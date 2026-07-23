@@ -977,6 +977,58 @@ describe("agent slack integration provisioning", () => {
       expect(chatResponse.body.messages).toContain("Mock assistant response")
     })
 
+    it("rejects confirmation tokens prepared by a different authenticated user", async () => {
+      const { agent, chatAppId } = await setupProvisionedSlackAgent()
+      const otherUser = await config.createUser()
+
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const linkResponse = await postSlackMessage({
+        path,
+        body: {
+          command: `/${ChatCommands.LINK}`,
+          text: "",
+          channel_id: "D123",
+          user_id: "user-1",
+          user_name: "Slack User",
+          team_id: "T123",
+        },
+      })
+
+      const linkUrl = extractLinkUrl(linkResponse.body.messages)
+      expect(linkUrl).toBeTruthy()
+
+      const handoffPath = getLinkPath(linkUrl!)
+      const preparedByOtherUser = await config.withUser(
+        otherUser,
+        async () =>
+          await config
+            .getRequest()!
+            .get(handoffPath)
+            .set(config.defaultHeaders({}, true))
+            .expect(200)
+      )
+      const confirmationToken = extractConfirmationToken(
+        preparedByOtherUser.text
+      )
+      expect(confirmationToken).toBeTruthy()
+
+      await config
+        .getRequest()!
+        .post(handoffPath)
+        .set(config.defaultHeaders({}, true))
+        .send({ confirmationToken })
+        .expect(400)
+
+      await config.doInTenant(async () => {
+        const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
+          provider: AgentChannelProvider.SLACK,
+          externalUserId: "user-1",
+          teamId: "T123",
+        })
+        expect(link).toBeUndefined()
+      })
+    })
+
     it("blocks unlinked users and guides them to link first", async () => {
       const { agent, chatAppId } = await setupProvisionedSlackAgent()
       const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`

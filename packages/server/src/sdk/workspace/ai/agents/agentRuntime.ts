@@ -29,23 +29,30 @@ import {
 } from "../chatConversations"
 import {
   updatePendingToolCalls,
+  updateUnrecoveredToolFailures,
+  groupToolResultsByOutcome,
   buildPromptAndTools,
   getLiveOperations,
   type BuildPromptAndToolsOptions,
 } from "./utils"
 import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
+import { createEscalateTool } from "../../../../ai/tools/budibase"
 import {
-  createEscalateTool,
-  createResolvedEscalateTool,
-} from "../../../../ai/tools/budibase/escalate"
-import { createListSessionEscalationsTool } from "../../../../ai/tools/budibase/listSessionEscalations"
+  createListSessionEscalationsTool,
+  LIST_SESSION_ESCALATIONS_TOOL_NAME,
+} from "../../../../ai/tools/budibase/listSessionEscalations"
 import type tracer from "dd-trace"
 import { withLiteLLMSessionId } from "../llm/requestSession"
 
 // How long to wait for a human response before the escalation expires, in
 // seconds, when the operation doesn't specify its own delay.
 const DEFAULT_ESCALATION_DELAY_SECONDS = 3600
+
+// Read-only/helper tool calls that shouldn't clutter the request timeline.
+const TIMELINE_HIDDEN_TOOL_NAMES = new Set<string>([
+  LIST_SESSION_ESCALATIONS_TOOL_NAME,
+])
 
 interface PrepareAgentChatRunParams {
   agent: Agent
@@ -60,16 +67,19 @@ interface PrepareAgentChatRunParams {
   startedAt?: string
   // Pin the run to a specific operation instead of routing on the question.
   operationId?: string
-  // On resume swap escalate for a resolved stub so the model can't trigger a fresh escalation
-  escalationResolved?: boolean
   // Appended to the system prompt - a trusted channel for run-time directives
   // Puting it in the user input made it suspicious.
   additionalInstructions?: string
+  // Resolves the AgentRequest id tracking this run, for the escalate tool to
+  // stamp onto the escalation it raises. Read lazily since the caller only
+  // knows it after this run's operation is resolved.
+  getRequestId?: () => string | undefined
 }
 
 export interface AgentChatRun {
   latestQuestion: string
   selectedOperation?: AgentOperation
+  operationIntent?: OperationIntent
   getUsedKnowledgeSourcesMetadata: () => AgentMessageMetadata["ragSources"]
   sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
   stream: (
@@ -86,8 +96,20 @@ export interface AgentChatRun {
 
 export interface AgentChatStreamOptions {
   onFinish?: (responseId?: string) => void | Promise<void>
+  // Tool calls that actually completed successfully
   onToolCalls?: (toolNames: string[]) => void
+  // Individual tool call as its outcome becomes known, success or error
+  onToolCallCompleted?: (call: {
+    toolName: string
+    status: "success" | "error"
+    input?: unknown
+    output?: unknown
+  }) => void | Promise<void>
+  // In-flight (pending) tool calls.
   pendingToolCalls?: Set<string>
+  // Tool calls whose last known outcome was a failure (couldn't be
+  // recovered).
+  unrecoveredToolFailures?: Set<string>
 }
 
 const operationRoutingActionSchema = z.enum([
@@ -96,31 +118,42 @@ const operationRoutingActionSchema = z.enum([
   "no_operation",
 ])
 
+const operationIntentSchema = z.enum(["execute", "query"])
+
 const operationRouterOutputSchema = z.object({
   action: operationRoutingActionSchema,
   operationId: z.string().nullable(),
+  intent: operationIntentSchema.nullable(),
   reason: z.string(),
 })
 
 type OperationRoutingAction = z.infer<typeof operationRoutingActionSchema>
 type OperationRouterOutput = z.infer<typeof operationRouterOutputSchema>
+export type OperationIntent = z.infer<typeof operationIntentSchema>
 type OperationRoute =
   | {
       action: "select_operation"
       operation: AgentOperation
+      intent: OperationIntent
     }
   | {
       action: Exclude<OperationRoutingAction, "select_operation">
       operation?: undefined
     }
 
+const INTENT_DECISION_GUIDANCE = `- "execute" when fulfilling this message performs the concrete action that operation's instructions define - including an operation whose defined goal is to react to a topic (e.g. escalate to a human whenever a subject comes up), where a question about that subject still triggers the goal.
+- "query" when fulfilling this message does not perform that action - e.g. asking about the status or history of something the operation manages, without asking it to act again.
+This is about the operation's specific goal, not the grammatical form of the message: a question can be "execute" and an instruction-shaped sentence can be "query". If genuinely unsure, return "execute" - losing track of a real action is worse than tracking an extra query.
+Do not use the presence of a question mark, or an imperative verb, as a shortcut for this decision - always check it against the specific operation's own goal. For example: for an operation whose goal is to persist a new record, "create a ticket for my broken laptop" is "execute", "how many tickets do I have open?" is "query" (it asks about existing records, it doesn't create one), "I changed my mind about the ticket I just asked for" is still "execute" (it changes the outcome of the action, even if it isn't the original request), and "what kind of tickets can I create?" is "query" (it uses the word "create" but only asks what's possible). For an operation whose goal is to react whenever a topic comes up (e.g. escalate to a human whenever a subject is mentioned), both a statement and a question about that subject are "execute" - either one triggers the operation's actual goal, neither is just asking about a past record.`
+
 const buildOperationRoutingInstructions = (
   operations: AgentOperation[]
 ) => `You decide whether the assistant should use one Budibase agent operation, summarize the available operations, or proceed without an operation.
 
-Return action "select_operation" only when exactly one live operation is clearly the best match for the latest user request. In that case, return its operationId.
-Return action "summarize_operations" when the user is asking broadly what the agent can do, what it can help with, or wants an overview of available capabilities across operations. In that case, return operationId as null.
-Return action "no_operation" when the request does not fit any operation and should not trigger a capabilities summary. In that case, return operationId as null.
+Return action "select_operation" only when exactly one live operation is clearly the best match for the latest user request. In that case, return its operationId, and also decide its intent:
+${INTENT_DECISION_GUIDANCE}
+Return action "summarize_operations" when the user is asking broadly what the agent can do, what it can help with, or wants an overview of available capabilities across operations. In that case, return operationId and intent as null.
+Return action "no_operation" when the request does not fit any operation and should not trigger a capabilities summary. In that case, return operationId and intent as null.
 Be conservative. If the request is ambiguous, too broad, or unrelated to a specific operation, do not select one unless it is clearly a capabilities-overview request.
 Use the operation name, instructions, tools, and knowledge setup as signals.
 Return only the structured output.
@@ -175,15 +208,6 @@ export const chooseOperationForQuestion = async ({
       action: "no_operation",
     }
   }
-  const multipleOperationsEnabled = await features.isEnabled(
-    FeatureFlag.MULTIPLE_OPERATIONS
-  )
-  if (!multipleOperationsEnabled) {
-    return {
-      action: "select_operation",
-      operation: liveOperations[0],
-    }
-  }
   if (!latestQuestion.trim()) {
     return {
       action: "no_operation",
@@ -236,6 +260,7 @@ export const chooseOperationForQuestion = async ({
     return {
       action: "select_operation",
       operation,
+      intent: route.intent ?? "execute",
     }
   } catch (error) {
     console.error("Operation routing failed", {
@@ -269,20 +294,23 @@ const selectOperationForRun = async ({
   if (operationId) {
     const operation = getLiveOperations(agent).find(o => o.id === operationId)
     route = operation
-      ? { action: "select_operation", operation }
+      ? { action: "select_operation", operation, intent: "execute" }
       : { action: "no_operation" }
   } else {
     route = await chooseOperationForQuestion({ agent, latestQuestion, llm })
   }
 
-  // Sticky
   if (route.action === "no_operation" && !operationId) {
     const lastOperationId = await getSessionOperationId(sessionId)
     const lastOperation = lastOperationId
       ? getLiveOperations(agent).find(o => o.id === lastOperationId)
       : undefined
     if (lastOperation) {
-      route = { action: "select_operation", operation: lastOperation }
+      route = {
+        action: "select_operation",
+        operation: lastOperation,
+        intent: "execute",
+      }
     }
   }
 
@@ -308,6 +336,7 @@ export interface PrepareAgentRunContextParams {
 export interface AgentRunContext {
   llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
   selectedOperation?: AgentOperation
+  operationIntent?: OperationIntent
   routingAction: OperationRoute["action"]
   systemPrompt: string
   tools: ToolSet
@@ -371,6 +400,10 @@ export const prepareAgentRunContext = async ({
   return {
     llm,
     selectedOperation: routingDecision.operation,
+    operationIntent:
+      routingDecision.action === "select_operation"
+        ? routingDecision.intent
+        : undefined,
     routingAction: routingDecision.action,
     ...promptAndTools,
   }
@@ -388,8 +421,8 @@ export const prepareAgentChatRun = async ({
   user,
   startedAt,
   operationId,
-  escalationResolved,
   additionalInstructions,
+  getRequestId,
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
   const latestQuestion =
     providedLatestQuestion ?? (chat ? findLatestUserQuestion(chat) : "")
@@ -419,6 +452,7 @@ export const prepareAgentChatRun = async ({
   const {
     llm,
     selectedOperation,
+    operationIntent,
     tools,
     toolDisplayNames,
     systemPrompt: baseSystemPrompt,
@@ -457,14 +491,9 @@ export const prepareAgentChatRun = async ({
 
   if (tools.escalate) {
     const recipients = selectedOperation?.escalation?.recipients
-    if (escalationResolved) {
-      // Resumed run: replace with a no-op so the model can't re-escalate.
-      // The prior escalate call is in the message history, so the tool must
-      // remain in the schema or the model will see an unresolved tool call.
-      tools.escalate = createResolvedEscalateTool()
-    } else if (selectedOperation && recipients?.length) {
-      // Fresh run: escalation is configured per operation, so resolve it from
-      // the operation this run actually selected - never a different one.
+    if (selectedOperation && recipients?.length) {
+      // Always the real tool, on resumes too. A resumed run must still be
+      // able to raise a genuinely new escalation.
       tools.escalate = createEscalateTool({
         agentId,
         operationId: selectedOperation.id,
@@ -476,6 +505,7 @@ export const prepareAgentChatRun = async ({
         channel: chat?.channel,
         userId: user?._id,
         getMessages: () => modelMessages,
+        getRequestId: () => getRequestId?.(),
       })
     }
 
@@ -512,6 +542,7 @@ export const prepareAgentChatRun = async ({
   return {
     latestQuestion,
     selectedOperation,
+    operationIntent,
     sessionLogIndexer,
     getUsedKnowledgeSourcesMetadata: () =>
       Array.from(usedKnowledgeSourceById.values()),
@@ -519,7 +550,13 @@ export const prepareAgentChatRun = async ({
     contextWindowTokens: llm.contextWindowTokens,
     systemPromptTokens,
     contextUsage,
-    stream: async ({ onFinish, onToolCalls, pendingToolCalls } = {}) =>
+    stream: async ({
+      onFinish,
+      onToolCalls,
+      onToolCallCompleted,
+      pendingToolCalls,
+      unrecoveredToolFailures,
+    } = {}) =>
       await withLiteLLMSessionId(sessionId, () =>
         agentRunner.stream({
           messages: modelMessages,
@@ -535,16 +572,66 @@ export const prepareAgentChatRun = async ({
             }
             contextUsage.output = usage
             sessionLogIndexer.addRequestId(response?.id)
-            if (onToolCalls) {
-              const toolNames = toolCalls
-                .map(toolCall => toolCall.toolName)
-                .filter(Boolean)
-              if (toolNames.length) {
-                onToolCalls(toolNames)
+            const {
+              successResults,
+              successNames,
+              semanticFailureNames,
+              semanticFailureResults,
+            } = groupToolResultsByOutcome(toolResults)
+            const erroredParts = content.filter(
+              (
+                part
+              ): part is Extract<
+                (typeof content)[number],
+                { type: "tool-error" }
+              > => part.type === "tool-error"
+            )
+            const erroredToolNames = erroredParts.map(part => part.toolName)
+
+            if (onToolCalls && successNames.length) {
+              onToolCalls(successNames)
+            }
+            if (onToolCallCompleted) {
+              const inputForCall = (toolCallId: string) =>
+                toolCalls.find(c => c.toolCallId === toolCallId)?.input
+
+              const completedToolCalls = [
+                ...successResults.map(result => ({
+                  toolName: result.toolName,
+                  status: "success" as const,
+                  input: inputForCall(result.toolCallId),
+                  output: result.output,
+                })),
+                ...erroredParts.map(part => ({
+                  toolName: part.toolName,
+                  status: "error" as const,
+                  input: part.input,
+                  output: part.error,
+                })),
+                ...semanticFailureResults.map(result => ({
+                  toolName: result.toolName,
+                  status: "error" as const,
+                  input: inputForCall(result.toolCallId),
+                  output: result.output,
+                })),
+              ]
+
+              for (const call of completedToolCalls) {
+                if (TIMELINE_HIDDEN_TOOL_NAMES.has(call.toolName)) {
+                  continue
+                }
+                await onToolCallCompleted(call)
               }
             }
             if (pendingToolCalls) {
               updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
+            }
+            if (unrecoveredToolFailures) {
+              updateUnrecoveredToolFailures(
+                unrecoveredToolFailures,
+                successResults,
+                [...erroredToolNames, ...semanticFailureNames]
+              )
             }
 
             for (const toolResult of toolResults) {
@@ -580,13 +667,10 @@ export const prepareAgentChatRun = async ({
               await quotas.addAction(ActionType.AI_AGENT, async () => {})
             }
 
-            if (!pendingToolCalls) {
-              return
-            }
-
             for (const part of content) {
               if (part.type === "tool-error") {
-                pendingToolCalls.delete(part.toolCallId)
+                pendingToolCalls?.delete(part.toolCallId)
+                unrecoveredToolFailures?.add(part.toolName)
               }
             }
           },

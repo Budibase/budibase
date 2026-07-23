@@ -1,6 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/svelte"
 import type { Agent } from "@budibase/types"
-import { FeatureFlag } from "@budibase/types"
 import { describe, expect, it, vi } from "vitest"
 import MockBody from "@/test/mocks/MockBody.svelte"
 import MockButton from "@/test/mocks/MockButton.svelte"
@@ -35,29 +34,6 @@ vi.mock("@/stores/builder", () => ({
   },
 }))
 
-const { featureFlagsStore } = vi.hoisted(() => {
-  let value = {}
-  const subscribers = new Set<(value: Record<string, boolean>) => void>()
-
-  return {
-    featureFlagsStore: {
-      subscribe(callback: (value: Record<string, boolean>) => void) {
-        subscribers.add(callback)
-        callback(value)
-        return () => subscribers.delete(callback)
-      },
-      set(nextValue: Record<string, boolean>) {
-        value = nextValue
-        subscribers.forEach(callback => callback(value))
-      },
-    },
-  }
-})
-
-vi.mock("@/stores/portal", () => ({
-  featureFlags: featureFlagsStore,
-}))
-
 vi.mock("./OperationLiveBadge.svelte", () => ({
   default: MockComponent,
 }))
@@ -70,7 +46,6 @@ import OperationsSection from "./OperationsSection.svelte"
 
 describe("OperationsSection", () => {
   it("opens a create modal before adding an operation", async () => {
-    featureFlagsStore.set({})
     const onUpdated = vi.fn(async () => true)
     const agent: Agent = {
       name: "Support agent",
@@ -107,9 +82,6 @@ describe("OperationsSection", () => {
   })
 
   it("does not allow creating a second operation with the same name", async () => {
-    featureFlagsStore.set({
-      [FeatureFlag.MULTIPLE_OPERATIONS]: true,
-    })
     const onUpdated = vi.fn(async () => true)
     const agent: Agent = {
       name: "Support agent",

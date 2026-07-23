@@ -1184,6 +1184,31 @@ describe("/api/global/users", () => {
     })
   })
 
+  describe("GET /api/global/users/tenant/:id", () => {
+    it("should reject unauthenticated access", async () => {
+      await config.request
+        .get(
+          `/api/global/users/tenant/${encodeURIComponent(config.user!.email)}`
+        )
+        .expect("Content-Type", /json/)
+        .expect(403)
+    })
+
+    it("should allow internal api access", async () => {
+      const response = await config.request
+        .get(
+          `/api/global/users/tenant/${encodeURIComponent(config.user!.email)}`
+        )
+        .set(config.internalAPIHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(response.body._id).toBe(config.user!.email)
+      expect(response.body.tenantId).toBe(config.user!.tenantId)
+      expect(response.body.userId).toBe(config.user!._id)
+    })
+  })
+
   describe("POST /api/global/users/:userId/permission/:role", () => {
     it("should assign CREATOR role and set builder properties", async () => {
       const user = await config.createUser()

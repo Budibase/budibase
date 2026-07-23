@@ -126,7 +126,10 @@ export function setupEnv(...envs: any[]) {
 
   const configs = [
     { key: "COUCH_DB_PORT", value: `${couchPort}` },
-    { key: "COUCH_DB_URL", value: `http://127.0.0.1:${couchPort}` },
+    {
+      key: "COUCH_DB_URL",
+      value: `http://budibase:budibase@127.0.0.1:${couchPort}`,
+    },
     { key: "COUCH_DB_SQL_URL", value: `http://127.0.0.1:${couchSqlPort}` },
     { key: "MINIO_URL", value: `http://127.0.0.1:${minioPort}` },
   ]

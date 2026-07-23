@@ -2,6 +2,7 @@
   import { notifications } from "@budibase/bbui"
   import { type KnowledgeSourceOption } from "@budibase/types"
   import { workspaceDeploymentStore } from "@/stores/builder"
+  import { bb } from "@/stores/bb"
   import { agentsStore, knowledgeConnectionsStore } from "@/stores/portal"
   import type { SharePointSelectionMode } from "../renderers/types"
   import { EXCLUDE_ALL_PATTERN } from "../sharepoint/sharePointModalUtils"
@@ -125,7 +126,10 @@
   }
 
   const handleSelect = async (mode: SharePointSelectionMode) => {
-    if (!agentId || !operationId || !selectedSiteId) {
+    const selectedSite = sharePointSites.find(
+      site => site.id === selectedSiteId
+    )
+    if (!agentId || !operationId || !selectedSite) {
       return
     }
     saving = true
@@ -133,7 +137,7 @@
       await agentsStore.connectOperationSharePointSite(agentId, operationId, {
         datasourceId: selectedDatasourceId,
         authConfigId: selectedAuthConfigId,
-        siteId: selectedSiteId,
+        site: selectedSite,
         filters: mode === "selective" ? [EXCLUDE_ALL_PATTERN] : undefined,
       })
       await workspaceDeploymentStore.fetch()
@@ -179,6 +183,13 @@
   options={sharePointConnectionOptions}
   {selectedConnectionId}
   {loadingNextStep}
+  hasSharePointDatasource={$knowledgeConnectionsStore.sharePointDatasourceIds
+    .length > 0}
+  onConfigure={() => {
+    hide()
+    const datasourceId = $knowledgeConnectionsStore.sharePointDatasourceIds[0]
+    bb.settings(`/connections/apis/${datasourceId}`)
+  }}
   onConnectionChange={connectionId => {
     selectedConnectionId = connectionId
     const full = $knowledgeConnectionsStore.connections.find(

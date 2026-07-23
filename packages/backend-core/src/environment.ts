@@ -255,6 +255,9 @@ const environment = {
   ENABLE_SSO_MAINTENANCE_MODE: selfHosted
     ? process.env.ENABLE_SSO_MAINTENANCE_MODE
     : false,
+  // Boot time OIDC config for SSO - enables non-verified email linking,
+  OIDC_ALLOW_UNVERIFIED_EMAIL_LINKING:
+    process.env.OIDC_ALLOW_UNVERIFIED_EMAIL_LINKING,
   ...getPackageJsonFields(),
   DISABLE_PINO_LOGGER: process.env.DISABLE_PINO_LOGGER,
   OFFLINE_MODE: process.env.OFFLINE_MODE,
@@ -280,6 +283,7 @@ const environment = {
   CUSTOM_CSP_FRAME_SRC: process.env.CUSTOM_CSP_FRAME_SRC,
   OPENROUTER_BASE_URL:
     process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
+  COUCH_DB_SQS_PORT: process.env.COUCH_DB_SQS_PORT || "4984",
 }
 
 export function setEnv(newEnvVars: Partial<typeof environment>): () => void {

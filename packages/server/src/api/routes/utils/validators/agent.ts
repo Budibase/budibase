@@ -265,7 +265,11 @@ export function syncAgentKnowledgeSourcesValidator() {
 export function connectAgentSharePointSiteValidator() {
   return auth.joiValidator.body(
     Joi.object({
-      siteId: NON_EMPTY_STRING.required(),
+      site: Joi.object({
+        id: NON_EMPTY_STRING.required(),
+        name: OPTIONAL_STRING,
+        webUrl: OPTIONAL_STRING,
+      }).required(),
       datasourceId: NON_EMPTY_STRING.required(),
       authConfigId: NON_EMPTY_STRING.required(),
       filters: Joi.array().items(NON_EMPTY_STRING).optional(),

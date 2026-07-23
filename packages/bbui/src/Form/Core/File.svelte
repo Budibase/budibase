@@ -2,6 +2,7 @@
   import ActionButton from "../../ActionButton/ActionButton.svelte"
   import { uuid } from "../../helpers"
   import Icon from "../../Icon/Icon.svelte"
+  import ProgressCircle from "../../ProgressCircle/ProgressCircle.svelte"
   import { createEventDispatcher } from "svelte"
 
   const BYTES_IN_MB = 1000000
@@ -10,6 +11,8 @@
   export let statusText: string | undefined = undefined
   export let title: string = "Upload file"
   export let disabled: boolean = false
+  export let loading: boolean = false
+  export let hideButtonWhenSet: boolean = false
   export let allowClear: boolean | undefined = undefined
   export let extensions: string[] | undefined = undefined
   export let handleFileTooLarge: ((_file: File) => void) | undefined = undefined
@@ -39,6 +42,7 @@
   function handleFile(evt: Event) {
     const target = evt.target as HTMLInputElement
     processFile(target.files?.[0])
+    target.value = ""
   }
 
   function clearFile() {
@@ -48,7 +52,7 @@
 
 <input
   id={fieldId}
-  {disabled}
+  disabled={disabled || loading}
   type="file"
   accept={inputAccept}
   bind:this={fileInput}
@@ -58,7 +62,11 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="field">
-  {#if statusText}
+  {#if loading}
+    <div class="file-view">
+      <ProgressCircle size="S" />
+    </div>
+  {:else if statusText}
     <div class="file-view status" class:disabled>
       <div class="filename">{statusText}</div>
       {#if !disabled || (allowClear === true && disabled)}
@@ -89,9 +97,14 @@
       {/if}
     </div>
   {/if}
-  <ActionButton {disabled} on:click={() => fileInput?.click()}>
-    {title}
-  </ActionButton>
+  {#if !hideButtonWhenSet || !(loading || statusText || value)}
+    <ActionButton
+      disabled={disabled || loading}
+      on:click={() => fileInput?.click()}
+    >
+      {title}
+    </ActionButton>
+  {/if}
 </div>
 
 <style>

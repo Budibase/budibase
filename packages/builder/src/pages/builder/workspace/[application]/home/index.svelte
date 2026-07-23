@@ -6,11 +6,12 @@
   import AgentModal from "@/pages/builder/workspace/[application]/agent/AgentModal.svelte"
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
-  import AssignProjectModal from "./_components/AssignProjectModal.svelte"
+  import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
   import CreateProjectModal from "./_components/CreateProjectModal.svelte"
   import ExportProjectModal from "./_components/ExportProjectModal.svelte"
   import HomeControls from "./_components/HomeControls.svelte"
   import HomeCreateMenu from "./_components/HomeCreateMenu.svelte"
+  import HomeHeaderActions from "./_components/HomeHeaderActions.svelte"
   import HomeMetrics from "./_components/HomeMetrics.svelte"
   import HomeProjectTabs from "./_components/HomeProjectTabs.svelte"
   import HomeResourcePanel from "./_components/HomeResourcePanel.svelte"
@@ -20,6 +21,9 @@
     appStore,
     automationStore,
     contextMenuStore,
+    datasources,
+    integrations,
+    tables,
     workspaceAppStore,
     workspaceFavouriteStore,
   } from "@/stores/builder"
@@ -32,12 +36,10 @@
     licensing,
     projectsStore,
   } from "@/stores/portal"
-  import FreeTrialBanner from "@/components/portal/licensing/FreeTrialBanner.svelte"
   import { getErrorMessage } from "@/helpers/errors"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
     Body,
-    Button,
     Icon,
     Modal,
     type ModalAPI,
@@ -61,16 +63,24 @@
     type Table,
     type WorkspaceFavourite,
     type WorkspaceResource,
+    SourceName,
   } from "@budibase/types"
+  import { integrationForDatasource } from "@/stores/selectors"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import { goto as gotoStore, url as urlStore } from "@roxi/routify"
   import { onMount } from "svelte"
+  import { get } from "svelte/store"
   import {
     buildHomeRows,
     filterHomeRows,
+    getTypeLabel,
     sortHomeRows,
   } from "./_components/rows"
-  import { buildHomeUrl, type HomeUrlState } from "./_components/urlState"
+  import {
+    buildHomeUrl,
+    normaliseHomeSortColumn,
+    type HomeUrlState,
+  } from "./_components/urlState"
 
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
 
@@ -121,7 +131,6 @@
   let sortColumn: HomeSortColumn = "updated"
   let sortOrder: HomeSortOrder = "desc"
 
-  let searchOpen = false
   let highlightedRowId: string | null = null
 
   let hasMounted = false
@@ -131,10 +140,14 @@
   $: currentUserId = $auth.user?._id || ""
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
   $: initialProjectIds = selectedProjectId ? [selectedProjectId] : []
+  $: selectedProjectResource = selectedRow
+    ? {
+        name: selectedRow.name,
+        typeLabel: getTypeLabel(selectedRow.type),
+        projectIds: selectedRow.projectIds,
+      }
+    : null
   $: if (!projectsEnabled && selectedProjectId) selectedProjectId = ""
-  $: if (searchTerm.trim()) {
-    searchOpen = true
-  }
 
   let getFavourite: (
     _resourceType: WorkspaceResource,
@@ -157,28 +170,12 @@
     if (!value) {
       return null
     }
-    if (value === "all" || value === "app" || value === "automation") {
-      return value
-    }
-    if (value === "agent") {
-      return value
-    }
-    return null
-  }
-
-  const normaliseSortColumn = (value: string | null): HomeSortColumn | null => {
-    if (!value) {
-      return null
-    }
-    if (value === "created") {
-      return "created"
-    }
     if (
-      value === "name" ||
-      value === "type" ||
-      value === "projects" ||
-      value === "status" ||
-      value === "updated"
+      value === "all" ||
+      value === "app" ||
+      value === "automation" ||
+      value === "agent" ||
+      value === "data"
     ) {
       return value
     }
@@ -206,7 +203,7 @@
     const q = params.get("q") ?? ""
     const type = normaliseType(params.get("type"))
     const project = params.get("project") ?? ""
-    const sort = normaliseSortColumn(params.get("sort"))
+    const sort = normaliseHomeSortColumn(params.get("sort"))
     const order = normaliseSortOrder(params.get("order"))
     return { q, type, project, sort, order }
   }
@@ -237,7 +234,7 @@
       return
     }
     sortColumn = column
-    sortOrder = column === "updated" || column === "created" ? "desc" : "asc"
+    sortOrder = column === "updated" ? "desc" : "asc"
   }
 
   const createApp = () => {
@@ -429,10 +426,35 @@
           ...agent,
           projectIds,
         })
+      } else if (selectedRow.type === "datasource") {
+        const { resource } = selectedRow
+        await datasources.save({
+          datasource: {
+            ...resource,
+            projectIds,
+          },
+          integration: integrationForDatasource(get(integrations), resource),
+          skipConnectionCheck: true,
+        })
+      } else if (selectedRow.type === "table") {
+        const { resource } = selectedRow
+        await tables.save({
+          ...resource,
+          projectIds,
+        })
       }
 
       notifications.success("Projects updated successfully")
       assignProjectModal?.hide()
+
+      try {
+        await Promise.all([appStore.refresh(), agentsStore.fetchAgents()])
+      } catch (error) {
+        console.error(error)
+        notifications.warning(
+          "Projects updated, but some resources could not be refreshed. Reload the workspace to see all changes."
+        )
+      }
     } catch (error) {
       console.error(error)
       notifications.error("Unable to update project")
@@ -486,11 +508,10 @@
       selectedProjectId = ""
       notifications.success(`Project '${projectName}' deleted successfully`)
 
-      const refreshes = await Promise.allSettled([
-        appStore.refresh(),
-        agentsStore.fetchAgents(),
-      ])
-      if (refreshes.some(result => result.status === "rejected")) {
+      try {
+        await Promise.all([appStore.refresh(), agentsStore.fetchAgents()])
+      } catch (error) {
+        console.error(error)
         notifications.warning(
           "Project deleted, but some resources could not be refreshed. Reload the workspace to see all changes."
         )
@@ -552,7 +573,6 @@
 
       const refreshes = await Promise.allSettled([
         appStore.refresh(),
-        agentsStore.fetchAgents(),
         loadMetrics(),
       ])
       if (refreshes.some(result => result.status === "rejected")) {
@@ -705,6 +725,23 @@
       ]
     }
 
+    if (row.type === "datasource" || row.type === "table") {
+      return [
+        {
+          icon: "arrow-square-out",
+          name: "Open",
+          visible: true,
+          callback: () => openRow(row),
+        },
+        {
+          icon: "stack",
+          name: "Assign project",
+          visible: projectsEnabled,
+          callback: () => assignProjectModal.show(),
+        },
+      ]
+    }
+
     return []
   }
 
@@ -755,6 +792,18 @@
       goto(url(`../agent/${row.id}/config`))
       return
     }
+    if (row.type === "datasource") {
+      const route =
+        row.resource.source === SourceName.REST
+          ? `../apis/datasource/${row.id}`
+          : `../data/datasource/${row.id}`
+      goto(url(route))
+      return
+    }
+    if (row.type === "table") {
+      goto(url(`../data/table/${row.id}`))
+      return
+    }
   }
 
   const loadMetrics = async () => {
@@ -782,8 +831,15 @@
     apps: $workspaceAppStore.workspaceApps,
     automations: $automationStore.automations,
     agents: $agentsStore.agents,
+    datasources: $datasources.list,
+    tables: $tables.list,
     getFavourite,
   })
+  $: projectIdsWithResources = Array.from(
+    new Set(baseRows.flatMap(row => row.projectIds || []))
+  )
+  $: selectedProjectExportDisabled =
+    !!selectedProjectId && !projectIdsWithResources.includes(selectedProjectId)
 
   $: projectLookup = (
     projectsEnabled
@@ -805,13 +861,6 @@
     !projectLookup[selectedProjectId]
   ) {
     selectedProjectId = ""
-  }
-
-  const toggleSearch = () => {
-    searchOpen = !searchOpen
-    if (!searchOpen) {
-      searchTerm = ""
-    }
   }
 
   const openUpgradePage = () => {
@@ -848,7 +897,6 @@
       ),
     }))
 
-  $: showHeaderActions = $licensing.showTrialBanner
   $: budibaseAICreditLimit =
     $licensing.license?.quotas?.usage.monthly.budibaseAICredits?.value
   $: showBudibaseAIMetric =
@@ -920,12 +968,9 @@
     if (project) {
       selectedProjectId = project
     }
-    const sortAllowed =
-      sort && (projectsEnabled || (sort !== "projects" && sort !== "created"))
+    const sortAllowed = sort && (projectsEnabled || sort !== "projects")
     if (sortAllowed) {
       sortColumn = sort
-    } else if (projectsEnabled) {
-      sortColumn = "created"
     } else {
       sortColumn = "updated"
     }
@@ -960,18 +1005,12 @@
         </Body>
       </div>
 
-      <div class="header-actions">
-        {#if projectsEnabled}
-          <button type="button" class="header-link" on:click={openUpgradePage}>
-            Upgrade plan
-          </button>
-        {:else if showHeaderActions}
-          <FreeTrialBanner show={$licensing.showTrialBanner} />
-        {/if}
-        <Button size="M" secondary on:click={openContactSales}>
-          Contact sales
-        </Button>
-      </div>
+      <HomeHeaderActions
+        isEnterprisePlan={$licensing.isEnterprisePlan}
+        showTrialBanner={$licensing.showTrialBanner}
+        onUpgradePlan={openUpgradePage}
+        onContactSales={openContactSales}
+      />
     </div>
 
     {#if automationErrorEntries.length}
@@ -1014,102 +1053,75 @@
     <HomeMetrics {metrics} {showBudibaseAIMetric} />
 
     {#if projectsEnabled}
-      <HomeProjectTabs
-        projects={$projectsStore}
-        {selectedProjectId}
-        hasSelectedProject={!!selectedProject}
-        canExport={$projectsStore.length > 0}
-        onSelect={projectId => (selectedProjectId = projectId)}
-        onCreateProject={createProject}
-        onEditProject={editProject}
-        onDeleteProject={() => confirmDeleteProjectDialog?.show()}
-        onImportProject={importProject}
-        onExportProject={exportProject}
-      />
-
-      <HomeResourcePanel>
-        {#snippet toolbar()}
-          <div class="panel-toolbar">
-            <HomeControls
-              {typeFilter}
-              variant="panel"
-              onTypeChange={setTypeFilter}
-            />
-            <div class="panel-toolbar__right">
-              <div
-                class="search-control"
-                class:search-control--open={searchOpen}
-              >
-                {#if searchOpen}
-                  <div class="search-wrapper">
-                    <Icon name="magnifying-glass" size="S" />
-                    <input
-                      class="search-input"
-                      type="text"
-                      placeholder="Search"
-                      bind:value={searchTerm}
-                    />
-                    <button
-                      type="button"
-                      class="search-close"
-                      aria-label="Close search"
-                      on:click={toggleSearch}
-                    >
-                      <Icon name="x" size="S" />
-                    </button>
-                  </div>
-                {:else}
-                  <button
-                    type="button"
-                    class="search-toggle"
-                    aria-label="Search"
-                    on:click={toggleSearch}
-                  >
-                    <Icon
-                      name="magnifying-glass"
-                      size="S"
-                      color="var(--spectrum-global-color-gray-600)"
-                    />
-                  </button>
-                {/if}
-              </div>
-              <HomeCreateMenu
-                variant="pill"
-                onCreateAgent={createAgent}
-                onCreateAutomation={createAutomation}
-                onCreateApp={createApp}
-                onCreateConnection={() => goToCreate("data/new")}
-                onCreateTable={openCreateTable}
-                onCreateApi={() => goToCreate("apis/new")}
-              />
-            </div>
-          </div>
-        {/snippet}
-
-        <HomeTable
-          rows={filteredRows}
-          allRowsCount={allRows.length}
-          {typeFilter}
-          {searchTerm}
-          {projectsEnabled}
-          {selectedProjectName}
-          {sortColumn}
-          {sortOrder}
-          {highlightedRowId}
-          variant="panel"
-          onOpenRow={openRow}
-          onOpenContextMenu={openHomeContextMenu}
-          onClearSearch={() => (searchTerm = "")}
-          onResetFilters={() => {
-            typeFilter = "all"
-            selectedProjectId = ""
-          }}
-          onSortChange={setSort}
-          onCreateAgent={createAgent}
-          onCreateAutomation={createAutomation}
-          onCreateApp={createApp}
+      <div class="project-resources">
+        <HomeProjectTabs
+          projects={$projectsStore}
+          {selectedProjectId}
+          onSelect={projectId => (selectedProjectId = projectId)}
+          onCreateProject={createProject}
+          onEditProject={editProject}
+          onDeleteProject={() => confirmDeleteProjectDialog?.show()}
+          onImportProject={importProject}
+          onExportProject={exportProject}
+          exportProjectDisabled={selectedProjectExportDisabled}
         />
-      </HomeResourcePanel>
+
+        <HomeResourcePanel>
+          {#snippet toolbar()}
+            <div class="panel-toolbar">
+              <HomeControls
+                {typeFilter}
+                variant="panel"
+                onTypeChange={setTypeFilter}
+              />
+              <div class="panel-toolbar__right">
+                <div class="search-wrapper">
+                  <Icon name="magnifying-glass" size="S" />
+                  <input
+                    class="search-input"
+                    type="text"
+                    placeholder="Search"
+                    bind:value={searchTerm}
+                  />
+                </div>
+                <HomeCreateMenu
+                  variant="pill"
+                  onCreateAgent={createAgent}
+                  onCreateAutomation={createAutomation}
+                  onCreateApp={createApp}
+                  onCreateConnection={() => goToCreate("data/new")}
+                  onCreateTable={openCreateTable}
+                  onCreateApi={() => goToCreate("apis/new")}
+                />
+              </div>
+            </div>
+          {/snippet}
+
+          <HomeTable
+            rows={filteredRows}
+            allRowsCount={allRows.length}
+            {typeFilter}
+            {searchTerm}
+            {projectsEnabled}
+            {selectedProjectName}
+            {sortColumn}
+            {sortOrder}
+            {highlightedRowId}
+            variant="panel"
+            onOpenRow={openRow}
+            onOpenContextMenu={openHomeContextMenu}
+            onClearSearch={() => (searchTerm = "")}
+            onResetFilters={() => {
+              typeFilter = "all"
+              selectedProjectId = ""
+            }}
+            onSortChange={setSort}
+            onCreateAgent={createAgent}
+            onCreateAutomation={createAutomation}
+            onCreateApp={createApp}
+          />
+        </HomeResourcePanel>
+      </div>
     {:else}
       <div class="controls-row">
         <HomeControls {typeFilter} onTypeChange={setTypeFilter} />
@@ -1171,8 +1183,7 @@
 
   <Modal bind:this={assignProjectModal}>
     <AssignProjectModal
-      row={selectedRow}
-      projects={$projectsStore}
+      resource={selectedProjectResource}
       onConfirm={assignProject}
     />
   </Modal>
@@ -1203,6 +1214,7 @@
       <ExportProjectModal
         projects={$projectsStore}
         {selectedProjectId}
+        {projectIdsWithResources}
         onConfirm={handleExportProject}
       />
     {/key}
@@ -1307,7 +1319,7 @@
 
   .content {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1280px;
     padding: var(--spacing-xl) 0;
     display: flex;
     flex-direction: column;
@@ -1318,18 +1330,11 @@
     gap: 20px;
   }
 
-  .header-link {
-    border: none;
-    background: none;
-    padding: 0;
-    font-family: var(--font-sans);
-    font-size: var(--font-size-s);
-    color: var(--spectrum-global-color-gray-900);
-    cursor: pointer;
-  }
-
-  .header-link:hover {
-    color: var(--spectrum-global-color-gray-800);
+  .project-resources {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
   }
 
   .panel-toolbar {
@@ -1347,42 +1352,6 @@
     gap: var(--spacing-m);
     margin-left: auto;
     flex-shrink: 0;
-  }
-
-  .search-control {
-    display: flex;
-    align-items: center;
-  }
-
-  .search-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    background: transparent;
-    padding: 4px;
-    cursor: pointer;
-    border-radius: var(--border-radius-s);
-  }
-
-  .search-toggle:hover {
-    background: var(--spectrum-global-color-gray-200);
-  }
-
-  .search-close {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    background: transparent;
-    padding: 2px;
-    cursor: pointer;
-    border-radius: var(--border-radius-s);
-    color: var(--spectrum-global-color-gray-600);
-  }
-
-  .search-close:hover {
-    background: var(--spectrum-global-color-gray-200);
   }
 
   .panel-toolbar .search-wrapper {
@@ -1412,13 +1381,6 @@
     color: var(--spectrum-global-color-gray-600);
   }
 
-  @media (min-width: 1080px) {
-    .search-control--open .search-wrapper,
-    .search-control .search-wrapper {
-      display: flex;
-    }
-  }
-
   .automation-errors {
     display: flex;
     flex-direction: column;
@@ -1434,12 +1396,6 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-l);
-  }
-
-  .header-actions {
-    display: flex;
-    gap: var(--spacing-l);
-    align-items: center;
   }
 
   .controls-row {

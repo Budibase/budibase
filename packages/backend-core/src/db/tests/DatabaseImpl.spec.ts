@@ -1,6 +1,7 @@
 import _ from "lodash"
 import { AnyDocument } from "@budibase/types"
 import { generator } from "../../../tests"
+import { withEnv } from "../../environment"
 import { DatabaseImpl } from "../couch"
 import { newid } from "../../utils"
 
@@ -50,6 +51,47 @@ describe("DatabaseImpl", () => {
 
       await database.remove(existingDoc!)
       expect(await database.exists(id)).toBe(false)
+    })
+  })
+
+  describe("external connections", () => {
+    it("does not leak env credentials into external connection strings", async () => {
+      await withEnv(
+        {
+          COUCH_DB_USERNAME: "env-user",
+          COUCH_DB_PASSWORD: "env-password",
+        },
+        async () => {
+          const db = new DatabaseImpl(
+            generator.word(),
+            undefined,
+            "http://url-user:url-password@example.com:5984"
+          )
+
+          expect((db as any).couchInfo.url).toBe("http://example.com:5984")
+          expect((db as any).couchInfo.auth.username).toBe("url-user")
+          expect((db as any).couchInfo.auth.password).toBe("url-password")
+        }
+      )
+    })
+
+    it("rejects external connection strings that would otherwise rely on env credentials", async () => {
+      await withEnv(
+        {
+          COUCH_DB_USERNAME: "env-user",
+          COUCH_DB_PASSWORD: "env-password",
+        },
+        async () => {
+          expect(
+            () =>
+              new DatabaseImpl(
+                generator.word(),
+                undefined,
+                "http://example.com:5984"
+              )
+          ).toThrow("CouchDB username not set")
+        }
+      )
     })
   })
 })

@@ -394,6 +394,9 @@ class Orchestrator {
   }
 
   private async logResult(result: AutomationResults) {
+    if (this.isTestRun) {
+      return
+    }
     await storeLog(this.automation, result)
   }
 
@@ -1129,7 +1132,9 @@ export async function execute(
           await context.ensureSnippetContext()
           const envVars = await sdkUtils.getEnvironmentVariables()
           await context.doInEnvironmentContext(envVars, async () => {
-            const orchestrator = new Orchestrator(job)
+            const orchestrator = new Orchestrator(job, {
+              isTestRun: job.data.isTestRun,
+            })
             callback(null, await orchestrator.execute())
           })
         } catch (err) {
@@ -1179,7 +1184,9 @@ export const removeStalled = async (job: Job<AutomationData>) => {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
   await context.doInWorkspaceContext(appId, async () => {
-    const orchestrator = new Orchestrator(job)
-    await orchestrator.stopCron("stalled")
+    logging.logWarn(
+      `Automation job stalled - ${appId}/${job.data.automation._id}`,
+      getAutomationLogContext(job)
+    )
   })
 }
