@@ -102,14 +102,18 @@ function cleanupConfig(config: RunConfig, table: Table): RunConfig {
     FieldType.OPTIONS,
     FieldType.NUMBER,
   ]
-  // filter out fields which cannot be keys
-  const fieldNames = Object.entries(table.schema)
-    .filter(schema => primaryOptions.find(val => val === schema[1].type))
-    // map to fieldName
-    .map(entry => entry[0])
+  // filter out fields which cannot be keys — collect into a Set so the per-field
+  // lookup in iterateObject is O(1) instead of a fieldNames.find scan (O(fields²) per
+  // row otherwise, which matters for wide external tables).
+  const fieldNames = new Set(
+    Object.entries(table.schema)
+      .filter(schema => primaryOptions.find(val => val === schema[1].type))
+      // map to fieldName
+      .map(entry => entry[0])
+  )
   const iterateObject = (obj: { [key: string]: any }) => {
     for (let [field, value] of Object.entries(obj)) {
-      if (fieldNames.find(name => name === field) && isRowId(value)) {
+      if (fieldNames.has(field) && isRowId(value)) {
         obj[field] = convertRowId(value)
       }
     }
