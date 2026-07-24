@@ -287,7 +287,7 @@
             <div class="instructions-editor">
               <div class="editor-body">
                 {#if toolsLoaded}
-                  {#key resolvedIconCount}
+                  {#key `${resolvedIconCount}-${webSearchConfigured}`}
                     <CodeEditor
                       value={operation.promptInstructions || ""}
                       bindings={promptBindings}

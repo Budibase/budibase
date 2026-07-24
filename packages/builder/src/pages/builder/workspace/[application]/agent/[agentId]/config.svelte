@@ -20,11 +20,7 @@
   import { bb } from "@/stores/bb"
   import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
   import type { AgentTool } from "./toolTypes"
-  import {
-    EditorModes,
-    hbAutocomplete,
-    bindingsToCompletions,
-  } from "@/components/common/CodeEditor"
+  import { hbAutocomplete } from "@/components/common/CodeEditor"
   import BudibaseLogo from "../logos/Budibase.svelte"
   import WebSearchLogo from "../logos/WebSearch.svelte"
   import RestLogo from "../logos/Rest.svelte"
@@ -35,7 +31,10 @@
   } from "../logos/tagIconUrls"
   import { DATASOURCE_TAG_ICON_URLS } from "../datasourceIconUrls"
   import BudibaseLogoSvg from "assets/bb-emblem.svg"
-  import { shouldAutoSelectAgentModel } from "./configUtils"
+  import {
+    buildAgentPromptCompletionOptions,
+    shouldAutoSelectAgentModel,
+  } from "./configUtils"
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
   import OperationsSection from "./OperationsSection.svelte"
   import WebSearchConfigModal from "./WebSearchConfigModal.svelte"
@@ -155,37 +154,48 @@
     return { readableToRuntimeBinding: runtimeMap, readableToIcon: iconMap }
   })
 
-  let promptBindings: EnrichedBinding[] = $derived.by(() => {
-    return availableTools
+  const toPromptBinding = (tool: AgentTool): EnrichedBinding => ({
+    runtimeBinding: tool.runtimeBinding,
+    readableBinding: tool.readableBinding,
+    category: getSectionName(tool.sourceType, tool.sourceLabel),
+    display: {
+      name:
+        tool.sourceType === ToolType.SEARCH
+          ? "Web search"
+          : formatToolLabel(tool),
+      type: "tool",
+      rank: tool.sourceType === ToolType.SEARCH ? 0 : 1,
+    },
+    icon: tool.tagIconUrl,
+  })
+
+  let webSearchPromptBinding: EnrichedBinding | undefined = $derived.by(() => {
+    const webSearchTool = availableTools.find(
+      tool => tool.sourceType === ToolType.SEARCH
+    )
+    return webSearchTool ? toPromptBinding(webSearchTool) : undefined
+  })
+
+  let promptBindings: EnrichedBinding[] = $derived.by(() =>
+    availableTools
       .filter(tool => !!tool.name)
       .filter(
         tool =>
           tool.sourceType !== ToolType.SEARCH ||
           (webSearchConfigured && tool.runtimeBinding)
       )
-      .map(tool => ({
-        runtimeBinding: tool.runtimeBinding,
-        readableBinding: tool.readableBinding,
-        category: getSectionName(tool.sourceType, tool.sourceLabel),
-        display: {
-          name:
-            tool.sourceType === ToolType.SEARCH
-              ? "Web search"
-              : formatToolLabel(tool),
-          type: "tool",
-          rank: tool.sourceType === ToolType.SEARCH ? 0 : 1,
-        },
-        icon: tool.tagIconUrl,
-      }))
-  })
+      .map(toPromptBinding)
+  )
 
   let promptCompletions = $derived.by(() => {
-    return promptBindings.length > 0
-      ? [
-          hbAutocomplete([
-            ...bindingsToCompletions(promptBindings, EditorModes.Handlebars),
-          ]),
-        ]
+    const completionOptions = buildAgentPromptCompletionOptions({
+      promptBindings,
+      webSearchBinding: webSearchPromptBinding,
+      webSearchConfigured,
+      onConfigureWebSearch: openWebSearchConfigModal,
+    })
+    return completionOptions.length > 0
+      ? [hbAutocomplete(completionOptions)]
       : []
   })
 
@@ -546,7 +556,7 @@
     }
   })
 
-  const openWebSearchConfigModal = () => {
+  function openWebSearchConfigModal() {
     webSearchConfigModal?.show()
   }
 </script>
