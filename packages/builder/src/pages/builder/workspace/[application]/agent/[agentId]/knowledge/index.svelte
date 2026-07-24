@@ -385,15 +385,13 @@
   </div>
 
   {#if geminiFileSearchConfigured === false}
-    <div class="knowledge-configuration-notice">
-      <InlineAlert
-        type="error"
-        header="Agent knowledge isn't configured"
-        message={$admin.cloud
-          ? "Agent knowledge is currently unavailable. Contact Budibase support."
-          : "Set GEMINI_API_KEY on the Budibase app service and restart Budibase to add or manage knowledge."}
-      />
-    </div>
+    <InlineAlert
+      type="error"
+      header="Agent knowledge isn't configured"
+      message={$admin.cloud
+        ? "Agent knowledge is currently unavailable. Contact Budibase support."
+        : "Set GEMINI_API_KEY on the Budibase app service and restart Budibase to add or manage knowledge."}
+    />
     {#if knowledgeTableRows.length > 0}
       <KnowledgeTable
         {loading}
@@ -483,29 +481,5 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
-  }
-
-  .knowledge-configuration-notice :global(.spectrum-InLineAlert) {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    column-gap: var(--spacing-s);
-    align-items: start;
-  }
-
-  .knowledge-configuration-notice
-    :global(.spectrum-InLineAlert > i:first-child) {
-    position: static;
-    grid-column: 1;
-    grid-row: 1 / span 2;
-    --color: var(--spectrum-inlinealert-error-icon-color);
-  }
-
-  .knowledge-configuration-notice :global(.spectrum-InLineAlert-header),
-  .knowledge-configuration-notice :global(.spectrum-InLineAlert-content) {
-    grid-column: 2;
-  }
-
-  .knowledge-configuration-notice :global(.spectrum-InLineAlert-header) {
-    padding-inline-end: 0;
   }
 </style>
