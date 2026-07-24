@@ -1,6 +1,42 @@
+import { CompletionContext } from "@codemirror/autocomplete"
+import { EditorState } from "@codemirror/state"
+import type { EnrichedBinding } from "@budibase/types"
 import { describe, expect, it } from "vitest"
 
-import { hbInsert, htmlInsert, jsInsert } from ".."
+import {
+  bindingsToCompletions,
+  EditorModes,
+  hbAutocomplete,
+  hbInsert,
+  htmlInsert,
+  jsInsert,
+} from ".."
+
+describe("hbAutocomplete", () => {
+  it("finds bindings by their datasource category", () => {
+    const warehouseBinding: EnrichedBinding = {
+      runtimeBinding: "table_orders_list_rows",
+      readableBinding: "Warehouse.Orders.list_rows",
+      category: "Warehouse",
+      display: {
+        name: "Orders.List Rows",
+        type: "tool",
+      },
+    }
+    const doc = "{{ warehouse"
+    const state = EditorState.create({ doc })
+    const context = new CompletionContext(state, doc.length, false)
+    const autocomplete = hbAutocomplete(
+      bindingsToCompletions([warehouseBinding], EditorModes.Handlebars)
+    )
+
+    const result = autocomplete(context)
+
+    expect(result?.options.map(option => option.label)).toContain(
+      "Orders.List Rows"
+    )
+  })
+})
 
 describe("hbInsert", () => {
   it("wraps bindings when not inside existing handlebars", () => {
