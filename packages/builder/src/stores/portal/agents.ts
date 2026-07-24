@@ -34,6 +34,7 @@ import {
 } from "@budibase/types"
 import { derived, get } from "svelte/store"
 import { createOperationKnowledgePollingController } from "./operationKnowledgePolling"
+import { getErrorMessage } from "@/helpers/errors"
 
 const KNOWLEDGE_POLL_INTERVAL_MS = 1000
 const BYTES_IN_MB = 1024 * 1024
@@ -57,7 +58,10 @@ export interface OperationKnowledgeUploadState {
 
 export interface OperationKnowledgeUploadResult {
   successfulUploads: number
-  failedUploads: string[]
+  failedUploads: Array<{
+    filename: string
+    errorMessage: string
+  }>
   oversizedUploads: string[]
   totalSelected: number
 }
@@ -76,6 +80,7 @@ interface AgentStoreState {
   >
   knowledgeUploadByOperation: Record<string, OperationKnowledgeUploadState>
   knowledgeLoadingByOperation: Record<string, boolean>
+  knowledgeConfiguration?: FetchAgentKnowledgeIndexResponse["configuration"]
 }
 
 const getOperationKnowledgeCacheKey = (agentId: string, operationId: string) =>
@@ -106,6 +111,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       knowledgeByOperation: {},
       knowledgeUploadByOperation: {},
       knowledgeLoadingByOperation: {},
+      knowledgeConfiguration: undefined,
     })
   }
 
@@ -424,6 +430,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
           getOperationKnowledgeCacheKey(agentId, operationId)
         ] = knowledge
       }
+      state.knowledgeConfiguration = response.configuration
       return state
     })
 
@@ -492,6 +499,8 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     get(this.store).knowledgeByOperation[
       getOperationKnowledgeCacheKey(agentId, operationId)
     ]
+
+  getKnowledgeConfiguration = () => get(this.store).knowledgeConfiguration
 
   isOperationKnowledgeLoading = (
     agentId: string,
@@ -590,7 +599,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     }))
 
     let successfulUploads = 0
-    const failedUploads: string[] = []
+    const failedUploads: OperationKnowledgeUploadResult["failedUploads"] = []
     const oversizedUploads: string[] = []
 
     try {
@@ -626,7 +635,10 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
           )
         } catch (error) {
           console.error("Error uploading file:", error)
-          failedUploads.push(upload.file.name)
+          failedUploads.push({
+            filename: upload.file.name,
+            errorMessage: getErrorMessage(error),
+          })
           this.setOperationUploadState(cacheKey, current => ({
             ...current,
             pendingUploads: current.pendingUploads.filter(

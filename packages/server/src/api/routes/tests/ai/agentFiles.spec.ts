@@ -10,7 +10,7 @@ import {
   KnowledgeBaseFileStatus,
   RestAuthType,
 } from "@budibase/types"
-import environment, { setEnv } from "../../../../environment"
+import environment, { setEnv, withEnv } from "../../../../environment"
 import { getQueue } from "../../../../sdk/workspace/ai/rag/ragQueue"
 import * as knowledgeSourceSyncQueue from "../../../../sdk/workspace/ai/rag/sources/knowledgeSourceSyncQueue"
 import { installHttpMocking, resetHttpMocking } from "../../../../tests/jestEnv"
@@ -48,6 +48,8 @@ describe("agent files", () => {
     live: false,
     allowKnowledgeSourceDownload: false,
   }
+  const missingGeminiMessage =
+    "Gemini File Search isn't configured. Set GEMINI_API_KEY on the Budibase app service and restart Budibase."
 
   const mockLiteLLMProviders = () =>
     nock(environment.LITELLM_URL)
@@ -220,6 +222,55 @@ describe("agent files", () => {
     mockSharePointSitesFetch(sites, times)
     return connection
   }
+
+  it("reports and rejects missing Gemini File Search configuration", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "Support Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+
+    await withEnv({ GEMINI_API_KEY: " " }, async () => {
+      const knowledge = await config.api.agent.fetchKnowledge(created._id!)
+      expect(knowledge.configuration).toEqual({
+        geminiFileSearchConfigured: false,
+      })
+
+      await config.api.agent.uploadFile(
+        created._id!,
+        operationId,
+        { file: fileBuffer, name: "notes.txt" },
+        {
+          status: 400,
+          body: {
+            message: missingGeminiMessage,
+          },
+        }
+      )
+
+      await config.api.agent.connectSharePointSite(
+        created._id!,
+        operationId,
+        {
+          site: { id: "site-1" },
+          datasourceId: "datasource-1",
+          authConfigId: "auth-1",
+        },
+        {
+          status: 400,
+          body: { message: missingGeminiMessage },
+        }
+      )
+    })
+
+    const refreshed = await config.api.agent.fetch()
+    const saved = refreshed.agents.find(agent => agent._id === created._id)
+    expect(saved?.operations?.[0]?.knowledgeBases || []).toEqual([])
+    expect(saved?.operations?.[0]?.knowledgeSources || []).toEqual([])
+  })
 
   it("uploads and lists files attached to an agent", async () => {
     const created = await config.api.agent.createWithOperation(

@@ -16,6 +16,7 @@ export interface FileKnowledgeTableRow {
   isUploading?: boolean
   onDelete?: () => Promise<void>
   errorMessage?: string
+  actionsDisabled?: boolean
 }
 
 export interface SharePointConnectionTableRow {
@@ -35,6 +36,7 @@ export interface SharePointConnectionTableRow {
   isSyncing: boolean
   runStatus?: AgentKnowledgeSourceSyncRunStatus
   errorMessage?: string
+  actionsDisabled?: boolean
   onDelete: () => Promise<void>
   onSync: () => Promise<void>
 }

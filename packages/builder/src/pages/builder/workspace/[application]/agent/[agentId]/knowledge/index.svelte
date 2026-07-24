@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { Body, Button, Layout, notifications, Toggle } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    InlineAlert,
+    Layout,
+    notifications,
+    Toggle,
+  } from "@budibase/bbui"
   import { bb } from "@/stores/bb"
   import { confirm } from "@/helpers"
   import {
@@ -12,6 +19,7 @@
   import { workspaceDeploymentStore } from "@/stores/builder"
   import {
     agentsStore,
+    admin,
     knowledgeConnectionsStore,
     selectedAgent,
   } from "@/stores/portal"
@@ -93,6 +101,12 @@
     return agentsStore.getOperationUploadState(agentId, operationId)
   })
 
+  let geminiFileSearchConfigured = $derived.by(() => {
+    const _store = $agentsStore
+    return agentsStore.getKnowledgeConfiguration()?.geminiFileSearchConfigured
+  })
+  let knowledgeActionsDisabled = $derived(geminiFileSearchConfigured !== true)
+
   let hasSharePointConnection = $derived(
     $knowledgeConnectionsStore.connections.some(
       connection =>
@@ -136,7 +150,8 @@
     toFileTableRows(
       files.filter(file => !file.source),
       removeFile,
-      uploadState.pendingUploads
+      uploadState.pendingUploads,
+      knowledgeActionsDisabled
     )
   )
   let sharePointConnectionRows = $derived.by(() =>
@@ -145,6 +160,7 @@
       sharePointSourceSnapshots,
       onDelete: removeSharePointSite,
       onSync: syncSharePointNow,
+      actionsDisabled: knowledgeActionsDisabled,
     })
   )
   let knowledgeTableRows: KnowledgeTableRow[] = $derived.by(() => [
@@ -217,7 +233,7 @@
   }
 
   const handleKnowledgeRowClick = (row: KnowledgeTableRow) => {
-    if (row.kind !== "sharepoint_connection") {
+    if (knowledgeActionsDisabled || row.kind !== "sharepoint_connection") {
       return
     }
     openSharePointSiteConfigModal(row.siteId).catch(error => {
@@ -336,95 +352,118 @@
 <Layout gap="S" noPadding>
   <div class="section-header">
     <Body size="S">Knowledge</Body>
-    <div class="section-header-actions">
-      {#if hasStoreAccessFailures}
-        <Button
-          quiet
-          size="S"
-          secondary
-          disabled={resetting}
-          iconColor="var(--orange)"
-          icon="cloud-rain"
-          on:click={resetKnowledgeStore}
-        >
-          Reset store
-        </Button>
-      {/if}
-      <KnowledgeAddControls
-        {agentId}
-        {operationId}
-        onUploaded={async () => {
-          syncOperationFromStore()
-          await refreshDeploymentStatus()
-        }}
-        onSharePoint={() =>
-          openSharePointFlow().catch(error => {
-            console.error(error)
-            notifications.error("Failed to fetch SharePoint sites")
-          })}
-      />
-    </div>
+    {#if geminiFileSearchConfigured === true}
+      <div class="section-header-actions">
+        {#if hasStoreAccessFailures}
+          <Button
+            quiet
+            size="S"
+            secondary
+            disabled={resetting}
+            iconColor="var(--orange)"
+            icon="cloud-rain"
+            on:click={resetKnowledgeStore}
+          >
+            Reset store
+          </Button>
+        {/if}
+        <KnowledgeAddControls
+          {agentId}
+          {operationId}
+          onUploaded={async () => {
+            syncOperationFromStore()
+            await refreshDeploymentStatus()
+          }}
+          onSharePoint={() =>
+            openSharePointFlow().catch(error => {
+              console.error(error)
+              notifications.error("Failed to fetch SharePoint sites")
+            })}
+        />
+      </div>
+    {/if}
   </div>
 
-  <div class="sources-access">
-    <Toggle
-      bind:value={operation.allowKnowledgeSourceDownload}
-      disabled={savingAllowKnowledgeSourceDownload || !agentId}
-      on:change={async () => {
-        savingAllowKnowledgeSourceDownload = true
-        try {
-          await tick()
-          await onUpdated()
-        } finally {
-          savingAllowKnowledgeSourceDownload = false
-        }
-      }}
+  {#if geminiFileSearchConfigured === false}
+    <InlineAlert
+      type="error"
+      header="Agent knowledge isn't configured"
+      message={$admin.cloud
+        ? "Agent knowledge is currently unavailable. Contact Budibase support."
+        : "Set GEMINI_API_KEY on the Budibase app service and restart Budibase to add or manage knowledge."}
     />
-    <div>
-      <Body
-        color={"var(--spectrum-global-color-gray-900)"}
-        weight="500"
-        size="XS"
-      >
-        Allow users to download knowledge source files from chat
-      </Body>
-      <Body color={"var(--spectrum-global-color-gray-700)"} size="XS">
-        When disabled, chat still shows which files were used, without a
-        download link.
-      </Body>
+    {#if knowledgeTableRows.length > 0}
+      <KnowledgeTable
+        {loading}
+        rows={knowledgeTableRows}
+        onRowClick={handleKnowledgeRowClick}
+      />
+    {/if}
+  {:else if geminiFileSearchConfigured === true}
+    <div class="sources-access">
+      <Toggle
+        bind:value={operation.allowKnowledgeSourceDownload}
+        disabled={savingAllowKnowledgeSourceDownload || !agentId}
+        on:change={async () => {
+          savingAllowKnowledgeSourceDownload = true
+          try {
+            await tick()
+            await onUpdated()
+          } finally {
+            savingAllowKnowledgeSourceDownload = false
+          }
+        }}
+      />
+      <div>
+        <Body
+          color={"var(--spectrum-global-color-gray-900)"}
+          weight="500"
+          size="XS"
+        >
+          Allow users to download knowledge source files from chat
+        </Body>
+        <Body color={"var(--spectrum-global-color-gray-700)"} size="XS">
+          When disabled, chat still shows which files were used, without a
+          download link.
+        </Body>
+      </div>
     </div>
-  </div>
 
-  <KnowledgeTable
-    {loading}
-    isUploading={uploadState.uploading}
-    rows={knowledgeTableRows}
-    onRowClick={handleKnowledgeRowClick}
-  />
+    <KnowledgeTable
+      {loading}
+      isUploading={uploadState.uploading}
+      rows={knowledgeTableRows}
+      onRowClick={handleKnowledgeRowClick}
+    />
+  {:else}
+    <KnowledgeTable loading rows={[]} />
+  {/if}
 </Layout>
 
-<SelectSharePointSiteModal
-  bind:this={selectSharePointSiteModal}
-  agentId={agentId || ""}
-  {operationId}
-  existingSiteIds={selectedSiteIds}
-  onCreated={onSharePointSiteCreated}
-/>
+{#if geminiFileSearchConfigured === true}
+  <SelectSharePointSiteModal
+    bind:this={selectSharePointSiteModal}
+    agentId={agentId || ""}
+    {operationId}
+    existingSiteIds={selectedSiteIds}
+    onCreated={onSharePointSiteCreated}
+  />
 
-<DisplaySharePointSiteModal
-  bind:this={displaySharePointSiteModal}
-  {agentId}
-  {operationId}
-  siteId={selectedSharePointSiteId}
-  onEdit={openSharePointSiteSelectionModal}
-/>
+  <DisplaySharePointSiteModal
+    bind:this={displaySharePointSiteModal}
+    {agentId}
+    {operationId}
+    siteId={selectedSharePointSiteId}
+    onEdit={openSharePointSiteSelectionModal}
+  />
 
-<SelectSharePointFilesModal
-  bind:this={selectSharePointFilesModal}
-  {agentId}
-  {operationId}
-  siteId={selectedSharePointSiteId}
-/>
+  <SelectSharePointFilesModal
+    bind:this={selectSharePointFilesModal}
+    {agentId}
+    {operationId}
+    siteId={selectedSharePointSiteId}
+  />
+{/if}
 
 <style>
   .sources-access {

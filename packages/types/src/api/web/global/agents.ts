@@ -65,6 +65,9 @@ export interface FetchAgentKnowledgeResponse {
 
 export interface FetchAgentKnowledgeIndexResponse {
   operations: Record<string, FetchAgentKnowledgeResponse>
+  configuration: {
+    geminiFileSearchConfigured: boolean
+  }
 }
 
 export interface KnowledgeSourceEntry {

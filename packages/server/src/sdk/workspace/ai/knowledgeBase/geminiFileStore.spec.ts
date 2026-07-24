@@ -16,6 +16,7 @@ import {
   createGeminiFileStore,
   deleteGeminiFileFromStore,
   ingestGeminiFile,
+  isGeminiFileSearchConfigured,
   searchGeminiFileStore,
 } from "./geminiFileStore"
 
@@ -61,13 +62,29 @@ describe("geminiFileStore", () => {
         {
           status: 400,
           message:
-            "Gemini File Search failed. Set GEMINI_API_KEY on your local environment",
+            "Gemini File Search isn't configured. Set GEMINI_API_KEY on the Budibase app service and restart Budibase.",
         }
       )
       expect(mockFetch).not.toHaveBeenCalled()
     } finally {
       cleanup()
     }
+  })
+
+  it("treats an empty or whitespace-only GEMINI_API_KEY as missing", async () => {
+    await withEnv({ GEMINI_API_KEY: "   " }, async () => {
+      expect(isGeminiFileSearchConfigured()).toBe(false)
+      await expect(createGeminiFileStore("Support Docs")).rejects.toMatchObject(
+        { status: 400 }
+      )
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+  })
+
+  it("reports GEMINI_API_KEY as configured without exposing it", async () => {
+    await withEnv({ GEMINI_API_KEY: " test-gemini-key " }, async () => {
+      expect(isGeminiFileSearchConfigured()).toBe(true)
+    })
   })
 
   it("uses upstream response status when ingest fails", async () => {
