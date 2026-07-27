@@ -130,6 +130,7 @@ export const mockChatGPTResponse: MockLLMResponseFn = (answer, opts) => {
   interceptor.defaultReplyHeaders({ "content-type": "application/json" })
   const scope = interceptor.reply(200, (reqOpts: any) => {
     const reqBody = parseJsonBody(reqOpts.body)
+    opts?.onRequest?.(reqBody)
     if (expectedFormat && !matchesResponseFormat(reqBody, expectedFormat)) {
       return {
         error: { message: "Unexpected response_format in request body" },
