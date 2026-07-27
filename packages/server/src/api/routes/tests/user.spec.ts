@@ -1,7 +1,7 @@
 import { roles, utils } from "@budibase/backend-core"
 import { checkPermissionsEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
-import { UserMetadata } from "@budibase/types"
+import { SSOProviderType, UserMetadata, UserSSO } from "@budibase/types"
 
 jest.mock("../../../utilities/workerRequests", () => ({
   getGlobalUsers: jest.fn(() => {
@@ -76,6 +76,36 @@ describe("/users", () => {
         roleId: roles.BUILTIN_ROLE_IDS.POWER,
       })
       expect(res2.ok).toEqual(true)
+    })
+
+    it("should strip sensitive fields from user metadata updates", async () => {
+      const user = await config.createUser()
+      const metadata: UserMetadata & Partial<UserSSO> = {
+        ...user,
+        oauth2: { accessToken: "access", refreshToken: "refresh" },
+        provider: "google",
+        providerType: SSOProviderType.GOOGLE,
+        profile: { displayName: "Metadata User" },
+        thirdPartyProfile: { id: "external" },
+        ssoId: "sso-user",
+        forceResetPassword: false,
+      }
+      delete metadata._rev
+
+      await config.api.user.update(metadata)
+
+      const found = await config.api.user.find(user._id!)
+      for (const field of [
+        "oauth2",
+        "provider",
+        "providerType",
+        "profile",
+        "thirdPartyProfile",
+        "ssoId",
+        "forceResetPassword",
+      ]) {
+        expect(found).not.toHaveProperty(field)
+      }
     })
 
     it("should require the _rev field for multiple updates", async () => {

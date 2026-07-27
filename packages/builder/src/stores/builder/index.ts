@@ -15,6 +15,7 @@ import {
   selectedAutomation,
   automationHistoryStore,
   evaluationContext,
+  MAX_STICKY_NOTES_PER_AUTOMATION,
 } from "./automations"
 import { userStore, userSelectedResourceMap, isOnlyUser } from "./users"
 import { deploymentStore } from "./deployment"
@@ -42,6 +43,7 @@ import componentTreeNodesStore from "./componentTreeNodes"
 import { oauth2 } from "./oauth2"
 import { recaptchaStore } from "./recaptcha"
 import { dataEnvironmentStore, dataAPI } from "./dataEnvironment"
+import { workspaceConnections } from "./workspaceConnection"
 
 import { FetchAppPackageResponse } from "@budibase/types"
 import { selectedAppUrls } from "./appUrls"
@@ -62,6 +64,7 @@ export {
   automationStore,
   selectedAutomation,
   automationHistoryStore,
+  MAX_STICKY_NOTES_PER_AUTOMATION,
   sortedScreens,
   userStore,
   isOnlyUser,
@@ -94,6 +97,7 @@ export {
   dataEnvironmentStore,
   dataAPI,
   restTemplates,
+  workspaceConnections,
 }
 
 export const reset = () => {

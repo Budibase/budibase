@@ -7,7 +7,8 @@ export type LicenseStatus = "checking" | "has_key" | "missing_key"
 export const aiLicenseStatus = writable<LicenseStatus>("checking")
 
 const resolveStatus = async (): Promise<LicenseStatus> => {
-  if (get(admin).cloud) {
+  const adminStore = get(admin)
+  if (adminStore.cloud) {
     return "has_key"
   }
 

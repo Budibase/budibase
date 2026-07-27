@@ -48,6 +48,16 @@ describe("objectExists", () => {
     expect(result).toBe(false)
   })
 
+  it("should return false when object does not exist (404 error with $metadata)", async () => {
+    const error: any = new Error("Not Found")
+    error.$metadata = { httpStatusCode: 404 }
+    mockHeadObject.mockRejectedValue(error)
+
+    const result = await objectExists("test-bucket", "test-key")
+
+    expect(result).toBe(false)
+  })
+
   it("should throw error for other errors", async () => {
     const error: any = new Error("Access Denied")
     error.statusCode = 403

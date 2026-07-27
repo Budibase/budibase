@@ -1,10 +1,20 @@
-import { db as dbCore, encryption, objectStore } from "@budibase/backend-core"
+import {
+  db as dbCore,
+  docIds,
+  encryption,
+  objectStore,
+} from "@budibase/backend-core"
+import { ImportWorkspaceFn } from "@budibase/pro"
 import { utils } from "@budibase/shared-core"
 import {
   Automation,
   AutomationTriggerStepId,
+  BUDIBASE_AI_PROVIDER_ID,
+  CustomAIProviderConfig,
   Database,
+  DocumentType,
   FieldType,
+  LiteLLMKeyConfig,
   Row,
   RowAttachment,
   WebhookTriggerInputs,
@@ -16,6 +26,7 @@ import * as tar from "tar"
 import { v4 as uuid } from "uuid"
 import sdk from "../.."
 import { ObjectStoreBuckets } from "../../../constants"
+import environment from "../../../environment"
 import { getAutomationParams } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { downloadTemplate } from "../../../utilities/fileSystem"
@@ -23,6 +34,7 @@ import {
   ATTACHMENT_DIRECTORY,
   DB_EXPORT_FILE,
   GLOBAL_DB_EXPORT_FILE,
+  IMPORT_PENDING_LITELLM_MODEL_ID,
 } from "./constants"
 
 type TemplateType = {
@@ -144,7 +156,7 @@ export async function untarFile(file: { path: string }) {
   return tmpPath
 }
 
-async function decryptFiles(path: string, password: string) {
+export async function decryptFiles(path: string, password: string) {
   try {
     const processDirectory = async (dirPath: string) => {
       for (let file of await fsp.readdir(dirPath)) {
@@ -179,15 +191,74 @@ export function getListOfAppsInMulti(tmpPath: string) {
   return fs.readdirSync(tmpPath).filter(dir => dir !== GLOBAL_DB_EXPORT_FILE)
 }
 
-export async function importApp(
-  appId: string,
-  db: Database,
-  template: TemplateType,
-  opts: {
-    updateAttachmentColumns: boolean
-  } = { updateAttachmentColumns: true }
-) {
-  let prodAppId = dbCore.getProdWorkspaceID(appId)
+export interface ImportAppOpts {
+  updateAttachmentColumns?: boolean
+  importObjStoreContents?: boolean
+  objectStoreAppId?: string
+  preserveLiteLLMConfig?: boolean
+}
+
+async function sanitizeLiteLLMImportData(db: Database) {
+  console.log("Starting LiteLLM import sanitization", {
+    dbName: db.name,
+  })
+  const keyDocId = docIds.getLiteLLMKeyID()
+  const keyDoc = await db.tryGet<LiteLLMKeyConfig>(keyDocId)
+  if (keyDoc) {
+    await db.remove(keyDoc)
+    console.log("Removed LiteLLM key config from imported data", {
+      dbName: db.name,
+      keyDocId,
+    })
+  }
+
+  const aiConfigs = await db.allDocs<CustomAIProviderConfig>(
+    docIds.getDocParams(DocumentType.AI_CONFIG, undefined, {
+      include_docs: true,
+    })
+  )
+
+  const updatedAIConfigs = aiConfigs.rows
+    .map(row => row.doc)
+    .filter((doc): doc is CustomAIProviderConfig => !!doc)
+    .map(doc => ({
+      ...doc,
+      liteLLMModelId:
+        doc.provider === BUDIBASE_AI_PROVIDER_ID && !environment.SELF_HOSTED
+          ? doc.liteLLMModelId
+          : IMPORT_PENDING_LITELLM_MODEL_ID,
+    }))
+
+  if (updatedAIConfigs.length) {
+    await db.bulkDocs(updatedAIConfigs)
+  }
+
+  console.log("Finished LiteLLM import sanitization", {
+    dbName: db.name,
+    aiConfigCount: updatedAIConfigs.length,
+    preservedBudibaseAIConfigCount: updatedAIConfigs.filter(
+      c =>
+        c.provider === BUDIBASE_AI_PROVIDER_ID &&
+        c.liteLLMModelId !== IMPORT_PENDING_LITELLM_MODEL_ID
+    ).length,
+  })
+}
+
+export const importApp: ImportWorkspaceFn = async (
+  appId,
+  db,
+  template,
+  opts = {}
+) => {
+  const importOpts: ImportAppOpts = {
+    updateAttachmentColumns: true,
+    importObjStoreContents: true,
+    preserveLiteLLMConfig: false,
+    ...opts,
+  }
+  const prodAppId = dbCore.getProdWorkspaceID(appId)
+  const objectStoreWorkspaceId = importOpts.objectStoreAppId ?? appId
+  const objectStoreProdAppId = dbCore.getProdWorkspaceID(objectStoreWorkspaceId)
   let dbStream: fs.ReadStream
   const isTar = template.file && template?.file?.type?.endsWith("gzip")
   const isDirectory =
@@ -214,7 +285,7 @@ export async function importApp(
       )
     }
     // have to handle object import
-    {
+    if (importOpts.importObjStoreContents) {
       const promises = []
       const excludedFiles = [GLOBAL_DB_EXPORT_FILE, DB_EXPORT_FILE]
 
@@ -223,7 +294,7 @@ export async function importApp(
         if (excludedFiles.includes(filename)) {
           continue
         }
-        filename = join(prodAppId, filename)
+        filename = join(objectStoreProdAppId, filename)
         if ((await fsp.lstat(path)).isDirectory()) {
           promises.push(
             objectStore.uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
@@ -245,14 +316,22 @@ export async function importApp(
       await utils.parallelForeach(
         objectStore.listAllObjects(
           objectStore.ObjectStoreBuckets.APPS,
-          prodAppId
+          objectStoreProdAppId
         ),
         async file => {
+          if (!file.Key) {
+            return
+          }
+          const prefix = `${objectStoreProdAppId}/`
+          if (!file.Key.startsWith(prefix)) {
+            return
+          }
+          const relativePath = file.Key.slice(prefix.length)
+          // never delete attachment files - they are referenced by prod rows
+          // which are not included in the export and cannot be re-uploaded
           if (
-            file.Key &&
-            !uploadedFiles.includes(
-              file.Key.replace(new RegExp(`^${prodAppId}/`), "")
-            )
+            !relativePath.startsWith(`${ATTACHMENT_DIRECTORY}/`) &&
+            !uploadedFiles.includes(relativePath)
           ) {
             filesToDelete.push(file.Key)
           }
@@ -271,15 +350,20 @@ export async function importApp(
   } else {
     dbStream = await getTemplateStream(template)
   }
-  // @ts-ignore
   const { ok } = await db.load(dbStream)
   if (!ok) {
     throw "Error loading database dump from template."
   }
-  if (opts.updateAttachmentColumns) {
+  if (importOpts.updateAttachmentColumns) {
     await updateAttachmentColumns(prodAppId, db)
   }
   await updateAutomations(prodAppId, db)
+  if (!importOpts.preserveLiteLLMConfig) {
+    await sanitizeLiteLLMImportData(db)
+  }
+
+  await sdk.ai.configs.reconcileLiteLLMModels()
+
   // clear up afterward
   if (tmpPath) {
     await fsp.rm(tmpPath, { recursive: true, force: true })

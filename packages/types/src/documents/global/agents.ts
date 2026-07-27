@@ -1,5 +1,6 @@
 import { Document } from "../../"
 import type { UIMessage } from "ai"
+import { EscalationRecipient } from "../workspace/escalation"
 
 export enum ToolType {
   INTERNAL_TABLE = "INTERNAL_TABLE",
@@ -8,6 +9,7 @@ export enum ToolType {
   REST_QUERY = "REST_QUERY",
   DATASOURCE_QUERY = "DATASOURCE_QUERY",
   SEARCH = "SEARCH",
+  ESCALATION = "ESCALATION",
 }
 
 export interface ToolMetadata {
@@ -22,6 +24,7 @@ export interface ToolMetadata {
 interface ChatAgentIntegration {
   chatAppId?: string
   idleTimeoutMinutes?: number
+  requireUserLink?: boolean
 }
 
 export interface DiscordAgentIntegration extends ChatAgentIntegration {
@@ -36,6 +39,7 @@ export interface MSTeamsAgentIntegration extends ChatAgentIntegration {
   appId?: string
   appPassword?: string
   tenantId?: string
+  teamId?: string
   messagingEndpointUrl?: string
 }
 
@@ -45,62 +49,111 @@ export interface SlackAgentIntegration extends ChatAgentIntegration {
   messagingEndpointUrl?: string
 }
 
+export interface TelegramAgentIntegration extends ChatAgentIntegration {
+  botToken?: string
+  webhookSecretToken?: string
+  botUserName?: string
+  messagingEndpointUrl?: string
+}
+
+export enum AgentKnowledgeSourceType {
+  SHAREPOINT = "sharepoint",
+}
+
+export interface AgentKnowledgeSourceFilterConfig {
+  patterns?: string[]
+}
+
+export interface AgentSharePointKnowledgeSource {
+  id: string
+  type: AgentKnowledgeSourceType.SHAREPOINT
+  config: {
+    datasourceId: string
+    authConfigId: string
+    site: {
+      id: string
+      name?: string
+      webUrl?: string
+    }
+    filters?: AgentKnowledgeSourceFilterConfig
+  }
+}
+
+export type AgentKnowledgeSource = AgentSharePointKnowledgeSource
+
+export interface AgentEscalationConfig {
+  recipients?: EscalationRecipient[]
+  // How long the escalation is kept before being marked as expired.
+  delay?: number
+}
+
+export interface AgentOperation {
+  id: string
+  name: string
+  live: boolean
+  promptInstructions?: string
+  enabledTools?: string[]
+  knowledgeBases?: string[]
+  knowledgeSources?: AgentKnowledgeSource[]
+  allowKnowledgeSourceDownload: boolean
+  escalation?: AgentEscalationConfig
+}
+
 export interface Agent extends Document {
   name: string
   description?: string
   aiconfig: string
-  promptInstructions?: string
+  projectIds?: string[]
+  operations?: AgentOperation[]
   goal?: string
   live?: boolean
+  publishedAt?: string
   icon?: string
   iconColor?: string
   createdBy?: string
-  enabledTools?: string[]
-  embeddingModel?: string
-  vectorDb?: string
-  ragMinDistance?: number
-  ragTopK?: number
   discordIntegration?: DiscordAgentIntegration
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration
+  telegramIntegration?: TelegramAgentIntegration
 }
 
 export interface AgentMessageRagSource {
   sourceId: string
   fileId?: string
   filename?: string
-  chunkCount: number
+}
+
+export type AgentMessageUsageSegmentType =
+  | "system"
+  | "input"
+  | "cachedInput"
+  | "output"
+  | "reasoning"
+
+export interface AgentMessageUsageSegment {
+  type: AgentMessageUsageSegmentType
+  tokens: number
+}
+
+export interface AgentMessageUsage {
+  maxTokens?: number
+  segments: AgentMessageUsageSegment[]
 }
 
 export interface AgentMessageMetadata {
   ragSources?: AgentMessageRagSource[]
+  toolDisplayNames?: Record<string, string>
+  selectedOperationId?: string
+  selectedOperationName?: string
+  allowKnowledgeSourceDownload?: boolean
   createdAt?: number
   completedAt?: number
   error?: string
+  usage?: AgentMessageUsage
 }
 
 export interface AgentChat extends Document {
   agentId?: string
   title: string
   messages: UIMessage<AgentMessageMetadata>[]
-}
-
-export enum AgentFileStatus {
-  PROCESSING = "processing",
-  READY = "ready",
-  FAILED = "failed",
-}
-
-export interface AgentFile extends Document {
-  agentId: string
-  filename: string
-  mimetype?: string
-  size?: number
-  objectStoreKey: string
-  ragSourceId: string
-  status: AgentFileStatus
-  chunkCount: number
-  uploadedBy: string
-  errorMessage?: string
-  processedAt?: string
 }

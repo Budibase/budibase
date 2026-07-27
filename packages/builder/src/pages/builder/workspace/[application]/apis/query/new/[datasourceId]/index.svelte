@@ -1,25 +1,22 @@
 <script>
   import { params, redirect } from "@roxi/routify"
-  import RestQueryViewer from "@/components/integration/RestQueryViewer.svelte"
+  import { datasources, queries } from "@/stores/builder"
   import { IntegrationTypes } from "@/constants/backend"
-  import { datasources } from "@/stores/builder"
-  import APIEndpointViewer from "@/components/integration/APIEndpointViewer.svelte"
+
+  $redirect
 
   $: datasource = $datasources.list.find(ds => ds._id === $params.datasourceId)
-  $: isRestSource = datasource?.source === IntegrationTypes.REST
+  $: isRestDatasource = datasource?.source === IntegrationTypes.REST
   $: {
-    if (!datasource) {
-      $redirect("../../../")
-    } else if (!isRestSource) {
-      $redirect(`../../../data/query/new/${$params.datasourceId}`)
+    if ($datasources.list.length && !datasource) {
+      $redirect(`/builder/workspace/${$params.application}/apis`)
+    } else if (datasource && !isRestDatasource) {
+      $redirect(
+        `/builder/workspace/${$params.application}/data/query/new/${$params.datasourceId}`
+      )
+    } else if (datasource && isRestDatasource) {
+      queries.setNewQueryDatasourceId($params.datasourceId)
+      $redirect(`/builder/workspace/${$params.application}/apis/query/new`)
     }
   }
 </script>
-
-{#if isRestSource}
-  {#if datasource.restTemplate}
-    <APIEndpointViewer datasourceId={$params.datasourceId} />
-  {:else}
-    <RestQueryViewer />
-  {/if}
-{/if}

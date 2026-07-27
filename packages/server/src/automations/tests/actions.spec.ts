@@ -1,5 +1,5 @@
 import { quotas } from "@budibase/pro"
-import { FieldType, TableSourceType } from "@budibase/types"
+import { ActionType, FieldType, TableSourceType } from "@budibase/types"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import * as automation from "../index"
 import { createAutomationBuilder } from "./utilities/AutomationTestBuilder"
@@ -10,7 +10,11 @@ jest.mock("@budibase/pro", () => {
     ...actual,
     quotas: {
       ...actual.quotas,
-      addAction: jest.fn().mockImplementation((fn: () => Promise<any>) => fn()),
+      addAction: jest
+        .fn()
+        .mockImplementation((_type: ActionType, fn: () => Promise<unknown>) =>
+          fn()
+        ),
     },
   }
 })

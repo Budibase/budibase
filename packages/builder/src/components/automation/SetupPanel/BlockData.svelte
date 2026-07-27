@@ -67,6 +67,21 @@
 
   let dataMode: DataMode = DataMode.INPUT
   let issues: BlockStatus[] = []
+  let lastNodeId: string | undefined
+  let lastMode: DataMode | undefined
+
+  const syncDataMode = (
+    nodeId: string | undefined,
+    mode: DataMode | undefined
+  ) => {
+    if (!nodeId || (nodeId === lastNodeId && mode === lastMode)) {
+      return
+    }
+
+    lastNodeId = nodeId
+    lastMode = mode
+    dataMode = mode || DataMode.INPUT
+  }
 
   $: blockRef = block?.id
     ? $selectedAutomation?.blockRefs?.[block.id]
@@ -78,9 +93,10 @@
     : undefined
   $: loopBlock = automationStore.actions.getBlockByRef(automation, loopRef)
 
-  $: if ($automationStore.selectedNodeId) {
-    dataMode = $automationStore.selectedNodeMode || DataMode.INPUT
-  }
+  $: syncDataMode(
+    $automationStore.selectedNodeId,
+    $automationStore.selectedNodeMode
+  )
 
   $: testResults = $automationStore.testResults as TestAutomationResponse
   $: blockResults = automationStore.actions.processBlockResults(
@@ -410,7 +426,7 @@
     color: var(--spectrum-global-color-static-red-600);
   }
   .issue.warn .icon {
-    color: var(--spectrum-global-color-static-yellow-600);
+    color: var(--spectrum-global-color-orange-500);
   }
   .issues :global(hr.spectrum-Divider:last-child) {
     display: none;

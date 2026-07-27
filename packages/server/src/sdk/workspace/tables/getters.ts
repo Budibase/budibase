@@ -19,6 +19,7 @@ import {
 import datasources from "../datasources"
 import { isV2 } from "../views"
 import { ensureQueryUISet } from "../views/utils"
+import { USERS_TABLE_SCHEMA } from "../../../constants"
 
 export async function processTable(table: Table): Promise<Table> {
   return await tracer.trace("processTable", async span => {
@@ -59,6 +60,15 @@ export async function processTable(table: Table): Promise<Table> {
         sourceType: TableSourceType.INTERNAL,
         sql: true,
       }
+
+      if (processed._id === InternalTables.USER_METADATA) {
+        for (const [key, schema] of Object.entries(USERS_TABLE_SCHEMA.schema)) {
+          if (!processed.schema[key]) {
+            processed.schema[key] = schema
+          }
+        }
+      }
+
       return processed
     }
   })

@@ -85,13 +85,28 @@ export const updateBindingsInSteps = (
     return updatedStep
   })
 }
-export const getNewStepName = (automation, step) => {
-  const baseName = step.name
 
+const parseStepName = name => {
+  const match = name.match(/^(.*?)(?: (\d+))?$/)
+  return {
+    rootName: match?.[1] || name,
+    suffix: match?.[2] ? Number(match[2]) : 1,
+  }
+}
+
+const getStepDisplayName = (automation, step) => {
+  return automation?.definition?.stepNames?.[step.id] || step.name
+}
+
+const getHighestExistingSuffix = (automation, rootName) => {
   const countExistingSteps = steps => {
-    return steps.reduce((count, currentStep) => {
-      if (currentStep.name && currentStep.name.startsWith(baseName)) {
-        count++
+    return steps.reduce((highestSuffix, currentStep) => {
+      const currentName = getStepDisplayName(automation, currentStep)
+      if (currentName) {
+        const { rootName: currentRootName, suffix } = parseStepName(currentName)
+        if (currentRootName === rootName) {
+          highestSuffix = Math.max(highestSuffix, suffix)
+        }
       }
       if (
         currentStep.stepId === AutomationActionStepId.BRANCH &&
@@ -99,7 +114,10 @@ export const getNewStepName = (automation, step) => {
         currentStep.inputs.children
       ) {
         Object.values(currentStep.inputs.children).forEach(branchSteps => {
-          count += countExistingSteps(branchSteps)
+          highestSuffix = Math.max(
+            highestSuffix,
+            countExistingSteps(branchSteps)
+          )
         })
       }
       if (
@@ -107,18 +125,34 @@ export const getNewStepName = (automation, step) => {
         currentStep.inputs &&
         Array.isArray(currentStep.inputs.children)
       ) {
-        count += countExistingSteps(currentStep.inputs.children)
+        highestSuffix = Math.max(
+          highestSuffix,
+          countExistingSteps(currentStep.inputs.children)
+        )
       }
-      return count
+      return highestSuffix
     }, 0)
   }
-  let existingCount = 0
-  if (automation?.definition) {
-    existingCount = countExistingSteps(automation.definition.steps)
-  }
-  if (existingCount === 0) {
-    return baseName
+
+  return automation?.definition
+    ? countExistingSteps(automation.definition.steps)
+    : 0
+}
+
+export const getDuplicateStepName = (automation, stepOrName) => {
+  const name =
+    typeof stepOrName === "string" ? stepOrName : stepOrName?.name || ""
+  const { rootName, suffix } = parseStepName(name)
+  const highestExistingSuffix = getHighestExistingSuffix(automation, rootName)
+  return `${rootName} ${Math.max(highestExistingSuffix, suffix) + 1}`
+}
+
+export const getNewStepName = (automation, step) => {
+  const { rootName, suffix: currentSuffix } = parseStepName(step.name)
+  const highestExistingSuffix = getHighestExistingSuffix(automation, rootName)
+  if (highestExistingSuffix === 0) {
+    return step.name
   }
 
-  return `${baseName} ${existingCount + 1}`
+  return `${rootName} ${Math.max(highestExistingSuffix, currentSuffix) + 1}`
 }

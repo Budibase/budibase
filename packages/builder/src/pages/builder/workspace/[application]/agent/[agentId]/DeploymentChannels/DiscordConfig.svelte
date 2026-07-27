@@ -1,8 +1,15 @@
 <script lang="ts">
-  import { Body, CopyInput, Input, notifications } from "@budibase/bbui"
-  import { DiscordCommands } from "@budibase/shared-core"
+  import {
+    Body,
+    Checkbox,
+    CopyInput,
+    Input,
+    notifications,
+  } from "@budibase/bbui"
+  import { ChatCommands } from "@budibase/shared-core"
   import type { Agent, SyncAgentDiscordCommandsResponse } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
+  import { deploymentStore } from "@/stores/builder"
   import ChannelConfigLayout from "./ChannelConfigLayout.svelte"
   import {
     DEFAULT_IDLE_TIMEOUT_MINUTES,
@@ -10,8 +17,9 @@
     toOptionalValue,
   } from "./utils"
 
-  const DISCORD_ASK_COMMAND = DiscordCommands.ASK
-  const DISCORD_NEW_COMMAND = DiscordCommands.NEW
+  const DISCORD_ASK_COMMAND = ChatCommands.ASK
+  const DISCORD_NEW_COMMAND = ChatCommands.NEW
+  const DISCORD_LINK_COMMAND = ChatCommands.LINK
   const AI_CONFIG_REQUIRED_MESSAGE =
     "Select an AI model in Agent config before enabling Discord."
 
@@ -24,6 +32,7 @@
     botToken: "",
     guildId: "",
     idleTimeoutMinutes: DEFAULT_IDLE_TIMEOUT_MINUTES,
+    requireUserLink: true,
   })
 
   let syncing = $state(false)
@@ -80,6 +89,7 @@
       guildId: integration?.guildId || "",
       idleTimeoutMinutes:
         integration?.idleTimeoutMinutes || DEFAULT_IDLE_TIMEOUT_MINUTES,
+      requireUserLink: integration?.requireUserLink !== false,
     }
     syncResult = undefined
     draftAgentId = currentAgent._id
@@ -103,6 +113,7 @@
           interactionsEndpointUrl:
             agent.discordIntegration?.interactionsEndpointUrl,
           idleTimeoutMinutes: toOptionalIdleTimeout(draft.idleTimeoutMinutes),
+          requireUserLink: draft.requireUserLink,
         },
       })
     } catch (error) {
@@ -133,6 +144,9 @@
     try {
       await saveDiscordIntegration()
       syncResult = await agentsStore.syncDiscordCommands(agent._id)
+      if (agent.live) {
+        await deploymentStore.publishApp()
+      }
       notifications.success("Discord channel enabled")
     } catch (error) {
       console.error(error)
@@ -183,6 +197,12 @@
       type="number"
       bind:value={draft.idleTimeoutMinutes}
     />
+    <div class="field-grid-leading">
+      <Checkbox
+        bind:value={draft.requireUserLink}
+        text="Require users to link a Budibase account"
+      />
+    </div>
   {/snippet}
 
   {#snippet response()}
@@ -197,10 +217,15 @@
     {#if isConnected}
       <div class="synced-info">
         <Body size="S"
-          >Commands synced: /{DISCORD_ASK_COMMAND} and /{DISCORD_NEW_COMMAND}</Body
+          >Commands synced: /{DISCORD_ASK_COMMAND}, /{DISCORD_NEW_COMMAND}, and
+          /{DISCORD_LINK_COMMAND}</Body
         >
       </div>
-      <CopyInput label="Webhook URL" value={webhookUrl} disabled />
+      <CopyInput
+        label="Interactions endpoint URL"
+        value={webhookUrl}
+        disabled
+      />
     {/if}
   {/snippet}
 </ChannelConfigLayout>

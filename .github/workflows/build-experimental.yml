@@ -1,0 +1,122 @@
+name: Build Experimental Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_suffix:
+        type: string
+        description: "Optional suffix for the image tag (e.g. 'ceph-fix'). If empty, the branch name is used."
+        required: false
+
+concurrency:
+  group: build-experimental-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  HUSKY: 0
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Compute image tag
+        id: tag
+        run: |
+          if [ -n "${{ github.event.inputs.tag_suffix }}" ]; then
+            RAW="${{ github.event.inputs.tag_suffix }}"
+          else
+            RAW="${GITHUB_REF_NAME}"
+          fi
+          # Sanitise for Docker tag: replace any character not in [a-zA-Z0-9._-]
+          SAFE="$(echo "$RAW" | tr '/' '-' | sed 's/[^a-zA-Z0-9._-]/-/g' | cut -c1-128)"
+          TAG="experimental-${SAFE}"
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "sha_tag=$TAG-$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "Image tags: $TAG, $TAG-$SHORT_SHA"
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+
+      - name: Restore hoisted node_modules cache
+        id: cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: yarn --frozen-lockfile
+
+      - name: Build
+        run: yarn build
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_API_KEY }}
+
+      - name: Build and push apps image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: packages/server/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            BUDIBASE_VERSION=${{ steps.tag.outputs.tag }}
+            GIT_COMMIT_SHA=${{ github.sha }}
+          tags: |
+            budibase/apps:${{ steps.tag.outputs.tag }}
+            budibase/apps:${{ steps.tag.outputs.sha_tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push worker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: packages/worker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            BUDIBASE_VERSION=${{ steps.tag.outputs.tag }}
+            GIT_COMMIT_SHA=${{ github.sha }}
+          tags: |
+            budibase/worker:${{ steps.tag.outputs.tag }}
+            budibase/worker:${{ steps.tag.outputs.sha_tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Print image references
+        run: |
+          echo "### Experimental images pushed" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Image | Tags |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| \`budibase/apps\` | \`${{ steps.tag.outputs.tag }}\`, \`${{ steps.tag.outputs.sha_tag }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| \`budibase/worker\` | \`${{ steps.tag.outputs.tag }}\`, \`${{ steps.tag.outputs.sha_tag }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Pull with:" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "docker pull budibase/apps:${{ steps.tag.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "docker pull budibase/worker:${{ steps.tag.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"

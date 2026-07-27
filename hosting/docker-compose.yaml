@@ -104,7 +104,7 @@ services:
 
   couchdb-service:
     restart: unless-stopped
-    image: budibase/database:2.0.0
+    image: budibase/database:2.1.0
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}
@@ -122,7 +122,7 @@ services:
 
   litellm-service:
     restart: unless-stopped
-    image: docker.litellm.ai/berriai/litellm:1.80.15-stable.1
+    image: ghcr.io/berriai/litellm:main-v1.83.10-stable
     ports:
       - "${LITELLM_PORT:-4000}:4000"
     volumes:

@@ -36,4 +36,5 @@ publicRoutes
   .get("/api/client/chatapps", controller.fetchClientChatApps)
   .get("/api/applications/:appId/definition", controller.fetchAppDefinition)
   .get("/api/applications", controller.fetch)
+  .get("/api/microfrontend/bootstrap", controller.fetchMicrofrontendBootstrap)
   .get("/api/applications/:appId/appPackage", controller.fetchAppPackage)

@@ -10,7 +10,6 @@
   } from "@budibase/types"
   import {
     AutomationSelector,
-    CronBuilder,
     DateSelector,
     ExecuteScript,
     ExecuteScriptV2,
@@ -20,6 +19,7 @@
     PropField,
     QueryParamSelector,
     SchemaSetup,
+    ScheduleBuilder,
     TableSelector,
   } from "."
   import { getFieldLabel, getInputValue } from "./layouts"
@@ -174,11 +174,18 @@
       fullWidth: true,
     },
     [SchemaFieldTypes.CRON]: {
-      comp: CronBuilder,
+      comp: ScheduleBuilder,
+      wrapped: false,
       props: (opts: FieldProps = {} as FieldProps) => {
         const { value } = opts
         return {
           cronExpression: value,
+          timezone: getInputValue(inputData, "timezone") || "UTC",
+          onchange: (update: FormUpdate) => {
+            if (block) {
+              automationStore.actions.requestUpdate(update, block)
+            }
+          },
         }
       },
     },
@@ -376,15 +383,15 @@
       return customType
     }
 
+    // Enum Field
+    if (field.type === AutomationIOType.STRING && field.enum) {
+      return SchemaFieldTypes.ENUM
+    }
+
     // Direct type map
     const fieldType = field.type && typeToSchema[field.type]
     if (fieldType) {
       return fieldType
-    }
-
-    // Enum Field
-    if (field.type === AutomationIOType.STRING && field.enum) {
-      return SchemaFieldTypes.ENUM
     }
 
     // JS V2
@@ -438,7 +445,11 @@
           />
         {/key}
       {:else}
-        <PropField label={title} fullWidth labelTooltip={config.tooltip || ""}>
+        <PropField
+          label={title}
+          fullWidth
+          labelTooltip={config.tooltip || field.tooltip || ""}
+        >
           {#key shouldRerender(field, block, key)}
             <svelte:component
               this={config.comp}
@@ -458,3 +469,6 @@
     {/if}
   {/if}
 {/each}
+
+<style>
+</style>

@@ -185,3 +185,10 @@ export const getWorkspaceFavouriteParams = (
     otherProps
   )
 }
+
+export const getProjectParams = (
+  projectId?: string | null,
+  otherProps: Partial<DatabaseQueryOpts> = {}
+) => {
+  return getDocParams(DocumentType.PROJECT, projectId, otherProps)
+}

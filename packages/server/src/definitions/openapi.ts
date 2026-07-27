@@ -1488,7 +1488,7 @@ export interface components {
                          * @description The type of search operation which is being performed.
                          * @enum {string}
                          */
-                        operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "range";
+                        operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "notOneOf" | "range";
                         /** @description The field in the view to perform the search on. */
                         field?: string;
                         /** @description The value to search for - the type will depend on the operator in use. */
@@ -1507,7 +1507,7 @@ export interface components {
                              * @description The type of search operation which is being performed.
                              * @enum {string}
                              */
-                            operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "range";
+                            operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "notOneOf" | "range";
                             /** @description The field in the view to perform the search on. */
                             field?: string;
                             /** @description The value to search for - the type will depend on the operator in use. */
@@ -1596,7 +1596,7 @@ export interface components {
                              * @description The type of search operation which is being performed.
                              * @enum {string}
                              */
-                            operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "range";
+                            operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "notOneOf" | "range";
                             /** @description The field in the view to perform the search on. */
                             field?: string;
                             /** @description The value to search for - the type will depend on the operator in use. */
@@ -1615,7 +1615,7 @@ export interface components {
                                  * @description The type of search operation which is being performed.
                                  * @enum {string}
                                  */
-                                operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "range";
+                                operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "notOneOf" | "range";
                                 /** @description The field in the view to perform the search on. */
                                 field?: string;
                                 /** @description The value to search for - the type will depend on the operator in use. */
@@ -1706,7 +1706,7 @@ export interface components {
                              * @description The type of search operation which is being performed.
                              * @enum {string}
                              */
-                            operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "range";
+                            operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "notOneOf" | "range";
                             /** @description The field in the view to perform the search on. */
                             field?: string;
                             /** @description The value to search for - the type will depend on the operator in use. */
@@ -1725,7 +1725,7 @@ export interface components {
                                  * @description The type of search operation which is being performed.
                                  * @enum {string}
                                  */
-                                operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "range";
+                                operator?: "equal" | "notEqual" | "empty" | "notEmpty" | "fuzzy" | "string" | "contains" | "notContains" | "containsAny" | "oneOf" | "notOneOf" | "range";
                                 /** @description The field in the view to perform the search on. */
                                 field?: string;
                                 /** @description The value to search for - the type will depend on the operator in use. */

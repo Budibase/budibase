@@ -250,6 +250,12 @@
             "value": "stretch",
             "barIcon": "MoveLeftRight",
             "barTitle": "Align stretched horizontally"
+          },
+          {
+            "label": "Space Around",
+            "value": "space-around",
+            "barIcon": "arrows-out-line-horizontal",
+            "barTitle": "Align space around horizontally"
           }
         ],
         "defaultValue": "stretch",
@@ -289,6 +295,12 @@
             "value": "stretch",
             "barIcon": "MoveUpDown",
             "barTitle": "Align stretched vertically"
+          },
+          {
+            "label": "Space Around",
+            "value": "space-around",
+            "barIcon": "arrows-out-line-vertical",
+            "barTitle": "Align space around vertically"
           }
         ],
         "defaultValue": "top",
@@ -455,6 +467,31 @@
             "key": "collapsedText",
             "dependsOn": "collapsed",
             "placeholder": "Action"
+          },
+          {
+            "type": "select",
+            "label": "Collapsed button size",
+            "key": "collapsedSize",
+            "dependsOn": "collapsed",
+            "options": [
+              {
+                "label": "Small",
+                "value": "S"
+              },
+              {
+                "label": "Medium",
+                "value": "M"
+              },
+              {
+                "label": "Large",
+                "value": "L"
+              },
+              {
+                "label": "Extra Large",
+                "value": "XL"
+              }
+            ],
+            "defaultValue": "M"
           },
           {
             "type": "select",
@@ -3455,6 +3492,327 @@
       ]
     }
   },
+  "urlfield": {
+    "name": "URL Field",
+    "icon": "link",
+    "styles": ["size"],
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 60
+    },
+    "settings": [
+      {
+        "type": "field/string",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue",
+        "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Run on input",
+        "key": "runOnInput",
+        "dependsOn": "onChange",
+        "info": "Trigger actions by 'input' events as well as 'change' events",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
+        "type": "validation/url",
+        "label": "Validation",
+        "key": "validation",
+        "defaultValue": [
+          {
+            "id": "default-url-validation",
+            "type": "string",
+            "constraint": "url",
+            "value": ["http", "https"],
+            "error": "Must be a valid URL"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Alignment",
+        "key": "align",
+        "defaultValue": "left",
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "Left",
+            "value": "left",
+            "barIcon": "TextAlignLeft",
+            "barTitle": "Align left"
+          },
+          {
+            "label": "Center",
+            "value": "center",
+            "barIcon": "TextAlignCenter",
+            "barTitle": "Align center"
+          },
+          {
+            "label": "Right",
+            "value": "right",
+            "barIcon": "TextAlignRight",
+            "barTitle": "Align right"
+          },
+          {
+            "label": "Justify",
+            "value": "justify",
+            "barIcon": "TextAlignJustify",
+            "barTitle": "Justify text"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Columns",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "number-square-one",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "number-square-two",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "number-square-three",
+            "barTitle": "3 columns"
+          }
+        ]
+      }
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "string"
+        }
+      ]
+    }
+  },
+  "emailfield": {
+    "name": "Email Field",
+    "icon": "envelope",
+    "styles": ["size"],
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 60
+    },
+    "settings": [
+      {
+        "type": "field/string",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue",
+        "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Run on input",
+        "key": "runOnInput",
+        "dependsOn": "onChange",
+        "info": "Trigger actions by 'input' events as well as 'change' events",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
+        "type": "validation/email",
+        "label": "Validation",
+        "key": "validation",
+        "defaultValue": [
+          {
+            "id": "default-email-validation",
+            "type": "string",
+            "constraint": "email",
+            "error": "Must be a valid email address"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Alignment",
+        "key": "align",
+        "defaultValue": "left",
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "Left",
+            "value": "left",
+            "barIcon": "TextAlignLeft",
+            "barTitle": "Align left"
+          },
+          {
+            "label": "Center",
+            "value": "center",
+            "barIcon": "TextAlignCenter",
+            "barTitle": "Align center"
+          },
+          {
+            "label": "Right",
+            "value": "right",
+            "barIcon": "TextAlignRight",
+            "barTitle": "Align right"
+          },
+          {
+            "label": "Justify",
+            "value": "justify",
+            "barIcon": "TextAlignJustify",
+            "barTitle": "Justify text"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Columns",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "number-square-one",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "number-square-two",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "number-square-three",
+            "barTitle": "3 columns"
+          }
+        ]
+      }
+    ],
+    "context": {
+      "type": "static",
+      "values": [
+        {
+          "label": "Value",
+          "key": "value",
+          "type": "string"
+        }
+      ]
+    }
+  },
   "numberfield": {
     "name": "Number Field",
     "icon": "number-circle-nine",
@@ -3509,6 +3867,12 @@
         "dependsOn": "onChange",
         "info": "Trigger actions by 'input' events as well as 'change' events",
         "defaultValue": false
+      },
+      {
+        "type": "number",
+        "label": "Debounce (ms)",
+        "key": "debounceMs",
+        "defaultValue": 500
       },
       {
         "type": "boolean",
@@ -4129,6 +4493,38 @@
         "dependsOn": {
           "setting": "optionsType",
           "value": "checkbox"
+        }
+      },
+      {
+        "type": "select",
+        "label": "Box columns",
+        "key": "columns",
+        "defaultValue": 1,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 1,
+            "barIcon": "number-square-one",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 2,
+            "barIcon": "number-square-two",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 3,
+            "barIcon": "number-square-three",
+            "barTitle": "3 columns"
+          }
+        ],
+        "dependsOn": {
+          "setting": "direction",
+          "value": "horizontal"
         }
       },
       {
@@ -5140,17 +5536,6 @@
         "key": "helpText"
       },
       {
-        "type": "text",
-        "label": "Extensions",
-        "key": "extensions"
-      },
-      {
-        "type": "number",
-        "label": "Max attachments",
-        "key": "maximum",
-        "min": 1
-      },
-      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -5160,12 +5545,6 @@
             "key": "value"
           }
         ]
-      },
-      {
-        "type": "boolean",
-        "label": "Compact",
-        "key": "compact",
-        "defaultValue": false
       },
       {
         "type": "boolean",
@@ -5209,7 +5588,7 @@
       },
       {
         "section": true,
-        "name": "Uploader Text Settings",
+        "name": "Dropzone settings",
         "dependsOn": [
           {
             "setting": "disabled",
@@ -5217,6 +5596,23 @@
           }
         ],
         "settings": [
+          {
+            "type": "text",
+            "label": "Extensions",
+            "key": "extensions"
+          },
+          {
+            "type": "number",
+            "label": "Max attachments",
+            "key": "maximum",
+            "min": 1
+          },
+          {
+            "type": "boolean",
+            "label": "Compact",
+            "key": "compact",
+            "defaultValue": false
+          },
           {
             "type": "text",
             "label": "Title Text",
@@ -5272,11 +5668,6 @@
         "key": "helpText"
       },
       {
-        "type": "text",
-        "label": "Extensions",
-        "key": "extensions"
-      },
-      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -5286,12 +5677,6 @@
             "key": "value"
           }
         ]
-      },
-      {
-        "type": "boolean",
-        "label": "Compact",
-        "key": "compact",
-        "defaultValue": false
       },
       {
         "type": "boolean",
@@ -5335,7 +5720,7 @@
       },
       {
         "section": true,
-        "name": "Uploader Text Settings",
+        "name": "Dropzone settings",
         "dependsOn": [
           {
             "setting": "disabled",
@@ -5343,6 +5728,17 @@
           }
         ],
         "settings": [
+          {
+            "type": "text",
+            "label": "Extensions",
+            "key": "extensions"
+          },
+          {
+            "type": "boolean",
+            "label": "Compact",
+            "key": "compact",
+            "defaultValue": false
+          },
           {
             "type": "text",
             "label": "Title Text",
@@ -5652,6 +6048,52 @@
         "type": "validation/attachment",
         "label": "Validation",
         "key": "validation"
+      },
+      {
+        "section": true,
+        "name": "Dropzone settings",
+        "dependsOn": [
+          {
+            "setting": "disabled",
+            "value": false
+          }
+        ],
+        "settings": [
+          {
+            "type": "text",
+            "label": "Extensions",
+            "key": "extensions"
+          },
+          {
+            "type": "boolean",
+            "label": "Compact",
+            "key": "compact",
+            "defaultValue": false
+          },
+          {
+            "type": "text",
+            "label": "Title Text",
+            "key": "titleText",
+            "dependsOn": {
+              "setting": "compact",
+              "value": false
+            }
+          },
+          {
+            "type": "text",
+            "label": "Upload text",
+            "key": "clickText"
+          },
+          {
+            "type": "text",
+            "label": "Sub text",
+            "key": "addText",
+            "dependsOn": {
+              "setting": "compact",
+              "value": false
+            }
+          }
+        ]
       }
     ],
     "context": {
@@ -7533,13 +7975,13 @@
               {
                 "label": "Column",
                 "value": "column",
-                "barIcon": "TableSelectColumn",
+                "barIcon": "rows-plus-bottom",
                 "barTitle": "Column layout"
               },
               {
                 "label": "Row",
                 "value": "row",
-                "barIcon": "TableSelectRow",
+                "barIcon": "columns-plus-right",
                 "barTitle": "Row layout"
               }
             ],
@@ -8108,6 +8550,7 @@
     "illegalChildren": ["section", "sidepanel", "modal"],
     "showEmptyState": false,
     "draggable": false,
+    "styles": ["background"],
     "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action.",
     "settings": [
       {
@@ -8115,6 +8558,28 @@
         "key": "ignoreClicksOutside",
         "label": "Ignore clicks outside",
         "defaultValue": false
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "small",
+        "options": [
+          { "label": "Small", "value": "small" },
+          { "label": "Medium", "value": "medium" },
+          { "label": "Large", "value": "large" },
+          { "label": "Fullscreen", "value": "fullscreen" }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Position",
+        "key": "position",
+        "defaultValue": "right",
+        "options": [
+          { "label": "Left", "value": "left" },
+          { "label": "Right", "value": "right" }
+        ]
       },
       {
         "type": "event",
@@ -8504,6 +8969,16 @@
         "dependsOn": {
           "setting": "table.type",
           "value": ["table", "viewV2"]
+        }
+      },
+      {
+        "type": "boolean",
+        "label": "Row selection",
+        "key": "allowRowSelection",
+        "defaultValue": true,
+        "dependsOn": {
+          "setting": "allowDeleteRows",
+          "value": false
         }
       },
       {
@@ -9735,6 +10210,18 @@
               { "label": "Long", "value": "long" },
               { "label": "Narrow", "value": "narrow" }
             ]
+          },
+          {
+            "type": "select",
+            "label": "Weekday header format",
+            "key": "weekdayHeaderFormat",
+            "dependsOn": "showDayNames",
+            "options": [
+              { "label": "Narrow", "value": "narrow" },
+              { "label": "Short", "value": "short" },
+              { "label": "Long", "value": "long" }
+            ],
+            "defaultValue": "short"
           }
         ]
       },
@@ -9745,51 +10232,14 @@
         "defaultValue": true
       },
       {
-        "section": true,
-        "name": "Controls",
-        "dependsOn": "showButtons",
-        "settings": [
-          {
-            "type": "select",
-            "label": "Button type",
-            "key": "buttonType",
-            "options": [
-              { "label": "Action", "value": "action" },
-              { "label": "Primary", "value": "primary" }
-            ],
-            "defaultValue": "action"
-          },
-          {
-            "type": "text",
-            "label": "Month button Text",
-            "key": "monthText",
-            "defaultValue": "Month"
-          },
-          {
-            "type": "text",
-            "label": "Week button Text",
-            "key": "weekText",
-            "defaultValue": "Week"
-          },
-          {
-            "type": "text",
-            "label": "Day button Text",
-            "key": "dayText",
-            "defaultValue": "Day"
-          },
-          {
-            "type": "text",
-            "label": "Agenda button Text",
-            "key": "agendaText",
-            "defaultValue": "Agenda"
-          },
-          {
-            "type": "text",
-            "label": "Today button text",
-            "key": "todayText",
-            "defaultValue": "Today"
-          }
-        ]
+        "type": "select",
+        "label": "Button type",
+        "key": "buttonType",
+        "options": [
+          { "label": "Action", "value": "action" },
+          { "label": "Primary", "value": "primary" }
+        ],
+        "defaultValue": "action"
       }
     ]
   }

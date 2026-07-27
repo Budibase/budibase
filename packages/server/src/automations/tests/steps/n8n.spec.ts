@@ -3,7 +3,7 @@ import nock from "nock"
 import { createAutomationBuilder } from "../utilities/AutomationTestBuilder"
 import { HttpMethod } from "@budibase/types"
 
-describe("test the outgoing webhook action", () => {
+describe("n8n automation step", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
@@ -67,6 +67,44 @@ describe("test the outgoing webhook action", () => {
     expect(result.steps[0].outputs.httpStatus).toEqual(400)
     expect(result.steps[0].outputs.response).toEqual("Invalid payload JSON")
     expect(result.steps[0].outputs.success).toEqual(false)
+  })
+
+  it("should return a 400 when the webhook URL is missing", async () => {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .n8n({
+        url: "",
+        body: { value: JSON.stringify({ name: "Nora" }) },
+        method: HttpMethod.POST,
+        authorization: "",
+      })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs).toMatchObject({
+      httpStatus: 400,
+      response: "Missing Webhook URL",
+      success: false,
+    })
+  })
+
+  it("should return an error if something goes wrong in fetch", async () => {
+    nock("http://www.example.com").get("/n8n").replyWithError("n8n failed")
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .n8n({
+        url: "http://www.example.com/n8n",
+        method: HttpMethod.GET,
+        authorization: "Bearer test",
+        body: {},
+      })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs).toMatchObject({
+      httpStatus: 400,
+      success: false,
+    })
+    expect(result.steps[0].outputs.response).toContain("n8n failed")
   })
 
   it("should not append the body if the method is HEAD", async () => {

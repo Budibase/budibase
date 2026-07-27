@@ -16,7 +16,6 @@ packages/worker/src/constants/templates/tests/
 .github
 .vscode
 examples
-hosting
 i18n
 /.nx/cache
 /.nx/workspace-data

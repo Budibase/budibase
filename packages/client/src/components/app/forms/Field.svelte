@@ -174,7 +174,11 @@
           <slot />
           {#if fieldState.error}
             <div class="error">
-              <Icon name="warning" />
+              <Icon
+                name="warning"
+                size="XS"
+                color="var(--spectrum-semantic-negative-color-default, var(--spectrum-global-color-red-500))"
+              />
               <span>{fieldState.error}</span>
             </div>
           {:else if helpText}
@@ -213,7 +217,6 @@
     width: 100%;
   }
 
-  .error :global(svg),
   .helpText :global(svg) {
     width: 13px;
     margin-right: 6px;
@@ -222,20 +225,23 @@
   .error {
     display: flex;
     margin-top: var(--spectrum-global-dimension-size-75);
-    align-items: center;
-  }
-  .error :global(svg) {
-    color: var(
-      --spectrum-semantic-negative-color-default,
-      var(--spectrum-global-color-red-500)
-    );
-  }
-  .error span {
+    align-items: flex-start;
+    gap: 6px;
     color: var(
       --spectrum-semantic-negative-color-default,
       var(--spectrum-global-color-red-500)
     );
     font-size: var(--spectrum-global-dimension-font-size-75);
+    line-height: 1.3;
+  }
+  .error :global(i),
+  .error :global(svg) {
+    flex: 0 0 auto;
+    margin-top: 1px;
+  }
+  .error span {
+    color: inherit;
+    font-size: inherit;
   }
 
   .helpText {

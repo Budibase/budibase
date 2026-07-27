@@ -62,6 +62,7 @@ const environment = {
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: process.env.SMTP_PORT,
   SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
+  SMTP_REJECT_UNAUTHORIZED: process.env.SMTP_REJECT_UNAUTHORIZED,
   // other
   CHECKLIST_CACHE_TTL: parseIntSafe(process.env.CHECKLIST_CACHE_TTL) || 3600,
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
@@ -90,6 +91,8 @@ const environment = {
   LOGIN_MAX_FAILED_ATTEMPTS:
     parseIntSafe(process.env.LOGIN_MAX_FAILED_ATTEMPTS) || 5,
   LOGIN_LOCKOUT_SECONDS: parseIntSafe(process.env.LOGIN_LOCKOUT_SECONDS) || 900,
+  LOGIN_IP_LOCKOUT_LIMIT:
+    parseIntSafe(process.env.LOGIN_IP_LOCKOUT_LIMIT) || 10,
 
   // password reset rate limiting
   PASSWORD_RESET_RATE_EMAIL_LIMIT:

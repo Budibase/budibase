@@ -1,10 +1,16 @@
 <script>
-  import { Icon, ActionButton } from "@budibase/bbui"
+  import {
+    Icon,
+    ActionButton,
+    AbsTooltip,
+    TooltipPosition,
+  } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { isBuilderInputFocused } from "@/helpers"
 
   export let store
   export let showButtonGroup = false
+  export let showTooltips = false
 
   const handleKeyPress = e => {
     if (!(e.ctrlKey || e.metaKey)) {
@@ -36,28 +42,51 @@
 <div class="undo-redo" class:buttons={showButtonGroup}>
   {#if showButtonGroup}
     <div class="group">
-      <ActionButton
-        icon="arrow-counter-clockwise"
-        quiet
-        on:click={store.undo}
-        disabled={!$store.canUndo}
-      />
-      <ActionButton
-        icon="arrow-clockwise"
-        quiet
-        on:click={store.redo}
-        disabled={!$store.canRedo}
-      />
+      {#if showTooltips}
+        <AbsTooltip text="Undo" position={TooltipPosition.Top} offset={10}>
+          <ActionButton
+            icon="arrow-counter-clockwise"
+            quiet
+            on:click={store.undo}
+            disabled={!$store.canUndo}
+          />
+        </AbsTooltip>
+        <AbsTooltip text="Redo" position={TooltipPosition.Top} offset={10}>
+          <ActionButton
+            icon="arrow-clockwise"
+            quiet
+            on:click={store.redo}
+            disabled={!$store.canRedo}
+          />
+        </AbsTooltip>
+      {:else}
+        <ActionButton
+          icon="arrow-counter-clockwise"
+          quiet
+          on:click={store.undo}
+          disabled={!$store.canUndo}
+        />
+        <ActionButton
+          icon="arrow-clockwise"
+          quiet
+          on:click={store.redo}
+          disabled={!$store.canRedo}
+        />
+      {/if}
     </div>
   {:else}
     <Icon
       name="arrow-counter-clockwise"
+      tooltip={showTooltips ? "Undo" : undefined}
+      tooltipPosition={TooltipPosition.Top}
       hoverable
       on:click={store.undo}
       disabled={!$store.canUndo}
     />
     <Icon
       name="arrow-clockwise"
+      tooltip={showTooltips ? "Redo" : undefined}
+      tooltipPosition={TooltipPosition.Top}
       hoverable
       on:click={store.redo}
       disabled={!$store.canRedo}

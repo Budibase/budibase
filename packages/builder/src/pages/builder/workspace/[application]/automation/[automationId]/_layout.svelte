@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onDestroy } from "svelte"
   import { syncURLToState } from "@/helpers/urlStateSync"
   import * as routify from "@roxi/routify"
@@ -7,11 +7,17 @@
     automationStore,
     selectedAutomation,
   } from "@/stores/builder"
+  import ResizablePanel from "@/components/common/ResizablePanel.svelte"
   import StepPanel from "@/components/automation/AutomationBuilder/StepPanel.svelte"
   import SelectStepSidePanel from "@/components/automation/AutomationBuilder/FlowChart/SelectStepSidePanel.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import LogDetailsPanel from "@/components/automation/AutomationBuilder/FlowChart/LogDetailsPanel.svelte"
   import AutomationLogsPanel from "@/components/automation/AutomationBuilder/FlowChart/AutomationLogsPanel.svelte"
+  import type { AutomationLog } from "@budibase/types"
+
+  const SIDE_PANEL_STORAGE_KEY = "automation-side-panel-width"
+  const SIDE_PANEL_DEFAULT_WIDTH = 480
+  let sidePanelWidth = getSidePanelWidth()
 
   const { goto, params, url, redirect, isActive, page, layout } = routify
   $goto
@@ -24,7 +30,20 @@
 
   $: automationId = $selectedAutomation?.data?._id
   $: blockRefs = $selectedAutomation.blockRefs
-  $: builderStore.selectResource(automationId)
+  $: selectedNodeId = $automationStore.selectedNodeId
+  $: actionPanelOpen =
+    !!$automationStore.actionPanelBlock && !$automationStore.selectedNodeId
+  $: stepPanelOpen =
+    !!$automationStore.selectedNodeId &&
+    !!(
+      blockRefs[$automationStore.selectedNodeId] ||
+      $automationStore.selectedBranchNode
+    )
+  $: panelOpen = actionPanelOpen || stepPanelOpen
+  $: panelWidth = panelOpen ? sidePanelWidth : 0
+  $: if (automationId) {
+    builderStore.selectResource(automationId)
+  }
 
   const stopSyncing = syncURLToState({
     urlParam: "automationId",
@@ -36,10 +55,28 @@
     routify,
   })
 
-  onDestroy(stopSyncing)
+  onDestroy(() => {
+    stopSyncing?.()
+  })
+
+  function getSidePanelWidth() {
+    const saved = localStorage.getItem(SIDE_PANEL_STORAGE_KEY)
+    const parsedWidth = saved ? parseInt(saved, 10) : SIDE_PANEL_DEFAULT_WIDTH
+    return Number.isFinite(parsedWidth) && parsedWidth > 0
+      ? parsedWidth
+      : SIDE_PANEL_DEFAULT_WIDTH
+  }
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape" && $automationStore.actionPanelBlock) {
+      automationStore.actions.closeActionPanel()
+    }
+  }
 </script>
 
-<div class="wrapper">
+<svelte:window on:keydown={handleKeyDown} />
+
+<div class="wrapper" class:resizing-panel={$builderStore.isResizingPanel}>
   <TopBar
     breadcrumbs={[
       { text: "Automations", url: "../" },
@@ -48,21 +85,38 @@
     icon="path"
   />
   <div class="root">
-    <div class="content drawer-container">
+    <div
+      class="content drawer-container"
+      class:panel-open={panelOpen}
+      style:--automation-panel-width={`${panelWidth}px`}
+    >
       <slot />
     </div>
 
-    {#if blockRefs[$automationStore.selectedNodeId] && $automationStore.selectedNodeId}
-      <div class="step-panel">
-        <StepPanel />
+    {#if selectedNodeId && (blockRefs[selectedNodeId] || $automationStore.selectedBranchNode)}
+      <div class="step-panel-container">
+        <ResizablePanel
+          storageKey={SIDE_PANEL_STORAGE_KEY}
+          defaultWidth={SIDE_PANEL_DEFAULT_WIDTH}
+          minWidth={360}
+          maxWidthRatio={0.6}
+          position="right"
+          onResize={width => (sidePanelWidth = width)}
+        >
+          <div class="step-panel">
+            <StepPanel />
+          </div>
+        </ResizablePanel>
       </div>
     {/if}
 
-    {#if $automationStore.actionPanelBlock && !$automationStore.selectedNodeId}
-      <SelectStepSidePanel
-        block={$automationStore.actionPanelBlock}
-        onClose={() => automationStore.actions.closeActionPanel()}
-      />
+    {#if actionPanelOpen}
+      <div class="action-panel-container">
+        <SelectStepSidePanel
+          block={$automationStore.actionPanelBlock}
+          onClose={() => automationStore.actions.closeActionPanel()}
+        />
+      </div>
     {/if}
 
     {#if $automationStore.showLogsPanel && $selectedAutomation?.data}
@@ -71,7 +125,7 @@
           <div class="logs-panel">
             <AutomationLogsPanel
               automation={$selectedAutomation.data}
-              onSelectLog={log =>
+              onSelectLog={(log: AutomationLog) =>
                 automationStore.actions.selectLogForDetails(log)}
               selectedLog={$automationStore.selectedLog}
             />
@@ -98,13 +152,35 @@
     flex-direction: column;
     align-items: stretch;
     flex: 1 1 auto;
+    --automation-step-icon-data-color: var(--spectrum-global-color-blue-100);
+    --automation-step-icon-flow-logic-color: var(
+      --spectrum-global-color-indigo-100
+    );
+    --automation-step-icon-code-color: var(--spectrum-global-color-orange-100);
+    --automation-step-icon-trigger-color: var(--color-green-200);
+    --automation-step-icon-email-color: var(--spectrum-global-color-green-100);
+    --automation-step-icon-ai-color: var(--spectrum-global-color-blue-100);
+    --automation-step-icon-apps-color: var(--spectrum-global-color-orange-100);
+  }
+  :global(.spectrum--dark) .wrapper,
+  :global(.spectrum--darkest) .wrapper,
+  :global(.spectrum--midnight) .wrapper,
+  :global(.spectrum--nord) .wrapper {
+    --automation-step-icon-data-color: var(--color-blue-600);
+    --automation-step-icon-flow-logic-color: var(--color-purple-600);
+    --automation-step-icon-code-color: var(--color-orange-600);
+    --automation-step-icon-trigger-color: var(--color-green-600);
+    --automation-step-icon-email-color: var(--color-green-600);
+    --automation-step-icon-ai-color: var(--color-brand-500);
+    --automation-step-icon-apps-color: var(--color-orange-400);
   }
   .root {
     flex: 1 1 auto;
     display: grid;
     grid-auto-flow: column dense;
-    grid-template-columns: minmax(510px, 1fr) fit-content(500px);
+    grid-template-columns: minmax(510px, 1fr) auto;
     overflow: hidden;
+    position: relative;
   }
   .content {
     position: relative;
@@ -113,27 +189,53 @@
     justify-content: flex-start;
     align-items: stretch;
     overflow: auto;
+    min-width: 0;
+  }
+  .content.panel-open :global(.automation-heading) {
+    padding-right: calc(var(--spacing-l) + var(--automation-panel-width));
+  }
+  .step-panel-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 99;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    overflow: hidden;
+  }
+  .action-panel-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 99;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
   }
   .step-panel {
-    border-left: var(--border-light);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
     background-color: var(--background);
     overflow: auto;
-    grid-column: 3;
-    width: 400px;
-    max-width: 400px;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .logs-panel-container {
-    position: relative;
+    position: absolute;
+    top: 0;
+    right: 0;
     width: 400px;
     max-width: 400px;
     overflow: hidden;
     height: 100%;
     border-left: var(--border-light);
+    z-index: 98;
   }
 
   .panels-wrapper {
@@ -169,5 +271,11 @@
     align-items: stretch;
     background-color: var(--background);
     overflow: auto;
+  }
+  .wrapper.resizing-panel {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
   }
 </style>

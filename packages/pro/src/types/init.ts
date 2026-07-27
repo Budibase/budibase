@@ -1,4 +1,4 @@
-import { WorkspaceBackupContents } from "@budibase/types"
+import { Database, WorkspaceBackupContents } from "@budibase/types"
 
 export interface InitOpts {
   backups?: BackupInitOpts
@@ -10,24 +10,42 @@ export interface BackupInitOpts {
   processing: BackupProcessingOpts
 }
 
-export interface ImportAppConfig {
-  file: {
-    type: string
+export interface ImportWorkspaceConfig {
+  file?: {
+    type?: string
     path: string
+    password?: string
   }
-  key: string
+  key?: string
 }
 
-type ExportAppFn = (devAppId: string, opts: { tar: boolean }) => Promise<string>
-type ImportAppFn = (
-  devAppId: string,
-  db: any,
-  config: ImportAppConfig
+export interface ImportWorkspaceOpts {
+  updateAttachmentColumns?: boolean
+  importObjStoreContents?: boolean
+  objectStoreAppId?: string
+  preserveLiteLLMConfig?: boolean
+}
+
+export type ExportWorkspaceFn = (
+  devWorkspaceId: string,
+  opts: {
+    tar: boolean
+    excludeRows?: boolean
+    encryptPassword?: string
+    exportPath?: string
+    filter?: string
+  }
 ) => Promise<string>
-type StatsFn = (devAppId: string) => Promise<WorkspaceBackupContents>
+export type ImportWorkspaceFn = (
+  targetWorkspaceId: string,
+  destinationDb: Database,
+  config: ImportWorkspaceConfig,
+  opts?: ImportWorkspaceOpts
+) => Promise<string>
+type StatsFn = (devWorkspaceId: string) => Promise<WorkspaceBackupContents>
 
 export interface BackupProcessingOpts {
-  exportAppFn: ExportAppFn
-  importAppFn: ImportAppFn
+  exportWorkspaceFn: ExportWorkspaceFn
+  importWorkspaceFn: ImportWorkspaceFn
   statsFn: StatsFn
 }

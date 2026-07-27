@@ -1,5 +1,6 @@
 <script lang="ts">
   import {
+    Badge,
     Body,
     Button,
     Helpers,
@@ -8,8 +9,9 @@
     Modal,
     ModalContent,
   } from "@budibase/bbui"
-  import { Utils } from "@budibase/frontend-core"
+  import { Constants, Utils } from "@budibase/frontend-core"
   import type { ChatAppAgent, ConversationStarter } from "@budibase/types"
+  import RoleSelect from "@/components/common/RoleSelect.svelte"
   import type { AgentListItem } from "./types"
 
   type ConversationStarterItem = ConversationStarter & {
@@ -27,10 +29,15 @@
     _agentId: string,
     _starters: ConversationStarter[]
   ) => void
+  export let onUpdateAccessRole: (
+    _agentId: string,
+    _roleId?: string
+  ) => void = () => {}
   export let onClose: () => void
 
   let modal: Modal | undefined
   let conversationStarters: ConversationStarterItem[] = []
+  let selectedAccessRole = Constants.Roles.BASIC
   let newStarter = ""
   let lastAgentId: string | undefined
 
@@ -50,6 +57,7 @@
       id: Helpers.uuid(),
       prompt: starter.prompt,
     }))
+    selectedAccessRole = selectedAgentConfig?.roleId || Constants.Roles.BASIC
     newStarter = ""
   }
 
@@ -114,6 +122,17 @@
     newStarter = ""
     debouncedSave()
   }
+
+  const handleAccessRoleChange = (value: string) => {
+    selectedAccessRole = value
+
+    const targetAgentId = selectedAgent?.agentId || selectedAgentConfig?.agentId
+    if (!targetAgentId) {
+      return
+    }
+
+    onUpdateAccessRole(targetAgentId, value)
+  }
 </script>
 
 <Modal
@@ -127,6 +146,13 @@
     showConfirmButton={false}
     showCancelButton={false}
   >
+    <div class="deprecation-notice">
+      <Badge orange size="S">Deprecated</Badge>
+      <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+        Agent Chat will be removed in a future release.
+      </Body>
+    </div>
+
     {#if showDefaultControls && !isDefault}
       <div class="agent-settings">
         <div class="agent-settings-default">
@@ -139,6 +165,17 @@
         {/if}
       </div>
     {/if}
+
+    <div class="agent-settings-section">
+      <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+        Access role
+      </Body>
+      <RoleSelect
+        value={selectedAccessRole}
+        allowPublic={false}
+        on:change={event => handleAccessRoleChange(event.detail)}
+      />
+    </div>
 
     <div class="agent-settings-section">
       <Body size="XS" color="var(--spectrum-global-color-gray-600)">
@@ -185,6 +222,17 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
+  }
+
+  .deprecation-notice {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-s);
+  }
+
+  .deprecation-notice :global(p) {
+    margin: 0;
   }
 
   .agent-settings-default {

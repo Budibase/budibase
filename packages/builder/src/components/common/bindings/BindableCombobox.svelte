@@ -15,6 +15,8 @@
   export let options = undefined
   export let appendBindingsAsOptions = true
   export let error
+  export let required = false
+  export let helpText = undefined
 
   const dispatch = createEventDispatcher()
 
@@ -53,6 +55,8 @@
     {placeholder}
     options={allOptions}
     {error}
+    {required}
+    {helpText}
   />
 </div>
 

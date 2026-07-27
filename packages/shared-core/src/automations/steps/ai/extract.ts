@@ -10,7 +10,7 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationStepDefinition = {
-  name: "Extract Document Data",
+  name: "Extract document data",
   icon: "Document",
   tagline: "Extract structured data from documents using AI",
   description:

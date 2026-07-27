@@ -15,6 +15,7 @@
   export let min = null
   export let max = null
   export let step = 1
+  export let hideButtons = true
   export let helpText = null
 
   const dispatch = createEventDispatcher()
@@ -36,6 +37,7 @@
     {min}
     {max}
     {step}
+    {hideButtons}
     on:change={onChange}
     on:click
     on:input

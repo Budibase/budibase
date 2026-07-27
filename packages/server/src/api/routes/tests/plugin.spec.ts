@@ -24,20 +24,94 @@ jest.mock("../../controllers/plugin/github", () => {
 import fs from "fs"
 import os from "os"
 import path from "path"
-import { events, objectStore, tenancy } from "@budibase/backend-core"
+import { events, objectStore, tenancy, withEnv } from "@budibase/backend-core"
 import { Plugin, PluginSource, PluginType } from "@budibase/types"
 import nock from "nock"
+import * as tar from "tar"
 import * as setup from "./utilities"
 import * as github from "../../controllers/plugin/github"
+import { budibaseTempDir } from "../../../utilities/budibaseDir"
 
 const mockUploadDirectory = objectStore.uploadDirectory as jest.Mock
 const mockDeleteFolder = objectStore.deleteFolder as jest.Mock
+const getTempDirsWithPrefix = (prefix: string) =>
+  fs
+    .readdirSync(budibaseTempDir())
+    .filter(dir => dir.startsWith(prefix))
+    .sort()
+
+const createDatasourcePluginTarball = async (opts: {
+  pluginName: string
+  js: string
+}) => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), `${opts.pluginName}-`))
+  const pluginDir = path.join(tempDir, "plugin")
+  const tarPath = path.join(tempDir, `${opts.pluginName}.tar.gz`)
+
+  fs.mkdirSync(pluginDir)
+  fs.writeFileSync(
+    path.join(pluginDir, "package.json"),
+    JSON.stringify({
+      name: opts.pluginName,
+      version: "1.0.0",
+      description: "Test datasource plugin",
+    })
+  )
+  fs.writeFileSync(
+    path.join(pluginDir, "schema.json"),
+    JSON.stringify({
+      type: PluginType.DATASOURCE,
+      metadata: {},
+      hash: `${opts.pluginName}-hash`,
+      schema: {
+        docs: "https://docs.budibase.com",
+        friendlyName: "Test datasource",
+        type: "API",
+        description: "Performs a basic HTTP call to a URL",
+        datasource: {
+          url: {
+            type: "string",
+            required: true,
+          },
+        },
+        query: {
+          read: {
+            type: "fields",
+            fields: {
+              queryString: {
+                type: "string",
+                required: false,
+              },
+            },
+          },
+        },
+      },
+    })
+  )
+  fs.writeFileSync(path.join(pluginDir, "test.js"), opts.js)
+
+  await tar.create(
+    {
+      gzip: true,
+      file: tarPath,
+      cwd: pluginDir,
+    },
+    ["package.json", "schema.json", "test.js"]
+  )
+
+  return {
+    tarPath,
+    tempDir,
+  }
+}
 
 describe("/plugins", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    setup.afterAll()
+  })
 
   beforeAll(async () => {
     await config.init()
@@ -50,16 +124,19 @@ describe("/plugins", () => {
 
   const createPlugin = async (
     pluginType: "default" | "encoded" = "default",
-    status?: number
+    status?: number,
+    uploadFilename?: string
   ) => {
-    const filename =
+    const fixtureFilename =
       pluginType === "encoded"
         ? "_.-encoded-plugin-1.0.0.tar.gz"
         : "comment-box-1.0.2.tar.gz"
 
     return request
       .post(`/api/plugin/upload`)
-      .attach("file", `src/api/routes/tests/data/${filename}`)
+      .attach("file", `src/api/routes/tests/data/${fixtureFilename}`, {
+        filename: uploadFilename || undefined,
+      })
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(status ? status : 200)
@@ -89,6 +166,124 @@ describe("/plugins", () => {
       let res = await createPlugin(undefined, 400)
       expect(res.body.message).toEqual("Failed to import plugin: Error")
       expect(events.plugin.imported).toHaveBeenCalledTimes(0)
+    })
+
+    it("should ignore traversal sequences in uploaded filenames", async () => {
+      const res = await createPlugin(
+        "default",
+        undefined,
+        "../../../etc/cron.d/plugin.tar.gz"
+      )
+
+      expect(res.body.plugins[0]._id).toEqual("plg_comment-box")
+      expect(events.plugin.imported).toHaveBeenCalledTimes(1)
+    })
+
+    it("should clean up temp directories when upload extraction fails", async () => {
+      const invalidTarballPath = path.join(
+        os.tmpdir(),
+        `invalid-plugin-${Date.now()}.tar.gz`
+      )
+      const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+      const uploadFilename = `broken-plugin-${uploadId}.tar.gz`
+      const tempDirPrefix = `${uploadFilename.replace(".tar.gz", "")}-`
+      fs.writeFileSync(invalidTarballPath, "not a tarball")
+
+      try {
+        await request
+          .post("/api/plugin/upload")
+          .attach("file", invalidTarballPath, {
+            filename: uploadFilename,
+          })
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(400)
+
+        expect(getTempDirsWithPrefix(tempDirPrefix)).toEqual([])
+      } finally {
+        fs.unlinkSync(invalidTarballPath)
+      }
+    })
+
+    it("should upload a datasource plugin without executing top-level JS", async () => {
+      const pluginId = "plg_throwing-datasource"
+      const { tarPath, tempDir } = await createDatasourcePluginTarball({
+        pluginName: "throwing-datasource",
+        js: 'throw new Error("executed during upload")\nmodule.exports = {}\n',
+      })
+
+      try {
+        const res = await request
+          .post("/api/plugin/upload")
+          .attach("file", tarPath)
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(200)
+
+        expect(res.body.plugins[0]._id).toEqual(pluginId)
+        expect(events.plugin.imported).toHaveBeenCalledTimes(1)
+      } finally {
+        await config.doInTenant(async () => {
+          const db = tenancy.getGlobalDB()
+          const existing = await db.tryGet<Plugin>(pluginId)
+          if (existing) {
+            await db.remove(existing)
+          }
+        })
+        fs.rmSync(tempDir, { recursive: true, force: true })
+      }
+    })
+
+    it("should upload a datasource plugin with valid CommonJS top-level return", async () => {
+      const pluginId = "plg_returning-datasource"
+      const { tarPath, tempDir } = await createDatasourcePluginTarball({
+        pluginName: "returning-datasource",
+        js: "module.exports = {}\nreturn\n",
+      })
+
+      try {
+        const res = await request
+          .post("/api/plugin/upload")
+          .attach("file", tarPath)
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(200)
+
+        expect(res.body.plugins[0]._id).toEqual(pluginId)
+        expect(events.plugin.imported).toHaveBeenCalledTimes(1)
+      } finally {
+        await config.doInTenant(async () => {
+          const db = tenancy.getGlobalDB()
+          const existing = await db.tryGet<Plugin>(pluginId)
+          if (existing) {
+            await db.remove(existing)
+          }
+        })
+        fs.rmSync(tempDir, { recursive: true, force: true })
+      }
+    })
+
+    it("should reject a datasource plugin with invalid JS syntax", async () => {
+      const { tarPath, tempDir } = await createDatasourcePluginTarball({
+        pluginName: "invalid-datasource",
+        js: "module.exports = {\n",
+      })
+
+      try {
+        const res = await request
+          .post("/api/plugin/upload")
+          .attach("file", tarPath)
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(400)
+
+        expect(res.body.message).toContain(
+          "Failed to import plugin: JS invalid:"
+        )
+        expect(events.plugin.imported).toHaveBeenCalledTimes(0)
+      } finally {
+        fs.rmSync(tempDir, { recursive: true, force: true })
+      }
     })
   })
 
@@ -238,23 +433,66 @@ describe("/plugins", () => {
       expect(plugin._id).toEqual("plg_budibase-component")
       expect(events.plugin.imported).toHaveBeenCalled()
     })
+
+    it("should clean up temp directories after a successful npm import", async () => {
+      const packageName = `budibase-component-cleanup-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 10)}`
+      const tempDirPrefix = `${packageName}-`
+
+      nock("https://registry.npmjs.org")
+        .get(`/${packageName}`)
+        .reply(200, {
+          name: packageName,
+          "dist-tags": {
+            latest: "1.0.0",
+          },
+          versions: {
+            "1.0.0": {
+              dist: {
+                tarball: `https://registry.npmjs.org/${packageName}/-/${packageName}-1.0.1.tgz`,
+              },
+            },
+          },
+        })
+        .get(`/${packageName}/-/${packageName}-1.0.1.tgz`)
+        .replyWithFile(
+          200,
+          "src/api/routes/tests/data/budibase-component-1.0.1.tgz"
+        )
+
+      await config.api.plugin.create({
+        source: PluginSource.NPM,
+        url: `https://www.npmjs.com/package/${packageName}`,
+      })
+
+      expect(getTempDirsWithPrefix(tempDirPrefix)).toEqual([])
+    })
   })
 
   describe("url", () => {
     it("should be able to create a plugin from a URL", async () => {
-      nock("https://www.someurl.com")
-        .get("/comment-box/comment-box-1.0.2.tar.gz")
-        .replyWithFile(
-          200,
-          "src/api/routes/tests/data/comment-box-1.0.2.tar.gz"
-        )
+      await withEnv(
+        {
+          // Set blacklist to empty to allow the request to go through, since the url is mocked in this test we don't want to perform DNS lookups.
+          BLACKLIST_IPS: "",
+        },
+        async () => {
+          nock("https://8.8.8.8")
+            .get("/comment-box/comment-box-1.0.2.tar.gz")
+            .replyWithFile(
+              200,
+              "src/api/routes/tests/data/comment-box-1.0.2.tar.gz"
+            )
 
-      const { plugin } = await config.api.plugin.create({
-        source: PluginSource.URL,
-        url: "https://www.someurl.com/comment-box/comment-box-1.0.2.tar.gz",
-      })
-      expect(plugin._id).toEqual("plg_comment-box")
-      expect(events.plugin.imported).toHaveBeenCalledTimes(1)
+          const { plugin } = await config.api.plugin.create({
+            source: PluginSource.URL,
+            url: "https://8.8.8.8/comment-box/comment-box-1.0.2.tar.gz",
+          })
+          expect(plugin._id).toEqual("plg_comment-box")
+          expect(events.plugin.imported).toHaveBeenCalledTimes(1)
+        }
+      )
     })
   })
 
@@ -281,6 +519,7 @@ describe("/plugins", () => {
             },
           },
           directory: dir,
+          cleanupDirectory: dir,
         }
       })
 

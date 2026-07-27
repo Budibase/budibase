@@ -1,10 +1,22 @@
-import { ViewV2 } from "@budibase/types"
+import { Table, ViewV2 } from "@budibase/types"
 import { utils, dataFilters } from "@budibase/shared-core"
 import { cloneDeep, isPlainObject } from "lodash"
 import { HTTPError } from "@budibase/backend-core"
 
 function isEmptyObject(obj: any) {
   return obj && isPlainObject(obj) && Object.keys(obj).length === 0
+}
+
+// A view's display column can reference a table column that no longer
+// exists, e.g. dropped from an external datasource. There is nothing to
+// display in that case - fall back to the table's display column.
+export function ensureValidPrimaryDisplay<
+  T extends Omit<ViewV2, "id" | "version">,
+>(view: T, table: Table): T {
+  if (view.primaryDisplay && !table.schema[view.primaryDisplay]) {
+    view.primaryDisplay = table.primaryDisplay
+  }
+  return view
 }
 
 export function ensureQueryUISet(viewArg: Readonly<ViewV2>): ViewV2 {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { getErrorMessage } from "@/helpers/errors"
   import { agentsStore } from "@/stores/portal"
   import { notifications, Input, ModalContent, Modal } from "@budibase/bbui"
   import type { Agent } from "@budibase/types"
@@ -29,7 +30,7 @@
       })
       notifications.success(`Agent ${name} updated successfully`)
     } catch (error) {
-      notifications.error("Error saving agent")
+      notifications.error(getErrorMessage(error) || "Error saving agent")
     }
   }
 

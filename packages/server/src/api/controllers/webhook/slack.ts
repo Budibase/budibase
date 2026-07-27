@@ -1,33 +1,149 @@
 import { context, HTTPError } from "@budibase/backend-core"
+import { ChatCommands } from "@budibase/shared-core"
 import type { SlackEvent } from "@chat-adapter/slack"
 import { createSlackAdapter } from "@chat-adapter/slack"
-import type {
-  ChatConversation,
-  ChatConversationChannel,
-  Ctx,
-  SlackConversationScope,
+import {
+  AgentChannelProvider,
+  type ChatConversation,
+  type ChatConversationChannel,
+  type Ctx,
+  type SlackConversationScope,
+  type WebhookChatCompleteResult,
 } from "@budibase/types"
-import { Chat, type Message, type Thread } from "chat"
+import {
+  Chat,
+  type ActionEvent,
+  type Message,
+  type SlashCommandEvent,
+  type Thread,
+} from "chat"
 import sdk from "../../../sdk"
+import { escalationProcessor } from "../../../escalation/processor"
 import { handleChatMessage } from "./chatHandler"
 import { getSlackState } from "./chatState"
+import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
-import { pickLatestConversation } from "./utils"
+import {
+  pickLatestConversation,
+  resolveEscalationWorkspaceId,
+  toAbsoluteUrl,
+} from "./utils"
 
 const SLACK_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
 
+const formatSlackLinkLabel = (value: string) =>
+  value.replace(/[<>|]/g, " ").replace(/\s+/g, " ").trim()
+
+const preserveSlackLiteralSegments = (
+  text: string,
+  formatter: (text: string) => string
+) => {
+  const literals: string[] = []
+  const placeholderPrefix = "\u0000SLACK_LITERAL_"
+  const placeholderSuffix = "\u0000"
+  const protectedText = text.replace(
+    /```[\s\S]*?```|`[^`\n]*`|\[[^\]\n]+\]\([^\n)]+\)/g,
+    literal => {
+      const index = literals.push(literal) - 1
+      return `${placeholderPrefix}${index}${placeholderSuffix}`
+    }
+  )
+
+  return formatter(protectedText).replace(
+    new RegExp(`${placeholderPrefix}(\\d+)${placeholderSuffix}`, "g"),
+    (_placeholder, index) => literals[Number(index)] || ""
+  )
+}
+
+const markdownStrike = /~~(?=\S)([^\n]*?\S)~~/g
+const markdownItalicAsterisk = /(^|[^*])\*(?![\s*])([^*\n]*?\S)\*(?!\*)/g
+const markdownBoldAsterisk = /\*\*(?=\S)([^\n]*?\S)\*\*/g
+const markdownBoldUnderscore = /__(?=\S)([^\n]*?\S)__/g
+
+const formatSlackInlineMrkdwn = (text: string) =>
+  text
+    .replace(markdownStrike, "~$1~")
+    .replace(markdownItalicAsterisk, "$1_$2_")
+    .replace(markdownBoldAsterisk, "*$1*")
+    .replace(markdownBoldUnderscore, "*$1*")
+
+const formatSlackLineMrkdwn = (line: string) => {
+  const heading = line.match(/^#{1,6}\s+(.+?)\s*#*\s*$/)
+  if (!heading) {
+    const bullet = line.match(/^(\s*)[-*+]\s+(.+)$/)
+    if (bullet) {
+      return `${bullet[1]}• ${formatSlackInlineMrkdwn(bullet[2])}`
+    }
+    return formatSlackInlineMrkdwn(line)
+  }
+
+  const formattedHeading = formatSlackInlineMrkdwn(heading[1].trim())
+  if (!formattedHeading) {
+    return ""
+  }
+
+  if (formattedHeading.startsWith("*") && formattedHeading.endsWith("*")) {
+    return formattedHeading
+  }
+  return `*${formattedHeading}*`
+}
+
+export const formatSlackMrkdwn = (text: string) =>
+  preserveSlackLiteralSegments(text, value =>
+    value.split("\n").map(formatSlackLineMrkdwn).join("\n")
+  )
+
+export const formatSlackAssistantReply = async ({
+  agentId,
+  result,
+  isDirectMessage,
+}: {
+  agentId: string
+  result: WebhookChatCompleteResult
+  isDirectMessage?: boolean
+}) => {
+  const assistantText = formatSlackMrkdwn(result.assistantText || "")
+  if (result.allowKnowledgeSourceDownload === false || !isDirectMessage) {
+    return assistantText
+  }
+
+  const sources = result.ragSources || []
+  const sourceLinks: string[] = []
+  for (const source of sources) {
+    if (!source.fileId) {
+      continue
+    }
+
+    try {
+      const signedUrl = await sdk.ai.rag.getFileUrlForAgent(
+        agentId,
+        source.fileId
+      )
+      const absoluteUrl = await toAbsoluteUrl(signedUrl)
+      const label =
+        formatSlackLinkLabel(source.filename || "") || "Knowledge source"
+      sourceLinks.push(`- <${absoluteUrl}|${label}>`)
+    } catch (error) {
+      console.error("Failed to generate Slack RAG source link", error)
+    }
+  }
+
+  if (!sourceLinks.length) {
+    return assistantText
+  }
+
+  return `${assistantText}\n\nSources:\n${sourceLinks.join("\n")}`
+}
+
 export const isSlackDirectMessage = (event?: SlackEvent) =>
   event?.channel_type === "im" || !!event?.channel?.startsWith("D")
 
-export const stripSlackMentions = (text: string) =>
-  text
+export const extractSlackMessageContent = (text?: string) =>
+  (text || "")
     .replace(/<@[A-Z0-9]+(?:\|[^>]+)?>/gi, " ")
     .replace(/\s+/g, " ")
     .trim()
-
-export const extractSlackMessageContent = (text?: string) =>
-  stripSlackMentions(text || "")
 
 export const matchesSlackConversationScope = ({
   chat,
@@ -40,7 +156,7 @@ export const matchesSlackConversationScope = ({
   return !!(
     chat.chatAppId === scope.chatAppId &&
     chat.agentId === scope.agentId &&
-    ch?.provider === "slack" &&
+    ch?.provider === AgentChannelProvider.SLACK &&
     ch?.channelId === scope.channelId &&
     (ch?.threadId || undefined) === scope.threadId &&
     ch?.externalUserId === scope.externalUserId
@@ -66,45 +182,56 @@ export const pickSlackConversation = ({
     nowMs,
   })
 
-const createSlackMessageHandler = ({
+type SlackReplyTarget = PrivatePostTarget
+
+type SlackCommand = typeof ChatCommands.ASK | typeof ChatCommands.LINK
+
+type SlackInput = {
+  target: SlackReplyTarget
+  privateTarget: SlackReplyTarget
+  author: Message["author"]
+  command: SlackCommand
+  content: string
+  channelId: string
+  externalUserId: string
+  isDirectMessage: boolean
+  teamId?: string
+  threadId?: string
+}
+
+const createSlackInputHandler = ({
   workspaceId,
   chatAppId,
   agentId,
+  channelEnabled,
   idleTimeoutMinutes,
+  requireUserLink,
 }: {
   workspaceId: string
   chatAppId: string
   agentId: string
+  channelEnabled: boolean
   idleTimeoutMinutes?: number
+  requireUserLink?: boolean
 }) => {
-  return async (thread: Thread, message: Message) => {
-    const raw = message.raw as SlackEvent | undefined
-    const content = extractSlackMessageContent(message.text || "")
-    if (!content) {
-      await thread.post("Send a message to continue.")
-      return
-    }
-
-    const channelId = raw?.channel?.trim() || thread.channelId?.trim() || ""
-    const threadId = thread.id?.trim()
-    const externalUserId = raw?.user?.trim() || message.author.userId
-    const displayName =
-      message.author.fullName || message.author.userName || externalUserId
-    const teamId = raw?.team_id?.trim() || raw?.team?.trim()
-
-    if (!channelId) {
-      await thread.post("Missing Slack channel information.")
-      return
-    }
-    if (!externalUserId) {
-      await thread.post("Missing Slack user information.")
-      return
-    }
+  return async ({
+    target,
+    privateTarget,
+    author,
+    command,
+    content,
+    channelId,
+    externalUserId,
+    isDirectMessage,
+    teamId,
+    threadId,
+  }: SlackInput) => {
+    const displayName = author.fullName || author.userName || externalUserId
 
     const channel: ChatConversationChannel = {
-      provider: "slack",
+      provider: AgentChannelProvider.SLACK,
       channelId,
-      threadId: threadId || undefined,
+      threadId,
       teamId,
       externalUserId,
       externalUserName: displayName,
@@ -114,25 +241,50 @@ const createSlackMessageHandler = ({
       chatAppId,
       agentId,
       channelId,
-      threadId: threadId || undefined,
+      threadId,
       externalUserId,
     }
 
     try {
       await handleChatMessage({
-        reply: async (text: string) => {
-          await thread.post(text)
+        reply: async text => {
+          await target.post(text)
         },
+        replyLinkPrompt: async prompt => {
+          const delivery = await postLinkPromptPrivately({
+            target: privateTarget,
+            user: author,
+            text: prompt.text,
+            linkUrl: prompt.linkUrl,
+          })
+          if (delivery.usedDirectMessageFallback) {
+            await target.post("I sent you a DM with your Budibase link.")
+            return
+          }
+          if (!delivery.delivered) {
+            await target.post(
+              "I couldn't send a private Budibase link. Please try again in a direct message."
+            )
+          }
+        },
+        formatAssistantReply: async result =>
+          await formatSlackAssistantReply({
+            agentId,
+            result,
+            isDirectMessage,
+          }),
         workspaceId,
         chatAppId,
         agentId,
-        provider: "slack",
-        command: "ask",
+        provider: AgentChannelProvider.SLACK,
+        channelEnabled,
+        command,
         content,
         user: { externalUserId, displayName },
         channel,
         scope,
         idleTimeoutMinutes,
+        requireUserLink,
       })
     } catch (error) {
       console.error("Slack webhook processing failed", error)
@@ -140,8 +292,38 @@ const createSlackMessageHandler = ({
         error instanceof HTTPError
           ? error.message
           : SLACK_FALLBACK_ERROR_MESSAGE
-      await thread.post(msg)
+      await target.post(msg)
     }
+  }
+}
+
+const createSlackMessageHandler = (
+  handleSlackInput: ReturnType<typeof createSlackInputHandler>
+) => {
+  return async (thread: Thread, message: Message) => {
+    const raw = message.raw as SlackEvent | undefined
+    const content = extractSlackMessageContent(raw?.text || message.text)
+    if (!content) {
+      await thread.post("Send a message to continue.")
+      return
+    }
+    if (!message.author.userId) {
+      await thread.post("Missing Slack message metadata.")
+      return
+    }
+
+    await handleSlackInput({
+      target: thread as SlackReplyTarget,
+      privateTarget: thread.channel as SlackReplyTarget,
+      author: message.author,
+      command: ChatCommands.ASK,
+      content,
+      channelId: thread.channelId,
+      threadId: thread.id || undefined,
+      externalUserId: message.author.userId,
+      isDirectMessage: isSlackDirectMessage(raw),
+      teamId: raw?.team_id || raw?.team,
+    })
   }
 }
 
@@ -156,15 +338,26 @@ export async function slackWebhook(
     ctx,
     providerName: "Slack",
     createWebhookHandler: async ({ workspaceId, chatAppId, agentId }) => {
-      const { integration, idleTimeoutMinutes } =
-        await context.doInWorkspaceContext(workspaceId, async () => {
-          const agent = await sdk.ai.agents.getOrThrow(agentId)
-          return {
-            integration:
-              sdk.ai.deployments.slack.validateSlackIntegration(agent),
-            idleTimeoutMinutes: agent.slackIntegration?.idleTimeoutMinutes,
-          }
-        })
+      const {
+        integration,
+        idleTimeoutMinutes,
+        channelEnabled,
+        requireUserLink,
+      } = await context.doInWorkspaceContext(workspaceId, async () => {
+        const agent = await sdk.ai.agents.getOrThrow(agentId)
+        return {
+          integration: sdk.ai.deployments.slack.validateSlackIntegration(agent),
+          idleTimeoutMinutes: agent.slackIntegration?.idleTimeoutMinutes,
+          requireUserLink: agent.slackIntegration?.requireUserLink,
+          channelEnabled:
+            !!agent.slackIntegration?.messagingEndpointUrl?.trim(),
+        }
+      })
+
+      const state = await getSlackState()
+      if (!state) {
+        throw new Error("Slack state adapter is required")
+      }
 
       const chat = new Chat({
         userName: "Budibase",
@@ -174,16 +367,117 @@ export async function slackWebhook(
             signingSecret: integration.signingSecret,
           }),
         },
-        state: await getSlackState(),
+        state,
         logger: "silent",
       })
 
-      const handler = createSlackMessageHandler({
+      const handleSlackInput = createSlackInputHandler({
         workspaceId,
         chatAppId,
         agentId,
+        channelEnabled,
         idleTimeoutMinutes,
+        requireUserLink,
       })
+      const handler = createSlackMessageHandler(handleSlackInput)
+
+      chat.onSlashCommand(
+        `/${ChatCommands.LINK}`,
+        async (event: SlashCommandEvent) => {
+          const raw = event.raw as Record<string, string | undefined>
+          const channelId = raw.channel_id
+          if (!channelId || !event.user.userId) {
+            await event.channel.post("Missing Slack command metadata.")
+            return
+          }
+          await handleSlackInput({
+            target: event.channel as SlackReplyTarget,
+            privateTarget: event.channel as SlackReplyTarget,
+            author: event.user,
+            command: ChatCommands.LINK,
+            content: event.text,
+            channelId,
+            externalUserId: event.user.userId,
+            isDirectMessage: isSlackDirectMessage({
+              type: "message",
+              channel: raw.channel_id,
+            }),
+            teamId: raw.team_id,
+          })
+        }
+      )
+      // TODO: Make these a strict set
+      chat.onAction(async (event: ActionEvent) => {
+        if (!event.actionId.startsWith("esc_")) {
+          return
+        }
+
+        let parsed: {
+          escalationId: string
+          notificationDocId: string
+        }
+        try {
+          parsed = JSON.parse(event.value ?? "")
+        } catch {
+          console.error("Escalation action: invalid button value", event.value)
+          return
+        }
+        // The appId in the button value is untrusted; resolve which environment
+        // of the verified webhook route's app actually holds the notification.
+        const { escalationId, notificationDocId } = parsed
+
+        const slackResponse = {
+          actionId: event.actionId,
+          user: event.user,
+          messageId: event.messageId,
+          threadId: event.threadId,
+          channel: (event.raw as any)?.channel,
+        }
+
+        try {
+          const appId = await resolveEscalationWorkspaceId(
+            workspaceId,
+            notificationDocId
+          )
+          if (!appId) {
+            console.warn("Escalation action: notification not found", {
+              workspaceId,
+              notificationDocId,
+            })
+            return
+          }
+
+          const result = await context.doInContext(appId, async () => {
+            // We can respond with closed or
+            return sdk.escalations.respond(
+              escalationId,
+              notificationDocId,
+              slackResponse,
+              (id, response) => escalationProcessor.resolve(id, response)
+            )
+          })
+
+          // TODO: Can these responses be more dynamic/informative
+          if (event.thread) {
+            const msg =
+              result.status === "closed"
+                ? "Escalation already closed."
+                : "Response recorded."
+            await event.thread.post(msg)
+          }
+        } catch (error) {
+          console.error("Escalation action: failed to record response", {
+            escalationId,
+            notificationDocId,
+            workspaceId,
+            message: error instanceof Error ? error.message : String(error),
+          })
+          if (event.thread) {
+            await event.thread.post("Failed to record response.")
+          }
+        }
+      })
+
       chat.onNewMention(handler)
       chat.onSubscribedMessage(handler)
       chat.onNewMessage(/./, async (thread, message) => {

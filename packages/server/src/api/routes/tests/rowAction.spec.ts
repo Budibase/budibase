@@ -9,6 +9,7 @@ import {
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { automations } from "@budibase/pro"
 import {
+  BasicOperator,
   CreateRowActionRequest,
   Datasource,
   DocumentType,
@@ -766,6 +767,50 @@ describe("/rowsActions", () => {
           automationId: rowAction.automationId,
         }),
       ])
+    })
+
+    it("rejects triggering a row outside the allowed view filters", async () => {
+      await config.api.row.save(tableId, { name: "visible" })
+      const hiddenRow = await config.api.row.save(tableId, { name: "hidden" })
+      const filteredViewId = (
+        await config.api.viewV2.create({
+          tableId,
+          name: generator.guid(),
+          queryUI: {
+            groups: [
+              {
+                filters: [
+                  {
+                    operator: BasicOperator.EQUAL,
+                    field: "name",
+                    value: "visible",
+                  },
+                ],
+              },
+            ],
+          },
+        })
+      ).id
+
+      await config.api.rowAction.setViewPermission(
+        tableId,
+        filteredViewId,
+        rowAction.id
+      )
+      await config.publish()
+
+      await config.api.rowAction.trigger(
+        filteredViewId,
+        rowAction.id,
+        { rowId: hiddenRow._id! },
+        {
+          status: 404,
+          body: { message: "Row not found" },
+        }
+      )
+
+      const automationLogs = await getAutomationLogs()
+      expect(automationLogs).toEqual([])
     })
 
     describe("role permission checks", () => {

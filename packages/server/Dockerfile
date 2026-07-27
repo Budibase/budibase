@@ -68,6 +68,7 @@ ARG BUDIBASE_VERSION
 ARG GIT_COMMIT_SHA
 # Ensuring the version argument is sent
 RUN test -n "$BUDIBASE_VERSION"
+RUN jq --arg v "$BUDIBASE_VERSION" '.version = $v' package.json > tmp.json && mv tmp.json package.json
 ENV BUDIBASE_VERSION=$BUDIBASE_VERSION
 ENV DD_GIT_REPOSITORY_URL=https://github.com/budibase/budibase
 ENV DD_GIT_COMMIT_SHA=$GIT_COMMIT_SHA

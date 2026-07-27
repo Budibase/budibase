@@ -12,21 +12,22 @@ export const CLOUD_FREE_LICENSE: License = {
     usage: {
       monthly: {
         ...quotas.queries(UNLIMITED),
-        ...quotas.automations(200),
+        ...quotas.automations(UNLIMITED),
         ...quotas.budibaseAICredits(0),
-        ...quotas.actions(UNLIMITED),
+        ...quotas.actions(5000),
       },
       static: {
-        ...quotas.apps(UNLIMITED),
+        ...quotas.apps(1),
         ...quotas.rows(2000),
         ...quotas.users(5),
         ...quotas.creators(5),
         ...quotas.userGroups(0),
-        ...quotas.plugins(10),
+        ...quotas.plugins(UNLIMITED),
         ...quotas.customAIConfigurations(0),
       },
     },
     constant: {
+      ...quotas.agentLogRetentionDays(1),
       ...quotas.automationLogRetentionDays(1),
       ...quotas.appBackupRetentionDays(0),
     },
@@ -53,15 +54,16 @@ export const SELF_FREE_LICENSE: License = {
       },
       static: {
         ...quotas.rows(UNLIMITED),
-        ...quotas.apps(UNLIMITED),
+        ...quotas.apps(1),
         ...quotas.users(UNLIMITED),
         ...quotas.creators(UNLIMITED),
         ...quotas.userGroups(0),
-        ...quotas.plugins(10),
+        ...quotas.plugins(UNLIMITED),
         ...quotas.customAIConfigurations(0),
       },
     },
     constant: {
+      ...quotas.agentLogRetentionDays(1),
       ...quotas.automationLogRetentionDays(1),
       ...quotas.appBackupRetentionDays(0),
     },
@@ -97,6 +99,7 @@ export const UNLIMITED_LICENSE: License = {
       },
     },
     constant: {
+      ...quotas.agentLogRetentionDays(UNLIMITED),
       ...quotas.automationLogRetentionDays(UNLIMITED),
       ...quotas.appBackupRetentionDays(UNLIMITED),
     },

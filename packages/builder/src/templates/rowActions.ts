@@ -44,7 +44,7 @@ export const getRowActionButtonTemplates = async ({
   if (ds?.type !== "table" && ds?.type !== "viewV2") {
     return []
   }
-  const resourceId = ds.id || ds.tableId
+  const resourceId = ds.type === "viewV2" ? ds.id : ds.tableId
   if (!resourceId) {
     return []
   }

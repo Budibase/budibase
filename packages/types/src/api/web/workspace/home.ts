@@ -1,7 +1,7 @@
 export interface GetWorkspaceHomeMetricsResponse {
   totalUsers: number
-  automationRunsThisMonth: number
-  agentActionsThisMonth: number
+  operationsThisMonth: number
+  budibaseAICreditsThisMonth: number
   periodStart: string
   periodEnd: string
 }

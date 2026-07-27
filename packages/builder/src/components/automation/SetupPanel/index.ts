@@ -6,6 +6,7 @@ import DateSelector from "./DateSelector.svelte"
 import SchemaSetup from "./SchemaSetup.svelte"
 import TableSelector from "./TableSelector.svelte"
 import CronBuilder from "./CronBuilder.svelte"
+import ScheduleBuilder from "./ScheduleBuilder.svelte"
 import FieldSelector from "./FieldSelector.svelte"
 import FileSelector from "./FileSelector.svelte"
 import RowSelector from "./RowSelector.svelte"
@@ -22,6 +23,7 @@ export {
   SchemaSetup,
   TableSelector,
   CronBuilder,
+  ScheduleBuilder,
   FieldSelector,
   FileSelector,
   RowSelector,

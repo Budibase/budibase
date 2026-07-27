@@ -6,12 +6,14 @@
   import { parseDate } from "../../helpers"
   import { writable } from "svelte/store"
   import { getLocaleStartDayOfWeek, type Weekday } from "./DatePicker/utils"
+  import { resolveTranslationGroup } from "@budibase/shared-core"
 
   export let enableTime: boolean | undefined = false
   export let timeOnly: boolean | undefined = false
   export let ignoreTimezones: boolean | undefined = false
   const browserStartDayOfWeek = getLocaleStartDayOfWeek()
   export let startDayOfWeek: Weekday | undefined = undefined
+  export let calendarLabels = resolveTranslationGroup("calendar")
   export let value: string[] | undefined = []
 
   const dispatch = createEventDispatcher()
@@ -77,6 +79,7 @@
     {timeOnly}
     {ignoreTimezones}
     startDayOfWeek={resolvedStartDayOfWeek}
+    {calendarLabels}
   />
   <div class="arrow">
     <Icon name="caret-right" />
@@ -88,6 +91,7 @@
     {timeOnly}
     {ignoreTimezones}
     startDayOfWeek={resolvedStartDayOfWeek}
+    {calendarLabels}
   />
 </div>
 

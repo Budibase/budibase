@@ -5,16 +5,20 @@ import {
   HTTPError,
   logging,
   objectStore,
+  features,
 } from "@budibase/backend-core"
 import chunk from "lodash/chunk"
 import {
   AnyDocument,
+  Agent,
   Automation,
   Datasource,
   DocumentType,
   INTERNAL_TABLE_SOURCE_ID,
   FieldType,
   DatabaseQueryOpts,
+  FeatureFlag,
+  Project,
   Row,
   RowAttachment,
   WithDocMetadata,
@@ -29,14 +33,43 @@ import {
 import sdk from "../.."
 import { ObjectStoreBuckets } from "../../../constants"
 import { extractTableIdFromRowActionsID, getRowParams } from "../../../db/utils"
+import {
+  getProjectIds,
+  hasProject,
+  type ProjectAssignable,
+  withProjectIds,
+} from "../projects/utils"
 
 export async function getResourcesInfo(): Promise<
   Record<string, { dependencies: UsedResource[] }>
 > {
   const automations = await sdk.automations.fetch()
+  const agents = await sdk.ai.agents.fetch()
+  const projectsEnabled = await features.isEnabled(FeatureFlag.PROJECTS)
+  const projects = projectsEnabled ? await sdk.projects.fetch() : []
   const workspaceApps = await sdk.workspaceApps.fetch()
 
   const dependencies: Record<string, { dependencies: UsedResource[] }> = {}
+  const addDependency = (forResource: string, dependency: UsedResource) => {
+    dependencies[forResource] ??= { dependencies: [] }
+    if (
+      !dependencies[forResource].dependencies.find(
+        resource => resource.id === dependency.id
+      )
+    ) {
+      dependencies[forResource].dependencies.push(dependency)
+    }
+  }
+
+  const addDependencies = (
+    forResource: string,
+    nextDependencies: UsedResource[]
+  ) => {
+    nextDependencies.forEach(dependency =>
+      addDependency(forResource, dependency)
+    )
+  }
+
   interface BaseSearchTarget {
     id: string
     idToSearch: string
@@ -80,6 +113,15 @@ export async function getResourcesInfo(): Promise<
       idToSearch: automation._id!,
       name: automation.name!,
       type: ResourceType.AUTOMATION,
+    }))
+  )
+
+  baseSearchTargets.push(
+    ...agents.map<BaseSearchTarget>(agent => ({
+      id: agent._id!,
+      idToSearch: agent._id!,
+      name: agent.name!,
+      type: ResourceType.AGENT,
     }))
   )
 
@@ -128,15 +170,14 @@ export async function getResourcesInfo(): Promise<
     possibleUsages: AnyDocument
   ) => {
     const json = JSON.stringify(possibleUsages)
-    dependencies[forResource] ??= { dependencies: [] }
     for (const search of baseSearchTargets) {
       if (
         json.includes(search.idToSearch) &&
-        !dependencies[forResource].dependencies.find(
+        !dependencies[forResource]?.dependencies.find(
           resource => resource.id === search.id
         )
       ) {
-        dependencies[forResource].dependencies.push({
+        addDependency(forResource, {
           id: search.id,
           name: search.name,
           type: search.type,
@@ -147,9 +188,9 @@ export async function getResourcesInfo(): Promise<
           ...(dependencies[search.id]?.dependencies || []),
         ].filter(
           ({ id }) =>
-            !dependencies[forResource].dependencies.some(r => r.id === id)
+            !dependencies[forResource]?.dependencies.some(r => r.id === id)
         )
-        dependencies[forResource].dependencies.push(...toAdd)
+        addDependencies(forResource, toAdd)
       }
     }
   }
@@ -169,6 +210,10 @@ export async function getResourcesInfo(): Promise<
     searchForUsages(query._id!, query)
   }
 
+  for (const agent of agents) {
+    searchForUsages(agent._id!, agent)
+  }
+
   // Search in workspace app screens
   const screens = await sdk.screens.fetch()
   const workspaceAppScreens: Record<string, Screen[]> = {}
@@ -185,9 +230,9 @@ export async function getResourcesInfo(): Promise<
 
   for (const workspaceApp of workspaceApps) {
     const screens = workspaceAppScreens[workspaceApp._id!] || []
-    dependencies[workspaceApp._id!] ??= { dependencies: [] }
-    dependencies[workspaceApp._id!].dependencies.push(
-      ...screens.map(s => ({
+    addDependencies(
+      workspaceApp._id!,
+      screens.map(s => ({
         id: s._id!,
         name: s.name!,
         type: ResourceType.SCREEN,
@@ -219,12 +264,90 @@ export async function getResourcesInfo(): Promise<
       if (!automation) {
         continue
       }
-      dependencies[rowActionResource.id] ??= { dependencies: [] }
-      dependencies[rowActionResource.id].dependencies.push({
+      addDependency(rowActionResource.id, {
         id: automation._id,
         name: automation.name,
         type: ResourceType.AUTOMATION,
       })
+    }
+  }
+
+  if (projects.length) {
+    type NamedDoc = { _id?: string; name?: string }
+
+    const buildUsedResource = (
+      doc: NamedDoc,
+      type: ResourceType
+    ): UsedResource => ({
+      id: doc._id!,
+      name: doc.name!,
+      type,
+    })
+
+    const collectTransitiveDependencies = (
+      resourceId: string,
+      seen = new Set<string>()
+    ): UsedResource[] => {
+      if (seen.has(resourceId)) {
+        return []
+      }
+      seen.add(resourceId)
+
+      // dependencies[resourceId] lists resources referenced in that resource's JSON
+      // (e.g. a query referencing a table). Those references can themselves reference
+      // other resources, so we walk the graph recursively. seen breaks cycles.
+      return (dependencies[resourceId]?.dependencies || []).flatMap(
+        dependency => [
+          dependency,
+          ...collectTransitiveDependencies(dependency.id, seen),
+        ]
+      )
+    }
+
+    // Projects include direct members plus each member's transitive dependencies.
+    for (const project of projects.filter(
+      (doc): doc is Required<Pick<Project, "_id" | "name">> & Project =>
+        !!doc._id && !!doc.name
+    )) {
+      const directMembers: UsedResource[] = [
+        ...datasources
+          .filter(
+            datasource =>
+              datasource._id !== INTERNAL_TABLE_SOURCE_ID &&
+              (hasProject(datasource, project._id) ||
+                Object.values(datasource.entities || {}).some(table =>
+                  hasProject(table, project._id)
+                ))
+          )
+          .map(datasource =>
+            buildUsedResource(datasource, ResourceType.DATASOURCE)
+          ),
+        ...internalTables
+          .filter(table => hasProject(table, project._id))
+          .map(table => buildUsedResource(table, ResourceType.TABLE)),
+        ...queries
+          .filter(query => hasProject(query, project._id))
+          .map(query => buildUsedResource(query, ResourceType.QUERY)),
+        ...automations
+          .filter(automation => hasProject(automation, project._id))
+          .map(automation =>
+            buildUsedResource(automation, ResourceType.AUTOMATION)
+          ),
+        ...agents
+          .filter(agent => hasProject(agent, project._id))
+          .map(agent => buildUsedResource(agent, ResourceType.AGENT)),
+        ...workspaceApps
+          .filter(workspaceApp => hasProject(workspaceApp, project._id))
+          .map(workspaceApp =>
+            buildUsedResource(workspaceApp, ResourceType.WORKSPACE_APP)
+          ),
+      ]
+
+      addDependencies(project._id, directMembers)
+      // e.g. a project-assigned query may depend on a table, which depends on a datasource.
+      for (const member of directMembers) {
+        addDependencies(project._id, collectTransitiveDependencies(member.id))
+      }
     }
   }
 
@@ -243,6 +366,8 @@ async function getDestinationDb(toWorkspace: string) {
 }
 
 const resourceTypeIdPrefixes: Record<ResourceType, string> = {
+  [ResourceType.PROJECT]: prefixed(DocumentType.PROJECT),
+  [ResourceType.AGENT]: prefixed(DocumentType.AGENT),
   [ResourceType.DATASOURCE]: prefixed(DocumentType.DATASOURCE),
   [ResourceType.TABLE]: prefixed(DocumentType.TABLE),
   [ResourceType.ROW_ACTION]: prefixed(DocumentType.ROW_ACTIONS),
@@ -267,12 +392,28 @@ function isAutomation(doc: AnyDocument): doc is Automation {
   return type === ResourceType.AUTOMATION
 }
 
+function isAgent(doc: AnyDocument): doc is Agent {
+  if (!doc._id) {
+    return false
+  }
+  const type = getResourceType(doc._id)
+  return type === ResourceType.AGENT
+}
+
 function isWorkspaceApp(doc: AnyDocument): doc is WorkspaceApp {
   if (!doc._id) {
     return false
   }
   const type = getResourceType(doc._id)
   return type === ResourceType.WORKSPACE_APP
+}
+
+function isDatasource(doc: AnyDocument): doc is Datasource {
+  if (!doc._id) {
+    return false
+  }
+  const type = getResourceType(doc._id)
+  return type === ResourceType.DATASOURCE
 }
 
 function isTable(doc: AnyDocument): doc is WithDocMetadata<Table> {
@@ -608,6 +749,13 @@ export async function duplicateResourcesToWorkspace(
   }
 ) {
   resources = Array.from(new Set(resources).keys())
+  const resourceIds = new Set(resources)
+  const projectsEnabled = await features.isEnabled(FeatureFlag.PROJECTS)
+  if (!projectsEnabled) {
+    resources = resources.filter(
+      id => getResourceType(id) !== ResourceType.PROJECT
+    )
+  }
 
   const destinationDb = await getDestinationDb(toWorkspace)
 
@@ -628,15 +776,57 @@ export async function duplicateResourcesToWorkspace(
   const docsToInsert = documentToCopy.filter(
     doc => doc._id && toCopy.includes(doc._id)
   )
+  const referencedProjectIds = Array.from(
+    new Set(
+      docsToInsert
+        .flatMap(doc => [
+          ...getProjectIds(doc),
+          ...(isDatasource(doc)
+            ? Object.values(doc.entities || {}).flatMap(entity =>
+                getProjectIds(entity)
+              )
+            : []),
+        ])
+        .filter((projectId): projectId is string => !!projectId)
+    )
+  )
+  const destinationProjectIds = new Set(
+    projectsEnabled && referencedProjectIds.length
+      ? (
+          await destinationDb.getMultiple<AnyDocument>(referencedProjectIds, {
+            allowMissing: true,
+          })
+        )
+          .filter(
+            doc => doc._id && getResourceType(doc._id) === ResourceType.PROJECT
+          )
+          .map(doc => doc._id!)
+      : []
+  )
 
   const fromWorkspace = context.getWorkspaceId()
   if (!fromWorkspace) {
     throw new Error("Could not get workspaceId")
   }
+
+  const hasAvailableProject = (projectId: string) =>
+    projectsEnabled &&
+    (resourceIds.has(projectId) || destinationProjectIds.has(projectId))
+
+  const sanitizeProjectAssignment = <T extends ProjectAssignable>(doc: T) => {
+    return withProjectIds(
+      doc,
+      getProjectIds(doc).filter(projectId => hasAvailableProject(projectId))
+    )
+  }
+
   if (docsToInsert.length) {
     await destinationDb.bulkDocs(
       docsToInsert.map<AnyDocument>(doc => {
-        const sanitizedDoc: AnyDocument = { ...doc, fromWorkspace }
+        const sanitizedDoc = sanitizeProjectAssignment({
+          ...(isAgent(doc) ? sdk.ai.agents.sanitiseAgentForExport(doc) : doc),
+          fromWorkspace,
+        })
         delete sanitizedDoc._rev
         delete sanitizedDoc.createdAt
         delete sanitizedDoc.updatedAt
@@ -645,6 +835,14 @@ export async function duplicateResourcesToWorkspace(
         }
         if (isAutomation(sanitizedDoc)) {
           sanitizedDoc.appId = toWorkspace
+        }
+        if (isDatasource(sanitizedDoc) && sanitizedDoc.entities) {
+          sanitizedDoc.entities = Object.fromEntries(
+            Object.entries(sanitizedDoc.entities).map(([name, entity]) => {
+              const sanitizedEntity = sanitizeProjectAssignment({ ...entity })
+              return [name, sanitizedEntity]
+            })
+          )
         }
         return sanitizedDoc
       })
@@ -679,6 +877,14 @@ export async function duplicateResourcesToWorkspace(
       case ResourceType.AUTOMATION:
         name = (doc as Automation).name
         displayType = "Automation"
+        break
+      case ResourceType.PROJECT:
+        name = (doc as Project).name
+        displayType = "Project"
+        break
+      case ResourceType.AGENT:
+        name = (doc as Agent).name
+        displayType = "Agent"
         break
       case ResourceType.DATASOURCE:
         name = (doc as Datasource).name || "Unknown"

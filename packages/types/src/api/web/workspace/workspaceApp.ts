@@ -1,4 +1,4 @@
-import { AppNavigation } from "../../../documents"
+import { AppCustomTheme, AppNavigation, Theme } from "../../../documents"
 
 export interface WorkspaceAppResponse {
   _id: string
@@ -6,16 +6,20 @@ export interface WorkspaceAppResponse {
   name: string
   url: string
   navigation: AppNavigation
+  theme?: Theme
+  customTheme?: AppCustomTheme
   isDefault: boolean
   createdAt: string
   updatedAt: string
   disabled?: boolean
+  projectIds?: string[]
 }
 
 export interface InsertWorkspaceAppRequest {
   name: string
   url: string
   disabled?: boolean
+  projectIds?: string[]
 }
 
 export interface InsertWorkspaceAppResponse {
@@ -32,7 +36,10 @@ export interface UpdateWorkspaceAppRequest {
   name: string
   url: string
   navigation: AppNavigation
+  theme?: Theme
+  customTheme?: AppCustomTheme
   disabled?: boolean
+  projectIds?: string[]
 }
 
 export interface UpdateWorkspaceAppResponse {

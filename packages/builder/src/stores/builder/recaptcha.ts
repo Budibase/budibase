@@ -24,6 +24,14 @@ export class RecaptchaStore extends BudiStore<RecaptchaState> {
     })
   }
 
+  setAvailable = (available: boolean) => {
+    this.update(state => {
+      state.available = available
+      state.enabled = state.enabled && available
+      return state
+    })
+  }
+
   async setState(enabled: boolean) {
     const appId = get(appStore).appId
     await API.saveAppMetadata(appId, {

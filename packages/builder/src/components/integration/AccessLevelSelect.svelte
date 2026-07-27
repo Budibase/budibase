@@ -12,11 +12,11 @@
 
   let roleId: string, loaded: boolean, fetched: Query | undefined
 
-  async function updateRole(role: string) {
+  async function updateRole(role: string | undefined) {
     try {
-      roleId = role
+      roleId = role || ""
       const queryId = query._id
-      if (roleId && queryId) {
+      if (role && queryId) {
         for (let level of [PermissionLevel.READ, PermissionLevel.WRITE]) {
           await permissions.save({
             level,

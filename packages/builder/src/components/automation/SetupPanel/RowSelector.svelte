@@ -351,7 +351,7 @@
   align="left"
   bind:this={customPopover}
   anchor={editableFields ? popoverAnchor : null}
-  useAnchorWidth
+  widthMode="fixed-to-anchor"
   maxHeight={300}
   resizable={false}
 >

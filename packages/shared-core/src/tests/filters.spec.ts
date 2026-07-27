@@ -1,4 +1,4 @@
-import { buildQuery } from "../filters"
+import { buildQuery, runQuery } from "../filters"
 import {
   BasicOperator,
   EmptyFilterOption,
@@ -152,5 +152,38 @@ describe("filter to query conversion", () => {
         ],
       },
     })
+  })
+})
+
+describe("runQuery notOneOf", () => {
+  const docs = [
+    { id: 1, name: "foo" },
+    { id: 2, name: "bar" },
+    { id: 3, name: "baz" },
+    { id: 4, name: null },
+  ]
+
+  it("returns docs whose value is not in the list", () => {
+    const result = runQuery(docs, { notOneOf: { name: ["foo"] } })
+    expect(result.map(d => d.id)).toEqual([2, 3, 4])
+  })
+
+  it("excludes all matching values", () => {
+    const result = runQuery(docs, { notOneOf: { name: ["foo", "bar"] } })
+    expect(result.map(d => d.id)).toEqual([3, 4])
+  })
+
+  it("includes docs with an empty value", () => {
+    const result = runQuery(docs, { notOneOf: { name: ["baz"] } })
+    expect(result.map(d => d.id)).toEqual([1, 2, 4])
+  })
+
+  it("is the inverse of oneOf for non-empty values", () => {
+    const oneOfResult = runQuery(docs, { oneOf: { name: ["foo", "bar"] } })
+    const notOneOfResult = runQuery(docs, {
+      notOneOf: { name: ["foo", "bar"] },
+    })
+    expect(oneOfResult.map(d => d.id)).toEqual([1, 2])
+    expect(notOneOfResult.map(d => d.id)).toEqual([3, 4])
   })
 })

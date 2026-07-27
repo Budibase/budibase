@@ -1,9 +1,12 @@
-import type {
-  ChatConversation,
-  MSTeamsConversationScope,
+import {
+  AgentChannelProvider,
+  type ChatConversation,
+  type MSTeamsConversationScope,
 } from "@budibase/types"
+import { ChatCommands } from "@budibase/shared-core"
 import {
   isTeamsLifecycleActivity,
+  isTeamsMentionActivity,
   parseTeamsCommand,
   splitTeamsMessage,
   stripTeamsMentions,
@@ -18,17 +21,15 @@ const matchesTeamsConversationScope = ({
   scope: MSTeamsConversationScope
 }) => {
   const ch = chat.channel
-  if (
-    chat.chatAppId !== scope.chatAppId ||
-    chat.agentId !== scope.agentId ||
-    ch?.provider !== "msteams" ||
-    ch?.conversationId !== scope.conversationId ||
-    (ch?.channelId || undefined) !== scope.channelId ||
-    ch.externalUserId !== scope.externalUserId
-  ) {
-    return false
-  }
-  return true
+  return !!(
+    chat.chatAppId === scope.chatAppId &&
+    chat.agentId === scope.agentId &&
+    ch?.provider === AgentChannelProvider.MSTEAMS &&
+    ch?.conversationId === scope.conversationId &&
+    ch?.threadId === scope.threadId &&
+    (ch?.channelId || undefined) === scope.channelId &&
+    ch.externalUserId === scope.externalUserId
+  )
 }
 
 const pickTeamsConversation = ({
@@ -62,9 +63,10 @@ const makeChat = (
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
   channel: {
-    provider: "msteams",
+    provider: AgentChannelProvider.MSTEAMS,
     conversationId: "conversation-1",
     channelId: "channel-1",
+    threadId: "teams:conversation-1:service-1",
     externalUserId: "user-1",
   },
   ...overrides,
@@ -73,42 +75,45 @@ const makeChat = (
 describe("teams webhook helpers", () => {
   it("strips teams mention entities", () => {
     expect(
-      stripTeamsMentions("<at>Budibase Bot</at> ask hello", [
+      stripTeamsMentions(`<at>Budibase Bot</at> hello`, [
         {
           type: "mention",
           text: "<at>Budibase Bot</at>",
         },
       ])
-    ).toEqual("ask hello")
+    ).toEqual("hello")
   })
 
   it.each([
-    ["ask hello there", { command: "ask", content: "hello there" }],
-    ["/ask hello there", { command: "ask", content: "hello there" }],
-    ["new", { command: "new", content: "" }],
-    ["/new start fresh", { command: "new", content: "start fresh" }],
-    ["status", { command: "ask", content: "status" }],
+    [ChatCommands.NEW, { command: ChatCommands.NEW, content: "" }],
+    [
+      `/${ChatCommands.NEW} start fresh`,
+      { command: ChatCommands.NEW, content: "start fresh" },
+    ],
+    [ChatCommands.LINK, { command: ChatCommands.LINK, content: "" }],
+    [`/${ChatCommands.LINK}`, { command: ChatCommands.LINK, content: "" }],
+    ["status", { command: ChatCommands.ASK, content: "status" }],
   ] as const)("parses command text %s", (text, expected) => {
     expect(parseTeamsCommand(text)).toEqual(expected)
   })
 
   it("parses command text containing mention entities", () => {
     expect(
-      parseTeamsCommand("<at>Budibase Bot</at> ask follow up", [
+      parseTeamsCommand(`<at>Budibase Bot</at> follow up`, [
         {
           type: "mention",
           text: "<at>Budibase Bot</at>",
         },
       ])
     ).toEqual({
-      command: "ask",
+      command: ChatCommands.ASK,
       content: "follow up",
     })
   })
 
   it("returns unsupported for empty text", () => {
     expect(parseTeamsCommand("   ")).toEqual({
-      command: "unsupported",
+      command: ChatCommands.UNSUPPORTED,
       content: "",
     })
   })
@@ -137,24 +142,56 @@ describe("teams webhook helpers", () => {
     expect(isTeamsLifecycleActivity({ type: "message" })).toBe(false)
   })
 
+  it("detects Teams mention activities using mention entities", () => {
+    expect(
+      isTeamsMentionActivity({
+        recipient: { id: "bot-1" },
+        entities: [
+          {
+            type: "mention",
+            mentioned: { id: "bot-1" },
+          },
+        ],
+      })
+    ).toBe(true)
+
+    expect(
+      isTeamsMentionActivity({
+        recipient: { id: "bot-1" },
+        entities: [
+          {
+            type: "mention",
+            mentioned: { id: "bot-2" },
+          },
+        ],
+      })
+    ).toBe(false)
+  })
+
   it("scopes conversations by chat app, agent, conversation, channel, and user", () => {
     const scope = {
       chatAppId: "chat-app-1",
       agentId: "agent-1",
       conversationId: "conversation-1",
       channelId: "channel-1",
+      threadId: "teams:conversation-1:service-1",
       externalUserId: "user-1",
     }
 
     const channel = (overrides = {}) => ({
-      provider: "msteams" as const,
+      provider: AgentChannelProvider.MSTEAMS,
       conversationId: "conversation-1",
       channelId: "channel-1",
+      threadId: "teams:conversation-1:service-1",
       externalUserId: "user-1",
       ...overrides,
     })
 
     const matching = makeChat({ _id: "matching", channel: channel() })
+    const wrongThread = makeChat({
+      _id: "wrong-thread",
+      channel: channel({ threadId: "teams:conversation-1:service-2" }),
+    })
     const wrongConversation = makeChat({
       _id: "wrong-conversation",
       channel: channel({ conversationId: "conversation-2" }),
@@ -170,6 +207,9 @@ describe("teams webhook helpers", () => {
     })
 
     expect(matchesTeamsConversationScope({ chat: matching, scope })).toBe(true)
+    expect(matchesTeamsConversationScope({ chat: wrongThread, scope })).toBe(
+      false
+    )
     expect(
       matchesTeamsConversationScope({ chat: wrongConversation, scope })
     ).toBe(false)
@@ -185,9 +225,10 @@ describe("teams webhook helpers", () => {
     const chat = makeChat({
       userId: "msteams:user-legacy",
       channel: {
-        provider: "msteams",
+        provider: AgentChannelProvider.MSTEAMS,
         conversationId: "conversation-1",
         channelId: "channel-1",
+        threadId: "teams:conversation-1:service-1",
       },
     })
 
@@ -196,6 +237,7 @@ describe("teams webhook helpers", () => {
       agentId: "agent-1",
       conversationId: "conversation-1",
       channelId: "channel-1",
+      threadId: "teams:conversation-1:service-1",
       externalUserId: "user-legacy",
     }
 
@@ -210,6 +252,7 @@ describe("teams webhook helpers", () => {
       agentId: "agent-1",
       conversationId: "conversation-1",
       channelId: "channel-1",
+      threadId: "teams:conversation-1:service-1",
       externalUserId: "user-1",
     }
 
@@ -225,9 +268,10 @@ describe("teams webhook helpers", () => {
       _id: "other-user",
       updatedAt: "2026-01-01T00:59:00.000Z",
       channel: {
-        provider: "msteams",
+        provider: AgentChannelProvider.MSTEAMS,
         conversationId: "conversation-1",
         channelId: "channel-1",
+        threadId: "teams:conversation-1:service-1",
         externalUserId: "user-2",
       },
     })

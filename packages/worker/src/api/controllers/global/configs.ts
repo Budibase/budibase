@@ -36,6 +36,8 @@ import {
   OIDCLogosConfig,
   PASSWORD_REPLACEMENT,
   RecaptchaInnerConfig,
+  SCIMDisableAction,
+  SCIMInnerConfig,
   SaveConfigRequest,
   SaveConfigResponse,
   SettingsBrandingConfig,
@@ -346,12 +348,26 @@ async function processTranslationsConfig(
   ctx.request.body.config = prepareTranslationsConfig(ctx, config)
 }
 
+async function processSCIMConfig(
+  newConfig: SCIMInnerConfig,
+  existingConfig: SCIMInnerConfig | undefined
+): Promise<SCIMDisableAction | undefined> {
+  const { disableAction } = newConfig
+  delete newConfig.disableAction
+
+  const isBeingDisabled = existingConfig?.enabled && !newConfig.enabled
+  if (isBeingDisabled && disableAction) {
+    return disableAction
+  }
+}
+
 export async function save(
   ctx: UserCtx<SaveConfigRequest, SaveConfigResponse>
 ) {
   const body = ctx.request.body
   const type = body.type
   const config = body.config
+  let scimDisableAction: SCIMDisableAction | undefined
 
   const existingConfig = await configs.getConfig(type)
   let eventFns = await getEventFns(ctx.request.body, existingConfig)
@@ -380,9 +396,15 @@ export async function save(
       case ConfigType.TRANSLATIONS:
         await processTranslationsConfig(ctx, config)
         break
+      case ConfigType.SCIM:
+        scimDisableAction = await processSCIMConfig(
+          config,
+          existingConfig?.config
+        )
+        break
     }
   } catch (err: any) {
-    ctx.throw(400, err)
+    ctx.throw(400, err?.message || err)
   }
 
   // Ignore branding changes if the license does not permit it
@@ -425,13 +447,26 @@ export async function save(
       await fn()
     }
 
+    if (scimDisableAction) {
+      const tenantId = tenancy.getTenantId()
+      setImmediate(async () => {
+        try {
+          await tenancy.doInTenant(tenantId, () =>
+            pro.scimUsers.handleDisable(scimDisableAction!)
+          )
+        } catch (e) {
+          console.error("Error processing SCIM users on disable:", e)
+        }
+      })
+    }
+
     ctx.body = {
       type,
       _id: response.id,
       _rev: response.rev,
     }
   } catch (err: any) {
-    ctx.throw(400, err)
+    ctx.throw(400, err?.message || err)
   }
 }
 
@@ -531,7 +566,7 @@ export async function publicOidc(ctx: Ctx<void, GetPublicOIDCConfigResponse>) {
       ]
     }
   } catch (err: any) {
-    ctx.throw(err.status, err)
+    ctx.throw(err.status, err?.message || err)
   }
 }
 
@@ -625,7 +660,7 @@ export async function publicSettings(
       },
     }
   } catch (err: any) {
-    ctx.throw(err.status, err)
+    ctx.throw(err.status, err?.message || err)
   }
 }
 
@@ -636,7 +671,7 @@ export async function publicTranslations(
     const configDoc = await configs.getTranslationsConfigDoc()
     ctx.body = filterPublicTranslations(configDoc.config)
   } catch (err: any) {
-    ctx.throw(err.status, err)
+    ctx.throw(err.status, err?.message || err)
   }
 }
 
@@ -653,7 +688,7 @@ export async function upload(ctx: UserCtx<void, UploadConfigFileResponse>) {
   const result = await objectStore.upload({
     bucket,
     filename: key,
-    path: file.path,
+    path: file.filepath,
     type: file.type,
   })
 
@@ -693,7 +728,7 @@ export async function destroy(ctx: UserCtx<void, DeleteConfigResponse>) {
     await cache.destroy(cache.CacheKey.CHECKLIST)
     ctx.body = { message: "Config deleted successfully" }
   } catch (err: any) {
-    ctx.throw(err.status, err)
+    ctx.throw(err.status, err?.message || err)
   }
 }
 
@@ -758,6 +793,6 @@ export async function configChecklist(ctx: Ctx<void, ConfigChecklistResponse>) {
       }
     )
   } catch (err: any) {
-    ctx.throw(err.status, err)
+    ctx.throw(err.status, err?.message || err)
   }
 }

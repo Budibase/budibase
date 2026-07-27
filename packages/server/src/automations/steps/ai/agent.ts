@@ -1,7 +1,9 @@
 import * as automationUtils from "../../automationUtils"
-import { getErrorMessage } from "@budibase/backend-core"
+import { events, getErrorMessage } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
+  ActionFailureReason,
+  ActionType,
   AgentStepInputs,
   AgentStepOutputs,
   AutomationStepInputBase,
@@ -9,10 +11,12 @@ import {
 import { helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import {
+  prepareAgentRunContext,
   findIncompleteToolCalls,
   formatIncompleteToolCallError,
   updatePendingToolCalls,
 } from "../../../sdk/workspace/ai/agents"
+import { createSessionLogIndexer } from "../../../sdk/workspace/ai/agentLogs"
 import {
   ToolLoopAgent,
   stepCountIs,
@@ -51,10 +55,19 @@ export async function run({
   }
 
   const sessionId = v4()
+  const operationStartedAt = new Date().toISOString()
 
   return tracer.llmobs.trace(
     { kind: "agent", name: "automation.agent", sessionId },
     async agentSpan => {
+      const sessionLogIndexer = createSessionLogIndexer({
+        agentId,
+        sessionId,
+        firstInput: prompt,
+        errorLabel: "automation agent",
+        startedAt: operationStartedAt,
+      })
+
       try {
         const agentConfig = await sdk.ai.agents.getOrThrow(agentId)
 
@@ -81,21 +94,28 @@ export async function run({
           }
         }
 
-        const { systemPrompt, tools } =
-          await sdk.ai.agents.buildPromptAndTools(agentConfig)
+        const { llm, selectedOperation, systemPrompt, tools } =
+          await prepareAgentRunContext({
+            agent: agentConfig,
+            agentId,
+            sessionId,
+            latestQuestion: prompt,
+            span: agentSpan,
+          })
 
         tracer.llmobs.annotate(agentSpan, {
           metadata: {
             toolCount: Object.keys(tools).length,
+            ...(selectedOperation
+              ? {
+                  operationId: selectedOperation.id,
+                  operationName: selectedOperation.name,
+                }
+              : {}),
           },
         })
 
-        const { chat, providerOptions } = await sdk.ai.llm.createLLM(
-          agentConfig.aiconfig,
-          sessionId,
-          agentSpan,
-          agentId
-        )
+        const { chat, providerOptions } = llm
 
         let outputOption = undefined
         if (
@@ -125,7 +145,8 @@ export async function run({
           stopWhen: stepCountIs(30),
           providerOptions: providerOptions?.(hasTools),
           output: outputOption,
-          async onStepFinish({ content, toolCalls, toolResults }) {
+          async onStepFinish({ content, toolCalls, toolResults, response }) {
+            sessionLogIndexer.addRequestId(response?.id)
             updatePendingToolCalls(pendingToolCalls, toolCalls, toolResults)
             for (const part of content) {
               if (part.type === "tool-error") {
@@ -133,7 +154,7 @@ export async function run({
               }
             }
             for (const _toolResult of toolResults) {
-              await quotas.addAction(async () => {})
+              await quotas.addAction(ActionType.AI_AGENT, async () => {})
             }
           },
         })
@@ -159,8 +180,35 @@ export async function run({
         const incompleteTools = assistantMessage
           ? findIncompleteToolCalls([assistantMessage])
           : []
+        let requestId: string | undefined
+        let responseMetadataError: string | undefined
+        try {
+          requestId = (await streamResult.response).id ?? undefined
+        } catch (err) {
+          responseMetadataError = getErrorMessage(err)
+        }
+
+        const returnStreamingFailure = async (
+          errorMessage: string
+        ): Promise<AgentStepOutputs> => {
+          sessionLogIndexer.addRequestId(requestId)
+          await sessionLogIndexer.index()
+          tracer.llmobs.annotate(agentSpan, {
+            outputData: errorMessage,
+            tags: { error: "1", "error.type": "StreamingError" },
+          })
+          return {
+            success: false,
+            response: errorMessage,
+            message: assistantMessage,
+            sessionId,
+          }
+        }
+
         if (pendingToolCalls.size > 0 || incompleteTools.length > 0) {
+          sessionLogIndexer.addRequestId(requestId)
           const errorMessage = formatIncompleteToolCallError(incompleteTools)
+          await sessionLogIndexer.index()
           tracer.llmobs.annotate(agentSpan, {
             outputData: errorMessage,
             tags: { error: "1", "error.type": "IncompleteToolCall" },
@@ -169,6 +217,7 @@ export async function run({
             success: false,
             response: errorMessage,
             message: assistantMessage,
+            sessionId,
           }
         }
 
@@ -181,36 +230,58 @@ export async function run({
         }
 
         const error = streamingError || textExtractionError
-        if (error && !responseText) {
-          tracer.llmobs.annotate(agentSpan, {
-            outputData: error,
-            tags: { error: "1", "error.type": "StreamingError" },
-          })
-          return {
-            success: false,
-            response: error,
-            message: assistantMessage,
+        const streamError = error || responseMetadataError
+        if (streamError && !responseText) {
+          return returnStreamingFailure(streamError)
+        }
+
+        let usage: Awaited<typeof streamResult.usage> | undefined
+        let usageError: string | undefined
+        try {
+          usage = await streamResult.usage
+        } catch (err) {
+          usageError = getErrorMessage(err)
+        }
+
+        if (usageError && !responseText) {
+          return returnStreamingFailure(usageError)
+        }
+
+        let output: AgentStepOutputs["output"] | undefined
+        let outputError: string | undefined
+        if (outputOption) {
+          try {
+            output = (await streamResult.output) as AgentStepOutputs["output"]
+          } catch (err) {
+            outputError = getErrorMessage(err)
           }
         }
-        const usage = await streamResult.usage
-        const output = outputOption
-          ? ((await streamResult.output) as Record<string, any>)
-          : undefined
+
+        if (outputError) {
+          return returnStreamingFailure(outputError)
+        }
+
+        sessionLogIndexer.addRequestId(requestId)
+        await sessionLogIndexer.index()
 
         tracer.llmobs.annotate(agentSpan, {
           outputData: responseText,
           metadata: { stepCount: assistantMessage?.parts?.length ?? 0 },
         })
 
+        events.action.aiAgentExecuted({ agentId })
+
         return {
           success: true,
           response: responseText,
           usage,
           message: assistantMessage,
+          sessionId,
           output,
         }
       } catch (err: any) {
         const errorMessage = automationUtils.getError(err)
+        await sessionLogIndexer.index()
 
         tracer.llmobs.annotate(agentSpan, {
           outputData: errorMessage,
@@ -228,9 +299,16 @@ export async function run({
           errorMessage,
         })
 
+        events.action.aiAgentFailed({
+          agentId,
+          reason: ActionFailureReason.ERROR,
+          errorMessage,
+        })
+
         return {
           success: false,
           response: errorMessage,
+          sessionId,
         }
       }
     }

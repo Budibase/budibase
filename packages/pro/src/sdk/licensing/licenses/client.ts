@@ -198,6 +198,11 @@ export async function getLicenseFromKey(
   })
 }
 
+export const getLicenseKey = async (): Promise<string | undefined> => {
+  const licenseInfo = await db.licenseInfo.get()
+  return licenseInfo.licenseKey
+}
+
 export const triggerQuota = (body: QuotaTriggeredRequest) => {
   return authAware(async (authHeader: any) => {
     const response = await api.post(`/api/license/usage/triggered`, {

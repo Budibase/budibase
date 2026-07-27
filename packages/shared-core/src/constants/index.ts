@@ -1,11 +1,11 @@
 export * from "./ai"
 export * from "./api"
+export * from "./chat"
 export * from "./fields"
 export * from "./rows"
 export * from "./colors"
 export * from "./themes"
 export * from "./urls"
-export * from "./discord"
 
 export const OperatorOptions = {
   Equals: {
@@ -51,6 +51,10 @@ export const OperatorOptions = {
   In: {
     value: "oneOf",
     label: "Is in",
+  },
+  NotIn: {
+    value: "notOneOf",
+    label: "Is not in",
   },
   ContainsAny: {
     value: "containsAny",
@@ -104,6 +108,7 @@ export enum BuilderSocketEvent {
   AutomationTestProgress = "AutomationTestProgress",
   RoleChange = "RoleChange",
   WorkspaceAppChange = "WorkspaceAppChange",
+  AgentRequestChange = "AgentRequestChange",
 }
 
 export const SocketSessionTTL = 60

@@ -42,7 +42,7 @@
         on:click={() => (selectedType = type.id)}
       >
         <div class="image">
-          <img alt={type.img.alt} src={type.img.src} />
+          <img alt={type.img.alt} src={type.img.src} draggable="false" />
         </div>
         <div class="typeContent">
           <Body>{type.title}</Body>
@@ -63,6 +63,7 @@
     border-radius: 4px;
     display: flex;
     overflow: hidden;
+    user-select: none;
   }
 
   .type:hover {
@@ -92,5 +93,6 @@
 
   .image img {
     height: 100%;
+    -webkit-user-drag: none;
   }
 </style>

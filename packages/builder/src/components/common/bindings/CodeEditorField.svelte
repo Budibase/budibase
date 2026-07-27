@@ -155,6 +155,7 @@
           "Add bindings by typing $ or use the menu on the right"}
         jsBindingWrapping
         {dropdown}
+        aiEnabled={false}
       />
     {/key}
   </div>

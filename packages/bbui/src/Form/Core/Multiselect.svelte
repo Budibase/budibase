@@ -18,6 +18,7 @@
   export let autocomplete: boolean = false
   export let sort: boolean = false
   export let autoWidth: boolean = false
+  export let popoverAutoWidth: boolean = false
   export let searchTerm: string | null = null
   export let customPopoverHeight: string | undefined = undefined
   export let open: boolean = false
@@ -140,6 +141,7 @@
   onSelectOption={toggleOption}
   {sort}
   {autoWidth}
+  {popoverAutoWidth}
   {customPopoverHeight}
   {loading}
   {onOptionMouseenter}

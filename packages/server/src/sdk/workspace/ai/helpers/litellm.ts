@@ -1,10 +1,9 @@
-import { AIConfigType, ReasoningEffort } from "@budibase/types"
+import { ReasoningEffort } from "@budibase/types"
 
 export type BuildLiteLLMParamsArgs = {
   provider: string
   name: string
   credentialFields: Record<string, string>
-  configType: AIConfigType
   reasoningEffort?: ReasoningEffort
 }
 
@@ -60,10 +59,6 @@ const applyCredentialParams: LiteLLMParamBuilder = (params, args) => ({
 })
 
 const applyReasoningParams: LiteLLMParamBuilder = (params, args) => {
-  if (args.configType === AIConfigType.EMBEDDINGS) {
-    return params
-  }
-
   const normalizedReasoningEffort = normalizeReasoningEffort(args)
   if (!normalizedReasoningEffort) {
     return params

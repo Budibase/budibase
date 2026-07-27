@@ -1,10 +1,18 @@
 <script lang="ts">
-  import { Body, CopyInput, Input, notifications } from "@budibase/bbui"
+  import {
+    Body,
+    Checkbox,
+    CopyInput,
+    Input,
+    notifications,
+  } from "@budibase/bbui"
+  import { ChatCommands } from "@budibase/shared-core"
   import type {
     Agent,
     ProvisionAgentSlackChannelResponse,
   } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
+  import { deploymentStore } from "@/stores/builder"
   import ChannelConfigLayout from "./ChannelConfigLayout.svelte"
   import {
     DEFAULT_IDLE_TIMEOUT_MINUTES,
@@ -12,6 +20,7 @@
     toOptionalValue,
   } from "./utils"
 
+  const SLACK_LINK_COMMAND = ChatCommands.LINK
   let { agent }: { agent?: Agent } = $props()
 
   let draftAgentId: string | undefined = $state()
@@ -19,6 +28,7 @@
     botToken: "",
     signingSecret: "",
     idleTimeoutMinutes: DEFAULT_IDLE_TIMEOUT_MINUTES,
+    requireUserLink: true,
   })
 
   let provisioning = $state(false)
@@ -50,6 +60,7 @@
       signingSecret: integration?.signingSecret || "",
       idleTimeoutMinutes:
         integration?.idleTimeoutMinutes || DEFAULT_IDLE_TIMEOUT_MINUTES,
+      requireUserLink: integration?.requireUserLink !== false,
     }
     provisionResult = undefined
     draftAgentId = currentAgent._id
@@ -70,9 +81,13 @@
           chatAppId: agent.slackIntegration?.chatAppId,
           messagingEndpointUrl: agent.slackIntegration?.messagingEndpointUrl,
           idleTimeoutMinutes: toOptionalIdleTimeout(draft.idleTimeoutMinutes),
+          requireUserLink: draft.requireUserLink,
         },
       })
       provisionResult = await agentsStore.provisionSlackChannel(agent._id)
+      if (agent.live) {
+        await deploymentStore.publishApp()
+      }
       notifications.success("Slack channel settings saved")
     } catch (error) {
       console.error(error)
@@ -107,12 +122,21 @@
       type="number"
       bind:value={draft.idleTimeoutMinutes}
     />
+    <div class="field-grid-leading">
+      <Checkbox
+        bind:value={draft.requireUserLink}
+        text="Require users to link a Budibase account"
+      />
+    </div>
   {/snippet}
 
   {#snippet response()}
     <Body size="S">
-      Mention the bot in a channel or send it a DM. Slack threads are used as
-      the conversation boundary automatically.
+      Mention the bot in a channel or send it a DM to ask a question. Slack
+      threads are used as the conversation boundary automatically.
+    </Body>
+    <Body size="S">
+      Use `/{SLACK_LINK_COMMAND}` to link or refresh your Budibase account.
     </Body>
 
     <CopyInput

@@ -1,17 +1,24 @@
-import { createTempFolder } from "../../../utilities/fileSystem"
+import {
+  createTempFolder,
+  deleteFolderFileSystem,
+} from "../../../utilities/fileSystem"
 import { objectStore } from "@budibase/backend-core"
 
 export async function downloadUnzipTarball(
   url: string,
   name: string,
-  headers = {}
+  headers = {},
+  { followRedirects = true }: { followRedirects?: boolean } = {}
 ) {
-  try {
-    const path = createTempFolder(name)
-    await objectStore.downloadTarballDirect(url, path, headers)
+  const path = createTempFolder(name)
 
+  try {
+    await objectStore.downloadTarballDirect(url, path, headers, {
+      followRedirects,
+    })
     return path
   } catch (e: any) {
-    throw new Error(e.message)
+    deleteFolderFileSystem(path)
+    throw e
   }
 }

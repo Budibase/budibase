@@ -4,32 +4,40 @@ import { Ctx, GetEnvironmentResponse, MaintenanceType } from "@budibase/types"
 import nodeFetch from "node-fetch"
 import env from "../../../environment"
 
-let sqsAvailable: boolean
+let sqsAvailable: boolean | undefined
+let sqsLastChecked: number | undefined
+const SQS_AVAILABLE_CACHE_TTL_MS = 30_000
+
 async function isSqsAvailable() {
-  // We cache this value for the duration of the Node process because we don't
-  // want every page load to be making this relatively expensive check.
-  if (sqsAvailable !== undefined) {
+  const now = Date.now()
+  if (
+    sqsAvailable !== undefined &&
+    sqsLastChecked !== undefined &&
+    now - sqsLastChecked < SQS_AVAILABLE_CACHE_TTL_MS
+  ) {
     return sqsAvailable
   }
 
   try {
-    const { url } = dbCore.getCouchInfo()
-    if (!url) {
+    const { sqlUrl } = dbCore.getCouchInfo()
+    if (!sqlUrl) {
       sqsAvailable = false
+      sqsLastChecked = now
       return false
     }
     await helpers.retry(
       async () => {
-        await nodeFetch(url, { timeout: 2000 })
+        await nodeFetch(sqlUrl, { timeout: 2000 })
       },
       { times: 3 }
     )
-    console.log("connected to SQS")
     sqsAvailable = true
+    sqsLastChecked = now
     return true
   } catch (e) {
     console.warn("failed to connect to SQS", e)
     sqsAvailable = false
+    sqsLastChecked = now
     return false
   }
 }

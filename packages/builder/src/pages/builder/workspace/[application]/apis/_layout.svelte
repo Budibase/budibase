@@ -1,20 +1,33 @@
 <script lang="ts">
-  import { Layout } from "@budibase/bbui"
+  import { ActionButton, Layout } from "@budibase/bbui"
   import DatasourceNavigator from "@/components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import Panel from "@/components/design/Panel.svelte"
   import { isActive, redirect } from "@roxi/routify"
-  import { datasources, builderStore } from "@/stores/builder"
+  import {
+    datasources,
+    builderStore,
+    workspaceConnections,
+  } from "@/stores/builder"
   import NavHeader from "@/components/common/NavHeader.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { getHorizontalResizeActions } from "@/components/common/resizable"
   import { IntegrationTypes } from "@/constants/backend"
   import type { Datasource, UIInternalDatasource } from "@budibase/types"
-  import { onMount } from "svelte"
+  import { onMount, tick } from "svelte"
   import APIModal from "./_components/APIModal.svelte"
+  import { goto } from "@roxi/routify"
+
+  $goto
 
   let searchValue: string
   let panelWidth = 260
   let apiModal: APIModal
+
+  const startDraft = async () => {
+    $goto("./query/new")
+    await tick()
+    workspaceConnections.startDraft()
+  }
 
   const loadPanelWidth = () => {
     const saved = localStorage.getItem("api-panel-width")
@@ -50,18 +63,31 @@
     loadPanelWidth()
   })
 
+  $: if ($workspaceConnections.draft && !$isActive("./query/new")) {
+    workspaceConnections.discardDraft()
+  }
+
   $: restDatasources = ($datasources.list || []).filter(
     datasource => datasource.source === IntegrationTypes.REST
   )
+
   $: hasRestDatasources = restDatasources.length > 0
 
   const APIS_BASE_ROUTE = "/builder/workspace/:application/apis"
 
-  $: shouldRedirectToNew =
-    !hasRestDatasources && !$isActive("./new") && $isActive(APIS_BASE_ROUTE)
+  $: firstRestDatasource = restDatasources[0]
 
-  $: if (shouldRedirectToNew) {
+  $: if (
+    !hasRestDatasources &&
+    !$isActive("./new") &&
+    $isActive(APIS_BASE_ROUTE)
+  ) {
     $redirect("./new")
+  }
+
+  // When a connection is created while on the empty state, redirect to new query
+  $: if (hasRestDatasources && $isActive("./new")) {
+    $redirect(`./query/new/${firstRestDatasource._id}`)
   }
 </script>
 
@@ -69,7 +95,7 @@
 
 <!-- routify:options index=1 -->
 <div class="wrapper" class:resizing-panel={$builderStore.isResizingPanel}>
-  <TopBar icon="webhooks-logo" breadcrumbs={[{ text: "APIs" }]}></TopBar>
+  <TopBar icon="globe-simple" breadcrumbs={[{ text: "API explorer" }]}></TopBar>
   <div class="data">
     {#if !$isActive("./new")}
       <div class="panel-container" style="width: {panelWidth}px;" use:resizable>
@@ -79,11 +105,15 @@
               title="APIs"
               placeholder="Search APIs"
               bind:value={searchValue}
-              onAdd={() => {
-                apiModal.show()
-              }}
+              showAddIcon={false}
             />
           </span>
+          <div class="new-api-btn">
+            <ActionButton
+              disabled={!!$workspaceConnections.draft}
+              on:click={startDraft}>New API</ActionButton
+            >
+          </div>
           <Layout paddingX="L" paddingY="none" gap="S">
             <DatasourceNavigator
               searchTerm={searchValue}
@@ -91,6 +121,7 @@
               datasourceSort={sortByDatasourceName}
               showAppUsers={false}
               showManageRoles={false}
+              noResultsText="There aren't any APIs matching that name"
             />
           </Layout>
         </Panel>
@@ -111,6 +142,15 @@
 </div>
 
 <style>
+  .new-api-btn {
+    width: 100%;
+    padding: 0px var(--spacing-l);
+    padding-bottom: var(--spacing-l);
+    box-sizing: border-box;
+  }
+  .new-api-btn :global(.spectrum-ActionButton) {
+    width: 100%;
+  }
   .wrapper {
     display: flex;
     flex-direction: column;
@@ -135,8 +175,8 @@
     transition: width 300ms ease-out;
   }
   .content {
-    padding: 28px 40px 40px 40px;
-    overflow-y: auto;
+    padding: 0;
+    overflow: hidden;
     gap: var(--spacing-l);
     display: flex;
     flex-direction: column;

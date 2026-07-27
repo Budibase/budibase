@@ -20,6 +20,7 @@ import { MigrationEndpoints } from "./migrations"
 import { OAuth2Endpoints } from "./oauth2"
 import { OtherEndpoints } from "./other"
 import { PermissionEndpoints } from "./permissions"
+import { ProjectEndpoints } from "./projects"
 import { PluginEndpoins } from "./plugins"
 import { QueryEndpoints } from "./queries"
 import { RelationshipEndpoints } from "./relationships"
@@ -35,7 +36,12 @@ import { UserEndpoints } from "./user"
 import { ViewEndpoints } from "./views"
 import { ViewV2Endpoints } from "./viewsV2"
 import { AgentEndpoints } from "./agents"
+import { AgentTestEndpoints } from "./agentTests"
+import { AgentLogEndpoints } from "./agentLogs"
+import { AgentRequestEndpoints } from "./agentRequests"
 import { ChatAppEndpoints } from "./chatApps"
+import { ChatLinksEndpoints } from "./chatLinks"
+import { EscalationEndpoints } from "./escalations"
 import { NavigationEndpoints } from "./navigation"
 import { WorkspaceAppEndpoints } from "./workspaceApps"
 import { ResourceEndpoints } from "./resource"
@@ -44,7 +50,6 @@ import { WorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { WorkspaceHomeEndpoints } from "./workspaceHome"
 import { RecaptchaEndpoints } from "./recaptcha"
 import { AIConfigEndpoints } from "./aiConfig"
-import { VectorDbEndpoints } from "./vectorDbs"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -58,7 +63,10 @@ export type Headers = Record<string, string>
 
 export type APIClientConfig = {
   enableCaching?: boolean
-  attachHeaders?: (headers: Headers) => void
+  attachHeaders?: (
+    headers: Headers,
+    request?: { url: string; method: HTTPMethod }
+  ) => void
   onError?: (error: APIError) => void
   onMigrationDetected?: (migration: string) => void
 }
@@ -116,7 +124,12 @@ export type APIError = {
 export type APIClient = BaseAPIClient &
   AIEndpoints &
   AgentEndpoints &
+  AgentTestEndpoints &
+  AgentLogEndpoints &
+  AgentRequestEndpoints &
   ChatAppEndpoints &
+  ChatLinksEndpoints &
+  EscalationEndpoints &
   AnalyticsEndpoints &
   AppEndpoints &
   AttachmentEndpoints &
@@ -154,11 +167,11 @@ export type APIClient = BaseAPIClient &
     viewV2: ViewV2Endpoints
     oauth2: OAuth2Endpoints
     navigation: NavigationEndpoints
+    projects: ProjectEndpoints
     workspaceApp: WorkspaceAppEndpoints
     workspace: WorkspaceFavouriteEndpoints
     workspaceHome: WorkspaceHomeEndpoints
     deployment: DeploymentEndpoints
     recaptcha: RecaptchaEndpoints
     aiConfig: AIConfigEndpoints
-    vectorDb: VectorDbEndpoints
   }

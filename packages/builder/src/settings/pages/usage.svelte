@@ -40,6 +40,7 @@
     ["Day Passes"]: () => true,
     [Feature.AI_CUSTOM_CONFIGS]: () => true,
     Queries: () => true,
+    Automations: () => true,
     Creators: license => {
       return license.plan.model === PlanModel.PER_USER
     },
@@ -72,11 +73,17 @@
         }
         const used = quotaUsage.monthly.current[key]
         if (value.value !== 0) {
-          monthlyUsage.push({
+          const isAICredits = value.name === "Budibase AI Credits"
+          const entry = {
             name: value.name,
-            used: used ? used : 0,
-            total: value.value,
-          })
+            used: isAICredits ? Math.floor((used ?? 0) / 1000) : (used ?? 0),
+            total: isAICredits ? Math.floor(value.value / 1000) : value.value,
+            quotaKey: key,
+          }
+          if (key === "actions" && $licensing.actionsBreakdown) {
+            entry.breakdown = $licensing.actionsBreakdown
+          }
+          monthlyUsage.push(entry)
         }
       }
     }
@@ -117,7 +124,7 @@
     textRows = []
 
     if (cancelAt && !usesInvoicing) {
-      if (plan?.type !== Constants.PlanType.ENTERPRISE_BASIC_TRIAL) {
+      if (!$licensing.isTrialPlan) {
         textRows.push({ message: "Subscription has been cancelled" })
       }
       textRows.push({
@@ -146,16 +153,18 @@
   }
 
   const setPrimaryActionText = () => {
-    if (license?.plan.type === Constants.PlanType.FREE) {
+    if (
+      [
+        Constants.PlanType.FREE,
+        Constants.PlanType.PREMIUM_PLUS_TRIAL,
+        Constants.PlanType.ENTERPRISE_BASIC_TRIAL,
+      ].includes(license?.plan.type)
+    ) {
       primaryActionText = "Upgrade"
       return
     }
 
-    if (cancelAt) {
-      primaryActionText = "Renew"
-    } else {
-      primaryActionText = "Manage"
-    }
+    primaryActionText = cancelAt ? "Renew" : "Manage"
   }
 
   const init = async () => {
@@ -216,26 +225,41 @@
     <div class="content">
       <div class="column">
         <Layout noPadding>
+          <div class="monthly-section">
+            <Layout gap="XS" noPadding>
+              <Heading size="XS">Monthly limits</Heading>
+              <div class="detail monthly-reset">
+                <TooltipWrapper tooltip={new Date(quotaReset)}>
+                  <Detail size="M">
+                    Resets in {daysRemainingInMonth} days
+                  </Detail>
+                </TooltipWrapper>
+              </div>
+            </Layout>
+            <Layout noPadding gap="M">
+              {#each monthlyUsage as usage}
+                <Usage
+                  {usage}
+                  warnWhenFull={WARN_USAGE.includes(usage.name)}
+                  breakdown={usage.breakdown ?? null}
+                  showPurchaseCreditsLink={usage.quotaKey ===
+                    "budibaseAICredits" &&
+                    $admin.cloud &&
+                    accountPortalAccess &&
+                    !usesInvoicing &&
+                    !$licensing.isTrialPlan &&
+                    !!license?.billing?.subscription}
+                />
+              {/each}
+            </Layout>
+          </div>
+          <Heading size="XS">Static limits</Heading>
+
           {#each staticUsage as usage}
             <div class="usage">
               <Usage {usage} warnWhenFull={WARN_USAGE.includes(usage.name)} />
             </div>
           {/each}
-          <Layout gap="XS" noPadding>
-            <Heading size="XS">Monthly limits</Heading>
-            <div class="detail">
-              <TooltipWrapper tooltip={new Date(quotaReset)}>
-                <Detail size="M">
-                  Resets in {daysRemainingInMonth} days
-                </Detail>
-              </TooltipWrapper>
-            </div>
-          </Layout>
-          <Layout noPadding gap="M">
-            {#each monthlyUsage as usage}
-              <Usage {usage} warnWhenFull={WARN_USAGE.includes(usage.name)} />
-            {/each}
-          </Layout>
         </Layout>
       </div>
     </div>
@@ -267,6 +291,12 @@
   }
   .detail :global(.icon) {
     margin-bottom: 0;
+  }
+  .monthly-reset {
+    margin-bottom: var(--spacing-xl);
+  }
+  .monthly-section {
+    margin-bottom: var(--spacing-xl);
   }
 
   .usage-title :global(.spectrum-Detail) {

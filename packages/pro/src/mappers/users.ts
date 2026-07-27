@@ -71,7 +71,8 @@ function tryGetEmail(
 }
 
 export const fromScimUser = (
-  scimUser: ScimUserResponse | ScimCreateUserRequest
+  scimUser: ScimUserResponse | ScimCreateUserRequest,
+  roles: User["roles"] = {}
 ): User => {
   const existingUser = isScimUserResponse(scimUser) ? scimUser : undefined
 
@@ -116,7 +117,7 @@ export const fromScimUser = (
       ...scimUser,
       isSync: true,
     },
-    roles: {},
+    roles,
     status: isActive ? UserStatus.ACTIVE : UserStatus.INACTIVE,
     createdAt: existingUser?.meta.created.getTime(),
     updatedAt: existingUser?.meta.lastModified.toISOString(),

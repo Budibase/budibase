@@ -5,6 +5,7 @@ import {
   adminRoutes,
   builderOrAdminRoutes,
   cloudRestrictedRoutes,
+  internalRoutes,
   loggedInRoutes,
 } from "../endpointGroups"
 import { users } from "../validation"
@@ -104,11 +105,6 @@ builderOrAdminRoutes
     controller.removeWorkspaceIdFromInvite
   )
   .post(
-    "/api/global/users/onboard",
-    buildInviteMultipleValidation(),
-    controller.onboardUsers
-  )
-  .post(
     "/api/global/users/:userId/permission/:role",
     controller.addUserToWorkspace
   )
@@ -141,4 +137,5 @@ loggedInRoutes
     controller.inviteAccept
   )
   .get("/api/global/users/accountholder", controller.accountHolderLookup)
-  .get("/api/global/users/tenant/:id", controller.tenantUserLookup)
+
+internalRoutes.get("/api/global/users/tenant/:id", controller.tenantUserLookup)

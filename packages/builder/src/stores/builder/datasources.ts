@@ -9,6 +9,7 @@ import {
   Datasource,
   DatasourceFeature,
   Integration,
+  RestTemplateId,
   RestTemplateName,
   RestTemplateSpecVersion,
   SourceName,
@@ -17,14 +18,19 @@ import {
   UIInternalDatasource,
 } from "@budibase/types"
 import { derived, get, Readable, Writable } from "svelte/store"
-import { queries } from "./queries"
+import { restTemplates } from "./restTemplates"
+import { removeDatasourceQueries, saveQuery } from "./queries"
 import { tables } from "./tables"
 
 class TableImportError extends Error {
   errors: Record<string, string>
 
   constructor(errors: Record<string, string>) {
-    super()
+    super(
+      Object.entries(errors)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join("\n")
+    )
     this.name = "TableImportError"
     this.errors = errors
   }
@@ -176,12 +182,13 @@ export class DatasourceStore extends DerivedBudiStore<
     this.updateDatasourceInStore(response)
   }
 
-  sourceCount(source: string, restTemplate?: string) {
+  sourceCount(source: string, restTemplateId?: string) {
     return get(this.store).rawList.filter(
       datasource =>
         datasource.source === source &&
-        (restTemplate !== undefined
-          ? datasource.restTemplate === restTemplate
+        (restTemplateId !== undefined
+          ? datasource.restTemplateId === restTemplateId ||
+            restTemplates.get(datasource.restTemplate)?.id === restTemplateId
           : true)
     ).length
   }
@@ -205,16 +212,18 @@ export class DatasourceStore extends DerivedBudiStore<
     integration,
     config,
     name,
-    restTemplate,
+    projectIds,
+    restTemplateId,
     restTemplateVersion,
   }: {
     integration: UIIntegration
     config: Record<string, any>
     name?: string
-    restTemplate?: RestTemplateName
+    projectIds?: string[]
+    restTemplateId?: RestTemplateId
     restTemplateVersion?: RestTemplateSpecVersion
   }) {
-    const count = this.sourceCount(integration.name, restTemplate)
+    const count = this.sourceCount(integration.name, restTemplateId)
     const nameModifier = count === 0 ? "" : ` ${count + 1}`
 
     const datasource: Datasource = {
@@ -222,9 +231,10 @@ export class DatasourceStore extends DerivedBudiStore<
       source: integration.name as SourceName,
       config,
       name: `${name || integration.friendlyName}${nameModifier}`,
+      projectIds,
       plus: integration.plus && integration.name !== SourceName.REST,
       isSQL: integration.isSQL,
-      ...(restTemplate && { restTemplate }),
+      ...(restTemplateId && { restTemplateId }),
       ...(restTemplateVersion && { restTemplateVersion }),
     }
 
@@ -247,11 +257,16 @@ export class DatasourceStore extends DerivedBudiStore<
   async save({
     integration,
     datasource,
+    skipConnectionCheck,
   }: {
     integration: Integration
     datasource: Datasource
+    skipConnectionCheck?: boolean
   }) {
-    if (!(await this.checkDatasourceValidity(integration, datasource)).valid) {
+    if (
+      !skipConnectionCheck &&
+      !(await this.checkDatasourceValidity(integration, datasource)).valid
+    ) {
       throw new Error("Unable to connect")
     }
 
@@ -284,7 +299,7 @@ export class DatasourceStore extends DerivedBudiStore<
         rawList: state.rawList.filter(x => x._id !== datasourceId),
       }))
       tables.removeDatasourceTables(datasourceId)
-      queries.removeDatasourceQueries(datasourceId)
+      removeDatasourceQueries(datasourceId)
       return
     }
 
@@ -305,10 +320,10 @@ export class DatasourceStore extends DerivedBudiStore<
 
     // Update existing datasource
     else if (datasource) {
-      this.store.update(state => {
-        state.rawList[index] = datasource
-        return state
-      })
+      this.store.update(state => ({
+        ...state,
+        rawList: state.rawList.map((ds, i) => (i === index ? datasource : ds)),
+      }))
     }
   }
 
@@ -349,12 +364,30 @@ export class DatasourceStore extends DerivedBudiStore<
         schema: {},
         readable: true,
       }
-      return await queries.save(datasource._id!, query)
+      return await saveQuery(datasource._id!, query, datasource.source)
     } catch (error) {
       console.error("API error fetching view definitions:", error)
       return
     }
   }
+}
+
+/**
+ * Check if a datasource has a REST template (either new restTemplateId or legacy restTemplate)
+ */
+export function hasRestTemplate(
+  datasource: Pick<Datasource, "restTemplateId" | "restTemplate"> | undefined
+): boolean {
+  return Boolean(datasource?.restTemplateId || datasource?.restTemplate)
+}
+
+/**
+ * Get the REST template identifier from a datasource (prefers new restTemplateId over legacy restTemplate)
+ */
+export function getRestTemplateIdentifier(
+  datasource: Pick<Datasource, "restTemplateId" | "restTemplate"> | undefined
+): RestTemplateId | RestTemplateName | undefined {
+  return datasource?.restTemplateId || datasource?.restTemplate
 }
 
 export const datasources = new DatasourceStore()

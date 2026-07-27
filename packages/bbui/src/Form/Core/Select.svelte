@@ -37,6 +37,7 @@
   export let quiet: boolean = false
   export let bordered: boolean = true
   export let autoWidth: boolean = false
+  export let popoverAutoWidth: boolean = false
   export let autocomplete: boolean = false
   export let sort: boolean = false
   export let align: PopoverAlignment | undefined = PopoverAlignment.Left
@@ -48,7 +49,6 @@
   export let onOptionMouseleave = () => {}
   export let customPopoverHeight: string | undefined = undefined
   export let searchPlaceholder: string = "Search"
-  export let hideChevron: boolean = false
   export let wrapText: boolean = false
 
   const dispatch = createEventDispatcher()
@@ -123,6 +123,7 @@
   {fieldColour}
   {options}
   {autoWidth}
+  {popoverAutoWidth}
   {align}
   {footer}
   {getOptionLabel}
@@ -147,7 +148,6 @@
   {loading}
   {customPopoverHeight}
   {searchPlaceholder}
-  {hideChevron}
   {fieldTooltip}
   {wrapText}
 />

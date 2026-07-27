@@ -6,8 +6,12 @@ import {
   GetAutomationActionDefinitionsResponse,
   GetAutomationStepDefinitionsResponse,
   GetAutomationTriggerDefinitionsResponse,
+  SearchAutomationLogsRequest,
+  SearchAutomationLogsResponse,
   TestAutomationRequest,
   TestAutomationResponse,
+  TestEmailConnectionRequest,
+  TestEmailConnectionResponse,
   TriggerAutomationRequest,
   TriggerAutomationResponse,
   UpdateAutomationRequest,
@@ -112,6 +116,19 @@ export class AutomationAPI extends TestAPI {
     )
   }
 
+  testEmailConnection = async (
+    body: TestEmailConnectionRequest,
+    expectations?: Expectations
+  ): Promise<TestEmailConnectionResponse> => {
+    return await this._post<TestEmailConnectionResponse>(
+      `/api/automations/email/test-connection`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
   update = async (
     body: UpdateAutomationRequest,
     expectations?: Expectations
@@ -138,6 +155,19 @@ export class AutomationAPI extends TestAPI {
     const { automations } = await this.fetch()
     await Promise.all(
       automations.map(automation => this.delete(automation, expectations))
+    )
+  }
+
+  logSearch = async (
+    body: SearchAutomationLogsRequest,
+    expectations?: Expectations
+  ): Promise<SearchAutomationLogsResponse> => {
+    return await this._post<SearchAutomationLogsResponse>(
+      `/api/automations/logs/search`,
+      {
+        body,
+        expectations,
+      }
     )
   }
 }

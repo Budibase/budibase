@@ -1,312 +1,455 @@
-import { embedMany } from "ai"
-import * as crypto from "crypto"
-import { PDFParse } from "pdf-parse"
-import { parse as parseYaml } from "yaml"
-import { features } from "@budibase/backend-core"
 import {
-  AgentFileStatus,
+  AgentKnowledgeSourceType,
   AgentMessageRagSource,
-  FeatureFlag,
+  AgentOperation,
   type Agent,
-  type AgentFile,
+  type KnowledgeBase,
+  type KnowledgeBaseFile,
+  KnowledgeBaseFileStatus,
+  KnowledgeBaseType,
+  LockName,
+  LockType,
+  type WithRequired,
 } from "@budibase/types"
-import { createVectorDb, type ChunkInput } from "../vectorDb/utils"
-import { agents } from ".."
-import { createLLM } from "../llm"
+import { HTTPError, locks, objectStore } from "@budibase/backend-core"
+import { agents as agentsSdk, knowledgeBase as knowledgeBaseSdk } from ".."
+import { RetrievedContextChunk } from "./processors"
+import { GeminiRagProcessor } from "./processors/gemini"
+import {
+  isTabularKnowledgeFile,
+  searchTabularRowsForExactMatches,
+  type TabularRowExactMatch,
+} from "./processors/tabularText"
+import { ObjectStoreBuckets } from "../../../../constants"
+import {
+  deleteKnowledgeSourceSyncStateForOperation,
+  deleteSharePointFilesForOperationSite,
+} from "./sources/sharepoint/sharepoint"
 
-const DEFAULT_CHUNK_SIZE = 1500
-const DEFAULT_CHUNK_OVERLAP = 200
-const DEFAULT_EMBEDDING_BATCH_SIZE = 64
-
-const ensureRagEnabled = async () => {
-  if (!(await features.isEnabled(FeatureFlag.AI_RAG))) {
-    throw new Error("RAG feature is disabled")
+const getOperationOrThrow = (agent: Agent, operationId: string) => {
+  const operation = agent.operations?.find(
+    operation => operation.id === operationId
+  )
+  if (!operation) {
+    throw new HTTPError("Operation not found for this agent", 404)
   }
+  return operation
 }
 
-const textFileExtensions = new Set([
-  ".txt",
-  ".md",
-  ".markdown",
-  ".json",
-  ".yaml",
-  ".yml",
-  ".csv",
-  ".tsv",
-])
-
-const yamlExtensions = new Set([".yaml", ".yml"])
-
-const hashChunk = (chunk: string) => {
-  return crypto.createHash("sha256").update(chunk).digest("hex")
+interface ExactTabularMatchResult {
+  chunks: RetrievedContextChunk[]
+  matchesBySourceId: Map<string, TabularRowExactMatch[]>
 }
 
-const chunkDocument = (
-  text: string,
-  chunkSize = DEFAULT_CHUNK_SIZE,
-  overlap = DEFAULT_CHUNK_OVERLAP
-) => {
-  const normalized = text.replace(/\r\n/g, "\n")
-  const chunks: string[] = []
-  let start = 0
-  while (start < normalized.length) {
-    const end = Math.min(start + chunkSize, normalized.length)
-    const chunk = normalized.slice(start, end).trim()
-    if (chunk) {
-      chunks.push(chunk)
-    }
-    if (end === normalized.length) {
-      break
-    }
-    start = Math.max(0, end - overlap)
-    if (start >= normalized.length) {
-      break
-    }
-  }
-  return chunks
-}
-
-const formatParameters = (parameters: any[] = []) => {
-  if (!Array.isArray(parameters) || parameters.length === 0) {
-    return "None"
-  }
-  return parameters
-    .map(param => {
-      const location = param?.in ? `(${param.in})` : ""
-      const required = param?.required ? "required" : "optional"
-      return `${param?.name ?? "unknown"} ${location} - ${required}`
-    })
-    .join("; ")
-}
-
-const formatResponses = (responses: Record<string, any> = {}) => {
-  const entries = Object.entries(responses)
-  if (entries.length === 0) {
-    return "None"
-  }
-  return entries
-    .map(
-      ([status, response]) =>
-        `${status}: ${response?.description ?? "No description"}`
-    )
-    .join("; ")
-}
-
-const buildOpenApiChunks = (doc: Record<string, any>) => {
-  if (!doc || typeof doc !== "object") {
+const resolveKnowledgeBasesForOperation = async (
+  operation: AgentOperation
+): Promise<KnowledgeBase[]> => {
+  const knowledgeBaseIds = (operation.knowledgeBases || []).filter(Boolean)
+  if (knowledgeBaseIds.length === 0) {
     return []
   }
 
-  const chunks: string[] = []
+  const knowledgeBases: KnowledgeBase[] = []
+  for (const knowledgeBaseId of knowledgeBaseIds) {
+    const config = await knowledgeBaseSdk.find(knowledgeBaseId)
+    if (config) {
+      knowledgeBases.push(config)
+    }
+  }
 
-  if (doc.info) {
-    chunks.push(
-      [
-        `OpenAPI ${doc.openapi ?? ""}`.trim(),
-        doc.info.title ? `Title: ${doc.info.title}` : null,
-        doc.info.version ? `Version: ${doc.info.version}` : null,
-        doc.info.description ?? null,
-      ]
-        .filter(Boolean)
-        .join("\n")
+  if (knowledgeBases.length === 0) {
+    return []
+  }
+
+  return knowledgeBases
+}
+
+const getAgentKnowledgeBase = async (
+  knowledgeBaseIds: string[] | undefined
+): Promise<KnowledgeBase | undefined> => {
+  const validIds = (knowledgeBaseIds || []).filter(Boolean)
+  for (const id of validIds) {
+    const knowledgeBase = await knowledgeBaseSdk.find(id)
+    if (knowledgeBase) {
+      return knowledgeBase
+    }
+  }
+  return undefined
+}
+
+const normalizeFilenameLookup = (value?: string) =>
+  value?.trim().toLowerCase() || ""
+
+const loadFileBuffer = async (objectKey: string): Promise<Buffer> => {
+  const { stream } = await objectStore.getReadStream(
+    ObjectStoreBuckets.APPS,
+    objectKey
+  )
+
+  const chunks: Uint8Array[] = []
+  for await (const chunk of stream) {
+    chunks.push(new Uint8Array(chunk))
+  }
+  return Buffer.concat(chunks)
+}
+
+const getReadySourceIdByFilename = (readyFiles: KnowledgeBaseFile[]) => {
+  const sourceIdByFilename = new Map<string, string>()
+  const ambiguousFilenames = new Set<string>()
+
+  for (const file of readyFiles) {
+    if (!file.ragSourceId) {
+      continue
+    }
+
+    const normalizedFilename = normalizeFilenameLookup(file.filename)
+    if (!normalizedFilename || ambiguousFilenames.has(normalizedFilename)) {
+      continue
+    }
+
+    const existingSourceId = sourceIdByFilename.get(normalizedFilename)
+    if (existingSourceId && existingSourceId !== file.ragSourceId) {
+      sourceIdByFilename.delete(normalizedFilename)
+      ambiguousFilenames.add(normalizedFilename)
+      continue
+    }
+
+    sourceIdByFilename.set(normalizedFilename, file.ragSourceId)
+  }
+
+  return sourceIdByFilename
+}
+
+const getOperationKnowledgeBaseName = (agent: Agent, operationId: string) => {
+  return `Agent files (${agent._id}:${operationId})`
+}
+
+const getKnowledgeBaseIdsForOperation = async (
+  agentId: string,
+  operationId: string
+): Promise<string[]> => {
+  const agent = await agentsSdk.getOrThrow(agentId)
+  const operation = getOperationOrThrow(agent, operationId)
+  return (operation.knowledgeBases || []).filter(Boolean)
+}
+
+export const ensureKnowledgeBaseForOperation = async (
+  agentId: string,
+  operationId: string
+): Promise<KnowledgeBase> => {
+  const { result } = await locks.doWithLock(
+    {
+      name: LockName.AGENT_RAG_KNOWLEDGE_BASE,
+      type: LockType.AUTO_EXTEND,
+      resource: `${agentId}:${operationId}`,
+    },
+    async () => {
+      const agent = await agentsSdk.getOrThrow(agentId)
+      const targetOperation = getOperationOrThrow(agent, operationId)
+      const existing = await getAgentKnowledgeBase(
+        targetOperation.knowledgeBases
+      )
+      if (existing) {
+        return existing
+      }
+
+      const created = await knowledgeBaseSdk.create({
+        name: getOperationKnowledgeBaseName(agent, operationId),
+        type: KnowledgeBaseType.GEMINI,
+      })
+
+      await agentsSdk.update({
+        ...agent,
+        operations: (agent.operations || []).map(operation =>
+          operation.id === operationId
+            ? {
+                ...operation,
+                knowledgeBases: created._id ? [created._id] : [],
+              }
+            : operation
+        ),
+      })
+
+      return created
+    }
+  )
+
+  return result
+}
+
+export const listFilesForOperation = async (
+  agentId: string,
+  operationId: string
+): Promise<KnowledgeBaseFile[]> => {
+  const knowledgeBaseIds = await getKnowledgeBaseIdsForOperation(
+    agentId,
+    operationId
+  )
+  if (knowledgeBaseIds.length === 0) {
+    return []
+  }
+
+  return (
+    await Promise.all(
+      knowledgeBaseIds.map(id => knowledgeBaseSdk.listKnowledgeBaseFiles(id))
     )
-  }
-
-  if (doc.paths && typeof doc.paths === "object") {
-    for (const [pathKey, methods] of Object.entries<any>(doc.paths)) {
-      if (!methods || typeof methods !== "object") {
-        continue
-      }
-      for (const [method, definition] of Object.entries<any>(methods)) {
-        if (!definition || typeof definition !== "object") {
-          continue
-        }
-        const header = `${method.toUpperCase()} ${pathKey}`
-        const summary =
-          definition.summary ?? definition.operationId ?? "No summary provided"
-        const description = definition.description ?? ""
-        const parameters = formatParameters(definition.parameters)
-        const responses = formatResponses(definition.responses)
-        const tags = Array.isArray(definition.tags)
-          ? `Tags: ${definition.tags.join(", ")}`
-          : ""
-        const chunk = [
-          header,
-          summary,
-          description,
-          tags,
-          `Parameters: ${parameters}`,
-          `Responses: ${responses}`,
-        ]
-          .filter(Boolean)
-          .join("\n")
-        chunks.push(chunk)
-      }
-    }
-  }
-
-  if (doc.components?.schemas) {
-    for (const [schemaName, schemaDef] of Object.entries<any>(
-      doc.components.schemas
-    )) {
-      const props =
-        schemaDef?.properties && typeof schemaDef.properties === "object"
-          ? Object.keys(schemaDef.properties).join(", ")
-          : "No properties listed"
-      chunks.push(
-        [
-          `Schema: ${schemaName}`,
-          schemaDef?.description ?? "No description",
-          `Properties: ${props}`,
-        ].join("\n")
-      )
-    }
-  }
-
-  return chunks
+  ).flat()
 }
 
-const createChunksFromContent = (content: string, filename?: string) => {
-  const ext = (filename?.split(".").pop() || "").toLowerCase()
-  if (yamlExtensions.has(`.${ext}`) || yamlExtensions.has(ext)) {
-    try {
-      const parsed = parseYaml(content)
-      const openApiChunks = buildOpenApiChunks(parsed)
-      if (openApiChunks.length > 0) {
-        return openApiChunks.flatMap(chunk =>
-          chunk.length > DEFAULT_CHUNK_SIZE ? chunkDocument(chunk) : [chunk]
-        )
-      }
-    } catch (error) {
-      console.warn(
-        "Failed to parse YAML for agent upload, falling back to plain chunking",
-        error
-      )
-    }
-  }
-  return chunkDocument(content)
-}
-
-const getEmbeddingModel = async (configId: string) => {
-  const { embedding } = await createLLM(configId)
-  return embedding
-}
-
-const embedChunks = async (
-  configId: string,
-  chunks: string[],
-  batchSize = DEFAULT_EMBEDDING_BATCH_SIZE
-) => {
-  const model = await getEmbeddingModel(configId)
-  const embeddings: number[][] = []
-
-  for (let i = 0; i < chunks.length; i += batchSize) {
-    const batch = chunks.slice(i, i + batchSize)
-    const { embeddings: batchEmbeddings } = await embedMany({
-      model,
-      values: batch,
-    })
-    embeddings.push(...batchEmbeddings)
+export const uploadFileForOperation = async (
+  agentId: string,
+  operationId: string,
+  input: UploadKnowledgeFileInput
+): Promise<KnowledgeBaseFile> => {
+  const knowledgeBase = await ensureKnowledgeBaseForOperation(
+    agentId,
+    operationId
+  )
+  const knowledgeBaseId = knowledgeBase._id
+  if (!knowledgeBaseId) {
+    throw new HTTPError("Failed to create operation file storage", 500)
   }
 
-  return embeddings
-}
-
-const isPdfFile = (file?: AgentFile) => {
-  if (!file) {
-    return false
-  }
-  const mime = file.mimetype?.toLowerCase()
-  if (mime === "application/pdf") {
-    return true
-  }
-  const ext = (file.filename?.split(".").pop() || "").toLowerCase()
-  return ext === "pdf" || ext === ".pdf"
-}
-
-const getTextFromBuffer = async (buffer: Buffer, file: AgentFile) => {
-  if (isPdfFile(file)) {
-    const parser = new PDFParse({ data: buffer as any })
-    const parsed = await parser.getText()
-    return (parsed.text || "").trim()
-  }
-
-  const ext = (file.filename?.split(".").pop() || "").toLowerCase()
-  if (!file.filename) {
-    return buffer.toString("utf-8")
-  }
-  if (textFileExtensions.has(`.${ext}`) || textFileExtensions.has(ext)) {
-    return buffer.toString("utf-8")
-  }
-  return buffer.toString("utf-8")
-}
-
-export const ingestAgentFile = async (
-  agent: Agent,
-  agentFile: AgentFile,
-  fileBuffer: Buffer
-): Promise<{
-  inserted: number
-  total: number
-}> => {
-  await ensureRagEnabled()
-  const { _id: agentId } = agent
-  if (!agentId) {
-    throw new Error("Agent id not set")
-  }
-
-  if (!agent.embeddingModel) {
-    throw new Error("Embedding model is not set")
-  }
-
-  const content = await getTextFromBuffer(fileBuffer, agentFile)
-  const chunks = createChunksFromContent(content, agentFile.filename)
-
-  const vectorDb = await createVectorDb({
-    agentId: agent._id!,
-    vectorDbId: agent.vectorDb,
+  return await knowledgeBaseSdk.uploadKnowledgeBaseFile({
+    knowledgeBaseId,
+    filename: input.filename,
+    mimetype: input.mimetype,
+    size: input.size ?? input.buffer.byteLength,
+    buffer: input.buffer,
+    uploadedBy: input.uploadedBy,
   })
-
-  if (chunks.length === 0) {
-    // This will ensure any existing chunks for the source are removed
-    await vectorDb.deleteBySourceIds([agentFile.ragSourceId])
-    return { inserted: 0, total: 0 }
-  }
-
-  const embeddings = await embedChunks(agent.embeddingModel, chunks)
-  if (embeddings.length !== chunks.length) {
-    throw new Error("Embedding response size mismatch")
-  }
-
-  const payloads = chunks.map<ChunkInput>((chunk, index) => ({
-    hash: hashChunk(chunk),
-    text: chunk,
-    embedding: embeddings[index],
-  }))
-
-  return await vectorDb.upsertSourceChunks(agentFile.ragSourceId, payloads)
 }
 
-export const deleteAgentFileChunks = async (
-  agent: Agent,
-  sourceIds: string[]
+export const deleteFileForOperation = async (
+  agentId: string,
+  operationId: string,
+  fileId: string
+): Promise<void> => {
+  const file = await knowledgeBaseSdk.getKnowledgeBaseFileOrThrow(fileId)
+  const fileKnowledgeBaseId = file.knowledgeBaseId
+  if (!fileKnowledgeBaseId) {
+    throw new HTTPError("Invalid knowledge base file id", 400)
+  }
+  const knowledgeBaseIds = await getKnowledgeBaseIdsForOperation(
+    agentId,
+    operationId
+  )
+  if (!knowledgeBaseIds.includes(fileKnowledgeBaseId)) {
+    throw new HTTPError("File does not belong to this operation", 404)
+  }
+
+  const knowledgeBase = await knowledgeBaseSdk.find(fileKnowledgeBaseId)
+  if (!knowledgeBase) {
+    throw new HTTPError("Operation file storage not found", 404)
+  }
+  await knowledgeBaseSdk.removeKnowledgeBaseFile(knowledgeBase, file)
+}
+
+const removeKnowledgeBaseWithFiles = async (
+  knowledgeBaseId: string,
+  contextLabel: string
 ) => {
-  await ensureRagEnabled()
-  if (!sourceIds || sourceIds.length === 0) {
+  const knowledgeBase = await knowledgeBaseSdk.find(knowledgeBaseId)
+  if (!knowledgeBase) {
     return
   }
 
-  const vectorDb = await createVectorDb({
-    agentId: agent._id!,
-    vectorDbId: agent.vectorDb,
-  })
-  await vectorDb.deleteBySourceIds(sourceIds)
+  const files = await knowledgeBaseSdk.listKnowledgeBaseFiles(knowledgeBaseId)
+  for (const file of files) {
+    try {
+      await knowledgeBaseSdk.removeKnowledgeBaseFile(knowledgeBase, file)
+    } catch (error) {
+      console.log(`Failed to remove knowledge base file for ${contextLabel}`, {
+        knowledgeBaseId,
+        fileId: file._id,
+        error,
+      })
+    }
+  }
+
+  try {
+    await knowledgeBaseSdk.remove(knowledgeBaseId)
+  } catch (error) {
+    console.log(`Failed to remove knowledge base for ${contextLabel}`, {
+      knowledgeBaseId,
+      error,
+    })
+  }
 }
 
-export interface RetrievedContextChunk {
-  sourceId: string
-  chunkText: string
-  chunkHash: string
+export const cleanupKnowledgeForOperation = async (
+  agentId: string,
+  operationId: string
+): Promise<void> => {
+  const agent = await agentsSdk.getOrThrow(agentId)
+  const operation = getOperationOrThrow(agent, operationId)
+
+  const sharePointSources = (operation.knowledgeSources || []).filter(
+    source => source.type === AgentKnowledgeSourceType.SHAREPOINT
+  )
+
+  for (const source of sharePointSources) {
+    const siteId = source.config.site.id
+    if (!siteId) {
+      continue
+    }
+    await deleteSharePointFilesForOperationSite(agentId, operationId, siteId)
+  }
+
+  await deleteKnowledgeSourceSyncStateForOperation(agentId, operationId)
+
+  const knowledgeBaseIds = (operation.knowledgeBases || []).filter(Boolean)
+  for (const knowledgeBaseId of knowledgeBaseIds) {
+    await removeKnowledgeBaseWithFiles(knowledgeBaseId, "operation deletion")
+  }
+}
+
+export const getFileUrlForOperation = async (
+  agentId: string,
+  operationId: string,
+  fileId: string
+): Promise<string> => {
+  const file = await knowledgeBaseSdk.getKnowledgeBaseFileOrThrow(fileId)
+  const fileKnowledgeBaseId = file.knowledgeBaseId
+  if (!fileKnowledgeBaseId) {
+    throw new HTTPError("Invalid knowledge base file id", 400)
+  }
+
+  const knowledgeBaseIds = await getKnowledgeBaseIdsForOperation(
+    agentId,
+    operationId
+  )
+  if (!knowledgeBaseIds.includes(fileKnowledgeBaseId)) {
+    throw new HTTPError("File does not belong to this operation", 404)
+  }
+
+  if (!file.objectStoreKey) {
+    throw new HTTPError("Knowledge base file is missing object key", 400)
+  }
+
+  return await objectStore.getPresignedUrl(
+    ObjectStoreBuckets.APPS,
+    file.objectStoreKey
+  )
+}
+
+const getKnowledgeBaseIdsForAgent = async (
+  agentId: string
+): Promise<string[]> => {
+  const agent = await agentsSdk.getOrThrow(agentId)
+  return (
+    agent.operations?.flatMap(operation => operation.knowledgeBases || []) || []
+  ).filter(Boolean)
+}
+
+export const listFilesForAgent = async (
+  agentId: string
+): Promise<KnowledgeBaseFile[]> => {
+  const knowledgeBaseIds = await getKnowledgeBaseIdsForAgent(agentId)
+  if (knowledgeBaseIds.length === 0) {
+    return []
+  }
+
+  return (
+    await Promise.all(
+      knowledgeBaseIds.map(id => knowledgeBaseSdk.listKnowledgeBaseFiles(id))
+    )
+  ).flat()
+}
+
+interface UploadKnowledgeFileInput {
+  filename: string
+  mimetype?: string
+  size?: number
+  buffer: Buffer
+  uploadedBy: string
+}
+
+export const deleteFileForAgent = async (
+  agentId: string,
+  fileId: string
+): Promise<void> => {
+  const file = await knowledgeBaseSdk.getKnowledgeBaseFileOrThrow(fileId)
+  const fileKnowledgeBaseId = file.knowledgeBaseId
+  if (!fileKnowledgeBaseId) {
+    throw new HTTPError("Invalid knowledge base file id", 400)
+  }
+  const knowledgeBaseIds = await getKnowledgeBaseIdsForAgent(agentId)
+  if (!knowledgeBaseIds.includes(fileKnowledgeBaseId)) {
+    throw new HTTPError("File does not belong to this agent", 404)
+  }
+
+  const knowledgeBase = await knowledgeBaseSdk.find(fileKnowledgeBaseId)
+  if (!knowledgeBase) {
+    throw new HTTPError("Agent file storage not found", 404)
+  }
+  await knowledgeBaseSdk.removeKnowledgeBaseFile(knowledgeBase, file)
+}
+
+export const getFileUrlForAgent = async (
+  agentId: string,
+  fileId: string
+): Promise<string> => {
+  const file = await knowledgeBaseSdk.getKnowledgeBaseFileOrThrow(fileId)
+  const fileKnowledgeBaseId = file.knowledgeBaseId
+  if (!fileKnowledgeBaseId) {
+    throw new HTTPError("Invalid knowledge base file id", 400)
+  }
+
+  const knowledgeBaseIds = await getKnowledgeBaseIdsForAgent(agentId)
+  if (!knowledgeBaseIds.includes(fileKnowledgeBaseId)) {
+    throw new HTTPError("File does not belong to this agent", 404)
+  }
+
+  if (!file.objectStoreKey) {
+    throw new HTTPError("Knowledge base file is missing object key", 400)
+  }
+
+  return await objectStore.getPresignedUrl(
+    ObjectStoreBuckets.APPS,
+    file.objectStoreKey
+  )
+}
+
+const assertKnowledgeBaseHasId: (
+  knowledgeBase: KnowledgeBase
+) => asserts knowledgeBase is WithRequired<KnowledgeBase, "_id"> = (
+  knowledgeBase: KnowledgeBase
+) => {
+  if (!knowledgeBase._id) {
+    throw new Error("Knowledge base id not set")
+  }
+}
+
+function getProcessor(kb: WithRequired<KnowledgeBase, "_id">) {
+  const ProcessorClassByType = {
+    [KnowledgeBaseType.GEMINI]: GeminiRagProcessor,
+  }
+
+  const ProcessorClass = ProcessorClassByType[kb.type]
+  if (!ProcessorClass) {
+    throw new Error(`RAG processor is not configured for ${kb.type}`)
+  }
+
+  return new ProcessorClass(kb)
+}
+
+export const ingestKnowledgeBaseFile = async (
+  knowledgeBase: KnowledgeBase,
+  knowledgeBaseFile: KnowledgeBaseFile,
+  fileBuffer: Buffer
+): Promise<void> => {
+  assertKnowledgeBaseHasId(knowledgeBase)
+  const knowledgeBaseFileId = knowledgeBaseFile._id
+  if (!knowledgeBaseFileId) {
+    throw new Error("Knowledge base file id not set")
+  }
+
+  const processor = getProcessor(knowledgeBase)
+  await processor.ingestKnowledgeBaseFile(
+    { ...knowledgeBaseFile, _id: knowledgeBaseFileId },
+    fileBuffer
+  )
 }
 
 interface RetrievedContextResult {
@@ -315,97 +458,234 @@ interface RetrievedContextResult {
   sources: AgentMessageRagSource[]
 }
 
-export const retrieveContextForAgent = async (
+export const retrieveContextForOperation = async (
   agent: Agent,
+  operationId: string,
   question: string
 ): Promise<RetrievedContextResult> => {
-  await ensureRagEnabled()
   if (!question || question.trim().length === 0) {
     return { text: "", chunks: [], sources: [] }
   }
 
-  const agentId = agent._id
-  if (!agentId) {
-    throw new Error("Agent id not set")
-  }
-
-  if (!agent.ragTopK || !agent.ragMinDistance) {
-    throw new Error("RAG settings not properly configured")
-  }
-
-  if (!agent.embeddingModel) {
-    throw new Error("Embedding model is not set")
-  }
-
-  const agentFiles = await agents.listAgentFiles(agent._id!)
-  const readyFileSources = agentFiles
-    .filter(file => file.status === AgentFileStatus.READY && file.ragSourceId)
-    .map(file => file.ragSourceId)
-
-  if (readyFileSources.length === 0) {
+  const operation = getOperationOrThrow(agent, operationId)
+  if (!operation.live) {
     return { text: "", chunks: [], sources: [] }
   }
+  const knowledgeBases = await resolveKnowledgeBasesForOperation(operation)
+  const chunks: Array<RetrievedContextChunk> = []
+  const files: KnowledgeBaseFile[] = []
 
-  const [queryEmbedding] = await embedChunks(
-    agent.embeddingModel,
-    [question],
-    1
-  )
-  if (!queryEmbedding?.length) {
-    throw new Error("Embedding response missing dimensions")
+  for (const knowledgeBase of knowledgeBases) {
+    const knowledgeBaseId = knowledgeBase._id
+    if (!knowledgeBaseId) {
+      continue
+    }
+
+    const knowledgeBaseFiles =
+      await knowledgeBaseSdk.listKnowledgeBaseFiles(knowledgeBaseId)
+    files.push(...knowledgeBaseFiles)
+
+    const readyFiles = knowledgeBaseFiles.filter(
+      file => file.status === KnowledgeBaseFileStatus.READY
+    )
+    const readyFileSources = readyFiles
+      .map(file => file.ragSourceId)
+      .filter((id): id is string => !!id)
+
+    if (readyFiles.length === 0) {
+      continue
+    }
+
+    const exactTabularMatchResult = await retrieveExactTabularMatches(
+      readyFiles,
+      question
+    )
+    chunks.push(...exactTabularMatchResult.chunks)
+
+    const readyFileSourceIds = new Set(readyFileSources)
+    const readySourceIdByFilename = getReadySourceIdByFilename(readyFiles)
+    assertKnowledgeBaseHasId(knowledgeBase)
+    const processor = getProcessor(knowledgeBase)
+    const returned = await processor.search(question)
+
+    for (const chunk of returned) {
+      if (!chunk.source) {
+        chunks.push(chunk)
+        continue
+      }
+
+      if (readyFileSourceIds.has(chunk.source)) {
+        if (
+          shouldSkipTabularVectorChunk(
+            chunk.chunkText,
+            exactTabularMatchResult.matchesBySourceId.get(chunk.source)
+          )
+        ) {
+          continue
+        }
+        chunks.push(chunk)
+        continue
+      }
+
+      const sourceIdFromFilename = readySourceIdByFilename.get(
+        normalizeFilenameLookup(chunk.source)
+      )
+      if (!sourceIdFromFilename) {
+        continue
+      }
+      if (
+        shouldSkipTabularVectorChunk(
+          chunk.chunkText,
+          exactTabularMatchResult.matchesBySourceId.get(sourceIdFromFilename)
+        )
+      ) {
+        continue
+      }
+
+      chunks.push({
+        ...chunk,
+        source: sourceIdFromFilename,
+      })
+    }
   }
 
-  const vectorDb = await createVectorDb({
-    agentId,
-    vectorDbId: agent.vectorDb,
-  })
-  const rows = await vectorDb.queryNearest(
-    queryEmbedding,
-    readyFileSources,
-    agent.ragTopK
-  )
-  if (rows.length === 0) {
+  if (chunks.length === 0) {
     return { text: "", chunks: [], sources: [] }
   }
-
-  const maxDistance = 1 - agent.ragMinDistance
-  const filtered = rows.filter(row => row.distance <= maxDistance)
-  if (filtered.length === 0) {
-    return { text: "", chunks: [], sources: [] }
-  }
-
-  const chunks: RetrievedContextChunk[] = filtered.map(row => ({
-    sourceId: row.source,
-    chunkText: row.chunkText,
-    chunkHash: row.chunkHash,
-  }))
 
   return {
     text: chunks.map(chunk => chunk.chunkText).join("\n\n"),
     chunks,
-    sources: toSourceMetadata(chunks, agentFiles),
+    sources: toSourceMetadata(chunks, files),
   }
 }
 
 const toSourceMetadata = (
   chunks: RetrievedContextChunk[],
-  files: AgentFile[]
+  files: KnowledgeBaseFile[]
 ): AgentMessageRagSource[] => {
-  const fileBySourceId = new Map(files.map(file => [file.ragSourceId, file]))
+  const readyFiles = files.filter(
+    file => file.status === KnowledgeBaseFileStatus.READY
+  )
+  const fileBySourceId = new Map(
+    readyFiles.map(file => [file.ragSourceId, file])
+  )
   const summary = new Map<string, AgentMessageRagSource>()
 
   for (const chunk of chunks) {
-    const file = fileBySourceId.get(chunk.sourceId)
-    if (!summary.has(chunk.sourceId)) {
-      summary.set(chunk.sourceId, {
-        sourceId: chunk.sourceId,
+    if (!chunk.source) {
+      continue
+    }
+    const file = fileBySourceId.get(chunk.source)
+    const sourceId = chunk.source
+    if (!summary.has(sourceId)) {
+      summary.set(sourceId, {
+        sourceId,
         fileId: file?._id,
-        filename: file?.filename ?? chunk.sourceId,
-        chunkCount: 0,
+        filename: file?.filename ?? chunk.source,
       })
     }
-    const entry = summary.get(chunk.sourceId)!
-    entry.chunkCount += 1
   }
   return Array.from(summary.values())
+}
+const isTabularRowLikeChunk = (
+  chunkText: string,
+  exactMatches: TabularRowExactMatch[]
+) => {
+  if (/(^|\n)Row \d+ in /i.test(chunkText)) {
+    return true
+  }
+
+  for (const match of exactMatches) {
+    const matchingLabels = match.columnLabels.filter(label =>
+      new RegExp(
+        `(^|\n)${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}:\\s*\\S`,
+        "i"
+      ).test(chunkText)
+    )
+    if (matchingLabels.length >= 2) {
+      return true
+    }
+  }
+
+  return false
+}
+
+const shouldSkipTabularVectorChunk = (
+  chunkText: string,
+  exactMatches?: TabularRowExactMatch[]
+) => {
+  if (!exactMatches?.length) {
+    return false
+  }
+
+  if (!isTabularRowLikeChunk(chunkText, exactMatches)) {
+    return false
+  }
+
+  return true
+}
+
+const retrieveExactTabularMatches = async (
+  readyFiles: KnowledgeBaseFile[],
+  question: string
+): Promise<ExactTabularMatchResult> => {
+  const chunks: RetrievedContextChunk[] = []
+  const matchesBySourceId = new Map<string, TabularRowExactMatch[]>()
+
+  for (const file of readyFiles) {
+    if (
+      !file.ragSourceId ||
+      !file.objectStoreKey ||
+      !isTabularKnowledgeFile({
+        filename: file.filename,
+        mimetype: file.mimetype,
+      })
+    ) {
+      continue
+    }
+
+    try {
+      const buffer = await loadFileBuffer(file.objectStoreKey)
+      const matches = searchTabularRowsForExactMatches({
+        filename: file.filename,
+        mimetype: file.mimetype,
+        buffer,
+        query: question,
+      })
+      if (!matches.length) {
+        continue
+      }
+
+      matchesBySourceId.set(file.ragSourceId, matches)
+
+      chunks.push(
+        ...matches.map(match => ({
+          source: file.ragSourceId,
+          chunkText: match.chunkText,
+        }))
+      )
+    } catch (error) {
+      console.error("Failed to run exact tabular knowledge lookup", {
+        fileId: file._id,
+        filename: file.filename,
+        error,
+      })
+    }
+  }
+
+  return { chunks, matchesBySourceId }
+}
+
+export const deleteKnowledgeBaseFileChunks = async (
+  knowledgeBase: KnowledgeBase,
+  sourceIds: string[]
+) => {
+  if (!sourceIds || sourceIds.length === 0) {
+    return
+  }
+  assertKnowledgeBaseHasId(knowledgeBase)
+
+  const processor = getProcessor(knowledgeBase)
+  await processor.deleteFiles(sourceIds)
 }

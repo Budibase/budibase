@@ -1,7 +1,7 @@
 <script lang="ts">
   import "@spectrum-css/statuslight"
 
-  export let size: string = "M"
+  export let size: "S" | "M" | "L" | "XL" = "M"
   export let celery: boolean = false
   export let yellow: boolean = false
   export let fuchsia: boolean = false

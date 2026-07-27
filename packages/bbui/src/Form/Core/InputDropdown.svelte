@@ -19,7 +19,7 @@
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
   export let getOptionSubtitle = option => option?.subtitle
-  export let isOptionSelected = () => false
+  export let isOptionSelected = _option => false
 
   const dispatch = createEventDispatcher()
   let open = false

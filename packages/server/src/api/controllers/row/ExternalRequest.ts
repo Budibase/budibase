@@ -28,7 +28,6 @@ import {
   ViewV2,
 } from "@budibase/types"
 import dayjs from "dayjs"
-import { isEqual, omit } from "lodash"
 import { cloneDeep } from "lodash/fp"
 import { isRelationshipColumn } from "../../../db/utils"
 import env from "../../../environment"
@@ -118,11 +117,12 @@ function cleanupConfig(config: RunConfig, table: Table): RunConfig {
   // check the row and filters to make sure they aren't a key of some sort
   if (config.filters) {
     for (let [key, filter] of Object.entries(config.filters)) {
-      // oneOf is an array, don't iterate it
+      // oneOf/notOneOf are arrays, don't iterate
       if (
         typeof filter !== "object" ||
         Object.keys(filter).length === 0 ||
-        key === FilterType.ONE_OF
+        key === FilterType.ONE_OF ||
+        key === FilterType.NOT_ONE_OF
       ) {
         continue
       }
@@ -540,12 +540,13 @@ export class ExternalRequest<T extends Operation> {
         linkSecondary?: string
         relationshipType: RelationshipType
       }) => {
-        // In many-to-many relationships, the table will contain 3 fields: a
-        // primary key (usually an auto-incrementing ID), and then the 2 foreign
-        // keys that link to the two tables. So a row is equal if the 2
-        // non-primary keys match the body.
+        // Match junction rows using the relationship link columns being written
+        // for this sync operation, rather than the order of the table primary key.
         if (relationshipType === RelationshipType.MANY_TO_MANY) {
-          return isEqual(omit(row, [linkPrimary]), omit(body, [linkPrimary]))
+          const junctionLinkFields = Object.keys(body)
+          return junctionLinkFields.every(
+            field => String(row[field]) === String(body[field])
+          )
         }
 
         const matchesPrimaryLink =

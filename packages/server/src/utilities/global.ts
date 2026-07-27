@@ -7,10 +7,16 @@ import {
   users,
 } from "@budibase/backend-core"
 import { groups } from "@budibase/pro"
-import { ContextUser, User, UserCtx, UserGroup } from "@budibase/types"
+import {
+  type ContextUser,
+  type User,
+  type UserCtx,
+  type UserGroup,
+} from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import env from "../environment"
+import { stripSensitiveUserFields } from "./sensitiveUserFields"
 
 export async function processUser(
   user: ContextUser,
@@ -20,7 +26,7 @@ export async function processUser(
     return user
   }
   user = cloneDeep(user)
-  delete user.password
+  stripSensitiveUserFields(user)
   const workspaceId = opts.appId || context.getWorkspaceId()
   if (!workspaceId) {
     throw new Error("Unable to process user without app ID")
@@ -102,7 +108,9 @@ export async function getRawGlobalUsers(userIds?: string[]): Promise<User[]> {
   const db = tenancy.getGlobalDB()
   let globalUsers: User[]
   if (userIds) {
-    globalUsers = await db.getMultiple<User>(userIds, { allowMissing: true })
+    globalUsers = await db.getMultiple<User>(userIds, {
+      allowMissing: true,
+    })
   } else {
     globalUsers = (
       await db.allDocs<User>(
@@ -114,11 +122,7 @@ export async function getRawGlobalUsers(userIds?: string[]): Promise<User[]> {
   }
   return globalUsers
     .filter(user => user != null)
-    .map(user => {
-      delete user.password
-      delete user.forceResetPassword
-      return user
-    })
+    .map(user => stripSensitiveUserFields(user))
 }
 
 export async function getGlobalUsers(
@@ -137,10 +141,11 @@ export async function getGlobalUsersFromMetadata(users: ContextUser[]) {
     const globalUser = globalUsers.find(
       globalUser => globalUser && user._id?.includes(globalUser._id!)
     )
+    const metadata = stripSensitiveUserFields(cloneDeep(user))
     return {
       ...globalUser,
       // doing user second overwrites the id and rev (always metadata)
-      ...user,
+      ...metadata,
     }
   })
 }

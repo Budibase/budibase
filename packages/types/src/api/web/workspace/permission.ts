@@ -16,6 +16,7 @@ export interface ResourcePermissionInfo {
 
 export interface GetResourcePermsResponse {
   permissions: Record<string, ResourcePermissionInfo>
+  excludedRoles?: string[]
 }
 
 export interface GetDependantResourcesResponse {

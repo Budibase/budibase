@@ -87,12 +87,13 @@
   export let lineWrapping = true
   export let renderBindingsAsTags = false
   export let renderMarkdownDecorations = false
+  // Allows context specific customisation, like the params in API Editor
+  export let extraExtensions: Extension[] = []
   export let getCaretPosition: CaretPositionFn = () => ({
     start: 0,
     end: 0,
   })
   export let insertAtPos: InsertAtPositionFn = () => {}
-
   const dispatch = createEventDispatcher()
 
   let textarea: HTMLDivElement
@@ -161,7 +162,7 @@
     }
     if (
       editor &&
-      value &&
+      value != null &&
       (editor.state.doc.toString() !== value || queuedRefresh)
     ) {
       editor.dispatch({
@@ -490,6 +491,7 @@
       doc: String(value),
       extensions: buildExtensions([
         ...baseExtensions,
+        ...extraExtensions,
         dropdown == DropdownPosition.Absolute
           ? tooltips({
               position: "absolute",
@@ -568,11 +570,11 @@
   /* Editor */
   .code-editor {
     font-size: 12px;
-    height: auto;
+    height: 100%;
     cursor: text;
   }
   .code-editor :global(.cm-editor) {
-    height: auto;
+    height: 100%;
     background: var(--spectrum-global-color-gray-50) !important;
     outline: none;
     border: none;
@@ -582,7 +584,7 @@
     padding: 10px 0;
   }
   .code-editor > div {
-    height: auto;
+    height: 100%;
   }
 
   /* HBS tags */

@@ -16,6 +16,7 @@ export type EnvVar = {
 interface EnvironmentState {
   variables: EnvVar[]
   status: StatusEnvironmentVariableResponse
+  loaded: boolean
 }
 
 class EnvironmentStore extends BudiStore<EnvironmentState> {
@@ -25,6 +26,7 @@ class EnvironmentStore extends BudiStore<EnvironmentState> {
       status: {
         encryptionKeyAvailable: false,
       },
+      loaded: false,
     })
   }
 
@@ -43,6 +45,7 @@ class EnvironmentStore extends BudiStore<EnvironmentState> {
       const mappedVars = envVars.map(name => ({ name }))
       this.update(store => {
         store.variables = mappedVars
+        store.loaded = true
         return store
       })
     }

@@ -25,10 +25,11 @@
 - No semicolons, double quotes, 2-space tabs (see .prettierrc.json)
 - Use TypeScript strict mode with consistent-type-imports
 - Imports: Group external imports first, then internal `@budibase/*` packages
+- Assume the target Node version from the repo root `.nvmrc` when writing or reviewing code
 - Variables: camelCase, prefix unused with `_`
 - Functions: Prefer arrow functions, use async/await over Promises
 - Error handling: Use try/catch
-- Types: Use `interface` for objects, `type` for unions/primitives, do NOT cast to any.
+- Types: Use `interface` for objects, `type` for unions/primitives, do NOT cast to any or unknown.
 - Do not add backwards compatibility paths or broad "handle every scenario" logic unless explicitly instructed to do so for the task.
 - Testing: Jest framework, use describe/it structure, mock external services
   using `nock`.
@@ -40,6 +41,10 @@
 - When you're writing tests, you don't need to assert or do conditional checks
   on intermediate states. Just assert the final outcome
   against, provided there are no type errors.
+- Avoid adding nested ternary statements.
+- Prefer a svelte5 approach over svelte4.
+- Don't use // @ts-nocheck when asked to fix type errors.
+- When writing tests involving a URL, use example.com as the domain.
 
 ## Test style - packages/server
 
@@ -51,6 +56,19 @@
 - Use `TestConfiguration` in `packages/server/src/tests/TestConfiguration.ts` for every API test case -
   this can be used to access the test API under `new TestConfiguration().api`, a list of functions and
   request/response types can be found in `packages/server/src/tests/utilities/api`.
+
+## Git
+
+Never auto-commit changes unless explicitly asked to do so. You may ask permission to commit.
+Each commit requires permission.
+
+Never auto-push changes unless explicitly asked to do so. You may ask permission to push.
+Each push requires permission.
+
+Never auto-stage or add changes unless explicitly asked to do so. As a developer I want to review the changes that the LLM has made.
+Never unstage changes.
+
+For example, if I command `git add, commit, push` go ahead and do that once. Any subsequent changes will require permission. You may ask for permission on a per commit basis.
 
 ## Pull requests
 
@@ -75,9 +93,10 @@
 - The product is split up by app, so to find things like data sources and
   automations you must first make sure to select an app.
 
-## LiteLLM 
-- The LiteLLM API is available when in local development at localhost:4000 
-- The auth token is `sk-1234`
+## LiteLLM
+
+- The LiteLLM API is available when in local development at localhost:4000
+- The auth token is `budibase`
 
 ## Misc
 
@@ -88,17 +107,17 @@
 
 ### Services overview
 
-| Service | Port | Notes |
-|---------|------|-------|
-| Nginx proxy (main entry) | 10000 | Routes to builder, server, worker, CouchDB, MinIO |
-| Builder (Vite/Svelte) | 3000 | Frontend dev server |
-| Server (Koa) | 4001 | Backend API for apps |
-| Worker | 4002 | Background jobs; note `.env` sets `WORKER_PORT=4002`, not 4003 |
-| CouchDB | 4005 | Primary database |
-| CouchDB SQS | 4006 | |
-| Redis | 6379 | Cache, sessions, queues |
-| MinIO | 4004 | S3-compatible object storage |
-| LiteLLM (optional) | 4000 | AI proxy; see `## LiteLLM` section above for auth token |
+| Service                  | Port  | Notes                                                          |
+| ------------------------ | ----- | -------------------------------------------------------------- |
+| Nginx proxy (main entry) | 10000 | Routes to builder, server, worker, CouchDB, MinIO              |
+| Builder (Vite/Svelte)    | 3000  | Frontend dev server                                            |
+| Server (Koa)             | 4001  | Backend API for apps                                           |
+| Worker                   | 4002  | Background jobs; note `.env` sets `WORKER_PORT=4002`, not 4003 |
+| CouchDB                  | 4005  | Primary database                                               |
+| CouchDB SQS              | 4006  |                                                                |
+| Redis                    | 6379  | Cache, sessions, queues                                        |
+| MinIO                    | 4004  | S3-compatible object storage                                   |
+| LiteLLM (optional)       | 4000  | AI proxy; see `## LiteLLM` section above for auth token        |
 
 ### Starting the dev environment
 

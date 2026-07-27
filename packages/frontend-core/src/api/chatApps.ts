@@ -10,6 +10,7 @@ import {
   FetchPublishedChatAppsResponse,
   UpdateChatAppRequest,
   AgentMessageMetadata,
+  FetchAgentFileUrlResponse,
 } from "@budibase/types"
 import { Header } from "@budibase/shared-core"
 import { BaseAPIClient } from "./types"
@@ -38,6 +39,12 @@ export interface ChatAppEndpoints {
   ) => Promise<FetchAgentHistoryResponse>
   fetchChatApp: (workspaceId?: string) => Promise<ChatApp | null>
   setChatAppAgent: (chatAppId: string, agentId: string) => Promise<ChatAppAgent>
+  fetchChatAppAgentFileUrl: (
+    chatAppId: string,
+    agentId: string,
+    fileId: string,
+    operationId: string
+  ) => Promise<FetchAgentFileUrlResponse>
   createChatConversation: (
     chat: CreateChatConversationRequest,
     workspaceId?: string
@@ -178,6 +185,20 @@ export const buildChatAppEndpoints = (
     return await API.post({
       url: `/api/chatapps/${chatAppId}/agent`,
       body: { agentId } as any,
+    })
+  },
+
+  fetchChatAppAgentFileUrl: async (
+    chatAppId: string,
+    agentId: string,
+    fileId: string,
+    operationId: string
+  ) => {
+    if (!operationId) {
+      throw new Error("operationId is required to fetch a chat app agent file")
+    }
+    return await API.get<FetchAgentFileUrlResponse>({
+      url: `/api/chatapps/${chatAppId}/agents/${agentId}/operations/${operationId}/files/${fileId}/url`,
     })
   },
 

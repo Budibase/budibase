@@ -1,4 +1,6 @@
 import {
+  GenerateAgentInstructionsRequest,
+  GenerateAgentInstructionsResponse,
   GenerateJsRequest,
   GenerateJsResponse,
   GenerateTablesRequest,
@@ -38,6 +40,9 @@ const parseSSEEventChunk = (chunk: string): TablesStreamEvent | null => {
 }
 
 export interface AIEndpoints {
+  generateAgentInstructions: (
+    req: GenerateAgentInstructionsRequest
+  ) => Promise<GenerateAgentInstructionsResponse>
   generateCronExpression: (prompt: string) => Promise<{ message: string }>
   generateJs: (req: GenerateJsRequest) => Promise<GenerateJsResponse>
   generateTables: (
@@ -47,6 +52,13 @@ export interface AIEndpoints {
 }
 
 export const buildAIEndpoints = (API: BaseAPIClient): AIEndpoints => ({
+  generateAgentInstructions: async req => {
+    return await API.post({
+      url: "/api/ai/agent-instructions",
+      body: req,
+    })
+  },
+
   /**
    * Generates a cron expression from a prompt
    */

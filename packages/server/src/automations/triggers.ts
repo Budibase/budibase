@@ -7,6 +7,7 @@ import { context, db as dbCore, logging } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { dataFilters, sdk } from "@budibase/shared-core"
 import {
+  ActionType,
   Automation,
   AutomationData,
   AutomationEventType,
@@ -100,25 +101,18 @@ async function queueRelevantRowAutomations(
     })
 
     for (const automation of automations) {
-      // don't queue events which are for dev workspaces, only way to test automations is
-      // running tests on them, in production the test flag will never
-      // be checked due to lazy evaluation (first always false)
-      if (
-        !env.ALLOW_DEV_AUTOMATIONS &&
-        isDevWorkspaceID(event.appId) &&
-        !(await checkTestFlag(automation._id!))
-      ) {
-        continue
-      }
-
       const shouldTrigger = await checkTriggerFilters(automation, {
         row: event.row,
         oldRow: event.oldRow,
       })
       if (shouldTrigger) {
         try {
-          await quotas.addAction(() =>
-            automationQueue.add({ automation, event }, JOB_OPTS)
+          const isTestRun = isDevWorkspaceID(event.appId)
+          await quotas.addAction(ActionType.AUTOMATION_STEP, () =>
+            automationQueue.add(
+              { automation, event, ...(isTestRun ? { isTestRun } : {}) },
+              JOB_OPTS
+            )
           )
         } catch (e) {
           logging.logAlert("Failed to queue automation", e)
@@ -190,6 +184,7 @@ interface AutomationTriggerParams {
 export interface ExternalTriggerOptions {
   getResponses?: boolean
   onProgress?: (event: AutomationTestProgressEvent) => void
+  isTestRun?: boolean
 }
 
 export async function externalTrigger(
@@ -205,14 +200,19 @@ export async function externalTrigger(
 export async function externalTrigger(
   automation: Automation,
   params: AutomationTriggerParams,
-  { getResponses, onProgress }: ExternalTriggerOptions = {}
+  { getResponses, onProgress, isTestRun }: ExternalTriggerOptions = {}
 ): Promise<AutomationResults | DidNotTriggerResponse | AutomationJob> {
   if (automation.disabled) {
     throw new Error("Automation is disabled")
   }
 
+  const workspaceId = params.appId || context.getWorkspaceId()
+  const isDevRun = workspaceId ? isDevWorkspaceID(workspaceId) : false
+  const shouldRunAsTest = Boolean(isTestRun || isDevRun)
+
   if (
     sdk.automations.isAppAction(automation) &&
+    !isTestRun &&
     !(await checkTestFlag(automation._id!))
   ) {
     if (params.fields == null) {
@@ -234,14 +234,27 @@ export async function externalTrigger(
     sdk.automations.isRowAction(automation) ||
     sdk.automations.isWebhookAction(automation)
   ) {
+    const {
+      appId: _appId,
+      timeout: _timeout,
+      user: _user,
+      metadata: _metadata,
+      automation: _automation,
+      ...fields
+    } = params.fields || {}
+
     params = {
       ...params,
-      ...params.fields,
+      ...fields,
       fields: {},
     }
   }
 
-  const data: AutomationData = { automation, event: params }
+  const data: AutomationData = {
+    automation,
+    event: params,
+    ...(shouldRunAsTest ? { isTestRun: true } : {}),
+  }
 
   const shouldTrigger = await checkTriggerFilters(automation, {
     row: data.event?.row ?? {},
@@ -261,14 +274,19 @@ export async function externalTrigger(
   if (getResponses) {
     data.event = {
       ...data.event,
-      appId: context.getWorkspaceId(),
+      appId: workspaceId,
       automation,
     }
-    return quotas.addAction(() =>
-      executeInThread({ data } as AutomationJob, { onProgress })
+    return quotas.addAction(ActionType.AUTOMATION_STEP, () =>
+      executeInThread({ data } as AutomationJob, {
+        onProgress,
+        isTestRun: shouldRunAsTest,
+      })
     )
   } else {
-    return quotas.addAction(() => automationQueue.add(data, JOB_OPTS))
+    return quotas.addAction(ActionType.AUTOMATION_STEP, () =>
+      automationQueue.add(data, JOB_OPTS)
+    )
   }
 }
 

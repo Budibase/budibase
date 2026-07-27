@@ -65,6 +65,10 @@ export function createPaginationStore() {
     set(defaultValue())
   }
 
+  function replace(state: PaginationStore) {
+    set(state)
+  }
+
   return {
     subscribe,
     prevPage,
@@ -72,5 +76,6 @@ export function createPaginationStore() {
     fetched,
     loading,
     reset,
+    replace,
   }
 }

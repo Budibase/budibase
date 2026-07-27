@@ -47,7 +47,7 @@
 
 <div class="wrapper">
   <Body>{recaptchaLabels.prompt}</Body>
-  <div id="recaptcha-container" />
+  <div id="recaptcha-container"></div>
   <div>
     <Button cta on:click={handleSubmit}>{recaptchaLabels.submit}</Button>
   </div>

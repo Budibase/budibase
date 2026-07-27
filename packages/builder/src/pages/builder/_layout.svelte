@@ -34,7 +34,6 @@
   } from "@budibase/bbui"
   import SettingsModal from "@/components/settings/SettingsModal.svelte"
   import AccountLockedModal from "@/components/portal/licensing/AccountLockedModal.svelte"
-  import EnterpriseBasicTrialBanner from "@/components/portal/licensing/EnterpriseBasicTrialBanner.svelte"
   import { writable } from "svelte/store"
 
   $isActive
@@ -52,6 +51,7 @@
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
   $: cloud = $admin?.cloud
   $: user = $auth.user
+  $: canCreateApps = sdk.users.canCreateApps(user)
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
   $: isBuilder = sdk.users.hasBuilderPermissions(user)
@@ -69,7 +69,7 @@
       ? accountLockedModal.show
       : null
 
-  $: updateBannerVisibility($auth.user, $licensing.license?.plan?.type, isOwner)
+  $: updateBannerVisibility($auth.user, isOwner)
 
   $: processNavAction($navigationAction)
 
@@ -80,7 +80,7 @@
   }
 
   // Determine if the user is on a trial and show the banner.
-  const updateBannerVisibility = (user, licenseType, isOwner) => {
+  const updateBannerVisibility = (user, isOwner) => {
     if (!user && $licensing.showTrialBanner) {
       licensing.update(store => {
         store.showTrialBanner = false
@@ -89,7 +89,7 @@
     } else if (
       user &&
       !$licensing.showTrialBanner &&
-      licenseType === Constants.PlanType.ENTERPRISE_BASIC_TRIAL &&
+      $licensing.isTrialPlan &&
       isOwner
     ) {
       licensing.update(store => {
@@ -183,22 +183,18 @@
           return { type: "returnUrl", url: returnUrl }
         }
 
-        // Review if builder users have workspaces. If not, redirect them to get-started
+        // Review if builder users have workspaces. If not, redirect them to onboarding
         const hasEditableWorkspaces = $enrichedApps.some(app => app.editable)
         if (
-          ($appsStore.apps.length === 0 ||
-            (isBuilder && !hasEditableWorkspaces)) &&
+          isBuilder &&
+          ($appsStore.apps.length === 0 || !hasEditableWorkspaces) &&
           !$isActive("./apps") &&
           !$isActive("./onboarding") &&
           !$isActive("./get-started")
         ) {
-          // Tenant owners without apps should be redirected to onboarding
-          if (isOwner) {
-            return { type: "redirect", path: "./onboarding" }
-          }
-          // Regular builders without apps should be redirected to "get started"
-          if (isBuilder && !isOwner) {
-            return { type: "redirect", path: "./get-started" }
+          return {
+            type: "redirect",
+            path: canCreateApps ? "./onboarding" : "./apps",
           }
         }
 
@@ -221,7 +217,10 @@
           const defaultApp = $enrichedApps.find(app => app.editable)
           // Only redirect if enriched apps are loaded and app is editable
           if (defaultApp?.devId) {
-            return { type: "redirect", path: `./workspace/${defaultApp.devId}` }
+            return {
+              type: "redirect",
+              path: `./workspace/${defaultApp.devId}/home`,
+            }
           }
         }
       }
@@ -295,17 +294,44 @@
     }
   }
 
+  const handleSharePointConnectionRedirect = () => {
+    const currentUrl = new URL(window.location.href)
+    const microsoftConnected =
+      currentUrl.searchParams.get("microsoft_connected") === "1"
+    const microsoftConnectionReused =
+      currentUrl.searchParams.get("microsoft_connection_reused") === "1"
+    if (!microsoftConnected) {
+      return
+    }
+
+    currentUrl.searchParams.delete("microsoft_connected")
+    currentUrl.searchParams.delete("microsoft_connection_reused")
+    const query = currentUrl.searchParams.toString()
+    const path = query ? `${currentUrl.pathname}?${query}` : currentUrl.pathname
+    window.history.replaceState({}, "", path)
+    if (microsoftConnectionReused) {
+      notifications.warning(
+        "SharePoint connection already existed. Reused existing connection."
+      )
+    } else {
+      notifications.success("SharePoint connected")
+    }
+    bb.settings("/connections/apis")
+  }
+
   onMount(() => {
+    handleSharePointConnectionRedirect()
     initPromise = initBuilder()
     hasAuthenticated = !!$auth.user
   })
 </script>
 
-<EnterpriseBasicTrialBanner show={$licensing.showTrialBanner} />
-
 <AccountLockedModal
   bind:this={accountLockedModal}
   lockedBy={$auth.user?.lockedBy}
+  deactivationScheduledAt={$auth.user?.deactivationScheduledAt}
+  appId={$enrichedApps.find(app => app.editable)?.devId}
+  {isOwner}
   onConfirm={() =>
     isOwner ? licensing.goToUpgradePage() : licensing.goToPricingPage()}
 />

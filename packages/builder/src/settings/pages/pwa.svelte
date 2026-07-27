@@ -68,7 +68,8 @@
 
   async function handlePWAZip(e: CustomEvent) {
     if (!e.detail) {
-      notifications.error("No file selected")
+      pwaConfig.icons = []
+      notifications.success("PWA icons cleared")
       return
     }
 

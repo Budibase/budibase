@@ -38,6 +38,7 @@ import TableConditionEditor from "./controls/TableConditionEditor.svelte"
 import ButtonConditionEditor from "./controls/ButtonConditionEditor.svelte"
 import MultilineDrawerBindableInput from "@/components/common/MultilineDrawerBindableInput.svelte"
 import FilterableSelect from "./controls/FilterableSelect.svelte"
+import { setComponentSettingsResolver } from "./componentSettingsRegistry"
 
 const componentMap = {
   text: DrawerBindableInput,
@@ -100,6 +101,8 @@ const componentMap = {
   // Some validation types are the same as others, so not all types are
   // explicitly listed here. e.g. options uses string validation
   "validation/string": ValidationEditor,
+  "validation/url": ValidationEditor,
+  "validation/email": ValidationEditor,
   "validation/array": ValidationEditor,
   "validation/number": ValidationEditor,
   "validation/boolean": ValidationEditor,
@@ -129,3 +132,5 @@ export const getComponentForSetting = setting => {
 
   return componentMap[type]
 }
+
+setComponentSettingsResolver(getComponentForSetting)

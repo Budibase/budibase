@@ -13,10 +13,11 @@ import {
   mockChatGPTResponse,
   mockOpenAIFileUpload,
 } from "../../../../tests/utilities/mocks/ai/openai"
-import { getKeySettings } from "../configs/litellm"
+import { fetchModelMaxInputTokens, getKeySettings } from "../configs/litellm"
 import { createLiteLLMOpenAI } from "./litellm"
 
 jest.mock("../configs/litellm", () => ({
+  fetchModelMaxInputTokens: jest.fn(),
   getKeySettings: jest.fn(),
 }))
 
@@ -54,6 +55,10 @@ describe("createLiteLLMOpenAI", () => {
     const getKeySettingsMock = getKeySettings as jest.MockedFunction<
       typeof getKeySettings
     >
+    const fetchModelMaxInputTokensMock =
+      fetchModelMaxInputTokens as jest.MockedFunction<
+        typeof fetchModelMaxInputTokens
+      >
 
     getLicenseKeyMock.mockResolvedValue("license-key")
     getKeySettingsMock.mockResolvedValue({
@@ -61,6 +66,7 @@ describe("createLiteLLMOpenAI", () => {
       secretKey: "secret-key",
       teamId: "team-id",
     })
+    fetchModelMaxInputTokensMock.mockResolvedValue(undefined)
 
     mockChatGPTResponse("hello", {
       baseUrl: "http://litellm.local",

@@ -77,8 +77,15 @@
   let optionsMap: OptionsMap = {}
   let loadingMissingOptions: boolean = false
 
+  // Cached filter
+  let lastFilterKey: string | undefined = undefined
+
   // Reset the available options when our base filter changes
   $: filter, workspaceUsersOnly, (optionsMap = {})
+
+  // Clear the current selection when the base filter changes
+  $: clearSelectionOnFilterChange(migratedFilter)
+
   // Determine if we can select multiple rows or not
   $: multiselect =
     multi ??
@@ -376,6 +383,20 @@
       return utils.processSearchFilters(filter)
     }
     return filter
+  }
+
+  // Clears the current selection when the base filter changes
+  const clearSelectionOnFilterChange = (filter: UISearchFilter | undefined) => {
+    const key = filter ? JSON.stringify(filter) : ""
+    const previous = lastFilterKey
+    lastFilterKey = key
+    // Pre-existing values are preserved.
+    if (!previous || key === previous) {
+      return
+    }
+    if (fieldApi && selectedIDs.length) {
+      fieldApi.setValue(type === FieldType.BB_REFERENCE_SINGLE ? null : [])
+    }
   }
 
   // Searches for new options matching the given term

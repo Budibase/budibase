@@ -11,11 +11,18 @@
     ChatConversation,
     DraftChatConversation,
     AgentMessageMetadata,
+    EscalationContextDoc,
+    EscalationRespondResult,
   } from "@budibase/types"
+  import { ESCALATE_TOOL_NAME, EscalateToolResultStatus } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
-  import { tick } from "svelte"
+  import { tick, untrack } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
   import { Chat } from "@ai-sdk/svelte"
+  import { formatToolName } from "../../utils"
+  import ReasoningStatus from "./ReasoningStatus.svelte"
+  import ContextUsage from "./ContextUsage.svelte"
+  import EscalationCard from "./EscalationCard.svelte"
   import {
     DefaultChatTransport,
     isTextUIPart,
@@ -26,7 +33,6 @@
   } from "ai"
 
   type ChatConversationLike = ChatConversation | DraftChatConversation
-
   interface Props {
     workspaceId: string
     chat: ChatConversationLike
@@ -36,6 +42,20 @@
     onchatsaved?: (_event: {
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
+    // Fired when an escalation parks; the consumer polls the outcome and
+    // injects it via appendAssistantMessage.
+    onEscalationPending?: (_detail: { escalationId: string }) => void
+    // Live resolution per escalationId (from the poll) - drives the card state.
+    escalationState?: Record<
+      string,
+      { resolution: EscalationContextDoc["resolution"] }
+    >
+    // Dev-only: show the inline Approve/Reject buttons on the escalation card.
+    showInlineApproval?: boolean
+    onResolve?: (
+      _escalationId: string,
+      _accepted: boolean
+    ) => Promise<EscalationRespondResult | undefined>
     isAgentPreviewChat?: boolean
     readOnly?: boolean
     readOnlyReason?: "disabled" | "deleted" | "offline"
@@ -48,10 +68,46 @@
     conversationStarters = [],
     initialPrompt = "",
     onchatsaved,
+    onEscalationPending,
+    escalationState,
+    showInlineApproval = false,
+    onResolve,
     isAgentPreviewChat = false,
     readOnly = false,
     readOnlyReason,
   }: Props = $props()
+
+  // Per-escalation in-flight flag + the message relayed from resolve, so the
+  // card shows the real outcome on click rather than a static label.
+  let resolvingEscalations = $state<Record<string, boolean>>({})
+  let resolveMessages = $state<Record<string, string>>({})
+  const handleResolve = async (escalationId: string, accepted: boolean) => {
+    resolvingEscalations = { ...resolvingEscalations, [escalationId]: true }
+    try {
+      const result = await onResolve?.(escalationId, accepted)
+      if (result?.message) {
+        resolveMessages = { ...resolveMessages, [escalationId]: result.message }
+      }
+    } finally {
+      resolvingEscalations = { ...resolvingEscalations, [escalationId]: false }
+    }
+  }
+
+  // The escalate part's input/output are loosely typed by the AI SDK, so the
+  // casts live here rather than cluttering the template.
+  const escalationCardProps = (part: { input?: unknown; output?: unknown }) => {
+    const output = part.output as { escalationId?: string } | undefined
+    const input = part.input as { title?: string; summary?: string } | undefined
+    const escalationId = output?.escalationId
+    return {
+      escalationId,
+      title: input?.title,
+      summary: input?.summary,
+      resolution:
+        (escalationId && escalationState?.[escalationId]?.resolution) ||
+        "pending",
+    }
+  }
 
   let API = $state(
     createAPIClient({
@@ -63,13 +119,76 @@
     })
   )
 
-  let stableSessionId = $state(Helpers.uuid())
+  const createStableSessionId = () =>
+    isAgentPreviewChat ? `chat-preview:${Helpers.uuid()}` : Helpers.uuid()
+
+  let stableSessionId = $state(createStableSessionId())
   let chatAreaElement = $state<HTMLDivElement>()
   let textareaElement = $state<HTMLTextAreaElement>()
   let expandedTools = $state<Record<string, boolean>>({})
+  let reasoningTextByMessageId = $state<Record<string, string>>({})
   let inputValue = $state("")
   let lastInitialPrompt = $state("")
-  let reasoningTimers = $state<Record<string, number>>({})
+  let isPreparingResponse = $state(false)
+  const resetPendingResponse = () => {
+    isPreparingResponse = false
+  }
+
+  const openRagSource = async (
+    message: UIMessage<AgentMessageMetadata>,
+    source: NonNullable<AgentMessageMetadata["ragSources"]>[number]
+  ) => {
+    const selectedOperationId = message.metadata?.selectedOperationId
+    const messageAllowsDownload =
+      message.metadata?.allowKnowledgeSourceDownload === true
+
+    if (!messageAllowsDownload) {
+      notifications.error("Source downloads are disabled for this agent")
+      return
+    }
+    if (!source.fileId) {
+      return
+    }
+
+    try {
+      const resolvedUrl =
+        !isAgentPreviewChat &&
+        chat?.chatAppId &&
+        chat?.agentId &&
+        selectedOperationId
+          ? (
+              await API.fetchChatAppAgentFileUrl(
+                chat.chatAppId,
+                chat.agentId,
+                source.fileId,
+                selectedOperationId
+              )
+            ).url
+          : isAgentPreviewChat && chat?.agentId && selectedOperationId
+            ? (
+                await API.fetchOperationFileUrl(
+                  chat.agentId,
+                  selectedOperationId,
+                  source.fileId
+                )
+              ).url
+            : undefined
+      if (!resolvedUrl) {
+        notifications.error("Could not resolve source file URL")
+        return
+      }
+
+      const link = document.createElement("a")
+      link.href = resolvedUrl
+      link.download = source.filename || "source.pdf"
+      link.target = "_blank"
+      link.rel = "noopener noreferrer"
+      link.click()
+    } catch (error) {
+      console.error("Failed to resolve knowledge source URL", error)
+      notifications.error("Failed to download source file")
+    }
+  }
 
   const getReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
     (message.parts ?? [])
@@ -77,10 +196,62 @@
       .map(p => p.text)
       .join("")
 
+  const canDownloadSource = (message: UIMessage<AgentMessageMetadata>) =>
+    message.metadata?.allowKnowledgeSourceDownload === true &&
+    !!message.metadata?.selectedOperationId
+
+  const getCachedReasoningText = (message: UIMessage<AgentMessageMetadata>) =>
+    reasoningTextByMessageId[message.id] || getReasoningText(message)
+
   const isReasoningStreaming = (message: UIMessage<AgentMessageMetadata>) =>
     (message.parts ?? []).some(
       part => isReasoningUIPart(part) && part.state === "streaming"
     )
+
+  const hasVisibleAssistantContent = (
+    message: UIMessage<AgentMessageMetadata>
+  ) => {
+    if (getReasoningText(message).trim()) {
+      return true
+    }
+
+    if (
+      (message.parts ?? []).some(
+        part =>
+          (isTextUIPart(part) && part.text.trim().length > 0) ||
+          isToolUIPart(part)
+      )
+    ) {
+      return true
+    }
+
+    return Boolean(getVisibleRagSources(message).length)
+  }
+
+  const getVisibleRagSources = (message: UIMessage<AgentMessageMetadata>) => {
+    const ragSources = message.metadata?.ragSources || []
+    const uniqueByFileId = new Set<string>()
+    const visible: NonNullable<AgentMessageMetadata["ragSources"]> = []
+
+    for (const source of ragSources) {
+      const filename = source.filename?.trim()
+      if (!source.fileId || !filename) {
+        continue
+      }
+
+      if (uniqueByFileId.has(source.fileId)) {
+        continue
+      }
+
+      uniqueByFileId.add(source.fileId)
+      visible.push({
+        ...source,
+        filename,
+      })
+    }
+
+    return visible
+  }
 
   const hasToolError = (message: UIMessage<AgentMessageMetadata>) =>
     (message.parts ?? []).some(
@@ -90,53 +261,23 @@
   const getMessageError = (message: UIMessage<AgentMessageMetadata>) =>
     message.metadata?.error
 
-  $effect(() => {
-    const interval = setInterval(() => {
-      let updated = false
-      const newTimers = { ...reasoningTimers }
+  const getToolDisplayName = (
+    message: UIMessage<AgentMessageMetadata>,
+    rawToolName: string
+  ) => {
+    const { metadata } = message
+    if (!metadata) {
+      return undefined
+    }
 
-      for (const message of messages) {
-        if (message.role !== "assistant") continue
-        const createdAt = message.metadata?.createdAt
-        const completedAt = message.metadata?.completedAt
-        const id = `${message.id}-reasoning`
+    const toolDisplayNames = Reflect.get(metadata, "toolDisplayNames")
+    const displayName =
+      toolDisplayNames !== undefined
+        ? Reflect.get(toolDisplayNames, rawToolName)
+        : undefined
 
-        if (!createdAt) continue
-
-        if (completedAt) {
-          const finalElapsed = (completedAt - createdAt) / 1000
-          if (newTimers[id] !== finalElapsed) {
-            newTimers[id] = finalElapsed
-            updated = true
-          }
-          continue
-        }
-
-        const toolError = hasToolError(message)
-        if (toolError) {
-          if (newTimers[id] == null) {
-            newTimers[id] = (Date.now() - createdAt) / 1000
-            updated = true
-          }
-          continue
-        }
-
-        if (isReasoningStreaming(message)) {
-          const newElapsed = (Date.now() - createdAt) / 1000
-          if (newTimers[id] !== newElapsed) {
-            newTimers[id] = newElapsed
-            updated = true
-          }
-        }
-      }
-
-      if (updated) {
-        reasoningTimers = newTimers
-      }
-    }, 100)
-
-    return () => clearInterval(interval)
-  })
+    return displayName
+  }
 
   const PREVIEW_CHAT_APP_ID = "agent-preview"
 
@@ -149,7 +290,6 @@
     }
     inputValue = starterPrompt
     await sendMessage()
-    tick().then(() => textareaElement?.focus())
   }
 
   $effect(() => {
@@ -189,6 +329,8 @@
     }),
     messages: chat?.messages || [],
     onFinish: async () => {
+      isPreparingResponse = false
+
       if (persistConversation && !chat._id && chat.chatAppId) {
         try {
           const history = await API.fetchChatHistory(
@@ -213,11 +355,10 @@
 
       chat = { ...chat, messages: chatInstance.messages }
       onchatsaved?.({ detail: { chatId: chat._id, chat } })
-
-      await tick()
-      textareaElement?.focus()
     },
     onError: error => {
+      resetPendingResponse()
+
       console.error(error)
       let message = error.message || "Failed to send message"
       try {
@@ -233,13 +374,71 @@
   })
 
   let messages = $derived(chatInstance.messages)
+  let lastMessage = $derived(messages[messages.length - 1])
+
+  // Notify the consumer of every unseen parked escalation. The escalate part's
+  // output stays frozen at pending_approval, so notifying only the first would
+  // shadow later escalations.
+  const notifiedEscalations = new Set<string>()
+  let pendingEscalationIds = $derived.by(() => {
+    const ids: string[] = []
+    for (const message of messages) {
+      for (const part of message.parts ?? []) {
+        if (
+          !isToolUIPart(part) ||
+          getToolName(part) !== ESCALATE_TOOL_NAME ||
+          part.state !== "output-available"
+        ) {
+          continue
+        }
+        const output = part.output as
+          | { status?: string; escalationId?: string }
+          | undefined
+        if (
+          output?.status === EscalateToolResultStatus.PENDING_APPROVAL &&
+          output.escalationId
+        ) {
+          ids.push(output.escalationId)
+        }
+      }
+    }
+    return ids
+  })
+  $effect(() => {
+    for (const escalationId of pendingEscalationIds) {
+      if (!notifiedEscalations.has(escalationId)) {
+        notifiedEscalations.add(escalationId)
+        onEscalationPending?.({ escalationId })
+      }
+    }
+  })
+
+  // Injects the polled resume outcome as a plain assistant turn - the agent's
+  // own reply self-frames the approval.
+  export function appendAssistantMessage(
+    message: UIMessage<AgentMessageMetadata>
+  ) {
+    chatInstance.messages = [...chatInstance.messages, message]
+  }
+
+  let lastAssistantUsage = $derived(
+    messages.findLast(m => m.role === "assistant" && m.metadata?.usage)
+      ?.metadata?.usage
+  )
+  let lastAssistantMessage = $derived(
+    messages.findLast(message => message.role === "assistant")
+  )
   let isBusy = $derived(
     chatInstance.status === "streaming" || chatInstance.status === "submitted"
   )
+  let isRequestPending = $derived(isPreparingResponse || isBusy)
+  let showPendingAssistantState = $derived(
+    isPreparingResponse || (isBusy && lastMessage?.role === "user")
+  )
   let canStart = $derived(inputValue.trim().length > 0)
-  let hasMessages = $derived(Boolean(messages?.length))
+  let hasMessages = $derived(messages.length > 0)
   let showConversationStarters = $derived(
-    !isBusy &&
+    !isRequestPending &&
       !hasMessages &&
       conversationStarters.length > 0 &&
       !isAgentPreviewChat &&
@@ -257,9 +456,42 @@
   $effect(() => {
     if (chat?._id !== lastChatId) {
       lastChatId = chat?._id
-      stableSessionId = Helpers.uuid()
+      stableSessionId = createStableSessionId()
+      if (!isPreparingResponse) {
+        resetPendingResponse()
+      }
       chatInstance.messages = chat?.messages || []
       expandedTools = {}
+      reasoningTextByMessageId = {}
+    }
+  })
+
+  $effect(() => {
+    const nextReasoningTextByMessageId = untrack(() => ({
+      ...reasoningTextByMessageId,
+    }))
+    let hasChanged = false
+
+    for (const message of messages) {
+      if (message.role !== "assistant") {
+        continue
+      }
+
+      const reasoningText = getReasoningText(message)
+      if (!reasoningText) {
+        continue
+      }
+
+      if (nextReasoningTextByMessageId[message.id] === reasoningText) {
+        continue
+      }
+
+      nextReasoningTextByMessageId[message.id] = reasoningText
+      hasChanged = true
+    }
+
+    if (hasChanged) {
+      reasoningTextByMessageId = nextReasoningTextByMessageId
     }
   })
 
@@ -334,6 +566,21 @@
       return
     }
 
+    const text = inputValue.trim()
+    if (!text) {
+      return
+    }
+
+    const failToStartResponse = (message: string, error?: unknown) => {
+      resetPendingResponse()
+      if (error) {
+        console.error(error)
+      }
+      notifications.error(message)
+    }
+
+    isPreparingResponse = true
+
     const chatAppIdFromEnsure = await ensureChatApp()
 
     if (!chat) {
@@ -344,12 +591,12 @@
     const agentId = chat.agentId
 
     if (!chatAppId) {
-      notifications.error("Chat app could not be created")
+      failToStartResponse("Chat app could not be created")
       return
     }
 
     if (!agentId) {
-      notifications.error("Agent is required to start a chat")
+      failToStartResponse("Agent is required to start a chat")
       return
     }
 
@@ -374,19 +621,16 @@
           err instanceof Error
             ? err.message
             : "Could not start a new chat conversation"
-        console.error(err)
-        notifications.error(errorMessage)
+        failToStartResponse(errorMessage, err)
         return
       }
     } else if (chat._id) {
       resolvedConversationId = chat._id
     }
 
-    const text = inputValue.trim()
-    if (!text) return
-
     inputValue = ""
     chatInstance.sendMessage({ text })
+    isPreparingResponse = false
   }
 
   const handlePromptAction = async () => {
@@ -425,12 +669,17 @@
     if (!mounted) {
       mounted = true
       ensureChatApp()
-      tick().then(() => {
-        if (!readOnly) {
-          textareaElement?.focus()
-        }
-      })
     }
+  })
+
+  $effect(() => {
+    if (readOnly || isRequestPending) {
+      return
+    }
+
+    tick().then(() => {
+      textareaElement?.focus()
+    })
   })
 
   $effect(() => {
@@ -466,7 +715,7 @@
           {/each}
         </div>
       </div>
-    {:else if !hasMessages}
+    {:else if !hasMessages && !isRequestPending}
       <div class="empty-state">
         <div class="empty-state-icon">
           <Icon
@@ -487,164 +736,202 @@
           <MarkdownViewer value={getUserMessageText(message)} />
         </div>
       {:else if message.role === "assistant"}
-        {@const reasoningText = getReasoningText(message)}
+        {@const reasoningText = getCachedReasoningText(message)}
         {@const reasoningId = `${message.id}-reasoning`}
+        {@const pendingAssistant =
+          isBusy &&
+          lastAssistantMessage?.id === message.id &&
+          !hasVisibleAssistantContent(message)}
         {@const toolError = hasToolError(message)}
         {@const messageError = getMessageError(message)}
         {@const reasoningStreaming = isReasoningStreaming(message)}
+        {@const activeAssistant =
+          isBusy && lastAssistantMessage?.id === message.id}
         {@const isThinking =
-          reasoningStreaming &&
+          (reasoningStreaming || pendingAssistant || activeAssistant) &&
           !toolError &&
           !messageError &&
           !message.metadata?.completedAt}
-        <div class="message assistant">
-          {#if reasoningText}
-            <div class="reasoning-part">
-              <button
-                class="reasoning-toggle"
-                type="button"
-                onclick={() =>
+        {@const showReasoningStatus =
+          reasoningText ||
+          pendingAssistant ||
+          activeAssistant ||
+          message.metadata?.createdAt ||
+          message.metadata?.completedAt}
+        {#if hasVisibleAssistantContent(message) || pendingAssistant}
+          <div class="message assistant">
+            {#if showReasoningStatus}
+              <ReasoningStatus
+                thinking={isThinking}
+                label={isThinking ? "Thinking" : "Thought"}
+                interactive={!!reasoningText}
+                expanded={Boolean(expandedTools[reasoningId])}
+                content={reasoningText}
+                ontoggle={() =>
                   (expandedTools = {
                     ...expandedTools,
                     [reasoningId]: !expandedTools[reasoningId],
                   })}
-              >
-                <span class="reasoning-icon" class:shimmer={isThinking}>
-                  <Icon
-                    name="brain"
-                    size="M"
-                    color="var(--spectrum-global-color-gray-600)"
-                  />
-                </span>
-                <span class="reasoning-label" class:shimmer={isThinking}>
-                  {isThinking ? "Thinking" : "Thought for"}
-                  {#if reasoningTimers[reasoningId]}
-                    <span class="reasoning-timer"
-                      >{reasoningTimers[reasoningId].toFixed(1)}s</span
-                    >
-                  {/if}
-                </span>
-              </button>
-              {#if expandedTools[reasoningId]}
-                <div class="reasoning-content">{reasoningText}</div>
-              {/if}
-            </div>
-          {/if}
-          {#each message.parts ?? [] as part, partIndex}
-            {#if isTextUIPart(part)}
-              <MarkdownViewer value={part.text} />
-            {:else if isToolUIPart(part)}
-              {@const toolId = `${message.id}-${getToolName(part)}-${partIndex}`}
-              {@const isRunning =
-                part.state === "input-streaming" ||
-                part.state === "input-available"}
-              {@const isSuccess = part.state === "output-available"}
-              {@const isError = part.state === "output-error"}
-              <div class="tool-part" class:tool-running={isRunning}>
-                <button
-                  class="tool-header"
-                  class:tool-header-expanded={expandedTools[toolId]}
-                  type="button"
-                  onclick={() => toggleTool(toolId)}
-                >
-                  <span
-                    class="tool-chevron"
-                    class:expanded={expandedTools[toolId]}
+              />
+            {/if}
+            {#each message.parts ?? [] as part, partIndex}
+              {#if isTextUIPart(part)}
+                <MarkdownViewer value={part.text} />
+              {:else if isToolUIPart(part) && getToolName(part) === ESCALATE_TOOL_NAME}
+                {@const card = escalationCardProps(part)}
+                <EscalationCard
+                  title={card.title}
+                  summary={card.summary}
+                  resolution={card.resolution}
+                  statusMessage={card.escalationId
+                    ? resolveMessages[card.escalationId]
+                    : undefined}
+                  showApproval={showInlineApproval}
+                  resolving={!!card.escalationId &&
+                    !!resolvingEscalations[card.escalationId]}
+                  onApprove={() =>
+                    card.escalationId && handleResolve(card.escalationId, true)}
+                  onReject={() =>
+                    card.escalationId &&
+                    handleResolve(card.escalationId, false)}
+                />
+              {:else if isToolUIPart(part)}
+                {@const rawToolName = getToolName(part)}
+                {@const displayToolName = formatToolName(
+                  rawToolName,
+                  getToolDisplayName(message, rawToolName)
+                )}
+                {@const toolId = `${message.id}-${rawToolName}-${partIndex}`}
+                {@const isRunning =
+                  part.state === "input-streaming" ||
+                  part.state === "input-available"}
+                {@const isSuccess = part.state === "output-available"}
+                {@const isError = part.state === "output-error"}
+                <div class="tool-part" class:tool-running={isRunning}>
+                  <button
+                    class="tool-header"
+                    class:tool-header-expanded={expandedTools[toolId]}
+                    type="button"
+                    onclick={() => toggleTool(toolId)}
                   >
-                    <span class="tool-chevron-icon tool-chevron-icon-default">
-                      <Icon
-                        name="globe-simple"
-                        size="M"
-                        weight="regular"
-                        color="var(--spectrum-global-color-gray-600)"
-                      />
-                    </span>
-                    <span class="tool-chevron-icon tool-chevron-icon-expanded">
-                      <Icon
-                        name="minus"
-                        size="M"
-                        weight="regular"
-                        color="var(--spectrum-global-color-gray-600)"
-                      />
-                    </span>
-                  </span>
-                  <span class="tool-call-label">Tool call</span>
-                  <div class="tool-name-wrapper">
-                    <span class="tool-name">{getToolName(part)}</span>
-                  </div>
-                  {#if isRunning || isError || isSuccess}
-                    <span class="tool-status">
-                      {#if isRunning}
-                        <ProgressCircle size="S" />
-                      {:else if isError}
+                    <span
+                      class="tool-chevron"
+                      class:expanded={expandedTools[toolId]}
+                    >
+                      <span class="tool-chevron-icon tool-chevron-icon-default">
                         <Icon
-                          name="x"
-                          size="S"
-                          color="var(--spectrum-global-color-red-600)"
+                          name="wrench"
+                          size="M"
+                          weight="regular"
+                          color="var(--spectrum-global-color-gray-600)"
                         />
-                      {:else if isSuccess}
+                      </span>
+                      <span
+                        class="tool-chevron-icon tool-chevron-icon-expanded"
+                      >
                         <Icon
-                          name="check"
-                          size="S"
-                          color="var(--spectrum-global-color-green-600)"
+                          name="minus"
+                          size="M"
+                          weight="regular"
+                          color="var(--spectrum-global-color-gray-600)"
                         />
+                      </span>
+                    </span>
+                    <span class="tool-call-label">Tool call</span>
+                    <div class="tool-name-wrapper">
+                      <span class="tool-name-primary"
+                        >{displayToolName.primary}</span
+                      >
+                    </div>
+                    {#if isRunning || isError || isSuccess}
+                      <span class="tool-status">
+                        {#if isRunning}
+                          <ProgressCircle size="S" />
+                        {:else if isError}
+                          <Icon
+                            name="x"
+                            size="S"
+                            color="var(--spectrum-global-color-red-600)"
+                          />
+                        {:else if isSuccess}
+                          <Icon
+                            name="check"
+                            size="S"
+                            color="var(--spectrum-global-color-green-600)"
+                          />
+                        {/if}
+                      </span>
+                    {/if}
+                  </button>
+                  {#if expandedTools[toolId]}
+                    <div class="tool-details">
+                      {#if part.input}
+                        <div class="tool-section">
+                          <div class="tool-section-label">Input</div>
+                          <pre class="tool-section-content">{formatToolOutput(
+                              part.input
+                            )}</pre>
+                        </div>
                       {/if}
-                    </span>
+                      {#if isSuccess && part.output}
+                        <div class="tool-section">
+                          <div class="tool-section-label">Output</div>
+                          <pre class="tool-section-content">{formatToolOutput(
+                              part.output
+                            )}</pre>
+                        </div>
+                      {:else if isError && part.errorText}
+                        <div class="tool-section tool-error">
+                          <div class="tool-section-label">Error</div>
+                          <pre
+                            class="tool-section-content error-content">{part.errorText}</pre>
+                        </div>
+                      {/if}
+                    </div>
                   {/if}
-                </button>
-                {#if expandedTools[toolId]}
-                  <div class="tool-details">
-                    {#if part.input}
-                      <div class="tool-section">
-                        <div class="tool-section-label">Input</div>
-                        <pre class="tool-section-content">{formatToolOutput(
-                            part.input
-                          )}</pre>
-                      </div>
-                    {/if}
-                    {#if isSuccess && part.output}
-                      <div class="tool-section">
-                        <div class="tool-section-label">Output</div>
-                        <pre class="tool-section-content">{formatToolOutput(
-                            part.output
-                          )}</pre>
-                      </div>
-                    {:else if isError && part.errorText}
-                      <div class="tool-section tool-error">
-                        <div class="tool-section-label">Error</div>
-                        <pre
-                          class="tool-section-content error-content">{part.errorText}</pre>
-                      </div>
-                    {/if}
-                  </div>
-                {/if}
+                </div>
+              {/if}
+            {/each}
+            {#if getVisibleRagSources(message).length}
+              <div class="sources">
+                <div class="sources-header">
+                  <span class="sources-icon">
+                    <Icon
+                      name="book-open"
+                      size="M"
+                      color="var(--spectrum-global-color-gray-600)"
+                    />
+                  </span>
+                  <span class="sources-title">Sources</span>
+                </div>
+                <ul>
+                  {#each getVisibleRagSources(message) as source (source.fileId)}
+                    <li class="source-item">
+                      {#if canDownloadSource(message)}
+                        <button
+                          type="button"
+                          class="source-link"
+                          onclick={() => openRagSource(message, source)}
+                        >
+                          {source.filename}
+                        </button>
+                      {:else}
+                        <span class="source-name">{source.filename}</span>
+                      {/if}
+                    </li>
+                  {/each}
+                </ul>
               </div>
             {/if}
-          {/each}
-          {#if message.metadata?.ragSources?.length}
-            <div class="sources">
-              <div class="sources-title">Sources</div>
-              <ul>
-                {#each message.metadata.ragSources as source (source.sourceId)}
-                  <li class="source-item">
-                    <span class="source-name"
-                      >{source.filename || source.sourceId}</span
-                    >
-                    {#if source.chunkCount > 0}
-                      <span class="source-count"
-                        >({source.chunkCount} chunk{source.chunkCount === 1
-                          ? ""
-                          : "s"})</span
-                      >
-                    {/if}
-                  </li>
-                {/each}
-              </ul>
-            </div>
-          {/if}
-        </div>
+          </div>
+        {/if}
       {/if}
     {/each}
+    {#if showPendingAssistantState}
+      <div class="message assistant assistant-loading" aria-live="polite">
+        <ReasoningStatus thinking={true} label="Thinking" />
+      </div>
+    {/if}
   </div>
 
   {#if readOnly}
@@ -664,22 +951,27 @@
           class="input spectrum-Textfield-input"
           onkeydown={handleKeyDown}
           placeholder="Ask..."
-          disabled={isBusy}
+          disabled={isRequestPending}
         ></textarea>
         <button
           type="button"
           class="prompt-action"
-          class:running={isBusy}
+          class:running={isRequestPending}
           onclick={handlePromptAction}
           aria-label={isBusy ? "Pause response" : "Start response"}
-          disabled={!isBusy && !canStart}
+          disabled={isPreparingResponse || (!isBusy && !canStart)}
         >
           {#if isBusy}
             <Icon name="stop" size="M" weight="fill" color="#ffffff" />
+          {:else if isPreparingResponse}
+            <ProgressCircle size="S" />
           {:else}
             <Icon name="arrow-up" size="M" weight="bold" color="#111111" />
           {/if}
         </button>
+      </div>
+      <div class="input-footer">
+        <ContextUsage usage={lastAssistantUsage} />
       </div>
     </div>
   {/if}
@@ -692,6 +984,14 @@
     flex-direction: column;
     overflow-y: auto;
     min-height: 0;
+    font-family: var(--chat-font-sans, var(--font-sans));
+    --font-serif: var(--chat-font-sans, var(--font-sans));
+    --font-accent: var(--chat-font-sans, var(--font-sans));
+    --spectrum-alias-body-text-font-family: var(
+      --chat-font-sans,
+      var(--font-sans)
+    );
+    --spectrum-global-font-family-base: var(--chat-font-sans, var(--font-sans));
   }
   .chatbox {
     display: flex;
@@ -798,6 +1098,13 @@
     flex-direction: column;
     flex-shrink: 0;
     line-height: 1.4;
+    gap: 6px;
+  }
+
+  .input-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 4px;
   }
 
   .read-only-notice {
@@ -979,18 +1286,17 @@
 
   .tool-name-wrapper {
     display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-    padding: 3px 6px;
+    align-items: flex-start;
+    padding: 6px 8px;
     background-color: var(--spectrum-global-color-gray-200);
-    border-radius: 4px;
+    border-radius: 6px;
   }
 
-  .tool-name {
-    font-family: var(--font-mono), monospace;
+  .tool-name-primary {
     font-size: 13px;
     color: var(--spectrum-global-color-gray-800);
-    font-weight: 400;
+    font-weight: 600;
+    line-height: 1.2;
   }
 
   .tool-status {
@@ -1061,77 +1367,29 @@
     color: var(--spectrum-global-color-red-700);
   }
 
-  /* Reasoning parts styling */
-  .reasoning-part {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .reasoning-toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 0;
-    margin: 0;
-    background: none;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-
-  .reasoning-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .reasoning-label {
-    font-size: 13px;
-    color: var(--spectrum-global-color-gray-600);
-  }
-
-  .reasoning-timer {
-    font-size: 12px;
-    color: var(--spectrum-global-color-gray-600);
-    font-weight: 400;
-  }
-
-  .reasoning-label.shimmer,
-  .reasoning-icon.shimmer {
-    animation: shimmer 2s ease-in-out infinite;
-  }
-
-  .reasoning-content {
-    font-size: 13px;
-    color: var(--spectrum-global-color-gray-600);
-    font-style: italic;
-    line-height: 1.4;
-  }
-
-  @keyframes shimmer {
-    0%,
-    100% {
-      opacity: 0.6;
-    }
-    50% {
-      opacity: 1;
-    }
-  }
-
   .sources {
     margin-top: var(--spacing-m);
     padding-top: var(--spacing-s);
     border-top: 1px solid var(--grey-3);
   }
 
+  .sources-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .sources-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
   .sources-title {
     font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
     color: var(--spectrum-global-color-gray-600);
-    margin-bottom: var(--spacing-xs);
   }
 
   .sources ul {
@@ -1146,15 +1404,23 @@
   .source-item {
     display: flex;
     gap: 8px;
-    font-size: 14px;
+    font-size: 13px;
     color: var(--spectrum-global-color-gray-900);
   }
 
   .source-name {
-    font-weight: 500;
+    font-weight: 400;
   }
 
-  .source-count {
-    color: var(--spectrum-global-color-gray-600);
+  .source-link {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    font-weight: 400;
+    color: var(--spectrum-global-color-blue-700);
+    text-decoration: underline;
+    cursor: pointer;
+    text-align: left;
   }
 </style>

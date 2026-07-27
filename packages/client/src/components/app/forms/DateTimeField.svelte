@@ -1,6 +1,11 @@
 <script>
   import { CoreDatePicker } from "@budibase/bbui"
   import Field from "./Field.svelte"
+  import { getContext } from "svelte"
+  import {
+    resolveTranslationGroup,
+    resolveWorkspaceTranslations,
+  } from "@budibase/shared-core"
 
   export let field
   export let label
@@ -21,6 +26,12 @@
 
   let fieldState
   let fieldApi
+  const { appStore } = getContext("sdk")
+
+  $: translationOverrides = resolveWorkspaceTranslations(
+    $appStore.application?.translationOverrides
+  )
+  $: calendarLabels = resolveTranslationGroup("calendar", translationOverrides)
 
   const handleChange = e => {
     let value = e.detail
@@ -78,6 +89,7 @@
       {ignoreTimezones}
       {startDayOfWeek}
       {placeholder}
+      {calendarLabels}
     />
   {/if}
 </Field>

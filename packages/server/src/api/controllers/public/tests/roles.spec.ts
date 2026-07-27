@@ -28,18 +28,36 @@ const createAssignCtx = (
   body: RoleAssignRequest
 ): UserCtx<RoleAssignRequest, RoleAssignmentResponse> =>
   ({
+    user: {
+      admin: {
+        global: true,
+      },
+    },
     request: {
       body,
     },
+    throw: jest.fn((status, message) => {
+      const err = Object.assign(new Error(message), { status })
+      throw err
+    }),
   }) as unknown as UserCtx<RoleAssignRequest, RoleAssignmentResponse>
 
 const createUnAssignCtx = (
   body: RoleUnAssignRequest
 ): UserCtx<RoleUnAssignRequest, RoleAssignmentResponse> =>
   ({
+    user: {
+      admin: {
+        global: true,
+      },
+    },
     request: {
       body,
     },
+    throw: jest.fn((status, message) => {
+      const err = Object.assign(new Error(message), { status })
+      throw err
+    }),
   }) as unknown as UserCtx<RoleUnAssignRequest, RoleAssignmentResponse>
 
 describe("public roles controller", () => {
@@ -87,6 +105,29 @@ describe("public roles controller", () => {
       expect(ctx.body).toEqual({ data: { userIds } })
       expect(next).toHaveBeenCalled()
     })
+
+    it("rejects app role assignment when the caller does not build the target app", async () => {
+      const ctx = createAssignCtx({
+        userIds: ["user_basic"],
+        role: {
+          roleId: "ROLE_BASIC",
+          appId: "app_target",
+        },
+      })
+      ctx.user = {
+        builder: {
+          apps: ["app_allowed"],
+        },
+      } as any
+      const next = jest
+        .fn()
+        .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+      await expect(controller.assign(ctx, next)).rejects.toMatchObject({
+        status: 403,
+      })
+      expect(sdk.publicApi.roles.assign).not.toHaveBeenCalled()
+    })
   })
 
   describe("unAssign", () => {
@@ -128,6 +169,28 @@ describe("public roles controller", () => {
       ])
       expect(ctx.body).toEqual({ data: { userIds } })
       expect(next).toHaveBeenCalled()
+    })
+
+    it("rejects app builder unassignment when the caller does not build the target app", async () => {
+      const ctx = createUnAssignCtx({
+        userIds: ["user_basic"],
+        appBuilder: {
+          appId: "app_target",
+        },
+      })
+      ctx.user = {
+        builder: {
+          apps: ["app_allowed"],
+        },
+      } as any
+      const next = jest
+        .fn()
+        .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+      await expect(controller.unAssign(ctx, next)).rejects.toMatchObject({
+        status: 403,
+      })
+      expect(sdk.publicApi.roles.unAssign).not.toHaveBeenCalled()
     })
   })
 })

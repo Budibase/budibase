@@ -8,7 +8,7 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationStepDefinition = {
-  name: "Update Row",
+  name: "Update row",
   tagline: "Update a {{inputs.enriched.table.name}} row",
   icon: "arrow-clockwise",
   description: "Update a row in your database",

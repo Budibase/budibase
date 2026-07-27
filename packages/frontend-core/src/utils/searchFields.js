@@ -8,7 +8,9 @@ export function getTableFields(tables, linkField) {
   const linkFields = getFields(tables, Object.values(table.schema), {
     allowLinks: false,
   })
-  return linkFields
+  // Expose the related row's _id so relationships can be filtered on the same
+  // value a relationship picker emits and a saved row stores.
+  return [{ name: "_id", type: "string" }, ...linkFields]
     .sort((a, b) => a.name.localeCompare(b.name))
     .map(field => ({
       ...field,

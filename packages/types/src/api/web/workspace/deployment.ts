@@ -17,6 +17,7 @@ export type PublishStatusResource = {
   published: boolean
   name: string
   publishedAt?: string
+  lastDeployedLiveAt?: string
   unpublishedChanges?: boolean
   state: PublishResourceState
 }
@@ -25,6 +26,7 @@ export interface PublishStatusResponse {
   workspaceApps: Record<string, PublishStatusResource>
   automations: Record<string, PublishStatusResource>
   tables: Record<string, PublishStatusResource>
+  agents: Record<string, PublishStatusResource>
 }
 
 export interface DeploymentProgressResponse {

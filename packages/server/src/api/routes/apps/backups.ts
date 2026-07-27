@@ -2,7 +2,7 @@ import Router from "@koa/router"
 import Joi from "joi"
 import { auth } from "@budibase/backend-core"
 import { BackupTrigger, BackupType } from "@budibase/types"
-import * as backups from "../../controllers/apps/backups"
+import * as backups from "../../controllers/workspace/backups"
 
 const router: Router = new Router()
 

@@ -16,7 +16,7 @@ const SortOrderPretty = {
 export const definition: AutomationStepDefinition = {
   description: "Get a single row from the database",
   icon: "box-arrow-down",
-  name: "Get Row",
+  name: "Get row",
   tagline: "Get a row from {{inputs.enriched.table.name}} table",
   type: AutomationStepType.ACTION,
   stepId: AutomationActionStepId.GET_ROW,

@@ -17,7 +17,7 @@ import {
   SQLiteDefinition,
   SqlQueryBinding,
 } from "@budibase/types"
-import { getCouchInfo } from "./connections"
+import { getCouchInfo, parseCouchConnection } from "./connections"
 import { directCouchUrlCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
 import { ReadStream, WriteStream } from "fs"
@@ -105,7 +105,7 @@ export class DatabaseImpl implements Database {
     this.name = dbName
     this.pouchOpts = opts || {}
     if (connection) {
-      this.couchInfo = getCouchInfo(connection)
+      this.couchInfo = parseCouchConnection(connection)
       this.instanceNano = buildNano(this.couchInfo)
     }
     if (!DatabaseImpl.nano) {

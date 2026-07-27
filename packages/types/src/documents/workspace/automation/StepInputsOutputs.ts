@@ -1,12 +1,10 @@
 import { Table } from "@budibase/types"
 import type { UIMessage, LanguageModelUsage } from "ai"
 import { SortOrder } from "../../../api"
-import {
-  SearchFilters,
-  EmptyFilterOption,
-  BasicOperator,
-  LogicalOperator,
-} from "../../../sdk"
+import { EmptyFilterOption, SearchFilters } from "../../../sdk"
+import { DurationType } from "../../../shared"
+import type { UISearchFilter } from "../../../api"
+import type { RestTemplateId } from "../../../ui/rest"
 import { HttpMethod } from "../query"
 import { Row, RowAttachment } from "../row"
 import {
@@ -17,6 +15,7 @@ import {
   SupportedFileType,
 } from "./automation"
 import { AutomationStep } from "./schema"
+import type { EscalationRecipient, EscalationResponse } from "../escalation"
 
 export enum FilterCondition {
   EQUAL = "EQUAL",
@@ -38,8 +37,13 @@ export type ExternalAppStepOutputs = {
   success: boolean
 }
 
+export type JSONEditorInput<T> = {
+  value?: T | string
+}
+
 export type BashStepInputs = {
-  code: string
+  command: string
+  args?: string[] | JSONEditorInput<string[]>
 }
 
 export type BashStepOutputs = BaseAutomationOutputs & {
@@ -66,6 +70,7 @@ export type CreateRowStepOutputs = BaseAutomationOutputs & {
 
 export type DelayStepInputs = {
   time: number
+  unit?: DurationType
 }
 
 export type DelayStepOutputs = BaseAutomationOutputs
@@ -92,6 +97,7 @@ export type ExecuteQueryStepInputs = {
     queryId: string
     [key: string]: any
   }
+  continueOnError?: boolean
 }
 
 export type ExecuteQueryStepOutputs = BaseAutomationOutputs & {
@@ -103,6 +109,8 @@ export type APIRequestStepInputs = {
     queryId: string
     [key: string]: any
   }
+  restTemplateId?: RestTemplateId
+  continueOnError?: boolean
 }
 
 export type APIRequestStepOutputs = BaseAutomationOutputs & {
@@ -130,6 +138,7 @@ export type FilterStepInputs = {
   field: any
   condition: FilterCondition
   value: any
+  notify?: boolean
 }
 
 export type FilterStepOutputs = BaseAutomationOutputs & {
@@ -161,24 +170,10 @@ export type Branch = {
   id: any
   name: string
   condition: BranchSearchFilters
-  conditionUI?: {
-    groups?: {
-      filters?: {
-        field: string
-        operator: BasicOperator
-        value: any
-      }[]
-    }[]
-  }
+  conditionUI?: UISearchFilter | null
 }
 
-export type BranchSearchFilters = Pick<
-  SearchFilters,
-  | BasicOperator.EQUAL
-  | BasicOperator.NOT_EQUAL
-  | LogicalOperator.AND
-  | LogicalOperator.OR
->
+export type BranchSearchFilters = SearchFilters
 
 export type MakeIntegrationInputs = {
   url: string
@@ -281,6 +276,7 @@ export type AgentStepOutputs = {
   success: boolean
   response?: string
   message?: UIMessage
+  sessionId?: string
   usage?: LanguageModelUsage
   output?: Record<string, any>
 }
@@ -399,6 +395,7 @@ export type TriggerAutomationStepInputs = {
     automationId: string
   }
   timeout?: number
+  continueOnError?: boolean
 }
 
 export type TriggerAutomationStepOutputs = BaseAutomationOutputs & {
@@ -448,6 +445,12 @@ export type AppActionTriggerOutputs = {
 
 export type CronTriggerInputs = {
   cron: string
+  timezone?: string
+}
+
+export enum EmailTriggerAuthType {
+  PASSWORD = "password",
+  OAUTH2 = "oauth2",
 }
 
 export interface EmailTriggerInputs {
@@ -455,7 +458,10 @@ export interface EmailTriggerInputs {
   port: number
   secure: boolean
   username: string
-  password: string
+  authType?: EmailTriggerAuthType
+  password?: string
+  datasourceId?: string
+  authConfigId?: string
   mailbox?: string
 }
 
@@ -523,4 +529,21 @@ export type RowActionTriggerOutputs = {
   id: string
   revision?: string
   table: Table
+}
+
+export type EscalationStepInputs = {
+  message: string
+  delay: number
+  operationId?: string
+  agentId?: string
+  notifications?: { recipients?: EscalationRecipient[] }
+  resolutionStrategy?: string
+}
+
+export type EscalationStepOutputs = {
+  success: boolean
+  escalationId?: string
+  resolution?: "pending" | "resolved" | "expired" | "cancelled"
+  resolvedAt?: string
+  response?: EscalationResponse
 }

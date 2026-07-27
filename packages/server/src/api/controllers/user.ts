@@ -17,6 +17,7 @@ import {
 } from "@budibase/types"
 import { generateUserFlagID, InternalTables } from "../../db/utils"
 import sdk from "../../sdk"
+import { stripSensitiveUserFields } from "../../utilities/sensitiveUserFields"
 import { getFullUser } from "../../utilities/users"
 
 export async function fetchMetadata(ctx: Ctx<void, FetchUserMetadataResponse>) {
@@ -44,6 +45,7 @@ export async function updateMetadata(
     tableId: InternalTables.USER_METADATA,
     ...user,
   }
+  stripSensitiveUserFields(metadata)
   // this isn't applicable to the user
   delete metadata.roles
   ctx.body = await db.put(metadata)

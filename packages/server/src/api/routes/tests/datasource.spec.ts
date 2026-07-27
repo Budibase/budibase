@@ -1,8 +1,12 @@
-import { context, events } from "@budibase/backend-core"
+import { cache, context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { getCachedVariable } from "../../../threads/utils"
 import * as setup from "./utilities"
-import { allowUndefined, checkBuilderEndpoint } from "./utilities/TestFunctions"
+import {
+  allowUndefined,
+  checkBuilderEndpoint,
+  createRequest,
+} from "./utilities/TestFunctions"
 
 import { generator } from "@budibase/backend-core/tests"
 import {
@@ -11,7 +15,11 @@ import {
   FieldSchema,
   FieldType,
   JsonFieldSubType,
+  OAuth2CredentialsMethod,
+  OAuth2GrantType,
+  PASSWORD_REPLACEMENT,
   RelationshipType,
+  RestAuthType,
   SourceName,
   SupportedSqlTypes,
   Table,
@@ -72,6 +80,143 @@ describe("/datasources", () => {
           },
         }
       )
+    })
+
+    it("can create a REST datasource with multiple auth configs", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Basic",
+              type: RestAuthType.BASIC,
+              config: { username: "user", password: "pass" },
+            },
+            {
+              _id: generator.guid(),
+              name: "Bearer",
+              type: RestAuthType.BEARER,
+              config: { token: "tok" },
+            },
+          ],
+        },
+      })
+
+      expect(ds.config!.authConfigs).toHaveLength(2)
+      expect(ds.config!.authConfigs[0].type).toBe(RestAuthType.BASIC)
+      expect(ds.config!.authConfigs[1].type).toBe(RestAuthType.BEARER)
+    })
+
+    it("can create a REST datasource with default headers, query params, and static variables", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.REST,
+        config: {
+          defaultHeaders: { "X-Custom": "value" },
+          defaultQueryParameters: { format: "json" },
+          staticVariables: { baseId: "123" },
+        },
+      })
+
+      expect(ds.config!.defaultHeaders).toEqual({ "X-Custom": "value" })
+      expect(ds.config!.defaultQueryParameters).toEqual({ format: "json" })
+      expect(ds.config!.staticVariables).toEqual({ baseId: "123" })
+    })
+  })
+
+  describe("secret redaction", () => {
+    it("should redact and preserve MongoDB connection strings", async () => {
+      const connectionString =
+        "mongodb://leakuser:SuperSecretPw123@prod-db.internal:27017/payments"
+      const mongoDatasource = await config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.MONGODB,
+        config: {
+          connectionString,
+          db: "payments",
+        },
+      })
+
+      expect(mongoDatasource.config!.connectionString).toBe(
+        PASSWORD_REPLACEMENT
+      )
+
+      const fetchedDatasource = await config.api.datasource.get(
+        mongoDatasource._id!
+      )
+      expect(fetchedDatasource.config!.connectionString).toBe(
+        PASSWORD_REPLACEMENT
+      )
+
+      const datasources = await config.api.datasource.fetch()
+      expect(datasources).toContainEqual(
+        expect.objectContaining({
+          _id: mongoDatasource._id,
+          config: expect.objectContaining({
+            connectionString: PASSWORD_REPLACEMENT,
+          }),
+        })
+      )
+
+      await config.api.datasource.update(fetchedDatasource)
+
+      const storedConnectionString = await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          const ds = await sdk.datasources.get(mongoDatasource._id!)
+          return ds.config!.connectionString
+        }
+      )
+      expect(storedConnectionString).toBe(connectionString)
+    })
+
+    it("should redact and preserve Firestore private keys", async () => {
+      const privateKey =
+        "-----BEGIN PRIVATE KEY-----\nMIISECRETKEYMATERIAL\n-----END PRIVATE KEY-----"
+      const firestoreDatasource = await config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.FIRESTORE,
+        config: {
+          email: "service-account@example.iam.gserviceaccount.com",
+          privateKey,
+          projectId: "project-id",
+          databaseId: "(default)",
+        },
+      })
+
+      expect(firestoreDatasource.config!.privateKey).toBe(PASSWORD_REPLACEMENT)
+
+      const fetchedDatasource = await config.api.datasource.get(
+        firestoreDatasource._id!
+      )
+      expect(fetchedDatasource.config!.privateKey).toBe(PASSWORD_REPLACEMENT)
+
+      const datasources = await config.api.datasource.fetch()
+      expect(datasources).toContainEqual(
+        expect.objectContaining({
+          _id: firestoreDatasource._id,
+          config: expect.objectContaining({
+            privateKey: PASSWORD_REPLACEMENT,
+          }),
+        })
+      )
+
+      await config.api.datasource.update(fetchedDatasource)
+
+      const storedPrivateKey = await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => {
+          const ds = await sdk.datasources.get(firestoreDatasource._id!)
+          return ds.config!.privateKey
+        }
+      )
+      expect(storedPrivateKey).toBe(privateKey)
     })
   })
 
@@ -145,6 +290,577 @@ describe("/datasources", () => {
     })
   })
 
+  describe("restTemplateId (with restTemplate accommodation)", () => {
+    it("should save a datasource with restTemplateId", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "Test REST",
+        source: SourceName.REST,
+        config: {},
+        restTemplateId: "attio",
+      })
+      expect(ds.restTemplateId).toBe("attio")
+    })
+
+    it("should still read datasources that only have the legacy restTemplate field", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "Legacy REST",
+        source: SourceName.REST,
+        config: {},
+        restTemplate: "Attio" as any,
+      })
+
+      const fetched = await config.api.datasource.get(ds._id!)
+      expect(fetched.restTemplate).toBe("Attio")
+      expect(fetched.restTemplateId).toBeUndefined()
+    })
+
+    it("should read datasources that have both restTemplate and restTemplateId", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "Both Fields REST",
+        source: SourceName.REST,
+        config: {},
+        restTemplate: "Attio" as any,
+        restTemplateId: "attio",
+      })
+
+      const fetched = await config.api.datasource.get(ds._id!)
+      expect(fetched.restTemplate).toBe("Attio")
+      expect(fetched.restTemplateId).toBe("attio")
+    })
+
+    it("should return restTemplateId when updating a REST datasource", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST with template",
+        source: SourceName.REST,
+        config: {},
+        restTemplateId: "attio",
+      })
+
+      const updated = await config.api.datasource.update({
+        ...ds,
+        name: "Updated REST",
+      })
+
+      expect(updated.restTemplateId).toBe("attio")
+      expect(updated.name).toBe("Updated REST")
+    })
+
+    it("should handle updating a legacy datasource without losing restTemplate", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "Legacy Only",
+        source: SourceName.REST,
+        config: {},
+        restTemplate: "Attio" as any,
+      })
+
+      const updated = await config.api.datasource.update({
+        ...ds,
+        name: "Updated Legacy",
+      })
+
+      expect(updated.restTemplate).toBe("Attio")
+      expect(updated.name).toBe("Updated Legacy")
+    })
+
+    it("should handle SharePoint template name migration scenarios", async () => {
+      // Legacy datasources stored "SharePoint Sites" as restTemplate.
+      // Templates were renamed to just "Sites" within "Microsoft SharePoint"
+      // group, so the name would sluggify to "microsoft-sharepoint-sites".
+      const legacy = await config.api.datasource.create({
+        type: "datasource",
+        name: "SharePoint Legacy",
+        source: SourceName.REST,
+        config: {},
+        restTemplate: "SharePoint Sites" as any,
+      })
+
+      const fetchedLegacy = await config.api.datasource.get(legacy._id!)
+      expect(fetchedLegacy.restTemplate).toBe("SharePoint Sites")
+      expect(fetchedLegacy.restTemplateId).toBeUndefined()
+
+      // Migrated datasource has both old name and new id
+      const migrated = await config.api.datasource.create({
+        type: "datasource",
+        name: "SharePoint Migrated",
+        source: SourceName.REST,
+        config: {},
+        restTemplate: "SharePoint Sites" as any,
+        restTemplateId: "microsoft-sharepoint-sites",
+      })
+
+      const fetchedMigrated = await config.api.datasource.get(migrated._id!)
+      expect(fetchedMigrated.restTemplate).toBe("SharePoint Sites")
+      // This represents
+      expect(fetchedMigrated.restTemplateId).toBe("microsoft-sharepoint-sites")
+
+      const fresh = await config.api.datasource.create({
+        type: "datasource",
+        name: "SharePoint New",
+        source: SourceName.REST,
+        config: {},
+        restTemplateId: "microsoft-sharepoint-drives",
+      })
+
+      const fetchedFresh = await config.api.datasource.get(fresh._id!)
+      expect(fetchedFresh.restTemplateId).toBe("microsoft-sharepoint-drives")
+      expect(fetchedFresh.restTemplate).toBeUndefined()
+    })
+  })
+
+  describe("auth config secret scrubbing", () => {
+    it("scrubs basic auth password in create response", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST scrub basic",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Basic Auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "testuser",
+                password: "testpassword",
+              },
+            },
+          ],
+        },
+      })
+
+      expect(ds.config!.authConfigs[0].config.password).toBe(
+        PASSWORD_REPLACEMENT
+      )
+      expect(ds.config!.authConfigs[0].config.username).toBe("testuser")
+    })
+
+    it("scrubs bearer token in create response", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST scrub bearer",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Bearer Auth",
+              type: RestAuthType.BEARER,
+              config: {
+                token: "my-secret-token",
+              },
+            },
+          ],
+        },
+      })
+
+      expect(ds.config!.authConfigs[0].config.token).toBe(PASSWORD_REPLACEMENT)
+    })
+
+    it("scrubs basic auth password in get response", async () => {
+      const created = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST scrub get basic",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Basic Auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "testuser",
+                password: "testpassword",
+              },
+            },
+          ],
+        },
+      })
+
+      const fetched = await config.api.datasource.get(created._id!)
+      expect(fetched.config!.authConfigs[0].config.password).toBe(
+        PASSWORD_REPLACEMENT
+      )
+    })
+
+    it("preserves env var references instead of scrubbing them", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST env vars",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Env Auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "{{ env.USERNAME }}",
+                password: "{{ env.PASSWORD }}",
+              },
+            },
+          ],
+        },
+      })
+
+      expect(ds.config!.authConfigs[0].config.password).toBe(
+        "{{ env.PASSWORD }}"
+      )
+      expect(ds.config!.authConfigs[0].config.username).toBe(
+        "{{ env.USERNAME }}"
+      )
+    })
+
+    it("scrubs sensitive longform fields in get response", async () => {
+      const privateKey = [
+        "-----BEGIN PRIVATE KEY-----",
+        "secret-material",
+        "-----END PRIVATE KEY-----",
+      ].join("\n")
+      const created = await config.api.datasource.create({
+        type: "datasource",
+        name: "Snowflake longform secret",
+        source: SourceName.SNOWFLAKE,
+        config: {
+          account: "test-account",
+          username: "test-user",
+          privateKey,
+          warehouse: "test-warehouse",
+          database: "test-database",
+          schema: "test-schema",
+        },
+      })
+
+      const fetched = await config.api.datasource.get(created._id!)
+
+      expect(fetched.config!.privateKey).toBe(PASSWORD_REPLACEMENT)
+    })
+  })
+
+  describe("auth config password preservation", () => {
+    it("should preserve basic auth password when updating with PASSWORD_REPLACEMENT and matching _id", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST with auth",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: "auth1",
+              name: "My Basic Auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "user",
+                password: "realpassword123",
+              },
+            },
+          ],
+        },
+      })
+
+      const fetched = await config.api.datasource.get(ds._id!)
+      expect(fetched.config!.authConfigs[0].config.password).toBe(
+        PASSWORD_REPLACEMENT
+      )
+
+      const updated = await config.api.datasource.update({
+        ...fetched,
+        name: "Updated name",
+      })
+
+      const actual = await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => sdk.datasources.get(updated._id!)
+      )
+      expect(actual!.config!.authConfigs[0].config.password).toBe(
+        "realpassword123"
+      )
+    })
+
+    it("should preserve password when auth config name changes but _id stays the same", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST rename auth",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: "auth1",
+              name: "Original Name",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "user",
+                password: "secretpass",
+              },
+            },
+          ],
+        },
+      })
+
+      const fetched = await config.api.datasource.get(ds._id!)
+      fetched.config!.authConfigs[0].name = "Renamed Auth"
+
+      await config.api.datasource.update(fetched)
+
+      const actual = await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => sdk.datasources.get(ds._id!)
+      )
+      expect(actual!.config!.authConfigs[0].name).toBe("Renamed Auth")
+      expect(actual!.config!.authConfigs[0].config.password).toBe("secretpass")
+    })
+
+    it("should preserve bearer token when PASSWORD_REPLACEMENT is sent back", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST bearer preservation",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: "auth1",
+              name: "Bearer Auth",
+              type: RestAuthType.BEARER,
+              config: {
+                token: "my-secret-token",
+              },
+            },
+          ],
+        },
+      })
+
+      const fetched = await config.api.datasource.get(ds._id!)
+      expect(fetched.config!.authConfigs[0].config.token).toBe(
+        PASSWORD_REPLACEMENT
+      )
+
+      await config.api.datasource.update(fetched)
+
+      const actual = await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => sdk.datasources.get(ds._id!)
+      )
+      expect(actual!.config!.authConfigs[0].config.token).toBe(
+        "my-secret-token"
+      )
+    })
+
+    it("should use new value when a real password is sent instead of PASSWORD_REPLACEMENT", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST new password",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: "auth1",
+              name: "Basic Auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "user",
+                password: "original-password",
+              },
+            },
+          ],
+        },
+      })
+
+      await config.api.datasource.update({
+        ...ds,
+        config: {
+          authConfigs: [
+            {
+              _id: "auth1",
+              name: "Basic Auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "user",
+                password: "brand-new-password",
+              },
+            },
+          ],
+        },
+      })
+
+      const actual = await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => sdk.datasources.get(ds._id!)
+      )
+      expect(actual!.config!.authConfigs[0].config.password).toBe(
+        "brand-new-password"
+      )
+    })
+
+    it("should not preserve password when auth config _id does not match", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST new auth",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: "auth1",
+              name: "Old Auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "user",
+                password: "oldpassword",
+              },
+            },
+          ],
+        },
+      })
+
+      await config.api.datasource.update({
+        ...ds,
+        config: {
+          authConfigs: [
+            {
+              _id: "auth2",
+              name: "New Auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "newuser",
+                password: "newpassword",
+              },
+            },
+          ],
+        },
+      })
+
+      const actual = await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => sdk.datasources.get(ds._id!)
+      )
+      expect(actual!.config!.authConfigs[0].config.password).toBe("newpassword")
+    })
+  })
+
+  describe("OAuth2 auth config scrubbing", () => {
+    const makeOAuth2AuthConfig = (overrides?: object) => ({
+      _id: generator.guid(),
+      name: "OAuth2 Auth",
+      type: RestAuthType.OAUTH2,
+      url: "https://auth.example.com/token",
+      clientId: "my-client-id",
+      clientSecret: "my-client-secret",
+      method: OAuth2CredentialsMethod.BODY,
+      grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+      ...overrides,
+    })
+
+    it("scrubs OAuth2 clientSecret in create response", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.REST,
+        config: { authConfigs: [makeOAuth2AuthConfig()] },
+      })
+
+      expect(ds.config!.authConfigs[0].clientSecret).toBe(PASSWORD_REPLACEMENT)
+      expect(ds.config!.authConfigs[0].clientId).toBe("my-client-id")
+    })
+
+    it("scrubs OAuth2 clientSecret in get response", async () => {
+      const created = await config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.REST,
+        config: { authConfigs: [makeOAuth2AuthConfig()] },
+      })
+
+      const fetched = await config.api.datasource.get(created._id!)
+      expect(fetched.config!.authConfigs[0].clientSecret).toBe(
+        PASSWORD_REPLACEMENT
+      )
+    })
+
+    it("preserves OAuth2 clientSecret when PASSWORD_REPLACEMENT is sent back on update", async () => {
+      const authId = generator.guid()
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.REST,
+        config: { authConfigs: [makeOAuth2AuthConfig({ _id: authId })] },
+      })
+
+      const fetched = await config.api.datasource.get(ds._id!)
+      expect(fetched.config!.authConfigs[0].clientSecret).toBe(
+        PASSWORD_REPLACEMENT
+      )
+
+      await config.api.datasource.update({ ...fetched, name: "Updated" })
+
+      const actual = await context.doInWorkspaceContext(
+        config.getDevWorkspaceId(),
+        async () => sdk.datasources.get(ds._id!)
+      )
+      expect(actual!.config!.authConfigs[0].clientSecret).toBe(
+        "my-client-secret"
+      )
+    })
+  })
+
+  describe("OAuth2 token cache cleanup", () => {
+    const makeOAuth2Datasource = async () => {
+      return config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: "oauth2-auth-1",
+              name: "OAuth2 Auth",
+              type: RestAuthType.OAUTH2,
+              url: "https://auth.example.com/token",
+              clientId: "my-client-id",
+              clientSecret: "my-client-secret",
+              method: "header",
+              grantType: "client_credentials",
+            },
+          ],
+        },
+      })
+    }
+
+    it("clears OAuth2 token cache on datasource update", async () => {
+      const ds = await makeOAuth2Datasource()
+      const cacheKey = cache.CacheKey.OAUTH2_TOKEN("oauth2-auth-1")
+
+      await config.doInTenant(async () => {
+        await cache.store(cacheKey, "Bearer mock-token", 3600)
+        expect(await cache.get(cacheKey)).toBe("Bearer mock-token")
+      })
+
+      await config.api.datasource.update({ ...ds, name: "Updated" })
+
+      await config.doInTenant(async () => {
+        expect(await cache.get(cacheKey)).toBeNull()
+      })
+    })
+
+    it("clears OAuth2 token cache on datasource delete", async () => {
+      const ds = await makeOAuth2Datasource()
+      const cacheKey = cache.CacheKey.OAUTH2_TOKEN("oauth2-auth-1")
+
+      await config.doInTenant(async () => {
+        await cache.store(cacheKey, "Bearer mock-token", 3600)
+        expect(await cache.get(cacheKey)).toBe("Bearer mock-token")
+      })
+
+      await config.api.datasource.delete(ds)
+
+      await config.doInTenant(async () => {
+        expect(await cache.get(cacheKey)).toBeNull()
+      })
+    })
+  })
+
   describe("permissions", () => {
     it("should apply authorization to endpoint", async () => {
       await checkBuilderEndpoint({
@@ -154,12 +870,49 @@ describe("/datasources", () => {
       })
     })
 
+    it("should apply authorization to get endpoint", async () => {
+      await checkBuilderEndpoint({
+        config,
+        method: "GET",
+        url: `/api/datasources/${datasource._id}`,
+      })
+    })
+
     it("should apply authorization to delete endpoint", async () => {
       await checkBuilderEndpoint({
         config,
         method: "DELETE",
         url: `/api/datasources/${datasource._id}/${datasource._rev}`,
       })
+    })
+
+    it("should apply authorization to update endpoint", async () => {
+      await checkBuilderEndpoint({
+        config,
+        method: "PUT",
+        url: `/api/datasources/${datasource._id}`,
+        body: datasource,
+      })
+    })
+
+    it("should not persist datasource updates from production users without builder access", async () => {
+      const before = await config.api.datasource.get(datasource._id!)
+      const headers = await config.login({
+        userId: "us_fail",
+        builder: false,
+        prodApp: true,
+      })
+      await createRequest(
+        config.request,
+        "PUT",
+        `/api/datasources/${datasource._id}`,
+        { ...before, name: "Unauthorized update attempt" }
+      )
+        .set(headers)
+        .expect(403)
+      const after = await config.api.datasource.get(datasource._id!)
+      expect(after.name).toEqual(before.name)
+      expect(after._rev).toEqual(before._rev)
     })
   })
 })
@@ -504,6 +1257,171 @@ if (descriptions.length) {
               table.schema.enum.constraints!.inclusion!.toSorted()
             ).toEqual(enumOptions)
           })
+
+        isMSSQL &&
+          it("supports temporal tables without importing history tables", async () => {
+            const tableName = generator.guid().replaceAll("-", "")
+            await client.raw(`
+              CREATE TABLE [dbo].[${tableName}](
+                [email] NVARCHAR(255) NOT NULL,
+                [first_name] NVARCHAR(100) NOT NULL,
+                [ValidFrom] DATETIME2(7) GENERATED ALWAYS AS ROW START NOT NULL,
+                [ValidTo] DATETIME2(7) GENERATED ALWAYS AS ROW END NOT NULL,
+                CONSTRAINT [PK_${tableName}] PRIMARY KEY CLUSTERED ([email]),
+                PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo])
+              )
+              WITH (
+                SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[${tableName}_History])
+              )
+            `)
+
+            const info = await config.api.datasource.info(datasource)
+            expect(info.tableNames).toContain(tableName)
+            expect(info.tableNames).not.toContain(`${tableName}_History`)
+
+            const resp = await config.api.datasource.fetchSchema({
+              datasourceId: datasource._id!,
+            })
+
+            expect(resp.errors).toEqual({})
+            expect(
+              resp.datasource.entities?.[tableName].schema.ValidFrom.autocolumn
+            ).toBe(true)
+            expect(
+              resp.datasource.entities?.[tableName].schema.ValidTo.autocolumn
+            ).toBe(true)
+            expect(
+              resp.datasource.entities?.[`${tableName}_History`]
+            ).toBeUndefined()
+          })
+
+        it("re-points primaryDisplay when its column is dropped from the source database", async () => {
+          await client.schema.createTable("display_test", table => {
+            table.increments("id").primary()
+            table.string("name")
+            table.string("description")
+          })
+          await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+
+          let ds = await config.api.datasource.get(datasource._id!)
+          let table = Object.values(ds.entities!).find(
+            t => t.name === "display_test"
+          )!
+          await config.api.table.save({ ...table, primaryDisplay: "name" })
+
+          await client.schema.alterTable("display_test", table => {
+            table.dropColumn("name")
+          })
+          await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+
+          ds = await config.api.datasource.get(datasource._id!)
+          table = Object.values(ds.entities!).find(
+            t => t.name === "display_test"
+          )!
+          expect(table.primaryDisplay).toBeDefined()
+          expect(table.primaryDisplay).not.toEqual("name")
+          expect(table.schema[table.primaryDisplay!]).toBeDefined()
+        })
+
+        it("still searches views referencing a column dropped from the source database", async () => {
+          await client.schema.createTable("stale_view_test", table => {
+            table.increments("id").primary()
+            table.string("name")
+            table.string("doomed")
+          })
+          await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+
+          const ds = await config.api.datasource.get(datasource._id!)
+          const table = Object.values(ds.entities!).find(
+            t => t.name === "stale_view_test"
+          )!
+          const view = await config.api.viewV2.create({
+            name: generator.guid(),
+            tableId: table._id!,
+            schema: {
+              id: { visible: true },
+              name: { visible: true },
+              doomed: { visible: true },
+            },
+          })
+          await config.api.row.save(table._id!, { name: "a", doomed: "gone" })
+
+          await client.schema.alterTable("stale_view_test", table => {
+            table.dropColumn("doomed")
+          })
+          await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+
+          // The view schema still contains the dropped column - the search
+          // must skip it rather than reference it in the generated SQL
+          const response = await config.api.viewV2.search(view.id)
+          expect(response.rows).toHaveLength(1)
+          expect(response.rows[0].name).toEqual("a")
+          expect(response.rows[0].doomed).toBeUndefined()
+        })
+
+        it("re-points view display columns when the display column is dropped from the source database", async () => {
+          await client.schema.createTable("view_display_test", table => {
+            table.increments("id").primary()
+            table.string("name")
+            table.string("description")
+          })
+          await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+
+          let ds = await config.api.datasource.get(datasource._id!)
+          let table = Object.values(ds.entities!).find(
+            t => t.name === "view_display_test"
+          )!
+          await config.api.table.save({ ...table, primaryDisplay: "name" })
+          const view = await config.api.viewV2.create({
+            name: generator.guid(),
+            tableId: table._id!,
+            schema: {
+              id: { visible: true },
+              name: { visible: true },
+              description: { visible: true },
+            },
+          })
+
+          await client.schema.alterTable("view_display_test", table => {
+            table.dropColumn("name")
+          })
+          await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+          })
+
+          // The view follows the table's healed display column, and the
+          // dropped column is removed from its schema so it can be updated
+          ds = await config.api.datasource.get(datasource._id!)
+          table = Object.values(ds.entities!).find(
+            t => t.name === "view_display_test"
+          )!
+          const updated = await config.api.viewV2.get(view.id)
+          expect(table.primaryDisplay).toBeDefined()
+          expect(updated.primaryDisplay).toEqual(table.primaryDisplay)
+          expect(updated.primaryDisplay).not.toEqual("name")
+          expect(Object.keys(updated.schema!)).not.toContain("name")
+
+          await config.api.viewV2.update(
+            {
+              ...updated,
+              schema: {
+                id: { visible: true },
+                description: { visible: false },
+              },
+            },
+            { status: 200 }
+          )
+        })
       })
 
       describe("verify", () => {

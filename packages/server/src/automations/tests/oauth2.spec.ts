@@ -94,7 +94,7 @@ describe("OAuth2 Automation Binding", () => {
         config: {
           clientID: "test_client_id",
           clientSecret: "test_client_secret",
-          callbackURL: "http://callback.example.com",
+          callbackURL: "http://example.com/callback",
           activated: true,
         },
       }
@@ -122,7 +122,7 @@ describe("OAuth2 Automation Binding", () => {
 
   it("should make OAuth2 token available in executeQuery automation step", async () => {
     await config.withUser(ssoUser, async () => {
-      const pool = getPool("https://api.example.com")
+      const pool = getPool("https://example.com")
       let requestCount = 0
 
       pool
@@ -144,7 +144,7 @@ describe("OAuth2 Automation Binding", () => {
       })
 
       const queryFields: RestQueryFields = {
-        path: "https://api.example.com/test",
+        path: "https://example.com/test",
         queryString: "",
         headers: {
           Authorization: "Bearer {{ user.oauth2.accessToken }}",
@@ -174,7 +174,7 @@ describe("OAuth2 Automation Binding", () => {
 
   it("should make OAuth2 token available in apiRequest automation step", async () => {
     await config.withUser(ssoUser, async () => {
-      const pool = getPool("https://api.example.com")
+      const pool = getPool("https://example.com")
       let requestCount = 0
 
       pool
@@ -203,7 +203,7 @@ describe("OAuth2 Automation Binding", () => {
       })
 
       const queryFields: RestQueryFields = {
-        path: "https://api.example.com/api-request",
+        path: "https://example.com/api-request",
         queryString: "",
         headers: {
           Authorization: "Bearer {{ user.oauth2.accessToken }}",
@@ -258,7 +258,7 @@ describe("OAuth2 Automation Binding", () => {
 
   it("should handle 401 Unauthorized and retry mechanism in apiRequest step", async () => {
     await config.withUser(ssoUser, async () => {
-      const apiPool = getPool("https://api.example.com")
+      const apiPool = getPool("https://example.com")
       let firstCall = true
 
       apiPool
@@ -293,7 +293,7 @@ describe("OAuth2 Automation Binding", () => {
       })
 
       const queryFields: RestQueryFields = {
-        path: "https://api.example.com/protected-endpoint",
+        path: "https://example.com/protected-endpoint",
         queryString: "",
         headers: {
           Authorization: "Bearer {{ user.oauth2.accessToken }}",

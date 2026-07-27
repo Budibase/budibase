@@ -21,6 +21,8 @@
   export let options: O[] = []
   export let getOptionLabel = (option: O) => `${option}`
   export let getOptionValue = (option: O) => `${option}`
+  export let popoverAutoWidth = false
+  export let wrapText = false
 
   const dispatch = createEventDispatcher<{
     change: string
@@ -40,7 +42,7 @@
     return String(value).toLowerCase()
   }
 
-  $: query = value || ""
+  $: if (!focus) query = value || ""
   $: filteredOptions =
     !query.trim() || !options?.length
       ? options
@@ -57,12 +59,13 @@
   }
 
   const onType: FormEventHandler<HTMLInputElement> = e => {
-    const value = e.currentTarget.value
-    dispatch("type", value)
-    selectOption(value, false)
+    query = e.currentTarget.value
+    dispatch("type", query)
+    open = true
   }
 
   const onPick = (value: string) => {
+    query = value
     dispatch("pick", value)
     selectOption(value)
   }
@@ -85,10 +88,13 @@
       on:focus={() => (focus = true)}
       on:blur={() => {
         focus = false
+        if (query !== (value || "")) {
+          dispatch("change", query)
+        }
         dispatch("blur")
       }}
       on:input={onType}
-      value={value || ""}
+      value={query}
       placeholder={placeholder || ""}
       {disabled}
       {readonly}
@@ -112,10 +118,14 @@
   {open}
   align={PopoverAlignment.Left}
   on:close={() => (open = false)}
-  useAnchorWidth
+  widthMode={popoverAutoWidth ? "min-to-anchor" : "fixed-to-anchor"}
+  maxWidth={popoverAutoWidth ? 400 : undefined}
+  closeOnScroll
 >
   <div
     class="popover-content"
+    class:auto-width={popoverAutoWidth}
+    class:wrap-text={wrapText}
     use:clickOutside={() => {
       open = false
     }}
@@ -129,6 +139,7 @@
             role="option"
             aria-selected="true"
             tabindex="0"
+            on:mousedown|preventDefault
             on:click={() => onPick(getOptionValue(option))}
           >
             <span class="spectrum-Menu-itemLabel">{getOptionLabel(option)}</span
@@ -174,6 +185,25 @@
   }
   .popover-content:not(.auto-width) .spectrum-Menu-itemLabel {
     width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .popover-content.auto-width .spectrum-Menu-item {
+    padding-right: var(--spacing-xl);
+  }
+  .popover-content.wrap-text .spectrum-Menu-item {
+    height: auto;
+    min-height: var(--spectrum-menu-item-height);
+    align-items: flex-start;
+  }
+  .popover-content.wrap-text .spectrum-Menu-itemLabel {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
+    width: auto;
     flex: 1 1 auto;
   }
 </style>

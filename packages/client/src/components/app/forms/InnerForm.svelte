@@ -459,17 +459,35 @@
 
   const handleUpdateFieldValue = ({
     type,
+    fields,
+    fieldValues,
+    // Legacy single-field format - coerce for backwards compatibility
     field,
     value,
   }: {
     type: "set" | "reset"
-    field: string
-    value: any
+    fields?: string[]
+    fieldValues?: Record<string, any>
+    field?: string
+    value?: any
   }) => {
-    if (type === "set") {
-      formApi.setFieldValue(field, value)
-    } else {
-      formApi.resetField(field)
+    // Coerce legacy single-field format into the new multi-field format
+    const resolvedFields = fields ?? (field ? [field] : [])
+    const resolvedFieldValues =
+      fieldValues ?? (field !== undefined ? { [field]: value } : {})
+
+    if (type === "set" && Object.keys(resolvedFieldValues).length > 0) {
+      Object.entries(resolvedFieldValues).forEach(([fieldName, fieldValue]) => {
+        formApi.setFieldValue(fieldName, fieldValue)
+      })
+    } else if (
+      type === "reset" &&
+      Array.isArray(resolvedFields) &&
+      resolvedFields.length > 0
+    ) {
+      resolvedFields.forEach(fieldName => {
+        formApi.resetField(fieldName)
+      })
     }
   }
 

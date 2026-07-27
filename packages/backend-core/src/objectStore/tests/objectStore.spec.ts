@@ -1,14 +1,70 @@
 import { Upload } from "@aws-sdk/lib-storage"
 import { PassThrough } from "stream"
 import { structures } from "../../../tests"
-import { streamUpload, streamUploadMany, upload } from "../objectStore"
+import {
+  downloadTarball,
+  downloadTarballDirect,
+  getSafeRetrieveDirectoryPath,
+  sanitizeKey,
+  streamUpload,
+  streamUploadMany,
+  upload,
+} from "../objectStore"
+import { fetchWithBlacklist } from "../../utils/outboundFetch"
 
 // Get mock instances
 const mockUpload = Upload as jest.MockedClass<typeof Upload>
+const fetchWithBlacklistMock = fetchWithBlacklist as jest.MockedFunction<
+  typeof fetchWithBlacklist
+>
+
+jest.mock("../../utils/outboundFetch", () => ({
+  fetchWithBlacklist: jest.fn(),
+}))
 
 describe("objectStore", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+  })
+
+  describe("sanitizeKey", () => {
+    it("rejects traversal path segments", () => {
+      expect(() => sanitizeKey("app_123/files/../../etc/passwd")).toThrow(
+        "Invalid object store key"
+      )
+      expect(() => sanitizeKey("app_123/files/./config.json")).toThrow(
+        "Invalid object store key"
+      )
+    })
+
+    it("allows dots in ordinary path segments", () => {
+      expect(sanitizeKey("app_123/files/config.backup.json")).toBe(
+        "app_123/files/config.backup.json"
+      )
+    })
+  })
+
+  describe("getSafeRetrieveDirectoryPath", () => {
+    it("resolves safe object keys under the export directory", () => {
+      expect(
+        getSafeRetrieveDirectoryPath(
+          "/tmp/budibase-export",
+          "app_123/files/config.json"
+        )
+      ).toEqual({
+        dir: "/tmp/budibase-export/app_123/files",
+        path: "/tmp/budibase-export/app_123/files/config.json",
+      })
+    })
+
+    it("rejects object keys that resolve outside the export directory", () => {
+      expect(
+        getSafeRetrieveDirectoryPath(
+          "/tmp/budibase-export",
+          "app_123/files/../../../../etc/passwd"
+        )
+      ).toBeUndefined()
+    })
   })
 
   describe("upload", () => {
@@ -372,6 +428,38 @@ describe("objectStore", () => {
           CacheControl: "max-age=3600",
         },
       })
+    })
+  })
+
+  describe("safe outbound fetch usage", () => {
+    it("uses fetchWithBlacklist in downloadTarballDirect", async () => {
+      fetchWithBlacklistMock.mockRejectedValue(
+        new Error("URL is blocked or could not be resolved safely.")
+      )
+
+      await expect(
+        downloadTarballDirect("http://169.254.169.254/metadata/v1/", "tmp")
+      ).rejects.toThrow("URL is blocked or could not be resolved safely.")
+
+      expect(fetchWithBlacklistMock).toHaveBeenCalledWith(
+        "http://169.254.169.254/metadata/v1/",
+        { headers: {} },
+        { followRedirects: true }
+      )
+    })
+
+    it("uses fetchWithBlacklist in downloadTarball", async () => {
+      fetchWithBlacklistMock.mockRejectedValue(
+        new Error("URL is blocked or could not be resolved safely.")
+      )
+
+      await expect(
+        downloadTarball("http://169.254.169.254/metadata/v1/", "bucket", "tmp")
+      ).rejects.toThrow("URL is blocked or could not be resolved safely.")
+
+      expect(fetchWithBlacklistMock).toHaveBeenCalledWith(
+        "http://169.254.169.254/metadata/v1/"
+      )
     })
   })
 })

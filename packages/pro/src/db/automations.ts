@@ -8,6 +8,7 @@ import {
   ConstantQuotaName,
   DatabaseQueryOpts,
   Workspace,
+  WorkspaceMetadataAutomationStops,
   WorkspaceMetadataErrors,
 } from "@budibase/types"
 import { backOff } from "../utilities/delay"
@@ -179,6 +180,37 @@ export async function updateAppMetadataWithErrors(
   logIds: string[],
   { clearing } = { clearing: false }
 ) {
+  await updateAppMetadataWithLogIds({
+    logIds,
+    clearing,
+    metadataKey: "automationErrors",
+    failureMessage: "Failed to update app metadata with automation log error",
+  })
+}
+
+export async function updateAppMetadataWithStops(
+  logIds: string[],
+  { clearing } = { clearing: false }
+) {
+  await updateAppMetadataWithLogIds({
+    logIds,
+    clearing,
+    metadataKey: "automationStops",
+    failureMessage: "Failed to update app metadata with automation log stop",
+  })
+}
+
+async function updateAppMetadataWithLogIds({
+  logIds,
+  clearing,
+  metadataKey,
+  failureMessage,
+}: {
+  logIds: string[]
+  clearing: boolean
+  metadataKey: "automationErrors" | "automationStops"
+  failureMessage: string
+}) {
   const db = context.getProdWorkspaceDB()
   // this will try multiple times with a delay between to update the metadata
   await backOff(async () => {
@@ -190,29 +222,37 @@ export async function updateAppMetadataWithErrors(
       const autoId = `${parts[parts.length - 3]}${dbUtils.SEPARATOR}${
         parts[parts.length - 2]
       }`
-      let errors: WorkspaceMetadataErrors = {}
-      if (metadata.automationErrors) {
-        errors = metadata.automationErrors as WorkspaceMetadataErrors
+      let logIdsByAutomation:
+        | WorkspaceMetadataErrors
+        | WorkspaceMetadataAutomationStops = {}
+      if (metadata[metadataKey]) {
+        logIdsByAutomation = metadata[metadataKey] as
+          | WorkspaceMetadataErrors
+          | WorkspaceMetadataAutomationStops
       }
-      if (!Array.isArray(errors[autoId])) {
-        errors[autoId] = []
+      if (clearing && !Array.isArray(logIdsByAutomation[autoId])) {
+        continue
       }
-      const idx = errors[autoId].indexOf(logId)
-      if (clearing && idx !== -1) {
-        errors[autoId].splice(idx, 1)
+      logIdsByAutomation[autoId] ||= []
+      const idx = logIdsByAutomation[autoId].indexOf(logId)
+      if (clearing) {
+        if (idx === -1) {
+          continue
+        }
+        logIdsByAutomation[autoId].splice(idx, 1)
       } else {
-        errors[autoId].push(logId)
+        logIdsByAutomation[autoId].push(logId)
       }
       // if clearing and reach zero, this will pass and will remove the element
-      if (errors[autoId].length === 0) {
-        delete errors[autoId]
+      if (logIdsByAutomation[autoId].length === 0) {
+        delete logIdsByAutomation[autoId]
       }
-      metadata.automationErrors = errors
+      metadata[metadataKey] = logIdsByAutomation
     }
     await db.put(metadata)
     // don't update cache until after DB put, make sure it has been stored successfully
     await cache.workspace.invalidateWorkspaceMetadata(metadata.appId, metadata)
-  }, "Failed to update app metadata with automation log error")
+  }, failureMessage)
 }
 
 export async function getExpiredLogs(): Promise<AutomationLogPage> {
@@ -241,16 +281,18 @@ export async function clearOldHistory() {
       _rev: doc.value.rev,
       _deleted: true,
     }))
-    const errorLogIds = expired.data
-      .filter((doc: any) => {
-        const parts = doc.id.split(dbUtils.SEPARATOR)
-        const status = parts[parts.length - 1]
-        return status === AutomationStatus.ERROR
-      })
-      .map((doc: any) => doc.id)
+    const expiredLogIds = expired.data.map((doc: any) => doc.id)
+    const errorLogIds = expiredLogIds.filter((id: string) => {
+      const parts = id.split(dbUtils.SEPARATOR)
+      const status = parts[parts.length - 1]
+      return status === AutomationStatus.ERROR
+    })
     await db.bulkDocs(toDelete)
     if (errorLogIds.length) {
       await updateAppMetadataWithErrors(errorLogIds, { clearing: true })
+    }
+    if (expiredLogIds.length) {
+      await updateAppMetadataWithStops(expiredLogIds, { clearing: true })
     }
   } catch (err) {
     logging.logAlert(

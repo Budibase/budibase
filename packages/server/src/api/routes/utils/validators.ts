@@ -184,6 +184,7 @@ function searchFiltersValidator() {
     empty: Joi.object().optional(),
     notEmpty: Joi.object().optional(),
     oneOf: Joi.object().optional(),
+    notOneOf: Joi.object().optional(),
     contains: Joi.object().optional(),
     notContains: Joi.object().optional(),
     containsAny: Joi.object().optional(),
@@ -343,8 +344,8 @@ function generateStepSchema(allowStepTypes: string[]) {
   const branchSchema = Joi.object({
     id: Joi.string().required(),
     name: Joi.string().required(),
-    condition: filterObject({ unknown: false }).required().min(1),
-    conditionUI: Joi.object(),
+    condition: filterObject({ unknown: false }).required(),
+    conditionUI: Joi.object().allow(null),
   })
 
   return Joi.object({

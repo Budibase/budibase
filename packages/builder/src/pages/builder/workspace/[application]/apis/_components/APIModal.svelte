@@ -4,23 +4,23 @@
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { sortedIntegrations as integrations } from "@/stores/builder/sortedIntegrations"
   import { queries } from "@/stores/builder"
-  import { configFromIntegration } from "@/stores/selectors" //??
+  import { configFromIntegration } from "@/stores/selectors"
   import { datasources } from "@/stores/builder/datasources"
   import { IntegrationTypes } from "@/constants/backend"
   import {
     type RestTemplateSpec,
     type RestTemplate,
-    type RestTemplateGroupName,
-    type RestTemplateGroup,
     type TemplateSelectionContext,
-    type TemplateSelectionEventDetail,
     type UIIntegration,
   } from "@budibase/types"
   import { goto as gotoStore } from "@roxi/routify"
   import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import SelectCategoryAPIModal from "./SelectCategoryAPIModal.svelte"
 
-  export const show = () => modal.show()
+  export const show = () => {
+    resetModalState()
+    modal.show()
+  }
   export const hide = () => modal.hide()
 
   let modal: Modal
@@ -28,8 +28,7 @@
 
   let selectedTemplate: TemplateSelectionContext | null = null
   let targetSpec: RestTemplateSpec | null = null
-  let templatesValue: RestTemplate[] = []
-  let templateGroupsValue: RestTemplateGroup<RestTemplateGroupName>[] = []
+  let projectIds: string[] = []
 
   $beforeUrlChange(() => {
     return true
@@ -38,12 +37,17 @@
   $: goto = $gotoStore
 
   $: templatesValue = $restTemplates?.templates || []
-  $: templateGroupsValue = $restTemplates?.templateGroups || []
   $: restIntegration = ($integrations || []).find(
     integration => integration.name === IntegrationTypes.REST
   )
 
-  // CUSTOM REST
+  const resetModalState = () => {
+    loading = false
+    selectedTemplate = null
+    targetSpec = null
+    projectIds = []
+  }
+
   const handleCustom = async (integration?: UIIntegration) => {
     if (!integration || loading) return
     try {
@@ -52,10 +56,9 @@
         const ds = await datasources.create({
           integration,
           config: configFromIntegration(integration),
+          projectIds: projectIds.length ? projectIds : undefined,
         })
         await datasources.fetch()
-
-        // Go to the new query page.
         goto(`./query/new/${ds._id}`)
       }
     } catch {
@@ -63,9 +66,7 @@
     }
 
     modal.hide()
-    loading = false
-    selectedTemplate = null
-    targetSpec = null
+    resetModalState()
   }
 
   const loadTemplateInfo = async (spec?: RestTemplateSpec | null) => {
@@ -143,8 +144,7 @@
       loading = true
       selectedTemplate = template
 
-      // Initially we only support 1 type
-      targetSpec = template.specs[0] || null
+      targetSpec = template.specs?.[0] || null
 
       const config = configFromIntegration(restIntegration)
       const templateInfo = await loadTemplateInfo(targetSpec)
@@ -155,17 +155,18 @@
         integration: restIntegration,
         config,
         name: buildDatasourceName(selectedTemplate, targetSpec),
-        ...(template.restTemplateName && targetSpec?.version
+        projectIds: projectIds.length ? projectIds : undefined,
+        ...(template.restTemplateId
           ? {
-              restTemplate: template.restTemplateName,
-              restTemplateVersion: targetSpec.version,
+              restTemplateId: template.restTemplateId,
+              ...(targetSpec?.version
+                ? { restTemplateVersion: targetSpec.version }
+                : {}),
             }
           : {}),
       })
 
       await datasources.fetch()
-
-      // Go to the newly created datasource page.
       goto(`./datasource/${ds._id}`)
 
       notifications.success(`${selectedTemplate.name} API created`)
@@ -175,9 +176,7 @@
         `Error importing template - ${error?.message || "Unknown error"}`
       )
     } finally {
-      loading = false
-      selectedTemplate = null
-      targetSpec = null
+      resetModalState()
     }
   }
 
@@ -185,57 +184,26 @@
     template: TemplateSelectionContext,
     spec?: RestTemplateSpec | null
   ) => {
-    if (spec && template.specs.length > 1 && spec.version) {
+    if (spec && (template.specs?.length ?? 0) > 1 && spec.version) {
       return `${template.name} (${spec.version})`
     }
     return template.name
   }
 
-  const onSelectTemplate = (
-    event: CustomEvent<TemplateSelectionEventDetail>
-  ) => {
-    if (event.detail.kind === "template") {
-      handleTemplateSelection({
-        name: event.detail.template.name,
-        description: event.detail.template.description,
-        specs: event.detail.template.specs,
-        icon: event.detail.template.icon,
-        restTemplateName: event.detail.template.name,
-      })
-      return
-    }
-
-    const groupSelection = event.detail
-    const group = templateGroupsValue.find(
-      templateGroup => templateGroup.name === groupSelection.groupName
-    )
-
-    if (!group) {
-      notifications.error("Template group configuration is missing.")
-      return
-    }
-
-    const selectedTemplate = group.templates.find(
-      template => template.name === groupSelection.template.name
-    )
-
-    if (!selectedTemplate) {
-      notifications.error("Selected template could not be found.")
-      return
-    }
-
+  const onSelectTemplate = (event: CustomEvent<RestTemplate>) => {
+    const template = event.detail
     handleTemplateSelection({
-      name: selectedTemplate.name,
-      description: selectedTemplate.description,
-      specs: selectedTemplate.specs,
-      icon: group.icon,
-      restTemplateName: selectedTemplate.name,
+      name: template.name,
+      description: template.description,
+      specs: template.specs ?? [],
+      icon: template.icon,
+      restTemplateId: template.id,
     })
   }
 </script>
 
 <div class="settings-wrap">
-  <Modal bind:this={modal} autoFocus={false}>
+  <Modal bind:this={modal} autoFocus={false} on:hide={resetModalState}>
     <div
       class="spectrum-Dialog--large"
       role="dialog"
@@ -244,9 +212,9 @@
     >
       <SelectCategoryAPIModal
         templates={templatesValue}
-        templateGroups={templateGroupsValue}
         {loading}
         customDisabled={!restIntegration}
+        bind:projectIds
         on:custom={() => handleCustom(restIntegration)}
         on:selectTemplate={onSelectTemplate}
       />

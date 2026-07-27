@@ -22,6 +22,9 @@ spec:
   template:
     metadata:
       annotations:
+        {{- if .Values.globals.deployTimestamp }}
+        rollme/deploy-timestamp: {{ .Values.globals.deployTimestamp | quote }}
+        {{- end }}
         ad.datadoghq.com/bbautomationworker.logs: '[{"source":"nodejs"}]'
 {{ if .Values.services.automationWorkers.templateAnnotations }}
 {{- toYaml .Values.services.automationWorkers.templateAnnotations | indent 8 -}}
@@ -33,6 +36,10 @@ spec:
 {{ end }}
     spec:
       terminationGracePeriodSeconds: {{ .Values.services.automationWorkers.terminationGracePeriodSeconds }}
+      {{- if .Values.services.automationWorkers.readinessGates }}
+      readinessGates:
+        {{- toYaml .Values.services.automationWorkers.readinessGates | nindent 8 }}
+      {{- end }}
       containers:
       - env:
         - name: BUDIBASE_ENVIRONMENT
@@ -158,6 +165,10 @@ spec:
         - name: LITELLM_MASTER_KEY
           value: {{ .Values.services.litellm.masterKey | quote }}
         {{- end }}
+        {{- if .Values.services.litellm.bbaiKey }}
+        - name: BBAI_LITELLM_KEY
+          value: {{ .Values.services.litellm.bbaiKey | quote }}
+        {{- end }}
         - name: PLATFORM_URL
           value: {{ .Values.globals.platformUrl | quote }}
         - name: ACCOUNT_PORTAL_URL
@@ -237,8 +248,12 @@ spec:
               key: {{ .secretKey | quote }}
         {{- end}}
 
-        image: {{ .Values.globals.dockerRegistry }}budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
-        imagePullPolicy: Always
+        image: {{ .Values.services.automationWorkers.image | default (printf "%sbudibase/apps:%s" (.Values.globals.dockerRegistry | default "") (.Values.globals.appVersion | default .Chart.AppVersion)) }}
+        imagePullPolicy: {{ .Values.services.automationWorkers.imagePullPolicy | default "IfNotPresent" }}
+        {{- with .Values.services.automationWorkers.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         {{- if .Values.services.automationWorkers.startupProbe }}
         {{- with .Values.services.automationWorkers.startupProbe }}
         startupProbe:
@@ -272,6 +287,10 @@ spec:
         args:
         {{- toYaml .Values.services.automationWorkers.args | nindent 10 }}
         {{ end }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "{{ .Values.services.automationWorkers.preStopDelaySeconds }}"]
         {{ if .Values.services.automationWorkers.extraVolumeMounts }}
         volumeMounts:
         {{- toYaml .Values.services.automationWorkers.extraVolumeMounts | nindent 10 }}

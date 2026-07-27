@@ -162,7 +162,7 @@ export async function buildSqlFieldList(
     table = await sdk.views.getTable(source.id)
 
     fields = Object.keys(helpers.views.basicFields(source)).filter(
-      f => table.schema[f].type !== FieldType.LINK
+      f => table.schema[f] && table.schema[f].type !== FieldType.LINK
     )
   } else {
     table = source

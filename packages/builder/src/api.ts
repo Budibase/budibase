@@ -10,13 +10,19 @@ import { sdk, Header, ClientHeader } from "@budibase/shared-core"
 
 const newClient = (opts?: { production?: boolean }) =>
   createAPIClient({
-    attachHeaders: headers => {
+    attachHeaders: (headers, request) => {
+      const isWorkspaceDeleteRequest =
+        request?.method === "DELETE" &&
+        /^\/api\/applications\/app_dev_/.test(request.url)
+
       // Attach app ID header from store
       let appId = get(appStore).appId
       if (appId) {
-        headers[Header.APP_ID] = opts?.production
-          ? sdk.applications.getProdAppID(appId)
-          : appId
+        if (!isWorkspaceDeleteRequest) {
+          headers[Header.APP_ID] = opts?.production
+            ? sdk.applications.getProdAppID(appId)
+            : appId
+        }
         headers[Header.CLIENT] = ClientHeader.BUILDER
       }
 
@@ -39,21 +45,15 @@ const newClient = (opts?: { production?: boolean }) =>
       // Log all errors to console
       console.warn(`[Builder] HTTP ${status} on ${method}:${url}\n\t${message}`)
 
-      // In the event that the server has terminated the session, we need to
-      // manually clear the auth user, trigger a redirect to auth.
-      const hasAuthCookie = !!CookieUtils.getCookie(Constants.Cookies.Auth)
-
-      if (!hasAuthCookie && get(auth).user) {
+      // On 401 the server has explicitly rejected the credentials.
+      // Clear the client session and let the layout redirect to login
+      if (status === 401 && get(auth).user) {
         auth.clearSession()
-        // Let the user be redirected to auth by the core layout
         return
       }
 
       // Logout on 403's
       if (status === 403) {
-        // Remove cookies
-        CookieUtils.removeCookie(Constants.Cookies.Auth)
-
         const isAuthenticated = !!get(auth).user
         if (isAuthenticated) {
           // Clear return URL to prevent redirect loops with invalid URLs

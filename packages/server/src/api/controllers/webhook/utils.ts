@@ -1,5 +1,46 @@
-import { db as dbCore } from "@budibase/backend-core"
+import { configs, context, db as dbCore } from "@budibase/backend-core"
 import type { ChatConversation, Ctx } from "@budibase/types"
+
+// Escalations created in builder preview live in the dev workspace, while a
+// channel webhook resolves to the prod workspace. Rather than trust a
+// user-supplied appId, find which environment of the trusted app actually holds
+// the notification and record the response there. Returns the holding app id
+// variant, or undefined if neither has it.
+export const resolveEscalationWorkspaceId = async (
+  workspaceId: string,
+  notificationDocId: string
+): Promise<string | undefined> => {
+  const candidates = [
+    dbCore.getProdWorkspaceID(workspaceId),
+    dbCore.getDevWorkspaceID(workspaceId),
+  ]
+  for (const appId of candidates) {
+    const exists = await context.doInContext(appId, async () => {
+      const db = context.getWorkspaceDB()
+      return !!(await db.tryGet(notificationDocId))
+    })
+    if (exists) {
+      return appId
+    }
+  }
+  return undefined
+}
+
+export const isAbsoluteUrl = (url: string) =>
+  url.startsWith("http://") || url.startsWith("https://")
+
+export const toAbsoluteUrl = async (url: string) => {
+  if (isAbsoluteUrl(url)) {
+    return url
+  }
+
+  if (!url.startsWith("/")) {
+    return url
+  }
+
+  const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
+  return `${platformUrl.replace(/\/$/, "")}${url}`
+}
 
 export const ensureProdWorkspaceWebhookRoute = ({
   ctx,

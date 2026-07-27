@@ -48,7 +48,6 @@
   const excludedRoleIds = [
     ...builtInEndUserRoles,
     Constants.Roles.PUBLIC,
-    Constants.Roles.POWER,
     Constants.Roles.CREATOR,
     Constants.Roles.GROUP,
   ]
@@ -167,7 +166,7 @@
     !user || canWorkspaceRoleOverrideGlobalRole(users.getUserRole(user))
   )
   const disableRole = $derived(
-    disableFields ||
+    readonly ||
       isTenantOwner ||
       user?._id === $auth.user?._id ||
       !canEditWorkspaceRole

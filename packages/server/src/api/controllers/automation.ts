@@ -16,6 +16,8 @@ import {
   CreateAutomationRequest,
   CreateAutomationResponse,
   DeleteAutomationResponse,
+  EmailTriggerAuthType,
+  EmailTriggerInputs,
   FetchAutomationResponse,
   FindAutomationResponse,
   GetAutomationActionDefinitionsResponse,
@@ -26,14 +28,19 @@ import {
   Table,
   TestAutomationRequest,
   TestAutomationResponse,
+  TestEmailConnectionRequest,
+  TestEmailConnectionResponse,
   TriggerAutomationRequest,
   TriggerAutomationResponse,
   UpdateAutomationRequest,
   UpdateAutomationResponse,
   UserCtx,
   Workspace,
+  isEmailTrigger,
 } from "@budibase/types"
+import { testConnection } from "../../automations/email"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
+import { sanitizeAutomationTestResult } from "../../automations/sanitizeTestResult"
 import * as triggers from "../../automations/triggers"
 import {
   AutomationTestProgressEvent,
@@ -45,7 +52,12 @@ import { updateTestHistory } from "../../automations/utils"
 import { DocumentType } from "../../db/utils"
 import env from "../../environment"
 import sdk from "../../sdk"
+import { isMaskedPassword } from "../../sdk/workspace/automations/utils"
 import { isQsTrue } from "../../utilities"
+import {
+  resolveProjectIds,
+  resolveUpdatedProjectIds,
+} from "../../utilities/projects"
 import { withTestFlag } from "../../utilities/redis"
 import { builderSocket } from "../../websockets"
 
@@ -59,13 +71,15 @@ export async function create(
   ctx: UserCtx<CreateAutomationRequest, CreateAutomationResponse>
 ) {
   let automation = ctx.request.body
-  automation.appId = ctx.appId
 
   // call through to update if already exists
   if (automation._id && automation._rev) {
     await update(ctx)
     return
   }
+
+  automation.projectIds = await resolveProjectIds(automation.projectIds)
+  automation.appId = ctx.appId
 
   let createdAutomation: Automation
 
@@ -108,6 +122,12 @@ export async function update(
     return
   }
 
+  const existingAutomation = await sdk.automations.get(automation._id)
+  automation.projectIds = await resolveUpdatedProjectIds(
+    automation.projectIds,
+    existingAutomation.projectIds
+  )
+
   const updatedAutomation = await sdk.automations.update(automation)
 
   ctx.body = {
@@ -131,7 +151,7 @@ export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {
 
   const automation = await sdk.automations.get(ctx.params.id)
   if (coreSdk.automations.isRowAction(automation)) {
-    ctx.throw("Row actions automations cannot be deleted", 422)
+    ctx.throw(422, "Row actions automations cannot be deleted")
   }
 
   ctx.body = await sdk.automations.remove(automationId, ctx.params.rev)
@@ -141,7 +161,10 @@ export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {
 export async function logSearch(
   ctx: UserCtx<SearchAutomationLogsRequest, SearchAutomationLogsResponse>
 ) {
-  ctx.body = await automations.logs.logSearch(ctx.request.body)
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(ctx.appId)
+  ctx.body = await context.doInWorkspaceContext(prodWorkspaceId, async () => {
+    return await automations.logs.logSearch(ctx.request.body)
+  })
 }
 
 export async function clearLogError(
@@ -153,11 +176,19 @@ export async function clearLogError(
     const metadata = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
     if (!automationId) {
       delete metadata.automationErrors
+      delete metadata.automationStops
     } else if (
       metadata.automationErrors &&
       metadata.automationErrors[automationId]
     ) {
       delete metadata.automationErrors[automationId]
+    }
+    if (
+      automationId &&
+      metadata.automationStops &&
+      metadata.automationStops[automationId]
+    ) {
+      delete metadata.automationStops[automationId]
     }
     await db.put(metadata)
     await cache.workspace.invalidateWorkspaceMetadata(metadata.appId, metadata)
@@ -183,6 +214,77 @@ export async function getDefinitionList(
   ctx.body = {
     trigger: triggers.TRIGGER_DEFINITIONS,
     action: await actionDefs(),
+  }
+}
+
+async function hydrateEmailConnectionPassword(
+  inputs: TestEmailConnectionRequest
+): Promise<EmailTriggerInputs> {
+  const { automationId, ...emailInputs } = inputs
+  if (emailInputs.authType === EmailTriggerAuthType.OAUTH2) {
+    delete emailInputs.password
+    return emailInputs
+  }
+
+  if (!isMaskedPassword(emailInputs.password)) {
+    return emailInputs
+  }
+
+  if (!automationId) {
+    throw new HTTPError(
+      "Automation ID is required to test a saved password",
+      400
+    )
+  }
+
+  const automation = await context
+    .getWorkspaceDB()
+    .tryGet<Automation>(automationId)
+  if (!automation) {
+    throw new HTTPError("Automation not found", 404)
+  }
+
+  const trigger = automation.definition.trigger
+  if (!trigger) {
+    throw new HTTPError("No trigger found for automation", 400)
+  }
+  if (!isEmailTrigger(trigger)) {
+    throw new HTTPError("Automation trigger is not an email trigger", 400)
+  }
+  if (!trigger.inputs.password) {
+    throw new HTTPError("IMAP password is required", 400)
+  }
+
+  const stored = trigger.inputs
+  const connectionMatches =
+    emailInputs.host === stored.host &&
+    emailInputs.port === stored.port &&
+    emailInputs.username === stored.username &&
+    emailInputs.secure === stored.secure
+  if (!connectionMatches) {
+    throw new HTTPError(
+      "IMAP password is required when connection details change",
+      400
+    )
+  }
+
+  return {
+    ...emailInputs,
+    password: stored.password,
+  }
+}
+
+export async function testEmailConnection(
+  ctx: UserCtx<TestEmailConnectionRequest, TestEmailConnectionResponse>
+) {
+  try {
+    await testConnection(await hydrateEmailConnectionPassword(ctx.request.body))
+    ctx.body = { valid: true }
+  } catch (err: any) {
+    ctx.body = {
+      valid: false,
+      message: err?.message || "Unable to connect to IMAP server",
+    }
   }
 }
 
@@ -228,9 +330,6 @@ export async function trigger(
       }
     }
   } else {
-    if (ctx.appId && !dbCore.isProdWorkspaceID(ctx.appId)) {
-      ctx.throw(400, "Only apps in production support this endpoint")
-    }
     await triggers.externalTrigger(automation, {
       ...ctx.request.body,
       appId: ctx.appId,
@@ -290,10 +389,11 @@ export async function test(
   const emitProgress = (event: ProgressEventInput) => {
     const payload: AutomationTestProgressEvent = {
       ...event,
+      result: sanitizeAutomationTestResult(event.result),
       automationId: automation._id!,
       appId,
     }
-    recordTestProgress(appId, automation._id!, payload)
+    recordTestProgress(appId, automation._id!, payload, ctx.user._id)
     builderSocket?.emitToRoom(
       ctx,
       ctx.appId,
@@ -312,19 +412,20 @@ export async function test(
       return await triggers.externalTrigger(
         { ...automation, disabled: false },
         { ...{ ...input, ...(table ? { table } : {}) }, appId, user },
-        { getResponses: true, onProgress: emitProgress }
+        { getResponses: true, onProgress: emitProgress, isTestRun: true }
       )
     })
     await events.automation.tested(automation)
+    const sanitizedResult = sanitizeAutomationTestResult(result)
     emitProgress({
       status: "complete",
       occurredAt: Date.now(),
-      result,
+      result: sanitizedResult,
     })
-    return result
+    return sanitizedResult
   }
 
-  clearTestProgress(appId, automation._id!)
+  clearTestProgress(appId, automation._id!, ctx.user._id)
 
   if (asyncFlag) {
     ctx.status = 202
@@ -339,11 +440,11 @@ export async function test(
     return
   }
 
-  ctx.body = await runTest()
+  ctx.body = (await runTest()) as TestAutomationResponse
 }
 
 export async function testStatus(ctx: UserCtx<void, unknown>) {
   const automationId = ctx.params.id
-  const status = getTestProgress(ctx.appId, automationId)
+  const status = getTestProgress(ctx.appId, automationId, ctx.user._id)
   ctx.body = status || {}
 }

@@ -126,4 +126,71 @@ describe("test the outgoing webhook action", () => {
     expect(capturedRequestBody.Rows[0].Name).toEqual("blah de' blah")
     expect(result.steps[0].outputs.success).toEqual(true)
   })
+
+  it("should return a 400 when the webhook URL is missing", async () => {
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .make({
+        url: "   ",
+        body: { value: "{}" },
+      })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs).toEqual({
+      httpStatus: 400,
+      response: "Missing Webhook URL",
+      success: false,
+    })
+  })
+
+  it("should keep nested string props when they are not JSON", async () => {
+    let capturedRequestBody: Record<string, unknown> | undefined
+    nock("http://www.example.com/")
+      .post("/", body => {
+        capturedRequestBody = body
+        return true
+      })
+      .reply(200, "ok")
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .make({
+        url: "http://www.example.com",
+        body: {
+          value: JSON.stringify({
+            message: "plain string",
+            metadata: '{"source":"automation"}',
+          }),
+        },
+      })
+      .test({ fields: {} })
+
+    expect(capturedRequestBody).toEqual({
+      message: "plain string",
+      metadata: {
+        source: "automation",
+      },
+    })
+    expect(result.steps[0].outputs).toEqual({
+      httpStatus: 200,
+      response: "ok",
+      success: true,
+    })
+  })
+
+  it("should report fetch failures", async () => {
+    nock("http://www.example.com/").post("/").replyWithError("network failed")
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .make({
+        url: "http://www.example.com",
+        body: null,
+      })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.httpStatus).toEqual(400)
+    expect(result.steps[0].outputs.response).toContain("network failed")
+    expect(result.steps[0].outputs.success).toEqual(false)
+  })
 })

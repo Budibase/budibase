@@ -17,6 +17,7 @@ import { AddressInfo } from "net"
 import * as api from "../api"
 import * as automations from "../automations"
 import * as bullboard from "../automations/bullboard"
+import * as escalation from "../escalation/queue"
 import env from "../environment"
 import { default as eventEmitter, init as eventInit } from "../events"
 import { automationsEnabled, printFeatures } from "../features"
@@ -28,13 +29,52 @@ import { generateApiKey, getChecklist } from "../utilities/workerRequests"
 import { watch } from "../watch"
 import { initialise as initialiseWebsockets } from "../websockets"
 import * as workspaceMigrations from "../workspaceMigrations/queue"
-import { rag } from "../sdk/workspace/ai"
+import { agentRequests, rag, tests as agentTests } from "../sdk/workspace/ai"
 
 export type State = "uninitialised" | "starting" | "ready"
 let STATE: State = "uninitialised"
 
+class LiteLLMReadinessTimeoutError extends Error {
+  constructor(public readonly timeoutMs: number) {
+    super(`LiteLLM did not become ready within ${timeoutMs}ms`)
+    this.name = "LiteLLMReadinessTimeoutError"
+  }
+}
+
 export function getState(): State {
   return STATE
+}
+
+async function waitForLiteLLMReadiness() {
+  if (!env.LITELLM_MASTER_KEY) {
+    return
+  }
+
+  const timeoutMs = env.LITELLM_READINESS_TIMEOUT_MS
+  const pollMs = env.LITELLM_READINESS_POLL_MS
+  const start = Date.now()
+  while (Date.now() - start < timeoutMs) {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), pollMs)
+    const status = await sdk.ai.configs.getLiteLLMStatus({
+      signal: controller.signal,
+    })
+    clearTimeout(timeout)
+
+    if (status === sdk.ai.configs.LiteLLMStatus.OK) {
+      console.log(`LiteLLM ready after waiting ${Date.now() - start}ms`)
+      return
+    }
+
+    if (status === sdk.ai.configs.LiteLLMStatus.NOT_CONFIGURED) {
+      console.warn(`LiteLLM not configured ${Date.now() - start}ms`)
+      return
+    }
+
+    await new Promise(resolve => setTimeout(resolve, pollMs))
+  }
+
+  throw new LiteLLMReadinessTimeoutError(timeoutMs)
 }
 
 async function initRoutes(app: Koa) {
@@ -55,8 +95,8 @@ async function initPro() {
   await pro.init({
     backups: {
       processing: {
-        exportAppFn: sdk.backups.exportApp,
-        importAppFn: sdk.backups.importApp,
+        exportWorkspaceFn: sdk.backups.exportWorkspace,
+        importWorkspaceFn: sdk.backups.importApp,
         statsFn: sdk.backups.calculateBackupStats,
       },
     },
@@ -72,6 +112,7 @@ export async function startup(
     return
   }
   STATE = "starting"
+
   printFeatures()
   if (env.BUDIBASE_ENVIRONMENT) {
     console.log(`service running environment: "${env.BUDIBASE_ENVIRONMENT}"`)
@@ -124,10 +165,24 @@ export async function startup(
   // get the references to the queue promises, don't await as
   // they will never end, unless the processing stops
   let queuePromises = []
-  // configure events to use the pro audit log write
+  // configure events processors with pro dependencies
   // can't integrate directly into backend-core due to cyclic issues
-  queuePromises.push(events.processors.init(pro.sdk.auditLogs.write))
-  queuePromises.push(rag.queue.init())
+  queuePromises.push(
+    events.processors.init(
+      pro.sdk.auditLogs.write,
+      pro.sdk.licensing.client.getLicenseKey
+    )
+  )
+  queuePromises.push(rag.ragQueue.init())
+  queuePromises.push(escalation.init())
+  queuePromises.push(rag.knowledgeSourceSyncQueue.init())
+  queuePromises.push(agentRequests.init())
+  queuePromises.push(agentTests.init())
+  queuePromises.push(
+    rag.knowledgeSourceSyncQueue.rehydrateScheduledJobs().catch(err => {
+      console.error("Failed to rehydrate knowledge source sync jobs", err)
+    })
+  )
   // app migrations and automations on other service
   if (automationsEnabled()) {
     queuePromises.push(automations.init())
@@ -190,5 +245,17 @@ export async function startup(
   console.log("Initialising JS runner")
   jsRunner.init()
 
+  console.log("Waiting for LiteLLM readiness")
+
+  await waitForLiteLLMReadiness().catch(e => {
+    if (e instanceof LiteLLMReadinessTimeoutError) {
+      console.warn(e.message)
+      return
+    }
+
+    console.warn("Error waiting for LiteLLM readiness", e)
+  })
+
+  console.log("Server ready!")
   STATE = "ready"
 }

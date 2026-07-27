@@ -11,6 +11,8 @@ export interface OfflineLicense extends License {
   expireAt: ISO8601
 }
 
+export type GetLicenseKeyFn = () => Promise<string | undefined>
+
 export interface License {
   features: Feature[]
   quotas: Quotas

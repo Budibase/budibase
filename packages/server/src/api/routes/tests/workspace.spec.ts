@@ -2,13 +2,25 @@ import { DEFAULT_TABLES } from "../../../db/defaultData/datasource_bb_default"
 import { USERS_TABLE_SCHEMA } from "../../../constants"
 import { setEnv, withEnv } from "../../../environment"
 
-import { Header, context, db, events, roles } from "@budibase/backend-core"
-import { structures } from "@budibase/backend-core/tests"
+import {
+  Header,
+  context,
+  db,
+  events,
+  objectStore,
+  roles,
+} from "@budibase/backend-core"
+import { mocks, structures } from "@budibase/backend-core/tests"
 import {
   type Workspace,
+  AppFontFamily,
   BuiltinPermissionID,
+  DocumentType,
+  Feature,
   PermissionLevel,
   Screen,
+  SEPARATOR,
+  Theme,
   WorkspaceApp,
 } from "@budibase/types"
 import nock from "nock"
@@ -33,6 +45,59 @@ const generateAppName = () => {
   return structures.generator.word({ length: 10 })
 }
 
+const seedAgentWithLogs = async (appId: string) => {
+  return await context.doInWorkspaceContext(appId, async () => {
+    const workspaceDb = context.getWorkspaceDB()
+    const now = new Date().toISOString()
+    const agentId = `${DocumentType.AGENT}${SEPARATOR}${uuid.v4()}`
+    await workspaceDb.put({
+      _id: agentId,
+      name: "Support Agent",
+      aiconfig: "",
+      live: true,
+      goal: "Help the user",
+      createdAt: now,
+    })
+    const sessionId = "chat:session-1"
+    const logId = `${DocumentType.AGENT_LOG_SESSION}${SEPARATOR}${encodeURIComponent(
+      agentId
+    )}${SEPARATOR}${encodeURIComponent(sessionId)}`
+    await workspaceDb.put({
+      _id: logId,
+      type: "agent_log_session",
+      agentId,
+      sessionId,
+      trigger: "Chat",
+      isPreview: false,
+      firstInput: "Hello",
+      requestIds: JSON.stringify(["req-1"]),
+      operations: 1,
+      status: "success",
+      startTime: now,
+      lastActivityAt: now,
+      createdAt: now,
+      updatedAt: now,
+    })
+    return { agentId, logId }
+  })
+}
+
+const getAgentArtifacts = async (appId: string) => {
+  return await context.doInWorkspaceContext(appId, async () => {
+    const workspaceDb = context.getWorkspaceDB()
+    const [agents, logs] = await Promise.all([
+      workspaceDb.allDocs(db.getDocParams(DocumentType.AGENT, null)),
+      workspaceDb.allDocs(
+        db.getDocParams(DocumentType.AGENT_LOG_SESSION, null)
+      ),
+    ])
+    return {
+      agentIds: agents.rows.map(row => row.id),
+      logIds: logs.rows.map(row => row.id),
+    }
+  })
+}
+
 describe("/applications", () => {
   let config = setup.getConfig()
   let workspace: Workspace
@@ -51,6 +116,7 @@ describe("/applications", () => {
   }
 
   beforeEach(async () => {
+    mocks.licenses.useUnlimited()
     await createNewApp()
     jest.clearAllMocks()
     nock.cleanAll()
@@ -114,6 +180,8 @@ describe("/applications", () => {
     })
 
     it("should only return apps a user has access to through a custom role on a group", async () => {
+      mocks.licenses.useUnlimited()
+
       let user = await config.createUser({
         builder: { global: false },
         admin: { global: false },
@@ -166,11 +234,21 @@ describe("/applications", () => {
       })
       expect(newWorkspace.name).toBe(name)
       expect(newWorkspace._id).toBeDefined()
+      expect(newWorkspace.customTheme?.fontFamily).toBe(AppFontFamily.INTER)
       expect(events.app.created).toHaveBeenCalledTimes(1)
 
       // Ensure we created a blank app without sample data
       await checkScreenCount(0)
       await checkTableCount(1) // users table
+    })
+
+    it("trims workspace name before saving when creating", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: "  Trimmed Workspace  ",
+      })
+
+      expect(newWorkspace.name).toBe("Trimmed Workspace")
+      expect(newWorkspace.navigation?.title).toBe("Trimmed Workspace")
     })
 
     it("adds the workspace creator to the dev users table", async () => {
@@ -187,30 +265,49 @@ describe("/applications", () => {
       })
     })
 
-    it("creates app with sample data when onboarding", async () => {
-      const name = "Welcome app"
+    it("creates default workspace without sample data when onboarding", async () => {
       const newWorkspace = await config.api.workspace.create({
-        name,
         isOnboarding: "true",
       })
       expect(newWorkspace._id).toBeDefined()
       expect(newWorkspace.name).toBe("Default workspace")
+      expect(newWorkspace.navigation?.title).toBe("Default workspace")
       expect(events.app.created).toHaveBeenCalledTimes(1)
 
-      // Check sample resources in the newly created app context
+      // Check the onboarding path now creates an empty workspace baseline
       await config.withApp(newWorkspace, async () => {
-        const workspaceAppsFetchResult = await config.api.workspaceApp.fetch()
-        const {
-          workspaceApps: [app],
-        } = workspaceAppsFetchResult
-        expect(app.name).toBe(name)
-
         const res = await config.api.workspace.getDefinition(newWorkspace.appId)
-        expect(res.screens.length).toEqual(1)
+        expect(res.screens.length).toEqual(0)
 
         const tables = await config.api.table.fetch()
-        expect(tables.length).toEqual(5)
+        expect(tables.length).toEqual(1)
       })
+    })
+
+    it("creates a uniquely named default workspace when onboarding workspace already exists", async () => {
+      await config.api.workspace.create({
+        isOnboarding: "true",
+      })
+
+      const secondWorkspace = await config.api.workspace.create({
+        isOnboarding: "true",
+      })
+
+      expect(secondWorkspace.name).toBe("Workspace 2")
+      expect(secondWorkspace.navigation?.title).toBe("Workspace 2")
+    })
+
+    it("creates an onboarding workspace when normalized default name already exists", async () => {
+      await config.api.workspace.create({
+        name: "  DEFAULT workspace ",
+      })
+
+      const onboardingWorkspace = await config.api.workspace.create({
+        isOnboarding: "true",
+      })
+
+      expect(onboardingWorkspace.name).toBe("Workspace 2")
+      expect(onboardingWorkspace.navigation?.title).toBe("Workspace 2")
     })
 
     it("creates app from template", async () => {
@@ -227,6 +324,7 @@ describe("/applications", () => {
         templateKey: "app/expense-approval",
       })
       expect(newApp._id).toBeDefined()
+      expect(newApp.customTheme?.fontFamily).toBe(AppFontFamily.INTER)
       expect(events.app.created).toHaveBeenCalledTimes(1)
       expect(events.app.templateImported).toHaveBeenCalledTimes(1)
 
@@ -247,6 +345,7 @@ describe("/applications", () => {
         fileToImport: "src/api/routes/tests/data/old-app.txt", // export.tx was empty
       })
       expect(newApp._id).toBeDefined()
+      expect(newApp.customTheme?.fontFamily).toBeUndefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
       expect(events.app.fileImported).toHaveBeenCalledTimes(1)
 
@@ -298,6 +397,13 @@ describe("/applications", () => {
       )
     })
 
+    it("should reject with a known name ignoring case and whitespace", async () => {
+      await config.api.workspace.create(
+        { name: `  ${workspace.name.toUpperCase()}  ` },
+        { body: { message: "Workspace name is already in use." }, status: 400 }
+      )
+    })
+
     it("should reject with a known url", async () => {
       await config.api.workspace.create(
         { name: "made up", url: workspace!.url! },
@@ -312,6 +418,7 @@ describe("/applications", () => {
         encryptionPassword: "testtest",
       })
       expect(newApp._id).toBeDefined()
+      expect(newApp.customTheme?.fontFamily).toBeUndefined()
       expect(events.app.created).toHaveBeenCalledTimes(1)
       expect(events.app.fileImported).toHaveBeenCalledTimes(1)
 
@@ -505,9 +612,12 @@ describe("/applications", () => {
         await config.api.workspace.update(sourceWorkspace.appId, { scripts })
       })
 
-      const exportPath = await sdk.backups.exportApp(sourceWorkspace.appId, {
-        tar: true,
-      })
+      const exportPath = await sdk.backups.exportWorkspace(
+        sourceWorkspace.appId,
+        {
+          tar: true,
+        }
+      )
 
       const newWorkspace = await config.api.workspace.createFromImport({
         name: generateAppName(),
@@ -534,6 +644,28 @@ describe("/applications", () => {
         location: "Body",
         html: "<script>window.__testBody = true</script>",
       })
+    })
+
+    it("preserves agents but not agent logs when creating from an import", async () => {
+      const sourceWorkspace = await config.api.workspace.create({
+        name: generateAppName(),
+      })
+      const { agentId, logId } = await seedAgentWithLogs(sourceWorkspace.appId)
+
+      const exportPath = await sdk.backups.exportWorkspace(
+        sourceWorkspace.appId,
+        { tar: true }
+      )
+
+      const newWorkspace = await config.api.workspace.createFromImport({
+        name: generateAppName(),
+        fileToImport: exportPath,
+      })
+
+      const imported = await getAgentArtifacts(newWorkspace.appId)
+      expect(imported.agentIds).toContain(agentId)
+      expect(imported.logIds).not.toContain(logId)
+      expect(imported.logIds).toHaveLength(0)
     })
   })
 
@@ -686,7 +818,9 @@ describe("/applications", () => {
           {
             appId: expect.stringMatching(
               new RegExp(
-                `^${db.getProdWorkspaceID(secondWorkspace.appId)}_workspace_app_.+`
+                `^${db.getProdWorkspaceID(
+                  secondWorkspace.appId
+                )}_workspace_app_.+`
               )
             ),
             name: "App Two",
@@ -769,7 +903,9 @@ describe("/applications", () => {
           {
             appId: expect.stringMatching(
               new RegExp(
-                `^${db.getProdWorkspaceID(secondWorkspace.appId)}_workspace_app_.+`
+                `^${db.getProdWorkspaceID(
+                  secondWorkspace.appId
+                )}_workspace_app_.+`
               )
             ),
             name: "Default",
@@ -878,7 +1014,24 @@ describe("/applications", () => {
       )
     })
 
+    it("should expose recaptcha availability to public app packages", async () => {
+      mocks.licenses.useUnlimited({ features: [Feature.RECAPTCHA] })
+
+      await config.publish()
+      const res = await config.withHeaders(
+        { referer: `http://localhost:10000/app${workspace.url}` },
+        () =>
+          config.api.workspace.getAppPackage(config.getProdWorkspaceId(), {
+            publicUser: true,
+          })
+      )
+
+      expect(res.recaptchaEnabled).toBe(true)
+    })
+
     it("should allow users in multiple groups with different roles to access all permitted screens", async () => {
+      mocks.licenses.useUnlimited()
+
       const hrRole = await config.api.roles.save({
         name: `HR_${structures.generator.guid().replace(/[^a-zA-Z0-9]/g, "")}`,
         inherits: [roles.BUILTIN_ROLE_IDS.BASIC],
@@ -1109,6 +1262,70 @@ describe("/applications", () => {
           )
         })
 
+        it("should resolve theme settings for the matched workspace app", async () => {
+          const app = workspaceAppInfo[1].workspaceApp
+          await config.api.workspaceApp.update({
+            _id: app._id!,
+            _rev: app._rev!,
+            name: app.name,
+            url: app.url,
+            navigation: app.navigation,
+            disabled: app.disabled,
+            theme: Theme.NORD,
+            customTheme: {
+              fontFamily: AppFontFamily.SOURCE_SANS,
+            },
+          })
+
+          await config.withHeaders(
+            {
+              referer: `http://localhost:10000/${config.devWorkspaceId}${app.url}`,
+            },
+            async () => {
+              const res = await config.api.workspace.getAppPackage(
+                workspace.appId,
+                {
+                  headers: {
+                    [Header.TYPE]: "client",
+                  },
+                }
+              )
+
+              expect(res.application.theme).toBe(Theme.NORD)
+              expect(res.application.customTheme?.fontFamily).toBe(
+                AppFontFamily.SOURCE_SANS
+              )
+              expect(res.application.customTheme).toEqual({
+                ...workspace.customTheme,
+                fontFamily: AppFontFamily.SOURCE_SANS,
+              })
+            }
+          )
+        })
+
+        it("should fall back to workspace theme settings", async () => {
+          const app = workspaceAppInfo[1].workspaceApp
+
+          await config.withHeaders(
+            {
+              referer: `http://localhost:10000/${config.devWorkspaceId}${app.url}`,
+            },
+            async () => {
+              const res = await config.api.workspace.getAppPackage(
+                workspace.appId,
+                {
+                  headers: {
+                    [Header.TYPE]: "client",
+                  },
+                }
+              )
+
+              expect(res.application.theme).toBe(workspace.theme)
+              expect(res.application.customTheme).toEqual(workspace.customTheme)
+            }
+          )
+        })
+
         it("should retrieve only the screens for a the workspace for prod app", async () => {
           await config.publish()
           await config.withProdApp(() =>
@@ -1180,6 +1397,53 @@ describe("/applications", () => {
     })
   })
 
+  describe("fetchMicrofrontendBootstrap", () => {
+    it("should resolve bootstrap data for a published app path", async () => {
+      mocks.licenses.useMicrofrontend()
+
+      await config.publish()
+      const appPath = `/app${config.prodWorkspace?.url}`
+
+      const res = await config.api.workspace.getMicrofrontendBootstrap(
+        appPath,
+        {
+          publicUser: true,
+        }
+      )
+
+      expect(res.appId).toEqual(config.getProdWorkspaceId())
+      expect(res.clientLibPath).toContain("/api/assets/")
+    })
+
+    it("should return 404 for unknown app paths", async () => {
+      mocks.licenses.useMicrofrontend()
+
+      await config.api.workspace.getMicrofrontendBootstrap(
+        "/app/does-not-exist",
+        {
+          publicUser: true,
+          expectations: {
+            status: 404,
+          },
+        }
+      )
+    })
+
+    it("should return 403 when license is not enterprise", async () => {
+      mocks.licenses.useCloudFree()
+
+      await config.publish()
+      const appPath = `/app${config.prodWorkspace?.url}`
+
+      await config.api.workspace.getMicrofrontendBootstrap(appPath, {
+        publicUser: true,
+        expectations: {
+          status: 403,
+        },
+      })
+    })
+  })
+
   describe("update", () => {
     it("should be able to update the app package", async () => {
       const updatedApp = await config.api.workspace.update(workspace.appId, {
@@ -1187,6 +1451,139 @@ describe("/applications", () => {
       })
       expect(updatedApp._rev).toBeDefined()
       expect(events.app.updated).toHaveBeenCalledTimes(1)
+    })
+
+    it("should delete removed pwa icons from object storage", async () => {
+      const appId = config.getProdWorkspaceId()
+      const iconOne = `${appId}/pwa/icon-one.png`
+      const iconTwo = `${appId}/pwa/icon-two.png`
+      const foreignIcon = `app_prod_foreign/pwa/icon-foreign.png`
+
+      await objectStore.upload({
+        bucket: "apps",
+        filename: iconOne,
+        body: Buffer.from("icon-one"),
+        type: "image/png",
+      })
+
+      await objectStore.upload({
+        bucket: "apps",
+        filename: iconTwo,
+        body: Buffer.from("icon-two"),
+        type: "image/png",
+      })
+
+      await objectStore.upload({
+        bucket: "apps",
+        filename: foreignIcon,
+        body: Buffer.from("icon-foreign"),
+        type: "image/png",
+      })
+
+      await config.api.workspace.update(workspace.appId, {
+        pwa: {
+          name: "Test App",
+          short_name: "TestApp",
+          description: "Test app description",
+          background_color: "#FFFFFF",
+          theme_color: "#4285F4",
+          display: "standalone",
+          start_url: "/",
+          scope: "/",
+          screenshots: [],
+          icons: [
+            {
+              src: iconOne,
+              sizes: "192x192",
+              type: "image/png",
+            },
+            {
+              src: iconTwo,
+              sizes: "512x512",
+              type: "image/png",
+            },
+            {
+              src: foreignIcon,
+              sizes: "256x256",
+              type: "image/png",
+            },
+          ],
+        },
+      })
+
+      await config.api.workspace.update(workspace.appId, {
+        pwa: {
+          name: "Test App",
+          short_name: "TestApp",
+          description: "Test app description",
+          background_color: "#FFFFFF",
+          theme_color: "#4285F4",
+          display: "standalone",
+          start_url: "/",
+          scope: "/",
+          screenshots: [],
+          icons: [],
+        },
+      })
+
+      const fileEtags = await getAppObjectStorageEtags(appId)
+      expect(fileEtags[`pwa/icon-one.png`]).toBeUndefined()
+      expect(fileEtags[`pwa/icon-two.png`]).toBeUndefined()
+      expect(await objectStore.objectExists("apps", foreignIcon)).toBe(true)
+    })
+
+    it("trims workspace name before saving when updating", async () => {
+      const updatedApp = await config.api.workspace.update(workspace.appId, {
+        name: "  TEST_APP  ",
+      })
+
+      expect(updatedApp.name).toBe("TEST_APP")
+    })
+
+    it("updates published recaptcha state without requiring publish", async () => {
+      await config.api.workspace.publish(workspace.appId)
+      await config.api.workspace.update(workspace.appId, {
+        features: {
+          recaptchaEnabled: true,
+        },
+      })
+
+      await config.withProdApp(async () => {
+        const prodApp = await sdk.workspaces.metadata.get()
+        expect(prodApp.features?.recaptchaEnabled).toBe(true)
+      })
+    })
+
+    it("rejects embed SSO updates when the feature is unavailable", async () => {
+      mocks.licenses.useCloudFree()
+
+      await config.api.workspace.update(
+        workspace.appId,
+        {
+          embedSSO: {
+            enabled: true,
+            algorithm: "HS256",
+            key: "super-secret",
+          },
+        },
+        {
+          status: 400,
+        }
+      )
+    })
+
+    it("allows embed SSO updates when the feature is enabled", async () => {
+      mocks.licenses.useEmbedAuth()
+
+      const updatedApp = await config.api.workspace.update(workspace.appId, {
+        embedSSO: {
+          enabled: true,
+          algorithm: "HS256",
+          key: "super-secret",
+        },
+      })
+
+      expect(updatedApp.embedSSO?.enabled).toBe(true)
     })
   })
 
@@ -1523,6 +1920,24 @@ describe("/applications", () => {
 
       migrationsModule.MIGRATIONS.pop()
     })
+
+    it("should reject delete when APP_ID header conflicts with path appId", async () => {
+      const secondWorkspace = await config.api.workspace.create({
+        name: generateAppName(),
+      })
+
+      await config.withHeaders(
+        { [Header.APP_ID]: workspace.appId },
+        async () => {
+          await config.api.workspace.delete(secondWorkspace.appId, {
+            status: 403,
+            body: { message: "App id conflict" },
+          })
+        }
+      )
+
+      expect(events.app.deleted).not.toHaveBeenCalled()
+    })
   })
 
   describe("POST /api/applications/:appId/duplicate", () => {
@@ -1542,6 +1957,26 @@ describe("/applications", () => {
       expect(resp.duplicateAppId).toBeDefined()
       expect(resp.sourceAppId).toEqual(workspace.appId)
       expect(resp.duplicateAppId).not.toEqual(workspace.appId)
+    })
+
+    it("preserves agents but not agent logs when duplicating", async () => {
+      const { agentId, logId } = await seedAgentWithLogs(workspace.appId)
+
+      const resp = await config.api.workspace.duplicateWorkspace(
+        workspace.appId,
+        {
+          name: "agent-dupe copy",
+          url: "/agent-dupe-copy",
+        },
+        {
+          status: 200,
+        }
+      )
+
+      const duplicated = await getAgentArtifacts(resp.duplicateAppId)
+      expect(duplicated.agentIds).toContain(agentId)
+      expect(duplicated.logIds).not.toContain(logId)
+      expect(duplicated.logIds).toHaveLength(0)
     })
 
     it("should reject an unknown app id with a 404", async () => {

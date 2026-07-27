@@ -283,7 +283,32 @@ describe("Test triggering an automation from another automation", () => {
         },
         timeout: 0.1, // Very short timeout
       })
-      .serverLog({ text: "After trigger - should still execute" })
+      .serverLog({ text: "After trigger - should not execute" })
+      .test({ fields: {} })
+
+    expect(result.steps).toHaveLength(2)
+    expect(result.steps[0].outputs.success).toBe(true)
+    expect(result.steps[1].outputs.success).toBe(false)
+    expect(result.steps[1].outputs.status).toBe(AutomationStatus.TIMED_OUT)
+  })
+
+  it("should continue executing subsequent steps when child automation times out and continue on error is enabled", async () => {
+    const { automation } = await createAutomationBuilder(config)
+      .onAppAction()
+      .delay({ time: 300 })
+      .save()
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .serverLog({ text: "Before trigger" })
+      .triggerAutomationRun({
+        automation: {
+          automationId: automation._id!,
+        },
+        timeout: 0.1,
+        continueOnError: true,
+      })
+      .serverLog({ text: "After trigger - should execute" })
       .test({ fields: {} })
 
     expect(result.steps).toHaveLength(3)
@@ -323,10 +348,9 @@ describe("Test triggering an automation from another automation", () => {
       .serverLog({ text: "Final step" })
       .test({ fields: {} })
 
-    expect(result.steps).toHaveLength(3)
+    expect(result.steps).toHaveLength(2)
     expect(result.steps[0].outputs.success).toBe(true)
     expect(result.steps[1].outputs.success).toBe(false)
     expect(result.steps[1].outputs.status).toBe(AutomationStatus.TIMED_OUT)
-    expect(result.steps[2].outputs.success).toBe(true)
   })
 })

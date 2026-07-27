@@ -11,21 +11,21 @@
     "prebuild": "rimraf dist/",
     "build": "node ../../scripts/build.js && tsc -p tsconfig.build.json --emitDeclarationOnly",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
-    "check:types": "tsc -p tsconfig.json --noEmit --paths null"
+    "check:types": "tsc -p tsconfig.json --noEmit --incremental --paths null"
   },
   "devDependencies": {
-    "@ai-sdk/provider-utils": "^4.0.15",
-    "@budibase/nano": "10.1.5",
+    "@ai-sdk/provider-utils": "^4.0.19",
+    "@budibase/nano": "10.1.6",
     "@types/json-schema": "^7.0.15",
-    "@types/koa": "2.13.4",
-    "@types/nodemailer": "^6.4.17",
+    "@types/koa": "3.0.1",
+    "@types/nodemailer": "7.0.11",
     "@types/redlock": "4.0.7",
     "koa-useragent": "^4.1.0",
-    "openai": "5.12.1",
+    "openai": "6.32.0",
     "rimraf": "3.0.2",
     "zod": "^4.2.1"
   },
   "dependencies": {
-    "scim-patch": "^0.8.1"
+    "scim-patch": "^0.9.1"
   }
 }

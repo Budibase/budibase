@@ -6,4 +6,5 @@ export interface AgentTool extends ToolMetadata {
   runtimeBinding: string
   icon?: IconInfo
   tagIconUrl?: string
+  fallbackIcon?: string
 }

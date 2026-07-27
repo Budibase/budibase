@@ -1,3 +1,4 @@
+import { findHBSBlocks, FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
 import restUtils from "@/helpers/data/utils"
 import {
   runtimeToReadableMap,
@@ -155,9 +156,11 @@ export function buildQueryBindings(
   datasource: any,
   requestBindings: Record<string, any>,
   globalDynamicBindings: Record<string, any>,
-  dynamicVariables?: Record<string, any>
+  dynamicVariables?: Record<string, any>,
+  connectionStaticVariables?: Record<string, any>
 ) {
   const staticVariables = datasource?.config?.staticVariables || {}
+  const connectionStatic = connectionStaticVariables || {}
   const restBindings = getRestBindings() as EnrichedBinding[]
 
   const customRequestBindings = toBindingsArray(
@@ -174,12 +177,19 @@ export function buildQueryBindings(
 
   const dataSourceStaticBindings = toBindingsArray(
     staticVariables,
-    "Datasource.Static",
-    "Datasource Static"
+    "Connection.Static",
+    "Connection Static"
+  ) as EnrichedBinding[]
+
+  const connectionStaticBindings = toBindingsArray(
+    connectionStatic,
+    "Connection.Static",
+    "Connection Static"
   ) as EnrichedBinding[]
 
   const mergedBindings: EnrichedBinding[] = [
     ...dataSourceStaticBindings,
+    ...connectionStaticBindings,
     ...restBindings,
     ...customRequestBindings,
     ...globalDynamicRequestBindings,
@@ -189,6 +199,7 @@ export function buildQueryBindings(
     requestBindings,
     globalDynamicBindings,
     staticVariables,
+    connectionStatic,
   ]
 
   if (dynamicVariables) {
@@ -201,6 +212,7 @@ export function buildQueryBindings(
     customRequestBindings,
     globalDynamicRequestBindings,
     dataSourceStaticBindings,
+    connectionStaticBindings,
     restBindings,
     mergedBindings,
     bindingPreviewContext,
@@ -441,13 +453,55 @@ export function getSelectedQuery(queryId: string, datasourceId: string) {
 }
 
 export function keyValueArrayToRecord(
-  items: Array<{ name: string; value: any }>
+  items: Array<{ name: string; value: any }>,
+  options?: {
+    transform?: (value: any) => any
+    filterEmpty?: boolean
+  }
 ): Record<string, any> {
   return items.reduce(
     (acc, { name, value }) => {
-      acc[name] = value
+      const key = options?.filterEmpty ? (name ?? "").toString().trim() : name
+
+      if (options?.filterEmpty && key === "") {
+        return acc
+      }
+
+      acc[key] = options?.transform ? options.transform(value) : value
       return acc
     },
     {} as Record<string, any>
   )
+}
+
+export function isValidEndpointUrl(url: string | undefined): boolean {
+  if (!url) return false
+  if (!/^(https?:\/\/|\{\{)/.test(url)) return false
+  const withoutBindings = url.replace(new RegExp(FIND_ANY_HBS_REGEX), "")
+  if (/\s/.test(withoutBindings)) return false
+  if (findHBSBlocks(url).length > 0) return true
+  try {
+    new URL(url)
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function isValidEndpointUrlMissingProtocol(
+  url: string | undefined
+): boolean {
+  if (!url) return false
+  if (/^(https?:\/\/|\{\{)/.test(url)) return false
+  if (url.startsWith("/") || /\s/.test(url)) return false
+  if (/^[a-z][a-z\d+.-]*:\/\//i.test(url)) return false
+  try {
+    const parsed = new URL(`https://${url}`)
+    return (
+      parsed.hostname === "localhost" ||
+      /^[^/?#]+\.[^/?#]+/.test(parsed.hostname)
+    )
+  } catch {
+    return false
+  }
 }

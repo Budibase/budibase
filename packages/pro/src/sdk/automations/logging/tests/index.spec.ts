@@ -15,6 +15,7 @@ import { mocks } from "../../../../../tests"
 import {
   generateAutomationLogID,
   getExpiredLogs,
+  updateAppMetadataWithStops,
 } from "../../../../db/automations"
 import { daysAgo } from "../../../../utilities/time"
 import { logSearch } from "../index"
@@ -106,6 +107,62 @@ describe("paid log testing", () => {
   it("should work with paid license", async () => {
     const logs = await logSearch({ startDate: daysAgo(30).toISOString() })
     expect(logs.data.length).toEqual(2)
+  })
+
+  it("stores stopped automation notifications in app metadata", async () => {
+    const automationId = "au_4ad55bcf27b34855b4ae11f0ed50e5ac"
+    const logId = generateAutomationLogID(
+      baseDate.toISOString(),
+      AutomationStatus.STOPPED,
+      automationId
+    )
+    await workspaceDb.put({
+      _id: db.DocumentType.WORKSPACE_METADATA,
+      appId: "app_1",
+      type: db.DocumentType.WORKSPACE_METADATA,
+    })
+
+    await updateAppMetadataWithStops([logId])
+
+    const metadata = await workspaceDb.get(db.DocumentType.WORKSPACE_METADATA)
+    expect(metadata.automationStops).toEqual({
+      [automationId]: [logId],
+    })
+  })
+
+  it("clears stopped automation notifications from app metadata", async () => {
+    const automationId = "au_4ad55bcf27b34855b4ae11f0ed50e5ac"
+    const logId = generateAutomationLogID(
+      baseDate.toISOString(),
+      AutomationStatus.STOPPED,
+      automationId
+    )
+    const metadata = await workspaceDb.get(db.DocumentType.WORKSPACE_METADATA)
+    metadata.automationStops = {
+      [automationId]: [logId],
+    }
+    await workspaceDb.put(metadata)
+
+    await updateAppMetadataWithStops([logId], { clearing: true })
+
+    const updatedMetadata = await workspaceDb.get(
+      db.DocumentType.WORKSPACE_METADATA
+    )
+    expect(updatedMetadata.automationStops).toEqual({})
+  })
+
+  it("does not create stopped automation notifications when clearing absent logs", async () => {
+    const automationId = "au_4ad55bcf27b34855b4ae11f0ed50e5ac"
+    const logId = generateAutomationLogID(
+      baseDate.toISOString(),
+      AutomationStatus.STOPPED,
+      automationId
+    )
+
+    await updateAppMetadataWithStops([logId], { clearing: true })
+
+    const metadata = await workspaceDb.get(db.DocumentType.WORKSPACE_METADATA)
+    expect(metadata.automationStops?.[automationId]).toBeUndefined()
   })
 
   it("check status lookup", async () => {

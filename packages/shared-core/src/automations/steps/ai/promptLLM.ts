@@ -6,7 +6,7 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationStepDefinition = {
-  name: "LLM Prompt",
+  name: "LLM prompt",
   tagline: "Send prompts to LLM",
   icon: "Algorithm",
   description: "Interact with an LLM.",

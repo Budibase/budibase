@@ -367,6 +367,6 @@ describe("test the create row action", () => {
     expect(result.steps[1].outputs.response).toEqual(
       'Error: Attachments must have both "url" and "filename" keys. You have provided: wrongKey, anotherWrongKey'
     )
-    expect(result.steps[2].outputs.status).toEqual("No branch condition met")
+    expect(result.steps).toHaveLength(2)
   })
 })

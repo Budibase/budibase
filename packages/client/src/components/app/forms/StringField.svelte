@@ -15,6 +15,7 @@
   export let runOnInput = false
   export let span
   export let helpText = null
+  export let autocomplete
 
   let fieldState
   let fieldApi
@@ -56,6 +57,7 @@
       {placeholder}
       {type}
       {align}
+      {autocomplete}
     />
   {/if}
 </Field>

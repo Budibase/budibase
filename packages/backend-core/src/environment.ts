@@ -167,6 +167,12 @@ const environment = {
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  MICROSOFT_CLIENT_ID: process.env.MICROSOFT_CLIENT_ID,
+  MICROSOFT_CLIENT_SECRET: process.env.MICROSOFT_CLIENT_SECRET,
+  MICROSOFT_TENANT_ID: process.env.MICROSOFT_TENANT_ID,
+  RAG_SHAREPOINT_DEFAULT_SCOPE:
+    process.env.RAG_SHAREPOINT_DEFAULT_SCOPE ||
+    "offline_access User.Read https://graph.microsoft.com/Sites.Read.All",
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   REDIS_URL: process.env.REDIS_URL || "localhost:6379",
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
@@ -198,6 +204,8 @@ const environment = {
   POSTHOG_PERSONAL_TOKEN: process.env.POSTHOG_PERSONAL_TOKEN,
   POSTHOG_API_HOST: process.env.POSTHOG_API_HOST || "https://us.i.posthog.com",
   POSTHOG_FEATURE_FLAGS_ENABLED: process.env.POSTHOG_FEATURE_FLAGS_ENABLED,
+  POSTHOG_FEATURE_FLAGS_POLLING_INTERVAL_MS:
+    process.env.POSTHOG_FEATURE_FLAGS_POLLING_INTERVAL_MS,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
   CLOUDFRONT_CDN: process.env.CLOUDFRONT_CDN,
@@ -247,6 +255,9 @@ const environment = {
   ENABLE_SSO_MAINTENANCE_MODE: selfHosted
     ? process.env.ENABLE_SSO_MAINTENANCE_MODE
     : false,
+  // Boot time OIDC config for SSO - enables non-verified email linking,
+  OIDC_ALLOW_UNVERIFIED_EMAIL_LINKING:
+    process.env.OIDC_ALLOW_UNVERIFIED_EMAIL_LINKING,
   ...getPackageJsonFields(),
   DISABLE_PINO_LOGGER: process.env.DISABLE_PINO_LOGGER,
   OFFLINE_MODE: process.env.OFFLINE_MODE,
@@ -272,6 +283,7 @@ const environment = {
   CUSTOM_CSP_FRAME_SRC: process.env.CUSTOM_CSP_FRAME_SRC,
   OPENROUTER_BASE_URL:
     process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
+  COUCH_DB_SQS_PORT: process.env.COUCH_DB_SQS_PORT || "4984",
 }
 
 export function setEnv(newEnvVars: Partial<typeof environment>): () => void {
@@ -312,6 +324,7 @@ export const SECRETS: EnvironmentKey[] = [
   "COUCH_DB_SQL_URL",
   "COUCH_DB_URL",
   "GOOGLE_CLIENT_SECRET",
+  "MICROSOFT_CLIENT_SECRET",
   "INTERNAL_API_KEY_FALLBACK",
   "INTERNAL_API_KEY",
   "JWT_SECRET",

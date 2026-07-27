@@ -1,5 +1,25 @@
-import { context } from "@budibase/backend-core"
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    events: {
+      ...actual.events,
+      action: {
+        ...actual.events.action,
+        automationStepExecuted: jest.fn(),
+        automationStepFailed: jest.fn(),
+      },
+    },
+  }
+})
+
+jest.mock("../automations/logging", () => ({
+  storeLog: jest.fn(),
+}))
+
+import { context, events } from "@budibase/backend-core"
 import {
+  ActionFailureReason,
   AutomationActionStepId,
   AutomationData,
   AutomationStep,
@@ -8,14 +28,17 @@ import {
   AutomationTestProgressEvent,
   AutomationTriggerStepId,
   AutomationStepResult,
+  AutomationStatus,
 } from "@budibase/types"
 import { Job } from "bull"
 import { BUILTIN_ACTION_DEFINITIONS, TRIGGER_DEFINITIONS } from "../automations"
 import TestConfiguration from "../tests/utilities/TestConfiguration"
 import { basicAutomation } from "../tests/utilities/structures"
-import { executeInThread } from "./automation"
+import { executeInThread, removeStalled } from "./automation"
 import sdk from "../sdk"
 import { automations } from "@budibase/shared-core"
+import { storeLog } from "../automations/logging"
+import { automationQueue } from "../automations/bullboard"
 
 const isAutomationStepResult = (
   result: AutomationTestProgressEvent["result"]
@@ -23,6 +46,7 @@ const isAutomationStepResult = (
 
 describe("automation thread", () => {
   const config = new TestConfiguration()
+  const mockStoreLog = jest.mocked(storeLog)
 
   beforeAll(async () => {
     await config.init()
@@ -30,6 +54,60 @@ describe("automation thread", () => {
 
   afterAll(() => {
     config.end()
+  })
+
+  it("does not disable a cron schedule when a repeatable job stalls", async () => {
+    const prodAppId = config.getProdWorkspaceId()
+    const removeRepeatableByKey = jest.fn()
+    const getBullQueue = jest.spyOn(automationQueue, "getBullQueue")
+
+    const automation = basicAutomation({
+      _id: "automation_stalled_cron",
+      appId: prodAppId,
+      definition: {
+        trigger: {
+          id: "cron-trigger",
+          type: AutomationStepType.TRIGGER,
+          name: TRIGGER_DEFINITIONS.CRON.name,
+          tagline: TRIGGER_DEFINITIONS.CRON.tagline,
+          description: TRIGGER_DEFINITIONS.CRON.description,
+          icon: TRIGGER_DEFINITIONS.CRON.icon,
+          schema: TRIGGER_DEFINITIONS.CRON.schema,
+          stepId: AutomationTriggerStepId.CRON,
+          event: AutomationEventType.CRON_TRIGGER,
+          inputs: { cron: "* * * * *" },
+        },
+        steps: [],
+      },
+    })
+
+    const job = {
+      id: `${prodAppId}_cron_existing`,
+      data: {
+        automation,
+        event: {
+          appId: prodAppId,
+        },
+      },
+    } as Job<AutomationData>
+
+    getBullQueue.mockReturnValue({
+      getRepeatableJobs: jest.fn().mockResolvedValue([
+        {
+          id: job.id,
+          key: `${job.id}:cron:* * * * *`,
+        },
+      ]),
+      removeRepeatableByKey,
+    } as unknown as ReturnType<typeof automationQueue.getBullQueue>)
+
+    try {
+      await removeStalled(job)
+
+      expect(removeRepeatableByKey).not.toHaveBeenCalled()
+    } finally {
+      getBullQueue.mockRestore()
+    }
   })
 
   it("executes the latest automation definition for cron jobs", async () => {
@@ -147,6 +225,88 @@ describe("automation thread", () => {
     expect(logStepResult).toBeUndefined()
   })
 
+  it("does not store automation logs for test runs", async () => {
+    mockStoreLog.mockClear()
+    const appId = config.getDevWorkspaceId()
+    const job = {
+      data: {
+        isTestRun: true,
+        automation: basicAutomation({ appId }),
+        event: {
+          appId,
+        },
+      },
+    } as Job<AutomationData>
+
+    await executeInThread(job, { isTestRun: true })
+
+    expect(mockStoreLog).not.toHaveBeenCalled()
+  })
+
+  it("stops after a failed step by default", async () => {
+    const appId = config.getDevWorkspaceId()
+
+    const { id: _scriptId, ...scriptDefinition } =
+      BUILTIN_ACTION_DEFINITIONS.EXECUTE_SCRIPT as AutomationStep
+    const { id: _logId, ...serverLogDefinition } =
+      BUILTIN_ACTION_DEFINITIONS.SERVER_LOG as AutomationStep
+
+    const failingStep: AutomationStep = {
+      ...scriptDefinition,
+      id: "failing-step",
+      stepId: AutomationActionStepId.EXECUTE_SCRIPT,
+      inputs: { code: "return missingValue.map(x => x)" },
+    }
+    const skippedStep: AutomationStep = {
+      ...serverLogDefinition,
+      id: "skipped-step",
+      stepId: AutomationActionStepId.SERVER_LOG,
+      inputs: { text: "This should not run" },
+    }
+
+    const job = {
+      data: {
+        automation: basicAutomation({
+          appId,
+          definition: {
+            trigger: {
+              stepId: AutomationTriggerStepId.APP,
+              name: "test",
+              tagline: "test",
+              icon: "test",
+              description: "test",
+              type: AutomationStepType.TRIGGER,
+              inputs: {},
+              id: "trigger",
+              schema: {
+                inputs: { properties: {} },
+                outputs: { properties: {} },
+              },
+            },
+            steps: [failingStep, skippedStep],
+          },
+        }),
+        event: {
+          appId,
+        },
+      },
+    } as Job<AutomationData>
+
+    const result = await executeInThread(job)
+
+    expect(result.status).toBe(AutomationStatus.ERROR)
+    expect(result.steps.find(step => step.id === failingStep.id)).toMatchObject(
+      {
+        outputs: {
+          success: false,
+        },
+      }
+    )
+    expect(
+      result.steps.find(step => step.id === skippedStep.id)
+    ).toBeUndefined()
+  })
+
   it("emits selected branch ID while branch children execute", async () => {
     const appId = config.getDevWorkspaceId()
 
@@ -234,5 +394,55 @@ describe("automation thread", () => {
       e => e.blockId === childStepId && e.status === "running"
     )
     expect(firstChildRunningIndex).toBeGreaterThan(firstBranchEventIndex)
+  })
+
+  it("emits automationStepFailed with ERROR when a step fails", async () => {
+    jest.clearAllMocks()
+
+    const appId = config.getDevWorkspaceId()
+
+    const { id: _scriptId, ...scriptDefinition } =
+      BUILTIN_ACTION_DEFINITIONS.EXECUTE_SCRIPT as AutomationStep
+    const failingStep: AutomationStep = {
+      ...scriptDefinition,
+      id: "failing-step",
+      stepId: AutomationActionStepId.EXECUTE_SCRIPT,
+      inputs: { code: "return missingValue.map(x => x)" },
+    }
+
+    const job = {
+      data: {
+        automation: basicAutomation({
+          appId,
+          definition: {
+            trigger: {
+              stepId: AutomationTriggerStepId.APP,
+              name: "test",
+              tagline: "test",
+              icon: "test",
+              description: "test",
+              type: AutomationStepType.TRIGGER,
+              inputs: {},
+              id: "trigger",
+              schema: {
+                inputs: { properties: {} },
+                outputs: { properties: {} },
+              },
+            },
+            steps: [failingStep],
+          },
+        }),
+        event: { appId },
+      },
+    } as Job<AutomationData>
+
+    await executeInThread(job)
+
+    expect(events.action.automationStepFailed).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stepId: AutomationActionStepId.EXECUTE_SCRIPT,
+        reason: ActionFailureReason.ERROR,
+      })
+    )
   })
 })

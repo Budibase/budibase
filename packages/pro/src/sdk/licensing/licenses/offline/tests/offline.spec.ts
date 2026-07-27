@@ -11,6 +11,7 @@ jest.mock("@budibase/backend-core", () => {
     __esModule: true, // Preserve the module structure
     ...mocked,
     Duration: actual.Duration,
+    HTTPError: actual.HTTPError,
   }
 })
 jest.mock("../../features")
@@ -71,13 +72,88 @@ describe("offline", () => {
   })
 
   describe("activateOfflineLicense", () => {
-    it("activates license", async () => {
-      const token = "token"
+    const token = "token"
+    const expiryOffsetMs = core.Duration.fromMinutes(1).toMs()
+
+    it("activates a valid license", async () => {
+      offlineLicense.expireAt = new Date(
+        Date.now() + expiryOffsetMs
+      ).toISOString()
+      signing.verifyLicenseToken.mockReturnValue(offlineLicense)
+      setupIdentifierMocks()
+
       await offline.activateOfflineLicenseToken(token)
+
       expect(db.licenseInfo.save).toHaveBeenCalledWith({
         offlineLicenseToken: token,
       })
       expect(cache.refresh).toHaveBeenCalledTimes(1)
+    })
+
+    it("rejects an invalid token without persisting it", async () => {
+      signing.verifyLicenseToken.mockImplementation(() => {
+        throw new Error("jwt malformed")
+      })
+
+      await expect(
+        offline.activateOfflineLicenseToken(token)
+      ).rejects.toMatchObject({
+        message: "Invalid offline license token",
+        status: 400,
+      })
+      expect(db.licenseInfo.save).not.toHaveBeenCalled()
+      expect(cache.refresh).not.toHaveBeenCalled()
+    })
+
+    it("rejects an expired token without persisting it", async () => {
+      offlineLicense.expireAt = new Date(
+        Date.now() - expiryOffsetMs
+      ).toISOString()
+      signing.verifyLicenseToken.mockReturnValue(offlineLicense)
+
+      await expect(
+        offline.activateOfflineLicenseToken(token)
+      ).rejects.toMatchObject({
+        message: "Offline license has expired",
+        status: 400,
+      })
+      expect(db.licenseInfo.save).not.toHaveBeenCalled()
+      expect(cache.refresh).not.toHaveBeenCalled()
+    })
+
+    it("rejects a token bound to a different installation without persisting it", async () => {
+      offlineLicense.expireAt = new Date(
+        Date.now() + expiryOffsetMs
+      ).toISOString()
+      offlineLicense.identifier.installId = generator.string()
+      signing.verifyLicenseToken.mockReturnValue(offlineLicense)
+      setupIdentifierMocks()
+
+      await expect(
+        offline.activateOfflineLicenseToken(token)
+      ).rejects.toMatchObject({
+        message: "Offline license does not match this installation",
+        status: 400,
+      })
+      expect(db.licenseInfo.save).not.toHaveBeenCalled()
+      expect(cache.refresh).not.toHaveBeenCalled()
+    })
+
+    it("propagates operational errors from the installation lookup without persisting it", async () => {
+      offlineLicense.expireAt = new Date(
+        Date.now() + expiryOffsetMs
+      ).toISOString()
+      signing.verifyLicenseToken.mockReturnValue(offlineLicense)
+      installation.getInstall.mockRejectedValue(new Error("connection reset"))
+
+      await expect(offline.activateOfflineLicenseToken(token)).rejects.toThrow(
+        "connection reset"
+      )
+      await expect(
+        offline.activateOfflineLicenseToken(token)
+      ).rejects.not.toHaveProperty("status")
+      expect(db.licenseInfo.save).not.toHaveBeenCalled()
+      expect(cache.refresh).not.toHaveBeenCalled()
     })
   })
 
@@ -148,6 +224,14 @@ describe("offline", () => {
   describe("verifyExpiry", () => {
     it("throws when expiry exceeded", () => {
       const expireAt = new Date(Date.now() + -1).toISOString()
+      offlineLicense.expireAt = expireAt
+      expect(() => offline.verifyExpiry(offlineLicense)).toThrow(
+        new Error(`Offline license has expired. expireAt=${expireAt}`)
+      )
+    })
+
+    it("throws when expiry is not a valid date", () => {
+      const expireAt = "not-a-date"
       offlineLicense.expireAt = expireAt
       expect(() => offline.verifyExpiry(offlineLicense)).toThrow(
         new Error(`Offline license has expired. expireAt=${expireAt}`)

@@ -8,27 +8,35 @@ import type {
   StepNodeData,
   AutomationBlock,
 } from "@/types/automations"
-import type { Node as FlowNode, Edge as FlowEdge } from "@xyflow/svelte"
-import type {
-  BlockPath,
-  Branch,
-  BranchStep,
-  LayoutDirection,
-} from "@budibase/types"
+import type { Edge as FlowEdge } from "@xyflow/svelte"
+import type { BlockPath, Branch, BranchStep } from "@budibase/types"
+import { ANCHOR, BRANCH, STEP } from "./FlowGeometry"
+import {
+  FLOW_NODE_TYPE,
+  type AnchorFlowNode,
+  type BranchFlowNode,
+  type StepFlowNode,
+} from "./FlowGraphTypes"
 
 export const stepNode = (
   id: string,
   block: AutomationBlock,
-  direction?: LayoutDirection,
   parentId?: string,
   position: { x: number; y: number } = { x: 0, y: 0 }
-): FlowNode => {
-  const data: StepNodeData = { block, direction }
-  const node: FlowNode = {
+): StepFlowNode => {
+  const data: StepNodeData = {
+    block,
+    layout: {
+      width: STEP.width,
+      height: STEP.height,
+    },
+  }
+  const node: StepFlowNode = {
     id,
-    type: "step-node",
+    type: FLOW_NODE_TYPE.STEP,
     data,
     position,
+    draggable: false,
   }
   if (parentId) {
     node.parentId = parentId
@@ -42,24 +50,27 @@ export const branchNode = (
   step: BranchStep,
   branch: Branch,
   branchIdx: number,
-  direction?: LayoutDirection,
   parentId?: string,
   laneWidth?: number,
   position: { x: number; y: number } = { x: 0, y: 0 }
-): FlowNode => {
+): BranchFlowNode => {
   const data = {
     block: step,
     branch,
     branchIdx,
-    direction,
+    layout: {
+      width: laneWidth || STEP.width,
+      height: BRANCH.height,
+    },
     ...(parentId ? { isSubflow: true } : {}),
     ...(laneWidth ? { laneWidth } : {}),
   }
-  const node: FlowNode = {
+  const node: BranchFlowNode = {
     id,
-    type: "branch-node",
+    type: FLOW_NODE_TYPE.BRANCH,
     data,
     position,
+    draggable: false,
   }
   if (parentId) {
     node.parentId = parentId
@@ -71,12 +82,22 @@ export const branchNode = (
 
 export const anchorNode = (
   id: string,
-  direction?: LayoutDirection,
   parentId?: string,
   position: { x: number; y: number } = { x: 0, y: 0 }
-): FlowNode => {
-  const data: AnchorNodeData = { direction }
-  const node: FlowNode = { id, type: "anchor-node", data, position }
+): AnchorFlowNode => {
+  const data: AnchorNodeData = {
+    layout: {
+      width: ANCHOR.width,
+      height: ANCHOR.height,
+    },
+  }
+  const node: AnchorFlowNode = {
+    id,
+    type: FLOW_NODE_TYPE.ANCHOR,
+    data,
+    position,
+    draggable: false,
+  }
   if (parentId) {
     node.parentId = parentId
     node.extent = "parent"
@@ -89,13 +110,11 @@ export const edgeAddItem = (
   target: string,
   ctx: {
     block: FlowBlockContext
-    direction?: LayoutDirection
     pathTo?: FlowBlockPath
   }
 ): FlowEdge => {
   const data: BaseEdgeData = {
     block: ctx.block,
-    direction: ctx.direction,
     ...(ctx.pathTo ? { pathTo: ctx.pathTo } : {}),
   }
   return {
@@ -112,7 +131,6 @@ export const edgeBranchAddItem = (
   target: string,
   ctx: {
     block: FlowBlockContext
-    direction?: LayoutDirection
     branchStepId: string
     branchIdx: number
     branchesCount: number
@@ -130,7 +148,6 @@ export const edgeBranchAddItem = (
     branchIdx: ctx.branchIdx,
     branchesCount: ctx.branchesCount,
     block: ctx.block,
-    direction: ctx.direction,
     ...(ctx.isSubflowEdge ? { isSubflowEdge: true } : {}),
     ...(ctx.pathTo ? { pathTo: ctx.pathTo } : {}),
     ...(ctx.loopStepId ? { loopStepId: ctx.loopStepId } : {}),
@@ -152,18 +169,20 @@ export const edgeLoopAddItem = (
   target: string,
   ctx: {
     block: FlowBlockContext
-    direction?: LayoutDirection
     loopStepId: string
     loopChildInsertIndex: number
+    branchStepId?: string
+    branchIdx?: number
     pathTo?: BlockPath[]
   }
 ): FlowEdge => {
   const data: LoopEdgeData = {
     block: ctx.block,
-    direction: ctx.direction,
     loopStepId: ctx.loopStepId,
     loopChildInsertIndex: ctx.loopChildInsertIndex,
     insertIntoLoopV2: true,
+    ...(ctx.branchStepId ? { branchStepId: ctx.branchStepId } : {}),
+    ...(typeof ctx.branchIdx === "number" ? { branchIdx: ctx.branchIdx } : {}),
     ...(ctx.pathTo ? { pathTo: ctx.pathTo } : {}),
   }
   return {

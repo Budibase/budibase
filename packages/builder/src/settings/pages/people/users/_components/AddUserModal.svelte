@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     keepOpen,
     Label,
@@ -11,7 +11,9 @@
     PillInput,
     Layout,
     Icon,
+    Avatar,
   } from "@budibase/bbui"
+  import { API } from "@/api"
   import { groups } from "@/stores/portal/groups"
   import GlobalRoleSelect from "@/components/common/GlobalRoleSelect.svelte"
   import { licensing } from "@/stores/portal/licensing"
@@ -21,41 +23,96 @@
   import { Constants, emailValidator } from "@budibase/frontend-core"
   import { capitalise } from "@/helpers"
   import { OnboardingType } from "@/constants"
+  import { helpers } from "@budibase/shared-core"
+  import { onDestroy } from "svelte"
+  import type { UserInfo } from "@/types"
+  import type { UserData as AddUsersData } from "../workspaceInviteUtils"
+  import type { StrippedUser, UserGroup } from "@budibase/types"
 
-  export let showOnboardingTypeModal
+  interface UserInput {
+    email: string | null
+    role: string | null
+    password: string
+    forceResetPassword: true
+    error: string | undefined
+  }
+
+  interface EndUserRoleOption {
+    label: string
+    value: string
+    color?: string
+  }
+
+  interface OnboardingOption {
+    label: string
+    subtitle?: string
+    value: string
+    disabled: boolean
+  }
+
+  type EmailPickerKeydownEvent = CustomEvent<KeyboardEvent>
+
+  type SuggestedUser = StrippedUser & {
+    firstName?: string
+    lastName?: string
+  }
+
+  export let showOnboardingTypeModal: (
+    addUsersData: AddUsersData,
+    onboardingType?: string
+  ) => unknown
   export let workspaceOnly = false
   export let useWorkspaceInviteModal = workspaceOnly
   export let assignToWorkspace = workspaceOnly
   export let inviteTitle = "Invite users to workspace"
+  export let showGroupSelect = !useWorkspaceInviteModal
+  export let showInviteIcon = true
+
+  const createUserInput = (inputPassword: string): UserInput => ({
+    email: "",
+    role: Constants.BudibaseRoles.AppUser,
+    password: inputPassword,
+    forceResetPassword: true,
+    error: undefined,
+  })
 
   const password = generatePassword(12)
-  let userGroups = []
-  let emailsInput = []
-  let emailError = null
+  let userGroups: string[] = []
+  let emailsInput: string[] = []
+  let parsedEmails: string[] = []
+  let pendingEmailInput = ""
+  let emailError: string | undefined
+  let suggestedUsers: SuggestedUser[] = []
+  let isSearchingUsers = false
+  let userSearchTimeout: ReturnType<typeof setTimeout> | undefined
+  let userSearchId = 0
+  let highlightedUserIndex = -1
   const maxItems = 15
-  let selectedRole = Constants.BudibaseRoles.Creator
+  let selectedRole = Constants.BudibaseRoles.AppUser
   const builtInEndUserRoles = [Constants.Roles.BASIC, Constants.Roles.ADMIN]
   const excludedRoleIds = [
     ...builtInEndUserRoles,
     Constants.Roles.PUBLIC,
-    Constants.Roles.POWER,
     Constants.Roles.CREATOR,
     Constants.Roles.GROUP,
   ]
-  let roleColorLookup = {}
-  $: roleColorLookup = ($roles || []).reduce((acc, role) => {
+  let roleColorLookup: Record<string, string | undefined> = {}
+  $: roleColorLookup = ($roles || []).reduce<
+    Record<string, string | undefined>
+  >((acc, role) => {
     acc[role._id] = role.uiMetadata?.color
     return acc
   }, {})
   $: customEndUserRoleOptions = ($roles || [])
     .filter(role => !excludedRoleIds.includes(role._id))
-    .map(role => ({
+    .map<EndUserRoleOption>(role => ({
       label: role.uiMetadata?.displayName || role.name || "Custom role",
       value: role._id,
       color:
         role.uiMetadata?.color ||
         "var(--spectrum-global-color-static-magenta-400)",
     }))
+  let endUserRoleOptions: EndUserRoleOption[] = []
   $: endUserRoleOptions = [
     {
       label: "Basic user",
@@ -70,27 +127,31 @@
     ...customEndUserRoleOptions,
   ]
   let endUserRole = Constants.Roles.BASIC
-  let onboardingType = OnboardingType.EMAIL
+  let onboardingType: string | null = OnboardingType.EMAIL
 
-  $: userData = [
-    {
-      email: "",
-      role: "appUser",
-      password,
-      forceResetPassword: true,
-    },
-  ]
-  $: hasError = userData.find(x => x.error != null)
-  $: parsedEmails = useWorkspaceInviteModal ? emailsInput : []
+  let userData: UserInput[] = [createUserInput(password)]
+  $: hasError = userData.some(x => x.error != null)
+  $: {
+    if (!useWorkspaceInviteModal) {
+      parsedEmails = []
+    } else {
+      const pendingEmail = pendingEmailInput.trim()
+      parsedEmails =
+        emailsInput.length === 0 && emailValidator(pendingEmail) === true
+          ? [pendingEmail]
+          : emailsInput
+    }
+  }
   $: userCount =
-    $licensing.userCount +
+    ($licensing.userCount || 0) +
     (useWorkspaceInviteModal ? parsedEmails.length : userData.length)
   $: reached = licensing.usersLimitReached(userCount)
   $: exceeded = licensing.usersLimitExceeded(userCount)
   $: smtpConfigured =
     $admin.loaded && ($admin.cloud || !!$admin.checklist?.smtp?.checked)
   $: emailInviteDisabled = $admin.loaded ? !smtpConfigured : false
-  $: passwordInviteDisabled = $organisation.isSSOEnforced
+  $: passwordInviteDisabled = !!$organisation.isSSOEnforced
+  let onboardingOptions: OnboardingOption[] = []
   $: onboardingOptions = [
     {
       label: "Send email invites",
@@ -114,25 +175,17 @@
     onboardingType = OnboardingType.EMAIL
   }
 
-  $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
+  let internalGroups: UserGroup[] = []
+  $: internalGroups = ($groups || []).filter(g => !g?.scimInfo?.isSync)
 
-  function removeInput(idx) {
-    userData = userData.filter((e, i) => i !== idx)
+  function removeInput(idx: number) {
+    userData = userData.filter((_input, i) => i !== idx)
   }
   function addNewInput() {
-    userData = [
-      ...userData,
-      {
-        email: "",
-        role: "appUser",
-        password: generatePassword(12),
-        forceResetPassword: true,
-        error: null,
-      },
-    ]
+    userData = [...userData, createUserInput(generatePassword(12))]
   }
 
-  function validateInput(input, index) {
+  function validateInput(input: UserInput, index: number) {
     if (input.email) {
       input.email = input.email.trim()
     }
@@ -140,7 +193,7 @@
     if (email) {
       const res = emailValidator(email)
       if (res === true) {
-        userData[index].error = null
+        userData[index].error = undefined
       } else {
         userData[index].error = res
       }
@@ -150,10 +203,9 @@
     return userData[index].error == null
   }
 
-  function validateWorkspaceEmails() {
-    const emails = emailsInput
+  function validateWorkspaceEmails(emails: string[] = emailsInput) {
     if (!emails.length) {
-      emailError = null
+      emailError = undefined
       return false
     }
 
@@ -172,7 +224,7 @@
       return false
     }
 
-    emailError = null
+    emailError = undefined
     return true
   }
 
@@ -180,7 +232,120 @@
     validateWorkspaceEmails()
   }
 
-  function buildWorkspaceUsers() {
+  const searchExistingUsers = async (search: string) => {
+    const nextSearchId = ++userSearchId
+    const trimmedSearch = search.trim()
+    if (!trimmedSearch) {
+      suggestedUsers = []
+      return
+    }
+
+    isSearchingUsers = true
+    try {
+      const response = await API.searchUsers({
+        query: { fuzzy: { email: trimmedSearch } },
+        limit: 8,
+      })
+      if (nextSearchId !== userSearchId) {
+        return
+      }
+      suggestedUsers = (response.data || []).filter(
+        (user): user is SuggestedUser => !!user.email
+      )
+      highlightedUserIndex = suggestedUsers.findIndex(
+        user => !isSuggestedUserSelected(user)
+      )
+    } catch (error) {
+      if (nextSearchId === userSearchId) {
+        suggestedUsers = []
+        highlightedUserIndex = -1
+      }
+    } finally {
+      if (nextSearchId === userSearchId) {
+        isSearchingUsers = false
+      }
+    }
+  }
+
+  const clearUserSearch = () => {
+    clearTimeout(userSearchTimeout)
+    userSearchId += 1
+    suggestedUsers = []
+    highlightedUserIndex = -1
+    isSearchingUsers = false
+  }
+
+  const handlePendingEmailInput = () => {
+    clearTimeout(userSearchTimeout)
+    if (!useWorkspaceInviteModal || !pendingEmailInput.trim()) {
+      clearUserSearch()
+      return
+    }
+    userSearchTimeout = setTimeout(
+      () => searchExistingUsers(pendingEmailInput),
+      350
+    )
+  }
+
+  const selectSuggestedUser = (user: SuggestedUser) => {
+    if (!user?.email || isSuggestedUserSelected(user)) {
+      return
+    }
+    const nextEmails = [...emailsInput, user.email]
+    emailsInput = nextEmails
+    pendingEmailInput = ""
+    suggestedUsers = []
+    highlightedUserIndex = -1
+    validateWorkspaceEmails(nextEmails)
+  }
+
+  const updateHighlightedUser = (direction: 1 | -1) => {
+    if (!suggestedUsers.length) {
+      return
+    }
+    const startIndex = highlightedUserIndex === -1 ? 0 : highlightedUserIndex
+    for (let offset = 1; offset <= suggestedUsers.length; offset++) {
+      const nextIndex =
+        (startIndex + direction * offset + suggestedUsers.length) %
+        suggestedUsers.length
+      if (!isSuggestedUserSelected(suggestedUsers[nextIndex])) {
+        highlightedUserIndex = nextIndex
+        return
+      }
+    }
+    highlightedUserIndex = -1
+  }
+
+  const isSuggestedUserSelected = (user: SuggestedUser) => {
+    const userEmail = user?.email?.trim().toLowerCase()
+    return emailsInput.some(email => email.trim().toLowerCase() === userEmail)
+  }
+
+  const handleEmailPickerKeydown = (event: EmailPickerKeydownEvent) => {
+    if (!suggestedUsers.length) {
+      return
+    }
+
+    if (event.detail?.key === "ArrowDown") {
+      event.detail.preventDefault()
+      updateHighlightedUser(1)
+    } else if (event.detail?.key === "ArrowUp") {
+      event.detail.preventDefault()
+      updateHighlightedUser(-1)
+    } else if (
+      ["Enter", "Tab"].includes(event.detail?.key) &&
+      highlightedUserIndex >= 0
+    ) {
+      event.detail.preventDefault()
+      selectSuggestedUser(suggestedUsers[highlightedUserIndex])
+    }
+  }
+
+  onDestroy(() => {
+    clearTimeout(userSearchTimeout)
+  })
+
+  function buildWorkspaceUsers(): UserInfo[] {
     return emailsInput.map(email => ({
       email,
       role: selectedRole,
@@ -193,7 +358,16 @@
     }))
   }
 
-  function generatePassword(length) {
+  function buildUserInputs(): UserInfo[] {
+    return userData.map(input => ({
+      email: input.email || "",
+      role: input.role || Constants.BudibaseRoles.AppUser,
+      password: input.password,
+      forceResetPassword: input.forceResetPassword,
+    }))
+  }
+
+  function generatePassword(length: number) {
     const array = new Uint8Array(length)
     window.crypto.getRandomValues(array)
     return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
@@ -226,7 +400,7 @@
       return keepOpen
     }
     showOnboardingTypeModal({
-      users: userData,
+      users: buildUserInputs(),
       groups: userGroups,
       assignToWorkspace,
     })
@@ -248,11 +422,13 @@
   <svelte:fragment slot="header">
     {#if useWorkspaceInviteModal}
       <span class="modal-title">
-        <Icon
-          name="user-plus"
-          size="XL"
-          color="var(--spectrum-global-color-gray-600)"
-        />
+        {#if showInviteIcon}
+          <Icon
+            name="user-plus"
+            size="XL"
+            color="var(--spectrum-global-color-gray-600)"
+          />
+        {/if}
         <span>{inviteTitle}</span>
       </span>
     {/if}
@@ -260,14 +436,59 @@
   {#if useWorkspaceInviteModal}
     <div class="workspace-invite-modal">
       <Layout noPadding gap="S">
-        <PillInput
-          label="Type or paste emails below, separated by commas"
-          bind:value={emailsInput}
-          error={emailError}
-          splitOnSpace={true}
-          maxItems={maxItems + 1}
-          on:change={handleEmailsChange}
-        />
+        <div class="user-email-picker">
+          <PillInput
+            label="Type or paste emails below, separated by commas"
+            bind:value={emailsInput}
+            bind:inputValue={pendingEmailInput}
+            error={emailError}
+            splitOnSpace={true}
+            maxItems={maxItems + 1}
+            on:change={handleEmailsChange}
+            on:input={handlePendingEmailInput}
+            on:keydown={handleEmailPickerKeydown}
+            on:blur={clearUserSearch}
+          />
+
+          {#if suggestedUsers.length}
+            <div class="user-suggestions" role="listbox">
+              {#each suggestedUsers as user, index (user._id || user.email)}
+                {@const userSelected = isSuggestedUserSelected(user)}
+                <button
+                  class="user-suggestion"
+                  class:is-highlighted={highlightedUserIndex === index}
+                  class:is-selected={userSelected}
+                  type="button"
+                  role="option"
+                  disabled={userSelected}
+                  aria-disabled={userSelected}
+                  aria-selected={highlightedUserIndex === index}
+                  on:mouseenter={() => (highlightedUserIndex = index)}
+                  on:mousedown|preventDefault={() => selectSuggestedUser(user)}
+                >
+                  <Avatar
+                    size="S"
+                    initials={helpers.getUserInitials(user)}
+                    color={helpers.getUserColor(user)}
+                  />
+                  <span class="user-suggestion-details">
+                    <span class="user-suggestion-name">
+                      {helpers.getUserLabel(user)}
+                    </span>
+                    <span class="user-suggestion-email">{user.email}</span>
+                  </span>
+                  {#if userSelected}
+                    <span class="user-suggestion-check">
+                      <Icon name="check" size="S" />
+                    </span>
+                  {/if}
+                </button>
+              {/each}
+            </div>
+          {:else if isSearchingUsers}
+            <div class="user-suggestions loading">Searching...</div>
+          {/if}
+        </div>
 
         <GlobalRoleSelect
           bind:value={selectedRole}
@@ -288,6 +509,17 @@
           />
         {/if}
 
+        {#if showGroupSelect && $licensing.groupsEnabled && internalGroups?.length}
+          <Multiselect
+            bind:value={userGroups}
+            placeholder="No groups"
+            label="Add to groups (optional)"
+            options={internalGroups}
+            getOptionLabel={option => option.name}
+            getOptionValue={option => option._id || ""}
+          />
+        {/if}
+
         <div class="onboarding">
           <Label size="L">Select onboarding</Label>
           <RadioGroup
@@ -304,7 +536,8 @@
           <div class="user-notification">
             <Icon name="info" />
             <span>
-              {capitalise($licensing.license.plan.type)} plan is limited to {$licensing.userLimit}
+              {capitalise($licensing.license?.plan.type || "")} plan is limited to
+              {$licensing.userLimit}
               users. Upgrade your plan to add more users</span
             >
           </div>
@@ -345,7 +578,8 @@
         <div class="user-notification">
           <Icon name="info" />
           <span>
-            {capitalise($licensing.license.plan.type)} plan is limited to {$licensing.userLimit}
+            {capitalise($licensing.license?.plan.type || "")} plan is limited to
+            {$licensing.userLimit}
             users. Upgrade your plan to add more users</span
           >
         </div>
@@ -359,14 +593,14 @@
     </Layout>
   {/if}
 
-  {#if !useWorkspaceInviteModal && $licensing.groupsEnabled && internalGroups?.length}
+  {#if !useWorkspaceInviteModal && showGroupSelect && $licensing.groupsEnabled && internalGroups?.length}
     <Multiselect
       bind:value={userGroups}
       placeholder="No groups"
       label="Groups"
       options={internalGroups}
       getOptionLabel={option => option.name}
-      getOptionValue={option => option._id}
+      getOptionValue={option => option._id || ""}
     />
   {/if}
 </ModalContent>
@@ -431,5 +665,75 @@
   .workspace-invite-modal :global(.pill-input) {
     gap: 6px;
     padding: 8px;
+  }
+  .user-email-picker {
+    position: relative;
+  }
+  .user-suggestions {
+    position: absolute;
+    z-index: 2;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    padding: 4px;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: var(--spectrum-global-dimension-size-50);
+    background: var(--spectrum-global-color-gray-50);
+    box-shadow: 0 1px 4px var(--drop-shadow);
+  }
+  .user-suggestions.loading {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: 14px;
+    padding: 8px;
+  }
+  .user-suggestion {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    padding: 6px 8px;
+    border: 0;
+    border-radius: var(--spectrum-global-dimension-size-50);
+    background: transparent;
+    color: var(--spectrum-global-color-gray-800);
+    text-align: left;
+    cursor: pointer;
+  }
+  .user-suggestion:hover,
+  .user-suggestion.is-highlighted {
+    background: var(--spectrum-global-color-gray-100);
+  }
+  .user-suggestion.is-selected {
+    color: var(--spectrum-global-color-gray-600);
+    cursor: default;
+  }
+  .user-suggestion.is-selected:hover,
+  .user-suggestion.is-selected.is-highlighted {
+    background: transparent;
+  }
+  .user-suggestion-details {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  .user-suggestion-name,
+  .user-suggestion-email {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .user-suggestion-name {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .user-suggestion-email {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: 12px;
+  }
+  .user-suggestion-check {
+    display: inline-flex;
+    align-items: center;
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>

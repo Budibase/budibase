@@ -14,12 +14,8 @@
   {#if tooltip}
     <div class="icon-container">
       <AbsTooltip text={tooltip} {position}>
-        <div
-          class="icon"
-          class:icon-small={size === "M" || size === "S"}
-          on:focus
-        >
-          <Icon name="info" size="S" {disabled} hoverable />
+        <div class="icon" on:focus>
+          <Icon name="info" {size} {disabled} hoverable />
         </div>
       </AbsTooltip>
     </div>
@@ -37,11 +33,5 @@
     justify-content: center;
     margin-left: 5px;
     margin-right: 5px;
-  }
-  .icon {
-    transform: scale(0.75);
-  }
-  .icon-small {
-    margin-bottom: -2px;
   }
 </style>

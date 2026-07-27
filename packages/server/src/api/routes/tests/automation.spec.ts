@@ -6,6 +6,7 @@ import {
   AutomationTriggerStepId,
   ConfigType,
   EmailTrigger,
+  EmailTriggerAuthType,
   EmailTriggerInputs,
   FieldType,
   FilterCondition,
@@ -14,13 +15,16 @@ import {
   RowDeletedTriggerInputs,
   SettingsConfig,
   Table,
+  WebhookTriggerInputs,
   isDidNotTriggerResponse,
+  isBranchStep,
   isEmailTrigger,
 } from "@budibase/types"
 import {
   BUILTIN_ACTION_DEFINITIONS,
   TRIGGER_DEFINITIONS,
 } from "../../../automations"
+import * as emailAutomation from "../../../automations/email"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import sdk from "../../../sdk"
 import { basicTable } from "../../../tests/utilities/structures"
@@ -32,7 +36,31 @@ import {
   testAutomation,
 } from "./utilities/TestFunctions"
 
+jest.mock("../../../automations/email", () => ({
+  ...jest.requireActual("../../../automations/email"),
+  testConnection: jest.fn(),
+}))
+
 const MAX_RETRIES = 4
+const testEmailConnectionMock = jest.mocked(emailAutomation.testConnection)
+const hasWebhookSchemaUrl = (
+  inputs: Automation["definition"]["trigger"]["inputs"]
+): inputs is Pick<WebhookTriggerInputs, "schemaUrl"> => {
+  if (!inputs || typeof inputs !== "object") {
+    return false
+  }
+
+  return "schemaUrl" in inputs && typeof inputs.schemaUrl === "string"
+}
+const getWebhookSchemaUrl = (automation: Automation): string => {
+  const inputs = automation.definition.trigger.inputs
+  if (hasWebhookSchemaUrl(inputs)) {
+    return inputs.schemaUrl
+  }
+
+  throw new Error("Webhook trigger schema URL was not generated.")
+}
+
 const {
   basicAutomation,
   newAutomation,
@@ -56,6 +84,23 @@ describe("/automations", () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+  })
+
+  describe("logs", () => {
+    it("searches production automation logs from the builder context", async () => {
+      const { automation } = await config.api.automation.post(basicAutomation())
+      await config.createAutomationLog(automation, config.getProdWorkspaceId())
+
+      const logs = await config.api.automation.logSearch({
+        automationId: automation._id,
+      })
+
+      expect(logs.data).toEqual([
+        expect.objectContaining({
+          automationId: automation._id,
+        }),
+      ])
+    })
   })
 
   describe("get definitions", () => {
@@ -83,12 +128,12 @@ describe("/automations", () => {
 
   describe("create", () => {
     it("creates an automation with no steps", async () => {
-      const { message, automation } = await config.api.automation.post(
-        newAutomation({ steps: [] })
-      )
+      const automationRequest = newAutomation({ steps: [] })
+      const { message, automation } =
+        await config.api.automation.post(automationRequest)
 
       expect(message).toEqual("Automation created successfully")
-      expect(automation.name).toEqual("My Automation")
+      expect(automation.name).toEqual(automationRequest.name)
       expect(automation._id).not.toEqual(null)
       expect(events.automation.created).toHaveBeenCalledTimes(1)
       expect(events.automation.stepCreated).not.toHaveBeenCalled()
@@ -97,15 +142,34 @@ describe("/automations", () => {
     it("creates an automation with steps", async () => {
       jest.clearAllMocks()
 
-      const { message, automation } = await config.api.automation.post(
-        newAutomation({ steps: [automationStep(), automationStep()] })
-      )
+      const automationRequest = newAutomation({
+        steps: [automationStep(), automationStep()],
+      })
+      const { message, automation } =
+        await config.api.automation.post(automationRequest)
 
       expect(message).toEqual("Automation created successfully")
-      expect(automation.name).toEqual("My Automation")
+      expect(automation.name).toEqual(automationRequest.name)
       expect(automation._id).not.toEqual(null)
       expect(events.automation.created).toHaveBeenCalledTimes(1)
       expect(events.automation.stepCreated).toHaveBeenCalledTimes(2)
+    })
+
+    it("allows creating a second automation with a duplicate name", async () => {
+      const name = "Duplicate Automation Name"
+      await config.api.automation.post(
+        basicAutomation({
+          name,
+        })
+      )
+
+      const { automation } = await config.api.automation.post(
+        basicAutomation({
+          name,
+        })
+      )
+
+      expect(automation.name).toEqual(name)
     })
 
     it("Should ensure you can't have a branch as not a last step", async () => {
@@ -148,7 +212,7 @@ describe("/automations", () => {
       })
     })
 
-    it("Should check validation on a branch step with empty conditions", async () => {
+    it("allows a branch step with empty conditions", async () => {
       const automation = createAutomationBuilder(config)
         .onAppAction()
         .branch({
@@ -160,13 +224,31 @@ describe("/automations", () => {
         })
         .build()
 
-      await config.api.automation.post(automation, {
-        status: 400,
-        body: {
-          message:
-            'Invalid body - "definition.steps[0].inputs.branches[0].condition" must have at least 1 key',
-        },
-      })
+      const { message } = await config.api.automation.post(automation)
+
+      expect(message).toEqual("Automation created successfully")
+    })
+
+    it("allows a branch step with empty condition UI", async () => {
+      const automation = createAutomationBuilder(config)
+        .onAppAction()
+        .branch({
+          activeBranch: {
+            steps: stepBuilder =>
+              stepBuilder.serverLog({ text: "Active user" }),
+            condition: {},
+          },
+        })
+        .build()
+      const [step] = automation.definition.steps
+      if (!isBranchStep(step)) {
+        throw new Error("Expected branch step")
+      }
+      step.inputs.branches[0].conditionUI = null
+
+      const { message } = await config.api.automation.post(automation)
+
+      expect(message).toEqual("Automation created successfully")
     })
 
     it("Should check validation on an branch that has a condition that is not valid", async () => {
@@ -176,22 +258,48 @@ describe("/automations", () => {
           activeBranch: {
             steps: stepBuilder =>
               stepBuilder.serverLog({ text: "Active user" }),
-            condition: {
-              //@ts-ignore
-              INCORRECT: { "trigger.fields.status": "active" },
-            },
+            condition: {},
           },
         })
         .serverLog({ text: "Inactive user" })
         .build()
-
-      await config.api.automation.post(automation, {
-        status: 400,
-        body: {
-          message:
-            'Invalid body - "definition.steps[0].inputs.branches[0].condition.INCORRECT" is not allowed',
+      const [step] = automation.definition.steps
+      if (!isBranchStep(step)) {
+        throw new Error("Expected branch step")
+      }
+      const invalidAutomation = {
+        ...automation,
+        definition: {
+          ...automation.definition,
+          steps: [
+            {
+              ...step,
+              inputs: {
+                ...step.inputs,
+                branches: [
+                  {
+                    ...step.inputs.branches[0],
+                    condition: {
+                      INCORRECT: { "trigger.fields.status": "active" },
+                    },
+                  },
+                ],
+              },
+            },
+          ],
         },
-      })
+      }
+
+      const response = await config
+        .request!.post("/api/automations")
+        .send(invalidAutomation)
+        .set(config.defaultHeaders())
+        .expect(400)
+        .expect("Content-Type", /json/)
+
+      expect(response.body.message).toEqual(
+        'Invalid body - "definition.steps[0].inputs.branches[0].condition.INCORRECT" is not allowed'
+      )
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -322,7 +430,7 @@ describe("/automations", () => {
   })
 
   describe("trigger", () => {
-    it("does not trigger an automation when not synchronous and in dev", async () => {
+    it("triggers an asynchronous automation in dev", async () => {
       const { automation } = await config.api.automation.post(newAutomation())
       await config.api.automation.trigger(
         automation._id!,
@@ -331,9 +439,9 @@ describe("/automations", () => {
           timeout: 1000,
         },
         {
-          status: 400,
+          status: 200,
           body: {
-            message: "Only apps in production support this endpoint",
+            message: `Automation ${automation._id} has been triggered.`,
           },
         }
       )
@@ -405,7 +513,7 @@ describe("/automations", () => {
   describe("update", () => {
     it("updates a automations name", async () => {
       const { automation } = await config.api.automation.post(basicAutomation())
-      automation.name = "Updated Name"
+      automation.name = "Updated Name 1"
       jest.clearAllMocks()
 
       const { automation: updatedAutomation, message } =
@@ -415,7 +523,7 @@ describe("/automations", () => {
       expect(updatedAutomation._rev).toBeDefined()
       expect(updatedAutomation._rev).not.toEqual(automation._rev)
 
-      expect(updatedAutomation.name).toEqual("Updated Name")
+      expect(updatedAutomation.name).toEqual("Updated Name 1")
       expect(message).toEqual(
         `Automation ${automation._id} updated successfully.`
       )
@@ -428,7 +536,7 @@ describe("/automations", () => {
 
     it("updates a automations name using POST request", async () => {
       const { automation } = await config.api.automation.post(basicAutomation())
-      automation.name = "Updated Name"
+      automation.name = "Updated Name 2"
       jest.clearAllMocks()
 
       // the POST request will defer to the update when an id has been supplied.
@@ -439,7 +547,7 @@ describe("/automations", () => {
       expect(updatedAutomation._rev).toBeDefined()
       expect(updatedAutomation._rev).not.toEqual(automation._rev)
 
-      expect(updatedAutomation.name).toEqual("Updated Name")
+      expect(updatedAutomation.name).toEqual("Updated Name 2")
       expect(message).toEqual(
         `Automation ${automation._id} updated successfully.`
       )
@@ -457,12 +565,19 @@ describe("/automations", () => {
       )
       jest.clearAllMocks()
 
-      await config.api.automation.update(automation)
+      const { automation: updatedAutomation } =
+        await config.api.automation.update(automation)
 
       expect(events.automation.created).not.toHaveBeenCalled()
       expect(events.automation.stepCreated).not.toHaveBeenCalled()
       expect(events.automation.stepDeleted).not.toHaveBeenCalled()
       expect(events.automation.triggerUpdated).toHaveBeenCalledTimes(1)
+
+      expect(getWebhookSchemaUrl(updatedAutomation)).toMatch(
+        new RegExp(
+          `^api/webhooks/schema/${config.getDevWorkspaceId()}/wh_[^/]+/[^/]+$`
+        )
+      )
     })
 
     it("adds automation steps", async () => {
@@ -537,6 +652,44 @@ describe("/automations", () => {
         status: 400,
         body: {
           message: "Field tableId is readonly and it cannot be modified",
+        },
+      })
+    })
+
+    it("allows updating an automation to use a duplicate name", async () => {
+      const { automation: first } = await config.api.automation.post(
+        basicAutomation({
+          name: "Existing Automation Name",
+        })
+      )
+      const { automation: second } = await config.api.automation.post(
+        basicAutomation({
+          name: "Second Automation Name",
+        })
+      )
+
+      second.name = first.name
+
+      const { automation: updated } = await config.api.automation.update(second)
+      expect(updated.name).toEqual(first.name)
+    })
+
+    it("rejects updates with more than 12 sticky notes", async () => {
+      const { automation } = await config.api.automation.post(basicAutomation())
+      automation.uiTree = {
+        stickyNotes: Array.from({ length: 13 }, (_, index) => ({
+          id: `note-${index}`,
+          title: "Note",
+          text: "",
+          x: 100,
+          y: 100,
+        })),
+      }
+
+      await config.api.automation.update(automation, {
+        status: 400,
+        body: {
+          message: "Automations cannot have more than 12 sticky notes",
         },
       })
     })
@@ -763,6 +916,11 @@ describe("/automations", () => {
   })
 
   describe("email trigger secrets", () => {
+    beforeEach(() => {
+      testEmailConnectionMock.mockReset()
+      testEmailConnectionMock.mockResolvedValue()
+    })
+
     const ensureEmailTrigger = (
       trigger?: Automation["definition"]["trigger"]
     ): EmailTrigger => {
@@ -783,6 +941,27 @@ describe("/automations", () => {
           username: "dom",
           password,
           mailbox: "dom",
+        } satisfies EmailTriggerInputs,
+      }
+      return newAutomation({
+        trigger,
+        steps: [],
+      })
+    }
+
+    const buildOAuthEmailAutomation = () => {
+      const trigger: EmailTrigger = {
+        ...automationTrigger(TRIGGER_DEFINITIONS.EMAIL),
+        stepId: AutomationTriggerStepId.EMAIL,
+        inputs: {
+          host: "outlook.office365.com",
+          port: 993,
+          secure: true,
+          username: "dom@example.com",
+          authType: EmailTriggerAuthType.OAUTH2,
+          datasourceId: "ds_1",
+          authConfigId: "auth_1",
+          mailbox: "INBOX",
         } satisfies EmailTriggerInputs,
       }
       return newAutomation({
@@ -850,6 +1029,112 @@ describe("/automations", () => {
       const storedTrigger = ensureEmailTrigger(stored.definition.trigger)
       expect(storedTrigger.inputs.password).toEqual("mail-secret")
       expect(storedTrigger.inputs.mailbox).toEqual("alerts")
+    })
+
+    it("does not require a password for OAuth2 triggers", async () => {
+      const payload = buildOAuthEmailAutomation()
+      const { automation: createdAutomation, message } =
+        await config.api.automation.post(payload)
+
+      expect(message).toEqual("Automation created successfully")
+      const createdTrigger = ensureEmailTrigger(
+        createdAutomation.definition.trigger
+      )
+      expect(createdTrigger.inputs).toEqual(
+        expect.objectContaining({
+          authType: EmailTriggerAuthType.OAUTH2,
+          datasourceId: "ds_1",
+          authConfigId: "auth_1",
+        })
+      )
+      expect(createdTrigger.inputs.password).toBeUndefined()
+
+      const stored = await fetchStoredAutomation(createdAutomation._id!)
+      const storedTrigger = ensureEmailTrigger(stored.definition.trigger)
+      expect(storedTrigger.inputs.password).toBeUndefined()
+    })
+
+    it("hydrates masked passwords when testing connections", async () => {
+      const payload = buildEmailAutomation("stored-secret")
+      const { automation: createdAutomation } =
+        await config.api.automation.post(payload)
+      const trigger = ensureEmailTrigger(createdAutomation.definition.trigger)
+
+      const response = await config.api.automation.testEmailConnection({
+        ...trigger.inputs,
+        automationId: createdAutomation._id,
+      })
+
+      expect(response).toEqual({ valid: true })
+      expect(testEmailConnectionMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          host: "imap.gmail.com",
+          username: "dom",
+          password: "stored-secret",
+        })
+      )
+    })
+
+    it("refuses to hydrate the stored password when connection details change", async () => {
+      const payload = buildEmailAutomation("stored-secret")
+      const { automation: createdAutomation } =
+        await config.api.automation.post(payload)
+      const trigger = ensureEmailTrigger(createdAutomation.definition.trigger)
+
+      const response = await config.api.automation.testEmailConnection({
+        ...trigger.inputs,
+        host: "attacker.example.com",
+        password: "********",
+        automationId: createdAutomation._id,
+      })
+
+      expect(response).toEqual({
+        valid: false,
+        message: "IMAP password is required when connection details change",
+      })
+      expect(testEmailConnectionMock).not.toHaveBeenCalled()
+    })
+
+    it("tests OAuth2 connections without a password", async () => {
+      const response = await config.api.automation.testEmailConnection({
+        host: "outlook.office365.com",
+        port: 993,
+        secure: true,
+        username: "dom@example.com",
+        authType: EmailTriggerAuthType.OAUTH2,
+        datasourceId: "ds_1",
+        authConfigId: "auth_1",
+        mailbox: "INBOX",
+      })
+
+      expect(response).toEqual({ valid: true })
+      const [inputs] = testEmailConnectionMock.mock.calls[0]
+      expect(inputs).toEqual(
+        expect.objectContaining({
+          authType: EmailTriggerAuthType.OAUTH2,
+          datasourceId: "ds_1",
+          authConfigId: "auth_1",
+        })
+      )
+      expect(inputs.password).toBeUndefined()
+    })
+
+    it("returns connection test failures", async () => {
+      testEmailConnectionMock.mockRejectedValue(new Error("AUTH failed"))
+
+      const response = await config.api.automation.testEmailConnection({
+        host: "imap.gmail.com",
+        port: 993,
+        secure: true,
+        username: "dom",
+        password: "wrong-password",
+        mailbox: "INBOX",
+      })
+
+      expect(response).toEqual({
+        valid: false,
+        message: "AUTH failed",
+      })
     })
   })
 })

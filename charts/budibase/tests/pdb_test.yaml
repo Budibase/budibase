@@ -1,0 +1,145 @@
+suite: PodDisruptionBudget
+templates:
+  - templates/pdb.yaml
+release:
+  name: budibase
+chart:
+  version: 3.0.0
+  appVersion: 3.0.0
+tests:
+  - it: should not render any PDBs when disabled
+    set:
+      podDisruptionBudget.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render proxy, apps, and worker PDBs by default
+    set:
+      services.automationWorkers.enabled: false
+      services.litellm.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 3
+
+  - it: should render automation-worker PDB when enabled
+    set:
+      services.automationWorkers.enabled: true
+      services.litellm.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 4
+      - equal:
+          path: metadata.name
+          value: budibase-budibase-automation-worker-pdb
+        documentIndex: 3
+
+  - it: should render litellm PDB when enabled
+    set:
+      services.automationWorkers.enabled: false
+      services.litellm.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 4
+      - equal:
+          path: metadata.name
+          value: budibase-budibase-litellm-pdb
+        documentIndex: 3
+
+  - it: should render all five PDBs when all services enabled
+    set:
+      services.automationWorkers.enabled: true
+      services.litellm.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 5
+
+  - it: should use global minAvailable by default
+    set:
+      podDisruptionBudget.minAvailable: 2
+      services.automationWorkers.enabled: false
+      services.litellm.enabled: false
+    asserts:
+      - equal:
+          path: spec.minAvailable
+          value: 2
+        documentIndex: 0
+      - equal:
+          path: spec.minAvailable
+          value: 2
+        documentIndex: 1
+      - equal:
+          path: spec.minAvailable
+          value: 2
+        documentIndex: 2
+
+  - it: should use per-service minAvailable when set
+    set:
+      podDisruptionBudget.minAvailable: 1
+      services.proxy.pdb.minAvailable: 2
+      services.apps.pdb.minAvailable: 3
+      services.automationWorkers.enabled: false
+      services.litellm.enabled: false
+    asserts:
+      - equal:
+          path: spec.minAvailable
+          value: 2
+        documentIndex: 0
+      - equal:
+          path: spec.minAvailable
+          value: 3
+        documentIndex: 1
+      - equal:
+          path: spec.minAvailable
+          value: 1
+        documentIndex: 2
+
+  - it: proxy PDB should target budibase-proxy pods
+    set:
+      services.automationWorkers.enabled: false
+      services.litellm.enabled: false
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/name"]
+          value: budibase-proxy
+        documentIndex: 0
+
+  - it: apps PDB should target app-service pods
+    set:
+      services.automationWorkers.enabled: false
+      services.litellm.enabled: false
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels["io.kompose.service"]
+          value: app-service
+        documentIndex: 1
+
+  - it: worker PDB should target worker-service pods
+    set:
+      services.automationWorkers.enabled: false
+      services.litellm.enabled: false
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels["io.kompose.service"]
+          value: worker-service
+        documentIndex: 2
+
+  - it: automation-worker PDB should target automation-worker-service pods
+    set:
+      services.automationWorkers.enabled: true
+      services.litellm.enabled: false
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels["io.kompose.service"]
+          value: automation-worker-service
+        documentIndex: 3
+
+  - it: litellm PDB should target litellm-service pods
+    set:
+      services.automationWorkers.enabled: false
+      services.litellm.enabled: true
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels["io.kompose.service"]
+          value: litellm-service
+        documentIndex: 3

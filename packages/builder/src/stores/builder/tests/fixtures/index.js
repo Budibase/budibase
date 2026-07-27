@@ -123,6 +123,7 @@ export const generateAppPackage = ({
   revertableVersion,
   appValidation = true,
   disableUserMetadata = true,
+  suppressErrorNotifications = false,
   name = "Test app",
   url = "/test-app",
 }) => {
@@ -138,6 +139,8 @@ export const generateAppPackage = ({
   if (disableUserMetadata) {
     features["disableUserMetadata"] = false
   }
+
+  features["suppressErrorNotifications"] = suppressErrorNotifications
 
   return {
     application: {

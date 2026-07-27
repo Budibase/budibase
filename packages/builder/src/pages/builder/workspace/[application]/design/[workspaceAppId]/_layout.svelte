@@ -22,7 +22,7 @@
     validate: (id: string) =>
       $workspaceAppStore.workspaceApps.some(app => app._id === id),
     fallbackUrl: () => {
-      return "../../design"
+      return "../../home?type=app"
     },
     routify,
     update: (id: string) => workspaceAppStore.select(id),

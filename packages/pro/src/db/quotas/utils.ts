@@ -109,5 +109,7 @@ export const getBreakdownName = (
         : isDatasourceOrDatasourcePlusId(id)
           ? BreakdownQuotaName.DATASOURCE_QUERIES
           : undefined
+    case MonthlyQuotaName.ACTIONS:
+      return BreakdownQuotaName.ACTIONS
   }
 }

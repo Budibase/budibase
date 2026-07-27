@@ -61,6 +61,15 @@ describe("/api/applications/:appId/sync", () => {
       )) as unknown as APIError
       expect(resp.message).toContain("No file provided")
     })
+
+    it("should reject active content for builder uploads", async () => {
+      let resp = (await config.api.attachment.process(
+        "xss.svg",
+        Buffer.from("<svg><script>alert(1)</script></svg>"),
+        { status: 400 }
+      )) as unknown as APIError
+      expect(resp.message).toContain("active content")
+    })
   })
 
   describe("/api/attachments/:tableId/upload", () => {
@@ -89,13 +98,14 @@ describe("/api/applications/:appId/sync", () => {
       })
     })
 
-    it("should allow active content for authenticated users", async () => {
-      const resp = await config.api.attachment.upload(
+    it("should reject active content for authenticated users", async () => {
+      const resp = (await config.api.attachment.upload(
         tableId,
         "image.png",
-        Buffer.from("<svg><script>alert(1)</script></svg>")
-      )
-      expect(resp.length).toBe(1)
+        Buffer.from("<svg><script>alert(1)</script></svg>"),
+        { status: 400 }
+      )) as unknown as APIError
+      expect(resp.message).toContain("active content")
     })
   })
 })

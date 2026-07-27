@@ -8,11 +8,11 @@ import {
   BucketedContent,
 } from "@budibase/types"
 import fs from "fs"
-import streamWeb from "node:stream/web"
 import { tmpdir } from "os"
 import path, { join } from "path"
 import stream from "stream"
 import env from "../environment"
+import { fetchWithBlacklist } from "../utils/outboundFetch"
 import * as objectStore from "./objectStore"
 
 /****************************************************
@@ -68,7 +68,7 @@ export const bucketTTLConfig = (
 async function processUrlAttachment(
   attachment: AutomationAttachment
 ): Promise<AutomationAttachmentContent> {
-  const response = await fetch(attachment.url)
+  const response = await fetchWithBlacklist(attachment.url)
   if (!response.ok || !response.body) {
     throw new Error(`Unexpected response ${response.statusText}`)
   }
@@ -76,9 +76,12 @@ async function processUrlAttachment(
   if (!response.body) {
     throw new Error("No response received for attachment")
   }
+  if (!(response.body instanceof stream.Readable)) {
+    throw new Error("Unexpected response body stream type")
+  }
   return {
     filename: attachment.filename || fallbackFilename,
-    content: stream.Readable.fromWeb(response.body as streamWeb.ReadableStream),
+    content: response.body,
   }
 }
 

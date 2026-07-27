@@ -33,7 +33,6 @@ export interface LLMProviderField {
 
 export interface LLMProviderModels {
   completions: string[]
-  embeddings: string[]
 }
 
 export interface LLMProvider {

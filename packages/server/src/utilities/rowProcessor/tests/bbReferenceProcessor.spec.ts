@@ -50,8 +50,13 @@ describe("bbReferenceProcessor", () => {
 
     await config.doInTenant(async () => {
       const db = backendCore.context.getGlobalDB()
-      for (const userId of userIds) {
-        const user = structures.users.user({ _id: userId })
+      for (const [index, userId] of userIds.entries()) {
+        const user = structures.users.user({
+          _id: userId,
+          firstName: `First${index}`,
+          lastName: `Last${index}`,
+          email: `user${index}@example.com`,
+        })
         await db.put(user)
         users.push(user)
       }
@@ -245,6 +250,7 @@ describe("bbReferenceProcessor", () => {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          fullName: `${user.firstName} ${user.lastName}`,
         })
         expect(cacheGetUserSpy).toHaveBeenCalledTimes(1)
         expect(cacheGetUserSpy).toHaveBeenCalledWith({
@@ -285,6 +291,7 @@ describe("bbReferenceProcessor", () => {
             email: user.email,
             firstName: user.firstName,
             lastName: user.lastName,
+            fullName: `${user.firstName} ${user.lastName}`,
           },
         ])
         expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
@@ -312,6 +319,7 @@ describe("bbReferenceProcessor", () => {
               email: u.email,
               firstName: u.firstName,
               lastName: u.lastName,
+              fullName: `${u.firstName} ${u.lastName}`,
             }))
           )
         )
@@ -347,6 +355,7 @@ describe("bbReferenceProcessor", () => {
               email: u.email,
               firstName: u.firstName,
               lastName: u.lastName,
+              fullName: `${u.firstName} ${u.lastName}`,
             }))
           )
         )

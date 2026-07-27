@@ -87,7 +87,7 @@
   {/if}
 
   {#if customHeaderContent}
-    <span class="custom-content-wrap">
+    <span class="custom-content-wrap" class:noHeaderBorder>
       <slot name="panel-header-content" />
     </span>
   {/if}
@@ -188,7 +188,7 @@
   .header.custom {
     border: none;
   }
-  .custom-content-wrap {
+  .custom-content-wrap:not(.noHeaderBorder) {
     border-bottom: var(--border-light);
   }
   .title {

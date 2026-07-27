@@ -40,6 +40,19 @@ const normalizeConversationStarters = (
   })
 }
 
+const normalizeRoleId = (roleId?: unknown) => {
+  if (roleId === undefined) {
+    return undefined
+  }
+
+  if (typeof roleId !== "string") {
+    throw new HTTPError("roleId must be a string", 400)
+  }
+
+  const trimmedRoleId = roleId.trim()
+  return trimmedRoleId.length ? trimmedRoleId : undefined
+}
+
 const normalizeAgents = (agents?: ChatApp["agents"]) => {
   if (agents === undefined) {
     return undefined
@@ -63,6 +76,7 @@ const normalizeAgents = (agents?: ChatApp["agents"]) => {
     agentId: agent.agentId,
     isEnabled: agent.isEnabled === true,
     isDefault: agent.isDefault === true,
+    roleId: normalizeRoleId(agent.roleId),
     conversationStarters: normalizeConversationStarters(
       agent.conversationStarters
     ),

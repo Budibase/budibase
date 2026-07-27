@@ -1,4 +1,4 @@
-import { db, features, HTTPError } from "@budibase/backend-core"
+import { db, HTTPError } from "@budibase/backend-core"
 import {
   Agent,
   CreateAgentRequest,
@@ -6,6 +6,8 @@ import {
   FetchAgentsResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
+  ProvisionAgentTelegramChannelRequest,
+  ProvisionAgentTelegramChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   RequiredKeys,
@@ -13,46 +15,17 @@ import {
   ToggleAgentDeploymentResponse,
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
-  FeatureFlag,
   ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
-
-const SECRET_MASK = "********"
-
-const maskSecretFields = <T extends object>(obj: T, fields: (keyof T)[]): T => {
-  const result = { ...obj }
-  for (const field of fields) {
-    if (result[field]) {
-      result[field] = SECRET_MASK as T[typeof field]
-    }
-  }
-  return result
-}
-
-const obfuscateAgentSecrets = (agent: Agent): Agent => ({
-  ...agent,
-  ...(agent.discordIntegration && {
-    discordIntegration: maskSecretFields(agent.discordIntegration, [
-      "publicKey",
-      "botToken",
-    ]),
-  }),
-  ...(agent.MSTeamsIntegration && {
-    MSTeamsIntegration: maskSecretFields(agent.MSTeamsIntegration, [
-      "appPassword",
-    ]),
-  }),
-  ...(agent.slackIntegration && {
-    slackIntegration: maskSecretFields(agent.slackIntegration, [
-      "botToken",
-      "signingSecret",
-    ]),
-  }),
-})
+import {
+  resolveProjectIds,
+  resolveUpdatedProjectIds,
+} from "../../../utilities/projects"
+import { toAgentResponse } from "./agentResponse"
 
 const parseOptionalChatAppId = (value: unknown) => {
   if (typeof value !== "string") {
@@ -177,6 +150,25 @@ const persistSlackDeployment = async ({
   })
 }
 
+const persistTelegramDeployment = async ({
+  agent,
+  chatAppId,
+  messagingEndpointUrl,
+}: {
+  agent: Agent
+  chatAppId: string
+  messagingEndpointUrl: string
+}) => {
+  await sdk.ai.agents.update({
+    ...agent,
+    telegramIntegration: {
+      ...agent.telegramIntegration,
+      chatAppId,
+      messagingEndpointUrl,
+    },
+  })
+}
+
 const configureDiscordDeployment = async ({
   agent,
   agentId,
@@ -219,41 +211,37 @@ export async function fetchTools(ctx: UserCtx<void, ToolMetadata[]>) {
 
 export async function fetchAgents(ctx: UserCtx<void, FetchAgentsResponse>) {
   const agents = await sdk.ai.agents.fetch()
-  ctx.body = { agents: agents.map(obfuscateAgentSecrets) }
+  ctx.body = { agents: agents.map(toAgentResponse) }
 }
 
 export async function createAgent(
   ctx: UserCtx<CreateAgentRequest, CreateAgentResponse>
 ) {
   const body = ctx.request.body
-  const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
   const createdBy = ctx.user?._id!
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
+  const projectIds = await resolveProjectIds(body.projectIds)
 
-  const createRequest: RequiredKeys<CreateAgentRequest> = {
+  const createRequest: Parameters<typeof sdk.ai.agents.create>[number] = {
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
-    promptInstructions: body.promptInstructions,
+    projectIds,
     goal: body.goal,
     icon: body.icon,
     iconColor: body.iconColor,
     live: body.live,
     _deleted: false,
     createdBy: globalId,
-    enabledTools: body.enabledTools,
-    embeddingModel: ragEnabled ? body.embeddingModel : undefined,
-    vectorDb: ragEnabled ? body.vectorDb : undefined,
-    ragMinDistance: ragEnabled ? body.ragMinDistance : undefined,
-    ragTopK: ragEnabled ? body.ragTopK : undefined,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
+    telegramIntegration: body.telegramIntegration,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
 
-  ctx.body = obfuscateAgentSecrets(agent)
+  ctx.body = toAgentResponse(agent)
   ctx.status = 201
 }
 
@@ -261,7 +249,11 @@ export async function updateAgent(
   ctx: UserCtx<UpdateAgentRequest, UpdateAgentResponse>
 ) {
   const body = ctx.request.body
-  const ragEnabled = await features.isEnabled(FeatureFlag.AI_RAG)
+  const existing = await sdk.ai.agents.getOrThrow(body._id)
+  const projectIds = await resolveUpdatedProjectIds(
+    body.projectIds,
+    existing.projectIds
+  )
 
   const updateRequest: RequiredKeys<UpdateAgentRequest> = {
     _id: body._id,
@@ -269,24 +261,24 @@ export async function updateAgent(
     name: body.name,
     description: body.description,
     aiconfig: body.aiconfig,
-    promptInstructions: body.promptInstructions,
+    projectIds,
     goal: body.goal,
     icon: body.icon,
     iconColor: body.iconColor,
     live: body.live,
-    enabledTools: body.enabledTools,
-    embeddingModel: ragEnabled ? body.embeddingModel : undefined,
-    vectorDb: ragEnabled ? body.vectorDb : undefined,
-    ragMinDistance: ragEnabled ? body.ragMinDistance : undefined,
-    ragTopK: ragEnabled ? body.ragTopK : undefined,
+    publishedAt: undefined,
     discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
+    telegramIntegration: body.telegramIntegration,
   }
 
-  const agent = await sdk.ai.agents.update(updateRequest)
+  const agent = await sdk.ai.agents.update({
+    ...existing,
+    ...updateRequest,
+  })
 
-  ctx.body = obfuscateAgentSecrets(agent)
+  ctx.body = toAgentResponse(agent)
   ctx.status = 200
 }
 
@@ -385,6 +377,54 @@ export async function provisionAgentSlackChannel(
   ctx.status = 200
 }
 
+export async function provisionAgentTelegramChannel(
+  ctx: UserCtx<
+    ProvisionAgentTelegramChannelRequest,
+    ProvisionAgentTelegramChannelResponse,
+    { agentId: string }
+  >
+) {
+  const { agentId } = ctx.params
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const requestedChatAppId = parseOptionalChatAppId(ctx.request.body?.chatAppId)
+  const { chatAppId, endpointUrl, integration } =
+    await configureDeploymentChannel({
+      agent,
+      agentId,
+      requestedChatAppId,
+      validateIntegration:
+        sdk.ai.deployments.telegram.validateTelegramIntegration,
+      resolveChatAppForAgent:
+        sdk.ai.deployments.telegram.resolveChatAppForAgent,
+      buildEndpointUrl: sdk.ai.deployments.telegram.buildTelegramWebhookUrl,
+      persistIntegration: async (chatAppId, messagingEndpointUrl) =>
+        await persistTelegramDeployment({
+          agent,
+          chatAppId,
+          messagingEndpointUrl,
+        }),
+    })
+
+  let warning: string | undefined
+  try {
+    await sdk.ai.deployments.telegram.setTelegramWebhook({
+      botToken: integration.botToken,
+      webhookUrl: endpointUrl,
+      secretToken: integration.webhookSecretToken,
+    })
+  } catch (error: any) {
+    warning = error.message || "Failed to register webhook with Telegram"
+  }
+
+  ctx.body = {
+    success: true,
+    chatAppId,
+    messagingEndpointUrl: endpointUrl,
+    ...(warning ? { warning } : {}),
+  }
+  ctx.status = 200
+}
+
 export async function toggleAgentDiscordDeployment(
   ctx: UserCtx<
     ToggleAgentDeploymentRequest,
@@ -402,15 +442,6 @@ export async function toggleAgentDiscordDeployment(
       agentId,
     })
   } else {
-    const chatAppId = agent.discordIntegration?.chatAppId?.trim()
-
-    if (chatAppId) {
-      await sdk.ai.deployments.shared.disableAgentOnChatApp({
-        chatAppId,
-        agentId,
-      })
-    }
-
     await persistDiscordDeployment({
       agent,
       interactionsEndpointUrl: undefined,
@@ -453,15 +484,6 @@ export async function toggleAgentMSTeamsDeployment(
         }),
     })
   } else {
-    const chatAppId = agent.MSTeamsIntegration?.chatAppId?.trim()
-
-    if (chatAppId) {
-      await sdk.ai.deployments.shared.disableAgentOnChatApp({
-        chatAppId,
-        agentId,
-      })
-    }
-
     await sdk.ai.agents.update({
       ...agent,
       MSTeamsIntegration: {
@@ -505,7 +527,58 @@ export async function toggleAgentSlackDeployment(
         }),
     })
   } else {
-    const chatAppId = agent.slackIntegration?.chatAppId?.trim()
+    await sdk.ai.agents.update({
+      ...agent,
+      slackIntegration: {
+        ...agent.slackIntegration,
+        messagingEndpointUrl: undefined,
+      },
+    })
+  }
+
+  ctx.body = { success: true, enabled }
+  ctx.status = 200
+}
+
+export async function toggleAgentTelegramDeployment(
+  ctx: UserCtx<
+    ToggleAgentDeploymentRequest,
+    ToggleAgentDeploymentResponse,
+    { agentId: string }
+  >
+) {
+  const { agentId } = ctx.params
+  const { enabled } = ctx.request.body
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+
+  if (enabled) {
+    const requestedChatAppId = parseOptionalChatAppId(
+      agent.telegramIntegration?.chatAppId?.trim() || undefined
+    )
+    const { endpointUrl, integration } = await configureDeploymentChannel({
+      agent,
+      agentId,
+      requestedChatAppId,
+      validateIntegration:
+        sdk.ai.deployments.telegram.validateTelegramIntegration,
+      resolveChatAppForAgent:
+        sdk.ai.deployments.telegram.resolveChatAppForAgent,
+      buildEndpointUrl: sdk.ai.deployments.telegram.buildTelegramWebhookUrl,
+      persistIntegration: async (chatAppId, messagingEndpointUrl) =>
+        await persistTelegramDeployment({
+          agent,
+          chatAppId,
+          messagingEndpointUrl,
+        }),
+    })
+
+    await sdk.ai.deployments.telegram.setTelegramWebhook({
+      botToken: integration.botToken,
+      webhookUrl: endpointUrl,
+      secretToken: integration.webhookSecretToken,
+    })
+  } else {
+    const chatAppId = agent.telegramIntegration?.chatAppId?.trim()
 
     if (chatAppId) {
       await sdk.ai.deployments.shared.disableAgentOnChatApp({
@@ -516,8 +589,8 @@ export async function toggleAgentSlackDeployment(
 
     await sdk.ai.agents.update({
       ...agent,
-      slackIntegration: {
-        ...agent.slackIntegration,
+      telegramIntegration: {
+        ...agent.telegramIntegration,
         messagingEndpointUrl: undefined,
       },
     })
@@ -536,7 +609,7 @@ export async function duplicateAgent(
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
   const duplicated = await sdk.ai.agents.duplicate(sourceAgent, globalId)
 
-  ctx.body = obfuscateAgentSecrets(duplicated)
+  ctx.body = toAgentResponse(duplicated)
   ctx.status = 201
 }
 
@@ -544,6 +617,8 @@ export async function deleteAgent(
   ctx: UserCtx<void, { deleted: true }, { agentId: string }>
 ) {
   const agentId = ctx.params.agentId
+  await sdk.ai.rag.knowledgeSourceSyncQueue.removeAllAgentJobs(agentId)
+  await sdk.ai.rag.deleteKnowledgeSourceSyncStateForAgent(agentId)
   await sdk.ai.agents.remove(agentId ?? "")
   ctx.body = { deleted: true }
   ctx.status = 200

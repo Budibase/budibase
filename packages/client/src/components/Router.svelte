@@ -1,6 +1,7 @@
 <script>
   import { setContext, getContext, onMount } from "svelte"
   import Router, { querystring } from "svelte-spa-router"
+  import { sessionBannerStore } from "@budibase/frontend-core"
   import { routeStore, stateStore } from "@/stores"
   import Screen from "./Screen.svelte"
   import { get } from "svelte/store"
@@ -43,6 +44,21 @@
   }
 
   const onRouteLoading = ({ detail }) => {
+    const currentRouteStore = get(routeStore)
+    const previousScreenId = currentRouteStore.activeRoute?.screenId
+    const nextScreenId = currentRouteStore.routes.find(
+      route => route.path === detail.route
+    )?.screenId
+    const screenChanged =
+      previousScreenId && nextScreenId && previousScreenId !== nextScreenId
+
+    if (
+      screenChanged &&
+      get(sessionBannerStore)?.variant === "session-not-authenticated"
+    ) {
+      sessionBannerStore.set(null)
+    }
+
     routeStore.actions.setRouteParams(detail.params || {})
     routeStore.actions.setActiveRoute(detail.route)
   }

@@ -80,9 +80,7 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
     throw new HTTPError(`Unsupported BBAI model: ${model}`, 400)
   }
 
-  if (!environment.BBAI_LITELLM_KEY) {
-    ctx.throw(500, "BBAI_LITELLM_KEY not configured")
-  }
+  const bbaiKey = bbai.getBBAIKey()
 
   await quotas.throwIfBudibaseAICreditsExceeded()
 
@@ -100,7 +98,7 @@ export async function chatCompletionV2(ctx: Ctx<ChatCompletionRequestV2>) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${environment.BBAI_LITELLM_KEY}`,
+        Authorization: `Bearer ${bbaiKey}`,
       },
       body: JSON.stringify(requestBody),
     }

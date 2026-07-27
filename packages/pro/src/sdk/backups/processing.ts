@@ -1,6 +1,7 @@
 import {
   db,
   db as dbCore,
+  Duration,
   logging,
   objectStore,
   tenancy,
@@ -10,6 +11,8 @@ import {
   BackupTrigger,
   BackupType,
   WorkspaceBackupContents,
+  WorkspaceBackupExportQueueData,
+  WorkspaceBackupImportQueueData,
   WorkspaceBackupQueueData,
 } from "@budibase/types"
 import { Job } from "bull"
@@ -18,24 +21,40 @@ import { BackupProcessingOpts } from "../../types"
 import backups from "./backup"
 import { getBackupQueue } from "./queue"
 
+const BACKUP_CLEANUP_JOB_ID = "workspace-backup-cleanup"
+const BACKUP_CLEANUP_INTERVAL_MS = Duration.fromDays(1).toMs()
+
 export async function init(opts: BackupProcessingOpts) {
   getBackupQueue().process(async (job: Job) => {
     const data = job.data as WorkspaceBackupQueueData
     try {
-      if (data.export) {
+      if ("cleanup" in data) {
+        console.log("Cleaning up expired app backups")
+        await tenancy.doInTenant(data.tenantId, () =>
+          backups.cleanupExpiredWorkspaceBackups()
+        )
+      } else if ("export" in data) {
         console.log("Exporting app backup:", data.appId, data.export.trigger)
-        return exportProcessor(job, opts)
-      } else if (data.import) {
+        await exportProcessor(data, opts)
+      } else if ("import" in data) {
         console.log("Importing app backup:", data.appId, data.import.backupId)
-        return importProcessor(job, opts)
+        await importProcessor(data, opts)
       }
-    } catch (err: any) {
-      logging.logAlert(
-        `Failed to perform backup for app ID: ${data.appId}`,
-        err
-      )
+    } catch (err) {
+      const appId = "appId" in data ? data.appId : "system"
+      logging.logAlert(`Failed to perform backup for app ID: ${appId}`, err)
     }
   })
+}
+
+export async function scheduleCleanup() {
+  await getBackupQueue().add(
+    { cleanup: true, tenantId: tenancy.getTenantId() },
+    {
+      jobId: BACKUP_CLEANUP_JOB_ID,
+      repeat: { every: BACKUP_CLEANUP_INTERVAL_MS },
+    }
+  )
 }
 
 type RunBackupOpts = {
@@ -48,6 +67,160 @@ type RunBackupOpts = {
 async function removeExistingApp(devId: string) {
   const devDb = dbCore.getDB(devId, { skip_setup: true })
   await devDb.destroy()
+}
+
+const DELETE_BATCH_SIZE = 1000
+
+async function deleteAppFiles(fileKeys: string[]) {
+  for (let i = 0; i < fileKeys.length; i += DELETE_BATCH_SIZE) {
+    await objectStore.deleteFiles(
+      objectStore.ObjectStoreBuckets.APPS,
+      fileKeys.slice(i, i + DELETE_BATCH_SIZE)
+    )
+  }
+}
+
+async function listAppFiles(prefix: string) {
+  const fileKeys: string[] = []
+  for await (const file of objectStore.listAllObjects(
+    objectStore.ObjectStoreBuckets.APPS,
+    prefix
+  )) {
+    if (file.Key) {
+      fileKeys.push(file.Key)
+    }
+  }
+  return fileKeys
+}
+
+async function clearWorkspaceFiles(workspaceId: string) {
+  const prodWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
+  const fileKeys = await listAppFiles(`${prodWorkspaceId}/`)
+  if (fileKeys.length) {
+    await deleteAppFiles(fileKeys)
+  }
+}
+
+interface PromoteWorkspaceFileRollback {
+  targetKey: string
+  rollbackKey: string
+}
+
+interface PromoteWorkspaceFilesResult {
+  sourceFileKeys: string[]
+  targetFileKeys: string[]
+  rollbackFiles: PromoteWorkspaceFileRollback[]
+}
+
+async function copyAppFile(sourceKey: string, targetKey: string) {
+  const { stream } = await objectStore.getReadStream(
+    objectStore.ObjectStoreBuckets.APPS,
+    sourceKey
+  )
+  await objectStore.streamUpload({
+    bucket: objectStore.ObjectStoreBuckets.APPS,
+    filename: targetKey,
+    stream,
+  })
+}
+
+async function rollbackPromotedWorkspaceFiles(
+  targetFileKeys: string[],
+  rollbackFiles: PromoteWorkspaceFileRollback[]
+) {
+  const rollbackByTargetKey = new Map<string, string>()
+  for (const rollbackFile of rollbackFiles) {
+    rollbackByTargetKey.set(rollbackFile.targetKey, rollbackFile.rollbackKey)
+  }
+  const promotedNewFiles: string[] = []
+  for (const targetKey of targetFileKeys) {
+    const rollbackKey = rollbackByTargetKey.get(targetKey)
+    if (rollbackKey) {
+      await copyAppFile(rollbackKey, targetKey)
+    } else {
+      promotedNewFiles.push(targetKey)
+    }
+  }
+  if (promotedNewFiles.length) {
+    await deleteAppFiles(promotedNewFiles)
+  }
+}
+
+async function promoteWorkspaceFiles(
+  sourceWorkspaceId: string,
+  workspaceId: string
+): Promise<PromoteWorkspaceFilesResult> {
+  const sourceProdWorkspaceId = dbCore.getProdWorkspaceID(sourceWorkspaceId)
+  const targetProdWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
+  const sourcePrefix = `${sourceProdWorkspaceId}/`
+  const targetPrefix = `${targetProdWorkspaceId}/`
+  const rollbackPrefix = `${sourcePrefix}__restore_rollback/${Date.now()}/`
+
+  const sourceFileKeys = await listAppFiles(sourcePrefix)
+  const uploadedTargetKeys = new Set<string>()
+  const rollbackFiles: PromoteWorkspaceFileRollback[] = []
+  try {
+    for (const sourceKey of sourceFileKeys) {
+      const relativePath = sourceKey.startsWith(sourcePrefix)
+        ? sourceKey.slice(sourcePrefix.length)
+        : sourceKey
+      const targetKey = `${targetPrefix}${relativePath}`
+      const alreadyExists = await objectStore.objectExists(
+        objectStore.ObjectStoreBuckets.APPS,
+        targetKey
+      )
+      if (alreadyExists) {
+        const rollbackKey = `${rollbackPrefix}${relativePath}`
+        await copyAppFile(targetKey, rollbackKey)
+        rollbackFiles.push({
+          targetKey,
+          rollbackKey,
+        })
+      }
+      await copyAppFile(sourceKey, targetKey)
+      uploadedTargetKeys.add(targetKey)
+    }
+  } catch (err) {
+    if (uploadedTargetKeys.size) {
+      try {
+        await rollbackPromotedWorkspaceFiles(
+          [...uploadedTargetKeys],
+          rollbackFiles
+        )
+      } catch (rollbackErr) {
+        console.log(
+          "Failed to rollback partially promoted restore files:",
+          rollbackErr
+        )
+      }
+    }
+    throw err
+  }
+  return {
+    sourceFileKeys,
+    targetFileKeys: [...uploadedTargetKeys],
+    rollbackFiles,
+  }
+}
+
+async function cleanupPromotedWorkspaceFiles(
+  sourceFileKeys: string[],
+  targetFileKeys: string[],
+  workspaceId: string
+) {
+  const targetProdWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
+  const targetPrefix = `${targetProdWorkspaceId}/`
+  const allTargetFileKeys = await listAppFiles(targetPrefix)
+  const targetFileKeySet = new Set(targetFileKeys)
+  const staleFileKeys = allTargetFileKeys.filter(
+    key => !targetFileKeySet.has(key)
+  )
+  if (staleFileKeys.length) {
+    await deleteAppFiles(staleFileKeys)
+  }
+  if (sourceFileKeys.length) {
+    await deleteAppFiles(sourceFileKeys)
+  }
 }
 
 async function runBackup(
@@ -71,7 +244,7 @@ async function runBackup(
         updateOpts?.filename
       )
     } else {
-      await backups.storeAppBackupMetadata(
+      await backups.storeWorkspaceBackupMetadata(
         {
           appId: prodAppId,
           timestamp,
@@ -87,7 +260,7 @@ async function runBackup(
     }
   }
   try {
-    const tarPath = await opts.processing.exportAppFn(devWorkspaceId, {
+    const tarPath = await opts.processing.exportWorkspaceFn(devWorkspaceId, {
       tar: true,
     })
     const contents = await opts.processing.statsFn(devWorkspaceId)
@@ -127,16 +300,18 @@ async function runBackup(
   }
 }
 
-async function importProcessor(job: Job, opts: BackupProcessingOpts) {
-  const data: WorkspaceBackupQueueData = job.data
+async function importProcessor(
+  data: WorkspaceBackupImportQueueData,
+  opts: BackupProcessingOpts
+) {
   const appId = data.appId,
-    backupId = data.import!.backupId,
-    nameForBackup = data.import!.nameForBackup,
-    createdBy = data.import!.createdBy
+    backupId = data.import.backupId,
+    nameForBackup = data.import.nameForBackup,
+    createdBy = data.import.createdBy
   const tenantId = tenancy.getTenantIDFromWorkspaceID(appId) as string
   return tenancy.doInTenant(tenantId, async () => {
     const devWorkspaceId = dbCore.getDevWorkspaceID(appId)
-    const tempAppId = `${devWorkspaceId}_temp_${Date.now()}`
+    const tempWorkspaceId = `${devWorkspaceId}_temp_${Date.now()}`
 
     const { rev } = await backups.updateRestoreStatus(
       data.docId,
@@ -150,25 +325,60 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
       name: nameForBackup,
     })
     // get the backup ready on disk
-    const path = await backups.downloadAppBackup(backupId)
+    const path = await backups.downloadWorkspaceBackup(backupId)
     let status = BackupStatus.COMPLETE
+    let promotedWorkspaceFiles: PromoteWorkspaceFilesResult | null = null
     try {
-      // import into temporary database first
-      await opts.importAppFn(tempAppId, dbCore.getDB(tempAppId), {
-        file: {
-          type: "application/gzip",
-          path,
+      // Import into a temporary database, but rewrite embedded app references
+      // against the real development workspace ID.
+      await opts.importWorkspaceFn(
+        devWorkspaceId,
+        dbCore.getDB(tempWorkspaceId),
+        {
+          file: {
+            type: "application/gzip",
+            path,
+          },
+          key: path,
         },
-        key: path,
-      })
+        {
+          objectStoreAppId: tempWorkspaceId,
+          preserveLiteLLMConfig: true,
+        }
+      )
+      // Copy files before database cutover. We only add/overwrite desired keys
+      // here and defer deletions until after replication succeeds.
+      promotedWorkspaceFiles = await promoteWorkspaceFiles(
+        tempWorkspaceId,
+        devWorkspaceId
+      )
 
       // if import succeeds, replace the original app with the temporary one
       await removeExistingApp(devWorkspaceId)
       await new db.Replication({
-        source: tempAppId,
+        source: tempWorkspaceId,
         target: devWorkspaceId,
       }).replicate()
+      try {
+        await cleanupPromotedWorkspaceFiles(
+          promotedWorkspaceFiles.sourceFileKeys,
+          promotedWorkspaceFiles.targetFileKeys,
+          devWorkspaceId
+        )
+      } catch (cleanupErr) {
+        console.log("Failed to cleanup promoted restore files:", cleanupErr)
+      }
     } catch (err: any) {
+      if (promotedWorkspaceFiles) {
+        try {
+          await rollbackPromotedWorkspaceFiles(
+            promotedWorkspaceFiles.targetFileKeys,
+            promotedWorkspaceFiles.rollbackFiles
+          )
+        } catch (rollbackErr) {
+          console.log("Failed to rollback promoted restore files:", rollbackErr)
+        }
+      }
       logging.logAlert("App restore error", err)
       status = BackupStatus.FAILED
       // Track restore error in app metadata
@@ -180,8 +390,13 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
       )
     } finally {
       try {
-        const tempDb = dbCore.getDB(tempAppId, { skip_setup: true })
+        const tempDb = dbCore.getDB(tempWorkspaceId, { skip_setup: true })
         await tempDb.destroy()
+      } catch (cleanupErr) {
+        // ignore cleanup errors
+      }
+      try {
+        await clearWorkspaceFiles(tempWorkspaceId)
       } catch (cleanupErr) {
         // ignore cleanup errors
       }
@@ -193,11 +408,13 @@ async function importProcessor(job: Job, opts: BackupProcessingOpts) {
   })
 }
 
-async function exportProcessor(job: Job, opts: BackupProcessingOpts) {
-  const data: WorkspaceBackupQueueData = job.data
+async function exportProcessor(
+  data: WorkspaceBackupExportQueueData,
+  opts: BackupProcessingOpts
+) {
   const appId = data.appId,
-    trigger = data.export!.trigger,
-    name = data.export!.name
+    trigger = data.export.trigger,
+    name = data.export.name
   const tenantId = tenancy.getTenantIDFromWorkspaceID(appId) as string
   await tenancy.doInTenant(tenantId, async () => {
     try {

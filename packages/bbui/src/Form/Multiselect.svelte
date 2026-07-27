@@ -20,6 +20,7 @@
   ) => option
   export let sort = false
   export let autoWidth = false
+  export let popoverAutoWidth = false
   export let autocomplete = false
   export let searchTerm: string | undefined = undefined
   export let customPopoverHeight: string | undefined = undefined
@@ -48,6 +49,7 @@
     {getOptionLabel}
     {getOptionValue}
     {autoWidth}
+    {popoverAutoWidth}
     {autocomplete}
     {customPopoverHeight}
     {onOptionMouseenter}

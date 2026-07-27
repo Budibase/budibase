@@ -52,9 +52,7 @@ export async function init(opts: any) {
     const message = isSingle
       ? "This will create a single-image docker-compose.yaml in current directory, should continue?"
       : "This will create multiple files in current directory, should continue?"
-    const shouldContinue = await confirmation(
-      message
-    )
+    const shouldContinue = await confirmation(message)
     if (!shouldContinue) {
       console.log("Stopping.")
       return

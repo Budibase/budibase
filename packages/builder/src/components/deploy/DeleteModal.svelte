@@ -3,15 +3,15 @@
   import { goto as gotoStore } from "@roxi/routify"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { appStore } from "@/stores/builder"
+  import { appsStore, enrichedApps } from "@/stores/portal"
   import { API } from "@/api"
+  import { get } from "svelte/store"
 
   $: goto = $gotoStore
 
   export let appId
   export let appName
-  export let onDeleteSuccess = () => {
-    goto("/")
-  }
+  export let onDeleteSuccess = async () => {}
 
   let deleting = false
 
@@ -30,21 +30,56 @@
     deletionConfirmationAppName = appName
   }
 
+  const getPostDeleteRedirectPath = deletedAppId => {
+    const nextWorkspace = get(enrichedApps).find(
+      workspace => workspace.editable && workspace.devId !== deletedAppId
+    )
+    return nextWorkspace?.devId
+      ? `/builder/workspace/${nextWorkspace.devId}`
+      : "/"
+  }
+
+  const redirectAfterDeletingCurrentWorkspace = async deletedAppId => {
+    goto(getPostDeleteRedirectPath(deletedAppId))
+  }
+
   const deleteApp = async () => {
     if (!appId) {
       console.error("No app id provided")
       return
     }
     deleting = true
+    const deletedCurrentWorkspace = $appStore.appId === appId
+    let deletedSuccessfully = false
     try {
       await API.deleteApp(appId)
-      // Clear the current app from appStore since it no longer exists
-      appStore.reset()
+      deletedSuccessfully = true
+
+      if (deletedCurrentWorkspace) {
+        appStore.reset()
+      }
       notifications.success("Workspace deleted successfully")
-      deleting = false
-      onDeleteSuccess()
+      try {
+        await onDeleteSuccess()
+      } catch (err) {
+        console.error("Post-delete callback failed", err)
+      }
+      try {
+        await appsStore.load()
+      } catch (err) {
+        console.error("Post-delete workspace list refresh failed", err)
+      }
+
+      if (deletedCurrentWorkspace) {
+        await redirectAfterDeletingCurrentWorkspace(appId)
+      }
     } catch (err) {
-      notifications.error("Error deleting workspace")
+      if (!deletedSuccessfully) {
+        notifications.error("Error deleting workspace")
+      } else {
+        console.error("Post-delete follow-up failed", err)
+      }
+    } finally {
       deleting = false
     }
   }

@@ -1,4 +1,5 @@
 <script>
+  import { getErrorMessage } from "@/helpers/errors"
   import { goto as gotoStore } from "@roxi/routify"
   import { appStore, automationStore } from "@/stores/builder"
   import {
@@ -15,6 +16,7 @@
   $: goto = $gotoStore
 
   export let webhookModal
+  export let initialProjectIds = []
 
   let name
   let selectedTrigger
@@ -35,14 +37,18 @@
         triggerVal.stepId,
         triggerVal
       )
-      const automation = await automationStore.actions.create(name, trigger)
+      const automation = await automationStore.actions.create(
+        name,
+        trigger,
+        initialProjectIds.length ? initialProjectIds : undefined
+      )
       if (triggerVal.stepId === TriggerStepID.WEBHOOK) {
         webhookModal.show()
       }
       notifications.success(`Automation ${name} created`)
       goto(`/builder/workspace/${workspaceId}/automation/${automation._id}`)
     } catch (error) {
-      notifications.error("Error creating automation")
+      notifications.error(getErrorMessage(error) || "Error creating automation")
     }
   }
 
@@ -81,7 +87,7 @@
             <Icon
               name={trigger.icon}
               size="M"
-              color="var(--spectrum-global-color-static-gray-50)"
+              color="var(--spectrum-global-color-gray-900)"
             />
           </div>
           <Body size="S">{trigger.name}</Body>
@@ -96,6 +102,14 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     grid-gap: var(--spectrum-alias-grid-baseline);
+    --automation-step-icon-trigger-color: var(--color-green-200);
+  }
+
+  :global(.spectrum--dark) .item-list,
+  :global(.spectrum--darkest) .item-list,
+  :global(.spectrum--midnight) .item-list,
+  :global(.spectrum--nord) .item-list {
+    --automation-step-icon-trigger-color: var(--color-green-600);
   }
 
   .item {
@@ -112,8 +126,7 @@
   }
 
   .icon-container {
-    background-color: #215f9e;
-    border: 0.5px solid #467db4;
+    background-color: var(--automation-step-icon-trigger-color);
     padding: 4px;
     border-radius: 8px;
   }

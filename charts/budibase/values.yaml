@@ -2,9 +2,11 @@
 imagePullSecrets: []
 
 podDisruptionBudget:
-  # -- Whether to create a PodDisruptionBudget for the services.
-  enabled: false
-  # -- The minimum number of available pods for the services.
+  # -- Whether to create PodDisruptionBudgets for the services.
+  # Enabled by default. Requires replicaCount >= 2 per service to avoid blocking voluntary disruptions.
+  enabled: true
+  # -- Default minimum number of available pods across all services.
+  # Can be overridden per-service via services.<name>.pdb.minAvailable.
   minAvailable: 1
 
 # -- Override the name of the deployment. Defaults to {{ .Chart.Name }}.
@@ -51,6 +53,14 @@ awsAlbIngress:
   # -- Time in seconds ALB waits for in-flight requests during target deregistration.
   # This allows graceful connection draining during pod rollouts.
   deregistrationDelay: 30
+  # -- ALB access logging to S3.
+  # The bucket must already exist in the same region as the ALB, with a bucket policy
+  # allowing the regional ELB log-delivery principal to write to it.
+  accessLogs:
+    enabled: false
+    bucket: ""
+    # -- Object key prefix within the bucket (logs land under <prefix>/AWSLogs/...).
+    prefix: ""
 
 # -- Sets the tolerations for all pods created by this chart. Should not ordinarily need to be changed.
 # See <https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/> for more information
@@ -67,6 +77,11 @@ globals:
   # -- The version of Budibase to deploy. Defaults to what's specified by {{ .Chart.AppVersion }}.
   # Ends up being used as the image version tag for the apps, proxy, and worker images.
   appVersion: ""
+  # -- Opaque value stamped onto every pod template as an annotation. Changing it
+  # (e.g. to a fresh timestamp on each deploy) triggers a rolling restart of the
+  # pods without changing the image, which is useful for picking up mutable tags
+  # or externally-managed config. Leave empty to disable (no annotation is added).
+  deployTimestamp: ""
   # -- Sets the environment variable BUDIBASE_ENVIRONMENT for the apps and worker pods. Should not
   # ordinarily need to be changed.
   budibaseEnv: PRODUCTION
@@ -167,7 +182,24 @@ services:
     # @ignore (you shouldn't need to change this)
     port: 10000
     # -- The number of proxy replicas to run.
-    replicaCount: 1
+    replicaCount: 2
+    # -- Image pull policy for the proxy pods. Release tags are immutable, so
+    # IfNotPresent avoids a registry round-trip on every pod start. Set to Always
+    # if you deploy a mutable tag (e.g. "latest" or a shared "develop" tag).
+    imagePullPolicy: IfNotPresent
+    # -- Rolling update strategy for the proxy Deployment. maxUnavailable: 0 keeps
+    # the rollout zero-downtime; raise maxSurge (int or percentage, e.g. "25%") to
+    # replace more pods at once and speed up rollouts when spare capacity exists.
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    # -- The DNS resolver the nginx proxy uses to resolve upstreams at request time.
+    # MUST be an IP address (nginx resolves this once at config-load and exits fatally
+    # if it is an unresolvable DNS name). Leave empty to auto-detect the kube-dns
+    # ClusterIP at install/upgrade time; only set this if auto-detection cannot run
+    # (e.g. restricted RBAC for `lookup`) — then use your cluster's DNS ClusterIP,
+    # e.g. `kubectl -n kube-system get svc kube-dns -o jsonpath='{.spec.clusterIP}'`.
+    resolver: ""
     # @ignore (you should never need to change this)
     upstreams:
       apps: "http://app-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.apps.port }}"
@@ -176,9 +208,17 @@ services:
       couchdb: "http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}"
     # -- The time in seconds to wait before sending SIGKILL after SIGTERM.
     # Must be greater than preStopDelaySeconds to allow graceful shutdown.
-    terminationGracePeriodSeconds: 60
+    terminationGracePeriodSeconds: 70
     # -- Seconds to sleep before SIGTERM to allow load balancer deregistration.
-    preStopDelaySeconds: 10
+    preStopDelaySeconds: 45
+    # -- Pod readiness gates for the proxy pods. Useful for ALB target group
+    # health tracking with the AWS Load Balancer Controller.
+    # Example: [{conditionType: "target-health.elbv2.k8s.aws/my-tgb"}]
+    readinessGates: []
+    # -- PodDisruptionBudget settings for the proxy service.
+    # Requires podDisruptionBudget.enabled to be true.
+    # Set minAvailable to override the global podDisruptionBudget.minAvailable for this service.
+    pdb: {}
     # -- The resources to use for proxy pods. See
     # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
     # for more information on how to set these.
@@ -194,9 +234,11 @@ services:
         port: 10000
         scheme: HTTP
       # @ignore
-      failureThreshold: 40
+      failureThreshold: 24
       # @ignore
-      periodSeconds: 3
+      periodSeconds: 5
+      # @ignore
+      timeoutSeconds: 1
     # -- Readiness probe configuration for proxy pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
@@ -253,7 +295,17 @@ services:
     # @ignore (you shouldn't need to change this)
     port: 4002
     # -- The number of apps replicas to run.
-    replicaCount: 1
+    replicaCount: 2
+    # -- Image pull policy for the apps pods. Release tags are immutable, so
+    # IfNotPresent avoids a registry round-trip on every pod start. Set to Always
+    # if you deploy a mutable tag (e.g. "latest" or a shared "develop" tag).
+    imagePullPolicy: IfNotPresent
+    # -- Rolling update strategy for the apps Deployment. maxUnavailable: 0 keeps
+    # the rollout zero-downtime; raise maxSurge (int or percentage, e.g. "25%") to
+    # replace more pods at once and speed up rollouts when spare capacity exists.
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
     # -- The log level for the apps service.
     logLevel: info
     # -- Whether or not to log HTTP requests to the apps service.
@@ -265,12 +317,20 @@ services:
     # -- The amount of time to wait between requesting a shutdown and killing the
     # container. This is used to give the apps service time to finish processing
     # any requests before shutting down. You shouldn't need to change this.
-    terminationGracePeriodSeconds: 60
+    terminationGracePeriodSeconds: 70
     # -- Seconds to wait after pod is Ready before adding to endpoints.
     # Ensures pods are stable before receiving traffic.
     minReadySeconds: 10
     # -- Seconds to sleep before SIGTERM to allow load balancer deregistration.
-    preStopDelaySeconds: 5
+    preStopDelaySeconds: 45
+    # -- Pod readiness gates for the apps pods. Useful for ALB target group
+    # health tracking with the AWS Load Balancer Controller.
+    # Example: [{conditionType: "target-health.elbv2.k8s.aws/my-tgb"}]
+    readinessGates: []
+    # -- PodDisruptionBudget settings for the apps service.
+    # Requires podDisruptionBudget.enabled to be true.
+    # Set minAvailable to override the global podDisruptionBudget.minAvailable for this service.
+    pdb: {}
     # -- Extra environment variables to set for apps pods. Takes a list of
     # name=value pairs.
     extraEnv: []
@@ -292,9 +352,11 @@ services:
         port: 4002
         scheme: HTTP
       # @ignore
-      failureThreshold: 30
+      failureThreshold: 24
       # @ignore
-      periodSeconds: 3
+      periodSeconds: 5
+      # @ignore
+      timeoutSeconds: 1
     # -- Readiness probe configuration for apps pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
@@ -308,7 +370,9 @@ services:
       # @ignore
       periodSeconds: 3
       # @ignore
-      failureThreshold: 1
+      failureThreshold: 3
+      # @ignore
+      timeoutSeconds: 5
     # -- Liveness probe configuration for apps pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
@@ -320,9 +384,11 @@ services:
         port: 4002
         scheme: HTTP
       # @ignore
-      failureThreshold: 3
+      failureThreshold: 5
       # @ignore
       periodSeconds: 5
+      # @ignore
+      timeoutSeconds: 5
     autoscaling:
       # -- Whether to enable horizontal pod autoscaling for the apps service.
       enabled: false
@@ -351,10 +417,14 @@ services:
     # -- Whether or not to enable the automation worker service. If you disable this,
     # automations will be processed by the apps service.
     enabled: true
+    # -- Image pull policy for the automation worker pods. Release tags are
+    # immutable, so IfNotPresent avoids a registry round-trip on every pod start.
+    # Set to Always if you deploy a mutable tag (e.g. "latest").
+    imagePullPolicy: IfNotPresent
     # @ignore (you shouldn't need to change this)
     port: 4002
     # -- The number of automation worker replicas to run.
-    replicaCount: 1
+    replicaCount: 2
     # -- The log level for the automation worker service.
     logLevel: info
     # -- The resources to use for automation worker pods. See
@@ -365,7 +435,17 @@ services:
     # the container. This is used to give the automation worker service time to
     # finish processing any requests before shutting down. You shouldn't need to
     # change this.
-    terminationGracePeriodSeconds: 60
+    terminationGracePeriodSeconds: 70
+    # -- Seconds to sleep before SIGTERM to allow load balancer deregistration.
+    preStopDelaySeconds: 45
+    # -- Pod readiness gates for the automation worker pods. Useful for ALB
+    # target group health tracking with the AWS Load Balancer Controller.
+    # Example: [{conditionType: "target-health.elbv2.k8s.aws/my-tgb"}]
+    readinessGates: []
+    # -- PodDisruptionBudget settings for the automation worker service.
+    # Requires podDisruptionBudget.enabled to be true.
+    # Set minAvailable to override the global podDisruptionBudget.minAvailable for this service.
+    pdb: {}
     # -- Extra environment variables to set for automation worker pods. Takes a list of
     # name=value pairs.
     extraEnv: []
@@ -388,9 +468,11 @@ services:
         port: 4002
         scheme: HTTP
       # @ignore
-      failureThreshold: 30
+      failureThreshold: 12
       # @ignore
-      periodSeconds: 3
+      periodSeconds: 30
+      # @ignore
+      timeoutSeconds: 1
     # -- Readiness probe configuration for automation worker pods. You shouldn't
     # need to change this, but if you want to you can find more information
     # here:
@@ -405,7 +487,9 @@ services:
       # @ignore
       periodSeconds: 3
       # @ignore
-      failureThreshold: 1
+      failureThreshold: 3
+      # @ignore
+      timeoutSeconds: 5
     # -- Liveness probe configuration for automation worker pods. You shouldn't
     # need to change this, but if you want to you can find more information
     # here:
@@ -418,9 +502,11 @@ services:
         port: 4002
         scheme: HTTP
       # @ignore
-      failureThreshold: 3
+      failureThreshold: 5
       # @ignore
       periodSeconds: 30
+      # @ignore
+      timeoutSeconds: 5
     autoscaling:
       # -- Whether to enable horizontal pod autoscaling for the apps service.
       enabled: false
@@ -449,7 +535,17 @@ services:
     # @ignore (you shouldn't need to change this)
     port: 4003
     # -- The number of worker replicas to run.
-    replicaCount: 1
+    replicaCount: 2
+    # -- Image pull policy for the worker pods. Release tags are immutable, so
+    # IfNotPresent avoids a registry round-trip on every pod start. Set to Always
+    # if you deploy a mutable tag (e.g. "latest" or a shared "develop" tag).
+    imagePullPolicy: IfNotPresent
+    # -- Rolling update strategy for the worker Deployment. maxUnavailable: 0 keeps
+    # the rollout zero-downtime; raise maxSurge (int or percentage, e.g. "25%") to
+    # replace more pods at once and speed up rollouts when spare capacity exists.
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
     # -- The log level for the worker service.
     logLevel: info
     # -- Whether or not to log HTTP requests to the worker service.
@@ -462,12 +558,20 @@ services:
     # the container. This is used to give the worker service time to finish
     # processing any requests before shutting down. You shouldn't need to change
     # this.
-    terminationGracePeriodSeconds: 60
+    terminationGracePeriodSeconds: 70
     # -- Seconds to wait after pod is Ready before adding to endpoints.
     # Ensures pods are stable before receiving traffic.
     minReadySeconds: 10
     # -- Seconds to sleep before SIGTERM to allow load balancer deregistration.
-    preStopDelaySeconds: 10
+    preStopDelaySeconds: 45
+    # -- Pod readiness gates for the worker pods. Useful for ALB target group
+    # health tracking with the AWS Load Balancer Controller.
+    # Example: [{conditionType: "target-health.elbv2.k8s.aws/my-tgb"}]
+    readinessGates: []
+    # -- PodDisruptionBudget settings for the worker service.
+    # Requires podDisruptionBudget.enabled to be true.
+    # Set minAvailable to override the global podDisruptionBudget.minAvailable for this service.
+    pdb: {}
     # -- Extra environment variables to set for worker pods. Takes a list of
     # name=value pairs.
     extraEnv: []
@@ -489,9 +593,11 @@ services:
         port: 4003
         scheme: HTTP
       # @ignore
-      failureThreshold: 40
+      failureThreshold: 24
       # @ignore
-      periodSeconds: 3
+      periodSeconds: 5
+      # @ignore
+      timeoutSeconds: 1
     # -- Readiness probe configuration for worker pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
@@ -506,6 +612,8 @@ services:
       periodSeconds: 5
       # @ignore
       failureThreshold: 3
+      # @ignore
+      timeoutSeconds: 5
     # -- Liveness probe configuration for worker pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
@@ -517,9 +625,11 @@ services:
         port: 4003
         scheme: HTTP
       # @ignore
-      failureThreshold: 3
+      failureThreshold: 5
       # @ignore
       periodSeconds: 5
+      # @ignore
+      timeoutSeconds: 5
     autoscaling:
       # -- Whether to enable horizontal pod autoscaling for the worker service.
       enabled: false
@@ -616,11 +726,36 @@ services:
     # -- Whether or not to deploy the litellm gateway.
     enabled: false
     # -- litellm image to use.
-    image: ghcr.io/berriai/litellm:main-latest
+    image: ghcr.io/berriai/litellm:main-v1.83.10-stable
     # -- Port exposed by the litellm container.
     port: 4000
     # -- Number of litellm replicas.
-    replicaCount: 1
+    replicaCount: 2
+    # -- The time in seconds to wait before sending SIGKILL after SIGTERM.
+    terminationGracePeriodSeconds: 70
+    # -- Seconds to sleep before SIGTERM to allow load balancer deregistration.
+    preStopDelaySeconds: 45
+    # -- Pod readiness gates for the litellm pods. Useful for ALB target group
+    # health tracking with the AWS Load Balancer Controller.
+    # Example: [{conditionType: "target-health.elbv2.k8s.aws/my-tgb"}]
+    readinessGates: []
+    # -- PodDisruptionBudget settings for the litellm service.
+    # Requires podDisruptionBudget.enabled to be true.
+    # Set minAvailable to override the global podDisruptionBudget.minAvailable for this service.
+    pdb: {}
+    # -- Startup probe configuration for litellm pods. Uses a TCP socket check
+    # because litellm doesn't expose a dedicated /health endpoint on startup.
+    # @default -- TCP socket check on the litellm port.
+    startupProbe:
+      # @ignore
+      tcpSocket:
+        port: 4000
+      # @ignore
+      failureThreshold: 24
+      # @ignore
+      periodSeconds: 5
+      # @ignore
+      timeoutSeconds: 1
     # -- Resources for litellm pods.
     resources: {}
     # -- Extra environment variables for the litellm container.
@@ -639,6 +774,9 @@ services:
     saltKey: ""
     # -- The master key to use for litellm.
     masterKey: ""
+    # -- The Budibase AI virtual key (BBAI_LITELLM_KEY) used by agents. When set
+    # it is rendered onto both the app service and the automation worker.
+    bbaiKey: ""
     # -- Optional username for LiteLLM Admin UI login.
     # If not set, LiteLLM uses its built-in defaults.
     uiUsername: ""
@@ -652,6 +790,9 @@ services:
         store_prompts_in_spend_logs: true
       litellm_settings:
         drop_params: true
+        extra_spend_tag_headers:
+          - "x-litellm-tags"
+        disable_add_user_agent_to_request_tags: true
         num_retries: 3
         retry_after: 5
         retry_policy:
@@ -743,7 +884,7 @@ couchdb:
     # @ignore
     repository: budibase/database
     # @ignore
-    tag: "2.0.0"
+    tag: "2.1.0"
     # @ignore
     pullPolicy: Always
 

@@ -2,6 +2,7 @@
   import { goto } from "@roxi/routify"
   import { Button, Table, Modal } from "@budibase/bbui"
   import { queries } from "@/stores/builder"
+  import { hasRestTemplate } from "@/stores/builder/datasources"
   import CapitaliseRenderer from "@/components/common/renderers/CapitaliseRenderer.svelte"
   import RestImportButton from "./RestImportButton.svelte"
   import RestImportQueriesModal from "./RestImportQueriesModal.svelte"
@@ -24,7 +25,7 @@
   $: supportsViews =
     datasource.source === "POSTGRES" || datasource.source === "MYSQL"
   $: isRestDatasource = datasource?.source === "REST"
-  $: isTemplateDatasource = Boolean(datasource?.restTemplate)
+  $: isTemplateDatasource = hasRestTemplate(datasource)
   $: showImportButton = isRestDatasource && !isTemplateDatasource
   $: createQueryLabel = isRestDatasource ? "Add action" : "Create new query"
 </script>

@@ -1,5 +1,6 @@
+import { utils } from "@budibase/backend-core"
 import { ContextEmitter } from "@budibase/types"
-import { Response } from "node-fetch"
+import { RequestInit, Response } from "node-fetch"
 
 export function hasNullFilters(filters: any[] = []) {
   return (
@@ -22,6 +23,15 @@ export async function getFetchResponse(fetched: Response) {
     message = "Failed to retrieve response"
   }
   return { status, message }
+}
+
+export async function fetchWithBlacklist(
+  url: string,
+  request: RequestInit = {}
+): Promise<Response> {
+  return utils.fetchWithBlacklist(url, request, {
+    returnRedirectWithoutLocation: true,
+  })
 }
 
 // need to make sure all ctx structures have the

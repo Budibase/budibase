@@ -1,10 +1,16 @@
-import type { ChatConversation, SlackConversationScope } from "@budibase/types"
+import {
+  AgentChannelProvider,
+  type ChatConversation,
+  type SlackConversationScope,
+  type WebhookChatCompleteResult,
+} from "@budibase/types"
 import {
   extractSlackMessageContent,
+  formatSlackAssistantReply,
+  formatSlackMrkdwn,
   isSlackDirectMessage,
   matchesSlackConversationScope,
   pickSlackConversation,
-  stripSlackMentions,
 } from "../slack"
 
 const makeChat = (
@@ -19,7 +25,7 @@ const makeChat = (
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
   channel: {
-    provider: "slack",
+    provider: AgentChannelProvider.SLACK,
     channelId: "C123",
     threadId: "slack:C123:1700000000.100",
     externalUserId: "user-1",
@@ -28,11 +34,72 @@ const makeChat = (
 })
 
 describe("slack webhook helpers", () => {
-  it("strips Slack mentions from message text", () => {
-    expect(stripSlackMentions("<@U123> ask hello")).toEqual("ask hello")
+  it("formats markdown emphasis and headings for Slack mrkdwn", () => {
+    const input = [
+      "# Summary",
+      "This is **bold** and __also bold__.",
+      "This is *italic* and ~~removed~~.",
+      "- **First** item",
+      "  * second item",
+      "+ third item",
+    ].join("\n")
+
+    expect(formatSlackMrkdwn(input)).toEqual(
+      [
+        "*Summary*",
+        "This is *bold* and *also bold*.",
+        "This is _italic_ and ~removed~.",
+        "• *First* item",
+        "  • second item",
+        "• third item",
+      ].join("\n")
+    )
+  })
+
+  it("leaves markdown links and code untouched when formatting Slack mrkdwn", () => {
+    const input = [
+      "Use **bold** outside links.",
+      "Leave [**docs**](https://example.com/docs) alone.",
+      "Keep `**inline code**` alone.",
+      "```",
+      "# code heading",
+      "**code bold**",
+      "- code bullet",
+      "```",
+    ].join("\n")
+
+    expect(formatSlackMrkdwn(input)).toEqual(
+      [
+        "Use *bold* outside links.",
+        "Leave [**docs**](https://example.com/docs) alone.",
+        "Keep `**inline code**` alone.",
+        "```",
+        "# code heading",
+        "**code bold**",
+        "- code bullet",
+        "```",
+      ].join("\n")
+    )
+  })
+
+  it("formats assistant replies before returning them to Slack", async () => {
+    const result: WebhookChatCompleteResult = {
+      messages: [],
+      assistantText: "## Next steps\nUse **bold** text.",
+      title: "Mock conversation",
+    }
+
+    await expect(
+      formatSlackAssistantReply({
+        agentId: "agent-1",
+        result,
+        isDirectMessage: false,
+      })
+    ).resolves.toEqual("*Next steps*\nUse *bold* text.")
   })
 
   it.each([
+    ["<@U123> ask hello", "ask hello"],
     ["hello there", "hello there"],
     ["ask hello there", "ask hello there"],
     ["/new start fresh", "/new start fresh"],
@@ -71,7 +138,7 @@ describe("slack webhook helpers", () => {
     }
 
     const channel = (overrides = {}) => ({
-      provider: "slack" as const,
+      provider: AgentChannelProvider.SLACK,
       channelId: "C123",
       threadId: "slack:C123:1700000000.100",
       externalUserId: "user-1",
@@ -128,7 +195,7 @@ describe("slack webhook helpers", () => {
       _id: "other-user",
       updatedAt: "2026-01-01T00:59:00.000Z",
       channel: {
-        provider: "slack",
+        provider: AgentChannelProvider.SLACK,
         channelId: "C123",
         threadId: "slack:C123:1700000000.100",
         externalUserId: "user-2",

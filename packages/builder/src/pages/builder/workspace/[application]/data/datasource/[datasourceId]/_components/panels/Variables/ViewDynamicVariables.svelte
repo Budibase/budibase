@@ -2,10 +2,10 @@
   import { Body, Table, BoldRenderer, CodeRenderer } from "@budibase/bbui"
   import { queries } from "@/stores/builder"
   import { goto } from "@roxi/routify"
-
   $goto
 
   export let datasource
+  export let onRowClick = undefined
 
   let dynamicVariables = []
 
@@ -18,6 +18,10 @@
   }
 
   const onClick = dynamicVariable => {
+    if (onRowClick) {
+      onRowClick(dynamicVariable)
+      return
+    }
     const queryId = dynamicVariable.queryId
     queries.select({ _id: queryId })
     $goto(`../../query/${queryId}`)

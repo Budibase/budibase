@@ -2,6 +2,22 @@ import { context, roles } from "@budibase/backend-core"
 import { ContextUserMetadata, UserCtx, UserMetadata } from "@budibase/types"
 import { InternalTables } from "../db/utils"
 import { getGlobalUser } from "./global"
+import { stripSensitiveUserFields } from "./sensitiveUserFields"
+
+export function getUserFullName(user: {
+  firstName?: string
+  lastName?: string
+  email?: string
+}) {
+  const firstName = user.firstName?.trim()
+  const lastName = user.lastName?.trim()
+
+  if (firstName && lastName) {
+    return `${firstName} ${lastName}`
+  }
+
+  return firstName || lastName || undefined
+}
 
 export async function getFullUser(
   userId: string
@@ -18,16 +34,22 @@ export async function getFullUser(
     const db = context.getWorkspaceDB()
     metadata = await db.get<UserMetadata>(userId)
     delete metadata.csrfToken
+    stripSensitiveUserFields(metadata)
   } catch (err) {
     // it is fine if there is no user metadata yet
   }
-  return {
+  const mergedUser = {
     ...metadata,
     ...global,
     roleId: global.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC,
     tableId: InternalTables.USER_METADATA,
     // make sure the ID is always a local ID, not a global one
     _id: userId,
+  }
+
+  return {
+    ...mergedUser,
+    fullName: getUserFullName(mergedUser),
   }
 }
 

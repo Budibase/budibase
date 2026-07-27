@@ -3,6 +3,8 @@ import { quotas } from "@budibase/pro"
 import { utils as JsonUtils, ValidQueryNameRegex } from "@budibase/shared-core"
 import { findHBSBlocks } from "@budibase/string-templates"
 import {
+  ActionFailureReason,
+  ActionType,
   ContextUser,
   CreateDatasourceRequest,
   Datasource,
@@ -39,8 +41,13 @@ import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
+import {
+  resolveProjectIds,
+  resolveUpdatedProjectIds,
+} from "../../../utilities/projects"
 import { createImporter, getImportInfo } from "./import"
 import { ImportInfo } from "./import/sources/base"
+import { mergePreviewSchema } from "./schema"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
@@ -158,7 +165,9 @@ export async function importInfo(
     docsUrl: info.docsUrl,
     endpoints: info.endpoints || [],
     securityHeaders: info.securityHeaders || [],
+    securitySchemes: info.securitySchemes,
     staticVariables: info.staticVariables || {},
+    servers: info.servers,
   }
 }
 
@@ -175,6 +184,7 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
 
   let eventFn
   if (!query._id && !query._rev) {
+    query.projectIds = await resolveProjectIds(query.projectIds)
     query._id = generateQueryID(query.datasourceId)
     // flag to state whether the default bindings are empty strings (old behaviour) or null
     query.nullDefaultSupport = true
@@ -186,6 +196,10 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
     if (existingQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
       query.nullDefaultSupport = true
     }
+    query.projectIds = await resolveUpdatedProjectIds(
+      query.projectIds,
+      existingQuery.projectIds
+    )
     eventFn = () => events.query.updated(datasource, query)
   }
   const response = await db.put(query)
@@ -388,21 +402,18 @@ export async function preview(
   const { rows, keys, info, extra } = queryResponse
   const { previewSchema, nestedSchemaFields } = getSchemaFields(rows, keys)
 
-  // if existing schema, update to include any previous schema keys
-  if (existingSchema) {
-    for (let key of Object.keys(existingSchema)) {
-      if (!previewSchema[key]) {
-        previewSchema[key] = existingSchema[key]
-      }
-    }
-  }
+  const schema = mergePreviewSchema({
+    previewSchema,
+    existingSchema,
+    firstRow: rows?.[0],
+  })
   // remove configuration before sending event
   delete datasource.config
   await events.query.previewed(datasource, ctx.request.body)
   ctx.body = {
     rows,
     nestedSchemaFields,
-    schema: previewSchema,
+    schema,
     info,
     extra,
   }
@@ -452,7 +463,7 @@ async function execute(
     const { rows, pagination, extra, info } =
       query.queryVerb === "read" || opts.isAutomation
         ? await Runner.run<QueryResponse>(inputs)
-        : await quotas.addAction(async () => {
+        : await quotas.addAction(ActionType.CRUD, async () => {
             const response = await Runner.run<QueryResponse>(inputs)
             events.action.crudExecuted({ type: query.queryVerb })
             return response
@@ -467,6 +478,10 @@ async function execute(
       ctx.body = { data: rows, pagination, ...extra, ...info }
     }
   } catch (err: any) {
+    events.action.crudFailed({
+      type: query.queryVerb,
+      reason: ActionFailureReason.ERROR,
+    })
     ctx.throw(400, err)
   }
 }

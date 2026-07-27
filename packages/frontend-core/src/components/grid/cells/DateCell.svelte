@@ -1,8 +1,12 @@
 <script>
   import { CoreDatePickerPopoverContents, Icon, Helpers } from "@budibase/bbui"
-  import { onMount } from "svelte"
+  import { getContext, onMount } from "svelte"
   import dayjs from "dayjs"
   import GridPopover from "../overlays/GridPopover.svelte"
+  import {
+    resolveTranslationGroup,
+    resolveWorkspaceTranslations,
+  } from "@budibase/shared-core"
 
   export let value
   export let schema
@@ -14,7 +18,13 @@
 
   let isOpen
   let anchor
+  const sdk = getContext("sdk") || {}
+  const { appStore } = sdk
 
+  $: translationOverrides = resolveWorkspaceTranslations(
+    appStore ? $appStore.application?.translationOverrides : undefined
+  )
+  $: calendarLabels = resolveTranslationGroup("calendar", translationOverrides)
   $: timeOnly = schema?.timeOnly
   $: enableTime = !schema?.dateOnly
   $: ignoreTimezones = schema?.ignoreTimezones
@@ -120,6 +130,7 @@
       {timeOnly}
       {ignoreTimezones}
       {startDayOfWeek}
+      {calendarLabels}
     />
   </GridPopover>
 {/if}

@@ -69,6 +69,8 @@ describe("/api/global/tenants", () => {
   })
 
   describe("PUT /api/system/tenants/:tenantId/lock", () => {
+    const deactivationScheduledAt = "2026-07-15T12:00:00.000Z"
+
     it("allows locking tenant with valid reason", async () => {
       const user = await config.createTenant()
 
@@ -76,6 +78,7 @@ describe("/api/global/tenants", () => {
         user.tenantId,
         {
           reason: LockReason.FREE_TIER,
+          deactivationScheduledAt,
         },
         {
           headers: config.internalAPIHeaders(),
@@ -84,7 +87,8 @@ describe("/api/global/tenants", () => {
 
       expect(tenantSdk.lockTenant).toHaveBeenCalledWith(
         user.tenantId,
-        LockReason.FREE_TIER
+        LockReason.FREE_TIER,
+        deactivationScheduledAt
       )
       expect(tenantSdk.unlockTenant).not.toHaveBeenCalled()
     })
@@ -104,6 +108,49 @@ describe("/api/global/tenants", () => {
       expect(tenantSdk.lockTenant).not.toHaveBeenCalled()
     })
 
+    it("allows locking tenant without deactivationScheduledAt", async () => {
+      const user = await config.createTenant()
+
+      await config.api.tenants.lock(
+        user.tenantId,
+        {
+          reason: LockReason.FREE_TIER,
+        },
+        {
+          headers: config.internalAPIHeaders(),
+        }
+      )
+
+      expect(tenantSdk.lockTenant).toHaveBeenCalledWith(
+        user.tenantId,
+        LockReason.FREE_TIER,
+        undefined
+      )
+      expect(tenantSdk.unlockTenant).not.toHaveBeenCalled()
+    })
+
+    it("rejects deactivationScheduledAt in the past", async () => {
+      const user = await config.createTenant()
+
+      const status = 400
+      const res = await config.api.tenants.lock(
+        user.tenantId,
+        {
+          reason: LockReason.FREE_TIER,
+          deactivationScheduledAt: "2020-01-01T00:00:00.000Z",
+        },
+        {
+          status,
+          headers: config.internalAPIHeaders(),
+        }
+      )
+
+      expect(res.body.message).toContain(
+        "deactivationScheduledAt must be a date in the future"
+      )
+      expect(tenantSdk.lockTenant).not.toHaveBeenCalled()
+    })
+
     it("rejects invalid lock reason", async () => {
       const user = await config.createTenant()
 
@@ -112,6 +159,7 @@ describe("/api/global/tenants", () => {
         user.tenantId,
         {
           reason: "invalid_reason" as any,
+          deactivationScheduledAt,
         },
         {
           status,
@@ -133,6 +181,7 @@ describe("/api/global/tenants", () => {
         user.tenantId,
         {
           reason: LockReason.FREE_TIER,
+          deactivationScheduledAt,
         },
         {
           status,

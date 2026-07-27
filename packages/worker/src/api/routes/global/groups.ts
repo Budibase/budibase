@@ -19,6 +19,7 @@ function buildGroupSaveValidation() {
       users: Joi.array().optional(),
       apps: Joi.array().optional(),
       roles: Joi.object().optional(),
+      isDefault: Joi.boolean().optional(),
       builder: Joi.object({
         apps: Joi.array().items(Joi.string()).optional(),
       }).optional(),
@@ -38,6 +39,7 @@ router
   )
   .get(
     "/api/global/groups",
+    auth.builderOrAdmin,
     proMiddleware.feature.requireFeature(Feature.USER_GROUPS),
     controller.fetch
   )

@@ -1,12 +1,22 @@
-import type { PublishResourceState } from "../../api"
-import type { Agent, WorkspaceFavourite } from "../../documents"
+import type { CreateProjectRequest, PublishResourceState } from "../../api"
+import type {
+  Agent,
+  Datasource,
+  Table,
+  WorkspaceFavourite,
+} from "../../documents"
 import type { UIAutomation } from "../stores/automations"
 import type { UIWorkspaceApp } from "../workspaceApps"
 
-export type HomeType = "all" | "app" | "automation" | "agent"
-export type HomeRowType = "app" | "automation" | "agent"
+export type HomeType = "all" | "app" | "automation" | "agent" | "data"
+export type HomeRowType =
+  | "app"
+  | "automation"
+  | "agent"
+  | "datasource"
+  | "table"
 
-export type HomeSortColumn = "name" | "type" | "status" | "updated"
+export type HomeSortColumn = "name" | "type" | "projects" | "status" | "updated"
 export type HomeSortOrder = "asc" | "desc"
 
 interface HomeRowBase {
@@ -14,6 +24,7 @@ interface HomeRowBase {
   id: string
   name: string
   type: HomeRowType
+  projectIds?: string[]
   updatedAt?: string
   createdAt?: string
   favourite: WorkspaceFavourite
@@ -39,4 +50,21 @@ export interface AgentRow extends HomeRowBase {
   live: boolean
 }
 
-export type HomeRow = AppRow | AutomationRow | AgentRow
+export interface DatasourceRow extends HomeRowBase {
+  type: "datasource"
+  resource: Datasource
+}
+
+export interface TableRow extends HomeRowBase {
+  type: "table"
+  resource: Table
+}
+
+export type HomeRow =
+  | AppRow
+  | AutomationRow
+  | AgentRow
+  | DatasourceRow
+  | TableRow
+
+export type ProjectFormPayload = CreateProjectRequest

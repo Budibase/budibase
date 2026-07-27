@@ -1,8 +1,11 @@
 import { InviteUsersResponse, OIDCUser, User } from "@budibase/types"
+import { randomUUID } from "crypto"
 
 import {
   accounts as _accounts,
+  cache,
   events,
+  middleware,
   tenancy,
   withEnv,
 } from "@budibase/backend-core"
@@ -372,6 +375,90 @@ describe("/api/global/users", () => {
       expect(body.unsuccessful.length).toBe(0)
       expect(sendMailMock).toHaveBeenCalledTimes(2)
       expect(events.user.invited).toHaveBeenCalledTimes(2)
+    })
+
+    it("should persist invited creator app access when accepting the invite", async () => {
+      const email = structures.users.newEmail()
+      const workspaceId = "app_creator_invite_workspace"
+      const request = [
+        {
+          email,
+          userInfo: {
+            builder: { creator: true },
+            apps: {
+              [workspaceId]: "CREATOR",
+            },
+          },
+        },
+      ]
+
+      await config.api.users.sendMultiUserInvite(request)
+
+      const emailCall = sendMailMock.mock.calls[0][0]
+      const code = emailCall.html
+        .split("http://localhost:10000/builder/invite?code=")[1]
+        .split('"')[0]
+        .split("&")[0]
+      await config.api.users.acceptInvite(code)
+
+      const user = await config.getUser(email)
+      expect(user?.roles?.[workspaceId]).toBe("CREATOR")
+      expect(user?.builder?.creator).toBe(true)
+      expect(user?.builder?.apps).toEqual([workspaceId])
+    })
+
+    it("reconciles an OIDC login with a pending invite for the same email, regardless of casing or email verification", async () => {
+      const email = structures.users.newEmail()
+      const workspaceId = "app_oidc_invite_workspace"
+      const request = [
+        {
+          email,
+          userInfo: {
+            apps: { [workspaceId]: "BASIC" },
+          },
+        },
+      ]
+
+      await config.api.users.sendMultiUserInvite(request)
+
+      // different casing, no email_verified claim
+      const uppercaseEmail = email.toUpperCase()
+      const ssoUserId = `oidc-test-${randomUUID()}`
+      const verify: any = middleware.oidc.buildVerifyFn(userSdk.db.save, false)
+
+      const { err, user: loggedInUser } = await config.doInTenant(
+        () =>
+          new Promise<{ err: any; user: any }>(resolve => {
+            verify(
+              "https://issuer.example.com",
+              { id: ssoUserId, _json: { email: uppercaseEmail } } as any,
+              { id: ssoUserId, emails: [] } as any,
+              {} as any,
+              "id-token",
+              "access-token",
+              "refresh-token",
+              {},
+              (err: any, user: any) => resolve({ err, user })
+            )
+          })
+      )
+
+      expect(err).toBeFalsy()
+      expect(loggedInUser.email).toBe(email.toLowerCase())
+      expect(loggedInUser.roles?.[workspaceId]).toBe("BASIC")
+
+      // a single reconciled user, invite consumed
+      const remainingInvites = await config.doInTenant(() =>
+        cache.invite.getInviteCodes()
+      )
+      expect(
+        remainingInvites.some(
+          invite => invite.email.toLowerCase() === email.toLowerCase()
+        )
+      ).toBe(false)
+      expect(events.user.inviteAccepted).toHaveBeenCalledWith(
+        expect.objectContaining({ email: email.toLowerCase() })
+      )
     })
 
     it("should not be able to generate an invitation for existing user", async () => {
@@ -1108,6 +1195,14 @@ describe("/api/global/users", () => {
       await config.api.users.searchUsers({}, { status: 403, noHeaders: true })
     })
 
+    it("should throw an error if a public route is injected in the query string", async () => {
+      await config.request
+        .post("/api/global/users/search?x=/api/system/status")
+        .send({})
+        .expect("Content-Type", /json/)
+        .expect(403)
+    })
+
     it("should be able to search using logical conditions", async () => {
       const user = await config.createUser()
       const response = await config.api.users.searchUsers({
@@ -1143,6 +1238,31 @@ describe("/api/global/users", () => {
         expect(user.builder).toBeUndefined()
         expect(user.admin).toBeUndefined()
       }
+    })
+  })
+
+  describe("GET /api/global/users/tenant/:id", () => {
+    it("should reject unauthenticated access", async () => {
+      await config.request
+        .get(
+          `/api/global/users/tenant/${encodeURIComponent(config.user!.email)}`
+        )
+        .expect("Content-Type", /json/)
+        .expect(403)
+    })
+
+    it("should allow internal api access", async () => {
+      const response = await config.request
+        .get(
+          `/api/global/users/tenant/${encodeURIComponent(config.user!.email)}`
+        )
+        .set(config.internalAPIHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(response.body._id).toBe(config.user!.email)
+      expect(response.body.tenantId).toBe(config.user!.tenantId)
+      expect(response.body.userId).toBe(config.user!._id)
     })
   })
 
@@ -1334,27 +1454,6 @@ describe("/api/global/users", () => {
     })
   })
 
-  describe("POST /api/global/users/onboard", () => {
-    it("should successfully onboard a user", async () => {
-      const response = await config.api.users.onboardUser([
-        { email: structures.users.newEmail(), userInfo: {} },
-      ])
-      expect(response.successful.length).toBe(1)
-      expect(response.unsuccessful.length).toBe(0)
-    })
-
-    it("should not onboard a user who has been invited", async () => {
-      const email = structures.users.newEmail()
-      await config.api.users.sendUserInvite(sendMailMock, email)
-
-      const response = await config.api.users.onboardUser([
-        { email, userInfo: {} },
-      ])
-      expect(response.successful.length).toBe(0)
-      expect(response.unsuccessful.length).toBe(1)
-    })
-  })
-
   describe("PUT /api/global/users/tenant/owner", () => {
     it("should successfully change tenant owner email for existing user", async () => {
       const originalEmail = `original-${structures.uuid()}@example.com`
@@ -1510,6 +1609,44 @@ describe("/api/global/users", () => {
         })
         .set(config.defaultHeaders())
         .expect(403)
+    })
+
+    it("should reject authenticated users on self-hosted", async () => {
+      const originalEmail = `original-${structures.uuid()}@example.com`
+      const newEmail = `new-${structures.uuid()}@example.com`
+      const tenantId = config.getTenantId()
+
+      const tenantUser = await config.doInTenant(async () => {
+        return await userSdk.db.save(
+          structures.users.user({
+            email: originalEmail,
+            tenantId,
+            roles: {},
+          }),
+          { requirePassword: false, isAccountHolder: true }
+        )
+      })
+
+      config.selfHosted()
+      try {
+        await config.request
+          .put(`/api/global/users/tenant/owner`)
+          .send({
+            newAccountEmail: newEmail,
+            originalEmail,
+            tenantIds: [tenantId],
+          })
+          .set(config.defaultHeaders())
+          .expect(403)
+      } finally {
+        config.cloudHosted()
+      }
+
+      const unchangedUser = await config.doInTenant(async () => {
+        return await userSdk.db.getUser(tenantUser._id!)
+      })
+
+      expect(unchangedUser!.email).toBe(originalEmail)
     })
   })
 })

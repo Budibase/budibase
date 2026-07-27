@@ -507,3 +507,12 @@ export function setTableForView(viewId: string, table: Table) {
   context.viewToTableCache ??= {}
   context.viewToTableCache[viewId] = table
 }
+
+export function isDevWorkspace() {
+  const workspaceId = getWorkspaceId()
+  return conversions.isDevWorkspaceID(workspaceId)
+}
+
+export function isProdWorkspace() {
+  return !isDevWorkspace()
+}

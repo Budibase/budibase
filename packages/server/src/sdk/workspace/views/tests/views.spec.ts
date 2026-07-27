@@ -370,6 +370,128 @@ describe("table sdk", () => {
         })
       )
     })
+
+    it("should ignore deleted related tables when enriching relationship fields", async () => {
+      const tableId = basicTable._id!
+      const relatedTableId = generator.guid()
+      const table: Table = {
+        ...basicTable,
+        schema: {
+          customer: {
+            name: "customer",
+            type: FieldType.LINK,
+            relationshipType: RelationshipType.ONE_TO_MANY,
+            fieldName: "rates",
+            tableId: relatedTableId,
+          },
+        },
+      }
+
+      const getTableSpy = jest.spyOn(sdk.tables, "getTable")
+      getTableSpy.mockRejectedValueOnce({
+        statusCode: 404,
+        reason: "deleted",
+        message: "CouchDB error: deleted",
+      })
+
+      const view: ViewV2 = {
+        version: 2,
+        id: generator.guid(),
+        name: generator.guid(),
+        tableId,
+        schema: {
+          customer: {
+            visible: true,
+            columns: {
+              name: {
+                visible: true,
+                readonly: false,
+              },
+            },
+          },
+        },
+      }
+
+      const res = await enrichSchema(view, table.schema)
+
+      expect(res).toEqual(
+        expect.objectContaining({
+          ...view,
+          schema: {
+            customer: {
+              ...table.schema.customer,
+              visible: true,
+              columns: {
+                name: {
+                  visible: true,
+                  readonly: false,
+                },
+              },
+            },
+          },
+        })
+      )
+    })
+
+    it("should ignore missing external related tables when enriching relationship fields", async () => {
+      const tableId = basicTable._id!
+      const relatedTableId = generator.guid()
+      const table: Table = {
+        ...basicTable,
+        schema: {
+          customer: {
+            name: "customer",
+            type: FieldType.LINK,
+            relationshipType: RelationshipType.ONE_TO_MANY,
+            fieldName: "rates",
+            tableId: relatedTableId,
+          },
+        },
+      }
+
+      const getTableSpy = jest.spyOn(sdk.tables, "getTable")
+      getTableSpy.mockRejectedValueOnce(
+        new Error('Unable to find table named "customers"')
+      )
+
+      const view: ViewV2 = {
+        version: 2,
+        id: generator.guid(),
+        name: generator.guid(),
+        tableId,
+        schema: {
+          customer: {
+            visible: true,
+            columns: {
+              name: {
+                visible: true,
+                readonly: false,
+              },
+            },
+          },
+        },
+      }
+
+      const res = await enrichSchema(view, table.schema)
+
+      expect(res).toEqual(
+        expect.objectContaining({
+          ...view,
+          schema: {
+            customer: {
+              ...table.schema.customer,
+              visible: true,
+              columns: {
+                name: {
+                  visible: true,
+                  readonly: false,
+                },
+              },
+            },
+          },
+        })
+      )
+    })
   })
 
   describe("syncSchema", () => {

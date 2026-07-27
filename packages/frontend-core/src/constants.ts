@@ -86,8 +86,10 @@ export const PlanType = {
   TEAM: "team",
   PRO: "pro",
   BUSINESS: "business",
+  BUSINESS_PLUS: "business_plus",
   PREMIUM: "premium",
   PREMIUM_PLUS: "premium_plus",
+  PREMIUM_PLUS_TRIAL: "premium_plus_trial",
   ENTERPRISE: "enterprise",
   ENTERPRISE_BASIC_TRIAL: "enterprise_basic_trial",
 }

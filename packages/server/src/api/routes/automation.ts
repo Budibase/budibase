@@ -1,6 +1,6 @@
 import * as controller from "../controllers/automation"
 import { authorizedMiddleware as authorized } from "../../middleware/authorized"
-import { permissions } from "@budibase/backend-core"
+import { middleware, permissions } from "@budibase/backend-core"
 import { bodyResource, paramResource } from "../../middleware/resourceId"
 import {
   middleware as appInfoMiddleware,
@@ -9,6 +9,41 @@ import {
 import recaptcha from "../../middleware/recaptcha"
 import { automationValidator } from "./utils/validators"
 import { builderRoutes, endpointGroupList } from "./endpointGroups"
+import { EmailTriggerAuthType } from "@budibase/types"
+import Joi from "joi"
+
+const optionalString = Joi.string().optional().allow(null).allow("")
+const emptyString = Joi.valid(null, "").optional()
+
+const emailTriggerInputsValidator = middleware.joiValidator.body(
+  Joi.object({
+    host: Joi.string().required(),
+    port: Joi.number().required(),
+    secure: Joi.boolean().required(),
+    username: Joi.string().required(),
+    authType: Joi.string()
+      .valid(...Object.values(EmailTriggerAuthType))
+      .default(EmailTriggerAuthType.PASSWORD),
+    password: Joi.when("authType", {
+      is: EmailTriggerAuthType.OAUTH2,
+      then: emptyString,
+      otherwise: Joi.string().required(),
+    }),
+    datasourceId: Joi.when("authType", {
+      is: EmailTriggerAuthType.OAUTH2,
+      then: Joi.string().required(),
+      otherwise: emptyString,
+    }),
+    authConfigId: Joi.when("authType", {
+      is: EmailTriggerAuthType.OAUTH2,
+      then: Joi.string().required(),
+      otherwise: emptyString,
+    }),
+    mailbox: optionalString,
+    automationId: optionalString,
+  }),
+  { allowUnknown: false }
+)
 
 const authorizedRoutes = endpointGroupList.group(
   {
@@ -25,6 +60,12 @@ builderRoutes
   .get("/api/automations/trigger/list", controller.getTriggerList)
   .get("/api/automations/action/list", controller.getActionList)
   .get("/api/automations/definitions/list", controller.getDefinitionList)
+  .post(
+    "/api/automations/email/test-connection",
+    appInfoMiddleware({ appType: AppType.DEV }),
+    emailTriggerInputsValidator,
+    controller.testEmailConnection
+  )
   .get("/api/automations", controller.fetch)
   .get("/api/automations/:id", paramResource("id"), controller.find)
   .put(

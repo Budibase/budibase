@@ -17,7 +17,7 @@
     Tag,
   } from "@budibase/bbui"
   import { createLocalStorageStore, derivedMemo } from "@budibase/frontend-core"
-  import { url, goto, isActive } from "@roxi/routify"
+  import { url, goto } from "@roxi/routify"
   import BBLogo from "assets/BBLogo.svelte"
   import {
     appStore,
@@ -32,17 +32,17 @@
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import {
     appsStore,
-    featureFlags,
     licensing,
     enrichedApps,
     agentsStore,
+    featureFlags,
   } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
   import SideNavUserSettings from "./SideNavUserSettings.svelte"
   import { onDestroy, setContext } from "svelte"
   import {
-    FeatureFlag,
     type Datasource,
+    FeatureFlag,
     type Query,
     type Table,
     type UIAutomation,
@@ -52,7 +52,6 @@
     type WorkspaceFavourite,
     PublishResourceState,
     WorkspaceResource,
-    AIConfigType,
   } from "@budibase/types"
   import { derived, get, type Readable } from "svelte/store"
   import { IntegrationTypes } from "@/constants/backend"
@@ -71,17 +70,12 @@
   export const show = () => {
     pinned.set(true)
   }
+  export let canInviteUsers = false
+  export let canManageConnections = false
   export let onInviteUser: () => void = () => {}
 
-  $: automationErrors = getAutomationErrors($enrichedApps || [], workspaceId)
-  $: automationErrorCount = Object.keys(automationErrors).length
   $: backupErrors = getBackupErrors($enrichedApps || [], workspaceId)
   $: backupErrorCount = Object.keys(backupErrors).length
-
-  const getAutomationErrors = (apps: EnrichedApp[], workspaceId: string) => {
-    const target = apps.find(app => app.devId === workspaceId)
-    return target?.automationErrors || {}
-  }
 
   const getBackupErrors = (apps: EnrichedApp[], workspaceId: string) => {
     const target = apps.find(app => app.devId === workspaceId)
@@ -301,7 +295,7 @@
           const entry: UIFavouriteResource = {
             name: resource.name,
             icon: isRestQuery
-              ? "webhooks-logo"
+              ? "globe-simple"
               : ResourceIcons[favourite.resourceType],
           }
 
@@ -438,7 +432,7 @@
   <CreateWorkspaceModal />
 </Modal>
 
-{#if workspaceId && $featureFlags[FeatureFlag.WORKSPACE_HOME]}
+{#if workspaceId}
   <Modal bind:this={createAutomationModal}>
     <CreateAutomationModal {webhookModal} />
   </Modal>
@@ -448,9 +442,7 @@
 
   <WorkspaceAppModal bind:this={workspaceAppModal} workspaceApp={null} />
 
-  {#if $featureFlags.AI_AGENTS}
-    <AgentModal bind:this={agentModal} />
-  {/if}
+  <AgentModal bind:this={agentModal} />
 
   <Modal bind:this={createTableModal} closeOnOutsideClick={false}>
     <CreateTableModal bind:name={tableName} afterSave={handleTableSave} />
@@ -474,7 +466,7 @@
       <div>
         <a
           class="logo_link"
-          href={$url("./")}
+          href={$url("./home")}
           aria-label="Workspace home"
           title="Workspace home"
           on:click={keepCollapsed}
@@ -510,131 +502,83 @@
     <div class="nav_body">
       <div class="links core">
         {#if workspaceId}
-          <div
-            class="core-sections"
-            class:workspace_home={$featureFlags[FeatureFlag.WORKSPACE_HOME]}
-          >
+          <div class="core-sections workspace_home">
             <div>
-              {#if $featureFlags[FeatureFlag.WORKSPACE_HOME]}
+              <SideNavLink
+                icon="house"
+                text="Home"
+                url={$url("./home")}
+                {collapsed}
+                on:click={keepCollapsed}
+              />
+              {#if $featureFlags[FeatureFlag.AI_AGENT_ACTIVITY]}
                 <SideNavLink
-                  icon="house"
-                  text="Home"
-                  url={$url("./home")}
+                  icon="pulse"
+                  text="Activity"
+                  url={$url("./activity")}
                   {collapsed}
                   on:click={keepCollapsed}
                 />
-
-                <ActionMenu
-                  align={PopoverAlignment.RightContextMenu}
-                  portalTarget={".nav .create-popover-container"}
-                  animate={false}
-                  on:open={() => (createMenuOpen = true)}
-                  on:close={() => (createMenuOpen = false)}
-                >
-                  <svelte:fragment slot="control" let:open>
-                    <SideNavLink
-                      icon="plus"
-                      text="Create"
-                      {collapsed}
-                      forceActive={open}
-                      on:click={keepCollapsed}
-                    />
-                  </svelte:fragment>
-
-                  {#if $featureFlags.AI_AGENTS}
-                    <MenuItem icon="sparkle" on:click={openCreateAgent}>
-                      Agent
-                      <div slot="right">
-                        <Tag emphasized>Beta</Tag>
-                      </div>
-                    </MenuItem>
-                  {/if}
-                  <MenuItem icon="path" on:click={openCreateAutomation}>
-                    Automation
-                  </MenuItem>
-                  <MenuItem icon="browsers" on:click={openCreateApp}>
-                    App
-                  </MenuItem>
-
-                  <MenuSeparator />
-                  <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
-                    Connection
-                  </MenuItem>
-                  <MenuItem icon="grid-nine" on:click={openCreateTable}>
-                    Table
-                  </MenuItem>
-                  <MenuItem
-                    icon="globe-simple"
-                    on:click={() => goToCreate("apis/new")}
-                  >
-                    API request
-                  </MenuItem>
-                </ActionMenu>
-              {:else}
-                <SideNavLink
-                  icon="browser"
-                  text="Apps"
-                  url={$url("./design")}
-                  {collapsed}
-                  on:click={keepCollapsed}
-                />
-                <span
-                  class="root-nav"
-                  class:selected={$isActive("./automation")}
-                >
-                  {#if collapsed && automationErrorCount}
-                    <span class="status-indicator">
-                      <StatusLight
-                        color="var(--spectrum-global-color-static-red-600)"
-                        size="M"
-                      />
-                    </span>
-                  {/if}
-                  <SideNavLink
-                    icon="path"
-                    text="Automations"
-                    url={$url("./automation")}
-                    {collapsed}
-                    on:click={keepCollapsed}
-                  >
-                    <svelte:fragment slot="right">
-                      {#if automationErrorCount}
-                        <StatusLight
-                          color="var(--spectrum-global-color-static-red-600)"
-                          size="M"
-                        />
-                      {/if}
-                    </svelte:fragment>
-                  </SideNavLink>
-                </span>
-                {#if $featureFlags.AI_AGENTS}
-                  <SideNavLink
-                    icon="memory"
-                    text="Agents"
-                    url={$url("./agent")}
-                    {collapsed}
-                    on:click={keepCollapsed}
-                  >
-                    <svelte:fragment slot="right">
-                      <div class="beta-tag-wrapper">
-                        <Tag emphasized>Beta</Tag>
-                      </div>
-                    </svelte:fragment>
-                  </SideNavLink>
-                {/if}
               {/if}
+
+              <ActionMenu
+                align={PopoverAlignment.RightContextMenu}
+                portalTarget={".nav .create-popover-container"}
+                animate={false}
+                on:open={() => (createMenuOpen = true)}
+                on:close={() => (createMenuOpen = false)}
+              >
+                <svelte:fragment slot="control" let:open>
+                  <SideNavLink
+                    icon="plus"
+                    text="Create"
+                    {collapsed}
+                    forceActive={open}
+                    on:click={keepCollapsed}
+                  />
+                </svelte:fragment>
+
+                <MenuItem icon="sparkle" on:click={openCreateAgent}>
+                  Agent
+                  <div slot="right">
+                    <Tag emphasized>Beta</Tag>
+                  </div>
+                </MenuItem>
+                <MenuItem icon="path" on:click={openCreateAutomation}>
+                  Automation
+                </MenuItem>
+                <MenuItem icon="browsers" on:click={openCreateApp}>
+                  App
+                </MenuItem>
+
+                <MenuSeparator />
+                <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
+                  Connection
+                </MenuItem>
+                <MenuItem icon="grid-nine" on:click={openCreateTable}>
+                  Table
+                </MenuItem>
+                <MenuItem
+                  icon="globe-simple"
+                  on:click={() => goToCreate("apis/new")}
+                >
+                  API request
+                </MenuItem>
+              </ActionMenu>
             </div>
 
             <div class="core-secondary">
-              <SideNavLink
-                icon="sparkle"
-                text="AI models"
-                {collapsed}
-                on:click={() => {
-                  bb.settings(`/ai-config/${AIConfigType.COMPLETIONS}`)
-                  keepCollapsed()
-                }}
-              />
+              {#if canManageConnections}
+                <SideNavLink
+                  icon="cube"
+                  text="Connections"
+                  {collapsed}
+                  on:click={() => {
+                    bb.settings(`/connections/apis`)
+                    keepCollapsed()
+                  }}
+                />
+              {/if}
               <SideNavLink
                 icon="globe-simple"
                 text="API explorer"
@@ -649,12 +593,14 @@
                 {collapsed}
                 on:click={keepCollapsed}
               />
-              <SideNavLink
-                icon="user-plus"
-                text="Invite users"
-                on:click={openInviteUser}
-                {collapsed}
-              />
+              {#if canInviteUsers}
+                <SideNavLink
+                  icon="user-plus"
+                  text="Invite users"
+                  on:click={openInviteUser}
+                  {collapsed}
+                />
+              {/if}
               <span class="root-nav" class:error={backupErrorCount}>
                 {#if collapsed && backupErrorCount}
                   <span class="status-indicator">
@@ -702,8 +648,8 @@
                   size="XS"
                   textAlign="left"
                 >
-                  You have no favourites yet! Favourite an automation, app,
-                  table or API for quicker access.
+                  You have no favourites yet! Favourite an app, automation,
+                  agent, table or API for quicker access.
                 </Body>
                 <Link
                   href="https://docs.budibase.com/docs/favouriting-in-a-workspace"
@@ -794,7 +740,7 @@
             keepCollapsed()
           }}
         />
-        {#if $licensing.isBusinessPlan || $licensing.isEnterprisePlan || $licensing.isEnterpriseTrial}
+        {#if $licensing.isBusinessPlan || $licensing.isEnterprisePlan || $licensing.isTrialPlan}
           <SideNavLink
             icon="paper-plane-tilt"
             text="Email support"
@@ -1067,15 +1013,6 @@
     margin: 0 0 10px 0;
   }
 
-  .nav-section-title {
-    margin-top: 10px;
-    margin-bottom: 10px;
-  }
-  .nav-section-title hr {
-    border: none;
-    border-top: 1px solid var(--spectrum-global-color-gray-200);
-    margin: 0;
-  }
   .favourite-empty-state {
     display: flex;
     flex-direction: column;
@@ -1101,9 +1038,6 @@
   }
 
   @container (max-width: 239px) {
-    .nav-section-title {
-      transition: all var(--nav-transition-ms) var(--nav-transition-ease);
-    }
     .favourite-wrapper {
       display: none;
       transition: all var(--nav-transition-ms) var(--nav-transition-ease);
@@ -1118,7 +1052,6 @@
     .nav-title,
     .logo_link :global(svg),
     .favourite-empty-state,
-    .nav-section-title,
     .favourite-wrapper {
       transition: none;
     }

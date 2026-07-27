@@ -8,8 +8,8 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationStepDefinition = {
-  name: "External Data Connector",
-  tagline: "Execute Data Connector",
+  name: "Execute query",
+  tagline: "Execute query",
   icon: "database",
   description: "Execute a query in an external data connector",
   type: AutomationStepType.ACTION,

@@ -1,4 +1,3 @@
-import { AIConfigType } from "@budibase/types"
 import { buildLiteLLMParams } from "./litellm"
 
 describe("buildLiteLLMParams", () => {
@@ -6,7 +5,6 @@ describe("buildLiteLLMParams", () => {
     provider: "openai",
     name: "gpt-5-mini",
     credentialFields: { api_key: "secret" },
-    configType: AIConfigType.COMPLETIONS,
   }
 
   it("includes base params and credentials", () => {
@@ -33,23 +31,11 @@ describe("buildLiteLLMParams", () => {
     expect(result).toMatchObject({ reasoning_effort: "low" })
   })
 
-  it("skips reasoning params for embeddings", () => {
-    const result = buildLiteLLMParams({
-      ...baseArgs,
-      configType: AIConfigType.EMBEDDINGS,
-      reasoningEffort: "high",
-    })
-
-    expect(result).not.toHaveProperty("reasoning_effort")
-    expect(result).not.toHaveProperty("extra_body")
-  })
-
   it("normalizes groq qwen3-32b effort to default", () => {
     const result = buildLiteLLMParams({
       provider: "groq",
       name: "qwen3-32b",
       credentialFields: {},
-      configType: AIConfigType.COMPLETIONS,
       reasoningEffort: "high",
     })
 
@@ -61,7 +47,6 @@ describe("buildLiteLLMParams", () => {
       provider: "openrouter",
       name: "some-model",
       credentialFields: {},
-      configType: AIConfigType.COMPLETIONS,
       reasoningEffort: "medium",
     })
 
@@ -76,7 +61,6 @@ describe("buildLiteLLMParams", () => {
       provider: "custom_openai",
       name: "some-model",
       credentialFields: {},
-      configType: AIConfigType.COMPLETIONS,
       reasoningEffort: "medium",
     })
 

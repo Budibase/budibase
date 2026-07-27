@@ -6,8 +6,11 @@ interface ResizeActionsConfig {
   elementDimension: "width" | "height"
   mouseCoordinate: "pageX" | "pageY"
   clientDimension: "clientWidth" | "clientHeight"
+  directionMultiplier?: 1 | -1
   initialValue?: number
+  resetValue?: number
   setValue?: (value: number) => void
+  onValueChange?: (value: number) => void
   onResizeStart?: () => void
 }
 
@@ -15,8 +18,11 @@ const getResizeActions = ({
   elementDimension,
   mouseCoordinate,
   clientDimension: elementProperty,
+  directionMultiplier = 1,
   initialValue,
+  resetValue = initialValue,
   setValue = noop,
+  onValueChange = noop,
   onResizeStart = noop,
 }: ResizeActionsConfig) => {
   let element: HTMLElement | null = null
@@ -44,9 +50,10 @@ const getResizeActions = ({
       e.preventDefault()
       if (!element || startProperty == null || startPosition == null) return
 
-      const change = e[mouseCoordinate] - startPosition
+      const change = (e[mouseCoordinate] - startPosition) * directionMultiplier
       const newValue = startProperty + change
       element.style[elementDimension] = `${newValue}px`
+      onValueChange(newValue)
     }
 
     const handleMouseUp = (e: MouseEvent) => {
@@ -122,7 +129,7 @@ const getResizeActions = ({
     const handleDoubleClick = () => {
       if (element) {
         element.style.removeProperty(elementDimension)
-        setValue(initialValue || 0)
+        setValue(resetValue || 0)
       }
     }
 
@@ -142,13 +149,15 @@ const getResizeActions = ({
 
 export const getVerticalResizeActions = (
   initialValue?: number,
-  setValue?: (value: number) => void
+  setValue?: (value: number) => void,
+  resetValue?: number
 ) => {
   return getResizeActions({
     elementDimension: "height",
     mouseCoordinate: "pageY",
     clientDimension: "clientHeight",
     initialValue,
+    resetValue,
     setValue,
   })
 }
@@ -156,14 +165,20 @@ export const getVerticalResizeActions = (
 export const getHorizontalResizeActions = (
   initialValue?: number,
   setValue?: (value: number) => void,
-  onResizeStart?: () => void
+  onResizeStart?: () => void,
+  panelPosition: "left" | "right" = "left",
+  resetValue?: number,
+  onValueChange?: (value: number) => void
 ) => {
   return getResizeActions({
     elementDimension: "width",
     mouseCoordinate: "pageX",
     clientDimension: "clientWidth",
+    directionMultiplier: panelPosition === "right" ? -1 : 1,
     initialValue,
+    resetValue,
     setValue,
+    onValueChange,
     onResizeStart,
   })
 }

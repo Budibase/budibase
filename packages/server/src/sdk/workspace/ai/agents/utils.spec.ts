@@ -1,15 +1,126 @@
-import type { UIMessage, ToolSet, TypedToolCall, TypedToolResult } from "ai"
+import type { Agent } from "@budibase/types"
+import type {
+  Tool,
+  ToolSet,
+  TypedToolCall,
+  TypedToolResult,
+  UIMessage,
+} from "ai"
+import { ToolType } from "@budibase/types"
 import {
   findIncompleteToolCalls,
   formatIncompleteToolCallError,
+  getLiveOperation,
+  getLiveOperations,
+  getToolDisplayNames,
   IncompleteToolCall,
+  groupToolResultsByOutcome,
   updatePendingToolCalls,
+  updateUnrecoveredToolFailures,
 } from "./utils"
 
 type MessagePart = NonNullable<UIMessage["parts"]>[number]
 
 const toolPart = (part: Record<string, unknown>): MessagePart =>
   part as MessagePart
+
+describe("getToolDisplayNames", () => {
+  it("returns readable names keyed by raw tool name", () => {
+    expect(
+      getToolDisplayNames([
+        {
+          name: "ta_123_list_rows",
+          readableName: "Research Notes.list_rows",
+          description: "List rows",
+          sourceType: ToolType.INTERNAL_TABLE,
+          tool: {} as Tool,
+        },
+        {
+          name: "list_tables",
+          description: "List tables",
+          sourceType: ToolType.INTERNAL_TABLE,
+          tool: {} as Tool,
+        },
+      ])
+    ).toEqual({
+      ta_123_list_rows: "Research Notes.list_rows",
+    })
+  })
+})
+
+describe("getLiveOperations", () => {
+  it("returns all live operations", () => {
+    const operation = {
+      id: "operation_2",
+      name: "Main operation",
+      live: true,
+      promptInstructions: "Live instructions",
+    }
+    const agent = {
+      _id: "agent_1",
+      name: "Support Agent",
+      live: false,
+      operations: [
+        {
+          id: "operation_1",
+          name: "Draft operation",
+          live: false,
+        },
+        operation,
+      ],
+    } as Agent
+
+    expect(getLiveOperations(agent)).toEqual([operation])
+  })
+
+  it("returns an empty array when there are no live operations", () => {
+    const agent = {
+      _id: "agent_1",
+      name: "Support Agent",
+      live: true,
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main operation",
+          live: false,
+          promptInstructions: "Draft instructions",
+        },
+      ],
+    } as Agent
+
+    expect(getLiveOperations(agent)).toEqual([])
+  })
+})
+
+describe("getLiveOperation", () => {
+  it("returns the first live operation", () => {
+    const firstLiveOperation = {
+      id: "operation_2",
+      name: "Main operation",
+      live: true,
+    }
+    const agent = {
+      _id: "agent_1",
+      name: "Support Agent",
+      live: true,
+      operations: [
+        {
+          id: "operation_1",
+          name: "Draft operation",
+          live: false,
+        },
+        firstLiveOperation,
+        {
+          id: "operation_3",
+          name: "Secondary operation",
+          live: true,
+        },
+      ],
+    } as Agent
+
+    expect(getLiveOperation(agent)).toEqual(firstLiveOperation)
+  })
+})
 
 describe("incomplete tool call detection", () => {
   describe("findIncompleteToolCalls", () => {
@@ -322,6 +433,96 @@ describe("incomplete tool call detection", () => {
       updatePendingToolCalls(pending, toolCalls, toolResults)
       expect(pending.has("call-1")).toBe(false)
       expect(pending.has("call-2")).toBe(true)
+    })
+  })
+
+  describe("updateUnrecoveredToolFailures", () => {
+    it("flags a tool that ends in tool-error", () => {
+      const unrecovered = new Set<string>()
+
+      updateUnrecoveredToolFailures(unrecovered, [], ["send_email"])
+
+      expect(unrecovered.has("send_email")).toBe(true)
+    })
+
+    it("clears the flag once the same tool later succeeds", () => {
+      const unrecovered = new Set<string>(["send_email"])
+      const toolResults: TypedToolResult<ToolSet>[] = [
+        {
+          type: "tool-result",
+          toolCallId: "call-2",
+          toolName: "send_email",
+          input: {},
+          output: {},
+        },
+      ]
+
+      updateUnrecoveredToolFailures(unrecovered, toolResults, [])
+
+      expect(unrecovered.has("send_email")).toBe(false)
+    })
+
+    it("leaves other tools' failure state untouched", () => {
+      const unrecovered = new Set<string>(["send_email"])
+
+      updateUnrecoveredToolFailures(unrecovered, [], ["escalate"])
+
+      expect(unrecovered.has("send_email")).toBe(true)
+      expect(unrecovered.has("escalate")).toBe(true)
+    })
+  })
+
+  describe("groupToolResultsByOutcome", () => {
+    const escalateResult = (status: string): TypedToolResult<ToolSet> => ({
+      type: "tool-result",
+      toolCallId: "call-1",
+      toolName: "escalate",
+      input: {},
+      output: { status },
+    })
+
+    it("treats a real escalation (pending_approval) as a success", () => {
+      const { successResults, successNames, semanticFailureNames } =
+        groupToolResultsByOutcome([escalateResult("pending_approval")])
+
+      expect(successResults).toHaveLength(1)
+      expect(successNames).toEqual(["escalate"])
+      expect(semanticFailureNames).toEqual([])
+    })
+
+    it("treats an unavailable escalation as a semantic failure, not a success", () => {
+      const { successResults, successNames, semanticFailureNames } =
+        groupToolResultsByOutcome([escalateResult("unavailable")])
+
+      expect(successResults).toEqual([])
+      expect(successNames).toEqual([])
+      expect(semanticFailureNames).toEqual(["escalate"])
+    })
+
+    it("treats an already_approved resume result as harmless, not needs_input", () => {
+      const { successResults, successNames, semanticFailureNames } =
+        groupToolResultsByOutcome([escalateResult("already_approved")])
+
+      expect(successResults).toHaveLength(1)
+      expect(successNames).toEqual([])
+      expect(semanticFailureNames).toEqual([])
+    })
+
+    it("leaves non-escalate tool results untouched", () => {
+      const toolResult: TypedToolResult<ToolSet> = {
+        type: "tool-result",
+        toolCallId: "call-2",
+        toolName: "send_email",
+        input: {},
+        output: {},
+      }
+
+      const { successResults, successNames, semanticFailureNames } =
+        groupToolResultsByOutcome([toolResult])
+
+      expect(successResults).toEqual([toolResult])
+      expect(successNames).toEqual(["send_email"])
+      expect(semanticFailureNames).toEqual([])
     })
   })
 

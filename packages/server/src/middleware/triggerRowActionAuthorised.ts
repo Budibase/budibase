@@ -25,10 +25,10 @@ export function triggerRowActionAuthorised(
         ? sourceId
         : getTableIdFromViewId(sourceId)
       const viewId = isTableIdOrExternalTableId(sourceId) ? undefined : sourceId
-      return { tableId, viewId, rowActionId }
+      return { sourceId, tableId, viewId, rowActionId }
     }
 
-    const { tableId, viewId, rowActionId } = await getResourceIds()
+    const { sourceId, tableId, viewId, rowActionId } = await getResourceIds()
 
     // Check if the user has permissions to the table/view
     await authorizedResource(
@@ -53,6 +53,7 @@ export function triggerRowActionAuthorised(
 
     // Enrich tableId
     ctx.params.tableId = tableId
+    ctx.params.sourceId = sourceId
     return next()
   }
 }

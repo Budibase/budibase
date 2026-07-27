@@ -7,7 +7,7 @@
   export let onSchemaChange = () => {}
 
   const handleChange = e => {
-    onSchemaChange(keyValueArrayToRecord(e.detail))
+    onSchemaChange(keyValueArrayToRecord(e.detail.fields))
   }
 </script>
 

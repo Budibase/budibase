@@ -20,11 +20,14 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+      maxSurge: {{ .Values.services.proxy.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.services.proxy.rollingUpdate.maxUnavailable }}
   template:
     metadata:
       annotations:
+        {{- if .Values.globals.deployTimestamp }}
+        rollme/deploy-timestamp: {{ .Values.globals.deployTimestamp | quote }}
+        {{- end }}
         ad.datadoghq.com/proxy-service.logs: '[{"source":"nginx","service":"budibase-proxy"}]'
         ad.datadoghq.com/proxy-service.check_names: '["nginx"]'
         ad.datadoghq.com/proxy-service.init_configs: '[{}]'
@@ -39,9 +42,17 @@ spec:
 {{ end }}
     spec:
       terminationGracePeriodSeconds: {{ .Values.services.proxy.terminationGracePeriodSeconds }}
+      {{- if .Values.services.proxy.readinessGates }}
+      readinessGates:
+        {{- toYaml .Values.services.proxy.readinessGates | nindent 8 }}
+      {{- end }}
       containers:
-      - image: {{ .Values.globals.dockerRegistry }}budibase/proxy:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
-        imagePullPolicy: Always
+      - image: {{ .Values.services.proxy.image | default (printf "%sbudibase/proxy:%s" (.Values.globals.dockerRegistry | default "") (.Values.globals.appVersion | default .Chart.AppVersion)) }}
+        imagePullPolicy: {{ .Values.services.proxy.imagePullPolicy | default "IfNotPresent" }}
+        {{- with .Values.services.proxy.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         name: proxy-service
         {{- if .Values.services.proxy.startupProbe }}
         {{- with .Values.services.proxy.startupProbe }}
@@ -81,11 +92,13 @@ spec:
           value: {{ .Values.services.proxy.proxyRateLimitApiPerSecond | quote }}
         {{ end }}
         - name: RESOLVER
-          {{ if .Values.services.proxy.resolver }}
-          value: {{ .Values.services.proxy.resolver }}
-          {{ else }}
-          value: kube-dns.kube-system.svc.{{ .Values.services.dns }}
-          {{ end }}
+          {{- if .Values.services.proxy.resolver }}
+          value: {{ .Values.services.proxy.resolver | quote }}
+          {{- else if (lookup "v1" "Service" "kube-system" "kube-dns") }}
+          value: {{ (lookup "v1" "Service" "kube-system" "kube-dns").spec.clusterIP | quote }}
+          {{- else }}
+          value: {{ printf "kube-dns.kube-system.svc.%s" .Values.services.dns | quote }}
+          {{- end }}
         {{ with .Values.services.proxy.resources }}
         resources:
         {{- toYaml . | nindent 10 }}
@@ -111,7 +124,7 @@ spec:
     {{- end }}
       {{ if .Values.schedulerName }}
       schedulerName: {{ .Values.schedulerName | quote }}
-      {{ end }} 
+      {{ end }}
       {{ if .Values.imagePullSecrets }}
       imagePullSecrets:
       {{- toYaml .Values.imagePullSecrets | nindent 6 }}

@@ -3,6 +3,7 @@ import {
   ResourceDependenciesResponse,
   UserCtx,
 } from "@budibase/types"
+import { users } from "@budibase/backend-core"
 import sdk from "../../sdk"
 
 export async function getResourceDependencies(
@@ -17,6 +18,10 @@ export async function duplicateResourceToWorkspace(
   ctx: UserCtx<DuplicateResourceToWorkspaceRequest, void>
 ) {
   const { toWorkspace, resources, copyRows } = ctx.request.body
+  if (!users.isAdminOrBuilder(ctx.user, toWorkspace)) {
+    ctx.throw(403, "Only app builders or admins can duplicate resources.")
+  }
+
   await sdk.resources.duplicateResourcesToWorkspace(resources, toWorkspace, {
     copyRows,
   })

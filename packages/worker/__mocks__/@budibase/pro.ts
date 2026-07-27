@@ -1,6 +1,10 @@
 const actual = jest.requireActual("@budibase/pro")
 const pro = {
   ...actual,
+  scimUsers: {
+    ...actual.scimUsers,
+    handleDisable: jest.fn(),
+  },
   features: {
     ...actual.features,
     isSSOEnforced: jest.fn(),

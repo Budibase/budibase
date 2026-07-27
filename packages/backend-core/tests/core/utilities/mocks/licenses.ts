@@ -79,6 +79,10 @@ export const useEnforceableSSO = () => {
   return useFeature(Feature.ENFORCEABLE_SSO)
 }
 
+export const useEmbedAuth = () => {
+  return useFeature(Feature.EMBED_AUTH)
+}
+
 export const useGroups = () => {
   return useFeature(Feature.USER_GROUPS)
 }
@@ -131,11 +135,21 @@ export const useAICustomConfigs = () => {
   return useFeature(Feature.AI_CUSTOM_CONFIGS)
 }
 
+export const useMicrofrontend = () => {
+  return useFeature(Feature.MICROFRONTEND)
+}
+
 // QUOTAS
 
 export const setAutomationLogsQuota = (value: number) => {
   const license = cloneDeep(UNLIMITED_LICENSE)
   license.quotas.constant.automationLogRetentionDays.value = value
+  return useLicense(license)
+}
+
+export const setAgentLogsQuota = (value: number) => {
+  const license = cloneDeep(UNLIMITED_LICENSE)
+  license.quotas.constant.agentLogRetentionDays.value = value
   return useLicense(license)
 }
 

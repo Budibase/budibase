@@ -32,6 +32,7 @@ import {
 import datasourceSdk from "../../datasources"
 import * as viewSdk from "../../views"
 import { getTable } from "../getters"
+import { ensureValidPrimaryDisplay } from "../utils"
 import { populateExternalTableSchemas } from "../validation"
 
 const DEFAULT_PRIMARY_COLUMN = "id"
@@ -148,6 +149,8 @@ export async function save(
       name: DEFAULT_PRIMARY_COLUMN,
     }
   }
+
+  ensureValidPrimaryDisplay(tableToSave)
 
   for (let view in tableToSave.views) {
     const tableView = tableToSave.views[view]

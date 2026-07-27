@@ -15,7 +15,15 @@ export interface CreateWorkspaceRequest {
   fileToImport?: string
   encryptionPassword?: string
   file?: { path: string }
-  isOnboarding?: string
+  isOnboarding?: "false"
+}
+export interface OnboardingWorkspaceRequest {
+  url?: string
+  useTemplate?: string | boolean
+  templateKey?: string
+  encryptionPassword?: string
+  file?: { path: string }
+  isOnboarding: "true"
 }
 
 export interface CreateWorkspaceResponse extends Workspace {}
@@ -44,6 +52,13 @@ export interface FetchAppPackageResponse {
   clientLibPath: string
   hasLock: boolean
   recaptchaKey?: string
+  recaptchaEnabled?: boolean
+  clientCacheKey?: string
+}
+
+export interface FetchMicrofrontendBootstrapResponse {
+  appId: string
+  clientLibPath: string
   clientCacheKey?: string
 }
 

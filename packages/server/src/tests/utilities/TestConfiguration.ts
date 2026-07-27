@@ -447,7 +447,9 @@ export default class TestConfiguration {
         sessionId: this.sessionIdForUser(userId),
         tenantId: this.getTenantId(),
       }
-      const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
+      const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret, {
+        expiresIn: utils.getSessionExpirySeconds(),
+      })
 
       // returning necessary request headers
       await cache.user.invalidateUser(userId)
@@ -505,7 +507,9 @@ export default class TestConfiguration {
       sessionId: this.sessionIdForUser(user._id!),
       tenantId,
     }
-    const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
+    const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret, {
+      expiresIn: utils.getSessionExpirySeconds(),
+    })
 
     let cookie: (string | string[])[] = [
       `${constants.Cookie.Auth}=${authToken}`,
@@ -675,40 +679,6 @@ export default class TestConfiguration {
     this.devWorkspaceId = this.devWorkspace.appId
 
     const defaultWorkspaceApp = await this.createDefaultWorkspaceApp(name)
-    this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
-
-    return await context.doInWorkspaceContext(
-      this.devWorkspace.appId!,
-      async () => {
-        // create production app
-        this.prodWorkspace = await this.publish()
-
-        this.allWorkspaces.push(this.prodWorkspace)
-        this.allWorkspaces.push(this.devWorkspace!)
-
-        return this.devWorkspace!
-      }
-    )
-  }
-
-  async createWorkspaceWithOnboarding(
-    name: string,
-    url?: string
-  ): Promise<Workspace> {
-    this.devWorkspaceId = undefined
-    this.devWorkspace = await context.doInTenant(
-      this.tenantId!,
-      async () =>
-        (await this._req(workspaceController.create, {
-          name,
-          url,
-          isOnboarding: "true",
-        })) as Workspace
-    )
-    this.devWorkspaceId = this.devWorkspace.appId
-
-    const [defaultWorkspaceApp] = (await this.api.workspaceApp.fetch())
-      .workspaceApps
     this.defaultWorkspaceAppId = defaultWorkspaceApp?._id
 
     return await context.doInWorkspaceContext(

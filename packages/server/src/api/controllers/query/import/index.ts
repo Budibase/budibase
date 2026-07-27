@@ -15,7 +15,6 @@ import { OpenAPI2 } from "./sources/openapi2"
 import { OpenAPI3 } from "./sources/openapi3"
 import sdk from "../../../../sdk"
 import * as crypto from "crypto"
-import fetch from "node-fetch"
 
 interface ImportResult {
   errorQueries: Query[]
@@ -25,6 +24,7 @@ interface ImportResult {
 type ImporterInput = { data: string } | { url: string }
 
 const OPENAPI_SPEC_CACHE_TTL_DAYS = 28
+const ALLOWED_IMPORT_PROTOCOLS = new Set(["http:", "https:"])
 const SOURCE_FACTORIES: Record<string, () => ImportSource> = {
   "openapi2.0": () => new OpenAPI2(),
   "openapi3.0": () => new OpenAPI3(),
@@ -71,15 +71,41 @@ const stringToHashKey = (input: string) =>
 const buildCacheKey = (input: ImporterInput) =>
   `openapiSpecs:${stringToHashKey(JSON.stringify("data" in input ? input.data : input.url))}`
 
+function parseImportUrl(url: string): URL {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    throw new HTTPError("Invalid import url", 400)
+  }
+
+  if (!ALLOWED_IMPORT_PROTOCOLS.has(parsed.protocol)) {
+    throw new HTTPError("Only HTTP(S) URLs are allowed for query import", 400)
+  }
+
+  if (parsed.username || parsed.password) {
+    throw new HTTPError("Import url must not contain credentials", 400)
+  }
+
+  return parsed
+}
+
 async function fetchFromUrl(url: string): Promise<string> {
   try {
-    const response = await fetch(url)
+    // validate protocol / credentials up front for clear 400 errors
+    parseImportUrl(url)
+    // fetchWithBlacklist resolves and validates the target, pins the request to
+    // the validated IP (preventing DNS rebinding between validation and the
+    // actual connection) and safely follows redirects, re-validating each hop.
+    const response = await utils.fetchWithBlacklist(url)
+
     if (!response.ok) {
       throw new HTTPError(
         `Failed to fetch import data (status ${response.status})`,
         response.status
       )
     }
+
     return await response.text()
   } catch (error: any) {
     if (error instanceof HTTPError) {

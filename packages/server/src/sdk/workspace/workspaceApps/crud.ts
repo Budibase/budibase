@@ -2,11 +2,19 @@ import { context, docIds, events, HTTPError } from "@budibase/backend-core"
 import { RequiredKeys, WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
 import sdk from "../.."
 import { helpers } from "@budibase/shared-core"
+import { getValidProjectIdsForDuplication } from "../projects/utils"
 
 async function guardName(name: string, id?: string) {
   const existingWorkspaceApps = await fetch()
+  const normalizedName = helpers.normalizeForComparison(name)
 
-  if (existingWorkspaceApps.find(p => p.name === name && p._id !== id)) {
+  if (
+    existingWorkspaceApps.find(
+      app =>
+        helpers.normalizeForComparison(app.name) === normalizedName &&
+        app._id !== id
+    )
+  ) {
     throw new HTTPError(`App with name '${name}' is already taken.`, 400)
   }
 }
@@ -52,13 +60,27 @@ const createDuplicatedApp = async (workspaceApp: WorkspaceApp) => {
     url: `/${slugify(name)}`,
     disabled: true,
     navigation: workspaceApp.navigation,
+    theme: workspaceApp.theme,
+    customTheme: workspaceApp.customTheme,
     isDefault: false,
+    projectIds: await getValidProjectIdsForDuplication(workspaceApp.projectIds),
   }
 
   return sdk.workspaceApps.create(duplicatedAppData)
 }
 
 const slugify = (text: string) => text.toLowerCase().replaceAll(" ", "-")
+
+type WorkspaceAppUpdate = Omit<
+  WorkspaceApp,
+  "createdAt" | "updatedAt" | "isDefault" | "theme" | "customTheme"
+> & {
+  theme?: WorkspaceApp["theme"]
+  customTheme?: WorkspaceApp["customTheme"]
+}
+
+const hasOwn = (obj: object, key: string) =>
+  Object.prototype.hasOwnProperty.call(obj, key)
 
 export async function fetch(
   db = context.getWorkspaceDB()
@@ -94,6 +116,7 @@ export async function create(
     },
     { returnDoc: true }
   )
+  events.workspace.appCreated(response.doc, context.getWorkspaceId()!)
   return response.doc
 }
 
@@ -106,7 +129,7 @@ export async function duplicate(
 }
 
 export async function update(
-  workspaceApp: Omit<WorkspaceApp, "createdAt" | "updatedAt" | "isDefault">
+  workspaceApp: WorkspaceAppUpdate
 ): Promise<WorkspaceApp> {
   const db = context.getWorkspaceDB()
 
@@ -126,7 +149,15 @@ export async function update(
     name: workspaceApp.name,
     url: workspaceApp.url,
     navigation: workspaceApp.navigation,
+    theme: hasOwn(workspaceApp, "theme") ? workspaceApp.theme : persisted.theme,
+    customTheme: hasOwn(workspaceApp, "customTheme")
+      ? workspaceApp.customTheme
+      : persisted.customTheme,
     disabled: workspaceApp.disabled,
+    // projectIds is optional on update: omitted means keep persisted assignments.
+    projectIds: hasOwn(workspaceApp, "projectIds")
+      ? workspaceApp.projectIds
+      : persisted.projectIds,
 
     // Immutable properties
     createdAt: persisted.createdAt,
@@ -135,6 +166,7 @@ export async function update(
     _deleted: undefined,
   }
   const response = await db.put(docToUpdate, { returnDoc: true })
+  events.workspace.appUpdated(response.doc, context.getWorkspaceId()!)
   return response.doc
 }
 
@@ -154,7 +186,7 @@ export async function remove(
     await db.remove(workspaceAppId, _rev)
 
     // Clear out any favourites related to this
-    events.workspace.deleted(existing, context.getWorkspaceId()!)
+    events.workspace.appDeleted(existing, context.getWorkspaceId()!)
   } catch (e: any) {
     if (e.status === 404) {
       throw new HTTPError(

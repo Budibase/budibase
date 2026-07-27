@@ -1,6 +1,7 @@
 import { svelte, vitePreprocess } from "@sveltejs/vite-plugin-svelte"
 import { defineConfig } from "vite"
 import path from "path"
+import { fileURLToPath } from "url"
 import { visualizer } from "rollup-plugin-visualizer"
 import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js"
 
@@ -13,6 +14,8 @@ const ignoredWarnings = [
   "element_invalid_self_closing_tag",
 ]
 
+const currentDir = path.dirname(fileURLToPath(import.meta.url))
+
 export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
 
@@ -20,6 +23,16 @@ export default defineConfig(({ mode }) => {
     test: {
       globals: true,
       include: ["src/**/*.test.*", "src/**/*.spec.*"],
+      deps: {
+        web: {
+          transformCss: true,
+        },
+      },
+      server: {
+        deps: {
+          inline: [/@budibase\/bbui/, /@spectrum-css/, /easymde/],
+        },
+      },
     },
     server: {
       open: false,
@@ -84,26 +97,26 @@ export default defineConfig(({ mode }) => {
         },
         {
           find: "@",
-          replacement: path.resolve(__dirname, "src"),
+          replacement: path.resolve(currentDir, "src"),
         },
         {
           find: "leaflet/dist/leaflet.css",
           replacement: path.resolve(
-            __dirname,
+            currentDir,
             "../../node_modules/leaflet/dist/leaflet.css"
           ),
         },
         {
           find: "leaflet",
           replacement: path.resolve(
-            __dirname,
+            currentDir,
             "../../node_modules/leaflet/dist/leaflet.js"
           ),
         },
         {
           find: "html2canvas",
           replacement: path.resolve(
-            __dirname,
+            currentDir,
             "../../node_modules/html2canvas/dist/html2canvas.min.js"
           ),
         },

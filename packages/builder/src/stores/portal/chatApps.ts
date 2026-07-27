@@ -1,8 +1,9 @@
-import { API } from "@/api"
-import { agentsStore } from "./agents"
-import { BudiStore } from "../BudiStore"
+import { Constants } from "@budibase/frontend-core"
 import { ChatApp, ChatConversation } from "@budibase/types"
 import { derived, get } from "svelte/store"
+import { API } from "@/api"
+import { BudiStore } from "../BudiStore"
+import { agentsStore } from "./agents"
 
 interface ChatAppsStoreState {
   chatAppId?: string
@@ -66,6 +67,7 @@ const buildAgentChatUpdate = ({
               agentId,
               isEnabled: true,
               isDefault: false,
+              roleId: Constants.Roles.BASIC,
             },
           ]
     )
@@ -235,6 +237,7 @@ export class ChatAppsStore extends BudiStore<ChatAppsStoreState> {
           agentId,
           isEnabled: false,
           isDefault: false,
+          roleId: Constants.Roles.BASIC,
           ...updates,
         }
 

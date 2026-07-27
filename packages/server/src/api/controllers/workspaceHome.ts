@@ -14,5 +14,5 @@ export async function metrics(
     ctx.throw(400, "Missing workspace context")
   }
 
-  ctx.body = await getWorkspaceHomeMetrics(workspaceId)
+  ctx.body = await getWorkspaceHomeMetrics()
 }

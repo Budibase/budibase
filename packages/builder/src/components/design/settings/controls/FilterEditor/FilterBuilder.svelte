@@ -17,6 +17,7 @@
   export let builderType = undefined
   export let docsURL = undefined
   export let evaluationContext = {}
+  export let flagInvalidFields = false
 </script>
 
 <CoreFilterBuilder
@@ -34,5 +35,6 @@
   {builderType}
   {docsURL}
   {evaluationContext}
+  {flagInvalidFields}
   on:change
 />

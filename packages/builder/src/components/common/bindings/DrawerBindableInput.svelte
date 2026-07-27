@@ -7,7 +7,7 @@
   } from "@/dataBinding"
   import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
-  import { isJSBinding } from "@budibase/string-templates"
+  import { findHBSBlocks, isJSBinding } from "@budibase/string-templates"
   import { builderStore } from "@/stores/builder"
 
   export let panel = ClientBindingPanel
@@ -23,7 +23,8 @@
   export let updateOnChange: boolean = true
   export let key: string | null = null
   export let disableBindings: boolean = false
-  export let forceModal: boolean = false
+  export let drawerForceModal: boolean = false
+  export let drawerZIndex: number | undefined = undefined
   export let context: any | undefined = undefined
   export let autocomplete: boolean | undefined = undefined
   export let multiline: boolean = false
@@ -39,6 +40,8 @@
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
   $: isJS = isJSBinding(value)
+  $: hasBinding = !!findHBSBlocks(value)?.length
+  $: resolvedInputType = hasBinding ? "text" : inputType
 
   const saveBinding = () => {
     onChange(tempValue)
@@ -81,7 +84,7 @@
     placeholder={placeholder || undefined}
     {updateOnChange}
     {autocomplete}
-    type={multiline ? undefined : inputType}
+    type={multiline ? undefined : resolvedInputType}
   >
     {#if !disabled && !disableBindings}
       <div
@@ -101,7 +104,8 @@
   on:drawerShow
   bind:this={bindingDrawer}
   title={title || placeholder || "Bindings"}
-  {forceModal}
+  forceModal={drawerForceModal}
+  zIndex={drawerZIndex}
 >
   <Button cta slot="buttons" on:click={saveBinding}>Save</Button>
   <svelte:component

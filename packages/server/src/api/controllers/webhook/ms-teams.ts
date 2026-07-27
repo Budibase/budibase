@@ -1,20 +1,132 @@
-import { context, HTTPError } from "@budibase/backend-core"
-import type {
-  ChatConversationChannel,
-  Ctx,
-  MSTeamsActivity,
-  MSTeamsCommand,
-  MSTeamsConversationScope,
+import { context, features } from "@budibase/backend-core"
+import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
+import {
+  AgentChannelProvider,
+  FeatureFlag,
+  type ChatConversationChannel,
+  type Ctx,
+  type MSTeamsActivity,
+  type MSTeamsConversationScope,
+  type WebhookChatCompleteResult,
 } from "@budibase/types"
-import { Chat, type Thread, type Message } from "chat"
+import {
+  Chat,
+  Actions,
+  Card,
+  LinkButton,
+  type ActionEvent,
+  type Thread,
+  type Message,
+  type SentMessage,
+} from "chat"
 import { createTeamsAdapter } from "@chat-adapter/teams"
 import sdk from "../../../sdk"
-import { handleChatMessage } from "./chatHandler"
+import { escalationProcessor } from "../../../escalation/processor"
+import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
 import { getTeamsState } from "./chatState"
+import { postLinkPromptPrivately } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
+import { resolveEscalationWorkspaceId, toAbsoluteUrl } from "./utils"
 
 const TEAMS_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
+const TEAMS_PROCESSING_MESSAGE = "Thinking..."
+const TEAMS_STREAMING_UPDATE_INTERVAL_MS = 750
+
+const formatTeamsLinkLabel = (value: string) =>
+  value
+    .replace(/\[|]|<|>|@|\n|\r/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+
+const getTeamsKnowledgeSourceLinks = async ({
+  agentId,
+  result,
+  isPersonalConversation,
+}: {
+  agentId: string
+  result: WebhookChatCompleteResult
+  isPersonalConversation?: boolean
+}) => {
+  if (
+    result.allowKnowledgeSourceDownload === false ||
+    !isPersonalConversation
+  ) {
+    return []
+  }
+
+  const links: { label: string; url: string }[] = []
+  for (const source of result.ragSources || []) {
+    if (!source.fileId) {
+      continue
+    }
+
+    try {
+      const signedUrl = await sdk.ai.rag.getFileUrlForAgent(
+        agentId,
+        source.fileId
+      )
+      const absoluteUrl = await toAbsoluteUrl(signedUrl)
+      links.push({
+        label:
+          formatTeamsLinkLabel(source.filename || "") || "Knowledge source",
+        url: absoluteUrl,
+      })
+    } catch (error) {
+      console.error("Failed to generate Teams RAG source link", error)
+    }
+  }
+  return links
+}
+
+export const formatTeamsAssistantReply = async ({
+  result,
+}: {
+  result: WebhookChatCompleteResult
+}) => {
+  return result.assistantText || ""
+}
+
+const postTeamsKnowledgeSourceLinks = async ({
+  thread,
+  agentId,
+  result,
+  isPersonalConversation,
+}: {
+  thread: Thread
+  agentId: string
+  result: WebhookChatCompleteResult
+  isPersonalConversation?: boolean
+}) => {
+  const sourceLinks = await getTeamsKnowledgeSourceLinks({
+    agentId,
+    result,
+    isPersonalConversation,
+  })
+  if (!sourceLinks.length) {
+    return
+  }
+
+  try {
+    await thread.post(
+      Card({
+        title: "Sources",
+        children: [
+          Actions(
+            sourceLinks.map(source =>
+              LinkButton({
+                label: source.label,
+                url: source.url,
+              })
+            )
+          ),
+        ],
+      })
+    )
+  } catch (error) {
+    console.error("Failed to post Teams RAG source links", error)
+  }
+}
 
 export const stripTeamsMentions = (
   text: string,
@@ -38,33 +150,50 @@ export const parseTeamsCommand = (
   text?: string,
   entities?: MSTeamsActivity["entities"]
 ): {
-  command: MSTeamsCommand
+  command: SupportedChatCommand
   content: string
 } => {
   const normalized = stripTeamsMentions(text || "", entities)
   if (!normalized) {
-    return { command: "unsupported" as const, content: "" }
+    return { command: ChatCommands.UNSUPPORTED, content: "" }
   }
-  const match = normalized.match(/^\/?(ask|new)\b(?:\s+(.*))?$/i)
-  if (!match) {
-    return { command: "ask" as const, content: normalized }
+  const lower = normalized.toLowerCase()
+
+  if (
+    lower === ChatCommands.NEW ||
+    lower === `/${ChatCommands.NEW}` ||
+    lower.startsWith(`/${ChatCommands.NEW} `)
+  ) {
+    return {
+      command: ChatCommands.NEW,
+      content: normalized.replace(
+        new RegExp(`^/?${ChatCommands.NEW}\\s*`, "i"),
+        ""
+      ),
+    }
   }
-  const commandName = match[1]?.toLowerCase()
-  const content = (match[2] || "").trim()
-  if (commandName === "new") {
-    return { command: "new" as const, content }
+  if (
+    lower === ChatCommands.LINK ||
+    lower === `/${ChatCommands.LINK}` ||
+    lower.startsWith(`/${ChatCommands.LINK} `)
+  ) {
+    return {
+      command: ChatCommands.LINK,
+      content: normalized.replace(
+        new RegExp(`^/?${ChatCommands.LINK}\\s*`, "i"),
+        ""
+      ),
+    }
   }
-  if (commandName === "ask") {
-    return { command: "ask" as const, content }
-  }
-  return { command: "ask" as const, content: normalized }
+
+  return { command: ChatCommands.ASK, content: normalized }
 }
 
 export const splitTeamsMessage = (
   content: string,
   maxLength = 3500
 ): string[] => {
-  const normalized = content || "No response generated."
+  const normalized = content || NO_ASSISTANT_RESPONSE_MESSAGE
   if (normalized.length <= maxLength) {
     return [normalized]
   }
@@ -84,7 +213,7 @@ const isTeamsBotAddedToConversation = (activity: MSTeamsActivity) => {
     return false
   }
   return (activity.membersAdded || []).some(
-    member => member.id?.trim() === recipientId
+    (member: { id?: string }) => member.id?.trim() === recipientId
   )
 }
 
@@ -96,34 +225,54 @@ export const isTeamsLifecycleActivity = (activity: MSTeamsActivity) =>
   isTeamsInstallAddedActivity(activity) ||
   isTeamsBotAddedToConversation(activity)
 
+export const isTeamsMentionActivity = (activity?: MSTeamsActivity) => {
+  const recipientId = activity?.recipient?.id?.trim()
+  if (!recipientId) {
+    return false
+  }
+
+  return (activity?.entities || []).some(
+    (entity: { type?: string; mentioned?: { id?: string } }) =>
+      entity.type?.toLowerCase() === "mention" &&
+      entity.mentioned?.id?.trim() === recipientId
+  )
+}
+
+const isTeamsPersonalConversation = (conversationType?: string) =>
+  conversationType?.trim().toLowerCase() === "personal"
+
 const createTeamsMessageHandler = ({
   workspaceId,
   chatAppId,
   agentId,
+  channelEnabled,
   idleTimeoutMinutes,
+  requireUserLink,
 }: {
   workspaceId: string
   chatAppId: string
   agentId: string
+  channelEnabled: boolean
   idleTimeoutMinutes?: number
+  requireUserLink?: boolean
 }) => {
   return async (thread: Thread, message: Message) => {
     const raw = message.raw as MSTeamsActivity | undefined
     const messageText = message.text || ""
 
-    // Parse command from the Chat SDK's normalized text (mentions already stripped)
     const { command, content } = parseTeamsCommand(messageText, raw?.entities)
-    if (command === "unsupported") {
+    if (command === ChatCommands.UNSUPPORTED) {
       await thread.post(
-        'Send a message to chat, or "new" to start a new conversation.'
+        `Send a message to chat, or "${ChatCommands.NEW}" to start a new conversation.`
       )
       return
     }
 
     const conversationId = raw?.conversation?.id?.trim() || ""
+    const threadId = thread.id
     const externalUserId =
-      raw?.from?.aadObjectId?.trim() ||
       raw?.from?.id?.trim() ||
+      raw?.from?.aadObjectId?.trim() ||
       message.author.userId
     const displayName = raw?.from?.name?.trim() || message.author.fullName
     const channelId = raw?.channelData?.channel?.id?.trim()
@@ -131,6 +280,7 @@ const createTeamsMessageHandler = ({
     const tenantId =
       raw?.channelData?.tenant?.id?.trim() || raw?.from?.tenantId?.trim()
     const conversationType = raw?.conversation?.conversationType?.trim()
+    const serviceUrl = raw?.serviceUrl?.trim()
 
     if (!conversationId) {
       await thread.post("Missing Teams conversation information.")
@@ -140,57 +290,154 @@ const createTeamsMessageHandler = ({
       await thread.post("Missing Teams user information.")
       return
     }
+    if (!threadId) {
+      await thread.post("Missing Teams thread information.")
+      return
+    }
 
     const channel: ChatConversationChannel = {
-      provider: "msteams",
+      provider: AgentChannelProvider.MSTEAMS,
       conversationId,
       conversationType,
       channelId,
+      threadId,
       teamId,
       tenantId,
       externalUserId,
       externalUserName: displayName,
+      serviceUrl,
     }
 
     const scope: MSTeamsConversationScope = {
       chatAppId,
       agentId,
       conversationId,
+      threadId,
       channelId,
       externalUserId,
     }
 
+    const shouldShowProgress =
+      command === ChatCommands.ASK ||
+      (command === ChatCommands.NEW && !!content)
+
+    const shouldPostChannelWorkingIndicator =
+      shouldShowProgress && !isTeamsPersonalConversation(conversationType)
+    const isPersonalConversation = isTeamsPersonalConversation(conversationType)
+
+    let progressMessage: SentMessage | undefined
+    let hasUsedProgressMessage = false
+
+    const editProgressMessage = async (text: string) => {
+      if (!progressMessage || hasUsedProgressMessage) {
+        return false
+      }
+
+      hasUsedProgressMessage = true
+
+      try {
+        progressMessage = await progressMessage.edit(text)
+        return true
+      } catch (error) {
+        console.error("Teams progress final update failed", error)
+        return false
+      }
+    }
+
+    const editOrPostTextReply = async (text: string) => {
+      const chunks = splitTeamsMessage(text)
+      const firstChunk = chunks[0] || NO_ASSISTANT_RESPONSE_MESSAGE
+      const remainingChunks = chunks.slice(1)
+      if (!(await editProgressMessage(firstChunk))) {
+        await thread.post(firstChunk)
+      }
+      for (const chunk of remainingChunks) {
+        await thread.post(chunk)
+      }
+    }
+
     try {
+      await thread.subscribe()
+
+      if (shouldShowProgress) {
+        const typingThread = thread as Thread & {
+          startTyping?: () => Promise<void>
+        }
+        try {
+          await typingThread.startTyping?.()
+        } catch (error) {
+          console.error("Teams typing indicator failed", error)
+        }
+      }
+
       await handleChatMessage({
-        reply: async (text: string) => {
-          const chunks = splitTeamsMessage(text)
-          for (const chunk of chunks) {
-            await thread.post(chunk)
+        reply: editOrPostTextReply,
+        replyWithAssistantStream: shouldPostChannelWorkingIndicator
+          ? undefined
+          : async stream => {
+              return await thread.post(stream)
+            },
+        beforeAssistantWebhook: shouldPostChannelWorkingIndicator
+          ? async () => {
+              progressMessage = await thread.post(TEAMS_PROCESSING_MESSAGE)
+            }
+          : undefined,
+        replyLinkPrompt: async prompt => {
+          const delivery = await postLinkPromptPrivately({
+            target: thread,
+            user: message.author,
+            text: prompt.text,
+            linkUrl: prompt.linkUrl,
+          })
+          if (delivery.usedDirectMessageFallback) {
+            await editOrPostTextReply(
+              "I sent you a DM with your Budibase link."
+            )
+            return
           }
+          if (!delivery.delivered) {
+            await editOrPostTextReply(
+              "I couldn't send a private Budibase link. Please try again in a direct message."
+            )
+            return
+          }
+          await editOrPostTextReply("I sent you a private Budibase link.")
         },
+        formatAssistantReply: async result =>
+          await formatTeamsAssistantReply({
+            result,
+          }),
+        afterAssistantReply: async result =>
+          await postTeamsKnowledgeSourceLinks({
+            thread,
+            agentId,
+            result,
+            isPersonalConversation,
+          }),
         workspaceId,
         chatAppId,
         agentId,
-        provider: "msteams",
+        provider: AgentChannelProvider.MSTEAMS,
+        channelEnabled,
         command,
         content,
-        user: { externalUserId, displayName },
+        user: {
+          externalUserId,
+          displayName,
+        },
         channel,
         scope,
         idleTimeoutMinutes,
+        requireUserLink,
       })
     } catch (error) {
       console.error("Teams webhook processing failed", error)
       const msg =
-        error instanceof HTTPError
-          ? error.message
-          : TEAMS_FALLBACK_ERROR_MESSAGE
-      await thread.post(msg)
+        error instanceof Error ? error.message : TEAMS_FALLBACK_ERROR_MESSAGE
+      await editOrPostTextReply(msg)
     }
   }
 }
-
-// --- Main webhook handler ---
 
 export async function MSTeamsWebhook(
   ctx: Ctx<
@@ -203,15 +450,22 @@ export async function MSTeamsWebhook(
     ctx,
     providerName: "Teams",
     createWebhookHandler: async ({ workspaceId, chatAppId, agentId }) => {
-      const { integration, idleTimeoutMinutes } =
-        await context.doInWorkspaceContext(workspaceId, async () => {
-          const agent = await sdk.ai.agents.getOrThrow(agentId)
-          return {
-            integration:
-              sdk.ai.deployments.MSTeams.validateMSTeamsIntegration(agent),
-            idleTimeoutMinutes: agent.MSTeamsIntegration?.idleTimeoutMinutes,
-          }
-        })
+      const {
+        integration,
+        idleTimeoutMinutes,
+        channelEnabled,
+        requireUserLink,
+      } = await context.doInWorkspaceContext(workspaceId, async () => {
+        const agent = await sdk.ai.agents.getOrThrow(agentId)
+        return {
+          integration:
+            sdk.ai.deployments.MSTeams.validateMSTeamsIntegration(agent),
+          idleTimeoutMinutes: agent.MSTeamsIntegration?.idleTimeoutMinutes,
+          requireUserLink: agent.MSTeamsIntegration?.requireUserLink,
+          channelEnabled:
+            !!agent.MSTeamsIntegration?.messagingEndpointUrl?.trim(),
+        }
+      })
 
       const chat = new Chat({
         userName: "Budibase",
@@ -225,17 +479,105 @@ export async function MSTeamsWebhook(
         },
         state: await getTeamsState(),
         logger: "silent",
+        fallbackStreamingPlaceholderText: TEAMS_PROCESSING_MESSAGE,
+        streamingUpdateIntervalMs: TEAMS_STREAMING_UPDATE_INTERVAL_MS,
       })
 
       const handler = createTeamsMessageHandler({
         workspaceId,
         chatAppId,
         agentId,
+        channelEnabled,
         idleTimeoutMinutes,
+        requireUserLink,
+      })
+      chat.onAction(async (event: ActionEvent) => {
+        if (!event.actionId.startsWith("esc_")) {
+          return
+        }
+
+        let parsed: {
+          escalationId: string
+          notificationDocId: string
+        }
+        try {
+          parsed = JSON.parse(event.value ?? "")
+        } catch {
+          console.error(
+            "Teams escalation action: invalid button value",
+            event.value
+          )
+          return
+        }
+        // The appId in the button value is untrusted; resolve which environment
+        // of the verified webhook route's app actually holds the notification.
+        const { escalationId, notificationDocId } = parsed
+
+        const teamsResponse = {
+          actionId: event.actionId,
+          user: event.user,
+          messageId: event.messageId,
+          threadId: event.threadId,
+        }
+
+        try {
+          const appId = await resolveEscalationWorkspaceId(
+            workspaceId,
+            notificationDocId
+          )
+          if (!appId) {
+            console.warn("Teams escalation action: notification not found", {
+              workspaceId,
+              notificationDocId,
+            })
+            return
+          }
+
+          const result = await context.doInContext(appId, async () => {
+            if (!(await features.isEnabled(FeatureFlag.ESCALATION))) {
+              return { status: "closed" as const }
+            }
+            return sdk.escalations.respond(
+              escalationId,
+              notificationDocId,
+              teamsResponse,
+              (id, response) => escalationProcessor.resolve(id, response)
+            )
+          })
+          if (event.thread) {
+            const msg =
+              result.status === "closed"
+                ? "Escalation already closed."
+                : "Response recorded."
+            await event.thread.post(msg)
+          }
+        } catch (error) {
+          console.error("Teams escalation action: failed to record response", {
+            escalationId,
+            notificationDocId,
+            workspaceId,
+            message: error instanceof Error ? error.message : String(error),
+          })
+          if (event.thread) {
+            await event.thread.post("Failed to record response.")
+          }
+        }
+      })
+
+      chat.onDirectMessage(async (thread, message) => {
+        await handler(thread, message)
       })
       chat.onNewMention(handler)
+      chat.onNewMessage(/./, async (thread, message) => {
+        if (
+          message.isMention ||
+          !isTeamsMentionActivity(message.raw as MSTeamsActivity | undefined)
+        ) {
+          return
+        }
+        await handler(thread, message)
+      })
       chat.onSubscribedMessage(handler)
-      chat.onNewMessage(/./, handler)
 
       return request => chat.webhooks.teams(request)
     },

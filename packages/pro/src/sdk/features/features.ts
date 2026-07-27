@@ -59,10 +59,20 @@ export async function isBrandingEnabled() {
   return areFeaturesEnabled(Feature.BRANDING)
 }
 
+export async function isMicrofrontendFeatureEnabled(license?: License) {
+  return areFeaturesEnabled(Feature.MICROFRONTEND, license)
+}
+
 // SSO
 
 export async function isEnforceableSSO() {
   return areFeaturesEnabled(Feature.ENFORCEABLE_SSO)
+}
+
+// EMBED AUTH
+
+export async function isEmbedAuthEnabled() {
+  return areFeaturesEnabled(Feature.EMBED_AUTH)
 }
 
 // SYNC WEBHOOK

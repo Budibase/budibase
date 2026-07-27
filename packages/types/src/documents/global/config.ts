@@ -38,7 +38,9 @@ export interface SettingsBrandingConfig {
 }
 
 export enum LockReason {
-  FREE_TIER = "free_tier", // Locked because grace period in free tier has ended
+  FREE_TIER = "free_tier", // Post-trial removal grace period
+  MIGRATION = "migration", // Free tier cloud deprecation (migration flow)
+  PAID_TO_FREE = "paid_to_free", // Paid subscription ended; tenant in removal flow
 }
 
 export interface SettingsInnerConfig {
@@ -52,6 +54,7 @@ export interface SettingsInnerConfig {
   isSSOEnforced?: boolean
   createdVersion?: string
   lockedBy?: LockReason
+  deactivationScheduledAt?: string // ISO 8601; when the tenant will be deactivated (set by account-portal on lock)
   active?: boolean
   liteLLM?: { keyId: string; secretKey: string }
 }
@@ -82,6 +85,7 @@ export interface OIDCStrategyConfiguration {
   clientSecret: string
   callbackURL: string
   pkce?: PKCEMethod
+  allowUnverifiedEmailLinking?: boolean
 }
 
 export interface OIDCConfigs {
@@ -104,6 +108,7 @@ export interface OIDCInnerConfig {
   activated: boolean
   scopes: string[]
   pkce?: PKCEMethod
+  allowUnverifiedEmailLinking?: boolean
 }
 
 export interface OIDCConfig extends Config<OIDCConfigs> {}
@@ -115,8 +120,11 @@ export interface OIDCWellKnownConfig {
   userinfo_endpoint: string
 }
 
+export type SCIMDisableAction = "remove" | "convert"
+
 export interface SCIMInnerConfig {
   enabled: boolean
+  disableAction?: SCIMDisableAction
 }
 
 export interface SCIMConfig extends Config<SCIMInnerConfig> {}

@@ -1,6 +1,7 @@
 import { constants, db as dbCore } from "@budibase/backend-core"
 import {
   DuplicateWorkspaceResponse,
+  OnboardingWorkspaceRequest,
   PublishWorkspaceRequest,
   PublishWorkspaceResponse,
   UpdateWorkspaceRequest,
@@ -10,6 +11,7 @@ import {
   type CreateWorkspaceRequest,
   type FetchAppDefinitionResponse,
   type FetchAppPackageResponse,
+  type FetchMicrofrontendBootstrapResponse,
   type FetchPublishedAppsResponse,
 } from "@budibase/types"
 import { WorkspaceStatus } from "../../../db/utils"
@@ -17,11 +19,14 @@ import { Expectations, RequestOpts, TestAPI } from "./base"
 
 export class WorkspaceAPI extends TestAPI {
   create = async (
-    app: CreateWorkspaceRequest,
+    app: CreateWorkspaceRequest | OnboardingWorkspaceRequest,
     expectations?: Expectations
   ): Promise<Workspace> => {
-    const files = app.fileToImport ? { fileToImport: app.fileToImport } : {}
-    delete app.fileToImport
+    let files = {}
+    if (app.isOnboarding !== "true") {
+      files = app.fileToImport ? { fileToImport: app.fileToImport } : {}
+      delete app.fileToImport
+    }
     return await this._post<Workspace>("/api/applications", {
       fields: app,
       files,
@@ -150,6 +155,22 @@ export class WorkspaceAPI extends TestAPI {
     return await this._get<FetchAppPackageResponse>(
       `/api/applications/${appId}/appPackage`,
       opts
+    )
+  }
+
+  getMicrofrontendBootstrap = async (
+    appPath: string,
+    opts?: RequestOpts
+  ): Promise<FetchMicrofrontendBootstrapResponse> => {
+    return await this._get<FetchMicrofrontendBootstrapResponse>(
+      "/api/microfrontend/bootstrap",
+      {
+        ...opts,
+        query: {
+          ...(opts?.query || {}),
+          appPath,
+        },
+      }
     )
   }
 

@@ -1,13 +1,31 @@
-import { getPluginMetadata } from "../../../utilities/fileSystem"
-import fetch from "node-fetch"
+import { utils as coreUtils } from "@budibase/backend-core"
+import {
+  deleteFolderFileSystem,
+  getPluginMetadata,
+} from "../../../utilities/fileSystem"
 import { downloadUnzipTarball } from "./utils"
+
+function parseGithubUrl(url: string): URL {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    throw new Error("Invalid Github URL")
+  }
+
+  if (parsed.protocol !== "https:" || parsed.hostname !== "github.com") {
+    throw new Error("The plugin origin must be from Github")
+  }
+
+  return parsed
+}
 
 export async function request(
   url: string,
   headers: Record<string, string> = {},
   err: string
 ) {
-  const response = await fetch(url, { headers })
+  const response = await coreUtils.fetchWithBlacklist(url, { headers })
   if (response.status >= 300) {
     const respErr = await response.text()
     throw new Error(`Error: ${err} - ${respErr}`)
@@ -16,15 +34,14 @@ export async function request(
 }
 
 export async function githubUpload(url: string, name = "", token = "") {
-  let githubUrl = url
-
-  if (!githubUrl.includes("https://github.com/")) {
-    throw new Error("The plugin origin must be from Github")
-  }
+  let githubUrl = parseGithubUrl(url).toString()
+  let path: string | undefined
 
   if (url.includes(".git")) {
     githubUrl = url.replace(".git", "")
   }
+
+  githubUrl = parseGithubUrl(githubUrl).toString()
 
   const githubApiUrl = githubUrl.replace(
     "https://github.com/",
@@ -61,13 +78,16 @@ export async function githubUpload(url: string, name = "", token = "") {
   }
 
   try {
-    const path = await downloadUnzipTarball(
+    path = await downloadUnzipTarball(
       pluginLastReleaseTarballUrl,
       pluginName,
       headers
     )
     return await getPluginMetadata(path)
   } catch (err: any) {
+    if (path) {
+      deleteFolderFileSystem(path)
+    }
     let errMsg = err?.message || err
     if (errMsg === "unexpected response Not Found") {
       errMsg = "Github release tarball not found"

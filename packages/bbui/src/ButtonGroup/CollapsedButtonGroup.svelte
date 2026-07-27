@@ -49,7 +49,11 @@
 >
   <Menu>
     {#each buttons as button}
-      <MenuItem on:click={() => handleClick(button)} disabled={button.disabled}>
+      <MenuItem
+        icon={button.icon}
+        on:click={() => handleClick(button)}
+        disabled={button.disabled}
+      >
         {button.text || "Button"}
       </MenuItem>
     {/each}

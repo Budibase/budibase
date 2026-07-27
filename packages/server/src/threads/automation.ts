@@ -11,6 +11,8 @@ import {
   processStringSync,
 } from "@budibase/string-templates"
 import {
+  ActionFailureReason,
+  ActionType,
   Automation,
   AutomationActionStepId,
   AutomationData,
@@ -27,9 +29,14 @@ import {
   BranchSearchFilters,
   BranchStep,
   ContextEmitter,
+  isArraySearchOperator,
+  isBasicSearchOperator,
   isCronTrigger,
   isEmailTrigger,
   isLogicalFilter,
+  isLogicalSearchOperator,
+  isRangeSearchOperator,
+  EscalationStepInputs,
   LoopV2Step,
   LoopV2StepInputs,
 } from "@budibase/types"
@@ -198,20 +205,74 @@ async function branchMatches(
   // evaluate all of the bindings.
   const evaluateBindings = (fs: Readonly<BranchSearchFilters>) => {
     const filters = cloneDeep(fs)
-    for (const filter of Object.values(filters)) {
-      if (!filter) {
+    const evaluateValue = (value: any): any => {
+      if (typeof value === "string" && findHBSBlocks(value).length > 0) {
+        return processStringSync(value, ctx)
+      }
+      if (Array.isArray(value)) {
+        return value.map(evaluateValue)
+      }
+      if (value && typeof value === "object") {
+        return Object.fromEntries(
+          Object.entries(value).map(([key, nestedValue]) => [
+            key,
+            evaluateValue(nestedValue),
+          ])
+        )
+      }
+      return value
+    }
+    const coerceFieldValue = (fieldValue: any, conditionValue: any): any => {
+      const reference = Array.isArray(conditionValue)
+        ? conditionValue.find(value => value != null)
+        : conditionValue
+
+      if (typeof fieldValue === "string" && typeof reference === "number") {
+        if (fieldValue.trim() === "") {
+          return fieldValue
+        }
+        const parsed = Number(fieldValue)
+        return Number.isNaN(parsed) ? fieldValue : parsed
+      }
+      if (typeof fieldValue === "string" && typeof reference === "boolean") {
+        if (fieldValue === "true") {
+          return true
+        }
+        if (fieldValue === "false") {
+          return false
+        }
+      }
+      return fieldValue
+    }
+
+    for (const [operator, filter] of Object.entries(filters)) {
+      if (isLogicalSearchOperator(operator)) {
+        if (filter && isLogicalFilter(filter)) {
+          filter.conditions = filter.conditions.map(evaluateBindings)
+        }
         continue
       }
 
-      if (isLogicalFilter(filter)) {
-        filter.conditions = filter.conditions.map(evaluateBindings)
-      } else {
-        for (const [field, value] of Object.entries(filter)) {
-          toFilter[field] = processStringSync(field, ctx)
-          if (typeof value === "string" && findHBSBlocks(value).length > 0) {
-            filter[field] = processStringSync(value, ctx)
-          }
-        }
+      if (
+        !isBasicSearchOperator(operator) &&
+        !isArraySearchOperator(operator) &&
+        !isRangeSearchOperator(operator)
+      ) {
+        continue
+      }
+
+      const evaluatedFilter = filter as Record<string, unknown> | undefined
+      if (!evaluatedFilter) {
+        continue
+      }
+
+      for (const [field, value] of Object.entries(evaluatedFilter)) {
+        const evaluatedValue = evaluateValue(value)
+        toFilter[field] = coerceFieldValue(
+          processStringSync(field, ctx),
+          evaluatedValue
+        )
+        evaluatedFilter[field] = evaluatedValue
       }
     }
 
@@ -274,14 +335,19 @@ class Orchestrator {
   private emitter: ContextEmitter
   private stopped: boolean
   private readonly onProgress?: (event: AutomationTestProgressEvent) => void
+  private readonly isTestRun: boolean
 
   constructor(
     job: Readonly<AutomationJob>,
-    opts: { onProgress?: (event: AutomationTestProgressEvent) => void } = {}
+    opts: {
+      onProgress?: (event: AutomationTestProgressEvent) => void
+      isTestRun?: boolean
+    } = {}
   ) {
     this.job = job
     this.stopped = false
     this.onProgress = opts.onProgress
+    this.isTestRun = Boolean(opts.isTestRun)
 
     // Pre-process the automation to transform legacy loops
     this.job.data.automation = automationUtils.preprocessAutomation(
@@ -328,6 +394,9 @@ class Orchestrator {
   }
 
   private async logResult(result: AutomationResults) {
+    if (this.isTestRun) {
+      return
+    }
     await storeLog(this.automation, result)
   }
 
@@ -440,6 +509,24 @@ class Orchestrator {
       }
       await enrichBaseContext(ctx)
 
+      // Restore prior step bindings when resuming after an escalation suspension.
+      // Replays the same index assignments as addToContext() so that bindings like
+      // {{ steps.stepName.x }} and {{ steps[n].x }} resolve correctly in remaining steps.
+      const resumeContext = this.job.data.event.resumeContext
+      if (resumeContext) {
+        ctx.state = resumeContext.state
+        for (const result of resumeContext.stepResults) {
+          ctx.steps[result.id] = result.outputs
+          ctx.steps[result.name || result.id] = result.outputs
+          ctx.stepsById[result.id] = result.outputs
+          ctx.stepsByName[result.name || result.id] = result.outputs
+          ctx.steps[ctx._stepIndex] = result.outputs
+          ctx._stepIndex++
+          ctx._stepResults.push(result)
+          ctx.previous = result.outputs
+        }
+      }
+
       const timeout =
         this.job.data.event.timeout || env.AUTOMATION_THREAD_TIMEOUT
 
@@ -451,7 +538,12 @@ class Orchestrator {
         )
         stepResults = outputs
         if (this.stopped) {
-          result.status = AutomationStatus.STOPPED
+          const wasSuspended = stepResults.some(
+            s => s.outputs.status === AutomationStatus.SUSPENDED
+          )
+          result.status = wasSuspended
+            ? AutomationStatus.SUSPENDED
+            : AutomationStatus.STOPPED
         } else if (this.hasErrored(ctx)) {
           result.status = AutomationStatus.ERROR
         }
@@ -490,6 +582,7 @@ class Orchestrator {
         [AutomationStatus.SUCCESS]: "success",
         [AutomationStatus.ERROR]: "error",
         [AutomationStatus.STOPPED]: "stopped",
+        [AutomationStatus.SUSPENDED]: "stopped",
       }
 
       this.onProgress?.({
@@ -519,6 +612,9 @@ class Orchestrator {
           return "error"
         }
         if (result.outputs.status === AutomationStatus.STOPPED) {
+          return "stopped"
+        }
+        if (result.outputs.status === AutomationStatus.SUSPENDED) {
           return "stopped"
         }
         return "success"
@@ -555,6 +651,27 @@ class Orchestrator {
         results.push(result)
       }
 
+      const shouldStopAfterFailure = (stepResults: AutomationStepResult[]) => {
+        return stepResults.some(
+          result =>
+            result.outputs.success === false && !canContinueOnError(result)
+        )
+      }
+
+      const canContinueOnError = (result: AutomationStepResult) => {
+        if (result.stepId === AutomationActionStepId.EXTRACT_STATE) {
+          return true
+        }
+        return (
+          result.inputs?.continueOnError === true &&
+          [
+            AutomationActionStepId.API_REQUEST,
+            AutomationActionStepId.EXECUTE_QUERY,
+            AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
+          ].includes(result.stepId)
+        )
+      }
+
       while (stepIndex < steps.length) {
         if (this.stopped) {
           break
@@ -563,8 +680,9 @@ class Orchestrator {
         const step = steps[stepIndex]
         switch (step.stepId) {
           case AutomationActionStepId.BRANCH: {
-            const branchResults = await quotas.addAction(() =>
-              this.executeBranchStep(ctx, step)
+            const branchResults = await quotas.addAction(
+              ActionType.AUTOMATION_STEP,
+              () => this.executeBranchStep(ctx, step)
             )
             ctx._stepResults.push(...branchResults)
             results.push(...branchResults)
@@ -575,6 +693,10 @@ class Orchestrator {
                 branchResults[0],
                 ctx
               )
+            }
+            if (shouldStopAfterFailure(branchResults)) {
+              ctx._error = true
+              return results
             }
             stepIndex++
             break
@@ -593,7 +715,8 @@ class Orchestrator {
             this.reportStepProgress(step, progressStatus(result), result, ctx)
             if (
               result.outputs.success === false &&
-              result.outputs.status == null
+              result.outputs.status == null &&
+              !canContinueOnError(result)
             ) {
               return results
             }
@@ -604,7 +727,7 @@ class Orchestrator {
             this.reportStepProgress(step, "running", undefined, ctx)
             addToContext(
               step,
-              await quotas.addAction(async () => {
+              await quotas.addAction(ActionType.AUTOMATION_STEP, async () => {
                 const response = await this.executeStep(ctx, step)
                 if (step.stepId === AutomationActionStepId.EXTRACT_STATE) {
                   ctx.state ??= {}
@@ -612,6 +735,13 @@ class Orchestrator {
                 }
 
                 events.action.automationStepExecuted({ stepId: step.stepId })
+                if (response.outputs.success === false) {
+                  events.action.automationStepFailed({
+                    stepId: step.stepId,
+                    reason: ActionFailureReason.ERROR,
+                    errorMessage: response.outputs.error as string | undefined,
+                  })
+                }
                 return response
               })
             )
@@ -621,8 +751,15 @@ class Orchestrator {
               if (
                 step.stepId === AutomationActionStepId.TRIGGER_AUTOMATION_RUN &&
                 latest.outputs.success === false &&
+                !canContinueOnError(latest) &&
                 (latest.outputs.status === AutomationStatus.ERROR ||
                   latest.outputs.status === AutomationStatus.STOPPED_ERROR)
+              ) {
+                return results
+              }
+              if (
+                latest.outputs.success === false &&
+                !canContinueOnError(latest)
               ) {
                 return results
               }
@@ -664,6 +801,10 @@ class Orchestrator {
             status: AutomationStepStatus.INCORRECT_TYPE,
             iterations,
           })
+          events.action.automationStepFailed({
+            stepId: step.stepId,
+            reason: ActionFailureReason.INCORRECT_TYPE,
+          })
           return stepFailure(step, {
             status: AutomationStepStatus.INCORRECT_TYPE,
           })
@@ -678,6 +819,7 @@ class Orchestrator {
           children,
           maxStoredResults
         )
+        const childrenById = new Map(children.map(child => [child.id, child]))
 
         const totalIterations = Math.min(iterable.length, maxIterations)
 
@@ -688,6 +830,10 @@ class Orchestrator {
             span.addTags({
               status: AutomationStepStatus.MAX_ITERATIONS,
               iterations,
+            })
+            events.action.automationStepFailed({
+              stepId: step.stepId,
+              reason: ActionFailureReason.MAX_ITERATIONS,
             })
             return stepFailure(
               step,
@@ -703,6 +849,10 @@ class Orchestrator {
             span.addTags({
               status: AutomationStepStatus.FAILURE_CONDITION,
               iterations,
+            })
+            events.action.automationStepFailed({
+              stepId: step.stepId,
+              reason: ActionFailureReason.FAILURE_CONDITION,
             })
             return stepFailure(
               step,
@@ -726,19 +876,30 @@ class Orchestrator {
             // For both legacy and new loops, we need to preserve the step index
             // so child steps don't affect the main step numbering
             const savedStepIndex = ctx._stepIndex
-            const iterationResults = await this.executeSteps(ctx, children)
+            const iterationResults = await this.executeSteps(
+              ctx,
+              cloneDeep(children)
+            )
             ctx._stepIndex = savedStepIndex
 
             // Process results based on their type
+            let collectingBranchResults = false
             for (const result of iterationResults) {
-              const isDirectChild = children.some(
-                child => child.id === result.id
-              )
-              if (isDirectChild) {
+              const directChild = childrenById.get(result.id)
+              if (directChild) {
                 automationUtils.processStandardResult(
                   storage,
                   result,
                   iterations
+                )
+                collectingBranchResults =
+                  directChild.stepId === AutomationActionStepId.BRANCH
+              } else if (collectingBranchResults) {
+                automationUtils.processStandardResult(
+                  storage,
+                  result,
+                  iterations,
+                  false
                 )
               }
             }
@@ -759,6 +920,16 @@ class Orchestrator {
             }
 
             if (this.stopped) {
+              const stoppedByFilter = iterationResults.some(
+                result =>
+                  result.stepId === AutomationActionStepId.FILTER &&
+                  result.outputs.status === AutomationStatus.STOPPED
+              )
+              if (stoppedByFilter) {
+                this.stopped = false
+                continue
+              }
+
               const output = automationUtils.buildLoopOutput(
                 storage,
                 undefined,
@@ -820,6 +991,10 @@ class Orchestrator {
       }
 
       span.addTags({ status: AutomationStatus.NO_CONDITION_MET })
+      events.action.automationStepFailed({
+        stepId: step.stepId,
+        reason: ActionFailureReason.NO_CONDITION_MET,
+      })
       return [stepFailure(step, { status: AutomationStatus.NO_CONDITION_MET })]
     })
   }
@@ -854,13 +1029,30 @@ class Orchestrator {
 
       let inputs = cloneDeep(step.inputs)
       if (
+        step.stepId !== AutomationActionStepId.EXECUTE_BASH &&
         step.stepId !== AutomationActionStepId.EXECUTE_SCRIPT_V2 &&
-        step.stepId !== AutomationActionStepId.EXTRACT_STATE
+        step.stepId !== AutomationActionStepId.EXTRACT_STATE &&
+        step.stepId !== AutomationActionStepId.SERVER_LOG
       ) {
         // The EXECUTE_SCRIPT_V2 step saves its input.code value as a `{{ js
         // "..." }}` template, and expects to receive it that way in the
-        // function that runs it. So we skip this next bit for that step.
+        // function that runs it. EXECUTE_BASH also handles its own templating
+        // so it can reject bindings in the command name while still allowing
+        // templated args. So we skip this next bit for those steps.
+        //
+        // For ESCALATION, resolutionStrategy is stored as an encoded JS binding and
+        // must be preserved as-is so the escalation processor can decode and run
+        // it later. Strip it before processObject then restore it after.
+        const escalationInputs =
+          step.stepId === AutomationActionStepId.ESCALATION
+            ? (inputs as EscalationStepInputs)
+            : undefined
+        const resolutionStrategy = escalationInputs?.resolutionStrategy
         inputs = await processObject(inputs, ctx)
+        if (escalationInputs && resolutionStrategy !== undefined) {
+          ;(inputs as EscalationStepInputs).resolutionStrategy =
+            resolutionStrategy
+        }
       }
 
       inputs = automationUtils.cleanInputValues(
@@ -876,12 +1068,16 @@ class Orchestrator {
             appId: this.appId,
             emitter: this.emitter,
             context: ctx,
+            automationId: this.automation._id,
+            stepId: step.id,
+            isTestRun: this.isTestRun,
           })
         )
       } catch (err: any) {
+        const errorMessage = automationUtils.getError(err)
         return stepFailure(step, {
           status: AutomationStatus.ERROR,
-          error: automationUtils.getError(err),
+          error: errorMessage,
         })
       }
 
@@ -899,6 +1095,10 @@ class Orchestrator {
         outputs.status === AutomationStatus.STOPPED
       ) {
         this.stopped = true
+      }
+      if (step.stepId === AutomationActionStepId.ESCALATION) {
+        this.stopped = true
+        ;(outputs as any).status = AutomationStatus.SUSPENDED
       }
 
       span.addTags({ outputsKeys: Object.keys(outputs) })
@@ -932,7 +1132,9 @@ export async function execute(
           await context.ensureSnippetContext()
           const envVars = await sdkUtils.getEnvironmentVariables()
           await context.doInEnvironmentContext(envVars, async () => {
-            const orchestrator = new Orchestrator(job)
+            const orchestrator = new Orchestrator(job, {
+              isTestRun: job.data.isTestRun,
+            })
             callback(null, await orchestrator.execute())
           })
         } catch (err) {
@@ -951,7 +1153,10 @@ export async function execute(
 
 export async function executeInThread(
   job: Job<AutomationData>,
-  opts: { onProgress?: (event: AutomationTestProgressEvent) => void } = {}
+  opts: {
+    onProgress?: (event: AutomationTestProgressEvent) => void
+    isTestRun?: boolean
+  } = {}
 ): Promise<AutomationResults> {
   const workspaceId = job.data.event.appId
   if (!workspaceId) {
@@ -979,7 +1184,9 @@ export const removeStalled = async (job: Job<AutomationData>) => {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
   await context.doInWorkspaceContext(appId, async () => {
-    const orchestrator = new Orchestrator(job)
-    await orchestrator.stopCron("stalled")
+    logging.logWarn(
+      `Automation job stalled - ${appId}/${job.data.automation._id}`,
+      getAutomationLogContext(job)
+    )
   })
 }

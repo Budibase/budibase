@@ -1,4 +1,4 @@
-FROM budibase/database:2.0.0
+FROM budibase/database:2.1.0
 
 ENV DATA_DIR /data
 RUN mkdir /data

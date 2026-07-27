@@ -1,11 +1,17 @@
 import { Document } from "../document"
 import { SourceName } from "../../sdk"
 import { Table } from "./table"
-import { RestTemplateName, RestTemplateSpecVersion } from "../../ui/rest"
+import {
+  RestTemplateId,
+  RestTemplateName,
+  RestTemplateSpecVersion,
+} from "../../ui/rest"
+import { OAuth2Config, OAuth2GrantType } from "./oauth2"
 
 export interface Datasource extends Document {
   type: string
   name?: string
+  projectIds?: string[]
   source: SourceName
   // this is a googlesheets specific property which
   // can be found in the GSheets schema - pertains to SSO creds
@@ -14,7 +20,13 @@ export interface Datasource extends Document {
   config?: Record<string, any>
   plus?: boolean
   isSQL?: boolean
+  /**
+   * @deprecated Use restTemplateId instead. This field stored template names
+   * which could change. restTemplateId stores stable identifiers.
+   * Use getRestTemplateIdentifier() helper for backwards-compatible lookups.
+   */
   restTemplate?: RestTemplateName
+  restTemplateId?: RestTemplateId
   restTemplateVersion?: RestTemplateSpecVersion
   usesEnvironmentVariables?: boolean
   entities?: Record<string, Table>
@@ -24,6 +36,7 @@ export enum RestAuthType {
   BASIC = "basic",
   BEARER = "bearer",
   OAUTH2 = "oauth2",
+  API_KEY = "apiKey",
 }
 
 export interface RestBasicAuthConfig {
@@ -49,7 +62,28 @@ export interface BearerRestAuthConfig {
   config: RestBearerAuthConfig
 }
 
-export type RestAuthConfig = BasicRestAuthConfig | BearerRestAuthConfig
+export interface OAuth2RestAuthConfig
+  extends Omit<OAuth2Config, keyof Document> {
+  _id: string
+  type: RestAuthType.OAUTH2
+}
+
+export const isOAuth2ClientCredentialsAuthConfig = (
+  authConfig: RestAuthConfig | OAuth2RestAuthConfig | undefined
+): authConfig is OAuth2RestAuthConfig =>
+  authConfig?.type === RestAuthType.OAUTH2 &&
+  authConfig.grantType === OAuth2GrantType.CLIENT_CREDENTIALS
+
+export const REST_AUTH_SECRET_FIELD: Partial<Record<RestAuthType, string>> = {
+  [RestAuthType.BASIC]: "password" satisfies keyof RestBasicAuthConfig,
+  [RestAuthType.BEARER]: "token" satisfies keyof RestBearerAuthConfig,
+  [RestAuthType.OAUTH2]: "clientSecret" satisfies keyof OAuth2RestAuthConfig,
+}
+
+export type RestAuthConfig =
+  | BasicRestAuthConfig
+  | BearerRestAuthConfig
+  | OAuth2RestAuthConfig
 
 export interface DynamicVariable {
   name: string
@@ -58,11 +92,15 @@ export interface DynamicVariable {
 }
 
 export interface RestConfig {
+  // Base URL
   url: string
   rejectUnauthorized?: boolean
   downloadImages?: boolean
   defaultHeaders?: {
     [key: string]: any
+  }
+  defaultQueryParameters?: {
+    [key: string]: string
   }
   legacyHttpParser?: boolean
   authConfigs?: RestAuthConfig[]

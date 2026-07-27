@@ -16,7 +16,7 @@ export async function getEnvironmentVariables() {
   return envVars
 }
 
-function isEnvironmentVariableKey(str: string) {
+export function isEnvironmentVariableKey(str: string) {
   return str.match(/{{\s*env\.[^\s]+\s*}}/)
 }
 

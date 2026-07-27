@@ -4,8 +4,8 @@ import { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
 import environment from "../../environment"
 import { budibaseTempDir } from "../budibaseDir"
+import { deleteFolderFileSystem, TOP_LEVEL_PATH } from "./filesystem"
 import { shouldServeLocally, updateClientLibrary } from "./clientLibrary"
-import { TOP_LEVEL_PATH } from "./filesystem"
 
 export const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
 
@@ -59,6 +59,24 @@ export const getComponentLibraryManifest = async (library: string) => {
     throw new Error("No app ID found - cannot get component libraries")
   }
 
+  const isMissingObject = (error: unknown) => {
+    if (!error || typeof error !== "object") {
+      return false
+    }
+    const err = error as {
+      name?: unknown
+      Code?: unknown
+      $metadata?: {
+        httpStatusCode?: unknown
+      }
+    }
+    return (
+      err.name === "NoSuchKey" ||
+      err.Code === "NoSuchKey" ||
+      err.$metadata?.httpStatusCode === 404
+    )
+  }
+
   let resp
   let path
   try {
@@ -72,7 +90,18 @@ export const getComponentLibraryManifest = async (library: string) => {
     )
     // Fallback to loading it from the old location for old apps
     path = join(appId, "node_modules", library, "package", filename)
-    resp = await objectStore.retrieve(ObjectStoreBuckets.APPS, path)
+    try {
+      resp = await objectStore.retrieve(ObjectStoreBuckets.APPS, path)
+    } catch (fallbackError) {
+      if (!isMissingObject(error) || !isMissingObject(fallbackError)) {
+        throw fallbackError
+      }
+      console.error(
+        `component-manifest-legacy-objectstore=failed appId=${appId} path=${path}`,
+        fallbackError
+      )
+      return updateClientLibrary(appId)
+    }
   }
   if (typeof resp !== "string") {
     resp = resp.toString()
@@ -86,8 +115,6 @@ export const getComponentLibraryManifest = async (library: string) => {
 export const cleanup = (appIds: string[]) => {
   for (let appId of appIds) {
     const path = join(budibaseTempDir(), appId)
-    if (fs.existsSync(path)) {
-      fs.rmdirSync(path, { recursive: true })
-    }
+    deleteFolderFileSystem(path)
   }
 }

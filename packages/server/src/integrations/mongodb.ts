@@ -50,7 +50,7 @@ const getSchema = () => {
     },
     datasource: {
       connectionString: {
-        type: DatasourceFieldType.STRING,
+        type: DatasourceFieldType.PASSWORD,
         required: true,
         default: `mongodb://${HOST_ADDRESS}:27017`,
         display: "Connection string",
@@ -349,16 +349,24 @@ const getSchema = () => {
 
 const SCHEMA: Integration = getSchema()
 
+export function buildMongoClientOptions(
+  config: MongoDBConfig
+): MongoClientOptions {
+  return environment.SELF_HOSTED
+    ? {
+        tlsCertificateKeyFile: config.tlsCertificateKeyFile || undefined,
+        tlsCAFile: config.tlsCAFile || undefined,
+      }
+    : {}
+}
+
 export class MongoIntegration implements IntegrationBase {
   private config: MongoDBConfig
   private client: MongoClient
 
   constructor(config: MongoDBConfig) {
     this.config = config
-    const options: MongoClientOptions = {
-      tlsCertificateKeyFile: config.tlsCertificateKeyFile || undefined,
-      tlsCAFile: config.tlsCAFile || undefined,
-    }
+    const options = buildMongoClientOptions(config)
     this.client = new MongoClient(config.connectionString, options)
   }
 

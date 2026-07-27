@@ -1,4 +1,4 @@
-import { env as coreEnv } from "@budibase/backend-core"
+import { env as coreEnv, Duration } from "@budibase/backend-core"
 import { ServiceType } from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
 import { join, resolve } from "path"
@@ -27,7 +27,11 @@ const DEFAULTS = {
   QUERY_THREAD_TIMEOUT: 15000,
   AUTOMATION_THREAD_TIMEOUT: 120000,
   AUTOMATION_MAX_ITERATIONS: 200,
+  LITELLM_READINESS_TIMEOUT_MS: 30000,
+  LITELLM_READINESS_POLL_MS: 500,
   JS_PER_EXECUTION_TIME_LIMIT_MS: 1500,
+  SHAREPOINT_SYNC_INTERVAL_MS: Duration.fromDays(1).toMs(),
+  SHAREPOINT_SYNC_TIMEOUT_MS: Duration.fromMinutes(15).toMs(),
   TEMPLATE_REPOSITORY: "app",
   PLUGINS_DIR: "/plugins",
   FORKED_PROCESS_NAME: "main",
@@ -120,6 +124,7 @@ const environment = {
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
+  MAX_WORKER_RUNS: parseIntSafe(process.env.MAX_WORKER_RUNS),
   DISABLE_AUTOMATION_LOGS: process.env.DISABLE_AUTOMATION_LOGS,
   DISABLE_RATE_LIMITING: process.env.DISABLE_RATE_LIMITING,
   DISABLE_WORKSPACE_MIGRATIONS: process.env.SKIP_WORKSPACE_MIGRATIONS || false,
@@ -136,6 +141,12 @@ const environment = {
   JS_PER_INVOCATION_TIMEOUT_MS:
     parseIntSafe(process.env.JS_PER_EXECUTION_TIME_LIMIT_MS) ||
     DEFAULTS.JS_PER_EXECUTION_TIME_LIMIT_MS,
+  SHAREPOINT_SYNC_INTERVAL_MS:
+    parseIntSafe(process.env.SHAREPOINT_SYNC_INTERVAL_MS) ||
+    DEFAULTS.SHAREPOINT_SYNC_INTERVAL_MS,
+  SHAREPOINT_SYNC_TIMEOUT_MS:
+    parseIntSafe(process.env.SHAREPOINT_SYNC_TIMEOUT_MS) ||
+    DEFAULTS.SHAREPOINT_SYNC_TIMEOUT_MS,
   JS_PER_REQUEST_TIMEOUT_MS: parseIntSafe(
     process.env.JS_PER_REQUEST_TIME_LIMIT_MS
   ),
@@ -159,9 +170,16 @@ const environment = {
     process.env.LITELLM_URL ||
     `http://localhost:${process.env.LITELLM_PORT || "4000"}`,
   LITELLM_MASTER_KEY: process.env.LITELLM_MASTER_KEY,
+  LITELLM_READINESS_TIMEOUT_MS:
+    parseIntSafe(process.env.LITELLM_READINESS_TIMEOUT_MS) ||
+    DEFAULTS.LITELLM_READINESS_TIMEOUT_MS,
+  LITELLM_READINESS_POLL_MS:
+    parseIntSafe(process.env.LITELLM_READINESS_POLL_MS) ||
+    DEFAULTS.LITELLM_READINESS_POLL_MS,
   BBAI_LITELLM_KEY: process.env.BBAI_LITELLM_KEY,
   TABLE_GENERATION_TIMEOUT_MS:
     process.env.TABLE_GENERATION_TIMEOUT_MS || "240000",
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {

@@ -59,22 +59,12 @@ import {
   UserCtx,
   UserIdentifier,
 } from "@budibase/types"
-import crypto from "crypto"
 import emailValidator from "email-validator"
 import env from "../../../environment"
 import * as userSdk from "../../../sdk/users"
-import { isEmailConfigured } from "../../../utilities/email"
 import { checkAnyUserExists } from "../../../utilities/users"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
-
-const generatePassword = (length: number) => {
-  const array = new Uint8Array(length)
-  crypto.getRandomValues(array)
-  return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
-    .join("")
-    .slice(0, length)
-}
 
 const stripUsers = (users: (User | StrippedUser)[]): StrippedUser[] => {
   return users.map(user => ({
@@ -112,13 +102,17 @@ export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
       email: user.email,
     }
   } catch (err: any) {
-    ctx.throw(err.status || 400, err)
+    ctx.throw(err.status || 400, err?.message || err)
   }
 }
 
 export const changeTenantOwnerEmail = async (
   ctx: Ctx<ChangeTenantOwnerEmailRequest, void>
 ) => {
+  if (!ctx.internal) {
+    ctx.throw(403, "Unauthorized")
+  }
+
   const { newAccountEmail, originalEmail, tenantIds } = ctx.request.body
   try {
     for (const tenantId of tenantIds) {
@@ -146,7 +140,7 @@ export const changeTenantOwnerEmail = async (
     }
     ctx.status = 200
   } catch (err: any) {
-    ctx.throw(err.status || 400, err)
+    ctx.throw(err.status || 400, err?.message || err)
   }
 }
 
@@ -178,7 +172,7 @@ export const addSsoSupport = async (
     })
     ctx.body = { message: "SSO support added." }
   } catch (err: any) {
-    ctx.throw(err.status || 400, err)
+    ctx.throw(err.status || 400, err?.message || err)
   }
 }
 
@@ -271,7 +265,7 @@ export const adminUser = async (
         email: finalUser.email,
       }
     } catch (err: any) {
-      ctx.throw(err.status || 400, err)
+      ctx.throw(err.status || 400, err?.message || err)
     }
   })
 }
@@ -283,7 +277,7 @@ export const countByWorkspace = async (
   try {
     ctx.body = await userSdk.db.countUsersByWorkspace(workspaceId)
   } catch (err: any) {
-    ctx.throw(err.status || 400, err)
+    ctx.throw(err.status || 400, err?.message || err)
   }
 }
 
@@ -595,40 +589,6 @@ export const accountHolderLookup = async (
   }
 }
 
-/* 
-  Encapsulate the app user onboarding flows here.
-*/
-export const onboardUsers = async (
-  ctx: Ctx<InviteUsersRequest, InviteUsersResponse>
-) => {
-  if (await isEmailConfigured()) {
-    await inviteMultiple(ctx)
-    return
-  }
-
-  let createdPasswords: Record<string, string> = {}
-  const users = ctx.request.body.map<User>(invite => {
-    const password = generatePassword(12)
-    createdPasswords[invite.email] = password
-
-    return {
-      email: invite.email,
-      password,
-      forceResetPassword: true,
-      roles: invite.userInfo.apps || {},
-      admin: { global: !!invite.userInfo.admin },
-      builder: invite.userInfo.builder,
-      tenantId: tenancy.getTenantId(),
-    }
-  })
-
-  let resp = await userSdk.db.bulkCreate(users)
-  for (const user of resp.successful) {
-    user.password = createdPasswords[user.email]
-  }
-  ctx.body = { ...resp, created: true }
-}
-
 export const invite = async (
   ctx: Ctx<InviteUserRequest, InviteUserResponse>
 ) => {
@@ -777,27 +737,13 @@ export const inviteAccept = async (
           resolvedTenantId
         )
         const user = await tenancy.doInTenant(info.tenantId, async () => {
-          let request: any = {
+          const request: any = {
             firstName,
             lastName,
             password,
             email,
-            admin: { global: info?.admin?.global || false },
-            roles: info.apps,
             tenantId: info.tenantId,
-          }
-          const builder: { global: boolean; apps?: string[] } = {
-            global: info?.builder?.global || false,
-          }
-
-          if (info?.builder?.apps) {
-            builder.apps = info.builder.apps
-            request.builder = builder
-          }
-          delete info.apps
-          request = {
-            ...request,
-            ...info,
+            ...users.deriveUserFieldsFromInvite(info),
           }
 
           const saved = await userSdk.db.save(request)
@@ -823,10 +769,13 @@ export const inviteAccept = async (
   } catch (err: any) {
     if (err.code === APIWarningCode.USAGE_LIMIT_EXCEEDED) {
       // explicitly re-throw limit exceeded errors
-      ctx.throw(400, err)
+      ctx.throw(400, err?.message || err)
     }
     console.warn("Error inviting user", err)
-    ctx.throw(400, err || "Unable to create new user, invitation invalid.")
+    ctx.throw(
+      400,
+      err?.message || err || "Unable to create new user, invitation invalid."
+    )
   }
 }
 

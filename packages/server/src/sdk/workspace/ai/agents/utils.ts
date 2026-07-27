@@ -1,12 +1,20 @@
 import {
   Agent,
+  AgentOperation,
   ToolType,
   ToolMetadata,
   SourceName,
   WebSearchProvider,
+  ESCALATE_TOOL_NAME,
+  EscalateToolResultStatus,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
-import { getBudibaseTools } from "../../../../ai/tools/budibase"
+import {
+  createKnowledgeFilesTool,
+  createKnowledgeSearchTool,
+  createEscalatePlaceholderTool,
+  getBudibaseTools,
+} from "../../../../ai/tools/budibase"
 import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
 import { isToolUIPart, getToolName } from "ai"
 import {
@@ -17,16 +25,36 @@ import {
 } from "../../../../ai/tools"
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
+import { HTTPError } from "@budibase/backend-core"
 
 const HELPER_TOOL_NAMES = new Set([
   "list_tables",
   "get_table",
   "list_automations",
   "get_automation",
+  "list_knowledge_files",
+  "search_knowledge",
+  "list_session_escalations",
 ])
 
 const isHelperTool = (tool: Pick<AiToolDefinition, "name">) =>
   HELPER_TOOL_NAMES.has(tool.name)
+
+export const getLiveOperations = (agent: Agent): AgentOperation[] =>
+  (agent.operations || []).filter(operation => operation.live === true)
+
+export const getLiveOperation = (agent: Agent): AgentOperation | undefined =>
+  getLiveOperations(agent)[0]
+
+export function getToolDisplayNames(
+  tools: AiToolDefinition[]
+): Record<string, string> {
+  return Object.fromEntries(
+    tools.flatMap(tool =>
+      tool.readableName ? [[tool.name, tool.readableName]] : []
+    )
+  )
+}
 
 export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
   return {
@@ -99,6 +127,7 @@ export async function getAvailableTools(
     ),
     ...restQueryTools,
     ...datasourceQueryTools,
+    createEscalatePlaceholderTool(),
   ]
   if (webSearchConfig?.apiKey) {
     if (webSearchConfig.provider === WebSearchProvider.EXA) {
@@ -121,19 +150,31 @@ export async function getAvailableToolsMetadata(
 export interface BuildPromptAndToolsOptions {
   baseSystemPrompt?: string
   includeGoal?: boolean
+  fallbackPromptInstructions?: string
 }
 
 export async function buildPromptAndTools(
   agent: Agent,
+  operation?: AgentOperation,
   options: BuildPromptAndToolsOptions = {}
 ): Promise<{
   systemPrompt: string
   tools: ToolSet
+  toolDisplayNames: Record<string, string>
 }> {
-  const { baseSystemPrompt, includeGoal = true } = options
+  const {
+    baseSystemPrompt,
+    includeGoal = true,
+    fallbackPromptInstructions,
+  } = options
+  const agentId = agent._id
+  if (!agentId) {
+    throw new Error("Agent _id is required")
+  }
+  const hasKnowledgeBases = operation?.knowledgeBases?.some(Boolean) ?? false
 
   const allTools = await getAvailableTools(agent.aiconfig)
-  const enabledToolNames = new Set(agent.enabledTools || [])
+  const enabledToolNames = new Set(operation?.enabledTools || [])
   const enabledTools = addHelperTools(
     allTools.filter(
       tool => enabledToolNames.has(tool.name) && !isHelperTool(tool)
@@ -141,16 +182,44 @@ export async function buildPromptAndTools(
     allTools
   )
 
+  if (
+    operation &&
+    hasKnowledgeBases &&
+    !enabledTools.some(tool => tool.name === "list_knowledge_files")
+  ) {
+    enabledTools.push(createKnowledgeFilesTool(agentId, operation.id))
+  }
+  if (
+    operation &&
+    hasKnowledgeBases &&
+    !enabledTools.some(tool => tool.name === "search_knowledge")
+  ) {
+    enabledTools.push(createKnowledgeSearchTool(agentId, operation.id))
+  }
+
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
-    promptInstructions: agent.promptInstructions,
+    promptInstructions: operation
+      ? [`Current operation: ${operation.name}`, operation.promptInstructions]
+          .filter(Boolean)
+          .join("\n\n")
+      : fallbackPromptInstructions,
     includeGoal,
   })
 
+  let resolvedSystemPrompt = systemPrompt
+  if (hasKnowledgeBases) {
+    resolvedSystemPrompt += `\n\nWhen users ask about attached files (for example size, type, upload status, processing errors, or file counts), call list_knowledge_files with a filename when possible. Do not guess file metadata. If list_knowledge_files returns ambiguous results, ask a clarification question before answering. If it returns no matches, say that you couldn't find a matching file.\n\nFor any non-trivial user question, call search_knowledge before answering. Do not say the answer is unavailable, unknown, or unsupported until after you have searched knowledge. If search_knowledge returns no relevant context, say that you couldn't find supporting knowledge.\n\nIf you used search_knowledge context in your final answer, call report_used_sources immediately before your final response and pass only sourceIds that directly support the final answer. Do not include sources that were merely searched/consulted. If your conclusion is that the answer is not found in the documents, call report_used_sources with an empty sourceIds list.`
+  }
+  if (enabledToolNames.has("escalate")) {
+    resolvedSystemPrompt += `\n\nBefore calling escalate, call list_session_escalations to check whether this same request is already awaiting approval or has already been approved in this conversation. If an equivalent request is still pending, do not escalate again - tell the user it is already awaiting approval. If it has already been approved, proceed instead of escalating again. Only escalate genuinely new requests.`
+  }
+
   return {
-    systemPrompt,
+    systemPrompt: resolvedSystemPrompt,
     tools: toToolSet(enabledTools),
+    toolDisplayNames: getToolDisplayNames(enabledTools),
   }
 }
 
@@ -247,9 +316,88 @@ export function updatePendingToolCalls(
   }
 }
 
+export function updateUnrecoveredToolFailures(
+  unrecoveredToolFailures: Set<string>,
+  toolResults: TypedToolResult<ToolSet>[],
+  erroredToolNames: string[]
+): void {
+  for (const toolResult of toolResults) {
+    unrecoveredToolFailures.delete(toolResult.toolName)
+  }
+
+  for (const toolName of erroredToolNames) {
+    unrecoveredToolFailures.add(toolName)
+  }
+}
+
+// escalate can return a technically-successful tool-result that isn't a real
+// escalation (e.g. the "no reviewers configured" placeholder responds with
+// status "unavailable" instead of throwing). Split tool results so callers
+// can treat that case as a failure rather than a genuine success, while every
+// other tool keeps its normal success/failure handling untouched.
+export function groupToolResultsByOutcome(
+  toolResults: TypedToolResult<ToolSet>[]
+): {
+  successResults: TypedToolResult<ToolSet>[]
+  successNames: string[]
+  semanticFailureNames: string[]
+  semanticFailureResults: TypedToolResult<ToolSet>[]
+} {
+  const successResults: TypedToolResult<ToolSet>[] = []
+  const successNames: string[] = []
+  const semanticFailureNames: string[] = []
+  const semanticFailureResults: TypedToolResult<ToolSet>[] = []
+
+  for (const toolResult of toolResults) {
+    if (toolResult.toolName !== ESCALATE_TOOL_NAME) {
+      successResults.push(toolResult)
+      successNames.push(toolResult.toolName)
+      continue
+    }
+
+    const status = (toolResult.output as { status?: string } | undefined)
+      ?.status
+
+    if (status === EscalateToolResultStatus.UNAVAILABLE) {
+      semanticFailureNames.push(toolResult.toolName)
+      semanticFailureResults.push(toolResult)
+      continue
+    }
+
+    successResults.push(toolResult)
+    if (status === EscalateToolResultStatus.PENDING_APPROVAL) {
+      successNames.push(toolResult.toolName)
+    }
+  }
+
+  return {
+    successResults,
+    successNames,
+    semanticFailureNames,
+    semanticFailureResults,
+  }
+}
+
 export function formatIncompleteToolCallError(
   incompleteTools: IncompleteToolCall[]
 ): string {
   const toolNames = incompleteTools.map(t => t.toolName).join(", ")
   return `The AI model failed to complete tool execution${toolNames ? ` for: ${toolNames}` : ""}. This may be due to a compatibility issue with the selected model. Please try a different model or try again.`
+}
+
+export const assertAgentHasValidConfig = async (agent: Agent) => {
+  if (!agent.aiconfig) {
+    throw new HTTPError(
+      "Agent is not properly configured: missing AI config",
+      422
+    )
+  }
+
+  const aiConfig = await sdk.ai.configs.find(agent.aiconfig)
+  if (!aiConfig) {
+    throw new HTTPError(
+      `Agent is not properly configured: AI config "${agent.aiconfig}" not found`,
+      422
+    )
+  }
 }

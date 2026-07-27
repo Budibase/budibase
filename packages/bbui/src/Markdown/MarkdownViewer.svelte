@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { marked } from "marked"
+  import { renderMarkdown } from "./renderMarkdown"
 
   export let value: string | undefined = undefined
   export let height: string | undefined = undefined
@@ -19,7 +19,7 @@
       ref.innerHTML = ""
       return
     }
-    ref.innerHTML = marked.parse(markdown, { async: false })
+    ref.innerHTML = renderMarkdown(markdown)
   }
 </script>
 
@@ -72,5 +72,10 @@
   }
   .markdown-viewer :global(a:hover) {
     color: var(--primaryColorHover);
+  }
+  /* Markdown italics */
+  .markdown-viewer :global(em),
+  .markdown-viewer :global(i) {
+    font-style: italic !important;
   }
 </style>

@@ -8,33 +8,39 @@
     selectedAppUrls,
     workspaceAppStore,
   } from "@/stores/builder"
+  import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import UndoRedoControl from "@/components/common/UndoRedoControl.svelte"
   import ScreenErrorsButton from "./ScreenErrorsButton.svelte"
-  import { ActionButton, Divider, Icon, Toggle } from "@budibase/bbui"
+  import { ActionButton, Divider, Icon } from "@budibase/bbui"
+  import {
+    getNextPreviewDevice,
+    getPreviewDeviceIcon,
+  } from "@budibase/shared-core"
   import { PublishResourceState, ScreenVariant } from "@budibase/types"
   import ThemeSettings from "./Theme/ThemeSettings.svelte"
-  import PublishStatusBadge from "@/components/common/PublishStatusBadge.svelte"
 
   let changingStatus = false
 
-  $: mobile = $previewStore.previewDevice === "mobile"
+  $: currentDevice = $previewStore.previewDevice
   $: isPDF = $selectedScreen?.variant === ScreenVariant.PDF
   $: selectedWorkspaceApp = $workspaceAppStore.selectedWorkspaceApp
 
   $: liveUrl = $selectedAppUrls.liveUrl
 
-  $: toggleValue =
+  $: isLive =
     selectedWorkspaceApp?.publishStatus.state === PublishResourceState.PUBLISHED
+
+  $: deviceIcon = getPreviewDeviceIcon(currentDevice)
 
   const previewApp = () => {
     previewStore.showPreview(true)
   }
 
   const togglePreviewDevice = () => {
-    previewStore.setDevice(mobile ? "desktop" : "mobile")
+    previewStore.setDevice(getNextPreviewDevice(currentDevice))
   }
 
-  const handleToggleChange = async (e: CustomEvent<boolean>) => {
+  const handleToggleLive = async () => {
     if (!selectedWorkspaceApp) {
       return
     }
@@ -42,10 +48,7 @@
     try {
       changingStatus = true
 
-      await workspaceAppStore.toggleDisabled(
-        selectedWorkspaceApp._id!,
-        !e.detail
-      )
+      await workspaceAppStore.toggleDisabled(selectedWorkspaceApp._id!, isLive)
     } finally {
       changingStatus = false
     }
@@ -85,7 +88,7 @@
             {#if $appStore.clientFeatures.devicePreview}
               <ActionButton
                 quiet
-                icon={mobile ? "device-mobile-camera" : "monitor"}
+                icon={deviceIcon}
                 on:click={togglePreviewDevice}
               />
             {/if}
@@ -102,16 +105,11 @@
         <div class="divider-container">
           <Divider size="S" vertical />
         </div>
-        <div class="workspace-info-toggle">
-          <PublishStatusBadge
-            status={selectedWorkspaceApp.publishStatus.state}
-            loading={changingStatus}
-          />
-          <Toggle
-            noPadding
-            on:change={handleToggleChange}
-            value={toggleValue}
+        <div class="workspace-live-toggle">
+          <LiveToggleButton
+            live={isLive}
             disabled={changingStatus}
+            on:click={handleToggleLive}
           />
         </div>
       </div>
@@ -159,12 +157,11 @@
     gap: 6px;
   }
 
-  .workspace-info-toggle {
+  .workspace-live-toggle {
     display: flex;
     align-items: center;
     justify-content: right;
-    gap: var(--spacing-m);
-    width: 100px;
+    min-width: 96px;
   }
 
   .workspace-info {

@@ -1,12 +1,18 @@
 import {
+  EmptyFilterOption,
   FieldType,
   RelationshipType,
   SearchFilters,
   Table,
 } from "@budibase/types"
+import _ from "lodash"
 import { structures } from "../../../../api/routes/tests/utilities"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { getQueryableFields, validateFilters } from "../queryUtils"
+import {
+  findInvalidFilterFields,
+  getQueryableFields,
+  validateFilters,
+} from "../queryUtils"
 
 describe("query utils", () => {
   describe("validateFilters", () => {
@@ -132,6 +138,63 @@ describe("query utils", () => {
     })
   })
 
+  describe("findInvalidFilterFields", () => {
+    it("returns nothing for filters on valid fields", () => {
+      const filters: SearchFilters = {
+        onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+        equal: { one: "foo" },
+        $and: {
+          conditions: [{ equal: { one: "foo2" }, notEmpty: { two: null } }],
+        },
+      }
+
+      expect(findInvalidFilterFields(filters, ["one", "two"])).toEqual([])
+    })
+
+    it("finds filters on unknown fields", () => {
+      const filters: SearchFilters = {
+        onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+        equal: { one: "foo", deleted: "bar" },
+      }
+
+      expect(findInvalidFilterFields(filters, ["one"])).toEqual(["deleted"])
+    })
+
+    it("finds unknown fields nested in logical operators", () => {
+      const filters: SearchFilters = {
+        $or: {
+          conditions: [
+            { $and: { conditions: [{ equal: { deleted: "foo" } }] } },
+            { equal: { one: "foo", missing: "bar" } },
+          ],
+        },
+      }
+
+      expect(findInvalidFilterFields(filters, ["one"])).toEqual([
+        "deleted",
+        "missing",
+      ])
+    })
+
+    it("handles numbered field prefixes", () => {
+      const filters: SearchFilters = {
+        equal: { "1:one": "foo", "2:deleted": "bar" },
+      }
+
+      expect(findInvalidFilterFields(filters, ["one"])).toEqual(["2:deleted"])
+    })
+
+    it("does not mutate the original filters", () => {
+      const filters: SearchFilters = {
+        equal: { one: "foo", deleted: "bar" },
+      }
+      const original = _.cloneDeep(filters)
+
+      findInvalidFilterFields(filters, ["one"])
+      expect(filters).toEqual(original)
+    })
+  })
+
   describe("getQueryableFields", () => {
     const config = new TestConfiguration()
 
@@ -163,6 +226,21 @@ describe("query utils", () => {
 
       const result = await getQueryableFields(table)
       expect(result).toEqual(["_id", "name"])
+    })
+
+    it("includes hidden fields when includeHidden is set", async () => {
+      const table: Table = await config.api.table.save({
+        ...structures.basicTable(),
+        schema: {
+          name: { name: "name", type: FieldType.STRING },
+          age: { name: "age", type: FieldType.NUMBER, visible: false },
+        },
+      })
+
+      const result = await getQueryableFields(table, undefined, {
+        includeHidden: true,
+      })
+      expect(result).toEqual(["_id", "name", "age"])
     })
 
     it("includes relationship fields", async () => {

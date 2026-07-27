@@ -1,16 +1,16 @@
 # Use root/example as user/password credentials
-version: '3.1'
+version: "3.1"
 
 services:
-
   db:
-    image: mysql
+    image: mysql:9
     restart: always
-    command: --init-file /data/application/init.sql --default-authentication-plugin=mysql_native_password
+    command: --init-file /data/application/init.sql
     volumes:
       - ./init.sql:/data/application/init.sql
     environment:
       MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: "%"
     ports:
       - 3306:3306
 

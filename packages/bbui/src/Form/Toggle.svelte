@@ -12,6 +12,7 @@
   export let error: string | undefined = undefined
   export let helpText: string | undefined = undefined
   export let noPadding: boolean = false
+  export let noMargin: boolean = false
 
   const dispatch = createEventDispatcher()
   const onChange = (e: CustomEvent<boolean>) => {
@@ -23,6 +24,7 @@
 <Field {helpText} {label} {labelPosition} {error}>
   <Switch
     {disabled}
+    {noMargin}
     {text}
     {noPadding}
     value={value ?? undefined}

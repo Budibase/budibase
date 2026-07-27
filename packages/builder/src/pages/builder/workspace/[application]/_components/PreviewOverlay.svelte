@@ -8,12 +8,14 @@
 
   const close = () => {
     previewStore.showPreview(false)
+    previewStore.resetModalDevice()
   }
 
   onMount(() => {
     window.isBuilder = true
     window.closePreview = () => {
       previewStore.showPreview(false)
+      previewStore.resetModalDevice()
     }
   })
 
@@ -29,6 +31,7 @@
 >
   <div
     class="container spectrum {$themeStore.theme}"
+    class:tablet={$previewStore.modalDevice === "tablet"}
     class:mobile={$previewStore.modalDevice === "mobile"}
     transition:fly={{ duration: 260, y: 130 }}
   >
@@ -67,6 +70,12 @@
     flex: 0 0 auto;
     width: min(520px, calc(100% - 96px));
     height: min(960px, calc(100% - 96px));
+    margin: auto;
+  }
+  .container.tablet {
+    flex: 0 0 auto;
+    width: min(900px, calc(100% - 96px));
+    height: min(1200px, calc(100% - 96px));
     margin: auto;
   }
   iframe {

@@ -100,6 +100,6 @@
   }
   textarea {
     resize: vertical;
-    min-height: 80px !important;
+    min-height: 38px !important;
   }
 </style>

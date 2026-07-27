@@ -14,6 +14,79 @@
   --bb-blue: #6a9bcc;
   --bb-green: #788c5d;
 
+  /* temporary colours for Joe testing */
+  /* Brand */
+  --color-brand-100: #e9f0ff;
+  --color-brand-200: #d3e0ff;
+  --color-brand-300: #afc7ff;
+  --color-brand-400: #7fa6ff;
+  --color-brand-500: #386cf4;
+  --color-brand-600: #2660f3;
+  --color-brand-700: #1e4fd4;
+  --color-brand-800: #173ea8;
+  --color-brand-900: #112d7a;
+  --color-brand-950: #091841;
+
+  /* Blue */
+  --color-blue-100: #eaf2f9;
+  --color-blue-200: #c3daea;
+  --color-blue-300: #89b5e2;
+  --color-blue-400: #6a9bcc;
+  --color-blue-500: #467db4;
+  --color-blue-600: #215f9e;
+  --color-blue-700: #1b436a;
+  --color-blue-800: #13324f;
+  --color-blue-900: #0c2236;
+  --color-blue-950: #0c2236;
+
+  /* Clay / Orange */
+  --color-orange-100: #f6e6da;
+  --color-orange-200: #ecd3c2;
+  --color-orange-300: #ddb99a;
+  --color-orange-400: #d4a27f;
+  --color-orange-500: #d97757;
+  --color-orange-600: #c86240;
+  --color-orange-700: #aa4321;
+  --color-orange-800: #7f3118;
+  --color-orange-900: #4a1d0e;
+  --color-orange-950: #301208;
+
+  /* Grass / Green */
+  --color-green-100: #eef3e9;
+  --color-green-200: #d2ddc3;
+  --color-green-300: #b6c7a8;
+  --color-green-400: #9fb88a;
+  --color-green-500: #8ca171;
+  --color-green-600: #788c5d;
+  --color-green-700: #4c622f;
+  --color-green-800: #35461f;
+  --color-green-900: #1f2a12;
+  --color-green-950: #141b0c;
+
+  /* Lavender / Purple */
+  --color-purple-100: #f1eefb;
+  --color-purple-200: #d2ccef;
+  --color-purple-300: #bdb0f5;
+  --color-purple-400: #a292e3;
+  --color-purple-500: #8777d1;
+  --color-purple-600: #585392;
+  --color-purple-700: #363174;
+  --color-purple-800: #252154;
+  --color-purple-900: #171336;
+  --color-purple-950: #110e27;
+
+  /* Reds */
+  --color-red-100: #f4e7e4;
+  --color-red-200: #e9c8c3;
+  --color-red-300: #d9a29a;
+  --color-red-400: #c87c72;
+  --color-red-500: #b4564b;
+  --color-red-600: #9c3f36;
+  --color-red-700: #7e2c24;
+  --color-red-800: #5a1e19;
+  --color-red-900: #361210;
+  --color-red-950: #220b0a;
+
   /* Custom spectrum additions */
   --spectrum-global-color-static-red-1200: #740000;
   --spectrum-global-color-static-orange-1200: #612300;

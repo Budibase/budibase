@@ -1,13 +1,12 @@
 <script lang="ts">
   import { Button, Icon, Layout } from "@budibase/bbui"
 
-  /* eslint-disable no-unused-vars */
   enum ResourceType {
     App = "app",
     Automation = "automation",
     Agent = "agent",
+    API = "api",
   }
-  /* eslint-enable no-unused-vars */
 
   export let onCtaClick: () => void
   export let ctaText: string
@@ -18,6 +17,7 @@
     [ResourceType.App]: "browser",
     [ResourceType.Automation]: "path",
     [ResourceType.Agent]: "cpu",
+    [ResourceType.API]: "globe-simple",
   }
 </script>
 
@@ -27,6 +27,7 @@
     class:automation={resourceType === ResourceType.Automation}
     class:app={resourceType === ResourceType.App}
     class:agent={resourceType === ResourceType.Agent}
+    class:api={resourceType === ResourceType.API}
   >
     <Icon
       name={iconByType[resourceType]}
@@ -55,9 +56,11 @@
     border: 0.5px solid #c96442;
     background: #aa4321;
   }
-
   .icon-container.agent {
     border: 0.5px solid #e9e6ff;
     background: #806fde;
+  }
+  .icon-container.api {
+    border: 0.5px solid #e9e6ff;
   }
 </style>

@@ -1,4 +1,6 @@
-import { Duration, DurationType } from "../Duration"
+import { DurationType } from "@budibase/types"
+
+import { Duration } from "../Duration"
 
 describe("duration", () => {
   it("should convert minutes to milliseconds", () => {

@@ -2,12 +2,20 @@
   import Portal from "svelte-portal"
   import { getContext } from "svelte"
   import Context from "../context"
+  import { readable } from "svelte/store"
 
   export let anchor
   export let visible = false
   export let offset = 0
 
-  $: target = getContext(Context.PopoverRoot) || "#app"
+  const popoverRootCtx = getContext(Context.PopoverRoot)
+  const popoverRootStore =
+    popoverRootCtx &&
+    typeof popoverRootCtx === "object" &&
+    "subscribe" in popoverRootCtx
+      ? popoverRootCtx
+      : readable(popoverRootCtx || "#app")
+  $: target = $popoverRootStore || "#app"
 
   let hovering = false
   let tooltip

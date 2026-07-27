@@ -5,6 +5,7 @@
   import ActionButton from "../../../ActionButton/ActionButton.svelte"
   import { createEventDispatcher, onMount } from "svelte"
   import { stringifyDate } from "../../../helpers"
+  import { resolveTranslationGroup } from "@budibase/shared-core"
 
   export let useKeyboardShortcuts = true
   export let ignoreTimezones
@@ -12,6 +13,7 @@
   export let timeOnly
   export let value
   export let startDayOfWeek = "Monday"
+  export let calendarLabels = resolveTranslationGroup("calendar")
 
   const dispatch = createEventDispatcher()
   let calendar
@@ -20,7 +22,7 @@
   $: showTime = enableTime || timeOnly
 
   const setToNow = () => {
-    const now = dayjs()
+    const now = dayjs().second(0).millisecond(0)
     calendar?.setDate(now)
     handleChange(now)
   }
@@ -57,6 +59,7 @@
     <Calendar
       {value}
       {startDayOfWeek}
+      {calendarLabels}
       on:change={e => handleChange(e.detail)}
       bind:this={calendar}
     />
@@ -71,10 +74,12 @@
         size="S"
         on:click={() => dispatch("change", null)}
       >
-        Clear
+        {calendarLabels?.datePickerClear || "Clear"}
       </ActionButton>
       <ActionButton size="S" on:click={setToNow}>
-        {showTime ? "Now" : "Today"}
+        {showTime
+          ? calendarLabels?.datePickerNow || "Now"
+          : calendarLabels?.todayButton || "Today"}
       </ActionButton>
     </div>
   </div>

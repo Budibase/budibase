@@ -1,28 +1,33 @@
-import { cache, context, db as dbCore } from "@budibase/backend-core"
+import { cache, context, users } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { type GetWorkspaceHomeMetricsResponse } from "@budibase/types"
 
 import { getQuotaMonthWindow } from "../../utilities/quotaMonthWindow"
 
-const METRICS_FRESH_TTL_MS = 10 * 60 * 1000
+const METRICS_FRESH_TTL_MS = 90 * 1000
 const METRICS_FAILURE_TTL_MS = 5 * 60 * 1000
 const METRICS_RETENTION_TTL_SECONDS = 24 * 60 * 60
-const METRICS_CACHE_KEY_PREFIX = "workspaceHome:metrics"
+const METRICS_CACHE_KEY_PREFIX = "workspaceHome:metrics:v3"
+const BUDIBASE_AI_TOKENS_PER_CREDIT = 1000
 
 interface WorkspaceMetricsCacheEnvelope {
   value: GetWorkspaceHomeMetricsResponse
   expiresAt: number
 }
 
-const buildWorkspaceMetricsCacheKey = (prodWorkspaceId: string) =>
-  `${METRICS_CACHE_KEY_PREFIX}:${prodWorkspaceId}`
+const buildWorkspaceMetricsCacheKey = (tenantId: string) =>
+  `${METRICS_CACHE_KEY_PREFIX}:${tenantId}`
+
+const convertBudibaseAIUsageToCredits = (usage = 0) => {
+  return Math.floor(usage / BUDIBASE_AI_TOKENS_PER_CREDIT)
+}
 
 const getDefaultMetrics = (): GetWorkspaceHomeMetricsResponse => {
   const { periodStart, periodEnd } = getQuotaMonthWindow()
   return {
     totalUsers: 0,
-    automationRunsThisMonth: 0,
-    agentActionsThisMonth: 0,
+    operationsThisMonth: 0,
+    budibaseAICreditsThisMonth: 0,
     periodStart,
     periodEnd,
   }
@@ -43,100 +48,64 @@ const storeCachedMetrics = async (
     .catch(() => null)
 }
 
-const countUsersWithWorkspaceAccess = async (prodWorkspaceId: string) => {
-  const globalDb = context.getGlobalDB()
+const computeWorkspaceHomeMetrics =
+  async (): Promise<GetWorkspaceHomeMetricsResponse> => {
+    const { periodStart, periodEnd } = getQuotaMonthWindow()
 
-  const selector = {
-    $or: [
-      { "builder.global": true },
-      { "admin.global": true },
-      { [`roles.${prodWorkspaceId}`]: { $exists: true } },
-    ],
-    _id: { $regex: "^us_" },
-  }
+    const usersPromise = users.getUserCount()
 
-  const limit = 1000
-  let bookmark: string | undefined
-  let total = 0
-
-  while (true) {
-    const resp = await globalDb.find({
-      selector,
-      fields: ["_id"],
-      limit,
-      bookmark,
+    const quotaUsagePromise = quotas.getQuotaUsage().then(usage => {
+      return {
+        operationsThisMonth: usage.monthly?.current?.actions ?? 0,
+        budibaseAICreditsThisMonth: convertBudibaseAIUsageToCredits(
+          usage.monthly?.current?.budibaseAICredits
+        ),
+      }
     })
 
-    total += resp.docs.length
+    const [totalUsers, quotaUsage] = await Promise.all([
+      usersPromise,
+      quotaUsagePromise,
+    ])
 
-    if (!resp.bookmark || resp.docs.length < limit) {
-      break
+    return {
+      totalUsers,
+      operationsThisMonth: quotaUsage.operationsThisMonth,
+      budibaseAICreditsThisMonth: quotaUsage.budibaseAICreditsThisMonth,
+      periodStart,
+      periodEnd,
+    }
+  }
+
+export const getWorkspaceHomeMetrics =
+  async (): Promise<GetWorkspaceHomeMetricsResponse> => {
+    const cacheKey = buildWorkspaceMetricsCacheKey(context.getTenantId())
+
+    const envelope = await getCachedMetrics(cacheKey)
+
+    if (envelope && envelope.expiresAt > Date.now()) {
+      return envelope.value
     }
 
-    bookmark = resp.bookmark
-  }
+    try {
+      const value = await computeWorkspaceHomeMetrics()
+      const nextEnvelope: WorkspaceMetricsCacheEnvelope = {
+        value,
+        expiresAt: Date.now() + METRICS_FRESH_TTL_MS,
+      }
 
-  return total
-}
+      await storeCachedMetrics(cacheKey, nextEnvelope)
 
-const computeWorkspaceHomeMetrics = async (
-  prodWorkspaceId: string
-): Promise<GetWorkspaceHomeMetricsResponse> => {
-  const { periodStart, periodEnd, monthString } = getQuotaMonthWindow()
+      return value
+    } catch {
+      const value = envelope?.value || getDefaultMetrics()
+      const fallbackEnvelope: WorkspaceMetricsCacheEnvelope = {
+        value,
+        expiresAt: Date.now() + METRICS_FAILURE_TTL_MS,
+      }
 
-  const usersPromise = countUsersWithWorkspaceAccess(prodWorkspaceId)
+      await storeCachedMetrics(cacheKey, fallbackEnvelope)
 
-  const automationsPromise = quotas.getQuotaUsage().then(usage => {
-    return (
-      usage.apps?.[prodWorkspaceId]?.monthly?.[monthString]?.automations ?? 0
-    )
-  })
-
-  const [totalUsers, automationRunsThisMonth] = await Promise.all([
-    usersPromise,
-    automationsPromise,
-  ])
-
-  return {
-    totalUsers,
-    automationRunsThisMonth,
-    agentActionsThisMonth: 0,
-    periodStart,
-    periodEnd,
-  }
-}
-
-export const getWorkspaceHomeMetrics = async (
-  workspaceId: string
-): Promise<GetWorkspaceHomeMetricsResponse> => {
-  const prodWorkspaceId = dbCore.getProdWorkspaceID(workspaceId)
-  const cacheKey = buildWorkspaceMetricsCacheKey(prodWorkspaceId)
-
-  const envelope = await getCachedMetrics(cacheKey)
-
-  if (envelope && envelope.expiresAt > Date.now()) {
-    return envelope.value
-  }
-
-  try {
-    const value = await computeWorkspaceHomeMetrics(prodWorkspaceId)
-    const nextEnvelope: WorkspaceMetricsCacheEnvelope = {
-      value,
-      expiresAt: Date.now() + METRICS_FRESH_TTL_MS,
+      return value
     }
-
-    await storeCachedMetrics(cacheKey, nextEnvelope)
-
-    return value
-  } catch {
-    const value = envelope?.value || getDefaultMetrics()
-    const fallbackEnvelope: WorkspaceMetricsCacheEnvelope = {
-      value,
-      expiresAt: Date.now() + METRICS_FAILURE_TTL_MS,
-    }
-
-    await storeCachedMetrics(cacheKey, fallbackEnvelope)
-
-    return value
   }
-}

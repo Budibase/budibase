@@ -7,9 +7,13 @@
 
   let modal
   let promptUpload = false
+  let tableModalKey = 0
+
+  export let initialProjectIds = []
 
   export function show({ promptUpload: newPromptUpload = false } = {}) {
     promptUpload = newPromptUpload
+    tableModalKey += 1
     modal.show()
   }
 
@@ -20,5 +24,11 @@
 </script>
 
 <Modal bind:this={modal} closeOnOutsideClick={false}>
-  <CreateTableModal {promptUpload} afterSave={handleInternalTableSave} />
+  {#key tableModalKey}
+    <CreateTableModal
+      {promptUpload}
+      {initialProjectIds}
+      afterSave={handleInternalTableSave}
+    />
+  {/key}
 </Modal>

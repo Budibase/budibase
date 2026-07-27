@@ -6,16 +6,96 @@
   import dayGridPlugin from "@fullcalendar/daygrid"
   import timeGridPlugin from "@fullcalendar/timegrid"
   import listPlugin from "@fullcalendar/list"
-  import type { EventClickArg } from "@fullcalendar/core"
+  import {
+    formatDate,
+    formatRange,
+    type DayHeaderContentArg,
+    type EventClickArg,
+    type FormatterInput,
+  } from "@fullcalendar/core"
   import type { Row, UIFieldDataProviderContext } from "@budibase/types"
+  import {
+    resolveTranslationGroup,
+    resolveWorkspaceTranslations,
+  } from "@budibase/shared-core"
 
   type CalendarView =
     | "dayGridMonth"
     | "dayGridWeek"
     | "timeGridDay"
     | "listWeek"
+  type YearTitleFormat = "hidden" | "numeric" | "2-digit"
+  type MonthTitleFormat = "hidden" | "numeric" | "2-digit" | "short" | "long"
+  type DayTitleFormat = "hidden" | "numeric" | "2-digit"
   type TitleDateLocale = "en-gb" | "en-us"
   type CalendarButtonType = "action" | "primary"
+  type WeekdayFormat = "long" | "short" | "narrow"
+  type WeekdayTitleFormat = "hidden" | WeekdayFormat
+  type MonthFormat = "long" | "short"
+  interface CalendarDateFormat extends Intl.DateTimeFormatOptions {
+    omitCommas?: boolean
+    separator?: string
+  }
+  type CalendarTitleFormatter = Exclude<
+    FormatterInput,
+    string | Intl.DateTimeFormatOptions
+  >
+  type WeekdayTranslationKey =
+    | "sunday"
+    | "monday"
+    | "tuesday"
+    | "wednesday"
+    | "thursday"
+    | "friday"
+    | "saturday"
+  type MonthTranslationKey =
+    | "january"
+    | "february"
+    | "march"
+    | "april"
+    | "may"
+    | "june"
+    | "july"
+    | "august"
+    | "september"
+    | "october"
+    | "november"
+    | "december"
+
+  const weekdayTranslationKeys: WeekdayTranslationKey[] = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+  ]
+  const monthTranslationKeys: MonthTranslationKey[] = [
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+  ]
+
+  const formatTranslatedLabel = (label: string, format: WeekdayFormat) => {
+    if (format === "narrow") {
+      return label.slice(0, 1)
+    }
+    if (format === "short") {
+      return label.slice(0, 3)
+    }
+    return label
+  }
+
   interface CalendarEventPayload {
     row_id?: string
     title: string
@@ -38,20 +118,26 @@
   export let agendaText: string = "Agenda"
   export let showTitleDate: boolean = true
   export let locale: TitleDateLocale = "en-gb"
-  export let yearTitleFormat: string
-  export let monthTitleFormat: string
-  export let dayTitleFormat: string
-  export let weekdayTitleFormat: string
+  export let yearTitleFormat: YearTitleFormat
+  export let monthTitleFormat: MonthTitleFormat
+  export let dayTitleFormat: DayTitleFormat
+  export let weekdayTitleFormat: WeekdayTitleFormat
+  export let weekdayHeaderFormat: WeekdayFormat = "short"
   export let emptyAgendaText: string = "No events found"
   export let openOnDate: string = "{{ now }}"
   export let calendarType: CalendarView = "dayGridMonth"
   export let showDayNames: boolean = true
 
-  const { styleable } = getContext("sdk")
+  const { styleable, appStore } = getContext("sdk")
   const component = getContext("component")
   let calendarRef: FullCalendar | null = null
   let calendarContainer: HTMLDivElement | null = null
   let resizeObserver: ResizeObserver | null = null
+  let timeGridDayTitleFormat: FormatterInput
+  $: translationOverrides = resolveWorkspaceTranslations(
+    $appStore.application?.translationOverrides
+  )
+  $: calendarLabels = resolveTranslationGroup("calendar", translationOverrides)
   $: isTimeGridDay = calendarType === "timeGridDay"
   $: calendarButtonType = buttonType === "primary" ? "primary" : "action"
   $: hasClickAction = typeof onClick === "function"
@@ -65,10 +151,12 @@
       : {}
   $: dayTitleFormatProps =
     dayTitleFormat && dayTitleFormat !== "hidden" ? { day: dayTitleFormat } : {}
-  $: weekdayTitleFormatProps =
-    weekdayTitleFormat && weekdayTitleFormat !== "hidden"
-      ? { weekday: weekdayTitleFormat }
-      : {}
+  $: timeGridDayTitleDateFormat = {
+    ...yearTitleFormatProps,
+    ...dayTitleFormatProps,
+    ...monthTitleFormatProps,
+    omitCommas: true,
+  }
 
   $: events =
     dataProvider?.rows?.map((row: Row) => ({
@@ -108,6 +196,162 @@
     onClick?.({ title, start, end, row_id })
   }
 
+  const getTranslatedWeekday = (date: Date, format: WeekdayFormat) => {
+    const key = weekdayTranslationKeys[date.getUTCDay()]
+    return formatTranslatedLabel(calendarLabels[key], format)
+  }
+
+  const getTranslatedMonth = (date: Date, format: MonthFormat) => {
+    const key = monthTranslationKeys[date.getUTCMonth()]
+    return formatTranslatedLabel(calendarLabels[key], format)
+  }
+
+  const getTranslatedDefaultText = (
+    label: string,
+    defaultLabel: string,
+    translationKey: string
+  ) => {
+    return !label || label === defaultLabel
+      ? calendarLabels[translationKey]
+      : label
+  }
+
+  const replaceTranslatedMonths = (
+    value: string,
+    monthFormat: Intl.DateTimeFormatOptions["month"]
+  ) => {
+    if (monthFormat !== "long" && monthFormat !== "short") {
+      return value
+    }
+
+    const replacements = monthTranslationKeys
+      .map((_, index) => {
+        const date = new Date(Date.UTC(2020, index, 1))
+        return {
+          localeLabel: new Intl.DateTimeFormat(locale, {
+            month: monthFormat,
+            timeZone: "UTC",
+          }).format(date),
+          translatedLabel: getTranslatedMonth(date, monthFormat),
+        }
+      })
+      .sort((a, b) => b.localeLabel.length - a.localeLabel.length)
+
+    const translationMap = new Map(
+      replacements.map(({ localeLabel, translatedLabel }) => [
+        localeLabel,
+        translatedLabel,
+      ])
+    )
+    const monthPattern = new RegExp(
+      replacements.map(({ localeLabel }) => localeLabel).join("|"),
+      "g"
+    )
+
+    return value.replace(
+      monthPattern,
+      match => translationMap.get(match) ?? match
+    )
+  }
+
+  const formatTranslatedDate = (date: Date, dateFormat: CalendarDateFormat) => {
+    const formattedDate = formatDate(date, { ...dateFormat, locale })
+    return replaceTranslatedMonths(formattedDate, dateFormat.month)
+  }
+
+  const formatTranslatedDateRange = (
+    start: Date,
+    end: Date | undefined,
+    dateFormat: CalendarDateFormat
+  ) => {
+    const formattedDate = end
+      ? formatRange(start, end, { ...dateFormat, locale })
+      : formatDate(start, { ...dateFormat, locale })
+
+    return replaceTranslatedMonths(formattedDate, dateFormat.month)
+  }
+
+  const buildTranslatedDateFormat =
+    (dateFormat: CalendarDateFormat): CalendarTitleFormatter =>
+    arg =>
+      formatTranslatedDateRange(arg.start.marker, arg.end?.marker, {
+        ...dateFormat,
+        separator: arg.defaultSeparator,
+      })
+
+  const buildDayHeaderContent =
+    (weekdayFormat: WeekdayFormat, dateFormat?: CalendarDateFormat) =>
+    (arg: DayHeaderContentArg) => {
+      const weekday = getTranslatedWeekday(arg.date, weekdayFormat)
+      const date = dateFormat
+        ? formatTranslatedDate(arg.date, dateFormat)
+        : undefined
+
+      return date ? `${weekday} ${date}` : weekday
+    }
+
+  const buildTranslatedWeekdayTitleFormat =
+    (
+      weekdayFormat: WeekdayFormat,
+      dateFormat: CalendarDateFormat
+    ): CalendarTitleFormatter =>
+    arg => {
+      const date = arg.date.marker
+      const weekday = getTranslatedWeekday(date, weekdayFormat)
+      const hasDateFormat =
+        dateFormat.year || dateFormat.month || dateFormat.day
+      const formattedDate = hasDateFormat
+        ? formatTranslatedDate(date, dateFormat)
+        : undefined
+
+      return formattedDate ? `${weekday} ${formattedDate}` : weekday
+    }
+
+  $: monthTitleUsesTranslation =
+    monthTitleFormat === "long" || monthTitleFormat === "short"
+  $: dayGridMonthTitleFormat = monthTitleUsesTranslation
+    ? buildTranslatedDateFormat({
+        ...yearTitleFormatProps,
+        ...monthTitleFormatProps,
+      })
+    : {
+        ...yearTitleFormatProps,
+        ...monthTitleFormatProps,
+      }
+  $: dayGridWeekTitleFormat = monthTitleUsesTranslation
+    ? buildTranslatedDateFormat({
+        ...yearTitleFormatProps,
+        ...dayTitleFormatProps,
+        ...monthTitleFormatProps,
+      })
+    : {
+        ...yearTitleFormatProps,
+        ...dayTitleFormatProps,
+        ...monthTitleFormatProps,
+      }
+  $: {
+    if (weekdayTitleFormat && weekdayTitleFormat !== "hidden") {
+      timeGridDayTitleFormat = buildTranslatedWeekdayTitleFormat(
+        weekdayTitleFormat,
+        timeGridDayTitleDateFormat
+      )
+    } else if (monthTitleUsesTranslation) {
+      timeGridDayTitleFormat = buildTranslatedDateFormat(
+        timeGridDayTitleDateFormat
+      )
+    } else {
+      timeGridDayTitleFormat = timeGridDayTitleDateFormat
+    }
+  }
+  $: listDayFormat = showDayNames
+    ? buildTranslatedWeekdayTitleFormat("long", {})
+    : false
+  $: listDaySideFormat = buildTranslatedDateFormat({
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  })
+
   $: options = {
     headerToolbar: {
       left: showButtons ? "dayGridMonth,dayGridWeek,timeGridDay,listWeek" : "",
@@ -116,53 +360,57 @@
     },
     footerToolbar: "",
     locale,
+    allDayText: calendarLabels.allDay,
     buttonText: {
-      today: todayText,
-      dayGridMonth: monthText,
-      dayGridWeek: weekText,
-      timeGridDay: dayText,
-      listWeek: agendaText,
+      today: getTranslatedDefaultText(todayText, "Today", "todayButton"),
+      dayGridMonth: getTranslatedDefaultText(monthText, "Month", "monthButton"),
+      dayGridWeek: getTranslatedDefaultText(weekText, "Week", "weekButton"),
+      timeGridDay: getTranslatedDefaultText(dayText, "Day", "dayButton"),
+      listWeek: getTranslatedDefaultText(agendaText, "Agenda", "agendaButton"),
     },
     plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
     initialView: calendarType || "dayGridMonth",
     views: {
       dayGridMonth: {
-        titleFormat: {
-          ...yearTitleFormatProps,
-          ...monthTitleFormatProps,
-        },
+        titleFormat: dayGridMonthTitleFormat,
         dayHeaders: showDayNames,
+        dayHeaderContent: showDayNames
+          ? buildDayHeaderContent(weekdayHeaderFormat)
+          : undefined,
       },
       dayGridWeek: {
-        titleFormat: {
-          ...yearTitleFormatProps,
-          ...dayTitleFormatProps,
-          ...monthTitleFormatProps,
-        },
+        titleFormat: dayGridWeekTitleFormat,
         dayHeaderFormat: showDayNames
-          ? { weekday: "short", day: "numeric", month: "numeric" }
+          ? { weekday: weekdayHeaderFormat, day: "numeric", month: "numeric" }
           : { day: "numeric", month: "numeric" },
+        dayHeaderContent: showDayNames
+          ? buildDayHeaderContent(weekdayHeaderFormat, {
+              day: "numeric",
+              month: "numeric",
+            })
+          : undefined,
       },
       timeGridDay: {
-        titleFormat: {
-          ...yearTitleFormatProps,
-          ...dayTitleFormatProps,
-          ...monthTitleFormatProps,
-          ...weekdayTitleFormatProps,
-          omitCommas: true,
-        },
+        titleFormat: timeGridDayTitleFormat,
         dayHeaderFormat: showDayNames
-          ? { weekday: "short", day: "numeric", month: "numeric" }
+          ? { weekday: weekdayHeaderFormat, day: "numeric", month: "numeric" }
           : { day: "numeric", month: "numeric" },
+        dayHeaderContent: showDayNames
+          ? buildDayHeaderContent(weekdayHeaderFormat, {
+              day: "numeric",
+              month: "numeric",
+            })
+          : undefined,
       },
       listWeek: {
-        titleFormat: {
-          ...yearTitleFormatProps,
-          ...dayTitleFormatProps,
-          ...monthTitleFormatProps,
-        },
-        listDayFormat: showDayNames ? { weekday: "long" } : false,
-        noEventsContent: emptyAgendaText,
+        titleFormat: dayGridWeekTitleFormat,
+        listDayFormat,
+        listDaySideFormat,
+        noEventsContent: getTranslatedDefaultText(
+          emptyAgendaText,
+          "No events found",
+          "noEvents"
+        ),
       },
     },
     initialDate: openOnDate,

@@ -2,7 +2,7 @@
   import "@spectrum-css/textfield/dist/index-vars.css"
   import "@spectrum-css/actionbutton/dist/index-vars.css"
   import "@spectrum-css/stepper/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onDestroy } from "svelte"
   import Icon from "../../Icon/Icon.svelte"
 
   export let value = null
@@ -15,9 +15,12 @@
   export let min
   export let max
   export let step
+  export let hideButtons = false
 
   const dispatch = createEventDispatcher()
   let focus = false
+  let holdTimeout
+  let holdInterval
 
   // We need to keep the field value bound to a different variable in order
   // to properly handle erroneous values. If we don't do this then it is
@@ -79,6 +82,9 @@
   }
 
   const stepUp = () => {
+    if (readonly || disabled) {
+      return
+    }
     if (value == null || isNaN(value)) {
       updateValue(step)
     } else {
@@ -87,12 +93,47 @@
   }
 
   const stepDown = () => {
+    if (readonly || disabled) {
+      return
+    }
     if (value == null || isNaN(value)) {
       updateValue(step)
     } else {
       updateValue(value - step)
     }
   }
+
+  const stopHold = () => {
+    if (holdTimeout) {
+      clearTimeout(holdTimeout)
+      holdTimeout = undefined
+    }
+    if (holdInterval) {
+      clearInterval(holdInterval)
+      holdInterval = undefined
+    }
+  }
+
+  const startHold = stepFn => {
+    if (readonly || disabled) {
+      return
+    }
+    stepFn()
+    holdTimeout = setTimeout(() => {
+      holdInterval = setInterval(stepFn, 75)
+    }, 300)
+  }
+
+  const onStepButtonClick = (event, stepFn) => {
+    if (event.detail !== 0) {
+      return
+    }
+    stepFn()
+  }
+
+  onDestroy(() => {
+    stopHold()
+  })
 </script>
 
 <div
@@ -109,6 +150,9 @@
       bind:value={fieldValue}
       placeholder={placeholder || ""}
       type="number"
+      {min}
+      {max}
+      {step}
       class="spectrum-Textfield-input spectrum-Stepper-input"
       on:click
       on:blur
@@ -121,22 +165,40 @@
       on:keyup={updateValueOnEnter}
     />
   </div>
-  <span class="spectrum-Stepper-buttons">
-    <button
-      class="spectrum-ActionButton spectrum-ActionButton--sizeM spectrum-Stepper-stepUp"
-      tabindex="-1"
-      on:click={stepUp}
-    >
-      <Icon name="caret-up" size="XS" />
-    </button>
-    <button
-      class="spectrum-ActionButton spectrum-ActionButton--sizeM spectrum-Stepper-stepDown"
-      tabindex="-1"
-      on:click={stepDown}
-    >
-      <Icon name="caret-down" size="XS" />
-    </button>
-  </span>
+  {#if !hideButtons}
+    <span class="spectrum-Stepper-buttons">
+      <button
+        class="spectrum-ActionButton spectrum-ActionButton--sizeM spectrum-Stepper-stepUp"
+        type="button"
+        {disabled}
+        tabindex="-1"
+        on:mousedown|preventDefault={() => startHold(stepUp)}
+        on:mouseup={stopHold}
+        on:mouseleave={stopHold}
+        on:touchstart|preventDefault={() => startHold(stepUp)}
+        on:touchend={stopHold}
+        on:touchcancel={stopHold}
+        on:click={event => onStepButtonClick(event, stepUp)}
+      >
+        <Icon name="caret-up" size="XS" />
+      </button>
+      <button
+        class="spectrum-ActionButton spectrum-ActionButton--sizeM spectrum-Stepper-stepDown"
+        type="button"
+        {disabled}
+        tabindex="-1"
+        on:mousedown|preventDefault={() => startHold(stepDown)}
+        on:mouseup={stopHold}
+        on:mouseleave={stopHold}
+        on:touchstart|preventDefault={() => startHold(stepDown)}
+        on:touchend={stopHold}
+        on:touchcancel={stopHold}
+        on:click={event => onStepButtonClick(event, stepDown)}
+      >
+        <Icon name="caret-down" size="XS" />
+      </button>
+    </span>
+  {/if}
 </div>
 
 <style>

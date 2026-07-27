@@ -81,9 +81,9 @@
         await auth.getSelf()
       }
       onDuplicateSuccess()
-      notifications.success("App duplicated successfully")
+      notifications.success("Workspace duplicated successfully")
     } catch (err) {
-      notifications.error("Error duplicating app")
+      notifications.error("Error duplicating workspace")
       duplicating = false
     }
   }
@@ -113,7 +113,7 @@
 </script>
 
 <ModalContent
-  title={"Duplicate App"}
+  title={"Duplicate Workspace"}
   onConfirm={async () => {
     validation.check({
       ...$values,

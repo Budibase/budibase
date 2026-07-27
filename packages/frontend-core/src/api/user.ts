@@ -42,7 +42,6 @@ export interface UserEndpoints {
   saveUser: (user: UnsavedUser) => Promise<SaveUserResponse>
   deleteUser: (userId: string) => Promise<DeleteUserResponse>
   deleteUsers: (users: UserIdentifier[]) => Promise<BulkUserDeleted | undefined>
-  onboardUsers: (data: InviteUsersRequest) => Promise<InviteUsersResponse>
   getUserInvite: (
     code: string,
     tenantId?: string
@@ -182,16 +181,6 @@ export const buildUserEndpoints = (API: BaseAPIClient): UserEndpoints => ({
       },
     })
     return res.deleted
-  },
-
-  /**
-   * Onboards multiple users
-   */
-  onboardUsers: async data => {
-    return await API.post({
-      url: "/api/global/users/onboard",
-      body: data,
-    })
   },
 
   addWorkspaceIdToInvite: async (code, role) => {

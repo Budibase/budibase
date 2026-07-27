@@ -12,7 +12,7 @@ jest.mock("../../sdk/workspace/oauth2", () => {
   return {
     ...actual,
     getToken: jest.fn(),
-    cleanStoredToken: jest.fn(),
+    cleanStoredTokensForAuthConfig: jest.fn(),
   }
 })
 
@@ -145,6 +145,14 @@ describe("REST Integration", () => {
       })
     })
   }
+
+  const replaceProcessEnv = (env: NodeJS.ProcessEnv) => {
+    jest.replaceProperty(process, "env", {
+      ...process.env,
+      ...env,
+    })
+  }
+
   const config = new TestConfiguration()
 
   beforeAll(async () => {
@@ -174,6 +182,7 @@ describe("REST Integration", () => {
   })
 
   afterEach(() => {
+    jest.restoreAllMocks()
     fetchMock.mockReset()
   })
 
@@ -218,6 +227,44 @@ describe("REST Integration", () => {
         Accept: "text/html",
       },
     })
+    expect(data).toEqual({ foo: "bar" })
+  })
+
+  it("rejects a redirect to a different origin, even when the target is otherwise blacklisted", async () => {
+    queueResponse(async (url, options) => {
+      expect(url).toEqual("https://example.com/redirect")
+      expect(options?.redirect).toEqual("manual")
+      return new Response("", {
+        status: 302,
+        headers: { location: "http://127.0.0.1/private" },
+      })
+    })
+
+    await expect(integration.read({ path: "redirect" })).rejects.toThrow(
+      "Redirect to a different origin is not permitted."
+    )
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("follows valid redirects", async () => {
+    queueResponse(async (url, options) => {
+      expect(url).toEqual("https://example.com/redirect")
+      expect(options?.redirect).toEqual("manual")
+      return new Response("", {
+        status: 302,
+        headers: { location: "/next" },
+      })
+    })
+    queueJsonResponse(
+      (url, options) => {
+        expect(url).toEqual("https://example.com/next")
+        expect(options?.method).toEqual("GET")
+        expect(options?.redirect).toEqual("manual")
+      },
+      { foo: "bar" }
+    )
+
+    const { data } = await integration.read({ path: "redirect" })
     expect(data).toEqual({ foo: "bar" })
   })
 
@@ -309,12 +356,10 @@ describe("REST Integration", () => {
           expect(options?.method).toEqual("POST")
           expect(options?.body).toBeInstanceOf(UndiciFormData)
 
-          const headers = options?.headers as Record<string, any>
-          const contentTypeHeader =
-            headers["Content-Type"] || headers["content-type"]
+          const headers = new undici.Headers(options?.headers)
           // The original Content-Type inserted in the test data below should be stripped so that
           // undici can automatically insert the correct multipart/form-data header with boundary
-          expect(contentTypeHeader).toBeUndefined()
+          expect(headers.get("content-type")).toBeNull()
         },
         { success: true }
       )
@@ -332,12 +377,9 @@ describe("REST Integration", () => {
 
       // Assert that the non-Content-Type header was kept
       const lastFetchOptions = fetchMock.mock.calls[0][1]
-      expect((lastFetchOptions!.headers! as any)["X-Custom-Header"]).toEqual(
-        "KeepMe"
-      )
-      expect(
-        (lastFetchOptions!.headers! as any)["Content-Type"]
-      ).toBeUndefined()
+      const headers = new undici.Headers(lastFetchOptions!.headers)
+      expect(headers.get("X-Custom-Header")).toEqual("KeepMe")
+      expect(headers.get("Content-Type")).toBeNull()
 
       expect(data).toEqual({ success: true })
     })
@@ -442,9 +484,9 @@ describe("REST Integration", () => {
     const getTokenMock = sdk.oauth2.getToken as jest.MockedFunction<
       typeof sdk.oauth2.getToken
     >
-    const cleanStoredTokenMock = sdk.oauth2
-      .cleanStoredToken as jest.MockedFunction<
-      typeof sdk.oauth2.cleanStoredToken
+    const cleanStoredTokensForAuthConfigMock = sdk.oauth2
+      .cleanStoredTokensForAuthConfig as jest.MockedFunction<
+      typeof sdk.oauth2.cleanStoredTokensForAuthConfig
     >
     const basicAuth: BasicRestAuthConfig = {
       _id: "c59c14bd1898a43baa08da68959b24686",
@@ -467,11 +509,11 @@ describe("REST Integration", () => {
 
     beforeEach(() => {
       getTokenMock.mockReset()
-      cleanStoredTokenMock.mockReset()
+      cleanStoredTokensForAuthConfigMock.mockReset()
       getTokenMock.mockRejectedValue(
         new Error("Unexpected oauth2.getToken call")
       )
-      cleanStoredTokenMock.mockResolvedValue(undefined)
+      cleanStoredTokensForAuthConfigMock.mockResolvedValue(undefined)
       integration = new RestIntegration({
         url: "https://example.com",
         authConfigs: [basicAuth, bearerAuth],
@@ -480,7 +522,7 @@ describe("REST Integration", () => {
 
     afterEach(() => {
       getTokenMock.mockReset()
-      cleanStoredTokenMock.mockReset()
+      cleanStoredTokensForAuthConfigMock.mockReset()
     })
 
     it("adds basic auth", async () => {
@@ -628,8 +670,10 @@ describe("REST Integration", () => {
 
       expect(data).toEqual({ foo: "bar" })
       expect(info.code).toEqual(200)
-      expect(cleanStoredTokenMock).toHaveBeenCalledTimes(1)
-      expect(cleanStoredTokenMock).toHaveBeenCalledWith(oauthConfig._id)
+      expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledTimes(1)
+      expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledWith(
+        oauthConfig._id
+      )
       expect(getTokenMock).toHaveBeenCalledTimes(2)
     })
 
@@ -676,8 +720,10 @@ describe("REST Integration", () => {
 
       expect(info.code).toEqual(401)
       expect(data).toEqual({})
-      expect(cleanStoredTokenMock).toHaveBeenCalledTimes(1)
-      expect(cleanStoredTokenMock).toHaveBeenCalledWith(oauthConfig._id)
+      expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledTimes(1)
+      expect(cleanStoredTokensForAuthConfigMock).toHaveBeenCalledWith(
+        oauthConfig._id
+      )
       expect(getTokenMock).toHaveBeenCalledTimes(2)
     })
   })
@@ -1046,6 +1092,39 @@ describe("REST Integration", () => {
       })
       const { data } = await integration.read({})
       expect(data).toEqual({ foo: "bar" })
+    })
+
+    it("returns a proxy-specific message when the proxy connection is refused", async () => {
+      replaceProcessEnv({
+        GLOBAL_AGENT_HTTP_PROXY: "http://proxy.example.com:8080",
+        GLOBAL_AGENT_HTTPS_PROXY: "",
+        GLOBAL_AGENT_NO_PROXY: "",
+        HTTP_PROXY: "",
+        HTTPS_PROXY: "",
+        NO_PROXY: "",
+      })
+      jest.spyOn(console, "log").mockImplementation(() => {})
+
+      queueResponse(async (_url, options) => {
+        expect(options?.dispatcher?.constructor.name).toBe("ProxyAgent")
+
+        const error = new Error("fetch failed") as Error & {
+          cause: { code: string; message: string }
+        }
+        error.cause = {
+          code: "ECONNREFUSED",
+          message: "connect ECONNREFUSED",
+        }
+        throw error
+      })
+
+      const integration = new RestIntegration({
+        url: "https://example.com",
+      })
+
+      await expect(integration.read({})).rejects.toThrow(
+        "Connection refused when using proxy"
+      )
     })
 
     it("falls back to environment variable when config rejectUnauthorized is undefined", async () => {

@@ -1,5 +1,6 @@
 <script lang="ts">
   import FlowItem from "../../FlowItem.svelte"
+  import LogFlowItem from "../../LogFlowItem.svelte"
   import { ViewMode } from "@/types/automations"
   import {
     AutomationActionStepId,
@@ -29,36 +30,25 @@
   $: memoEnvVariables.set($environment.variables)
   $: isBranch = step.stepId === AutomationActionStepId.BRANCH
   $: viewMode = $automationStore.viewMode
-
-  // Log execution state
-  $: logStepData = getLogStepData(logData, step)
-
-  function getLogStepData(
-    logData: AutomationLog | null,
-    step: AutomationStep | AutomationTrigger
-  ) {
-    if (!logData || viewMode !== ViewMode.LOGS) return null
-    // For trigger step
-    if (step.type === "TRIGGER") {
-      return logData.trigger
-    }
-
-    // For action steps, find by unique id match
-    const logSteps = logData.steps || []
-    return logSteps.find(logStep => logStep.id === step.id)
-  }
 </script>
 
 {#if !isBranch}
   <div class="block" bind:this={stepEle}>
-    <FlowItem
-      block={step}
-      {automation}
-      draggable={step.type !== "TRIGGER"}
-      {logStepData}
-      {viewMode}
-      {selectedLogStepId}
-      {onStepSelect}
-    />
+    {#if viewMode === ViewMode.LOGS}
+      <LogFlowItem
+        block={step}
+        {automation}
+        {logData}
+        {selectedLogStepId}
+        {onStepSelect}
+      />
+    {:else}
+      <FlowItem
+        block={step}
+        {automation}
+        draggable={step.type !== "TRIGGER"}
+        {viewMode}
+      />
+    {/if}
   </div>
 {/if}

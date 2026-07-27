@@ -17,17 +17,26 @@ spec:
       labels:
         io.kompose.service: redis-service
     spec:
+      {{- if .Values.services.redis.podSecurityContext }}
+      securityContext:
+        {{- toYaml .Values.services.redis.podSecurityContext | nindent 8 }}
+      {{- else }}
       securityContext:
         runAsUser: 999
         runAsGroup: 1000
         fsGroup: 1000
+      {{- end }}
       containers:
       - args:
-        - redis-server 
-        - --requirepass 
+        - redis-server
+        - --requirepass
         - {{ .Values.services.redis.password }}
-        image: {{ .Values.globals.dockerRegistry }}{{ .Values.services.redis.image }}
+        image: {{ .Values.services.redis.image | default (printf "%sredis" (.Values.globals.dockerRegistry | default "")) }}
         imagePullPolicy: ""
+        {{- with .Values.services.redis.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         name: redis-service
         ports:
         - containerPort: {{ .Values.services.redis.port }}

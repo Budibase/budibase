@@ -6,13 +6,12 @@
     auth,
     clientAppsStore,
     clientChatAppsStore,
-    featureFlags,
     licensing,
     organisation,
     translations,
   } from "@/stores/portal"
   import type { EnrichedApp } from "@/types"
-  import type { User } from "@budibase/types"
+  import type { PublishedWorkspaceData, User } from "@budibase/types"
   import {
     ActionMenu,
     Body,
@@ -32,7 +31,6 @@
   } from "@budibase/frontend-core"
   import { helpers, sdk, resolveTranslationGroup } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
-  import type { PublishedWorkspaceData } from "@budibase/types"
   import { goto } from "@roxi/routify"
   import Logo from "assets/bb-emblem.svg"
   import Spaceman from "assets/bb-space-man.svg"
@@ -48,8 +46,6 @@
 
   $: userApps = $clientAppsStore.apps
   $: liveChatApps = $clientChatAppsStore.chatApps
-  $: chatAppsLoaded = $clientChatAppsStore.loaded
-  $: chatFeatureEnabled = $featureFlags.AI_CHAT
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
   function getUrl(app: EnrichedApp | PublishedWorkspaceData) {
@@ -75,9 +71,7 @@
       notifications.error("Error loading apps")
     }
 
-    if (chatFeatureEnabled) {
-      await clientChatAppsStore.load()
-    }
+    await clientChatAppsStore.load()
 
     loaded = true
   })
@@ -144,7 +138,7 @@
                 {menuLabels.password}
               </MenuItem>
               {#if sdk.users.hasBuilderPermissions($auth.user)}
-                <MenuItem icon="user-gear" on:click={() => $goto("/builder")}>
+                <MenuItem icon="code" on:click={() => $goto("/builder")}>
                   {menuLabels.portal}
                 </MenuItem>
               {/if}
@@ -202,50 +196,44 @@
                 </Layout>
               </div>
             {/if}
-            {#if chatFeatureEnabled && (userApps.length || !chatAppsLoaded || liveChatApps.length)}
+            {#if liveChatApps.length}
               <Heading size="S">Chat</Heading>
               <div class="group">
                 <Layout gap="S" noPadding>
-                  {#if !chatAppsLoaded}
-                    <Body size="S">Loading chat apps...</Body>
-                  {:else if liveChatApps.length}
-                    {#each liveChatApps as chatApp (`${chatApp.chatAppId}:${chatApp.url}`)}
-                      <a
-                        class="app"
-                        target="_blank"
-                        rel="noreferrer"
-                        href={appChatUrl(chatApp.url)}
-                      >
-                        <div
-                          class="preview"
-                          use:gradient={{ seed: chatApp.name }}
-                        ></div>
-                        <div class="app-info">
-                          <Heading size="XS">{chatApp.name}</Heading>
-                          <Body size="S">
-                            {#if chatApp.updatedAt}
-                              {processStringSync(portalLabels.updatedAgo, {
-                                time:
-                                  new Date().getTime() -
-                                  new Date(chatApp.updatedAt).getTime(),
-                              })}
-                            {:else}
-                              {portalLabels.neverUpdated}
-                            {/if}
-                          </Body>
-                        </div>
-                        <div class="icon-muted">
-                          <Icon name="caret-right" />
-                        </div>
-                      </a>
-                    {/each}
-                  {:else}
-                    <Body size="S">No live chat apps yet.</Body>
-                  {/if}
+                  {#each liveChatApps as chatApp (`${chatApp.chatAppId}:${chatApp.url}`)}
+                    <a
+                      class="app"
+                      target="_blank"
+                      rel="noreferrer"
+                      href={appChatUrl(chatApp.url)}
+                    >
+                      <div
+                        class="preview"
+                        use:gradient={{ seed: chatApp.name }}
+                      ></div>
+                      <div class="app-info">
+                        <Heading size="XS">{chatApp.name}</Heading>
+                        <Body size="S">
+                          {#if chatApp.updatedAt}
+                            {processStringSync(portalLabels.updatedAgo, {
+                              time:
+                                new Date().getTime() -
+                                new Date(chatApp.updatedAt).getTime(),
+                            })}
+                          {:else}
+                            {portalLabels.neverUpdated}
+                          {/if}
+                        </Body>
+                      </div>
+                      <div class="icon-muted">
+                        <Icon name="caret-right" />
+                      </div>
+                    </a>
+                  {/each}
                 </Layout>
               </div>
             {/if}
-            {#if !userApps.length && (!chatFeatureEnabled || (chatAppsLoaded && !liveChatApps.length))}
+            {#if !userApps.length && !liveChatApps.length}
               <Layout gap="XS" noPadding>
                 <Heading size="S">{portalLabels.noAppsHeading}</Heading>
                 <Body size="S">{portalLabels.noAppsDescription}</Body>
@@ -325,12 +313,6 @@
     cursor: pointer;
     background: var(--spectrum-global-color-gray-200);
     transition: background-color 130ms ease-in-out;
-  }
-  .app.static {
-    cursor: default;
-  }
-  .app.static:hover {
-    background: var(--background);
   }
   .app .icon-muted {
     color: var(--spectrum-global-color-gray-500);

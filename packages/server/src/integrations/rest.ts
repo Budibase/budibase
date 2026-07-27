@@ -5,6 +5,7 @@ import {
   Integration,
   IntegrationBase,
   JSONValue,
+  OAuth2RestAuthConfig,
   PaginationConfig,
   PaginationValues,
   QueryType,
@@ -16,13 +17,13 @@ import get from "lodash/get"
 import qs from "querystring"
 import { performance } from "perf_hooks"
 import { URLSearchParams } from "url"
-import { blacklist } from "@budibase/backend-core"
+import { utils as coreUtils } from "@budibase/backend-core"
 import { handleFileResponse, handleXml } from "./utils"
 import { parse } from "content-disposition"
 import path from "path"
 import { Builder as XmlBuilder } from "xml2js"
 import { getAttachmentHeaders } from "./utils/restUtils"
-import { helpers, utils } from "@budibase/shared-core"
+import { helpers } from "@budibase/shared-core"
 import sdk from "../sdk"
 import { getDispatcher } from "../utilities"
 import {
@@ -35,6 +36,22 @@ import {
   MockAgent,
 } from "undici"
 import environment from "../environment"
+
+interface AuthConfig {
+  type: string
+  config: {
+    username?: string
+    password?: string
+    token?: string
+    key?: string
+    value?: string
+    location?: string
+  }
+}
+
+type ResolvedAuthConfig =
+  | { type: "auth"; auth: AuthConfig }
+  | { type: "oauth2"; sourceId: string }
 
 const coreFields = {
   path: {
@@ -330,8 +347,8 @@ export class RestIntegration implements IntegrationBase {
   }
 
   getUrl(
-    path: string,
-    queryString: string,
+    path = "",
+    queryString = "",
     pagination?: PaginationConfig,
     paginationValues?: PaginationValues
   ): string {
@@ -488,39 +505,10 @@ export class RestIntegration implements IntegrationBase {
             }
           }
         )
-        const ensureHeaderObject = (): Record<
-          string,
-          string | readonly string[]
-        > => {
-          if (!input.headers) {
-            const headerObject: Record<string, string> = {}
-            return headerObject
-          }
-          if (Array.isArray(input.headers)) {
-            const headerObject = input.headers.reduce<Record<string, string>>(
-              (acc, [name, value]) => {
-                acc[name] = value
-                return acc
-              },
-              {}
-            )
-            return headerObject
-          }
-          if (input.headers instanceof Headers) {
-            return Object.fromEntries(input.headers)
-          }
-          return input.headers
-        }
-
-        const headers = ensureHeaderObject()
+        const headers = new Headers(input.headers)
 
         // Delete Content-Type to allow fetch to auto-generate the correct header/boundary.
-        const existingContentTypeKey = Object.keys(headers).find(
-          key => key.toLowerCase() === "content-type"
-        )
-        if (existingContentTypeKey) {
-          delete headers[existingContentTypeKey]
-        }
+        headers.delete("content-type")
 
         input.headers = headers
         input.body = form
@@ -588,51 +576,120 @@ export class RestIntegration implements IntegrationBase {
     return input
   }
 
+  buildBasicAuthHeader(username: string, password: string): string {
+    return `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`
+  }
+
+  buildBearerAuthHeader(token: string): string {
+    return `Bearer ${token}`
+  }
+
+  private buildHeadersFromAuthConfig(auth: AuthConfig): Record<string, string> {
+    const { type, config } = auth
+    switch (type) {
+      case RestAuthType.BASIC:
+        return {
+          Authorization: this.buildBasicAuthHeader(
+            config.username!,
+            config.password!
+          ),
+        }
+      case RestAuthType.BEARER:
+        return { Authorization: this.buildBearerAuthHeader(config.token!) }
+      case RestAuthType.OAUTH2:
+        // Token already includes "Bearer " prefix from OAuth2 response
+        return { Authorization: config.token! }
+      // We dont currently support this but it is available and outlined
+      // in supported openapi specs.
+      case "apiKey":
+        if (config.location === "header") {
+          return { [config.key!]: config.value! }
+        }
+        return {}
+      default:
+        return {}
+    }
+  }
+
+  private async resolveAuthConfig(
+    authConfigId?: string,
+    authConfigType?: RestAuthType
+  ): Promise<ResolvedAuthConfig | null> {
+    if (!authConfigId) return null
+    if (authConfigType === RestAuthType.OAUTH2) {
+      return { type: "oauth2", sourceId: authConfigId }
+    }
+    if (!this.config.authConfigs) return null
+    const authConfig = this.config.authConfigs.find(
+      c => c._id === authConfigId && c.type !== RestAuthType.OAUTH2
+    )
+    if (!authConfig) return null
+    return { type: "auth", auth: authConfig as AuthConfig }
+  }
+
   async getAuthHeaders(
     authConfigId?: string,
     authConfigType?: RestAuthType
   ): Promise<Record<string, string>> {
-    if (!authConfigId) {
-      return {}
-    }
-
-    if (authConfigType === RestAuthType.OAUTH2) {
-      return { Authorization: await sdk.oauth2.getToken(authConfigId) }
-    }
-
-    if (!this.config.authConfigs) {
-      return {}
-    }
-
-    const headers: Record<string, string> = {}
-    const authConfig = this.config.authConfigs.filter(
-      c => c._id === authConfigId
-    )[0]
-    // check the config still exists before proceeding
-    // if not - do nothing
-    if (authConfig) {
-      const { type, config } = authConfig
-      switch (type) {
-        case RestAuthType.BASIC:
-          headers.Authorization = `Basic ${Buffer.from(
-            `${config.username}:${config.password}`
-          ).toString("base64")}`
-          break
-        case RestAuthType.BEARER:
-          headers.Authorization = `Bearer ${config.token}`
-          break
-        default:
-          throw utils.unreachable(type)
+    if (authConfigId && authConfigType === RestAuthType.OAUTH2) {
+      const inlineOAuth2 = this.config.authConfigs?.find(
+        c => c._id === authConfigId && c.type === RestAuthType.OAUTH2
+      )
+      if (inlineOAuth2) {
+        const token = await sdk.oauth2.getTokenFromConfig(
+          authConfigId,
+          inlineOAuth2 as OAuth2RestAuthConfig
+        )
+        return { Authorization: token }
       }
     }
 
-    return headers
+    const resolved = await this.resolveAuthConfig(authConfigId, authConfigType)
+
+    if (!resolved) {
+      return {}
+    }
+
+    if (resolved.type === "oauth2") {
+      return { Authorization: await sdk.oauth2.getToken(resolved.sourceId) }
+    }
+
+    return this.buildHeadersFromAuthConfig(resolved.auth)
+  }
+
+  private getOrigin(urlString: string): string | null {
+    try {
+      const parsed = new URL(urlString)
+      return `${parsed.protocol}//${parsed.host}`
+    } catch {
+      return null
+    }
+  }
+
+  private assertSameOrigin(url: string, rawPath: string | undefined) {
+    const finalOrigin = this.getOrigin(url)
+
+    const expectedOriginUrls: string[] = []
+    if (this.config.url) {
+      expectedOriginUrls.push(this.getUrl())
+    }
+    if (rawPath !== undefined) {
+      expectedOriginUrls.push(this.getUrl(rawPath))
+    }
+
+    const isCrossOrigin = expectedOriginUrls.some(
+      expectedUrl => this.getOrigin(expectedUrl) !== finalOrigin
+    )
+    if (isCrossOrigin) {
+      throw new Error("REST query path must remain on the datasource origin")
+    }
   }
 
   async _req(query: RestQuery, retry401 = true): Promise<ParsedResponse> {
     const {
       path = "",
       queryString = "",
+      rawPath,
       headers = {},
       method = HttpMethod.GET,
       disabledHeaders,
@@ -643,6 +700,27 @@ export class RestIntegration implements IntegrationBase {
       pagination,
       paginationValues,
     } = query
+
+    const defaultQueryParameters = this.config.defaultQueryParameters || {}
+    let mergedQueryString = queryString
+    if (Object.keys(defaultQueryParameters).length > 0) {
+      const queryParams = queryString ? qs.decode(queryString) : {}
+      const merged = { ...defaultQueryParameters, ...queryParams }
+      mergedQueryString = qs.encode(merged)
+    }
+
+    this.startTimeMs = performance.now()
+    const url = this.getUrl(
+      path,
+      mergedQueryString,
+      pagination,
+      paginationValues
+    )
+
+    // Resolve and validate the destination BEFORE attaching any
+    // datasource-scoped credentials or headers below.
+    this.assertSameOrigin(url, rawPath)
+
     const authHeaders = await this.getAuthHeaders(authConfigId, authConfigType)
 
     this.headers = {
@@ -679,12 +757,6 @@ export class RestIntegration implements IntegrationBase {
       input.extraHttpOptions = { insecureHTTPParser: true }
     }
 
-    this.startTimeMs = performance.now()
-    const url = this.getUrl(path, queryString, pagination, paginationValues)
-    if (await blacklist.isBlacklisted(url)) {
-      throw new Error("Cannot connect to URL.")
-    }
-
     // Configure dispatcher for proxy and/or TLS settings
     // Use datasource config if set, otherwise fall back to environment variable
     const rejectUnauthorized =
@@ -694,18 +766,51 @@ export class RestIntegration implements IntegrationBase {
 
     const globalDispatcher = getGlobalDispatcher()
     const isHttpMockingActive = globalDispatcher instanceof MockAgent
+    let hasDispatcher = false
+    let usedProxyDispatcher = false
 
-    if (!isHttpMockingActive) {
-      // Cast needed due to undici version differences between packages
-      input.dispatcher = getDispatcher({
+    const setDispatcher = (
+      requestInput: RequestInit,
+      requestUrl: string,
+      pinnedIp: string
+    ) => {
+      if (isHttpMockingActive) {
+        return requestInput
+      }
+
+      const dispatcher = getDispatcher({
         rejectUnauthorized,
-        url,
-      }) as unknown as typeof input.dispatcher
+        url: requestUrl,
+        lookup: coreUtils.createPinnedLookup(pinnedIp),
+      }) as unknown as typeof requestInput.dispatcher
+
+      hasDispatcher = true
+      usedProxyDispatcher = dispatcher?.constructor.name === "ProxyAgent"
+
+      return {
+        ...requestInput,
+        dispatcher,
+      }
     }
 
     let response: Response
     try {
-      response = await fetch(url, input)
+      response = await coreUtils.fetchWithBlacklist<RequestInit, Response>(
+        url,
+        input,
+        {
+          rejectCrossOriginRedirects: true,
+          fetchFn: async (
+            requestUrl: string,
+            requestInput: RequestInit,
+            pinnedIp: string
+          ) =>
+            fetch(
+              requestUrl,
+              setDispatcher(requestInput, requestUrl, pinnedIp)
+            ),
+        }
+      )
     } catch (err) {
       const error = err as Error & {
         cause?: {
@@ -718,7 +823,8 @@ export class RestIntegration implements IntegrationBase {
         error: error.message,
         cause: error.cause?.message,
         code: error.cause?.code,
-        hasDispatcher: !!input.dispatcher,
+        hasDispatcher,
+        usedProxyDispatcher,
         isHttpsUrl: url.startsWith("https://"),
         rejectUnauthorized,
       })
@@ -732,20 +838,18 @@ export class RestIntegration implements IntegrationBase {
         )
       }
 
-      if (error.cause?.code === "ECONNREFUSED" && input.dispatcher) {
+      if (error.cause?.code === "ECONNREFUSED" && usedProxyDispatcher) {
         throw new Error(
           `Connection refused when using proxy. Check proxy configuration and ensure the proxy server is accessible. Original error: ${error.message}`
         )
       }
       throw error
     }
-    if (
-      response.status === 401 &&
-      authConfigType === RestAuthType.OAUTH2 &&
-      retry401
-    ) {
-      await sdk.oauth2.cleanStoredToken(authConfigId!)
-      return await this._req(query, false)
+    if (response.status === 401 && retry401) {
+      if (authConfigType === RestAuthType.OAUTH2 && authConfigId) {
+        await sdk.oauth2.cleanStoredTokensForAuthConfig(authConfigId)
+        return await this._req(query, false)
+      }
     }
     return await this.parseResponse(response, pagination)
   }

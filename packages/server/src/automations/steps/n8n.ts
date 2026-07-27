@@ -1,5 +1,5 @@
-import fetch, { HeadersInit } from "node-fetch"
-import { getFetchResponse } from "./utils"
+import { HeadersInit } from "node-fetch"
+import { fetchWithBlacklist, getFetchResponse } from "./utils"
 import {
   HttpMethod,
   ExternalAppStepOutputs,
@@ -50,7 +50,7 @@ export async function run({
   }
 
   try {
-    response = await fetch(url, request)
+    response = await fetchWithBlacklist(url, request)
   } catch (err: any) {
     return {
       httpStatus: 400,

@@ -23,7 +23,8 @@
   let isOpen = false
   let anchor
 
-  $: editable = focused && !readonly
+  $: hasAttachments = Array.isArray(value) && value.length > 0
+  $: openable = readonly ? hasAttachments : focused
   $: {
     if (!focused) {
       close()
@@ -35,6 +36,9 @@
   }
 
   const open = () => {
+    if (!openable) {
+      return
+    }
     isOpen = true
   }
 
@@ -87,8 +91,8 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="attachment-cell"
-  class:editable
-  on:click={editable ? open : null}
+  class:openable
+  on:click={openable ? open : null}
   bind:this={anchor}
 >
   {#each value || [] as attachment}
@@ -113,6 +117,7 @@
       <Dropzone
         {value}
         compact
+        disabled={readonly}
         on:change={e => onChange(e.detail)}
         maximum={maximum || schema.constraints?.length?.maximum}
         {processFiles}
@@ -135,7 +140,7 @@
     overflow: hidden;
     user-select: none;
   }
-  .attachment-cell.editable:hover {
+  .attachment-cell.openable:hover {
     cursor: pointer;
   }
   .file {

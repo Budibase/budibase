@@ -107,7 +107,7 @@ export const update = async (ctx: Ctx<ScimUpdateRequest, ScimUserResponse>) => {
     ctx.throw(500)
   }
 
-  const userToUpdate = mappers.user.fromScimUser(patchedScimUser)
+  const userToUpdate = mappers.user.fromScimUser(patchedScimUser, user.roles)
   await scimUsers.update(userToUpdate, { allowChangingEmail: true })
 
   ctx.body = mappers.user.toScimUserResponse(userToUpdate)

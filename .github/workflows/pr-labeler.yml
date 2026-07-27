@@ -12,7 +12,7 @@ jobs:
   size-labeler:
     runs-on: ubuntu-latest
     steps:
-      - uses: codelytv/pr-size-labeler@v1
+      - uses: codelytv/pr-size-labeler@095a41fca88b8764fd9e008ad269bcdb82bb38b9  # v1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           xs_max_size: "10"
@@ -22,18 +22,3 @@ jobs:
           fail_if_xl: "false"
           files_to_ignore: "yarn.lock"
           message_if_xl: ""
-
-  team-labeler:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.action == 'opened' }}
-    steps:
-      - uses: rodrigoarias/auto-label-per-user@v1.0.0
-        with:
-          git-token: ${{ secrets.GITHUB_TOKEN }}
-          user-team-map: |
-            {
-                "adrinr": "firestorm",
-                "samwho": "firestorm",
-                "PClmnt": "firestorm",
-                "mike12345567": "firestorm"
-            }

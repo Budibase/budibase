@@ -11,6 +11,7 @@ import {
   getAllLogs,
   getLogsByView,
   updateAppMetadataWithErrors,
+  updateAppMetadataWithStops,
   writeLog,
 } from "../../../db/automations"
 
@@ -76,6 +77,16 @@ export async function storeLog(
   // need to note on the app metadata that there is an error, store what the error is
   if (results.status === AutomationStatus.ERROR) {
     await updateAppMetadataWithErrors([id])
+  }
+  if (
+    results.status === AutomationStatus.STOPPED &&
+    results.steps.some(
+      step =>
+        step.inputs?.notify === true &&
+        step.outputs.status === AutomationStatus.STOPPED
+    )
+  ) {
+    await updateAppMetadataWithStops([id])
   }
   // clear up old logging for app
   await clearOldHistory()

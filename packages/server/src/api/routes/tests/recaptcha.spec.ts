@@ -79,9 +79,34 @@ describe("/recaptcha", () => {
         { status: 200 }
       )
       expect(res.body.verified).toBe(true)
+      expect(res.headers["set-cookie"][0].toLowerCase()).toContain(
+        "samesite=lax"
+      )
 
       // Check if the nock interceptor was called
       expect(scope.isDone()).toBe(true)
+    })
+
+    it("should set a cross-site recaptcha cookie over https", async () => {
+      recaptchaSucceed()
+
+      await config.withHeaders(
+        {
+          "X-Forwarded-Proto": "https",
+        },
+        async () => {
+          const res = await config.api.recaptcha.verify(
+            {
+              token: "valid-token",
+            },
+            { status: 200 }
+          )
+          const cookie = res.headers["set-cookie"][0].toLowerCase()
+
+          expect(cookie).toContain("samesite=none")
+          expect(cookie).toContain("secure")
+        }
+      )
     })
 
     it("should handle invalid recaptcha token", async () => {

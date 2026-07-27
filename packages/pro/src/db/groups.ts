@@ -155,6 +155,10 @@ async function getAllGroupDocuments() {
   ).rows.map(row => row.doc!)
 }
 
+export async function getAll(): Promise<UserGroup[]> {
+  return getAllGroupDocuments()
+}
+
 export async function fetch(): Promise<EnrichedUserGroup[]> {
   const [groups, appIds] = await Promise.all([
     getAllGroupDocuments(),

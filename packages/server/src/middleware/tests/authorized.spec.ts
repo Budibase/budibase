@@ -249,5 +249,23 @@ describe("Authorization middleware", () => {
       expect(config.next).toHaveBeenCalled()
       expect(config.throw).not.toHaveBeenCalled()
     })
+
+    it("does not bypass auth for webhook schema endpoints", async () => {
+      config.setRequestUrl("/api/webhooks/schema/app-id/webhook-id")
+
+      await config.executeMiddleware()
+
+      expect(config.throw).toHaveBeenCalledWith(401, "No user info found")
+      expect(config.next).not.toHaveBeenCalled()
+    })
+
+    it("WEBHOOK_ENDPOINTS regex does not match tokenized schema URL", async () => {
+      config.setRequestUrl("/api/webhooks/schema/app-id/webhook-id/token")
+
+      await config.executeMiddleware()
+
+      expect(config.throw).toHaveBeenCalledWith(401, "No user info found")
+      expect(config.next).not.toHaveBeenCalled()
+    })
   })
 })

@@ -13,6 +13,7 @@ export interface GetGlobalSelfResponse extends User {
   flags?: FeatureFlags
   account?: Account
   lockedBy?: LockReason
+  deactivationScheduledAt?: string
   license: License
   budibaseAccess: boolean
   accountPortalAccess: boolean

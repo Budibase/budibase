@@ -113,7 +113,7 @@
           class:selected={selectedType === AutoScreenTypes.BLANK}
         >
           <div class="image">
-            <img alt="A blank screen" src={blank} />
+            <img alt="A blank screen" src={blank} draggable="false" />
           </div>
           <div class="text">
             <Body
@@ -131,7 +131,7 @@
           class:selected={selectedType === AutoScreenTypes.TABLE}
         >
           <div class="image">
-            <img alt="A table of data" src={table} />
+            <img alt="A table of data" src={table} draggable="false" />
           </div>
           <div class="text">
             <Body
@@ -149,7 +149,7 @@
           class:selected={selectedType === AutoScreenTypes.FORM}
         >
           <div class="image">
-            <img alt="A form containing data" src={form} />
+            <img alt="A form containing data" src={form} draggable="false" />
           </div>
           <div class="text">
             <Body
@@ -170,7 +170,7 @@
           class:selected={selectedType === AutoScreenTypes.PDF}
         >
           <div class="image">
-            <img alt="A PDF document" src={pdf} width="185" />
+            <img alt="A PDF document" src={pdf} width="185" draggable="false" />
           </div>
           <div class="text">
             <Body
@@ -250,6 +250,7 @@
     flex-direction: column;
     gap: 2px;
     min-height: 46px;
+    user-select: none;
   }
   .text :global(p:first-child) {
     display: flex;

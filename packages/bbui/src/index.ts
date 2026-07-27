@@ -24,6 +24,7 @@ export { default as Select } from "./Form/Select.svelte"
 export { default as Slider } from "./Form/Slider.svelte"
 export { default as Stepper } from "./Form/Stepper.svelte"
 export { default as TextArea } from "./Form/TextArea.svelte"
+export { default as TimeField } from "./Form/TimeField.svelte"
 export { default as Toggle } from "./Form/Toggle.svelte"
 
 // Core form components to be used elsewhere (standard components)
@@ -70,6 +71,13 @@ export { default as MenuSection } from "./Menu/Section.svelte"
 export { default as MenuSeparator } from "./Menu/Separator.svelte"
 export { default as Modal, type ModalAPI } from "./Modal/Modal.svelte"
 export { keepOpen, default as ModalContent } from "./Modal/ModalContent.svelte"
+export {
+  addOverlay,
+  removeOverlay,
+  isActiveOverlay,
+  overlayStack,
+  BASE_Z_INDEX,
+} from "./Modal/overlayStack"
 export { default as Notification } from "./Notification/Notification.svelte"
 export { default as NotificationDisplay } from "./Notification/NotificationDisplay.svelte"
 export { default as Pagination } from "./Pagination/Pagination.svelte"

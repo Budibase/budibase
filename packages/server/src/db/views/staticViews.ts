@@ -1,6 +1,7 @@
 import { context } from "@budibase/backend-core"
 import {
   DBView,
+  DesignDocument,
   DocumentType,
   LinkDocument,
   Row,
@@ -8,7 +9,15 @@ import {
 } from "@budibase/types"
 import { SEPARATOR, ViewName } from "../utils"
 
-const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
+const getPrefix = (type: DocumentType) => type + SEPARATOR
+
+const WORKSPACE_APP_PREFIX = getPrefix(DocumentType.WORKSPACE_APP)
+const AUTOMATION_PREFIX = getPrefix(DocumentType.AUTOMATION)
+const AGENT_PREFIX = getPrefix(DocumentType.AGENT)
+const TABLE_PREFIX = getPrefix(DocumentType.TABLE)
+const QUERY_PREFIX = getPrefix(DocumentType.QUERY)
+const DATASOURCE_PREFIX = getPrefix(DocumentType.DATASOURCE)
+const DATASOURCE_PLUS_PREFIX = getPrefix(DocumentType.DATASOURCE_PLUS)
 
 /**************************************************
  *                  INFORMATION                   *
@@ -29,7 +38,7 @@ const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
  */
 export async function createLinkView() {
   const db = context.getWorkspaceDB()
-  const designDoc = await db.get<any>("_design/database")
+  const designDoc = await db.get<DesignDocument>("_design/database")
   const view = {
     map: function (doc: LinkDocument) {
       // everything in this must remain constant as its going to Pouch, no external variables
@@ -65,11 +74,11 @@ export async function createLinkView() {
 
 export async function createRoutingView() {
   const db = context.getWorkspaceDB()
-  const designDoc = await db.get<any>("_design/database")
+  const designDoc = await db.get<DesignDocument>("_design/database")
   const view: DBView = {
     // if using variables in a map function need to inject them before use
     map: `function(doc) {
-      if (doc._id.startsWith("${SCREEN_PREFIX}")) {
+      if (doc._id.startsWith("${getPrefix(DocumentType.SCREEN)}")) {
         emit([doc.workspaceAppId, doc._id], {
           id: doc._id,
           routing: doc.routing,
@@ -86,9 +95,63 @@ export async function createRoutingView() {
   await db.put(designDoc)
 }
 
+export async function createProjectMembersView() {
+  const db = context.getWorkspaceDB()
+  const designDoc = await db.get<DesignDocument>("_design/database")
+  const view: DBView = {
+    map: `function(doc) {
+      function emitProjectIds(projectIds) {
+        if (!Array.isArray(projectIds)) {
+          return
+        }
+
+        for (var i = 0; i < projectIds.length; i++) {
+          emit(projectIds[i], null)
+        }
+      }
+
+      if (!doc || !doc._id) {
+        return
+      }
+
+      if (
+        doc._id.startsWith("${WORKSPACE_APP_PREFIX}") ||
+        doc._id.startsWith("${AUTOMATION_PREFIX}") ||
+        doc._id.startsWith("${AGENT_PREFIX}") ||
+        doc._id.startsWith("${TABLE_PREFIX}") ||
+        doc._id.startsWith("${QUERY_PREFIX}")
+      ) {
+        emitProjectIds(doc.projectIds)
+        return
+      }
+
+      if (
+        doc._id.startsWith("${DATASOURCE_PREFIX}") ||
+        doc._id.startsWith("${DATASOURCE_PLUS_PREFIX}")
+      ) {
+        emitProjectIds(doc.projectIds)
+
+        if (!doc.entities) {
+          return
+        }
+
+        for (var key in doc.entities) {
+          emitProjectIds(doc.entities[key].projectIds)
+        }
+      }
+    }`,
+  }
+
+  designDoc.views = {
+    ...designDoc.views,
+    [ViewName.PROJECT_MEMBERS]: view,
+  }
+  await db.put(designDoc)
+}
+
 async function searchIndex(indexName: string, fnString: string) {
   const db = context.getWorkspaceDB()
-  const designDoc = await db.get<any>("_design/database")
+  const designDoc = await db.get<DesignDocument>("_design/database")
   designDoc.indexes = {
     [indexName]: {
       index: fnString,

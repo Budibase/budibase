@@ -12,6 +12,7 @@
   export let gap = "S"
   export let collapsed = false
   export let collapsedText = "Action"
+  export let collapsedSize = "M"
 
   const { enrichButtonActions } = getContext("sdk")
   const context = getContext("context")
@@ -41,6 +42,7 @@
       <CollapsedButtonGroup
         text={collapsedText || "Action"}
         buttons={collapsedButtons}
+        size={collapsedSize}
       />
     {:else}
       {#each buttons as button}

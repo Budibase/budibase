@@ -3,7 +3,6 @@ import { DerivedBudiStore } from "@/stores/BudiStore"
 import {
   InsertWorkspaceAppRequest,
   PublishResourceState,
-  RequiredKeys,
   UIWorkspaceApp,
   UpdateWorkspaceAppRequest,
   WorkspaceApp,
@@ -126,13 +125,23 @@ export class WorkspaceAppStore extends DerivedBudiStore<
   }
 
   async edit(workspaceApp: WorkspaceApp) {
-    const safeWorkspaceApp: RequiredKeys<UpdateWorkspaceAppRequest> = {
+    // Theme fields use presence checks because the API treats omitted fields as unchanged.
+    const safeWorkspaceApp: UpdateWorkspaceAppRequest = {
       _id: workspaceApp._id!,
       _rev: workspaceApp._rev!,
       name: workspaceApp.name,
       url: workspaceApp.url,
       navigation: workspaceApp.navigation,
       disabled: workspaceApp.disabled,
+      ...(Object.hasOwn(workspaceApp, "projectIds")
+        ? { projectIds: workspaceApp.projectIds }
+        : {}),
+      ...(Object.hasOwn(workspaceApp, "theme")
+        ? { theme: workspaceApp.theme }
+        : {}),
+      ...(Object.hasOwn(workspaceApp, "customTheme")
+        ? { customTheme: workspaceApp.customTheme }
+        : {}),
     }
 
     const updatedWorkspaceApp = await API.workspaceApp.update(safeWorkspaceApp)
@@ -182,7 +191,6 @@ export class WorkspaceAppStore extends DerivedBudiStore<
 
     const { deploymentStore } = await import("./deployment")
     await deploymentStore.publishApp()
-    await workspaceDeploymentStore.fetch()
   }
 
   replaceDatasource(_id: string, workspaceApp: WorkspaceApp) {

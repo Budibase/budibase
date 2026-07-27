@@ -69,6 +69,9 @@
       if (parsedSchema.lastName) {
         parsedSchema.lastName.displayName = "Last Name"
       }
+      if (parsedSchema.fullName) {
+        parsedSchema.fullName.displayName = "Full Name"
+      }
       if (parsedSchema.status) {
         parsedSchema.status.displayName = "Status"
       }

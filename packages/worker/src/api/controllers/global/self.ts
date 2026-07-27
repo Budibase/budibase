@@ -124,6 +124,7 @@ export async function getSelf(ctx: UserCtx<void, GetGlobalSelfResponse>) {
     ...sessionAttributes,
     flags,
     lockedBy: settingsConfig?.lockedBy,
+    deactivationScheduledAt: settingsConfig?.deactivationScheduledAt,
   }
 }
 

@@ -53,6 +53,10 @@ export const enrichSearchColumns = async (
       if (linkSchema?.type === "link") {
         const linkedDef = await API.fetchTableDefinition(linkSchema.tableId)
         schemaType = linkedDef?.schema?.[linkField]?.type
+        // _id is not part of the related table schema but is filterable
+        if (!schemaType && linkField === "_id") {
+          schemaType = "string"
+        }
       }
     }
 

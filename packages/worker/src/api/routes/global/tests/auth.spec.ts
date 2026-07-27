@@ -56,6 +56,18 @@ describe("/api/global/auth", () => {
 
   describe("password", () => {
     describe("POST /api/global/auth/:tenantId/login", () => {
+      const flushIpCounters = async () => {
+        await config.doInTenant(async () => {
+          const { cache } = require("@budibase/backend-core")
+          for (const ip of ["127.0.0.1", "::1", "::ffff:127.0.0.1"]) {
+            await cache.destroy(`auth:login:ip:${ip}`)
+          }
+        })
+      }
+
+      beforeEach(flushIpCounters)
+      afterEach(flushIpCounters)
+
       it("logs in with correct credentials", async () => {
         const tenantId = config.tenantId!
         const email = config.user!.email!
@@ -189,6 +201,66 @@ describe("/api/global/auth", () => {
                 correctPassword
               )
               expectSetAuthCookie(response)
+            }
+          )
+        })
+
+        it("locks unknown emails after the same failed attempt threshold", async () => {
+          const tenantId = config.tenantId!
+          const email = "missing@example.com"
+          const password = "incorrect123"
+          const { withEnv } = require("../../../../environment")
+
+          await withEnv(
+            {
+              LOGIN_MAX_FAILED_ATTEMPTS: 5,
+              LOGIN_LOCKOUT_SECONDS: 900,
+            },
+            async () => {
+              for (let i = 0; i < 4; i++) {
+                await config.api.auth.login(tenantId, email, password, {
+                  status: 403,
+                })
+              }
+
+              const response = await config.api.auth.login(
+                tenantId,
+                email,
+                password,
+                { status: 403 }
+              )
+
+              expect(response.headers["x-account-locked"]).toBe("1")
+              expect(response.headers["retry-after"]).toBe("900")
+              expect(response.body).toEqual({
+                message: "Account temporarily locked. Try again later.",
+                status: 403,
+              })
+            }
+          )
+        })
+      })
+
+      describe("IP lockout", () => {
+        it("returns 429 with Retry-After once the IP limit is exceeded", async () => {
+          const { withEnv } = require("../../../../environment")
+          const tenantId = config.tenantId!
+          const email = config.user!.email!
+          const password = config.userPassword
+
+          await withEnv(
+            { LOGIN_IP_LOCKOUT_LIMIT: 2, LOGIN_LOCKOUT_SECONDS: 900 },
+            async () => {
+              await config.api.auth.login(tenantId, email, password)
+              await config.api.auth.login(tenantId, email, password)
+
+              const res = await config.api.auth.login(
+                tenantId,
+                email,
+                password,
+                { status: 429 }
+              )
+              expect(res.headers["retry-after"]).toBe("900")
             }
           )
         })

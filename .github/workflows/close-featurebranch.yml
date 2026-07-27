@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: passeidireto/trigger-external-workflow-action@main
+      - uses: passeidireto/trigger-external-workflow-action@d78a1f58cb96f3a637e37da56b8714f5a92c9d34  # main
         env:
           PAYLOAD_BRANCH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.BRANCH || github.head_ref }}
           PAYLOAD_PR_NUMBER: ${{ github.event.pull_request.number }}

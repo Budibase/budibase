@@ -1,4 +1,9 @@
-import { context, db as dbCore, events } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  events,
+  HTTPError,
+} from "@budibase/backend-core"
 import {
   BuildSchemaFromSourceRequest,
   BuildSchemaFromSourceResponse,
@@ -20,6 +25,7 @@ import {
   FieldType,
   FindDatasourcesResponse,
   RelationshipFieldMetadata,
+  RestAuthType,
   RowValue,
   SourceName,
   Table,
@@ -34,7 +40,21 @@ import { getQueryParams, getTableParams } from "../../db/utils"
 import sdk from "../../sdk"
 import { processTable } from "../../sdk/workspace/tables/getters"
 import { invalidateCachedVariable } from "../../threads/utils"
+import {
+  resolveProjectIds,
+  resolveUpdatedProjectIds,
+} from "../../utilities/projects"
 import { builderSocket } from "../../websockets"
+
+async function clearOAuth2TokenCaches(datasource: Datasource) {
+  const authConfigs = datasource.config?.authConfigs
+  if (!authConfigs) return
+  for (const config of authConfigs) {
+    if (config.type === RestAuthType.OAUTH2 && config._id) {
+      await sdk.oauth2.cleanStoredToken(config._id)
+    }
+  }
+}
 
 export async function fetch(ctx: UserCtx<void, FetchDatasourcesResponse>) {
   ctx.body = await sdk.datasources.fetch()
@@ -193,6 +213,31 @@ async function invalidateVariables(
   await invalidateCachedVariable(toInvalidate)
 }
 
+const isDatasourceEntity = (entity: unknown): entity is Table =>
+  typeof entity === "object" && entity !== null && !Array.isArray(entity)
+
+const resolveDatasourceEntityProjectIds = async (
+  datasource: Datasource,
+  existingDatasource?: Datasource
+) => {
+  if (!datasource.entities) {
+    return
+  }
+
+  for (const [name, entity] of Object.entries<unknown>(datasource.entities)) {
+    if (!isDatasourceEntity(entity)) {
+      throw new HTTPError(`Datasource entity '${name}' must be an object.`, 400)
+    }
+
+    entity.projectIds = existingDatasource
+      ? await resolveUpdatedProjectIds(
+          entity.projectIds,
+          existingDatasource.entities?.[name]?.projectIds
+        )
+      : await resolveProjectIds(entity.projectIds)
+  }
+}
+
 export async function update(
   ctx: UserCtx<UpdateDatasourceRequest, UpdateDatasourceResponse>
 ) {
@@ -216,6 +261,11 @@ export async function update(
     ...baseDatasource,
     ...sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource),
   }
+  datasource.projectIds = await resolveUpdatedProjectIds(
+    ctx.request.body.projectIds,
+    baseDatasource.projectIds
+  )
+  await resolveDatasourceEntityProjectIds(datasource, baseDatasource)
 
   // this block is specific to GSheets, if no auth set, set it back
   const auth = baseDatasource.config?.auth
@@ -232,6 +282,7 @@ export async function update(
     ctx.throw(400, "Duplicate dynamic/static variable names are invalid.")
   }
 
+  await clearOAuth2TokenCaches(baseDatasource)
   const response = await db.put(
     sdk.tables.populateExternalTableSchemas(datasource)
   )
@@ -265,6 +316,8 @@ export async function save(
     fetchSchema,
     tablesFilter,
   } = ctx.request.body
+  datasourceData.projectIds = await resolveProjectIds(datasourceData.projectIds)
+  await resolveDatasourceEntityProjectIds(datasourceData)
   const { datasource, errors } = await sdk.datasources.save(datasourceData, {
     fetchSchema,
     tablesFilter,
@@ -346,6 +399,7 @@ export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
   }
 
   // delete the datasource
+  await clearOAuth2TokenCaches(datasource)
   await db.remove(datasourceId, ctx.params.revId)
   await events.datasource.deleted(datasource)
 

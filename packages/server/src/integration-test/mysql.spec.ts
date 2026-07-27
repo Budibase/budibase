@@ -126,6 +126,52 @@ if (mainDescriptions.length) {
           expect(table).toBeDefined()
           expect(table.schema[enumColumnName].type).toEqual(FieldType.OPTIONS)
         })
+
+        it("handles table names containing backticks", async () => {
+          tableName = `${uniqueTableName(6)}\`safe`
+
+          await client.schema.createTable(tableName, table => {
+            table.increments("id").primary()
+          })
+
+          const res = await config.api.datasource.fetchSchema({
+            datasourceId: datasource._id!,
+            tablesFilter: [tableName],
+          })
+
+          const table = res.datasource.entities![tableName]
+          expect(table).toBeDefined()
+          expect(table.schema.id).toBeDefined()
+        })
+
+        it("does not execute SQL from table names", async () => {
+          const safeTable = uniqueTableName(6)
+          const markerTable = `${uniqueTableName(6)}_marker`
+          tableName = `${safeTable}\`; CREATE TABLE ${markerTable} (id int); #`
+
+          try {
+            await client.schema.createTable(safeTable, table => {
+              table.increments("id").primary()
+            })
+            await client.schema.createTable(tableName, table => {
+              table.increments("id").primary()
+            })
+
+            const res = await config.api.datasource.fetchSchema({
+              datasourceId: datasource._id!,
+              tablesFilter: [tableName],
+            })
+
+            expect(await client.schema.hasTable(markerTable)).toBe(false)
+
+            const table = res.datasource.entities![tableName]
+            expect(table).toBeDefined()
+            expect(table.schema.id).toBeDefined()
+          } finally {
+            await client.schema.dropTableIfExists(safeTable)
+            await client.schema.dropTableIfExists(markerTable)
+          }
+        })
       }
     )
   }

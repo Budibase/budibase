@@ -9,6 +9,18 @@ import env from "../environment"
 import { Duration } from "../utils"
 
 let posthog: PostHog | undefined
+
+const getFeatureFlagsPollingInterval = () => {
+  const configured = env.POSTHOG_FEATURE_FLAGS_POLLING_INTERVAL_MS
+  if (configured) {
+    const interval = parseInt(configured, 10)
+    if (!Number.isNaN(interval) && interval > 0) {
+      return interval
+    }
+  }
+  return Duration.fromDays(1).toMs()
+}
+
 export function init(opts?: PostHogOptions) {
   if (
     env.POSTHOG_TOKEN &&
@@ -20,7 +32,7 @@ export function init(opts?: PostHogOptions) {
     posthog = new PostHog(env.POSTHOG_TOKEN, {
       host: env.POSTHOG_API_HOST,
       personalApiKey: env.POSTHOG_PERSONAL_TOKEN,
-      featureFlagsPollingInterval: Duration.fromMinutes(3).toMs(),
+      featureFlagsPollingInterval: getFeatureFlagsPollingInterval(),
       ...opts,
     })
   } else {
@@ -234,12 +246,13 @@ export class FlagSet<T extends { [name: string]: boolean }> {
 
 const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.USE_ZOD_VALIDATOR]: false,
-  [FeatureFlag.AI_AGENTS]: false,
-  [FeatureFlag.AI_CHAT]: false,
-  [FeatureFlag.AI_RAG]: false,
-  [FeatureFlag.WORKSPACE_HOME]: false,
+  [FeatureFlag.AI_TESTS]: false,
+  [FeatureFlag.ESCALATION]: false,
+  [FeatureFlag.FRONT_COMPANION]: false,
+  [FeatureFlag.PROJECTS]: false,
   [FeatureFlag.DEBUG_UI]: env.isDev(),
   [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,
+  [FeatureFlag.AI_AGENT_ACTIVITY]: false,
 }
 export const flags = new FlagSet(featureFlagDefaults)
 

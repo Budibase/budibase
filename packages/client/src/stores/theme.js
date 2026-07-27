@@ -2,7 +2,13 @@
 import { derived } from "svelte/store"
 import { appStore } from "./app"
 import { builderStore } from "./builder"
-import { ensureValidTheme, DefaultAppTheme } from "@budibase/shared-core"
+import {
+  DefaultAppTheme,
+  DefaultExistingAppFontFamily,
+  ensureValidAppFontFamily,
+  ensureValidTheme,
+  getAppFontFamilyStack,
+} from "@budibase/shared-core"
 
 // This is the good old acorn bug where having the word "g l o b a l" makes it
 // think that this is not ES6 compatible and starts throwing errors when using
@@ -11,6 +17,7 @@ const defaultCustomTheme = {
   primaryColor: "var(--spectrum-glo" + "bal-color-blue-600)",
   primaryColorHover: "var(--spectrum-glo" + "bal-color-blue-500)",
   buttonBorderRadius: "16px",
+  fontFamily: DefaultExistingAppFontFamily,
   navBackground: "var(--spectrum-glo" + "bal-color-gray-100)",
   navTextColor: "var(--spectrum-glo" + "bal-color-gray-800)",
 }
@@ -43,10 +50,24 @@ const createThemeStore = () => {
         ...defaultCustomTheme,
         ...customTheme,
       }
+      customTheme.fontFamily = ensureValidAppFontFamily(customTheme.fontFamily)
 
       // Build CSS string setting all custom variables
-      let customThemeCss = ""
+      const fontFamilyStack = getAppFontFamilyStack(customTheme.fontFamily)
+      const fontProperties = [
+        "font-family",
+        "--font-sans",
+        "--font-accent",
+        "--spectrum-alias-body-text-font-family",
+        "--spectrum-global-font-family-base",
+      ]
+      let customThemeCss = fontProperties
+        .map(property => `${property}:${fontFamilyStack} !important;`)
+        .join("")
       Object.entries(customTheme).forEach(([key, value]) => {
+        if (key === "fontFamily") {
+          return
+        }
         customThemeCss += `--${key}:${value};`
       })
 

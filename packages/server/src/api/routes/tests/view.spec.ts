@@ -12,6 +12,7 @@ import {
   ViewCalculation,
 } from "@budibase/types"
 import { quotas } from "@budibase/pro"
+import { Expectations } from "../../../tests/utilities/api/base"
 
 const priceTable: SaveTableRequest = {
   name: "table",
@@ -47,7 +48,10 @@ describe("/views", () => {
     table = await config.api.table.save(priceTable)
   })
 
-  const saveView = async (view?: Partial<View>) => {
+  const saveView = async (
+    view?: Partial<View>,
+    expectations?: Expectations
+  ) => {
     const viewToSave: View = {
       name: "TestView",
       field: "Price",
@@ -57,7 +61,7 @@ describe("/views", () => {
       schema: {},
       ...view,
     }
-    return config.api.legacyView.save(viewToSave)
+    return config.api.legacyView.save(viewToSave, expectations)
   }
 
   const getRowUsage = async () => {
@@ -79,6 +83,16 @@ describe("/views", () => {
       const view = await saveView({ calculation: ViewCalculation.COUNT })
 
       expect(view.tableId).toBe(table._id)
+    })
+
+    it("rejects unknown calculations", async () => {
+      await saveView(
+        { calculation: "custom_reduce" as ViewCalculation },
+        {
+          status: 400,
+          body: { message: "Invalid calculation type: custom_reduce" },
+        }
+      )
     })
 
     it("creates a view with a filter", async () => {

@@ -112,6 +112,16 @@ export const actions = (value: number) => {
 
 // Constant
 
+export const agentLogRetentionDays = (value: number) => {
+  return {
+    [ConstantQuotaName.AGENT_LOG_RETENTION_DAYS]: {
+      name: "Agent Logs",
+      value,
+      triggers: [], // n/a
+    },
+  }
+}
+
 export const automationLogRetentionDays = (value: number) => {
   return {
     [ConstantQuotaName.AUTOMATION_LOG_RETENTION_DAYS]: {
@@ -124,7 +134,7 @@ export const automationLogRetentionDays = (value: number) => {
 
 export const appBackupRetentionDays = (value: number) => {
   return {
-    [ConstantQuotaName.APP_BACKUPS_RETENTION_DAYS]: {
+    [ConstantQuotaName.WORKSPACE_BACKUPS_RETENTION_DAYS]: {
       name: "App Backups",
       value,
       triggers: [], // n/a

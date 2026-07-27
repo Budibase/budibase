@@ -2,6 +2,7 @@
   import Field from "./Field.svelte"
   import DateRangePicker from "./Core/DateRangePicker.svelte"
   import { createEventDispatcher } from "svelte"
+  import { resolveTranslationGroup } from "@budibase/shared-core"
 
   export let value = undefined
   export let label = null
@@ -14,6 +15,7 @@
   export let ignoreTimezones = false
   export let enableTime = false
   export let timeOnly = false
+  export let calendarLabels = resolveTranslationGroup("calendar")
 
   const dispatch = createEventDispatcher()
 
@@ -33,6 +35,7 @@
     {ignoreTimezones}
     {enableTime}
     {timeOnly}
+    {calendarLabels}
     on:change={onChange}
   />
 </Field>

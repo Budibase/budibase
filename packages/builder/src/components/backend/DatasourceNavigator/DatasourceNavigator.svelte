@@ -10,6 +10,7 @@
     userSelectedResourceMap,
     dataEnvironmentStore,
     workspaceDeploymentStore,
+    workspaceConnections,
   } from "@/stores/builder"
   import QueryNavItem from "./QueryNavItem.svelte"
   import NavItem from "@/components/common/NavItem.svelte"
@@ -19,6 +20,11 @@
   import { enrichDatasources } from "./datasourceUtils"
   import { onMount } from "svelte"
   import { DataEnvironmentMode } from "@budibase/types"
+  import {
+    customQueryIconText,
+    customQueryIconColor,
+  } from "@/helpers/data/utils"
+  import { canCreateDatasourceQuery } from "./datasourceUtils"
 
   $goto
   $isActive
@@ -29,7 +35,11 @@
   export let showAppUsers = true
   export let showManageRoles = true
   export let datasourceSort
+  export let noResultsText = "There aren't any datasources matching that name"
   let toggledDatasources = {}
+
+  $: ({ draftDatasource, draftQuery } = $workspaceConnections)
+  $: draftQueryVerb = $workspaceConnections.draft?.query?.queryVerb
 
   $: enrichedDataSources = enrichDatasources(
     $datasources,
@@ -44,13 +54,32 @@
     datasourceFilter
   )
 
-  $: displayedDatasources = datasourceSort
+  $: sortedDatasources = datasourceSort
     ? enrichedDataSources.slice().sort(datasourceSort)
     : enrichedDataSources
 
+  $: displayedDatasources = (() => {
+    if (draftQuery?.datasourceId) {
+      return sortedDatasources.map(ds => {
+        if (ds._id !== draftQuery.datasourceId) return ds
+        return { ...ds, open: true, queries: [draftQuery, ...ds.queries] }
+      })
+    }
+    if (draftDatasource) {
+      const effective =
+        toggledDatasources["__draft__"] === false
+          ? { ...draftDatasource, open: false }
+          : draftDatasource
+      return [effective, ...sortedDatasources]
+    }
+    return sortedDatasources
+  })()
+
   function selectDatasource(datasource) {
     openNode(datasource)
-    $goto(`./datasource/${datasource._id}`)
+    if (datasource.source !== "REST") {
+      $goto(`./datasource/${datasource._id}`)
+    }
   }
 
   const selectTable = tableId => {
@@ -115,14 +144,44 @@
     {#if datasource.open}
       <TableNavigator tables={datasource.tables} {selectTable} />
       {#each datasource.queries as query}
-        <QueryNavItem {datasource} {query} />
+        {#if query._id === "__draft_query__"}
+          {@const hasDatasource =
+            !!$workspaceConnections.draft?.query?.datasourceId}
+          <NavItem
+            indentLevel={1}
+            iconText={customQueryIconText(draftQueryVerb)}
+            iconColor={hasDatasource
+              ? (customQueryIconColor(draftQueryVerb) ?? "#00a4e4")
+              : undefined}
+            text={query.name}
+            selected={true}
+            on:click={() => $goto("./query/new")}
+          />
+        {:else}
+          <QueryNavItem {datasource} {query} />
+        {/if}
       {/each}
+      {#if datasource.source === "REST" && datasource._id !== "__draft__" && canCreateDatasourceQuery(datasource)}
+        <span class="add-operation">
+          <NavItem
+            indentLevel={0}
+            icon="plus"
+            text="New API operation"
+            on:click={() =>
+              $goto(`/builder/workspace/:application/apis/query/new/:id`, {
+                application: $params.application,
+                id: datasource._id,
+              })}
+          />
+        </span>
+      {/if}
     {/if}
   {/each}
+
   {#if showNoResults}
     <Layout paddingY="none" paddingX="L">
       <div class="no-results">
-        There aren't any datasources matching that name
+        {noResultsText}
       </div>
     </Layout>
   {/if}
@@ -135,5 +194,10 @@
 
   .no-results {
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  .add-operation :global(.nav-item-body .text) {
+    font-size: 0.95em;
+    color: var(--spectrum-global-color-gray-700);
   }
 </style>

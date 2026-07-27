@@ -89,7 +89,7 @@ describe("triggers", () => {
 
   it("monthly - 90 then 100", async () => {
     const license = mocks.licenses.useCloudFree()
-    const quota = license.quotas.usage.monthly.automations
+    const quota = license.quotas.usage.monthly.actions
     const now = new Date().toISOString()
     const currentMonthString = db.quotas.utils.getCurrentMonthString()
 
@@ -98,22 +98,18 @@ describe("triggers", () => {
       let value = quota.value * 0.9
       await quotas.incrementMany({
         change: value,
-        name: MonthlyQuotaName.AUTOMATIONS,
+        name: MonthlyQuotaName.ACTIONS,
         type: QuotaUsageType.MONTHLY,
       })
       let usage = await db.quotas.getQuotaUsage()
-      expect(usage.monthly[currentMonthString].triggers.automations![80]).toBe(
-        now
-      ) // 80 is also recorded
-      expect(usage.monthly[currentMonthString].triggers.automations![90]).toBe(
-        now
-      )
-      expect(usage.monthly[currentMonthString].triggers.automations![100]).toBe(
+      expect(usage.monthly[currentMonthString].triggers.actions![80]).toBe(now) // 80 is also recorded
+      expect(usage.monthly[currentMonthString].triggers.actions![90]).toBe(now)
+      expect(usage.monthly[currentMonthString].triggers.actions![100]).toBe(
         undefined
       )
       expect(mockTriggerQuota).toHaveBeenCalledTimes(1)
       expect(mockTriggerQuota).toHaveBeenCalledWith({
-        name: "Automations",
+        name: "Actions",
         percentage: 90,
         resetDate: usage.quotaReset,
       })
@@ -123,22 +119,16 @@ describe("triggers", () => {
       value = quota.value * 0.1
       await quotas.incrementMany({
         change: value,
-        name: MonthlyQuotaName.AUTOMATIONS,
+        name: MonthlyQuotaName.ACTIONS,
         type: QuotaUsageType.MONTHLY,
       })
       usage = await db.quotas.getQuotaUsage()
-      expect(usage.monthly[currentMonthString].triggers.automations![80]).toBe(
-        now
-      )
-      expect(usage.monthly[currentMonthString].triggers.automations![90]).toBe(
-        now
-      )
-      expect(usage.monthly[currentMonthString].triggers.automations![100]).toBe(
-        now
-      )
+      expect(usage.monthly[currentMonthString].triggers.actions![80]).toBe(now)
+      expect(usage.monthly[currentMonthString].triggers.actions![90]).toBe(now)
+      expect(usage.monthly[currentMonthString].triggers.actions![100]).toBe(now)
       expect(mockTriggerQuota).toHaveBeenCalledTimes(1)
       expect(mockTriggerQuota).toHaveBeenCalledWith({
-        name: "Automations",
+        name: "Actions",
         percentage: 100,
         resetDate: usage.quotaReset,
       })
@@ -148,7 +138,7 @@ describe("triggers", () => {
 
   it("monthly - direct to 100, only triggers once", async () => {
     const license = mocks.licenses.useCloudFree()
-    const quota = license.quotas.usage.monthly.automations
+    const quota = license.quotas.usage.monthly.actions
     const now = new Date().toISOString()
     const currentMonthString = db.quotas.utils.getCurrentMonthString()
 
@@ -156,22 +146,16 @@ describe("triggers", () => {
       const value = quota.value
       await quotas.incrementMany({
         change: value,
-        name: MonthlyQuotaName.AUTOMATIONS,
+        name: MonthlyQuotaName.ACTIONS,
         type: QuotaUsageType.MONTHLY,
       })
       const usage = await db.quotas.getQuotaUsage()
-      expect(usage.monthly[currentMonthString].triggers.automations![80]).toBe(
-        now
-      )
-      expect(usage.monthly[currentMonthString].triggers.automations![90]).toBe(
-        now
-      )
-      expect(usage.monthly[currentMonthString].triggers.automations![100]).toBe(
-        now
-      )
+      expect(usage.monthly[currentMonthString].triggers.actions![80]).toBe(now)
+      expect(usage.monthly[currentMonthString].triggers.actions![90]).toBe(now)
+      expect(usage.monthly[currentMonthString].triggers.actions![100]).toBe(now)
       expect(mockTriggerQuota).toHaveBeenCalledTimes(1)
       expect(mockTriggerQuota).toHaveBeenCalledWith({
-        name: "Automations",
+        name: "Actions",
         percentage: 100,
         resetDate: usage.quotaReset,
       })
@@ -221,12 +205,12 @@ describe("triggers", () => {
 
   it("monthly - re-triggers the following month", async () => {
     const license = mocks.licenses.useCloudFree()
-    const quota = license.quotas.usage.monthly.automations
+    const quota = license.quotas.usage.monthly.actions
     await config.doInWorkspace(async () => {
       let value = quota.value
       await quotas.incrementMany({
         change: value,
-        name: MonthlyQuotaName.AUTOMATIONS,
+        name: MonthlyQuotaName.ACTIONS,
         type: QuotaUsageType.MONTHLY,
       })
 
@@ -234,7 +218,7 @@ describe("triggers", () => {
       let usage = await db.quotas.getQuotaUsage()
       expect(mockTriggerQuota).toHaveBeenCalledTimes(1)
       expect(mockTriggerQuota).toHaveBeenCalledWith({
-        name: "Automations",
+        name: "Actions",
         percentage: 100,
         resetDate: usage.quotaReset,
       })
@@ -247,14 +231,14 @@ describe("triggers", () => {
 
       await quotas.incrementMany({
         change: value,
-        name: MonthlyQuotaName.AUTOMATIONS,
+        name: MonthlyQuotaName.ACTIONS,
         type: QuotaUsageType.MONTHLY,
       })
       // re-triggered
       usage = await db.quotas.getQuotaUsage()
       expect(mockTriggerQuota).toHaveBeenCalledTimes(1)
       expect(mockTriggerQuota).toHaveBeenCalledWith({
-        name: "Automations",
+        name: "Actions",
         percentage: 100,
         resetDate: usage.quotaReset,
       })
@@ -263,13 +247,13 @@ describe("triggers", () => {
 
   it("re-triggers after usage is lowered", async () => {
     const license = mocks.licenses.useCloudFree()
-    const quota = license.quotas.usage.static.plugins
+    const quota = license.quotas.usage.static.rows
 
     await config.doInWorkspace(async () => {
       let value = quota.value * 0.9
       await quotas.incrementMany({
         change: value,
-        name: StaticQuotaName.PLUGINS,
+        name: StaticQuotaName.ROWS,
         type: QuotaUsageType.STATIC,
       })
 
@@ -278,10 +262,10 @@ describe("triggers", () => {
       mockTriggerQuota.mockClear()
 
       // go one below the 90% threshold
-      await quotas.decrement(StaticQuotaName.PLUGINS, QuotaUsageType.STATIC)
+      await quotas.decrement(StaticQuotaName.ROWS, QuotaUsageType.STATIC)
 
       // go above the threshold again
-      await quotas.increment(StaticQuotaName.PLUGINS, QuotaUsageType.STATIC)
+      await quotas.increment(StaticQuotaName.ROWS, QuotaUsageType.STATIC)
 
       // re-triggered
       expect(mockTriggerQuota).toHaveBeenCalledTimes(1)
@@ -290,14 +274,14 @@ describe("triggers", () => {
 
   it("triggers concurrently doesn't send two emails", async () => {
     const license = mocks.licenses.useCloudFree()
-    const quota = license.quotas.usage.static.plugins
+    const quota = license.quotas.usage.static.rows
 
     await config.doInWorkspace(async () => {
       const trigger = async () => {
         let value = quota.value * 0.9
         await quotas.incrementMany({
           change: value,
-          name: StaticQuotaName.PLUGINS,
+          name: StaticQuotaName.ROWS,
           type: QuotaUsageType.STATIC,
         })
       }

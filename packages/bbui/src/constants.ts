@@ -8,6 +8,8 @@ export enum PopoverAlignment {
   LeftContextMenu = "left-context-menu",
 }
 
+export type PopoverWidthMode = "no-anchor" | "min-to-anchor" | "fixed-to-anchor"
+
 export enum TooltipPosition {
   Top = "top",
   Right = "right",

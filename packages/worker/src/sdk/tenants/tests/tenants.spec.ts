@@ -57,17 +57,17 @@ const mockDb = {
 const mockedTenancy = jest.mocked(tenancy)
 const mockedConfigs = jest.mocked(configs)
 
+const DEACTIVATION_SCHEDULED = "2026-07-15T12:00:00.000Z"
+
 describe("tenants", () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    // Setup mock database
     mockedTenancy.getTenantDB.mockReturnValue(mockDb as any)
-    // Setup mock config ID generation
     mockedConfigs.generateConfigID.mockReturnValue("config_settings")
   })
 
   describe("lockTenant", () => {
-    it("should lock tenant with provided reason", async () => {
+    it("should lock tenant with provided reason and deactivation date", async () => {
       const tenantId = structures.tenant.id()
       const lockReason = LockReason.FREE_TIER
 
@@ -79,7 +79,7 @@ describe("tenants", () => {
 
       mockDb.tryGet.mockResolvedValue(settingsConfig)
 
-      await lockTenant(tenantId, lockReason)
+      await lockTenant(tenantId, lockReason, DEACTIVATION_SCHEDULED)
 
       expect(mockDb.tryGet).toHaveBeenCalledWith(
         configs.generateConfigID(ConfigType.SETTINGS)
@@ -89,24 +89,34 @@ describe("tenants", () => {
         config: {
           ...settingsConfig.config,
           lockedBy: lockReason,
+          deactivationScheduledAt: DEACTIVATION_SCHEDULED,
         },
       })
     })
 
-    it("should throw error when settings config not found", async () => {
-      const tenantId = structures.tenant.id()
-      const lockReason = LockReason.FREE_TIER
+    it("should create settings config when not found", async () => {
+      const lockReason = LockReason.MIGRATION
 
       mockDb.tryGet.mockResolvedValue(null)
 
-      await expect(lockTenant(tenantId, lockReason)).rejects.toThrow(
-        `Cannot lock. Settings config not found for tenant ${tenantId}`
+      await lockTenant(
+        structures.tenant.id(),
+        lockReason,
+        "2026-06-24T12:00:00.000Z"
       )
+
+      expect(mockDb.put).toHaveBeenCalledWith({
+        _id: "config_settings",
+        type: ConfigType.SETTINGS,
+        config: {
+          lockedBy: lockReason,
+          deactivationScheduledAt: "2026-06-24T12:00:00.000Z",
+        },
+      })
     })
 
-    it("should throw error when settings config has no config property", async () => {
-      const tenantId = structures.tenant.id()
-      const lockReason = LockReason.FREE_TIER
+    it("should initialise config property when missing", async () => {
+      const lockReason = LockReason.PAID_TO_FREE
 
       const settingsConfig = {
         _id: "config_settings",
@@ -115,14 +125,24 @@ describe("tenants", () => {
 
       mockDb.tryGet.mockResolvedValue(settingsConfig)
 
-      await expect(lockTenant(tenantId, lockReason)).rejects.toThrow(
-        `Cannot lock. Settings config not found for tenant ${tenantId}`
+      await lockTenant(
+        structures.tenant.id(),
+        lockReason,
+        "2026-06-24T12:00:00.000Z"
       )
+
+      expect(mockDb.put).toHaveBeenCalledWith({
+        ...settingsConfig,
+        config: {
+          lockedBy: lockReason,
+          deactivationScheduledAt: "2026-06-24T12:00:00.000Z",
+        },
+      })
     })
   })
 
   describe("unlockTenant", () => {
-    it("should unlock tenant by removing lock reason", async () => {
+    it("should unlock tenant by removing lock reason and deactivation date", async () => {
       const tenantId = structures.tenant.id()
 
       const settingsConfig: SettingsConfig = {
@@ -130,6 +150,7 @@ describe("tenants", () => {
         type: ConfigType.SETTINGS,
         config: {
           lockedBy: LockReason.FREE_TIER,
+          deactivationScheduledAt: DEACTIVATION_SCHEDULED,
         },
       }
 
@@ -143,20 +164,24 @@ describe("tenants", () => {
       expect(mockDb.put).toHaveBeenCalledWith({
         ...settingsConfig,
         config: {
-          ...settingsConfig.config,
           lockedBy: undefined,
+          deactivationScheduledAt: undefined,
         },
       })
     })
 
-    it("should throw error when settings config not found", async () => {
-      const tenantId = structures.tenant.id()
-
+    it("should create settings config when not found", async () => {
       mockDb.tryGet.mockResolvedValue(null)
 
-      await expect(unlockTenant(tenantId)).rejects.toThrow(
-        `Cannot lock. Settings config not found for tenant ${tenantId}`
-      )
+      await unlockTenant(structures.tenant.id())
+
+      expect(mockDb.put).toHaveBeenCalledWith({
+        _id: "config_settings",
+        type: ConfigType.SETTINGS,
+        config: {
+          lockedBy: undefined,
+        },
+      })
     })
   })
 
@@ -213,19 +238,21 @@ describe("tenants", () => {
       })
     })
 
-    it("should throw error when settings config not found", async () => {
-      const tenantId = structures.tenant.id()
-
+    it("should create settings config when not found", async () => {
       mockDb.tryGet.mockResolvedValue(null)
 
-      await expect(setActivation(tenantId, true)).rejects.toThrow(
-        `Cannot set activation. Settings config not found for tenant ${tenantId}`
-      )
+      await setActivation(structures.tenant.id(), true)
+
+      expect(mockDb.put).toHaveBeenCalledWith({
+        _id: "config_settings",
+        type: ConfigType.SETTINGS,
+        config: {
+          active: true,
+        },
+      })
     })
 
-    it("should throw error when settings config has no config property", async () => {
-      const tenantId = structures.tenant.id()
-
+    it("should initialise config property when missing", async () => {
       const settingsConfig = {
         _id: "config_settings",
         type: ConfigType.SETTINGS,
@@ -233,9 +260,14 @@ describe("tenants", () => {
 
       mockDb.tryGet.mockResolvedValue(settingsConfig)
 
-      await expect(setActivation(tenantId, true)).rejects.toThrow(
-        `Cannot set activation. Settings config not found for tenant ${tenantId}`
-      )
+      await setActivation(structures.tenant.id(), true)
+
+      expect(mockDb.put).toHaveBeenCalledWith({
+        ...settingsConfig,
+        config: {
+          active: true,
+        },
+      })
     })
   })
 })

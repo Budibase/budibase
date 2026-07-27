@@ -5,6 +5,7 @@ import {
   BadRequestError,
   configs,
   context,
+  env as envCore,
   objectStore,
   roles,
   utils,
@@ -21,6 +22,7 @@ import {
   GetSignedUploadUrlResponse,
   ProcessAttachmentResponse,
   PWAManifest,
+  PWAManifestImage,
   ServeAppResponse,
   ServeBuilderPreviewResponse,
   ServeClientLibraryResponse,
@@ -45,14 +47,16 @@ import {
   shouldServeLocally,
 } from "../../../utilities/fileSystem"
 import { isWorkspaceFullyMigrated } from "../../../workspaceMigrations"
-import AppComponent from "./templates/BudibaseApp.svelte"
-import { render } from "svelte/server"
 
 const ACTIVE_CONTENT_EXTENSIONS = new Set([
   "html",
   "htm",
+  "js",
+  "jse",
+  "mjs",
   "svg",
   "svgz",
+  "wasm",
   "xhtml",
   "mhtml",
   "shtml",
@@ -61,10 +65,119 @@ const ACTIVE_CONTENT_EXTENSIONS = new Set([
 const ACTIVE_CONTENT_MIME_TYPES = [
   "text/html",
   "image/svg+xml",
+  "application/javascript",
+  "application/wasm",
+  "text/javascript",
   "application/xhtml+xml",
 ]
 
 const MAX_SNIFF_BYTES = 4096
+const GLOBAL_CLIENT_ASSET_ID = "global"
+const PWA_MANIFEST_FILENAMES = ["icons.json", "manifest.json"]
+const PWA_ICON_PATTERNS = [
+  /^android\/launchericon-(\d+)x\1\.png$/i,
+  /^ios\/(\d+)\.png$/i,
+]
+
+const MAX_PWA_ZIP_FILE_COUNT = 100
+const MAX_PWA_ZIP_ENTRY_SIZE = 10 * 1024 * 1024 // 10MB per file
+const MAX_PWA_ZIP_TOTAL_SIZE = 50 * 1024 * 1024 // 50MB uncompressed total
+const MAX_PWA_ZIP_DEPTH = 10
+
+const validatePWAZipEntries = () => {
+  let fileCount = 0
+  let totalUncompressedSize = 0
+
+  return (entry: { fileName: string; uncompressedSize: number }) => {
+    // extract-zip skips these itself, so don't count them against the limits.
+    if (entry.fileName.startsWith("__MACOSX/")) {
+      return
+    }
+
+    const depth =
+      entry.fileName.split("/").filter(Boolean).length -
+      (entry.fileName.endsWith("/") ? 0 : 1)
+    if (depth > MAX_PWA_ZIP_DEPTH) {
+      throw new BadRequestError(
+        `Invalid zip - directory depth exceeds ${MAX_PWA_ZIP_DEPTH}`
+      )
+    }
+
+    // Directory entries carry no content, only enforce the depth limit on them.
+    if (entry.fileName.endsWith("/")) {
+      return
+    }
+
+    fileCount++
+    if (fileCount > MAX_PWA_ZIP_FILE_COUNT) {
+      throw new BadRequestError(
+        `Invalid zip - too many files (max ${MAX_PWA_ZIP_FILE_COUNT})`
+      )
+    }
+
+    if (entry.uncompressedSize > MAX_PWA_ZIP_ENTRY_SIZE) {
+      throw new BadRequestError(
+        `Invalid zip - file "${entry.fileName}" exceeds the maximum size`
+      )
+    }
+
+    totalUncompressedSize += entry.uncompressedSize
+    if (totalUncompressedSize > MAX_PWA_ZIP_TOTAL_SIZE) {
+      throw new BadRequestError(
+        "Invalid zip - uncompressed contents exceed the maximum size"
+      )
+    }
+  }
+}
+
+const listFilesRecursively = async (directory: string): Promise<string[]> => {
+  const entries = await fsp.readdir(directory, { withFileTypes: true })
+  const files = await Promise.all(
+    entries.map(async entry => {
+      const entryPath = join(directory, entry.name)
+      if (entry.isDirectory()) {
+        return await listFilesRecursively(entryPath)
+      }
+
+      if (entry.isFile()) {
+        return [entryPath]
+      }
+
+      return []
+    })
+  )
+
+  return files.flat().sort()
+}
+
+const derivePWAIconsFromFiles = async (
+  directory: string,
+  files: string[]
+): Promise<PWAManifestImage[]> => {
+  const icons: PWAManifestImage[] = []
+
+  for (const filePath of files) {
+    const relativePath = path.relative(directory, filePath)
+    const normalizedPath = relativePath.split(path.sep).join("/")
+
+    for (const pattern of PWA_ICON_PATTERNS) {
+      const match = normalizedPath.match(pattern)
+      if (!match) {
+        continue
+      }
+
+      const size = match[1]
+      icons.push({
+        src: relativePath,
+        sizes: `${size}x${size}`,
+        type: "image/png",
+      })
+      break
+    }
+  }
+
+  return icons
+}
 
 const detectActiveContent = async (filePath: fs.PathLike) => {
   const handle = await fsp.open(filePath, "r")
@@ -90,6 +203,36 @@ const detectActiveContent = async (filePath: fs.PathLike) => {
   }
 }
 
+const getUploadFilename = (file: unknown) => {
+  if (!file || typeof file !== "object") {
+    return undefined
+  }
+  const upload = file as {
+    originalFilename?: string | null
+  }
+  return upload.originalFilename || undefined
+}
+
+const getUploadPath = (file: unknown) => {
+  if (!file || typeof file !== "object") {
+    return undefined
+  }
+  const upload = file as {
+    filepath?: string
+  }
+  return upload.filepath
+}
+
+const getUploadMimeType = (file: unknown) => {
+  if (!file || typeof file !== "object") {
+    return undefined
+  }
+  const upload = file as {
+    mimetype?: string | null
+  }
+  return upload.mimetype || undefined
+}
+
 export const uploadFile = async function (
   ctx: Ctx<void, ProcessAttachmentResponse>
 ) {
@@ -102,16 +245,22 @@ export const uploadFile = async function (
 
   ctx.body = await Promise.all(
     files.map(async file => {
-      if (!file.name) {
+      const fileName = getUploadFilename(file)
+      const filePath = getUploadPath(file)
+      const rawMimeType = getUploadMimeType(file)
+      if (!fileName) {
         throw new BadRequestError(
           "Attempted to upload a file without a filename"
         )
       }
+      if (!filePath) {
+        throw new BadRequestError("Attempted to upload a file without a path")
+      }
 
-      const extension = [...file.name.split(".")].pop()
+      const extension = [...fileName.split(".")].pop()
       if (!extension) {
         throw new BadRequestError(
-          `File "${file.name}" has no extension, an extension is required to upload a file`
+          `File "${fileName}" has no extension, an extension is required to upload a file`
         )
       }
 
@@ -125,34 +274,29 @@ export const uploadFile = async function (
         InvalidFileExtensions.includes(extensionLower)
       ) {
         throw new BadRequestError(
-          `File "${file.name}" has an invalid extension: "${extension}"`
+          `File "${fileName}" has an invalid extension: "${extension}"`
         )
       }
 
-      if (isPublicUser) {
-        if (ACTIVE_CONTENT_EXTENSIONS.has(extensionLower)) {
-          throw new ActiveContentFileError(file.name)
-        }
+      if (ACTIVE_CONTENT_EXTENSIONS.has(extensionLower)) {
+        throw new ActiveContentFileError(fileName)
+      }
 
-        const rawMimeType = Array.isArray(file.type) ? file.type[0] : file.type
-        const mimeType =
-          typeof rawMimeType === "string"
-            ? rawMimeType.toLowerCase()
-            : undefined
-        if (
-          mimeType &&
-          ACTIVE_CONTENT_MIME_TYPES.some(type => mimeType.includes(type))
-        ) {
-          throw new ActiveContentFileError(file.name)
-        }
+      const mimeType =
+        typeof rawMimeType === "string" ? rawMimeType.toLowerCase() : undefined
+      if (
+        mimeType &&
+        ACTIVE_CONTENT_MIME_TYPES.some(type => mimeType.includes(type))
+      ) {
+        throw new ActiveContentFileError(fileName)
+      }
 
-        if (
-          file.path &&
-          (typeof file.path === "string" || Buffer.isBuffer(file.path)) &&
-          (await detectActiveContent(file.path))
-        ) {
-          throw new ActiveContentFileError(file.name)
-        }
+      if (
+        filePath &&
+        (typeof filePath === "string" || Buffer.isBuffer(filePath)) &&
+        (await detectActiveContent(filePath))
+      ) {
+        throw new ActiveContentFileError(fileName)
       }
 
       // filenames converted to UUIDs so they are unique
@@ -163,13 +307,13 @@ export const uploadFile = async function (
       const response = await objectStore.upload({
         bucket: ObjectStoreBuckets.APPS,
         filename: s3Key,
-        path: file.path,
-        type: file.type,
+        path: filePath,
+        type: rawMimeType,
       })
 
       return {
         size: file.size,
-        name: file.name,
+        name: fileName,
         url: await objectStore.getAppFileUrl(s3Key),
         extension,
         key: response.Key!,
@@ -184,46 +328,74 @@ export async function processPWAZip(ctx: UserCtx) {
     ctx.throw(400, "No file or multiple files provided")
   }
 
-  if (!file.path || !file.name?.toLowerCase().endsWith(".zip")) {
+  const filePath = getUploadPath(file)
+  const fileName = getUploadFilename(file)
+  if (!filePath || !fileName?.toLowerCase().endsWith(".zip")) {
     ctx.throw(400, "Invalid file - must be a zip file")
   }
 
-  const tempDir = join(tmpdir(), `pwa-${Date.now()}`)
+  const tempDir = await fsp.mkdtemp(join(tmpdir(), "pwa-"))
   try {
     await fsp.mkdir(tempDir, { recursive: true })
 
-    await extract(file.path, { dir: tempDir })
-    const iconsJsonPath = join(tempDir, "icons.json")
+    await extract(filePath, { dir: tempDir, onEntry: validatePWAZipEntries() })
 
-    if (!fs.existsSync(iconsJsonPath)) {
-      ctx.throw(400, "Invalid zip structure - missing icons.json")
+    const files = await listFilesRecursively(tempDir)
+    const manifestPath = files.find(filePath => {
+      const fileName = path.basename(filePath).toLowerCase()
+      return PWA_MANIFEST_FILENAMES.includes(fileName)
+    })
+    let manifestData: { icons?: PWAManifestImage[] } | undefined
+    let baseDir = tempDir
+
+    if (manifestPath) {
+      try {
+        const manifestContent = await fsp.readFile(manifestPath, "utf-8")
+        manifestData = JSON.parse(manifestContent) as {
+          icons?: PWAManifestImage[]
+        }
+      } catch (_error) {
+        ctx.throw(400, "Invalid PWA manifest file - could not parse JSON")
+      }
+
+      if (!manifestData?.icons || !Array.isArray(manifestData.icons)) {
+        ctx.throw(400, "Invalid PWA manifest file - missing icons array")
+      }
+      baseDir = path.dirname(manifestPath)
+    } else {
+      const derivedIcons = await derivePWAIconsFromFiles(tempDir, files)
+      if (derivedIcons.length === 0) {
+        ctx.throw(
+          400,
+          "Invalid zip structure - missing icons.json, manifest.json, or recognizable PWA icon files"
+        )
+      }
+
+      manifestData = { icons: derivedIcons }
     }
 
-    let iconsData
-    try {
-      const iconsContent = await fsp.readFile(iconsJsonPath, "utf-8")
-      iconsData = JSON.parse(iconsContent)
-    } catch (error) {
-      ctx.throw(400, "Invalid icons.json file - could not parse JSON")
-    }
-
-    if (!iconsData.icons || !Array.isArray(iconsData.icons)) {
-      ctx.throw(400, "Invalid icons.json file - missing icons array")
-    }
-
-    const icons = []
-    const baseDir = path.dirname(iconsJsonPath)
+    const iconsData = manifestData?.icons || []
+    const icons: PWAManifestImage[] = []
+    const realBaseDir = await fsp.realpath(baseDir)
     const appId = context.getProdWorkspaceId()
 
-    for (const icon of iconsData.icons) {
+    for (const icon of iconsData) {
       const resolvedSrc = icon.src ? path.resolve(baseDir, icon.src) : undefined
-      if (
-        !icon.src ||
-        !icon.sizes ||
-        !resolvedSrc ||
-        !resolvedSrc.startsWith(baseDir + path.sep) ||
-        !fs.existsSync(resolvedSrc)
-      ) {
+      let validIconFile = false
+      if (resolvedSrc?.startsWith(baseDir + path.sep)) {
+        try {
+          const [iconStats, realSrc] = await Promise.all([
+            fsp.lstat(resolvedSrc),
+            fsp.realpath(resolvedSrc),
+          ])
+          validIconFile =
+            iconStats.isFile() && realSrc.startsWith(realBaseDir + path.sep)
+        } catch (_err) {
+          validIconFile = false
+        }
+      }
+
+      if (!icon.src || !icon.sizes || !resolvedSrc || !validIconFile) {
         continue
       }
 
@@ -257,8 +429,16 @@ export async function processPWAZip(ctx: UserCtx) {
     }
 
     ctx.body = { icons }
-  } catch (error: any) {
-    ctx.throw(500, `Error processing zip: ${error.message}`)
+  } catch (error) {
+    if (error && typeof error === "object" && "status" in error) {
+      throw error
+    }
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error"
+    ctx.throw(500, `Error processing zip: ${errorMessage}`)
+  } finally {
+    await fsp.rm(tempDir, { recursive: true, force: true })
   }
 }
 
@@ -308,11 +488,42 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
     const workspaceApp = await sdk.workspaceApps.getMatchedWorkspaceApp(ctx.url)
 
     const appInfo = await sdk.workspaces.metadata.get()
+
+    // When embedded, allow the host site to authenticate the user via a signed
+    // token. Establishing the session here sets the auth cookie on the initial
+    // document response so the client's subsequent API calls are authenticated.
+    if (
+      bbHeaderEmbed &&
+      !ctx.isAuthenticated &&
+      appInfo.embedSSO?.enabled &&
+      (await pro.features.isEmbedAuthEnabled())
+    ) {
+      const embedToken = ctx.query.jwt
+      if (typeof embedToken === "string" && embedToken) {
+        try {
+          await sdk.embedSSO.authenticateEmbedUser(
+            ctx,
+            appInfo.embedSSO,
+            embedToken
+          )
+        } catch (err) {
+          console.warn(`Embed SSO authentication failed: ${err}`)
+        }
+      }
+    }
+    const clientVersion = isChatRoute ? envCore.VERSION : appInfo.version
+    const clientCacheKey = await objectStore.getClientCacheKey(clientVersion)
+    const clientAssetScopeId = isChatRoute
+      ? GLOBAL_CLIENT_ASSET_ID
+      : workspaceId
+    const clientLibPath = `/api/assets/${clientAssetScopeId}/client?${clientCacheKey}`
     const hideDevTools = !!ctx.params.appUrl
     const sideNav = workspaceApp?.navigation.navigation === "Left"
     const hideFooter =
       ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
-    const themeVariables = getThemeVariables(appInfo.theme)
+    const themeVariables = getThemeVariables(
+      workspaceApp?.theme ?? appInfo.theme
+    )
     const hasPWA = Object.keys(appInfo.pwa || {}).length > 0
     const manifestUrl = hasPWA ? `/api/apps/${workspaceId}/manifest.json` : ""
     const addAppScripts =
@@ -320,6 +531,10 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       false
 
     if (!env.isJest()) {
+      const [{ default: AppComponent }, { render }] = await Promise.all([
+        import("./templates/BudibaseApp.svelte"),
+        import("svelte/server"),
+      ])
       const plugins = await objectStore.enrichPluginURLs(appInfo.usedPlugins)
       /*
        * Server rendering in svelte sadly does not support type checking, the .render function
@@ -345,7 +560,8 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         metaTitle: isChatRoute
           ? "Chat"
           : branding?.metaTitle || `${appName} - built with Budibase`,
-        clientCacheKey: await objectStore.getClientCacheKey(appInfo.version),
+        clientCacheKey,
+        clientLibPath,
         usedPlugins: plugins,
         favicon: branding.faviconUrl
           ? await objectStore.getGlobalFileUrl("settings", "faviconUrl")
@@ -411,7 +627,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
       })
     } else {
       // just return the app info for jest to assert on
-      ctx.body = appInfo
+      ctx.body = { ...appInfo, clientCacheKey, clientLibPath }
     }
   } catch (error: any) {
     let msg = "An unknown error occurred"
@@ -475,6 +691,11 @@ function serveLocalFile(ctx: Ctx, fileName: string) {
 export const serveClientLibrary = async function (
   ctx: Ctx<void, ServeClientLibraryResponse>
 ) {
+  const appId = ctx.params.appId
+  if (appId === GLOBAL_CLIENT_ASSET_ID) {
+    return serveLocalFile(ctx, "budibase-client.js")
+  }
+
   const workspaceId = context.getWorkspaceId()
 
   if (!workspaceId) {
@@ -498,6 +719,10 @@ export const serve3rdPartyFile = async function (ctx: Ctx) {
   const file = Array.isArray(ctx.params.file)
     ? ctx.params.file.join("/")
     : ctx.params.file
+  const appId = ctx.params.appId
+  if (appId === GLOBAL_CLIENT_ASSET_ID) {
+    return serveLocalFile(ctx, file)
+  }
 
   const workspaceId = context.getWorkspaceId()
   if (!workspaceId) {
@@ -553,6 +778,10 @@ export const getSignedUploadURL = async function (
     const { bucket, key } = ctx.request.body || {}
     if (!bucket || !key) {
       ctx.throw(400, "bucket and key values are required")
+    }
+    const datasourceBucket = datasource?.config?.bucket
+    if (datasourceBucket && datasourceBucket !== bucket) {
+      ctx.throw(400, "bucket must match the datasource configuration")
     }
     try {
       let endpoint = datasource?.config?.endpoint

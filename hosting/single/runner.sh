@@ -77,6 +77,27 @@ repair_internal_couch_url() {
     fi
 }
 
+# Custom CA bundle support.
+# Mount the file at one of these paths:
+#   - ${DATA_DIR}/ca-bundle.pem
+#   - /etc/budibase/ca-bundle.pem
+# Or set CUSTOM_CA_BUNDLE_PATH to an explicit absolute path.
+CUSTOM_CA_BUNDLE_PATH="${CUSTOM_CA_BUNDLE_PATH:-}"
+if [[ -z "${CUSTOM_CA_BUNDLE_PATH}" ]]; then
+    for candidate in "${DATA_DIR}/ca-bundle.pem" "/etc/budibase/ca-bundle.pem"; do
+        if [[ -f "${candidate}" ]]; then
+            CUSTOM_CA_BUNDLE_PATH="${candidate}"
+            break
+        fi
+    done
+fi
+if [[ -n "${CUSTOM_CA_BUNDLE_PATH}" && -f "${CUSTOM_CA_BUNDLE_PATH}" ]]; then
+    echo "Installing custom CA bundle from ${CUSTOM_CA_BUNDLE_PATH}"
+    install -m 0644 "${CUSTOM_CA_BUNDLE_PATH}" /usr/local/share/ca-certificates/budibase-custom.crt
+    update-ca-certificates >/dev/null 2>&1 || echo "Warning: update-ca-certificates failed"
+    export NODE_EXTRA_CA_CERTS="${CUSTOM_CA_BUNDLE_PATH}"
+fi
+
 # Mount NFS or GCP Filestore if FILESHARE_IP and FILESHARE_NAME are set
 if [[ -n "${FILESHARE_IP}" && -n "${FILESHARE_NAME}" ]]; then
     echo "Mounting NFS share"
@@ -98,6 +119,16 @@ if [[ "${LITELLM_INTERNAL_DB+x}" == "x" ]]; then
     runtime_litellm_internal_db="${LITELLM_INTERNAL_DB}"
 fi
 
+# These are randomized if unset and persisted to .env.
+env_vars=(COUCHDB_USER COUCHDB_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY INTERNAL_API_KEY JWT_SECRET REDIS_PASSWORD LITELLM_MASTER_KEY LITELLM_SALT_KEY LITELLM_DB_PASSWORD)
+
+declare -A runtime_secret_values
+for var in "${env_vars[@]}"; do
+    if [[ -n "${!var}" ]]; then
+        runtime_secret_values["$var"]="${!var}"
+    fi
+done
+
 # Source environment variables from a .env file if it exists in DATA_DIR
 if [[ -f "${DATA_DIR}/.env" ]]; then
     set -a  # Automatically export all variables loaded from .env
@@ -109,12 +140,39 @@ fi
 sync_couch_env_aliases
 
 # Randomize any unset sensitive environment variables using uuidgen
-env_vars=(COUCHDB_USER COUCHDB_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY INTERNAL_API_KEY JWT_SECRET REDIS_PASSWORD LITELLM_MASTER_KEY LITELLM_SALT_KEY LITELLM_DB_PASSWORD)
+generated_vars=()
 for var in "${env_vars[@]}"; do
     if [[ -z "${!var}" ]]; then
         export "$var"="$(uuidgen | tr -d '-')"
+        generated_vars+=("$var")
     fi
 done
+
+# If ${DATA_DIR}/.env did not exist on this start, we just minted fresh
+# secrets. When ${DATA_DIR} is not backed by a persistent volume, those
+# secrets are regenerated on every restart, which invalidates JWTs,
+# encrypted session payloads and the redis AUTH password — the common
+# symptom is a flood of "Auth Error: Session not found" and 403
+# Unauthorized in the logs after the container restarts. Make this loud
+# so operators notice before they put the deployment in front of users.
+if [[ ! -f "${DATA_DIR}/.env" && "${#generated_vars[@]}" -gt 0 && "${BUDIBASE_ACK_EPHEMERAL_DATA:-0}" != "1" ]]; then
+    cat <<EOF >&2
+==============================================================================
+WARNING: ${DATA_DIR}/.env did not exist; generated fresh secrets for:
+  ${generated_vars[*]}
+
+If ${DATA_DIR} is NOT a persistent volume, these secrets will be regenerated
+on every container restart. That will:
+  - log every existing user out (Session not found / 403 Unauthorized)
+  - re-encrypt CouchDB/Redis credentials, breaking persisted data
+  - rotate JWT_SECRET, invalidating all signed tokens
+
+Mount a persistent volume at ${DATA_DIR} (docker -v / k8s PVC) BEFORE
+putting this container into production. Set BUDIBASE_ACK_EPHEMERAL_DATA=1
+to silence this warning.
+==============================================================================
+EOF
+fi
 
 repair_internal_couch_url
 
@@ -124,11 +182,7 @@ fi
 
 if [ ! -f "${DATA_DIR}/.env" ]; then
     touch ${DATA_DIR}/.env
-    for ENV_VAR in "${ENV_VARS[@]}"; do
-        temp=$(eval "echo \$$ENV_VAR")
-        echo "$ENV_VAR=$temp" >>${DATA_DIR}/.env
-    done
-    for ENV_VAR in "${DOCKER_VARS[@]}"; do
+    for ENV_VAR in "${env_vars[@]}"; do
         temp=$(eval "echo \$$ENV_VAR")
         echo "$ENV_VAR=$temp" >>${DATA_DIR}/.env
     done
@@ -142,6 +196,35 @@ ensure_env_var() {
         return
     fi
     echo "${name}=${value}" >> "${DATA_DIR}/.env"
+}
+
+# Set or replace a variable in the persisted .env, overwriting any existing value.
+upsert_env_var() {
+    local name="$1"
+    local value="$2"
+    local env_file="${DATA_DIR}/.env"
+    local temp_file
+    temp_file="$(mktemp)"
+
+    awk -v name="$name" -v value="$value" '
+index($0, name "=") == 1 {
+    if (!updated) {
+        print name "=" value
+        updated = 1
+    }
+    next
+}
+{
+    print
+}
+END {
+    if (!updated) {
+        print name "=" value
+    }
+}
+' "${env_file}" > "${temp_file}"
+
+    mv "${temp_file}" "${env_file}"
 }
 
 ensure_env_var "LITELLM_DB_NAME" "${LITELLM_DB_NAME}"
@@ -161,6 +244,29 @@ if [[ "${runtime_database_url_set}" == "true" ]]; then
 fi
 if [[ "${runtime_litellm_internal_db_set}" == "true" ]]; then
     export LITELLM_INTERNAL_DB="${runtime_litellm_internal_db}"
+fi
+
+# A runtime-provided secret only overrides the persisted value when it actually
+# differs from it. This lets users rotate any secret by passing a new value on a
+# later boot, while ignoring image-baked defaults (e.g. the base image always sets
+# COUCHDB_USER/PASSWORD) that already match what is persisted.
+couch_creds_updated="false"
+for var in "${!runtime_secret_values[@]}"; do
+    if [[ "${runtime_secret_values[$var]}" == "${!var}" ]]; then
+        continue
+    fi
+    export "$var"="${runtime_secret_values[$var]}"
+    upsert_env_var "$var" "${runtime_secret_values[$var]}"
+    if [[ "$var" == "COUCHDB_USER" || "$var" == "COUCHDB_PASSWORD" ]]; then
+        couch_creds_updated="true"
+    fi
+done
+
+# If the CouchDB credentials changed, rebuild and persist the derived internal URL.
+if [[ "${couch_creds_updated}" == "true" ]]; then
+    sync_couch_env_aliases
+    repair_internal_couch_url
+    upsert_env_var "COUCH_DB_URL" "${COUCH_DB_URL}"
 fi
 
 ln -sfn ${DATA_DIR}/.env /app/.env
@@ -264,33 +370,7 @@ if [[ -z "${LITELLM_MASTER_KEY}" || -z "${LITELLM_SALT_KEY}" ]]; then
     exit 1
 fi
 
-upsert_env_var() {
-    local name="$1"
-    local value="$2"
-    local env_file="${DATA_DIR}/.env"
-    local temp_file
-    temp_file="$(mktemp)"
-
-    awk -v name="$name" -v value="$value" '
-index($0, name "=") == 1 {
-    if (!updated) {
-        print name "=" value
-        updated = 1
-    }
-    next
-}
-{
-    print
-}
-END {
-    if (!updated) {
-        print name "=" value
-    }
-}
-' "${env_file}" > "${temp_file}"
-
-    mv "${temp_file}" "${env_file}"
-}
+export USE_PRISMA_MIGRATE="True"
 
 upsert_env_var "LITELLM_INTERNAL_DB" "${LITELLM_INTERNAL_DB}"
 upsert_env_var "DATABASE_URL" "${DATABASE_URL}"
@@ -311,6 +391,27 @@ pm2 start /opt/venv/litellm/bin/litellm \
   --restart-delay 5000 \
   --time \
   -- -c "${LITELLM_CONFIG_PATH}"
+
+echo "Waiting for LiteLLM to become ready..."
+litellm_ready_timeout="${LITELLM_READY_TIMEOUT_SECONDS:-120}"
+litellm_wait_seconds=0
+litellm_ready="false"
+until [[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/health/liveliness) -eq 200 ]]; do
+    litellm_wait_seconds=$((litellm_wait_seconds + 1))
+    if [[ "${litellm_wait_seconds}" -ge "${litellm_ready_timeout}" ]]; then
+        echo "Timed out waiting for LiteLLM readiness after ${litellm_ready_timeout}s. Continuing startup without waiting further."
+        break
+    fi
+    sleep 1
+done
+if [[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/health/liveliness) -eq 200 ]]; then
+    litellm_ready="true"
+fi
+if [[ "${litellm_ready}" == "true" ]]; then
+    echo "LiteLLM is ready."
+else
+    echo "LiteLLM is not ready yet. App and worker will still start."
+fi
 
 pushd app
 pm2 start --name app "yarn run:docker"

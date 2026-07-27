@@ -1,20 +1,24 @@
-import {
-  RestTemplate,
-  RestTemplateGroup,
-  RestTemplateGroupName,
-  RestTemplateName,
-} from "@budibase/types"
+import type { RestTemplate, RestTemplateId } from "@budibase/types"
 import { BudiStore } from "../BudiStore"
+import ActiveCampaignLogo from "assets/rest-template-icons/activecampaign.avif"
 import AnsibleLogo from "assets/rest-template-icons/ansible.svg"
+import ApolloLogo from "assets/rest-template-icons/apollo.avif"
 import AttioLogo from "assets/rest-template-icons/attio.svg"
 import BambooHRLogo from "assets/rest-template-icons/bamboohr.svg"
 import ConfluenceLogo from "assets/rest-template-icons/confluence.svg"
+import CustomerIoLogo from "assets/rest-template-icons/customer-io.avif"
 import DiscordLogo from "assets/rest-template-icons/discord.svg"
+import DocuSignLogo from "assets/rest-template-icons/docusign.avif"
+import DocumensoLogo from "assets/rest-template-icons/documenso.svg"
 import FigmaLogo from "assets/rest-template-icons/figma.svg"
 import JiraLogo from "assets/rest-template-icons/jira.svg"
 import GitHubLogo from "assets/rest-template-icons/github.svg"
+import GongLogo from "assets/rest-template-icons/gong.avif"
 import OktaLogo from "assets/rest-template-icons/okta.svg"
 import PagerDutyLogo from "assets/rest-template-icons/pagerduty.svg"
+import PandaDocLogo from "assets/rest-template-icons/pandadoc.avif"
+import PipedriveLogo from "assets/rest-template-icons/pipedrive.avif"
+import SalesforceLogo from "assets/rest-template-icons/salesforce.avif"
 import ServiceNowLogo from "assets/rest-template-icons/servicenow.svg"
 import SlackLogo from "assets/rest-template-icons/slack.svg"
 import SplunkLogo from "assets/rest-template-icons/splunk.svg"
@@ -33,6 +37,7 @@ import CleverLogo from "assets/rest-template-icons/clever.svg"
 import ClickupLogo from "assets/rest-template-icons/clickup.svg"
 import DeelLogo from "assets/rest-template-icons/deel.svg"
 import DixaLogo from "assets/rest-template-icons/dixa.svg"
+import DodoPaymentsLogo from "assets/rest-template-icons/dodo-payments.svg"
 import DotsLogo from "assets/rest-template-icons/dots.svg"
 import FactorialLogo from "assets/rest-template-icons/factorial.svg"
 import FastspringLogo from "assets/rest-template-icons/fastspring.svg"
@@ -91,1174 +96,1286 @@ import ZendeskLogo from "assets/rest-template-icons/zendesk.svg"
 
 interface RestTemplatesState {
   templates: RestTemplate[]
-  templateGroups: RestTemplateGroup<RestTemplateGroupName>[]
 }
 
-const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
+export const featuredTemplates: RestTemplateId[] = [
+  "slack-web-api",
+  "jira-cloud",
+  "bamboohr",
+  "hubspot",
+  "stripe",
+  "github",
+]
+
+const hubspotRestTemplateGroup: RestTemplate = {
+  id: "hubspot",
   name: "HubSpot",
   icon: HubSpotLogo,
   description:
     "CRM, marketing, CMS, and automation APIs for HubSpot's platform.",
   operationsCount: 1274,
+  connectionMode: "shared",
+  mixin: { servers: [{ url: "https://api.hubapi.com" }] },
   templates: [
     {
+      id: "hubspot-account-info",
       name: "HubSpot Account Info",
       description: "Get information about a HubSpot account and its API usage.",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Account/Account%20Info/Rollouts/144923/2025-09/accountInfo.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/account-info/openapi.json",
         },
       ],
       operationsCount: 2,
     },
     {
+      id: "hubspot-actions-v4",
       name: "HubSpot Actions V4",
       description: "HubSpot Automation Actions V4 API.",
       specs: [
         {
           version: "v4",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Automation/Actions%20V4/Rollouts/148901/v4/actionsV4.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/actions-v4/openapi.json",
         },
       ],
       operationsCount: 16,
     },
     {
+      id: "hubspot-app-uninstalls",
       name: "HubSpot App Uninstalls",
       description: "HubSpot CRM App Uninstalls API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/App%20Uninstalls/Rollouts/209039/v3/appUninstalls.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/app-uninstalls/openapi.json",
         },
       ],
       operationsCount: 1,
     },
     {
+      id: "hubspot-appointments",
       name: "HubSpot Appointments",
       description: "HubSpot Appointments API.",
       specs: [
         {
           version: "2026-03",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Appointments/Rollouts/424/2026-03/appointments.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/appointments/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-associations",
       name: "HubSpot Associations",
       description: "HubSpot Associations API.",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Associations/Rollouts/130902/2025-09/associations.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/associations/openapi.json",
         },
       ],
       operationsCount: 23,
     },
     {
+      id: "hubspot-associations-schema",
       name: "HubSpot Associations Schema",
       description: "HubSpot CRM Associations Schema API.",
       specs: [
         {
           version: "v4",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Associations%20Schema/Rollouts/130902/v4/associationsSchema.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/associations-schema/openapi.json",
         },
       ],
       operationsCount: 9,
     },
     {
+      id: "hubspot-audit-logs",
       name: "HubSpot Audit Logs",
       description: "Get information about a HubSpot account and its API usage.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Account/Audit%20Logs/Rollouts/144923/v3/auditLogs.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/audit-logs/openapi.json",
         },
       ],
       operationsCount: 3,
     },
     {
+      id: "hubspot-authors",
       name: "HubSpot Authors",
       description:
         "Use these endpoints for interacting with Blog Posts, Blog Authors, and Blog Tags",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Authors/Rollouts/635/v3/authors.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/authors/openapi.json",
         },
       ],
       operationsCount: 14,
     },
     {
+      id: "hubspot-automation-v4",
       name: "HubSpot Automation V4",
       description: "HubSpot Automation V4 API.",
       specs: [
         {
           version: "v4",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Automation/Automation%20V4/Rollouts/144908/v4/automationV4.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/automation-v4/openapi.json",
         },
       ],
       operationsCount: 8,
     },
     {
+      id: "hubspot-blog-settings",
       name: "HubSpot Blog Settings",
       description: "Use these endpoints for interacting with Blog objects",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Blog%20Settings/Rollouts/635/v3/blogSettings.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/blog-settings/openapi.json",
         },
       ],
       operationsCount: 9,
     },
     {
+      id: "hubspot-bucket-test111",
       name: "HubSpot Bucket_Test111",
       description: "HubSpot Bucket_Test111 API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Bucket_Test111/Rollouts/424/v3/buckettest111.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/bucket-test111/openapi.json",
         },
       ],
       operationsCount: 10,
     },
     {
+      id: "hubspot-business-units",
       name: "HubSpot Business Units",
       description: "Retrieve Business Unit information.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Business%20Units/Business%20Units/Rollouts/140946/v3/businessUnits.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/business-units/openapi.json",
         },
       ],
       operationsCount: 1,
     },
     {
+      id: "hubspot-calling-extensions",
       name: "HubSpot Calling Extensions",
       description: "HubSpot CRM Calling Extensions API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Calling%20Extensions/Rollouts/145891/v3/callingExtensions.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/calling-extensions/openapi.json",
         },
       ],
       operationsCount: 12,
     },
     {
+      id: "hubspot-calls",
       name: "HubSpot Calls",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Calls/Rollouts/424/2025-09/calls.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/calls/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-campaigns-public-api",
       name: "HubSpot Campaigns Public Api",
       description: "HubSpot Marketing Campaigns Public Api API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Campaigns%20Public%20Api/Rollouts/177944/v3/campaignsPublicApi.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/campaigns-public-api/openapi.json",
         },
       ],
       operationsCount: 24,
     },
     {
+      id: "hubspot-carts",
       name: "HubSpot Carts",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Carts/Rollouts/424/2025-09/carts.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/carts/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-cms-content-audit",
       name: "HubSpot Cms Content Audit",
       description:
         "Use this endpoint to query audit logs of CMS changes that occurred on your HubSpot account.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Cms%20Content%20Audit/Rollouts/144888/v3/cmsContentAudit.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/cms-content-audit/openapi.json",
         },
       ],
       operationsCount: 1,
     },
     {
+      id: "hubspot-commerce-payments",
       name: "HubSpot Commerce Payments",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Commerce%20Payments/Rollouts/424/2025-09/commercePayments.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/commerce-payments/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-commerce-subscriptions",
       name: "HubSpot Commerce Subscriptions",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Commerce%20Subscriptions/Rollouts/206901/2025-09/commerceSubscriptions.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/commerce-subscriptions/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-communications",
       name: "HubSpot Communications",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Communications/Rollouts/424/2025-09/communications.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/communications/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-companies",
       name: "HubSpot Companies",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Companies/Rollouts/424/2025-09/companies.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/companies/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-contacts",
       name: "HubSpot Contacts",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2026-03",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Contacts/Rollouts/424/2026-03/contacts.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/contacts/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-contracts",
       name: "HubSpot Contracts",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Contracts/Rollouts/424/2025-09/contracts.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/contracts/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-conversations",
       name: "HubSpot Conversations",
       description: "HubSpot Conversations Inbox & Messages API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Conversations/Conversations/Rollouts/54902/v3/conversations.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/conversations/openapi.json",
         },
       ],
       operationsCount: 16,
     },
     {
+      id: "hubspot-conversations-inbox-messages",
       name: "HubSpot Conversations Inbox & Messages",
       description: "HubSpot Conversations Inbox & Messages API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Conversations/Conversations%20Inbox%20&%20Messages/Rollouts/54902/v3/conversationsInboxMessages.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/conversations-inbox-messages/openapi.json",
         },
       ],
       operationsCount: 16,
     },
     {
+      id: "hubspot-courses",
       name: "HubSpot Courses",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Courses/Rollouts/424/2025-09/courses.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/courses/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-crm-meetings",
       name: "HubSpot CRM Meetings",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Meetings/Rollouts/424/2025-09/meetings.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/crm-meetings/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-crm-owners",
       name: "HubSpot Crm Owners",
       description:
         "HubSpot uses **owners** to assign CRM objects to specific people in your organization. The endpoints described here are used to get a list of the owners that...",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Crm%20Owners/Rollouts/146888/v3/crmOwners.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/crm-owners/openapi.json",
         },
       ],
       operationsCount: 2,
     },
     {
+      id: "hubspot-custom-channels",
       name: "HubSpot Custom Channels",
       description: "HubSpot Conversations Custom Channels API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Conversations/Custom%20Channels/Rollouts/160898/v3/customChannels.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/custom-channels/openapi.json",
         },
       ],
       operationsCount: 13,
     },
     {
+      id: "hubspot-custom-objects",
       name: "HubSpot Custom Objects",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2026-03",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Custom%20Objects/Rollouts/424/2026-03/customObjects.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/custom-objects/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-deal-splits",
       name: "HubSpot Deal Splits",
       description: "HubSpot CRM Deal Splits API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Deal%20Splits/Rollouts/157885/v3/dealSplits.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/deal-splits/openapi.json",
         },
       ],
       operationsCount: 2,
     },
     {
+      id: "hubspot-deals",
       name: "HubSpot Deals",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Deals/Rollouts/424/2025-09/deals.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/deals/openapi.json",
         },
       ],
       operationsCount: 15,
     },
     {
+      id: "hubspot-discounts",
       name: "HubSpot Discounts",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2026-03",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Discounts/Rollouts/424/2026-03/discounts.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/discounts/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-domains",
       name: "HubSpot Domains",
       description: "HubSpot Domains API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Domains/Rollouts/149894/v3/domains.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/domains/openapi.json",
         },
       ],
       operationsCount: 2,
     },
     {
+      id: "hubspot-emails",
       name: "HubSpot Emails",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Emails/Rollouts/424/2025-09/emails.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/emails/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-events",
       name: "HubSpot Events",
       description: "HubSpot Events Events API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Events/Events/Rollouts/147897/v3/events.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/events/openapi.json",
         },
       ],
       operationsCount: 2,
     },
     {
+      id: "hubspot-exports",
       name: "HubSpot Exports",
       description: "HubSpot CRM Exports API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Exports/Rollouts/95922/v3/exports.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/exports/openapi.json",
         },
       ],
       operationsCount: 3,
     },
     {
+      id: "hubspot-feedback-submissions",
       name: "HubSpot Feedback Submissions",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Feedback%20Submissions/Rollouts/424/2025-09/feedbackSubmissions.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/feedback-submissions/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-fees",
       name: "HubSpot Fees",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Fees/Rollouts/424/2025-09/fees.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/fees/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-files",
       name: "HubSpot Files",
       description: "Upload and manage files.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Files/Files/Rollouts/140950/v3/files.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/files/openapi.json",
         },
       ],
       operationsCount: 20,
     },
     {
+      id: "hubspot-forms",
       name: "HubSpot Forms",
       description: "HubSpot Forms API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Forms/Rollouts/144909/v3/forms.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/forms/openapi.json",
         },
       ],
       operationsCount: 6,
     },
     {
+      id: "hubspot-goal-targets",
       name: "HubSpot Goal Targets",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Goal%20Targets/Rollouts/424/2025-09/goalTargets.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/goal-targets/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-hubdb",
       name: "HubSpot Hubdb",
       description: "HubSpot Hubdb API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Hubdb/Rollouts/243927/v3/hubdb.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/hubdb/openapi.json",
         },
       ],
       operationsCount: 31,
     },
     {
+      id: "hubspot-imports",
       name: "HubSpot Imports",
       description: "HubSpot CRM Imports API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Imports/Rollouts/144903/v3/imports.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/imports/openapi.json",
         },
       ],
       operationsCount: 5,
     },
     {
+      id: "hubspot-invoices",
       name: "HubSpot Invoices",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Invoices/Rollouts/424/2025-09/invoices.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/invoices/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-leads",
       name: "HubSpot Leads",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Leads/Rollouts/424/2025-09/leads.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/leads/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-limits-tracking",
       name: "HubSpot Limits Tracking",
       description: "HubSpot Limits Tracking API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Limits%20Tracking/Rollouts/199890/v3/limitsTracking.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/limits-tracking/openapi.json",
         },
       ],
       operationsCount: 9,
     },
     {
+      id: "hubspot-line-items",
       name: "HubSpot Line Items",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Line%20Items/Rollouts/424/2025-09/lineItems.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/line-items/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-listings",
       name: "HubSpot Listings",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Listings/Rollouts/424/2025-09/listings.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/listings/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-lists",
       name: "HubSpot Lists",
       description: "CRUD operations to manage lists and list memberships",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Lists/Rollouts/144891/v3/lists.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/lists/openapi.json",
         },
       ],
       operationsCount: 28,
     },
     {
+      id: "hubspot-manage-event-definitions",
       name: "HubSpot Manage Event Definitions",
       description: "HubSpot Events Manage Event Definitions API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Events/Manage%20Event%20Definitions/Rollouts/138888/v3/manageEventDefinitions.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/manage-event-definitions/openapi.json",
         },
       ],
       operationsCount: 9,
     },
     {
+      id: "hubspot-marketing-emails",
       name: "HubSpot Marketing Emails",
       description: "HubSpot Marketing Emails API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Marketing%20Emails/Rollouts/145892/v3/marketingEmails.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/marketing-emails/openapi.json",
         },
       ],
       operationsCount: 19,
     },
     {
+      id: "hubspot-marketing-emails-v3",
       name: "HubSpot Marketing Emails V3",
       description: "HubSpot Marketing Emails V3 API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Marketing%20Emails%20V3/Rollouts/155892/v3/marketingEmailsV3.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/marketing-emails-v3/openapi.json",
         },
       ],
       operationsCount: 19,
     },
     {
+      id: "hubspot-marketing-events",
       name: "HubSpot Marketing Events",
       description: "HubSpot Marketing Marketing Events API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Marketing%20Events/Rollouts/129888/v3/marketingEvents.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/marketing-events/openapi.json",
         },
       ],
       operationsCount: 36,
     },
     {
+      id: "hubspot-media-bridge",
       name: "HubSpot Media Bridge",
       description: "HubSpot CMS Media Bridge API.",
       specs: [
         {
           version: "v1",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Media%20Bridge/Rollouts/787/v1/mediaBridge.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/media-bridge/openapi.json",
         },
       ],
       operationsCount: 32,
     },
     {
+      id: "hubspot-multicurrency",
       name: "HubSpot Multicurrency",
       description: "HubSpot Settings Multicurrency API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Settings/Multicurrency/Rollouts/145897/v3/multicurrency.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/multicurrency/openapi.json",
         },
       ],
       operationsCount: 15,
     },
     {
+      id: "hubspot-notes",
       name: "HubSpot Notes",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Notes/Rollouts/424/2025-09/notes.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/notes/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-oauth",
       name: "HubSpot Oauth",
       description: "HubSpot Auth Oauth API.",
       specs: [
         {
           version: "v1",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Auth/Oauth/Rollouts/155908/v1/oauth.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/oauth/openapi.json",
         },
       ],
       operationsCount: 4,
     },
     {
+      id: "hubspot-object-library",
       name: "HubSpot Object Library",
       description: "HubSpot CRM Object Library API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Object%20Library/Rollouts/196908/v3/objectLibrary.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/object-library/openapi.json",
         },
       ],
       operationsCount: 2,
     },
     {
+      id: "hubspot-objects",
       name: "HubSpot Objects",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Objects/Rollouts/424/2025-09/objects.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/objects/openapi.json",
         },
       ],
       operationsCount: 11,
     },
     {
+      id: "hubspot-orders",
       name: "HubSpot Orders",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Orders/Rollouts/424/2025-09/orders.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/orders/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-origins",
       name: "HubSpot Origins",
       description: "HubSpot Meta Origins API.",
       specs: [
         {
           version: "v1",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Meta/Origins/Rollouts/277913/v1/origins.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/origins/openapi.json",
         },
       ],
       operationsCount: 2,
     },
     {
+      id: "hubspot-pages",
       name: "HubSpot Pages",
       description:
         "Use these endpoints for interacting with Landing Pages and Site Pages",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Pages/Rollouts/59888/v3/pages.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/pages/openapi.json",
         },
       ],
       operationsCount: 66,
     },
     {
+      id: "hubspot-partner-clients",
       name: "HubSpot Partner Clients",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Partner%20Clients/Rollouts/424/2025-09/partnerClients.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/partner-clients/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-partner-services",
       name: "HubSpot Partner Services",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Partner%20Services/Rollouts/424/2025-09/partnerServices.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/partner-services/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-payments",
       name: "HubSpot Payments",
       description: "HubSpot Payments API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Payments/Rollouts/424/v3/payments.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/payments/openapi.json",
         },
       ],
       operationsCount: 4,
     },
     {
+      id: "hubspot-pipelines",
       name: "HubSpot Pipelines",
       description:
         "Pipelines represent distinct stages in a workflow, like closing a deal or servicing a support ticket. These endpoints provide access to read and modify pipel...",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Pipelines/Rollouts/145896/v3/pipelines.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/pipelines/openapi.json",
         },
       ],
       operationsCount: 14,
     },
     {
+      id: "hubspot-postal-mail",
       name: "HubSpot Postal Mail",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Postal%20Mail/Rollouts/424/2025-09/postalMail.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/postal-mail/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-posts",
       name: "HubSpot Posts",
       description:
         "Use these endpoints for interacting with Blog Posts, Blog Authors, and Blog Tags",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Posts/Rollouts/635/v3/posts.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/posts/openapi.json",
         },
       ],
       operationsCount: 24,
     },
     {
+      id: "hubspot-products",
       name: "HubSpot Products",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Products/Rollouts/424/2025-09/products.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/products/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-projects",
       name: "HubSpot Projects",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Projects/Rollouts/260890/v3/projects.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/projects/openapi.json",
         },
       ],
       operationsCount: 12,
     },
     {
+      id: "hubspot-properties",
       name: "HubSpot Properties",
       description:
         "All HubSpot objects store data in default and custom properties. These endpoints provide access to read and modify object properties in HubSpot.",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Properties/Rollouts/145899/2025-09/properties.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/properties/openapi.json",
         },
       ],
       operationsCount: 13,
     },
     {
+      id: "hubspot-property-validations",
       name: "HubSpot Property Validations",
       description: "HubSpot CRM Property Validations API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Property%20Validations/Rollouts/215885/v3/propertyValidations.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/property-validations/openapi.json",
         },
       ],
       operationsCount: 4,
     },
     {
+      id: "hubspot-public-app-crm-cards",
       name: "HubSpot Public App Crm Cards",
       description:
         "Allows an app to extend the CRM UI by surfacing custom cards in the sidebar of record pages. These cards are defined up-front as part of app configuration, t...",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Public%20App%20Crm%20Cards/Rollouts/147892/v3/publicAppCrmCards.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/public-app-crm-cards/openapi.json",
         },
       ],
       operationsCount: 6,
     },
     {
+      id: "hubspot-public-app-feature-flags-v3",
       name: "HubSpot Public App Feature Flags V3",
       description: "HubSpot CRM Public App Feature Flags V3 API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Public%20App%20Feature%20Flags%20V3/Rollouts/195919/v3/publicAppFeatureFlagsV3.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/public-app-feature-flags-v3/openapi.json",
         },
       ],
       operationsCount: 9,
     },
     {
+      id: "hubspot-quotes",
       name: "HubSpot Quotes",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Quotes/Rollouts/424/2025-09/quotes.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/quotes/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-scheduler-meetings",
       name: "HubSpot Scheduler Meetings",
       description: "Meetings Service For HubSpot Sales",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Scheduler/Meetings/Rollouts/177892/v3/meetings.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/scheduler-meetings/openapi.json",
         },
       ],
       operationsCount: 5,
     },
     {
+      id: "hubspot-schemas",
       name: "HubSpot Schemas",
       description:
         "The CRM uses schemas to define how custom objects should store and represent information in the HubSpot CRM. Schemas define details about an object's type, p...",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Schemas/Rollouts/145900/v3/schemas.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/schemas/openapi.json",
         },
       ],
       operationsCount: 7,
     },
     {
+      id: "hubspot-send-event-completions",
       name: "HubSpot Send Event Completions",
       description: "HubSpot Events Send Event Completions API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Events/Send%20Event%20Completions/Rollouts/669/v3/sendEventCompletions.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/send-event-completions/openapi.json",
         },
       ],
       operationsCount: 2,
     },
     {
+      id: "hubspot-sequences",
       name: "HubSpot Sequences",
       description: "HubSpot Sequences API.",
       specs: [
         {
           version: "v4",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Automation/Sequences/Rollouts/177891/v4/sequences.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/sequences/openapi.json",
         },
       ],
       operationsCount: 4,
     },
     {
+      id: "hubspot-services",
       name: "HubSpot Services",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Services/Rollouts/424/2025-09/services.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/services/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-single-send",
       name: "HubSpot Single-send",
       description: "HubSpot Single-send API.",
       specs: [
         {
           version: "v4",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Single-send/Rollouts/106894/v4/singlesend.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/single-send/openapi.json",
         },
       ],
       operationsCount: 1,
     },
     {
+      id: "hubspot-site-search",
       name: "HubSpot Site Search",
       description:
         "Use these endpoints for searching content on your HubSpot hosted CMS website(s).",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Site%20Search/Rollouts/144890/v3/siteSearch.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/site-search/openapi.json",
         },
       ],
       operationsCount: 2,
     },
     {
+      id: "hubspot-source-code",
       name: "HubSpot Source Code",
       description:
         "API for managing and retrieving source code files and metadata",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Source%20Code/Rollouts/140886/v3/sourceCode.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/source-code/openapi.json",
         },
       ],
       operationsCount: 8,
     },
     {
+      id: "hubspot-subscription-lifecycle",
       name: "HubSpot Subscription Lifecycle",
       description: "HubSpot CRM Subscription Lifecycle API.",
       specs: [
         {
           version: "v1",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Subscription%20Lifecycle/Rollouts/206901/v1/subscriptionLifecycle.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/subscription-lifecycle/openapi.json",
         },
       ],
       operationsCount: 3,
     },
     {
+      id: "hubspot-subscriptions",
       name: "HubSpot Subscriptions",
       description: "HubSpot Communication Preferences Subscriptions API.",
       specs: [
         {
           version: "v4",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Communication%20Preferences/Subscriptions/Rollouts/176901/v4/subscriptions.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/subscriptions/openapi.json",
         },
       ],
       operationsCount: 10,
     },
     {
+      id: "hubspot-tags",
       name: "HubSpot Tags",
       description:
         "Use these endpoints for interacting with Blog Posts, Blog Authors, and Blog Tags",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Tags/Rollouts/635/v3/tags.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/tags/openapi.json",
         },
       ],
       operationsCount: 14,
     },
     {
+      id: "hubspot-tasks",
       name: "HubSpot Tasks",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Tasks/Rollouts/424/2025-09/tasks.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/tasks/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-tax-rates",
       name: "HubSpot Tax Rates",
       description: "HubSpot Settings Tax Rates API.",
       specs: [
         {
           version: "v1",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Settings/Tax%20Rates/Rollouts/207908/v1/taxRates.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/tax-rates/openapi.json",
         },
       ],
       operationsCount: 2,
     },
     {
+      id: "hubspot-taxes",
       name: "HubSpot Taxes",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Taxes/Rollouts/424/2025-09/taxes.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/taxes/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-test-child-api",
       name: "HubSpot Test Child Api",
       description: "Get information about a HubSpot account and its API usage.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Account/Test%20Child%20Api/Rollouts/144923/v3/testChildApi.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/test-child-api/openapi.json",
         },
       ],
       operationsCount: 4,
     },
     {
+      id: "hubspot-tickets",
       name: "HubSpot Tickets",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Tickets/Rollouts/424/2025-09/tickets.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/tickets/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-timeline",
       name: "HubSpot Timeline",
       description:
         "This feature allows an app to create and configure custom events that can show up in the timelines of certain CRM objects like contacts, companies, tickets,...",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Timeline/Rollouts/147898/v3/timeline.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/timeline/openapi.json",
         },
       ],
       operationsCount: 13,
     },
     {
+      id: "hubspot-transactional-single-send",
       name: "HubSpot Transactional Single Send",
       description: "HubSpot Transactional Single Send API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Marketing/Transactional%20Single%20Send/Rollouts/140892/v3/transactionalSingleSend.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/transactional-single-send/openapi.json",
         },
       ],
       operationsCount: 6,
     },
     {
+      id: "hubspot-transcriptions",
       name: "HubSpot Transcriptions",
       description: "HubSpot Transcriptions API.",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Transcriptions/Rollouts/178922/v3/transcriptions.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/transcriptions/openapi.json",
         },
       ],
       operationsCount: 3,
     },
     {
+      id: "hubspot-url-redirects",
       name: "HubSpot Url Redirects",
       description: "URL redirect operations",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CMS/Url%20Redirects/Rollouts/149916/v3/urlRedirects.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/url-redirects/openapi.json",
         },
       ],
       operationsCount: 5,
     },
     {
+      id: "hubspot-user-provisioning",
       name: "HubSpot User Provisioning",
       description: "Add, manage, and remove users from your account",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Settings/User%20Provisioning/Rollouts/144927/v3/userProvisioning.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/user-provisioning/openapi.json",
         },
       ],
       operationsCount: 7,
     },
     {
+      id: "hubspot-users",
       name: "HubSpot Users",
       description:
         "CRM objects such as companies, contacts, deals, line items, products, tickets, and quotes are standard objects in HubSpot's CRM. These core building blocks s...",
       specs: [
         {
           version: "2025-09",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Users/Rollouts/424/2025-09/users.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/users/openapi.json",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "hubspot-video-conferencing-extension",
       name: "HubSpot Video Conferencing Extension",
       description:
         "These APIs allow you to specify URLs that can be used to interact with a video conferencing application, to allow HubSpot to add video conference links to me...",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Video%20Conferencing%20Extension/Rollouts/148903/v3/videoConferencingExtension.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/video-conferencing-extension/openapi.json",
         },
       ],
       operationsCount: 3,
     },
     {
+      id: "hubspot-visitor-identification",
       name: "HubSpot Visitor Identification",
       description:
         "The Visitor Identification API allows you to pass identification information to the HubSpot chat widget for otherwise unknown visitors that were verified by...",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Conversations/Visitor%20Identification/Rollouts/140938/v3/visitorIdentification.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/visitor-identification/openapi.json",
         },
       ],
       operationsCount: 1,
     },
     {
+      id: "hubspot-webhooks",
       name: "HubSpot Webhooks",
       description:
         "Provides a way for apps to subscribe to certain change events in HubSpot. Once configured, apps will receive event payloads containing details about the chan...",
       specs: [
         {
           version: "v3",
-          url: "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Webhooks/Webhooks/Rollouts/147891/v3/webhooks.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/hubspot/webhooks/openapi.json",
         },
       ],
       operationsCount: 9,
@@ -1266,389 +1383,525 @@ const hubspotRestTemplateGroup: RestTemplateGroup<"HubSpot"> = {
   ],
 }
 
-const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
+const docusignRestTemplateGroup: RestTemplate = {
+  id: "docusign",
+  name: "DocuSign",
+  icon: DocuSignLogo,
+  description: "Electronic signature and agreement workflows.",
+  connectionMode: "independent",
+  operationsCount: 405,
+  templates: [
+    {
+      id: "docusign-esignature",
+      name: "eSignature",
+      description:
+        "Send, sign, manage, and track DocuSign eSignature envelopes.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/docusign/esignature/openapi.yaml",
+        },
+      ],
+      operationsCount: 405,
+    },
+  ],
+}
+
+const gongRestTemplateGroup: RestTemplate = {
+  id: "gong",
+  name: "Gong",
+  icon: GongLogo,
+  description:
+    "Revenue intelligence, conversations, calls, users, and engagement workflows.",
+  connectionMode: "independent",
+  operationsCount: 62,
+  templates: [
+    {
+      id: "gong-public-api",
+      name: "Public API",
+      description:
+        "Access Gong calls, transcripts, users, scorecards, libraries, and conversation data.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/gong/public-api/openapi.yaml",
+        },
+      ],
+      operationsCount: 56,
+    },
+    {
+      id: "gong-engage",
+      name: "Engage",
+      description:
+        "Manage Gong Engage flows, folders, and engagement workflows.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/gong/engage/openapi.yaml",
+        },
+      ],
+      operationsCount: 6,
+    },
+  ],
+}
+
+const salesforceRestTemplateGroup: RestTemplate = {
+  id: "salesforce",
+  name: "Salesforce",
+  icon: SalesforceLogo,
+  description:
+    "CRM data, sObjects, SOQL queries, composite requests, and bulk jobs.",
+  connectionMode: "shared",
+  operationsCount: 29,
+  templates: [
+    {
+      id: "salesforce-core",
+      name: "Core",
+      description:
+        "Query, describe, read, write, and compose Salesforce sObject data.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/salesforce/core/openapi.yaml",
+        },
+      ],
+      operationsCount: 14,
+    },
+    {
+      id: "salesforce-bulk-api-2",
+      name: "Bulk API 2.0",
+      description:
+        "Asynchronous large-volume ingest, delete, upsert, and query jobs for Salesforce data.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/salesforce/bulk-api-2/openapi.yaml",
+        },
+      ],
+      operationsCount: 15,
+    },
+  ],
+}
+
+const twilioRestTemplateGroup: RestTemplate = {
+  id: "twilio",
   name: "Twilio",
   icon: TwilioLogo,
   description:
     "Combines powerful communications APIs with AI and first-party data.",
+  connectionMode: "independent",
   operationsCount: 795,
   templates: [
     {
+      id: "twilio-accounts",
       name: "Twilio Accounts",
       description:
         "Core account resources including usage, addresses, and credentials",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_accounts_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/accounts/openapi.yaml",
         },
       ],
       operationsCount: 20,
     },
     {
+      id: "twilio-assistants",
       name: "Twilio Assistants",
       description: "Autopilot assistants, tasks, samples, and field values",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_assistants_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/assistants/openapi.yaml",
         },
       ],
       operationsCount: 30,
     },
     {
+      id: "twilio-bulk-exports",
       name: "Twilio Bulk Exports",
       description:
         "BulkExports API for exporting messaging, voice, and usage data",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_bulkexports_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/bulk-exports/openapi.yaml",
         },
       ],
       operationsCount: 9,
     },
     {
+      id: "twilio-chat",
       name: "Twilio Chat",
       description: "Programmable Chat channels, members, roles, and messages",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_chat_v3.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/chat/openapi.yaml",
         },
       ],
       operationsCount: 1,
     },
     {
+      id: "twilio-content",
       name: "Twilio Content",
       description: "Reusable Content API for templates, variants, and media",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_content_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/content/openapi.yaml",
         },
       ],
       operationsCount: 2,
     },
     {
+      id: "twilio-conversations",
       name: "Twilio Conversations",
       description: "Conversations services, participants, and messages",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_conversations_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/conversations/openapi.yaml",
         },
       ],
       operationsCount: 103,
     },
     {
+      id: "twilio-events",
       name: "Twilio Events",
       description:
         "Event Streams resources for schema, sinks, and subscriptions",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_events_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/events/openapi.yaml",
         },
       ],
       operationsCount: 22,
     },
     {
+      id: "twilio-flex",
       name: "Twilio Flex",
       description: "Flex contact center configuration, users, and integrations",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_flex_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/flex/openapi.yaml",
         },
       ],
       operationsCount: 3,
     },
     {
+      id: "twilio-frontline",
       name: "Twilio Frontline",
       description:
         "Frontline mobile workforce accounts, users, and conversations",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_frontline_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/frontline/openapi.yaml",
         },
       ],
       operationsCount: 2,
     },
     {
+      id: "twilio-iam-organizations",
       name: "Twilio IAM Organizations",
       description: "IAM organization, invitation, and membership management",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_iam_organizations.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/iam-organizations/openapi.yaml",
         },
       ],
       operationsCount: 12,
     },
     {
+      id: "twilio-insights",
       name: "Twilio Insights",
       description: "Voice Insights calls, metrics, and summaries",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_insights_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/insights/openapi.yaml",
         },
       ],
       operationsCount: 17,
     },
     {
+      id: "twilio-intelligence",
       name: "Twilio Intelligence",
       description: "Voice Intelligence transcripts, participants, and insights",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_intelligence_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/intelligence/openapi.yaml",
         },
       ],
       operationsCount: 29,
     },
     {
+      id: "twilio-ip-messaging",
       name: "Twilio IP Messaging",
       description: "Programmable IP Messaging services, users, and messages",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_ip_messaging_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/ip-messaging/openapi.yaml",
         },
       ],
       operationsCount: 54,
     },
     {
+      id: "twilio-knowledge",
       name: "Twilio Knowledge",
       description: "Knowledge base content, categories, and documents",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_knowledge_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/knowledge/openapi.yaml",
         },
       ],
       operationsCount: 7,
     },
     {
+      id: "twilio-lookups",
       name: "Twilio Lookups",
       description: "Lookup API for phone carrier, caller name, and identity",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_lookups_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/lookups/openapi.yaml",
         },
       ],
       operationsCount: 10,
     },
     {
+      id: "twilio-marketplace",
       name: "Twilio Marketplace",
       description: "Marketplace listings, installations, and products",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_marketplace_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/marketplace/openapi.yaml",
         },
       ],
       operationsCount: 18,
     },
     {
+      id: "twilio-monitor",
       name: "Twilio Monitor",
       description: "Monitoring alerts, events, and triggers",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_monitor_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/monitor/openapi.yaml",
         },
       ],
       operationsCount: 6,
     },
     {
+      id: "twilio-notify",
       name: "Twilio Notify",
       description: "Notify bindings, credentials, and notifications",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_notify_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/notify/openapi.yaml",
         },
       ],
       operationsCount: 15,
     },
     {
+      id: "twilio-numbers",
       name: "Twilio Numbers",
       description: "Phone number inventory, orders, and configurations",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_numbers_v3.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/numbers/openapi.yaml",
         },
       ],
       operationsCount: 1,
     },
     {
+      id: "twilio-oauth",
       name: "Twilio OAuth",
       description:
         "OAuth 2.0 API for authorization servers, clients, and tokens",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_oauth_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/oauth/openapi.yaml",
         },
       ],
       operationsCount: 1,
     },
     {
+      id: "twilio-preview",
       name: "Twilio Preview",
       description: "Preview API set for Twilio beta capabilities",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_preview.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/preview/openapi.yaml",
         },
       ],
       operationsCount: 34,
     },
     {
+      id: "twilio-pricing",
       name: "Twilio Pricing",
       description: "Pricing API for voice, SMS, and phone numbers",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_pricing_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/pricing/openapi.yaml",
         },
       ],
       operationsCount: 6,
     },
     {
+      id: "twilio-proxy",
       name: "Twilio Proxy",
       description: "Proxy sessions, phone numbers, and short codes",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_proxy_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/proxy/openapi.yaml",
         },
       ],
       operationsCount: 25,
     },
     {
+      id: "twilio-routes",
       name: "Twilio Routes",
       description: "Routes API for expertise routing and orchestration",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_routes_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/routes/openapi.yaml",
         },
       ],
       operationsCount: 6,
     },
     {
+      id: "twilio-serverless",
       name: "Twilio Serverless",
       description: "Serverless assets, environments, and deployments",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_serverless_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/serverless/openapi.yaml",
         },
       ],
       operationsCount: 39,
     },
     {
+      id: "twilio-studio",
       name: "Twilio Studio",
       description: "Studio flows, executions, and steps",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_studio_v2.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/studio/openapi.yaml",
         },
       ],
       operationsCount: 19,
     },
     {
+      id: "twilio-super-sim",
       name: "Twilio Super SIM",
       description: "Super SIM fleets, commands, and networks",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_supersim_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/super-sim/openapi.yaml",
         },
       ],
       operationsCount: 31,
     },
     {
+      id: "twilio-sync",
       name: "Twilio Sync",
       description: "Sync services, documents, lists, and maps",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_sync_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/sync/openapi.yaml",
         },
       ],
       operationsCount: 48,
     },
     {
+      id: "twilio-taskrouter",
       name: "Twilio TaskRouter",
       description: "TaskRouter workers, tasks, and workflows",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_taskrouter_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/taskrouter/openapi.yaml",
         },
       ],
       operationsCount: 61,
     },
     {
+      id: "twilio-trunking",
       name: "Twilio Trunking",
       description:
         "Elastic SIP Trunking trunks, phone numbers, and credentials",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_trunking_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/trunking/openapi.yaml",
         },
       ],
       operationsCount: 24,
     },
     {
+      id: "twilio-trusthub",
       name: "Twilio TrustHub",
       description: "TrustHub customer profiles and compliance items",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_trusthub_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/trusthub/openapi.yaml",
         },
       ],
       operationsCount: 53,
     },
     {
+      id: "twilio-video",
       name: "Twilio Video",
       description: "Programmable Video rooms, participants, and recordings",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_video_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/video/openapi.yaml",
         },
       ],
       operationsCount: 39,
     },
     {
+      id: "twilio-voice",
       name: "Twilio Voice",
       description: "Programmable voice calls, conferences, and recordings",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_voice_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/voice/openapi.yaml",
         },
       ],
       operationsCount: 32,
     },
     {
+      id: "twilio-wireless",
       name: "Twilio Wireless",
       description: "Programmable Wireless SIM cards, data sessions, and usage",
       specs: [
         {
           version: "1.0.0",
-          url: "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_wireless_v1.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/twilio/wireless/openapi.yaml",
         },
       ],
       operationsCount: 16,
@@ -1656,13 +1909,16 @@ const twilioRestTemplateGroup: RestTemplateGroup<"Twilio"> = {
   ],
 }
 
-const zendeskRestTemplateGroup: RestTemplateGroup<"Zendesk"> = {
+const zendeskRestTemplateGroup: RestTemplate = {
+  id: "zendesk",
   name: "Zendesk",
   icon: ZendeskLogo,
   description: "Customer support and messaging APIs from Zendesk.",
   operationsCount: 68,
+  connectionMode: "independent",
   templates: [
     {
+      id: "zendesk-sunshine-conversations",
       name: "Sunshine Conversations",
       description: "Messaging and conversation APIs for Zendesk Sunshine.",
       specs: [
@@ -1676,58 +1932,75 @@ const zendeskRestTemplateGroup: RestTemplateGroup<"Zendesk"> = {
   ],
 }
 
-const microsoftSharepointRestTemplateGroup: RestTemplateGroup<"Microsoft SharePoint"> =
-  {
-    name: "Microsoft SharePoint",
-    icon: MicrosoftSharepointLogo,
-    description:
-      "Microsoft Graph SharePoint APIs for sites, drives, and shared items.",
-    operationsCount: 2826,
-    templates: [
-      {
-        name: "SharePoint Sites",
-        description: "SharePoint sites, lists, and content types.",
-        specs: [
-          {
-            version: "v1.0",
-            url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/sites/openapi.yaml",
-          },
-        ],
-        operationsCount: 650,
-      },
-      {
-        name: "SharePoint Drives",
-        description: "Drive items and file operations for SharePoint.",
-        specs: [
-          {
-            version: "v1.0",
-            url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/drives/openapi.yaml",
-          },
-        ],
-        operationsCount: 2024,
-      },
-      {
-        name: "SharePoint Shares",
-        description: "Shared items and sharing operations for SharePoint.",
-        specs: [
-          {
-            version: "v1.0",
-            url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/shares/openapi.yaml",
-          },
-        ],
-        operationsCount: 152,
-      },
-    ],
-  }
+// Microsoft SharePoint templates were renamed from "SharePoint X" to "X"
+// to match the slugify pattern (group prefix + name = id). This alias map
+// maintains backwards compatibility for legacy datasources.
+export const MICROSOFT_SHAREPOINT_NAME_ALIASES: Record<string, string> = {
+  "SharePoint Sites": "Sites",
+  "SharePoint Drives": "Drives",
+  "SharePoint Shares": "Shares",
+}
 
-const splunkRestTemplateGroup: RestTemplateGroup<"Splunk"> = {
+const microsoftSharepointRestTemplateGroup: RestTemplate = {
+  id: "microsoft-sharepoint",
+  name: "Microsoft SharePoint",
+  icon: MicrosoftSharepointLogo,
+  description:
+    "Microsoft Graph SharePoint APIs for sites, drives, and shared items.",
+  operationsCount: 2826,
+  connectionMode: "shared",
+  mixin: { servers: [{ url: "https://graph.microsoft.com" }] },
+  templates: [
+    {
+      id: "microsoft-sharepoint-sites",
+      name: "Sites",
+      description: "SharePoint sites, lists, and content types.",
+      specs: [
+        {
+          version: "v1.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/sites/openapi.yaml",
+        },
+      ],
+      operationsCount: 650,
+    },
+    {
+      id: "microsoft-sharepoint-drives",
+      name: "Drives",
+      description: "Drive items and file operations for SharePoint.",
+      specs: [
+        {
+          version: "v1.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/drives/openapi.yaml",
+        },
+      ],
+      operationsCount: 2024,
+    },
+    {
+      id: "microsoft-sharepoint-shares",
+      name: "Shares",
+      description: "Shared items and sharing operations for SharePoint.",
+      specs: [
+        {
+          version: "v1.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/ms-sharepoint/shares/openapi.yaml",
+        },
+      ],
+      operationsCount: 152,
+    },
+  ],
+}
+
+const splunkRestTemplateGroup: RestTemplate = {
+  id: "splunk",
   name: "Splunk",
   icon: SplunkLogo,
   description:
     "Official OpenAPI specifications for Splunk Cloud and Splunk Enterprise Security.",
+  connectionMode: "independent",
   operationsCount: 151,
   templates: [
     {
+      id: "splunk-admin-config-service",
       name: "Splunk Admin Config Service",
       description: "Admin Config Service (ACS) APIs for Splunk Cloud Platform.",
       specs: [
@@ -1739,6 +2012,7 @@ const splunkRestTemplateGroup: RestTemplateGroup<"Splunk"> = {
       operationsCount: 98,
     },
     {
+      id: "splunk-enterprise-security",
       name: "Splunk Enterprise Security",
       description:
         "Enterprise Security API for managing detection and response data.",
@@ -1751,6 +2025,7 @@ const splunkRestTemplateGroup: RestTemplateGroup<"Splunk"> = {
       operationsCount: 20,
     },
     {
+      id: "splunk-mission-control-automation",
       name: "Splunk Mission Control Automation",
       description:
         "Mission Control Automation API for SOAR playbook integrations.",
@@ -1768,32 +2043,62 @@ const splunkRestTemplateGroup: RestTemplateGroup<"Splunk"> = {
 const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
   templates: [
     {
+      id: "activecampaign",
+      name: "ActiveCampaign",
+      description: "Email marketing, CRM, and automation.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/activecampaign/openapi.yaml",
+        },
+      ],
+      operationsCount: 256,
+      icon: ActiveCampaignLogo,
+    },
+    {
+      id: "apollo",
+      name: "Apollo",
+      description:
+        "Sales intelligence, lead enrichment, prospecting, and engagement.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/apollo/openapi.yaml",
+        },
+      ],
+      operationsCount: 39,
+      icon: ApolloLogo,
+    },
+    {
+      id: "attio",
       name: "Attio",
       description:
         "CRM platform API for objects, records, lists, tasks, and webhooks",
       specs: [
         {
           version: "2.0.0",
-          url: "https://api.attio.com/openapi/api",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/attio/openapi.json",
         },
       ],
       operationsCount: 66,
       icon: AttioLogo,
     },
     {
+      id: "bamboohr",
       name: "BambooHR",
       description:
         "HRIS platform for employee records, time off, and performance management",
       specs: [
         {
           version: "1.0",
-          url: "https://openapi.bamboohr.io/main/latest/docs/openapi/public-openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/bamboohr/openapi.yaml",
         },
       ],
       operationsCount: 134,
       icon: BambooHRLogo,
     },
     {
+      id: "confluence",
       name: "Confluence",
       description: "Atlassian Confluence API for content, spaces, and users",
       specs: [
@@ -1806,45 +2111,76 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: ConfluenceLogo,
     },
     {
+      id: "customer-io",
+      name: "Customer.io",
+      description: "Customer messaging, campaigns, broadcasts, and automation.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/customer-io/openapi.yaml",
+        },
+      ],
+      operationsCount: 111,
+      icon: CustomerIoLogo,
+    },
+    {
+      id: "discord",
       name: "Discord",
       description: "Discord API for guilds, channels, messages, and webhooks",
       specs: [
         {
           version: "10",
-          url: "https://raw.githubusercontent.com/discord/discord-api-spec/main/specs/openapi.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/discord/openapi.json",
         },
       ],
       operationsCount: 227,
       icon: DiscordLogo,
     },
     {
+      id: "documenso",
+      name: "Documenso",
+      description:
+        "Open source document signing, templates, recipients, fields, and e-signature workflows.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/documenso/openapi.yaml",
+        },
+      ],
+      operationsCount: 85,
+      icon: DocumensoLogo,
+    },
+    {
+      id: "figma",
       name: "Figma",
       description:
         "Design platform API for files, projects, teams, and comments",
       specs: [
         {
           version: "0.35.0",
-          url: "https://raw.githubusercontent.com/figma/rest-api-spec/main/openapi/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/figma/openapi.yaml",
         },
       ],
       operationsCount: 46,
       icon: FigmaLogo,
     },
     {
+      id: "github",
       name: "GitHub",
       description:
         "GitHub REST API for repositories, issues, pull requests, and actions",
       specs: [
         {
           version: "1.1.4",
-          url: "https://raw.githubusercontent.com/github/rest-api-description/refs/heads/main/descriptions/api.github.com/api.github.com.2022-11-28.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/github/openapi.yaml",
         },
       ],
       operationsCount: 1078,
       icon: GitHubLogo,
     },
     {
-      name: "Jira Cloud",
+      id: "jira-cloud",
+      name: "Jira",
       description:
         "Build apps, script interactions with Jira, or develop any other type of integration",
       specs: [
@@ -1857,45 +2193,49 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: JiraLogo,
     },
     {
-      name: "Okta Management",
+      id: "okta-management",
+      name: "Okta",
       description:
         "Configure and manage authorization servers and the security policies attached to them, enabling centralized control over API access",
       specs: [
         {
           version: "2025.11.0",
-          url: "https://raw.githubusercontent.com/okta/okta-management-openapi-spec/master/dist/current/management-oneOfInheritance.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/okta-management/openapi.yaml",
         },
       ],
       operationsCount: 694,
       icon: OktaLogo,
     },
     {
+      id: "pagerduty",
       name: "PagerDuty",
       description:
         "PagerDuty REST resources for services, incidents, and incident automation",
       specs: [
         {
           version: "2.0.0",
-          url: "https://raw.githubusercontent.com/PagerDuty/api-schema/main/reference/REST/openapiv3.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/pagerduty/openapi.json",
         },
       ],
       operationsCount: 390,
       icon: PagerDutyLogo,
     },
     {
-      name: "Slack Web API",
+      id: "slack-web-api",
+      name: "Slack",
       description:
         "The Slack Web API is an interface for querying information from and enacting change in a Slack workspace.",
       specs: [
         {
           version: "1.7.0",
-          url: "https://api.slack.com/specs/openapi/v2/slack_web.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/slack-web-api/openapi.json",
         },
       ],
       operationsCount: 172,
       icon: SlackLogo,
     },
     {
+      id: "servicenow",
       name: "ServiceNow",
       description:
         "Provisioning operations for users, groups, and supporting resources such as companies, cost centers, departments, and locations.",
@@ -1909,19 +2249,21 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: ServiceNowLogo,
     },
     {
+      id: "virustotal",
       name: "VirusTotal",
       description:
         "Analyze files, URLs, IPs, or domains and pull threat intelligence verdicts from VirusTotal",
       specs: [
         {
           version: "3.0",
-          url: "https://github.com/VirusTotal/vt-py/files/13278605/vt-api-v3-openapi.json",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/virustotal/openapi.json",
         },
       ],
       operationsCount: 159,
       icon: VirusTotalLogo,
     },
     {
+      id: "gitlab",
       name: "Gitlab",
       description: "The most comprehensive DevSecOps platform.",
       specs: [
@@ -1934,6 +2276,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: GitlabLogo,
     },
     {
+      id: "mastercard",
       name: "Mastercard",
       description:
         "Open Banking solutions in the US are provided by Finicity, a Mastercard company.",
@@ -1947,19 +2290,21 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: MastercardLogo,
     },
     {
+      id: "stripe",
       name: "Stripe",
       description:
         "Secure payment processing, subscriptions, billing, and reporting APIs",
       specs: [
         {
           version: "2026-01-28.clover",
-          url: "https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/stripe/openapi.yaml",
         },
       ],
       operationsCount: 587,
       icon: StripeLogo,
     },
     {
+      id: "ansible-awx",
       name: "Ansible AWX",
       description:
         "Automation Controller (AWX) REST API for inventories, projects, jobs, and workflows",
@@ -1973,6 +2318,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: AnsibleLogo,
     },
     {
+      id: "ashby",
       name: "Ashby",
       description:
         "The public API for accessing resources in your Ashby instance.",
@@ -1986,6 +2332,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: AshbyLogo,
     },
     {
+      id: "banksapi",
       name: "Banksapi",
       description:
         "Comprehensive Data Access Access to hundreds of millions of accounts, securities accounts and financial products",
@@ -1999,6 +2346,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: BanksapiLogo,
     },
     {
+      id: "baremetrics",
       name: "Baremetrics",
       description:
         "Baremetrics provides real-time subscription metrics for teams built with Stripe, Shopify Partners, Braintree, Recurly, Chargebee, Google Play, and...",
@@ -2012,6 +2360,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: BaremetricsLogo,
     },
     {
+      id: "billsby",
       name: "Billsby",
       description:
         'Billsby is a feature-rich "Saas" recurring payment platform, ranked as the leading subscription billing software by G2.',
@@ -2025,6 +2374,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: BillsbyLogo,
     },
     {
+      id: "breezy-hr",
       name: "Breezy HR",
       description:
         "We specialize in sourcing high quality pilots to meet the needs of 135 operators.",
@@ -2038,6 +2388,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: BreezyHRLogo,
     },
     {
+      id: "brevo",
       name: "Brevo",
       description:
         "Brevo provide a RESTFul API that can be used with any languages.",
@@ -2051,6 +2402,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: BrevoLogo,
     },
     {
+      id: "bulksms",
       name: "BulkSMS",
       description: "Allows you to submit and receive BulkSMS messages.",
       specs: [
@@ -2063,6 +2415,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: BulksmsComLogo,
     },
     {
+      id: "buttondown",
       name: "Buttondown",
       description: "The last email platform you'll switch to.",
       specs: [
@@ -2075,19 +2428,21 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: ButtondownLogo,
     },
     {
+      id: "clever",
       name: "Clever",
       description:
         "Offers one secure place for teachers and students to access the applications they love and depend on.",
       specs: [
         {
           version: "3.0.0",
-          url: "https://dev.clever.com/openapi/6054fe66dc8ea400120e9f7a",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/clever/openapi.yaml",
         },
       ],
       operationsCount: 42,
       icon: CleverLogo,
     },
     {
+      id: "clickup",
       name: "Clickup",
       description:
         "This is the ClickUp API Reference where you can learn about specific endpoints and parameters in detail.",
@@ -2101,6 +2456,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: ClickupLogo,
     },
     {
+      id: "deel",
       name: "Deel",
       description:
         "The only platform that allows you to combine payroll, HR, performance, and compliance for any type of worker in 150 countries into a single HR platform.",
@@ -2114,6 +2470,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DeelLogo,
     },
     {
+      id: "dixa",
       name: "Dixa",
       description:
         "Dixa enables companies to deliver customer service as it is meant to be.",
@@ -2127,6 +2484,21 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DixaLogo,
     },
     {
+      id: "dodo-payments",
+      name: "Dodo Payments",
+      description:
+        "Payments API for products, customers, subscriptions, invoices, and billing workflows.",
+      specs: [
+        {
+          version: "1.92.3",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/dodo-payments/openapi.yaml",
+        },
+      ],
+      operationsCount: 116,
+      icon: DodoPaymentsLogo,
+    },
+    {
+      id: "dots",
       name: "Dots",
       description: "Scalable and Flexible Payouts Infrastructure",
       specs: [
@@ -2139,6 +2511,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: DotsLogo,
     },
     {
+      id: "factorial",
       name: "Factorial",
       description:
         "The business management software that connects all you need to manage your team. It automates repetitive tasks, from hiring and holidays to performance reviews.",
@@ -2152,6 +2525,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: FactorialLogo,
     },
     {
+      id: "fastspring",
       name: "Fastspring",
       description:
         "The FastSpring API and its supported requests, data, endpoints, and rate limits.",
@@ -2165,6 +2539,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: FastspringLogo,
     },
     {
+      id: "fountain",
       name: "Fountain",
       description:
         "Fountain's all-in-one high volume hiring platform empowers the world's leading enterprises to find the right people through smart, fast, and seamle...",
@@ -2178,6 +2553,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: FountainLogo,
     },
     {
+      id: "goody",
       name: "Goody",
       description:
         "Goody is a new way to send personal and business gifts as easily as a text message.",
@@ -2191,6 +2567,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: GoodyLogo,
     },
     {
+      id: "helcim",
       name: "Helcim",
       description: "This API covers publicly accessible merchant actions",
       specs: [
@@ -2203,6 +2580,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: HelcimLogo,
     },
     {
+      id: "hibob",
       name: "Hibob",
       description: "Access your employees data with the Bob API",
       specs: [
@@ -2215,6 +2593,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: HibobLogo,
     },
     {
+      id: "homerun",
       name: "Homerun",
       description:
         "Applicant tracking and HR management made easy for growing teams. Beautiful job posts, leave tracking, employee data, and team insights—all in one place.",
@@ -2228,6 +2607,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: HomerunLogo,
     },
     {
+      id: "hypatos",
       name: "Hypatos",
       description:
         "Say goodbye to manual errors and cut the risk of do-overs. Hypatos AI agents increase processing efficiency and keep it consistent with correct decisions powered by knowledge...",
@@ -2241,6 +2621,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: HypatosLogo,
     },
     {
+      id: "intercom",
       name: "Intercom",
       description:
         "The leading AI Agent for customer service delivering the highest quality answers and handling the most complex queries",
@@ -2254,6 +2635,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: IntercomLogo,
     },
     {
+      id: "ironclad",
       name: "Ironclad",
       description:
         "Design and deploy any type of contract in minutes. Instantly surface insights from legal agreements; manage risk.",
@@ -2267,6 +2649,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: IroncladLogo,
     },
     {
+      id: "jina-ai",
       name: "Jina AI",
       description:
         "This is the UniversalAPI to access all the Jina embedding models",
@@ -2280,6 +2663,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: JinaAILogo,
     },
     {
+      id: "jobsoid",
       name: "Jobsoid",
       description:
         "Jobsoid is an Online Applicant Tracking System (ATS) which simplifies every step of the recruitment process in organizations, streamlining everythi...",
@@ -2293,6 +2677,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: JobsoidLogo,
     },
     {
+      id: "keatext-ai",
       name: "Keatext AI",
       description:
         "Keatext brings the voice of customer and employee into your day-to-day activities. Easily understand what drives engagement and get tailored AI-bas...",
@@ -2306,6 +2691,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: KeatextAILogo,
     },
     {
+      id: "kenjo",
       name: "Kenjo",
       description:
         "Before starting to use the Kenjo API, you have to request the API activation for a sandbox or production environment to the Kenjo Customer Success...",
@@ -2319,6 +2705,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: KenjoLogo,
     },
     {
+      id: "lambda",
       name: "Lambda",
       description: "API for interacting with the Lambda GPU Cloud",
       specs: [
@@ -2331,6 +2718,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: LambdaLogo,
     },
     {
+      id: "lob",
       name: "Lob",
       description:
         "The Lob API is organized around REST. Our API is designed to have predictable, resource-oriented URLs and uses HTTP response codes to indicate any...",
@@ -2344,6 +2732,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: LobLogo,
     },
     {
+      id: "localizely",
       name: "Localizely",
       description:
         "A translation management system that helps you organize your software translation projects.",
@@ -2357,6 +2746,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: LocalizelyLogo,
     },
     {
+      id: "logisticsos",
       name: "LogisticsOS",
       description:
         "Powered by world's most powerful route optimization engine.",
@@ -2370,6 +2760,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: LogisticsosLogo,
     },
     {
+      id: "measureone",
       name: "Measureone",
       description:
         "Automate your business workflows and lower your costs with MeasureOne, the most comprehensive and accurate platform for income, employment, educati...",
@@ -2383,6 +2774,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: MeasureoneLogo,
     },
     {
+      id: "microsoft-teams",
       name: "Microsoft Teams",
       description:
         "Use Microsoft Graph to manage teams, channels, chats, and messages.",
@@ -2396,6 +2788,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: MicrosoftTeamsLogo,
     },
     {
+      id: "nanonets",
       name: "Nanonets",
       description:
         "Break down data barriers with Nanonets AI—extract valuable information from documents, emails, tickets or databases.",
@@ -2409,6 +2802,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: NanonetsLogo,
     },
     {
+      id: "notion",
       name: "Notion",
       description:
         "Notion is a new tool that blends your everyday work apps into one. It's the all-in-one workspace for you and your team.",
@@ -2422,19 +2816,21 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: NotionLogo,
     },
     {
+      id: "openrouter",
       name: "OpenRouter",
       description: "OpenAI-compatible API with additional OpenRouter features",
       specs: [
         {
           version: "1.0.0",
-          url: "https://openrouter.ai/openapi.yaml",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/openrouter/openapi.yaml",
         },
       ],
       operationsCount: 57,
       icon: OpenRouterLogo,
     },
     {
-      name: "Oyster HR",
+      id: "oyster-hr",
+      name: "Oyster",
       description:
         "Oyster HR uses OAuth2 to enable customers to grant access to their data to third party applications.",
       specs: [
@@ -2447,6 +2843,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: OysterLogo,
     },
     {
+      id: "peach-payments",
       name: "Peach Payments",
       description: "Reconciliation API",
       specs: [
@@ -2459,6 +2856,35 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: PeachPaymentsLogo,
     },
     {
+      id: "pandadoc",
+      name: "PandaDoc",
+      description:
+        "Document generation, e-signatures, templates, and workflow automation.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/pandadoc/openapi.yaml",
+        },
+      ],
+      operationsCount: 115,
+      icon: PandaDocLogo,
+    },
+    {
+      id: "pipedrive",
+      name: "Pipedrive",
+      description:
+        "CRM deals, contacts, organizations, activities, projects, and sales workflows.",
+      specs: [
+        {
+          version: "1.0.0",
+          url: "https://raw.githubusercontent.com/Budibase/openapi-rest-templates/main/pipedrive/openapi.yaml",
+        },
+      ],
+      operationsCount: 264,
+      icon: PipedriveLogo,
+    },
+    {
+      id: "pinpoint",
       name: "Pinpoint",
       description: "Applicant tracking software that's ready for anything.",
       specs: [
@@ -2471,6 +2897,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: PinpointLogo,
     },
     {
+      id: "podium",
       name: "Podium",
       description: "AI that converts leads and makes you money.",
       specs: [
@@ -2483,6 +2910,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: PodiumLogo,
     },
     {
+      id: "remote",
       name: "Remote",
       description: "Talent is everywhere.",
       specs: [
@@ -2495,6 +2923,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: RemoteLogo,
     },
     {
+      id: "resend",
       name: "Resend",
       description: "Resend is the email platform for developers.",
       specs: [
@@ -2507,6 +2936,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: ResendLogo,
     },
     {
+      id: "rivery",
       name: "Rivery",
       description:
         "Rivery API documentation Welcome to the Rivery API Documentation.",
@@ -2520,6 +2950,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: RiveryLogo,
     },
     {
+      id: "sage",
       name: "Sage",
       description: "All requests are required to be sent to your subdomain.",
       specs: [
@@ -2532,6 +2963,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SageLogo,
     },
     {
+      id: "secoda",
       name: "Secoda",
       description:
         "Use this API to programmatically use Secoda's data enablement features.",
@@ -2545,6 +2977,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SecodaLogo,
     },
     {
+      id: "shipengine",
       name: "Shipengine",
       description:
         "ShipEngine's easy-to-use REST API lets you manage all of your shipping needs without worrying about the complexities of different carrier APIs and...",
@@ -2558,6 +2991,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: ShipengineLogo,
     },
     {
+      id: "shippo",
       name: "Shippo",
       description: "Use this API to integrate with the Shippo service",
       specs: [
@@ -2570,6 +3004,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: ShippoLogo,
     },
     {
+      id: "shortcut",
       name: "Shortcut",
       description:
         "A fast, lightweight and enjoyable project management platform for product and engineering teams.",
@@ -2583,6 +3018,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: ShortcutLogo,
     },
     {
+      id: "smartrecruiters",
       name: "Smartrecruiters",
       description: "SmartOnboard Public API",
       specs: [
@@ -2595,6 +3031,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SmartrecruitersLogo,
     },
     {
+      id: "softledger",
       name: "SoftLedger",
       description:
         "SoftLedger provides real-time visibility to critical financial data.",
@@ -2608,6 +3045,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SoftledgerLogo,
     },
     {
+      id: "spotdraft",
       name: "SpotDraft",
       description:
         "A contract lifecycle management solution built for fast growing businesses. Create, manage, sign and analyze your contracts all in one place.",
@@ -2621,6 +3059,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SpotdraftLogo,
     },
     {
+      id: "sumsub",
       name: "Sumsub",
       description:
         "Sumsub is the one verification platform to secure the whole user journey.",
@@ -2634,6 +3073,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SumsubLogo,
     },
     {
+      id: "suprsend",
       name: "SuprSend",
       description:
         "SuprSend is a central communication stack for easily creating, managing and delivering notifications to your end users on multiple channels.",
@@ -2647,6 +3087,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: SuprsendLogo,
     },
     {
+      id: "terminal",
       name: "Terminal",
       description:
         "Terminal is a unified API that makes it easy to integrate with the leading telematics service providers.",
@@ -2660,6 +3101,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: TerminalLogo,
     },
     {
+      id: "theirstack",
       name: "Theirstack",
       description: "Find your next customer",
       specs: [
@@ -2672,6 +3114,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: TheirstackLogo,
     },
     {
+      id: "tilled",
       name: "Tilled",
       description:
         "PayFac-as-a-Service combines easy-to-integrate payment technology, full-service offerings...",
@@ -2685,6 +3128,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: TilledLogo,
     },
     {
+      id: "trello",
       name: "Trello",
       description: "Capture, organize, and tackle your to-dos from anywhere.",
       specs: [
@@ -2697,6 +3141,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: TrelloLogo,
     },
     {
+      id: "tremendous",
       name: "Tremendous",
       description:
         "Deliver monetary rewards and incentives to employees, customers, survey participants, and more.",
@@ -2710,6 +3155,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: TremendousLogo,
     },
     {
+      id: "verifiable",
       name: "Verifiable",
       description:
         "Discover credentialing solutions designed to optimize provider networks, powered by industry-leading primary source verification technology.",
@@ -2723,6 +3169,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: VerifiableLogo,
     },
     {
+      id: "volt-io",
       name: "Volt IO",
       description: "One integration to a world of real-time payments",
       specs: [
@@ -2735,6 +3182,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: VoltIOLogo,
     },
     {
+      id: "workable",
       name: "Workable",
       description:
         "Workable develops a cloud-based recruitment platform for companies to post jobs, track applicants and schedule interviews.",
@@ -2748,6 +3196,7 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       icon: WorkableLogo,
     },
     {
+      id: "x",
       name: "X",
       description: "Twitter API v2 available endpoints",
       specs: [
@@ -2759,10 +3208,11 @@ const INITIAL_REST_TEMPLATES_STATE: RestTemplatesState = {
       operationsCount: 80,
       icon: XLogo,
     },
-  ],
-  templateGroups: [
+    docusignRestTemplateGroup,
+    gongRestTemplateGroup,
     hubspotRestTemplateGroup,
     microsoftSharepointRestTemplateGroup,
+    salesforceRestTemplateGroup,
     splunkRestTemplateGroup,
     twilioRestTemplateGroup,
     zendeskRestTemplateGroup,
@@ -2782,34 +3232,73 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
     return templates
   }
 
-  get templateGroups(): RestTemplateGroup<RestTemplateGroupName>[] {
-    let templateGroups: RestTemplateGroup<RestTemplateGroupName>[] = []
-    this.subscribe(state => {
-      templateGroups = state.templateGroups
-    })()
-    return templateGroups
+  // Returns top-level entries only — collections appear as single entries.
+  get flatTemplates(): RestTemplate[] {
+    return this.templates
   }
 
-  getByName(name?: RestTemplateName) {
+  getByName(name?: string): RestTemplate | undefined {
     if (!name) {
       return undefined
     }
-    const template = this.templates.find(template => template.name === name)
-    if (template) {
-      return template
-    }
-    for (const group of this.templateGroups) {
-      const groupTemplate = group.templates.find(
-        template => template.name === name
-      )
-      if (groupTemplate) {
-        return {
-          ...groupTemplate,
-          icon: group.icon,
+    const actualName = MICROSOFT_SHAREPOINT_NAME_ALIASES[name] || name
+    for (const template of this.templates) {
+      if (template.name === actualName) {
+        return template
+      }
+      if (template.templates?.length) {
+        const child = template.templates.find(t => t.name === actualName)
+        if (child) {
+          return { ...child, icon: child.icon ?? template.icon }
         }
       }
     }
     return undefined
+  }
+
+  private slugify(str: string): string {
+    return str
+      .toLowerCase()
+      .replace(/['"&]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+  }
+
+  getById(id: string, groupName?: string): RestTemplate | undefined {
+    const searchId = (targetId: string): RestTemplate | undefined => {
+      for (const template of this.templates) {
+        if (template.id === targetId) {
+          return template
+        }
+        if (template.templates?.length) {
+          const child = template.templates.find(t => t.id === targetId)
+          if (child) {
+            // Legacy: child id stored on datasource — return parent collection
+            return template
+          }
+        }
+      }
+      return undefined
+    }
+
+    if (groupName) {
+      const groupSlug = this.slugify(groupName)
+      const withPrefix = `${groupSlug}-${id}`
+      const found = searchId(withPrefix)
+      if (found) return found
+    }
+
+    return searchId(id)
+  }
+
+  // getByName is legacy behaviour
+  // Makes no sense to have a lookup be the display value.
+  get(nameOrId?: string) {
+    if (!nameOrId) {
+      return undefined
+    }
+    return this.getById(nameOrId) || this.getByName(nameOrId)
   }
 }
 

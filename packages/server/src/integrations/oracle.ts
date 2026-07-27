@@ -24,6 +24,7 @@ import {
   getSqlQuery,
   HOST_ADDRESS,
 } from "./utils"
+import { quoteOracleIdentifier } from "./utils/sqlIdentifiers"
 import oracledb, {
   BindParameters,
   Connection,
@@ -574,7 +575,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
         // get the last row that was updated
         if (response.lastRowid && operation !== Operation.DELETE) {
           const lastRow = await this.internalQuery({
-            sql: `SELECT * FROM "${json.table.name}" WHERE ROWID = '${response.lastRowid}'`,
+            sql: `SELECT * FROM ${quoteOracleIdentifier(json.table.name)} WHERE ROWID = '${response.lastRowid}'`,
           })
           return lastRow.rows as Row[]
         } else {

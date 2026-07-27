@@ -2,6 +2,7 @@
   import { params } from "@roxi/routify"
   import { Tabs, Tab, Heading, Body, Layout } from "@budibase/bbui"
   import { datasources, integrations } from "@/stores/builder"
+  import { getRestTemplateIdentifier } from "@/stores/builder/datasources"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import IntegrationIcon from "@/components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import EditDatasourceConfig from "./_components/EditDatasourceConfig.svelte"
@@ -45,8 +46,8 @@
 
   $: datasource = $datasources.selected
   $: templateIcon =
-    datasource?.restTemplate && $restTemplates
-      ? restTemplates.getByName(datasource.restTemplate)?.icon
+    getRestTemplateIdentifier(datasource) && $restTemplates
+      ? restTemplates.get(getRestTemplateIdentifier(datasource))?.icon
       : undefined
 
   $: isRestDatasource = datasource?.source === IntegrationTypes.REST
@@ -57,7 +58,9 @@
   let restConfigDirty = false
   $: if (
     datasource &&
-    (!updatedDatasource || updatedDatasource._id !== datasource._id)
+    (!updatedDatasource ||
+      updatedDatasource._id !== datasource._id ||
+      updatedDatasource._rev !== datasource._rev)
   ) {
     updatedDatasource = cloneDeep(datasource)
     restConfigDirty = false

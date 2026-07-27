@@ -10,6 +10,7 @@
     agentId: string
     isEnabled: boolean
     isDefault: boolean
+    roleId?: string
     conversationStarters?: ConversationStarter[]
   }
 
@@ -26,6 +27,10 @@
     _agentId: string,
     _starters: ConversationStarter[]
   ) => void
+  export let handleUpdateAccessRole: (
+    _agentId: string,
+    _roleId?: string
+  ) => void = () => {}
 
   let selectedAgentId: string | undefined
   let selectedAgent: AgentListItem | undefined
@@ -135,6 +140,7 @@
   defaultAgentId={resolvedDefaultAgent?.agentId}
   {isAgentAvailable}
   onSetDefault={handleDefaultToggle}
+  onUpdateAccessRole={handleUpdateAccessRole}
   onUpdateConversationStarters={handleUpdateConversationStarters}
   onClose={() => {
     isModalOpen = false

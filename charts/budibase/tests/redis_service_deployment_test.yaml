@@ -1,0 +1,123 @@
+suite: redis-service deployment
+templates:
+  - templates/redis-service-deployment.yaml
+release:
+  name: budibase
+chart:
+  version: 3.0.0
+  appVersion: 3.0.0
+tests:
+  - it: should not render when disabled
+    set:
+      services.redis.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render when enabled
+    set:
+      services.redis.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Deployment
+
+  - it: should render default image
+    set:
+      services.redis.enabled: true
+      services.redis.image: redis
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "redis"
+
+  - it: should use custom image when set to full path
+    set:
+      services.redis.enabled: true
+      services.redis.image: "my-registry.example.com/custom/redis:7-alpine"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "my-registry.example.com/custom/redis:7-alpine"
+
+  - it: should render default pod securityContext
+    set:
+      services.redis.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 999
+      - equal:
+          path: spec.template.spec.securityContext.runAsGroup
+          value: 1000
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 1000
+
+  - it: should override pod securityContext when podSecurityContext set
+    set:
+      services.redis.enabled: true
+      services.redis.podSecurityContext:
+        runAsUser: 2000
+        runAsGroup: 2000
+        fsGroup: 2000
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 2000
+      - equal:
+          path: spec.template.spec.securityContext.runAsGroup
+          value: 2000
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 2000
+
+  - it: should not render container securityContext by default
+    set:
+      services.redis.enabled: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].securityContext
+
+  - it: should render container securityContext when set
+    set:
+      services.redis.enabled: true
+      services.redis.securityContext:
+        readOnlyRootFilesystem: true
+        allowPrivilegeEscalation: false
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
+
+  - it: should set correct container port
+    set:
+      services.redis.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 6379
+
+  - it: should mount redis-data volume
+    set:
+      services.redis.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            mountPath: /data
+            name: redis-data
+
+  - it: should set imagePullSecrets when configured
+    set:
+      services.redis.enabled: true
+      imagePullSecrets:
+        - name: my-pull-secret
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: my-pull-secret

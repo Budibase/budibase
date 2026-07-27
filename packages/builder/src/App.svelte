@@ -3,6 +3,7 @@
   import { routes } from "../.routify/routes"
   import { NotificationDisplay, BannerDisplay, Context } from "@budibase/bbui"
   import LicensingOverlays from "@/components/portal/licensing/LicensingOverlays.svelte"
+  import FrontChatWidget from "@/components/FrontChatWidget.svelte"
   import { parse, stringify } from "qs"
   import { setContext } from "svelte"
 
@@ -17,6 +18,7 @@
 <BannerDisplay />
 <NotificationDisplay />
 <LicensingOverlays />
+<FrontChatWidget />
 
 <div class="modal-container"></div>
 

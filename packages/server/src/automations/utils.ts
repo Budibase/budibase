@@ -5,6 +5,7 @@ import {
   Automation,
   AutomationJob,
   CronTriggerInputs,
+  EmailTriggerAuthType,
   EmailTriggerInputs,
   isCronTrigger,
   isEmailTrigger,
@@ -39,6 +40,15 @@ function isWorkspaceDatabaseMissing(err: unknown) {
     error.reason === DATABASE_NOT_FOUND_REASON ||
     error.message?.includes(DATABASE_NOT_FOUND_REASON) === true
   )
+}
+
+async function workspaceExists(workspaceId: string) {
+  try {
+    return await dbCore.dbExists(workspaceId)
+  } catch (err) {
+    console.log("Failed to check workspace existence", { workspaceId, err })
+    return true
+  }
 }
 
 function isLegacyRepeatableJobId(jobId?: string) {
@@ -151,14 +161,22 @@ export async function processEvent(job: AutomationJob) {
           console.log("automation running", ...loggingArgs(job))
 
           const runFn = () => Runner.run(job)
-          const result = await quotas.addAutomation(runFn, { automationId })
+          // Skip quota increment for resumed escalations - the original run was already charged
+          const result = job.data.isResume
+            ? await runFn()
+            : await quotas.addAutomation(runFn, { automationId })
           console.log("automation completed", ...loggingArgs(job))
           return result
         })
       } catch (err) {
         span.addTags({ error: true })
         console.warn(`automation was unable to run`, err, ...loggingArgs(job))
-        if (job.opts.repeat && job.id && isWorkspaceDatabaseMissing(err)) {
+        if (
+          job.opts.repeat &&
+          job.id &&
+          isWorkspaceDatabaseMissing(err) &&
+          !(await workspaceExists(workspaceId))
+        ) {
           await disableCronById(job.id)
         }
         return { err }
@@ -274,6 +292,7 @@ export async function enableCronOrEmailTrigger(
   if (isCronTrigger(trigger)) {
     const inputs = trigger.inputs as CronTriggerInputs
     const cronExp = inputs.cron || ""
+    const timezone = inputs.timezone
     const validation = helpers.cron.validate(cronExp)
     if (!validation.valid) {
       throw new Error(
@@ -299,7 +318,7 @@ export async function enableCronOrEmailTrigger(
         automation,
         event: { appId },
       },
-      { repeat: { cron: cronExp }, jobId }
+      { repeat: { cron: cronExp, tz: timezone }, jobId }
     )
 
     trigger.cronJobId = jobId
@@ -364,13 +383,18 @@ export async function enableCronOrEmailTrigger(
 }
 
 function isValidEmailTriggerInputs(inputs: EmailTriggerInputs): boolean {
-  return !!(
-    inputs &&
-    inputs.host &&
-    inputs.port &&
-    inputs.username &&
-    inputs.password
-  )
+  if (!inputs || !inputs.host || !inputs.port || !inputs.username) {
+    return false
+  }
+
+  if (inputs.authType === EmailTriggerAuthType.OAUTH2) {
+    const legacyId = (
+      inputs as EmailTriggerInputs & { oauth2ConfigId?: string }
+    ).oauth2ConfigId
+    return (!!inputs.datasourceId && !!inputs.authConfigId) || !!legacyId
+  }
+
+  return !!inputs.password
 }
 
 /**

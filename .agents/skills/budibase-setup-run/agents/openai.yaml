@@ -1,0 +1,4 @@
+interface:
+  display_name: "Budibase Setup Run"
+  short_description: "Set up and run the Budibase monorepo locally."
+  default_prompt: "Help me set up and run Budibase locally from a fresh checkout."

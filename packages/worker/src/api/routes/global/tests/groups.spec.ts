@@ -62,6 +62,13 @@ describe("/api/global/groups", () => {
       )
     })
 
+    it("should allow setting isDefault when creating a group", async () => {
+      const group = { ...structures.groups.UserGroup(), isDefault: true }
+      const response = await config.api.groups.saveGroup(group, { expect: 200 })
+      const savedGroup = await config.api.groups.find(response.body._id)
+      expect(savedGroup.body.isDefault).toBe(true)
+    })
+
     describe("name max length", () => {
       const maxLength = 50
 
@@ -370,6 +377,12 @@ describe("/api/global/groups", () => {
       })
     })
 
+    it("fetch should return 200", async () => {
+      await config.withUser(builder, async () => {
+        await config.api.groups.fetch()
+      })
+    })
+
     it("update should return forbidden", async () => {
       await config.withUser(builder, async () => {
         await config.api.groups.updateGroupUsers(
@@ -380,6 +393,19 @@ describe("/api/global/groups", () => {
           },
           { expect: 403 }
         )
+      })
+    })
+  })
+
+  describe("with basic role", () => {
+    it("fetch should return forbidden", async () => {
+      const user = await config.createUser({
+        builder: { global: false },
+        admin: { global: false },
+      })
+
+      await config.withUser(user, async () => {
+        await config.api.groups.fetch({ expect: 403 })
       })
     })
   })

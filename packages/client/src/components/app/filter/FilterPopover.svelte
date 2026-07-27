@@ -16,6 +16,11 @@
     FilterValueType,
     OperatorOptions,
   } from "@budibase/frontend-core/src/constants"
+  import { loadTranslationsByGroup } from "@budibase/frontend-core"
+  import {
+    resolveTranslationGroup,
+    resolveWorkspaceTranslations,
+  } from "@budibase/shared-core"
   import {
     type FieldSchema,
     type FilterConfig,
@@ -54,6 +59,8 @@
 
   const dispatch = createEventDispatcher()
   const rowCache: Writable<Record<string, any>> = getContext("rows")
+  const { appStore } = getContext("sdk")
+  const filterLabels = loadTranslationsByGroup("filter")
 
   let popover: PopoverAPI | undefined
   let anchor: HTMLElement | undefined
@@ -63,6 +70,11 @@
   let enableTime: boolean
   let timeOnly: boolean
   let ignoreTimezones: boolean
+
+  $: translationOverrides = resolveWorkspaceTranslations(
+    $appStore.application?.translationOverrides
+  )
+  $: calendarLabels = resolveTranslationGroup("calendar", translationOverrides)
 
   // Change on update
   $: editableFilter = getDefaultFilter(filter, schema, config)
@@ -184,6 +196,17 @@
       ...retrieved,
     }))
   }
+
+  const applyFilter = () => {
+    const sanitized = sanitizeOperator(editableFilter)
+    const { noValue, value, operator } = sanitized || {}
+
+    // Check for empty filter. if empty on invalid set it to undefined.
+    const update = (!noValue && !value) || !operator ? undefined : sanitized
+
+    dispatch("change", update)
+    hide()
+  }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -219,7 +242,7 @@
 
               const sanitized = sanitizeOperator({
                 ...editableFilter,
-                operator: e.detail,
+                operator: e.detail as any,
               })
 
               editableFilter = { ...(sanitized || editableFilter) }
@@ -229,6 +252,7 @@
 
         {#if editableFilter?.type && [FieldType.STRING, FieldType.LONGFORM, FieldType.NUMBER, FieldType.BIGINT, FieldType.FORMULA, FieldType.AI].includes(editableFilter.type)}
           <Input
+            autofocus
             disabled={editableFilter.noValue}
             value={editableFilter.value}
             on:change={e => {
@@ -238,8 +262,9 @@
                 value: e.detail,
               })
             }}
+            on:enterkey={applyFilter}
           />
-        {:else if (editableFilter?.type && editableFilter?.type === FieldType.ARRAY) || (editableFilter.type === FieldType.OPTIONS && editableFilter.operator === ArrayOperator.ONE_OF)}
+        {:else if (editableFilter?.type && editableFilter?.type === FieldType.ARRAY) || (editableFilter.type === FieldType.OPTIONS && (editableFilter.operator === ArrayOperator.ONE_OF || editableFilter.operator === ArrayOperator.NOT_ONE_OF))}
           {@const isMulti = isArrayOperator(editableFilter.operator)}
           {@const type = isMulti ? CoreCheckboxGroup : CoreRadioGroup}
           {#key type}
@@ -277,6 +302,7 @@
             {enableTime}
             {timeOnly}
             {ignoreTimezones}
+            {calendarLabels}
             value={parseDateRange(editableFilter.value)}
             on:change={e => {
               const [from, to] = e.detail
@@ -311,6 +337,7 @@
             {enableTime}
             {timeOnly}
             {ignoreTimezones}
+            {calendarLabels}
             disabled={editableFilter.noValue}
             value={editableFilter.value}
             on:change={e => {
@@ -326,8 +353,8 @@
             value={editableFilter.value}
             disabled={editableFilter.noValue}
             options={[
-              { label: "True", value: "true" },
-              { label: "False", value: "false" },
+              { label: filterLabels.true, value: "true" },
+              { label: filterLabels.false, value: "false" },
             ]}
             on:change={e => {
               if (!editableFilter) return
@@ -354,20 +381,7 @@
           <Input disabled />
         {/if}
         <!-- Needs to be disabled if there is nothing-->
-        <Button
-          cta
-          on:click={() => {
-            const sanitized = sanitizeOperator(editableFilter)
-            const { noValue, value, operator } = sanitized || {}
-
-            // Check for empty filter. if empty on invalid set it to undefined.
-            const update =
-              (!noValue && !value) || !operator ? undefined : sanitized
-
-            dispatch("change", update)
-            hide()
-          }}
-        >
+        <Button cta on:click={applyFilter}>
           {buttonText || "Apply"}
         </Button>
       {/if}

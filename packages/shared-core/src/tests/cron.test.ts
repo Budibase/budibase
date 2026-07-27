@@ -18,4 +18,18 @@ describe("check valid and invalid crons", () => {
   it("valid - * * * * *", () => {
     expect(cron.validate("* * * * *")).toStrictEqual({ valid: true })
   })
+
+  it("formats next executions in the selected timezone", () => {
+    const londonRun = cron.getNextExecutionDates(
+      "0 9 * * *",
+      1,
+      "Europe/London"
+    )[0]
+    const tokyoRun = cron.getNextExecutionDates("0 9 * * *", 1, "Asia/Tokyo")[0]
+
+    expect(londonRun).toContain("09:00")
+    expect(tokyoRun).toContain("09:00")
+    expect(londonRun).not.toMatch(/GMT|UTC|BST|JST/)
+    expect(tokyoRun).not.toMatch(/GMT|UTC|BST|JST/)
+  })
 })

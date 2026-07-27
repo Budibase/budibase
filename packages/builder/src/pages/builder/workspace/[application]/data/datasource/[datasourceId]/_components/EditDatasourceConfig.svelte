@@ -1,41 +1,82 @@
-<script>
+<svelte:options runes={true} />
+
+<script lang="ts">
   import { keepOpen, Modal, notifications } from "@budibase/bbui"
   import { integrationForDatasource } from "@/stores/selectors"
   import { datasources, integrations } from "@/stores/builder"
   import DatasourceConfigEditor from "@/components/backend/Datasources/ConfigEditor/index.svelte"
   import EditDatasourceConfigButton from "./EditDatasourceConfigButton.svelte"
+  import type { Datasource, UIIntegration } from "@budibase/types"
 
-  export let datasource
+  interface ModalHandle {
+    show(): void
+  }
 
-  $: integration = integrationForDatasource($integrations, datasource)
+  type DatasourceConfig = NonNullable<Datasource["config"]>
 
-  let modal
+  interface DatasourceConfigSubmit {
+    config: DatasourceConfig
+    name: string
+    projectIds?: string[]
+  }
 
-  async function saveDatasource({ config, name }) {
+  interface Props {
+    datasource: Datasource
+  }
+
+  let { datasource }: Props = $props()
+
+  const integration = $derived(
+    integrationForDatasource($integrations, datasource)
+  )
+
+  let modal: ModalHandle | undefined = $state()
+
+  async function saveDatasource({
+    config,
+    name,
+    projectIds,
+  }: DatasourceConfigSubmit) {
     try {
+      const { projectIds: _projectIds, ...datasourceWithoutProjectIds } =
+        datasource
+      const updatedDatasource: Datasource = {
+        ...datasourceWithoutProjectIds,
+        config,
+        name,
+      }
+      if (projectIds !== undefined) {
+        updatedDatasource.projectIds = projectIds
+      }
+
       await datasources.save({
         integration,
-        datasource: { ...datasource, config, name },
+        datasource: updatedDatasource,
       })
 
       notifications.success(
         `Datasource ${datasource.name} updated successfully`
       )
     } catch (err) {
-      notifications.error(err?.message ?? "Error saving datasource")
+      notifications.error(
+        err instanceof Error ? err.message : "Error saving datasource"
+      )
 
       return keepOpen
     }
   }
 </script>
 
-<EditDatasourceConfigButton on:click={modal.show} {datasource} />
+<EditDatasourceConfigButton on:click={() => modal?.show()} {datasource} />
 <Modal bind:this={modal}>
   <DatasourceConfigEditor
-    {integration}
-    config={datasource.config}
+    integration={integration as UIIntegration}
+    config={datasource.config || {}}
     showNameField
+    showProjectField
+    originalProjectIdsValue={datasource.projectIds || []}
     nameFieldValue={datasource.name}
+    projectIdsValue={datasource.projectIds || []}
     onSubmit={saveDatasource}
   />
 </Modal>

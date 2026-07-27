@@ -393,7 +393,7 @@ export const updateUsage = async (
           if (appValue) {
             appValue = Math.max(0, appValue)
           }
-          if (breakdownValue) {
+          if (breakdownValue != null) {
             breakdownValue = Math.max(0, breakdownValue)
             breakdownValuesToApply = {
               ...breakdownValuesToApply,

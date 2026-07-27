@@ -133,18 +133,41 @@ export const generateChatConversationID = () => {
   return `${DocumentType.CHAT_CONVERSATION}${SEPARATOR}${newid()}`
 }
 
+export const generateAgentRequestID = (id = newid()) => {
+  return `${DocumentType.AGENT_REQUEST}${SEPARATOR}${id}`
+}
+
+export const getAgentTestSuiteID = (agentId: string) => {
+  return `${DocumentType.AGENT_TEST_SUITE}${SEPARATOR}${agentId}`
+}
+
+export const getAgentTestRunID = (agentId: string, runId: string) => {
+  return `${getAgentTestSuiteID(agentId)}${SEPARATOR}${DocumentType.AGENT_TEST_RUN}${SEPARATOR}${runId}`
+}
+
 export const generateAgentToolSourceID = () => {
   return `${DocumentType.AGENT_TOOL_SOURCE}${SEPARATOR}${newid()}`
 }
 
-export const generateAgentFileID = (agentId: string) => {
-  return `${DocumentType.AGENT_FILE}${SEPARATOR}${agentId}${SEPARATOR}${newid()}`
+export const generateAgentKnowledgeSourceSyncStateID = (
+  agentId: string,
+  sourceId: string
+) => {
+  return `${DocumentType.AGENT_KNOWLEDGE_SOURCE_SYNC_STATE}${SEPARATOR}${agentId}${SEPARATOR}${encodeURIComponent(sourceId)}`
 }
-const isAgentFileIDRegex = new RegExp(
-  `^${DocumentType.AGENT_FILE}${SEPARATOR}.+`
+
+export const generateAgentKnowledgeSourceConnectionID = () => {
+  return `${DocumentType.AGENT_KNOWLEDGE_SOURCE_CONNECTION}${SEPARATOR}${newid()}`
+}
+
+export const generateKnowledgeBaseFileID = (knowledgeBaseId: string) => {
+  return `${DocumentType.KNOWLEDGE_BASE_FILE}${SEPARATOR}${knowledgeBaseId}${SEPARATOR}${newid()}`
+}
+const isKnowledgeBaseFileIDRegex = new RegExp(
+  `^${DocumentType.KNOWLEDGE_BASE_FILE}${SEPARATOR}.+`
 )
-export const isAgentFileID = (id: string) => {
-  return isAgentFileIDRegex.test(id)
+export const isKnowledgeBaseFileID = (id: string) => {
+  return isKnowledgeBaseFileIDRegex.test(id)
 }
 
 export const generateAIConfigID = (id = newid()) => {
@@ -163,6 +186,10 @@ export const generateWorkspaceFavouriteID = () => {
   return `${DocumentType.WORKSPACE_FAVOURITE}${SEPARATOR}${newid()}`
 }
 
-export const generateVectorDbID = () => {
-  return `${DocumentType.VECTOR_STORE}${SEPARATOR}${newid()}`
+export const generateProjectID = () => {
+  return `${DocumentType.PROJECT}${SEPARATOR}${newid()}`
+}
+
+export const generateKnowledgeBaseID = () => {
+  return `${DocumentType.KNOWLEDGE_BASE}${SEPARATOR}${newid()}`
 }

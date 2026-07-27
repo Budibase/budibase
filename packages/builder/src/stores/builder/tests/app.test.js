@@ -79,6 +79,7 @@ describe("Application Meta Store", () => {
       url,
       features,
       pwa,
+      embedSSO,
       componentLibraries,
     } = app
 
@@ -102,6 +103,7 @@ describe("Application Meta Store", () => {
       initialised: true,
       hasAppPackage: true,
       pwa,
+      embedSSO,
     })
   })
 

@@ -1,16 +1,54 @@
-<script>
+<script lang="ts">
   import { Divider, Layout, StatusLight } from "@budibase/bbui"
-  import { Breadcrumbs, Breadcrumb } from "@/components/portal/page"
   import { bb } from "@/stores/bb"
   import NewPill from "@/components/common/NewPill.svelte"
+  import SubtreeCrumbs from "./components/SubtreeCrumbs.svelte"
+  import RouteCrumbs from "./components/RouteCrumbs.svelte"
 
   $: matched = $bb.settings.route
   $: route = matched?.entry
+  $: locked = $bb.settings.locked
+  $: hardLocked = locked === "self"
+  $: subtreeStack = $bb.settings.subtreeStack
+
+  $: handleSectionClick = () => {
+    if (route?.crumbs?.length) {
+      const firstCrumb = route.crumbs[0]
+      if (firstCrumb?.path) {
+        bb.settings(firstCrumb.path)
+      }
+    }
+  }
+
+  const resolvePathParams = (
+    path: string | undefined,
+    params: Record<string, string>
+  ) => {
+    if (!path) {
+      return path
+    }
+    return path.replace(/:([^/]+)/g, (_match, key) => params[key] ?? `:${key}`)
+  }
+
+  const resolveTitle = (
+    title: string | ((_path: string | undefined) => string) | undefined,
+    path: string | undefined
+  ) => {
+    if (typeof title === "function") {
+      return title(path)
+    }
+    return title
+  }
 </script>
 
 <div class="route-header">
   {#if route?.nav?.length}
-    <div class="section-header">
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <div
+      class="section-header"
+      on:click={hardLocked ? undefined : handleSectionClick}
+    >
       {route?.section || ""}
     </div>
     <Divider noMargin size={"S"} />
@@ -23,9 +61,9 @@
             class="nav-tab"
             class:match={nav.path === route.path}
             class:error={nav.error?.()}
-            on:click={() => bb.settings(nav.path)}
+            on:click={hardLocked ? undefined : () => bb.settings(nav.path)}
           >
-            {nav.title}
+            {resolveTitle(nav.title, nav.path)}
             {#if nav.error?.()}
               <span class="indicator">
                 <StatusLight
@@ -46,17 +84,21 @@
     <Layout paddingX="L" paddingY="L">
       <div class="page-heading">
         <div class="crumbs">
-          <!-- Drill down -->
-          <Breadcrumbs>
-            <Breadcrumb text={route?.section} />
-            {#each route?.crumbs || [] as crumb, idx}
-              {@const isLast = idx == route?.crumbs.length - 1}
-              <Breadcrumb
-                text={crumb.title}
-                {...!isLast && { onClick: () => bb.settings(crumb.path) }}
-              />
-            {/each}
-          </Breadcrumbs>
+          {#if locked === "subtree"}
+            <SubtreeCrumbs
+              stack={subtreeStack || []}
+              currentRoute={matched}
+              {resolveTitle}
+              {resolvePathParams}
+            />
+          {:else}
+            <RouteCrumbs
+              {matched}
+              {locked}
+              {resolveTitle}
+              {resolvePathParams}
+            />
+          {/if}
         </div>
         <!-- Registered on the page itself -->
         <div class="page-actions no-padding"></div>

@@ -1,0 +1,15 @@
+<script lang="ts">
+  import { createEventDispatcher } from "svelte"
+
+  const dispatch = createEventDispatcher()
+
+  export const show = () => {
+    dispatch("show")
+  }
+
+  export const hide = () => {
+    dispatch("hide")
+  }
+</script>
+
+<slot />

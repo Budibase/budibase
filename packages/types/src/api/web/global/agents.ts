@@ -1,11 +1,13 @@
 import { Optional } from "../../../shared"
 import {
   Agent,
-  AgentFile,
+  AgentKnowledgeSourceSyncRunStatus,
+  AgentOperation,
   ChatApp,
   ChatConversation,
   ChatConversationRequest,
   CreateChatConversationRequest,
+  KnowledgeBaseFile,
 } from "../../../documents"
 
 export type ChatAgentRequest = ChatConversationRequest
@@ -22,6 +24,103 @@ export type UpdateChatAppRequest = Omit<ChatApp, "createdAt" | "updatedAt">
 
 export interface FetchAgentsResponse {
   agents: Agent[]
+}
+
+export interface AgentFileUploadResponse {
+  file: KnowledgeBaseFile
+}
+
+export interface FetchAgentFileUrlResponse {
+  url: string
+}
+
+export interface KnowledgeSourceOption {
+  id: string
+  name?: string
+  webUrl?: string
+}
+
+export interface FetchAgentKnowledgeSourceOptionsResponse {
+  options: KnowledgeSourceOption[]
+}
+
+export interface SharePointKnowledgeSourceSnapshot {
+  sourceId: string
+  name?: string
+  webUrl?: string
+  runStatus?: AgentKnowledgeSourceSyncRunStatus
+  lastRunAt?: string
+  lastStartedAt?: string
+  errorMessage?: string
+  syncedCount: number
+  failedCount: number
+  processingCount: number
+  totalCount: number
+}
+
+export interface FetchAgentKnowledgeResponse {
+  files: KnowledgeBaseFile[]
+  sharePointSources: SharePointKnowledgeSourceSnapshot[]
+}
+
+export interface FetchAgentKnowledgeIndexResponse {
+  operations: Record<string, FetchAgentKnowledgeResponse>
+}
+
+export interface KnowledgeSourceEntry {
+  id: string
+  name: string
+  path: string
+  type: "folder" | "file" | "list"
+  webUrl?: string
+}
+
+export interface FetchAgentKnowledgeSourceEntriesResponse {
+  entries: KnowledgeSourceEntry[]
+}
+
+export interface KnowledgeSourceSyncRun {
+  sourceId: string
+  lastRunAt?: string
+  lastStartedAt?: string
+  errorMessage?: string
+  synced: number
+  failed: number
+  skipped: number
+  unsupported: number
+  totalDiscovered: number
+  status: AgentKnowledgeSourceSyncRunStatus
+}
+
+export interface SyncAgentKnowledgeSourcesRequest {}
+
+export interface SyncAgentKnowledgeSourcesResponse {
+  agentId: string
+  sourceId: string
+  status: AgentKnowledgeSourceSyncRunStatus.QUEUED
+}
+
+export interface ConnectAgentSharePointSiteRequest {
+  site: KnowledgeSourceOption
+  datasourceId: string
+  authConfigId: string
+  filters?: string[]
+}
+
+export type ConnectAgentSharePointSiteResponse =
+  FetchAgentKnowledgeSourceOptionsResponse
+
+export interface UpdateAgentSharePointSiteRequest {
+  filters?: string[]
+}
+
+export type UpdateAgentSharePointSiteResponse =
+  FetchAgentKnowledgeSourceOptionsResponse
+
+export interface DisconnectAgentSharePointSiteResponse {
+  agentId: string
+  disconnected: true
+  siteId: string
 }
 
 export interface FetchChatAppAgentsResponse {
@@ -62,6 +161,15 @@ export interface ProvisionAgentSlackChannelResponse
   messagingEndpointUrl: string
 }
 
+export type ProvisionAgentTelegramChannelRequest =
+  ConfigureAgentDeploymentChannelRequest
+
+export interface ProvisionAgentTelegramChannelResponse
+  extends ConfigureAgentDeploymentChannelResponse {
+  messagingEndpointUrl: string
+  warning?: string
+}
+
 export interface ToggleAgentDeploymentRequest {
   enabled: boolean
 }
@@ -72,22 +180,43 @@ export interface ToggleAgentDeploymentResponse {
 }
 
 export type CreateAgentRequest = Optional<
-  Omit<Agent, "_id" | "_rev" | "createdAt" | "updatedAt">,
+  Omit<
+    Agent,
+    "_id" | "_rev" | "createdAt" | "updatedAt" | "publishedAt" | "operations"
+  >,
   "aiconfig"
 >
-export type CreateAgentResponse = Agent
+export type CreateAgentResponse = Omit<
+  Agent,
+  "knowledgeSources" | "knowledgeBases"
+>
 export type DuplicateAgentResponse = Agent
 
 export type UpdateAgentRequest = Omit<
   Agent,
-  "createdAt" | "updatedAt" | "_deleted" | "createdBy"
+  "createdAt" | "updatedAt" | "_deleted" | "createdBy" | "operations"
 >
-export type UpdateAgentResponse = Agent
+export type UpdateAgentResponse = Omit<
+  Agent,
+  "knowledgeSources" | "knowledgeBases"
+>
 
-export interface FetchAgentFilesResponse {
-  files: AgentFile[]
-}
+export type AgentOperationConfigRequest = Pick<
+  AgentOperation,
+  | "name"
+  | "live"
+  | "promptInstructions"
+  | "enabledTools"
+  | "allowKnowledgeSourceDownload"
+  | "escalation"
+>
 
-export interface AgentFileUploadResponse {
-  file: AgentFile
-}
+export type CreateAgentOperationRequest = AgentOperationConfigRequest &
+  Pick<AgentOperation, "id">
+
+export type UpdateAgentOperationRequest = Partial<AgentOperationConfigRequest>
+
+export type AgentOperationMutationResponse = Omit<
+  Agent,
+  "knowledgeSources" | "knowledgeBases"
+>

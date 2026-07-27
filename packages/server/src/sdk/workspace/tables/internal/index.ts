@@ -24,6 +24,7 @@ import { EventType, updateLinks } from "../../../../db/linkedRows"
 import { generateTableID, getRowParams } from "../../../../db/utils"
 import * as viewsSdk from "../../views"
 import { getTable } from "../getters"
+import { ensureValidPrimaryDisplay } from "../utils"
 import { checkAutoColumns } from "./utils"
 
 export async function create(
@@ -135,6 +136,8 @@ export async function save(
   }
 
   table = await tableSaveFunctions.mid(table, renaming)
+
+  ensureValidPrimaryDisplay(table)
 
   // update schema of non-statistics views when new columns are added
   for (let view in table.views) {

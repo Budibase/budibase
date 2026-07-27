@@ -442,7 +442,7 @@
           allowEditRows={false}
           allowEditColumns={false}
           customRenderers={customAppTableRenderers}
-          on:click={e => $goto(`/builder/workspace/${e.detail.devId}`)}
+          on:click={e => $goto(`/builder/workspace/${e.detail.devId}/home`)}
         >
           <div class="placeholder" slot="placeholder">
             <Heading size="S">

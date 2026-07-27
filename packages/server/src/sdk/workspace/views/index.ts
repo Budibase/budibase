@@ -1,4 +1,4 @@
-import { context, HTTPError } from "@budibase/backend-core"
+import { context, HTTPError, logging } from "@budibase/backend-core"
 import {
   getTableIdFromViewId,
   helpers,
@@ -28,7 +28,7 @@ import sdk from "../.."
 import { isExternalTableID } from "../../../integrations/utils"
 import * as external from "./external"
 import * as internal from "./internal"
-import { ensureQueryUISet } from "./utils"
+import { ensureQueryUISet, ensureValidPrimaryDisplay } from "./utils"
 
 function pickApi(tableId: any) {
   if (isExternalTableID(tableId)) {
@@ -59,7 +59,11 @@ export async function getAllEnriched(): Promise<ViewV2Enriched[]> {
     const v2Views = Object.values(table.views).filter(isV2)
     const enrichedViews = await Promise.all(
       v2Views.map(view =>
-        enrichSchema(ensureQueryUISet(view), table.schema, tables)
+        enrichSchema(
+          ensureValidPrimaryDisplay(ensureQueryUISet(view), table),
+          table.schema,
+          tables
+        )
       )
     )
     views = views.concat(enrichedViews)
@@ -232,6 +236,11 @@ async function guardViewSchema(
     checkRequiredFields(table, view)
   }
 
+  // Falling back to the table's display column here means a view whose
+  // display column no longer exists can still be saved, rather than every
+  // save being rejected by the display column check
+  ensureValidPrimaryDisplay(view, table)
+
   checkDisplayField(view)
 }
 
@@ -378,12 +387,41 @@ export async function enrichSchema(
     tableId: string,
     viewFields: Record<string, RelationSchemaField>
   ) {
-    let relTable = tables
-      ? tables?.find(t => t._id === tableId)
-      : await sdk.tables.getTable(tableId)
-    if (!relTable) {
-      throw new Error("Cannot enrich relationship, table not found")
+    let relTable
+    try {
+      relTable = tables?.find(t => t._id === tableId)
+      if (!relTable && !tables) {
+        relTable = await sdk.tables.getTable(tableId)
+      }
+      if (!relTable) {
+        throw new Error("Cannot enrich relationship, table not found")
+      }
+    } catch (err) {
+      const recoverableError = err as {
+        reason?: string
+        status?: number
+        statusCode?: number
+        message?: string
+      }
+
+      if (
+        recoverableError.reason !== "deleted" &&
+        recoverableError.status !== 404 &&
+        recoverableError.statusCode !== 404 &&
+        recoverableError.message !==
+          "Cannot enrich relationship, table not found" &&
+        !recoverableError.message?.startsWith("Unable to find table named")
+      ) {
+        throw err
+      }
+
+      logging.logWarn(
+        `Skipping broken relationship during view enrichment for view "${view.name}" (${view.id}) and related table "${tableId}"`,
+        err
+      )
+      return viewFields as Record<string, ViewV2ColumnEnriched>
     }
+
     const result: Record<string, ViewV2ColumnEnriched> = {}
     for (const relTableFieldName of Object.keys(relTable.schema)) {
       const relTableField = relTable.schema[relTableFieldName]

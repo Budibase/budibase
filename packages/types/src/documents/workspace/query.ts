@@ -1,6 +1,7 @@
 import { Document } from "../document"
 import { RestAuthType } from "./datasource"
 import { Row } from "./row"
+import type { RestTemplateId } from "../../ui"
 
 export interface QuerySchema {
   name?: string
@@ -34,14 +35,17 @@ export interface ImportEndpoint {
   queryString?: string
 }
 
+export type QueryFields = RestQueryFields &
+  SQLQueryFields &
+  MongoQueryFields &
+  GoogleSheetsQueryFields
+
 export interface Query extends Document {
   datasourceId: string
+  projectIds?: string[]
   name: string
   parameters: QueryParameter[]
-  fields: RestQueryFields &
-    SQLQueryFields &
-    MongoQueryFields &
-    GoogleSheetsQueryFields
+  fields: QueryFields
   transformer: string | null
   schema: Record<string, QuerySchema | string>
   nestedSchemaFields?: Record<string, Record<string, QuerySchema | string>>
@@ -80,6 +84,8 @@ export enum BodyType {
 
 export interface RestQueryFields {
   path?: string
+  // Path as saved on the query, before parameter substitution.
+  rawPath?: string
   queryString?: string
   headers?: { [key: string]: any }
   disabledHeaders?: { [key: string]: any }
@@ -93,6 +99,7 @@ export interface RestQueryFields {
 }
 export interface SQLQueryFields {
   sql?: string
+  pagination?: PaginationConfig
 }
 
 export interface MongoQueryFields {
@@ -107,6 +114,7 @@ export interface MongoQueryFields {
       | "count"
       | "distinct"
       | "insertOne"
+      | "insertMany"
       | "deleteOne"
       | "deleteMany"
   }
@@ -120,11 +128,16 @@ export interface GoogleSheetsQueryFields {
 }
 
 export interface PaginationConfig {
-  type: string
-  location: string
-  pageParam: string
+  // REST query pagination
+  type?: string
+  location?: string
+  pageParam?: string
   sizeParam?: string
   responseParam?: string
+  // SQL query pagination
+  enabled?: boolean
+  offsetBinding?: string
+  limitBinding?: string
 }
 
 export interface PaginationValues {
@@ -149,4 +162,53 @@ export interface RestTemplateQueryMetadata {
   originalPath?: string
   originalRequestBody?: unknown
   defaultBindings?: Record<string, string>
+  restTemplateId?: RestTemplateId
 }
+
+// OpenAPI Security Scheme types
+export type SecuritySchemeType = "apiKey" | "http" | "oauth2"
+export type SecuritySchemeLocation = "query" | "header" | "cookie"
+
+export interface ApiKeySecurityScheme {
+  type: "apiKey"
+  name: string
+  in: SecuritySchemeLocation
+  description?: string
+}
+
+export interface HttpSecurityScheme {
+  type: "http"
+  scheme: string
+  bearerFormat?: string
+  description?: string
+}
+
+export interface OAuth2SecurityScheme {
+  type: "oauth2"
+  flows: {
+    implicit?: {
+      authorizationUrl: string
+      scopes: Record<string, string>
+    }
+    password?: {
+      tokenUrl: string
+      scopes: Record<string, string>
+    }
+    clientCredentials?: {
+      tokenUrl: string
+      scopes: Record<string, string>
+    }
+    authorizationCode?: {
+      authorizationUrl: string
+      tokenUrl: string
+      scopes: Record<string, string>
+    }
+  }
+  description?: string
+}
+
+export type SecurityScheme =
+  | ApiKeySecurityScheme
+  | HttpSecurityScheme
+  | OAuth2SecurityScheme
+// There is an openIdConnect option but none of our users use it

@@ -3,6 +3,7 @@
   import DatePicker from "./Core/DatePicker/DatePicker.svelte"
   import { createEventDispatcher } from "svelte"
   import type { LabelPosition } from "../types"
+  import { resolveTranslationGroup } from "@budibase/shared-core"
 
   export let value: V | null = null
   export let label = undefined
@@ -16,6 +17,7 @@
   export let appendTo = undefined
   export let ignoreTimezones = false
   export let helpText = undefined
+  export let calendarLabels = resolveTranslationGroup("calendar")
 
   const dispatch = createEventDispatcher()
 
@@ -36,6 +38,7 @@
     {timeOnly}
     {appendTo}
     {ignoreTimezones}
+    {calendarLabels}
     on:change={onChange}
   />
 </Field>

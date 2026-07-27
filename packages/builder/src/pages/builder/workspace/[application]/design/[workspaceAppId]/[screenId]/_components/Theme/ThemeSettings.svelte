@@ -10,10 +10,11 @@
     notifications,
   } from "@budibase/bbui"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
-  import { themeStore, appStore } from "@/stores/builder"
+  import { themeStore } from "@/stores/builder"
   import { DefaultAppTheme } from "@/constants"
   import AppThemeSelect from "./AppThemeSelect.svelte"
   import ButtonRoundnessSelect from "./ButtonRoundnessSelect.svelte"
+  import FontFamilySelect from "./FontFamilySelect.svelte"
   import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
 
   let popover: any
@@ -30,7 +31,7 @@
 
   const update = async (property: string, value: any) => {
     try {
-      await themeStore.saveCustom({ [property]: value }, $appStore.appId)
+      await themeStore.saveCustom({ [property]: value })
     } catch (error) {
       notifications.error("Error updating custom theme")
     }
@@ -50,13 +51,18 @@
   <div class="info">
     <Icon name="info" size="S" color="var(--spectrum-global-color-gray-600)" />
     <Body size="S">
-      These settings apply to all screens. PDFs are always light theme.
+      These settings apply to all screens in this app. PDFs are always light
+      theme.
     </Body>
   </div>
   <Layout noPadding gap="S">
     <Layout noPadding gap="XS">
       <AppThemeSelect />
     </Layout>
+    <FontFamilySelect
+      {customTheme}
+      on:change={e => update("fontFamily", e.detail)}
+    />
     <Layout noPadding gap="XS">
       <Label>Button roundness</Label>
       <ButtonRoundnessSelect

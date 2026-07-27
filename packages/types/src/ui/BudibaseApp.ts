@@ -6,6 +6,7 @@ export interface BudibaseAppProps {
   metaImage: string
   metaTitle: string
   metaDescription: string
+  clientLibPath: string
   clientCacheKey?: string
   workspaceId: string
   usedPlugins: Plugin[]

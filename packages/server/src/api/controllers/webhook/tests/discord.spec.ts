@@ -1,4 +1,4 @@
-import type { ChatConversation } from "@budibase/types"
+import { AgentChannelProvider, type ChatConversation } from "@budibase/types"
 import {
   matchesDiscordConversationScope,
   pickDiscordConversation,
@@ -16,7 +16,7 @@ const makeChat = (
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
   channel: {
-    provider: "discord",
+    provider: AgentChannelProvider.DISCORD,
     channelId: "channel-1",
     externalUserId: "user-1",
   },
@@ -34,7 +34,7 @@ describe("discord webhook helpers", () => {
     }
 
     const channel = (overrides = {}) => ({
-      provider: "discord" as const,
+      provider: AgentChannelProvider.DISCORD,
       channelId: "channel-1",
       threadId: "thread-1",
       externalUserId: "user-1",
@@ -74,7 +74,7 @@ describe("discord webhook helpers", () => {
     const chat = makeChat({
       userId: "discord:user-legacy",
       channel: {
-        provider: "discord",
+        provider: AgentChannelProvider.DISCORD,
         channelId: "channel-1",
       },
     })
@@ -113,7 +113,7 @@ describe("discord webhook helpers", () => {
       _id: "other-user",
       updatedAt: "2026-01-01T00:59:00.000Z",
       channel: {
-        provider: "discord",
+        provider: AgentChannelProvider.DISCORD,
         channelId: "channel-1",
         externalUserId: "user-2",
       },

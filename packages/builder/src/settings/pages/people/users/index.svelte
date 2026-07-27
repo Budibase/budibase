@@ -51,12 +51,14 @@
   } from "@budibase/types"
   import { InternalTable } from "@budibase/types"
   import type { UserInfo } from "@/types"
-  import { routeActions } from "@/settings/pages"
+  import RouteActions from "@/settings/components/RouteActions.svelte"
   import {
     assignCreatedUsersToWorkspace,
     assignExistingUsersToWorkspace,
+    assignExistingUsersToGroups,
     buildWorkspaceInvitePayload,
     dedupeUsersByEmail,
+    getEffectiveGroupIds,
     type UserData,
   } from "./workspaceInviteUtils"
 
@@ -288,8 +290,9 @@
     addUsersData: UserData,
     onboardingType?: string
   ) => {
-    // no-op if users already exist
-    userData = await removingDuplicities(addUsersData)
+    userData = isWorkspaceOnly
+      ? await removingDuplicities(addUsersData)
+      : dedupeUsersByEmail(addUsersData)
     if (!userData?.users?.length) {
       return
     }
@@ -303,15 +306,13 @@
   }
 
   async function createUserFlow() {
-    if (!isWorkspaceOnly) {
-      return
-    }
     let usersForInvite = userData?.users ?? []
     let assignedExistingUsers = false
     if (isWorkspaceOnly) {
       const result = await assignExistingUsersToWorkspace(
         userData,
-        currentWorkspaceId
+        currentWorkspaceId,
+        $groups
       )
       usersForInvite = result.usersToInvite
       const shouldShowInviteModal = usersForInvite.length > 0
@@ -327,14 +328,30 @@
         await refreshUserList()
         return
       }
+    } else {
+      const result = await assignExistingUsersToGroups(userData)
+      usersForInvite = result.newUsers
+      if (result.assignedCount && !usersForInvite.length) {
+        notifications.success("Users added to groups")
+      }
+      if (result.failedCount) {
+        notifications.error("Error adding some users to groups")
+      }
+      if (!usersForInvite.length) {
+        await groups.init()
+        await refreshUserList()
+        return
+      }
     }
 
     const assignToWorkspace = userData.assignToWorkspace ?? isWorkspaceOnly
+    const effectiveGroupIds = getEffectiveGroupIds(userData.groups, $groups)
     const payload = buildWorkspaceInvitePayload(
       usersForInvite,
-      userData.groups,
+      effectiveGroupIds,
       currentWorkspaceId,
-      assignToWorkspace
+      assignToWorkspace,
+      $groups
     )
     try {
       inviteUsersResponse = await users.invite(payload)
@@ -392,11 +409,17 @@
       users.push(newUser)
     }
 
-    userData = await removingDuplicities({
-      groups,
-      users,
-      assignToWorkspace: isWorkspaceOnly,
-    })
+    userData = isWorkspaceOnly
+      ? await removingDuplicities({
+          groups,
+          users,
+          assignToWorkspace: isWorkspaceOnly,
+        })
+      : dedupeUsersByEmail({
+          groups,
+          users,
+          assignToWorkspace: isWorkspaceOnly,
+        })
     if (!userData.users.length) return
 
     return createUsers()
@@ -405,12 +428,15 @@
   async function createUsers() {
     try {
       addedToWorkspaceEmails = []
-      let usersForCreation = await removingDuplicities(userData)
+      let usersForCreation = isWorkspaceOnly
+        ? await removingDuplicities(userData)
+        : dedupeUsersByEmail(userData)
 
       if (isWorkspaceOnly) {
         const result = await assignExistingUsersToWorkspace(
           usersForCreation,
-          currentWorkspaceId
+          currentWorkspaceId,
+          $groups
         )
         usersForCreation = { ...usersForCreation, users: result.usersToInvite }
         addedToWorkspaceEmails = result.addedToWorkspaceEmails
@@ -425,9 +451,31 @@
           await refreshUserList()
           return
         }
+      } else {
+        const result = await assignExistingUsersToGroups(usersForCreation)
+        usersForCreation = { ...usersForCreation, users: result.newUsers }
+
+        if (result.assignedCount && !usersForCreation.users.length) {
+          notifications.success("Users added to groups")
+        }
+        if (result.failedCount) {
+          notifications.error("Error adding some users to groups")
+        }
+        if (!usersForCreation.users.length) {
+          await groups.init()
+          await refreshUserList()
+          return
+        }
       }
 
-      bulkSaveResponse = (await users.create(usersForCreation)) || {
+      const effectiveGroupIds = getEffectiveGroupIds(
+        usersForCreation.groups,
+        $groups
+      )
+      bulkSaveResponse = (await users.create({
+        ...usersForCreation,
+        groups: effectiveGroupIds,
+      })) || {
         successful: [],
         unsuccessful: [],
       }
@@ -440,7 +488,9 @@
         const assignmentResult = await assignCreatedUsersToWorkspace(
           bulkSaveResponse.successful,
           usersForCreation.users,
-          currentWorkspaceId
+          currentWorkspaceId,
+          effectiveGroupIds,
+          $groups
         )
         if (assignmentResult.failedCount) {
           notifications.error("Error adding some users to workspace")
@@ -460,7 +510,7 @@
   }
 
   async function chooseCreationType(onboardingType: string) {
-    if (onboardingType === OnboardingType.EMAIL && isWorkspaceOnly) {
+    if (onboardingType === OnboardingType.EMAIL) {
       await createUserFlow()
     } else {
       await createUsers()
@@ -548,9 +598,12 @@
       .slice(0, length)
   }
 
-  const onRowClick = ({ detail }: { detail: User }) => {
+  const onRowClick = ({ detail }: { detail: EnrichedUser }) => {
     if (isWorkspaceOnly) {
-      selectedWorkspaceUser = detail
+      selectedWorkspaceUser = {
+        ...detail,
+        userGroups: detail.userGroups.map(g => g._id!),
+      }
       editWorkspaceUserModal.show()
       return
     }
@@ -600,53 +653,65 @@
       Upgrade your plan to re-activate your account."
     />
   {/if}
-  <div use:routeActions class="controls">
-    {#if !readonly}
-      <div class="buttons">
-        {#if selectedRows.length > 0}
-          <DeleteRowsButton
-            item="user"
-            action={isWorkspaceOnly ? "Remove" : "Delete"}
-            confirmationTitle={isWorkspaceOnly
-              ? "Confirm user removal"
-              : "Confirm user deletion"}
-            confirmationButtonText={isWorkspaceOnly
-              ? "Remove users"
-              : "Delete users"}
-            on:updaterows
-            selectedRows={[...selectedRows]}
-            deleteRows={deleteUsers}
-          />
-        {:else}
-          <Search bind:value={searchEmail} placeholder="Search" />
-          {#if !isWorkspaceOnly}
-            <ActionButton
-              size="M"
-              quiet
-              on:click={$licensing.userLimitReached
-                ? userLimitReachedModal.show
-                : importUsersModal.show}
-              disabled={readonly}
-            >
-              <Icon name={"upload-simple"} size="M" />
-            </ActionButton>
+  <RouteActions>
+    <div class="controls">
+      {#if !readonly}
+        <div class="buttons">
+          {#if selectedRows.length > 0}
+            <DeleteRowsButton
+              item="user"
+              action={isWorkspaceOnly ? "Remove" : "Delete"}
+              confirmationTitle={isWorkspaceOnly
+                ? "Confirm user removal"
+                : "Confirm user deletion"}
+              confirmationButtonText={isWorkspaceOnly
+                ? "Remove users"
+                : "Delete users"}
+              on:updaterows
+              selectedRows={[...selectedRows]}
+              deleteRows={deleteUsers}
+            />
+          {:else}
+            <Search bind:value={searchEmail} placeholder="Search" />
+            {#if !isWorkspaceOnly}
+              <ActionButton
+                size="M"
+                quiet
+                on:click={$licensing.userLimitReached
+                  ? userLimitReachedModal.show
+                  : importUsersModal.show}
+                disabled={readonly}
+              >
+                <Icon name={"upload-simple"} size="M" />
+              </ActionButton>
+              <Button
+                size="M"
+                disabled={readonly}
+                on:click={$licensing.userLimitReached
+                  ? userLimitReachedModal.show
+                  : createUserModal.show}
+                cta
+              >
+                Invite users
+              </Button>
+            {/if}
+            {#if isWorkspaceOnly}
+              <Button
+                size="M"
+                disabled={readonly}
+                on:click={$licensing.userLimitReached
+                  ? userLimitReachedModal.show
+                  : createUserModal.show}
+                cta
+              >
+                Invite to workspace
+              </Button>
+            {/if}
           {/if}
-          {#if isWorkspaceOnly}
-            <Button
-              size="M"
-              disabled={readonly}
-              on:click={$licensing.userLimitReached
-                ? userLimitReachedModal.show
-                : createUserModal.show}
-              cta
-            >
-              Invite to workspace
-            </Button>
-          {/if}
-        {/if}
-      </div>
-    {/if}
-  </div>
+        </div>
+      {/if}
+    </div>
+  </RouteActions>
   <div class="table-wrap" style={`min-height: ${TABLE_MIN_HEIGHT}px;`}>
     <Table
       on:click={onRowClick}
@@ -678,21 +743,23 @@
   </div>
 </div>
 
-{#if isWorkspaceOnly}
-  <Modal bind:this={createUserModal} closeOnOutsideClick={false}>
-    <AddUserModal
-      {showOnboardingTypeModal}
-      workspaceOnly={isWorkspaceOnly}
-      useWorkspaceInviteModal={isWorkspaceOnly}
-      assignToWorkspace={isWorkspaceOnly}
-      inviteTitle="Invite users to workspace"
-    />
-  </Modal>
+<Modal bind:this={createUserModal} closeOnOutsideClick={false}>
+  <AddUserModal
+    {showOnboardingTypeModal}
+    workspaceOnly={isWorkspaceOnly}
+    useWorkspaceInviteModal={true}
+    assignToWorkspace={isWorkspaceOnly}
+    inviteTitle={isWorkspaceOnly
+      ? "Invite users to workspace"
+      : "Invite user to organisation"}
+    showGroupSelect={!isWorkspaceOnly}
+    showInviteIcon={isWorkspaceOnly}
+  />
+</Modal>
 
-  <Modal bind:this={inviteConfirmationModal}>
-    <InvitedModal {inviteUsersResponse} />
-  </Modal>
-{/if}
+<Modal bind:this={inviteConfirmationModal}>
+  <InvitedModal {inviteUsersResponse} />
+</Modal>
 
 <Modal bind:this={passwordModal} disableCancel={true}>
   <PasswordModal

@@ -2,6 +2,7 @@ import { API } from "@/api"
 import {
   AppScript,
   AutomationSettings,
+  EmbedSSOConfig,
   Plugin,
   PWAManifest,
   UpdateWorkspaceRequest,
@@ -53,6 +54,8 @@ export interface AppMetaState {
   icon?: WorkspaceIcon
   pwa?: PWAManifest
   scripts: AppScript[]
+  embedAllowedOrigins: string[]
+  embedSSO?: EmbedSSOConfig
 }
 
 export const INITIAL_APP_META_STATE: AppMetaState = {
@@ -77,6 +80,7 @@ export const INITIAL_APP_META_STATE: AppMetaState = {
   features: {
     componentValidation: false,
     disableUserMetadata: false,
+    suppressErrorNotifications: false,
   },
   clientLibPath: "",
   hasLock: true,
@@ -98,6 +102,7 @@ export const INITIAL_APP_META_STATE: AppMetaState = {
     screenshots: [],
   },
   scripts: [],
+  embedAllowedOrigins: [],
 }
 
 export class AppMetaStore extends BudiStore<AppMetaState> {
@@ -131,6 +136,8 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
       hasAppPackage: true,
       pwa: workspace.pwa,
       scripts: workspace.scripts || [],
+      embedAllowedOrigins: workspace.embedAllowedOrigins || [],
+      embedSSO: workspace.embedSSO,
     }))
   }
 

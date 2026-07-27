@@ -1,4 +1,5 @@
 import { context, permissions, roles } from "@budibase/backend-core"
+import { InternalTables } from "../../db/utils"
 import {
   AddPermissionRequest,
   AddPermissionResponse,
@@ -71,6 +72,10 @@ export async function getResourcePerms(
   const inheritablePermissions =
     await sdk.permissions.getInheritablePermissions(resourceId)
 
+  const isInternalTable = (Object.values(InternalTables) as string[]).includes(
+    resourceId
+  )
+
   ctx.body = {
     permissions: Object.entries(resourcePermissions).reduce(
       (p, [level, role]) => {
@@ -84,6 +89,9 @@ export async function getResourcePerms(
       },
       {} as Record<string, ResourcePermissionInfo>
     ),
+    excludedRoles: isInternalTable
+      ? [roles.BUILTIN_ROLE_IDS.PUBLIC]
+      : undefined,
   }
 }
 

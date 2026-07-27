@@ -14,7 +14,7 @@ export async function errorHandling(ctx: ParameterizedContext, next: Next) {
     if (status >= 400 && status < 500) {
       console.warn(err)
     } else {
-      console.error("Got 400 response code", err)
+      console.error("Got 5xx response code", err)
     }
 
     let error: APIError = {

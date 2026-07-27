@@ -115,6 +115,26 @@ export async function buildSchemaFromSource(
   datasource.entities = tables
 
   datasources.setDefaultDisplayColumns(datasource)
+
+  // The fetched schema can drop columns that views still reference - sync
+  // each table's views the same way a table save would, so view schemas and
+  // view display columns don't point at columns that no longer exist
+  for (const [tableName, table] of Object.entries(tables)) {
+    if (!table.views) {
+      continue
+    }
+    const previousPrimaryDisplay = oldTables[tableName]?.primaryDisplay
+    for (const [viewName, view] of Object.entries(table.views)) {
+      if (!sdk.views.isV2(view)) {
+        continue
+      }
+      table.views[viewName] = sdk.views.syncSchema(view, table.schema, {
+        primaryDisplay: table.primaryDisplay,
+        previousPrimaryDisplay,
+      })
+    }
+  }
+
   const dbResp = await db.put(tableSdk.populateExternalTableSchemas(datasource))
   datasource._rev = dbResp.rev
 

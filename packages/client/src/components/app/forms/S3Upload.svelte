@@ -11,6 +11,11 @@
   export let field
   export let label
   export let disabled = false
+  export let compact = false
+  export let extensions
+  export let titleText
+  export let clickText
+  export let addText
   export let validation
   export let onChange
 
@@ -148,6 +153,11 @@
         on:change={handleChange}
         {processFiles}
         {handleFileTooLarge}
+        {compact}
+        {extensions}
+        {titleText}
+        {clickText}
+        {addText}
         maximum={1}
         fileSizeLimit={MaxFileSize}
       />

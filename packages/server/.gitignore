@@ -10,3 +10,4 @@ coverage/
 watchtower-hook.json
 .claude
 scripts/.env.ai-evals
+scripts/rag-evals/.env

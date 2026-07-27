@@ -1,4 +1,4 @@
-import { db, queue, utils } from "@budibase/backend-core"
+import { context, db, objectStore, queue, utils } from "@budibase/backend-core"
 import { utils as testUtils } from "@budibase/backend-core/tests"
 import {
   BackupStatus,
@@ -7,14 +7,15 @@ import {
   WorkspaceBackup,
 } from "@budibase/types"
 import tk from "timekeeper"
+import { Readable } from "stream"
 import { default as backups } from "../"
 import { DBTestConfiguration, mocks } from "../../../../tests"
 
+let mockOldestRetentionDate = new Date(0).toISOString()
+
 jest.mock("../../../db/utils/retention", () => {
-  let date = new Date()
-  date.setDate(date.getDate() - 30)
   return {
-    getOldestRetentionDate: jest.fn().mockReturnValue(date.toISOString()),
+    getOldestRetentionDate: jest.fn(() => mockOldestRetentionDate),
   }
 })
 
@@ -31,14 +32,24 @@ jest.mock("@budibase/backend-core", () => {
   const { join } = jest.requireActual("path")
   return {
     ...core,
+    db: {
+      ...core.db,
+      queryViewRaw: jest.fn(core.db.queryViewRaw),
+    },
     objectStore: {
       ...core.objectStore,
       upload: jest.fn(),
       streamUpload: jest.fn(),
       deleteFile: jest.fn(),
+      deleteFiles: jest.fn(),
+      objectExists: jest.fn().mockResolvedValue(false),
+      listAllObjects: jest
+        .fn()
+        .mockImplementation(() => (async function* () {})()),
       getReadStream: jest.fn().mockReturnValue({
         stream: fs.createReadStream(join(__dirname, "index.spec.ts")),
       }),
+      uploadDirectory: jest.fn(),
       retrieveToTmp: jest.fn().mockReturnValue("/path"),
     },
   }
@@ -49,6 +60,7 @@ const USER_ID = "user_test"
 beforeAll(() => testUtils.queue.useRealQueues())
 
 describe("backups", () => {
+  const mockedObjectStore = jest.mocked(objectStore)
   const config = new DBTestConfiguration()
 
   async function waitForQueue() {
@@ -70,6 +82,9 @@ describe("backups", () => {
       workspaceId?: string
       type?: BackupType
       trigger?: BackupTrigger
+      status?: BackupStatus
+      timestamp?: string
+      filename?: string | null
     } = {}
   ) {
     return advanceTimeAround(async () => {
@@ -82,17 +97,21 @@ describe("backups", () => {
       if (!opts.trigger) {
         opts.trigger = BackupTrigger.PUBLISH
       }
-      const { id } = await backups.storeAppBackupMetadata(
+      const metadataOpts =
+        opts.filename === null
+          ? {}
+          : { filename: opts.filename || "test.tar.gz" }
+      const { id } = await backups.storeWorkspaceBackupMetadata(
         {
           appId: opts.workspaceId,
           trigger: opts.trigger,
           type: opts.type,
-          status: BackupStatus.STARTED,
+          status: opts.status || BackupStatus.STARTED,
           name: "test name",
           createdBy: USER_ID,
-          timestamp: new Date().toISOString(),
+          timestamp: opts.timestamp || new Date().toISOString(),
         },
-        { filename: "test.tar.gz" }
+        metadataOpts
       )
 
       return id
@@ -107,7 +126,7 @@ describe("backups", () => {
         opts.workspaceId = config.workspaceId
       }
 
-      let backupId = await backups.triggerAppBackup(
+      let backupId = await backups.triggerWorkspaceBackup(
         opts.workspaceId,
         BackupTrigger.MANUAL,
         { createdBy: USER_ID, name: "test" }
@@ -117,7 +136,7 @@ describe("backups", () => {
         await waitForQueue()
       }
 
-      return backups.getAppBackup(backupId!)
+      return backups.getWorkspaceBackup(backupId!)
     })
   }
 
@@ -134,44 +153,65 @@ describe("backups", () => {
       await waitForQueue()
 
       // create restore
-      const response = await backups.triggerAppRestore(
+      const response = await backups.triggerWorkspaceRestore(
         workspaceId,
         backup._id,
         "backup restore",
         USER_ID
       )
-      const restore = await backups.getAppBackup(response!.restoreId)
+      const restore = await backups.getWorkspaceBackup(response!.restoreId)
       expect(restore).toBeDefined()
       expect(restore.status).toEqual(BackupStatus.PENDING)
       // wait for processing
       await waitForQueue()
       // return processed result
-      return backups.getAppBackup(response!.restoreId)
+      return backups.getWorkspaceBackup(response!.restoreId)
     })
   }
 
   // Disable date mocking
   tk.reset()
 
-  const exportAppFn = jest.fn(),
-    importAppFn = jest.fn(),
+  const exportWorkspaceFn = jest.fn(),
+    importWorkspaceFn = jest.fn(),
     statsFn = jest.fn()
 
   beforeAll(async () => {
     mocks.licenses.useBackups()
     await backups.init({
       processing: {
-        exportAppFn,
-        importAppFn,
+        exportWorkspaceFn,
+        importWorkspaceFn,
         statsFn,
       },
     })
   })
 
   beforeEach(() => {
-    exportAppFn.mockReset().mockReturnValue("/path")
-    importAppFn.mockReset().mockImplementation()
+    const date = new Date()
+    date.setDate(date.getDate() - 30)
+    mockOldestRetentionDate = date.toISOString()
+    exportWorkspaceFn.mockReset().mockReturnValue("/path")
+    importWorkspaceFn.mockReset().mockImplementation()
     statsFn.mockReset().mockImplementation()
+    mockedObjectStore.listAllObjects
+      .mockReset()
+      .mockImplementation(() => (async function* () {})())
+    mockedObjectStore.getReadStream.mockReset().mockResolvedValue({
+      stream: Readable.from(""),
+    })
+    mockedObjectStore.streamUpload.mockReset().mockResolvedValue({
+      $metadata: {},
+      ContentLength: 0,
+    })
+    mockedObjectStore.deleteFiles.mockReset().mockResolvedValue({
+      $metadata: {},
+      Deleted: [],
+    })
+    mockedObjectStore.deleteFile.mockReset().mockResolvedValue({
+      $metadata: {},
+    })
+    mockedObjectStore.objectExists.mockReset().mockResolvedValue(false)
 
     mocks.licenses.useBackups()
     config.newTenant()
@@ -200,18 +240,226 @@ describe("backups", () => {
       expect(backup.status).toEqual(BackupStatus.COMPLETE)
       await waitForQueue()
       expect(backup._id).toBeDefined()
-      expect(exportAppFn).toHaveBeenCalledTimes(1)
+      expect(exportWorkspaceFn).toHaveBeenCalledTimes(1)
     })
   })
 
-  it("should trigger a restore", async () => {
+  it("should call importWorkspaceFn with dev workspace id, not temp workspace id", async () => {
     await config.doInTenant(async () => {
       const restore = await createRestore()
-      const processedRestore = await backups.getAppBackup(restore._id)
+      const processedRestore = await backups.getWorkspaceBackup(restore._id)
+      const [importWorkspaceId, importDb, _config, importOpts] =
+        importWorkspaceFn.mock.calls[0]
+      const devWorkspaceId = db.getDevWorkspaceID(config.workspaceId)
+      const tempAppId = importDb.name
 
       expect(processedRestore._id).toBeDefined()
-      expect(exportAppFn).toHaveBeenCalledTimes(2)
-      expect(importAppFn).toHaveBeenCalledTimes(1)
+      expect(exportWorkspaceFn).toHaveBeenCalledTimes(2)
+      expect(importWorkspaceFn).toHaveBeenCalledTimes(1)
+      expect(importWorkspaceId).toEqual(devWorkspaceId)
+      expect(importWorkspaceId).not.toEqual(tempAppId)
+      expect(importDb.name).toMatch(new RegExp(`^${devWorkspaceId}_temp_`))
+      expect(importOpts).toEqual(
+        expect.objectContaining({
+          objectStoreAppId: tempAppId,
+          preserveLiteLLMConfig: true,
+        })
+      )
+    })
+  })
+
+  it("should overwrite existing target object store files during restore", async () => {
+    await config.doInTenant(async () => {
+      const backup = await createBackup()
+      await waitForQueue()
+      mockedObjectStore.listAllObjects.mockImplementation((_bucket, prefix) =>
+        (async function* () {
+          if (prefix?.includes("_temp_")) {
+            yield { Key: `${prefix}attachments/shared.txt` }
+          }
+          if (prefix === `${config.workspaceId}/`) {
+            yield { Key: `${prefix}attachments/shared.txt` }
+          }
+        })()
+      )
+      mockedObjectStore.objectExists.mockImplementation(
+        async (_bucket, key) =>
+          key === `${config.workspaceId}/attachments/shared.txt`
+      )
+
+      const response = await backups.triggerWorkspaceRestore(
+        config.workspaceId,
+        backup._id,
+        "backup restore",
+        USER_ID
+      )
+      await waitForQueue()
+
+      const processedRestore = await backups.getWorkspaceBackup(
+        response!.restoreId
+      )
+      const targetUploads = mockedObjectStore.streamUpload.mock.calls.filter(
+        ([args]) =>
+          args.bucket === objectStore.ObjectStoreBuckets.APPS &&
+          args.filename === `${config.workspaceId}/attachments/shared.txt`
+      )
+      expect(processedRestore.status).toEqual(BackupStatus.COMPLETE)
+      expect(targetUploads).toHaveLength(1)
+    })
+  })
+
+  it("should roll back promoted object store files when restore cutover fails", async () => {
+    await config.doInTenant(async () => {
+      const backup = await createBackup()
+      await waitForQueue()
+      const replicateSpy = jest
+        .spyOn(db.Replication.prototype, "replicate")
+        .mockRejectedValueOnce(new Error("Replication failed"))
+
+      mockedObjectStore.listAllObjects.mockImplementation((_bucket, prefix) =>
+        (async function* () {
+          if (prefix?.includes("_temp_")) {
+            yield { Key: `${prefix}attachments/file.txt` }
+          }
+        })()
+      )
+      mockedObjectStore.objectExists.mockResolvedValue(false)
+
+      try {
+        const response = await backups.triggerWorkspaceRestore(
+          config.workspaceId,
+          backup._id,
+          "backup restore",
+          USER_ID
+        )
+        await waitForQueue()
+
+        const processedRestore = await backups.getWorkspaceBackup(
+          response!.restoreId
+        )
+        const targetUploads = mockedObjectStore.streamUpload.mock.calls.filter(
+          ([args]) =>
+            args.bucket === objectStore.ObjectStoreBuckets.APPS &&
+            args.filename === `${config.workspaceId}/attachments/file.txt`
+        )
+        const targetRollbackDeletes =
+          mockedObjectStore.deleteFiles.mock.calls.filter(
+            ([bucket, keys]) =>
+              bucket === objectStore.ObjectStoreBuckets.APPS &&
+              keys.includes(`${config.workspaceId}/attachments/file.txt`)
+          )
+        expect(processedRestore.status).toEqual(BackupStatus.FAILED)
+        expect(targetUploads).toHaveLength(1)
+        expect(targetRollbackDeletes).toHaveLength(1)
+      } finally {
+        replicateSpy.mockRestore()
+      }
+    })
+  })
+
+  it("should restore overwritten target files when restore cutover fails", async () => {
+    await config.doInTenant(async () => {
+      const backup = await createBackup()
+      await waitForQueue()
+      const replicateSpy = jest
+        .spyOn(db.Replication.prototype, "replicate")
+        .mockRejectedValueOnce(new Error("Replication failed"))
+
+      mockedObjectStore.listAllObjects.mockImplementation((_bucket, prefix) =>
+        (async function* () {
+          if (prefix?.includes("_temp_")) {
+            yield { Key: `${prefix}attachments/shared.txt` }
+          }
+          if (prefix === `${config.workspaceId}/`) {
+            yield { Key: `${prefix}attachments/shared.txt` }
+          }
+        })()
+      )
+      mockedObjectStore.objectExists.mockImplementation(
+        async (_bucket, key) =>
+          key === `${config.workspaceId}/attachments/shared.txt`
+      )
+
+      try {
+        const response = await backups.triggerWorkspaceRestore(
+          config.workspaceId,
+          backup._id,
+          "backup restore",
+          USER_ID
+        )
+        await waitForQueue()
+
+        const processedRestore = await backups.getWorkspaceBackup(
+          response!.restoreId
+        )
+        const targetUploads = mockedObjectStore.streamUpload.mock.calls.filter(
+          ([args]) =>
+            args.bucket === objectStore.ObjectStoreBuckets.APPS &&
+            args.filename === `${config.workspaceId}/attachments/shared.txt`
+        )
+        const targetRollbackDeletes =
+          mockedObjectStore.deleteFiles.mock.calls.filter(
+            ([bucket, keys]) =>
+              bucket === objectStore.ObjectStoreBuckets.APPS &&
+              keys.includes(`${config.workspaceId}/attachments/shared.txt`)
+          )
+        expect(processedRestore.status).toEqual(BackupStatus.FAILED)
+        expect(targetUploads).toHaveLength(2)
+        expect(targetRollbackDeletes).toHaveLength(0)
+      } finally {
+        replicateSpy.mockRestore()
+      }
+    })
+  })
+
+  it("should not cut over database when promotion fails", async () => {
+    await config.doInTenant(async () => {
+      const devWorkspaceId = db.getDevWorkspaceID(config.workspaceId)
+      const backup = await createBackup()
+      await waitForQueue()
+      await db.getDB(devWorkspaceId).put({
+        _id: "post-backup-marker",
+        type: "app",
+      })
+      const replicateSpy = jest.spyOn(db.Replication.prototype, "replicate")
+
+      mockedObjectStore.listAllObjects.mockImplementation((_bucket, prefix) =>
+        (async function* () {
+          if (prefix?.includes("_temp_")) {
+            yield { Key: `${prefix}attachments/file.txt` }
+          }
+        })()
+      )
+      mockedObjectStore.streamUpload.mockImplementation(async args => {
+        if (args.bucket === objectStore.ObjectStoreBuckets.APPS) {
+          throw new Error("Promotion upload failed")
+        }
+        return {
+          $metadata: {},
+          ContentLength: 0,
+        }
+      })
+
+      try {
+        const response = await backups.triggerWorkspaceRestore(
+          config.workspaceId,
+          backup._id,
+          "backup restore",
+          USER_ID
+        )
+        await waitForQueue()
+        const processedRestore = await backups.getWorkspaceBackup(
+          response!.restoreId
+        )
+
+        expect(processedRestore.status).toEqual(BackupStatus.FAILED)
+        expect(replicateSpy).not.toHaveBeenCalled()
+        expect(
+          await db.getDB(devWorkspaceId).get("post-backup-marker")
+        ).toEqual(expect.objectContaining({ _id: "post-backup-marker" }))
+      } finally {
+        replicateSpy.mockRestore()
+      }
     })
   })
 
@@ -226,9 +474,9 @@ describe("backups", () => {
       const backup = await createBackup()
       await waitForQueue()
 
-      importAppFn.mockRejectedValue(new Error("Import failed"))
+      importWorkspaceFn.mockRejectedValue(new Error("Import failed"))
       // Trigger restore which should fail
-      const response = await backups.triggerAppRestore(
+      const response = await backups.triggerWorkspaceRestore(
         config.workspaceId,
         backup._id,
         "backup restore",
@@ -237,9 +485,11 @@ describe("backups", () => {
       await waitForQueue()
 
       // Verify restore failed
-      const processedRestore = await backups.getAppBackup(response!.restoreId)
+      const processedRestore = await backups.getWorkspaceBackup(
+        response!.restoreId
+      )
       expect(processedRestore.status).toEqual(BackupStatus.FAILED)
-      expect(importAppFn).toHaveBeenCalledTimes(1)
+      expect(importWorkspaceFn).toHaveBeenCalledTimes(1)
 
       // Verify dev workspace database is not deleted
       expect(await db.getDB(devWorkspaceId).allDocs({})).toEqual({
@@ -279,7 +529,7 @@ describe("backups", () => {
     await config.doInTenant(async () => {
       const id = await storeBackup()
       expect(id).toBeDefined()
-      const metadata = await backups.getAppBackup(id)
+      const metadata = await backups.getWorkspaceBackup(id)
       expect(metadata.filename).toEqual("test.tar.gz")
     })
   })
@@ -287,10 +537,10 @@ describe("backups", () => {
   it("should be able to update backup status", async () => {
     await config.doInTenant(async () => {
       const backup = await createBackup()
-      const before = await backups.getAppBackup(backup._id)
+      const before = await backups.getWorkspaceBackup(backup._id)
       // @ts-ignore
       await backups.updateBackupStatus(before._id, BackupStatus.FAILED)
-      const metadata = await backups.getAppBackup(backup._id)
+      const metadata = await backups.getWorkspaceBackup(backup._id)
       expect(metadata.status).toEqual(BackupStatus.FAILED)
     })
   })
@@ -303,7 +553,7 @@ describe("backups", () => {
         restore._rev!,
         BackupStatus.FAILED
       )
-      const updated = await backups.getAppBackup(restore._id)
+      const updated = await backups.getWorkspaceBackup(restore._id)
       expect(updated.status).toEqual(BackupStatus.FAILED)
     })
   })
@@ -312,7 +562,7 @@ describe("backups", () => {
     await config.doInTenant(async () => {
       let backup = await createBackup()
       expect(backup).toBeDefined()
-      backup = await backups.getAppBackup(backup._id)
+      backup = await backups.getWorkspaceBackup(backup._id)
       expect(backup.status).toEqual(BackupStatus.COMPLETE)
       expect(backup.name).toEqual("test")
     })
@@ -321,8 +571,8 @@ describe("backups", () => {
   it("should be able to update an workspace backup", async () => {
     await config.doInTenant(async () => {
       const backup = await createBackup()
-      await backups.updateAppBackup(backup._id, "new name")
-      const updated = await backups.getAppBackup(backup._id)
+      await backups.updateWorkspaceBackup(backup._id, "new name")
+      const updated = await backups.getWorkspaceBackup(backup._id)
       expect(updated.name).toEqual("new name")
     })
   })
@@ -330,16 +580,230 @@ describe("backups", () => {
   it("should be able to delete a backup", async () => {
     await config.doInTenant(async () => {
       const backup = await createBackup()
-      await backups.deleteAppBackup(backup._id)
+      await backups.deleteWorkspaceBackup(backup._id)
       let cantFind = false
       try {
-        await backups.getAppBackup(backup._id)
+        await backups.getWorkspaceBackup(backup._id)
       } catch (err: any) {
         if (err.status === 404) {
           cantFind = true
         }
       }
       expect(cantFind).toEqual(true)
+    })
+  })
+
+  describe("expired backup cleanup", () => {
+    function expiredTimestamp() {
+      const date = new Date()
+      date.setDate(date.getDate() - 31)
+      return date.toISOString()
+    }
+
+    function noExpiryRetention() {
+      mockOldestRetentionDate = new Date(0).toISOString()
+    }
+
+    it("deletes expired completed backup files and metadata", async () => {
+      await config.doInTenant(async () => {
+        const backupId = await storeBackup({
+          status: BackupStatus.COMPLETE,
+          timestamp: expiredTimestamp(),
+          filename: "expired.tar.gz",
+        })
+        const getSpy = jest.spyOn(context.getGlobalDB(), "get")
+
+        const result = await backups.cleanupExpiredWorkspaceBackups()
+        const getCallCount = getSpy.mock.calls.length
+        getSpy.mockRestore()
+
+        expect(result).toEqual({ deleted: 1, failed: 0 })
+        expect(getCallCount).toEqual(0)
+        expect(mockedObjectStore.deleteFile).toHaveBeenCalledWith(
+          objectStore.ObjectStoreBuckets.BACKUPS,
+          "expired.tar.gz"
+        )
+        await expect(
+          backups.getWorkspaceBackup(backupId)
+        ).rejects.toMatchObject({ status: 404 })
+      })
+    })
+
+    it("drains bounded batches past a deletion failure", async () => {
+      await config.doInTenant(async () => {
+        const expiredDate = new Date(expiredTimestamp())
+        const backupIds = await Promise.all(
+          Array.from({ length: 101 }, (_, i) =>
+            storeBackup({
+              status: BackupStatus.COMPLETE,
+              timestamp: new Date(expiredDate.getTime() + i).toISOString(),
+              filename: i === 99 ? "failed.tar.gz" : `backup-${i}.tar.gz`,
+            })
+          )
+        )
+        mockedObjectStore.deleteFile.mockImplementation(
+          async (_bucket, filename) => {
+            if (filename === "failed.tar.gz") {
+              throw new Error("delete failed")
+            }
+            return { $metadata: {} }
+          }
+        )
+        const queryViewMock = jest.mocked(db.queryViewRaw)
+        queryViewMock.mockClear()
+
+        const result = await backups.cleanupExpiredWorkspaceBackups()
+        const queryLimits = queryViewMock.mock.calls.map(call => call[1]?.limit)
+
+        expect(result).toEqual({ deleted: 100, failed: 1 })
+        expect(queryLimits).toEqual([100, 101])
+        expect(mockedObjectStore.deleteFile).toHaveBeenCalledTimes(101)
+        expect((await backups.getWorkspaceBackup(backupIds[99]))._id).toEqual(
+          backupIds[99]
+        )
+        await expect(
+          backups.getWorkspaceBackup(backupIds[100])
+        ).rejects.toMatchObject({ status: 404 })
+      })
+    })
+
+    it("retains backups exactly at the retention cutoff", async () => {
+      await config.doInTenant(async () => {
+        const backupId = await storeBackup({
+          status: BackupStatus.COMPLETE,
+          timestamp: mockOldestRetentionDate,
+        })
+
+        const result = await backups.cleanupExpiredWorkspaceBackups()
+
+        expect(result).toEqual({ deleted: 0, failed: 0 })
+        expect((await backups.getWorkspaceBackup(backupId))._id).toEqual(
+          backupId
+        )
+      })
+    })
+
+    it("retains backups inside the retention window", async () => {
+      await config.doInTenant(async () => {
+        const backupId = await storeBackup({
+          status: BackupStatus.COMPLETE,
+        })
+
+        const result = await backups.cleanupExpiredWorkspaceBackups()
+        const backup = await backups.getWorkspaceBackup(backupId)
+
+        expect(result).toEqual({ deleted: 0, failed: 0 })
+        expect(backup._id).toEqual(backupId)
+        expect(mockedObjectStore.deleteFile).not.toHaveBeenCalled()
+      })
+    })
+
+    it("retains restore records even when older than retention", async () => {
+      await config.doInTenant(async () => {
+        const restoreId = await storeBackup({
+          type: BackupType.RESTORE,
+          status: BackupStatus.COMPLETE,
+          timestamp: expiredTimestamp(),
+        })
+
+        const result = await backups.cleanupExpiredWorkspaceBackups()
+        const restore = await backups.getWorkspaceBackup(restoreId)
+
+        expect(result).toEqual({ deleted: 0, failed: 0 })
+        expect(restore._id).toEqual(restoreId)
+        expect(mockedObjectStore.deleteFile).not.toHaveBeenCalled()
+      })
+    })
+
+    it("deletes expired backup metadata without a file", async () => {
+      await config.doInTenant(async () => {
+        const backupId = await storeBackup({
+          status: BackupStatus.COMPLETE,
+          timestamp: expiredTimestamp(),
+          filename: null,
+        })
+
+        const result = await backups.cleanupExpiredWorkspaceBackups()
+
+        expect(result).toEqual({ deleted: 1, failed: 0 })
+        expect(mockedObjectStore.deleteFile).not.toHaveBeenCalled()
+        await expect(
+          backups.getWorkspaceBackup(backupId)
+        ).rejects.toMatchObject({ status: 404 })
+      })
+    })
+
+    it("leaves metadata for retry when object deletion fails", async () => {
+      await config.doInTenant(async () => {
+        const failedBackupId = await storeBackup({
+          status: BackupStatus.COMPLETE,
+          timestamp: expiredTimestamp(),
+          filename: "failed.tar.gz",
+        })
+        const deletedBackupId = await storeBackup({
+          status: BackupStatus.COMPLETE,
+          timestamp: expiredTimestamp(),
+          filename: "deleted.tar.gz",
+        })
+        mockedObjectStore.deleteFile.mockImplementation(
+          async (_bucket, filename) => {
+            if (filename === "failed.tar.gz") {
+              throw new Error("delete failed")
+            }
+            return { $metadata: {} }
+          }
+        )
+
+        const result = await backups.cleanupExpiredWorkspaceBackups()
+        const failedBackup = await backups.getWorkspaceBackup(failedBackupId)
+
+        expect(result).toEqual({ deleted: 1, failed: 1 })
+        expect(failedBackup._id).toEqual(failedBackupId)
+        await expect(
+          backups.getWorkspaceBackup(deletedBackupId)
+        ).rejects.toMatchObject({ status: 404 })
+      })
+    })
+
+    it("does not delete anything when retention has no expiry", async () => {
+      await config.doInTenant(async () => {
+        noExpiryRetention()
+        const backupId = await storeBackup({
+          status: BackupStatus.COMPLETE,
+          timestamp: expiredTimestamp(),
+        })
+
+        const result = await backups.cleanupExpiredWorkspaceBackups()
+        const backup = await backups.getWorkspaceBackup(backupId)
+
+        expect(result).toEqual({ deleted: 0, failed: 0 })
+        expect(backup._id).toEqual(backupId)
+        expect(mockedObjectStore.deleteFile).not.toHaveBeenCalled()
+      })
+    })
+
+    it("processes cleanup queue jobs", async () => {
+      await config.doInTenant(async () => {
+        const backupId = await storeBackup({
+          status: BackupStatus.COMPLETE,
+          timestamp: expiredTimestamp(),
+          filename: "queued.tar.gz",
+        })
+
+        const job = await backups.getBackupQueue().add({
+          cleanup: true,
+          tenantId: config.getTenantId(),
+        })
+        await job.finished()
+
+        expect(mockedObjectStore.deleteFile).toHaveBeenCalledWith(
+          objectStore.ObjectStoreBuckets.BACKUPS,
+          "queued.tar.gz"
+        )
+        await expect(
+          backups.getWorkspaceBackup(backupId)
+        ).rejects.toMatchObject({ status: 404 })
+      })
     })
   })
 
@@ -356,7 +820,7 @@ describe("backups", () => {
     it("should be able to fetch a list of backups when empty", async () => {
       await config.doInTenant(async () => {
         const workspaceId = "app_searchEmpty"
-        const response = await backups.fetchAppBackups(workspaceId, {
+        const response = await backups.fetchWorkspaceBackups(workspaceId, {
           startDate,
           endDate,
         })
@@ -386,7 +850,7 @@ describe("backups", () => {
           type: BackupType.RESTORE,
         })
 
-        const response = await backups.fetchAppBackups(workspaceId, {
+        const response = await backups.fetchWorkspaceBackups(workspaceId, {
           startDate,
           endDate,
           trigger: BackupTrigger.MANUAL,
@@ -409,10 +873,10 @@ describe("backups", () => {
           limit: 8,
           paginate: true,
         }
-        const resp1 = await backups.fetchAppBackups(workspaceId, opts)
+        const resp1 = await backups.fetchWorkspaceBackups(workspaceId, opts)
         expect(resp1.data.length).toEqual(8)
         expect(resp1.hasNextPage).toEqual(true)
-        const resp2 = await backups.fetchAppBackups(workspaceId, {
+        const resp2 = await backups.fetchWorkspaceBackups(workspaceId, {
           ...opts,
           page: resp1.nextPage,
         })

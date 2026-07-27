@@ -13,6 +13,7 @@ import {
   type SelfResponse,
   type TestAutomationResponse,
   type UISearchFilter,
+  type RestTemplateId,
   AutomationActionStepId,
   AutomationCustomIOType,
   AutomationIOType,
@@ -20,12 +21,11 @@ import {
   AutomationTriggerStepId,
   UIAutomation,
   Branch,
-  LayoutDirection,
   LoopV2Step,
   AutomationTestProgressEvent,
   InProgressTestState,
 } from "@budibase/types"
-import { SvelteComponent } from "svelte"
+import type { Component, SvelteComponent } from "svelte"
 
 export enum DataMode {
   INPUT = "data_in",
@@ -146,7 +146,12 @@ export type BranchPathEntry = Partial<BlockPath> & {
   stepIdx?: number
 }
 
-export type FlowBlockPath = Array<BlockPath | BranchPathEntry>
+export type LoopPathEntry = Partial<BlockPath> & {
+  loopStepId: string
+  stepIdx: number
+}
+
+export type FlowBlockPath = Array<BlockPath | BranchPathEntry | LoopPathEntry>
 
 export interface BranchFlowContext {
   branchNode: true
@@ -155,7 +160,24 @@ export interface BranchFlowContext {
   branchStepId: string
 }
 
-export type FlowBlockContext = AutomationBlockContext | BranchFlowContext
+export type LoopFlowContext = AutomationBlockContext & {
+  insertIntoLoopV2: true
+  loopStepId: string
+  loopChildInsertIndex?: number
+  branchStepId?: string
+  branchIdx?: number
+}
+
+export interface SelectedBranchNode {
+  nodeId: string
+  stepId: string
+  branchIdx: number
+}
+
+export type FlowBlockContext =
+  | AutomationBlockContext
+  | BranchFlowContext
+  | LoopFlowContext
 
 export type AutomationBlockRef = BlockRef & {
   stepId?: string
@@ -172,7 +194,7 @@ export type AutomationBlockRefMap = Record<string, AutomationBlockRef>
  * forms
  */
 export interface SchemaConfigProps {
-  comp: typeof SvelteComponent<any>
+  comp: typeof SvelteComponent<any> | Component<any>
   onChange?: (e: CustomEvent) => void
   props?: (opts?: FieldProps) => Record<string, unknown>
   fullWidth?: boolean
@@ -191,8 +213,15 @@ export interface AutomationStoreState<T extends Automation = Automation> {
   selectedAutomationId: string | null
   appSelf?: SelfResponse
   selectedNodeId?: string
+  selectedBranchNode?: SelectedBranchNode
   selectedNodeMode?: DataMode
-  actionPanelBlock?: BlockRef
+  actionPanelBlock?: BlockRef | FlowBlockContext
+  /** Toolbar + opened the step picker (append at flow tail). */
+  actionPanelToolbarFlowEnd?: boolean
+  pendingApiRequestTemplate?: {
+    blockId: string
+    templateId: RestTemplateId
+  }
   selectedLog?: AutomationLog
   selectedLogStepData?: any
   showLogsPanel?: boolean
@@ -247,6 +276,7 @@ export enum FlowStatusType {
   WARN = "warn",
   ERROR = "error",
   SUCCESS = "success",
+  SKIPPED = "skipped",
 }
 
 /**
@@ -291,9 +321,14 @@ export type BlockStatus = {
 /**
  * SvelteFlow Node Data Types
  */
+export interface FlowNodeLayout {
+  width: number
+  height: number
+}
+
 export interface StepNodeData {
   block: AutomationBlock
-  direction?: LayoutDirection
+  layout: FlowNodeLayout
   [key: string]: unknown
 }
 
@@ -301,7 +336,7 @@ export interface BranchNodeData {
   block: AutomationBlock
   branch: Branch
   branchIdx: number
-  direction?: LayoutDirection
+  layout: FlowNodeLayout
   isSubflow?: boolean
   laneWidth?: number
   [key: string]: unknown
@@ -309,14 +344,30 @@ export interface BranchNodeData {
 
 export interface LoopV2NodeData {
   block: LoopV2Step
-  direction?: LayoutDirection
   containerHeight: number
   containerWidth: number
+  handleY: number
+  layout: FlowNodeLayout
   [key: string]: unknown
 }
 
 export interface AnchorNodeData {
-  direction?: LayoutDirection
+  layout: FlowNodeLayout
+  [key: string]: unknown
+}
+
+export interface StickyNote {
+  id: string
+  title: string
+  text: string
+  x: number
+  y: number
+  width?: number
+  height?: number
+}
+
+export interface StickyNoteNodeData {
+  note: StickyNote
   [key: string]: unknown
 }
 
@@ -325,7 +376,6 @@ export interface AnchorNodeData {
  */
 export interface BaseEdgeData {
   block: FlowBlockContext
-  direction?: LayoutDirection
   pathTo?: FlowBlockPath
   isSubflowEdge?: boolean
   [key: string]: unknown
@@ -346,6 +396,8 @@ export interface LoopEdgeData extends BaseEdgeData {
   insertIntoLoopV2?: boolean
   loopStepId: string
   loopChildInsertIndex: number
+  branchStepId?: string
+  branchIdx?: number
 }
 
 export type EdgeData = BaseEdgeData | BranchEdgeData | LoopEdgeData

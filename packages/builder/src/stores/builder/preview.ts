@@ -86,6 +86,7 @@ export class PreviewStore extends BudiStore<PreviewState> {
     this.update(state => ({
       ...state,
       showPreview: isVisible,
+      modalDevice: isVisible ? state.modalDevice : null,
     }))
   }
 

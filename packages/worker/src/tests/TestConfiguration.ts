@@ -255,7 +255,9 @@ class TestConfiguration {
       sessionId: "sessionid",
       tenantId: user.tenantId,
     }
-    const authCookie = jwt.sign(authToken, coreEnv.JWT_SECRET as Secret)
+    const authCookie = jwt.sign(authToken, coreEnv.JWT_SECRET as Secret, {
+      expiresIn: utils.getSessionExpirySeconds(),
+    })
     const headers: Record<string, string> = {
       Accept: "application/json",
       ...this.cookieHeader([`${constants.Cookie.Auth}=${authCookie}`]),

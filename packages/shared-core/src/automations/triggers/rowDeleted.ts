@@ -8,7 +8,7 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationTriggerDefinition = {
-  name: "Row Deleted",
+  name: "Row deleted",
   event: AutomationEventType.ROW_DELETE,
   icon: "trash-simple",
   tagline: "Row is deleted from {{inputs.enriched.table.name}}",

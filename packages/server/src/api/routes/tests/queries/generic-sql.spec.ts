@@ -841,6 +841,42 @@ if (descriptions.length) {
             ])
           })
 
+          it("should preserve multiline parameter values exactly", async () => {
+            const query = await createQuery({
+              fields: {
+                sql: client(tableName)
+                  .update({ name: client.raw("{{ name }}") })
+                  .where({ id: client.raw("{{ id }}") })
+                  .toString(),
+              },
+              parameters: [
+                {
+                  name: "id",
+                  default: "",
+                },
+                {
+                  name: "name",
+                  default: "",
+                },
+              ],
+              queryVerb: "update",
+            })
+
+            const multilineValue = "line 1\r\nline 2\nline 3"
+
+            await config.api.query.execute(query._id!, {
+              parameters: {
+                id: "1",
+                name: multilineValue,
+              },
+            })
+
+            const rows = await client(tableName).where({ id: 1 }).select()
+            expect(rows).toEqual([
+              { id: 1, name: multilineValue, birthday: null, number: null },
+            ])
+          })
+
           it("should be able to execute an update that updates no rows", async () => {
             const query = await createQuery({
               fields: {

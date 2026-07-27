@@ -1,7 +1,7 @@
-<script>
+<script lang="ts">
   import "@spectrum-css/label/dist/index-vars.css"
 
-  export let size = "M"
+  export let size: "S" | "M" | "L" = "M"
   export let grey = false
   export let red = false
   export let orange = false
@@ -11,7 +11,17 @@
   export let active = false
   export let inactive = false
   export let hoverable = false
-  export let outlineColor = null
+  export let outlineColor: string | null = null
+  export let backgroundColor: string | null = null
+  export let textColor: string | null = null
+
+  $: customStyles = [
+    outlineColor ? `border: 2px solid ${outlineColor}` : "",
+    backgroundColor ? `background-color: ${backgroundColor}` : "",
+    textColor ? `color: ${textColor}` : "",
+  ]
+    .filter(Boolean)
+    .join("; ")
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -30,7 +40,7 @@
   class:spectrum-Label--seafoam={seafoam}
   class:spectrum-Label--active={active}
   class:spectrum-Label--inactive={inactive}
-  style={outlineColor ? `border: 2px solid ${outlineColor}` : ""}
+  style={customStyles}
 >
   <slot />
 </span>

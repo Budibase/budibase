@@ -274,6 +274,10 @@ export class InMemoryQueue<T = any> implements Partial<Queue<T>> {
     return null
   }
 
+  async getJobs() {
+    return this._messages as Job[]
+  }
+
   manualTrigger(id: JobId) {
     for (const message of this._messages) {
       if (message.id === id) {

@@ -108,6 +108,9 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Sets the affinity for all pods created by this chart. Should not ordinarily need to be changed.  See <https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes-using-node-affinity/> for more information on affinity. |
+| awsAlbIngress.accessLogs.bucket | string | `""` |  |
+| awsAlbIngress.accessLogs.enabled | bool | `false` | ALB access logging to S3. The bucket must already exist in the same region as the ALB, with a bucket policy allowing the regional ELB log-delivery principal to write to it. |
+| awsAlbIngress.accessLogs.prefix | string | `""` | Object key prefix within the bucket (logs land under <prefix>/AWSLogs/...). |
 | awsAlbIngress.certificateArn | string | `""` | If you're wanting to use HTTPS, you'll need to create an ACM certificate and specify the ARN here. |
 | awsAlbIngress.enabled | bool | `false` | Whether to create an ALB Ingress resource pointing to the Budibase proxy. Requires the AWS ALB Ingress Controller. |
 | couchdb.clusterSize | int | `1` | The number of replicas to run in the CouchDB cluster. We set this to 1 by default to make things simpler, but you can set it to 3 if you need a high-availability CouchDB cluster. |
@@ -216,6 +219,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.proxy.livenessProbe | object | HTTP health checks. | Liveness probe configuration for proxy pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
 | services.proxy.readinessProbe | object | HTTP health checks. | Readiness probe configuration for proxy pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
 | services.proxy.replicaCount | int | `1` | The number of proxy replicas to run. |
+| services.proxy.resolver | string | `""` | The DNS resolver the nginx proxy uses to resolve upstreams at request time. MUST be an IP address (nginx resolves this once at config-load and exits fatally if it is an unresolvable DNS name). Leave empty to auto-detect the kube-dns ClusterIP at install/upgrade time; only set this if auto-detection cannot run (e.g. restricted RBAC for `lookup`). |
 | services.proxy.resources | object | `{}` | The resources to use for proxy pods. See <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/> for more information on how to set these. |
 | services.proxy.startupProbe | object | HTTP health checks. | Startup probe configuration for proxy pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
 | services.redis.enabled | bool | `true` | Whether or not to deploy a Redis pod into your cluster. |

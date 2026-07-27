@@ -14,8 +14,9 @@ import {
   routeStore,
   notificationStore,
 } from "@/stores"
-import { mount } from "svelte"
+import { mount, unmount } from "svelte"
 import { get } from "svelte/store"
+import { push } from "svelte-spa-router"
 import { initWebsocket } from "@/websocket"
 import {
   Screen,
@@ -34,6 +35,7 @@ import { ActionTypes } from "@/constants"
 import { APIClient } from "@budibase/frontend-core"
 import BlockComponent from "./components/BlockComponent.svelte"
 import Block from "./components/Block.svelte"
+import { API } from "./api"
 
 // Expose Svelte modules globally for plugin compatibility
 import "@/svelteGlobals"
@@ -60,6 +62,7 @@ declare global {
     "##BUDIBASE_PREVIEW_DEVICE##"?: PreviewDevice
     "##BUDIBASE_PREVIEW_MODAL_DEVICE##"?: PreviewDevice
     "##BUDIBASE_APP_EMBEDDED##"?: string // This is a bool wrapped in a string
+    "##BUDIBASE_EMBED_LOCATION##"?: string
     "##BUDIBASE_PREVIEW_NAVIGATION##"?: AppNavigation
     "##BUDIBASE_HIDDEN_COMPONENT_IDS##"?: string[]
     "##BUDIBASE_USED_PLUGINS##"?: Plugin[]
@@ -101,9 +104,103 @@ export interface SDK {
   BlockComponent: typeof BlockComponent
 }
 
-let app: Record<string, unknown> | undefined
+let app: Parameters<typeof unmount>[0] | undefined
 
-const loadBudibase = async () => {
+export interface MountBudibaseAppOptions {
+  target: HTMLElement
+  appUrl: string
+  appId?: string
+  initialPath?: string
+  onNavigate?: (path: string) => void
+}
+
+export type BudibaseMountHandle = (() => void) & {
+  navigate: (path: string) => ReturnType<typeof navigateToPath>
+  getCurrentPath: () => string
+}
+
+interface LoadBudibaseOptions {
+  target?: HTMLElement
+}
+
+const getPathname = (pathOrUrl: string) => {
+  if (!pathOrUrl) {
+    return ""
+  }
+  if (pathOrUrl.startsWith("/")) {
+    return pathOrUrl.split("#")[0].split("?")[0]
+  }
+  try {
+    return new URL(pathOrUrl, window.location.origin).pathname
+  } catch (error) {
+    return pathOrUrl
+  }
+}
+
+const getHash = (pathOrUrl: string) => {
+  if (!pathOrUrl) {
+    return ""
+  }
+  if (pathOrUrl.startsWith("/")) {
+    const [, hash = ""] = pathOrUrl.split("#")
+    return hash ? `#${hash}` : ""
+  }
+  try {
+    return new URL(pathOrUrl, window.location.origin).hash
+  } catch (error) {
+    return ""
+  }
+}
+
+const normalizeAppPath = (pathOrUrl: string) => {
+  const pathname = getPathname(pathOrUrl).replace(/\/$/, "")
+  if (!pathname) {
+    return ""
+  }
+  if (pathname.startsWith("/app/") || pathname.startsWith("/app-chat/")) {
+    return pathname
+  }
+  return pathname.startsWith("/") ? `/app${pathname}` : `/app/${pathname}`
+}
+
+const resolveAppIdFromPath = async (appPath: string) => {
+  const publishedApps = await API.getPublishedApps()
+  const pathToMatch = appPath.replace(/\/$/, "")
+  const matched = publishedApps.find(app => {
+    return [`/app${app.url}`, `/app-chat${app.url}`].includes(pathToMatch)
+  })
+  if (!matched?.prodId) {
+    throw new Error(`Could not resolve Budibase app for path: ${appPath}`)
+  }
+  return matched.prodId
+}
+
+const normalizeRoutePath = (path: string) => {
+  if (!path) {
+    return "/"
+  }
+  const [pathname = "/", query = ""] = path.split("?")
+  const normalizedPathname = pathname.startsWith("/")
+    ? pathname
+    : `/${pathname}`
+  if (!query) {
+    return normalizedPathname
+  }
+  return `${normalizedPathname}?${query}`
+}
+
+const getCurrentPath = () => {
+  const hash = window.location.hash || ""
+  const route = hash.startsWith("#") ? hash.slice(1) : hash
+  return normalizeRoutePath(route || "/")
+}
+
+const navigateToPath = (path: string) => {
+  return push(normalizeRoutePath(path))
+}
+
+const loadBudibase = async (options: LoadBudibaseOptions = {}) => {
+  const target = options.target || window.document.body
   // Update builder store with any builder flags
   builderStore.set({
     ...get(builderStore),
@@ -134,7 +231,7 @@ const loadBudibase = async () => {
   if (window.MIGRATING_APP) {
     if (!app) {
       app = mount(UpdatingApp, {
-        target: window.document.body,
+        target,
       })
     }
     return
@@ -207,10 +304,79 @@ const loadBudibase = async () => {
   // Create app if one hasn't been created yet
   if (!app) {
     app = mount(ClientApp, {
-      target: window.document.body,
+      target,
     })
   }
 }
 
 // Attach to window so the HTML template can call this when it loads
 window.loadBudibase = loadBudibase
+
+export const mountBudibaseApp = async ({
+  target,
+  appUrl,
+  appId,
+  initialPath,
+  onNavigate,
+}: MountBudibaseAppOptions) => {
+  if (!target || !(target instanceof HTMLElement)) {
+    throw new Error("mountBudibaseApp requires a target HTMLElement")
+  }
+
+  const appPath = normalizeAppPath(appUrl)
+  const appHash = getHash(appUrl)
+  if (!appPath) {
+    throw new Error("mountBudibaseApp requires a valid appUrl")
+  }
+
+  const resolvedAppId = appId || (await resolveAppIdFromPath(appPath))
+
+  window["##BUDIBASE_APP_ID##"] = resolvedAppId
+  window["##BUDIBASE_EMBED_LOCATION##"] = appPath
+
+  const resolvedInitialPath = initialPath
+    ? normalizeRoutePath(initialPath)
+    : appHash
+      ? normalizeRoutePath(appHash.replace(/^#/, ""))
+      : undefined
+
+  if (resolvedInitialPath && getCurrentPath() !== resolvedInitialPath) {
+    await navigateToPath(resolvedInitialPath)
+  }
+
+  if (app) {
+    throw new Error(
+      "Budibase is already mounted. Unmount the existing instance before mounting again."
+    )
+  }
+  await loadBudibase({
+    target,
+  })
+
+  const notifyNavigation = onNavigate
+    ? () => onNavigate(getCurrentPath())
+    : undefined
+  if (notifyNavigation) {
+    window.addEventListener("hashchange", notifyNavigation)
+    notifyNavigation()
+  }
+
+  const handle = (() => {
+    if (notifyNavigation) {
+      window.removeEventListener("hashchange", notifyNavigation)
+    }
+    if (app) {
+      unmount(app)
+      app = undefined
+    }
+  }) as BudibaseMountHandle
+
+  handle.navigate = path => {
+    return navigateToPath(path)
+  }
+  handle.getCurrentPath = () => {
+    return getCurrentPath()
+  }
+
+  return handle
+}

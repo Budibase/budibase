@@ -12,6 +12,8 @@ import {
   tenancy,
   logging,
 } from "@budibase/backend-core"
+import Module from "module"
+import ivm from "isolated-vm"
 import { loadJSFile } from "../../utilities/fileSystem"
 import * as quotas from "../quotas"
 
@@ -42,13 +44,14 @@ export async function storePlugin(
   // validate the JS for a datasource
   if (metadata.schema.type === PluginType.DATASOURCE) {
     const js = loadJSFile(directory, jsFile.name)
+    const isolate = new ivm.Isolate({ memoryLimit: 8 })
     try {
-      // down the line we might need a better way to confirm JS file
-      // BUDI-7116 -> indirect eval call appears to cause issues importing plugins
-      eval(js)
+      isolate.compileScriptSync(Module.wrap(js), { filename: jsFile.name })
     } catch (err: any) {
       const message = err?.message ? err.message : JSON.stringify(err)
       throw new Error(`JS invalid: ${message}`)
+    } finally {
+      isolate.dispose()
     }
   }
   const iconFileName = iconFile ? iconFile.name : null

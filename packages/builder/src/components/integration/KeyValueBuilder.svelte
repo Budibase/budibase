@@ -40,15 +40,24 @@
   export let compare = (option: O, value: O) => option === value
   export let context: any = null
   export let lockedKeys: string[] = []
+  export let drawerForceModal: boolean = false
+  export let drawerZIndex: number | undefined = undefined
+
+  export function addEntry() {
+    fields = [...fields, { name: "", value: "" }]
+    fieldActivity = [...fieldActivity, true]
+    changed()
+  }
+
+  const isLocked = (name?: string) => (name ? lockedKeySet.has(name) : false)
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
     value,
   }))
   let fieldActivity = buildFieldActivity(activity)
-  $: lockedKeySet = new Set((lockedKeys || []).filter(Boolean))
-  const isLocked = (name?: string) => (name ? lockedKeySet.has(name) : false)
 
+  $: lockedKeySet = new Set((lockedKeys || []).filter(Boolean))
   $: fullObject = fields.reduce<Record<string, unknown>>((acc, next) => {
     acc[next.name] = next.value
     return acc
@@ -79,12 +88,6 @@
     return array
   }
 
-  export function addEntry() {
-    fields = [...fields, { name: "", value: "" }]
-    fieldActivity = [...fieldActivity, true]
-    changed()
-  }
-
   function deleteEntry(idx: number) {
     fields.splice(idx, 1)
     fieldActivity.splice(idx, 1)
@@ -102,7 +105,7 @@
       }
     }
     activity = newActivity
-    dispatch("change", fields)
+    dispatch("change", { fields, activity: newActivity })
   }
 
   function isJsonArray(value: any) {
@@ -148,6 +151,8 @@
           {allowJS}
           {allowHelpers}
           {context}
+          {drawerForceModal}
+          {drawerZIndex}
         />
       {:else}
         <Input
@@ -178,12 +183,14 @@
           {allowJS}
           {allowHelpers}
           {context}
+          {drawerForceModal}
+          {drawerZIndex}
         />
       {:else}
         <Input
           placeholder={valuePlaceholder}
           readonly={readOnly}
-          bind:value={field.value}
+          bind:value={field.value as any}
           on:blur={changed}
         />
       {/if}

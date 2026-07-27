@@ -1,8 +1,8 @@
 import TestConfiguration from "../TestConfiguration"
 import { AIAPI } from "./ai"
 import { AgentAPI } from "./ai/agent"
-import { AgentFilesAPI } from "./ai/agentFiles"
-import { VectorDbAPI } from "./ai/vectorDb"
+import { KnowledgeBaseAPI } from "./ai/knowledgeBase"
+import { KnowledgeBaseFilesAPI } from "./ai/knowledgeBaseFiles"
 import { AssetsAPI } from "./assets"
 import { AttachmentAPI } from "./attachment"
 import { AutomationAPI } from "./automation"
@@ -15,6 +15,7 @@ import { MiscAPI } from "./misc"
 import { NavigationAPI } from "./navigation"
 import { OAuth2API } from "./oauth2"
 import { PermissionAPI } from "./permission"
+import { ProjectAPI } from "./project"
 import { PluginAPI } from "./plugin"
 import { RowPublicAPI } from "./public/row"
 import { UserPublicAPI } from "./public/user"
@@ -48,6 +49,7 @@ export default class API {
   misc: MiscAPI
   oauth2: OAuth2API
   permission: PermissionAPI
+  project: ProjectAPI
   plugin: PluginAPI
   query: QueryAPI
   roles: RoleAPI
@@ -67,8 +69,8 @@ export default class API {
   routing: RoutingAPI
   workspaceFavourites: WorkspaceFavouriteAPI
   agent: AgentAPI
-  vectorDb: VectorDbAPI
-  agentFiles: AgentFilesAPI
+  knowledgeBase: KnowledgeBaseAPI
+  knowledgeBaseFiles: KnowledgeBaseFilesAPI
 
   public: {
     user: UserPublicAPI
@@ -88,6 +90,7 @@ export default class API {
     this.misc = new MiscAPI(config)
     this.oauth2 = new OAuth2API(config)
     this.permission = new PermissionAPI(config)
+    this.project = new ProjectAPI(config)
     this.plugin = new PluginAPI(config)
     this.query = new QueryAPI(config)
     this.roles = new RoleAPI(config)
@@ -107,8 +110,8 @@ export default class API {
     this.routing = new RoutingAPI(config)
     this.workspaceFavourites = new WorkspaceFavouriteAPI(config)
     this.agent = new AgentAPI(config)
-    this.vectorDb = new VectorDbAPI(config)
-    this.agentFiles = new AgentFilesAPI(config)
+    this.knowledgeBase = new KnowledgeBaseAPI(config)
+    this.knowledgeBaseFiles = new KnowledgeBaseFilesAPI(config)
     this.public = {
       user: new UserPublicAPI(config),
       row: new RowPublicAPI(config),

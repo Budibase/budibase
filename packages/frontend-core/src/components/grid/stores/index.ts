@@ -78,6 +78,7 @@ export interface BaseStoreProps {
   canAddRows?: boolean
   canEditRows?: boolean
   canDeleteRows?: boolean
+  canSelectRows?: boolean
   canEditColumns?: boolean
   canExpandRows?: boolean
   canSaveSchema?: boolean

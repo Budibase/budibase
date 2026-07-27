@@ -8,7 +8,7 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationTriggerDefinition = {
-  name: "Row Created",
+  name: "Row created",
   event: AutomationEventType.ROW_SAVE,
   icon: "rows-plus-bottom",
   tagline: "Row is added to {{inputs.enriched.table.name}}",

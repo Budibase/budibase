@@ -2,11 +2,12 @@ import { Cookie, cache, context, utils } from "@budibase/backend-core"
 import { features } from "@budibase/pro"
 import { ClientHeader, Header, sdk } from "@budibase/shared-core"
 import { RecaptchaSessionCookie, UserCtx, Workspace } from "@budibase/types"
-import { Middleware, Next } from "koa"
+import type { CtxFn } from "@budibase/backend-core"
+import { Next } from "koa"
 import { isProdWorkspaceID } from "../db/utils"
 import { isRecaptchaVerified } from "../utilities/redis"
 
-const middleware = (async (ctx: UserCtx, next: Next) => {
+const middleware: CtxFn = async (ctx: UserCtx, next: Next) => {
   const workspaceId = context.getWorkspaceId()
   // no app ID, requests are not targeting an app
   // if not production app - this is in the builder, recaptcha isn't enabled
@@ -43,6 +44,6 @@ const middleware = (async (ctx: UserCtx, next: Next) => {
     }
   }
   return next()
-}) as Middleware
+}
 
 export default middleware

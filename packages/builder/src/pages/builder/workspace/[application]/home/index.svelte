@@ -6,31 +6,46 @@
   import AgentModal from "@/pages/builder/workspace/[application]/agent/AgentModal.svelte"
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
+  import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
+  import CreateProjectModal from "./_components/CreateProjectModal.svelte"
+  import ExportProjectModal from "./_components/ExportProjectModal.svelte"
   import HomeControls from "./_components/HomeControls.svelte"
+  import HomeCreateMenu from "./_components/HomeCreateMenu.svelte"
+  import HomeHeaderActions from "./_components/HomeHeaderActions.svelte"
   import HomeMetrics from "./_components/HomeMetrics.svelte"
+  import HomeProjectTabs from "./_components/HomeProjectTabs.svelte"
+  import HomeResourcePanel from "./_components/HomeResourcePanel.svelte"
   import HomeTable from "./_components/HomeTable.svelte"
+  import ImportProjectModal from "./_components/ImportProjectModal.svelte"
   import {
     appStore,
     automationStore,
     contextMenuStore,
+    datasources,
+    integrations,
+    tables,
     workspaceAppStore,
     workspaceFavouriteStore,
   } from "@/stores/builder"
   import { API } from "@/api"
-  import { agentsStore, auth, featureFlags } from "@/stores/portal"
+  import {
+    agentsStore,
+    appsStore,
+    auth,
+    featureFlags,
+    licensing,
+    projectsStore,
+  } from "@/stores/portal"
+  import { getErrorMessage } from "@/helpers/errors"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
-    ActionMenu,
     Body,
-    Button,
     Icon,
-    MenuItem,
-    MenuSeparator,
     Modal,
     type ModalAPI,
+    Notification,
+    keepOpen,
     notifications,
-    PopoverAlignment,
-    Tag,
   } from "@budibase/bbui"
   import {
     FeatureFlag,
@@ -41,31 +56,33 @@
     type HomeSortColumn,
     type HomeSortOrder,
     type HomeType,
+    type ProjectFormPayload,
+    type ProjectResponse,
     PublishResourceState,
     type Agent,
     type Table,
     type WorkspaceFavourite,
     type WorkspaceResource,
+    SourceName,
   } from "@budibase/types"
+  import { integrationForDatasource } from "@/stores/selectors"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
-  import { getHomeTypeIcon, getHomeTypeIconColor } from "./_components/rows"
-  import {
-    beforeUrlChange,
-    goto as gotoStore,
-    url as urlStore,
-  } from "@roxi/routify"
+  import { goto as gotoStore, url as urlStore } from "@roxi/routify"
   import { onMount } from "svelte"
+  import { get } from "svelte/store"
   import {
     buildHomeRows,
     filterHomeRows,
+    getTypeLabel,
     sortHomeRows,
   } from "./_components/rows"
+  import {
+    buildHomeUrl,
+    normaliseHomeSortColumn,
+    type HomeUrlState,
+  } from "./_components/urlState"
 
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
-
-  type HomeCreate = "app" | "automation" | "agent"
-
-  $beforeUrlChange
 
   $: goto = $gotoStore
   $: url = $urlStore
@@ -88,12 +105,26 @@
 
   let createTableModal: ModalAPI
   let tableName = ""
+  let createTableModalKey = 0
 
   let selectedAgent: Agent | undefined
   let updateAgentModal: Pick<ModalAPI, "show" | "hide">
   let confirmDeleteAgentDialog: Pick<ModalAPI, "show" | "hide">
+  let selectedRow: HomeRow | null = null
+
+  let createProjectModal: ModalAPI
+  let editProjectModal: ModalAPI
+  let confirmDeleteProjectDialog: Pick<ModalAPI, "show" | "hide">
+  let assignProjectModal: ModalAPI
+  let exportProjectModal: ModalAPI
+  let importProjectModal: ModalAPI
+  let createProjectModalKey = 0
+  let editProjectModalKey = 0
+  let exportProjectModalKey = 0
+  let importProjectModalKey = 0
 
   let typeFilter: HomeType = "all"
+  let selectedProjectId = ""
   let searchTerm = ""
   let metrics: GetWorkspaceHomeMetricsResponse | null = null
 
@@ -103,9 +134,20 @@
   let highlightedRowId: string | null = null
 
   let hasMounted = false
+  let projectsRequestedForWorkspace = ""
 
   const favourites = workspaceFavouriteStore.lookup
   $: currentUserId = $auth.user?._id || ""
+  $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
+  $: initialProjectIds = selectedProjectId ? [selectedProjectId] : []
+  $: selectedProjectResource = selectedRow
+    ? {
+        name: selectedRow.name,
+        typeLabel: getTypeLabel(selectedRow.type),
+        projectIds: selectedRow.projectIds,
+      }
+    : null
+  $: if (!projectsEnabled && selectedProjectId) selectedProjectId = ""
 
   let getFavourite: (
     _resourceType: WorkspaceResource,
@@ -128,68 +170,12 @@
     if (!value) {
       return null
     }
-    if (value === "all" || value === "app" || value === "automation") {
-      return value
-    }
-    if (value === "agent" && $featureFlags.AI_AGENTS) {
-      return value
-    }
-    return null
-  }
-
-  const normaliseCreate = (value: string | null): HomeCreate | null => {
-    if (!value) {
-      return null
-    }
-    if (value === "app" || value === "automation") {
-      return value
-    }
-    if (value === "agent" && $featureFlags.AI_AGENTS) {
-      return value
-    }
-    return null
-  }
-
-  const consumeCreateParam = (urlString?: string) => {
-    if (typeof window === "undefined") {
-      return
-    }
-
-    const parsed = new URL(urlString ?? window.location.href)
-    const create = normaliseCreate(parsed.searchParams.get("create"))
-    if (!create) {
-      return
-    }
-
-    if (create === "automation") {
-      createAutomation()
-    } else if (create === "app") {
-      createApp()
-    } else if (create === "agent") {
-      createAgent()
-    }
-
-    parsed.searchParams.delete("create")
-    const query = parsed.searchParams.toString()
-    history.replaceState(
-      {},
-      "",
-      `${parsed.pathname}${query ? `?${query}` : ""}`
-    )
-  }
-
-  const normaliseSortColumn = (value: string | null): HomeSortColumn | null => {
-    if (!value) {
-      return null
-    }
-    if (value === "created") {
-      return "updated"
-    }
     if (
-      value === "name" ||
-      value === "type" ||
-      value === "status" ||
-      value === "updated"
+      value === "all" ||
+      value === "app" ||
+      value === "automation" ||
+      value === "agent" ||
+      value === "data"
     ) {
       return value
     }
@@ -208,7 +194,7 @@
       return {
         q: "",
         type: null as HomeType | null,
-        create: null as HomeCreate | null,
+        project: "",
         sort: null as HomeSortColumn | null,
         order: null as HomeSortOrder | null,
       }
@@ -216,75 +202,23 @@
     const params = new URLSearchParams(window.location.search)
     const q = params.get("q") ?? ""
     const type = normaliseType(params.get("type"))
-    const sort = normaliseSortColumn(params.get("sort"))
+    const project = params.get("project") ?? ""
+    const sort = normaliseHomeSortColumn(params.get("sort"))
     const order = normaliseSortOrder(params.get("order"))
-    const create = normaliseCreate(params.get("create"))
-    return { q, type, sort, order, create }
+    return { q, type, project, sort, order }
   }
 
-  const writeUrlState = () => {
+  const writeUrlState = (state: HomeUrlState) => {
     if (!hasMounted || typeof window === "undefined") {
       return
     }
-
-    const params = new URLSearchParams(window.location.search)
-
-    params.delete("create")
-
-    const q = searchTerm.trim()
-    if (!q) {
-      params.delete("q")
-    } else {
-      params.set("q", q)
-    }
-
-    if (typeFilter === "all") {
-      params.delete("type")
-    } else {
-      params.set("type", typeFilter)
-    }
-
-    const defaultSortColumn: HomeSortColumn = "updated"
-    const defaultSortOrder: HomeSortOrder = "desc"
-    const isDefaultSort =
-      sortColumn === defaultSortColumn && sortOrder === defaultSortOrder
-    if (isDefaultSort) {
-      params.delete("sort")
-      params.delete("order")
-    } else {
-      params.set("sort", sortColumn)
-      params.set("order", sortOrder)
-    }
-
-    const query = params.toString()
-    const next = `${window.location.pathname}${query ? `?${query}` : ""}`
+    const next = buildHomeUrl(
+      window.location.pathname,
+      window.location.search,
+      state
+    )
     history.replaceState({}, "", next)
   }
-
-  $beforeUrlChange((event: { url?: string } | undefined) => {
-    if (typeof window === "undefined") {
-      return true
-    }
-
-    const nextUrl = typeof event?.url === "string" ? event.url : ""
-    if (!nextUrl) {
-      return true
-    }
-
-    const parsed = new URL(nextUrl, window.location.origin)
-    if (!parsed.pathname.endsWith("/home")) {
-      return true
-    }
-
-    if (!parsed.searchParams.get("create")) {
-      return true
-    }
-
-    setTimeout(() => {
-      consumeCreateParam(parsed.toString())
-    }, 0)
-    return true
-  })
 
   const setTypeFilter = (value: string) => {
     const normalised = normaliseType(value)
@@ -316,6 +250,29 @@
     agentModal?.show()
   }
 
+  const createProject = () => {
+    createProjectModalKey += 1
+    createProjectModal?.show()
+  }
+
+  const editProject = () => {
+    if (!selectedProject) {
+      return
+    }
+    editProjectModalKey += 1
+    editProjectModal?.show()
+  }
+
+  const exportProject = () => {
+    exportProjectModalKey += 1
+    exportProjectModal?.show()
+  }
+
+  const importProject = () => {
+    importProjectModalKey += 1
+    importProjectModal?.show()
+  }
+
   const goToCreate = (target: "data/new" | "apis/new") => {
     goto(url(`../${target}`))
   }
@@ -327,6 +284,7 @@
 
   const openCreateTable = () => {
     tableName = ""
+    createTableModalKey += 1
     createTableModal?.show()
   }
 
@@ -349,6 +307,12 @@
       return
     }
     window.open(liveUrl, "_blank", "noopener,noreferrer")
+  }
+
+  const CONTACT_SALES_URL = "https://budibase.com/contact/"
+
+  const openContactSales = () => {
+    window.open(CONTACT_SALES_URL, "_blank", "noopener,noreferrer")
   }
 
   const duplicateWorkspaceApp = async (workspaceAppId: string) => {
@@ -376,10 +340,11 @@
       notifications.success(
         `App '${selectedWorkspaceApp.name}' deleted successfully`
       )
-    } catch (e: any) {
+    } catch (error) {
       let message = "Error deleting app"
-      if (e.message) {
-        message += ` - ${e.message}`
+      const errorMessage = getErrorMessage(error)
+      if (errorMessage) {
+        message += ` - ${errorMessage}`
       }
       notifications.error(message)
     }
@@ -426,14 +391,210 @@
     }
   }
 
+  const assignProject = async (projectIds: string[] | undefined) => {
+    if (!projectsEnabled || !selectedRow) {
+      return keepOpen
+    }
+
+    try {
+      if (selectedRow.type === "app") {
+        const { resource } = selectedRow
+        await workspaceAppStore.edit({
+          _id: resource._id!,
+          _rev: resource._rev!,
+          name: resource.name,
+          url: resource.url,
+          navigation: resource.navigation,
+          disabled: resource.disabled,
+          isDefault: resource.isDefault,
+          projectIds,
+        })
+      } else if (selectedRow.type === "automation") {
+        const { resource } = selectedRow
+        const { publishStatus: _publishStatus, ...automation } = resource
+        await automationStore.actions.save(
+          {
+            ...automation,
+            projectIds,
+          },
+          { skipUnpublishedChanges: true }
+        )
+      } else if (selectedRow.type === "agent") {
+        const { resource } = selectedRow
+        const { operations: _operations, ...agent } = resource
+        await agentsStore.updateAgent({
+          ...agent,
+          projectIds,
+        })
+      } else if (selectedRow.type === "datasource") {
+        const { resource } = selectedRow
+        await datasources.save({
+          datasource: {
+            ...resource,
+            projectIds,
+          },
+          integration: integrationForDatasource(get(integrations), resource),
+          skipConnectionCheck: true,
+        })
+      } else if (selectedRow.type === "table") {
+        const { resource } = selectedRow
+        await tables.save({
+          ...resource,
+          projectIds,
+        })
+      }
+
+      notifications.success("Projects updated successfully")
+      assignProjectModal?.hide()
+
+      try {
+        await Promise.all([appStore.refresh(), agentsStore.fetchAgents()])
+      } catch (error) {
+        console.error(error)
+        notifications.warning(
+          "Projects updated, but some resources could not be refreshed. Reload the workspace to see all changes."
+        )
+      }
+    } catch (error) {
+      console.error(error)
+      notifications.error("Unable to update project")
+      return keepOpen
+    }
+  }
+
+  const handleCreateProject = async (project: ProjectFormPayload) => {
+    try {
+      const createdProject = await projectsStore.create(project)
+      selectedProjectId = createdProject._id
+      notifications.success("Project created successfully")
+      createProjectModal?.hide()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Unable to create project")
+      return keepOpen
+    }
+  }
+
+  const handleUpdateProject = async (project: ProjectFormPayload) => {
+    if (!selectedProject) {
+      return keepOpen
+    }
+
+    try {
+      await projectsStore.updateProject({
+        _id: selectedProject._id,
+        _rev: selectedProject._rev,
+        ...project,
+      })
+      notifications.success("Project updated successfully")
+      editProjectModal?.hide()
+    } catch (error) {
+      notifications.error(getErrorMessage(error) || "Unable to update project")
+      return keepOpen
+    }
+  }
+
+  const deleteProject = async () => {
+    if (!selectedProject) {
+      return
+    }
+
+    const projectName = selectedProject.name
+    try {
+      await projectsStore.deleteProject(
+        selectedProject._id,
+        selectedProject._rev
+      )
+      selectedProjectId = ""
+      notifications.success(`Project '${projectName}' deleted successfully`)
+
+      try {
+        await Promise.all([appStore.refresh(), agentsStore.fetchAgents()])
+      } catch (error) {
+        console.error(error)
+        notifications.warning(
+          "Project deleted, but some resources could not be refreshed. Reload the workspace to see all changes."
+        )
+      }
+    } catch (error) {
+      notifications.error(getErrorMessage(error) || "Unable to delete project")
+    }
+  }
+
+  const handleExportProject = async ({
+    id,
+    encryptPassword,
+  }: {
+    id: string
+    encryptPassword?: string
+  }) => {
+    try {
+      await projectsStore.exportProject(id, { encryptPassword })
+      exportProjectModal?.hide()
+    } catch (error) {
+      console.error(error)
+      notifications.error(getErrorMessage(error) || "Unable to export project")
+      return keepOpen
+    }
+  }
+
+  const notifyImportFollowUps = (
+    response: Awaited<ReturnType<typeof projectsStore.importProject>>
+  ) => {
+    if (response.requirements.length) {
+      const names = response.requirements
+        .map(requirement => requirement.name)
+        .join(", ")
+      notifications.warning(`Some imported resources need secrets: ${names}`)
+    }
+
+    if (response.unsupportedContent.length) {
+      const summary = response.unsupportedContent
+        .map(item => `${item.count} ${item.type}`)
+        .join(", ")
+      notifications.warning(`Some Project content was not imported: ${summary}`)
+    }
+  }
+
+  const handleImportProject = async ({
+    file,
+    encryptPassword,
+  }: {
+    file: File
+    encryptPassword?: string
+  }) => {
+    try {
+      const response = await projectsStore.importProject(file, {
+        encryptPassword,
+      })
+      importProjectModal?.hide()
+      notifications.success(`Imported project '${response.project.name}'`)
+      notifyImportFollowUps(response)
+
+      const refreshes = await Promise.allSettled([
+        appStore.refresh(),
+        loadMetrics(),
+      ])
+      if (refreshes.some(result => result.status === "rejected")) {
+        notifications.warning(
+          "Project imported, but some resources could not be refreshed. Reload the workspace to see all imported resources."
+        )
+      }
+    } catch (error) {
+      console.error(error)
+      notifications.error(getErrorMessage(error) || "Unable to import project")
+      return keepOpen
+    }
+  }
+
   const getContextMenuItemsForRow = (row: HomeRow) => {
     if (row.type === "app") {
       const workspaceApp = row.resource
       const liveUrl = buildLiveWorkspaceAppUrl(workspaceApp)
 
       const pause = {
-        icon: workspaceApp.disabled ? "play-circle" : "pause-circle",
-        name: workspaceApp.disabled ? "Switch on" : "Switch off",
+        icon: workspaceApp.disabled ? "play-circle" : "stop",
+        name: workspaceApp.disabled ? "Set live" : "Stop",
         visible: true,
         callback: async () => {
           await workspaceAppStore.toggleDisabled(
@@ -452,6 +613,12 @@
             selectedWorkspaceApp = workspaceApp
             workspaceAppModal.show()
           },
+        },
+        {
+          icon: "stack",
+          name: "Assign project",
+          visible: projectsEnabled,
+          callback: () => assignProjectModal.show(),
         },
         {
           icon: "globe-simple",
@@ -489,8 +656,8 @@
       }
 
       const pause = {
-        icon: automation.disabled ? "play-circle" : "pause-circle",
-        name: automation.disabled ? "Switch on" : "Switch off",
+        icon: automation.disabled ? "play-circle" : "stop",
+        name: automation.disabled ? "Set live" : "Stop",
         keyBind: null,
         visible: true,
         disabled: !automation.definition.trigger,
@@ -501,6 +668,12 @@
 
       return [
         edit,
+        {
+          icon: "stack",
+          name: "Assign project",
+          visible: projectsEnabled,
+          callback: () => assignProjectModal.show(),
+        },
         {
           icon: "copy",
           name: "Duplicate",
@@ -523,15 +696,18 @@
     }
 
     if (row.type === "agent") {
-      if (!$featureFlags.AI_AGENTS) {
-        return []
-      }
       return [
         {
           icon: "pencil",
           name: "Edit",
           visible: true,
           callback: () => updateAgentModal.show(),
+        },
+        {
+          icon: "stack",
+          name: "Assign project",
+          visible: projectsEnabled,
+          callback: () => assignProjectModal.show(),
         },
         {
           icon: "copy",
@@ -545,6 +721,23 @@
           visible: true,
           disabled: false,
           callback: () => confirmDeleteAgentDialog.show(),
+        },
+      ]
+    }
+
+    if (row.type === "datasource" || row.type === "table") {
+      return [
+        {
+          icon: "arrow-square-out",
+          name: "Open",
+          visible: true,
+          callback: () => openRow(row),
+        },
+        {
+          icon: "stack",
+          name: "Assign project",
+          visible: projectsEnabled,
+          callback: () => assignProjectModal.show(),
         },
       ]
     }
@@ -564,6 +757,7 @@
     selectedWorkspaceApp = undefined
     selectedAutomation = undefined
     selectedAgent = undefined
+    selectedRow = row
 
     highlightedRowId = row._id
 
@@ -572,10 +766,6 @@
     } else if (row.type === "automation") {
       selectedAutomation = row.resource
     } else if (row.type === "agent") {
-      if (!$featureFlags.AI_AGENTS) {
-        highlightedRowId = null
-        return
-      }
       selectedAgent = row.resource
     }
 
@@ -602,6 +792,18 @@
       goto(url(`../agent/${row.id}/config`))
       return
     }
+    if (row.type === "datasource") {
+      const route =
+        row.resource.source === SourceName.REST
+          ? `../apis/datasource/${row.id}`
+          : `../data/datasource/${row.id}`
+      goto(url(route))
+      return
+    }
+    if (row.type === "table") {
+      goto(url(`../data/table/${row.id}`))
+      return
+    }
   }
 
   const loadMetrics = async () => {
@@ -613,19 +815,142 @@
     }
   }
 
+  const loadProjects = async (workspaceId: string) => {
+    try {
+      projectsRequestedForWorkspace = workspaceId
+      await projectsStore.ensureFetched(workspaceId)
+    } catch (error) {
+      projectsRequestedForWorkspace = ""
+      if ($appStore.appId === workspaceId && projectsEnabled) {
+        notifications.error(getErrorMessage(error) || "Unable to load projects")
+      }
+    }
+  }
+
   $: baseRows = buildHomeRows({
     apps: $workspaceAppStore.workspaceApps,
     automations: $automationStore.automations,
     agents: $agentsStore.agents,
-    agentsEnabled: $featureFlags.AI_AGENTS,
+    datasources: $datasources.list,
+    tables: $tables.list,
     getFavourite,
   })
+  $: projectIdsWithResources = Array.from(
+    new Set(baseRows.flatMap(row => row.projectIds || []))
+  )
+  $: selectedProjectExportDisabled =
+    !!selectedProjectId && !projectIdsWithResources.includes(selectedProjectId)
 
+  $: projectLookup = (
+    projectsEnabled
+      ? Object.fromEntries(
+          $projectsStore.map(project => [project._id, project])
+        )
+      : {}
+  ) as Record<string, ProjectResponse>
+  $: selectedProjectName = selectedProjectId
+    ? projectLookup[selectedProjectId]?.name || ""
+    : ""
+  $: selectedProject = selectedProjectId
+    ? projectLookup[selectedProjectId]
+    : undefined
+  $: if (
+    projectsEnabled &&
+    selectedProjectId &&
+    projectsStore.hasFetched() &&
+    !projectLookup[selectedProjectId]
+  ) {
+    selectedProjectId = ""
+  }
+
+  const openUpgradePage = () => {
+    licensing.goToUpgradePage()
+  }
   $: allRows = sortHomeRows(baseRows, { sortColumn, sortOrder })
 
-  $: filteredRows = filterHomeRows({ rows: allRows, typeFilter, searchTerm })
+  $: filteredRows = filterHomeRows({
+    rows: allRows,
+    typeFilter,
+    searchTerm,
+  }).filter(
+    row =>
+      !projectsEnabled ||
+      !selectedProjectId ||
+      row.projectIds?.includes(selectedProjectId)
+  )
+  $: targetApp = $appsStore.apps.find(app => app.devId === $appStore.appId)
+  $: automationErrorEntries = Object.entries(targetApp?.automationErrors || {})
+    .filter(([, logIds]) => logIds.length > 0)
+    .map(([automationId, logIds]) => ({
+      automationId,
+      errorCount: logIds.length,
+      automation: $automationStore.automations.find(
+        automation => automation._id === automationId
+      ),
+    }))
+  $: automationStopEntries = Object.entries(targetApp?.automationStops || {})
+    .filter(([, logIds]) => logIds.length > 0)
+    .map(([automationId]) => ({
+      automationId,
+      automation: $automationStore.automations.find(
+        automation => automation._id === automationId
+      ),
+    }))
 
-  $: if (hasMounted) writeUrlState()
+  $: budibaseAICreditLimit =
+    $licensing.license?.quotas?.usage.monthly.budibaseAICredits?.value
+  $: showBudibaseAIMetric =
+    budibaseAICreditLimit != null && budibaseAICreditLimit !== 0
+
+  $: if (
+    hasMounted &&
+    projectsEnabled &&
+    $appStore.appId &&
+    projectsRequestedForWorkspace !== $appStore.appId
+  ) {
+    loadProjects($appStore.appId)
+  }
+
+  $: if (hasMounted) {
+    writeUrlState({
+      searchTerm,
+      typeFilter,
+      selectedProjectId,
+      sortColumn,
+      sortOrder,
+      projectsEnabled,
+    })
+  }
+
+  const goToAutomationError = (automationId: string) => {
+    goto(url(`../automation/${automationId}`))
+  }
+
+  const dismissAutomationError = async (automationId: string) => {
+    try {
+      await automationStore.actions.clearLogErrors({
+        automationId,
+        appId: $appStore.appId,
+      })
+      await appsStore.load()
+    } catch (err) {
+      console.error(err)
+      notifications.error("Error dismissing automation error")
+    }
+  }
+
+  const automationErrorMessage = (
+    automationName: string | undefined,
+    errorCount: number
+  ) => {
+    const name = automationName || "Automation"
+    return `${name} - Automation error${errorCount > 1 ? ` (${errorCount})` : ""}`
+  }
+
+  const automationStopMessage = (automationName: string | undefined) => {
+    const name = automationName || "Automation"
+    return `${name} - Automation stopped`
+  }
 
   onMount(async () => {
     const workspaceId = $appStore.appId
@@ -633,171 +958,300 @@
       return
     }
 
-    if (!$featureFlags[FeatureFlag.WORKSPACE_HOME]) {
-      goto(url("../design"))
-      return
-    }
-
-    const { q, type, sort, order } = readUrlState()
+    const { q, type, project, sort, order } = readUrlState()
     if (q) {
       searchTerm = q
     }
     if (type) {
       typeFilter = type
     }
-    if (sort) {
-      sortColumn = sort
+    if (project) {
+      selectedProjectId = project
     }
-    if (order) {
+    const sortAllowed = sort && (projectsEnabled || sort !== "projects")
+    if (sortAllowed) {
+      sortColumn = sort
+    } else {
+      sortColumn = "updated"
+    }
+    if (order && sortAllowed) {
       sortOrder = order
     }
 
     hasMounted = true
-    consumeCreateParam()
-    writeUrlState()
+    writeUrlState({
+      searchTerm,
+      typeFilter,
+      selectedProjectId,
+      sortColumn,
+      sortOrder,
+      projectsEnabled,
+    })
 
-    await Promise.all([
-      $featureFlags.AI_AGENTS ? agentsStore.fetchAgents() : Promise.resolve(),
-      loadMetrics(),
-    ])
+    await Promise.all([agentsStore.fetchAgents(), loadMetrics()])
   })
 </script>
 
 <div class="workspace-home">
-  <div class="content">
+  <div class="content" class:content--projects={projectsEnabled}>
     <div class="header">
       <div class="title">
         <Body
           size="M"
           weight="500"
           color="var(--spectrum-global-color-gray-900)"
-          >{$appStore.name || "Workspace"}</Body
         >
+          {$appStore.name || "Workspace"}
+        </Body>
       </div>
 
-      {#if $featureFlags.AI_AGENTS && $featureFlags.AI_CHAT}
-        <div class="header-actions">
-          <a href={url("../chat")} class="header-link header-link--with-icons">
-            <Icon name="chat-circle" size="XS" color="#8CA171" weight="fill" />
-            <Body size="S">Agent chat</Body>
-            <Icon
-              name="arrow-up-right"
-              size="XS"
-              color="var(--spectrum-global-color-gray-600)"
-              weight="regular"
-            />
-          </a>
-        </div>
-      {/if}
+      <HomeHeaderActions
+        isEnterprisePlan={$licensing.isEnterprisePlan}
+        showTrialBanner={$licensing.showTrialBanner}
+        onUpgradePlan={openUpgradePage}
+        onContactSales={openContactSales}
+      />
     </div>
 
-    <HomeMetrics {metrics} agentsEnabled={$featureFlags.AI_AGENTS} />
+    {#if automationErrorEntries.length}
+      <div class="automation-errors">
+        {#each automationErrorEntries as entry (entry.automationId)}
+          <Notification
+            wide
+            dismissable
+            type="error"
+            icon="Alert"
+            action={() => goToAutomationError(entry.automationId)}
+            actionMessage={entry.errorCount > 1 ? "View errors" : "View error"}
+            message={automationErrorMessage(
+              entry.automation?.name,
+              entry.errorCount
+            )}
+            on:dismiss={() => dismissAutomationError(entry.automationId)}
+          />
+        {/each}
+      </div>
+    {/if}
 
-    <div class="controls-row">
-      <HomeControls
-        {typeFilter}
-        agentsEnabled={$featureFlags.AI_AGENTS}
-        on:typeChange={({ detail }) => setTypeFilter(detail)}
-      />
-      <div class="controls-right">
-        <div class="search-wrapper">
-          <Icon name="magnifying-glass" size="S" />
-          <input
-            class="search-input"
-            type="text"
-            placeholder="Search"
-            bind:value={searchTerm}
+    {#if automationStopEntries.length}
+      <div class="automation-errors">
+        {#each automationStopEntries as entry (entry.automationId)}
+          <Notification
+            wide
+            dismissable
+            type="warning"
+            icon="Alert"
+            action={() => goToAutomationError(entry.automationId)}
+            actionMessage="View"
+            message={automationStopMessage(entry.automation?.name)}
+            on:dismiss={() => dismissAutomationError(entry.automationId)}
+          />
+        {/each}
+      </div>
+    {/if}
+
+    <HomeMetrics {metrics} {showBudibaseAIMetric} />
+
+    {#if projectsEnabled}
+      <div class="project-resources">
+        <HomeProjectTabs
+          projects={$projectsStore}
+          {selectedProjectId}
+          onSelect={projectId => (selectedProjectId = projectId)}
+          onCreateProject={createProject}
+          onEditProject={editProject}
+          onDeleteProject={() => confirmDeleteProjectDialog?.show()}
+          onImportProject={importProject}
+          onExportProject={exportProject}
+          exportProjectDisabled={selectedProjectExportDisabled}
+        />
+
+        <HomeResourcePanel>
+          {#snippet toolbar()}
+            <div class="panel-toolbar">
+              <HomeControls
+                {typeFilter}
+                variant="panel"
+                onTypeChange={setTypeFilter}
+              />
+              <div class="panel-toolbar__right">
+                <div class="search-wrapper">
+                  <Icon name="magnifying-glass" size="S" />
+                  <input
+                    class="search-input"
+                    type="text"
+                    placeholder="Search"
+                    bind:value={searchTerm}
+                  />
+                </div>
+                <HomeCreateMenu
+                  variant="pill"
+                  onCreateAgent={createAgent}
+                  onCreateAutomation={createAutomation}
+                  onCreateApp={createApp}
+                  onCreateConnection={() => goToCreate("data/new")}
+                  onCreateTable={openCreateTable}
+                  onCreateApi={() => goToCreate("apis/new")}
+                />
+              </div>
+            </div>
+          {/snippet}
+
+          <HomeTable
+            rows={filteredRows}
+            allRowsCount={allRows.length}
+            {typeFilter}
+            {searchTerm}
+            {projectsEnabled}
+            {selectedProjectName}
+            {sortColumn}
+            {sortOrder}
+            {highlightedRowId}
+            variant="panel"
+            onOpenRow={openRow}
+            onOpenContextMenu={openHomeContextMenu}
+            onClearSearch={() => (searchTerm = "")}
+            onResetFilters={() => {
+              typeFilter = "all"
+              selectedProjectId = ""
+            }}
+            onSortChange={setSort}
+            onCreateAgent={createAgent}
+            onCreateAutomation={createAutomation}
+            onCreateApp={createApp}
+          />
+        </HomeResourcePanel>
+      </div>
+    {:else}
+      <div class="controls-row">
+        <HomeControls {typeFilter} onTypeChange={setTypeFilter} />
+        <div class="controls-right">
+          <div class="search-wrapper">
+            <Icon name="magnifying-glass" size="S" />
+            <input
+              class="search-input"
+              type="text"
+              placeholder="Search"
+              bind:value={searchTerm}
+            />
+          </div>
+          <div class="create-popover-container"></div>
+          <HomeCreateMenu
+            portalTarget=".workspace-home .create-popover-container"
+            onCreateAgent={createAgent}
+            onCreateAutomation={createAutomation}
+            onCreateApp={createApp}
+            onCreateConnection={() => goToCreate("data/new")}
+            onCreateTable={openCreateTable}
+            onCreateApi={() => goToCreate("apis/new")}
           />
         </div>
-        <div class="create-popover-container"></div>
-        <ActionMenu
-          align={PopoverAlignment.Right}
-          portalTarget=".workspace-home .create-popover-container"
-          animate={false}
-        >
-          <div slot="control" class="create-menu-control">
-            <Button size="M" icon="plus" primary>Create</Button>
-          </div>
-
-          {#if $featureFlags.AI_AGENTS}
-            <MenuItem
-              icon={getHomeTypeIcon("agent")}
-              iconColour={getHomeTypeIconColor("agent")}
-              iconWeight="fill"
-              on:click={createAgent}
-            >
-              Agent
-              <div slot="right">
-                <Tag emphasized>Beta</Tag>
-              </div>
-            </MenuItem>
-          {/if}
-          <MenuItem
-            icon={getHomeTypeIcon("automation")}
-            iconColour={getHomeTypeIconColor("automation")}
-            iconWeight="fill"
-            on:click={createAutomation}
-          >
-            Automation
-          </MenuItem>
-          <MenuItem
-            icon={getHomeTypeIcon("app")}
-            iconColour={getHomeTypeIconColor("app")}
-            iconWeight="fill"
-            on:click={createApp}
-          >
-            App
-          </MenuItem>
-
-          <MenuSeparator />
-          <MenuItem icon="cube" on:click={() => goToCreate("data/new")}>
-            Connection
-          </MenuItem>
-          <MenuItem icon="grid-nine" on:click={openCreateTable}>Table</MenuItem>
-          <MenuItem icon="globe-simple" on:click={() => goToCreate("apis/new")}>
-            API request
-          </MenuItem>
-        </ActionMenu>
       </div>
-    </div>
 
-    <HomeTable
-      rows={filteredRows}
-      allRowsCount={allRows.length}
-      {typeFilter}
-      {searchTerm}
-      {sortColumn}
-      {sortOrder}
-      {highlightedRowId}
-      on:openRow={({ detail }) => openRow(detail)}
-      on:openContextMenu={({ detail }) => openHomeContextMenu(detail)}
-      on:clearSearch={() => (searchTerm = "")}
-      on:resetFilters={() => (typeFilter = "all")}
-      on:sortChange={({ detail }) => setSort(detail)}
-    />
+      <HomeTable
+        rows={filteredRows}
+        allRowsCount={allRows.length}
+        {typeFilter}
+        {searchTerm}
+        {projectsEnabled}
+        {selectedProjectName}
+        {sortColumn}
+        {sortOrder}
+        {highlightedRowId}
+        onOpenRow={openRow}
+        onOpenContextMenu={openHomeContextMenu}
+        onClearSearch={() => (searchTerm = "")}
+        onResetFilters={() => {
+          typeFilter = "all"
+          selectedProjectId = ""
+        }}
+        onSortChange={setSort}
+        onCreateAgent={createAgent}
+        onCreateAutomation={createAutomation}
+        onCreateApp={createApp}
+      />
+    {/if}
   </div>
 </div>
+
+{#if projectsEnabled}
+  <Modal bind:this={createProjectModal}>
+    {#key createProjectModalKey}
+      <CreateProjectModal onConfirm={handleCreateProject} />
+    {/key}
+  </Modal>
+
+  <Modal bind:this={assignProjectModal}>
+    <AssignProjectModal
+      resource={selectedProjectResource}
+      onConfirm={assignProject}
+    />
+  </Modal>
+
+  <Modal bind:this={editProjectModal}>
+    {#key editProjectModalKey}
+      <CreateProjectModal
+        project={selectedProject}
+        onConfirm={handleUpdateProject}
+      />
+    {/key}
+  </Modal>
+
+  {#if selectedProject}
+    <ConfirmDialog
+      bind:this={confirmDeleteProjectDialog}
+      okText="Delete Project"
+      onOk={deleteProject}
+      title="Confirm Deletion"
+    >
+      Deleting <b>{selectedProject.name}</b> will clear its resource assignments.
+      The resources themselves will not be deleted. Are you sure?
+    </ConfirmDialog>
+  {/if}
+
+  <Modal bind:this={exportProjectModal}>
+    {#key exportProjectModalKey}
+      <ExportProjectModal
+        projects={$projectsStore}
+        {selectedProjectId}
+        {projectIdsWithResources}
+        onConfirm={handleExportProject}
+      />
+    {/key}
+  </Modal>
+
+  <Modal bind:this={importProjectModal}>
+    {#key importProjectModalKey}
+      <ImportProjectModal onConfirm={handleImportProject} />
+    {/key}
+  </Modal>
+{/if}
 
 <WorkspaceAppModal
   bind:this={workspaceAppModal}
   workspaceApp={selectedWorkspaceApp}
+  {initialProjectIds}
   on:hide={() => (selectedWorkspaceApp = undefined)}
 />
 
 <Modal bind:this={createAutomationModal}>
-  <CreateAutomationModal {webhookModal} />
+  <CreateAutomationModal {webhookModal} {initialProjectIds} />
 </Modal>
 <Modal bind:this={webhookModal}>
   <CreateWebhookModal />
 </Modal>
 
 <Modal bind:this={createTableModal} closeOnOutsideClick={false}>
-  <CreateTableModal bind:name={tableName} afterSave={handleTableSave} />
+  {#key createTableModalKey}
+    <CreateTableModal
+      bind:name={tableName}
+      {initialProjectIds}
+      afterSave={handleTableSave}
+    />
+  {/key}
 </Modal>
 
-{#if $featureFlags.AI_AGENTS}
-  <AgentModal bind:this={agentModal} />
-{/if}
+<AgentModal bind:this={agentModal} {initialProjectIds} />
 
 <Modal bind:this={duplicateAutomationModal}>
   {#if selectedAutomation}
@@ -837,7 +1291,7 @@
   </ConfirmDialog>
 {/if}
 
-{#if $featureFlags.AI_AGENTS && selectedAgent}
+{#if selectedAgent}
   <UpdateAgentModal agent={selectedAgent} bind:this={updateAgentModal} />
   <ConfirmDialog
     bind:this={confirmDeleteAgentDialog}
@@ -865,11 +1319,72 @@
 
   .content {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1280px;
     padding: var(--spacing-xl) 0;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xl);
+  }
+
+  .content--projects {
+    gap: 20px;
+  }
+
+  .project-resources {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .panel-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .panel-toolbar__right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .panel-toolbar .search-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: var(--border-radius-s);
+    padding: var(--spacing-xs) var(--spacing-s);
+    min-width: 140px;
+    height: 32px;
+    box-sizing: border-box;
+  }
+
+  .panel-toolbar .search-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    flex: 1;
+    font-family: var(--font-sans);
+    font-size: var(--font-size-s);
+    color: var(--spectrum-global-color-gray-900);
+    width: 120px;
+  }
+
+  .panel-toolbar .search-input::placeholder {
+    color: var(--spectrum-global-color-gray-600);
+  }
+
+  .automation-errors {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
   }
 
   .header {
@@ -883,46 +1398,22 @@
     gap: var(--spacing-l);
   }
 
-  .header-actions {
-    display: flex;
-    gap: var(--spacing-l);
-    align-items: center;
-  }
-
-  .header-link {
-    text-decoration: none;
-    color: var(--spectrum-global-color-gray-800);
-    transition: color 130ms ease-out;
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    font-family: inherit;
-  }
-
-  .header-link:hover {
-    color: var(--spectrum-global-color-gray-900);
-  }
-
-  .header-link--with-icons {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-
   .controls-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--spacing-m);
+    gap: var(--spacing-m) var(--spacing-l);
+    flex-wrap: wrap;
     position: relative;
-    margin-bottom: -12px;
   }
 
   .controls-row .controls-right {
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
+    margin-left: auto;
+    flex-shrink: 0;
+    justify-content: flex-end;
   }
 
   .controls-row .search-wrapper {
@@ -930,11 +1421,13 @@
     align-items: center;
     gap: var(--spacing-s);
     border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 6px;
-    padding: 3px 8px;
-    min-width: 200px;
+    border-radius: var(--border-radius-s);
+    padding: var(--spacing-xs) var(--spacing-s);
+    min-width: 140px;
     height: 32px;
     box-sizing: border-box;
+    flex: 1 1 160px;
+    max-width: 240px;
   }
 
   .controls-row .search-input {
@@ -943,7 +1436,7 @@
     outline: none;
     flex: 1;
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: var(--font-size-s);
     color: var(--spectrum-global-color-gray-900);
   }
 
@@ -951,25 +1444,41 @@
     color: var(--spectrum-global-color-gray-600);
   }
 
-  .controls-row .create-menu-control :global(button) {
-    border-radius: 100px;
-    padding: 7px 15px 8px;
-    height: 32px;
-    box-sizing: border-box;
-  }
-
   .create-popover-container {
     position: absolute;
   }
 
   .create-popover-container :global(.spectrum-Popover) {
-    min-width: 245px;
-    border-radius: 6px !important;
-    background: var(--background) !important;
-    border: 1px solid var(--spectrum-global-color-gray-200) !important;
-    padding: 4px !important;
-    margin-top: 4px;
-    margin-left: 2px;
+    min-width: 240px;
+    border-radius: var(--border-radius-s);
+    background: var(--background);
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    padding: var(--spacing-xs);
+    margin-top: var(--spacing-xs);
+  }
+
+  @media (max-width: 1080px) {
+    .controls-row .controls-right {
+      width: 100%;
+      margin-left: 0;
+      flex-shrink: 1;
+      justify-content: flex-end;
+    }
+
+    .controls-row .search-wrapper {
+      max-width: none;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .controls-row .controls-right {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .controls-row .search-wrapper {
+      width: 100%;
+    }
   }
 
   .create-popover-container :global(.spectrum-Menu) {
@@ -978,7 +1487,7 @@
   }
 
   .create-popover-container :global(.spectrum-Menu-item) {
-    border-radius: 4px;
+    border-radius: var(--border-radius-s);
     margin: 0;
   }
 
@@ -989,13 +1498,12 @@
   .create-popover-container
     :global(.spectrum-Menu-item)
     :global(.spectrum-Menu-itemLabel) {
-    font-size: 13px;
-    line-height: 17px;
+    font-size: var(--font-size-s);
     color: var(--spectrum-global-color-gray-800);
   }
 
   .create-popover-container :global(.spectrum-Menu-divider) {
-    margin: 4px 0;
+    margin: var(--spacing-xs) 0;
     background: var(--spectrum-global-color-gray-200);
   }
 </style>

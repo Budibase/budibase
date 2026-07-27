@@ -5,6 +5,7 @@
   import { getEnvironmentBindings } from "@/dataBinding"
   import { environment, licensing } from "@/stores/portal"
   import { queries } from "@/stores/builder"
+  import { hasRestTemplate } from "@/stores/builder/datasources"
   import { cloneDeep, isEqual } from "lodash/fp"
   import Panel from "../Panel.svelte"
   import { onMount } from "svelte"
@@ -21,7 +22,7 @@
   )
 
   const getTemplateStaticVariableKeys = datasource => {
-    if (!datasource?.restTemplate) {
+    if (!hasRestTemplate(datasource)) {
       return []
     }
     const configured = datasource?.config?.templateStaticVariables || []
@@ -71,17 +72,19 @@
   <Layout>
     <Layout noPadding gap="XS">
       <Heading size="S">Static</Heading>
-      <KeyValueBuilder
-        name="Variable"
-        keyPlaceholder="Name"
-        headings
-        object={localUpdatedDatasource?.config?.staticVariables || {}}
-        lockedKeys={templateStaticVariableKeys}
-        on:change={({ detail }) => handleStaticChange(detail)}
-        bindings={$licensing.environmentVariablesEnabled
-          ? getEnvironmentBindings()
-          : []}
-      />
+      {#key localUpdatedDatasource?._rev}
+        <KeyValueBuilder
+          name="Variable"
+          keyPlaceholder="Name"
+          headings
+          object={localUpdatedDatasource?.config?.staticVariables || {}}
+          lockedKeys={templateStaticVariableKeys}
+          on:change={({ detail }) => handleStaticChange(detail.fields)}
+          bindings={$licensing.environmentVariablesEnabled
+            ? getEnvironmentBindings()
+            : []}
+        />
+      {/key}
     </Layout>
     <Layout noPadding gap="XS">
       <Heading size="S">Dynamic</Heading>

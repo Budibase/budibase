@@ -134,7 +134,7 @@ describe("utils", () => {
 
       await expect(utils.getWorkspaceIdFromCtx(ctx)).rejects.toThrow()
       expect(ctx.throw).toHaveBeenCalledTimes(1)
-      expect(ctx.throw).toHaveBeenCalledWith("App id conflict", 403)
+      expect(ctx.throw).toHaveBeenCalledWith(403, "App id conflict")
     })
 
     it("throws 403 when header and path have different valid app IDs", async () => {
@@ -150,7 +150,7 @@ describe("utils", () => {
 
       await expect(utils.getWorkspaceIdFromCtx(ctx)).rejects.toThrow()
       expect(ctx.throw).toHaveBeenCalledTimes(1)
-      expect(ctx.throw).toHaveBeenCalledWith("App id conflict", 403)
+      expect(ctx.throw).toHaveBeenCalledWith(403, "App id conflict")
     })
 
     it("returns same app ID when found across multiple sources consistently", async () => {

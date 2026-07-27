@@ -7,6 +7,10 @@ export default class CustomFetch extends BaseDataFetch<
   CustomDatasource,
   CustomDefinition
 > {
+  getDefaultSortColumn() {
+    return null
+  }
+
   // Gets the correct Budibase type for a JS value
   getType(value: any) {
     if (value == null) {

@@ -95,7 +95,7 @@
     }
 
     /* Inject latest font CSS from bbui.css, as the real file is versioned with the client lib */
-    .spectrum {
+    #spectrum-root.spectrum {
       --font-sans:
         "Source Sans 3", -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
         "Helvetica Neue", Arial, "Noto Sans", sans-serif !important;
@@ -147,7 +147,7 @@
   <script
     id="budibase-client-script"
     type="module"
-    src={`/api/assets/${props.workspaceId}/client?${props.clientCacheKey}`}
+    src={props.clientLibPath}
     data-plugin-scripts={JSON.stringify(
       props.usedPlugins?.map(plugin => plugin.jsUrl) ?? []
     )}

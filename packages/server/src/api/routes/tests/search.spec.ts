@@ -962,6 +962,27 @@ if (descriptions.length) {
                     }
                   )
                 })
+
+                it("should return 400 when searching with an invalid operator", async () => {
+                  await config.api.row.search(
+                    tableOrViewId,
+                    {
+                      query: {
+                        $where: "function(){return true}",
+                      } as SearchFilters,
+                    },
+                    {
+                      status: 400,
+                      body: {
+                        message: expect.stringContaining("$where"),
+                      },
+                    }
+                  )
+
+                  await expectQuery({
+                    equal: { name: "foo" },
+                  }).toContainExactly([{ name: "foo" }])
+                })
               })
 
               describe("notEqual", () => {
@@ -1032,6 +1053,37 @@ if (descriptions.length) {
                       oneOf: { name: [] },
                     }).toContainExactly([])
                   })
+              })
+
+              describe("notOneOf", () => {
+                it("successfully finds rows not in the list", async () => {
+                  await expectQuery({
+                    notOneOf: { name: ["foo"] },
+                  }).toContainExactly([{ name: "bar" }])
+                })
+
+                it("returns all rows when none match the list", async () => {
+                  await expectQuery({
+                    notOneOf: { name: ["none"] },
+                  }).toContainExactly([{ name: "foo" }, { name: "bar" }])
+                })
+
+                it("can exclude multiple values for same column", async () => {
+                  await expectQuery({
+                    notOneOf: {
+                      name: ["foo", "bar"],
+                    },
+                  }).toFindNothing()
+                })
+
+                it("splits comma separated strings", async () => {
+                  await expectQuery({
+                    notOneOf: {
+                      // @ts-ignore
+                      name: "foo,bar",
+                    },
+                  }).toFindNothing()
+                })
               })
 
               describe("fuzzy", () => {

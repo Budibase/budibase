@@ -110,7 +110,7 @@ class SnowflakePromise {
     return connectAsync()
   }
 
-  async execute(sql: string) {
+  async execute(sql: string, bindings?: any[]) {
     return new Promise((resolve, reject) => {
       if (!this.client) {
         throw Error(
@@ -120,6 +120,7 @@ class SnowflakePromise {
 
       this.client.execute({
         sqlText: sql,
+        binds: bindings,
         complete: function (
           err: SnowflakeError | undefined,
           statementExecuted: any,
@@ -157,7 +158,7 @@ class SnowflakeIntegration {
   async internalQuery(query: SqlQuery) {
     await this.client.connect()
     try {
-      return await this.client.execute(query.sql)
+      return await this.client.execute(query.sql, query.bindings)
     } catch (err: any) {
       throw err?.message.split(":")[1] || err?.message
     }

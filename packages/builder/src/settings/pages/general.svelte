@@ -12,7 +12,7 @@
     isOnlyUser,
     recaptchaStore,
   } from "@/stores/builder"
-  import { featureFlags } from "@/stores/portal"
+  import { appsStore, featureFlags } from "@/stores/portal"
   import { admin } from "@/stores/portal/admin"
   import { licensing } from "@/stores/portal/licensing"
   import {
@@ -23,7 +23,9 @@
     Icon,
     Layout,
     Modal,
+    Toggle,
     notifications,
+    TooltipPosition,
   } from "@budibase/bbui"
   import CloneResourcesModal from "../_components/CloneResourcesModal.svelte"
 
@@ -39,6 +41,15 @@
   $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
   $: revertAvailable = $appStore.revertableVersion != null
   $: appRecaptchaEnabled = $recaptchaStore.enabled
+  $: hasOnlyOneWorkspace = $appsStore.apps.length <= 1
+  $: disableDeleteWorkspace = !$isOnlyUser || hasOnlyOneWorkspace
+  $: suppressErrorNotifications =
+    !!$appStore.features?.suppressErrorNotifications
+  $: deleteWorkspaceTooltip = hasOnlyOneWorkspace
+    ? "At least one workspace is required."
+    : !$isOnlyUser
+      ? "Unavailable - another user is editing this workspace"
+      : undefined
 
   const exportApp = (opts: { published: any }) => {
     exportPublishedVersion = !!opts?.published
@@ -52,6 +63,24 @@
       notifications.success(`Recaptcha ${newState ? "enabled" : "disabled"}`)
     } catch (err: any) {
       notifications.error(`Failed to set recaptcha state: ${err.message}`)
+    }
+  }
+
+  const updateSuppressErrorNotifications = async () => {
+    try {
+      const newState = !suppressErrorNotifications
+      await appStore.updateApp({
+        features: {
+          suppressErrorNotifications: newState,
+        },
+      })
+      notifications.success(
+        `Frontend error notifications ${newState ? "disabled" : "enabled"}`
+      )
+    } catch (err: any) {
+      notifications.error(
+        `Failed to update notification setting: ${err.message}`
+      )
     }
   }
 </script>
@@ -211,6 +240,21 @@
   </div>
   <Divider noMargin />
   <Layout noPadding gap="XS">
+    <Heading size="S">Notifications</Heading>
+    <Body size="S">
+      Suppress runtime frontend error notifications in published apps. Errors
+      are still logged to browser console.
+    </Body>
+  </Layout>
+  <div class="row">
+    <Toggle
+      text="Suppress frontend error notifications"
+      value={suppressErrorNotifications}
+      on:change={updateSuppressErrorNotifications}
+    />
+  </div>
+  <Divider noMargin />
+  <Layout noPadding gap="XS">
     <div class="row">
       <Heading size="S">Recaptcha</Heading>
       {#if !$licensing.recaptchaEnabled}
@@ -241,13 +285,12 @@
   <div class="row">
     <Button
       warning
-      disabled={!$isOnlyUser}
+      disabled={disableDeleteWorkspace}
       on:click={() => {
         deleteModal.show()
       }}
-      tooltip={$isOnlyUser
-        ? undefined
-        : "Unavailable - another user is editing this workspace"}
+      tooltip={deleteWorkspaceTooltip}
+      tooltipPosition={TooltipPosition.Right}
     >
       Delete workspace
     </Button>

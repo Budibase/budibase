@@ -160,7 +160,7 @@ export class RowAPI extends TestAPI {
         ? PaginatedSearchRowResponse
         : SearchRowResponse
     >(`/api/${sourceId}/search`, {
-      body: params,
+      body: (params ?? {}) as T,
       expectations,
     })
   }

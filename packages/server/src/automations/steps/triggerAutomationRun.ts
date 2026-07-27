@@ -11,8 +11,10 @@ import * as triggers from "../triggers"
 
 export async function run({
   inputs,
+  isTestRun,
 }: {
   inputs: TriggerAutomationStepInputs
+  isTestRun?: boolean
 }): Promise<TriggerAutomationStepOutputs> {
   const { automationId, ...fieldParams } = inputs.automation
 
@@ -41,7 +43,7 @@ export async function run({
       const response = await triggers.externalTrigger(
         automation,
         { fields: { ...fieldParams }, timeout },
-        { getResponses: true }
+        { getResponses: true, isTestRun }
       )
 
       if (triggers.isAutomationResults(response)) {

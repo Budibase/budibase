@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { sdk } from "@budibase/shared-core"
   import {
     initialise,
     reset,
@@ -7,7 +8,7 @@
     deploymentStore,
     appStore,
   } from "@/stores/builder"
-  import { appsStore, admin, aiConfigsStore } from "@/stores/portal"
+  import { appsStore, admin, aiConfigsStore, auth } from "@/stores/portal"
   import { bb } from "@/stores/bb"
   import { Heading, Layout, Body } from "@budibase/bbui"
   import { API } from "@/api"
@@ -21,7 +22,13 @@
   let promise = getPackage(application)
   let sideNav: SideNav
   let showInviteUsersModal = false
+  $: canInviteUsers = sdk.users.isAdmin($auth.user)
+  $: canManageConnections =
+    $auth.user != null && sdk.users.canCreateApps($auth.user)
   $: if ($bb.settings.open && showInviteUsersModal) {
+    showInviteUsersModal = false
+  }
+  $: if (!canInviteUsers && showInviteUsersModal) {
     showInviteUsersModal = false
   }
 
@@ -54,14 +61,20 @@
   })
 </script>
 
-{#if showInviteUsersModal}
+{#if canInviteUsers && showInviteUsersModal}
   <InviteUsersModal onHide={() => (showInviteUsersModal = false)} />
 {/if}
 
 <div class="root" class:blur={$previewStore.showPreview}>
   <SideNav
     bind:this={sideNav}
-    onInviteUser={() => (showInviteUsersModal = true)}
+    {canInviteUsers}
+    {canManageConnections}
+    onInviteUser={() => {
+      if (canInviteUsers) {
+        showInviteUsersModal = true
+      }
+    }}
   />
   {#await promise}
     <div class="loading"></div>

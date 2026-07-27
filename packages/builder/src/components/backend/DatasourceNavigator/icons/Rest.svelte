@@ -16,7 +16,7 @@
 
 <span class="rest-icon" style={iconStyle}>
   <i
-    class="ph ph-regular ph-webhooks-logo rest-icon__layer rest-icon__stroke"
+    class="ph ph-regular ph-globe-simple rest-icon__layer rest-icon__stroke"
     aria-hidden="true"
   ></i>
 </span>
