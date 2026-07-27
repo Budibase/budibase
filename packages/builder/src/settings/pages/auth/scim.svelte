@@ -184,5 +184,6 @@
     display: flex;
     align-items: center;
     margin-left: 10px;
+    cursor: pointer;
   }
 </style>
