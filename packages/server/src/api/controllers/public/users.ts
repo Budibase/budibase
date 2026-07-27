@@ -30,12 +30,17 @@ const NO_ROLES_MSG =
 async function createUpdateResponse(ctx: UserCtx, user?: User) {
   const base = cloneDeep(ctx.request.body)
   ctx = await sdk.publicApi.users.roleCheck(ctx, user)
+  const requestedApps = ctx.request.body.builder?.apps
+  if (requestedApps !== undefined && !Array.isArray(requestedApps)) {
+    ctx.throw(400, "builder.apps must be an array.")
+  }
   validateGlobalRoleUpdate(ctx, {
     admin: !!ctx.request.body.admin?.global !== !!user?.admin?.global,
     builder: !!ctx.request.body.builder?.global !== !!user?.builder?.global,
   })
   validateBuilderAppUpdate({
     ctx,
+    requestedApps,
     currentBuilder: user?.builder,
   })
   // check the ctx before any updates to it

@@ -37,7 +37,7 @@ type TestContext = {
       email: string
       roles: {}
       builder: {
-        apps: string[]
+        apps: unknown
       }
     }
   }
@@ -51,7 +51,7 @@ const createCtx = ({
 }: {
   caller: TestUser
   target: TestTarget
-  builderApps: string[]
+  builderApps: unknown
 }): UserCtx =>
   ({
     user: caller,
@@ -151,6 +151,31 @@ describe("public users controller", () => {
     expect(next).toHaveBeenCalled()
   })
 
+  it("allows a workspace creator to assign a new user to their workspace", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: "user_creator",
+        email: "creator@example.com",
+        tenantId: "tenant",
+        builder: {
+          apps: ["app_allowed"],
+        },
+      },
+      target: targetUser,
+      builderApps: ["app_allowed"],
+    })
+    setExistingTargetUser()
+    saveTargetUser()
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await controller.create(ctx, next)
+
+    expect(saveUser).toHaveBeenCalledTimes(1)
+    expect(next).toHaveBeenCalled()
+  })
+
   it("rejects a workspace creator assigning another user to a different workspace", async () => {
     const ctx = createCtx({
       caller: {
@@ -176,6 +201,30 @@ describe("public users controller", () => {
     expect(saveUser).not.toHaveBeenCalled()
   })
 
+  it("rejects a workspace creator assigning a new user to a different workspace", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: "user_creator",
+        email: "creator@example.com",
+        tenantId: "tenant",
+        builder: {
+          apps: ["app_allowed"],
+        },
+      },
+      target: targetUser,
+      builderApps: ["app_target"],
+    })
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await expect(controller.create(ctx, next)).rejects.toMatchObject({
+      status: 403,
+    })
+
+    expect(saveUser).not.toHaveBeenCalled()
+  })
+
   it("rejects an end user assigning another user to a workspace", async () => {
     const ctx = createCtx({
       caller: {
@@ -193,6 +242,33 @@ describe("public users controller", () => {
 
     await expect(controller.update(ctx, next)).rejects.toMatchObject({
       status: 403,
+    })
+
+    expect(saveUser).not.toHaveBeenCalled()
+  })
+
+  it("rejects a non-array builder apps value", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: "user_admin",
+        email: "admin@example.com",
+        tenantId: "tenant",
+        admin: {
+          global: true,
+        },
+      },
+      target: targetUser,
+      builderApps: [],
+    })
+    ctx.request.body.builder.apps = {}
+    setExistingTargetUser()
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await expect(controller.update(ctx, next)).rejects.toMatchObject({
+      message: "builder.apps must be an array.",
+      status: 400,
     })
 
     expect(saveUser).not.toHaveBeenCalled()

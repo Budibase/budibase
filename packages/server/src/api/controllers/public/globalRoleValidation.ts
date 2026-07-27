@@ -24,13 +24,15 @@ const validateAppRoleUpdate = (ctx: UserCtx, appId?: string) => {
 
 export const validateBuilderAppUpdate = ({
   ctx,
+  requestedApps,
   currentBuilder,
 }: {
   ctx: UserCtx
+  requestedApps?: string[]
   currentBuilder?: User["builder"]
 }) => {
   const existingApps = currentBuilder?.apps || []
-  for (const appId of ctx.request.body.builder?.apps || []) {
+  for (const appId of requestedApps || []) {
     if (!existingApps.includes(appId)) {
       validateAppRoleUpdate(ctx, appId)
     }
