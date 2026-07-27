@@ -1,6 +1,11 @@
 import * as setup from "../../tests/utilities"
 import { basicTable } from "../../../../tests/utilities/structures"
-import { BasicOperator, Table, UILogicalOperator } from "@budibase/types"
+import {
+  BasicOperator,
+  SortOrder,
+  Table,
+  UILogicalOperator,
+} from "@budibase/types"
 import { PublicAPIRequest } from "./Request"
 import { generator } from "@budibase/backend-core/tests"
 
@@ -91,5 +96,50 @@ describe("check public API security", () => {
     )
     const results = await request.rows.viewSearch(response.data.id, {})
     expect(results.data.length).toEqual(1)
+  })
+
+  it("uses the saved view sort when the request does not specify one", async () => {
+    const prefix = generator.guid()
+    await request.rows.create(
+      table._id!,
+      { name: `${prefix}-a` },
+      { status: 200 }
+    )
+    await request.rows.create(
+      table._id!,
+      { name: `${prefix}-b` },
+      { status: 200 }
+    )
+    const response = await request.views.create(
+      {
+        ...baseView(),
+        sort: {
+          field: "name",
+          order: SortOrder.DESCENDING,
+        },
+        query: {
+          logicalOperator: UILogicalOperator.ALL,
+          groups: [
+            {
+              filters: [
+                {
+                  operator: BasicOperator.STRING,
+                  field: "name",
+                  value: prefix,
+                },
+              ],
+            },
+          ],
+        },
+      },
+      { status: 201 }
+    )
+
+    const results = await request.rows.viewSearch(response.data.id, {})
+
+    expect(results.data.map(row => row.name)).toEqual([
+      `${prefix}-b`,
+      `${prefix}-a`,
+    ])
   })
 })

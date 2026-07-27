@@ -4,7 +4,6 @@ import {
   Row,
   SearchFilters,
   SortOrder,
-  SortField,
   SortType,
   TableSchema,
 } from "@budibase/types"
@@ -15,51 +14,7 @@ import { APIClient } from "../api/types"
 import { QueryUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
 
-const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
-
-const multiSortRows = <T extends Record<string, any>>(
-  rows: T[],
-  sorts: SortField[]
-) => {
-  if (!sorts?.length) {
-    return rows
-  }
-
-  const parseValue = (value: any, type?: SortType) => {
-    if (value == null) {
-      return value
-    }
-    if (type === SortType.NUMBER) {
-      return parseFloat(value)
-    }
-    return `${value}`
-  }
-
-  return rows.slice().sort((a, b) => {
-    for (const sortEntry of sorts) {
-      const sortType = sortEntry.type || SortType.STRING
-      const valA = parseValue(a[sortEntry.field], sortType)
-      const valB = parseValue(b[sortEntry.field], sortType)
-
-      if (valA == null && valB == null) {
-        continue
-      }
-      if (valA == null) {
-        return sortEntry.order === SortOrder.DESCENDING ? -1 : 1
-      }
-      if (valB == null) {
-        return sortEntry.order === SortOrder.DESCENDING ? 1 : -1
-      }
-      if (valA === valB) {
-        continue
-      }
-
-      const result = valA > valB ? 1 : -1
-      return sortEntry.order === SortOrder.DESCENDING ? result * -1 : result
-    }
-    return 0
-  })
-}
+const { buildQuery, limit: queryLimit, multiSort, runQuery, sort } = QueryUtils
 
 interface DataFetchStore<TDefinition, TQuery, TRow extends Row> {
   rows: TRow[]
@@ -289,7 +244,11 @@ export default abstract class BaseDataFetch<
           type: sortEntry.type || getSortType(sortEntry.field),
         })) || []
 
-    if (!normalizedSorts.length && this.options.sortColumn) {
+    if (
+      !normalizedSorts.length &&
+      this.options.sorts == null &&
+      this.options.sortColumn
+    ) {
       if (schema?.[this.options.sortColumn]) {
         normalizedSorts = [
           {
@@ -391,7 +350,18 @@ export default abstract class BaseDataFetch<
         sortEntry => sortEntry?.field && sortEntry?.order
       )
       if (activeSorts.length > 1) {
-        rows = multiSortRows(rows, activeSorts)
+        rows = multiSort(
+          rows,
+          Object.fromEntries(
+            activeSorts.map(sortEntry => [
+              sortEntry.field,
+              {
+                direction: sortEntry.order || SortOrder.ASCENDING,
+                type: sortEntry.type,
+              },
+            ])
+          )
+        )
       } else if (activeSorts.length === 1) {
         const [entry] = activeSorts
         rows = sort(

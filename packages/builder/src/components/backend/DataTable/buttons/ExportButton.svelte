@@ -64,9 +64,15 @@
     if (selectedRows?.length) {
       payload.rows = selectedRows.map(row => row._id)
     }
-    if (sorting) {
-      payload.sort = sorting.sortColumn
-      payload.sortOrder = sorting.sortOrder
+    if (sorting?.length) {
+      payload.sort = Object.fromEntries(
+        sorting.map(sortEntry => [
+          sortEntry.column,
+          {
+            direction: sortEntry.order,
+          },
+        ])
+      )
     }
     return await $dataAPI.exportRows(view, exportFormat, payload)
   }
