@@ -13,6 +13,7 @@ import { DataFetchType } from "."
 import { APIClient } from "../api/types"
 import { QueryUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
+import { normalizeSorts } from "./sort"
 
 const { buildQuery, limit: queryLimit, multiSort, runQuery, sort } = QueryUtils
 
@@ -220,60 +221,11 @@ export default abstract class BaseDataFetch<
     }
     schema = this.enrichSchema(schema)
 
-    const getSortType = (field: string) => {
-      const fieldSchema = schema?.[field]
-      if (
-        fieldSchema?.type === FieldType.NUMBER ||
-        fieldSchema?.type === FieldType.BIGINT ||
-        fieldSchema?.responseType === FieldType.NUMBER ||
-        ("calculationType" in fieldSchema && fieldSchema?.calculationType)
-      ) {
-        return SortType.NUMBER
-      }
-      return SortType.STRING
-    }
-
-    let normalizedSorts =
-      (this.options.sorts || [])
-        ?.filter(sortEntry => sortEntry?.field && schema?.[sortEntry.field])
-        .map(sortEntry => ({
-          ...sortEntry,
-          order: (
-            sortEntry.order || SortOrder.ASCENDING
-          ).toLowerCase() as SortOrder,
-          type: sortEntry.type || getSortType(sortEntry.field),
-        })) || []
-
-    if (
-      !normalizedSorts.length &&
-      this.options.sorts == null &&
-      this.options.sortColumn
-    ) {
-      if (schema?.[this.options.sortColumn]) {
-        normalizedSorts = [
-          {
-            field: this.options.sortColumn,
-            order: (
-              this.options.sortOrder || SortOrder.ASCENDING
-            ).toLowerCase() as SortOrder,
-            type: this.options.sortType || getSortType(this.options.sortColumn),
-          },
-        ]
-      }
-    }
-
-    if (!normalizedSorts.length) {
-      const defaultSortColumn = this.getDefaultSortColumn(definition, schema)
-      if (defaultSortColumn) {
-        normalizedSorts = [
-          {
-            field: defaultSortColumn,
-            order: SortOrder.ASCENDING,
-            type: getSortType(defaultSortColumn),
-          },
-        ]
-      }
-    }
+    const normalizedSorts = normalizeSorts(
+      this.options,
+      schema,
+      this.getDefaultSortColumn(definition, schema)
+    )
 
     if (!normalizedSorts.length) {
       this.options.sortColumn = null
