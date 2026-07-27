@@ -1,9 +1,29 @@
-<script>
+<script lang="ts">
   import ExportButton from "../ExportButton.svelte"
   import { getContext } from "svelte"
+  import type { Readable } from "svelte/store"
+  import type {
+    SortOrder,
+    UIColumn,
+    UIDatasource,
+    UIRow,
+  } from "@budibase/types"
 
-  const { rows, columns, datasource, sort, selectedRows, filter } =
-    getContext("grid")
+  interface SortEntry {
+    column: string
+    order: SortOrder
+  }
+
+  interface GridContext {
+    rows: Readable<UIRow[]>
+    columns: Readable<UIColumn[]>
+    datasource: Readable<UIDatasource>
+    sort: Readable<SortEntry[]>
+    selectedRows: Readable<Record<string, boolean>>
+  }
+
+  const { rows, columns, datasource, sort, selectedRows } =
+    getContext<GridContext>("grid")
 
   $: disabled = !$rows.length || !$columns.length
   $: selectedRowArray = Object.keys($selectedRows).map(id => ({ _id: id }))
@@ -12,7 +32,6 @@
 <ExportButton
   {disabled}
   view={$datasource.tableId}
-  filters={$filter}
   sorting={$sort}
   selectedRows={selectedRowArray}
 />
