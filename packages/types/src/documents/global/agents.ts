@@ -60,8 +60,51 @@ export enum AgentKnowledgeSourceType {
   SHAREPOINT = "sharepoint",
 }
 
-export interface AgentKnowledgeSourceFilterConfig {
-  patterns?: string[]
+export enum SharePointScopeAction {
+  INCLUDE = "include",
+  EXCLUDE = "exclude",
+}
+
+export enum SharePointScopeTargetType {
+  DRIVE = "drive",
+  FOLDER = "folder",
+  FILE = "file",
+  LIST = "list",
+}
+
+interface SharePointDriveScopeTarget {
+  type: SharePointScopeTargetType.DRIVE
+  driveId: string
+  name: string
+}
+
+interface SharePointDriveItemScopeTarget {
+  type: SharePointScopeTargetType.FOLDER | SharePointScopeTargetType.FILE
+  driveId: string
+  itemId: string
+  name: string
+  path: string
+}
+
+interface SharePointListScopeTarget {
+  type: SharePointScopeTargetType.LIST
+  listId: string
+  name: string
+}
+
+export type SharePointScopeTarget =
+  | SharePointDriveScopeTarget
+  | SharePointDriveItemScopeTarget
+  | SharePointListScopeTarget
+
+export interface SharePointScopeRule {
+  action: SharePointScopeAction
+  target: SharePointScopeTarget
+}
+
+export interface AgentSharePointKnowledgeSourceScope {
+  defaultAction: SharePointScopeAction
+  rules: SharePointScopeRule[]
 }
 
 export interface AgentSharePointKnowledgeSource {
@@ -75,7 +118,7 @@ export interface AgentSharePointKnowledgeSource {
       name?: string
       webUrl?: string
     }
-    filters?: AgentKnowledgeSourceFilterConfig
+    scope?: AgentSharePointKnowledgeSourceScope
   }
 }
 

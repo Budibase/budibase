@@ -54,8 +54,6 @@ export async function status() {
     tables: [],
   }
 
-  const normalizeArray = <T>(items: T[]) => [...items].sort()
-
   const toComparableKnowledgeSource = (
     source: NonNullable<AgentOperation["knowledgeSources"]>[number]
   ) => ({
@@ -69,9 +67,12 @@ export async function status() {
             webUrl: source.config.site.webUrl,
           }
         : undefined,
-      filters: source.config.filters
+      scope: source.config.scope
         ? {
-            patterns: normalizeArray(source.config.filters.patterns || []),
+            defaultAction: source.config.scope.defaultAction,
+            rules: [...source.config.scope.rules].sort((a, b) =>
+              JSON.stringify(a).localeCompare(JSON.stringify(b))
+            ),
           }
         : undefined,
     },

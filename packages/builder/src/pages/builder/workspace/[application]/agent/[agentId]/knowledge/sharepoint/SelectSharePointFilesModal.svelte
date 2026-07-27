@@ -11,21 +11,14 @@
   } from "@budibase/bbui"
   import {
     AgentKnowledgeSourceType,
-    type KnowledgeSourceEntry,
+    SharePointScopeAction,
+    type SharePointScopeRule,
   } from "@budibase/types"
   import { agentsStore, selectedAgent } from "@/stores/portal"
   import { workspaceDeploymentStore } from "@/stores/builder"
   import SharePointEntryTreeItem from "./tree/SharePointEntryTreeItem.svelte"
-  import {
-    buildFileDescendantPathsByNodePath,
-    buildEntryTreeFromSourceEntries,
-    buildPatternsFromSelection,
-    SITE_ROOT_PATH,
-    flattenNodesByPath,
-    isExcludeNewByDefaultPatterns,
-    rehydrateFromPatterns,
-    wrapSelectionTreeWithSiteRoot,
-  } from "./sharePointModalUtils"
+  import type { SharePointEntryTreeNode } from "./tree/sharePointEntryTree"
+  import { entryToNode, toggleScopeNode } from "./sharePointScope"
 
   export interface Props {
     agentId?: string
@@ -35,11 +28,11 @@
 
   let { agentId, operationId, siteId }: Props = $props()
 
-  let selectedEntryPaths = $state<string[]>([])
+  let defaultAction = $state(SharePointScopeAction.INCLUDE)
+  let scopeRules = $state<SharePointScopeRule[]>([])
+  let rootNodes = $state<SharePointEntryTreeNode[]>([])
   let loadingEntries = $state(false)
   let loadEntriesError = $state<string | null>(null)
-  let allEntries = $state<KnowledgeSourceEntry[]>([])
-  let includeNewContentByDefault = $state(true)
   let modal = $state<Modal>()
 
   const sharePointSource = $derived.by(() => {
@@ -58,90 +51,104 @@
   })
 
   const sourceId = $derived(sharePointSource?.id)
+  const isOutdated = $derived(
+    !!sharePointSource && !sharePointSource.config.scope
+  )
   const selectedSiteLabel = $derived(
     sharePointSource?.config.site.name ||
       sharePointSource?.config.site.webUrl ||
       siteId ||
       ""
   )
-  const initialPatterns = $derived(
-    sharePointSource?.config.filters?.patterns || []
-  )
-  const entryTree = $derived(buildEntryTreeFromSourceEntries(allEntries))
-  const selectionTree = $derived(wrapSelectionTreeWithSiteRoot(entryTree))
-  const selectionNodeByPath = $derived(flattenNodesByPath(selectionTree))
-  const fileDescendantPathsByNodePath = $derived(
-    buildFileDescendantPathsByNodePath(selectionTree)
-  )
-  const selectablePaths = $derived.by(() =>
-    Array.from(selectionNodeByPath.values())
-      .filter(node => node.type === "file" || node.type === "list")
-      .map(node => node.path)
-      .sort((a, b) => a.localeCompare(b))
-  )
-  const selectedCountLabel = $derived(
-    `${selectedEntryPaths.filter(path => path !== SITE_ROOT_PATH).length} items selected`
+  const ruleCountLabel = $derived(
+    `${scopeRules.length} scope ${scopeRules.length === 1 ? "rule" : "rules"}`
   )
 
-  const loadAllEntries = async () => {
-    if (!agentId || !operationId || !siteId) {
-      return false
+  const loadRootEntries = async () => {
+    if (!agentId || !operationId || !siteId || isOutdated) {
+      return
     }
     loadingEntries = true
     loadEntriesError = null
-    allEntries = []
+    rootNodes = []
     try {
-      const response =
-        await agentsStore.fetchOperationKnowledgeSourceAllEntries(
-          agentId,
-          operationId,
-          siteId
-        )
-      allEntries = response.entries
-      return true
+      const response = await agentsStore.fetchOperationKnowledgeSourceEntries(
+        agentId,
+        operationId,
+        siteId
+      )
+      rootNodes = response.entries.map(entryToNode)
     } catch (error) {
       console.error(error)
       loadEntriesError =
-        "Failed to load SharePoint files. Check your network connection and try again."
+        "Failed to load SharePoint content. Check your connection and try again."
       notifications.error(loadEntriesError)
-      return false
     } finally {
       loadingEntries = false
     }
   }
 
-  const rehydrateSelectedEntryPaths = () => {
-    const selectablePathSet = new Set(selectablePaths)
-    selectedEntryPaths = rehydrateFromPatterns(
-      initialPatterns,
-      selectablePaths
-    ).filter(path => selectablePathSet.has(path))
-    if (selectedEntryPaths.length === selectablePaths.length) {
-      selectedEntryPaths = [SITE_ROOT_PATH, ...selectedEntryPaths]
+  const expandNode = async (node: SharePointEntryTreeNode) => {
+    if (
+      !agentId ||
+      !operationId ||
+      !siteId ||
+      !node.driveId ||
+      node.childrenLoaded ||
+      node.loading
+    ) {
+      return
+    }
+    node.loading = true
+    node.loadError = undefined
+    rootNodes = [...rootNodes]
+    try {
+      const response = await agentsStore.fetchOperationKnowledgeSourceEntries(
+        agentId,
+        operationId,
+        siteId,
+        {
+          driveId: node.driveId,
+          parentItemId: node.type === "folder" ? node.itemId : undefined,
+          parentPath: node.path,
+        }
+      )
+      node.children = response.entries.map(entryToNode)
+      node.childrenLoaded = true
+    } catch (error) {
+      console.error(error)
+      node.loadError = "Failed to load"
+      notifications.error(`Failed to load ${node.name}`)
+    } finally {
+      node.loading = false
+      rootNodes = [...rootNodes]
     }
   }
 
-  const retryLoadAllEntries = async () => {
-    const loaded = await loadAllEntries()
-    if (!loaded) {
-      return
-    }
-    rehydrateSelectedEntryPaths()
+  const toggleNode = (
+    node: SharePointEntryTreeNode,
+    nextSelected: boolean,
+    inheritedAction: SharePointScopeAction
+  ) => {
+    scopeRules = toggleScopeNode({
+      rules: scopeRules,
+      node,
+      nextSelected,
+      inheritedAction,
+    })
   }
 
   export async function show() {
-    selectedEntryPaths = []
-    loadEntriesError = null
-    includeNewContentByDefault = !isExcludeNewByDefaultPatterns(initialPatterns)
-
-    const loaded = await loadAllEntries()
-    if (!loaded) {
-      modal?.show()
-      return
+    const scope = sharePointSource?.config.scope
+    if (scope) {
+      defaultAction = scope.defaultAction
+      scopeRules = [...scope.rules]
+    } else {
+      defaultAction = SharePointScopeAction.EXCLUDE
+      scopeRules = []
     }
-    rehydrateSelectedEntryPaths()
-
     modal?.show()
+    await loadRootEntries()
   }
 
   export function hide() {
@@ -149,32 +156,19 @@
   }
 
   const handleConfirm = async () => {
-    if (!agentId || !operationId || !siteId) {
+    if (!agentId || !operationId || !siteId || isOutdated) {
       return keepOpen
     }
-    const selectedSelectablePaths = selectedEntryPaths.filter(path =>
-      selectablePaths.includes(path)
-    )
-    if (selectedSelectablePaths.length === 0) {
-      notifications.error("Please select at least one file or list to sync")
-
-      return keepOpen
-    }
-
-    const filters = buildPatternsFromSelection(
-      selectedEntryPaths,
-      selectablePaths,
-      selectionNodeByPath,
-      includeNewContentByDefault
-    )
-
     try {
-      await agentsStore.applyOperationSharePointSiteFilters(
+      await agentsStore.applyOperationSharePointSiteScope(
         agentId,
         operationId,
         siteId,
         {
-          filters,
+          scope: {
+            defaultAction,
+            rules: scopeRules,
+          },
         }
       )
       await Promise.all([
@@ -182,25 +176,13 @@
         workspaceDeploymentStore.fetch(),
       ])
 
-      notifications.success("SharePoint folders/files updated and sync started")
+      notifications.success("SharePoint scope updated and sync started")
       hide()
     } catch (error) {
       console.error(error)
-      notifications.error("Failed to update SharePoint content")
+      notifications.error("Failed to update SharePoint scope")
       return keepOpen
     }
-  }
-
-  const toggleEntryPaths = (paths: string[], nextSelected: boolean) => {
-    const nextPaths = new Set(selectedEntryPaths)
-    for (const path of paths) {
-      if (nextSelected) {
-        nextPaths.add(path)
-      } else {
-        nextPaths.delete(path)
-      }
-    }
-    selectedEntryPaths = Array.from(nextPaths)
   }
 </script>
 
@@ -209,7 +191,7 @@
     title={`SharePoint - ${selectedSiteLabel}`}
     showCloseIcon={false}
     showDivider={false}
-    showConfirmButton
+    showConfirmButton={!isOutdated}
     size="XL"
     confirmText="Save"
     cancelText="Cancel"
@@ -217,50 +199,65 @@
     onConfirm={handleConfirm}
     onCancel={hide}
   >
-    <div class="entries-header">
-      <RadioGroup
-        options={[
-          { label: "Include new content by default", value: true },
-          { label: "Exclude new content by default", value: false },
-        ]}
-        value={includeNewContentByDefault}
-        on:change={e => {
-          includeNewContentByDefault = e.detail === "true"
-        }}
-        getOptionLabel={o => o.label}
-        getOptionValue={o => o.value}
-        getOptionSubtitle={o => o.subtitle}
-        direction="horizontal"
-      ></RadioGroup>
-      <span class="selected-count">{selectedCountLabel}</span>
-    </div>
-
-    {#if loadingEntries}
-      <Body size="S">Loading SharePoint content...</Body>
-    {:else if loadEntriesError}
-      <div class="load-error">
-        <Body size="S">{loadEntriesError}</Body>
-        <ActionButton quiet icon="refresh" on:click={retryLoadAllEntries}
-          >Retry</ActionButton
-        >
-      </div>
-    {:else if selectionTree.length === 0}
-      <Body size="S">No files or lists found for this site.</Body>
+    {#if isOutdated}
+      <Body size="S">
+        This SharePoint source uses an outdated configuration. Delete it and
+        reconnect the site to configure scoped sync.
+      </Body>
     {:else}
-      <div class="entries-list">
-        <TreeView width="auto" standalone={false} quiet selectable>
-          {#each selectionTree as node (node.path)}
-            <SharePointEntryTreeItem
-              selectable
-              {node}
-              selectedPaths={selectedEntryPaths}
-              {fileDescendantPathsByNodePath}
-              onTogglePaths={toggleEntryPaths}
-              showStatus={false}
-            />
-          {/each}
-        </TreeView>
+      <div class="entries-header">
+        <RadioGroup
+          options={[
+            {
+              label: "Include new content by default",
+              value: SharePointScopeAction.INCLUDE,
+            },
+            {
+              label: "Exclude new content by default",
+              value: SharePointScopeAction.EXCLUDE,
+            },
+          ]}
+          value={defaultAction}
+          on:change={e => {
+            defaultAction = e.detail as SharePointScopeAction
+            scopeRules = []
+          }}
+          getOptionLabel={o => o.label}
+          getOptionValue={o => o.value}
+          direction="horizontal"
+        ></RadioGroup>
+        <span class="selected-count">{ruleCountLabel}</span>
       </div>
+
+      {#if loadingEntries}
+        <Body size="S">Loading SharePoint content...</Body>
+      {:else if loadEntriesError}
+        <div class="load-error">
+          <Body size="S">{loadEntriesError}</Body>
+          <ActionButton quiet icon="refresh" on:click={loadRootEntries}>
+            Retry
+          </ActionButton>
+        </div>
+      {:else if rootNodes.length === 0}
+        <Body size="S">No document libraries or lists found for this site.</Body
+        >
+      {:else}
+        <div class="entries-list">
+          <TreeView width="auto" standalone={false} quiet selectable>
+            {#each rootNodes as node (node.id)}
+              <SharePointEntryTreeItem
+                selectable
+                {node}
+                {scopeRules}
+                inheritedAction={defaultAction}
+                onToggleNode={toggleNode}
+                onExpandNode={expandNode}
+                showStatus={false}
+              />
+            {/each}
+          </TreeView>
+        </div>
+      {/if}
     {/if}
   </ModalContent>
 </Modal>
@@ -272,10 +269,6 @@
     align-items: center;
     gap: var(--spacing-xs);
     justify-content: space-between;
-  }
-
-  .entries-header :global(.spectrum-ActionButton:first-of-type) {
-    margin-left: auto;
   }
 
   .selected-count {

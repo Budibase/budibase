@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { KnowledgeBaseFileStatus } from "@budibase/types"
+  import {
+    KnowledgeBaseFileStatus,
+    SharePointScopeAction,
+    SharePointScopeTargetType,
+    type SharePointScopeRule,
+  } from "@budibase/types"
   import {
     Body,
     Helpers,
@@ -19,6 +24,14 @@
     selectedPaths?: string[]
     fileDescendantPathsByNodePath?: Map<string, string[]>
     onTogglePaths?: (_paths: string[], _nextSelected: boolean) => void
+    scopeRules?: SharePointScopeRule[]
+    inheritedAction?: SharePointScopeAction
+    onToggleNode?: (
+      _node: SharePointEntryTreeNode,
+      _nextSelected: boolean,
+      _inheritedAction: SharePointScopeAction
+    ) => void
+    onExpandNode?: (_node: SharePointEntryTreeNode) => Promise<void> | void
     showStatus?: boolean
   }
 
@@ -28,6 +41,10 @@
     selectedPaths,
     fileDescendantPathsByNodePath,
     onTogglePaths,
+    scopeRules,
+    inheritedAction = SharePointScopeAction.INCLUDE,
+    onToggleNode,
+    onExpandNode,
     showStatus = true,
   }: Props = $props()
 
@@ -60,7 +77,7 @@
   }
 
   let errorModal = $state<Modal>()
-  let hasChildren = $derived(node.children.length > 0)
+  let hasChildren = $derived(!!node.hasChildren || node.children.length > 0)
   let hasError = $derived(
     node.status === KnowledgeBaseFileStatus.FAILED && !!node.errorMessage
   )
@@ -82,6 +99,28 @@
     notifications.success("Error copied to clipboard")
   }
   let selectedSet = $derived(new Set(selectedPaths))
+  const matchesRule = (rule: SharePointScopeRule) => {
+    const target = rule.target
+    if (node.type === "drive") {
+      return (
+        target.type === SharePointScopeTargetType.DRIVE &&
+        target.driveId === node.driveId
+      )
+    }
+    if (node.type === "folder" || node.type === "file") {
+      return (
+        target.type === node.type &&
+        target.driveId === node.driveId &&
+        target.itemId === node.itemId
+      )
+    }
+    return (
+      target.type === SharePointScopeTargetType.LIST &&
+      target.listId === node.listId
+    )
+  }
+  let exactRule = $derived(scopeRules?.find(matchesRule))
+  let effectiveAction = $derived(exactRule?.action || inheritedAction)
   let targetPaths = $derived.by(() => {
     if (node.type === "file" || node.type === "list") {
       return [node.path]
@@ -89,12 +128,35 @@
     return fileDescendantPathsByNodePath?.get(node.path) || []
   })
   let selected = $derived.by(() => {
+    if (scopeRules) {
+      return effectiveAction === SharePointScopeAction.INCLUDE
+    }
     if (targetPaths.length === 0) {
       return false
     }
     return targetPaths.every(path => selectedSet.has(path))
   })
   let indeterminate = $derived.by(() => {
+    if (scopeRules) {
+      return scopeRules.some(rule => {
+        if (rule.action === effectiveAction) {
+          return false
+        }
+        const target = rule.target
+        if (node.type === "drive") {
+          return "driveId" in target && target.driveId === node.driveId
+        }
+        if (node.type === "folder") {
+          return (
+            (target.type === SharePointScopeTargetType.FOLDER ||
+              target.type === SharePointScopeTargetType.FILE) &&
+            target.driveId === node.driveId &&
+            target.path.startsWith(`${node.path}/`)
+          )
+        }
+        return false
+      })
+    }
     if (targetPaths.length === 0) {
       return false
     }
@@ -103,11 +165,22 @@
     ).length
     return selectedCount > 0 && selectedCount < targetPaths.length
   })
-  let disabled = $derived(targetPaths.length === 0)
+  let disabled = $derived(scopeRules ? false : targetPaths.length === 0)
 
   const handleSelect = (_event: CustomEvent<boolean>) => {
     const nextSelected = indeterminate ? true : !selected
+    if (scopeRules) {
+      onToggleNode?.(node, nextSelected, inheritedAction)
+      return
+    }
     onTogglePaths?.(targetPaths, nextSelected)
+  }
+
+  const handleToggle = async (event: CustomEvent<boolean>) => {
+    node.open = event.detail
+    if (event.detail && !node.childrenLoaded) {
+      await onExpandNode?.(node)
+    }
   }
 </script>
 
@@ -120,9 +193,10 @@
     {indeterminate}
     showCheckbox={selectable}
     {disabled}
-    open={hasChildren}
+    open={node.open || false}
     {hasChildren}
     on:select={handleSelect}
+    on:toggle={handleToggle}
     on:click={openErrorModal}
   >
     <svelte:fragment slot="post">
@@ -130,6 +204,11 @@
         <StatusLight size="S" {...getSharePointStatusLightProps(node.status)}>
           {getSharePointStatusText(node.status)}
         </StatusLight>
+      {/if}
+      {#if node.loading}
+        <Body size="XS">Loading...</Body>
+      {:else if node.loadError}
+        <Body size="XS">Retry</Body>
       {/if}
     </svelte:fragment>
 
@@ -141,6 +220,10 @@
           {selectedPaths}
           {fileDescendantPathsByNodePath}
           {onTogglePaths}
+          {scopeRules}
+          inheritedAction={effectiveAction}
+          {onToggleNode}
+          {onExpandNode}
           {showStatus}
         />
       {/each}

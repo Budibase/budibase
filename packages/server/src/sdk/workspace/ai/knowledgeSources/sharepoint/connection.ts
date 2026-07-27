@@ -400,7 +400,7 @@ export interface SharePointDriveRef {
   name: string
 }
 
-interface SharePointDriveItem {
+export interface SharePointDriveItem {
   id?: string
   name?: string
   eTag?: string
@@ -410,6 +410,9 @@ interface SharePointDriveItem {
     mimeType?: string
   }
   folder?: Record<string, unknown>
+  parentReference?: {
+    path?: string
+  }
 }
 
 interface SharePointDriveItemsResponse {
@@ -417,7 +420,7 @@ interface SharePointDriveItemsResponse {
   "@odata.nextLink"?: string
 }
 
-interface SharePointFileRef {
+export interface SharePointFileRef {
   driveId: string
   itemId: string
   filename: string
@@ -703,7 +706,7 @@ export const fetchSharePointListDocument = async (
   return { buffer: Buffer.concat(chunks, totalBytes), itemCount }
 }
 
-const listSharePointDriveItems = async (
+export const listSharePointDriveItems = async (
   bearerToken: string,
   driveId: string,
   itemId?: string,
@@ -728,6 +731,9 @@ const listSharePointDriveItems = async (
         }),
       signal
     )
+    if (response.status === 404) {
+      return items
+    }
     if (!response.ok) {
       console.error("Failed to list SharePoint drive items", {
         status: response.status,
@@ -759,12 +765,53 @@ const listSharePointDriveItems = async (
   return items
 }
 
+export const getSharePointDriveItem = async (
+  bearerToken: string,
+  driveId: string,
+  itemId: string,
+  signal?: AbortSignal
+): Promise<SharePointDriveItem | undefined> => {
+  const response = await requestWithRetries(
+    "getSharePointDriveItem",
+    () =>
+      fetch(
+        `${SHAREPOINT_API_BASE}/drives/${encodeURIComponent(
+          driveId
+        )}/items/${encodeURIComponent(
+          itemId
+        )}?$select=id,name,eTag,lastModifiedDateTime,size,file,folder,parentReference`,
+        {
+          signal,
+          headers: {
+            Authorization: bearerToken,
+          },
+        }
+      ),
+    signal
+  )
+  if (response.status === 404) {
+    return undefined
+  }
+  if (!response.ok) {
+    throw new HTTPError(
+      response.status === 401 || response.status === 403
+        ? "Access denied by Microsoft Graph. Ensure delegated SharePoint read permissions are granted."
+        : `Failed to fetch SharePoint drive item (${response.status})`,
+      400
+    )
+  }
+  return (await response.json()) as SharePointDriveItem
+}
+
 export const collectSharePointFilesRecursive = async (
   bearerToken: string,
   driveId: string,
   folderId?: string,
   parentPath = "",
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  shouldVisit?: (
+    item: SharePointDriveItem & { id: string; name: string; path: string }
+  ) => boolean
 ): Promise<SharePointFileRef[]> => {
   const items = await listSharePointDriveItems(
     bearerToken,
@@ -782,15 +829,20 @@ export const collectSharePointFilesRecursive = async (
       continue
     }
 
+    const path = parentPath ? `${parentPath}/${name}` : name
+    if (shouldVisit && !shouldVisit({ ...item, id: itemId, name, path })) {
+      continue
+    }
+
     if (item.folder) {
-      const nextPath = parentPath ? `${parentPath}/${name}` : name
       files.push(
         ...(await collectSharePointFilesRecursive(
           bearerToken,
           driveId,
           itemId,
-          nextPath,
-          signal
+          path,
+          signal,
+          shouldVisit
         ))
       )
       continue
@@ -804,7 +856,7 @@ export const collectSharePointFilesRecursive = async (
       driveId,
       itemId,
       filename: name,
-      path: parentPath ? `${parentPath}/${name}` : name,
+      path,
       mimetype: item.file.mimeType || undefined,
       etag: item.eTag || undefined,
       lastModifiedAt: item.lastModifiedDateTime || undefined,

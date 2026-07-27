@@ -9,6 +9,7 @@ import {
   AgentKnowledgeSourceSyncRunStatus,
   KnowledgeBaseFileStatus,
   RestAuthType,
+  SharePointScopeAction,
 } from "@budibase/types"
 import environment, { setEnv } from "../../../../environment"
 import { getQueue } from "../../../../sdk/workspace/ai/rag/ragQueue"
@@ -42,6 +43,10 @@ describe("agent files", () => {
   })
 
   const fileBuffer = Buffer.from("Hello from Budibase")
+  const defaultSharePointScope = {
+    defaultAction: SharePointScopeAction.INCLUDE,
+    rules: [],
+  }
   const operation = {
     id: "operation_1",
     name: "Main operation",
@@ -454,6 +459,7 @@ describe("agent files", () => {
         site: { id: "site-1" },
         datasourceId: "datasource-1",
         authConfigId: "auth-1",
+        scope: defaultSharePointScope,
       },
       {
         status: 400,
@@ -479,6 +485,7 @@ describe("agent files", () => {
 
     await config.api.agent.connectSharePointSite(created._id!, operationId, {
       ...connection,
+      scope: defaultSharePointScope,
       site: {
         id: "contoso.sharepoint.com,site-id,web-id",
         name: "Product Documentation",
@@ -527,6 +534,7 @@ describe("agent files", () => {
 
     await config.api.agent.connectSharePointSite(created._id!, operationId, {
       ...connection,
+      scope: defaultSharePointScope,
       site: {
         id: "site-1",
         name: "Stale Site Name",
@@ -568,6 +576,7 @@ describe("agent files", () => {
         site: { id: "" },
         datasourceId: "datasource-1",
         authConfigId: "auth-1",
+        scope: defaultSharePointScope,
       },
       { status: 400 }
     )

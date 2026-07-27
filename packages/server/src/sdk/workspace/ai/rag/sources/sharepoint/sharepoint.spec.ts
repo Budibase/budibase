@@ -75,12 +75,15 @@ import {
   KnowledgeBaseFileSourceType,
   KnowledgeBaseFileStatus,
   KnowledgeBaseType,
+  SharePointScopeAction,
+  SharePointScopeTargetType,
   type AgentOperation,
   type Agent,
+  type AgentSharePointKnowledgeSourceScope,
   type KnowledgeBaseFile,
 } from "@budibase/types"
 import {
-  fetchAllSharePointEntriesForOperation,
+  fetchSharePointEntriesForOperation,
   SharePointSyncTimeoutError,
   syncSharePointSourcesForAgent,
 } from "./sharepoint"
@@ -97,7 +100,10 @@ const toArrayBuffer = (value: string) => {
 const makeSharePointAgent = (
   sourceId: string,
   siteId: string,
-  patterns?: string[],
+  scope: AgentSharePointKnowledgeSourceScope = {
+    defaultAction: SharePointScopeAction.INCLUDE,
+    rules: [],
+  },
   datasourceId = "datasource_1",
   authConfigId = "auth_1"
 ): Agent =>
@@ -118,7 +124,7 @@ const makeSharePointAgent = (
               datasourceId,
               authConfigId,
               site: { id: siteId },
-              ...(patterns ? { filters: { patterns } } : {}),
+              scope,
             },
           },
         ],
@@ -126,6 +132,37 @@ const makeSharePointAgent = (
       } satisfies AgentOperation,
     ],
   }) as Agent
+
+const selectiveScope = (
+  targets: AgentSharePointKnowledgeSourceScope["rules"][number]["target"][]
+): AgentSharePointKnowledgeSourceScope => ({
+  defaultAction: SharePointScopeAction.EXCLUDE,
+  rules: targets.map(target => ({
+    action: SharePointScopeAction.INCLUDE,
+    target,
+  })),
+})
+
+const folderTarget = (
+  driveId: string,
+  itemId: string,
+  path: string
+): AgentSharePointKnowledgeSourceScope["rules"][number]["target"] => ({
+  type: SharePointScopeTargetType.FOLDER,
+  driveId,
+  itemId,
+  name: path.split("/").pop() || path,
+  path,
+})
+
+const listTarget = (
+  listId: string,
+  name = listId
+): AgentSharePointKnowledgeSourceScope["rules"][number]["target"] => ({
+  type: SharePointScopeTargetType.LIST,
+  listId,
+  name,
+})
 
 const makeSharePointFile = ({
   id,
@@ -257,7 +294,21 @@ describe("rag/sharepoint sync deduplication", () => {
     jest.useRealTimers()
   })
 
-  it("returns document libraries as roots in file paths", async () => {
+  it("fails closed for outdated SharePoint source configurations", async () => {
+    const agent = makeSharePointAgent("sharepoint_source_1", "site-1")
+    const source = agent.operations?.[0]?.knowledgeSources?.[0]
+    if (source?.type === AgentKnowledgeSourceType.SHAREPOINT) {
+      delete source.config.scope
+    }
+    mockAgentsGetOrThrow.mockResolvedValue(agent)
+
+    await expect(
+      syncSharePointSourcesForAgent("agent_1", "sharepoint_source_1")
+    ).rejects.toThrow("Delete and reconnect")
+    expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
+  })
+
+  it("returns document libraries without enumerating their contents", async () => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"
     mockAgentsGetOrThrow.mockResolvedValue(
@@ -279,33 +330,9 @@ describe("rag/sharepoint sync deduplication", () => {
           }),
         } as Response,
       },
-      ...["drive-a", "drive-b"].map(driveId => ({
-        match: `/drives/${driveId}/root/children`,
-        response: {
-          ok: true,
-          status: 200,
-          json: async () => ({
-            value: [
-              {
-                id: `item-${driveId}`,
-                name: "handbook.txt",
-                file: { mimeType: "text/plain" },
-              },
-            ],
-          }),
-        } as Response,
-      })),
-      {
-        match: "/drives/drive-empty/root/children",
-        response: {
-          ok: true,
-          status: 200,
-          json: async () => ({ value: [] }),
-        } as Response,
-      },
     ])
 
-    const result = await fetchAllSharePointEntriesForOperation(
+    const result = await fetchSharePointEntriesForOperation(
       "agent_1",
       "operation_1",
       siteId
@@ -315,25 +342,76 @@ describe("rag/sharepoint sync deduplication", () => {
       expect.objectContaining({
         name: "Department Files",
         path: "Department Files",
-        type: "folder",
-      }),
-      expect.objectContaining({
-        path: "Department Files/handbook.txt",
-        type: "file",
+        type: "drive",
       }),
       expect.objectContaining({
         name: "Documents",
         path: "Documents",
-        type: "folder",
-      }),
-      expect.objectContaining({
-        path: "Documents/handbook.txt",
-        type: "file",
+        type: "drive",
       }),
       expect.objectContaining({
         name: "Empty Library",
         path: "Empty Library",
+        type: "drive",
+      }),
+    ])
+  })
+
+  it("returns only the immediate children of an expanded folder", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [{ id: "drive-a", name: "Documents" }],
+          }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/items/folder-1/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              { id: "folder-2", name: "Archive", folder: {} },
+              {
+                id: "file-1",
+                name: "handbook.txt",
+                file: { mimeType: "text/plain" },
+              },
+            ],
+          }),
+        } as Response,
+      },
+    ])
+
+    const result = await fetchSharePointEntriesForOperation(
+      "agent_1",
+      "operation_1",
+      siteId,
+      "drive-a",
+      "folder-1",
+      "Documents/Policies"
+    )
+
+    expect(result.entries).toEqual([
+      expect.objectContaining({
+        itemId: "folder-2",
+        path: "Documents/Policies/Archive",
         type: "folder",
+      }),
+      expect.objectContaining({
+        itemId: "file-1",
+        path: "Documents/Policies/handbook.txt",
+        type: "file",
       }),
     ])
   })
@@ -489,12 +567,12 @@ describe("rag/sharepoint sync deduplication", () => {
     })
   })
 
-  it("deletes existing files that no longer match source filters", async () => {
+  it("deletes existing files that are outside an empty selective scope", async () => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"
 
     mockAgentsGetOrThrow.mockResolvedValue(
-      makeSharePointAgent(sourceId, siteId, ["!**", "allowed/**"])
+      makeSharePointAgent(sourceId, siteId, selectiveScope([]))
     )
 
     mockKnowledgeBaseListFiles.mockResolvedValue([
@@ -544,8 +622,11 @@ describe("rag/sharepoint sync deduplication", () => {
 
   it.each([
     {
-      name: "keeps legacy relative filters matching across libraries",
-      patterns: ["!**", "Policies/**"],
+      name: "syncs selected folders across libraries",
+      targets: [
+        folderTarget("drive-a", "folder-drive-a", "Documents/Policies"),
+        folderTarget("drive-b", "folder-drive-b", "Department Files/Policies"),
+      ],
       expectedDriveIds: ["drive-a", "drive-b"],
       expectedPaths: [
         "Documents/Policies/handbook.txt",
@@ -553,23 +634,19 @@ describe("rag/sharepoint sync deduplication", () => {
       ],
     },
     {
-      name: "limits library filters to one library",
-      patterns: ["!**", "Documents/Policies/**"],
+      name: "limits folder selection to one library",
+      targets: [
+        folderTarget("drive-a", "folder-drive-a", "Documents/Policies"),
+      ],
       expectedDriveIds: ["drive-a"],
       expectedPaths: ["Documents/Policies/handbook.txt"],
     },
-    {
-      name: "limits drive filters to one library",
-      patterns: ["!**", "drive:drive-a/Policies/**"],
-      expectedDriveIds: ["drive-a"],
-      expectedPaths: ["Documents/Policies/handbook.txt"],
-    },
-  ])("$name", async ({ patterns, expectedDriveIds, expectedPaths }) => {
+  ])("$name", async ({ targets, expectedDriveIds, expectedPaths }) => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"
 
     mockAgentsGetOrThrow.mockResolvedValue(
-      makeSharePointAgent(sourceId, siteId, patterns)
+      makeSharePointAgent(sourceId, siteId, selectiveScope(targets))
     )
     mockKnowledgeBaseListFiles.mockResolvedValue([])
 
@@ -588,6 +665,19 @@ describe("rag/sharepoint sync deduplication", () => {
         } as Response,
       },
       ...["drive-a", "drive-b"].flatMap(driveId => [
+        {
+          match: `/drives/${driveId}/items/folder-${driveId}?`,
+          response: {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              id: `folder-${driveId}`,
+              name: "Policies",
+              folder: {},
+              parentReference: { path: `/drives/${driveId}/root:` },
+            }),
+          } as Response,
+        },
         {
           match: `/drives/${driveId}/root/children`,
           response: {
@@ -644,19 +734,22 @@ describe("rag/sharepoint sync deduplication", () => {
     expect(result).toMatchObject({
       synced: expectedDriveIds.length,
       failed: 0,
-      totalDiscovered: 2,
+      totalDiscovered: expectedDriveIds.length,
     })
   })
 
-  it("does not delete existing files selected by drive filters", async () => {
+  it("does not delete existing files inside selected folders", async () => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"
 
     mockAgentsGetOrThrow.mockResolvedValue(
-      makeSharePointAgent(sourceId, siteId, [
-        "!**",
-        "drive:drive-a/Policies/**",
-      ])
+      makeSharePointAgent(
+        sourceId,
+        siteId,
+        selectiveScope([
+          folderTarget("drive-a", "folder-drive-a", "Documents/Policies"),
+        ])
+      )
     )
     mockKnowledgeBaseListFiles.mockResolvedValue([
       makeSharePointFile({
@@ -677,6 +770,19 @@ describe("rag/sharepoint sync deduplication", () => {
           status: 200,
           json: async () => ({
             value: [{ id: "drive-a", name: "Documents" }],
+          }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/items/folder-drive-a?",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            id: "folder-drive-a",
+            name: "Policies",
+            folder: {},
+            parentReference: { path: "/drives/drive-a/root:" },
           }),
         } as Response,
       },
@@ -721,12 +827,20 @@ describe("rag/sharepoint sync deduplication", () => {
     })
   })
 
-  it("does not inflate already synced count with filtered-out files", async () => {
+  it("does not enumerate files beneath excluded folders", async () => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"
 
     mockAgentsGetOrThrow.mockResolvedValue(
-      makeSharePointAgent(sourceId, siteId, ["keep/**"])
+      makeSharePointAgent(sourceId, siteId, {
+        defaultAction: SharePointScopeAction.INCLUDE,
+        rules: [
+          {
+            action: SharePointScopeAction.EXCLUDE,
+            target: folderTarget("drive-a", "folder-drop", "drive-a/drop"),
+          },
+        ],
+      })
     )
 
     mockKnowledgeBaseListFiles.mockResolvedValue([
@@ -831,7 +945,7 @@ describe("rag/sharepoint sync deduplication", () => {
       deleted: 1,
       failed: 0,
       unsupported: 0,
-      totalDiscovered: 2,
+      totalDiscovered: 1,
     })
   })
 
@@ -1586,12 +1700,12 @@ describe("rag/sharepoint sync deduplication", () => {
     })
   })
 
-  it("excludes lists with the shared exclude-all pattern", async () => {
+  it("excludes all lists from an empty selective scope", async () => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"
 
     mockAgentsGetOrThrow.mockResolvedValue(
-      makeSharePointAgent(sourceId, siteId, ["!**"])
+      makeSharePointAgent(sourceId, siteId, selectiveScope([]))
     )
     mockKnowledgeBaseListFiles.mockResolvedValue([
       makeSharePointListFile({
@@ -1627,7 +1741,7 @@ describe("rag/sharepoint sync deduplication", () => {
     )
     expect(result).toMatchObject({
       synced: 0,
-      totalDiscovered: 1,
+      totalDiscovered: 0,
     })
   })
 
@@ -1636,7 +1750,11 @@ describe("rag/sharepoint sync deduplication", () => {
     const siteId = "site-1"
 
     mockAgentsGetOrThrow.mockResolvedValue(
-      makeSharePointAgent(sourceId, siteId, ["!**", "__list__:list-1"])
+      makeSharePointAgent(
+        sourceId,
+        siteId,
+        selectiveScope([listTarget("list-1", "FAQs")])
+      )
     )
     mockKnowledgeBaseListFiles.mockResolvedValue([])
     mockListSharePointLists.mockResolvedValue([
@@ -1706,16 +1824,24 @@ describe("rag/sharepoint sync deduplication", () => {
     expect(result).toMatchObject({
       synced: 1,
       failed: 0,
-      totalDiscovered: 3,
+      totalDiscovered: 1,
     })
   })
 
-  it("excludes exact list paths while including new content by default", async () => {
+  it("excludes selected lists while including new content by default", async () => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"
 
     mockAgentsGetOrThrow.mockResolvedValue(
-      makeSharePointAgent(sourceId, siteId, ["!__list__:list-1"])
+      makeSharePointAgent(sourceId, siteId, {
+        defaultAction: SharePointScopeAction.INCLUDE,
+        rules: [
+          {
+            action: SharePointScopeAction.EXCLUDE,
+            target: listTarget("list-1", "FAQs"),
+          },
+        ],
+      })
     )
     mockKnowledgeBaseListFiles.mockResolvedValue([])
     mockListSharePointLists.mockResolvedValue([

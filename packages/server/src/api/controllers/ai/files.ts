@@ -302,7 +302,7 @@ export async function fetchAgentKnowledgeSourceOptions(
   ctx.status = 200
 }
 
-export async function fetchAgentKnowledgeSourceAllEntries(
+export async function fetchAgentKnowledgeSourceEntries(
   ctx: UserCtx<
     void,
     FetchAgentKnowledgeSourceEntriesResponse,
@@ -314,10 +314,19 @@ export async function fetchAgentKnowledgeSourceAllEntries(
   if (!siteId) {
     throw new HTTPError("siteId is required", 400)
   }
-  ctx.body = await sdk.ai.rag.fetchAllSharePointEntriesForOperation(
+  const driveId = String(ctx.query.driveId || "").trim() || undefined
+  const parentItemId = String(ctx.query.parentItemId || "").trim() || undefined
+  const parentPath = String(ctx.query.parentPath || "").trim()
+  if (parentItemId && !driveId) {
+    throw new HTTPError("driveId is required with parentItemId", 400)
+  }
+  ctx.body = await sdk.ai.rag.fetchSharePointEntriesForOperation(
     agentId,
     operationId,
-    siteId
+    siteId,
+    driveId,
+    parentItemId,
+    parentPath
   )
   ctx.status = 200
 }
@@ -381,7 +390,7 @@ export async function connectAgentSharePointSite(
   >
 ) {
   const { agentId, operationId } = ctx.params
-  const { datasourceId, authConfigId, site, filters } = ctx.request.body
+  const { datasourceId, authConfigId, site, scope } = ctx.request.body
   const siteId = site.id
   if (!siteId) {
     throw new HTTPError("siteId is required", 400)
@@ -419,7 +428,7 @@ export async function connectAgentSharePointSite(
         name: selectedOption?.name || site.name,
         webUrl: selectedOption?.webUrl || site.webUrl,
       },
-      filters: filters ? { patterns: filters } : undefined,
+      scope,
     },
   }
   console.log("Connecting SharePoint site to agent", {
@@ -476,7 +485,7 @@ export async function updateAgentSharePointSite(
     )
   }
 
-  const { filters } = ctx.request.body
+  const { scope } = ctx.request.body
   const updated = await sdk.ai.agents.update({
     ...existingAgent,
     operations: updateOperationKnowledgeSources(
@@ -494,7 +503,7 @@ export async function updateAgentSharePointSite(
                   ...existingSource,
                   config: {
                     ...existingSource.config,
-                    filters: filters ? { patterns: filters } : undefined,
+                    scope,
                   },
                 }
               : existingSource
