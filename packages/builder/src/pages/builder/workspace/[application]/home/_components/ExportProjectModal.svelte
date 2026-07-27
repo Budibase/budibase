@@ -12,19 +12,28 @@
   interface Props {
     projects?: ProjectResponse[]
     selectedProjectId?: string
+    projectIdsWithResources?: string[]
     onConfirm?: (_payload: ConfirmPayload) => unknown
   }
 
   let {
     projects = [],
     selectedProjectId = "",
+    projectIdsWithResources,
     onConfirm = () => {},
   }: Props = $props()
 
   let projectId = $state("")
   let encrypted = $state(false)
   let encryptPassword = $state("")
-  let disabled = $derived(!projectId || (encrypted && !encryptPassword.trim()))
+  let projectIsEmpty = $derived(
+    !!projectId &&
+      !!projectIdsWithResources &&
+      !projectIdsWithResources.includes(projectId)
+  )
+  let disabled = $derived(
+    !projectId || projectIsEmpty || (encrypted && !encryptPassword.trim())
+  )
   let initialised = $state(false)
 
   $effect(() => {

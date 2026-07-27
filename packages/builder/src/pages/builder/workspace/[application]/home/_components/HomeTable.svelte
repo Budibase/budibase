@@ -101,13 +101,6 @@
 
   const getProjectCount = (row: HomeRow) => row.projectIds?.length ?? 0
 
-  const getCreatedDisplay = (row: HomeRow) => {
-    if (!row.createdAt) {
-      return "-"
-    }
-    return Helpers.getDateDisplayValue(row.createdAt)
-  }
-
   const openContextMenu = (event: MouseEvent, row: HomeRow) => {
     event.preventDefault()
     event.stopPropagation()
@@ -212,17 +205,14 @@
         <button
           type="button"
           class="header-cell"
-          onclick={() => headerClick(projectsEnabled ? "created" : "updated")}
+          onclick={() => headerClick("updated")}
         >
-          <span>{projectsEnabled ? "Created" : "Updated"}</span>
+          <span>Updated</span>
           <span
             class="sort-indicator"
-            class:sort-indicator--active={isSorted(
-              projectsEnabled ? "created" : "updated"
-            )}
-            class:sort-indicator--up={isSorted(
-              projectsEnabled ? "created" : "updated"
-            ) && sortOrder === "desc"}
+            class:sort-indicator--active={isSorted("updated")}
+            class:sort-indicator--up={isSorted("updated") &&
+              sortOrder === "desc"}
           >
             <Icon
               name="caret-down"
@@ -281,11 +271,7 @@
           </div>
 
           <div class="cell">
-            {#if projectsEnabled}
-              <Body size="S" color="var(--spectrum-global-color-gray-700)">
-                {getCreatedDisplay(row)}
-              </Body>
-            {:else if row.updatedAt}
+            {#if row.updatedAt}
               <AbsTooltip text={Helpers.getDateDisplayValue(row.updatedAt)}>
                 <Body size="S" color="var(--spectrum-global-color-gray-700)">
                   {dayjs(row.updatedAt).fromNow()}
