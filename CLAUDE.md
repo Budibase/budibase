@@ -45,6 +45,7 @@
 - Prefer a svelte5 approach over svelte4.
 - Don't use // @ts-nocheck when asked to fix type errors.
 - When writing tests involving a URL, use example.com as the domain.
+- Prefer object params for function signatures.
 
 ## Test style - packages/server
 
