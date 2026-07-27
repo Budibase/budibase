@@ -6,6 +6,16 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 if [[ -z "${SCIM_TOKEN:-}" && -f "${repo_root}/.env" ]]; then
   SCIM_TOKEN="$(sed -n 's/^SCIM_TOKEN=//p' "${repo_root}/.env" | head -n 1)"
+  case "${SCIM_TOKEN}" in
+    \"*\")
+      SCIM_TOKEN="${SCIM_TOKEN#\"}"
+      SCIM_TOKEN="${SCIM_TOKEN%\"}"
+      ;;
+    \'*\')
+      SCIM_TOKEN="${SCIM_TOKEN#\'}"
+      SCIM_TOKEN="${SCIM_TOKEN%\'}"
+      ;;
+  esac
   export SCIM_TOKEN
 fi
 
