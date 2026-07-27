@@ -2,6 +2,7 @@ import {
   LanguageModelV3Content,
   LanguageModelV3Middleware,
   LanguageModelV3StreamPart,
+  LanguageModelV3StreamResult,
   NoContentGeneratedError,
 } from "@ai-sdk/provider"
 import { TransformStream } from "node:stream/web"
@@ -54,7 +55,9 @@ export const rejectEmptyCompletionMiddleware: LanguageModelV3Middleware = {
 
     return {
       ...result,
-      stream: result.stream.pipeThrough(transformStream),
+      stream: result.stream.pipeThrough(
+        transformStream
+      ) as LanguageModelV3StreamResult["stream"],
     }
   },
 }
