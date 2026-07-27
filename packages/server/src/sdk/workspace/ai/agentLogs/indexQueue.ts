@@ -101,7 +101,7 @@ export async function addSessionLog(
         row => getLiteLLMRequestUser(row) === getExpectedEndUser(input.agentId)
       )
       .map(row => row.request_id)
-      .filter(Boolean)
+      .filter((requestId): requestId is string => !!requestId)
   }
 
   if (!uniqueRequestIds.length) {
