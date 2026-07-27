@@ -21,6 +21,7 @@ describe("hbAutocomplete", () => {
       display: {
         name: "Orders.List Rows",
         type: "tool",
+        rank: 1,
       },
     }
     const doc = "{{ warehouse"
