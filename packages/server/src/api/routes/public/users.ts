@@ -1,6 +1,6 @@
 import controller from "../../controllers/public/users"
 import { Endpoint } from "@budibase/backend-core"
-import { nameValidator } from "../utils/validators"
+import { nameValidator, publicUserValidator } from "../utils/validators"
 
 const read = [],
   write = []
@@ -30,7 +30,11 @@ const read = [],
  *               user:
  *                 $ref: '#/components/examples/user'
  */
-write.push(new Endpoint("post", "/users", controller.create))
+write.push(
+  new Endpoint("post", "/users", controller.create).addMiddleware(
+    publicUserValidator()
+  )
+)
 
 /**
  * @openapi
@@ -59,7 +63,11 @@ write.push(new Endpoint("post", "/users", controller.create))
  *               user:
  *                 $ref: '#/components/examples/user'
  */
-write.push(new Endpoint("put", "/users/:userId", controller.update))
+write.push(
+  new Endpoint("put", "/users/:userId", controller.update).addMiddleware(
+    publicUserValidator()
+  )
+)
 
 /**
  * @openapi

@@ -246,31 +246,4 @@ describe("public users controller", () => {
 
     expect(saveUser).not.toHaveBeenCalled()
   })
-
-  it("rejects a non-array builder apps value", async () => {
-    const ctx = createCtx({
-      caller: {
-        _id: "user_admin",
-        email: "admin@example.com",
-        tenantId: "tenant",
-        admin: {
-          global: true,
-        },
-      },
-      target: targetUser,
-      builderApps: [],
-    })
-    ctx.request.body.builder.apps = {}
-    setExistingTargetUser()
-    const next = jest
-      .fn()
-      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
-
-    await expect(controller.update(ctx, next)).rejects.toMatchObject({
-      message: "builder.apps must be an array.",
-      status: 400,
-    })
-
-    expect(saveUser).not.toHaveBeenCalled()
-  })
 })
