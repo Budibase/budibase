@@ -131,6 +131,40 @@ describe("createBBAIClient", () => {
     expect(incrementCreditsMock).toHaveBeenCalledWith(20)
   })
 
+  it("rejects streamed completions with no visible output", async () => {
+    mockChatGPTStreamResponse("")
+
+    await withEnv(
+      {
+        BBAI_LITELLM_KEY: "sk-test-key",
+      },
+      async () => {
+        const { chat } = await createBBAIClient("budibase/v1")
+        const result = await chat.doStream({
+          prompt: [
+            {
+              role: "user",
+              content: [{ type: "text", text: "hello" }],
+            },
+          ],
+        })
+        const reader = result.stream.getReader()
+
+        await expect(async () => {
+          for (
+            let next = await reader.read();
+            !next.done;
+            next = await reader.read()
+          ) {
+            // Read all stream
+          }
+        }).rejects.toThrow(
+          "The model completed without producing text or a tool call"
+        )
+      }
+    )
+  })
+
   it("increments credits for OpenAI models", async () => {
     mockChatGPTResponse("hello world")
 

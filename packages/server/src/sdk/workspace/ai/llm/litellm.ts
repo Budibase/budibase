@@ -13,6 +13,8 @@ import {
 import nodeFetch from "node-fetch"
 import { Readable } from "stream"
 import { blob } from "stream/consumers"
+import { wrapLanguageModel } from "ai"
+import { rejectEmptyCompletionMiddleware } from "./emptyCompletion"
 
 type LiteLLMFetch = (
   input: Parameters<typeof fetch>[0],
@@ -54,7 +56,10 @@ export const createLiteLLMOpenAI = async (
   const llm = createOpenAI(clientConfig)
   const contextWindowTokens = await fetchModelMaxInputTokens(modelId)
   return {
-    chat: llm.chat(modelId),
+    chat: wrapLanguageModel({
+      model: llm.chat(modelId),
+      middleware: rejectEmptyCompletionMiddleware,
+    }),
     providerOptions: getLiteLLMProviderOptions,
     uploadFile: async (stream: Readable, filename: string) => {
       const fileId = await uploadFile({

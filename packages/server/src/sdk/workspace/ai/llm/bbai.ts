@@ -18,6 +18,7 @@ import environment from "../../../../environment"
 import { Readable } from "stream"
 import { blob } from "stream/consumers"
 import { unwrapLiteLLMFileId } from "./litellm"
+import { rejectEmptyCompletionMiddleware } from "./emptyCompletion"
 
 // The OpenAI client resolves its API key lazily, so an undefined key would
 // otherwise surface later as a misleading "OpenAI API key is missing" error.
@@ -183,40 +184,45 @@ export async function createBBAIClient(
   })
   const chat = wrapLanguageModel({
     model: client.chat(model),
-    middleware: {
-      specificationVersion: "v3",
-      async wrapGenerate({ doGenerate }) {
-        await quotas.throwIfBudibaseAICreditsExceeded()
-        const result = await doGenerate()
-        await incrementBudibaseAICreditsFromUsage(result.usage).catch(() => {})
-        return result
-      },
-      async wrapStream({ doStream }) {
-        await quotas.throwIfBudibaseAICreditsExceeded()
-        const result = await doStream()
-        const transformStream = new TransformStream<
-          LanguageModelV3StreamPart,
-          LanguageModelV3StreamPart
-        >({
-          async transform(chunk, controller) {
-            controller.enqueue(chunk)
-            if (chunk.type === "finish") {
-              await incrementBudibaseAICreditsFromUsage(chunk.usage).catch(
-                () => {}
-              )
-            }
-            return
-          },
-        }) as Parameters<typeof result.stream.pipeThrough>[0]
+    middleware: [
+      {
+        specificationVersion: "v3",
+        async wrapGenerate({ doGenerate }) {
+          await quotas.throwIfBudibaseAICreditsExceeded()
+          const result = await doGenerate()
+          await incrementBudibaseAICreditsFromUsage(result.usage).catch(
+            () => {}
+          )
+          return result
+        },
+        async wrapStream({ doStream }) {
+          await quotas.throwIfBudibaseAICreditsExceeded()
+          const result = await doStream()
+          const transformStream = new TransformStream<
+            LanguageModelV3StreamPart,
+            LanguageModelV3StreamPart
+          >({
+            async transform(chunk, controller) {
+              controller.enqueue(chunk)
+              if (chunk.type === "finish") {
+                await incrementBudibaseAICreditsFromUsage(chunk.usage).catch(
+                  () => {}
+                )
+              }
+              return
+            },
+          }) as Parameters<typeof result.stream.pipeThrough>[0]
 
-        return {
-          ...result,
-          stream: result.stream.pipeThrough(
-            transformStream
-          ) as LanguageModelV3StreamResult["stream"],
-        }
+          return {
+            ...result,
+            stream: result.stream.pipeThrough(
+              transformStream
+            ) as LanguageModelV3StreamResult["stream"],
+          }
+        },
       },
-    },
+      rejectEmptyCompletionMiddleware,
+    ],
   })
   return {
     chat,
