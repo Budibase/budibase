@@ -93,7 +93,7 @@ describe("agentsStore sharepoint and file syncing", () => {
         _id: "kb_file_1",
         knowledgeBaseId: "kb_1",
         source: {
-          type: KnowledgeBaseFileSourceType.SHAREPOINT,
+          type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE,
           knowledgeSourceId: "source-1",
           siteId: "site-1",
           driveId: "drive-1",

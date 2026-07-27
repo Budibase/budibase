@@ -20,6 +20,7 @@
     buildFileDescendantPathsByNodePath,
     buildEntryTreeFromSourceEntries,
     buildPatternsFromSelection,
+    SITE_ROOT_PATH,
     flattenNodesByPath,
     isExcludeNewByDefaultPatterns,
     rehydrateFromPatterns,
@@ -38,7 +39,7 @@
   let loadingEntries = $state(false)
   let loadEntriesError = $state<string | null>(null)
   let allEntries = $state<KnowledgeSourceEntry[]>([])
-  let includeNewFilesByDefault = $state(true)
+  let includeNewContentByDefault = $state(true)
   let modal = $state<Modal>()
 
   const sharePointSource = $derived.by(() => {
@@ -66,7 +67,6 @@
   const initialPatterns = $derived(
     sharePointSource?.config.filters?.patterns || []
   )
-
   const entryTree = $derived(buildEntryTreeFromSourceEntries(allEntries))
   const selectionTree = $derived(wrapSelectionTreeWithSiteRoot(entryTree))
   const selectionNodeByPath = $derived(flattenNodesByPath(selectionTree))
@@ -75,13 +75,12 @@
   )
   const selectablePaths = $derived.by(() =>
     Array.from(selectionNodeByPath.values())
-      .filter(node => node.type === "file")
+      .filter(node => node.type === "file" || node.type === "list")
       .map(node => node.path)
       .sort((a, b) => a.localeCompare(b))
   )
-
   const selectedCountLabel = $derived(
-    `${selectedEntryPaths.length} files selected`
+    `${selectedEntryPaths.filter(path => path !== SITE_ROOT_PATH).length} items selected`
   )
 
   const loadAllEntries = async () => {
@@ -117,6 +116,9 @@
       initialPatterns,
       selectablePaths
     ).filter(path => selectablePathSet.has(path))
+    if (selectedEntryPaths.length === selectablePaths.length) {
+      selectedEntryPaths = [SITE_ROOT_PATH, ...selectedEntryPaths]
+    }
   }
 
   const retryLoadAllEntries = async () => {
@@ -130,7 +132,7 @@
   export async function show() {
     selectedEntryPaths = []
     loadEntriesError = null
-    includeNewFilesByDefault = !isExcludeNewByDefaultPatterns(initialPatterns)
+    includeNewContentByDefault = !isExcludeNewByDefaultPatterns(initialPatterns)
 
     const loaded = await loadAllEntries()
     if (!loaded) {
@@ -150,8 +152,11 @@
     if (!agentId || !operationId || !siteId) {
       return keepOpen
     }
-    if (selectedEntryPaths.length === 0) {
-      notifications.error("Please select at least one folder/file to sync")
+    const selectedSelectablePaths = selectedEntryPaths.filter(path =>
+      selectablePaths.includes(path)
+    )
+    if (selectedSelectablePaths.length === 0) {
+      notifications.error("Please select at least one file or list to sync")
 
       return keepOpen
     }
@@ -160,7 +165,7 @@
       selectedEntryPaths,
       selectablePaths,
       selectionNodeByPath,
-      includeNewFilesByDefault
+      includeNewContentByDefault
     )
 
     try {
@@ -181,7 +186,7 @@
       hide()
     } catch (error) {
       console.error(error)
-      notifications.error("Failed to update SharePoint files")
+      notifications.error("Failed to update SharePoint content")
       return keepOpen
     }
   }
@@ -215,12 +220,12 @@
     <div class="entries-header">
       <RadioGroup
         options={[
-          { label: "Include new files by default", value: true },
-          { label: "Exclude new files by default", value: false },
+          { label: "Include new content by default", value: true },
+          { label: "Exclude new content by default", value: false },
         ]}
-        value={includeNewFilesByDefault}
+        value={includeNewContentByDefault}
         on:change={e => {
-          includeNewFilesByDefault = e.detail === "true"
+          includeNewContentByDefault = e.detail === "true"
         }}
         getOptionLabel={o => o.label}
         getOptionValue={o => o.value}
@@ -231,7 +236,7 @@
     </div>
 
     {#if loadingEntries}
-      <Body size="S">Loading SharePoint files...</Body>
+      <Body size="S">Loading SharePoint content...</Body>
     {:else if loadEntriesError}
       <div class="load-error">
         <Body size="S">{loadEntriesError}</Body>
@@ -240,7 +245,7 @@
         >
       </div>
     {:else if selectionTree.length === 0}
-      <Body size="S">No folders or files found for this site.</Body>
+      <Body size="S">No files or lists found for this site.</Body>
     {:else}
       <div class="entries-list">
         <TreeView width="auto" standalone={false} quiet selectable>

@@ -20,12 +20,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: mitchellh/vouch/action/check-user@f44860978966ace98fb11aaaa20f2b27d7543e13
-        with:
-          user: ${{ github.event.pull_request.user.login }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   manage:
     if: github.event_name == 'issue_comment' && github.event.issue.pull_request
     runs-on: ubuntu-latest

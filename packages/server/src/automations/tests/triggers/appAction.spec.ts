@@ -41,8 +41,29 @@ describe("app action trigger", () => {
       expect.objectContaining({
         fields: {},
         timeout: 1000,
+        appId: config.getProdWorkspaceId(),
       })
     )
+    expect(jobs[0].data.isTestRun).toBeUndefined()
+  })
+
+  it("should run as a test against dev data when triggered in dev", async () => {
+    const jobs = await captureAutomationResults(automation, async () => {
+      await config.api.automation.trigger(automation._id!, {
+        fields: {},
+        timeout: 1000,
+      })
+    })
+
+    expect(jobs).toHaveLength(1)
+    expect(jobs[0].data.event).toEqual(
+      expect.objectContaining({
+        fields: {},
+        timeout: 1000,
+        appId: config.getDevWorkspaceId(),
+      })
+    )
+    expect(jobs[0].data.isTestRun).toBe(true)
   })
 
   it("should correct coerce values based on the schema", async () => {
@@ -67,6 +88,35 @@ describe("app action trigger", () => {
           fields: { text: "1", number: "2", boolean: "true" },
           timeout: 1000,
         })
+      })
+    })
+
+    expect(jobs).toHaveLength(1)
+    expect(jobs[0].data.event.fields).toEqual({
+      text: "1",
+      number: 2,
+      boolean: true,
+    })
+  })
+
+  it("should coerce preview values based on the schema", async () => {
+    const { automation } = await createAutomationBuilder(config)
+      .onAppAction({
+        fields: {
+          text: AutomationIOType.STRING,
+          number: AutomationIOType.NUMBER,
+          boolean: AutomationIOType.BOOLEAN,
+        },
+      })
+      .serverLog({
+        text: "{{ fields.text }} {{ fields.number }} {{ fields.boolean }}",
+      })
+      .save()
+
+    const jobs = await captureAutomationResults(automation, async () => {
+      await config.api.automation.trigger(automation._id!, {
+        fields: { text: "1", number: "2", boolean: "true" },
+        timeout: 1000,
       })
     })
 

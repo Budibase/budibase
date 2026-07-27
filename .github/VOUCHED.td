@@ -14,6 +14,7 @@
 # "denounce" or "denounce @username" on a PR.
 andz200zx
 aptkingston
+-chetanyarathi
 mike12345567
 mitchellh
 mohagan9

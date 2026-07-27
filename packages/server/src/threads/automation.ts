@@ -394,6 +394,9 @@ class Orchestrator {
   }
 
   private async logResult(result: AutomationResults) {
+    if (this.isTestRun) {
+      return
+    }
     await storeLog(this.automation, result)
   }
 
@@ -1129,7 +1132,9 @@ export async function execute(
           await context.ensureSnippetContext()
           const envVars = await sdkUtils.getEnvironmentVariables()
           await context.doInEnvironmentContext(envVars, async () => {
-            const orchestrator = new Orchestrator(job)
+            const orchestrator = new Orchestrator(job, {
+              isTestRun: job.data.isTestRun,
+            })
             callback(null, await orchestrator.execute())
           })
         } catch (err) {

@@ -71,7 +71,8 @@ export interface KnowledgeSourceEntry {
   id: string
   name: string
   path: string
-  type: "folder" | "file"
+  type: "folder" | "file" | "list"
+  webUrl?: string
 }
 
 export interface FetchAgentKnowledgeSourceEntriesResponse {

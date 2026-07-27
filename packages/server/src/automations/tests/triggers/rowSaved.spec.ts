@@ -38,6 +38,23 @@ describe("row saved trigger", () => {
         row: expect.objectContaining({ name: "foo" }),
       })
     )
+    expect(results[0].data.isTestRun).toBeUndefined()
+  })
+
+  it("should queue a Bull job when a row is created in dev", async () => {
+    const results = await captureAutomationResults(automation, () =>
+      config.api.row.save(table._id!, { name: "foo" })
+    )
+
+    expect(results).toHaveLength(1)
+    expect(results[0].data.event).toEqual(
+      expect.objectContaining({
+        tableId: table._id!,
+        appId: config.getDevWorkspaceId(),
+        row: expect.objectContaining({ name: "foo" }),
+      })
+    )
+    expect(results[0].data.isTestRun).toBe(true)
   })
 
   it("should not fire for rows created in other tables", async () => {

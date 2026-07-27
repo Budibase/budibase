@@ -330,13 +330,6 @@ export async function trigger(
       }
     }
   } else {
-    if (
-      ctx.appId &&
-      !dbCore.isProdWorkspaceID(ctx.appId) &&
-      !env.ALLOW_DEV_AUTOMATIONS
-    ) {
-      ctx.throw(400, "Only apps in production support this endpoint")
-    }
     await triggers.externalTrigger(automation, {
       ...ctx.request.body,
       appId: ctx.appId,
