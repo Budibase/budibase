@@ -122,7 +122,7 @@
       name: "web_search",
       description: "Configure web search",
       sourceType: ToolType.SEARCH,
-      sourceLabel: "Search",
+      sourceLabel: "Search tools",
     }
     const enriched = enrichToolMetadata(webSearchTool)
     return {
