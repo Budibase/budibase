@@ -22,7 +22,7 @@
   type Recipient = { type: string; config: Record<string, any> }
 
   interface PendingRecipient {
-    provider: EscalationNotificationChannel | ""
+    provider: EscalationNotificationChannel | undefined
     targetType: "user" | "channel"
     userId: string
     channelId: string
@@ -53,7 +53,7 @@
   )
 
   const DEFAULT_PENDING: PendingRecipient = {
-    provider: "",
+    provider: undefined,
     targetType: "user",
     userId: "",
     channelId: "",
@@ -79,7 +79,7 @@
   const resetPending = (keepProvider = false) => {
     pending = {
       ...DEFAULT_PENDING,
-      provider: keepProvider ? pending.provider : "",
+      provider: keepProvider ? pending.provider : undefined,
     }
   }
 
@@ -141,7 +141,9 @@
 
   $: recipientLabels = recipients.map(r => getRecipientLabel(r, linkCache))
 
-  $: filteredIdentityLinks = (linkCache[pending.provider] || []).filter(
+  $: filteredIdentityLinks = (
+    pending.provider ? linkCache[pending.provider] || [] : []
+  ).filter(
     (l, i, arr) => arr.findIndex(x => x.globalUserId === l.globalUserId) === i
   )
 
@@ -233,7 +235,8 @@
   }
 
   const addRecipient = () => {
-    if (!canAdd) return
+    const provider = pending.provider
+    if (!canAdd || !provider) return
 
     let recipient: Recipient | undefined
 
@@ -243,7 +246,7 @@
       )
       if (!link) return
       recipient = {
-        type: pending.provider,
+        type: provider,
         config: {
           globalUserId: link.globalUserId,
           externalUserId: link.externalUserId,
@@ -251,19 +254,19 @@
           ...(link.guildId && { guildId: link.guildId }),
         },
       }
-    } else if (pending.provider === EscalationNotificationChannel.SLACK) {
+    } else if (provider === EscalationNotificationChannel.SLACK) {
       const channel = slackChannels.find(c => c.id === pending.channelId)
       if (!channel) return
       recipient = {
         type: EscalationNotificationChannel.SLACK,
         config: { channelId: channel.id, channelName: channel.name },
       }
-    } else if (pending.provider === EscalationNotificationChannel.DISCORD) {
+    } else if (provider === EscalationNotificationChannel.DISCORD) {
       recipient = {
         type: EscalationNotificationChannel.DISCORD,
         config: { channelId: pending.discordChannelId },
       }
-    } else if (pending.provider === EscalationNotificationChannel.MSTEAMS) {
+    } else if (provider === EscalationNotificationChannel.MSTEAMS) {
       if (pending.teamsInputMode === "url") {
         const parsed = parseTeamsChannelUrl(pending.teamsUrl)
         if (!parsed) return
@@ -330,7 +333,7 @@
         getOptionLabel={o => o.label}
         getOptionValue={o => o.value}
         on:change={e => {
-          pending = { ...DEFAULT_PENDING, provider: e.detail || "" }
+          pending = { ...DEFAULT_PENDING, provider: e.detail }
         }}
       />
 
