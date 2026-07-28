@@ -602,7 +602,7 @@ const collectScopedSharePointContent = async ({
   )
   const lists =
     scope.mode === SharePointScopeMode.ALL || selectedListIds.size > 0
-      ? await listSharePointLists(bearerToken, siteId)
+      ? await listSharePointLists(bearerToken, siteId, signal)
       : []
   const scopedLists =
     scope.mode === SharePointScopeMode.ALL
@@ -1045,7 +1045,8 @@ const runSharePointSourcesForOperation = async (
           bearerToken,
           siteId,
           list.id,
-          MAX_SHAREPOINT_GENERATED_LIST_SIZE_BYTES
+          MAX_SHAREPOINT_GENERATED_LIST_SIZE_BYTES,
+          signal
         )
         const contentHash = getSharePointListContentHash(document.buffer)
 
@@ -1144,6 +1145,9 @@ const runSharePointSourcesForOperation = async (
 
         synced++
       } catch (error) {
+        if (isSharePointSyncTimeoutError(error)) {
+          throw error
+        }
         failed++
         const message = error instanceof Error ? error.message : String(error)
         syncErrors.push(

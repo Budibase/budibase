@@ -488,16 +488,21 @@ const fetchSharePointCollection = async <
 >(
   operation: string,
   initialUrl: string,
-  bearerToken: string
+  bearerToken: string,
+  signal?: AbortSignal
 ): Promise<T[]> => {
   const pages: T[] = []
   let nextLink = initialUrl
 
   while (nextLink) {
-    const response = await requestWithRetries(operation, () =>
-      fetch(nextLink, {
-        headers: { Authorization: bearerToken },
-      })
+    const response = await requestWithRetries(
+      operation,
+      () =>
+        fetch(nextLink, {
+          signal,
+          headers: { Authorization: bearerToken },
+        }),
+      signal
     )
     if (!response.ok) {
       throw new HTTPError(
@@ -525,12 +530,14 @@ const fetchSharePointCollection = async <
 
 export const listSharePointLists = async (
   bearerToken: string,
-  siteId: string
+  siteId: string,
+  signal?: AbortSignal
 ): Promise<SharePointListRef[]> => {
   const pages = await fetchSharePointCollection<SharePointListResponse>(
     "listSharePointLists",
     `${SHAREPOINT_API_BASE}/sites/${encodeURIComponent(siteId)}/lists?$top=200&$select=id,displayName,name,webUrl,list`,
-    bearerToken
+    bearerToken,
+    signal
   )
 
   return pages
@@ -611,12 +618,14 @@ export const fetchSharePointListDocument = async (
   bearerToken: string,
   siteId: string,
   listId: string,
-  maxSizeBytes = MAX_SHAREPOINT_GENERATED_LIST_SIZE_BYTES
+  maxSizeBytes = MAX_SHAREPOINT_GENERATED_LIST_SIZE_BYTES,
+  signal?: AbortSignal
 ): Promise<SharePointListDocument> => {
   const columnPages = await fetchSharePointCollection<SharePointColumnResponse>(
     "listSharePointColumns",
     `${SHAREPOINT_API_BASE}/sites/${encodeURIComponent(siteId)}/lists/${encodeURIComponent(listId)}/columns?$top=200&$select=name,displayName,hidden`,
-    bearerToken
+    bearerToken,
+    signal
   )
 
   const columns = getUniqueColumnLabels(
@@ -664,10 +673,14 @@ export const fetchSharePointListDocument = async (
   let nextLink = `${SHAREPOINT_API_BASE}/sites/${encodeURIComponent(siteId)}/lists/${encodeURIComponent(listId)}/items?$top=200&$expand=fields`
 
   while (nextLink) {
-    const response = await requestWithRetries("listSharePointItems", () =>
-      fetch(nextLink, {
-        headers: { Authorization: bearerToken },
-      })
+    const response = await requestWithRetries(
+      "listSharePointItems",
+      () =>
+        fetch(nextLink, {
+          signal,
+          headers: { Authorization: bearerToken },
+        }),
+      signal
     )
     if (!response.ok) {
       throw new HTTPError(

@@ -970,6 +970,111 @@ describe("rag/sharepoint sync deduplication", () => {
     }
   })
 
+  it("times out while listing a selected SharePoint list scope", async () => {
+    jest.useFakeTimers()
+
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(
+        sourceId,
+        siteId,
+        selectiveScope([listTarget("list-1")])
+      )
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([])
+
+    let listingStarted!: () => void
+    const listingStartedPromise = new Promise<void>(resolve => {
+      listingStarted = resolve
+    })
+    mockListSharePointLists.mockImplementation(
+      (_bearerToken: string, _siteId: string, signal?: AbortSignal) => {
+        listingStarted()
+        return new Promise((_resolve, reject) => {
+          signal?.addEventListener("abort", () => reject(signal.reason), {
+            once: true,
+          })
+        })
+      }
+    )
+
+    try {
+      const result = syncSharePointSourcesForAgent("agent_1", sourceId)
+      await listingStartedPromise
+
+      jest.runOnlyPendingTimers()
+
+      await expect(result).rejects.toBeInstanceOf(SharePointSyncTimeoutError)
+      expect(mockListSharePointLists).toHaveBeenCalledWith(
+        "Bearer token",
+        siteId,
+        expect.any(AbortSignal)
+      )
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
+  it("times out while fetching a selected SharePoint list document", async () => {
+    jest.useFakeTimers()
+
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(
+        sourceId,
+        siteId,
+        selectiveScope([listTarget("list-1")])
+      )
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+    ])
+
+    let documentFetchStarted!: () => void
+    const documentFetchStartedPromise = new Promise<void>(resolve => {
+      documentFetchStarted = resolve
+    })
+    mockFetchSharePointListDocument.mockImplementation(
+      (
+        _bearerToken: string,
+        _siteId: string,
+        _listId: string,
+        _maxSizeBytes: number,
+        signal?: AbortSignal
+      ) => {
+        documentFetchStarted()
+        return new Promise((_resolve, reject) => {
+          signal?.addEventListener("abort", () => reject(signal.reason), {
+            once: true,
+          })
+        })
+      }
+    )
+
+    try {
+      const result = syncSharePointSourcesForAgent("agent_1", sourceId)
+      await documentFetchStartedPromise
+
+      jest.runOnlyPendingTimers()
+
+      await expect(result).rejects.toBeInstanceOf(SharePointSyncTimeoutError)
+      expect(mockFetchSharePointListDocument).toHaveBeenCalledWith(
+        "Bearer token",
+        siteId,
+        "list-1",
+        expect.any(Number),
+        expect.any(AbortSignal)
+      )
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
   it("times out while uploading a SharePoint file", async () => {
     jest.useFakeTimers()
 
@@ -1688,7 +1793,8 @@ describe("rag/sharepoint sync deduplication", () => {
       "Bearer token",
       siteId,
       "list-1",
-      expect.any(Number)
+      expect.any(Number),
+      expect.any(AbortSignal)
     )
     expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledWith(
       expect.objectContaining({

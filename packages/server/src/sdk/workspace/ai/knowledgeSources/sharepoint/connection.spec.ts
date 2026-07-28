@@ -15,6 +15,7 @@ import {
   listSharePointDriveItems,
   listSharePointDrives,
   listSharePointLists,
+  MAX_SHAREPOINT_GENERATED_LIST_SIZE_BYTES,
 } from "./connection"
 import { type Datasource, OAuth2GrantType, RestAuthType } from "@budibase/types"
 import sdk from "../../../.."
@@ -111,6 +112,33 @@ describe("SharePoint lists", () => {
     ])
   })
 
+  it("aborts an in-flight list request without retrying", async () => {
+    const controller = new AbortController()
+    const timeoutError = new Error("SharePoint sync timed out")
+    const fetchMock = jest
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async (_input, init) => {
+        await new Promise<void>((_resolve, reject) => {
+          init?.signal?.addEventListener(
+            "abort",
+            () => reject(init.signal?.reason),
+            { once: true }
+          )
+        })
+        throw new Error("unreachable")
+      })
+
+    const result = listSharePointLists(
+      "Bearer token",
+      "site-1",
+      controller.signal
+    )
+    controller.abort(timeoutError)
+
+    await expect(result).rejects.toBe(timeoutError)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
   it("builds CSV from visible columns and list items", async () => {
     jest.spyOn(globalThis, "fetch").mockImplementation(async input => {
       const url = input.toString()
@@ -159,6 +187,46 @@ describe("SharePoint lists", () => {
         '1,,,,"{""a"":1,""b"":2}",First',
       ].join("\n")
     )
+  })
+
+  it("aborts an in-flight list document request without retrying", async () => {
+    const controller = new AbortController()
+    const timeoutError = new Error("SharePoint sync timed out")
+    let itemRequestStarted!: () => void
+    const itemRequestStartedPromise = new Promise<void>(resolve => {
+      itemRequestStarted = resolve
+    })
+    const fetchMock = jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ value: [] }),
+      } as Response)
+      .mockImplementationOnce(async (_input, init) => {
+        itemRequestStarted()
+        await new Promise<void>((_resolve, reject) => {
+          init?.signal?.addEventListener(
+            "abort",
+            () => reject(init.signal?.reason),
+            { once: true }
+          )
+        })
+        throw new Error("unreachable")
+      })
+
+    const result = fetchSharePointListDocument(
+      "Bearer token",
+      "site-1",
+      "list-1",
+      MAX_SHAREPOINT_GENERATED_LIST_SIZE_BYTES,
+      controller.signal
+    )
+    await itemRequestStartedPromise
+    controller.abort(timeoutError)
+
+    await expect(result).rejects.toBe(timeoutError)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
   it("neutralizes formula-like values in generated CSV cells", async () => {
