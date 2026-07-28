@@ -22,13 +22,13 @@ export function devClientLibPath() {
  * The paths for the in-use version are:
  * {workspaceId}/manifest.json
  * {workspaceId}/budibase-client.js
- * {workspaceId}/_chunks/...
+ * {workspaceId}/chunks/...
  * {workspaceId}/... (and any other workspace files)
  *
  * The paths for the backups are:
  * {workspaceId}/.bak/manifest.json
  * {workspaceId}/.bak/budibase-client.js
- * {workspaceId}/.bak/_chunks/...
+ * {workspaceId}/.bak/chunks/...
  * {workspaceId}/.bak/... (complete folder backup)
  *
  * We don't rely on NPM at all any more, as when updating to the latest version
