@@ -43,6 +43,7 @@
   <button
     {id}
     {type}
+    {disabled}
     bind:this={ref}
     class:spectrum-Button--cta={cta}
     class:spectrum-Button--primary={primary}

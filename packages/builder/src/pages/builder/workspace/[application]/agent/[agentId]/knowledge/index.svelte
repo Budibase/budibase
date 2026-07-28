@@ -355,7 +355,8 @@
           quiet
           size="S"
           secondary
-          disabled={resetting}
+          tooltip={knowledgeActionsTooltip}
+          disabled={resetting || knowledgeSearchUnavailable}
           iconColor="var(--orange)"
           icon="cloud-rain"
           on:click={resetKnowledgeStore}

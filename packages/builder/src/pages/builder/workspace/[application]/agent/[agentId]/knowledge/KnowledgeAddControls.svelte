@@ -177,7 +177,7 @@
     height: 18px;
   }
 
-  :global(.spectrum-Button-label) {
+  .add-knowledge-button :global(.spectrum-Button-label) {
     flex-shrink: 0;
   }
 </style>
