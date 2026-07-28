@@ -246,3 +246,73 @@ describe("sharePointModalUtils filter patterns", () => {
     ).toBeUndefined()
   })
 })
+
+describe("sharePointModalUtils document library entries", () => {
+  it("groups identical relative paths beneath their document libraries", () => {
+    const tree = buildEntryTreeFromSourceEntries([
+      {
+        id: "drive-1",
+        name: "Documents",
+        path: "Documents",
+        type: "folder",
+      },
+      {
+        id: "drive-1:item-1",
+        name: "handbook.txt",
+        path: "Documents/Policies/handbook.txt",
+        type: "file",
+      },
+      {
+        id: "drive-2:item-1",
+        name: "handbook.txt",
+        path: "Department Files/Policies/handbook.txt",
+        type: "file",
+      },
+    ])
+
+    expect(tree.map(node => node.name)).toEqual(["Files"])
+    const documentLibraries = tree[0].children
+    expect(documentLibraries.map(node => node.name)).toEqual([
+      "Department Files",
+      "Documents",
+    ])
+    expect(documentLibraries.map(node => node.path)).toEqual([
+      "Department Files",
+      "Documents",
+    ])
+    expect(documentLibraries[0].children[0].children[0]).toMatchObject({
+      name: "handbook.txt",
+      path: "Department Files/Policies/handbook.txt",
+    })
+    expect(documentLibraries[1].children[0].children[0]).toMatchObject({
+      name: "handbook.txt",
+      path: "Documents/Policies/handbook.txt",
+    })
+  })
+
+  it("keeps an empty document library in the tree", () => {
+    expect(
+      buildEntryTreeFromSourceEntries([
+        {
+          id: "drive-empty",
+          name: "Empty Library",
+          path: "Empty Library",
+          type: "folder",
+        },
+      ])
+    ).toEqual([
+      expect.objectContaining({
+        name: "Files",
+        type: "folder",
+        children: [
+          expect.objectContaining({
+            name: "Empty Library",
+            path: "Empty Library",
+            type: "folder",
+            children: [],
+          }),
+        ],
+      }),
+    ])
+  })
+})

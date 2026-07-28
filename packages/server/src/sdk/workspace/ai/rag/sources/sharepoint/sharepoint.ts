@@ -282,14 +282,17 @@ const normalizeSourceFilters = (
 
 const isSharePointPathIncludedByFilters = (
   path: string,
-  filters?: AgentKnowledgeSourceFilterConfig
+  filters?: AgentKnowledgeSourceFilterConfig,
+  ...alternativePaths: string[]
 ) => {
   const { patterns } = normalizeSourceFilters(filters)
 
   if (!patterns?.length) {
     return true
   }
-  return matchesConfiguredPatterns(path, patterns)
+  return [path, ...alternativePaths].some(candidatePath =>
+    matchesConfiguredPatterns(candidatePath, patterns)
+  )
 }
 
 const isSharePointKnowledgeBaseFile = (
@@ -425,11 +428,17 @@ export const fetchAllSharePointEntriesForOperation = async (
     throw new HTTPError("SharePoint is not connected for this workspace", 400)
   }
   const bearerToken = await getSharePointBearerToken(datasourceId, authConfigId)
-  const driveIds = await listSharePointDrives(bearerToken, siteId)
+  const drives = await listSharePointDrives(bearerToken, siteId)
   const entries: KnowledgeSourceEntry[] = []
 
-  for (const driveId of driveIds) {
-    const files = await collectSharePointFilesRecursive(bearerToken, driveId)
+  for (const drive of drives) {
+    entries.push({
+      id: drive.id,
+      name: drive.name,
+      path: drive.name,
+      type: "folder",
+    })
+    const files = await collectSharePointFilesRecursive(bearerToken, drive.id)
     for (const file of files) {
       const path = file.path
       if (!path) {
@@ -438,7 +447,7 @@ export const fetchAllSharePointEntriesForOperation = async (
       entries.push({
         id: `${file.driveId}:${file.itemId}`,
         name: file.filename || path.split("/").pop() || path,
-        path,
+        path: `${drive.name}/${path}`,
         type: "file",
       })
     }
@@ -665,28 +674,6 @@ const runSharePointSourcesForOperation = async (
   const existingSourceLists = existingFiles.filter(file =>
     isSharePointListKnowledgeBaseFile(file, sourceId, siteId)
   )
-  const filteredOutFileIds = existingSourceFiles
-    .filter(file => {
-      const candidatePath = file.source?.path || file.filename
-      return !isSharePointPathIncludedByFilters(
-        candidatePath || "",
-        sourceFilters
-      )
-    })
-    .map(file => file._id)
-    .filter((fileId): fileId is string => !!fileId)
-  if (filteredOutFileIds.length > 0) {
-    const deleteResults = await Promise.allSettled(
-      filteredOutFileIds.map(fileId =>
-        deleteFileForOperation(agentId, operationId, fileId)
-      )
-    )
-    deleted = deleteResults.filter(
-      result => result.status === "fulfilled"
-    ).length
-    deleteFailed = deleteResults.length - deleted
-  }
-
   const existingSourceExternalIdsByFileId = new Map<string, string>()
   for (const file of existingSourceFiles) {
     const fileId = file._id
@@ -709,13 +696,14 @@ const runSharePointSourcesForOperation = async (
 
   try {
     phase = "listing_drives"
-    const driveIds = await listSharePointDrives(bearerToken, siteId, signal)
+    const drives = await listSharePointDrives(bearerToken, siteId, signal)
     console.log("Fetched SharePoint drives for site", {
       agentId,
       siteId,
-      driveCount: driveIds.length,
+      driveCount: drives.length,
     })
-    for (const driveId of driveIds) {
+    for (const drive of drives) {
+      const driveId = drive.id
       throwIfSyncAborted(signal)
       phase = "listing_files"
       const files = await collectSharePointFilesRecursive(
@@ -729,7 +717,15 @@ const runSharePointSourcesForOperation = async (
       totalDiscovered += files.length
       for (const file of files) {
         throwIfSyncAborted(signal)
-        if (!isSharePointPathIncludedByFilters(file.path, sourceFilters)) {
+        const qualifiedPath = `${drive.name}/${file.path}`
+        if (
+          !isSharePointPathIncludedByFilters(
+            qualifiedPath,
+            sourceFilters,
+            `drive:${driveId}/${file.path}`,
+            file.path
+          )
+        ) {
           skipped++
           filteredOut++
           continue
@@ -866,7 +862,7 @@ const runSharePointSourcesForOperation = async (
                 siteId,
                 driveId,
                 itemId: file.itemId,
-                path: file.path,
+                path: qualifiedPath,
                 externalId: `${siteId}:${driveId}:${file.itemId}`,
                 etag: file.etag,
                 lastModifiedAt: file.lastModifiedAt,
@@ -1094,7 +1090,6 @@ const runSharePointSourcesForOperation = async (
     const staleFileIds = existingSourceFiles
       .map(file => file._id)
       .filter((fileId): fileId is string => !!fileId)
-      .filter(fileId => !filteredOutFileIds.includes(fileId))
       .filter(fileId => {
         const externalId = existingSourceExternalIdsByFileId.get(fileId)
         return !!externalId && !discoveredExternalIds.has(externalId)

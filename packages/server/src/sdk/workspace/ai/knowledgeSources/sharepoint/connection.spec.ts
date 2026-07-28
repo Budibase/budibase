@@ -752,13 +752,68 @@ describe("SharePoint Graph retries", () => {
         ok: true,
         status: 200,
         headers: { get: () => null },
-        json: async () => ({ value: [{ id: "drive-1" }] }),
+        json: async () => ({
+          value: [{ id: "drive-1", name: "Documents" }, { name: "Missing ID" }],
+        }),
       } as unknown as Response)
 
     const drives = await listSharePointDrives(bearerToken, "site-1")
 
     expect(fetchMock).toHaveBeenCalledTimes(2)
-    expect(drives).toEqual(["drive-1"])
+    expect(drives).toEqual([{ id: "drive-1", name: "Documents" }])
+  })
+
+  it("paginates SharePoint drives", async () => {
+    const nextLink =
+      "https://graph.microsoft.com/v1.0/sites/site-1/drives?$skiptoken=next"
+    const fetchMock = jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        json: async () => ({
+          value: [{ id: "drive-1", name: "Documents" }],
+          "@odata.nextLink": nextLink,
+        }),
+      } as unknown as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        json: async () => ({
+          value: [{ id: "drive-2" }],
+        }),
+      } as unknown as Response)
+
+    const drives = await listSharePointDrives(bearerToken, "site-1")
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock).toHaveBeenNthCalledWith(2, nextLink, expect.any(Object))
+    expect(drives).toEqual([
+      { id: "drive-1", name: "Documents" },
+      { id: "drive-2", name: "drive-2" },
+    ])
+  })
+
+  it("rejects invalid SharePoint drive pagination URLs", async () => {
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      json: async () => ({
+        value: [{ id: "drive-1", name: "Documents" }],
+        "@odata.nextLink": "https://example.com/drives?$skiptoken=next",
+      }),
+    } as unknown as Response)
+
+    await expect(listSharePointDrives(bearerToken, "site-1")).rejects.toEqual(
+      expect.objectContaining({
+        message: "Invalid SharePoint pagination URL",
+        status: 400,
+      })
+    )
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
   it("does not retry listSharePointDrives on 403", async () => {

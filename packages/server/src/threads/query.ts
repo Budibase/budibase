@@ -190,7 +190,11 @@ class QueryRunner {
         }
       )
     } else {
+      const rawPath = fieldsClone.path
       query = await sdk.queries.enrichContext(fieldsClone, enrichedContext)
+      if (datasourceClone.source === SourceName.REST) {
+        query.rawPath = rawPath
+      }
     }
     // Add pagination values for REST queries
     if (this.pagination) {

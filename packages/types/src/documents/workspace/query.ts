@@ -84,6 +84,8 @@ export enum BodyType {
 
 export interface RestQueryFields {
   path?: string
+  // Path as saved on the query, before parameter substitution.
+  rawPath?: string
   queryString?: string
   headers?: { [key: string]: any }
   disabledHeaders?: { [key: string]: any }

@@ -93,6 +93,11 @@
     }
   }
 
+  // Only a genuinely-raised escalation gets the approval card
+  const isRaisedEscalation = (output: unknown) =>
+    (output as { status?: string } | undefined)?.status ===
+    EscalateToolResultStatus.PENDING_APPROVAL
+
   // The escalate part's input/output are loosely typed by the AI SDK, so the
   // casts live here rather than cluttering the template.
   const escalationCardProps = (part: { input?: unknown; output?: unknown }) => {
@@ -777,7 +782,7 @@
             {#each message.parts ?? [] as part, partIndex}
               {#if isTextUIPart(part)}
                 <MarkdownViewer value={part.text} />
-              {:else if isToolUIPart(part) && getToolName(part) === ESCALATE_TOOL_NAME}
+              {:else if isToolUIPart(part) && getToolName(part) === ESCALATE_TOOL_NAME && isRaisedEscalation(part.output)}
                 {@const card = escalationCardProps(part)}
                 <EscalationCard
                   title={card.title}

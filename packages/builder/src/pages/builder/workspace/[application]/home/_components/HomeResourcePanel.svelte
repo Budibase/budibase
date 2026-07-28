@@ -25,6 +25,7 @@
     width: 100%;
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: var(--border-radius-s);
+    border-top-left-radius: 0;
     overflow: hidden;
     background: var(--spectrum-global-color-gray-100);
   }

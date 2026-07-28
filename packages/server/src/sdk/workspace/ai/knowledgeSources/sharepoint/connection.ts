@@ -335,6 +335,7 @@ export const fetchSharePointSitesByDatasourceAuthConfig = async (
 
 interface SharePointDrive {
   id?: string
+  name?: string
 }
 
 export interface SharePointListRef {
@@ -391,6 +392,12 @@ export interface SharePointListDocument {
 
 interface SharePointDriveListResponse {
   value?: SharePointDrive[]
+  "@odata.nextLink"?: string
+}
+
+export interface SharePointDriveRef {
+  id: string
+  name: string
 }
 
 interface SharePointDriveItem {
@@ -425,37 +432,52 @@ export const listSharePointDrives = async (
   bearerToken: string,
   siteId: string,
   signal?: AbortSignal
-): Promise<string[]> => {
-  const response = await requestWithRetries(
-    "listSharePointDrives",
-    () =>
-      fetch(
-        `${SHAREPOINT_API_BASE}/sites/${encodeURIComponent(
-          siteId
-        )}/drives?$top=200&$select=id`,
-        {
+): Promise<SharePointDriveRef[]> => {
+  const drives: SharePointDrive[] = []
+  let nextLink = `${SHAREPOINT_API_BASE}/sites/${encodeURIComponent(
+    siteId
+  )}/drives?$top=200&$select=id,name`
+
+  while (nextLink) {
+    const response = await requestWithRetries(
+      "listSharePointDrives",
+      () =>
+        fetch(nextLink, {
           signal,
           headers: {
             Authorization: bearerToken,
           },
-        }
-      ),
-    signal
-  )
-  if (!response.ok) {
-    console.error("Failed to list SharePoint drives", {
-      status: response.status,
-      siteId,
-    })
-    throw new HTTPError(
-      response.status === 401 || response.status === 403
-        ? "Access denied by Microsoft Graph. Ensure delegated SharePoint read permissions are granted."
-        : `Failed to list SharePoint drives (${response.status})`,
-      400
+        }),
+      signal
     )
+    if (!response.ok) {
+      console.error("Failed to list SharePoint drives", {
+        status: response.status,
+        siteId,
+      })
+      throw new HTTPError(
+        response.status === 401 || response.status === 403
+          ? "Access denied by Microsoft Graph. Ensure delegated SharePoint read permissions are granted."
+          : `Failed to list SharePoint drives (${response.status})`,
+        400
+      )
+    }
+
+    const payload = (await response.json()) as SharePointDriveListResponse
+    drives.push(...(payload.value || []))
+    const nextPageLink = payload["@odata.nextLink"]
+    if (!nextPageLink) {
+      nextLink = ""
+    } else if (!isAllowedSharePointNextLink(nextPageLink)) {
+      throw new HTTPError("Invalid SharePoint pagination URL", 400)
+    } else {
+      nextLink = nextPageLink
+    }
   }
-  const payload = (await response.json()) as SharePointDriveListResponse
-  return (payload.value || []).map(drive => drive.id || "").filter(Boolean)
+
+  return drives
+    .filter((drive): drive is SharePointDrive & { id: string } => !!drive.id)
+    .map(drive => ({ id: drive.id, name: drive.name || drive.id }))
 }
 
 const fetchSharePointCollection = async <
