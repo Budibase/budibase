@@ -8,6 +8,7 @@
   import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
   import {
+    AutomationActionStepId,
     AutomationStepType,
     type Automation,
     type AutomationStep,
@@ -15,6 +16,7 @@
     type AutomationStepResult,
     type AutomationTriggerResult,
     type AutomationResults,
+    isLoopV2Step,
   } from "@budibase/types"
   import {
     getRunHighlight,
@@ -124,8 +126,8 @@
   $: blockRef = block?.id
     ? $selectedAutomation?.blockRefs?.[block.id]
     : undefined
-  $: isInsideLoop = blockRef?.pathTo?.some(hop => hop.loopStepId) ?? false
-
+  $: isLoopChildBeforeBranch = isConnectedToLoopBranchNodes(blockRef)
+  $: canDrag = draggable && !isTrigger && !isLoopChildBeforeBranch
   $: triggerInfo = (() => {
     const automationData = $selectedAutomation.data
     if (!automationData) {
@@ -194,7 +196,7 @@
       return
     }
 
-    if (!draggable || isTrigger || isInsideLoop) {
+    if (!canDrag) {
       e.preventDefault()
       return
     }
@@ -220,6 +222,48 @@
 
   function handleHeaderUpdate(e: CustomEvent) {
     automationStore.actions.updateBlockTitle(block, e.detail)
+  }
+
+  function isConnectedToLoopBranchNodes(
+    blockRef:
+      | {
+          pathTo?: Array<{
+            loopStepId?: string
+            branchStepId?: string
+            branchIdx?: number
+            stepIdx?: number
+          }>
+        }
+      | undefined
+  ) {
+    const automationData = $selectedAutomation.data
+    const refs = $selectedAutomation.blockRefs
+    const pathTo = blockRef?.pathTo
+    const lastHop = pathTo?.at(-1)
+    const stepIdx = lastHop?.stepIdx
+    if (
+      !automationData ||
+      !refs ||
+      !lastHop?.loopStepId ||
+      lastHop.branchStepId ||
+      Number.isInteger(lastHop.branchIdx) ||
+      typeof stepIdx !== "number"
+    ) {
+      return false
+    }
+
+    const loopRef = refs[lastHop.loopStepId]
+    const loopStep = automationStore.actions.getBlockByRef(
+      automationData,
+      loopRef
+    )
+    if (!loopStep || !isLoopV2Step(loopStep)) {
+      return false
+    }
+
+    const nextStep = loopStep.inputs.children?.[stepIdx + 1]
+
+    return nextStep?.stepId === AutomationActionStepId.BRANCH
   }
 
   function getTriggerIconColor({
@@ -270,7 +314,7 @@
     class={`block ${block.type} hoverable`}
     class:dragging
     class:pressingDraggableNode
-    class:draggable={draggable && !isInsideLoop}
+    class:draggable={canDrag}
     class:selected
     class:success={successHighlight}
     class:error={errorHighlight}
