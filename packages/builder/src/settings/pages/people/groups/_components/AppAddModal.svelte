@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Body,
     Layout,
@@ -15,7 +15,12 @@
   import { Constants } from "@budibase/frontend-core"
   import GroupIcon from "./GroupIcon.svelte"
 
-  export let groupId
+  export let groupId: string
+
+  interface WorkspaceOption {
+    label: string
+    value: string
+  }
 
   const workspaceRoleOptions = Constants.BudibaseRoleOptions.filter(
     option =>
@@ -23,13 +28,15 @@
       option.value === Constants.BudibaseRoles.AppUser
   )
 
-  let selectedWorkspaceIds = []
+  let selectedWorkspaceIds: string[] = []
   let selectedRole = Constants.BudibaseRoles.AppUser
   let selectedEndUserRole = Constants.Roles.BASIC
   let workspaceSearchTerm = ""
 
   $: group = $groups.find(x => x._id === groupId)
-  $: roleColorLookup = ($roles || []).reduce((acc, role) => {
+  $: roleColorLookup = ($roles || []).reduce<
+    Record<string, string | undefined>
+  >((acc, role) => {
     acc[role._id] = role.uiMetadata?.color
     return acc
   }, {})
@@ -45,10 +52,13 @@
       color: roleColorLookup[Constants.Roles.ADMIN],
     },
   ]
-  $: assignedWorkspaceIds = groups.getGroupAppIds(group)
+  $: assignedWorkspaceIds = group ? groups.getGroupAppIds(group) : []
   $: workspaceOptions = Object.values(
-    $appsStore.apps.reduce((acc, app) => {
-      const prodAppId = appsStore.getProdWorkspaceID(app.devId)
+    $appsStore.apps.reduce<Record<string, WorkspaceOption>>((acc, app) => {
+      const prodAppId = appsStore.getProdWorkspaceID(app.devId || "")
+      if (!prodAppId) {
+        return acc
+      }
       if (assignedWorkspaceIds.includes(prodAppId) || acc[prodAppId]) {
         return acc
       }
@@ -116,8 +126,8 @@
       bind:searchTerm={workspaceSearchTerm}
       label="Workspaces"
       options={workspaceOptions}
-      getOptionLabel={option => option.label}
-      getOptionValue={option => option.value}
+      getOptionLabel={(option: WorkspaceOption) => option.label}
+      getOptionValue={(option: WorkspaceOption) => option.value}
       placeholder={workspaceOptions.length
         ? "Select workspaces"
         : "No available workspaces"}

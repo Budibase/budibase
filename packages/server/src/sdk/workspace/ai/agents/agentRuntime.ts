@@ -7,6 +7,8 @@ import {
   AgentMessageMetadata,
   ChatConversationRequest,
   ContextUser,
+  ESCALATE_TOOL_NAME,
+  EscalateToolResultStatus,
   FeatureFlag,
 } from "@budibase/types"
 import {
@@ -16,6 +18,7 @@ import {
   ToolLoopAgent,
   type LanguageModelUsage,
   type ModelMessage,
+  type StepResult,
   type StreamTextResult,
   type ToolSet,
   wrapLanguageModel,
@@ -409,6 +412,26 @@ export const prepareAgentRunContext = async ({
   }
 }
 
+// A pending escalation suspends the turn - once one exists, later steps run
+// with no tools so the model can wrap up in text but cannot act before a
+// human responds. Keyed on the result status rather than the tool name so
+// resumed runs (ALREADY_APPROVED) keep their tools.
+const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
+  steps.some(step =>
+    step.toolResults.some(result => {
+      if (result.toolName !== ESCALATE_TOOL_NAME) {
+        return false
+      }
+      const output = result.output
+      return (
+        typeof output === "object" &&
+        output !== null &&
+        "status" in output &&
+        output.status === EscalateToolResultStatus.PENDING_APPROVAL
+      )
+    })
+  )
+
 export const prepareAgentChatRun = async ({
   agent,
   agentId,
@@ -533,6 +556,9 @@ export const prepareAgentChatRun = async ({
     tools: hasTools ? tools : undefined,
     ...(hasTools ? { toolChoice: "auto" as const } : {}),
     stopWhen: stepCountIs(30),
+    // Anthropic rejects those without a tools param.
+    prepareStep: ({ steps }) =>
+      hasPendingEscalation(steps) ? { toolChoice: "none" as const } : undefined,
     providerOptions: llm.providerOptions?.(hasTools),
   })
 
