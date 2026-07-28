@@ -62,9 +62,14 @@ export async function status() {
     if (!scope || scope.mode === SharePointScopeMode.ALL) {
       return scope
     }
+    const targets = scope.targets.map(target =>
+      Object.fromEntries(
+        Object.entries(target).sort(([a], [b]) => a.localeCompare(b))
+      )
+    )
     return {
       mode: scope.mode,
-      targets: [...scope.targets].sort((a, b) =>
+      targets: targets.sort((a, b) =>
         JSON.stringify(a).localeCompare(JSON.stringify(b))
       ),
     }
