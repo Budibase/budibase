@@ -140,6 +140,18 @@ export function nameValidator() {
   )
 }
 
+export function publicApiUserValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      builder: Joi.object({
+        global: Joi.boolean().optional(),
+        apps: Joi.array().items(Joi.string()).optional(),
+        creator: Joi.boolean().optional(),
+      }).optional(),
+    }).unknown(true)
+  )
+}
+
 export function datasourceValidator() {
   return auth.joiValidator.body(
     Joi.object({

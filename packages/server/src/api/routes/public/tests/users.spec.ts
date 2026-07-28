@@ -51,6 +51,23 @@ describe("public users API", () => {
       expect(newUser._id).toBeDefined()
     })
 
+    it("rejects malformed builder app assignments", async () => {
+      const apiKey = await config.generateApiKey(globalUser._id)
+      const response = await config
+        .request!.post("/api/public/v1/users")
+        .set(
+          config.defaultHeaders({
+            "x-budibase-api-key": apiKey,
+          })
+        )
+        .send({
+          email: generator.email({ domain: "example.com" }),
+          builder: { apps: {} },
+        })
+
+      expect(response.status).toBe(400)
+    })
+
     describe("role creation on free tier", () => {
       it("should not allow 'roles' to be updated", async () => {
         const newUser = await config.api.public.user.create({

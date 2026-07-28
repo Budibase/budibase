@@ -1,5 +1,5 @@
 import { users } from "@budibase/backend-core"
-import type { UserCtx } from "@budibase/types"
+import type { User, UserCtx } from "@budibase/types"
 
 interface GlobalRoleUpdate {
   builder?: boolean
@@ -19,6 +19,23 @@ const validateAppRoleUpdate = (ctx: UserCtx, appId?: string) => {
 
   if (!users.isAdmin(ctx.user) && !users.isBuilder(ctx.user, appId)) {
     ctx.throw(403, "Only app builders or admins can update app permissions.")
+  }
+}
+
+export const validateBuilderAppUpdate = ({
+  ctx,
+  requestedApps,
+  currentBuilder,
+}: {
+  ctx: UserCtx
+  requestedApps?: string[]
+  currentBuilder?: User["builder"]
+}) => {
+  const existingApps = currentBuilder?.apps || []
+  for (const appId of requestedApps || []) {
+    if (!existingApps.includes(appId)) {
+      validateAppRoleUpdate(ctx, appId)
+    }
   }
 }
 
