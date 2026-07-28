@@ -7,6 +7,7 @@
     screenStore,
     componentStore,
     componentTreeNodesStore,
+    componentTreeSearchStore,
     userSelectedResourceMap,
     hoverStore,
     contextMenuStore,
@@ -24,20 +25,18 @@
   let searchTerm = ""
   let searchOpen = false
   let searchInput: HTMLInputElement | undefined
-  let handledCreatedComponentSequence: number | undefined
+  let handledClearSearchSequence = $componentTreeSearchStore.clearSearchSequence
 
   $: isSearching = !!searchTerm.trim()
   $: searchResults = getComponentTreeSearchResults(
     $selectedScreen?.props?._children,
     searchTerm
   )
-  $: if (handledCreatedComponentSequence === undefined) {
-    handledCreatedComponentSequence = $componentStore.createdComponentSequence
-  } else if (
-    $componentStore.createdComponentSequence !== handledCreatedComponentSequence
+  $: if (
+    $componentTreeSearchStore.clearSearchSequence !== handledClearSearchSequence
   ) {
     closeSearch()
-    handledCreatedComponentSequence = $componentStore.createdComponentSequence
+    handledClearSearchSequence = $componentTreeSearchStore.clearSearchSequence
   }
 
   const openSearch = async () => {
