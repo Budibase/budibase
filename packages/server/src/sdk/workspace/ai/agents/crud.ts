@@ -5,6 +5,7 @@ import {
   events,
   HTTPError,
 } from "@budibase/backend-core"
+import { WebClient } from "@slack/web-api"
 import { DocumentType } from "@budibase/types"
 import type {
   Agent,
@@ -375,6 +376,37 @@ const mergeMSTeamsIntegration = ({
   return merged
 }
 
+const withSlackTeamId = async (
+  integration: Agent["slackIntegration"],
+  existing?: Agent["slackIntegration"]
+): Promise<Agent["slackIntegration"]> => {
+  const botToken = integration?.botToken
+  if (!integration || !botToken) {
+    return integration
+  }
+  // teamId is server-derived, never trusted from the client.
+  if (botToken === existing?.botToken && existing?.teamId) {
+    return { ...integration, teamId: existing.teamId }
+  }
+  // Drop any inherited teamId - it belongs to the old token's workspace,
+  // and leaving it unset on failure lets the next save retry.
+  const { teamId: _teamId, ...withoutTeamId } = integration
+  try {
+    // Single attempt - the default retry policy would block the save for 30 minutes.
+    const client = new WebClient(botToken, {
+      retryConfig: { retries: 0 },
+      timeout: 5000,
+    })
+    const auth = await client.auth.test()
+    return { ...withoutTeamId, teamId: auth.team_id }
+  } catch (err) {
+    console.warn("Failed to resolve Slack workspace for integration", {
+      error: err instanceof Error ? err.message : String(err),
+    })
+    return withoutTeamId
+  }
+}
+
 const mergeSlackIntegration = ({
   existing,
   incoming,
@@ -494,7 +526,7 @@ export async function create(
     createdBy: request.createdBy,
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
-    slackIntegration: request.slackIntegration,
+    slackIntegration: await withSlackTeamId(request.slackIntegration),
     telegramIntegration: request.telegramIntegration,
   }
 
@@ -592,6 +624,11 @@ export async function update(agent: Agent): Promise<Agent> {
       incoming: agent.telegramIntegration,
     }),
   } satisfies Agent)
+
+  updated.slackIntegration = await withSlackTeamId(
+    updated.slackIntegration,
+    existing?.slackIntegration
+  )
 
   if (updated.live) {
     await assertAgentHasValidConfig(updated)
