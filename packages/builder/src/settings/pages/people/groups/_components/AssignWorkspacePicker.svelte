@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Button, Modal } from "@budibase/bbui"
-  import { appsStore } from "@/stores/portal/apps"
+  import { appsStore } from "@/stores/portal/workspaces"
   import { groups } from "@/stores/portal/groups"
   import AppAddModal from "./AppAddModal.svelte"
 

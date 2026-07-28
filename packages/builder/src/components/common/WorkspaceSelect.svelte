@@ -10,7 +10,7 @@
   import { contextMenuStore } from "@/stores/builder/contextMenu"
   import { bb } from "@/stores/bb"
   import { enrichedApps, auth, licensing } from "@/stores/portal"
-  import { appsStore, sortBy } from "@/stores/portal/apps"
+  import { appsStore, sortBy } from "@/stores/portal/workspaces"
   import WorkspaceSortMenu from "./WorkspaceSortMenu.svelte"
   import type { EnrichedApp } from "@/types"
 

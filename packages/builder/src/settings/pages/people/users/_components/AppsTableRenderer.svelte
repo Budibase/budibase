@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Icon } from "@budibase/bbui"
-  import { appsStore } from "@/stores/portal/apps"
+  import { appsStore } from "@/stores/portal/workspaces"
   import { sdk } from "@budibase/shared-core"
   import { type EnrichedUser, type ParsedInvite } from "@/types"
 

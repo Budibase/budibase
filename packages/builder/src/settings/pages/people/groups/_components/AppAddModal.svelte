@@ -10,7 +10,7 @@
   } from "@budibase/bbui"
   import GlobalRoleSelect from "@/components/common/GlobalRoleSelect.svelte"
   import { roles } from "@/stores/builder"
-  import { appsStore } from "@/stores/portal/apps"
+  import { appsStore } from "@/stores/portal/workspaces"
   import { groups } from "@/stores/portal/groups"
   import { Constants } from "@budibase/frontend-core"
   import GroupIcon from "./GroupIcon.svelte"

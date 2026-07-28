@@ -14,7 +14,7 @@
   } from "@budibase/bbui"
   import { PASSWORD_REPLACEMENT } from "@budibase/types"
   import { AppStatus } from "@/constants"
-  import { appsStore } from "@/stores/portal/apps"
+  import { appsStore } from "@/stores/portal/workspaces"
   import { appStore, workspaceAppStore } from "@/stores/builder"
   import { licensing } from "@/stores/portal/licensing"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"

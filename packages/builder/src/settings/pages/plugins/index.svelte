@@ -14,7 +14,7 @@
   import { onMount } from "svelte"
   import type { Plugin } from "@budibase/types"
   import { admin } from "@/stores/portal/admin"
-  import { appsStore } from "@/stores/portal/apps"
+  import { appsStore } from "@/stores/portal/workspaces"
   import { plugins } from "@/stores/portal/plugins"
   import AddPluginModal from "./_components/AddPluginModal.svelte"
   import PluginNameRenderer from "./_components/PluginNameRenderer.svelte"

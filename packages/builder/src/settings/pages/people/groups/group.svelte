@@ -14,7 +14,7 @@
   } from "@budibase/bbui"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { roles } from "@/stores/builder"
-  import { appsStore } from "@/stores/portal/apps"
+  import { appsStore } from "@/stores/portal/workspaces"
   import { auth } from "@/stores/portal/auth"
   import { groups } from "@/stores/portal/groups"
   import { onMount, setContext, getContext } from "svelte"

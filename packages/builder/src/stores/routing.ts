@@ -6,7 +6,7 @@ import { auth } from "@/stores/portal/auth"
 import { admin } from "@/stores/portal/admin"
 import { appStore } from "@/stores/builder/app"
 import { bb, setSettingsRouteResolver } from "@/stores/bb"
-import { appsStore } from "@/stores/portal/apps"
+import { appsStore } from "@/stores/portal/workspaces"
 import {
   workspaceRoutes,
   filterRoutes,

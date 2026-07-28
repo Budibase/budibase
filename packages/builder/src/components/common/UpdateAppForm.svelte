@@ -10,7 +10,7 @@
   import { AppStatus } from "@/constants"
   import { initialise } from "@/stores/builder"
   import { appStore } from "@/stores/builder/app"
-  import { appsStore } from "@/stores/portal/apps"
+  import { appsStore } from "@/stores/portal/workspaces"
   import { API } from "@/api"
   import { writable } from "svelte/store"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"

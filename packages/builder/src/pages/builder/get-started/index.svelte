@@ -3,7 +3,7 @@
   import { Body, Button, Heading, Layout, Modal } from "@budibase/bbui"
   import { SplitPage } from "@budibase/frontend-core"
   import { goto as gotoStore } from "@roxi/routify"
-  import { appsStore } from "@/stores/portal/apps"
+  import { appsStore } from "@/stores/portal/workspaces"
   import { auth } from "@/stores/portal/auth"
   import BBLogo from "assets/BBLogo.svelte"
   import CreateWorkspaceModal from "../workspace/[application]/_components/CreateWorkspaceModal.svelte"
