@@ -50,9 +50,9 @@ export async function create(tableId: string, rowAction: { name: string }) {
 
   await ensureUniqueAndThrow(doc, action.name)
 
-  const appId = context.getWorkspaceId()
-  if (!appId) {
-    throw new Error("Could not get the current appId")
+  const workspaceId = context.getWorkspaceId()
+  if (!workspaceId) {
+    throw new Error("Could not get the current workspace ID")
   }
 
   const newRowActionId = `${
@@ -61,7 +61,7 @@ export async function create(tableId: string, rowAction: { name: string }) {
 
   const automation = await automations.create({
     name: action.name,
-    appId,
+    appId: workspaceId,
     definition: {
       trigger: {
         id: "trigger",
