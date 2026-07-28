@@ -289,8 +289,10 @@ export const componentMatchesSearchTerm = (
     return false
   }
 
-  return [getComponentText(component), getComponentTypeSearchText(component)]
-    .some(text => text.toLowerCase().includes(normalisedSearchTerm))
+  return [
+    getComponentText(component),
+    getComponentTypeSearchText(component),
+  ].some(text => text.toLowerCase().includes(normalisedSearchTerm))
 }
 
 export const getComponentTreeSearchResults = (

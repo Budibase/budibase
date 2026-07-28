@@ -25,7 +25,9 @@
     _id: string
   }
 
-  const hasComponentId = (component: Component): component is ComponentWithId => {
+  const hasComponentId = (
+    component: Component
+  ): component is ComponentWithId => {
     return !!component._id
   }
 
@@ -38,16 +40,18 @@
 
   $: isSearching = !!searchTerm
 
-  $: filteredComponents = components?.filter(hasComponentId).filter(component => {
-    const isCutComponent =
-      $componentStore.componentToPaste?.isCut &&
-      component._id === $componentStore.componentToPaste?._id
+  $: filteredComponents = components
+    ?.filter(hasComponentId)
+    .filter(component => {
+      const isCutComponent =
+        $componentStore.componentToPaste?.isCut &&
+        component._id === $componentStore.componentToPaste?._id
 
-    const isVisibleInComponentTree =
-      !isSearching || visibleSearchIds.has(component._id)
+      const isVisibleInComponentTree =
+        !isSearching || visibleSearchIds.has(component._id)
 
-    return !isCutComponent && isVisibleInComponentTree
-  })
+      return !isCutComponent && isVisibleInComponentTree
+    })
 
   const dragover = (component: ComponentWithId) => (e: DragEvent) => {
     if (isSearching) {
@@ -74,7 +78,9 @@
   }
 
   const componentHasChildren = (component: ComponentWithId) => {
-    return !!(componentSupportsChildren(component) && component._children?.length)
+    return !!(
+      componentSupportsChildren(component) && component._children?.length
+    )
   }
 
   const onDrop = async (e: DragEvent) => {
@@ -112,7 +118,11 @@
     const selected = get(selectedComponent)
     const selectedComponentId = selected?._id
     const selectedScreenId = get(selectedScreen)?.props._id
-    if (!selected || !selectedComponentId || selectedComponentId === selectedScreenId) {
+    if (
+      !selected ||
+      !selectedComponentId ||
+      selectedComponentId === selectedScreenId
+    ) {
       return false
     }
     return findComponentPath(selected, component._id)?.length > 0
@@ -138,10 +148,7 @@
     e.preventDefault()
     e.stopPropagation()
 
-    const items = getComponentContextMenuItems(
-      component,
-      !opened
-    )
+    const items = getComponentContextMenuItems(component, !opened)
     contextMenuStore.open(component._id, items, { x: e.clientX, y: e.clientY })
   }
 
@@ -188,7 +195,7 @@
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions-->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <ul>
-  {#each filteredComponents || [] as component, index (component._id)}
+  {#each filteredComponents || [] as component (component._id)}
     {@const opened = isOpen(component)}
     <li
       on:contextmenu={e => openContextMenu(e, component, opened)}
