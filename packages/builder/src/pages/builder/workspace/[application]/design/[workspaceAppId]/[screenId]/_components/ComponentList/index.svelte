@@ -1,14 +1,15 @@
-<script>
+<script lang="ts">
   import { tick } from "svelte"
   import { notifications, Icon } from "@budibase/bbui"
+  import type { Component } from "@budibase/types"
   import {
     selectedScreen,
     screenStore,
     componentStore,
+    componentTreeNodesStore,
     userSelectedResourceMap,
     hoverStore,
     contextMenuStore,
-    componentTreeNodesStore,
   } from "@/stores/builder"
   import NavItem from "@/components/common/NavItem.svelte"
   import ComponentTree from "./ComponentTree.svelte"
@@ -22,13 +23,22 @@
   $: navComponentId = `${$screenStore.selectedScreenId}-navigation`
   let searchTerm = ""
   let searchOpen = false
-  let searchInput
+  let searchInput: HTMLInputElement | undefined
+  let handledCreatedComponentSequence = 0
 
   $: isSearching = !!searchTerm.trim()
   $: searchResults = getComponentTreeSearchResults(
     $selectedScreen?.props?._children,
     searchTerm
   )
+  $: if (
+    $componentStore.createdComponentSequence !== handledCreatedComponentSequence
+  ) {
+    if (handledCreatedComponentSequence) {
+      closeSearch()
+    }
+    handledCreatedComponentSequence = $componentStore.createdComponentSequence
+  }
 
   const openSearch = async () => {
     searchOpen = true
@@ -49,13 +59,13 @@
     openSearch()
   }
 
-  const onKeyDown = e => {
+  const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape" && searchOpen) {
       closeSearch()
     }
   }
 
-  const onSearchInputKeyDown = e => {
+  const onSearchInputKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape") {
       closeSearch()
       return
@@ -94,14 +104,23 @@
   // showCopy is used to hide the copy button when the user right-clicks the empty
   // background of their component tree. Pasting in the empty space makes sense,
   // but copying it doesn't
-  const openScreenContextMenu = (e, showCopy) => {
+  const openScreenContextMenu = (
+    e: MouseEvent,
+    showCopy: boolean | Component | undefined
+  ) => {
     const screenComponent = $selectedScreen?.props
-    const definition = componentStore.getDefinition(screenComponent?._component)
+    const definition = screenComponent?._component
+      ? componentStore.getDefinition(screenComponent._component)
+      : null
+    const editable =
+      definition && "editable" in definition ? definition.editable : undefined
+    const isStatic =
+      definition && "static" in definition ? definition.static : undefined
     // "editable" has been repurposed for inline text editing.
     // It remains here for legacy compatibility.
     // Future components should define "static": true for indicate they should
     // not show a context menu.
-    if (definition?.editable !== false && definition?.static !== true) {
+    if (editable !== false && isStatic !== true) {
       e.preventDefault()
       e.stopPropagation()
 

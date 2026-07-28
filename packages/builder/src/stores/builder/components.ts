@@ -53,6 +53,7 @@ export interface ComponentState {
   customComponents: string[]
   selectedComponentId?: string
   componentToPaste?: Component
+  createdComponentSequence: number
   settingsCache: Record<string, ComponentSetting[]>
   selectedScreenId?: string | null
 }
@@ -60,6 +61,7 @@ export interface ComponentState {
 export const INITIAL_COMPONENTS_STATE: ComponentState = {
   components: {},
   customComponents: [],
+  createdComponentSequence: 0,
   settingsCache: {},
 }
 
@@ -583,6 +585,7 @@ export class ComponentStore extends BudiStore<ComponentState> {
     // Select new component
     this.update(state => {
       state.selectedComponentId = componentInstance._id
+      state.createdComponentSequence += 1
       return state
     })
 
