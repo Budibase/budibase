@@ -14,6 +14,8 @@
   let processing = $derived(
     syncing || (row.kind === "sharepoint_connection" && row.isSyncing)
   )
+  const unavailableTooltip =
+    "Set GEMINI_API_KEY in your env vars and restart Budibase."
 
   $effect(() => {
     if (renderedRowId === row._id) {
@@ -35,37 +37,50 @@
       syncing = false
     }
   }
+
+  const knowledgeSearchUnavailable = $derived(
+    row.knowledgeSearchConfigured !== true
+  )
 </script>
 
 <div class="file-actions" class:loading={processing}>
   {#if row.kind === "sharepoint_connection"}
-    <AbsTooltip text="Sync SharePoint" noWrap>
+    <AbsTooltip
+      text={knowledgeSearchUnavailable ? unavailableTooltip : "Sync SharePoint"}
+      noWrap
+    >
       <ActionButton
         icon={"arrows-clockwise"}
         size="M"
         quiet
         on:click={() => sync(row)}
-        disabled={processing}
+        disabled={knowledgeSearchUnavailable || processing}
         loading={syncing}
       ></ActionButton>
     </AbsTooltip>
-    <AbsTooltip text="Disconnect" noWrap>
+    <AbsTooltip
+      text={knowledgeSearchUnavailable ? unavailableTooltip : "Disconnect"}
+      noWrap
+    >
       <ActionButton
         icon="trash"
         size="M"
         quiet
         on:click={remove}
-        disabled={processing}
+        disabled={knowledgeSearchUnavailable || processing}
       />
     </AbsTooltip>
   {:else if row.onDelete}
-    <AbsTooltip text="Remove" noWrap>
+    <AbsTooltip
+      text={knowledgeSearchUnavailable ? unavailableTooltip : "Remove"}
+      noWrap
+    >
       <ActionButton
         icon="trash"
         size="M"
         quiet
         on:click={remove}
-        disabled={processing}
+        disabled={knowledgeSearchUnavailable || processing}
       />
     </AbsTooltip>
   {/if}

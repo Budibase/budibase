@@ -11,9 +11,18 @@
     operationId: string
     onUploaded?: () => Promise<void>
     onSharePoint?: () => Promise<void> | void
+    disabled?: boolean
+    tooltip?: string
   }
 
-  let { agentId, operationId, onUploaded, onSharePoint }: Props = $props()
+  let {
+    agentId,
+    operationId,
+    onUploaded,
+    onSharePoint,
+    disabled = false,
+    tooltip,
+  }: Props = $props()
 
   let fileInput = $state<HTMLInputElement>()
   let addKnowledgeModal = $state<AddKnowledgeModal>()
@@ -27,6 +36,9 @@
   })
 
   const openAddKnowledgeModal = () => {
+    if (disabled) {
+      return
+    }
     addKnowledgeModal?.show()
   }
 
@@ -106,22 +118,26 @@
   }
 </script>
 
-<Button
-  icon="plus"
-  size="S"
-  secondary
-  disabled={uploadState.uploading}
-  on:click={openAddKnowledgeModal}
->
-  <span class="add-knowledge-label">
-    <span>
-      {uploadState.uploading
-        ? uploadState.progress || "Uploading..."
-        : "Add knowledge"}
+<div class="add-knowledge-button">
+  <Button
+    icon="plus"
+    size="S"
+    secondary
+    {tooltip}
+    calculateTooltipWidth={target => target.getBoundingClientRect().width}
+    disabled={disabled || uploadState.uploading}
+    on:click={openAddKnowledgeModal}
+  >
+    <span class="add-knowledge-label">
+      <span>
+        {uploadState.uploading
+          ? uploadState.progress || "Uploading..."
+          : "Add knowledge"}
+      </span>
+      <img src={addKnowledgeIcons} alt="" />
     </span>
-    <img src={addKnowledgeIcons} alt="" />
-  </span>
-</Button>
+  </Button>
+</div>
 
 <input
   type="file"
@@ -145,11 +161,23 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    width: max-content;
+    flex-shrink: 0;
+  }
+
+  .add-knowledge-button {
+    display: inline-flex;
+    width: max-content;
   }
 
   .add-knowledge-label img {
     object-fit: contain;
     pointer-events: none;
+    flex: 0 0 auto;
     height: 18px;
+  }
+
+  :global(.spectrum-Button-label) {
+    flex-shrink: 0;
   }
 </style>

@@ -93,6 +93,17 @@
     return agentsStore.getOperationUploadState(agentId, operationId)
   })
 
+  let knowledgeSearchConfigured = $derived.by(() => {
+    const _store = $agentsStore
+    return agentsStore.getKnowledgeConfiguration()?.knowledgeSearchConfigured
+  })
+  let knowledgeSearchUnavailable = $derived(knowledgeSearchConfigured !== true)
+  let knowledgeActionsTooltip = $derived(
+    knowledgeSearchUnavailable
+      ? "Set GEMINI_API_KEY in your env vars and restart Budibase."
+      : undefined
+  )
+
   let hasSharePointConnection = $derived(
     $knowledgeConnectionsStore.connections.some(
       connection =>
@@ -136,7 +147,8 @@
     toFileTableRows(
       files.filter(file => !file.source),
       removeFile,
-      uploadState.pendingUploads
+      uploadState.pendingUploads,
+      knowledgeSearchConfigured === true
     )
   )
   let sharePointConnectionRows = $derived.by(() =>
@@ -145,6 +157,7 @@
       sharePointSourceSnapshots,
       onDelete: removeSharePointSite,
       onSync: syncSharePointNow,
+      knowledgeSearchConfigured: knowledgeSearchConfigured === true,
     })
   )
   let knowledgeTableRows: KnowledgeTableRow[] = $derived.by(() => [
@@ -217,7 +230,7 @@
   }
 
   const handleKnowledgeRowClick = (row: KnowledgeTableRow) => {
-    if (row.kind !== "sharepoint_connection") {
+    if (knowledgeSearchUnavailable || row.kind !== "sharepoint_connection") {
       return
     }
     openSharePointSiteConfigModal(row.siteId).catch(error => {
@@ -353,6 +366,8 @@
       <KnowledgeAddControls
         {agentId}
         {operationId}
+        disabled={knowledgeSearchUnavailable}
+        tooltip={knowledgeActionsTooltip}
         onUploaded={async () => {
           syncOperationFromStore()
           await refreshDeploymentStatus()

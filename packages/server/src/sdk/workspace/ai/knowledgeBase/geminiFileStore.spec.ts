@@ -61,7 +61,7 @@ describe("geminiFileStore", () => {
         {
           status: 400,
           message:
-            "Gemini File Search failed. Set GEMINI_API_KEY on your local environment",
+            "Gemini File Search isn't configured. Set GEMINI_API_KEY in your env vars and restart Budibase.",
         }
       )
       expect(mockFetch).not.toHaveBeenCalled()

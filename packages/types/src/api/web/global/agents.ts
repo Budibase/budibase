@@ -65,6 +65,9 @@ export interface FetchAgentKnowledgeResponse {
 
 export interface FetchAgentKnowledgeIndexResponse {
   operations: Record<string, FetchAgentKnowledgeResponse>
+  configuration: {
+    knowledgeSearchConfigured: boolean
+  }
 }
 
 export interface KnowledgeSourceEntry {
