@@ -4,16 +4,19 @@
   import { groups } from "@/stores/portal/groups"
   import AppAddModal from "./AppAddModal.svelte"
 
-  export let groupId
+  export let groupId: string
 
-  let assignWorkspaceModal
-  let appAddModal
+  let assignWorkspaceModal: Modal
+  let appAddModal: AppAddModal
 
   $: group = $groups.find(x => x._id === groupId)
-  $: assignedWorkspaceIds = groups.getGroupAppIds(group)
+  $: assignedWorkspaceIds = group ? groups.getGroupAppIds(group) : []
   $: availableWorkspaceIds = Object.keys(
-    $appsStore.apps.reduce((acc, app) => {
-      const prodAppId = appsStore.getProdAppID(app.devId)
+    $appsStore.apps.reduce<Record<string, boolean>>((acc, app) => {
+      const prodAppId = appsStore.getProdAppID(app.devId || "")
+      if (!prodAppId) {
+        return acc
+      }
       if (assignedWorkspaceIds.includes(prodAppId) || acc[prodAppId]) {
         return acc
       }
