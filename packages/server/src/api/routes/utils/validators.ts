@@ -140,7 +140,7 @@ export function nameValidator() {
   )
 }
 
-export function publicUserValidator() {
+export function publicApiUserValidator() {
   return auth.joiValidator.body(
     Joi.object({
       builder: Joi.object({
