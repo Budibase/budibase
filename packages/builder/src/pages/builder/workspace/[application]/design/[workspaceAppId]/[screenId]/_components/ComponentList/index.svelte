@@ -66,6 +66,8 @@
 
   const onSearchInputKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape") {
+      e.preventDefault()
+      e.stopPropagation()
       closeSearch()
       return
     }
