@@ -1,34 +1,69 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte"
+  import type { Readable, Writable } from "svelte/store"
   import { ActionButton, Icon, Select } from "@budibase/bbui"
-  import { FieldType, isNumeric } from "@budibase/types"
+  import {
+    FieldType,
+    SortOrder,
+    isNumeric,
+    type UIFieldSchema,
+  } from "@budibase/types"
   import { canBeSortColumn } from "@budibase/frontend-core"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
 
-  const { sort, columns } = getContext("grid")
+  interface SortEntry {
+    column: string
+    order: SortOrder
+  }
 
-  let popover
+  interface ColumnOption {
+    label: string
+    value: string
+    type: FieldType
+  }
+
+  interface OrderOption {
+    label: string
+    value: SortOrder
+  }
+
+  interface GridColumn {
+    label?: string
+    name: string
+    schema: UIFieldSchema
+  }
+
+  interface GridContext {
+    sort: Writable<SortEntry[]>
+    columns: Readable<GridColumn[]>
+  }
+
+  const { sort, columns } = getContext<GridContext>("grid")
+
+  let popover: DetailPopover | undefined
 
   $: columnOptions = $columns
     .filter(col => canBeSortColumn(col.schema))
     .map(col => ({
       label: col.label || col.name,
       value: col.name,
-      type: col.schema?.type,
+      type: col.schema.type,
     }))
-  $: sortRows =
-    $sort.length > 0 ? $sort : [{ column: null, order: "ascending" }]
-  $: canAddSort =
-    columnOptions.filter(option => !$sort.some(s => s.column === option.value))
-      .length > 0
+  $: sortRows = $sort.length > 0 ? $sort : [undefined]
+  $: canAddSort = columnOptions.some(
+    option => !$sort.some(sortEntry => sortEntry.column === option.value)
+  )
 
-  const getOrderOptions = (column, columnOptions) => {
+  const getOrderOptions = (
+    column: string,
+    columnOptions: ColumnOption[]
+  ): OrderOption[] => {
     const type = columnOptions.find(col => col.value === column)?.type
 
     // Define labels based on column type
     let ascendingLabel, descendingLabel
 
-    if (isNumeric(type)) {
+    if (type && isNumeric(type)) {
       ascendingLabel = "Low to high"
       descendingLabel = "High to low"
     } else if (type === FieldType.DATETIME) {
@@ -42,16 +77,16 @@
     return [
       {
         label: ascendingLabel,
-        value: "ascending",
+        value: SortOrder.ASCENDING,
       },
       {
         label: descendingLabel,
-        value: "descending",
+        value: SortOrder.DESCENDING,
       },
     ]
   }
 
-  const getColumnOptions = currentColumn => {
+  const getColumnOptions = (currentColumn?: string): ColumnOption[] => {
     const used = new Set($sort.map(sortEntry => sortEntry.column))
     if (currentColumn) {
       used.delete(currentColumn)
@@ -59,56 +94,78 @@
     return columnOptions.filter(option => !used.has(option.value))
   }
 
-  const updateSortColumn = (index, column) => {
-    sort.update(state => {
-      const next = [...state]
+  const updateSortColumn = (index: number, column?: string) => {
+    sort.update(currentSort => {
+      const currentSortEntry = currentSort[index]
+
       if (!column) {
-        if (next[index]) {
-          next.splice(index, 1)
+        if (!currentSortEntry) {
+          return [...currentSort]
         }
-        return next
+
+        return currentSort.filter((_, sortIndex) => sortIndex !== index)
       }
-      if (next[index]) {
-        next[index] = {
-          ...next[index],
+
+      if (currentSortEntry) {
+        return currentSort.map((sortEntry, sortIndex) => {
+          if (sortIndex !== index) {
+            return sortEntry
+          }
+
+          return {
+            ...sortEntry,
+            column,
+          }
+        })
+      }
+
+      return [
+        ...currentSort,
+        {
           column,
+          order: SortOrder.ASCENDING,
+        },
+      ]
+    })
+  }
+
+  const updateSortOrder = (index: number, order: SortOrder) => {
+    sort.update(currentSort => {
+      if (!currentSort[index]) {
+        return currentSort
+      }
+
+      return currentSort.map((sortEntry, sortIndex) => {
+        if (sortIndex !== index) {
+          return sortEntry
         }
-      } else {
-        next.push({ column, order: "ascending" })
-      }
-      return next
+
+        return {
+          ...sortEntry,
+          order,
+        }
+      })
     })
   }
 
-  const updateSortOrder = (index, order) => {
-    sort.update(state => {
-      if (!state[index]) {
-        return state
-      }
-      const next = [...state]
-      next[index] = {
-        ...next[index],
-        order,
-      }
-      return next
-    })
-  }
-
-  const removeSort = index => {
+  const removeSort = (index: number) => {
     sort.update(state => state.filter((_, idx) => idx !== index))
   }
 
   const addSort = () => {
-    const used = new Set($sort.map(sortEntry => sortEntry.column))
-    const nextOption = columnOptions.find(option => !used.has(option.value))
+    const nextOption = columnOptions.find(
+      option => !$sort.some(sortEntry => sortEntry.column === option.value)
+    )
+
     if (!nextOption) {
       return
     }
-    sort.update(state => [
-      ...state,
+
+    sort.update(currentSort => [
+      ...currentSort,
       {
         column: nextOption.value,
-        order: "ascending",
+        order: SortOrder.ASCENDING,
       },
     ])
   }
@@ -131,16 +188,16 @@
     <div class="sort-row">
       <Select
         placeholder="Default"
-        value={sortRow.column}
-        options={getColumnOptions(sortRow.column)}
+        value={sortRow?.column}
+        options={getColumnOptions(sortRow?.column)}
         autoWidth
         on:change={e => updateSortColumn(index, e.detail)}
         label="Column"
       />
-      {#if sortRow.column}
+      {#if sortRow?.column}
         <Select
-          placeholder={null}
-          value={sortRow.order || "ascending"}
+          placeholder={false}
+          value={sortRow.order || SortOrder.ASCENDING}
           options={getOrderOptions(sortRow.column, columnOptions)}
           autoWidth
           on:change={e => updateSortOrder(index, e.detail)}
@@ -154,7 +211,7 @@
             hoverColor="var(--spectrum-global-color-gray-900)"
             size="S"
             on:click={() => removeSort(index)}
-            title="Remove sort"
+            tooltip="Remove sort"
           />
         </div>
       {/if}

@@ -22,32 +22,36 @@ const getSortType = (schema: TableSchema, field: string) => {
   return SortType.STRING
 }
 
+const normalizeSortOrder = (order?: SortOrder) =>
+  order?.toLowerCase() === SortOrder.DESCENDING
+    ? SortOrder.DESCENDING
+    : SortOrder.ASCENDING
+
 export const normalizeSorts = (
   options: SortNormalizationOptions,
   schema: TableSchema,
   defaultSortColumn: string | null
-) => {
-  let normalizedSorts =
+): SortField[] => {
+  let normalizedSorts: SortField[] =
     options.sorts
       ?.filter(sortEntry => sortEntry?.field && schema[sortEntry.field])
-      .map(sortEntry => ({
-        ...sortEntry,
-        order: (
-          sortEntry.order || SortOrder.ASCENDING
-        ).toLowerCase() as SortOrder,
-        type: sortEntry.type || getSortType(schema, sortEntry.field),
-      })) || []
+      .map(
+        sortEntry =>
+          ({
+            ...sortEntry,
+            order: normalizeSortOrder(sortEntry.order),
+            type: sortEntry.type || getSortType(schema, sortEntry.field),
+          }) satisfies SortField
+      ) || []
 
   if (!normalizedSorts.length && options.sorts == null && options.sortColumn) {
     if (schema[options.sortColumn]) {
       normalizedSorts = [
         {
           field: options.sortColumn,
-          order: (
-            options.sortOrder || SortOrder.ASCENDING
-          ).toLowerCase() as SortOrder,
+          order: normalizeSortOrder(options.sortOrder),
           type: options.sortType || getSortType(schema, options.sortColumn),
-        },
+        } satisfies SortField,
       ]
     }
   }
@@ -58,7 +62,7 @@ export const normalizeSorts = (
         field: defaultSortColumn,
         order: SortOrder.ASCENDING,
         type: getSortType(schema, defaultSortColumn),
-      },
+      } satisfies SortField,
     ]
   }
 
