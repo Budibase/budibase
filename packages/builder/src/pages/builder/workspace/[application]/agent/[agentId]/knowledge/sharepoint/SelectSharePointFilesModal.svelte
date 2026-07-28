@@ -155,6 +155,13 @@
     if (!agentId || !operationId || !siteId || isOutdated) {
       return keepOpen
     }
+    if (
+      scopeMode === SharePointScopeMode.SELECTED &&
+      scopeTargets.length === 0
+    ) {
+      notifications.error("Please select at least one file or list to sync")
+      return keepOpen
+    }
     try {
       await agentsStore.applyOperationSharePointSiteScope(
         agentId,
