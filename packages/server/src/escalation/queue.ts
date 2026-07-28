@@ -1,7 +1,7 @@
 import zlib from "zlib"
 import type { Job } from "bull"
 import { readUIMessageStream, type ModelMessage, type UIMessage } from "ai"
-import { context, db as dbCore, queue, utils } from "@budibase/backend-core"
+import { context, queue, utils } from "@budibase/backend-core"
 import {
   AgentChannelProvider,
   AutomationActionStepId,
@@ -161,14 +161,6 @@ async function processNotify(job: Job<EscalationJob>) {
           })
         }
       })
-    }
-
-    try {
-      await db.put({ ...doc, updatedAt: new Date().toISOString() })
-    } catch (err) {
-      if (!dbCore.isDocumentConflictError(err)) {
-        throw err
-      }
     }
   })
 }
