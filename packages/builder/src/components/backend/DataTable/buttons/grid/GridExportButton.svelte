@@ -21,10 +21,10 @@
     datasource: Readable<UIDatasource>
     sort: Readable<SortEntry[]>
     selectedRows: Readable<Record<string, boolean>>
-    filter: Readable<UISearchFilter | undefined>
+    allFilters: Readable<UISearchFilter | undefined>
   }
 
-  const { rows, columns, datasource, sort, selectedRows, filter } =
+  const { rows, columns, datasource, sort, selectedRows, allFilters } =
     getContext<GridContext>("grid")
 
   $: disabled = !$rows.length || !$columns.length
@@ -34,7 +34,7 @@
 <ExportButton
   {disabled}
   view={$datasource.tableId}
-  filters={$filter}
+  filters={$allFilters}
   sorting={$sort}
   selectedRows={selectedRowArray}
 />
