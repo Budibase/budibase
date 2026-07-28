@@ -4,8 +4,8 @@
   import { ActionMenu, MenuItem, Icon, StatusLight } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
-  import AppContextMenuModals from "@/components/start/AppContextMenuModals.svelte"
-  import getAppContextMenuItems from "@/components/start/getAppContextMenuItems"
+  import AppContextMenuModals from "@/components/start/WorkspaceContextMenuModals.svelte"
+  import getWorkspaceContextMenuItems from "@/components/start/getWorkspaceContextMenuItems"
   import { appStore } from "@/stores/builder"
   import { contextMenuStore } from "@/stores/builder/contextMenu"
   import { bb } from "@/stores/bb"
@@ -112,7 +112,7 @@
     }
     selectedWorkspaceForMenu = ws
 
-    const items = getAppContextMenuItems({
+    const items = getWorkspaceContextMenuItems({
       app: ws,
       onDuplicate: () => appContextMenuModals?.showDuplicateModal(),
       onExportDev: () => appContextMenuModals?.showExportDevModal(),

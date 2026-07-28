@@ -8,7 +8,7 @@ import {
   WorkspaceApp,
 } from "@budibase/types"
 import { derived, get, Readable } from "svelte/store"
-import { appStore } from "./app"
+import { appStore } from "./workspace"
 import { sortedScreens } from "./screens"
 import { workspaceDeploymentStore } from "./workspaceDeployment"
 

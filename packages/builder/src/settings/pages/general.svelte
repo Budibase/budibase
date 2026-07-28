@@ -1,11 +1,11 @@
 <script lang="ts">
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import UpdateAppForm from "@/components/common/UpdateAppForm.svelte"
+  import UpdateAppForm from "@/components/common/UpdateWorkspaceForm.svelte"
   import DeleteModal from "@/components/deploy/DeleteModal.svelte"
   import RevertModal from "@/components/deploy/RevertModal.svelte"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
-  import ExportAppModal from "@/components/start/ExportAppModal.svelte"
-  import ImportAppModal from "@/components/start/ImportAppModal.svelte"
+  import ExportAppModal from "@/components/start/ExportWorkspaceModal.svelte"
+  import ImportAppModal from "@/components/start/ImportWorkspaceModal.svelte"
   import {
     appStore,
     deploymentStore,

@@ -15,7 +15,7 @@
   import { appStore } from "@/stores/builder"
   import { createPaginationStore } from "@/helpers/pagination"
   import TimeAgoRenderer from "./_components/TimeAgoRenderer.svelte"
-  import AppSizeRenderer from "./_components/AppSizeRenderer.svelte"
+  import AppSizeRenderer from "./_components/WorkspaceSizeRenderer.svelte"
   import ActionsRenderer from "./_components/ActionsRenderer.svelte"
   import UserRenderer from "./_components/UserRenderer.svelte"
   import StatusRenderer from "./_components/StatusRenderer.svelte"

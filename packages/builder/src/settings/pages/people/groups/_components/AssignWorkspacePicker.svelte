@@ -2,7 +2,7 @@
   import { Button, Modal } from "@budibase/bbui"
   import { workspacesStore } from "@/stores/portal/workspaces"
   import { groups } from "@/stores/portal/groups"
-  import AppAddModal from "./AppAddModal.svelte"
+  import AppAddModal from "./WorkspaceAddModal.svelte"
 
   export let groupId: string
 
