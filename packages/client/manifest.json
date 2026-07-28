@@ -9413,7 +9413,7 @@
         "defaultValue": "Download PDF"
       },
       {
-        "type": "options",
+        "type": "select",
         "label": "Page orientation",
         "key": "orientation",
         "options": [
