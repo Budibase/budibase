@@ -11,6 +11,7 @@
   export let fixed: boolean = false
   export let color: string | undefined = undefined
   export let noWrap: boolean = false
+  export let disabledTarget: boolean = false
   export let calculateWidth:
     | ((target: Element) => number | undefined)
     | undefined = undefined
@@ -88,6 +89,7 @@
 <div
   bind:this={wrapper}
   class="abs-tooltip"
+  class:disabled-target={disabledTarget}
   on:focus={null}
   on:mouseover={() => (hovered = true)}
   on:mouseleave={() => (hovered = false)}
@@ -119,6 +121,12 @@
   .abs-tooltip {
     display: contents;
     pointer-events: all;
+  }
+  .abs-tooltip.disabled-target {
+    display: inline-block;
+  }
+  .abs-tooltip.disabled-target :global(:disabled) {
+    pointer-events: none;
   }
   .spectrum-Tooltip.noWrap .spectrum-Tooltip-label {
     width: max-content;

@@ -38,6 +38,7 @@
 <AbsTooltip
   text={tooltipText}
   position={tooltipPosition}
+  disabledTarget={disabled && !!tooltipText}
   calculateWidth={calculateTooltipWidth}
 >
   <button
