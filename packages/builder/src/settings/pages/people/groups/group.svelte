@@ -95,26 +95,26 @@
   ]
   $: groupApps = $appsStore.apps
     .filter(app => {
-      const prodAppId = appsStore.getProdAppID(app.devId || "")
+      const prodWorkspaceId = appsStore.getProdWorkspaceID(app.devId || "")
       return (
-        !!prodAppId &&
+        !!prodWorkspaceId &&
         !!group &&
-        groups.getGroupAppIds(group).includes(prodAppId)
+        groups.getGroupAppIds(group).includes(prodWorkspaceId)
       )
     })
     .map(app => {
-      const prodAppId = appsStore.getProdAppID(app.devId || "")
-      if (!prodAppId) {
+      const prodWorkspaceId = appsStore.getProdWorkspaceID(app.devId || "")
+      if (!prodWorkspaceId) {
         return undefined
       }
       return {
         ...app,
-        _id: prodAppId,
-        prodAppId,
+        _id: prodWorkspaceId,
+        prodAppId: prodWorkspaceId,
         readonly: workspaceReadonly,
-        role: group?.builder?.apps.includes(prodAppId)
+        role: group?.builder?.apps.includes(prodWorkspaceId)
           ? Constants.Roles.CREATOR
-          : group?.roles?.[prodAppId],
+          : group?.roles?.[prodWorkspaceId],
       }
     })
     .filter(app => app !== undefined)

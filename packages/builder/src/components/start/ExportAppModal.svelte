@@ -34,7 +34,7 @@
       confirmText: encrypt ? "Continue" : exportButtonText,
       onConfirm: async () => {
         if (!encrypt) {
-          await exportApp()
+          await exportWorkspace()
         } else {
           currentStep = Step.SET_PASSWORD
           return keepOpen
@@ -50,16 +50,16 @@
         if (!$validation.valid) {
           return keepOpen
         }
-        await exportApp()
+        await exportWorkspace()
       },
       isValid: $validation.valid,
     },
   }
 
-  const exportApp = async () => {
+  const exportWorkspace = async () => {
     const id = published
-      ? sdk.applications.getProdAppID(appId)
-      : sdk.applications.getDevAppID(appId)
+      ? sdk.workspaces.getProdWorkspaceID(appId)
+      : sdk.workspaces.getDevWorkspaceID(appId)
     const url = `/api/backups/export?appId=${id}`
 
     try {

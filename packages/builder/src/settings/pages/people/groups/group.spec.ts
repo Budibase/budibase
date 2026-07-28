@@ -58,7 +58,7 @@ const {
   }
   const appsStoreMock = {
     subscribe: appsStore.subscribe,
-    getProdAppID: vi.fn((devId: string) => devId),
+    getProdWorkspaceID: vi.fn((devId: string) => devId),
   }
 
   return {
