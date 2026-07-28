@@ -54,20 +54,28 @@
   ]
   $: assignedWorkspaceIds = group ? groups.getGroupAppIds(group) : []
   $: workspaceOptions = Object.values(
-    $appsStore.apps.reduce<Record<string, WorkspaceOption>>((acc, app) => {
-      const prodAppId = appsStore.getProdWorkspaceID(app.devId || "")
-      if (!prodAppId) {
+    $appsStore.apps.reduce<Record<string, WorkspaceOption>>(
+      (acc, workspace) => {
+        const prodWorkspaceId = appsStore.getProdWorkspaceID(
+          workspace.devId || ""
+        )
+        if (!prodWorkspaceId) {
+          return acc
+        }
+        if (
+          assignedWorkspaceIds.includes(prodWorkspaceId) ||
+          acc[prodWorkspaceId]
+        ) {
+          return acc
+        }
+        acc[prodWorkspaceId] = {
+          label: workspace.name,
+          value: prodWorkspaceId,
+        }
         return acc
-      }
-      if (assignedWorkspaceIds.includes(prodAppId) || acc[prodAppId]) {
-        return acc
-      }
-      acc[prodAppId] = {
-        label: app.name,
-        value: prodAppId,
-      }
-      return acc
-    }, {})
+      },
+      {}
+    )
   ).sort((a, b) => a.label.localeCompare(b.label))
   $: validOptionIds = workspaceOptions.map(option => option.value)
   $: selectedWorkspaceIdsForSubmit = selectedWorkspaceIds.filter(id =>

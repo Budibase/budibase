@@ -72,62 +72,66 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
     }))
     const json = await API.getApps()
     if (Array.isArray(json)) {
-      // Merge apps into one sensible list
-      let appMap: Record<string, StoreApp> = {}
-      let devApps = json.filter(app => app.status === AppStatus.DEV)
-      let deployedApps = json.filter(app => app.status === AppStatus.DEPLOYED)
+      // Merge development and deployed workspaces into one sensible list.
+      let workspaceMap: Record<string, StoreApp> = {}
+      const devWorkspaces = json.filter(
+        workspace => workspace.status === AppStatus.DEV
+      )
+      const deployedWorkspaces = json.filter(
+        workspace => workspace.status === AppStatus.DEPLOYED
+      )
 
-      // First append all dev app version
-      devApps.forEach(app => {
-        const id = this.extractAppId(app.appId)
+      // First append all development workspace versions.
+      devWorkspaces.forEach(workspace => {
+        const id = this.extractAppId(workspace.appId)
         if (!id) {
           return
         }
-        appMap[id] = {
-          ...app,
-          devId: app.appId,
-          devRev: app._rev,
+        workspaceMap[id] = {
+          ...workspace,
+          devId: workspace.appId,
+          devRev: workspace._rev,
         }
       })
 
-      // Then merge with all prod app versions
-      deployedApps.forEach(app => {
-        const id = this.extractAppId(app.appId)
+      // Then merge in all deployed workspace versions.
+      deployedWorkspaces.forEach(workspace => {
+        const id = this.extractAppId(workspace.appId)
         if (!id) {
           return
         }
 
-        // Skip any deployed apps which don't have a dev counterpart
-        if (!appMap[id]) {
+        // Skip deployed workspaces without a development counterpart.
+        if (!workspaceMap[id]) {
           return
         }
 
-        // Extract certain properties from the dev app to override the prod app
+        // Preserve selected development metadata on the deployed workspace.
         let devProps: Pick<Workspace, "updatedBy" | "updatedAt"> = {}
-        if (appMap[id]) {
+        if (workspaceMap[id]) {
           devProps = {
-            updatedBy: appMap[id].updatedBy,
-            updatedAt: appMap[id].updatedAt,
+            updatedBy: workspaceMap[id].updatedBy,
+            updatedAt: workspaceMap[id].updatedAt,
           }
         }
-        appMap[id] = {
-          ...appMap[id],
-          ...app,
+        workspaceMap[id] = {
+          ...workspaceMap[id],
+          ...workspace,
           ...devProps,
-          prodId: app.appId,
-          prodRev: app._rev,
+          prodId: workspace.appId,
+          prodRev: workspace._rev,
         }
       })
 
       // Transform into an array and clean up
-      const apps = Object.values(appMap)
-      apps.forEach(app => {
-        const appId = this.extractAppId(app.devId)
-        if (appId) {
-          app.appId = appId
+      const apps = Object.values(workspaceMap)
+      apps.forEach(workspace => {
+        const workspaceId = this.extractAppId(workspace.devId)
+        if (workspaceId) {
+          workspace.appId = workspaceId
         }
-        delete app._id
-        delete app._rev
+        delete workspace._id
+        delete workspace._rev
       })
       this.update(state => ({
         ...state,
@@ -141,16 +145,16 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
     }
   }
 
-  async save(appId: string, value: UpdateWorkspaceRequest) {
-    await API.saveAppMetadata(appId, value)
+  async save(workspaceId: string, value: UpdateWorkspaceRequest) {
+    await API.saveAppMetadata(workspaceId, value)
     this.update(state => {
-      const updatedAppIndex = state.apps.findIndex(
-        app => app.instance._id === appId
+      const updatedWorkspaceIndex = state.apps.findIndex(
+        workspace => workspace.instance._id === workspaceId
       )
-      if (updatedAppIndex !== -1) {
-        let updatedApp = state.apps[updatedAppIndex]
-        updatedApp = { ...updatedApp, ...value }
-        state.apps.splice(updatedAppIndex, 1, updatedApp)
+      if (updatedWorkspaceIndex !== -1) {
+        let updatedWorkspace = state.apps[updatedWorkspaceIndex]
+        updatedWorkspace = { ...updatedWorkspace, ...value }
+        state.apps.splice(updatedWorkspaceIndex, 1, updatedWorkspace)
       }
       return state
     })
@@ -163,19 +167,23 @@ export const sortBy = derived([appsStore, auth], ([$store, $auth]) => {
   return $store.sortBy || $auth.user?.appSort || "name"
 })
 
-// Centralise any logic that enriches the apps list
+// Centralise the logic that enriches the workspace list.
 export const enrichedApps = derived(
   [appsStore, auth, sortBy],
   ([$store, $auth, $sortBy]) => {
-    const enrichedApps: EnrichedApp[] = $store.apps.map(app => {
+    const enrichedApps: EnrichedApp[] = $store.apps.map(workspace => {
       const user = $auth.user
       return {
-        ...app,
-        deployed: app.status === AppStatus.DEPLOYED,
-        lockedYou: app.lockedBy != null && app.lockedBy.email === user?.email,
-        lockedOther: app.lockedBy != null && app.lockedBy.email !== user?.email,
-        favourite: !!user?.appFavourites?.includes(app.appId),
-        editable: sdk.users.isBuilder(user, app?.devId),
+        ...workspace,
+        deployed: workspace.status === AppStatus.DEPLOYED,
+        lockedYou:
+          workspace.lockedBy != null &&
+          workspace.lockedBy.email === user?.email,
+        lockedOther:
+          workspace.lockedBy != null &&
+          workspace.lockedBy.email !== user?.email,
+        favourite: !!user?.appFavourites?.includes(workspace.appId),
+        editable: sdk.users.isBuilder(user, workspace?.devId),
       }
     })
 
