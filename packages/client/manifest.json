@@ -9425,7 +9425,8 @@
             "label": "Landscape",
             "value": "landscape"
           }
-        ]
+        ],
+        "defaultValue": "portrait"
       }
     ]
   },
