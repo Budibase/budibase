@@ -397,16 +397,42 @@ export async function connectAgentSharePointSite(
   }
 
   const existingAgent = await sdk.ai.agents.getOrThrow(agentId)
-  const existingSites = new Set(
-    getSharePointSourcesForOperation(existingAgent, operationId)
-      .map(source => source.config.site.id.trim())
-      .filter((id): id is string => !!id)
-  )
-  if (existingSites.has(siteId)) {
-    ctx.body = await fetchSharePointOptionsForDatasourceAuthConfig(
-      datasourceId,
-      authConfigId
+  const existingSource = getSharePointSourcesForOperation(
+    existingAgent,
+    operationId
+  ).find(source => source.config.site.id.trim() === siteId)
+  if (existingSource) {
+    const availableOptions =
+      await fetchSharePointOptionsForDatasourceAuthConfig(
+        datasourceId,
+        authConfigId
+      )
+    const updated = await sdk.ai.agents.update({
+      ...existingAgent,
+      operations: updateOperationKnowledgeSources(
+        existingAgent,
+        operationId,
+        sources =>
+          sources.map(source =>
+            source.id === existingSource.id
+              ? {
+                  ...source,
+                  config: {
+                    ...source.config,
+                    scope,
+                  },
+                }
+              : source
+          )
+      ),
+    })
+    await sdk.ai.rag.knowledgeSourceSyncQueue.reconcileAgentJobs(updated)
+    await sdk.ai.rag.knowledgeSourceSyncQueue.enqueueAgentJobs(
+      agentId,
+      AgentKnowledgeSourceType.SHAREPOINT,
+      [existingSource.id]
     )
+    ctx.body = availableOptions
     ctx.status = 200
     return
   }
