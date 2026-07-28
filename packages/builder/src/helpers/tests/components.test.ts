@@ -11,6 +11,12 @@ vi.mock("@/stores/builder", async () => {
           friendlyName: "Primary button",
           name: "Button",
         },
+        "@budibase/standard-components/container": {
+          name: "Container",
+        },
+        "@budibase/standard-components/textv2": {
+          name: "Text",
+        },
       },
     }),
   }
@@ -22,16 +28,23 @@ import {
   normaliseComponentSearchTerm,
 } from "@/helpers/components"
 
-const component = (
-  _id: string,
-  _component: string,
-  _instanceName = "",
-  _children: Component[] = []
-): Component => ({
-  _id,
-  _component,
-  _instanceName,
-  _children,
+interface ComponentTestConfig {
+  id: string
+  type: string
+  name?: string
+  children?: Component[]
+}
+
+const component = ({
+  id,
+  type,
+  name = "",
+  children = [],
+}: ComponentTestConfig): Component => ({
+  _id: id,
+  _component: type,
+  _instanceName: name,
+  _children: children,
   _styles: {},
 })
 
@@ -42,7 +55,12 @@ describe("component tree search", () => {
 
   it("returns empty sets for an empty search", () => {
     const results = getComponentTreeSearchResults(
-      [component("button-1", "@budibase/standard-components/button")],
+      [
+        component({
+          id: "button-1",
+          type: "@budibase/standard-components/button",
+        }),
+      ],
       ""
     )
 
@@ -52,40 +70,56 @@ describe("component tree search", () => {
   })
 
   it("matches component labels shown in the tree", () => {
-    const button = component(
-      "button-1",
-      "@budibase/standard-components/button",
-      "Save changes"
-    )
-    const table = component("table-1", "@budibase/standard-components/table")
+    const button = component({
+      id: "button-1",
+      type: "@budibase/standard-components/button",
+      name: "Save changes",
+    })
+    const table = component({
+      id: "table-1",
+      type: "@budibase/standard-components/table",
+    })
 
     expect(componentMatchesSearchTerm(button, "save")).toBe(true)
     expect(componentMatchesSearchTerm(table, "table")).toBe(true)
   })
 
-  it("does not match hidden component metadata", () => {
-    const renamedButton = component(
-      "button-1",
-      "@budibase/standard-components/button",
-      "Save changes"
-    )
-    const renamedText = component(
-      "text-1",
-      "@budibase/standard-components/textv2",
-      "bruh"
-    )
+  it("matches component type names but not hidden metadata", () => {
+    const renamedButton = component({
+      id: "button-1",
+      type: "@budibase/standard-components/button",
+      name: "Save changes",
+    })
+    const renamedContainer = component({
+      id: "container-1",
+      type: "@budibase/standard-components/container",
+      name: "Outer panel",
+    })
+    const renamedText = component({
+      id: "text-1",
+      type: "@budibase/standard-components/textv2",
+      name: "bruh",
+    })
 
+    expect(componentMatchesSearchTerm(renamedButton, "button")).toBe(true)
+    expect(componentMatchesSearchTerm(renamedContainer, "container")).toBe(true)
     expect(componentMatchesSearchTerm(renamedButton, "primary")).toBe(false)
-    expect(componentMatchesSearchTerm(renamedButton, "button")).toBe(false)
     expect(componentMatchesSearchTerm(renamedText, "textv2")).toBe(false)
     expect(componentMatchesSearchTerm(renamedText, "v")).toBe(false)
   })
 
   it("includes ancestors of descendant matches", () => {
     const tree = [
-      component("container-1", "@budibase/standard-components/container", "", [
-        component("table-1", "@budibase/standard-components/table"),
-      ]),
+      component({
+        id: "container-1",
+        type: "@budibase/standard-components/container",
+        children: [
+          component({
+            id: "table-1",
+            type: "@budibase/standard-components/table",
+          }),
+        ],
+      }),
     ]
 
     const results = getComponentTreeSearchResults(tree, "table")
@@ -100,26 +134,40 @@ describe("component tree search", () => {
 
   it("includes descendants of matching containers", () => {
     const tree = [
-      component(
-        "container-1",
-        "@budibase/standard-components/container",
-        "Outer panel",
-        [
-          component("button-1", "@budibase/standard-components/button"),
-          component(
-            "container-2",
-            "@budibase/standard-components/container",
-            "Inner panel",
-            [component("table-1", "@budibase/standard-components/table")]
-          ),
-        ]
-      ),
-      component("button-2", "@budibase/standard-components/button"),
+      component({
+        id: "container-1",
+        type: "@budibase/standard-components/container",
+        name: "Outer panel",
+        children: [
+          component({
+            id: "button-1",
+            type: "@budibase/standard-components/button",
+          }),
+          component({
+            id: "container-2",
+            type: "@budibase/standard-components/container",
+            name: "Inner panel",
+            children: [
+              component({
+                id: "table-1",
+                type: "@budibase/standard-components/table",
+              }),
+            ],
+          }),
+        ],
+      }),
+      component({
+        id: "button-2",
+        type: "@budibase/standard-components/button",
+      }),
     ]
 
-    const results = getComponentTreeSearchResults(tree, "outer")
+    const results = getComponentTreeSearchResults(tree, "container")
 
-    expect(Array.from(results.matchingIds)).toEqual(["container-1"])
+    expect(Array.from(results.matchingIds)).toEqual([
+      "container-1",
+      "container-2",
+    ])
     expect(Array.from(results.visibleIds)).toEqual([
       "container-1",
       "button-1",
@@ -134,7 +182,12 @@ describe("component tree search", () => {
 
   it("returns empty sets when there are no matches", () => {
     const results = getComponentTreeSearchResults(
-      [component("button-1", "@budibase/standard-components/button")],
+      [
+        component({
+          id: "button-1",
+          type: "@budibase/standard-components/button",
+        }),
+      ],
       "missing"
     )
 

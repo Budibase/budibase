@@ -249,6 +249,27 @@ export const getComponentName = (component: Component) => {
   return componentDefinition.friendlyName || componentDefinition.name || ""
 }
 
+const getComponentTypeSearchText = (component: Component) => {
+  if (!component?._component) {
+    return ""
+  }
+
+  const components = get(componentStore)?.components || {}
+  const componentDefinition = components[component._component]
+  if (componentDefinition?.name) {
+    return componentDefinition.name
+  }
+
+  if (!component._component.startsWith("@budibase/standard-components/")) {
+    return ""
+  }
+
+  return component._component
+    .replace("@budibase/standard-components/", "")
+    .replace(/v\d+$/, "")
+    .replace(/[-_]+/g, " ")
+}
+
 export interface ComponentTreeSearchResults {
   matchingIds: Set<string>
   visibleIds: Set<string>
@@ -268,9 +289,8 @@ export const componentMatchesSearchTerm = (
     return false
   }
 
-  return getComponentText(component)
-    .toLowerCase()
-    .includes(normalisedSearchTerm)
+  return [getComponentText(component), getComponentTypeSearchText(component)]
+    .some(text => text.toLowerCase().includes(normalisedSearchTerm))
 }
 
 export const getComponentTreeSearchResults = (
