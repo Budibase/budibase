@@ -718,6 +718,7 @@ export const listSharePointDriveItems = async (
 
   const items: SharePointDriveItem[] = []
   let nextLink = initialPath
+  let hasFetchedPage = false
 
   while (nextLink) {
     const response = await requestWithRetries(
@@ -731,7 +732,7 @@ export const listSharePointDriveItems = async (
         }),
       signal
     )
-    if (response.status === 404) {
+    if (response.status === 404 && !hasFetchedPage) {
       return items
     }
     if (!response.ok) {
@@ -749,6 +750,7 @@ export const listSharePointDriveItems = async (
     }
 
     const payload = (await response.json()) as SharePointDriveItemsResponse
+    hasFetchedPage = true
     items.push(...(Array.isArray(payload.value) ? payload.value : []))
     const nextPageLink = payload?.["@odata.nextLink"]
     if (!nextPageLink) {

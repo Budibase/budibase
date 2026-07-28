@@ -12,6 +12,7 @@ import {
   fetchSharePointListDocument,
   fetchSharePointSitesByDatasourceAuthConfig,
   isAllowedSharePointNextLink,
+  listSharePointDriveItems,
   listSharePointDrives,
   listSharePointLists,
 } from "./connection"
@@ -878,6 +879,68 @@ describe("SharePoint Graph retries", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(3)
     expect(files.map(file => file.path)).toEqual(["doc-1.txt", "doc-2.txt"])
+  })
+
+  it("returns an empty listing when the initial drive items request is missing", async () => {
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: false,
+      status: 404,
+      headers: { get: () => null },
+      json: async () => ({}),
+    } as unknown as Response)
+
+    await expect(
+      listSharePointDriveItems(bearerToken, "drive-1", "missing-folder")
+    ).resolves.toEqual([])
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("rejects when a paginated drive items request is missing", async () => {
+    const nextLink =
+      "https://graph.microsoft.com/v1.0/drives/drive-1/root/children?$skiptoken=next"
+    const errorSpy = jest.spyOn(console, "error").mockImplementation()
+    const fetchMock = jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        json: async () => ({
+          value: [
+            {
+              id: "item-1",
+              name: "doc-1.txt",
+              file: { mimeType: "text/plain" },
+            },
+          ],
+          "@odata.nextLink": nextLink,
+        }),
+      } as unknown as Response)
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        headers: { get: () => null },
+        json: async () => ({}),
+      } as unknown as Response)
+
+    await expect(
+      listSharePointDriveItems(bearerToken, "drive-1")
+    ).rejects.toEqual(
+      expect.objectContaining({
+        message: "Failed to list SharePoint drive items (404)",
+        status: 400,
+      })
+    )
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock).toHaveBeenNthCalledWith(2, nextLink, expect.any(Object))
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Failed to list SharePoint drive items",
+      {
+        status: 404,
+        driveId: "drive-1",
+        hasItemId: false,
+      }
+    )
   })
 
   it("aborts an in-flight recursive listing without retrying", async () => {
