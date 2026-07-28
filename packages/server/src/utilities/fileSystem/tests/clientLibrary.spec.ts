@@ -58,15 +58,15 @@ type ObjectStoreFile = { Key?: string }
 type MockedReadFile = jest.MockedFunction<typeof fs.promises.readFile>
 
 describe("clientLibrary", () => {
-  const testAppId = "app_123"
-  const testAppIdDev = "app_dev_123"
+  const testWorkspaceId = "app_123"
+  const testDevWorkspaceId = "app_dev_123"
 
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
   describe("backupClientLibrary", () => {
-    it("should backup entire app folder to /.bak folder", async () => {
+    it("should backup entire workspace folder to /.bak folder", async () => {
       const mockFiles: ObjectStoreFile[] = [
         { Key: "app_123/manifest.json" },
         { Key: "app_123/budibase-client.js" },
@@ -76,7 +76,7 @@ describe("clientLibrary", () => {
 
       mockedObjectStore.listAllObjects.mockReturnValue(mockFiles as any)
 
-      await backupClientLibrary(testAppId)
+      await backupClientLibrary(testWorkspaceId)
 
       expect(mockedObjectStore.deleteFolder).toHaveBeenCalledWith(
         ObjectStoreBuckets.APPS,
@@ -115,7 +115,7 @@ describe("clientLibrary", () => {
 
       mockedObjectStore.listAllObjects.mockReturnValue(mockFiles as any)
 
-      await backupClientLibrary(testAppId)
+      await backupClientLibrary(testWorkspaceId)
 
       expect(mockedObjectStore.upload).toHaveBeenCalledTimes(1)
       expect(mockedObjectStore.upload).toHaveBeenCalledWith({
@@ -125,15 +125,15 @@ describe("clientLibrary", () => {
       })
     })
 
-    it("should handle dev app IDs correctly", async () => {
+    it("should handle dev workspace IDs correctly", async () => {
       const mockFiles: ObjectStoreFile[] = [{ Key: "app_123/manifest.json" }]
       mockedObjectStore.listAllObjects.mockReturnValue(mockFiles as any)
 
-      await backupClientLibrary(testAppIdDev)
+      await backupClientLibrary(testDevWorkspaceId)
 
       expect(mockedObjectStore.listAllObjects).toHaveBeenCalledWith(
         ObjectStoreBuckets.APPS,
-        testAppId // should be converted to prod ID
+        testWorkspaceId // should be converted to production workspace ID
       )
     })
 
@@ -142,7 +142,7 @@ describe("clientLibrary", () => {
       mockedObjectStore.listAllObjects.mockReturnValue(mockFiles as any)
       mockedObjectStore.deleteFolder.mockRejectedValue(new Error("Not found"))
 
-      await expect(backupClientLibrary(testAppId)).resolves.not.toThrow()
+      await expect(backupClientLibrary(testWorkspaceId)).resolves.not.toThrow()
       expect(mockedObjectStore.upload).toHaveBeenCalledTimes(1)
     })
   })
@@ -173,7 +173,7 @@ describe("clientLibrary", () => {
 
       mockedEnv.isDev.mockReturnValue(isDev)
 
-      const result = await updateClientLibrary(testAppId)
+      const result = await updateClientLibrary(testWorkspaceId)
 
       expect(mockedFs.readdirSync).toHaveBeenCalledTimes(1)
 
@@ -225,7 +225,7 @@ describe("clientLibrary", () => {
 
       mockedObjectStore.listAllObjects.mockReturnValue(existingFiles as any)
 
-      await updateClientLibrary(testAppId)
+      await updateClientLibrary(testWorkspaceId)
 
       expect(mockedObjectStore.deleteFiles).toHaveBeenCalledTimes(1)
       expect(mockedObjectStore.deleteFiles).toHaveBeenCalledWith(
@@ -261,7 +261,7 @@ describe("clientLibrary", () => {
         .mockReturnValueOnce(mockBackupFiles as any) // First call for backup files
         .mockReturnValueOnce(mockCurrentFiles as any) // Second call for cleanup
 
-      const result = await revertClientLibrary(testAppId)
+      const result = await revertClientLibrary(testWorkspaceId)
 
       expect(mockedObjectStore.upload).toHaveBeenCalledTimes(3)
       ;["manifest.json", "budibase-client.js", "manifest.json"].forEach(
@@ -302,7 +302,7 @@ describe("clientLibrary", () => {
         .mockReturnValueOnce([] as any) // No .bak folder
         .mockReturnValueOnce(mockOldBackupFiles as any) // Old .bak files
 
-      const result = await revertClientLibrary(testAppId)
+      const result = await revertClientLibrary(testWorkspaceId)
 
       expect(mockedObjectStore.streamUpload).toHaveBeenCalledTimes(2)
       expect(mockedObjectStore.streamUpload).toHaveBeenCalledWith({
@@ -324,8 +324,8 @@ describe("clientLibrary", () => {
         .mockReturnValueOnce([] as any) // No .bak folder
         .mockReturnValueOnce([] as any) // No old .bak files
 
-      await expect(revertClientLibrary(testAppId)).rejects.toThrow(
-        "No backup found for app app_123"
+      await expect(revertClientLibrary(testWorkspaceId)).rejects.toThrow(
+        "No backup found for workspace app_123"
       )
     })
 
@@ -338,12 +338,12 @@ describe("clientLibrary", () => {
         mockBackupFiles as any
       )
 
-      await expect(revertClientLibrary(testAppId)).rejects.toThrow(
-        "No manifest found in backup for app app_123"
+      await expect(revertClientLibrary(testWorkspaceId)).rejects.toThrow(
+        "No manifest found in backup for workspace app_123"
       )
     })
 
-    it("should handle dev app IDs correctly", async () => {
+    it("should handle dev workspace IDs correctly", async () => {
       const mockBackupFiles: ObjectStoreFile[] = [
         { Key: "app_123/.bak/manifest.json" },
       ]
@@ -352,11 +352,11 @@ describe("clientLibrary", () => {
         mockBackupFiles as any
       )
 
-      await revertClientLibrary(testAppIdDev)
+      await revertClientLibrary(testDevWorkspaceId)
 
       expect(mockedObjectStore.listAllObjects).toHaveBeenCalledWith(
         ObjectStoreBuckets.APPS,
-        "app_123/.bak" // should use prod ID
+        "app_123/.bak" // should use production workspace ID
       )
     })
   })
