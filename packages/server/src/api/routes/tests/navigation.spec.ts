@@ -1,4 +1,5 @@
 import * as setup from "./utilities"
+import { basicScreen } from "../../../tests/utilities/structures"
 import { AppNavigation, WithRequired, WorkspaceApp } from "@budibase/types"
 
 describe("/navigation", () => {
@@ -62,6 +63,59 @@ describe("/navigation", () => {
       const updatedApp = await config.api.workspaceApp.find(workspaceApp._id)
       expect(updatedApp).toBeDefined()
       expect(updatedApp!.navigation).toEqual(emptyNavigation)
+    })
+  })
+
+  describe("screen deletion nav pruning", () => {
+    it("removes links at every depth and keeps groups whose header URL matches", async () => {
+      const screen = await config.api.screen.save({
+        ...basicScreen("/reports"),
+        workspaceAppId: workspaceApp._id,
+      })
+
+      const navigation: AppNavigation = {
+        navigation: "Top",
+        links: [
+          { url: "/home", text: "Home", type: "link" },
+          {
+            // Group header links to the deleted screen: it must lose only its
+            // URL, never its children.
+            url: "/reports",
+            text: "Reports",
+            type: "sublinks",
+            subLinks: [
+              { url: "/reports", text: "Overview", type: "link" },
+              { url: "/other", text: "Other", type: "link" },
+              {
+                url: "",
+                text: "Archive",
+                type: "sublinks",
+                subLinks: [
+                  // Depth 2 link to the deleted screen must be pruned too
+                  { url: "/reports", text: "Deep", type: "link" },
+                ],
+              },
+            ],
+          },
+        ],
+      }
+      await config.api.navigation.update(workspaceApp._id, { navigation })
+
+      await config.api.screen.destroy(screen._id!, screen._rev!)
+
+      const updatedApp = await config.api.workspaceApp.find(workspaceApp._id)
+      expect(updatedApp!.navigation.links).toEqual([
+        { url: "/home", text: "Home", type: "link" },
+        {
+          url: "",
+          text: "Reports",
+          type: "sublinks",
+          subLinks: [
+            { url: "/other", text: "Other", type: "link" },
+            { url: "", text: "Archive", type: "sublinks", subLinks: [] },
+          ],
+        },
+      ])
     })
   })
 })
