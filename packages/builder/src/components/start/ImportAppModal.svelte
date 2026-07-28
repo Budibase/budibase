@@ -23,15 +23,15 @@
   let file: File
   $: disabled = (encrypted && !password) || !file
 
-  async function updateApp() {
+  async function updateWorkspace() {
     try {
       const body: ImportToUpdateWorkspaceRequest = {}
       if (encrypted) {
         body.encryptionPassword = password.trim()
       }
-      const appId = sdk.applications.getDevAppID(app.appId)
-      await API.updateAppFromExport(appId, body, file)
-      const pkg = await API.fetchAppPackage(appId)
+      const id = sdk.workspaces.getDevWorkspaceID(app.appId)
+      await API.updateAppFromExport(id, body, file)
+      const pkg = await API.fetchAppPackage(id)
       await initialise(pkg)
 
       notifications.success("Workspace updated successfully")
@@ -49,7 +49,7 @@
 <ModalContent
   title={`Update ${app.name}`}
   confirmText="Update"
-  onConfirm={updateApp}
+  onConfirm={updateWorkspace}
   bind:disabled
 >
   <Body size="S">

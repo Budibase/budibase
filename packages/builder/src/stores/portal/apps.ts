@@ -19,7 +19,7 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
     })
 
     this.extractAppId = this.extractAppId.bind(this)
-    this.getProdAppID = this.getProdAppID.bind(this)
+    this.getProdWorkspaceID = this.getProdWorkspaceID.bind(this)
     this.updateSort = this.updateSort.bind(this)
     this.load = this.load.bind(this)
     this.save = this.save.bind(this)
@@ -30,22 +30,22 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
     return split.length ? split[split.length - 1] : null
   }
 
-  getProdAppID(appId: string) {
-    if (!appId) {
-      return appId
+  getProdWorkspaceID(workspaceId: string) {
+    if (!workspaceId) {
+      return workspaceId
     }
     let rest,
       separator = ""
-    if (appId.startsWith("app_dev")) {
+    if (workspaceId.startsWith("app_dev")) {
       // split to take off the app_dev element, then join it together incase any other app_ exist
-      const split = appId.split("app_dev")
+      const split = workspaceId.split("app_dev")
       split.shift()
       rest = split.join("app_dev")
-    } else if (!appId.startsWith("app")) {
-      rest = appId
+    } else if (!workspaceId.startsWith("app")) {
+      rest = workspaceId
       separator = "_"
     } else {
-      return appId
+      return workspaceId
     }
     return `app${separator}${rest}`
   }

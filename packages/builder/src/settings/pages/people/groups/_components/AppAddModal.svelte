@@ -48,7 +48,7 @@
   $: assignedWorkspaceIds = groups.getGroupAppIds(group)
   $: workspaceOptions = Object.values(
     $appsStore.apps.reduce((acc, app) => {
-      const prodAppId = appsStore.getProdAppID(app.devId)
+      const prodAppId = appsStore.getProdWorkspaceID(app.devId)
       if (assignedWorkspaceIds.includes(prodAppId) || acc[prodAppId]) {
         return acc
       }

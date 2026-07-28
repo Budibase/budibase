@@ -177,7 +177,7 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
    * @param body a FormData body with a file and password.
    */
   updateAppFromExport: async (appId, body, appExport) => {
-    const devId = sdk.applications.getDevAppID(appId)
+    const devId = sdk.workspaces.getDevWorkspaceID(appId)
     const formData = new FormData()
     formData.append("appExport", appExport)
     for (const [key, field] of Object.entries(body)) {

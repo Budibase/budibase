@@ -15,8 +15,8 @@ jest.mock("@budibase/backend-core", () => {
       ObjectStoreBuckets: actual.objectStore.ObjectStoreBuckets,
     },
     sdk: {
-      applications: {
-        getProdAppID: jest.fn((id: string) => id.replace("_dev", "")),
+      workspaces: {
+        getProdWorkspaceID: jest.fn((id: string) => id.replace("_dev", "")),
       },
     },
   }
