@@ -37,7 +37,7 @@
   let createdUsers: UserData["users"] = []
 
   $: currentWorkspaceId = $appStore.appId
-    ? sdk.applications.getProdAppID($appStore.appId)
+    ? sdk.workspaces.getProdWorkspaceID($appStore.appId)
     : ""
 
   const removeDuplicates = (userData: UserData): UserData => {

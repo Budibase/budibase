@@ -20,7 +20,7 @@ const newClient = (opts?: { production?: boolean }) =>
       if (appId) {
         if (!isWorkspaceDeleteRequest) {
           headers[Header.APP_ID] = opts?.production
-            ? sdk.applications.getProdAppID(appId)
+            ? sdk.workspaces.getProdWorkspaceID(appId)
             : appId
         }
         headers[Header.CLIENT] = ClientHeader.BUILDER

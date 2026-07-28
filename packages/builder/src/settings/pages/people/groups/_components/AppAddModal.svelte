@@ -55,7 +55,7 @@
   $: assignedWorkspaceIds = group ? groups.getGroupAppIds(group) : []
   $: workspaceOptions = Object.values(
     $appsStore.apps.reduce<Record<string, WorkspaceOption>>((acc, app) => {
-      const prodAppId = appsStore.getProdAppID(app.devId || "")
+      const prodAppId = appsStore.getProdWorkspaceID(app.devId || "")
       if (!prodAppId) {
         return acc
       }
