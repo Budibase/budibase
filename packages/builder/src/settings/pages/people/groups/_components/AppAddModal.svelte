@@ -34,7 +34,9 @@
   let workspaceSearchTerm = ""
 
   $: group = $groups.find(x => x._id === groupId)
-  $: roleColorLookup = ($roles || []).reduce<Record<string, string | undefined>>((acc, role) => {
+  $: roleColorLookup = ($roles || []).reduce<
+    Record<string, string | undefined>
+  >((acc, role) => {
     acc[role._id] = role.uiMetadata?.color
     return acc
   }, {})
