@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { goto } from "@roxi/routify"
   import {
     ActionMenu,

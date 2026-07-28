@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Button, Modal } from "@budibase/bbui"
   import { appsStore } from "@/stores/portal/apps"
   import { groups } from "@/stores/portal/groups"
