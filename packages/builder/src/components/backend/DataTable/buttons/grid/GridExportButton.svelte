@@ -7,6 +7,7 @@
     UIColumn,
     UIDatasource,
     UIRow,
+    UISearchFilter,
   } from "@budibase/types"
 
   interface SortEntry {
@@ -20,9 +21,10 @@
     datasource: Readable<UIDatasource>
     sort: Readable<SortEntry[]>
     selectedRows: Readable<Record<string, boolean>>
+    filter: Readable<UISearchFilter | undefined>
   }
 
-  const { rows, columns, datasource, sort, selectedRows } =
+  const { rows, columns, datasource, sort, selectedRows, filter } =
     getContext<GridContext>("grid")
 
   $: disabled = !$rows.length || !$columns.length
@@ -32,6 +34,7 @@
 <ExportButton
   {disabled}
   view={$datasource.tableId}
+  filters={$filter}
   sorting={$sort}
   selectedRows={selectedRowArray}
 />

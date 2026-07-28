@@ -6,15 +6,17 @@
     Body,
     Button,
   } from "@budibase/bbui"
-  import { dataAPI } from "@/stores/builder"
-  import download from "downloadjs"
-  import { ROW_EXPORT_FORMATS } from "@/constants/backend"
-  import DetailPopover from "@/components/common/DetailPopover.svelte"
+  import { QueryUtils } from "@budibase/frontend-core"
   import type {
     ExportRowsRequest,
     RowExportFormat,
     SortOrder,
+    UISearchFilter,
   } from "@budibase/types"
+  import download from "downloadjs"
+  import DetailPopover from "@/components/common/DetailPopover.svelte"
+  import { ROW_EXPORT_FORMATS } from "@/constants/backend"
+  import { dataAPI } from "@/stores/builder"
 
   interface SortEntry {
     column: string
@@ -26,6 +28,7 @@
   }
 
   export let view: string
+  export let filters: UISearchFilter | undefined = undefined
   export let sorting: SortEntry[] | undefined = undefined
   export let disabled: boolean = false
   export let selectedRows: SelectedRow[] | undefined = undefined
@@ -69,20 +72,21 @@
     download(new Blob([data], { type: "text/plain" }), filename)
   }
 
-  const exportAllData = async () => {
-    if (!exportFormat) {
-      throw new Error("An export format is required")
-    }
-    return await $dataAPI.exportView(view, exportFormat)
+  const exportAllData = async ({ format }: { format: RowExportFormat }) => {
+    return await $dataAPI.exportView(view, format)
   }
 
-  const exportFilteredData = async () => {
-    if (!exportFormat) {
-      throw new Error("An export format is required")
-    }
+  const exportFilteredData = async ({
+    format,
+  }: {
+    format: RowExportFormat
+  }) => {
     const payload: ExportRowsRequest = {}
     if (selectedRows?.length) {
       payload.rows = selectedRows.map(row => row._id)
+    }
+    if (filters) {
+      payload.query = QueryUtils.buildQuery(filters)
     }
     if (sorting?.length) {
       payload.sort = Object.fromEntries(
@@ -94,20 +98,26 @@
         ])
       )
     }
-    return await $dataAPI.exportRows(view, exportFormat, payload)
+    return await $dataAPI.exportRows(view, format, payload)
   }
 
   const exportData = async () => {
+    if (!exportFormat) {
+      notifications.error("An export format is required")
+      return
+    }
+    const format = exportFormat
+
     try {
       loading = true
       let data
-      if (selectedRows?.length || sorting) {
-        data = await exportFilteredData()
+      if (selectedRows?.length || filters || sorting?.length) {
+        data = await exportFilteredData({ format })
       } else {
-        data = await exportAllData()
+        data = await exportAllData({ format })
       }
       notifications.success("Export successful")
-      downloadWithBlob(data, `export.${exportFormat}`)
+      downloadWithBlob(data, `export.${format}`)
       popover?.hide()
     } catch (error) {
       console.error(error)
