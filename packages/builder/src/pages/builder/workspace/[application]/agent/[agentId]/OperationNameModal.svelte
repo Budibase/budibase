@@ -93,6 +93,14 @@
       bind:value={name}
       error={nameError}
       on:input={() => (touched = true)}
+      on:enterkey={() => {
+        submitError = undefined
+        if (cannotSubmit()) {
+          touched = true
+          return
+        }
+        modalContent.confirm()
+      }}
       {placeholder}
     />
   </ModalContent>

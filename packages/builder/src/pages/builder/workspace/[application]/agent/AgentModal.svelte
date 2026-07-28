@@ -83,6 +83,12 @@
         bind:value={name}
         error={nameError}
         on:input={() => (touched = true)}
+        on:enterkey={() => {
+          if (loading || !trimmedName) {
+            return
+          }
+          modalContent.confirm()
+        }}
         placeholder="Support agent"
       />
     </div>
