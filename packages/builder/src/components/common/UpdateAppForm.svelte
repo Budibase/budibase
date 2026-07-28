@@ -10,7 +10,7 @@
   import { AppStatus } from "@/constants"
   import { initialise } from "@/stores/builder"
   import { appStore } from "@/stores/builder/app"
-  import { appsStore } from "@/stores/portal/workspaces"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { API } from "@/api"
   import { writable } from "svelte/store"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
@@ -49,7 +49,9 @@
   let updating = false
   let initialised = false
 
-  $: filteredApps = $appsStore.apps.filter(app => app.devId === $appStore.appId)
+  $: filteredApps = $workspacesStore.apps.filter(
+    app => app.devId === $appStore.appId
+  )
   $: app = filteredApps[0]
   $: appDeployed = app?.status === AppStatus.DEPLOYED
 
@@ -126,18 +128,18 @@
 
   const setupValidation = async () => {
     workspaceValidation.name(validation, {
-      workspaces: $appsStore.apps,
+      workspaces: $workspacesStore.apps,
       currentWorkspace: app,
     })
     workspaceValidation.url(validation, {
-      workspaces: $appsStore.apps,
+      workspaces: $workspacesStore.apps,
       currentWorkspace: app,
     })
   }
 
   async function updateApp() {
     try {
-      await appsStore.save($appStore.appId, {
+      await workspacesStore.save($appStore.appId, {
         name: $values.name?.trim(),
         url: $values.url?.trim(),
         icon: {

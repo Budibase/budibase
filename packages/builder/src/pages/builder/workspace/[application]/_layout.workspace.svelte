@@ -8,7 +8,7 @@
     deploymentStore,
     appStore,
   } from "@/stores/builder"
-  import { appsStore, admin, aiConfigsStore, auth } from "@/stores/portal"
+  import { workspacesStore, admin, aiConfigsStore, auth } from "@/stores/portal"
   import { bb } from "@/stores/bb"
   import { Heading, Layout, Body } from "@budibase/bbui"
   import { API } from "@/api"
@@ -39,7 +39,7 @@
       }
       if ($builderStore.created) {
         builderStore.appCreated(false)
-        await appsStore.load()
+        await workspacesStore.load()
       } else {
         reset()
         appStore.update(state => ({ ...state, appId }))

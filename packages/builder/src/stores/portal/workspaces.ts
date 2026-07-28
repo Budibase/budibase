@@ -157,15 +157,15 @@ export class WorkspacesStore extends BudiStore<PortalWorkspacesStore> {
   }
 }
 
-export const appsStore = new WorkspacesStore()
+export const workspacesStore = new WorkspacesStore()
 
-export const sortBy = derived([appsStore, auth], ([$store, $auth]) => {
+export const sortBy = derived([workspacesStore, auth], ([$store, $auth]) => {
   return $store.sortBy || $auth.user?.appSort || "name"
 })
 
 // Centralise any logic that enriches the apps list
 export const enrichedApps = derived(
-  [appsStore, auth, sortBy],
+  [workspacesStore, auth, sortBy],
   ([$store, $auth, $sortBy]) => {
     const enrichedApps: EnrichedApp[] = $store.apps.map(app => {
       const user = $auth.user

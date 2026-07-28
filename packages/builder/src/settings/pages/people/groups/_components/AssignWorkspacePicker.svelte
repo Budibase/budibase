@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Button, Modal } from "@budibase/bbui"
-  import { appsStore } from "@/stores/portal/workspaces"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { groups } from "@/stores/portal/groups"
   import AppAddModal from "./AppAddModal.svelte"
 
@@ -12,8 +12,10 @@
   $: group = $groups.find(x => x._id === groupId)
   $: assignedWorkspaceIds = group ? groups.getGroupAppIds(group) : []
   $: availableWorkspaceIds = Object.keys(
-    $appsStore.apps.reduce<Record<string, boolean>>((acc, app) => {
-      const prodWorkspaceId = appsStore.getProdWorkspaceID(app.devId || "")
+    $workspacesStore.apps.reduce<Record<string, boolean>>((acc, app) => {
+      const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
+        app.devId || ""
+      )
       if (!prodWorkspaceId) {
         return acc
       }

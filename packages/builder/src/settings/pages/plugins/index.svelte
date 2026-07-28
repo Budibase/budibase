@@ -14,7 +14,7 @@
   import { onMount } from "svelte"
   import type { Plugin } from "@budibase/types"
   import { admin } from "@/stores/portal/admin"
-  import { appsStore } from "@/stores/portal/workspaces"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { plugins } from "@/stores/portal/plugins"
   import AddPluginModal from "./_components/AddPluginModal.svelte"
   import PluginNameRenderer from "./_components/PluginNameRenderer.svelte"
@@ -112,7 +112,7 @@
     return usageMap
   }
 
-  $: pluginUsageById = buildPluginUsageMap($appsStore.apps)
+  $: pluginUsageById = buildPluginUsageMap($workspacesStore.apps)
 
   $: enrichedPlugins = ($plugins || []).map(plugin => {
     const usedInApps = plugin._id ? pluginUsageById.get(plugin._id) || [] : []
@@ -137,7 +137,7 @@
     })
 
   onMount(async () => {
-    await Promise.all([plugins.load(), appsStore.load()])
+    await Promise.all([plugins.load(), workspacesStore.load()])
     try {
       await plugins.checkUpdates()
     } catch (err: any) {

@@ -10,7 +10,7 @@
   import { contextMenuStore } from "@/stores/builder/contextMenu"
   import { bb } from "@/stores/bb"
   import { enrichedApps, auth, licensing } from "@/stores/portal"
-  import { appsStore, sortBy } from "@/stores/portal/workspaces"
+  import { workspacesStore, sortBy } from "@/stores/portal/workspaces"
   import WorkspaceSortMenu from "./WorkspaceSortMenu.svelte"
   import type { EnrichedApp } from "@/types"
 
@@ -181,7 +181,7 @@
     } catch (error) {
       console.error("Failed to save sort preference", error)
     }
-    await appsStore.updateSort(key)
+    await workspacesStore.updateSort(key)
     setTimeout(() => filterInput?.focus(), 0)
   }
 
@@ -216,7 +216,7 @@
     try {
       const saved = localStorage.getItem(SORT_STORAGE_KEY)
       if (saved && saved !== currentSort) {
-        appsStore.updateSort(saved)
+        workspacesStore.updateSort(saved)
       }
     } catch (error) {
       console.error("Failed to load sort preference", error)

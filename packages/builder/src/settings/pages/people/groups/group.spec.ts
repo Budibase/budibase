@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { UserGroup } from "@budibase/types"
 
 const {
-  appsStore,
-  appsStoreMock,
+  workspacesStore,
+  workspacesStoreMock,
   authStore,
   bbMock,
   groupsMock,
@@ -29,7 +29,7 @@ const {
   }
 
   const groupsStore = createStore([] as UserGroup[])
-  const appsStore = createStore({ apps: [] as { devId: string }[] })
+  const workspacesStore = createStore({ apps: [] as { devId: string }[] })
   const authStore = createStore({
     user: {
       admin: { global: true },
@@ -56,14 +56,14 @@ const {
       return ids
     },
   }
-  const appsStoreMock = {
-    subscribe: appsStore.subscribe,
+  const workspacesStoreMock = {
+    subscribe: workspacesStore.subscribe,
     getProdWorkspaceID: vi.fn((devId: string) => devId),
   }
 
   return {
-    appsStore,
-    appsStoreMock,
+    workspacesStore,
+    workspacesStoreMock,
     authStore,
     bbMock,
     groupsMock,
@@ -155,7 +155,7 @@ vi.mock("@/stores/builder", () => ({
 }))
 
 vi.mock("@/stores/portal/apps", () => ({
-  appsStore: appsStoreMock,
+  workspacesStore: workspacesStoreMock,
 }))
 
 vi.mock("@/stores/portal/auth", () => ({
@@ -202,7 +202,7 @@ const buildGroup = (overrides: Partial<UserGroup> = {}): UserGroup =>
 describe("group page workspace assignment permissions", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    appsStore.set({ apps: [] })
+    workspacesStore.set({ apps: [] })
     groupsStore.set([
       buildGroup({
         scimInfo: { isSync: true, externalId: "123" },

@@ -19,7 +19,7 @@
   } from "@budibase/bbui"
   import { licensing } from "@/stores/portal/licensing"
   import { users } from "@/stores/portal/users"
-  import { appsStore } from "@/stores/portal/workspaces"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { auditLogs } from "@/stores/portal/auditLogs"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import { createPaginationStore } from "@/helpers/pagination"
@@ -103,7 +103,10 @@
     enrich(parseEventObject($auditLogs.events), selectedEvents, "id"),
     "id"
   )
-  $: sortedApps = sort(enrich($appsStore.apps, selectedApps, "appId"), "name")
+  $: sortedApps = sort(
+    enrich($workspacesStore.apps, selectedApps, "appId"),
+    "name"
+  )
 
   const debounce = value => {
     clearTimeout(timer)

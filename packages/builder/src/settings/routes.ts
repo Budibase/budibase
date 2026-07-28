@@ -233,7 +233,7 @@ export const orgRoutes = (
 
 export const workspaceRoutes = (
   appStore: AppMetaState,
-  appsStore: PortalWorkspacesStore,
+  workspacesStore: PortalWorkspacesStore,
   user: GetGlobalSelfResponse
 ): Route[] => {
   if (!appStore?.appId) {
@@ -245,7 +245,10 @@ export const workspaceRoutes = (
     return target?.backupErrors || {}
   }
 
-  const backupErrors = getBackupErrors(appsStore.apps || [], appStore?.appId)
+  const backupErrors = getBackupErrors(
+    workspacesStore.apps || [],
+    appStore?.appId
+  )
   const backupErrorCount = Object.keys(backupErrors).length
 
   return [

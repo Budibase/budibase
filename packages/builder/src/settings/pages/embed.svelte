@@ -14,7 +14,7 @@
   } from "@budibase/bbui"
   import { PASSWORD_REPLACEMENT } from "@budibase/types"
   import { AppStatus } from "@/constants"
-  import { appsStore } from "@/stores/portal/workspaces"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { appStore, workspaceAppStore } from "@/stores/builder"
   import { licensing } from "@/stores/portal/licensing"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
@@ -107,7 +107,9 @@
     }
   }
 
-  $: filteredApps = $appsStore.apps.filter(app => app.devId == $appStore.appId)
+  $: filteredApps = $workspacesStore.apps.filter(
+    app => app.devId == $appStore.appId
+  )
   $: workspace = filteredApps.length ? filteredApps[0] : {}
   $: workspaceBaseUrl = `${window.origin}/embed${workspace?.url}`
   $: workspaceUrl =
