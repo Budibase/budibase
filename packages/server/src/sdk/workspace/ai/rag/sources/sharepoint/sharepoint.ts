@@ -24,10 +24,8 @@ import {
   type KnowledgeSourceSyncRun,
   KnowledgeBaseFileSourceType,
   KnowledgeBaseFileStatus,
-  SharePointScopeAction,
+  SharePointScopeMode,
   SharePointScopeTargetType,
-  type SharePointScopeRule,
-  type SharePointScopeTarget,
 } from "@budibase/types"
 import {
   agents as agentsSdk,
@@ -269,47 +267,14 @@ const isOversizedSharePointFile = (file: { remoteSize?: number }) =>
   file.remoteSize !== undefined &&
   file.remoteSize > MAX_SHAREPOINT_KNOWLEDGE_FILE_SIZE_BYTES
 
-const getScopeTargetKey = (target: SharePointScopeTarget) => {
-  switch (target.type) {
-    case SharePointScopeTargetType.DRIVE:
-      return `drive:${target.driveId}`
-    case SharePointScopeTargetType.FOLDER:
-    case SharePointScopeTargetType.FILE:
-      return `${target.type}:${target.driveId}:${target.itemId}`
-    case SharePointScopeTargetType.LIST:
-      return `list:${target.listId}`
-  }
-}
-
-const getDriveItemScopeKey = (
-  driveId: string,
-  itemId: string,
-  item: SharePointDriveItem
-) =>
-  `${item.folder ? SharePointScopeTargetType.FOLDER : SharePointScopeTargetType.FILE}:${driveId}:${itemId}`
-
-const getRulesByAction = (
-  scope: AgentSharePointKnowledgeSourceScope,
-  action: SharePointScopeAction
-) => scope.rules.filter(rule => rule.action === action)
-
-const getRuleKeys = (rules: SharePointScopeRule[]) =>
-  new Set(rules.map(rule => getScopeTargetKey(rule.target)))
-
-const getRelativeTargetPath = (path: string, driveName: string) => {
-  const prefix = `${driveName}/`
-  return path.startsWith(prefix) ? path.slice(prefix.length) : path
-}
-
 const getCurrentDriveItemPath = (
-  item: SharePointDriveItem & { name: string },
-  fallbackPath: string
+  item: SharePointDriveItem & { name: string }
 ) => {
   const parentPath = item.parentReference?.path
   const rootMarker = "root:"
   const rootIndex = parentPath?.indexOf(rootMarker) ?? -1
   if (!parentPath || rootIndex === -1) {
-    return fallbackPath
+    return item.name
   }
   const relativeParentPath = parentPath
     .slice(rootIndex + rootMarker.length)
@@ -534,12 +499,16 @@ const collectScopedSharePointContent = async ({
   lists: SharePointListRef[]
   driveNamesById: Map<string, string>
 }> => {
-  const drives = await listSharePointDrives(bearerToken, siteId, signal)
-  const drivesById = new Map(drives.map(drive => [drive.id, drive]))
-  const includeRules = getRulesByAction(scope, SharePointScopeAction.INCLUDE)
-  const excludeRuleKeys = getRuleKeys(
-    getRulesByAction(scope, SharePointScopeAction.EXCLUDE)
+  const targets =
+    scope.mode === SharePointScopeMode.SELECTED ? scope.targets : []
+  const driveTargets = targets.filter(
+    target => target.type !== SharePointScopeTargetType.LIST
   )
+  const drives =
+    scope.mode === SharePointScopeMode.ALL || driveTargets.length > 0
+      ? await listSharePointDrives(bearerToken, siteId, signal)
+      : []
+  const drivesById = new Map(drives.map(drive => [drive.id, drive]))
   const filesByExternalId = new Map<string, SharePointFileRef>()
 
   const addFiles = (files: SharePointFileRef[]) => {
@@ -554,10 +523,6 @@ const collectScopedSharePointContent = async ({
       )
     }
   }
-  const shouldVisit = (
-    driveId: string,
-    item: SharePointDriveItem & { id: string; name: string; path: string }
-  ) => !excludeRuleKeys.has(getDriveItemScopeKey(driveId, item.id, item))
   const collectDriveFiles = async (
     driveId: string,
     folderId?: string,
@@ -569,34 +534,18 @@ const collectScopedSharePointContent = async ({
         driveId,
         folderId,
         parentPath,
-        signal,
-        item => shouldVisit(driveId, item)
+        signal
       )
     )
   }
 
-  if (scope.defaultAction === SharePointScopeAction.INCLUDE) {
+  if (scope.mode === SharePointScopeMode.ALL) {
     for (const drive of drives) {
-      if (
-        excludeRuleKeys.has(
-          getScopeTargetKey({
-            type: SharePointScopeTargetType.DRIVE,
-            driveId: drive.id,
-            name: drive.name,
-          })
-        )
-      ) {
-        continue
-      }
       await collectDriveFiles(drive.id)
     }
   }
 
-  for (const rule of includeRules) {
-    const target = rule.target
-    if (target.type === SharePointScopeTargetType.LIST) {
-      continue
-    }
+  for (const target of driveTargets) {
     const drive = drivesById.get(target.driveId)
     if (!drive) {
       continue
@@ -618,10 +567,7 @@ const collectScopedSharePointContent = async ({
       await collectDriveFiles(
         target.driveId,
         target.itemId,
-        getCurrentDriveItemPath(
-          { ...item, name: item.name },
-          getRelativeTargetPath(target.path, drive.name)
-        )
+        getCurrentDriveItemPath({ ...item, name: item.name })
       )
       continue
     }
@@ -635,20 +581,12 @@ const collectScopedSharePointContent = async ({
     if (!item?.id || !item.name || !item.file) {
       continue
     }
-    if (
-      excludeRuleKeys.has(getDriveItemScopeKey(target.driveId, item.id, item))
-    ) {
-      continue
-    }
     addFiles([
       {
         driveId: target.driveId,
         itemId: item.id,
         filename: item.name,
-        path: getCurrentDriveItemPath(
-          { ...item, name: item.name },
-          getRelativeTargetPath(target.path, drive.name)
-        ),
+        path: getCurrentDriveItemPath({ ...item, name: item.name }),
         mimetype: item.file.mimeType,
         etag: item.eTag,
         lastModifiedAt: item.lastModifiedDateTime,
@@ -657,28 +595,19 @@ const collectScopedSharePointContent = async ({
     ])
   }
 
-  const lists = await listSharePointLists(bearerToken, siteId)
-  const includedListIds = new Set(
-    includeRules.flatMap(rule =>
-      rule.target.type === SharePointScopeTargetType.LIST
-        ? [rule.target.listId]
-        : []
+  const selectedListIds = new Set(
+    targets.flatMap(target =>
+      target.type === SharePointScopeTargetType.LIST ? [target.listId] : []
     )
   )
-  const scopedLists = lists.filter(list => {
-    const key = getScopeTargetKey({
-      type: SharePointScopeTargetType.LIST,
-      listId: list.id,
-      name: list.name,
-    })
-    if (excludeRuleKeys.has(key)) {
-      return false
-    }
-    return (
-      scope.defaultAction === SharePointScopeAction.INCLUDE ||
-      includedListIds.has(list.id)
-    )
-  })
+  const lists =
+    scope.mode === SharePointScopeMode.ALL || selectedListIds.size > 0
+      ? await listSharePointLists(bearerToken, siteId)
+      : []
+  const scopedLists =
+    scope.mode === SharePointScopeMode.ALL
+      ? lists
+      : lists.filter(list => selectedListIds.has(list.id))
 
   return {
     files: [...filesByExternalId.values()],
@@ -807,7 +736,11 @@ const runSharePointSourcesForOperation = async (
 
   const siteId = site.id
   const sourceScope = knowledgeSource?.config.scope
-  if (!sourceScope) {
+  if (
+    !sourceScope ||
+    (sourceScope.mode !== SharePointScopeMode.ALL &&
+      sourceScope.mode !== SharePointScopeMode.SELECTED)
+  ) {
     throw new HTTPError(
       "This SharePoint source uses an outdated configuration. Delete and reconnect it to continue syncing.",
       400
@@ -885,7 +818,6 @@ const runSharePointSourcesForOperation = async (
   let skipped = 0
   let alreadySynced = 0
   let unsupported = 0
-  let filteredOut = 0
   let retried = 0
   let totalDiscovered = 0
   let deleted = 0
@@ -1337,7 +1269,7 @@ const runSharePointSourcesForOperation = async (
         alreadySynced,
         retried,
         unsupported,
-        filteredOut,
+        filteredOut: 0,
         deleted,
         deleteFailed,
         totalDiscovered,
@@ -1355,7 +1287,6 @@ const runSharePointSourcesForOperation = async (
         skipped,
         alreadySynced,
         retried,
-        filteredOut,
         unsupported,
         totalDiscovered,
       })

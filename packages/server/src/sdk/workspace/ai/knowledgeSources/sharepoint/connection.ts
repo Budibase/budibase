@@ -808,10 +808,7 @@ export const collectSharePointFilesRecursive = async (
   driveId: string,
   folderId?: string,
   parentPath = "",
-  signal?: AbortSignal,
-  shouldVisit?: (
-    item: SharePointDriveItem & { id: string; name: string; path: string }
-  ) => boolean
+  signal?: AbortSignal
 ): Promise<SharePointFileRef[]> => {
   const items = await listSharePointDriveItems(
     bearerToken,
@@ -830,9 +827,6 @@ export const collectSharePointFilesRecursive = async (
     }
 
     const path = parentPath ? `${parentPath}/${name}` : name
-    if (shouldVisit && !shouldVisit({ ...item, id: itemId, name, path })) {
-      continue
-    }
 
     if (item.folder) {
       files.push(
@@ -841,8 +835,7 @@ export const collectSharePointFilesRecursive = async (
           driveId,
           itemId,
           path,
-          signal,
-          shouldVisit
+          signal
         ))
       )
       continue

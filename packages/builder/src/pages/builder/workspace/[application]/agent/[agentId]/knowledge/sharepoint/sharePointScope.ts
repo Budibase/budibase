@@ -1,8 +1,6 @@
 import {
-  SharePointScopeAction,
   SharePointScopeTargetType,
   type KnowledgeSourceEntry,
-  type SharePointScopeRule,
   type SharePointScopeTarget,
 } from "@budibase/types"
 import type { SharePointEntryTreeNode } from "./tree/sharePointEntryTree"
@@ -29,7 +27,6 @@ export const nodeToTarget = (
     return {
       type: SharePointScopeTargetType.DRIVE,
       driveId: node.driveId,
-      name: node.name,
     }
   }
   if (
@@ -44,70 +41,57 @@ export const nodeToTarget = (
           : SharePointScopeTargetType.FILE,
       driveId: node.driveId,
       itemId: node.itemId,
-      name: node.name,
-      path: node.path,
     }
   }
   if (node.type === "list" && node.listId) {
     return {
       type: SharePointScopeTargetType.LIST,
       listId: node.listId,
-      name: node.name,
     }
   }
   return undefined
 }
 
-const isTargetWithinNode = (
-  target: SharePointScopeTarget,
-  node: SharePointEntryTreeNode
+const getTargetKey = (target: SharePointScopeTarget) => {
+  switch (target.type) {
+    case SharePointScopeTargetType.DRIVE:
+      return `drive:${target.driveId}`
+    case SharePointScopeTargetType.FOLDER:
+    case SharePointScopeTargetType.FILE:
+      return `${target.type}:${target.driveId}:${target.itemId}`
+    case SharePointScopeTargetType.LIST:
+      return `list:${target.listId}`
+  }
+}
+
+export const isNodeTargeted = (
+  node: SharePointEntryTreeNode,
+  targets: SharePointScopeTarget[]
 ) => {
-  if (node.type === "list") {
-    return (
-      target.type === SharePointScopeTargetType.LIST &&
-      target.listId === node.listId
-    )
-  }
-  if (node.type === "drive") {
-    return "driveId" in target && target.driveId === node.driveId
-  }
-  if (node.type === "file") {
-    return (
-      target.type === SharePointScopeTargetType.FILE &&
-      target.driveId === node.driveId &&
-      target.itemId === node.itemId
-    )
-  }
-  return (
-    (target.type === SharePointScopeTargetType.FOLDER ||
-      target.type === SharePointScopeTargetType.FILE) &&
-    target.driveId === node.driveId &&
-    (target.itemId === node.itemId || target.path.startsWith(`${node.path}/`))
-  )
+  const target = nodeToTarget(node)
+  return target
+    ? targets.some(
+        candidate => getTargetKey(candidate) === getTargetKey(target)
+      )
+    : false
 }
 
 export const toggleScopeNode = ({
-  rules,
+  targets,
   node,
   nextSelected,
-  inheritedAction,
 }: {
-  rules: SharePointScopeRule[]
+  targets: SharePointScopeTarget[]
   node: SharePointEntryTreeNode
   nextSelected: boolean
-  inheritedAction: SharePointScopeAction
 }) => {
   const target = nodeToTarget(node)
   if (!target) {
-    return rules
+    return targets
   }
-  const nextAction = nextSelected
-    ? SharePointScopeAction.INCLUDE
-    : SharePointScopeAction.EXCLUDE
-  const remainingRules = rules.filter(
-    rule => !isTargetWithinNode(rule.target, node)
+  const targetKey = getTargetKey(target)
+  const remainingTargets = targets.filter(
+    candidate => getTargetKey(candidate) !== targetKey
   )
-  return nextAction === inheritedAction
-    ? remainingRules
-    : [...remainingRules, { action: nextAction, target }]
+  return nextSelected ? [...remainingTargets, target] : remainingTargets
 }

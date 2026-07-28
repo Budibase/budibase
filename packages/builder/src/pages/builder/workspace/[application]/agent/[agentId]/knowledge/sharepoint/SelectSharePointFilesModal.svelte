@@ -11,8 +11,8 @@
   } from "@budibase/bbui"
   import {
     AgentKnowledgeSourceType,
-    SharePointScopeAction,
-    type SharePointScopeRule,
+    SharePointScopeMode,
+    type SharePointScopeTarget,
   } from "@budibase/types"
   import { agentsStore, selectedAgent } from "@/stores/portal"
   import { workspaceDeploymentStore } from "@/stores/builder"
@@ -28,8 +28,8 @@
 
   let { agentId, operationId, siteId }: Props = $props()
 
-  let defaultAction = $state(SharePointScopeAction.INCLUDE)
-  let scopeRules = $state<SharePointScopeRule[]>([])
+  let scopeMode = $state(SharePointScopeMode.ALL)
+  let scopeTargets = $state<SharePointScopeTarget[]>([])
   let rootNodes = $state<SharePointEntryTreeNode[]>([])
   let loadingEntries = $state(false)
   let loadEntriesError = $state<string | null>(null)
@@ -60,8 +60,8 @@
       siteId ||
       ""
   )
-  const ruleCountLabel = $derived(
-    `${scopeRules.length} scope ${scopeRules.length === 1 ? "rule" : "rules"}`
+  const selectedCountLabel = $derived(
+    `${scopeTargets.length} selected ${scopeTargets.length === 1 ? "item" : "items"}`
   )
 
   const loadRootEntries = async () => {
@@ -125,27 +125,23 @@
     }
   }
 
-  const toggleNode = (
-    node: SharePointEntryTreeNode,
-    nextSelected: boolean,
-    inheritedAction: SharePointScopeAction
-  ) => {
-    scopeRules = toggleScopeNode({
-      rules: scopeRules,
+  const toggleNode = (node: SharePointEntryTreeNode, nextSelected: boolean) => {
+    scopeTargets = toggleScopeNode({
+      targets: scopeTargets,
       node,
       nextSelected,
-      inheritedAction,
     })
   }
 
   export async function show() {
     const scope = sharePointSource?.config.scope
     if (scope) {
-      defaultAction = scope.defaultAction
-      scopeRules = [...scope.rules]
+      scopeMode = scope.mode
+      scopeTargets =
+        scope.mode === SharePointScopeMode.SELECTED ? [...scope.targets] : []
     } else {
-      defaultAction = SharePointScopeAction.EXCLUDE
-      scopeRules = []
+      scopeMode = SharePointScopeMode.SELECTED
+      scopeTargets = []
     }
     modal?.show()
     await loadRootEntries()
@@ -165,10 +161,13 @@
         operationId,
         siteId,
         {
-          scope: {
-            defaultAction,
-            rules: scopeRules,
-          },
+          scope:
+            scopeMode === SharePointScopeMode.ALL
+              ? { mode: SharePointScopeMode.ALL }
+              : {
+                  mode: SharePointScopeMode.SELECTED,
+                  targets: scopeTargets,
+                },
         }
       )
       await Promise.all([
@@ -209,27 +208,36 @@
         <RadioGroup
           options={[
             {
-              label: "Include new content by default",
-              value: SharePointScopeAction.INCLUDE,
+              label: "Sync all content",
+              value: SharePointScopeMode.ALL,
             },
             {
-              label: "Exclude new content by default",
-              value: SharePointScopeAction.EXCLUDE,
+              label: "Sync selected content",
+              value: SharePointScopeMode.SELECTED,
             },
           ]}
-          value={defaultAction}
+          value={scopeMode}
           on:change={e => {
-            defaultAction = e.detail as SharePointScopeAction
-            scopeRules = []
+            scopeMode = e.detail as SharePointScopeMode
+            if (scopeMode === SharePointScopeMode.ALL) {
+              scopeTargets = []
+            }
           }}
           getOptionLabel={o => o.label}
           getOptionValue={o => o.value}
           direction="horizontal"
         ></RadioGroup>
-        <span class="selected-count">{ruleCountLabel}</span>
+        {#if scopeMode === SharePointScopeMode.SELECTED}
+          <span class="selected-count">{selectedCountLabel}</span>
+        {/if}
       </div>
 
-      {#if loadingEntries}
+      {#if scopeMode === SharePointScopeMode.ALL}
+        <Body size="S">
+          All document libraries, folders, files, and lists in this site will be
+          synced.
+        </Body>
+      {:else if loadingEntries}
         <Body size="S">Loading SharePoint content...</Body>
       {:else if loadEntriesError}
         <div class="load-error">
@@ -248,8 +256,7 @@
               <SharePointEntryTreeItem
                 selectable
                 {node}
-                {scopeRules}
-                inheritedAction={defaultAction}
+                {scopeTargets}
                 onToggleNode={toggleNode}
                 onExpandNode={expandNode}
                 showStatus={false}

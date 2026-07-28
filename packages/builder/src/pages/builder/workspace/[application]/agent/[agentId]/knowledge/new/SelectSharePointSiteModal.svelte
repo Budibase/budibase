@@ -1,7 +1,7 @@
 <script lang="ts">
   import { notifications } from "@budibase/bbui"
   import {
-    SharePointScopeAction,
+    SharePointScopeMode,
     type KnowledgeSourceOption,
   } from "@budibase/types"
   import { workspaceDeploymentStore } from "@/stores/builder"
@@ -141,11 +141,9 @@
         authConfigId: selectedAuthConfigId,
         site: selectedSite,
         scope: {
-          defaultAction:
-            mode === "selective"
-              ? SharePointScopeAction.EXCLUDE
-              : SharePointScopeAction.INCLUDE,
-          rules: [],
+          ...(mode === "selective"
+            ? { mode: SharePointScopeMode.SELECTED, targets: [] }
+            : { mode: SharePointScopeMode.ALL }),
         },
       })
       await workspaceDeploymentStore.fetch()

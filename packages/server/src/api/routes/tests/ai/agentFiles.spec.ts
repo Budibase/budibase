@@ -5,11 +5,12 @@ import type { MockAgent } from "undici"
 import {
   type Agent,
   type AgentOperation,
+  type AgentSharePointKnowledgeSourceScope,
   AgentKnowledgeSourceType,
   AgentKnowledgeSourceSyncRunStatus,
   KnowledgeBaseFileStatus,
   RestAuthType,
-  SharePointScopeAction,
+  SharePointScopeMode,
 } from "@budibase/types"
 import environment, { setEnv } from "../../../../environment"
 import { getQueue } from "../../../../sdk/workspace/ai/rag/ragQueue"
@@ -43,9 +44,8 @@ describe("agent files", () => {
   })
 
   const fileBuffer = Buffer.from("Hello from Budibase")
-  const defaultSharePointScope = {
-    defaultAction: SharePointScopeAction.INCLUDE,
-    rules: [],
+  const defaultSharePointScope: AgentSharePointKnowledgeSourceScope = {
+    mode: SharePointScopeMode.ALL,
   }
   const operation = {
     id: "operation_1",

@@ -1,9 +1,7 @@
 <script lang="ts">
   import {
     KnowledgeBaseFileStatus,
-    SharePointScopeAction,
-    SharePointScopeTargetType,
-    type SharePointScopeRule,
+    type SharePointScopeTarget,
   } from "@budibase/types"
   import {
     Body,
@@ -17,19 +15,16 @@
   } from "@budibase/bbui"
   import SharePointEntryTreeItem from "./SharePointEntryTreeItem.svelte"
   import type { SharePointEntryTreeNode } from "./sharePointEntryTree"
+  import { isNodeTargeted } from "../sharePointScope"
 
   export interface Props {
     selectable?: boolean
     node: SharePointEntryTreeNode
-    selectedPaths?: string[]
-    fileDescendantPathsByNodePath?: Map<string, string[]>
-    onTogglePaths?: (_paths: string[], _nextSelected: boolean) => void
-    scopeRules?: SharePointScopeRule[]
-    inheritedAction?: SharePointScopeAction
+    scopeTargets?: SharePointScopeTarget[]
+    ancestorSelected?: boolean
     onToggleNode?: (
       _node: SharePointEntryTreeNode,
-      _nextSelected: boolean,
-      _inheritedAction: SharePointScopeAction
+      _nextSelected: boolean
     ) => void
     onExpandNode?: (_node: SharePointEntryTreeNode) => Promise<void> | void
     showStatus?: boolean
@@ -38,11 +33,8 @@
   let {
     selectable,
     node,
-    selectedPaths,
-    fileDescendantPathsByNodePath,
-    onTogglePaths,
-    scopeRules,
-    inheritedAction = SharePointScopeAction.INCLUDE,
+    scopeTargets,
+    ancestorSelected = false,
     onToggleNode,
     onExpandNode,
     showStatus = true,
@@ -98,82 +90,16 @@
     Helpers.copyToClipboard(node.errorMessage)
     notifications.success("Error copied to clipboard")
   }
-  let selectedSet = $derived(new Set(selectedPaths))
-  const matchesRule = (rule: SharePointScopeRule) => {
-    const target = rule.target
-    if (node.type === "drive") {
-      return (
-        target.type === SharePointScopeTargetType.DRIVE &&
-        target.driveId === node.driveId
-      )
-    }
-    if (node.type === "folder" || node.type === "file") {
-      return (
-        target.type === node.type &&
-        target.driveId === node.driveId &&
-        target.itemId === node.itemId
-      )
-    }
-    return (
-      target.type === SharePointScopeTargetType.LIST &&
-      target.listId === node.listId
-    )
-  }
-  let exactRule = $derived(scopeRules?.find(matchesRule))
-  let effectiveAction = $derived(exactRule?.action || inheritedAction)
-  let targetPaths = $derived.by(() => {
-    if (node.type === "file" || node.type === "list") {
-      return [node.path]
-    }
-    return fileDescendantPathsByNodePath?.get(node.path) || []
-  })
-  let selected = $derived.by(() => {
-    if (scopeRules) {
-      return effectiveAction === SharePointScopeAction.INCLUDE
-    }
-    if (targetPaths.length === 0) {
-      return false
-    }
-    return targetPaths.every(path => selectedSet.has(path))
-  })
-  let indeterminate = $derived.by(() => {
-    if (scopeRules) {
-      return scopeRules.some(rule => {
-        if (rule.action === effectiveAction) {
-          return false
-        }
-        const target = rule.target
-        if (node.type === "drive") {
-          return "driveId" in target && target.driveId === node.driveId
-        }
-        if (node.type === "folder") {
-          return (
-            (target.type === SharePointScopeTargetType.FOLDER ||
-              target.type === SharePointScopeTargetType.FILE) &&
-            target.driveId === node.driveId &&
-            target.path.startsWith(`${node.path}/`)
-          )
-        }
-        return false
-      })
-    }
-    if (targetPaths.length === 0) {
-      return false
-    }
-    const selectedCount = targetPaths.filter(path =>
-      selectedSet.has(path)
-    ).length
-    return selectedCount > 0 && selectedCount < targetPaths.length
-  })
-  let disabled = $derived(scopeRules ? false : targetPaths.length === 0)
+  let selected = $derived(
+    !!scopeTargets && (ancestorSelected || isNodeTargeted(node, scopeTargets))
+  )
+  let disabled = $derived(!!scopeTargets && ancestorSelected)
 
   const handleSelect = (_event: CustomEvent<boolean>) => {
-    const nextSelected = indeterminate ? true : !selected
-    if (scopeRules) {
-      onToggleNode?.(node, nextSelected, inheritedAction)
+    if (!scopeTargets) {
       return
     }
-    onTogglePaths?.(targetPaths, nextSelected)
+    onToggleNode?.(node, !selected)
   }
 
   const handleToggle = async (event: CustomEvent<boolean>) => {
@@ -190,7 +116,6 @@
   <TreeItem
     title={node.name}
     {selected}
-    {indeterminate}
     showCheckbox={selectable}
     {disabled}
     open={node.open || false}
@@ -217,11 +142,8 @@
         <SharePointEntryTreeItem
           {selectable}
           node={child}
-          {selectedPaths}
-          {fileDescendantPathsByNodePath}
-          {onTogglePaths}
-          {scopeRules}
-          inheritedAction={effectiveAction}
+          {scopeTargets}
+          ancestorSelected={!!scopeTargets && selected}
           {onToggleNode}
           {onExpandNode}
           {showStatus}

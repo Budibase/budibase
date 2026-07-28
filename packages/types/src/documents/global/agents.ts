@@ -60,9 +60,9 @@ export enum AgentKnowledgeSourceType {
   SHAREPOINT = "sharepoint",
 }
 
-export enum SharePointScopeAction {
-  INCLUDE = "include",
-  EXCLUDE = "exclude",
+export enum SharePointScopeMode {
+  ALL = "all",
+  SELECTED = "selected",
 }
 
 export enum SharePointScopeTargetType {
@@ -75,21 +75,17 @@ export enum SharePointScopeTargetType {
 interface SharePointDriveScopeTarget {
   type: SharePointScopeTargetType.DRIVE
   driveId: string
-  name: string
 }
 
 interface SharePointDriveItemScopeTarget {
   type: SharePointScopeTargetType.FOLDER | SharePointScopeTargetType.FILE
   driveId: string
   itemId: string
-  name: string
-  path: string
 }
 
 interface SharePointListScopeTarget {
   type: SharePointScopeTargetType.LIST
   listId: string
-  name: string
 }
 
 export type SharePointScopeTarget =
@@ -97,15 +93,14 @@ export type SharePointScopeTarget =
   | SharePointDriveItemScopeTarget
   | SharePointListScopeTarget
 
-export interface SharePointScopeRule {
-  action: SharePointScopeAction
-  target: SharePointScopeTarget
-}
-
-export interface AgentSharePointKnowledgeSourceScope {
-  defaultAction: SharePointScopeAction
-  rules: SharePointScopeRule[]
-}
+export type AgentSharePointKnowledgeSourceScope =
+  | {
+      mode: SharePointScopeMode.ALL
+    }
+  | {
+      mode: SharePointScopeMode.SELECTED
+      targets: SharePointScopeTarget[]
+    }
 
 export interface AgentSharePointKnowledgeSource {
   id: string

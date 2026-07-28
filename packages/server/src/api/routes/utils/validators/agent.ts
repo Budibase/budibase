@@ -256,33 +256,29 @@ const SHAREPOINT_SCOPE_TARGET_SCHEMA = Joi.alternatives().try(
   Joi.object({
     type: Joi.string().valid("drive").required(),
     driveId: NON_EMPTY_STRING.required(),
-    name: NON_EMPTY_STRING.required(),
   }),
   Joi.object({
     type: Joi.string().valid("folder", "file").required(),
     driveId: NON_EMPTY_STRING.required(),
     itemId: NON_EMPTY_STRING.required(),
-    name: NON_EMPTY_STRING.required(),
-    path: NON_EMPTY_STRING.required(),
   }),
   Joi.object({
     type: Joi.string().valid("list").required(),
     listId: NON_EMPTY_STRING.required(),
-    name: NON_EMPTY_STRING.required(),
   })
 )
 
-const SHAREPOINT_SCOPE_SCHEMA = Joi.object({
-  defaultAction: Joi.string().valid("include", "exclude").required(),
-  rules: Joi.array()
-    .items(
-      Joi.object({
-        action: Joi.string().valid("include", "exclude").required(),
-        target: SHAREPOINT_SCOPE_TARGET_SCHEMA.required(),
-      })
-    )
-    .required(),
-}).required()
+const SHAREPOINT_SCOPE_SCHEMA = Joi.alternatives()
+  .try(
+    Joi.object({
+      mode: Joi.string().valid("all").required(),
+    }),
+    Joi.object({
+      mode: Joi.string().valid("selected").required(),
+      targets: Joi.array().items(SHAREPOINT_SCOPE_TARGET_SCHEMA).required(),
+    })
+  )
+  .required()
 
 export function connectAgentSharePointSiteValidator() {
   return auth.joiValidator.body(
