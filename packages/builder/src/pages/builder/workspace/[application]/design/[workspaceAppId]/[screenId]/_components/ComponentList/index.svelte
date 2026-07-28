@@ -24,19 +24,19 @@
   let searchTerm = ""
   let searchOpen = false
   let searchInput: HTMLInputElement | undefined
-  let handledCreatedComponentSequence = 0
+  let handledCreatedComponentSequence: number | undefined
 
   $: isSearching = !!searchTerm.trim()
   $: searchResults = getComponentTreeSearchResults(
     $selectedScreen?.props?._children,
     searchTerm
   )
-  $: if (
+  $: if (handledCreatedComponentSequence === undefined) {
+    handledCreatedComponentSequence = $componentStore.createdComponentSequence
+  } else if (
     $componentStore.createdComponentSequence !== handledCreatedComponentSequence
   ) {
-    if (handledCreatedComponentSequence) {
-      closeSearch()
-    }
+    closeSearch()
     handledCreatedComponentSequence = $componentStore.createdComponentSequence
   }
 
