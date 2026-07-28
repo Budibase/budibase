@@ -73,7 +73,7 @@ export const getGeminiApiKey = () => {
   const key = environment.GEMINI_API_KEY?.trim()
   if (!key) {
     throw new HTTPError(
-      "Gemini File Search isn't configured. Set GEMINI_API_KEY in your env vars and restart Budibase.",
+      "Gemini File Search failed. Set GEMINI_API_KEY on your local environment",
       400
     )
   }

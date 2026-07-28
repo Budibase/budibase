@@ -29,10 +29,6 @@ import { fetchSharePointSitesByDatasourceAuthConfig } from "../../../sdk/workspa
 
 const GEMINI_UPSTREAM_EVENT = "ai.gemini.upstream_unavailable"
 
-const requireGeminiFileSearch = () => {
-  sdk.ai.knowledgeBase.getGeminiApiKey()
-}
-
 const normalizeUpload = (fileInput: any) => {
   if (!fileInput) {
     return undefined
@@ -183,7 +179,6 @@ export async function uploadAgentFile(
     { agentId: string; operationId: string }
   >
 ) {
-  requireGeminiFileSearch()
   const { agentId, operationId } = ctx.params
   const upload = normalizeUpload(
     ctx.request.files?.file ||
@@ -261,7 +256,6 @@ export async function deleteAgentFile(
     { agentId: string; operationId: string; fileId: string }
   >
 ) {
-  requireGeminiFileSearch()
   const { agentId, operationId, fileId } = ctx.params
   await sdk.ai.rag.deleteFileForOperation(agentId, operationId, fileId)
   ctx.body = { deleted: true }
@@ -335,7 +329,6 @@ export async function fetchAgentKnowledgeSourceAllEntries(
 export async function resetAgentKnowledgeBaseStore(
   ctx: UserCtx<void, void, { agentId: string; operationId: string }>
 ) {
-  requireGeminiFileSearch()
   const { agentId, operationId } = ctx.params
   const knowledgeBase = await sdk.ai.rag.ensureKnowledgeBaseForOperation(
     agentId,
@@ -352,7 +345,6 @@ export async function syncAgentKnowledgeSource(
     { agentId: string; operationId: string; sourceId: string }
   >
 ) {
-  requireGeminiFileSearch()
   const { agentId, operationId, sourceId } = ctx.params
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   const sharePointSources = getSharePointSourcesForOperation(agent, operationId)
@@ -392,7 +384,6 @@ export async function connectAgentSharePointSite(
     { agentId: string; operationId: string }
   >
 ) {
-  requireGeminiFileSearch()
   const { agentId, operationId } = ctx.params
   const { datasourceId, authConfigId, site, filters } = ctx.request.body
   const siteId = site.id
@@ -476,7 +467,6 @@ export async function updateAgentSharePointSite(
     { agentId: string; operationId: string; siteId: string }
   >
 ) {
-  requireGeminiFileSearch()
   const { agentId, operationId, siteId } = ctx.params
   const existingAgent = await sdk.ai.agents.getOrThrow(agentId)
   const source = getSharePointSourcesForOperation(
@@ -537,7 +527,6 @@ export async function disconnectAgentSharePointSite(
     { agentId: string; operationId: string; siteId: string }
   >
 ) {
-  requireGeminiFileSearch()
   const { agentId, operationId, siteId } = ctx.params
   const existingAgent = await sdk.ai.agents.getOrThrow(agentId)
   const removedSource = getSharePointSourcesForOperation(

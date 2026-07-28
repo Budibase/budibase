@@ -100,7 +100,7 @@
   let knowledgeSearchUnavailable = $derived(knowledgeSearchConfigured !== true)
   let knowledgeActionsTooltip = $derived(
     knowledgeSearchUnavailable
-      ? "Set GEMINI_API_KEY in your env vars and restart Budibase."
+      ? "Set GEMINI_API_KEY on your local environment and restart Budibase."
       : undefined
   )
 
