@@ -102,6 +102,11 @@ export enum EscalationNotificationChannel {
   TELEGRAM = "telegram",
 }
 
+export enum EscalationAction {
+  APPROVE = "esc_approve",
+  REJECT = "esc_reject",
+}
+
 export interface EscalationRecipient {
   type: EscalationNotificationChannel
   config: Record<string, any>
