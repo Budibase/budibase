@@ -12,8 +12,10 @@
   $: group = $groups.find(x => x._id === groupId)
   $: assignedWorkspaceIds = group ? groups.getGroupAppIds(group) : []
   $: availableWorkspaceIds = Object.keys(
-    $appsStore.apps.reduce<Record<string, boolean>>((acc, app) => {
-      const prodWorkspaceId = appsStore.getProdWorkspaceID(app.devId || "")
+    $appsStore.apps.reduce<Record<string, boolean>>((acc, workspace) => {
+      const prodWorkspaceId = appsStore.getProdWorkspaceID(
+        workspace.devId || ""
+      )
       if (!prodWorkspaceId) {
         return acc
       }

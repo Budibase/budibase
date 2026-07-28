@@ -16,20 +16,20 @@ export function devClientLibPath() {
  * Client library paths in the object store:
  * Previously, the entire client library package was downloaded from NPM
  * as a tarball and extracted to the object store, even though only the manifest
- * was ever needed. Therefore we need to support old apps which may still have
- * the manifest at this location for the first update.
+ * was ever needed. Therefore we need to support old workspaces which may still
+ * have the manifest at this location for the first update.
  *
  * The paths for the in-use version are:
- * {appId}/manifest.json
- * {appId}/budibase-client.js
- * {appId}/_chunks/...
- * {appId}/... (and any other app files)
+ * {workspaceId}/manifest.json
+ * {workspaceId}/budibase-client.js
+ * {workspaceId}/_chunks/...
+ * {workspaceId}/... (and any other workspace files)
  *
  * The paths for the backups are:
- * {appId}/.bak/manifest.json
- * {appId}/.bak/budibase-client.js
- * {appId}/.bak/_chunks/...
- * {appId}/.bak/... (complete folder backup)
+ * {workspaceId}/.bak/manifest.json
+ * {workspaceId}/.bak/budibase-client.js
+ * {workspaceId}/.bak/_chunks/...
+ * {workspaceId}/.bak/... (complete folder backup)
  *
  * We don't rely on NPM at all any more, as when updating to the latest version
  * we pull both the manifest and client bundle from the server's dependencies
@@ -37,22 +37,25 @@ export function devClientLibPath() {
  */
 
 /**
- * Backs up the current client library version by copying the entire app folder
- * to a backup location in the object store. Only the one previous version is
- * stored as a backup, which can be reverted to.
- * @param appId The app ID to backup
+ * Backs up the current client library version by copying the entire workspace
+ * folder to a backup location in the object store. Only the one previous
+ * version is stored as a backup, which can be reverted to.
+ * @param workspaceId The workspace ID to backup
  * @returns {Promise<void>}
  */
-export async function backupClientLibrary(appId: string) {
-  appId = sdk.workspaces.getProdWorkspaceID(appId)
+export async function backupClientLibrary(workspaceId: string) {
+  workspaceId = sdk.workspaces.getProdWorkspaceID(workspaceId)
   // First, remove any existing backup folder
   try {
-    await objectStore.deleteFolder(ObjectStoreBuckets.APPS, `${appId}/.bak`)
+    await objectStore.deleteFolder(
+      ObjectStoreBuckets.APPS,
+      `${workspaceId}/.bak`
+    )
   } catch (error) {
     // Ignore errors if backup doesn't exist
   }
 
-  await forEachObject(appId, async fileKey => {
+  await forEachObject(workspaceId, async fileKey => {
     if (fileKey.includes("/.bak/") || fileKey.endsWith(".bak")) {
       return
     }
@@ -62,7 +65,7 @@ export async function backupClientLibrary(appId: string) {
       fileKey
     )
 
-    const backupKey = fileKey.replace(appId, `${appId}/.bak`)
+    const backupKey = fileKey.replace(workspaceId, `${workspaceId}/.bak`)
     await objectStore.upload({
       bucket: ObjectStoreBuckets.APPS,
       filename: backupKey,
@@ -74,11 +77,11 @@ export async function backupClientLibrary(appId: string) {
 /**
  * Uploads the latest version of the component manifest and the client library
  * to the object store, overwriting the existing version.
- * @param appId The app ID to update
+ * @param workspaceId The workspace ID to update
  * @returns {Promise<void>}
  */
-export async function updateClientLibrary(appId: string) {
-  appId = sdk.workspaces.getProdWorkspaceID(appId)
+export async function updateClientLibrary(workspaceId: string) {
+  workspaceId = sdk.workspaces.getProdWorkspaceID(workspaceId)
 
   let manifest: string, client: string
   let dependencies = []
@@ -108,15 +111,15 @@ export async function updateClientLibrary(appId: string) {
   // Upload latest manifest and client library
   const files = [
     {
-      filename: join(appId, "manifest.json"),
+      filename: join(workspaceId, "manifest.json"),
       stream: fs.createReadStream(manifest),
     },
     {
-      filename: join(appId, "budibase-client.js"),
+      filename: join(workspaceId, "budibase-client.js"),
       stream: fs.createReadStream(client),
     },
     ...dependencies.map(dependency => ({
-      filename: join(appId, "chunks", path.basename(dependency)),
+      filename: join(workspaceId, "chunks", path.basename(dependency)),
       stream: fs.createReadStream(dependency),
     })),
   ]
@@ -133,13 +136,16 @@ export async function updateClientLibrary(appId: string) {
   const uploadedFiles = files.map(file => file.filename)
   const filesToDelete: string[] = []
   await utils.parallelForeach(
-    objectStore.listAllObjects(objectStore.ObjectStoreBuckets.APPS, appId),
+    objectStore.listAllObjects(
+      objectStore.ObjectStoreBuckets.APPS,
+      workspaceId
+    ),
     async file => {
       const key = file.Key
       if (!key) {
         return
       }
-      if (!key.startsWith(`${appId}/chunks/`)) {
+      if (!key.startsWith(`${workspaceId}/chunks/`)) {
         return
       }
       if (!uploadedFiles.includes(key)) {
@@ -161,19 +167,19 @@ export async function updateClientLibrary(appId: string) {
 
 /**
  * Reverts the version of the client library and manifest to the previously
- * used version for an app by restoring the entire backed up folder.
- * @param appId The app ID to revert
+ * used version for a workspace by restoring the entire backed up folder.
+ * @param workspaceId The workspace ID to revert
  * @returns {Promise<void>}
  */
-export async function revertClientLibrary(appId: string) {
-  appId = sdk.workspaces.getProdWorkspaceID(appId)
+export async function revertClientLibrary(workspaceId: string) {
+  workspaceId = sdk.workspaces.getProdWorkspaceID(workspaceId)
 
   let manifestContent
   let hasBackup = false
   const restoredFiles = new Set<string>()
 
   // First, restore all files from the backup folder
-  await forEachObject(`${appId}/.bak`, async filePath => {
+  await forEachObject(`${workspaceId}/.bak`, async filePath => {
     hasBackup = true
 
     // Download the backup file to temp
@@ -183,7 +189,7 @@ export async function revertClientLibrary(appId: string) {
     )
 
     // Restore to original location
-    const restoreKey = filePath.replace(`${appId}/.bak`, appId)
+    const restoreKey = filePath.replace(`${workspaceId}/.bak`, workspaceId)
     restoredFiles.add(restoreKey)
 
     // Read manifest content if this is the manifest file
@@ -200,7 +206,7 @@ export async function revertClientLibrary(appId: string) {
 
   // After successful restore, clean up any extra files that weren't in backup
   if (hasBackup) {
-    await forEachObject(appId, async filePath => {
+    await forEachObject(workspaceId, async filePath => {
       if (
         !filePath.includes("/.bak/") &&
         !filePath.endsWith(".bak") &&
@@ -213,7 +219,7 @@ export async function revertClientLibrary(appId: string) {
 
   // If no backup folder found, try to find old .bak files
   if (!hasBackup) {
-    await forEachObject(appId, async filePath => {
+    await forEachObject(workspaceId, async filePath => {
       if (!filePath.endsWith(".bak")) {
         return
       }
@@ -248,11 +254,11 @@ export async function revertClientLibrary(appId: string) {
   }
 
   if (!hasBackup) {
-    throw new Error(`No backup found for app ${appId}`)
+    throw new Error(`No backup found for workspace ${workspaceId}`)
   }
 
   if (!manifestContent) {
-    throw new Error(`No manifest found in backup for app ${appId}`)
+    throw new Error(`No manifest found in backup for workspace ${workspaceId}`)
   }
 
   return JSON.parse(manifestContent)
