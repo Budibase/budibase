@@ -1,8 +1,11 @@
-import { View } from "./types"
-import { ViewV2, Ctx, RequiredKeys } from "@budibase/types"
 import { dataFilters } from "@budibase/shared-core"
+import type { Ctx, RequiredKeys, ViewV2 } from "@budibase/types"
+import type { View } from "./types"
 
-function view(body: ViewV2): RequiredKeys<View> {
+export function view(body: ViewV2): RequiredKeys<View> {
+  const sort =
+    Array.isArray(body.sort) && body.sort.length <= 1 ? body.sort[0] : body.sort
+
   return {
     id: body.id,
     tableId: body.tableId,
@@ -11,7 +14,7 @@ function view(body: ViewV2): RequiredKeys<View> {
     schema: body.schema!,
     primaryDisplay: body.primaryDisplay,
     query: dataFilters.buildQuery(body.query),
-    sort: Array.isArray(body.sort) ? body.sort[0] : body.sort,
+    sort,
   }
 }
 

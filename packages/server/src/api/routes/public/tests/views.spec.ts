@@ -37,6 +37,29 @@ describe("check public API security", () => {
     await request.views.create(baseView(), { status: 201 })
   })
 
+  it("should be able to create a view with multiple sorts", async () => {
+    const sort = [
+      {
+        field: "name",
+        order: SortOrder.ASCENDING,
+      },
+      {
+        field: "createdAt",
+        order: SortOrder.DESCENDING,
+      },
+    ]
+
+    const response = await request.views.create(
+      {
+        ...baseView(),
+        sort,
+      },
+      { status: 201 }
+    )
+
+    expect(response.data.sort).toEqual(sort)
+  })
+
   it("should be able to update a view", async () => {
     const view = await request.views.create(baseView(), { status: 201 })
     const response = await request.views.update(view.data.id, {

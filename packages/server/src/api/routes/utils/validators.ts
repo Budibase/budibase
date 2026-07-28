@@ -121,6 +121,16 @@ function searchUIFilterValidator() {
   })
 }
 
+const viewSortValidator = Joi.object({
+  field: Joi.string().required(),
+  order: Joi.string()
+    .optional()
+    .valid(...Object.values(SortOrder)),
+  type: Joi.string()
+    .optional()
+    .valid(...Object.values(SortType)),
+})
+
 export function viewValidator() {
   return auth.joiValidator.body(
     Joi.object({
@@ -131,15 +141,9 @@ export function viewValidator() {
       primaryDisplay: OPTIONAL_STRING,
       schema: Joi.object().required(),
       query: searchUIFilterValidator().optional(),
-      sort: Joi.object({
-        field: Joi.string().required(),
-        order: Joi.string()
-          .optional()
-          .valid(...Object.values(SortOrder)),
-        type: Joi.string()
-          .optional()
-          .valid(...Object.values(SortType)),
-      }).optional(),
+      sort: Joi.alternatives()
+        .try(viewSortValidator, Joi.array().items(viewSortValidator))
+        .optional(),
     })
   )
 }
