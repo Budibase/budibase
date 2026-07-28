@@ -88,24 +88,12 @@
     disabled={cannotSubmit()}
     onConfirm={submit}
   >
-    <form
-      onsubmit={event => {
-        event.preventDefault()
-        submitError = undefined
-        if (cannotSubmit()) {
-          touched = true
-          return
-        }
-        modalContent.confirm()
-      }}
-    >
-      <Input
-        label="Name"
-        bind:value={name}
-        error={nameError}
-        on:input={() => (touched = true)}
-        {placeholder}
-      />
-    </form>
+    <Input
+      label="Name"
+      bind:value={name}
+      error={nameError}
+      on:input={() => (touched = true)}
+      {placeholder}
+    />
   </ModalContent>
 </Modal>
