@@ -308,54 +308,43 @@ export const getComponentTreeSearchResults = (
     return { matchingIds, visibleIds, expandedIds }
   }
 
-  const addVisibleSubtree = (component: Component) => {
-    if (component._children?.length && component._id) {
-      expandedIds.add(component._id)
+  const searchComponent = (
+    component: Component,
+    visibleFromAncestorMatch = false
+  ): boolean => {
+    const matches = componentMatchesSearchTerm(component, normalisedSearchTerm)
+    const visibleSubtree = matches || visibleFromAncestorMatch
+
+    if (component._id && visibleSubtree) {
+      visibleIds.add(component._id)
     }
 
-    for (const child of component._children || []) {
-      if (child._id) {
-        visibleIds.add(child._id)
-      }
-      addVisibleSubtree(child)
-    }
-  }
-
-  const searchComponent = (component: Component, path: string[]): boolean => {
-    if (component._id) {
-      path.push(component._id)
-    }
-
-    let matches = componentMatchesSearchTerm(component, normalisedSearchTerm)
     if (matches && component._id) {
       matchingIds.add(component._id)
-      visibleIds.add(component._id)
-      addVisibleSubtree(component)
+    }
+
+    if (component._id && component._children?.length && visibleSubtree) {
+      expandedIds.add(component._id)
     }
 
     let descendantMatches = false
     for (const child of component._children || []) {
-      descendantMatches = searchComponent(child, path) || descendantMatches
+      descendantMatches =
+        searchComponent(child, visibleSubtree) || descendantMatches
     }
 
-    matches = matches || descendantMatches
-
-    if (matches) {
-      path.forEach(id => visibleIds.add(id))
+    if (component._id && descendantMatches) {
+      visibleIds.add(component._id)
     }
 
-    if (descendantMatches && component._children?.length && component._id) {
+    if (component._id && component._children?.length && descendantMatches) {
       expandedIds.add(component._id)
     }
 
-    if (component._id) {
-      path.pop()
-    }
-
-    return matches
+    return matches || descendantMatches
   }
 
-  components.forEach(component => searchComponent(component, []))
+  components.forEach(component => searchComponent(component))
 
   return { matchingIds, visibleIds, expandedIds }
 }
