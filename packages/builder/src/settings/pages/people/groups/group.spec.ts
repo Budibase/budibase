@@ -72,7 +72,8 @@ const {
   }
 })
 
-vi.mock("@budibase/bbui", async () => {
+vi.mock("@budibase/bbui", async importOriginal => {
+  const actual = await importOriginal<typeof import("@budibase/bbui")>()
   const [
     { default: MockInput },
     { default: MockLayout },
@@ -86,6 +87,7 @@ vi.mock("@budibase/bbui", async () => {
   ])
 
   return {
+    ...actual,
     ActionMenu: MockLayout,
     Heading: MockLayout,
     Icon: MockLayout,
@@ -170,21 +172,35 @@ vi.mock("@/stores/bb", () => ({
   bb: bbMock,
 }))
 
-vi.mock("@budibase/shared-core", () => ({
-  sdk: {
-    users: {
-      isAdmin: (user: any) => !!user?.admin?.global,
+vi.mock("@budibase/shared-core", async importOriginal => {
+  const actual = await importOriginal<typeof import("@budibase/shared-core")>()
+  return {
+    ...actual,
+    sdk: {
+      ...actual.sdk,
+      users: {
+        ...actual.sdk.users,
+        isAdmin: (user: Parameters<typeof actual.sdk.users.isAdmin>[0]) =>
+          !!user?.admin?.global,
+      },
     },
-  },
-}))
+  }
+})
 
-vi.mock("@budibase/frontend-core", () => ({
-  Constants: {
-    Roles: {
-      CREATOR: "CREATOR",
+vi.mock("@budibase/frontend-core", async importOriginal => {
+  const actual =
+    await importOriginal<typeof import("@budibase/frontend-core")>()
+  return {
+    ...actual,
+    Constants: {
+      ...actual.Constants,
+      Roles: {
+        ...actual.Constants.Roles,
+        CREATOR: "CREATOR",
+      },
     },
-  },
-}))
+  }
+})
 
 import GroupPage from "./group.svelte"
 
