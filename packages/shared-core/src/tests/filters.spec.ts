@@ -1,8 +1,10 @@
-import { buildQuery, runQuery } from "../filters"
+import { buildQuery, cleanupQuery, runQuery } from "../filters"
 import {
+  ArrayOperator,
   BasicOperator,
   EmptyFilterOption,
   FieldType,
+  LogicalOperator,
   UILogicalOperator,
   UISearchFilter,
 } from "@budibase/types"
@@ -185,5 +187,76 @@ describe("runQuery notOneOf", () => {
     })
     expect(oneOfResult.map(d => d.id)).toEqual([1, 2])
     expect(notOneOfResult.map(d => d.id)).toEqual([3, 4])
+  })
+})
+
+describe("empty array filters", () => {
+  const docs = [
+    { id: 1, name: "foo", status: "Available" },
+    { id: 2, name: "bar", status: "Unavailable" },
+  ]
+
+  it("preserves empty arrays for array membership operators", () => {
+    const query = cleanupQuery({
+      [ArrayOperator.ONE_OF]: { name: [] },
+      [ArrayOperator.NOT_ONE_OF]: { name: [] },
+    })
+
+    expect(query).toEqual({
+      [ArrayOperator.ONE_OF]: { name: [] },
+      [ArrayOperator.NOT_ONE_OF]: { name: [] },
+    })
+  })
+
+  it("removes empty strings for array membership operators", () => {
+    const query = cleanupQuery({
+      [ArrayOperator.ONE_OF]: {
+        // @ts-expect-error Verifies invalid empty string cleanup
+        name: "",
+      },
+      [ArrayOperator.NOT_ONE_OF]: {
+        // @ts-expect-error Verifies invalid empty string cleanup
+        name: "",
+      },
+    })
+
+    expect(query).toEqual({
+      [ArrayOperator.ONE_OF]: {},
+      [ArrayOperator.NOT_ONE_OF]: {},
+    })
+  })
+
+  it("matches no rows when an ALL group contains oneOf an empty array", () => {
+    const result = runQuery(docs, {
+      [LogicalOperator.AND]: {
+        conditions: [
+          { [ArrayOperator.ONE_OF]: { name: [] } },
+          { [BasicOperator.EQUAL]: { status: "Available" } },
+        ],
+      },
+    })
+
+    expect(result).toEqual([])
+  })
+
+  it("ignores oneOf an empty array when matching an ANY group", () => {
+    const result = runQuery(docs, {
+      [LogicalOperator.OR]: {
+        conditions: [
+          { [ArrayOperator.ONE_OF]: { name: [] } },
+          { [BasicOperator.EQUAL]: { status: "Available" } },
+        ],
+      },
+    })
+
+    expect(result).toEqual([docs[0]])
+  })
+
+  it("matches every row for notOneOf an empty array", () => {
+    const result = runQuery(docs, {
+      [ArrayOperator.NOT_ONE_OF]: { name: [] },
+    })
+
+    expect(result).toEqual(docs)
   })
 })

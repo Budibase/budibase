@@ -147,6 +147,19 @@ export const NoEmptyFilterStrings = [
   OperatorOptions.NotIn.value,
 ] as (keyof SearchQueryFields)[]
 
+/**
+ * Operators which do not support empty arrays as values
+ */
+export const NoEmptyFilterArrays = [
+  OperatorOptions.StartsWith.value,
+  OperatorOptions.Like.value,
+  OperatorOptions.Equals.value,
+  OperatorOptions.NotEquals.value,
+  OperatorOptions.Contains.value,
+  OperatorOptions.NotContains.value,
+  OperatorOptions.ContainsAny.value,
+] as (keyof SearchQueryFields)[]
+
 export function recurseLogicalOperators(
   filters: SearchFilters,
   fn: (f: SearchFilters) => SearchFilters
@@ -162,39 +175,45 @@ export function recurseLogicalOperators(
 }
 
 /**
- * Removes any fields that contain empty strings that would cause inconsistent
- * behaviour with how backend tables are filtered (no value means no filter).
+ * Removes empty filter values that are unsupported by their operator.
  *
- * don't do a pure falsy check, as 0 is included
+ * Empty strings represent unconfigured filters. Empty arrays are also treated
+ * as unconfigured unless the operator gives them meaningful semantics, such as
+ * `oneOf` and `notOneOf`. Values such as `0` and `false` must be preserved.
+ *
  * https://github.com/Budibase/budibase/issues/10118
  */
 export const cleanupQuery = (query: SearchFilters) => {
-  for (let filterField of NoEmptyFilterStrings) {
-    if (!query[filterField]) {
-      continue
-    }
-
-    for (let filterType of Object.keys(query)) {
-      if (filterType !== filterField) {
-        continue
-      }
-      // don't know which one we're checking, type could be anything
-      const value = query[filterType] as unknown
-      if (typeof value === "object") {
-        for (let [key, value] of Object.entries(query[filterType] as object)) {
-          if (value == null || value === "" || isEmptyArray(value)) {
-            // @ts-ignore
-            delete query[filterField][key]
-          }
-        }
-      }
-    }
-  }
+  removeEmptyFilterValues(
+    query,
+    NoEmptyFilterStrings,
+    value => value == null || value === ""
+  )
+  removeEmptyFilterValues(query, NoEmptyFilterArrays, isEmptyArray)
   query = recurseLogicalOperators(query, cleanupQuery)
   return query
 }
 
-function isEmptyArray(value: any) {
+function removeEmptyFilterValues(
+  query: SearchFilters,
+  operators: (keyof SearchQueryFields)[],
+  isEmptyValue: (value: unknown) => boolean
+) {
+  for (const operator of operators) {
+    const filter = query[operator]
+    if (!filter || typeof filter !== "object") {
+      continue
+    }
+    for (const [key, value] of Object.entries(filter)) {
+      if (isEmptyValue(value)) {
+        // @ts-expect-error Search filter types do not share an index signature
+        delete filter[key]
+      }
+    }
+  }
+}
+
+function isEmptyArray(value: unknown): boolean {
   return Array.isArray(value) && value.length === 0
 }
 

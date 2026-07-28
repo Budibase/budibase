@@ -1038,16 +1038,27 @@ if (descriptions.length) {
                   }).toContainExactly([{ name: "foo" }, { name: "bar" }])
                 })
 
-                it("empty arrays returns all when onEmptyFilter is set to return 'all'", async () => {
+                it("empty arrays return no rows when using oneOf", async () => {
                   await expectQuery({
                     onEmptyFilter: EmptyFilterOption.RETURN_ALL,
                     oneOf: { name: [] },
-                  }).toContainExactly([{ name: "foo" }, { name: "bar" }])
+                  }).toContainExactly([])
+                })
+
+                it("empty arrays return no rows when combined with another filter", async () => {
+                  await expectQuery({
+                    $and: {
+                      conditions: [
+                        { oneOf: { name: [] } },
+                        { equal: { name: "foo" } },
+                      ],
+                    },
+                  }).toContainExactly([])
                 })
 
                 // onEmptyFilter cannot be sent to view searches
                 !isView &&
-                  it("empty arrays returns all when onEmptyFilter is set to return 'none'", async () => {
+                  it("empty arrays return no rows when onEmptyFilter is set to return 'none'", async () => {
                     await expectQuery({
                       onEmptyFilter: EmptyFilterOption.RETURN_NONE,
                       oneOf: { name: [] },
