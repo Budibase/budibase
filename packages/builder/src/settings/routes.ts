@@ -6,7 +6,7 @@ import { Target, type Route } from "@/types/routing"
 import { Pages } from "./pages"
 import { AdminState } from "@/stores/portal/admin"
 import { AppMetaState } from "@/stores/builder/app"
-import { PortalAppsStore } from "@/stores/portal/apps"
+import { PortalWorkspacesStore } from "@/stores/portal/apps"
 import { StoreApp } from "@/types"
 import { aiConfigsStore } from "@/stores/portal"
 import { get } from "svelte/store"
@@ -233,7 +233,7 @@ export const orgRoutes = (
 
 export const workspaceRoutes = (
   appStore: AppMetaState,
-  appsStore: PortalAppsStore,
+  appsStore: PortalWorkspacesStore,
   user: GetGlobalSelfResponse
 ): Route[] => {
   if (!appStore?.appId) {

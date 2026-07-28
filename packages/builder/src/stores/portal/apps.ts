@@ -7,12 +7,12 @@ import { BudiStore } from "../BudiStore"
 import { auth } from "./auth"
 import { sdk } from "@budibase/shared-core"
 
-export interface PortalAppsStore {
+export interface PortalWorkspacesStore {
   apps: StoreApp[]
   sortBy?: string
 }
 
-export class AppsStore extends BudiStore<PortalAppsStore> {
+export class WorkspacesStore extends BudiStore<PortalWorkspacesStore> {
   constructor() {
     super({
       apps: [],
@@ -157,7 +157,7 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
   }
 }
 
-export const appsStore = new AppsStore()
+export const appsStore = new WorkspacesStore()
 
 export const sortBy = derived([appsStore, auth], ([$store, $auth]) => {
   return $store.sortBy || $auth.user?.appSort || "name"
