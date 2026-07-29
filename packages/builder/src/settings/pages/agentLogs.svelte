@@ -16,6 +16,10 @@
   import DateRangePicker from "@/components/common/DateRangePicker.svelte"
   import dayjs from "dayjs"
   import { debounce } from "lodash"
+  import ViewDetailsRenderer from "./_components/ViewDetailsRenderer.svelte"
+  import UserRenderer from "./_components/UserRenderer.svelte"
+  import TimeRenderer from "./_components/TimeRenderer.svelte"
+  import AppColumnRenderer from "./_components/AppColumnRenderer.svelte"
 
   const schema = {
     date: { width: "0.8fr" },
