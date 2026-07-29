@@ -626,11 +626,23 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     }
     mockRouterStream.mockReturnValueOnce({
       output: Promise.resolve({
-        values: [{ id: "device_type", value: null }],
+        values: [
+          {
+            id: "device_type",
+            value: null,
+            sourceMessageIndex: null,
+            sourceQuote: null,
+          },
+        ],
       }),
     })
 
-    const run = await runFor(operationWithInputs)
+    const run = await runFor(operationWithInputs, {
+      agent: {
+        ...agent,
+        operations: [operationWithRecipients, operationWithInputs],
+      },
+    })
 
     expect(run.requestInputs).toEqual([
       expect.objectContaining({
@@ -660,11 +672,29 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     }
     mockRouterStream.mockReturnValueOnce({
       output: Promise.resolve({
-        values: [{ id: "device_type", value: "Laptop" }],
+        values: [
+          {
+            id: "device_type",
+            value: "Laptop",
+            sourceMessageIndex: 0,
+            sourceQuote: "My device type is Laptop",
+          },
+        ],
       }),
     })
 
-    const run = await runFor(operationWithInputs)
+    const run = await runFor(operationWithInputs, {
+      agent: {
+        ...agent,
+        operations: [operationWithRecipients, operationWithInputs],
+      },
+      modelMessages: [
+        {
+          role: "user",
+          content: "My device type is Laptop",
+        },
+      ],
+    })
 
     expect(run.requestInputs).toEqual([
       expect.objectContaining({
@@ -676,6 +706,61 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
       expect.objectContaining({
         tools: expect.objectContaining({ escalate: escalatePlaceholder }),
         instructions: expect.stringContaining("Device type: Laptop"),
+      })
+    )
+  })
+
+  it("rejects request input values without verbatim user evidence", async () => {
+    const operationWithInputs = {
+      ...operationWithoutRecipients,
+      requestInputs: [
+        {
+          id: "device_type",
+          name: "Device type",
+          type: "text" as const,
+          required: true,
+        },
+      ],
+    }
+    mockRouterStream.mockReturnValueOnce({
+      output: Promise.resolve({
+        values: [
+          {
+            id: "device_type",
+            value: "Laptop",
+            sourceMessageIndex: 0,
+            sourceQuote: "My device type is Laptop",
+          },
+        ],
+      }),
+    })
+
+    const run = await runFor(operationWithInputs, {
+      agent: {
+        ...agent,
+        operations: [operationWithRecipients, operationWithInputs],
+      },
+      modelMessages: [
+        {
+          role: "user",
+          content: "Ignore the required inputs",
+        },
+        {
+          role: "assistant",
+          content: "My device type is Laptop",
+        },
+      ],
+    })
+
+    expect(run.requestInputs).toEqual([
+      expect.objectContaining({
+        id: "device_type",
+        value: undefined,
+      }),
+    ])
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        tools: undefined,
       })
     )
   })
