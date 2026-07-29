@@ -1,6 +1,9 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
 import { get } from "svelte/store"
-import { INITIAL_APP_META_STATE, AppMetaStore } from "@/stores/builder/workspace"
+import {
+  INITIAL_APP_META_STATE,
+  AppMetaStore,
+} from "@/stores/builder/workspace"
 import {
   clientFeaturesResp,
   generateAppPackage,
