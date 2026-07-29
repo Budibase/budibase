@@ -31,7 +31,7 @@
   } from "@/stores/builder"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import {
-    appsStore,
+    workspacesStore,
     licensing,
     enrichedApps,
     agentsStore,
@@ -204,7 +204,8 @@
   }
 
   // Hide the picker if the user cannot see it
-  $: canSelectWorkspace = !$licensing.isFreePlan || $appsStore.apps.length > 1
+  $: canSelectWorkspace =
+    !$licensing.isFreePlan || $workspacesStore.apps.length > 1
 
   $: if (!canSelectWorkspace) {
     workspaceMenuOpen = false

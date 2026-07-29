@@ -198,9 +198,10 @@ vi.mock("@budibase/shared-core", async importOriginal => {
     ...actual,
     sdk: {
       ...actual.sdk,
-      applications: {
-        ...actual.sdk.applications,
-        getProdAppID: (appId: string) => appId.replace("app_dev_", "app_"),
+      workspaces: {
+        ...actual.sdk.workspaces,
+        getProdWorkspaceID: (workspaceId: string) =>
+          workspaceId.replace("app_dev_", "app_"),
       },
     },
   }

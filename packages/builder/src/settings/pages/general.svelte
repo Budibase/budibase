@@ -12,7 +12,7 @@
     isOnlyUser,
     recaptchaStore,
   } from "@/stores/builder"
-  import { appsStore, featureFlags } from "@/stores/portal"
+  import { workspacesStore, featureFlags } from "@/stores/portal"
   import { admin } from "@/stores/portal/admin"
   import { licensing } from "@/stores/portal/licensing"
   import {
@@ -41,7 +41,7 @@
   $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
   $: revertAvailable = $appStore.revertableVersion != null
   $: appRecaptchaEnabled = $recaptchaStore.enabled
-  $: hasOnlyOneWorkspace = $appsStore.apps.length <= 1
+  $: hasOnlyOneWorkspace = $workspacesStore.apps.length <= 1
   $: disableDeleteWorkspace = !$isOnlyUser || hasOnlyOneWorkspace
   $: suppressErrorNotifications =
     !!$appStore.features?.suppressErrorNotifications

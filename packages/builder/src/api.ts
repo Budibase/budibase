@@ -15,13 +15,13 @@ const newClient = (opts?: { production?: boolean }) =>
         request?.method === "DELETE" &&
         /^\/api\/applications\/app_dev_/.test(request.url)
 
-      // Attach app ID header from store
-      let appId = get(appStore).appId
-      if (appId) {
+      // Attach the workspace ID header from the store.
+      const workspaceId = get(appStore).appId
+      if (workspaceId) {
         if (!isWorkspaceDeleteRequest) {
           headers[Header.APP_ID] = opts?.production
-            ? sdk.applications.getProdAppID(appId)
-            : appId
+            ? sdk.workspaces.getProdWorkspaceID(workspaceId)
+            : workspaceId
         }
         headers[Header.CLIENT] = ClientHeader.BUILDER
       }
@@ -70,8 +70,8 @@ const newClient = (opts?: { production?: boolean }) =>
         }
       }
     },
-    onMigrationDetected: appId => {
-      const updatingUrl = `/builder/workspace/updating/${appId}`
+    onMigrationDetected: workspaceId => {
+      const updatingUrl = `/builder/workspace/updating/${workspaceId}`
 
       if (window.location.pathname === updatingUrl) {
         return
