@@ -49,6 +49,7 @@ import {
   truncateTitle,
 } from "../../../sdk/workspace/ai/chatConversations"
 import { determineTrigger } from "../../../sdk/workspace/ai/agentLogs/shared"
+import { agentConversationLogs } from "@budibase/pro"
 
 const getGlobalUserId = (ctx: UserCtx) => {
   const userId = ctx.user?.globalId || ctx.user?.userId || ctx.user?._id
@@ -549,6 +550,148 @@ const getAssistantMessageText = (assistantMessage?: UIMessage) =>
     ?.flatMap(part => (part.type === "text" ? [part.text] : []))
     .join("") || ""
 
+const getMessageTimestamp = (message: ChatConversation["messages"][number]) => {
+  const metadata = message.metadata as
+    | { createdAt?: string | number }
+    | undefined
+  const createdAt = metadata?.createdAt
+  if (typeof createdAt === "number") {
+    return new Date(createdAt).toISOString()
+  }
+  if (typeof createdAt === "string") {
+    const parsed = new Date(createdAt)
+    if (Number.isFinite(parsed.getTime())) {
+      return parsed.toISOString()
+    }
+  }
+  return new Date().toISOString()
+}
+
+const summarizeToolPart = (
+  part: ChatConversation["messages"][number]["parts"][number]
+) => {
+  if (!("type" in part)) {
+    return undefined
+  }
+  if (!part.type.startsWith("tool-")) {
+    return undefined
+  }
+  const toolName = part.type.replace(/^tool-/, "")
+  if ("input" in part && part.input) {
+    return {
+      role: "tool_call" as const,
+      text: `${toolName}: ${JSON.stringify(part.input)}`,
+    }
+  }
+  if ("output" in part && part.output) {
+    return {
+      role: "tool_result" as const,
+      text: `${toolName}: ${JSON.stringify(part.output)}`,
+    }
+  }
+  return undefined
+}
+
+const buildConversationLogEntries = (
+  messages: ChatConversation["messages"],
+  existingMessageIds = new Set<string>()
+): agentConversationLogs.WriteAgentConversationLogEntry[] => {
+  return messages.flatMap((message, messageIndex) => {
+    const messageId = message.id || `${message.role}:${messageIndex}`
+    if (existingMessageIds.has(messageId)) {
+      return []
+    }
+
+    const timestamp = getMessageTimestamp(message)
+    let entryIndex = 0
+    return message.parts.flatMap(part => {
+      if (part.type === "text") {
+        const text = part.text.trim()
+        if (
+          !text ||
+          (message.role !== "user" && message.role !== "assistant")
+        ) {
+          return []
+        }
+        const role = message.role === "user" ? "user" : "assistant"
+        entryIndex += 1
+        return [
+          {
+            messageId,
+            entryId: `${messageId}:${entryIndex}`,
+            timestamp,
+            role,
+            text,
+          },
+        ]
+      }
+
+      const summary = summarizeToolPart(part)
+      if (!summary) {
+        return []
+      }
+      entryIndex += 1
+      return [
+        {
+          messageId,
+          entryId: `${messageId}:${entryIndex}`,
+          timestamp,
+          role: summary.role,
+          text: summary.text,
+        },
+      ]
+    })
+  })
+}
+
+const writeConversationLog = async ({
+  conversationId,
+  agentId,
+  appId,
+  userId,
+  channelProvider,
+  transient,
+  messages,
+  existingMessages,
+}: {
+  conversationId: string
+  agentId: string
+  appId?: string
+  userId: string
+  channelProvider?: string
+  transient?: boolean
+  messages: ChatConversation["messages"]
+  existingMessages?: ChatConversation["messages"]
+}) => {
+  const existingMessageIds = new Set(
+    (existingMessages || []).map(
+      (message, messageIndex) => message.id || `${message.role}:${messageIndex}`
+    )
+  )
+  const entries = buildConversationLogEntries(messages, existingMessageIds)
+  if (!entries.length) {
+    return
+  }
+
+  try {
+    await agentConversationLogs.write({
+      conversationId,
+      agentId,
+      appId,
+      userId,
+      channelProvider,
+      transient,
+      entries,
+    })
+  } catch (error) {
+    console.error("Failed to write agent conversation log", {
+      conversationId,
+      agentId,
+      error,
+    })
+  }
+}
+
 const createAssistantTextStream = async function* (
   stream: ReadableStream<UIMessageChunk>
 ): AsyncGenerator<string, void, void> {
@@ -778,6 +921,16 @@ export async function webhookChat({
     finalResponse: assistantText,
   })
 
+  await writeConversationLog({
+    conversationId: sessionId,
+    agentId,
+    appId: context.getWorkspaceId(),
+    userId,
+    channelProvider: determineTrigger(sessionId),
+    transient: chat.transient,
+    messages: [...chat.messages, assistantMessage],
+  })
+
   return {
     messages: [...chat.messages, assistantMessage],
     assistantText: assistantText || "",
@@ -973,6 +1126,26 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           })
 
           await db.put(chatToSave)
+          await writeConversationLog({
+            conversationId: sessionId,
+            agentId,
+            appId: context.getWorkspaceId(),
+            userId,
+            channelProvider: determineTrigger(sessionId),
+            transient: chat.transient,
+            messages,
+            existingMessages: existingChat?.messages,
+          })
+        } else {
+          await writeConversationLog({
+            conversationId: sessionId,
+            agentId,
+            appId: context.getWorkspaceId(),
+            userId,
+            channelProvider: determineTrigger(sessionId),
+            transient: chat.transient,
+            messages,
+          })
         }
 
         await finalizeTask

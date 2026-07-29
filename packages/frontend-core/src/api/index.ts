@@ -43,6 +43,7 @@ import { buildBackupEndpoints } from "./backups"
 import { buildEnvironmentVariableEndpoints } from "./environmentVariables"
 import { buildEventEndpoints } from "./events"
 import { buildAuditLogEndpoints } from "./auditLogs"
+import { buildAgentConversationLogEndpoints } from "./agentConversationLogs"
 import { buildLogsEndpoints } from "./logs"
 import { buildMigrationEndpoints } from "./migrations"
 import { buildRowActionEndpoints } from "./rowActions"
@@ -319,6 +320,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     ...buildEnvironmentVariableEndpoints(API),
     ...buildEventEndpoints(API),
     ...buildAuditLogEndpoints(API),
+    ...buildAgentConversationLogEndpoints(API),
     ...buildLogsEndpoints(API),
     ...buildMigrationEndpoints(API),
     ...buildAgentEndpoints(API),

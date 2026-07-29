@@ -19,6 +19,7 @@ import "./system/restore"
 import "./system/status"
 import "./system/tenants"
 import auditLogsRoutes from "./global/auditLogs"
+import agentConversationLogsRoutes from "./global/agentConversationLogs"
 import groupRoutes from "./global/groups"
 import scimRoutes from "./global/scim"
 
@@ -30,6 +31,7 @@ for (let endpoint of endpointGroupList.listAllEndpoints()) {
 export const routes: Router[] = [
   endpointGroupsRouter,
   auditLogsRoutes,
+  agentConversationLogsRoutes,
   groupRoutes,
   scimRoutes,
 ]

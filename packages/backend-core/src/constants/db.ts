@@ -73,6 +73,9 @@ export const StaticDatabases = {
   AUDIT_LOGS: {
     name: "audit-logs",
   },
+  AGENT_CONVERSATION_LOGS: {
+    name: "agent-conversation-logs",
+  },
   SCIM_LOGS: {
     name: "scim-logs",
   },

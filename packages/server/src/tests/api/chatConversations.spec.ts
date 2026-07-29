@@ -15,7 +15,7 @@ import type {
 } from "@budibase/types"
 import type { LanguageModelUsage, ModelMessage, ToolSet } from "ai"
 import { convertToModelMessages, pruneMessages, streamText } from "ai"
-import { quotas } from "@budibase/pro"
+import { agentConversationLogs, quotas } from "@budibase/pro"
 import TestConfiguration from "../utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../utilities/aiConfig"
 import sdk from "../../sdk"
@@ -46,6 +46,10 @@ jest.mock("@budibase/pro", () => {
           fn()
         ),
       throwIfBudibaseAICreditsExceeded: jest.fn(),
+    },
+    agentConversationLogs: {
+      ...actual.agentConversationLogs,
+      write: jest.fn().mockResolvedValue(undefined),
     },
     ai: {
       ...actual.ai,
@@ -866,6 +870,23 @@ describe("chat conversation transient behavior", () => {
       })
 
     expect(res.status).toBe(200)
+    expect(agentConversationLogs.write).toHaveBeenCalledWith(
+      expect.objectContaining({
+        agentId,
+        transient: true,
+        entries: expect.arrayContaining([
+          expect.objectContaining({
+            messageId: "message-0",
+            role: "user",
+            text: "hi",
+          }),
+          expect.objectContaining({
+            role: "assistant",
+            text: "hello",
+          }),
+        ]),
+      })
+    )
 
     await context.doInWorkspaceContext(
       config.getProdWorkspaceId(),
@@ -901,6 +922,23 @@ describe("chat conversation transient behavior", () => {
       })
 
     expect(res.status).toBe(200)
+    expect(agentConversationLogs.write).toHaveBeenCalledWith(
+      expect.objectContaining({
+        agentId,
+        transient: undefined,
+        entries: expect.arrayContaining([
+          expect.objectContaining({
+            messageId: "message-0",
+            role: "user",
+            text: "hi",
+          }),
+          expect.objectContaining({
+            role: "assistant",
+            text: "hello",
+          }),
+        ]),
+      })
+    )
 
     await context.doInWorkspaceContext(
       config.getProdWorkspaceId(),

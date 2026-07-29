@@ -47,6 +47,7 @@ export enum DocumentType {
   AGENT_FILE = "agentfile",
   AGENT_LOG_SESSION = "agentlogsession",
   AGENT_LOG_REQUEST = "agentlogrequest",
+  AGENT_CONVERSATION_LOG = "agentconvo",
   AGENT_REQUEST = "agentrequest",
   AGENT_TEST_SUITE = "agenttestsuite",
   AGENT_TEST_RUN = "agenttestrun",
