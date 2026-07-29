@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/svelte"
+import { fireEvent, render, screen } from "@testing-library/svelte"
 import { describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
@@ -59,7 +59,13 @@ vi.mock("@/stores/builder", async () => {
     previewStore: {
       showPreview: mocks.showPreview,
     },
-    sortedScreens: writable([]),
+    sortedScreens: writable([
+      {
+        _id: "screen_1",
+        workspaceAppId: "workspace_app_1",
+        routing: { route: "/screen-route" },
+      },
+    ]),
     appStore: writable({
       appId: "app_1",
       url: "/test-app",
@@ -80,7 +86,7 @@ vi.mock("@roxi/routify", async () => {
   return {
     goto: writable(mocks.goto),
     isActive: writable(() => true),
-    params: writable({ application: "app_1" }),
+    params: writable({ workspaceId: "app_1" }),
   }
 })
 
@@ -102,5 +108,21 @@ describe("CommandPalette", () => {
 
     expect(screen.getByText("Enable")).toBeInTheDocument()
     expect(container.querySelector(".name code")).toHaveTextContent("TEST_FLAG")
+  })
+
+  it("includes the workspace app ID when opening a screen", async () => {
+    render(CommandPalette)
+
+    await fireEvent.click(screen.getByText("/screen-route"))
+
+    expect(mocks.goto).toHaveBeenCalledWith(
+      "/builder/workspace/:workspaceId/design/:workspaceAppId/:screenId/:componentId",
+      {
+        workspaceId: "app_1",
+        workspaceAppId: "workspace_app_1",
+        screenId: "screen_1",
+        componentId: "screen_1-screen",
+      }
+    )
   })
 })
