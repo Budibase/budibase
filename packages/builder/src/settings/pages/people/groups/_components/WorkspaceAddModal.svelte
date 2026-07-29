@@ -55,17 +55,22 @@
   $: assignedWorkspaceIds = group ? groups.getGroupAppIds(group) : []
   $: workspaceOptions = Object.values(
     $workspacesStore.apps.reduce<Record<string, WorkspaceOption>>(
-      (acc, app) => {
-        const prodAppId = workspacesStore.getProdWorkspaceID(app.devId || "")
-        if (!prodAppId) {
+      (acc, workspace) => {
+        const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
+          workspace.devId || ""
+        )
+        if (!prodWorkspaceId) {
           return acc
         }
-        if (assignedWorkspaceIds.includes(prodAppId) || acc[prodAppId]) {
+        if (
+          assignedWorkspaceIds.includes(prodWorkspaceId) ||
+          acc[prodWorkspaceId]
+        ) {
           return acc
         }
-        acc[prodAppId] = {
-          label: app.name,
-          value: prodAppId,
+        acc[prodWorkspaceId] = {
+          label: workspace.name,
+          value: prodWorkspaceId,
         }
         return acc
       },
