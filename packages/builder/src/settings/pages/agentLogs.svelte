@@ -25,6 +25,25 @@
     view: { width: "0.1fr", borderLeft: true, displayName: "" },
   }
 
+  const customRenderers = [
+    {
+      column: "view",
+      component: ViewDetailsRenderer,
+    },
+    {
+      column: "user",
+      component: UserRenderer,
+    },
+    {
+      column: "date",
+      component: TimeRenderer,
+    },
+    {
+      column: "app",
+      component: AppColumnRenderer,
+    },
+  ]
+
   let userSearchTerm = ""
 
   let dateRange = [dayjs().subtract(30, "days"), dayjs()]
@@ -42,20 +61,20 @@
   }
 
   //   Copied from Audit logs, will need to be fixed later
-  const downloadLogs = async () => {
-    try {
-      window.location = auditLogs.getDownloadUrl({
-        startDate: dateRange[0],
-        endDate: dateRange[1],
-        fullSearch: logSearchTerm,
-        userIds: selectedUsers,
-        appIds: selectedApps,
-        events: selectedEvents,
-      })
-    } catch (error) {
-      notifications.error(`Error downloading logs: ` + error.message)
-    }
-  }
+  //   const downloadLogs = async () => {
+  //     try {
+  //       window.location = auditLogs.getDownloadUrl({
+  //         startDate: dateRange[0],
+  //         endDate: dateRange[1],
+  //         fullSearch: logSearchTerm,
+  //         userIds: selectedUsers,
+  //         appIds: selectedApps,
+  //         events: selectedEvents,
+  //       })
+  //     } catch (error) {
+  //       notifications.error(`Error downloading logs: ` + error.message)
+  //     }
+  //   }
 </script>
 
 <!-- Configure "agentLogsEnabled" to mimic "auditLogsEnabled" -->
@@ -130,7 +149,7 @@
     <Table
       on:click={({ detail }) => viewDetails(detail)}
       {customRenderers}
-      data={$agentLogs.logs?.data}
+    //   data={$agentLogs.logs?.data}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
