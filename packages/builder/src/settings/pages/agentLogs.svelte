@@ -1,7 +1,7 @@
 <script>
-  import { Layout, Body, Button } from "@budibase/bbui"
+  import { Layout, Body } from "@budibase/bbui"
   import { downloadStream } from "@budibase/frontend-core"
-  import Spinner from "@/components/common/Spinner.svelte"
+  //   import Spinner from "@/components/common/Spinner.svelte"
 
   import { API } from "@/api"
 
