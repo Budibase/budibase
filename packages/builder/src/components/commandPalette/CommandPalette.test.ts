@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/svelte"
+import { fireEvent, render, screen } from "@testing-library/svelte"
 import { describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
@@ -70,7 +70,9 @@ vi.mock("@/stores/builder", async () => {
       list: [{ _id: "ta_1", name: mocks.maliciousName }],
     }),
     views: writable({ list: [] }),
-    viewsV2: writable({ list: [] }),
+    viewsV2: writable({
+      list: [{ id: "view_1", name: "Current view", tableId: "table_1" }],
+    }),
   }
 })
 
@@ -102,5 +104,20 @@ describe("CommandPalette", () => {
 
     expect(screen.getByText("Enable")).toBeInTheDocument()
     expect(container.querySelector(".name code")).toHaveTextContent("TEST_FLAG")
+  })
+
+  it("uses the tableId parameter when opening a v2 view", async () => {
+    render(CommandPalette)
+
+    await fireEvent.click(screen.getByText("Current view"))
+
+    expect(mocks.goto).toHaveBeenCalledWith(
+      "/builder/workspace/:workspaceId/data/table/:tableId/:viewId",
+      {
+        workspaceId: "app_1",
+        tableId: "table_1",
+        viewId: "view_1",
+      }
+    )
   })
 })

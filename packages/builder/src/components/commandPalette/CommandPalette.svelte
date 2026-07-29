@@ -207,7 +207,7 @@
       action: () => {
         $goto(`/builder/workspace/:workspaceId/data/table/:tableId/:viewId`, {
           workspaceId: $params.workspaceId,
-          x: view.tableId,
+          tableId: view.tableId,
           viewId: view.id,
         })
       },
