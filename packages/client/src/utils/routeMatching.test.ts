@@ -15,4 +15,13 @@ describe("routeMatchesPattern", () => {
       true
     )
   })
+
+  it("allows a trailing optional route segment to be omitted", () => {
+    expect(
+      routeMatchesPattern(
+        "/customers/:customerId/details/:tab?",
+        "/customers/55/details"
+      )
+    ).toBe(true)
+  })
 })
