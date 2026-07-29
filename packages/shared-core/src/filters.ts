@@ -133,7 +133,7 @@ export const getValidOperatorsForType = (
 }
 
 /**
- * Operators which do not support empty strings as values
+ * Operators whose empty-string values are treated as absent during cleanup.
  */
 export const NoEmptyFilterStrings = [
   OperatorOptions.StartsWith.value,
@@ -148,16 +148,22 @@ export const NoEmptyFilterStrings = [
 ] as (keyof SearchQueryFields)[]
 
 /**
- * Operators which do not support empty arrays as values
+ * Operators whose empty-array values are always treated as absent during
+ * cleanup.
  */
 export const NoEmptyFilterArrays = [
   OperatorOptions.StartsWith.value,
   OperatorOptions.Like.value,
   OperatorOptions.Equals.value,
   OperatorOptions.NotEquals.value,
-  OperatorOptions.Contains.value,
-  OperatorOptions.NotContains.value,
-  OperatorOptions.ContainsAny.value,
+] as (keyof SearchQueryFields)[]
+
+const AllowEmptyFilterArrays = [
+  ArrayOperator.ONE_OF,
+  ArrayOperator.NOT_ONE_OF,
+  ArrayOperator.CONTAINS,
+  ArrayOperator.NOT_CONTAINS,
+  ArrayOperator.CONTAINS_ANY,
 ] as (keyof SearchQueryFields)[]
 
 export function recurseLogicalOperators(
@@ -177,22 +183,26 @@ export function recurseLogicalOperators(
 /**
  * Removes empty filter values that are unsupported by their operator.
  *
- * Empty strings represent unconfigured filters. Empty array membership filters
- * are only preserved when another configured filter makes their set semantics
+ * Empty strings represent unconfigured filters. Empty array set filters are
+ * only preserved when another configured filter makes their set semantics
  * relevant. For example, `{ oneOf: { status: [] } }` is treated as an empty
  * query so `onEmptyFilter` determines the result. When the same filter is in an
  * AND group with `{ equal: { type: "active" } }`, it is preserved because no
  * value belongs to an empty set, so the AND group must match no rows. Values
  * such as `0` and `false` must be preserved.
  */
-const cleanupUnsupportedFilterValues = (query: SearchFilters) => {
-  removeEmptyFilterValues(
+const removeIgnoredEmptyFilters = (query: SearchFilters) => {
+  removeEmptyFilterEntries({
     query,
-    NoEmptyFilterStrings,
-    value => value == null || value === ""
-  )
-  removeEmptyFilterValues(query, NoEmptyFilterArrays, isEmptyArray)
-  query = recurseLogicalOperators(query, cleanupUnsupportedFilterValues)
+    operators: NoEmptyFilterStrings,
+    isEmptyValue: value => value == null || value === "",
+  })
+  removeEmptyFilterEntries({
+    query,
+    operators: NoEmptyFilterArrays,
+    isEmptyValue: isEmptyArray,
+  })
+  query = recurseLogicalOperators(query, removeIgnoredEmptyFilters)
   return query
 }
 
@@ -218,30 +228,34 @@ const hasConfiguredFilterValues = (query: SearchFilters): boolean => {
   return false
 }
 
-const removeEmptyArrayMembershipFilters = (query: SearchFilters) => {
-  removeEmptyFilterValues(
+const removeEmptyFilterArrays = (query: SearchFilters) => {
+  removeEmptyFilterEntries({
     query,
-    [ArrayOperator.ONE_OF, ArrayOperator.NOT_ONE_OF],
-    isEmptyArray
-  )
-  return recurseLogicalOperators(query, removeEmptyArrayMembershipFilters)
+    operators: AllowEmptyFilterArrays,
+    isEmptyValue: isEmptyArray,
+  })
+  return recurseLogicalOperators(query, removeEmptyFilterArrays)
 }
 
 export const cleanupQuery = (query: SearchFilters) => {
-  query = cleanupUnsupportedFilterValues(query)
+  query = removeIgnoredEmptyFilters(query)
 
   if (!hasConfiguredFilterValues(query)) {
-    query = removeEmptyArrayMembershipFilters(query)
+    query = removeEmptyFilterArrays(query)
   }
 
   return query
 }
 
-function removeEmptyFilterValues(
-  query: SearchFilters,
-  operators: (keyof SearchQueryFields)[],
+function removeEmptyFilterEntries({
+  query,
+  operators,
+  isEmptyValue,
+}: {
+  query: SearchFilters
+  operators: (keyof SearchQueryFields)[]
   isEmptyValue: (value: unknown) => boolean
-) {
+}) {
   for (const operator of operators) {
     const filter = query[operator]
     if (!filter || typeof filter !== "object") {
@@ -893,10 +907,6 @@ function runQueryInternal<T extends object>({
         return false
       }
 
-      if (testValue.length === 0) {
-        return true
-      }
-
       return testValue[f](item => _valueMatches(docValue, item))
     }
 
@@ -909,18 +919,7 @@ function runQueryInternal<T extends object>({
       return _contains("every")(docValue, testValue)
     }
   )
-  const notContains = match(
-    ArrayOperator.NOT_CONTAINS,
-    (docValue: any, testValue: any) => {
-      // Not sure if this is logically correct, but at the time this code was
-      // written the search endpoint behaved this way and we wanted to make this
-      // local search match its behaviour, so we had to do this.
-      if (Array.isArray(testValue) && testValue.length === 0) {
-        return true
-      }
-      return not(_contains("every"))(docValue, testValue)
-    }
-  )
+  const notContains = match(ArrayOperator.NOT_CONTAINS, not(_contains("every")))
   const containsAny = match(ArrayOperator.CONTAINS_ANY, _contains("some"))
 
   const and = match(
