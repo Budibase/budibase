@@ -1,6 +1,6 @@
 <script lang="ts">
   import { API } from "@/api"
-  import { appsStore, auth } from "@/stores/portal"
+  import { workspacesStore, auth } from "@/stores/portal"
   import {
     Input,
     Layout,
@@ -75,7 +75,7 @@
 
     try {
       const app = await API.duplicateApp(appId, data)
-      appsStore.load()
+      workspacesStore.load()
       if (!sdk.users.isBuilder($auth.user, app?.duplicateAppId)) {
         // Refresh for access to created applications
         await auth.getSelf()
@@ -89,7 +89,7 @@
   }
 
   const setupValidation = async () => {
-    const applications = get(appsStore).apps
+    const applications = get(workspacesStore).apps
     workspaceValidation.name(validation, { workspaces: applications })
     workspaceValidation.url(validation, { workspaces: applications })
 

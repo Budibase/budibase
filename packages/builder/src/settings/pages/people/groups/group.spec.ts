@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { UserGroup } from "@budibase/types"
 
 const {
-  appsStore,
-  appsStoreMock,
+  workspacesStore,
+  workspacesStoreMock,
   authStore,
   bbMock,
   groupsMock,
@@ -29,7 +29,7 @@ const {
   }
 
   const groupsStore = createStore([] as UserGroup[])
-  const appsStore = createStore({ apps: [] as { devId: string }[] })
+  const workspacesStore = createStore({ apps: [] as { devId: string }[] })
   const authStore = createStore({
     user: {
       admin: { global: true },
@@ -56,14 +56,14 @@ const {
       return ids
     },
   }
-  const appsStoreMock = {
-    subscribe: appsStore.subscribe,
+  const workspacesStoreMock = {
+    subscribe: workspacesStore.subscribe,
     getProdWorkspaceID: vi.fn((devId: string) => devId),
   }
 
   return {
-    appsStore,
-    appsStoreMock,
+    workspacesStore,
+    workspacesStoreMock,
     authStore,
     bbMock,
     groupsMock,
@@ -72,7 +72,8 @@ const {
   }
 })
 
-vi.mock("@budibase/bbui", async () => {
+vi.mock("@budibase/bbui", async importOriginal => {
+  const actual = await importOriginal<typeof import("@budibase/bbui")>()
   const [
     { default: MockInput },
     { default: MockLayout },
@@ -86,6 +87,7 @@ vi.mock("@budibase/bbui", async () => {
   ])
 
   return {
+    ...actual,
     ActionMenu: MockLayout,
     Heading: MockLayout,
     Icon: MockLayout,
@@ -155,7 +157,7 @@ vi.mock("@/stores/builder", () => ({
 }))
 
 vi.mock("@/stores/portal/apps", () => ({
-  appsStore: appsStoreMock,
+  workspacesStore: workspacesStoreMock,
 }))
 
 vi.mock("@/stores/portal/auth", () => ({
@@ -170,21 +172,35 @@ vi.mock("@/stores/bb", () => ({
   bb: bbMock,
 }))
 
-vi.mock("@budibase/shared-core", () => ({
-  sdk: {
-    users: {
-      isAdmin: (user: any) => !!user?.admin?.global,
+vi.mock("@budibase/shared-core", async importOriginal => {
+  const actual = await importOriginal<typeof import("@budibase/shared-core")>()
+  return {
+    ...actual,
+    sdk: {
+      ...actual.sdk,
+      users: {
+        ...actual.sdk.users,
+        isAdmin: (user: Parameters<typeof actual.sdk.users.isAdmin>[0]) =>
+          !!user?.admin?.global,
+      },
     },
-  },
-}))
+  }
+})
 
-vi.mock("@budibase/frontend-core", () => ({
-  Constants: {
-    Roles: {
-      CREATOR: "CREATOR",
+vi.mock("@budibase/frontend-core", async importOriginal => {
+  const actual =
+    await importOriginal<typeof import("@budibase/frontend-core")>()
+  return {
+    ...actual,
+    Constants: {
+      ...actual.Constants,
+      Roles: {
+        ...actual.Constants.Roles,
+        CREATOR: "CREATOR",
+      },
     },
-  },
-}))
+  }
+})
 
 import GroupPage from "./group.svelte"
 
@@ -202,7 +218,7 @@ const buildGroup = (overrides: Partial<UserGroup> = {}): UserGroup =>
 describe("group page workspace assignment permissions", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    appsStore.set({ apps: [] })
+    workspacesStore.set({ apps: [] })
     groupsStore.set([
       buildGroup({
         scimInfo: { isSync: true, externalId: "123" },

@@ -3,7 +3,7 @@
   import { goto as gotoStore } from "@roxi/routify"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { appStore } from "@/stores/builder"
-  import { appsStore, enrichedApps } from "@/stores/portal"
+  import { workspacesStore, enrichedApps } from "@/stores/portal"
   import { API } from "@/api"
   import { get } from "svelte/store"
 
@@ -65,7 +65,7 @@
         console.error("Post-delete callback failed", err)
       }
       try {
-        await appsStore.load()
+        await workspacesStore.load()
       } catch (err) {
         console.error("Post-delete workspace list refresh failed", err)
       }
