@@ -246,7 +246,6 @@ export const workspaceRoutes = (
   if (!appStore?.appId) {
     return []
   }
-  const isAdmin = user != null && sdk.users.isAdmin(user)
   const isCreator = user != null && sdk.users.canCreateApps(user)
   const getBackupErrors = (apps: StoreApp[], appId: string) => {
     const target = apps.find(app => app.devId === appId)
