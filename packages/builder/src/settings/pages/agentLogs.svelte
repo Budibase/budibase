@@ -149,7 +149,6 @@
     <Table
       on:click={({ detail }) => viewDetails(detail)}
       {customRenderers}
-    //   data={$agentLogs.logs?.data}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
