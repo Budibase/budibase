@@ -1,7 +1,7 @@
 import { layoutStore } from "./layouts"
 import { workspaceAppStore } from "./workspaceApps"
 import { workspaceFavouriteStore } from "./workspaceFavourites"
-import { appStore } from "./app"
+import { appStore } from "./workspace"
 import { componentStore, selectedComponent } from "./components"
 import { navigationStore } from "./navigation"
 import { themeStore } from "./theme"
