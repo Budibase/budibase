@@ -73,6 +73,21 @@ const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
     recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
     delay: Joi.number().integer().positive().optional(),
   }).optional(),
+  requestInputs: Joi.array()
+    .items(
+      Joi.object({
+        id: Joi.string().required(),
+        name: Joi.string().trim().required(),
+        type: Joi.string().valid("text").required(),
+        required: Joi.boolean().required(),
+      }).required()
+    )
+    .unique("id")
+    .unique(
+      (left, right) =>
+        left.name.trim().toLowerCase() === right.name.trim().toLowerCase()
+    )
+    .optional(),
 })
 
 export function createAgentValidator() {

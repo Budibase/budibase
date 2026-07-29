@@ -24,6 +24,7 @@
   import ToolIcon from "./ToolIcon.svelte"
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
+  import RequestInputs from "./RequestInputs.svelte"
 
   let {
     open = false,
@@ -381,6 +382,10 @@
               />
             </div>
           {/if}
+
+          <div class="operation-panel-section">
+            <RequestInputs bind:operation {onUpdated} />
+          </div>
 
           <Knowledge bind:operation {onUpdated} />
         </div>

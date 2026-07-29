@@ -90,6 +90,13 @@ export interface AgentEscalationConfig {
   delay?: number
 }
 
+export interface AgentRequestInputDefinition {
+  id: string
+  name: string
+  type: "text"
+  required: boolean
+}
+
 export interface AgentOperation {
   id: string
   name: string
@@ -100,6 +107,7 @@ export interface AgentOperation {
   knowledgeSources?: AgentKnowledgeSource[]
   allowKnowledgeSourceDownload: boolean
   escalation?: AgentEscalationConfig
+  requestInputs?: AgentRequestInputDefinition[]
 }
 
 export interface Agent extends Document {

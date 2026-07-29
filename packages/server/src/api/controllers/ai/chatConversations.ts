@@ -117,6 +117,7 @@ const startAgentRequestTracking = async ({
       ? {
           name: run.selectedOperation.name,
           prompt: run.selectedOperation.promptInstructions || "",
+          requestInputs: run.requestInputs,
         }
       : undefined
 

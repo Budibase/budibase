@@ -26,6 +26,7 @@ export async function createAgentOperation(
     enabledTools: body.enabledTools,
     allowKnowledgeSourceDownload: body.allowKnowledgeSourceDownload ?? true,
     escalation: body.escalation,
+    requestInputs: body.requestInputs,
   })
 
   ctx.body = toAgentResponse(agent)

@@ -129,6 +129,12 @@
         : undefined,
       icon: "calendar",
     },
+    ...(request?.requestInputs ?? [])
+      .filter(input => input.value)
+      .map(input => ({
+        label: input.name,
+        value: input.value,
+      })),
   ])
   let timelineEvents = $derived.by(() => {
     if (!request?.actions?.length) {

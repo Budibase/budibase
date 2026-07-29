@@ -5,6 +5,7 @@ import {
   Agent,
   AgentOperation,
   AgentMessageMetadata,
+  AgentRequestInputSnapshot,
   ChatConversationRequest,
   ContextUser,
   ESCALATE_TOOL_NAME,
@@ -83,6 +84,7 @@ export interface AgentChatRun {
   latestQuestion: string
   selectedOperation?: AgentOperation
   operationIntent?: OperationIntent
+  requestInputs?: AgentRequestInputSnapshot[]
   getUsedKnowledgeSourcesMetadata: () => AgentMessageMetadata["ragSources"]
   sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
   stream: (
@@ -94,6 +96,73 @@ export interface AgentChatRun {
   contextUsage: {
     input?: LanguageModelUsage
     output?: LanguageModelUsage
+  }
+}
+
+const requestInputValueSchema = z.object({
+  values: z.array(
+    z.object({
+      id: z.string(),
+      value: z.string().nullable(),
+    })
+  ),
+})
+
+const collectRequestInputs = async ({
+  operation,
+  modelMessages,
+  llm,
+}: {
+  operation: AgentOperation
+  modelMessages: ModelMessage[]
+  llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
+}): Promise<AgentRequestInputSnapshot[]> => {
+  const definitions = operation.requestInputs ?? []
+  if (!definitions.length) {
+    return []
+  }
+
+  const extractor = new ToolLoopAgent({
+    model: wrapLanguageModel({
+      model: llm.chat,
+      middleware: extractReasoningMiddleware({ tagName: "think" }),
+    }),
+    instructions: `Extract explicitly supplied values for the configured request inputs from the conversation.
+Never infer, guess, transform, or invent a value. A value is present only when the user clearly supplied it.
+Return every configured id exactly once, using null when no explicit value is present.
+
+Configured inputs:
+${definitions.map(input => `- ${input.id}: ${input.name}`).join("\n")}`,
+    stopWhen: stepCountIs(1),
+    providerOptions: llm.providerOptions?.(false),
+    output: Output.object({ schema: requestInputValueSchema }),
+    headers: {
+      "x-litellm-tags": "bb-request-input-extraction",
+    },
+  })
+
+  try {
+    const result = await extractor.stream({
+      prompt: JSON.stringify(modelMessages),
+    })
+    const output = (await result.output) as z.infer<
+      typeof requestInputValueSchema
+    >
+    const valueById = new Map(
+      output.values
+        .filter(item => definitions.some(input => input.id === item.id))
+        .map(item => [item.id, item.value?.trim() || undefined])
+    )
+    return definitions.map(input => ({
+      ...input,
+      value: valueById.get(input.id),
+    }))
+  } catch (error) {
+    console.error("Failed to extract agent request inputs", {
+      operationId: operation.id,
+      error,
+    })
+    return definitions.map(input => ({ ...input }))
   }
 }
 
@@ -480,6 +549,22 @@ export const prepareAgentChatRun = async ({
     toolDisplayNames,
     systemPrompt: baseSystemPrompt,
   } = runContext
+  const requestInputs =
+    selectedOperation && operationIntent === "execute"
+      ? await collectRequestInputs({
+          operation: selectedOperation,
+          modelMessages,
+          llm,
+        })
+      : []
+  const missingRequestInputs = requestInputs.filter(
+    input => input.required && !input.value
+  )
+  if (missingRequestInputs.length) {
+    for (const toolName of Object.keys(tools)) {
+      delete tools[toolName]
+    }
+  }
   const retrievedKnowledgeSourceById = new Map<
     string,
     NonNullable<AgentMessageMetadata["ragSources"]>[number]
@@ -529,6 +614,7 @@ export const prepareAgentChatRun = async ({
         userId: user?._id,
         getMessages: () => modelMessages,
         getRequestId: () => getRequestId?.(),
+        requestInputs,
       })
     }
 
@@ -540,7 +626,19 @@ export const prepareAgentChatRun = async ({
     })
   }
 
-  const systemPrompt = [baseSystemPrompt, additionalInstructions]
+  const requestInputInstructions = missingRequestInputs.length
+    ? `Do not perform the operation or any other task yet. Ask the user to provide the following missing required information: ${missingRequestInputs.map(input => input.name).join(", ")}. Ask only for these missing values and keep the request concise.`
+    : requestInputs.length
+      ? `The required request information has been collected:\n${requestInputs
+          .filter(input => input.value)
+          .map(input => `- ${input.name}: ${input.value}`)
+          .join("\n")}`
+      : undefined
+  const systemPrompt = [
+    baseSystemPrompt,
+    requestInputInstructions,
+    additionalInstructions,
+  ]
     .filter(Boolean)
     .join("\n\n")
 
@@ -569,6 +667,7 @@ export const prepareAgentChatRun = async ({
     latestQuestion,
     selectedOperation,
     operationIntent,
+    requestInputs,
     sessionLogIndexer,
     getUsedKnowledgeSourcesMetadata: () =>
       Array.from(usedKnowledgeSourceById.values()),

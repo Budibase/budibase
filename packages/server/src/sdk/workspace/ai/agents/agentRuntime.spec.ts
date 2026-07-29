@@ -611,4 +611,72 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     expect(run.selectedOperation).toEqual(operationWithRecipients)
     expect(run.operationIntent).toBe("execute")
   })
+
+  it("removes operation tools while required request inputs are missing", async () => {
+    const operationWithInputs = {
+      ...operationWithoutRecipients,
+      requestInputs: [
+        {
+          id: "device_type",
+          name: "Device type",
+          type: "text" as const,
+          required: true,
+        },
+      ],
+    }
+    mockRouterStream.mockReturnValueOnce({
+      output: Promise.resolve({
+        values: [{ id: "device_type", value: null }],
+      }),
+    })
+
+    const run = await runFor(operationWithInputs)
+
+    expect(run.requestInputs).toEqual([
+      expect.objectContaining({
+        id: "device_type",
+        value: undefined,
+      }),
+    ])
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        tools: undefined,
+        instructions: expect.stringContaining("Device type"),
+      })
+    )
+  })
+
+  it("keeps operation tools once required request inputs are supplied", async () => {
+    const operationWithInputs = {
+      ...operationWithoutRecipients,
+      requestInputs: [
+        {
+          id: "device_type",
+          name: "Device type",
+          type: "text" as const,
+          required: true,
+        },
+      ],
+    }
+    mockRouterStream.mockReturnValueOnce({
+      output: Promise.resolve({
+        values: [{ id: "device_type", value: "Laptop" }],
+      }),
+    })
+
+    const run = await runFor(operationWithInputs)
+
+    expect(run.requestInputs).toEqual([
+      expect.objectContaining({
+        id: "device_type",
+        value: "Laptop",
+      }),
+    ])
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        tools: expect.objectContaining({ escalate: escalatePlaceholder }),
+        instructions: expect.stringContaining("Device type: Laptop"),
+      })
+    )
+  })
 })

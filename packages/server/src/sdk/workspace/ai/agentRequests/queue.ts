@@ -1,5 +1,5 @@
 import { context, features, queue } from "@budibase/backend-core"
-import { FeatureFlag } from "@budibase/types"
+import { AgentRequestInputSnapshot, FeatureFlag } from "@budibase/types"
 import { createOrUpdateRequestForPrompt } from "./crud"
 import { determineTrigger } from "../agentLogs/shared"
 
@@ -15,6 +15,7 @@ type AgentRequestTrackingJob = {
   operation?: {
     name: string
     prompt: string
+    requestInputs?: AgentRequestInputSnapshot[]
   }
   source: string
   userId: string
@@ -106,6 +107,7 @@ export async function enqueueRequestTracking({
   operation?: {
     name: string
     prompt: string
+    requestInputs?: AgentRequestInputSnapshot[]
   }
   userId: string
   existingRequestId?: string

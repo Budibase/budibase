@@ -2,6 +2,7 @@ import type { ModelMessage, UIMessage } from "ai"
 import { Document } from "../document"
 import { Automation, AutomationStepResult } from "./automation"
 import { ChatConversationChannel } from "../global"
+import type { AgentRequestInputSnapshot } from "../global/agentRequests"
 
 // This does need a degree of flexibility
 // {accepted: boolean} is a given for now, but response text
@@ -53,6 +54,7 @@ export interface SuspendedOperationContext {
   messages: ModelMessage[]
   channel?: ChatConversationChannel
   userId?: string
+  requestInputs?: AgentRequestInputSnapshot[]
 }
 
 export type SuspendedContext =

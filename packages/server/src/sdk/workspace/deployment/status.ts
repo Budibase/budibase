@@ -148,6 +148,7 @@ export async function status() {
         promptInstructions: operation.promptInstructions,
         live: operation.live,
         allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
+        requestInputs: operation.requestInputs,
         knowledgeSources: (operation.knowledgeSources || [])
           .map(source => toComparableKnowledgeSource(source))
           .sort((a, b) => a.id.localeCompare(b.id)),
