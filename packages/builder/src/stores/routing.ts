@@ -4,7 +4,7 @@ import { derived, get } from "svelte/store"
 // Use direct imports to avoid circular dependency in licensing
 import { auth } from "@/stores/portal/auth"
 import { admin } from "@/stores/portal/admin"
-import { appStore } from "@/stores/builder/app"
+import { appStore } from "@/stores/builder/workspace"
 import { bb, setSettingsRouteResolver } from "@/stores/bb"
 import { workspacesStore } from "@/stores/portal/workspaces"
 import {

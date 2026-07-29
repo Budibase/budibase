@@ -110,12 +110,12 @@ vi.mock("@/components/common/ConfirmDialog.svelte", async () => {
   return { default: MockLayout }
 })
 
-vi.mock("../users/_components/AppNameTableRenderer.svelte", async () => {
+vi.mock("../users/_components/WorkspaceNameTableRenderer.svelte", async () => {
   const { default: MockLayout } = await import("@/test/mocks/MockLayout.svelte")
   return { default: MockLayout }
 })
 
-vi.mock("../users/_components/AppRoleTableRenderer.svelte", async () => {
+vi.mock("../users/_components/WorkspaceRoleTableRenderer.svelte", async () => {
   const { default: MockLayout } = await import("@/test/mocks/MockLayout.svelte")
   return { default: MockLayout }
 })

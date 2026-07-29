@@ -205,8 +205,8 @@
 
         // Default workspace selection for builders
         const isOnWorkspaceRoute =
-          $isActive("./workspace/:application") ||
-          $isActive("./workspace/updating/:application")
+          $isActive("./workspace/:workspaceId") ||
+          $isActive("./workspace/updating/:workspaceId")
         if (
           isBuilder &&
           $workspacesStore.apps.length &&

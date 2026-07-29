@@ -5,7 +5,7 @@
   import FlowItemStatus from "./FlowItemStatus.svelte"
   import { getContext } from "svelte"
   import { type Writable } from "svelte/store"
-  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[workspaceId]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import BlockHeader from "../../SetupPanel/BlockHeader.svelte"
   import {
     AutomationActionStepId,
