@@ -141,11 +141,7 @@
         <Search placeholder="Search" on:change={e => debounce(e.detail)} />
       </div>
       <div class="">
-        <ActionButton
-          size="M"
-          icon="download"
-          on:click={() => downloadLogs()}
-        />
+        <ActionButton size="M" icon="download" />
       </div>
     </div>
   </div>
