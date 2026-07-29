@@ -5,7 +5,7 @@
     auth,
     licensing,
     navigation,
-    appsStore,
+    workspacesStore,
     organisation,
     groups,
     enrichedApps,
@@ -137,8 +137,8 @@
   }
 
   const navigationAction = derivedMemo(
-    [admin, auth, enrichedApps, isActive, appsStore, loaded],
-    ([$admin, $auth, $enrichedApps, $isActive, $appsStore, $loaded]) => {
+    [admin, auth, enrichedApps, isActive, workspacesStore, loaded],
+    ([$admin, $auth, $enrichedApps, $isActive, $workspacesStore, $loaded]) => {
       // Only run remaining logic when fully loaded
       if (!$loaded || !$admin.loaded || !$auth.loaded) {
         return null
@@ -187,7 +187,7 @@
         const hasEditableWorkspaces = $enrichedApps.some(app => app.editable)
         if (
           isBuilder &&
-          ($appsStore.apps.length === 0 || !hasEditableWorkspaces) &&
+          ($workspacesStore.apps.length === 0 || !hasEditableWorkspaces) &&
           !$isActive("./apps") &&
           !$isActive("./onboarding") &&
           !$isActive("./get-started")
@@ -209,7 +209,7 @@
           $isActive("./workspace/updating/:application")
         if (
           isBuilder &&
-          $appsStore.apps.length &&
+          $workspacesStore.apps.length &&
           !isOnWorkspaceRoute &&
           !$isActive("./apps")
         ) {
@@ -247,7 +247,7 @@
         // We need to load apps to know if we need to show onboarding fullscreen
         await Promise.all([
           licensing.init(),
-          appsStore.load(),
+          workspacesStore.load(),
           organisation.init(),
           groups.init(),
         ])
