@@ -2,8 +2,8 @@
   import { Modal } from "@budibase/bbui"
   import DeleteModal from "@/components/deploy/DeleteModal.svelte"
   import { licensing } from "@/stores/portal"
-  import DuplicateAppModal from "./DuplicateWorkspaceModal.svelte"
-  import ExportAppModal from "./ExportWorkspaceModal.svelte"
+  import DuplicateWorkspaceModal from "./DuplicateWorkspaceModal.svelte"
+  import ExportWorkspaceModal from "./ExportWorkspaceModal.svelte"
   import type { EnrichedApp } from "@/types"
 
   export let app: EnrichedApp
@@ -43,11 +43,14 @@
 />
 
 <Modal bind:this={exportModal}>
-  <ExportAppModal appId={app.devId || ""} published={exportPublishedVersion} />
+  <ExportWorkspaceModal
+    appId={app.devId || ""}
+    published={exportPublishedVersion}
+  />
 </Modal>
 
 <Modal bind:this={duplicateModal}>
-  <DuplicateAppModal
+  <DuplicateWorkspaceModal
     appId={app.devId || ""}
     appName={app?.name}
     onDuplicateSuccess={async () => {

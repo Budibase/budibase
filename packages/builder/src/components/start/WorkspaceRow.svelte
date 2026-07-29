@@ -6,7 +6,7 @@
   import { UserAvatars } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
-  import AppContextMenuModals from "./WorkspaceContextMenuModals.svelte"
+  import WorkspaceContextMenuModals from "./WorkspaceContextMenuModals.svelte"
   import getWorkspaceContextMenuItems from "./getWorkspaceContextMenuItems.js"
 
   // Initialize Routify store and derive callable function
@@ -16,7 +16,7 @@
   export let app
   export let lockedAction
 
-  let appContextMenuModals
+  let workspaceContextMenuModals
 
   $: contextMenuOpen = `${app.appId}-index` === $contextMenuStore.id
   $: editing = app.sessions?.length
@@ -53,10 +53,10 @@
 
     const items = getWorkspaceContextMenuItems({
       app,
-      onDuplicate: appContextMenuModals?.showDuplicateModal,
-      onExportDev: appContextMenuModals?.showExportDevModal,
-      onExportProd: appContextMenuModals?.showExportProdModal,
-      onDelete: appContextMenuModals?.showDeleteModal,
+      onDuplicate: workspaceContextMenuModals?.showDuplicateModal,
+      onExportDev: workspaceContextMenuModals?.showExportDevModal,
+      onExportProd: workspaceContextMenuModals?.showExportProdModal,
+      onDelete: workspaceContextMenuModals?.showDeleteModal,
     })
 
     contextMenuStore.open(`${app.appId}-index`, items, {
@@ -131,7 +131,7 @@
       {/if}
     </div>
   </div>
-  <AppContextMenuModals {app} bind:this={appContextMenuModals} />
+  <WorkspaceContextMenuModals {app} bind:this={workspaceContextMenuModals} />
 </div>
 
 <style>

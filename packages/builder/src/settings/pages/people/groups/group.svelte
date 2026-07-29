@@ -18,8 +18,8 @@
   import { auth } from "@/stores/portal/auth"
   import { groups } from "@/stores/portal/groups"
   import { onMount, setContext, getContext } from "svelte"
-  import AppNameTableRenderer from "../users/_components/WorkspaceNameTableRenderer.svelte"
-  import AppRoleTableRenderer from "../users/_components/WorkspaceRoleTableRenderer.svelte"
+  import WorkspaceNameTableRenderer from "../users/_components/WorkspaceNameTableRenderer.svelte"
+  import WorkspaceRoleTableRenderer from "../users/_components/WorkspaceRoleTableRenderer.svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import GroupIcon from "./_components/GroupIcon.svelte"
   import GroupUsers from "./_components/GroupUsers.svelte"
@@ -82,11 +82,11 @@
   const customAppTableRenderers = [
     {
       column: "name",
-      component: AppNameTableRenderer,
+      component: WorkspaceNameTableRenderer,
     },
     {
       column: "role",
-      component: AppRoleTableRenderer,
+      component: WorkspaceRoleTableRenderer,
     },
     {
       column: "prodAppId",

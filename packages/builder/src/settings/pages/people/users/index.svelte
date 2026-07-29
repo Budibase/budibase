@@ -23,7 +23,7 @@
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
   import { roles } from "@/stores/builder"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
-  import AppsTableRenderer from "./_components/WorkspacesTableRenderer.svelte"
+  import WorkspacesTableRenderer from "./_components/WorkspacesTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
   import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
   import DateAddedRenderer from "./_components/DateAddedRenderer.svelte"
@@ -138,7 +138,10 @@
         column: "userGroups",
         component: GroupsTableRenderer,
       },
-    !isWorkspaceOnly && { column: "workspaces", component: AppsTableRenderer },
+    !isWorkspaceOnly && {
+      column: "workspaces",
+      component: WorkspacesTableRenderer,
+    },
     isWorkspaceOnly && { column: "createdAt", component: DateAddedRenderer },
   ].filter(Boolean)
   let userData: UserData = { users: [], groups: [] }

@@ -8,7 +8,7 @@
     Link,
   } from "@budibase/bbui"
   import { LockReason } from "@budibase/types"
-  import ExportAppModal from "@/components/start/ExportWorkspaceModal.svelte"
+  import ExportWorkspaceModal from "@/components/start/ExportWorkspaceModal.svelte"
 
   const ONE_DAY_MS = 86400000
   const SELF_HOST_DOCS_URL =
@@ -149,7 +149,7 @@
 
 {#if appId}
   <Modal bind:this={exportModal}>
-    <ExportAppModal {appId} published={false} />
+    <ExportWorkspaceModal {appId} published={false} />
   </Modal>
 {/if}
 

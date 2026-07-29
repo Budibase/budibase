@@ -4,7 +4,7 @@
   import { ActionMenu, MenuItem, Icon, StatusLight } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
-  import AppContextMenuModals from "@/components/start/WorkspaceContextMenuModals.svelte"
+  import WorkspaceContextMenuModals from "@/components/start/WorkspaceContextMenuModals.svelte"
   import getWorkspaceContextMenuItems from "@/components/start/getWorkspaceContextMenuItems"
   import { appStore } from "@/stores/builder"
   import { contextMenuStore } from "@/stores/builder/contextMenu"
@@ -38,7 +38,7 @@
   let activeIndex = -1
   let itemEls: (HTMLElement | null)[] = []
   let selectedWorkspaceForMenu: EnrichedApp | null = null
-  let appContextMenuModals:
+  let workspaceContextMenuModals:
     | {
         showDuplicateModal: () => void
         showExportDevModal: () => void
@@ -114,10 +114,10 @@
 
     const items = getWorkspaceContextMenuItems({
       app: ws,
-      onDuplicate: () => appContextMenuModals?.showDuplicateModal(),
-      onExportDev: () => appContextMenuModals?.showExportDevModal(),
-      onExportProd: () => appContextMenuModals?.showExportProdModal(),
-      onDelete: () => appContextMenuModals?.showDeleteModal(),
+      onDuplicate: () => workspaceContextMenuModals?.showDuplicateModal(),
+      onExportDev: () => workspaceContextMenuModals?.showExportDevModal(),
+      onExportProd: () => workspaceContextMenuModals?.showExportProdModal(),
+      onDelete: () => workspaceContextMenuModals?.showDeleteModal(),
     })
 
     contextMenuStore.open(`workspace-select-${ws.appId}`, items, {
@@ -357,9 +357,9 @@
 </ActionMenu>
 
 {#if selectedWorkspaceForMenu}
-  <AppContextMenuModals
+  <WorkspaceContextMenuModals
     app={selectedWorkspaceForMenu}
-    bind:this={appContextMenuModals}
+    bind:this={workspaceContextMenuModals}
   />
 {/if}
 
