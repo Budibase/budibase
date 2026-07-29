@@ -177,20 +177,63 @@ export function recurseLogicalOperators(
 /**
  * Removes empty filter values that are unsupported by their operator.
  *
- * Empty strings represent unconfigured filters. Empty arrays are also treated
- * as unconfigured unless the operator gives them meaningful semantics, such as
- * `oneOf` and `notOneOf`. Values such as `0` and `false` must be preserved.
- *
- * https://github.com/Budibase/budibase/issues/10118
+ * Empty strings represent unconfigured filters. Empty array membership filters
+ * are only preserved when another configured filter makes their set semantics
+ * relevant. For example, `{ oneOf: { status: [] } }` is treated as an empty
+ * query so `onEmptyFilter` determines the result. When the same filter is in an
+ * AND group with `{ equal: { type: "active" } }`, it is preserved because no
+ * value belongs to an empty set, so the AND group must match no rows. Values
+ * such as `0` and `false` must be preserved.
  */
-export const cleanupQuery = (query: SearchFilters) => {
+const cleanupUnsupportedFilterValues = (query: SearchFilters) => {
   removeEmptyFilterValues(
     query,
     NoEmptyFilterStrings,
     value => value == null || value === ""
   )
   removeEmptyFilterValues(query, NoEmptyFilterArrays, isEmptyArray)
-  query = recurseLogicalOperators(query, cleanupQuery)
+  query = recurseLogicalOperators(query, cleanupUnsupportedFilterValues)
+  return query
+}
+
+const hasConfiguredFilterValues = (query: SearchFilters): boolean => {
+  for (const logical of LOGICAL_OPERATORS) {
+    for (const condition of query[logical]?.conditions || []) {
+      if (hasConfiguredFilterValues(condition)) {
+        return true
+      }
+    }
+  }
+
+  for (const operator of SEARCH_OPERATORS) {
+    const filter = query[operator]
+    if (!filter || typeof filter !== "object") {
+      continue
+    }
+    if (Object.values(filter).some(value => !isEmptyArray(value))) {
+      return true
+    }
+  }
+
+  return false
+}
+
+const removeEmptyArrayMembershipFilters = (query: SearchFilters) => {
+  removeEmptyFilterValues(
+    query,
+    [ArrayOperator.ONE_OF, ArrayOperator.NOT_ONE_OF],
+    isEmptyArray
+  )
+  return recurseLogicalOperators(query, removeEmptyArrayMembershipFilters)
+}
+
+export const cleanupQuery = (query: SearchFilters) => {
+  query = cleanupUnsupportedFilterValues(query)
+
+  if (!hasConfiguredFilterValues(query)) {
+    query = removeEmptyArrayMembershipFilters(query)
+  }
+
   return query
 }
 
@@ -607,7 +650,7 @@ export function search<T extends Record<string, any>>(
  * @param docs the data
  * @param query the JSON query
  */
-export function runQuery<T extends Record<string, any>>(
+export function runQuery<T extends object>(
   docs: T[],
   query: SearchFilters
 ): T[] {
@@ -621,6 +664,18 @@ export function runQuery<T extends Record<string, any>>(
   query = cleanupQuery(query)
   query = fixupFilterArrays(query)
 
+  return runQueryInternal({ docs, query })
+}
+
+interface RunQueryInternalParams<T extends object> {
+  docs: T[]
+  query: SearchFilters
+}
+
+function runQueryInternal<T extends object>({
+  docs,
+  query,
+}: RunQueryInternalParams<T>): T[] {
   if (
     !hasFilters(query) &&
     query.onEmptyFilter === EmptyFilterOption.RETURN_NONE
@@ -870,12 +925,15 @@ export function runQuery<T extends Record<string, any>>(
 
   const and = match(
     LogicalOperator.AND,
-    (docValue: Record<string, any>, conditions: SearchFilters[]) => {
+    (docValue: T, conditions: SearchFilters[]) => {
       if (!conditions.length) {
         return false
       }
       for (const condition of conditions) {
-        const matchesCondition = runQuery([docValue], condition)
+        const matchesCondition = runQueryInternal({
+          docs: [docValue],
+          query: condition,
+        })
         if (!matchesCondition.length) {
           return false
         }
@@ -885,14 +943,17 @@ export function runQuery<T extends Record<string, any>>(
   )
   const or = match(
     LogicalOperator.OR,
-    (docValue: Record<string, any>, conditions: SearchFilters[]) => {
+    (docValue: T, conditions: SearchFilters[]) => {
       if (!conditions.length) {
         return false
       }
       for (const condition of conditions) {
-        const matchesCondition = runQuery([docValue], {
-          ...condition,
-          allOr: true,
+        const matchesCondition = runQueryInternal({
+          docs: [docValue],
+          query: {
+            ...condition,
+            allOr: true,
+          },
         })
         if (matchesCondition.length) {
           return true

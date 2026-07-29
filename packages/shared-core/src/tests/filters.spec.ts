@@ -196,16 +196,54 @@ describe("empty array filters", () => {
     { id: 2, name: "bar", status: "Unavailable" },
   ]
 
-  it("preserves empty arrays for array membership operators", () => {
+  it("removes empty array membership filters when the query is empty", () => {
     const query = cleanupQuery({
       [ArrayOperator.ONE_OF]: { name: [] },
       [ArrayOperator.NOT_ONE_OF]: { name: [] },
     })
 
     expect(query).toEqual({
-      [ArrayOperator.ONE_OF]: { name: [] },
-      [ArrayOperator.NOT_ONE_OF]: { name: [] },
+      [ArrayOperator.ONE_OF]: {},
+      [ArrayOperator.NOT_ONE_OF]: {},
     })
+  })
+
+  it("preserves empty arrays for array membership operators in populated queries", () => {
+    const query = cleanupQuery({
+      [LogicalOperator.AND]: {
+        conditions: [
+          { [ArrayOperator.ONE_OF]: { name: [] } },
+          { [BasicOperator.EQUAL]: { status: "Available" } },
+        ],
+      },
+    })
+
+    expect(query).toEqual({
+      [LogicalOperator.AND]: {
+        conditions: [
+          { [ArrayOperator.ONE_OF]: { name: [] } },
+          { [BasicOperator.EQUAL]: { status: "Available" } },
+        ],
+      },
+    })
+  })
+
+  it("respects RETURN_ALL for an empty oneOf filter", () => {
+    const result = runQuery(docs, {
+      onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+      [ArrayOperator.ONE_OF]: { name: [] },
+    })
+
+    expect(result).toEqual(docs)
+  })
+
+  it("respects RETURN_NONE for an empty oneOf filter", () => {
+    const result = runQuery(docs, {
+      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+      [ArrayOperator.ONE_OF]: { name: [] },
+    })
+
+    expect(result).toEqual([])
   })
 
   it("removes empty strings for array membership operators", () => {

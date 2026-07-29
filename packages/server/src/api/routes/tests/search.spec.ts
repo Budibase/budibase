@@ -1038,11 +1038,11 @@ if (descriptions.length) {
                   }).toContainExactly([{ name: "foo" }, { name: "bar" }])
                 })
 
-                it("empty arrays return no rows when using oneOf", async () => {
+                it("empty arrays return all when onEmptyFilter is set to return 'all'", async () => {
                   await expectQuery({
                     onEmptyFilter: EmptyFilterOption.RETURN_ALL,
                     oneOf: { name: [] },
-                  }).toContainExactly([])
+                  }).toContainExactly([{ name: "foo" }, { name: "bar" }])
                 })
 
                 it("empty arrays return no rows when combined with another filter", async () => {
