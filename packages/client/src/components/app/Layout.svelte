@@ -13,6 +13,7 @@
   } from "@/utils/conditions"
   import { authStore } from "@/stores/auth"
   import { currentRole } from "@/stores/derived/currentRole.js"
+  import { routeMatchesPattern } from "@/utils/routeMatching"
 
   const sdk = getContext("sdk")
   const {
@@ -174,17 +175,6 @@
     }
   }
 
-  const getRouteWithoutQueryParams = route => {
-    if (!route) {
-      return route
-    }
-    try {
-      return new URL(route, "http://localhost").pathname
-    } catch (error) {
-      return route
-    }
-  }
-
   const canAccessSubLink = (subLink, accessibleRoutes) => {
     if ($builderStore.inBuilder) {
       return true
@@ -200,7 +190,7 @@
       return true
     }
 
-    return accessibleRoutes.has(getRouteWithoutQueryParams(url))
+    return [...accessibleRoutes].some(route => routeMatchesPattern(route, url))
   }
 
   const enrichNavItems = (navItems, userRoleHierarchy, routeEntries = []) => {
