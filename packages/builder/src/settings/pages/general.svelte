@@ -1,11 +1,11 @@
 <script lang="ts">
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import UpdateAppForm from "@/components/common/UpdateAppForm.svelte"
+  import UpdateWorkspaceForm from "@/components/common/UpdateWorkspaceForm.svelte"
   import DeleteModal from "@/components/deploy/DeleteModal.svelte"
   import RevertModal from "@/components/deploy/RevertModal.svelte"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
-  import ExportAppModal from "@/components/start/ExportAppModal.svelte"
-  import ImportAppModal from "@/components/start/ImportAppModal.svelte"
+  import ExportWorkspaceModal from "@/components/start/ExportWorkspaceModal.svelte"
+  import ImportWorkspaceModal from "@/components/start/ImportWorkspaceModal.svelte"
   import {
     appStore,
     deploymentStore,
@@ -87,7 +87,7 @@
 
 <Layout noPadding>
   <Heading size="S">Workspace info</Heading>
-  <UpdateAppForm />
+  <UpdateWorkspaceForm />
   {#if $deploymentStore.isPublished}
     <Divider noMargin />
     <Heading size="S">Deployment</Heading>
@@ -300,11 +300,14 @@
 <VersionModal bind:this={versionModal} hideIcon={true} />
 
 <Modal bind:this={exportModal}>
-  <ExportAppModal appId={$appStore.appId} published={exportPublishedVersion} />
+  <ExportWorkspaceModal
+    appId={$appStore.appId}
+    published={exportPublishedVersion}
+  />
 </Modal>
 
 <Modal bind:this={importModal}>
-  <ImportAppModal app={$appStore} />
+  <ImportWorkspaceModal app={$appStore} />
 </Modal>
 
 <ConfirmDialog

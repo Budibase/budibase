@@ -17,13 +17,13 @@
   import { licensing } from "@/stores/portal/licensing"
   import { organisation } from "@/stores/portal/organisation"
   import { admin } from "@/stores/portal/admin"
-  import { appStore } from "@/stores/builder/app"
+  import { appStore } from "@/stores/builder/workspace"
   import { onMount } from "svelte"
   import DeleteRowsButton from "@/components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
   import { roles } from "@/stores/builder"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
-  import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
+  import WorkspacesTableRenderer from "./_components/WorkspacesTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
   import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
   import DateAddedRenderer from "./_components/DateAddedRenderer.svelte"
@@ -138,7 +138,10 @@
         column: "userGroups",
         component: GroupsTableRenderer,
       },
-    !isWorkspaceOnly && { column: "workspaces", component: AppsTableRenderer },
+    !isWorkspaceOnly && {
+      column: "workspaces",
+      component: WorkspacesTableRenderer,
+    },
     isWorkspaceOnly && { column: "createdAt", component: DateAddedRenderer },
   ].filter(Boolean)
   let userData: UserData = { users: [], groups: [] }

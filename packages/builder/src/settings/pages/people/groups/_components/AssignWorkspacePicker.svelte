@@ -2,12 +2,12 @@
   import { Button, Modal } from "@budibase/bbui"
   import { workspacesStore } from "@/stores/portal/workspaces"
   import { groups } from "@/stores/portal/groups"
-  import AppAddModal from "./AppAddModal.svelte"
+  import WorkspaceAddModal from "./WorkspaceAddModal.svelte"
 
   export let groupId: string
 
   let assignWorkspaceModal: Modal
-  let appAddModal: AppAddModal
+  let workspaceAddModal: WorkspaceAddModal
 
   $: group = $groups.find(x => x._id === groupId)
   $: assignedWorkspaceIds = group ? groups.getGroupAppIds(group) : []
@@ -32,7 +32,7 @@
   $: canAssignWorkspace = availableWorkspaceIds.length > 0
 
   const openAssignWorkspaceModal = () => {
-    appAddModal?.reset()
+    workspaceAddModal?.reset()
     assignWorkspaceModal?.show()
   }
 </script>
@@ -42,5 +42,5 @@
 {/if}
 
 <Modal bind:this={assignWorkspaceModal} closeOnOutsideClick={false}>
-  <AppAddModal bind:this={appAddModal} {groupId} />
+  <WorkspaceAddModal bind:this={workspaceAddModal} {groupId} />
 </Modal>
