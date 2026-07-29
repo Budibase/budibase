@@ -1,11 +1,11 @@
 <script>
   import { Layout, Body } from "@budibase/bbui"
-  import { downloadStream } from "@budibase/frontend-core"
+  //   import { downloadStream } from "@budibase/frontend-core"
   //   import Spinner from "@/components/common/Spinner.svelte"
 
   import { API } from "@/api"
 
-  let loading = false
+  //   let loading = false
 
   async function download() {
     loading = true
