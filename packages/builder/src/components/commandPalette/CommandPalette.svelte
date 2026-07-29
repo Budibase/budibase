@@ -36,7 +36,7 @@
   let search
   let selected = null
 
-  $: inApp = $isActive("/builder/workspace/:application")
+  $: inApp = $isActive("/builder/workspace/:workspaceId")
   $: commands = [
     {
       type: "Access",
@@ -115,23 +115,23 @@
       },
       {
         name: "Home",
-        url: "/builder/workspace/:application/home",
+        url: "/builder/workspace/:workspaceId/home",
       },
       {
         name: "Data",
-        url: "/builder/workspace/:application/data",
+        url: "/builder/workspace/:workspaceId/data",
       },
       {
         name: "Apps",
-        url: "/builder/workspace/:application/home?type=app",
+        url: "/builder/workspace/:workspaceId/home?type=app",
       },
       {
         name: "Automations",
-        url: "/builder/workspace/:application/home?type=automation",
+        url: "/builder/workspace/:workspaceId/home?type=automation",
       },
       {
         name: "Agents",
-        url: "/builder/workspace/:application/home?type=agent",
+        url: "/builder/workspace/:workspaceId/home?type=agent",
       },
     ]
     return routes.map(route => ({
@@ -139,8 +139,8 @@
       name: route.name,
       icon: "compass",
       action: () => {
-        const gotoParams = route.url.includes(":application")
-          ? { application: $params.application }
+        const gotoParams = route.url.includes(":workspaceId")
+          ? { workspaceId: $params.workspaceId }
           : {}
         $goto(route.url, gotoParams)
       },
@@ -159,10 +159,10 @@
       action: () =>
         $goto(
           datasource.source === IntegrationTypes.REST
-            ? `/builder/workspace/:application/apis/datasource/:id`
-            : `/builder/workspace/:application/data/datasource/:id`,
+            ? `/builder/workspace/:workspaceId/apis/datasource/:id`
+            : `/builder/workspace/:workspaceId/data/datasource/:id`,
           {
-            application: $params.application,
+            workspaceId: $params.workspaceId,
             id: datasource._id,
           }
         ),
@@ -176,8 +176,8 @@
       name: table.name,
       icon: "table",
       action: () =>
-        $goto(`/builder/workspace/:application/data/table/:id`, {
-          application: $params.application,
+        $goto(`/builder/workspace/:workspaceId/data/table/:id`, {
+          workspaceId: $params.workspaceId,
           id: table._id,
         }),
       requiresApp: true,
@@ -190,8 +190,8 @@
       name: view.name,
       icon: "minus",
       action: () => {
-        $goto(`/builder/workspace/:application/data/view/:name`, {
-          application: $params.application,
+        $goto(`/builder/workspace/:workspaceId/data/view/:name`, {
+          workspaceId: $params.workspaceId,
           name: view.name,
         })
       },
@@ -205,8 +205,8 @@
       name: view.name,
       icon: "minus",
       action: () => {
-        $goto(`/builder/workspace/:application/data/table/:tableId/:viewId`, {
-          application: $params.application,
+        $goto(`/builder/workspace/:workspaceId/data/table/:tableId/:viewId`, {
+          workspaceId: $params.workspaceId,
           x: view.tableId,
           viewId: view.id,
         })
@@ -229,10 +229,10 @@
         action: () =>
           $goto(
             isRest
-              ? `/builder/workspace/:application/apis/query/:id`
-              : `/builder/workspace/:application/data/query/:id`,
+              ? `/builder/workspace/:workspaceId/apis/query/:id`
+              : `/builder/workspace/:workspaceId/data/query/:id`,
             {
-              application: $params.application,
+              workspaceId: $params.workspaceId,
               id: query._id,
             }
           ),
@@ -247,8 +247,8 @@
       name: screen.routing.route,
       icon: "browser",
       action: () =>
-        $goto(`/builder/workspace/:application/design/:screenId/:componentId`, {
-          application: $params.application,
+        $goto(`/builder/workspace/:workspaceId/design/:screenId/:componentId`, {
+          workspaceId: $params.workspaceId,
           screenId: screen._id,
           componentId: `${screen._id}-screen`,
         }),
@@ -262,8 +262,8 @@
       name: automation.name,
       icon: "share-network",
       action: () =>
-        $goto(`/builder/workspace/:application/automation/:id`, {
-          application: $params.application,
+        $goto(`/builder/workspace/:workspaceId/automation/:id`, {
+          workspaceId: $params.workspaceId,
           id: automation._id,
         }),
       requiresApp: true,
