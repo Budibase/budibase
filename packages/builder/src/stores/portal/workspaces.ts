@@ -7,12 +7,12 @@ import { BudiStore } from "../BudiStore"
 import { auth } from "./auth"
 import { sdk } from "@budibase/shared-core"
 
-export interface PortalAppsStore {
+export interface PortalWorkspacesStore {
   apps: StoreApp[]
   sortBy?: string
 }
 
-export class AppsStore extends BudiStore<PortalAppsStore> {
+export class WorkspacesStore extends BudiStore<PortalWorkspacesStore> {
   constructor() {
     super({
       apps: [],
@@ -161,15 +161,15 @@ export class AppsStore extends BudiStore<PortalAppsStore> {
   }
 }
 
-export const appsStore = new AppsStore()
+export const workspacesStore = new WorkspacesStore()
 
-export const sortBy = derived([appsStore, auth], ([$store, $auth]) => {
+export const sortBy = derived([workspacesStore, auth], ([$store, $auth]) => {
   return $store.sortBy || $auth.user?.appSort || "name"
 })
 
 // Centralise the logic that enriches the workspace list.
 export const enrichedApps = derived(
-  [appsStore, auth, sortBy],
+  [workspacesStore, auth, sortBy],
   ([$store, $auth, $sortBy]) => {
     const enrichedApps: EnrichedApp[] = $store.apps.map(workspace => {
       const user = $auth.user

@@ -10,7 +10,7 @@
   } from "@budibase/bbui"
   import GlobalRoleSelect from "@/components/common/GlobalRoleSelect.svelte"
   import { roles } from "@/stores/builder"
-  import { appsStore } from "@/stores/portal/apps"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { groups } from "@/stores/portal/groups"
   import { Constants } from "@budibase/frontend-core"
   import GroupIcon from "./GroupIcon.svelte"
@@ -54,9 +54,9 @@
   ]
   $: assignedWorkspaceIds = group ? groups.getGroupAppIds(group) : []
   $: workspaceOptions = Object.values(
-    $appsStore.apps.reduce<Record<string, WorkspaceOption>>(
+    $workspacesStore.apps.reduce<Record<string, WorkspaceOption>>(
       (acc, workspace) => {
-        const prodWorkspaceId = appsStore.getProdWorkspaceID(
+        const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
           workspace.devId || ""
         )
         if (!prodWorkspaceId) {
