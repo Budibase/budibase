@@ -247,15 +247,11 @@
       name: screen.routing.route,
       icon: "browser",
       action: () =>
-        $goto(
-          `/builder/workspace/:workspaceId/design/:workspaceAppId/:screenId/:componentId`,
-          {
-            workspaceId: $params.workspaceId,
-            workspaceAppId: screen.workspaceAppId,
-            screenId: screen._id,
-            componentId: `${screen._id}-screen`,
-          }
-        ),
+        $goto(`/builder/workspace/:workspaceId/design/:screenId/:componentId`, {
+          workspaceId: $params.workspaceId,
+          screenId: screen._id,
+          componentId: `${screen._id}-screen`,
+        }),
       requiresApp: true,
     }))
   }
