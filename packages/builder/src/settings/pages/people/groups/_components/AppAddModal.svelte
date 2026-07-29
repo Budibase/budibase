@@ -10,7 +10,7 @@
   } from "@budibase/bbui"
   import GlobalRoleSelect from "@/components/common/GlobalRoleSelect.svelte"
   import { roles } from "@/stores/builder"
-  import { appsStore } from "@/stores/portal/apps"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { groups } from "@/stores/portal/groups"
   import { Constants } from "@budibase/frontend-core"
   import GroupIcon from "./GroupIcon.svelte"
@@ -54,20 +54,28 @@
   ]
   $: assignedWorkspaceIds = group ? groups.getGroupAppIds(group) : []
   $: workspaceOptions = Object.values(
-    $appsStore.apps.reduce<Record<string, WorkspaceOption>>((acc, app) => {
-      const prodAppId = appsStore.getProdAppID(app.devId || "")
-      if (!prodAppId) {
+    $workspacesStore.apps.reduce<Record<string, WorkspaceOption>>(
+      (acc, workspace) => {
+        const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
+          workspace.devId || ""
+        )
+        if (!prodWorkspaceId) {
+          return acc
+        }
+        if (
+          assignedWorkspaceIds.includes(prodWorkspaceId) ||
+          acc[prodWorkspaceId]
+        ) {
+          return acc
+        }
+        acc[prodWorkspaceId] = {
+          label: workspace.name,
+          value: prodWorkspaceId,
+        }
         return acc
-      }
-      if (assignedWorkspaceIds.includes(prodAppId) || acc[prodAppId]) {
-        return acc
-      }
-      acc[prodAppId] = {
-        label: app.name,
-        value: prodAppId,
-      }
-      return acc
-    }, {})
+      },
+      {}
+    )
   ).sort((a, b) => a.label.localeCompare(b.label))
   $: validOptionIds = workspaceOptions.map(option => option.value)
   $: selectedWorkspaceIdsForSubmit = selectedWorkspaceIds.filter(id =>

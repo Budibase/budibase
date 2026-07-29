@@ -82,8 +82,8 @@
   const PAGE_SIZE = 8
   const TABLE_MIN_HEIGHT = 36 + 55 * PAGE_SIZE
   const initialWorkspaceId = (() => {
-    const appId = get(appStore).appId
-    return appId ? sdk.applications.getProdAppID(appId) : ""
+    const id = get(appStore).appId
+    return id ? sdk.workspaces.getProdWorkspaceID(id) : ""
   })()
 
   const fetch = fetchData({
@@ -120,7 +120,7 @@
   let tableLoading = false
 
   $: currentWorkspaceId = $appStore.appId
-    ? sdk.applications.getProdAppID($appStore.appId)
+    ? sdk.workspaces.getProdWorkspaceID($appStore.appId)
     : ""
   $: workspaceReady = !isWorkspaceOnly || !!currentWorkspaceId
   $: isWorkspaceQueryReady =

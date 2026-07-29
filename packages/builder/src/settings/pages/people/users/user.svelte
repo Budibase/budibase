@@ -22,7 +22,7 @@
   import { users } from "@/stores/portal/users"
   import { auth } from "@/stores/portal/auth"
   import { groups } from "@/stores/portal/groups"
-  import { appsStore } from "@/stores/portal/apps"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { licensing } from "@/stores/portal/licensing"
   import { roles } from "@/stores/builder"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
@@ -133,13 +133,15 @@
   $: isTenantOwner = !!tenantOwner?.email && tenantOwner.email === user?.email
 
   const getApps = (user: User, appIds: string[]) => {
-    let availableApps = $appsStore.apps
+    let availableApps = $workspacesStore.apps
       .slice()
       .filter(app =>
-        appIds.find(id => id === appsStore.getProdAppID(app.devId || ""))
+        appIds.find(
+          id => id === workspacesStore.getProdWorkspaceID(app.devId || "")
+        )
       )
     return availableApps.map(app => {
-      const prodAppId = appsStore.getProdAppID(app.devId || "")
+      const prodAppId = workspacesStore.getProdWorkspaceID(app.devId || "")
       return {
         name: app.name,
         devId: app.devId,

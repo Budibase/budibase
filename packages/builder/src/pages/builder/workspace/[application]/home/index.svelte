@@ -30,7 +30,7 @@
   import { API } from "@/api"
   import {
     agentsStore,
-    appsStore,
+    workspacesStore,
     auth,
     featureFlags,
     licensing,
@@ -878,7 +878,9 @@
       !selectedProjectId ||
       row.projectIds?.includes(selectedProjectId)
   )
-  $: targetApp = $appsStore.apps.find(app => app.devId === $appStore.appId)
+  $: targetApp = $workspacesStore.apps.find(
+    app => app.devId === $appStore.appId
+  )
   $: automationErrorEntries = Object.entries(targetApp?.automationErrors || {})
     .filter(([, logIds]) => logIds.length > 0)
     .map(([automationId, logIds]) => ({
@@ -932,7 +934,7 @@
         automationId,
         appId: $appStore.appId,
       })
-      await appsStore.load()
+      await workspacesStore.load()
     } catch (err) {
       console.error(err)
       notifications.error("Error dismissing automation error")

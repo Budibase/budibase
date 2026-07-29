@@ -10,7 +10,7 @@
   } from "@budibase/bbui"
   import { initialise, builderStore, reset } from "@/stores/builder"
   import { API } from "@/api"
-  import { appsStore, auth } from "@/stores/portal"
+  import { workspacesStore, auth } from "@/stores/portal"
   import { onMount, createEventDispatcher } from "svelte"
   import { goto as gotoStore } from "@roxi/routify"
   import { createValidationStore } from "@budibase/frontend-core/src/utils/validation/yup"
@@ -109,7 +109,7 @@
   }
 
   const setupValidation = async () => {
-    const applications = get(appsStore).apps
+    const applications = get(workspacesStore).apps
     workspaceValidation.name(validation, { workspaces: applications })
     workspaceValidation.url(validation, { workspaces: applications })
     workspaceValidation.file(validation, { template })
