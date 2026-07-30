@@ -231,6 +231,7 @@
 </script>
 
 <button
+  type="button"
   {id}
   class="spectrum-Picker spectrum-Picker--size{size}"
   class:has-border={bordered}
@@ -444,6 +445,17 @@
   .spectrum-Picker {
     width: 100%;
     box-shadow: none;
+  }
+  .spectrum-Picker:focus-visible {
+    border-color: var(
+      --spectrum-picker-m-border-color-key-focus,
+      var(--spectrum-alias-border-color-focus)
+    );
+    box-shadow: 0 0 0 var(--spectrum-picker-border-size-increase-focus)
+      var(
+        --spectrum-picker-m-border-color-key-focus,
+        var(--spectrum-alias-border-color-focus)
+      );
   }
   .spectrum-Picker.auto-width {
     width: auto;

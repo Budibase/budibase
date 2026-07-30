@@ -167,7 +167,12 @@
   >
     <div class="pill-list">
       {#each value as pill, index (pill + index)}
-        <Tag closable emphasized on:remove={() => removeToken(index)}>
+        <Tag
+          closable
+          emphasized
+          closeButtonTabindex={-1}
+          on:remove={() => removeToken(index)}
+        >
           {pill}
         </Tag>
       {/each}

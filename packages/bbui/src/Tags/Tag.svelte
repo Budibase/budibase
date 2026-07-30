@@ -11,6 +11,7 @@
   export let disabled: boolean = false
   export let closable: boolean = false
   export let emphasized: boolean = false
+  export let closeButtonTabindex: number | undefined = undefined
 
   const dispatch = createEventDispatcher()
 
@@ -35,7 +36,7 @@
   {/if}
   <span class="spectrum-Tags-itemLabel"><slot /></span>
   {#if closable}
-    <ClearButton on:click={onRemove} />
+    <ClearButton tabindex={closeButtonTabindex} on:click={onRemove} />
   {/if}
 </div>
 
