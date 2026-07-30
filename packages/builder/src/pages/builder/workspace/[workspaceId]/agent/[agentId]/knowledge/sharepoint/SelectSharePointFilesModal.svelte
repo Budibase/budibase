@@ -204,8 +204,7 @@
     disabled={!sourceId ||
       loadingEntries ||
       !!loadEntriesError ||
-      (scopeMode === SharePointScopeMode.SELECTED &&
-        scopeTargets.length === 0)}
+      (scopeMode === SharePointScopeMode.SELECTED && scopeTargets.length === 0)}
     onConfirm={handleConfirm}
     onCancel={hide}
   >
