@@ -15,7 +15,7 @@ describe("utils", () => {
       const ctx = structures.koa.newContext()
       const expected = db.generateWorkspaceID()
       ctx.request.headers = {
-        [Header.APP_ID]: expected,
+        [Header.WORKSPACE_ID]: expected,
       }
 
       const actual = await utils.getWorkspaceIdFromCtx(ctx)
@@ -126,7 +126,7 @@ describe("utils", () => {
       const appId2 = db.generateWorkspaceID()
 
       ctx.request.headers = {
-        [Header.APP_ID]: appId1,
+        [Header.WORKSPACE_ID]: appId1,
       }
       ctx.request.body = {
         appId: appId2,
@@ -144,7 +144,7 @@ describe("utils", () => {
       const appId2 = db.generateWorkspaceID()
 
       ctx.request.headers = {
-        [Header.APP_ID]: appId1,
+        [Header.WORKSPACE_ID]: appId1,
       }
       ctx.path = `/apps/${appId2}`
 
@@ -158,7 +158,7 @@ describe("utils", () => {
       const expected = db.generateWorkspaceID()
 
       ctx.request.headers = {
-        [Header.APP_ID]: expected,
+        [Header.WORKSPACE_ID]: expected,
       }
       ctx.request.body = {
         appId: expected,
@@ -175,7 +175,7 @@ describe("utils", () => {
       const invalidAppId = "invalid_app_id"
 
       ctx.request.headers = {
-        [Header.APP_ID]: invalidAppId,
+        [Header.WORKSPACE_ID]: invalidAppId,
       }
       ctx.request.body = {
         appId: validAppId,
@@ -189,7 +189,7 @@ describe("utils", () => {
       const ctx = structures.koa.newContext()
 
       ctx.request.headers = {
-        [Header.APP_ID]: "invalid_id",
+        [Header.WORKSPACE_ID]: "invalid_id",
       }
       ctx.request.body = {
         appId: "also_invalid",

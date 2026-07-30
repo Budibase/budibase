@@ -40,6 +40,7 @@ import { queries } from "./queries"
 import { flags } from "./flags"
 import { rowActions } from "./rowActions"
 import componentTreeNodesStore from "./componentTreeNodes"
+import { componentTreeSearchStore } from "./componentTreeSearch"
 import { oauth2 } from "./oauth2"
 import { recaptchaStore } from "./recaptcha"
 import { dataEnvironmentStore, dataAPI } from "./dataEnvironment"
@@ -51,6 +52,7 @@ import { agentsStore } from "../portal"
 import { restTemplates } from "./restTemplates"
 export {
   componentTreeNodesStore,
+  componentTreeSearchStore,
   layoutStore,
   appStore,
   componentStore,
