@@ -16,6 +16,7 @@
     AgentOperation,
     AgentRequestInputDefinition,
   } from "@budibase/types"
+  import { confirm } from "@/helpers/confirm"
 
   let {
     operation = $bindable(),
@@ -108,6 +109,21 @@
     await onUpdated()
     popover.hide()
   }
+
+  const confirmRemove = async () => {
+    popover.hide()
+    const confirmed = await confirm({
+      title: "Confirm deletion",
+      body: `Delete the “${trimmedName}” request input?`,
+      okText: "Delete",
+      warning: true,
+    })
+    if (confirmed) {
+      await remove()
+    } else {
+      popover.show()
+    }
+  }
 </script>
 
 <div class="request-inputs">
@@ -195,7 +211,7 @@
     <Toggle text="Required" bind:value={required} />
     <div class="input-form__actions">
       {#if editingId}
-        <Button type="button" quiet overBackground on:click={remove}>
+        <Button type="button" quiet overBackground on:click={confirmRemove}>
           Delete
         </Button>
       {/if}
