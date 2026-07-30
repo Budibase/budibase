@@ -27,6 +27,18 @@ const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
 const OPTIONAL_BOOLEAN = Joi.boolean().optional().allow(null)
 const APP_NAME_REGEX = /^[\w\s]+$/
 
+const sortJsonValidator = Joi.object().pattern(
+  Joi.string(),
+  Joi.object({
+    direction: Joi.string()
+      .valid(...Object.values(SortOrder))
+      .required(),
+    type: Joi.string()
+      .valid(...Object.values(SortType))
+      .optional(),
+  })
+)
+
 const validateViewSchemas: CustomValidator<Table> = (table, joiHelpers) => {
   if (!table.views || Object.keys(table.views).length === 0) {
     return table
@@ -109,6 +121,16 @@ function searchUIFilterValidator() {
   })
 }
 
+const viewSortValidator = Joi.object({
+  field: Joi.string().required(),
+  order: Joi.string()
+    .optional()
+    .valid(...Object.values(SortOrder)),
+  type: Joi.string()
+    .optional()
+    .valid(...Object.values(SortType)),
+})
+
 export function viewValidator() {
   return auth.joiValidator.body(
     Joi.object({
@@ -119,15 +141,9 @@ export function viewValidator() {
       primaryDisplay: OPTIONAL_STRING,
       schema: Joi.object().required(),
       query: searchUIFilterValidator().optional(),
-      sort: Joi.object({
-        field: Joi.string().required(),
-        order: Joi.string()
-          .optional()
-          .valid(...Object.values(SortOrder)),
-        type: Joi.string()
-          .optional()
-          .valid(...Object.values(SortType)),
-      }).optional(),
+      sort: Joi.alternatives()
+        .try(viewSortValidator, Joi.array().items(viewSortValidator))
+        .optional(),
     })
   )
 }
@@ -213,7 +229,9 @@ export function internalSearchValidator() {
       tableId: OPTIONAL_STRING,
       query: filterObject(),
       limit: OPTIONAL_NUMBER,
-      sort: OPTIONAL_STRING,
+      sort: Joi.alternatives()
+        .try(OPTIONAL_STRING, sortJsonValidator)
+        .optional(),
       sortOrder: OPTIONAL_STRING,
       sortType: OPTIONAL_STRING,
       paginate: Joi.boolean(),
