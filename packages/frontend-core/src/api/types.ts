@@ -1,6 +1,6 @@
 import { AIEndpoints } from "./ai"
 import { AnalyticsEndpoints } from "./analytics"
-import { AppEndpoints } from "./app"
+import { AppEndpoints } from "./workspace"
 import { AttachmentEndpoints } from "./attachments"
 import { AuditLogEndpoints } from "./auditLogs"
 import { AuthEndpoints } from "./auth"
