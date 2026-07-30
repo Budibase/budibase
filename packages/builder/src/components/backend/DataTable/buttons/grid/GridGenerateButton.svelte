@@ -12,7 +12,7 @@
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import MagicWand from "./magic-wand.svg"
   import { AutoScreenTypes } from "@/constants"
-  import CreateScreenModal from "@/pages/builder/workspace/[application]/design/_components/NewScreen/CreateScreenModal.svelte"
+  import CreateScreenModal from "@/pages/builder/workspace/[workspaceId]/design/_components/NewScreen/CreateScreenModal.svelte"
   import { getSequentialName } from "@/helpers/duplicate"
   import { BlockDefinitionTypes } from "@budibase/types"
 
@@ -69,7 +69,7 @@
         triggerBlock
       )
       builderStore.setPreviousTopNavPath(
-        "/builder/workspace/:application/data",
+        "/builder/workspace/:workspaceId/data",
         window.location.pathname
       )
       goto(`/builder/workspace/${response.appId}/automation/${response._id}`)

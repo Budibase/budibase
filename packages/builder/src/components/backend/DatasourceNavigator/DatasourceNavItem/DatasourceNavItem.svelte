@@ -126,8 +126,8 @@
     disabled: false,
     callback: () => {
       const section = datasource.source === "REST" ? "apis" : "data"
-      $goto(`/builder/workspace/:application/${section}/query/new/:id`, {
-        application: $params.application,
+      $goto(`/builder/workspace/:workspaceId/${section}/query/new/:id`, {
+        workspaceId: $params.workspaceId,
         id: datasourceId,
       })
     },
