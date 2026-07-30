@@ -48,7 +48,7 @@ export const getRestTemplateImportInfoRequest = (
   return undefined
 }
 
-const isCustomRestTemplateId = (
+export const isCustomRestTemplateId = (
   restTemplateId: RestTemplateId
 ): restTemplateId is CustomRestTemplateId =>
   restTemplateId.startsWith("rest_template_")

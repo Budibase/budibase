@@ -24,7 +24,7 @@
     })
   })
 
-  $: connectionCards = restTemplates.flatTemplates
+  $: connectionCards = $restTemplates.templates
     .filter(t => {
       if (!searchValue) return true
       return t.name.toLowerCase().includes(searchValue.toLowerCase())

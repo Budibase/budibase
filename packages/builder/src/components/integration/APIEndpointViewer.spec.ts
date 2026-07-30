@@ -243,7 +243,10 @@ const REST_DS_ID_2 = "datasource_aaaabbbbccccdddd1111222233334444"
 
 const mockRestTemplates = (
   templates: Partial<
-    Record<RestTemplateId, Pick<RestTemplate, "id" | "name" | "icon">>
+    Record<
+      RestTemplateId,
+      Partial<RestTemplate> & Pick<RestTemplate, "id" | "name">
+    >
   >
 ) => {
   const fullTemplates = Object.fromEntries(
@@ -2020,6 +2023,44 @@ describe("API Endpoint Viewer", () => {
         expect(container.querySelector(".url-input")).toBeNull()
         // TemplateEndpointInput wraps the endpoint Select in .input-wrap
         expect(container.querySelector(".input-wrap")).not.toBeNull()
+      })
+    })
+
+    it("loads endpoints for a custom OpenAPI template by template ID", async () => {
+      const templateId = "rest_template_github"
+      mockRestTemplates({
+        [templateId]: {
+          id: templateId,
+          name: "GitHub",
+          specs: [{ version: "custom" }],
+          custom: true,
+        },
+      })
+      await setupDatasources({
+        ...REST_DS,
+        restTemplateId: templateId,
+      })
+      vi.mocked(getRestTemplateIdentifier).mockReturnValue(templateId)
+      vi.spyOn(queries, "fetchImportInfo").mockResolvedValue({
+        name: "GitHub",
+        endpoints: [
+          {
+            id: "get-user",
+            operationId: "get-user",
+            name: "Get user",
+            method: "GET",
+            path: "/users/{username}",
+            queryVerb: "read",
+          },
+        ],
+      })
+
+      setupDOM({ datasourceId: REST_DS_ID })
+
+      await waitFor(() => {
+        expect(queries.fetchImportInfo).toHaveBeenCalledWith({
+          restTemplateId: templateId,
+        })
       })
     })
 

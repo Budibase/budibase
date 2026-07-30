@@ -92,15 +92,6 @@
   </Body>
 
   <Layout noPadding gap="S">
-    <Dropzone
-      gallery={false}
-      label="OpenAPI schema"
-      fileTags={["JSON", "YAML"]}
-      maximum={1}
-      error={fileError}
-      {handleTooManyFiles}
-      on:change={handleFileChange}
-    />
     <Input
       label="Name"
       placeholder="Template name"
@@ -112,6 +103,15 @@
       label="Description"
       placeholder="Describe this API"
       bind:value={description}
+    />
+    <Dropzone
+      gallery={false}
+      label="OpenAPI schema"
+      fileTags={["JSON", "YAML"]}
+      maximum={1}
+      error={fileError}
+      {handleTooManyFiles}
+      on:change={handleFileChange}
     />
   </Layout>
 </ModalContent>
