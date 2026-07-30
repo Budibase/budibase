@@ -118,7 +118,7 @@
     createAPIClient({
       attachHeaders: headers => {
         if (workspaceId) {
-          headers[Header.APP_ID] = workspaceId
+          headers[Header.WORKSPACE_ID] = workspaceId
         }
       },
     })
@@ -313,7 +313,7 @@
 
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
     transport: new DefaultChatTransport({
-      headers: () => ({ [Header.APP_ID]: workspaceId }),
+      headers: () => ({ [Header.WORKSPACE_ID]: workspaceId }),
       prepareSendMessagesRequest: ({ messages }) => {
         const chatAppId = resolvedChatAppId || chat?.chatAppId
         const conversationId = resolvedConversationId || chat?._id || "new"

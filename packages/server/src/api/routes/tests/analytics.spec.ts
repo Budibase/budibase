@@ -48,7 +48,7 @@ describe("/static", () => {
 
     it("should ping from app", async () => {
       const headers = config.defaultHeaders()
-      headers[constants.Header.APP_ID] = config.prodWorkspaceId
+      headers[constants.Header.WORKSPACE_ID] = config.prodWorkspaceId
 
       await request
         .post("/api/bbtel/ping")
@@ -67,7 +67,7 @@ describe("/static", () => {
 
     it("should ping from an embedded app", async () => {
       const headers = config.defaultHeaders()
-      headers[constants.Header.APP_ID] = config.prodWorkspaceId
+      headers[constants.Header.WORKSPACE_ID] = config.prodWorkspaceId
 
       await request
         .post("/api/bbtel/ping")
