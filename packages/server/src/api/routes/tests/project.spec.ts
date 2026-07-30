@@ -37,6 +37,16 @@ import {
   newAutomation,
 } from "../../../tests/utilities/structures"
 
+// Agent create/update resolves the Slack workspace via auth.test - mocked so
+// tests never call out to Slack.
+jest.mock("@slack/web-api", () => ({
+  WebClient: jest.fn(() => ({
+    auth: {
+      test: jest.fn().mockResolvedValue({ ok: true, team_id: "T123" }),
+    },
+  })),
+}))
+
 describe("/projects", () => {
   const config = new TestConfiguration()
   let cleanupAIConfig: undefined | (() => Promise<void>)
@@ -1135,6 +1145,7 @@ describe("/projects", () => {
         expect(exportedAgent.slackIntegration).toEqual({
           idleTimeoutMinutes: 20,
           requireUserLink: true,
+          teamId: "T123",
         })
         expect(exportedAgent.telegramIntegration).toEqual({
           botUserName: "ops_bot",

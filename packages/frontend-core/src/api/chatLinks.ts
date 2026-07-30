@@ -18,7 +18,8 @@ export interface MSTeamsChannel {
 
 export interface ChatLinksEndpoints {
   fetchChatIdentityLinks: (
-    provider?: ChatIdentityLinkProvider
+    provider?: ChatIdentityLinkProvider,
+    agentId?: string
   ) => Promise<ChatIdentityLink[]>
   fetchSlackChannels: (agentId: string) => Promise<SlackChannel[]>
   fetchMSTeamsChannels: (agentId: string) => Promise<MSTeamsChannel[]>
@@ -27,10 +28,12 @@ export interface ChatLinksEndpoints {
 export const buildChatLinksEndpoints = (
   API: BaseAPIClient
 ): ChatLinksEndpoints => ({
-  fetchChatIdentityLinks: async provider => {
-    const query = provider
-      ? `?${new URLSearchParams({ provider }).toString()}`
-      : ""
+  fetchChatIdentityLinks: async (provider, agentId) => {
+    const params = new URLSearchParams({
+      ...(provider ? { provider } : {}),
+      ...(agentId ? { agentId } : {}),
+    }).toString()
+    const query = params ? `?${params}` : ""
     return await API.get({ url: `/api/chat-links${query}` })
   },
   fetchSlackChannels: async agentId => {
