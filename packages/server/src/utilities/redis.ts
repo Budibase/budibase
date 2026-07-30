@@ -111,7 +111,7 @@ export async function withTestFlag<R>(id: string, fn: () => Promise<R>) {
   try {
     return await fn()
   } finally {
-    await devAppClient.delete(id)
+    await flagClient.delete(id)
   }
 }
 

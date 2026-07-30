@@ -239,7 +239,7 @@ function cleanVariables() {
     // handle the edge case of "false" to disable an environment variable
     if (value === "false") {
       // @ts-ignore
-      environment[key] = 0
+      environment[key] = false
     }
   }
 }

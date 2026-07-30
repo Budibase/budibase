@@ -79,27 +79,31 @@ export class BaseSocket {
     })
 
     // Initialise redis before handling connections
-    this.initialise().then(() => {
-      this.io.on("connection", async socket => {
-        // Add built in handler for heartbeats
-        socket.on(SocketEvent.Heartbeat, async () => {
-          await this.extendSessionTTL(socket.data.sessionId)
+    this.initialise()
+      .then(() => {
+        this.io.on("connection", async socket => {
+          // Add built in handler for heartbeats
+          socket.on(SocketEvent.Heartbeat, async () => {
+            await this.extendSessionTTL(socket.data.sessionId)
+          })
+
+          // Add early disconnection handler to clean up and leave room
+          socket.on("disconnect", async () => {
+            // Run any custom disconnection logic before we leave the room,
+            // so that we have access to their room etc before disconnection
+            await this.onDisconnect(socket)
+
+            // Leave the current room when the user disconnects if we're in one
+            await this.leaveRoom(socket)
+          })
+
+          // Add handlers for this socket
+          await this.onConnect(socket)
         })
-
-        // Add early disconnection handler to clean up and leave room
-        socket.on("disconnect", async () => {
-          // Run any custom disconnection logic before we leave the room,
-          // so that we have access to their room etc before disconnection
-          await this.onDisconnect(socket)
-
-          // Leave the current room when the user disconnects if we're in one
-          await this.leaveRoom(socket)
-        })
-
-        // Add handlers for this socket
-        await this.onConnect(socket)
       })
-    })
+      .catch(error => {
+        console.error("Failed to initialise WebSocket Redis adapter", error)
+      })
   }
 
   async initialise() {

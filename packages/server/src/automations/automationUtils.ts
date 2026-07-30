@@ -112,13 +112,25 @@ export function getError(err: any) {
   if (err == null) {
     return "No error provided."
   }
-  if (
-    typeof err === "object" &&
-    (err.toString == null || err.toString() === "[object Object]")
-  ) {
-    return JSON.stringify(err)
+  if (typeof err === "string") {
+    return err
   }
-  return typeof err !== "string" ? err.toString() : err
+  try {
+    if (typeof err === "object") {
+      const str = err.toString?.()
+      if (str == null || str === "[object Object]") {
+        return JSON.stringify(err)
+      }
+      return str
+    }
+    return String(err)
+  } catch {
+    try {
+      return JSON.stringify(err)
+    } catch {
+      return String(err)
+    }
+  }
 }
 
 export function guardAttachment(
@@ -387,7 +399,7 @@ export function getLoopMaxIterations(loopStep: LoopV2Step): number {
       ? parseInt(loopStep.inputs.iterations)
       : loopStep.inputs.iterations
   return Math.min(
-    loopMaxIterations || env.AUTOMATION_MAX_ITERATIONS,
+    loopMaxIterations ?? env.AUTOMATION_MAX_ITERATIONS,
     env.AUTOMATION_MAX_ITERATIONS
   )
 }

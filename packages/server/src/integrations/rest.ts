@@ -295,8 +295,9 @@ export class RestIntegration implements IntegrationBase {
           data = JSON.parse(responseTxt) as JSONValue
           raw = responseTxt
         } else if (
-          (hasContent && contentType.includes("text/xml")) ||
-          contentType.includes("application/xml")
+          hasContent &&
+          (contentType.includes("text/xml") ||
+            contentType.includes("application/xml"))
         ) {
           triedParsing = true
           let xmlResponse = await handleXml(responseTxt)

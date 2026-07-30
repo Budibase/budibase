@@ -160,7 +160,9 @@ class SnowflakeIntegration {
     try {
       return await this.client.execute(query.sql, query.bindings)
     } catch (err: any) {
-      throw err?.message.split(":")[1] || err?.message
+      const msg =
+        typeof err?.message === "string" ? err.message : String(err ?? "Unknown error")
+      throw msg.includes(":") ? msg.split(":")[1].trim() : msg
     }
   }
 

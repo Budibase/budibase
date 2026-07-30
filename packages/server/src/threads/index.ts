@@ -103,9 +103,13 @@ export class Thread {
       }
       // if in test then don't use threading
       if (this.disableThreading) {
-        import(typeToFile(this.type)).then(thread => {
-          fire(thread)
-        })
+        import(typeToFile(this.type))
+          .then(thread => {
+            fire(thread)
+          })
+          .catch(err => {
+            reject(err)
+          })
       } else {
         fire(this.workers)
       }
@@ -116,6 +120,7 @@ export class Thread {
     return new Promise<void>(resolve => {
       if (Thread.workerRefs.length === 0) {
         resolve()
+        return
       }
       let count = 0
       function complete() {
