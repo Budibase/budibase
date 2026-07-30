@@ -108,6 +108,12 @@
       await onExpandNode?.(node)
     }
   }
+
+  const handleRetry = async (event: MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+    await onExpandNode?.(node)
+  }
 </script>
 
 <div class="sharepoint-entry-tree-item">
@@ -130,25 +136,26 @@
           {getSharePointStatusText(node.status)}
         </StatusLight>
       {/if}
-      {#if node.loading}
-        <Body size="XS">Loading...</Body>
-      {:else if node.loadError}
-        <Body size="XS">Retry</Body>
-      {/if}
     </svelte:fragment>
 
     {#if hasChildren}
-      {#each node.children as child (child.path)}
-        <SharePointEntryTreeItem
-          {selectable}
-          node={child}
-          {scopeTargets}
-          ancestorSelected={!!scopeTargets && selected}
-          {onToggleNode}
-          {onExpandNode}
-          {showStatus}
-        />
-      {/each}
+      {#if node.loading}
+        <TreeItem title="Loading..." disabled />
+      {:else if node.loadError}
+        <TreeItem title="Failed to load. Retry" on:click={handleRetry} />
+      {:else}
+        {#each node.children as child (child.path)}
+          <SharePointEntryTreeItem
+            {selectable}
+            node={child}
+            {scopeTargets}
+            ancestorSelected={!!scopeTargets && selected}
+            {onToggleNode}
+            {onExpandNode}
+            {showStatus}
+          />
+        {/each}
+      {/if}
     {/if}
   </TreeItem>
 
