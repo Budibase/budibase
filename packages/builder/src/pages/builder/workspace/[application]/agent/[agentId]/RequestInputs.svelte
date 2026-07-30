@@ -29,6 +29,7 @@
   let editorAnchor = $state<HTMLElement>()
   let editingId = $state<string | undefined>()
   let name = $state("")
+  let type = $state<AgentRequestInputDefinition["type"]>("text")
   let required = $state(false)
   let touched = $state(false)
 
@@ -52,6 +53,7 @@
     editorAnchor = anchor
     editingId = input?.id
     name = input?.name ?? ""
+    type = input?.type ?? "text"
     required = input?.required ?? false
     touched = false
     popover.show()
@@ -64,7 +66,7 @@
     const input: AgentRequestInputDefinition = {
       id: editingId ?? `request_input_${Helpers.uuid()}`,
       name: trimmedName,
-      type: "text",
+      type,
       required,
     }
     operation.requestInputs = editingId
@@ -141,8 +143,11 @@
     />
     <Select
       label="Type"
-      value="text"
-      options={[{ label: "Text", value: "text" }]}
+      bind:value={type}
+      options={[
+        { label: "Text", value: "text" },
+        { label: "Number", value: "number" },
+      ]}
     />
     <Toggle text="Required" bind:value={required} />
     <div class="input-form__actions">

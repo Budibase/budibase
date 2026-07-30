@@ -764,4 +764,106 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
       })
     )
   })
+
+  it("rejects non-numeric values for required number inputs", async () => {
+    const operationWithInputs = {
+      ...operationWithoutRecipients,
+      requestInputs: [
+        {
+          id: "quantity",
+          name: "Quantity",
+          type: "number" as const,
+          required: true,
+        },
+      ],
+    }
+    mockRouterStream.mockReturnValueOnce({
+      output: Promise.resolve({
+        values: [
+          {
+            id: "quantity",
+            value: "several",
+            sourceMessageIndex: 0,
+            sourceQuote: "The quantity is several",
+          },
+        ],
+      }),
+    })
+
+    const run = await runFor(operationWithInputs, {
+      agent: {
+        ...agent,
+        operations: [operationWithRecipients, operationWithInputs],
+      },
+      modelMessages: [
+        {
+          role: "user",
+          content: "The quantity is several",
+        },
+      ],
+    })
+
+    expect(run.requestInputs).toEqual([
+      expect.objectContaining({
+        id: "quantity",
+        value: undefined,
+      }),
+    ])
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        tools: undefined,
+      })
+    )
+  })
+
+  it("accepts numeric values for required number inputs", async () => {
+    const operationWithInputs = {
+      ...operationWithoutRecipients,
+      requestInputs: [
+        {
+          id: "quantity",
+          name: "Quantity",
+          type: "number" as const,
+          required: true,
+        },
+      ],
+    }
+    mockRouterStream.mockReturnValueOnce({
+      output: Promise.resolve({
+        values: [
+          {
+            id: "quantity",
+            value: "12.5",
+            sourceMessageIndex: 0,
+            sourceQuote: "The quantity is 12.5",
+          },
+        ],
+      }),
+    })
+
+    const run = await runFor(operationWithInputs, {
+      agent: {
+        ...agent,
+        operations: [operationWithRecipients, operationWithInputs],
+      },
+      modelMessages: [
+        {
+          role: "user",
+          content: "The quantity is 12.5",
+        },
+      ],
+    })
+
+    expect(run.requestInputs).toEqual([
+      expect.objectContaining({
+        id: "quantity",
+        value: "12.5",
+      }),
+    ])
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        tools: expect.objectContaining({ escalate: escalatePlaceholder }),
+      })
+    )
+  })
 })

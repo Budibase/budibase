@@ -93,7 +93,7 @@ export interface AgentEscalationConfig {
 export interface AgentRequestInputDefinition {
   id: string
   name: string
-  type: "text"
+  type: "text" | "number"
   required: boolean
 }
 

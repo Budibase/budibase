@@ -5,6 +5,7 @@ import {
   Agent,
   AgentOperation,
   AgentMessageMetadata,
+  AgentRequestInputDefinition,
   AgentRequestInputSnapshot,
   ChatConversationRequest,
   ContextUser,
@@ -110,6 +111,19 @@ const requestInputValueSchema = z.object({
   ),
 })
 
+const isValidRequestInputValue = (
+  input: AgentRequestInputDefinition,
+  value: string
+) => {
+  if (input.type === "text") {
+    return true
+  }
+  return (
+    /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(value) &&
+    Number.isFinite(Number(value))
+  )
+}
+
 const collectRequestInputs = async ({
   operation,
   modelMessages,
@@ -148,7 +162,11 @@ Return every configured id exactly once. When a value is absent, set value, sour
 When a value is present, sourceMessageIndex must be its zero-based index in the supplied userMessages array and sourceQuote must be an exact verbatim quote containing the value.
 
 Configured inputs: ${JSON.stringify(
-      definitions.map(input => ({ id: input.id, name: input.name }))
+      definitions.map(input => ({
+        id: input.id,
+        name: input.name,
+        type: input.type,
+      }))
     )}`,
     stopWhen: stepCountIs(1),
     providerOptions: llm.providerOptions?.(false),
@@ -167,7 +185,8 @@ Configured inputs: ${JSON.stringify(
     >
     const valueById = new Map<string, string>()
     for (const item of output.values) {
-      if (!definitions.some(input => input.id === item.id)) {
+      const definition = definitions.find(input => input.id === item.id)
+      if (!definition) {
         continue
       }
       const value = item.value?.trim()
@@ -180,7 +199,8 @@ Configured inputs: ${JSON.stringify(
         value &&
         sourceQuote &&
         sourceMessage?.includes(sourceQuote) &&
-        sourceQuote.includes(value)
+        sourceQuote.includes(value) &&
+        isValidRequestInputValue(definition, value)
       ) {
         valueById.set(item.id, value)
       }
