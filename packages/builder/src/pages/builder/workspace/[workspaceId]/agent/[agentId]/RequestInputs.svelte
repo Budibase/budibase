@@ -1,7 +1,6 @@
 <script lang="ts">
   import {
     Body,
-    ActionButton,
     Button,
     Helpers,
     Icon,
@@ -27,6 +26,7 @@
   } = $props()
 
   let popover: PopoverAPI
+  let addButton = $state<HTMLButtonElement>()
   let editorAnchor = $state<HTMLElement>()
   let editingId = $state<string | undefined>()
   let name = $state("")
@@ -74,8 +74,11 @@
     touched = true
     if (!trimmedName || nameError || optionsError) return
 
+    const isEditing = !!editingId
+    const inputId = editingId ?? `request_input_${Helpers.uuid()}`
+    editingId = inputId
     const inputBase = {
-      id: editingId ?? `request_input_${Helpers.uuid()}`,
+      id: inputId,
       name: trimmedName,
       required,
     }
@@ -83,8 +86,8 @@
       type === "select"
         ? { ...inputBase, type, options }
         : { ...inputBase, type }
-    operation.requestInputs = editingId
-      ? inputs.map(existing => (existing.id === editingId ? input : existing))
+    operation.requestInputs = isEditing
+      ? inputs.map(existing => (existing.id === inputId ? input : existing))
       : [...inputs, input]
     await onUpdated()
     popover.hide()
@@ -108,13 +111,15 @@
     </Body>
   </div>
 
-  <ActionButton
+  <Button
+    bind:ref={addButton}
     size="S"
     icon="plus"
-    on:click={event => showEditor(event.currentTarget as HTMLElement)}
+    secondary
+    on:click={() => addButton && showEditor(addButton)}
   >
     Add request input
-  </ActionButton>
+  </Button>
 
   <div class="input-list">
     {#each inputs as input (input.id)}
@@ -183,6 +188,7 @@
         cta
         type="submit"
         disabled={!trimmedName || !!nameError || !!optionsError}
+        on:click={save}
       >
         Save
       </Button>
