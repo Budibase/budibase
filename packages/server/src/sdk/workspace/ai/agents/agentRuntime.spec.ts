@@ -946,6 +946,61 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     )
   })
 
+  it("normalizes clear numeric language for number inputs", async () => {
+    const operationWithInputs = {
+      ...operationWithoutRecipients,
+      requestInputs: [
+        {
+          id: "quantity",
+          name: "Quantity",
+          type: "number" as const,
+          required: true,
+        },
+      ],
+    }
+    mockRouterStream.mockReturnValueOnce({
+      output: Promise.resolve({
+        values: [
+          {
+            id: "quantity",
+            value: "100",
+            sourceMessageIndex: 0,
+            sourceQuote: "hundred",
+          },
+        ],
+        confirmed: false,
+        confirmationSourceMessageIndex: null,
+        confirmationSourceQuote: null,
+      }),
+    })
+
+    const run = await runFor(operationWithInputs, {
+      agent: {
+        ...agent,
+        operations: [operationWithRecipients, operationWithInputs],
+      },
+      modelMessages: [
+        {
+          role: "user",
+          content: "I need hundred new bulbs in Llagostera ASAP",
+        },
+      ],
+    })
+
+    expect(run.requestInputs).toEqual([
+      expect.objectContaining({
+        id: "quantity",
+        value: "100",
+      }),
+    ])
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        tools: undefined,
+        instructions: expect.stringContaining("Quantity: 100"),
+      })
+    )
+  })
+
   it("accepts configured select options", async () => {
     const operationWithInputs = {
       ...operationWithoutRecipients,
