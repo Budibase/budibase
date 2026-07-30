@@ -171,7 +171,7 @@
   }
 </script>
 
-<DetailPopover bind:this={popover} title="Sorting" width={300}>
+<DetailPopover bind:this={popover} title="Sorting" width={360}>
   <svelte:fragment slot="anchor" let:open>
     <ActionButton
       icon="sort-descending"
@@ -190,7 +190,6 @@
         placeholder="Default"
         value={sortRow?.column}
         options={getColumnOptions(sortRow?.column)}
-        autoWidth
         on:change={e => updateSortColumn(index, e.detail)}
         label="Column"
       />
@@ -199,7 +198,6 @@
           placeholder={false}
           value={sortRow.order || SortOrder.ASCENDING}
           options={getOrderOptions(sortRow.column, columnOptions)}
-          autoWidth
           on:change={e => updateSortOrder(index, e.detail)}
           label="Order"
         />
@@ -231,7 +229,7 @@
 <style>
   .sort-row {
     display: grid;
-    grid-template-columns: 1fr 1fr auto;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr) auto;
     gap: var(--spacing-s);
     align-items: end;
   }
