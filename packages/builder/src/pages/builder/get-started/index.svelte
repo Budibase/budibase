@@ -6,7 +6,7 @@
   import { workspacesStore } from "@/stores/portal/workspaces"
   import { auth } from "@/stores/portal/auth"
   import BBLogo from "assets/BBLogo.svelte"
-  import CreateWorkspaceModal from "../workspace/[application]/_components/CreateWorkspaceModal.svelte"
+  import CreateWorkspaceModal from "../workspace/[workspaceId]/_components/CreateWorkspaceModal.svelte"
   import type { CreateWorkspaceResponse } from "@budibase/types"
   import { sdk } from "@budibase/shared-core"
 

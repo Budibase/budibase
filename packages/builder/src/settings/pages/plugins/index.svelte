@@ -20,7 +20,7 @@
   import PluginNameRenderer from "./_components/PluginNameRenderer.svelte"
   import EditPluginRenderer from "./_components/EditPluginRenderer.svelte"
   import RouteActions from "@/settings/components/RouteActions.svelte"
-  import UsedInAppsRenderer from "./_components/UsedInAppsRenderer.svelte"
+  import UsedInWorkspacesRenderer from "./_components/UsedInWorkspacesRenderer.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import type { StoreApp } from "@/types"
 
@@ -62,7 +62,7 @@
   }
   const customRenderers = [
     { column: "name", component: PluginNameRenderer },
-    { column: "usedInAppsLabel", component: UsedInAppsRenderer },
+    { column: "usedInAppsLabel", component: UsedInWorkspacesRenderer },
     { column: "edit", component: EditPluginRenderer },
   ]
 

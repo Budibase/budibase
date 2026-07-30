@@ -27,7 +27,7 @@
   import ViewDetailsRenderer from "./_components/ViewDetailsRenderer.svelte"
   import UserRenderer from "./_components/UserRenderer.svelte"
   import TimeRenderer from "./_components/TimeRenderer.svelte"
-  import AppColumnRenderer from "./_components/AppColumnRenderer.svelte"
+  import WorkspaceColumnRenderer from "./_components/WorkspaceColumnRenderer.svelte"
   import { cloneDeep } from "lodash"
   import DateRangePicker from "@/components/common/DateRangePicker.svelte"
   import dayjs from "dayjs"
@@ -55,7 +55,7 @@
     },
     {
       column: "app",
-      component: AppColumnRenderer,
+      component: WorkspaceColumnRenderer,
     },
   ]
 
