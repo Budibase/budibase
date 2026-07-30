@@ -169,6 +169,7 @@
     }}
   >
     <Input
+      autofocus
       label="Name"
       bind:value={name}
       error={nameError}
