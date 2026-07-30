@@ -320,7 +320,7 @@ export const sanitiseAgentForExport = (agent: Agent): SanitisedAgent => {
   return sanitised
 }
 
-const mergeDiscordIntegration = ({
+const resolveDiscordIntegration = ({
   existing,
   incoming,
 }: {
@@ -334,23 +334,20 @@ const mergeDiscordIntegration = ({
     return incoming
   }
 
-  const merged = {
-    ...(existing || {}),
-    ...incoming,
-  }
+  const resolved = { ...incoming }
 
   if (incoming.publicKey === SECRET_MASK && existing?.publicKey) {
-    merged.publicKey = existing.publicKey
+    resolved.publicKey = existing.publicKey
   }
 
   if (incoming.botToken === SECRET_MASK && existing?.botToken) {
-    merged.botToken = existing.botToken
+    resolved.botToken = existing.botToken
   }
 
-  return merged
+  return resolved
 }
 
-const mergeMSTeamsIntegration = ({
+const resolveMSTeamsIntegration = ({
   existing,
   incoming,
 }: {
@@ -364,16 +361,13 @@ const mergeMSTeamsIntegration = ({
     return incoming
   }
 
-  const merged = {
-    ...(existing || {}),
-    ...incoming,
-  }
+  const resolved = { ...incoming }
 
   if (incoming.appPassword === SECRET_MASK && existing?.appPassword) {
-    merged.appPassword = existing.appPassword
+    resolved.appPassword = existing.appPassword
   }
 
-  return merged
+  return resolved
 }
 
 const withSlackTeamId = async (
@@ -407,7 +401,7 @@ const withSlackTeamId = async (
   }
 }
 
-const mergeSlackIntegration = ({
+const resolveSlackIntegration = ({
   existing,
   incoming,
 }: {
@@ -421,23 +415,20 @@ const mergeSlackIntegration = ({
     return incoming
   }
 
-  const merged = {
-    ...(existing || {}),
-    ...incoming,
-  }
+  const resolved = { ...incoming }
 
   if (incoming.botToken === SECRET_MASK && existing?.botToken) {
-    merged.botToken = existing.botToken
+    resolved.botToken = existing.botToken
   }
 
   if (incoming.signingSecret === SECRET_MASK && existing?.signingSecret) {
-    merged.signingSecret = existing.signingSecret
+    resolved.signingSecret = existing.signingSecret
   }
 
-  return merged
+  return resolved
 }
 
-const mergeTelegramIntegration = ({
+const resolveTelegramIntegration = ({
   existing,
   incoming,
 }: {
@@ -451,23 +442,20 @@ const mergeTelegramIntegration = ({
     return incoming
   }
 
-  const merged = {
-    ...(existing || {}),
-    ...incoming,
-  }
+  const resolved = { ...incoming }
 
   if (incoming.botToken === SECRET_MASK && existing?.botToken) {
-    merged.botToken = existing.botToken
+    resolved.botToken = existing.botToken
   }
 
   if (
     incoming.webhookSecretToken === SECRET_MASK &&
     existing?.webhookSecretToken
   ) {
-    merged.webhookSecretToken = existing.webhookSecretToken
+    resolved.webhookSecretToken = existing.webhookSecretToken
   }
 
-  return merged
+  return resolved
 }
 
 export async function fetch(): Promise<Agent[]> {
@@ -607,19 +595,19 @@ export async function update(agent: Agent): Promise<Agent> {
     ...agent,
     updatedAt: now,
     operations: incomingOperations,
-    discordIntegration: mergeDiscordIntegration({
+    discordIntegration: resolveDiscordIntegration({
       existing: existing?.discordIntegration,
       incoming: agent.discordIntegration,
     }),
-    MSTeamsIntegration: mergeMSTeamsIntegration({
+    MSTeamsIntegration: resolveMSTeamsIntegration({
       existing: existing?.MSTeamsIntegration,
       incoming: agent.MSTeamsIntegration,
     }),
-    slackIntegration: mergeSlackIntegration({
+    slackIntegration: resolveSlackIntegration({
       existing: existing?.slackIntegration,
       incoming: agent.slackIntegration,
     }),
-    telegramIntegration: mergeTelegramIntegration({
+    telegramIntegration: resolveTelegramIntegration({
       existing: existing?.telegramIntegration,
       incoming: agent.telegramIntegration,
     }),
