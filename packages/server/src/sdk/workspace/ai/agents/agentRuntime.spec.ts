@@ -658,7 +658,7 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     )
   })
 
-  it("keeps operation tools once required request inputs are supplied", async () => {
+  it("keeps operation tools disabled until captured inputs are confirmed", async () => {
     const operationWithInputs = {
       ...operationWithoutRecipients,
       requestInputs: [
@@ -680,6 +680,9 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
             sourceQuote: "My device type is Laptop",
           },
         ],
+        confirmed: true,
+        confirmationSourceMessageIndex: 0,
+        confirmationSourceQuote: "My device type is Laptop",
       }),
     })
 
@@ -692,6 +695,71 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
         {
           role: "user",
           content: "My device type is Laptop",
+        },
+      ],
+    })
+
+    expect(run.requestInputs).toEqual([
+      expect.objectContaining({
+        id: "device_type",
+        value: "Laptop",
+      }),
+    ])
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        tools: undefined,
+        instructions: expect.stringContaining(
+          "confirm that the following captured request information is correct"
+        ),
+      })
+    )
+  })
+
+  it("keeps operation tools once captured inputs are confirmed", async () => {
+    const operationWithInputs = {
+      ...operationWithoutRecipients,
+      requestInputs: [
+        {
+          id: "device_type",
+          name: "Device type",
+          type: "text" as const,
+          required: true,
+        },
+      ],
+    }
+    mockRouterStream.mockReturnValueOnce({
+      output: Promise.resolve({
+        values: [
+          {
+            id: "device_type",
+            value: "Laptop",
+            sourceMessageIndex: 0,
+            sourceQuote: "My device type is Laptop",
+          },
+        ],
+        confirmed: true,
+        confirmationSourceMessageIndex: 1,
+        confirmationSourceQuote: "Yes, that is correct",
+      }),
+    })
+
+    const run = await runFor(operationWithInputs, {
+      agent: {
+        ...agent,
+        operations: [operationWithRecipients, operationWithInputs],
+      },
+      modelMessages: [
+        {
+          role: "user",
+          content: "My device type is Laptop",
+        },
+        {
+          role: "assistant",
+          content: "Please confirm Device type: Laptop",
+        },
+        {
+          role: "user",
+          content: "Yes, that is correct",
         },
       ],
     })
@@ -838,6 +906,9 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
             sourceQuote: "The quantity is 12.5",
           },
         ],
+        confirmed: true,
+        confirmationSourceMessageIndex: 1,
+        confirmationSourceQuote: "Yes",
       }),
     })
 
@@ -850,6 +921,14 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
         {
           role: "user",
           content: "The quantity is 12.5",
+        },
+        {
+          role: "assistant",
+          content: "Please confirm Quantity: 12.5",
+        },
+        {
+          role: "user",
+          content: "Yes",
         },
       ],
     })
@@ -890,6 +969,9 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
             sourceQuote: "The priority is high",
           },
         ],
+        confirmed: true,
+        confirmationSourceMessageIndex: 1,
+        confirmationSourceQuote: "Yes",
       }),
     })
 
@@ -902,6 +984,14 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
         {
           role: "user",
           content: "The priority is high",
+        },
+        {
+          role: "assistant",
+          content: "Please confirm Priority: High",
+        },
+        {
+          role: "user",
+          content: "Yes",
         },
       ],
     })
