@@ -705,6 +705,9 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
         value: "Laptop",
       }),
     ])
+    expect(run.requestInputConfirmation).toEqual({
+      inputs: [{ name: "Device type", value: "Laptop" }],
+    })
     expect(ToolLoopAgent).toHaveBeenLastCalledWith(
       expect.objectContaining({
         tools: undefined,
@@ -770,6 +773,7 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
         value: "Laptop",
       }),
     ])
+    expect(run.requestInputConfirmation).toBeUndefined()
     expect(ToolLoopAgent).toHaveBeenLastCalledWith(
       expect.objectContaining({
         tools: expect.objectContaining({ escalate: escalatePlaceholder }),

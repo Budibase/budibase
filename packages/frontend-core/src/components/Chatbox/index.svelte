@@ -2,6 +2,7 @@
   import {
     MarkdownViewer,
     notifications,
+    Button,
     Icon,
     ProgressCircle,
     Body,
@@ -566,12 +567,12 @@
     }
   }
 
-  const sendMessage = async () => {
+  const sendMessage = async (messageText?: string) => {
     if (readOnly) {
       return
     }
 
-    const text = inputValue.trim()
+    const text = (messageText ?? inputValue).trim()
     if (!text) {
       return
     }
@@ -636,6 +637,14 @@
     inputValue = ""
     chatInstance.sendMessage({ text })
     isPreparingResponse = false
+  }
+
+  const respondToRequestInputConfirmation = async (confirmed: boolean) => {
+    await sendMessage(
+      confirmed
+        ? "Yes, these values are correct."
+        : "No, I need to correct these values."
+    )
   }
 
   const handlePromptAction = async () => {
@@ -897,6 +906,30 @@
                 </div>
               {/if}
             {/each}
+            {#if isAgentPreviewChat && message.id === lastAssistantMessage?.id && lastMessage?.id === message.id && message.metadata?.completedAt && message.metadata?.requestInputConfirmation}
+              <div
+                class="request-input-confirmation-actions"
+                role="group"
+                aria-label="Confirm captured request information"
+              >
+                <Button
+                  cta
+                  size="S"
+                  disabled={isRequestPending}
+                  on:click={() => respondToRequestInputConfirmation(true)}
+                >
+                  Yes
+                </Button>
+                <Button
+                  secondary
+                  size="S"
+                  disabled={isRequestPending}
+                  on:click={() => respondToRequestInputConfirmation(false)}
+                >
+                  No
+                </Button>
+              </div>
+            {/if}
             {#if getVisibleRagSources(message).length}
               <div class="sources">
                 <div class="sources-header">
@@ -1093,6 +1126,11 @@
     color: var(--spectrum-global-color-gray-800);
     line-height: 1.4;
     max-width: 100%;
+  }
+
+  .request-input-confirmation-actions {
+    display: flex;
+    gap: var(--spacing-s);
   }
 
   .input-wrapper {

@@ -160,6 +160,13 @@ export interface AgentMessageUsage {
   segments: AgentMessageUsageSegment[]
 }
 
+export interface AgentRequestInputConfirmation {
+  inputs: {
+    name: string
+    value: string
+  }[]
+}
+
 export interface AgentMessageMetadata {
   ragSources?: AgentMessageRagSource[]
   toolDisplayNames?: Record<string, string>
@@ -170,6 +177,7 @@ export interface AgentMessageMetadata {
   completedAt?: number
   error?: string
   usage?: AgentMessageUsage
+  requestInputConfirmation?: AgentRequestInputConfirmation
 }
 
 export interface AgentChat extends Document {

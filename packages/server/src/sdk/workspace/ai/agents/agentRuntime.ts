@@ -6,6 +6,7 @@ import {
   AgentOperation,
   AgentMessageMetadata,
   AgentRequestInputDefinition,
+  AgentRequestInputConfirmation,
   AgentRequestInputSnapshot,
   ChatConversationRequest,
   ContextUser,
@@ -86,6 +87,7 @@ export interface AgentChatRun {
   selectedOperation?: AgentOperation
   operationIntent?: OperationIntent
   requestInputs?: AgentRequestInputSnapshot[]
+  requestInputConfirmation?: AgentRequestInputConfirmation
   getUsedKnowledgeSourcesMetadata: () => AgentMessageMetadata["ragSources"]
   sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
   stream: (
@@ -767,12 +769,20 @@ export const prepareAgentChatRun = async ({
 
   const contextUsage: AgentChatRun["contextUsage"] = {}
   const systemPromptTokens = estimateTokens(systemPrompt || "")
+  const requestInputConfirmation = awaitingRequestInputConfirmation
+    ? {
+        inputs: requestInputs.flatMap(input =>
+          input.value ? [{ name: input.name, value: input.value }] : []
+        ),
+      }
+    : undefined
 
   return {
     latestQuestion,
     selectedOperation,
     operationIntent,
     requestInputs,
+    requestInputConfirmation,
     sessionLogIndexer,
     getUsedKnowledgeSourcesMetadata: () =>
       Array.from(usedKnowledgeSourceById.values()),

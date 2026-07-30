@@ -869,6 +869,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
               run.selectedOperation.allowKnowledgeSourceDownload,
           }
         : {}),
+      ...(chat.isPreview && run.requestInputConfirmation
+        ? { requestInputConfirmation: run.requestInputConfirmation }
+        : {}),
     }
     result.pipeUIMessageStreamToResponse(ctx.res, {
       originalMessages: chat.messages,
