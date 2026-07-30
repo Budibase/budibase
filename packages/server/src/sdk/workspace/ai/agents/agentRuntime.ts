@@ -109,9 +109,6 @@ const requestInputValueSchema = z.object({
       sourceQuote: z.string().nullable(),
     })
   ),
-  confirmed: z.boolean(),
-  confirmationSourceMessageIndex: z.number().int().nullable(),
-  confirmationSourceQuote: z.string().nullable(),
 })
 
 const getValidRequestInputValue = (
@@ -140,13 +137,10 @@ const collectRequestInputs = async ({
   operation: AgentOperation
   modelMessages: ModelMessage[]
   llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
-}): Promise<{
-  requestInputs: AgentRequestInputSnapshot[]
-  confirmed: boolean
-}> => {
+}): Promise<AgentRequestInputSnapshot[]> => {
   const definitions = operation.requestInputs ?? []
   if (!definitions.length) {
-    return { requestInputs: [], confirmed: false }
+    return []
   }
 
   const getMessageText = (message: ModelMessage) =>
@@ -159,13 +153,6 @@ const collectRequestInputs = async ({
   const userMessages = modelMessages
     .filter(message => message.role === "user")
     .map(getMessageText)
-  const conversationMessages = modelMessages
-    .filter(message => ["user", "assistant"].includes(message.role))
-    .map(message => ({
-      role: message.role,
-      content: getMessageText(message),
-    }))
-
   const extractor = new ToolLoopAgent({
     model: wrapLanguageModel({
       model: llm.chat,
@@ -178,8 +165,6 @@ For number inputs, normalize explicit, unambiguous numeric language to a numeric
 For select inputs only, map clear user language to exactly one configured option when the meaning is unambiguous. The source quote must contain the user's exact language supporting that classification, but does not need to contain the option verbatim. Return null when the classification is ambiguous.
 Return every configured id exactly once. When a value is absent, set value, sourceMessageIndex, and sourceQuote to null.
 When a value is present, sourceMessageIndex must be its zero-based index in the supplied userMessages array and sourceQuote must be an exact verbatim quote containing the value.
-Set confirmed to true only when the latest user message explicitly confirms the complete set of currently extracted values in response to a prior assistant confirmation request. Supplying or correcting a value is not confirmation.
-When confirmed is true, confirmationSourceMessageIndex must reference the latest user message and confirmationSourceQuote must be an exact verbatim quote expressing confirmation. Otherwise set both confirmation source fields to null.
 
 Configured inputs: ${JSON.stringify(
       definitions.map(input => ({
@@ -199,7 +184,7 @@ Configured inputs: ${JSON.stringify(
 
   try {
     const result = await extractor.stream({
-      prompt: JSON.stringify({ userMessages, conversationMessages }),
+      prompt: JSON.stringify({ userMessages }),
     })
     const output = (await result.output) as z.infer<
       typeof requestInputValueSchema
@@ -229,34 +214,16 @@ Configured inputs: ${JSON.stringify(
         valueById.set(item.id, validValue)
       }
     }
-    const confirmationSourceMessage =
-      output.confirmationSourceMessageIndex === null
-        ? undefined
-        : userMessages[output.confirmationSourceMessageIndex]
-    const priorConversationMessage =
-      conversationMessages[conversationMessages.length - 2]
-    const confirmed =
-      output.confirmed &&
-      output.confirmationSourceMessageIndex === userMessages.length - 1 &&
-      !!output.confirmationSourceQuote &&
-      !!confirmationSourceMessage?.includes(output.confirmationSourceQuote) &&
-      priorConversationMessage?.role === "assistant"
-    return {
-      requestInputs: definitions.map(input => ({
-        ...input,
-        value: valueById.get(input.id),
-      })),
-      confirmed,
-    }
+    return definitions.map(input => ({
+      ...input,
+      value: valueById.get(input.id),
+    }))
   } catch (error) {
     console.error("Failed to extract agent request inputs", {
       operationId: operation.id,
       error,
     })
-    return {
-      requestInputs: definitions.map(input => ({ ...input })),
-      confirmed: false,
-    }
+    return definitions.map(input => ({ ...input }))
   }
 }
 
@@ -646,24 +613,18 @@ export const prepareAgentChatRun = async ({
   const requestInputsEnabled =
     !!selectedOperation?.requestInputs?.length &&
     (await features.isEnabled(FeatureFlag.AI_AGENT_REQUEST_INPUTS))
-  const requestInputCollection =
+  const requestInputs =
     selectedOperation && operationIntent === "execute" && requestInputsEnabled
       ? await collectRequestInputs({
           operation: selectedOperation,
           modelMessages,
           llm,
         })
-      : { requestInputs: [], confirmed: false }
-  const requestInputs = requestInputCollection.requestInputs
+      : []
   const missingRequestInputs = requestInputs.filter(
     input => input.required && !input.value
   )
-  const hasCapturedRequestInputs = requestInputs.some(input => input.value)
-  const awaitingRequestInputConfirmation =
-    !missingRequestInputs.length &&
-    hasCapturedRequestInputs &&
-    !requestInputCollection.confirmed
-  if (missingRequestInputs.length || awaitingRequestInputConfirmation) {
+  if (missingRequestInputs.length) {
     for (const toolName of Object.keys(tools)) {
       delete tools[toolName]
     }
@@ -731,17 +692,12 @@ export const prepareAgentChatRun = async ({
 
   const requestInputInstructions = missingRequestInputs.length
     ? `Do not perform the operation or any other task yet. Ask the user to provide the following missing required information: ${missingRequestInputs.map(input => input.name).join(", ")}. Ask only for these missing values and keep the request concise.`
-    : awaitingRequestInputConfirmation
-      ? `Do not perform the operation or any other task yet. Ask the user to confirm that the following captured request information is correct, or to provide corrections:\n${requestInputs
+    : requestInputs.length
+      ? `The required request information has been collected:\n${requestInputs
           .filter(input => input.value)
           .map(input => `- ${input.name}: ${input.value}`)
           .join("\n")}`
-      : requestInputs.length
-        ? `The required request information has been collected:\n${requestInputs
-            .filter(input => input.value)
-            .map(input => `- ${input.name}: ${input.value}`)
-            .join("\n")}`
-        : undefined
+      : undefined
   const systemPrompt = [
     baseSystemPrompt,
     requestInputInstructions,
