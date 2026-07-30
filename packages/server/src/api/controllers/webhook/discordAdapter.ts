@@ -9,9 +9,11 @@ type DiscordFile = {
   mimeType?: string
 }
 
+// Agent replies quote stored data, which can contain "@everyone"/"@here".
 // Matches on shape rather than method/path, so it covers channel posts,
 // interaction callbacks and the PATCH that edits a deferred slash reply.
-const withClampedMentions = (body: unknown) => {
+// Exported so the policy is testable without loading the ESM-only adapter.
+export const withClampedMentions = (body: unknown) => {
   if (!body || typeof body !== "object") {
     return body
   }
