@@ -90,12 +90,21 @@ export interface AgentEscalationConfig {
   delay?: number
 }
 
-export interface AgentRequestInputDefinition {
+interface AgentRequestInputBase {
   id: string
   name: string
-  type: "text" | "number"
   required: boolean
 }
+
+export type AgentRequestInputDefinition =
+  | (AgentRequestInputBase & {
+      type: "text" | "number"
+      options?: never
+    })
+  | (AgentRequestInputBase & {
+      type: "select"
+      options: string[]
+    })
 
 export interface AgentOperation {
   id: string

@@ -111,17 +111,22 @@ const requestInputValueSchema = z.object({
   ),
 })
 
-const isValidRequestInputValue = (
+const getValidRequestInputValue = (
   input: AgentRequestInputDefinition,
   value: string
 ) => {
   if (input.type === "text") {
-    return true
+    return value
   }
-  return (
-    /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(value) &&
+  if (input.type === "select") {
+    return input.options?.find(
+      option => option.toLowerCase() === value.toLowerCase()
+    )
+  }
+  return /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(value) &&
     Number.isFinite(Number(value))
-  )
+    ? value
+    : undefined
 }
 
 const collectRequestInputs = async ({
@@ -166,6 +171,7 @@ Configured inputs: ${JSON.stringify(
         id: input.id,
         name: input.name,
         type: input.type,
+        options: input.options,
       }))
     )}`,
     stopWhen: stepCountIs(1),
@@ -195,14 +201,17 @@ Configured inputs: ${JSON.stringify(
         item.sourceMessageIndex === null
           ? undefined
           : userMessages[item.sourceMessageIndex]
+      const validValue = value
+        ? getValidRequestInputValue(definition, value)
+        : undefined
       if (
         value &&
+        validValue &&
         sourceQuote &&
         sourceMessage?.includes(sourceQuote) &&
-        sourceQuote.includes(value) &&
-        isValidRequestInputValue(definition, value)
+        sourceQuote.includes(value)
       ) {
-        valueById.set(item.id, value)
+        valueById.set(item.id, validValue)
       }
     }
     return definitions.map(input => ({

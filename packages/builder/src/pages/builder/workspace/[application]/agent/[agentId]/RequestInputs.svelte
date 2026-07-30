@@ -7,6 +7,7 @@
     Icon,
     Input,
     ListItem,
+    PillInput,
     Popover,
     type PopoverAPI,
     Select,
@@ -30,6 +31,7 @@
   let editingId = $state<string | undefined>()
   let name = $state("")
   let type = $state<AgentRequestInputDefinition["type"]>("text")
+  let options = $state<string[]>([])
   let required = $state(false)
   let touched = $state(false)
 
@@ -45,6 +47,14 @@
     )
     return duplicate ? "Input names must be unique" : undefined
   })
+  let optionsError = $derived.by(() => {
+    if (!touched || type !== "select") return undefined
+    if (!options.length) return "At least one option is required"
+    const normalized = options.map(option => option.trim().toLowerCase())
+    return new Set(normalized).size !== normalized.length
+      ? "Options must be unique"
+      : undefined
+  })
 
   const showEditor = (
     anchor: HTMLElement,
@@ -54,6 +64,7 @@
     editingId = input?.id
     name = input?.name ?? ""
     type = input?.type ?? "text"
+    options = [...(input?.options ?? [])]
     required = input?.required ?? false
     touched = false
     popover.show()
@@ -61,14 +72,17 @@
 
   const save = async () => {
     touched = true
-    if (!trimmedName || nameError) return
+    if (!trimmedName || nameError || optionsError) return
 
-    const input: AgentRequestInputDefinition = {
+    const inputBase = {
       id: editingId ?? `request_input_${Helpers.uuid()}`,
       name: trimmedName,
-      type,
       required,
     }
+    const input: AgentRequestInputDefinition =
+      type === "select"
+        ? { ...inputBase, type, options }
+        : { ...inputBase, type }
     operation.requestInputs = editingId
       ? inputs.map(existing => (existing.id === editingId ? input : existing))
       : [...inputs, input]
@@ -147,8 +161,17 @@
       options={[
         { label: "Text", value: "text" },
         { label: "Number", value: "number" },
+        { label: "Select", value: "select" },
       ]}
     />
+    {#if type === "select"}
+      <PillInput
+        label="Options"
+        bind:value={options}
+        error={optionsError}
+        placeholder="Add an option"
+      />
+    {/if}
     <Toggle text="Required" bind:value={required} />
     <div class="input-form__actions">
       {#if editingId}
@@ -157,7 +180,7 @@
       <Button
         cta
         type="submit"
-        disabled={!trimmedName || !!nameError}
+        disabled={!trimmedName || !!nameError || !!optionsError}
         on:click={save}
       >
         Save

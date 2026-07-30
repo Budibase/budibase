@@ -78,7 +78,19 @@ const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
       Joi.object({
         id: Joi.string().required(),
         name: Joi.string().trim().required(),
-        type: Joi.string().valid("text", "number").required(),
+        type: Joi.string().valid("text", "number", "select").required(),
+        options: Joi.when("type", {
+          is: "select",
+          then: Joi.array()
+            .items(Joi.string().trim().required())
+            .min(1)
+            .unique(
+              (left, right) =>
+                left.trim().toLowerCase() === right.trim().toLowerCase()
+            )
+            .required(),
+          otherwise: Joi.forbidden(),
+        }),
         required: Joi.boolean().required(),
       }).required()
     )

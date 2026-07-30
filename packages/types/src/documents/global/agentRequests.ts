@@ -83,6 +83,6 @@ export interface AgentRequest extends Document {
   requestInputs?: AgentRequestInputSnapshot[]
 }
 
-export interface AgentRequestInputSnapshot extends AgentRequestInputDefinition {
+export type AgentRequestInputSnapshot = AgentRequestInputDefinition & {
   value?: string
 }

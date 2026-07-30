@@ -65,9 +65,27 @@ describe("agent duplicate", () => {
         live: false,
         enabledTools: [],
         allowKnowledgeSourceDownload: true,
+        requestInputs: [
+          {
+            id: "priority",
+            name: "Priority",
+            type: "select",
+            required: true,
+            options: ["Low", "High"],
+          },
+        ],
       }
     )
     expect(created.operations?.[0]?.name).toEqual("Main triage flow")
+    expect(created.operations?.[0]?.requestInputs).toEqual([
+      {
+        id: "priority",
+        name: "Priority",
+        type: "select",
+        required: true,
+        options: ["Low", "High"],
+      },
+    ])
 
     const updated = await config.api.agent.updateOperation(
       created._id!,

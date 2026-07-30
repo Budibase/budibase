@@ -866,4 +866,108 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
       })
     )
   })
+
+  it("accepts configured select options", async () => {
+    const operationWithInputs = {
+      ...operationWithoutRecipients,
+      requestInputs: [
+        {
+          id: "priority",
+          name: "Priority",
+          type: "select" as const,
+          required: true,
+          options: ["Low", "High"],
+        },
+      ],
+    }
+    mockRouterStream.mockReturnValueOnce({
+      output: Promise.resolve({
+        values: [
+          {
+            id: "priority",
+            value: "high",
+            sourceMessageIndex: 0,
+            sourceQuote: "The priority is high",
+          },
+        ],
+      }),
+    })
+
+    const run = await runFor(operationWithInputs, {
+      agent: {
+        ...agent,
+        operations: [operationWithRecipients, operationWithInputs],
+      },
+      modelMessages: [
+        {
+          role: "user",
+          content: "The priority is high",
+        },
+      ],
+    })
+
+    expect(run.requestInputs).toEqual([
+      expect.objectContaining({
+        id: "priority",
+        value: "High",
+      }),
+    ])
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        tools: expect.objectContaining({ escalate: escalatePlaceholder }),
+      })
+    )
+  })
+
+  it("rejects values outside configured select options", async () => {
+    const operationWithInputs = {
+      ...operationWithoutRecipients,
+      requestInputs: [
+        {
+          id: "priority",
+          name: "Priority",
+          type: "select" as const,
+          required: true,
+          options: ["Low", "High"],
+        },
+      ],
+    }
+    mockRouterStream.mockReturnValueOnce({
+      output: Promise.resolve({
+        values: [
+          {
+            id: "priority",
+            value: "Urgent",
+            sourceMessageIndex: 0,
+            sourceQuote: "The priority is Urgent",
+          },
+        ],
+      }),
+    })
+
+    const run = await runFor(operationWithInputs, {
+      agent: {
+        ...agent,
+        operations: [operationWithRecipients, operationWithInputs],
+      },
+      modelMessages: [
+        {
+          role: "user",
+          content: "The priority is Urgent",
+        },
+      ],
+    })
+
+    expect(run.requestInputs).toEqual([
+      expect.objectContaining({
+        id: "priority",
+        value: undefined,
+      }),
+    ])
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        tools: undefined,
+      })
+    )
+  })
 })
