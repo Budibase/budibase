@@ -255,13 +255,13 @@ const mockRestTemplates = (
         ...template,
       },
     ])
-  ) as Partial<Record<RestTemplateId, RestTemplate>>
+  ) as Record<string, RestTemplate>
 
   vi.mocked(restTemplates.get).mockImplementation((templateId?: string) => {
     if (!templateId) {
       return undefined
     }
-    return fullTemplates[templateId as RestTemplateId]
+    return fullTemplates[templateId]
   })
   restTemplates.flatTemplates.splice(
     0,

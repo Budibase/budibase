@@ -83,8 +83,10 @@ const _import = async (
   ctx: UserCtx<ImportRestQueryRequest, ImportRestQueryResponse>
 ) => {
   const body = ctx.request.body
-
-  const importer = await createImporter(body)
+  const importerInput = body.restTemplateId
+    ? { data: await sdk.restTemplates.getSpec(body.restTemplateId) }
+    : body
+  const importer = await createImporter(importerInput)
   const importInfo = importer.getInfo()
 
   let datasourceId
@@ -152,12 +154,16 @@ export async function importInfo(
   const { body } = ctx.request
 
   let info: ImportInfo
-  if (body.data) {
+  if (body.restTemplateId) {
+    info = await getImportInfo({
+      data: await sdk.restTemplates.getSpec(body.restTemplateId),
+    })
+  } else if (body.data) {
     info = await getImportInfo({ data: body.data })
   } else if (body.url) {
     info = await getImportInfo({ url: body.url })
   } else {
-    ctx.throw(400, "Import data or url is required")
+    ctx.throw(400, "Import data, url, or REST template ID is required")
   }
   ctx.body = {
     name: info.name,

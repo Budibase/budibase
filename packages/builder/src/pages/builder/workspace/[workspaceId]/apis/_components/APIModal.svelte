@@ -10,20 +10,28 @@
   import {
     type RestTemplateSpec,
     type RestTemplate,
+    type RestTemplateId,
     type TemplateSelectionContext,
     type UIIntegration,
   } from "@budibase/types"
   import { goto as gotoStore } from "@roxi/routify"
   import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import SelectCategoryAPIModal from "./SelectCategoryAPIModal.svelte"
+  import ImportRestTemplateModal from "@/settings/pages/connections/_components/ImportRestTemplateModal.svelte"
 
-  export const show = () => {
+  export const show = async () => {
     resetModalState()
     modal.show()
+    try {
+      await restTemplates.fetchCustom()
+    } catch {
+      notifications.error("There was a problem loading custom API templates")
+    }
   }
   export const hide = () => modal.hide()
 
   let modal: Modal
+  let importTemplateModal: Modal
   let loading = false
 
   let selectedTemplate: TemplateSelectionContext | null = null
@@ -69,8 +77,11 @@
     resetModalState()
   }
 
-  const loadTemplateInfo = async (spec?: RestTemplateSpec | null) => {
-    const request = getRestTemplateImportInfoRequest(spec)
+  const loadTemplateInfo = async (
+    spec?: RestTemplateSpec | null,
+    restTemplateId?: RestTemplateId
+  ) => {
+    const request = getRestTemplateImportInfoRequest(spec, restTemplateId)
     if (!request) {
       return undefined
     }
@@ -147,7 +158,10 @@
       targetSpec = template.specs?.[0] || null
 
       const config = configFromIntegration(restIntegration)
-      const templateInfo = await loadTemplateInfo(targetSpec)
+      const templateInfo = await loadTemplateInfo(
+        targetSpec,
+        template.restTemplateId
+      )
       applySecurityHeaders(config, templateInfo?.securityHeaders)
       applyTemplateStaticVariables(config, templateInfo?.staticVariables)
 
@@ -216,9 +230,16 @@
         customDisabled={!restIntegration}
         bind:projectIds
         on:custom={() => handleCustom(restIntegration)}
+        on:importTemplate={() => importTemplateModal.show()}
         on:selectTemplate={onSelectTemplate}
       />
     </div>
+  </Modal>
+  <Modal bind:this={importTemplateModal}>
+    <ImportRestTemplateModal
+      onCancel={() => importTemplateModal.hide()}
+      onUploaded={() => importTemplateModal.hide()}
+    />
   </Modal>
 </div>
 
