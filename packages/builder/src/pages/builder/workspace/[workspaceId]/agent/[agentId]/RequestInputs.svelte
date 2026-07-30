@@ -70,6 +70,15 @@
     popover.show()
   }
 
+  const showEditorFromContextMenu = (
+    event: MouseEvent,
+    input: AgentRequestInputDefinition
+  ) => {
+    event.preventDefault()
+    event.stopPropagation()
+    showEditor(event.currentTarget as HTMLElement, input)
+  }
+
   const save = async () => {
     touched = true
     if (!trimmedName || nameError || optionsError) return
@@ -123,7 +132,10 @@
 
   <div class="input-list" role="list">
     {#each inputs as input (input.id)}
-      <div role="listitem">
+      <div
+        role="listitem"
+        oncontextmenu={event => showEditorFromContextMenu(event, input)}
+      >
         <ListItem title={input.name}>
           <svelte:fragment slot="right">
             <ActionButton
