@@ -175,13 +175,14 @@
     <Toggle text="Required" bind:value={required} />
     <div class="input-form__actions">
       {#if editingId}
-        <Button quiet overBackground on:click={remove}>Delete</Button>
+        <Button type="button" quiet overBackground on:click={remove}>
+          Delete
+        </Button>
       {/if}
       <Button
         cta
         type="submit"
         disabled={!trimmedName || !!nameError || !!optionsError}
-        on:click={save}
       >
         Save
       </Button>
