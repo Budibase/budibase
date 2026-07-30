@@ -133,24 +133,21 @@ describe("SelectSharePointFilesModal", () => {
     })
   })
 
-  it("does not save selected content without a target", async () => {
+  it("disables saving selected content without a target", async () => {
     setSelectedAgent(SharePointScopeMode.SELECTED)
     await renderModal()
 
-    await fireEvent.click(screen.getByText("Save"))
-
-    expect(mocks.notifications.error).toHaveBeenCalledWith(
-      "Please select at least one file or list to sync"
-    )
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled()
     expect(mocks.applyOperationSharePointSiteScope).not.toHaveBeenCalled()
-    expect(screen.getByTestId("mock-modal")).toBeInTheDocument()
   })
 
   it("saves all content without explicit targets", async () => {
     setSelectedAgent(SharePointScopeMode.ALL)
     await renderModal()
 
-    await fireEvent.click(screen.getByText("Save"))
+    const saveButton = screen.getByRole("button", { name: "Save" })
+    expect(saveButton).not.toBeDisabled()
+    await fireEvent.click(saveButton)
 
     await waitFor(() => {
       expect(mocks.applyOperationSharePointSiteScope).toHaveBeenCalledWith(

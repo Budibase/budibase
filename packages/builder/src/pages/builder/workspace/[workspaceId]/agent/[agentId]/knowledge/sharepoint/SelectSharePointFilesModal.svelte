@@ -201,7 +201,11 @@
     size="XL"
     confirmText="Save"
     cancelText="Cancel"
-    disabled={!sourceId || loadingEntries || !!loadEntriesError}
+    disabled={!sourceId ||
+      loadingEntries ||
+      !!loadEntriesError ||
+      (scopeMode === SharePointScopeMode.SELECTED &&
+        scopeTargets.length === 0)}
     onConfirm={handleConfirm}
     onCancel={hide}
   >
