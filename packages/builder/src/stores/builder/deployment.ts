@@ -3,9 +3,9 @@ import { API } from "@/api"
 import { notifications } from "@budibase/bbui"
 import { DeploymentProgressResponse, DeploymentStatus } from "@budibase/types"
 import analytics, { Events, EventSource } from "@/analytics"
-import { appsStore } from "@/stores/portal/apps"
+import { workspacesStore } from "@/stores/portal/workspaces"
 import { DerivedBudiStore } from "@/stores/BudiStore"
-import { appStore } from "./app"
+import { appStore } from "./workspace"
 import { processStringSync } from "@budibase/string-templates"
 import { selectedAppUrls } from "./appUrls"
 import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
@@ -34,10 +34,12 @@ class DeploymentStore extends DerivedBudiStore<
       store: Writable<DeploymentState>
     ): Readable<DerivedDeploymentState> => {
       return derived(
-        [store, appStore, appsStore],
-        ([$store, $appStore, $appsStore]) => {
+        [store, appStore, workspacesStore],
+        ([$store, $appStore, $workspacesStore]) => {
           // Determine whether the app is published
-          const app = $appsStore.apps.find(app => app.devId === $appStore.appId)
+          const app = $workspacesStore.apps.find(
+            app => app.devId === $appStore.appId
+          )
           const deployments = $store.deployments.filter(
             x => x.status === DeploymentStatus.SUCCESS
           )
@@ -114,7 +116,7 @@ class DeploymentStore extends DerivedBudiStore<
       await Promise.all([
         workspaceDeploymentStore.fetch(),
         workspaceAppStore.refresh(),
-        appsStore.load(),
+        workspacesStore.load(),
         automationStore.actions.fetch(),
         agentsStore.fetchAgents(),
       ])
@@ -133,7 +135,7 @@ class DeploymentStore extends DerivedBudiStore<
       await Promise.all([
         workspaceDeploymentStore.fetch(),
         workspaceAppStore.refresh(),
-        appsStore.load(),
+        workspacesStore.load(),
         automationStore.actions.fetch(),
       ])
       notifications.send("App unpublished", {

@@ -14,12 +14,12 @@
   } from "@budibase/bbui"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { roles } from "@/stores/builder"
-  import { appsStore } from "@/stores/portal/apps"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { auth } from "@/stores/portal/auth"
   import { groups } from "@/stores/portal/groups"
   import { onMount, setContext, getContext } from "svelte"
-  import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
-  import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
+  import WorkspaceNameTableRenderer from "../users/_components/WorkspaceNameTableRenderer.svelte"
+  import WorkspaceRoleTableRenderer from "../users/_components/WorkspaceRoleTableRenderer.svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import GroupIcon from "./_components/GroupIcon.svelte"
   import GroupUsers from "./_components/GroupUsers.svelte"
@@ -82,20 +82,22 @@
   const customAppTableRenderers = [
     {
       column: "name",
-      component: AppNameTableRenderer,
+      component: WorkspaceNameTableRenderer,
     },
     {
       column: "role",
-      component: AppRoleTableRenderer,
+      component: WorkspaceRoleTableRenderer,
     },
     {
       column: "prodAppId",
       component: RemoveWorkspaceTableRenderer,
     },
   ]
-  $: groupApps = $appsStore.apps
+  $: groupApps = $workspacesStore.apps
     .filter(app => {
-      const prodWorkspaceId = appsStore.getProdWorkspaceID(app.devId || "")
+      const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
+        app.devId || ""
+      )
       return (
         !!prodWorkspaceId &&
         !!group &&
@@ -103,7 +105,9 @@
       )
     })
     .map(app => {
-      const prodWorkspaceId = appsStore.getProdWorkspaceID(app.devId || "")
+      const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
+        app.devId || ""
+      )
       if (!prodWorkspaceId) {
         return undefined
       }
