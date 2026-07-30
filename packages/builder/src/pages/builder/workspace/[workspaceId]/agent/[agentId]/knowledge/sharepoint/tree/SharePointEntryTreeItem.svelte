@@ -116,7 +116,7 @@
   }
 </script>
 
-<div class="sharepoint-entry-tree-item">
+<div class="sharepoint-entry-tree-item" class:is-selectable={selectable}>
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <TreeItem
@@ -201,5 +201,17 @@
 
   .sharepoint-entry-tree-item :global(.spectrum-TreeView-itemLink) {
     padding-inline-end: 8px;
+  }
+
+  .sharepoint-entry-tree-item.is-selectable
+    :global(.spectrum-TreeView-itemIndicator) {
+    inset-inline-start: 0;
+    inset-block-start: 0;
+    margin-inline-start: 0;
+    margin-inline-end: var(--spacing-xs);
+    margin-block-end: 0;
+    padding-inline: 0;
+    padding-block: 0;
+    flex-shrink: 0;
   }
 </style>
