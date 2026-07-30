@@ -132,6 +132,12 @@
     if (event.defaultPrevented) {
       return
     }
+    if (event.key === "Enter") {
+      event.preventDefault()
+      addTokens([inputValue])
+      inputValue = ""
+      return
+    }
     if (
       event.key === delimiter ||
       (splitOnSpace && event.key === " " && !event.shiftKey)
@@ -173,7 +179,7 @@
       {id}
       {disabled}
       {readonly}
-      placeholder={placeholder ?? ""}
+      placeholder={value.length ? "" : (placeholder ?? "")}
       on:input={handleInput}
       on:keydown={handleKeydown}
       on:focus={() => (focused = true)}
@@ -233,8 +239,8 @@
     );
   }
   .pill-input-field {
-    min-width: 120px;
-    flex: 1 1 120px;
+    min-width: 40px;
+    flex: 1 1 40px;
     padding: 0;
     height: auto;
     line-height: 20px;
