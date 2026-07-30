@@ -1,9 +1,9 @@
 <script lang="ts">
   import {
+    ActionButton,
     Body,
     Button,
     Helpers,
-    Icon,
     Input,
     ListItem,
     PillInput,
@@ -121,17 +121,19 @@
     Add request input
   </Button>
 
-  <div class="input-list">
+  <div class="input-list" role="list">
     {#each inputs as input (input.id)}
-      <div>
-        <ListItem
-          title={input.name}
-          hoverable
-          on:click={event =>
-            showEditor(event.currentTarget as HTMLElement, input)}
-        >
+      <div role="listitem">
+        <ListItem title={input.name}>
           <svelte:fragment slot="right">
-            <Icon name="dots-three" size="S" />
+            <ActionButton
+              quiet
+              noPadding
+              icon="dots-three"
+              size="S"
+              on:click={event =>
+                showEditor(event.currentTarget as HTMLElement, input)}
+            />
           </svelte:fragment>
         </ListItem>
       </div>
