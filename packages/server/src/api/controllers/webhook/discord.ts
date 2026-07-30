@@ -109,7 +109,11 @@ export async function discordWebhook(
       const chat = new Chat({
         userName: "Budibase",
         adapters: {
-          discord: createSafeDiscordAdapter({ applicationId, publicKey, botToken }),
+          discord: createSafeDiscordAdapter({
+            applicationId,
+            publicKey,
+            botToken,
+          }),
         },
         state: await getDiscordState(),
         logger: "silent",
