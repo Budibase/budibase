@@ -264,6 +264,7 @@ const getComponentTypeSearchText = (component: Component) => {
     return ""
   }
 
+  // strip version suffixes and normalise separators in type names
   return component._component
     .replace("@budibase/standard-components/", "")
     .replace(/v\d+$/, "")
@@ -312,19 +313,24 @@ export const getComponentTreeSearchResults = (
     component: Component,
     visibleFromAncestorMatch = false
   ): boolean => {
+    const componentId = component._id
+    if (!componentId) {
+      return false
+    }
+
     const matches = componentMatchesSearchTerm(component, normalisedSearchTerm)
     const visibleSubtree = matches || visibleFromAncestorMatch
 
-    if (component._id && visibleSubtree) {
-      visibleIds.add(component._id)
+    if (visibleSubtree) {
+      visibleIds.add(componentId)
     }
 
-    if (matches && component._id) {
-      matchingIds.add(component._id)
+    if (matches) {
+      matchingIds.add(componentId)
     }
 
-    if (component._id && component._children?.length && visibleSubtree) {
-      expandedIds.add(component._id)
+    if (component._children?.length && visibleSubtree) {
+      expandedIds.add(componentId)
     }
 
     let descendantMatches = false
@@ -333,12 +339,12 @@ export const getComponentTreeSearchResults = (
         searchComponent(child, visibleSubtree) || descendantMatches
     }
 
-    if (component._id && descendantMatches) {
-      visibleIds.add(component._id)
+    if (descendantMatches) {
+      visibleIds.add(componentId)
     }
 
-    if (component._id && component._children?.length && descendantMatches) {
-      expandedIds.add(component._id)
+    if (component._children?.length && descendantMatches) {
+      expandedIds.add(componentId)
     }
 
     return matches || descendantMatches
