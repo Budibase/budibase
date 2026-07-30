@@ -19,7 +19,7 @@ const newClient = (opts?: { production?: boolean }) =>
       const workspaceId = get(appStore).appId
       if (workspaceId) {
         if (!isWorkspaceDeleteRequest) {
-          headers[Header.APP_ID] = opts?.production
+          headers[Header.WORKSPACE_ID] = opts?.production
             ? sdk.workspaces.getProdWorkspaceID(workspaceId)
             : workspaceId
         }
