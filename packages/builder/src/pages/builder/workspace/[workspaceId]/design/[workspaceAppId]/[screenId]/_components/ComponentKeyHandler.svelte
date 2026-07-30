@@ -5,6 +5,7 @@
     componentStore,
     selectedComponent,
     componentTreeNodesStore,
+    componentTreeSearchStore,
     previewStore,
   } from "@/stores/builder"
   import { findComponent, getChildIdsForComponent } from "@/helpers/components"
@@ -53,6 +54,7 @@
       if ($isActive(`./:componentId/new`)) {
         $goto(`./${$componentStore.selectedComponentId}`)
       } else {
+        componentTreeSearchStore.clearSearch()
         $goto(`./:componentId/new`)
       }
     },
