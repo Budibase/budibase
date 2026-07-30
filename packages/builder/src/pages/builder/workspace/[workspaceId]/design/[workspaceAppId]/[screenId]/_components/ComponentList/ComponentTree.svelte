@@ -1,6 +1,7 @@
-<script>
+<script lang="ts">
   import NavItem from "@/components/common/NavItem.svelte"
   import { Icon, notifications } from "@budibase/bbui"
+  import type { Component } from "@budibase/types"
   import {
     selectedScreen,
     componentStore,
@@ -20,91 +21,142 @@
   import { dndStore } from "./dndStore"
   import getComponentContextMenuItems from "./getComponentContextMenuItems"
 
-  export let components = []
+  interface ComponentWithId extends Component {
+    _id: string
+  }
+
+  const hasComponentId = (
+    component: Component
+  ): component is ComponentWithId => {
+    return !!component._id
+  }
+
+  export let components: Component[] = []
   export let level = 0
+  export let searchTerm = ""
+  export let visibleSearchIds: Set<string> = new Set()
+  export let matchingSearchIds: Set<string> = new Set()
+  export let expandedSearchIds: Set<string> = new Set()
 
-  $: openNodes = $componentTreeNodesStore
+  $: isSearching = !!searchTerm
 
-  $: filteredComponents = components?.filter(component => {
-    return (
-      !$componentStore.componentToPaste?.isCut ||
-      component._id !== $componentStore.componentToPaste?._id
-    )
-  })
+  $: filteredComponents = components
+    ?.filter(hasComponentId)
+    .filter(component => {
+      const isCutComponent =
+        $componentStore.componentToPaste?.isCut &&
+        component._id === $componentStore.componentToPaste?._id
 
-  const dragover = (component, index) => e => {
-    const mousePosition = e.offsetY / e.currentTarget.offsetHeight
+      const isVisibleInComponentTree =
+        !isSearching || visibleSearchIds.has(component._id)
+
+      return !isCutComponent && isVisibleInComponentTree
+    })
+
+  const dragover = (component: ComponentWithId) => (e: DragEvent) => {
+    if (isSearching) {
+      return false
+    }
+
+    const target = e.currentTarget as HTMLElement
+    const mousePosition = e.offsetY / target.offsetHeight
     dndStore.actions.dragover({
       component,
-      index,
       mousePosition,
     })
     return false
   }
 
-  const getComponentIcon = component => {
+  const getComponentIcon = (component: ComponentWithId) => {
     const def = componentStore.getDefinition(component?._component)
     return def?.icon
   }
 
-  const componentSupportsChildren = component => {
+  const componentSupportsChildren = (component: ComponentWithId) => {
     const def = componentStore.getDefinition(component?._component)
     return def?.hasChildren
   }
 
-  const componentHasChildren = component => {
-    return componentSupportsChildren(component) && component._children?.length
+  const componentHasChildren = (component: ComponentWithId) => {
+    return !!(
+      componentSupportsChildren(component) && component._children?.length
+    )
   }
 
-  const onDrop = async e => {
+  const onDrop = async (e: DragEvent) => {
     e.stopPropagation()
+    if (isSearching) {
+      return
+    }
+
     try {
       await dndStore.actions.drop()
     } catch (error) {
-      notifications.error(error || "Error saving component")
+      console.error(error)
+      notifications.error("Error saving component")
     }
   }
 
-  const isOpen = component => {
+  const isOpen = (component: ComponentWithId) => {
     if (!component?._children?.length) {
       return false
+    }
+    if (isSearching) {
+      return expandedSearchIds.has(component._id)
     }
     return componentTreeNodesStore.isNodeExpanded(component._id)
   }
 
-  const isChildOfSelectedComponent = component => {
-    const selectedComponentId = get(selectedComponent)?._id
-    const selectedScreenId = get(selectedScreen)?.props._id
-    if (!selectedComponentId || selectedComponentId === selectedScreenId) {
-      return false
+  const selectComponent = (componentId: string) => {
+    if (isSearching) {
+      componentTreeNodesStore.makeNodeVisible(componentId)
     }
-    return findComponentPath($selectedComponent, component._id)?.length > 0
+    componentStore.select(componentId)
   }
 
-  const handleIconClick = componentId => {
+  const isChildOfSelectedComponent = (component: ComponentWithId) => {
+    const selected = get(selectedComponent)
+    const selectedComponentId = selected?._id
+    const selectedScreenId = get(selectedScreen)?.props._id
+    if (
+      !selected ||
+      !selectedComponentId ||
+      selectedComponentId === selectedScreenId
+    ) {
+      return false
+    }
+    return findComponentPath(selected, component._id)?.length > 0
+  }
+
+  const handleIconClick = (componentId: string) => {
     componentStore.select(componentId)
+    if (isSearching) {
+      componentTreeNodesStore.makeNodeVisible(componentId)
+      componentTreeNodesStore.expandNodes([componentId])
+      return
+    }
     componentTreeNodesStore.toggleNode(componentId)
   }
 
   const hover = hoverStore.hover
 
-  const openContextMenu = (e, component, opened) => {
+  const openContextMenu = (
+    e: MouseEvent,
+    component: ComponentWithId,
+    opened: boolean
+  ) => {
     e.preventDefault()
     e.stopPropagation()
 
-    const items = getComponentContextMenuItems(
-      component,
-      !opened,
-      componentStore
-    )
+    const items = getComponentContextMenuItems(component, !opened)
     contextMenuStore.open(component._id, items, { x: e.clientX, y: e.clientY })
   }
 
-  let renamingId = null
+  let renamingId: string | null = null
   let renameValue = ""
-  let renameInput
+  let renameInput: HTMLInputElement | undefined
 
-  const startRename = async component => {
+  const startRename = async (component: ComponentWithId) => {
     renamingId = component._id
     renameValue = component?._instanceName || getComponentText(component)
     await tick()
@@ -117,7 +169,7 @@
     renameValue = ""
   }
 
-  const commitRename = async component => {
+  const commitRename = async (component: ComponentWithId) => {
     const trimmed = renameValue.trim()
     renamingId = null
     if (!trimmed) {
@@ -129,7 +181,7 @@
       return
     }
     try {
-      await componentStore.patch(updated => {
+      await componentStore.patch((updated: Component) => {
         updated._instanceName = trimmed
         return true
       }, component._id)
@@ -143,24 +195,28 @@
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions-->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <ul>
-  {#each filteredComponents || [] as component, index (component._id)}
-    {@const opened = isOpen(component, openNodes)}
+  {#each filteredComponents || [] as component (component._id)}
+    {@const opened = isOpen(component)}
     <li
       on:contextmenu={e => openContextMenu(e, component, opened)}
       on:dblclick|stopPropagation={() => startRename(component)}
       on:click|stopPropagation={() => {
-        componentStore.select(component._id)
+        selectComponent(component._id)
       }}
       id={`component-${component._id}`}
     >
       <NavItem
         compact
         scrollable
-        draggable={renamingId !== component._id}
+        draggable={renamingId !== component._id && !isSearching}
         bodyInteractive={renamingId === component._id}
         on:dragend={dndStore.actions.reset}
-        on:dragstart={() => dndStore.actions.dragstart(component)}
-        on:dragover={dragover(component, index)}
+        on:dragstart={() => {
+          if (!isSearching) {
+            dndStore.actions.dragstart(component)
+          }
+        }}
+        on:dragover={dragover(component)}
         on:iconClick={() => handleIconClick(component._id)}
         on:drop={onDrop}
         hovering={$hoverStore.componentId === component._id ||
@@ -198,7 +254,10 @@
             />
           {:else}
             <div class="text">
-              <span title={getComponentText(component)}>
+              <span
+                class:search-match={matchingSearchIds.has(component._id)}
+                title={getComponentText(component)}
+              >
                 {getComponentText(component)}
               </span>
             </div>
@@ -215,8 +274,11 @@
       {#if opened}
         <svelte:self
           components={component._children}
-          {dndStore}
           level={level + 1}
+          {searchTerm}
+          {visibleSearchIds}
+          {matchingSearchIds}
+          {expandedSearchIds}
         />
       {/if}
     </li>
@@ -246,5 +308,11 @@
     outline: none;
     border-color: var(--spectrum-global-color-gray-600);
     background: var(--spectrum-global-color-gray-100);
+  }
+  .search-match {
+    background: var(--spectrum-global-color-yellow-1000);
+    border-radius: 3px;
+    color: var(--spectrum-global-color-static-gray-900);
+    padding: 0 2px;
   }
 </style>

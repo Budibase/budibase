@@ -93,10 +93,17 @@ export const initialise = (context: StoreContext) => {
     // Wipe state
     filter.set(get(initialFilter) ?? undefined)
     inlineFilters.set([])
-    sort.set({
-      column: get(initialSortColumn),
-      order: get(initialSortOrder) || SortOrder.ASCENDING,
-    })
+    const initialColumn = get(initialSortColumn)
+    sort.set(
+      initialColumn
+        ? [
+            {
+              column: initialColumn,
+              order: get(initialSortOrder) || SortOrder.ASCENDING,
+            },
+          ]
+        : []
+    )
 
     // Update fetch when filter changes
     unsubscribers.push(
@@ -120,9 +127,12 @@ export const initialise = (context: StoreContext) => {
         if (!isSameDatasource($fetch?.options?.datasource, $datasource)) {
           return
         }
+        const sorts = $sort.map(sortEntry => ({
+          field: sortEntry.column,
+          order: sortEntry.order,
+        }))
         $fetch?.update({
-          sortOrder: $sort.order || SortOrder.ASCENDING,
-          sortColumn: $sort.column ?? undefined,
+          sorts,
         })
       })
     )

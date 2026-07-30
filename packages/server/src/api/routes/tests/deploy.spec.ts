@@ -662,7 +662,7 @@ describe("/api/deploy", () => {
 
     // Create a row directly in production to simulate live data
     const productionRow = await config.withHeaders(
-      { [constants.Header.APP_ID]: config.getProdWorkspaceId() },
+      { [constants.Header.WORKSPACE_ID]: config.getProdWorkspaceId() },
       async () =>
         await config.api.row.save(table._id!, {
           tableId: table._id!,
@@ -689,7 +689,7 @@ describe("/api/deploy", () => {
     await config.api.workspace.publish(config.devWorkspace!.appId)
 
     const prodRowAfterPublish = await config.withHeaders(
-      { [constants.Header.APP_ID]: config.getProdWorkspaceId() },
+      { [constants.Header.WORKSPACE_ID]: config.getProdWorkspaceId() },
       async () => await config.api.row.get(table._id!, productionRow._id!)
     )
 
