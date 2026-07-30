@@ -383,9 +383,11 @@
             </div>
           {/if}
 
-          <div class="operation-panel-section">
-            <RequestInputs bind:operation {onUpdated} />
-          </div>
+          {#if $featureFlags[FeatureFlag.AI_AGENT_REQUEST_INPUTS]}
+            <div class="operation-panel-section">
+              <RequestInputs bind:operation {onUpdated} />
+            </div>
+          {/if}
 
           <Knowledge bind:operation {onUpdated} />
         </div>

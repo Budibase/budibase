@@ -643,8 +643,11 @@ export const prepareAgentChatRun = async ({
     toolDisplayNames,
     systemPrompt: baseSystemPrompt,
   } = runContext
+  const requestInputsEnabled =
+    !!selectedOperation?.requestInputs?.length &&
+    (await features.isEnabled(FeatureFlag.AI_AGENT_REQUEST_INPUTS))
   const requestInputCollection =
-    selectedOperation && operationIntent === "execute"
+    selectedOperation && operationIntent === "execute" && requestInputsEnabled
       ? await collectRequestInputs({
           operation: selectedOperation,
           modelMessages,

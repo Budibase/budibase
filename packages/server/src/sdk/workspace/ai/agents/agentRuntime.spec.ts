@@ -518,7 +518,9 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockIsEnabled.mockImplementation(
-      async (flag: FeatureFlag) => flag === FeatureFlag.ESCALATION
+      async (flag: FeatureFlag) =>
+        flag === FeatureFlag.ESCALATION ||
+        flag === FeatureFlag.AI_AGENT_REQUEST_INPUTS
     )
     jest.mocked(sdk.ai.llm.createLLM).mockResolvedValue(llm)
     jest.mocked(createSessionLogIndexer).mockReturnValue({
@@ -610,6 +612,38 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
 
     expect(run.selectedOperation).toEqual(operationWithRecipients)
     expect(run.operationIntent).toBe("execute")
+  })
+
+  it("bypasses request input collection when the feature is disabled", async () => {
+    const operationWithInputs = {
+      ...operationWithoutRecipients,
+      requestInputs: [
+        {
+          id: "device_type",
+          name: "Device type",
+          type: "text" as const,
+          required: true,
+        },
+      ],
+    }
+    mockIsEnabled.mockImplementation(
+      async (flag: FeatureFlag) => flag === FeatureFlag.ESCALATION
+    )
+
+    const run = await runFor(operationWithInputs, {
+      agent: {
+        ...agent,
+        operations: [operationWithRecipients, operationWithInputs],
+      },
+    })
+
+    expect(run.requestInputs).toEqual([])
+    expect(ToolLoopAgent).toHaveBeenCalledTimes(1)
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        tools: expect.objectContaining({ escalate: escalatePlaceholder }),
+      })
+    )
   })
 
   it("removes operation tools while required request inputs are missing", async () => {
