@@ -1009,6 +1009,62 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     )
   })
 
+  it("classifies clear user language as a configured select option", async () => {
+    const operationWithInputs = {
+      ...operationWithoutRecipients,
+      requestInputs: [
+        {
+          id: "urgency",
+          name: "Urgency",
+          type: "select" as const,
+          required: true,
+          options: ["Low", "Medium", "High", "Critical"],
+        },
+      ],
+    }
+    mockRouterStream.mockReturnValueOnce({
+      output: Promise.resolve({
+        values: [
+          {
+            id: "urgency",
+            value: "Critical",
+            sourceMessageIndex: 0,
+            sourceQuote: "ASAP",
+          },
+        ],
+        confirmed: false,
+        confirmationSourceMessageIndex: null,
+        confirmationSourceQuote: null,
+      }),
+    })
+
+    const run = await runFor(operationWithInputs, {
+      agent: {
+        ...agent,
+        operations: [operationWithRecipients, operationWithInputs],
+      },
+      modelMessages: [
+        {
+          role: "user",
+          content: "I need 10000 new bulbs in Llagostera ASAP",
+        },
+      ],
+    })
+
+    expect(run.requestInputs).toEqual([
+      expect.objectContaining({
+        id: "urgency",
+        value: "Critical",
+      }),
+    ])
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        tools: undefined,
+        instructions: expect.stringContaining("Urgency: Critical"),
+      })
+    )
+  })
+
   it("rejects values outside configured select options", async () => {
     const operationWithInputs = {
       ...operationWithoutRecipients,
