@@ -6,6 +6,7 @@
     builderStore,
     componentStore,
     componentTreeNodesStore,
+    componentTreeSearchStore,
     hoverStore,
     navigationStore,
     previewStore,
@@ -194,6 +195,7 @@
       await componentStore.refreshDefinitions()
     } else if (type === "drop-new-component") {
       const { component, parent, index, props } = data
+      componentTreeSearchStore.clearSearch()
       await componentStore.create(component, props, parent, index)
     } else if (type === "add-parent-component") {
       const { componentId, parentType } = data
@@ -242,6 +244,7 @@
     if ($isActive(`./:componentId/new`)) {
       $goto(`./:componentId`)
     } else {
+      componentTreeSearchStore.clearSearch()
       $goto(`./:componentId/new`)
     }
   }

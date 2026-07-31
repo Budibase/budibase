@@ -7,6 +7,7 @@
     previewStore,
     selectedScreen,
     componentStore,
+    componentTreeSearchStore,
     selectedComponent,
   } from "@/stores/builder"
   import { onMount } from "svelte"
@@ -195,6 +196,7 @@
   }
 
   const addComponent = async component => {
+    componentTreeSearchStore.clearSearch()
     try {
       await componentStore.create(component)
     } catch (error) {
