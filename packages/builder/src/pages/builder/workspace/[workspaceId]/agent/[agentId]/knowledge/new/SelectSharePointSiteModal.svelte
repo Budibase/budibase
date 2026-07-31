@@ -70,6 +70,12 @@
     return sharePointSites.filter(site => !excluded.has(site.id))
   })
 
+  const siteEmptyMessage = $derived(
+    sharePointSites.length > 0 && availableSites.length === 0
+      ? "All SharePoint sites for this connection have already been added."
+      : "No SharePoint sites found for this connection."
+  )
+
   const loadSharePointConnections = async () => {
     if (!agentId) {
       sharePointConnectionOptions = []
@@ -202,7 +208,9 @@
         quickAuthConfigId
       )
       sharePointSites = response.options
-      selectedSiteId = sharePointSites[0]?.id || ""
+      const excluded = new Set(existingSiteIds)
+      selectedSiteId =
+        sharePointSites.find(site => !excluded.has(site.id))?.id || ""
       selectedDatasourceId = datasourceId
       selectedAuthConfigId = quickAuthConfigId
       selectedConnectionId = `${datasourceId}:${quickAuthConfigId}`
@@ -218,9 +226,7 @@
   }
 
   const handleSelect = async (mode: SharePointSelectionMode) => {
-    const selectedSite = sharePointSites.find(
-      site => site.id === selectedSiteId
-    )
+    const selectedSite = availableSites.find(site => site.id === selectedSiteId)
     if (!agentId || !operationId || !selectedSite) {
       return
     }
@@ -318,6 +324,7 @@
   bind:this={siteStepModal}
   options={availableSites}
   {selectedSiteId}
+  emptyMessage={siteEmptyMessage}
   {saving}
   showBack={!skippedConnectionStep}
   onSiteChange={siteId => {

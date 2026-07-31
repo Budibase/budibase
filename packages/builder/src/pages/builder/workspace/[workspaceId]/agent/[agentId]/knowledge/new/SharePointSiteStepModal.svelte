@@ -13,6 +13,7 @@
   export interface Props {
     options: KnowledgeSourceOption[]
     selectedSiteId: string
+    emptyMessage?: string
     saving?: boolean
     showBack?: boolean
     onBack: () => Promise<void> | void
@@ -23,6 +24,7 @@
   let {
     options,
     selectedSiteId,
+    emptyMessage = "No SharePoint sites found for this connection.",
     saving = false,
     showBack = true,
     onBack,
@@ -68,7 +70,7 @@
       </div>
 
       {#if displaySharePointSites.length === 0}
-        <Body size="S">No SharePoint sites found for this connection.</Body>
+        <Body size="S">{emptyMessage}</Body>
       {:else}
         <Select
           value={selectedSiteId}
