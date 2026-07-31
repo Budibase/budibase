@@ -1,7 +1,13 @@
 <script lang="ts">
-  import { notifications } from "@budibase/bbui"
-  import { type KnowledgeSourceOption } from "@budibase/types"
-  import { workspaceDeploymentStore } from "@/stores/builder"
+  import { Helpers, notifications } from "@budibase/bbui"
+  import {
+    SourceName,
+    type Datasource,
+    type KnowledgeSourceOption,
+    type UIIntegration,
+  } from "@budibase/types"
+  import { datasources, workspaceDeploymentStore } from "@/stores/builder"
+  import { sortedIntegrations } from "@/stores/builder/sortedIntegrations"
   import { bb } from "@/stores/bb"
   import { agentsStore, knowledgeConnectionsStore } from "@/stores/portal"
   import type { SharePointSelectionMode } from "../renderers/types"
@@ -10,6 +16,11 @@
     type SharePointConnectionOption,
   } from "./SharePointConnectionStepModal.svelte"
   import SharePointSiteStepModal from "./SharePointSiteStepModal.svelte"
+  import SharePointQuickAddModal from "./SharePointQuickAddModal.svelte"
+  import {
+    saveSharePointQuickDatasource,
+    type SharePointQuickAddCredentials,
+  } from "./sharePointQuickAdd"
 
   export interface Props {
     agentId: string
@@ -37,10 +48,22 @@
   let siteLoadError = $state("")
   let loadingNextStep = $state(false)
   let saving = $state(false)
+  let savingQuickConnection = $state(false)
+  let quickConnectionError = $state("")
+  let quickDatasource = $state<Datasource>()
+  let quickAuthConfigId = $state("")
   let skippedConnectionStep = $state(false)
 
   let connectionStepModal = $state<SharePointConnectionStepModal>()
   let siteStepModal = $state<SharePointSiteStepModal>()
+  let quickAddModal = $state<SharePointQuickAddModal>()
+
+  let restIntegration = $derived(
+    $sortedIntegrations.find(
+      (integration): integration is UIIntegration =>
+        integration.name === SourceName.REST
+    )
+  )
 
   const availableSites = $derived.by(() => {
     const excluded = new Set(existingSiteIds)
@@ -95,12 +118,12 @@
       const excluded = new Set(existingSiteIds)
       selectedSiteId =
         sharePointSites.find(site => !excluded.has(site.id))?.id || ""
-    } catch (error: any) {
+    } catch (error) {
       console.error(error)
-      const message =
-        error?.cause?.message ||
-        error?.message ||
+      const message = getErrorMessage(
+        error,
         "Failed to fetch SharePoint sites for this auth config."
+      )
       siteLoadError = message
       notifications.error(`Error fetching sites: ${message}`)
       sharePointSites = []
@@ -122,6 +145,75 @@
       siteStepModal?.show()
     } finally {
       loadingNextStep = false
+    }
+  }
+
+  const getErrorMessage = (
+    error: unknown,
+    fallback = "Failed to connect to SharePoint."
+  ) => {
+    if (typeof error !== "object" || error === null) {
+      return fallback
+    }
+    if ("cause" in error) {
+      const cause = error.cause
+      if (
+        typeof cause === "object" &&
+        cause !== null &&
+        "message" in cause &&
+        typeof cause.message === "string"
+      ) {
+        return cause.message
+      }
+    }
+    if ("message" in error && typeof error.message === "string") {
+      return error.message
+    }
+    return fallback
+  }
+
+  const saveQuickConnection = async (
+    credentials: SharePointQuickAddCredentials
+  ) => {
+    if (!restIntegration || savingQuickConnection) {
+      return
+    }
+
+    savingQuickConnection = true
+    quickConnectionError = ""
+    try {
+      quickAuthConfigId ||= Helpers.uuid()
+      quickDatasource = await saveSharePointQuickDatasource({
+        credentials,
+        authConfigId: quickAuthConfigId,
+        integration: restIntegration,
+        existingDatasource: quickDatasource,
+        createDatasource: params => datasources.create(params),
+        updateDatasource: params => datasources.save(params),
+      })
+
+      const datasourceId = quickDatasource._id
+      if (!datasourceId) {
+        throw new Error("SharePoint connection was saved without an ID.")
+      }
+
+      const response = await agentsStore.fetchAgentKnowledgeSourceOptions(
+        datasourceId,
+        quickAuthConfigId
+      )
+      sharePointSites = response.options
+      selectedSiteId = sharePointSites[0]?.id || ""
+      selectedDatasourceId = datasourceId
+      selectedAuthConfigId = quickAuthConfigId
+      selectedConnectionId = `${datasourceId}:${quickAuthConfigId}`
+      skippedConnectionStep = true
+      quickAddModal?.hide()
+      siteStepModal?.show()
+    } catch (error) {
+      console.error(error)
+      quickConnectionError = getErrorMessage(error)
+    } finally {
+      savingQuickConnection = false
     }
   }
 
@@ -154,12 +246,22 @@
 
   export async function show() {
     await loadSharePointConnections()
+    if (
+      sharePointConnectionOptions.length === 0 &&
+      $knowledgeConnectionsStore.sharePointDatasourceIds.length === 0
+    ) {
+      quickConnectionError = ""
+      quickAddModal?.show()
+      return
+    }
     if (sharePointConnectionOptions.length === 1 && selectedConnectionId) {
       skippedConnectionStep = true
       loadingNextStep = true
       try {
         await loadSharePointSites()
         if (siteLoadError) {
+          skippedConnectionStep = false
+          connectionStepModal?.show()
           return
         }
         siteStepModal?.show()
@@ -175,8 +277,16 @@
   export function hide() {
     connectionStepModal?.hide()
     siteStepModal?.hide()
+    quickAddModal?.hide()
   }
 </script>
+
+<SharePointQuickAddModal
+  bind:this={quickAddModal}
+  saving={savingQuickConnection}
+  error={quickConnectionError}
+  onSubmit={saveQuickConnection}
+/>
 
 <SharePointConnectionStepModal
   bind:this={connectionStepModal}
@@ -187,7 +297,9 @@
     .length > 0}
   onConfigure={() => {
     hide()
-    const datasourceId = $knowledgeConnectionsStore.sharePointDatasourceIds[0]
+    const datasourceId =
+      selectedDatasourceId ||
+      $knowledgeConnectionsStore.sharePointDatasourceIds[0]
     bb.settings(`/connections/apis/${datasourceId}`)
   }}
   onConnectionChange={connectionId => {
