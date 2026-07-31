@@ -2,29 +2,6 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import SharePointQuickAddModal from "./SharePointQuickAddModal.svelte"
 
-if (!Element.prototype.animate) {
-  Element.prototype.animate = () => {
-    const animation = Object.create(null) as Animation
-    animation.cancel = () => {}
-    Object.defineProperty(animation, "finished", {
-      value: Promise.resolve(animation),
-    })
-    Object.defineProperty(animation, "onfinish", {
-      set: (callback: Animation["onfinish"]) => {
-        if (callback) {
-          queueMicrotask(() =>
-            callback.call(
-              animation,
-              new Event("finish") as AnimationPlaybackEvent
-            )
-          )
-        }
-      },
-    })
-    return animation
-  }
-}
-
 beforeEach(() => {
   const modalContainer = document.createElement("div")
   modalContainer.classList.add("modal-container")

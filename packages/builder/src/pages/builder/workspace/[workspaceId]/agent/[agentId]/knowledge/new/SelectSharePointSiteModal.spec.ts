@@ -60,29 +60,6 @@ vi.mock("./sharePointQuickAdd", async importOriginal => ({
 
 import SelectSharePointSiteModal from "./SelectSharePointSiteModal.svelte"
 
-if (!Element.prototype.animate) {
-  Element.prototype.animate = () => {
-    const animation = Object.create(null) as Animation
-    animation.cancel = () => {}
-    Object.defineProperty(animation, "finished", {
-      value: Promise.resolve(animation),
-    })
-    Object.defineProperty(animation, "onfinish", {
-      set: (callback: Animation["onfinish"]) => {
-        if (callback) {
-          queueMicrotask(() =>
-            callback.call(
-              animation,
-              new Event("finish") as AnimationPlaybackEvent
-            )
-          )
-        }
-      },
-    })
-    return animation
-  }
-}
-
 const existingSite: KnowledgeSourceOption = {
   id: "existing-site",
   name: "Existing site",
