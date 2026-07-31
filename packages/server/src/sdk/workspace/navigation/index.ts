@@ -1,5 +1,4 @@
 import { HTTPError } from "@budibase/backend-core"
-import { MAX_NAV_DEPTH } from "@budibase/shared-core"
 import sdk from "../.."
 import { AppNavigation, AppNavigationLink } from "@budibase/types"
 
@@ -61,22 +60,6 @@ export async function deleteLink(route: string, workspaceAppId: string) {
   })
 }
 
-// The client renderer stops at MAX_NAV_DEPTH, so reject deeper trees here
-// rather than silently dropping them at render time.
-function validateDepth(links: AppNavigationLink[], depth = 1) {
-  for (const link of links || []) {
-    if (depth > MAX_NAV_DEPTH) {
-      throw new HTTPError(
-        `Navigation supports up to ${MAX_NAV_DEPTH} levels of links`,
-        400
-      )
-    }
-    if (link.subLinks?.length) {
-      validateDepth(link.subLinks, depth + 1)
-    }
-  }
-}
-
 export async function update(
   workspaceAppId: string,
   navigation: AppNavigation
@@ -85,6 +68,6 @@ export async function update(
   if (!workspaceApp) {
     throw new HTTPError("Workspace app not found", 400)
   }
-  validateDepth(navigation?.links || [])
+  // Depth is validated in workspaceApps.update so every write path is covered.
   await sdk.workspaceApps.update({ ...workspaceApp, navigation })
 }

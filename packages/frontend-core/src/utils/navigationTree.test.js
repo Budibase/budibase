@@ -147,7 +147,8 @@ describe("navigationTree", () => {
 
     it("holds children to their own parent's stricter role", () => {
       // Archive ("manager") already satisfies the new "sales" minimum and
-      // keeps its role - so its child must meet "manager", not just "sales".
+      // keeps its role - so its child must be raised to "manager", the minimum
+      // for its own level, not to the edited group's "sales".
       const links = updateNavNode(tree(), "archive", { roleId: "manager" })
       const result = enforceSubtreeMinRole(
         links,
@@ -156,7 +157,27 @@ describe("navigationTree", () => {
         isAllowedUnder
       )
       expect(findNavNode(result.links, "archive")?.roleId).toBe("manager")
-      expect(findNavNode(result.links, "y2023")?.roleId).toBe("sales")
+      expect(findNavNode(result.links, "y2023")?.roleId).toBe("manager")
+    })
+
+    it("reaches a fixed point: re-running changes nothing", () => {
+      // Every raise must satisfy the rule it was raised for, otherwise the same
+      // node is reported again on the next run.
+      const links = updateNavNode(tree(), "archive", { roleId: "manager" })
+      const first = enforceSubtreeMinRole(
+        links,
+        "reports",
+        "sales",
+        isAllowedUnder
+      )
+      const second = enforceSubtreeMinRole(
+        first.links,
+        "reports",
+        "sales",
+        isAllowedUnder
+      )
+      expect(second.raised).toEqual([])
+      expect(second.links).toEqual(first.links)
     })
 
     it("leaves an ADMIN descendant alone", () => {
@@ -204,11 +225,14 @@ describe("navigationTree", () => {
   })
 
   describe("filterNavTree", () => {
+    // Route reachability is deliberately independent of whether a url is set,
+    // so the harness cannot stand in for the "link has no url" check.
+    const reachable = ["/", "/x", "/s", "/ok", "/reports/monthly", "/deep"]
     const filter = (links, overrides = {}) =>
       filterNavTree(links, {
         userRoleHierarchy: ["BASIC", "PUBLIC"],
         defaultRole: "BASIC",
-        canAccessLink: node => !!node.url,
+        canAccessLink: node => reachable.includes(node.url),
         evaluateConditions: () => true,
         enrich: node => ({ ...node, enriched: true }),
         ...overrides,
@@ -304,6 +328,64 @@ describe("navigationTree", () => {
       expect(result.map(n => n.id)).toEqual(["g"])
       expect(findNavNode(result, "dead")).toBeUndefined()
       expect(findNavNode(result, "ok")).toBeDefined()
+    })
+
+    it("drops nested links without a url, like it does at top level", () => {
+      const links = [
+        {
+          id: "g",
+          text: "Group",
+          type: "sublinks",
+          subLinks: [
+            { id: "nourl", text: "No url", type: "link", url: "" },
+            { id: "ok", text: "Ok", type: "link", url: "/ok" },
+          ],
+        },
+      ]
+      const result = filter(links)
+      expect(findNavNode(result, "nourl")).toBeUndefined()
+      expect(findNavNode(result, "ok")).toBeDefined()
+    })
+
+    it("keeps a group whose own url is unreachable, but drops that url", () => {
+      // A group header link to a screen the user cannot reach would render a
+      // dead anchor; the group itself is still valid as a label.
+      const links = [
+        {
+          id: "g",
+          text: "Group",
+          type: "sublinks",
+          url: "/gone",
+          subLinks: [{ id: "ok", text: "Ok", type: "link", url: "/ok" }],
+        },
+      ]
+      const result = filter(links)
+      expect(result[0].url).toBe("")
+      expect(findNavNode(result, "ok")).toBeDefined()
+    })
+
+    it("drops an unreachable url on a nested group too", () => {
+      const links = [
+        {
+          id: "outer",
+          text: "Outer",
+          type: "sublinks",
+          subLinks: [
+            {
+              id: "inner",
+              text: "Inner",
+              type: "sublinks",
+              url: "/gone",
+              subLinks: [
+                { id: "leaf", text: "Leaf", type: "link", url: "/ok" },
+              ],
+            },
+          ],
+        },
+      ]
+      const result = filter(links)
+      expect(findNavNode(result, "inner")?.url).toBe("")
+      expect(findNavNode(result, "leaf")).toBeDefined()
     })
 
     it("applies conditions to top level nodes too", () => {

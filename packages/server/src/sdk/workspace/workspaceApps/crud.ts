@@ -1,8 +1,26 @@
 import { context, docIds, events, HTTPError } from "@budibase/backend-core"
-import { RequiredKeys, WithoutDocMetadata, WorkspaceApp } from "@budibase/types"
+import {
+  AppNavigationLink,
+  RequiredKeys,
+  WithoutDocMetadata,
+  WorkspaceApp,
+} from "@budibase/types"
 import sdk from "../.."
-import { helpers } from "@budibase/shared-core"
+import { helpers, MAX_NAV_DEPTH } from "@budibase/shared-core"
 import { getValidProjectIdsForDuplication } from "../projects/utils"
+
+// The client renderer stops at MAX_NAV_DEPTH, so reject deeper trees on every
+// write path rather than silently dropping them at render time.
+function guardNavigationDepth(links?: AppNavigationLink[]) {
+  const violation = helpers.findNavDepthViolation(links || [])
+  if (violation) {
+    throw new HTTPError(
+      `Navigation supports up to ${MAX_NAV_DEPTH} levels of links - ` +
+        `"${violation.text || "Untitled"}" is nested deeper`,
+      400
+    )
+  }
+}
 
 async function guardName(name: string, id?: string) {
   const existingWorkspaceApps = await fetch()
@@ -143,6 +161,7 @@ export async function update(
   if (workspaceApp.name !== persisted.name) {
     await guardName(workspaceApp.name, workspaceApp._id)
   }
+  guardNavigationDepth(workspaceApp.navigation?.links)
   const docToUpdate: RequiredKeys<WorkspaceApp> = {
     _id: workspaceApp._id,
     _rev: workspaceApp._rev,

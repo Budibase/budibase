@@ -18,6 +18,7 @@
   } from "@budibase/frontend-core"
   import type { AppNavigationLink, EnrichedBinding } from "@budibase/types"
   import { navigationStore, roles } from "@/stores/builder"
+  import { getSequentialName } from "@/helpers/duplicate"
   import NavItemFields from "./NavItemFields.svelte"
 
   export let bindings: EnrichedBinding[] = []
@@ -100,6 +101,19 @@
 
   const isGroup = (node: AppNavigationLink) => node.type === "sublinks"
 
+  // Both of these are dropped by the runtime filter, so say so here rather than
+  // letting the item quietly disappear from the app.
+  const hiddenReason = (node: AppNavigationLink): string | undefined => {
+    if (isGroup(node)) {
+      return NavigationUtils.navChildrenOf(links, node.id || null).length
+        ? undefined
+        : "No sub items - this group won't be shown in your app"
+    }
+    return node.url
+      ? undefined
+      : "No link set - this item won't be shown in your app"
+  }
+
   const selectItem = (item: AppNavigationLink, colIndex: number) => {
     if (isGroup(item) && item.id) {
       columnPath = [...columnPath.slice(0, colIndex), item.id]
@@ -110,25 +124,31 @@
   }
 
   const newNode = (
-    roleId: string = Constants.Roles.BASIC
+    roleId: string,
+    siblings: AppNavigationLink[]
   ): AppNavigationLink => ({
     id: generate(),
-    text: "New item",
+    text: getSequentialName(siblings, "New item ", {
+      getName: (x: AppNavigationLink) => x.text,
+    }),
     url: "",
     roleId,
     type: "link",
   })
 
-  // A new sub item inherits (at least) its parent group's access.
+  // A new sub item inherits (at least) its parent group's access - the role that
+  // actually gates the parent, which may come from further up the chain.
   const roleFor = (parentId: string | null): string =>
     parentId == null
       ? Constants.Roles.BASIC
-      : NavigationUtils.findNavNode(links, parentId)?.roleId ||
-        Constants.Roles.BASIC
+      : NavigationUtils.effectiveNavRole(
+          NavigationUtils.findNavPath(links, parentId) || [],
+          Constants.Roles.BASIC
+        )
 
   const addToColumn = (colIndex: number) => {
     const parentId = columns[colIndex].parentId
-    const child = newNode(roleFor(parentId))
+    const child = newNode(roleFor(parentId), columns[colIndex].items)
     links = NavigationUtils.addNavChild(links, parentId, child)
     selectedId = child.id || null
   }
@@ -185,9 +205,20 @@
     links = NavigationUtils.reorderNavChildren(links, parentId, items)
   }
 
-  const save = () => {
-    navigationStore.save({ ...$navigationStore, links })
-    drawer.hide()
+  // The drawer batches the whole editing session in a local copy, so a failed
+  // save must keep it open with the edits intact rather than discard them.
+  const save = async () => {
+    try {
+      await navigationStore.save({ ...$navigationStore, links })
+      drawer.hide()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : ""
+      notifications.error(
+        message
+          ? `Could not save navigation: ${message}`
+          : "Could not save navigation"
+      )
+    }
   }
 </script>
 
@@ -225,6 +256,7 @@
                   }}
                 >
                   {#each column.items as item (item.id)}
+                    {@const hidden = hiddenReason(item)}
                     <div
                       class="row"
                       class:selected={selectedId === item.id ||
@@ -243,12 +275,12 @@
                         <Icon name={item.icon} size="S" />
                       {/if}
                       <span class="label">{item.text || "Untitled"}</span>
-                      {#if !isGroup(item) && !item.url}
+                      {#if hidden}
                         <Icon
                           name="warning"
                           size="XS"
                           color="var(--spectrum-global-color-yellow-600)"
-                          tooltip="No link set - this item won't be shown in your app"
+                          tooltip={hidden}
                         />
                       {/if}
                       {#if item._conditions?.length}

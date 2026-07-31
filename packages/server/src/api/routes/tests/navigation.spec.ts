@@ -1,6 +1,12 @@
 import * as setup from "./utilities"
 import { basicScreen } from "../../../tests/utilities/structures"
-import { AppNavigation, WithRequired, WorkspaceApp } from "@budibase/types"
+import { MAX_NAV_DEPTH } from "@budibase/shared-core"
+import {
+  AppNavigation,
+  AppNavigationLink,
+  WithRequired,
+  WorkspaceApp,
+} from "@budibase/types"
 
 describe("/navigation", () => {
   let config = setup.getConfig()
@@ -63,6 +69,59 @@ describe("/navigation", () => {
       const updatedApp = await config.api.workspaceApp.find(workspaceApp._id)
       expect(updatedApp).toBeDefined()
       expect(updatedApp!.navigation).toEqual(emptyNavigation)
+    })
+  })
+
+  describe("nesting depth", () => {
+    const nest = (depth: number): AppNavigation => {
+      let link: AppNavigationLink = {
+        text: `L${depth}`,
+        url: `/l${depth}`,
+        type: "link",
+      }
+      for (let level = depth - 1; level >= 1; level--) {
+        link = {
+          text: `L${level}`,
+          url: "",
+          type: "sublinks",
+          subLinks: [link],
+        }
+      }
+      return { navigation: "Top", links: [link] }
+    }
+
+    it("accepts a tree at the maximum depth", async () => {
+      await config.api.navigation.update(workspaceApp._id, {
+        navigation: nest(MAX_NAV_DEPTH),
+      })
+
+      const updated = await config.api.workspaceApp.find(workspaceApp._id)
+      expect(updated!.navigation).toEqual(nest(MAX_NAV_DEPTH))
+    })
+
+    it("rejects a tree deeper than the maximum", async () => {
+      await config.api.navigation.update(
+        workspaceApp._id,
+        { navigation: nest(MAX_NAV_DEPTH + 1) },
+        { status: 400 }
+      )
+    })
+
+    // The workspace app route is a second write path for navigation; it must be
+    // guarded too, otherwise over-deep trees get stored and silently dropped by
+    // the renderer.
+    it("rejects a too deep tree via the workspace app route as well", async () => {
+      const app = (await config.api.workspaceApp.find(workspaceApp._id))!
+      await config.api.workspaceApp.update(
+        {
+          _id: app._id!,
+          _rev: app._rev!,
+          name: app.name,
+          url: app.url,
+          navigation: nest(MAX_NAV_DEPTH + 1),
+        },
+        { status: 400 }
+      )
     })
   })
 

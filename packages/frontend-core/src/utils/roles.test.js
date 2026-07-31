@@ -72,6 +72,41 @@ describe("roles inheritance", () => {
     })
   })
 
+  describe("mixed prefix spellings", () => {
+    // The roles API externalises a role's _id without its version but its
+    // `inherits` with it (backend-core externalRole), so the same role can
+    // arrive with a prefixed _id and unprefixed parents. A chain three deep
+    // then needs a lookup by an unprefixed id against a prefixed key.
+    const mixed = [
+      { _id: "BASIC", inherits: "PUBLIC" },
+      { _id: "PUBLIC" },
+      { _id: "role_staff", inherits: "BASIC" },
+      { _id: "role_sales", inherits: "staff" },
+      { _id: "role_manager", inherits: "sales" },
+    ]
+
+    it("walks a three deep custom chain despite mixed spellings", () => {
+      expect(isRoleAtLeastAsRestrictive("role_manager", "staff", mixed)).toBe(
+        true
+      )
+      expect(
+        isRoleAtLeastAsRestrictive("role_sales", "role_staff", mixed)
+      ).toBe(true)
+    })
+
+    it("still refuses roles that genuinely do not reach the parent", () => {
+      expect(isRoleAtLeastAsRestrictive("role_staff", "sales", mixed)).toBe(
+        false
+      )
+    })
+
+    it("offers the whole descendant chain in the allowed list", () => {
+      expect(getRolesAtLeastAsRestrictive("staff", mixed).sort()).toEqual(
+        ["role_staff", "role_sales", "role_manager"].sort()
+      )
+    })
+  })
+
   describe("isRoleAtLeastAsRestrictive", () => {
     it("always allows ADMIN, regardless of branch", () => {
       expect(isRoleAtLeastAsRestrictive("ADMIN", "role_sales", roles)).toBe(

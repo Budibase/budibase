@@ -164,7 +164,11 @@ export const enforceSubtreeMinRole = (
       if (violates) {
         raised.push(node.text || "Untitled")
       }
-      const roleId = violates ? newRole : node.roleId
+      // Raise to the minimum for THIS level, not to the edited group's role:
+      // an intermediate group that keeps a stricter role becomes the minimum
+      // for its own children. Using newRole here would write a role that still
+      // violates the rule, so the function would never reach a fixed point.
+      const roleId = violates ? minRole : node.roleId
       return {
         ...node,
         ...(violates ? { roleId } : {}),
@@ -251,7 +255,8 @@ export const filterNavTree = (
       return null
     }
     const group = isNavGroup(node)
-    if (!group && !canAccessLink(node)) {
+    // A link needs a destination, and one we can actually reach.
+    if (!group && (!node.url || !canAccessLink(node))) {
       return null
     }
     const role = node.roleId || parentRole
@@ -262,6 +267,11 @@ export const filterNavTree = (
       return null
     }
     const enriched = enrich(node)
+    // A group's own URL is optional, so an unreachable one only costs the URL -
+    // the header falls back to a plain label instead of a dead link.
+    if (group && node.url && !canAccessLink(node)) {
+      enriched.url = ""
+    }
     if (group) {
       const children =
         depth < MAX_NAV_DEPTH - 1
@@ -292,6 +302,9 @@ export const filterNavTree = (
     })
     .map(node => {
       const enriched = enrich(node)
+      if (isNavGroup(node) && node.url && !canAccessLink(node)) {
+        enriched.url = ""
+      }
       if (isNavGroup(node) && node.subLinks?.length) {
         enriched.subLinks = node.subLinks
           .map(child => filterChild(child, 1, node.roleId || defaultRole))
