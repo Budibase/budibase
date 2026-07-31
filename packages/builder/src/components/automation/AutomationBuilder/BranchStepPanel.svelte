@@ -10,7 +10,7 @@
   import ConditionBuilder from "@/components/common/ConditionBuilder.svelte"
   import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[workspaceId]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { PropField } from "../SetupPanel"
   import BlockHeader from "../SetupPanel/BlockHeader.svelte"
   import { getVerticalResizeActions } from "@/components/common/resizable"

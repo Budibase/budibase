@@ -293,7 +293,7 @@ describe("sanitize relationship field names migration", () => {
     expect(peopleView.schema![ILLEGAL_FIELD_NAME]).toBeUndefined()
     expect(peopleView.schema![SANITISED_FIELD_NAME]).toBeDefined()
     expect(peopleView.primaryDisplay).toEqual(SANITISED_FIELD_NAME)
-    expect(peopleView.sort!.field).toEqual(SANITISED_FIELD_NAME)
+    expect(peopleView.sort).toEqual({ field: SANITISED_FIELD_NAME })
 
     // related table's own view: saved filter references updated in `query`
     const query = peopleView.query as SearchFilters
