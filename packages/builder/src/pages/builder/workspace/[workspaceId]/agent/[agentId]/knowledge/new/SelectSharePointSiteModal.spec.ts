@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   fetchAgentKnowledgeSourceOptions: vi.fn(),
   fetchWorkspaceDeployment: vi.fn(),
   saveSharePointQuickDatasource: vi.fn(),
+  settings: vi.fn(),
 }))
 
 vi.mock("@/stores/builder", () => ({
@@ -30,7 +31,7 @@ vi.mock("@/stores/builder/sortedIntegrations", () => ({
 
 vi.mock("@/stores/bb", () => ({
   bb: {
-    settings: vi.fn(),
+    settings: mocks.settings,
   },
 }))
 
@@ -94,6 +95,20 @@ const availableSite: KnowledgeSourceOption = {
   webUrl: "https://example.com/available",
 }
 
+const submitQuickCredentials = async () => {
+  const inputs = document.querySelectorAll<HTMLInputElement>(".fields input")
+  await fireEvent.input(inputs[0], {
+    target: { value: "tenant-id" },
+  })
+  await fireEvent.input(inputs[1], {
+    target: { value: "client-id" },
+  })
+  await fireEvent.input(inputs[2], {
+    target: { value: "client-secret" },
+  })
+  await fireEvent.click(screen.getByText("Connect"))
+}
+
 const connectQuickSharePoint = async (
   sites: KnowledgeSourceOption[],
   existingSiteIds = [existingSite.id]
@@ -111,18 +126,7 @@ const connectQuickSharePoint = async (
     existingSiteIds,
   })
   await result.component.show()
-
-  const inputs = document.querySelectorAll<HTMLInputElement>(".fields input")
-  await fireEvent.input(inputs[0], {
-    target: { value: "tenant-id" },
-  })
-  await fireEvent.input(inputs[1], {
-    target: { value: "client-id" },
-  })
-  await fireEvent.input(inputs[2], {
-    target: { value: "client-secret" },
-  })
-  await fireEvent.click(screen.getByText("Connect"))
+  await submitQuickCredentials()
 
   return result
 }
@@ -141,6 +145,50 @@ afterEach(() => {
 })
 
 describe("SelectSharePointSiteModal quick add", () => {
+  it("opens the full SharePoint editor for advanced setup", async () => {
+    const { component } = render(SelectSharePointSiteModal, {
+      agentId: "agent-id",
+      operationId: "operation-id",
+    })
+    await component.show()
+
+    await fireEvent.click(await screen.findByText("Advanced setup"))
+
+    expect(mocks.settings).toHaveBeenCalledWith(
+      "/connections/apis/new/microsoft-sharepoint"
+    )
+    expect(screen.queryByText("Connect SharePoint")).not.toBeInTheDocument()
+  })
+
+  it("opens a saved quick datasource after site discovery fails", async () => {
+    mocks.saveSharePointQuickDatasource.mockResolvedValue({
+      _id: "datasource-id",
+      type: "datasource",
+      source: SourceName.REST,
+    })
+    mocks.fetchAgentKnowledgeSourceOptions.mockRejectedValue(
+      new Error("Unable to fetch sites")
+    )
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const { component } = render(SelectSharePointSiteModal, {
+        agentId: "agent-id",
+        operationId: "operation-id",
+      })
+      await component.show()
+      await submitQuickCredentials()
+      await screen.findByText("Unable to fetch sites")
+
+      await fireEvent.click(screen.getByText("Advanced setup"))
+
+      expect(mocks.settings).toHaveBeenCalledWith(
+        "/connections/apis/datasource-id"
+      )
+    } finally {
+      errorSpy.mockRestore()
+    }
+  })
+
   it("selects the first site that has not already been added", async () => {
     await connectQuickSharePoint([existingSite, availableSite])
 

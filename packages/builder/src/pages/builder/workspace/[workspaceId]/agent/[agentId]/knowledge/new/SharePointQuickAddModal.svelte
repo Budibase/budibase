@@ -13,9 +13,15 @@
     saving?: boolean
     error?: string
     onSubmit: (_credentials: SharePointQuickAddCredentials) => Promise<void>
+    onAdvancedSetup: () => Promise<void> | void
   }
 
-  let { saving = false, error = "", onSubmit }: Props = $props()
+  let {
+    saving = false,
+    error = "",
+    onSubmit,
+    onAdvancedSetup,
+  }: Props = $props()
 
   let modal = $state<Modal>()
   let tenantId = $state("")
@@ -91,6 +97,9 @@
     </div>
 
     <ButtonGroup slot="footer">
+      <Button cta secondary on:click={onAdvancedSetup} disabled={saving}>
+        Advanced setup
+      </Button>
       <Button cta primary on:click={submit} disabled={!canSubmit}>
         {saving ? "Connecting..." : error ? "Retry" : "Connect"}
       </Button>

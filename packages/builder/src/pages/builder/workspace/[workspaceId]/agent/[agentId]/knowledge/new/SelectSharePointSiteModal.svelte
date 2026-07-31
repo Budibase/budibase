@@ -19,6 +19,7 @@
   import SharePointQuickAddModal from "./SharePointQuickAddModal.svelte"
   import {
     saveSharePointQuickDatasource,
+    SHAREPOINT_TEMPLATE_ID,
     type SharePointQuickAddCredentials,
   } from "./sharePointQuickAdd"
 
@@ -225,6 +226,16 @@
     }
   }
 
+  const openAdvancedSetup = () => {
+    hide()
+    const datasourceId = quickDatasource?._id
+    bb.settings(
+      datasourceId
+        ? `/connections/apis/${datasourceId}`
+        : `/connections/apis/new/${SHAREPOINT_TEMPLATE_ID}`
+    )
+  }
+
   const handleSelect = async (mode: SharePointSelectionMode) => {
     const selectedSite = availableSites.find(site => site.id === selectedSiteId)
     if (!agentId || !operationId || !selectedSite) {
@@ -292,6 +303,7 @@
   saving={savingQuickConnection}
   error={quickConnectionError}
   onSubmit={saveQuickConnection}
+  onAdvancedSetup={openAdvancedSetup}
 />
 
 <SharePointConnectionStepModal

@@ -39,13 +39,17 @@ afterEach(() => {
 
 describe("SharePointQuickAddModal", () => {
   it("cannot be dismissed while saving", async () => {
+    const onAdvancedSetup = vi.fn()
     const { component } = render(SharePointQuickAddModal, {
       saving: true,
       onSubmit: vi.fn(),
+      onAdvancedSetup,
     })
     component.show()
 
     await screen.findByText("Connect SharePoint")
+    await fireEvent.click(screen.getByText("Advanced setup"))
+    expect(onAdvancedSetup).not.toHaveBeenCalled()
     await fireEvent.keyDown(document, { key: "Escape" })
     expect(screen.getByText("Connect SharePoint")).toBeInTheDocument()
 
@@ -65,6 +69,7 @@ describe("SharePointQuickAddModal", () => {
     const { component } = render(SharePointQuickAddModal, {
       saving: false,
       onSubmit: vi.fn(),
+      onAdvancedSetup: vi.fn(),
     })
     component.show()
     await screen.findByText("Connect SharePoint")
@@ -76,5 +81,18 @@ describe("SharePointQuickAddModal", () => {
     await waitFor(() => {
       expect(screen.queryByText("Connect SharePoint")).not.toBeInTheDocument()
     })
+  })
+
+  it("opens advanced setup", async () => {
+    const onAdvancedSetup = vi.fn()
+    const { component } = render(SharePointQuickAddModal, {
+      onSubmit: vi.fn(),
+      onAdvancedSetup,
+    })
+    component.show()
+
+    await fireEvent.click(await screen.findByText("Advanced setup"))
+
+    expect(onAdvancedSetup).toHaveBeenCalledOnce()
   })
 })
