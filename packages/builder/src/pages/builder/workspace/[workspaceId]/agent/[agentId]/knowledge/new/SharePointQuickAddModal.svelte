@@ -48,7 +48,7 @@
   }
 </script>
 
-<Modal bind:this={modal} on:hide={clearCredentials}>
+<Modal bind:this={modal} disableCancel={saving} on:hide={clearCredentials}>
   <ModalContent
     custom
     showDivider={false}
