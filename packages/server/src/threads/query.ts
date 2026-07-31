@@ -410,7 +410,8 @@ class QueryRunner {
           return false
         }
         // look for {{ variable }} but allow spaces between handlebars
-        const regex = new RegExp(`{{[ ]*${variable.name}[ ]*}}`)
+        const escapedName = variable.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        const regex = new RegExp(`{{[ ]*${escapedName}[ ]*}}`)
         return regex.test(stringFields)
       })
       const dynamics = foundVars.map((dynVar: QueryVariable) =>

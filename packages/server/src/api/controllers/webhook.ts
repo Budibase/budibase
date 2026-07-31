@@ -18,6 +18,14 @@ import {
 } from "@budibase/types"
 import * as triggers from "../../automations/triggers"
 import { getWebhookParams } from "../../db/utils"
+
+const DANGEROUS_BODY_KEYS = ["__proto__", "constructor", "prototype"]
+
+function sanitizeBody(body: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(body).filter(([key]) => !DANGEROUS_BODY_KEYS.includes(key))
+  )
+}
 import sdk from "../../sdk"
 import { discordWebhook } from "./webhook/discord"
 import { MSTeamsWebhook } from "./webhook/ms-teams"
@@ -171,7 +179,7 @@ export async function trigger(
           target,
           {
             fields: {
-              ...ctx.request.body,
+              ...sanitizeBody(ctx.request.body as Record<string, unknown>),
               body: ctx.request.body,
             },
             appId: prodAppId,
@@ -191,7 +199,7 @@ export async function trigger(
       } else {
         await triggers.externalTrigger(target, {
           fields: {
-            ...ctx.request.body,
+            ...sanitizeBody(ctx.request.body as Record<string, unknown>),
             body: ctx.request.body,
           },
           appId: prodAppId,

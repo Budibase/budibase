@@ -98,7 +98,7 @@ async function refreshGoogleAccessToken(
     )
   } catch (err: any) {
     throw new Error(
-      `Error constructing OIDC refresh strategy: message=${err.message}`
+      `Error constructing Google refresh strategy: message=${err.message}`
     )
   }
 

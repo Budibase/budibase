@@ -68,7 +68,11 @@ export const loadHandlebarsFile = (path: PathLike) => {
 export const apiFileReturn = (contents: string | NodeJS.ArrayBufferView) => {
   const path = join(budibaseTempDir(), uuid())
   fs.writeFileSync(path, contents)
-  return fs.createReadStream(path)
+  const readStream = fs.createReadStream(path)
+  readStream.on("close", () => {
+    fs.unlink(path, () => {})
+  })
+  return readStream
 }
 
 export const streamFile = (path: string) => {

@@ -115,6 +115,9 @@ export async function getUser({
       }
     })
   }
+  if (user) {
+    delete user.password
+  }
   return user
 }
 

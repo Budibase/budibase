@@ -98,7 +98,7 @@ export async function destroy(ctx: UserCtx) {
     await groups.remove(groupId, rev)
     ctx.body = { message: "Group deleted successfully" }
   } catch (err: any) {
-    ctx.throw(err.status, err)
+    ctx.throw(err.status || 400, err?.message || "Failed to delete group")
   }
 }
 
@@ -109,7 +109,7 @@ export async function find(ctx: UserCtx) {
   try {
     ctx.body = await groups.get(ctx.params.groupId)
   } catch (err: any) {
-    ctx.throw(err.status, err)
+    ctx.throw(err.status || 400, err?.message || "Failed to find group")
   }
 }
 

@@ -205,10 +205,12 @@ export async function decryptFile(
 
 function readBytes(stream: fs.ReadStream, length: number) {
   return new Promise<Buffer>((resolve, reject) => {
+    let settled = false
     let bytesRead = 0
     const data: Buffer[] = []
 
     stream.on("readable", () => {
+      if (settled) return
       let chunk
 
       while ((chunk = stream.read(length - bytesRead)) !== null) {
@@ -216,15 +218,24 @@ function readBytes(stream: fs.ReadStream, length: number) {
         bytesRead += chunk.length
       }
 
-      resolve(Buffer.concat(data.map(buf => new Uint8Array(buf))))
+      if (bytesRead >= length) {
+        settled = true
+        resolve(Buffer.concat(data.map(buf => new Uint8Array(buf))))
+      }
     })
 
     stream.on("end", () => {
-      reject(new Error("Insufficient data in the stream."))
+      if (!settled) {
+        settled = true
+        reject(new Error("Insufficient data in the stream."))
+      }
     })
 
     stream.on("error", error => {
-      reject(error)
+      if (!settled) {
+        settled = true
+        reject(error)
+      }
     })
   })
 }

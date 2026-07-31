@@ -5,6 +5,10 @@ import sdk from "../../sdk"
 const MYSQL_CONST_CHAR_REGEX = new RegExp(`"[^"]*"|'[^']*'`, "g")
 const CONST_CHAR_REGEX = new RegExp(`'[^']*'`, "g")
 
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
 function getConstCharRegex(sourceName: SourceName) {
   // MySQL clients support ANSI_QUOTES mode off, this is by default
   // but " and ' count as string literals
@@ -19,10 +23,11 @@ function getBindingWithinConstCharRegex(
   sourceName: SourceName,
   binding: string
 ) {
+  const escaped = escapeRegExp(binding)
   if (sourceName === SourceName.MYSQL) {
-    return new RegExp(`[^']*${binding}[^']*'|"[^"]*${binding}[^"]*"`, "g")
+    return new RegExp(`[^']*${escaped}[^']*'|"[^"]*${escaped}[^"]*"`, "g")
   } else {
-    return new RegExp(`'[^']*${binding}[^']*'`)
+    return new RegExp(`'[^']*${escaped}[^']*'`)
   }
 }
 
@@ -42,8 +47,9 @@ export async function interpolateSQL(
     arrays = []
   for (let binding of bindings) {
     // look for array/list operations in the SQL statement, which will need handled later
+    const escapedBinding = escapeRegExp(binding)
     const listRegexMatch = sql.match(
-      new RegExp(`(in|IN|In|iN)( )+[(]?${binding}[)]?`)
+      new RegExp(`(in|IN|In|iN)( )+[(]?${escapedBinding}[)]?`)
     )
     // check if the variable was used as part of a string concat e.g. 'Hello {{binding}}'
     // start by finding all the instances of const character strings

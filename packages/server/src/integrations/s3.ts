@@ -259,17 +259,20 @@ class S3Integration implements IntegrationBase {
     let csvError = false
     return new Promise((resolve, reject) => {
       fileStream.on("error", (err: Error) => {
+        fileStream.destroy()
         reject(err)
       })
       const response = csv()
         .fromStream(fileStream)
         .on("error", () => {
           csvError = true
+          fileStream.destroy()
         })
       fileStream.on("end", () => {
         resolve(response)
       })
     }).catch(err => {
+      fileStream.destroy()
       if (csvError) {
         throw new Error("Could not read CSV")
       } else {
