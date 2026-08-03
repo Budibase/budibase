@@ -99,6 +99,7 @@
     "build:docker:single": "./scripts/build-single-image.sh",
     "build:docker:functions-runner": "yarn build --scope @budibase/functions-runner && docker build --file packages/functions-runner/Dockerfile --tag budibase/functions-runner:local .",
     "verify:docker:functions-runner": "yarn workspace @budibase/functions-runner verify:image",
+    "verify:compose:functions-runner": "yarn workspace @budibase/functions-runner verify:compose",
     "check:litellm-version": "node ./scripts/syncLiteLLMVersion.js --check",
     "sync:litellm-version": "node ./scripts/syncLiteLLMVersion.js",
     "build:docker:dependencies": "docker build -f hosting/dependencies/Dockerfile -t budibase/dependencies:latest ./hosting",

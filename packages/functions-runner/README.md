@@ -43,6 +43,33 @@ yarn verify:docker:functions-runner
 The verification starts an isolated temporary container without application
 credentials and removes it when complete.
 
+## Self-hosted Docker Compose
+
+The official Docker Compose configuration deploys the runner on an internal
+network without published ports. Enable Functions by setting:
+
+```sh
+BUDIBASE_FUNCTIONS_ENABLED=true
+```
+
+The runner is still deployed when this setting is empty, but the server and
+worker will not dispatch work to it. The separate Functions feature flag must
+also be enabled.
+
+The default container limits can be adjusted in `.env`:
+
+```sh
+FUNCTIONS_RUNNER_MEMORY_LIMIT=512m
+FUNCTIONS_RUNNER_CPU_LIMIT=1.0
+FUNCTIONS_RUNNER_PIDS_LIMIT=128
+```
+
+Verify the production and local-build Compose configurations with:
+
+```sh
+yarn verify:compose:functions-runner
+```
+
 ## Native build requirements
 
 `isolated-vm` contains a native Node addon. Building outside the supplied

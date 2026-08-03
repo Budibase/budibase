@@ -28,10 +28,15 @@ services:
       BB_ADMIN_USER_PASSWORD: ${BB_ADMIN_USER_PASSWORD}
       PLUGINS_DIR: ${PLUGINS_DIR}
       OFFLINE_MODE: ${OFFLINE_MODE:-}
+      BUDIBASE_FUNCTIONS_ENABLED: ${BUDIBASE_FUNCTIONS_ENABLED:-}
+      FUNCTIONS_RUNNER_URL: http://functions-runner-service:4007
     depends_on:
       - worker-service
       - redis-service
       - litellm-service
+    networks:
+      - default
+      - functions-network
   #    volumes:
   #      - /some/path/to/plugins:/plugins
 
@@ -59,10 +64,49 @@ services:
       LITELLM_URL: http://litellm-service:4000
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
       OFFLINE_MODE: ${OFFLINE_MODE:-}
+      BUDIBASE_FUNCTIONS_ENABLED: ${BUDIBASE_FUNCTIONS_ENABLED:-}
+      FUNCTIONS_RUNNER_URL: http://functions-runner-service:4007
     depends_on:
       - redis-service
       - minio-service
       - litellm-service
+    networks:
+      - default
+      - functions-network
+
+  functions-runner-service:
+    restart: unless-stopped
+    image: budibase/functions-runner
+    container_name: bbfunctions
+    environment:
+      FUNCTIONS_RUNNER_HOST: 0.0.0.0
+      FUNCTIONS_RUNNER_PORT: 4007
+    user: node
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: ${FUNCTIONS_RUNNER_PIDS_LIMIT:-128}
+    mem_limit: ${FUNCTIONS_RUNNER_MEMORY_LIMIT:-512m}
+    cpus: ${FUNCTIONS_RUNNER_CPU_LIMIT:-1.0}
+    stop_grace_period: 10s
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4007/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+      start_period: 5s
+    networks:
+      - functions-network
 
   minio-service:
     restart: unless-stopped
@@ -165,3 +209,7 @@ volumes:
     driver: local
   litellm_data:
     driver: local
+
+networks:
+  functions-network:
+    internal: true
