@@ -1,6 +1,5 @@
 import { Document } from "../../"
 import { EscalationNotificationChannel } from "../workspace"
-import type { AgentRequestInputDefinition } from "./agents"
 
 export const AGENT_REQUEST_STATUSES = [
   "active",
@@ -80,8 +79,4 @@ export interface AgentRequest extends Document {
   status: AgentRequestStatus
   error?: string
   completedAt?: string
-}
-
-export type AgentRequestInputSnapshot = AgentRequestInputDefinition & {
-  value?: string
 }

@@ -6,7 +6,6 @@ import {
   AgentOperation,
   AgentMessageMetadata,
   AgentRequestInputDefinition,
-  AgentRequestInputSnapshot,
   ChatConversationRequest,
   ContextUser,
   ESCALATE_TOOL_NAME,
@@ -59,6 +58,10 @@ const TIMELINE_HIDDEN_TOOL_NAMES = new Set<string>([
   LIST_SESSION_ESCALATIONS_TOOL_NAME,
 ])
 
+type CollectedRequestInput = AgentRequestInputDefinition & {
+  value?: string
+}
+
 interface PrepareAgentChatRunParams {
   agent: Agent
   agentId: string
@@ -85,7 +88,7 @@ export interface AgentChatRun {
   latestQuestion: string
   selectedOperation?: AgentOperation
   operationIntent?: OperationIntent
-  requestInputs?: AgentRequestInputSnapshot[]
+  requestInputs?: CollectedRequestInput[]
   getUsedKnowledgeSourcesMetadata: () => AgentMessageMetadata["ragSources"]
   sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
   stream: (
@@ -149,7 +152,7 @@ const collectRequestInputs = async ({
   operation: AgentOperation
   modelMessages: ModelMessage[]
   llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
-}): Promise<AgentRequestInputSnapshot[]> => {
+}): Promise<CollectedRequestInput[]> => {
   const definitions = operation.requestInputs ?? []
   if (!definitions.length) {
     return []
@@ -237,7 +240,7 @@ const confirmRequestInputs = async ({
   modelMessages,
   llm,
 }: {
-  requestInputs: AgentRequestInputSnapshot[]
+  requestInputs: CollectedRequestInput[]
   modelMessages: ModelMessage[]
   llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
 }): Promise<boolean> => {
@@ -744,7 +747,6 @@ export const prepareAgentChatRun = async ({
         userId: user?._id,
         getMessages: () => modelMessages,
         getRequestId: () => getRequestId?.(),
-        requestInputs,
       })
     }
 

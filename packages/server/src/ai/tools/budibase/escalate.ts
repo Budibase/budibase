@@ -2,7 +2,6 @@ import { context } from "@budibase/backend-core"
 import {
   type ChatConversationChannel,
   type EscalationRecipient,
-  type AgentRequestInputSnapshot,
   ESCALATE_TOOL_NAME,
   EscalateToolResultStatus,
   EscalationSource,
@@ -32,7 +31,6 @@ interface CreateEscalateToolParams {
   // is off for this run (non-prod workspace or the AI_AGENT_ACTIVITY flag is
   // disabled) - there is no AgentRequest to reference in that case.
   getRequestId: () => string | undefined
-  requestInputs?: AgentRequestInputSnapshot[]
 }
 
 // A fire-and-forget escalation tool. When the operation cannot proceed safely
@@ -49,7 +47,6 @@ export const createEscalateTool = ({
   userId,
   getMessages,
   getRequestId,
-  requestInputs,
 }: CreateEscalateToolParams) =>
   tool({
     description:
@@ -76,18 +73,13 @@ export const createEscalateTool = ({
         throw new Error("escalate: missing workspace context")
       }
 
-      const inputSummary = requestInputs
-        ?.filter(input => input.value)
-        .map(input => `${input.name}: ${input.value}`)
-        .join("\n")
-      const enrichedSummary = [summary, inputSummary].filter(Boolean).join("\n")
       const { escalationId } = await escalationProcessor.create({
         source: EscalationSource.OPERATION,
         appId,
         tenantId,
-        message: enrichedSummary,
+        message: summary,
         title,
-        summary: enrichedSummary,
+        summary,
         delay: delayMs,
         recipients,
         resolutionStrategy: resolutionStrategyBinding(
@@ -103,7 +95,6 @@ export const createEscalateTool = ({
           channel,
           userId,
           messages: getMessages(),
-          requestInputs,
         },
       })
 
