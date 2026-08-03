@@ -12,7 +12,6 @@
     DEPLOYMENT_CHANNEL_IDS,
     DEPLOYMENT_ID_TO_PROVIDER,
     type Agent,
-    type DeploymentRow,
   } from "@budibase/types"
   import { selectedAgent, agentsStore } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
@@ -28,6 +27,23 @@
 
   const AI_CONFIG_REQUIRED_MESSAGE =
     "Select an AI model in Agent config before enabling this channel."
+
+  interface ChannelMetadata {
+    name: string
+    logo: string
+    details: string
+    deprecationMessage?: string
+  }
+
+  interface DeploymentRow {
+    id: string
+    name: string
+    logo: string
+    status: "Enabled" | "Disabled"
+    details: string
+    configurable?: boolean
+    deprecationMessage?: string
+  }
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let discordModal: Modal
@@ -85,14 +101,13 @@
 
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
 
-  const channelMetadata: Record<
-    AgentChannelProvider,
-    { name: string; logo: string; details: string }
-  > = {
+  const channelMetadata: Record<AgentChannelProvider, ChannelMetadata> = {
     [AgentChannelProvider.DISCORD]: {
       name: "Discord",
       logo: DiscordLogo,
       details: "Allow this agent to respond in Discord channels and threads",
+      deprecationMessage:
+        "Deprecated: Discord will be removed in a future release.",
     },
     [AgentChannelProvider.MSTEAMS]: {
       name: "Microsoft Teams",
@@ -111,6 +126,8 @@
       logo: TelegramLogo,
       details:
         "Allow this agent to respond in Telegram private and group chats",
+      deprecationMessage:
+        "Deprecated: Telegram will be removed in a future release.",
     },
   }
 
@@ -140,6 +157,7 @@
       logo: channelMetadata[provider].logo,
       status: channelStatus[provider],
       details: channelMetadata[provider].details,
+      deprecationMessage: channelMetadata[provider].deprecationMessage,
       configurable: true,
     }))
   )
@@ -290,6 +308,12 @@
               <Body color={"var(--spectrum-global-color-gray-700)"} size="XS"
                 >{channel.details}</Body
               >
+              {#if channel.deprecationMessage}
+                <Body
+                  color={"var(--spectrum-global-color-orange-900)"}
+                  size="XS">{channel.deprecationMessage}</Body
+                >
+              {/if}
             </div>
           </div>
           <div class="row-action">
