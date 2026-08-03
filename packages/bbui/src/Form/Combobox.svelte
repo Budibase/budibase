@@ -41,7 +41,7 @@
   const defaultGetOptionLabel = (item: O) => extractProperty(item, "label")
   const defaultGetOptionValue = (item: O) => extractProperty(item, "value")
 
-  type OptionFormatter = (_option: O) => string
+  type OptionFormatter = (option: O) => string
 
   export let getOptionLabel: OptionFormatter = defaultGetOptionLabel
   export let getOptionValue: OptionFormatter = defaultGetOptionValue

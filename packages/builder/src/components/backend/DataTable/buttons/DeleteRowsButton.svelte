@@ -9,7 +9,7 @@
   }
 
   export let selectedRows: unknown[] = []
-  export let deleteRows: (_rows: unknown[]) => void | Promise<void>
+  export let deleteRows: (rows: unknown[]) => void | Promise<void>
   export let item: string = "row"
   export let action: string = "Delete"
   export let confirmationTitle: string | undefined

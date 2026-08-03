@@ -13,7 +13,7 @@
     expandedStepId: string | null
     expandedStepDetail: AgentLogRequestDetail | null
     expandedStepLoading: boolean
-    onToggleStep: (_entry: AgentLogEntry) => void | Promise<void>
+    onToggleStep: (entry: AgentLogEntry) => void | Promise<void>
   }
 
   let {
