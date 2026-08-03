@@ -20,6 +20,7 @@
     loadingNextStep?: boolean
     hasSharePointDatasource?: boolean
     onNext: () => Promise<void> | void
+    onAddConnection: () => Promise<void> | void
     onConfigure: () => Promise<void> | void
     onConnectionChange: (connectionId: string) => void
   }
@@ -30,6 +31,7 @@
     loadingNextStep = false,
     hasSharePointDatasource = false,
     onNext,
+    onAddConnection,
     onConfigure,
     onConnectionChange,
   }: Props = $props()
@@ -70,8 +72,10 @@
       {:else}
         <Select
           value={selectedConnectionId}
-          on:change={e => e.detail && onConnectionChange(e.detail)}
+          on:change={e =>
+            e.detail ? onConnectionChange(e.detail) : onAddConnection()}
           label="Select auth config"
+          placeholder="Add new connection"
           {options}
           getOptionLabel={o => `${o.name} - ${o.account}`}
           getOptionValue={o => o.id}

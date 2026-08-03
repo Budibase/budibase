@@ -6,6 +6,18 @@ const mocks = vi.hoisted(() => ({
   connectOperationSharePointSite: vi.fn(),
   fetchAgentKnowledgeSourceOptions: vi.fn(),
   fetchWorkspaceDeployment: vi.fn(),
+  knowledgeConnections: {
+    connections: [] as {
+      _id: string
+      datasourceId: string
+      authConfigId: string
+      sourceType: "sharepoint"
+      authType: "client_credentials"
+      datasourceName: string
+      authConfigName: string
+    }[],
+    sharePointDatasourceIds: [] as string[],
+  },
   saveSharePointQuickDatasource: vi.fn(),
   settings: vi.fn(),
 }))
@@ -41,13 +53,8 @@ vi.mock("@/stores/portal", () => ({
     fetchAgentKnowledgeSourceOptions: mocks.fetchAgentKnowledgeSourceOptions,
   },
   knowledgeConnectionsStore: {
-    subscribe: (
-      run: (_state: {
-        connections: never[]
-        sharePointDatasourceIds: never[]
-      }) => void
-    ) => {
-      run({ connections: [], sharePointDatasourceIds: [] })
+    subscribe: (run: (_state: typeof mocks.knowledgeConnections) => void) => {
+      run(mocks.knowledgeConnections)
       return () => {}
     },
   },
@@ -110,6 +117,8 @@ const connectQuickSharePoint = async (
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.knowledgeConnections.connections = []
+  mocks.knowledgeConnections.sharePointDatasourceIds = []
   const modalContainer = document.createElement("div")
   modalContainer.classList.add("modal-container")
   document.body.appendChild(modalContainer)
@@ -118,6 +127,108 @@ beforeEach(() => {
 afterEach(() => {
   document.querySelectorAll(".modal-container").forEach(element => {
     element.remove()
+  })
+})
+
+const addExistingConnection = ({
+  datasourceId = "existing-datasource-id",
+  authConfigId = "existing-auth-id",
+  datasourceName = "Existing SharePoint",
+  authConfigName = "Client credentials",
+} = {}) => {
+  mocks.knowledgeConnections.connections.push({
+    _id: `${datasourceId}:${authConfigId}`,
+    datasourceId,
+    authConfigId,
+    sourceType: "sharepoint",
+    authType: "client_credentials",
+    datasourceName,
+    authConfigName,
+  })
+  mocks.knowledgeConnections.sharePointDatasourceIds.push(datasourceId)
+}
+
+describe("SelectSharePointSiteModal existing connections", () => {
+  it("shows the connection dropdown when there is one existing connection", async () => {
+    addExistingConnection()
+    const { component } = render(SelectSharePointSiteModal, {
+      agentId: "agent-id",
+      operationId: "operation-id",
+    })
+
+    await component.show()
+
+    expect(
+      await screen.findByText("Existing SharePoint - Client credentials")
+    ).toBeInTheDocument()
+    expect(mocks.fetchAgentKnowledgeSourceOptions).not.toHaveBeenCalled()
+  })
+
+  it("opens quick add from the dropdown placeholder", async () => {
+    addExistingConnection()
+    mocks.saveSharePointQuickDatasource.mockResolvedValue({
+      _id: "new-datasource-id",
+      type: "datasource",
+      source: SourceName.REST,
+    })
+    mocks.fetchAgentKnowledgeSourceOptions.mockResolvedValue({
+      options: [availableSite],
+    })
+    const { component } = render(SelectSharePointSiteModal, {
+      agentId: "agent-id",
+      operationId: "operation-id",
+    })
+    await component.show()
+
+    await fireEvent.click(
+      await screen.findByText("Existing SharePoint - Client credentials")
+    )
+    await fireEvent.click(await screen.findByText("Add new connection"))
+
+    expect(await screen.findByText("Connect SharePoint")).toBeInTheDocument()
+    await submitQuickCredentials()
+
+    await waitFor(() => {
+      expect(mocks.fetchAgentKnowledgeSourceOptions).toHaveBeenCalledWith(
+        "new-datasource-id",
+        expect.any(String)
+      )
+    })
+    expect(await screen.findByText("Sync all")).toBeInTheDocument()
+  })
+
+  it("loads sites from a selected existing connection", async () => {
+    addExistingConnection()
+    addExistingConnection({
+      datasourceId: "second-datasource-id",
+      authConfigId: "second-auth-id",
+      datasourceName: "Second SharePoint",
+      authConfigName: "Second credentials",
+    })
+    mocks.fetchAgentKnowledgeSourceOptions.mockResolvedValue({
+      options: [availableSite],
+    })
+    const { component } = render(SelectSharePointSiteModal, {
+      agentId: "agent-id",
+      operationId: "operation-id",
+    })
+    await component.show()
+
+    await fireEvent.click(
+      await screen.findByText("Existing SharePoint - Client credentials")
+    )
+    await fireEvent.click(
+      await screen.findByText("Second SharePoint - Second credentials")
+    )
+    await fireEvent.click(screen.getByText("Next"))
+
+    await waitFor(() => {
+      expect(mocks.fetchAgentKnowledgeSourceOptions).toHaveBeenCalledWith(
+        "second-datasource-id",
+        "second-auth-id"
+      )
+    })
+    expect(await screen.findByText("Sync all")).toBeInTheDocument()
   })
 })
 

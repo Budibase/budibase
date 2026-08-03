@@ -236,6 +236,12 @@
     )
   }
 
+  const openQuickConnection = () => {
+    quickConnectionError = ""
+    connectionStepModal?.hide()
+    quickAddModal?.show()
+  }
+
   const handleSelect = async (mode: SharePointSelectionMode) => {
     const selectedSite = availableSites.find(site => site.id === selectedSiteId)
     if (!agentId || !operationId || !selectedSite) {
@@ -275,22 +281,6 @@
       quickAddModal?.show()
       return
     }
-    if (sharePointConnectionOptions.length === 1 && selectedConnectionId) {
-      skippedConnectionStep = true
-      loadingNextStep = true
-      try {
-        await loadSharePointSites()
-        if (siteLoadError) {
-          skippedConnectionStep = false
-          connectionStepModal?.show()
-          return
-        }
-        siteStepModal?.show()
-      } finally {
-        loadingNextStep = false
-      }
-      return
-    }
     skippedConnectionStep = false
     connectionStepModal?.show()
   }
@@ -317,6 +307,7 @@
   {loadingNextStep}
   hasSharePointDatasource={$knowledgeConnectionsStore.sharePointDatasourceIds
     .length > 0}
+  onAddConnection={openQuickConnection}
   onConfigure={() => {
     hide()
     const datasourceId =
