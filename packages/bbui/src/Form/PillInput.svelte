@@ -132,7 +132,7 @@
     if (event.defaultPrevented) {
       return
     }
-    if (event.key === "Enter") {
+    if (event.key === "Enter" && inputValue.trim()) {
       event.preventDefault()
       addTokens([inputValue])
       inputValue = ""
