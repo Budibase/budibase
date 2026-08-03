@@ -174,6 +174,13 @@ vi.mock("@/stores/builder/tables", async () => {
   }
 })
 
+vi.mock("@/components/common/bindings/ClientBindingPanel.svelte", async () => {
+  return {
+    default: (await import("../common/tests/MockClientBindingPanel.svelte"))
+      .default,
+  }
+})
+
 // Parent mock imports from already-mocked sub-modules (safe direction: sub → parent).
 vi.mock("@/stores/builder", async () => {
   const { writable } = await import("svelte/store")
@@ -207,6 +214,11 @@ vi.mock("@/stores/builder", async () => {
     roles: writable([]),
     oauth2,
     restTemplates,
+    previewStore: {
+      ...writable({ selectedComponentContext: null }),
+      requestComponentContext: vi.fn(),
+    },
+    snippets: writable([]),
   }
 })
 
@@ -1687,6 +1699,66 @@ describe("API Endpoint Viewer", () => {
       await waitFor(() => {
         expect(container.querySelector(".verb-trigger")).not.toBeNull()
         expect(container.querySelector(".url-input")).not.toBeNull()
+      })
+    })
+
+    it("shows a bindings button on the API endpoint input", async () => {
+      const { container } = setupDOM({ datasourceId: REST_DS_ID })
+      await waitFor(() => {
+        expect(container.querySelector(".bindings-icon")).not.toBeNull()
+      })
+    })
+
+    it("opens the bindings drawer when the bindings button is clicked", async () => {
+      const { container, baseElement } = setupDOM({ datasourceId: REST_DS_ID })
+      await waitFor(() =>
+        expect(container.querySelector(".bindings-icon")).not.toBeNull()
+      )
+      await fireEvent.click(container.querySelector(".bindings-icon")!)
+      await waitFor(() => {
+        const drawer = baseElement.querySelector(".modal-container .drawer")
+        expect(drawer?.textContent).toContain("Bindings")
+        expect(
+          drawer?.querySelector('input[aria-label="Binding panel value"]')
+        ).not.toBeNull()
+      })
+    })
+
+    it("inserts a binding selected in the drawer into the endpoint URL", async () => {
+      const { container, baseElement } = setupDOM({
+        datasourceId: REST_DS_ID,
+      })
+      await waitFor(() =>
+        expect(container.querySelector(".bindings-icon")).not.toBeNull()
+      )
+      await fireEvent.click(container.querySelector(".bindings-icon")!)
+
+      const panelInput = await waitFor(() => {
+        const el = baseElement.querySelector(
+          '.modal-container input[aria-label="Binding panel value"]'
+        ) as HTMLInputElement
+        expect(el).not.toBeNull()
+        return el
+      })
+      await fireEvent.input(panelInput, {
+        target: {
+          value:
+            "https://example.com/pages/{{ Current User.fullName }}/markdown",
+        },
+      })
+
+      const saveBtn = Array.from(
+        baseElement.querySelectorAll(".modal-container .drawer button")
+      ).find(b => b.textContent?.includes("Save"))
+      await fireEvent.click(saveBtn!)
+
+      await waitFor(() => {
+        const urlInput = container.querySelector(
+          ".url-input"
+        ) as HTMLInputElement
+        expect(urlInput.value).toBe(
+          "https://example.com/pages/{{ Current User.fullName }}/markdown"
+        )
       })
     })
 

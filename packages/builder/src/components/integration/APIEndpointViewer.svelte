@@ -1128,6 +1128,9 @@
               url={customUrl}
               {baseUrlOptions}
               activeWarningMessage={protocolMissingWarningMessage}
+              bindings={mergedBindings}
+              context={bindingPreviewContext}
+              drawerZIndex={panelZIndex + 1}
               on:verbChange={e => {
                 if (editableQuery) {
                   editableQuery.queryVerb = e.detail

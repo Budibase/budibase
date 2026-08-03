@@ -1,21 +1,28 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, setContext } from "svelte"
   import {
     clickOutside,
     Icon,
     ActionMenu,
     MenuItem,
     Tooltip,
+    Drawer,
+    Button,
   } from "@budibase/bbui"
   import APIEndpointVerbBadge from "./APIEndpointVerbBadge.svelte"
   import { customQueryIconColor, QUERY_VERB_MAP } from "@/helpers/data/utils"
   import { applyBaseUrl } from "@budibase/shared-core"
+  import ClientBindingPanel from "@/components/common/bindings/ClientBindingPanel.svelte"
+  import type { EnrichedBinding } from "@budibase/types"
 
   export let verb: string = "read"
   export let url: string = ""
   export let baseUrlOptions: { label: string; url: string }[] = []
   export let disabled: boolean = false
   export let activeWarningMessage: string | undefined = undefined
+  export let bindings: EnrichedBinding[] = []
+  export let context: any = undefined
+  export let drawerZIndex: number | undefined = undefined
 
   const verbOptions = Object.entries(QUERY_VERB_MAP).map(([value, label]) => ({
     value,
@@ -26,9 +33,25 @@
 
   let verbOpen = false
   let urlInputEl: HTMLInputElement
+  let bindingDrawer: any
+  let tempUrl = ""
 
   $: verbColor = customQueryIconColor(verb)
   $: httpVerb = verbOptions.find(o => o.value === verb)?.label ?? verb
+  $: tempUrl = url
+  $: hasBindings = bindings?.length > 0
+
+  const saveBinding = () => {
+    url = tempUrl
+    dispatch("urlChange", url)
+    dispatch("urlCommit", url)
+    bindingDrawer?.hide()
+    urlInputEl?.focus()
+  }
+
+  setContext("binding-drawer-actions", {
+    save: saveBinding,
+  })
 
   const selectVerb = (value: string) => {
     verb = value
@@ -65,7 +88,11 @@
 
   <div class="divider"></div>
 
-  <div class="url-section" class:has-globe={baseUrlOptions.length > 0}>
+  <div
+    class="url-section"
+    class:has-globe={baseUrlOptions.length > 0}
+    class:has-bindings={hasBindings}
+  >
     {#if activeWarningMessage}
       <div class="protocol-warning-anchor">
         <Tooltip textWrapping direction="top" text={activeWarningMessage} />
@@ -87,6 +114,17 @@
       }}
       on:blur={() => dispatch("urlCommit", url)}
     />
+    {#if hasBindings}
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <div
+        class="bindings-icon"
+        aria-label="Open bindings"
+        on:click={() => bindingDrawer?.show()}
+      >
+        <Icon size="S" weight="fill" name="lightning" />
+      </div>
+    {/if}
     {#if baseUrlOptions.length > 0}
       <div class="globe-icon">
         <ActionMenu align="right" {disabled}>
@@ -133,6 +171,17 @@
     </div>
   {/if}
 </div>
+
+<Drawer bind:this={bindingDrawer} title="Bindings" zIndex={drawerZIndex}>
+  <Button cta slot="buttons" on:click={saveBinding}>Save</Button>
+  <ClientBindingPanel
+    slot="body"
+    value={url}
+    {bindings}
+    {context}
+    on:change={e => (tempUrl = e.detail)}
+  />
+</Drawer>
 
 <style>
   .input-wrap {
@@ -209,6 +258,26 @@
   }
   .url-section.has-globe .url-input {
     padding-right: 28px;
+  }
+  .url-section.has-bindings .url-input {
+    padding-right: 56px;
+  }
+
+  .bindings-icon {
+    position: absolute;
+    right: 34px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    color: var(--spectrum-alias-text-color);
+    cursor: pointer;
+  }
+  .bindings-icon:hover {
+    color: var(--spectrum-global-color-blue-600);
+  }
+  .url-section.has-bindings:not(.has-globe) .bindings-icon {
+    right: 6px;
   }
 
   .globe-icon {
