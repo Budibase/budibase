@@ -10,6 +10,7 @@ import { ObjectStoreBuckets } from "../../../constants"
 import {
   AGENT_LOG_SESSION_PREFIX,
   AUTOMATION_LOG_PREFIX,
+  FUNCTION_RUN_LOG_PREFIX,
   LINK_USER_METADATA_PREFIX,
   TABLE_ROW_PREFIX,
   USER_METDATA_PREFIX,
@@ -90,6 +91,7 @@ function defineFilter(excludeRows?: boolean) {
     AUTOMATION_LOG_PREFIX,
     // agent execution logs must not carry over on duplicate/export-import
     AGENT_LOG_SESSION_PREFIX,
+    FUNCTION_RUN_LOG_PREFIX,
   ]
   if (excludeRows) {
     ids.push(TABLE_ROW_PREFIX)
