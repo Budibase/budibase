@@ -1,4 +1,8 @@
-import type { RestTemplate, RestTemplateId } from "@budibase/types"
+import {
+  MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID,
+  type RestTemplate,
+  type RestTemplateId,
+} from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 import ActiveCampaignLogo from "assets/rest-template-icons/activecampaign.avif"
 import AnsibleLogo from "assets/rest-template-icons/ansible.svg"
@@ -1942,7 +1946,7 @@ export const MICROSOFT_SHAREPOINT_NAME_ALIASES: Record<string, string> = {
 }
 
 const microsoftSharepointRestTemplateGroup: RestTemplate = {
-  id: "microsoft-sharepoint",
+  id: MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID,
   name: "Microsoft SharePoint",
   icon: MicrosoftSharepointLogo,
   description:
