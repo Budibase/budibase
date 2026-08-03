@@ -19,7 +19,7 @@ const ERROR_MESSAGES: Partial<Record<FunctionErrorCode, string>> = {
     "The Function query request was denied",
   [FunctionErrorCode.FUNCTION_QUERY_LIMIT]:
     "The Function query request exceeded a limit",
-  [FunctionErrorCode.FUNCTION_RUNTIME_ERROR]: "The Function query failed",
+  [FunctionErrorCode.FUNCTION_RUNTIME_ERROR]: "The Function execution failed",
   [FunctionErrorCode.FUNCTION_PROTOCOL_ERROR]:
     "The Function runner returned an invalid response",
   [FunctionErrorCode.FUNCTION_ORCHESTRATOR_INTERRUPTED]:

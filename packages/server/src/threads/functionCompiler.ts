@@ -10,7 +10,9 @@ const isCompilerRequest = (
     "source" in value &&
     typeof value.source === "string" &&
     "declarations" in value &&
-    typeof value.declarations === "string"
+    typeof value.declarations === "string" &&
+    "capabilities" in value &&
+    Array.isArray(value.capabilities)
   )
 }
 

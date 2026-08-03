@@ -109,6 +109,21 @@ describe("Replication", () => {
       expect((opts.filter as Function)(automationLogDoc, {})).toBe(false)
     })
 
+    it("should filter out Function run logs", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({ isCreation: true })
+
+      const functionRunLogDoc = {
+        _id: `${DocumentType.FUNCTION_RUN_LOG}_123`,
+      }
+
+      expect((opts.filter as Function)(functionRunLogDoc, {})).toBe(false)
+    })
+
     it("should filter out app metadata", () => {
       const replication = new Replication({
         source: `${DocumentType.WORKSPACE_DEV}_source`,

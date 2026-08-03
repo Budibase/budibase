@@ -21,6 +21,14 @@ export {
   hashFunctionDeclarations,
 } from "./declarations"
 export { getQueryCatalog, resolveSavedQuery } from "./queryCatalog"
+export {
+  clearOldHistory,
+  createRunSummary,
+  finalizeRunSummary,
+  getRunHistory,
+  listRunHistory,
+  reconcileRunning,
+} from "./history"
 
 interface FunctionDraftInput {
   name: string
@@ -176,6 +184,7 @@ export const compile = async (draft: FunctionCompileInput) => {
   const result = await compileFunction({
     source: draft.source,
     declarations,
+    capabilities,
   })
   return getCompileDiagnostics(result.diagnostics, !!result.output)
 }
@@ -198,6 +207,7 @@ export const build = async (id: string, revision: string) => {
   const result = await compileFunction({
     source: fn.source,
     declarations: declarationResult.declarations,
+    capabilities: declarationResult.capabilities,
   })
   const diagnostics = getCompileDiagnostics(result.diagnostics, !!result.output)
 
