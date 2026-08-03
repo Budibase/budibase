@@ -150,8 +150,8 @@
   $: if (!projectsEnabled && selectedProjectId) selectedProjectId = ""
 
   let getFavourite: (
-    _resourceType: WorkspaceResource,
-    _resourceId: string
+    resourceType: WorkspaceResource,
+    resourceId: string
   ) => WorkspaceFavourite
 
   $: getFavourite = (resourceType, resourceId) => {

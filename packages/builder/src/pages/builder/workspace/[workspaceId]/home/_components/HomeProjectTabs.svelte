@@ -7,7 +7,7 @@
   interface Props {
     projects?: ProjectResponse[]
     selectedProjectId?: string
-    onSelect?: (_projectId: string) => void
+    onSelect?: (projectId: string) => void
     onCreateProject?: () => void
     onEditProject?: () => void
     onDeleteProject?: () => void

@@ -11,7 +11,7 @@
     toolSections: Record<string, AgentTool[]>
     toolSearch: string
     webSearchEnabled: boolean
-    onToolClick: (_tool: AgentTool) => void
+    onToolClick: (tool: AgentTool) => void
     onAddApiConnection: () => void
     onConfigureWebSearch: () => void
   }

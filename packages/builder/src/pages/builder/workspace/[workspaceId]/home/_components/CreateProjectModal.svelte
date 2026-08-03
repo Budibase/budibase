@@ -13,7 +13,7 @@
   import type { ProjectFormPayload, ProjectResponse } from "@budibase/types"
 
   interface Props {
-    onConfirm?: (_payload: ProjectFormPayload) => unknown
+    onConfirm?: (payload: ProjectFormPayload) => unknown
     project?: ProjectResponse
   }
 
