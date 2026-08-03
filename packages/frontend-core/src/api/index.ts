@@ -20,6 +20,7 @@ import { buildAutomationEndpoints } from "./automations"
 import { buildConfigEndpoints } from "./configs"
 import { buildDatasourceEndpoints } from "./datasources"
 import { buildFlagEndpoints } from "./flags"
+import { buildFunctionEndpoints } from "./functions"
 import { buildLayoutEndpoints } from "./layouts"
 import { buildOtherEndpoints } from "./other"
 import { buildPermissionsEndpoints } from "./permissions"
@@ -298,6 +299,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     ...buildConfigEndpoints(API),
     ...buildDatasourceEndpoints(API),
     ...buildFlagEndpoints(API),
+    ...buildFunctionEndpoints(API),
     ...buildLayoutEndpoints(API),
     ...buildOtherEndpoints(API),
     ...buildPermissionsEndpoints(API),
