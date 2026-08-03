@@ -1,4 +1,5 @@
 import {
+  MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID,
   OAuth2CredentialsMethod,
   OAuth2GrantType,
   RestAuthType,
@@ -11,7 +12,6 @@ import {
   buildSharePointConnectionConfig,
   saveSharePointQuickDatasource,
   SHAREPOINT_CONNECTION_NAME,
-  SHAREPOINT_TEMPLATE_ID,
 } from "./sharePointQuickAdd"
 
 describe("SharePoint quick add", () => {
@@ -26,7 +26,7 @@ describe("SharePoint quick add", () => {
     })
 
     expect(SHAREPOINT_CONNECTION_NAME).toBe("Microsoft SharePoint")
-    expect(SHAREPOINT_TEMPLATE_ID).toBe("microsoft-sharepoint")
+    expect(MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID).toBe("microsoft-sharepoint")
     expect(config).toEqual({
       url: "https://graph.microsoft.com",
       defaultHeaders: {},
@@ -95,7 +95,7 @@ describe("SharePoint quick add", () => {
       expect.objectContaining({
         integration,
         name: SHAREPOINT_CONNECTION_NAME,
-        restTemplateId: SHAREPOINT_TEMPLATE_ID,
+        restTemplateId: MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID,
       })
     )
     expect(result).toBe(createdDatasource)
@@ -117,7 +117,7 @@ describe("SharePoint quick add", () => {
       type: "datasource",
       source: SourceName.REST,
       name: SHAREPOINT_CONNECTION_NAME,
-      restTemplateId: SHAREPOINT_TEMPLATE_ID,
+      restTemplateId: MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID,
       config: {},
     }
     const createDatasource = vi.fn()

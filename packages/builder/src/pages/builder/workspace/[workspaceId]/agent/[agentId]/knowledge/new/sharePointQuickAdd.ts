@@ -1,4 +1,5 @@
 import {
+  MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID,
   OAuth2CredentialsMethod,
   OAuth2GrantType,
   RestAuthType,
@@ -7,7 +8,6 @@ import {
   type UIIntegration,
 } from "@budibase/types"
 
-export const SHAREPOINT_TEMPLATE_ID = "microsoft-sharepoint"
 export const SHAREPOINT_CONNECTION_NAME = "Microsoft SharePoint"
 
 export interface SharePointQuickAddCredentials {
@@ -20,7 +20,7 @@ interface CreateSharePointDatasourceParams {
   integration: UIIntegration
   config: RestConfig
   name: string
-  restTemplateId: typeof SHAREPOINT_TEMPLATE_ID
+  restTemplateId: typeof MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID
 }
 
 interface UpdateSharePointDatasourceParams {
@@ -98,6 +98,6 @@ export const saveSharePointQuickDatasource = async ({
     integration,
     config,
     name: SHAREPOINT_CONNECTION_NAME,
-    restTemplateId: SHAREPOINT_TEMPLATE_ID,
+    restTemplateId: MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID,
   })
 }

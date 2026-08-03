@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Helpers, notifications } from "@budibase/bbui"
   import {
+    MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID,
     SharePointScopeMode,
     SourceName,
     type Datasource,
@@ -19,7 +20,6 @@
   import SharePointQuickAddModal from "./SharePointQuickAddModal.svelte"
   import {
     saveSharePointQuickDatasource,
-    SHAREPOINT_TEMPLATE_ID,
     type SharePointQuickAddCredentials,
   } from "./sharePointQuickAdd"
 
@@ -230,7 +230,7 @@
     bb.settings(
       datasourceId
         ? `/connections/apis/${datasourceId}`
-        : `/connections/apis/new/${SHAREPOINT_TEMPLATE_ID}`
+        : `/connections/apis/new/${MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID}`
     )
   }
 
