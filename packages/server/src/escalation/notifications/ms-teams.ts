@@ -143,9 +143,7 @@ export const listTeamsChannels = async (
   return {
     channels: channelsByTeam.flat(),
     hasNext: !!nextLink,
-    cursor: nextLink
-      ? Buffer.from(nextLink).toString("base64url")
-      : undefined,
+    cursor: nextLink ? Buffer.from(nextLink).toString("base64url") : undefined,
   }
 }
 
