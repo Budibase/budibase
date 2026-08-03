@@ -23,7 +23,7 @@
 
   const PAGE_SIZE = 20
 
-  interface Props {
+  export interface Props {
     functionId: string
   }
 
