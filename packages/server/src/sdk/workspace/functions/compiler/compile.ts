@@ -15,5 +15,5 @@ export const compileFunctionInProcess = async (
     return { diagnostics }
   }
 
-  return await bundleFunction(request.source)
+  return await bundleFunction(request.source, request.capabilities)
 }

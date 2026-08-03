@@ -164,6 +164,22 @@ describe("Run Function automation action", () => {
     )
   })
 
+  it("defaults omitted Function inputs to an empty object", async () => {
+    const deps = dependencies()
+
+    await run(deps, {
+      functionId: fn._id,
+      // @ts-expect-error - older steps may not have persisted the editor default
+      inputs: undefined,
+    })
+
+    expect(deps.execute).toHaveBeenCalledWith(
+      deps.executor,
+      expect.objectContaining({ inputs: {} }),
+      expect.any(Object)
+    )
+  })
+
   it.each([
     [
       "disabled",

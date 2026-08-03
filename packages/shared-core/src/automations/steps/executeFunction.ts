@@ -18,7 +18,11 @@ export const definition: AutomationStepDefinition = {
   features: {
     [AutomationFeature.LOOPING]: true,
   },
-  inputs: {},
+  inputs: {
+    inputs: {
+      value: "{}",
+    },
+  },
   schema: {
     inputs: {
       properties: {
