@@ -74,6 +74,10 @@ function getEnv(port: number) {
     LITELLM_DB_USER: "llmproxy",
     WATCHTOWER_PORT: 6161,
     BUDIBASE_ENVIRONMENT: "PRODUCTION",
+    BUDIBASE_FUNCTIONS_ENABLED: "",
+    FUNCTIONS_RUNNER_MEMORY_LIMIT: "512m",
+    FUNCTIONS_RUNNER_CPU_LIMIT: "1.0",
+    FUNCTIONS_RUNNER_PIDS_LIMIT: 128,
   })
   return [
     "# Use the main port in the builder for your self hosting URL, e.g. localhost:10000",

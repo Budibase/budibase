@@ -601,6 +601,53 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  build-functions-runner-image:
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-build-functions-runner-image-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
+    needs: install-deps
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+
+      - name: Restore hoisted node_modules cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          fail-on-cache-miss: true
+
+      - name: Build Functions runner
+        run: yarn build --scope @budibase/functions-runner
+
+      - name: Verify Functions runner Compose service
+        run: yarn verify:compose:functions-runner
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Functions runner image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: packages/functions-runner/Dockerfile
+          push: false
+          load: true
+          tags: budibase/functions-runner:local
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify Functions runner image
+        run: yarn verify:docker:functions-runner
+
   check-client-build-size:
     runs-on: ubuntu-24.04
     concurrency:
