@@ -10,16 +10,15 @@
   export let disabled: boolean = false
   export let error: string | undefined | false = undefined
   export let fileSizeLimit: number | undefined = undefined
-  export let processFiles:
-    | ((_files: FileList) => Promise<Value[]>)
-    | undefined = undefined
+  export let processFiles: ((files: FileList) => Promise<Value[]>) | undefined =
+    undefined
   export let deleteAttachments:
-    | ((_keys: string[]) => Promise<void>)
+    | ((keys: string[]) => Promise<void>)
     | undefined = undefined
   export let handleFileTooLarge:
-    | ((_limit: number, _currentFiles: Value[]) => void)
+    | ((limit: number, currentFiles: Value[]) => void)
     | undefined = undefined
-  export let handleTooManyFiles: ((_maximum: number) => void) | undefined =
+  export let handleTooManyFiles: ((maximum: number) => void) | undefined =
     undefined
   export let gallery: boolean = true
   export let fileTags: string[] = []

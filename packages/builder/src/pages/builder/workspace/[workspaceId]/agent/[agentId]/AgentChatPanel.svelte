@@ -32,7 +32,7 @@
 
   // Preview is transient, so escalation polling lives here, not in Chatbox.
   let chatbox = $state<
-    | { appendAssistantMessage: (_m: UIMessage<AgentMessageMetadata>) => void }
+    | { appendAssistantMessage: (m: UIMessage<AgentMessageMetadata>) => void }
     | undefined
   >()
   const delivered = new Set<string>()
@@ -97,7 +97,7 @@
   <div class="chat-preview-header">
     <span class="chat-preview-pill">Chat preview</span>
     <button class="chat-preview-refresh" type="button" onclick={refreshChat}>
-      Refresh chat
+      Clear chat
     </button>
   </div>
   <div class="chat-preview-body">
