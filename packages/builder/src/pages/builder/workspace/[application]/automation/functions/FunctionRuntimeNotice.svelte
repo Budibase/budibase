@@ -4,7 +4,7 @@
   import { Badge, Body, Button, Icon, ProgressCircle } from "@budibase/bbui"
   import type { FunctionRunnerStatus } from "@budibase/types"
 
-  interface Props {
+  export interface Props {
     status?: FunctionRunnerStatus
     loading?: boolean
     error?: string
