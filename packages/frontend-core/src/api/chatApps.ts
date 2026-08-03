@@ -92,7 +92,7 @@ export const buildChatAppEndpoints = (
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          [Header.APP_ID]: workspaceId,
+          [Header.WORKSPACE_ID]: workspaceId,
         },
         body: JSON.stringify(body),
         credentials: "same-origin",
@@ -166,7 +166,7 @@ export const buildChatAppEndpoints = (
     const url = "/api/chatapps"
     const headers = workspaceId
       ? {
-          [Header.APP_ID]: workspaceId,
+          [Header.WORKSPACE_ID]: workspaceId,
         }
       : undefined
     return await API.get({
@@ -218,7 +218,7 @@ export const buildChatAppEndpoints = (
     }
 
     if (resolvedWorkspaceId) {
-      headers[Header.APP_ID] = resolvedWorkspaceId
+      headers[Header.WORKSPACE_ID] = resolvedWorkspaceId
     }
 
     const response = await fetch(`/api/chatapps/${chatAppId}/conversations`, {
