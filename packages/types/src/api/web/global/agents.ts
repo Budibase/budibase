@@ -1,6 +1,7 @@
 import { Optional } from "../../../shared"
 import {
   Agent,
+  AgentSharePointKnowledgeSourceScope,
   AgentKnowledgeSourceSyncRunStatus,
   AgentOperation,
   ChatApp,
@@ -71,7 +72,11 @@ export interface KnowledgeSourceEntry {
   id: string
   name: string
   path: string
-  type: "folder" | "file" | "list"
+  type: "drive" | "folder" | "file" | "list"
+  driveId?: string
+  itemId?: string
+  listId?: string
+  hasChildren?: boolean
   webUrl?: string
 }
 
@@ -104,14 +109,14 @@ export interface ConnectAgentSharePointSiteRequest {
   site: KnowledgeSourceOption
   datasourceId: string
   authConfigId: string
-  filters?: string[]
+  scope: AgentSharePointKnowledgeSourceScope
 }
 
 export type ConnectAgentSharePointSiteResponse =
   FetchAgentKnowledgeSourceOptionsResponse
 
 export interface UpdateAgentSharePointSiteRequest {
-  filters?: string[]
+  scope: AgentSharePointKnowledgeSourceScope
 }
 
 export type UpdateAgentSharePointSiteResponse =

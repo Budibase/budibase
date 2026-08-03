@@ -10,7 +10,7 @@
 
   export let integration: UIIntegration
   export let config: Record<string, any>
-  export let onSubmit: (_value: {
+  export let onSubmit: (value: {
     config: Record<string, any>
     name: string
     projectIds?: string[]

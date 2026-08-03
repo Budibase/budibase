@@ -17,7 +17,7 @@
   }
 
   interface Props {
-    onConfirm?: (_payload: ConfirmPayload) => unknown
+    onConfirm?: (payload: ConfirmPayload) => unknown
   }
 
   let { onConfirm = () => {} }: Props = $props()

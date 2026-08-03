@@ -18,7 +18,7 @@
   export let labelKey: string
   export let iconComponent: ComponentType | null = null
   export let extractIconProps: (
-    _item: EnrichedPickerItem
+    item: EnrichedPickerItem
   ) => Record<string, unknown> = item => item
 
   const dispatch = createEventDispatcher<{
