@@ -138,7 +138,11 @@ export default async function () {
 
   it("terminates a compiler child at the deadline", async () => {
     const result = await runFunctionCompilerProcess(
-      { declarations, source: "export default async function () {}" },
+      {
+        capabilities,
+        declarations,
+        source: "export default async function () {}",
+      },
       {
         timeoutMs: 50,
         workerPath: join(__dirname, "tests/fixtures/hangingCompiler.js"),
@@ -154,7 +158,11 @@ export default async function () {
 
   it("contains compiler child failures", async () => {
     const result = await runFunctionCompilerProcess(
-      { declarations, source: "export default async function () {}" },
+      {
+        capabilities,
+        declarations,
+        source: "export default async function () {}",
+      },
       {
         timeoutMs: 5_000,
         workerPath: join(__dirname, "tests/fixtures/failedCompiler.js"),
@@ -170,7 +178,11 @@ export default async function () {
 
   it("rejects invalid diagnostics returned by the compiler child", async () => {
     const result = await runFunctionCompilerProcess(
-      { declarations, source: "export default async function () {}" },
+      {
+        capabilities,
+        declarations,
+        source: "export default async function () {}",
+      },
       {
         timeoutMs: 5_000,
         workerPath: join(__dirname, "tests/fixtures/invalidCompiler.js"),
