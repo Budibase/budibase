@@ -22,6 +22,14 @@ export {
   hashFunctionDeclarations,
 } from "./declarations"
 export { getQueryCatalog, resolveSavedQuery } from "./queryCatalog"
+export {
+  clearOldHistory,
+  createRunSummary,
+  finalizeRunSummary,
+  getRunHistory,
+  listRunHistory,
+  reconcileRunning,
+} from "./history"
 
 interface FunctionDraftInput {
   name: string

@@ -69,6 +69,8 @@ const dependencies = (
   getReadiness: jest.fn().mockResolvedValue("ready"),
   execute: jest.fn().mockResolvedValue(successResult),
   createRunId: jest.fn().mockReturnValue("run-1"),
+  createRunSummary: jest.fn().mockResolvedValue({}),
+  finalizeRunSummary: jest.fn().mockResolvedValue({}),
   ...overrides,
 })
 
@@ -130,6 +132,15 @@ describe("Run Function automation action", () => {
         },
       }
     )
+    expect(deps.createRunSummary).toHaveBeenCalledWith({
+      runId: "run-1",
+      functionId: fn._id,
+      functionName: fn.name,
+      sourceHash: artifact.sourceHash,
+      automationId: "automation-1",
+      stepId: "step-1",
+    })
+    expect(deps.finalizeRunSummary).toHaveBeenCalledWith("run-1", successResult)
   })
 
   it("parses JSON editor input", async () => {
@@ -235,6 +246,10 @@ describe("Run Function automation action", () => {
         code: FunctionErrorCode.FUNCTION_RUNNER_UNAVAILABLE,
         message: "The Function runner is unavailable",
       },
+    })
+    expect(deps.finalizeRunSummary).toHaveBeenCalledWith("run-1", {
+      status: "error",
+      code: FunctionErrorCode.FUNCTION_RUNNER_UNAVAILABLE,
     })
   })
 
