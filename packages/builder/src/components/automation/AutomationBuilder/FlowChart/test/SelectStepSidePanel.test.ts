@@ -1,4 +1,4 @@
-import { render, waitFor } from "@testing-library/svelte"
+import { render, screen, waitFor } from "@testing-library/svelte"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import MockIcon from "@/test/mocks/MockIcon.svelte"
 import MockSearch from "@/test/mocks/MockSearch.svelte"
@@ -89,6 +89,7 @@ vi.mock("@budibase/types", () => ({
     DELAY: "DELAY",
     DELETE_ROW: "DELETE_ROW",
     EXECUTE_BASH: "EXECUTE_BASH",
+    EXECUTE_FUNCTION: "EXECUTE_FUNCTION",
     EXECUTE_QUERY: "EXECUTE_QUERY",
     EXECUTE_SCRIPT_V2: "EXECUTE_SCRIPT_V2",
     EXTRACT_FILE_DATA: "EXTRACT_FILE_DATA",
@@ -129,6 +130,7 @@ vi.mock("@budibase/types", () => ({
 vi.mock("@/constants/backend/automations", () => ({
   ActionStepID: {
     COLLECT: "COLLECT",
+    EXECUTE_FUNCTION: "EXECUTE_FUNCTION",
     TRIGGER_AUTOMATION_RUN: "TRIGGER_AUTOMATION_RUN",
   },
   TriggerStepID: {
@@ -179,6 +181,10 @@ describe("SelectStepSidePanel", () => {
           onfinish: null,
         }) as unknown as Animation
     )
+    mocks.automationStore.set({
+      actionPanelToolbarFlowEnd: false,
+      blockDefinitions: { ACTION: {}, TRIGGER: {} },
+    })
   })
 
   it("focuses search without scrolling the canvas while the panel opens", async () => {
@@ -191,5 +197,38 @@ describe("SelectStepSidePanel", () => {
     await waitFor(() => {
       expect(mocks.focus).toHaveBeenCalledWith({ preventScroll: true })
     })
+  })
+
+  it("shows Run Function only when its gated action definition is available", async () => {
+    const view = render(SelectStepSidePanel, {
+      props: {
+        block: { id: "step-1" },
+      },
+    })
+
+    expect(screen.queryByText("Run Function")).not.toBeInTheDocument()
+    view.unmount()
+
+    mocks.automationStore.set({
+      actionPanelToolbarFlowEnd: false,
+      blockDefinitions: {
+        ACTION: {
+          EXECUTE_FUNCTION: {
+            name: "Run Function",
+            stepId: "EXECUTE_FUNCTION",
+            icon: "functions",
+            internal: true,
+          },
+        },
+        TRIGGER: {},
+      },
+    })
+
+    render(SelectStepSidePanel, {
+      props: {
+        block: { id: "step-1" },
+      },
+    })
+    expect(screen.getByText("Run Function")).toBeInTheDocument()
   })
 })
