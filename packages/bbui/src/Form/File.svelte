@@ -10,7 +10,7 @@
   export let loading: boolean = false
   export let hideButtonWhenSet: boolean = false
   export let allowClear: boolean | undefined = undefined
-  export let handleFileTooLarge: (_file: File) => void = () => {}
+  export let handleFileTooLarge: (file: File) => void = () => {}
   export let previewUrl: string | undefined = undefined
   export let extensions: string[] | undefined = undefined
   export let error: string | undefined = undefined

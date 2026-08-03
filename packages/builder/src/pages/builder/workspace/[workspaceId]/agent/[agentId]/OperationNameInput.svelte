@@ -4,7 +4,7 @@
     onSave = (_value: string) => {},
   }: {
     value?: string
-    onSave?: (_value: string) => void
+    onSave?: (value: string) => void
   } = $props()
 
   let editing = $state(false)

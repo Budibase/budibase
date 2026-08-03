@@ -18,7 +18,7 @@
     node: SharePointEntryTreeNode
     selectedPaths?: string[]
     fileDescendantPathsByNodePath?: Map<string, string[]>
-    onTogglePaths?: (_paths: string[], _nextSelected: boolean) => void
+    onTogglePaths?: (paths: string[], nextSelected: boolean) => void
     showStatus?: boolean
   }
 
