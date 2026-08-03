@@ -243,7 +243,6 @@ export default async function (): Promise<FunctionResult> {
       )
       expect(built.artifact).toEqual(
         expect.objectContaining({
-          runnerProtocolVersion: 1,
           compiledJavaScript: expect.stringContaining(
             "__budibaseFunctionModule"
           ),
@@ -383,7 +382,7 @@ export default async function (): Promise<FunctionResult> {
           ...current,
           artifact: {
             ...current.artifact!,
-            runnerProtocolVersion: 2,
+            sourceHash: "tampered",
           },
         })
       })
@@ -595,7 +594,6 @@ export default async function (): Promise<FunctionResult> {
         source: "",
         capabilities: [],
         artifact: {
-          runnerProtocolVersion: 1,
           compiledJavaScript: "malicious",
           sourceHash: "fake",
           declarationsHash: "fake",

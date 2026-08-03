@@ -58,7 +58,15 @@ const resultSchema: z.ZodType<FunctionRunResult> = z
 
 export const parseFunctionRunResult = (payload: string) => {
   try {
-    return resultSchema.parse(JSON.parse(payload))
+    return validateFunctionRunResult(JSON.parse(payload))
+  } catch {
+    throw new FunctionExecutionError(FunctionErrorCode.FUNCTION_PROTOCOL_ERROR)
+  }
+}
+
+export const validateFunctionRunResult = (result: unknown) => {
+  try {
+    return resultSchema.parse(result)
   } catch {
     throw new FunctionExecutionError(FunctionErrorCode.FUNCTION_PROTOCOL_ERROR)
   }
