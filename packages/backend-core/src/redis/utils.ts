@@ -31,6 +31,7 @@ export enum Databases {
   DOC_WRITE_THROUGH = "docWriteThrough",
   RECAPTCHA_SESSION = "recaptchaSession",
   OPENAPI_IMPORT_SPECS = "openapiImportSpecs",
+  FUNCTION_RUN_GRANTS = "functionRunGrants",
 }
 
 /**
