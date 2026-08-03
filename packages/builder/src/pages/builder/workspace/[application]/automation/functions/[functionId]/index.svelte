@@ -2,7 +2,7 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import { getErrorMessage } from "@/helpers/errors"
   import { appStore, builderStore, functionStore } from "@/stores/builder"
-  import { auth, featureFlags } from "@/stores/portal"
+  import { admin, auth, featureFlags } from "@/stores/portal"
   import {
     Badge,
     Body,
@@ -26,6 +26,8 @@
   import FunctionCodeEditor from "../FunctionCodeEditor.svelte"
   import FunctionLogs from "../FunctionLogs.svelte"
   import FunctionQueryEditor from "../FunctionQueryEditor.svelte"
+  import FunctionRuntimeNotice from "../FunctionRuntimeNotice.svelte"
+  import { isFunctionClientGateOpen } from "../availability"
   import { canManageFunctions } from "../permissions"
 
   let fn: FunctionResponse | undefined
@@ -45,7 +47,12 @@
   $params
   $: functionId = $params.functionId
   $: enabled = $featureFlags[FeatureFlag.FUNCTIONS]
-  $: canManage = enabled && canManageFunctions($auth.user, $appStore.appId)
+  $: clientGateOpen = isFunctionClientGateOpen({
+    featureEnabled: enabled,
+    cloud: $admin.cloud,
+  })
+  $: hasPermission = canManageFunctions($auth.user, $appStore.appId)
+  $: availability = clientGateOpen ? $functionStore.availability : "unavailable"
   $: builderStore.selectResource(functionId)
   $: sourceDirty = !!fn && source !== savedSource
   $: draftDirty = sourceDirty || queriesDirty
@@ -126,6 +133,18 @@
     }
   }
 
+  const initialise = async (force = false) => {
+    if (!clientGateOpen || !hasPermission) {
+      loading = false
+      return
+    }
+    if (await functionStore.fetchStatus({ force })) {
+      await load()
+    } else {
+      loading = false
+    }
+  }
+
   const saveCapabilities = async (
     capabilities: FunctionQueryCapabilityInput[]
   ) => {
@@ -187,11 +206,7 @@
   }
 
   onMount(() => {
-    if (canManage) {
-      load()
-    } else {
-      loading = false
-    }
+    initialise()
   })
 
   onDestroy(() => {
@@ -210,11 +225,36 @@
   />
 
   <main class="function-page">
-    {#if !canManage}
+    {#if !clientGateOpen || availability === "unavailable"}
+      <div class="state" data-testid="function-unavailable-state">
+        <Icon name="lock" size="L" />
+        <Heading size="S">Functions are not available</Heading>
+        <Body size="S" color="var(--spectrum-global-color-gray-600)">
+          Functions require an enabled self-hosted installation and product
+          rollout.
+        </Body>
+      </div>
+    {:else if !hasPermission}
       <div class="state" data-testid="function-permission-state">
         <Icon name="lock" size="L" />
         <Heading size="S">You don't have permission to manage Functions</Heading
         >
+      </div>
+    {:else if availability === "unknown" || availability === "checking"}
+      <div class="state" data-testid="function-availability-loading">
+        <ProgressCircle size="M" />
+        <Body size="S">Checking Functions availability...</Body>
+      </div>
+    {:else if availability === "error"}
+      <div class="state" data-testid="function-availability-error" role="alert">
+        <Icon name="warning-circle" size="L" />
+        <Heading size="S">Unable to check Functions availability</Heading>
+        {#if $functionStore.runnerStatusError}
+          <Body size="S" color="var(--spectrum-global-color-gray-600)">
+            {$functionStore.runnerStatusError}
+          </Body>
+        {/if}
+        <Button secondary on:click={() => initialise(true)}>Retry</Button>
       </div>
     {:else if loading}
       <div class="state" data-testid="function-loading-state">
@@ -272,6 +312,13 @@
           </div>
         {/if}
       </div>
+
+      <FunctionRuntimeNotice
+        status={$functionStore.runnerStatus}
+        loading={$functionStore.runnerStatusLoading}
+        error={$functionStore.runnerStatusError}
+        onretry={() => functionStore.fetchStatus({ force: true })}
+      />
 
       <Tabs
         noHorizPadding

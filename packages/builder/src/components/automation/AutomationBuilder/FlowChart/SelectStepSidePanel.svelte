@@ -11,10 +11,11 @@
   import {
     AutomationActionStepId,
     BlockDefinitionTypes,
+    FeatureFlag,
     isBranchStep,
   } from "@budibase/types"
   import { automationStore, selectedAutomation } from "@/stores/builder"
-  import { admin, licensing } from "@/stores/portal"
+  import { admin, featureFlags, licensing } from "@/stores/portal"
   import { externalActions } from "./ExternalActions"
   import { TriggerStepID, ActionStepID } from "@/constants/backend/automations"
   import type { AutomationStepDefinition } from "@budibase/types"
@@ -27,6 +28,7 @@
   import { getAutomationStepIconColor } from "./AutomationStepCategories"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import type { RestTemplate } from "@budibase/types"
+  import { isFunctionClientGateOpen } from "@/pages/builder/workspace/[application]/automation/functions/availability"
 
   export let block
   export let onClose = () => {}
@@ -50,6 +52,10 @@
 
   $: syncAutomationsEnabled = $licensing.syncAutomationsEnabled
   $: triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
+  $: functionsClientGateOpen = isFunctionClientGateOpen({
+    featureEnabled: !!$featureFlags[FeatureFlag.FUNCTIONS],
+    cloud: $admin.cloud,
+  })
   let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
   let actions = Object.entries($automationStore.blockDefinitions.ACTION).filter(
     ([key, action]) =>
@@ -226,14 +232,17 @@
     },
     {
       name: "Code",
-      items: actions.filter(([k]) =>
-        [
-          AutomationActionStepId.EXECUTE_BASH,
-          AutomationActionStepId.EXECUTE_FUNCTION,
-          AutomationActionStepId.EXECUTE_SCRIPT_V2,
-          AutomationActionStepId.SERVER_LOG,
-          AutomationActionStepId.EXTRACT_STATE,
-        ].includes(k as AutomationActionStepId)
+      items: actions.filter(
+        ([k]) =>
+          [
+            AutomationActionStepId.EXECUTE_BASH,
+            AutomationActionStepId.EXECUTE_FUNCTION,
+            AutomationActionStepId.EXECUTE_SCRIPT_V2,
+            AutomationActionStepId.SERVER_LOG,
+            AutomationActionStepId.EXTRACT_STATE,
+          ].includes(k as AutomationActionStepId) &&
+          (k !== AutomationActionStepId.EXECUTE_FUNCTION ||
+            functionsClientGateOpen)
       ),
     },
     {

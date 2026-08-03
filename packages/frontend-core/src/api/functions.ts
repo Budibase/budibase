@@ -8,6 +8,7 @@ import type {
   FetchFunctionQueryCatalogResponse,
   FetchFunctionRunResponse,
   FetchFunctionRunsResponse,
+  FetchFunctionStatusResponse,
   FetchFunctionsResponse,
   UpdateFunctionRequest,
   UpdateFunctionResponse,
@@ -16,6 +17,7 @@ import type { BaseAPIClient } from "./types"
 
 export interface FunctionEndpoints {
   getFunctions: () => Promise<FetchFunctionsResponse>
+  getFunctionStatus: () => Promise<FetchFunctionStatusResponse>
   getFunctionQueryCatalog: () => Promise<FetchFunctionQueryCatalogResponse>
   getFunction: (functionId: string) => Promise<FetchFunctionResponse>
   getFunctionRuns: (
@@ -47,6 +49,12 @@ export const buildFunctionEndpoints = (
   getFunctions: async () => {
     return await API.get({
       url: "/api/functions",
+    })
+  },
+
+  getFunctionStatus: async () => {
+    return await API.get({
+      url: "/api/functions/status",
     })
   },
 

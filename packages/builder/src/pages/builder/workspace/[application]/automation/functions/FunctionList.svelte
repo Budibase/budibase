@@ -2,6 +2,9 @@
 
 <script lang="ts">
   import type { UIFunction } from "@/stores/builder/functions"
+  import type { FunctionAvailability } from "./availability"
+  import FunctionRuntimeNotice from "./FunctionRuntimeNotice.svelte"
+  import type { FunctionRunnerStatus } from "@budibase/types"
   import {
     ActionMenu,
     Body,
@@ -18,12 +21,18 @@
     loading?: boolean
     error?: string
     canManage?: boolean
+    availability?: FunctionAvailability
+    runnerStatus?: FunctionRunnerStatus
+    runnerStatusLoading?: boolean
+    runnerStatusError?: string
     onOpen?: (_fn: UIFunction) => void
     onRetry?: () => void
     onCreate?: () => void
     onRename?: (_fn: UIFunction) => void
     onDuplicate?: (_fn: UIFunction) => void
     onDelete?: (_fn: UIFunction) => void
+    onRetryAvailability?: () => void
+    onRetryRunnerStatus?: () => void
   }
 
   let {
@@ -31,12 +40,18 @@
     loading = false,
     error = "",
     canManage = false,
+    availability = "available",
+    runnerStatus,
+    runnerStatusLoading = false,
+    runnerStatusError = "",
     onOpen = () => {},
     onRetry = () => {},
     onCreate = () => {},
     onRename = () => {},
     onDuplicate = () => {},
     onDelete = () => {},
+    onRetryAvailability = () => {},
+    onRetryRunnerStatus = () => {},
   }: Props = $props()
 
   const readinessLabels = {
@@ -46,7 +61,7 @@
   }
 
   const deploymentLabels = {
-    not_deployed: "Not deployed",
+    not_published: "Not published",
     published: "Published",
     unpublished_changes: "Unpublished changes",
   }
@@ -60,7 +75,7 @@
         Reusable TypeScript that can run from your automations.
       </Body>
     </div>
-    {#if canManage}
+    {#if canManage && availability === "available"}
       <Button primary on:click={onCreate}>
         <Icon name="plus" size="S" />
         New Function
@@ -68,88 +83,122 @@
     {/if}
   </div>
 
-  {#if !canManage}
+  {#if availability === "unknown" || availability === "checking"}
+    <div class="state" data-testid="functions-availability-loading">
+      <ProgressCircle size="M" />
+      <Body size="S">Checking Functions availability...</Body>
+    </div>
+  {:else if availability === "error"}
+    <div class="state" data-testid="functions-availability-error" role="alert">
+      <Icon name="warning-circle" size="L" />
+      <Heading size="S">Unable to check Functions availability</Heading>
+      {#if runnerStatusError}
+        <Body size="S" color="var(--spectrum-global-color-gray-600)">
+          {runnerStatusError}
+        </Body>
+      {/if}
+      <Button secondary on:click={onRetryAvailability}>Retry</Button>
+    </div>
+  {:else if availability === "unavailable"}
+    <div class="state" data-testid="functions-unavailable-state">
+      <Icon name="lock" size="L" />
+      <Heading size="S">Functions are not available</Heading>
+      <Body size="S" color="var(--spectrum-global-color-gray-600)">
+        Functions require an enabled self-hosted installation and product
+        rollout.
+      </Body>
+    </div>
+  {:else if !canManage}
     <div class="state" data-testid="functions-permission-state">
       <Icon name="lock" size="L" />
       <Heading size="S">You don't have permission to manage Functions</Heading>
     </div>
-  {:else if loading}
-    <div class="state" data-testid="functions-loading-state">
-      <ProgressCircle size="M" />
-      <Body size="S">Loading Functions...</Body>
-    </div>
-  {:else if error}
-    <div class="state" data-testid="functions-error-state">
-      <Icon name="warning-circle" size="L" />
-      <Heading size="S">Unable to load Functions</Heading>
-      <Body size="S" color="var(--spectrum-global-color-gray-600)">
-        {error}
-      </Body>
-      <Button secondary on:click={onRetry}>Retry</Button>
-    </div>
-  {:else if !functions.length}
-    <div class="state" data-testid="functions-empty-state">
-      <Icon name="code" size="XL" />
-      <Heading size="S">Create your first Function</Heading>
-      <Body size="S" color="var(--spectrum-global-color-gray-600)">
-        Functions let automations reuse safe, server-side TypeScript.
-      </Body>
-      <Button primary on:click={onCreate}>New Function</Button>
-    </div>
   {:else}
-    <div class="function-table" role="table" aria-label="Functions">
-      <div class="table-header" role="row">
-        <div role="columnheader">Name</div>
-        <div role="columnheader">Readiness</div>
-        <div role="columnheader">Deployment</div>
-        <div role="columnheader">Linked queries</div>
-        <div role="columnheader">Last updated</div>
-        <div role="columnheader" aria-label="Actions"></div>
+    <FunctionRuntimeNotice
+      status={runnerStatus}
+      loading={runnerStatusLoading}
+      error={runnerStatusError}
+      onretry={onRetryRunnerStatus}
+    />
+
+    {#if loading}
+      <div class="state" data-testid="functions-loading-state">
+        <ProgressCircle size="M" />
+        <Body size="S">Loading Functions...</Body>
       </div>
-      {#each functions as fn (fn._id)}
-        <div class="table-row" role="row">
-          <div class="name" role="cell">
-            <Icon name="code" size="S" />
-            <button
-              type="button"
-              class="name-button"
-              onclick={() => onOpen(fn)}
-            >
-              {fn.name}
-            </button>
-          </div>
-          <div role="cell">
-            <span class:failed={fn.readiness === "build_failed"}>
-              {readinessLabels[fn.readiness]}
-            </span>
-          </div>
-          <div role="cell">{deploymentLabels[fn.deploymentState]}</div>
-          <div role="cell">{fn.capabilities.length}</div>
-          <div role="cell">{Helpers.getDateDisplayValue(fn.updatedAt)}</div>
-          <div class="actions" role="cell">
-            <ActionMenu align="right">
-              <button
-                slot="control"
-                type="button"
-                class="action-control"
-                aria-label={`Actions for ${fn.name}`}
-              >
-                <Icon name="dots-three" size="M" hoverable />
-              </button>
-              <MenuItem icon="pencil" on:click={() => onRename(fn)}>
-                Rename
-              </MenuItem>
-              <MenuItem icon="copy" on:click={() => onDuplicate(fn)}>
-                Duplicate
-              </MenuItem>
-              <MenuItem icon="trash" on:click={() => onDelete(fn)}>
-                Delete
-              </MenuItem>
-            </ActionMenu>
-          </div>
+    {:else if error}
+      <div class="state" data-testid="functions-error-state">
+        <Icon name="warning-circle" size="L" />
+        <Heading size="S">Unable to load Functions</Heading>
+        <Body size="S" color="var(--spectrum-global-color-gray-600)">
+          {error}
+        </Body>
+        <Button secondary on:click={onRetry}>Retry</Button>
+      </div>
+    {:else if !functions.length}
+      <div class="state" data-testid="functions-empty-state">
+        <Icon name="code" size="XL" />
+        <Heading size="S">Create your first Function</Heading>
+        <Body size="S" color="var(--spectrum-global-color-gray-600)">
+          Functions let automations reuse safe, server-side TypeScript.
+        </Body>
+        <Button primary on:click={onCreate}>New Function</Button>
+      </div>
+    {:else}
+      <div class="function-table" role="table" aria-label="Functions">
+        <div class="table-header" role="row">
+          <div role="columnheader">Name</div>
+          <div role="columnheader">Readiness</div>
+          <div role="columnheader">Deployment</div>
+          <div role="columnheader">Linked queries</div>
+          <div role="columnheader">Last updated</div>
+          <div role="columnheader" aria-label="Actions"></div>
         </div>
-      {/each}
-    </div>
+        {#each functions as fn (fn._id)}
+          <div class="table-row" role="row">
+            <div class="name" role="cell">
+              <Icon name="code" size="S" />
+              <button
+                type="button"
+                class="name-button"
+                onclick={() => onOpen(fn)}
+              >
+                {fn.name}
+              </button>
+            </div>
+            <div role="cell">
+              <span class:failed={fn.readiness === "build_failed"}>
+                {readinessLabels[fn.readiness]}
+              </span>
+            </div>
+            <div role="cell">{deploymentLabels[fn.deploymentState]}</div>
+            <div role="cell">{fn.capabilities.length}</div>
+            <div role="cell">{Helpers.getDateDisplayValue(fn.updatedAt)}</div>
+            <div class="actions" role="cell">
+              <ActionMenu align="right">
+                <button
+                  slot="control"
+                  type="button"
+                  class="action-control"
+                  aria-label={`Actions for ${fn.name}`}
+                >
+                  <Icon name="dots-three" size="M" hoverable />
+                </button>
+                <MenuItem icon="pencil" on:click={() => onRename(fn)}>
+                  Rename
+                </MenuItem>
+                <MenuItem icon="copy" on:click={() => onDuplicate(fn)}>
+                  Duplicate
+                </MenuItem>
+                <MenuItem icon="trash" on:click={() => onDelete(fn)}>
+                  Delete
+                </MenuItem>
+              </ActionMenu>
+            </div>
+          </div>
+        {/each}
+      </div>
+    {/if}
   {/if}
 </div>
 
