@@ -750,7 +750,7 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     )
   })
 
-  it("keeps operation tools when required inputs are captured", async () => {
+  it("keeps operation tools when captured inputs are confirmed", async () => {
     const operationWithInputs = {
       ...operationWithoutRecipients,
       requestInputs: [
@@ -762,18 +762,22 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
         },
       ],
     }
-    mockRouterStream.mockReturnValueOnce({
-      output: Promise.resolve({
-        values: [
-          {
-            id: "device_type",
-            value: "Laptop",
-            sourceMessageIndex: 0,
-            sourceQuote: "My device type is Laptop",
-          },
-        ],
-      }),
-    })
+    mockRouterStream
+      .mockReturnValueOnce({
+        output: Promise.resolve({
+          values: [
+            {
+              id: "device_type",
+              value: "Laptop",
+              sourceMessageIndex: 0,
+              sourceQuote: "My device type is Laptop",
+            },
+          ],
+        }),
+      })
+      .mockReturnValueOnce({
+        output: Promise.resolve({ confirmed: true }),
+      })
 
     const run = await runFor(operationWithInputs, {
       agent: {
@@ -784,6 +788,14 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
         {
           role: "user",
           content: "My device type is Laptop",
+        },
+        {
+          role: "assistant",
+          content: "I captured Device type: Laptop. Is that correct?",
+        },
+        {
+          role: "user",
+          content: "Yes, that is correct",
         },
       ],
     })
@@ -1000,7 +1012,7 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     ])
     expect(ToolLoopAgent).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        tools: expect.objectContaining({ escalate: escalatePlaceholder }),
+        tools: undefined,
       })
     )
   })
@@ -1051,7 +1063,7 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     ])
     expect(ToolLoopAgent).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        tools: expect.objectContaining({ escalate: escalatePlaceholder }),
+        tools: undefined,
         instructions: expect.stringContaining('"value": "100"'),
       })
     )
@@ -1111,7 +1123,7 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     )
     expect(ToolLoopAgent).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        tools: expect.objectContaining({ escalate: escalatePlaceholder }),
+        tools: undefined,
       })
     )
   })
@@ -1163,7 +1175,7 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     ])
     expect(ToolLoopAgent).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        tools: expect.objectContaining({ escalate: escalatePlaceholder }),
+        tools: undefined,
       })
     )
   })
@@ -1215,7 +1227,7 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     ])
     expect(ToolLoopAgent).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        tools: expect.objectContaining({ escalate: escalatePlaceholder }),
+        tools: undefined,
         instructions: expect.stringContaining('"value": "Critical"'),
       })
     )
