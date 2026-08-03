@@ -1,13 +1,44 @@
+<script context="module" lang="ts">
+  import { type Agent, EscalationNotificationChannel } from "@budibase/types"
+
+  // Enabled = endpoint URL present, the same inference the deployment toggle
+  export const configuredEscalationProviders = (
+    agent: Agent | undefined
+  ): EscalationNotificationChannel[] => {
+    const channels: [EscalationNotificationChannel, string | undefined][] = [
+      [
+        EscalationNotificationChannel.SLACK,
+        agent?.slackIntegration?.messagingEndpointUrl,
+      ],
+      [
+        EscalationNotificationChannel.DISCORD,
+        agent?.discordIntegration?.interactionsEndpointUrl,
+      ],
+      [
+        EscalationNotificationChannel.MSTEAMS,
+        agent?.MSTeamsIntegration?.messagingEndpointUrl,
+      ],
+      [
+        EscalationNotificationChannel.TELEGRAM,
+        agent?.telegramIntegration?.messagingEndpointUrl,
+      ],
+    ]
+    return channels
+      .filter(([, url]) => url?.trim())
+      .map(([provider]) => provider)
+  }
+</script>
+
 <script lang="ts">
-  import {
-    type ChatIdentityLink,
-    type ChatIdentityLinkProvider,
-    EscalationNotificationChannel,
+  import type {
+    ChatIdentityLink,
+    ChatIdentityLinkProvider,
   } from "@budibase/types"
   import { API } from "@/api"
   import type {
     SlackChannel,
     MSTeamsChannel,
+    PagedChannels,
   } from "@budibase/frontend-core/src/api/chatLinks"
   import {
     ActionButton,
@@ -40,6 +71,8 @@
   // Single mode: cap at one recipient (still stored as an array). Once chosen,
   // the add button is replaced by a clear-recipient affordance.
   export let single: boolean = false
+  // Optional allowlist of providers to offer; undefined shows all.
+  export let providers: EscalationNotificationChannel[] | undefined = undefined
 
   const PROVIDER_OPTIONS = [
     { value: EscalationNotificationChannel.SLACK, label: "Slack" },
@@ -67,10 +100,24 @@
 
   const loadingProviders = new Set<string>()
 
+  interface ChannelPager<T> {
+    channels: T[]
+    hasNext: boolean
+    cursor?: string
+    loading: boolean
+    loadedFor?: string
+  }
+
+  const emptyPager = <T,>(): ChannelPager<T> => ({
+    channels: [],
+    hasNext: false,
+    loading: false,
+  })
+
   let linkCache: Record<string, ChatIdentityLink[]> = {}
   let loadedAgentId: string | undefined = undefined
-  let slackChannels: SlackChannel[] = []
-  let teamsChannels: MSTeamsChannel[] = []
+  let slackPager = emptyPager<SlackChannel>()
+  let teamsPager = emptyPager<MSTeamsChannel>()
 
   let isAdding = false
   let pending: PendingRecipient = { ...DEFAULT_PENDING }
@@ -118,6 +165,10 @@
     }
   }
 
+  $: providerOptions = providers
+    ? PROVIDER_OPTIONS.filter(o => providers!.includes(o.value))
+    : PROVIDER_OPTIONS
+
   // Refresh links on agent change. An automation concern
   $: if (agentId !== loadedAgentId) {
     loadedAgentId = agentId
@@ -154,31 +205,79 @@
     pending.provider === EscalationNotificationChannel.DISCORD ||
     pending.provider === EscalationNotificationChannel.MSTEAMS
 
+  // Appends the next provider page onto the pager; the caller reassigns the
+  // returned pager so Svelte picks up the change.
+  const loadChannelPage = async <T,>(
+    pager: ChannelPager<T>,
+    fetchPage: (
+      _agentId: string,
+      _cursor?: string
+    ) => Promise<PagedChannels<T>>,
+    onError?: () => void
+  ): Promise<ChannelPager<T>> => {
+    if (!agentId || pager.loading) {
+      return pager
+    }
+    pager.loading = true
+    try {
+      const page = await fetchPage(agentId, pager.cursor)
+      return {
+        ...pager,
+        loading: false,
+        channels: [...pager.channels, ...page.channels],
+        hasNext: page.hasNext,
+        cursor: page.cursor,
+      }
+    } catch {
+      onError?.()
+      return { ...pager, loading: false, hasNext: false }
+    }
+  }
+
+  const teamsLoadError = () =>
+    notifications.error(
+      "Couldn't load Teams channels — check the bot's Graph permissions"
+    )
+
+  const loadMoreSlackChannels = async () => {
+    if (slackPager.hasNext) {
+      slackPager = await loadChannelPage(slackPager, API.fetchSlackChannels)
+    }
+  }
+
+  const loadMoreTeamsChannels = async () => {
+    if (teamsPager.hasNext) {
+      teamsPager = await loadChannelPage(
+        teamsPager,
+        API.fetchMSTeamsChannels,
+        teamsLoadError
+      )
+    }
+  }
+
   $: if (
     pending.provider === EscalationNotificationChannel.SLACK &&
     pending.targetType === "channel" &&
-    agentId
+    agentId &&
+    slackPager.loadedFor !== agentId
   ) {
-    API.fetchSlackChannels(agentId).then((channels: SlackChannel[]) => {
-      slackChannels = channels
-    })
+    slackPager = { ...emptyPager<SlackChannel>(), loadedFor: agentId }
+    loadChannelPage(slackPager, API.fetchSlackChannels).then(
+      pager => (slackPager = pager)
+    )
   }
 
   $: if (
     pending.provider === EscalationNotificationChannel.MSTEAMS &&
     pending.targetType === "channel" &&
     pending.teamsInputMode === "lookup" &&
-    agentId
+    agentId &&
+    teamsPager.loadedFor !== agentId
   ) {
-    API.fetchMSTeamsChannels(agentId)
-      .then((channels: MSTeamsChannel[]) => {
-        teamsChannels = channels
-      })
-      .catch(() =>
-        notifications.error(
-          "Couldn't load Teams channels — check the bot's Graph permissions"
-        )
-      )
+    teamsPager = { ...emptyPager<MSTeamsChannel>(), loadedFor: agentId }
+    loadChannelPage(teamsPager, API.fetchMSTeamsChannels, teamsLoadError).then(
+      pager => (teamsPager = pager)
+    )
   }
 
   $: canAdd = (() => {
@@ -255,7 +354,7 @@
         },
       }
     } else if (provider === EscalationNotificationChannel.SLACK) {
-      const channel = slackChannels.find(c => c.id === pending.channelId)
+      const channel = slackPager.channels.find(c => c.id === pending.channelId)
       if (!channel) return
       recipient = {
         type: EscalationNotificationChannel.SLACK,
@@ -327,7 +426,7 @@
   {#if isAdding}
     <div class="add-flow">
       <Select
-        options={PROVIDER_OPTIONS}
+        options={providerOptions}
         value={pending.provider}
         placeholder="Provider..."
         getOptionLabel={o => o.label}
@@ -376,12 +475,13 @@
           {/if}
         {:else if pending.provider === EscalationNotificationChannel.SLACK}
           <Select
-            options={slackChannels}
+            options={slackPager.channels}
             value={pending.channelId}
             placeholder="Select channel..."
             getOptionLabel={c => `#${c.name}`}
             getOptionValue={c => c.id}
             on:change={e => (pending.channelId = e.detail ?? "")}
+            on:loadMore={loadMoreSlackChannels}
           />
         {:else if pending.provider === EscalationNotificationChannel.DISCORD}
           <Input
@@ -412,13 +512,13 @@
           </div>
           {#if pending.teamsInputMode === "lookup"}
             <Select
-              options={teamsChannels}
+              options={teamsPager.channels}
               value={pending.teamsChannelId}
               placeholder="Select channel..."
               getOptionLabel={c => `${c.teamName} / ${c.name}`}
               getOptionValue={c => c.id}
               on:change={e => {
-                const channel = teamsChannels.find(c => c.id === e.detail)
+                const channel = teamsPager.channels.find(c => c.id === e.detail)
                 pending = {
                   ...pending,
                   teamsChannelId: channel?.id ?? "",
@@ -426,6 +526,7 @@
                   teamsChannelName: channel?.name ?? "",
                 }
               }}
+              on:loadMore={loadMoreTeamsChannels}
             />
           {:else if pending.teamsInputMode === "url"}
             <Input
