@@ -102,6 +102,27 @@ describe("FunctionQueryEditor", () => {
     ])
   })
 
+  it("reports unsaved query configuration changes", async () => {
+    const onDirtyChange = vi.fn()
+    render(FunctionQueryEditor, {
+      catalog,
+      onDirtyChange,
+    })
+
+    expect(onDirtyChange).toHaveBeenLastCalledWith(false)
+    await fireEvent.click(
+      screen.getByRole("button", { name: /Link a Data query/i })
+    )
+    await fireEvent.click(
+      screen.getByRole("option", {
+        name: /Find renamed customer/i,
+        hidden: true,
+      })
+    )
+
+    expect(onDirtyChange).toHaveBeenLastCalledWith(true)
+  })
+
   it("removes links, including saved queries that are now missing", async () => {
     const onSave = vi.fn().mockResolvedValue(undefined)
     render(FunctionQueryEditor, {

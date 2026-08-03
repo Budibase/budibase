@@ -10,6 +10,8 @@ vi.mock("@/api", () => ({
     getFunctions: vi.fn(),
     getFunctionQueryCatalog: vi.fn(),
     getFunction: vi.fn(),
+    compileFunction: vi.fn(),
+    buildFunction: vi.fn(),
     createFunction: vi.fn(),
     updateFunction: vi.fn(),
     deleteFunction: vi.fn(),
@@ -204,6 +206,48 @@ describe("FunctionStore", () => {
       name: fn.name,
       _rev: fn._rev,
     })
+  })
+
+  it("validates an unsaved draft without changing the stored Function", async () => {
+    const fn = makeFunction()
+    const request = {
+      functionId: fn._id,
+      name: fn.name,
+      source: "invalid TypeScript",
+      capabilities: [],
+    }
+    vi.mocked(API.compileFunction).mockResolvedValue({
+      diagnostics: [{ code: "TS2304", message: "Cannot find name" }],
+    })
+
+    await expect(store.compile(request)).resolves.toEqual({
+      diagnostics: [{ code: "TS2304", message: "Cannot find name" }],
+    })
+
+    expect(API.compileFunction).toHaveBeenCalledWith(request)
+    expect(store.list).toEqual([])
+  })
+
+  it("builds the saved revision and stores its new readiness", async () => {
+    const fn = makeFunction({ readiness: "build_required" })
+    const built = makeFunction({ _rev: "2-two", readiness: "ready" })
+    vi.mocked(API.buildFunction).mockResolvedValue({ function: built })
+
+    await expect(store.build(fn)).resolves.toEqual(built)
+
+    expect(API.buildFunction).toHaveBeenCalledWith(fn._id, fn._rev)
+    expect(store.list[0]).toEqual(
+      expect.objectContaining({ _rev: "2-two", readiness: "ready" })
+    )
+  })
+
+  it("requires a revision before building", async () => {
+    const fn = makeFunction({ _rev: undefined })
+
+    await expect(store.build(fn)).rejects.toThrow(
+      "Function revision is missing"
+    )
+    expect(API.buildFunction).not.toHaveBeenCalled()
   })
 
   it("duplicates the draft without copying server-owned metadata", async () => {

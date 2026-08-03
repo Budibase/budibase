@@ -30,6 +30,7 @@
     catalogError?: string
     onRetry?: () => void
     onSave?: (_capabilities: FunctionQueryCapabilityInput[]) => Promise<void>
+    onDirtyChange?: (_dirty: boolean) => void
   }
 
   let {
@@ -39,6 +40,7 @@
     catalogError = "",
     onRetry = () => {},
     onSave = async () => {},
+    onDirtyChange = () => {},
   }: Props = $props()
 
   let drafts = $state<FunctionQueryCapabilityInput[]>([])
@@ -93,6 +95,10 @@
   let dirty = $derived(
     JSON.stringify(drafts) !== syncedCapabilities || parameterMetadataChanged
   )
+
+  $effect(() => {
+    onDirtyChange(dirty)
+  })
 
   const getAvailableQueries = (kind: FunctionQueryKind) =>
     catalog.filter(
