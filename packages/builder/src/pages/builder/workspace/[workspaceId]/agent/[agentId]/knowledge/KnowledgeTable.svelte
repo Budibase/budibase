@@ -10,7 +10,7 @@
     loading: boolean
     isUploading?: boolean
     rows: KnowledgeTableRow[]
-    onRowClick?: (_row: KnowledgeTableRow) => void
+    onRowClick?: (row: KnowledgeTableRow) => void
   }
 
   let { loading, isUploading = false, rows, onRowClick }: Props = $props()

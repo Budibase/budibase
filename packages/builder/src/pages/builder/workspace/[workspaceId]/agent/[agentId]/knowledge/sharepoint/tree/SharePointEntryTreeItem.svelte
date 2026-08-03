@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { KnowledgeBaseFileStatus } from "@budibase/types"
+  import {
+    KnowledgeBaseFileStatus,
+    type SharePointScopeTarget,
+  } from "@budibase/types"
   import {
     Body,
     Helpers,
@@ -12,22 +15,28 @@
   } from "@budibase/bbui"
   import SharePointEntryTreeItem from "./SharePointEntryTreeItem.svelte"
   import type { SharePointEntryTreeNode } from "./sharePointEntryTree"
+  import { isNodeTargeted } from "../sharePointScope"
 
   export interface Props {
     selectable?: boolean
     node: SharePointEntryTreeNode
-    selectedPaths?: string[]
-    fileDescendantPathsByNodePath?: Map<string, string[]>
-    onTogglePaths?: (_paths: string[], _nextSelected: boolean) => void
+    scopeTargets?: SharePointScopeTarget[]
+    ancestorSelected?: boolean
+    onToggleNode?: (
+      _node: SharePointEntryTreeNode,
+      _nextSelected: boolean
+    ) => void
+    onExpandNode?: (_node: SharePointEntryTreeNode) => Promise<void> | void
     showStatus?: boolean
   }
 
   let {
     selectable,
     node,
-    selectedPaths,
-    fileDescendantPathsByNodePath,
-    onTogglePaths,
+    scopeTargets,
+    ancestorSelected = false,
+    onToggleNode,
+    onExpandNode,
     showStatus = true,
   }: Props = $props()
 
@@ -60,7 +69,7 @@
   }
 
   let errorModal = $state<Modal>()
-  let hasChildren = $derived(node.children.length > 0)
+  let hasChildren = $derived(!!node.hasChildren || node.children.length > 0)
   let hasError = $derived(
     node.status === KnowledgeBaseFileStatus.FAILED && !!node.errorMessage
   )
@@ -81,48 +90,44 @@
     Helpers.copyToClipboard(node.errorMessage)
     notifications.success("Error copied to clipboard")
   }
-  let selectedSet = $derived(new Set(selectedPaths))
-  let targetPaths = $derived.by(() => {
-    if (node.type === "file" || node.type === "list") {
-      return [node.path]
-    }
-    return fileDescendantPathsByNodePath?.get(node.path) || []
-  })
-  let selected = $derived.by(() => {
-    if (targetPaths.length === 0) {
-      return false
-    }
-    return targetPaths.every(path => selectedSet.has(path))
-  })
-  let indeterminate = $derived.by(() => {
-    if (targetPaths.length === 0) {
-      return false
-    }
-    const selectedCount = targetPaths.filter(path =>
-      selectedSet.has(path)
-    ).length
-    return selectedCount > 0 && selectedCount < targetPaths.length
-  })
-  let disabled = $derived(targetPaths.length === 0)
+  let selected = $derived(
+    !!scopeTargets && (ancestorSelected || isNodeTargeted(node, scopeTargets))
+  )
+  let disabled = $derived(!!scopeTargets && ancestorSelected)
 
   const handleSelect = (_event: CustomEvent<boolean>) => {
-    const nextSelected = indeterminate ? true : !selected
-    onTogglePaths?.(targetPaths, nextSelected)
+    if (!scopeTargets) {
+      return
+    }
+    onToggleNode?.(node, !selected)
+  }
+
+  const handleToggle = async (event: CustomEvent<boolean>) => {
+    node.open = event.detail
+    if (event.detail && !node.childrenLoaded) {
+      await onExpandNode?.(node)
+    }
+  }
+
+  const handleRetry = async (event: MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+    await onExpandNode?.(node)
   }
 </script>
 
-<div class="sharepoint-entry-tree-item">
+<div class="sharepoint-entry-tree-item" class:is-selectable={selectable}>
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <TreeItem
     title={node.name}
     {selected}
-    {indeterminate}
     showCheckbox={selectable}
     {disabled}
-    open={hasChildren}
+    open={node.open || false}
     {hasChildren}
     on:select={handleSelect}
+    on:toggle={handleToggle}
     on:click={openErrorModal}
   >
     <svelte:fragment slot="post">
@@ -134,16 +139,23 @@
     </svelte:fragment>
 
     {#if hasChildren}
-      {#each node.children as child (child.path)}
-        <SharePointEntryTreeItem
-          {selectable}
-          node={child}
-          {selectedPaths}
-          {fileDescendantPathsByNodePath}
-          {onTogglePaths}
-          {showStatus}
-        />
-      {/each}
+      {#if node.loading}
+        <TreeItem title="Loading..." disabled />
+      {:else if node.loadError}
+        <TreeItem title="Failed to load. Retry" on:click={handleRetry} />
+      {:else}
+        {#each node.children as child (child.path)}
+          <SharePointEntryTreeItem
+            {selectable}
+            node={child}
+            {scopeTargets}
+            ancestorSelected={!!scopeTargets && selected}
+            {onToggleNode}
+            {onExpandNode}
+            {showStatus}
+          />
+        {/each}
+      {/if}
     {/if}
   </TreeItem>
 
@@ -189,5 +201,17 @@
 
   .sharepoint-entry-tree-item :global(.spectrum-TreeView-itemLink) {
     padding-inline-end: 8px;
+  }
+
+  .sharepoint-entry-tree-item.is-selectable
+    :global(.spectrum-TreeView-itemIndicator) {
+    inset-inline-start: 0;
+    inset-block-start: 0;
+    margin-inline-start: 0;
+    margin-inline-end: var(--spacing-xs);
+    margin-block-end: 0;
+    padding-inline: 0;
+    padding-block: 0;
+    flex-shrink: 0;
   }
 </style>

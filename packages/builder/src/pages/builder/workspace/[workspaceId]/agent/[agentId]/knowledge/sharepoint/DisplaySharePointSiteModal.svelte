@@ -19,7 +19,7 @@
     agentId?: string
     operationId: string
     siteId?: string
-    onEdit?: (_siteId: string) => Promise<void> | void
+    onEdit?: (siteId: string) => Promise<void> | void
   }
 
   let { agentId, operationId, siteId, onEdit }: Props = $props()
