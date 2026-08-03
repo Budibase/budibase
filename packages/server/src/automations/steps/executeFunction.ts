@@ -119,7 +119,7 @@ const getJsonDepth = (value: JSONValue): number => {
 const parseInputs = (
   inputs: ExecuteFunctionStepInputs["inputs"]
 ): Record<string, JSONValue> => {
-  let value: unknown = inputs
+  let value: unknown = inputs ?? {}
   if (
     value &&
     typeof value === "object" &&

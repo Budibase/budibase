@@ -1,8 +1,12 @@
-import type { FunctionBuildDiagnostic } from "@budibase/types"
+import type {
+  FunctionBuildDiagnostic,
+  FunctionQueryCapability,
+} from "@budibase/types"
 
 export interface FunctionCompilerRequest {
   source: string
   declarations: string
+  capabilities: FunctionQueryCapability[]
 }
 
 export interface FunctionCompilerOutput {

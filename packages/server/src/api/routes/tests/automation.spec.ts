@@ -2,6 +2,7 @@ import { configs, context, events } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import {
   Automation,
+  AutomationActionStepId,
   AutomationResults,
   AutomationTriggerStepId,
   ConfigType,
@@ -116,9 +117,12 @@ describe("/automations", () => {
 
     it("returns all of the definitions in one", async () => {
       const { action, trigger } = await config.api.automation.getDefinitions()
+      const requiredActionIds = Object.keys(BUILTIN_ACTION_DEFINITIONS).filter(
+        actionId => actionId !== AutomationActionStepId.EXECUTE_FUNCTION
+      )
 
-      expect(Object.keys(action).length).toBeGreaterThanOrEqual(
-        Object.keys(BUILTIN_ACTION_DEFINITIONS).length
+      expect(Object.keys(action)).toEqual(
+        expect.arrayContaining(requiredActionIds)
       )
       expect(Object.keys(trigger).length).toEqual(
         Object.keys(TRIGGER_DEFINITIONS).length
