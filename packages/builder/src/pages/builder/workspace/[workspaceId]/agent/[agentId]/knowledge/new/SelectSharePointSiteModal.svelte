@@ -28,8 +28,8 @@
     operationId: string
     existingSiteIds?: string[]
     onCreated?: (
-      _siteId: string,
-      _mode: SharePointSelectionMode
+      siteId: string,
+      mode: SharePointSelectionMode
     ) => Promise<void> | void
   }
 

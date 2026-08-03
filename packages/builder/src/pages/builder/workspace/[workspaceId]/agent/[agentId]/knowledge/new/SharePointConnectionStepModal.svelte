@@ -21,7 +21,7 @@
     hasSharePointDatasource?: boolean
     onNext: () => Promise<void> | void
     onConfigure: () => Promise<void> | void
-    onConnectionChange: (_connectionId: string) => void
+    onConnectionChange: (connectionId: string) => void
   }
 
   let {

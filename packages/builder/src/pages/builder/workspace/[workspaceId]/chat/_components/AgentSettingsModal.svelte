@@ -23,15 +23,15 @@
   export let selectedAgentConfig: ChatAppAgent | undefined
   export let defaultAgentId: string | undefined
   export let showDefaultControls = true
-  export let isAgentAvailable: (_agentId: string) => boolean
-  export let onSetDefault: ((_agentId: string) => void) | undefined = undefined
+  export let isAgentAvailable: (agentId: string) => boolean
+  export let onSetDefault: ((agentId: string) => void) | undefined = undefined
   export let onUpdateConversationStarters: (
-    _agentId: string,
-    _starters: ConversationStarter[]
+    agentId: string,
+    starters: ConversationStarter[]
   ) => void
   export let onUpdateAccessRole: (
-    _agentId: string,
-    _roleId?: string
+    agentId: string,
+    roleId?: string
   ) => void = () => {}
   export let onClose: () => void
 

@@ -30,7 +30,7 @@
   export let isOptionEnabled = (option: O, _index?: number) =>
     option as unknown as boolean
   export let tooltipMessage:
-    | ((_option: O, _index?: number) => string)
+    | ((option: O, index?: number) => string)
     | undefined = undefined
   export let readonly: boolean = false
   export let size: "S" | "M" | "L" = "M"

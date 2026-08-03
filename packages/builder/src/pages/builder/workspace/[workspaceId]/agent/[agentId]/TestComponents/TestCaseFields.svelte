@@ -10,9 +10,7 @@
   type Props = {
     selectedCase: AgentTestCase
     groupOptions: GroupOption[]
-    onUpdateCase: (
-      _updater: (_testCase: AgentTestCase) => AgentTestCase
-    ) => void
+    onUpdateCase: (updater: (testCase: AgentTestCase) => AgentTestCase) => void
   }
 
   let { selectedCase, groupOptions, onUpdateCase }: Props = $props()
