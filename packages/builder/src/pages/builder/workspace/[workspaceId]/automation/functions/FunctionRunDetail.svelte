@@ -10,7 +10,7 @@
     functionRunStatusLabels,
   } from "./functionLogs"
 
-  interface Props {
+  export interface Props {
     run: FunctionRunSummary
     loading?: boolean
     error?: string
