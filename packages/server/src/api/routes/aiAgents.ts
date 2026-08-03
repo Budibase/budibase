@@ -136,8 +136,8 @@ builderAdminRoutes
     ai.fetchAgentKnowledgeSourceOptions
   )
   .get(
-    "/api/agent/:agentId/operations/:operationId/knowledge-sources/sharepoint/entries/all",
-    ai.fetchAgentKnowledgeSourceAllEntries
+    "/api/agent/:agentId/operations/:operationId/knowledge-sources/sharepoint/entries",
+    ai.fetchAgentKnowledgeSourceEntries
   )
   .post(
     "/api/agent/:agentId/operations/:operationId/knowledge-sources/sharepoint/sites",

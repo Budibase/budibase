@@ -53,6 +53,9 @@ export interface SlackAgentIntegration extends ChatAgentIntegration {
   teamId?: string
   teamName?: string
   messagingEndpointUrl?: string
+  // Bots Slack workspace - derived via auth.test when the token is saved
+  // Need this to filter the user picker
+  teamId?: string
 }
 
 export interface TelegramAgentIntegration extends ChatAgentIntegration {
@@ -66,9 +69,47 @@ export enum AgentKnowledgeSourceType {
   SHAREPOINT = "sharepoint",
 }
 
-export interface AgentKnowledgeSourceFilterConfig {
-  patterns?: string[]
+export enum SharePointScopeMode {
+  ALL = "all",
+  SELECTED = "selected",
 }
+
+export enum SharePointScopeTargetType {
+  DRIVE = "drive",
+  FOLDER = "folder",
+  FILE = "file",
+  LIST = "list",
+}
+
+interface SharePointDriveScopeTarget {
+  type: SharePointScopeTargetType.DRIVE
+  driveId: string
+}
+
+interface SharePointDriveItemScopeTarget {
+  type: SharePointScopeTargetType.FOLDER | SharePointScopeTargetType.FILE
+  driveId: string
+  itemId: string
+}
+
+interface SharePointListScopeTarget {
+  type: SharePointScopeTargetType.LIST
+  listId: string
+}
+
+export type SharePointScopeTarget =
+  | SharePointDriveScopeTarget
+  | SharePointDriveItemScopeTarget
+  | SharePointListScopeTarget
+
+export type AgentSharePointKnowledgeSourceScope =
+  | {
+      mode: SharePointScopeMode.ALL
+    }
+  | {
+      mode: SharePointScopeMode.SELECTED
+      targets: SharePointScopeTarget[]
+    }
 
 export interface AgentSharePointKnowledgeSource {
   id: string
@@ -81,7 +122,7 @@ export interface AgentSharePointKnowledgeSource {
       name?: string
       webUrl?: string
     }
-    filters?: AgentKnowledgeSourceFilterConfig
+    scope?: AgentSharePointKnowledgeSourceScope
   }
 }
 

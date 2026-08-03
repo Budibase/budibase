@@ -701,15 +701,21 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     )
   }
 
-  fetchOperationKnowledgeSourceAllEntries = async (
+  fetchOperationKnowledgeSourceEntries = async (
     agentId: string,
     operationId: string,
-    siteId: string
+    siteId: string,
+    options?: {
+      driveId?: string
+      parentItemId?: string
+      parentPath?: string
+    }
   ): Promise<FetchAgentKnowledgeSourceEntriesResponse> => {
-    return await API.fetchOperationKnowledgeSourceAllEntries(
+    return await API.fetchOperationKnowledgeSourceEntries(
       agentId,
       operationId,
-      siteId
+      siteId,
+      options
     )
   }
 
@@ -742,7 +748,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     )
   }
 
-  applyOperationSharePointSiteFilters = async (
+  applyOperationSharePointSiteScope = async (
     agentId: string,
     operationId: string,
     siteId: string,

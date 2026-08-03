@@ -39,12 +39,12 @@
     persistConversation?: boolean
     conversationStarters?: { prompt: string }[]
     initialPrompt?: string
-    onchatsaved?: (_event: {
+    onchatsaved?: (event: {
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
     // Fired when an escalation parks; the consumer polls the outcome and
     // injects it via appendAssistantMessage.
-    onEscalationPending?: (_detail: { escalationId: string }) => void
+    onEscalationPending?: (detail: { escalationId: string }) => void
     // Live resolution per escalationId (from the poll) - drives the card state.
     escalationState?: Record<
       string,
@@ -53,8 +53,8 @@
     // Dev-only: show the inline Approve/Reject buttons on the escalation card.
     showInlineApproval?: boolean
     onResolve?: (
-      _escalationId: string,
-      _accepted: boolean
+      escalationId: string,
+      accepted: boolean
     ) => Promise<EscalationRespondResult | undefined>
     isAgentPreviewChat?: boolean
     readOnly?: boolean
@@ -93,6 +93,11 @@
     }
   }
 
+  // Only a genuinely-raised escalation gets the approval card
+  const isRaisedEscalation = (output: unknown) =>
+    (output as { status?: string } | undefined)?.status ===
+    EscalateToolResultStatus.PENDING_APPROVAL
+
   // The escalate part's input/output are loosely typed by the AI SDK, so the
   // casts live here rather than cluttering the template.
   const escalationCardProps = (part: { input?: unknown; output?: unknown }) => {
@@ -113,7 +118,7 @@
     createAPIClient({
       attachHeaders: headers => {
         if (workspaceId) {
-          headers[Header.APP_ID] = workspaceId
+          headers[Header.WORKSPACE_ID] = workspaceId
         }
       },
     })
@@ -308,7 +313,7 @@
 
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
     transport: new DefaultChatTransport({
-      headers: () => ({ [Header.APP_ID]: workspaceId }),
+      headers: () => ({ [Header.WORKSPACE_ID]: workspaceId }),
       prepareSendMessagesRequest: ({ messages }) => {
         const chatAppId = resolvedChatAppId || chat?.chatAppId
         const conversationId = resolvedConversationId || chat?._id || "new"
@@ -777,7 +782,7 @@
             {#each message.parts ?? [] as part, partIndex}
               {#if isTextUIPart(part)}
                 <MarkdownViewer value={part.text} />
-              {:else if isToolUIPart(part) && getToolName(part) === ESCALATE_TOOL_NAME}
+              {:else if isToolUIPart(part) && getToolName(part) === ESCALATE_TOOL_NAME && isRaisedEscalation(part.output)}
                 {@const card = escalationCardProps(part)}
                 <EscalationCard
                   title={card.title}

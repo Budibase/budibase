@@ -116,10 +116,15 @@ export interface AgentEndpoints {
     datasourceId: string,
     authConfigId: string
   ) => Promise<FetchAgentKnowledgeSourceOptionsResponse>
-  fetchOperationKnowledgeSourceAllEntries: (
+  fetchOperationKnowledgeSourceEntries: (
     agentId: string,
     operationId: string,
-    siteId: string
+    siteId: string,
+    options?: {
+      driveId?: string
+      parentItemId?: string
+      parentPath?: string
+    }
   ) => Promise<FetchAgentKnowledgeSourceEntriesResponse>
   connectOperationSharePointSite: (
     agentId: string,
@@ -355,14 +360,24 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchOperationKnowledgeSourceAllEntries: async (
+  fetchOperationKnowledgeSourceEntries: async (
     agentId: string,
     operationId: string,
-    siteId: string
+    siteId: string,
+    options
   ) => {
     const query = new URLSearchParams({ siteId })
+    if (options?.driveId) {
+      query.set("driveId", options.driveId)
+    }
+    if (options?.parentItemId) {
+      query.set("parentItemId", options.parentItemId)
+    }
+    if (options?.parentPath) {
+      query.set("parentPath", options.parentPath)
+    }
     return await API.get<FetchAgentKnowledgeSourceEntriesResponse>({
-      url: `/api/agent/${agentId}/operations/${operationId}/knowledge-sources/sharepoint/entries/all?${query.toString()}`,
+      url: `/api/agent/${agentId}/operations/${operationId}/knowledge-sources/sharepoint/entries?${query.toString()}`,
     })
   },
 
