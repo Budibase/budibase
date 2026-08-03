@@ -12,6 +12,8 @@
     Icon,
     notifications,
     ProgressCircle,
+    Tab,
+    Tabs,
   } from "@budibase/bbui"
   import { Utils } from "@budibase/frontend-core"
   import type {
@@ -25,6 +27,7 @@
   import { debounce } from "lodash"
   import { createSaveCoordinator } from "../../../saveCoordinator"
   import FunctionCodeEditor from "../FunctionCodeEditor.svelte"
+  import FunctionLogs from "../FunctionLogs.svelte"
   import FunctionQueryEditor from "../FunctionQueryEditor.svelte"
 
   let fn: FunctionResponse | undefined
@@ -44,6 +47,7 @@
   let lastObservedSource = ""
   let pendingCapabilities: FunctionQueryCapabilityInput[] | undefined
   let destroyed = false
+  let selectedTab = "Code"
 
   $params
   $: functionId = $params.functionId
@@ -321,17 +325,26 @@
             {/if}
           </div>
           <Body size="S" color="var(--spectrum-global-color-gray-600)">
-            Write TypeScript. Changes save automatically; build to use the
-            latest revision.
+            {selectedTab === "Code"
+              ? "Write TypeScript. Changes save automatically; build to use the latest revision."
+              : "Review sanitized development and published execution history."}
           </Body>
         </div>
-        <div class="actions">
-          <Button primary disabled={buildDisabled} on:click={build}>
-            {building ? "Building..." : "Build"}
-          </Button>
-        </div>
+        {#if selectedTab === "Code"}
+          <div class="actions">
+            <Button primary disabled={buildDisabled} on:click={build}>
+              {building ? "Building..." : "Build"}
+            </Button>
+          </div>
+        {/if}
       </div>
 
+      <Tabs
+        noHorizPadding
+        selected={selectedTab}
+        on:select={event => (selectedTab = event.detail)}
+      >
+        <Tab title="Code">
       {#if actionError}
         <div class="action-error" role="alert">
           <Icon name="warning-circle" size="S" />
@@ -391,6 +404,11 @@
         onSave={saveCapabilities}
         onDirtyChange={dirty => (queriesDirty = dirty)}
       />
+        </Tab>
+        <Tab title="Logs">
+          <FunctionLogs functionId={fn._id} />
+        </Tab>
+      </Tabs>
     {/if}
   </main>
 </div>
