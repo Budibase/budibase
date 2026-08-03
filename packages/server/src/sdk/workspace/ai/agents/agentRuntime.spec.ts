@@ -1057,6 +1057,65 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     )
   })
 
+  it("normalizes a singular requested item to one", async () => {
+    const operationWithInputs = {
+      ...operationWithoutRecipients,
+      requestInputs: [
+        {
+          id: "quantity",
+          name: "Quantity",
+          type: "number" as const,
+          required: true,
+        },
+      ],
+    }
+    mockRouterStream.mockReturnValueOnce({
+      output: Promise.resolve({
+        values: [
+          {
+            id: "quantity",
+            value: "1",
+            sourceMessageIndex: 0,
+            sourceQuote: "a new laptop",
+          },
+        ],
+      }),
+    })
+
+    const run = await runFor(operationWithInputs, {
+      agent: {
+        ...agent,
+        operations: [operationWithRecipients, operationWithInputs],
+      },
+      modelMessages: [
+        {
+          role: "user",
+          content: "Hello, I need a new laptop",
+        },
+      ],
+    })
+
+    expect(run.requestInputs).toEqual([
+      expect.objectContaining({
+        id: "quantity",
+        value: "1",
+      }),
+    ])
+    expect(ToolLoopAgent).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        instructions: expect.stringContaining(
+          'Treat a singular article directly describing one requested countable item as "1"'
+        ),
+      })
+    )
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        tools: expect.objectContaining({ escalate: escalatePlaceholder }),
+      })
+    )
+  })
+
   it("accepts configured select options", async () => {
     const operationWithInputs = {
       ...operationWithoutRecipients,
