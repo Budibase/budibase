@@ -99,8 +99,10 @@
     operation.requestInputs = isEditing
       ? inputs.map(existing => (existing.id === inputId ? input : existing))
       : [...inputs, input]
-    await onUpdated()
-    popover.hide()
+    const saved = await onUpdated()
+    if (saved) {
+      popover.hide()
+    }
   }
 
   const remove = async (inputId: string) => {
