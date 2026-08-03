@@ -12,7 +12,7 @@
 
   interface Props {
     resource?: AssignableProjectResource | null
-    onConfirm?: (_projectIds: string[]) => unknown
+    onConfirm?: (projectIds: string[]) => unknown
   }
 
   let { resource = null, onConfirm = () => {} }: Props = $props()

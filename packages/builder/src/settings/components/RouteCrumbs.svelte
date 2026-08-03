@@ -6,12 +6,12 @@
   export let matched: MatchedRoute | undefined
   export let locked: string | undefined
   export let resolveTitle: (
-    _title: string | ((_path: string | undefined) => string) | undefined,
-    _path: string | undefined
+    title: string | ((path: string | undefined) => string) | undefined,
+    path: string | undefined
   ) => string | undefined
   export let resolvePathParams: (
-    _path: string | undefined,
-    _params: Record<string, string>
+    path: string | undefined,
+    params: Record<string, string>
   ) => string | undefined
 
   $: route = matched?.entry

@@ -31,7 +31,7 @@
     (option as any)?.colour
   export let useOptionIconImage = false
   export let isOptionEnabled:
-    | ((_option: O, _index?: number) => boolean)
+    | ((option: O, index?: number) => boolean)
     | undefined = undefined
   export let quiet: boolean = false
   export let size: "S" | "M" | "L" = "M"
@@ -41,7 +41,7 @@
   export let sort: boolean = false
   export let tooltip: string | undefined = undefined
   export let tooltipMessage:
-    | ((_option: O, _index?: number) => string)
+    | ((option: O, index?: number) => string)
     | undefined = undefined
   export let autocomplete: boolean = false
   export let customPopoverHeight: string | undefined = undefined

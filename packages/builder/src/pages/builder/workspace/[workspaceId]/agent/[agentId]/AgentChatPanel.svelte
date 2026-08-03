@@ -32,7 +32,7 @@
 
   // Preview is transient, so escalation polling lives here, not in Chatbox.
   let chatbox = $state<
-    | { appendAssistantMessage: (_m: UIMessage<AgentMessageMetadata>) => void }
+    | { appendAssistantMessage: (m: UIMessage<AgentMessageMetadata>) => void }
     | undefined
   >()
   const delivered = new Set<string>()
