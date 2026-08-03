@@ -147,9 +147,9 @@
   const channels = $derived.by<DeploymentRow[]>(() =>
     (
       [
-        AgentChannelProvider.DISCORD,
         AgentChannelProvider.MSTEAMS,
         AgentChannelProvider.SLACK,
+        AgentChannelProvider.DISCORD,
         AgentChannelProvider.TELEGRAM,
       ] as const
     ).map(provider => ({
