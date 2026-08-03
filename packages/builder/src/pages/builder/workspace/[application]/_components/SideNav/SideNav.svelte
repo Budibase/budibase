@@ -186,6 +186,10 @@
     keepCollapsed()
   }
 
+  const openFunctions = () => {
+    goToCreate("automation/functions")
+  }
+
   const handleTableSave = async (table: Table) => {
     if (!workspaceId) {
       return
@@ -549,6 +553,11 @@
                 <MenuItem icon="path" on:click={openCreateAutomation}>
                   Automation
                 </MenuItem>
+                {#if $featureFlags[FeatureFlag.FUNCTIONS] && canManageFunctions($auth.user, workspaceId)}
+                  <MenuItem icon="code" on:click={openFunctions}>
+                    Function
+                  </MenuItem>
+                {/if}
                 <MenuItem icon="browsers" on:click={openCreateApp}>
                   App
                 </MenuItem>

@@ -66,19 +66,16 @@
     disabled={saving || !name.trim()}
     onConfirm={save}
   >
-    <form
-      on:submit|preventDefault={() => {
+    <Input
+      label="Name"
+      bind:value={name}
+      {error}
+      placeholder="Customer lookup"
+      on:enterkey={() => {
         if (name.trim() && !saving) {
           modalContent.confirm()
         }
       }}
-    >
-      <Input
-        label="Name"
-        bind:value={name}
-        {error}
-        placeholder="Customer lookup"
-      />
-    </form>
+    />
   </ModalContent>
 </Modal>
