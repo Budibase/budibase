@@ -13,7 +13,7 @@
     projects?: ProjectResponse[]
     selectedProjectId?: string
     projectIdsWithResources?: string[]
-    onConfirm?: (_payload: ConfirmPayload) => unknown
+    onConfirm?: (payload: ConfirmPayload) => unknown
   }
 
   let {

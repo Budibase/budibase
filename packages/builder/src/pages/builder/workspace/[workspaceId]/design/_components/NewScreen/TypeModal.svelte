@@ -13,7 +13,7 @@
 
   export let title: string
   export let types: SelectableType[]
-  export let onConfirm: (_selectedType: string) => Promise<void>
+  export let onConfirm: (selectedType: string) => Promise<void>
   export let showCancelButton: boolean = true
 
   let selectedType: string | null = null

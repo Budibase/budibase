@@ -16,8 +16,8 @@
     saving?: boolean
     showBack?: boolean
     onBack: () => Promise<void> | void
-    onSelect: (_mode: SharePointSelectionMode) => Promise<void> | void
-    onSiteChange: (_siteId: string) => void
+    onSelect: (mode: SharePointSelectionMode) => Promise<void> | void
+    onSiteChange: (siteId: string) => void
   }
 
   let {

@@ -20,7 +20,7 @@
     statusFilter?: string
     dateRange?: [Dayjs | null, Dayjs | null]
     triggerFilter?: string
-    onSessionRowClick: (_row: { sessionId?: string }) => void
+    onSessionRowClick: (row: { sessionId?: string }) => void
     onLoadMore: () => void | Promise<void>
   }
 
