@@ -46,11 +46,9 @@
   let selectedConnectionId = $state("")
   let selectedDatasourceId = $state("")
   let selectedAuthConfigId = $state("")
-  let siteLoadError = $state("")
+  let errorMessage = $state("")
   let loadingNextStep = $state(false)
   let saving = $state(false)
-  let savingQuickConnection = $state(false)
-  let quickConnectionError = $state("")
   let quickDatasource = $state<Datasource>()
   let quickAuthConfigId = $state("")
   let skippedConnectionStep = $state(false)
@@ -110,12 +108,12 @@
     if (!selectedConnectionId) {
       sharePointSites = []
       selectedSiteId = ""
-      siteLoadError = ""
+      errorMessage = ""
       return
     }
     sharePointSites = []
     selectedSiteId = ""
-    siteLoadError = ""
+    errorMessage = ""
     try {
       const response = await agentsStore.fetchAgentKnowledgeSourceOptions(
         selectedDatasourceId,
@@ -131,7 +129,7 @@
         error,
         "Failed to fetch SharePoint sites for this auth config."
       )
-      siteLoadError = message
+      errorMessage = message
       notifications.error(`Error fetching sites: ${message}`)
       sharePointSites = []
       selectedSiteId = ""
@@ -145,7 +143,7 @@
     loadingNextStep = true
     try {
       await loadSharePointSites()
-      if (siteLoadError) {
+      if (errorMessage) {
         return
       }
       connectionStepModal?.hide()
@@ -182,12 +180,12 @@
   const saveQuickConnection = async (
     credentials: SharePointQuickAddCredentials
   ) => {
-    if (!restIntegration || savingQuickConnection) {
+    if (!restIntegration || saving) {
       return
     }
 
-    savingQuickConnection = true
-    quickConnectionError = ""
+    saving = true
+    errorMessage = ""
     try {
       quickAuthConfigId ||= Helpers.uuid()
       quickDatasource = await saveSharePointQuickDatasource({
@@ -220,9 +218,9 @@
       siteStepModal?.show()
     } catch (error) {
       console.error(error)
-      quickConnectionError = getErrorMessage(error)
+      errorMessage = getErrorMessage(error)
     } finally {
-      savingQuickConnection = false
+      saving = false
     }
   }
 
@@ -237,7 +235,7 @@
   }
 
   const openQuickConnection = () => {
-    quickConnectionError = ""
+    errorMessage = ""
     connectionStepModal?.hide()
     quickAddModal?.show()
   }
@@ -277,7 +275,7 @@
       sharePointConnectionOptions.length === 0 &&
       $knowledgeConnectionsStore.sharePointDatasourceIds.length === 0
     ) {
-      quickConnectionError = ""
+      errorMessage = ""
       quickAddModal?.show()
       return
     }
@@ -294,8 +292,8 @@
 
 <SharePointQuickAddModal
   bind:this={quickAddModal}
-  saving={savingQuickConnection}
-  error={quickConnectionError}
+  {saving}
+  error={errorMessage}
   onSubmit={saveQuickConnection}
   onAdvancedSetup={openAdvancedSetup}
 />
