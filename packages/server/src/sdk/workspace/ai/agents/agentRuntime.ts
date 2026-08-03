@@ -614,7 +614,7 @@ export const prepareAgentChatRun = async ({
     !!selectedOperation?.requestInputs?.length &&
     (await features.isEnabled(FeatureFlag.AI_AGENT_REQUEST_INPUTS))
   const requestInputs =
-    selectedOperation && operationIntent === "execute" && requestInputsEnabled
+    selectedOperation && requestInputsEnabled
       ? await collectRequestInputs({
           operation: selectedOperation,
           modelMessages,

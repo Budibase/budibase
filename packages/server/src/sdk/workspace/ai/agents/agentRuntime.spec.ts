@@ -692,6 +692,64 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     )
   })
 
+  it("removes operation tools for query routes while required inputs are missing", async () => {
+    const operationWithInputs = {
+      ...operationWithoutRecipients,
+      requestInputs: [
+        {
+          id: "device_type",
+          name: "Device type",
+          type: "text" as const,
+          required: true,
+        },
+      ],
+    }
+    mockRouterStream
+      .mockReturnValueOnce({
+        output: Promise.resolve({
+          action: "select_operation",
+          operationId: operationWithInputs.id,
+          intent: "query",
+          reason: "Asking about an existing request",
+        }),
+      })
+      .mockReturnValueOnce({
+        output: Promise.resolve({
+          values: [
+            {
+              id: "device_type",
+              value: null,
+              sourceMessageIndex: null,
+              sourceQuote: null,
+            },
+          ],
+        }),
+      })
+
+    const run = await runFor(operationWithInputs, {
+      agent: {
+        ...agent,
+        operations: [operationWithRecipients, operationWithInputs],
+      },
+      latestQuestion: "What is the status of my request?",
+      operationId: undefined,
+    })
+
+    expect(run.operationIntent).toBe("query")
+    expect(run.requestInputs).toEqual([
+      expect.objectContaining({
+        id: "device_type",
+        value: undefined,
+      }),
+    ])
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        tools: undefined,
+        instructions: expect.stringContaining("Device type"),
+      })
+    )
+  })
+
   it("keeps operation tools when required inputs are captured", async () => {
     const operationWithInputs = {
       ...operationWithoutRecipients,
