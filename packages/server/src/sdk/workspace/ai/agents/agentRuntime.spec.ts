@@ -1090,7 +1090,7 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
       modelMessages: [
         {
           role: "user",
-          content: "Hello, I need a new laptop",
+          content: "I need a new laptop. My current one is too slow",
         },
       ],
     })
@@ -1105,7 +1105,7 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
       1,
       expect.objectContaining({
         instructions: expect.stringContaining(
-          'Treat a singular article directly describing one requested countable item as "1"'
+          'for "I need a new laptop. My current one is too slow", return value "1"'
         ),
       })
     )
