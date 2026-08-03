@@ -1,13 +1,15 @@
-import { API, productionAPI } from "@/api"
+import { API } from "@/api"
 import { FunctionStore } from "@/stores/builder/functions"
+import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
 import type { FunctionResponse } from "@budibase/types"
-import { SourceName } from "@budibase/types"
+import { PublishResourceState, SourceName } from "@budibase/types"
 import { get } from "svelte/store"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 vi.mock("@/api", () => ({
   API: {
     getFunctions: vi.fn(),
+    getFunctionStatus: vi.fn(),
     getFunctionQueryCatalog: vi.fn(),
     getFunction: vi.fn(),
     compileFunction: vi.fn(),
@@ -15,9 +17,6 @@ vi.mock("@/api", () => ({
     createFunction: vi.fn(),
     updateFunction: vi.fn(),
     deleteFunction: vi.fn(),
-  },
-  productionAPI: {
-    getFunctions: vi.fn(),
   },
 }))
 
@@ -58,15 +57,30 @@ describe("FunctionStore", () => {
     store = new FunctionStore()
     vi.clearAllMocks()
     vi.mocked(API.getFunctions).mockResolvedValue({ functions: [] })
-    vi.mocked(productionAPI.getFunctions).mockResolvedValue({ functions: [] })
+    vi.mocked(API.getFunctionStatus).mockResolvedValue({ runner: "healthy" })
+    workspaceDeploymentStore.set({
+      automations: {},
+      workspaceApps: {},
+      tables: {},
+      agents: {},
+      functions: {},
+    })
   })
 
-  it("loads Functions and derives published deployment state", async () => {
+  it("loads Functions and uses workspace publication status", async () => {
     const fn = makeFunction()
     vi.mocked(API.getFunctions).mockResolvedValue({ functions: [fn] })
-    vi.mocked(productionAPI.getFunctions).mockResolvedValue({
-      functions: [makeFunction({ appId: "app_test" })],
-    })
+    workspaceDeploymentStore.update(state => ({
+      ...state,
+      functions: {
+        [fn._id]: {
+          name: fn.name,
+          published: true,
+          unpublishedChanges: false,
+          state: PublishResourceState.PUBLISHED,
+        },
+      },
+    }))
 
     await store.fetch()
 
@@ -79,28 +93,61 @@ describe("FunctionStore", () => {
     expect(get(store).loading).toBe(false)
   })
 
-  it("distinguishes unpublished changes and Functions not yet deployed", async () => {
+  it("distinguishes unpublished changes and Functions not yet published", async () => {
     const changed = makeFunction({ _id: "fn_changed" })
     const newFunction = makeFunction({ _id: "fn_new", name: "New Function" })
     vi.mocked(API.getFunctions).mockResolvedValue({
       functions: [changed, newFunction],
     })
-    vi.mocked(productionAPI.getFunctions).mockResolvedValue({
-      functions: [
-        makeFunction({
-          _id: "fn_changed",
-          appId: "app_test",
-          updatedAt: "2026-07-22T12:00:00.000Z",
-        }),
-      ],
-    })
+    workspaceDeploymentStore.update(state => ({
+      ...state,
+      functions: {
+        [changed._id]: {
+          name: changed.name,
+          published: true,
+          unpublishedChanges: true,
+          state: PublishResourceState.PUBLISHED,
+        },
+      },
+    }))
 
     await store.fetch()
 
     expect(store.list.map(fn => [fn._id, fn.deploymentState])).toEqual([
       ["fn_changed", "unpublished_changes"],
-      ["fn_new", "not_deployed"],
+      ["fn_new", "not_published"],
     ])
+  })
+
+  it("uses the guarded server status as availability authority", async () => {
+    await expect(store.fetchStatus()).resolves.toBe(true)
+    expect(get(store)).toMatchObject({
+      availability: "available",
+      runnerStatus: "healthy",
+      runnerStatusLoading: false,
+    })
+
+    store = new FunctionStore()
+    vi.mocked(API.getFunctionStatus).mockRejectedValue({ status: 404 })
+    await expect(store.fetchStatus()).resolves.toBe(false)
+    expect(get(store)).toMatchObject({
+      availability: "unavailable",
+      runnerStatusLoading: false,
+    })
+  })
+
+  it("revokes availability when a guarded Function request returns 404", async () => {
+    await store.fetchStatus()
+    vi.mocked(API.getFunctions).mockRejectedValue({ status: 404 })
+
+    await store.fetch()
+
+    expect(get(store)).toMatchObject({
+      availability: "unavailable",
+      functions: [],
+      loading: false,
+      error: undefined,
+    })
   })
 
   it("stores a fetch error for the retry state", async () => {

@@ -103,6 +103,7 @@ export default async function (): Promise<FunctionResult> {
 
   it("returns 404 when Functions are disabled", async () => {
     await config.api.function.fetch({ status: 404 })
+    await config.api.function.status({ status: 404 })
   })
 
   it("only allows builders to access Function routes", async () => {
@@ -110,6 +111,14 @@ export default async function (): Promise<FunctionResult> {
       config,
       method: "GET",
       url: "/api/functions",
+    })
+  })
+
+  it("reports a disabled runner without treating Functions as unavailable", async () => {
+    await withFunctionsEnabled(async () => {
+      await expect(config.api.function.status()).resolves.toEqual({
+        runner: "disabled",
+      })
     })
   })
 

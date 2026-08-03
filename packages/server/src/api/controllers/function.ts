@@ -10,11 +10,19 @@ import {
   type FetchFunctionRunsResponse,
   type FetchFunctionQueryCatalogResponse,
   type FetchFunctionsResponse,
+  type FetchFunctionStatusResponse,
   type UpdateFunctionRequest,
   type UpdateFunctionResponse,
   type UserCtx,
 } from "@budibase/types"
 import sdk from "../../sdk"
+import { getFunctionRunnerStatus } from "../../functions/status"
+
+export const status = async (
+  ctx: UserCtx<void, FetchFunctionStatusResponse>
+) => {
+  ctx.body = { runner: await getFunctionRunnerStatus() }
+}
 
 export const fetch = async (ctx: UserCtx<void, FetchFunctionsResponse>) => {
   const functions = await sdk.functions.fetch()

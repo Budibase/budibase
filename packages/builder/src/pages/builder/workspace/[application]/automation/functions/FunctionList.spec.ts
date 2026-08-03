@@ -63,6 +63,20 @@ describe("FunctionList", () => {
     ).not.toBeInTheDocument()
   })
 
+  it("shows the server-authoritative unavailable state", () => {
+    render(FunctionList, {
+      availability: "unavailable",
+      canManage: false,
+    })
+
+    expect(screen.getByTestId("functions-unavailable-state")).toHaveTextContent(
+      "enabled self-hosted installation"
+    )
+    expect(
+      screen.queryByRole("button", { name: "New Function" })
+    ).not.toBeInTheDocument()
+  })
+
   it("renders readiness separately from deployment state", () => {
     render(FunctionList, {
       canManage: true,
@@ -86,6 +100,16 @@ describe("FunctionList", () => {
     expect(screen.getByText("Build required")).toBeInTheDocument()
     expect(screen.getByText("Unpublished changes")).toBeInTheDocument()
     expect(screen.getByText("1")).toBeInTheDocument()
+  })
+
+  it("labels Functions that have not been published", () => {
+    render(FunctionList, {
+      canManage: true,
+      functions: [makeFunction({ deploymentState: "not_published" })],
+    })
+
+    expect(screen.getByText("Not published")).toBeInTheDocument()
+    expect(screen.getByText("Ready")).toBeInTheDocument()
   })
 
   it("opens a Function from its name", async () => {

@@ -7,6 +7,8 @@ import type { SourceName } from "../../../sdk"
 
 export type FunctionReadiness = "ready" | "build_required" | "build_failed"
 
+export type FunctionRunnerStatus = "healthy" | "disabled" | "unhealthy" | "busy"
+
 export interface FunctionQueryCapabilityInput {
   queryId: string
   datasourceAlias: string
@@ -31,6 +33,10 @@ export interface FunctionResponse extends FunctionDocument {
 
 export interface FetchFunctionsResponse {
   functions: FunctionResponse[]
+}
+
+export interface FetchFunctionStatusResponse {
+  runner: FunctionRunnerStatus
 }
 
 export interface CreateFunctionResponse {

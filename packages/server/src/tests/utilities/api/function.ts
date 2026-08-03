@@ -10,6 +10,7 @@ import type {
   FetchFunctionRunsResponse,
   FetchFunctionQueryCatalogResponse,
   FetchFunctionsResponse,
+  FetchFunctionStatusResponse,
   UpdateFunctionRequest,
   UpdateFunctionResponse,
 } from "@budibase/types"
@@ -37,6 +38,13 @@ export class FunctionAPI extends TestAPI {
         body,
         expectations,
       }
+    )
+  }
+
+  status = async (expectations?: Expectations) => {
+    return await this._get<FetchFunctionStatusResponse>(
+      "/api/functions/status",
+      { expectations }
     )
   }
 

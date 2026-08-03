@@ -36,6 +36,7 @@ const mocks = vi.hoisted(() => {
       blockRefs: {},
     }),
     admin: store({
+      cloud: false,
       checklist: {
         smtp: { checked: true, fallback: false },
       },
@@ -44,6 +45,7 @@ const mocks = vi.hoisted(() => {
       syncAutomationsEnabled: true,
       triggerAutomationRunEnabled: true,
     }),
+    featureFlags: store({ FUNCTIONS: false }),
     restTemplates: store({
       templates: [],
     }),
@@ -124,6 +126,7 @@ vi.mock("@budibase/types", () => ({
     WEBHOOK: "WEBHOOK",
   },
   BlockDefinitionTypes: { ACTION: "ACTION" },
+  FeatureFlag: { FUNCTIONS: "FUNCTIONS" },
   isBranchStep: vi.fn(() => false),
 }))
 
@@ -146,6 +149,7 @@ vi.mock("@/stores/builder", () => ({
 
 vi.mock("@/stores/portal", () => ({
   admin: mocks.admin,
+  featureFlags: mocks.featureFlags,
   licensing: mocks.licensing,
 }))
 
@@ -185,6 +189,11 @@ describe("SelectStepSidePanel", () => {
       actionPanelToolbarFlowEnd: false,
       blockDefinitions: { ACTION: {}, TRIGGER: {} },
     })
+    mocks.admin.set({
+      cloud: false,
+      checklist: { smtp: { checked: true, fallback: false } },
+    })
+    mocks.featureFlags.set({ FUNCTIONS: false })
   })
 
   it("focuses search without scrolling the canvas while the panel opens", async () => {
@@ -199,7 +208,7 @@ describe("SelectStepSidePanel", () => {
     })
   })
 
-  it("shows Run Function only when its gated action definition is available", async () => {
+  it("shows Run Function only when its server definition and client gate are available", async () => {
     const view = render(SelectStepSidePanel, {
       props: {
         block: { id: "step-1" },
@@ -223,6 +232,7 @@ describe("SelectStepSidePanel", () => {
         TRIGGER: {},
       },
     })
+    mocks.featureFlags.set({ FUNCTIONS: true })
 
     render(SelectStepSidePanel, {
       props: {
@@ -230,5 +240,33 @@ describe("SelectStepSidePanel", () => {
       },
     })
     expect(screen.getByText("Run Function")).toBeInTheDocument()
+  })
+
+  it("hides Run Function in Cloud even when its definition is available", () => {
+    mocks.automationStore.set({
+      actionPanelToolbarFlowEnd: false,
+      blockDefinitions: {
+        ACTION: {
+          EXECUTE_FUNCTION: {
+            name: "Run Function",
+            stepId: "EXECUTE_FUNCTION",
+            icon: "functions",
+            internal: true,
+          },
+        },
+        TRIGGER: {},
+      },
+    })
+    mocks.featureFlags.set({ FUNCTIONS: true })
+    mocks.admin.set({
+      cloud: true,
+      checklist: { smtp: { checked: true, fallback: false } },
+    })
+
+    render(SelectStepSidePanel, {
+      props: { block: { id: "step-1" } },
+    })
+
+    expect(screen.queryByText("Run Function")).not.toBeInTheDocument()
   })
 })

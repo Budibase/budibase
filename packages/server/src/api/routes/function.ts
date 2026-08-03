@@ -21,6 +21,7 @@ const draftSchema = {
 }
 
 builderRoutes
+  .get("/api/functions/status", functionsEnabled, controller.status)
   .get("/api/functions", functionsEnabled, controller.fetch)
   .post(
     "/api/functions",
