@@ -20,7 +20,7 @@ export const getToolBindingCategory = (
     return sourceLabel || "External"
   }
   if (sourceType === ToolType.SEARCH) {
-    return "Knowledge sources"
+    return sourceLabel || "Search tools"
   }
   if (sourceType === ToolType.REST_QUERY) {
     return sourceLabel || "API tools"
