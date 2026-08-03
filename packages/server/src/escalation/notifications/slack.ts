@@ -64,14 +64,14 @@ const getSlackIntegration = async (
     agentId,
     a => !!a.slackIntegration?.botToken
   )
-  if (!agent?.slackIntegration?.botToken) {
+  if (!agent) {
     return undefined
   }
   const integration = sdk.ai.deployments.slack.validateSlackIntegration(agent)
   return {
     botToken: integration.botToken,
     signingSecret: integration.signingSecret,
-    teamId: agent.slackIntegration.teamId,
+    teamId: agent.slackIntegration?.teamId,
   }
 }
 

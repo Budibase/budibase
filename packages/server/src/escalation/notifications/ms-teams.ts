@@ -93,15 +93,23 @@ const graphGet = async <T>(url: string, token: string): Promise<T> => {
   return (await resp.json()) as T
 }
 
-// Cursors are the Graph nextLink base64url-encoded so callers treat them as
-// opaque. Decoding validates the URL prefix - the server must never fetch a
-// client-supplied URL with the Graph token attached.
+// Opaque base64url Graph nextLink. Validate origin + exact pathname so the
+// Graph token can only ever be sent to the teams collection.
 const decodeTeamsCursor = (cursor: string): string => {
   const decoded = Buffer.from(cursor, "base64url").toString()
-  if (!decoded.startsWith(`${GRAPH_BASE}/teams`)) {
+  let url: URL
+  try {
+    url = new URL(decoded)
+  } catch {
     throw new HTTPError("Invalid cursor", 400)
   }
-  return decoded
+  if (
+    url.origin !== "https://graph.microsoft.com" ||
+    url.pathname !== "/v1.0/teams"
+  ) {
+    throw new HTTPError("Invalid cursor", 400)
+  }
+  return url.toString()
 }
 
 // Lists channels for one page of teams the app can see, using a Graph token (a

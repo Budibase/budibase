@@ -1,10 +1,41 @@
 import { get } from "svelte/store"
 import { API } from "@/api"
-import type { EscalationResponse, EscalationResult } from "@budibase/types"
+import {
+  type Agent,
+  type EscalationResponse,
+  type EscalationResult,
+  EscalationNotificationChannel,
+} from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 
 const POLL_INTERVAL_MS = 5000
 const MAX_CONSECUTIVE_FAILURES = 3
+
+// Providers with an enabled deployment on the agent. Enabled = endpoint URL
+// present
+export const configuredEscalationProviders = (
+  agent: Agent | undefined
+): EscalationNotificationChannel[] => {
+  const channels: [EscalationNotificationChannel, string | undefined][] = [
+    [
+      EscalationNotificationChannel.SLACK,
+      agent?.slackIntegration?.messagingEndpointUrl,
+    ],
+    [
+      EscalationNotificationChannel.DISCORD,
+      agent?.discordIntegration?.interactionsEndpointUrl,
+    ],
+    [
+      EscalationNotificationChannel.MSTEAMS,
+      agent?.MSTeamsIntegration?.messagingEndpointUrl,
+    ],
+    [
+      EscalationNotificationChannel.TELEGRAM,
+      agent?.telegramIntegration?.messagingEndpointUrl,
+    ],
+  ]
+  return channels.filter(([, url]) => url?.trim()).map(([provider]) => provider)
+}
 
 export interface EscalationEntry extends EscalationResult {
   escalationId: string

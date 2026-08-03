@@ -22,9 +22,8 @@
   import type { AgentTool } from "./toolTypes"
   import Knowledge from "./knowledge/index.svelte"
   import ToolIcon from "./ToolIcon.svelte"
-  import EscalationRecipients, {
-    configuredEscalationProviders,
-  } from "@/components/common/EscalationRecipients.svelte"
+  import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
+  import { configuredEscalationProviders } from "@/stores/portal/escalations"
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
 
   let {
