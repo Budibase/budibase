@@ -80,7 +80,6 @@ export interface AgentRequest extends Document {
   status: AgentRequestStatus
   error?: string
   completedAt?: string
-  requestInputs?: AgentRequestInputSnapshot[]
 }
 
 export type AgentRequestInputSnapshot = AgentRequestInputDefinition & {

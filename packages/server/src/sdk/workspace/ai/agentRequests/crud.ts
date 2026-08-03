@@ -16,7 +16,6 @@ import type {
   StatusChangedAction,
   UserMessageAction,
   ToolCallAction,
-  AgentRequestInputSnapshot,
 } from "@budibase/types"
 import { builderSocket } from "../../../../websockets"
 import {
@@ -703,7 +702,6 @@ export async function initActiveRequest({
   operation?: {
     name: string
     prompt: string
-    requestInputs?: AgentRequestInputSnapshot[]
   }
   source: string
 }): Promise<{ requestId: string } | undefined> {
@@ -718,28 +716,11 @@ export async function initActiveRequest({
       r.entries.some(e => e.sessionId === sessionId)
   )
   if (existing && existing._id) {
-    if (operation.requestInputs?.length) {
-      const incomingValueById = new Map(
-        operation.requestInputs.map(input => [input.id, input.value])
-      )
-      await saveRequest({
-        ...existing,
-        requestInputs: existing.requestInputs?.length
-          ? existing.requestInputs.map(input => ({
-              ...input,
-              value: incomingValueById.get(input.id) ?? input.value,
-            }))
-          : operation.requestInputs,
-      })
-    }
     return { requestId: existing._id }
   }
 
   const entry = buildEntry({ sessionId, operation, source })
-  const thread = {
-    ...buildThread({ agentId, userId, entry }),
-    requestInputs: operation.requestInputs,
-  }
+  const thread = buildThread({ agentId, userId, entry })
 
   let title: string | undefined
   try {
