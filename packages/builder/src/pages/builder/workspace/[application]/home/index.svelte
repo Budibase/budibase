@@ -73,9 +73,13 @@
   import { buildHomeUrl, type HomeUrlState } from "./_components/urlState"
 
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
+  import { canManageFunctions } from "../automation/functions/permissions"
 
   $: goto = $gotoStore
   $: url = $urlStore
+  $: functionsEnabled =
+    !!$featureFlags[FeatureFlag.FUNCTIONS] &&
+    canManageFunctions($auth.user, $appStore.appId)
 
   let workspaceAppModal: WorkspaceAppModal
   let selectedWorkspaceApp: UIWorkspaceApp | undefined
@@ -276,7 +280,7 @@
     importProjectModal?.show()
   }
 
-  const goToCreate = (target: "data/new" | "apis/new") => {
+  const goToCreate = (target: string) => {
     goto(url(`../${target}`))
   }
 
@@ -1077,6 +1081,8 @@
                 variant="pill"
                 onCreateAgent={createAgent}
                 onCreateAutomation={createAutomation}
+                onCreateFunction={() => goToCreate("automation/functions")}
+                showFunctions={functionsEnabled}
                 onCreateApp={createApp}
                 onCreateConnection={() => goToCreate("data/new")}
                 onCreateTable={openCreateTable}
@@ -1128,6 +1134,8 @@
             portalTarget=".workspace-home .create-popover-container"
             onCreateAgent={createAgent}
             onCreateAutomation={createAutomation}
+            onCreateFunction={() => goToCreate("automation/functions")}
+            showFunctions={functionsEnabled}
             onCreateApp={createApp}
             onCreateConnection={() => goToCreate("data/new")}
             onCreateTable={openCreateTable}
