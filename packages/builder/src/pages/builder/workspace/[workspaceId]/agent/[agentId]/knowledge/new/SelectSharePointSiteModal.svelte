@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Helpers, notifications } from "@budibase/bbui"
   import {
+    SharePointScopeMode,
     SourceName,
     type Datasource,
     type KnowledgeSourceOption,
@@ -11,7 +12,6 @@
   import { bb } from "@/stores/bb"
   import { agentsStore, knowledgeConnectionsStore } from "@/stores/portal"
   import type { SharePointSelectionMode } from "../renderers/types"
-  import { EXCLUDE_ALL_PATTERN } from "../sharepoint/sharePointModalUtils"
   import SharePointConnectionStepModal, {
     type SharePointConnectionOption,
   } from "./SharePointConnectionStepModal.svelte"
@@ -247,7 +247,11 @@
         datasourceId: selectedDatasourceId,
         authConfigId: selectedAuthConfigId,
         site: selectedSite,
-        filters: mode === "selective" ? [EXCLUDE_ALL_PATTERN] : undefined,
+        scope: {
+          ...(mode === "selective"
+            ? { mode: SharePointScopeMode.SELECTED, targets: [] }
+            : { mode: SharePointScopeMode.ALL }),
+        },
       })
       await workspaceDeploymentStore.fetch()
       notifications.success("SharePoint site added")
