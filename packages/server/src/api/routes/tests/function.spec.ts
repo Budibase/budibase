@@ -18,6 +18,11 @@ import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 describe("/functions", () => {
   const config = new TestConfiguration()
   let restoreEnv: () => void
+  const validSource = `import type { FunctionResult } from "@budibase/functions"
+
+export default async function (): Promise<FunctionResult> {
+  return { output: { ok: true } }
+}`
 
   beforeAll(() => {
     restoreEnv = setEnv({
@@ -71,6 +76,13 @@ describe("/functions", () => {
       ],
     })
   }
+
+  const toCapabilityInputs = (fn: FunctionDocument) =>
+    fn.capabilities.map(capability => ({
+      queryId: capability.queryId,
+      datasourceAlias: capability.datasourceAlias,
+      queryAlias: capability.queryAlias,
+    }))
 
   const createRestQuery = async () => {
     const datasource = await config.restDatasource({
@@ -167,6 +179,218 @@ describe("/functions", () => {
 
       expect(afterRename).toEqual(beforeRename)
       expect(fetched.capabilities[0].queryAlias).toBe("findRooms")
+    })
+  })
+
+  it("validates an unsaved draft without persisting build state", async () => {
+    await withFunctionsEnabled(async () => {
+      const query = await createQuery()
+      const draft = {
+        name: "Unsaved Function",
+        source: validSource,
+        capabilities: [
+          {
+            queryId: query._id!,
+            datasourceAlias: "Inventory",
+            queryAlias: "findRooms",
+          },
+        ],
+      }
+
+      expect(await config.api.function.compile(draft)).toEqual({
+        diagnostics: [],
+      })
+      const invalid = await config.api.function.compile({
+        ...draft,
+        source: `export default async function () {
+  const value: string = 42
+}`,
+      })
+
+      expect(invalid.diagnostics).toEqual(
+        expect.arrayContaining([expect.objectContaining({ code: "TS2322" })])
+      )
+      expect(await config.api.function.fetch()).toEqual({ functions: [] })
+    })
+  })
+
+  it("builds the saved revision and derives readiness from its artifact", async () => {
+    await withFunctionsEnabled(async () => {
+      const query = await createQuery()
+      const { function: created } = await config.api.function.create({
+        name: "Buildable Function",
+        source: validSource,
+        capabilities: [
+          {
+            queryId: query._id!,
+            datasourceAlias: "Inventory",
+            queryAlias: "findRooms",
+          },
+        ],
+      })
+
+      const { function: built } = await config.api.function.build(created._id, {
+        _rev: created._rev!,
+      })
+
+      expect(built.readiness).toBe("ready")
+      expect(built.lastBuild).toEqual(
+        expect.objectContaining({
+          status: "success",
+          sourceHash: built.artifact?.sourceHash,
+          declarationsHash: built.artifact?.declarationsHash,
+        })
+      )
+      expect(built.artifact).toEqual(
+        expect.objectContaining({
+          runnerProtocolVersion: 1,
+          compiledJavaScript: expect.stringContaining(
+            "__budibaseFunctionModule"
+          ),
+        })
+      )
+
+      const { function: updated } = await config.api.function.update(
+        built._id,
+        {
+          _rev: built._rev!,
+          name: built.name,
+          source: `${validSource}\n`,
+          capabilities: toCapabilityInputs(built),
+        }
+      )
+
+      expect(updated.readiness).toBe("build_required")
+      expect(updated.artifact).toEqual(built.artifact)
+    })
+  })
+
+  it("records a failed build while preserving the older artifact", async () => {
+    await withFunctionsEnabled(async () => {
+      const query = await createQuery()
+      const { function: created } = await config.api.function.create({
+        name: "Failed Function",
+        source: validSource,
+        capabilities: [
+          {
+            queryId: query._id!,
+            datasourceAlias: "Inventory",
+            queryAlias: "findRooms",
+          },
+        ],
+      })
+      const { function: built } = await config.api.function.build(created._id, {
+        _rev: created._rev!,
+      })
+      const { function: invalid } = await config.api.function.update(
+        built._id,
+        {
+          _rev: built._rev!,
+          name: built.name,
+          source: "export default function () {}",
+          capabilities: toCapabilityInputs(built),
+        }
+      )
+
+      const { function: failed } = await config.api.function.build(
+        invalid._id,
+        { _rev: invalid._rev! }
+      )
+
+      expect(failed.readiness).toBe("build_failed")
+      expect(failed.artifact).toEqual(built.artifact)
+      expect(failed.lastBuild).toEqual(
+        expect.objectContaining({
+          status: "failed",
+          diagnostics: expect.arrayContaining([
+            expect.objectContaining({
+              code: "FUNCTION_ENTRYPOINT_INVALID",
+            }),
+          ]),
+        })
+      )
+    })
+  })
+
+  it("rejects a stale build revision", async () => {
+    await withFunctionsEnabled(async () => {
+      const query = await createQuery()
+      const { function: created } = await config.api.function.create({
+        name: "Stale build",
+        source: validSource,
+        capabilities: [
+          {
+            queryId: query._id!,
+            datasourceAlias: "Inventory",
+            queryAlias: "findRooms",
+          },
+        ],
+      })
+
+      await config.api.function.update(created._id, {
+        _rev: created._rev!,
+        name: "Updated before build",
+        source: created.source,
+        capabilities: toCapabilityInputs(created),
+      })
+      await config.api.function.build(
+        created._id,
+        { _rev: created._rev! },
+        { status: 409 }
+      )
+    })
+  })
+
+  it("requires a rebuild for changed declarations or a tampered artifact", async () => {
+    await withFunctionsEnabled(async () => {
+      const query = await createQuery()
+      const { function: created } = await config.api.function.create({
+        name: "Declaration changes",
+        source: validSource,
+        capabilities: [
+          {
+            queryId: query._id!,
+            datasourceAlias: "Inventory",
+            queryAlias: "findRooms",
+          },
+        ],
+      })
+      const { function: built } = await config.api.function.build(created._id, {
+        _rev: created._rev!,
+      })
+
+      await config.api.query.save({
+        ...query,
+        parameters: [
+          ...(query.parameters || []),
+          { name: "roomType", default: "" },
+        ],
+      })
+      expect(
+        (await config.api.function.find(built._id)).function.readiness
+      ).toBe("build_required")
+
+      const { function: rebuilt } = await config.api.function.build(built._id, {
+        _rev: built._rev!,
+      })
+      expect(rebuilt.readiness).toBe("ready")
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const current = await context
+          .getWorkspaceDB()
+          .get<FunctionDocument>(rebuilt._id)
+        await context.getWorkspaceDB().put({
+          ...current,
+          artifact: {
+            ...current.artifact!,
+            runnerProtocolVersion: 2,
+          },
+        })
+      })
+
+      expect(
+        (await config.api.function.find(rebuilt._id)).function.readiness
+      ).toBe("build_required")
     })
   })
 
