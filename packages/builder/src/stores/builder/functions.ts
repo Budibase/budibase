@@ -3,6 +3,7 @@ import { duplicateName } from "@/helpers/duplicate"
 import { getErrorMessage } from "@/helpers/errors"
 import { BudiStore } from "@/stores/BudiStore"
 import type {
+  CompileFunctionRequest,
   CreateFunctionRequest,
   FunctionQueryCapabilityInput,
   FunctionQueryCatalogEntry,
@@ -144,6 +145,19 @@ export class FunctionStore extends BudiStore<FunctionStoreState> {
 
   async save(fn: FunctionResponse, request: UpdateFunctionRequest) {
     const response = await API.updateFunction(fn._id, request)
+    this.upsert(response.function)
+    return response.function
+  }
+
+  async compile(request: CompileFunctionRequest) {
+    return await API.compileFunction(request)
+  }
+
+  async build(fn: FunctionResponse) {
+    if (!fn._rev) {
+      throw new Error("Function revision is missing")
+    }
+    const response = await API.buildFunction(fn._id, fn._rev)
     this.upsert(response.function)
     return response.function
   }
