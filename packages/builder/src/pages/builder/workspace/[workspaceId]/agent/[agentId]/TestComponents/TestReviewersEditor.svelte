@@ -24,9 +24,7 @@
     selectedCase: AgentTestCase
     toolOptions: ToolOption[]
     operationOptions: OperationOption[]
-    onUpdateCase: (
-      _updater: (_testCase: AgentTestCase) => AgentTestCase
-    ) => void
+    onUpdateCase: (updater: (testCase: AgentTestCase) => AgentTestCase) => void
   }
 
   let { selectedCase, toolOptions, operationOptions, onUpdateCase }: Props =

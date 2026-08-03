@@ -19,7 +19,7 @@
     promptInstructions?: string
     promptBindings?: EnrichedBinding[]
     bindingIcons?: Record<string, string | undefined>
-    onApplyInstructions?: (_instructions: string) => void
+    onApplyInstructions?: (instructions: string) => void
     triggerLabel?: string
   }
 
