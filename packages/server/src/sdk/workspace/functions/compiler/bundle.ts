@@ -1,3 +1,4 @@
+import type { FunctionQueryCapability } from "@budibase/types"
 import { build, type BuildFailure, type Message } from "esbuild"
 import {
   FUNCTION_VIRTUAL_SOURCE_FILE,
@@ -23,14 +24,36 @@ const toBuildDiagnostic = (message: Message) =>
     message.location ? message.location.column + 1 : undefined
   )
 
+const renderRuntimeModule = (capabilities: FunctionQueryCapability[]) => {
+  const grouped = new Map<string, FunctionQueryCapability[]>()
+  for (const capability of capabilities) {
+    const datasourceCapabilities = grouped.get(capability.datasourceAlias) || []
+    datasourceCapabilities.push(capability)
+    grouped.set(capability.datasourceAlias, datasourceCapabilities)
+  }
+
+  const queries = [...grouped.entries()].map(
+    ([datasourceAlias, datasourceCapabilities]) =>
+      `${JSON.stringify(datasourceAlias)}: Object.freeze({${datasourceCapabilities
+        .map(
+          capability =>
+            `${JSON.stringify(capability.queryAlias)}: (parameters = {}) => globalThis.__budibaseInvokeQuery(${JSON.stringify(capability.capabilityId)}, parameters)`
+        )
+        .join(",")}})`
+  )
+
+  return `export const inputs = globalThis.__budibaseInputs
+export const queries = Object.freeze({${queries.join(",")}})`
+}
+
 export const bundleFunction = async (
-  source: string
+  source: string,
+  capabilities: FunctionQueryCapability[]
 ): Promise<FunctionCompilerResult> => {
   try {
     const result = await build({
       bundle: true,
-      format: "iife",
-      globalName: "__budibaseFunctionModule",
+      format: "esm",
       legalComments: "none",
       outfile: "function.js",
       platform: "neutral",
@@ -52,9 +75,7 @@ export const bundleFunction = async (
             build.onLoad(
               { filter: /.*/, namespace: VIRTUAL_MODULE_NAMESPACE },
               () => ({
-                contents: `const runtime = globalThis.__budibaseFunctionsRuntime
-export const inputs = runtime.inputs
-export const queries = runtime.queries`,
+                contents: renderRuntimeModule(capabilities),
                 loader: "js",
               })
             )

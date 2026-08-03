@@ -73,24 +73,10 @@ const isCompilerResult = (value: unknown): value is FunctionCompilerResult => {
   )
 }
 
-const getWorkerOptions = (memoryLimitMb: number) => {
-  if (env.isDev()) {
-    return {
-      execArgv: [
-        `--max-old-space-size=${memoryLimitMb}`,
-        "-r",
-        require.resolve("ts-node/register/transpile-only"),
-        "-r",
-        require.resolve("tsconfig-paths/register"),
-      ],
-      workerPath: join(__dirname, "../../../../threads/functionCompiler.ts"),
-    }
-  }
-  return {
-    execArgv: [`--max-old-space-size=${memoryLimitMb}`],
-    workerPath: join(__dirname, "functionCompiler.js"),
-  }
-}
+const getWorkerOptions = (memoryLimitMb: number) => ({
+  execArgv: [`--max-old-space-size=${memoryLimitMb}`],
+  workerPath: join(__dirname, "functionCompiler.js"),
+})
 
 export const runFunctionCompilerProcess = async (
   request: FunctionCompilerRequest,

@@ -245,9 +245,7 @@ export default async function (): Promise<FunctionResult> {
       )
       expect(built.artifact).toEqual(
         expect.objectContaining({
-          compiledJavaScript: expect.stringContaining(
-            "__budibaseFunctionModule"
-          ),
+          compiledJavaScript: expect.stringContaining("export {"),
         })
       )
 
@@ -723,7 +721,7 @@ export default async function (): Promise<FunctionResult> {
           queryCount: 2,
           error: {
             code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
-            message: "The Function query failed",
+            message: "The Function execution failed",
           },
         })
         expect(stored?.error?.message.length).toBeLessThanOrEqual(512)
