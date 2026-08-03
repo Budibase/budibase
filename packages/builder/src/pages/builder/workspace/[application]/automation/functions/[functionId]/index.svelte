@@ -11,6 +11,8 @@
     Icon,
     notifications,
     ProgressCircle,
+    Tab,
+    Tabs,
   } from "@budibase/bbui"
   import { Utils } from "@budibase/frontend-core"
   import type {
@@ -22,6 +24,7 @@
   import { params } from "@roxi/routify"
   import { onDestroy, onMount } from "svelte"
   import FunctionCodeEditor from "../FunctionCodeEditor.svelte"
+  import FunctionLogs from "../FunctionLogs.svelte"
   import FunctionQueryEditor from "../FunctionQueryEditor.svelte"
   import { canManageFunctions } from "../permissions"
 
@@ -37,6 +40,7 @@
   let queriesDirty = false
   let actionError = ""
   let validationRequest = 0
+  let selectedTab = "Code"
 
   $params
   $: functionId = $params.functionId
@@ -244,84 +248,99 @@
             {/if}
           </div>
           <Body size="S" color="var(--spectrum-global-color-gray-600)">
-            Write TypeScript, save the draft, then build its saved revision.
+            {selectedTab === "Code"
+              ? "Write TypeScript, save the draft, then build its saved revision."
+              : "Review sanitized development and published execution history."}
           </Body>
         </div>
-        <div class="actions">
-          <Button
-            secondary
-            disabled={!sourceDirty || saving || building}
-            on:click={saveSource}
-          >
-            {saving ? "Saving..." : "Save"}
-          </Button>
-          <Button
-            primary
-            disabled={draftDirty || saving || building}
-            on:click={build}
-          >
-            {building ? "Building..." : "Build"}
-          </Button>
-        </div>
-      </div>
-
-      {#if actionError}
-        <div class="action-error" role="alert">
-          <Icon name="warning-circle" size="S" />
-          <span>{actionError}</span>
-          <Button secondary on:click={load}>Reload saved revision</Button>
-        </div>
-      {/if}
-
-      <section class="source-editor">
-        <div class="section-heading">
-          <div>
-            <Heading size="M">Source</Heading>
-            <Body size="S" color="var(--spectrum-global-color-gray-600)">
-              TypeScript diagnostics are authoritative and do not prevent
-              saving.
-            </Body>
-          </div>
-          {#if validating}
-            <div class="validating">
-              <ProgressCircle size="S" />
-              <Body size="S">Checking...</Body>
-            </div>
-          {/if}
-        </div>
-        <FunctionCodeEditor
-          bind:value={source}
-          capabilities={fn.capabilities}
-          {diagnostics}
-        />
-        {#if diagnostics.length}
-          <div class="diagnostics" aria-label="Function diagnostics">
-            {#each diagnostics as diagnostic}
-              <div class="diagnostic">
-                <code>{diagnostic.code}</code>
-                {#if diagnostic.line}
-                  <span>
-                    Line {diagnostic.line}{diagnostic.column
-                      ? `:${diagnostic.column}`
-                      : ""}
-                  </span>
-                {/if}
-                <span>{diagnostic.message}</span>
-              </div>
-            {/each}
+        {#if selectedTab === "Code"}
+          <div class="actions">
+            <Button
+              secondary
+              disabled={!sourceDirty || saving || building}
+              on:click={saveSource}
+            >
+              {saving ? "Saving..." : "Save"}
+            </Button>
+            <Button
+              primary
+              disabled={draftDirty || saving || building}
+              on:click={build}
+            >
+              {building ? "Building..." : "Build"}
+            </Button>
           </div>
         {/if}
-      </section>
+      </div>
 
-      <FunctionQueryEditor
-        capabilities={fn.capabilities}
-        catalog={$functionStore.queryCatalog}
-        catalogLoading={$functionStore.catalogLoading}
-        catalogError={$functionStore.catalogError}
-        onRetry={() => functionStore.fetchQueryCatalog()}
-        onSave={saveCapabilities}
-        onDirtyChange={dirty => (queriesDirty = dirty)}
-      />
+      <Tabs
+        noHorizPadding
+        selected={selectedTab}
+        on:select={event => (selectedTab = event.detail)}
+      >
+        <Tab title="Code">
+          {#if actionError}
+            <div class="action-error" role="alert">
+              <Icon name="warning-circle" size="S" />
+              <span>{actionError}</span>
+              <Button secondary on:click={load}>Reload saved revision</Button>
+            </div>
+          {/if}
+
+          <section class="source-editor">
+            <div class="section-heading">
+              <div>
+                <Heading size="M">Source</Heading>
+                <Body size="S" color="var(--spectrum-global-color-gray-600)">
+                  TypeScript diagnostics are authoritative and do not prevent
+                  saving.
+                </Body>
+              </div>
+              {#if validating}
+                <div class="validating">
+                  <ProgressCircle size="S" />
+                  <Body size="S">Checking...</Body>
+                </div>
+              {/if}
+            </div>
+            <FunctionCodeEditor
+              bind:value={source}
+              capabilities={fn.capabilities}
+              {diagnostics}
+            />
+            {#if diagnostics.length}
+              <div class="diagnostics" aria-label="Function diagnostics">
+                {#each diagnostics as diagnostic}
+                  <div class="diagnostic">
+                    <code>{diagnostic.code}</code>
+                    {#if diagnostic.line}
+                      <span>
+                        Line {diagnostic.line}{diagnostic.column
+                          ? `:${diagnostic.column}`
+                          : ""}
+                      </span>
+                    {/if}
+                    <span>{diagnostic.message}</span>
+                  </div>
+                {/each}
+              </div>
+            {/if}
+          </section>
+
+          <FunctionQueryEditor
+            capabilities={fn.capabilities}
+            catalog={$functionStore.queryCatalog}
+            catalogLoading={$functionStore.catalogLoading}
+            catalogError={$functionStore.catalogError}
+            onRetry={() => functionStore.fetchQueryCatalog()}
+            onSave={saveCapabilities}
+            onDirtyChange={dirty => (queriesDirty = dirty)}
+          />
+        </Tab>
+        <Tab title="Logs">
+          <FunctionLogs functionId={fn._id} />
+        </Tab>
+      </Tabs>
     {/if}
   </main>
 </div>
