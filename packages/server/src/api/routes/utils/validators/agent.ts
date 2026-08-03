@@ -256,6 +256,34 @@ export function syncAgentKnowledgeSourcesValidator() {
   return auth.joiValidator.body(Joi.object({}).optional())
 }
 
+const SHAREPOINT_SCOPE_TARGET_SCHEMA = Joi.alternatives().try(
+  Joi.object({
+    type: Joi.string().valid("drive").required(),
+    driveId: NON_EMPTY_STRING.required(),
+  }),
+  Joi.object({
+    type: Joi.string().valid("folder", "file").required(),
+    driveId: NON_EMPTY_STRING.required(),
+    itemId: NON_EMPTY_STRING.required(),
+  }),
+  Joi.object({
+    type: Joi.string().valid("list").required(),
+    listId: NON_EMPTY_STRING.required(),
+  })
+)
+
+const SHAREPOINT_SCOPE_SCHEMA = Joi.alternatives()
+  .try(
+    Joi.object({
+      mode: Joi.string().valid("all").required(),
+    }),
+    Joi.object({
+      mode: Joi.string().valid("selected").required(),
+      targets: Joi.array().items(SHAREPOINT_SCOPE_TARGET_SCHEMA).required(),
+    })
+  )
+  .required()
+
 export function connectAgentSharePointSiteValidator() {
   return auth.joiValidator.body(
     Joi.object({
@@ -266,7 +294,7 @@ export function connectAgentSharePointSiteValidator() {
       }).required(),
       datasourceId: NON_EMPTY_STRING.required(),
       authConfigId: NON_EMPTY_STRING.required(),
-      filters: Joi.array().items(NON_EMPTY_STRING).optional(),
+      scope: SHAREPOINT_SCOPE_SCHEMA,
     }).required()
   )
 }
@@ -274,7 +302,7 @@ export function connectAgentSharePointSiteValidator() {
 export function updateAgentSharePointSiteValidator() {
   return auth.joiValidator.body(
     Joi.object({
-      filters: Joi.array().items(NON_EMPTY_STRING).optional(),
+      scope: SHAREPOINT_SCOPE_SCHEMA,
     }).required()
   )
 }

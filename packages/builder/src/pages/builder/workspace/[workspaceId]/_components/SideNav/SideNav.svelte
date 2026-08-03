@@ -85,7 +85,7 @@
   $goto
   $url
 
-  type ResourceLinkFn = (_id: string) => string
+  type ResourceLinkFn = (id: string) => string
 
   interface UIFavouriteResource {
     name: string

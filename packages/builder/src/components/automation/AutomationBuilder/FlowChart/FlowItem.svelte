@@ -48,7 +48,7 @@
   export let selectedLogStepId: string | null = null
   export let unexecuted: boolean = false
   export let onStepSelect: (
-    _data: AutomationStepResult | AutomationTriggerResult
+    data: AutomationStepResult | AutomationTriggerResult
   ) => void = () => {}
   const view = getContext<Writable<DragView>>("draggableView")
   const contentPos =
