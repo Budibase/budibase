@@ -1,19 +1,23 @@
-import { API, productionAPI } from "@/api"
+import { API } from "@/api"
 import { duplicateName } from "@/helpers/duplicate"
 import { getErrorMessage } from "@/helpers/errors"
+import type { FunctionAvailability } from "@/pages/builder/workspace/[application]/automation/functions/availability"
 import { BudiStore } from "@/stores/BudiStore"
+import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
 import type {
   CompileFunctionRequest,
   CreateFunctionRequest,
   FunctionQueryCapabilityInput,
   FunctionQueryCatalogEntry,
   FunctionResponse,
+  FunctionRunnerStatus,
+  PublishStatusResource,
   UpdateFunctionRequest,
 } from "@budibase/types"
 import { get } from "svelte/store"
 
 export type FunctionDeploymentState =
-  | "not_deployed"
+  | "not_published"
   | "published"
   | "unpublished_changes"
 
@@ -23,21 +27,28 @@ export interface UIFunction extends FunctionResponse {
 
 interface FunctionStoreState {
   functions: FunctionResponse[]
-  publishedFunctions: FunctionResponse[]
   queryCatalog: FunctionQueryCatalogEntry[]
   loading: boolean
   catalogLoading: boolean
+  availability: FunctionAvailability
+  runnerStatus?: FunctionRunnerStatus
+  runnerStatusLoading: boolean
   error?: string
   catalogError?: string
+  runnerStatusError?: string
 }
 
 const initialState: FunctionStoreState = {
   functions: [],
-  publishedFunctions: [],
   queryCatalog: [],
   loading: false,
   catalogLoading: false,
+  availability: "unknown",
+  runnerStatusLoading: false,
 }
+
+const isNotFoundError = (error: object) =>
+  "status" in error && error.status === 404
 
 const toCapabilityInputs = (
   fn: FunctionResponse
@@ -59,50 +70,118 @@ const toUpdateRequest = (
 })
 
 const getDeploymentState = (
-  fn: FunctionResponse,
-  publishedFunctions: FunctionResponse[]
+  deployment?: PublishStatusResource
 ): FunctionDeploymentState => {
-  const published = publishedFunctions.find(
-    candidate => candidate._id === fn._id
-  )
-  if (!published) {
-    return "not_deployed"
+  if (!deployment?.published) {
+    return "not_published"
   }
-  return published.updatedAt === fn.updatedAt
-    ? "published"
-    : "unpublished_changes"
+  return deployment.unpublishedChanges ? "unpublished_changes" : "published"
 }
 
 export class FunctionStore extends BudiStore<FunctionStoreState> {
+  private statusRequest?: Promise<boolean>
+
   constructor() {
     super(initialState)
   }
 
   get list(): UIFunction[] {
-    return this.getList(get(this.store))
+    return this.getList(
+      get(this.store),
+      get(workspaceDeploymentStore).functions || {}
+    )
   }
 
-  getList(state: FunctionStoreState): UIFunction[] {
+  getList(
+    state: FunctionStoreState,
+    deployments: Record<string, PublishStatusResource> = {}
+  ): UIFunction[] {
     return state.functions.map(fn => ({
       ...fn,
-      deploymentState: getDeploymentState(fn, state.publishedFunctions),
+      deploymentState: getDeploymentState(deployments[fn._id]),
     }))
+  }
+
+  async fetchStatus(options: { force?: boolean } = {}) {
+    const current = get(this.store)
+    if (!options.force && current.availability === "available") {
+      return true
+    }
+    if (this.statusRequest) {
+      return await this.statusRequest
+    }
+
+    const request = this.loadStatus()
+    this.statusRequest = request
+    try {
+      return await request
+    } finally {
+      if (this.statusRequest === request) {
+        this.statusRequest = undefined
+      }
+    }
+  }
+
+  private async loadStatus() {
+    this.update(state => ({
+      ...state,
+      availability:
+        state.availability === "available" ? "available" : "checking",
+      runnerStatusLoading: true,
+      runnerStatusError: undefined,
+    }))
+    try {
+      const response = await API.getFunctionStatus()
+      this.update(state => ({
+        ...state,
+        availability: "available",
+        runnerStatus: response.runner,
+        runnerStatusLoading: false,
+      }))
+      return true
+    } catch (error) {
+      const isUnavailable =
+        !!error && typeof error === "object" && isNotFoundError(error)
+      const wasAvailable = get(this.store).availability === "available"
+      let availability: FunctionAvailability = "error"
+      if (isUnavailable) {
+        availability = "unavailable"
+      } else if (wasAvailable) {
+        availability = "available"
+      }
+      this.update(state => ({
+        ...state,
+        availability,
+        runnerStatus: undefined,
+        runnerStatusLoading: false,
+        runnerStatusError: isUnavailable
+          ? undefined
+          : getErrorMessage(error) || "Unable to check Function runner status",
+      }))
+      return false
+    }
   }
 
   async fetch() {
     this.update(state => ({ ...state, loading: true, error: undefined }))
     try {
-      const [development, published] = await Promise.all([
-        API.getFunctions(),
-        productionAPI.getFunctions(),
-      ])
+      const development = await API.getFunctions()
       this.update(state => ({
         ...state,
         functions: development.functions,
-        publishedFunctions: published.functions,
         loading: false,
       }))
     } catch (error) {
+      if (error && typeof error === "object" && isNotFoundError(error)) {
+        this.update(state => ({
+          ...state,
+          availability: "unavailable",
+          functions: [],
+          loading: false,
+          error: undefined,
+        }))
+        return
+      }
       const message = getErrorMessage(error) || "Unable to load Functions"
       this.update(state => ({ ...state, loading: false, error: message }))
     }

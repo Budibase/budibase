@@ -2,15 +2,21 @@
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { getErrorMessage } from "@/helpers/errors"
-  import { appStore, builderStore, functionStore } from "@/stores/builder"
+  import {
+    appStore,
+    builderStore,
+    functionStore,
+    workspaceDeploymentStore,
+  } from "@/stores/builder"
   import type { UIFunction } from "@/stores/builder/functions"
-  import { auth, featureFlags } from "@/stores/portal"
+  import { admin, auth, featureFlags } from "@/stores/portal"
   import { Modal, ModalContent, notifications } from "@budibase/bbui"
   import { FeatureFlag } from "@budibase/types"
   import { goto as gotoStore } from "@roxi/routify"
   import { onMount } from "svelte"
   import FunctionList from "./FunctionList.svelte"
   import FunctionNameModal from "./FunctionNameModal.svelte"
+  import { isFunctionClientGateOpen } from "./availability"
   import { canManageFunctions } from "./permissions"
 
   const DEFAULT_SOURCE = `import type { FunctionResult } from "@budibase/functions"
@@ -26,11 +32,29 @@ export default async function (): Promise<FunctionResult> {
   let blockedDeleteMessage = ""
 
   $: enabled = $featureFlags[FeatureFlag.FUNCTIONS]
-  $: canManage = enabled && canManageFunctions($auth.user, $appStore.appId)
-  $: functions = functionStore.getList($functionStore)
+  $: clientGateOpen = isFunctionClientGateOpen({
+    featureEnabled: enabled,
+    cloud: $admin.cloud,
+  })
+  $: hasPermission = canManageFunctions($auth.user, $appStore.appId)
+  $: availability = clientGateOpen ? $functionStore.availability : "unavailable"
+  $: canManage = clientGateOpen && availability === "available" && hasPermission
+  $: functions = functionStore.getList(
+    $functionStore,
+    $workspaceDeploymentStore.functions || {}
+  )
   $: goto = $gotoStore
-  $: if (enabled) {
+  $: if (canManage) {
     builderStore.selectResource("functions")
+  }
+
+  const loadAvailableFunctions = async (force = false) => {
+    if (!clientGateOpen || !hasPermission) {
+      return
+    }
+    if (await functionStore.fetchStatus({ force })) {
+      await functionStore.fetch()
+    }
   }
 
   const createFunction = () => {
@@ -94,9 +118,7 @@ export default async function (): Promise<FunctionResult> {
   }
 
   onMount(() => {
-    if (enabled && canManage) {
-      functionStore.fetch()
-    }
+    loadAvailableFunctions()
   })
 </script>
 
@@ -131,7 +153,13 @@ export default async function (): Promise<FunctionResult> {
     loading={$functionStore.loading}
     error={$functionStore.error}
     {canManage}
+    {availability}
+    runnerStatus={$functionStore.runnerStatus}
+    runnerStatusLoading={$functionStore.runnerStatusLoading}
+    runnerStatusError={$functionStore.runnerStatusError}
     onRetry={() => functionStore.fetch()}
+    onRetryAvailability={() => loadAvailableFunctions(true)}
+    onRetryRunnerStatus={() => functionStore.fetchStatus({ force: true })}
     onCreate={createFunction}
     onOpen={fn => goto(`./${fn._id}`)}
     onRename={renameFunction}

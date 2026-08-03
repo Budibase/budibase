@@ -28,6 +28,7 @@
     tables,
     queries,
     viewsV2,
+    functionStore,
   } from "@/stores/builder"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import {
@@ -35,6 +36,7 @@
     licensing,
     enrichedApps,
     agentsStore,
+    admin,
     auth,
     featureFlags,
   } from "@/stores/portal"
@@ -68,6 +70,7 @@
   import WorkspaceAppModal from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import { canManageFunctions } from "@/pages/builder/workspace/[application]/automation/functions/permissions"
+  import { isFunctionClientGateOpen } from "@/pages/builder/workspace/[application]/automation/functions/availability"
 
   export const show = () => {
     pinned.set(true)
@@ -140,6 +143,17 @@
   let tableName = ""
 
   $: workspaceId = $appStore.appId
+  $: functionsClientGateOpen = isFunctionClientGateOpen({
+    featureEnabled: !!$featureFlags[FeatureFlag.FUNCTIONS],
+    cloud: $admin.cloud,
+  })
+  $: canCheckFunctions =
+    functionsClientGateOpen && canManageFunctions($auth.user, workspaceId)
+  $: if (canCheckFunctions && $functionStore.availability === "unknown") {
+    functionStore.fetchStatus()
+  }
+  $: showFunctions =
+    canCheckFunctions && $functionStore.availability === "available"
   $: !$pinned && unPin()
 
   // keep sidebar expanded when workspace selector is open
@@ -588,7 +602,7 @@
                 {collapsed}
                 on:click={keepCollapsed}
               />
-              {#if $featureFlags[FeatureFlag.FUNCTIONS] && canManageFunctions($auth.user, workspaceId)}
+              {#if showFunctions}
                 <SideNavLink
                   icon="code"
                   text="Functions"
