@@ -83,7 +83,7 @@
   } from "./_components/urlState"
 
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
-  import { canManageFunctions } from "../automation/functions/permissions"
+  import { canManageFunctions } from "@/pages/builder/workspace/[application]/automation/functions/permissions"
 
   $: goto = $gotoStore
   $: url = $urlStore
@@ -1094,6 +1094,8 @@
                   variant="pill"
                   onCreateAgent={createAgent}
                   onCreateAutomation={createAutomation}
+                  onCreateFunction={() => goToCreate("automation/functions")}
+                  showFunctions={functionsEnabled}
                   onCreateApp={createApp}
                   onCreateConnection={() => goToCreate("data/new")}
                   onCreateTable={openCreateTable}
