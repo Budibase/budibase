@@ -1,3 +1,11 @@
+import path from "node:path"
+
+if (process.env.NODE_ENV !== "production" && !process.env.JEST_WORKER_ID) {
+  const topLevelPath =
+    process.env.TOP_LEVEL_PATH || path.resolve(__dirname, "..", "..", "..")
+  require("dotenv").config({ path: path.join(topLevelPath, ".env") })
+}
+
 const DEFAULT_PORT = 4007
 const DEFAULT_TERMINATION_GRACE_MS = 250
 
