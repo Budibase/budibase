@@ -221,7 +221,7 @@
       {/if}
       <Button
         cta
-        type="submit"
+        type="button"
         disabled={!trimmedName || !!nameError || !!optionsError}
         on:click={save}
       >
