@@ -5,16 +5,6 @@ interface MockWebhookChatPayload {
   }
 }
 
-jest.mock("@chat-adapter/discord", () => ({
-  createDiscordAdapter: jest.fn((options: Record<string, unknown>) => options),
-  // SafeDiscordAdapter subclasses this - see webhook/discordAdapter.ts
-  DiscordAdapter: class {
-    constructor(config: Record<string, unknown> = {}) {
-      Object.assign(this, config)
-    }
-  },
-}))
-
 jest.mock("@chat-adapter/state-memory", () => ({
   createMemoryState: jest.fn(() => ({})),
 }))

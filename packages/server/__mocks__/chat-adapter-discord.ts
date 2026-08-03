@@ -1,3 +1,9 @@
+type DiscordFile = {
+  filename: string
+  data: Buffer | Blob | ArrayBuffer
+  mimeType?: string
+}
+
 export class DiscordAdapter {
   constructor(config: Record<string, unknown> = {}) {
     Object.assign(this, config)
@@ -26,6 +32,33 @@ export class DiscordAdapter {
   async getUser(userId: string) {
     await this.discordFetch(`/users/${userId}`, "GET")
     return { id: userId }
+  }
+
+  protected discordInteractionFetch(
+    path: string,
+    method: string,
+    body?: unknown
+  ): Promise<Response> {
+    return this.discordFetch(path, method, body)
+  }
+
+  protected async postMessageWithFiles(
+    channelId: string,
+    _threadId: string,
+    payload: unknown,
+    _files: DiscordFile[]
+  ) {
+    await this.discordFetch(`/channels/${channelId}/messages`, "POST", payload)
+    return { id: "msg-1" }
+  }
+
+  protected discordInteractionFetchWithFiles(
+    path: string,
+    method: string,
+    payload: unknown,
+    _files: DiscordFile[]
+  ): Promise<Response> {
+    return this.discordFetch(path, method, payload)
   }
 }
 
