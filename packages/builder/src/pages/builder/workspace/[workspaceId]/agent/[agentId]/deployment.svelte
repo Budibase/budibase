@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     ActionButton,
+    Badge,
     Body,
     Modal,
     ModalContent,
@@ -365,6 +366,12 @@
         </div>
       </div>
     </svelte:fragment>
+    <div class="deprecation-notice">
+      <Badge orange size="S">Deprecated</Badge>
+      <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+        Discord will be removed in a future release.
+      </Body>
+    </div>
     <DiscordConfig agent={currentAgent} />
   </ModalContent>
 </Modal>
@@ -446,6 +453,12 @@
         </div>
       </div>
     </svelte:fragment>
+    <div class="deprecation-notice">
+      <Badge orange size="S">Deprecated</Badge>
+      <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+        Telegram will be removed in a future release.
+      </Body>
+    </div>
     <TelegramConfig agent={currentAgent} />
   </ModalContent>
 </Modal>
@@ -537,5 +550,16 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+  }
+
+  .deprecation-notice {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-s);
+  }
+
+  .deprecation-notice :global(p) {
+    margin: 0;
   }
 </style>
