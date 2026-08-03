@@ -103,23 +103,25 @@
     popover.hide()
   }
 
-  const remove = async () => {
-    if (!editingId) return
-    operation.requestInputs = inputs.filter(input => input.id !== editingId)
+  const remove = async (inputId: string) => {
+    operation.requestInputs = inputs.filter(input => input.id !== inputId)
     await onUpdated()
     popover.hide()
   }
 
   const confirmRemove = async () => {
+    const inputToRemove = inputs.find(input => input.id === editingId)
+    if (!inputToRemove) return
+
     popover.hide()
     const confirmed = await confirm({
       title: "Confirm deletion",
-      body: `Delete the “${trimmedName}” request input?`,
+      body: `Delete the “${inputToRemove.name}” request input?`,
       okText: "Delete",
       warning: true,
     })
     if (confirmed) {
-      await remove()
+      await remove(inputToRemove.id)
     } else {
       popover.show()
     }
