@@ -52,7 +52,11 @@
   let slackModal: Modal
   let telegramModal: Modal
   let toggling = $state(false)
-  let toggleRenderKey = $state(0)
+  let toggleRenderKeys = $state<Record<string, number>>({})
+
+  const resetChannelToggle = (channelId: string) => {
+    toggleRenderKeys[channelId] = (toggleRenderKeys[channelId] || 0) + 1
+  }
 
   const discordConfigured = $derived.by(() => {
     const integration = currentAgent?.discordIntegration
@@ -191,7 +195,7 @@
     const isChannelEnabled = channel.status === "Enabled"
     if (!isChannelEnabled && !hasAiConfig) {
       notifications.error(AI_CONFIG_REQUIRED_MESSAGE)
-      toggleRenderKey += 1
+      resetChannelToggle(channel.id)
       return
     }
     toggling = true
@@ -259,7 +263,7 @@
       )
     } finally {
       toggling = false
-      toggleRenderKey += 1
+      resetChannelToggle(channel.id)
     }
   }
 </script>
@@ -327,7 +331,7 @@
               accentColor="Blue"
               on:click={() => onConfigureChannel(channel)}>Manage</ActionButton
             >
-            {#key `${channel.id}-${toggleRenderKey}`}
+            {#key `${channel.id}-${channel.status}-${toggleRenderKeys[channel.id] || 0}`}
               <Toggle
                 value={channel.status === "Enabled"}
                 disabled={toggling}
