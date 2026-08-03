@@ -149,28 +149,8 @@ const addExistingConnection = ({
 }
 
 describe("SelectSharePointSiteModal existing connections", () => {
-  it("shows the connection dropdown when there is one existing connection", async () => {
+  it("loads sites immediately when there is one existing connection", async () => {
     addExistingConnection()
-    const { component } = render(SelectSharePointSiteModal, {
-      agentId: "agent-id",
-      operationId: "operation-id",
-    })
-
-    await component.show()
-
-    expect(
-      await screen.findByText("Existing SharePoint - Client credentials")
-    ).toBeInTheDocument()
-    expect(mocks.fetchAgentKnowledgeSourceOptions).not.toHaveBeenCalled()
-  })
-
-  it("opens quick add from the dropdown placeholder", async () => {
-    addExistingConnection()
-    mocks.saveSharePointQuickDatasource.mockResolvedValue({
-      _id: "new-datasource-id",
-      type: "datasource",
-      source: SourceName.REST,
-    })
     mocks.fetchAgentKnowledgeSourceOptions.mockResolvedValue({
       options: [availableSite],
     })
@@ -178,20 +158,13 @@ describe("SelectSharePointSiteModal existing connections", () => {
       agentId: "agent-id",
       operationId: "operation-id",
     })
+
     await component.show()
-
-    await fireEvent.click(
-      await screen.findByText("Existing SharePoint - Client credentials")
-    )
-    await fireEvent.click(await screen.findByText("Add new connection"))
-
-    expect(await screen.findByText("Connect SharePoint")).toBeInTheDocument()
-    await submitQuickCredentials()
 
     await waitFor(() => {
       expect(mocks.fetchAgentKnowledgeSourceOptions).toHaveBeenCalledWith(
-        "new-datasource-id",
-        expect.any(String)
+        "existing-datasource-id",
+        "existing-auth-id"
       )
     })
     expect(await screen.findByText("Sync all")).toBeInTheDocument()
