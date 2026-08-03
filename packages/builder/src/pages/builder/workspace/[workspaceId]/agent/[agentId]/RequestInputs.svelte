@@ -30,6 +30,7 @@
   let addButton = $state<HTMLButtonElement>()
   let editorAnchor = $state<HTMLElement>()
   let editingId = $state<string | undefined>()
+  let isEditing = $state(false)
   let name = $state("")
   let type = $state<AgentRequestInputDefinition["type"]>("text")
   let options = $state<string[]>([])
@@ -63,6 +64,7 @@
   ) => {
     editorAnchor = anchor
     editingId = input?.id
+    isEditing = !!input
     name = input?.name ?? ""
     type = input?.type ?? "text"
     options = [...(input?.options ?? [])]
@@ -84,7 +86,7 @@
     touched = true
     if (!trimmedName || nameError || optionsError) return
 
-    const isEditing = !!editingId
+    const updatesExistingInput = !!editingId
     const inputId = editingId ?? `request_input_${Helpers.uuid()}`
     editingId = inputId
     const inputBase = {
@@ -96,7 +98,7 @@
       type === "select"
         ? { ...inputBase, type, options }
         : { ...inputBase, type }
-    operation.requestInputs = isEditing
+    operation.requestInputs = updatesExistingInput
       ? inputs.map(existing => (existing.id === inputId ? input : existing))
       : [...inputs, input]
     const saved = await onUpdated()
@@ -214,7 +216,7 @@
     {/if}
     <Toggle text="Required" bind:value={required} />
     <div class="input-form__actions">
-      {#if editingId}
+      {#if isEditing}
         <Button type="button" quiet overBackground on:click={confirmRemove}>
           Delete
         </Button>
