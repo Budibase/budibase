@@ -12,18 +12,15 @@ describe("FunctionRuntimeNotice", () => {
     ["disabled", "Runner disabled"],
     ["unhealthy", "Runner unhealthy"],
     ["busy", "Runner busy"],
-  ] as const)(
-    "renders the %s runner state independently",
-    (status, label) => {
-      render(FunctionRuntimeNotice, { status })
+  ] as const)("renders the %s runner state independently", (status, label) => {
+    render(FunctionRuntimeNotice, { status })
 
-      expect(screen.getByTestId("function-runner-status")).toHaveAttribute(
-        "data-status",
-        status
-      )
-      expect(screen.getByText(label)).toBeInTheDocument()
-    }
-  )
+    expect(screen.getByTestId("function-runner-status")).toHaveAttribute(
+      "data-status",
+      status
+    )
+    expect(screen.getByText(label)).toBeInTheDocument()
+  })
 
   it("shows the trusted Function author boundary", () => {
     render(FunctionRuntimeNotice, { status: "healthy" })
