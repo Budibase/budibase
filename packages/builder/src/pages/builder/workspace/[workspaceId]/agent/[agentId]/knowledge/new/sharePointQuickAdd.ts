@@ -73,7 +73,7 @@ export const saveSharePointQuickDatasource = async ({
   integration: UIIntegration
   existingDatasource?: Datasource
   createDatasource: (
-    _params: CreateSharePointDatasourceParams
+    params: CreateSharePointDatasourceParams
   ) => Promise<Datasource>
   updateDatasource: (
     _params: UpdateSharePointDatasourceParams
