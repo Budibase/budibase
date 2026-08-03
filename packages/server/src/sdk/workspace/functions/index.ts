@@ -3,7 +3,6 @@ import { context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   DEFAULT_FUNCTION_LIMITS,
   DocumentType,
-  FUNCTION_RUNNER_PROTOCOL_VERSION,
   type Automation,
   type FunctionBuildDiagnostic,
   type FunctionDocument,

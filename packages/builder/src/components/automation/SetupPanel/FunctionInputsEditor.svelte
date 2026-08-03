@@ -16,11 +16,15 @@
     runtimeToReadableBinding,
   } from "@/dataBinding"
   import { Body } from "@budibase/bbui"
-  import type { EnrichedBinding, JSONEditorInput } from "@budibase/types"
+  import type {
+    EnrichedBinding,
+    ExecuteFunctionStepInputs,
+    JSONEditorInput,
+  } from "@budibase/types"
   import { isFunctionInputsObject } from "./functionInputs"
 
   interface Props {
-    value?: JSONEditorInput<string>
+    value?: ExecuteFunctionStepInputs["inputs"]
     bindings?: EnrichedBinding[]
     context?: object
     onchange?: (value: JSONEditorInput<string>) => void
@@ -28,8 +32,21 @@
 
   let { value, bindings = [], context, onchange = () => {} }: Props = $props()
 
+  const getInputsSource = (inputValue: Props["value"]) => {
+    if (!inputValue) {
+      return "{}"
+    }
+    if (Object.keys(inputValue).length === 1 && "value" in inputValue) {
+      const storedValue = inputValue.value
+      return typeof storedValue === "string"
+        ? storedValue
+        : JSON.stringify(storedValue || {}, null, 2)
+    }
+    return JSON.stringify(inputValue, null, 2)
+  }
+
   let error = $state("")
-  let storedValue = $derived(value?.value || "{}")
+  let storedValue = $derived(getInputsSource(value))
   let editorValue = $derived(runtimeToReadableBinding(bindings, storedValue))
   let completions = $derived([
     hbAutocomplete(bindingsToCompletions(bindings, EditorModes.Handlebars)),

@@ -41,7 +41,6 @@ const makeFunction = (
   createdAt: "2026-07-23T12:00:00.000Z",
   updatedAt: "2026-07-23T12:00:00.000Z",
   artifact: {
-    runnerProtocolVersion: 1,
     compiledJavaScript: "compiled",
     sourceHash: "source-hash",
     declarationsHash: "declarations-hash",

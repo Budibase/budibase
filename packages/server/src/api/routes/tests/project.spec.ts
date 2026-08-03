@@ -1244,7 +1244,7 @@ describe("/projects", () => {
           name: "Function import workspace",
         })
         await config.withHeaders(
-          { [Header.APP_ID]: destinationWorkspace.appId },
+          { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
           async () => {
             const imported = await config.api.project.import(body)
             const importedFunctionId = imported.resources.function?.[0]
