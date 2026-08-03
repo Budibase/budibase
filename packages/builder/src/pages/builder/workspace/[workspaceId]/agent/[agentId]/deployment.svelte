@@ -331,7 +331,7 @@
               accentColor="Blue"
               on:click={() => onConfigureChannel(channel)}>Manage</ActionButton
             >
-            {#key `${channel.id}-${channel.status}-${toggleRenderKeys[channel.id] || 0}`}
+            {#key `${channel.id}-${toggleRenderKeys[channel.id] || 0}`}
               <Toggle
                 value={channel.status === "Enabled"}
                 disabled={toggling}
