@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     ActionButton,
+    Badge,
     Body,
     Modal,
     ModalContent,
@@ -12,7 +13,6 @@
     DEPLOYMENT_CHANNEL_IDS,
     DEPLOYMENT_ID_TO_PROVIDER,
     type Agent,
-    type DeploymentRow,
   } from "@budibase/types"
   import { selectedAgent, agentsStore } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
@@ -29,12 +29,34 @@
   const AI_CONFIG_REQUIRED_MESSAGE =
     "Select an AI model in Agent config before enabling this channel."
 
+  interface ChannelMetadata {
+    name: string
+    logo: string
+    details: string
+    deprecationMessage?: string
+  }
+
+  interface DeploymentRow {
+    id: string
+    name: string
+    logo: string
+    status: "Enabled" | "Disabled"
+    details: string
+    configurable?: boolean
+    deprecationMessage?: string
+  }
+
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let discordModal: Modal
   let MSTeamsModal: Modal
   let slackModal: Modal
   let telegramModal: Modal
   let toggling = $state(false)
+  let toggleRenderKeys = $state<Record<string, number>>({})
+
+  const resetChannelToggle = (channelId: string) => {
+    toggleRenderKeys[channelId] = (toggleRenderKeys[channelId] || 0) + 1
+  }
 
   const discordConfigured = $derived.by(() => {
     const integration = currentAgent?.discordIntegration
@@ -85,14 +107,13 @@
 
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
 
-  const channelMetadata: Record<
-    AgentChannelProvider,
-    { name: string; logo: string; details: string }
-  > = {
+  const channelMetadata: Record<AgentChannelProvider, ChannelMetadata> = {
     [AgentChannelProvider.DISCORD]: {
       name: "Discord",
       logo: DiscordLogo,
       details: "Allow this agent to respond in Discord channels and threads",
+      deprecationMessage:
+        "Deprecated: Discord will be removed in a future release.",
     },
     [AgentChannelProvider.MSTEAMS]: {
       name: "Microsoft Teams",
@@ -111,6 +132,8 @@
       logo: TelegramLogo,
       details:
         "Allow this agent to respond in Telegram private and group chats",
+      deprecationMessage:
+        "Deprecated: Telegram will be removed in a future release.",
     },
   }
 
@@ -129,9 +152,9 @@
   const channels = $derived.by<DeploymentRow[]>(() =>
     (
       [
-        AgentChannelProvider.DISCORD,
         AgentChannelProvider.MSTEAMS,
         AgentChannelProvider.SLACK,
+        AgentChannelProvider.DISCORD,
         AgentChannelProvider.TELEGRAM,
       ] as const
     ).map(provider => ({
@@ -140,6 +163,7 @@
       logo: channelMetadata[provider].logo,
       status: channelStatus[provider],
       details: channelMetadata[provider].details,
+      deprecationMessage: channelMetadata[provider].deprecationMessage,
       configurable: true,
     }))
   )
@@ -171,6 +195,7 @@
     const isChannelEnabled = channel.status === "Enabled"
     if (!isChannelEnabled && !hasAiConfig) {
       notifications.error(AI_CONFIG_REQUIRED_MESSAGE)
+      resetChannelToggle(channel.id)
       return
     }
     toggling = true
@@ -238,6 +263,7 @@
       )
     } finally {
       toggling = false
+      resetChannelToggle(channel.id)
     }
   }
 </script>
@@ -290,6 +316,12 @@
               <Body color={"var(--spectrum-global-color-gray-700)"} size="XS"
                 >{channel.details}</Body
               >
+              {#if channel.deprecationMessage}
+                <Body
+                  color={"var(--spectrum-global-color-orange-900)"}
+                  size="XS">{channel.deprecationMessage}</Body
+                >
+              {/if}
             </div>
           </div>
           <div class="row-action">
@@ -299,11 +331,13 @@
               accentColor="Blue"
               on:click={() => onConfigureChannel(channel)}>Manage</ActionButton
             >
-            <Toggle
-              value={channel.status === "Enabled"}
-              disabled={toggling}
-              on:change={() => onToggleChannel(channel)}
-            />
+            {#key `${channel.id}-${toggleRenderKeys[channel.id] || 0}`}
+              <Toggle
+                value={channel.status === "Enabled"}
+                disabled={toggling}
+                on:change={() => onToggleChannel(channel)}
+              />
+            {/key}
           </div>
         </div>
       {/each}
@@ -341,6 +375,12 @@
         </div>
       </div>
     </svelte:fragment>
+    <div class="deprecation-notice">
+      <Badge orange size="S">Deprecated</Badge>
+      <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+        Discord will be removed in a future release.
+      </Body>
+    </div>
     <DiscordConfig agent={currentAgent} />
   </ModalContent>
 </Modal>
@@ -422,6 +462,12 @@
         </div>
       </div>
     </svelte:fragment>
+    <div class="deprecation-notice">
+      <Badge orange size="S">Deprecated</Badge>
+      <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+        Telegram will be removed in a future release.
+      </Body>
+    </div>
     <TelegramConfig agent={currentAgent} />
   </ModalContent>
 </Modal>
@@ -513,5 +559,16 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+  }
+
+  .deprecation-notice {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-s);
+  }
+
+  .deprecation-notice :global(p) {
+    margin: 0;
   }
 </style>
