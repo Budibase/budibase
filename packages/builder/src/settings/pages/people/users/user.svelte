@@ -20,7 +20,7 @@
     Table,
     ProgressCircle,
   } from "@budibase/bbui"
-  import { onMount, setContext, getContext } from "svelte"
+  import { onMount, setContext } from "svelte"
   import { users } from "@/stores/portal/users"
   import { auth } from "@/stores/portal/auth"
   import { groups } from "@/stores/portal/groups"
@@ -40,7 +40,6 @@
   import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
   import { bb } from "@/stores/bb"
   import type { User, UserGroup } from "@budibase/types"
-  import type { Readable } from "svelte/store"
 
   $goto
 
@@ -48,10 +47,7 @@
     userId: string
   }
 
-  let { userId = $bindable() }: Props = $props()
-
-  const routing =
-    getContext<Readable<{ params: { userId?: string } }>>("routing")
+  let { userId }: Props = $props()
 
   // Override
   const appSchema = {
@@ -169,12 +165,6 @@
     return label
   }
 
-  const params = $derived($routing?.params)
-  $effect(() => {
-    if (params.userId && userId !== params.userId) {
-      userId = params.userId
-    }
-  })
   const internalGroups = $derived(
     $groups?.filter(group => !group?.scimInfo?.isSync)
   )
