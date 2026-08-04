@@ -2,7 +2,7 @@
   import { ModalContent, Body, Select } from "@budibase/bbui"
   import { workspaceAppStore } from "@/stores/builder"
 
-  export let onConfirm: (_selectedAppId: string) => Promise<void> | void
+  export let onConfirm: (selectedAppId: string) => Promise<void> | void
   export let selectedAppId: string | undefined = undefined
 
   async function handleConfirm() {

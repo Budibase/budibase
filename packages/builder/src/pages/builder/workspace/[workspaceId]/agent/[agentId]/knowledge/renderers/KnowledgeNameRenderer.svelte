@@ -10,24 +10,34 @@
   }
 
   let { row }: Props = $props()
+
+  let errorMessage = $derived.by(() => {
+    if (row.kind === "sharepoint_connection") {
+      return row.errorMessage
+    }
+    return row.status === KnowledgeBaseFileStatus.FAILED
+      ? row.errorMessage
+      : undefined
+  })
 </script>
 
 <div class="file-name">
   <span class="file-title">{row.filename}</span>
-  <span
-    class="file-meta"
-    title={row.kind === "sharepoint_connection"
-      ? row.subtitle || "SharePoint"
-      : row.mimetype || "text/plain"}
-    >{row.kind === "sharepoint_connection"
-      ? row.subtitle || "SharePoint"
-      : getKnowledgeFileDisplayType({
-          filename: row.filename,
-          mimetype: row.mimetype,
-        })}</span
-  >
-  {#if (row.kind === "sharepoint_connection" && row.errorMessage) || (row.kind !== "sharepoint_connection" && row.status === KnowledgeBaseFileStatus.FAILED && row.errorMessage)}
-    <span class="file-error">{row.errorMessage}</span>
+  {#if errorMessage}
+    <span class="file-error" title={errorMessage}>{errorMessage}</span>
+  {:else}
+    <span
+      class="file-meta"
+      title={row.kind === "sharepoint_connection"
+        ? row.subtitle || "SharePoint"
+        : row.mimetype || "text/plain"}
+      >{row.kind === "sharepoint_connection"
+        ? row.subtitle || "SharePoint"
+        : getKnowledgeFileDisplayType({
+            filename: row.filename,
+            mimetype: row.mimetype,
+          })}</span
+    >
   {/if}
 </div>
 
@@ -49,9 +59,6 @@
   .file-error {
     font-size: 12px;
     color: var(--spectrum-global-color-gray-700);
-  }
-
-  .file-meta {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

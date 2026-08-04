@@ -1,5 +1,8 @@
 import type { RestAuthConfig } from "../documents/workspace/datasource"
 
+export const MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID =
+  "microsoft-sharepoint" as const
+
 export interface RestTemplateSpec {
   version: string
   url?: string
@@ -111,7 +114,7 @@ export type RestTemplateId =
   | GongRestTemplateId
   | "hubspot"
   | HubSpotRestTemplateId
-  | "microsoft-sharepoint"
+  | typeof MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID
   | MicrosoftSharepointRestTemplateId
   | "salesforce"
   | SalesforceRestTemplateId

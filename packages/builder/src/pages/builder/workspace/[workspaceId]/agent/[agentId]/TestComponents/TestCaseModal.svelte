@@ -16,9 +16,9 @@
     groupOptions: ToolOption[]
     aiConfigOptions: AIConfigOption[]
     defaultAiConfigId?: string
-    isExisting: (_id: string) => boolean
+    isExisting: (id: string) => boolean
     disabled?: boolean
-    onSave: (_testCase: AgentTestCase) => Promise<boolean>
+    onSave: (testCase: AgentTestCase) => Promise<boolean>
   }
 
   let {
@@ -75,7 +75,7 @@
   }
 
   const updateDraftCase = (
-    updater: (_testCase: AgentTestCase) => AgentTestCase
+    updater: (testCase: AgentTestCase) => AgentTestCase
   ) => {
     if (!draftCase) return
     draftCase = updater(draftCase)

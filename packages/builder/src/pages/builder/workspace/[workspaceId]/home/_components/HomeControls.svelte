@@ -8,7 +8,7 @@
   interface Props {
     typeFilter?: HomeType
     variant?: "default" | "panel"
-    onTypeChange?: (_type: HomeType) => void
+    onTypeChange?: (type: HomeType) => void
   }
 
   let {

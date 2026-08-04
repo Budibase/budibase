@@ -21,7 +21,7 @@
     hasSharePointDatasource?: boolean
     onNext: () => Promise<void> | void
     onConfigure: () => Promise<void> | void
-    onConnectionChange: (_connectionId: string) => void
+    onConnectionChange: (connectionId: string) => void
   }
 
   let {
@@ -84,6 +84,16 @@
       {#if options.length === 0 && hasSharePointDatasource}
         <Button cta primary on:click={onConfigure}>Configure connection</Button>
       {:else}
+        {#if options.length > 0}
+          <Button
+            cta
+            secondary
+            on:click={onConfigure}
+            disabled={loadingNextStep}
+          >
+            Configure connection
+          </Button>
+        {/if}
         <Button
           cta
           primary

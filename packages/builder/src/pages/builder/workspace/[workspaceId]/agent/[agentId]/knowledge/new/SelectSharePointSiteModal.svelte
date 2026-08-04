@@ -1,23 +1,35 @@
 <script lang="ts">
-  import { notifications } from "@budibase/bbui"
-  import { type KnowledgeSourceOption } from "@budibase/types"
-  import { workspaceDeploymentStore } from "@/stores/builder"
+  import { Helpers, notifications } from "@budibase/bbui"
+  import {
+    MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID,
+    SharePointScopeMode,
+    SourceName,
+    type Datasource,
+    type KnowledgeSourceOption,
+    type UIIntegration,
+  } from "@budibase/types"
+  import { datasources, workspaceDeploymentStore } from "@/stores/builder"
+  import { sortedIntegrations } from "@/stores/builder/sortedIntegrations"
   import { bb } from "@/stores/bb"
   import { agentsStore, knowledgeConnectionsStore } from "@/stores/portal"
   import type { SharePointSelectionMode } from "../renderers/types"
-  import { EXCLUDE_ALL_PATTERN } from "../sharepoint/sharePointModalUtils"
   import SharePointConnectionStepModal, {
     type SharePointConnectionOption,
   } from "./SharePointConnectionStepModal.svelte"
   import SharePointSiteStepModal from "./SharePointSiteStepModal.svelte"
+  import SharePointQuickAddModal from "./SharePointQuickAddModal.svelte"
+  import {
+    saveSharePointQuickDatasource,
+    type SharePointQuickAddCredentials,
+  } from "./sharePointQuickAdd"
 
   export interface Props {
     agentId: string
     operationId: string
     existingSiteIds?: string[]
     onCreated?: (
-      _siteId: string,
-      _mode: SharePointSelectionMode
+      siteId: string,
+      mode: SharePointSelectionMode
     ) => Promise<void> | void
   }
 
@@ -34,18 +46,34 @@
   let selectedConnectionId = $state("")
   let selectedDatasourceId = $state("")
   let selectedAuthConfigId = $state("")
-  let siteLoadError = $state("")
+  let errorMessage = $state("")
   let loadingNextStep = $state(false)
   let saving = $state(false)
+  let quickDatasource = $state<Datasource>()
+  let quickAuthConfigId = $state("")
   let skippedConnectionStep = $state(false)
 
   let connectionStepModal = $state<SharePointConnectionStepModal>()
   let siteStepModal = $state<SharePointSiteStepModal>()
+  let quickAddModal = $state<SharePointQuickAddModal>()
+
+  let restIntegration = $derived(
+    $sortedIntegrations.find(
+      (integration): integration is UIIntegration =>
+        integration.name === SourceName.REST
+    )
+  )
 
   const availableSites = $derived.by(() => {
     const excluded = new Set(existingSiteIds)
     return sharePointSites.filter(site => !excluded.has(site.id))
   })
+
+  const siteEmptyMessage = $derived(
+    sharePointSites.length > 0 && availableSites.length === 0
+      ? "All SharePoint sites for this connection have already been added."
+      : "No SharePoint sites found for this connection."
+  )
 
   const loadSharePointConnections = async () => {
     if (!agentId) {
@@ -80,12 +108,12 @@
     if (!selectedConnectionId) {
       sharePointSites = []
       selectedSiteId = ""
-      siteLoadError = ""
+      errorMessage = ""
       return
     }
     sharePointSites = []
     selectedSiteId = ""
-    siteLoadError = ""
+    errorMessage = ""
     try {
       const response = await agentsStore.fetchAgentKnowledgeSourceOptions(
         selectedDatasourceId,
@@ -95,13 +123,13 @@
       const excluded = new Set(existingSiteIds)
       selectedSiteId =
         sharePointSites.find(site => !excluded.has(site.id))?.id || ""
-    } catch (error: any) {
+    } catch (error) {
       console.error(error)
-      const message =
-        error?.cause?.message ||
-        error?.message ||
+      const message = getErrorMessage(
+        error,
         "Failed to fetch SharePoint sites for this auth config."
-      siteLoadError = message
+      )
+      errorMessage = message
       notifications.error(`Error fetching sites: ${message}`)
       sharePointSites = []
       selectedSiteId = ""
@@ -115,7 +143,7 @@
     loadingNextStep = true
     try {
       await loadSharePointSites()
-      if (siteLoadError) {
+      if (errorMessage) {
         return
       }
       connectionStepModal?.hide()
@@ -125,10 +153,89 @@
     }
   }
 
-  const handleSelect = async (mode: SharePointSelectionMode) => {
-    const selectedSite = sharePointSites.find(
-      site => site.id === selectedSiteId
+  const getErrorMessage = (
+    error: unknown,
+    fallback = "Failed to connect to SharePoint."
+  ) => {
+    if (typeof error !== "object" || error === null) {
+      return fallback
+    }
+    if ("cause" in error) {
+      const cause = error.cause
+      if (
+        typeof cause === "object" &&
+        cause !== null &&
+        "message" in cause &&
+        typeof cause.message === "string"
+      ) {
+        return cause.message
+      }
+    }
+    if ("message" in error && typeof error.message === "string") {
+      return error.message
+    }
+    return fallback
+  }
+
+  const saveQuickConnection = async (
+    credentials: SharePointQuickAddCredentials
+  ) => {
+    if (!restIntegration || saving) {
+      return
+    }
+
+    saving = true
+    errorMessage = ""
+    try {
+      quickAuthConfigId ||= Helpers.uuid()
+      quickDatasource = await saveSharePointQuickDatasource({
+        credentials,
+        authConfigId: quickAuthConfigId,
+        integration: restIntegration,
+        existingDatasource: quickDatasource,
+        createDatasource: params => datasources.create(params),
+        updateDatasource: params => datasources.save(params),
+      })
+
+      const datasourceId = quickDatasource._id
+      if (!datasourceId) {
+        throw new Error("SharePoint connection was saved without an ID.")
+      }
+
+      const response = await agentsStore.fetchAgentKnowledgeSourceOptions(
+        datasourceId,
+        quickAuthConfigId
+      )
+      sharePointSites = response.options
+      const excluded = new Set(existingSiteIds)
+      selectedSiteId =
+        sharePointSites.find(site => !excluded.has(site.id))?.id || ""
+      selectedDatasourceId = datasourceId
+      selectedAuthConfigId = quickAuthConfigId
+      selectedConnectionId = `${datasourceId}:${quickAuthConfigId}`
+      skippedConnectionStep = true
+      quickAddModal?.hide()
+      siteStepModal?.show()
+    } catch (error) {
+      console.error(error)
+      errorMessage = getErrorMessage(error)
+    } finally {
+      saving = false
+    }
+  }
+
+  const openAdvancedSetup = () => {
+    hide()
+    const datasourceId = quickDatasource?._id
+    bb.settings(
+      datasourceId
+        ? `/connections/apis/${datasourceId}`
+        : `/connections/apis/new/${MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID}`
     )
+  }
+
+  const handleSelect = async (mode: SharePointSelectionMode) => {
+    const selectedSite = availableSites.find(site => site.id === selectedSiteId)
     if (!agentId || !operationId || !selectedSite) {
       return
     }
@@ -138,7 +245,11 @@
         datasourceId: selectedDatasourceId,
         authConfigId: selectedAuthConfigId,
         site: selectedSite,
-        filters: mode === "selective" ? [EXCLUDE_ALL_PATTERN] : undefined,
+        scope: {
+          ...(mode === "selective"
+            ? { mode: SharePointScopeMode.SELECTED, targets: [] }
+            : { mode: SharePointScopeMode.ALL }),
+        },
       })
       await workspaceDeploymentStore.fetch()
       notifications.success("SharePoint site added")
@@ -154,12 +265,22 @@
 
   export async function show() {
     await loadSharePointConnections()
+    if (
+      sharePointConnectionOptions.length === 0 &&
+      $knowledgeConnectionsStore.sharePointDatasourceIds.length === 0
+    ) {
+      errorMessage = ""
+      quickAddModal?.show()
+      return
+    }
     if (sharePointConnectionOptions.length === 1 && selectedConnectionId) {
       skippedConnectionStep = true
       loadingNextStep = true
       try {
         await loadSharePointSites()
-        if (siteLoadError) {
+        if (errorMessage) {
+          skippedConnectionStep = false
+          connectionStepModal?.show()
           return
         }
         siteStepModal?.show()
@@ -175,8 +296,17 @@
   export function hide() {
     connectionStepModal?.hide()
     siteStepModal?.hide()
+    quickAddModal?.hide()
   }
 </script>
+
+<SharePointQuickAddModal
+  bind:this={quickAddModal}
+  {saving}
+  error={errorMessage}
+  onSubmit={saveQuickConnection}
+  onAdvancedSetup={openAdvancedSetup}
+/>
 
 <SharePointConnectionStepModal
   bind:this={connectionStepModal}
@@ -187,7 +317,9 @@
     .length > 0}
   onConfigure={() => {
     hide()
-    const datasourceId = $knowledgeConnectionsStore.sharePointDatasourceIds[0]
+    const datasourceId =
+      selectedDatasourceId ||
+      $knowledgeConnectionsStore.sharePointDatasourceIds[0]
     bb.settings(`/connections/apis/${datasourceId}`)
   }}
   onConnectionChange={connectionId => {
@@ -206,6 +338,7 @@
   bind:this={siteStepModal}
   options={availableSites}
   {selectedSiteId}
+  emptyMessage={siteEmptyMessage}
   {saving}
   showBack={!skippedConnectionStep}
   onSiteChange={siteId => {

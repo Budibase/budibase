@@ -5,10 +5,12 @@ import type { MockAgent } from "undici"
 import {
   type Agent,
   type AgentOperation,
+  type AgentSharePointKnowledgeSourceScope,
   AgentKnowledgeSourceType,
   AgentKnowledgeSourceSyncRunStatus,
   KnowledgeBaseFileStatus,
   RestAuthType,
+  SharePointScopeMode,
 } from "@budibase/types"
 import environment, { setEnv } from "../../../../environment"
 import { getQueue } from "../../../../sdk/workspace/ai/rag/ragQueue"
@@ -42,6 +44,9 @@ describe("agent files", () => {
   })
 
   const fileBuffer = Buffer.from("Hello from Budibase")
+  const defaultSharePointScope: AgentSharePointKnowledgeSourceScope = {
+    mode: SharePointScopeMode.ALL,
+  }
   const operation = {
     id: "operation_1",
     name: "Main operation",
@@ -107,7 +112,8 @@ describe("agent files", () => {
     agentId: string,
     siteIds: string[],
     datasourceId = "datasource_1",
-    authConfigId = "auth_1"
+    authConfigId = "auth_1",
+    scope: AgentSharePointKnowledgeSourceScope = defaultSharePointScope
   ) => {
     await config.doInContext(config.getDevWorkspaceId(), async () => {
       const db = context.getWorkspaceDB()
@@ -128,6 +134,7 @@ describe("agent files", () => {
                 datasourceId,
                 authConfigId,
                 site: { id: siteId },
+                scope,
               },
             })),
           },
@@ -454,6 +461,7 @@ describe("agent files", () => {
         site: { id: "site-1" },
         datasourceId: "datasource-1",
         authConfigId: "auth-1",
+        scope: defaultSharePointScope,
       },
       {
         status: 400,
@@ -479,6 +487,7 @@ describe("agent files", () => {
 
     await config.api.agent.connectSharePointSite(created._id!, operationId, {
       ...connection,
+      scope: defaultSharePointScope,
       site: {
         id: "contoso.sharepoint.com,site-id,web-id",
         name: "Product Documentation",
@@ -527,6 +536,7 @@ describe("agent files", () => {
 
     await config.api.agent.connectSharePointSite(created._id!, operationId, {
       ...connection,
+      scope: defaultSharePointScope,
       site: {
         id: "site-1",
         name: "Stale Site Name",
@@ -551,6 +561,61 @@ describe("agent files", () => {
     })
   })
 
+  it("updates the scope when reconnecting an existing SharePoint site", async () => {
+    const created = await config.api.agent.createWithOperation(
+      {
+        name: "SharePoint Reconnect Agent",
+        aiconfig: "default",
+      },
+      operation
+    )
+    const operationId = created.operations?.[0]?.id || operation.id
+    const connection = await setSharePointConnection(created._id!)
+    await setSharePointSourceInAgent(
+      created._id!,
+      ["site-1"],
+      connection.datasourceId,
+      connection.authConfigId
+    )
+    mockSharePointOAuthTokenFetch(1)
+    mockSharePointSitesFetch([{ id: "site-1" }], 1)
+    const queueAddSpy = jest.spyOn(knowledgeSourceSyncQueue.getQueue(), "add")
+    const scope: AgentSharePointKnowledgeSourceScope = {
+      mode: SharePointScopeMode.SELECTED,
+      targets: [],
+    }
+
+    await config.api.agent.connectSharePointSite(created._id!, operationId, {
+      ...connection,
+      site: { id: "site-1" },
+      scope,
+    })
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const updated = await db.tryGet<Agent>(created._id!)
+      const sources =
+        updated?.operations
+          ?.find(operation => operation.id === operationId)
+          ?.knowledgeSources?.filter(
+            source => source.type === AgentKnowledgeSourceType.SHAREPOINT
+          ) || []
+
+      expect(sources).toHaveLength(1)
+      expect(sources[0].config.scope).toEqual(scope)
+    })
+    expect(queueAddSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        agentId: created._id!,
+        sourceId: "sharepoint_site_site-1",
+        jobType: "sync",
+      }),
+      expect.objectContaining({
+        jobId: expect.stringContaining("_immediate"),
+      })
+    )
+  })
+
   it("rejects an empty SharePoint site id", async () => {
     const created = await config.api.agent.createWithOperation(
       {
@@ -568,6 +633,7 @@ describe("agent files", () => {
         site: { id: "" },
         datasourceId: "datasource-1",
         authConfigId: "auth-1",
+        scope: defaultSharePointScope,
       },
       { status: 400 }
     )

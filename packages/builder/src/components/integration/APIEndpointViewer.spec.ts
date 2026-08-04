@@ -16,12 +16,6 @@ import {
   type UIInternalDatasource,
 } from "@budibase/types"
 
-// ! These could be moved to vitest.setup.js to apply globally across all specs.
-if (!Element.prototype.animate) {
-  Element.prototype.animate = () =>
-    ({ onfinish: null, cancel: () => {}, finished: Promise.resolve() }) as any
-}
-
 // bbui Popover mounts its content into .spectrum via svelte-portal.
 // Ensure the element exists before each test so portal renders don't throw.
 beforeEach(() => {

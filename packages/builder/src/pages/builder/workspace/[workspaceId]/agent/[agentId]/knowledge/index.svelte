@@ -1,6 +1,5 @@
 <script lang="ts">
   import { Body, Button, Layout, notifications, Toggle } from "@budibase/bbui"
-  import { bb } from "@/stores/bb"
   import { confirm } from "@/helpers"
   import {
     AgentKnowledgeSourceType,
@@ -10,11 +9,7 @@
     type KnowledgeBaseFile,
   } from "@budibase/types"
   import { workspaceDeploymentStore } from "@/stores/builder"
-  import {
-    agentsStore,
-    knowledgeConnectionsStore,
-    selectedAgent,
-  } from "@/stores/portal"
+  import { agentsStore, selectedAgent } from "@/stores/portal"
   import KnowledgeTable from "./KnowledgeTable.svelte"
   import KnowledgeAddControls from "./KnowledgeAddControls.svelte"
   import SelectSharePointSiteModal from "./new/SelectSharePointSiteModal.svelte"
@@ -93,15 +88,6 @@
     return agentsStore.getOperationUploadState(agentId, operationId)
   })
 
-  let hasSharePointConnection = $derived(
-    $knowledgeConnectionsStore.connections.some(
-      connection =>
-        connection.sourceType === AgentKnowledgeSourceType.SHAREPOINT
-    )
-  )
-  let hasSharePointDatasource = $derived(
-    $knowledgeConnectionsStore.sharePointDatasourceIds.length > 0
-  )
   let selectedSiteIds = $derived.by(() =>
     sharePointSources
       .map(source => source.config.site.id)
@@ -180,14 +166,6 @@
   })
 
   async function openSharePointFlow() {
-    if (!hasSharePointConnection) {
-      if (hasSharePointDatasource) {
-        await selectSharePointSiteModal?.show()
-        return
-      }
-      bb.settings("/connections/apis/new/microsoft-sharepoint")
-      return
-    }
     await selectSharePointSiteModal?.show()
   }
 
