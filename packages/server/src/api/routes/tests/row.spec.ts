@@ -4264,6 +4264,15 @@ if (descriptions.length) {
             const { rows } = await config.api.row.search(table._id!)
             expect(rows[0].formula).toBe(1)
           })
+
+        isInternal &&
+          it("should expose relationship primary display values to static formulas", async () => {
+            await updateFormulaColumn("{{ links.0.primaryDisplay }}", {
+              formulaType: FormulaType.STATIC,
+            })
+            const { rows } = await config.api.row.search(table._id!)
+            expect(rows[0].formula).toBe(relatedRow.name)
+          })
       })
 
       describe("Formula JS protection", () => {
