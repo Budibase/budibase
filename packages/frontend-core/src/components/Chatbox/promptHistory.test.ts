@@ -71,4 +71,15 @@ describe("navigatePromptHistory", () => {
       })
     ).toBeUndefined()
   })
+
+  it("leaves Enter handling to the chat input", () => {
+    expect(
+      navigatePromptHistory({
+        key: "Enter",
+        history,
+        inputValue: "draft",
+        index: undefined,
+      })
+    ).toBeUndefined()
+  })
 })

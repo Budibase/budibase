@@ -11,7 +11,7 @@ describe("chat preview prompt history", () => {
   const agentId = "agent-1"
 
   beforeEach(() => {
-    localStorage.clear()
+    sessionStorage.clear()
     vi.restoreAllMocks()
   })
 
@@ -48,10 +48,10 @@ describe("chat preview prompt history", () => {
 
   it("treats malformed storage as empty history", () => {
     const key = getPromptHistoryStorageKey({ workspaceId, agentId })
-    localStorage.setItem(key, "not-json")
+    sessionStorage.setItem(key, "not-json")
     expect(loadPromptHistory({ workspaceId, agentId })).toEqual([])
 
-    localStorage.setItem(key, JSON.stringify(["valid", 123]))
+    sessionStorage.setItem(key, JSON.stringify(["valid", 123]))
     expect(loadPromptHistory({ workspaceId, agentId })).toEqual([])
   })
 

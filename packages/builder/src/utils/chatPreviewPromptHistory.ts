@@ -24,7 +24,7 @@ export const loadPromptHistory = ({
   }
 
   try {
-    const storedHistory = localStorage.getItem(
+    const storedHistory = sessionStorage.getItem(
       getPromptHistoryStorageKey({ workspaceId, agentId })
     )
     if (!storedHistory) {
@@ -56,7 +56,7 @@ export const savePromptHistory = ({
   }
 
   try {
-    localStorage.setItem(
+    sessionStorage.setItem(
       getPromptHistoryStorageKey({ workspaceId, agentId }),
       JSON.stringify(retainedHistory)
     )
