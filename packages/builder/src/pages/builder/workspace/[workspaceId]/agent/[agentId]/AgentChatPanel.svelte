@@ -31,7 +31,7 @@
   }
 
   let chat: DraftChatConversation = $state({ ...INITIAL_CHAT })
-  let lastKey = $state("")
+  let lastKey = $state<string | undefined>()
   let refreshKey = $state(0)
   let promptHistory = $state<string[]>([])
 
@@ -105,8 +105,18 @@
     }
 
     const tenantId = $auth.tenantId
-    const userId = $auth.user?._id || ""
-    const nextKey = `${tenantId}:${userId}:${workspaceId}:${agentId || ""}`
+    const userId = $auth.user?._id
+
+    if (!userId || !agentId) {
+      if (lastKey !== undefined) {
+        lastKey = undefined
+        promptHistory = []
+        resetChat(agentId)
+      }
+      return
+    }
+
+    const nextKey = JSON.stringify([tenantId, userId, workspaceId, agentId])
     if (nextKey === lastKey) {
       return
     }
