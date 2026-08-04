@@ -20,6 +20,7 @@
   import { bb } from "@/stores/bb"
   import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
   import type { AgentTool } from "./toolTypes"
+  import { getToolBindingCategory } from "./toolBindingUtils"
   import {
     EditorModes,
     hbAutocomplete,
@@ -166,7 +167,7 @@
       .map(tool => ({
         runtimeBinding: tool.runtimeBinding,
         readableBinding: tool.readableBinding,
-        category: getSectionName(tool.sourceType, tool.sourceLabel),
+        category: getToolBindingCategory(tool.sourceType, tool.sourceLabel),
         display: {
           name:
             tool.sourceType === ToolType.SEARCH
@@ -363,34 +364,6 @@
       return "escalation"
     }
     return "tool"
-  }
-
-  function getSectionName(
-    sourceType: ToolType | undefined,
-    sourceLabel?: string
-  ): string {
-    if (sourceType === ToolType.INTERNAL_TABLE) {
-      return "Budibase"
-    }
-    if (sourceType === ToolType.AUTOMATION) {
-      return "Automations"
-    }
-    if (sourceType === ToolType.EXTERNAL_TABLE) {
-      return sourceLabel || "External"
-    }
-    if (sourceType === ToolType.SEARCH) {
-      return "Knowledge sources"
-    }
-    if (sourceType === ToolType.REST_QUERY) {
-      return "API tools"
-    }
-    if (sourceType === ToolType.DATASOURCE_QUERY) {
-      return sourceLabel || "Datasource tools"
-    }
-    if (sourceType === ToolType.ESCALATION) {
-      return "Escalation"
-    }
-    return "Tools"
   }
 
   // list_tables -> List tables
