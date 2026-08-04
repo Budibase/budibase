@@ -1,12 +1,12 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-  import { users } from "@/stores/portal/users"
+  import { users, type UserRoleDetails } from "@/stores/portal/users"
   import { roles } from "@/stores/builder"
   import { Constants } from "@budibase/frontend-core"
-  import type { Role, User } from "@budibase/types"
+  import type { Role } from "@budibase/types"
 
-  interface RoleRow extends User {
+  interface RoleRow extends UserRoleDetails {
     workspaceRole?: string
     workspaceRoleGroupRole?: string
   }

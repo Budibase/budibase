@@ -2,7 +2,6 @@ import { API } from "@/api"
 import { UserInfo } from "@/types"
 import { notifications } from "@budibase/bbui"
 import { Constants } from "@budibase/frontend-core"
-import { sdk } from "@budibase/shared-core"
 import {
   DeleteInviteUsersRequest,
   InviteUsersRequest,
@@ -16,6 +15,18 @@ import { licensing } from "."
 import { BudiStore } from "../BudiStore"
 
 type UserState = SearchUsersResponse & SearchUsersRequest
+
+export interface UserRoleDetails {
+  email: string
+  tenantOwnerEmail?: string
+  admin?: {
+    global?: boolean
+  }
+  builder?: {
+    global?: boolean
+    creator?: boolean
+  }
+}
 
 class UserStore extends BudiStore<UserState> {
   constructor() {
@@ -183,17 +194,17 @@ class UserStore extends BudiStore<UserState> {
     return await API.getAccountHolder()
   }
 
-  getUserRole(user?: User & { tenantOwnerEmail?: string }) {
+  getUserRole(user?: UserRoleDetails) {
     if (!user) {
       return Constants.BudibaseRoles.AppUser
     }
     if (user.email === user.tenantOwnerEmail) {
       return Constants.BudibaseRoles.Owner
-    } else if (sdk.users.isAdmin(user)) {
+    } else if (user.admin?.global) {
       return Constants.BudibaseRoles.Admin
-    } else if (sdk.users.isBuilder(user)) {
+    } else if (user.builder?.global) {
       return Constants.BudibaseRoles.Developer
-    } else if (sdk.users.hasCreatorPermissions(user)) {
+    } else if (user.builder?.creator) {
       return Constants.BudibaseRoles.Creator
     } else {
       return Constants.BudibaseRoles.AppUser
