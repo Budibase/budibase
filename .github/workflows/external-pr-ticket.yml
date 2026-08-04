@@ -26,6 +26,12 @@ jobs:
             const pullRequestAuthor = pullRequest.user.login.toLowerCase()
             const body = pullRequest.body || ""
             const issueNumbers = new Set()
+            const invalidIssueLabels = new Set([
+              "needs-triage",
+              "wontfix",
+              "out-of-scope",
+              "closed-stale",
+            ])
 
             const escapedOwner = owner.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
             const escapedRepo = repo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -53,7 +59,18 @@ jobs:
                 const isAssignedToAuthor = issue.assignees?.some(
                   assignee => assignee.login.toLowerCase() === pullRequestAuthor
                 )
-                if (!issue.pull_request && isAssignedToAuthor) {
+                const hasInvalidLabel = issue.labels.some(issueLabel => {
+                  const labelName = typeof issueLabel === "string"
+                    ? issueLabel
+                    : issueLabel.name
+                  return invalidIssueLabels.has(labelName.toLowerCase())
+                })
+                const isValidIssue = !issue.pull_request &&
+                  issue.state === "open" &&
+                  isAssignedToAuthor &&
+                  !hasInvalidLabel
+
+                if (isValidIssue) {
                   validIssue = issue
                   break
                 }
@@ -95,7 +112,7 @@ jobs:
 
             const marker = "<!-- external-pr-ticket-check -->"
             const message = `${marker}
-            Thanks for contributing to Budibase. External pull requests must reference an existing issue in this repository that is assigned to the pull request author. Add the issue in the **Addresses** section of the pull request description using its full URL or the \`#123\` format.
+            Thanks for contributing to Budibase. External pull requests must reference an open issue in this repository that is assigned to the pull request author. The issue must have completed triage and must not be marked \`wontfix\`, \`out-of-scope\`, or \`closed-stale\`. Add the issue in the **Addresses** section of the pull request description using its full URL or the \`#123\` format.
 
             This pull request has been closed because it does not reference a valid assigned issue. Once an assigned issue has been linked, you can reopen the pull request.`
 
