@@ -1,17 +1,27 @@
 <svelte:options runes={true} />
 
-<script>
+<script lang="ts">
   import { ActionButton } from "@budibase/bbui"
   import { getContext } from "svelte"
   import { auth } from "@/stores/portal/auth"
   import { sdk } from "@budibase/shared-core"
+  import type { User } from "@budibase/types"
 
-  let { value, row } = $props()
+  interface Props {
+    value: string
+    row: User
+  }
 
-  const groupContext = getContext("groups")
+  interface GroupContext {
+    removeGroup: (groupId: string) => void | Promise<void>
+  }
 
-  const onClick = e => {
-    e.stopPropagation()
+  let { value, row }: Props = $props()
+
+  const groupContext = getContext<GroupContext>("groups")
+
+  const onClick = (event: MouseEvent) => {
+    event.stopPropagation()
     groupContext.removeGroup(value)
   }
 

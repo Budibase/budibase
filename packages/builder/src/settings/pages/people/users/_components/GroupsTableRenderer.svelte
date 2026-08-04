@@ -1,9 +1,13 @@
 <svelte:options runes={true} />
 
-<script>
+<script lang="ts">
   import { Icon } from "@budibase/bbui"
 
-  let { value } = $props()
+  interface Props {
+    value?: readonly object[] | null
+  }
+
+  let { value }: Props = $props()
 </script>
 
 <div class="align">

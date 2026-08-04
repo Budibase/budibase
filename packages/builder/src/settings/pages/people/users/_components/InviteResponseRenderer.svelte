@@ -1,7 +1,11 @@
 <svelte:options runes={true} />
 
-<script>
-  let { value } = $props()
+<script lang="ts">
+  interface Props {
+    value: string
+  }
+
+  let { value }: Props = $props()
 </script>
 
 <div style="display: flex; ">

@@ -1,10 +1,15 @@
 <svelte:options runes={true} />
 
-<script>
+<script lang="ts">
   import { Body, ModalContent, Table } from "@budibase/bbui"
+  import type { InviteUsersResponse } from "@budibase/types"
   import InviteResponseRenderer from "./InviteResponseRenderer.svelte"
 
-  let { inviteUsersResponse } = $props()
+  interface Props {
+    inviteUsersResponse: InviteUsersResponse
+  }
+
+  let { inviteUsersResponse }: Props = $props()
   const hasSuccess = $derived(inviteUsersResponse.successful.length)
   const hasFailure = $derived(inviteUsersResponse.unsuccessful.length)
   const title = $derived(hasSuccess ? "Users invited!" : "Oops!")

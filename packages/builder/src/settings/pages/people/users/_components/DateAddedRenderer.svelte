@@ -1,12 +1,16 @@
 <svelte:options runes={true} />
 
-<script>
+<script lang="ts">
   import dayjs from "dayjs"
   import advancedFormat from "dayjs/plugin/advancedFormat"
 
   dayjs.extend(advancedFormat)
 
-  let { value } = $props()
+  interface Props {
+    value?: string | Date | null
+  }
+
+  let { value }: Props = $props()
 
   const formattedDate = $derived(
     value ? dayjs(value).format("Do MMM, YYYY") : "-"

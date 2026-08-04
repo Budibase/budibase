@@ -1,13 +1,23 @@
 <svelte:options runes={true} />
 
-<script>
+<script lang="ts">
   import { users } from "@/stores/portal/users"
   import { roles } from "@/stores/builder"
   import { Constants } from "@budibase/frontend-core"
+  import type { Role, User } from "@budibase/types"
 
-  let { row } = $props()
+  interface RoleRow extends User {
+    workspaceRole?: string
+    workspaceRoleGroupRole?: string
+  }
 
-  const getRoleFromWorkspaceRole = workspaceRole => {
+  interface Props {
+    row: RoleRow
+  }
+
+  let { row }: Props = $props()
+
+  const getRoleFromWorkspaceRole = (workspaceRole?: string) => {
     if (workspaceRole === Constants.Roles.CREATOR) {
       return Constants.BudibaseRoles.Creator
     }
@@ -17,7 +27,7 @@
     return undefined
   }
 
-  const canWorkspaceRoleOverrideGlobalRole = globalRole => {
+  const canWorkspaceRoleOverrideGlobalRole = (globalRole: string) => {
     return (
       globalRole === Constants.BudibaseRoles.AppUser ||
       globalRole === Constants.BudibaseRoles.Creator
@@ -36,9 +46,12 @@
   const role = $derived(
     Constants.ExtendedBudibaseRoleOptions.find(x => x.value === roleValue)
   )
-  const isBuiltInEndUserRole = roleId =>
+  const isBuiltInEndUserRole = (roleId: string) =>
     roleId === Constants.Roles.BASIC || roleId === Constants.Roles.ADMIN
-  const getWorkspaceRoleLabel = (roleId, availableRoles) => {
+  const getWorkspaceRoleLabel = (
+    roleId: string | undefined,
+    availableRoles: Role[]
+  ) => {
     if (!roleId || roleId === Constants.Roles.BASIC) {
       return "Basic"
     }
@@ -63,7 +76,7 @@
       ? `Group user: ${getWorkspaceRoleLabel(row.workspaceRoleGroupRole, $roles)}`
       : "Group user"
   )
-  const tooltip = $derived(role?.subtitle || "")
+  const tooltip = $derived(role?.label || "")
 </script>
 
 {#if row?.workspaceRole === Constants.Roles.GROUP}

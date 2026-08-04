@@ -1,9 +1,16 @@
 <svelte:options runes={true} />
 
-<script>
+<script lang="ts">
   import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
 
-  let { value, row } = $props()
+  interface Props {
+    value: string
+    row: {
+      scimInfo?: { isSync: boolean }
+    }
+  }
+
+  let { value, row }: Props = $props()
 </script>
 
 <span title={value} class="email">
