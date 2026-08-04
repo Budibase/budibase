@@ -19,6 +19,14 @@ The standard CI Build job is what runs when you raise a PR to master.
 - Run the integration tests
 - Check that the pro and account portal submodules are pointing to the lastest master head
 
+### External PR Ticket Check (external-pr-ticket.yml)
+
+External pull requests from users who are not repository owners, members, or
+collaborators must reference an existing issue in this repository. The issue may
+be linked with its full GitHub URL or a `#123` reference. Bot-authored pull
+requests are excluded. Pull requests without a valid issue reference are
+commented on and closed, and can be reopened after an issue is added.
+
 ### Release Job (tag-release.yml)
 
 Triggers:

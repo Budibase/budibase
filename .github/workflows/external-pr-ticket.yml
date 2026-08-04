@@ -1,0 +1,98 @@
+name: External PR ticket check
+
+on:
+  pull_request_target:
+    types: [opened, reopened, edited, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-ticket:
+    if: |
+      github.event.pull_request.user.type != 'Bot' &&
+      !contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.pull_request.author_association)
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+      pull-requests: write
+    steps:
+      - name: Check for a valid linked issue
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        with:
+          script: |
+            const { owner, repo } = context.repo
+            const pullRequest = context.payload.pull_request
+            const body = pullRequest.body || ""
+            const issueNumbers = new Set()
+
+            const escapedOwner = owner.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+            const escapedRepo = repo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+            const issueUrlPattern = new RegExp(
+              `https?:\\/\\/github\\.com\\/${escapedOwner}\\/${escapedRepo}\\/issues\\/(\\d+)`,
+              "gi"
+            )
+            const shortReferencePattern = /(?:^|[\s(])#(\d+)\b/gm
+
+            for (const match of body.matchAll(issueUrlPattern)) {
+              issueNumbers.add(Number(match[1]))
+            }
+            for (const match of body.matchAll(shortReferencePattern)) {
+              issueNumbers.add(Number(match[1]))
+            }
+
+            let validIssue
+            for (const issueNumber of issueNumbers) {
+              try {
+                const { data: issue } = await github.rest.issues.get({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                })
+                if (!issue.pull_request) {
+                  validIssue = issue
+                  break
+                }
+              } catch (error) {
+                if (error.status !== 404) throw error
+              }
+            }
+
+            if (validIssue) {
+              core.info(`Found valid issue #${validIssue.number}`)
+              return
+            }
+
+            const marker = "<!-- external-pr-ticket-check -->"
+            const message = `${marker}
+            Thanks for contributing to Budibase. External pull requests must reference an existing issue in this repository in the **Addresses** section of the pull request description. References can use a full issue URL or the \`#123\` format.
+
+            This pull request has been closed because it does not reference a valid issue. Once an issue has been linked, you can reopen the pull request.`
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              {
+                owner,
+                repo,
+                issue_number: pullRequest.number,
+                per_page: 100,
+              }
+            )
+
+            if (!comments.some(comment => comment.body?.includes(marker))) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pullRequest.number,
+                body: message,
+              })
+            }
+
+            if (pullRequest.state === "open") {
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: pullRequest.number,
+                state: "closed",
+              })
+            }
