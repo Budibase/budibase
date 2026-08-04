@@ -14,7 +14,7 @@ jobs:
       !contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.pull_request.author_association)
     runs-on: ubuntu-latest
     permissions:
-      issues: read
+      issues: write
       pull-requests: write
     steps:
       - name: Check for a valid linked issue
@@ -62,6 +62,32 @@ jobs:
               core.info(`Found valid issue #${validIssue.number}`)
               return
             }
+
+            const label = {
+              name: "closed: missing-ticket",
+              color: "B60205",
+              description: "External PR closed because it did not reference a valid issue",
+            }
+
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name: label.name })
+            } catch (error) {
+              if (error.status !== 404) throw error
+
+              try {
+                await github.rest.issues.createLabel({ owner, repo, ...label })
+              } catch (createError) {
+                // Another workflow run may have created the label concurrently.
+                if (createError.status !== 422) throw createError
+              }
+            }
+
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: pullRequest.number,
+              labels: [label.name],
+            })
 
             const marker = "<!-- external-pr-ticket-check -->"
             const message = `${marker}

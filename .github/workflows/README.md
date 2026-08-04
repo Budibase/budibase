@@ -25,7 +25,8 @@ External pull requests from users who are not repository owners, members, or
 collaborators must reference an existing issue in this repository. The issue may
 be linked with its full GitHub URL or a `#123` reference. Bot-authored pull
 requests are excluded. Pull requests without a valid issue reference are
-commented on and closed, and can be reopened after an issue is added.
+tagged with the persistent `closed: missing-ticket` label, commented on, and
+closed. They can be reopened after an issue is added.
 
 ### Release Job (tag-release.yml)
 
