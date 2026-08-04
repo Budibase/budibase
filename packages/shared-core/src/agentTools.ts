@@ -2,6 +2,12 @@ import { ToolType } from "@budibase/types"
 
 export type QueryToolType = ToolType.REST_QUERY | ToolType.DATASOURCE_QUERY
 
+export const isQueryToolType = (
+  sourceType: ToolType | undefined
+): sourceType is QueryToolType =>
+  sourceType === ToolType.REST_QUERY ||
+  sourceType === ToolType.DATASOURCE_QUERY
+
 interface QueryToolBindingOptions {
   sourceType: QueryToolType
   sourceLabel?: string

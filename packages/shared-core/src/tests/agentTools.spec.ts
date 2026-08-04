@@ -1,5 +1,14 @@
 import { ToolType } from "@budibase/types"
-import { getQueryToolBindings } from "../agentTools"
+import { getQueryToolBindings, isQueryToolType } from "../agentTools"
+
+describe("isQueryToolType", () => {
+  it("identifies query tool types", () => {
+    expect(isQueryToolType(ToolType.REST_QUERY)).toBe(true)
+    expect(isQueryToolType(ToolType.DATASOURCE_QUERY)).toBe(true)
+    expect(isQueryToolType(ToolType.AUTOMATION)).toBe(false)
+    expect(isQueryToolType(undefined)).toBe(false)
+  })
+})
 
 describe("getQueryToolBindings", () => {
   it("builds REST query bindings", () => {

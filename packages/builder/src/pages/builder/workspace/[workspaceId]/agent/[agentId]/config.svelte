@@ -10,7 +10,10 @@
     type EnrichedBinding,
   } from "@budibase/types"
   import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
-  import { getQueryToolBindings } from "@budibase/shared-core"
+  import {
+    getQueryToolBindings,
+    isQueryToolType,
+  } from "@budibase/shared-core"
   import {
     datasources,
     restTemplates,
@@ -106,15 +109,13 @@
       sourceLabel,
     })
     const displayName = tool.readableName || tool.name
-    const readableBinding =
-      sourceType === ToolType.REST_QUERY ||
-      sourceType === ToolType.DATASOURCE_QUERY
-        ? getQueryToolBindings({
-            sourceType,
-            sourceLabel,
-            queryName: displayName,
-          }).readableBinding
-        : `${getBindingPrefix(sourceType, sourceLabel)}.${displayName}`
+    const readableBinding = isQueryToolType(sourceType)
+      ? getQueryToolBindings({
+          sourceType,
+          sourceLabel,
+          queryName: displayName,
+        }).readableBinding
+      : `${getBindingPrefix(sourceType, sourceLabel)}.${displayName}`
     return {
       ...tool,
       sourceLabel,
