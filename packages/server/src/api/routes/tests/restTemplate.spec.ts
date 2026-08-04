@@ -65,9 +65,10 @@ describe("/rest-templates", () => {
       .attach("file", Buffer.from(OPENAPI_SCHEMA), "openapi.json")
       .expect(200)
 
-    expect(uploadResponse.body.template).toEqual(
+    const template = uploadResponse.body.template as RestTemplate
+    expect(template).toEqual(
       expect.objectContaining({
-        id: "rest_template_example-api",
+        id: expect.stringMatching(/^rest_template_[a-z0-9]+$/),
         name: "Example API",
         description: "An example API",
         operationsCount: 1,
@@ -77,7 +78,7 @@ describe("/rest-templates", () => {
     expect(objectStore.upload).toHaveBeenCalledWith(
       expect.objectContaining({
         bucket: objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
-        filename: "rest_template_example-api/openapi.json",
+        filename: `${template.id}/openapi.json`,
       })
     )
 
@@ -87,7 +88,7 @@ describe("/rest-templates", () => {
       .expect(200)
     expect(listResponse.body).toContainEqual(
       expect.objectContaining({
-        id: "rest_template_example-api",
+        id: template.id,
       })
     )
 
@@ -95,20 +96,20 @@ describe("/rest-templates", () => {
       .post("/api/queries/import/info")
       .set(config.defaultHeaders())
       .send({
-        restTemplateId: "rest_template_example-api",
+        restTemplateId: template.id,
       })
       .expect(200)
     expect(importInfoResponse.body.endpoints).toHaveLength(1)
     expect(objectStore.retrieve).toHaveBeenCalledWith(
       objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
-      "rest_template_example-api/openapi.json"
+      `${template.id}/openapi.json`
     )
 
     const importResponse = await request
       .post("/api/queries/import")
       .set(config.defaultHeaders())
       .send({
-        restTemplateId: "rest_template_example-api",
+        restTemplateId: template.id,
         datasource: {
           type: "datasource",
           source: "REST",
@@ -120,12 +121,12 @@ describe("/rest-templates", () => {
     expect(importResponse.body.queries).toHaveLength(1)
 
     await request
-      .delete("/api/rest-templates/rest_template_example-api")
+      .delete(`/api/rest-templates/${template.id}`)
       .set(config.defaultHeaders())
       .expect(200)
     expect(objectStore.deleteFolder).toHaveBeenCalledWith(
       objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
-      "rest_template_example-api"
+      template.id
     )
 
     const afterDeleteResponse = await request
@@ -134,7 +135,7 @@ describe("/rest-templates", () => {
       .expect(200)
     expect(
       (afterDeleteResponse.body as RestTemplate[]).find(
-        template => template.id === "rest_template_example-api"
+        listedTemplate => listedTemplate.id === template.id
       )
     ).toBeUndefined()
   })
@@ -154,8 +155,8 @@ describe("/rest-templates", () => {
     expect(objectStore.upload).not.toHaveBeenCalled()
   })
 
-  it("rejects names that resolve to an existing template ID", async () => {
-    await request
+  it("rejects names that normalize to the same value", async () => {
+    const firstResponse = await request
       .post("/api/rest-templates")
       .set(config.defaultHeaders())
       .field("name", "Duplicate API")
@@ -174,7 +175,7 @@ describe("/rest-templates", () => {
     expect(duplicateResponse.body.message).toContain("already exists")
 
     await request
-      .delete("/api/rest-templates/rest_template_duplicate-api")
+      .delete(`/api/rest-templates/${firstResponse.body.template.id}`)
       .set(config.defaultHeaders())
       .expect(200)
   })
