@@ -63,9 +63,9 @@ describe("chat preview prompt history", () => {
       throw new Error("Storage unavailable")
     })
 
-    expect(
-      savePromptHistory({ ...keyOptions, history: ["first"] })
-    ).toEqual(["first"])
+    expect(savePromptHistory({ ...keyOptions, history: ["first"] })).toEqual([
+      "first",
+    ])
   })
 
   it("isolates history by tenant and user", () => {
