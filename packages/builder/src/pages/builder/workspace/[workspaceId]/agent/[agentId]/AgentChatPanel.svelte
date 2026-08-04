@@ -106,9 +106,7 @@
     }
 
     lastKey = nextKey
-    promptHistory = agentId
-      ? loadPromptHistory({ workspaceId, agentId })
-      : []
+    promptHistory = agentId ? loadPromptHistory({ workspaceId, agentId }) : []
     resetChat(agentId)
   })
 </script>

@@ -27,9 +27,9 @@ describe("chat preview prompt history", () => {
     expect(loadPromptHistory({ workspaceId, agentId: "agent-2" })).toEqual([
       "second",
     ])
-    expect(
-      loadPromptHistory({ workspaceId: "workspace-2", agentId })
-    ).toEqual([])
+    expect(loadPromptHistory({ workspaceId: "workspace-2", agentId })).toEqual(
+      []
+    )
   })
 
   it("retains only the newest prompts", () => {
