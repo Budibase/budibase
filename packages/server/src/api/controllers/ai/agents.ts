@@ -22,6 +22,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import {
+  propagateProjectDependencyChangesWithWarning,
   resolveProjectIds,
   resolveUpdatedProjectIds,
 } from "../../../utilities/projects"
@@ -240,6 +241,12 @@ export async function createAgent(
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: agent._id!,
+    currentProjectIds: agent.projectIds,
+    previousProjectIds: [],
+    savedResource: agent,
+  })
 
   ctx.body = toAgentResponse(agent)
   ctx.status = 201
@@ -276,6 +283,13 @@ export async function updateAgent(
   const agent = await sdk.ai.agents.update({
     ...existing,
     ...updateRequest,
+  })
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: agent._id!,
+    currentProjectIds: agent.projectIds,
+    previousProjectIds: existing.projectIds,
+    previousResource: existing,
+    savedResource: agent,
   })
 
   ctx.body = toAgentResponse(agent)
@@ -608,6 +622,12 @@ export async function duplicateAgent(
   const createdBy = ctx.user?._id!
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
   const duplicated = await sdk.ai.agents.duplicate(sourceAgent, globalId)
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: duplicated._id!,
+    currentProjectIds: duplicated.projectIds,
+    previousProjectIds: [],
+    savedResource: duplicated,
+  })
 
   ctx.body = toAgentResponse(duplicated)
   ctx.status = 201

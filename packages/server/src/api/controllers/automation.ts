@@ -55,6 +55,7 @@ import sdk from "../../sdk"
 import { isMaskedPassword } from "../../sdk/workspace/automations/utils"
 import { isQsTrue } from "../../utilities"
 import {
+  propagateProjectDependencyChangesWithWarning,
   resolveProjectIds,
   resolveUpdatedProjectIds,
 } from "../../utilities/projects"
@@ -103,6 +104,13 @@ export async function create(
     createdAutomation = await sdk.automations.create(automation)
   }
 
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: createdAutomation._id!,
+    currentProjectIds: createdAutomation.projectIds,
+    previousProjectIds: [],
+    savedResource: createdAutomation,
+  })
+
   ctx.body = {
     message: "Automation created successfully",
     automation: createdAutomation,
@@ -129,6 +137,13 @@ export async function update(
   )
 
   const updatedAutomation = await sdk.automations.update(automation)
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: updatedAutomation._id!,
+    currentProjectIds: updatedAutomation.projectIds,
+    previousProjectIds: existingAutomation.projectIds,
+    previousResource: existingAutomation,
+    savedResource: updatedAutomation,
+  })
 
   ctx.body = {
     message: `Automation ${automation._id} updated successfully.`,

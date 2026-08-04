@@ -54,6 +54,7 @@ import {
 } from "../../../utilities/schema"
 import { handleDataImport } from "./utils"
 import {
+  propagateProjectDependencyChangesWithWarning,
   resolveProjectIds,
   resolveUpdatedProjectIds,
 } from "../../../utilities/projects"
@@ -174,14 +175,15 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const renaming = ctx.request.body._rename
 
   const isCreate = !table._id
+  let previousTable: Table | undefined
 
   if (isCreate) {
     table.projectIds = await resolveProjectIds(table.projectIds)
   } else {
-    const existingTable = await sdk.tables.getTable(table._id!)
+    previousTable = await sdk.tables.getTable(table._id!)
     table.projectIds = await resolveUpdatedProjectIds(
       table.projectIds,
-      existingTable.projectIds
+      previousTable.projectIds
     )
     ctx.request.body.projectIds = table.projectIds
   }
@@ -213,6 +215,17 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   if (isImport) {
     await events.table.imported(savedTable)
   }
+
+  if (!isExternalTable(savedTable)) {
+    await propagateProjectDependencyChangesWithWarning(ctx, {
+      rootResourceId: savedTable._id!,
+      currentProjectIds: savedTable.projectIds,
+      previousProjectIds: previousTable?.projectIds || [],
+      previousResource: previousTable,
+      savedResource: savedTable,
+    })
+  }
+
   ctx.message = `Table ${table.name} saved successfully.`
   ctx.eventEmitter?.emitTable(EventType.TABLE_SAVE, appId, { ...savedTable })
 
@@ -327,6 +340,14 @@ export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
   }
 
   const duplicatedTable = await sdk.tables.duplicate(table, ctx.user._id)
+  if (!isExternalTable(duplicatedTable)) {
+    await propagateProjectDependencyChangesWithWarning(ctx, {
+      rootResourceId: duplicatedTable._id!,
+      currentProjectIds: duplicatedTable.projectIds,
+      previousProjectIds: [],
+      savedResource: duplicatedTable,
+    })
+  }
 
   ctx.message = `Table ${table.name} duplicated successfully.`
   ctx.body = duplicatedTable

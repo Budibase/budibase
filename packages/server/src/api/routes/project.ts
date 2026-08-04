@@ -13,6 +13,31 @@ const baseSchema = {
 builderRoutes
   .get("/api/projects", projectsEnabled, controller.fetch)
   .post(
+    "/api/projects/assignments/preview",
+    projectsEnabled,
+    middleware.joiValidator.body(
+      Joi.object({
+        resourceId: Joi.string().required(),
+        projectIds: Joi.array().items(Joi.string()).required(),
+      }),
+      { allowUnknown: false }
+    ),
+    controller.previewAssignment
+  )
+  .put(
+    "/api/projects/assignments/:resourceId",
+    projectsEnabled,
+    middleware.joiValidator.body(
+      Joi.object({
+        resourceRev: Joi.string().required(),
+        projectIds: Joi.array().items(Joi.string()).required(),
+        dependencyIds: Joi.array().items(Joi.string()).required(),
+      }),
+      { allowUnknown: false }
+    ),
+    controller.updateAssignment
+  )
+  .post(
     "/api/projects/import",
     projectsEnabled,
     middleware.joiValidator.body(
