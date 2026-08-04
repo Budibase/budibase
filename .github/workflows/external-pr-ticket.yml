@@ -4,6 +4,10 @@ on:
   pull_request_target:
     types: [opened, reopened, edited, synchronize]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -22,10 +26,7 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo
-            const pullRequest = context.payload.pull_request
-            const pullRequestAuthor = pullRequest.user.login.toLowerCase()
-            const body = pullRequest.body || ""
-            const issueNumbers = new Set()
+            const pullRequestNumber = context.payload.pull_request.number
             const invalidIssueLabels = new Set([
               "needs-triage",
               "wontfix",
@@ -41,46 +42,77 @@ jobs:
             )
             const shortReferencePattern = /(?:^|[\s(])#(\d+)\b/gm
 
-            for (const match of body.matchAll(issueUrlPattern)) {
-              issueNumbers.add(Number(match[1]))
-            }
-            for (const match of body.matchAll(shortReferencePattern)) {
-              issueNumbers.add(Number(match[1]))
-            }
+            const findValidIssue = async pullRequest => {
+              const pullRequestAuthor = pullRequest.user.login.toLowerCase()
+              const body = pullRequest.body || ""
+              const issueNumbers = new Set()
 
-            let validIssue
-            for (const issueNumber of issueNumbers) {
-              try {
-                const { data: issue } = await github.rest.issues.get({
-                  owner,
-                  repo,
-                  issue_number: issueNumber,
-                })
-                const isAssignedToAuthor = issue.assignees?.some(
-                  assignee => assignee.login.toLowerCase() === pullRequestAuthor
-                )
-                const hasInvalidLabel = issue.labels.some(issueLabel => {
-                  const labelName = typeof issueLabel === "string"
-                    ? issueLabel
-                    : issueLabel.name
-                  return invalidIssueLabels.has(labelName.toLowerCase())
-                })
-                const isValidIssue = !issue.pull_request &&
-                  issue.state === "open" &&
-                  isAssignedToAuthor &&
-                  !hasInvalidLabel
-
-                if (isValidIssue) {
-                  validIssue = issue
-                  break
-                }
-              } catch (error) {
-                if (error.status !== 404) throw error
+              for (const match of body.matchAll(issueUrlPattern)) {
+                issueNumbers.add(Number(match[1]))
               }
+              for (const match of body.matchAll(shortReferencePattern)) {
+                issueNumbers.add(Number(match[1]))
+              }
+
+              for (const issueNumber of issueNumbers) {
+                try {
+                  const { data: issue } = await github.rest.issues.get({
+                    owner,
+                    repo,
+                    issue_number: issueNumber,
+                  })
+                  const isAssignedToAuthor = issue.assignees?.some(
+                    assignee => assignee.login.toLowerCase() === pullRequestAuthor
+                  )
+                  const hasInvalidLabel = issue.labels.some(issueLabel => {
+                    const labelName = typeof issueLabel === "string"
+                      ? issueLabel
+                      : issueLabel.name
+                    return invalidIssueLabels.has(labelName.toLowerCase())
+                  })
+                  const isValidIssue = !issue.pull_request &&
+                    issue.state === "open" &&
+                    isAssignedToAuthor &&
+                    !hasInvalidLabel
+
+                  if (isValidIssue) return issue
+                } catch (error) {
+                  if (error.status !== 404) throw error
+                }
+              }
+
+              return undefined
             }
+
+            let { data: pullRequest } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: pullRequestNumber,
+            })
+            let validIssue = await findValidIssue(pullRequest)
 
             if (validIssue) {
               core.info(`Found valid issue #${validIssue.number}`)
+              return
+            }
+
+            // Refresh and revalidate before mutating in case the PR was edited
+            // while this run was checking its referenced issues.
+            const refreshedPullRequest = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: pullRequestNumber,
+            })
+            pullRequest = refreshedPullRequest.data
+
+            if (pullRequest.state !== "open") {
+              core.info("Pull request is no longer open")
+              return
+            }
+
+            validIssue = await findValidIssue(pullRequest)
+            if (validIssue) {
+              core.info(`Found valid issue #${validIssue.number} after refresh`)
               return
             }
 
