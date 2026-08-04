@@ -1,5 +1,7 @@
 import { context } from "@budibase/backend-core"
-import { Query, ToolType } from "@budibase/types"
+import { getQueryToolBindings, type QueryToolType } from "@budibase/shared-core"
+import { ToolType } from "@budibase/types"
+import type { Query } from "@budibase/types"
 import { tool } from "ai"
 import { z } from "zod"
 import { type AiToolDefinition } from "."
@@ -13,11 +15,10 @@ export interface RestQueryToolsConfig {
 
 interface QueryToolOptions {
   query: Query
-  sourceType: ToolType
+  sourceType: QueryToolType
   sourceLabel?: string
   sourceIconType?: string
   description: string
-  namePrefix: "rest" | "ds"
 }
 
 type RestQueryToolResult =
@@ -30,26 +31,6 @@ type RestQueryToolResult =
       success: false
       error: string
     }
-
-const sanitiseNameSegment = (name: string, maxLength: number): string => {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_|_$/g, "")
-    .substring(0, maxLength)
-}
-
-const buildScopedToolName = (
-  query: Query,
-  datasourceName: string | undefined,
-  prefix: QueryToolOptions["namePrefix"]
-): string => {
-  const datasourceSegment =
-    sanitiseNameSegment(datasourceName || "datasource", 20) || "datasource"
-  const querySegment = sanitiseNameSegment(query.name || "query", 24) || "query"
-  return `${prefix}_${datasourceSegment}_${querySegment}`
-}
 
 const buildParametersSchema = (query: Query) => {
   const schemaFields: Record<string, z.ZodTypeAny> = {}
@@ -70,9 +51,12 @@ const createQueryTool = ({
   sourceLabel,
   sourceIconType,
   description,
-  namePrefix,
 }: QueryToolOptions): AiToolDefinition => {
-  const toolName = buildScopedToolName(query, sourceLabel, namePrefix)
+  const { runtimeBinding: toolName } = getQueryToolBindings({
+    sourceType,
+    sourceLabel,
+    queryName: query.name,
+  })
   const parametersSchema = buildParametersSchema(query)
 
   return {
@@ -129,7 +113,6 @@ export const createRestQueryTool = (
     description,
     sourceType: ToolType.REST_QUERY,
     sourceLabel: datasourceName || "API",
-    namePrefix: "rest",
   })
 }
 
@@ -144,6 +127,5 @@ export const createDatasourceQueryTool = (
     sourceType: ToolType.DATASOURCE_QUERY,
     sourceLabel: datasourceName || "Datasource",
     sourceIconType,
-    namePrefix: "ds",
   })
 }

@@ -4,6 +4,8 @@ import type { SourceName } from "@budibase/types"
 import { API } from "@/api"
 import { duplicateName } from "@/helpers/duplicate"
 import { DerivedBudiStore } from "@/stores/BudiStore"
+import { agentsStore } from "@/stores/portal/agents"
+import { workspaceDeploymentStore } from "./workspaceDeployment"
 import {
   Query,
   QueryPreview,
@@ -89,6 +91,10 @@ export class QueryStore extends DerivedBudiStore<
 
     query.datasourceId = datasourceId
     const isNew = !query._id
+    const existingQuery = isNew
+      ? undefined
+      : get(this.store).list.find(existing => existing._id === query._id)
+    const isRename = !!existingQuery && existingQuery.name !== query.name
     if (isNew && query.name) {
       const existingNames = get(this.store).list.map(q => q.name)
       if (existingNames.includes(query.name)) {
@@ -111,6 +117,16 @@ export class QueryStore extends DerivedBudiStore<
         selectedQueryId: savedQuery._id || null,
       }
     })
+    if (isRename) {
+      try {
+        await Promise.all([
+          agentsStore.refreshAfterQueryToolRename(),
+          workspaceDeploymentStore.fetch(),
+        ])
+      } catch (error) {
+        console.error("Failed to refresh agents after query rename", error)
+      }
+    }
     return savedQuery
   }
 

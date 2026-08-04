@@ -15,6 +15,7 @@ vi.mock("@/api", () => {
   return {
     API: {
       fetchAgents: vi.fn(),
+      fetchTools: vi.fn(),
       updateAgent: vi.fn(),
       fetchAgentKnowledge: vi.fn(),
       uploadOperationFile: vi.fn(),
@@ -26,6 +27,7 @@ vi.mock("@/api", () => {
 })
 
 const fetchAgents = vi.mocked(API.fetchAgents)
+const fetchTools = vi.mocked(API.fetchTools)
 const fetchAgentKnowledge = vi.mocked(API.fetchAgentKnowledge)
 const uploadOperationFile = vi.mocked(API.uploadOperationFile)
 const deleteOperationFile = vi.mocked(API.deleteOperationFile)
@@ -85,6 +87,43 @@ describe("agentsStore sharepoint and file syncing", () => {
     )
     expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
     expect(result.status).toBe(AgentKnowledgeSourceSyncRunStatus.QUEUED)
+  })
+
+  it("refreshes loaded agents and current tools after a query rename", async () => {
+    store.set({
+      ...createEmptyState(),
+      agents: [
+        {
+          _id: "agent_1",
+          name: "Agent",
+          aiconfig: "config_1",
+        },
+      ],
+      agentsLoaded: true,
+      currentAgentId: "agent_1",
+    })
+    fetchAgents.mockResolvedValue({
+      agents: [
+        {
+          _id: "agent_1",
+          name: "Agent",
+          aiconfig: "config_1",
+        },
+      ],
+    })
+    fetchTools.mockResolvedValue([])
+
+    await store.refreshAfterQueryToolRename()
+
+    expect(fetchAgents).toHaveBeenCalledTimes(1)
+    expect(fetchTools).toHaveBeenCalledWith("config_1")
+  })
+
+  it("does not load agents solely to refresh a renamed query tool", async () => {
+    await store.refreshAfterQueryToolRename()
+
+    expect(fetchAgents).not.toHaveBeenCalled()
+    expect(fetchTools).not.toHaveBeenCalled()
   })
 
   it("fetchAgentKnowledge stores all operation knowledge", async () => {
