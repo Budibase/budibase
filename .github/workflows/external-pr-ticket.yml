@@ -30,6 +30,7 @@ jobs:
           script: |
             const { owner, repo } = context.repo
             const internalAssociations = new Set(["OWNER", "MEMBER", "COLLABORATOR"])
+            const maxReferencedIssues = 10
             const invalidIssueLabels = new Set([
               "needs-triage",
               "wontfix",
@@ -50,9 +51,13 @@ jobs:
 
               for (const match of (body || "").matchAll(issueUrlPattern)) {
                 issueNumbers.add(Number(match[1]))
+                if (issueNumbers.size === maxReferencedIssues) break
               }
-              for (const match of (body || "").matchAll(shortReferencePattern)) {
-                issueNumbers.add(Number(match[1]))
+              if (issueNumbers.size < maxReferencedIssues) {
+                for (const match of (body || "").matchAll(shortReferencePattern)) {
+                  issueNumbers.add(Number(match[1]))
+                  if (issueNumbers.size === maxReferencedIssues) break
+                }
               }
 
               return issueNumbers

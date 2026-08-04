@@ -26,10 +26,11 @@ collaborators must reference an existing issue in this repository that is
 open, assigned to the pull request author, and does not have a `needs-triage`,
 `wontfix`, `out-of-scope`, or `closed-stale` label. The issue may be linked with
 its full GitHub URL or a `#123` reference. Bot-authored pull requests are
-excluded. Pull requests without a valid assigned issue are tagged with the
-persistent `closed: missing-ticket` label, commented on, and closed. They can be
-reopened after a valid assigned issue is added. Open external pull requests are
-also revalidated when a referenced issue is closed, receives a label, or has an
+excluded. At most ten distinct issue references are checked per pull request.
+Pull requests without a valid assigned issue are tagged with the persistent
+`closed: missing-ticket` label, commented on, and closed. They can be reopened
+after a valid assigned issue is added. Open external pull requests are also
+revalidated when a referenced issue is closed, receives a label, or has an
 assignee removed.
 
 ### Release Job (tag-release.yml)
