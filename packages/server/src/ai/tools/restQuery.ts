@@ -52,10 +52,14 @@ const createQueryTool = ({
   sourceIconType,
   description,
 }: QueryToolOptions): AiToolDefinition => {
+  if (!query._id) {
+    throw new Error("Cannot create a query tool without a query ID")
+  }
   const { runtimeBinding: toolName } = getQueryToolBindings({
     sourceType,
     sourceLabel,
     queryName: query.name,
+    queryId: query._id,
   })
   const parametersSchema = buildParametersSchema(query)
 

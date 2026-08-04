@@ -106,6 +106,9 @@ const getBindings = ({
   datasource: Datasource
   query: Query
 }) => {
+  if (!query._id) {
+    throw new Error("Cannot generate query tool bindings without a query ID")
+  }
   const sourceType: QueryToolType =
     datasource.source === SourceName.REST
       ? ToolType.REST_QUERY
@@ -116,6 +119,7 @@ const getBindings = ({
       datasource.name ||
       (sourceType === ToolType.REST_QUERY ? "API" : "Datasource"),
     queryName: query.name,
+    queryId: query._id,
   })
 }
 

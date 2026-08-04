@@ -11,7 +11,10 @@ interface QueryToolBindingOptions {
   sourceType: QueryToolType
   sourceLabel?: string
   queryName?: string
+  queryId: string
 }
+
+type ReadableQueryToolBindingOptions = Omit<QueryToolBindingOptions, "queryId">
 
 const sanitiseRuntimeNameSegment = (name: string, maxLength: number) =>
   name
@@ -27,24 +30,52 @@ const sanitiseReadableSource = (name: string) =>
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_|_$/g, "")
 
-export const getQueryToolBindings = ({
+const getRuntimeIdentifier = (queryId: string) => {
+  const identifier = sanitiseRuntimeNameSegment(queryId, queryId.length).slice(
+    -16
+  )
+  if (!identifier) {
+    throw new Error("Query ID must contain letters or numbers")
+  }
+  return identifier
+}
+
+export const getReadableQueryToolBinding = ({
   sourceType,
   sourceLabel,
   queryName,
-}: QueryToolBindingOptions) => {
+}: ReadableQueryToolBindingOptions) => {
   const isRestQuery = sourceType === ToolType.REST_QUERY
   const resolvedSourceLabel =
     sourceLabel || (isRestQuery ? "API" : "Datasource")
   const readableSource = sanitiseReadableSource(resolvedSourceLabel)
   const readablePrefix = isRestQuery ? `api.${readableSource}` : readableSource
+
+  return `${readablePrefix}.${queryName || "query"}`
+}
+
+export const getQueryToolBindings = ({
+  sourceType,
+  sourceLabel,
+  queryName,
+  queryId,
+}: QueryToolBindingOptions) => {
+  const isRestQuery = sourceType === ToolType.REST_QUERY
+  const resolvedSourceLabel =
+    sourceLabel || (isRestQuery ? "API" : "Datasource")
   const datasourceSegment =
     sanitiseRuntimeNameSegment(resolvedSourceLabel, 20) || "datasource"
   const querySegment =
-    sanitiseRuntimeNameSegment(queryName || "query", 24) || "query"
+    sanitiseRuntimeNameSegment(queryName || "query", 20) || "query"
+  const runtimeIdentifier = getRuntimeIdentifier(queryId)
   const runtimePrefix = isRestQuery ? "rest" : "ds"
 
   return {
-    readableBinding: `${readablePrefix}.${queryName || "query"}`,
-    runtimeBinding: `${runtimePrefix}_${datasourceSegment}_${querySegment}`,
+    readableBinding: getReadableQueryToolBinding({
+      sourceType,
+      sourceLabel,
+      queryName,
+    }),
+    runtimeBinding: `${runtimePrefix}_${datasourceSegment}_${querySegment}_${runtimeIdentifier}`,
   }
 }

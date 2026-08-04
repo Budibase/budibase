@@ -60,6 +60,7 @@ describe.each([
         transformer: null,
         readable: true,
       })
+      const runtimeIdentifier = query._id!.slice(-16)
       const agent = await config.api.agent.createWithOperation(
         { name: "Wow agent" },
         {
@@ -67,7 +68,10 @@ describe.each([
           name: "Get a wow",
           live: false,
           promptInstructions: `Use {{ ${oldReadableBinding} }} then {{${oldReadableBinding}}}. Keep {{ other.tool }}.`,
-          enabledTools: [oldRuntimeBinding, "other_tool"],
+          enabledTools: [
+            `${oldRuntimeBinding}_${runtimeIdentifier}`,
+            "other_tool",
+          ],
           allowKnowledgeSourceDownload: true,
         }
       )
@@ -99,7 +103,10 @@ describe.each([
         name: "Get a wow",
         live: false,
         promptInstructions: `Use {{ ${newReadableBinding} }} then {{${newReadableBinding}}}. Keep {{ other.tool }}.`,
-        enabledTools: [newRuntimeBinding, "other_tool"],
+        enabledTools: [
+          `${newRuntimeBinding}_${runtimeIdentifier}`,
+          "other_tool",
+        ],
         allowKnowledgeSourceDownload: true,
       })
       expect(unchangedAgent?._rev).toBe(unrelatedAgent._rev)
@@ -123,6 +130,7 @@ describe.each([
         transformer: null,
         readable: true,
       })
+      const runtimeIdentifier = query._id!.slice(-16)
       const agent = await config.api.agent.createWithOperation(
         { name: "Wow agent" },
         {
@@ -130,7 +138,7 @@ describe.each([
           name: "Get a wow",
           live: false,
           promptInstructions: `Use {{ ${oldReadableBinding} }}.`,
-          enabledTools: [oldRuntimeBinding],
+          enabledTools: [`${oldRuntimeBinding}_${runtimeIdentifier}`],
           allowKnowledgeSourceDownload: true,
         }
       )
@@ -150,7 +158,7 @@ describe.each([
         source,
         config: {},
       })
-      await config.api.query.save({
+      const query = await config.api.query.save({
         name: "Old endpoint",
         datasourceId: datasource._id!,
         parameters: [],
@@ -160,6 +168,7 @@ describe.each([
         transformer: null,
         readable: true,
       })
+      const runtimeIdentifier = query._id!.slice(-16)
       const agent = await config.api.agent.createWithOperation(
         { name: "Wow agent" },
         {
@@ -167,7 +176,7 @@ describe.each([
           name: "Get a wow",
           live: false,
           promptInstructions: `Use {{ ${oldReadableBinding} }}.`,
-          enabledTools: [oldRuntimeBinding],
+          enabledTools: [`${oldRuntimeBinding}_${runtimeIdentifier}`],
           allowKnowledgeSourceDownload: true,
         }
       )
@@ -182,7 +191,9 @@ describe.each([
         agents.find(candidate => candidate._id === agent._id)?.operations?.[0]
       ).toMatchObject({
         promptInstructions: `Use {{ ${renamedDatasourceReadableBinding} }}.`,
-        enabledTools: [renamedDatasourceRuntimeBinding],
+        enabledTools: [
+          `${renamedDatasourceRuntimeBinding}_${runtimeIdentifier}`,
+        ],
       })
     })
   }

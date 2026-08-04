@@ -137,8 +137,8 @@ describe("migrateQueryToolReferences", () => {
           promptInstructions:
             "Use {{ api.old_api.First query }} and {{ api.old_api.Second query }}.",
           enabledTools: [
-            "rest_old_api_first_query",
-            "rest_old_api_second_query",
+            "rest_old_api_first_query_uery_first_query",
+            "rest_old_api_second_query_ery_second_query",
           ],
           allowKnowledgeSourceDownload: true,
         },
@@ -187,8 +187,8 @@ describe("migrateQueryToolReferences", () => {
             promptInstructions:
               "Use {{ api.new_api.First query }} and {{ api.new_api.Second query }}.",
             enabledTools: [
-              "rest_new_api_first_query",
-              "rest_new_api_second_query",
+              "rest_new_api_first_query_uery_first_query",
+              "rest_new_api_second_query_ery_second_query",
             ],
           }),
         ],
