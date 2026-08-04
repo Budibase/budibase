@@ -190,7 +190,9 @@
       return true
     }
 
-    return [...accessibleRoutes].some(route => routeMatchesPattern(route, url))
+    return [...accessibleRoutes].some(route =>
+      routeMatchesPattern({ pattern: route, route: url })
+    )
   }
 
   const enrichNavItems = (navItems, userRoleHierarchy, routeEntries = []) => {
