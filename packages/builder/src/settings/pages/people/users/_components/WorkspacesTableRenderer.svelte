@@ -11,10 +11,10 @@
   }
 
   let { row }: Props = $props()
-  const priviliged = $derived(sdk.users.isAdminOrBuilder(row))
+  const privileged = $derived(sdk.users.isAdminOrBuilder(row))
 
   const getCount = (row: EnrichedUser | ParsedInvite) => {
-    const appList = priviliged ? $workspacesStore.apps : row.apps
+    const appList = privileged ? $workspacesStore.apps : row.apps
     return appList?.length || 0
   }
   const count = $derived(getCount(row))
