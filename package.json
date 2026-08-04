@@ -37,7 +37,7 @@
     "svelte-preprocess": "^6.0.3",
     "testcontainers": "^11.7.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "5.9.2",
+    "typescript": "6.0.3",
     "typescript-eslint": "8.17.0",
     "update-dotenv": "1.1.1",
     "yargs": "^17.7.2"
