@@ -48,14 +48,14 @@
   )
   const successfulUsers = $derived(
     createUsersResponse.successful.map(user => ({
-        email: user.email,
-        password: userDataIndex[user.email].password,
+      email: user.email,
+      password: userDataIndex[user.email].password,
     }))
   )
   const unsuccessfulUsers = $derived(
     createUsersResponse.unsuccessful.map(user => ({
-        email: user.email,
-        reason: user.reason,
+      email: user.email,
+      reason: user.reason,
     }))
   )
   const addedToWorkspaceUsers = $derived(

@@ -8,8 +8,12 @@
 
   let { value } = $props()
 
-  const formattedDate = $derived(value ? dayjs(value).format("Do MMM, YYYY") : "-")
-  const titleDate = $derived(value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "")
+  const formattedDate = $derived(
+    value ? dayjs(value).format("Do MMM, YYYY") : "-"
+  )
+  const titleDate = $derived(
+    value ? dayjs(value).format("YYYY-MM-DD HH:mm") : ""
+  )
 </script>
 
 <span title={titleDate}>{formattedDate}</span>

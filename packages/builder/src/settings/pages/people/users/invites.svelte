@@ -82,9 +82,7 @@
   }
 
   const pendingSchema = $derived(getPendingSchema(schema))
-  const readonly = $derived(
-    $auth.user ? !sdk.users.isAdmin($auth.user) : false
-  )
+  const readonly = $derived($auth.user ? !sdk.users.isAdmin($auth.user) : false)
   const parsedInvites = $derived(invitesToSchema(pendingInvites))
 
   const deleteUsers = async () => {

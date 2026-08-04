@@ -33,9 +33,9 @@
       ? workspaceRoleValue
       : globalRoleValue
   )
-  const role = $derived(Constants.ExtendedBudibaseRoleOptions.find(
-    x => x.value === roleValue
-  ))
+  const role = $derived(
+    Constants.ExtendedBudibaseRoleOptions.find(x => x.value === roleValue)
+  )
   const isBuiltInEndUserRole = roleId =>
     roleId === Constants.Roles.BASIC || roleId === Constants.Roles.ADMIN
   const getWorkspaceRoleLabel = (roleId, availableRoles) => {
@@ -58,9 +58,11 @@
         : getWorkspaceRoleLabel(row.workspaceRole, $roles)
       : role?.label || "Not available"
   )
-  const groupUserValue = $derived(row?.workspaceRoleGroupRole
-    ? `Group user: ${getWorkspaceRoleLabel(row.workspaceRoleGroupRole, $roles)}`
-    : "Group user")
+  const groupUserValue = $derived(
+    row?.workspaceRoleGroupRole
+      ? `Group user: ${getWorkspaceRoleLabel(row.workspaceRoleGroupRole, $roles)}`
+      : "Group user"
+  )
   const tooltip = $derived(role?.subtitle || "")
 </script>
 

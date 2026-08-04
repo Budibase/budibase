@@ -91,8 +91,7 @@
   let popover = $state<Popover>()
   let user = $state<(User & { provider?: string }) | undefined>()
   let tenantOwner = $state<
-    | Awaited<ReturnType<typeof users.getAccountHolder>>
-    | undefined
+    Awaited<ReturnType<typeof users.getAccountHolder>> | undefined
   >()
   let loaded = $state(false)
   let userFieldsToUpdate = $state<Partial<User>>({})

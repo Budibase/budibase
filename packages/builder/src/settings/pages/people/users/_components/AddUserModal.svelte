@@ -109,21 +109,23 @@
     Constants.Roles.CREATOR,
     Constants.Roles.GROUP,
   ]
-  const roleColorLookup = $derived(($roles || []).reduce<
-    Record<string, string | undefined>
-  >((acc, role) => {
-    acc[role._id] = role.uiMetadata?.color
-    return acc
-  }, {}))
-  const customEndUserRoleOptions = $derived(($roles || [])
-    .filter(role => !excludedRoleIds.includes(role._id))
-    .map<EndUserRoleOption>(role => ({
-      label: role.uiMetadata?.displayName || role.name || "Custom role",
-      value: role._id,
-      color:
-        role.uiMetadata?.color ||
-        "var(--spectrum-global-color-static-magenta-400)",
-    })))
+  const roleColorLookup = $derived(
+    ($roles || []).reduce<Record<string, string | undefined>>((acc, role) => {
+      acc[role._id] = role.uiMetadata?.color
+      return acc
+    }, {})
+  )
+  const customEndUserRoleOptions = $derived(
+    ($roles || [])
+      .filter(role => !excludedRoleIds.includes(role._id))
+      .map<EndUserRoleOption>(role => ({
+        label: role.uiMetadata?.displayName || role.name || "Custom role",
+        value: role._id,
+        color:
+          role.uiMetadata?.color ||
+          "var(--spectrum-global-color-static-magenta-400)",
+      }))
+  )
   const endUserRoleOptions = $derived<EndUserRoleOption[]>([
     {
       label: "Basic user",
@@ -153,7 +155,7 @@
   })
   const userCount = $derived(
     ($licensing.userCount || 0) +
-    (useWorkspaceInviteModal ? parsedEmails.length : userData.length)
+      (useWorkspaceInviteModal ? parsedEmails.length : userData.length)
   )
   const reached = $derived(licensing.usersLimitReached(userCount))
   const exceeded = $derived(licensing.usersLimitExceeded(userCount))

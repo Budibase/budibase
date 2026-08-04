@@ -542,23 +542,16 @@
   }
 
   const currentWorkspaceId = $derived(
-    $appStore.appId
-      ? sdk.workspaces.getProdWorkspaceID($appStore.appId)
-      : ""
+    $appStore.appId ? sdk.workspaces.getProdWorkspaceID($appStore.appId) : ""
   )
-  const workspaceReady = $derived(
-    !isWorkspaceOnly || !!currentWorkspaceId
-  )
+  const workspaceReady = $derived(!isWorkspaceOnly || !!currentWorkspaceId)
   const isWorkspaceQueryReady = $derived(
     !isWorkspaceOnly ||
       ($fetch.query as { workspaceId?: string })?.workspaceId ===
         currentWorkspaceId
   )
   const tableLoading = $derived(
-    !workspaceReady ||
-      !isWorkspaceQueryReady ||
-      !$fetch.loaded ||
-      !groupsLoaded
+    !workspaceReady || !isWorkspaceQueryReady || !$fetch.loaded || !groupsLoaded
   )
   const customRenderers = $derived(
     [
