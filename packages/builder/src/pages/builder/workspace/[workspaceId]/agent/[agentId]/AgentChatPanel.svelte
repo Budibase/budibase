@@ -8,7 +8,7 @@
   import type { UIMessage } from "ai"
   import { Chatbox } from "@budibase/frontend-core/src/components"
   import { escalationsStore } from "@/stores/portal/escalations"
-  import { featureFlags } from "@/stores/portal"
+  import { auth, featureFlags } from "@/stores/portal"
   import {
     loadPromptHistory,
     savePromptHistory,
@@ -84,11 +84,15 @@
   }
 
   const handlePromptSubmitted = (prompt: string) => {
-    if (!agentId) {
+    const tenantId = $auth.tenantId
+    const userId = $auth.user?._id
+    if (!agentId || !userId) {
       return
     }
 
     promptHistory = savePromptHistory({
+      tenantId,
+      userId,
       workspaceId,
       agentId,
       history: [...promptHistory, prompt],
@@ -100,13 +104,18 @@
       return
     }
 
-    const nextKey = `${workspaceId}:${agentId || ""}`
+    const tenantId = $auth.tenantId
+    const userId = $auth.user?._id || ""
+    const nextKey = `${tenantId}:${userId}:${workspaceId}:${agentId || ""}`
     if (nextKey === lastKey) {
       return
     }
 
     lastKey = nextKey
-    promptHistory = agentId ? loadPromptHistory({ workspaceId, agentId }) : []
+    promptHistory =
+      agentId && userId
+        ? loadPromptHistory({ tenantId, userId, workspaceId, agentId })
+        : []
     resetChat(agentId)
   })
 </script>

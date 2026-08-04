@@ -1,6 +1,8 @@
 export const MAX_PROMPT_HISTORY_LENGTH = 25
 
 interface PromptHistoryKeyOptions {
+  tenantId: string
+  userId: string
   workspaceId: string
   agentId: string
 }
@@ -10,22 +12,26 @@ interface SavePromptHistoryOptions extends PromptHistoryKeyOptions {
 }
 
 export const getPromptHistoryStorageKey = ({
+  tenantId,
+  userId,
   workspaceId,
   agentId,
 }: PromptHistoryKeyOptions) =>
-  `budibase:chat-preview-history:${workspaceId}:${agentId}`
+  `budibase:chat-preview-history:${tenantId}:${userId}:${workspaceId}:${agentId}`
 
 export const loadPromptHistory = ({
+  tenantId,
+  userId,
   workspaceId,
   agentId,
 }: PromptHistoryKeyOptions): string[] => {
-  if (!workspaceId || !agentId) {
+  if (!tenantId || !userId || !workspaceId || !agentId) {
     return []
   }
 
   try {
     const storedHistory = sessionStorage.getItem(
-      getPromptHistoryStorageKey({ workspaceId, agentId })
+      getPromptHistoryStorageKey({ tenantId, userId, workspaceId, agentId })
     )
     if (!storedHistory) {
       return []
@@ -46,18 +52,20 @@ export const loadPromptHistory = ({
 }
 
 export const savePromptHistory = ({
+  tenantId,
+  userId,
   workspaceId,
   agentId,
   history,
 }: SavePromptHistoryOptions): string[] => {
   const retainedHistory = history.slice(-MAX_PROMPT_HISTORY_LENGTH)
-  if (!workspaceId || !agentId) {
+  if (!tenantId || !userId || !workspaceId || !agentId) {
     return retainedHistory
   }
 
   try {
     sessionStorage.setItem(
-      getPromptHistoryStorageKey({ workspaceId, agentId }),
+      getPromptHistoryStorageKey({ tenantId, userId, workspaceId, agentId }),
       JSON.stringify(retainedHistory)
     )
   } catch (_error) {

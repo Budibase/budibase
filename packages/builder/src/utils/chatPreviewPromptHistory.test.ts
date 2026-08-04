@@ -9,6 +9,9 @@ import {
 describe("chat preview prompt history", () => {
   const workspaceId = "workspace-1"
   const agentId = "agent-1"
+  const tenantId = "tenant-1"
+  const userId = "user-1"
+  const keyOptions = { tenantId, userId, workspaceId, agentId }
 
   beforeEach(() => {
     sessionStorage.clear()
@@ -16,20 +19,20 @@ describe("chat preview prompt history", () => {
   })
 
   it("isolates history by workspace and agent", () => {
-    savePromptHistory({ workspaceId, agentId, history: ["first"] })
+    savePromptHistory({ ...keyOptions, history: ["first"] })
     savePromptHistory({
-      workspaceId,
+      ...keyOptions,
       agentId: "agent-2",
       history: ["second"],
     })
 
-    expect(loadPromptHistory({ workspaceId, agentId })).toEqual(["first"])
-    expect(loadPromptHistory({ workspaceId, agentId: "agent-2" })).toEqual([
+    expect(loadPromptHistory(keyOptions)).toEqual(["first"])
+    expect(loadPromptHistory({ ...keyOptions, agentId: "agent-2" })).toEqual([
       "second",
     ])
-    expect(loadPromptHistory({ workspaceId: "workspace-2", agentId })).toEqual(
-      []
-    )
+    expect(
+      loadPromptHistory({ ...keyOptions, workspaceId: "workspace-2" })
+    ).toEqual([])
   })
 
   it("retains only the newest prompts", () => {
@@ -38,21 +41,21 @@ describe("chat preview prompt history", () => {
       (_, index) => `prompt-${index}`
     )
 
-    expect(savePromptHistory({ workspaceId, agentId, history })).toEqual(
+    expect(savePromptHistory({ ...keyOptions, history })).toEqual(
       history.slice(-MAX_PROMPT_HISTORY_LENGTH)
     )
-    expect(loadPromptHistory({ workspaceId, agentId })).toEqual(
+    expect(loadPromptHistory(keyOptions)).toEqual(
       history.slice(-MAX_PROMPT_HISTORY_LENGTH)
     )
   })
 
   it("treats malformed storage as empty history", () => {
-    const key = getPromptHistoryStorageKey({ workspaceId, agentId })
+    const key = getPromptHistoryStorageKey(keyOptions)
     sessionStorage.setItem(key, "not-json")
-    expect(loadPromptHistory({ workspaceId, agentId })).toEqual([])
+    expect(loadPromptHistory(keyOptions)).toEqual([])
 
     sessionStorage.setItem(key, JSON.stringify(["valid", 123]))
-    expect(loadPromptHistory({ workspaceId, agentId })).toEqual([])
+    expect(loadPromptHistory(keyOptions)).toEqual([])
   })
 
   it("continues with in-memory history when storage fails", () => {
@@ -61,7 +64,16 @@ describe("chat preview prompt history", () => {
     })
 
     expect(
-      savePromptHistory({ workspaceId, agentId, history: ["first"] })
+      savePromptHistory({ ...keyOptions, history: ["first"] })
     ).toEqual(["first"])
+  })
+
+  it("isolates history by tenant and user", () => {
+    savePromptHistory({ ...keyOptions, history: ["first"] })
+
+    expect(loadPromptHistory({ ...keyOptions, userId: "user-2" })).toEqual([])
+    expect(loadPromptHistory({ ...keyOptions, tenantId: "tenant-2" })).toEqual(
+      []
+    )
   })
 })
