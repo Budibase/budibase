@@ -9,6 +9,8 @@ describe.each([
     newReadableBinding: "api.owen_api.New endpoint",
     oldRuntimeBinding: "rest_owen_api_old_endpoint",
     newRuntimeBinding: "rest_owen_api_new_endpoint",
+    renamedDatasourceReadableBinding: "api.new_api.Old endpoint",
+    renamedDatasourceRuntimeBinding: "rest_new_api_old_endpoint",
   },
   {
     label: "datasource",
@@ -17,6 +19,8 @@ describe.each([
     newReadableBinding: "owen_api.New endpoint",
     oldRuntimeBinding: "ds_owen_api_old_endpoint",
     newRuntimeBinding: "ds_owen_api_new_endpoint",
+    renamedDatasourceReadableBinding: "new_api.Old endpoint",
+    renamedDatasourceRuntimeBinding: "ds_new_api_old_endpoint",
   },
 ])(
   "$label query tool renames",
@@ -26,6 +30,8 @@ describe.each([
     newReadableBinding,
     oldRuntimeBinding,
     newRuntimeBinding,
+    renamedDatasourceReadableBinding,
+    renamedDatasourceRuntimeBinding,
   }) => {
     const config = new TestConfiguration()
 
@@ -135,6 +141,49 @@ describe.each([
       expect(agents.find(candidate => candidate._id === agent._id)?._rev).toBe(
         agent._rev
       )
+    })
+
+    it("updates agent references when the datasource name changes", async () => {
+      const datasource = await config.api.datasource.create({
+        name: "Owen API",
+        type: "datasource",
+        source,
+        config: {},
+      })
+      await config.api.query.save({
+        name: "Old endpoint",
+        datasourceId: datasource._id!,
+        parameters: [],
+        fields: {},
+        schema: {},
+        queryVerb: "read",
+        transformer: null,
+        readable: true,
+      })
+      const agent = await config.api.agent.createWithOperation(
+        { name: "Wow agent" },
+        {
+          id: "operation_1",
+          name: "Get a wow",
+          live: false,
+          promptInstructions: `Use {{ ${oldReadableBinding} }}.`,
+          enabledTools: [oldRuntimeBinding],
+          allowKnowledgeSourceDownload: true,
+        }
+      )
+
+      await config.api.datasource.update({
+        ...datasource,
+        name: "New API",
+      })
+
+      const { agents } = await config.api.agent.fetch()
+      expect(
+        agents.find(candidate => candidate._id === agent._id)?.operations?.[0]
+      ).toMatchObject({
+        promptInstructions: `Use {{ ${renamedDatasourceReadableBinding} }}.`,
+        enabledTools: [renamedDatasourceRuntimeBinding],
+      })
     })
   }
 )

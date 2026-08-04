@@ -4,7 +4,8 @@ import type { Agent, Datasource, Query } from "@budibase/types"
 import { fetch, update } from "./crud"
 
 interface QueryToolReferenceMigration {
-  datasource: Datasource
+  existingDatasource: Datasource
+  updatedDatasource: Datasource
   existingQuery: Query
   updatedQuery: Query
 }
@@ -98,44 +99,64 @@ export const updateAgentQueryToolReferences = ({
   return changed ? { ...agent, operations } : undefined
 }
 
-export const migrateQueryToolReferences = async ({
+const getBindings = ({
   datasource,
-  existingQuery,
-  updatedQuery,
-}: QueryToolReferenceMigration): Promise<void> => {
+  query,
+}: {
+  datasource: Datasource
+  query: Query
+}) => {
   const sourceType: QueryToolType =
     datasource.source === SourceName.REST
       ? ToolType.REST_QUERY
       : ToolType.DATASOURCE_QUERY
-  const bindingOptions = {
+  return getQueryToolBindings({
     sourceType,
     sourceLabel:
       datasource.name ||
       (sourceType === ToolType.REST_QUERY ? "API" : "Datasource"),
-  }
-  const existingBindings = getQueryToolBindings({
-    ...bindingOptions,
-    queryName: existingQuery.name,
+    queryName: query.name,
   })
-  const updatedBindings = getQueryToolBindings({
-    ...bindingOptions,
-    queryName: updatedQuery.name,
-  })
+}
 
-  if (
-    existingBindings.readableBinding === updatedBindings.readableBinding &&
-    existingBindings.runtimeBinding === updatedBindings.runtimeBinding
-  ) {
+export const migrateQueryToolReferences = async (
+  migrations: QueryToolReferenceMigration | QueryToolReferenceMigration[]
+): Promise<void> => {
+  const bindingChanges = (Array.isArray(migrations) ? migrations : [migrations])
+    .map(migration => ({
+      existingBindings: getBindings({
+        datasource: migration.existingDatasource,
+        query: migration.existingQuery,
+      }),
+      updatedBindings: getBindings({
+        datasource: migration.updatedDatasource,
+        query: migration.updatedQuery,
+      }),
+    }))
+    .filter(
+      ({ existingBindings, updatedBindings }) =>
+        existingBindings.readableBinding !== updatedBindings.readableBinding ||
+        existingBindings.runtimeBinding !== updatedBindings.runtimeBinding
+    )
+
+  if (!bindingChanges.length) {
     return
   }
 
   const agents = await fetch()
   for (const agent of agents) {
-    const updatedAgent = updateAgentQueryToolReferences({
-      agent,
-      existingBindings,
-      updatedBindings,
-    })
+    let updatedAgent: Agent | undefined
+    let currentAgent = agent
+    for (const bindingChange of bindingChanges) {
+      const result = updateAgentQueryToolReferences({
+        agent: currentAgent,
+        ...bindingChange,
+      })
+      if (result) {
+        currentAgent = result
+        updatedAgent = result
+      }
+    }
     if (updatedAgent) {
       await update(updatedAgent)
     }

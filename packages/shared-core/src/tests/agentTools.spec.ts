@@ -46,4 +46,17 @@ describe("getQueryToolBindings", () => {
       }).runtimeBinding
     ).toBe("rest_a_very_long_datasour_a_very_long_query_name_t")
   })
+
+  it("preserves readable bindings for symbol-only datasource names", () => {
+    expect(
+      getQueryToolBindings({
+        sourceType: ToolType.REST_QUERY,
+        sourceLabel: "🚀",
+        queryName: "Launch",
+      })
+    ).toEqual({
+      readableBinding: "api..Launch",
+      runtimeBinding: "rest_datasource_launch",
+    })
+  })
 })

@@ -35,8 +35,7 @@ export const getQueryToolBindings = ({
   const isRestQuery = sourceType === ToolType.REST_QUERY
   const resolvedSourceLabel =
     sourceLabel || (isRestQuery ? "API" : "Datasource")
-  const readableSource =
-    sanitiseReadableSource(resolvedSourceLabel) || "datasource"
+  const readableSource = sanitiseReadableSource(resolvedSourceLabel)
   const readablePrefix = isRestQuery ? `api.${readableSource}` : readableSource
   const datasourceSegment =
     sanitiseRuntimeNameSegment(resolvedSourceLabel, 20) || "datasource"

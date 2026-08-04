@@ -1,10 +1,18 @@
-import type { Agent } from "@budibase/types"
-import { updateAgentQueryToolReferences } from "./queryToolReferences"
+import { SourceName } from "@budibase/types"
+import type { Agent, Datasource, Query } from "@budibase/types"
+import { fetch, update } from "./crud"
+import {
+  migrateQueryToolReferences,
+  updateAgentQueryToolReferences,
+} from "./queryToolReferences"
 
 jest.mock("./crud", () => ({
   fetch: jest.fn(),
   update: jest.fn(),
 }))
+
+const fetchAgents = jest.mocked(fetch)
+const updateAgent = jest.mocked(update)
 
 const makeAgent = (overrides: Partial<Agent> = {}): Agent => ({
   _id: "agent_1",
@@ -111,5 +119,80 @@ describe("updateAgentQueryToolReferences", () => {
         updatedBindings,
       })
     ).toBeUndefined()
+  })
+})
+
+describe("migrateQueryToolReferences", () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it("migrates all query bindings when a datasource is renamed", async () => {
+    const agent = makeAgent({
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main",
+          live: false,
+          promptInstructions:
+            "Use {{ api.old_api.First query }} and {{ api.old_api.Second query }}.",
+          enabledTools: [
+            "rest_old_api_first_query",
+            "rest_old_api_second_query",
+          ],
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
+    })
+    const existingDatasource: Datasource = {
+      _id: "datasource_1",
+      name: "Old API",
+      type: "datasource",
+      source: SourceName.REST,
+      config: {},
+    }
+    const updatedDatasource = {
+      ...existingDatasource,
+      name: "New API",
+    }
+    const makeQuery = (name: string): Query => ({
+      _id: `query_${name}`,
+      datasourceId: "datasource_1",
+      fields: {},
+      name,
+      parameters: [],
+      queryVerb: "read",
+      readable: true,
+      schema: {},
+      transformer: "return data",
+    })
+    const queries = [makeQuery("First query"), makeQuery("Second query")]
+    fetchAgents.mockResolvedValue([agent])
+    updateAgent.mockResolvedValue(agent)
+
+    await migrateQueryToolReferences(
+      queries.map(query => ({
+        existingDatasource,
+        updatedDatasource,
+        existingQuery: query,
+        updatedQuery: query,
+      }))
+    )
+
+    expect(updateAgent).toHaveBeenCalledTimes(1)
+    expect(updateAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operations: [
+          expect.objectContaining({
+            promptInstructions:
+              "Use {{ api.new_api.First query }} and {{ api.new_api.Second query }}.",
+            enabledTools: [
+              "rest_new_api_first_query",
+              "rest_new_api_second_query",
+            ],
+          }),
+        ],
+      })
+    )
   })
 })

@@ -282,6 +282,19 @@ export async function update(
     ctx.throw(400, "Duplicate dynamic/static variable names are invalid.")
   }
 
+  if (baseDatasource.name !== datasource.name) {
+    const queries = (await sdk.queries.fetch({ enrich: false })).filter(
+      query => query.datasourceId === datasourceId
+    )
+    await sdk.ai.agents.migrateQueryToolReferences(
+      queries.map(query => ({
+        existingDatasource: baseDatasource,
+        updatedDatasource: datasource,
+        existingQuery: query,
+        updatedQuery: query,
+      }))
+    )
+  }
   await clearOAuth2TokenCaches(baseDatasource)
   const response = await db.put(
     sdk.tables.populateExternalTableSchemas(datasource)

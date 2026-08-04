@@ -203,16 +203,17 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
     )
     eventFn = () => events.query.updated(datasource, query)
   }
-  const response = await db.put(query)
-  await eventFn()
-  query._rev = response.rev
   if (existingQuery && existingQuery.name !== query.name) {
     await sdk.ai.agents.migrateQueryToolReferences({
-      datasource,
+      existingDatasource: datasource,
+      updatedDatasource: datasource,
       existingQuery,
       updatedQuery: query,
     })
   }
+  const response = await db.put(query)
+  await eventFn()
+  query._rev = response.rev
 
   ctx.body = query
 }
