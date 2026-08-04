@@ -3,11 +3,9 @@ name: External PR ticket check
 on:
   pull_request_target:
     types: [opened, reopened, edited, synchronize]
-  issues:
-    types: [closed, labeled, unassigned]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
@@ -16,9 +14,8 @@ permissions:
 jobs:
   validate-ticket:
     if: |
-      github.event_name == 'issues' ||
-      (github.event.pull_request.user.type != 'Bot' &&
-      !contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.pull_request.author_association))
+      github.event.pull_request.user.type != 'Bot' &&
+      !contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.pull_request.author_association)
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -29,7 +26,6 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo
-            const internalAssociations = new Set(["OWNER", "MEMBER", "COLLABORATOR"])
             const maxReferencedIssues = 10
             const invalidIssueLabels = new Set([
               "needs-triage",
@@ -193,32 +189,4 @@ jobs:
               }
             }
 
-            let pullRequestNumbers
-            if (context.eventName === "issues") {
-              const changedLabel = context.payload.label?.name.toLowerCase()
-              if (changedLabel && !invalidIssueLabels.has(changedLabel)) {
-                core.info(`Label ${changedLabel} does not invalidate linked PRs`)
-                return
-              }
-
-              const issueNumber = context.payload.issue.number
-              const openPullRequests = await github.paginate(
-                github.rest.pulls.list,
-                { owner, repo, state: "open", per_page: 100 }
-              )
-              pullRequestNumbers = openPullRequests
-                .filter(pullRequest => pullRequest.user.type !== "Bot")
-                .filter(pullRequest => !internalAssociations.has(
-                  pullRequest.author_association
-                ))
-                .filter(pullRequest => getReferencedIssueNumbers(
-                  pullRequest.body
-                ).has(issueNumber))
-                .map(pullRequest => pullRequest.number)
-            } else {
-              pullRequestNumbers = [context.payload.pull_request.number]
-            }
-
-            for (const pullRequestNumber of pullRequestNumbers) {
-              await enforcePullRequest(pullRequestNumber)
-            }
+            await enforcePullRequest(context.payload.pull_request.number)
