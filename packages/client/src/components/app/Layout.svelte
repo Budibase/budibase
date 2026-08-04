@@ -13,7 +13,7 @@
   } from "@/utils/conditions"
   import { authStore } from "@/stores/auth"
   import { currentRole } from "@/stores/derived/currentRole.js"
-  import { routeMatchesPattern } from "@/utils/routeMatching"
+  import { urlMatchesTemplate } from "@/utils/routeMatching"
 
   const sdk = getContext("sdk")
   const {
@@ -191,7 +191,7 @@
     }
 
     return [...accessibleRoutes].some(route =>
-      routeMatchesPattern({ pattern: route, route: url })
+      urlMatchesTemplate({ template: route, url })
     )
   }
 
