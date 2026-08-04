@@ -26,6 +26,7 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo
+            const pullRequestNumber = context.payload.pull_request.number
             const maxReferencedIssues = 10
             const invalidIssueLabels = new Set([
               "needs-triage",
@@ -34,159 +35,112 @@ jobs:
               "closed-stale",
             ])
 
+            const { data: pullRequest } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: pullRequestNumber,
+            })
+            const pullRequestAuthor = pullRequest.user.login.toLowerCase()
+            const body = pullRequest.body || ""
+            const issueNumbers = new Set()
             const escapedOwner = owner.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
             const escapedRepo = repo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-            const issueUrlPattern = new RegExp(
-              `https?:\\/\\/github\\.com\\/${escapedOwner}\\/${escapedRepo}\\/issues\\/(\\d+)`,
-              "gi"
-            )
-            const shortReferencePattern = /(?:^|[\s(])#(\d+)\b/gm
+            const patterns = [
+              new RegExp(
+                `https?:\\/\\/github\\.com\\/${escapedOwner}\\/${escapedRepo}\\/issues\\/(\\d+)`,
+                "gi"
+              ),
+              /(?:^|[\s(])#(\d+)\b/gm,
+            ]
 
-            const getReferencedIssueNumbers = body => {
-              const issueNumbers = new Set()
-
-              for (const match of (body || "").matchAll(issueUrlPattern)) {
+            for (const pattern of patterns) {
+              for (const match of body.matchAll(pattern)) {
                 issueNumbers.add(Number(match[1]))
                 if (issueNumbers.size === maxReferencedIssues) break
               }
-              if (issueNumbers.size < maxReferencedIssues) {
-                for (const match of (body || "").matchAll(shortReferencePattern)) {
-                  issueNumbers.add(Number(match[1]))
-                  if (issueNumbers.size === maxReferencedIssues) break
-                }
-              }
-
-              return issueNumbers
+              if (issueNumbers.size === maxReferencedIssues) break
             }
 
-            const findValidIssue = async pullRequest => {
-              const pullRequestAuthor = pullRequest.user.login.toLowerCase()
-              const issueNumbers = getReferencedIssueNumbers(pullRequest.body)
-
-              for (const issueNumber of issueNumbers) {
-                try {
-                  const { data: issue } = await github.rest.issues.get({
-                    owner,
-                    repo,
-                    issue_number: issueNumber,
-                  })
-                  const isAssignedToAuthor = issue.assignees?.some(
-                    assignee => assignee.login.toLowerCase() === pullRequestAuthor
-                  )
-                  const hasInvalidLabel = issue.labels.some(issueLabel => {
-                    const labelName = typeof issueLabel === "string"
-                      ? issueLabel
-                      : issueLabel.name
-                    return invalidIssueLabels.has(labelName.toLowerCase())
-                  })
-                  const isValidIssue = !issue.pull_request &&
-                    issue.state === "open" &&
-                    isAssignedToAuthor &&
-                    !hasInvalidLabel
-
-                  if (isValidIssue) return issue
-                } catch (error) {
-                  if (error.status !== 404) throw error
-                }
-              }
-
-              return undefined
-            }
-
-            const enforcePullRequest = async pullRequestNumber => {
-              let { data: pullRequest } = await github.rest.pulls.get({
-                owner,
-                repo,
-                pull_number: pullRequestNumber,
-              })
-              let validIssue = await findValidIssue(pullRequest)
-
-              if (validIssue) {
-                core.info(`Found valid issue #${validIssue.number}`)
-                return
-              }
-
-              // Refresh and revalidate before mutating in case the PR was edited
-              // while this run was checking its referenced issues.
-              const refreshedPullRequest = await github.rest.pulls.get({
-                owner,
-                repo,
-                pull_number: pullRequestNumber,
-              })
-              pullRequest = refreshedPullRequest.data
-
-              if (pullRequest.state !== "open") {
-                core.info("Pull request is no longer open")
-                return
-              }
-
-              validIssue = await findValidIssue(pullRequest)
-              if (validIssue) {
-                core.info(`Found valid issue #${validIssue.number} after refresh`)
-                return
-              }
-
-              const label = {
-                name: "closed: missing-ticket",
-                color: "B60205",
-                description: "External PR closed because it lacked an assigned valid issue",
-              }
-
+            for (const issueNumber of issueNumbers) {
               try {
-                await github.rest.issues.getLabel({ owner, repo, name: label.name })
+                const { data: issue } = await github.rest.issues.get({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                })
+                const isAssignedToAuthor = issue.assignees?.some(
+                  assignee => assignee.login.toLowerCase() === pullRequestAuthor
+                )
+                const hasInvalidLabel = issue.labels.some(issueLabel => {
+                  const labelName = typeof issueLabel === "string"
+                    ? issueLabel
+                    : issueLabel.name
+                  return invalidIssueLabels.has(labelName.toLowerCase())
+                })
+                const isValidIssue = !issue.pull_request &&
+                  issue.state === "open" &&
+                  isAssignedToAuthor &&
+                  !hasInvalidLabel
+
+                if (isValidIssue) {
+                  core.info(`Found valid issue #${issue.number}`)
+                  return
+                }
               } catch (error) {
                 if (error.status !== 404) throw error
-
-                try {
-                  await github.rest.issues.createLabel({ owner, repo, ...label })
-                } catch (createError) {
-                  // Another workflow run may have created the label concurrently.
-                  if (createError.status !== 422) throw createError
-                }
               }
+            }
 
-              await github.rest.issues.addLabels({
-                owner,
-                repo,
-                issue_number: pullRequest.number,
-                labels: [label.name],
-              })
+            if (pullRequest.state !== "open") return
 
-              const marker = "<!-- external-pr-ticket-check -->"
+            const label = {
+              name: "closed: missing-ticket",
+              color: "B60205",
+              description: "External PR closed because it lacked an assigned valid issue",
+            }
+
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name: label.name })
+            } catch (error) {
+              if (error.status !== 404) throw error
+              try {
+                await github.rest.issues.createLabel({ owner, repo, ...label })
+              } catch (createError) {
+                if (createError.status !== 422) throw createError
+              }
+            }
+
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: pullRequestNumber,
+              labels: [label.name],
+            })
+
+            const marker = "<!-- external-pr-ticket-check -->"
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number: pullRequestNumber, per_page: 100 }
+            )
+
+            if (!comments.some(comment => comment.body?.includes(marker))) {
               const message = [
                 marker,
-                "Thanks for contributing to Budibase. External pull requests must reference an open issue in this repository that is assigned to the pull request author. The issue must have completed triage and must not be marked `wontfix`, `out-of-scope`, or `closed-stale`. Add the issue in the **Addresses** section of the pull request description using its full URL or the `#123` format.",
+                "Thanks for contributing to Budibase. External pull requests must reference an open issue in this repository that is assigned to the pull request author. The issue must have completed triage and must not be marked `wontfix`, `out-of-scope`, or `closed-stale`. Add the issue in the **Addresses** section using its full URL or the `#123` format.",
                 "",
                 "This pull request has been closed because it does not reference a valid assigned issue. Once an assigned issue has been linked, you can reopen the pull request.",
               ].join("\n")
-
-              const comments = await github.paginate(
-                github.rest.issues.listComments,
-                {
-                  owner,
-                  repo,
-                  issue_number: pullRequest.number,
-                  per_page: 100,
-                }
-              )
-
-              if (!comments.some(comment => comment.body?.includes(marker))) {
-                await github.rest.issues.createComment({
-                  owner,
-                  repo,
-                  issue_number: pullRequest.number,
-                  body: message,
-                })
-              }
-
-              if (pullRequest.state === "open") {
-                await github.rest.pulls.update({
-                  owner,
-                  repo,
-                  pull_number: pullRequest.number,
-                  state: "closed",
-                })
-              }
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pullRequestNumber,
+                body: message,
+              })
             }
 
-            await enforcePullRequest(context.payload.pull_request.number)
+            await github.rest.pulls.update({
+              owner,
+              repo,
+              pull_number: pullRequestNumber,
+              state: "closed",
+            })
