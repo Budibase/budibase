@@ -1,4 +1,3 @@
-import kebabCase from "lodash/kebabCase"
 import {
   context,
   db as dbCore,
@@ -21,16 +20,6 @@ interface CreateCustomRestTemplateParams {
   data: string
   fileExtension: CustomRestTemplateFileExtension
   operationsCount: number
-}
-
-export const generateId = (name: string): CustomRestTemplateId => {
-  const slug = kebabCase(name)
-
-  if (!slug) {
-    throw new HTTPError("Template name must contain letters or numbers", 400)
-  }
-
-  return `${DocumentType.REST_TEMPLATE}_${slug}`
 }
 
 const getObjectStoreFolder = (restTemplateId: CustomRestTemplateId) => {
@@ -76,7 +65,7 @@ export const create = async ({
   operationsCount,
 }: CreateCustomRestTemplateParams): Promise<RestTemplate> => {
   const db = context.getWorkspaceDB()
-  const restTemplateId = generateId(name)
+  const restTemplateId = dbCore.generateRestTemplateID()
   const existing = await db.tryGet<CustomRestTemplateDocument>(restTemplateId)
   if (existing) {
     throw new HTTPError(
