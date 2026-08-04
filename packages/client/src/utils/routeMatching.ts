@@ -18,7 +18,7 @@ interface RouteMatchPatternArgs {
 export const routeMatchesPattern = ({
   pattern,
   route,
-}: RouteMatchPatternArgs) => {
+}: RouteMatchPatternArgs = {}) => {
   // Strip query strings from the concrete URL so values like
   // /product/55?nav=details still match a route pattern such as /product/:id.
   const routePath = stripQueryString(route)
