@@ -23,6 +23,7 @@ jobs:
           script: |
             const { owner, repo } = context.repo
             const pullRequest = context.payload.pull_request
+            const pullRequestAuthor = pullRequest.user.login.toLowerCase()
             const body = pullRequest.body || ""
             const issueNumbers = new Set()
 
@@ -49,7 +50,10 @@ jobs:
                   repo,
                   issue_number: issueNumber,
                 })
-                if (!issue.pull_request) {
+                const isAssignedToAuthor = issue.assignees?.some(
+                  assignee => assignee.login.toLowerCase() === pullRequestAuthor
+                )
+                if (!issue.pull_request && isAssignedToAuthor) {
                   validIssue = issue
                   break
                 }
@@ -66,7 +70,7 @@ jobs:
             const label = {
               name: "closed: missing-ticket",
               color: "B60205",
-              description: "External PR closed because it did not reference a valid issue",
+              description: "External PR closed because it lacked an assigned valid issue",
             }
 
             try {
@@ -91,9 +95,9 @@ jobs:
 
             const marker = "<!-- external-pr-ticket-check -->"
             const message = `${marker}
-            Thanks for contributing to Budibase. External pull requests must reference an existing issue in this repository in the **Addresses** section of the pull request description. References can use a full issue URL or the \`#123\` format.
+            Thanks for contributing to Budibase. External pull requests must reference an existing issue in this repository that is assigned to the pull request author. Add the issue in the **Addresses** section of the pull request description using its full URL or the \`#123\` format.
 
-            This pull request has been closed because it does not reference a valid issue. Once an issue has been linked, you can reopen the pull request.`
+            This pull request has been closed because it does not reference a valid assigned issue. Once an assigned issue has been linked, you can reopen the pull request.`
 
             const comments = await github.paginate(
               github.rest.issues.listComments,

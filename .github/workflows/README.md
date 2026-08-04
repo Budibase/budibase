@@ -22,11 +22,12 @@ The standard CI Build job is what runs when you raise a PR to master.
 ### External PR Ticket Check (external-pr-ticket.yml)
 
 External pull requests from users who are not repository owners, members, or
-collaborators must reference an existing issue in this repository. The issue may
-be linked with its full GitHub URL or a `#123` reference. Bot-authored pull
-requests are excluded. Pull requests without a valid issue reference are
-tagged with the persistent `closed: missing-ticket` label, commented on, and
-closed. They can be reopened after an issue is added.
+collaborators must reference an existing issue in this repository that is
+assigned to the pull request author. The issue may be linked with its full
+GitHub URL or a `#123` reference. Bot-authored pull requests are excluded. Pull
+requests without a valid assigned issue are tagged with the persistent
+`closed: missing-ticket` label, commented on, and closed. They can be reopened
+after an assigned issue is added.
 
 ### Release Job (tag-release.yml)
 
