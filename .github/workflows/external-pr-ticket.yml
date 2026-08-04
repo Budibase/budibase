@@ -1,0 +1,140 @@
+name: External PR ticket check
+
+on:
+  pull_request_target:
+    types: [opened, reopened, edited, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate-ticket:
+    if: |
+      github.event.pull_request.user.type != 'Bot' &&
+      !contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.pull_request.author_association)
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Check for a valid linked issue
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        with:
+          script: |
+            const { owner, repo } = context.repo
+            const pullRequestNumber = context.payload.pull_request.number
+            const maxReferencedIssues = 10
+            const invalidIssueLabels = new Set([
+              "needs-triage",
+              "wontfix",
+              "out-of-scope",
+              "closed-stale",
+            ])
+
+            const { data: pullRequest } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: pullRequestNumber,
+            })
+            const pullRequestAuthor = pullRequest.user.login.toLowerCase()
+            const body = pullRequest.body || ""
+            const issueNumbers = new Set()
+            const escapedOwner = owner.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+            const escapedRepo = repo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+            const issueReferencePattern = new RegExp(
+              `https?:\\/\\/github\\.com\\/${escapedOwner}\\/${escapedRepo}\\/issues\\/(\\d+)|(?:^|[\\s(])#(\\d+)\\b`,
+              "gim"
+            )
+
+            for (const match of body.matchAll(issueReferencePattern)) {
+              issueNumbers.add(Number(match[1] || match[2]))
+              if (issueNumbers.size === maxReferencedIssues) break
+            }
+
+            for (const issueNumber of issueNumbers) {
+              try {
+                const { data: issue } = await github.rest.issues.get({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                })
+                const isAssignedToAuthor = issue.assignees?.some(
+                  assignee => assignee.login.toLowerCase() === pullRequestAuthor
+                )
+                const hasInvalidLabel = issue.labels.some(issueLabel => {
+                  const labelName = typeof issueLabel === "string"
+                    ? issueLabel
+                    : issueLabel.name
+                  return invalidIssueLabels.has(labelName.toLowerCase())
+                })
+                const isValidIssue = !issue.pull_request &&
+                  issue.state === "open" &&
+                  isAssignedToAuthor &&
+                  !hasInvalidLabel
+
+                if (isValidIssue) {
+                  core.info(`Found valid issue #${issue.number}`)
+                  return
+                }
+              } catch (error) {
+                if (error.status !== 404) throw error
+              }
+            }
+
+            if (pullRequest.state !== "open") return
+
+            const label = {
+              name: "closed: missing-ticket",
+              color: "B60205",
+              description: "External PR closed because it lacked an assigned valid issue",
+            }
+
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name: label.name })
+            } catch (error) {
+              if (error.status !== 404) throw error
+              try {
+                await github.rest.issues.createLabel({ owner, repo, ...label })
+              } catch (createError) {
+                if (createError.status !== 422) throw createError
+              }
+            }
+
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: pullRequestNumber,
+              labels: [label.name],
+            })
+
+            const marker = "<!-- external-pr-ticket-check -->"
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number: pullRequestNumber, per_page: 100 }
+            )
+
+            if (!comments.some(comment => comment.body?.includes(marker))) {
+              const message = [
+                marker,
+                "Thanks for contributing to Budibase. External pull requests must reference an open issue in this repository that is assigned to the pull request author. The issue must have completed triage and must not be marked `wontfix`, `out-of-scope`, or `closed-stale`. Add the issue in the **Addresses** section using its full URL or the `#123` format.",
+                "",
+                "This pull request has been closed because it does not reference a valid assigned issue. Once an assigned issue has been linked, you can reopen the pull request.",
+              ].join("\n")
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pullRequestNumber,
+                body: message,
+              })
+            }
+
+            await github.rest.pulls.update({
+              owner,
+              repo,
+              pull_number: pullRequestNumber,
+              state: "closed",
+            })
