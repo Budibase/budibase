@@ -18,7 +18,7 @@ vi.mock("./integrations", () => ({
 
 vi.mock("@/stores/portal/agents", () => ({
   agentsStore: {
-    refreshAfterQueryToolRename: vi.fn(),
+    fetchAgents: vi.fn(),
   },
 }))
 
@@ -29,7 +29,7 @@ vi.mock("./workspaceDeployment", () => ({
 }))
 
 const saveQuery = vi.mocked(API.saveQuery)
-const refreshAgents = vi.mocked(agentsStore.refreshAfterQueryToolRename)
+const refreshAgents = vi.mocked(agentsStore.fetchAgents)
 const refreshDeployment = vi.mocked(workspaceDeploymentStore.fetch)
 
 const makeQuery = (name: string): Query => ({
@@ -56,7 +56,7 @@ describe("QueryStore", () => {
       selectedQueryId: null,
       newQueryDatasourceId: undefined,
     })
-    refreshAgents.mockResolvedValue()
+    refreshAgents.mockResolvedValue([])
     refreshDeployment.mockResolvedValue()
   })
 

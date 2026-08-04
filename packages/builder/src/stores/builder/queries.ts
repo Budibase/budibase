@@ -120,7 +120,7 @@ export class QueryStore extends DerivedBudiStore<
     if (isRename) {
       try {
         await Promise.all([
-          agentsStore.refreshAfterQueryToolRename(),
+          agentsStore.fetchAgents(),
           workspaceDeploymentStore.fetch(),
         ])
       } catch (error) {

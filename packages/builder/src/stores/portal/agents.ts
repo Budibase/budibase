@@ -226,19 +226,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return tools
   }
 
-  refreshAfterQueryToolRename = async () => {
-    const { agentsLoaded, currentAgentId } = get(this.store)
-    if (!agentsLoaded) {
-      return
-    }
-
-    const agents = await this.fetchAgents()
-    const currentAgent = agents.find(agent => agent._id === currentAgentId)
-    if (currentAgent) {
-      await this.fetchTools(currentAgent.aiconfig)
-    }
-  }
-
   createAgent = async (agent: CreateAgentRequest) => {
     const created = await API.createAgent(agent)
     this.update(state => {
