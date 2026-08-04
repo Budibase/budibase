@@ -4,7 +4,6 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
     "lib": ["ESNext"],
-    "baseUrl": ".",
     "paths": {
       "@budibase/*": [
         "../*/src/index.ts",
