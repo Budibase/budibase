@@ -283,9 +283,10 @@ export async function update(
   }
 
   if (baseDatasource.name !== datasource.name) {
-    const queries = (await sdk.queries.fetch({ enrich: false })).filter(
-      query => query.datasourceId === datasourceId
-    )
+    const queries = await sdk.queries.fetch({
+      enrich: false,
+      datasourceId,
+    })
     await sdk.ai.agents.migrateQueryToolReferences(
       queries.map(query => ({
         existingDatasource: baseDatasource,
