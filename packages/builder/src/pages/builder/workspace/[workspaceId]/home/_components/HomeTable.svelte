@@ -35,14 +35,14 @@
     sortOrder: HomeSortOrder
     variant?: "default" | "panel"
     highlightedRowId?: string | null
-    onOpenRow?: (_row: HomeRow) => void
+    onOpenRow?: (row: HomeRow) => void
     onClearSearch?: () => void
     onResetFilters?: () => void
-    onSortChange?: (_column: HomeSortColumn) => void
+    onSortChange?: (column: HomeSortColumn) => void
     onCreateAgent?: () => void
     onCreateAutomation?: () => void
     onCreateApp?: () => void
-    onOpenContextMenu?: (_payload: ContextMenuPayload) => void
+    onOpenContextMenu?: (payload: ContextMenuPayload) => void
   }
 
   let {

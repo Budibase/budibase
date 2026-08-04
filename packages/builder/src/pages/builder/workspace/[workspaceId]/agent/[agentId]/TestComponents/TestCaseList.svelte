@@ -35,17 +35,17 @@
     runningCaseIds: Set<string>
     hasLatestRun: boolean
     latestResultsByCaseId: Map<string, AgentTestCaseResult[]>
-    onSelectCase: (_caseId: string) => void
-    onSelectGroup: (_groupId: string) => void
+    onSelectCase: (caseId: string) => void
+    onSelectGroup: (groupId: string) => void
     onCreateGroup: () => void
     onRenameGroup: () => void
     onDeleteGroup: () => void
     onAddCase: () => void
-    onEditCase: (_caseId: string) => void
-    onRunCase: (_caseId: string) => void
+    onEditCase: (caseId: string) => void
+    onRunCase: (caseId: string) => void
     onRunAll: () => void
-    onDuplicateCase: (_caseId: string) => void
-    onRemoveCase: (_caseId: string) => void
+    onDuplicateCase: (caseId: string) => void
+    onRemoveCase: (caseId: string) => void
   }
 
   let {

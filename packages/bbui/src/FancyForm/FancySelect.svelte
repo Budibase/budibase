@@ -10,7 +10,7 @@
   export let value: string | undefined
   export let disabled: boolean = false
   export let error: string | null = null
-  export let validate: ((_value: string | undefined) => string) | null = null
+  export let validate: ((value: string | undefined) => string) | null = null
   export let options: O[] = []
   export let footer: string | undefined = undefined
   export let isOptionEnabled = (_option: O) => true
@@ -21,8 +21,8 @@
   export let getOptionSubtitle = (option: O) =>
     extractProperty(option, "subtitle")
   export let getOptionColour: (
-    _option: O,
-    _index?: number
+    option: O,
+    index?: number
   ) => string | null = () => null
 
   const dispatch = createEventDispatcher<{ change: string | undefined }>()
@@ -35,7 +35,7 @@
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)
 
   const getFieldAttribute = (
-    getAttribute: (_option: O, _index?: number) => string | null,
+    getAttribute: (option: O, index?: number) => string | null,
     value: string | undefined,
     options: O[]
   ) => {

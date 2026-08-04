@@ -50,7 +50,7 @@
     allowRemove: boolean,
     allowedRoles: string[] | null,
     allowCreator: boolean,
-    enrichLabel: (_label: string) => string
+    enrichLabel: (label: string) => string
   ): RoleOption[] => {
     // Use roles whitelist if specified
     if (allowedRoles?.length) {

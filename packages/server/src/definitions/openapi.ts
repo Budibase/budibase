@@ -1529,7 +1529,20 @@ export interface components {
                  * @enum {string}
                  */
                 type?: "string" | "number";
-            };
+            } | {
+                /** @description The field from the table/view schema to sort on. */
+                field: string;
+                /**
+                 * @description The order in which to sort.
+                 * @enum {string}
+                 */
+                order?: "ascending" | "descending";
+                /**
+                 * @description The type of sort to perform (by number, or by alphabetically).
+                 * @enum {string}
+                 */
+                type?: "string" | "number";
+            }[];
             schema: {
                 [key: string]: {
                     /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
@@ -1637,7 +1650,20 @@ export interface components {
                      * @enum {string}
                      */
                     type?: "string" | "number";
-                };
+                } | {
+                    /** @description The field from the table/view schema to sort on. */
+                    field: string;
+                    /**
+                     * @description The order in which to sort.
+                     * @enum {string}
+                     */
+                    order?: "ascending" | "descending";
+                    /**
+                     * @description The type of sort to perform (by number, or by alphabetically).
+                     * @enum {string}
+                     */
+                    type?: "string" | "number";
+                }[];
                 schema: {
                     [key: string]: {
                         /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */
@@ -1747,7 +1773,20 @@ export interface components {
                      * @enum {string}
                      */
                     type?: "string" | "number";
-                };
+                } | {
+                    /** @description The field from the table/view schema to sort on. */
+                    field: string;
+                    /**
+                     * @description The order in which to sort.
+                     * @enum {string}
+                     */
+                    order?: "ascending" | "descending";
+                    /**
+                     * @description The type of sort to perform (by number, or by alphabetically).
+                     * @enum {string}
+                     */
+                    type?: "string" | "number";
+                }[];
                 schema: {
                     [key: string]: {
                         /** @description Defines whether the column is visible or not - rows retrieved/updated through this view will not be able to access it. */

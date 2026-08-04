@@ -39,12 +39,12 @@
     persistConversation?: boolean
     conversationStarters?: { prompt: string }[]
     initialPrompt?: string
-    onchatsaved?: (_event: {
+    onchatsaved?: (event: {
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
     // Fired when an escalation parks; the consumer polls the outcome and
     // injects it via appendAssistantMessage.
-    onEscalationPending?: (_detail: { escalationId: string }) => void
+    onEscalationPending?: (detail: { escalationId: string }) => void
     // Live resolution per escalationId (from the poll) - drives the card state.
     escalationState?: Record<
       string,
@@ -53,8 +53,8 @@
     // Dev-only: show the inline Approve/Reject buttons on the escalation card.
     showInlineApproval?: boolean
     onResolve?: (
-      _escalationId: string,
-      _accepted: boolean
+      escalationId: string,
+      accepted: boolean
     ) => Promise<EscalationRespondResult | undefined>
     isAgentPreviewChat?: boolean
     readOnly?: boolean
@@ -118,7 +118,7 @@
     createAPIClient({
       attachHeaders: headers => {
         if (workspaceId) {
-          headers[Header.APP_ID] = workspaceId
+          headers[Header.WORKSPACE_ID] = workspaceId
         }
       },
     })
@@ -313,7 +313,7 @@
 
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
     transport: new DefaultChatTransport({
-      headers: () => ({ [Header.APP_ID]: workspaceId }),
+      headers: () => ({ [Header.WORKSPACE_ID]: workspaceId }),
       prepareSendMessagesRequest: ({ messages }) => {
         const chatAppId = resolvedChatAppId || chat?.chatAppId
         const conversationId = resolvedConversationId || chat?._id || "new"

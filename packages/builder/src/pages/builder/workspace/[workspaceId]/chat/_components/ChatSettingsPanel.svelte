@@ -16,20 +16,20 @@
 
   export let namedAgents: Agent[] = []
   export let agents: ChatAgentConfig[] = []
-  export let isAgentAvailable: (_agentId: string) => boolean
+  export let isAgentAvailable: (agentId: string) => boolean
   export let handleAvailabilityToggle: (
-    _agentId: string,
-    _enabled: boolean
+    agentId: string,
+    enabled: boolean
   ) => void
-  export let handleDefaultToggle: (_agentId: string) => void
-  export let handleAddAgent: (_agentId: string) => void
+  export let handleDefaultToggle: (agentId: string) => void
+  export let handleAddAgent: (agentId: string) => void
   export let handleUpdateConversationStarters: (
-    _agentId: string,
-    _starters: ConversationStarter[]
+    agentId: string,
+    starters: ConversationStarter[]
   ) => void
   export let handleUpdateAccessRole: (
-    _agentId: string,
-    _roleId?: string
+    agentId: string,
+    roleId?: string
   ) => void = () => {}
 
   let selectedAgentId: string | undefined
