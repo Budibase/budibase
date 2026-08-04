@@ -28,7 +28,9 @@ open, assigned to the pull request author, and does not have a `needs-triage`,
 its full GitHub URL or a `#123` reference. Bot-authored pull requests are
 excluded. Pull requests without a valid assigned issue are tagged with the
 persistent `closed: missing-ticket` label, commented on, and closed. They can be
-reopened after a valid assigned issue is added.
+reopened after a valid assigned issue is added. Open external pull requests are
+also revalidated when a referenced issue is closed, receives a label, or has an
+assignee removed.
 
 ### Release Job (tag-release.yml)
 
