@@ -132,12 +132,7 @@ const _import = async (
   try {
     importResult = await importer.importQueries(
       datasourceId,
-      body.selectedEndpointId,
-      {
-        updateExisting:
-          body.restTemplateId?.startsWith("rest_template_") ||
-          body.datasource?.restTemplateId?.startsWith("rest_template_"),
-      }
+      body.selectedEndpointId
     )
   } catch (error: any) {
     if (body.selectedEndpointId && error?.message) {
