@@ -11,6 +11,7 @@ interface QueryToolBindingOptions {
   sourceType: QueryToolType
   sourceLabel?: string
   queryName?: string
+  queryId?: string
 }
 
 const sanitiseRuntimeNameSegment = (name: string, maxLength: number) =>
@@ -31,6 +32,7 @@ export const getQueryToolBindings = ({
   sourceType,
   sourceLabel,
   queryName,
+  queryId,
 }: QueryToolBindingOptions) => {
   const isRestQuery = sourceType === ToolType.REST_QUERY
   const resolvedSourceLabel =
@@ -43,8 +45,15 @@ export const getQueryToolBindings = ({
     sanitiseRuntimeNameSegment(queryName || "query", 24) || "query"
   const runtimePrefix = isRestQuery ? "rest" : "ds"
 
+  let runtimeBinding = `${runtimePrefix}_${datasourceSegment}_${querySegment}`
+
+  if (queryId) {
+    const idSuffix = queryId.replace(/^[^_]*_/, "").substring(0, 8)
+    runtimeBinding += `_${idSuffix}`
+  }
+
   return {
     readableBinding: `${readablePrefix}.${queryName || "query"}`,
-    runtimeBinding: `${runtimePrefix}_${datasourceSegment}_${querySegment}`,
+    runtimeBinding,
   }
 }

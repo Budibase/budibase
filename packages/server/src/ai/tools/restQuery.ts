@@ -56,6 +56,7 @@ const createQueryTool = ({
     sourceType,
     sourceLabel,
     queryName: query.name,
+    queryId: query._id,
   })
   const parametersSchema = buildParametersSchema(query)
 

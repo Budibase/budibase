@@ -116,6 +116,7 @@ const getBindings = ({
       datasource.name ||
       (sourceType === ToolType.REST_QUERY ? "API" : "Datasource"),
     queryName: query.name,
+    queryId: query._id,
   })
 }
 

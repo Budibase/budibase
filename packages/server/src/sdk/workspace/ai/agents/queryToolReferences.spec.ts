@@ -26,11 +26,11 @@ const makeAgent = (overrides: Partial<Agent> = {}): Agent => ({
 describe("updateAgentQueryToolReferences", () => {
   const existingBindings = {
     readableBinding: "api.owen_wilson.GET random wow",
-    runtimeBinding: "rest_owen_wilson_get_random_wow",
+    runtimeBinding: "rest_owen_wilson_get_random_wow_001",
   }
   const updatedBindings = {
     readableBinding: "api.owen_wilson.GET another wow",
-    runtimeBinding: "rest_owen_wilson_get_another_wow",
+    runtimeBinding: "rest_owen_wilson_get_another_wow_002",
   }
 
   it("updates readable and runtime bindings across agent operations", () => {
@@ -73,7 +73,7 @@ describe("updateAgentQueryToolReferences", () => {
           name: "Main",
           live: false,
           promptInstructions: "{{ api.owen_wilson.Old name }}",
-          enabledTools: ["rest_owen_wilson_same_name"],
+          enabledTools: ["rest_owen_wilson_same_name_003"],
           allowKnowledgeSourceDownload: true,
         },
       ],
@@ -83,17 +83,17 @@ describe("updateAgentQueryToolReferences", () => {
       agent,
       existingBindings: {
         readableBinding: "api.owen_wilson.Old name",
-        runtimeBinding: "rest_owen_wilson_same_name",
+        runtimeBinding: "rest_owen_wilson_same_name_003",
       },
       updatedBindings: {
         readableBinding: "api.owen_wilson.New name",
-        runtimeBinding: "rest_owen_wilson_same_name",
+        runtimeBinding: "rest_owen_wilson_same_name_003",
       },
     })
 
     expect(updated?.operations?.[0]).toMatchObject({
       promptInstructions: "{{ api.owen_wilson.New name }}",
-      enabledTools: ["rest_owen_wilson_same_name"],
+      enabledTools: ["rest_owen_wilson_same_name_003"],
     })
   })
 
@@ -137,8 +137,8 @@ describe("migrateQueryToolReferences", () => {
           promptInstructions:
             "Use {{ api.old_api.First query }} and {{ api.old_api.Second query }}.",
           enabledTools: [
-            "rest_old_api_first_query",
-            "rest_old_api_second_query",
+            "rest_old_api_first_query_001",
+            "rest_old_api_second_query_002",
           ],
           allowKnowledgeSourceDownload: true,
         },
@@ -155,8 +155,8 @@ describe("migrateQueryToolReferences", () => {
       ...existingDatasource,
       name: "New API",
     }
-    const makeQuery = (name: string): Query => ({
-      _id: `query_${name}`,
+    const makeQuery = (name: string, id: string): Query => ({
+      _id: id,
       datasourceId: "datasource_1",
       fields: {},
       name,
@@ -166,7 +166,10 @@ describe("migrateQueryToolReferences", () => {
       schema: {},
       transformer: "return data",
     })
-    const queries = [makeQuery("First query"), makeQuery("Second query")]
+    const queries = [
+      makeQuery("First query", "query_001"),
+      makeQuery("Second query", "query_002"),
+    ]
     fetchAgents.mockResolvedValue([agent])
     updateAgent.mockResolvedValue(agent)
 
@@ -187,8 +190,8 @@ describe("migrateQueryToolReferences", () => {
             promptInstructions:
               "Use {{ api.new_api.First query }} and {{ api.new_api.Second query }}.",
             enabledTools: [
-              "rest_new_api_first_query",
-              "rest_new_api_second_query",
+              "rest_new_api_first_query_001",
+              "rest_new_api_second_query_002",
             ],
           }),
         ],
