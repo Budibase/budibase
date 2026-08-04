@@ -1,7 +1,9 @@
+<svelte:options runes={true} />
+
 <script>
   import { Icon } from "@budibase/bbui"
 
-  export let value
+  let { value } = $props()
 </script>
 
 <div class="align">

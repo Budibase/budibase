@@ -1,8 +1,9 @@
+<svelte:options runes={true} />
+
 <script>
   import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
 
-  export let value
-  export let row
+  let { value, row } = $props()
 </script>
 
 <span title={value} class="email">

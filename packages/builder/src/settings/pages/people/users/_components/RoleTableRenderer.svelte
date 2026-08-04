@@ -1,9 +1,11 @@
+<svelte:options runes={true} />
+
 <script>
   import { users } from "@/stores/portal/users"
   import { roles } from "@/stores/builder"
   import { Constants } from "@budibase/frontend-core"
 
-  export let row
+  let { row } = $props()
 
   const getRoleFromWorkspaceRole = workspaceRole => {
     if (workspaceRole === Constants.Roles.CREATOR) {
@@ -22,15 +24,18 @@
     )
   }
 
-  $: globalRoleValue = users.getUserRole(row)
-  $: workspaceRoleValue = getRoleFromWorkspaceRole(row?.workspaceRole)
-  $: roleValue =
+  const globalRoleValue = $derived(users.getUserRole(row))
+  const workspaceRoleValue = $derived(
+    getRoleFromWorkspaceRole(row?.workspaceRole)
+  )
+  const roleValue = $derived(
     canWorkspaceRoleOverrideGlobalRole(globalRoleValue) && workspaceRoleValue
       ? workspaceRoleValue
       : globalRoleValue
-  $: role = Constants.ExtendedBudibaseRoleOptions.find(
-    x => x.value === roleValue
   )
+  const role = $derived(Constants.ExtendedBudibaseRoleOptions.find(
+    x => x.value === roleValue
+  ))
   const isBuiltInEndUserRole = roleId =>
     roleId === Constants.Roles.BASIC || roleId === Constants.Roles.ADMIN
   const getWorkspaceRoleLabel = (roleId, availableRoles) => {
@@ -46,16 +51,17 @@
     const customRole = availableRoles.find(x => x._id === roleId)
     return customRole?.uiMetadata?.displayName || customRole?.name || roleId
   }
-  $: value =
+  const value = $derived(
     role?.value === Constants.BudibaseRoles.AppUser && row?.workspaceRole
       ? isBuiltInEndUserRole(row.workspaceRole)
         ? `${role.label}: ${getWorkspaceRoleLabel(row.workspaceRole, $roles)}`
         : getWorkspaceRoleLabel(row.workspaceRole, $roles)
       : role?.label || "Not available"
-  $: groupUserValue = row?.workspaceRoleGroupRole
+  )
+  const groupUserValue = $derived(row?.workspaceRoleGroupRole
     ? `Group user: ${getWorkspaceRoleLabel(row.workspaceRoleGroupRole, $roles)}`
-    : "Group user"
-  $: tooltip = role?.subtitle || ""
+    : "Group user")
+  const tooltip = $derived(role?.subtitle || "")
 </script>
 
 {#if row?.workspaceRole === Constants.Roles.GROUP}

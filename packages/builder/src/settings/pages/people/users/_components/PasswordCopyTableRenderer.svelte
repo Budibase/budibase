@@ -1,7 +1,9 @@
+<svelte:options runes={true} />
+
 <script>
   import { InternalRenderer } from "@budibase/bbui"
 
-  export let value
+  let { value } = $props()
 </script>
 
 <div style="display: flex; ">

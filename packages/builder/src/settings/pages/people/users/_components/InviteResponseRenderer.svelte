@@ -1,5 +1,7 @@
+<svelte:options runes={true} />
+
 <script>
-  export let value
+  let { value } = $props()
 </script>
 
 <div style="display: flex; ">

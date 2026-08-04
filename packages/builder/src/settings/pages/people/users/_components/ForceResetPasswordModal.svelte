@@ -1,11 +1,10 @@
+<svelte:options runes={true} />
+
 <script>
-  import { createEventDispatcher } from "svelte"
   import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
   import { users } from "@/stores/portal/users"
 
-  const dispatch = createEventDispatcher()
-
-  export let user
+  let { user, onupdate } = $props()
 
   const generatePassword = length => {
     const array = new Uint8Array(length)
@@ -25,7 +24,7 @@
         forceResetPassword: true,
       })
       notifications.success("Password reset successfully")
-      dispatch("update")
+      onupdate?.()
     } catch (error) {
       notifications.error("Error resetting password")
     }

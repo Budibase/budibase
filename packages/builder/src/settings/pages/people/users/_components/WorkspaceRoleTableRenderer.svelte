@@ -1,13 +1,14 @@
+<svelte:options runes={true} />
+
 <script>
   import { StatusLight } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
   import { roles } from "@/stores/builder"
   import { capitalise } from "@/helpers"
 
-  export let value
-  export let row
+  let { value, row } = $props()
 
-  $: role = $roles.find(x => x._id === value)
+  const role = $derived($roles.find(x => x._id === value))
 
   const getRoleLabel = roleId => {
     return roleId === Constants.Roles.CREATOR

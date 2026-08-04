@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import {
     keepOpen,
@@ -57,16 +59,28 @@
     lastName?: string
   }
 
-  export let showOnboardingTypeModal: (
-    addUsersData: AddUsersData,
-    onboardingType?: string
-  ) => unknown
-  export let workspaceOnly = false
-  export let useWorkspaceInviteModal = workspaceOnly
-  export let assignToWorkspace = workspaceOnly
-  export let inviteTitle = "Invite users to workspace"
-  export let showGroupSelect = !useWorkspaceInviteModal
-  export let showInviteIcon = true
+  interface Props {
+    showOnboardingTypeModal: (
+      addUsersData: AddUsersData,
+      onboardingType?: string
+    ) => void | typeof keepOpen | Promise<void | typeof keepOpen>
+    workspaceOnly?: boolean
+    useWorkspaceInviteModal?: boolean
+    assignToWorkspace?: boolean
+    inviteTitle?: string
+    showGroupSelect?: boolean
+    showInviteIcon?: boolean
+  }
+
+  let {
+    showOnboardingTypeModal,
+    workspaceOnly = false,
+    useWorkspaceInviteModal = workspaceOnly,
+    assignToWorkspace = workspaceOnly,
+    inviteTitle = "Invite users to workspace",
+    showGroupSelect = !useWorkspaceInviteModal,
+    showInviteIcon = true,
+  }: Props = $props()
 
   const createUserInput = (inputPassword: string): UserInput => ({
     email: "",
@@ -77,18 +91,17 @@
   })
 
   const password = generatePassword(12)
-  let userGroups: string[] = []
-  let emailsInput: string[] = []
-  let parsedEmails: string[] = []
-  let pendingEmailInput = ""
-  let emailError: string | undefined
-  let suggestedUsers: SuggestedUser[] = []
-  let isSearchingUsers = false
+  let userGroups = $state<string[]>([])
+  let emailsInput = $state<string[]>([])
+  let pendingEmailInput = $state("")
+  let emailError = $state<string | undefined>()
+  let suggestedUsers = $state<SuggestedUser[]>([])
+  let isSearchingUsers = $state(false)
   let userSearchTimeout: ReturnType<typeof setTimeout> | undefined
   let userSearchId = 0
-  let highlightedUserIndex = -1
+  let highlightedUserIndex = $state(-1)
   const maxItems = 15
-  let selectedRole = Constants.BudibaseRoles.AppUser
+  let selectedRole = $state(Constants.BudibaseRoles.AppUser)
   const builtInEndUserRoles = [Constants.Roles.BASIC, Constants.Roles.ADMIN]
   const excludedRoleIds = [
     ...builtInEndUserRoles,
@@ -96,14 +109,13 @@
     Constants.Roles.CREATOR,
     Constants.Roles.GROUP,
   ]
-  let roleColorLookup: Record<string, string | undefined> = {}
-  $: roleColorLookup = ($roles || []).reduce<
+  const roleColorLookup = $derived(($roles || []).reduce<
     Record<string, string | undefined>
   >((acc, role) => {
     acc[role._id] = role.uiMetadata?.color
     return acc
-  }, {})
-  $: customEndUserRoleOptions = ($roles || [])
+  }, {}))
+  const customEndUserRoleOptions = $derived(($roles || [])
     .filter(role => !excludedRoleIds.includes(role._id))
     .map<EndUserRoleOption>(role => ({
       label: role.uiMetadata?.displayName || role.name || "Custom role",
@@ -111,9 +123,8 @@
       color:
         role.uiMetadata?.color ||
         "var(--spectrum-global-color-static-magenta-400)",
-    }))
-  let endUserRoleOptions: EndUserRoleOption[] = []
-  $: endUserRoleOptions = [
+    })))
+  const endUserRoleOptions = $derived<EndUserRoleOption[]>([
     {
       label: "Basic user",
       value: Constants.Roles.BASIC,
@@ -125,34 +136,33 @@
       color: roleColorLookup[Constants.Roles.ADMIN],
     },
     ...customEndUserRoleOptions,
-  ]
-  let endUserRole = Constants.Roles.BASIC
-  let onboardingType: string | null = OnboardingType.EMAIL
+  ])
+  let endUserRole = $state(Constants.Roles.BASIC)
+  let onboardingType = $state<string | null>(OnboardingType.EMAIL)
 
-  let userData: UserInput[] = [createUserInput(password)]
-  $: hasError = userData.some(x => x.error != null)
-  $: {
-    if (!useWorkspaceInviteModal) {
-      parsedEmails = []
-    } else {
+  let userData = $state<UserInput[]>([createUserInput(password)])
+  const hasError = $derived(userData.some(x => x.error != null))
+  const parsedEmails = $derived.by(() => {
+    if (useWorkspaceInviteModal) {
       const pendingEmail = pendingEmailInput.trim()
-      parsedEmails =
-        emailsInput.length === 0 && emailValidator(pendingEmail) === true
-          ? [pendingEmail]
-          : emailsInput
+      return emailsInput.length === 0 && emailValidator(pendingEmail) === true
+        ? [pendingEmail]
+        : emailsInput
     }
-  }
-  $: userCount =
+    return []
+  })
+  const userCount = $derived(
     ($licensing.userCount || 0) +
     (useWorkspaceInviteModal ? parsedEmails.length : userData.length)
-  $: reached = licensing.usersLimitReached(userCount)
-  $: exceeded = licensing.usersLimitExceeded(userCount)
-  $: smtpConfigured =
+  )
+  const reached = $derived(licensing.usersLimitReached(userCount))
+  const exceeded = $derived(licensing.usersLimitExceeded(userCount))
+  const smtpConfigured = $derived(
     $admin.loaded && ($admin.cloud || !!$admin.checklist?.smtp?.checked)
-  $: emailInviteDisabled = $admin.loaded ? !smtpConfigured : false
-  $: passwordInviteDisabled = !!$organisation.isSSOEnforced
-  let onboardingOptions: OnboardingOption[] = []
-  $: onboardingOptions = [
+  )
+  const emailInviteDisabled = $derived($admin.loaded ? !smtpConfigured : false)
+  const passwordInviteDisabled = $derived(!!$organisation.isSSOEnforced)
+  const onboardingOptions = $derived<OnboardingOption[]>([
     {
       label: "Send email invites",
       subtitle: emailInviteDisabled ? "Requires SMTP setup" : undefined,
@@ -164,19 +174,22 @@
       value: OnboardingType.PASSWORD,
       disabled: passwordInviteDisabled,
     },
-  ]
-  $: if (emailInviteDisabled && passwordInviteDisabled) {
-    onboardingType = null
-  } else if (emailInviteDisabled) {
-    onboardingType = OnboardingType.PASSWORD
-  } else if (passwordInviteDisabled) {
-    onboardingType = OnboardingType.EMAIL
-  } else if (!onboardingType) {
-    onboardingType = OnboardingType.EMAIL
-  }
+  ])
+  $effect(() => {
+    if (emailInviteDisabled && passwordInviteDisabled) {
+      onboardingType = null
+    } else if (emailInviteDisabled) {
+      onboardingType = OnboardingType.PASSWORD
+    } else if (passwordInviteDisabled) {
+      onboardingType = OnboardingType.EMAIL
+    } else if (!onboardingType) {
+      onboardingType = OnboardingType.EMAIL
+    }
+  })
 
-  let internalGroups: UserGroup[] = []
-  $: internalGroups = ($groups || []).filter(g => !g?.scimInfo?.isSync)
+  const internalGroups = $derived<UserGroup[]>(
+    ($groups || []).filter(g => !g?.scimInfo?.isSync)
+  )
 
   function removeInput(idx: number) {
     userData = userData.filter((_input, i) => i !== idx)

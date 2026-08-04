@@ -1,8 +1,9 @@
+<svelte:options runes={true} />
+
 <script>
   import { IconAvatar } from "@budibase/bbui"
 
-  export let value
-  export let row
+  let { value, row } = $props()
 </script>
 
 {#if !row?.__skeleton}

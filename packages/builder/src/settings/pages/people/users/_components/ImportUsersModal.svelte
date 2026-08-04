@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import {
     Body,
@@ -16,25 +18,27 @@
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
   const MAX_USERS_UPLOAD_LIMIT = 1000
 
-  export let createUsersFromCsv: (data: {
+  interface ImportUsersData {
     userEmails: string[]
     usersRole: string
     userGroups: string[]
-  }) => void
+  }
 
-  let files: File[] = []
-  let csvString: string | undefined = undefined
-  let userEmails: string[] = []
-  let userGroups: string[] = []
-  let usersRole: string = Constants.BudibaseRoles.AppUser
-  let invalidEmails: string[] = []
+  interface Props {
+    createUsersFromCsv: (data: ImportUsersData) => void
+  }
 
-  $: userCount = ($licensing?.userCount || 0) + userEmails.length
-  $: exceed = licensing.usersLimitExceeded(userCount)
-  $: importDisabled =
-    !userEmails.length || !validEmails(userEmails) || !usersRole || exceed
+  let { createUsersFromCsv }: Props = $props()
 
-  $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
+  let files = $state<File[]>([])
+  let userEmails = $state<string[]>([])
+  let userGroups = $state<string[]>([])
+  let usersRole = $state<string>(Constants.BudibaseRoles.AppUser)
+  let invalidEmails = $state<string[]>([])
+
+  const userCount = $derived(($licensing?.userCount || 0) + userEmails.length)
+  const exceed = $derived(licensing.usersLimitExceeded(userCount))
+  const internalGroups = $derived($groups?.filter(g => !g?.scimInfo?.isSync))
 
   const validEmails = (userEmails: string[]): boolean => {
     invalidEmails = [] // Reset invalid emails
@@ -59,6 +63,10 @@
     return false
   }
 
+  const importDisabled = $derived(
+    !userEmails.length || !validEmails(userEmails) || !usersRole || exceed
+  )
+
   async function handleFile(evt: Event): Promise<void> {
     const target = evt.target as HTMLInputElement
     if (!target.files) return
@@ -78,9 +86,8 @@
     reader.addEventListener("load", function (e) {
       const result = e.target?.result
       if (typeof result === "string") {
-        csvString = result
         files = fileArray
-        userEmails = parseUserEmailsFromCSV(csvString)
+        userEmails = parseUserEmailsFromCSV(result)
       }
     })
     reader.readAsText(fileArray[0])

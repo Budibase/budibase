@@ -1,11 +1,12 @@
+<svelte:options runes={true} />
+
 <script>
   import { goto as gotoStore } from "@roxi/routify"
   import { Body, ModalContent, notifications } from "@budibase/bbui"
   import { users } from "@/stores/portal/users"
 
-  $: goto = $gotoStore
-
-  export let user
+  let { user } = $props()
+  const goto = $derived($gotoStore)
 
   async function deleteUser() {
     try {

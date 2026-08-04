@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import DeleteRowsButton from "@/components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import { auth } from "@/stores/portal/auth"
@@ -23,18 +25,24 @@
     userGroups?: string[]
   }
 
-  let selectedInvites: ParsedInvite[] = []
-  let invitesLoaded = false
-  let pendingInvites: GetUserInvitesResponse = []
-  let parsedInvites: ParsedInvite[] = []
-  let customRenderers = [
+  interface SchemaField {
+    displayName?: string
+    sortable: boolean
+    width: string
+    minWidth?: string
+  }
+
+  let selectedInvites = $state<ParsedInvite[]>([])
+  let invitesLoaded = $state(false)
+  let pendingInvites = $state<GetUserInvitesResponse>([])
+  const customRenderers = [
     { column: "email", component: EmailTableRenderer },
     { column: "userGroups", component: GroupsTableRenderer },
     // { column: "apps", component: AppsTableRenderer },
     { column: "role", component: RoleTableRenderer },
   ]
 
-  $: schema = {
+  const schema = $derived<Record<string, SchemaField>>({
     email: {
       sortable: false,
       width: "1fr",
@@ -48,11 +56,7 @@
     ...($licensing.groupsEnabled && {
       userGroups: { sortable: false, displayName: "Groups", width: "1fr" },
     }),
-  }
-
-  $: pendingSchema = getPendingSchema(schema)
-  $: readonly = $auth.user ? !sdk.users.isAdmin($auth.user) : false
-  $: parsedInvites = invitesToSchema(pendingInvites)
+  })
 
   const invitesToSchema = (invites: InviteWithCode[]): ParsedInvite[] => {
     return invites.map(invite => {
@@ -68,7 +72,7 @@
     })
   }
 
-  const getPendingSchema = (tblSchema: any) => {
+  const getPendingSchema = (tblSchema: Record<string, SchemaField>) => {
     if (!tblSchema) {
       return {}
     }
@@ -76,6 +80,12 @@
     pendingSchema.email.displayName = "Pending Users"
     return pendingSchema
   }
+
+  const pendingSchema = $derived(getPendingSchema(schema))
+  const readonly = $derived(
+    $auth.user ? !sdk.users.isAdmin($auth.user) : false
+  )
+  const parsedInvites = $derived(invitesToSchema(pendingInvites))
 
   const deleteUsers = async () => {
     try {
