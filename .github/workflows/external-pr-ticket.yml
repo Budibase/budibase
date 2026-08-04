@@ -45,19 +45,13 @@ jobs:
             const issueNumbers = new Set()
             const escapedOwner = owner.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
             const escapedRepo = repo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-            const patterns = [
-              new RegExp(
-                `https?:\\/\\/github\\.com\\/${escapedOwner}\\/${escapedRepo}\\/issues\\/(\\d+)`,
-                "gi"
-              ),
-              /(?:^|[\s(])#(\d+)\b/gm,
-            ]
+            const issueReferencePattern = new RegExp(
+              `https?:\\/\\/github\\.com\\/${escapedOwner}\\/${escapedRepo}\\/issues\\/(\\d+)|(?:^|[\\s(])#(\\d+)\\b`,
+              "gim"
+            )
 
-            for (const pattern of patterns) {
-              for (const match of body.matchAll(pattern)) {
-                issueNumbers.add(Number(match[1]))
-                if (issueNumbers.size === maxReferencedIssues) break
-              }
+            for (const match of body.matchAll(issueReferencePattern)) {
+              issueNumbers.add(Number(match[1] || match[2]))
               if (issueNumbers.size === maxReferencedIssues) break
             }
 
