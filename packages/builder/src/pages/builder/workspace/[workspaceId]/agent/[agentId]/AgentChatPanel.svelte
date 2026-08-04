@@ -9,6 +9,10 @@
   import { Chatbox } from "@budibase/frontend-core/src/components"
   import { escalationsStore } from "@/stores/portal/escalations"
   import { featureFlags } from "@/stores/portal"
+  import {
+    loadPromptHistory,
+    savePromptHistory,
+  } from "@/utils/chatPreviewPromptHistory"
 
   type DraftChat = WithoutDocMetadata<DraftChatConversation>
 
@@ -29,6 +33,7 @@
   let chat: DraftChatConversation = $state({ ...INITIAL_CHAT })
   let lastKey = $state("")
   let refreshKey = $state(0)
+  let promptHistory = $state<string[]>([])
 
   // Preview is transient, so escalation polling lives here, not in Chatbox.
   let chatbox = $state<
@@ -78,6 +83,18 @@
     resetChat(agentId)
   }
 
+  const handlePromptSubmitted = (prompt: string) => {
+    if (!agentId) {
+      return
+    }
+
+    promptHistory = savePromptHistory({
+      workspaceId,
+      agentId,
+      history: [...promptHistory, prompt],
+    })
+  }
+
   $effect(() => {
     if (!workspaceId) {
       return
@@ -89,6 +106,9 @@
     }
 
     lastKey = nextKey
+    promptHistory = agentId
+      ? loadPromptHistory({ workspaceId, agentId })
+      : []
     resetChat(agentId)
   })
 </script>
@@ -108,6 +128,8 @@
         persistConversation={false}
         {workspaceId}
         isAgentPreviewChat={true}
+        {promptHistory}
+        onpromptsubmitted={handlePromptSubmitted}
         onEscalationPending={handleEscalationPending}
         escalationState={$escalationsStore.escalations}
         showInlineApproval={$featureFlags[FeatureFlag.ESCALATION]}
