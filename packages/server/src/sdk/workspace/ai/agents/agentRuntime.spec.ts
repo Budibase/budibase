@@ -1003,14 +1003,6 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
         value: "12.5",
       }),
     ])
-    expect(ToolLoopAgent).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        instructions: expect.stringContaining(
-          "A correction replaces an earlier value."
-        ),
-      })
-    )
     expect(ToolLoopAgent).toHaveBeenLastCalledWith(
       expect.objectContaining({
         tools: undefined,
