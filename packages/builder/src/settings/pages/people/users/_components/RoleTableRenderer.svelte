@@ -77,7 +77,12 @@
       : "Group user"
   )
   const tooltip = $derived(
-    role && "subtitle" in role && role.subtitle ? role.subtitle : ""
+    role &&
+      "subtitle" in role &&
+      role.subtitle &&
+      typeof role.subtitle === "string"
+      ? role.subtitle
+      : ""
   )
 </script>
 
