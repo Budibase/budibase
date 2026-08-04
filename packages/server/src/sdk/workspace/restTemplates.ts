@@ -1,3 +1,4 @@
+import kebabCase from "lodash/kebabCase"
 import {
   context,
   db as dbCore,
@@ -65,6 +66,21 @@ export const create = async ({
   operationsCount,
 }: CreateCustomRestTemplateParams): Promise<RestTemplate> => {
   const db = context.getWorkspaceDB()
+  const normalizedName = kebabCase(name)
+  if (!normalizedName) {
+    throw new HTTPError("Template name must contain letters or numbers", 400)
+  }
+
+  const existingTemplate = (await fetch()).find(
+    template => kebabCase(template.name) === normalizedName
+  )
+  if (existingTemplate) {
+    throw new HTTPError(
+      `A custom REST template named "${name.trim()}" already exists`,
+      409
+    )
+  }
+
   const restTemplateId = dbCore.generateRestTemplateID()
   const existing = await db.tryGet<CustomRestTemplateDocument>(restTemplateId)
   if (existing) {

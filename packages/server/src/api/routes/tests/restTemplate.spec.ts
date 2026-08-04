@@ -253,7 +253,7 @@ describe("/rest-templates", () => {
       .expect(200)
   })
 
-  it("allows names that normalize to the same value", async () => {
+  it("rejects names that normalize to the same value", async () => {
     const firstResponse = await request
       .post("/api/rest-templates")
       .set(config.defaultHeaders())
@@ -262,24 +262,18 @@ describe("/rest-templates", () => {
       .attach("file", Buffer.from(OPENAPI_SCHEMA), "openapi.json")
       .expect(200)
 
-    const secondResponse = await request
+    const duplicateResponse = await request
       .post("/api/rest-templates")
       .set(config.defaultHeaders())
       .field("name", "duplicate-api")
       .field("description", "")
       .attach("file", Buffer.from(OPENAPI_SCHEMA), "openapi.json")
-      .expect(200)
+      .expect(409)
 
-    expect(firstResponse.body.template.id).not.toBe(
-      secondResponse.body.template.id
-    )
+    expect(duplicateResponse.body.message).toContain("already exists")
 
     await request
       .delete(`/api/rest-templates/${firstResponse.body.template.id}`)
-      .set(config.defaultHeaders())
-      .expect(200)
-    await request
-      .delete(`/api/rest-templates/${secondResponse.body.template.id}`)
       .set(config.defaultHeaders())
       .expect(200)
   })

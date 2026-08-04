@@ -55,7 +55,7 @@
     }
     if (
       restTemplates.templates.some(
-        template => template.id === `rest_template_${nameSlug}`
+        template => template.custom && kebabCase(template.name) === nameSlug
       )
     ) {
       nameError = "A custom template with this name already exists."
