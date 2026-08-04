@@ -2,9 +2,10 @@
 
 <script lang="ts">
   import { Icon } from "@budibase/bbui"
+  import type { UserGroup } from "@budibase/types"
 
   interface Props {
-    value?: readonly object[] | null
+    value?: readonly (string | UserGroup)[] | null
   }
 
   let { value }: Props = $props()
