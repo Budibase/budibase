@@ -231,6 +231,30 @@ describe("Functions isolate", () => {
     })
   })
 
+  it("identifies an unhandled query failure", async () => {
+    const result = await executeFunctionInIsolate(
+      request(`
+        export default async function run() {
+          await globalThis.__budibaseInvokeQuery("query", {})
+          return { output: {} }
+        }
+      `),
+      async () => {
+        throw new Error("sensitive datasource error")
+      }
+    )
+
+    expect(result).toMatchObject({
+      status: "error",
+      metrics: { queryCount: 1 },
+      error: {
+        code: FunctionErrorCode.FUNCTION_QUERY_ERROR,
+        message: "Function query failed",
+      },
+    })
+    expect(JSON.stringify(result)).not.toContain("sensitive datasource error")
+  })
+
   it("enforces concurrent query calls", async () => {
     const runRequest = request(`
       export default async function run() {

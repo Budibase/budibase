@@ -160,6 +160,8 @@ const failureMessage = (code: FunctionErrorCode) => {
   switch (code) {
     case FunctionErrorCode.FUNCTION_OUTPUT_INVALID:
       return INVALID_OUTPUT_MESSAGE
+    case FunctionErrorCode.FUNCTION_QUERY_ERROR:
+      return QUERY_FAILED_MESSAGE
     case FunctionErrorCode.FUNCTION_QUERY_LIMIT:
       return QUERY_LIMIT_MESSAGE
     case FunctionErrorCode.FUNCTION_MEMORY_LIMIT:
@@ -349,6 +351,8 @@ export const executeFunctionInIsolate = async (
       errorCode = FunctionErrorCode.FUNCTION_TIMEOUT
     } else if (error instanceof FunctionOutputError) {
       errorCode = FunctionErrorCode.FUNCTION_OUTPUT_INVALID
+    } else if (String(error).includes(QUERY_FAILED_MESSAGE)) {
+      errorCode = FunctionErrorCode.FUNCTION_QUERY_ERROR
     } else if (isolate.isDisposed) {
       errorCode = FunctionErrorCode.FUNCTION_MEMORY_LIMIT
     } else if (String(error).toLowerCase().includes("timed out")) {
