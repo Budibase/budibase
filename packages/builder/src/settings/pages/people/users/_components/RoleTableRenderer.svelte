@@ -76,7 +76,9 @@
       ? `Group user: ${getWorkspaceRoleLabel(row.workspaceRoleGroupRole, $roles)}`
       : "Group user"
   )
-  const tooltip = $derived(role?.label || "")
+  const tooltip = $derived(
+    role && "subtitle" in role && role.subtitle ? role.subtitle : ""
+  )
 </script>
 
 {#if row?.workspaceRole === Constants.Roles.GROUP}
