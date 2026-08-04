@@ -21,6 +21,10 @@ interface ImportResult {
   queries: Query[]
 }
 
+interface ImportOptions {
+  updateExisting?: boolean
+}
+
 type ImporterInput = { data: string } | { url: string }
 
 const OPENAPI_SPEC_CACHE_TTL_DAYS = 28
@@ -70,6 +74,9 @@ const stringToHashKey = (input: string) =>
 
 const buildCacheKey = (input: ImporterInput) =>
   `openapiSpecs:${stringToHashKey(JSON.stringify("data" in input ? input.data : input.url))}`
+
+const getEndpointKey = (query: Query) =>
+  `${query.queryVerb}::${query.restTemplateMetadata?.originalPath || ""}`
 
 function parseImportUrl(url: string): URL {
   let parsed: URL
@@ -219,7 +226,8 @@ export class RestImporter {
 
   importQueries = async (
     datasourceId: string,
-    selectedEndpointId?: string
+    selectedEndpointId?: string,
+    { updateExisting = false }: ImportOptions = {}
   ): Promise<ImportResult> => {
     const filterIds = selectedEndpointId
       ? new Set<string>([selectedEndpointId])
@@ -239,19 +247,43 @@ export class RestImporter {
     // validate queries
     const errorQueries: Query[] = []
     const schema = queryValidation()
-    queries = queries
-      .filter(query => {
-        const validation = schema.validate(query)
-        if (validation.error) {
-          errorQueries.push(query)
-          return false
+    queries = queries.filter(query => {
+      const validation = schema.validate(query)
+      if (validation.error) {
+        errorQueries.push(query)
+        return false
+      }
+      return true
+    })
+
+    const existingQueries = updateExisting
+      ? (await sdk.queries.fetch({ enrich: false })).filter(
+          query => query.datasourceId === datasourceId
+        )
+      : []
+    const existingByEndpoint = new Map(
+      existingQueries
+        .filter(query => query.restTemplateMetadata?.originalPath)
+        .map(query => [getEndpointKey(query), query])
+    )
+
+    queries = queries.map(query => {
+      const existing = updateExisting
+        ? existingByEndpoint.get(getEndpointKey(query))
+        : undefined
+      if (existing?._id && existing._rev) {
+        return {
+          ...existing,
+          ...query,
+          _id: existing._id,
+          _rev: existing._rev,
         }
-        return true
-      })
-      .map(query => {
-        query._id = generateQueryID(query.datasourceId)
-        return query
-      })
+      }
+      return {
+        ...query,
+        _id: generateQueryID(query.datasourceId),
+      }
+    })
 
     // persist queries
     const db = context.getWorkspaceDB()
@@ -284,7 +316,11 @@ export class RestImporter {
     const datasource = await sdk.datasources.get(datasourceId)
     await events.query.imported(datasource, importSource, count)
     for (let query of successQueries) {
-      await events.query.created(datasource, query)
+      if (existingQueries.some(existing => existing._id === query._id)) {
+        await events.query.updated(datasource, query)
+      } else {
+        await events.query.created(datasource, query)
+      }
     }
 
     return {
