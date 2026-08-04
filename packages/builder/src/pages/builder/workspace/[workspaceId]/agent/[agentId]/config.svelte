@@ -10,10 +10,7 @@
     type EnrichedBinding,
   } from "@budibase/types"
   import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
-  import {
-    getQueryToolBindings,
-    isQueryToolType,
-  } from "@budibase/shared-core"
+  import { getQueryToolBindings, isQueryToolType } from "@budibase/shared-core"
   import {
     datasources,
     restTemplates,
