@@ -1,6 +1,6 @@
 import { Datasource, Query, SourceName, ToolType } from "@budibase/types"
 import sdk from "../../.."
-import { getAvailableToolsMetadata } from "./utils"
+import { getAvailableTools, getAvailableToolsMetadata } from "./utils"
 
 const makeDatasource = (overrides: Partial<Datasource>): Datasource => ({
   _id: "datasource_1",
@@ -76,6 +76,48 @@ describe("getAvailableToolsMetadata", () => {
       sourceType: ToolType.REST_QUERY,
       sourceLabel: "REST API",
     })
+  })
+
+  it("marks only read queries as read-only tools", async () => {
+    jest.spyOn(sdk.datasources, "fetch").mockResolvedValue([
+      makeDatasource({
+        _id: "datasource_rest",
+        source: SourceName.REST,
+        name: "REST API",
+      }),
+    ])
+    jest.spyOn(sdk.queries, "fetch").mockResolvedValue([
+      makeQuery({
+        _id: "query_read",
+        datasourceId: "datasource_rest",
+        name: "List tags",
+        queryVerb: "read",
+      }),
+      makeQuery({
+        _id: "query_create",
+        datasourceId: "datasource_rest",
+        name: "Create expense",
+        queryVerb: "create",
+      }),
+      makeQuery({
+        _id: "query_unknown",
+        datasourceId: "datasource_rest",
+        name: "Unknown action",
+        queryVerb: undefined,
+      }),
+    ])
+
+    const tools = await getAvailableTools()
+
+    expect(
+      tools.find(tool => tool.readableName === "List tags")?.readOnly
+    ).toBe(true)
+    expect(
+      tools.find(tool => tool.readableName === "Create expense")?.readOnly
+    ).toBe(false)
+    expect(
+      tools.find(tool => tool.readableName === "Unknown action")?.readOnly
+    ).toBe(false)
   })
 
   it("adds non-REST datasource queries as DATASOURCE_QUERY tools", async () => {

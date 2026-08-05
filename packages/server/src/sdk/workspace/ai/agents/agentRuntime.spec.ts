@@ -388,6 +388,7 @@ describe("prepareAgentRunContext", () => {
       systemPrompt: "system prompt",
       tools: {},
       toolDisplayNames: {},
+      readOnlyToolNames: new Set(),
     })
   })
 
@@ -534,13 +535,15 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
 
   const runFor = async (
     operation: (typeof agent.operations)[number],
-    overrides: Partial<Parameters<typeof prepareAgentChatRun>[0]> = {}
-  ) => {
-    jest.mocked(buildPromptAndTools).mockResolvedValue({
+    overrides: Partial<Parameters<typeof prepareAgentChatRun>[0]> = {},
+    promptAndTools: Awaited<ReturnType<typeof buildPromptAndTools>> = {
       systemPrompt: "system prompt",
       tools: { escalate: escalatePlaceholder },
       toolDisplayNames: {},
-    })
+      readOnlyToolNames: new Set(),
+    }
+  ) => {
+    jest.mocked(buildPromptAndTools).mockResolvedValue(promptAndTools)
 
     return prepareAgentChatRun({
       agent,
@@ -705,7 +708,7 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     )
   })
 
-  it("removes operation tools for query routes while required inputs are missing", async () => {
+  it("keeps only read-only tools for query routes without collecting request inputs", async () => {
     const operationWithInputs = {
       ...operationWithoutRecipients,
       requestInputs: [
@@ -717,47 +720,50 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
         },
       ],
     }
-    mockRouterStream
-      .mockReturnValueOnce({
-        output: Promise.resolve({
-          action: "select_operation",
-          operationId: operationWithInputs.id,
-          intent: "query",
-          reason: "Asking about an existing request",
-        }),
-      })
-      .mockReturnValueOnce({
-        output: Promise.resolve({
-          values: {
-            device_type: {
-              value: null,
-              sourceMessageIndex: null,
-              sourceQuote: null,
-            },
-          },
-        }),
-      })
-
-    const run = await runFor(operationWithInputs, {
-      agent: {
-        ...agent,
-        operations: [operationWithRecipients, operationWithInputs],
-      },
-      latestQuestion: "What is the status of my request?",
-      operationId: undefined,
+    mockRouterStream.mockReturnValueOnce({
+      output: Promise.resolve({
+        action: "select_operation",
+        operationId: operationWithInputs.id,
+        intent: "query",
+        reason: "Asking about an existing request",
+      }),
     })
 
+    const run = await runFor(
+      operationWithInputs,
+      {
+        agent: {
+          ...agent,
+          operations: [operationWithRecipients, operationWithInputs],
+        },
+        latestQuestion: "What expense tags are available?",
+        operationId: undefined,
+      },
+      {
+        systemPrompt: "system prompt",
+        tools: {
+          get_table: escalatePlaceholder,
+          create_expense: escalatePlaceholder,
+        },
+        toolDisplayNames: {},
+        readOnlyToolNames: new Set(["get_table"]),
+      }
+    )
+
     expect(run.operationIntent).toBe("query")
-    expect(run.requestInputs).toEqual([
-      expect.objectContaining({
-        id: "device_type",
-        value: undefined,
-      }),
-    ])
+    expect(run.requestInputs).toEqual([])
+    expect(mockRouterStream).toHaveBeenCalledTimes(1)
     expect(ToolLoopAgent).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        tools: undefined,
-        instructions: expect.stringContaining("Device type"),
+        tools: { get_table: escalatePlaceholder },
+        instructions: expect.stringContaining(
+          "Use the available read-only tools to verify the answer."
+        ),
+      })
+    )
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        instructions: expect.not.stringContaining("Device type"),
       })
     )
   })

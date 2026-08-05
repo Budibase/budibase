@@ -139,6 +139,7 @@ describe("Agent step tool call tracking", () => {
       systemPrompt: "You are a helpful assistant",
       tools: { queryTable: {}, callApi: {} },
       toolDisplayNames: {},
+      readOnlyToolNames: new Set(),
     })
     jest.mocked(require("ai").ToolLoopAgent).mockClear()
     jest.spyOn(console, "error").mockImplementation(() => {})

@@ -75,6 +75,23 @@ describe("AI Tools - Rows", () => {
     }
   })
 
+  it("marks only row lookup tools as read-only", () => {
+    const readOnlyByAction = Object.fromEntries(
+      getExternalRowTools("Expenses").map(tool => [
+        tool.readableName?.split(".").at(-1),
+        tool.readOnly === true,
+      ])
+    )
+
+    expect(readOnlyByAction).toEqual({
+      list_rows: true,
+      get_row: true,
+      create_row: false,
+      update_row: false,
+      search_rows: true,
+    })
+  })
+
   async function executeTool<T extends BudibaseToolDefinition>(
     tool: ToolLike<T>,
     input: ToolInput<T>
