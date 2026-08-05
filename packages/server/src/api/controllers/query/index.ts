@@ -47,6 +47,7 @@ import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
+import { builderSocket } from "../../../websockets"
 import {
   resolveProjectIds,
   resolveUpdatedProjectIds,
@@ -143,16 +144,24 @@ const _import = async (
           }
 
           const datasource = await sdk.datasources.get(body.datasourceId!)
+          if (datasource.source !== SourceName.REST) {
+            throw new HTTPError(
+              "Custom REST templates can only be associated with REST datasources",
+              400
+            )
+          }
           if (datasource.restTemplateId === body.restTemplateId) {
             return
           }
 
+          importer.prepareDatasourceConfig(datasource)
           datasource.restTemplateId = body.restTemplateId
           const response = await context
             .getWorkspaceDB()
             .put(sdk.tables.populateExternalTableSchemas(datasource))
           datasource._rev = response.rev
           await events.datasource.updated(datasource)
+          builderSocket?.emitDatasourceUpdate(ctx, datasource)
         },
       })
     }

@@ -32,6 +32,25 @@ const OPENAPI_SCHEMA = JSON.stringify({
       },
     },
   },
+  servers: [
+    {
+      url: "https://{account}.example.com",
+      variables: {
+        account: {
+          default: "api",
+        },
+      },
+    },
+  ],
+  components: {
+    securitySchemes: {
+      apiKey: {
+        type: "apiKey",
+        in: "header",
+        name: "X-API-Key",
+      },
+    },
+  },
 })
 
 describe("/rest-templates", () => {
@@ -137,7 +156,34 @@ describe("/rest-templates", () => {
     const taggedDatasource = (await config.api.datasource.fetch()).find(
       datasource => datasource._id === existingDatasource._id
     )
-    expect(taggedDatasource?.restTemplateId).toBe(template.id)
+    expect(taggedDatasource).toEqual(
+      expect.objectContaining({
+        restTemplateId: template.id,
+        config: expect.objectContaining({
+          staticVariables: { account: "api" },
+          defaultHeaders: { "X-API-Key": "" },
+        }),
+      })
+    )
+
+    const nonRestDatasource = await config.api.datasource.create({
+      type: "datasource",
+      name: "Existing Postgres datasource",
+      source: SourceName.POSTGRES,
+      config: {},
+    })
+    await request
+      .post("/api/queries/import")
+      .set(config.defaultHeaders())
+      .send({
+        restTemplateId: template.id,
+        datasourceId: nonRestDatasource._id,
+      })
+      .expect(400)
+    const unchangedNonRestDatasource = (
+      await config.api.datasource.fetch()
+    ).find(datasource => datasource._id === nonRestDatasource._id)
+    expect(unchangedNonRestDatasource?.restTemplateId).toBeUndefined()
 
     await request
       .delete(`/api/rest-templates/${template.id}`)
@@ -148,6 +194,7 @@ describe("/rest-templates", () => {
       datasource => datasource.restTemplateId === template.id
     )
     expect(importedDatasources).toHaveLength(2)
+    await config.api.datasource.delete(nonRestDatasource)
     await config.api.datasource.delete(importedDatasources[0])
     await config.api.datasource.delete(importedDatasources[1])
     expect(
