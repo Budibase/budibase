@@ -9,9 +9,11 @@ import type {
   CustomRestTemplateDocument,
   CustomRestTemplateFileExtension,
   CustomRestTemplateId,
+  Datasource,
   RestTemplate,
 } from "@budibase/types"
-import { DocumentType } from "@budibase/types"
+import { DocumentType, SourceName } from "@budibase/types"
+import { getDatasourceParams } from "../../db/utils"
 
 const CUSTOM_TEMPLATE_VERSION = "custom"
 
@@ -175,4 +177,34 @@ export const remove = async (restTemplateId: CustomRestTemplateId) => {
     getObjectStoreFolder(restTemplateId)
   )
   await db.remove(document._id, document._rev)
+}
+
+export const removeIfUnused = async (
+  restTemplateId: CustomRestTemplateId
+): Promise<boolean> => {
+  const db = context.getWorkspaceDB()
+  const response = await db.allDocs<Datasource>(
+    getDatasourceParams(null, {
+      include_docs: true,
+    })
+  )
+  const isUsed = response.rows.some(row => {
+    const datasource = row.doc
+    return (
+      datasource?.source === SourceName.REST &&
+      datasource.restTemplateId === restTemplateId
+    )
+  })
+
+  if (isUsed) {
+    return false
+  }
+
+  const document = await db.tryGet<CustomRestTemplateDocument>(restTemplateId)
+  if (!document?._rev) {
+    return false
+  }
+
+  await remove(restTemplateId)
+  return true
 }

@@ -1,5 +1,5 @@
 import { objectStore } from "@budibase/backend-core"
-import type { RestTemplate } from "@budibase/types"
+import { SourceName, type RestTemplate } from "@budibase/types"
 import { afterAll as cleanup, getConfig, getRequest } from "./utilities"
 
 jest.mock("@budibase/backend-core", () => {
@@ -138,6 +138,49 @@ describe("/rest-templates", () => {
         listedTemplate => listedTemplate.id === template.id
       )
     ).toBeUndefined()
+  })
+
+  it("removes an uploaded template when its last connection is deleted", async () => {
+    const uploadResponse = await request
+      .post("/api/rest-templates")
+      .set(config.defaultHeaders())
+      .field("name", "Unused API")
+      .field("description", "An API used for cleanup")
+      .attach("file", Buffer.from(OPENAPI_SCHEMA), "openapi.json")
+      .expect(200)
+
+    const template = uploadResponse.body.template as RestTemplate
+    const datasource = await config.api.datasource.create({
+      type: "datasource",
+      name: "Unused API connection",
+      source: SourceName.REST,
+      restTemplateId: template.id,
+      config: {},
+    })
+    const secondDatasource = await config.api.datasource.create({
+      type: "datasource",
+      name: "Second unused API connection",
+      source: SourceName.REST,
+      restTemplateId: template.id,
+      config: {},
+    })
+
+    await config.api.datasource.delete(datasource)
+    expect(objectStore.deleteFolder).not.toHaveBeenCalled()
+
+    await config.api.datasource.delete(secondDatasource)
+
+    expect(objectStore.deleteFolder).toHaveBeenCalledWith(
+      objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
+      template.id
+    )
+    const templates = await request
+      .get("/api/rest-templates")
+      .set(config.defaultHeaders())
+      .expect(200)
+    expect(templates.body).not.toContainEqual(
+      expect.objectContaining({ id: template.id })
+    )
   })
 
   it("rejects non-OpenAPI uploads", async () => {

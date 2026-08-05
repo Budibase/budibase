@@ -46,6 +46,11 @@ import {
 } from "../../utilities/projects"
 import { builderSocket } from "../../websockets"
 
+const isCustomRestTemplateId = (
+  restTemplateId: string | undefined
+): restTemplateId is `rest_template_${string}` =>
+  restTemplateId?.startsWith("rest_template_") ?? false
+
 async function clearOAuth2TokenCaches(datasource: Datasource) {
   const authConfigs = datasource.config?.authConfigs
   if (!authConfigs) return
@@ -416,6 +421,11 @@ export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
   await clearOAuth2TokenCaches(datasource)
   await db.remove(datasourceId, ctx.params.revId)
   await events.datasource.deleted(datasource)
+
+  const restTemplateId = datasource.restTemplateId
+  if (isCustomRestTemplateId(restTemplateId)) {
+    await sdk.restTemplates.removeIfUnused(restTemplateId)
+  }
 
   ctx.body = { message: `Datasource deleted.` }
   builderSocket?.emitDatasourceDeletion(ctx, datasourceId)

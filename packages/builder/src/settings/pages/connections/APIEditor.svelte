@@ -47,10 +47,7 @@
   import { cloneDeep, isEqual } from "lodash"
   import { API } from "@/api"
   import { confirm } from "@/helpers"
-  import {
-    getRestTemplateImportInfoRequest,
-    isCustomRestTemplateId,
-  } from "@/helpers/restTemplates"
+  import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import HTTPAuthEditor from "./HTTPAuthEditor.svelte"
   import OAuth2Editor from "./OAuth2Editor.svelte"
   import ServerUrlInput from "./ServerUrlInput.svelte"
@@ -529,33 +526,6 @@
     }
   }
 
-  const deleteCustomTemplate = async () => {
-    if (!template?.custom || !isCustomRestTemplateId(template.id)) {
-      return
-    }
-
-    const customTemplateId = template.id
-    const customTemplateName = template.name
-    await confirm({
-      title: "Delete custom OpenAPI template",
-      body: `Delete ${customTemplateName}? Existing connections and queries will remain, but the template will no longer be available when creating connections.`,
-      okText: "Delete template",
-      warning: true,
-      onConfirm: async () => {
-        try {
-          await restTemplates.deleteCustom(customTemplateId)
-          notifications.success(`${customTemplateName} template deleted`)
-          unregister()
-          bb.settings("/connections/apis")
-        } catch (error) {
-          const message =
-            error instanceof Error ? error.message : "Unknown error"
-          notifications.error(`Error deleting template - ${message}`)
-        }
-      },
-    })
-  }
-
   const openInApiEditor = () => {
     if (!datasource?._id) {
       return
@@ -653,11 +623,6 @@
     <RouteActions>
       <div class="route-buttons">
         {#if !$bb.settings.locked}
-          {#if isNewConnection && template?.custom}
-            <Button on:click={deleteCustomTemplate} quiet overBackground>
-              Delete template
-            </Button>
-          {/if}
           {#if isDatasource && !isNewConnection}
             <Button on:click={() => deleteModal.show()} quiet overBackground>
               Delete
