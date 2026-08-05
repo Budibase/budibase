@@ -702,9 +702,9 @@ export const prepareAgentChatRun = async ({
   const requestInputsEnabled =
     !!selectedOperation?.requestInputs?.length &&
     (await features.isEnabled(FeatureFlag.AI_AGENT_REQUEST_INPUTS))
-  const requestInputQuery = requestInputsEnabled && operationIntent === "query"
+  const operationQuery = operationIntent === "query"
   const requestInputs =
-    selectedOperation && requestInputsEnabled && !requestInputQuery
+    selectedOperation && requestInputsEnabled && !operationQuery
       ? await collectRequestInputs({
           operation: selectedOperation,
           modelMessages,
@@ -721,7 +721,7 @@ export const prepareAgentChatRun = async ({
       : false
   const awaitingRequestInputConfirmation =
     capturedRequestInputs.length > 0 && !requestInputsConfirmed
-  if (requestInputQuery) {
+  if (operationQuery) {
     for (const toolName of Object.keys(tools)) {
       if (!readOnlyToolNames.has(toolName)) {
         delete tools[toolName]
@@ -793,7 +793,7 @@ export const prepareAgentChatRun = async ({
   }
 
   let requestInputInstructions: string | undefined
-  if (requestInputQuery) {
+  if (operationQuery) {
     requestInputInstructions = `This is an informational query about the current operation, not a request to perform it. Do not ask for request input values and do not perform or initiate the operation. Use the available read-only tools to verify the answer. If the available tools cannot verify the answer, say that you cannot determine it from the available information. Never infer, invent, or guess operation data or possible values.`
   } else if (missingRequestInputs.length) {
     const missingInputNames = missingRequestInputs.map(input => input.name)

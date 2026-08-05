@@ -768,6 +768,48 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     )
   })
 
+  it("keeps only read-only tools for query routes when request inputs are disabled", async () => {
+    mockIsEnabled.mockImplementation(
+      async (flag: FeatureFlag) => flag === FeatureFlag.ESCALATION
+    )
+    mockRouterStream.mockReturnValueOnce({
+      output: Promise.resolve({
+        action: "select_operation",
+        operationId: operationWithoutRecipients.id,
+        intent: "query",
+        reason: "Asking about an existing request",
+      }),
+    })
+
+    const run = await runFor(
+      operationWithoutRecipients,
+      {
+        latestQuestion: "What expense tags are available?",
+        operationId: undefined,
+      },
+      {
+        systemPrompt: "system prompt",
+        tools: {
+          get_table: escalatePlaceholder,
+          create_expense: escalatePlaceholder,
+        },
+        toolDisplayNames: {},
+        readOnlyToolNames: new Set(["get_table"]),
+      }
+    )
+
+    expect(run.operationIntent).toBe("query")
+    expect(run.requestInputs).toEqual([])
+    expect(ToolLoopAgent).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        tools: { get_table: escalatePlaceholder },
+        instructions: expect.stringContaining(
+          "Use the available read-only tools to verify the answer."
+        ),
+      })
+    )
+  })
+
   it("keeps operation tools when captured inputs are confirmed", async () => {
     const operationWithInputs = {
       ...operationWithoutRecipients,
