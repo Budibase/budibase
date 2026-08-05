@@ -37,16 +37,14 @@
       syncing = false
     }
   }
-
-  const knowledgeSearchUnavailable = $derived(
-    row.knowledgeSearchConfigured !== true
-  )
 </script>
 
 <div class="file-actions" class:loading={processing}>
   {#if row.kind === "sharepoint_connection"}
     <AbsTooltip
-      text={knowledgeSearchUnavailable ? unavailableTooltip : "Sync SharePoint"}
+      text={!row.knowledgeSearchConfigured
+        ? unavailableTooltip
+        : "Sync SharePoint"}
       noWrap
     >
       <ActionButton
@@ -54,12 +52,12 @@
         size="M"
         quiet
         on:click={() => sync(row)}
-        disabled={knowledgeSearchUnavailable || processing}
+        disabled={!row.knowledgeSearchConfigured || processing}
         loading={syncing}
       ></ActionButton>
     </AbsTooltip>
     <AbsTooltip
-      text={knowledgeSearchUnavailable ? unavailableTooltip : "Disconnect"}
+      text={!row.knowledgeSearchConfigured ? unavailableTooltip : "Disconnect"}
       noWrap
     >
       <ActionButton
@@ -67,12 +65,12 @@
         size="M"
         quiet
         on:click={remove}
-        disabled={knowledgeSearchUnavailable || processing}
+        disabled={!row.knowledgeSearchConfigured || processing}
       />
     </AbsTooltip>
   {:else if row.onDelete}
     <AbsTooltip
-      text={knowledgeSearchUnavailable ? unavailableTooltip : "Remove"}
+      text={!row.knowledgeSearchConfigured ? unavailableTooltip : "Remove"}
       noWrap
     >
       <ActionButton
@@ -80,7 +78,7 @@
         size="M"
         quiet
         on:click={remove}
-        disabled={knowledgeSearchUnavailable || processing}
+        disabled={!row.knowledgeSearchConfigured || processing}
       />
     </AbsTooltip>
   {/if}
