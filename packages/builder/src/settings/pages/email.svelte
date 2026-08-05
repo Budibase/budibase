@@ -115,11 +115,7 @@
     </Layout>
     <div class="spectrum-ButtonGroup spectrum-Settings-buttonGroup">
       <Button cta on:click={saveSmtp}>Save</Button>
-      <Button
-        secondary
-        on:click={deleteSmtp}
-        disabled={!smtpConfig._id}
-      >
+      <Button secondary on:click={deleteSmtp} disabled={!smtpConfig._id}>
         Clear
       </Button>
     </div>
