@@ -3,6 +3,7 @@
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
+    "rootDir": "..",
     "lib": ["ESNext"],
     "paths": {
       "@budibase/*": [
@@ -11,8 +12,8 @@
         "../*",
         "../../node_modules/@budibase/*"
       ],
-      "assets/*": ["assets/*"],
-      "@/*": ["src/*"]
+      "assets/*": ["./assets/*"],
+      "@/*": ["./src/*"]
     }
   },
   "exclude": []

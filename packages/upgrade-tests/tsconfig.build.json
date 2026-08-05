@@ -6,7 +6,8 @@
     "allowArbitraryExtensions": true,
     "isolatedModules": false,
     "outDir": "./dist",
-    "rootDir": "."
+    "rootDir": ".",
+    "types": ["node", "jest"]
   },
   "include": ["src/**/*"],
   "exclude": [

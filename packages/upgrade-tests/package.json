@@ -17,7 +17,7 @@
     "test:pre": "yarn build && node dist/src/cli/index.js pre",
     "test:post": "yarn build && node dist/src/cli/index.js post",
     "cli": "yarn build && node dist/src/cli/index.js",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json --paths null",
     "check:types": "tsc -p tsconfig.json --noEmit --incremental"
   },
   "author": "Budibase",

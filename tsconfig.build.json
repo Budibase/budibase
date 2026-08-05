@@ -2,6 +2,8 @@
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
+    "moduleResolution": "node10",
+    "ignoreDeprecations": "6.0",
     "lib": ["es2020"],
     "strict": true,
     "noImplicitAny": true,
