@@ -1,5 +1,8 @@
 {
   "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "types": ["node", "jest"]
+  },
   "ts-node": {
     "require": ["tsconfig-paths/register"],
     "swc": true

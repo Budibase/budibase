@@ -6,8 +6,14 @@
     "module": "preserve",
     "moduleResolution": "bundler",
     "outDir": "./dist",
+    "rootDir": "..",
+    "noUncheckedSideEffectImports": false,
     "skipLibCheck": true,
-    "allowJs": true
+    "allowJs": true,
+    "paths": {
+      "@budibase/*": ["../*/src"],
+      "@/*": ["../bbui/src/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
