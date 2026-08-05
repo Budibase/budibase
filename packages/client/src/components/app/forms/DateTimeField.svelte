@@ -14,6 +14,7 @@
   export let readonly = false
   export let enableTime = true
   export let timeOnly = false
+  export let setTimeTo
   export let time24hr = false
   export let ignoreTimezones = false
   export let startDayOfWeek = "Monday"
@@ -85,6 +86,7 @@
       id={fieldState.fieldId}
       {enableTime}
       {timeOnly}
+      {setTimeTo}
       {time24hr}
       {ignoreTimezones}
       {startDayOfWeek}

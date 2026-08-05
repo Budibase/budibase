@@ -11,6 +11,7 @@
   export let ignoreTimezones
   export let enableTime
   export let timeOnly
+  export let setTimeTo
   export let value
   export let startDayOfWeek = "Monday"
   export let calendarLabels = resolveTranslationGroup("calendar")
@@ -30,7 +31,12 @@
   const handleChange = date => {
     dispatch(
       "change",
-      stringifyDate(date, { enableTime, timeOnly, ignoreTimezones })
+      stringifyDate(date, {
+        enableTime,
+        timeOnly,
+        ignoreTimezones,
+        setTimeTo,
+      })
     )
   }
 

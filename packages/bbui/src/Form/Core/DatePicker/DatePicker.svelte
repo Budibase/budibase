@@ -20,6 +20,7 @@
   export let value: V | null = null
   export let placeholder: string | null = null
   export let timeOnly = false
+  export let setTimeTo: string | undefined = undefined
   export let ignoreTimezones = false
   export let useKeyboardShortcuts = true
   export let appendTo = undefined
@@ -37,6 +38,7 @@
 
   $: parsedValue = parseDate(value as string | dayjs.Dayjs | null, {
     enableTime,
+    setTimeTo,
   })
 
   const onOpen = () => {
@@ -88,6 +90,7 @@
       {ignoreTimezones}
       {enableTime}
       {timeOnly}
+      {setTimeTo}
       startDayOfWeek={resolvedStartDayOfWeek}
       {calendarLabels}
       value={parsedValue}

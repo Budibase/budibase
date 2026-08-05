@@ -7,6 +7,7 @@
   export let type = "number"
   export let disabled = false
   export let readonly = false
+  export let step = undefined
 
   $: style = width ? `width:${width}px;` : ""
 
@@ -22,6 +23,7 @@
   {max}
   {disabled}
   {readonly}
+  {step}
   on:click={selectAll}
   on:change
   on:input
