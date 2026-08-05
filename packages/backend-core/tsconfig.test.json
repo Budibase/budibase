@@ -4,7 +4,7 @@
     "outDir": "dist",
     "sourceMap": true,
     "types": ["node", "jest"],
-    "rootDir": ".."
+    "rootDir": "."
   },
   "include": ["tests/**/*.js", "tests/**/*.ts"],
   "exclude": ["node_modules", "dist"]
