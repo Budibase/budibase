@@ -81,6 +81,7 @@ services:
     image: budibase/functions-runner
     container_name: bbfunctions
     environment:
+      FUNCTIONS_BROKER_URL: http://app-service:4002
       FUNCTIONS_RUNNER_HOST: 0.0.0.0
       FUNCTIONS_RUNNER_PORT: 4007
     user: node

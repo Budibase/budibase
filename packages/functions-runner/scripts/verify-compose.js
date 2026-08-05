@@ -70,6 +70,10 @@ const verifyRunner = config => {
   assert(!runner.ports, "Runner must not publish ports")
   assert(!runner.volumes, "Runner must not mount volumes")
   assert(
+    runner.environment.FUNCTIONS_BROKER_URL === "http://app-service:4002",
+    "Runner does not use the internal Function broker URL"
+  )
+  assert(
     Object.keys(runner.networks || {}).length === 1 &&
       runnerNetworkName in runner.networks,
     "Runner must only use the internal Functions network"

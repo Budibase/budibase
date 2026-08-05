@@ -10,6 +10,7 @@ export enum FunctionErrorCode {
   FUNCTION_RUNTIME_ERROR = "FUNCTION_RUNTIME_ERROR",
   FUNCTION_TIMEOUT = "FUNCTION_TIMEOUT",
   FUNCTION_MEMORY_LIMIT = "FUNCTION_MEMORY_LIMIT",
+  FUNCTION_QUERY_ERROR = "FUNCTION_QUERY_ERROR",
   FUNCTION_QUERY_DENIED = "FUNCTION_QUERY_DENIED",
   FUNCTION_QUERY_LIMIT = "FUNCTION_QUERY_LIMIT",
   FUNCTION_OUTPUT_INVALID = "FUNCTION_OUTPUT_INVALID",
@@ -146,6 +147,17 @@ export interface FunctionQueryCapability {
   datasourceAlias: string
   queryAlias: string
   parameterNames: string[]
+}
+
+export interface FunctionQueryBrokerRequest {
+  runId: string
+  capabilityId: string
+  parameters: Record<string, string | null>
+  grantToken: string
+}
+
+export interface FunctionQueryBrokerResponse {
+  data: JSONValue
 }
 
 export interface FunctionRunGrant {
