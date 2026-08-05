@@ -150,10 +150,6 @@ const _import = async (
               400
             )
           }
-          if (datasource.restTemplateId === body.restTemplateId) {
-            return
-          }
-
           importer.prepareDatasourceConfig(datasource)
           datasource.restTemplateId = body.restTemplateId
           const response = await context

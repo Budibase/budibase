@@ -166,6 +166,31 @@ describe("/rest-templates", () => {
       })
     )
 
+    const preTaggedDatasource = await config.api.datasource.create({
+      type: "datasource",
+      name: "Pre-tagged Example API",
+      source: SourceName.REST,
+      restTemplateId: template.id,
+      config: {},
+    })
+    await request
+      .post("/api/queries/import")
+      .set(config.defaultHeaders())
+      .send({
+        restTemplateId: template.id,
+        datasourceId: preTaggedDatasource._id,
+      })
+      .expect(200)
+    const preparedPreTaggedDatasource = (
+      await config.api.datasource.fetch()
+    ).find(datasource => datasource._id === preTaggedDatasource._id)
+    expect(preparedPreTaggedDatasource?.config).toEqual(
+      expect.objectContaining({
+        staticVariables: { account: "api" },
+        defaultHeaders: { "X-API-Key": "" },
+      })
+    )
+
     const nonRestDatasource = await config.api.datasource.create({
       type: "datasource",
       name: "Existing Postgres datasource",
@@ -193,10 +218,11 @@ describe("/rest-templates", () => {
     const importedDatasources = (await config.api.datasource.fetch()).filter(
       datasource => datasource.restTemplateId === template.id
     )
-    expect(importedDatasources).toHaveLength(2)
+    expect(importedDatasources).toHaveLength(3)
     await config.api.datasource.delete(nonRestDatasource)
     await config.api.datasource.delete(importedDatasources[0])
     await config.api.datasource.delete(importedDatasources[1])
+    await config.api.datasource.delete(importedDatasources[2])
     expect(
       (await config.api.datasource.fetch()).filter(
         datasource => datasource.restTemplateId === template.id
