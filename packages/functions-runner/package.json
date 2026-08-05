@@ -12,6 +12,7 @@
     "dev": "nodemon",
     "dev:built": "yarn run run:docker",
     "run:docker": "node --enable-source-maps dist/start.js",
+    "verify:compose": "node ./scripts/verify-compose.js",
     "verify:image": "node ./scripts/verify-image.js",
     "test": "jest"
   },

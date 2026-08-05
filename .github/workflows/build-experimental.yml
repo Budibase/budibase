@@ -106,6 +106,19 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Build and push Functions runner image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: packages/functions-runner/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            budibase/functions-runner:${{ steps.tag.outputs.tag }}
+            budibase/functions-runner:${{ steps.tag.outputs.sha_tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       - name: Print image references
         run: |
           echo "### Experimental images pushed" >> "$GITHUB_STEP_SUMMARY"
@@ -114,9 +127,11 @@ jobs:
           echo "|-------|------|" >> "$GITHUB_STEP_SUMMARY"
           echo "| \`budibase/apps\` | \`${{ steps.tag.outputs.tag }}\`, \`${{ steps.tag.outputs.sha_tag }}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| \`budibase/worker\` | \`${{ steps.tag.outputs.tag }}\`, \`${{ steps.tag.outputs.sha_tag }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| \`budibase/functions-runner\` | \`${{ steps.tag.outputs.tag }}\`, \`${{ steps.tag.outputs.sha_tag }}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "Pull with:" >> "$GITHUB_STEP_SUMMARY"
           echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
           echo "docker pull budibase/apps:${{ steps.tag.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
           echo "docker pull budibase/worker:${{ steps.tag.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "docker pull budibase/functions-runner:${{ steps.tag.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
           echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
