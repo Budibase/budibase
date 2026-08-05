@@ -2,7 +2,7 @@
   import "@spectrum-css/textfield/dist/index-vars.css"
   import { createEventDispatcher, onMount, tick } from "svelte"
   import type { FullAutoFill } from "svelte/elements"
-  import type { UIEvent } from "@budibase/types"
+  import type { UIEvent } from "@/types"
 
   export let value: V | null = null
   export let placeholder: string | undefined = undefined
