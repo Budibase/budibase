@@ -66,8 +66,11 @@ interface GeminiFileStoreResponse {
 const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504])
 const RETRY_DELAYS_MS = [500, 1500, 3000]
 
-const getGeminiApiKey = () => {
-  const key = environment.GEMINI_API_KEY
+export const isGeminiFileSearchConfigured = () =>
+  !!environment.GEMINI_API_KEY?.trim()
+
+export const getGeminiApiKey = () => {
+  const key = environment.GEMINI_API_KEY?.trim()
   if (!key) {
     throw new HTTPError(
       "Gemini File Search failed. Set GEMINI_API_KEY on your local environment",
