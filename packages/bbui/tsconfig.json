@@ -11,7 +11,8 @@
         "../*",
         "../../node_modules/@budibase/*"
       ]
-    }
+    },
+    "rootDir": ".."
   },
   "include": ["./src/**/*"],
   "exclude": ["node_modules", "**/*.json", "**/*.spec.ts", "**/*.spec.js"]

@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "dist",
     "sourceMap": true,
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "rootDir": ".."
   },
   "include": ["tests/**/*.js", "tests/**/*.ts"],
   "exclude": ["node_modules", "dist"]
