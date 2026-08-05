@@ -1,4 +1,10 @@
-import { constants, context, events, utils } from "@budibase/backend-core"
+import {
+  constants,
+  context,
+  events,
+  HTTPError,
+  utils,
+} from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { utils as JsonUtils, ValidQueryNameRegex } from "@budibase/shared-core"
 import { findHBSBlocks } from "@budibase/string-templates"
@@ -125,6 +131,31 @@ const _import = async (
     await saveDatasource(datasourceCtx)
     datasourceId = datasourceCtx.body.datasource._id
   } else {
+    if (body.restTemplateId) {
+      await sdk.restTemplates.withCustomRestTemplateLock({
+        resource: body.restTemplateId,
+        task: async () => {
+          const templateExists = await sdk.restTemplates.exists(
+            body.restTemplateId!
+          )
+          if (!templateExists) {
+            throw new HTTPError("Custom REST template not found", 404)
+          }
+
+          const datasource = await sdk.datasources.get(body.datasourceId!)
+          if (datasource.restTemplateId === body.restTemplateId) {
+            return
+          }
+
+          datasource.restTemplateId = body.restTemplateId
+          const response = await context
+            .getWorkspaceDB()
+            .put(sdk.tables.populateExternalTableSchemas(datasource))
+          datasource._rev = response.rev
+          await events.datasource.updated(datasource)
+        },
+      })
+    }
     // use existing datasource
     datasourceId = body.datasourceId
   }

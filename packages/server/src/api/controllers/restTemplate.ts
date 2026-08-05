@@ -120,8 +120,11 @@ export const destroy = async (
     throw new HTTPError("Invalid custom REST template ID", 400)
   }
 
-  const removed = await sdk.restTemplates.removeIfUnused(restTemplateId)
-  if (!removed) {
+  const removalResult = await sdk.restTemplates.removeIfUnused(restTemplateId)
+  if (removalResult === "missing") {
+    throw new HTTPError("Custom REST template not found", 404)
+  }
+  if (removalResult === "in_use") {
     throw new HTTPError(
       "Custom REST template cannot be deleted while it is in use",
       409

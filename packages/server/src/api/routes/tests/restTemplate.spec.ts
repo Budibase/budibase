@@ -120,6 +120,25 @@ describe("/rest-templates", () => {
       .expect(200)
     expect(importResponse.body.queries).toHaveLength(1)
 
+    const existingDatasource = await config.api.datasource.create({
+      type: "datasource",
+      name: "Existing Example API",
+      source: SourceName.REST,
+      config: {},
+    })
+    await request
+      .post("/api/queries/import")
+      .set(config.defaultHeaders())
+      .send({
+        restTemplateId: template.id,
+        datasourceId: existingDatasource._id,
+      })
+      .expect(200)
+    const taggedDatasource = (await config.api.datasource.fetch()).find(
+      datasource => datasource._id === existingDatasource._id
+    )
+    expect(taggedDatasource?.restTemplateId).toBe(template.id)
+
     await request
       .delete(`/api/rest-templates/${template.id}`)
       .set(config.defaultHeaders())
@@ -128,8 +147,9 @@ describe("/rest-templates", () => {
     const importedDatasources = (await config.api.datasource.fetch()).filter(
       datasource => datasource.restTemplateId === template.id
     )
-    expect(importedDatasources).toHaveLength(1)
+    expect(importedDatasources).toHaveLength(2)
     await config.api.datasource.delete(importedDatasources[0])
+    await config.api.datasource.delete(importedDatasources[1])
     expect(
       (await config.api.datasource.fetch()).filter(
         datasource => datasource.restTemplateId === template.id
@@ -150,6 +170,11 @@ describe("/rest-templates", () => {
         listedTemplate => listedTemplate.id === template.id
       )
     ).toBeUndefined()
+
+    await request
+      .delete(`/api/rest-templates/${template.id}`)
+      .set(config.defaultHeaders())
+      .expect(404)
   })
 
   it("removes an uploaded template when its last connection is deleted", async () => {

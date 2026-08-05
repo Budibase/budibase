@@ -30,12 +30,20 @@ const getObjectStoreFolder = (restTemplateId: CustomRestTemplateId) => {
   return restTemplateId
 }
 
-export const withCustomRestTemplateLock = async <T>(
+const getLockResource = (resource: string) =>
+  [context.getWorkspaceId(), resource].filter(Boolean).join(":")
+
+export const withCustomRestTemplateLock = async <T>({
+  resource,
+  task,
+}: {
+  resource: string
   task: () => Promise<T>
-): Promise<T> => {
+}): Promise<T> => {
   const { result } = await locks.doWithLock(
     {
       name: LockName.CUSTOM_REST_TEMPLATES,
+      resource: getLockResource(resource),
       type: LockType.AUTO_EXTEND,
     },
     task
@@ -156,7 +164,10 @@ const createWithoutLock = async ({
 }
 
 export const create = async (params: CreateCustomRestTemplateParams) =>
-  withCustomRestTemplateLock(() => createWithoutLock(params))
+  withCustomRestTemplateLock({
+    resource: "workspace",
+    task: () => createWithoutLock(params),
+  })
 
 export const getSpec = async (
   restTemplateId: CustomRestTemplateId
@@ -196,13 +207,15 @@ const removeWithoutLock = async (restTemplateId: CustomRestTemplateId) => {
   await db.remove(document._id, document._rev)
 }
 
-export const remove = async (restTemplateId: CustomRestTemplateId) =>
-  withCustomRestTemplateLock(() => removeWithoutLock(restTemplateId))
-
 const removeIfUnusedWithoutLock = async (
   restTemplateId: CustomRestTemplateId
-): Promise<boolean> => {
+): Promise<"removed" | "in_use" | "missing"> => {
   const db = context.getWorkspaceDB()
+  const document = await db.tryGet<CustomRestTemplateDocument>(restTemplateId)
+  if (!document?._rev) {
+    return "missing"
+  }
+
   const response = await db.allDocs<Datasource>(
     getDatasourceParams(null, {
       include_docs: true,
@@ -217,22 +230,20 @@ const removeIfUnusedWithoutLock = async (
   })
 
   if (isUsed) {
-    return false
-  }
-
-  const document = await db.tryGet<CustomRestTemplateDocument>(restTemplateId)
-  if (!document?._rev) {
-    return false
+    return "in_use"
   }
 
   await removeWithoutLock(restTemplateId)
-  return true
+  return "removed"
 }
 
 export const removeIfUnused = async (
   restTemplateId: CustomRestTemplateId
-): Promise<boolean> =>
-  withCustomRestTemplateLock(() => removeIfUnusedWithoutLock(restTemplateId))
+): Promise<"removed" | "in_use" | "missing"> =>
+  withCustomRestTemplateLock({
+    resource: restTemplateId,
+    task: () => removeIfUnusedWithoutLock(restTemplateId),
+  })
 
 export const exists = async (restTemplateId: CustomRestTemplateId) => {
   const db = context.getWorkspaceDB()

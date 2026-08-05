@@ -302,10 +302,28 @@ export async function update(
     )
   }
   await clearOAuth2TokenCaches(baseDatasource)
-  const response = await db.put(
-    sdk.tables.populateExternalTableSchemas(datasource)
-  )
-  await events.datasource.updated(datasource)
+  const persistDatasource = async () => {
+    const restTemplateId = datasource.restTemplateId
+    if (isCustomRestTemplateId(restTemplateId)) {
+      const templateExists = await sdk.restTemplates.exists(restTemplateId)
+      if (!templateExists) {
+        throw new HTTPError("Custom REST template not found", 404)
+      }
+    }
+
+    const response = await db.put(
+      sdk.tables.populateExternalTableSchemas(datasource)
+    )
+    await events.datasource.updated(datasource)
+    return response
+  }
+  const restTemplateId = datasource.restTemplateId
+  const response = isCustomRestTemplateId(restTemplateId)
+    ? await sdk.restTemplates.withCustomRestTemplateLock({
+        resource: restTemplateId,
+        task: persistDatasource,
+      })
+    : await persistDatasource()
   datasource._rev = response.rev
 
   ctx.message = "Datasource saved successfully."
@@ -362,7 +380,10 @@ export async function save(
 
   const restTemplateId = datasourceData.restTemplateId
   if (isCustomRestTemplateId(restTemplateId)) {
-    await sdk.restTemplates.withCustomRestTemplateLock(saveDatasource)
+    await sdk.restTemplates.withCustomRestTemplateLock({
+      resource: restTemplateId,
+      task: saveDatasource,
+    })
   } else {
     await saveDatasource()
   }
