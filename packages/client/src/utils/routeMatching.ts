@@ -1,18 +1,6 @@
-const stripQueryString = (route?: string) => {
-  if (!route) {
-    return route
-  }
-
-  try {
-    return new URL(route, "http://example.com").pathname
-  } catch (error) {
-    return route
-  }
-}
-
 interface UrlMatchesTemplateArgs {
-  template?: string
-  url?: string
+  readonly template?: string
+  readonly url?: string
 }
 
 export const urlMatchesTemplate = ({
@@ -21,18 +9,24 @@ export const urlMatchesTemplate = ({
 }: UrlMatchesTemplateArgs = {}) => {
   // Strip query strings from the concrete URL so values like
   // /product/55?nav=details still match a route pattern such as /product/:id.
-  const routePath = stripQueryString(url)
-  const routePattern = template
+  let routePath = url
+  if (url) {
+    try {
+      routePath = new URL(url, "http://example.com").pathname
+    } catch (error) {
+      routePath = url
+    }
+  }
 
-  if (!routePattern || !routePath) {
+  if (!template || !routePath) {
     return false
   }
 
-  if (routePattern === routePath) {
+  if (template === routePath) {
     return true
   }
 
-  const patternSegments = routePattern.split("/").filter(Boolean)
+  const patternSegments = template.split("/").filter(Boolean)
   const routeSegments = routePath.split("/").filter(Boolean)
 
   const optionalTrailingSegmentCount = (() => {
