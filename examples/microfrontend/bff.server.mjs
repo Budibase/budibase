@@ -1,5 +1,6 @@
 import "dotenv/config"
 import crypto from "node:crypto"
+import fs from "node:fs"
 import cookieParser from "cookie-parser"
 import express from "express"
 import { createProxyMiddleware } from "http-proxy-middleware"
@@ -22,6 +23,7 @@ const OIDC_REDIRECT_URI =
   process.env.OIDC_REDIRECT_URI || `${BFF_PUBLIC_ORIGIN}/auth/callback`
 const BUDIBASE_TENANT_ID = process.env.BUDIBASE_TENANT_ID || "default"
 const BUDIBASE_OIDC_CONFIG_ID = process.env.BUDIBASE_OIDC_CONFIG_ID
+const CLIENT_CONFIG_PATH = process.env.CLIENT_CONFIG_PATH
 
 const COOKIE_NAME = "mf_sid"
 const RETURN_TO_COOKIE = "mf_return_to"
@@ -35,13 +37,64 @@ app.set("trust proxy", true)
 
 const sessions = new Map()
 const pendingLogins = new Map()
-let oidcConfiguration
+const oidcConfigurations = new Map()
 
-const hasOidcConfig = () =>
-  Boolean(OIDC_ISSUER && OIDC_CLIENT_ID && OIDC_CLIENT_SECRET)
+const loadClientConfigs = () => {
+  if (!CLIENT_CONFIG_PATH) {
+    return {
+      default: {
+        appPath: process.env.BUDIBASE_APP_PATH || "/app/microfrontend",
+        oidcIssuer: OIDC_ISSUER,
+        oidcClientId: OIDC_CLIENT_ID,
+        oidcClientSecret: OIDC_CLIENT_SECRET,
+        oidcScopes: OIDC_SCOPES,
+        budibaseTenantId: BUDIBASE_TENANT_ID,
+        budibaseOidcConfigId: BUDIBASE_OIDC_CONFIG_ID,
+      },
+    }
+  }
 
-const requireOidcConfig = res => {
-  if (hasOidcConfig()) {
+  const parsed = JSON.parse(fs.readFileSync(CLIENT_CONFIG_PATH, "utf8"))
+  if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") {
+    throw new Error("CLIENT_CONFIG_PATH must contain a JSON object")
+  }
+  return parsed
+}
+
+const clientConfigs = loadClientConfigs()
+
+const getClientConfig = clientKey => {
+  if (typeof clientKey !== "string" || !/^[a-zA-Z0-9_-]+$/.test(clientKey)) {
+    return undefined
+  }
+  const config = clientConfigs[clientKey]
+  if (!config || typeof config !== "object") {
+    return undefined
+  }
+  return { key: clientKey, ...config }
+}
+
+const getClientConfigByAppPath = appPath => {
+  if (typeof appPath !== "string") {
+    return undefined
+  }
+  const matches = Object.entries(clientConfigs).filter(
+    ([, config]) => config?.appPath === appPath
+  )
+  if (matches.length !== 1) {
+    return undefined
+  }
+  const [clientKey] = matches[0]
+  return getClientConfig(clientKey)
+}
+
+const hasOidcConfig = config =>
+  Boolean(
+    config?.oidcIssuer && config?.oidcClientId && config?.oidcClientSecret
+  )
+
+const requireOidcConfig = (config, res) => {
+  if (hasOidcConfig(config)) {
     return true
   }
   res.status(500).json({
@@ -51,16 +104,18 @@ const requireOidcConfig = res => {
   return false
 }
 
-const getOidcConfiguration = async () => {
-  if (oidcConfiguration) {
-    return oidcConfiguration
+const getOidcConfiguration = async clientConfig => {
+  const cached = oidcConfigurations.get(clientConfig.key)
+  if (cached) {
+    return cached
   }
-  oidcConfiguration = await oidcClient.discovery(
-    new URL(OIDC_ISSUER),
-    OIDC_CLIENT_ID,
-    OIDC_CLIENT_SECRET
+  const configuration = await oidcClient.discovery(
+    new URL(clientConfig.oidcIssuer),
+    clientConfig.oidcClientId,
+    clientConfig.oidcClientSecret
   )
-  return oidcConfiguration
+  oidcConfigurations.set(clientConfig.key, configuration)
+  return configuration
 }
 
 const getSession = req => {
@@ -166,10 +221,16 @@ const rewriteBudibaseAuthLocation = (location, req) => {
   }
 }
 
-const resolveBudibaseOidcConfigId = async tenantId => {
-  if (BUDIBASE_OIDC_CONFIG_ID) {
-    return BUDIBASE_OIDC_CONFIG_ID
+const resolveBudibaseOidcConfigId = async clientConfig => {
+  if (clientConfig.budibaseOidcConfigId) {
+    return clientConfig.budibaseOidcConfigId
   }
+  if (CLIENT_CONFIG_PATH) {
+    throw new Error(
+      `budibaseOidcConfigId is required for multi-client entry: ${clientConfig.key}`
+    )
+  }
+  const tenantId = sanitizeTenantId(clientConfig.budibaseTenantId)
   const response = await fetch(
     `${BUDIBASE_ORIGIN}/api/global/configs/public/oidc?tenantId=${encodeURIComponent(tenantId)}`
   )
@@ -195,29 +256,47 @@ app.get("/auth/session", (req, res) => {
   res.json({
     authenticated: true,
     expiresAt: session.expiresAt,
+    appPath: session.appPath,
+    clientKey: session.clientKey,
     user: session.user || null,
   })
 })
 
 app.get("/auth/login", async (req, res) => {
   try {
-    if (!requireOidcConfig(res)) {
+    const requestedAppPath = req.query.appPath
+    const clientConfig = CLIENT_CONFIG_PATH
+      ? getClientConfigByAppPath(requestedAppPath)
+      : getClientConfig("default")
+    if (!clientConfig) {
+      res.status(400).send("Unknown or ambiguous client app path")
+      return
+    }
+    if (!requireOidcConfig(clientConfig, res)) {
       return
     }
 
-    const config = await getOidcConfiguration()
+    const returnTo = sanitizeReturnTo(req.query.returnTo)
+    const bridgeBudibase = req.query.bridgeBudibase === "1"
+    const tenantId = sanitizeTenantId(clientConfig.budibaseTenantId)
+    if (!tenantId) {
+      res.status(500).send("Invalid client tenant configuration")
+      return
+    }
+    if (
+      typeof clientConfig.appPath !== "string" ||
+      requestedAppPath !== clientConfig.appPath
+    ) {
+      res.status(400).send("Client is not allowed to access this app path")
+      return
+    }
+
+    const config = await getOidcConfiguration(clientConfig)
     const state = oidcClient.randomState()
     const nonce = oidcClient.randomNonce()
     const codeVerifier = oidcClient.randomPKCECodeVerifier()
     const codeChallenge =
       await oidcClient.calculatePKCECodeChallenge(codeVerifier)
-    const returnTo = sanitizeReturnTo(req.query.returnTo)
-    const bridgeBudibase = req.query.bridgeBudibase === "1"
-    const tenantId = sanitizeTenantId(req.query.tenantId)
-    if (!tenantId) {
-      res.status(400).send("Invalid tenantId")
-      return
-    }
 
     pendingLogins.set(state, {
       nonce,
@@ -225,12 +304,13 @@ app.get("/auth/login", async (req, res) => {
       returnTo,
       bridgeBudibase,
       tenantId,
+      clientKey: clientConfig.key,
       createdAt: Date.now(),
     })
 
     const authUrl = oidcClient.buildAuthorizationUrl(config, {
       redirect_uri: OIDC_REDIRECT_URI,
-      scope: OIDC_SCOPES,
+      scope: clientConfig.oidcScopes || OIDC_SCOPES,
       state,
       nonce,
       code_challenge: codeChallenge,
@@ -246,10 +326,6 @@ app.get("/auth/login", async (req, res) => {
 
 app.get("/auth/callback", async (req, res) => {
   try {
-    if (!requireOidcConfig(res)) {
-      return
-    }
-
     const { state } = req.query
     if (!state || typeof state !== "string") {
       res.status(400).send("Invalid OIDC callback parameters")
@@ -257,13 +333,22 @@ app.get("/auth/callback", async (req, res) => {
     }
 
     const loginContext = pendingLogins.get(state)
-    pendingLogins.delete(state)
     if (!loginContext) {
       res.status(400).send("Invalid or expired login state")
       return
     }
+    pendingLogins.delete(state)
 
-    const config = await getOidcConfiguration()
+    const clientConfig = getClientConfig(loginContext.clientKey)
+    if (!clientConfig) {
+      res.status(400).send("Unknown client")
+      return
+    }
+    if (!requireOidcConfig(clientConfig, res)) {
+      return
+    }
+
+    const config = await getOidcConfiguration(clientConfig)
     const currentUrl = new URL(
       `${req.protocol}://${req.get("host")}${req.originalUrl}`
     )
@@ -298,11 +383,13 @@ app.get("/auth/callback", async (req, res) => {
     sessions.set(sid, {
       user,
       tokenSet,
+      appPath: clientConfig.appPath,
+      clientKey: clientConfig.key,
       expiresAt: Date.now() + SESSION_TTL_MS,
     })
     setSessionCookie(res, sid)
     if (loginContext.bridgeBudibase) {
-      const configId = await resolveBudibaseOidcConfigId(loginContext.tenantId)
+      const configId = await resolveBudibaseOidcConfigId(clientConfig)
       setReturnToCookie(res, loginContext.returnTo)
       const encodedTenantId = encodeURIComponent(loginContext.tenantId)
       res.redirect(
@@ -340,13 +427,14 @@ app.get("/auth/logout", async (req, res) => {
   }
 
   // If we cannot do OIDC RP-initiated logout, still return to the app route.
-  if (!session?.tokenSet?.id_token || !hasOidcConfig()) {
+  const clientConfig = getClientConfig(session?.clientKey)
+  if (!session?.tokenSet?.id_token || !hasOidcConfig(clientConfig)) {
     res.redirect(returnTo)
     return
   }
 
   try {
-    const config = await getOidcConfiguration()
+    const config = await getOidcConfiguration(clientConfig)
     setReturnToCookie(res, returnTo)
     const postLogoutRedirectUri = `${req.protocol}://${req.get("host")}/auth/logout/callback`
     const endSessionUrl = oidcClient.buildEndSessionUrl(config, {

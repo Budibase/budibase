@@ -2,6 +2,7 @@ import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 
 const budibaseTarget = "http://localhost:10000"
+const bffTarget = "http://localhost:5174"
 
 export default defineConfig({
   plugins: [react()],
@@ -10,6 +11,14 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
+      "/auth": {
+        target: bffTarget,
+        changeOrigin: false,
+      },
+      "/api/global/auth": {
+        target: bffTarget,
+        changeOrigin: false,
+      },
       "/api": {
         target: budibaseTarget,
         changeOrigin: true,

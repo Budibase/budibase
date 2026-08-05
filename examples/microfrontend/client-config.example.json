@@ -1,0 +1,20 @@
+{
+  "client-a": {
+    "appPath": "/app/client-a",
+    "oidcIssuer": "https://ids.client-a.example.com",
+    "oidcClientId": "replace-with-client-a-id",
+    "oidcClientSecret": "replace-with-client-a-secret",
+    "oidcScopes": "openid profile email",
+    "budibaseTenantId": "default",
+    "budibaseOidcConfigId": "replace-with-budibase-oidc-config-id"
+  },
+  "client-b": {
+    "appPath": "/app/client-b",
+    "oidcIssuer": "https://ids.client-b.example.com",
+    "oidcClientId": "replace-with-client-b-id",
+    "oidcClientSecret": "replace-with-client-b-secret",
+    "oidcScopes": "openid profile email",
+    "budibaseTenantId": "default",
+    "budibaseOidcConfigId": "replace-with-budibase-oidc-config-id"
+  }
+}

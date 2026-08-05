@@ -1,4 +1,5 @@
 node_modules
 dist
 .env
+client-config.json
 yarn.lock

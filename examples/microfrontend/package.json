@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "concurrently \"vite\" \"node ./bff.server.mjs\"",
     "dev:oidc": "VITE_AUTH_MODE=oidc yarn dev",
+    "dev:multitenant": "CLIENT_CONFIG_PATH=./client-config.json VITE_AUTH_MODE=oidc yarn dev",
     "build": "vite build",
     "preview": "vite preview"
   },

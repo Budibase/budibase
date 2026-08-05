@@ -10,7 +10,20 @@ import {
 const AUTH_MODE = (import.meta.env.VITE_AUTH_MODE || "none").toLowerCase()
 const OIDC_AUTH_MODE = "oidc"
 
+const getAppPathFromLocation = () => {
+  const match = window.location.pathname.match(/^\/(app|app-chat)\/[^/]+/)
+  return match?.[0]
+}
+
 const parseConfiguredBudibaseUrl = () => {
+  const locationAppPath = getAppPathFromLocation()
+  if (locationAppPath) {
+    return {
+      appUrl: `${window.location.origin}${locationAppPath}`,
+      appPath: locationAppPath,
+    }
+  }
+
   const raw = window.__BUDIBASE_APP_URL__
   if (!raw || typeof raw !== "string") {
     throw new Error(
@@ -59,13 +72,14 @@ const buildReturnTo = appPath => {
   return `${window.location.pathname}${window.location.search}${window.location.hash}`
 }
 
-const checkSessionState = async () => {
+const checkSessionState = async appPath => {
   try {
     const bffSession = await fetch("/auth/session", {
       credentials: "same-origin",
     })
 
-    const hasOidcSession = bffSession.ok
+    const bffSessionDetails = bffSession.ok ? await bffSession.json() : null
+    const hasOidcSession = bffSessionDetails?.appPath === appPath
     const budibaseSession = await fetch("/api/global/self", {
       credentials: "same-origin",
     })
@@ -123,7 +137,7 @@ const BudibaseRoute = ({ appUrl, appPath }) => {
       try {
         if (oidcModeEnabled) {
           setStatus("Checking OIDC and Budibase sessions...")
-          const sessionState = await checkSessionState()
+          const sessionState = await checkSessionState(appPath)
           if (!isMounted) {
             return
           }
@@ -132,9 +146,13 @@ const BudibaseRoute = ({ appUrl, appPath }) => {
           setIsBudibaseAuthenticated(sessionState.hasBudibaseSession)
 
           if (!sessionState.hasOidcSession) {
-            setStatus("OIDC mode: click Login to start authentication.")
+            setStatus(
+              "OIDC mode: click Login to authenticate for this client."
+            )
+            return
           } else if (!sessionState.hasBudibaseSession) {
             setStatus("OIDC active: click Login to bridge Budibase session.")
+            return
           } else {
             setStatus("Authenticated. Loading Budibase app...")
           }
@@ -221,7 +239,9 @@ const BudibaseRoute = ({ appUrl, appPath }) => {
 
     const returnTo = buildReturnTo(appPath)
     window.location.assign(
-      `/auth/login?returnTo=${encodeURIComponent(returnTo)}&bridgeBudibase=1`
+      `/auth/login?returnTo=${encodeURIComponent(returnTo)}` +
+        `&appPath=${encodeURIComponent(appPath)}` +
+        "&bridgeBudibase=1"
     )
   }
 
