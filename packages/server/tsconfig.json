@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
+    "resolvePackageJsonExports": false,
     "types": ["node", "jest"]
   },
   "ts-node": {
