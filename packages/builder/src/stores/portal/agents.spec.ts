@@ -36,6 +36,8 @@ const resetOperationKnowledgeBaseStore = vi.mocked(
   API.resetOperationKnowledgeBaseStore
 )
 
+const knowledgeConfiguration = { knowledgeSearchConfigured: true }
+
 const createEmptyState = () => ({
   agents: [] as Agent[],
   tools: [],
@@ -70,6 +72,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       operations: {
         operation_1: { files: [], sharePointSources: [] },
       },
+      configuration: knowledgeConfiguration,
     })
 
     const result = await store.syncOperationKnowledgeSources(
@@ -112,6 +115,7 @@ describe("agentsStore sharepoint and file syncing", () => {
         operation_1: { files, sharePointSources: [] },
         operation_2: { files: [], sharePointSources: [] },
       },
+      configuration: knowledgeConfiguration,
     })
 
     const response = await store.fetchAgentKnowledge("agent_1")
@@ -148,6 +152,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       operations: {
         operation_1: { files: [], sharePointSources: [] },
       },
+      configuration: knowledgeConfiguration,
     })
 
     await store.fetchAgentKnowledge("agent_1")
@@ -163,6 +168,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       operations: {
         operation_1: { files: [], sharePointSources: [] },
       },
+      configuration: knowledgeConfiguration,
     })
 
     await store.fetchAgentKnowledge("agent_1")
@@ -178,6 +184,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       operations: {
         operation_1: { files: [], sharePointSources: [] },
       },
+      configuration: knowledgeConfiguration,
     })
 
     await store.ensureOperationKnowledgeLoaded("agent_1", "operation_1")
@@ -198,6 +205,7 @@ describe("agentsStore sharepoint and file syncing", () => {
       operations: {
         operation_1: { files: [processingFile], sharePointSources: [] },
       },
+      configuration: knowledgeConfiguration,
     })
 
     await store.fetchAgentKnowledge("agent_1")
@@ -231,6 +239,7 @@ describe("agentsStore sharepoint and file syncing", () => {
           ],
         },
       },
+      configuration: knowledgeConfiguration,
     })
 
     await store.fetchAgentKnowledge("agent_1")
@@ -257,6 +266,7 @@ describe("agentsStore sharepoint and file syncing", () => {
           ],
         },
       },
+      configuration: knowledgeConfiguration,
     })
 
     await store.fetchAgentKnowledge("agent_1")
@@ -315,6 +325,7 @@ describe("AgentsStore file operations", () => {
       operations: {
         operation_1: { files: [], sharePointSources: [] },
       },
+      configuration: knowledgeConfiguration,
     })
 
     await store.removeOperationKnowledgeFile("agent_1", "operation_1", "file_1")
@@ -342,6 +353,7 @@ describe("AgentsStore file operations", () => {
       operations: {
         operation_1: { files: [uploadedFile], sharePointSources: [] },
       },
+      configuration: knowledgeConfiguration,
     })
 
     const file = new File(["hello"], "notes.txt", { type: "text/plain" })
@@ -367,6 +379,7 @@ describe("AgentsStore file operations", () => {
       operations: {
         operation_1: { files: [], sharePointSources: [] },
       },
+      configuration: knowledgeConfiguration,
     })
 
     await store.resetOperationKnowledgeBaseStore("agent_1", "operation_1")

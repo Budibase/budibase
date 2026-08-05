@@ -13,9 +13,7 @@ permissions:
 
 jobs:
   validate-ticket:
-    if: |
-      github.event.pull_request.user.type != 'Bot' &&
-      !contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.pull_request.author_association)
+    if: github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     permissions:
       issues: write
