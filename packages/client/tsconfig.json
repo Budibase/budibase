@@ -5,7 +5,7 @@
     "outDir": "dist",
     "rootDir": "..",
     "noUncheckedSideEffectImports": false,
-    "types": ["jest"],
+    "types": ["vitest/globals"],
     "allowSyntheticDefaultImports": true,
     "target": "ESNext",
     "module": "ESNext",
