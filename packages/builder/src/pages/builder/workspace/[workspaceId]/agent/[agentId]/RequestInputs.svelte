@@ -108,9 +108,15 @@
   }
 
   const remove = async (inputId: string) => {
+    const previousInputs = inputs
     operation.requestInputs = inputs.filter(input => input.id !== inputId)
-    await onUpdated()
-    popover.hide()
+    const saved = await onUpdated()
+    if (saved) {
+      popover.hide()
+    } else {
+      operation.requestInputs = previousInputs
+      popover.show()
+    }
   }
 
   const confirmRemove = async () => {
