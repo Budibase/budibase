@@ -4,9 +4,12 @@ import * as controller from "../../controllers/global/users"
 import {
   adminRoutes,
   builderOrAdminRoutes,
-  cloudRestrictedRoutes,
-  internalRoutes,
+  cloudRestrictedNoTenancyRoutes,
+  internalNoTenancyRoutes,
   loggedInRoutes,
+  loggedInNoTenancyRoutes,
+  publicCloudRestrictedNoTenancyRoutes,
+  publicNoTenancyRoutes,
 } from "../endpointGroups"
 import { users } from "../validation"
 
@@ -66,22 +69,23 @@ function buildChangeTenantOwnerEmailValidation() {
   )
 }
 
-cloudRestrictedRoutes
+cloudRestrictedNoTenancyRoutes
   .post(
     "/api/global/users/sso",
     users.buildAddSsoSupport(),
     controller.addSsoSupport
-  )
-  .post(
-    "/api/global/users/init",
-    buildAdminInitValidation(),
-    controller.adminUser
   )
   .put(
     "/api/global/users/tenant/owner",
     buildChangeTenantOwnerEmailValidation(),
     controller.changeTenantOwnerEmail
   )
+
+publicCloudRestrictedNoTenancyRoutes.post(
+  "/api/global/users/init",
+  buildAdminInitValidation(),
+  controller.adminUser
+)
 
 adminRoutes
   .post(
@@ -129,13 +133,21 @@ adminRoutes
 loggedInRoutes
   // search can be used by any user now, to retrieve users for user column
   .post("/api/global/users/search", controller.search)
-  // non-global endpoints
+
+publicNoTenancyRoutes
   .get("/api/global/users/invite/:code", controller.checkInvite)
   .post(
     "/api/global/users/invite/accept",
     buildInviteAcceptValidation(),
     controller.inviteAccept
   )
-  .get("/api/global/users/accountholder", controller.accountHolderLookup)
 
-internalRoutes.get("/api/global/users/tenant/:id", controller.tenantUserLookup)
+loggedInNoTenancyRoutes.get(
+  "/api/global/users/accountholder",
+  controller.accountHolderLookup
+)
+
+internalNoTenancyRoutes.get(
+  "/api/global/users/tenant/:id",
+  controller.tenantUserLookup
+)

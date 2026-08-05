@@ -1,6 +1,6 @@
 import * as controller from "../../controllers/system/accounts"
-import { internalRoutes } from "../endpointGroups"
+import { internalNoTenancyRoutes } from "../endpointGroups"
 
-internalRoutes
+internalNoTenancyRoutes
   .put("/api/system/accounts/:accountId/metadata", controller.save)
   .delete("/api/system/accounts/:accountId/metadata", controller.destroy)

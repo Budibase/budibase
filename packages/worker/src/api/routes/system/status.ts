@@ -1,4 +1,4 @@
 import * as controller from "../../controllers/system/status"
-import { loggedInRoutes } from "../endpointGroups"
+import { publicNoTenancyRoutes } from "../endpointGroups"
 
-loggedInRoutes.get("/api/system/status", controller.fetch)
+publicNoTenancyRoutes.get("/api/system/status", controller.fetch)

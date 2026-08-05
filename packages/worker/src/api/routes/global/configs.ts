@@ -2,7 +2,7 @@ import { auth } from "@budibase/backend-core"
 import { ConfigType, PKCEMethod } from "@budibase/types"
 import Joi from "joi"
 import * as controller from "../../controllers/global/configs"
-import { adminRoutes, loggedInRoutes } from "../endpointGroups"
+import { adminRoutes, loggedInRoutes, publicRoutes } from "../endpointGroups"
 
 function smtpValidation() {
   // prettier-ignore
@@ -141,9 +141,14 @@ adminRoutes
     controller.upload
   )
 
-loggedInRoutes
+loggedInRoutes.get(
+  "/api/global/configs/:type",
+  buildConfigGetValidation(),
+  controller.find
+)
+
+publicRoutes
   .get("/api/global/configs/checklist", controller.configChecklist)
   .get("/api/global/configs/public", controller.publicSettings)
   .get("/api/global/configs/public/oidc", controller.publicOidc)
   .get("/api/global/configs/public/translations", controller.publicTranslations)
-  .get("/api/global/configs/:type", buildConfigGetValidation(), controller.find)

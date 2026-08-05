@@ -1,7 +1,13 @@
 import Endpoint, { CtxFn, Method } from "./Endpoint"
 import Router from "@koa/router"
+import type { EndpointMatcher } from "@budibase/types"
 
 type ArrayOneOrMore<T> = [T, ...T[]]
+
+export interface EndpointGroupOptions {
+  public?: boolean
+  noTenancy?: boolean
+}
 
 export default class EndpointGroup {
   endpoints: Endpoint[] = []
@@ -10,6 +16,11 @@ export default class EndpointGroup {
   applied = false
   // if locked, can't add anymore middlewares
   private locked = false
+  private options: EndpointGroupOptions
+
+  constructor(options: EndpointGroupOptions = {}) {
+    this.options = options
+  }
 
   addGroupMiddleware(
     middleware: CtxFn,
@@ -98,5 +109,20 @@ export default class EndpointGroup {
       )
     }
     return this.endpoints
+  }
+
+  endpointMatchers(options: EndpointGroupOptions): EndpointMatcher[] {
+    if (
+      (options.public !== undefined &&
+        options.public !== this.options.public) ||
+      (options.noTenancy !== undefined &&
+        options.noTenancy !== this.options.noTenancy)
+    ) {
+      return []
+    }
+    return this.endpoints.map(endpoint => ({
+      route: endpoint.url,
+      method: endpoint.method.toUpperCase(),
+    }))
   }
 }

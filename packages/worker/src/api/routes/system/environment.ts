@@ -1,4 +1,4 @@
 import * as controller from "../../controllers/system/environment"
-import { loggedInRoutes } from "../endpointGroups"
+import { publicNoTenancyRoutes } from "../endpointGroups"
 
-loggedInRoutes.get("/api/system/environment", controller.fetch)
+publicNoTenancyRoutes.get("/api/system/environment", controller.fetch)
