@@ -30,6 +30,7 @@ async function init() {
     APPS_URL: "http://localhost:4001",
     WORKER_URL: "http://localhost:4002",
     FUNCTIONS_RUNNER_URL: "http://localhost:4007",
+    FUNCTIONS_BROKER_URL: "http://localhost:4001",
     APPS_SERVICE: "app-service",
     WORKER_SERVICE: "worker-service",
     DEPLOYMENT_ENVIRONMENT: "development",

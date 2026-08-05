@@ -177,6 +177,8 @@ const main = async () => {
       "no-new-privileges:true",
       "--name",
       containerName,
+      "--env",
+      "FUNCTIONS_BROKER_URL=http://example.com",
       "--publish",
       "127.0.0.1::4007",
       image

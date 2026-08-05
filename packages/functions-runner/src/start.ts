@@ -1,10 +1,12 @@
 import { DEFAULT_FUNCTION_LIMITS } from "@budibase/types"
 import { getEnvironment } from "./environment"
+import { createFunctionQueryBroker } from "./queryBroker"
 import { createServer } from "./server"
 import { FunctionSupervisor } from "./supervisor"
 
 const environment = getEnvironment()
 const supervisor = new FunctionSupervisor({
+  queryHandler: createFunctionQueryBroker({ baseUrl: environment.brokerUrl }),
   terminationGraceMs: environment.terminationGraceMs,
   maxConcurrentRuns: DEFAULT_FUNCTION_LIMITS.service.maxConcurrentRuns,
 })
