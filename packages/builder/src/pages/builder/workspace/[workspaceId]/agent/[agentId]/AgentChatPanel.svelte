@@ -8,7 +8,11 @@
   import type { UIMessage } from "ai"
   import { Chatbox } from "@budibase/frontend-core/src/components"
   import { escalationsStore } from "@/stores/portal/escalations"
-  import { featureFlags } from "@/stores/portal"
+  import { auth, featureFlags } from "@/stores/portal"
+  import {
+    loadPromptHistory,
+    savePromptHistory,
+  } from "@/utils/chatPreviewPromptHistory"
 
   type DraftChat = WithoutDocMetadata<DraftChatConversation>
 
@@ -27,12 +31,13 @@
   }
 
   let chat: DraftChatConversation = $state({ ...INITIAL_CHAT })
-  let lastKey = $state("")
+  let lastKey = $state<string | undefined>()
   let refreshKey = $state(0)
+  let promptHistory = $state<string[]>([])
 
   // Preview is transient, so escalation polling lives here, not in Chatbox.
   let chatbox = $state<
-    | { appendAssistantMessage: (_m: UIMessage<AgentMessageMetadata>) => void }
+    | { appendAssistantMessage: (m: UIMessage<AgentMessageMetadata>) => void }
     | undefined
   >()
   const delivered = new Set<string>()
@@ -78,17 +83,51 @@
     resetChat(agentId)
   }
 
+  const handlePromptSubmitted = (prompt: string) => {
+    const tenantId = $auth.tenantId
+    const userId = $auth.user?._id
+    if (!agentId || !userId) {
+      return
+    }
+
+    promptHistory = savePromptHistory({
+      tenantId,
+      userId,
+      workspaceId,
+      agentId,
+      history: [...promptHistory, prompt],
+    })
+  }
+
   $effect(() => {
     if (!workspaceId) {
       return
     }
 
-    const nextKey = `${workspaceId}:${agentId || ""}`
+    const tenantId = $auth.tenantId
+    const userId = $auth.user?._id
+
+    if (!userId || !agentId) {
+      if (lastKey !== undefined) {
+        lastKey = undefined
+        promptHistory = []
+        resetChat(agentId)
+      }
+      return
+    }
+
+    const nextKey = JSON.stringify([tenantId, userId, workspaceId, agentId])
     if (nextKey === lastKey) {
       return
     }
 
     lastKey = nextKey
+    promptHistory = loadPromptHistory({
+      tenantId,
+      userId,
+      workspaceId,
+      agentId,
+    })
     resetChat(agentId)
   })
 </script>
@@ -108,6 +147,8 @@
         persistConversation={false}
         {workspaceId}
         isAgentPreviewChat={true}
+        {promptHistory}
+        onpromptsubmitted={handlePromptSubmitted}
         onEscalationPending={handleEscalationPending}
         escalationState={$escalationsStore.escalations}
         showInlineApproval={$featureFlags[FeatureFlag.ESCALATION]}

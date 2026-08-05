@@ -5,7 +5,7 @@
   type Props = {
     disabled?: boolean
     onSave: (
-      _group: AgentTestGroup | Omit<AgentTestGroup, "id">
+      group: AgentTestGroup | Omit<AgentTestGroup, "id">
     ) => Promise<boolean>
   }
 

@@ -5,7 +5,7 @@
   import { screenStore, workspaceAppStore, appStore } from "@/stores/builder"
   import { buildLiveUrl } from "@/helpers/urls"
 
-  export let onConfirm: (_data: { route: string }) => Promise<void>
+  export let onConfirm: (data: { route: string }) => Promise<void>
   export let onCancel: (() => Promise<void>) | undefined = undefined
   export let route: string = ""
   export let role: string | undefined = undefined

@@ -78,22 +78,19 @@
     onConfirm={createAgent}
   >
     <div class="agent-form">
-      <form
-        on:submit|preventDefault={() => {
+      <Input
+        label="Name"
+        bind:value={name}
+        error={nameError}
+        on:input={() => (touched = true)}
+        on:enterkey={() => {
           if (loading || !trimmedName) {
             return
           }
           modalContent.confirm()
         }}
-      >
-        <Input
-          label="Name"
-          bind:value={name}
-          error={nameError}
-          on:input={() => (touched = true)}
-          placeholder="Support agent"
-        />
-      </form>
+        placeholder="Support agent"
+      />
     </div>
   </ModalContent>
 </Modal>

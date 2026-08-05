@@ -23,6 +23,7 @@
   import ReasoningStatus from "./ReasoningStatus.svelte"
   import ContextUsage from "./ContextUsage.svelte"
   import EscalationCard from "./EscalationCard.svelte"
+  import { navigatePromptHistory } from "./promptHistory"
   import {
     DefaultChatTransport,
     isTextUIPart,
@@ -39,12 +40,12 @@
     persistConversation?: boolean
     conversationStarters?: { prompt: string }[]
     initialPrompt?: string
-    onchatsaved?: (_event: {
+    onchatsaved?: (event: {
       detail: { chatId?: string; chat: ChatConversationLike }
     }) => void
     // Fired when an escalation parks; the consumer polls the outcome and
     // injects it via appendAssistantMessage.
-    onEscalationPending?: (_detail: { escalationId: string }) => void
+    onEscalationPending?: (detail: { escalationId: string }) => void
     // Live resolution per escalationId (from the poll) - drives the card state.
     escalationState?: Record<
       string,
@@ -53,12 +54,14 @@
     // Dev-only: show the inline Approve/Reject buttons on the escalation card.
     showInlineApproval?: boolean
     onResolve?: (
-      _escalationId: string,
-      _accepted: boolean
+      escalationId: string,
+      accepted: boolean
     ) => Promise<EscalationRespondResult | undefined>
     isAgentPreviewChat?: boolean
     readOnly?: boolean
     readOnlyReason?: "disabled" | "deleted" | "offline"
+    promptHistory?: string[]
+    onpromptsubmitted?: (prompt: string) => void
   }
 
   let {
@@ -75,6 +78,8 @@
     isAgentPreviewChat = false,
     readOnly = false,
     readOnlyReason,
+    promptHistory = [],
+    onpromptsubmitted,
   }: Props = $props()
 
   // Per-escalation in-flight flag + the message relayed from resolve, so the
@@ -133,6 +138,7 @@
   let expandedTools = $state<Record<string, boolean>>({})
   let reasoningTextByMessageId = $state<Record<string, string>>({})
   let inputValue = $state("")
+  let promptHistoryIndex = $state<number | undefined>()
   let lastInitialPrompt = $state("")
   let isPreparingResponse = $state(false)
   const resetPendingResponse = () => {
@@ -560,6 +566,23 @@
       return
     }
 
+    if (isAgentPreviewChat) {
+      const navigationState = navigatePromptHistory({
+        key: event.key,
+        history: promptHistory,
+        inputValue,
+        index: promptHistoryIndex,
+      })
+      if (navigationState) {
+        event.preventDefault()
+        inputValue = navigationState.inputValue
+        promptHistoryIndex = navigationState.index
+        await tick()
+        textareaElement?.setSelectionRange(inputValue.length, inputValue.length)
+        return
+      }
+    }
+
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault()
       await sendMessage()
@@ -634,6 +657,8 @@
     }
 
     inputValue = ""
+    promptHistoryIndex = undefined
+    onpromptsubmitted?.(text)
     chatInstance.sendMessage({ text })
     isPreparingResponse = false
   }
@@ -955,6 +980,7 @@
           bind:this={textareaElement}
           class="input spectrum-Textfield-input"
           onkeydown={handleKeyDown}
+          oninput={() => (promptHistoryIndex = undefined)}
           placeholder="Ask..."
           disabled={isRequestPending}
         ></textarea>
