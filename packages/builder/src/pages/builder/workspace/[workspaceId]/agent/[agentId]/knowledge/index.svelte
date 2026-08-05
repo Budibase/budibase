@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Body, Button, Layout, notifications, Toggle } from "@budibase/bbui"
+  import { bb } from "@/stores/bb"
   import { confirm } from "@/helpers"
   import {
     AgentKnowledgeSourceType,
@@ -9,7 +10,11 @@
     type KnowledgeBaseFile,
   } from "@budibase/types"
   import { workspaceDeploymentStore } from "@/stores/builder"
-  import { agentsStore, selectedAgent } from "@/stores/portal"
+  import {
+    agentsStore,
+    knowledgeConnectionsStore,
+    selectedAgent,
+  } from "@/stores/portal"
   import KnowledgeTable from "./KnowledgeTable.svelte"
   import KnowledgeAddControls from "./KnowledgeAddControls.svelte"
   import SelectSharePointSiteModal from "./new/SelectSharePointSiteModal.svelte"
@@ -88,6 +93,26 @@
     return agentsStore.getOperationUploadState(agentId, operationId)
   })
 
+  let knowledgeSearchConfigured = $derived.by(() => {
+    const _store = $agentsStore
+    return agentsStore.getKnowledgeConfiguration()?.knowledgeSearchConfigured
+  })
+  let knowledgeSearchUnavailable = $derived(knowledgeSearchConfigured !== true)
+  let knowledgeActionsTooltip = $derived(
+    knowledgeSearchUnavailable
+      ? "Set GEMINI_API_KEY on your local environment and restart Budibase."
+      : undefined
+  )
+
+  let hasSharePointConnection = $derived(
+    $knowledgeConnectionsStore.connections.some(
+      connection =>
+        connection.sourceType === AgentKnowledgeSourceType.SHAREPOINT
+    )
+  )
+  let hasSharePointDatasource = $derived(
+    $knowledgeConnectionsStore.sharePointDatasourceIds.length > 0
+  )
   let selectedSiteIds = $derived.by(() =>
     sharePointSources
       .map(source => source.config.site.id)
@@ -122,7 +147,8 @@
     toFileTableRows(
       files.filter(file => !file.source),
       removeFile,
-      uploadState.pendingUploads
+      uploadState.pendingUploads,
+      knowledgeSearchConfigured === true
     )
   )
   let sharePointConnectionRows = $derived.by(() =>
@@ -131,6 +157,7 @@
       sharePointSourceSnapshots,
       onDelete: removeSharePointSite,
       onSync: syncSharePointNow,
+      knowledgeSearchConfigured: knowledgeSearchConfigured === true,
     })
   )
   let knowledgeTableRows: KnowledgeTableRow[] = $derived.by(() => [
@@ -166,6 +193,14 @@
   })
 
   async function openSharePointFlow() {
+    if (!hasSharePointConnection) {
+      if (hasSharePointDatasource) {
+        await selectSharePointSiteModal?.show()
+        return
+      }
+      bb.settings("/connections/apis/new/microsoft-sharepoint")
+      return
+    }
     await selectSharePointSiteModal?.show()
   }
 
@@ -195,7 +230,7 @@
   }
 
   const handleKnowledgeRowClick = (row: KnowledgeTableRow) => {
-    if (row.kind !== "sharepoint_connection") {
+    if (knowledgeSearchUnavailable || row.kind !== "sharepoint_connection") {
       return
     }
     openSharePointSiteConfigModal(row.siteId).catch(error => {
@@ -320,7 +355,8 @@
           quiet
           size="S"
           secondary
-          disabled={resetting}
+          tooltip={knowledgeActionsTooltip}
+          disabled={resetting || knowledgeSearchUnavailable}
           iconColor="var(--orange)"
           icon="cloud-rain"
           on:click={resetKnowledgeStore}
@@ -331,6 +367,8 @@
       <KnowledgeAddControls
         {agentId}
         {operationId}
+        disabled={knowledgeSearchUnavailable}
+        tooltip={knowledgeActionsTooltip}
         onUploaded={async () => {
           syncOperationFromStore()
           await refreshDeploymentStatus()
