@@ -195,6 +195,19 @@ describe("/api/global/email", () => {
     expect(email.from).toEqual([{ address: "from@example.com", name: "" }])
   })
 
+  it("uses the configured from address when one is not provided", async () => {
+    const email = await captureEmail(mailserver, async () => {
+      await config.api.emails.sendEmail({
+        email: "to@example.com",
+        subject: "Test",
+        purpose: EmailTemplatePurpose.CUSTOM,
+        contents: "Hello, world!",
+      })
+    })
+
+    expect(email.from).toEqual([{ address: "test@example.com", name: "" }])
+  })
+
   it("can send a calendar invite", async () => {
     const startTime = new Date()
     const endTime = new Date()

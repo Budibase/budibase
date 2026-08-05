@@ -90,7 +90,12 @@
         <Input type="number" bind:value={smtpConfig.config.port} />
       </div>
       <div class="form-row">
-        <Label size="L">From email address</Label>
+        <Label
+          size="L"
+          tooltip="Used by system emails and SMTP automations that do not specify Send From. Your SMTP provider may restrict or rewrite this address."
+        >
+          Default from email address
+        </Label>
         <Input type="email" bind:value={smtpConfig.config.from} />
       </div>
       <div class="form-row">
@@ -113,9 +118,9 @@
       <Button
         secondary
         on:click={deleteSmtp}
-        disabled={!$admin.checklist?.smtp?.checked}
+        disabled={!smtpConfig._id}
       >
-        Reset
+        Clear
       </Button>
     </div>
   {/if}
