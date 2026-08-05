@@ -683,7 +683,7 @@ export const prepareAgentChatRun = async ({
       aiConfigId,
       operationId,
       buildPromptOptions: {
-        baseSystemPrompt: ai.agentSystemPrompt(user),
+        baseSystemPrompt: ai.agentSystemPrompt(user, chat?.timezone),
         includeGoal: false,
       },
     }),

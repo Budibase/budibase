@@ -573,6 +573,20 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     )
   })
 
+  it("passes the chat timezone to the agent system prompt", async () => {
+    await runFor(operationWithoutRecipients, {
+      chat: {
+        chatAppId: "chatapp_1",
+        agentId: "agent_1",
+        messages: [],
+        timezone: "Europe/London",
+      },
+    })
+
+    const { ai } = jest.requireMock("@budibase/pro")
+    expect(ai.agentSystemPrompt).toHaveBeenCalledWith(user, "Europe/London")
+  })
+
   it("resolves getRequestId lazily via the provided callback", async () => {
     const getRequestId = jest.fn().mockReturnValue("request_1")
 

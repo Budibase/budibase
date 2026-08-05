@@ -5,6 +5,7 @@ import {
   DEFAULT_BB_DATASOURCE_ID,
 } from "@/constants/backend"
 import { DerivedBudiStore } from "@/stores/BudiStore"
+import { agentsStore } from "@/stores/portal/agents"
 import {
   Datasource,
   DatasourceFeature,
@@ -21,6 +22,7 @@ import { derived, get, Readable, Writable } from "svelte/store"
 import { restTemplates } from "./restTemplates"
 import { removeDatasourceQueries, saveQuery } from "./queries"
 import { tables } from "./tables"
+import { workspaceDeploymentStore } from "./workspaceDeployment"
 
 class TableImportError extends Error {
   errors: Record<string, string>
@@ -263,6 +265,11 @@ export class DatasourceStore extends DerivedBudiStore<
     datasource: Datasource
     skipConnectionCheck?: boolean
   }) {
+    const existingDatasource = get(this.store).rawList.find(
+      existing => existing._id === datasource._id
+    )
+    const isRename =
+      !!existingDatasource && existingDatasource.name !== datasource.name
     if (
       !skipConnectionCheck &&
       !(await this.checkDatasourceValidity(integration, datasource)).valid
@@ -271,8 +278,18 @@ export class DatasourceStore extends DerivedBudiStore<
     }
 
     const response = await API.updateDatasource(datasource)
-
-    return this.updateDatasourceInStore(response)
+    const updatedDatasource = this.updateDatasourceInStore(response)
+    if (isRename) {
+      try {
+        await Promise.all([
+          agentsStore.fetchAgents(),
+          workspaceDeploymentStore.fetch(),
+        ])
+      } catch (error) {
+        console.error("Failed to refresh agents after datasource rename", error)
+      }
+    }
+    return updatedDatasource
   }
 
   async deleteDatasource(datasource: Datasource) {
