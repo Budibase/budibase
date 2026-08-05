@@ -76,6 +76,7 @@ interface AgentStoreState {
   >
   knowledgeUploadByOperation: Record<string, OperationKnowledgeUploadState>
   knowledgeLoadingByOperation: Record<string, boolean>
+  knowledgeConfiguration?: FetchAgentKnowledgeIndexResponse["configuration"]
 }
 
 const getOperationKnowledgeCacheKey = (agentId: string, operationId: string) =>
@@ -106,6 +107,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       knowledgeByOperation: {},
       knowledgeUploadByOperation: {},
       knowledgeLoadingByOperation: {},
+      knowledgeConfiguration: undefined,
     })
   }
 
@@ -424,6 +426,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
           getOperationKnowledgeCacheKey(agentId, operationId)
         ] = knowledge
       }
+      state.knowledgeConfiguration = response.configuration
       return state
     })
 
@@ -492,6 +495,8 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     get(this.store).knowledgeByOperation[
       getOperationKnowledgeCacheKey(agentId, operationId)
     ]
+
+  getKnowledgeConfiguration = () => get(this.store).knowledgeConfiguration
 
   isOperationKnowledgeLoading = (
     agentId: string,
