@@ -9,6 +9,7 @@ const TABLE_TOOLS: BudibaseToolDefinition[] = [
     name: "list_tables",
     sourceType: ToolType.INTERNAL_TABLE,
     sourceLabel: "Budibase",
+    readOnly: true,
     description: "List all tables in the current workspace",
     tool: tool({
       description: "List all tables in the current workspace",
@@ -41,6 +42,7 @@ const TABLE_TOOLS: BudibaseToolDefinition[] = [
     name: "get_table",
     sourceType: ToolType.INTERNAL_TABLE,
     sourceLabel: "Budibase",
+    readOnly: true,
     description: "Get details about a specific table by ID",
     tool: tool({
       description: "Get details about a specific table by ID",

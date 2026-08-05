@@ -21,6 +21,7 @@ export interface BudibaseToolDefinition {
   description: string
   tool: Tool
   readableName?: string
+  readOnly?: boolean
 }
 
 export const getBudibaseTools = (

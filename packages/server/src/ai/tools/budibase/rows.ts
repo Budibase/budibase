@@ -398,6 +398,7 @@ export const createRowTools = ({
       sourceType: resolvedSourceType,
       sourceLabel: resolvedSourceLabel,
       sourceIconType,
+      readOnly: ["list_rows", "get_row", "search_rows"].includes(action),
       description,
       tool: tool({
         description,

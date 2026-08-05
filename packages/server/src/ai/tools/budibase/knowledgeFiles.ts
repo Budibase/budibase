@@ -196,6 +196,7 @@ export const createKnowledgeFilesTool = (
   name: "list_knowledge_files",
   sourceType: ToolType.INTERNAL_TABLE,
   sourceLabel: "Budibase",
+  readOnly: true,
   description:
     "List knowledge files attached to this agent, including metadata like size, status, and upload time",
   tool: tool({
@@ -287,6 +288,7 @@ export const createKnowledgeSearchTool = (
   name: "search_knowledge",
   sourceType: ToolType.INTERNAL_TABLE,
   sourceLabel: "Budibase",
+  readOnly: true,
   description:
     "Search the agent knowledge files and return relevant context snippets with source metadata",
   tool: tool({

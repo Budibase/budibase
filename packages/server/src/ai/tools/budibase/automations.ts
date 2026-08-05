@@ -84,6 +84,7 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
     name: "list_automations",
     sourceType: ToolType.AUTOMATION,
     sourceLabel: "Budibase",
+    readOnly: true,
     description: "List all automations in the current workspace",
     tool: tool({
       description: "List all automations in the current workspace",
@@ -98,6 +99,7 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
     name: "get_automation",
     sourceType: ToolType.AUTOMATION,
     sourceLabel: "Budibase",
+    readOnly: true,
     description: "Get details about a specific automation by ID",
     tool: tool({
       description: "Get details about a specific automation by ID",

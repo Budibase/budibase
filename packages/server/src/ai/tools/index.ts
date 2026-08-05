@@ -6,6 +6,7 @@ export interface AiToolDefinition {
   readableName?: string
   description: string
   tool: Tool
+  readOnly?: boolean
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
