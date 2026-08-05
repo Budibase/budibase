@@ -21,7 +21,8 @@ curl http://localhost:4007/health
 ```
 
 The generated root `.env` configures the server to use
-`http://localhost:4007`. Functions remain disabled unless the separate
+`http://localhost:4007` and the runner to use the broker at
+`http://localhost:4001`. Functions remain disabled unless the separate
 `BUDIBASE_FUNCTIONS_ENABLED` administrator opt-in and the Functions feature
 flag are both enabled.
 
@@ -55,6 +56,11 @@ BUDIBASE_FUNCTIONS_ENABLED=true
 The runner is still deployed when this setting is empty, but the server and
 worker will not dispatch work to it. The separate Functions feature flag must
 also be enabled.
+
+The runner reaches `/api/internal/functions/query` through the internal
+`http://app-service:4002` broker URL. The scoped run grant is the only authority
+sent with query requests; the runner does not receive a Budibase API key or
+application credentials.
 
 The default container limits can be adjusted in `.env`:
 

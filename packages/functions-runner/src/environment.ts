@@ -29,25 +29,33 @@ const parseInteger = (
 }
 
 export interface FunctionsRunnerEnvironment {
+  brokerUrl: string
   host: string
   port: number
   terminationGraceMs: number
 }
 
-export const getEnvironment = (): FunctionsRunnerEnvironment => ({
-  host: process.env.FUNCTIONS_RUNNER_HOST || "0.0.0.0",
-  port: parseInteger(
-    process.env.FUNCTIONS_RUNNER_PORT || process.env.PORT,
-    DEFAULT_PORT,
-    "FUNCTIONS_RUNNER_PORT",
-    1,
-    65_535
-  ),
-  terminationGraceMs: parseInteger(
-    process.env.FUNCTIONS_RUNNER_TERMINATION_GRACE_MS,
-    DEFAULT_TERMINATION_GRACE_MS,
-    "FUNCTIONS_RUNNER_TERMINATION_GRACE_MS",
-    0,
-    60_000
-  ),
-})
+export const getEnvironment = (): FunctionsRunnerEnvironment => {
+  if (!process.env.FUNCTIONS_BROKER_URL) {
+    throw new Error("FUNCTIONS_BROKER_URL is required")
+  }
+
+  return {
+    brokerUrl: process.env.FUNCTIONS_BROKER_URL,
+    host: process.env.FUNCTIONS_RUNNER_HOST || "0.0.0.0",
+    port: parseInteger(
+      process.env.FUNCTIONS_RUNNER_PORT || process.env.PORT,
+      DEFAULT_PORT,
+      "FUNCTIONS_RUNNER_PORT",
+      1,
+      65_535
+    ),
+    terminationGraceMs: parseInteger(
+      process.env.FUNCTIONS_RUNNER_TERMINATION_GRACE_MS,
+      DEFAULT_TERMINATION_GRACE_MS,
+      "FUNCTIONS_RUNNER_TERMINATION_GRACE_MS",
+      0,
+      60_000
+    ),
+  }
+}
