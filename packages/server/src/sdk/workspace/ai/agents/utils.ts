@@ -161,6 +161,7 @@ export async function buildPromptAndTools(
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
+  readOnlyToolNames: Set<string>
 }> {
   const {
     baseSystemPrompt,
@@ -220,6 +221,9 @@ export async function buildPromptAndTools(
     systemPrompt: resolvedSystemPrompt,
     tools: toToolSet(enabledTools),
     toolDisplayNames: getToolDisplayNames(enabledTools),
+    readOnlyToolNames: new Set(
+      enabledTools.filter(tool => tool.readOnly).map(tool => tool.name)
+    ),
   }
 }
 
