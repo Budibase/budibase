@@ -5,7 +5,7 @@
     "outDir": "./dist",
     "rootDir": "..",
     "noUncheckedSideEffectImports": false,
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "paths": {
       "@budibase/*": [
         "../*/src/index.ts",
