@@ -2,6 +2,7 @@
   import { Modal, notifications } from "@budibase/bbui"
   import { beforeUrlChange } from "@roxi/routify"
   import { restTemplates } from "@/stores/builder/restTemplates"
+  import { bb } from "@/stores/bb"
   import { sortedIntegrations as integrations } from "@/stores/builder/sortedIntegrations"
   import { queries } from "@/stores/builder"
   import { configFromIntegration } from "@/stores/selectors"
@@ -18,6 +19,7 @@
   import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import SelectCategoryAPIModal from "./SelectCategoryAPIModal.svelte"
   import ImportRestTemplateModal from "@/settings/pages/connections/_components/ImportRestTemplateModal.svelte"
+  import { createImportedRestConnection } from "@/settings/pages/connections/_components/createImportedRestConnection"
 
   export const show = async () => {
     resetModalState()
@@ -238,7 +240,18 @@
   <Modal bind:this={importTemplateModal}>
     <ImportRestTemplateModal
       onCancel={() => importTemplateModal.hide()}
-      onUploaded={() => importTemplateModal.hide()}
+      onUploaded={async template => {
+        if (!restIntegration) {
+          throw new Error("REST integration unavailable")
+        }
+        const datasource = await createImportedRestConnection({
+          template,
+          integration: restIntegration,
+        })
+        importTemplateModal.hide()
+        modal.hide()
+        bb.settings(`/connections/apis/${datasource._id}`)
+      }}
     />
   </Modal>
 </div>

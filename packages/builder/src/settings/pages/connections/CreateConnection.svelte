@@ -9,11 +9,17 @@
     Search,
   } from "@budibase/bbui"
   import { bb } from "@/stores/bb"
+  import { sortedIntegrations as integrations } from "@/stores/builder/sortedIntegrations"
   import { restTemplates } from "@/stores/builder/restTemplates"
+  import { IntegrationTypes } from "@/constants/backend"
   import RouteActions from "@/settings/components/RouteActions.svelte"
   import ImportRestTemplateModal from "./_components/ImportRestTemplateModal.svelte"
+  import { createImportedRestConnection } from "./_components/createImportedRestConnection"
 
   $: locked = $bb.settings.locked
+  $: restIntegration = ($integrations || []).find(
+    integration => integration.name === IntegrationTypes.REST
+  )
 
   let searchValue = ""
   let importTemplateModal: Modal
@@ -112,7 +118,17 @@
 <Modal bind:this={importTemplateModal}>
   <ImportRestTemplateModal
     onCancel={() => importTemplateModal.hide()}
-    onUploaded={() => importTemplateModal.hide()}
+    onUploaded={async template => {
+      if (!restIntegration) {
+        throw new Error("REST integration unavailable")
+      }
+      const datasource = await createImportedRestConnection({
+        template,
+        integration: restIntegration,
+      })
+      importTemplateModal.hide()
+      bb.settings(`/connections/apis/${datasource._id}`)
+    }}
   />
 </Modal>
 

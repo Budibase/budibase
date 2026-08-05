@@ -11,10 +11,12 @@
     TextArea,
   } from "@budibase/bbui"
   import type { RestTemplate, UIFile } from "@budibase/types"
+  import { isCustomRestTemplateId } from "@/helpers/restTemplates"
   import { restTemplates } from "@/stores/builder/restTemplates"
 
-  export let onUploaded: ((_template: RestTemplate) => void) | undefined =
-    undefined
+  export let onUploaded:
+    | ((_template: RestTemplate) => Promise<void> | void)
+    | undefined = undefined
   export let onCancel: (() => void) | undefined = undefined
 
   let name = ""
@@ -62,15 +64,23 @@
       return keepOpen
     }
 
+    let template: RestTemplate | undefined
     try {
-      const template = await restTemplates.uploadCustom({
+      template = await restTemplates.uploadCustom({
         name: name.trim(),
         description: description.trim(),
         file,
       })
+      await onUploaded?.(template)
       notifications.success(`${template.name} template imported`)
-      onUploaded?.(template)
     } catch (error) {
+      if (template?.custom && isCustomRestTemplateId(template.id)) {
+        try {
+          await restTemplates.deleteCustom(template.id)
+        } catch {
+          // Keep the original upload/save error visible to the user.
+        }
+      }
       const message = error instanceof Error ? error.message : "Unknown error"
       notifications.error(`Error importing template - ${message}`)
       return keepOpen
