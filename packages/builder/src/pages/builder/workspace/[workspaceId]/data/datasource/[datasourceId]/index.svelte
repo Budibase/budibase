@@ -1,14 +1,6 @@
 <script>
   import { params } from "@roxi/routify"
-  import {
-    Tabs,
-    Tab,
-    Heading,
-    Body,
-    Button,
-    Layout,
-    notifications,
-  } from "@budibase/bbui"
+  import { Tabs, Tab, Heading, Body, Layout } from "@budibase/bbui"
   import { datasources, integrations } from "@/stores/builder"
   import { getRestTemplateIdentifier } from "@/stores/builder/datasources"
   import { restTemplates } from "@/stores/builder/restTemplates"
@@ -25,8 +17,6 @@
   import Tooltip from "./_components/panels/Tooltip.svelte"
   import SaveDatasourceButton from "./_components/panels/SaveDatasourceButton.svelte"
   import { cloneDeep } from "lodash/fp"
-  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import { onMount } from "svelte"
 
   const REST_PANEL_SECTIONS = [
     { title: "", component: QueriesPanel },
@@ -53,14 +43,6 @@
   let selectedPanel = $params.tab ?? null
   let panelOptions = []
   let templateIcon
-  let deleteRestTemplateDialog
-  let deletingRestTemplate = false
-
-  onMount(() => {
-    restTemplates.fetchCustom().catch(() => {
-      notifications.error("There was a problem loading custom API templates")
-    })
-  })
 
   $: datasource = $datasources.selected
   $: restTemplateIdentifier = getRestTemplateIdentifier(datasource)
@@ -69,9 +51,6 @@
       ? restTemplates.get(restTemplateIdentifier)
       : undefined
   $: templateIcon = selectedRestTemplate?.icon
-  $: customRestTemplate = selectedRestTemplate?.custom
-    ? selectedRestTemplate
-    : undefined
 
   $: isRestDatasource = datasource?.source === IntegrationTypes.REST
   $: getOptions(datasource)
@@ -106,25 +85,6 @@
     updatedDatasource = cloneDeep(datasource ?? updatedDatasource)
   }
 
-  const deleteCustomRestTemplate = async () => {
-    if (!customRestTemplate || deletingRestTemplate) {
-      return
-    }
-
-    try {
-      deletingRestTemplate = true
-      await restTemplates.deleteCustom(customRestTemplate.id)
-      notifications.success(`${customRestTemplate.name} template deleted`)
-      deleteRestTemplateDialog.hide()
-    } catch (error) {
-      notifications.error(
-        `Error deleting template - ${error?.message || "Unknown error"}`
-      )
-    } finally {
-      deletingRestTemplate = false
-    }
-  }
-
   const getOptions = datasource => {
     if (!datasource) {
       panelOptions = []
@@ -150,15 +110,6 @@
 </script>
 
 <PromptQueryModal />
-<ConfirmDialog
-  bind:this={deleteRestTemplateDialog}
-  title="Delete custom OpenAPI template"
-  body={`Delete ${customRestTemplate?.name || "this template"}? Existing connections and queries will remain, but the template will no longer be available when creating connections.`}
-  okText="Delete"
-  disabled={deletingRestTemplate}
-  onOk={deleteCustomRestTemplate}
-/>
-
 <section>
   <Layout noPadding>
     <Layout gap="XS" noPadding>
@@ -194,15 +145,6 @@
             {#if restPanel.component === QueriesPanel}
               <svelte:component this={restPanel.component} {datasource}>
                 <div slot="global-save" class="global-save-actions">
-                  {#if customRestTemplate}
-                    <Button
-                      warning
-                      disabled={deletingRestTemplate}
-                      on:click={() => deleteRestTemplateDialog.show()}
-                    >
-                      Delete
-                    </Button>
-                  {/if}
                   <SaveDatasourceButton
                     {datasource}
                     {updatedDatasource}

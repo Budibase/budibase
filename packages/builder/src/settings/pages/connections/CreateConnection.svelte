@@ -1,13 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte"
-  import {
-    Button,
-    Heading,
-    Icon,
-    Modal,
-    notifications,
-    Search,
-  } from "@budibase/bbui"
+  import { Button, Heading, Icon, Modal, Search } from "@budibase/bbui"
   import { bb } from "@/stores/bb"
   import { sortedIntegrations as integrations } from "@/stores/builder/sortedIntegrations"
   import { restTemplates } from "@/stores/builder/restTemplates"
@@ -23,12 +15,6 @@
 
   let searchValue = ""
   let importTemplateModal: Modal
-
-  onMount(() => {
-    restTemplates.fetchCustom().catch(() => {
-      notifications.error("There was a problem loading custom API templates")
-    })
-  })
 
   $: connectionCards = $restTemplates.templates
     .filter(template => {
@@ -50,35 +36,38 @@
   </RouteActions>
 
   <div class="content">
-    <div class="actions">
-      <button
-        class="action-card"
-        type="button"
-        on:click={() => bb.settings("/connections/apis/new")}
-      >
-        <span class="action-icon"><Icon name="code" size="M" /></span>
-        <span class="action-copy">
-          <span class="action-title">Custom connection</span>
-          <span class="action-description"
-            >Configure a reusable API connection.</span
-          >
-        </span>
-        <Icon name="caret-right" size="S" />
-      </button>
+    {#if !locked}
+      <div class="actions">
+        <button
+          class="action-card"
+          type="button"
+          on:click={() => bb.settings("/connections/apis/new")}
+        >
+          <span class="action-icon"><Icon name="code" size="M" /></span>
+          <span class="action-copy">
+            <span class="action-title">Custom connection</span>
+            <span class="action-description"
+              >Configure a reusable API connection.</span
+            >
+          </span>
+          <Icon name="caret-right" size="S" />
+        </button>
 
-      <button
-        class="action-card"
-        type="button"
-        on:click={() => importTemplateModal.show()}
-      >
-        <span class="action-icon"><Icon name="upload-simple" size="M" /></span>
-        <span class="action-copy">
-          <span class="action-title">Import OpenAPI</span>
-          <span class="action-description">Import an OpenAPI spec.</span>
-        </span>
-        <Icon name="caret-right" size="S" />
-      </button>
-    </div>
+        <button
+          class="action-card"
+          type="button"
+          on:click={() => importTemplateModal.show()}
+        >
+          <span class="action-icon"><Icon name="upload-simple" size="M" /></span
+          >
+          <span class="action-copy">
+            <span class="action-title">Import OpenAPI</span>
+            <span class="action-description">Import an OpenAPI spec.</span>
+          </span>
+          <Icon name="caret-right" size="S" />
+        </button>
+      </div>
+    {/if}
 
     <div class="integration-header">
       <Heading size="XS">Browse integrations</Heading>

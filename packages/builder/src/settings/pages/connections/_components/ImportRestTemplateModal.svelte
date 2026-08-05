@@ -74,7 +74,7 @@
       await onUploaded?.(template)
       notifications.success(`${template.name} template imported`)
     } catch (error) {
-      if (template?.custom && isCustomRestTemplateId(template.id)) {
+      if (template && isCustomRestTemplateId(template.id)) {
         try {
           await restTemplates.deleteCustom(template.id)
         } catch {
@@ -118,6 +118,7 @@
       gallery={false}
       label="OpenAPI schema"
       fileTags={["JSON", "YAML"]}
+      extensions=".json,.yaml,.yml"
       maximum={1}
       error={fileError}
       {handleTooManyFiles}

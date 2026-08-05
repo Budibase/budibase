@@ -337,18 +337,35 @@ export async function save(
   } = ctx.request.body
   datasourceData.projectIds = await resolveProjectIds(datasourceData.projectIds)
   await resolveDatasourceEntityProjectIds(datasourceData)
-  const { datasource, errors } = await sdk.datasources.save(datasourceData, {
-    fetchSchema,
-    tablesFilter,
-  })
+  const saveDatasource = async () => {
+    const restTemplateId = datasourceData.restTemplateId
+    if (isCustomRestTemplateId(restTemplateId)) {
+      const templateExists = await sdk.restTemplates.exists(restTemplateId)
+      if (!templateExists) {
+        throw new HTTPError("Custom REST template not found", 404)
+      }
+    }
 
-  ctx.body = {
-    datasource: await sdk.datasources.removeSecretSingle(
-      sdk.datasources.addDatasourceFlags(datasource)
-    ),
-    errors,
+    const { datasource, errors } = await sdk.datasources.save(datasourceData, {
+      fetchSchema,
+      tablesFilter,
+    })
+
+    ctx.body = {
+      datasource: await sdk.datasources.removeSecretSingle(
+        sdk.datasources.addDatasourceFlags(datasource)
+      ),
+      errors,
+    }
+    builderSocket?.emitDatasourceUpdate(ctx, datasource)
   }
-  builderSocket?.emitDatasourceUpdate(ctx, datasource)
+
+  const restTemplateId = datasourceData.restTemplateId
+  if (isCustomRestTemplateId(restTemplateId)) {
+    await sdk.restTemplates.withCustomRestTemplateLock(saveDatasource)
+  } else {
+    await saveDatasource()
+  }
 }
 
 async function destroyInternalTablesBySourceId(datasourceId: string) {
@@ -424,7 +441,14 @@ export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
 
   const restTemplateId = datasource.restTemplateId
   if (isCustomRestTemplateId(restTemplateId)) {
-    await sdk.restTemplates.removeIfUnused(restTemplateId)
+    try {
+      await sdk.restTemplates.removeIfUnused(restTemplateId)
+    } catch (error) {
+      console.error(
+        `Failed to remove unused custom REST template ${restTemplateId}`,
+        error
+      )
+    }
   }
 
   ctx.body = { message: `Datasource deleted.` }

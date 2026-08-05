@@ -3,6 +3,7 @@ import {
   context,
   db as dbCore,
   HTTPError,
+  locks,
   objectStore,
 } from "@budibase/backend-core"
 import type {
@@ -12,7 +13,7 @@ import type {
   Datasource,
   RestTemplate,
 } from "@budibase/types"
-import { DocumentType, SourceName } from "@budibase/types"
+import { DocumentType, LockName, LockType, SourceName } from "@budibase/types"
 import { getDatasourceParams } from "../../db/utils"
 
 const CUSTOM_TEMPLATE_VERSION = "custom"
@@ -27,6 +28,19 @@ interface CreateCustomRestTemplateParams {
 
 const getObjectStoreFolder = (restTemplateId: CustomRestTemplateId) => {
   return restTemplateId
+}
+
+export const withCustomRestTemplateLock = async <T>(
+  task: () => Promise<T>
+): Promise<T> => {
+  const { result } = await locks.doWithLock(
+    {
+      name: LockName.CUSTOM_REST_TEMPLATES,
+      type: LockType.AUTO_EXTEND,
+    },
+    task
+  )
+  return result
 }
 
 const toRestTemplate = (
@@ -60,7 +74,7 @@ export const fetch = async (): Promise<RestTemplate[]> => {
     .map(toRestTemplate)
 }
 
-export const create = async ({
+const createWithoutLock = async ({
   name,
   description,
   data,
@@ -141,6 +155,9 @@ export const create = async ({
   return toRestTemplate(document)
 }
 
+export const create = async (params: CreateCustomRestTemplateParams) =>
+  withCustomRestTemplateLock(() => createWithoutLock(params))
+
 export const getSpec = async (
   restTemplateId: CustomRestTemplateId
 ): Promise<string> => {
@@ -165,7 +182,7 @@ export const getSpec = async (
   return Buffer.concat(chunks).toString("utf8")
 }
 
-export const remove = async (restTemplateId: CustomRestTemplateId) => {
+const removeWithoutLock = async (restTemplateId: CustomRestTemplateId) => {
   const db = context.getWorkspaceDB()
   const document = await db.tryGet<CustomRestTemplateDocument>(restTemplateId)
   if (!document?._rev) {
@@ -179,7 +196,10 @@ export const remove = async (restTemplateId: CustomRestTemplateId) => {
   await db.remove(document._id, document._rev)
 }
 
-export const removeIfUnused = async (
+export const remove = async (restTemplateId: CustomRestTemplateId) =>
+  withCustomRestTemplateLock(() => removeWithoutLock(restTemplateId))
+
+const removeIfUnusedWithoutLock = async (
   restTemplateId: CustomRestTemplateId
 ): Promise<boolean> => {
   const db = context.getWorkspaceDB()
@@ -205,6 +225,16 @@ export const removeIfUnused = async (
     return false
   }
 
-  await remove(restTemplateId)
+  await removeWithoutLock(restTemplateId)
   return true
+}
+
+export const removeIfUnused = async (
+  restTemplateId: CustomRestTemplateId
+): Promise<boolean> =>
+  withCustomRestTemplateLock(() => removeIfUnusedWithoutLock(restTemplateId))
+
+export const exists = async (restTemplateId: CustomRestTemplateId) => {
+  const db = context.getWorkspaceDB()
+  return Boolean(await db.tryGet<CustomRestTemplateDocument>(restTemplateId))
 }

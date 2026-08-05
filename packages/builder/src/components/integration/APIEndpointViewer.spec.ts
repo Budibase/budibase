@@ -2049,12 +2049,25 @@ describe("API Endpoint Viewer", () => {
         ],
       })
 
-      setupDOM({ datasourceId: REST_DS_ID })
+      const { container } = setupDOM({ datasourceId: REST_DS_ID })
 
       await waitFor(() => {
         expect(queries.fetchImportInfo).toHaveBeenCalledWith({
           restTemplateId: templateId,
         })
+      })
+      const pickerTrigger = await waitFor(() => {
+        const element = container.querySelector(".input-wrap .spectrum-Picker")
+        expect(element).not.toBeNull()
+        return element
+      })
+      await fireEvent.click(pickerTrigger!)
+      await waitFor(() => {
+        expect(
+          Array.from(document.querySelectorAll(".spectrum-Menu-item")).some(
+            element => element.textContent?.includes("Get user")
+          )
+        ).toBe(true)
       })
     })
 

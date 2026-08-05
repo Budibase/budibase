@@ -1,25 +1,17 @@
-import type {
-  OpenAPIServer,
-  RestTemplate,
-  UIIntegration,
-} from "@budibase/types"
+import type { RestTemplate, UIIntegration } from "@budibase/types"
 import { API } from "@/api"
 import { configFromIntegration } from "@/stores/selectors"
 import { datasources } from "@/stores/builder/datasources"
 import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
 
-const resolveServerUrl = (server: OpenAPIServer) =>
-  server.url.replace(
-    /\{([^}]+)\}/g,
-    (_, key) => server.variables?.[key]?.default ?? `{${key}}`
-  )
-
 export const createImportedRestConnection = async ({
   template,
   integration,
+  projectIds,
 }: {
   template: RestTemplate
   integration: UIIntegration
+  projectIds?: string[]
 }) => {
   const request = getRestTemplateImportInfoRequest(undefined, template.id)
   if (!request) {
@@ -29,7 +21,7 @@ export const createImportedRestConnection = async ({
   const info = await API.getImportInfo(request)
   const config = {
     ...configFromIntegration(integration),
-    url: info.servers?.[0] ? resolveServerUrl(info.servers[0]) : "",
+    url: info.servers?.[0]?.url ?? info.url ?? "",
     authConfigs: [],
     staticVariables: info.staticVariables || {},
     defaultHeaders: {},
@@ -42,6 +34,7 @@ export const createImportedRestConnection = async ({
     integration,
     config,
     name: template.name,
+    projectIds,
     restTemplateId: template.id,
   })
 }

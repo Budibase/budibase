@@ -130,9 +130,9 @@
       <ProjectSelect bind:value={projectIds} />
       <Button
         secondary
-        icon="download-simple"
+        icon="upload-simple"
         tooltip="Import OpenAPI template"
-        disabled={loading}
+        disabled={loading || customDisabled}
         on:click={handleImportTemplateClick}
       />
       <Button

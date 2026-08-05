@@ -12,6 +12,7 @@
     type RestTemplateSpec,
     type RestTemplate,
     type RestTemplateId,
+    type ImportRestQueryInfoResponse,
     type TemplateSelectionContext,
     type UIIntegration,
   } from "@budibase/types"
@@ -21,14 +22,9 @@
   import ImportRestTemplateModal from "@/settings/pages/connections/_components/ImportRestTemplateModal.svelte"
   import { createImportedRestConnection } from "@/settings/pages/connections/_components/createImportedRestConnection"
 
-  export const show = async () => {
+  export const show = () => {
     resetModalState()
     modal.show()
-    try {
-      await restTemplates.fetchCustom()
-    } catch {
-      notifications.error("There was a problem loading custom API templates")
-    }
   }
   export const hide = () => modal.hide()
 
@@ -82,7 +78,7 @@
   const loadTemplateInfo = async (
     spec?: RestTemplateSpec | null,
     restTemplateId?: RestTemplateId
-  ) => {
+  ): Promise<ImportRestQueryInfoResponse | undefined> => {
     const request = getRestTemplateImportInfoRequest(spec, restTemplateId)
     if (!request) {
       return undefined
@@ -159,11 +155,17 @@
 
       targetSpec = template.specs?.[0] || null
 
-      const config = configFromIntegration(restIntegration)
       const templateInfo = await loadTemplateInfo(
         targetSpec,
         template.restTemplateId
       )
+      // OpenAPI 3 exposes servers, while OpenAPI 2 exposes the normalized url.
+      const templateBaseUrl =
+        templateInfo?.servers?.[0]?.url ?? templateInfo?.url
+      const config = {
+        ...configFromIntegration(restIntegration),
+        ...(templateBaseUrl ? { url: templateBaseUrl } : {}),
+      }
       applySecurityHeaders(config, templateInfo?.securityHeaders)
       applyTemplateStaticVariables(config, templateInfo?.staticVariables)
 
@@ -247,6 +249,7 @@
         const datasource = await createImportedRestConnection({
           template,
           integration: restIntegration,
+          projectIds,
         })
         importTemplateModal.hide()
         modal.hide()

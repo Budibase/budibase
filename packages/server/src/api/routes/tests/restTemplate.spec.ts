@@ -123,7 +123,19 @@ describe("/rest-templates", () => {
     await request
       .delete(`/api/rest-templates/${template.id}`)
       .set(config.defaultHeaders())
-      .expect(200)
+      .expect(409)
+
+    const importedDatasources = (await config.api.datasource.fetch()).filter(
+      datasource => datasource.restTemplateId === template.id
+    )
+    expect(importedDatasources).toHaveLength(1)
+    await config.api.datasource.delete(importedDatasources[0])
+    expect(
+      (await config.api.datasource.fetch()).filter(
+        datasource => datasource.restTemplateId === template.id
+      )
+    ).toHaveLength(0)
+
     expect(objectStore.deleteFolder).toHaveBeenCalledWith(
       objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
       template.id

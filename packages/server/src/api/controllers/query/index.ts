@@ -103,6 +103,7 @@ const _import = async (
       type: "datasource",
       source: rest.source || SourceName.REST,
       name: rest.name || importInfo?.name,
+      ...(body.restTemplateId ? { restTemplateId: body.restTemplateId } : {}),
       config: {
         ...config,
         defaultHeaders: config.defaultHeaders ?? {},
