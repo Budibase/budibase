@@ -219,11 +219,12 @@ export const getQueryCatalog = async () => {
         return undefined
       }
       try {
+        const datasource = await getDatasource(query.datasourceId)
+        if (!datasource) {
+          return undefined
+        }
         return toCatalogEntry(
-          await resolveQuery(
-            { ...query, _id: query._id },
-            await getDatasource(query.datasourceId)
-          )
+          await resolveQuery({ ...query, _id: query._id }, datasource)
         )
       } catch (error) {
         if (error instanceof HTTPError) {
