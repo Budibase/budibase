@@ -4,9 +4,10 @@ import {
   encryption,
   events,
   HTTPError,
+  roles,
 } from "@budibase/backend-core"
 import { WebClient } from "@slack/web-api"
-import { DocumentType } from "@budibase/types"
+import { DocumentType, UserStatus, type User } from "@budibase/types"
 import type {
   Agent,
   AgentKnowledgeSource,
@@ -33,6 +34,27 @@ const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 const NAME_REQUIRED_ERROR = "Agent name is required."
 const DEFAULT_OPERATION_NAME = "Main operation"
+
+export const createAgentServiceUser = async (agentName: string) => {
+  const serviceUserId = docIds.generateGlobalUserID()
+  const serviceUser: User = {
+    _id: serviceUserId,
+    tenantId: context.getTenantId(),
+    email: `${serviceUserId}@agent.budibase.local`,
+    firstName: agentName,
+    lastName: "Agent",
+    roles: {
+      [context.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+    },
+    builder: { global: false },
+    admin: { global: false },
+    budibaseAccess: false,
+    status: UserStatus.ACTIVE,
+    createdAt: Date.now(),
+  }
+  await context.getGlobalDB().put(serviceUser)
+  return serviceUserId
+}
 
 const guardName = async (name: string, id?: string) => {
   if (!name.trim()) {
@@ -524,6 +546,7 @@ export async function create(
     goal: request.goal,
     createdAt: now,
     createdBy: request.createdBy,
+    serviceUserId: request.serviceUserId,
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
     slackIntegration: await withSlackTeamId(request.slackIntegration),
@@ -533,6 +556,8 @@ export async function create(
   if (agent.live) {
     await assertAgentHasValidConfig(agent)
   }
+
+  agent.serviceUserId ||= await createAgentServiceUser(agent.name)
 
   const { rev } = await db.put({
     ...agent,
@@ -707,6 +732,14 @@ export async function remove(agentId: string) {
           error,
         })
       }
+    }
+  }
+
+  if (agent.serviceUserId) {
+    const globalDb = context.getGlobalDB()
+    const serviceUser = await globalDb.tryGet<User>(agent.serviceUserId)
+    if (serviceUser) {
+      await globalDb.remove(serviceUser)
     }
   }
 
