@@ -34,6 +34,13 @@ describe("getQueryCatalog", () => {
             queryVerb: "read",
           },
         },
+        {
+          doc: {
+            _id: "query_2",
+            datasourceId: "datasource_missing",
+            queryVerb: "read",
+          },
+        },
       ],
     })
     mockDbTryGet.mockResolvedValue(undefined)
