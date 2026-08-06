@@ -44,7 +44,9 @@ describe("contentSecurityPolicy middleware", () => {
   beforeEach(() => {
     ctx = {
       state: {},
+      response: {},
       set: jest.fn(),
+      remove: jest.fn(),
     }
     next = jest.fn()
     // @ts-ignore
@@ -86,6 +88,45 @@ describe("contentSecurityPolicy middleware", () => {
     expect(cspHeader).toContain("worker-src blob:")
   })
 
+  it.each(["application/json", "application/problem+json"])(
+    "should remove CSP from %s responses",
+    async responseType => {
+      next.mockImplementation(() => {
+        ctx.response.type = responseType
+      })
+
+      await contentSecurityPolicy(ctx, next)
+
+      expect(ctx.state.nonce).toBe(mockNonce)
+      expect(ctx.remove).toHaveBeenCalledWith("Content-Security-Policy")
+    }
+  )
+
+  it("should retain CSP on HTML responses", async () => {
+    next.mockImplementation(() => {
+      ctx.response.type = "text/html"
+    })
+
+    await contentSecurityPolicy(ctx, next)
+
+    expect(ctx.set).toHaveBeenCalledWith(
+      "Content-Security-Policy",
+      expect.any(String)
+    )
+    expect(ctx.remove).not.toHaveBeenCalled()
+  })
+
+  it("should not modify headers after they have been sent", async () => {
+    next.mockImplementation(() => {
+      ctx.response.type = "application/json"
+      ctx.headerSent = true
+    })
+
+    await contentSecurityPolicy(ctx, next)
+
+    expect(ctx.remove).not.toHaveBeenCalled()
+  })
+
   it("should handle errors and log an error message", async () => {
     // Ctx setup to let us try and use CSP whitelist
     const fakeAppId = "app_sdfdsfsdfsdf"
@@ -112,7 +153,7 @@ describe("contentSecurityPolicy middleware", () => {
     consoleSpy.mockRestore()
   })
 
-  it("should add custom CSP whitelist", async () => {
+  it("should add and deduplicate custom CSP whitelist entries", async () => {
     const appId = "app_foo"
     const domain = "https://*.foo.bar"
 
@@ -141,7 +182,7 @@ describe("contentSecurityPolicy middleware", () => {
             id: "foo",
             name: "Test",
             location: "Head",
-            cspWhitelist: domain,
+            cspWhitelist: `${domain}\n${domain}`,
           },
         ],
       }

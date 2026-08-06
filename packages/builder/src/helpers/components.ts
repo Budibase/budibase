@@ -249,6 +249,112 @@ export const getComponentName = (component: Component) => {
   return componentDefinition.friendlyName || componentDefinition.name || ""
 }
 
+const getComponentTypeSearchText = (component: Component) => {
+  if (!component?._component) {
+    return ""
+  }
+
+  const components = get(componentStore)?.components || {}
+  const componentDefinition = components[component._component]
+  if (componentDefinition?.name) {
+    return componentDefinition.name
+  }
+
+  if (!component._component.startsWith("@budibase/standard-components/")) {
+    return ""
+  }
+
+  // strip version suffixes and normalise separators in type names
+  return component._component
+    .replace("@budibase/standard-components/", "")
+    .replace(/v\d+$/, "")
+    .replace(/[-_]+/g, " ")
+}
+
+export interface ComponentTreeSearchResults {
+  matchingIds: Set<string>
+  visibleIds: Set<string>
+  expandedIds: Set<string>
+}
+
+export const normaliseComponentSearchTerm = (searchTerm: string) => {
+  return searchTerm.trim().toLowerCase()
+}
+
+export const componentMatchesSearchTerm = (
+  component: Component,
+  searchTerm: string
+) => {
+  const normalisedSearchTerm = normaliseComponentSearchTerm(searchTerm)
+  if (!normalisedSearchTerm) {
+    return false
+  }
+
+  return [
+    getComponentText(component),
+    getComponentTypeSearchText(component),
+  ].some(text => text.toLowerCase().includes(normalisedSearchTerm))
+}
+
+export const getComponentTreeSearchResults = (
+  components: Component[] | undefined,
+  searchTerm: string
+): ComponentTreeSearchResults => {
+  const matchingIds = new Set<string>()
+  const visibleIds = new Set<string>()
+  const expandedIds = new Set<string>()
+  const normalisedSearchTerm = normaliseComponentSearchTerm(searchTerm)
+
+  if (!components?.length || !normalisedSearchTerm) {
+    return { matchingIds, visibleIds, expandedIds }
+  }
+
+  const searchComponent = (
+    component: Component,
+    visibleFromAncestorMatch = false
+  ): boolean => {
+    const componentId = component._id
+    if (!componentId) {
+      return false
+    }
+
+    const matches = componentMatchesSearchTerm(component, normalisedSearchTerm)
+    const visibleSubtree = matches || visibleFromAncestorMatch
+
+    if (visibleSubtree) {
+      visibleIds.add(componentId)
+    }
+
+    if (matches) {
+      matchingIds.add(componentId)
+    }
+
+    if (component._children?.length && visibleSubtree) {
+      expandedIds.add(componentId)
+    }
+
+    let descendantMatches = false
+    for (const child of component._children || []) {
+      descendantMatches =
+        searchComponent(child, visibleSubtree) || descendantMatches
+    }
+
+    if (descendantMatches) {
+      visibleIds.add(componentId)
+    }
+
+    if (component._children?.length && descendantMatches) {
+      expandedIds.add(componentId)
+    }
+
+    return matches || descendantMatches
+  }
+
+  components.forEach(component => searchComponent(component))
+
+  return { matchingIds, visibleIds, expandedIds }
+}
+
 // Gets all contexts exposed by a certain component type, including actions
 export const getComponentContexts = (component: string) => {
   const def = componentStore.getDefinition(component)

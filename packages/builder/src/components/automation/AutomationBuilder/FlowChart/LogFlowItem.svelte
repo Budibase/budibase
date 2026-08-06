@@ -22,7 +22,7 @@
   export let logData: AutomationLog | null = null
   export let selectedLogStepId: string | null = null
   export let onStepSelect: (
-    _data: AutomationStepResult | AutomationTriggerResult
+    data: AutomationStepResult | AutomationTriggerResult
   ) => void = () => {}
 
   const view = getContext<Writable<DragView>>("draggableView")

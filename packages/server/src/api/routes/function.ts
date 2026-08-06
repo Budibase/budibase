@@ -1,6 +1,5 @@
 import Joi from "joi"
 import { middleware } from "@budibase/backend-core"
-import { DEFAULT_FUNCTION_LIMITS } from "@budibase/types"
 import { functionsEnabled } from "../../middleware/functionsEnabled"
 import * as controller from "../controllers/function"
 import { builderRoutes } from "./endpointGroups"
@@ -13,10 +12,7 @@ const capabilitySchema = Joi.object({
 
 const draftSchema = {
   name: Joi.string().max(255).required(),
-  source: Joi.string()
-    .max(DEFAULT_FUNCTION_LIMITS.compile.maxSourceBytes)
-    .required()
-    .allow(""),
+  source: Joi.string().required().allow(""),
   capabilities: Joi.array().items(capabilitySchema).required(),
 }
 

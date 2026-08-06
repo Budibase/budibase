@@ -14,7 +14,7 @@ import {
   workspaceDeploymentStore,
 } from "@/stores/builder"
 import { get } from "svelte/store"
-import { auth, appsStore } from "@/stores/portal"
+import { auth, workspacesStore } from "@/stores/portal"
 import { screenStore } from "./screens"
 import { SocketEvent, BuilderSocketEvent, helpers } from "@budibase/shared-core"
 import { notifications } from "@budibase/bbui"
@@ -121,7 +121,7 @@ export const createBuilderWebsocket = (appId: string) => {
   socket.onOther(
     BuilderSocketEvent.AppPublishChange,
     async ({ user, published }: { user: UIUser; published: boolean }) => {
-      await appsStore.load()
+      await workspacesStore.load()
       if (published) {
         await Promise.all([
           deploymentStore.load(),

@@ -14,13 +14,13 @@
   import { onMount } from "svelte"
   import type { Plugin } from "@budibase/types"
   import { admin } from "@/stores/portal/admin"
-  import { appsStore } from "@/stores/portal/apps"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { plugins } from "@/stores/portal/plugins"
   import AddPluginModal from "./_components/AddPluginModal.svelte"
   import PluginNameRenderer from "./_components/PluginNameRenderer.svelte"
   import EditPluginRenderer from "./_components/EditPluginRenderer.svelte"
   import RouteActions from "@/settings/components/RouteActions.svelte"
-  import UsedInAppsRenderer from "./_components/UsedInAppsRenderer.svelte"
+  import UsedInWorkspacesRenderer from "./_components/UsedInWorkspacesRenderer.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import type { StoreApp } from "@/types"
 
@@ -62,7 +62,7 @@
   }
   const customRenderers = [
     { column: "name", component: PluginNameRenderer },
-    { column: "usedInAppsLabel", component: UsedInAppsRenderer },
+    { column: "usedInAppsLabel", component: UsedInWorkspacesRenderer },
     { column: "edit", component: EditPluginRenderer },
   ]
 
@@ -112,7 +112,7 @@
     return usageMap
   }
 
-  $: pluginUsageById = buildPluginUsageMap($appsStore.apps)
+  $: pluginUsageById = buildPluginUsageMap($workspacesStore.apps)
 
   $: enrichedPlugins = ($plugins || []).map(plugin => {
     const usedInApps = plugin._id ? pluginUsageById.get(plugin._id) || [] : []
@@ -137,7 +137,7 @@
     })
 
   onMount(async () => {
-    await Promise.all([plugins.load(), appsStore.load()])
+    await Promise.all([plugins.load(), workspacesStore.load()])
     try {
       await plugins.checkUpdates()
     } catch (err: any) {
