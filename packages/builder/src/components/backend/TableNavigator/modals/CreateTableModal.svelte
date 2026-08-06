@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { goto as gotoStore, url as urlStore } from "@roxi/routify"
   import {

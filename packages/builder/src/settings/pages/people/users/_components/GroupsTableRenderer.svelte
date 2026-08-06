@@ -1,7 +1,12 @@
-<script>
+<script lang="ts">
   import { Icon } from "@budibase/bbui"
+  import type { UserGroup } from "@budibase/types"
 
-  export let value
+  interface Props {
+    value?: readonly (string | UserGroup)[] | null
+  }
+
+  let { value }: Props = $props()
 </script>
 
 <div class="align">

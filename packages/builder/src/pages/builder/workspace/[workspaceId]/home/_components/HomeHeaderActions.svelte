@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import FreeTrialBanner from "@/components/portal/licensing/FreeTrialBanner.svelte"
   import { Button } from "@budibase/bbui"
