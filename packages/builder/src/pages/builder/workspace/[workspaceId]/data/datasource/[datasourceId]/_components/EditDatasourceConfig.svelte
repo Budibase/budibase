@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { keepOpen, Modal, notifications } from "@budibase/bbui"
   import { integrationForDatasource } from "@/stores/selectors"
