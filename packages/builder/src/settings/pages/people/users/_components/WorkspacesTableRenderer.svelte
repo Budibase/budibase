@@ -4,14 +4,18 @@
   import { sdk } from "@budibase/shared-core"
   import { type EnrichedUser, type ParsedInvite } from "@/types"
 
-  export let row: EnrichedUser | ParsedInvite
-  $: priviliged = sdk.users.isAdminOrBuilder(row)
-  $: count = getCount(row)
+  interface Props {
+    row: EnrichedUser | ParsedInvite
+  }
+
+  let { row }: Props = $props()
+  const privileged = $derived(sdk.users.isAdminOrBuilder(row))
 
   const getCount = (row: EnrichedUser | ParsedInvite) => {
-    const appList = priviliged ? $workspacesStore.apps : row.apps
+    const appList = privileged ? $workspacesStore.apps : row.apps
     return appList?.length || 0
   }
+  const count = $derived(getCount(row))
 </script>
 
 <div class="align">

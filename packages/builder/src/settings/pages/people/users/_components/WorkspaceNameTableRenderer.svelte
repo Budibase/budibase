@@ -1,8 +1,18 @@
-<script>
+<script lang="ts">
   import { IconAvatar } from "@budibase/bbui"
 
-  export let value
-  export let row
+  interface Props {
+    value: string
+    row: {
+      __skeleton?: boolean
+      icon?: {
+        name?: string
+        color?: string
+      }
+    }
+  }
+
+  let { value, row }: Props = $props()
 </script>
 
 {#if !row?.__skeleton}
