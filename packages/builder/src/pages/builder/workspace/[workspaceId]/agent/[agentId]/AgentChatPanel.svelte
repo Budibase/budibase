@@ -4,17 +4,23 @@
     type AgentMessageMetadata,
     type DraftChatConversation,
     type WithoutDocMetadata,
+    type User,
   } from "@budibase/types"
   import type { UIMessage } from "ai"
   import { Chatbox } from "@budibase/frontend-core/src/components"
+  import { Select } from "@budibase/bbui"
   import { escalationsStore } from "@/stores/portal/escalations"
-  import { auth, featureFlags } from "@/stores/portal"
+  import { auth, featureFlags, users } from "@/stores/portal"
+  import { roles } from "@/stores/builder"
+  import { sdk } from "@budibase/shared-core"
+  import { onMount } from "svelte"
   import {
     loadPromptHistory,
     savePromptHistory,
   } from "@/utils/chatPreviewPromptHistory"
 
   type DraftChat = WithoutDocMetadata<DraftChatConversation>
+  const CURRENT_USER_VALUE = "current-user"
 
   type Props = {
     agentId?: string
@@ -34,6 +40,18 @@
   let lastKey = $state<string | undefined>()
   let refreshKey = $state(0)
   let promptHistory = $state<string[]>([])
+  let previewUserId = $state<string | undefined>()
+  let previewUsers = $state<User[]>([])
+
+  onMount(async () => {
+    const [result] = await Promise.all([
+      users.search({ workspaceId, paginate: false }),
+      roles.fetchByAppId(workspaceId),
+    ])
+    previewUsers = (result.data as User[]).filter(
+      user => user.budibaseAccess !== false
+    )
+  })
 
   // Preview is transient, so escalation polling lives here, not in Chatbox.
   let chatbox = $state<
@@ -82,6 +100,28 @@
   const refreshChat = () => {
     resetChat(agentId)
   }
+
+  const selectPreviewUser = (userId: string) => {
+    previewUserId = userId === CURRENT_USER_VALUE ? undefined : userId
+    resetChat(agentId)
+  }
+
+  const getPreviewUserLabel = (user: User) => {
+    const name = [user.firstName, user.lastName].filter(Boolean).join(" ")
+    const prodWorkspaceId = sdk.workspaces.getProdWorkspaceID(workspaceId)
+    const roleId = user.roles?.[prodWorkspaceId]
+    const roleName = $roles.find(role => role._id === roleId)?.uiMetadata
+      ?.displayName
+    return `${name || user.email}${roleName ? ` · ${roleName}` : ""}`
+  }
+
+  const previewUserOptions = $derived([
+    { label: "Current user", value: CURRENT_USER_VALUE },
+    ...previewUsers.map(user => ({
+      label: getPreviewUserLabel(user),
+      value: user._id,
+    })),
+  ])
 
   const handlePromptSubmitted = (prompt: string) => {
     const tenantId = $auth.tenantId
@@ -135,9 +175,23 @@
 <div class="agent-chat-panel">
   <div class="chat-preview-header">
     <span class="chat-preview-pill">Chat preview</span>
-    <button class="chat-preview-refresh" type="button" onclick={refreshChat}>
-      Clear chat
-    </button>
+    <div class="chat-preview-actions">
+      <label class="preview-user-picker">
+        <span>Test as</span>
+        <Select
+          value={previewUserId || CURRENT_USER_VALUE}
+          options={previewUserOptions}
+          placeholder={false}
+          size="S"
+          autoWidth
+          popoverAutoWidth
+          on:change={event => selectPreviewUser(event.detail)}
+        />
+      </label>
+      <button class="chat-preview-refresh" type="button" onclick={refreshChat}>
+        Clear chat
+      </button>
+    </div>
   </div>
   <div class="chat-preview-body">
     {#key refreshKey}
@@ -147,6 +201,7 @@
         persistConversation={false}
         {workspaceId}
         isAgentPreviewChat={true}
+        {previewUserId}
         {promptHistory}
         onpromptsubmitted={handlePromptSubmitted}
         onEscalationPending={handleEscalationPending}
@@ -190,6 +245,18 @@
     color: var(--spectrum-global-color-gray-700);
     font-size: 14px;
     cursor: pointer;
+  }
+
+  .chat-preview-actions,
+  .preview-user-picker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .preview-user-picker {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 12px;
   }
 
   .chat-preview-body {

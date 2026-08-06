@@ -49,6 +49,7 @@ import {
   truncateTitle,
 } from "../../../sdk/workspace/ai/chatConversations"
 import { determineTrigger } from "../../../sdk/workspace/ai/agentLogs/shared"
+import { getFullUser } from "../../../utilities/users"
 
 const getGlobalUserId = (ctx: UserCtx) => {
   const userId = ctx.user?.globalId || ctx.user?.userId || ctx.user?._id
@@ -413,6 +414,7 @@ interface ResolvedChatStreamRequest {
   chatAppId?: string
   existingChat?: ChatConversation
   userId: string
+  user: ContextUser
 }
 
 interface getExistingChatForStreamParams {
@@ -499,6 +501,17 @@ const resolveChatStreamRequest = async (
 
   const canUsePreview = requestedPreview
 
+  let effectiveUser = ctx.user
+  let effectiveUserId = userId
+  if (canUsePreview && chat.previewUserId) {
+    effectiveUser = await getFullUser(chat.previewUserId)
+    effectiveUserId =
+      effectiveUser.globalId ||
+      effectiveUser.userId ||
+      effectiveUser._id ||
+      chat.previewUserId
+  }
+
   if (!canUsePreview && !chatAppId) {
     throw new HTTPError("chatAppId is required", 400)
   }
@@ -517,7 +530,7 @@ const resolveChatStreamRequest = async (
     chat,
     chatAppId,
     db,
-    userId,
+    userId: effectiveUserId,
   })
 
   const agentId = existingChat?.agentId || chat.agentId
@@ -538,7 +551,8 @@ const resolveChatStreamRequest = async (
     chat,
     chatAppId,
     existingChat,
-    userId,
+    userId: effectiveUserId,
+    user: effectiveUser,
   }
 }
 
@@ -791,7 +805,7 @@ export async function webhookChat({
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const db = context.getWorkspaceDB()
-  const { agentId, chat, chatAppId, userId } =
+  const { agentId, chat, chatAppId, userId, user } =
     await resolveChatStreamRequest(ctx)
 
   ctx.status = 200
@@ -817,7 +831,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       chat,
       errorLabel: "chat stream",
       sessionId,
-      user: ctx.user,
+      user,
       getRequestId: () => trackingHandle?.requestId,
     })
 
