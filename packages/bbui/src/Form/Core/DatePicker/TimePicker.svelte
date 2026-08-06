@@ -4,7 +4,7 @@
   import NumberInput from "./NumberInput.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let value: Dayjs | undefined
+  export let value: Dayjs | null | undefined
   export let disableClearing = false
   export let disabled = false
   export let readonly = false

@@ -1,16 +1,16 @@
-<script>
-  import { TimeField } from "@budibase/bbui"
+<script lang="ts">
   import { createEventDispatcher } from "svelte"
+  import { TimeField } from "@budibase/bbui"
 
-  export let value = undefined
-  export let name = undefined
+  export let value: string | null | undefined = undefined
+  export let name: string | undefined = undefined
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ change: string | undefined }>()
 </script>
 
 <TimeField
   {value}
   {name}
   showSeconds
-  onchange={nextValue => dispatch("change", nextValue)}
+  onchange={(nextValue: string | undefined) => dispatch("change", nextValue)}
 />

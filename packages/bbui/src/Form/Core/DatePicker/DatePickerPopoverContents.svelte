@@ -1,23 +1,24 @@
-<script>
-  import dayjs from "dayjs"
-  import TimePicker from "./TimePicker.svelte"
-  import Calendar from "./Calendar.svelte"
-  import ActionButton from "../../../ActionButton/ActionButton.svelte"
+<script lang="ts">
+  import dayjs, { type Dayjs } from "dayjs"
   import { createEventDispatcher, onMount } from "svelte"
-  import { stringifyDate } from "../../../helpers"
   import { resolveTranslationGroup } from "@budibase/shared-core"
+  import ActionButton from "../../../ActionButton/ActionButton.svelte"
+  import { stringifyDate } from "../../../helpers"
+  import Calendar from "./Calendar.svelte"
+  import TimePicker from "./TimePicker.svelte"
+  import type { Weekday } from "./utils"
 
   export let useKeyboardShortcuts = true
-  export let ignoreTimezones
-  export let enableTime
-  export let timeOnly
-  export let setTimeTo
-  export let value
-  export let startDayOfWeek = "Monday"
+  export let ignoreTimezones = false
+  export let enableTime = true
+  export let timeOnly = false
+  export let setTimeTo: string | undefined = undefined
+  export let value: Dayjs | null | undefined = null
+  export let startDayOfWeek: Weekday = "Monday"
   export let calendarLabels = resolveTranslationGroup("calendar")
 
-  const dispatch = createEventDispatcher()
-  let calendar
+  const dispatch = createEventDispatcher<{ change: string | null }>()
+  let calendar: { setDate: (date: Dayjs) => void } | undefined
 
   $: showCalendar = !timeOnly
   $: showTime = enableTime || timeOnly
@@ -28,10 +29,10 @@
     handleChange(now)
   }
 
-  const handleChange = date => {
+  const handleChange = (date: Dayjs | null | undefined) => {
     dispatch(
       "change",
-      stringifyDate(date, {
+      stringifyDate(date ?? null, {
         enableTime,
         timeOnly,
         ignoreTimezones,
@@ -40,7 +41,7 @@
     )
   }
 
-  const clearDateOnBackspace = event => {
+  const clearDateOnBackspace = (event: KeyboardEvent) => {
     // Ignore if we're typing a value
     if (document.activeElement?.tagName.toLowerCase() === "input") {
       return
