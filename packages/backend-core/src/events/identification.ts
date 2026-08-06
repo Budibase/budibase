@@ -14,6 +14,8 @@ import {
   UserIdentity,
   InstallationGroup,
   UserContext,
+  ServiceAccountContext,
+  ServiceAccountIdentity,
   Group,
   isSSOUser,
 } from "@budibase/types"
@@ -90,6 +92,22 @@ const getCurrentIdentity = async (): Promise<Identity> => {
       realTenantId: context.getTenantId(),
       hostInfo: userContext.hostInfo,
     }
+  } else if (identityType === IdentityType.SERVICE_ACCOUNT) {
+    const serviceContext = identityContext as ServiceAccountContext
+    const tenantId = await getEventTenantId(context.getTenantId())
+    const installationId = await getInstallationId()
+    const identity: ServiceAccountIdentity = {
+      id: serviceContext._id,
+      name: serviceContext.serviceApiKey.name,
+      type: identityType,
+      hosting: getHostingFromEnv(),
+      installationId,
+      tenantId,
+      realTenantId: context.getTenantId(),
+      environment,
+      hostInfo: serviceContext.hostInfo,
+    }
+    return identity
   } else {
     throw new Error("Unknown identity type")
   }

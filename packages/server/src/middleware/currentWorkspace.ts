@@ -40,6 +40,9 @@ export const currentWorkspaceMiddleware = (async (ctx: UserCtx, next: Next) => {
 
   let workspaceId: string | undefined,
     roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
+  if (ctx.serviceApiKey) {
+    roleId = roles.BUILTIN_ROLE_IDS.ADMIN
+  }
   if (!ctx.user?._id) {
     // not logged in, try to set a cookie for public apps
     workspaceId = requestWorkspaceId

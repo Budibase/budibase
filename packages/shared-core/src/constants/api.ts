@@ -4,6 +4,7 @@ export enum ClientHeader {
 
 export enum Header {
   API_KEY = "x-budibase-api-key",
+  SERVICE_ACCOUNT_ID = "x-budibase-service-account-id",
   LICENSE_KEY = "x-budibase-license-key",
   API_VER = "x-budibase-api-version",
   WORKSPACE_ID = "x-budibase-app-id",

@@ -32,8 +32,13 @@ export interface InstallationGroup extends Group {
 
 export enum IdentityType {
   USER = "user",
+  SERVICE_ACCOUNT = "service_account",
   TENANT = "tenant",
   INSTALLATION = "installation",
+}
+
+export interface ServiceAccountIdentity extends Identity {
+  name: string
 }
 
 export interface HostInfo {

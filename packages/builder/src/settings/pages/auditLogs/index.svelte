@@ -31,6 +31,7 @@
   import { cloneDeep } from "lodash"
   import DateRangePicker from "@/components/common/DateRangePicker.svelte"
   import dayjs from "dayjs"
+  import { API } from "@/api"
 
   const schema = {
     date: { width: "0.8fr" },
@@ -88,6 +89,7 @@
   $: logsPage = $logsPageInfo.page
 
   let usersObj = {}
+  let serviceApiKeyActors = []
   $: usersObj = {
     ...usersObj,
     ...$users.data?.reduce((accumulator, user) => {
@@ -96,7 +98,11 @@
     }, {}),
   }
   $: sortedUsers = sort(
-    enrich(Object.values(usersObj), selectedUsers, "_id"),
+    enrich(
+      [...Object.values(usersObj), ...serviceApiKeyActors],
+      selectedUsers,
+      "_id"
+    ),
     "email"
   )
   $: sortedEvents = sort(
@@ -255,6 +261,15 @@
   }
 
   onMount(async () => {
+    try {
+      const response = await API.fetchServiceApiKeys()
+      serviceApiKeyActors = response.serviceApiKeys.map(serviceApiKey => ({
+        _id: serviceApiKey._id,
+        email: `${serviceApiKey.name} (service API key)`,
+      }))
+    } catch {
+      serviceApiKeyActors = []
+    }
     await auditLogs.getEventDefinitions()
     await licensing.init()
   })

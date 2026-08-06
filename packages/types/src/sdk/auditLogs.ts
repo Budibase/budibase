@@ -1,4 +1,4 @@
-import { Event, HostInfo } from "./events"
+import { Event, HostInfo, IdentityType } from "./events"
 import { AuditLogDoc } from "../documents"
 
 export type AuditWriteOpts = {
@@ -6,6 +6,8 @@ export type AuditWriteOpts = {
   timestamp?: string | number
   userId?: string
   hostInfo?: HostInfo
+  identityType?: IdentityType
+  serviceAccountName?: string
 }
 
 export type AuditLogFn = (

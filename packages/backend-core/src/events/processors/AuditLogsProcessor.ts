@@ -5,6 +5,7 @@ import {
   HostInfo,
   Identity,
   IdentityType,
+  ServiceAccountIdentity,
 } from "@budibase/types"
 import { doInTenant, getTenantId, getWorkspaceId } from "../../context"
 import env from "../../environment"
@@ -68,13 +69,21 @@ export default class AuditLogsProcessor implements EventProcessor {
     if (AuditLogsProcessor.auditLogsEnabled && isAudited(event)) {
       // only audit log actual events, don't include backfills
       const userId =
-        identity.type === IdentityType.USER ? identity.id : undefined
+        identity.type === IdentityType.USER ||
+        identity.type === IdentityType.SERVICE_ACCOUNT
+          ? identity.id
+          : undefined
       // add to the event queue, rather than just writing immediately
       await AuditLogsProcessor.auditLogQueue.add({
         event,
         properties,
         opts: {
           userId,
+          identityType: identity.type,
+          serviceAccountName:
+            identity.type === IdentityType.SERVICE_ACCOUNT
+              ? (identity as ServiceAccountIdentity).name
+              : undefined,
           timestamp,
           appId: getWorkspaceId(),
           hostInfo: identity.hostInfo,

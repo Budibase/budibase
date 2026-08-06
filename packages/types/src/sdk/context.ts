@@ -1,4 +1,4 @@
-import { User, Account } from "../documents"
+import { User, Account, ServiceApiKeySummary } from "../documents"
 import { IdentityType, HostInfo } from "./events"
 
 export interface BaseContext {
@@ -19,4 +19,14 @@ export interface UserContext extends BaseContext, User {
   hostInfo: HostInfo
 }
 
-export type IdentityContext = BaseContext | AccountUserContext | UserContext
+export interface ServiceAccountContext extends BaseContext {
+  tenantId: string
+  serviceApiKey: ServiceApiKeySummary
+  hostInfo: HostInfo
+}
+
+export type IdentityContext =
+  | BaseContext
+  | AccountUserContext
+  | UserContext
+  | ServiceAccountContext

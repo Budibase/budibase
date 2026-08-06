@@ -17,7 +17,11 @@ const validateAppRoleUpdate = (ctx: UserCtx, appId?: string) => {
     return
   }
 
-  if (!users.isAdmin(ctx.user) && !users.isBuilder(ctx.user, appId)) {
+  if (
+    !ctx.serviceApiKeyAuthorized &&
+    !users.isAdmin(ctx.user) &&
+    !users.isBuilder(ctx.user, appId)
+  ) {
     ctx.throw(403, "Only app builders or admins can update app permissions.")
   }
 }
@@ -43,6 +47,9 @@ export const validateGlobalRoleUpdate = (
   ctx: UserCtx,
   roleUpdate: GlobalRoleUpdate
 ) => {
+  if (ctx.serviceApiKeyAuthorized && ctx.serviceApiKey?.tenantAdmin) {
+    return
+  }
   if (roleUpdate.admin && !users.isAdmin(ctx.user)) {
     ctx.throw(403, "Only global admins can update global admin permissions.")
   }

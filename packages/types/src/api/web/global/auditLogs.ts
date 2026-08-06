@@ -1,6 +1,6 @@
 import { BasicPaginationRequest, PaginationResponse } from "../"
 import { User, Workspace } from "../../../"
-import { Event } from "../../../sdk"
+import { Event, IdentityType } from "../../../sdk"
 
 export interface AuditLogSearchParams {
   userIds?: string[]
@@ -29,9 +29,16 @@ export type DeletedResourceInfo = {
   name?: string
 }
 
+export interface AuditLogServiceAccount {
+  _id: string
+  name: string
+  status: string
+  type: IdentityType.SERVICE_ACCOUNT
+}
+
 export interface AuditLogEnriched {
   app?: Workspace | DeletedResourceInfo
-  user: User | DeletedResourceInfo
+  user: User | DeletedResourceInfo | AuditLogServiceAccount
   event: Event
   timestamp: string
   name: string

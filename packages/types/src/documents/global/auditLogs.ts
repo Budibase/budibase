@@ -1,5 +1,5 @@
 import { Document } from "../document"
-import { Event } from "../../sdk"
+import { Event, IdentityType } from "../../sdk"
 
 export const AuditLogSystemUser = "SYSTEM"
 export const AUDIT_LOG_TYPE = "auditLog"
@@ -7,6 +7,7 @@ export const AUDIT_LOG_TYPE = "auditLog"
 export type FallbackInfo = {
   appName?: string
   email?: string
+  name?: string
 }
 
 export interface AuditLogDoc extends Document {
@@ -18,4 +19,5 @@ export interface AuditLogDoc extends Document {
   name: string
   type?: "auditLog"
   fallback?: FallbackInfo
+  identityType?: IdentityType
 }

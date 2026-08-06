@@ -1,6 +1,10 @@
 import { CtxFn, middleware, redis } from "@budibase/backend-core"
 import { SelectableDatabase } from "@budibase/backend-core/src/redis/utils"
-import { PermissionLevel, PermissionType } from "@budibase/types"
+import {
+  PermissionLevel,
+  PermissionType,
+  ServiceApiKeyAccessLevel,
+} from "@budibase/types"
 import cors from "@koa/cors"
 import env from "../../../environment"
 import { authorizedMiddleware as authorized } from "../../../middleware/authorized"
@@ -97,6 +101,20 @@ function addToRouter(endpoints: any) {
 }
 
 function applyAdminRoutes(endpoints: any) {
+  addMiddleware(
+    endpoints.read,
+    publicApi({
+      accessLevel: ServiceApiKeyAccessLevel.READ_ONLY,
+      tenantLevel: true,
+    })
+  )
+  addMiddleware(
+    endpoints.write,
+    publicApi({
+      accessLevel: ServiceApiKeyAccessLevel.READ_WRITE,
+      tenantLevel: true,
+    })
+  )
   addMiddleware(endpoints.read, middleware.builderOrAdmin)
   addMiddleware(endpoints.write, middleware.builderOrAdmin)
   addToRouter(endpoints.read)
@@ -112,12 +130,22 @@ function applyRoutes(
   const paramMiddleware = subResource
     ? paramSubResource(resource, subResource)
     : paramResource(resource)
-  const publicApiMiddleware = publicApi({
+  const readPublicApiMiddleware = publicApi({
     requiresAppId:
       permType !== PermissionType.WORKSPACE && permType !== PermissionType.USER,
+    accessLevel: ServiceApiKeyAccessLevel.READ_ONLY,
+    tenantLevel: permType === PermissionType.USER,
+    workspaceLevel: permType === PermissionType.WORKSPACE,
   })
-  addMiddleware(endpoints.read, publicApiMiddleware)
-  addMiddleware(endpoints.write, publicApiMiddleware)
+  const writePublicApiMiddleware = publicApi({
+    requiresAppId:
+      permType !== PermissionType.WORKSPACE && permType !== PermissionType.USER,
+    accessLevel: ServiceApiKeyAccessLevel.READ_WRITE,
+    tenantLevel: permType === PermissionType.USER,
+    workspaceLevel: permType === PermissionType.WORKSPACE,
+  })
+  addMiddleware(endpoints.read, readPublicApiMiddleware)
+  addMiddleware(endpoints.write, writePublicApiMiddleware)
   // add the parameter capture middleware
   addMiddleware(endpoints.read, paramMiddleware)
   addMiddleware(endpoints.write, paramMiddleware)
