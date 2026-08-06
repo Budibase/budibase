@@ -2,6 +2,7 @@ import { API } from "@/api"
 import { UserInfo } from "@/types"
 import { notifications } from "@budibase/bbui"
 import { Constants } from "@budibase/frontend-core"
+import { sdk } from "@budibase/shared-core"
 import {
   DeleteInviteUsersRequest,
   InviteUsersRequest,
@@ -9,6 +10,8 @@ import {
   SearchUsersResponse,
   UnsavedUser,
   User,
+  type UserAdminInfo,
+  type UserBuilderInfo,
   UserIdentifier,
 } from "@budibase/types"
 import { licensing } from "."
@@ -16,16 +19,9 @@ import { BudiStore } from "../BudiStore"
 
 type UserState = SearchUsersResponse & SearchUsersRequest
 
-export interface UserRoleDetails {
+export interface UserRoleDetails extends UserAdminInfo, UserBuilderInfo {
   email: string
   tenantOwnerEmail?: string
-  admin?: {
-    global?: boolean
-  }
-  builder?: {
-    global?: boolean
-    creator?: boolean
-  }
 }
 
 class UserStore extends BudiStore<UserState> {
@@ -200,11 +196,11 @@ class UserStore extends BudiStore<UserState> {
     }
     if (user.email === user.tenantOwnerEmail) {
       return Constants.BudibaseRoles.Owner
-    } else if (user.admin?.global) {
+    } else if (sdk.users.isAdmin(user)) {
       return Constants.BudibaseRoles.Admin
-    } else if (user.builder?.global) {
+    } else if (sdk.users.isBuilder(user)) {
       return Constants.BudibaseRoles.Developer
-    } else if (user.builder?.creator) {
+    } else if (sdk.users.hasCreatorPermissions(user)) {
       return Constants.BudibaseRoles.Creator
     } else {
       return Constants.BudibaseRoles.AppUser

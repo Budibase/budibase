@@ -5,9 +5,11 @@
   import { users } from "@/stores/portal/users"
   import { Layout, Table, notifications } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
+  import type { RequiredKeys } from "@budibase/types"
   import {
     type GetUserInvitesResponse,
     type InviteWithCode,
+    type UserAdminInfo,
   } from "@budibase/types"
   import { onMount } from "svelte"
   import RouteActions from "@/settings/components/RouteActions.svelte"
@@ -19,7 +21,7 @@
     _id: string
     email: string
     builder?: InviteWithCode["info"]["builder"]
-    admin?: InviteWithCode["info"]["admin"]
+    admin?: UserAdminInfo["admin"]
     userGroups?: string[]
   }
 
@@ -64,9 +66,13 @@
         _id: invite.code,
         email: invite.email,
         builder: builder ? { ...builder } : undefined,
-        admin: admin ? { ...admin } : undefined,
+        admin: admin
+          ? ({ global: !!admin.global } satisfies RequiredKeys<
+              ParsedInvite["admin"]
+            >)
+          : undefined,
         userGroups: userGroups,
-      }
+      } satisfies ParsedInvite
     })
   }
 
