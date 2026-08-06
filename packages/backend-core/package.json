@@ -27,7 +27,7 @@
     "build": "node ./scripts/build.js && yarn build:types",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "build:oss": "node ./scripts/build.js",
-    "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly --paths null && tsc -p tsconfig.test.json --paths null",
+    "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly --paths null && tsc -p tsconfig.test-utils.json --paths null",
     "check:types": "tsc -p tsconfig.json --noEmit --incremental --paths null",
     "test": "bash scripts/test.sh",
     "test:watch": "jest --watchAll"
