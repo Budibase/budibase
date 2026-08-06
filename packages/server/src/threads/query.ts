@@ -391,11 +391,7 @@ class QueryRunner {
     return value
   }
 
-  // Builds the display-oriented preview inputs by running the normal
-  // enrichment under a masked environment: every env var resolves to its own
-  // binding text, so parameters and dynamic variables resolve as they do for
-  // the real request while env secrets stay symbolic. An env name missing
-  // from the masked context resolves to nothing, never a secret.
+  // Builds the display-oriented preview
   async buildPreview(
     fields: Record<string, any>,
     parameters: Record<string, any>
@@ -426,6 +422,24 @@ class QueryRunner {
           config.defaultHeaders,
           previewContext
         )
+      }
+      // Mirrors the template base URL rewrite applied to the real request
+      if (
+        (this.datasource.restTemplateId || this.datasource.restTemplate) &&
+        config?.url
+      ) {
+        const resolvedConfigUrl = processStringSync(
+          config.url,
+          previewContext,
+          {
+            noEscaping: true,
+            noHelpers: true,
+            onlyFound: true,
+          }
+        )
+        if (resolvedConfigUrl) {
+          fields.path = applyBaseUrl(fields.path, resolvedConfigUrl)
+        }
       }
       return {
         fields: await sdk.queries.enrichContext(fields, previewContext),

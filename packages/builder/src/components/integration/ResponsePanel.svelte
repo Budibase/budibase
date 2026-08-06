@@ -117,7 +117,7 @@
     {#if !response && (!schema || Object.keys(schema).length === 0)}
       <div class="placeholder">-</div>
     {:else}
-      <QueryStats info={response?.info} compact={!fullscreen} />
+      <QueryStats info={response?.info} />
       {#if !fullscreen}
         <Select
           quiet

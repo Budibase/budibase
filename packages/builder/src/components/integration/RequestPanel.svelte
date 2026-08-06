@@ -8,7 +8,6 @@
   export let request: RestRequestPreview | undefined = undefined
   export let info: { code: number; time: string; size: string } | undefined =
     undefined
-  export let fullscreen = false
 
   $: value = JSON.stringify(request ?? {}, null, 2)
 </script>
@@ -17,7 +16,7 @@
   {#if !request}
     <div class="placeholder">-</div>
   {:else}
-    <QueryStats {info} compact={!fullscreen} />
+    <QueryStats {info} />
     <div class="embed">
       <CodeEditor
         {value}

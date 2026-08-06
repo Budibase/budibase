@@ -61,7 +61,8 @@ export function sanitiseHeaders({
 }): Record<string, string> {
   const authKeys = new Set(authHeaderKeys.map(key => key.toLowerCase()))
   const sanitised: Record<string, string> = {}
-  for (const [key, value] of Object.entries(normaliseHeaders(headers))) {
+  for (const [key, rawValue] of Object.entries(normaliseHeaders(headers))) {
+    const value = String(rawValue)
     const lowerKey = key.toLowerCase()
     const tag = authKeys.has(lowerKey)
       ? tagForAuthType(authType)

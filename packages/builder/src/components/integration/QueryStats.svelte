@@ -1,15 +1,17 @@
 <script lang="ts">
   import { Label } from "@budibase/bbui"
 
-  export let info: { code: number; time: string; size: string } | undefined =
-    undefined
-  export let compact = false
+  interface Props {
+    info?: { code: number; time: string; size: string }
+  }
 
-  $: success = !!info && info.code >= 200 && info.code < 400
+  let { info = undefined }: Props = $props()
+
+  const success = $derived(!!info && info.code >= 200 && info.code < 400)
 </script>
 
 {#if info}
-  <div class="stats" class:compact>
+  <div class="stats">
     <Label size="L">
       Status: <span class={success ? "green" : "red"}>{info.code}</span>
     </Label>

@@ -1435,7 +1435,6 @@
               <RequestPanel
                 request={requestPreview}
                 info={response?.info}
-                fullscreen={expanded}
               />
             {:else}
               <ResponsePanel
