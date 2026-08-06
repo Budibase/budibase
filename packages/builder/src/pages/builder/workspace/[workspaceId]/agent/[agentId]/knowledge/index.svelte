@@ -93,6 +93,17 @@
     return agentsStore.getOperationUploadState(agentId, operationId)
   })
 
+  let knowledgeSearchConfigured = $derived.by(() => {
+    const _store = $agentsStore
+    return agentsStore.getKnowledgeConfiguration()?.knowledgeSearchConfigured
+  })
+  let knowledgeSearchUnavailable = $derived(knowledgeSearchConfigured !== true)
+  let knowledgeActionsTooltip = $derived(
+    knowledgeSearchUnavailable
+      ? "Set GEMINI_API_KEY on your local environment and restart Budibase."
+      : undefined
+  )
+
   let hasSharePointConnection = $derived(
     $knowledgeConnectionsStore.connections.some(
       connection =>
@@ -136,7 +147,8 @@
     toFileTableRows(
       files.filter(file => !file.source),
       removeFile,
-      uploadState.pendingUploads
+      uploadState.pendingUploads,
+      knowledgeSearchConfigured === true
     )
   )
   let sharePointConnectionRows = $derived.by(() =>
@@ -145,6 +157,7 @@
       sharePointSourceSnapshots,
       onDelete: removeSharePointSite,
       onSync: syncSharePointNow,
+      knowledgeSearchConfigured: knowledgeSearchConfigured === true,
     })
   )
   let knowledgeTableRows: KnowledgeTableRow[] = $derived.by(() => [
@@ -217,7 +230,7 @@
   }
 
   const handleKnowledgeRowClick = (row: KnowledgeTableRow) => {
-    if (row.kind !== "sharepoint_connection") {
+    if (knowledgeSearchUnavailable || row.kind !== "sharepoint_connection") {
       return
     }
     openSharePointSiteConfigModal(row.siteId).catch(error => {
@@ -342,7 +355,8 @@
           quiet
           size="S"
           secondary
-          disabled={resetting}
+          tooltip={knowledgeActionsTooltip}
+          disabled={resetting || knowledgeSearchUnavailable}
           iconColor="var(--orange)"
           icon="cloud-rain"
           on:click={resetKnowledgeStore}
@@ -353,6 +367,8 @@
       <KnowledgeAddControls
         {agentId}
         {operationId}
+        disabled={knowledgeSearchUnavailable}
+        tooltip={knowledgeActionsTooltip}
         onUploaded={async () => {
           syncOperationFromStore()
           await refreshDeploymentStatus()
@@ -366,34 +382,36 @@
     </div>
   </div>
 
-  <div class="sources-access">
-    <Toggle
-      bind:value={operation.allowKnowledgeSourceDownload}
-      disabled={savingAllowKnowledgeSourceDownload || !agentId}
-      on:change={async () => {
-        savingAllowKnowledgeSourceDownload = true
-        try {
-          await tick()
-          await onUpdated()
-        } finally {
-          savingAllowKnowledgeSourceDownload = false
-        }
-      }}
-    />
-    <div>
-      <Body
-        color={"var(--spectrum-global-color-gray-900)"}
-        weight="500"
-        size="XS"
-      >
-        Allow users to download knowledge source files from chat
-      </Body>
-      <Body color={"var(--spectrum-global-color-gray-700)"} size="XS">
-        When disabled, chat still shows which files were used, without a
-        download link.
-      </Body>
+  {#if knowledgeTableRows.length}
+    <div class="sources-access">
+      <Toggle
+        bind:value={operation.allowKnowledgeSourceDownload}
+        disabled={savingAllowKnowledgeSourceDownload || !agentId}
+        on:change={async () => {
+          savingAllowKnowledgeSourceDownload = true
+          try {
+            await tick()
+            await onUpdated()
+          } finally {
+            savingAllowKnowledgeSourceDownload = false
+          }
+        }}
+      />
+      <div>
+        <Body
+          color={"var(--spectrum-global-color-gray-900)"}
+          weight="500"
+          size="XS"
+        >
+          Allow users to download knowledge source files from chat
+        </Body>
+        <Body color={"var(--spectrum-global-color-gray-700)"} size="XS">
+          When disabled, chat still shows which files were used, without a
+          download link.
+        </Body>
+      </div>
     </div>
-  </div>
+  {/if}
 
   <KnowledgeTable
     {loading}

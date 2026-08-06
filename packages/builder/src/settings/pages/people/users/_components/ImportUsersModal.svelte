@@ -16,7 +16,7 @@
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
   const MAX_USERS_UPLOAD_LIMIT = 1000
 
-  export let createUsersFromCsv: (_data: {
+  export let createUsersFromCsv: (data: {
     userEmails: string[]
     usersRole: string
     userGroups: string[]

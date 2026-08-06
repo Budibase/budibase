@@ -3,8 +3,8 @@
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
-    "lib": ["ESNext"],
-    "baseUrl": ".",
+    "rootDir": "..",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "paths": {
       "@budibase/*": [
         "../*/src/index.ts",
@@ -12,8 +12,8 @@
         "../*",
         "../../node_modules/@budibase/*"
       ],
-      "assets/*": ["assets/*"],
-      "@/*": ["src/*"]
+      "assets/*": ["./assets/*"],
+      "@/*": ["./src/*"]
     }
   },
   "exclude": []

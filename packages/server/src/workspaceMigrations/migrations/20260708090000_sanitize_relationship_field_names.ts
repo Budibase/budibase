@@ -160,8 +160,15 @@ const renameOwnReferences = (table: Table, old: string, updated: string) => {
     if (view.primaryDisplay === old) {
       view.primaryDisplay = updated
     }
-    if (view.sort?.field === old) {
-      view.sort.field = updated
+    const sortFields = Array.isArray(view.sort)
+      ? view.sort
+      : view.sort
+        ? [view.sort]
+        : []
+    for (const sortField of sortFields) {
+      if (sortField.field === old) {
+        sortField.field = updated
+      }
     }
     // saved filters may reference the column directly (`old`) or filter through
     // it on a sub-column (`old.subField`) - these live on the view regardless of

@@ -109,7 +109,7 @@
   export let eventEnd: string
   export let eventTitle: string
 
-  export let onClick: ((_payload: CalendarEventPayload) => void) | undefined
+  export let onClick: ((payload: CalendarEventPayload) => void) | undefined
   export let showButtons: boolean
   export let buttonType: CalendarButtonType = "action"
   export let monthText: string = "Month"

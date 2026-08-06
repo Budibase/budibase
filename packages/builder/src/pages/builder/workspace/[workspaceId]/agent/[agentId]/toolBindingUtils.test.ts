@@ -1,6 +1,10 @@
+import { ToolType } from "@budibase/types"
 import { describe, expect, it } from "vitest"
 
-import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
+import {
+  getToolBindingCategory,
+  getIncludedToolRuntimeBindings,
+} from "./toolBindingUtils"
 
 describe("getIncludedToolRuntimeBindings", () => {
   const bindingsMap = {
@@ -65,5 +69,16 @@ describe("getIncludedToolRuntimeBindings", () => {
       "{{ budibase.tools.users.find }}",
       "{{ budibase.tools.orders.list }}",
     ])
+  })
+})
+
+describe("getToolBindingCategory", () => {
+  it("groups rest query bindings by api connection name", () => {
+    expect(getToolBindingCategory(ToolType.REST_QUERY, "First API")).toBe(
+      "First API"
+    )
+    expect(getToolBindingCategory(ToolType.REST_QUERY, "Second API")).toBe(
+      "Second API"
+    )
   })
 })
