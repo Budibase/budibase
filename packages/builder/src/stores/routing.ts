@@ -4,9 +4,9 @@ import { derived, get } from "svelte/store"
 // Use direct imports to avoid circular dependency in licensing
 import { auth } from "@/stores/portal/auth"
 import { admin } from "@/stores/portal/admin"
-import { appStore } from "@/stores/builder/app"
+import { appStore } from "@/stores/builder/workspace"
 import { bb, setSettingsRouteResolver } from "@/stores/bb"
-import { appsStore } from "@/stores/portal/apps"
+import { workspacesStore } from "@/stores/portal/workspaces"
 import {
   workspaceRoutes,
   filterRoutes,
@@ -15,8 +15,8 @@ import {
 } from "@/settings/routes"
 
 export const permittedRoutes = derived(
-  [admin, auth, appStore, appsStore],
-  ([$admin, $auth, $appStore, $appsStore]) => {
+  [admin, auth, appStore, workspacesStore],
+  ([$admin, $auth, $appStore, $workspacesStore]) => {
     const user = $auth?.user
 
     if (!user) {
@@ -24,7 +24,7 @@ export const permittedRoutes = derived(
     }
     const routes = [
       ...globalRoutes(user),
-      ...workspaceRoutes($appStore, $appsStore, user),
+      ...workspaceRoutes($appStore, $workspacesStore, user),
       ...orgRoutes(user, $admin),
     ]
     return filterRoutes(routes)

@@ -17,6 +17,17 @@ jest.mock("@chat-adapter/slack", () => ({
   createSlackAdapter: jest.fn(() => ({})),
 }))
 
+// Agent create/update resolves the Slack workspace via auth.test - without
+// this mock the real client retries against the nock net-connect block until
+// the test times out.
+jest.mock("@slack/web-api", () => ({
+  WebClient: jest.fn(() => ({
+    auth: {
+      test: jest.fn().mockResolvedValue({ ok: true, team_id: "T123" }),
+    },
+  })),
+}))
+
 jest.mock("@chat-adapter/state-memory", () => ({
   createMemoryState: jest.fn(() => ({})),
 }))
@@ -216,6 +227,31 @@ describe("agent slack integration provisioning", () => {
         persisted.slackIntegration!.signingSecret!
       )
     ).toBeTrue()
+  })
+
+  it("ignores a client-supplied teamId while the bot token is unchanged", async () => {
+    const created = await config.api.agent.create({
+      name: "Slack TeamId Agent",
+      slackIntegration: {
+        botToken: "xoxb-token-teamid",
+        signingSecret: "slack-signing-secret-teamid",
+      },
+    })
+
+    let persisted = await getPersistedAgent(created._id)
+    expect(persisted.slackIntegration?.teamId).toEqual("T123")
+
+    const { agents } = await config.api.agent.fetch()
+    const fetched = agents.find(a => a._id === created._id)!
+
+    // Same (masked) token, but forge a different workspace id.
+    await config.api.agent.update({
+      ...fetched,
+      slackIntegration: { ...fetched.slackIntegration!, teamId: "T999" },
+    })
+
+    persisted = await getPersistedAgent(created._id)
+    expect(persisted.slackIntegration?.teamId).toEqual("T123")
   })
 
   it("returns a validation error when slack settings are missing", async () => {

@@ -9,9 +9,9 @@ const TABLE_TOOLS: BudibaseToolDefinition[] = [
     name: "list_tables",
     sourceType: ToolType.INTERNAL_TABLE,
     sourceLabel: "Budibase",
-    description: "List all tables in the current app",
+    description: "List all tables in the current workspace",
     tool: tool({
-      description: "List all tables in the current app",
+      description: "List all tables in the current workspace",
       inputSchema: z.object({
         showSchema: z
           .boolean()

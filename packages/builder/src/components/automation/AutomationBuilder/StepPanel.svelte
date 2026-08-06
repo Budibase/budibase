@@ -486,7 +486,7 @@
     transition:
       height 300ms ease-out,
       max-height 300ms ease-out;
-    height: 520px;
+    height: 440px;
     box-sizing: border-box;
   }
   .config.panel .content {

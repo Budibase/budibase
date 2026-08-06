@@ -3,10 +3,10 @@
   import { Body, Button, Heading, Layout, Modal } from "@budibase/bbui"
   import { SplitPage } from "@budibase/frontend-core"
   import { goto as gotoStore } from "@roxi/routify"
-  import { appsStore } from "@/stores/portal/apps"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { auth } from "@/stores/portal/auth"
   import BBLogo from "assets/BBLogo.svelte"
-  import CreateWorkspaceModal from "../workspace/[application]/_components/CreateWorkspaceModal.svelte"
+  import CreateWorkspaceModal from "../workspace/[workspaceId]/_components/CreateWorkspaceModal.svelte"
   import type { CreateWorkspaceResponse } from "@budibase/types"
   import { sdk } from "@budibase/shared-core"
 
@@ -21,7 +21,7 @@
       await auth.getSelf()
     }
     // Refresh the apps list to include the newly created app
-    await appsStore.load()
+    await workspacesStore.load()
     // Redirect to the newly created workspace
     goto(`/builder/workspace/${event.detail.instance._id}/home`)
   }

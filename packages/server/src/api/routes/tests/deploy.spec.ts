@@ -1,13 +1,18 @@
 import { constants, context, db as dbCore } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import {
+  AgentKnowledgeSourceType,
   Automation,
   FieldType,
   FormulaType,
   PublishResourceState,
   Row,
+  SharePointScopeMode,
+  SharePointScopeTargetType,
   Table,
   WorkspaceApp,
+  type Agent,
+  type AgentSharePointKnowledgeSourceScope,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
@@ -355,6 +360,88 @@ describe("/api/deploy", () => {
         })
       )
     })
+
+    it("ignores SharePoint target object key order when comparing agents", async () => {
+      const created = await config.api.agent.createWithOperation(
+        {
+          name: "SharePoint Agent",
+          aiconfig: "default",
+          live: true,
+        },
+        {
+          id: "operation_1",
+          name: "Main operation",
+          live: false,
+          enabledTools: [],
+          allowKnowledgeSourceDownload: false,
+        }
+      )
+
+      const setScope = async (scope: AgentSharePointKnowledgeSourceScope) => {
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const db = context.getWorkspaceDB()
+          const agent = await db.get<Agent>(created._id!)
+          agent.operations![0].knowledgeSources = [
+            {
+              id: "sharepoint_site_1",
+              type: AgentKnowledgeSourceType.SHAREPOINT,
+              config: {
+                datasourceId: "datasource_1",
+                authConfigId: "auth_1",
+                site: { id: "site_1" },
+                scope,
+              },
+            },
+          ]
+          await db.put(agent)
+        })
+      }
+
+      await setScope({
+        mode: SharePointScopeMode.SELECTED,
+        targets: [
+          {
+            type: SharePointScopeTargetType.FOLDER,
+            driveId: "drive_1",
+            itemId: "item_1",
+          },
+        ],
+      })
+      await config.api.workspace.publish(config.devWorkspace!.appId)
+
+      await setScope({
+        mode: SharePointScopeMode.SELECTED,
+        targets: [
+          {
+            itemId: "item_1",
+            driveId: "drive_1",
+            type: SharePointScopeTargetType.FOLDER,
+          },
+        ],
+      })
+
+      const status = await config.api.deploy.publishStatus()
+      expect(status.agents[created._id!]).toEqual(
+        expect.objectContaining({
+          published: true,
+          unpublishedChanges: false,
+        })
+      )
+
+      await setScope({
+        mode: SharePointScopeMode.SELECTED,
+        targets: [
+          {
+            itemId: "item_2",
+            driveId: "drive_1",
+            type: SharePointScopeTargetType.FOLDER,
+          },
+        ],
+      })
+
+      const changedStatus = await config.api.deploy.publishStatus()
+      expect(changedStatus.agents[created._id!].unpublishedChanges).toBe(true)
+    })
   })
 
   describe("POST /api/deploy", () => {
@@ -575,7 +662,7 @@ describe("/api/deploy", () => {
 
     // Create a row directly in production to simulate live data
     const productionRow = await config.withHeaders(
-      { [constants.Header.APP_ID]: config.getProdWorkspaceId() },
+      { [constants.Header.WORKSPACE_ID]: config.getProdWorkspaceId() },
       async () =>
         await config.api.row.save(table._id!, {
           tableId: table._id!,
@@ -602,7 +689,7 @@ describe("/api/deploy", () => {
     await config.api.workspace.publish(config.devWorkspace!.appId)
 
     const prodRowAfterPublish = await config.withHeaders(
-      { [constants.Header.APP_ID]: config.getProdWorkspaceId() },
+      { [constants.Header.WORKSPACE_ID]: config.getProdWorkspaceId() },
       async () => await config.api.row.get(table._id!, productionRow._id!)
     )
 
