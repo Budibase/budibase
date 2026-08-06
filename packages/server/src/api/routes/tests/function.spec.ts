@@ -1,6 +1,7 @@
 import { context, features } from "@budibase/backend-core"
 import {
   DocumentType,
+  DEFAULT_FUNCTION_LIMITS,
   FeatureFlag,
   type FunctionDocument,
   prefixed,
@@ -347,19 +348,42 @@ describe("/functions", () => {
       )
 
       const query = await createQuery()
+      // JavaScript's `$` anchor can match before a trailing line terminator.
+      for (const lineTerminator of ["\r", "\n", "\u2028", "\u2029"]) {
+        await config.api.function.create(
+          {
+            name: "Invalid alias",
+            source: "",
+            capabilities: [
+              {
+                queryId: query._id!,
+                datasourceAlias: `Inventory${lineTerminator}`,
+                queryAlias: "findRooms",
+              },
+            ],
+          },
+          { status: 400 }
+        )
+      }
+    })
+  })
+
+  it("enforces the source limit using UTF-8 byte length", async () => {
+    await withFunctionsEnabled(async () => {
+      const source = "é".repeat(
+        Math.floor(DEFAULT_FUNCTION_LIMITS.compile.maxSourceBytes / 2) + 1
+      )
+
       await config.api.function.create(
         {
-          name: "Invalid alias",
-          source: "",
-          capabilities: [
-            {
-              queryId: query._id!,
-              datasourceAlias: "Invalid alias",
-              queryAlias: "findRooms",
-            },
-          ],
+          name: "Oversized source",
+          source,
+          capabilities: [],
         },
-        { status: 400 }
+        {
+          status: 400,
+          body: { message: "Function source exceeds the maximum size." },
+        }
       )
     })
   })
