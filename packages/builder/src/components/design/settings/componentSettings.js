@@ -38,12 +38,14 @@ import TableConditionEditor from "./controls/TableConditionEditor.svelte"
 import ButtonConditionEditor from "./controls/ButtonConditionEditor.svelte"
 import MultilineDrawerBindableInput from "@/components/common/MultilineDrawerBindableInput.svelte"
 import FilterableSelect from "./controls/FilterableSelect.svelte"
+import TimeControl from "./controls/TimeControl.svelte"
 import { setComponentSettingsResolver } from "./componentSettingsRegistry"
 
 const componentMap = {
   text: DrawerBindableInput,
   "text/multiline": MultilineDrawerBindableInput,
   plainText: Input,
+  time: TimeControl,
   select: Select,
   radio: RadioGroup,
   dataSource: DataSourceSelect,
