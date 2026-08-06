@@ -10,6 +10,14 @@ import {
   limitDiagnostics,
 } from "./diagnostics"
 
+const unwrapParentheses = (expression: ts.Expression) => {
+  let unwrapped = expression
+  while (ts.isParenthesizedExpression(unwrapped)) {
+    unwrapped = unwrapped.expression
+  }
+  return unwrapped
+}
+
 export const lintFunctionSource = (
   source: string
 ): FunctionBuildDiagnostic[] => {
@@ -119,7 +127,7 @@ export const lintFunctionSource = (
 
     if (ts.isExportAssignment(statement)) {
       defaultEntrypoints++
-      const expression = statement.expression
+      const expression = unwrapParentheses(statement.expression)
       const modifiers = ts.canHaveModifiers(expression)
         ? ts.getModifiers(expression)
         : undefined
