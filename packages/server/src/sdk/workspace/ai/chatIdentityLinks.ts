@@ -273,15 +273,32 @@ export const upsertChatIdentityLink = async ({
   }
 }
 
+// A user can hold one link per provider scope (Slack workspace / Teams tenant).
+// When a scope is supplied, match it so the DM targets the workspace the bot
+// actually lives in
 export const getChatIdentityLinkByGlobalUserId = async ({
   globalUserId,
   provider,
+  teamId,
+  providerTenantId,
 }: {
   globalUserId: string
   provider: ChatIdentityLinkProvider
+  teamId?: string
+  providerTenantId?: string
 }): Promise<ChatIdentityLink | undefined> => {
   const links = await listChatIdentityLinks(provider)
-  return links.find(l => l.globalUserId === globalUserId)
+  const scope = getProviderScopeKey({ provider, teamId, providerTenantId })
+  return links.find(
+    l =>
+      l.globalUserId === globalUserId &&
+      (scope === undefined ||
+        getProviderScopeKey({
+          provider,
+          teamId: l.teamId,
+          providerTenantId: l.providerTenantId,
+        }) === scope)
+  )
 }
 
 export const listChatIdentityLinks = async (

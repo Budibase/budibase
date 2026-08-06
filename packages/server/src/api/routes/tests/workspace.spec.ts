@@ -1978,7 +1978,7 @@ describe("/applications", () => {
       })
 
       await config.withHeaders(
-        { [Header.APP_ID]: workspace.appId },
+        { [Header.WORKSPACE_ID]: workspace.appId },
         async () => {
           await config.api.workspace.delete(secondWorkspace.appId, {
             status: 403,

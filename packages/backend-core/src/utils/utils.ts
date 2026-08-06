@@ -120,7 +120,7 @@ export async function getWorkspaceIdFromCtx(ctx: Ctx) {
   }
 
   // look in headers
-  checkPossibleValues(ctx.request.headers[Header.APP_ID])
+  checkPossibleValues(ctx.request.headers[Header.WORKSPACE_ID])
 
   // look in body
   setWorkspaceIdIfValid(ctx.request.body?.appId)

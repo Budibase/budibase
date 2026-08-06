@@ -11,12 +11,17 @@
   export let fixed: boolean = false
   export let color: string | undefined = undefined
   export let noWrap: boolean = false
+  export let disabledTarget: boolean = false
+  export let calculateWidth:
+    | ((target: Element) => number | undefined)
+    | undefined = undefined
   export let offset: number = 0
 
   let wrapper: HTMLElement | undefined
   let hovered = false
   let left: number | undefined
   let top: number | undefined
+  let tooltipWidth: number | undefined
   let visible = false
   let timeout: ReturnType<typeof setTimeout> | undefined
   let interval: ReturnType<typeof setInterval> | undefined
@@ -38,9 +43,11 @@
     if (!node) {
       left = undefined
       top = undefined
+      tooltipWidth = undefined
       return
     }
     const bounds = node.getBoundingClientRect()
+    tooltipWidth = calculateWidth?.(node)
 
     // Determine where to render tooltip based on position prop
     if (position === TooltipPosition.Top) {
@@ -82,6 +89,7 @@
 <div
   bind:this={wrapper}
   class="abs-tooltip"
+  class:disabled-target={disabledTarget}
   on:focus={null}
   on:mouseover={() => (hovered = true)}
   on:mouseleave={() => (hovered = false)}
@@ -94,7 +102,13 @@
     <span
       class="spectrum-Tooltip spectrum-Tooltip--{type} spectrum-Tooltip--{position} is-open"
       class:noWrap
-      style={`left:${left}px;top:${top}px;${tooltipStyle}`}
+      class:calculated-width={tooltipWidth != null}
+      style:left={`${left}px`}
+      style:top={`${top}px`}
+      style:--tooltip-width={tooltipWidth != null
+        ? `${tooltipWidth}px`
+        : undefined}
+      style={tooltipStyle}
       transition:fade|local={{ duration: 130 }}
     >
       <span class="spectrum-Tooltip-label">{text}</span>
@@ -108,6 +122,12 @@
     display: contents;
     pointer-events: all;
   }
+  .abs-tooltip.disabled-target {
+    display: inline-block;
+  }
+  .abs-tooltip.disabled-target :global(:disabled) {
+    pointer-events: none;
+  }
   .spectrum-Tooltip.noWrap .spectrum-Tooltip-label {
     width: max-content;
   }
@@ -120,6 +140,11 @@
     transition:
       top 130ms ease-out,
       left 130ms ease-out;
+  }
+  .spectrum-Tooltip.calculated-width {
+    width: var(--tooltip-width);
+    max-width: none;
+    max-inline-size: none;
   }
   .spectrum-Tooltip-label {
     display: -webkit-box;

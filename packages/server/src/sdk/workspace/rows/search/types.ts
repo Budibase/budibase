@@ -1,5 +1,5 @@
 import { Format } from "../../../../api/controllers/view/exporters"
-import { SearchFilters, SortOrder } from "@budibase/types"
+import { SearchFilters, SortJson, SortOrder } from "@budibase/types"
 
 export interface ExportRowsParams {
   tableId: string
@@ -8,7 +8,7 @@ export interface ExportRowsParams {
   rowIds?: string[]
   columns?: string[]
   query?: SearchFilters
-  sort?: string
+  sort?: string | SortJson
   sortOrder?: SortOrder
   customHeaders?: { [key: string]: string }
 }

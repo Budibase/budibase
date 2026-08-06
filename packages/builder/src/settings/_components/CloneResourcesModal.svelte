@@ -10,7 +10,7 @@
     tables,
     workspaceAppStore,
   } from "@/stores/builder"
-  import { appsStore } from "@/stores/portal"
+  import { workspacesStore } from "@/stores/portal"
   import {
     Checkbox,
     Modal,
@@ -70,7 +70,9 @@
     [ResourceType.SCREEN]: [],
   }
 
-  $: otherWorkspaces = $appsStore.apps.filter(a => a.devId !== $appStore.appId)
+  $: otherWorkspaces = $workspacesStore.apps.filter(
+    a => a.devId !== $appStore.appId
+  )
 
   async function onConfirm() {
     await API.resource

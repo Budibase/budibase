@@ -19,14 +19,13 @@
   export let disabled: boolean = false
   export let compact: boolean = false
   export let fileSizeLimit: number = BYTES_IN_MB * 20
-  export let processFiles: ((_files: FileList) => Promise<Value[]>) | null =
-    null
-  export let deleteAttachments: ((_keys: string[]) => Promise<void>) | null =
+  export let processFiles: ((files: FileList) => Promise<Value[]>) | null = null
+  export let deleteAttachments: ((keys: string[]) => Promise<void>) | null =
     null
   export let handleFileTooLarge:
-    | ((_limit: number, _currentFiles: Value[]) => void)
+    | ((limit: number, currentFiles: Value[]) => void)
     | null = null
-  export let handleTooManyFiles: ((_maximum: number) => void) | null = null
+  export let handleTooManyFiles: ((maximum: number) => void) | null = null
   export let gallery: boolean = true
   export let fileTags: string[] = []
   export let maximum: number | undefined = undefined

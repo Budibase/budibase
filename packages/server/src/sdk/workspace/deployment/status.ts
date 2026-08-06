@@ -2,12 +2,14 @@ import { context } from "@budibase/backend-core"
 import {
   Agent,
   AgentOperation,
+  AgentSharePointKnowledgeSourceScope,
   Automation,
   FunctionDocument,
   KnowledgeBaseFile,
   PublishResourceState,
   PublishStatusResource,
   Screen,
+  SharePointScopeMode,
   Table,
   Workspace,
   WorkspaceApp,
@@ -58,7 +60,24 @@ export async function status() {
     functions: [],
   }
 
-  const normalizeArray = <T>(items: T[]) => [...items].sort()
+  const toComparableSharePointScope = (
+    scope?: AgentSharePointKnowledgeSourceScope
+  ) => {
+    if (!scope || scope.mode === SharePointScopeMode.ALL) {
+      return scope
+    }
+    const targets = scope.targets.map(target =>
+      Object.fromEntries(
+        Object.entries(target).sort(([a], [b]) => a.localeCompare(b))
+      )
+    )
+    return {
+      mode: scope.mode,
+      targets: targets.sort((a, b) =>
+        JSON.stringify(a).localeCompare(JSON.stringify(b))
+      ),
+    }
+  }
 
   const toComparableKnowledgeSource = (
     source: NonNullable<AgentOperation["knowledgeSources"]>[number]
@@ -73,11 +92,7 @@ export async function status() {
             webUrl: source.config.site.webUrl,
           }
         : undefined,
-      filters: source.config.filters
-        ? {
-            patterns: normalizeArray(source.config.filters.patterns || []),
-          }
-        : undefined,
+      scope: toComparableSharePointScope(source.config.scope),
     },
   })
 

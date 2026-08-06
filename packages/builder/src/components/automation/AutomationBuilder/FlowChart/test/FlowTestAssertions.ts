@@ -150,6 +150,8 @@ export const expectLoopEdge = (
   expected: {
     loopStepId: string
     loopChildInsertIndex: number
+    branchStepId?: string
+    branchIdx?: number
   }
 ) => {
   expect(edge.data).toMatchObject({
@@ -157,4 +159,10 @@ export const expectLoopEdge = (
     loopStepId: expected.loopStepId,
     loopChildInsertIndex: expected.loopChildInsertIndex,
   })
+  if (expected.branchStepId) {
+    expect(edge.data).toMatchObject({ branchStepId: expected.branchStepId })
+  }
+  if (typeof expected.branchIdx === "number") {
+    expect(edge.data).toMatchObject({ branchIdx: expected.branchIdx })
+  }
 }
