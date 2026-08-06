@@ -312,9 +312,6 @@ export const publishWorkspaceInternal = async (
   seedProductionTables?: boolean,
   tablesToSeed?: string[]
 ) => {
-  const automations = await sdk.automations.fetch()
-  await sdk.functions.validateFunctionAutomationReferences(automations)
-
   const seedTables =
     seedProductionTables !== undefined
       ? seedProductionTables
@@ -360,6 +357,8 @@ export const publishWorkspaceInternal = async (
       try {
         const devId = dbCore.getDevWorkspaceID(appId)
         const prodId = dbCore.getProdWorkspaceID(appId)
+        const automations = await sdk.automations.fetch()
+        await sdk.functions.validateFunctionAutomationReferences(automations)
 
         if (!(await sdk.workspaces.isWorkspacePublished(prodId))) {
           const allWorkspaceApps = await sdk.workspaceApps.fetch()

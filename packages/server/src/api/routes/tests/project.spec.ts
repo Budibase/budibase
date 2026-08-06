@@ -1290,6 +1290,44 @@ describe("/projects", () => {
       })
     })
 
+    it("exports Functions assigned directly to a project", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Direct Function project",
+        })
+        const functionId = docIds.generateFunctionID()
+
+        await config.doInContext(config.getDevWorkspaceId(), async () =>
+          context.getWorkspaceDB().put({
+            _id: functionId,
+            appId: config.getDevWorkspaceId(),
+            projectIds: [project._id],
+            name: "Direct Function",
+            source: "export default async function () {}",
+            capabilities: [],
+          })
+        )
+
+        const body = await config.api.project.export(project._id)
+        const files = await readTarEntries(body)
+        const manifest = JSON.parse(files.get("manifest.json")!.toString())
+        const dependencyIndex = JSON.parse(
+          files.get("dependency-index.json")!.toString()
+        ) as ProjectPackageDependencyIndex
+
+        expect(files.has(`docs/function/${functionId}.json`)).toBe(true)
+        expect(manifest.resourcesByType.function).toBe(1)
+        expect(dependencyIndex.directMembers).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: functionId,
+              type: ResourceType.FUNCTION,
+            }),
+          ])
+        )
+      })
+    })
+
     it("reports unsupported content for transitive agents", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
