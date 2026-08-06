@@ -52,7 +52,7 @@ export const createAgentServiceUser = async (agentName: string) => {
     status: UserStatus.ACTIVE,
     createdAt: Date.now(),
   }
-  await context.getGlobalDB().put(serviceUser)
+  await context.getWorkspaceDB().put(serviceUser)
   return serviceUserId
 }
 
@@ -736,7 +736,7 @@ export async function remove(agentId: string) {
   }
 
   if (agent.serviceUserId) {
-    const globalDb = context.getGlobalDB()
+    const globalDb = context.getWorkspaceDB()
     const serviceUser = await globalDb.tryGet<User>(agent.serviceUserId)
     if (serviceUser) {
       await globalDb.remove(serviceUser)
