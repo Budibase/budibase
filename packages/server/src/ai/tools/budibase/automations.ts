@@ -7,6 +7,9 @@ import {
   AutomationStatus,
   AutomationTriggerStepId,
   ToolType,
+  PermissionLevel,
+  PermissionType,
+  ToolExecutionPrincipal,
 } from "@budibase/types"
 import * as triggers from "../../../automations/triggers"
 import sdk from "../../../sdk"
@@ -85,6 +88,11 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
     sourceType: ToolType.AUTOMATION,
     sourceLabel: "Budibase",
     description: "List all automations in the current workspace",
+    authorization: {
+      supportedPrincipals: [ToolExecutionPrincipal.REQUESTER],
+      permissionType: PermissionType.WORKSPACE,
+      permissionLevel: PermissionLevel.READ,
+    },
     tool: tool({
       description: "List all automations in the current workspace",
       inputSchema: z.object({}),
@@ -99,6 +107,15 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
     sourceType: ToolType.AUTOMATION,
     sourceLabel: "Budibase",
     description: "Get details about a specific automation by ID",
+    authorization: {
+      supportedPrincipals: [ToolExecutionPrincipal.REQUESTER],
+      permissionType: PermissionType.AUTOMATION,
+      permissionLevel: PermissionLevel.READ,
+      resolveResourceId: input =>
+        typeof input === "object" && input && "automationId" in input
+          ? String(input.automationId)
+          : undefined,
+    },
     tool: tool({
       description: "Get details about a specific automation by ID",
       inputSchema: z.object({
@@ -145,6 +162,15 @@ const createAutomationTools = (
         sourceType: ToolType.AUTOMATION,
         sourceLabel: "Budibase",
         description,
+        authorization: {
+          supportedPrincipals: [
+            ToolExecutionPrincipal.REQUESTER,
+            ToolExecutionPrincipal.AGENT,
+          ],
+          permissionType: PermissionType.AUTOMATION,
+          permissionLevel: PermissionLevel.EXECUTE,
+          resourceId: automation._id!,
+        },
         tool: tool({
           description,
           inputSchema: z.object({

@@ -1,4 +1,9 @@
-import { ToolType } from "@budibase/types"
+import {
+  PermissionLevel,
+  PermissionType,
+  ToolExecutionPrincipal,
+  ToolType,
+} from "@budibase/types"
 import { tool } from "ai"
 import { z } from "zod"
 import sdk from "../../../sdk"
@@ -10,6 +15,11 @@ const TABLE_TOOLS: BudibaseToolDefinition[] = [
     sourceType: ToolType.INTERNAL_TABLE,
     sourceLabel: "Budibase",
     description: "List all tables in the current workspace",
+    authorization: {
+      supportedPrincipals: [ToolExecutionPrincipal.REQUESTER],
+      permissionType: PermissionType.WORKSPACE,
+      permissionLevel: PermissionLevel.READ,
+    },
     tool: tool({
       description: "List all tables in the current workspace",
       inputSchema: z.object({
@@ -42,6 +52,15 @@ const TABLE_TOOLS: BudibaseToolDefinition[] = [
     sourceType: ToolType.INTERNAL_TABLE,
     sourceLabel: "Budibase",
     description: "Get details about a specific table by ID",
+    authorization: {
+      supportedPrincipals: [ToolExecutionPrincipal.REQUESTER],
+      permissionType: PermissionType.TABLE,
+      permissionLevel: PermissionLevel.READ,
+      resolveResourceId: input =>
+        typeof input === "object" && input && "tableId" in input
+          ? String(input.tableId)
+          : undefined,
+    },
     tool: tool({
       description: "Get details about a specific table by ID",
       inputSchema: z.object({

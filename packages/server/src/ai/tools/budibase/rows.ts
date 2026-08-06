@@ -8,6 +8,9 @@ import {
   TableSchema,
   TableSourceType,
   ToolType,
+  PermissionLevel,
+  PermissionType,
+  ToolExecutionPrincipal,
 } from "@budibase/types"
 import {
   PROTECTED_EXTERNAL_COLUMNS,
@@ -399,6 +402,18 @@ export const createRowTools = ({
       sourceLabel: resolvedSourceLabel,
       sourceIconType,
       description,
+      authorization: {
+        supportedPrincipals: [
+          ToolExecutionPrincipal.REQUESTER,
+          ToolExecutionPrincipal.AGENT,
+        ],
+        permissionType: PermissionType.TABLE,
+        permissionLevel:
+          action === "create_row" || action === "update_row"
+            ? PermissionLevel.WRITE
+            : PermissionLevel.READ,
+        resourceId: tableId,
+      },
       tool: tool({
         description,
         inputSchema,

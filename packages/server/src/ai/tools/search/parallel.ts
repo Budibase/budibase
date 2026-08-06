@@ -1,4 +1,9 @@
-import { ToolType } from "@budibase/types"
+import {
+  PermissionLevel,
+  PermissionType,
+  ToolExecutionPrincipal,
+  ToolType,
+} from "@budibase/types"
 import { z } from "zod"
 import { tool } from "ai"
 import { BudibaseToolDefinition } from "../budibase"
@@ -20,6 +25,14 @@ export const createParallelTool = (apiKey: string): BudibaseToolDefinition => ({
   description: "Search the web using Parallel AI",
   sourceType: ToolType.SEARCH,
   sourceLabel: "Parallel Search",
+  authorization: {
+    supportedPrincipals: [
+      ToolExecutionPrincipal.REQUESTER,
+      ToolExecutionPrincipal.AGENT,
+    ],
+    permissionType: PermissionType.WORKSPACE,
+    permissionLevel: PermissionLevel.READ,
+  },
   tool: tool({
     description: "Search the web using Parallel AI",
     inputSchema: parallelSearchParams,

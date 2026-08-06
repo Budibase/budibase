@@ -1,5 +1,23 @@
-import { ToolType } from "@budibase/types"
+import {
+  PermissionLevel,
+  PermissionType,
+  ToolExecutionPrincipal,
+  ToolType,
+  type AgentExecutionContext,
+} from "@budibase/types"
 import { type Tool, type ToolSet } from "ai"
+
+export interface ToolAuthorization {
+  supportedPrincipals: ToolExecutionPrincipal[]
+  permissionType: PermissionType
+  permissionLevel: PermissionLevel
+  resourceId?: string
+  resolveResourceId?: (input: unknown) => string | undefined
+  prepareInput?: (
+    modelInput: unknown,
+    executionContext: AgentExecutionContext
+  ) => unknown | Promise<unknown>
+}
 
 export interface AiToolDefinition {
   name: string
@@ -9,6 +27,20 @@ export interface AiToolDefinition {
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
+  authorization?: ToolAuthorization
+}
+
+export interface ToolAuthorizationRuntime {
+  executionContext: AgentExecutionContext
+  principal: ToolExecutionPrincipal
+  agentServiceUserId?: string
+  authorize: (params: {
+    authorization: ToolAuthorization
+    input: unknown
+    executionContext: AgentExecutionContext
+    principal: ToolExecutionPrincipal
+    agentServiceUserId?: string
+  }) => Promise<void>
 }
 
 const getToolFailure = (result: unknown): string | undefined => {
@@ -28,19 +60,72 @@ const getToolFailure = (result: unknown): string | undefined => {
   return String(error)
 }
 
-const wrapTool = (toolDef: AiToolDefinition): Tool => {
+const wrapTool = (
+  toolDef: AiToolDefinition,
+  runtime?: ToolAuthorizationRuntime
+): Tool => {
   const execute = toolDef.tool.execute
   if (!execute) {
     return toolDef.tool
   }
 
   const wrappedExecute: NonNullable<Tool["execute"]> = async (...args) => {
-    const result = await execute(...args)
-    const failureMessage = getToolFailure(result)
-    if (failureMessage) {
-      throw new Error(failureMessage)
+    let preparedInput = args[0]
+    if (runtime) {
+      if (!toolDef.authorization) {
+        throw new Error("Tool is not available in this security context")
+      }
+      if (
+        !toolDef.authorization.supportedPrincipals.includes(runtime.principal)
+      ) {
+        throw new Error("Tool is not available in this security context")
+      }
+      preparedInput = toolDef.authorization.prepareInput
+        ? await toolDef.authorization.prepareInput(
+            args[0],
+            runtime.executionContext
+          )
+        : args[0]
+      await runtime.authorize({
+        authorization: toolDef.authorization,
+        input: preparedInput,
+        executionContext: runtime.executionContext,
+        principal: runtime.principal,
+        agentServiceUserId: runtime.agentServiceUserId,
+      })
     }
-    return result
+    try {
+      const result = await execute(preparedInput, args[1])
+      const failureMessage = getToolFailure(result)
+      if (failureMessage) {
+        throw new Error(failureMessage)
+      }
+      if (runtime) {
+        console.log("Agent tool execution", {
+          outcome: "success",
+          toolName: toolDef.name,
+          requesterId: runtime.executionContext.requestingUserId,
+          effectivePrincipal: runtime.principal,
+          agentId: runtime.executionContext.agentId,
+          operationId: runtime.executionContext.operationId,
+          conversationId: runtime.executionContext.conversationId,
+        })
+      }
+      return result
+    } catch (error) {
+      if (runtime) {
+        console.log("Agent tool execution", {
+          outcome: "error",
+          toolName: toolDef.name,
+          requesterId: runtime.executionContext.requestingUserId,
+          effectivePrincipal: runtime.principal,
+          agentId: runtime.executionContext.agentId,
+          operationId: runtime.executionContext.operationId,
+          conversationId: runtime.executionContext.conversationId,
+        })
+      }
+      throw error
+    }
   }
 
   return {
@@ -49,9 +134,15 @@ const wrapTool = (toolDef: AiToolDefinition): Tool => {
   }
 }
 
-export const toToolSet = (tools: AiToolDefinition[]): ToolSet => {
+export const toToolSet = (
+  tools: AiToolDefinition[],
+  runtimes: Map<string, ToolAuthorizationRuntime> = new Map()
+): ToolSet => {
   return Object.fromEntries(
-    tools.map(toolDef => [toolDef.name, wrapTool(toolDef)])
+    tools.map(toolDef => [
+      toolDef.name,
+      wrapTool(toolDef, runtimes.get(toolDef.name)),
+    ])
   )
 }
 

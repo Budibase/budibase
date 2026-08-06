@@ -5,7 +5,10 @@ import {
   ESCALATE_TOOL_NAME,
   EscalateToolResultStatus,
   EscalationSource,
+  PermissionLevel,
+  PermissionType,
   ResolutionStrategy,
+  ToolExecutionPrincipal,
   ToolType,
 } from "@budibase/types"
 import { tool } from "ai"
@@ -14,6 +17,7 @@ import { z } from "zod"
 import { escalationProcessor } from "../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../escalation/resolutionStrategies"
 import type { AiToolDefinition } from ".."
+import { getFullUser } from "../../../utilities/users"
 
 interface CreateEscalateToolParams {
   agentId: string
@@ -67,6 +71,10 @@ export const createEscalateTool = ({
       reason: z.string().describe("Why this needs human review"),
     }),
     execute: async ({ title, summary, reason }) => {
+      if (!userId) {
+        throw new Error("Tool is not available in this security context")
+      }
+      await getFullUser(userId)
       const appId = context.getWorkspaceId()
       const tenantId = context.getTenantId()
       if (!appId) {
@@ -118,6 +126,11 @@ export const createEscalatePlaceholderTool = (): AiToolDefinition => ({
     "cannot proceed safely. Reference this where sign-off is required.",
   sourceType: ToolType.ESCALATION,
   sourceLabel: "Escalation",
+  authorization: {
+    supportedPrincipals: [ToolExecutionPrincipal.REQUESTER],
+    permissionType: PermissionType.WORKSPACE,
+    permissionLevel: PermissionLevel.READ,
+  },
   tool: tool({
     description:
       "Escalate to a human for approval. Use where the operation must not " +
