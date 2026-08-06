@@ -4,6 +4,7 @@ import {
   AgentOperation,
   AgentSharePointKnowledgeSourceScope,
   Automation,
+  FunctionDocument,
   KnowledgeBaseFile,
   PublishResourceState,
   PublishStatusResource,
@@ -38,6 +39,7 @@ export async function status() {
     workspaceApps: WorkspaceApp[]
     screens: Screen[]
     tables: Table[]
+    functions: FunctionDocument[]
   }
   const developmentState: State = {
     agents: [],
@@ -46,6 +48,7 @@ export async function status() {
     workspaceApps: [],
     screens: [],
     tables: [],
+    functions: [],
   }
   const productionState: State = {
     agents: [],
@@ -54,6 +57,7 @@ export async function status() {
     workspaceApps: [],
     screens: [],
     tables: [],
+    functions: [],
   }
 
   const toComparableSharePointScope = (
@@ -174,13 +178,14 @@ export async function status() {
     JSON.stringify(normalizeAgentPayload(agent, files))
 
   const updateState = async (state: State) => {
-    const [automations, workspaceApps, screens, tables, agents] =
+    const [automations, workspaceApps, screens, tables, agents, functions] =
       await Promise.all([
         sdk.automations.fetch(),
         sdk.workspaceApps.fetch(),
         sdk.screens.fetch(),
         sdk.tables.getAllInternalTables(),
         sdk.ai.agents.fetch(),
+        sdk.functions.fetch(),
       ])
 
     const filesByAgentEntries = await Promise.all(
@@ -202,6 +207,7 @@ export async function status() {
     state.workspaceApps = workspaceApps
     state.screens = screens
     state.tables = tables
+    state.functions = functions
   }
 
   await context.doInWorkspaceContext(context.getDevWorkspaceId(), async () =>
@@ -225,6 +231,7 @@ export async function status() {
   )
   const prodTableIds = new Set(productionState.tables.map(t => t._id))
   const prodAgentIds = new Set(productionState.agents.map(a => a._id))
+  const prodFunctionIds = new Set(productionState.functions.map(fn => fn._id))
 
   const processResource = (
     map: Record<string, PublishStatusResource>,
@@ -324,5 +331,10 @@ export async function status() {
     }
   }
 
-  return { automations, workspaceApps, tables, agents }
+  const functions: Record<string, PublishStatusResource> = {}
+  for (const fn of developmentState.functions) {
+    processResource(functions, prodFunctionIds, fn)
+  }
+
+  return { automations, workspaceApps, tables, agents, functions }
 }
