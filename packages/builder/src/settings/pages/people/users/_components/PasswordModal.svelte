@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { Body, ModalContent, Table, Icon } from "@budibase/bbui"
   import PasswordCopyTableRenderer from "./PasswordCopyTableRenderer.svelte"

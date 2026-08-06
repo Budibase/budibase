@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { Body, ModalContent, Table } from "@budibase/bbui"
   import type { InviteUsersResponse } from "@budibase/types"

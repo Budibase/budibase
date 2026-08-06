@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { Icon } from "@budibase/bbui"
   import { workspacesStore } from "@/stores/portal/workspaces"

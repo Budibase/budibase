@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { ActionButton } from "@budibase/bbui"
   import { getContext } from "svelte"

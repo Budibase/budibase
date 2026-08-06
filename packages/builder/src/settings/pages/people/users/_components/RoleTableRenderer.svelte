@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { users, type UserRoleDetails } from "@/stores/portal/users"
   import { roles } from "@/stores/builder"

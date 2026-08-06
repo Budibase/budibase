@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   interface Props {
     value: string

@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import dayjs from "dayjs"
   import advancedFormat from "dayjs/plugin/advancedFormat"

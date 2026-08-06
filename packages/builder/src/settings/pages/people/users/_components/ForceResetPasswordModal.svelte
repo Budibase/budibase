@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
   import { users } from "@/stores/portal/users"

@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { StatusLight } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"

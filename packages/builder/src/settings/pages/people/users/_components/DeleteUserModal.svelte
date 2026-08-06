@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { goto as gotoStore } from "@roxi/routify"
   import { Body, ModalContent, notifications } from "@budibase/bbui"

@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { IconAvatar } from "@budibase/bbui"
 

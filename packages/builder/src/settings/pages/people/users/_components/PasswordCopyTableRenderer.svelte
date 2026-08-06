@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { InternalRenderer } from "@budibase/bbui"
 
