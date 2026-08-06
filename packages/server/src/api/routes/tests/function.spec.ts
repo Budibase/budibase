@@ -733,7 +733,7 @@ export default async function (): Promise<FunctionResult> {
       })
 
       await config.api.workspace.publish(config.getDevWorkspaceId(), {
-        status: 400,
+        status: 500,
         body: {
           message: expect.stringContaining("Build required"),
         },
@@ -751,7 +751,7 @@ export default async function (): Promise<FunctionResult> {
       })
 
       await config.api.workspace.publish(config.getDevWorkspaceId(), {
-        status: 400,
+        status: 500,
         body: {
           message: expect.stringContaining("Function query bindings changed"),
         },
