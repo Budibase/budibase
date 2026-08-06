@@ -555,7 +555,12 @@ export const publishWorkspaceInternal = async (
       }
     })
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error)
+    const message =
+      error instanceof Error
+        ? error.message
+        : typeof error === "string"
+          ? error
+          : "Unknown error"
     deployment.setStatus(DeploymentStatus.FAILURE, message)
     await storeDeploymentHistory(deployment)
     throw new Error(`Deployment Failed: ${message}`, { cause: error })
