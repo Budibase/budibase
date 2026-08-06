@@ -28,6 +28,7 @@
     Banner,
     Divider,
     Label,
+    Switcher,
   } from "@budibase/bbui"
   import {
     BodyType,
@@ -38,6 +39,7 @@
     type RestTemplateSpec,
     type RestTemplateId,
     type PreviewQueryResponse,
+    type RestRequestPreview,
     type UIInternalDatasource,
     type EnrichedBinding,
   } from "@budibase/types"
@@ -81,6 +83,7 @@
   import { EditorModes } from "../common/CodeEditor"
   import { readableToRuntimeMap, runtimeToReadableMap } from "@/dataBinding"
   import ResponsePanel from "./ResponsePanel.svelte"
+  import RequestPanel from "./RequestPanel.svelte"
   import ExpandablePanel from "@/components/common/ExpandablePanel.svelte"
   import ConnectionSelect from "./rest/ConnectionSelect.svelte"
   import AccessLevelSelect from "@/components/integration/AccessLevelSelect.svelte"
@@ -136,6 +139,7 @@
   let originalBuiltQuery: Query | undefined = undefined
   let defaultSpecServerUrl: string | undefined = undefined
   let response: PreviewQueryResponse
+  let panelMode: "response" | "request" = "response"
   let editableQuery: Query | undefined
   let projectIds: string[] = []
   let originalProjectIds: string[] = []
@@ -437,6 +441,7 @@
     existingQueryUnchanged ||
     newQueryIncomplete ||
     !isValidCustomUrl
+  $: requestPreview = response?.extra?.request as RestRequestPreview | undefined
 
   const initCustomUrlFields = (fullPath: string | undefined) => {
     customUrl = fullPath || getDatasourceBaseUrl(datasource) || ""
@@ -728,6 +733,8 @@
 
       const result = await runQuery(builtQuery, schema)
       response = result.response
+      // A send always lands on the response, the request stays a click away
+      panelMode = "response"
 
       // Update query object with schema from preview
       editableQuery = {
@@ -1411,27 +1418,46 @@
         </Layout>
       </div>
       <div class="side-bar-wrapper">
-        <ExpandablePanel title="Response" bind:panelZIndex>
-          {#snippet children(expanded)}
-            <ResponsePanel
-              {datasource}
-              {response}
-              {schema}
-              {dynamicVariables}
-              fullscreen={expanded}
-              on:change={e => {
-                const {
-                  dynamicVariables: updatedDynamicVariables,
-                  schema: updatedSchema,
-                } = e.detail || {}
-                if (updatedDynamicVariables) {
-                  localDynamicVariables = updatedDynamicVariables
-                }
-                if (updatedSchema) {
-                  schema = updatedSchema
-                }
-              }}
+        <ExpandablePanel title="" bind:panelZIndex>
+          {#snippet headerLeading()}
+            <Switcher
+              size="S"
+              selected={panelMode === "request" ? "left" : "right"}
+              leftText="Request"
+              leftDisabled={!requestPreview}
+              rightText="Response"
+              on:left={() => (panelMode = "request")}
+              on:right={() => (panelMode = "response")}
             />
+          {/snippet}
+          {#snippet children(expanded)}
+            {#if panelMode === "request"}
+              <RequestPanel
+                request={requestPreview}
+                info={response?.info}
+                fullscreen={expanded}
+              />
+            {:else}
+              <ResponsePanel
+                {datasource}
+                {response}
+                {schema}
+                {dynamicVariables}
+                fullscreen={expanded}
+                on:change={e => {
+                  const {
+                    dynamicVariables: updatedDynamicVariables,
+                    schema: updatedSchema,
+                  } = e.detail || {}
+                  if (updatedDynamicVariables) {
+                    localDynamicVariables = updatedDynamicVariables
+                  }
+                  if (updatedSchema) {
+                    schema = updatedSchema
+                  }
+                }}
+              />
+            {/if}
           {/snippet}
         </ExpandablePanel>
       </div>

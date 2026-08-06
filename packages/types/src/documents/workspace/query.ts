@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import { JSONValue } from "../../core"
 import { RestAuthType } from "./datasource"
 import { Row } from "./row"
 import type { RestTemplateId } from "../../ui"
@@ -80,6 +81,28 @@ export enum BodyType {
   ENCODED = "encoded",
   JSON = "json",
   TEXT = "text",
+}
+
+// Placeholders substituted for credentials removed from a request preview.
+// Handlebars shaped so that the builder can render them as badges - see
+// secretTags.ts in the builder package.
+export const SecretTag = {
+  BASIC: "{{ Auth credential }}",
+  BEARER: "{{ Auth token }}",
+  OAUTH2: "{{ OAuth2 token }}",
+  API_KEY: "{{ API key }}",
+  GENERIC: "{{ Redacted }}",
+}
+
+// A sanitised view of the HTTP request a REST query actually sent
+// Preview Only
+export interface RestRequestPreview {
+  url: string
+  path: string
+  method: string
+  headers: Record<string, string>
+  params: Record<string, string>
+  body?: JSONValue
 }
 
 export interface RestQueryFields {
