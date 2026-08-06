@@ -103,19 +103,11 @@ export interface AgentChatRun {
   }
 }
 
-const getRequestInputEvidenceSchema = (input: AgentRequestInputDefinition) => {
-  let valueSchema: z.ZodType<string | null> = z.string().nullable()
-
-  if (input.type === "select") {
-    valueSchema = z.enum(input.options).nullable()
-  }
-
-  return z.object({
-    value: valueSchema,
-    sourceMessageIndex: z.number().int().nullable(),
-    sourceQuote: z.string().nullable(),
-  })
-}
+const requestInputEvidenceSchema = z.object({
+  value: z.string().nullable(),
+  sourceMessageIndex: z.number().int().nullable(),
+  sourceQuote: z.string().nullable(),
+})
 
 const requestInputConfirmationSchema = z.object({
   confirmed: z.boolean(),
@@ -162,7 +154,7 @@ const collectRequestInputs = async ({
   }
 
   const valueSchemas = Object.fromEntries(
-    definitions.map(input => [input.id, getRequestInputEvidenceSchema(input)])
+    definitions.map(input => [input.id, requestInputEvidenceSchema])
   )
   const requestInputValueSchema = z.object({
     values: z.object(valueSchemas).strict(),
