@@ -86,6 +86,8 @@
     touched = true
     if (!trimmedName || nameError || optionsError) return
 
+    const previousInputs = inputs
+    const previousEditingId = editingId
     const updatesExistingInput = !!editingId
     const inputId = editingId ?? `request_input_${Helpers.uuid()}`
     editingId = inputId
@@ -104,6 +106,9 @@
     const saved = await onUpdated()
     if (saved) {
       popover.hide()
+    } else {
+      operation.requestInputs = previousInputs
+      editingId = previousEditingId
     }
   }
 
