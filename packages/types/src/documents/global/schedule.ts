@@ -20,13 +20,6 @@ export interface Schedule extends Document {
 
 export type ScheduleMetadata = WorkspaceBackupScheduleMetadata
 
-export const isAppBackupMetadata = (
-  type: ScheduleType,
-  metadata: ScheduleMetadata
-): metadata is WorkspaceBackupScheduleMetadata => {
-  return type === ScheduleType.WORKSPACE_BACKUP
-}
-
 export interface WorkspaceBackupScheduleMetadata {
   apps: string[]
 }
