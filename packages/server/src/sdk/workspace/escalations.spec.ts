@@ -1,13 +1,16 @@
 import { context } from "@budibase/backend-core"
 import {
   DocumentType,
+  EscalationAction,
   EscalationNotificationChannel,
   EscalationRecipient,
   EscalationSource,
+  ResolutionStrategy,
   SEPARATOR,
 } from "@budibase/types"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import { resolveRecipientLabel, respond } from "./escalations"
+import { resolutionStrategyBinding } from "../../escalation/resolutionStrategies"
 
 describe("resolveRecipientLabel", () => {
   const config = new TestConfiguration()
@@ -112,6 +115,69 @@ describe("respond", () => {
 
   afterAll(() => {
     config.end()
+  })
+
+  const seedPendingEscalation = async (escalationId: string) => {
+    const db = context.getWorkspaceDB()
+    await db.put({
+      _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`,
+      source: EscalationSource.OPERATION,
+      appId: config.getProdWorkspaceId(),
+      tenantId: config.getTenantId(),
+      delay: 0,
+      resolution: "pending",
+      resolutionStrategy: resolutionStrategyBinding(
+        ResolutionStrategy.FIRST_RESPONSE
+      ),
+    })
+    const notificationDocId = `${DocumentType.ESCALATION_NOTIFICATION}${SEPARATOR}notif-1`
+    await db.put({
+      _id: notificationDocId,
+      escalationId,
+      appId: config.getProdWorkspaceId(),
+      tenantId: config.getTenantId(),
+      recipient: { type: EscalationNotificationChannel.SLACK, config: {} },
+      sentAt: new Date().toISOString(),
+    })
+    return notificationDocId
+  }
+
+  it("does not resolve when the action id is an inherited object property", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const escalationId = "esc-proto"
+      const notificationDocId = await seedPendingEscalation(escalationId)
+      const resolve = jest.fn()
+
+      const result = await respond(
+        escalationId,
+        notificationDocId,
+        { actionId: "constructor" },
+        resolve
+      )
+
+      expect(resolve).not.toHaveBeenCalled()
+      expect(result.status).toEqual("recorded")
+    })
+  })
+
+  it("resolves as approved for the canonical approve action", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const escalationId = "esc-approve"
+      const notificationDocId = await seedPendingEscalation(escalationId)
+      const resolve = jest.fn()
+
+      await respond(
+        escalationId,
+        notificationDocId,
+        { actionId: EscalationAction.APPROVE },
+        resolve
+      )
+
+      expect(resolve).toHaveBeenCalledWith(escalationId, {
+        accepted: true,
+        actionId: EscalationAction.APPROVE,
+      })
+    })
   })
 
   it("rejects a notification that belongs to a different escalation", async () => {

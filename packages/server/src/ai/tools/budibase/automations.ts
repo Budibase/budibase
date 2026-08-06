@@ -84,9 +84,9 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
     name: "list_automations",
     sourceType: ToolType.AUTOMATION,
     sourceLabel: "Budibase",
-    description: "List all automations in the current app",
+    description: "List all automations in the current workspace",
     tool: tool({
-      description: "List all automations in the current app",
+      description: "List all automations in the current workspace",
       inputSchema: z.object({}),
       execute: async () => {
         const automations = await sdk.automations.fetch()

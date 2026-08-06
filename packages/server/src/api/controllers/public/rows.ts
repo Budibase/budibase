@@ -23,15 +23,20 @@ export function fixRow(row: Row, params: any) {
 }
 
 function buildSearchRequestBody(ctx: UserCtx) {
-  let { sort, paginate, bookmark, limit, query } = ctx.request.body
-  // update the body to the correct format of the internal search
-  if (!sort) {
-    sort = {}
+  const { sort, paginate, bookmark, limit, query } = ctx.request.body
+  if (sort && typeof sort === "object" && "column" in sort) {
+    return {
+      sort: sort.column,
+      sortType: sort.type,
+      sortOrder: sort.order,
+      bookmark: convertBookmark(bookmark),
+      paginate,
+      limit,
+      query,
+    }
   }
   return {
-    sort: sort.column,
-    sortType: sort.type,
-    sortOrder: sort.order,
+    sort,
     bookmark: convertBookmark(bookmark),
     paginate,
     limit,

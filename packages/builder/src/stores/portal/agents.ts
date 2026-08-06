@@ -76,6 +76,7 @@ interface AgentStoreState {
   >
   knowledgeUploadByOperation: Record<string, OperationKnowledgeUploadState>
   knowledgeLoadingByOperation: Record<string, boolean>
+  knowledgeConfiguration?: FetchAgentKnowledgeIndexResponse["configuration"]
 }
 
 const getOperationKnowledgeCacheKey = (agentId: string, operationId: string) =>
@@ -106,6 +107,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       knowledgeByOperation: {},
       knowledgeUploadByOperation: {},
       knowledgeLoadingByOperation: {},
+      knowledgeConfiguration: undefined,
     })
   }
 
@@ -424,6 +426,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
           getOperationKnowledgeCacheKey(agentId, operationId)
         ] = knowledge
       }
+      state.knowledgeConfiguration = response.configuration
       return state
     })
 
@@ -492,6 +495,8 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     get(this.store).knowledgeByOperation[
       getOperationKnowledgeCacheKey(agentId, operationId)
     ]
+
+  getKnowledgeConfiguration = () => get(this.store).knowledgeConfiguration
 
   isOperationKnowledgeLoading = (
     agentId: string,
@@ -676,15 +681,21 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     )
   }
 
-  fetchOperationKnowledgeSourceAllEntries = async (
+  fetchOperationKnowledgeSourceEntries = async (
     agentId: string,
     operationId: string,
-    siteId: string
+    siteId: string,
+    options?: {
+      driveId?: string
+      parentItemId?: string
+      parentPath?: string
+    }
   ): Promise<FetchAgentKnowledgeSourceEntriesResponse> => {
-    return await API.fetchOperationKnowledgeSourceAllEntries(
+    return await API.fetchOperationKnowledgeSourceEntries(
       agentId,
       operationId,
-      siteId
+      siteId,
+      options
     )
   }
 
@@ -717,7 +728,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     )
   }
 
-  applyOperationSharePointSiteFilters = async (
+  applyOperationSharePointSiteScope = async (
     agentId: string,
     operationId: string,
     siteId: string,

@@ -14,7 +14,7 @@
   } from "@/types/routing"
   import { beforeUrlChange, goto } from "@roxi/routify"
   import ModalSideBar from "./ModalSideBar.svelte"
-  import SideNavLink from "@/pages/builder/workspace/[application]/_components/SideNav/SideNavLink.svelte"
+  import SideNavLink from "@/pages/builder/workspace/[workspaceId]/_components/SideNav/SideNavLink.svelte"
 
   export const show = () => modal.show()
 

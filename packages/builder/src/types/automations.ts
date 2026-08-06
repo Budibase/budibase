@@ -160,13 +160,24 @@ export interface BranchFlowContext {
   branchStepId: string
 }
 
+export type LoopFlowContext = AutomationBlockContext & {
+  insertIntoLoopV2: true
+  loopStepId: string
+  loopChildInsertIndex?: number
+  branchStepId?: string
+  branchIdx?: number
+}
+
 export interface SelectedBranchNode {
   nodeId: string
   stepId: string
   branchIdx: number
 }
 
-export type FlowBlockContext = AutomationBlockContext | BranchFlowContext
+export type FlowBlockContext =
+  | AutomationBlockContext
+  | BranchFlowContext
+  | LoopFlowContext
 
 export type AutomationBlockRef = BlockRef & {
   stepId?: string

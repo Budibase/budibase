@@ -2,10 +2,10 @@
   import { Icon, TooltipPosition, TooltipType } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { automationStore, selectedAutomation } from "@/stores/builder"
-  import { ViewMode } from "@/types/automations"
+  import { ViewMode, type FlowBlockContext } from "@/types/automations"
   import { type BlockRef } from "@budibase/types"
 
-  export let block
+  export let block: BlockRef | FlowBlockContext | undefined
   export let hideBranch = false
   export let showAddBranch = false
   export let branchStepId: string | undefined = undefined
@@ -13,9 +13,10 @@
 
   const dispatch = createEventDispatcher()
 
-  $: blockRef = block?.id
-    ? $selectedAutomation?.blockRefs?.[block.id]
-    : undefined
+  $: blockRef =
+    block && "id" in block && block.id
+      ? $selectedAutomation?.blockRefs?.[block.id]
+      : undefined
   $: isInsideBranchInLoop = checkIsInsideBranchInLoop(blockRef)
   $: canShowAddBranch =
     showAddBranch &&
@@ -25,6 +26,7 @@
   $: isActiveInsertionPoint =
     getActionTargetKey($automationStore.actionPanelBlock) ===
     getActionTargetKey(block)
+  $: isBranchBlock = isBranchTarget(block)
 
   const checkIsInsideBranchInLoop = (blockRef: BlockRef | undefined) => {
     if (!blockRef?.pathTo) return false
@@ -37,44 +39,66 @@
     return false
   }
 
-  const getActionTargetKey = (value: unknown) => {
-    if (!value || typeof value !== "object") {
+  type ActionTarget = BlockRef | FlowBlockContext
+  type LoopTarget = Extract<FlowBlockContext, { insertIntoLoopV2: true }>
+  type BranchTarget = Extract<FlowBlockContext, { branchNode: true }>
+
+  const isLoopTarget = (value: ActionTarget): value is LoopTarget =>
+    "insertIntoLoopV2" in value && value.insertIntoLoopV2 === true
+
+  const isBranchTarget = (
+    value: ActionTarget | undefined
+  ): value is BranchTarget =>
+    value !== undefined && "branchNode" in value && value.branchNode === true
+
+  const getBranchKey = (target: {
+    branchStepId?: string
+    branchIdx?: number
+  }) => {
+    if (target.branchStepId === undefined && target.branchIdx === undefined) {
+      return "root"
+    }
+    return `branch:${target.branchStepId ?? ""}:${target.branchIdx ?? ""}`
+  }
+
+  const getLoopSourceKey = (target: LoopTarget, branchKey: string) => {
+    if ("id" in target) {
+      return `step:${target.id}`
+    }
+    if (isBranchTarget(target)) {
+      return branchKey
+    }
+    return "unknown"
+  }
+
+  const getActionTargetKey = (target: ActionTarget | undefined) => {
+    if (!target) {
       return undefined
     }
 
-    const target = value as Record<string, unknown>
-    if (target.insertIntoLoopV2) {
-      const branchKey =
-        typeof target.branchStepId === "string" ||
-        typeof target.branchIdx === "number"
-          ? `branch:${target.branchStepId || ""}:${target.branchIdx ?? ""}`
-          : "root"
-      const sourceKey =
-        typeof target.id === "string"
-          ? `step:${target.id}`
-          : target.branchNode
-            ? branchKey
-            : "unknown"
+    if (isLoopTarget(target)) {
+      const branchKey = getBranchKey(target)
+      const sourceKey = getLoopSourceKey(target, branchKey)
 
       return [
         "loop",
-        target.loopStepId || target.id,
+        target.loopStepId,
         target.loopChildInsertIndex,
         branchKey,
         sourceKey,
       ].join(":")
     }
 
-    if (target.branchNode) {
+    if (isBranchTarget(target)) {
       return ["branch", target.branchStepId, target.branchIdx].join(":")
     }
 
-    return typeof target.id === "string" ? `step:${target.id}` : undefined
+    return "id" in target ? `step:${target.id}` : undefined
   }
 </script>
 
 <div class="action-bar" class:active-insertion-point={isActiveInsertionPoint}>
-  {#if !hideBranch && !block.branchNode && !isInsideBranchInLoop}
+  {#if !hideBranch && !isBranchBlock && !isInsideBranchInLoop}
     <Icon
       hoverable
       name="git-branch"
