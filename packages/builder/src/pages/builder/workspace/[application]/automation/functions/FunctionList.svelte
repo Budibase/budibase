@@ -18,6 +18,7 @@
     loading?: boolean
     error?: string
     canManage?: boolean
+    onOpen?: (_fn: UIFunction) => void
     onRetry?: () => void
     onCreate?: () => void
     onRename?: (_fn: UIFunction) => void
@@ -30,6 +31,7 @@
     loading = false,
     error = "",
     canManage = false,
+    onOpen = () => {},
     onRetry = () => {},
     onCreate = () => {},
     onRename = () => {},
@@ -108,7 +110,13 @@
         <div class="table-row" role="row">
           <div class="name" role="cell">
             <Icon name="code" size="S" />
-            <Body size="S">{fn.name}</Body>
+            <button
+              type="button"
+              class="name-button"
+              onclick={() => onOpen(fn)}
+            >
+              {fn.name}
+            </button>
           </div>
           <div role="cell">
             <span class:failed={fn.readiness === "build_failed"}>
@@ -210,6 +218,19 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
+  }
+  .name-button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--spectrum-global-color-blue-700);
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+    text-align: left;
+  }
+  .name-button:hover {
+    text-decoration: underline;
   }
   .failed {
     color: var(--spectrum-global-color-red-600);
