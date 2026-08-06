@@ -1,11 +1,21 @@
-<script>
-  import { users } from "@/stores/portal/users"
+<script lang="ts">
+  import { users, type UserRoleDetails } from "@/stores/portal/users"
   import { roles } from "@/stores/builder"
   import { Constants } from "@budibase/frontend-core"
+  import type { Role } from "@budibase/types"
 
-  export let row
+  interface RoleRow extends UserRoleDetails {
+    workspaceRole?: string
+    workspaceRoleGroupRole?: string
+  }
 
-  const getRoleFromWorkspaceRole = workspaceRole => {
+  interface Props {
+    row: RoleRow
+  }
+
+  let { row }: Props = $props()
+
+  const getRoleFromWorkspaceRole = (workspaceRole?: string) => {
     if (workspaceRole === Constants.Roles.CREATOR) {
       return Constants.BudibaseRoles.Creator
     }
@@ -15,25 +25,31 @@
     return undefined
   }
 
-  const canWorkspaceRoleOverrideGlobalRole = globalRole => {
+  const canWorkspaceRoleOverrideGlobalRole = (globalRole: string) => {
     return (
       globalRole === Constants.BudibaseRoles.AppUser ||
       globalRole === Constants.BudibaseRoles.Creator
     )
   }
 
-  $: globalRoleValue = users.getUserRole(row)
-  $: workspaceRoleValue = getRoleFromWorkspaceRole(row?.workspaceRole)
-  $: roleValue =
+  const globalRoleValue = $derived(users.getUserRole(row))
+  const workspaceRoleValue = $derived(
+    getRoleFromWorkspaceRole(row?.workspaceRole)
+  )
+  const roleValue = $derived(
     canWorkspaceRoleOverrideGlobalRole(globalRoleValue) && workspaceRoleValue
       ? workspaceRoleValue
       : globalRoleValue
-  $: role = Constants.ExtendedBudibaseRoleOptions.find(
-    x => x.value === roleValue
   )
-  const isBuiltInEndUserRole = roleId =>
+  const role = $derived(
+    Constants.ExtendedBudibaseRoleOptions.find(x => x.value === roleValue)
+  )
+  const isBuiltInEndUserRole = (roleId: string) =>
     roleId === Constants.Roles.BASIC || roleId === Constants.Roles.ADMIN
-  const getWorkspaceRoleLabel = (roleId, availableRoles) => {
+  const getWorkspaceRoleLabel = (
+    roleId: string | undefined,
+    availableRoles: Role[]
+  ) => {
     if (!roleId || roleId === Constants.Roles.BASIC) {
       return "Basic"
     }
@@ -46,16 +62,22 @@
     const customRole = availableRoles.find(x => x._id === roleId)
     return customRole?.uiMetadata?.displayName || customRole?.name || roleId
   }
-  $: value =
+  const value = $derived(
     role?.value === Constants.BudibaseRoles.AppUser && row?.workspaceRole
       ? isBuiltInEndUserRole(row.workspaceRole)
         ? `${role.label}: ${getWorkspaceRoleLabel(row.workspaceRole, $roles)}`
         : getWorkspaceRoleLabel(row.workspaceRole, $roles)
       : role?.label || "Not available"
-  $: groupUserValue = row?.workspaceRoleGroupRole
-    ? `Group user: ${getWorkspaceRoleLabel(row.workspaceRoleGroupRole, $roles)}`
-    : "Group user"
-  $: tooltip = role?.subtitle || ""
+  )
+  const groupUserValue = $derived(
+    row?.workspaceRoleGroupRole
+      ? `Group user: ${getWorkspaceRoleLabel(row.workspaceRoleGroupRole, $roles)}`
+      : "Group user"
+  )
+  const tooltip = $derived(
+    Constants.BudibaseRoleOptions.find(option => option.value === roleValue)
+      ?.subtitle || ""
+  )
 </script>
 
 {#if row?.workspaceRole === Constants.Roles.GROUP}

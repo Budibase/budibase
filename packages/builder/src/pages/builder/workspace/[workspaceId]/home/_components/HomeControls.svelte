@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { ActionButton, Icon } from "@budibase/bbui"
   import type { HomeType } from "@budibase/types"

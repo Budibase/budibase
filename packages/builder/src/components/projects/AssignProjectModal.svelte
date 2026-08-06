@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import ProjectSelect from "@/components/common/ProjectSelect.svelte"
   import { Body, ModalContent } from "@budibase/bbui"
