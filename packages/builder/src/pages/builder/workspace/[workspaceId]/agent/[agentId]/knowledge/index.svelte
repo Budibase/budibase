@@ -382,34 +382,36 @@
     </div>
   </div>
 
-  <div class="sources-access">
-    <Toggle
-      bind:value={operation.allowKnowledgeSourceDownload}
-      disabled={savingAllowKnowledgeSourceDownload || !agentId}
-      on:change={async () => {
-        savingAllowKnowledgeSourceDownload = true
-        try {
-          await tick()
-          await onUpdated()
-        } finally {
-          savingAllowKnowledgeSourceDownload = false
-        }
-      }}
-    />
-    <div>
-      <Body
-        color={"var(--spectrum-global-color-gray-900)"}
-        weight="500"
-        size="XS"
-      >
-        Allow users to download knowledge source files from chat
-      </Body>
-      <Body color={"var(--spectrum-global-color-gray-700)"} size="XS">
-        When disabled, chat still shows which files were used, without a
-        download link.
-      </Body>
+  {#if knowledgeTableRows.length}
+    <div class="sources-access">
+      <Toggle
+        bind:value={operation.allowKnowledgeSourceDownload}
+        disabled={savingAllowKnowledgeSourceDownload || !agentId}
+        on:change={async () => {
+          savingAllowKnowledgeSourceDownload = true
+          try {
+            await tick()
+            await onUpdated()
+          } finally {
+            savingAllowKnowledgeSourceDownload = false
+          }
+        }}
+      />
+      <div>
+        <Body
+          color={"var(--spectrum-global-color-gray-900)"}
+          weight="500"
+          size="XS"
+        >
+          Allow users to download knowledge source files from chat
+        </Body>
+        <Body color={"var(--spectrum-global-color-gray-700)"} size="XS">
+          When disabled, chat still shows which files were used, without a
+          download link.
+        </Body>
+      </div>
     </div>
-  </div>
+  {/if}
 
   <KnowledgeTable
     {loading}
