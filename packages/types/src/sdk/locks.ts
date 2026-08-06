@@ -25,6 +25,7 @@ export enum LockName {
   SQS_SYNC_DEFINITIONS = "sys_sync_definitions",
   LITELLM_KEY = "litellm_key",
   AGENT_RAG_KNOWLEDGE_BASE = "agent_rag_knowledge_base",
+  CUSTOM_REST_TEMPLATES = "custom_rest_templates",
 }
 
 export type LockOptions = {

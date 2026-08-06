@@ -1,6 +1,8 @@
 import type {
+  CustomRestTemplateId,
   ImportEndpoint,
   ImportRestQueryInfoRequest,
+  RestTemplateId,
   RestTemplateSpec,
 } from "@budibase/types"
 
@@ -30,17 +32,23 @@ export const formatEndpointLabel = (endpoint: ImportEndpoint) => {
 }
 
 export const getRestTemplateImportInfoRequest = (
-  spec?: RestTemplateSpec | null
+  spec?: RestTemplateSpec | null,
+  restTemplateId?: RestTemplateId
 ): ImportRestQueryInfoRequest | undefined => {
-  if (!spec) {
-    return undefined
+  if (restTemplateId && isCustomRestTemplateId(restTemplateId)) {
+    return {
+      restTemplateId,
+    }
   }
-  const payload: ImportRestQueryInfoRequest = {}
-  if (spec.url) {
-    payload.url = spec.url
+  if (spec?.url) {
+    return {
+      url: spec.url,
+    }
   }
-  if (!payload.url) {
-    return undefined
-  }
-  return payload
+  return undefined
 }
+
+export const isCustomRestTemplateId = (
+  restTemplateId: RestTemplateId
+): restTemplateId is CustomRestTemplateId =>
+  restTemplateId.startsWith("rest_template_")

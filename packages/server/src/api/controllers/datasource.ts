@@ -46,6 +46,11 @@ import {
 } from "../../utilities/projects"
 import { builderSocket } from "../../websockets"
 
+const isCustomRestTemplateId = (
+  restTemplateId: string | undefined
+): restTemplateId is `rest_template_${string}` =>
+  restTemplateId?.startsWith("rest_template_") ?? false
+
 async function clearOAuth2TokenCaches(datasource: Datasource) {
   const authConfigs = datasource.config?.authConfigs
   if (!authConfigs) return
@@ -297,10 +302,28 @@ export async function update(
     )
   }
   await clearOAuth2TokenCaches(baseDatasource)
-  const response = await db.put(
-    sdk.tables.populateExternalTableSchemas(datasource)
-  )
-  await events.datasource.updated(datasource)
+  const persistDatasource = async () => {
+    const restTemplateId = datasource.restTemplateId
+    if (isCustomRestTemplateId(restTemplateId)) {
+      const templateExists = await sdk.restTemplates.exists(restTemplateId)
+      if (!templateExists) {
+        throw new HTTPError("Custom REST template not found", 404)
+      }
+    }
+
+    const response = await db.put(
+      sdk.tables.populateExternalTableSchemas(datasource)
+    )
+    await events.datasource.updated(datasource)
+    return response
+  }
+  const restTemplateId = datasource.restTemplateId
+  const response = isCustomRestTemplateId(restTemplateId)
+    ? await sdk.restTemplates.withCustomRestTemplateLock({
+        resource: restTemplateId,
+        task: persistDatasource,
+      })
+    : await persistDatasource()
   datasource._rev = response.rev
 
   ctx.message = "Datasource saved successfully."
@@ -332,18 +355,38 @@ export async function save(
   } = ctx.request.body
   datasourceData.projectIds = await resolveProjectIds(datasourceData.projectIds)
   await resolveDatasourceEntityProjectIds(datasourceData)
-  const { datasource, errors } = await sdk.datasources.save(datasourceData, {
-    fetchSchema,
-    tablesFilter,
-  })
+  const saveDatasource = async () => {
+    const restTemplateId = datasourceData.restTemplateId
+    if (isCustomRestTemplateId(restTemplateId)) {
+      const templateExists = await sdk.restTemplates.exists(restTemplateId)
+      if (!templateExists) {
+        throw new HTTPError("Custom REST template not found", 404)
+      }
+    }
 
-  ctx.body = {
-    datasource: await sdk.datasources.removeSecretSingle(
-      sdk.datasources.addDatasourceFlags(datasource)
-    ),
-    errors,
+    const { datasource, errors } = await sdk.datasources.save(datasourceData, {
+      fetchSchema,
+      tablesFilter,
+    })
+
+    ctx.body = {
+      datasource: await sdk.datasources.removeSecretSingle(
+        sdk.datasources.addDatasourceFlags(datasource)
+      ),
+      errors,
+    }
+    builderSocket?.emitDatasourceUpdate(ctx, datasource)
   }
-  builderSocket?.emitDatasourceUpdate(ctx, datasource)
+
+  const restTemplateId = datasourceData.restTemplateId
+  if (isCustomRestTemplateId(restTemplateId)) {
+    await sdk.restTemplates.withCustomRestTemplateLock({
+      resource: restTemplateId,
+      task: saveDatasource,
+    })
+  } else {
+    await saveDatasource()
+  }
 }
 
 async function destroyInternalTablesBySourceId(datasourceId: string) {
@@ -416,6 +459,18 @@ export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
   await clearOAuth2TokenCaches(datasource)
   await db.remove(datasourceId, ctx.params.revId)
   await events.datasource.deleted(datasource)
+
+  const restTemplateId = datasource.restTemplateId
+  if (isCustomRestTemplateId(restTemplateId)) {
+    try {
+      await sdk.restTemplates.removeIfUnused(restTemplateId)
+    } catch (error) {
+      console.error(
+        `Failed to remove unused custom REST template ${restTemplateId}`,
+        error
+      )
+    }
+  }
 
   ctx.body = { message: `Datasource deleted.` }
   builderSocket?.emitDatasourceDeletion(ctx, datasourceId)
