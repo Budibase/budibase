@@ -75,12 +75,8 @@
       : "Group user"
   )
   const tooltip = $derived(
-    role &&
-      "subtitle" in role &&
-      role.subtitle &&
-      typeof role.subtitle === "string"
-      ? role.subtitle
-      : ""
+    Constants.BudibaseRoleOptions.find(option => option.value === roleValue)
+      ?.subtitle || ""
   )
 </script>
 
