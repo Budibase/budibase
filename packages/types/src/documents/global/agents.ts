@@ -1,6 +1,7 @@
 import { Document } from "../../"
 import type { UIMessage } from "ai"
 import { EscalationRecipient } from "../workspace/escalation"
+import { PermissionLevel, PermissionType } from "../../sdk/permissions"
 
 export enum ToolType {
   INTERNAL_TABLE = "INTERNAL_TABLE",
@@ -19,6 +20,11 @@ export interface ToolMetadata {
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
+  authorization?: {
+    supportedPrincipals: ToolExecutionPrincipal[]
+    permissionType: PermissionType
+    permissionLevel: PermissionLevel
+  }
 }
 
 interface ChatAgentIntegration {
@@ -128,12 +134,31 @@ export interface AgentEscalationConfig {
   delay?: number
 }
 
+export enum ToolExecutionPrincipal {
+  REQUESTER = "requester",
+  AGENT = "agent",
+}
+
+export interface AgentOperationToolConfig {
+  toolName: string
+  executionPrincipal: ToolExecutionPrincipal
+}
+
+export interface AgentExecutionContext {
+  tenantId: string
+  workspaceId: string
+  agentId: string
+  operationId: string
+  conversationId: string
+  requestingUserId: string
+}
+
 export interface AgentOperation {
   id: string
   name: string
   live: boolean
   promptInstructions?: string
-  enabledTools?: string[]
+  enabledTools?: Array<string | AgentOperationToolConfig>
   knowledgeBases?: string[]
   knowledgeSources?: AgentKnowledgeSource[]
   allowKnowledgeSourceDownload: boolean
@@ -152,6 +177,7 @@ export interface Agent extends Document {
   icon?: string
   iconColor?: string
   createdBy?: string
+  serviceUserId?: string
   discordIntegration?: DiscordAgentIntegration
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration

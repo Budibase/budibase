@@ -289,7 +289,9 @@ async function runAgentForCase({
     selectedOperationName: run.selectedOperation?.name,
     promptInstructions: run.selectedOperation?.promptInstructions,
     enabledTools: run.selectedOperation?.enabledTools
-      ? [...run.selectedOperation.enabledTools]
+      ? run.selectedOperation.enabledTools.map(tool =>
+          typeof tool === "string" ? tool : tool.toolName
+        )
       : undefined,
     knowledgeBases: run.selectedOperation?.knowledgeBases
       ? [...run.selectedOperation.knowledgeBases]

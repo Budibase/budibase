@@ -1,6 +1,11 @@
 import { HTTPError } from "@budibase/backend-core"
-import type { Agent, AgentOperation } from "@budibase/types"
-import { getOrThrow, update } from "./crud"
+import {
+  ToolExecutionPrincipal,
+  type Agent,
+  type AgentOperation,
+  type AgentOperationToolConfig,
+} from "@budibase/types"
+import { createAgentServiceUser, getOrThrow, update } from "./crud"
 
 export type AgentOperationConfig = Pick<
   AgentOperation,
@@ -14,6 +19,18 @@ export type AgentOperationConfig = Pick<
 
 export type CreateAgentOperationInput = AgentOperationConfig &
   Pick<AgentOperation, "id">
+
+export const normalizeOperationTools = (
+  tools: AgentOperation["enabledTools"] = []
+): AgentOperationToolConfig[] =>
+  tools.map(tool =>
+    typeof tool === "string"
+      ? {
+          toolName: tool,
+          executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+        }
+      : tool
+  )
 
 const normalizeOperationName = (name: string | undefined) =>
   name?.trim().toLowerCase() || ""
@@ -69,15 +86,33 @@ export async function createOperation(
   agentId: string,
   operation: CreateAgentOperationInput
 ): Promise<Agent> {
-  const existing = await getOrThrow(agentId)
+  let existing = await getOrThrow(agentId)
   if (existing.operations?.some(candidate => candidate.id === operation.id)) {
     throw new HTTPError("Operation already exists", 400)
   }
   assertUniqueOperationName(existing, operation.name)
+  const normalizedTools = normalizeOperationTools(operation.enabledTools)
+  if (
+    normalizedTools.some(
+      tool => tool.executionPrincipal === ToolExecutionPrincipal.AGENT
+    ) &&
+    !existing.serviceUserId
+  ) {
+    existing = {
+      ...existing,
+      serviceUserId: await createAgentServiceUser(existing.name),
+    }
+  }
 
   return update({
     ...existing,
-    operations: [...(existing.operations ?? []), operation],
+    operations: [
+      ...(existing.operations ?? []),
+      {
+        ...operation,
+        enabledTools: normalizedTools,
+      },
+    ],
   })
 }
 
@@ -86,15 +121,36 @@ export async function updateOperation(
   operationId: string,
   updateRequest: Partial<AgentOperationConfig>
 ): Promise<Agent> {
-  const existing = await getOrThrow(agentId)
+  let existing = await getOrThrow(agentId)
   getOperationOrThrow(existing, operationId)
   assertUniqueOperationName(existing, updateRequest.name, operationId)
+
+  const normalizedUpdate = updateRequest.enabledTools
+    ? {
+        ...updateRequest,
+        enabledTools: normalizeOperationTools(updateRequest.enabledTools),
+      }
+    : updateRequest
+
+  if (
+    normalizedUpdate.enabledTools?.some(
+      tool =>
+        typeof tool !== "string" &&
+        tool.executionPrincipal === ToolExecutionPrincipal.AGENT
+    ) &&
+    !existing.serviceUserId
+  ) {
+    existing = {
+      ...existing,
+      serviceUserId: await createAgentServiceUser(existing.name),
+    }
+  }
 
   return update({
     ...existing,
     operations: (existing.operations ?? []).map(operation =>
       operation.id === operationId
-        ? mergeOperationConfig(operation, updateRequest)
+        ? mergeOperationConfig(operation, normalizedUpdate)
         : operation
     ),
   })

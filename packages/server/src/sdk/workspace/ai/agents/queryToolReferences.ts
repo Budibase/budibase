@@ -1,6 +1,11 @@
 import { getQueryToolBindings, type QueryToolType } from "@budibase/shared-core"
 import { SourceName, ToolType } from "@budibase/types"
-import type { Agent, Datasource, Query } from "@budibase/types"
+import type {
+  Agent,
+  AgentOperationToolConfig,
+  Datasource,
+  Query,
+} from "@budibase/types"
 import { fetch, update } from "./crud"
 
 interface QueryToolReferenceMigration {
@@ -39,21 +44,33 @@ const replaceReadableBinding = (
 }
 
 const replaceRuntimeBinding = (
-  enabledTools: string[] | undefined,
+  enabledTools: Array<string | AgentOperationToolConfig> | undefined,
   existingBinding: string,
   updatedBinding: string
 ) => {
   if (!enabledTools || existingBinding === updatedBinding) {
     return enabledTools
   }
-  if (!enabledTools.includes(existingBinding)) {
+  if (
+    !enabledTools.some(tool =>
+      typeof tool === "string"
+        ? tool === existingBinding
+        : tool.toolName === existingBinding
+    )
+  ) {
     return enabledTools
   }
 
   return Array.from(
     new Set(
-      enabledTools.map(binding =>
-        binding === existingBinding ? updatedBinding : binding
+      enabledTools.map(tool =>
+        typeof tool === "string"
+          ? tool === existingBinding
+            ? updatedBinding
+            : tool
+          : tool.toolName === existingBinding
+            ? { ...tool, toolName: updatedBinding }
+            : tool
       )
     )
   )
