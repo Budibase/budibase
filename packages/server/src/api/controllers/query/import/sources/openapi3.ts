@@ -53,11 +53,7 @@ const isOpenAPI3 = (
 
 const methods: string[] = Object.values(OpenAPIV3.HttpMethods)
 
-const isOperation = (
-  key: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  pathItem: any
-): pathItem is OpenAPIV3.OperationObject => {
+const isOperation = (key: string) => {
   return methods.includes(key)
 }
 
@@ -517,7 +513,7 @@ export class OpenAPI3 extends OpenAPISource {
       const pathParams = this.normalizeParameters(pathItem.parameters)
 
       for (let [methodName, maybeOperation] of Object.entries(pathItem)) {
-        if (!isOperation(methodName, maybeOperation)) {
+        if (!isOperation(methodName)) {
           continue
         }
         const operation = maybeOperation as OpenAPIV3.OperationObject
