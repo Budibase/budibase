@@ -344,6 +344,9 @@ export async function getResourcesInfo(): Promise<
         ...queries
           .filter(query => hasProject(query, project._id))
           .map(query => buildUsedResource(query, ResourceType.QUERY)),
+        ...functions
+          .filter(fn => hasProject(fn, project._id))
+          .map(fn => buildUsedResource(fn, ResourceType.FUNCTION)),
         ...automations
           .filter(automation => hasProject(automation, project._id))
           .map(automation =>
