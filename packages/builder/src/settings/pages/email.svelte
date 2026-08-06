@@ -125,7 +125,7 @@
 <style>
   .form-row {
     display: grid;
-    grid-template-columns: 120px 1fr;
+    grid-template-columns: 200px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
   }
