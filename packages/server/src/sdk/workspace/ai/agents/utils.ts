@@ -7,6 +7,8 @@ import {
   WebSearchProvider,
   ESCALATE_TOOL_NAME,
   EscalateToolResultStatus,
+  ToolExecutionPrincipal,
+  type AgentExecutionContext,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import {
@@ -25,7 +27,9 @@ import {
 } from "../../../../ai/tools"
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
-import { HTTPError } from "@budibase/backend-core"
+import { context, HTTPError } from "@budibase/backend-core"
+import { normalizeOperationTools } from "./operations"
+import { authorizeAgentToolCall } from "../../../../ai/tools/authorization"
 
 const HELPER_TOOL_NAMES = new Set([
   "list_tables",
@@ -64,6 +68,13 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
     sourceType: tool.sourceType,
     sourceLabel: tool.sourceLabel,
     sourceIconType: tool.sourceIconType,
+    authorization: tool.authorization
+      ? {
+          supportedPrincipals: tool.authorization.supportedPrincipals,
+          permissionType: tool.authorization.permissionType,
+          permissionLevel: tool.authorization.permissionLevel,
+        }
+      : undefined,
   }
 }
 
@@ -151,6 +162,10 @@ export interface BuildPromptAndToolsOptions {
   baseSystemPrompt?: string
   includeGoal?: boolean
   fallbackPromptInstructions?: string
+  execution?: {
+    requestingUserId: string
+    sessionId: string
+  }
 }
 
 export async function buildPromptAndTools(
@@ -174,7 +189,8 @@ export async function buildPromptAndTools(
   const hasKnowledgeBases = operation?.knowledgeBases?.some(Boolean) ?? false
 
   const allTools = await getAvailableTools(agent.aiconfig)
-  const enabledToolNames = new Set(operation?.enabledTools || [])
+  const toolConfigs = normalizeOperationTools(operation?.enabledTools)
+  const enabledToolNames = new Set(toolConfigs.map(config => config.toolName))
   const enabledTools = addHelperTools(
     allTools.filter(
       tool => enabledToolNames.has(tool.name) && !isHelperTool(tool)
@@ -216,10 +232,60 @@ export async function buildPromptAndTools(
     resolvedSystemPrompt += `\n\nBefore calling escalate, call list_session_escalations to check whether this same request is already awaiting approval or has already been approved in this conversation. If an equivalent request is still pending, do not escalate again - tell the user it is already awaiting approval. If it has already been approved, proceed instead of escalating again. Only escalate genuinely new requests.`
   }
 
+  const runtimes = new Map()
+  if (operation && options.execution) {
+    const workspaceId = context.getWorkspaceId()
+    if (!workspaceId) {
+      throw new HTTPError("Workspace context is required", 400)
+    }
+    const executionContext: AgentExecutionContext = {
+      tenantId: context.getTenantId(),
+      workspaceId,
+      agentId,
+      operationId: operation.id,
+      conversationId: options.execution.sessionId,
+      requestingUserId: options.execution.requestingUserId,
+    }
+    for (const tool of enabledTools) {
+      const config = toolConfigs.find(config => config.toolName === tool.name)
+      const principal =
+        config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
+      if (
+        !tool.authorization ||
+        !tool.authorization.supportedPrincipals.includes(principal)
+      ) {
+        continue
+      }
+      const runtime = {
+        executionContext,
+        principal,
+        agentServiceUserId: agent.serviceUserId,
+        authorize: authorizeAgentToolCall,
+      }
+      try {
+        await authorizeAgentToolCall({
+          authorization: tool.authorization,
+          input: undefined,
+          executionContext,
+          principal,
+          agentServiceUserId: agent.serviceUserId,
+        })
+        runtimes.set(tool.name, runtime)
+      } catch {
+        // Exposure is best-effort least privilege. The same authorization is
+        // always repeated with the real input immediately before execution.
+      }
+    }
+  }
+
+  const authorizedTools = options.execution
+    ? enabledTools.filter(tool => runtimes.has(tool.name))
+    : enabledTools
+
   return {
     systemPrompt: resolvedSystemPrompt,
-    tools: toToolSet(enabledTools),
-    toolDisplayNames: getToolDisplayNames(enabledTools),
+    tools: toToolSet(authorizedTools, runtimes),
+    toolDisplayNames: getToolDisplayNames(authorizedTools),
   }
 }
 

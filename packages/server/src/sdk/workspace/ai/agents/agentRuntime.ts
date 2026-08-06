@@ -334,6 +334,7 @@ export interface PrepareAgentRunContextParams {
   buildPromptOptions?: BuildPromptAndToolsOptions
   // When set, pin the run to this operation instead of routing on the question.
   operationId?: string
+  requestingUserId?: string
 }
 
 export interface AgentRunContext {
@@ -374,6 +375,7 @@ export const prepareAgentRunContext = async ({
   span,
   buildPromptOptions,
   operationId,
+  requestingUserId,
 }: PrepareAgentRunContextParams): Promise<AgentRunContext> => {
   const llm = await sdk.ai.llm.createLLM(
     aiConfigId ?? agent.aiconfig,
@@ -397,6 +399,12 @@ export const prepareAgentRunContext = async ({
         routingDecision.action === "summarize_operations"
           ? buildOperationsSummaryPrompt(getLiveOperations(agent))
           : buildPromptOptions?.fallbackPromptInstructions,
+      execution: routingDecision.operation
+        ? {
+            requestingUserId: requestingUserId || "",
+            sessionId,
+          }
+        : undefined,
     }
   )
 
@@ -465,6 +473,7 @@ export const prepareAgentChatRun = async ({
       latestQuestion,
       aiConfigId,
       operationId,
+      requestingUserId: user._id!,
       buildPromptOptions: {
         baseSystemPrompt: ai.agentSystemPrompt(user, chat?.timezone),
         includeGoal: false,
