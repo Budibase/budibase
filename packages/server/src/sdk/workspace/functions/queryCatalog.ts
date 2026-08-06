@@ -67,6 +67,37 @@ const isSupportedSource = (source: SourceName) => {
   return Object.values(SourceName).includes(source)
 }
 
+async function resolveQuery(
+  query: Query & { _id: string },
+  datasource?: Datasource & { _id: string }
+): Promise<ResolvedQuery> {
+  if (!SUPPORTED_QUERY_VERBS.includes(query.queryVerb)) {
+    throw new HTTPError(
+      `Query '${query._id}' is not supported by Functions.`,
+      400
+    )
+  }
+
+  const resolvedDatasource =
+    datasource ||
+    (await context.getWorkspaceDB().tryGet<Datasource>(query.datasourceId))
+  if (
+    !resolvedDatasource?._id ||
+    !isSupportedSource(resolvedDatasource.source)
+  ) {
+    throw new HTTPError(
+      `Query '${query._id}' is not supported by Functions.`,
+      400
+    )
+  }
+
+  return {
+    query,
+    datasource: { ...resolvedDatasource, _id: resolvedDatasource._id },
+    parameterNames: getParameterNames(query),
+  }
+}
+
 export const resolveSavedQuery = async (
   queryId: string
 ): Promise<ResolvedQuery> => {
@@ -79,26 +110,8 @@ export const resolveSavedQuery = async (
   if (!query?._id) {
     throw new HTTPError(`Query '${queryId}' not found.`, 404)
   }
-  if (!SUPPORTED_QUERY_VERBS.includes(query.queryVerb)) {
-    throw new HTTPError(
-      `Query '${queryId}' is not supported by Functions.`,
-      400
-    )
-  }
 
-  const datasource = await db.tryGet<Datasource>(query.datasourceId)
-  if (!datasource?._id || !isSupportedSource(datasource.source)) {
-    throw new HTTPError(
-      `Query '${queryId}' is not supported by Functions.`,
-      400
-    )
-  }
-
-  return {
-    query: { ...query, _id: query._id },
-    datasource: { ...datasource, _id: datasource._id },
-    parameterNames: getParameterNames(query),
-  }
+  return await resolveQuery({ ...query, _id: query._id })
 }
 
 const validateAliasMappings = (
@@ -181,13 +194,37 @@ export const getQueryCatalog = async () => {
   const result = await db.allDocs<Query>(
     docIds.getDocParams(DocumentType.QUERY, null, { include_docs: true })
   )
+  const datasourceCache = new Map<
+    string,
+    Promise<(Datasource & { _id: string }) | undefined>
+  >()
+  const getDatasource = (datasourceId: string) => {
+    const cached = datasourceCache.get(datasourceId)
+    if (cached) {
+      return cached
+    }
+
+    const datasource = db
+      .tryGet<Datasource>(datasourceId)
+      .then(datasource =>
+        datasource?._id ? { ...datasource, _id: datasource._id } : undefined
+      )
+    datasourceCache.set(datasourceId, datasource)
+    return datasource
+  }
   const entries = await Promise.all(
     result.rows.map(async row => {
-      if (!row.doc?._id) {
+      const query = row.doc
+      if (!query?._id) {
         return undefined
       }
       try {
-        return toCatalogEntry(await resolveSavedQuery(row.doc._id))
+        return toCatalogEntry(
+          await resolveQuery(
+            { ...query, _id: query._id },
+            await getDatasource(query.datasourceId)
+          )
+        )
       } catch (error) {
         if (error instanceof HTTPError) {
           return undefined

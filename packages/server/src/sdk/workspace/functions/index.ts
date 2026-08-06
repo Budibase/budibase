@@ -34,7 +34,7 @@ interface FunctionUpdateInput extends FunctionDraftInput {
 const EXECUTE_FUNCTION_STEP_ID = "EXECUTE_FUNCTION"
 const MAX_FUNCTION_NAME_LENGTH = 255
 const MAX_ALIAS_LENGTH = 128
-const ALIAS_PATTERN = /^[A-Za-z_$][A-Za-z0-9_$]*$/
+const ALIAS_PATTERN = /^(?![\s\S]*[\r\n\u2028\u2029])[A-Za-z_$][A-Za-z0-9_$]*$/
 
 const getDb = () => context.getWorkspaceDB()
 
