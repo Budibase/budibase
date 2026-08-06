@@ -2,6 +2,7 @@
   import { Body, notifications, Select, Button } from "@budibase/bbui"
   import type { AgentOperation, RequiredKeys } from "@budibase/types"
   import {
+    ToolExecutionPrincipal,
     AIConfigType,
     ToolType,
     WebSearchProvider,
@@ -64,6 +65,25 @@
     knowledgeSources: operation.knowledgeSources,
     escalation: operation.escalation,
   })
+
+  const getConfiguredTools = (operation: AgentOperation) => {
+    const existing = new Map(
+      (operation.enabledTools || []).map(tool => [
+        typeof tool === "string" ? tool : tool.toolName,
+        typeof tool === "string"
+          ? ToolExecutionPrincipal.REQUESTER
+          : tool.executionPrincipal,
+      ])
+    )
+    return getIncludedToolRuntimeBindings(
+      operation.promptInstructions,
+      readableToRuntimeBinding
+    ).map(toolName => ({
+      toolName,
+      executionPrincipal:
+        existing.get(toolName) ?? ToolExecutionPrincipal.REQUESTER,
+    }))
+  }
 
   // Agent state
   let draftAgentId: string | undefined = $state()
@@ -410,10 +430,7 @@
       const operations =
         draftOperations?.map(operation => ({
           ...operation,
-          enabledTools: getIncludedToolRuntimeBindings(
-            operation.promptInstructions,
-            readableToRuntimeBinding
-          ),
+          enabledTools: getConfiguredTools(operation),
         })) || []
 
       await agentsStore.updateAgent({

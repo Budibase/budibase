@@ -2,6 +2,7 @@
   import { Body, Icon } from "@budibase/bbui"
   import {
     FeatureFlag,
+    ToolExecutionPrincipal,
     ToolType,
     type AgentOperation,
     type CaretPositionFn,
@@ -167,6 +168,28 @@
           .replace(/\b\w/g, l => l.toUpperCase())
       )
       .join(".")
+
+  const getToolPrincipal = (toolName: string) => {
+    const config = operation.enabledTools?.find(tool =>
+      typeof tool === "string" ? tool === toolName : tool.toolName === toolName
+    )
+    return typeof config === "object"
+      ? config.executionPrincipal
+      : ToolExecutionPrincipal.REQUESTER
+  }
+
+  const setToolPrincipal = (
+    toolName: string,
+    executionPrincipal: ToolExecutionPrincipal
+  ) => {
+    const toolNames = includedToolRuntimeBindings
+    operation.enabledTools = toolNames.map(name => ({
+      toolName: name,
+      executionPrincipal:
+        name === toolName ? executionPrincipal : getToolPrincipal(name),
+    }))
+    onUpdated()
+  }
 
   const escapeRegExp = (str: string) =>
     str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -346,6 +369,33 @@
                       </div>
                     </div>
                     <div class="tool-actions">
+                      <select
+                        aria-label={`Execution identity for ${formatToolLabel(tool)}`}
+                        value={getToolPrincipal(tool.runtimeBinding)}
+                        onchange={event =>
+                          setToolPrincipal(
+                            tool.runtimeBinding,
+                            event.currentTarget.value as ToolExecutionPrincipal
+                          )}
+                      >
+                        <option value={ToolExecutionPrincipal.REQUESTER}>
+                          Requesting user
+                        </option>
+                        <option
+                          value={ToolExecutionPrincipal.AGENT}
+                          disabled={!tool.authorization?.supportedPrincipals.includes(
+                            ToolExecutionPrincipal.AGENT
+                          )}
+                        >
+                          Agent identity (elevated)
+                        </option>
+                      </select>
+                      {#if getToolPrincipal(tool.runtimeBinding) === ToolExecutionPrincipal.AGENT}
+                        <span class="delegation-warning">
+                          Uses agent {tool.authorization?.permissionLevel}
+                          {tool.authorization?.permissionType} permission
+                        </span>
+                      {/if}
                       <button
                         class="tool-close-button"
                         type="button"
@@ -420,6 +470,11 @@
     display: flex;
     gap: var(--spacing-m);
     padding: var(--spacing-m) var(--spacing-l);
+  }
+
+  .delegation-warning {
+    color: var(--spectrum-global-color-orange-700);
+    font-size: var(--font-size-xs);
   }
 
   .operation-panel-title {
