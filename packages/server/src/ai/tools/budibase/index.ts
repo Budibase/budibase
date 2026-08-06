@@ -1,9 +1,4 @@
-import {
-  Automation,
-  TableSourceType,
-  type Table,
-  type ToolType,
-} from "@budibase/types"
+import { Automation, TableSourceType, type Table } from "@budibase/types"
 import type { AiToolDefinition } from ".."
 import createAutomationTools from "./automations"
 import TABLE_TOOLS from "./tables"

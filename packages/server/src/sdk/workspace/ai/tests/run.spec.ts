@@ -1,5 +1,11 @@
-import type { ContextUser } from "@budibase/types"
+import { ToolExecutionPrincipal, type ContextUser } from "@budibase/types"
 import { runSuite } from "./run"
+
+const requesterTools = (...toolNames: string[]) =>
+  toolNames.map(toolName => ({
+    toolName,
+    executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+  }))
 
 jest.mock("@budibase/backend-core", () => ({
   getErrorMessage: jest.fn((error: unknown) =>
@@ -534,7 +540,7 @@ describe("agent test runner", () => {
           name: "Operation 1",
           live: true,
           promptInstructions: "First operation instructions",
-          enabledTools: ["list_tables"],
+          enabledTools: requesterTools("list_tables"),
           knowledgeBases: ["kb-1"],
         },
         {
@@ -542,7 +548,7 @@ describe("agent test runner", () => {
           name: "Operation 2",
           live: true,
           promptInstructions: "Second operation instructions",
-          enabledTools: ["search_knowledge"],
+          enabledTools: requesterTools("search_knowledge"),
           knowledgeBases: ["kb-2"],
         },
       ],

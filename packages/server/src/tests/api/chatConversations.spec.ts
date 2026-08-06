@@ -4,6 +4,7 @@ import {
   AgentChannelProvider,
   DocumentType,
   FeatureFlag,
+  ToolExecutionPrincipal,
 } from "@budibase/types"
 import type {
   Agent,
@@ -23,6 +24,12 @@ import * as agentLogs from "../../sdk/workspace/ai/agentLogs"
 import type { LanguageModelV3 } from "@ai-sdk/provider"
 import { webhookChat } from "../../api/controllers/ai"
 import { MockLanguageModelV3 } from "ai/test"
+
+const requesterTools = (...toolNames: string[]) =>
+  toolNames.map(toolName => ({
+    toolName,
+    executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+  }))
 
 const mockAiConfigsFind = jest.fn()
 
@@ -199,7 +206,7 @@ const buildWebhookTestAgent = (
         name: "Support",
         live: true,
         promptInstructions: "Help the user.",
-        enabledTools: [],
+        enabledTools: requesterTools(),
         ...operationOverrides,
       },
     ],
@@ -1475,7 +1482,9 @@ describe("Agent chat tool call tracking", () => {
         sdk.ai.agents.getOrThrow as jest.MockedFunction<
           typeof sdk.ai.agents.getOrThrow
         >
-      ).mockResolvedValue(buildWebhookTestAgent({ enabledTools: ["escalate"] }))
+      ).mockResolvedValue(
+        buildWebhookTestAgent({ enabledTools: requesterTools("escalate") })
+      )
 
       await features.testutils.withFeatureFlags(
         config.getTenantId(),
@@ -1878,7 +1887,9 @@ describe("Agent chat tool call tracking", () => {
         sdk.ai.agents.getOrThrow as jest.MockedFunction<
           typeof sdk.ai.agents.getOrThrow
         >
-      ).mockResolvedValue(buildWebhookTestAgent({ enabledTools: ["escalate"] }))
+      ).mockResolvedValue(
+        buildWebhookTestAgent({ enabledTools: requesterTools("escalate") })
+      )
 
       await features.testutils.withFeatureFlags(
         config.getTenantId(),
@@ -1949,7 +1960,9 @@ describe("Agent chat tool call tracking", () => {
         sdk.ai.agents.getOrThrow as jest.MockedFunction<
           typeof sdk.ai.agents.getOrThrow
         >
-      ).mockResolvedValue(buildWebhookTestAgent({ enabledTools: ["escalate"] }))
+      ).mockResolvedValue(
+        buildWebhookTestAgent({ enabledTools: requesterTools("escalate") })
+      )
 
       await features.testutils.withFeatureFlags(
         config.getTenantId(),

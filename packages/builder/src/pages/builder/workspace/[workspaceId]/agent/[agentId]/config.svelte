@@ -69,10 +69,8 @@
   const getConfiguredTools = (operation: AgentOperation) => {
     const existing = new Map(
       (operation.enabledTools || []).map(tool => [
-        typeof tool === "string" ? tool : tool.toolName,
-        typeof tool === "string"
-          ? ToolExecutionPrincipal.REQUESTER
-          : tool.executionPrincipal,
+        tool.toolName,
+        tool.executionPrincipal,
       ])
     )
     return getIncludedToolRuntimeBindings(

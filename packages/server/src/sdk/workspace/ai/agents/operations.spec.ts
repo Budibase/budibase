@@ -1,9 +1,9 @@
 import { ToolExecutionPrincipal } from "@budibase/types"
-import { normalizeOperationTools } from "./operations"
+import { normalizePersistedOperationTools } from "./crud"
 
-describe("normalizeOperationTools", () => {
+describe("normalizePersistedOperationTools", () => {
   it("migrates legacy tool names to requester authority", () => {
-    expect(normalizeOperationTools(["list_tables"])).toEqual([
+    expect(normalizePersistedOperationTools(["list_tables"])).toEqual([
       {
         toolName: "list_tables",
         executionPrincipal: ToolExecutionPrincipal.REQUESTER,
@@ -16,6 +16,6 @@ describe("normalizeOperationTools", () => {
       toolName: "approve_holiday",
       executionPrincipal: ToolExecutionPrincipal.AGENT,
     }
-    expect(normalizeOperationTools([config])).toEqual([config])
+    expect(normalizePersistedOperationTools([config])).toEqual([config])
   })
 })

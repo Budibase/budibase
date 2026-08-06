@@ -3,7 +3,6 @@ import {
   ToolExecutionPrincipal,
   type Agent,
   type AgentOperation,
-  type AgentOperationToolConfig,
 } from "@budibase/types"
 import { createAgentServiceUser, getOrThrow, update } from "./crud"
 
@@ -19,18 +18,6 @@ export type AgentOperationConfig = Pick<
 
 export type CreateAgentOperationInput = AgentOperationConfig &
   Pick<AgentOperation, "id">
-
-export const normalizeOperationTools = (
-  tools: AgentOperation["enabledTools"] = []
-): AgentOperationToolConfig[] =>
-  tools.map(tool =>
-    typeof tool === "string"
-      ? {
-          toolName: tool,
-          executionPrincipal: ToolExecutionPrincipal.REQUESTER,
-        }
-      : tool
-  )
 
 const normalizeOperationName = (name: string | undefined) =>
   name?.trim().toLowerCase() || ""
@@ -91,7 +78,7 @@ export async function createOperation(
     throw new HTTPError("Operation already exists", 400)
   }
   assertUniqueOperationName(existing, operation.name)
-  const normalizedTools = normalizeOperationTools(operation.enabledTools)
+  const normalizedTools = operation.enabledTools || []
   if (
     normalizedTools.some(
       tool => tool.executionPrincipal === ToolExecutionPrincipal.AGENT
@@ -125,18 +112,11 @@ export async function updateOperation(
   getOperationOrThrow(existing, operationId)
   assertUniqueOperationName(existing, updateRequest.name, operationId)
 
-  const normalizedUpdate = updateRequest.enabledTools
-    ? {
-        ...updateRequest,
-        enabledTools: normalizeOperationTools(updateRequest.enabledTools),
-      }
-    : updateRequest
+  const normalizedUpdate = updateRequest
 
   if (
     normalizedUpdate.enabledTools?.some(
-      tool =>
-        typeof tool !== "string" &&
-        tool.executionPrincipal === ToolExecutionPrincipal.AGENT
+      tool => tool.executionPrincipal === ToolExecutionPrincipal.AGENT
     ) &&
     !existing.serviceUserId
   ) {

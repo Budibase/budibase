@@ -1,4 +1,10 @@
-import type { Agent } from "@budibase/types"
+import { ToolExecutionPrincipal, type Agent } from "@budibase/types"
+
+const requesterTools = (...toolNames: string[]) =>
+  toolNames.map(toolName => ({
+    toolName,
+    executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+  }))
 
 jest.mock("../../..", () => ({
   __esModule: true,
@@ -100,7 +106,7 @@ describe("buildPromptAndTools", () => {
           id: "operation_1",
           name: "Main operation",
           live: true,
-          enabledTools: [],
+          enabledTools: requesterTools(),
           knowledgeBases: ["kb_1"],
           allowKnowledgeSourceDownload: true,
         },
@@ -138,7 +144,7 @@ describe("buildPromptAndTools", () => {
           id: "operation_1",
           name: "Main operation",
           live: true,
-          enabledTools: [],
+          enabledTools: requesterTools(),
           knowledgeBases: [],
           allowKnowledgeSourceDownload: true,
         },
@@ -161,7 +167,7 @@ describe("buildPromptAndTools", () => {
           id: "operation_1",
           name: "Main operation",
           live: true,
-          enabledTools: [],
+          enabledTools: requesterTools(),
           knowledgeBases: ["kb_1"],
           allowKnowledgeSourceDownload: true,
         },
@@ -184,7 +190,7 @@ describe("buildPromptAndTools", () => {
           name: "Main operation",
           live: false,
           promptInstructions: "Draft instructions",
-          enabledTools: ["draft_tool"],
+          enabledTools: requesterTools("draft_tool"),
           knowledgeBases: ["kb_1"],
           allowKnowledgeSourceDownload: generator.bool(),
         },
@@ -214,7 +220,7 @@ describe("buildPromptAndTools", () => {
           name: "IT support",
           live: true,
           promptInstructions: "Handle IT requests",
-          enabledTools: [],
+          enabledTools: requesterTools(),
           knowledgeBases: [],
           allowKnowledgeSourceDownload: generator.bool(),
         },
@@ -223,7 +229,7 @@ describe("buildPromptAndTools", () => {
           name: "Knowledge support",
           live: true,
           promptInstructions: "Handle knowledge requests",
-          enabledTools: [],
+          enabledTools: requesterTools(),
           knowledgeBases: [],
           allowKnowledgeSourceDownload: generator.bool(),
         },

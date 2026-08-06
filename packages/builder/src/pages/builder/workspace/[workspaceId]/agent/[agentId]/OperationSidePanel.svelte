@@ -170,12 +170,10 @@
       .join(".")
 
   const getToolPrincipal = (toolName: string) => {
-    const config = operation.enabledTools?.find(tool =>
-      typeof tool === "string" ? tool === toolName : tool.toolName === toolName
+    const config = operation.enabledTools?.find(
+      tool => tool.toolName === toolName
     )
-    return typeof config === "object"
-      ? config.executionPrincipal
-      : ToolExecutionPrincipal.REQUESTER
+    return config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
   }
 
   const setToolPrincipal = (

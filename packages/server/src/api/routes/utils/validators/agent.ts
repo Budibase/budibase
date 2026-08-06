@@ -69,15 +69,10 @@ const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
   promptInstructions: OPTIONAL_STRING,
   enabledTools: Joi.array()
     .items(
-      Joi.alternatives().try(
-        Joi.string(),
-        Joi.object({
-          toolName: Joi.string().required(),
-          executionPrincipal: Joi.string()
-            .valid("requester", "agent")
-            .required(),
-        })
-      )
+      Joi.object({
+        toolName: Joi.string().required(),
+        executionPrincipal: Joi.string().valid("requester", "agent").required(),
+      })
     )
     .optional(),
   allowKnowledgeSourceDownload: Joi.boolean().optional(),

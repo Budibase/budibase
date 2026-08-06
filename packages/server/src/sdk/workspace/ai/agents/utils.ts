@@ -28,7 +28,6 @@ import {
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 import { context, HTTPError } from "@budibase/backend-core"
-import { normalizeOperationTools } from "./operations"
 import { authorizeAgentToolCall } from "../../../../ai/tools/authorization"
 
 const HELPER_TOOL_NAMES = new Set([
@@ -189,7 +188,7 @@ export async function buildPromptAndTools(
   const hasKnowledgeBases = operation?.knowledgeBases?.some(Boolean) ?? false
 
   const allTools = await getAvailableTools(agent.aiconfig)
-  const toolConfigs = normalizeOperationTools(operation?.enabledTools)
+  const toolConfigs = operation?.enabledTools || []
   const enabledToolNames = new Set(toolConfigs.map(config => config.toolName))
   const enabledTools = addHelperTools(
     allTools.filter(

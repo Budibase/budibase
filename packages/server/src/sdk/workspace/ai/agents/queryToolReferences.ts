@@ -44,33 +44,23 @@ const replaceReadableBinding = (
 }
 
 const replaceRuntimeBinding = (
-  enabledTools: Array<string | AgentOperationToolConfig> | undefined,
+  enabledTools: AgentOperationToolConfig[] | undefined,
   existingBinding: string,
   updatedBinding: string
 ) => {
   if (!enabledTools || existingBinding === updatedBinding) {
     return enabledTools
   }
-  if (
-    !enabledTools.some(tool =>
-      typeof tool === "string"
-        ? tool === existingBinding
-        : tool.toolName === existingBinding
-    )
-  ) {
+  if (!enabledTools.some(tool => tool.toolName === existingBinding)) {
     return enabledTools
   }
 
   return Array.from(
     new Set(
       enabledTools.map(tool =>
-        typeof tool === "string"
-          ? tool === existingBinding
-            ? updatedBinding
-            : tool
-          : tool.toolName === existingBinding
-            ? { ...tool, toolName: updatedBinding }
-            : tool
+        tool.toolName === existingBinding
+          ? { ...tool, toolName: updatedBinding }
+          : tool
       )
     )
   )

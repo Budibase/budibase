@@ -158,7 +158,7 @@ export interface AgentOperation {
   name: string
   live: boolean
   promptInstructions?: string
-  enabledTools?: Array<string | AgentOperationToolConfig>
+  enabledTools?: AgentOperationToolConfig[]
   knowledgeBases?: string[]
   knowledgeSources?: AgentKnowledgeSource[]
   allowKnowledgeSourceDownload: boolean

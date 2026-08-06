@@ -7,11 +7,17 @@ import {
   roles,
 } from "@budibase/backend-core"
 import { WebClient } from "@slack/web-api"
-import { DocumentType, UserStatus, type User } from "@budibase/types"
+import {
+  DocumentType,
+  ToolExecutionPrincipal,
+  UserStatus,
+  type User,
+} from "@budibase/types"
 import type {
   Agent,
   AgentKnowledgeSource,
   AgentOperation,
+  AgentOperationToolConfig,
   Optional,
 } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
@@ -21,7 +27,12 @@ import { cleanupKnowledgeForOperation, knowledgeSourceSyncQueue } from "../rag"
 import { getValidProjectIdsForDuplication } from "../../projects/utils"
 
 // TODO: this will eventually go away, after a grace period
-type DeprecatedAgent = Agent & {
+type DeprecatedAgentOperation = Omit<AgentOperation, "enabledTools"> & {
+  enabledTools?: Array<string | AgentOperationToolConfig>
+}
+
+type DeprecatedAgent = Omit<Agent, "operations"> & {
+  operations?: DeprecatedAgentOperation[]
   promptInstructions?: string
   operationName?: string
   enabledTools?: string[]
@@ -29,6 +40,18 @@ type DeprecatedAgent = Agent & {
   knowledgeSources?: AgentKnowledgeSource[]
   allowKnowledgeSourceDownload?: boolean
 }
+
+export const normalizePersistedOperationTools = (
+  tools: DeprecatedAgentOperation["enabledTools"] = []
+): AgentOperationToolConfig[] =>
+  tools.map(tool =>
+    typeof tool === "string"
+      ? {
+          toolName: tool,
+          executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+        }
+      : tool
+  )
 
 const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
@@ -190,7 +213,10 @@ const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
   const legacyAllowKnowledgeSourceDownload = raw.allowKnowledgeSourceDownload
 
   if (Object.prototype.hasOwnProperty.call(raw, "operations")) {
-    return raw.operations || []
+    return (raw.operations || []).map(operation => ({
+      ...operation,
+      enabledTools: normalizePersistedOperationTools(operation.enabledTools),
+    }))
   }
 
   if (
@@ -206,7 +232,7 @@ const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
         name: raw.operationName || DEFAULT_OPERATION_NAME,
         live: true,
         promptInstructions: raw.promptInstructions || "",
-        enabledTools: raw.enabledTools || [],
+        enabledTools: normalizePersistedOperationTools(raw.enabledTools),
         knowledgeBases: raw.knowledgeBases || [],
         knowledgeSources: legacyKnowledgeSources || [],
         allowKnowledgeSourceDownload:
