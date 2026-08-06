@@ -4,7 +4,6 @@
     "strict": true,
     "outDir": "dist",
     "rootDir": "..",
-    "noUncheckedSideEffectImports": false,
     "types": ["vitest/globals"],
     "allowSyntheticDefaultImports": true,
     "target": "ESNext",

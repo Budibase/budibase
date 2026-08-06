@@ -7,7 +7,6 @@
     "moduleResolution": "bundler",
     "outDir": "./dist",
     "rootDir": "..",
-    "noUncheckedSideEffectImports": false,
     "skipLibCheck": true,
     "allowJs": true,
     "paths": {

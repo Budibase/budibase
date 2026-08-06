@@ -4,7 +4,6 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
     "rootDir": "..",
-    "noUncheckedSideEffectImports": false,
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "paths": {
       "@budibase/*": [
