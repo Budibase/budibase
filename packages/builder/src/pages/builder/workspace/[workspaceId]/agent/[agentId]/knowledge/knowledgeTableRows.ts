@@ -42,11 +42,13 @@ const formatFileStatus = (file: KnowledgeBaseFile) =>
 export const toFileTableRows = (
   list: KnowledgeBaseFile[],
   onDelete: (file: KnowledgeBaseFile) => Promise<void>,
-  activePendingUploads?: PendingUpload[]
+  activePendingUploads?: PendingUpload[],
+  knowledgeSearchConfigured = false
 ): FileKnowledgeTableRow[] => {
   return [
     ...(activePendingUploads || []).map(upload => ({
       kind: "file" as const,
+      knowledgeSearchConfigured,
       _id: upload.tempId,
       filename: upload.filename,
       status: KnowledgeBaseFileStatus.PROCESSING,
@@ -60,6 +62,7 @@ export const toFileTableRows = (
     })),
     ...list.map(file => ({
       kind: "file" as const,
+      knowledgeSearchConfigured,
       _id: file._id,
       filename: file.filename,
       status: file.status,
@@ -177,6 +180,7 @@ export const toSharePointConnectionRows = ({
   sharePointSourceSnapshots,
   onDelete,
   onSync,
+  knowledgeSearchConfigured = false,
 }: {
   sharePointSources: Array<{
     id: string
@@ -185,6 +189,7 @@ export const toSharePointConnectionRows = ({
   sharePointSourceSnapshots: SharePointKnowledgeSourceSnapshot[]
   onDelete: (siteId: string) => Promise<void>
   onSync: (sourceId: string) => Promise<void>
+  knowledgeSearchConfigured?: boolean
 }): SharePointConnectionTableRow[] => {
   if (sharePointSources.length === 0) {
     return []
@@ -226,6 +231,7 @@ export const toSharePointConnectionRows = ({
       const hasSynced = hasCompletedSync || hasFileData
       return {
         kind: "sharepoint_connection" as const,
+        knowledgeSearchConfigured,
         __clickable: hasSynced,
         _id: siteId,
         sourceId: source.id,
