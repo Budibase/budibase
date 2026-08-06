@@ -44,8 +44,14 @@ export interface MSTeamsAgentIntegration extends ChatAgentIntegration {
 }
 
 export interface SlackAgentIntegration extends ChatAgentIntegration {
+  appId?: string
+  clientId?: string
+  clientSecret?: string
   botToken?: string
+  botUserId?: string
   signingSecret?: string
+  teamId?: string
+  teamName?: string
   messagingEndpointUrl?: string
   // Bots Slack workspace - derived via auth.test when the token is saved
   // Need this to filter the user picker
