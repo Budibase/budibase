@@ -1432,10 +1432,7 @@
           {/snippet}
           {#snippet children(expanded)}
             {#if panelMode === "request"}
-              <RequestPanel
-                request={requestPreview}
-                info={response?.info}
-              />
+              <RequestPanel request={requestPreview} info={response?.info} />
             {:else}
               <ResponsePanel
                 {datasource}
