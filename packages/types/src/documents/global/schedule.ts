@@ -22,6 +22,7 @@ export type ScheduleMetadata = WorkspaceBackupScheduleMetadata
 
 export const isAppBackupMetadata = (
   type: ScheduleType,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   metadata: ScheduleMetadata
 ): metadata is WorkspaceBackupScheduleMetadata => {
   return type === ScheduleType.WORKSPACE_BACKUP

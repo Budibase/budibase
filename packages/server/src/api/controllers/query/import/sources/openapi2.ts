@@ -21,6 +21,7 @@ import {
 import { buildEndpointName } from "./utils/endpointName"
 
 const parameterNotRef = (
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   param: OpenAPIV2.Parameter | OpenAPIV2.ReferenceObject
 ): param is OpenAPIV2.Parameter => {
   // all refs are deferenced by parser library
@@ -39,6 +40,7 @@ const methods: string[] = Object.values(OpenAPIV2.HttpMethods)
 
 const isOperation = (
   key: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   pathItem: any
 ): pathItem is OpenAPIV2.OperationObject => {
   return methods.includes(key)

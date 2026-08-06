@@ -55,6 +55,7 @@ const methods: string[] = Object.values(OpenAPIV3.HttpMethods)
 
 const isOperation = (
   key: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   pathItem: any
 ): pathItem is OpenAPIV3.OperationObject => {
   return methods.includes(key)
