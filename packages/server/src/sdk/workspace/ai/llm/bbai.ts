@@ -107,6 +107,7 @@ const createBBAIFetch = (
 
         if (sessionId) {
           body.litellm_session_id = sessionId
+          body.litellm_trace_id = sessionId
           body.metadata = {
             ...body.metadata,
             session_id: sessionId,

@@ -13,7 +13,7 @@
   import { onMount } from "svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import { cloneDeep } from "lodash/fp"
-  import GroupAppsTableRenderer from "./_components/GroupAppsTableRenderer.svelte"
+  import GroupWorkspacesTableRenderer from "./_components/GroupWorkspacesTableRenderer.svelte"
   import UsersTableRenderer from "./_components/UsersTableRenderer.svelte"
   import GroupNameTableRenderer from "./_components/GroupNameTableRenderer.svelte"
   import { sdk } from "@budibase/shared-core"
@@ -36,7 +36,7 @@
   let customRenderers = [
     { column: "name", component: GroupNameTableRenderer },
     { column: "users", component: UsersTableRenderer },
-    { column: "roles", component: GroupAppsTableRenderer },
+    { column: "roles", component: GroupWorkspacesTableRenderer },
   ]
 
   $: readonly = !sdk.users.isAdmin($auth.user)

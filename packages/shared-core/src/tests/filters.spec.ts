@@ -1,8 +1,10 @@
-import { buildQuery, runQuery } from "../filters"
+import { buildQuery, multiSort, runQuery } from "../filters"
 import {
   BasicOperator,
   EmptyFilterOption,
   FieldType,
+  SortOrder,
+  SortType,
   UILogicalOperator,
   UISearchFilter,
 } from "@budibase/types"
@@ -185,5 +187,28 @@ describe("runQuery notOneOf", () => {
     })
     expect(oneOfResult.map(d => d.id)).toEqual([1, 2])
     expect(notOneOfResult.map(d => d.id)).toEqual([3, 4])
+  })
+})
+
+describe("multiSort", () => {
+  it("sorts by each field in priority order", () => {
+    const docs = [
+      { id: 1, date: "2026-01-02", time: 10 },
+      { id: 2, date: "2026-01-01", time: 9 },
+      { id: 3, date: "2026-01-01", time: 11 },
+    ]
+
+    const result = multiSort(docs, {
+      date: {
+        direction: SortOrder.ASCENDING,
+        type: SortType.STRING,
+      },
+      time: {
+        direction: SortOrder.DESCENDING,
+        type: SortType.NUMBER,
+      },
+    })
+
+    expect(result.map(doc => doc.id)).toEqual([3, 2, 1])
   })
 })

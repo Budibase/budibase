@@ -27,7 +27,7 @@
   export let onTop: boolean = false
   export let size: "S" | "M" | "L" = "M"
   export let disabled: boolean = false
-  export let beforeSwitch: ((_title: string) => boolean) | null = null
+  export let beforeSwitch: ((title: string) => boolean) | null = null
   export let hideTabsList: boolean = false
 
   let thisSelected: string | undefined = undefined

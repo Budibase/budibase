@@ -1,8 +1,9 @@
-<script>
+<script lang="ts">
   import { IconAvatar } from "@budibase/bbui"
+  import type { UserGroup } from "@budibase/types"
 
-  export let group
-  export let size = "M"
+  export let group: UserGroup | undefined = undefined
+  export let size: "XS" | "S" | "M" | "L" = "M"
 </script>
 
 <div class="icon-group">

@@ -31,7 +31,7 @@
   }
 
   const resolveTitle = (
-    title: string | ((_path: string | undefined) => string) | undefined,
+    title: string | ((path: string | undefined) => string) | undefined,
     path: string | undefined
   ) => {
     if (typeof title === "function") {

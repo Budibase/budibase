@@ -7,6 +7,7 @@ import {
   FieldSchema,
   FieldType,
   Row,
+  SortOrder,
   SourceName,
   Table,
   TableSourceType,
@@ -245,6 +246,34 @@ describe("Google Sheets Integration", () => {
       expect(rows.map(row => row.name)).toEqual(
         expect.arrayContaining(Array.from({ length: 248 }, (_, i) => `${i}`))
       )
+    })
+
+    it("can sort by multiple columns", async () => {
+      await config.api.row.bulkImport(table._id!, {
+        rows: [
+          { name: "A", description: "1" },
+          { name: "B", description: "1" },
+          { name: "A", description: "2" },
+        ],
+      })
+
+      const response = await config.api.row.search(table._id!, {
+        query: {},
+        sort: {
+          name: {
+            direction: SortOrder.ASCENDING,
+          },
+          description: {
+            direction: SortOrder.DESCENDING,
+          },
+        },
+      })
+
+      expect(
+        response.rows
+          .filter(row => row.name === "A" || row.name === "B")
+          .map(row => `${row.name}-${row.description}`)
+      ).toEqual(["A-2", "A-1", "B-1"])
     })
 
     it("can export rows", async () => {

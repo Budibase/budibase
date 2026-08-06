@@ -37,6 +37,7 @@ import {
   Row,
   RowExportFormat,
   SaveTableRequest,
+  SortOrder,
   StaticQuotaName,
   Table,
   TableSchema,
@@ -2740,6 +2741,39 @@ if (descriptions.length) {
           expect(row._id).toEqual(existing._id)
         })
 
+        isInternal &&
+          it("should export rows using multiple sort columns", async () => {
+            await config.api.row.save(table._id!, {
+              name: "A",
+              description: "1",
+            })
+            await config.api.row.save(table._id!, {
+              name: "B",
+              description: "1",
+            })
+            await config.api.row.save(table._id!, {
+              name: "A",
+              description: "2",
+            })
+
+            const response = await config.api.row.exportRows(table._id!, {
+              sort: {
+                name: {
+                  direction: SortOrder.ASCENDING,
+                },
+                description: {
+                  direction: SortOrder.DESCENDING,
+                },
+              },
+            })
+
+            expect(
+              JSON.parse(response).map(
+                (row: Row) => `${row.name}-${row.description}`
+              )
+            ).toEqual(["A-2", "A-1", "B-1"])
+          })
+
         it("should allow exporting only certain columns", async () => {
           const existing = await config.api.row.save(table._id!, {
             name: "foo",
@@ -4229,6 +4263,15 @@ if (descriptions.length) {
             await config.api.row.save(table._id!, mainRow)
             const { rows } = await config.api.row.search(table._id!)
             expect(rows[0].formula).toBe(1)
+          })
+
+        isInternal &&
+          it("should expose relationship primary display values to static formulas", async () => {
+            await updateFormulaColumn("{{ links.0.primaryDisplay }}", {
+              formulaType: FormulaType.STATIC,
+            })
+            const { rows } = await config.api.row.search(table._id!)
+            expect(rows[0].formula).toBe(relatedRow.name)
           })
       })
 

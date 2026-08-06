@@ -5,8 +5,8 @@ import { UserAvatar } from "@budibase/frontend-core"
 import { Target, type Route } from "@/types/routing"
 import { Pages } from "./pages"
 import { AdminState } from "@/stores/portal/admin"
-import { AppMetaState } from "@/stores/builder/app"
-import { PortalAppsStore } from "@/stores/portal/apps"
+import { AppMetaState } from "@/stores/builder/workspace"
+import { PortalWorkspacesStore } from "@/stores/portal/workspaces"
 import { StoreApp } from "@/types"
 import { aiConfigsStore } from "@/stores/portal"
 import { get } from "svelte/store"
@@ -233,7 +233,7 @@ export const orgRoutes = (
 
 export const workspaceRoutes = (
   appStore: AppMetaState,
-  appsStore: PortalAppsStore,
+  workspacesStore: PortalWorkspacesStore,
   user: GetGlobalSelfResponse
 ): Route[] => {
   if (!appStore?.appId) {
@@ -245,7 +245,10 @@ export const workspaceRoutes = (
     return target?.backupErrors || {}
   }
 
-  const backupErrors = getBackupErrors(appsStore.apps || [], appStore?.appId)
+  const backupErrors = getBackupErrors(
+    workspacesStore.apps || [],
+    appStore?.appId
+  )
   const backupErrorCount = Object.keys(backupErrors).length
 
   return [
