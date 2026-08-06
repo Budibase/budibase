@@ -98,6 +98,17 @@ describe("knowledgeTableRows", () => {
     expect(onDelete).toHaveBeenCalledTimes(1)
   })
 
+  it("marks file actions unavailable when knowledge search is unavailable", () => {
+    const rows = toFileTableRows(
+      [makeFile({ filename: "notes.md" })],
+      async () => {},
+      undefined,
+      false
+    )
+
+    expect(rows[0].knowledgeSearchConfigured).toBe(false)
+  })
+
   it("filters and counts sharepoint files by site", () => {
     const files = [
       makeFile({

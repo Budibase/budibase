@@ -11,6 +11,10 @@
   } from "@budibase/types"
   import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
   import {
+    getReadableQueryToolBinding,
+    isQueryToolType,
+  } from "@budibase/shared-core"
+  import {
     datasources,
     restTemplates,
     workspaceDeploymentStore,
@@ -20,6 +24,7 @@
   import { bb } from "@/stores/bb"
   import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
   import type { AgentTool } from "./toolTypes"
+  import { getToolBindingCategory } from "./toolBindingUtils"
   import {
     EditorModes,
     hbAutocomplete,
@@ -99,17 +104,23 @@
 
   function enrichToolMetadata(tool: ToolMetadata): AgentTool {
     const { sourceType, sourceLabel } = tool
-    const prefix = getBindingPrefix(sourceType, sourceLabel)
     const { icon, tagIconUrl } = resolveAgentToolIcons(tool, {
       sourceType,
       sourceLabel,
     })
     const displayName = tool.readableName || tool.name
+    const readableBinding = isQueryToolType(sourceType)
+      ? getReadableQueryToolBinding({
+          sourceType,
+          sourceLabel,
+          queryName: displayName,
+        })
+      : `${getBindingPrefix(sourceType, sourceLabel)}.${displayName}`
     return {
       ...tool,
       sourceLabel,
       sourceType,
-      readableBinding: `${prefix}.${displayName}`,
+      readableBinding,
       runtimeBinding: tool.name,
       icon,
       tagIconUrl,
@@ -166,7 +177,7 @@
       .map(tool => ({
         runtimeBinding: tool.runtimeBinding,
         readableBinding: tool.readableBinding,
-        category: getSectionName(tool.sourceType, tool.sourceLabel),
+        category: getToolBindingCategory(tool.sourceType, tool.sourceLabel),
         display: {
           name:
             tool.sourceType === ToolType.SEARCH
@@ -332,10 +343,8 @@
     return {}
   }
 
-  function sanitizeString(str: string, lowercase = false) {
-    const base = lowercase ? str.toLowerCase() : str
-    const pattern = lowercase ? /[^a-z0-9]+/g : /[^a-zA-Z0-9]+/g
-    return base.replace(pattern, "_").replace(/^_|_$/g, "")
+  function sanitizeString(str: string) {
+    return str.replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_|_$/g, "")
   }
   function getBindingPrefix(
     sourceType: ToolType | undefined,
@@ -353,44 +362,10 @@
     if (sourceType === ToolType.SEARCH) {
       return "search"
     }
-    if (sourceType === ToolType.REST_QUERY && sourceLabel) {
-      return `api.${sanitizeString(sourceLabel, true)}`
-    }
-    if (sourceType === ToolType.DATASOURCE_QUERY) {
-      return sourceLabel ? sanitizeString(sourceLabel, true) : "datasource"
-    }
     if (sourceType === ToolType.ESCALATION) {
       return "escalation"
     }
     return "tool"
-  }
-
-  function getSectionName(
-    sourceType: ToolType | undefined,
-    sourceLabel?: string
-  ): string {
-    if (sourceType === ToolType.INTERNAL_TABLE) {
-      return "Budibase"
-    }
-    if (sourceType === ToolType.AUTOMATION) {
-      return "Automations"
-    }
-    if (sourceType === ToolType.EXTERNAL_TABLE) {
-      return sourceLabel || "External"
-    }
-    if (sourceType === ToolType.SEARCH) {
-      return "Knowledge sources"
-    }
-    if (sourceType === ToolType.REST_QUERY) {
-      return "API tools"
-    }
-    if (sourceType === ToolType.DATASOURCE_QUERY) {
-      return sourceLabel || "Datasource tools"
-    }
-    if (sourceType === ToolType.ESCALATION) {
-      return "Escalation"
-    }
-    return "Tools"
   }
 
   // list_tables -> List tables

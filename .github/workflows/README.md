@@ -19,6 +19,17 @@ The standard CI Build job is what runs when you raise a PR to master.
 - Run the integration tests
 - Check that the pro and account portal submodules are pointing to the lastest master head
 
+### External PR Ticket Check (external-pr-ticket.yml)
+
+Pull requests whose branches come from outside this repository must reference an
+existing issue in this repository that is open, assigned to the pull request
+author, and does not have a `needs-triage`, `wontfix`, `out-of-scope`, or
+`closed-stale` label. The issue may be linked with its full GitHub URL or a `#123`
+reference. At most ten distinct issue references are checked per pull request.
+Pull requests without a valid assigned issue are tagged with the persistent
+`closed: missing-ticket` label, commented on, and closed. They can be reopened
+after a valid assigned issue is added.
+
 ### Release Job (tag-release.yml)
 
 Triggers:
