@@ -22,6 +22,7 @@
   export let componentDefinition
   export let iconTooltip
   export let componentTitle
+  /** @type {((value: unknown) => void | Promise<void>) | null} */
   export let onSave = null
 
   let tempValue

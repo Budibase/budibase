@@ -1,5 +1,6 @@
 import { Document, Plugin, Snippet, Theme, User } from ".."
 import { SocketSession } from "../../sdk"
+import type { ComponentCondition } from "./component"
 
 export type WorkspaceMetadataErrors = { [key: string]: string[] }
 export type WorkspaceMetadataAutomationStops = { [key: string]: string[] }
@@ -105,6 +106,8 @@ export interface AppNavigationLink {
   type: "link" | "sublinks"
   subLinks?: AppNavigationLink[]
   icon?: string
+  _conditions?: ComponentCondition[]
+  _styles?: { custom?: string }
 }
 
 export enum AppFontFamily {

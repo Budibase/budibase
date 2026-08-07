@@ -3,6 +3,7 @@ import { API } from "@/api"
 import { appStore, workspaceAppStore } from "@/stores/builder"
 import { DerivedBudiStore } from "../BudiStore"
 import { AppNavigation, AppNavigationLink, UIObject } from "@budibase/types"
+import { NavigationUtils } from "@budibase/frontend-core"
 import { notifications } from "@budibase/bbui"
 
 export interface DerivedAppNavigationStore extends AppNavigation {}
@@ -105,17 +106,9 @@ export class NavigationStore extends DerivedBudiStore<
     }
     urls = Array.isArray(urls) ? urls : [urls]
 
-    // Filter out top level links pointing to these URLs
-    links = links.filter(link => !urls.includes(link.url))
-
-    // Filter out nested links pointing to these URLs
-    links.forEach(link => {
-      if (link.type === "sublinks" && link.subLinks?.length) {
-        link.subLinks = link.subLinks.filter(
-          subLink => !urls.includes(subLink.url)
-        )
-      }
-    })
+    // Remove links pointing to these URLs at every depth; groups keep their
+    // children and only lose a matching header URL
+    links = NavigationUtils.pruneNavLinksByUrl(links, urls)
 
     await this.save({
       ...navigation,

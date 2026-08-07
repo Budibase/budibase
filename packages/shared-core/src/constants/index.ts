@@ -200,3 +200,7 @@ export enum BpmStatusValue {
 }
 
 export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
+
+// Maximum supported navigation nesting depth (0-based levels: 0, 1, 2). Shared
+// so the builder, the client renderer and the server all agree on the cap.
+export const MAX_NAV_DEPTH = 3

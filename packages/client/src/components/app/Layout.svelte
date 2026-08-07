@@ -2,7 +2,7 @@
   import { getContext, setContext } from "svelte"
   import { writable } from "svelte/store"
   import { Heading, Icon, Button, clickOutside } from "@budibase/bbui"
-  import { Constants } from "@budibase/frontend-core"
+  import { Constants, NavigationUtils } from "@budibase/frontend-core"
   import NavItem from "./NavItem.svelte"
   import UserMenu from "./UserMenu.svelte"
   import Logo from "./Logo.svelte"
@@ -201,37 +201,13 @@
     }
     const accessibleRoutes = new Set(routeEntries.map(route => route.path))
 
-    return navItems
-      .filter(navItem => {
-        // Strip nav items without text
-        if (!navItem.text) {
-          return false
-        }
-
-        // Strip out links without URLs
-        if (navItem.type !== "sublinks" && !navItem.url) {
-          return false
-        }
-
-        // Filter to only links allowed by the current role
-        const role = navItem.roleId || Constants.Roles.BASIC
-        return userRoleHierarchy?.find(roleId => roleId === role)
-      })
-      .map(navItem => {
-        const enrichedNavItem = enrichNavItem(navItem)
-        if (navItem.type === "sublinks" && navItem.subLinks?.length) {
-          enrichedNavItem.subLinks = navItem.subLinks
-            .filter(
-              subLink =>
-                subLink.text && canAccessSubLink(subLink, accessibleRoutes)
-            )
-            .map(enrichNavItem)
-        }
-        return enrichedNavItem
-      })
-      .filter(
-        navItem => navItem.type !== "sublinks" || navItem.subLinks?.length > 0
-      )
+    return NavigationUtils.filterNavTree(navItems, {
+      userRoleHierarchy,
+      defaultRole: Constants.Roles.BASIC,
+      canAccessLink: node => canAccessSubLink(node, accessibleRoutes),
+      evaluateConditions: node => evaluateNavItemConditions(node._conditions),
+      enrich: enrichNavItem,
+    })
   }
 
   function evaluateNavItemConditions(conditions = []) {
@@ -486,23 +462,17 @@
 
               <div class="links" class:visible={mobileOpen}>
                 {#if enrichedNavItems.length}
-                  {#each enrichedNavItems as navItem}
-                    {#if evaluateNavItemConditions(navItem._conditions)}
-                      <NavItem
-                        type={navItem.type}
-                        text={navItem.text}
-                        url={navItem.url}
-                        subLinks={navItem.subLinks}
-                        icon={navItem.icon}
-                        internalLink={navItem.internalLink}
-                        customStyles={navItem._styles?.custom}
-                        on:clickLink={handleClickLink}
-                        leftNav={navigation === "Left"}
-                        {mobile}
-                        {navStateStore}
-                        collapsed={navCollapsed}
-                      />
-                    {/if}
+                  {#each enrichedNavItems as navItem, i}
+                    <NavItem
+                      {navItem}
+                      depth={0}
+                      navKey={navItem.id || `nav-${i}`}
+                      on:clickLink={handleClickLink}
+                      leftNav={navigation === "Left"}
+                      {mobile}
+                      {navStateStore}
+                      collapsed={navCollapsed}
+                    />
                   {/each}
                 {/if}
               </div>
