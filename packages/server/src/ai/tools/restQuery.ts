@@ -78,7 +78,7 @@ const createQueryTool = ({
     authorization: {
       supportedPrincipals: [
         ToolExecutionPrincipal.REQUESTER,
-        ToolExecutionPrincipal.AGENT,
+        ToolExecutionPrincipal.ADMIN,
       ],
       permissionType: PermissionType.QUERY,
       permissionLevel: PermissionLevel.EXECUTE,

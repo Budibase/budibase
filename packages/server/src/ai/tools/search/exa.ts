@@ -25,7 +25,7 @@ export const createExaTool = (apiKey: string): BudibaseToolDefinition => ({
   authorization: {
     supportedPrincipals: [
       ToolExecutionPrincipal.REQUESTER,
-      ToolExecutionPrincipal.AGENT,
+      ToolExecutionPrincipal.ADMIN,
     ],
     permissionType: PermissionType.WORKSPACE,
     permissionLevel: PermissionLevel.READ,

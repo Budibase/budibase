@@ -33,13 +33,11 @@ export interface AiToolDefinition {
 export interface ToolAuthorizationRuntime {
   executionContext: AgentExecutionContext
   principal: ToolExecutionPrincipal
-  agentServiceUserId?: string
   authorize: (params: {
     authorization: ToolAuthorization
     input: unknown
     executionContext: AgentExecutionContext
     principal: ToolExecutionPrincipal
-    agentServiceUserId?: string
   }) => Promise<void>
 }
 
@@ -91,7 +89,6 @@ const wrapTool = (
         input: preparedInput,
         executionContext: runtime.executionContext,
         principal: runtime.principal,
-        agentServiceUserId: runtime.agentServiceUserId,
       })
     }
     try {

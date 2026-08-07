@@ -1,10 +1,6 @@
 import { HTTPError } from "@budibase/backend-core"
-import {
-  ToolExecutionPrincipal,
-  type Agent,
-  type AgentOperation,
-} from "@budibase/types"
-import { createAgentServiceUser, getOrThrow, update } from "./crud"
+import type { Agent, AgentOperation } from "@budibase/types"
+import { getOrThrow, update } from "./crud"
 
 export type AgentOperationConfig = Pick<
   AgentOperation,
@@ -73,23 +69,12 @@ export async function createOperation(
   agentId: string,
   operation: CreateAgentOperationInput
 ): Promise<Agent> {
-  let existing = await getOrThrow(agentId)
+  const existing = await getOrThrow(agentId)
   if (existing.operations?.some(candidate => candidate.id === operation.id)) {
     throw new HTTPError("Operation already exists", 400)
   }
   assertUniqueOperationName(existing, operation.name)
   const normalizedTools = operation.enabledTools || []
-  if (
-    normalizedTools.some(
-      tool => tool.executionPrincipal === ToolExecutionPrincipal.AGENT
-    ) &&
-    !existing.serviceUserId
-  ) {
-    existing = {
-      ...existing,
-      serviceUserId: await createAgentServiceUser(existing.name),
-    }
-  }
 
   return update({
     ...existing,
@@ -108,23 +93,11 @@ export async function updateOperation(
   operationId: string,
   updateRequest: Partial<AgentOperationConfig>
 ): Promise<Agent> {
-  let existing = await getOrThrow(agentId)
+  const existing = await getOrThrow(agentId)
   getOperationOrThrow(existing, operationId)
   assertUniqueOperationName(existing, updateRequest.name, operationId)
 
   const normalizedUpdate = updateRequest
-
-  if (
-    normalizedUpdate.enabledTools?.some(
-      tool => tool.executionPrincipal === ToolExecutionPrincipal.AGENT
-    ) &&
-    !existing.serviceUserId
-  ) {
-    existing = {
-      ...existing,
-      serviceUserId: await createAgentServiceUser(existing.name),
-    }
-  }
 
   return update({
     ...existing,

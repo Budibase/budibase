@@ -202,12 +202,7 @@ export type DuplicateAgentResponse = Agent
 
 export type UpdateAgentRequest = Omit<
   Agent,
-  | "createdAt"
-  | "updatedAt"
-  | "_deleted"
-  | "createdBy"
-  | "operations"
-  | "serviceUserId"
+  "createdAt" | "updatedAt" | "_deleted" | "createdBy" | "operations"
 >
 export type UpdateAgentResponse = Omit<
   Agent,

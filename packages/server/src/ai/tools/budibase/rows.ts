@@ -405,7 +405,7 @@ export const createRowTools = ({
       authorization: {
         supportedPrincipals: [
           ToolExecutionPrincipal.REQUESTER,
-          ToolExecutionPrincipal.AGENT,
+          ToolExecutionPrincipal.ADMIN,
         ],
         permissionType: PermissionType.TABLE,
         permissionLevel:

@@ -71,7 +71,7 @@ const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
     .items(
       Joi.object({
         toolName: Joi.string().required(),
-        executionPrincipal: Joi.string().valid("requester", "agent").required(),
+        executionPrincipal: Joi.string().valid("requester", "admin").required(),
       })
     )
     .optional(),

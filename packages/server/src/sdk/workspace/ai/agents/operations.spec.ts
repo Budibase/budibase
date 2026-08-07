@@ -14,7 +14,7 @@ describe("normalizePersistedOperationTools", () => {
   it("preserves explicit delegated authority", () => {
     const config = {
       toolName: "approve_holiday",
-      executionPrincipal: ToolExecutionPrincipal.AGENT,
+      executionPrincipal: ToolExecutionPrincipal.ADMIN,
     }
     expect(normalizePersistedOperationTools([config])).toEqual([config])
   })

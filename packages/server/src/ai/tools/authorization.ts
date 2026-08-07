@@ -14,13 +14,11 @@ export const authorizeAgentToolCall = async ({
   input,
   executionContext,
   principal,
-  agentServiceUserId,
 }: {
   authorization: ToolAuthorization
   input: unknown
   executionContext: AgentExecutionContext
   principal: ToolExecutionPrincipal
-  agentServiceUserId?: string
 }) => {
   const audit = (decision: "allowed" | "denied", resourceId?: string) =>
     console.log("Agent tool authorization", {
@@ -46,24 +44,20 @@ export const authorizeAgentToolCall = async ({
       throw new Error(DENIED_MESSAGE)
     }
 
-    // Always rehydrate the requester, including agent-authority calls. This
+    // Always rehydrate the requester, including admin-authority calls. This
     // makes removal of the initiating user revoke delayed work.
-    await getFullUser(executionContext.requestingUserId)
-    const principalUserId =
-      principal === ToolExecutionPrincipal.REQUESTER
-        ? executionContext.requestingUserId
-        : agentServiceUserId
-    if (!principalUserId) {
-      throw new Error(DENIED_MESSAGE)
+    const requestingUser = await getFullUser(executionContext.requestingUserId)
+    if (principal === ToolExecutionPrincipal.ADMIN) {
+      audit("allowed", resourceId)
+      return
     }
-    const effectiveUser = await getFullUser(principalUserId)
-    if (users.isBuilder(effectiveUser, executionContext.workspaceId)) {
+    if (users.isBuilder(requestingUser, executionContext.workspaceId)) {
       audit("allowed", resourceId)
       return
     }
 
     const userRoles = await roles.getUserRoleHierarchy(
-      effectiveUser.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
+      requestingUser.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
     )
     if (resourceId) {
       const resourcePermissions =

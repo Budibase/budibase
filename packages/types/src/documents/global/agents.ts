@@ -136,7 +136,7 @@ export interface AgentEscalationConfig {
 
 export enum ToolExecutionPrincipal {
   REQUESTER = "requester",
-  AGENT = "agent",
+  ADMIN = "admin",
 }
 
 export interface AgentOperationToolConfig {
@@ -177,7 +177,6 @@ export interface Agent extends Document {
   icon?: string
   iconColor?: string
   createdBy?: string
-  serviceUserId?: string
   discordIntegration?: DiscordAgentIntegration
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration

@@ -165,7 +165,7 @@ const createAutomationTools = (
         authorization: {
           supportedPrincipals: [
             ToolExecutionPrincipal.REQUESTER,
-            ToolExecutionPrincipal.AGENT,
+            ToolExecutionPrincipal.ADMIN,
           ],
           permissionType: PermissionType.AUTOMATION,
           permissionLevel: PermissionLevel.EXECUTE,

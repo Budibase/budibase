@@ -258,7 +258,6 @@ export async function buildPromptAndTools(
       const runtime = {
         executionContext,
         principal,
-        agentServiceUserId: agent.serviceUserId,
         authorize: authorizeAgentToolCall,
       }
       try {
@@ -267,7 +266,6 @@ export async function buildPromptAndTools(
           input: undefined,
           executionContext,
           principal,
-          agentServiceUserId: agent.serviceUserId,
         })
         runtimes.set(tool.name, runtime)
       } catch {

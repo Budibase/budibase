@@ -380,17 +380,18 @@
                           Requesting user
                         </option>
                         <option
-                          value={ToolExecutionPrincipal.AGENT}
+                          value={ToolExecutionPrincipal.ADMIN}
                           disabled={!tool.authorization?.supportedPrincipals.includes(
-                            ToolExecutionPrincipal.AGENT
+                            ToolExecutionPrincipal.ADMIN
                           )}
                         >
-                          Agent identity (elevated)
+                          Budibase admin (elevated)
                         </option>
                       </select>
-                      {#if getToolPrincipal(tool.runtimeBinding) === ToolExecutionPrincipal.AGENT}
+                      {#if getToolPrincipal(tool.runtimeBinding) === ToolExecutionPrincipal.ADMIN}
                         <span class="delegation-warning">
-                          Uses agent {tool.authorization?.permissionLevel}
+                          Uses Budibase admin {tool.authorization
+                            ?.permissionLevel}
                           {tool.authorization?.permissionType} permission
                         </span>
                       {/if}
