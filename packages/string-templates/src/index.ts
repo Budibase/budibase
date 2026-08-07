@@ -456,23 +456,31 @@ export function processJsonStringSync(
     if (!documents) {
       return processStringSync(template, context, opts)
     }
-    // Recurse through the single-document path for each object so bindings are
-    // substituted into the parsed tree, not into the raw JSON text.
-    return documents
-      .map(document => {
-        const preparedDocument = quoteRawJsonBindings(document)
-        const parsed = JSON.parse(
-          preparedDocument.template
-        ) as JsonTemplateValue
-        return processJsonTemplateValue(
-          parsed,
-          preparedDocument.bindings,
-          context,
-          opts
-        )
-      })
-      .map(value => JSON.stringify(value))
-      .join(" ")
+    // Fail closed: each object must be strict JSON so bindings are applied to
+    // the parsed tree. Do not fall back to raw string substitution here — that
+    // reopens quote-breaking operator injection for multi-object templates.
+    try {
+      return documents
+        .map(document => {
+          const preparedDocument = quoteRawJsonBindings(document)
+          const parsed = JSON.parse(
+            preparedDocument.template
+          ) as JsonTemplateValue
+          return processJsonTemplateValue(
+            parsed,
+            preparedDocument.bindings,
+            context,
+            opts
+          )
+        })
+        .map(value => JSON.stringify(value))
+        .join(" ")
+    } catch (err) {
+      throw new Error(
+        "Multi-object JSON templates must be valid JSON objects",
+        { cause: err }
+      )
+    }
   }
 }
 

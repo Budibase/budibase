@@ -186,6 +186,16 @@ describe("Test that JSON string processing works correctly", () => {
       name: injectedName,
     })
   })
+
+  it("fails closed when a multi-object template is not strict JSON", () => {
+    expect(() =>
+      processJsonStringSync(
+        '{"name":"{{ name }}"} {"$set":{"touched":true},}',
+        { name: "one" },
+        options
+      )
+    ).toThrow("Multi-object JSON templates must be valid JSON objects")
+  })
 })
 
 describe("check arrays", () => {
