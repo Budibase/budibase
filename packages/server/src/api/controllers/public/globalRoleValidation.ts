@@ -39,6 +39,32 @@ export const validateBuilderAppUpdate = ({
   }
 }
 
+export const validateRolesUpdate = ({
+  ctx,
+  requestedRoles,
+  currentRoles,
+}: {
+  ctx: UserCtx
+  requestedRoles?: User["roles"]
+  currentRoles?: User["roles"]
+}) => {
+  const existingRoles = currentRoles || {}
+  const nextRoles = requestedRoles || {}
+
+  for (const [workspaceId, roleId] of Object.entries(nextRoles)) {
+    if (existingRoles[workspaceId] === roleId) {
+      continue
+    }
+    validateAppRoleUpdate(ctx, workspaceId)
+  }
+
+  for (const workspaceId of Object.keys(existingRoles)) {
+    if (!(workspaceId in nextRoles)) {
+      validateAppRoleUpdate(ctx, workspaceId)
+    }
+  }
+}
+
 export const validateGlobalRoleUpdate = (
   ctx: UserCtx,
   roleUpdate: GlobalRoleUpdate

@@ -35,7 +35,7 @@ type TestContext = {
     body: {
       _id: string
       email: string
-      roles: {}
+      roles: User["roles"]
       builder: {
         apps: unknown
       }
@@ -48,10 +48,12 @@ const createCtx = ({
   caller,
   target,
   builderApps,
+  roles = {},
 }: {
   caller: TestUser
   target: TestTarget
-  builderApps: unknown
+  builderApps?: unknown
+  roles?: User["roles"]
 }): UserCtx =>
   ({
     user: caller,
@@ -62,7 +64,7 @@ const createCtx = ({
       body: {
         _id: target._id,
         email: target.email,
-        roles: {},
+        roles,
         builder: {
           apps: builderApps,
         },
@@ -87,11 +89,11 @@ describe("public users controller", () => {
     email: "target@example.com",
   }
 
-  const setExistingTargetUser = () => {
+  const setExistingTargetUser = (roles: User["roles"] = {}) => {
     const user: User = {
       ...targetUser,
       tenantId: "tenant",
-      roles: {},
+      roles,
       builder: { apps: [] },
     }
     readUser.mockResolvedValue(user)
@@ -245,5 +247,156 @@ describe("public users controller", () => {
     })
 
     expect(saveUser).not.toHaveBeenCalled()
+  })
+
+  it("allows a workspace creator to set roles for their workspace", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: "user_creator",
+        email: "creator@example.com",
+        tenantId: "tenant",
+        builder: {
+          apps: ["app_allowed"],
+        },
+      },
+      target: targetUser,
+      roles: { app_allowed: "ADMIN" },
+    })
+    setExistingTargetUser()
+    saveTargetUser()
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await controller.update(ctx, next)
+
+    expect(saveUser).toHaveBeenCalledTimes(1)
+    expect(next).toHaveBeenCalled()
+  })
+
+  it("allows a workspace creator to create a user with roles for their workspace", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: "user_creator",
+        email: "creator@example.com",
+        tenantId: "tenant",
+        builder: {
+          apps: ["app_allowed"],
+        },
+      },
+      target: targetUser,
+      roles: { app_allowed: "BASIC" },
+    })
+    saveTargetUser()
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await controller.create(ctx, next)
+
+    expect(saveUser).toHaveBeenCalledTimes(1)
+    expect(next).toHaveBeenCalled()
+  })
+
+  it("rejects a workspace creator setting roles for a different workspace", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: "user_creator",
+        email: "creator@example.com",
+        tenantId: "tenant",
+        builder: {
+          apps: ["app_allowed"],
+        },
+      },
+      target: targetUser,
+      roles: { app_other: "ADMIN" },
+    })
+    setExistingTargetUser()
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await expect(controller.update(ctx, next)).rejects.toMatchObject({
+      status: 403,
+    })
+
+    expect(saveUser).not.toHaveBeenCalled()
+  })
+
+  it("rejects a workspace creator creating a user with roles for a different workspace", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: "user_creator",
+        email: "creator@example.com",
+        tenantId: "tenant",
+        builder: {
+          apps: ["app_allowed"],
+        },
+      },
+      target: targetUser,
+      roles: { app_other: "ADMIN" },
+    })
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await expect(controller.create(ctx, next)).rejects.toMatchObject({
+      status: 403,
+    })
+
+    expect(saveUser).not.toHaveBeenCalled()
+  })
+
+  it("rejects a workspace creator removing roles for a different workspace", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: "user_creator",
+        email: "creator@example.com",
+        tenantId: "tenant",
+        builder: {
+          apps: ["app_allowed"],
+        },
+      },
+      target: targetUser,
+      roles: {},
+    })
+    setExistingTargetUser({ app_other: "ADMIN" })
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await expect(controller.update(ctx, next)).rejects.toMatchObject({
+      status: 403,
+    })
+
+    expect(saveUser).not.toHaveBeenCalled()
+  })
+
+  it("allows unchanged roles for workspaces the caller does not build", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: "user_creator",
+        email: "creator@example.com",
+        tenantId: "tenant",
+        builder: {
+          apps: ["app_allowed"],
+        },
+      },
+      target: targetUser,
+      roles: {
+        app_other: "BASIC",
+        app_allowed: "ADMIN",
+      },
+    })
+    setExistingTargetUser({ app_other: "BASIC" })
+    saveTargetUser()
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await controller.update(ctx, next)
+
+    expect(saveUser).toHaveBeenCalledTimes(1)
+    expect(next).toHaveBeenCalled()
   })
 })

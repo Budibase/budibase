@@ -14,6 +14,7 @@ import { isEqual, cloneDeep } from "lodash"
 import {
   validateBuilderAppUpdate,
   validateGlobalRoleUpdate,
+  validateRolesUpdate,
 } from "./globalRoleValidation"
 
 function rolesRemoved(base: User, ctx: UserCtx) {
@@ -39,6 +40,11 @@ async function createUpdateResponse(ctx: UserCtx, user?: User) {
     ctx,
     requestedApps,
     currentBuilder: user?.builder,
+  })
+  validateRolesUpdate({
+    ctx,
+    requestedRoles: ctx.request.body.roles,
+    currentRoles: user?.roles,
   })
   // check the ctx before any updates to it
   const removed = rolesRemoved(base, ctx)
