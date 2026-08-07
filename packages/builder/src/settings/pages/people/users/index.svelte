@@ -75,7 +75,11 @@
     workspaceRoleGroupRole?: string
   }
 
-  export let workspaceOnly: boolean
+  export interface Props {
+    workspaceOnly: boolean
+  }
+
+  let { workspaceOnly }: Props = $props()
 
   const isWorkspaceOnly = workspaceOnly === true
 
@@ -99,106 +103,24 @@
     },
   })
 
-  let groupsLoaded = !$licensing.groupsEnabled || $groups?.length
-  let enrichedUsers: EnrichedUser[] = []
-  let tenantOwner: AccountMetadata | null
-  let createUserModal: Modal,
-    inviteConfirmationModal: Modal,
-    passwordModal: Modal,
-    importUsersModal: Modal,
-    userLimitReachedModal: Modal,
-    editWorkspaceUserModal: Modal
-  let searchEmail: string | undefined = undefined
-  let selectedRows: User[] = []
-  let selectedWorkspaceUser: User | null = null
-  let bulkSaveResponse: BulkUserCreated
-  let addedToWorkspaceEmails: string[] = []
-
-  let currentWorkspaceId = ""
-  let workspaceReady = false
-  let isWorkspaceQueryReady = false
-  let tableLoading = false
-
-  $: currentWorkspaceId = $appStore.appId
-    ? sdk.workspaces.getProdWorkspaceID($appStore.appId)
-    : ""
-  $: workspaceReady = !isWorkspaceOnly || !!currentWorkspaceId
-  $: isWorkspaceQueryReady =
-    !isWorkspaceOnly ||
-    ($fetch.query as { workspaceId?: string })?.workspaceId ===
-      currentWorkspaceId
-  $: tableLoading =
-    !workspaceReady || !isWorkspaceQueryReady || !$fetch.loaded || !groupsLoaded
-
-  $: customRenderers = [
-    { column: "email", component: EmailTableRenderer },
-    { column: "role", component: RoleTableRenderer },
-    !isWorkspaceOnly &&
-      $licensing.groupsEnabled && {
-        column: "userGroups",
-        component: GroupsTableRenderer,
-      },
-    !isWorkspaceOnly && {
-      column: "workspaces",
-      component: WorkspacesTableRenderer,
-    },
-    isWorkspaceOnly && { column: "createdAt", component: DateAddedRenderer },
-  ].filter(Boolean)
-  let userData: UserData = { users: [], groups: [] }
-
-  $: isOwner = $auth.accountPortalAccess && $admin.cloud
-  $: readonly = !sdk.users.isAdmin($auth.user)
-  $: debouncedUpdateFetch(searchEmail, currentWorkspaceId)
-  $: schema = {
-    email: {
-      displayName: "Email",
-      sortable: false,
-      width: "minmax(200px, max-content)",
-      minWidth: "200px",
-    },
-    role: {
-      displayName: "Access",
-      sortable: false,
-      width: "1fr",
-    },
-    ...(!isWorkspaceOnly &&
-      $licensing.groupsEnabled && {
-        userGroups: { sortable: false, displayName: "Groups", width: "1fr" },
-      }),
-    ...(isWorkspaceOnly
-      ? {
-          createdAt: {
-            displayName: "Date added",
-            sortable: false,
-            width: "1fr",
-            minWidth: "160px",
-          },
-        }
-      : {
-          workspaces: {
-            sortable: false,
-            width: "1fr",
-            preventSelectRow: false,
-          },
-        }),
-  }
-  let inviteUsersResponse: InviteUsersResponse = {
+  let groupsLoaded = $state(!$licensing.groupsEnabled || !!$groups?.length)
+  let tenantOwner = $state<AccountMetadata | null>(null)
+  let createUserModal = $state<Modal>()
+  let inviteConfirmationModal = $state<Modal>()
+  let passwordModal = $state<Modal>()
+  let importUsersModal = $state<Modal>()
+  let userLimitReachedModal = $state<Modal>()
+  let editWorkspaceUserModal = $state<Modal>()
+  let searchEmail = $state<string | undefined>()
+  let selectedRows = $state<User[]>([])
+  let selectedWorkspaceUser = $state<User | null>(null)
+  let bulkSaveResponse = $state<BulkUserCreated>()
+  let addedToWorkspaceEmails = $state<string[]>([])
+  let userData = $state<UserData>({ users: [], groups: [] })
+  let inviteUsersResponse = $state<InviteUsersResponse>({
     successful: [],
     unsuccessful: [],
-  }
-  $: enrichedUsers = buildEnrichedUsers(
-    $fetch.rows as User[],
-    tenantOwner,
-    $groups
-  )
-  $: shouldOpenWorkspaceInviteModal =
-    isWorkspaceOnly &&
-    $bb.settings.route?.entry?.path === "/people/workspace" &&
-    $bb.settings.route?.hash === "#invite"
-  $: if (shouldOpenWorkspaceInviteModal && createUserModal) {
-    createUserModal.show()
-    bb.settings("/people/workspace")
-  }
+  })
 
   const buildEnrichedUsers = (
     rows: User[],
@@ -359,7 +281,7 @@
     try {
       inviteUsersResponse = await users.invite(payload)
       await refreshUserList()
-      inviteConfirmationModal.show()
+      inviteConfirmationModal?.show()
     } catch (error) {
       if (assignedExistingUsers) {
         await refreshUserList()
@@ -501,7 +423,7 @@
       }
       notifications.success("Successfully created user")
       await groups.init()
-      passwordModal.show()
+      passwordModal?.show()
       await refreshUserList()
     } catch (error) {
       if (addedToWorkspaceEmails.length > 0) {
@@ -607,7 +529,7 @@
         ...detail,
         userGroups: detail.userGroups.map(g => g._id!),
       }
-      editWorkspaceUserModal.show()
+      editWorkspaceUserModal?.show()
       return
     }
     bb.settings(`/people/users/${detail._id}`)
@@ -616,6 +538,89 @@
   const onWorkspaceUserSaved = async () => {
     await refreshUserList()
   }
+
+  const currentWorkspaceId = $derived(
+    $appStore.appId ? sdk.workspaces.getProdWorkspaceID($appStore.appId) : ""
+  )
+  const workspaceReady = $derived(!isWorkspaceOnly || !!currentWorkspaceId)
+  const isWorkspaceQueryReady = $derived(
+    !isWorkspaceOnly ||
+      ($fetch.query as { workspaceId?: string })?.workspaceId ===
+        currentWorkspaceId
+  )
+  const tableLoading = $derived(
+    !workspaceReady || !isWorkspaceQueryReady || !$fetch.loaded || !groupsLoaded
+  )
+  const customRenderers = $derived(
+    [
+      { column: "email", component: EmailTableRenderer },
+      { column: "role", component: RoleTableRenderer },
+      !isWorkspaceOnly &&
+        $licensing.groupsEnabled && {
+          column: "userGroups",
+          component: GroupsTableRenderer,
+        },
+      !isWorkspaceOnly && {
+        column: "workspaces",
+        component: WorkspacesTableRenderer,
+      },
+      isWorkspaceOnly && { column: "createdAt", component: DateAddedRenderer },
+    ].filter(Boolean)
+  )
+  const isOwner = $derived($auth.accountPortalAccess && $admin.cloud)
+  const readonly = $derived(!sdk.users.isAdmin($auth.user))
+  const schema = $derived({
+    email: {
+      displayName: "Email",
+      sortable: false,
+      width: "minmax(200px, max-content)",
+      minWidth: "200px",
+    },
+    role: {
+      displayName: "Access",
+      sortable: false,
+      width: "1fr",
+    },
+    ...(!isWorkspaceOnly &&
+      $licensing.groupsEnabled && {
+        userGroups: { sortable: false, displayName: "Groups", width: "1fr" },
+      }),
+    ...(isWorkspaceOnly
+      ? {
+          createdAt: {
+            displayName: "Date added",
+            sortable: false,
+            width: "1fr",
+            minWidth: "160px",
+          },
+        }
+      : {
+          workspaces: {
+            sortable: false,
+            width: "1fr",
+            preventSelectRow: false,
+          },
+        }),
+  })
+  const enrichedUsers = $derived(
+    buildEnrichedUsers($fetch.rows as User[], tenantOwner, $groups)
+  )
+  const shouldOpenWorkspaceInviteModal = $derived(
+    isWorkspaceOnly &&
+      $bb.settings.route?.entry?.path === "/people/workspace" &&
+      $bb.settings.route?.hash === "#invite"
+  )
+
+  $effect(() => {
+    debouncedUpdateFetch(searchEmail, currentWorkspaceId)
+  })
+
+  $effect(() => {
+    if (shouldOpenWorkspaceInviteModal && createUserModal) {
+      createUserModal.show()
+      bb.settings("/people/workspace")
+    }
+  })
 
   onMount(async () => {
     roles.fetch().catch(() => {
@@ -680,9 +685,10 @@
               <ActionButton
                 size="M"
                 quiet
-                on:click={$licensing.userLimitReached
-                  ? userLimitReachedModal.show
-                  : importUsersModal.show}
+                on:click={() =>
+                  $licensing.userLimitReached
+                    ? userLimitReachedModal?.show()
+                    : importUsersModal?.show()}
                 disabled={readonly}
               >
                 <Icon name={"upload-simple"} size="M" />
@@ -690,9 +696,10 @@
               <Button
                 size="M"
                 disabled={readonly}
-                on:click={$licensing.userLimitReached
-                  ? userLimitReachedModal.show
-                  : createUserModal.show}
+                on:click={() =>
+                  $licensing.userLimitReached
+                    ? userLimitReachedModal?.show()
+                    : createUserModal?.show()}
                 cta
               >
                 Invite users
@@ -702,9 +709,10 @@
               <Button
                 size="M"
                 disabled={readonly}
-                on:click={$licensing.userLimitReached
-                  ? userLimitReachedModal.show
-                  : createUserModal.show}
+                on:click={() =>
+                  $licensing.userLimitReached
+                    ? userLimitReachedModal?.show()
+                    : createUserModal?.show()}
                 cta
               >
                 Invite to workspace
@@ -765,11 +773,13 @@
 </Modal>
 
 <Modal bind:this={passwordModal} disableCancel={true}>
-  <PasswordModal
-    createUsersResponse={bulkSaveResponse}
-    userData={userData.users}
-    {addedToWorkspaceEmails}
-  />
+  {#if bulkSaveResponse}
+    <PasswordModal
+      createUsersResponse={bulkSaveResponse}
+      userData={userData.users}
+      {addedToWorkspaceEmails}
+    />
+  {/if}
 </Modal>
 
 {#if !isWorkspaceOnly}
