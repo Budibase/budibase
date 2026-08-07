@@ -70,6 +70,7 @@ const createQueryTool = ({
     sourceType,
     sourceLabel,
     sourceIconType,
+    readOnly: query.queryVerb === "read",
     tool: tool({
       description,
       inputSchema: parametersSchema,

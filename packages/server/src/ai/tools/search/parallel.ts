@@ -20,6 +20,7 @@ export const createParallelTool = (apiKey: string): BudibaseToolDefinition => ({
   description: "Search the web using Parallel AI",
   sourceType: ToolType.SEARCH,
   sourceLabel: "Parallel Search",
+  readOnly: true,
   tool: tool({
     description: "Search the web using Parallel AI",
     inputSchema: parallelSearchParams,

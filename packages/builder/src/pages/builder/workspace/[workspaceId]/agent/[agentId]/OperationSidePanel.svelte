@@ -24,6 +24,7 @@
   import ToolIcon from "./ToolIcon.svelte"
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
+  import RequestInputs from "./RequestInputs.svelte"
 
   let {
     open = false,
@@ -379,6 +380,12 @@
                 {agentId}
                 onChange={updateRecipients}
               />
+            </div>
+          {/if}
+
+          {#if $featureFlags[FeatureFlag.AI_AGENT_REQUEST_INPUTS]}
+            <div class="operation-panel-section">
+              <RequestInputs bind:operation {onUpdated} />
             </div>
           {/if}
 

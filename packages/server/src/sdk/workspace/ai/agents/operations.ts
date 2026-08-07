@@ -10,6 +10,7 @@ export type AgentOperationConfig = Pick<
   | "enabledTools"
   | "allowKnowledgeSourceDownload"
   | "escalation"
+  | "requestInputs"
 >
 
 export type CreateAgentOperationInput = AgentOperationConfig &

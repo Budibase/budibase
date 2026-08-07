@@ -128,6 +128,22 @@ export interface AgentEscalationConfig {
   delay?: number
 }
 
+interface AgentRequestInputBase {
+  id: string
+  name: string
+  required: boolean
+}
+
+export type AgentRequestInputDefinition =
+  | (AgentRequestInputBase & {
+      type: "text" | "number"
+      options?: never
+    })
+  | (AgentRequestInputBase & {
+      type: "select"
+      options: string[]
+    })
+
 export interface AgentOperation {
   id: string
   name: string
@@ -138,6 +154,7 @@ export interface AgentOperation {
   knowledgeSources?: AgentKnowledgeSource[]
   allowKnowledgeSourceDownload: boolean
   escalation?: AgentEscalationConfig
+  requestInputs?: AgentRequestInputDefinition[]
 }
 
 export interface Agent extends Document {

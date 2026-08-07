@@ -63,6 +63,7 @@
     allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
     knowledgeSources: operation.knowledgeSources,
     escalation: operation.escalation,
+    requestInputs: operation.requestInputs,
   })
 
   // Agent state

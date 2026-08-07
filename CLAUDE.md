@@ -43,6 +43,9 @@
   against, provided there are no type errors.
 - Avoid adding nested ternary statements.
 - Prefer a svelte5 approach over svelte4.
+- In builder UI, default to `ActionButton` for compact contextual actions
+  (for example add, edit, or toolbar actions). Use `Button` for primary,
+  confirmation, and form submission actions.
 - Don't use // @ts-nocheck when asked to fix type errors.
 - When writing tests involving a URL, use example.com as the domain.
 - Prefer object params for function signatures.

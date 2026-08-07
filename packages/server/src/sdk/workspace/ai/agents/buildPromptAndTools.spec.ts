@@ -21,6 +21,7 @@ jest.mock("../../../../ai/tools/budibase", () => ({
     description: "List knowledge files",
     sourceType: "INTERNAL_TABLE",
     sourceLabel: "Budibase",
+    readOnly: true,
     tool: {
       execute: jest.fn().mockResolvedValue({ agentId, operationId }),
     },
@@ -31,6 +32,7 @@ jest.mock("../../../../ai/tools/budibase", () => ({
       description: "Search knowledge",
       sourceType: "INTERNAL_TABLE",
       sourceLabel: "Budibase",
+      readOnly: true,
       tool: {
         execute: jest.fn().mockResolvedValue({ agentId, operationId }),
       },
@@ -120,6 +122,9 @@ describe("buildPromptAndTools", () => {
     )
     expect(Reflect.get(result.tools, "list_knowledge_files")).toBeDefined()
     expect(Reflect.get(result.tools, "search_knowledge")).toBeDefined()
+    expect(result.readOnlyToolNames).toEqual(
+      new Set(["list_knowledge_files", "search_knowledge"])
+    )
     expect(result.systemPrompt).toContain("call list_knowledge_files")
     expect(result.systemPrompt).toContain("call search_knowledge")
     expect(result.systemPrompt).toContain(
