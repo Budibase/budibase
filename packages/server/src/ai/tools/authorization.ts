@@ -51,13 +51,18 @@ export const authorizeAgentToolCall = async ({
       audit("allowed", resourceId)
       return
     }
-    if (users.isBuilder(requestingUser, executionContext.workspaceId)) {
+    if (
+      !executionContext.requestingUserIsPublic &&
+      users.isBuilder(requestingUser, executionContext.workspaceId)
+    ) {
       audit("allowed", resourceId)
       return
     }
 
     const userRoles = await roles.getUserRoleHierarchy(
-      requestingUser.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
+      executionContext.requestingUserIsPublic
+        ? roles.BUILTIN_ROLE_IDS.PUBLIC
+        : requestingUser.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
     )
     if (resourceId) {
       const resourcePermissions =

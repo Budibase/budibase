@@ -163,6 +163,7 @@ export interface BuildPromptAndToolsOptions {
   fallbackPromptInstructions?: string
   execution?: {
     requestingUserId: string
+    requestingUserIsPublic?: boolean
     sessionId: string
   }
 }
@@ -244,6 +245,7 @@ export async function buildPromptAndTools(
       operationId: operation.id,
       conversationId: options.execution.sessionId,
       requestingUserId: options.execution.requestingUserId,
+      requestingUserIsPublic: options.execution.requestingUserIsPublic,
     }
     for (const tool of enabledTools) {
       const config = toolConfigs.find(config => config.toolName === tool.name)

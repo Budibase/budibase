@@ -5,6 +5,7 @@ import {
   features,
   getErrorMessage,
   HTTPError,
+  roles,
 } from "@budibase/backend-core"
 import { v4 } from "uuid"
 import {
@@ -503,7 +504,15 @@ const resolveChatStreamRequest = async (
 
   let effectiveUser = ctx.user
   let effectiveUserId = userId
-  if (canUsePreview && chat.previewUserId) {
+  if (canUsePreview && chat.previewAsPublic) {
+    effectiveUser = {
+      ...ctx.user,
+      roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+      roles: {},
+      builder: undefined,
+      admin: undefined,
+    }
+  } else if (canUsePreview && chat.previewUserId) {
     effectiveUser = await getFullUser(chat.previewUserId)
     effectiveUserId =
       effectiveUser.globalId ||

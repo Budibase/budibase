@@ -400,13 +400,6 @@
                             event.detail as ToolExecutionPrincipal
                           )}
                       />
-                      {#if getToolPrincipal(tool.runtimeBinding) === ToolExecutionPrincipal.ADMIN}
-                        <span class="delegation-warning">
-                          Uses Budibase admin {tool.authorization
-                            ?.permissionLevel}
-                          {tool.authorization?.permissionType} permission
-                        </span>
-                      {/if}
                       <button
                         class="tool-close-button"
                         type="button"
@@ -481,11 +474,6 @@
     display: flex;
     gap: var(--spacing-m);
     padding: var(--spacing-m) var(--spacing-l);
-  }
-
-  .delegation-warning {
-    color: var(--spectrum-global-color-orange-700);
-    font-size: var(--font-size-xs);
   }
 
   .operation-panel-title {

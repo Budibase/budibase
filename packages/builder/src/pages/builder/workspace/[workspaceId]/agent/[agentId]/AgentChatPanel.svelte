@@ -21,6 +21,7 @@
 
   type DraftChat = WithoutDocMetadata<DraftChatConversation>
   const CURRENT_USER_VALUE = "current-user"
+  const PUBLIC_USER_VALUE = "public-user"
 
   type Props = {
     agentId?: string
@@ -41,6 +42,7 @@
   let refreshKey = $state(0)
   let promptHistory = $state<string[]>([])
   let previewUserId = $state<string | undefined>()
+  let previewAsPublic = $state(false)
   let previewUsers = $state<User[]>([])
 
   onMount(async () => {
@@ -102,7 +104,9 @@
   }
 
   const selectPreviewUser = (userId: string) => {
-    previewUserId = userId === CURRENT_USER_VALUE ? undefined : userId
+    previewAsPublic = userId === PUBLIC_USER_VALUE
+    previewUserId =
+      userId === CURRENT_USER_VALUE || previewAsPublic ? undefined : userId
     resetChat(agentId)
   }
 
@@ -117,6 +121,7 @@
 
   const previewUserOptions = $derived([
     { label: "Current user", value: CURRENT_USER_VALUE },
+    { label: "Public user", value: PUBLIC_USER_VALUE },
     ...previewUsers.map(user => ({
       label: getPreviewUserLabel(user),
       value: user._id,
@@ -179,7 +184,9 @@
       <label class="preview-user-picker">
         <span>Test as</span>
         <Select
-          value={previewUserId || CURRENT_USER_VALUE}
+          value={previewAsPublic
+            ? PUBLIC_USER_VALUE
+            : previewUserId || CURRENT_USER_VALUE}
           options={previewUserOptions}
           placeholder={false}
           size="S"
@@ -202,6 +209,7 @@
         {workspaceId}
         isAgentPreviewChat={true}
         {previewUserId}
+        {previewAsPublic}
         {promptHistory}
         onpromptsubmitted={handlePromptSubmitted}
         onEscalationPending={handleEscalationPending}
