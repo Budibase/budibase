@@ -196,6 +196,16 @@ describe("Test that JSON string processing works correctly", () => {
       )
     ).toThrow("Multi-object JSON templates must be valid JSON objects")
   })
+
+  it("does not treat multiple Handlebars bindings as JSON objects", () => {
+    const output = processJsonStringSync(
+      "{{ firstName }} {{ lastName }}",
+      { firstName: "Joe", lastName: "Smith" },
+      options
+    )
+
+    expect(output).toEqual("Joe Smith")
+  })
 })
 
 describe("check arrays", () => {

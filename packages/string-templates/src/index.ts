@@ -385,6 +385,7 @@ const processJsonTemplateValue = (
 
 // Multi-object Mongo templates (`{filter} {update}`) aren't valid single JSON;
 // process each object via the binding-safe path instead of raw string substitution.
+// Handlebars `{{ ... }}` blocks must not be treated as JSON objects.
 const splitTopLevelJsonObjects = (template: string): string[] | null => {
   const documents: string[] = []
   let openCount = 0
@@ -408,6 +409,15 @@ const splitTopLevelJsonObjects = (template: string): string[] | null => {
 
     if (char === '"') {
       inQuotes = true
+      continue
+    }
+
+    if (char === "{" && template[i + 1] === "{") {
+      const end = template.indexOf("}}", i + 2)
+      if (end === -1) {
+        return null
+      }
+      i = end + 1
       continue
     }
 
