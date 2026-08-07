@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Body, Icon } from "@budibase/bbui"
+  import { Body, Icon, Select } from "@budibase/bbui"
   import {
     FeatureFlag,
     ToolExecutionPrincipal,
@@ -168,6 +168,17 @@
           .replace(/\b\w/g, l => l.toUpperCase())
       )
       .join(".")
+
+  const executionPrincipalOptions = [
+    {
+      label: "Requesting user",
+      value: ToolExecutionPrincipal.REQUESTER,
+    },
+    {
+      label: "Budibase admin (elevated)",
+      value: ToolExecutionPrincipal.ADMIN,
+    },
+  ]
 
   const getToolPrincipal = (toolName: string) => {
     const config = operation.enabledTools?.find(
@@ -367,27 +378,28 @@
                       </div>
                     </div>
                     <div class="tool-actions">
-                      <select
-                        aria-label={`Execution identity for ${formatToolLabel(tool)}`}
+                      <Select
+                        size="S"
+                        bordered={false}
+                        placeholder={false}
+                        autoWidth
+                        popoverAutoWidth
                         value={getToolPrincipal(tool.runtimeBinding)}
-                        onchange={event =>
-                          setToolPrincipal(
-                            tool.runtimeBinding,
-                            event.currentTarget.value as ToolExecutionPrincipal
-                          )}
-                      >
-                        <option value={ToolExecutionPrincipal.REQUESTER}>
-                          Requesting user
-                        </option>
-                        <option
-                          value={ToolExecutionPrincipal.ADMIN}
-                          disabled={!tool.authorization?.supportedPrincipals.includes(
+                        options={executionPrincipalOptions}
+                        getOptionLabel={option => option.label}
+                        getOptionValue={option => option.value}
+                        isOptionEnabled={option =>
+                          option.value !== ToolExecutionPrincipal.ADMIN ||
+                          !!tool.authorization?.supportedPrincipals.includes(
                             ToolExecutionPrincipal.ADMIN
                           )}
-                        >
-                          Budibase admin (elevated)
-                        </option>
-                      </select>
+                        tooltip={`Execution identity for ${formatToolLabel(tool)}`}
+                        on:change={event =>
+                          setToolPrincipal(
+                            tool.runtimeBinding,
+                            event.detail as ToolExecutionPrincipal
+                          )}
+                      />
                       {#if getToolPrincipal(tool.runtimeBinding) === ToolExecutionPrincipal.ADMIN}
                         <span class="delegation-warning">
                           Uses Budibase admin {tool.authorization
