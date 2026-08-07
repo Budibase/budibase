@@ -171,11 +171,11 @@
 
   const executionPrincipalOptions = [
     {
-      label: "Requesting user",
+      label: "Requester",
       value: ToolExecutionPrincipal.REQUESTER,
     },
     {
-      label: "Budibase admin (elevated)",
+      label: "Admin (elevated)",
       value: ToolExecutionPrincipal.ADMIN,
     },
   ]
@@ -378,6 +378,7 @@
                       </div>
                     </div>
                     <div class="tool-actions">
+                      <span class="run-as-label">Run as</span>
                       <Select
                         size="S"
                         bordered={false}
@@ -599,6 +600,13 @@
   .tool-actions {
     display: flex;
     align-items: center;
+    gap: var(--spacing-s);
+  }
+
+  .run-as-label {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--font-size-xs);
+    white-space: nowrap;
   }
 
   .tool-close-button {
@@ -609,5 +617,6 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    margin-left: var(--spacing-s);
   }
 </style>
