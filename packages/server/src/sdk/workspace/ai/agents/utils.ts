@@ -29,6 +29,10 @@ import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 import { context, HTTPError } from "@budibase/backend-core"
 import { authorizeAgentToolCall } from "../../../../ai/tools/authorization"
+import {
+  getReadableQueryToolBinding,
+  isQueryToolType,
+} from "@budibase/shared-core"
 
 const HELPER_TOOL_NAMES = new Set([
   "list_tables",
@@ -42,6 +46,61 @@ const HELPER_TOOL_NAMES = new Set([
 
 const isHelperTool = (tool: Pick<AiToolDefinition, "name">) =>
   HELPER_TOOL_NAMES.has(tool.name)
+
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+export const replaceUnavailableToolBindings = ({
+  promptInstructions,
+  bindings,
+}: {
+  promptInstructions?: string
+  bindings: Array<{ readableBinding: string; label: string }>
+}) => {
+  if (!promptInstructions || !bindings.length) {
+    return promptInstructions
+  }
+  return bindings.reduce((instructions, binding) => {
+    const expression = new RegExp(
+      `\\{\\{\\s*${escapeRegExp(binding.readableBinding)}\\s*\\}\\}`,
+      "g"
+    )
+    return instructions.replace(
+      expression,
+      `[Unavailable in this security context: ${binding.label}]`
+    )
+  }, promptInstructions)
+}
+
+const sanitizeBindingSegment = (value: string) =>
+  value.replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_|_$/g, "")
+
+const getToolReadableBinding = (tool: AiToolDefinition) => {
+  const displayName = tool.readableName || tool.name
+  if (isQueryToolType(tool.sourceType)) {
+    return getReadableQueryToolBinding({
+      sourceType: tool.sourceType,
+      sourceLabel: tool.sourceLabel,
+      queryName: displayName,
+    })
+  }
+  let prefix = "tool"
+  if (
+    tool.sourceType === ToolType.INTERNAL_TABLE ||
+    tool.sourceType === ToolType.AUTOMATION
+  ) {
+    prefix = "budibase"
+  } else if (tool.sourceType === ToolType.EXTERNAL_TABLE) {
+    prefix = tool.sourceLabel
+      ? sanitizeBindingSegment(tool.sourceLabel)
+      : "external"
+  } else if (tool.sourceType === ToolType.SEARCH) {
+    prefix = "search"
+  } else if (tool.sourceType === ToolType.ESCALATION) {
+    prefix = "escalation"
+  }
+  return `${prefix}.${displayName}`
+}
 
 export const getLiveOperations = (agent: Agent): AgentOperation[] =>
   (agent.operations || []).filter(operation => operation.live === true)
@@ -213,25 +272,6 @@ export async function buildPromptAndTools(
     enabledTools.push(createKnowledgeSearchTool(agentId, operation.id))
   }
 
-  const systemPrompt = ai.composeAutomationAgentSystemPrompt({
-    baseSystemPrompt,
-    goal: includeGoal ? agent.goal : undefined,
-    promptInstructions: operation
-      ? [`Current operation: ${operation.name}`, operation.promptInstructions]
-          .filter(Boolean)
-          .join("\n\n")
-      : fallbackPromptInstructions,
-    includeGoal,
-  })
-
-  let resolvedSystemPrompt = systemPrompt
-  if (hasKnowledgeBases) {
-    resolvedSystemPrompt += `\n\nWhen users ask about attached files (for example size, type, upload status, processing errors, or file counts), call list_knowledge_files with a filename when possible. Do not guess file metadata. If list_knowledge_files returns ambiguous results, ask a clarification question before answering. If it returns no matches, say that you couldn't find a matching file.\n\nFor any non-trivial user question, call search_knowledge before answering. Do not say the answer is unavailable, unknown, or unsupported until after you have searched knowledge. If search_knowledge returns no relevant context, say that you couldn't find supporting knowledge.\n\nIf you used search_knowledge context in your final answer, call report_used_sources immediately before your final response and pass only sourceIds that directly support the final answer. Do not include sources that were merely searched/consulted. If your conclusion is that the answer is not found in the documents, call report_used_sources with an empty sourceIds list.`
-  }
-  if (enabledToolNames.has("escalate")) {
-    resolvedSystemPrompt += `\n\nBefore calling escalate, call list_session_escalations to check whether this same request is already awaiting approval or has already been approved in this conversation. If an equivalent request is still pending, do not escalate again - tell the user it is already awaiting approval. If it has already been approved, proceed instead of escalating again. Only escalate genuinely new requests.`
-  }
-
   const runtimes = new Map()
   if (operation && options.execution) {
     const workspaceId = context.getWorkspaceId()
@@ -280,6 +320,43 @@ export async function buildPromptAndTools(
   const authorizedTools = options.execution
     ? enabledTools.filter(tool => runtimes.has(tool.name))
     : enabledTools
+  const authorizedToolNames = new Set(authorizedTools.map(tool => tool.name))
+  const unavailableBindings = options.execution
+    ? enabledTools
+        .filter(
+          tool =>
+            enabledToolNames.has(tool.name) &&
+            !authorizedToolNames.has(tool.name)
+        )
+        .map(tool => ({
+          readableBinding: getToolReadableBinding(tool),
+          label: tool.readableName || tool.name,
+        }))
+    : []
+  const promptInstructions = operation
+    ? replaceUnavailableToolBindings({
+        promptInstructions: operation.promptInstructions,
+        bindings: unavailableBindings,
+      })
+    : fallbackPromptInstructions
+  const systemPrompt = ai.composeAutomationAgentSystemPrompt({
+    baseSystemPrompt,
+    goal: includeGoal ? agent.goal : undefined,
+    promptInstructions: operation
+      ? [`Current operation: ${operation.name}`, promptInstructions]
+          .filter(Boolean)
+          .join("\n\n")
+      : promptInstructions,
+    includeGoal,
+  })
+
+  let resolvedSystemPrompt = systemPrompt
+  if (hasKnowledgeBases) {
+    resolvedSystemPrompt += `\n\nWhen users ask about attached files (for example size, type, upload status, processing errors, or file counts), call list_knowledge_files with a filename when possible. Do not guess file metadata. If list_knowledge_files returns ambiguous results, ask a clarification question before answering. If it returns no matches, say that you couldn't find a matching file.\n\nFor any non-trivial user question, call search_knowledge before answering. Do not say the answer is unavailable, unknown, or unsupported until after you have searched knowledge. If search_knowledge returns no relevant context, say that you couldn't find supporting knowledge.\n\nIf you used search_knowledge context in your final answer, call report_used_sources immediately before your final response and pass only sourceIds that directly support the final answer. Do not include sources that were merely searched/consulted. If your conclusion is that the answer is not found in the documents, call report_used_sources with an empty sourceIds list.`
+  }
+  if (enabledToolNames.has("escalate")) {
+    resolvedSystemPrompt += `\n\nBefore calling escalate, call list_session_escalations to check whether this same request is already awaiting approval or has already been approved in this conversation. If an equivalent request is still pending, do not escalate again - tell the user it is already awaiting approval. If it has already been approved, proceed instead of escalating again. Only escalate genuinely new requests.`
+  }
 
   return {
     systemPrompt: resolvedSystemPrompt,

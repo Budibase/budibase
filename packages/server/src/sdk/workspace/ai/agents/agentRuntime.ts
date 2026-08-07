@@ -1,4 +1,4 @@
-import { cache, features } from "@budibase/backend-core"
+import { cache, features, getErrorMessage } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import {
   ActionType,
@@ -51,6 +51,10 @@ import { withLiteLLMSessionId } from "../llm/requestSession"
 // How long to wait for a human response before the escalation expires, in
 // seconds, when the operation doesn't specify its own delay.
 const DEFAULT_ESCALATION_DELAY_SECONDS = 3600
+
+const TOOL_RESULT_SAFETY_INSTRUCTIONS = `Only call tools that are currently available to you. Never claim that an action, mutation, approval, or other side effect succeeded unless the corresponding tool returned a successful result during this turn. If a required tool is unavailable or its call fails, clearly state that the action was not performed and that the user may not have permission.`
+
+const UNAVAILABLE_TOOL_RECOVERY_INSTRUCTIONS = `A tool required for the requested action is unavailable in the current security context. The action was not performed. Tell the user that you could not perform it because the tool is unavailable to them; do not claim or imply success.`
 
 // Read-only/helper tool calls that shouldn't clutter the request timeline.
 const TIMELINE_HIDDEN_TOOL_NAMES = new Set<string>([
@@ -443,6 +447,21 @@ const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
     })
   )
 
+const hasUnavailableToolError = (steps: Array<StepResult<ToolSet>>) => {
+  const lastStep = steps.at(-1)
+  return lastStep?.content.some(part => {
+    if (part.type !== "tool-error") {
+      return false
+    }
+    const message = getErrorMessage(part.error).toLowerCase()
+    return (
+      message.includes("unavailable tool") ||
+      message.includes("no such tool") ||
+      message.includes("tool is not available")
+    )
+  })
+}
+
 export const prepareAgentChatRun = async ({
   agent,
   agentId,
@@ -553,7 +572,11 @@ export const prepareAgentChatRun = async ({
     })
   }
 
-  const systemPrompt = [baseSystemPrompt, additionalInstructions]
+  const systemPrompt = [
+    baseSystemPrompt,
+    additionalInstructions,
+    TOOL_RESULT_SAFETY_INSTRUCTIONS,
+  ]
     .filter(Boolean)
     .join("\n\n")
 
@@ -570,8 +593,17 @@ export const prepareAgentChatRun = async ({
     ...(hasTools ? { toolChoice: "auto" as const } : {}),
     stopWhen: stepCountIs(30),
     // Anthropic rejects those without a tools param.
-    prepareStep: ({ steps }) =>
-      hasPendingEscalation(steps) ? { toolChoice: "none" as const } : undefined,
+    prepareStep: ({ steps }) => {
+      if (hasUnavailableToolError(steps)) {
+        return {
+          toolChoice: "none" as const,
+          system: `${systemPrompt}\n\n${UNAVAILABLE_TOOL_RECOVERY_INSTRUCTIONS}`,
+        }
+      }
+      return hasPendingEscalation(steps)
+        ? { toolChoice: "none" as const }
+        : undefined
+    },
     providerOptions: llm.providerOptions?.(hasTools),
   })
 
