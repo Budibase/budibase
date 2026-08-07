@@ -160,6 +160,24 @@ describe("queries SDK", () => {
       })
     })
 
+    it("keeps quoted JSON parameters safe in multi-object MongoDB templates", async () => {
+      const injected = 'x","name":{"$exists":true},"$comment":"esc'
+      const result = await enrichContext(
+        {
+          json: '{"name":"{{ name }}"} {"$set":{"touched":true}}',
+        },
+        {
+          name: injected,
+        }
+      )
+
+      expect(result.json).toEqual(
+        `${JSON.stringify({ name: injected })} ${JSON.stringify({
+          $set: { touched: true },
+        })}`
+      )
+    })
+
     it("falls back to requestBody when json is blank", async () => {
       const result = await enrichContext({
         json: "",

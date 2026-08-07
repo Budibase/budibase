@@ -166,6 +166,26 @@ describe("Test that JSON string processing works correctly", () => {
       },
     })
   })
+
+  it("keeps quoted bindings safe across multi-object JSON templates", () => {
+    const injectedName = 'x","name":{"$exists":true},"$comment":"esc'
+    const output = processJsonStringSync(
+      '{"name":"{{ name }}"} {"$set":{"touched":true}} {}',
+      { name: injectedName },
+      options
+    )
+
+    expect(output).toEqual(
+      JSON.stringify({ name: injectedName }) +
+        " " +
+        JSON.stringify({ $set: { touched: true } }) +
+        " " +
+        JSON.stringify({})
+    )
+    expect(JSON.parse(String(output).split(" ")[0])).toEqual({
+      name: injectedName,
+    })
+  })
 })
 
 describe("check arrays", () => {

@@ -383,6 +383,65 @@ const processJsonTemplateValue = (
   return value
 }
 
+// Multi-object Mongo templates (`{filter} {update}`) aren't valid single JSON;
+// process each object via the binding-safe path instead of raw string substitution.
+const splitTopLevelJsonObjects = (template: string): string[] | null => {
+  const documents: string[] = []
+  let openCount = 0
+  let inQuotes = false
+  let escaped = false
+  let startIndex = -1
+
+  for (let i = 0; i < template.length; i++) {
+    const char = template[i]
+
+    if (inQuotes) {
+      if (escaped) {
+        escaped = false
+      } else if (char === "\\") {
+        escaped = true
+      } else if (char === '"') {
+        inQuotes = false
+      }
+      continue
+    }
+
+    if (char === '"') {
+      inQuotes = true
+      continue
+    }
+
+    if (char === "{") {
+      if (openCount === 0) {
+        startIndex = i
+      }
+      openCount++
+      continue
+    }
+
+    if (char === "}") {
+      if (openCount === 0) {
+        return null
+      }
+      openCount--
+      if (openCount === 0 && startIndex !== -1) {
+        documents.push(template.slice(startIndex, i + 1))
+        startIndex = -1
+      }
+      continue
+    }
+
+    if (openCount === 0 && !/\s/.test(char)) {
+      return null
+    }
+  }
+
+  if (openCount !== 0 || documents.length < 2) {
+    return null
+  }
+  return documents
+}
+
 export function processJsonStringSync(
   template: string,
   context?: object,
@@ -393,7 +452,27 @@ export function processJsonStringSync(
     const parsed = JSON.parse(prepared.template) as JsonTemplateValue
     return processJsonTemplateValue(parsed, prepared.bindings, context, opts)
   } catch (_err) {
-    return processStringSync(template, context, opts)
+    const documents = splitTopLevelJsonObjects(template)
+    if (!documents) {
+      return processStringSync(template, context, opts)
+    }
+    // Recurse through the single-document path for each object so bindings are
+    // substituted into the parsed tree, not into the raw JSON text.
+    return documents
+      .map(document => {
+        const preparedDocument = quoteRawJsonBindings(document)
+        const parsed = JSON.parse(
+          preparedDocument.template
+        ) as JsonTemplateValue
+        return processJsonTemplateValue(
+          parsed,
+          preparedDocument.bindings,
+          context,
+          opts
+        )
+      })
+      .map(value => JSON.stringify(value))
+      .join(" ")
   }
 }
 
