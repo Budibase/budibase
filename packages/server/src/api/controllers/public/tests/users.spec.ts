@@ -35,7 +35,7 @@ type TestContext = {
     body: {
       _id: string
       email: string
-      roles: User["roles"]
+      roles?: User["roles"]
       builder: {
         apps: unknown
       }
@@ -48,7 +48,7 @@ const createCtx = ({
   caller,
   target,
   builderApps,
-  roles = {},
+  roles,
 }: {
   caller: TestUser
   target: TestTarget
@@ -64,7 +64,7 @@ const createCtx = ({
       body: {
         _id: target._id,
         email: target.email,
-        roles,
+        ...(roles === undefined ? {} : { roles }),
         builder: {
           apps: builderApps,
         },
@@ -397,6 +397,33 @@ describe("public users controller", () => {
     await controller.update(ctx, next)
 
     expect(saveUser).toHaveBeenCalledTimes(1)
+    expect(next).toHaveBeenCalled()
+  })
+
+  it("preserves roles omitted from a partial update", async () => {
+    const ctx = createCtx({
+      caller: {
+        _id: "user_creator",
+        email: "creator@example.com",
+        tenantId: "tenant",
+        builder: {
+          apps: ["app_allowed"],
+        },
+      },
+      target: targetUser,
+    })
+    setExistingTargetUser({ app_other: "BASIC" })
+    saveTargetUser()
+    const next = jest
+      .fn()
+      .mockResolvedValue(undefined) as jest.MockedFunction<Next>
+
+    await controller.update(ctx, next)
+
+    expect(saveUser).toHaveBeenCalledTimes(1)
+    expect(saveUser.mock.calls[0][0].request.body.roles).toEqual({
+      app_other: "BASIC",
+    })
     expect(next).toHaveBeenCalled()
   })
 })

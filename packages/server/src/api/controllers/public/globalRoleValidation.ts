@@ -48,6 +48,10 @@ export const validateRolesUpdate = ({
   requestedRoles?: User["roles"]
   currentRoles?: User["roles"]
 }) => {
+  if (requestedRoles === undefined) {
+    return
+  }
+
   const existingRoles = currentRoles || {}
   const nextRoles = requestedRoles || {}
 

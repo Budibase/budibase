@@ -48,6 +48,9 @@ async function createUpdateResponse(ctx: UserCtx, user?: User) {
   })
   // check the ctx before any updates to it
   const removed = rolesRemoved(base, ctx)
+  if (user && ctx.request.body.roles === undefined) {
+    ctx.request.body.roles = user.roles || {}
+  }
   ctx = publicApiUserFix(ctx)
   const response = await saveGlobalUser(ctx)
   ctx.body = await getUser(ctx, response._id)
