@@ -475,10 +475,9 @@ export function processJsonStringSync(
         })
         .map(value => JSON.stringify(value))
         .join(" ")
-    } catch (err) {
+    } catch {
       throw new Error(
-        "Multi-object JSON templates must be valid JSON objects",
-        { cause: err }
+        "Multi-object JSON templates must be valid JSON objects"
       )
     }
   }
