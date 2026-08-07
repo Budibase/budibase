@@ -50,8 +50,13 @@
       users.search({ workspaceId, paginate: false }),
       roles.fetchByAppId(workspaceId),
     ])
+    const currentUserIds = new Set(
+      [$auth.user?._id, $auth.user?.userId].filter(Boolean)
+    )
     previewUsers = (result.data as User[]).filter(
-      user => user.budibaseAccess !== false
+      user =>
+        user.budibaseAccess !== false &&
+        ![user._id, user.userId].some(userId => currentUserIds.has(userId))
     )
   })
 
