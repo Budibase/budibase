@@ -383,6 +383,75 @@ const processJsonTemplateValue = (
   return value
 }
 
+// Multi-object Mongo templates (`{filter} {update}`) aren't valid single JSON;
+// process each object via the binding-safe path instead of raw string substitution.
+// Handlebars `{{ ... }}` blocks must not be treated as JSON objects.
+const splitTopLevelJsonObjects = (template: string): string[] | null => {
+  const documents: string[] = []
+  let openCount = 0
+  let inQuotes = false
+  let escaped = false
+  let startIndex = -1
+
+  for (let i = 0; i < template.length; i++) {
+    const char = template[i]
+
+    if (inQuotes) {
+      if (escaped) {
+        escaped = false
+      } else if (char === "\\") {
+        escaped = true
+      } else if (char === '"') {
+        inQuotes = false
+      }
+      continue
+    }
+
+    if (char === '"') {
+      inQuotes = true
+      continue
+    }
+
+    if (char === "{" && template[i + 1] === "{") {
+      const end = template.indexOf("}}", i + 2)
+      if (end === -1) {
+        return null
+      }
+      i = end + 1
+      continue
+    }
+
+    if (char === "{") {
+      if (openCount === 0) {
+        startIndex = i
+      }
+      openCount++
+      continue
+    }
+
+    if (char === "}") {
+      if (openCount === 0) {
+        return null
+      }
+      openCount--
+      if (openCount === 0 && startIndex !== -1) {
+        documents.push(template.slice(startIndex, i + 1))
+        startIndex = -1
+      }
+      continue
+    }
+
+    if (openCount === 0 && !/\s/.test(char)) {
+      return null
+    }
+  }
+
+  if (openCount !== 0 || documents.length < 2) {
+    return null
+  }
+  return documents
+}
+
 export function processJsonStringSync(
   template: string,
   context?: object,
@@ -393,7 +462,32 @@ export function processJsonStringSync(
     const parsed = JSON.parse(prepared.template) as JsonTemplateValue
     return processJsonTemplateValue(parsed, prepared.bindings, context, opts)
   } catch (_err) {
-    return processStringSync(template, context, opts)
+    const documents = splitTopLevelJsonObjects(template)
+    if (!documents) {
+      return processStringSync(template, context, opts)
+    }
+    // Fail closed: each object must be strict JSON so bindings are applied to
+    // the parsed tree. Do not fall back to raw string substitution here — that
+    // reopens quote-breaking operator injection for multi-object templates.
+    try {
+      return documents
+        .map(document => {
+          const preparedDocument = quoteRawJsonBindings(document)
+          const parsed = JSON.parse(
+            preparedDocument.template
+          ) as JsonTemplateValue
+          return processJsonTemplateValue(
+            parsed,
+            preparedDocument.bindings,
+            context,
+            opts
+          )
+        })
+        .map(value => JSON.stringify(value))
+        .join(" ")
+    } catch {
+      throw new Error("Multi-object JSON templates must be valid JSON objects")
+    }
   }
 }
 

@@ -166,6 +166,46 @@ describe("Test that JSON string processing works correctly", () => {
       },
     })
   })
+
+  it("keeps quoted bindings safe across multi-object JSON templates", () => {
+    const injectedName = 'x","name":{"$exists":true},"$comment":"esc'
+    const output = processJsonStringSync(
+      '{"name":"{{ name }}"} {"$set":{"touched":true}} {}',
+      { name: injectedName },
+      options
+    )
+
+    expect(output).toEqual(
+      JSON.stringify({ name: injectedName }) +
+        " " +
+        JSON.stringify({ $set: { touched: true } }) +
+        " " +
+        JSON.stringify({})
+    )
+    expect(JSON.parse(String(output).split(" ")[0])).toEqual({
+      name: injectedName,
+    })
+  })
+
+  it("fails closed when a multi-object template is not strict JSON", () => {
+    expect(() =>
+      processJsonStringSync(
+        '{"name":"{{ name }}"} {"$set":{"touched":true},}',
+        { name: "one" },
+        options
+      )
+    ).toThrow("Multi-object JSON templates must be valid JSON objects")
+  })
+
+  it("does not treat multiple Handlebars bindings as JSON objects", () => {
+    const output = processJsonStringSync(
+      "{{ firstName }} {{ lastName }}",
+      { firstName: "Joe", lastName: "Smith" },
+      options
+    )
+
+    expect(output).toEqual("Joe Smith")
+  })
 })
 
 describe("check arrays", () => {

@@ -758,6 +758,44 @@ if (descriptions.length) {
           })
         })
 
+        it("does not allow quoted multi-object updateMany parameters to widen the filter", async () => {
+          const query = await createQuery({
+            fields: {
+              json: '{"name":"{{ name }}"} {"$set":{"touched":true}}',
+              extra: {
+                actionType: "updateMany",
+              },
+            },
+            queryVerb: "update",
+            parameters: [
+              {
+                name: "name",
+                default: "",
+              },
+            ],
+          })
+
+          const result = await config.api.query.execute(query._id!, {
+            parameters: {
+              name: 'x","name":{"$exists":true},"$comment":"esc',
+            },
+          })
+
+          expect(result.data).toEqual([
+            {
+              acknowledged: true,
+              matchedCount: 0,
+              modifiedCount: 0,
+              upsertedCount: 0,
+              upsertedId: null,
+            },
+          ])
+
+          await withCollection(async collection => {
+            expect(await collection.countDocuments({ touched: true })).toBe(0)
+          })
+        })
+
         it("should be able to delete all records", async () => {
           const query = await createQuery({
             fields: {
