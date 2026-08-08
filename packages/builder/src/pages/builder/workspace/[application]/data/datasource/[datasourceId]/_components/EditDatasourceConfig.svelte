@@ -17,7 +17,6 @@
   interface DatasourceConfigSubmit {
     config: DatasourceConfig
     name: string
-    projectIds?: string[]
   }
 
   interface Props {
@@ -32,11 +31,7 @@
 
   let modal: ModalHandle | undefined = $state()
 
-  async function saveDatasource({
-    config,
-    name,
-    projectIds,
-  }: DatasourceConfigSubmit) {
+  async function saveDatasource({ config, name }: DatasourceConfigSubmit) {
     try {
       const { projectIds: _projectIds, ...datasourceWithoutProjectIds } =
         datasource
@@ -45,10 +40,6 @@
         config,
         name,
       }
-      if (projectIds !== undefined) {
-        updatedDatasource.projectIds = projectIds
-      }
-
       await datasources.save({
         integration,
         datasource: updatedDatasource,
@@ -73,10 +64,7 @@
     integration={integration as UIIntegration}
     config={datasource.config || {}}
     showNameField
-    showProjectField
-    originalProjectIdsValue={datasource.projectIds || []}
     nameFieldValue={datasource.name}
-    projectIdsValue={datasource.projectIds || []}
     onSubmit={saveDatasource}
   />
 </Modal>

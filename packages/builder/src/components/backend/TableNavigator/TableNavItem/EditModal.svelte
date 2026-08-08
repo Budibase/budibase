@@ -6,7 +6,6 @@
   import { tables, datasources } from "@/stores/builder"
   import { featureFlags } from "@/stores/portal"
   import { Input, Modal, ModalContent, notifications } from "@budibase/bbui"
-  import ProjectSelect from "@/components/common/ProjectSelect.svelte"
   import { FeatureFlag, type Table } from "@budibase/types"
 
   interface ModalHandle {
@@ -33,22 +32,13 @@
 
   let originalName = $state("")
   let updatedName = $state("")
-  let originalProjectIds: string[] = $state([])
-  let projectIds: string[] = $state([])
-  const hasChanges = $derived(
-    updatedName !== originalName ||
-      JSON.stringify(projectIds) !== JSON.stringify(originalProjectIds)
-  )
+  const hasChanges = $derived(updatedName !== originalName)
 
   async function save() {
     const updatedTable = cloneDeep(table)
     updatedTable.name = updatedName
     if (!$featureFlags[FeatureFlag.PROJECTS]) {
       delete updatedTable.projectIds
-    } else if (
-      JSON.stringify(projectIds) !== JSON.stringify(originalProjectIds)
-    ) {
-      updatedTable.projectIds = projectIds
     }
     await tables.save(updatedTable)
     await datasources.fetch()
@@ -68,8 +58,6 @@
     error = ""
     originalName = table.name + ""
     updatedName = table.name + ""
-    originalProjectIds = table.projectIds || []
-    projectIds = [...originalProjectIds]
   }
 
   const confirmEditTableName = (event: SubmitEvent) => {
@@ -93,7 +81,6 @@
         on:input={checkValid}
         {error}
       />
-      <ProjectSelect bind:value={projectIds} />
     </form>
   </ModalContent>
 </Modal>
