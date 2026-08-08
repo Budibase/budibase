@@ -3,6 +3,7 @@ import { applyBaseUrl } from "@budibase/shared-core"
 import {
   findHBSBlocks,
   iifeWrapper,
+  processObjectSync,
   processStringSync,
 } from "@budibase/string-templates"
 import {
@@ -10,6 +11,7 @@ import {
   DatasourcePlus,
   Query,
   QueryVerb,
+  RestPreviewConfig,
   Row,
   SourceName,
   SSOUser,
@@ -50,6 +52,8 @@ class QueryRunner {
   hasRefreshedOAuth: boolean
   hasDynamicVariables: boolean
   schema: any
+  includeRequest: boolean
+  previewConfig?: RestPreviewConfig
 
   constructor(input: QueryEvent, flags = { noRecursiveQuery: false }) {
     this.datasource = input.datasource
@@ -61,6 +65,8 @@ class QueryRunner {
     this.queryId = input.queryId!
     this.schema = input.schema
     this.nullDefaultSupport = !!input.nullDefaultSupport
+    this.includeRequest = !!input.includeRequest
+    this.previewConfig = input.previewConfig
     this.noRecursiveQuery = flags.noRecursiveQuery
     this.cachedVariables = []
     // Additional context items for enrichment
@@ -85,6 +91,10 @@ class QueryRunner {
     } = this
     let datasourceClone = cloneDeep(datasource)
     let fieldsClone = cloneDeep(fields)
+
+    const previewSource = this.includeRequest
+      ? cloneDeep(fieldsClone)
+      : undefined
 
     const Integration = await getIntegration(datasourceClone.source)
     if (!Integration) {
@@ -141,6 +151,9 @@ class QueryRunner {
       }
     }
     let query: Record<string, any>
+    let preview:
+      | { fields: Record<string, any>; config?: RestPreviewConfig }
+      | undefined
 
     // Handle SQL pagination bindings
     let paginationEnrichedContext = enrichedContext
@@ -195,6 +208,9 @@ class QueryRunner {
       if (datasourceClone.source === SourceName.REST) {
         query.rawPath = rawPath
       }
+      if (this.includeRequest && previewSource) {
+        preview = await this.buildPreview(previewSource, parameters)
+      }
     }
     // Add pagination values for REST queries
     if (this.pagination) {
@@ -208,7 +224,13 @@ class QueryRunner {
       )
     }
 
-    let output = threadUtils.formatResponse(await fn.bind(integration)(query))
+    let output = threadUtils.formatResponse(
+      await fn.bind(integration)(query, {
+        includeRequest: this.includeRequest,
+        previewFields: preview?.fields,
+        previewConfig: preview?.config,
+      })
+    )
     let rows = output as Row[],
       info = undefined,
       extra = undefined,
@@ -369,6 +391,63 @@ class QueryRunner {
     return value
   }
 
+  // Builds the display-oriented preview
+  async buildPreview(
+    fields: Record<string, any>,
+    parameters: Record<string, any>
+  ): Promise<{ fields: Record<string, any>; config?: RestPreviewConfig }> {
+    const envVars = context.getEnvironmentVariables() || {}
+    const maskedEnv = Object.fromEntries(
+      Object.keys(envVars).map(name => [name, `{{ env.${name} }}`])
+    )
+    return context.doInEnvironmentContext(maskedEnv, async () => {
+      const previewParameters = await sdk.queries.enrichContext(
+        parameters,
+        this.ctx
+      )
+      const previewContext = { ...previewParameters, ...this.ctx }
+      const config = this.previewConfig
+        ? (processObjectSync(
+            cloneDeep(this.previewConfig),
+            {
+              env: maskedEnv,
+            },
+            {
+              onlyFound: true,
+            }
+          ) as RestPreviewConfig)
+        : undefined
+      if (config?.defaultHeaders) {
+        config.defaultHeaders = await sdk.queries.enrichContext(
+          config.defaultHeaders,
+          previewContext
+        )
+      }
+      // Mirrors the template base URL rewrite applied to the real request
+      if (
+        (this.datasource.restTemplateId || this.datasource.restTemplate) &&
+        config?.url
+      ) {
+        const resolvedConfigUrl = processStringSync(
+          config.url,
+          previewContext,
+          {
+            noEscaping: true,
+            noHelpers: true,
+            onlyFound: true,
+          }
+        )
+        if (resolvedConfigUrl) {
+          fields.path = applyBaseUrl(fields.path, resolvedConfigUrl)
+        }
+      }
+      return {
+        fields: await sdk.queries.enrichContext(fields, previewContext),
+        config,
+      }
+    })
+  }
+
   async addDatasourceVariables() {
     let { datasource, parameters, fields } = this
     if (!datasource || !datasource.config) {
@@ -380,6 +459,11 @@ class QueryRunner {
     for (let [staticBindingKey, staticBindingValue] of Object.entries(
       staticVars
     )) {
+      // Static variables are literal values - one containing a binding is
+      // not permitted and never applied
+      if (findHBSBlocks(String(staticBindingValue)).length > 0) {
+        continue
+      }
       const namedValue = parameters[staticBindingKey]
       const shouldOverrideNamed =
         namedValue == null ||

@@ -171,12 +171,26 @@ export type ConnectionInfo = {
   error?: string
 }
 
+// The unresolved parts of a REST datasource config that the request preview
+// will use
+export interface RestPreviewConfig {
+  url?: string
+  defaultHeaders?: Record<string, string>
+  defaultQueryParameters?: Record<string, string>
+}
+
+export interface IntegrationRequestOpts {
+  includeRequest?: boolean
+  previewFields?: Record<string, any>
+  previewConfig?: RestPreviewConfig
+}
+
 export interface IntegrationBase {
-  create?(query: any): Promise<any[] | any>
-  read?(query: any): Promise<any[] | any>
-  update?(query: any): Promise<any[] | any>
-  delete?(query: any): Promise<any[] | any>
-  patch?(query: any): Promise<any[] | any>
+  create?(query: any, opts?: IntegrationRequestOpts): Promise<any[] | any>
+  read?(query: any, opts?: IntegrationRequestOpts): Promise<any[] | any>
+  update?(query: any, opts?: IntegrationRequestOpts): Promise<any[] | any>
+  delete?(query: any, opts?: IntegrationRequestOpts): Promise<any[] | any>
+  patch?(query: any, opts?: IntegrationRequestOpts): Promise<any[] | any>
   testConnection?(): Promise<ConnectionInfo>
   defineTypeCastingFromSchema?(schema: {
     [key: string]: {
