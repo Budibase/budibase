@@ -347,8 +347,8 @@ export class RestIntegration implements IntegrationBase {
   }
 
   getUrl(
-    path: string,
-    queryString: string,
+    path = "",
+    queryString = "",
     pagination?: PaginationConfig,
     paginationValues?: PaginationValues
   ): string {
@@ -657,10 +657,39 @@ export class RestIntegration implements IntegrationBase {
     return this.buildHeadersFromAuthConfig(resolved.auth)
   }
 
+  private getOrigin(urlString: string): string | null {
+    try {
+      const parsed = new URL(urlString)
+      return `${parsed.protocol}//${parsed.host}`
+    } catch {
+      return null
+    }
+  }
+
+  private assertSameOrigin(url: string, rawPath: string | undefined) {
+    const finalOrigin = this.getOrigin(url)
+
+    const expectedOriginUrls: string[] = []
+    if (this.config.url) {
+      expectedOriginUrls.push(this.getUrl())
+    }
+    if (rawPath !== undefined) {
+      expectedOriginUrls.push(this.getUrl(rawPath))
+    }
+
+    const isCrossOrigin = expectedOriginUrls.some(
+      expectedUrl => this.getOrigin(expectedUrl) !== finalOrigin
+    )
+    if (isCrossOrigin) {
+      throw new Error("REST query path must remain on the datasource origin")
+    }
+  }
+
   async _req(query: RestQuery, retry401 = true): Promise<ParsedResponse> {
     const {
       path = "",
       queryString = "",
+      rawPath,
       headers = {},
       method = HttpMethod.GET,
       disabledHeaders,
@@ -671,6 +700,27 @@ export class RestIntegration implements IntegrationBase {
       pagination,
       paginationValues,
     } = query
+
+    const defaultQueryParameters = this.config.defaultQueryParameters || {}
+    let mergedQueryString = queryString
+    if (Object.keys(defaultQueryParameters).length > 0) {
+      const queryParams = queryString ? qs.decode(queryString) : {}
+      const merged = { ...defaultQueryParameters, ...queryParams }
+      mergedQueryString = qs.encode(merged)
+    }
+
+    this.startTimeMs = performance.now()
+    const url = this.getUrl(
+      path,
+      mergedQueryString,
+      pagination,
+      paginationValues
+    )
+
+    // Resolve and validate the destination BEFORE attaching any
+    // datasource-scoped credentials or headers below.
+    this.assertSameOrigin(url, rawPath)
+
     const authHeaders = await this.getAuthHeaders(authConfigId, authConfigType)
 
     this.headers = {
@@ -706,22 +756,6 @@ export class RestIntegration implements IntegrationBase {
       // @ts-ignore
       input.extraHttpOptions = { insecureHTTPParser: true }
     }
-
-    const defaultQueryParameters = this.config.defaultQueryParameters || {}
-    let mergedQueryString = queryString
-    if (Object.keys(defaultQueryParameters).length > 0) {
-      const queryParams = queryString ? qs.decode(queryString) : {}
-      const merged = { ...defaultQueryParameters, ...queryParams }
-      mergedQueryString = qs.encode(merged)
-    }
-
-    this.startTimeMs = performance.now()
-    const url = this.getUrl(
-      path,
-      mergedQueryString,
-      pagination,
-      paginationValues
-    )
 
     // Configure dispatcher for proxy and/or TLS settings
     // Use datasource config if set, otherwise fall back to environment variable
@@ -765,6 +799,7 @@ export class RestIntegration implements IntegrationBase {
         url,
         input,
         {
+          rejectCrossOriginRedirects: true,
           fetchFn: async (
             requestUrl: string,
             requestInput: RequestInit,

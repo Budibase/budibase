@@ -180,7 +180,7 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const datasource = await sdk.datasources.get(query.datasourceId)
 
   let eventFn
-  let previousQuery: Query | undefined
+  let existingQuery: Query | undefined
   if (!query._id && !query._rev) {
     delete query.projectIds
     query._id = generateQueryID(query.datasourceId)
@@ -190,16 +190,24 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   } else {
     // check if flag has previously been set, don't let it change
     // allow it to be explicitly set to false via API incase this is ever needed
-    previousQuery = await db.get<Query>(query._id)
-    if (previousQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
+    existingQuery = await db.get<Query>(query._id)
+    if (existingQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
       query.nullDefaultSupport = true
     }
-    if (Array.isArray(previousQuery.projectIds)) {
-      query.projectIds = [...previousQuery.projectIds]
+    if (Array.isArray(existingQuery.projectIds)) {
+      query.projectIds = [...existingQuery.projectIds]
     } else {
       delete query.projectIds
     }
     eventFn = () => events.query.updated(datasource, query)
+  }
+  if (existingQuery && existingQuery.name !== query.name) {
+    await sdk.ai.agents.migrateQueryToolReferences({
+      existingDatasource: datasource,
+      updatedDatasource: datasource,
+      existingQuery,
+      updatedQuery: query,
+    })
   }
   const response = await db.put(query)
   await eventFn()
@@ -209,7 +217,7 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
     rootResourceId: datasource._id!,
     currentProjectIds: datasource.projectIds,
     previousProjectIds: datasource.projectIds,
-    previousResource: previousQuery,
+    previousResource: existingQuery,
     savedResource: query,
   })
 

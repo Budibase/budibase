@@ -85,7 +85,7 @@ export default function process() {
       else if (err?.status === 409) {
         return
       } else {
-        logging.logAlert("Failed to perform user/group app sync", err)
+        logging.logAlert("Failed to perform user/group workspace sync", err)
       }
     }
   }
