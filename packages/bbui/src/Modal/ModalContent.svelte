@@ -26,7 +26,7 @@
 
   export let showSecondaryButton: boolean = false
   export let secondaryButtonText: string | undefined = undefined
-  export let secondaryAction: ((_e: Event) => Promise<any> | any) | undefined =
+  export let secondaryAction: ((e: Event) => Promise<any> | any) | undefined =
     undefined
   export let secondaryButtonWarning: boolean = false
   export let custom: boolean = false

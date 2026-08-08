@@ -224,7 +224,9 @@
     )
     if (targetNode) {
       if ($focusNodeRequest.ensureVisible) {
-        ensureSelectedNodeVisible($focusNodeRequest.nodeId)
+        ensureSelectedNodeVisible($focusNodeRequest.nodeId, {
+          rightInset: getActionPanelWidth(),
+        })
       } else {
         focusOnNode(
           targetNode,
@@ -251,7 +253,9 @@
   ) {
     lastVisibleSelectionCheck = $automationStore.selectedNodeId
     visibleSelectionRequest = $automationStore.selectedNodeId
-    ensureSelectedNodeVisible($automationStore.selectedNodeId)
+    ensureSelectedNodeVisible($automationStore.selectedNodeId, {
+      rightInset: getActionPanelWidth(),
+    })
   }
 
   $: if (
@@ -262,7 +266,9 @@
   ) {
     lastVisibleSelectionCheck = $automationStore.selectedBranchNode.nodeId
     visibleSelectionRequest = $automationStore.selectedBranchNode.nodeId
-    ensureSelectedNodeVisible($automationStore.selectedBranchNode.nodeId)
+    ensureSelectedNodeVisible($automationStore.selectedBranchNode.nodeId, {
+      rightInset: getActionPanelWidth(),
+    })
   }
 
   $: actionPanelTargetNodeId = getActionPanelTargetNodeId(
@@ -371,10 +377,19 @@
   }
 
   const getNodeDimensions = (node: FlowNode) => {
+    if (node.type === "anchor-node") {
+      return {
+        width: 0,
+        height: 0,
+      }
+    }
+
     const data = node.data as Record<string, unknown> | undefined
+    const layout = data?.layout as Record<string, unknown> | undefined
     return {
       width:
         node.width ||
+        (typeof layout?.width === "number" ? layout.width : undefined) ||
         (typeof data?.laneWidth === "number" ? data.laneWidth : undefined) ||
         (typeof data?.containerWidth === "number"
           ? data.containerWidth
@@ -382,6 +397,7 @@
         DEFAULT_NODE_WIDTH,
       height:
         node.height ||
+        (typeof layout?.height === "number" ? layout.height : undefined) ||
         (typeof data?.containerHeight === "number"
           ? data.containerHeight
           : undefined) ||
@@ -448,9 +464,15 @@
       }
 
       const branchId = branchStep.inputs.branches?.[branchIdx]?.id
-      return branchId
-        ? `branch-${branchStepId}-${branchIdx}-${branchId}`
-        : undefined
+      if (!branchId) {
+        return undefined
+      }
+
+      const branchNodeId = `branch-${branchStepId}-${branchIdx}-${branchId}`
+      const anchorNodeId = `anchor-${branchNodeId}`
+      return get(nodes).some(node => node.id === anchorNodeId)
+        ? anchorNodeId
+        : branchNodeId
     }
 
     if (typeof block.id === "string") {

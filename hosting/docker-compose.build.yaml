@@ -1,5 +1,3 @@
-version: "3"
-
 # optional ports are specified throughout for more advanced use cases.
 
 services:

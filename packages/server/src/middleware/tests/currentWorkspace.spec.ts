@@ -136,7 +136,7 @@ class TestConfiguration {
   }
 }
 
-describe("Current app middleware", () => {
+describe("Current workspace middleware", () => {
   let config: TestConfiguration
 
   beforeEach(() => {

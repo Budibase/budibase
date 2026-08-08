@@ -19,7 +19,7 @@ export class HoverStore extends BudiStore<BuilderHoverStore> {
     this.hover = this.hover.bind(this)
   }
 
-  hover(componentId: string, notifyClient = true) {
+  hover(componentId: string | null, notifyClient = true) {
     clearTimeout(this.hoverTimeout)
     if (componentId) {
       this.processHover(componentId, notifyClient)
@@ -30,7 +30,7 @@ export class HoverStore extends BudiStore<BuilderHoverStore> {
     }
   }
 
-  processHover(componentId: string, notifyClient?: boolean) {
+  processHover(componentId: string | null, notifyClient?: boolean) {
     if (componentId === get(this.store).componentId) {
       return
     }

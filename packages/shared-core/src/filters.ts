@@ -20,6 +20,7 @@ import {
   SearchFilters,
   SearchQueryFields,
   SearchResponse,
+  SortJson,
   SortOrder,
   SortType,
   Table,
@@ -342,9 +343,9 @@ function buildCondition(filter?: SearchFilter): SearchFilters | undefined {
         if (!value) {
           return
         }
-        if (typeof value === "string") {
-          value = new Date(value).toISOString()
-        } else if (isRangeSearchOperator(operator)) {
+        // Preserve timezone-less datetime strings so that the schema-aware
+        // backend can handle them without applying the browser's timezone.
+        if (typeof value !== "string" && isRangeSearchOperator(operator)) {
           query[operator] ??= {}
           query[operator][field] = value
           return query
@@ -564,13 +565,15 @@ export function search<T extends Record<string, any>>(
   query: Omit<RowSearchParams, "tableId">
 ): SearchResponse<T> {
   let result = runQuery(docs, query.query)
-  if (query.sort) {
+  if (typeof query.sort === "string") {
     result = sort(
       result,
       query.sort,
       query.sortOrder || SortOrder.ASCENDING,
       query.sortType
     )
+  } else if (query.sort) {
+    result = multiSort(result, query.sort)
   }
   const totalRows = result.length
   if (query.limit) {
@@ -963,6 +966,49 @@ export function sort<T extends Record<string, any>>(
     }
 
     return result
+  })
+}
+
+export function multiSort<T extends Record<string, any>>(
+  docs: T[],
+  sorts: SortJson
+): T[] {
+  const sortEntries = Object.entries(sorts)
+  if (!sortEntries.length) {
+    return docs
+  }
+
+  const parse = (value: any, type?: SortType) => {
+    if (value == null) {
+      return value
+    }
+    if (type === SortType.NUMBER) {
+      return parseFloat(value)
+    }
+    return `${value}`
+  }
+
+  return docs.slice().sort((a, b) => {
+    for (const [field, sortInfo] of sortEntries) {
+      const valueA = parse(a[field], sortInfo.type)
+      const valueB = parse(b[field], sortInfo.type)
+
+      if (valueA === valueB) {
+        continue
+      }
+
+      let result
+      if (valueA == null) {
+        result = -1
+      } else if (valueB == null || valueA > valueB) {
+        result = 1
+      } else {
+        result = -1
+      }
+
+      return sortInfo.direction === SortOrder.DESCENDING ? result * -1 : result
+    }
+    return 0
   })
 }
 

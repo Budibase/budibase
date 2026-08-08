@@ -13,7 +13,7 @@ import { Header } from "@budibase/shared-core"
 import { ApiVersion } from "../constants"
 import { buildAnalyticsEndpoints } from "./analytics"
 import { buildAIEndpoints } from "./ai"
-import { buildAppEndpoints } from "./app"
+import { buildAppEndpoints } from "./workspace"
 import { buildAttachmentEndpoints } from "./attachments"
 import { buildAuthEndpoints } from "./auth"
 import { buildAutomationEndpoints } from "./automations"
@@ -294,7 +294,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     getAppID: (): string => {
       let headers: Headers = {}
       config?.attachHeaders?.(headers)
-      return headers?.[Header.APP_ID]
+      return headers?.[Header.WORKSPACE_ID]
     },
   }
 

@@ -136,6 +136,7 @@ interface FetchWithBlacklistOptions<
 > {
   followRedirects?: boolean
   returnRedirectWithoutLocation?: boolean
+  rejectCrossOriginRedirects?: boolean
   fetchFn?: (
     url: string,
     request: RedirectSafeRequest<TRequest>,
@@ -177,6 +178,7 @@ export async function fetchWithBlacklist<
   {
     followRedirects = true,
     returnRedirectWithoutLocation = false,
+    rejectCrossOriginRedirects = false,
     fetchFn = fetch as unknown as (
       url: string,
       request: RedirectSafeRequest<TRequest>,
@@ -239,6 +241,9 @@ export async function fetchWithBlacklist<
     ).toString()
     nextRequest = nextRequestForRedirect(nextRequest, response.status)
     if (shouldStripSensitiveHeadersForRedirect(nextUrl, redirectUrl)) {
+      if (rejectCrossOriginRedirects) {
+        throw new Error("Redirect to a different origin is not permitted.")
+      }
       nextRequest = stripSensitiveHeadersForRedirect(nextRequest)
     }
     nextUrl = redirectUrl

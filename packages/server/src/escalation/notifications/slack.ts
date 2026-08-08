@@ -6,6 +6,7 @@ import {
   type ChatConversationChannel,
   type EscalationContextDoc,
   type EscalationNotificationDoc,
+  EscalationAction,
   EscalationNotificationChannel,
 } from "@budibase/types"
 import sdk from "../../sdk"
@@ -38,14 +39,14 @@ const buildEscalationBlocks = ({
         type: "button",
         text: { type: "plain_text", text: "Approve" },
         style: "primary",
-        action_id: "esc_approve",
+        action_id: EscalationAction.APPROVE,
         value: JSON.stringify({ escalationId, notificationDocId, appId }),
       },
       {
         type: "button",
         text: { type: "plain_text", text: "Reject" },
         style: "danger",
-        action_id: "esc_reject",
+        action_id: EscalationAction.REJECT,
         value: JSON.stringify({ escalationId, notificationDocId, appId }),
       },
     ],
@@ -55,7 +56,9 @@ const buildEscalationBlocks = ({
 const getSlackIntegration = async (
   appId: string,
   agentId?: string
-): Promise<{ botToken: string; signingSecret: string } | undefined> => {
+): Promise<
+  { botToken: string; signingSecret: string; teamId?: string } | undefined
+> => {
   return await context.doInWorkspaceContext(appId, async () => {
     const agents = await sdk.ai.agents.fetch()
     const agent = agentId
@@ -68,6 +71,7 @@ const getSlackIntegration = async (
     return {
       botToken: integration.botToken,
       signingSecret: integration.signingSecret,
+      teamId: agent.slackIntegration.teamId,
     }
   })
 }
@@ -105,7 +109,12 @@ export async function sendSlackNotification({
     notificationDocId: notifDoc._id!,
     appId: contextDoc.appId,
   })
-  const client = new WebClient(integration.botToken)
+
+  // Fail quickly without retrying
+  const client = new WebClient(integration.botToken, {
+    retryConfig: { retries: 0 },
+    timeout: 5000,
+  })
 
   if (config.channelId) {
     await client.chat.postMessage({
@@ -127,10 +136,36 @@ export async function sendSlackNotification({
     return
   }
 
+  let teamId = integration.teamId
+  if (!teamId) {
+    try {
+      teamId = (await client.auth.test()).team_id
+    } catch (err) {
+      console.warn("sendSlackNotification: auth.test failed", {
+        escalationId: contextDoc._id,
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
+  }
+
+  // Fail closed: An unscoped match could DM a same-named user in a different
+  // Slack workspace.
+  if (!teamId) {
+    console.warn(
+      "sendSlackNotification: could not resolve Slack workspace, skipping",
+      {
+        escalationId: contextDoc._id,
+        globalUserId: config.globalUserId,
+      }
+    )
+    return
+  }
+
   const link = await tenancy.doInTenant(contextDoc.tenantId, () =>
     sdk.ai.chatIdentityLinks.getChatIdentityLinkByGlobalUserId({
       globalUserId: config.globalUserId,
       provider: AgentChannelProvider.SLACK,
+      teamId,
     })
   )
 

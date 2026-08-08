@@ -26,15 +26,15 @@
 
   interface ChatboxControllerWithConversationDelete extends ChatboxController {
     deleteConversation: (
-      _conversationId: string,
-      _conversationAgentId?: string
+      conversationId: string,
+      conversationAgentId?: string
     ) => Promise<void>
   }
 
   const API = createAPIClient({
     attachHeaders: headers => {
       if (workspaceId) {
-        headers[Header.APP_ID] = workspaceId
+        headers[Header.WORKSPACE_ID] = workspaceId
       }
     },
   })

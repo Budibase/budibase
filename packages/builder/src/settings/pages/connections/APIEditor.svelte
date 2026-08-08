@@ -8,7 +8,7 @@
     EnrichedBinding,
   } from "@budibase/types"
   import { type UIWorkspaceConnection, AUTH_TYPE_OPTIONS } from "@/types"
-  import { appStore } from "@/stores/builder/app"
+  import { appStore } from "@/stores/builder/workspace"
   import {
     datasources,
     hasRestTemplate,
@@ -64,7 +64,7 @@
     keyValueArrayToRecord,
     isValidEndpointUrl,
   } from "@/components/integration/query"
-  import ViewDynamicVariables from "@/pages/builder/workspace/[application]/data/datasource/[datasourceId]/_components/panels/Variables/ViewDynamicVariables.svelte"
+  import ViewDynamicVariables from "@/pages/builder/workspace/[workspaceId]/data/datasource/[datasourceId]/_components/panels/Variables/ViewDynamicVariables.svelte"
   import DeleteDataConfirmationModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
 
   export let selected: UIWorkspaceConnection | undefined

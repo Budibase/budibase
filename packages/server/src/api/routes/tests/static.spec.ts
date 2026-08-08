@@ -61,7 +61,7 @@ describe("/static", () => {
 
     it("should serve the app by url", async () => {
       const headers = config.defaultHeaders()
-      delete headers[constants.Header.APP_ID]
+      delete headers[constants.Header.WORKSPACE_ID]
       const workspaceId = config.getProdWorkspaceId()
 
       const res = await request
@@ -77,7 +77,7 @@ describe("/static", () => {
 
     it("should serve app-chat with the global client library path", async () => {
       const headers = config.defaultHeaders()
-      delete headers[constants.Header.APP_ID]
+      delete headers[constants.Header.WORKSPACE_ID]
       const workspaceId = config.getProdWorkspaceId()
 
       const res = await request
@@ -285,7 +285,7 @@ describe("/static", () => {
   describe("/api/assets/:appId/client", () => {
     it("should serve the global client library without an app ID header", async () => {
       const headers = config.defaultHeaders()
-      delete headers[constants.Header.APP_ID]
+      delete headers[constants.Header.WORKSPACE_ID]
       const shouldServeLocallyMock =
         fileSystem.shouldServeLocally as jest.MockedFunction<
           typeof fileSystem.shouldServeLocally
