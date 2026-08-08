@@ -50,6 +50,7 @@ import { WorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { WorkspaceHomeEndpoints } from "./workspaceHome"
 import { RecaptchaEndpoints } from "./recaptcha"
 import { AIConfigEndpoints } from "./aiConfig"
+import { ServiceApiKeyEndpoints } from "./serviceApiKeys"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -134,6 +135,7 @@ export type APIClient = BaseAPIClient &
   AppEndpoints &
   AttachmentEndpoints &
   AuditLogEndpoints &
+  ServiceApiKeyEndpoints &
   AuthEndpoints &
   AutomationEndpoints &
   BackupEndpoints &

@@ -99,6 +99,9 @@ beforeAll(async () => {
   jest.spyOn(events.serve, "servedApp")
   jest.spyOn(events.serve, "servedAppPreview")
 
+  jest.spyOn(events.serviceApiKey, "created")
+  jest.spyOn(events.serviceApiKey, "revoked")
+
   jest.spyOn(events.table, "created")
   jest.spyOn(events.table, "updated")
   jest.spyOn(events.table, "deleted")

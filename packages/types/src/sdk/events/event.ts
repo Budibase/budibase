@@ -29,6 +29,10 @@ export enum Event {
   // USER / COLLABORATION
   USER_DATA_COLLABORATION = "user:data:collaboration",
 
+  // SERVICE API KEY
+  SERVICE_API_KEY_CREATED = "service_api_key:created",
+  SERVICE_API_KEY_REVOKED = "service_api_key:revoked",
+
   // EMAIL
   EMAIL_SMTP_CREATED = "email:smtp:created",
   EMAIL_SMTP_UPDATED = "email:smtp:updated",
@@ -287,6 +291,10 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.USER_GROUP_ONBOARDING]: undefined,
   [Event.USER_ONBOARDING_COMPLETE]: undefined,
   [Event.USER_DATA_COLLABORATION]: undefined,
+
+  // SERVICE API KEY
+  [Event.SERVICE_API_KEY_CREATED]: `Service API key "{{ name }}" created`,
+  [Event.SERVICE_API_KEY_REVOKED]: `Service API key "{{ name }}" revoked`,
 
   // EMAIL
   [Event.EMAIL_SMTP_CREATED]: `Email configuration created`,

@@ -7,6 +7,8 @@ import {
   AccountUserContext,
   UserContext,
   Ctx,
+  ServiceAccountContext,
+  ServiceApiKeySummary,
 } from "@budibase/types"
 import * as context from "."
 
@@ -31,6 +33,25 @@ export function doInUserContext(user: User, ctx: Ctx, task: any) {
     },
   }
   return doInIdentityContext(userContext, task)
+}
+
+export function doInServiceAccountContext(
+  serviceApiKey: ServiceApiKeySummary,
+  tenantId: string,
+  ctx: Ctx,
+  task: any
+) {
+  const serviceAccountContext: ServiceAccountContext = {
+    _id: serviceApiKey._id!,
+    type: IdentityType.SERVICE_ACCOUNT,
+    tenantId,
+    serviceApiKey,
+    hostInfo: {
+      ipAddress: ctx.request.ip,
+      userAgent: ctx.userAgent.source,
+    },
+  }
+  return doInIdentityContext(serviceAccountContext, task)
 }
 
 // used in account portal

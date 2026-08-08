@@ -4,7 +4,7 @@ import { hasBuilderPermissions, isAdmin, isBuilder } from "../users"
 import { getWorkspaceIdFromCtx } from "../utils"
 
 export async function builderOrAdmin(ctx: UserCtx, next: any) {
-  if (ctx.internal || isAdmin(ctx.user)) {
+  if (ctx.internal || ctx.serviceApiKeyAuthorized || isAdmin(ctx.user)) {
     return next()
   }
 

@@ -63,6 +63,7 @@ import { buildWorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { buildWorkspaceHomeEndpoints } from "./workspaceHome"
 import { buildRecaptchaEndpoints } from "./recaptcha"
 import { buildAIConfigEndpoints } from "./aiConfig"
+import { buildServiceApiKeyEndpoints } from "./serviceApiKeys"
 
 export type { APIClient } from "./types"
 
@@ -319,6 +320,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     ...buildEnvironmentVariableEndpoints(API),
     ...buildEventEndpoints(API),
     ...buildAuditLogEndpoints(API),
+    ...buildServiceApiKeyEndpoints(API),
     ...buildLogsEndpoints(API),
     ...buildMigrationEndpoints(API),
     ...buildAgentEndpoints(API),

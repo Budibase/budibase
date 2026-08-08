@@ -21,10 +21,13 @@ import {
   LoginMethod,
   SessionCookie,
   User,
+  ServiceApiKeySummary,
 } from "@budibase/types"
 import { InvalidAPIKeyWarning } from "../warnings"
 import tracer from "dd-trace"
 import type { Middleware, Next } from "koa"
+import * as serviceApiKeys from "../serviceApiKeys"
+import { isPublicApiRequest } from "../utils"
 
 const ONE_MINUTE = env.SESSION_UPDATE_PERIOD
   ? parseInt(env.SESSION_UPDATE_PERIOD)
@@ -36,6 +39,7 @@ interface FinaliseOpts {
   publicEndpoint?: boolean
   version?: string
   user?: User | { tenantId: string }
+  serviceApiKey?: ServiceApiKeySummary
   loginMethod?: LoginMethod
 }
 
@@ -48,6 +52,7 @@ function finalise(ctx: Ctx, opts: FinaliseOpts = {}) {
   ctx.isAuthenticated = opts.authenticated || false
   ctx.loginMethod = opts.loginMethod
   ctx.user = opts.user
+  ctx.serviceApiKey = opts.serviceApiKey
   ctx.internal = opts.internal || false
   ctx.version = opts.version
 }
@@ -64,6 +69,19 @@ async function checkApiKey(
   // this allows for rotation
   if (isValidInternalAPIKey(apiKey)) {
     return { valid: true, user: undefined }
+  }
+  if (serviceApiKeys.isServiceApiKey(apiKey)) {
+    try {
+      const result = await serviceApiKeys.authenticate(apiKey)
+      return {
+        valid: true,
+        user: undefined,
+        serviceApiKey: result.serviceApiKey,
+        tenantId: result.tenantId,
+      }
+    } catch {
+      throw new InvalidAPIKeyWarning()
+    }
   }
   const decrypted = decrypt(apiKey)
   const tenantId = decrypted.split(SEPARATOR)[0]
@@ -146,6 +164,8 @@ export function authenticated(
       const tenantId = getHeader(ctx, Header.TENANT_ID)
       let authenticated = false,
         user: User | { tenantId: string } | undefined = undefined,
+        serviceApiKey: ServiceApiKeySummary | undefined = undefined,
+        serviceAccountTenantId: string | undefined = undefined,
         internal = false,
         loginMethod: LoginMethod | undefined = undefined
       if (authToken && !apiKey) {
@@ -192,16 +212,36 @@ export function authenticated(
           tenantId: string,
           email?: string
         ) => Promise<User> = opts.populateUser ? opts.populateUser(ctx) : null
-        const { valid, user: foundUser } = await checkApiKey(
-          apiKey,
-          populateUser
-        )
+        const result = await checkApiKey(apiKey, populateUser)
+        const { valid, user: foundUser } = result
+        const foundServiceApiKey =
+          "serviceApiKey" in result ? result.serviceApiKey : undefined
+        const foundServiceTenantId =
+          "tenantId" in result ? result.tenantId : undefined
         if (valid) {
+          if (foundServiceApiKey && !isPublicApiRequest(ctx)) {
+            throw new InvalidAPIKeyWarning()
+          }
           authenticated = true
           loginMethod = LoginMethod.API_KEY
           user = foundUser
+          serviceApiKey = foundServiceApiKey
+          serviceAccountTenantId = foundServiceTenantId
           internal = !foundUser
+          if (foundServiceApiKey) {
+            internal = false
+          }
         }
+      }
+      const forwardedServiceAccountId = getHeader(
+        ctx,
+        Header.SERVICE_ACCOUNT_ID
+      )
+      if (internal && forwardedServiceAccountId && tenantId) {
+        serviceApiKey = await doInTenant(tenantId, () =>
+          serviceApiKeys.fetchSummary(forwardedServiceAccountId)
+        )
+        serviceAccountTenantId = tenantId
       }
       if (!user && tenantId) {
         user = { tenantId }
@@ -232,6 +272,7 @@ export function authenticated(
       finalise(ctx, {
         authenticated,
         user,
+        serviceApiKey,
         internal,
         version,
         publicEndpoint,
@@ -240,6 +281,13 @@ export function authenticated(
 
       if (isUser(user)) {
         return identity.doInUserContext(user, ctx, next)
+      } else if (serviceApiKey && serviceAccountTenantId) {
+        return identity.doInServiceAccountContext(
+          serviceApiKey,
+          serviceAccountTenantId,
+          ctx,
+          next
+        )
       } else {
         return next()
       }

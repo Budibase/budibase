@@ -4,6 +4,7 @@ import {
   logging,
   users,
   utils,
+  serviceApiKeys,
 } from "@budibase/backend-core"
 import {
   AuditedEventFriendlyName,
@@ -14,6 +15,7 @@ import {
   AuditWriteOpts,
   Event,
   FallbackInfo,
+  IdentityType,
   SearchFilters,
 } from "@budibase/types"
 import { Readable } from "stream"
@@ -50,6 +52,7 @@ export async function write(
       ...metadata,
       ...opts?.hostInfo,
     },
+    identityType: opts?.identityType,
   }
   const fallback: FallbackInfo = {}
   // audit logs always use prod app ID
@@ -61,9 +64,12 @@ export async function write(
         fallback.appName = appMetadata.name
       }
     }
-    if (opts?.userId) {
+    if (opts?.userId && opts.identityType !== IdentityType.SERVICE_ACCOUNT) {
       const user = await users.getById(opts?.userId as string)
       fallback.email = user.email
+    }
+    if (opts?.serviceAccountName) {
+      fallback.name = opts.serviceAccountName
     }
   } catch (err) {
     logging.logAlert(
@@ -76,7 +82,9 @@ export async function write(
 }
 
 async function enrich(logs: AuditLogDoc[]): Promise<AuditLogEnriched[]> {
-  const allUserIds = logs.map(log => log.userId)
+  const allUserIds = logs
+    .filter(log => log.identityType !== IdentityType.SERVICE_ACCOUNT)
+    .map(log => log.userId)
   const hasAppIdLogs = logs.filter(log => log.appId)
   // get the dev app ID - enrich with dev app info as prod app may not exist
   const allAppIds = hasAppIdLogs.map(log =>
@@ -86,11 +94,20 @@ async function enrich(logs: AuditLogDoc[]): Promise<AuditLogEnriched[]> {
     [...new Set(allUserIds)],
     { cleanup: true }
   )
+  const serviceAccountIds = logs
+    .filter(log => log.identityType === IdentityType.SERVICE_ACCOUNT)
+    .map(log => log.userId)
+  const serviceAccountList = await Promise.all(
+    [...new Set(serviceAccountIds)].map(id => serviceApiKeys.fetch(id))
+  )
   const workspaceList = await dbCore.getWorkspacesByIDs([...new Set(allAppIds)])
 
   let enriched: AuditLogEnriched[] = []
   for (let log of logs) {
     const user = userList.find(user => user?._id === log.userId)
+    const serviceAccount = serviceAccountList.find(
+      serviceAccount => serviceAccount?._id === log.userId
+    )
     const workspace = workspaceList.find(workspace =>
       dbCore.isSameWorkspaceID(workspace?.appId, log.appId)
     )
@@ -99,7 +116,22 @@ async function enrich(logs: AuditLogDoc[]): Promise<AuditLogEnriched[]> {
       timestamp: log.timestamp,
       name: log.name,
       metadata: log.metadata,
-      user: user || deleted(log.userId, ResourceType.USER, log.fallback),
+      user:
+        log.identityType === IdentityType.SERVICE_ACCOUNT
+          ? serviceAccount
+            ? {
+                _id: serviceAccount._id!,
+                name: serviceAccount.name,
+                status: serviceAccount.status,
+                type: IdentityType.SERVICE_ACCOUNT,
+              }
+            : {
+                _id: log.userId,
+                name: log.fallback?.name || "Unknown service API key",
+                status: "deleted",
+                type: IdentityType.SERVICE_ACCOUNT,
+              }
+          : user || deleted(log.userId, ResourceType.USER, log.fallback),
     }
     if (log.appId) {
       enrichedLog.app =

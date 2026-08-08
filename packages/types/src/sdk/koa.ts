@@ -8,6 +8,7 @@ import {
   UserBindings,
   User,
   UserSSO,
+  ServiceApiKeySummary,
 } from "../documents"
 import { FeatureFlag, License } from "../sdk"
 import type { File } from "formidable"
@@ -62,6 +63,8 @@ export interface Ctx<
   body: ResponseBody
   userAgent: UserAgentContext["userAgent"]
   state: { nonce?: string }
+  serviceApiKey?: ServiceApiKeySummary
+  serviceApiKeyAuthorized?: boolean
 }
 
 /**

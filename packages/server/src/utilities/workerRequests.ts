@@ -47,7 +47,11 @@ export function createRequest<TBody>(request: Request<TBody>): RequestInit {
     // be specific about auth headers
     const cookie = ctx.headers[constants.Header.COOKIE],
       apiKey = ctx.headers[constants.Header.API_KEY]
-    if (cookie) {
+    if (ctx.serviceApiKey && coreEnv.INTERNAL_API_KEY) {
+      headers[constants.Header.API_KEY] = coreEnv.INTERNAL_API_KEY
+      headers[constants.Header.SERVICE_ACCOUNT_ID] = ctx.serviceApiKey._id!
+      delete headers[constants.Header.COOKIE]
+    } else if (cookie) {
       headers[constants.Header.COOKIE] = cookie
     } else if (apiKey) {
       headers[constants.Header.API_KEY] = Array.isArray(apiKey)

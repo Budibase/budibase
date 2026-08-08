@@ -96,6 +96,10 @@ const authorized =
       return next()
     }
 
+    if (ctx.serviceApiKeyAuthorized) {
+      return next()
+    }
+
     if (!ctx.user) {
       return ctx.throw(401, "No user info found")
     }

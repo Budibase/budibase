@@ -175,6 +175,13 @@ export const orgRoutes = (
       component: Pages.get("audit_logs"),
     },
     {
+      section: "Service API keys",
+      access: () => isAdmin,
+      path: "service-api-keys",
+      icon: "key",
+      component: Pages.get("service_api_keys"),
+    },
+    {
       section: "Self host",
       access: () => !cloud && isAdmin,
       path: "self",
