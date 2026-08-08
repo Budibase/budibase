@@ -400,27 +400,30 @@ export async function listSlackChannels(ctx: UserCtx) {
   })
 
   if (!botToken) {
-    ctx.body = []
+    ctx.body = { channels: [], hasNext: false }
     return
   }
 
+  const cursor = ctx.query.cursor as string | undefined
   const client = new WebClient(botToken)
-  const result = await client.conversations.list({
+  // users.conversations only returns conversations the bot is a member of,
+  // so no post-fetch membership filter is needed.
+  const result = await client.users.conversations({
     types: "public_channel,private_channel,mpim",
     exclude_archived: true,
     limit: 200,
+    ...(cursor ? { cursor } : {}),
   })
 
-  const all = result.channels ?? []
+  const channels = (result.channels ?? []).map(c => ({
+    id: c.id,
+    name: c.is_mpim
+      ? `Group DM: ${c.purpose?.value?.replace("Group messaging with: ", "") ?? c.name}`
+      : c.name,
+  }))
 
-  ctx.body = all
-    .filter(c => c.is_member)
-    .map(c => ({
-      id: c.id,
-      name: c.is_mpim
-        ? `Group DM: ${c.purpose?.value?.replace("Group messaging with: ", "") ?? c.name}`
-        : c.name,
-    }))
+  const nextCursor = result.response_metadata?.next_cursor || undefined
+  ctx.body = { channels, hasNext: !!nextCursor, cursor: nextCursor }
 }
 
 export async function listMSTeamsChannels(ctx: UserCtx) {
@@ -436,7 +439,7 @@ export async function listMSTeamsChannels(ctx: UserCtx) {
 
   const integration = await getMSTeamsIntegration(appId, agentId)
   if (!integration) {
-    ctx.body = []
+    ctx.body = { channels: [], hasNext: false }
     return
   }
 
@@ -447,5 +450,6 @@ export async function listMSTeamsChannels(ctx: UserCtx) {
     MS_SCOPE_GRAPH
   )
 
-  ctx.body = await listTeamsChannels(graphToken)
+  const cursor = ctx.query.cursor as string | undefined
+  ctx.body = await listTeamsChannels(graphToken, cursor)
 }

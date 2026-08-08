@@ -1,10 +1,41 @@
 import { get } from "svelte/store"
 import { API } from "@/api"
-import type { EscalationResponse, EscalationResult } from "@budibase/types"
+import {
+  type Agent,
+  type EscalationResponse,
+  type EscalationResult,
+  EscalationNotificationChannel,
+} from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 
 const POLL_INTERVAL_MS = 5000
 const MAX_CONSECUTIVE_FAILURES = 3
+
+// Providers with an enabled deployment on the agent. Enabled = endpoint URL
+// present
+export const configuredEscalationProviders = (
+  agent: Agent | undefined
+): EscalationNotificationChannel[] => {
+  const channels: [EscalationNotificationChannel, string | undefined][] = [
+    [
+      EscalationNotificationChannel.SLACK,
+      agent?.slackIntegration?.messagingEndpointUrl,
+    ],
+    [
+      EscalationNotificationChannel.DISCORD,
+      agent?.discordIntegration?.interactionsEndpointUrl,
+    ],
+    [
+      EscalationNotificationChannel.MSTEAMS,
+      agent?.MSTeamsIntegration?.messagingEndpointUrl,
+    ],
+    [
+      EscalationNotificationChannel.TELEGRAM,
+      agent?.telegramIntegration?.messagingEndpointUrl,
+    ],
+  ]
+  return channels.filter(([, url]) => url?.trim()).map(([provider]) => provider)
+}
 
 export interface EscalationEntry extends EscalationResult {
   escalationId: string
@@ -20,6 +51,7 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
   private interval: ReturnType<typeof setInterval> | undefined
   private inFlight = false
   private consecutiveFailures = 0
+  private generation = 0
 
   constructor() {
     super({ escalations: {} })
@@ -51,6 +83,7 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
 
   // Scopes the map to the current conversation; called on chat reset.
   reset() {
+    this.generation++
     this.stop()
     this.set({ escalations: {} })
   }
@@ -77,6 +110,7 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
     if (this.inFlight) {
       return
     }
+    const generation = this.generation
     const ids = this.pendingIds()
     if (!ids.length) {
       this.stop()
@@ -90,6 +124,9 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
           result: await API.fetchEscalationResult(escalationId),
         }))
       )
+      if (generation !== this.generation) {
+        return
+      }
       this.update(state => {
         const escalations = { ...state.escalations }
         for (const { escalationId, result } of results) {
@@ -99,6 +136,9 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
       })
       this.consecutiveFailures = 0
     } catch (error) {
+      if (generation !== this.generation) {
+        return
+      }
       this.consecutiveFailures++
       console.warn("Escalation poll failed", error)
       if (this.consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {

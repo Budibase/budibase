@@ -199,7 +199,7 @@ export async function discordWebhook(
           } catch (error) {
             console.error("Discord webhook processing failed", error)
             const msg =
-              error instanceof Error
+              error instanceof HTTPError
                 ? error.message
                 : "Sorry, something went wrong while processing your request."
             try {

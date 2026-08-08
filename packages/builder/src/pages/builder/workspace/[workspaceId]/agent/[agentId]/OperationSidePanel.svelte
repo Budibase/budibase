@@ -8,7 +8,7 @@
     type EnrichedBinding,
     type InsertAtPositionFn,
   } from "@budibase/types"
-  import { featureFlags } from "@/stores/portal"
+  import { agentsStore, featureFlags } from "@/stores/portal"
   import type { BindingCompletion } from "@/types"
   import { fly } from "svelte/transition"
   import ResizablePanel from "@/components/common/ResizablePanel.svelte"
@@ -23,6 +23,7 @@
   import Knowledge from "./knowledge/index.svelte"
   import ToolIcon from "./ToolIcon.svelte"
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
+  import { configuredEscalationProviders } from "@/stores/portal/escalations"
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
 
   let {
@@ -61,6 +62,13 @@
 
   let insertAtPos: InsertAtPositionFn | undefined = $state(undefined)
   let getCaretPosition: CaretPositionFn | undefined = $state(undefined)
+  let escalationProviders = $derived(
+    agentId
+      ? configuredEscalationProviders(
+          $agentsStore.agents.find(a => a._id === agentId)
+        )
+      : undefined
+  )
   let resolvedIconCount = $derived(
     Object.values(bindingIcons).filter(Boolean).length
   )
@@ -377,6 +385,7 @@
                 single
                 recipients={operation.escalation?.recipients ?? []}
                 {agentId}
+                providers={escalationProviders}
                 onChange={updateRecipients}
               />
             </div>

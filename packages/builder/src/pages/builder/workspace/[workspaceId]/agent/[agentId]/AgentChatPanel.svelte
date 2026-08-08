@@ -130,6 +130,13 @@
     })
     resetChat(agentId)
   })
+
+  // Stop escalation polling when the panel unmounts.
+  $effect(() => {
+    return () => {
+      escalationsStore.reset()
+    }
+  })
 </script>
 
 <div class="agent-chat-panel">
