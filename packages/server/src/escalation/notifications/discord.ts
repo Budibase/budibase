@@ -107,6 +107,9 @@ export async function sendDiscordNotification({
   const { title, summary } = getEscalationText(contextDoc)
   const messageBody = {
     content: summary ? `**${title}**\n${summary}` : `**${title}**`,
+    // Escalation text is authored by the requester or quoted by the model from
+    // stored data, so an @everyone in it would ping the channel.
+    allowed_mentions: { parse: [] },
     components: buildEscalationComponents({
       notifDocId: notifDoc._id!,
       appId: contextDoc.appId,
@@ -192,14 +195,20 @@ export async function replyToConversation({
   }
 
   // Mention the requester in a guild channel; DMs (no guild) get plain text.
-  const mention =
+  const mentionUserId =
     channel.guildId && channel.externalUserId
-      ? `<@${channel.externalUserId}> `
-      : ""
+      ? channel.externalUserId
+      : undefined
+  const mention = mentionUserId ? `<@${mentionUserId}> ` : ""
   // Discord enforces a 2000-character message limit.
   const content = `${mention}${text}`.slice(0, 2000)
 
   await discordPost(`/channels/${channel.channelId}/messages`, botToken, {
     content,
+    // Only the requester we deliberately mention may be pinged - the reply
+    // text itself can quote stored data containing @everyone/@here.
+    allowed_mentions: mentionUserId
+      ? { parse: [], users: [mentionUserId] }
+      : { parse: [] },
   })
 }
