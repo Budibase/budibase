@@ -1572,6 +1572,74 @@ describe("/projects", () => {
       })
     })
 
+    it("propagates dependencies introduced by a new agent operation", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const automation = await config.createAutomation()
+        const agent = await config.api.agent.create({
+          name: "Ops agent",
+          aiconfig: "default",
+          projectIds: [project._id],
+        })
+
+        await config.api.agent.createOperation(agent._id!, {
+          id: "operation_1",
+          name: "Run operations",
+          live: false,
+          enabledTools: [`${automation._id}_trigger`],
+          allowKnowledgeSourceDownload: true,
+        })
+
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toEqual([project._id])
+      })
+    })
+
+    it("propagates newly enabled operation dependencies without restoring exclusions", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const excludedAutomation = await config.createAutomation()
+        const addedAutomation = await config.createAutomation()
+        const agent = await config.api.agent.createWithOperation(
+          {
+            name: "Ops agent",
+            aiconfig: "default",
+          },
+          {
+            id: "operation_1",
+            name: "Run operations",
+            live: false,
+            enabledTools: [`${excludedAutomation._id}_trigger`],
+            allowKnowledgeSourceDownload: true,
+          }
+        )
+        await config.api.project.updateAssignment(agent._id!, {
+          resourceRev: agent._rev!,
+          projectIds: [project._id],
+          dependencyIds: [],
+        })
+
+        await config.api.agent.updateOperation(agent._id!, "operation_1", {
+          enabledTools: [
+            `${excludedAutomation._id}_trigger`,
+            `${addedAutomation._id}_trigger`,
+          ],
+        })
+
+        expect(
+          (await config.api.automation.get(excludedAutomation._id!)).projectIds
+        ).toBeUndefined()
+        expect(
+          (await config.api.automation.get(addedAutomation._id!)).projectIds
+        ).toEqual([project._id])
+      })
+    })
+
     it("propagates from an already-assigned app to newly referenced datasource dependencies added via a screen", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
@@ -2186,7 +2254,7 @@ describe("/projects", () => {
     const datasource = await config.api.datasource.create({
       ...basicDatasource().datasource,
       config: {
-        password: "super-secret",
+        password: "super-secret {{ env.DB_PASSWORD }}",
       },
       projectIds: [project._id],
     })
@@ -2342,7 +2410,7 @@ describe("/projects", () => {
         const exportedDatasource = JSON.parse(
           files.get(`docs/datasource/${datasource._id}.json`)!.toString()
         )
-        expect(exportedDatasource.config.password).not.toBe("super-secret")
+        expect(exportedDatasource.config.password).not.toContain("super-secret")
 
         const exportedQuery = JSON.parse(
           files.get(`docs/query/${query._id}.json`)!.toString()

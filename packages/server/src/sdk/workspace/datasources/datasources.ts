@@ -202,7 +202,11 @@ function useEnvVars(str: any) {
     return false
   }
   const blocks = findHBSBlocks(str)
-  return blocks.find(block => block.includes(ENV_VAR_PREFIX)) != null
+  return (
+    blocks.length === 1 &&
+    blocks[0] === str.trim() &&
+    blocks[0].includes(ENV_VAR_PREFIX)
+  )
 }
 
 function datasourceUsesEnvironmentVariables(datasource: Datasource): boolean {
