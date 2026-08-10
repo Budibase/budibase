@@ -23,6 +23,9 @@
   export let active = false
   export let tooltip: string | null = ""
   export let tooltipPosition: TooltipPosition = TooltipPosition.Top
+  export let calculateTooltipWidth:
+    | ((target: Element) => number | undefined)
+    | undefined = undefined
   export let newStyles = true
   export let id: string | undefined = undefined
   export let ref: HTMLButtonElement | undefined = undefined
@@ -32,10 +35,16 @@
   $: tooltipText = tooltip ?? ""
 </script>
 
-<AbsTooltip text={tooltipText} position={tooltipPosition}>
+<AbsTooltip
+  text={tooltipText}
+  position={tooltipPosition}
+  disabledTarget={disabled && !!tooltipText}
+  calculateWidth={calculateTooltipWidth}
+>
   <button
     {id}
     {type}
+    {disabled}
     bind:this={ref}
     class:spectrum-Button--cta={cta}
     class:spectrum-Button--primary={primary}

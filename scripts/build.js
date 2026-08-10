@@ -71,6 +71,7 @@ async function runBuild(entry, outfile, opts = {}) {
     process.cwd(),
     tsconfig
   )
+  tsconfigPathPluginContent.compilerOptions.baseUrl = path.resolve(__dirname, "..")
   const external = Array.isArray(opts.external) ? opts.external : []
 
   const sharedConfig = {

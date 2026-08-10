@@ -3,6 +3,8 @@
     "allowJs": true,
     "strict": true,
     "outDir": "dist",
+    "rootDir": "..",
+    "types": ["vitest/globals"],
     "allowSyntheticDefaultImports": true,
     "target": "ESNext",
     "module": "ESNext",
