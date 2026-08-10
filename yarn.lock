@@ -7967,6 +7967,13 @@
     "@typescript-eslint/types" "8.66.0"
     eslint-visitor-keys "^5.0.0"
 
+"@typescript/vfs@1.6.4":
+  version "1.6.4"
+  resolved "https://registry.yarnpkg.com/@typescript/vfs/-/vfs-1.6.4.tgz#7543a3bd961727eb51c8bdafc3ed5e0fb5f56dff"
+  integrity sha512-PJFXFS4ZJKiJ9Qiuix6Dz/OwEIqHD7Dme1UwZhTK11vR+5dqW2ACbdndWQexBzCx+CPuMe5WBYQWCsFyGlQLlQ==
+  dependencies:
+    debug "^4.4.3"
+
 "@typespec/ts-http-runtime@^0.3.0":
   version "0.3.3"
   resolved "https://registry.yarnpkg.com/@typespec/ts-http-runtime/-/ts-http-runtime-0.3.3.tgz#62767b88df3ba7fc53bfd66a94c88dfe1dec55bc"
@@ -22472,6 +22479,11 @@ typescript-eslint@8.66.0:
     "@typescript-eslint/parser" "8.66.0"
     "@typescript-eslint/typescript-estree" "8.66.0"
     "@typescript-eslint/utils" "8.66.0"
+
+typescript@5.9.2:
+  version "5.9.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.9.2.tgz#d93450cddec5154a2d5cabe3b8102b83316fb2a6"
+  integrity sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A==
 
 typescript@6.0.3:
   version "6.0.3"
