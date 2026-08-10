@@ -210,7 +210,10 @@ class QueryRunner {
       }
       if (this.includeRequest && previewSource) {
         preview = await this.buildPreview(previewSource, parameters).catch(
-          () => undefined
+          err => {
+            console.warn("Failed to build request preview", err)
+            return undefined
+          }
         )
       }
     }
