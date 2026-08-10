@@ -97,6 +97,12 @@ const SCHEMA: Integration = {
       required: false,
       default: {},
     },
+    allowCrossOriginPaths: {
+      display: "Allow cross-origin paths",
+      type: DatasourceFieldType.BOOLEAN,
+      default: false,
+      required: false,
+    },
     rejectUnauthorized: {
       display: "Reject Unauthorized",
       type: DatasourceFieldType.BOOLEAN,
@@ -717,9 +723,15 @@ export class RestIntegration implements IntegrationBase {
       paginationValues
     )
 
+    const allowCrossOriginPaths =
+      environment.REST_ALLOW_CROSS_ORIGIN_PATHS &&
+      this.config.allowCrossOriginPaths === true
+
     // Resolve and validate the destination BEFORE attaching any
     // datasource-scoped credentials or headers below.
-    this.assertSameOrigin(url, rawPath)
+    if (!allowCrossOriginPaths) {
+      this.assertSameOrigin(url, rawPath)
+    }
 
     const authHeaders = await this.getAuthHeaders(authConfigId, authConfigType)
 
