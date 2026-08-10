@@ -209,7 +209,9 @@ class QueryRunner {
         query.rawPath = rawPath
       }
       if (this.includeRequest && previewSource) {
-        preview = await this.buildPreview(previewSource, parameters)
+        preview = await this.buildPreview(previewSource, parameters).catch(
+          () => undefined
+        )
       }
     }
     // Add pagination values for REST queries

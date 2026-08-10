@@ -117,6 +117,23 @@ describe("sanitiseHeaders", () => {
     expect(sanitised.AUTHORIZATION).toEqual(`Bearer ${SecretTag.GENERIC}`)
   })
 
+  it("should fully redact a spaced credential which is not a known scheme", () => {
+    const sanitised = sanitiseHeaders({
+      headers: { "x-api-key": "part1 part2" },
+    })
+    expect(sanitised["x-api-key"]).toEqual(SecretTag.GENERIC)
+  })
+
+  it("should coerce non-string header values", () => {
+    const sanitised = sanitiseHeaders({
+      headers: { "x-request-id": 123, "x-api-key": 456 },
+    })
+    expect(sanitised).toEqual({
+      "x-request-id": "123",
+      "x-api-key": SecretTag.GENERIC,
+    })
+  })
+
   it("should leave ordinary headers untouched", () => {
     const sanitised = sanitiseHeaders({
       headers: { Accept: "application/json", "x-request-id": "abc" },

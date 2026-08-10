@@ -34,7 +34,7 @@ export function tagForAuthType(authType?: string): string {
 // not itself sensitive - while replacing the credential which follows it.
 function redactValue(value: string, tag: string): string {
   const [scheme, ...rest] = value.split(" ")
-  if (rest.length && /^[a-zA-Z]+$/.test(scheme)) {
+  if (rest.length && /^(basic|bearer)$/i.test(scheme)) {
     return `${scheme} ${tag}`
   }
   return tag
