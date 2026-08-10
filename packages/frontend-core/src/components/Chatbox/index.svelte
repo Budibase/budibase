@@ -14,7 +14,7 @@
     EscalationContextDoc,
     EscalationRespondResult,
   } from "@budibase/types"
-  import { EscalateToolResultStatus } from "@budibase/types"
+  import { ESCALATE_TOOL_NAME, EscalateToolResultStatus } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
   import { tick, untrack } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
@@ -102,23 +102,21 @@
     }
   }
 
-  // Only a genuinely-raised escalation gets the approval card.
+  // Only a genuinely-raised escalation gets the approval card
   const isRaisedEscalation = (output: unknown) =>
     (output as { status?: string } | undefined)?.status ===
     EscalateToolResultStatus.PENDING_APPROVAL
 
-  // New per-tool gates return a tool-owned safe title and summary in the
-  // output. Input is retained only as a fallback for legacy escalate calls.
+  // The escalate part's input/output are loosely typed by the AI SDK, so the
+  // casts live here rather than cluttering the template.
   const escalationCardProps = (part: { input?: unknown; output?: unknown }) => {
-    const output = part.output as
-      | { escalationId?: string; title?: string; summary?: string }
-      | undefined
+    const output = part.output as { escalationId?: string } | undefined
     const input = part.input as { title?: string; summary?: string } | undefined
     const escalationId = output?.escalationId
     return {
       escalationId,
-      title: output?.title || input?.title,
-      summary: output?.summary || input?.summary,
+      title: input?.title,
+      summary: input?.summary,
       resolution:
         (escalationId && escalationState?.[escalationId]?.resolution) ||
         "pending",
@@ -395,14 +393,19 @@
   let messages = $derived(chatInstance.messages)
   let lastMessage = $derived(messages[messages.length - 1])
 
-  // Notify the consumer of every unseen parked escalation. Pending tool output
-  // stays frozen, so notifying only the first would shadow later escalations.
+  // Notify the consumer of every unseen parked escalation. The escalate part's
+  // output stays frozen at pending_approval, so notifying only the first would
+  // shadow later escalations.
   const notifiedEscalations = new Set<string>()
   let pendingEscalationIds = $derived.by(() => {
     const ids: string[] = []
     for (const message of messages) {
       for (const part of message.parts ?? []) {
-        if (!isToolUIPart(part) || part.state !== "output-available") {
+        if (
+          !isToolUIPart(part) ||
+          getToolName(part) !== ESCALATE_TOOL_NAME ||
+          part.state !== "output-available"
+        ) {
           continue
         }
         const output = part.output as
@@ -810,7 +813,25 @@
             {#each message.parts ?? [] as part, partIndex}
               {#if isTextUIPart(part)}
                 <MarkdownViewer value={part.text} />
-              {:else if isToolUIPart(part) && !isRaisedEscalation(part.output)}
+              {:else if isToolUIPart(part) && getToolName(part) === ESCALATE_TOOL_NAME && isRaisedEscalation(part.output)}
+                {@const card = escalationCardProps(part)}
+                <EscalationCard
+                  title={card.title}
+                  summary={card.summary}
+                  resolution={card.resolution}
+                  statusMessage={card.escalationId
+                    ? resolveMessages[card.escalationId]
+                    : undefined}
+                  showApproval={showInlineApproval}
+                  resolving={!!card.escalationId &&
+                    !!resolvingEscalations[card.escalationId]}
+                  onApprove={() =>
+                    card.escalationId && handleResolve(card.escalationId, true)}
+                  onReject={() =>
+                    card.escalationId &&
+                    handleResolve(card.escalationId, false)}
+                />
+              {:else if isToolUIPart(part)}
                 {@const rawToolName = getToolName(part)}
                 {@const displayToolName = formatToolName(
                   rawToolName,
@@ -905,27 +926,6 @@
                     </div>
                   {/if}
                 </div>
-              {/if}
-            {/each}
-            {#each message.parts ?? [] as part}
-              {#if isToolUIPart(part) && isRaisedEscalation(part.output)}
-                {@const card = escalationCardProps(part)}
-                <EscalationCard
-                  title={card.title}
-                  summary={card.summary}
-                  resolution={card.resolution}
-                  statusMessage={card.escalationId
-                    ? resolveMessages[card.escalationId]
-                    : undefined}
-                  showApproval={showInlineApproval}
-                  resolving={!!card.escalationId &&
-                    !!resolvingEscalations[card.escalationId]}
-                  onApprove={() =>
-                    card.escalationId && handleResolve(card.escalationId, true)}
-                  onReject={() =>
-                    card.escalationId &&
-                    handleResolve(card.escalationId, false)}
-                />
               {/if}
             {/each}
             {#if getVisibleRagSources(message).length}

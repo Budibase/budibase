@@ -16,26 +16,17 @@ import type {
 } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
-import {
-  assertAgentHasValidConfig,
-  assertAgentToolApprovalsValid,
-} from "./utils"
+import { assertAgentHasValidConfig } from "./utils"
 import { cleanupKnowledgeForOperation, knowledgeSourceSyncQueue } from "../rag"
 import { getValidProjectIdsForDuplication } from "../../projects/utils"
 
 // TODO: this will eventually go away, after a grace period
 type DeprecatedAgentOperation = Omit<AgentOperation, "enabledTools"> & {
   enabledTools?: Array<string | AgentOperationToolConfig>
-  escalation?: {
-    recipients?: unknown[]
-    delay?: number
-  }
 }
 
 type DeprecatedAgent = Omit<Agent, "operations"> & {
   operations?: DeprecatedAgentOperation[]
-  escalationConfigs?: object[]
-  approvalPolicies?: object[]
   promptInstructions?: string
   operationName?: string
   enabledTools?: string[]
@@ -53,13 +44,7 @@ export const normalizePersistedOperationTools = (
           toolName: tool,
           executionPrincipal: ToolExecutionPrincipal.REQUESTER,
         }
-      : {
-          toolName: tool.toolName,
-          executionPrincipal: tool.executionPrincipal,
-          ...(tool.approvalPolicyId && {
-            approvalPolicyId: tool.approvalPolicyId,
-          }),
-        }
+      : tool
   )
 
 const SECRET_MASK = "********"
@@ -191,8 +176,6 @@ const stripDeprecatedAgentFields = (raw: DeprecatedAgent): Agent => {
     knowledgeBases: _knowledgeBases,
     knowledgeSources: _knowledgeSources,
     allowKnowledgeSourceDownload: _allowKnowledgeSourceDownload,
-    escalationConfigs: _escalationConfigs,
-    approvalPolicies: _approvalPolicies,
     ...agent
   } = raw
   return agent as Agent
@@ -570,8 +553,6 @@ export async function create(
 
   if (agent.live) {
     await assertAgentHasValidConfig(agent)
-  } else {
-    await assertAgentToolApprovalsValid(agent)
   }
 
   const { rev } = await db.put({
@@ -671,13 +652,7 @@ export async function update(agent: Agent): Promise<Agent> {
   )
 
   if (updated.live) {
-    await assertAgentHasValidConfig(updated, {
-      allowLegacyOperationEscalation: existing.live === true,
-    })
-  } else {
-    await assertAgentToolApprovalsValid(updated, {
-      allowLegacyOperationEscalation: true,
-    })
+    await assertAgentHasValidConfig(updated)
   }
 
   if (removedOperations.length > 0) {

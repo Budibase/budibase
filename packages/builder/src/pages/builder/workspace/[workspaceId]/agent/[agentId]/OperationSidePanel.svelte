@@ -1,13 +1,15 @@
 <script lang="ts">
-  import { Body, Checkbox, Icon, InlineAlert, Select } from "@budibase/bbui"
+  import { Body, Icon, Select } from "@budibase/bbui"
   import {
+    FeatureFlag,
     ToolExecutionPrincipal,
+    ToolType,
     type AgentOperation,
-    type AgentOperationApprovalPolicy,
     type CaretPositionFn,
     type EnrichedBinding,
     type InsertAtPositionFn,
   } from "@budibase/types"
+  import { featureFlags } from "@/stores/portal"
   import type { BindingCompletion } from "@/types"
   import { fly } from "svelte/transition"
   import ResizablePanel from "@/components/common/ResizablePanel.svelte"
@@ -21,8 +23,8 @@
   import type { AgentTool } from "./toolTypes"
   import Knowledge from "./knowledge/index.svelte"
   import ToolIcon from "./ToolIcon.svelte"
+  import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
-  import ApprovalPolicies from "./EscalationConfigurations.svelte"
 
   let {
     open = false,
@@ -33,7 +35,6 @@
     completions = [],
     toolsLoaded = false,
     availableTools = [],
-    hasLegacyEscalation = false,
     webSearchConfigured = false,
     onClose,
     onUpdated,
@@ -50,7 +51,6 @@
     completions?: BindingCompletion[]
     toolsLoaded?: boolean
     availableTools?: AgentTool[]
-    hasLegacyEscalation?: boolean
     webSearchConfigured?: boolean
     onClose: () => void
     onUpdated: () => Promise<boolean>
@@ -67,9 +67,15 @@
   )
   let panelRoot: HTMLDivElement | undefined = $state(undefined)
   let toolSearch = $state("")
-  let configuringApprovals = $state<string[]>([])
   let filteredTools = $derived.by(() =>
     availableTools.filter(tool => {
+      // Hide the escalate tool when the escalation feature flag is off.
+      if (
+        tool.sourceType === ToolType.ESCALATION &&
+        !$featureFlags[FeatureFlag.ESCALATION]
+      ) {
+        return false
+      }
       const query = toolSearch.trim().toLowerCase()
       if (!query) {
         return true
@@ -147,6 +153,11 @@
     onUpdated()
   }
 
+  const updateRecipients = (recipients: any[]) => {
+    operation.escalation = { ...(operation.escalation ?? {}), recipients }
+    onUpdated()
+  }
+
   const formatToolLabel = (tool: AgentTool) =>
     (tool.readableName || tool.name)
       .split(".")
@@ -176,66 +187,17 @@
     return config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
   }
 
-  const getToolConfig = (toolName: string) =>
-    operation.enabledTools?.find(tool => tool.toolName === toolName)
-
-  const updateToolConfig = (
-    toolName: string,
-    update: Partial<NonNullable<AgentOperation["enabledTools"]>[number]>
-  ) => {
-    operation.enabledTools = includedToolRuntimeBindings.map(name => ({
-      toolName: name,
-      executionPrincipal: getToolPrincipal(name),
-      ...getToolConfig(name),
-      ...(name === toolName ? update : {}),
-    }))
-  }
-
   const setToolPrincipal = (
     toolName: string,
     executionPrincipal: ToolExecutionPrincipal
   ) => {
-    updateToolConfig(toolName, { executionPrincipal })
+    const toolNames = includedToolRuntimeBindings
+    operation.enabledTools = toolNames.map(name => ({
+      toolName: name,
+      executionPrincipal:
+        name === toolName ? executionPrincipal : getToolPrincipal(name),
+    }))
     onUpdated()
-  }
-
-  const isConfiguringApproval = (toolName: string) =>
-    configuringApprovals.includes(toolName) ||
-    !!getToolConfig(toolName)?.approvalPolicyId
-
-  const setApprovalEnabled = (toolName: string, enabled: boolean) => {
-    if (enabled) {
-      configuringApprovals = [...configuringApprovals, toolName]
-      return
-    }
-    configuringApprovals = configuringApprovals.filter(
-      name => name !== toolName
-    )
-    updateToolConfig(toolName, { approvalPolicyId: undefined })
-    onUpdated()
-  }
-
-  const updateToolApprovalPolicy = (
-    toolName: string,
-    approvalPolicyId: string
-  ) => {
-    updateToolConfig(toolName, { approvalPolicyId })
-    configuringApprovals = configuringApprovals.filter(
-      name => name !== toolName
-    )
-    onUpdated()
-  }
-
-  const formatApprovalPolicy = (policy: AgentOperationApprovalPolicy) => {
-    const destinations = policy.recipients.map(recipient => {
-      const target =
-        recipient.config.channelName ||
-        recipient.config.externalUserId ||
-        recipient.config.channelId ||
-        recipient.config.globalUserId
-      return target ? `${recipient.type} ${target}` : recipient.type
-    })
-    return `${policy.name} · ${destinations.join(", ")}`
   }
 
   const escapeRegExp = (str: string) =>
@@ -354,14 +316,6 @@
               </div>
             </div>
 
-            {#if hasLegacyEscalation}
-              <InlineAlert
-                type="negative"
-                header="Approval configuration needs updating"
-                message="Legacy operation-level escalation is ignored. Draft changes can still be saved, but configure Require approval on the appropriate tools before newly enabling or publishing this operation."
-              />
-            {/if}
-
             <div class="instructions-editor">
               <div class="editor-body">
                 {#if toolsLoaded}
@@ -404,14 +358,6 @@
                 </div>
               </div>
             </div>
-
-            <ApprovalPolicies
-              bind:operation
-              {agentId}
-              {availableTools}
-              {onUpdated}
-            />
-
             {#if includedToolsWithDetails.length > 0}
               <div class="tools-list">
                 {#each includedToolsWithDetails as tool (tool.runtimeBinding)}
@@ -455,18 +401,6 @@
                             event.detail as ToolExecutionPrincipal
                           )}
                       />
-                      <Checkbox
-                        size="S"
-                        text="Require approval"
-                        disabled={!tool.supportsApproval ||
-                          !operation.approvalPolicies?.length}
-                        helpText={!operation.approvalPolicies?.length
-                          ? "Create an approval policy first"
-                          : undefined}
-                        value={isConfiguringApproval(tool.runtimeBinding)}
-                        on:change={event =>
-                          setApprovalEnabled(tool.runtimeBinding, event.detail)}
-                      />
                       <button
                         class="tool-close-button"
                         type="button"
@@ -480,30 +414,28 @@
                         />
                       </button>
                     </div>
-                    {#if isConfiguringApproval(tool.runtimeBinding)}
-                      <div class="tool-approval-config">
-                        <Select
-                          size="S"
-                          placeholder="Select approval policy..."
-                          value={getToolConfig(tool.runtimeBinding)
-                            ?.approvalPolicyId}
-                          options={operation.approvalPolicies || []}
-                          getOptionLabel={formatApprovalPolicy}
-                          getOptionValue={policy => policy.id}
-                          on:change={event =>
-                            event.detail &&
-                            updateToolApprovalPolicy(
-                              tool.runtimeBinding,
-                              event.detail
-                            )}
-                        />
-                      </div>
-                    {/if}
                   </div>
                 {/each}
               </div>
             {/if}
           </div>
+
+          {#if $featureFlags[FeatureFlag.ESCALATION]}
+            <div class="operation-panel-section">
+              <Body size="S" color="var(--spectrum-global-color-gray-900)">
+                Escalation recipients
+              </Body>
+              <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+                Who gets notified when this operation escalates for approval.
+              </Body>
+              <EscalationRecipients
+                single
+                recipients={operation.escalation?.recipients ?? []}
+                {agentId}
+                onChange={updateRecipients}
+              />
+            </div>
+          {/if}
 
           <Knowledge bind:operation {onUpdated} />
         </div>
@@ -640,7 +572,6 @@
     border-radius: 999px;
     padding: 6px 10px;
     background: var(--spectrum-global-color-blue-100);
-    flex-wrap: wrap;
   }
 
   .tool-main {
@@ -670,11 +601,6 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
-  }
-
-  .tool-approval-config {
-    flex-basis: 100%;
-    padding: var(--spacing-s) var(--spacing-m) 0;
   }
 
   .run-as-label {

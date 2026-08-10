@@ -60,15 +60,18 @@
     live: operation.live,
     promptInstructions: operation.promptInstructions,
     enabledTools: operation.enabledTools,
-    approvalPolicies: operation.approvalPolicies,
     knowledgeBases: operation.knowledgeBases,
     allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
     knowledgeSources: operation.knowledgeSources,
+    escalation: operation.escalation,
   })
 
   const getConfiguredTools = (operation: AgentOperation) => {
     const existing = new Map(
-      (operation.enabledTools || []).map(tool => [tool.toolName, tool])
+      (operation.enabledTools || []).map(tool => [
+        tool.toolName,
+        tool.executionPrincipal,
+      ])
     )
     return getIncludedToolRuntimeBindings(
       operation.promptInstructions,
@@ -76,11 +79,7 @@
     ).map(toolName => ({
       toolName,
       executionPrincipal:
-        existing.get(toolName)?.executionPrincipal ??
-        ToolExecutionPrincipal.REQUESTER,
-      ...(existing.get(toolName)?.approvalPolicyId && {
-        approvalPolicyId: existing.get(toolName)?.approvalPolicyId,
-      }),
+        existing.get(toolName) ?? ToolExecutionPrincipal.REQUESTER,
     }))
   }
 
@@ -102,16 +101,6 @@
   let preloadedKnowledgeAgentId: string | undefined = $state()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
-  let legacyEscalationOperationIds = $derived(
-    new Set(
-      (currentAgent?.operations || [])
-        .filter(operation => {
-          const legacy = operation as AgentOperation & { escalation?: object }
-          return !!legacy.escalation
-        })
-        .map(operation => operation.id)
-    )
-  )
   let completionConfigs = $derived($aiConfigsStore.customConfigs || [])
   let modelOptions = $derived(
     completionConfigs.map(config => ({
@@ -599,12 +588,12 @@
 {#key currentAgent?._id}
   <OperationsSection
     bind:agent={draft}
+    agentId={currentAgent?._id}
     {promptBindings}
     bindingIcons={readableToIcon}
     completions={promptCompletions}
     {toolsLoaded}
     {availableTools}
-    {legacyEscalationOperationIds}
     {webSearchConfigured}
     onAddApiConnection={() => bb.settings("/connections/apis")}
     onConfigureWebSearch={openWebSearchConfigModal}

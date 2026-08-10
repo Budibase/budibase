@@ -37,12 +37,6 @@ export class BullEscalationProcessor implements IEscalationProcessor {
         "Cannot create an operation escalation with no recipients"
       )
     }
-    if (
-      input.source === EscalationSource.TOOL &&
-      input.recipients?.length !== 1
-    ) {
-      throw new Error("A tool approval requires exactly one recipient")
-    }
 
     const escalationId = input.escalationId ?? buildEscalationId()
     const docId = getDocId(escalationId)
@@ -91,11 +85,6 @@ export class BullEscalationProcessor implements IEscalationProcessor {
       ...(input.recipients?.length && { recipients: input.recipients }),
       ...(input.resolutionStrategy && {
         resolutionStrategy: input.resolutionStrategy,
-      }),
-      ...(input.source === EscalationSource.TOOL && {
-        toolExecutionStatus: existing?.toolExecutionStatus ?? "pending",
-        approvalPolicyId: input.approvalPolicyId,
-        approvalPolicyName: input.approvalPolicyName,
       }),
       ...sourceFields,
     }

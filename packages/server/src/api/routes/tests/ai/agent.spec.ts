@@ -1,9 +1,5 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
-import {
-  EscalationNotificationChannel,
-  ToolExecutionPrincipal,
-} from "@budibase/types"
 
 describe("agent duplicate", () => {
   const config = new TestConfiguration()
@@ -124,63 +120,6 @@ describe("agent duplicate", () => {
     expect(
       removed.operations?.find(operation => operation.id === "operation_2")
     ).toBeUndefined()
-  })
-
-  it("accepts approval policy references in operation tools", async () => {
-    const created = await config.api.agent.create({
-      name: "Approval policy agent",
-      aiconfig: "default",
-    })
-
-    await config.api.agent.createOperation(
-      created._id!,
-      {
-        id: "operation_approval",
-        name: "Approval flow",
-        live: false,
-        approvalPolicies: [
-          {
-            id: "approval_policy_engineering",
-            name: "Engineering",
-            recipients: [
-              {
-                type: EscalationNotificationChannel.SLACK,
-                config: { channelId: "C_ENGINEERING" },
-              },
-            ],
-          },
-        ],
-        enabledTools: [
-          {
-            toolName: "unsupported_tool",
-            executionPrincipal: ToolExecutionPrincipal.REQUESTER,
-            approvalPolicyId: "approval_policy_engineering",
-          },
-        ],
-        allowKnowledgeSourceDownload: true,
-      },
-      {
-        status: 422,
-        body: {
-          message: 'Tool "unsupported_tool" does not support approval gates',
-        },
-      }
-    )
-  })
-
-  it("rejects agent-level approval policy configuration", async () => {
-    const request = {
-      name: "Invalid agent policy",
-      aiconfig: "default",
-      approvalPolicies: [],
-    }
-
-    await config.api.agent.create(request, {
-      status: 400,
-      body: {
-        message: 'Invalid body - "approvalPolicies" is not allowed',
-      },
-    })
   })
 
   it("rejects creating an operation with a duplicate name for the same agent", async () => {

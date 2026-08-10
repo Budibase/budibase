@@ -1,7 +1,6 @@
 import { context, permissions, roles, users } from "@budibase/backend-core"
 import {
   ToolExecutionPrincipal,
-  UserStatus,
   type AgentExecutionContext,
 } from "@budibase/types"
 import sdk from "../../sdk"
@@ -48,9 +47,6 @@ export const authorizeAgentToolCall = async ({
     // Always rehydrate the requester, including admin-authority calls. This
     // makes removal of the initiating user revoke delayed work.
     const requestingUser = await getFullUser(executionContext.requestingUserId)
-    if (requestingUser.status === UserStatus.INACTIVE) {
-      throw new Error(DENIED_MESSAGE)
-    }
     if (principal === ToolExecutionPrincipal.ADMIN) {
       audit("allowed", resourceId)
       return

@@ -6,7 +6,7 @@ import {
 } from "@budibase/types"
 import { tool } from "ai"
 import { z } from "zod"
-import { getToolFailure, toToolSet, type AiToolDefinition } from "."
+import { toToolSet, type AiToolDefinition } from "."
 
 const definition = (execute: jest.Mock): AiToolDefinition => ({
   name: "secured_tool",
@@ -35,17 +35,6 @@ const executionContext = {
 }
 
 describe("secured AI tool execution", () => {
-  it("preserves structured tool errors", () => {
-    expect(
-      getToolFailure({
-        error: {
-          message: "The row does not match the table schema",
-          status: 400,
-        },
-      })
-    ).toBe('{"message":"The row does not match the table schema","status":400}')
-  })
-
   it("authorizes immediately before executing the tool", async () => {
     const execute = jest.fn().mockResolvedValue({ success: true })
     const authorize = jest.fn().mockResolvedValue(undefined)
@@ -139,149 +128,5 @@ describe("secured AI tool execution", () => {
       trustedInput,
       expect.objectContaining({ toolCallId: "call_1" })
     )
-  })
-
-  it("creates an approval request with the prepared input without executing", async () => {
-    const execute = jest.fn()
-    const authorize = jest.fn().mockResolvedValue(undefined)
-    const request = jest.fn().mockResolvedValue({ escalationId: "esc_1" })
-    const toolDefinition = definition(execute)
-    toolDefinition.authorization!.prepareInput = (input, context) => ({
-      ...(input as { value: string; userId?: string }),
-      userId: context.requestingUserId,
-    })
-    toolDefinition.approval = {
-      summarize: () => ({
-        title: "Approve secured tool",
-        summary: "Run the secured tool",
-      }),
-    }
-    const tools = toToolSet(
-      [toolDefinition],
-      new Map([
-        [
-          "secured_tool",
-          {
-            executionContext,
-            principal: ToolExecutionPrincipal.REQUESTER,
-            authorize,
-            escalation: {
-              request,
-            },
-          },
-        ],
-      ])
-    )
-
-    const result = await tools.secured_tool.execute?.(
-      { value: "hello", userId: "attacker_selected_user" },
-      { toolCallId: "call_1", messages: [] }
-    )
-
-    expect(request).toHaveBeenCalledWith({
-      input: { value: "hello", userId: "user_1" },
-      summary: {
-        title: "Approve secured tool",
-        summary: "Run the secured tool",
-      },
-      toolCallId: "call_1",
-      messages: [],
-    })
-    expect(execute).not.toHaveBeenCalled()
-    expect(result).toEqual({
-      status: "pending_approval",
-      escalationId: "esc_1",
-      title: "Approve secured tool",
-      summary: "Run the secured tool",
-      note: "This tool call is waiting for human approval.",
-    })
-  })
-
-  it("reuses approval across failures and consumes it on first success", async () => {
-    const execute = jest
-      .fn()
-      .mockRejectedValueOnce(new Error("Expense Tags can't be blank"))
-      .mockResolvedValueOnce({ success: true })
-    const authorize = jest.fn().mockResolvedValue(undefined)
-    const request = jest.fn().mockResolvedValue({ escalationId: "esc_2" })
-    const approvedRetry = { active: true }
-    const toolDefinition = definition(execute)
-    toolDefinition.approval = {
-      summarize: () => ({
-        title: "Approve secured tool",
-        summary: "Run the secured tool",
-      }),
-    }
-    const tools = toToolSet(
-      [toolDefinition],
-      new Map([
-        [
-          "secured_tool",
-          {
-            executionContext,
-            principal: ToolExecutionPrincipal.REQUESTER,
-            authorize,
-            approvedRetry,
-            escalation: { request },
-          },
-        ],
-      ])
-    )
-
-    await expect(
-      tools.secured_tool.execute?.(
-        { value: "missing tag" },
-        { toolCallId: "call_1", messages: [] }
-      )
-    ).rejects.toThrow("Expense Tags can't be blank")
-    expect(approvedRetry.active).toBe(true)
-    expect(request).not.toHaveBeenCalled()
-
-    await expect(
-      tools.secured_tool.execute?.(
-        { value: "Other" },
-        { toolCallId: "call_2", messages: [] }
-      )
-    ).resolves.toEqual({ success: true })
-    expect(approvedRetry.active).toBe(false)
-    expect(request).not.toHaveBeenCalled()
-
-    await expect(
-      tools.secured_tool.execute?.(
-        { value: "another action" },
-        { toolCallId: "call_3", messages: [] }
-      )
-    ).resolves.toEqual(expect.objectContaining({ status: "pending_approval" }))
-    expect(request).toHaveBeenCalledTimes(1)
-    expect(authorize).toHaveBeenCalledTimes(3)
-    expect(execute).toHaveBeenCalledTimes(2)
-  })
-
-  it("fails closed when a configured gate lacks approval metadata", async () => {
-    const execute = jest.fn()
-    const tools = toToolSet(
-      [definition(execute)],
-      new Map([
-        [
-          "secured_tool",
-          {
-            executionContext,
-            principal: ToolExecutionPrincipal.REQUESTER,
-            authorize: jest.fn().mockResolvedValue(undefined),
-            escalation: {
-              request: jest.fn(),
-            },
-          },
-        ],
-      ])
-    )
-
-    await expect(
-      tools.secured_tool.execute?.(
-        { value: "hello" },
-        { toolCallId: "call_1", messages: [] }
-      )
-    ).rejects.toThrow("Tool does not support approval gates")
-    expect(execute).not.toHaveBeenCalled()
   })
 })

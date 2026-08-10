@@ -4,7 +4,6 @@ import {
   EscalationSource,
   SuspendedAutomationContext,
   SuspendedOperationContext,
-  SuspendedToolCallContext,
 } from "@budibase/types"
 
 interface CreateEscalationBase {
@@ -37,20 +36,9 @@ export interface CreateOperationEscalationInput extends CreateEscalationBase {
   context: SuspendedOperationContext
 }
 
-export interface CreateToolEscalationInput extends CreateEscalationBase {
-  source: EscalationSource.TOOL
-  agentId: string
-  operationId: string
-  requestId?: string
-  approvalPolicyId: string
-  approvalPolicyName: string
-  context: SuspendedToolCallContext
-}
-
 export type CreateEscalationInput =
   | CreateAutomationEscalationInput
   | CreateOperationEscalationInput
-  | CreateToolEscalationInput
 
 export interface CreateEscalationResult {
   escalationId: string

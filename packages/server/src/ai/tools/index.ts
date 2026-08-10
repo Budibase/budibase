@@ -5,7 +5,7 @@ import {
   ToolType,
   type AgentExecutionContext,
 } from "@budibase/types"
-import { type ModelMessage, type Tool, type ToolSet } from "ai"
+import { type Tool, type ToolSet } from "ai"
 
 export interface ToolAuthorization {
   supportedPrincipals: ToolExecutionPrincipal[]
@@ -19,18 +19,6 @@ export interface ToolAuthorization {
   ) => unknown | Promise<unknown>
 }
 
-export interface ToolApprovalSummary {
-  title: string
-  summary: string
-}
-
-export interface ToolApproval {
-  summarize: (
-    input: unknown,
-    executionContext: AgentExecutionContext
-  ) => ToolApprovalSummary | Promise<ToolApprovalSummary>
-}
-
 export interface AiToolDefinition {
   name: string
   readableName?: string
@@ -40,7 +28,6 @@ export interface AiToolDefinition {
   sourceLabel?: string
   sourceIconType?: string
   authorization?: ToolAuthorization
-  approval?: ToolApproval
 }
 
 export interface ToolAuthorizationRuntime {
@@ -52,20 +39,9 @@ export interface ToolAuthorizationRuntime {
     executionContext: AgentExecutionContext
     principal: ToolExecutionPrincipal
   }) => Promise<void>
-  escalation?: {
-    request: (params: {
-      input: unknown
-      summary: ToolApprovalSummary
-      toolCallId: string
-      messages: ModelMessage[]
-    }) => Promise<{ escalationId: string }>
-  }
-  approvedRetry?: {
-    active: boolean
-  }
 }
 
-export const getToolFailure = (result: unknown): string | undefined => {
+const getToolFailure = (result: unknown): string | undefined => {
   if (!result || typeof result !== "object" || !("error" in result)) {
     return
   }
@@ -77,14 +53,6 @@ export const getToolFailure = (result: unknown): string | undefined => {
 
   if (error instanceof Error) {
     return error.message || "Tool execution failed"
-  }
-
-  if (typeof error === "object") {
-    try {
-      return JSON.stringify(error)
-    } catch {
-      return "Tool execution failed with a non-serializable error"
-    }
   }
 
   return String(error)
@@ -122,28 +90,6 @@ const wrapTool = (
         executionContext: runtime.executionContext,
         principal: runtime.principal,
       })
-      if (runtime.escalation && !runtime.approvedRetry?.active) {
-        if (!toolDef.approval) {
-          throw new Error("Tool does not support approval gates")
-        }
-        const summary = await toolDef.approval.summarize(
-          preparedInput,
-          runtime.executionContext
-        )
-        const { escalationId } = await runtime.escalation.request({
-          input: preparedInput,
-          summary,
-          toolCallId: args[1].toolCallId,
-          messages: args[1].messages,
-        })
-        return {
-          status: "pending_approval",
-          escalationId,
-          title: summary.title,
-          summary: summary.summary,
-          note: "This tool call is waiting for human approval.",
-        }
-      }
     }
     try {
       const result = await execute(preparedInput, args[1])
@@ -152,9 +98,6 @@ const wrapTool = (
         throw new Error(failureMessage)
       }
       if (runtime) {
-        if (runtime.approvedRetry) {
-          runtime.approvedRetry.active = false
-        }
         console.log("Agent tool execution", {
           outcome: "success",
           toolName: toolDef.name,

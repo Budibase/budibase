@@ -79,28 +79,6 @@ describe("agents crud", () => {
   })
 
   describe("fetch", () => {
-    it("drops agent-level approval policy fields", async () => {
-      mockDbAllDocs.mockResolvedValue({
-        rows: [
-          {
-            doc: {
-              _id: "agent_old_policy_shape",
-              _rev: "1-abc",
-              name: "Old policy shape",
-              aiconfig: "cfg_1",
-              escalationConfigs: [{ id: "old" }],
-              approvalPolicies: [{ id: "also_old" }],
-            },
-          },
-        ],
-      })
-
-      const agents = await agentsCrud.fetch()
-
-      expect(agents[0]).not.toHaveProperty("escalationConfigs")
-      expect(agents[0]).not.toHaveProperty("approvalPolicies")
-    })
-
     it("migrates legacy promptInstructions into the default operation", async () => {
       mockDbAllDocs.mockResolvedValue({
         rows: [

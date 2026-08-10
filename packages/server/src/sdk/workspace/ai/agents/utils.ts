@@ -1,38 +1,27 @@
 import {
   Agent,
   AgentOperation,
-  type ChatConversationChannel,
-  ESCALATE_TOOL_NAME,
-  EscalationSource,
   ToolType,
   ToolMetadata,
   SourceName,
   WebSearchProvider,
+  ESCALATE_TOOL_NAME,
   EscalateToolResultStatus,
-  ResolutionStrategy,
   ToolExecutionPrincipal,
   type AgentExecutionContext,
-  type EscalationRecipient,
-  EscalationNotificationChannel,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import {
   createKnowledgeFilesTool,
   createKnowledgeSearchTool,
+  createEscalatePlaceholderTool,
   getBudibaseTools,
 } from "../../../../ai/tools/budibase"
-import type {
-  ModelMessage,
-  ToolSet,
-  UIMessage,
-  TypedToolCall,
-  TypedToolResult,
-} from "ai"
+import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
 import { isToolUIPart, getToolName } from "ai"
 import {
   createRestQueryTool,
   createDatasourceQueryTool,
-  getToolFailure,
   toToolSet,
   type AiToolDefinition,
 } from "../../../../ai/tools"
@@ -40,13 +29,10 @@ import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 import { context, HTTPError } from "@budibase/backend-core"
 import { authorizeAgentToolCall } from "../../../../ai/tools/authorization"
-import { escalationProcessor } from "../../../../escalation/processor"
-import { resolutionStrategyBinding } from "../../../../escalation/resolutionStrategies"
 import {
   getReadableQueryToolBinding,
   isQueryToolType,
 } from "@budibase/shared-core"
-import { isDeepStrictEqual } from "node:util"
 
 const HELPER_TOOL_NAMES = new Set([
   "list_tables",
@@ -57,8 +43,6 @@ const HELPER_TOOL_NAMES = new Set([
   "search_knowledge",
   "list_session_escalations",
 ])
-
-const DEFAULT_TOOL_APPROVAL_DELAY_MS = 60 * 60 * 1000
 
 const isHelperTool = (tool: Pick<AiToolDefinition, "name">) =>
   HELPER_TOOL_NAMES.has(tool.name)
@@ -149,7 +133,6 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
           permissionLevel: tool.authorization.permissionLevel,
         }
       : undefined,
-    supportsApproval: !!tool.approval,
   }
 }
 
@@ -213,6 +196,7 @@ export async function getAvailableTools(
     ),
     ...restQueryTools,
     ...datasourceQueryTools,
+    createEscalatePlaceholderTool(),
   ]
   if (webSearchConfig?.apiKey) {
     if (webSearchConfig.provider === WebSearchProvider.EXA) {
@@ -240,14 +224,6 @@ export interface BuildPromptAndToolsOptions {
     requestingUserId: string
     requestingUserIsPublic?: boolean
     sessionId: string
-    channel?: ChatConversationChannel
-    getRequestId?: () => string | undefined
-    approvedToolRetry?: {
-      toolName: string
-      approvalPolicyId: string
-      executionPrincipal: ToolExecutionPrincipal
-      grant: { active: boolean }
-    }
   }
 }
 
@@ -313,12 +289,6 @@ export async function buildPromptAndTools(
     }
     for (const tool of enabledTools) {
       const config = toolConfigs.find(config => config.toolName === tool.name)
-      const approvalPolicy = operation.approvalPolicies?.find(
-        policy => policy.id === config?.approvalPolicyId
-      )
-      if (config?.approvalPolicyId && !approvalPolicy) {
-        continue
-      }
       const principal =
         config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
       if (
@@ -331,81 +301,6 @@ export async function buildPromptAndTools(
         executionContext,
         principal,
         authorize: authorizeAgentToolCall,
-        ...(options.execution.approvedToolRetry?.toolName === tool.name &&
-          options.execution.approvedToolRetry.approvalPolicyId ===
-            config?.approvalPolicyId &&
-          options.execution.approvedToolRetry.executionPrincipal ===
-            principal && {
-            approvedRetry: options.execution.approvedToolRetry.grant,
-          }),
-        ...(approvalPolicy && {
-          escalation: {
-            request: async ({
-              input,
-              summary,
-              toolCallId,
-              messages,
-            }: {
-              input: unknown
-              summary: { title: string; summary: string }
-              toolCallId: string
-              messages: ModelMessage[]
-            }) => {
-              const result = await escalationProcessor.create({
-                source: EscalationSource.TOOL,
-                appId: workspaceId,
-                tenantId: executionContext.tenantId,
-                message: summary.summary,
-                title: summary.title,
-                summary: summary.summary,
-                delay: DEFAULT_TOOL_APPROVAL_DELAY_MS,
-                recipients: approvalPolicy.recipients,
-                resolutionStrategy: resolutionStrategyBinding(
-                  ResolutionStrategy.FIRST_RESPONSE
-                ),
-                agentId,
-                operationId: operation.id,
-                requestId: options.execution?.getRequestId?.(),
-                approvalPolicyId: approvalPolicy.id,
-                approvalPolicyName: approvalPolicy.name,
-                context: {
-                  agentId,
-                  operationId: operation.id,
-                  sessionId: options.execution?.sessionId || "",
-                  messages,
-                  channel: options.execution?.channel,
-                  userId: options.execution?.requestingUserId,
-                  tenantId: executionContext.tenantId,
-                  workspaceId: executionContext.workspaceId,
-                  toolName: tool.name,
-                  toolCallId,
-                  input,
-                  executionPrincipal: principal,
-                  approvalPolicyId: approvalPolicy.id,
-                  approvalPolicyName: approvalPolicy.name,
-                  approvalPolicyRecipients: approvalPolicy.recipients,
-                  requestingUserIsPublic:
-                    executionContext.requestingUserIsPublic,
-                },
-              })
-              console.log("Agent tool approval requested", {
-                escalationId: result.escalationId,
-                requesterId: executionContext.requestingUserId,
-                effectivePrincipal: principal,
-                agentId,
-                operationId: operation.id,
-                toolName: tool.name,
-                approvalPolicyId: approvalPolicy.id,
-                approvalPolicyName: approvalPolicy.name,
-                recipientTypes: approvalPolicy.recipients.map(
-                  recipient => recipient.type
-                ),
-                workspaceId,
-              })
-              return result
-            },
-          },
-        }),
       }
       try {
         await authorizeAgentToolCall({
@@ -458,6 +353,9 @@ export async function buildPromptAndTools(
   let resolvedSystemPrompt = systemPrompt
   if (hasKnowledgeBases) {
     resolvedSystemPrompt += `\n\nWhen users ask about attached files (for example size, type, upload status, processing errors, or file counts), call list_knowledge_files with a filename when possible. Do not guess file metadata. If list_knowledge_files returns ambiguous results, ask a clarification question before answering. If it returns no matches, say that you couldn't find a matching file.\n\nFor any non-trivial user question, call search_knowledge before answering. Do not say the answer is unavailable, unknown, or unsupported until after you have searched knowledge. If search_knowledge returns no relevant context, say that you couldn't find supporting knowledge.\n\nIf you used search_knowledge context in your final answer, call report_used_sources immediately before your final response and pass only sourceIds that directly support the final answer. Do not include sources that were merely searched/consulted. If your conclusion is that the answer is not found in the documents, call report_used_sources with an empty sourceIds list.`
+  }
+  if (enabledToolNames.has("escalate")) {
+    resolvedSystemPrompt += `\n\nBefore calling escalate, call list_session_escalations to check whether this same request is already awaiting approval or has already been approved in this conversation. If an equivalent request is still pending, do not escalate again - tell the user it is already awaiting approval. If it has already been approved, proceed instead of escalating again. Only escalate genuinely new requests.`
   }
 
   return {
@@ -629,10 +527,7 @@ export function formatIncompleteToolCallError(
   return `The AI model failed to complete tool execution${toolNames ? ` for: ${toolNames}` : ""}. This may be due to a compatibility issue with the selected model. Please try a different model or try again.`
 }
 
-export const assertAgentHasValidConfig = async (
-  agent: Agent,
-  options: { allowLegacyOperationEscalation?: boolean } = {}
-) => {
+export const assertAgentHasValidConfig = async (agent: Agent) => {
   if (!agent.aiconfig) {
     throw new HTTPError(
       "Agent is not properly configured: missing AI config",
@@ -647,222 +542,4 @@ export const assertAgentHasValidConfig = async (
       422
     )
   }
-
-  await assertAgentToolApprovalsValid(agent, options)
-}
-
-export const assertAgentToolApprovalsValid = async (
-  agent: Agent,
-  options: { allowLegacyOperationEscalation?: boolean } = {}
-) => {
-  for (const operation of agent.operations || []) {
-    if (
-      !options.allowLegacyOperationEscalation &&
-      "escalation" in operation &&
-      operation.escalation
-    ) {
-      throw new HTTPError(
-        "Operation-level escalation is no longer supported. Configure approval on individual tools.",
-        422
-      )
-    }
-    const names = new Set<string>()
-    const policyIds = new Set<string>()
-    for (const policy of operation.approvalPolicies || []) {
-      const normalizedName = policy.name?.trim().toLowerCase()
-      if (
-        typeof policy.id !== "string" ||
-        !policy.id.startsWith("approval_policy_") ||
-        !normalizedName ||
-        !Array.isArray(policy.recipients) ||
-        !policy.recipients.length ||
-        policy.recipients.some(
-          recipient =>
-            !recipient ||
-            !Object.values(EscalationNotificationChannel).includes(
-              recipient.type
-            ) ||
-            typeof recipient.config !== "object" ||
-            recipient.config === null ||
-            Array.isArray(recipient.config)
-        ) ||
-        policyIds.has(policy.id) ||
-        names.has(normalizedName)
-      ) {
-        throw new HTTPError("Operation approval policy is invalid", 422)
-      }
-      policyIds.add(policy.id)
-      names.add(normalizedName)
-    }
-
-    for (const tool of operation.enabledTools || []) {
-      if (tool.approvalPolicyId && !policyIds.has(tool.approvalPolicyId)) {
-        throw new HTTPError(
-          `Tool "${tool.toolName}" references an unknown approval policy`,
-          422
-        )
-      }
-    }
-  }
-
-  const configuredApprovalTools = (agent.operations || []).flatMap(operation =>
-    (operation.enabledTools || []).filter(tool => !!tool.approvalPolicyId)
-  )
-  if (!configuredApprovalTools.length) return
-
-  const approvalTools = new Map(
-    (await getAvailableTools(agent.aiconfig))
-      .filter(tool => !!tool.approval)
-      .map(tool => [tool.name, tool])
-  )
-  for (const tool of configuredApprovalTools) {
-    const definition = approvalTools.get(tool.toolName)
-    if (!definition) {
-      throw new HTTPError(
-        `Tool "${tool.toolName}" does not support approval gates`,
-        422
-      )
-    }
-    if (
-      !definition.authorization?.supportedPrincipals.includes(
-        tool.executionPrincipal
-      )
-    ) {
-      throw new HTTPError(
-        `Tool "${tool.toolName}" does not support the selected execution principal`,
-        422
-      )
-    }
-  }
-}
-
-const approvedToolErrorMessage = (error: unknown) => {
-  if (error instanceof Error) {
-    return error.message || "Approved tool execution failed"
-  }
-  if (typeof error === "object" && error !== null) {
-    try {
-      return JSON.stringify(error)
-    } catch {
-      return "Approved tool execution failed with a non-serializable error"
-    }
-  }
-  return String(error)
-}
-
-export class ApprovedToolExecutionError extends Error {
-  constructor(public readonly toolError: unknown) {
-    super(approvedToolErrorMessage(toolError))
-    this.name = "ApprovedToolExecutionError"
-  }
-}
-
-export const executeApprovedToolCall = async ({
-  agent,
-  operationId,
-  toolName,
-  input,
-  toolCallId,
-  messages,
-  executionPrincipal,
-  requestingUserId,
-  sessionId,
-  approvalPolicyId,
-  expectedRecipients,
-  requestingUserIsPublic,
-}: {
-  agent: Agent
-  operationId: string
-  toolName: string
-  input: unknown
-  toolCallId: string
-  messages: ModelMessage[]
-  executionPrincipal: "requester" | "admin"
-  requestingUserId: string
-  sessionId: string
-  approvalPolicyId: string
-  expectedRecipients: EscalationRecipient[]
-  requestingUserIsPublic?: boolean
-}) => {
-  const principal =
-    executionPrincipal === "admin"
-      ? ToolExecutionPrincipal.ADMIN
-      : ToolExecutionPrincipal.REQUESTER
-  const operation = agent.operations?.find(item => item.id === operationId)
-  const config = operation?.enabledTools?.find(
-    item => item.toolName === toolName
-  )
-  const approvalPolicy = operation?.approvalPolicies?.find(
-    item => item.id === approvalPolicyId
-  )
-  if (
-    !operation ||
-    config?.approvalPolicyId !== approvalPolicyId ||
-    !approvalPolicy ||
-    config.executionPrincipal !== principal ||
-    !isDeepStrictEqual(approvalPolicy.recipients, expectedRecipients)
-  ) {
-    throw new HTTPError("Approved tool configuration has changed", 403)
-  }
-
-  const definition = (await getAvailableTools(agent.aiconfig)).find(
-    tool => tool.name === toolName
-  )
-  if (!definition?.authorization || !definition.approval) {
-    throw new HTTPError("Approved tool is no longer available", 403)
-  }
-  if (!definition.authorization.supportedPrincipals.includes(principal)) {
-    throw new HTTPError(
-      "Approved execution principal is no longer supported",
-      403
-    )
-  }
-
-  const workspaceId = context.getWorkspaceId()
-  if (!workspaceId) {
-    throw new HTTPError("Workspace context is required", 400)
-  }
-  const executionContext: AgentExecutionContext = {
-    tenantId: context.getTenantId(),
-    workspaceId,
-    agentId: agent._id!,
-    operationId,
-    conversationId: sessionId,
-    requestingUserId,
-    requestingUserIsPublic,
-  }
-  const preparedInput = definition.authorization.prepareInput
-    ? await definition.authorization.prepareInput(input, executionContext)
-    : input
-  if (!isDeepStrictEqual(preparedInput, input)) {
-    throw new HTTPError("Approved tool input is no longer valid", 403)
-  }
-  await authorizeAgentToolCall({
-    authorization: definition.authorization,
-    input: preparedInput,
-    executionContext,
-    principal,
-  })
-
-  if (!definition.tool.execute) {
-    throw new HTTPError("Approved tool cannot be executed", 400)
-  }
-  let result: unknown
-  try {
-    result = await definition.tool.execute(preparedInput, {
-      toolCallId,
-      messages,
-    })
-  } catch (error) {
-    throw new ApprovedToolExecutionError(error)
-  }
-  const failureMessage = getToolFailure(result)
-  if (failureMessage) {
-    const toolError =
-      result && typeof result === "object" && "error" in result
-        ? result.error
-        : failureMessage
-    throw new ApprovedToolExecutionError(toolError)
-  }
-  return result
 }

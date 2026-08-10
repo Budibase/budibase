@@ -58,22 +58,9 @@ const TELEGRAM_INTEGRATION_SCHEMA = Joi.object({
 
 const ESCALATION_RECIPIENT_SCHEMA = Joi.object({
   type: Joi.string()
-    .valid(
-      EscalationNotificationChannel.SLACK,
-      EscalationNotificationChannel.DISCORD,
-      EscalationNotificationChannel.MSTEAMS,
-      EscalationNotificationChannel.TELEGRAM
-    )
+    .valid(...Object.values(EscalationNotificationChannel))
     .required(),
-  config: Joi.object().or("globalUserId", "channelId").unknown(true).required(),
-})
-
-const AGENT_OPERATION_APPROVAL_POLICY_SCHEMA = Joi.object({
-  id: Joi.string()
-    .pattern(/^approval_policy_/)
-    .required(),
-  name: NON_EMPTY_STRING.required(),
-  recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).min(1).required(),
+  config: Joi.object().optional(),
 })
 
 const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
@@ -85,14 +72,14 @@ const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
       Joi.object({
         toolName: Joi.string().required(),
         executionPrincipal: Joi.string().valid("requester", "admin").required(),
-        approvalPolicyId: Joi.string().optional(),
       })
     )
     .optional(),
-  approvalPolicies: Joi.array()
-    .items(AGENT_OPERATION_APPROVAL_POLICY_SCHEMA)
-    .optional(),
   allowKnowledgeSourceDownload: Joi.boolean().optional(),
+  escalation: Joi.object({
+    recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
+    delay: Joi.number().integer().positive().optional(),
+  }).optional(),
 })
 
 export function createAgentValidator() {
@@ -135,8 +122,6 @@ export function updateAgentValidator() {
       updatedAt: OPTIONAL_STRING,
       publishedAt: OPTIONAL_STRING,
       createdBy: OPTIONAL_STRING,
-      escalationConfigs: Joi.forbidden(),
-      approvalPolicies: Joi.forbidden(),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,

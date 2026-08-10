@@ -1,4 +1,4 @@
-import type { Agent, AgentOperation } from "@budibase/types"
+import type { Agent } from "@budibase/types"
 import type {
   Tool,
   ToolSet,
@@ -6,11 +6,7 @@ import type {
   TypedToolResult,
   UIMessage,
 } from "ai"
-import {
-  EscalationNotificationChannel,
-  ToolExecutionPrincipal,
-  ToolType,
-} from "@budibase/types"
+import { ToolType } from "@budibase/types"
 import {
   findIncompleteToolCalls,
   formatIncompleteToolCallError,
@@ -20,7 +16,6 @@ import {
   IncompleteToolCall,
   groupToolResultsByOutcome,
   replaceUnavailableToolBindings,
-  assertAgentToolApprovalsValid,
   updatePendingToolCalls,
   updateUnrecoveredToolFailures,
 } from "./utils"
@@ -61,209 +56,6 @@ describe("replaceUnavailableToolBindings", () => {
 
     expect(result).toEqual(
       "Use [Unavailable in this security context: Expenses.create_row]."
-    )
-  })
-})
-
-describe("assertAgentToolApprovalsValid", () => {
-  const legacyAgent = (): Agent & {
-    operations: Array<AgentOperation & { escalation: object }>
-  } => ({
-    _id: "agent_1",
-    name: "Support Agent",
-    aiconfig: "config_1",
-    operations: [
-      {
-        id: "operation_1",
-        name: "Main operation",
-        live: true,
-        promptInstructions: "",
-        enabledTools: [],
-        allowKnowledgeSourceDownload: true,
-        escalation: { recipients: [] },
-      },
-    ],
-  })
-
-  it("rejects legacy operation-level escalation configuration", async () => {
-    await expect(assertAgentToolApprovalsValid(legacyAgent())).rejects.toThrow(
-      "Operation-level escalation is no longer supported"
-    )
-  })
-
-  it("allows legacy escalation while saving an existing draft", async () => {
-    await expect(
-      assertAgentToolApprovalsValid(legacyAgent(), {
-        allowLegacyOperationEscalation: true,
-      })
-    ).resolves.toBeUndefined()
-  })
-
-  it("rejects duplicate approval policy names within an operation", async () => {
-    const agent = legacyAgent()
-    delete (
-      agent.operations[0] as Partial<AgentOperation> & {
-        escalation?: object
-      }
-    ).escalation
-    agent.operations[0].approvalPolicies = [
-      {
-        id: "approval_policy_1",
-        name: "Engineering",
-        recipients: [
-          {
-            type: EscalationNotificationChannel.SLACK,
-            config: { channelId: "C1" },
-          },
-        ],
-      },
-      {
-        id: "approval_policy_2",
-        name: " engineering ",
-        recipients: [
-          {
-            type: EscalationNotificationChannel.SLACK,
-            config: { channelId: "C2" },
-          },
-        ],
-      },
-    ]
-
-    await expect(assertAgentToolApprovalsValid(agent)).rejects.toThrow(
-      "Operation approval policy is invalid"
-    )
-  })
-
-  it("accepts multiple recipients in an approval policy", async () => {
-    const agent = legacyAgent()
-    delete (
-      agent.operations[0] as Partial<AgentOperation> & {
-        escalation?: object
-      }
-    ).escalation
-    agent.operations[0].approvalPolicies = [
-      {
-        id: "approval_policy_engineering",
-        name: "Engineering",
-        recipients: [
-          {
-            type: EscalationNotificationChannel.SLACK,
-            config: { channelId: "C1" },
-          },
-          {
-            type: EscalationNotificationChannel.DISCORD,
-            config: { channelId: "C2" },
-          },
-        ],
-      },
-    ]
-
-    await expect(assertAgentToolApprovalsValid(agent)).resolves.toBeUndefined()
-  })
-
-  it("allows the same policy name in different operations", async () => {
-    const agent = legacyAgent()
-    delete (
-      agent.operations[0] as Partial<AgentOperation> & {
-        escalation?: object
-      }
-    ).escalation
-    const policy = {
-      id: "approval_policy_engineering",
-      name: "Engineering",
-      recipients: [
-        {
-          type: EscalationNotificationChannel.SLACK,
-          config: { channelId: "C1" },
-        },
-      ],
-    }
-    agent.operations[0].approvalPolicies = [policy]
-    agent.operations.push({
-      ...agent.operations[0],
-      id: "operation_2",
-      name: "Secondary operation",
-      approvalPolicies: [{ ...policy, id: "approval_policy_secondary" }],
-    })
-
-    await expect(assertAgentToolApprovalsValid(agent)).resolves.toBeUndefined()
-  })
-
-  it("rejects a policy reference owned by another operation", async () => {
-    const agent = legacyAgent()
-    delete (
-      agent.operations[0] as Partial<AgentOperation> & {
-        escalation?: object
-      }
-    ).escalation
-    agent.operations[0].approvalPolicies = [
-      {
-        id: "approval_policy_engineering",
-        name: "Engineering",
-        recipients: [
-          {
-            type: EscalationNotificationChannel.SLACK,
-            config: { channelId: "C1" },
-          },
-        ],
-      },
-    ]
-    agent.operations.push({
-      ...agent.operations[0],
-      id: "operation_2",
-      name: "Secondary operation",
-      approvalPolicies: [],
-      enabledTools: [
-        {
-          toolName: "create_row",
-          executionPrincipal: ToolExecutionPrincipal.REQUESTER,
-          approvalPolicyId: "approval_policy_engineering",
-        },
-      ],
-    })
-
-    await expect(assertAgentToolApprovalsValid(agent)).rejects.toThrow(
-      'Tool "create_row" references an unknown approval policy'
-    )
-  })
-
-  it("rejects an approval policy without recipients", async () => {
-    const agent = legacyAgent()
-    delete (
-      agent.operations[0] as Partial<AgentOperation> & {
-        escalation?: object
-      }
-    ).escalation
-    agent.operations[0].approvalPolicies = [
-      {
-        id: "approval_policy_engineering",
-        name: "Engineering",
-        recipients: [],
-      },
-    ]
-
-    await expect(assertAgentToolApprovalsValid(agent)).rejects.toThrow(
-      "Operation approval policy is invalid"
-    )
-  })
-
-  it("rejects tools referencing a missing approval policy", async () => {
-    const agent = legacyAgent()
-    delete (
-      agent.operations[0] as Partial<AgentOperation> & {
-        escalation?: object
-      }
-    ).escalation
-    agent.operations[0].enabledTools = [
-      {
-        toolName: "create_row",
-        executionPrincipal: ToolExecutionPrincipal.REQUESTER,
-        approvalPolicyId: "approval_policy_missing",
-      },
-    ]
-
-    await expect(assertAgentToolApprovalsValid(agent)).rejects.toThrow(
-      'Tool "create_row" references an unknown approval policy'
     )
   })
 })

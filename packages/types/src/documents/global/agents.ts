@@ -25,7 +25,6 @@ export interface ToolMetadata {
     permissionType: PermissionType
     permissionLevel: PermissionLevel
   }
-  supportsApproval?: boolean
 }
 
 interface ChatAgentIntegration {
@@ -129,21 +128,20 @@ export interface AgentSharePointKnowledgeSource {
 
 export type AgentKnowledgeSource = AgentSharePointKnowledgeSource
 
+export interface AgentEscalationConfig {
+  recipients?: EscalationRecipient[]
+  // How long the escalation is kept before being marked as expired.
+  delay?: number
+}
+
 export enum ToolExecutionPrincipal {
   REQUESTER = "requester",
   ADMIN = "admin",
 }
 
-export interface AgentOperationApprovalPolicy {
-  id: string
-  name: string
-  recipients: EscalationRecipient[]
-}
-
 export interface AgentOperationToolConfig {
   toolName: string
   executionPrincipal: ToolExecutionPrincipal
-  approvalPolicyId?: string
 }
 
 export interface AgentExecutionContext {
@@ -162,10 +160,10 @@ export interface AgentOperation {
   live: boolean
   promptInstructions?: string
   enabledTools?: AgentOperationToolConfig[]
-  approvalPolicies?: AgentOperationApprovalPolicy[]
   knowledgeBases?: string[]
   knowledgeSources?: AgentKnowledgeSource[]
   allowKnowledgeSourceDownload: boolean
+  escalation?: AgentEscalationConfig
 }
 
 export interface Agent extends Document {

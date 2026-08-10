@@ -2,7 +2,6 @@
   import {
     type ChatIdentityLink,
     type ChatIdentityLinkProvider,
-    type EscalationRecipient,
     EscalationNotificationChannel,
   } from "@budibase/types"
   import { API } from "@/api"
@@ -18,11 +17,9 @@
     Tags,
     Input,
     notifications,
-    Popover,
-    type PopoverAPI,
   } from "@budibase/bbui"
 
-  type Recipient = EscalationRecipient
+  type Recipient = { type: string; config: Record<string, any> }
 
   interface PendingRecipient {
     provider: EscalationNotificationChannel | undefined
@@ -40,9 +37,9 @@
   export let recipients: Recipient[] = []
   export let agentId: string | undefined = undefined
   export let onChange: (recipients: Recipient[]) => void = () => {}
-  export let onAddingChange: (adding: boolean) => void = () => {}
+  // Single mode: cap at one recipient (still stored as an array). Once chosen,
+  // the add button is replaced by a clear-recipient affordance.
   export let single: boolean = false
-  export let minimumRecipients: number = 0
 
   const PROVIDER_OPTIONS = [
     { value: EscalationNotificationChannel.SLACK, label: "Slack" },
@@ -76,8 +73,6 @@
   let teamsChannels: MSTeamsChannel[] = []
 
   let isAdding = false
-  let popoverAnchor: HTMLDivElement | undefined
-  let popover: PopoverAPI | undefined
   let pending: PendingRecipient = { ...DEFAULT_PENDING }
 
   // Reset all pending fields; optionally keep the chosen provider.
@@ -309,22 +304,8 @@
   }
 
   const resetAddFlow = () => {
-    popover?.hide()
     isAdding = false
-    onAddingChange(false)
     resetPending()
-  }
-
-  const handlePopoverClose = () => {
-    isAdding = false
-    onAddingChange(false)
-    resetPending()
-  }
-
-  const startAddFlow = () => {
-    isAdding = true
-    onAddingChange(true)
-    popover?.show()
   }
 </script>
 
@@ -332,10 +313,7 @@
   {#if recipients.length > 0}
     <Tags>
       {#each recipients as recipient, i}
-        <Tag
-          closable={!single && recipients.length > minimumRecipients}
-          on:remove={() => removeRecipient(i)}
-        >
+        <Tag closable on:remove={() => removeRecipient(i)}>
           <span class="recipient-provider"
             >{PROVIDER_LABELS[recipient.type] ?? recipient.type}</span
           >
@@ -346,168 +324,150 @@
     </Tags>
   {/if}
 
-  {#if single && recipients.length > 0}
-    <div bind:this={popoverAnchor}>
-      <ActionButton icon="pencil-simple" on:click={startAddFlow}>
-        Change
-      </ActionButton>
-    </div>
-  {:else}
-    <div bind:this={popoverAnchor}>
-      <ActionButton icon="Add" on:click={startAddFlow}>
-        Add recipient
-      </ActionButton>
-    </div>
-  {/if}
+  {#if isAdding}
+    <div class="add-flow">
+      <Select
+        options={PROVIDER_OPTIONS}
+        value={pending.provider}
+        placeholder="Provider..."
+        getOptionLabel={o => o.label}
+        getOptionValue={o => o.value}
+        on:change={e => {
+          pending = { ...DEFAULT_PENDING, provider: e.detail }
+        }}
+      />
 
-  <Popover
-    bind:this={popover}
-    anchor={popoverAnchor}
-    align="left"
-    minWidth={320}
-    maxWidth={420}
-    on:close={handlePopoverClose}
-  >
-    {#if isAdding}
-      <div class="add-flow">
-        <Select
-          options={PROVIDER_OPTIONS}
-          value={pending.provider}
-          placeholder="Provider..."
-          getOptionLabel={o => o.label}
-          getOptionValue={o => o.value}
-          on:change={e => {
-            pending = { ...DEFAULT_PENDING, provider: e.detail }
-          }}
-        />
-
-        {#if pending.provider}
-          {#if supportsChannel}
-            <div class="target-type">
-              <ActionButton
-                selected={pending.targetType === "user"}
-                on:click={() => resetPending(true)}
-              >
-                User DM
-              </ActionButton>
-              <ActionButton
-                selected={pending.targetType === "channel"}
-                on:click={() => {
-                  pending = {
-                    ...DEFAULT_PENDING,
-                    provider: pending.provider,
-                    targetType: "channel",
-                  }
-                }}
-              >
-                Channel
-              </ActionButton>
-            </div>
-          {/if}
-
-          {#if pending.targetType === "user"}
-            {#if linksLoaded && !filteredIdentityLinks.length}
-              <div class="no-links">
-                No linked users in this bot's workspace
-              </div>
-            {:else}
-              <Select
-                options={filteredIdentityLinks}
-                value={pending.userId}
-                placeholder="Select user..."
-                getOptionLabel={l => l.externalUserName || l.externalUserId}
-                getOptionValue={l => l.globalUserId}
-                on:change={e => (pending.userId = e.detail ?? "")}
-              />
-            {/if}
-          {:else if pending.provider === EscalationNotificationChannel.SLACK}
-            <Select
-              options={slackChannels}
-              value={pending.channelId}
-              placeholder="Select channel..."
-              getOptionLabel={c => `#${c.name}`}
-              getOptionValue={c => c.id}
-              on:change={e => (pending.channelId = e.detail ?? "")}
-            />
-          {:else if pending.provider === EscalationNotificationChannel.DISCORD}
-            <Input
-              value={pending.discordChannelId}
-              placeholder="Discord channel ID..."
-              on:change={e => (pending.discordChannelId = e.detail)}
-            />
-          {:else if pending.provider === EscalationNotificationChannel.MSTEAMS}
-            <div class="target-type">
-              <ActionButton
-                selected={pending.teamsInputMode === "lookup"}
-                on:click={() => setTeamsMode("lookup")}
-              >
-                Lookup
-              </ActionButton>
-              <ActionButton
-                selected={pending.teamsInputMode === "url"}
-                on:click={() => setTeamsMode("url")}
-              >
-                Paste URL
-              </ActionButton>
-              <ActionButton
-                selected={pending.teamsInputMode === "manual"}
-                on:click={() => setTeamsMode("manual")}
-              >
-                Manual
-              </ActionButton>
-            </div>
-            {#if pending.teamsInputMode === "lookup"}
-              <Select
-                options={teamsChannels}
-                value={pending.teamsChannelId}
-                placeholder="Select channel..."
-                getOptionLabel={c => `${c.teamName} / ${c.name}`}
-                getOptionValue={c => c.id}
-                on:change={e => {
-                  const channel = teamsChannels.find(c => c.id === e.detail)
-                  pending = {
-                    ...pending,
-                    teamsChannelId: channel?.id ?? "",
-                    teamsTeamId: channel?.teamId ?? "",
-                    teamsChannelName: channel?.name ?? "",
-                  }
-                }}
-              />
-            {:else if pending.teamsInputMode === "url"}
-              <Input
-                value={pending.teamsUrl}
-                placeholder="Paste Teams channel link..."
-                on:change={e => (pending.teamsUrl = e.detail)}
-              />
-            {:else}
-              <Input
-                value={pending.teamsChannelId}
-                placeholder="Channel ID (19:abc...@thread.tacv2)"
-                on:change={e => (pending.teamsChannelId = e.detail)}
-              />
-              <Input
-                value={pending.teamsTeamId}
-                placeholder="Team ID (groupId)"
-                on:change={e => (pending.teamsTeamId = e.detail)}
-              />
-            {/if}
-          {/if}
+      {#if pending.provider}
+        {#if supportsChannel}
+          <div class="target-type">
+            <ActionButton
+              selected={pending.targetType === "user"}
+              on:click={() => resetPending(true)}
+            >
+              User DM
+            </ActionButton>
+            <ActionButton
+              selected={pending.targetType === "channel"}
+              on:click={() => {
+                pending = {
+                  ...DEFAULT_PENDING,
+                  provider: pending.provider,
+                  targetType: "channel",
+                }
+              }}
+            >
+              Channel
+            </ActionButton>
+          </div>
         {/if}
 
-        <div class="add-actions">
-          <Button cta disabled={!canAdd} on:click={addRecipient}>Add</Button>
-          <Button secondary on:click={resetAddFlow}>Cancel</Button>
-        </div>
+        {#if pending.targetType === "user"}
+          {#if linksLoaded && !filteredIdentityLinks.length}
+            <div class="no-links">No linked users in this bot's workspace</div>
+          {:else}
+            <Select
+              options={filteredIdentityLinks}
+              value={pending.userId}
+              placeholder="Select user..."
+              getOptionLabel={l => l.externalUserName || l.externalUserId}
+              getOptionValue={l => l.globalUserId}
+              on:change={e => (pending.userId = e.detail ?? "")}
+            />
+          {/if}
+        {:else if pending.provider === EscalationNotificationChannel.SLACK}
+          <Select
+            options={slackChannels}
+            value={pending.channelId}
+            placeholder="Select channel..."
+            getOptionLabel={c => `#${c.name}`}
+            getOptionValue={c => c.id}
+            on:change={e => (pending.channelId = e.detail ?? "")}
+          />
+        {:else if pending.provider === EscalationNotificationChannel.DISCORD}
+          <Input
+            value={pending.discordChannelId}
+            placeholder="Discord channel ID..."
+            on:change={e => (pending.discordChannelId = e.detail)}
+          />
+        {:else if pending.provider === EscalationNotificationChannel.MSTEAMS}
+          <div class="target-type">
+            <ActionButton
+              selected={pending.teamsInputMode === "lookup"}
+              on:click={() => setTeamsMode("lookup")}
+            >
+              Lookup
+            </ActionButton>
+            <ActionButton
+              selected={pending.teamsInputMode === "url"}
+              on:click={() => setTeamsMode("url")}
+            >
+              Paste URL
+            </ActionButton>
+            <ActionButton
+              selected={pending.teamsInputMode === "manual"}
+              on:click={() => setTeamsMode("manual")}
+            >
+              Manual
+            </ActionButton>
+          </div>
+          {#if pending.teamsInputMode === "lookup"}
+            <Select
+              options={teamsChannels}
+              value={pending.teamsChannelId}
+              placeholder="Select channel..."
+              getOptionLabel={c => `${c.teamName} / ${c.name}`}
+              getOptionValue={c => c.id}
+              on:change={e => {
+                const channel = teamsChannels.find(c => c.id === e.detail)
+                pending = {
+                  ...pending,
+                  teamsChannelId: channel?.id ?? "",
+                  teamsTeamId: channel?.teamId ?? "",
+                  teamsChannelName: channel?.name ?? "",
+                }
+              }}
+            />
+          {:else if pending.teamsInputMode === "url"}
+            <Input
+              value={pending.teamsUrl}
+              placeholder="Paste Teams channel link..."
+              on:change={e => (pending.teamsUrl = e.detail)}
+            />
+          {:else}
+            <Input
+              value={pending.teamsChannelId}
+              placeholder="Channel ID (19:abc...@thread.tacv2)"
+              on:change={e => (pending.teamsChannelId = e.detail)}
+            />
+            <Input
+              value={pending.teamsTeamId}
+              placeholder="Team ID (groupId)"
+              on:change={e => (pending.teamsTeamId = e.detail)}
+            />
+          {/if}
+        {/if}
+      {/if}
+
+      <div class="add-actions">
+        <Button cta disabled={!canAdd} on:click={addRecipient}>Add</Button>
+        <Button secondary on:click={resetAddFlow}>Cancel</Button>
       </div>
-    {/if}
-  </Popover>
+    </div>
+  {:else if single && recipients.length > 0}
+    <ActionButton icon="Delete" on:click={() => onChange([])}>
+      Clear recipient
+    </ActionButton>
+  {:else}
+    <ActionButton icon="Add" on:click={() => (isAdding = true)}>
+      Add recipient
+    </ActionButton>
+  {/if}
 </div>
 
 <style>
   .recipients {
     display: flex;
-    align-items: center;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: var(--spacing-s);
   }
 
@@ -524,7 +484,6 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
-    padding: var(--spacing-m);
   }
 
   .target-type {
