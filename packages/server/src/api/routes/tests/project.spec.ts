@@ -40,6 +40,7 @@ import * as tar from "tar"
 import { TRIGGER_DEFINITIONS } from "../../../automations"
 import sdk from "../../../sdk"
 import * as projects from "../../../sdk/workspace/projects/crud"
+import * as projectLock from "../../../sdk/workspace/projects/lock"
 import { buildExternalTableId } from "../../../integrations/utils"
 import { getQueryIndex } from "../../../db/utils"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -65,6 +66,16 @@ jest.mock("@slack/web-api", () => ({
   })),
 }))
 
+jest.mock("../../../sdk/workspace/projects/lock", () => {
+  const actual = jest.requireActual<
+    typeof import("../../../sdk/workspace/projects/lock")
+  >("../../../sdk/workspace/projects/lock")
+  return {
+    ...actual,
+    doWithProjectAssignmentsLock: jest.fn(actual.doWithProjectAssignmentsLock),
+  }
+})
+
 describe("/projects", () => {
   const config = new TestConfiguration()
   let cleanupAIConfig: undefined | (() => Promise<void>)
@@ -80,6 +91,61 @@ describe("/projects", () => {
       { [FeatureFlag.PROJECTS]: true },
       f
     )
+  }
+
+  const pauseNextProjectAssignmentLock = () => {
+    const doWithProjectAssignmentsLock =
+      projectLock.doWithProjectAssignmentsLock as jest.MockedFunction<
+        typeof projectLock.doWithProjectAssignmentsLock
+      >
+    const originalImplementation =
+      doWithProjectAssignmentsLock.getMockImplementation()
+    if (!originalImplementation) {
+      throw new Error("Project assignments lock mock is not configured")
+    }
+    let release!: () => void
+    let locked!: () => void
+    let contenderStarted!: () => void
+    let firstCompleted!: () => void
+    const releasePromise = new Promise<void>(resolve => (release = resolve))
+    const lockedPromise = new Promise<void>(resolve => (locked = resolve))
+    const contenderPromise = new Promise<void>(
+      resolve => (contenderStarted = resolve)
+    )
+    const firstCompletedPromise = new Promise<void>(
+      resolve => (firstCompleted = resolve)
+    )
+    let projectLockCalls = 0
+
+    doWithProjectAssignmentsLock.mockImplementation(
+      async (task, workspaceId) => {
+        projectLockCalls++
+        if (projectLockCalls === 1) {
+          locked()
+          await releasePromise
+          try {
+            return await task()
+          } finally {
+            firstCompleted()
+          }
+        }
+        if (projectLockCalls === 2) {
+          contenderStarted()
+          await firstCompletedPromise
+          return await task()
+        }
+
+        return await originalImplementation(task, workspaceId)
+      }
+    )
+
+    return {
+      locked: lockedPromise,
+      contenderStarted: contenderPromise,
+      release,
+      restore: () =>
+        doWithProjectAssignmentsLock.mockImplementation(originalImplementation),
+    }
   }
 
   const createAssignedProject = async () => {
@@ -1036,6 +1102,78 @@ describe("/projects", () => {
   })
 
   describe("propagates project ids to dependencies on save", () => {
+    it("rejects direct assignment waiting for Project deletion", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({ name: "Race" })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Race app",
+            url: "/race-app",
+          })
+        )
+        const gate = pauseNextProjectAssignmentLock()
+
+        try {
+          const deletion = config.api.project.delete(project._id, project._rev)
+          await gate.locked
+          const assignment = config.api.project.updateAssignment(
+            workspaceApp._id!,
+            {
+              resourceRev: workspaceApp._rev!,
+              projectIds: [project._id],
+              dependencyIds: [],
+            },
+            { status: 404 }
+          )
+          await gate.contenderStarted
+          gate.release()
+
+          await Promise.all([deletion, assignment])
+        } finally {
+          gate.release()
+          gate.restore()
+        }
+
+        expect(
+          (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
+    it("does not propagate after waiting for Project deletion", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({ name: "Race" })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Race app",
+            url: "/race-app",
+            projectIds: [project._id],
+          })
+        )
+        const automation = await config.createAutomation()
+        const gate = pauseNextProjectAssignmentLock()
+
+        try {
+          const deletion = config.api.project.delete(project._id, project._rev)
+          await gate.locked
+          const screenSave = config.api.screen.save(
+            createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+          )
+          await gate.contenderStarted
+          gate.release()
+
+          await Promise.all([deletion, screenSave])
+        } finally {
+          gate.release()
+          gate.restore()
+        }
+
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
     it("does not build a workspace graph for an unassigned resource save", async () => {
       await withProjectsEnabled(async () => {
         const { workspaceApp } = await config.api.workspaceApp.create(

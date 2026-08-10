@@ -14,6 +14,7 @@ import {
   withProjectIds,
 } from "./utils"
 import { get as getProject } from "./crud"
+import { doWithProjectAssignmentsLock } from "./lock"
 
 interface UpdateResourceProjectAssignmentInput {
   resourceId: string
@@ -42,7 +43,7 @@ export const getProjectAssignableResource = async (
   return resource
 }
 
-export const updateResourceProjectAssignment = async ({
+export const updateResourceProjectAssignmentUnlocked = async ({
   resourceId,
   resourceRev,
   projectIds,
@@ -74,4 +75,12 @@ export const updateResourceProjectAssignment = async ({
     ...updated,
     _rev: response.rev,
   }
+}
+
+export const updateResourceProjectAssignment = async (
+  input: UpdateResourceProjectAssignmentInput
+) => {
+  return await doWithProjectAssignmentsLock(() =>
+    updateResourceProjectAssignmentUnlocked(input)
+  )
 }

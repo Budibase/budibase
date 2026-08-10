@@ -168,7 +168,7 @@ export async function find(ctx: UserCtx<void, FindTableResponse>) {
   ctx.body = result
 }
 
-export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
+async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const appId = ctx.appId
   const { rows, ...table } = ctx.request.body
   const isImport = rows
@@ -231,6 +231,10 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
 
   ctx.body = savedTable
   builderSocket?.emitTableUpdate(ctx, cloneDeep(savedTable))
+}
+
+export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
+  await sdk.projects.doWithProjectAssignmentsLock(() => saveUnlocked(ctx))
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteTableResponse>) {
@@ -331,7 +335,7 @@ export async function migrate(
   ctx.body = { message: `Column ${oldColumn} migrated.` }
 }
 
-export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
+async function duplicateUnlocked(ctx: UserCtx<void, SaveTableResponse>) {
   const tableId = ctx.params.tableId as string
   const table = await sdk.tables.getTable(tableId)
 
@@ -354,6 +358,10 @@ export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
 
   const processedTable = await processTable(duplicatedTable)
   builderSocket?.emitTableUpdate(ctx, cloneDeep(processedTable))
+}
+
+export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
+  await sdk.projects.doWithProjectAssignmentsLock(() => duplicateUnlocked(ctx))
 }
 
 export async function publish(

@@ -37,7 +37,7 @@ export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
   )
 }
 
-export async function save(
+async function saveUnlocked(
   ctx: UserCtx<SaveScreenRequest, SaveScreenResponse>
 ) {
   const db = context.getWorkspaceDB()
@@ -141,6 +141,12 @@ export async function save(
     pluginAdded,
   }
   builderSocket?.emitScreenUpdate(ctx, savedScreen)
+}
+
+export async function save(
+  ctx: UserCtx<SaveScreenRequest, SaveScreenResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(() => saveUnlocked(ctx))
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {

@@ -51,7 +51,7 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
   ctx.body = result
 }
 
-export async function create(
+async function createUnlocked(
   ctx: Ctx<CreateRowActionRequest, RowActionResponse>
 ) {
   const table = await getTable(ctx)
@@ -78,6 +78,12 @@ export async function create(
     allowedSources: flattenAllowedSources(tableId, createdAction.permissions),
   }
   ctx.status = 201
+}
+
+export async function create(
+  ctx: Ctx<CreateRowActionRequest, RowActionResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(() => createUnlocked(ctx))
 }
 
 export async function remove(ctx: Ctx<void, void>) {

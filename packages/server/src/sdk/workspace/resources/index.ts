@@ -34,6 +34,7 @@ import { getRowToolNames } from "../../../ai/tools/budibase/rows"
 import { ObjectStoreBuckets } from "../../../constants"
 import { extractTableIdFromRowActionsID, getRowParams } from "../../../db/utils"
 import { getQueryToolBindingsForResource } from "../ai/agents/queryToolReferences"
+import { doWithProjectAssignmentsLock } from "../projects/lock"
 import {
   getProjectIds,
   hasProject,
@@ -909,7 +910,7 @@ async function duplicateInternalTableRows(
   }
 }
 
-export async function duplicateResourcesToWorkspace(
+async function duplicateResourcesToWorkspaceUnlocked(
   resources: string[],
   toWorkspace: string,
   options?: {
@@ -1102,4 +1103,18 @@ export async function duplicateResourcesToWorkspace(
       toWorkspace: toWorkspaceName,
     })
   }
+}
+
+export async function duplicateResourcesToWorkspace(
+  resources: string[],
+  toWorkspace: string,
+  options?: {
+    copyRows?: boolean
+  }
+) {
+  await doWithProjectAssignmentsLock(
+    () =>
+      duplicateResourcesToWorkspaceUnlocked(resources, toWorkspace, options),
+    toWorkspace
+  )
 }

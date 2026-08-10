@@ -104,62 +104,65 @@ export async function previewAssignment(
 export async function updateAssignment(
   ctx: Ctx<UpdateProjectAssignmentRequest, UpdateProjectAssignmentResponse>
 ) {
-  const { resourceId } = ctx.params
-  const { resourceRev, dependencyIds } = ctx.request.body
-  const projectIds =
-    (await resolveProjectIds(ctx.request.body.projectIds)) || []
-  await sdk.projects.getProjectAssignableResource(resourceId)
+  await sdk.projects.doWithProjectAssignmentsLock(async () => {
+    const { resourceId } = ctx.params
+    const { resourceRev, dependencyIds } = ctx.request.body
+    const projectIds =
+      (await resolveProjectIds(ctx.request.body.projectIds)) || []
+    await sdk.projects.getProjectAssignableResource(resourceId)
 
-  let selectedDependencyIds: string[] = []
-  if (dependencyIds.length) {
-    if (!projectIds.length) {
-      throw new HTTPError(
-        "Dependencies cannot be assigned without a project.",
-        400
+    let selectedDependencyIds: string[] = []
+    if (dependencyIds.length) {
+      if (!projectIds.length) {
+        throw new HTTPError(
+          "Dependencies cannot be assigned without a project.",
+          400
+        )
+      }
+
+      const dependencies = await getProjectAssignableDependencies(resourceId)
+      const dependencyIdsSet = new Set(dependencyIds)
+      const validDependencyIds = new Set(
+        dependencies.map(dependency => dependency.id)
       )
+      const invalidDependencyId = dependencyIds.find(
+        dependencyId => !validDependencyIds.has(dependencyId)
+      )
+      if (invalidDependencyId) {
+        throw new HTTPError(
+          `Resource '${invalidDependencyId}' is not an assignable dependency.`,
+          400
+        )
+      }
+
+      selectedDependencyIds = dependencies
+        .map(dependency => dependency.id)
+        .filter(dependencyId => dependencyIdsSet.has(dependencyId))
     }
 
-    const dependencies = await getProjectAssignableDependencies(resourceId)
-    const dependencyIdsSet = new Set(dependencyIds)
-    const validDependencyIds = new Set(
-      dependencies.map(dependency => dependency.id)
+    const updatedResource =
+      await sdk.projects.updateResourceProjectAssignmentUnlocked({
+        resourceId,
+        resourceRev,
+        projectIds,
+      })
+    const outcome = await propagateProjectIdsToDependencyIdsWithWarning(ctx, {
+      dependencyIds: selectedDependencyIds,
+      projectIds,
+    })
+    const failedIds = new Set(
+      outcome.status === "incomplete" ? outcome.resourceIds : []
     )
-    const invalidDependencyId = dependencyIds.find(
-      dependencyId => !validDependencyIds.has(dependencyId)
-    )
-    if (invalidDependencyId) {
-      throw new HTTPError(
-        `Resource '${invalidDependencyId}' is not an assignable dependency.`,
-        400
-      )
+
+    ctx.body = {
+      resourceId,
+      resourceRev: updatedResource._rev,
+      projectIds,
+      assignedDependencyIds: selectedDependencyIds.filter(
+        dependencyId => !failedIds.has(dependencyId)
+      ),
     }
-
-    selectedDependencyIds = dependencies
-      .map(dependency => dependency.id)
-      .filter(dependencyId => dependencyIdsSet.has(dependencyId))
-  }
-
-  const updatedResource = await sdk.projects.updateResourceProjectAssignment({
-    resourceId,
-    resourceRev,
-    projectIds,
   })
-  const outcome = await propagateProjectIdsToDependencyIdsWithWarning(ctx, {
-    dependencyIds: selectedDependencyIds,
-    projectIds,
-  })
-  const failedIds = new Set(
-    outcome.status === "incomplete" ? outcome.resourceIds : []
-  )
-
-  ctx.body = {
-    resourceId,
-    resourceRev: updatedResource._rev,
-    projectIds,
-    assignedDependencyIds: selectedDependencyIds.filter(
-      dependencyId => !failedIds.has(dependencyId)
-    ),
-  }
 }
 
 export async function remove(ctx: Ctx<void, void>) {

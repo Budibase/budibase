@@ -45,7 +45,7 @@ export async function fetch(ctx: Ctx<void, FetchWorkspaceAppResponse>) {
   }
 }
 
-export async function duplicate(
+async function duplicateUnlocked(
   ctx: Ctx<void, InsertWorkspaceAppResponse, { id: string }>
 ) {
   const { id } = ctx.params
@@ -67,6 +67,12 @@ export async function duplicate(
   ctx.status = 201
 }
 
+export async function duplicate(
+  ctx: Ctx<void, InsertWorkspaceAppResponse, { id: string }>
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(() => duplicateUnlocked(ctx))
+}
+
 export async function find(
   ctx: Ctx<void, FindWorkspaceAppResponse, { id: string }>
 ) {
@@ -79,7 +85,7 @@ export async function find(
   ctx.body = toWorkspaceAppResponse(workspaceApp)
 }
 
-export async function create(
+async function createUnlocked(
   ctx: Ctx<InsertWorkspaceAppRequest, InsertWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
@@ -109,7 +115,13 @@ export async function create(
   }
 }
 
-export async function edit(
+export async function create(
+  ctx: Ctx<InsertWorkspaceAppRequest, InsertWorkspaceAppResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(() => createUnlocked(ctx))
+}
+
+async function editUnlocked(
   ctx: Ctx<UpdateWorkspaceAppRequest, UpdateWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
@@ -152,6 +164,12 @@ export async function edit(
   ctx.body = {
     workspaceApp: toWorkspaceAppResponse(workspaceApp),
   }
+}
+
+export async function edit(
+  ctx: Ctx<UpdateWorkspaceAppRequest, UpdateWorkspaceAppResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(() => editUnlocked(ctx))
 }
 
 export async function remove(ctx: Ctx<void, void>) {
