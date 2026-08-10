@@ -1,4 +1,4 @@
-import { TableSourceType } from "@budibase/types"
+import { PermissionLevel, TableSourceType } from "@budibase/types"
 import { type BudibaseToolDefinition, getBudibaseTools } from ".."
 import { createRowTools } from "../rows"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
@@ -51,6 +51,16 @@ describe("AI Tools - Rows", () => {
       expect(tool.name).toMatch(/^[A-Za-z0-9_-]+$/)
       expect(tool.name.endsWith(`_${action}`)).toBe(true)
     }
+  })
+
+  it("requires write permission to delete rows", () => {
+    const deleteTool = getExternalRowTools("Notes").find(tool =>
+      tool.readableName?.endsWith(".delete_row")
+    )
+
+    expect(deleteTool?.authorization?.permissionLevel).toBe(
+      PermissionLevel.WRITE
+    )
   })
 
   it("distinguishes long table IDs with the same prefix", () => {
