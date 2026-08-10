@@ -5,7 +5,7 @@ import {
   Duration,
   utils,
 } from "@budibase/backend-core"
-import { ESCALATE_TOOL_NAME, EscalateToolResultStatus } from "@budibase/types"
+import { EscalateToolResultStatus } from "@budibase/types"
 import type {
   AgentRequest,
   AgentRequestAction,
@@ -340,6 +340,7 @@ async function recordEscalationRaised({
     },
     timestamp
   )
+  await updateRequestStatus({ requestId, status: "needs_input" })
 }
 
 export async function recordEscalationResolved({
@@ -380,7 +381,7 @@ export async function recordToolCall({
   input?: unknown
   output?: unknown
 }): Promise<void> {
-  if (toolName === ESCALATE_TOOL_NAME && status === "success") {
+  if (status === "success") {
     const escalationOutput = output as
       | { status?: string; escalationId?: string }
       | undefined

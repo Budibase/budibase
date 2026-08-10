@@ -171,6 +171,12 @@ const createAutomationTools = (
           permissionLevel: PermissionLevel.EXECUTE,
           resourceId: automation._id!,
         },
+        approval: {
+          summarize: () => ({
+            title: "Approve automation",
+            summary: `Trigger automation "${automationName}"`,
+          }),
+        },
         tool: tool({
           description,
           inputSchema: z.object({

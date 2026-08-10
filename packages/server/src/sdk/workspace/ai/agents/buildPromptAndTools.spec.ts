@@ -42,15 +42,6 @@ jest.mock("../../../../ai/tools/budibase", () => ({
       },
     })
   ),
-  createEscalatePlaceholderTool: jest.fn(() => ({
-    name: "escalate",
-    description: "Escalate to a human",
-    sourceType: "ESCALATION",
-    sourceLabel: "Escalation",
-    tool: {
-      execute: jest.fn().mockResolvedValue({ status: "unavailable" }),
-    },
-  })),
 }))
 
 jest.mock("../../../../ai/tools/search", () => ({

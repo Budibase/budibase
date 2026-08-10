@@ -1,4 +1,4 @@
-import type { Agent } from "@budibase/types"
+import type { Agent, AgentOperation } from "@budibase/types"
 import type {
   Tool,
   ToolSet,
@@ -16,6 +16,7 @@ import {
   IncompleteToolCall,
   groupToolResultsByOutcome,
   replaceUnavailableToolBindings,
+  assertAgentToolEscalationsValid,
   updatePendingToolCalls,
   updateUnrecoveredToolFailures,
 } from "./utils"
@@ -57,6 +58,41 @@ describe("replaceUnavailableToolBindings", () => {
     expect(result).toEqual(
       "Use [Unavailable in this security context: Expenses.create_row]."
     )
+  })
+})
+
+describe("assertAgentToolEscalationsValid", () => {
+  const legacyAgent = (): Agent & {
+    operations: Array<AgentOperation & { escalation: object }>
+  } => ({
+    _id: "agent_1",
+    name: "Support Agent",
+    aiconfig: "config_1",
+    operations: [
+      {
+        id: "operation_1",
+        name: "Main operation",
+        live: true,
+        promptInstructions: "",
+        enabledTools: [],
+        allowKnowledgeSourceDownload: true,
+        escalation: { recipients: [] },
+      },
+    ],
+  })
+
+  it("rejects legacy operation-level escalation configuration", async () => {
+    await expect(
+      assertAgentToolEscalationsValid(legacyAgent())
+    ).rejects.toThrow("Operation-level escalation is no longer supported")
+  })
+
+  it("allows legacy escalation while saving an existing draft", async () => {
+    await expect(
+      assertAgentToolEscalationsValid(legacyAgent(), {
+        allowLegacyOperationEscalation: true,
+      })
+    ).resolves.toBeUndefined()
   })
 })
 

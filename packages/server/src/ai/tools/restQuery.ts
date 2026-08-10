@@ -84,6 +84,12 @@ const createQueryTool = ({
       permissionLevel: PermissionLevel.EXECUTE,
       resourceId: query._id,
     },
+    approval: {
+      summarize: () => ({
+        title: "Approve query",
+        summary: `Execute query "${query.name}"`,
+      }),
+    },
     tool: tool({
       description,
       inputSchema: parametersSchema,

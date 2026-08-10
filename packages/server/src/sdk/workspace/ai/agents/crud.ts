@@ -23,6 +23,10 @@ import { getValidProjectIdsForDuplication } from "../../projects/utils"
 // TODO: this will eventually go away, after a grace period
 type DeprecatedAgentOperation = Omit<AgentOperation, "enabledTools"> & {
   enabledTools?: Array<string | AgentOperationToolConfig>
+  escalation?: {
+    recipients?: unknown[]
+    delay?: number
+  }
 }
 
 type DeprecatedAgent = Omit<Agent, "operations"> & {
@@ -652,7 +656,9 @@ export async function update(agent: Agent): Promise<Agent> {
   )
 
   if (updated.live) {
-    await assertAgentHasValidConfig(updated)
+    await assertAgentHasValidConfig(updated, {
+      allowLegacyOperationEscalation: existing.live === true,
+    })
   }
 
   if (removedOperations.length > 0) {

@@ -414,6 +414,12 @@ export const createRowTools = ({
             : PermissionLevel.READ,
         resourceId: tableId,
       },
+      approval: {
+        summarize: () => ({
+          title: `Approve ${formatActionLabel(action)}`,
+          summary: `${formatActionLabel(action)} in table "${tableName}"`,
+        }),
+      },
       tool: tool({
         description,
         inputSchema,

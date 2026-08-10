@@ -1,11 +1,12 @@
 import {
+  type EscalationRecipient,
   PermissionLevel,
   PermissionType,
   ToolExecutionPrincipal,
   ToolType,
   type AgentExecutionContext,
 } from "@budibase/types"
-import { type Tool, type ToolSet } from "ai"
+import { type ModelMessage, type Tool, type ToolSet } from "ai"
 
 export interface ToolAuthorization {
   supportedPrincipals: ToolExecutionPrincipal[]
@@ -19,6 +20,18 @@ export interface ToolAuthorization {
   ) => unknown | Promise<unknown>
 }
 
+export interface ToolApprovalSummary {
+  title: string
+  summary: string
+}
+
+export interface ToolApproval {
+  summarize: (
+    input: unknown,
+    executionContext: AgentExecutionContext
+  ) => ToolApprovalSummary | Promise<ToolApprovalSummary>
+}
+
 export interface AiToolDefinition {
   name: string
   readableName?: string
@@ -28,6 +41,7 @@ export interface AiToolDefinition {
   sourceLabel?: string
   sourceIconType?: string
   authorization?: ToolAuthorization
+  approval?: ToolApproval
 }
 
 export interface ToolAuthorizationRuntime {
@@ -39,6 +53,15 @@ export interface ToolAuthorizationRuntime {
     executionContext: AgentExecutionContext
     principal: ToolExecutionPrincipal
   }) => Promise<void>
+  escalation?: {
+    recipient: EscalationRecipient
+    request: (params: {
+      input: unknown
+      summary: ToolApprovalSummary
+      toolCallId: string
+      messages: ModelMessage[]
+    }) => Promise<{ escalationId: string }>
+  }
 }
 
 const getToolFailure = (result: unknown): string | undefined => {
@@ -90,6 +113,26 @@ const wrapTool = (
         executionContext: runtime.executionContext,
         principal: runtime.principal,
       })
+      if (runtime.escalation) {
+        if (!toolDef.approval) {
+          throw new Error("Tool does not support approval gates")
+        }
+        const summary = await toolDef.approval.summarize(
+          preparedInput,
+          runtime.executionContext
+        )
+        const { escalationId } = await runtime.escalation.request({
+          input: preparedInput,
+          summary,
+          toolCallId: args[1].toolCallId,
+          messages: args[1].messages,
+        })
+        return {
+          status: "pending_approval",
+          escalationId,
+          note: "This tool call is waiting for human approval.",
+        }
+      }
     }
     try {
       const result = await execute(preparedInput, args[1])

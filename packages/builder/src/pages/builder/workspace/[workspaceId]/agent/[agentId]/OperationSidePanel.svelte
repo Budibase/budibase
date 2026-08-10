@@ -1,15 +1,13 @@
 <script lang="ts">
-  import { Body, Icon, Select } from "@budibase/bbui"
+  import { Body, Checkbox, Icon, InlineAlert, Select } from "@budibase/bbui"
   import {
-    FeatureFlag,
     ToolExecutionPrincipal,
-    ToolType,
     type AgentOperation,
     type CaretPositionFn,
     type EnrichedBinding,
+    type EscalationRecipient,
     type InsertAtPositionFn,
   } from "@budibase/types"
-  import { featureFlags } from "@/stores/portal"
   import type { BindingCompletion } from "@/types"
   import { fly } from "svelte/transition"
   import ResizablePanel from "@/components/common/ResizablePanel.svelte"
@@ -35,6 +33,7 @@
     completions = [],
     toolsLoaded = false,
     availableTools = [],
+    hasLegacyEscalation = false,
     webSearchConfigured = false,
     onClose,
     onUpdated,
@@ -51,6 +50,7 @@
     completions?: BindingCompletion[]
     toolsLoaded?: boolean
     availableTools?: AgentTool[]
+    hasLegacyEscalation?: boolean
     webSearchConfigured?: boolean
     onClose: () => void
     onUpdated: () => Promise<boolean>
@@ -67,15 +67,9 @@
   )
   let panelRoot: HTMLDivElement | undefined = $state(undefined)
   let toolSearch = $state("")
+  let configuringApprovals = $state<string[]>([])
   let filteredTools = $derived.by(() =>
     availableTools.filter(tool => {
-      // Hide the escalate tool when the escalation feature flag is off.
-      if (
-        tool.sourceType === ToolType.ESCALATION &&
-        !$featureFlags[FeatureFlag.ESCALATION]
-      ) {
-        return false
-      }
       const query = toolSearch.trim().toLowerCase()
       if (!query) {
         return true
@@ -153,11 +147,6 @@
     onUpdated()
   }
 
-  const updateRecipients = (recipients: any[]) => {
-    operation.escalation = { ...(operation.escalation ?? {}), recipients }
-    onUpdated()
-  }
-
   const formatToolLabel = (tool: AgentTool) =>
     (tool.readableName || tool.name)
       .split(".")
@@ -187,16 +176,62 @@
     return config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
   }
 
+  const getToolConfig = (toolName: string) =>
+    operation.enabledTools?.find(tool => tool.toolName === toolName)
+
+  const updateToolConfig = (
+    toolName: string,
+    update: Partial<NonNullable<AgentOperation["enabledTools"]>[number]>
+  ) => {
+    operation.enabledTools = includedToolRuntimeBindings.map(name => ({
+      toolName: name,
+      executionPrincipal: getToolPrincipal(name),
+      ...getToolConfig(name),
+      ...(name === toolName ? update : {}),
+    }))
+  }
+
   const setToolPrincipal = (
     toolName: string,
     executionPrincipal: ToolExecutionPrincipal
   ) => {
-    const toolNames = includedToolRuntimeBindings
-    operation.enabledTools = toolNames.map(name => ({
-      toolName: name,
-      executionPrincipal:
-        name === toolName ? executionPrincipal : getToolPrincipal(name),
-    }))
+    updateToolConfig(toolName, { executionPrincipal })
+    onUpdated()
+  }
+
+  const isConfiguringApproval = (toolName: string) =>
+    configuringApprovals.includes(toolName) ||
+    !!getToolConfig(toolName)?.escalation
+
+  const getToolRecipients = (toolName: string): EscalationRecipient[] => {
+    const recipient = getToolConfig(toolName)?.escalation?.recipient
+    return recipient ? [recipient] : []
+  }
+
+  const setApprovalEnabled = (toolName: string, enabled: boolean) => {
+    if (enabled) {
+      configuringApprovals = [...configuringApprovals, toolName]
+      return
+    }
+    configuringApprovals = configuringApprovals.filter(
+      name => name !== toolName
+    )
+    updateToolConfig(toolName, { escalation: undefined })
+    onUpdated()
+  }
+
+  const updateToolRecipient = (
+    toolName: string,
+    recipients: EscalationRecipient[]
+  ) => {
+    updateToolConfig(toolName, {
+      escalation: recipients[0] ? { recipient: recipients[0] } : undefined,
+    })
+    if (recipients[0]) {
+      configuringApprovals = configuringApprovals.filter(
+        name => name !== toolName
+      )
+    }
     onUpdated()
   }
 
@@ -316,6 +351,14 @@
               </div>
             </div>
 
+            {#if hasLegacyEscalation}
+              <InlineAlert
+                type="negative"
+                header="Approval configuration needs updating"
+                message="Legacy operation-level escalation is ignored. Draft changes can still be saved, but configure Require approval on the appropriate tools before newly enabling or publishing this operation."
+              />
+            {/if}
+
             <div class="instructions-editor">
               <div class="editor-body">
                 {#if toolsLoaded}
@@ -401,6 +444,14 @@
                             event.detail as ToolExecutionPrincipal
                           )}
                       />
+                      <Checkbox
+                        size="S"
+                        text="Require approval"
+                        disabled={!tool.supportsApproval}
+                        value={isConfiguringApproval(tool.runtimeBinding)}
+                        on:change={event =>
+                          setApprovalEnabled(tool.runtimeBinding, event.detail)}
+                      />
                       <button
                         class="tool-close-button"
                         type="button"
@@ -414,28 +465,25 @@
                         />
                       </button>
                     </div>
+                    {#if isConfiguringApproval(tool.runtimeBinding)}
+                      <div class="tool-approval-config">
+                        <EscalationRecipients
+                          single
+                          recipients={getToolRecipients(tool.runtimeBinding)}
+                          {agentId}
+                          onChange={recipients =>
+                            updateToolRecipient(
+                              tool.runtimeBinding,
+                              recipients as EscalationRecipient[]
+                            )}
+                        />
+                      </div>
+                    {/if}
                   </div>
                 {/each}
               </div>
             {/if}
           </div>
-
-          {#if $featureFlags[FeatureFlag.ESCALATION]}
-            <div class="operation-panel-section">
-              <Body size="S" color="var(--spectrum-global-color-gray-900)">
-                Escalation recipients
-              </Body>
-              <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-                Who gets notified when this operation escalates for approval.
-              </Body>
-              <EscalationRecipients
-                single
-                recipients={operation.escalation?.recipients ?? []}
-                {agentId}
-                onChange={updateRecipients}
-              />
-            </div>
-          {/if}
 
           <Knowledge bind:operation {onUpdated} />
         </div>
@@ -572,6 +620,7 @@
     border-radius: 999px;
     padding: 6px 10px;
     background: var(--spectrum-global-color-blue-100);
+    flex-wrap: wrap;
   }
 
   .tool-main {
@@ -601,6 +650,11 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
+  }
+
+  .tool-approval-config {
+    flex-basis: 100%;
+    padding: var(--spacing-s) var(--spacing-m) 0;
   }
 
   .run-as-label {

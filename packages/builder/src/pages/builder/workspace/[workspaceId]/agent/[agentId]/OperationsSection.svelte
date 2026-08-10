@@ -35,6 +35,7 @@ Any constraints this operation must follow.
     completions = [],
     toolsLoaded = false,
     availableTools = [],
+    legacyEscalationOperationIds = new Set<string>(),
     webSearchConfigured = false,
     onAddApiConnection = () => {},
     onConfigureWebSearch = () => {},
@@ -48,6 +49,7 @@ Any constraints this operation must follow.
     completions?: BindingCompletion[]
     toolsLoaded?: boolean
     availableTools?: AgentTool[]
+    legacyEscalationOperationIds?: Set<string>
     webSearchConfigured?: boolean
     onAddApiConnection?: () => void
     onConfigureWebSearch?: () => void
@@ -315,6 +317,7 @@ Any constraints this operation must follow.
     {completions}
     {toolsLoaded}
     {availableTools}
+    hasLegacyEscalation={legacyEscalationOperationIds.has(selectedOperation.id)}
     {webSearchConfigured}
     {onAddApiConnection}
     {onConfigureWebSearch}

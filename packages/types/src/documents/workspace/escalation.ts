@@ -16,6 +16,7 @@ export function isEscalationResponse(v: unknown): v is EscalationResponse {
 export enum EscalationSource {
   AUTOMATION = "automation",
   OPERATION = "operation",
+  TOOL = "tool",
 }
 
 // The registered name of the escalate tool exposed to agent operations.
@@ -55,9 +56,20 @@ export interface SuspendedOperationContext {
   userId?: string
 }
 
+export interface SuspendedToolCallContext extends SuspendedOperationContext {
+  tenantId: string
+  workspaceId: string
+  toolName: string
+  toolCallId: string
+  input: unknown
+  executionPrincipal: "requester" | "admin"
+  requestingUserIsPublic?: boolean
+}
+
 export type SuspendedContext =
   | ({ source: EscalationSource.AUTOMATION } & SuspendedAutomationContext)
   | ({ source: EscalationSource.OPERATION } & SuspendedOperationContext)
+  | ({ source: EscalationSource.TOOL } & SuspendedToolCallContext)
 
 export interface EscalationContextDoc extends Document {
   source: EscalationSource
@@ -85,6 +97,8 @@ export interface EscalationContextDoc extends Document {
   // zlib-deflated + base64 JSON of the assistant UI message produced when the
   // operation resumed
   resumeResultCompressed?: string
+  toolExecutionStatus?: "pending" | "executing" | "completed" | "failed"
+  toolResultCompressed?: string
 }
 
 export interface EscalationResult {

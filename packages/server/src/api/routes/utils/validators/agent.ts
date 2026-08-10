@@ -58,9 +58,14 @@ const TELEGRAM_INTEGRATION_SCHEMA = Joi.object({
 
 const ESCALATION_RECIPIENT_SCHEMA = Joi.object({
   type: Joi.string()
-    .valid(...Object.values(EscalationNotificationChannel))
+    .valid(
+      EscalationNotificationChannel.SLACK,
+      EscalationNotificationChannel.DISCORD,
+      EscalationNotificationChannel.MSTEAMS,
+      EscalationNotificationChannel.TELEGRAM
+    )
     .required(),
-  config: Joi.object().optional(),
+  config: Joi.object().or("globalUserId", "channelId").unknown(true).required(),
 })
 
 const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
@@ -72,14 +77,13 @@ const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
       Joi.object({
         toolName: Joi.string().required(),
         executionPrincipal: Joi.string().valid("requester", "admin").required(),
+        escalation: Joi.object({
+          recipient: ESCALATION_RECIPIENT_SCHEMA.required(),
+        }).optional(),
       })
     )
     .optional(),
   allowKnowledgeSourceDownload: Joi.boolean().optional(),
-  escalation: Joi.object({
-    recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
-    delay: Joi.number().integer().positive().optional(),
-  }).optional(),
 })
 
 export function createAgentValidator() {

@@ -63,15 +63,11 @@
     knowledgeBases: operation.knowledgeBases,
     allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
     knowledgeSources: operation.knowledgeSources,
-    escalation: operation.escalation,
   })
 
   const getConfiguredTools = (operation: AgentOperation) => {
     const existing = new Map(
-      (operation.enabledTools || []).map(tool => [
-        tool.toolName,
-        tool.executionPrincipal,
-      ])
+      (operation.enabledTools || []).map(tool => [tool.toolName, tool])
     )
     return getIncludedToolRuntimeBindings(
       operation.promptInstructions,
@@ -79,7 +75,11 @@
     ).map(toolName => ({
       toolName,
       executionPrincipal:
-        existing.get(toolName) ?? ToolExecutionPrincipal.REQUESTER,
+        existing.get(toolName)?.executionPrincipal ??
+        ToolExecutionPrincipal.REQUESTER,
+      ...(existing.get(toolName)?.escalation && {
+        escalation: existing.get(toolName)?.escalation,
+      }),
     }))
   }
 
@@ -101,6 +101,16 @@
   let preloadedKnowledgeAgentId: string | undefined = $state()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
+  let legacyEscalationOperationIds = $derived(
+    new Set(
+      (currentAgent?.operations || [])
+        .filter(operation => {
+          const legacy = operation as AgentOperation & { escalation?: object }
+          return !!legacy.escalation
+        })
+        .map(operation => operation.id)
+    )
+  )
   let completionConfigs = $derived($aiConfigsStore.customConfigs || [])
   let modelOptions = $derived(
     completionConfigs.map(config => ({
@@ -594,6 +604,7 @@
     completions={promptCompletions}
     {toolsLoaded}
     {availableTools}
+    {legacyEscalationOperationIds}
     {webSearchConfigured}
     onAddApiConnection={() => bb.settings("/connections/apis")}
     onConfigureWebSearch={openWebSearchConfigModal}

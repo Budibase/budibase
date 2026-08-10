@@ -1,4 +1,4 @@
-import { cache, features, getErrorMessage } from "@budibase/backend-core"
+import { cache, getErrorMessage } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import {
   ActionType,
@@ -7,9 +7,7 @@ import {
   AgentMessageMetadata,
   ChatConversationRequest,
   ContextUser,
-  ESCALATE_TOOL_NAME,
   EscalateToolResultStatus,
-  FeatureFlag,
 } from "@budibase/types"
 import {
   Output,
@@ -40,26 +38,15 @@ import {
 } from "./utils"
 import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
-import { createEscalateTool } from "../../../../ai/tools/budibase"
-import {
-  createListSessionEscalationsTool,
-  LIST_SESSION_ESCALATIONS_TOOL_NAME,
-} from "../../../../ai/tools/budibase/listSessionEscalations"
 import type tracer from "dd-trace"
 import { withLiteLLMSessionId } from "../llm/requestSession"
-
-// How long to wait for a human response before the escalation expires, in
-// seconds, when the operation doesn't specify its own delay.
-const DEFAULT_ESCALATION_DELAY_SECONDS = 3600
 
 const TOOL_RESULT_SAFETY_INSTRUCTIONS = `Only call tools that are currently available to you. Never claim that an action, mutation, approval, or other side effect succeeded unless the corresponding tool returned a successful result during this turn. If a required tool is unavailable or its call fails, clearly state that the action was not performed and that the user may not have permission.`
 
 const UNAVAILABLE_TOOL_RECOVERY_INSTRUCTIONS = `A tool required for the requested action is unavailable in the current security context. The action was not performed. Tell the user that you could not perform it because the tool is unavailable to them; do not claim or imply success.`
 
 // Read-only/helper tool calls that shouldn't clutter the request timeline.
-const TIMELINE_HIDDEN_TOOL_NAMES = new Set<string>([
-  LIST_SESSION_ESCALATIONS_TOOL_NAME,
-])
+const TIMELINE_HIDDEN_TOOL_NAMES = new Set<string>()
 
 interface PrepareAgentChatRunParams {
   agent: Agent
@@ -77,10 +64,9 @@ interface PrepareAgentChatRunParams {
   // Appended to the system prompt - a trusted channel for run-time directives
   // Puting it in the user input made it suspicious.
   additionalInstructions?: string
-  // Resolves the AgentRequest id tracking this run, for the escalate tool to
-  // stamp onto the escalation it raises. Read lazily since the caller only
-  // knows it after this run's operation is resolved.
+  // Resolves the AgentRequest id lazily after operation routing.
   getRequestId?: () => string | undefined
+  reportOnly?: boolean
 }
 
 export interface AgentChatRun {
@@ -340,6 +326,8 @@ export interface PrepareAgentRunContextParams {
   operationId?: string
   requestingUserId?: string
   requestingUserIsPublic?: boolean
+  channel?: ChatConversationRequest["channel"]
+  getRequestId?: () => string | undefined
 }
 
 export interface AgentRunContext {
@@ -382,6 +370,8 @@ export const prepareAgentRunContext = async ({
   operationId,
   requestingUserId,
   requestingUserIsPublic,
+  channel,
+  getRequestId,
 }: PrepareAgentRunContextParams): Promise<AgentRunContext> => {
   const llm = await sdk.ai.llm.createLLM(
     aiConfigId ?? agent.aiconfig,
@@ -410,6 +400,8 @@ export const prepareAgentRunContext = async ({
             requestingUserId: requestingUserId || "",
             requestingUserIsPublic,
             sessionId,
+            channel,
+            getRequestId,
           }
         : undefined,
     }
@@ -427,16 +419,11 @@ export const prepareAgentRunContext = async ({
   }
 }
 
-// A pending escalation suspends the turn - once one exists, later steps run
-// with no tools so the model can wrap up in text but cannot act before a
-// human responds. Keyed on the result status rather than the tool name so
-// resumed runs (ALREADY_APPROVED) keep their tools.
+// A pending approval suspends the turn immediately. Keyed on the result status
+// rather than a tool name because any configured tool can be gated.
 const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
   steps.some(step =>
     step.toolResults.some(result => {
-      if (result.toolName !== ESCALATE_TOOL_NAME) {
-        return false
-      }
       const output = result.output
       return (
         typeof output === "object" &&
@@ -476,6 +463,7 @@ export const prepareAgentChatRun = async ({
   operationId,
   additionalInstructions,
   getRequestId,
+  reportOnly,
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
   const latestQuestion =
     providedLatestQuestion ?? (chat ? findLatestUserQuestion(chat) : "")
@@ -497,6 +485,8 @@ export const prepareAgentChatRun = async ({
       operationId,
       requestingUserId: user._id!,
       requestingUserIsPublic: chat?.previewAsPublic === true,
+      channel: chat?.channel,
+      getRequestId,
       buildPromptOptions: {
         baseSystemPrompt: ai.agentSystemPrompt(user, chat?.timezone),
         includeGoal: false,
@@ -539,39 +529,6 @@ export const prepareAgentChatRun = async ({
     tools.report_used_sources = reportUsedSourcesTool
   }
 
-  // Escalation gate: when off, strip the escalate tool entirely
-  if (tools.escalate && !(await features.isEnabled(FeatureFlag.ESCALATION))) {
-    delete tools.escalate
-  }
-
-  if (tools.escalate) {
-    const recipients = selectedOperation?.escalation?.recipients
-    if (selectedOperation && recipients?.length) {
-      // Always the real tool, on resumes too. A resumed run must still be
-      // able to raise a genuinely new escalation.
-      tools.escalate = createEscalateTool({
-        agentId,
-        operationId: selectedOperation.id,
-        sessionId,
-        recipients,
-        delayMs:
-          (selectedOperation.escalation?.delay ??
-            DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
-        channel: chat?.channel,
-        userId: user?._id,
-        getMessages: () => modelMessages,
-        getRequestId: () => getRequestId?.(),
-      })
-    }
-
-    // Give the model read-only visibility of this session's escalations so it
-    // can tell whether a request has already been raised/approved before
-    // escalating again.
-    tools.list_session_escalations = createListSessionEscalationsTool({
-      sessionId,
-    })
-  }
-
   const systemPrompt = [
     baseSystemPrompt,
     additionalInstructions,
@@ -590,8 +547,10 @@ export const prepareAgentChatRun = async ({
     }),
     instructions: systemPrompt || undefined,
     tools: hasTools ? tools : undefined,
-    ...(hasTools ? { toolChoice: "auto" as const } : {}),
-    stopWhen: stepCountIs(30),
+    ...(hasTools
+      ? { toolChoice: reportOnly ? ("none" as const) : ("auto" as const) }
+      : {}),
+    stopWhen: [stepCountIs(30), ({ steps }) => hasPendingEscalation(steps)],
     // Anthropic rejects those without a tools param.
     prepareStep: ({ steps }) => {
       if (hasUnavailableToolError(steps)) {
@@ -600,9 +559,7 @@ export const prepareAgentChatRun = async ({
           system: `${systemPrompt}\n\n${UNAVAILABLE_TOOL_RECOVERY_INSTRUCTIONS}`,
         }
       }
-      return hasPendingEscalation(steps)
-        ? { toolChoice: "none" as const }
-        : undefined
+      return undefined
     },
     providerOptions: llm.providerOptions?.(hasTools),
   })

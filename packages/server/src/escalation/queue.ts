@@ -14,6 +14,7 @@ import {
   EscalationSource,
   SEPARATOR,
   SuspendedOperationContext,
+  SuspendedToolCallContext,
 } from "@budibase/types"
 import { automationQueue } from "../automations"
 import sdk from "../sdk"
@@ -238,6 +239,277 @@ async function persistResumeResult(escalationId: string, message: UIMessage) {
       .deflateSync(JSON.stringify(message))
       .toString("base64"),
     updatedAt: new Date().toISOString(),
+  })
+}
+
+export async function resumeToolCall({
+  doc,
+  escalationId,
+  resolution,
+  ctx,
+}: {
+  doc: EscalationContextDoc
+  escalationId: string
+  resolution: EscalationContextDoc["resolution"]
+  ctx: SuspendedToolCallContext
+}) {
+  const approved = resolution === "resolved" && doc.response?.accepted === true
+  const outcome =
+    resolution === "expired" ? "expired" : approved ? "approved" : "rejected"
+  const settleRequest = async ({
+    status,
+    error,
+  }: {
+    status: "completed" | "failed"
+    error?: string
+  }) => {
+    if (!doc.requestId) {
+      return
+    }
+    await sdk.ai.agentRequests
+      .updateRequestStatus({
+        requestId: doc.requestId,
+        status,
+        ...(error && { error }),
+        isHumanResponse: true,
+      })
+      .catch(requestError => {
+        console.error("Failed to settle tool approval request", {
+          escalationId,
+          status,
+          error:
+            requestError instanceof Error
+              ? requestError.message
+              : String(requestError),
+        })
+      })
+  }
+
+  console.log("Agent tool approval resolved", {
+    escalationId,
+    requesterId: ctx.userId,
+    effectivePrincipal: ctx.executionPrincipal,
+    agentId: ctx.agentId,
+    operationId: ctx.operationId,
+    toolName: ctx.toolName,
+    recipientType: doc.recipients?.[0]?.type,
+    outcome,
+  })
+
+  if (doc.requestId) {
+    await sdk.ai.agentRequests
+      .recordEscalationResolved({
+        requestId: doc.requestId,
+        escalationId,
+        outcome,
+        sessionId: ctx.sessionId,
+      })
+      .catch(error => {
+        console.error("Failed to record tool approval resolution", {
+          escalationId,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+  }
+
+  if (!approved) {
+    const text =
+      outcome === "expired"
+        ? "This tool approval timed out without a response. The action was not performed."
+        : "This tool call was rejected. The action was not performed."
+    const db = context.getWorkspaceDB()
+    const current = await db.get<EscalationContextDoc>(getDocId(escalationId))
+    await db.put({
+      ...current,
+      toolExecutionStatus: "failed",
+      updatedAt: new Date().toISOString(),
+    })
+    await persistResumeResult(escalationId, textMessage(text))
+    await deliverOperationResult(ctx, text)
+    await settleRequest({ status: "completed" })
+    return
+  }
+
+  const db = context.getWorkspaceDB()
+  const recipient = doc.recipients?.[0]
+  const current = await db.get<EscalationContextDoc>(getDocId(escalationId))
+  if (current.toolExecutionStatus !== "pending") {
+    return
+  }
+  const executing = await db.put({
+    ...current,
+    toolExecutionStatus: "executing",
+    updatedAt: new Date().toISOString(),
+  })
+
+  let toolExecuted = false
+  let executionOutcome: "completed" | "failed" = "failed"
+  try {
+    if (
+      ctx.tenantId !== doc.tenantId ||
+      ctx.workspaceId !== doc.appId ||
+      context.getTenantId() !== doc.tenantId ||
+      context.getWorkspaceId() !== doc.appId
+    ) {
+      throw new Error("Tool approval context does not match this workspace")
+    }
+    if (!recipient || doc.recipients?.length !== 1) {
+      throw new Error("Tool approval recipient configuration is invalid")
+    }
+    const agent = await sdk.ai.agents.getOrThrow(ctx.agentId)
+    const userId = ctx.userId || ""
+    const user: ContextUser = await getFullUser(userId)
+    const toolResult = await sdk.ai.agents.executeApprovedToolCall({
+      agent,
+      operationId: ctx.operationId,
+      toolName: ctx.toolName,
+      input: ctx.input,
+      toolCallId: ctx.toolCallId,
+      messages: ctx.messages,
+      executionPrincipal: ctx.executionPrincipal,
+      requestingUserId: userId,
+      sessionId: ctx.sessionId,
+      expectedRecipient: { recipient },
+      requestingUserIsPublic: ctx.requestingUserIsPublic,
+    })
+    toolExecuted = true
+    executionOutcome = "completed"
+    const latest = await db.get<EscalationContextDoc>(getDocId(escalationId))
+    await db.put({
+      ...latest,
+      toolExecutionStatus: "completed",
+      toolResultCompressed: zlib
+        .deflateSync(JSON.stringify(toolResult ?? null))
+        .toString("base64"),
+      updatedAt: new Date().toISOString(),
+    })
+    if (doc.requestId) {
+      await sdk.ai.agentRequests
+        .recordToolCall({
+          requestId: doc.requestId,
+          agentId: ctx.agentId,
+          sessionId: ctx.sessionId,
+          toolName: ctx.toolName,
+          status: "success",
+        })
+        .catch(error => {
+          console.error("Failed to record approved tool execution", {
+            escalationId,
+            toolName: ctx.toolName,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        })
+    }
+
+    const messages: ModelMessage[] = [
+      ...ctx.messages,
+      {
+        role: "assistant",
+        content: [
+          {
+            type: "tool-call",
+            toolCallId: ctx.toolCallId,
+            toolName: ctx.toolName,
+            input: ctx.input,
+          },
+        ],
+      },
+      {
+        role: "tool",
+        content: [
+          {
+            type: "tool-result",
+            toolCallId: ctx.toolCallId,
+            toolName: ctx.toolName,
+            output: {
+              type: "text",
+              value: JSON.stringify(toolResult ?? null),
+            },
+          },
+        ],
+      },
+    ]
+    const run = await sdk.ai.agents.prepareAgentChatRun({
+      agent,
+      agentId: ctx.agentId,
+      modelMessages: messages,
+      errorLabel: "tool approval resume",
+      sessionId: ctx.sessionId,
+      user,
+      operationId: ctx.operationId,
+      additionalInstructions:
+        "The approved tool call has already executed exactly once. Report its actual result to the user. Do not repeat that tool call.",
+      getRequestId: () => doc.requestId,
+      reportOnly: true,
+    })
+    const result = await run.stream()
+    let assistantMessage: UIMessage | undefined
+    for await (const uiMessage of readUIMessageStream({
+      stream: result.toUIMessageStream({ sendReasoning: true }),
+    })) {
+      assistantMessage = uiMessage
+    }
+    if (assistantMessage && !assistantMessage.id) {
+      assistantMessage.id = v4()
+    }
+    const text = assistantMessage ? messageText(assistantMessage) : ""
+    await persistResumeResult(
+      escalationId,
+      assistantMessage ?? textMessage(text)
+    )
+    await deliverOperationResult(ctx, text)
+    await settleRequest({ status: "completed" })
+  } catch (error) {
+    if (!toolExecuted) {
+      const latest = await db.get<EscalationContextDoc>(getDocId(escalationId))
+      await db.put({
+        ...latest,
+        toolExecutionStatus: "failed",
+        updatedAt: new Date().toISOString(),
+      })
+    }
+    console.error("Approved tool call failed", {
+      escalationId,
+      toolName: ctx.toolName,
+      toolExecuted,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    const text = toolExecuted
+      ? "The approved action was performed, but the follow-up response could not be generated."
+      : "The approved action could not be performed because it is no longer authorized or available."
+    await persistResumeResult(escalationId, textMessage(text))
+    await deliverOperationResult(ctx, text)
+    if (doc.requestId && !toolExecuted) {
+      await sdk.ai.agentRequests
+        .recordToolCall({
+          requestId: doc.requestId,
+          agentId: ctx.agentId,
+          sessionId: ctx.sessionId,
+          toolName: ctx.toolName,
+          status: "error",
+        })
+        .catch(recordError => {
+          console.error("Failed to record approved tool failure", {
+            escalationId,
+            toolName: ctx.toolName,
+            error:
+              recordError instanceof Error
+                ? recordError.message
+                : String(recordError),
+          })
+        })
+    }
+    await settleRequest({
+      status: toolExecuted ? "completed" : "failed",
+      ...(!toolExecuted && { error: text }),
+    })
+  }
+
+  console.log("Tool approval execution finished", {
+    escalationId,
+    toolName: ctx.toolName,
+    executionOutcome,
+    revision: executing.rev,
   })
 }
 
@@ -603,6 +875,16 @@ async function processResume(job: Job<EscalationJob>) {
         )
         .toString()
     )
+
+    if (doc.source === EscalationSource.TOOL) {
+      await resumeToolCall({
+        doc,
+        escalationId,
+        resolution,
+        ctx: suspendedContext as SuspendedToolCallContext,
+      })
+      return
+    }
 
     if (doc.source === EscalationSource.OPERATION) {
       await resumeOperation({

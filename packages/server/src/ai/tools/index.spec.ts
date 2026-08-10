@@ -1,4 +1,5 @@
 import {
+  EscalationNotificationChannel,
   PermissionLevel,
   PermissionType,
   ToolExecutionPrincipal,
@@ -128,5 +129,95 @@ describe("secured AI tool execution", () => {
       trustedInput,
       expect.objectContaining({ toolCallId: "call_1" })
     )
+  })
+
+  it("creates an approval request with the prepared input without executing", async () => {
+    const execute = jest.fn()
+    const authorize = jest.fn().mockResolvedValue(undefined)
+    const request = jest.fn().mockResolvedValue({ escalationId: "esc_1" })
+    const toolDefinition = definition(execute)
+    toolDefinition.authorization!.prepareInput = (input, context) => ({
+      ...(input as { value: string; userId?: string }),
+      userId: context.requestingUserId,
+    })
+    toolDefinition.approval = {
+      summarize: () => ({
+        title: "Approve secured tool",
+        summary: "Run the secured tool",
+      }),
+    }
+    const tools = toToolSet(
+      [toolDefinition],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize,
+            escalation: {
+              recipient: {
+                type: EscalationNotificationChannel.SLACK,
+                config: { channelId: "channel_1" },
+              },
+              request,
+            },
+          },
+        ],
+      ])
+    )
+
+    const result = await tools.secured_tool.execute?.(
+      { value: "hello", userId: "attacker_selected_user" },
+      { toolCallId: "call_1", messages: [] }
+    )
+
+    expect(request).toHaveBeenCalledWith({
+      input: { value: "hello", userId: "user_1" },
+      summary: {
+        title: "Approve secured tool",
+        summary: "Run the secured tool",
+      },
+      toolCallId: "call_1",
+      messages: [],
+    })
+    expect(execute).not.toHaveBeenCalled()
+    expect(result).toEqual({
+      status: "pending_approval",
+      escalationId: "esc_1",
+      note: "This tool call is waiting for human approval.",
+    })
+  })
+
+  it("fails closed when a configured gate lacks approval metadata", async () => {
+    const execute = jest.fn()
+    const tools = toToolSet(
+      [definition(execute)],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize: jest.fn().mockResolvedValue(undefined),
+            escalation: {
+              recipient: {
+                type: EscalationNotificationChannel.SLACK,
+                config: { channelId: "channel_1" },
+              },
+              request: jest.fn(),
+            },
+          },
+        ],
+      ])
+    )
+
+    await expect(
+      tools.secured_tool.execute?.(
+        { value: "hello" },
+        { toolCallId: "call_1", messages: [] }
+      )
+    ).rejects.toThrow("Tool does not support approval gates")
+    expect(execute).not.toHaveBeenCalled()
   })
 })

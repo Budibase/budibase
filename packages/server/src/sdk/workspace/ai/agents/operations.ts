@@ -1,6 +1,14 @@
 import { HTTPError } from "@budibase/backend-core"
 import type { Agent, AgentOperation } from "@budibase/types"
 import { getOrThrow, update } from "./crud"
+import { assertAgentToolEscalationsValid } from "./utils"
+
+interface LegacyAgentOperation extends AgentOperation {
+  escalation?: object
+}
+
+const hasLegacyEscalation = (operation: AgentOperation) =>
+  !!(operation as LegacyAgentOperation).escalation
 
 export type AgentOperationConfig = Pick<
   AgentOperation,
@@ -9,7 +17,6 @@ export type AgentOperationConfig = Pick<
   | "promptInstructions"
   | "enabledTools"
   | "allowKnowledgeSourceDownload"
-  | "escalation"
 >
 
 export type CreateAgentOperationInput = AgentOperationConfig &
@@ -31,14 +38,24 @@ const getOperationOrThrow = (agent: Agent, operationId: string) => {
 const mergeOperationConfig = (
   existing: AgentOperation,
   incoming: Partial<AgentOperationConfig>
-): AgentOperation => ({
-  ...existing,
-  ...incoming,
-  id: existing.id,
-  knowledgeBases: existing.knowledgeBases,
-  knowledgeSources: existing.knowledgeSources,
-  escalation: incoming.escalation ?? existing.escalation,
-})
+): AgentOperation => {
+  const legacyExisting = existing as LegacyAgentOperation
+  const replacesLegacyEscalation = incoming.enabledTools?.some(
+    tool => !!tool.escalation
+  )
+  const { escalation: _legacyEscalation, ...current } = legacyExisting
+  return {
+    ...current,
+    ...(!replacesLegacyEscalation &&
+      legacyExisting.escalation && {
+        escalation: legacyExisting.escalation,
+      }),
+    ...incoming,
+    id: existing.id,
+    knowledgeBases: existing.knowledgeBases,
+    knowledgeSources: existing.knowledgeSources,
+  }
+}
 
 const assertUniqueOperationName = (
   agent: Agent,
@@ -75,17 +92,20 @@ export async function createOperation(
   }
   assertUniqueOperationName(existing, operation.name)
   const normalizedTools = operation.enabledTools || []
+  const newOperation = {
+    ...operation,
+    enabledTools: normalizedTools,
+  }
 
-  return update({
+  const updated = {
     ...existing,
-    operations: [
-      ...(existing.operations ?? []),
-      {
-        ...operation,
-        enabledTools: normalizedTools,
-      },
-    ],
+    operations: [...(existing.operations ?? []), newOperation],
+  }
+  await assertAgentToolEscalationsValid({
+    ...updated,
+    operations: [newOperation],
   })
+  return update(updated)
 }
 
 export async function updateOperation(
@@ -94,19 +114,41 @@ export async function updateOperation(
   updateRequest: Partial<AgentOperationConfig>
 ): Promise<Agent> {
   const existing = await getOrThrow(agentId)
-  getOperationOrThrow(existing, operationId)
+  const existingOperation = getOperationOrThrow(existing, operationId)
   assertUniqueOperationName(existing, updateRequest.name, operationId)
 
-  const normalizedUpdate = updateRequest
+  if (
+    hasLegacyEscalation(existingOperation) &&
+    existingOperation.live !== true &&
+    updateRequest.live === true &&
+    !updateRequest.enabledTools?.some(tool => !!tool.escalation)
+  ) {
+    throw new HTTPError(
+      "Configure approval on individual tools before enabling this operation.",
+      422
+    )
+  }
 
-  return update({
+  const normalizedUpdate = updateRequest
+  const mergedOperation = mergeOperationConfig(
+    existingOperation,
+    normalizedUpdate
+  )
+
+  const updated = {
     ...existing,
     operations: (existing.operations ?? []).map(operation =>
-      operation.id === operationId
-        ? mergeOperationConfig(operation, normalizedUpdate)
-        : operation
+      operation.id === operationId ? mergedOperation : operation
     ),
-  })
+  }
+  await assertAgentToolEscalationsValid(
+    {
+      ...updated,
+      operations: [mergedOperation],
+    },
+    { allowLegacyOperationEscalation: true }
+  )
+  return update(updated)
 }
 
 export async function removeOperation(

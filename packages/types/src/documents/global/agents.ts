@@ -25,6 +25,7 @@ export interface ToolMetadata {
     permissionType: PermissionType
     permissionLevel: PermissionLevel
   }
+  supportsApproval?: boolean
 }
 
 interface ChatAgentIntegration {
@@ -128,12 +129,6 @@ export interface AgentSharePointKnowledgeSource {
 
 export type AgentKnowledgeSource = AgentSharePointKnowledgeSource
 
-export interface AgentEscalationConfig {
-  recipients?: EscalationRecipient[]
-  // How long the escalation is kept before being marked as expired.
-  delay?: number
-}
-
 export enum ToolExecutionPrincipal {
   REQUESTER = "requester",
   ADMIN = "admin",
@@ -142,6 +137,9 @@ export enum ToolExecutionPrincipal {
 export interface AgentOperationToolConfig {
   toolName: string
   executionPrincipal: ToolExecutionPrincipal
+  escalation?: {
+    recipient: EscalationRecipient
+  }
 }
 
 export interface AgentExecutionContext {
@@ -163,7 +161,6 @@ export interface AgentOperation {
   knowledgeBases?: string[]
   knowledgeSources?: AgentKnowledgeSource[]
   allowKnowledgeSourceDownload: boolean
-  escalation?: AgentEscalationConfig
 }
 
 export interface Agent extends Document {
