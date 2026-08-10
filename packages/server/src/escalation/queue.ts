@@ -1,5 +1,6 @@
 import zlib from "zlib"
 import { isDeepStrictEqual } from "node:util"
+import { serializeError } from "serialize-error"
 import type { Job } from "bull"
 import { readUIMessageStream, type ModelMessage, type UIMessage } from "ai"
 import { context, queue, utils } from "@budibase/backend-core"
@@ -477,7 +478,7 @@ export async function resumeToolCall({
       escalationId,
       toolName: ctx.toolName,
       toolExecuted,
-      error: error instanceof Error ? error.message : String(error),
+      error: serializeError(error),
     })
     const text = toolExecuted
       ? "The approved action was performed, but the follow-up response could not be generated."
