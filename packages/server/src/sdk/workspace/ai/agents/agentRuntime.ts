@@ -410,13 +410,14 @@ export const prepareAgentRunContext = async ({
         routingDecision.action === "summarize_operations"
           ? buildOperationsSummaryPrompt(getLiveOperations(agent))
           : buildPromptOptions?.fallbackPromptInstructions,
-      execution: routingDecision.operation
-        ? {
-            requestingUserId: requestingUserId || "",
-            requestingUserIsPublic,
-            sessionId,
-          }
-        : undefined,
+      execution:
+        routingDecision.operation && requestingUserId
+          ? {
+              requestingUserId,
+              requestingUserIsPublic,
+              sessionId,
+            }
+          : undefined,
     }
   )
 

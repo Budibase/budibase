@@ -450,6 +450,63 @@ describe("prepareAgentRunContext", () => {
     expect(result.operationIntent).toBe("query")
   })
 
+  it("preserves legacy tool execution for runs without a requester", async () => {
+    mockIsEnabled.mockResolvedValue(true)
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "select_operation",
+        operationId: "operation_2",
+        intent: "execute",
+        reason: "Automation selected HR support",
+      }),
+    })
+
+    await prepareAgentRunContext({
+      agent,
+      agentId: "agent_1",
+      sessionId: "session_1",
+      latestQuestion: "Process pending leave requests",
+    })
+
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      agent.operations[1],
+      expect.objectContaining({ execution: undefined })
+    )
+  })
+
+  it("enables delegated authorization when a requester is present", async () => {
+    mockIsEnabled.mockResolvedValue(true)
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "select_operation",
+        operationId: "operation_2",
+        intent: "query",
+        reason: "User selected HR support",
+      }),
+    })
+
+    await prepareAgentRunContext({
+      agent,
+      agentId: "agent_1",
+      sessionId: "session_1",
+      latestQuestion: "Show my leave requests",
+      requestingUserId: "user_1",
+    })
+
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      agent.operations[1],
+      expect.objectContaining({
+        execution: {
+          requestingUserId: "user_1",
+          requestingUserIsPublic: undefined,
+          sessionId: "session_1",
+        },
+      })
+    )
+  })
+
   it("defaults operationIntent to execute for a sticky follow-up", async () => {
     mockIsEnabled.mockResolvedValue(true)
     mockRouterStream.mockResolvedValue({
