@@ -419,9 +419,9 @@ function buildCondition(filter?: SearchFilter): SearchFilters | undefined {
         if (!value) {
           return
         }
-        if (typeof value === "string") {
-          value = new Date(value).toISOString()
-        } else if (isRangeSearchOperator(operator)) {
+        // Preserve timezone-less datetime strings so that the schema-aware
+        // backend can handle them without applying the browser's timezone.
+        if (typeof value !== "string" && isRangeSearchOperator(operator)) {
           query[operator] ??= {}
           query[operator][field] = value
           return query

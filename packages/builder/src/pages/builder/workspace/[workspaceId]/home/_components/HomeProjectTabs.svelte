@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { ActionMenu, Icon, MenuItem } from "@budibase/bbui"
   import type { ProjectResponse } from "@budibase/types"

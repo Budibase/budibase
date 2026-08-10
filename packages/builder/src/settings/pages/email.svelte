@@ -90,7 +90,12 @@
         <Input type="number" bind:value={smtpConfig.config.port} />
       </div>
       <div class="form-row">
-        <Label size="L">From email address</Label>
+        <Label
+          size="L"
+          tooltip="Used by system emails and SMTP automations that do not specify Send From. Your SMTP provider may restrict or rewrite this address."
+        >
+          Default from email address
+        </Label>
         <Input type="email" bind:value={smtpConfig.config.from} />
       </div>
       <div class="form-row">
@@ -110,12 +115,8 @@
     </Layout>
     <div class="spectrum-ButtonGroup spectrum-Settings-buttonGroup">
       <Button cta on:click={saveSmtp}>Save</Button>
-      <Button
-        secondary
-        on:click={deleteSmtp}
-        disabled={!$admin.checklist?.smtp?.checked}
-      >
-        Reset
+      <Button secondary on:click={deleteSmtp} disabled={!smtpConfig._id}>
+        Clear
       </Button>
     </div>
   {/if}
@@ -124,7 +125,7 @@
 <style>
   .form-row {
     display: grid;
-    grid-template-columns: 120px 1fr;
+    grid-template-columns: 200px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
   }

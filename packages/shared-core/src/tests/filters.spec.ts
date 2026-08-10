@@ -5,6 +5,7 @@ import {
   EmptyFilterOption,
   FieldType,
   LogicalOperator,
+  RangeOperator,
   SortOrder,
   SortType,
   UILogicalOperator,
@@ -154,6 +155,34 @@ describe("filter to query conversion", () => {
             },
           },
         ],
+      },
+    })
+  })
+
+  it("preserves timezone-less datetime filter values", () => {
+    const value = "2026-08-05T23:59:00.000"
+    const filter: UISearchFilter = {
+      groups: [
+        {
+          filters: [
+            {
+              field: "date",
+              operator: "rangeHigh",
+              type: FieldType.DATETIME,
+              value,
+            },
+          ],
+        },
+      ],
+    }
+
+    const query = buildQuery(filter)
+
+    expect(query.$and?.conditions[0].$and?.conditions[0]).toEqual({
+      [RangeOperator.RANGE]: {
+        date: {
+          high: value,
+        },
       },
     })
   })
