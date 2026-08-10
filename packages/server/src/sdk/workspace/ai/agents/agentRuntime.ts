@@ -344,7 +344,7 @@ export interface PrepareAgentRunContextParams {
   // When set, pin the run to this operation instead of routing on the question.
   operationId?: string
   requestingUserId?: string
-  requestingUserIsPublic?: boolean
+  requestingUserRoleId?: string
 }
 
 export interface AgentRunContext {
@@ -386,7 +386,7 @@ export const prepareAgentRunContext = async ({
   buildPromptOptions,
   operationId,
   requestingUserId,
-  requestingUserIsPublic,
+  requestingUserRoleId,
 }: PrepareAgentRunContextParams): Promise<AgentRunContext> => {
   const llm = await sdk.ai.llm.createLLM(
     aiConfigId ?? agent.aiconfig,
@@ -414,7 +414,7 @@ export const prepareAgentRunContext = async ({
         routingDecision.operation && requestingUserId
           ? {
               requestingUserId,
-              requestingUserIsPublic,
+              requestingUserRoleId,
               sessionId,
             }
           : undefined,
@@ -502,7 +502,7 @@ export const prepareAgentChatRun = async ({
       aiConfigId,
       operationId,
       requestingUserId: user._id!,
-      requestingUserIsPublic: chat?.previewAsPublic === true,
+      requestingUserRoleId: chat?.previewRoleId,
       buildPromptOptions: {
         baseSystemPrompt: ai.agentSystemPrompt(user, chat?.timezone),
         includeGoal: false,
@@ -578,7 +578,7 @@ export const prepareAgentChatRun = async ({
           operationId: selectedOperation.id,
           conversationId: sessionId,
           requestingUserId: user?._id || "",
-          requestingUserIsPublic: chat?.previewAsPublic === true,
+          requestingUserRoleId: chat?.previewRoleId,
         },
       })
     }

@@ -68,8 +68,7 @@ export interface ChatConversationRequest extends Document {
   timezone?: string
   transient?: boolean
   isPreview?: boolean
-  previewUserId?: string
-  previewAsPublic?: boolean
+  previewRoleId?: string
   sessionId?: string
   channel?: ChatConversationChannel
 }

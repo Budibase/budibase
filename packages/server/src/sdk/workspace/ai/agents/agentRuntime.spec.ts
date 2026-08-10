@@ -500,7 +500,7 @@ describe("prepareAgentRunContext", () => {
       expect.objectContaining({
         execution: {
           requestingUserId: "user_1",
-          requestingUserIsPublic: undefined,
+          requestingUserRoleId: undefined,
           sessionId: "session_1",
         },
       })

@@ -50,7 +50,6 @@ import {
   truncateTitle,
 } from "../../../sdk/workspace/ai/chatConversations"
 import { determineTrigger } from "../../../sdk/workspace/ai/agentLogs/shared"
-import { getFullUser } from "../../../utilities/users"
 
 const getGlobalUserId = (ctx: UserCtx) => {
   const userId = ctx.user?.globalId || ctx.user?.userId || ctx.user?._id
@@ -489,10 +488,14 @@ const resolveChatStreamRequest = async (
   applyChatStreamPathParams(chat, ctx.params)
 
   const db = context.getWorkspaceDB()
+  const workspaceId = context.getWorkspaceId()
+  if (!workspaceId) {
+    throw new HTTPError("Workspace context is required", 400)
+  }
   const chatAppId = chat.chatAppId
   const isBuilderOrAdmin = usersSdk.users.isAdminOrBuilder(
     ctx.user,
-    context.getWorkspaceId()
+    workspaceId
   )
   const requestedPreview = chat.isPreview === true
 
@@ -504,21 +507,21 @@ const resolveChatStreamRequest = async (
 
   let effectiveUser = ctx.user
   let effectiveUserId = userId
-  if (canUsePreview && chat.previewAsPublic) {
+  if (canUsePreview && chat.previewRoleId) {
+    const previewRole = await roles.getRole(chat.previewRoleId)
+    if (!previewRole?._id) {
+      throw new HTTPError("Preview role not found", 400)
+    }
     effectiveUser = {
       ...ctx.user,
-      roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
-      roles: {},
+      roleId: previewRole._id,
+      roles: {
+        ...(ctx.user.roles || {}),
+        [workspaceId]: previewRole._id,
+      },
       builder: undefined,
       admin: undefined,
     }
-  } else if (canUsePreview && chat.previewUserId) {
-    effectiveUser = await getFullUser(chat.previewUserId)
-    effectiveUserId =
-      effectiveUser.globalId ||
-      effectiveUser.userId ||
-      effectiveUser._id ||
-      chat.previewUserId
   }
 
   if (!canUsePreview && !chatAppId) {

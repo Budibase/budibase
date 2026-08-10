@@ -58,8 +58,7 @@
       accepted: boolean
     ) => Promise<EscalationRespondResult | undefined>
     isAgentPreviewChat?: boolean
-    previewUserId?: string
-    previewAsPublic?: boolean
+    previewRoleId?: string
     readOnly?: boolean
     readOnlyReason?: "disabled" | "deleted" | "offline"
     promptHistory?: string[]
@@ -78,8 +77,7 @@
     showInlineApproval = false,
     onResolve,
     isAgentPreviewChat = false,
-    previewUserId,
-    previewAsPublic = false,
+    previewRoleId,
     readOnly = false,
     readOnlyReason,
     promptHistory = [],
@@ -335,8 +333,7 @@
             agentId: chat?.agentId,
             transient: !persistConversation,
             isPreview: isAgentPreviewChat,
-            previewUserId: isAgentPreviewChat ? previewUserId : undefined,
-            previewAsPublic: isAgentPreviewChat ? previewAsPublic : undefined,
+            previewRoleId: isAgentPreviewChat ? previewRoleId : undefined,
             sessionId: stableSessionId,
             title: chat?.title,
             messages,

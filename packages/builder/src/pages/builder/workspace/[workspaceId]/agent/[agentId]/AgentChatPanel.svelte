@@ -4,15 +4,14 @@
     type AgentMessageMetadata,
     type DraftChatConversation,
     type WithoutDocMetadata,
-    type User,
   } from "@budibase/types"
   import type { UIMessage } from "ai"
   import { Chatbox } from "@budibase/frontend-core/src/components"
+  import { Constants } from "@budibase/frontend-core"
   import { Select } from "@budibase/bbui"
   import { escalationsStore } from "@/stores/portal/escalations"
-  import { auth, featureFlags, users } from "@/stores/portal"
+  import { auth, featureFlags } from "@/stores/portal"
   import { roles } from "@/stores/builder"
-  import { sdk } from "@budibase/shared-core"
   import { onMount } from "svelte"
   import {
     loadPromptHistory,
@@ -20,8 +19,6 @@
   } from "@/utils/chatPreviewPromptHistory"
 
   type DraftChat = WithoutDocMetadata<DraftChatConversation>
-  const CURRENT_USER_VALUE = "current-user"
-  const PUBLIC_USER_VALUE = "public-user"
 
   type Props = {
     agentId?: string
@@ -41,35 +38,22 @@
   let lastKey = $state<string | undefined>()
   let refreshKey = $state(0)
   let promptHistory = $state<string[]>([])
-  let previewUserId = $state<string | undefined>()
-  let previewAsPublic = $state(false)
-  let previewUsers = $state<User[]>([])
-  let previewUsersLoading = $state(false)
+  let previewRoleId = $state(Constants.Roles.ADMIN)
+  let previewRolesLoading = $state(false)
 
-  const refreshPreviewUsers = async () => {
-    if (previewUsersLoading) {
+  const refreshPreviewRoles = async () => {
+    if (previewRolesLoading) {
       return
     }
-    previewUsersLoading = true
+    previewRolesLoading = true
     try {
-      const [result] = await Promise.all([
-        users.search({ workspaceId, paginate: false }),
-        roles.fetchByAppId(workspaceId),
-      ])
-      const currentUserIds = new Set(
-        [$auth.user?._id, $auth.user?.userId].filter(Boolean)
-      )
-      previewUsers = (result.data as User[]).filter(
-        user =>
-          user.budibaseAccess !== false &&
-          ![user._id, user.userId].some(userId => currentUserIds.has(userId))
-      )
+      await roles.fetchByAppId(workspaceId)
     } finally {
-      previewUsersLoading = false
+      previewRolesLoading = false
     }
   }
 
-  onMount(refreshPreviewUsers)
+  onMount(refreshPreviewRoles)
 
   // Preview is transient, so escalation polling lives here, not in Chatbox.
   let chatbox = $state<
@@ -119,30 +103,17 @@
     resetChat(agentId)
   }
 
-  const selectPreviewUser = (userId: string) => {
-    previewAsPublic = userId === PUBLIC_USER_VALUE
-    previewUserId =
-      userId === CURRENT_USER_VALUE || previewAsPublic ? undefined : userId
+  const selectPreviewRole = (roleId: string) => {
+    previewRoleId = roleId
     resetChat(agentId)
   }
 
-  const getPreviewUserLabel = (user: User) => {
-    const name = [user.firstName, user.lastName].filter(Boolean).join(" ")
-    const prodWorkspaceId = sdk.workspaces.getProdWorkspaceID(workspaceId)
-    const roleId = user.roles?.[prodWorkspaceId]
-    const roleName = $roles.find(role => role._id === roleId)?.uiMetadata
-      ?.displayName
-    return `${name || user.email}${roleName ? ` · ${roleName}` : ""}`
-  }
-
-  const previewUserOptions = $derived([
-    { label: "Current user", value: CURRENT_USER_VALUE },
-    { label: "Public user", value: PUBLIC_USER_VALUE },
-    ...previewUsers.map(user => ({
-      label: getPreviewUserLabel(user),
-      value: user._id,
-    })),
-  ])
+  const previewRoleOptions = $derived(
+    $roles.map(role => ({
+      label: role.uiMetadata?.displayName || role.name,
+      value: role._id,
+    }))
+  )
 
   const handlePromptSubmitted = (prompt: string) => {
     const tenantId = $auth.tenantId
@@ -200,17 +171,15 @@
       <label class="preview-user-picker">
         <span>Test as</span>
         <Select
-          value={previewAsPublic
-            ? PUBLIC_USER_VALUE
-            : previewUserId || CURRENT_USER_VALUE}
-          options={previewUserOptions}
+          value={previewRoleId}
+          options={previewRoleOptions}
           placeholder={false}
           size="S"
           autoWidth
           popoverAutoWidth
-          loading={previewUsersLoading}
-          on:click={refreshPreviewUsers}
-          on:change={event => selectPreviewUser(event.detail)}
+          loading={previewRolesLoading}
+          on:click={refreshPreviewRoles}
+          on:change={event => selectPreviewRole(event.detail)}
         />
       </label>
       <button class="chat-preview-refresh" type="button" onclick={refreshChat}>
@@ -226,8 +195,7 @@
         persistConversation={false}
         {workspaceId}
         isAgentPreviewChat={true}
-        {previewUserId}
-        {previewAsPublic}
+        {previewRoleId}
         {promptHistory}
         onpromptsubmitted={handlePromptSubmitted}
         onEscalationPending={handleEscalationPending}

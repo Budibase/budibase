@@ -151,7 +151,7 @@ export interface AgentExecutionContext {
   operationId: string
   conversationId: string
   requestingUserId: string
-  requestingUserIsPublic?: boolean
+  requestingUserRoleId?: string
 }
 
 export interface AgentOperation {
