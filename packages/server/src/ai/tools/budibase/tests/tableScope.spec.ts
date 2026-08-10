@@ -37,7 +37,7 @@ describe("agent table scope", () => {
       invoiceNumber: schema.invoiceNumber,
       hidden: schema.hidden,
     })
-    expect(getAgentTableFields(schema)).toEqual(["invoiceNumber"])
+    expect(getAgentTableFields(schema)).toEqual(["invoiceNumber", "hidden"])
     expect(
       sanitizeAgentRow(
         {
@@ -61,6 +61,7 @@ describe("agent table scope", () => {
   it("does not expose a relationship primary display in table metadata", () => {
     const table = basicTable(undefined, {
       _id: "ta_invoices",
+      _rev: "1-test",
       name: "Invoices",
       sourceType: TableSourceType.INTERNAL,
       primaryDisplay: "supplier",
@@ -71,8 +72,9 @@ describe("agent table scope", () => {
 
     expect(sanitized).toEqual(
       expect.objectContaining({
-        id: "ta_invoices",
-        tableName: "Invoices",
+        _id: "ta_invoices",
+        _rev: "1-test",
+        name: "Invoices",
         sourceType: TableSourceType.INTERNAL,
         primaryDisplay: undefined,
       })

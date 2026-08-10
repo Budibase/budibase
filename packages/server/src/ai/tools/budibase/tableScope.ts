@@ -12,9 +12,7 @@ export const getAgentTableSchema = (schema: TableSchema): TableSchema =>
 
 export const getAgentTableFields = (schema: TableSchema): string[] =>
   Object.entries(schema)
-    .filter(
-      ([, field]) => field.type !== FieldType.LINK && field.visible !== false
-    )
+    .filter(([, field]) => field.type !== FieldType.LINK)
     .map(([name]) => name)
 
 export const sanitizeAgentRow = (row: Row, schema: TableSchema): Row => {
@@ -34,9 +32,7 @@ export const sanitizeAgentTable = (table: Table) => {
   const primaryDisplay = table.primaryDisplay
 
   return {
-    id: table._id,
-    tableName: table.name,
-    sourceType: table.sourceType,
+    ...table,
     primaryDisplay:
       primaryDisplay && schema[primaryDisplay] ? primaryDisplay : undefined,
     schema,

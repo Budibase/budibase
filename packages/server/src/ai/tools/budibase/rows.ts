@@ -114,9 +114,6 @@ const formatFieldSummary = ({ name, schema }: TableSchemaField) => {
   ) {
     summary += ` options: ${options.join(" | ")}`
   }
-  if (schema.type === FieldType.LINK && "tableId" in schema && schema.tableId) {
-    summary += ` -> ${schema.tableId}`
-  }
   return summary
 }
 
@@ -131,9 +128,6 @@ const getWritableFields = (
         return false
       }
       if (isReadOnlyField(schema)) {
-        return false
-      }
-      if (schema.type === FieldType.LINK) {
         return false
       }
       return true

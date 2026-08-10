@@ -6,6 +6,7 @@ import { createTableTools } from "../tables"
 describe("AI Tools - Tables", () => {
   const invoices = basicTable(undefined, {
     _id: "ta_invoices",
+    _rev: "1-test",
     name: "Invoices",
     schema: {
       invoiceNumber: {
@@ -46,8 +47,9 @@ describe("AI Tools - Tables", () => {
     expect(result).toEqual({
       tables: [
         expect.objectContaining({
-          id: "ta_invoices",
-          tableName: "Invoices",
+          _id: "ta_invoices",
+          _rev: "1-test",
+          name: "Invoices",
           schema: expect.objectContaining({
             invoiceNumber: invoices.schema.invoiceNumber,
           }),
