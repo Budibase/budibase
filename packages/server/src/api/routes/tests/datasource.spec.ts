@@ -515,6 +515,45 @@ describe("/datasources", () => {
       )
     })
 
+    it("detects embedded env var references", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST embedded env var",
+        source: SourceName.REST,
+        config: {
+          url: "https://{{ env.HOST }}/api",
+        },
+      })
+
+      expect(ds.usesEnvironmentVariables).toBe(true)
+    })
+
+    it("scrubs secrets containing mixed literals and env var references", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST mixed env secret",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Mixed Env Auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "{{ env.USERNAME }}",
+                password: "prefix {{ env.PASSWORD }}",
+              },
+            },
+          ],
+        },
+      })
+
+      expect(ds.usesEnvironmentVariables).toBe(true)
+      expect(ds.config!.authConfigs[0].config.password).toBe(
+        PASSWORD_REPLACEMENT
+      )
+    })
+
     it("scrubs sensitive longform fields in get response", async () => {
       const privateKey = [
         "-----BEGIN PRIVATE KEY-----",
