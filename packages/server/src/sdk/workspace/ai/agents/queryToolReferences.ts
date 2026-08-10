@@ -99,7 +99,7 @@ export const updateAgentQueryToolReferences = ({
   return changed ? { ...agent, operations } : undefined
 }
 
-const getBindings = ({
+export const getQueryToolBindingsForResource = ({
   datasource,
   query,
 }: {
@@ -128,11 +128,11 @@ export const migrateQueryToolReferences = async (
 ): Promise<void> => {
   const bindingChanges = (Array.isArray(migrations) ? migrations : [migrations])
     .map(migration => ({
-      existingBindings: getBindings({
+      existingBindings: getQueryToolBindingsForResource({
         datasource: migration.existingDatasource,
         query: migration.existingQuery,
       }),
-      updatedBindings: getBindings({
+      updatedBindings: getQueryToolBindingsForResource({
         datasource: migration.updatedDatasource,
         query: migration.updatedQuery,
       }),
