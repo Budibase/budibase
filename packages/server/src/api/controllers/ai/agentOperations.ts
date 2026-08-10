@@ -78,15 +78,7 @@ export async function deleteAgentOperation(
 ) {
   const { agentId, operationId } = ctx.params
 
-  const existing = await sdk.ai.agents.getOrThrow(agentId)
   const agent = await sdk.ai.agents.removeOperation(agentId, operationId)
-  await propagateProjectDependencyChangesWithWarning(ctx, {
-    rootResourceId: agent._id!,
-    currentProjectIds: agent.projectIds,
-    previousProjectIds: existing.projectIds,
-    previousResource: existing,
-    savedResource: agent,
-  })
 
   ctx.body = toAgentResponse(agent)
   ctx.status = 200
