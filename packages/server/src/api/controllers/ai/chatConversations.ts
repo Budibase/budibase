@@ -499,6 +499,10 @@ const resolveChatStreamRequest = async (
   )
   const requestedPreview = chat.isPreview === true
 
+  if (chat.previewRoleId && !requestedPreview) {
+    throw new HTTPError("previewRoleId requires preview mode", 400)
+  }
+
   if (requestedPreview && !isBuilderOrAdmin) {
     throw new HTTPError("Forbidden", 403)
   }

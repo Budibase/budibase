@@ -1156,6 +1156,26 @@ describe("chat conversation path validation", () => {
 
     expect(res.status).toBe(403)
   })
+
+  it("rejects a preview role outside preview mode", async () => {
+    const headers = await config.withUser(basicUser, async () =>
+      config.defaultHeaders({}, true)
+    )
+
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${pathChatApp._id}/conversations/new/stream`)
+      .set(headers)
+      .send({
+        chatAppId: pathChatApp._id,
+        agentId: "agent-1",
+        previewRoleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+        messages: [],
+        title: "hello",
+      })
+
+    expect(res.status).toBe(400)
+  })
 })
 
 describe("Agent chat tool call tracking", () => {

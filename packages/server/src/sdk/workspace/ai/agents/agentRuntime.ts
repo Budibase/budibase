@@ -493,7 +493,7 @@ export const prepareAgentChatRun = async ({
       aiConfigId,
       operationId,
       requestingUserId: user._id!,
-      requestingUserRoleId: chat?.previewRoleId,
+      requestingUserRoleId: chat?.isPreview ? chat.previewRoleId : undefined,
       buildPromptOptions: {
         baseSystemPrompt: ai.agentSystemPrompt(user, chat?.timezone),
         includeGoal: false,
@@ -569,7 +569,9 @@ export const prepareAgentChatRun = async ({
           operationId: selectedOperation.id,
           conversationId: sessionId,
           requestingUserId: user?._id || "",
-          requestingUserRoleId: chat?.previewRoleId,
+          requestingUserRoleId: chat?.isPreview
+            ? chat.previewRoleId
+            : undefined,
         },
       })
     }

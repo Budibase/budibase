@@ -657,6 +657,28 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     )
   })
 
+  it("ignores a preview role when the chat is not in preview mode", async () => {
+    await runFor(operationWithoutRecipients, {
+      user: { _id: "user_1" } as ContextUser,
+      chat: {
+        chatAppId: "chatapp_1",
+        agentId: "agent_1",
+        messages: [],
+        previewRoleId: "ADMIN",
+      },
+    })
+
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      operationWithoutRecipients,
+      expect.objectContaining({
+        execution: expect.objectContaining({
+          requestingUserRoleId: undefined,
+        }),
+      })
+    )
+  })
+
   it("resolves getRequestId lazily via the provided callback", async () => {
     const getRequestId = jest.fn().mockReturnValue("request_1")
 
