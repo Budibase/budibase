@@ -69,7 +69,15 @@ jest.mock("./utils", () => {
   }
 })
 
-import type { Agent, KnowledgeBase, KnowledgeBaseFile } from "@budibase/types"
+import { getQueryToolBindings } from "@budibase/shared-core"
+import { SourceName, ToolExecutionPrincipal, ToolType } from "@budibase/types"
+import type {
+  Agent,
+  Datasource,
+  KnowledgeBase,
+  KnowledgeBaseFile,
+  Query,
+} from "@budibase/types"
 import * as agentsCrud from "./crud"
 import { generator } from "@budibase/backend-core/tests"
 
@@ -79,6 +87,65 @@ describe("agents crud", () => {
   })
 
   describe("fetch", () => {
+    it("maps legacy query tools without writing the agent", async () => {
+      const datasource: Datasource = {
+        _id: "datasource_1",
+        name: "Legacy API",
+        type: "datasource",
+        source: SourceName.REST,
+        config: {},
+      }
+      const query: Query = {
+        _id: "query_rest_unique_identifier",
+        datasourceId: datasource._id!,
+        fields: {},
+        name: "Get todo",
+        parameters: [],
+        queryVerb: "read",
+        readable: true,
+        schema: {},
+        transformer: "return data",
+      }
+      mockDbAllDocs
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              doc: {
+                _id: "agent_legacy",
+                _rev: "1-abc",
+                name: "Legacy Agent",
+                aiconfig: "cfg_1",
+                operations: [
+                  {
+                    id: "operation_1",
+                    name: "Main",
+                    live: true,
+                    enabledTools: ["rest_legacy_api_get_todo"],
+                  },
+                ],
+              },
+            },
+          ],
+        })
+        .mockResolvedValueOnce({ rows: [{ doc: datasource }] })
+        .mockResolvedValueOnce({ rows: [{ doc: query }] })
+
+      const agents = await agentsCrud.fetch()
+
+      expect(agents[0].operations?.[0].enabledTools).toEqual([
+        {
+          toolName: getQueryToolBindings({
+            sourceType: ToolType.REST_QUERY,
+            sourceLabel: datasource.name,
+            queryName: query.name,
+            queryId: query._id!,
+          }).runtimeBinding,
+          executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        },
+      ])
+      expect(mockDbPut).not.toHaveBeenCalled()
+    })
+
     it("migrates legacy promptInstructions into the default operation", async () => {
       mockDbAllDocs.mockResolvedValue({
         rows: [
@@ -177,6 +244,78 @@ describe("agents crud", () => {
           operations: [],
         }),
       ])
+    })
+  })
+
+  describe("getOrThrow", () => {
+    it("maps legacy query tools on read and persists them on save", async () => {
+      const datasource: Datasource = {
+        _id: "datasource_1",
+        name: "Warehouse",
+        type: "datasource",
+        source: SourceName.POSTGRES,
+        config: {},
+      }
+      const query: Query = {
+        _id: "query_sql_unique_identifier",
+        datasourceId: datasource._id!,
+        fields: {},
+        name: "Monthly sales",
+        parameters: [],
+        queryVerb: "read",
+        readable: true,
+        schema: {},
+        transformer: "return data",
+      }
+      mockDbTryGet.mockResolvedValue({
+        _id: "agent_legacy",
+        _rev: "1-abc",
+        name: "Legacy Agent",
+        aiconfig: "cfg_1",
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main",
+            live: true,
+            enabledTools: ["ds_warehouse_monthly_sales"],
+          },
+        ],
+      })
+      mockDbAllDocs
+        .mockResolvedValueOnce({ rows: [{ doc: datasource }] })
+        .mockResolvedValueOnce({ rows: [{ doc: query }] })
+
+      const agent = await agentsCrud.getOrThrow("agent_legacy")
+
+      expect(agent.operations?.[0].enabledTools).toEqual([
+        {
+          toolName: getQueryToolBindings({
+            sourceType: ToolType.DATASOURCE_QUERY,
+            sourceLabel: datasource.name,
+            queryName: query.name,
+            queryId: query._id!,
+          }).runtimeBinding,
+          executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        },
+      ])
+      expect(mockDbPut).not.toHaveBeenCalled()
+
+      mockDbAllDocs
+        .mockResolvedValueOnce({ rows: [{ doc: datasource }] })
+        .mockResolvedValueOnce({ rows: [{ doc: query }] })
+      mockDbPut.mockResolvedValue({ rev: "2-abc" })
+
+      await agentsCrud.update(agent)
+
+      expect(mockDbPut).toHaveBeenCalledWith(
+        expect.objectContaining({
+          operations: [
+            expect.objectContaining({
+              enabledTools: agent.operations?.[0].enabledTools,
+            }),
+          ],
+        })
+      )
     })
   })
 
