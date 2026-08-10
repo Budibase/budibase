@@ -24,9 +24,10 @@
     "jest": "^30.0.5",
     "kill-port": "^1.6.1",
     "knip": "^5.85.0",
-    "lerna": "^9.0.3",
+    "lerna": "10.0.0",
     "load-tsconfig": "^0.2.5",
     "madge": "^6.0.0",
+    "nx": "23.1.1",
     "prettier": "3.5.3",
     "prettier-plugin-svelte": "^3.4.0",
     "proper-lockfile": "^4.1.2",
@@ -146,7 +147,7 @@
     "ws": "8.21.0"
   },
   "engines": {
-    "node": ">=22.0.0 <23.0.0"
+    "node": ">=22.13.0 <23.0.0"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.20",
