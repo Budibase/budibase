@@ -8,6 +8,7 @@ interface LocaleWithWeekInfo {
 describe("getLocaleStartDayOfWeek", () => {
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it("uses the locale's first day of the week", () => {
@@ -19,6 +20,15 @@ describe("getLocaleStartDayOfWeek", () => {
 
   it("normalizes locale separators", () => {
     expect(getLocaleStartDayOfWeek(["en_US"])).toBe("Sunday")
+  })
+
+  it("uses the browser's preferred locales by default", () => {
+    vi.stubGlobal("navigator", {
+      language: "en-US",
+      languages: ["en-US"],
+    })
+
+    expect(getLocaleStartDayOfWeek()).toBe("Sunday")
   })
 
   it("uses the next valid locale", () => {
