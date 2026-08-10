@@ -44,21 +44,32 @@
   let previewUserId = $state<string | undefined>()
   let previewAsPublic = $state(false)
   let previewUsers = $state<User[]>([])
+  let previewUsersLoading = $state(false)
 
-  onMount(async () => {
-    const [result] = await Promise.all([
-      users.search({ workspaceId, paginate: false }),
-      roles.fetchByAppId(workspaceId),
-    ])
-    const currentUserIds = new Set(
-      [$auth.user?._id, $auth.user?.userId].filter(Boolean)
-    )
-    previewUsers = (result.data as User[]).filter(
-      user =>
-        user.budibaseAccess !== false &&
-        ![user._id, user.userId].some(userId => currentUserIds.has(userId))
-    )
-  })
+  const refreshPreviewUsers = async () => {
+    if (previewUsersLoading) {
+      return
+    }
+    previewUsersLoading = true
+    try {
+      const [result] = await Promise.all([
+        users.search({ workspaceId, paginate: false }),
+        roles.fetchByAppId(workspaceId),
+      ])
+      const currentUserIds = new Set(
+        [$auth.user?._id, $auth.user?.userId].filter(Boolean)
+      )
+      previewUsers = (result.data as User[]).filter(
+        user =>
+          user.budibaseAccess !== false &&
+          ![user._id, user.userId].some(userId => currentUserIds.has(userId))
+      )
+    } finally {
+      previewUsersLoading = false
+    }
+  }
+
+  onMount(refreshPreviewUsers)
 
   // Preview is transient, so escalation polling lives here, not in Chatbox.
   let chatbox = $state<
@@ -197,6 +208,8 @@
           size="S"
           autoWidth
           popoverAutoWidth
+          loading={previewUsersLoading}
+          on:click={refreshPreviewUsers}
           on:change={event => selectPreviewUser(event.detail)}
         />
       </label>
