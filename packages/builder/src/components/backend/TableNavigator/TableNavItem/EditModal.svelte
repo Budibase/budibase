@@ -1,10 +1,8 @@
 <script lang="ts">
-  import { cloneDeep } from "lodash/fp"
   import { get } from "svelte/store"
   import { tables, datasources } from "@/stores/builder"
-  import { featureFlags } from "@/stores/portal"
   import { Input, Modal, ModalContent, notifications } from "@budibase/bbui"
-  import { FeatureFlag, type Table } from "@budibase/types"
+  import type { Table } from "@budibase/types"
 
   interface ModalHandle {
     show(): void
@@ -33,11 +31,8 @@
   const hasChanges = $derived(updatedName !== originalName)
 
   async function save() {
-    const updatedTable = cloneDeep(table)
-    updatedTable.name = updatedName
-    if (!$featureFlags[FeatureFlag.PROJECTS]) {
-      delete updatedTable.projectIds
-    }
+    const { projectIds: _projectIds, ...tableWithoutProjectIds } = table
+    const updatedTable = { ...tableWithoutProjectIds, name: updatedName }
     await tables.save(updatedTable)
     await datasources.fetch()
     notifications.success("Table updated successfully")

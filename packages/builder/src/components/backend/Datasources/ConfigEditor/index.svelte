@@ -20,7 +20,6 @@
   export let nameFieldValue: string = ""
   export let showProjectField: boolean = false
   export let projectIdsValue: string[] = []
-  export let originalProjectIdsValue: string[] | undefined = undefined
 
   let projectIds: string[] = []
 
@@ -29,19 +28,9 @@
   $: projectIds = projectIdsValue || []
 
   const getSubmittedProjectIds = () => {
-    if (!$featureFlags[FeatureFlag.PROJECTS]) {
-      return undefined
-    }
-    if (projectIds.length) {
-      return projectIds
-    }
-    if (
-      originalProjectIdsValue &&
-      JSON.stringify(projectIds) !== JSON.stringify(originalProjectIdsValue)
-    ) {
-      return []
-    }
-    return undefined
+    return $featureFlags[FeatureFlag.PROJECTS] && projectIds.length
+      ? projectIds
+      : undefined
   }
 
   const handleConfirm = async () => {

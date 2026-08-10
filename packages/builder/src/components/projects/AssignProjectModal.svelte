@@ -39,11 +39,16 @@
     resource?.projectIds ? [...resource.projectIds] : []
   )
   let dependencies = $state<ProjectAssignmentDependency[]>([])
-  let selectedDependencyIds = $state<string[]>([])
   let deselectedDependencyIds = $state<Set<string>>(new Set())
   let previewLoading = $state(false)
   let previewError = $state("")
   let previewRequest = 0
+
+  const selectedDependencyIds = $derived(
+    dependencies
+      .map(dependency => dependency.id)
+      .filter(id => !deselectedDependencyIds.has(id))
+  )
 
   const compareStrings = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
   const sortDependencies = (
@@ -83,9 +88,6 @@
       nextDeselected.add(dependencyId)
     }
     deselectedDependencyIds = nextDeselected
-    selectedDependencyIds = dependencies
-      .map(dependency => dependency.id)
-      .filter(id => !nextDeselected.has(id))
   }
 
   $effect(() => {
@@ -98,7 +100,6 @@
     const timeout = setTimeout(async () => {
       if (!resourceId) {
         dependencies = []
-        selectedDependencyIds = []
         previewLoading = false
         return
       }
@@ -117,15 +118,11 @@
             dependencyIds.has(id)
           )
         )
-        selectedDependencyIds = dependencies
-          .map(dependency => dependency.id)
-          .filter(id => !deselectedDependencyIds.has(id))
       } catch (error) {
         if (request !== previewRequest) {
           return
         }
         dependencies = []
-        selectedDependencyIds = []
         previewError = getErrorMessage(error)
       } finally {
         if (request === previewRequest) {
