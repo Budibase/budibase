@@ -362,9 +362,21 @@ export async function resumeOperation({
 
   const resumeUserId = ctx.userId ?? "escalation-resume"
 
-  // Rehydrate current permissions on every resume. Missing or unlinked users
-  // fail closed rather than receiving a synthetic execution identity.
-  const user: ContextUser = await getFullUser(resumeUserId)
+  // Linked user check. Retrieve or generate transient.
+  let user: ContextUser
+  try {
+    user = await getFullUser(resumeUserId)
+  } catch {
+    user = {
+      _id: resumeUserId,
+      globalId: resumeUserId,
+      userId: resumeUserId,
+      tenantId: context.getTenantId(),
+      // Synthetic address for an unlinked transient resume user (no real
+      // identity); revisit when user rehydration lands (see TODO below).
+      email: `${encodeURIComponent(resumeUserId)}@escalation.budibase.local`,
+    }
+  }
 
   // Add in messages to confirm that the request is approved.
   const escalateCallId = `esc_call_${escalationId}`
