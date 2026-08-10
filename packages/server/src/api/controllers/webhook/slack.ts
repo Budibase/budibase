@@ -288,10 +288,9 @@ const createSlackInputHandler = ({
       })
     } catch (error) {
       console.error("Slack webhook processing failed", error)
-      const msg =
-        isHTTPError(error)
-          ? error.message
-          : SLACK_FALLBACK_ERROR_MESSAGE
+      const msg = isHTTPError(error)
+        ? error.message
+        : SLACK_FALLBACK_ERROR_MESSAGE
       await target.post(msg)
     }
   }

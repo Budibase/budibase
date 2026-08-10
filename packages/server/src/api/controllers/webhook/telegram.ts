@@ -180,10 +180,9 @@ const createTelegramInputHandler = ({
       })
     } catch (error) {
       console.error("Telegram webhook processing failed", error)
-      const msg =
-        isHTTPError(error)
-          ? error.message
-          : TELEGRAM_FALLBACK_ERROR_MESSAGE
+      const msg = isHTTPError(error)
+        ? error.message
+        : TELEGRAM_FALLBACK_ERROR_MESSAGE
       await target.post(msg)
     }
   }

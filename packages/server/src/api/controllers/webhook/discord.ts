@@ -203,10 +203,9 @@ export async function discordWebhook(
             })
           } catch (error) {
             console.error("Discord webhook processing failed", error)
-            const msg =
-              isHTTPError(error)
-                ? error.message
-                : "Sorry, something went wrong while processing your request."
+            const msg = isHTTPError(error)
+              ? error.message
+              : "Sorry, something went wrong while processing your request."
             try {
               await event.channel.post(msg)
             } catch {

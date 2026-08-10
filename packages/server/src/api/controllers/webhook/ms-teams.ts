@@ -432,10 +432,9 @@ const createTeamsMessageHandler = ({
       })
     } catch (error) {
       console.error("Teams webhook processing failed", error)
-      const msg =
-        isHTTPError(error)
-          ? error.message
-          : TEAMS_FALLBACK_ERROR_MESSAGE
+      const msg = isHTTPError(error)
+        ? error.message
+        : TEAMS_FALLBACK_ERROR_MESSAGE
       await editOrPostTextReply(msg)
     }
   }
