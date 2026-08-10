@@ -305,7 +305,7 @@ describe("AI Tools - Rows", () => {
     expect(result.rows[1].name).toBe("Bob")
   })
 
-  it("does not return relationship values to the agent", async () => {
+  it("does not return relationship-derived values to the agent", async () => {
     const tableSchema: TableSchema = {
       invoiceNumber: {
         name: "invoiceNumber",
@@ -317,6 +317,11 @@ describe("AI Tools - Rows", () => {
         type: FieldType.LINK,
         tableId: "ta_suppliers",
         relationshipType: RelationshipType.MANY_TO_ONE,
+      },
+      supplierAccount: {
+        name: "supplierAccount",
+        type: FieldType.FORMULA,
+        formula: "{{ supplier.0.primaryDisplay }}",
       },
     }
     const search = jest.spyOn(sdk.rows, "search").mockResolvedValue({
@@ -330,6 +335,7 @@ describe("AI Tools - Rows", () => {
               primaryDisplay: "ACCOUNT-4100-UNEXPOSED",
             },
           ],
+          supplierAccount: "ACCOUNT-4100-UNEXPOSED",
         },
       ],
     })

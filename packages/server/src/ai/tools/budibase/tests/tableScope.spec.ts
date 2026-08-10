@@ -24,6 +24,11 @@ const schema: TableSchema = {
     tableId: "ta_suppliers",
     relationshipType: RelationshipType.MANY_TO_ONE,
   },
+  supplierAccount: {
+    name: "supplierAccount",
+    type: FieldType.FORMULA,
+    formula: "{{ supplier.0.primaryDisplay }}",
+  },
   hidden: {
     name: "hidden",
     type: FieldType.STRING,
@@ -32,7 +37,7 @@ const schema: TableSchema = {
 }
 
 describe("agent table scope", () => {
-  it("removes relationship fields from schemas, field lists, and rows", () => {
+  it("removes relationship and formula fields from agent data", () => {
     expect(getAgentTableSchema(schema)).toEqual({
       invoiceNumber: schema.invoiceNumber,
       hidden: schema.hidden,
@@ -49,6 +54,7 @@ describe("agent table scope", () => {
               primaryDisplay: "ACCOUNT-4100-UNEXPOSED",
             },
           ],
+          supplierAccount: "ACCOUNT-4100-UNEXPOSED",
         },
         schema
       )
@@ -86,5 +92,6 @@ describe("agent table scope", () => {
       })
     )
     expect(sanitized.schema).not.toHaveProperty("supplier")
+    expect(sanitized.schema).not.toHaveProperty("supplierAccount")
   })
 })
