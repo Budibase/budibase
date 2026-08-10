@@ -89,9 +89,21 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
     sourceLabel: "Budibase",
     description: "List all automations in the current workspace",
     authorization: {
-      supportedPrincipals: [ToolExecutionPrincipal.REQUESTER],
+      supportedPrincipals: [
+        ToolExecutionPrincipal.REQUESTER,
+        ToolExecutionPrincipal.ADMIN,
+      ],
       permissionType: PermissionType.WORKSPACE,
       permissionLevel: PermissionLevel.READ,
+      resultFilter: {
+        collectionKey: "automations",
+        permissionType: PermissionType.AUTOMATION,
+        permissionLevel: PermissionLevel.READ,
+        resolveResourceId: automation =>
+          typeof automation === "object" && automation && "_id" in automation
+            ? String(automation._id)
+            : undefined,
+      },
     },
     tool: tool({
       description: "List all automations in the current workspace",
@@ -108,7 +120,10 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
     sourceLabel: "Budibase",
     description: "Get details about a specific automation by ID",
     authorization: {
-      supportedPrincipals: [ToolExecutionPrincipal.REQUESTER],
+      supportedPrincipals: [
+        ToolExecutionPrincipal.REQUESTER,
+        ToolExecutionPrincipal.ADMIN,
+      ],
       permissionType: PermissionType.AUTOMATION,
       permissionLevel: PermissionLevel.READ,
       resolveResourceId: input =>

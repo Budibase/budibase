@@ -9,6 +9,18 @@ import { z } from "zod"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
 
+const resolveTableId = (table: unknown) => {
+  if (!table || typeof table !== "object") {
+    return
+  }
+  if ("id" in table) {
+    return String(table.id)
+  }
+  if ("_id" in table) {
+    return String(table._id)
+  }
+}
+
 const TABLE_TOOLS: BudibaseToolDefinition[] = [
   {
     name: "list_tables",
@@ -16,9 +28,18 @@ const TABLE_TOOLS: BudibaseToolDefinition[] = [
     sourceLabel: "Budibase",
     description: "List all tables in the current workspace",
     authorization: {
-      supportedPrincipals: [ToolExecutionPrincipal.REQUESTER],
+      supportedPrincipals: [
+        ToolExecutionPrincipal.REQUESTER,
+        ToolExecutionPrincipal.ADMIN,
+      ],
       permissionType: PermissionType.WORKSPACE,
       permissionLevel: PermissionLevel.READ,
+      resultFilter: {
+        collectionKey: "tables",
+        permissionType: PermissionType.TABLE,
+        permissionLevel: PermissionLevel.READ,
+        resolveResourceId: resolveTableId,
+      },
     },
     tool: tool({
       description: "List all tables in the current workspace",
@@ -53,7 +74,10 @@ const TABLE_TOOLS: BudibaseToolDefinition[] = [
     sourceLabel: "Budibase",
     description: "Get details about a specific table by ID",
     authorization: {
-      supportedPrincipals: [ToolExecutionPrincipal.REQUESTER],
+      supportedPrincipals: [
+        ToolExecutionPrincipal.REQUESTER,
+        ToolExecutionPrincipal.ADMIN,
+      ],
       permissionType: PermissionType.TABLE,
       permissionLevel: PermissionLevel.READ,
       resolveResourceId: input =>

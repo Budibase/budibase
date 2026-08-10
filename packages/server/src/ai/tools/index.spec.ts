@@ -129,4 +129,55 @@ describe("secured AI tool execution", () => {
       expect.objectContaining({ toolCallId: "call_1" })
     )
   })
+
+  it("filters collection results using resource permissions", async () => {
+    const execute = jest.fn().mockResolvedValue({
+      tables: [
+        { id: "ta_allowed", name: "Allowed" },
+        { id: "ta_denied", name: "Denied" },
+      ],
+    })
+    const authorize = jest.fn().mockImplementation(({ authorization }) => {
+      if (authorization.resourceId === "ta_denied") {
+        throw new Error("denied")
+      }
+    })
+    const toolDefinition = definition(execute)
+    toolDefinition.authorization!.resultFilter = {
+      collectionKey: "tables",
+      permissionType: PermissionType.TABLE,
+      permissionLevel: PermissionLevel.READ,
+      resolveResourceId: item =>
+        typeof item === "object" && item && "id" in item
+          ? String(item.id)
+          : undefined,
+    }
+    const tools = toToolSet(
+      [toolDefinition],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize,
+          },
+        ],
+      ])
+    )
+
+    await expect(
+      tools.secured_tool.execute?.(
+        { value: "hello" },
+        { toolCallId: "call_1", messages: [] }
+      )
+    ).resolves.toEqual({
+      tables: [{ id: "ta_allowed", name: "Allowed" }],
+    })
+    expect(authorize).toHaveBeenCalledWith(
+      expect.objectContaining({
+        authorization: expect.objectContaining({ resourceId: "ta_denied" }),
+      })
+    )
+  })
 })

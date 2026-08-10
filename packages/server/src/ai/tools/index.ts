@@ -17,6 +17,12 @@ export interface ToolAuthorization {
     modelInput: unknown,
     executionContext: AgentExecutionContext
   ) => unknown | Promise<unknown>
+  resultFilter?: {
+    collectionKey: string
+    permissionType: PermissionType
+    permissionLevel: PermissionLevel
+    resolveResourceId: (item: unknown) => string | undefined
+  }
 }
 
 export interface AiToolDefinition {
@@ -97,6 +103,51 @@ const wrapTool = (
       if (failureMessage) {
         throw new Error(failureMessage)
       }
+      const authorization = toolDef.authorization
+      const resultFilter = authorization?.resultFilter
+      let authorizedResult = result
+      if (
+        runtime &&
+        authorization &&
+        resultFilter &&
+        result &&
+        typeof result === "object" &&
+        resultFilter.collectionKey in result
+      ) {
+        const collection = Reflect.get(result, resultFilter.collectionKey)
+        if (Array.isArray(collection)) {
+          const allowedItems = await Promise.all(
+            collection.map(async item => {
+              const resourceId = resultFilter.resolveResourceId(item)
+              if (!resourceId) {
+                return false
+              }
+              try {
+                await runtime.authorize({
+                  authorization: {
+                    supportedPrincipals: authorization.supportedPrincipals,
+                    permissionType: resultFilter.permissionType,
+                    permissionLevel: resultFilter.permissionLevel,
+                    resourceId,
+                  },
+                  input: undefined,
+                  executionContext: runtime.executionContext,
+                  principal: runtime.principal,
+                })
+                return true
+              } catch {
+                return false
+              }
+            })
+          )
+          authorizedResult = {
+            ...result,
+            [resultFilter.collectionKey]: collection.filter(
+              (_item, index) => allowedItems[index]
+            ),
+          }
+        }
+      }
       if (runtime) {
         console.log("Agent tool execution", {
           outcome: "success",
@@ -108,7 +159,7 @@ const wrapTool = (
           conversationId: runtime.executionContext.conversationId,
         })
       }
-      return result
+      return authorizedResult
     } catch (error) {
       if (runtime) {
         console.log("Agent tool execution", {
