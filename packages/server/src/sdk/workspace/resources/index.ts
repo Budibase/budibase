@@ -30,8 +30,11 @@ import {
   WorkspaceApp,
 } from "@budibase/types"
 import sdk from "../.."
+import { getRowToolNames } from "../../../ai/tools/budibase/rows"
 import { ObjectStoreBuckets } from "../../../constants"
 import { extractTableIdFromRowActionsID, getRowParams } from "../../../db/utils"
+import { getQueryToolBindingsForResource } from "../ai/agents/queryToolReferences"
+import { doWithProjectAssignmentsLock } from "../projects/lock"
 import {
   getProjectIds,
   hasProject,
@@ -39,6 +42,13 @@ import {
   type ProjectAssignable,
   withProjectIds,
 } from "../projects/utils"
+import {
+  createBindingSearchTarget,
+  createSearchTarget,
+  createToolSearchTarget,
+  findResourceSearchTargets,
+  type ResourceSearchTarget,
+} from "./references"
 import {
   compareResourceIds,
   compareResourceTypes,
@@ -153,69 +163,94 @@ async function buildResourceDependencyAnalysis({
     )
   }
 
-  interface BaseSearchTarget {
-    id: string
-    idToSearch: string
-    name: string
-    type: ResourceType
-    extraDependencies?: {
-      id: string
-      name: string
-      type: ResourceType
-    }[]
-  }
-  const baseSearchTargets: BaseSearchTarget[] = []
+  const baseSearchTargets: ResourceSearchTarget[] = []
 
   const internalTables = await sdk.tables.getAllInternalTables()
   const rowActions = await sdk.rowActions.getAll()
 
   baseSearchTargets.push(
-    ...internalTables.map(table => ({
-      id: table._id!,
-      idToSearch: table._id!,
-      name: table.name!,
-      type: ResourceType.TABLE,
-    }))
+    ...internalTables.flatMap(table => {
+      const resource: UsedResource = {
+        id: table._id!,
+        name: table.name!,
+        type: ResourceType.TABLE,
+      }
+      return [
+        createSearchTarget(resource),
+        ...Object.values(getRowToolNames(resource.id)).map(toolName =>
+          createToolSearchTarget({ resource, toolName })
+        ),
+      ]
+    })
   )
 
   const datasources = await sdk.datasources.fetch()
   baseSearchTargets.push(
     ...datasources
       .filter(d => d._id !== INTERNAL_TABLE_SOURCE_ID)
-      .map<BaseSearchTarget>(datasource => ({
-        id: datasource._id!,
-        idToSearch: datasource._id!,
-        name: datasource.name!,
-        type: ResourceType.DATASOURCE,
-      }))
+      .map(datasource =>
+        createSearchTarget({
+          id: datasource._id!,
+          name: datasource.name!,
+          type: ResourceType.DATASOURCE,
+        })
+      )
   )
 
   baseSearchTargets.push(
-    ...automations.map<BaseSearchTarget>(automation => ({
-      id: automation._id!,
-      idToSearch: automation._id!,
-      name: automation.name!,
-      type: ResourceType.AUTOMATION,
-    }))
+    ...automations.flatMap(automation => {
+      const resource: UsedResource = {
+        id: automation._id!,
+        name: automation.name!,
+        type: ResourceType.AUTOMATION,
+      }
+      return [
+        createSearchTarget(resource),
+        createToolSearchTarget({
+          resource,
+          toolName: `${resource.id}_trigger`,
+        }),
+      ]
+    })
   )
 
   baseSearchTargets.push(
-    ...agents.map<BaseSearchTarget>(agent => ({
-      id: agent._id!,
-      idToSearch: agent._id!,
-      name: agent.name!,
-      type: ResourceType.AGENT,
-    }))
+    ...agents.map(agent =>
+      createSearchTarget({
+        id: agent._id!,
+        name: agent.name!,
+        type: ResourceType.AGENT,
+      })
+    )
   )
 
   const queries = await sdk.queries.fetch()
   baseSearchTargets.push(
-    ...queries.map<BaseSearchTarget>(query => ({
-      id: query._id!,
-      idToSearch: query._id!,
-      name: query.name!,
-      type: ResourceType.QUERY,
-    }))
+    ...queries.flatMap(query => {
+      const resource: UsedResource = {
+        id: query._id!,
+        name: query.name!,
+        type: ResourceType.QUERY,
+      }
+      const datasource = datasources.find(
+        candidate => candidate._id === query.datasourceId
+      )
+      if (!datasource) {
+        return [createSearchTarget(resource)]
+      }
+      const bindings = getQueryToolBindingsForResource({ datasource, query })
+      return [
+        createSearchTarget(resource),
+        createBindingSearchTarget({
+          resource,
+          binding: bindings.readableBinding,
+        }),
+        createToolSearchTarget({
+          resource,
+          toolName: bindings.runtimeBinding,
+        }),
+      ]
+    })
   )
 
   if (includeDatasourceQueries) {
@@ -263,10 +298,8 @@ async function buildResourceDependencyAnalysis({
     }
   }
 
-  const findSearchTargets = (resource: AnyDocument) => {
-    const json = JSON.stringify(resource)
-    return baseSearchTargets.filter(target => json.includes(target.idToSearch))
-  }
+  const findSearchTargets = (resource: AnyDocument) =>
+    findResourceSearchTargets({ resource, targets: baseSearchTargets })
 
   const findReferencedResources = (resource: AnyDocument) =>
     Array.from(
@@ -877,7 +910,7 @@ async function duplicateInternalTableRows(
   }
 }
 
-export async function duplicateResourcesToWorkspace(
+async function duplicateResourcesToWorkspaceUnlocked(
   resources: string[],
   toWorkspace: string,
   options?: {
@@ -1070,4 +1103,18 @@ export async function duplicateResourcesToWorkspace(
       toWorkspace: toWorkspaceName,
     })
   }
+}
+
+export async function duplicateResourcesToWorkspace(
+  resources: string[],
+  toWorkspace: string,
+  options?: {
+    copyRows?: boolean
+  }
+) {
+  await doWithProjectAssignmentsLock(
+    () =>
+      duplicateResourcesToWorkspaceUnlocked(resources, toWorkspace, options),
+    toWorkspace
+  )
 }

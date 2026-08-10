@@ -239,7 +239,7 @@ const preserveLegacyDatasourceEntityProjectIds = (
   }
 }
 
-export async function update(
+async function updateUnlocked(
   ctx: UserCtx<UpdateDatasourceRequest, UpdateDatasourceResponse>
 ) {
   const db = context.getWorkspaceDB()
@@ -331,7 +331,13 @@ export async function update(
   }
 }
 
-export async function save(
+export async function update(
+  ctx: UserCtx<UpdateDatasourceRequest, UpdateDatasourceResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(() => updateUnlocked(ctx))
+}
+
+async function saveUnlocked(
   ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
 ) {
   const {
@@ -360,6 +366,12 @@ export async function save(
     errors,
   }
   builderSocket?.emitDatasourceUpdate(ctx, datasource)
+}
+
+export async function save(
+  ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(() => saveUnlocked(ctx))
 }
 
 async function destroyInternalTablesBySourceId(datasourceId: string) {

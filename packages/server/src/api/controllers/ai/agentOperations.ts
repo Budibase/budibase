@@ -9,7 +9,7 @@ import sdk from "../../../sdk"
 import { propagateProjectDependencyChangesWithWarning } from "../../../utilities/projects"
 import { toAgentResponse } from "./agentResponse"
 
-export async function createAgentOperation(
+async function createAgentOperationUnlocked(
   ctx: UserCtx<
     CreateAgentOperationRequest,
     AgentOperationMutationResponse,
@@ -41,7 +41,19 @@ export async function createAgentOperation(
   ctx.status = 201
 }
 
-export async function updateAgentOperation(
+export async function createAgentOperation(
+  ctx: UserCtx<
+    CreateAgentOperationRequest,
+    AgentOperationMutationResponse,
+    { agentId: string }
+  >
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(() =>
+    createAgentOperationUnlocked(ctx)
+  )
+}
+
+async function updateAgentOperationUnlocked(
   ctx: UserCtx<
     UpdateAgentOperationRequest,
     AgentOperationMutationResponse,
@@ -67,6 +79,18 @@ export async function updateAgentOperation(
 
   ctx.body = toAgentResponse(agent)
   ctx.status = 200
+}
+
+export async function updateAgentOperation(
+  ctx: UserCtx<
+    UpdateAgentOperationRequest,
+    AgentOperationMutationResponse,
+    { agentId: string; operationId: string }
+  >
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(() =>
+    updateAgentOperationUnlocked(ctx)
+  )
 }
 
 export async function deleteAgentOperation(

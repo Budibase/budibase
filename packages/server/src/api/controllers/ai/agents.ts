@@ -215,7 +215,7 @@ export async function fetchAgents(ctx: UserCtx<void, FetchAgentsResponse>) {
   ctx.body = { agents: agents.map(toAgentResponse) }
 }
 
-export async function createAgent(
+async function createAgentUnlocked(
   ctx: UserCtx<CreateAgentRequest, CreateAgentResponse>
 ) {
   const body = ctx.request.body
@@ -252,7 +252,15 @@ export async function createAgent(
   ctx.status = 201
 }
 
-export async function updateAgent(
+export async function createAgent(
+  ctx: UserCtx<CreateAgentRequest, CreateAgentResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(() =>
+    createAgentUnlocked(ctx)
+  )
+}
+
+async function updateAgentUnlocked(
   ctx: UserCtx<UpdateAgentRequest, UpdateAgentResponse>
 ) {
   const body = ctx.request.body
@@ -294,6 +302,14 @@ export async function updateAgent(
 
   ctx.body = toAgentResponse(agent)
   ctx.status = 200
+}
+
+export async function updateAgent(
+  ctx: UserCtx<UpdateAgentRequest, UpdateAgentResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(() =>
+    updateAgentUnlocked(ctx)
+  )
 }
 
 export async function syncAgentDiscordCommands(
@@ -614,7 +630,7 @@ export async function toggleAgentTelegramDeployment(
   ctx.status = 200
 }
 
-export async function duplicateAgent(
+async function duplicateAgentUnlocked(
   ctx: UserCtx<void, CreateAgentResponse, { agentId: string }>
 ) {
   const sourceAgent = await sdk.ai.agents.getOrThrow(ctx.params.agentId)
@@ -631,6 +647,14 @@ export async function duplicateAgent(
 
   ctx.body = toAgentResponse(duplicated)
   ctx.status = 201
+}
+
+export async function duplicateAgent(
+  ctx: UserCtx<void, CreateAgentResponse, { agentId: string }>
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(() =>
+    duplicateAgentUnlocked(ctx)
+  )
 }
 
 export async function deleteAgent(

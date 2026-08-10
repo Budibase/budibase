@@ -68,14 +68,14 @@ import { builderSocket } from "../../websockets"
  *                       *
  *************************/
 
-export async function create(
+async function createUnlocked(
   ctx: UserCtx<CreateAutomationRequest, CreateAutomationResponse>
 ) {
   let automation = ctx.request.body
 
   // call through to update if already exists
   if (automation._id && automation._rev) {
-    await update(ctx)
+    await updateUnlocked(ctx)
     return
   }
 
@@ -118,7 +118,7 @@ export async function create(
   builderSocket?.emitAutomationUpdate(ctx, automation)
 }
 
-export async function update(
+async function updateUnlocked(
   ctx: UserCtx<UpdateAutomationRequest, UpdateAutomationResponse>
 ) {
   let automation = ctx.request.body
@@ -126,7 +126,7 @@ export async function update(
 
   // Call through to create if it doesn't exist
   if (!automation._id || !automation._rev) {
-    await create(ctx)
+    await createUnlocked(ctx)
     return
   }
 
@@ -150,6 +150,18 @@ export async function update(
     automation: updatedAutomation,
   }
   builderSocket?.emitAutomationUpdate(ctx, automation)
+}
+
+export async function create(
+  ctx: UserCtx<CreateAutomationRequest, CreateAutomationResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(() => createUnlocked(ctx))
+}
+
+export async function update(
+  ctx: UserCtx<UpdateAutomationRequest, UpdateAutomationResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(() => updateUnlocked(ctx))
 }
 
 export async function fetch(ctx: UserCtx<void, FetchAutomationResponse>) {

@@ -168,7 +168,7 @@ export async function importInfo(
   }
 }
 
-export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
+async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const db = context.getWorkspaceDB()
   const query: Query = ctx.request.body
 
@@ -222,6 +222,10 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   })
 
   ctx.body = query
+}
+
+export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
+  await sdk.projects.doWithProjectAssignmentsLock(() => saveUnlocked(ctx))
 }
 
 export async function find(ctx: UserCtx<void, FindQueryResponse>) {
