@@ -1073,6 +1073,45 @@ describe("rest", () => {
       expectNoLeakedSecrets(result)
     })
 
+    it("should reject cross-origin paths when only the datasource opts in", async () => {
+      const ds = await createRestDatasource({
+        url: "http://budibase.com",
+        allowCrossOriginPaths: true,
+      })
+
+      await previewPath({
+        datasourceId: ds._id!,
+        fields: { path: "{{ t }}" },
+        parameters: [{ name: "t", default: "http://leak.budibase.com/data" }],
+        expectations: originError,
+      })
+    })
+
+    it("should allow cross-origin paths only when both the env flag and datasource opt-in are enabled", async () => {
+      const restoreCrossOriginEnv = setServerEnv({
+        REST_ALLOW_CROSS_ORIGIN_PATHS: true,
+      })
+      try {
+        const ds = await createRestDatasource({
+          url: "http://budibase.com",
+          allowCrossOriginPaths: true,
+        })
+
+        mockAgent!
+          .get("http://leak.budibase.com")
+          .intercept({ path: "/data", method: "GET" })
+          .reply(200, { ok: true }, { headers: jsonHeaders })
+
+        await previewPath({
+          datasourceId: ds._id!,
+          fields: { path: "{{ t }}" },
+          parameters: [{ name: "t", default: "http://leak.budibase.com/data" }],
+        })
+      } finally {
+        restoreCrossOriginEnv()
+      }
+    })
+
     it("should treat a different port as a different origin", async () => {
       const ds = await createRestDatasource({
         url: "http://budibase.com:8080",
