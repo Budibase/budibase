@@ -1,5 +1,4 @@
 import {
-  type EscalationRecipient,
   PermissionLevel,
   PermissionType,
   ToolExecutionPrincipal,

@@ -1,5 +1,4 @@
 import {
-  EscalationNotificationChannel,
   PermissionLevel,
   PermissionType,
   ToolExecutionPrincipal,
@@ -44,9 +43,7 @@ describe("secured AI tool execution", () => {
           status: 400,
         },
       })
-    ).toBe(
-      '{"message":"The row does not match the table schema","status":400}'
-    )
+    ).toBe('{"message":"The row does not match the table schema","status":400}')
   })
 
   it("authorizes immediately before executing the tool", async () => {
