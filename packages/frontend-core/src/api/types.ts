@@ -79,6 +79,7 @@ export type APICallConfig<RequestT, ResponseT> = {
   suppressErrors: boolean
   cache: boolean
   body?: RequestT
+  signal?: AbortSignal
   parseResponse?: (response: Response) => Promise<ResponseT> | ResponseT
 }
 

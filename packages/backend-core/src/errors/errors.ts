@@ -95,6 +95,20 @@ export class HTTPError extends BudibaseError {
   }
 }
 
+export function isHTTPError(err: unknown): err is HTTPError {
+  if (err instanceof HTTPError) {
+    return true
+  }
+  if (typeof err !== "object" || err === null) {
+    return false
+  }
+  const candidate = err as Partial<HTTPError>
+  return (
+    typeof candidate.message === "string" &&
+    typeof candidate.status === "number"
+  )
+}
+
 export class UnexpectedError extends HTTPError {
   constructor(message: string) {
     super(message, 500)
