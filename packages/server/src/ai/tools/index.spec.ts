@@ -185,6 +185,8 @@ describe("secured AI tool execution", () => {
     expect(result).toEqual({
       status: "pending_approval",
       escalationId: "esc_1",
+      title: "Approve secured tool",
+      summary: "Run the secured tool",
       note: "This tool call is waiting for human approval.",
     })
   })

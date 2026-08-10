@@ -45,6 +45,8 @@ const TOOL_RESULT_SAFETY_INSTRUCTIONS = `Only call tools that are currently avai
 
 const UNAVAILABLE_TOOL_RECOVERY_INSTRUCTIONS = `A tool required for the requested action is unavailable in the current security context. The action was not performed. Tell the user that you could not perform it because the tool is unavailable to them; do not claim or imply success.`
 
+const PENDING_APPROVAL_INSTRUCTIONS = `A tool call is waiting for human approval and has not executed. Tell the user that the action is awaiting approval. Do not claim or imply that the action succeeded, and do not request another tool call.`
+
 // Read-only/helper tool calls that shouldn't clutter the request timeline.
 const TIMELINE_HIDDEN_TOOL_NAMES = new Set<string>()
 
@@ -419,8 +421,8 @@ export const prepareAgentRunContext = async ({
   }
 }
 
-// A pending approval suspends the turn immediately. Keyed on the result status
-// rather than a tool name because any configured tool can be gated.
+// A pending approval allows one final text-only step so the requester receives
+// an acknowledgement, while preventing any further action before approval.
 const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
   steps.some(step =>
     step.toolResults.some(result => {
@@ -550,13 +552,19 @@ export const prepareAgentChatRun = async ({
     ...(hasTools
       ? { toolChoice: reportOnly ? ("none" as const) : ("auto" as const) }
       : {}),
-    stopWhen: [stepCountIs(30), ({ steps }) => hasPendingEscalation(steps)],
+    stopWhen: stepCountIs(30),
     // Anthropic rejects those without a tools param.
     prepareStep: ({ steps }) => {
       if (hasUnavailableToolError(steps)) {
         return {
           toolChoice: "none" as const,
           system: `${systemPrompt}\n\n${UNAVAILABLE_TOOL_RECOVERY_INSTRUCTIONS}`,
+        }
+      }
+      if (hasPendingEscalation(steps)) {
+        return {
+          toolChoice: "none" as const,
+          system: `${systemPrompt}\n\n${PENDING_APPROVAL_INSTRUCTIONS}`,
         }
       }
       return undefined

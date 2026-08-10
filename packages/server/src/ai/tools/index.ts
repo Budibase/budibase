@@ -130,6 +130,8 @@ const wrapTool = (
         return {
           status: "pending_approval",
           escalationId,
+          title: summary.title,
+          summary: summary.summary,
           note: "This tool call is waiting for human approval.",
         }
       }
