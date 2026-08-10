@@ -99,13 +99,12 @@ export function isHTTPError(err: unknown): err is HTTPError {
   if (err instanceof HTTPError) {
     return true
   }
-  if (typeof err !== "object" || err === null) {
+  if (!(err instanceof Error)) {
     return false
   }
   const candidate = err as Partial<HTTPError>
   return (
-    typeof candidate.message === "string" &&
-    typeof candidate.status === "number"
+    typeof candidate.status === "number" && typeof candidate.code === "string"
   )
 }
 

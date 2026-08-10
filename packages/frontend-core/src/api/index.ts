@@ -145,8 +145,16 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
   const makeApiCall = async <RequestT = null, ResponseT = void>(
     callConfig: APICallConfig<RequestT, ResponseT>
   ): Promise<ResponseT> => {
-    let { json, method, external, body, url, parseResponse, suppressErrors } =
-      callConfig
+    let {
+      json,
+      method,
+      external,
+      body,
+      url,
+      parseResponse,
+      suppressErrors,
+      signal,
+    } = callConfig
 
     // Ensure we don't do JSON processing if sending a GET request
     json = json && method !== HTTPMethod.GET
@@ -182,6 +190,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
         headers,
         body: requestBody,
         credentials: "same-origin",
+        signal,
       })
     } catch (error) {
       delete cache[url]
