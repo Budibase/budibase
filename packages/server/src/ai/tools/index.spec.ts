@@ -93,6 +93,62 @@ describe("secured AI tool execution", () => {
     expect(execute).not.toHaveBeenCalled()
   })
 
+  it("does not execute a tool without authorization metadata", async () => {
+    const execute = jest.fn()
+    const authorize = jest.fn()
+    const toolDefinition = definition(execute)
+    toolDefinition.authorization = undefined
+    const tools = toToolSet(
+      [toolDefinition],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize,
+          },
+        ],
+      ])
+    )
+
+    await expect(
+      tools.secured_tool.execute?.(
+        { value: "hello" },
+        { toolCallId: "call_1", messages: [] }
+      )
+    ).rejects.toThrow("Tool is not available in this security context")
+    expect(authorize).not.toHaveBeenCalled()
+    expect(execute).not.toHaveBeenCalled()
+  })
+
+  it("does not execute for an unsupported principal", async () => {
+    const execute = jest.fn()
+    const authorize = jest.fn()
+    const tools = toToolSet(
+      [definition(execute)],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.ADMIN,
+            authorize,
+          },
+        ],
+      ])
+    )
+
+    await expect(
+      tools.secured_tool.execute?.(
+        { value: "hello" },
+        { toolCallId: "call_1", messages: [] }
+      )
+    ).rejects.toThrow("Tool is not available in this security context")
+    expect(authorize).not.toHaveBeenCalled()
+    expect(execute).not.toHaveBeenCalled()
+  })
+
   it("applies tool-owned trusted bindings before authorization and execution", async () => {
     const execute = jest.fn().mockResolvedValue({ success: true })
     const authorize = jest.fn().mockResolvedValue(undefined)

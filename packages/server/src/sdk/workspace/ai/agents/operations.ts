@@ -74,7 +74,6 @@ export async function createOperation(
     throw new HTTPError("Operation already exists", 400)
   }
   assertUniqueOperationName(existing, operation.name)
-  const normalizedTools = operation.enabledTools || []
 
   return update({
     ...existing,
@@ -82,7 +81,7 @@ export async function createOperation(
       ...(existing.operations ?? []),
       {
         ...operation,
-        enabledTools: normalizedTools,
+        enabledTools: operation.enabledTools || [],
       },
     ],
   })
@@ -97,13 +96,11 @@ export async function updateOperation(
   getOperationOrThrow(existing, operationId)
   assertUniqueOperationName(existing, updateRequest.name, operationId)
 
-  const normalizedUpdate = updateRequest
-
   return update({
     ...existing,
     operations: (existing.operations ?? []).map(operation =>
       operation.id === operationId
-        ? mergeOperationConfig(operation, normalizedUpdate)
+        ? mergeOperationConfig(operation, updateRequest)
         : operation
     ),
   })

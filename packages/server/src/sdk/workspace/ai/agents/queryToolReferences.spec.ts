@@ -1,16 +1,11 @@
-import { SourceName, ToolExecutionPrincipal } from "@budibase/types"
+import { SourceName } from "@budibase/types"
 import type { Agent, Datasource, Query } from "@budibase/types"
+import { requesterTools } from "../tests/utils"
 import { fetch, update } from "./crud"
 import {
   migrateQueryToolReferences,
   updateAgentQueryToolReferences,
 } from "./queryToolReferences"
-
-const requesterTools = (...toolNames: string[]) =>
-  toolNames.map(toolName => ({
-    toolName,
-    executionPrincipal: ToolExecutionPrincipal.REQUESTER,
-  }))
 
 jest.mock("./crud", () => ({
   fetch: jest.fn(),

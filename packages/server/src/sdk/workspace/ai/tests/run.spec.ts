@@ -1,11 +1,6 @@
-import { ToolExecutionPrincipal, type ContextUser } from "@budibase/types"
+import type { ContextUser } from "@budibase/types"
 import { runSuite } from "./run"
-
-const requesterTools = (...toolNames: string[]) =>
-  toolNames.map(toolName => ({
-    toolName,
-    executionPrincipal: ToolExecutionPrincipal.REQUESTER,
-  }))
+import { requesterTools } from "./utils"
 
 jest.mock("@budibase/backend-core", () => ({
   getErrorMessage: jest.fn((error: unknown) =>

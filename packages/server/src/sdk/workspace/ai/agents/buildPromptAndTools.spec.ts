@@ -1,10 +1,5 @@
-import { ToolExecutionPrincipal, type Agent } from "@budibase/types"
-
-const requesterTools = (...toolNames: string[]) =>
-  toolNames.map(toolName => ({
-    toolName,
-    executionPrincipal: ToolExecutionPrincipal.REQUESTER,
-  }))
+import type { Agent } from "@budibase/types"
+import { requesterTools } from "../tests/utils"
 
 jest.mock("../../..", () => ({
   __esModule: true,
