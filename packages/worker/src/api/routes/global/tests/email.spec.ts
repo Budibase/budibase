@@ -4,6 +4,7 @@ import {
   captureEmail,
   deleteAllEmail,
   getAttachments,
+  getUnusedPort,
   Mailserver,
   startMailserver,
   stopMailserver,
@@ -14,10 +15,12 @@ import * as cheerio from "cheerio"
 describe("/api/global/email", () => {
   const config = new TestConfiguration()
   let mailserver: Mailserver
+  let smtpPort: number
 
   beforeAll(async () => {
     await config.beforeAll()
-    mailserver = await startMailserver(config)
+    smtpPort = await getUnusedPort()
+    mailserver = await startMailserver(config, { smtp: smtpPort })
   })
 
   afterAll(async () => {
@@ -193,6 +196,35 @@ describe("/api/global/email", () => {
 
     expect(email.to).toEqual([{ address: "to@example.com", name: "" }])
     expect(email.from).toEqual([{ address: "from@example.com", name: "" }])
+  })
+
+  it("uses the configured from address when one is not provided", async () => {
+    await config.saveSmtpConfig({
+      host: "localhost",
+      port: smtpPort,
+      secure: false,
+      from: "newfrom@example.com",
+    })
+
+    try {
+      const email = await captureEmail(mailserver, async () => {
+        await config.api.emails.sendEmail({
+          email: "to@example.com",
+          subject: "Test",
+          purpose: EmailTemplatePurpose.CUSTOM,
+          contents: "Hello, world!",
+        })
+      })
+
+      expect(email.from).toEqual([{ address: "newfrom@example.com", name: "" }])
+    } finally {
+      await config.saveSmtpConfig({
+        host: "localhost",
+        port: smtpPort,
+        secure: false,
+        from: "test@example.com",
+      })
+    }
   })
 
   it("can send a calendar invite", async () => {

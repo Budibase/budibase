@@ -2,6 +2,8 @@
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
     "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node", "jest"],
     "paths": {}, // We don't want to bundle anything, so we avoid duplicated packages on the final project bundled
     "sourceMap": false
   },

@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { get } from "svelte/store"
   import { datasources, integrations } from "@/stores/builder"
