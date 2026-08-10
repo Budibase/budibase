@@ -209,11 +209,14 @@ function isEnvVarBinding(str: unknown) {
     return false
   }
   const blocks = findHBSBlocks(str)
-  return (
-    blocks.length === 1 &&
-    blocks[0] === str.trim() &&
-    blocks[0].includes(ENV_VAR_PREFIX)
+  if (!blocks.length || blocks.some(block => !block.includes(ENV_VAR_PREFIX))) {
+    return false
+  }
+  const remaining = blocks.reduce(
+    (value, block) => value.replace(block, ""),
+    str
   )
+  return !remaining.trim()
 }
 
 function datasourceUsesEnvironmentVariables(datasource: Datasource): boolean {

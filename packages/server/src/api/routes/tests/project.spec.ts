@@ -5,7 +5,7 @@ import {
   ViewName,
 } from "@budibase/backend-core"
 import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseImpl"
-import { structures } from "@budibase/backend-core/tests"
+import { generator, structures } from "@budibase/backend-core/tests"
 import {
   AutomationTriggerStepId,
   APIWarningCode,
@@ -16,6 +16,8 @@ import {
   isEmailTrigger,
   isWebhookTrigger,
   ResourceType,
+  RestAuthType,
+  SourceName,
   type Automation,
   type Datasource,
   type EmailTrigger,
@@ -2441,6 +2443,44 @@ describe("/projects", () => {
           botUserName: "ops_bot",
           idleTimeoutMinutes: 25,
         })
+      })
+    })
+
+    it("preserves pure environment expressions in exported secrets", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Environment bindings",
+        })
+        const password = "{{ env.PASSWORD_PREFIX }}{{ env.PASSWORD_SUFFIX }}"
+        const datasource = await config.api.datasource.create({
+          type: "datasource",
+          name: "Environment datasource",
+          source: SourceName.REST,
+          config: {
+            authConfigs: [
+              {
+                _id: generator.guid(),
+                name: "Environment auth",
+                type: RestAuthType.BASIC,
+                config: {
+                  username: "{{ env.USERNAME }}",
+                  password,
+                },
+              },
+            ],
+          },
+          projectIds: [project._id],
+        })
+
+        const files = await readTarEntries(
+          await config.api.project.export(project._id)
+        )
+        const exportedDatasource = JSON.parse(
+          files.get(`docs/datasource/${datasource._id}.json`)!.toString()
+        )
+        expect(exportedDatasource.config.authConfigs[0].config.password).toBe(
+          password
+        )
       })
     })
 

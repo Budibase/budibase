@@ -554,6 +554,55 @@ describe("/datasources", () => {
       )
     })
 
+    it("preserves secrets composed of adjacent env var references", async () => {
+      const password = "{{ env.PASSWORD_PREFIX }}{{ env.PASSWORD_SUFFIX }}"
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST adjacent env secrets",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Adjacent Env Auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "{{ env.USERNAME }}",
+                password,
+              },
+            },
+          ],
+        },
+      })
+
+      expect(ds.config!.authConfigs[0].config.password).toBe(password)
+    })
+
+    it("scrubs secrets combining env and non-env bindings", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST mixed binding secret",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Mixed Binding Auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "{{ env.USERNAME }}",
+                password: "{{ env.PASSWORD }}{{ user.password }}",
+              },
+            },
+          ],
+        },
+      })
+
+      expect(ds.config!.authConfigs[0].config.password).toBe(
+        PASSWORD_REPLACEMENT
+      )
+    })
+
     it("scrubs sensitive longform fields in get response", async () => {
       const privateKey = [
         "-----BEGIN PRIVATE KEY-----",
