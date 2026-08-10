@@ -194,6 +194,9 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
       })
     } catch (error) {
       delete cache[url]
+      if (signal?.aborted) {
+        throw error
+      }
       throw makeError("Failed to send request", url, method)
     }
 
@@ -269,7 +272,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
         const handler = cacheRequest ? makeCachedApiCall : makeApiCall
         return await handler(callConfig)
       } catch (error) {
-        if (config?.onError) {
+        if (config?.onError && !params.signal?.aborted) {
           config.onError(error as APIError)
         }
         throw error
