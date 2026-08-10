@@ -63,7 +63,7 @@ export interface ToolAuthorizationRuntime {
   }
 }
 
-const getToolFailure = (result: unknown): string | undefined => {
+export const getToolFailure = (result: unknown): string | undefined => {
   if (!result || typeof result !== "object" || !("error" in result)) {
     return
   }
@@ -75,6 +75,14 @@ const getToolFailure = (result: unknown): string | undefined => {
 
   if (error instanceof Error) {
     return error.message || "Tool execution failed"
+  }
+
+  if (typeof error === "object") {
+    try {
+      return JSON.stringify(error)
+    } catch {
+      return "Tool execution failed with a non-serializable error"
+    }
   }
 
   return String(error)

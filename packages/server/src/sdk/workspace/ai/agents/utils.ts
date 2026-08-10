@@ -32,6 +32,7 @@ import { isToolUIPart, getToolName } from "ai"
 import {
   createRestQueryTool,
   createDatasourceQueryTool,
+  getToolFailure,
   toToolSet,
   type AiToolDefinition,
 } from "../../../../ai/tools"
@@ -820,13 +821,9 @@ export const executeApprovedToolCall = async ({
     toolCallId,
     messages,
   })
-  if (
-    result &&
-    typeof result === "object" &&
-    "error" in result &&
-    result.error
-  ) {
-    throw new Error(String(result.error))
+  const failureMessage = getToolFailure(result)
+  if (failureMessage) {
+    throw new Error(failureMessage)
   }
   return result
 }

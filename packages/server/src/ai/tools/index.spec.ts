@@ -7,7 +7,7 @@ import {
 } from "@budibase/types"
 import { tool } from "ai"
 import { z } from "zod"
-import { toToolSet, type AiToolDefinition } from "."
+import { getToolFailure, toToolSet, type AiToolDefinition } from "."
 
 const definition = (execute: jest.Mock): AiToolDefinition => ({
   name: "secured_tool",
@@ -36,6 +36,19 @@ const executionContext = {
 }
 
 describe("secured AI tool execution", () => {
+  it("preserves structured tool errors", () => {
+    expect(
+      getToolFailure({
+        error: {
+          message: "The row does not match the table schema",
+          status: 400,
+        },
+      })
+    ).toBe(
+      '{"message":"The row does not match the table schema","status":400}'
+    )
+  })
+
   it("authorizes immediately before executing the tool", async () => {
     const execute = jest.fn().mockResolvedValue({ success: true })
     const authorize = jest.fn().mockResolvedValue(undefined)
