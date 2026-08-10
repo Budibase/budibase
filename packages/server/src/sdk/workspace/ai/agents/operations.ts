@@ -1,7 +1,7 @@
 import { HTTPError } from "@budibase/backend-core"
 import type { Agent, AgentOperation } from "@budibase/types"
 import { getOrThrow, update } from "./crud"
-import { assertAgentToolEscalationsValid } from "./utils"
+import { assertAgentToolApprovalsValid } from "./utils"
 
 interface LegacyAgentOperation extends AgentOperation {
   escalation?: object
@@ -16,6 +16,7 @@ export type AgentOperationConfig = Pick<
   | "live"
   | "promptInstructions"
   | "enabledTools"
+  | "approvalPolicies"
   | "allowKnowledgeSourceDownload"
 >
 
@@ -41,7 +42,7 @@ const mergeOperationConfig = (
 ): AgentOperation => {
   const legacyExisting = existing as LegacyAgentOperation
   const replacesLegacyEscalation = incoming.enabledTools?.some(
-    tool => !!tool.escalationConfigId
+    tool => !!tool.approvalPolicyId
   )
   const { escalation: _legacyEscalation, ...current } = legacyExisting
   return {
@@ -101,7 +102,7 @@ export async function createOperation(
     ...existing,
     operations: [...(existing.operations ?? []), newOperation],
   }
-  await assertAgentToolEscalationsValid({
+  await assertAgentToolApprovalsValid({
     ...updated,
     operations: [newOperation],
   })
@@ -121,7 +122,7 @@ export async function updateOperation(
     hasLegacyEscalation(existingOperation) &&
     existingOperation.live !== true &&
     updateRequest.live === true &&
-    !updateRequest.enabledTools?.some(tool => !!tool.escalationConfigId)
+    !updateRequest.enabledTools?.some(tool => !!tool.approvalPolicyId)
   ) {
     throw new HTTPError(
       "Configure approval on individual tools before enabling this operation.",
@@ -141,7 +142,7 @@ export async function updateOperation(
       operation.id === operationId ? mergedOperation : operation
     ),
   }
-  await assertAgentToolEscalationsValid(
+  await assertAgentToolApprovalsValid(
     {
       ...updated,
       operations: [mergedOperation],

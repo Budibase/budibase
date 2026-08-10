@@ -2,8 +2,8 @@
   import { Body, Checkbox, Icon, InlineAlert, Select } from "@budibase/bbui"
   import {
     ToolExecutionPrincipal,
-    type AgentEscalationConfig,
     type AgentOperation,
+    type AgentOperationApprovalPolicy,
     type CaretPositionFn,
     type EnrichedBinding,
     type InsertAtPositionFn,
@@ -22,16 +22,17 @@
   import Knowledge from "./knowledge/index.svelte"
   import ToolIcon from "./ToolIcon.svelte"
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
+  import ApprovalPolicies from "./EscalationConfigurations.svelte"
 
   let {
     open = false,
     operation = $bindable(),
+    agentId,
     promptBindings = [],
     bindingIcons = {},
     completions = [],
     toolsLoaded = false,
     availableTools = [],
-    escalationConfigs = [],
     hasLegacyEscalation = false,
     webSearchConfigured = false,
     onClose,
@@ -43,12 +44,12 @@
   }: {
     open?: boolean
     operation: AgentOperation
+    agentId?: string
     promptBindings?: EnrichedBinding[]
     bindingIcons?: Record<string, string | undefined>
     completions?: BindingCompletion[]
     toolsLoaded?: boolean
     availableTools?: AgentTool[]
-    escalationConfigs?: AgentEscalationConfig[]
     hasLegacyEscalation?: boolean
     webSearchConfigured?: boolean
     onClose: () => void
@@ -200,7 +201,7 @@
 
   const isConfiguringApproval = (toolName: string) =>
     configuringApprovals.includes(toolName) ||
-    !!getToolConfig(toolName)?.escalationConfigId
+    !!getToolConfig(toolName)?.approvalPolicyId
 
   const setApprovalEnabled = (toolName: string, enabled: boolean) => {
     if (enabled) {
@@ -210,23 +211,23 @@
     configuringApprovals = configuringApprovals.filter(
       name => name !== toolName
     )
-    updateToolConfig(toolName, { escalationConfigId: undefined })
+    updateToolConfig(toolName, { approvalPolicyId: undefined })
     onUpdated()
   }
 
-  const updateToolEscalationConfig = (
+  const updateToolApprovalPolicy = (
     toolName: string,
-    escalationConfigId: string
+    approvalPolicyId: string
   ) => {
-    updateToolConfig(toolName, { escalationConfigId })
+    updateToolConfig(toolName, { approvalPolicyId })
     configuringApprovals = configuringApprovals.filter(
       name => name !== toolName
     )
     onUpdated()
   }
 
-  const formatEscalationConfig = (config: AgentEscalationConfig) => {
-    const destinations = config.recipients.map(recipient => {
+  const formatApprovalPolicy = (policy: AgentOperationApprovalPolicy) => {
+    const destinations = policy.recipients.map(recipient => {
       const target =
         recipient.config.channelName ||
         recipient.config.externalUserId ||
@@ -234,7 +235,7 @@
         recipient.config.globalUserId
       return target ? `${recipient.type} ${target}` : recipient.type
     })
-    return `${config.name} · ${destinations.join(", ")}`
+    return `${policy.name} · ${destinations.join(", ")}`
   }
 
   const escapeRegExp = (str: string) =>
@@ -403,6 +404,14 @@
                 </div>
               </div>
             </div>
+
+            <ApprovalPolicies
+              bind:operation
+              {agentId}
+              {availableTools}
+              {onUpdated}
+            />
+
             {#if includedToolsWithDetails.length > 0}
               <div class="tools-list">
                 {#each includedToolsWithDetails as tool (tool.runtimeBinding)}
@@ -450,9 +459,9 @@
                         size="S"
                         text="Require approval"
                         disabled={!tool.supportsApproval ||
-                          !escalationConfigs.length}
-                        helpText={!escalationConfigs.length
-                          ? "Create an escalation configuration first"
+                          !operation.approvalPolicies?.length}
+                        helpText={!operation.approvalPolicies?.length
+                          ? "Create an approval policy first"
                           : undefined}
                         value={isConfiguringApproval(tool.runtimeBinding)}
                         on:change={event =>
@@ -475,15 +484,15 @@
                       <div class="tool-approval-config">
                         <Select
                           size="S"
-                          placeholder="Select escalation configuration..."
+                          placeholder="Select approval policy..."
                           value={getToolConfig(tool.runtimeBinding)
-                            ?.escalationConfigId}
-                          options={escalationConfigs}
-                          getOptionLabel={formatEscalationConfig}
-                          getOptionValue={config => config.id}
+                            ?.approvalPolicyId}
+                          options={operation.approvalPolicies || []}
+                          getOptionLabel={formatApprovalPolicy}
+                          getOptionValue={policy => policy.id}
                           on:change={event =>
                             event.detail &&
-                            updateToolEscalationConfig(
+                            updateToolApprovalPolicy(
                               tool.runtimeBinding,
                               event.detail
                             )}

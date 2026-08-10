@@ -295,7 +295,7 @@ export async function resumeToolCall({
     agentId: ctx.agentId,
     operationId: ctx.operationId,
     toolName: ctx.toolName,
-    escalationConfigId: ctx.escalationConfigId,
+    approvalPolicyId: ctx.approvalPolicyId,
     recipientType: doc.recipients?.[0]?.type,
     outcome,
   })
@@ -358,7 +358,7 @@ export async function resumeToolCall({
     }
     if (
       !doc.recipients?.length ||
-      !isDeepStrictEqual(doc.recipients, ctx.escalationRecipients)
+      !isDeepStrictEqual(doc.recipients, ctx.approvalPolicyRecipients)
     ) {
       throw new Error("Tool approval recipient configuration is invalid")
     }
@@ -378,8 +378,8 @@ export async function resumeToolCall({
         executionPrincipal: ctx.executionPrincipal,
         requestingUserId: userId,
         sessionId: ctx.sessionId,
-        escalationConfigId: ctx.escalationConfigId,
-        expectedRecipients: ctx.escalationRecipients,
+        approvalPolicyId: ctx.approvalPolicyId,
+        expectedRecipients: ctx.approvalPolicyRecipients,
         requestingUserIsPublic: ctx.requestingUserIsPublic,
       })
       toolExecuted = true
@@ -473,7 +473,7 @@ export async function resumeToolCall({
       approvedToolRetry: toolError
         ? {
             toolName: ctx.toolName,
-            escalationConfigId: ctx.escalationConfigId,
+            approvalPolicyId: ctx.approvalPolicyId,
             executionPrincipal:
               ctx.executionPrincipal === "admin"
                 ? ToolExecutionPrincipal.ADMIN

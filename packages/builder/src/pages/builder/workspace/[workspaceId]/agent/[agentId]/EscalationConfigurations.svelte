@@ -1,8 +1,8 @@
 <script lang="ts">
   import { ActionButton, Body, Button, Helpers, Input } from "@budibase/bbui"
   import type {
-    Agent,
-    AgentEscalationConfig,
+    AgentOperation,
+    AgentOperationApprovalPolicy,
     AgentOperationToolConfig,
     EscalationRecipient,
   } from "@budibase/types"
@@ -10,12 +10,12 @@
   import type { AgentTool } from "./toolTypes"
 
   let {
-    agent = $bindable(),
+    operation = $bindable(),
     agentId,
     availableTools = [],
     onUpdated,
   }: {
-    agent: Agent
+    operation: AgentOperation
     agentId?: string
     availableTools?: AgentTool[]
     onUpdated: () => Promise<boolean>
@@ -28,25 +28,31 @@
 
   const normalizeName = (name: string) => name.trim().toLowerCase()
   const nameExists = (name: string, exceptId?: string) =>
-    (agent.escalationConfigs || []).some(
-      config =>
-        config.id !== exceptId &&
-        normalizeName(config.name) === normalizeName(name)
+    (operation.approvalPolicies || []).some(
+      policy =>
+        policy.id !== exceptId &&
+        normalizeName(policy.name) === normalizeName(name)
     )
 
-  const updateConfig = (id: string, update: Partial<AgentEscalationConfig>) => {
-    agent.escalationConfigs = (agent.escalationConfigs || []).map(config =>
-      config.id === id ? { ...config, ...update } : config
+  const updatePolicy = (
+    id: string,
+    update: Partial<AgentOperationApprovalPolicy>
+  ) => {
+    operation.approvalPolicies = (operation.approvalPolicies || []).map(
+      policy => (policy.id === id ? { ...policy, ...update } : policy)
     )
     onUpdated()
   }
 
-  const updateConfigName = (config: AgentEscalationConfig, name: string) => {
+  const updatePolicyName = (
+    policy: AgentOperationApprovalPolicy,
+    name: string
+  ) => {
     const trimmed = name.trim()
-    if (!trimmed || nameExists(trimmed, config.id)) {
+    if (!trimmed || nameExists(trimmed, policy.id)) {
       return
     }
-    updateConfig(config.id, { name: trimmed })
+    updatePolicy(policy.id, { name: trimmed })
   }
 
   const formatFallbackToolName = (toolName: string) => {
@@ -74,23 +80,19 @@
   }
 
   const referencesFor = (id: string) =>
-    (agent.operations || []).flatMap(operation =>
-      (operation.enabledTools || [])
-        .filter(tool => tool.escalationConfigId === id)
-        .map(toolConfig => {
-          return `${operation.name} · ${formatToolName(toolConfig)}`
-        })
-    )
+    (operation.enabledTools || [])
+      .filter(tool => tool.approvalPolicyId === id)
+      .map(formatToolName)
 
-  const addConfig = () => {
+  const addPolicy = () => {
     const name = pendingName.trim()
     if (!name || !pendingRecipients.length || nameExists(name)) {
       return
     }
-    agent.escalationConfigs = [
-      ...(agent.escalationConfigs || []),
+    operation.approvalPolicies = [
+      ...(operation.approvalPolicies || []),
       {
-        id: `escalation_config_${Helpers.uuid()}`,
+        id: `approval_policy_${Helpers.uuid()}`,
         name,
         recipients: pendingRecipients,
       },
@@ -102,60 +104,60 @@
     onUpdated()
   }
 
-  const deleteConfig = (id: string) => {
+  const deletePolicy = (id: string) => {
     if (referencesFor(id).length) {
       return
     }
-    agent.escalationConfigs = (agent.escalationConfigs || []).filter(
-      config => config.id !== id
+    operation.approvalPolicies = (operation.approvalPolicies || []).filter(
+      policy => policy.id !== id
     )
     onUpdated()
   }
 </script>
 
-<section class="escalation-configurations">
+<section class="approval-policies">
   <div class="configurations-header">
     <div class="section-header">
       <Body size="XS" color="var(--spectrum-global-color-gray-900)"
-        >Escalation configurations</Body
+        >Approval policies</Body
       >
       <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-        Create reusable approval destinations for this agent's tools.
+        Create reusable approval destinations for this operation's tools.
       </Body>
     </div>
     {#if !adding}
       <Button secondary size="S" icon="plus" on:click={() => (adding = true)}>
-        Add configuration
+        Add policy
       </Button>
     {/if}
   </div>
 
-  {#each agent.escalationConfigs || [] as config (config.id)}
-    {@const references = referencesFor(config.id)}
+  {#each operation.approvalPolicies || [] as policy (policy.id)}
+    {@const references = referencesFor(policy.id)}
     <div class="configuration">
       <div class="configuration-main">
         <div class="configuration-fields">
           <Input
             label="Name"
-            value={config.name}
-            error={!config.name.trim()
+            value={policy.name}
+            error={!policy.name.trim()
               ? "Name is required"
-              : nameExists(config.name, config.id)
+              : nameExists(policy.name, policy.id)
                 ? "Name must be unique"
                 : undefined}
-            on:change={event => updateConfigName(config, event.detail)}
+            on:change={event => updatePolicyName(policy, event.detail)}
           />
           <div class="destination-field">
             <Body size="XS" color="var(--spectrum-global-color-gray-800)"
               >Recipients</Body
             >
             <EscalationRecipients
-              recipients={config.recipients}
+              recipients={policy.recipients}
               minimumRecipients={1}
               {agentId}
               onChange={recipients => {
                 if (recipients.length) {
-                  updateConfig(config.id, { recipients })
+                  updatePolicy(policy.id, { recipients })
                 }
               }}
             />
@@ -172,8 +174,8 @@
         disabled={references.length > 0}
         tooltip={references.length > 0
           ? "Remove tool references before deleting"
-          : "Delete configuration"}
-        on:click={() => deleteConfig(config.id)}
+          : "Delete policy"}
+        on:click={() => deletePolicy(policy.id)}
       />
     </div>
   {/each}
@@ -189,8 +191,7 @@
       <EscalationRecipients
         recipients={pendingRecipients}
         {agentId}
-        onChange={recipients =>
-          (pendingRecipients = recipients as EscalationRecipient[])}
+        onChange={recipients => (pendingRecipients = recipients)}
         onAddingChange={adding => (recipientEditorOpen = adding)}
       />
       {#if !recipientEditorOpen}
@@ -199,7 +200,7 @@
             <Button
               cta
               disabled={!pendingName.trim() || nameExists(pendingName)}
-              on:click={addConfig}>Create</Button
+              on:click={addPolicy}>Create</Button
             >
           {/if}
           <Button
@@ -218,7 +219,7 @@
 </section>
 
 <style>
-  .escalation-configurations {
+  .approval-policies {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-m);

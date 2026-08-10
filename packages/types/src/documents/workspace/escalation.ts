@@ -63,8 +63,9 @@ export interface SuspendedToolCallContext extends SuspendedOperationContext {
   toolCallId: string
   input: unknown
   executionPrincipal: "requester" | "admin"
-  escalationConfigId: string
-  escalationRecipients: EscalationRecipient[]
+  approvalPolicyId: string
+  approvalPolicyName: string
+  approvalPolicyRecipients: EscalationRecipient[]
   requestingUserIsPublic?: boolean
 }
 
@@ -101,8 +102,8 @@ export interface EscalationContextDoc extends Document {
   resumeResultCompressed?: string
   toolExecutionStatus?: "pending" | "executing" | "completed" | "failed"
   toolResultCompressed?: string
-  escalationConfigId?: string
-  escalationConfigName?: string
+  approvalPolicyId?: string
+  approvalPolicyName?: string
 }
 
 export interface EscalationResult {

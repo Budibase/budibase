@@ -94,8 +94,8 @@ export class BullEscalationProcessor implements IEscalationProcessor {
       }),
       ...(input.source === EscalationSource.TOOL && {
         toolExecutionStatus: existing?.toolExecutionStatus ?? "pending",
-        escalationConfigId: input.escalationConfigId,
-        escalationConfigName: input.escalationConfigName,
+        approvalPolicyId: input.approvalPolicyId,
+        approvalPolicyName: input.approvalPolicyName,
       }),
       ...sourceFields,
     }

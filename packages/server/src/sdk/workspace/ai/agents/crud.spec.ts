@@ -69,12 +69,7 @@ jest.mock("./utils", () => {
   }
 })
 
-import {
-  EscalationNotificationChannel,
-  type Agent,
-  type KnowledgeBase,
-  type KnowledgeBaseFile,
-} from "@budibase/types"
+import type { Agent, KnowledgeBase, KnowledgeBaseFile } from "@budibase/types"
 import * as agentsCrud from "./crud"
 import { generator } from "@budibase/backend-core/tests"
 
@@ -84,25 +79,17 @@ describe("agents crud", () => {
   })
 
   describe("fetch", () => {
-    it("normalizes singular escalation recipients on read", async () => {
+    it("drops agent-level approval policy fields", async () => {
       mockDbAllDocs.mockResolvedValue({
         rows: [
           {
             doc: {
-              _id: "agent_legacy_recipient",
+              _id: "agent_old_policy_shape",
               _rev: "1-abc",
-              name: "Legacy recipient agent",
+              name: "Old policy shape",
               aiconfig: "cfg_1",
-              escalationConfigs: [
-                {
-                  id: "escalation_config_engineering",
-                  name: "Engineering",
-                  recipient: {
-                    type: EscalationNotificationChannel.SLACK,
-                    config: { channelId: "C1" },
-                  },
-                },
-              ],
+              escalationConfigs: [{ id: "old" }],
+              approvalPolicies: [{ id: "also_old" }],
             },
           },
         ],
@@ -110,19 +97,8 @@ describe("agents crud", () => {
 
       const agents = await agentsCrud.fetch()
 
-      expect(agents[0].escalationConfigs).toEqual([
-        {
-          id: "escalation_config_engineering",
-          name: "Engineering",
-          recipients: [
-            {
-              type: EscalationNotificationChannel.SLACK,
-              config: { channelId: "C1" },
-            },
-          ],
-        },
-      ])
-      expect(agents[0].escalationConfigs?.[0]).not.toHaveProperty("recipient")
+      expect(agents[0]).not.toHaveProperty("escalationConfigs")
+      expect(agents[0]).not.toHaveProperty("approvalPolicies")
     })
 
     it("migrates legacy promptInstructions into the default operation", async () => {

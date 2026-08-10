@@ -68,9 +68,9 @@ const ESCALATION_RECIPIENT_SCHEMA = Joi.object({
   config: Joi.object().or("globalUserId", "channelId").unknown(true).required(),
 })
 
-const AGENT_ESCALATION_CONFIG_SCHEMA = Joi.object({
+const AGENT_OPERATION_APPROVAL_POLICY_SCHEMA = Joi.object({
   id: Joi.string()
-    .pattern(/^escalation_config_/)
+    .pattern(/^approval_policy_/)
     .required(),
   name: NON_EMPTY_STRING.required(),
   recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).min(1).required(),
@@ -85,9 +85,12 @@ const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
       Joi.object({
         toolName: Joi.string().required(),
         executionPrincipal: Joi.string().valid("requester", "admin").required(),
-        escalationConfigId: Joi.string().optional(),
+        approvalPolicyId: Joi.string().optional(),
       })
     )
+    .optional(),
+  approvalPolicies: Joi.array()
+    .items(AGENT_OPERATION_APPROVAL_POLICY_SCHEMA)
     .optional(),
   allowKnowledgeSourceDownload: Joi.boolean().optional(),
 })
@@ -105,9 +108,6 @@ export function createAgentValidator() {
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
-      escalationConfigs: Joi.array()
-        .items(AGENT_ESCALATION_CONFIG_SCHEMA)
-        .optional(),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
@@ -135,9 +135,8 @@ export function updateAgentValidator() {
       updatedAt: OPTIONAL_STRING,
       publishedAt: OPTIONAL_STRING,
       createdBy: OPTIONAL_STRING,
-      escalationConfigs: Joi.array()
-        .items(AGENT_ESCALATION_CONFIG_SCHEMA)
-        .optional(),
+      escalationConfigs: Joi.forbidden(),
+      approvalPolicies: Joi.forbidden(),
       discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,

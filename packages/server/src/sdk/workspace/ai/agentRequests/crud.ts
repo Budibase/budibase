@@ -335,11 +335,11 @@ async function recordEscalationRaised({
     {
       type: "escalation_raised",
       escalationId,
-      ...(doc.escalationConfigId && {
-        escalationConfigId: doc.escalationConfigId,
+      ...(doc.approvalPolicyId && {
+        approvalPolicyId: doc.approvalPolicyId,
       }),
-      ...(doc.escalationConfigName && {
-        escalationConfigName: doc.escalationConfigName,
+      ...(doc.approvalPolicyName && {
+        approvalPolicyName: doc.approvalPolicyName,
       }),
       recipients,
       sessionId,

@@ -9,18 +9,16 @@ import { WebClient } from "@slack/web-api"
 import { DocumentType, ToolExecutionPrincipal } from "@budibase/types"
 import type {
   Agent,
-  AgentEscalationConfig,
   AgentKnowledgeSource,
   AgentOperation,
   AgentOperationToolConfig,
-  EscalationRecipient,
   Optional,
 } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
 import {
   assertAgentHasValidConfig,
-  assertAgentToolEscalationsValid,
+  assertAgentToolApprovalsValid,
 } from "./utils"
 import { cleanupKnowledgeForOperation, knowledgeSourceSyncQueue } from "../rag"
 import { getValidProjectIdsForDuplication } from "../../projects/utils"
@@ -34,17 +32,10 @@ type DeprecatedAgentOperation = Omit<AgentOperation, "enabledTools"> & {
   }
 }
 
-type DeprecatedAgentEscalationConfig = Omit<
-  AgentEscalationConfig,
-  "recipients"
-> & {
-  recipients?: EscalationRecipient[]
-  recipient?: EscalationRecipient
-}
-
-type DeprecatedAgent = Omit<Agent, "operations" | "escalationConfigs"> & {
+type DeprecatedAgent = Omit<Agent, "operations"> & {
   operations?: DeprecatedAgentOperation[]
-  escalationConfigs?: DeprecatedAgentEscalationConfig[]
+  escalationConfigs?: object[]
+  approvalPolicies?: object[]
   promptInstructions?: string
   operationName?: string
   enabledTools?: string[]
@@ -65,8 +56,8 @@ export const normalizePersistedOperationTools = (
       : {
           toolName: tool.toolName,
           executionPrincipal: tool.executionPrincipal,
-          ...(tool.escalationConfigId && {
-            escalationConfigId: tool.escalationConfigId,
+          ...(tool.approvalPolicyId && {
+            approvalPolicyId: tool.approvalPolicyId,
           }),
         }
   )
@@ -200,6 +191,8 @@ const stripDeprecatedAgentFields = (raw: DeprecatedAgent): Agent => {
     knowledgeBases: _knowledgeBases,
     knowledgeSources: _knowledgeSources,
     allowKnowledgeSourceDownload: _allowKnowledgeSourceDownload,
+    escalationConfigs: _escalationConfigs,
+    approvalPolicies: _approvalPolicies,
     ...agent
   } = raw
   return agent as Agent
@@ -246,13 +239,6 @@ const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
     ...stripDeprecatedAgentFields(raw),
     live: raw.live ?? false,
     operations: migrateOperations(raw),
-    escalationConfigs: raw.escalationConfigs?.map(config => {
-      const { recipient, ...current } = config
-      return {
-        ...current,
-        recipients: config.recipients || (recipient ? [recipient] : []),
-      }
-    }),
     discordIntegration: decodeDiscordIntegrationSecrets(raw.discordIntegration),
     slackIntegration: decodeSlackIntegrationSecrets(raw.slackIntegration),
     telegramIntegration: decodeTelegramIntegrationSecrets(
@@ -569,7 +555,6 @@ export async function create(
     aiconfig: request.aiconfig || "", // this might be set later, it will be validated on publish/usage
     projectIds: request.projectIds,
     operations: request.operations,
-    escalationConfigs: request.escalationConfigs,
     live: request.live ?? false,
     publishedAt: request.live ? now : undefined,
     icon: request.icon,
@@ -586,7 +571,7 @@ export async function create(
   if (agent.live) {
     await assertAgentHasValidConfig(agent)
   } else {
-    await assertAgentToolEscalationsValid(agent)
+    await assertAgentToolApprovalsValid(agent)
   }
 
   const { rev } = await db.put({
@@ -627,7 +612,6 @@ export async function duplicate(
     _deleted: false,
     createdBy,
     operations: source.operations,
-    escalationConfigs: source.escalationConfigs,
   })
 }
 
@@ -691,7 +675,7 @@ export async function update(agent: Agent): Promise<Agent> {
       allowLegacyOperationEscalation: existing.live === true,
     })
   } else {
-    await assertAgentToolEscalationsValid(updated, {
+    await assertAgentToolApprovalsValid(updated, {
       allowLegacyOperationEscalation: true,
     })
   }

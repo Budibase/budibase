@@ -126,35 +126,35 @@ describe("agent duplicate", () => {
     ).toBeUndefined()
   })
 
-  it("accepts escalation configuration references in operation tools", async () => {
+  it("accepts approval policy references in operation tools", async () => {
     const created = await config.api.agent.create({
-      name: "Escalation config agent",
+      name: "Approval policy agent",
       aiconfig: "default",
-      escalationConfigs: [
-        {
-          id: "escalation_config_engineering",
-          name: "Engineering",
-          recipients: [
-            {
-              type: EscalationNotificationChannel.SLACK,
-              config: { channelId: "C_ENGINEERING" },
-            },
-          ],
-        },
-      ],
     })
 
     await config.api.agent.createOperation(
       created._id!,
       {
-        id: "operation_escalation",
-        name: "Escalation flow",
+        id: "operation_approval",
+        name: "Approval flow",
         live: false,
+        approvalPolicies: [
+          {
+            id: "approval_policy_engineering",
+            name: "Engineering",
+            recipients: [
+              {
+                type: EscalationNotificationChannel.SLACK,
+                config: { channelId: "C_ENGINEERING" },
+              },
+            ],
+          },
+        ],
         enabledTools: [
           {
             toolName: "unsupported_tool",
             executionPrincipal: ToolExecutionPrincipal.REQUESTER,
-            escalationConfigId: "escalation_config_engineering",
+            approvalPolicyId: "approval_policy_engineering",
           },
         ],
         allowKnowledgeSourceDownload: true,
@@ -166,6 +166,21 @@ describe("agent duplicate", () => {
         },
       }
     )
+  })
+
+  it("rejects agent-level approval policy configuration", async () => {
+    const request = {
+      name: "Invalid agent policy",
+      aiconfig: "default",
+      approvalPolicies: [],
+    }
+
+    await config.api.agent.create(request, {
+      status: 400,
+      body: {
+        message: 'Invalid body - "approvalPolicies" is not allowed',
+      },
+    })
   })
 
   it("rejects creating an operation with a duplicate name for the same agent", async () => {

@@ -45,7 +45,6 @@
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
   import OperationsSection from "./OperationsSection.svelte"
   import WebSearchConfigModal from "./WebSearchConfigModal.svelte"
-  import EscalationConfigurations from "./EscalationConfigurations.svelte"
 
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
   // Use URLs derived from the same Phosphor SVG paths as the Svelte logo components.
@@ -61,6 +60,7 @@
     live: operation.live,
     promptInstructions: operation.promptInstructions,
     enabledTools: operation.enabledTools,
+    approvalPolicies: operation.approvalPolicies,
     knowledgeBases: operation.knowledgeBases,
     allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
     knowledgeSources: operation.knowledgeSources,
@@ -78,8 +78,8 @@
       executionPrincipal:
         existing.get(toolName)?.executionPrincipal ??
         ToolExecutionPrincipal.REQUESTER,
-      ...(existing.get(toolName)?.escalationConfigId && {
-        escalationConfigId: existing.get(toolName)?.escalationConfigId,
+      ...(existing.get(toolName)?.approvalPolicyId && {
+        approvalPolicyId: existing.get(toolName)?.approvalPolicyId,
       }),
     }))
   }
@@ -239,7 +239,6 @@
         goal: agent.goal || "",
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
-        escalationConfigs: agent.escalationConfigs || [],
         operations: agent.operations?.map(toDraftOperation) || [],
       }
       draftAgentId = agent._id
@@ -497,7 +496,6 @@
         goal: updated.goal || "",
         icon: updated.icon || "",
         iconColor: updated.iconColor || "",
-        escalationConfigs: updated.escalationConfigs || [],
         operations: updated.operations?.map(toDraftOperation) || [],
       }
 
@@ -599,12 +597,6 @@
 </div>
 
 {#key currentAgent?._id}
-  <EscalationConfigurations
-    bind:agent={draft}
-    agentId={currentAgent?._id}
-    {availableTools}
-    onUpdated={() => scheduleSave(true)}
-  />
   <OperationsSection
     bind:agent={draft}
     {promptBindings}

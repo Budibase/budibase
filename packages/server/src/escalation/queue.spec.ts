@@ -436,8 +436,9 @@ describe("resumeToolCall", () => {
         toolCallId: "call_1",
         input: { data: { Cost: 130 } },
         executionPrincipal: ToolExecutionPrincipal.ADMIN,
-        escalationConfigId: "escalation_config_1",
-        escalationRecipients: recipients,
+        approvalPolicyId: "approval_policy_1",
+        approvalPolicyName: "Finance",
+        approvalPolicyRecipients: recipients,
       }
 
       getOrThrowMock.mockResolvedValue({ _id: "agent_1" } as Agent)
@@ -460,7 +461,7 @@ describe("resumeToolCall", () => {
       expect(resumeOptions.approvedToolRetry).toEqual(
         expect.objectContaining({
           toolName: "ta_expenses_create_row",
-          escalationConfigId: "escalation_config_1",
+          approvalPolicyId: "approval_policy_1",
           executionPrincipal: ToolExecutionPrincipal.ADMIN,
           grant: { active: true },
         })

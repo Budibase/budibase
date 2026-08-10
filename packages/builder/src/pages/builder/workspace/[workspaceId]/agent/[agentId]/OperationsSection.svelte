@@ -309,12 +309,12 @@ Any constraints this operation must follow.
   <OperationSidePanel
     open={operationPanelOpen}
     bind:operation={selectedOperation}
+    agentId={agent._id}
     {promptBindings}
     {bindingIcons}
     {completions}
     {toolsLoaded}
     {availableTools}
-    escalationConfigs={agent.escalationConfigs || []}
     hasLegacyEscalation={legacyEscalationOperationIds.has(selectedOperation.id)}
     {webSearchConfigured}
     {onAddApiConnection}

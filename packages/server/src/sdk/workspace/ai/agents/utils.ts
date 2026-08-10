@@ -244,7 +244,7 @@ export interface BuildPromptAndToolsOptions {
     getRequestId?: () => string | undefined
     approvedToolRetry?: {
       toolName: string
-      escalationConfigId: string
+      approvalPolicyId: string
       executionPrincipal: ToolExecutionPrincipal
       grant: { active: boolean }
     }
@@ -313,10 +313,10 @@ export async function buildPromptAndTools(
     }
     for (const tool of enabledTools) {
       const config = toolConfigs.find(config => config.toolName === tool.name)
-      const escalationConfig = agent.escalationConfigs?.find(
-        escalation => escalation.id === config?.escalationConfigId
+      const approvalPolicy = operation.approvalPolicies?.find(
+        policy => policy.id === config?.approvalPolicyId
       )
-      if (config?.escalationConfigId && !escalationConfig) {
+      if (config?.approvalPolicyId && !approvalPolicy) {
         continue
       }
       const principal =
@@ -332,13 +332,13 @@ export async function buildPromptAndTools(
         principal,
         authorize: authorizeAgentToolCall,
         ...(options.execution.approvedToolRetry?.toolName === tool.name &&
-          options.execution.approvedToolRetry.escalationConfigId ===
-            config?.escalationConfigId &&
+          options.execution.approvedToolRetry.approvalPolicyId ===
+            config?.approvalPolicyId &&
           options.execution.approvedToolRetry.executionPrincipal ===
             principal && {
             approvedRetry: options.execution.approvedToolRetry.grant,
           }),
-        ...(escalationConfig && {
+        ...(approvalPolicy && {
           escalation: {
             request: async ({
               input,
@@ -359,15 +359,15 @@ export async function buildPromptAndTools(
                 title: summary.title,
                 summary: summary.summary,
                 delay: DEFAULT_TOOL_APPROVAL_DELAY_MS,
-                recipients: escalationConfig.recipients,
+                recipients: approvalPolicy.recipients,
                 resolutionStrategy: resolutionStrategyBinding(
                   ResolutionStrategy.FIRST_RESPONSE
                 ),
                 agentId,
                 operationId: operation.id,
                 requestId: options.execution?.getRequestId?.(),
-                escalationConfigId: escalationConfig.id,
-                escalationConfigName: escalationConfig.name,
+                approvalPolicyId: approvalPolicy.id,
+                approvalPolicyName: approvalPolicy.name,
                 context: {
                   agentId,
                   operationId: operation.id,
@@ -381,8 +381,9 @@ export async function buildPromptAndTools(
                   toolCallId,
                   input,
                   executionPrincipal: principal,
-                  escalationConfigId: escalationConfig.id,
-                  escalationRecipients: escalationConfig.recipients,
+                  approvalPolicyId: approvalPolicy.id,
+                  approvalPolicyName: approvalPolicy.name,
+                  approvalPolicyRecipients: approvalPolicy.recipients,
                   requestingUserIsPublic:
                     executionContext.requestingUserIsPublic,
                 },
@@ -394,9 +395,9 @@ export async function buildPromptAndTools(
                 agentId,
                 operationId: operation.id,
                 toolName: tool.name,
-                escalationConfigId: escalationConfig.id,
-                escalationConfigName: escalationConfig.name,
-                recipientTypes: escalationConfig.recipients.map(
+                approvalPolicyId: approvalPolicy.id,
+                approvalPolicyName: approvalPolicy.name,
+                recipientTypes: approvalPolicy.recipients.map(
                   recipient => recipient.type
                 ),
                 workspaceId,
@@ -647,43 +648,13 @@ export const assertAgentHasValidConfig = async (
     )
   }
 
-  await assertAgentToolEscalationsValid(agent, options)
+  await assertAgentToolApprovalsValid(agent, options)
 }
 
-export const assertAgentToolEscalationsValid = async (
+export const assertAgentToolApprovalsValid = async (
   agent: Agent,
   options: { allowLegacyOperationEscalation?: boolean } = {}
 ) => {
-  const escalationConfigs = agent.escalationConfigs || []
-  const names = new Set<string>()
-  const configIds = new Set<string>()
-  for (const escalationConfig of escalationConfigs) {
-    const normalizedName = escalationConfig.name?.trim().toLowerCase()
-    if (
-      typeof escalationConfig.id !== "string" ||
-      !escalationConfig.id.startsWith("escalation_config_") ||
-      !normalizedName ||
-      !Array.isArray(escalationConfig.recipients) ||
-      !escalationConfig.recipients.length ||
-      escalationConfig.recipients.some(
-        recipient =>
-          !recipient ||
-          !Object.values(EscalationNotificationChannel).includes(
-            recipient.type
-          ) ||
-          typeof recipient.config !== "object" ||
-          recipient.config === null ||
-          Array.isArray(recipient.config)
-      ) ||
-      configIds.has(escalationConfig.id) ||
-      names.has(normalizedName)
-    ) {
-      throw new HTTPError("Agent escalation configuration is invalid", 422)
-    }
-    configIds.add(escalationConfig.id)
-    names.add(normalizedName)
-  }
-
   for (const operation of agent.operations || []) {
     if (
       !options.allowLegacyOperationEscalation &&
@@ -695,27 +666,52 @@ export const assertAgentToolEscalationsValid = async (
         422
       )
     }
-  }
+    const names = new Set<string>()
+    const policyIds = new Set<string>()
+    for (const policy of operation.approvalPolicies || []) {
+      const normalizedName = policy.name?.trim().toLowerCase()
+      if (
+        typeof policy.id !== "string" ||
+        !policy.id.startsWith("approval_policy_") ||
+        !normalizedName ||
+        !Array.isArray(policy.recipients) ||
+        !policy.recipients.length ||
+        policy.recipients.some(
+          recipient =>
+            !recipient ||
+            !Object.values(EscalationNotificationChannel).includes(
+              recipient.type
+            ) ||
+            typeof recipient.config !== "object" ||
+            recipient.config === null ||
+            Array.isArray(recipient.config)
+        ) ||
+        policyIds.has(policy.id) ||
+        names.has(normalizedName)
+      ) {
+        throw new HTTPError("Operation approval policy is invalid", 422)
+      }
+      policyIds.add(policy.id)
+      names.add(normalizedName)
+    }
 
-  const configuredApprovalTools = (agent.operations || []).flatMap(operation =>
-    (operation.enabledTools || []).filter(tool => !!tool.escalationConfigId)
-  )
-  if (!configuredApprovalTools.length) {
-    return
-  }
-
-  for (const tool of configuredApprovalTools) {
-    if (!configIds.has(tool.escalationConfigId!)) {
-      throw new HTTPError(
-        `Tool "${tool.toolName}" references an unknown escalation configuration`,
-        422
-      )
+    for (const tool of operation.enabledTools || []) {
+      if (tool.approvalPolicyId && !policyIds.has(tool.approvalPolicyId)) {
+        throw new HTTPError(
+          `Tool "${tool.toolName}" references an unknown approval policy`,
+          422
+        )
+      }
     }
   }
 
-  const availableTools = await getAvailableTools(agent.aiconfig)
+  const configuredApprovalTools = (agent.operations || []).flatMap(operation =>
+    (operation.enabledTools || []).filter(tool => !!tool.approvalPolicyId)
+  )
+  if (!configuredApprovalTools.length) return
+
   const approvalTools = new Map(
-    availableTools
+    (await getAvailableTools(agent.aiconfig))
       .filter(tool => !!tool.approval)
       .map(tool => [tool.name, tool])
   )
@@ -771,7 +767,7 @@ export const executeApprovedToolCall = async ({
   executionPrincipal,
   requestingUserId,
   sessionId,
-  escalationConfigId,
+  approvalPolicyId,
   expectedRecipients,
   requestingUserIsPublic,
 }: {
@@ -784,7 +780,7 @@ export const executeApprovedToolCall = async ({
   executionPrincipal: "requester" | "admin"
   requestingUserId: string
   sessionId: string
-  escalationConfigId: string
+  approvalPolicyId: string
   expectedRecipients: EscalationRecipient[]
   requestingUserIsPublic?: boolean
 }) => {
@@ -796,15 +792,15 @@ export const executeApprovedToolCall = async ({
   const config = operation?.enabledTools?.find(
     item => item.toolName === toolName
   )
-  const escalationConfig = agent.escalationConfigs?.find(
-    item => item.id === escalationConfigId
+  const approvalPolicy = operation?.approvalPolicies?.find(
+    item => item.id === approvalPolicyId
   )
   if (
     !operation ||
-    config?.escalationConfigId !== escalationConfigId ||
-    !escalationConfig ||
+    config?.approvalPolicyId !== approvalPolicyId ||
+    !approvalPolicy ||
     config.executionPrincipal !== principal ||
-    !isDeepStrictEqual(escalationConfig.recipients, expectedRecipients)
+    !isDeepStrictEqual(approvalPolicy.recipients, expectedRecipients)
   ) {
     throw new HTTPError("Approved tool configuration has changed", 403)
   }
