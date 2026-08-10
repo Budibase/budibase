@@ -81,7 +81,7 @@ const createQueryTool = ({
         ToolExecutionPrincipal.ADMIN,
       ],
       permissionType: PermissionType.QUERY,
-      permissionLevel: PermissionLevel.EXECUTE,
+      permissionLevel: PermissionLevel.WRITE,
       resourceId: query._id,
     },
     tool: tool({

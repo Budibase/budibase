@@ -1,4 +1,10 @@
-import { Datasource, Query, SourceName, ToolType } from "@budibase/types"
+import {
+  PermissionLevel,
+  SourceName,
+  ToolType,
+  type Datasource,
+  type Query,
+} from "@budibase/types"
 import sdk from "../../.."
 import { getAvailableToolsMetadata } from "./utils"
 
@@ -75,6 +81,9 @@ describe("getAvailableToolsMetadata", () => {
       readableName: "Get Pokemon",
       sourceType: ToolType.REST_QUERY,
       sourceLabel: "REST API",
+      authorization: {
+        permissionLevel: PermissionLevel.WRITE,
+      },
     })
   })
 
@@ -107,6 +116,9 @@ describe("getAvailableToolsMetadata", () => {
       sourceType: ToolType.DATASOURCE_QUERY,
       sourceLabel: "Warehouse",
       sourceIconType: SourceName.SNOWFLAKE,
+      authorization: {
+        permissionLevel: PermissionLevel.WRITE,
+      },
     })
   })
 
