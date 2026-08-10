@@ -4,6 +4,7 @@ import { type Tool, type ToolSet } from "ai"
 export interface AiToolDefinition {
   name: string
   readableName?: string
+  tableId?: string
   description: string
   tool: Tool
   sourceType: ToolType
