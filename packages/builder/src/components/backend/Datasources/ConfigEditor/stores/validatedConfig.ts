@@ -151,7 +151,11 @@ export const createValidatedConfigStore = (
         config.continueSetupId = $configStore.continueSetupId
       }
 
-      const allowedRestKeys = ["rejectUnauthorized", "downloadImages"]
+      const allowedRestKeys = [
+        "rejectUnauthorized",
+        "downloadImages",
+        "allowCrossOriginPaths",
+      ]
       Object.entries(integration.datasource || {}).forEach(
         ([key, properties]) => {
           if (

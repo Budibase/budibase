@@ -83,6 +83,7 @@
     defaultHeaders: Record<string, string>
     staticVariables: Record<string, string>
     queryParams: Record<string, string>
+    allowCrossOriginPaths: boolean
     rejectUnauthorized: boolean
     downloadImages: boolean
   }
@@ -248,6 +249,7 @@
       defaultHeaders: cloneDeep(connection.props?.headers || {}),
       staticVariables: cloneDeep(connection.props?.staticVariables || {}),
       queryParams: cloneDeep(connection.props?.query || {}),
+      allowCrossOriginPaths: ds?.config?.allowCrossOriginPaths ?? false,
       rejectUnauthorized: ds?.config?.rejectUnauthorized ?? true,
       downloadImages: ds?.config?.downloadImages ?? true,
     }
@@ -390,6 +392,7 @@
         staticVariables: data.staticVariables || {},
         defaultHeaders: data.defaultHeaders || {},
         defaultQueryParameters: data.queryParams || {},
+        allowCrossOriginPaths: data.allowCrossOriginPaths ?? false,
         rejectUnauthorized: data.rejectUnauthorized ?? true,
         downloadImages: data.downloadImages ?? true,
       },
@@ -426,6 +429,7 @@
         staticVariables: data.staticVariables,
         defaultHeaders: data.defaultHeaders,
         defaultQueryParameters: data.queryParams,
+        allowCrossOriginPaths: data.allowCrossOriginPaths,
         rejectUnauthorized: data.rejectUnauthorized,
         downloadImages: data.downloadImages,
       },
@@ -819,6 +823,31 @@
           </div>
           <div class="settings-item">
             <div class="settings-item-text">
+              <span>Allow cross-origin paths</span>
+              <span class="settings-item-blurb">
+                Requires `REST_ALLOW_CROSS_ORIGIN_PATHS=true` in Hosting
+                settings.
+                <a
+                  href="https://docs.budibase.com/docs/hosting-settings"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Learn more
+                </a>
+              </span>
+            </div>
+            <div class="settings-item-control">
+              <Toggle
+                value={data.allowCrossOriginPaths ?? false}
+                on:change={e => {
+                  data.allowCrossOriginPaths = e.detail
+                  data = { ...data }
+                }}
+              />
+            </div>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-text">
               <span>Download images</span>
               <span class="settings-item-blurb"
                 >Download and return image responses as base64 data.</span
@@ -1038,9 +1067,19 @@
     font-size: var(--font-size-s);
   }
 
+  .settings-item-control {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+
   .settings-item-blurb {
     font-size: var(--font-size-xs);
     color: var(--spectrum-global-color-gray-600);
+  }
+  .settings-item-blurb a {
+    color: inherit;
+    text-decoration: underline;
   }
 
   .settings-item :global(.spectrum-Switch) {
