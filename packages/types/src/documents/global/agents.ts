@@ -134,12 +134,16 @@ export enum ToolExecutionPrincipal {
   ADMIN = "admin",
 }
 
+export interface AgentEscalationConfig {
+  id: string
+  name: string
+  recipient: EscalationRecipient
+}
+
 export interface AgentOperationToolConfig {
   toolName: string
   executionPrincipal: ToolExecutionPrincipal
-  escalation?: {
-    recipient: EscalationRecipient
-  }
+  escalationConfigId?: string
 }
 
 export interface AgentExecutionContext {
@@ -169,6 +173,7 @@ export interface Agent extends Document {
   aiconfig: string
   projectIds?: string[]
   operations?: AgentOperation[]
+  escalationConfigs?: AgentEscalationConfig[]
   goal?: string
   live?: boolean
   publishedAt?: string

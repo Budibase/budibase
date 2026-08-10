@@ -12,7 +12,8 @@ import {
   ResolutionStrategy,
   ToolExecutionPrincipal,
   type AgentExecutionContext,
-  type AgentOperationToolConfig,
+  type EscalationRecipient,
+  EscalationNotificationChannel,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import {
@@ -305,7 +306,12 @@ export async function buildPromptAndTools(
     }
     for (const tool of enabledTools) {
       const config = toolConfigs.find(config => config.toolName === tool.name)
-      const escalation = config?.escalation
+      const escalationConfig = agent.escalationConfigs?.find(
+        escalation => escalation.id === config?.escalationConfigId
+      )
+      if (config?.escalationConfigId && !escalationConfig) {
+        continue
+      }
       const principal =
         config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
       if (
@@ -318,9 +324,9 @@ export async function buildPromptAndTools(
         executionContext,
         principal,
         authorize: authorizeAgentToolCall,
-        ...(escalation && {
+        ...(escalationConfig && {
           escalation: {
-            recipient: escalation.recipient,
+            recipient: escalationConfig.recipient,
             request: async ({
               input,
               summary,
@@ -340,13 +346,15 @@ export async function buildPromptAndTools(
                 title: summary.title,
                 summary: summary.summary,
                 delay: DEFAULT_TOOL_APPROVAL_DELAY_MS,
-                recipients: [escalation.recipient],
+                recipients: [escalationConfig.recipient],
                 resolutionStrategy: resolutionStrategyBinding(
                   ResolutionStrategy.FIRST_RESPONSE
                 ),
                 agentId,
                 operationId: operation.id,
                 requestId: options.execution?.getRequestId?.(),
+                escalationConfigId: escalationConfig.id,
+                escalationConfigName: escalationConfig.name,
                 context: {
                   agentId,
                   operationId: operation.id,
@@ -360,6 +368,8 @@ export async function buildPromptAndTools(
                   toolCallId,
                   input,
                   executionPrincipal: principal,
+                  escalationConfigId: escalationConfig.id,
+                  escalationRecipient: escalationConfig.recipient,
                   requestingUserIsPublic:
                     executionContext.requestingUserIsPublic,
                 },
@@ -371,7 +381,9 @@ export async function buildPromptAndTools(
                 agentId,
                 operationId: operation.id,
                 toolName: tool.name,
-                recipientType: escalation.recipient.type,
+                escalationConfigId: escalationConfig.id,
+                escalationConfigName: escalationConfig.name,
+                recipientType: escalationConfig.recipient.type,
                 workspaceId,
               })
               return result
@@ -627,6 +639,31 @@ export const assertAgentToolEscalationsValid = async (
   agent: Agent,
   options: { allowLegacyOperationEscalation?: boolean } = {}
 ) => {
+  const escalationConfigs = agent.escalationConfigs || []
+  const names = new Set<string>()
+  const configIds = new Set<string>()
+  for (const escalationConfig of escalationConfigs) {
+    const normalizedName = escalationConfig.name?.trim().toLowerCase()
+    if (
+      typeof escalationConfig.id !== "string" ||
+      !escalationConfig.id.startsWith("escalation_config_") ||
+      !normalizedName ||
+      !escalationConfig.recipient ||
+      !Object.values(EscalationNotificationChannel).includes(
+        escalationConfig.recipient.type
+      ) ||
+      typeof escalationConfig.recipient.config !== "object" ||
+      escalationConfig.recipient.config === null ||
+      Array.isArray(escalationConfig.recipient.config) ||
+      configIds.has(escalationConfig.id) ||
+      names.has(normalizedName)
+    ) {
+      throw new HTTPError("Agent escalation configuration is invalid", 422)
+    }
+    configIds.add(escalationConfig.id)
+    names.add(normalizedName)
+  }
+
   for (const operation of agent.operations || []) {
     if (
       !options.allowLegacyOperationEscalation &&
@@ -641,10 +678,19 @@ export const assertAgentToolEscalationsValid = async (
   }
 
   const configuredApprovalTools = (agent.operations || []).flatMap(operation =>
-    (operation.enabledTools || []).filter(tool => !!tool.escalation)
+    (operation.enabledTools || []).filter(tool => !!tool.escalationConfigId)
   )
   if (!configuredApprovalTools.length) {
     return
+  }
+
+  for (const tool of configuredApprovalTools) {
+    if (!configIds.has(tool.escalationConfigId!)) {
+      throw new HTTPError(
+        `Tool "${tool.toolName}" references an unknown escalation configuration`,
+        422
+      )
+    }
   }
 
   const availableTools = await getAvailableTools(agent.aiconfig)
@@ -684,6 +730,7 @@ export const executeApprovedToolCall = async ({
   executionPrincipal,
   requestingUserId,
   sessionId,
+  escalationConfigId,
   expectedRecipient,
   requestingUserIsPublic,
 }: {
@@ -696,7 +743,8 @@ export const executeApprovedToolCall = async ({
   executionPrincipal: "requester" | "admin"
   requestingUserId: string
   sessionId: string
-  expectedRecipient: AgentOperationToolConfig["escalation"]
+  escalationConfigId: string
+  expectedRecipient: EscalationRecipient
   requestingUserIsPublic?: boolean
 }) => {
   const principal =
@@ -707,11 +755,15 @@ export const executeApprovedToolCall = async ({
   const config = operation?.enabledTools?.find(
     item => item.toolName === toolName
   )
+  const escalationConfig = agent.escalationConfigs?.find(
+    item => item.id === escalationConfigId
+  )
   if (
     !operation ||
-    !config?.escalation ||
+    config?.escalationConfigId !== escalationConfigId ||
+    !escalationConfig ||
     config.executionPrincipal !== principal ||
-    !isDeepStrictEqual(config.escalation, expectedRecipient)
+    !isDeepStrictEqual(escalationConfig.recipient, expectedRecipient)
   ) {
     throw new HTTPError("Approved tool configuration has changed", 403)
   }

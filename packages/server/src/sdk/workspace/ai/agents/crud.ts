@@ -16,7 +16,10 @@ import type {
 } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
-import { assertAgentHasValidConfig } from "./utils"
+import {
+  assertAgentHasValidConfig,
+  assertAgentToolEscalationsValid,
+} from "./utils"
 import { cleanupKnowledgeForOperation, knowledgeSourceSyncQueue } from "../rag"
 import { getValidProjectIdsForDuplication } from "../../projects/utils"
 
@@ -48,7 +51,13 @@ export const normalizePersistedOperationTools = (
           toolName: tool,
           executionPrincipal: ToolExecutionPrincipal.REQUESTER,
         }
-      : tool
+      : {
+          toolName: tool.toolName,
+          executionPrincipal: tool.executionPrincipal,
+          ...(tool.escalationConfigId && {
+            escalationConfigId: tool.escalationConfigId,
+          }),
+        }
   )
 
 const SECRET_MASK = "********"
@@ -542,6 +551,7 @@ export async function create(
     aiconfig: request.aiconfig || "", // this might be set later, it will be validated on publish/usage
     projectIds: request.projectIds,
     operations: request.operations,
+    escalationConfigs: request.escalationConfigs,
     live: request.live ?? false,
     publishedAt: request.live ? now : undefined,
     icon: request.icon,
@@ -557,6 +567,8 @@ export async function create(
 
   if (agent.live) {
     await assertAgentHasValidConfig(agent)
+  } else {
+    await assertAgentToolEscalationsValid(agent)
   }
 
   const { rev } = await db.put({
@@ -597,6 +609,7 @@ export async function duplicate(
     _deleted: false,
     createdBy,
     operations: source.operations,
+    escalationConfigs: source.escalationConfigs,
   })
 }
 
@@ -658,6 +671,10 @@ export async function update(agent: Agent): Promise<Agent> {
   if (updated.live) {
     await assertAgentHasValidConfig(updated, {
       allowLegacyOperationEscalation: existing.live === true,
+    })
+  } else {
+    await assertAgentToolEscalationsValid(updated, {
+      allowLegacyOperationEscalation: true,
     })
   }
 

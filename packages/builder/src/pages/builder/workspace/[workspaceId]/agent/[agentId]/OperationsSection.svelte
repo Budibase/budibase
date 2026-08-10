@@ -29,7 +29,6 @@ Any constraints this operation must follow.
 
   let {
     agent = $bindable(),
-    agentId,
     promptBindings = [],
     bindingIcons = {},
     completions = [],
@@ -43,7 +42,6 @@ Any constraints this operation must follow.
     onUpdated,
   }: {
     agent: Agent
-    agentId?: string
     promptBindings?: EnrichedBinding[]
     bindingIcons?: Record<string, string | undefined>
     completions?: BindingCompletion[]
@@ -310,13 +308,13 @@ Any constraints this operation must follow.
 {#if selectedOperation}
   <OperationSidePanel
     open={operationPanelOpen}
-    {agentId}
     bind:operation={selectedOperation}
     {promptBindings}
     {bindingIcons}
     {completions}
     {toolsLoaded}
     {availableTools}
+    escalationConfigs={agent.escalationConfigs || []}
     hasLegacyEscalation={legacyEscalationOperationIds.has(selectedOperation.id)}
     {webSearchConfigured}
     {onAddApiConnection}

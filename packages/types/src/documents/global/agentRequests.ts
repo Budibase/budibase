@@ -51,6 +51,8 @@ export interface ToolCallAction extends AgentRequestActionBase {
 export interface EscalationRaisedAction extends AgentRequestActionBase {
   type: "escalation_raised"
   escalationId: string
+  escalationConfigId?: string
+  escalationConfigName?: string
   recipients: Array<{
     type: EscalationNotificationChannel
     label: string

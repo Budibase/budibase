@@ -41,7 +41,7 @@ const mergeOperationConfig = (
 ): AgentOperation => {
   const legacyExisting = existing as LegacyAgentOperation
   const replacesLegacyEscalation = incoming.enabledTools?.some(
-    tool => !!tool.escalation
+    tool => !!tool.escalationConfigId
   )
   const { escalation: _legacyEscalation, ...current } = legacyExisting
   return {
@@ -121,7 +121,7 @@ export async function updateOperation(
     hasLegacyEscalation(existingOperation) &&
     existingOperation.live !== true &&
     updateRequest.live === true &&
-    !updateRequest.enabledTools?.some(tool => !!tool.escalation)
+    !updateRequest.enabledTools?.some(tool => !!tool.escalationConfigId)
   ) {
     throw new HTTPError(
       "Configure approval on individual tools before enabling this operation.",

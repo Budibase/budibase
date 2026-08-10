@@ -45,6 +45,7 @@
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
   import OperationsSection from "./OperationsSection.svelte"
   import WebSearchConfigModal from "./WebSearchConfigModal.svelte"
+  import EscalationConfigurations from "./EscalationConfigurations.svelte"
 
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
   // Use URLs derived from the same Phosphor SVG paths as the Svelte logo components.
@@ -77,8 +78,8 @@
       executionPrincipal:
         existing.get(toolName)?.executionPrincipal ??
         ToolExecutionPrincipal.REQUESTER,
-      ...(existing.get(toolName)?.escalation && {
-        escalation: existing.get(toolName)?.escalation,
+      ...(existing.get(toolName)?.escalationConfigId && {
+        escalationConfigId: existing.get(toolName)?.escalationConfigId,
       }),
     }))
   }
@@ -238,6 +239,7 @@
         goal: agent.goal || "",
         icon: agent.icon || "",
         iconColor: agent.iconColor || "",
+        escalationConfigs: agent.escalationConfigs || [],
         operations: agent.operations?.map(toDraftOperation) || [],
       }
       draftAgentId = agent._id
@@ -495,6 +497,7 @@
         goal: updated.goal || "",
         icon: updated.icon || "",
         iconColor: updated.iconColor || "",
+        escalationConfigs: updated.escalationConfigs || [],
         operations: updated.operations?.map(toDraftOperation) || [],
       }
 
@@ -596,9 +599,13 @@
 </div>
 
 {#key currentAgent?._id}
-  <OperationsSection
+  <EscalationConfigurations
     bind:agent={draft}
     agentId={currentAgent?._id}
+    onUpdated={() => scheduleSave(true)}
+  />
+  <OperationsSection
+    bind:agent={draft}
     {promptBindings}
     bindingIcons={readableToIcon}
     completions={promptCompletions}

@@ -1,5 +1,9 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
+import {
+  EscalationNotificationChannel,
+  ToolExecutionPrincipal,
+} from "@budibase/types"
 
 describe("agent duplicate", () => {
   const config = new TestConfiguration()
@@ -120,6 +124,46 @@ describe("agent duplicate", () => {
     expect(
       removed.operations?.find(operation => operation.id === "operation_2")
     ).toBeUndefined()
+  })
+
+  it("accepts escalation configuration references in operation tools", async () => {
+    const created = await config.api.agent.create({
+      name: "Escalation config agent",
+      aiconfig: "default",
+      escalationConfigs: [
+        {
+          id: "escalation_config_engineering",
+          name: "Engineering",
+          recipient: {
+            type: EscalationNotificationChannel.SLACK,
+            config: { channelId: "C_ENGINEERING" },
+          },
+        },
+      ],
+    })
+
+    await config.api.agent.createOperation(
+      created._id!,
+      {
+        id: "operation_escalation",
+        name: "Escalation flow",
+        live: false,
+        enabledTools: [
+          {
+            toolName: "unsupported_tool",
+            executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+            escalationConfigId: "escalation_config_engineering",
+          },
+        ],
+        allowKnowledgeSourceDownload: true,
+      },
+      {
+        status: 422,
+        body: {
+          message: 'Tool "unsupported_tool" does not support approval gates',
+        },
+      }
+    )
   })
 
   it("rejects creating an operation with a duplicate name for the same agent", async () => {

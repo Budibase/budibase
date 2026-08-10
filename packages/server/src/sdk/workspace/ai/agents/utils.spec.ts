@@ -6,7 +6,11 @@ import type {
   TypedToolResult,
   UIMessage,
 } from "ai"
-import { ToolType } from "@budibase/types"
+import {
+  EscalationNotificationChannel,
+  ToolExecutionPrincipal,
+  ToolType,
+} from "@budibase/types"
 import {
   findIncompleteToolCalls,
   formatIncompleteToolCallError,
@@ -93,6 +97,57 @@ describe("assertAgentToolEscalationsValid", () => {
         allowLegacyOperationEscalation: true,
       })
     ).resolves.toBeUndefined()
+  })
+
+  it("rejects duplicate escalation configuration names", async () => {
+    const agent = legacyAgent()
+    delete (
+      agent.operations[0] as Partial<AgentOperation> & {
+        escalation?: object
+      }
+    ).escalation
+    agent.escalationConfigs = [
+      {
+        id: "escalation_config_1",
+        name: "Engineering",
+        recipient: {
+          type: EscalationNotificationChannel.SLACK,
+          config: { channelId: "C1" },
+        },
+      },
+      {
+        id: "escalation_config_2",
+        name: " engineering ",
+        recipient: {
+          type: EscalationNotificationChannel.SLACK,
+          config: { channelId: "C2" },
+        },
+      },
+    ]
+
+    await expect(assertAgentToolEscalationsValid(agent)).rejects.toThrow(
+      "Agent escalation configuration is invalid"
+    )
+  })
+
+  it("rejects tools referencing a missing escalation configuration", async () => {
+    const agent = legacyAgent()
+    delete (
+      agent.operations[0] as Partial<AgentOperation> & {
+        escalation?: object
+      }
+    ).escalation
+    agent.operations[0].enabledTools = [
+      {
+        toolName: "create_row",
+        executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+        escalationConfigId: "escalation_config_missing",
+      },
+    ]
+
+    await expect(assertAgentToolEscalationsValid(agent)).rejects.toThrow(
+      'Tool "create_row" references an unknown escalation configuration'
+    )
   })
 })
 

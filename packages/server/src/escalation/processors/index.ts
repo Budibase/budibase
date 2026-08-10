@@ -42,6 +42,8 @@ export interface CreateToolEscalationInput extends CreateEscalationBase {
   agentId: string
   operationId: string
   requestId?: string
+  escalationConfigId: string
+  escalationConfigName: string
   context: SuspendedToolCallContext
 }
 

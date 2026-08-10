@@ -335,6 +335,12 @@ async function recordEscalationRaised({
     {
       type: "escalation_raised",
       escalationId,
+      ...(doc.escalationConfigId && {
+        escalationConfigId: doc.escalationConfigId,
+      }),
+      ...(doc.escalationConfigName && {
+        escalationConfigName: doc.escalationConfigName,
+      }),
       recipients,
       sessionId,
     },

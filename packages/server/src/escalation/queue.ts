@@ -292,6 +292,7 @@ export async function resumeToolCall({
     agentId: ctx.agentId,
     operationId: ctx.operationId,
     toolName: ctx.toolName,
+    escalationConfigId: ctx.escalationConfigId,
     recipientType: doc.recipients?.[0]?.type,
     outcome,
   })
@@ -369,7 +370,8 @@ export async function resumeToolCall({
       executionPrincipal: ctx.executionPrincipal,
       requestingUserId: userId,
       sessionId: ctx.sessionId,
-      expectedRecipient: { recipient },
+      escalationConfigId: ctx.escalationConfigId,
+      expectedRecipient: ctx.escalationRecipient,
       requestingUserIsPublic: ctx.requestingUserIsPublic,
     })
     toolExecuted = true
