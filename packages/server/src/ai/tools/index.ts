@@ -28,6 +28,7 @@ export interface ToolAuthorization {
 export interface AiToolDefinition {
   name: string
   readableName?: string
+  tableId?: string
   description: string
   tool: Tool
   sourceType: ToolType

@@ -8,6 +8,7 @@ import { tool } from "ai"
 import { z } from "zod"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
+import { sanitizeAgentTable } from "./tableScope"
 
 const resolveTableId = (table: unknown) => {
   if (!table || typeof table !== "object") {
@@ -21,82 +22,88 @@ const resolveTableId = (table: unknown) => {
   }
 }
 
-const TABLE_TOOLS: BudibaseToolDefinition[] = [
-  {
-    name: "list_tables",
-    sourceType: ToolType.INTERNAL_TABLE,
-    sourceLabel: "Budibase",
-    description: "List all tables in the current workspace",
-    authorization: {
-      supportedPrincipals: [
-        ToolExecutionPrincipal.REQUESTER,
-        ToolExecutionPrincipal.ADMIN,
-      ],
-      permissionType: PermissionType.WORKSPACE,
-      permissionLevel: PermissionLevel.READ,
-      resultFilter: {
-        collectionKey: "tables",
+export const createTableTools = (
+  tableIds: string[]
+): BudibaseToolDefinition[] => {
+  const allowedTableIds = [...new Set(tableIds)]
+  const allowedTableIdSet = new Set(allowedTableIds)
+
+  return [
+    {
+      name: "list_tables",
+      sourceType: ToolType.INTERNAL_TABLE,
+      sourceLabel: "Budibase",
+      description: "List tables configured for the current operation",
+      authorization: {
+        supportedPrincipals: [
+          ToolExecutionPrincipal.REQUESTER,
+          ToolExecutionPrincipal.ADMIN,
+        ],
+        permissionType: PermissionType.WORKSPACE,
+        permissionLevel: PermissionLevel.READ,
+        resultFilter: {
+          collectionKey: "tables",
+          permissionType: PermissionType.TABLE,
+          permissionLevel: PermissionLevel.READ,
+          resolveResourceId: resolveTableId,
+        },
+      },
+      tool: tool({
+        description: "List tables configured for the current operation",
+        inputSchema: z.object({
+          showSchema: z
+            .boolean()
+            .describe(
+              "Whether to show the schema of the tables. This can be extemely large. Default to false to save on tokens."
+            )
+            .default(false),
+        }),
+        execute: async input => {
+          const { showSchema } = input
+          const tables = await sdk.tables.getTables(allowedTableIds)
+          if (!showSchema) {
+            return {
+              tables: tables.map(table => ({
+                id: table._id!,
+                tableName: table.name,
+              })),
+            }
+          }
+          return { tables: tables.map(sanitizeAgentTable) }
+        },
+      }),
+    },
+    {
+      name: "get_table",
+      sourceType: ToolType.INTERNAL_TABLE,
+      sourceLabel: "Budibase",
+      description: "Get details about a specific table by ID",
+      authorization: {
+        supportedPrincipals: [
+          ToolExecutionPrincipal.REQUESTER,
+          ToolExecutionPrincipal.ADMIN,
+        ],
         permissionType: PermissionType.TABLE,
         permissionLevel: PermissionLevel.READ,
-        resolveResourceId: resolveTableId,
+        resolveResourceId: input =>
+          typeof input === "object" && input && "tableId" in input
+            ? String(input.tableId)
+            : undefined,
       },
-    },
-    tool: tool({
-      description: "List all tables in the current workspace",
-      inputSchema: z.object({
-        showSchema: z
-          .boolean()
-          .describe(
-            "Whether to show the schema of the tables. This can be extemely large. Default to false to save on tokens."
-          )
-          .default(false),
-      }),
-
-      execute: async input => {
-        const { showSchema } = input
-        const tables = await sdk.tables.getAllTables()
-        if (!showSchema) {
-          return {
-            tables: tables.map(table => ({
-              id: table._id!,
-              tableName: table.name,
-            })),
+      tool: tool({
+        description: "Get details about a specific table by ID",
+        inputSchema: z.object({
+          tableId: z.string().describe("The ID of the table to retrieve"),
+        }),
+        execute: async input => {
+          const { tableId } = input
+          if (!allowedTableIdSet.has(tableId)) {
+            throw new Error("Table is not configured for the current operation")
           }
-        }
-        return { tables }
-      },
-    }),
-  },
-
-  {
-    name: "get_table",
-    sourceType: ToolType.INTERNAL_TABLE,
-    sourceLabel: "Budibase",
-    description: "Get details about a specific table by ID",
-    authorization: {
-      supportedPrincipals: [
-        ToolExecutionPrincipal.REQUESTER,
-        ToolExecutionPrincipal.ADMIN,
-      ],
-      permissionType: PermissionType.TABLE,
-      permissionLevel: PermissionLevel.READ,
-      resolveResourceId: input =>
-        typeof input === "object" && input && "tableId" in input
-          ? String(input.tableId)
-          : undefined,
-    },
-    tool: tool({
-      description: "Get details about a specific table by ID",
-      inputSchema: z.object({
-        tableId: z.string().describe("The ID of the table to retrieve"),
+          const table = await sdk.tables.getTable(tableId)
+          return { table: sanitizeAgentTable(table) }
+        },
       }),
-      execute: async input => {
-        const { tableId } = input
-        const table = await sdk.tables.getTable(tableId)
-        return { table }
-      },
-    }),
-  },
-]
-
-export default TABLE_TOOLS
+    },
+  ]
+}
