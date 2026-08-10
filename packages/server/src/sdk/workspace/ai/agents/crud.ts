@@ -9,9 +9,11 @@ import { WebClient } from "@slack/web-api"
 import { DocumentType, ToolExecutionPrincipal } from "@budibase/types"
 import type {
   Agent,
+  AgentEscalationConfig,
   AgentKnowledgeSource,
   AgentOperation,
   AgentOperationToolConfig,
+  EscalationRecipient,
   Optional,
 } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
@@ -32,8 +34,17 @@ type DeprecatedAgentOperation = Omit<AgentOperation, "enabledTools"> & {
   }
 }
 
-type DeprecatedAgent = Omit<Agent, "operations"> & {
+type DeprecatedAgentEscalationConfig = Omit<
+  AgentEscalationConfig,
+  "recipients"
+> & {
+  recipients?: EscalationRecipient[]
+  recipient?: EscalationRecipient
+}
+
+type DeprecatedAgent = Omit<Agent, "operations" | "escalationConfigs"> & {
   operations?: DeprecatedAgentOperation[]
+  escalationConfigs?: DeprecatedAgentEscalationConfig[]
   promptInstructions?: string
   operationName?: string
   enabledTools?: string[]
@@ -235,6 +246,13 @@ const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
     ...stripDeprecatedAgentFields(raw),
     live: raw.live ?? false,
     operations: migrateOperations(raw),
+    escalationConfigs: raw.escalationConfigs?.map(config => {
+      const { recipient, ...current } = config
+      return {
+        ...current,
+        recipients: config.recipients || (recipient ? [recipient] : []),
+      }
+    }),
     discordIntegration: decodeDiscordIntegrationSecrets(raw.discordIntegration),
     slackIntegration: decodeSlackIntegrationSecrets(raw.slackIntegration),
     telegramIntegration: decodeTelegramIntegrationSecrets(

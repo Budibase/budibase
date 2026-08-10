@@ -134,10 +134,12 @@ describe("agent duplicate", () => {
         {
           id: "escalation_config_engineering",
           name: "Engineering",
-          recipient: {
-            type: EscalationNotificationChannel.SLACK,
-            config: { channelId: "C_ENGINEERING" },
-          },
+          recipients: [
+            {
+              type: EscalationNotificationChannel.SLACK,
+              config: { channelId: "C_ENGINEERING" },
+            },
+          ],
         },
       ],
     })

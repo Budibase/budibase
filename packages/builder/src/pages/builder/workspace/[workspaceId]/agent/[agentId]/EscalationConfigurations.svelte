@@ -3,17 +3,21 @@
   import type {
     Agent,
     AgentEscalationConfig,
+    AgentOperationToolConfig,
     EscalationRecipient,
   } from "@budibase/types"
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
+  import type { AgentTool } from "./toolTypes"
 
   let {
     agent = $bindable(),
     agentId,
+    availableTools = [],
     onUpdated,
   }: {
     agent: Agent
     agentId?: string
+    availableTools?: AgentTool[]
     onUpdated: () => Promise<boolean>
   } = $props()
 
@@ -45,17 +49,42 @@
     updateConfig(config.id, { name: trimmed })
   }
 
+  const formatFallbackToolName = (toolName: string) => {
+    const action = toolName.match(
+      /(create_row|update_row|delete_row|get_row|list_rows|get_table|list_tables)$/
+    )?.[1]
+    return (action || toolName)
+      .split("_")
+      .map(word => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
+      .join(" ")
+  }
+
+  const formatToolName = (toolConfig: AgentOperationToolConfig) => {
+    const tool = availableTools.find(
+      candidate => candidate.runtimeBinding === toolConfig.toolName
+    )
+    const displayName = tool?.readableName || tool?.name
+    if (!tool || !displayName) {
+      return formatFallbackToolName(toolConfig.toolName)
+    }
+    if (tool.sourceLabel && !displayName.startsWith(`${tool.sourceLabel}.`)) {
+      return `${tool.sourceLabel}: ${displayName}`
+    }
+    return displayName
+  }
+
   const referencesFor = (id: string) =>
     (agent.operations || []).flatMap(operation =>
       (operation.enabledTools || [])
         .filter(tool => tool.escalationConfigId === id)
-        .map(tool => `${operation.name}: ${tool.toolName}`)
+        .map(toolConfig => {
+          return `${operation.name} · ${formatToolName(toolConfig)}`
+        })
     )
 
   const addConfig = () => {
     const name = pendingName.trim()
-    const recipient = pendingRecipients[0]
-    if (!name || !recipient || nameExists(name)) {
+    if (!name || !pendingRecipients.length || nameExists(name)) {
       return
     }
     agent.escalationConfigs = [
@@ -63,7 +92,7 @@
       {
         id: `escalation_config_${Helpers.uuid()}`,
         name,
-        recipient,
+        recipients: pendingRecipients,
       },
     ]
     pendingName = ""
@@ -104,42 +133,48 @@
   {#each agent.escalationConfigs || [] as config (config.id)}
     {@const references = referencesFor(config.id)}
     <div class="configuration">
-      <div class="configuration-fields">
-        <Input
-          label="Name"
-          value={config.name}
-          error={!config.name.trim()
-            ? "Name is required"
-            : nameExists(config.name, config.id)
-              ? "Name must be unique"
-              : undefined}
-          on:change={event => updateConfigName(config, event.detail)}
-        />
-        <EscalationRecipients
-          single
-          recipients={[config.recipient]}
-          {agentId}
-          onChange={recipients => {
-            const recipient = recipients[0] as EscalationRecipient | undefined
-            if (recipient) {
-              updateConfig(config.id, { recipient })
-            }
-          }}
-        />
+      <div class="configuration-main">
+        <div class="configuration-fields">
+          <Input
+            label="Name"
+            value={config.name}
+            error={!config.name.trim()
+              ? "Name is required"
+              : nameExists(config.name, config.id)
+                ? "Name must be unique"
+                : undefined}
+            on:change={event => updateConfigName(config, event.detail)}
+          />
+          <div class="destination-field">
+            <Body size="XS" color="var(--spectrum-global-color-gray-800)"
+              >Recipients</Body
+            >
+            <EscalationRecipients
+              recipients={config.recipients}
+              minimumRecipients={1}
+              {agentId}
+              onChange={recipients => {
+                if (recipients.length) {
+                  updateConfig(config.id, { recipients })
+                }
+              }}
+            />
+          </div>
+        </div>
+        {#if references.length}
+          <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+            Used by {references.join(", ")}
+          </Body>
+        {/if}
       </div>
       <ActionButton
         icon="Delete"
         disabled={references.length > 0}
-        tooltip={references.length
-          ? `Used by ${references.join(", ")}`
+        tooltip={references.length > 0
+          ? "Remove tool references before deleting"
           : "Delete configuration"}
         on:click={() => deleteConfig(config.id)}
       />
-      {#if references.length}
-        <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-          Used by {references.join(", ")}
-        </Body>
-      {/if}
     </div>
   {/each}
 
@@ -152,7 +187,6 @@
         error={nameExists(pendingName) ? "Name must be unique" : undefined}
       />
       <EscalationRecipients
-        single
         recipients={pendingRecipients}
         {agentId}
         onChange={recipients =>
@@ -222,6 +256,19 @@
   .configuration-fields {
     flex: 1;
     min-width: 0;
+  }
+  .configuration-main,
+  .destination-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+  }
+  .configuration-main {
+    flex: 1;
+    min-width: 0;
+  }
+  .destination-field {
+    flex: 1;
   }
   .configuration-fields :global(.recipients) {
     flex: 1;

@@ -326,7 +326,6 @@ export async function buildPromptAndTools(
         authorize: authorizeAgentToolCall,
         ...(escalationConfig && {
           escalation: {
-            recipient: escalationConfig.recipient,
             request: async ({
               input,
               summary,
@@ -346,7 +345,7 @@ export async function buildPromptAndTools(
                 title: summary.title,
                 summary: summary.summary,
                 delay: DEFAULT_TOOL_APPROVAL_DELAY_MS,
-                recipients: [escalationConfig.recipient],
+                recipients: escalationConfig.recipients,
                 resolutionStrategy: resolutionStrategyBinding(
                   ResolutionStrategy.FIRST_RESPONSE
                 ),
@@ -369,7 +368,7 @@ export async function buildPromptAndTools(
                   input,
                   executionPrincipal: principal,
                   escalationConfigId: escalationConfig.id,
-                  escalationRecipient: escalationConfig.recipient,
+                  escalationRecipients: escalationConfig.recipients,
                   requestingUserIsPublic:
                     executionContext.requestingUserIsPublic,
                 },
@@ -383,7 +382,9 @@ export async function buildPromptAndTools(
                 toolName: tool.name,
                 escalationConfigId: escalationConfig.id,
                 escalationConfigName: escalationConfig.name,
-                recipientType: escalationConfig.recipient.type,
+                recipientTypes: escalationConfig.recipients.map(
+                  recipient => recipient.type
+                ),
                 workspaceId,
               })
               return result
@@ -648,13 +649,18 @@ export const assertAgentToolEscalationsValid = async (
       typeof escalationConfig.id !== "string" ||
       !escalationConfig.id.startsWith("escalation_config_") ||
       !normalizedName ||
-      !escalationConfig.recipient ||
-      !Object.values(EscalationNotificationChannel).includes(
-        escalationConfig.recipient.type
+      !Array.isArray(escalationConfig.recipients) ||
+      !escalationConfig.recipients.length ||
+      escalationConfig.recipients.some(
+        recipient =>
+          !recipient ||
+          !Object.values(EscalationNotificationChannel).includes(
+            recipient.type
+          ) ||
+          typeof recipient.config !== "object" ||
+          recipient.config === null ||
+          Array.isArray(recipient.config)
       ) ||
-      typeof escalationConfig.recipient.config !== "object" ||
-      escalationConfig.recipient.config === null ||
-      Array.isArray(escalationConfig.recipient.config) ||
       configIds.has(escalationConfig.id) ||
       names.has(normalizedName)
     ) {
@@ -731,7 +737,7 @@ export const executeApprovedToolCall = async ({
   requestingUserId,
   sessionId,
   escalationConfigId,
-  expectedRecipient,
+  expectedRecipients,
   requestingUserIsPublic,
 }: {
   agent: Agent
@@ -744,7 +750,7 @@ export const executeApprovedToolCall = async ({
   requestingUserId: string
   sessionId: string
   escalationConfigId: string
-  expectedRecipient: EscalationRecipient
+  expectedRecipients: EscalationRecipient[]
   requestingUserIsPublic?: boolean
 }) => {
   const principal =
@@ -763,7 +769,7 @@ export const executeApprovedToolCall = async ({
     config?.escalationConfigId !== escalationConfigId ||
     !escalationConfig ||
     config.executionPrincipal !== principal ||
-    !isDeepStrictEqual(escalationConfig.recipient, expectedRecipient)
+    !isDeepStrictEqual(escalationConfig.recipients, expectedRecipients)
   ) {
     throw new HTTPError("Approved tool configuration has changed", 403)
   }

@@ -226,15 +226,15 @@
   }
 
   const formatEscalationConfig = (config: AgentEscalationConfig) => {
-    const provider = config.recipient.type
-    const target =
-      config.recipient.config.channelName ||
-      config.recipient.config.externalUserId ||
-      config.recipient.config.channelId ||
-      config.recipient.config.globalUserId
-    return target
-      ? `${config.name} · ${provider} ${target}`
-      : `${config.name} · ${provider}`
+    const destinations = config.recipients.map(recipient => {
+      const target =
+        recipient.config.channelName ||
+        recipient.config.externalUserId ||
+        recipient.config.channelId ||
+        recipient.config.globalUserId
+      return target ? `${recipient.type} ${target}` : recipient.type
+    })
+    return `${config.name} · ${destinations.join(", ")}`
   }
 
   const escapeRegExp = (str: string) =>

@@ -73,7 +73,7 @@ const AGENT_ESCALATION_CONFIG_SCHEMA = Joi.object({
     .pattern(/^escalation_config_/)
     .required(),
   name: NON_EMPTY_STRING.required(),
-  recipient: ESCALATION_RECIPIENT_SCHEMA.required(),
+  recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).min(1).required(),
 })
 
 const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({

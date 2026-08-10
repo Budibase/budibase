@@ -602,6 +602,7 @@
   <EscalationConfigurations
     bind:agent={draft}
     agentId={currentAgent?._id}
+    {availableTools}
     onUpdated={() => scheduleSave(true)}
   />
   <OperationsSection

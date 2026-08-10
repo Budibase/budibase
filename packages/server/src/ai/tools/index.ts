@@ -54,7 +54,6 @@ export interface ToolAuthorizationRuntime {
     principal: ToolExecutionPrincipal
   }) => Promise<void>
   escalation?: {
-    recipient: EscalationRecipient
     request: (params: {
       input: unknown
       summary: ToolApprovalSummary

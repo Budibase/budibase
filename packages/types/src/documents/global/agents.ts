@@ -137,7 +137,7 @@ export enum ToolExecutionPrincipal {
 export interface AgentEscalationConfig {
   id: string
   name: string
-  recipient: EscalationRecipient
+  recipients: EscalationRecipient[]
 }
 
 export interface AgentOperationToolConfig {

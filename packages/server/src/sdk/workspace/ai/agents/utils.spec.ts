@@ -110,18 +110,71 @@ describe("assertAgentToolEscalationsValid", () => {
       {
         id: "escalation_config_1",
         name: "Engineering",
-        recipient: {
-          type: EscalationNotificationChannel.SLACK,
-          config: { channelId: "C1" },
-        },
+        recipients: [
+          {
+            type: EscalationNotificationChannel.SLACK,
+            config: { channelId: "C1" },
+          },
+        ],
       },
       {
         id: "escalation_config_2",
         name: " engineering ",
-        recipient: {
-          type: EscalationNotificationChannel.SLACK,
-          config: { channelId: "C2" },
-        },
+        recipients: [
+          {
+            type: EscalationNotificationChannel.SLACK,
+            config: { channelId: "C2" },
+          },
+        ],
+      },
+    ]
+
+    await expect(assertAgentToolEscalationsValid(agent)).rejects.toThrow(
+      "Agent escalation configuration is invalid"
+    )
+  })
+
+  it("accepts multiple recipients in an escalation configuration", async () => {
+    const agent = legacyAgent()
+    delete (
+      agent.operations[0] as Partial<AgentOperation> & {
+        escalation?: object
+      }
+    ).escalation
+    agent.escalationConfigs = [
+      {
+        id: "escalation_config_engineering",
+        name: "Engineering",
+        recipients: [
+          {
+            type: EscalationNotificationChannel.SLACK,
+            config: { channelId: "C1" },
+          },
+          {
+            type: EscalationNotificationChannel.DISCORD,
+            config: { channelId: "C2" },
+          },
+        ],
+      },
+    ]
+
+    await expect(
+      assertAgentToolEscalationsValid(agent)
+    ).resolves.toBeUndefined()
+  })
+
+  it("rejects an escalation configuration without recipients", async () => {
+    const agent = legacyAgent()
+    delete (
+      agent.operations[0] as Partial<AgentOperation> & {
+        escalation?: object
+      }
+    ).escalation
+    agent.escalationConfigs = [
+      {
+        id: "escalation_config_engineering",
+        name: "Engineering",
+        recipients: [],
       },
     ]
 

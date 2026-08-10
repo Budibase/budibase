@@ -1,4 +1,5 @@
 import zlib from "zlib"
+import { isDeepStrictEqual } from "node:util"
 import type { Job } from "bull"
 import { readUIMessageStream, type ModelMessage, type UIMessage } from "ai"
 import { context, queue, utils } from "@budibase/backend-core"
@@ -332,7 +333,6 @@ export async function resumeToolCall({
   }
 
   const db = context.getWorkspaceDB()
-  const recipient = doc.recipients?.[0]
   const current = await db.get<EscalationContextDoc>(getDocId(escalationId))
   if (current.toolExecutionStatus !== "pending") {
     return
@@ -354,7 +354,10 @@ export async function resumeToolCall({
     ) {
       throw new Error("Tool approval context does not match this workspace")
     }
-    if (!recipient || doc.recipients?.length !== 1) {
+    if (
+      !doc.recipients?.length ||
+      !isDeepStrictEqual(doc.recipients, ctx.escalationRecipients)
+    ) {
       throw new Error("Tool approval recipient configuration is invalid")
     }
     const agent = await sdk.ai.agents.getOrThrow(ctx.agentId)
@@ -371,7 +374,7 @@ export async function resumeToolCall({
       requestingUserId: userId,
       sessionId: ctx.sessionId,
       escalationConfigId: ctx.escalationConfigId,
-      expectedRecipient: ctx.escalationRecipient,
+      expectedRecipients: ctx.escalationRecipients,
       requestingUserIsPublic: ctx.requestingUserIsPublic,
     })
     toolExecuted = true

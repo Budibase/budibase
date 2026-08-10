@@ -2,6 +2,7 @@
   import {
     type ChatIdentityLink,
     type ChatIdentityLinkProvider,
+    type EscalationRecipient,
     EscalationNotificationChannel,
   } from "@budibase/types"
   import { API } from "@/api"
@@ -21,7 +22,7 @@
     type PopoverAPI,
   } from "@budibase/bbui"
 
-  type Recipient = { type: string; config: Record<string, any> }
+  type Recipient = EscalationRecipient
 
   interface PendingRecipient {
     provider: EscalationNotificationChannel | undefined
@@ -40,9 +41,8 @@
   export let agentId: string | undefined = undefined
   export let onChange: (recipients: Recipient[]) => void = () => {}
   export let onAddingChange: (adding: boolean) => void = () => {}
-  // Single mode: cap at one recipient (still stored as an array). Once chosen,
-  // the add button is replaced by a clear-recipient affordance.
   export let single: boolean = false
+  export let minimumRecipients: number = 0
 
   const PROVIDER_OPTIONS = [
     { value: EscalationNotificationChannel.SLACK, label: "Slack" },
@@ -332,7 +332,10 @@
   {#if recipients.length > 0}
     <Tags>
       {#each recipients as recipient, i}
-        <Tag closable on:remove={() => removeRecipient(i)}>
+        <Tag
+          closable={!single && recipients.length > minimumRecipients}
+          on:remove={() => removeRecipient(i)}
+        >
           <span class="recipient-provider"
             >{PROVIDER_LABELS[recipient.type] ?? recipient.type}</span
           >
@@ -344,9 +347,11 @@
   {/if}
 
   {#if single && recipients.length > 0}
-    <ActionButton icon="Delete" on:click={() => onChange([])}>
-      Clear recipient
-    </ActionButton>
+    <div bind:this={popoverAnchor}>
+      <ActionButton icon="pencil-simple" on:click={startAddFlow}>
+        Change
+      </ActionButton>
+    </div>
   {:else}
     <div bind:this={popoverAnchor}>
       <ActionButton icon="Add" on:click={startAddFlow}>
@@ -501,7 +506,8 @@
 <style>
   .recipients {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    flex-wrap: wrap;
     gap: var(--spacing-s);
   }
 

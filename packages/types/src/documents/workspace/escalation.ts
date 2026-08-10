@@ -64,7 +64,7 @@ export interface SuspendedToolCallContext extends SuspendedOperationContext {
   input: unknown
   executionPrincipal: "requester" | "admin"
   escalationConfigId: string
-  escalationRecipient: EscalationRecipient
+  escalationRecipients: EscalationRecipient[]
   requestingUserIsPublic?: boolean
 }
 

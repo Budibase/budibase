@@ -156,10 +156,6 @@ describe("secured AI tool execution", () => {
             principal: ToolExecutionPrincipal.REQUESTER,
             authorize,
             escalation: {
-              recipient: {
-                type: EscalationNotificationChannel.SLACK,
-                config: { channelId: "channel_1" },
-              },
               request,
             },
           },
@@ -203,10 +199,6 @@ describe("secured AI tool execution", () => {
             principal: ToolExecutionPrincipal.REQUESTER,
             authorize: jest.fn().mockResolvedValue(undefined),
             escalation: {
-              recipient: {
-                type: EscalationNotificationChannel.SLACK,
-                config: { channelId: "channel_1" },
-              },
               request: jest.fn(),
             },
           },

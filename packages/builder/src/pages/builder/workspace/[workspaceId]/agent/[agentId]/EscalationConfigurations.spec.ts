@@ -33,10 +33,12 @@ describe("EscalationConfigurations", () => {
         {
           id: "escalation_config_engineering",
           name: "Engineering",
-          recipient: {
-            type: EscalationNotificationChannel.SLACK,
-            config: { channelId: "C1", channelName: "engineering" },
-          },
+          recipients: [
+            {
+              type: EscalationNotificationChannel.SLACK,
+              config: { channelId: "C1", channelName: "engineering" },
+            },
+          ],
         },
       ],
       operations: [
@@ -61,6 +63,6 @@ describe("EscalationConfigurations", () => {
     })
 
     expect(screen.getByDisplayValue("Engineering")).toBeInTheDocument()
-    expect(screen.getByText("Used by Main: create_row")).toBeInTheDocument()
+    expect(screen.getByText("Used by Main · Create Row")).toBeInTheDocument()
   })
 })
