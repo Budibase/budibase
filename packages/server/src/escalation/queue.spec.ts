@@ -300,8 +300,17 @@ describe("resumeOperation", () => {
                 },
               ],
               delayMs: 1000,
+              userId: config.getUser()._id,
               getMessages: () => [],
               getRequestId,
+              executionContext: {
+                tenantId: config.getTenantId(),
+                workspaceId: config.getProdWorkspaceId(),
+                agentId: "agent_1",
+                operationId: "op_1",
+                conversationId: "session_1",
+                requestingUserId: config.getUser()._id!,
+              },
             })
 
             if (!escalateTool.execute) {

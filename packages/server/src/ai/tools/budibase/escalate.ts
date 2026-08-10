@@ -1,6 +1,7 @@
 import { context } from "@budibase/backend-core"
 import {
   type ChatConversationChannel,
+  type AgentExecutionContext,
   type EscalationRecipient,
   ESCALATE_TOOL_NAME,
   EscalateToolResultStatus,
@@ -16,8 +17,14 @@ import type { ModelMessage } from "ai"
 import { z } from "zod"
 import { escalationProcessor } from "../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../escalation/resolutionStrategies"
-import type { AiToolDefinition } from ".."
-import { getFullUser } from "../../../utilities/users"
+import type { AiToolDefinition, ToolAuthorization } from ".."
+import { authorizeAgentToolCall } from "../authorization"
+
+const ESCALATE_TOOL_AUTHORIZATION: ToolAuthorization = {
+  supportedPrincipals: [ToolExecutionPrincipal.REQUESTER],
+  permissionType: PermissionType.WORKSPACE,
+  permissionLevel: PermissionLevel.READ,
+}
 
 interface CreateEscalateToolParams {
   agentId: string
@@ -35,6 +42,7 @@ interface CreateEscalateToolParams {
   // is off for this run (non-prod workspace or the AI_AGENT_ACTIVITY flag is
   // disabled) - there is no AgentRequest to reference in that case.
   getRequestId: () => string | undefined
+  executionContext: AgentExecutionContext
 }
 
 // A fire-and-forget escalation tool. When the operation cannot proceed safely
@@ -51,6 +59,7 @@ export const createEscalateTool = ({
   userId,
   getMessages,
   getRequestId,
+  executionContext,
 }: CreateEscalateToolParams) =>
   tool({
     description:
@@ -71,10 +80,12 @@ export const createEscalateTool = ({
       reason: z.string().describe("Why this needs human review"),
     }),
     execute: async ({ title, summary, reason }) => {
-      if (!userId) {
-        throw new Error("Tool is not available in this security context")
-      }
-      await getFullUser(userId)
+      await authorizeAgentToolCall({
+        authorization: ESCALATE_TOOL_AUTHORIZATION,
+        input: { title, summary, reason },
+        executionContext,
+        principal: ToolExecutionPrincipal.REQUESTER,
+      })
       const appId = context.getWorkspaceId()
       const tenantId = context.getTenantId()
       if (!appId) {
@@ -126,11 +137,7 @@ export const createEscalatePlaceholderTool = (): AiToolDefinition => ({
     "cannot proceed safely. Reference this where sign-off is required.",
   sourceType: ToolType.ESCALATION,
   sourceLabel: "Escalation",
-  authorization: {
-    supportedPrincipals: [ToolExecutionPrincipal.REQUESTER],
-    permissionType: PermissionType.WORKSPACE,
-    permissionLevel: PermissionLevel.READ,
-  },
+  authorization: ESCALATE_TOOL_AUTHORIZATION,
   tool: tool({
     description:
       "Escalate to a human for approval. Use where the operation must not " +

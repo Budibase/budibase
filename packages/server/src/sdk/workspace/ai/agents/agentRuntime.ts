@@ -1,4 +1,9 @@
-import { cache, features, getErrorMessage } from "@budibase/backend-core"
+import {
+  cache,
+  context,
+  features,
+  getErrorMessage,
+} from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import {
   ActionType,
@@ -549,6 +554,10 @@ export const prepareAgentChatRun = async ({
     if (selectedOperation && recipients?.length) {
       // Always the real tool, on resumes too. A resumed run must still be
       // able to raise a genuinely new escalation.
+      const workspaceId = context.getWorkspaceId()
+      if (!workspaceId) {
+        throw new Error("Workspace context is required")
+      }
       tools.escalate = createEscalateTool({
         agentId,
         operationId: selectedOperation.id,
@@ -561,6 +570,15 @@ export const prepareAgentChatRun = async ({
         userId: user?._id,
         getMessages: () => modelMessages,
         getRequestId: () => getRequestId?.(),
+        executionContext: {
+          tenantId: context.getTenantId(),
+          workspaceId,
+          agentId,
+          operationId: selectedOperation.id,
+          conversationId: sessionId,
+          requestingUserId: user?._id || "",
+          requestingUserIsPublic: chat?.previewAsPublic === true,
+        },
       })
     }
 
