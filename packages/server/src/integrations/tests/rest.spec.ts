@@ -268,6 +268,76 @@ describe("REST Integration", () => {
     expect(data).toEqual({ foo: "bar" })
   })
 
+  it("allows cross-origin paths when the env flag and datasource opt-in are enabled", async () => {
+    const environment = require("../../environment").default
+    const originalEnv = process.env.REST_ALLOW_CROSS_ORIGIN_PATHS
+
+    try {
+      process.env.REST_ALLOW_CROSS_ORIGIN_PATHS = "true"
+      environment._set("REST_ALLOW_CROSS_ORIGIN_PATHS", true)
+
+      queueJsonResponse(
+        (url, options) => {
+          expect(url).toEqual("http://example.com:8080/data")
+          expect(options?.method).toEqual("GET")
+        },
+        { ok: true }
+      )
+
+      const crossOriginIntegration = new RestIntegration({
+        url: "http://example.com",
+        allowCrossOriginPaths: true,
+      })
+
+      const { data } = await crossOriginIntegration.read({
+        path: "http://example.com:8080/data",
+      })
+      expect(data).toEqual({ ok: true })
+    } finally {
+      if (originalEnv === undefined) {
+        delete process.env.REST_ALLOW_CROSS_ORIGIN_PATHS
+        environment._set("REST_ALLOW_CROSS_ORIGIN_PATHS", false)
+      } else {
+        process.env.REST_ALLOW_CROSS_ORIGIN_PATHS = originalEnv
+        environment._set(
+          "REST_ALLOW_CROSS_ORIGIN_PATHS",
+          originalEnv === "true"
+        )
+      }
+    }
+  })
+
+  it("rejects cross-origin paths when only the env flag is enabled", async () => {
+    const environment = require("../../environment").default
+    const originalEnv = process.env.REST_ALLOW_CROSS_ORIGIN_PATHS
+
+    try {
+      process.env.REST_ALLOW_CROSS_ORIGIN_PATHS = "true"
+      environment._set("REST_ALLOW_CROSS_ORIGIN_PATHS", true)
+
+      const crossOriginIntegration = new RestIntegration({
+        url: "http://example.com",
+      })
+
+      await expect(
+        crossOriginIntegration.read({
+          path: "http://example.com:8080/data",
+        })
+      ).rejects.toThrow("REST query path must remain on the datasource origin")
+    } finally {
+      if (originalEnv === undefined) {
+        delete process.env.REST_ALLOW_CROSS_ORIGIN_PATHS
+        environment._set("REST_ALLOW_CROSS_ORIGIN_PATHS", false)
+      } else {
+        process.env.REST_ALLOW_CROSS_ORIGIN_PATHS = originalEnv
+        environment._set(
+          "REST_ALLOW_CROSS_ORIGIN_PATHS",
+          originalEnv === "true"
+        )
+      }
+    }
+  })
+
   it("calls the update method with the correct params", async () => {
     queueResponse(async (url, options) => {
       expect(url).toEqual("https://example.com/api?test=1")
