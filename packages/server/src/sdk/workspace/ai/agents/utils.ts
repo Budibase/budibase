@@ -165,6 +165,51 @@ export interface BuildPromptAndToolsOptions {
   toolSecurityEnabled?: boolean
 }
 
+export interface ToolResolutionSummary {
+  configuredToolCount: number
+  resolvedToolCount: number
+  unresolvedToolCount: number
+}
+
+export class UnavailableAgentToolsError extends Error {
+  readonly toolResolution: ToolResolutionSummary
+
+  constructor(
+    operation: AgentOperation,
+    toolResolution: ToolResolutionSummary
+  ) {
+    super(
+      `Agent operation "${operation.name}" has unavailable tools. Re-select its tools and save the agent before running it.`
+    )
+    this.name = "UnavailableAgentToolsError"
+    this.toolResolution = toolResolution
+  }
+}
+
+export const assertConfiguredToolsAvailable = (
+  operation: AgentOperation | undefined,
+  availableTools: Pick<AiToolDefinition, "name">[]
+): ToolResolutionSummary => {
+  const configuredToolNames = new Set(
+    (operation?.enabledTools || []).map(config => config.toolName)
+  )
+  const availableToolNames = new Set(availableTools.map(tool => tool.name))
+  const resolvedToolCount = Array.from(configuredToolNames).filter(toolName =>
+    availableToolNames.has(toolName)
+  ).length
+  const toolResolution = {
+    configuredToolCount: configuredToolNames.size,
+    resolvedToolCount,
+    unresolvedToolCount: configuredToolNames.size - resolvedToolCount,
+  }
+
+  if (operation && toolResolution.unresolvedToolCount > 0) {
+    throw new UnavailableAgentToolsError(operation, toolResolution)
+  }
+
+  return toolResolution
+}
+
 export async function buildPromptAndTools(
   agent: Agent,
   operation?: AgentOperation,
@@ -173,6 +218,7 @@ export async function buildPromptAndTools(
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
+  toolResolution: ToolResolutionSummary
 }> {
   const {
     baseSystemPrompt,
@@ -188,6 +234,7 @@ export async function buildPromptAndTools(
   const allTools = await getAvailableTools(agent.aiconfig)
   const toolConfigs = operation?.enabledTools || []
   const enabledToolNames = new Set(toolConfigs.map(config => config.toolName))
+  const toolResolution = assertConfiguredToolsAvailable(operation, allTools)
   const configuredTools = allTools.filter(
     tool => enabledToolNames.has(tool.name) && !isHelperTool(tool)
   )
@@ -275,6 +322,7 @@ export async function buildPromptAndTools(
     systemPrompt: resolvedSystemPrompt,
     tools: toToolSet(enabledTools, runtimes),
     toolDisplayNames: getToolDisplayNames(enabledTools),
+    toolResolution,
   }
 }
 

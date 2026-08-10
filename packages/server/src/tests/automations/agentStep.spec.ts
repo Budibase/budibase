@@ -88,6 +88,7 @@ function makeToolLoopAgentMock(
     text?: Promise<string>
     usage?: Promise<{ totalTokens: number }>
     output?: Promise<Record<string, unknown> | undefined>
+    streamingError?: Error
   } = {}
 ) {
   return ({ onStepFinish }: any) => ({
@@ -98,7 +99,16 @@ function makeToolLoopAgentMock(
         toolResults,
       })
       return {
-        toUIMessageStream: jest.fn().mockReturnValue({}),
+        toUIMessageStream: jest
+          .fn()
+          .mockImplementation(
+            ({ onError }: { onError: (error: Error) => string }) => {
+              if (overrides.streamingError) {
+                onError(overrides.streamingError)
+              }
+              return {}
+            }
+          ),
         response:
           overrides.response ??
           Promise.resolve({
@@ -139,6 +149,11 @@ describe("Agent step tool call tracking", () => {
       systemPrompt: "You are a helpful assistant",
       tools: { queryTable: {}, callApi: {} },
       toolDisplayNames: {},
+      toolResolution: {
+        configuredToolCount: 2,
+        resolvedToolCount: 2,
+        unresolvedToolCount: 0,
+      },
     })
     jest.mocked(require("ai").ToolLoopAgent).mockClear()
     jest.spyOn(console, "error").mockImplementation(() => {})
@@ -204,6 +219,121 @@ describe("Agent step tool call tracking", () => {
     })
 
     expect(addActionMock).not.toHaveBeenCalled()
+  })
+
+  it("returns non-empty response text", async () => {
+    jest
+      .mocked(require("ai").ToolLoopAgent)
+      .mockImplementationOnce(makeToolLoopAgentMock([]))
+
+    const result = await run({
+      inputs: { agentId: "agent-id", prompt: "Answer directly" },
+      appId: "test",
+      context: {},
+      emitter: {} as any,
+    })
+
+    expect(result).toMatchObject({
+      success: true,
+      response: "Agent response",
+    })
+  })
+
+  it.each(["", "   "])(
+    "returns a controlled failure for empty text %p",
+    async text => {
+      jest
+        .mocked(require("ai").ToolLoopAgent)
+        .mockImplementationOnce(
+          makeToolLoopAgentMock([], { text: Promise.resolve(text) })
+        )
+
+      const result = await run({
+        inputs: { agentId: "agent-id", prompt: "Evaluate data" },
+        appId: "test",
+        context: {},
+        emitter: {} as any,
+      })
+
+      expect(result).toMatchObject({
+        success: false,
+        response: "Agent completed without producing a response.",
+        sessionId: expect.any(String),
+      })
+    }
+  )
+
+  it("allows structured output without response text", async () => {
+    const output = { sentiment: "positive" }
+    jest.mocked(require("ai").Output.object).mockReturnValueOnce({})
+    jest.mocked(require("ai").ToolLoopAgent).mockImplementationOnce(
+      makeToolLoopAgentMock([], {
+        text: Promise.resolve(""),
+        output: Promise.resolve(output),
+      })
+    )
+
+    const result = await run({
+      inputs: {
+        agentId: "agent-id",
+        prompt: "Evaluate data",
+        useStructuredOutput: true,
+        outputSchema: { sentiment: "string" },
+      },
+      appId: "test",
+      context: {},
+      emitter: {} as any,
+    })
+
+    expect(result).toMatchObject({
+      success: true,
+      response: "",
+      output,
+      sessionId: expect.any(String),
+    })
+  })
+
+  it("does not retry completed tool calls when the final response is empty", async () => {
+    jest.mocked(require("ai").ToolLoopAgent).mockImplementationOnce(
+      makeToolLoopAgentMock([{ toolCallId: "c1" }], {
+        text: Promise.resolve(""),
+      })
+    )
+
+    const result = await run({
+      inputs: { agentId: "agent-id", prompt: "Complete the action" },
+      appId: "test",
+      context: {},
+      emitter: {} as any,
+    })
+
+    expect(addActionMock).toHaveBeenCalledTimes(1)
+    expect(require("ai").ToolLoopAgent).toHaveBeenCalledTimes(1)
+    expect(result).toMatchObject({
+      success: false,
+      response: "Agent completed without producing a response.",
+    })
+  })
+
+  it("returns an explicit stream error", async () => {
+    jest.mocked(require("ai").ToolLoopAgent).mockImplementationOnce(
+      makeToolLoopAgentMock([], {
+        text: Promise.resolve(""),
+        streamingError: new Error("Provider stream failed"),
+      })
+    )
+
+    const result = await run({
+      inputs: { agentId: "agent-id", prompt: "Evaluate data" },
+      appId: "test",
+      context: {},
+      emitter: {} as any,
+    })
+
+    expect(result).toMatchObject({
+      success: false,
+      response: "Provider stream failed",
+    })
   })
 
   it("returns a controlled failure when response metadata has no generated output", async () => {
