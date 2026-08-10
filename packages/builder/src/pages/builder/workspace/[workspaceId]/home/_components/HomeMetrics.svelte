@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { Body, Icon, Modal } from "@budibase/bbui"
   import type { GetWorkspaceHomeMetricsResponse } from "@budibase/types"

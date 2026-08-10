@@ -18,7 +18,7 @@
     Table,
     ProgressCircle,
   } from "@budibase/bbui"
-  import { onMount, setContext, getContext } from "svelte"
+  import { onMount, setContext } from "svelte"
   import { users } from "@/stores/portal/users"
   import { auth } from "@/stores/portal/auth"
   import { groups } from "@/stores/portal/groups"
@@ -38,36 +38,16 @@
   import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
   import { bb } from "@/stores/bb"
   import type { User, UserGroup } from "@budibase/types"
-  import type { Readable } from "svelte/store"
 
   $goto
 
-  export let userId: string
+  export interface Props {
+    userId: string
+  }
 
-  const routing =
-    getContext<Readable<{ params: { userId?: string } }>>("routing")
+  let { userId }: Props = $props()
 
   // Override
-  $: params = $routing?.params
-  $: if (params.userId && userId !== params.userId) {
-    userId = params.userId
-  }
-
-  $: groupSchema = {
-    name: {
-      width: "1fr",
-    },
-    ...(!isAdmin
-      ? {}
-      : // Add
-        {
-          _id: {
-            displayName: "",
-            width: "auto",
-            borderLeft: true,
-          },
-        }),
-  }
   const appSchema = {
     name: {
       width: "2fr",
@@ -98,39 +78,19 @@
     },
   ]
 
-  let deleteModal: Modal
-  let resetPasswordModal: Modal
-  let popoverAnchor: HTMLDivElement
-  let searchTerm = ""
-  let popover: Popover
-  let user: (User & { provider?: string }) | undefined
-  let tenantOwner:
-    | Awaited<ReturnType<typeof users.getAccountHolder>>
-    | undefined
-  let loaded = false
-  let userFieldsToUpdate: Partial<User> = {}
-  let roleUpdateTarget: string | undefined
-  let saving = false
-
-  $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
-
-  $: isSSO = !!user?.provider
-  $: isAdmin = sdk.users.isAdmin($auth.user)
-  $: isScim = user?.scimInfo?.isSync
-  $: readonly = !isAdmin || isScim
-  $: privileged = user ? sdk.users.isAdminOrGlobalBuilder(user) : false
-  $: nameLabel = getNameLabel(user)
-  $: filteredGroups = getFilteredGroups(internalGroups, searchTerm)
-  $: availableApps = user
-    ? getApps(user, sdk.users.userAppAccessList(user, $groups || []))
-    : []
-  $: userGroups = $groups.filter(x => {
-    return x.users?.find(y => {
-      return y._id === userId
-    })
-  })
-  $: globalRole = users.getUserRole(user)
-  $: isTenantOwner = !!tenantOwner?.email && tenantOwner.email === user?.email
+  let deleteModal = $state<Modal>()
+  let resetPasswordModal = $state<Modal>()
+  let popoverAnchor = $state<HTMLDivElement>()
+  let searchTerm = $state("")
+  let popover = $state<Popover>()
+  let user = $state<(User & { provider?: string }) | undefined>()
+  let tenantOwner = $state<
+    Awaited<ReturnType<typeof users.getAccountHolder>> | undefined
+  >()
+  let loaded = $state(false)
+  let userFieldsToUpdate = $state<Partial<User>>({})
+  let roleUpdateTarget = $state<string | undefined>()
+  let saving = $state(false)
 
   const getApps = (user: User, appIds: string[]) => {
     let availableApps = $workspacesStore.apps
@@ -202,6 +162,45 @@
     }
     return label
   }
+
+  const internalGroups = $derived(
+    $groups?.filter(group => !group?.scimInfo?.isSync)
+  )
+  const isSSO = $derived(!!user?.provider)
+  const isAdmin = $derived(sdk.users.isAdmin($auth.user))
+  const isScim = $derived(user?.scimInfo?.isSync)
+  const readonly = $derived(!isAdmin || isScim)
+  const privileged = $derived(
+    user ? sdk.users.isAdminOrGlobalBuilder(user) : false
+  )
+  const nameLabel = $derived(getNameLabel(user))
+  const filteredGroups = $derived(
+    getFilteredGroups(internalGroups || [], searchTerm)
+  )
+  const availableApps = $derived(
+    user ? getApps(user, sdk.users.userAppAccessList(user, $groups || [])) : []
+  )
+  const userGroups = $derived(
+    $groups.filter(group => group.users?.find(member => member._id === userId))
+  )
+  const globalRole = $derived(users.getUserRole(user))
+  const isTenantOwner = $derived(
+    !!tenantOwner?.email && tenantOwner.email === user?.email
+  )
+  const groupSchema = $derived({
+    name: {
+      width: "1fr",
+    },
+    ...(!isAdmin
+      ? {}
+      : {
+          _id: {
+            displayName: "",
+            width: "auto",
+            borderLeft: true,
+          },
+        }),
+  })
 
   async function saveUser() {
     if (saving || Object.keys(userFieldsToUpdate).length === 0) {
@@ -332,14 +331,14 @@
             </span>
             {#if !isSSO}
               <MenuItem
-                on:click={resetPasswordModal.show}
+                on:click={() => resetPasswordModal?.show()}
                 icon="arrow-clockwise"
               >
                 Force password reset
               </MenuItem>
             {/if}
             {#if !isTenantOwner}
-              <MenuItem on:click={deleteModal.show} icon="trash">
+              <MenuItem on:click={() => deleteModal?.show()} icon="trash">
                 Delete
               </MenuItem>
             {/if}
@@ -416,7 +415,7 @@
           <Heading size="XS">Groups</Heading>
           {#if internalGroups?.length && isAdmin}
             <div bind:this={popoverAnchor}>
-              <Button on:click={() => popover.show()} secondary>
+              <Button on:click={() => popover?.show()} secondary>
                 Add to group
               </Button>
             </div>
@@ -483,7 +482,7 @@
   <DeleteUserModal {user} />
 </Modal>
 <Modal bind:this={resetPasswordModal}>
-  <ForceResetPasswordModal {user} on:update={fetchUser} />
+  <ForceResetPasswordModal {user} onupdate={fetchUser} />
 </Modal>
 
 <style>
