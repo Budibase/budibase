@@ -1,4 +1,5 @@
-import type { Agent } from "@budibase/types"
+import { ToolType, type Agent } from "@budibase/types"
+import type { Tool } from "ai"
 
 jest.mock("../../..", () => ({
   __esModule: true,
@@ -16,6 +17,22 @@ jest.mock("../../..", () => ({
 jest.mock("../../../../ai/tools/budibase", () => ({
   __esModule: true,
   getBudibaseTools: jest.fn(() => []),
+  createTableTools: jest.fn((tableIds: string[]) => [
+    {
+      name: "list_tables",
+      description: "List configured tables",
+      sourceType: "INTERNAL_TABLE",
+      sourceLabel: "Budibase",
+      tool: { execute: jest.fn().mockResolvedValue({ tableIds }) },
+    },
+    {
+      name: "get_table",
+      description: "Get a configured table",
+      sourceType: "INTERNAL_TABLE",
+      sourceLabel: "Budibase",
+      tool: { execute: jest.fn().mockResolvedValue({ tableIds }) },
+    },
+  ]),
   createKnowledgeFilesTool: jest.fn((agentId: string, operationId: string) => ({
     name: "list_knowledge_files",
     description: "List knowledge files",
@@ -70,6 +87,8 @@ jest.mock("@budibase/pro", () => ({
 
 import sdk from "../../.."
 import {
+  createTableTools,
+  getBudibaseTools,
   createKnowledgeFilesTool,
   createKnowledgeSearchTool,
 } from "../../../../ai/tools/budibase"
@@ -79,6 +98,7 @@ import { generator } from "@budibase/backend-core/tests"
 describe("buildPromptAndTools", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.mocked(getBudibaseTools).mockReturnValue([])
     const fetchQueries = jest.mocked(sdk.queries.fetch)
     const fetchDatasources = jest.mocked(sdk.datasources.fetch)
     const fetchTables = jest.mocked(sdk.tables.getAllTables)
@@ -240,5 +260,49 @@ describe("buildPromptAndTools", () => {
         ),
       })
     )
+  })
+
+  it("scopes table helpers to tables with explicitly enabled tools", async () => {
+    jest.mocked(getBudibaseTools).mockReturnValue([
+      {
+        name: "ta_invoices_search_rows",
+        readableName: "Invoices.search_rows",
+        tableId: "ta_invoices",
+        description: "Search invoices",
+        sourceType: ToolType.INTERNAL_TABLE,
+        sourceLabel: "Budibase",
+        tool: {} as Tool,
+      },
+      {
+        name: "ta_suppliers_search_rows",
+        readableName: "Suppliers.search_rows",
+        tableId: "ta_suppliers",
+        description: "Search suppliers",
+        sourceType: ToolType.INTERNAL_TABLE,
+        sourceLabel: "Budibase",
+        tool: {} as Tool,
+      },
+    ])
+    const agent = {
+      _id: "agent_tables",
+      name: "Invoice Agent",
+      aiconfig: "",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Invoice lookup",
+          live: true,
+          enabledTools: ["ta_invoices_search_rows"],
+          knowledgeBases: [],
+          allowKnowledgeSourceDownload: false,
+        },
+      ],
+    } satisfies Agent
+
+    const result = await buildPromptAndTools(agent, agent.operations[0])
+
+    expect(createTableTools).toHaveBeenCalledWith(["ta_invoices"])
+    expect(Reflect.get(result.tools, "list_tables")).toBeDefined()
+    expect(Reflect.get(result.tools, "get_table")).toBeDefined()
   })
 })

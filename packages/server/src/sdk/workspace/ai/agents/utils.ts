@@ -13,6 +13,7 @@ import {
   createKnowledgeFilesTool,
   createKnowledgeSearchTool,
   createEscalatePlaceholderTool,
+  createTableTools,
   getBudibaseTools,
 } from "../../../../ai/tools/budibase"
 import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
@@ -234,20 +235,14 @@ function addHelperTools(
   const seenTools = new Set(enabledTools.map(tool => tool.name))
   const toolByName = new Map(allTools.map(tool => [tool.name, tool]))
 
-  if (
-    enabledTools.some(
-      tool =>
-        tool.sourceType === ToolType.EXTERNAL_TABLE ||
-        tool.sourceType === ToolType.INTERNAL_TABLE
+  if (enabledTools.some(tool => tool.tableId)) {
+    const tableIds = enabledTools.flatMap(tool =>
+      tool.tableId ? [tool.tableId] : []
     )
-  ) {
-    for (const toolName of ["get_table", "list_tables"]) {
-      if (seenTools.has(toolName)) continue
-      let tool = toolByName.get(toolName)
-      if (tool) {
-        enabledTools.push(tool)
-        seenTools.add(tool.name)
-      }
+    for (const tool of createTableTools(tableIds)) {
+      if (seenTools.has(tool.name)) continue
+      enabledTools.push(tool)
+      seenTools.add(tool.name)
     }
   }
 
