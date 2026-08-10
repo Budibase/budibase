@@ -6,6 +6,7 @@ import {
   utils,
 } from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
+import { findHBSBlocks } from "@budibase/string-templates"
 import {
   Agent,
   AnyDocument,
@@ -412,12 +413,25 @@ const remapIdReferences = (
   })
 }
 
+const remapHandlebarsReferences = (
+  value: string,
+  remapper: ProjectImportIdRemapper
+) => {
+  return findHBSBlocks(value).reduce(
+    (remapped, block) =>
+      remapped.replace(block, remapIdReferences(block, remapper)),
+    value
+  )
+}
+
 const remapValue = (
   value: unknown,
   remapper: ProjectImportIdRemapper
 ): unknown => {
   if (typeof value === "string") {
-    return remapper.idMap.get(value) || remapIdReferences(value, remapper)
+    return (
+      remapper.idMap.get(value) || remapHandlebarsReferences(value, remapper)
+    )
   }
   if (Array.isArray(value)) {
     return value.map(item => remapValue(item, remapper))
@@ -425,7 +439,7 @@ const remapValue = (
   if (value && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value).map(([key, nestedValue]) => [
-        key,
+        remapper.idMap.get(key) || key,
         remapValue(nestedValue, remapper),
       ])
     )

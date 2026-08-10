@@ -2783,6 +2783,12 @@ describe("/projects", () => {
             imported.resources.automation?.[0]
           )
           expect(importedAction.id).not.toBe(rowAction.id)
+          expect(Object.keys(importedRowActions.actions)).toContain(
+            importedAction.id
+          )
+          expect(Object.keys(importedRowActions.actions)).not.toContain(
+            rowAction.id
+          )
 
           const importedAutomation = await config.api.automation.get(
             imported.resources.automation?.[0]!
@@ -2832,6 +2838,14 @@ describe("/projects", () => {
         props: {
           ...queryScreen.props,
           testBinding: `{{ ${query._id}.rows }}`,
+          testBlockBinding: `{{#if ${query._id}.rows}}{{ ${query._id}.rows }}{{/if}}`,
+          ordinaryText: `Docs: ${query._id}.rows`,
+          ordinaryUrl: `https://example.com/${query._id}.rows`,
+          idKeyed: {
+            [query._id!]: {
+              resourceId: query._id,
+            },
+          },
         },
         workspaceAppId: workspaceApp._id,
       })
@@ -2928,6 +2942,20 @@ describe("/projects", () => {
           expect(importedScreen!.props.testBinding).toBe(
             `{{ ${imported.resources.query?.[0]}.rows }}`
           )
+          expect(importedScreen!.props.testBlockBinding).toBe(
+            `{{#if ${imported.resources.query?.[0]}.rows}}{{ ${imported.resources.query?.[0]}.rows }}{{/if}}`
+          )
+          expect(importedScreen!.props.ordinaryText).toBe(
+            `Docs: ${query._id}.rows`
+          )
+          expect(importedScreen!.props.ordinaryUrl).toBe(
+            `https://example.com/${query._id}.rows`
+          )
+          expect(importedScreen!.props.idKeyed).toEqual({
+            [imported.resources.query?.[0]!]: {
+              resourceId: imported.resources.query?.[0],
+            },
+          })
 
           const importedQuery = await config.api.query.get(
             imported.resources.query?.[0]!
