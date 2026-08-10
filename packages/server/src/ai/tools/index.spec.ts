@@ -197,6 +197,66 @@ describe("secured AI tool execution", () => {
     })
   })
 
+  it("reuses approval across failures and consumes it on first success", async () => {
+    const execute = jest
+      .fn()
+      .mockRejectedValueOnce(new Error("Expense Tags can't be blank"))
+      .mockResolvedValueOnce({ success: true })
+    const authorize = jest.fn().mockResolvedValue(undefined)
+    const request = jest.fn().mockResolvedValue({ escalationId: "esc_2" })
+    const approvedRetry = { active: true }
+    const toolDefinition = definition(execute)
+    toolDefinition.approval = {
+      summarize: () => ({
+        title: "Approve secured tool",
+        summary: "Run the secured tool",
+      }),
+    }
+    const tools = toToolSet(
+      [toolDefinition],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize,
+            approvedRetry,
+            escalation: { request },
+          },
+        ],
+      ])
+    )
+
+    await expect(
+      tools.secured_tool.execute?.(
+        { value: "missing tag" },
+        { toolCallId: "call_1", messages: [] }
+      )
+    ).rejects.toThrow("Expense Tags can't be blank")
+    expect(approvedRetry.active).toBe(true)
+    expect(request).not.toHaveBeenCalled()
+
+    await expect(
+      tools.secured_tool.execute?.(
+        { value: "Other" },
+        { toolCallId: "call_2", messages: [] }
+      )
+    ).resolves.toEqual({ success: true })
+    expect(approvedRetry.active).toBe(false)
+    expect(request).not.toHaveBeenCalled()
+
+    await expect(
+      tools.secured_tool.execute?.(
+        { value: "another action" },
+        { toolCallId: "call_3", messages: [] }
+      )
+    ).resolves.toEqual(expect.objectContaining({ status: "pending_approval" }))
+    expect(request).toHaveBeenCalledTimes(1)
+    expect(authorize).toHaveBeenCalledTimes(3)
+    expect(execute).toHaveBeenCalledTimes(2)
+  })
+
   it("fails closed when a configured gate lacks approval metadata", async () => {
     const execute = jest.fn()
     const tools = toToolSet(

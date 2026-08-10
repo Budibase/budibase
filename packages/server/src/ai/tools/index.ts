@@ -60,6 +60,9 @@ export interface ToolAuthorizationRuntime {
       messages: ModelMessage[]
     }) => Promise<{ escalationId: string }>
   }
+  approvedRetry?: {
+    active: boolean
+  }
 }
 
 export const getToolFailure = (result: unknown): string | undefined => {
@@ -119,7 +122,7 @@ const wrapTool = (
         executionContext: runtime.executionContext,
         principal: runtime.principal,
       })
-      if (runtime.escalation) {
+      if (runtime.escalation && !runtime.approvedRetry?.active) {
         if (!toolDef.approval) {
           throw new Error("Tool does not support approval gates")
         }
@@ -149,6 +152,9 @@ const wrapTool = (
         throw new Error(failureMessage)
       }
       if (runtime) {
+        if (runtime.approvedRetry) {
+          runtime.approvedRetry.active = false
+        }
         console.log("Agent tool execution", {
           outcome: "success",
           toolName: toolDef.name,

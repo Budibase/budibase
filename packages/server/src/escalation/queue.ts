@@ -17,6 +17,7 @@ import {
   SEPARATOR,
   SuspendedOperationContext,
   SuspendedToolCallContext,
+  ToolExecutionPrincipal,
 } from "@budibase/types"
 import { automationQueue } from "../automations"
 import sdk from "../sdk"
@@ -364,29 +365,41 @@ export async function resumeToolCall({
     const agent = await sdk.ai.agents.getOrThrow(ctx.agentId)
     const userId = ctx.userId || ""
     const user: ContextUser = await getFullUser(userId)
-    const toolResult = await sdk.ai.agents.executeApprovedToolCall({
-      agent,
-      operationId: ctx.operationId,
-      toolName: ctx.toolName,
-      input: ctx.input,
-      toolCallId: ctx.toolCallId,
-      messages: ctx.messages,
-      executionPrincipal: ctx.executionPrincipal,
-      requestingUserId: userId,
-      sessionId: ctx.sessionId,
-      escalationConfigId: ctx.escalationConfigId,
-      expectedRecipients: ctx.escalationRecipients,
-      requestingUserIsPublic: ctx.requestingUserIsPublic,
-    })
-    toolExecuted = true
-    executionOutcome = "completed"
+    let toolResult: unknown
+    let toolError: { toolError: unknown } | undefined
+    try {
+      toolResult = await sdk.ai.agents.executeApprovedToolCall({
+        agent,
+        operationId: ctx.operationId,
+        toolName: ctx.toolName,
+        input: ctx.input,
+        toolCallId: ctx.toolCallId,
+        messages: ctx.messages,
+        executionPrincipal: ctx.executionPrincipal,
+        requestingUserId: userId,
+        sessionId: ctx.sessionId,
+        escalationConfigId: ctx.escalationConfigId,
+        expectedRecipients: ctx.escalationRecipients,
+        requestingUserIsPublic: ctx.requestingUserIsPublic,
+      })
+      toolExecuted = true
+      executionOutcome = "completed"
+    } catch (error) {
+      if (!(error instanceof sdk.ai.agents.ApprovedToolExecutionError)) {
+        throw error
+      }
+      toolError = error
+    }
+
     const latest = await db.get<EscalationContextDoc>(getDocId(escalationId))
     await db.put({
       ...latest,
-      toolExecutionStatus: "completed",
-      toolResultCompressed: zlib
-        .deflateSync(JSON.stringify(toolResult ?? null))
-        .toString("base64"),
+      toolExecutionStatus: toolError ? "failed" : "completed",
+      ...(!toolError && {
+        toolResultCompressed: zlib
+          .deflateSync(JSON.stringify(toolResult ?? null))
+          .toString("base64"),
+      }),
       updatedAt: new Date().toISOString(),
     })
     if (doc.requestId) {
@@ -396,17 +409,25 @@ export async function resumeToolCall({
           agentId: ctx.agentId,
           sessionId: ctx.sessionId,
           toolName: ctx.toolName,
-          status: "success",
+          status: toolError ? "error" : "success",
+          input: ctx.input,
+          output: toolError?.toolError ?? toolResult,
         })
         .catch(error => {
-          console.error("Failed to record approved tool execution", {
+          console.error("Failed to record approved tool result", {
             escalationId,
             toolName: ctx.toolName,
-            error: error instanceof Error ? error.message : String(error),
+            error: serializeError(error),
           })
         })
     }
 
+    const serializedToolError = toolError
+      ? serializeError(toolError.toolError)
+      : undefined
+    if (serializedToolError) {
+      delete serializedToolError.stack
+    }
     const messages: ModelMessage[] = [
       ...ctx.messages,
       {
@@ -427,10 +448,12 @@ export async function resumeToolCall({
             type: "tool-result",
             toolCallId: ctx.toolCallId,
             toolName: ctx.toolName,
-            output: {
-              type: "text",
-              value: JSON.stringify(toolResult ?? null),
-            },
+            output: toolError
+              ? { type: "error-json", value: serializedToolError! }
+              : {
+                  type: "text",
+                  value: JSON.stringify(toolResult ?? null),
+                },
           },
         ],
       },
@@ -443,18 +466,72 @@ export async function resumeToolCall({
       sessionId: ctx.sessionId,
       user,
       operationId: ctx.operationId,
-      additionalInstructions:
-        "The approved tool call has already executed exactly once. Report its actual result to the user. Do not repeat that tool call.",
+      additionalInstructions: toolError
+        ? "The approved tool call failed. Continue the normal tool loop and correct the failure when possible. The existing approval remains valid for retries of this same tool until one attempt succeeds. Never claim success unless a retry succeeds."
+        : "The approved tool call has already executed exactly once. Report its actual result to the user. Do not repeat that tool call.",
       getRequestId: () => doc.requestId,
-      reportOnly: true,
+      approvedToolRetry: toolError
+        ? {
+            toolName: ctx.toolName,
+            escalationConfigId: ctx.escalationConfigId,
+            executionPrincipal:
+              ctx.executionPrincipal === "admin"
+                ? ToolExecutionPrincipal.ADMIN
+                : ToolExecutionPrincipal.REQUESTER,
+            grant: { active: true },
+          }
+        : undefined,
+      reportOnly: !toolError,
     })
-    const result = await run.stream()
+
+    const pendingToolCalls = new Set<string>()
+    const unrecoveredToolFailures = new Set<string>(
+      toolError ? [ctx.toolName] : []
+    )
+    let toolCallChain = Promise.resolve()
+    const result = await run.stream({
+      pendingToolCalls,
+      unrecoveredToolFailures,
+      onToolCallCompleted: ({ toolName, status, input, output }) => {
+        if (!doc.requestId) {
+          return
+        }
+        toolCallChain = toolCallChain.then(() =>
+          sdk.ai.agentRequests
+            .recordToolCall({
+              requestId: doc.requestId!,
+              agentId: ctx.agentId,
+              sessionId: ctx.sessionId,
+              toolName,
+              status,
+              readableName: run.toolDisplayNames[toolName],
+              input,
+              output,
+            })
+            .catch(error => {
+              console.error("Failed to record approved tool retry", {
+                escalationId,
+                toolName,
+                error: serializeError(error),
+              })
+            })
+        )
+      },
+    })
     let assistantMessage: UIMessage | undefined
     for await (const uiMessage of readUIMessageStream({
-      stream: result.toUIMessageStream({ sendReasoning: true }),
+      stream: result.toUIMessageStream({
+        sendReasoning: true,
+        messageMetadata: ({ part }) =>
+          part.type === "start" && Object.keys(run.toolDisplayNames).length
+            ? { toolDisplayNames: run.toolDisplayNames }
+            : undefined,
+      }),
     })) {
       assistantMessage = uiMessage
     }
+    await toolCallChain
+    await run.sessionLogIndexer.index()
     if (assistantMessage && !assistantMessage.id) {
       assistantMessage.id = v4()
     }
@@ -464,7 +541,32 @@ export async function resumeToolCall({
       assistantMessage ?? textMessage(text)
     )
     await deliverOperationResult(ctx, text)
-    await settleRequest({ status: "completed" })
+    if (!toolError) {
+      await settleRequest({ status: "completed" })
+    } else if (doc.requestId) {
+      const pendingApprovals = await sdk.escalations.listContextDocs({
+        requestId: doc.requestId,
+        resolution: "pending",
+      })
+      if (pendingApprovals.length === 0) {
+        const finishReason = await Promise.resolve(result.finishReason).catch(
+          () => undefined
+        )
+        const judged = await sdk.ai.agentRequests.resolveFinalRequestOutcome({
+          requestId: doc.requestId,
+          agentId: ctx.agentId,
+          sessionId: ctx.sessionId,
+          toolCallsIncomplete:
+            pendingToolCalls.size > 0 || finishReason === "tool-calls",
+          unrecoveredToolFailures,
+          finalResponse: text,
+          isHumanResponse: true,
+        })
+        if (judged) {
+          await settleRequest(judged)
+        }
+      }
+    }
   } catch (error) {
     if (!toolExecuted) {
       const latest = await db.get<EscalationContextDoc>(getDocId(escalationId))

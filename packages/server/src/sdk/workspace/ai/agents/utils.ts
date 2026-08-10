@@ -242,6 +242,12 @@ export interface BuildPromptAndToolsOptions {
     sessionId: string
     channel?: ChatConversationChannel
     getRequestId?: () => string | undefined
+    approvedToolRetry?: {
+      toolName: string
+      escalationConfigId: string
+      executionPrincipal: ToolExecutionPrincipal
+      grant: { active: boolean }
+    }
   }
 }
 
@@ -325,6 +331,13 @@ export async function buildPromptAndTools(
         executionContext,
         principal,
         authorize: authorizeAgentToolCall,
+        ...(options.execution.approvedToolRetry?.toolName === tool.name &&
+          options.execution.approvedToolRetry.escalationConfigId ===
+            config?.escalationConfigId &&
+          options.execution.approvedToolRetry.executionPrincipal ===
+            principal && {
+            approvedRetry: options.execution.approvedToolRetry.grant,
+          }),
         ...(escalationConfig && {
           escalation: {
             request: async ({
@@ -727,6 +740,27 @@ export const assertAgentToolEscalationsValid = async (
   }
 }
 
+const approvedToolErrorMessage = (error: unknown) => {
+  if (error instanceof Error) {
+    return error.message || "Approved tool execution failed"
+  }
+  if (typeof error === "object" && error !== null) {
+    try {
+      return JSON.stringify(error)
+    } catch {
+      return "Approved tool execution failed with a non-serializable error"
+    }
+  }
+  return String(error)
+}
+
+export class ApprovedToolExecutionError extends Error {
+  constructor(public readonly toolError: unknown) {
+    super(approvedToolErrorMessage(toolError))
+    this.name = "ApprovedToolExecutionError"
+  }
+}
+
 export const executeApprovedToolCall = async ({
   agent,
   operationId,
@@ -817,13 +851,22 @@ export const executeApprovedToolCall = async ({
   if (!definition.tool.execute) {
     throw new HTTPError("Approved tool cannot be executed", 400)
   }
-  const result = await definition.tool.execute(preparedInput, {
-    toolCallId,
-    messages,
-  })
+  let result: unknown
+  try {
+    result = await definition.tool.execute(preparedInput, {
+      toolCallId,
+      messages,
+    })
+  } catch (error) {
+    throw new ApprovedToolExecutionError(error)
+  }
   const failureMessage = getToolFailure(result)
   if (failureMessage) {
-    throw new Error(failureMessage)
+    const toolError =
+      result && typeof result === "object" && "error" in result
+        ? result.error
+        : failureMessage
+    throw new ApprovedToolExecutionError(toolError)
   }
   return result
 }

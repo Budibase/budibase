@@ -9,10 +9,12 @@ import {
   EscalationSource,
   SEPARATOR,
   SuspendedOperationContext,
+  SuspendedToolCallContext,
+  ToolExecutionPrincipal,
 } from "@budibase/types"
 import TestConfiguration from "../tests/utilities/TestConfiguration"
 import sdk from "../sdk"
-import { resumeOperation } from "./queue"
+import { resumeOperation, resumeToolCall } from "./queue"
 import { createEscalateTool } from "../ai/tools/budibase"
 
 jest.mock("../sdk/workspace/ai/agents", () => {
@@ -21,6 +23,15 @@ jest.mock("../sdk/workspace/ai/agents", () => {
     ...actual,
     getOrThrow: jest.fn(),
     prepareAgentChatRun: jest.fn(),
+    executeApprovedToolCall: jest.fn(),
+  }
+})
+
+jest.mock("../utilities/users", () => {
+  const actual = jest.requireActual("../utilities/users")
+  return {
+    ...actual,
+    getFullUser: jest.fn().mockResolvedValue({ _id: "user_1" }),
   }
 })
 
@@ -42,6 +53,8 @@ jest.mock("ai", () => {
 
 const prepareAgentChatRunMock = sdk.ai.agents.prepareAgentChatRun as jest.Mock
 const getOrThrowMock = sdk.ai.agents.getOrThrow as jest.Mock
+const executeApprovedToolCallMock = sdk.ai.agents
+  .executeApprovedToolCall as jest.Mock
 const recordEscalationResolvedMock = sdk.ai.agentRequests
   .recordEscalationResolved as jest.Mock
 
@@ -93,11 +106,13 @@ describe("resumeOperation", () => {
     operationId: "op_1",
     sessionId: "session_1",
     messages: [],
+    userId: "user_1",
   }
 
   beforeEach(async () => {
     prepareAgentChatRunMock.mockReset()
     getOrThrowMock.mockReset()
+    executeApprovedToolCallMock.mockReset()
     await config.newTenant()
   })
 
@@ -293,6 +308,7 @@ describe("resumeOperation", () => {
               agentId: "agent_1",
               operationId: "op_1",
               sessionId: "session_1",
+              userId: "user_1",
               recipients: [
                 {
                   type: EscalationNotificationChannel.SLACK,
@@ -365,6 +381,110 @@ describe("resumeOperation", () => {
 
       // The new escalation is still pending, so the request must not close.
       expect(request.status).toEqual("needs_input")
+    })
+  })
+})
+
+describe("resumeToolCall", () => {
+  const config = new TestConfiguration()
+
+  beforeEach(async () => {
+    prepareAgentChatRunMock.mockReset()
+    getOrThrowMock.mockReset()
+    executeApprovedToolCallMock.mockReset()
+    await config.newTenant()
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  it("resumes the normal tool loop with a scoped grant after an execution failure", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const escalationId = "esc_tool_retry"
+      const recipients = [
+        {
+          type: EscalationNotificationChannel.SLACK,
+          config: { channelId: "C1" },
+        },
+      ]
+      const doc: EscalationContextDoc = {
+        _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`,
+        source: EscalationSource.TOOL,
+        appId: config.getProdWorkspaceId(),
+        tenantId: config.getTenantId(),
+        agentId: "agent_1",
+        operationId: "op_1",
+        sessionId: "session_1",
+        delay: 1000,
+        resolution: "resolved",
+        response: { accepted: true },
+        recipients,
+        toolExecutionStatus: "pending",
+      }
+      await context.getWorkspaceDB().put(doc)
+
+      const ctx: SuspendedToolCallContext = {
+        agentId: "agent_1",
+        operationId: "op_1",
+        sessionId: "session_1",
+        messages: [],
+        userId: "user_1",
+        tenantId: config.getTenantId(),
+        workspaceId: config.getProdWorkspaceId(),
+        toolName: "ta_expenses_create_row",
+        toolCallId: "call_1",
+        input: { data: { Cost: 130 } },
+        executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        escalationConfigId: "escalation_config_1",
+        escalationRecipients: recipients,
+      }
+
+      getOrThrowMock.mockResolvedValue({ _id: "agent_1" } as Agent)
+      executeApprovedToolCallMock.mockRejectedValue(
+        new sdk.ai.agents.ApprovedToolExecutionError({
+          validation: { "Expense Tags": ["can't be blank"] },
+        })
+      )
+      mockApprovedRun("Correcting the failed tool call.")
+
+      await resumeToolCall({
+        doc,
+        escalationId,
+        resolution: "resolved",
+        ctx,
+      })
+
+      const resumeOptions = prepareAgentChatRunMock.mock.calls[0][0]
+      expect(resumeOptions.reportOnly).toBe(false)
+      expect(resumeOptions.approvedToolRetry).toEqual(
+        expect.objectContaining({
+          toolName: "ta_expenses_create_row",
+          escalationConfigId: "escalation_config_1",
+          executionPrincipal: ToolExecutionPrincipal.ADMIN,
+          grant: { active: true },
+        })
+      )
+      expect(resumeOptions.modelMessages.at(-1)).toEqual(
+        expect.objectContaining({
+          role: "tool",
+          content: [
+            expect.objectContaining({
+              output: expect.objectContaining({
+                type: "error-json",
+                value: {
+                  validation: { "Expense Tags": ["can't be blank"] },
+                },
+              }),
+            }),
+          ],
+        })
+      )
+
+      const saved = await context
+        .getWorkspaceDB()
+        .get<EscalationContextDoc>(doc._id!)
+      expect(saved.toolExecutionStatus).toBe("failed")
     })
   })
 })

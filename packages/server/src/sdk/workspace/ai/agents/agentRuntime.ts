@@ -68,6 +68,9 @@ interface PrepareAgentChatRunParams {
   additionalInstructions?: string
   // Resolves the AgentRequest id lazily after operation routing.
   getRequestId?: () => string | undefined
+  approvedToolRetry?: NonNullable<
+    BuildPromptAndToolsOptions["execution"]
+  >["approvedToolRetry"]
   reportOnly?: boolean
 }
 
@@ -330,6 +333,9 @@ export interface PrepareAgentRunContextParams {
   requestingUserIsPublic?: boolean
   channel?: ChatConversationRequest["channel"]
   getRequestId?: () => string | undefined
+  approvedToolRetry?: NonNullable<
+    BuildPromptAndToolsOptions["execution"]
+  >["approvedToolRetry"]
 }
 
 export interface AgentRunContext {
@@ -374,6 +380,7 @@ export const prepareAgentRunContext = async ({
   requestingUserIsPublic,
   channel,
   getRequestId,
+  approvedToolRetry,
 }: PrepareAgentRunContextParams): Promise<AgentRunContext> => {
   const llm = await sdk.ai.llm.createLLM(
     aiConfigId ?? agent.aiconfig,
@@ -404,6 +411,7 @@ export const prepareAgentRunContext = async ({
             sessionId,
             channel,
             getRequestId,
+            approvedToolRetry,
           }
         : undefined,
     }
@@ -465,6 +473,7 @@ export const prepareAgentChatRun = async ({
   operationId,
   additionalInstructions,
   getRequestId,
+  approvedToolRetry,
   reportOnly,
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
   const latestQuestion =
@@ -489,6 +498,7 @@ export const prepareAgentChatRun = async ({
       requestingUserIsPublic: chat?.previewAsPublic === true,
       channel: chat?.channel,
       getRequestId,
+      approvedToolRetry,
       buildPromptOptions: {
         baseSystemPrompt: ai.agentSystemPrompt(user, chat?.timezone),
         includeGoal: false,
