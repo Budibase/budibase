@@ -197,7 +197,14 @@ function hasAuthConfigs(datasource: Datasource) {
   return datasource.source === SourceName.REST && datasource.config?.authConfigs
 }
 
-function useEnvVars(str: any) {
+function containsEnvVarBinding(str: unknown) {
+  if (typeof str !== "string") {
+    return false
+  }
+  return findHBSBlocks(str).some(block => block.includes(ENV_VAR_PREFIX))
+}
+
+function isEnvVarBinding(str: unknown) {
   if (typeof str !== "string") {
     return false
   }
@@ -214,9 +221,9 @@ function datasourceUsesEnvironmentVariables(datasource: Datasource): boolean {
     return false
   }
 
-  const checkValue = (value: any): boolean => {
+  const checkValue = (value: unknown): boolean => {
     if (typeof value === "string") {
-      return useEnvVars(value)
+      return containsEnvVarBinding(value)
     }
     if (typeof value === "object" && value !== null) {
       return Object.values(value).some(checkValue)
@@ -245,17 +252,17 @@ export async function removeSecrets(datasources: Datasource[]) {
         for (let config of configs) {
           if (config.type === RestAuthType.BASIC) {
             const basic = config.config as RestBasicAuthConfig
-            if (!useEnvVars(basic.password)) {
+            if (!isEnvVarBinding(basic.password)) {
               basic.password = PASSWORD_REPLACEMENT
             }
           } else if (config.type === RestAuthType.BEARER) {
             const bearer = config.config as RestBearerAuthConfig
-            if (!useEnvVars(bearer.token)) {
+            if (!isEnvVarBinding(bearer.token)) {
               bearer.token = PASSWORD_REPLACEMENT
             }
           } else if (config.type === RestAuthType.OAUTH2) {
             const oauth2 = config as OAuth2RestAuthConfig
-            if (!useEnvVars(oauth2.clientSecret)) {
+            if (!isEnvVarBinding(oauth2.clientSecret)) {
               oauth2.clientSecret = PASSWORD_REPLACEMENT
             }
           }
@@ -267,7 +274,7 @@ export async function removeSecrets(datasources: Datasource[]) {
         if (
           (fieldType === DatasourceFieldType.PASSWORD ||
             fieldType === DatasourceFieldType.SENSITIVE_LONGFORM) &&
-          !useEnvVars(datasource.config[key])
+          !isEnvVarBinding(datasource.config[key])
         ) {
           datasource.config[key] = PASSWORD_REPLACEMENT
         }
