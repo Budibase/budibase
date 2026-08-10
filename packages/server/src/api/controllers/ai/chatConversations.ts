@@ -33,6 +33,7 @@ import {
   type UIMessageChunk,
 } from "ai"
 import sdk from "../../../sdk"
+import { isDevWorkspaceID } from "../../../db/utils"
 import {
   buildAgentMessageUsage,
   formatIncompleteToolCallError,
@@ -409,7 +410,6 @@ const getChatConversation = async (
 
 interface ResolvedChatStreamRequest {
   agentId: string
-  canUsePreview: boolean
   chat: ChatAgentRequest
   chatAppId?: string
   existingChat?: ChatConversation
@@ -418,7 +418,7 @@ interface ResolvedChatStreamRequest {
 }
 
 interface getExistingChatForStreamParams {
-  canUsePreview: boolean
+  isPreview: boolean
   chat: ChatAgentRequest
   chatAppId?: string
   db: ReturnType<typeof context.getWorkspaceDB>
@@ -453,7 +453,7 @@ const applyChatStreamPathParams = (
 }
 
 const getExistingChatForStream = async ({
-  canUsePreview,
+  isPreview,
   chat,
   chatAppId,
   db,
@@ -467,7 +467,7 @@ const getExistingChatForStream = async ({
   if (!existingChat) {
     throw new HTTPError("chat not found", 404)
   }
-  if (!canUsePreview && existingChat.chatAppId !== chatAppId) {
+  if (!isPreview && existingChat.chatAppId !== chatAppId) {
     throw new HTTPError("chat does not belong to this chat app", 400)
   }
   if (existingChat.userId && existingChat.userId !== userId) {
@@ -497,43 +497,38 @@ const resolveChatStreamRequest = async (
     ctx.user,
     workspaceId
   )
-  const requestedPreview = chat.isPreview === true
+  const isPreview = chat.isPreview === true
 
-  if (chat.previewRoleId && !requestedPreview) {
+  if (chat.previewRoleId && !isPreview) {
     throw new HTTPError("previewRoleId requires preview mode", 400)
   }
 
-  if (requestedPreview && !isBuilderOrAdmin) {
+  if (isPreview && !isDevWorkspaceID(workspaceId)) {
+    throw new HTTPError("Preview mode requires a development workspace", 400)
+  }
+
+  if (isPreview && !isBuilderOrAdmin) {
     throw new HTTPError("Forbidden", 403)
   }
 
-  const canUsePreview = requestedPreview
-
-  let effectiveUser = ctx.user
-  let effectiveUserId = userId
-  if (canUsePreview && chat.previewRoleId) {
+  let user = ctx.user
+  if (isPreview && chat.previewRoleId) {
     const previewRole = await roles.getRole(chat.previewRoleId)
     if (!previewRole?._id) {
       throw new HTTPError("Preview role not found", 400)
     }
-    effectiveUser = {
+    user = {
       ...ctx.user,
       roleId: previewRole._id,
-      roles: {
-        ...(ctx.user.roles || {}),
-        [workspaceId]: previewRole._id,
-      },
-      builder: undefined,
-      admin: undefined,
     }
   }
 
-  if (!canUsePreview && !chatAppId) {
+  if (!isPreview && !chatAppId) {
     throw new HTTPError("chatAppId is required", 400)
   }
 
   let chatApp: ChatApp | undefined
-  if (!canUsePreview) {
+  if (!isPreview) {
     chatApp = await db.tryGet<ChatApp>(chatAppId)
     if (!chatApp) {
       throw new HTTPError("Chat app not found", 404)
@@ -542,11 +537,11 @@ const resolveChatStreamRequest = async (
   }
 
   const existingChat = await getExistingChatForStream({
-    canUsePreview,
+    isPreview,
     chat,
     chatAppId,
     db,
-    userId: effectiveUserId,
+    userId,
   })
 
   const agentId = existingChat?.agentId || chat.agentId
@@ -554,7 +549,7 @@ const resolveChatStreamRequest = async (
     throw new HTTPError("agentId is required", 400)
   }
 
-  if (!canUsePreview && chatApp) {
+  if (!isPreview && chatApp) {
     const chatAgentConfig = getEnabledChatAgentConfig(chatApp, agentId)
     await assertCanAccessChatAgent(ctx, chatAgentConfig)
   }
@@ -563,12 +558,11 @@ const resolveChatStreamRequest = async (
 
   return {
     agentId,
-    canUsePreview,
     chat,
     chatAppId,
     existingChat,
-    userId: effectiveUserId,
-    user: effectiveUser,
+    userId,
+    user,
   }
 }
 

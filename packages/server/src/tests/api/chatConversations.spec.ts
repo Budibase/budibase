@@ -1138,9 +1138,9 @@ describe("chat conversation path validation", () => {
     expect(res.status).toBe(400)
   })
 
-  it("rejects preview mode for non-builder users before input validation", async () => {
+  it("rejects preview mode for non-builder users in development", async () => {
     const headers = await config.withUser(basicUser, async () =>
-      config.defaultHeaders({}, true)
+      config.defaultHeaders()
     )
 
     const res = await config
@@ -1155,6 +1155,23 @@ describe("chat conversation path validation", () => {
       })
 
     expect(res.status).toBe(403)
+  })
+
+  it("rejects preview mode in production workspaces", async () => {
+    const headers = await config.defaultHeaders({}, true)
+
+    const res = await config
+      .getRequest()!
+      .post("/api/chatapps/chatapp-path/conversations/new/stream")
+      .set(headers)
+      .send({
+        agentId: "agent-1",
+        isPreview: true,
+        messages: [],
+        title: "hello",
+      })
+
+    expect(res.status).toBe(400)
   })
 
   it("rejects a preview role outside preview mode", async () => {
