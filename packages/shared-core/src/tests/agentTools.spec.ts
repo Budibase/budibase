@@ -2,6 +2,7 @@ import { ToolType } from "@budibase/types"
 import {
   getQueryToolBindings,
   getReadableAgentToolBinding,
+  getReadableAgentToolBindings,
   isQueryToolType,
 } from "../agentTools"
 
@@ -130,5 +131,29 @@ describe("getReadableAgentToolBinding", () => {
         toolName: "GET random wow",
       })
     ).toBe("api.owen_wilson_api.GET random wow")
+  })
+
+  it("uses the datasource ID to disambiguate external table bindings", () => {
+    const bindings = getReadableAgentToolBindings([
+      {
+        sourceType: ToolType.EXTERNAL_TABLE,
+        sourceLabel: "PostgreSQL DB",
+        sourceId: "datasource_one",
+        toolName: "Orders.search_rows",
+        runtimeBinding: "first_tool",
+      },
+      {
+        sourceType: ToolType.EXTERNAL_TABLE,
+        sourceLabel: "PostgreSQL-DB",
+        sourceId: "datasource_two",
+        toolName: "Orders.search_rows",
+        runtimeBinding: "second_tool",
+      },
+    ])
+
+    expect(bindings).toEqual({
+      first_tool: "PostgreSQL_DB_datasource_one.Orders.search_rows",
+      second_tool: "PostgreSQL_DB_datasource_two.Orders.search_rows",
+    })
   })
 })

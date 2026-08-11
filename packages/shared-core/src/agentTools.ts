@@ -57,7 +57,12 @@ export const getReadableQueryToolBinding = ({
 interface ReadableAgentToolBindingOptions {
   sourceType: ToolType
   sourceLabel?: string
+  sourceId?: string
   toolName: string
+}
+
+interface AgentToolBindingCandidate extends ReadableAgentToolBindingOptions {
+  runtimeBinding: string
 }
 
 const sanitiseReadableBindingSegment = (value: string) =>
@@ -66,6 +71,7 @@ const sanitiseReadableBindingSegment = (value: string) =>
 export const getReadableAgentToolBinding = ({
   sourceType,
   sourceLabel,
+  sourceId,
   toolName,
 }: ReadableAgentToolBindingOptions) => {
   if (isQueryToolType(sourceType)) {
@@ -83,9 +89,12 @@ export const getReadableAgentToolBinding = ({
   ) {
     prefix = "budibase"
   } else if (sourceType === ToolType.EXTERNAL_TABLE) {
-    prefix = sourceLabel
+    const readableSource = sourceLabel
       ? sanitiseReadableBindingSegment(sourceLabel)
       : "external"
+    prefix = sourceId
+      ? `${readableSource}_${sanitiseReadableBindingSegment(sourceId)}`
+      : readableSource
   } else if (sourceType === ToolType.SEARCH) {
     prefix = "search"
   } else if (sourceType === ToolType.ESCALATION) {
@@ -93,6 +102,40 @@ export const getReadableAgentToolBinding = ({
   }
 
   return `${prefix}.${toolName}`
+}
+
+export const getReadableAgentToolBindings = (
+  tools: AgentToolBindingCandidate[]
+): Record<string, string> => {
+  const baseBindings = tools.map(tool =>
+    getReadableAgentToolBinding({
+      sourceType: tool.sourceType,
+      sourceLabel: tool.sourceLabel,
+      toolName: tool.toolName,
+    })
+  )
+  const bindingCounts = baseBindings.reduce<Record<string, number>>(
+    (counts, binding) => {
+      counts[binding] = (counts[binding] || 0) + 1
+      return counts
+    },
+    {}
+  )
+
+  return Object.fromEntries(
+    tools.map((tool, index) => {
+      const baseBinding = baseBindings[index]
+      const readableBinding =
+        bindingCounts[baseBinding] > 1 &&
+        tool.sourceType === ToolType.EXTERNAL_TABLE
+          ? getReadableAgentToolBinding({
+              ...tool,
+              sourceId: tool.sourceId || tool.runtimeBinding,
+            })
+          : baseBinding
+      return [tool.runtimeBinding, readableBinding]
+    })
+  )
 }
 
 export const getQueryToolBindings = ({

@@ -30,7 +30,10 @@ import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 import { context, HTTPError } from "@budibase/backend-core"
 import { authorizeAgentToolCall } from "../../../../ai/tools/authorization"
-import { getReadableAgentToolBinding } from "@budibase/shared-core"
+import {
+  getReadableAgentToolBinding,
+  getReadableAgentToolBindings,
+} from "@budibase/shared-core"
 
 const HELPER_TOOL_NAMES = new Set([
   "list_tables",
@@ -93,6 +96,7 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
     description: tool.description,
     sourceType: tool.sourceType,
     sourceLabel: tool.sourceLabel,
+    sourceId: tool.sourceId,
     sourceIconType: tool.sourceIconType,
   }
 }
@@ -279,6 +283,15 @@ export async function buildPromptAndTools(
     ? enabledTools.filter(tool => runtimes.has(tool.name))
     : enabledTools
   const authorizedToolNames = new Set(authorizedTools.map(tool => tool.name))
+  const readableBindings = getReadableAgentToolBindings(
+    enabledTools.map(tool => ({
+      sourceType: tool.sourceType,
+      sourceLabel: tool.sourceLabel,
+      sourceId: tool.sourceId,
+      toolName: tool.readableName || tool.name,
+      runtimeBinding: tool.name,
+    }))
+  )
   const unavailableBindings = options.execution
     ? enabledTools
         .filter(
@@ -287,11 +300,13 @@ export async function buildPromptAndTools(
             !authorizedToolNames.has(tool.name)
         )
         .map(tool => ({
-          readableBinding: getReadableAgentToolBinding({
-            sourceType: tool.sourceType,
-            sourceLabel: tool.sourceLabel,
-            toolName: tool.readableName || tool.name,
-          }),
+          readableBinding:
+            readableBindings[tool.name] ||
+            getReadableAgentToolBinding({
+              sourceType: tool.sourceType,
+              sourceLabel: tool.sourceLabel,
+              toolName: tool.readableName || tool.name,
+            }),
           label: tool.readableName || tool.name,
         }))
     : []

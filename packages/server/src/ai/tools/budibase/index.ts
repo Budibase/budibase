@@ -31,6 +31,7 @@ export const getBudibaseTools = (
         sourceLabel: isExternal
           ? datasourceNamesById[table.sourceId] || "External"
           : "Budibase",
+        sourceId: isExternal ? table.sourceId : undefined,
         sourceIconType: isExternal
           ? datasourceIconTypesById[table.sourceId]
           : undefined,
