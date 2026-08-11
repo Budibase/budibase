@@ -15,6 +15,7 @@
   export let componentDefinition
   export let componentBindings
   export let bindings
+  /** @type {((value: unknown) => void | Promise<void>) | null} */
   export let onSave = null
   export let actionOptions
 
