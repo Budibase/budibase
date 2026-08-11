@@ -211,32 +211,14 @@ export async function buildPromptAndTools(
     for (const tool of enabledTools) {
       const config = toolConfigs.find(config => config.toolName === tool.name)
       const principal = resolveToolExecutionPrincipal(tool, config)
-      if (!tool.authorization) {
-        continue
-      }
-      const runtime = {
+      runtimes.set(tool.name, {
         executionContext,
         principal,
         authorize: authorizeAgentToolCall,
-      }
-      try {
-        await authorizeAgentToolCall({
-          authorization: tool.authorization,
-          input: undefined,
-          executionContext,
-          principal,
-        })
-        runtimes.set(tool.name, runtime)
-      } catch {
-        // Exposure is best-effort least privilege. The same authorization is
-        // always repeated with the real input immediately before execution.
-      }
+      })
     }
   }
 
-  const authorizedTools = options.executionContext
-    ? enabledTools.filter(tool => runtimes.has(tool.name))
-    : enabledTools
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
@@ -249,6 +231,9 @@ export async function buildPromptAndTools(
   })
 
   let resolvedSystemPrompt = systemPrompt
+  if (options.executionContext) {
+    resolvedSystemPrompt += `\n\nA configured tool may still be unavailable to the requesting user. If a tool call fails because it is unavailable in the security context, do not substitute a different tool or resource and do not claim the action succeeded. Tell the user that they do not have permission to perform the requested action.`
+  }
   if (hasKnowledgeBases) {
     resolvedSystemPrompt += `\n\nWhen users ask about attached files (for example size, type, upload status, processing errors, or file counts), call list_knowledge_files with a filename when possible. Do not guess file metadata. If list_knowledge_files returns ambiguous results, ask a clarification question before answering. If it returns no matches, say that you couldn't find a matching file.\n\nFor any non-trivial user question, call search_knowledge before answering. Do not say the answer is unavailable, unknown, or unsupported until after you have searched knowledge. If search_knowledge returns no relevant context, say that you couldn't find supporting knowledge.\n\nIf you used search_knowledge context in your final answer, call report_used_sources immediately before your final response and pass only sourceIds that directly support the final answer. Do not include sources that were merely searched/consulted. If your conclusion is that the answer is not found in the documents, call report_used_sources with an empty sourceIds list.`
   }
@@ -258,8 +243,8 @@ export async function buildPromptAndTools(
 
   return {
     systemPrompt: resolvedSystemPrompt,
-    tools: toToolSet(authorizedTools, runtimes),
-    toolDisplayNames: getToolDisplayNames(authorizedTools),
+    tools: toToolSet(enabledTools, runtimes),
+    toolDisplayNames: getToolDisplayNames(enabledTools),
   }
 }
 
