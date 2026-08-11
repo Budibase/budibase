@@ -64,11 +64,12 @@ export function sanitiseHeaders({
   for (const [key, rawValue] of Object.entries(normaliseHeaders(headers))) {
     const value = String(rawValue)
     const lowerKey = key.toLowerCase()
-    const tag = authKeys.has(lowerKey)
-      ? tagForAuthType(authType)
-      : SENSITIVE_HEADERS.includes(lowerKey)
-        ? SecretTag.GENERIC
-        : undefined
+    let tag: string | undefined
+    if (authKeys.has(lowerKey)) {
+      tag = tagForAuthType(authType)
+    } else if (SENSITIVE_HEADERS.includes(lowerKey)) {
+      tag = SecretTag.GENERIC
+    }
     const symbolic = findHBSBlocks(value).length > 0
     sanitised[key] = tag && !symbolic ? redactValue(value, tag) : value
   }
