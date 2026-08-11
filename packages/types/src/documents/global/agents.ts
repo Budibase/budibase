@@ -19,9 +19,6 @@ export interface ToolMetadata {
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
-  authorization?: {
-    supportedPrincipals: ToolExecutionPrincipal[]
-  }
 }
 
 interface ChatAgentIntegration {

@@ -21,7 +21,6 @@ import type { AiToolDefinition, ToolAuthorization } from ".."
 import { authorizeAgentToolCall } from "../authorization"
 
 const ESCALATE_TOOL_AUTHORIZATION: ToolAuthorization = {
-  supportedPrincipals: [ToolExecutionPrincipal.REQUESTER],
   permissionType: PermissionType.WORKSPACE,
   permissionLevel: PermissionLevel.READ,
 }
@@ -43,6 +42,7 @@ interface CreateEscalateToolParams {
   // disabled) - there is no AgentRequest to reference in that case.
   getRequestId: () => string | undefined
   executionContext: AgentExecutionContext
+  executionPrincipal?: ToolExecutionPrincipal
 }
 
 // A fire-and-forget escalation tool. When the operation cannot proceed safely
@@ -60,6 +60,7 @@ export const createEscalateTool = ({
   getMessages,
   getRequestId,
   executionContext,
+  executionPrincipal = ToolExecutionPrincipal.REQUESTER,
 }: CreateEscalateToolParams) =>
   tool({
     description:
@@ -84,7 +85,7 @@ export const createEscalateTool = ({
         authorization: ESCALATE_TOOL_AUTHORIZATION,
         input: { title, summary, reason },
         executionContext,
-        principal: ToolExecutionPrincipal.REQUESTER,
+        principal: executionPrincipal,
       })
       const appId = context.getWorkspaceId()
       const tenantId = context.getTenantId()

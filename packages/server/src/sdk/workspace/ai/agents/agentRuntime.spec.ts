@@ -1,5 +1,9 @@
 import type { Agent, LLMResponse } from "@budibase/types"
-import { EscalationNotificationChannel, FeatureFlag } from "@budibase/types"
+import {
+  EscalationNotificationChannel,
+  FeatureFlag,
+  ToolExecutionPrincipal,
+} from "@budibase/types"
 
 const mockRouterStream = jest.fn()
 
@@ -561,6 +565,7 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
         sessionId: "session_1",
         recipients,
         delayMs: 120000,
+        executionPrincipal: ToolExecutionPrincipal.ADMIN,
         executionContext: expect.objectContaining({
           agentId: "agent_1",
           operationId: operationWithRecipients.id,

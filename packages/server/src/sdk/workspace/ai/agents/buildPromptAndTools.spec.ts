@@ -293,7 +293,7 @@ describe("buildPromptAndTools", () => {
           id: "operation_1",
           name: "Invoice lookup",
           live: true,
-          enabledTools: ["ta_invoices_search_rows"],
+          enabledTools: requesterTools("ta_invoices_search_rows"),
           knowledgeBases: [],
           allowKnowledgeSourceDownload: false,
         },

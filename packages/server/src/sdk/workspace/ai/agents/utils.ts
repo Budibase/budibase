@@ -94,11 +94,6 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
     sourceType: tool.sourceType,
     sourceLabel: tool.sourceLabel,
     sourceIconType: tool.sourceIconType,
-    authorization: tool.authorization
-      ? {
-          supportedPrincipals: tool.authorization.supportedPrincipals,
-        }
-      : undefined,
   }
 }
 
@@ -256,11 +251,8 @@ export async function buildPromptAndTools(
     for (const tool of enabledTools) {
       const config = toolConfigs.find(config => config.toolName === tool.name)
       const principal =
-        config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
-      if (
-        !tool.authorization ||
-        !tool.authorization.supportedPrincipals.includes(principal)
-      ) {
+        config?.executionPrincipal ?? ToolExecutionPrincipal.ADMIN
+      if (!tool.authorization) {
         continue
       }
       const runtime = {

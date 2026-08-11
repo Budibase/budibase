@@ -389,11 +389,6 @@
                         options={executionPrincipalOptions}
                         getOptionLabel={option => option.label}
                         getOptionValue={option => option.value}
-                        isOptionEnabled={option =>
-                          option.value !== ToolExecutionPrincipal.ADMIN ||
-                          !!tool.authorization?.supportedPrincipals.includes(
-                            ToolExecutionPrincipal.ADMIN
-                          )}
                         tooltip={`Execution identity for ${formatToolLabel(tool)}`}
                         on:change={event =>
                           setToolPrincipal(

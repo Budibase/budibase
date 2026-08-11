@@ -1,9 +1,4 @@
-import {
-  PermissionLevel,
-  PermissionType,
-  ToolExecutionPrincipal,
-  ToolType,
-} from "@budibase/types"
+import { PermissionLevel, PermissionType, ToolType } from "@budibase/types"
 import { tool } from "ai"
 import { z } from "zod"
 import sdk from "../../../sdk"
@@ -35,10 +30,6 @@ export const createTableTools = (
       sourceLabel: "Budibase",
       description: "List tables configured for the current operation",
       authorization: {
-        supportedPrincipals: [
-          ToolExecutionPrincipal.REQUESTER,
-          ToolExecutionPrincipal.ADMIN,
-        ],
         permissionType: PermissionType.WORKSPACE,
         permissionLevel: PermissionLevel.READ,
         resultFilter: {
@@ -79,10 +70,6 @@ export const createTableTools = (
       sourceLabel: "Budibase",
       description: "Get details about a specific table by ID",
       authorization: {
-        supportedPrincipals: [
-          ToolExecutionPrincipal.REQUESTER,
-          ToolExecutionPrincipal.ADMIN,
-        ],
         permissionType: PermissionType.TABLE,
         permissionLevel: PermissionLevel.READ,
         resolveResourceId: input =>

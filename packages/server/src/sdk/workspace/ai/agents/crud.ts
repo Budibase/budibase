@@ -42,7 +42,7 @@ export const normalizePersistedOperationTools = (
     typeof tool === "string"
       ? {
           toolName: tool,
-          executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+          executionPrincipal: ToolExecutionPrincipal.ADMIN,
         }
       : tool
   )

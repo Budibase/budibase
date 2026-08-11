@@ -8,7 +8,6 @@ import {
 import { type Tool, type ToolSet } from "ai"
 
 export interface ToolAuthorization {
-  supportedPrincipals: ToolExecutionPrincipal[]
   permissionType: PermissionType
   permissionLevel: PermissionLevel
   resourceId?: string
@@ -75,11 +74,6 @@ const wrapTool = (
       if (!toolDef.authorization) {
         throw new Error("Tool is not available in this security context")
       }
-      if (
-        !toolDef.authorization.supportedPrincipals.includes(runtime.principal)
-      ) {
-        throw new Error("Tool is not available in this security context")
-      }
       await runtime.authorize({
         authorization: toolDef.authorization,
         input: args[0],
@@ -115,7 +109,6 @@ const wrapTool = (
               try {
                 await runtime.authorize({
                   authorization: {
-                    supportedPrincipals: authorization.supportedPrincipals,
                     permissionType: resultFilter.permissionType,
                     permissionLevel: resultFilter.permissionLevel,
                     resourceId,

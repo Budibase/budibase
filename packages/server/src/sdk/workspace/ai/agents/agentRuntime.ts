@@ -15,6 +15,7 @@ import {
   ESCALATE_TOOL_NAME,
   EscalateToolResultStatus,
   FeatureFlag,
+  ToolExecutionPrincipal,
 } from "@budibase/types"
 import {
   Output,
@@ -532,6 +533,10 @@ export const prepareAgentChatRun = async ({
       if (!workspaceId) {
         throw new Error("Workspace context is required")
       }
+      const escalationPrincipal =
+        selectedOperation.enabledTools?.find(
+          config => config.toolName === ESCALATE_TOOL_NAME
+        )?.executionPrincipal ?? ToolExecutionPrincipal.ADMIN
       tools.escalate = createEscalateTool({
         agentId,
         operationId: selectedOperation.id,
@@ -544,6 +549,7 @@ export const prepareAgentChatRun = async ({
         userId: user?._id,
         getMessages: () => modelMessages,
         getRequestId: () => getRequestId?.(),
+        executionPrincipal: escalationPrincipal,
         executionContext: {
           tenantId: context.getTenantId(),
           workspaceId,

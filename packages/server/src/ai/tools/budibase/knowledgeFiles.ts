@@ -2,7 +2,6 @@ import {
   KnowledgeBaseFileStatus,
   PermissionLevel,
   PermissionType,
-  ToolExecutionPrincipal,
   ToolType,
   type KnowledgeBaseFile,
 } from "@budibase/types"
@@ -202,7 +201,6 @@ export const createKnowledgeFilesTool = (
   description:
     "List knowledge files attached to this agent, including metadata like size, status, and upload time",
   authorization: {
-    supportedPrincipals: [ToolExecutionPrincipal.REQUESTER],
     permissionType: PermissionType.WORKSPACE,
     permissionLevel: PermissionLevel.READ,
   },
@@ -298,7 +296,6 @@ export const createKnowledgeSearchTool = (
   description:
     "Search the agent knowledge files and return relevant context snippets with source metadata",
   authorization: {
-    supportedPrincipals: [ToolExecutionPrincipal.REQUESTER],
     permissionType: PermissionType.WORKSPACE,
     permissionLevel: PermissionLevel.READ,
   },
