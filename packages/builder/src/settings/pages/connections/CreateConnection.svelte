@@ -1,292 +1,169 @@
 <script lang="ts">
-  import { Button, Heading, Icon, Modal, Search } from "@budibase/bbui"
+  import { Button, Layout, Modal, Search, Table } from "@budibase/bbui"
   import { bb } from "@/stores/bb"
-  import { sortedIntegrations as integrations } from "@/stores/builder/sortedIntegrations"
   import { restTemplates } from "@/stores/builder/restTemplates"
-  import { IntegrationTypes } from "@/constants/backend"
   import RouteActions from "@/settings/components/RouteActions.svelte"
+  import ConnectRestTemplateRenderer from "./_components/ConnectRestTemplateRenderer.svelte"
   import ImportRestTemplateModal from "./_components/ImportRestTemplateModal.svelte"
-  import { createImportedRestConnection } from "./_components/createImportedRestConnection"
-
-  $: locked = $bb.settings.locked
-  $: restIntegration = ($integrations || []).find(
-    integration => integration.name === IntegrationTypes.REST
-  )
+  import RestTemplateActionsRenderer from "./_components/RestTemplateActionsRenderer.svelte"
+  import RestTemplateIconRenderer from "./_components/RestTemplateIconRenderer.svelte"
 
   let searchValue = ""
-  let importTemplateModal: Modal
+  let templateModal: Modal
+  let modalKey = 0
 
-  $: connectionCards = $restTemplates.templates
-    .filter(template => {
-      if (!searchValue) return true
-      return template.name.toLowerCase().includes(searchValue.toLowerCase())
-    })
+  const customRenderers = [
+    { column: "icon", component: RestTemplateIconRenderer },
+    { column: "connect", component: ConnectRestTemplateRenderer },
+  ]
+  const importedRenderers = [
+    ...customRenderers,
+    { column: "more", component: RestTemplateActionsRenderer },
+  ]
+  const importedSchema = {
+    icon: { width: "40px" },
+    name: { width: "200px" },
+    description: { width: "1fr" },
+    connect: { width: "100px", align: "Right" },
+    more: { width: "40px", align: "Right" },
+  }
+  const prebuiltSchema = {
+    icon: { width: "40px" },
+    name: { width: "200px" },
+    description: { width: "1fr" },
+    connect: { width: "100px", align: "Right" },
+  }
+
+  $: locked = $bb.settings.locked
+
+  $: importedTemplates = $restTemplates.templates
+    .filter(template => template.custom)
+    .sort((a, b) => a.name.localeCompare(b.name))
+  $: prebuiltTemplates = $restTemplates.templates
+    .filter(template => !template.custom)
+    .filter(template =>
+      searchValue
+        ? template.name.toLowerCase().includes(searchValue.toLowerCase())
+        : true
+    )
     .sort((a, b) => a.name.localeCompare(b.name))
 
-  const handleSelect = (id: string) => {
-    bb.settings(`/connections/apis/new/${id}`)
+  const importSpec = () => {
+    modalKey += 1
+    templateModal.show()
   }
 </script>
 
-<div class="connections">
-  <RouteActions>
-    {#if locked}
+<Layout noPadding gap="XS">
+  {#if locked}
+    <RouteActions>
       <Button secondary on:click={() => bb.clearSettings()}>Cancel</Button>
+    </RouteActions>
+  {/if}
+
+  <section>
+    <div class="section-header">
+      <div class="section-title">Imported API specs</div>
+      {#if !locked}
+        <Button icon="upload-simple" size="S" on:click={importSpec}>
+          Import OpenAPI spec
+        </Button>
+      {/if}
+    </div>
+
+    {#if importedTemplates.length}
+      <Table
+        compact
+        data={importedTemplates}
+        schema={importedSchema}
+        customRenderers={importedRenderers}
+        hideHeader
+        rounded
+        allowClickRows={false}
+        allowEditRows={false}
+      />
     {/if}
-  </RouteActions>
+  </section>
 
-  <div class="content">
-    {#if !locked}
-      <div class="actions">
-        <button
-          class="action-card"
-          type="button"
-          on:click={() => bb.settings("/connections/apis/new")}
-        >
-          <span class="action-icon"><Icon name="code" size="M" /></span>
-          <span class="action-copy">
-            <span class="action-title">Custom connection</span>
-            <span class="action-description"
-              >Configure a reusable API connection.</span
-            >
-          </span>
-          <Icon name="caret-right" size="S" />
-        </button>
-
-        <button
-          class="action-card"
-          type="button"
-          on:click={() => importTemplateModal.show()}
-        >
-          <span class="action-icon"><Icon name="upload-simple" size="M" /></span
-          >
-          <span class="action-copy">
-            <span class="action-title">Import OpenAPI</span>
-            <span class="action-description">Import an OpenAPI spec.</span>
-          </span>
-          <Icon name="caret-right" size="S" />
-        </button>
-      </div>
-    {/if}
-
-    <div class="integration-header">
-      <Heading size="XS">Browse integrations</Heading>
-      <div class="integration-search">
+  <section>
+    <div class="section-header">
+      <div class="section-title">Pre-built OpenAPI templates</div>
+      <div class="search">
         <Search
-          placeholder="Search integrations"
+          placeholder="Search templates"
           value={searchValue}
           on:change={event => (searchValue = event.detail)}
         />
       </div>
     </div>
 
-    <div class="integrations">
-      {#each connectionCards as card (card.id)}
-        <button
-          class="integration"
-          type="button"
-          on:click={() => handleSelect(card.id)}
-        >
-          <span class="integration-icon">
-            {#if card.custom}
-              <Icon name="globe-simple" size="S" />
-            {:else if card.icon}
-              <img src={card.icon} alt="" />
-            {:else}
-              <Icon name="globe-simple" size="S" />
-            {/if}
-          </span>
-          <span class="integration-name">{card.name}</span>
-          <span class="integration-description">{card.description}</span>
-        </button>
-      {/each}
-    </div>
-  </div>
-</div>
+    <Table
+      compact
+      data={prebuiltTemplates}
+      schema={prebuiltSchema}
+      {customRenderers}
+      hideHeader
+      rounded
+      allowClickRows={false}
+      allowEditRows={false}
+    />
+  </section>
+</Layout>
 
-<Modal bind:this={importTemplateModal}>
-  <ImportRestTemplateModal
-    onCancel={() => importTemplateModal.hide()}
-    onUploaded={async template => {
-      if (!restIntegration) {
-        throw new Error("REST integration unavailable")
-      }
-      const datasource = await createImportedRestConnection({
-        template,
-        integration: restIntegration,
-      })
-      importTemplateModal.hide()
-      bb.settings(`/connections/apis/${datasource._id}`)
-    }}
-  />
+<Modal bind:this={templateModal}>
+  {#key modalKey}
+    <ImportRestTemplateModal
+      onCancel={() => templateModal.hide()}
+      onUploaded={() => templateModal.hide()}
+    />
+  {/key}
 </Modal>
 
 <style>
-  .connections {
+  section {
     display: flex;
     min-width: 0;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--spacing-xs);
   }
 
-  .content {
+  section:first-child {
+    margin-top: var(--spacing-l);
+  }
+
+  section + section {
+    margin-top: var(--spacing-l);
+  }
+
+  section:last-child {
+    gap: var(--spacing-l);
+  }
+
+  .section-header {
     display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .actions {
-    display: grid;
-    min-width: 0;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .action-card {
-    display: flex;
-    width: 100%;
-    min-width: 0;
-    min-height: 48px;
-    box-sizing: border-box;
-    padding: 8px 12px;
-    align-items: center;
-    gap: 10px;
-    color: var(--spectrum-global-color-gray-900);
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 8px;
-    background: var(--background-alt);
-  }
-
-  .action-card:hover,
-  .integration:hover {
-    background: var(--spectrum-global-color-gray-300);
-  }
-
-  .action-icon {
-    display: flex;
-    width: 32px;
-    height: 32px;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    color: var(--spectrum-global-color-gray-700);
-    border-radius: 50%;
-    background: var(--spectrum-global-color-gray-300);
-  }
-
-  .action-copy {
-    display: flex;
-    min-width: 0;
-    flex: 1;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .action-title {
-    font-size: 13px;
-    font-weight: 500;
-  }
-
-  .action-description,
-  .integration-description {
-    overflow: hidden;
-    color: var(--spectrum-global-color-gray-700);
-    font-size: 12px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .integration-header {
-    display: flex;
-    min-height: 32px;
+    height: 24px;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
   }
 
-  .integration-search {
-    width: 220px;
-    min-width: 120px;
-    max-width: 220px;
+  .search {
+    width: 312px;
+    max-width: 45%;
   }
 
-  .integration-search :global(.spectrum-Form-item) {
+  .search :global(.spectrum-Form-item) {
     width: 100%;
   }
 
-  .integrations {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    overflow: hidden;
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 6px;
-  }
-
-  .integration {
-    display: flex;
-    width: 100%;
-    min-width: 0;
-    min-height: 28px;
-    box-sizing: border-box;
-    padding: 3px 10px;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    color: var(--spectrum-global-color-gray-900);
-    font: inherit;
-    font-size: 12px;
-    text-align: left;
-    border: 0;
-    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
-    background-color: var(--spectrum-global-color-gray-100);
-  }
-
-  .integration:last-child {
-    border-bottom: 0;
-  }
-
-  .integration-icon {
-    display: flex;
-    width: 22px;
-    height: 22px;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 4px;
-  }
-
-  .integration-icon img {
-    width: 14px;
-    height: 14px;
-  }
-
-  .integration-name {
-    width: 140px;
-    flex-shrink: 0;
-  }
-
-  .integration-description {
-    min-width: 0;
-    flex: 1;
+  .section-title {
+    color: var(--grey-7, #a2a2a2);
+    font-size: 13px;
   }
 
   @media (max-width: 720px) {
-    .actions {
-      grid-template-columns: 1fr;
-    }
-
-    .integration-description {
-      display: none;
-    }
-
-    .integration-search {
-      flex: 1;
+    .search {
+      width: 220px;
     }
   }
 </style>

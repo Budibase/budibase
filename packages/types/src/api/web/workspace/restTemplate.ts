@@ -9,6 +9,10 @@ export interface UploadCustomRestTemplateResponse {
   template: RestTemplate
 }
 
+export interface UpdateCustomRestTemplateResponse {
+  template: RestTemplate
+}
+
 export type FetchCustomRestTemplatesResponse = RestTemplate[]
 
 export interface DeleteCustomRestTemplateResponse {

@@ -460,18 +460,6 @@ export async function destroy(ctx: UserCtx<void, DeleteDatasourceResponse>) {
   await db.remove(datasourceId, ctx.params.revId)
   await events.datasource.deleted(datasource)
 
-  const restTemplateId = datasource.restTemplateId
-  if (isCustomRestTemplateId(restTemplateId)) {
-    try {
-      await sdk.restTemplates.removeIfUnused(restTemplateId)
-    } catch (error) {
-      console.error(
-        `Failed to remove unused custom REST template ${restTemplateId}`,
-        error
-      )
-    }
-  }
-
   ctx.body = { message: `Datasource deleted.` }
   builderSocket?.emitDatasourceDeletion(ctx, datasourceId)
 }

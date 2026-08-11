@@ -11,6 +11,7 @@ vi.mock("@/api", () => ({
   API: {
     getCustomRestTemplates: vi.fn(),
     uploadCustomRestTemplate: vi.fn(),
+    updateCustomRestTemplate: vi.fn(),
     deleteCustomRestTemplate: vi.fn(),
   },
 }))
@@ -65,6 +66,31 @@ describe("RestTemplatesStore", () => {
         "rest_template_example"
       )
       expect(store.get("rest_template_example")).toBeUndefined()
+    })
+
+    it("replaces an updated custom template in the store", async () => {
+      const updatedTemplate = {
+        ...customTemplate,
+        name: "Updated example",
+      }
+      vi.mocked(API.getCustomRestTemplates).mockResolvedValue([customTemplate])
+      vi.mocked(API.updateCustomRestTemplate).mockResolvedValue({
+        template: updatedTemplate,
+      })
+      await store.fetchCustom()
+
+      const file = new File(["{}"], "openapi.json")
+      await store.updateCustom({
+        restTemplateId: "rest_template_example",
+        name: "Updated example",
+        description: "Example API",
+        file,
+      })
+
+      expect(store.get("rest_template_example")?.name).toBe("Updated example")
+      expect(
+        store.templates.filter(template => template.id === customTemplate.id)
+      ).toHaveLength(1)
     })
   })
 

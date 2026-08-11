@@ -253,7 +253,7 @@
         })
         importTemplateModal.hide()
         modal.hide()
-        bb.settings(`/connections/apis/${datasource._id}`)
+        bb.settings(`/connections/api-connections/${datasource._id}`)
       }}
     />
   </Modal>

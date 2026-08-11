@@ -5,6 +5,7 @@ import type {
   CustomRestTemplateId,
   DeleteCustomRestTemplateResponse,
   FetchCustomRestTemplatesResponse,
+  UpdateCustomRestTemplateResponse,
   UploadCustomRestTemplateRequest,
   UploadCustomRestTemplateResponse,
   UserCtx,
@@ -96,6 +97,68 @@ export const upload = async (
 
     ctx.body = {
       template: await sdk.restTemplates.create({
+        name,
+        description,
+        data,
+        fileExtension,
+        operationsCount: info.endpoints.length,
+      }),
+    }
+  } finally {
+    await unlink(uploadDetails.filepath).catch(() => {})
+  }
+}
+
+export const update = async (
+  ctx: UserCtx<
+    UploadCustomRestTemplateRequest,
+    UpdateCustomRestTemplateResponse,
+    { restTemplateId: string }
+  >
+) => {
+  const { restTemplateId } = ctx.params
+  if (!isCustomRestTemplateId(restTemplateId)) {
+    throw new HTTPError("Invalid custom REST template ID", 400)
+  }
+
+  const file = ctx.request.files?.file
+  if (!file || Array.isArray(file)) {
+    throw new HTTPError("Exactly one OpenAPI template file is required", 400)
+  }
+
+  const uploadDetails = getUploadDetails(file)
+  if (!uploadDetails) {
+    throw new HTTPError("Invalid OpenAPI template upload", 400)
+  }
+
+  try {
+    const name = ctx.request.body.name
+    const description = ctx.request.body.description
+    if (typeof name !== "string" || !name.trim()) {
+      throw new HTTPError("Template name is required", 400)
+    }
+    if (typeof description !== "string") {
+      throw new HTTPError("Template description is required", 400)
+    }
+
+    const fileExtension = getFileExtension(uploadDetails.filename)
+    const data = await readFile(uploadDetails.filepath, "utf8")
+    let importer
+    let info
+    try {
+      importer = await createImporter({ data })
+      const source = importer.getSource().getImportSource()
+      if (source !== "openapi2.0" && source !== "openapi3.0") {
+        throw new Error("Unsupported OpenAPI source")
+      }
+      info = importer.getInfo()
+    } catch {
+      throw new HTTPError("File must contain a valid OpenAPI schema", 400)
+    }
+
+    ctx.body = {
+      template: await sdk.restTemplates.update({
+        restTemplateId,
         name,
         description,
         data,

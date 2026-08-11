@@ -10,6 +10,7 @@ jest.mock("@budibase/backend-core", () => {
       ...actual.objectStore,
       upload: jest.fn(),
       retrieve: jest.fn(),
+      deleteFile: jest.fn(),
       deleteFolder: jest.fn(),
     },
   }
@@ -73,6 +74,9 @@ describe("/rest-templates", () => {
       .mocked(objectStore.retrieve)
       .mockImplementation(async () => OPENAPI_SCHEMA)
     jest.mocked(objectStore.deleteFolder).mockImplementation(async () => {})
+    jest.mocked(objectStore.deleteFile).mockImplementation(async () => ({
+      $metadata: {},
+    }))
   })
 
   it("uploads, lists, resolves and deletes a custom OpenAPI template", async () => {
@@ -97,8 +101,32 @@ describe("/rest-templates", () => {
     expect(objectStore.upload).toHaveBeenCalledWith(
       expect.objectContaining({
         bucket: objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
-        filename: `${template.id}/openapi.json`,
+        filename: `${config.getDevWorkspaceId()}/${template.id}/openapi.json`,
       })
+    )
+
+    const updateResponse = await request
+      .put(`/api/rest-templates/${template.id}`)
+      .set(config.defaultHeaders())
+      .field("name", "Updated Example API")
+      .field("description", "An updated example API")
+      .attach("file", Buffer.from(OPENAPI_SCHEMA), "openapi.yaml")
+      .expect(200)
+    expect(updateResponse.body.template).toEqual(
+      expect.objectContaining({
+        id: template.id,
+        name: "Updated Example API",
+        description: "An updated example API",
+      })
+    )
+    expect(objectStore.upload).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        filename: `${config.getDevWorkspaceId()}/${template.id}/openapi.yaml`,
+      })
+    )
+    expect(objectStore.deleteFile).toHaveBeenCalledWith(
+      objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
+      `${config.getDevWorkspaceId()}/${template.id}/openapi.json`
     )
 
     const listResponse = await request
@@ -121,7 +149,7 @@ describe("/rest-templates", () => {
     expect(importInfoResponse.body.endpoints).toHaveLength(1)
     expect(objectStore.retrieve).toHaveBeenCalledWith(
       objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
-      `${template.id}/openapi.json`
+      `${config.getDevWorkspaceId()}/${template.id}/openapi.yaml`
     )
 
     const importResponse = await request
@@ -229,9 +257,14 @@ describe("/rest-templates", () => {
       )
     ).toHaveLength(0)
 
+    await request
+      .delete(`/api/rest-templates/${template.id}`)
+      .set(config.defaultHeaders())
+      .expect(200)
+
     expect(objectStore.deleteFolder).toHaveBeenCalledWith(
       objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
-      template.id
+      `${config.getDevWorkspaceId()}/${template.id}`
     )
 
     const afterDeleteResponse = await request
@@ -248,49 +281,6 @@ describe("/rest-templates", () => {
       .delete(`/api/rest-templates/${template.id}`)
       .set(config.defaultHeaders())
       .expect(404)
-  })
-
-  it("removes an uploaded template when its last connection is deleted", async () => {
-    const uploadResponse = await request
-      .post("/api/rest-templates")
-      .set(config.defaultHeaders())
-      .field("name", "Unused API")
-      .field("description", "An API used for cleanup")
-      .attach("file", Buffer.from(OPENAPI_SCHEMA), "openapi.json")
-      .expect(200)
-
-    const template = uploadResponse.body.template as RestTemplate
-    const datasource = await config.api.datasource.create({
-      type: "datasource",
-      name: "Unused API connection",
-      source: SourceName.REST,
-      restTemplateId: template.id,
-      config: {},
-    })
-    const secondDatasource = await config.api.datasource.create({
-      type: "datasource",
-      name: "Second unused API connection",
-      source: SourceName.REST,
-      restTemplateId: template.id,
-      config: {},
-    })
-
-    await config.api.datasource.delete(datasource)
-    expect(objectStore.deleteFolder).not.toHaveBeenCalled()
-
-    await config.api.datasource.delete(secondDatasource)
-
-    expect(objectStore.deleteFolder).toHaveBeenCalledWith(
-      objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
-      template.id
-    )
-    const templates = await request
-      .get("/api/rest-templates")
-      .set(config.defaultHeaders())
-      .expect(200)
-    expect(templates.body).not.toContainEqual(
-      expect.objectContaining({ id: template.id })
-    )
   })
 
   it("rejects non-OpenAPI uploads", async () => {

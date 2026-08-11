@@ -3282,6 +3282,32 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
     return template
   }
 
+  async updateCustom({
+    restTemplateId,
+    name,
+    description,
+    file,
+  }: {
+    restTemplateId: CustomRestTemplateId
+    name: string
+    description: string
+    file: File
+  }) {
+    const { template } = await API.updateCustomRestTemplate({
+      restTemplateId,
+      name,
+      description,
+      file,
+    })
+    this.setCustomTemplates([
+      ...this.templates.filter(
+        existing => existing.custom && existing.id !== restTemplateId
+      ),
+      template,
+    ])
+    return template
+  }
+
   async deleteCustom(restTemplateId: CustomRestTemplateId) {
     await API.deleteCustomRestTemplate(restTemplateId)
     this.setCustomTemplates(

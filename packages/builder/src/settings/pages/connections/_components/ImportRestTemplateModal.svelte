@@ -18,9 +18,10 @@
     | ((_template: RestTemplate) => Promise<void> | void)
     | undefined = undefined
   export let onCancel: (() => void) | undefined = undefined
+  export let template: RestTemplate | undefined = undefined
 
-  let name = ""
-  let description = ""
+  let name = template?.name ?? ""
+  let description = template?.description ?? ""
   let file: File | undefined
   let fileError: string | undefined
   let nameError: string | undefined
@@ -57,48 +58,74 @@
     }
     if (
       restTemplates.templates.some(
-        template => template.custom && kebabCase(template.name) === nameSlug
+        existing =>
+          existing.custom &&
+          existing.id !== template?.id &&
+          kebabCase(existing.name) === nameSlug
       )
     ) {
       nameError = "A custom template with this name already exists."
       return keepOpen
     }
 
-    let template: RestTemplate | undefined
+    const templateId = template?.id
+    if (templateId && !isCustomRestTemplateId(templateId)) {
+      notifications.error("Only imported OpenAPI specs can be updated")
+      return keepOpen
+    }
+
+    let savedTemplate: RestTemplate | undefined
     try {
-      template = await restTemplates.uploadCustom({
-        name: name.trim(),
-        description: description.trim(),
-        file,
-      })
-      await onUploaded?.(template)
-      notifications.success(`${template.name} template imported`)
+      if (templateId && isCustomRestTemplateId(templateId)) {
+        savedTemplate = await restTemplates.updateCustom({
+          restTemplateId: templateId,
+          name: name.trim(),
+          description: description.trim(),
+          file,
+        })
+      } else {
+        savedTemplate = await restTemplates.uploadCustom({
+          name: name.trim(),
+          description: description.trim(),
+          file,
+        })
+      }
+      await onUploaded?.(savedTemplate)
+      notifications.success(
+        `${savedTemplate.name} template ${template ? "updated" : "imported"}`
+      )
     } catch (error) {
-      if (template && isCustomRestTemplateId(template.id)) {
+      if (
+        !template &&
+        savedTemplate &&
+        isCustomRestTemplateId(savedTemplate.id)
+      ) {
         try {
-          await restTemplates.deleteCustom(template.id)
+          await restTemplates.deleteCustom(savedTemplate.id)
         } catch {
           // Keep the original upload/save error visible to the user.
         }
       }
       const message = error instanceof Error ? error.message : "Unknown error"
-      notifications.error(`Error importing template - ${message}`)
+      notifications.error(
+        `Error ${template ? "updating" : "importing"} template - ${message}`
+      )
       return keepOpen
     }
   }
 </script>
 
 <ModalContent
-  title="Import OpenAPI template"
-  confirmText="Upload"
+  title={template ? "Update OpenAPI spec" : "Import OpenAPI spec"}
+  confirmText={template ? "Update" : "Import"}
   size="M"
   {disabled}
   {onCancel}
   onConfirm={upload}
 >
   <Body size="S">
-    Upload an OpenAPI 2.0 or 3.0 schema to reuse it when creating REST API
-    connections.
+    {template ? "Replace" : "Upload"} an OpenAPI 2.0 or 3.0 schema to reuse it when
+    creating REST API connections.
   </Body>
 
   <Layout noPadding gap="S">

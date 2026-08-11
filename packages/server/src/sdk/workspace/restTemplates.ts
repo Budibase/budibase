@@ -27,7 +27,7 @@ interface CreateCustomRestTemplateParams {
 }
 
 const getObjectStoreFolder = (restTemplateId: CustomRestTemplateId) => {
-  return restTemplateId
+  return `${context.getOrThrowWorkspaceId()}/${restTemplateId}`
 }
 
 const getLockResource = (resource: string) =>
@@ -167,6 +167,89 @@ export const create = async (params: CreateCustomRestTemplateParams) =>
   withCustomRestTemplateLock({
     resource: "workspace",
     task: () => createWithoutLock(params),
+  })
+
+const updateWithoutLock = async ({
+  restTemplateId,
+  name,
+  description,
+  data,
+  fileExtension,
+  operationsCount,
+}: CreateCustomRestTemplateParams & {
+  restTemplateId: CustomRestTemplateId
+}): Promise<RestTemplate> => {
+  const db = context.getWorkspaceDB()
+  const document = await db.tryGet<CustomRestTemplateDocument>(restTemplateId)
+  if (!document?._rev) {
+    throw new HTTPError("Custom REST template not found", 404)
+  }
+
+  const normalizedName = kebabCase(name)
+  if (!normalizedName) {
+    throw new HTTPError("Template name must contain letters or numbers", 400)
+  }
+  const duplicate = (await fetch()).find(
+    template =>
+      template.id !== restTemplateId &&
+      kebabCase(template.name) === normalizedName
+  )
+  if (duplicate) {
+    throw new HTTPError(
+      `A custom REST template named "${name.trim()}" already exists`,
+      409
+    )
+  }
+
+  const objectStoreKey = `${getObjectStoreFolder(
+    restTemplateId
+  )}/openapi.${fileExtension}`
+  await objectStore.upload({
+    bucket: objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
+    filename: objectStoreKey,
+    body: Buffer.from(data),
+    type: fileExtension === "json" ? "application/json" : "text/yaml",
+  })
+
+  const updatedDocument: CustomRestTemplateDocument = {
+    ...document,
+    name: name.trim(),
+    description: description.trim(),
+    objectStoreKey,
+    fileExtension,
+    operationsCount,
+  }
+
+  try {
+    await db.put(updatedDocument)
+  } catch (error) {
+    if (objectStoreKey !== document.objectStoreKey) {
+      await objectStore.deleteFile(
+        objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
+        objectStoreKey
+      )
+    }
+    throw error
+  }
+
+  if (objectStoreKey !== document.objectStoreKey) {
+    await objectStore.deleteFile(
+      objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
+      document.objectStoreKey
+    )
+  }
+
+  return toRestTemplate(updatedDocument)
+}
+
+export const update = async (
+  params: CreateCustomRestTemplateParams & {
+    restTemplateId: CustomRestTemplateId
+  }
+) =>
+  withCustomRestTemplateLock({
+    resource: params.restTemplateId,
+    task: () => updateWithoutLock(params),
   })
 
 export const getSpec = async (

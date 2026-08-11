@@ -411,9 +411,9 @@
         templateId: ds.restTemplateId,
         query: { datasourceId: ds._id },
       })
-      bb.hideSettings(`/connections/apis/${ds._id}`)
+      bb.hideSettings(`/connections/api-connections/${ds._id}`)
     } else {
-      bb.settings(`/connections/apis/${ds._id}`)
+      bb.settings(`/connections/api-connections/${ds._id}`)
     }
   }
 

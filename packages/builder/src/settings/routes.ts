@@ -272,17 +272,16 @@ export const workspaceRoutes = (
       ],
     },
     {
-      section: "Connections",
-      title: "Connections",
+      section: "APIs",
+      title: "APIs",
       access: () => isCreator,
       path: "connections",
       icon: "cube",
-      new: true,
       routes: [
         {
           path: "apis",
-          title: "APIs",
-          component: Pages.get("connections"),
+          title: "API Specs",
+          component: Pages.get("create_connection"),
           routes: [
             {
               title: "Create",
@@ -310,6 +309,34 @@ export const workspaceRoutes = (
             },
           ],
         },
+        {
+          path: "api-connections",
+          title: "Connections",
+          component: Pages.get("connections"),
+          routes: [
+            {
+              title: "New connection",
+              path: "new",
+              component: Pages.get("connection"),
+              skipNav: true,
+            },
+            {
+              title: "Connection",
+              path: ":id",
+              component: Pages.get("connection"),
+              skipNav: true,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      section: "AI models",
+      title: "AI models",
+      access: () => isCreator,
+      path: "connections",
+      icon: "brain",
+      routes: [
         {
           path: AIConfigType.COMPLETIONS,
           title: "AI models",
