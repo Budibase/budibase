@@ -1,12 +1,10 @@
-import MailDev from "maildev"
-import { promisify } from "util"
+import { simpleParser } from "mailparser"
+import type { AddressObject, ParsedMail } from "mailparser"
+import { SMTPServer } from "smtp-server"
+import type { SMTPServerOptions, SMTPServerSession } from "smtp-server"
 import TestConfiguration from "../TestConfiguration"
 
-/**
- * @deprecated please use the `MailDev` email server instead of this mock.
- */
 export function mock() {
-  // mock the email system
   const sendMailMock = jest.fn()
   const nodemailer = require("nodemailer")
   nodemailer.createTransport.mockReturnValue({
@@ -16,60 +14,47 @@ export function mock() {
   return sendMailMock
 }
 
-export type Mailserver = InstanceType<typeof MailDev>
-export type MailserverConfig = ConstructorParameters<typeof MailDev>[0]
-
-export interface Attachment {
-  checksum: string
-  contentId: string
-  contentType: string
-  fileName: string
-  generatedFileName: string
-  length: number
-  transferEncoding: string
-  transformed: boolean
-}
-
 export interface Address {
   address: string
-  args?: boolean
-  name?: string
-}
-
-export interface Alternative {
-  contentType: string
-  content: string
-  charset: string
-  method: string
-  transferEncoding: string
-}
-
-export interface Envelope {
-  from: Address
-  to: Address[]
-  host: string
-  remoteAddress: string
+  name: string
 }
 
 export interface Email {
-  attachments: Attachment[]
-  alternatives: Alternative[]
+  attachments: ParsedMail["attachments"]
   calculatedBcc: Address[]
   cc: Address[]
-  date: string
-  envelope: Envelope
   from: Address[]
-  headers: Record<string, string>
   html: string
-  id: string
-  messageId: string
-  priority: string
-  read: boolean
-  size: number
-  sizeHuman: string
-  source: string
-  time: Date
   to: Address[]
+}
+
+export class Mailserver {
+  private readonly emails: Email[] = []
+  private readonly listeners = new Set<(email: Email) => void>()
+
+  constructor(public readonly server: SMTPServer) {}
+
+  addEmail(email: Email) {
+    this.emails.push(email)
+    for (const listener of this.listeners) {
+      listener(email)
+    }
+  }
+
+  onNewEmail(listener: (email: Email) => void) {
+    this.listeners.add(listener)
+    return () => {
+      this.listeners.delete(listener)
+    }
+  }
+
+  deleteAllEmail() {
+    this.emails.length = 0
+  }
+}
+
+export interface MailserverConfig extends SMTPServerOptions {
+  smtp?: number
 }
 
 export function getUnusedPort(): Promise<number> {
@@ -86,61 +71,125 @@ export function getUnusedPort(): Promise<number> {
   })
 }
 
+function getAddresses(
+  addresses: AddressObject | AddressObject[] | undefined
+): Address[] {
+  const addressObjects = Array.isArray(addresses)
+    ? addresses
+    : addresses
+      ? [addresses]
+      : []
+
+  return addressObjects.flatMap(addressObject =>
+    addressObject.value.flatMap(({ address, name }) =>
+      address ? [{ address, name }] : []
+    )
+  )
+}
+
+function parseEmail(message: ParsedMail, session: SMTPServerSession): Email {
+  if (message.html === false) {
+    throw new Error("Expected email to contain an HTML body")
+  }
+
+  const to = getAddresses(message.to)
+  const cc = getAddresses(message.cc)
+  const visibleRecipients = new Set(
+    [...to, ...cc].map(recipient => recipient.address)
+  )
+  const calculatedBcc = session.envelope.rcptTo
+    .map(recipient => recipient.address)
+    .filter(address => !visibleRecipients.has(address))
+    .map(address => ({ address, name: "" }))
+
+  return {
+    attachments: message.attachments,
+    calculatedBcc,
+    cc,
+    from: getAddresses(message.from),
+    html: message.html,
+    to,
+  }
+}
+
 export async function captureEmail(
   mailserver: Mailserver,
   f: () => Promise<void>
 ): Promise<Email> {
   const timeoutMs = 5000
-  let timeout: ReturnType<typeof setTimeout> | undefined = undefined
-  const cancel = () => {
-    if (timeout) {
-      clearTimeout(timeout)
-      timeout = undefined
-    }
-  }
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  let removeListener: () => void = () => {}
+  const emailPromise = new Promise<Email>(resolve => {
+    removeListener = mailserver.onNewEmail(email => {
+      removeListener()
+      resolve(email)
+    })
+  })
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeout = setTimeout(() => {
       reject(new Error("Timed out waiting for email"))
     }, timeoutMs)
   })
-  const mailPromise = new Promise<Email>(resolve => {
-    // @ts-expect-error - types are wrong
-    mailserver.once("new", email => {
-      resolve(email as Email)
-      cancel()
-    })
-  })
-  const emailPromise = Promise.race([mailPromise, timeoutPromise])
+
   try {
     await f()
+    return await Promise.race([emailPromise, timeoutPromise])
   } finally {
-    cancel()
+    removeListener()
+    if (timeout) {
+      clearTimeout(timeout)
+    }
   }
-  return await emailPromise
 }
 
 export async function startMailserver(
   config: TestConfiguration,
-  opts?: MailserverConfig
+  opts: MailserverConfig = {}
 ): Promise<Mailserver> {
-  if (!opts) {
-    opts = {}
-  }
   if (!opts.smtp) {
     opts.smtp = await getUnusedPort()
   }
-  const mailserver = new MailDev(opts || {})
-  await new Promise((resolve, reject) => {
-    mailserver.listen(err => {
-      if (err) {
-        return reject(err)
-      }
-      resolve(mailserver)
+
+  const { smtp: smtpPort, ...serverOptions } = opts
+  const server = new SMTPServer({
+    ...serverOptions,
+    authOptional: true,
+    disabledCommands: ["AUTH", "STARTTLS"],
+    onData(stream, session, callback) {
+      const chunks: Buffer[] = []
+      stream.on("data", chunk => {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+      })
+      stream.on("error", error => callback(error))
+      stream.on("end", async () => {
+        try {
+          const message = await simpleParser(Buffer.concat(chunks))
+          mailserver.addEmail(parseEmail(message, session))
+          callback()
+        } catch (error) {
+          callback(error instanceof Error ? error : new Error(String(error)))
+        }
+      })
+    },
+  })
+  const mailserver = new Mailserver(server)
+
+  if (!smtpPort) {
+    throw new Error("SMTP port was not configured")
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const onError = (error: Error) => reject(error)
+    server.once("error", onError)
+    server.listen(smtpPort, "127.0.0.1", () => {
+      server.removeListener("error", onError)
+      resolve()
     })
   })
+
   await config.saveSmtpConfig({
-    host: "localhost",
-    port: opts.smtp,
+    host: "127.0.0.1",
+    port: smtpPort,
     secure: false,
     from: "test@example.com",
   })
@@ -148,37 +197,11 @@ export async function startMailserver(
 }
 
 export function deleteAllEmail(mailserver: Mailserver) {
-  return promisify(mailserver.deleteAllEmail).bind(mailserver)()
+  mailserver.deleteAllEmail()
 }
 
 export function stopMailserver(mailserver: Mailserver) {
-  return promisify(mailserver.close).bind(mailserver)()
-}
-
-export function getAttachment(
-  mailserver: Mailserver,
-  email: Email,
-  attachment: Attachment
-) {
-  return new Promise<string>(resolve => {
-    // @ts-expect-error - types are wrong
-    mailserver.getEmailAttachment(
-      email.id,
-      attachment.generatedFileName,
-      (err: any, _contentType: string, stream: ReadableStream) => {
-        if (err) {
-          throw err
-        }
-        resolve(new Response(stream).text())
-      }
-    )
+  return new Promise<void>(resolve => {
+    mailserver.server.close(() => resolve())
   })
-}
-
-export function getAttachments(mailserver: Mailserver, email: Email) {
-  return Promise.all(
-    email.attachments.map(attachment =>
-      getAttachment(mailserver, email, attachment)
-    )
-  )
 }
