@@ -397,6 +397,7 @@ describe("prepareAgentRunContext", () => {
       systemPrompt: "system prompt",
       tools: {},
       toolDisplayNames: {},
+      toolRequestInputConfigs: new Map(),
     })
   })
 
@@ -613,6 +614,7 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
       systemPrompt: "system prompt",
       tools: { escalate: escalatePlaceholder },
       toolDisplayNames: {},
+      toolRequestInputConfigs: new Map(),
     })
 
     return prepareAgentChatRun({
@@ -664,6 +666,22 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
 
     const { ai } = jest.requireMock("@budibase/pro")
     expect(ai.agentSystemPrompt).toHaveBeenCalledWith(user, "Europe/London")
+  })
+
+  it("enables tool request input metadata only behind its feature flag", async () => {
+    mockIsEnabled.mockImplementation(
+      async (flag: FeatureFlag) =>
+        flag === FeatureFlag.ESCALATION ||
+        flag === FeatureFlag.AI_AGENT_TOOL_REQUEST_INPUTS
+    )
+
+    await runFor(operationWithoutRecipients)
+
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      operationWithoutRecipients,
+      expect.objectContaining({ toolRequestInputsEnabled: true })
+    )
   })
 
   it("ignores a preview role when the chat is not in preview mode", async () => {

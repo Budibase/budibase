@@ -5,7 +5,8 @@ import {
   ToolType,
   type Agent,
 } from "@budibase/types"
-import type { Tool } from "ai"
+import { tool, type Tool } from "ai"
+import { z } from "zod"
 import { requesterTools } from "../tests/utils"
 
 jest.mock("../../..", () => ({
@@ -107,7 +108,7 @@ import {
   createKnowledgeFilesTool,
   createKnowledgeSearchTool,
 } from "../../../../ai/tools/budibase"
-import { buildPromptAndTools } from "./utils"
+import { buildPromptAndTools, toToolMetadata } from "./utils"
 import { generator } from "@budibase/backend-core/tests"
 import { authorizeAgentToolCall } from "../../../../ai/tools/authorization"
 
@@ -124,6 +125,102 @@ describe("buildPromptAndTools", () => {
     fetchDatasources.mockResolvedValue([])
     fetchTables.mockResolvedValue([])
     fetchAutomations.mockResolvedValue([])
+  })
+
+  it("derives supported request input parameters from the tool schema", async () => {
+    const metadata = await toToolMetadata({
+      name: "create_expense",
+      description: "Create an expense",
+      sourceType: ToolType.INTERNAL_TABLE,
+      sourceLabel: "Budibase",
+      executionPolicy: { mode: "admin" },
+      tool: tool({
+        inputSchema: z.object({
+          data: z.object({
+            description: z.string(),
+            amount: z.number(),
+            category: z.enum(["Food", "Travel"]),
+            reimbursable: z.boolean(),
+          }),
+        }),
+      }),
+    })
+
+    expect(metadata.requestInputParameters).toEqual([
+      {
+        parameterPath: ["data", "description"],
+        name: "description",
+        type: "text",
+        nativeRequired: true,
+      },
+      {
+        parameterPath: ["data", "amount"],
+        name: "amount",
+        type: "number",
+        nativeRequired: true,
+      },
+      {
+        parameterPath: ["data", "category"],
+        name: "category",
+        type: "select",
+        options: ["Food", "Travel"],
+        nativeRequired: true,
+      },
+    ])
+  })
+
+  it("builds request input runtime config only when enabled", async () => {
+    jest.mocked(getBudibaseTools).mockReturnValue([
+      {
+        name: "create_expense",
+        description: "Create an expense",
+        sourceType: ToolType.INTERNAL_TABLE,
+        sourceLabel: "Budibase",
+        executionPolicy: { mode: "admin" },
+        tool: tool({
+          inputSchema: z.object({ amount: z.number() }),
+        }),
+      },
+    ])
+    const agent = {
+      _id: "agent_expenses",
+      name: "Expense Agent",
+      aiconfig: "",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Expenses",
+          live: true,
+          enabledTools: [
+            {
+              toolName: "create_expense",
+              executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+              requestInputs: [{ parameterPath: ["amount"], required: true }],
+            },
+          ],
+          knowledgeBases: [],
+          allowKnowledgeSourceDownload: false,
+        },
+      ],
+    } satisfies Agent
+
+    const disabled = await buildPromptAndTools(agent, agent.operations[0])
+    const enabled = await buildPromptAndTools(agent, agent.operations[0], {
+      toolRequestInputsEnabled: true,
+    })
+
+    expect(disabled.toolRequestInputConfigs).toEqual(new Map())
+    expect(enabled.toolRequestInputConfigs.get("create_expense")).toEqual({
+      requestInputs: [{ parameterPath: ["amount"], required: true }],
+      parameters: [
+        {
+          parameterPath: ["amount"],
+          name: "amount",
+          type: "number",
+          nativeRequired: true,
+        },
+      ],
+    })
   })
 
   it("adds knowledge files helper when agent has a knowledge base", async () => {

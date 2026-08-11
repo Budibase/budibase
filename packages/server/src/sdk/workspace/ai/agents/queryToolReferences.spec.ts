@@ -101,10 +101,11 @@ describe("updateAgentQueryToolReferences", () => {
     })
   })
 
-  it("preserves the legacy principal when renaming a runtime binding", () => {
+  it("preserves the complete tool config when renaming a runtime binding", () => {
     const legacyConfig = {
       toolName: existingBindings.runtimeBinding,
       executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+      requestInputs: [{ parameterPath: ["body", "reason"], required: true }],
     }
     const agent = makeAgent({
       operations: [

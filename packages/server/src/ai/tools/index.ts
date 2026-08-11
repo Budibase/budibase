@@ -3,6 +3,7 @@ import {
   PermissionType,
   ToolExecutionPrincipal,
   ToolType,
+  type AgentToolRequestInputParameter,
   type AgentExecutionContext,
   type AgentOperationToolConfig,
   type ToolExecutionPolicy,
@@ -31,6 +32,7 @@ export interface AiToolDefinition {
     result: unknown,
     runtime: ToolAuthorizationRuntime
   ) => Promise<unknown>
+  requestInputParameters?: AgentToolRequestInputParameter[]
 }
 
 export interface ToolAuthorizationRuntime {

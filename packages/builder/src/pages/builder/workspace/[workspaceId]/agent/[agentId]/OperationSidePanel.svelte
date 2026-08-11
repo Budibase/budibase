@@ -5,6 +5,7 @@
     ToolExecutionPrincipal,
     ToolType,
     type AgentOperation,
+    type AgentOperationToolConfig,
     type CaretPositionFn,
     type EnrichedBinding,
     type InsertAtPositionFn,
@@ -25,6 +26,7 @@
   import ToolIcon from "./ToolIcon.svelte"
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
+  import ToolRequestInputs from "./ToolRequestInputs.svelte"
 
   let {
     open = false,
@@ -187,6 +189,10 @@
     return config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
   }
 
+  const getToolRequestInputs = (toolName: string) =>
+    operation.enabledTools?.find(tool => tool.toolName === toolName)
+      ?.requestInputs
+
   const getEffectiveToolPrincipal = (tool: AgentTool) =>
     tool.executionPolicy.mode === "admin"
       ? ToolExecutionPrincipal.ADMIN
@@ -201,8 +207,28 @@
       toolName: name,
       executionPrincipal:
         name === toolName ? executionPrincipal : getToolPrincipal(name),
+      requestInputs: getToolRequestInputs(name),
     }))
     onUpdated()
+  }
+
+  const setToolRequestInputs = async (
+    toolName: string,
+    requestInputs: NonNullable<AgentOperationToolConfig["requestInputs"]>
+  ) => {
+    const previousTools = operation.enabledTools
+    const toolNames = includedToolRuntimeBindings
+    operation.enabledTools = toolNames.map(name => ({
+      toolName: name,
+      executionPrincipal: getToolPrincipal(name),
+      requestInputs:
+        name === toolName ? requestInputs : getToolRequestInputs(name),
+    }))
+    const saved = await onUpdated()
+    if (!saved) {
+      operation.enabledTools = previousTools
+    }
+    return saved
   }
 
   const escapeRegExp = (str: string) =>
@@ -383,6 +409,19 @@
                       </div>
                     </div>
                     <div class="tool-actions">
+                      {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_REQUEST_INPUTS]}
+                        <ToolRequestInputs
+                          {tool}
+                          requestInputs={getToolRequestInputs(
+                            tool.runtimeBinding
+                          )}
+                          onUpdated={requestInputs =>
+                            setToolRequestInputs(
+                              tool.runtimeBinding,
+                              requestInputs
+                            )}
+                        />
+                      {/if}
                       {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] && tool.executionPolicy.mode === "configurable"}
                         <span class="run-as-label">Run as</span>
                         <Select

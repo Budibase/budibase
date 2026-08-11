@@ -61,6 +61,53 @@ describe("AI Tools - Rows", () => {
     }
   })
 
+  it("exposes supported row fields as request input parameters", () => {
+    const tools = createRowTools({
+      tableId: "ta_expenses",
+      tableName: "Expenses",
+      tableSourceType: TableSourceType.INTERNAL,
+      tableSchema: {
+        reason: {
+          name: "reason",
+          type: FieldType.STRING,
+          constraints: { presence: true },
+        },
+        amount: { name: "amount", type: FieldType.NUMBER },
+        category: {
+          name: "category",
+          type: FieldType.OPTIONS,
+          constraints: { inclusion: ["Food", "Travel"] },
+        },
+        approved: { name: "approved", type: FieldType.BOOLEAN },
+      },
+    })
+    const createTool = tools.find(tool =>
+      tool.readableName?.endsWith(".create_row")
+    )
+
+    expect(createTool?.requestInputParameters).toEqual([
+      {
+        parameterPath: ["data", "reason"],
+        name: "reason",
+        type: "text",
+        nativeRequired: true,
+      },
+      {
+        parameterPath: ["data", "amount"],
+        name: "amount",
+        type: "number",
+        nativeRequired: false,
+      },
+      {
+        parameterPath: ["data", "category"],
+        name: "category",
+        type: "select",
+        options: ["Food", "Travel"],
+        nativeRequired: false,
+      },
+    ])
+  })
+
   it.each([
     ["get_row", PermissionLevel.READ],
     ["search_rows", PermissionLevel.READ],

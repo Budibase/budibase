@@ -74,30 +74,30 @@
 
   const getConfiguredTools = (operation: AgentOperation) => {
     const existing = new Map(
-      (operation.enabledTools || []).map(tool => [
-        tool.toolName,
-        tool.executionPrincipal,
-      ])
+      (operation.enabledTools || []).map(tool => [tool.toolName, tool])
     )
     return getIncludedToolRuntimeBindings(
       operation.promptInstructions,
       readableToRuntimeBinding
     ).map(toolName => {
       const tool = availableTools.find(tool => tool.runtimeBinding === toolName)
+      const existingConfig = existing.get(toolName)
       let executionPrincipal =
-        existing.get(toolName) ?? ToolExecutionPrincipal.REQUESTER
+        existingConfig?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
       if (!$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]) {
         executionPrincipal =
-          existing.get(toolName) ?? ToolExecutionPrincipal.ADMIN
+          existingConfig?.executionPrincipal ?? ToolExecutionPrincipal.ADMIN
       } else if (tool?.executionPolicy.mode === "admin") {
         executionPrincipal = ToolExecutionPrincipal.ADMIN
       } else if (tool?.executionPolicy.mode === "configurable") {
         executionPrincipal =
-          existing.get(toolName) ?? tool.executionPolicy.defaultPrincipal
+          existingConfig?.executionPrincipal ??
+          tool.executionPolicy.defaultPrincipal
       }
       return {
         toolName,
         executionPrincipal,
+        requestInputs: existingConfig?.requestInputs,
       }
     })
   }

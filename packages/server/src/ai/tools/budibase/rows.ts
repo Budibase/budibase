@@ -9,6 +9,7 @@ import {
   PermissionLevel,
   PermissionType,
   ToolExecutionPrincipal,
+  type AgentToolRequestInputParameter,
   type Row,
   type RowSearchParams,
   type TableSchema,
@@ -53,6 +54,44 @@ const TOOL_NAME_HASH_LENGTH = 12
 type TableSchemaField = {
   name: string
   schema: TableSchema[string]
+  nativeRequired?: boolean
+}
+
+const getRowRequestInputParameter = ({
+  name,
+  schema,
+  nativeRequired = false,
+}: TableSchemaField): AgentToolRequestInputParameter[] => {
+  const parameterPath = ["data", name]
+  const options = schema.constraints?.inclusion
+  if (
+    schema.type === FieldType.OPTIONS &&
+    Array.isArray(options) &&
+    options.length > 0 &&
+    options.every(option => typeof option === "string")
+  ) {
+    return [
+      {
+        parameterPath,
+        name,
+        type: "select",
+        options,
+        nativeRequired,
+      },
+    ]
+  }
+  if (schema.type === FieldType.NUMBER || schema.type === FieldType.BIGINT) {
+    return [{ parameterPath, name, type: "number", nativeRequired }]
+  }
+  if (
+    schema.type === FieldType.STRING ||
+    schema.type === FieldType.LONGFORM ||
+    schema.type === FieldType.DATETIME ||
+    schema.type === FieldType.BARCODEQR
+  ) {
+    return [{ parameterPath, name, type: "text", nativeRequired }]
+  }
+  return []
 }
 
 const getProtectedColumns = (tableSourceType: TableSourceType) =>
@@ -446,6 +485,17 @@ export const createRowTools = ({
             : PermissionLevel.READ,
         resourceId: tableId,
       },
+      requestInputParameters:
+        action === "create_row" || action === "update_row"
+          ? writableFields.flatMap(field =>
+              getRowRequestInputParameter({
+                ...field,
+                nativeRequired:
+                  action === "create_row" &&
+                  Boolean(field.schema.constraints?.presence),
+              })
+            )
+          : undefined,
       tool: tool({
         description,
         inputSchema,
