@@ -15951,7 +15951,7 @@ leaflet@^1.9.4:
   resolved "https://registry.yarnpkg.com/leaflet/-/leaflet-1.9.4.tgz#23fae724e282fa25745aff82ca4d394748db7d8d"
   integrity sha512-nxS1ynzJOmOlHp+iL3FyWqK89GtNL8U8rvlMOsQdTTssxZwCXh8N2NB3GDQOL+YR3XnWyZAxwQixURb+FA74PA==
 
-lerna@10.0.0:
+lerna@^10.0.0:
   version "10.0.0"
   resolved "https://registry.yarnpkg.com/lerna/-/lerna-10.0.0.tgz#3192ce4aca49a9bcbe9fdcaf025dea48e36895bf"
   integrity sha512-U1Rkz2lMZEGstg7h6vw2LfuGNTomXANZ+mX80+3pR0L2RWWcXI/gZJya9EDq4wTY+1AoUzhNNUnlAEWdFugisw==
