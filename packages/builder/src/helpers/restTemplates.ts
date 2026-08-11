@@ -1,10 +1,10 @@
 import type {
-  CustomRestTemplateId,
   ImportEndpoint,
   ImportRestQueryInfoRequest,
   RestTemplateId,
   RestTemplateSpec,
 } from "@budibase/types"
+import { isCustomRestTemplateId } from "@budibase/shared-core"
 
 const normalizeEndpointLabel = (value?: string) =>
   (value || "").toLowerCase().replace(/[^a-z0-9]/g, "")
@@ -47,8 +47,3 @@ export const getRestTemplateImportInfoRequest = (
   }
   return undefined
 }
-
-export const isCustomRestTemplateId = (
-  restTemplateId: RestTemplateId
-): restTemplateId is CustomRestTemplateId =>
-  restTemplateId.startsWith("rest_template_")

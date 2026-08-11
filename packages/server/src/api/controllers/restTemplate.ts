@@ -1,8 +1,8 @@
 import { readFile, unlink } from "fs/promises"
 import { HTTPError } from "@budibase/backend-core"
+import { isCustomRestTemplateId } from "@budibase/shared-core"
 import type {
   CustomRestTemplateFileExtension,
-  CustomRestTemplateId,
   DeleteCustomRestTemplateResponse,
   FetchCustomRestTemplatesResponse,
   UpdateCustomRestTemplateResponse,
@@ -42,11 +42,6 @@ const getFileExtension = (
   }
   throw new HTTPError("OpenAPI template must be a YAML or JSON file", 400)
 }
-
-const isCustomRestTemplateId = (
-  restTemplateId: string
-): restTemplateId is CustomRestTemplateId =>
-  /^rest_template_[a-z0-9]+(?:-[a-z0-9]+)*$/.test(restTemplateId)
 
 export const fetch = async (
   ctx: UserCtx<void, FetchCustomRestTemplatesResponse>

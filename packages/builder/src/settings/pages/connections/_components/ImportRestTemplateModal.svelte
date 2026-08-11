@@ -10,8 +10,8 @@
     notifications,
     TextArea,
   } from "@budibase/bbui"
+  import { isCustomRestTemplateId } from "@budibase/shared-core"
   import type { RestTemplate, UIFile } from "@budibase/types"
-  import { isCustomRestTemplateId } from "@/helpers/restTemplates"
   import { restTemplates } from "@/stores/builder/restTemplates"
 
   export let onUploaded:

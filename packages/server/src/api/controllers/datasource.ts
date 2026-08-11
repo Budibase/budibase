@@ -35,6 +35,7 @@ import {
   VerifyDatasourceRequest,
   VerifyDatasourceResponse,
 } from "@budibase/types"
+import { isCustomRestTemplateId } from "@budibase/shared-core"
 import { isEqual } from "lodash"
 import { getQueryParams, getTableParams } from "../../db/utils"
 import sdk from "../../sdk"
@@ -45,11 +46,6 @@ import {
   resolveUpdatedProjectIds,
 } from "../../utilities/projects"
 import { builderSocket } from "../../websockets"
-
-const isCustomRestTemplateId = (
-  restTemplateId: string | undefined
-): restTemplateId is `rest_template_${string}` =>
-  restTemplateId?.startsWith("rest_template_") ?? false
 
 async function clearOAuth2TokenCaches(datasource: Datasource) {
   const authConfigs = datasource.config?.authConfigs

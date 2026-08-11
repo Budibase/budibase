@@ -6,9 +6,9 @@
     Modal,
     notifications,
   } from "@budibase/bbui"
+  import { isCustomRestTemplateId } from "@budibase/shared-core"
   import type { RestTemplate } from "@budibase/types"
   import { confirm } from "@/helpers"
-  import { isCustomRestTemplateId } from "@/helpers/restTemplates"
   import { bb } from "@/stores/bb"
   import { restTemplates } from "@/stores/builder/restTemplates"
   import { workspaceConnections } from "@/stores/builder/workspaceConnection"
