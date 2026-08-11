@@ -55,20 +55,25 @@ const replaceRuntimeBinding = (
     return enabledTools
   }
 
+  const hasUpdatedBinding = enabledTools.some(
+    tool => tool.toolName === updatedBinding
+  )
+  const updatedTools = hasUpdatedBinding
+    ? enabledTools.filter(tool => tool.toolName !== existingBinding)
+    : enabledTools.map(tool =>
+        tool.toolName === existingBinding
+          ? { ...tool, toolName: updatedBinding }
+          : tool
+      )
+
   const seenToolNames = new Set<string>()
-  return enabledTools
-    .map(tool =>
-      tool.toolName === existingBinding
-        ? { ...tool, toolName: updatedBinding }
-        : tool
-    )
-    .filter(tool => {
-      if (seenToolNames.has(tool.toolName)) {
-        return false
-      }
-      seenToolNames.add(tool.toolName)
-      return true
-    })
+  return updatedTools.filter(tool => {
+    if (seenToolNames.has(tool.toolName)) {
+      return false
+    }
+    seenToolNames.add(tool.toolName)
+    return true
+  })
 }
 
 export const updateAgentQueryToolReferences = ({

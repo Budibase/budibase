@@ -1,4 +1,4 @@
-import { SourceName } from "@budibase/types"
+import { SourceName, ToolExecutionPrincipal } from "@budibase/types"
 import type { Agent, Datasource, Query } from "@budibase/types"
 import { requesterTools } from "../tests/utils"
 import { fetch, update } from "./crud"
@@ -100,6 +100,43 @@ describe("updateAgentQueryToolReferences", () => {
       enabledTools: requesterTools("rest_owen_wilson_same_name"),
     })
   })
+
+  it.each(["legacy-first", "updated-first"])(
+    "preserves the existing destination principal when %s",
+    order => {
+      const legacyConfig = {
+        toolName: existingBindings.runtimeBinding,
+        executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+      }
+      const destinationConfig = {
+        toolName: updatedBindings.runtimeBinding,
+        executionPrincipal: ToolExecutionPrincipal.ADMIN,
+      }
+      const enabledTools =
+        order === "legacy-first"
+          ? [legacyConfig, destinationConfig]
+          : [destinationConfig, legacyConfig]
+      const agent = makeAgent({
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main",
+            live: true,
+            enabledTools,
+            allowKnowledgeSourceDownload: true,
+          },
+        ],
+      })
+
+      const updated = updateAgentQueryToolReferences({
+        agent,
+        existingBindings,
+        updatedBindings,
+      })
+
+      expect(updated?.operations?.[0].enabledTools).toEqual([destinationConfig])
+    }
+  )
 
   it("does not update unrelated agents", () => {
     const agent = makeAgent({
