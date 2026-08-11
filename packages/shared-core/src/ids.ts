@@ -65,7 +65,7 @@ export const isQueryId = idCheckFor(DocumentType.QUERY)
 export const isCustomRestTemplateId = (
   restTemplateId: string | undefined
 ): restTemplateId is CustomRestTemplateId =>
-  restTemplateId?.startsWith("rest_template_") ?? false
+  restTemplateId?.startsWith(`${DocumentType.REST_TEMPLATE}${SEPARATOR}`) ?? false
 
 export function getTableIdFromViewId(viewId: string) {
   if (!isViewId(viewId)) {
