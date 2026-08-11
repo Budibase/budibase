@@ -383,7 +383,7 @@
                       </div>
                     </div>
                     <div class="tool-actions">
-                      {#if tool.executionPolicy.mode === "configurable"}
+                      {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] && tool.executionPolicy.mode === "configurable"}
                         <span class="run-as-label">Run as</span>
                         <Select
                           size="S"

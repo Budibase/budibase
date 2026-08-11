@@ -2,6 +2,7 @@
   import { Body, notifications, Select, Button } from "@budibase/bbui"
   import type { AgentOperation, RequiredKeys } from "@budibase/types"
   import {
+    FeatureFlag,
     ToolExecutionPrincipal,
     AIConfigType,
     ToolType,
@@ -10,7 +11,12 @@
     type ToolMetadata,
     type EnrichedBinding,
   } from "@budibase/types"
-  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
+  import {
+    agentsStore,
+    aiConfigsStore,
+    featureFlags,
+    selectedAgent,
+  } from "@/stores/portal"
   import {
     getReadableQueryToolBinding,
     isQueryToolType,
@@ -80,7 +86,10 @@
       const tool = availableTools.find(tool => tool.runtimeBinding === toolName)
       let executionPrincipal =
         existing.get(toolName) ?? ToolExecutionPrincipal.REQUESTER
-      if (tool?.executionPolicy.mode === "admin") {
+      if (!$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]) {
+        executionPrincipal =
+          existing.get(toolName) ?? ToolExecutionPrincipal.ADMIN
+      } else if (tool?.executionPolicy.mode === "admin") {
         executionPrincipal = ToolExecutionPrincipal.ADMIN
       } else if (tool?.executionPolicy.mode === "configurable") {
         executionPrincipal =

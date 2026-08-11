@@ -368,6 +368,7 @@ describe("buildPromptAndTools", () => {
     } satisfies Agent
 
     const result = await buildPromptAndTools(agent, agent.operations[0], {
+      toolSecurityEnabled: true,
       executionContext: {
         tenantId: "tenant_1",
         workspaceId: "app_1",

@@ -7,6 +7,7 @@ import {
   WebSearchProvider,
   ESCALATE_TOOL_NAME,
   EscalateToolResultStatus,
+  ToolExecutionPrincipal,
   type AgentExecutionContext,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
@@ -158,6 +159,7 @@ export interface BuildPromptAndToolsOptions {
   includeGoal?: boolean
   fallbackPromptInstructions?: string
   executionContext?: AgentExecutionContext
+  toolSecurityEnabled?: boolean
 }
 
 export async function buildPromptAndTools(
@@ -210,7 +212,9 @@ export async function buildPromptAndTools(
     const { executionContext } = options
     for (const tool of enabledTools) {
       const config = toolConfigs.find(config => config.toolName === tool.name)
-      const principal = resolveToolExecutionPrincipal(tool, config)
+      const principal = options.toolSecurityEnabled
+        ? resolveToolExecutionPrincipal(tool, config)
+        : ToolExecutionPrincipal.ADMIN
       runtimes.set(tool.name, {
         executionContext,
         principal,
@@ -231,7 +235,7 @@ export async function buildPromptAndTools(
   })
 
   let resolvedSystemPrompt = systemPrompt
-  if (options.executionContext) {
+  if (options.toolSecurityEnabled) {
     resolvedSystemPrompt += `\n\nA configured tool may still be unavailable to the requesting user. If a tool call fails because it is unavailable in the security context, do not substitute a different tool or resource and do not claim the action succeeded. Tell the user that they do not have permission to perform the requested action.`
   }
   if (hasKnowledgeBases) {

@@ -40,6 +40,9 @@
   let promptHistory = $state<string[]>([])
   let previewRoleId = $state(Constants.Roles.ADMIN)
   let previewRolesLoading = $state(false)
+  let toolSecurityEnabled = $derived(
+    $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]
+  )
 
   const refreshPreviewRoles = async () => {
     if (previewRolesLoading) {
@@ -168,20 +171,22 @@
   <div class="chat-preview-header">
     <span class="chat-preview-pill">Chat preview</span>
     <div class="chat-preview-actions">
-      <label class="preview-user-picker">
-        <span>Test as</span>
-        <Select
-          value={previewRoleId}
-          options={previewRoleOptions}
-          placeholder={false}
-          size="S"
-          autoWidth
-          popoverAutoWidth
-          loading={previewRolesLoading}
-          on:click={refreshPreviewRoles}
-          on:change={event => selectPreviewRole(event.detail)}
-        />
-      </label>
+      {#if toolSecurityEnabled}
+        <label class="preview-user-picker">
+          <span>Test as</span>
+          <Select
+            value={previewRoleId}
+            options={previewRoleOptions}
+            placeholder={false}
+            size="S"
+            autoWidth
+            popoverAutoWidth
+            loading={previewRolesLoading}
+            on:click={refreshPreviewRoles}
+            on:change={event => selectPreviewRole(event.detail)}
+          />
+        </label>
+      {/if}
       <button class="chat-preview-refresh" type="button" onclick={refreshChat}>
         Clear chat
       </button>
@@ -195,7 +200,7 @@
         persistConversation={false}
         {workspaceId}
         isAgentPreviewChat={true}
-        {previewRoleId}
+        previewRoleId={toolSecurityEnabled ? previewRoleId : undefined}
         {promptHistory}
         onpromptsubmitted={handlePromptSubmitted}
         onEscalationPending={handleEscalationPending}
