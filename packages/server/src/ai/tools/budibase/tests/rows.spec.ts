@@ -1,6 +1,7 @@
 import {
   FieldType,
   PermissionLevel,
+  PermissionType,
   RelationshipType,
   TableSourceType,
   type TableSchema,
@@ -73,6 +74,7 @@ describe("AI Tools - Rows", () => {
     )
 
     expect(rowTool?.authorization).toMatchObject({
+      permissionType: PermissionType.TABLE,
       permissionLevel,
       resourceId: tableId,
     })
