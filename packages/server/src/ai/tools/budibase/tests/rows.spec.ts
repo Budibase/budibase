@@ -66,7 +66,6 @@ describe("AI Tools - Rows", () => {
     ["search_rows", PermissionLevel.READ],
     ["create_row", PermissionLevel.WRITE],
     ["update_row", PermissionLevel.WRITE],
-    ["delete_row", PermissionLevel.WRITE],
   ])("requires the correct permission for %s", (action, permissionLevel) => {
     const tableId = `${datasourceId}__Notes`
     const rowTool = getExternalRowTools("Notes").find(tool =>

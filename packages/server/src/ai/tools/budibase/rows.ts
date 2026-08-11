@@ -436,9 +436,7 @@ export const createRowTools = ({
       authorization: {
         permissionType: PermissionType.TABLE,
         permissionLevel:
-          action === "create_row" ||
-          action === "update_row" ||
-          action === "delete_row"
+          action === "create_row" || action === "update_row"
             ? PermissionLevel.WRITE
             : PermissionLevel.READ,
         resourceId: tableId,
