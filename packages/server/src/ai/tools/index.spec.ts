@@ -7,6 +7,7 @@ import {
 import { tool } from "ai"
 import { z } from "zod"
 import { toToolSet, type AiToolDefinition } from "."
+import { filterAgentToolCollectionResult } from "./authorization"
 
 const definition = (execute: jest.Mock): AiToolDefinition => ({
   name: "secured_tool",
@@ -134,15 +135,18 @@ describe("secured AI tool execution", () => {
       }
     })
     const toolDefinition = definition(execute)
-    toolDefinition.authorization!.resultFilter = {
-      collectionKey: "tables",
-      permissionType: PermissionType.TABLE,
-      permissionLevel: PermissionLevel.READ,
-      resolveResourceId: item =>
-        typeof item === "object" && item && "id" in item
-          ? String(item.id)
-          : undefined,
-    }
+    toolDefinition.filterResult = (result, runtime) =>
+      filterAgentToolCollectionResult({
+        result,
+        collectionKey: "tables",
+        permissionType: PermissionType.TABLE,
+        permissionLevel: PermissionLevel.READ,
+        resolveResourceId: item =>
+          typeof item === "object" && item && "id" in item
+            ? String(item.id)
+            : undefined,
+        runtime,
+      })
     const tools = toToolSet(
       [toolDefinition],
       new Map([

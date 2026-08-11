@@ -5,9 +5,58 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { getFullUser } from "../../utilities/users"
-import type { ToolAuthorization } from "."
+import type { ToolAuthorization, ToolAuthorizationRuntime } from "."
 
 const DENIED_MESSAGE = "Tool is not available in this security context"
+
+export const filterAgentToolCollectionResult = async ({
+  result,
+  collectionKey,
+  permissionType,
+  permissionLevel,
+  resolveResourceId,
+  runtime,
+}: {
+  result: unknown
+  collectionKey: string
+  permissionType: ToolAuthorization["permissionType"]
+  permissionLevel: ToolAuthorization["permissionLevel"]
+  resolveResourceId: (item: unknown) => string | undefined
+  runtime: ToolAuthorizationRuntime
+}) => {
+  if (!result || typeof result !== "object" || !(collectionKey in result)) {
+    return result
+  }
+  const collection = Reflect.get(result, collectionKey)
+  if (!Array.isArray(collection)) {
+    return result
+  }
+
+  const allowedItems = await Promise.all(
+    collection.map(async item => {
+      const resourceId = resolveResourceId(item)
+      if (!resourceId) {
+        return false
+      }
+      try {
+        await runtime.authorize({
+          authorization: { permissionType, permissionLevel, resourceId },
+          input: undefined,
+          executionContext: runtime.executionContext,
+          principal: runtime.principal,
+        })
+        return true
+      } catch {
+        return false
+      }
+    })
+  )
+
+  return {
+    ...result,
+    [collectionKey]: collection.filter((_item, index) => allowedItems[index]),
+  }
+}
 
 export const authorizeAgentToolCall = async ({
   authorization,

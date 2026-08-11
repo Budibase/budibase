@@ -13,6 +13,7 @@ import {
 import * as triggers from "../../../automations/triggers"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
+import { filterAgentToolCollectionResult } from "../authorization"
 
 const TRIGGER_AUTOMATION_BASE_DESCRIPTION =
   "Trigger this automation (APP triggers only). Returns all step outputs."
@@ -90,7 +91,10 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
     authorization: {
       permissionType: PermissionType.WORKSPACE,
       permissionLevel: PermissionLevel.READ,
-      resultFilter: {
+    },
+    filterResult: (result, runtime) =>
+      filterAgentToolCollectionResult({
+        result,
         collectionKey: "automations",
         permissionType: PermissionType.AUTOMATION,
         permissionLevel: PermissionLevel.READ,
@@ -98,8 +102,8 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
           typeof automation === "object" && automation && "_id" in automation
             ? String(automation._id)
             : undefined,
-      },
-    },
+        runtime,
+      }),
     tool: tool({
       description: "List all automations in the current workspace",
       inputSchema: z.object({}),

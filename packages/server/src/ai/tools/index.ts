@@ -12,12 +12,6 @@ export interface ToolAuthorization {
   permissionLevel: PermissionLevel
   resourceId?: string
   resolveResourceId?: (input: unknown) => string | undefined
-  resultFilter?: {
-    collectionKey: string
-    permissionType: PermissionType
-    permissionLevel: PermissionLevel
-    resolveResourceId: (item: unknown) => string | undefined
-  }
 }
 
 export interface AiToolDefinition {
@@ -30,6 +24,10 @@ export interface AiToolDefinition {
   sourceLabel?: string
   sourceIconType?: string
   authorization?: ToolAuthorization
+  filterResult?: (
+    result: unknown,
+    runtime: ToolAuthorizationRuntime
+  ) => Promise<unknown>
 }
 
 export interface ToolAuthorizationRuntime {
@@ -87,50 +85,10 @@ const wrapTool = (
       if (failureMessage) {
         throw new Error(failureMessage)
       }
-      const authorization = toolDef.authorization
-      const resultFilter = authorization?.resultFilter
-      let authorizedResult = result
-      if (
-        runtime &&
-        authorization &&
-        resultFilter &&
-        result &&
-        typeof result === "object" &&
-        resultFilter.collectionKey in result
-      ) {
-        const collection = Reflect.get(result, resultFilter.collectionKey)
-        if (Array.isArray(collection)) {
-          const allowedItems = await Promise.all(
-            collection.map(async item => {
-              const resourceId = resultFilter.resolveResourceId(item)
-              if (!resourceId) {
-                return false
-              }
-              try {
-                await runtime.authorize({
-                  authorization: {
-                    permissionType: resultFilter.permissionType,
-                    permissionLevel: resultFilter.permissionLevel,
-                    resourceId,
-                  },
-                  input: undefined,
-                  executionContext: runtime.executionContext,
-                  principal: runtime.principal,
-                })
-                return true
-              } catch {
-                return false
-              }
-            })
-          )
-          authorizedResult = {
-            ...result,
-            [resultFilter.collectionKey]: collection.filter(
-              (_item, index) => allowedItems[index]
-            ),
-          }
-        }
-      }
+      const authorizedResult =
+        runtime && toolDef.filterResult
+          ? await toolDef.filterResult(result, runtime)
+          : result
       if (runtime) {
         console.log("Agent tool execution", {
           outcome: "success",

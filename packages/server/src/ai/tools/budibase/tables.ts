@@ -3,6 +3,7 @@ import { tool } from "ai"
 import { z } from "zod"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
+import { filterAgentToolCollectionResult } from "../authorization"
 import { sanitizeAgentTable } from "./tableScope"
 
 const resolveTableId = (table: unknown) => {
@@ -32,13 +33,16 @@ export const createTableTools = (
       authorization: {
         permissionType: PermissionType.WORKSPACE,
         permissionLevel: PermissionLevel.READ,
-        resultFilter: {
+      },
+      filterResult: (result, runtime) =>
+        filterAgentToolCollectionResult({
+          result,
           collectionKey: "tables",
           permissionType: PermissionType.TABLE,
           permissionLevel: PermissionLevel.READ,
           resolveResourceId: resolveTableId,
-        },
-      },
+          runtime,
+        }),
       tool: tool({
         description: "List tables configured for the current operation",
         inputSchema: z.object({
