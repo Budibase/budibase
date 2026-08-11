@@ -7610,11 +7610,6 @@
     "@types/http-errors" "*"
     "@types/node" "*"
 
-"@types/shortid@^2.2.0":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@types/shortid/-/shortid-2.2.0.tgz#905990fc4275f77e60ab0cd9f791b91a3d4bff04"
-  integrity sha512-jBG2FgBxcaSf0h662YloTGA32M8UtNbnTPekUr/eCmWXq0JWQXgNEQ/P5Gf05Cv66QZtE1Ttr83I1AJBPdzCBg==
-
 "@types/ssh2-streams@*":
   version "0.1.13"
   resolved "https://registry.yarnpkg.com/@types/ssh2-streams/-/ssh2-streams-0.1.13.tgz#f8d34a22be50fb8dbafbb2bbc289add0d22daa51"
@@ -10624,11 +10619,6 @@ data-view-byte-offset@^1.0.1:
     call-bound "^1.0.2"
     es-errors "^1.3.0"
     is-data-view "^1.0.1"
-
-date-fns@^4.1.0:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-4.1.0.tgz#64b3d83fff5aa80438f5b1a633c2e83b8a1c2d14"
-  integrity sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==
 
 dateformat@^4.6.3:
   version "4.6.3"
@@ -17651,20 +17641,15 @@ nanoclone@^0.2.1:
   resolved "https://registry.yarnpkg.com/nanoclone/-/nanoclone-0.2.1.tgz#dd4090f8f1a110d26bb32c49ed2f5b9235209ed4"
   integrity sha512-wynEP02LmIbLpcYw8uBKpcfF6dmg2vcpKqxeH5UcoKEYdExslsdUA4ugFauuaeYdTB76ez6gJW8XAZ6CgkXYxA==
 
-nanoid@^2.1.0:
-  version "2.1.11"
-  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-2.1.11.tgz#ec24b8a758d591561531b4176a01e3ab4f0f0280"
-  integrity sha512-s/snB+WGm6uwi0WjsZdaVcuf3KJXlfGl2LcxgwkEwJF0D/BWzVWAZW/XY4bFaiR7s0Jk3FPvlnepg1H1b1UwlA==
+nanoid@6.0.1:
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-6.0.1.tgz#a04a2304f05b620c600ae8464d94c325ceeebd35"
+  integrity sha512-3wVS3i51pE2pi1k5FFL/95BGfVS0kSsvDVuGXHOtxox/TywUmtgq+3qiTOTbs9J7KfHaXPiN171k/A6dBnaXFw==
 
 nanoid@^3.3.16:
   version "3.3.16"
   resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.16.tgz#a04d8ec4b1f10009d2d533947aefe4293737816c"
   integrity sha512-bzlKTyNJ7+LdGIIwy8ijFpIqEQIvafahV7eYykJ8Cvh42EdJeODoJ6gUJXpQJvej1BddH8OqTXZNE/KfbWAu8Q==
-
-nanoid@^3.3.8:
-  version "3.3.11"
-  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.11.tgz#4f4f112cefbe303202f2199838128936266d185b"
-  integrity sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==
 
 napi-build-utils@^2.0.0:
   version "2.0.0"
@@ -21087,20 +21072,6 @@ shell-exec@1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/shell-exec/-/shell-exec-1.0.2.tgz#2e9361b0fde1d73f476c4b6671fa17785f696756"
   integrity sha512-jyVd+kU2X+mWKMmGhx4fpWbPsjvD53k9ivqetutVW/BQ+WIZoDoP4d8vUMGezV6saZsiNoW2f9GIhg9Dondohg==
-
-shortid@2.2.15:
-  version "2.2.15"
-  resolved "https://registry.yarnpkg.com/shortid/-/shortid-2.2.15.tgz#2b902eaa93a69b11120373cd42a1f1fe4437c122"
-  integrity sha512-5EaCy2mx2Jgc/Fdn9uuDuNIIfWBpzY4XIlhoqtXF6qsf+/+SGZ+FxDdX/ZsMZiWupIWNqAEmiNY4RC+LSmCeOw==
-  dependencies:
-    nanoid "^2.1.0"
-
-shortid@^2.2.15:
-  version "2.2.17"
-  resolved "https://registry.yarnpkg.com/shortid/-/shortid-2.2.17.tgz#ea87297a36b7edd10a57818fbac5be798e0994bb"
-  integrity sha512-GpbM3gLF1UUXZvQw6MCyulHkWbRseNO4cyBEZresZRorwl1+SLu1ZdqgVtuwqz8mB6RpwPkm541mYSqrKyJSaA==
-  dependencies:
-    nanoid "^3.3.8"
 
 side-channel-list@^1.0.0:
   version "1.0.0"

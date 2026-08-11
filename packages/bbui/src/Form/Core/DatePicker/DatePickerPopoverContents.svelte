@@ -6,7 +6,7 @@
   import { stringifyDate } from "../../../helpers"
   import Calendar from "./Calendar.svelte"
   import TimePicker from "./TimePicker.svelte"
-  import type { Weekday } from "./utils"
+  import { getLocaleStartDayOfWeek, type Weekday } from "./utils"
 
   export let useKeyboardShortcuts = true
   export let ignoreTimezones = false
@@ -14,7 +14,8 @@
   export let timeOnly = false
   export let setTimeTo: string | undefined = undefined
   export let value: Dayjs | null | undefined = null
-  export let startDayOfWeek: Weekday = "Monday"
+  const browserStartDayOfWeek = getLocaleStartDayOfWeek()
+  export let startDayOfWeek: Weekday | undefined = undefined
   export let calendarLabels = resolveTranslationGroup("calendar")
 
   const dispatch = createEventDispatcher<{ change: string | null }>()
@@ -22,6 +23,7 @@
 
   $: showCalendar = !timeOnly
   $: showTime = enableTime || timeOnly
+  $: resolvedStartDayOfWeek = startDayOfWeek ?? browserStartDayOfWeek
 
   const setToNow = () => {
     const now = dayjs().second(0).millisecond(0)
@@ -65,7 +67,7 @@
   {#if showCalendar}
     <Calendar
       {value}
-      {startDayOfWeek}
+      startDayOfWeek={resolvedStartDayOfWeek}
       {calendarLabels}
       on:change={e => handleChange(e.detail)}
       bind:this={calendar}
