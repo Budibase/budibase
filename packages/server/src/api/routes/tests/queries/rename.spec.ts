@@ -1,11 +1,6 @@
-import { SourceName, ToolExecutionPrincipal } from "@budibase/types"
+import { SourceName } from "@budibase/types"
+import { requesterTools } from "../../../../sdk/workspace/ai/tests/utils"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-
-const requesterTools = (...toolNames: string[]) =>
-  toolNames.map(toolName => ({
-    toolName,
-    executionPrincipal: ToolExecutionPrincipal.REQUESTER,
-  }))
 
 describe.each([
   {

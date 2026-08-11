@@ -4,7 +4,6 @@ import {
   AgentChannelProvider,
   DocumentType,
   FeatureFlag,
-  ToolExecutionPrincipal,
 } from "@budibase/types"
 import type {
   Agent,
@@ -21,15 +20,10 @@ import TestConfiguration from "../utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../utilities/aiConfig"
 import sdk from "../../sdk"
 import * as agentLogs from "../../sdk/workspace/ai/agentLogs"
+import { requesterTools } from "../../sdk/workspace/ai/tests/utils"
 import type { LanguageModelV3 } from "@ai-sdk/provider"
 import { webhookChat } from "../../api/controllers/ai"
 import { MockLanguageModelV3 } from "ai/test"
-
-const requesterTools = (...toolNames: string[]) =>
-  toolNames.map(toolName => ({
-    toolName,
-    executionPrincipal: ToolExecutionPrincipal.REQUESTER,
-  }))
 
 const mockAiConfigsFind = jest.fn()
 
