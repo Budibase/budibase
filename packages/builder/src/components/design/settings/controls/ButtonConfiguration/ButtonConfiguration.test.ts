@@ -1,10 +1,11 @@
+import { Helpers } from "@budibase/bbui"
 import { fireEvent, render } from "@testing-library/svelte"
 import { describe, expect, it, vi } from "vitest"
 import MockSlot from "@/test/mocks/MockSlot.svelte"
 import MockDraggableList from "./tests/MockDraggableList.svelte"
 
 const mocks = vi.hoisted(() => ({
-  uuid: vi.fn(() => crypto.randomUUID()),
+  uuid: vi.fn(() => Helpers.uuid()),
 }))
 
 vi.mock("@budibase/bbui", () => ({
