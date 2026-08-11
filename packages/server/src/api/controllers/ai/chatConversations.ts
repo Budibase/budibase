@@ -503,12 +503,12 @@ const resolveChatStreamRequest = async (
     throw new HTTPError("previewRoleId requires preview mode", 400)
   }
 
-  if (isPreview && !isDevWorkspaceID(workspaceId)) {
-    throw new HTTPError("Preview mode requires a development workspace", 400)
-  }
-
   if (isPreview && !isBuilderOrAdmin) {
     throw new HTTPError("Forbidden", 403)
+  }
+
+  if (isPreview && !isDevWorkspaceID(workspaceId)) {
+    throw new HTTPError("Preview mode requires a development workspace", 400)
   }
 
   let user = ctx.user

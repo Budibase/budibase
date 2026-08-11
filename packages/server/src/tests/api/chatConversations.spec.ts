@@ -1598,8 +1598,8 @@ describe("Agent chat tool call tracking", () => {
 
       expect(res.status).toBe(200)
       expect(finishMetadata?.usage?.segments).toEqual([
-        { type: "system", tokens: 2 },
-        { type: "input", tokens: 1698 },
+        { type: "system", tokens: 224 },
+        { type: "input", tokens: 1476 },
         { type: "output", tokens: 120 },
       ])
     })
