@@ -7571,11 +7571,6 @@
     "@types/http-errors" "*"
     "@types/node" "*"
 
-"@types/shortid@^2.2.0":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@types/shortid/-/shortid-2.2.0.tgz#905990fc4275f77e60ab0cd9f791b91a3d4bff04"
-  integrity sha512-jBG2FgBxcaSf0h662YloTGA32M8UtNbnTPekUr/eCmWXq0JWQXgNEQ/P5Gf05Cv66QZtE1Ttr83I1AJBPdzCBg==
-
 "@types/smtp-server@^3.5.13":
   version "3.5.13"
   resolved "https://registry.yarnpkg.com/@types/smtp-server/-/smtp-server-3.5.13.tgz#78dee0c47067e364fc209db2e0e80d80f52dcb92"
@@ -7583,7 +7578,7 @@
   dependencies:
     "@types/node" "*"
     "@types/nodemailer" "*"
- 
+
 "@types/ssh2-streams@*":
   version "0.1.13"
   resolved "https://registry.yarnpkg.com/@types/ssh2-streams/-/ssh2-streams-0.1.13.tgz#f8d34a22be50fb8dbafbb2bbc289add0d22daa51"
