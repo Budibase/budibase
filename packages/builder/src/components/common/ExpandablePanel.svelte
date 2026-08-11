@@ -21,11 +21,13 @@
     panelZIndex = $bindable(BASE_Z_INDEX),
     children,
     headerActions,
+    headerLeading,
   } = $props<{
     title?: string
     panelZIndex?: number
     children?: (_: boolean) => any
     headerActions?: () => any
+    headerLeading?: () => any
   }>()
 
   const EXPANDED_MARGIN = 0.15
@@ -158,6 +160,7 @@
   bind:this={collapsedEl}
 >
   <div class="panel-header">
+    {@render headerLeading?.()}
     <div class="panel-title">{title}</div>
     {@render headerActions?.()}
     <ActionButton
@@ -200,6 +203,7 @@
       style="z-index:{zIndex}"
     >
       <div class="panel-header">
+        {@render headerLeading?.()}
         <div class="panel-title">{title}</div>
         {@render headerActions?.()}
         <ActionButton
