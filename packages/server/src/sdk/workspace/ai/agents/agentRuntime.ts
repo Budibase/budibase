@@ -11,6 +11,8 @@ import {
   EscalateToolResultStatus,
   FeatureFlag,
   ToolExecutionPrincipal,
+  type AgentExecutionContext,
+  type AgentRequester,
 } from "@budibase/types"
 import {
   Output,
@@ -335,8 +337,7 @@ export interface PrepareAgentRunContextParams {
   buildPromptOptions?: BuildPromptAndToolsOptions
   // When set, pin the run to this operation instead of routing on the question.
   operationId?: string
-  requestingUserId?: string
-  requestingUserRoleId?: string
+  requester?: AgentRequester
 }
 
 export interface AgentRunContext {
@@ -347,6 +348,7 @@ export interface AgentRunContext {
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
+  executionContext?: AgentExecutionContext
 }
 
 const buildOperationsSummaryPrompt = (operations: AgentOperation[]) =>
@@ -377,8 +379,7 @@ export const prepareAgentRunContext = async ({
   span,
   buildPromptOptions,
   operationId,
-  requestingUserId,
-  requestingUserRoleId,
+  requester,
 }: PrepareAgentRunContextParams): Promise<AgentRunContext> => {
   const llm = await sdk.ai.llm.createLLM(
     aiConfigId ?? agent.aiconfig,
@@ -393,6 +394,21 @@ export const prepareAgentRunContext = async ({
     operationId,
     llm,
   })
+  let executionContext: AgentExecutionContext | undefined
+  if (routingDecision.operation && requester) {
+    const workspaceId = context.getWorkspaceId()
+    if (!workspaceId) {
+      throw new Error("Workspace context is required")
+    }
+    executionContext = {
+      tenantId: context.getTenantId(),
+      workspaceId,
+      agentId,
+      operationId: routingDecision.operation.id,
+      conversationId: sessionId,
+      requester,
+    }
+  }
   const promptAndTools = await buildPromptAndTools(
     agent,
     routingDecision.operation,
@@ -402,14 +418,7 @@ export const prepareAgentRunContext = async ({
         routingDecision.action === "summarize_operations"
           ? buildOperationsSummaryPrompt(getLiveOperations(agent))
           : buildPromptOptions?.fallbackPromptInstructions,
-      execution:
-        routingDecision.operation && requestingUserId
-          ? {
-              requestingUserId,
-              requestingUserRoleId,
-              sessionId,
-            }
-          : undefined,
+      executionContext,
     }
   )
 
@@ -421,6 +430,7 @@ export const prepareAgentRunContext = async ({
         ? routingDecision.intent
         : undefined,
     routingAction: routingDecision.action,
+    executionContext,
     ...promptAndTools,
   }
 }
@@ -444,6 +454,22 @@ const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
       )
     })
   )
+
+const getAgentRequester = ({
+  user,
+  chat,
+}: {
+  user: ContextUser
+  chat?: ChatConversationRequest
+}): AgentRequester => {
+  if (chat?.isPreview && chat.previewRoleId) {
+    return {
+      userId: user._id!,
+      authorization: { mode: "preview", roleId: chat.previewRoleId },
+    }
+  }
+  return { userId: user._id!, authorization: { mode: "current" } }
+}
 
 export const prepareAgentChatRun = async ({
   agent,
@@ -469,6 +495,7 @@ export const prepareAgentChatRun = async ({
     errorLabel,
     startedAt,
   })
+  const requester = getAgentRequester({ user, chat })
 
   const [runContext, modelMessages] = await Promise.all([
     prepareAgentRunContext({
@@ -478,8 +505,7 @@ export const prepareAgentChatRun = async ({
       latestQuestion,
       aiConfigId,
       operationId,
-      requestingUserId: user._id!,
-      requestingUserRoleId: chat?.isPreview ? chat.previewRoleId : undefined,
+      requester,
       buildPromptOptions: {
         baseSystemPrompt: ai.agentSystemPrompt(user, chat?.timezone),
         includeGoal: false,
@@ -493,6 +519,7 @@ export const prepareAgentChatRun = async ({
     operationIntent,
     tools,
     toolDisplayNames,
+    executionContext,
     systemPrompt: baseSystemPrompt,
   } = runContext
   const retrievedKnowledgeSourceById = new Map<
@@ -532,9 +559,8 @@ export const prepareAgentChatRun = async ({
     if (selectedOperation && recipients?.length) {
       // Always the real tool, on resumes too. A resumed run must still be
       // able to raise a genuinely new escalation.
-      const workspaceId = context.getWorkspaceId()
-      if (!workspaceId) {
-        throw new Error("Workspace context is required")
+      if (!executionContext) {
+        throw new Error("Agent execution context is required")
       }
       const escalationPrincipal =
         selectedOperation.enabledTools?.find(
@@ -553,17 +579,7 @@ export const prepareAgentChatRun = async ({
         getMessages: () => modelMessages,
         getRequestId: () => getRequestId?.(),
         executionPrincipal: escalationPrincipal,
-        executionContext: {
-          tenantId: context.getTenantId(),
-          workspaceId,
-          agentId,
-          operationId: selectedOperation.id,
-          conversationId: sessionId,
-          requestingUserId: user?._id || "",
-          requestingUserRoleId: chat?.isPreview
-            ? chat.previewRoleId
-            : undefined,
-        },
+        executionContext,
       })
     }
 

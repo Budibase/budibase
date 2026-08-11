@@ -33,12 +33,14 @@ export interface AiToolDefinition {
 export interface ToolAuthorizationRuntime {
   executionContext: AgentExecutionContext
   principal: ToolExecutionPrincipal
-  authorize: (params: {
-    authorization: ToolAuthorization
-    input: unknown
-    executionContext: AgentExecutionContext
-    principal: ToolExecutionPrincipal
-  }) => Promise<void>
+  authorize: (params: ToolAuthorizationRequest) => Promise<void>
+}
+
+export interface ToolAuthorizationRequest {
+  authorization: ToolAuthorization
+  input: unknown
+  executionContext: AgentExecutionContext
+  principal: ToolExecutionPrincipal
 }
 
 const getToolFailure = (result: unknown): string | undefined => {
@@ -57,6 +59,21 @@ const getToolFailure = (result: unknown): string | undefined => {
 
   return String(error)
 }
+
+const logToolExecution = (
+  outcome: "success" | "error",
+  toolDef: AiToolDefinition,
+  runtime: ToolAuthorizationRuntime
+) =>
+  console.log("Agent tool execution", {
+    outcome,
+    toolName: toolDef.name,
+    requesterId: runtime.executionContext.requester.userId,
+    effectivePrincipal: runtime.principal,
+    agentId: runtime.executionContext.agentId,
+    operationId: runtime.executionContext.operationId,
+    conversationId: runtime.executionContext.conversationId,
+  })
 
 const wrapTool = (
   toolDef: AiToolDefinition,
@@ -90,28 +107,12 @@ const wrapTool = (
           ? await toolDef.filterResult(result, runtime)
           : result
       if (runtime) {
-        console.log("Agent tool execution", {
-          outcome: "success",
-          toolName: toolDef.name,
-          requesterId: runtime.executionContext.requestingUserId,
-          effectivePrincipal: runtime.principal,
-          agentId: runtime.executionContext.agentId,
-          operationId: runtime.executionContext.operationId,
-          conversationId: runtime.executionContext.conversationId,
-        })
+        logToolExecution("success", toolDef, runtime)
       }
       return authorizedResult
     } catch (error) {
       if (runtime) {
-        console.log("Agent tool execution", {
-          outcome: "error",
-          toolName: toolDef.name,
-          requesterId: runtime.executionContext.requestingUserId,
-          effectivePrincipal: runtime.principal,
-          agentId: runtime.executionContext.agentId,
-          operationId: runtime.executionContext.operationId,
-          conversationId: runtime.executionContext.conversationId,
-        })
+        logToolExecution("error", toolDef, runtime)
       }
       throw error
     }

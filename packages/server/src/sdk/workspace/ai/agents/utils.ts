@@ -25,10 +25,11 @@ import {
   createDatasourceQueryTool,
   toToolSet,
   type AiToolDefinition,
+  type ToolAuthorizationRuntime,
 } from "../../../../ai/tools"
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
-import { context, HTTPError } from "@budibase/backend-core"
+import { HTTPError } from "@budibase/backend-core"
 import { authorizeAgentToolCall } from "../../../../ai/tools/authorization"
 
 const HELPER_TOOL_NAMES = new Set([
@@ -155,11 +156,7 @@ export interface BuildPromptAndToolsOptions {
   baseSystemPrompt?: string
   includeGoal?: boolean
   fallbackPromptInstructions?: string
-  execution?: {
-    requestingUserId: string
-    requestingUserRoleId?: string
-    sessionId: string
-  }
+  executionContext?: AgentExecutionContext
 }
 
 export async function buildPromptAndTools(
@@ -207,21 +204,9 @@ export async function buildPromptAndTools(
     enabledTools.push(createKnowledgeSearchTool(agentId, operation.id))
   }
 
-  const runtimes = new Map()
-  if (operation && options.execution) {
-    const workspaceId = context.getWorkspaceId()
-    if (!workspaceId) {
-      throw new HTTPError("Workspace context is required", 400)
-    }
-    const executionContext: AgentExecutionContext = {
-      tenantId: context.getTenantId(),
-      workspaceId,
-      agentId,
-      operationId: operation.id,
-      conversationId: options.execution.sessionId,
-      requestingUserId: options.execution.requestingUserId,
-      requestingUserRoleId: options.execution.requestingUserRoleId,
-    }
+  const runtimes = new Map<string, ToolAuthorizationRuntime>()
+  if (operation && options.executionContext) {
+    const { executionContext } = options
     for (const tool of enabledTools) {
       const config = toolConfigs.find(config => config.toolName === tool.name)
       const principal =
@@ -249,7 +234,7 @@ export async function buildPromptAndTools(
     }
   }
 
-  const authorizedTools = options.execution
+  const authorizedTools = options.executionContext
     ? enabledTools.filter(tool => runtimes.has(tool.name))
     : enabledTools
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({

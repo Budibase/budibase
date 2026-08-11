@@ -138,14 +138,18 @@ export interface AgentOperationToolConfig {
   executionPrincipal: ToolExecutionPrincipal
 }
 
+export interface AgentRequester {
+  userId: string
+  authorization: { mode: "current" } | { mode: "preview"; roleId: string }
+}
+
 export interface AgentExecutionContext {
   tenantId: string
   workspaceId: string
   agentId: string
   operationId: string
   conversationId: string
-  requestingUserId: string
-  requestingUserRoleId?: string
+  requester: AgentRequester
 }
 
 export interface AgentOperation {

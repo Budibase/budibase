@@ -1,11 +1,12 @@
 import { context, permissions, roles, users } from "@budibase/backend-core"
-import {
-  ToolExecutionPrincipal,
-  type AgentExecutionContext,
-} from "@budibase/types"
+import { ToolExecutionPrincipal } from "@budibase/types"
 import sdk from "../../sdk"
 import { getFullUser } from "../../utilities/users"
-import type { ToolAuthorization, ToolAuthorizationRuntime } from "."
+import type {
+  ToolAuthorization,
+  ToolAuthorizationRequest,
+  ToolAuthorizationRuntime,
+} from "."
 
 const DENIED_MESSAGE = "Tool is not available in this security context"
 
@@ -63,16 +64,11 @@ export const authorizeAgentToolCall = async ({
   input,
   executionContext,
   principal,
-}: {
-  authorization: ToolAuthorization
-  input: unknown
-  executionContext: AgentExecutionContext
-  principal: ToolExecutionPrincipal
-}) => {
+}: ToolAuthorizationRequest) => {
   const audit = (decision: "allowed" | "denied", resourceId?: string) =>
     console.log("Agent tool authorization", {
       decision,
-      requesterId: executionContext.requestingUserId,
+      requesterId: executionContext.requester.userId,
       effectivePrincipal: principal,
       agentId: executionContext.agentId,
       operationId: executionContext.operationId,
@@ -95,24 +91,31 @@ export const authorizeAgentToolCall = async ({
 
     // Always rehydrate the requester, including admin-authority calls. This
     // makes removal of the initiating user revoke delayed work.
-    const requestingUser = await getFullUser(executionContext.requestingUserId)
+    const { requester } = executionContext
+    const requestingUser = await getFullUser(requester.userId)
+    if (
+      requester.authorization.mode === "current" &&
+      requestingUser.roleId === roles.BUILTIN_ROLE_IDS.PUBLIC
+    ) {
+      throw new Error(DENIED_MESSAGE)
+    }
     if (principal === ToolExecutionPrincipal.ADMIN) {
       audit("allowed", resourceId)
       return
     }
     if (
-      !executionContext.requestingUserRoleId &&
+      requester.authorization.mode === "current" &&
       users.isBuilder(requestingUser, executionContext.workspaceId)
     ) {
       audit("allowed", resourceId)
       return
     }
 
-    const userRoles = await roles.getUserRoleHierarchy(
-      executionContext.requestingUserRoleId ||
-        requestingUser.roleId ||
-        roles.BUILTIN_ROLE_IDS.PUBLIC
-    )
+    let roleId = requestingUser.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
+    if (requester.authorization.mode === "preview") {
+      roleId = requester.authorization.roleId
+    }
+    const userRoles = await roles.getUserRoleHierarchy(roleId)
     if (resourceId) {
       const resourcePermissions =
         await sdk.permissions.getResourcePerms(resourceId)

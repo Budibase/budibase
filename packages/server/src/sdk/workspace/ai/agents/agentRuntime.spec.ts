@@ -95,6 +95,11 @@ jest.mock("@budibase/backend-core", () => {
       get: jest.fn().mockResolvedValue(undefined),
       store: jest.fn().mockResolvedValue(undefined),
     },
+    context: {
+      ...actual.context,
+      getTenantId: jest.fn(() => "tenant_1"),
+      getWorkspaceId: jest.fn(() => "app_1"),
+    },
   }
 })
 
@@ -475,7 +480,7 @@ describe("prepareAgentRunContext", () => {
     expect(buildPromptAndTools).toHaveBeenCalledWith(
       agent,
       agent.operations[1],
-      expect.objectContaining({ execution: undefined })
+      expect.objectContaining({ executionContext: undefined })
     )
   })
 
@@ -495,17 +500,26 @@ describe("prepareAgentRunContext", () => {
       agentId: "agent_1",
       sessionId: "session_1",
       latestQuestion: "Show my leave requests",
-      requestingUserId: "user_1",
+      requester: {
+        userId: "user_1",
+        authorization: { mode: "current" },
+      },
     })
 
     expect(buildPromptAndTools).toHaveBeenCalledWith(
       agent,
       agent.operations[1],
       expect.objectContaining({
-        execution: {
-          requestingUserId: "user_1",
-          requestingUserRoleId: undefined,
-          sessionId: "session_1",
+        executionContext: {
+          tenantId: expect.any(String),
+          workspaceId: expect.any(String),
+          agentId: "agent_1",
+          operationId: "operation_2",
+          conversationId: "session_1",
+          requester: {
+            userId: "user_1",
+            authorization: { mode: "current" },
+          },
         },
       })
     )
@@ -667,8 +681,37 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
       agent,
       operationWithoutRecipients,
       expect.objectContaining({
-        execution: expect.objectContaining({
-          requestingUserRoleId: undefined,
+        executionContext: expect.objectContaining({
+          requester: {
+            userId: "user_1",
+            authorization: { mode: "current" },
+          },
+        }),
+      })
+    )
+  })
+
+  it("uses public access as a preview role", async () => {
+    await runFor(operationWithoutRecipients, {
+      user: { _id: "user_1" } as ContextUser,
+      chat: {
+        chatAppId: "chatapp_1",
+        agentId: "agent_1",
+        messages: [],
+        isPreview: true,
+        previewRoleId: "PUBLIC",
+      },
+    })
+
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      operationWithoutRecipients,
+      expect.objectContaining({
+        executionContext: expect.objectContaining({
+          requester: {
+            userId: "user_1",
+            authorization: { mode: "preview", roleId: "PUBLIC" },
+          },
         }),
       })
     )

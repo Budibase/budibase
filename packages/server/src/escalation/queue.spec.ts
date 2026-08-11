@@ -309,7 +309,10 @@ describe("resumeOperation", () => {
                 agentId: "agent_1",
                 operationId: "op_1",
                 conversationId: "session_1",
-                requestingUserId: config.getUser()._id!,
+                requester: {
+                  userId: config.getUser()._id!,
+                  authorization: { mode: "current" },
+                },
               },
             })
 

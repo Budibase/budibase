@@ -31,7 +31,10 @@ const executionContext = {
   agentId: "agent_1",
   operationId: "operation_1",
   conversationId: "conversation_1",
-  requestingUserId: "user_1",
+  requester: {
+    userId: "user_1",
+    authorization: { mode: "current" as const },
+  },
 }
 
 describe("secured AI tool execution", () => {
