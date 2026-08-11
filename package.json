@@ -24,7 +24,7 @@
     "jest": "^30.0.5",
     "kill-port": "^1.6.1",
     "knip": "^5.85.0",
-    "lerna": "^9.0.3",
+    "lerna": "^10.0.0",
     "load-tsconfig": "^0.2.5",
     "madge": "^6.0.0",
     "prettier": "3.5.3",
@@ -48,7 +48,7 @@
     "build:npm": "DISABLE_V8_COMPILE_CACHE=1 yarn build --scope @budibase/backend-core --scope @budibase/bbui --scope @budibase/cli --scope @budibase/frontend-core --scope @budibase/pro --scope @budibase/sdk --scope @budibase/shared-core --scope @budibase/string-templates --scope @budibase/types",
     "build:apps": "DISABLE_V8_COMPILE_CACHE=1 yarn build --scope @budibase/server --scope @budibase/worker",
     "build:cli": "yarn build --scope @budibase/cli",
-    "build:dev": "lerna run --stream prebuild && yarn nx run-many --target=build --output-style=dynamic --watch --preserveWatchOutput",
+    "build:dev": "lerna run --stream prebuild && lerna run --stream build && lerna watch -- lerna run build --scope=\\$LERNA_PACKAGE_NAME",
     "precheck:types": "yarn build --scope @budibase/types --scope @budibase/backend-core --scope @budibase/shared-core --scope @budibase/pro",
     "check:types": "lerna run check:types",
     "check:missing-deps": "knip --include unlisted --workspace packages/server --workspace packages/backend-core --workspace packages/worker",
@@ -134,7 +134,7 @@
     "semver": "7.5.3",
     "http-cache-semantics": "4.1.1",
     "msgpackr": "1.10.1",
-    "axios": "1.15.2",
+    "axios": "1.19.0",
     "xml2js": "0.6.2",
     "passport": "0.6.0",
     "@azure/identity": "4.2.1",
@@ -146,7 +146,7 @@
     "ws": "8.21.0"
   },
   "engines": {
-    "node": ">=22.0.0 <23.0.0"
+    "node": ">=22.13.0 <23.0.0"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.20",
