@@ -58,25 +58,6 @@ describe("validatedConfig store", () => {
     },
   }
 
-  const mockRestIntegration = {
-    ...mockIntegration,
-    name: SourceName.REST,
-    datasource: {
-      rejectUnauthorized: {
-        type: DatasourceFieldType.BOOLEAN,
-        display: "Reject Unauthorized",
-      },
-      downloadImages: {
-        type: DatasourceFieldType.BOOLEAN,
-        display: "Download images",
-      },
-      allowCrossOriginPaths: {
-        type: DatasourceFieldType.BOOLEAN,
-        display: "Allow cross-origin paths",
-      },
-    },
-  }
-
   const mockConfig = {
     server: "localhost",
     port: 1433,
@@ -103,18 +84,6 @@ describe("validatedConfig store", () => {
 
       expect(storeValue.config).toEqual({})
       expect(storeValue.validatedConfig).toHaveLength(3)
-    })
-
-    it("keeps the REST cross-origin flag in the validated config", () => {
-      const store = createValidatedConfigStore(mockRestIntegration, {
-        allowCrossOriginPaths: true,
-      })
-      const storeValue = get(store)
-
-      expect(storeValue.validatedConfig.map(field => field.key)).toContain(
-        "allowCrossOriginPaths"
-      )
-      expect(storeValue.config.allowCrossOriginPaths).toBe(true)
     })
   })
 
