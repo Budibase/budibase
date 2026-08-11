@@ -30,10 +30,7 @@ import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 import { context, HTTPError } from "@budibase/backend-core"
 import { authorizeAgentToolCall } from "../../../../ai/tools/authorization"
-import {
-  getReadableQueryToolBinding,
-  isQueryToolType,
-} from "@budibase/shared-core"
+import { getReadableAgentToolBinding } from "@budibase/shared-core"
 
 const HELPER_TOOL_NAMES = new Set([
   "list_tables",
@@ -71,36 +68,6 @@ export const replaceUnavailableToolBindings = ({
       `[Unavailable in this security context: ${binding.label}]`
     )
   }, promptInstructions)
-}
-
-const sanitizeBindingSegment = (value: string) =>
-  value.replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_|_$/g, "")
-
-const getToolReadableBinding = (tool: AiToolDefinition) => {
-  const displayName = tool.readableName || tool.name
-  if (isQueryToolType(tool.sourceType)) {
-    return getReadableQueryToolBinding({
-      sourceType: tool.sourceType,
-      sourceLabel: tool.sourceLabel,
-      queryName: displayName,
-    })
-  }
-  let prefix = "tool"
-  if (
-    tool.sourceType === ToolType.INTERNAL_TABLE ||
-    tool.sourceType === ToolType.AUTOMATION
-  ) {
-    prefix = "budibase"
-  } else if (tool.sourceType === ToolType.EXTERNAL_TABLE) {
-    prefix = tool.sourceLabel
-      ? sanitizeBindingSegment(tool.sourceLabel)
-      : "external"
-  } else if (tool.sourceType === ToolType.SEARCH) {
-    prefix = "search"
-  } else if (tool.sourceType === ToolType.ESCALATION) {
-    prefix = "escalation"
-  }
-  return `${prefix}.${displayName}`
 }
 
 export const getLiveOperations = (agent: Agent): AgentOperation[] =>
@@ -328,7 +295,11 @@ export async function buildPromptAndTools(
             !authorizedToolNames.has(tool.name)
         )
         .map(tool => ({
-          readableBinding: getToolReadableBinding(tool),
+          readableBinding: getReadableAgentToolBinding({
+            sourceType: tool.sourceType,
+            sourceLabel: tool.sourceLabel,
+            toolName: tool.readableName || tool.name,
+          }),
           label: tool.readableName || tool.name,
         }))
     : []
