@@ -1,17 +1,11 @@
-import {
-  getQueryToolBindings,
-  getReadableAgentToolBinding,
-  type QueryToolType,
-} from "@budibase/shared-core"
+import { getQueryToolBindings, type QueryToolType } from "@budibase/shared-core"
 import { SourceName, ToolType } from "@budibase/types"
 import type {
   Agent,
   AgentOperationToolConfig,
   Datasource,
   Query,
-  Table,
 } from "@budibase/types"
-import { getBudibaseTools } from "../../../../ai/tools/budibase"
 import { fetch, update } from "./crud"
 
 interface QueryToolReferenceMigration {
@@ -166,15 +160,6 @@ export const migrateQueryToolReferences = async (
         existingBindings.runtimeBinding !== updatedBindings.runtimeBinding
     )
 
-  await migrateToolReferences(bindingChanges)
-}
-
-const migrateToolReferences = async (
-  bindingChanges: Array<{
-    existingBindings: ToolBindings
-    updatedBindings: ToolBindings
-  }>
-) => {
   if (!bindingChanges.length) {
     return
   }
@@ -197,51 +182,4 @@ const migrateToolReferences = async (
       await update(updatedAgent)
     }
   }
-}
-
-export const migrateExternalTableToolReferences = async ({
-  existingDatasource,
-  updatedDatasource,
-  tables,
-}: {
-  existingDatasource: Datasource
-  updatedDatasource: Datasource
-  tables: Table[]
-}): Promise<void> => {
-  if (!existingDatasource._id || !updatedDatasource._id) {
-    throw new Error("Cannot migrate table tools without a datasource ID")
-  }
-
-  const getBindings = (datasource: Datasource) =>
-    getBudibaseTools(tables, {
-      [datasource._id!]: datasource.name || "External",
-    })
-      .filter(tool => tool.sourceType === ToolType.EXTERNAL_TABLE)
-      .map(tool => ({
-        readableBinding: getReadableAgentToolBinding({
-          sourceType: tool.sourceType,
-          sourceLabel: tool.sourceLabel,
-          toolName: tool.readableName || tool.name,
-        }),
-        runtimeBinding: tool.name,
-      }))
-
-  const existingBindings = getBindings(existingDatasource)
-  const updatedBindingsByRuntime = new Map(
-    getBindings(updatedDatasource).map(binding => [
-      binding.runtimeBinding,
-      binding,
-    ])
-  )
-  const bindingChanges = existingBindings.flatMap(existingBinding => {
-    const updatedBinding = updatedBindingsByRuntime.get(
-      existingBinding.runtimeBinding
-    )
-    return updatedBinding &&
-      existingBinding.readableBinding !== updatedBinding.readableBinding
-      ? [{ existingBindings: existingBinding, updatedBindings: updatedBinding }]
-      : []
-  })
-
-  await migrateToolReferences(bindingChanges)
 }

@@ -1,13 +1,8 @@
-import {
-  SourceName,
-  TableSourceType,
-  ToolExecutionPrincipal,
-} from "@budibase/types"
+import { SourceName, ToolExecutionPrincipal } from "@budibase/types"
 import type { Agent, Datasource, Query } from "@budibase/types"
 import { requesterTools } from "../tests/utils"
 import { fetch, update } from "./crud"
 import {
-  migrateExternalTableToolReferences,
   migrateQueryToolReferences,
   updateAgentQueryToolReferences,
 } from "./queryToolReferences"
@@ -235,71 +230,6 @@ describe("migrateQueryToolReferences", () => {
             enabledTools: requesterTools(
               "rest_new_api_first_query_uery_first_query",
               "rest_new_api_second_query_ery_second_query"
-            ),
-          }),
-        ],
-      })
-    )
-  })
-})
-
-describe("migrateExternalTableToolReferences", () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-  })
-
-  it("updates external table placeholders when a datasource is renamed", async () => {
-    const tableId = "datasource_1__Orders"
-    const agent = makeAgent({
-      operations: [
-        {
-          id: "operation_1",
-          name: "Main",
-          live: false,
-          promptInstructions:
-            "Use {{ Old_Database.Orders.search_rows }} and {{ Old_Database.Orders.create_row }}.",
-          enabledTools: requesterTools(
-            `${tableId}_search_rows`,
-            `${tableId}_create_row`
-          ),
-          allowKnowledgeSourceDownload: true,
-        },
-      ],
-    })
-    const existingDatasource: Datasource = {
-      _id: "datasource_1",
-      name: "Old Database",
-      type: "datasource",
-      source: SourceName.POSTGRES,
-      config: {},
-    }
-    fetchAgents.mockResolvedValue([agent])
-    updateAgent.mockResolvedValue(agent)
-
-    await migrateExternalTableToolReferences({
-      existingDatasource,
-      updatedDatasource: { ...existingDatasource, name: "New Database" },
-      tables: [
-        {
-          _id: tableId,
-          type: "table",
-          name: "Orders",
-          sourceId: existingDatasource._id!,
-          sourceType: TableSourceType.EXTERNAL,
-          schema: {},
-        },
-      ],
-    })
-
-    expect(updateAgent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        operations: [
-          expect.objectContaining({
-            promptInstructions:
-              "Use {{ New_Database.Orders.search_rows }} and {{ New_Database.Orders.create_row }}.",
-            enabledTools: requesterTools(
-              `${tableId}_search_rows`,
-              `${tableId}_create_row`
             ),
           }),
         ],

@@ -29,7 +29,6 @@ import {
   RowValue,
   SourceName,
   Table,
-  TableSourceType,
   UpdateDatasourceRequest,
   UpdateDatasourceResponse,
   UserCtx,
@@ -284,13 +283,10 @@ export async function update(
   }
 
   if (baseDatasource.name !== datasource.name) {
-    const [queries, tables] = await Promise.all([
-      sdk.queries.fetch({
-        enrich: false,
-        datasourceId,
-      }),
-      sdk.tables.getAllTables(),
-    ])
+    const queries = await sdk.queries.fetch({
+      enrich: false,
+      datasourceId,
+    })
     await sdk.ai.agents.migrateQueryToolReferences(
       queries.map(query => ({
         existingDatasource: baseDatasource,
@@ -299,15 +295,6 @@ export async function update(
         updatedQuery: query,
       }))
     )
-    await sdk.ai.agents.migrateExternalTableToolReferences({
-      existingDatasource: baseDatasource,
-      updatedDatasource: datasource,
-      tables: tables.filter(
-        table =>
-          table.sourceType === TableSourceType.EXTERNAL &&
-          table.sourceId === datasourceId
-      ),
-    })
   }
   await clearOAuth2TokenCaches(baseDatasource)
   const response = await db.put(

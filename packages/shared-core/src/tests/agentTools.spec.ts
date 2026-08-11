@@ -1,9 +1,5 @@
 import { ToolType } from "@budibase/types"
-import {
-  getQueryToolBindings,
-  getReadableAgentToolBinding,
-  isQueryToolType,
-} from "../agentTools"
+import { getQueryToolBindings, isQueryToolType } from "../agentTools"
 
 describe("isQueryToolType", () => {
   it("identifies query tool types", () => {
@@ -83,52 +79,5 @@ describe("getQueryToolBindings", () => {
     })
 
     expect(first.runtimeBinding).not.toBe(second.runtimeBinding)
-  })
-})
-
-describe("getReadableAgentToolBinding", () => {
-  it.each([
-    [
-      ToolType.INTERNAL_TABLE,
-      "Budibase",
-      "Expenses.create_row",
-      "budibase.Expenses.create_row",
-    ],
-    [
-      ToolType.AUTOMATION,
-      "Budibase",
-      "Notify.trigger",
-      "budibase.Notify.trigger",
-    ],
-    [
-      ToolType.EXTERNAL_TABLE,
-      "PostgreSQL DB",
-      "Orders.search_rows",
-      "PostgreSQL_DB.Orders.search_rows",
-    ],
-    [ToolType.SEARCH, "Exa", "web_search", "search.web_search"],
-    [
-      ToolType.ESCALATION,
-      "Escalation",
-      "Escalate to human",
-      "escalation.Escalate to human",
-    ],
-  ])(
-    "builds the canonical %s binding",
-    (sourceType, sourceLabel, toolName, expected) => {
-      expect(
-        getReadableAgentToolBinding({ sourceType, sourceLabel, toolName })
-      ).toBe(expected)
-    }
-  )
-
-  it("uses the canonical query binding", () => {
-    expect(
-      getReadableAgentToolBinding({
-        sourceType: ToolType.REST_QUERY,
-        sourceLabel: "Owen-Wilson API",
-        toolName: "GET random wow",
-      })
-    ).toBe("api.owen_wilson_api.GET random wow")
   })
 })

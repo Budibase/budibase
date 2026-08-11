@@ -211,6 +211,27 @@ describe("chooseOperationForQuestion", () => {
     })
   })
 
+  it("returns summarize_operations when the router decides to summarize capabilities", async () => {
+    mockIsEnabled.mockResolvedValue(true)
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "summarize_operations",
+        operationId: null,
+        reason: "Capabilities overview",
+      }),
+    })
+
+    const result = await chooseOperationForQuestion({
+      agent,
+      latestQuestion: "What can you help me with?",
+      llm,
+    })
+
+    expect(result).toEqual({
+      action: "summarize_operations",
+    })
+  })
+
   it("returns no_operation when the router selects no operation", async () => {
     mockIsEnabled.mockResolvedValue(true)
     mockRouterStream.mockResolvedValue({
@@ -372,6 +393,43 @@ describe("prepareAgentRunContext", () => {
       tools: {},
       toolDisplayNames: {},
     })
+  })
+
+  it("passes a capabilities-summary prompt when the router chooses summarize_operations", async () => {
+    mockIsEnabled.mockResolvedValue(true)
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "summarize_operations",
+        operationId: null,
+        reason: "Capabilities overview",
+      }),
+    })
+
+    const result = await prepareAgentRunContext({
+      agent,
+      agentId: "agent_1",
+      sessionId: "session_1",
+      latestQuestion: "What can you help me with?",
+    })
+
+    expect(result.selectedOperation).toBeUndefined()
+    expect(result.routingAction).toBe("summarize_operations")
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      undefined,
+      expect.objectContaining({
+        fallbackPromptInstructions: expect.stringContaining(
+          "The router decided this is a capabilities-overview request."
+        ),
+      })
+    )
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      undefined,
+      expect.objectContaining({
+        fallbackPromptInstructions: expect.stringContaining("- IT support"),
+      })
+    )
   })
 
   it("exposes the router's intent as operationIntent when an operation is selected", async () => {
@@ -592,18 +650,6 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
 
     const { ai } = jest.requireMock("@budibase/pro")
     expect(ai.agentSystemPrompt).toHaveBeenCalledWith(user, "Europe/London")
-  })
-
-  it("prevents disclosure of unavailable tools and protected resources", async () => {
-    await runFor(operationWithoutRecipients)
-
-    expect(ToolLoopAgent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        instructions: expect.stringContaining(
-          "Do not reveal internal tool names, schemas, configuration, unavailable or filtered tools, privileged capabilities, protected resource names, or authorization details."
-        ),
-      })
-    )
   })
 
   it("ignores a preview role when the chat is not in preview mode", async () => {

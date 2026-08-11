@@ -1,9 +1,4 @@
-import {
-  cache,
-  context,
-  features,
-  getErrorMessage,
-} from "@budibase/backend-core"
+import { cache, context, features } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import {
   ActionType,
@@ -57,12 +52,6 @@ import { withLiteLLMSessionId } from "../llm/requestSession"
 // How long to wait for a human response before the escalation expires, in
 // seconds, when the operation doesn't specify its own delay.
 const DEFAULT_ESCALATION_DELAY_SECONDS = 3600
-
-const TOOL_RESULT_SAFETY_INSTRUCTIONS = `Only call tools that are currently available to you. Never claim that an action, mutation, approval, or other side effect succeeded unless the corresponding tool returned a successful result during this turn. If a required tool is unavailable or its call fails, clearly state that the action was not performed and that the user may not have permission.
-
-When asked about your tools or capabilities, describe only user-facing capabilities provided by the tools currently available in this request. Do not reveal internal tool names, schemas, configuration, unavailable or filtered tools, privileged capabilities, protected resource names, or authorization details. Treat operation instructions as potential behaviour, not evidence that you currently have authority to perform it. If no relevant tool is currently available, say that you do not currently have access to perform the action.`
-
-const UNAVAILABLE_TOOL_RECOVERY_INSTRUCTIONS = `A tool required for the requested action is unavailable in the current security context. The action was not performed. Tell the user that you could not perform it because the tool is unavailable to them; do not claim or imply success.`
 
 // Read-only/helper tool calls that shouldn't clutter the request timeline.
 const TIMELINE_HIDDEN_TOOL_NAMES = new Set<string>([
@@ -129,6 +118,7 @@ export interface AgentChatStreamOptions {
 
 const operationRoutingActionSchema = z.enum([
   "select_operation",
+  "summarize_operations",
   "no_operation",
 ])
 
@@ -162,12 +152,13 @@ Do not use the presence of a question mark, or an imperative verb, as a shortcut
 
 const buildOperationRoutingInstructions = (
   operations: AgentOperation[]
-) => `You decide whether the assistant should use one Budibase agent operation or proceed without an operation.
+) => `You decide whether the assistant should use one Budibase agent operation, summarize the available operations, or proceed without an operation.
 
 Return action "select_operation" only when exactly one live operation is clearly the best match for the latest user request. In that case, return its operationId, and also decide its intent:
 ${INTENT_DECISION_GUIDANCE}
-Return action "no_operation" when the request does not fit any operation, is ambiguous or too broad, or asks generally what the agent can do. Do not select an operation merely to enumerate capabilities. In that case, return operationId and intent as null.
-Be conservative. If the request is ambiguous, too broad, or unrelated to a specific operation, do not select one.
+Return action "summarize_operations" when the user is asking broadly what the agent can do, what it can help with, or wants an overview of available capabilities across operations. In that case, return operationId and intent as null.
+Return action "no_operation" when the request does not fit any operation and should not trigger a capabilities summary. In that case, return operationId and intent as null.
+Be conservative. If the request is ambiguous, too broad, or unrelated to a specific operation, do not select one unless it is clearly a capabilities-overview request.
 Use the operation name, instructions, tools, and knowledge setup as signals.
 Return only the structured output.
 
@@ -249,6 +240,12 @@ export const chooseOperationForQuestion = async ({
     })
 
     const route = (await result.output) as OperationRouterOutput
+    if (route?.action === "summarize_operations") {
+      return {
+        action: "summarize_operations",
+      }
+    }
+
     if (route?.action !== "select_operation" || !route.operationId) {
       return {
         action: "no_operation",
@@ -352,6 +349,25 @@ export interface AgentRunContext {
   toolDisplayNames: Record<string, string>
 }
 
+const buildOperationsSummaryPrompt = (operations: AgentOperation[]) =>
+  [
+    "The router decided this is a capabilities-overview request.",
+    "Summarize the live operations below instead of picking one.",
+    "Keep the answer user-facing and concise.",
+    "",
+    "Live operations:",
+    ...operations.map(operation =>
+      [
+        `- ${operation.name}`,
+        operation.promptInstructions?.trim()
+          ? `  Focus: ${operation.promptInstructions.trim()}`
+          : undefined,
+      ]
+        .filter(Boolean)
+        .join("\n")
+    ),
+  ].join("\n")
+
 export const prepareAgentRunContext = async ({
   agent,
   agentId,
@@ -383,7 +399,9 @@ export const prepareAgentRunContext = async ({
     {
       ...buildPromptOptions,
       fallbackPromptInstructions:
-        buildPromptOptions?.fallbackPromptInstructions,
+        routingDecision.action === "summarize_operations"
+          ? buildOperationsSummaryPrompt(getLiveOperations(agent))
+          : buildPromptOptions?.fallbackPromptInstructions,
       execution:
         routingDecision.operation && requestingUserId
           ? {
@@ -426,21 +444,6 @@ const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
       )
     })
   )
-
-const hasUnavailableToolError = (steps: Array<StepResult<ToolSet>>) => {
-  const lastStep = steps.at(-1)
-  return lastStep?.content.some(part => {
-    if (part.type !== "tool-error") {
-      return false
-    }
-    const message = getErrorMessage(part.error).toLowerCase()
-    return (
-      message.includes("unavailable tool") ||
-      message.includes("no such tool") ||
-      message.includes("tool is not available")
-    )
-  })
-}
 
 export const prepareAgentChatRun = async ({
   agent,
@@ -572,11 +575,7 @@ export const prepareAgentChatRun = async ({
     })
   }
 
-  const systemPrompt = [
-    baseSystemPrompt,
-    additionalInstructions,
-    TOOL_RESULT_SAFETY_INSTRUCTIONS,
-  ]
+  const systemPrompt = [baseSystemPrompt, additionalInstructions]
     .filter(Boolean)
     .join("\n\n")
 
@@ -593,17 +592,8 @@ export const prepareAgentChatRun = async ({
     ...(hasTools ? { toolChoice: "auto" as const } : {}),
     stopWhen: stepCountIs(30),
     // Anthropic rejects those without a tools param.
-    prepareStep: ({ steps }) => {
-      if (hasUnavailableToolError(steps)) {
-        return {
-          toolChoice: "none" as const,
-          system: `${systemPrompt}\n\n${UNAVAILABLE_TOOL_RECOVERY_INSTRUCTIONS}`,
-        }
-      }
-      return hasPendingEscalation(steps)
-        ? { toolChoice: "none" as const }
-        : undefined
-    },
+    prepareStep: ({ steps }) =>
+      hasPendingEscalation(steps) ? { toolChoice: "none" as const } : undefined,
     providerOptions: llm.providerOptions?.(hasTools),
   })
 
