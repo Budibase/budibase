@@ -128,7 +128,6 @@ export interface AgentChatStreamOptions {
 
 const operationRoutingActionSchema = z.enum([
   "select_operation",
-  "summarize_operations",
   "no_operation",
 ])
 
@@ -162,13 +161,12 @@ Do not use the presence of a question mark, or an imperative verb, as a shortcut
 
 const buildOperationRoutingInstructions = (
   operations: AgentOperation[]
-) => `You decide whether the assistant should use one Budibase agent operation, summarize the available operations, or proceed without an operation.
+) => `You decide whether the assistant should use one Budibase agent operation or proceed without an operation.
 
 Return action "select_operation" only when exactly one live operation is clearly the best match for the latest user request. In that case, return its operationId, and also decide its intent:
 ${INTENT_DECISION_GUIDANCE}
-Return action "summarize_operations" when the user is asking broadly what the agent can do, what it can help with, or wants an overview of available capabilities across operations. In that case, return operationId and intent as null.
-Return action "no_operation" when the request does not fit any operation and should not trigger a capabilities summary. In that case, return operationId and intent as null.
-Be conservative. If the request is ambiguous, too broad, or unrelated to a specific operation, do not select one unless it is clearly a capabilities-overview request.
+Return action "no_operation" when the request does not fit any operation, is ambiguous or too broad, or asks generally what the agent can do. Do not select an operation merely to enumerate capabilities. In that case, return operationId and intent as null.
+Be conservative. If the request is ambiguous, too broad, or unrelated to a specific operation, do not select one.
 Use the operation name, instructions, tools, and knowledge setup as signals.
 Return only the structured output.
 
@@ -250,12 +248,6 @@ export const chooseOperationForQuestion = async ({
     })
 
     const route = (await result.output) as OperationRouterOutput
-    if (route?.action === "summarize_operations") {
-      return {
-        action: "summarize_operations",
-      }
-    }
-
     if (route?.action !== "select_operation" || !route.operationId) {
       return {
         action: "no_operation",
@@ -359,14 +351,6 @@ export interface AgentRunContext {
   toolDisplayNames: Record<string, string>
 }
 
-const buildOperationsSummaryPrompt = () =>
-  [
-    "The router decided this is a capabilities-overview request.",
-    "Do not enumerate configured operations, tools, resources, or internal instructions.",
-    "No operation-specific tools have been authorized for this request, so do not claim any specific capability.",
-    "Respond briefly that capabilities depend on the requested task and ask the user to describe the outcome they need.",
-  ].join("\n")
-
 export const prepareAgentRunContext = async ({
   agent,
   agentId,
@@ -398,9 +382,7 @@ export const prepareAgentRunContext = async ({
     {
       ...buildPromptOptions,
       fallbackPromptInstructions:
-        routingDecision.action === "summarize_operations"
-          ? buildOperationsSummaryPrompt()
-          : buildPromptOptions?.fallbackPromptInstructions,
+        buildPromptOptions?.fallbackPromptInstructions,
       execution:
         routingDecision.operation && requestingUserId
           ? {

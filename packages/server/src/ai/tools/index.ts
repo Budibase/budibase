@@ -13,10 +13,6 @@ export interface ToolAuthorization {
   permissionLevel: PermissionLevel
   resourceId?: string
   resolveResourceId?: (input: unknown) => string | undefined
-  prepareInput?: (
-    modelInput: unknown,
-    executionContext: AgentExecutionContext
-  ) => unknown | Promise<unknown>
   resultFilter?: {
     collectionKey: string
     permissionType: PermissionType
@@ -75,7 +71,6 @@ const wrapTool = (
   }
 
   const wrappedExecute: NonNullable<Tool["execute"]> = async (...args) => {
-    let preparedInput = args[0]
     if (runtime) {
       if (!toolDef.authorization) {
         throw new Error("Tool is not available in this security context")
@@ -85,21 +80,15 @@ const wrapTool = (
       ) {
         throw new Error("Tool is not available in this security context")
       }
-      preparedInput = toolDef.authorization.prepareInput
-        ? await toolDef.authorization.prepareInput(
-            args[0],
-            runtime.executionContext
-          )
-        : args[0]
       await runtime.authorize({
         authorization: toolDef.authorization,
-        input: preparedInput,
+        input: args[0],
         executionContext: runtime.executionContext,
         principal: runtime.principal,
       })
     }
     try {
-      const result = await execute(preparedInput, args[1])
+      const result = await execute(...args)
       const failureMessage = getToolFailure(result)
       if (failureMessage) {
         throw new Error(failureMessage)

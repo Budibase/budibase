@@ -207,27 +207,6 @@ describe("chooseOperationForQuestion", () => {
     })
   })
 
-  it("returns summarize_operations when the router decides to summarize capabilities", async () => {
-    mockIsEnabled.mockResolvedValue(true)
-    mockRouterStream.mockResolvedValue({
-      output: Promise.resolve({
-        action: "summarize_operations",
-        operationId: null,
-        reason: "Capabilities overview",
-      }),
-    })
-
-    const result = await chooseOperationForQuestion({
-      agent,
-      latestQuestion: "What can you help me with?",
-      llm,
-    })
-
-    expect(result).toEqual({
-      action: "summarize_operations",
-    })
-  })
-
   it("returns no_operation when the router selects no operation", async () => {
     mockIsEnabled.mockResolvedValue(true)
     mockRouterStream.mockResolvedValue({
@@ -389,41 +368,6 @@ describe("prepareAgentRunContext", () => {
       tools: {},
       toolDisplayNames: {},
     })
-  })
-
-  it("does not disclose operation configuration in capability summaries", async () => {
-    mockIsEnabled.mockResolvedValue(true)
-    mockRouterStream.mockResolvedValue({
-      output: Promise.resolve({
-        action: "summarize_operations",
-        operationId: null,
-        reason: "Capabilities overview",
-      }),
-    })
-
-    const result = await prepareAgentRunContext({
-      agent,
-      agentId: "agent_1",
-      sessionId: "session_1",
-      latestQuestion: "What can you help me with?",
-    })
-
-    expect(result.selectedOperation).toBeUndefined()
-    expect(result.routingAction).toBe("summarize_operations")
-    expect(buildPromptAndTools).toHaveBeenCalledWith(
-      agent,
-      undefined,
-      expect.objectContaining({
-        fallbackPromptInstructions: expect.stringContaining(
-          "Do not enumerate configured operations"
-        ),
-      })
-    )
-    const options = jest.mocked(buildPromptAndTools).mock.calls[0][2]
-    expect(options?.fallbackPromptInstructions).not.toContain("IT support")
-    expect(options?.fallbackPromptInstructions).not.toContain(
-      "Handle IT issues"
-    )
   })
 
   it("exposes the router's intent as operationIntent when an operation is selected", async () => {

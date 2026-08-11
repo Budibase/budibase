@@ -1,5 +1,4 @@
 import {
-  PermissionLevel,
   SourceName,
   ToolType,
   type Datasource,
@@ -81,9 +80,6 @@ describe("getAvailableToolsMetadata", () => {
       readableName: "Get Pokemon",
       sourceType: ToolType.REST_QUERY,
       sourceLabel: "REST API",
-      authorization: {
-        permissionLevel: PermissionLevel.WRITE,
-      },
     })
   })
 
@@ -116,9 +112,6 @@ describe("getAvailableToolsMetadata", () => {
       sourceType: ToolType.DATASOURCE_QUERY,
       sourceLabel: "Warehouse",
       sourceIconType: SourceName.SNOWFLAKE,
-      authorization: {
-        permissionLevel: PermissionLevel.WRITE,
-      },
     })
   })
 

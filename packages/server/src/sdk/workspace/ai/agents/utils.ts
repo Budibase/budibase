@@ -130,8 +130,6 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
     authorization: tool.authorization
       ? {
           supportedPrincipals: tool.authorization.supportedPrincipals,
-          permissionType: tool.authorization.permissionType,
-          permissionLevel: tool.authorization.permissionLevel,
         }
       : undefined,
   }

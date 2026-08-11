@@ -149,43 +149,6 @@ describe("secured AI tool execution", () => {
     expect(execute).not.toHaveBeenCalled()
   })
 
-  it("applies tool-owned trusted bindings before authorization and execution", async () => {
-    const execute = jest.fn().mockResolvedValue({ success: true })
-    const authorize = jest.fn().mockResolvedValue(undefined)
-    const toolDefinition = definition(execute)
-    toolDefinition.authorization!.prepareInput = (input, context) => ({
-      ...(input as { value: string; userId?: string }),
-      userId: context.requestingUserId,
-    })
-    const tools = toToolSet(
-      [toolDefinition],
-      new Map([
-        [
-          "secured_tool",
-          {
-            executionContext,
-            principal: ToolExecutionPrincipal.REQUESTER,
-            authorize,
-          },
-        ],
-      ])
-    )
-
-    await tools.secured_tool.execute?.(
-      { value: "hello", userId: "attacker_selected_user" },
-      { toolCallId: "call_1", messages: [] }
-    )
-
-    const trustedInput = { value: "hello", userId: "user_1" }
-    expect(authorize).toHaveBeenCalledWith(
-      expect.objectContaining({ input: trustedInput })
-    )
-    expect(execute).toHaveBeenCalledWith(
-      trustedInput,
-      expect.objectContaining({ toolCallId: "call_1" })
-    )
-  })
-
   it("filters collection results using resource permissions", async () => {
     const execute = jest.fn().mockResolvedValue({
       tables: [

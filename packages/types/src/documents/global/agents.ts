@@ -1,7 +1,6 @@
 import { Document } from "../../"
 import type { UIMessage } from "ai"
 import { EscalationRecipient } from "../workspace/escalation"
-import { PermissionLevel, PermissionType } from "../../sdk/permissions"
 
 export enum ToolType {
   INTERNAL_TABLE = "INTERNAL_TABLE",
@@ -22,8 +21,6 @@ export interface ToolMetadata {
   sourceIconType?: string
   authorization?: {
     supportedPrincipals: ToolExecutionPrincipal[]
-    permissionType: PermissionType
-    permissionLevel: PermissionLevel
   }
 }
 
