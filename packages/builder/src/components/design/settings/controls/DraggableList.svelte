@@ -2,8 +2,7 @@
   import { dndzone } from "svelte-dnd-action"
   import { createEventDispatcher, setContext } from "svelte"
   import { writable, get } from "svelte/store"
-  import { Icon } from "@budibase/bbui"
-  import { generateId as generate } from "@budibase/frontend-core"
+  import { Icon, generateId } from "@budibase/bbui"
 
   export let items = []
   export let showHandle = true
@@ -13,7 +12,7 @@
   export let draggable = true
   export let focus = undefined
 
-  let zoneType = generate()
+  let zoneType = generateId()
 
   let store = writable({
     selected: null,
@@ -46,7 +45,7 @@
     const seenIds = new Set()
     return items
       .map(item => {
-        let id = listItemKey ? item[listItemKey] : generate()
+        let id = listItemKey ? item[listItemKey] : generateId()
         return {
           id,
           item,

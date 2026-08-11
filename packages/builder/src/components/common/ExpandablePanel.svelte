@@ -13,8 +13,8 @@
     BASE_Z_INDEX,
     isActiveOverlay,
     Context,
+    generateId,
   } from "@budibase/bbui"
-  import { generateId as generate } from "@budibase/frontend-core"
 
   let {
     title = "",
@@ -33,7 +33,7 @@
   const EXPANDED_MARGIN = 0.15
   const EXPANDED_SIZE = 0.7
 
-  const overlayId = generate()
+  const overlayId = generateId()
   let expanded = $state(false)
 
   // Wire up the popover portal override context so popovers opened inside the

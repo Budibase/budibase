@@ -11,17 +11,13 @@
     Combobox,
     Multiselect,
     Toggle,
+    generateId,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash"
   import ColorPicker from "./ColorPicker.svelte"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
-  import {
-    Constants,
-    FilterUsers,
-    generateId as generate,
-    QueryUtils,
-  } from "@budibase/frontend-core"
+  import { Constants, FilterUsers, QueryUtils } from "@budibase/frontend-core"
   import { FieldType, FormulaType } from "@budibase/types"
   import { dndzone } from "svelte-dnd-action"
   import { flip } from "svelte/animate"
@@ -98,7 +94,7 @@
 
   const addCondition = () => {
     const condition = {
-      id: generate(),
+      id: generateId(),
       target: targetOptions[0].value,
       metadataKey: conditionOptions[0].value,
       operator: operatorOptions[0]?.value,
@@ -109,7 +105,7 @@
   }
 
   const duplicateCondition = condition => {
-    const dupe = { ...condition, id: generate() }
+    const dupe = { ...condition, id: generateId() }
     tempValue = [...tempValue, dupe]
   }
 

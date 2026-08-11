@@ -41,12 +41,8 @@ import {
   isTestAutomationResponse,
 } from "@budibase/types"
 
-import { notifications } from "@budibase/bbui"
-import {
-  generateId as generate,
-  QueryUtils,
-  Utils,
-} from "@budibase/frontend-core"
+import { generateId, notifications } from "@budibase/bbui"
+import { QueryUtils, Utils } from "@budibase/frontend-core"
 import { sdk } from "@budibase/shared-core"
 import { makePropSafe } from "@budibase/string-templates"
 import {
@@ -1645,7 +1641,7 @@ const automationActions = (store: AutomationStore) => ({
       inputs: blockDefinition.inputs || {},
       stepId,
       type,
-      id: generate(),
+      id: generateId(),
     }
     const newName = getNewStepName(get(selectedAutomation)?.data, newStep)
     newStep.name = newName
@@ -1874,7 +1870,7 @@ const automationActions = (store: AutomationStore) => ({
     const createBranch = (name: string): Branch => ({
       name,
       ...store.actions.generateDefaultConditions(),
-      id: generate(),
+      id: generateId(),
     })
 
     // Traverse the path and resolve the array (container) that holds the
@@ -2689,7 +2685,7 @@ const automationActions = (store: AutomationStore) => ({
     }
 
     const newNote = {
-      id: generate(),
+      id: generateId(),
       title: "Note",
       text: "",
       x: position?.x ?? 100 + notes.length * 30,

@@ -6,6 +6,7 @@
     Icon,
     Modal,
     DetailSummary,
+    generateId,
   } from "@budibase/bbui"
   import {
     type Automation,
@@ -20,7 +21,7 @@
     AutomationFeature,
     isLoopV2Step,
   } from "@budibase/types"
-  import { generateId as generate, memo } from "@budibase/frontend-core"
+  import { memo } from "@budibase/frontend-core"
   import {
     automationStore,
     selectedAutomation,
@@ -208,7 +209,7 @@
   const cloneStepWithNewIds = (step: AutomationStep): AutomationStep => {
     const base: AutomationStep = {
       ...step,
-      id: generate(),
+      id: generateId(),
     }
 
     // Recurse into Loop V2 children

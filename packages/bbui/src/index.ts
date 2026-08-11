@@ -2,6 +2,7 @@ import "./bbui.css"
 
 // Constants
 export * from "./constants"
+export { generateId } from "./utils/ids"
 
 // Form components
 export { default as Checkbox } from "./Form/Checkbox.svelte"

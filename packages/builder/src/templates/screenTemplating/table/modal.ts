@@ -1,7 +1,8 @@
 import { capitalise } from "@/helpers"
 import { SourceOption } from "@/pages/builder/workspace/[workspaceId]/design/_components/NewScreen/utils"
 import { getRowActionButtonTemplates } from "@/templates/rowActions"
-import { generateId as generate, Utils } from "@budibase/frontend-core"
+import { generateId } from "@budibase/bbui"
+import { Utils } from "@budibase/frontend-core"
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { Screen as ScreenDoc, UIPermissions } from "@budibase/types"
 import { Component } from "../../Component"
@@ -86,7 +87,7 @@ const modal = async ({
   /*
     Edit Row
    */
-  const stateKey = `ID_${generate()}`
+  const stateKey = `ID_${generateId()}`
   const detailsModal = new Component("@budibase/standard-components/modal")
     .instanceName("Edit row modal")
     .customProps({

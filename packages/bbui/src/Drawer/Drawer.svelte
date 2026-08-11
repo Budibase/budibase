@@ -66,7 +66,6 @@
 </script>
 
 <script lang="ts">
-  import { nanoid } from "nanoid"
   import { createEventDispatcher, onDestroy, setContext } from "svelte"
   import type { TransitionConfig } from "svelte/transition"
   import Portal from "svelte-portal"
@@ -79,6 +78,7 @@
     overlayStack,
     BASE_Z_INDEX,
   } from "../Modal/overlayStack"
+  import { generateId } from "../utils/ids"
 
   interface DrawerEvents {
     drawerShow: string
@@ -93,7 +93,7 @@
   const spacing = 11
 
   let visible: boolean = false
-  let drawerId: string = nanoid(9)
+  let drawerId: string = generateId()
   let depth: number = 0
   let stackIndex: number = -1
   let computedZIndex: number = BASE_Z_INDEX

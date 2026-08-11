@@ -1,9 +1,10 @@
 <script>
+  import { generateId } from "@budibase/bbui"
   import { navigationStore } from "@/stores/builder"
   import DraggableList from "@/components/design/settings/controls/DraggableList.svelte"
   import NavItem from "./NavItem.svelte"
   import { getSequentialName } from "@/helpers/duplicate"
-  import { Constants, generateId as generate } from "@budibase/frontend-core"
+  import { Constants } from "@budibase/frontend-core"
 
   export let bindings
 
@@ -16,7 +17,7 @@
   const enrichNavItems = links => {
     return (links || []).map(link => ({
       ...link,
-      id: link.id || generate(),
+      id: link.id || generateId(),
     }))
   }
 
@@ -46,7 +47,7 @@
     await save([
       ...navItems,
       {
-        id: generate(),
+        id: generateId(),
         text: getSequentialName(navItems, "Nav Item ", {
           getName: x => x.text,
         }),

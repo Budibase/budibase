@@ -10,14 +10,11 @@
     Icon,
     Toggle,
     DatePicker,
+    generateId,
   } from "@budibase/bbui"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import DrawerBindableSlot from "@/components/common/bindings/DrawerBindableSlot.svelte"
-  import {
-    Constants,
-    generateId as generate,
-    QueryUtils,
-  } from "@budibase/frontend-core"
+  import { Constants, QueryUtils } from "@budibase/frontend-core"
   import { dndzone } from "svelte-dnd-action"
   import { flip } from "svelte/animate"
   import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
@@ -48,7 +45,7 @@
   let drawer: Drawer
   const dispatch = createEventDispatcher()
   const flipDurationMs = 150
-  const zoneType = generate()
+  const zoneType = generateId()
   const actionOptions = [
     {
       label: "Hide component",
@@ -136,7 +133,7 @@
     conditions = [
       ...conditions,
       {
-        id: generate(),
+        id: generateId(),
         action: "hide",
         operator: BasicOperator.EQUAL,
         valueType: "string",
@@ -153,7 +150,7 @@
     const condition: ComponentCondition = conditions.find(
       link => link.id === id
     )!
-    const duplicate = { ...condition, id: generate() }
+    const duplicate = { ...condition, id: generateId() }
     conditions = [...conditions, duplicate]
   }
 

@@ -7,8 +7,8 @@
     Layout,
     Input,
     Drawer,
+    generateId,
   } from "@budibase/bbui"
-  import { generateId as generate } from "@budibase/frontend-core"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import { screenStore } from "@/stores/builder"
@@ -29,7 +29,7 @@
   $: drawerTitle = navItem.text ? `${navItem.text} sub links` : "Sub links"
   $: subLinks.forEach(subLink => {
     if (!subLink.id) {
-      subLink.id = generate()
+      subLink.id = generateId()
     }
   })
   $: urlOptions = screenStore.routes

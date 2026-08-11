@@ -1,8 +1,8 @@
 <script>
   import { getContext, setContext, onDestroy } from "svelte"
+  import { generateId } from "@budibase/bbui"
   import { dataSourceStore, createContextStore } from "@/stores"
   import { ActionTypes } from "@/constants"
-  import { generateId as generate } from "@budibase/frontend-core"
 
   const { ContextScopes } = getContext("sdk")
 
@@ -23,7 +23,7 @@
 
   // Generate a permanent unique ID for this component and use it to register
   // any datasource actions
-  const instanceId = generate()
+  const instanceId = generateId()
 
   // Keep previous state around so we can avoid updating unless necessary
   let lastDataKey

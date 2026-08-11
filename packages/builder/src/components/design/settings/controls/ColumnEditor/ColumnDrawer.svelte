@@ -8,8 +8,8 @@
     Label,
     Body,
     Input,
+    generateId,
   } from "@budibase/bbui"
-  import { generateId as generate } from "@budibase/frontend-core"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import type { TableSchema } from "@budibase/types"
@@ -32,7 +32,7 @@
   $: unselectedColumns = getUnselectedColumns(options, columns)
   $: columns.forEach(column => {
     if (!column.id) {
-      column.id = generate()
+      column.id = generateId()
     }
   })
 

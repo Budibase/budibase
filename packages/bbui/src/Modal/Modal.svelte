@@ -21,7 +21,6 @@
   import Portal from "svelte-portal"
   import Context from "../context"
   import { ModalCancelFrom } from "../constants"
-  import { nanoid } from "nanoid"
   import {
     BASE_Z_INDEX,
     overlayStack,
@@ -29,6 +28,7 @@
     removeOverlay,
     isActiveOverlay,
   } from "./overlayStack"
+  import { generateId } from "../utils/ids"
 
   export let fixed: boolean = false
   export let inline: boolean = false
@@ -44,7 +44,7 @@
 
   // Ensure any popovers inside this modal are rendered inside this modal
   // Unique ids are required to ensure nested modals are parented correctly
-  const uniqueId = nanoid(9)
+  const uniqueId = generateId()
   const modalId = uniqueId
   setContext(Context.PopoverRoot, `.spectrum-Modal-${uniqueId}`)
 

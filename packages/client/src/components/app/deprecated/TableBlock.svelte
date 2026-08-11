@@ -5,7 +5,8 @@
   import BlockComponent from "@/components/BlockComponent.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import { enrichSearchColumns, enrichFilter } from "@/utils/blocks"
-  import { generateId as generate, Utils } from "@budibase/frontend-core"
+  import { generateId } from "@budibase/bbui"
+  import { Utils } from "@budibase/frontend-core"
 
   export let title
   export let dataSource
@@ -37,7 +38,7 @@
   const { fetchDatasourceSchema, API, generateGoldenSample } = getContext("sdk")
   const component = getContext("component")
   const context = getContext("context")
-  const stateKey = `ID_${generate()}`
+  const stateKey = `ID_${generateId()}`
 
   let formId
   let dataProviderId
