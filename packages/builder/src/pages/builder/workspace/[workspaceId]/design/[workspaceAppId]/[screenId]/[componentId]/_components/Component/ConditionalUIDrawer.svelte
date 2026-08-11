@@ -7,13 +7,13 @@
     DrawerContent,
     Layout,
     Select,
+    generateId,
   } from "@budibase/bbui"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
-  import { generate } from "shortid"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import ConditionValueControl from "@/components/common/ConditionValueControl.svelte"
-  import { QueryUtils, Constants } from "@budibase/frontend-core"
+  import { Constants, QueryUtils } from "@budibase/frontend-core"
   import { selectedComponent, componentStore } from "@/stores/builder"
   import { getComponentForSetting } from "@/components/design/settings/componentSettingsRegistry"
   import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
@@ -24,7 +24,7 @@
   export let actionOptions = null
 
   const flipDurationMs = 150
-  const zoneType = generate()
+  const zoneType = generateId()
   const defaultActionOptions = [
     {
       label: "Hide component",
@@ -58,7 +58,7 @@
     }))
   $: conditions.forEach(link => {
     if (!link.id) {
-      link.id = generate()
+      link.id = generateId()
     }
     if (link.valueType === "Binding") {
       link.valueType = "string"
@@ -94,7 +94,7 @@
       ...conditions,
       {
         valueType: "string",
-        id: generate(),
+        id: generateId(),
         action: "hide",
         operator: Constants.OperatorOptions.Equals.value,
       },
@@ -107,7 +107,7 @@
 
   const duplicateCondition = id => {
     const condition = conditions.find(link => link.id === id)
-    const duplicate = { ...condition, id: generate() }
+    const duplicate = { ...condition, id: generateId() }
     conditions = [...conditions, duplicate]
   }
 

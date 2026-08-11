@@ -3,16 +3,19 @@
   import AbsTooltip from "../Tooltip/AbsTooltip.svelte"
   import ActionButton from "../ActionButton/ActionButton.svelte"
 
-  export let leftIcon: string
+  export let leftIcon: string | undefined = undefined
   export let leftNotificationTooltip: string | undefined = undefined
   export let leftNotificationCount: number | undefined = undefined
   export let leftText: string
-  export let rightIcon: string
+  export let rightIcon: string | undefined = undefined
   export let rightNotificationTooltip: string | undefined = undefined
   export let rightNotificationCount: number | undefined = undefined
   export let rightText: string
   export let selected: "left" | "right" = "left"
   export let disabled = false
+  export let leftDisabled = false
+  export let rightDisabled = false
+  export let size: "S" | "M" | "L" = "M"
 
   const dispatch = createEventDispatcher<{
     left: void
@@ -21,7 +24,7 @@
 </script>
 
 <div class="view-mode-toggle" class:disabled>
-  <div class="group">
+  <div class="group size-{size}">
     <div class="wrapper">
       {#if leftNotificationTooltip && leftNotificationCount}
         <AbsTooltip text={leftNotificationTooltip}>
@@ -39,7 +42,8 @@
         <ActionButton
           icon={leftIcon}
           quiet
-          {disabled}
+          disabled={disabled || leftDisabled}
+          {size}
           selected={selected === "left"}
           on:click={() => {
             selected = "left"
@@ -67,7 +71,8 @@
         <ActionButton
           icon={rightIcon}
           quiet
-          {disabled}
+          disabled={disabled || rightDisabled}
+          {size}
           selected={selected === "right"}
           on:click={() => {
             selected = "right"
@@ -100,6 +105,16 @@
   }
   .left :global(*) {
     border-radius: 10px 0 0 10px;
+  }
+  /* A radius sized for M crops the label on a shorter button */
+  .group.size-S {
+    border-radius: 8px;
+  }
+  .size-S .right :global(*) {
+    border-radius: 0 6px 6px 0;
+  }
+  .size-S .left :global(*) {
+    border-radius: 6px 0 0 6px;
   }
   .wrapper {
     position: relative;

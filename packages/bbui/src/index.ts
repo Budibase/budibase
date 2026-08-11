@@ -2,6 +2,7 @@ import "./bbui.css"
 
 // Constants
 export * from "./constants"
+export { generateId } from "./utils/ids"
 
 // Form components
 export { default as Checkbox } from "./Form/Checkbox.svelte"
@@ -122,5 +123,4 @@ export { createNotificationStore, notifications } from "./Stores/notifications"
 
 // Helpers
 export * as Helpers from "./helpers"
-
 export type * from "./types"
