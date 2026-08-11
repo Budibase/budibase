@@ -6,7 +6,6 @@ import {
   type ToolType,
 } from "@budibase/types"
 import createAutomationTools from "./automations"
-import TABLE_TOOLS from "./tables"
 import { createRowTools } from "./rows"
 import {
   createKnowledgeFilesTool,
@@ -21,6 +20,7 @@ export interface BudibaseToolDefinition {
   description: string
   tool: Tool
   readableName?: string
+  tableId?: string
 }
 
 export const getBudibaseTools = (
@@ -29,7 +29,7 @@ export const getBudibaseTools = (
   datasourceIconTypesById: Record<string, string> = {},
   automations: Automation[] = []
 ): BudibaseToolDefinition[] => {
-  const baseTools = [...createAutomationTools(automations), ...TABLE_TOOLS]
+  const baseTools = createAutomationTools(automations)
 
   const rowTools = tables
     .filter(table => table._id)
@@ -53,5 +53,6 @@ export const getBudibaseTools = (
 }
 
 export default getBudibaseTools
+export { createTableTools } from "./tables"
 export { createKnowledgeFilesTool, createKnowledgeSearchTool }
 export { createEscalatePlaceholderTool, createEscalateTool } from "./escalate"
