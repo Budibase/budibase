@@ -1,13 +1,15 @@
 <script lang="ts">
   import { Body, Button, Helpers, Icon, notifications } from "@budibase/bbui"
-  import type { Agent, AgentOperation, EnrichedBinding } from "@budibase/types"
-  import type { AgentTool } from "./toolTypes"
-  import type { BindingCompletion } from "@/types"
+  import type { Agent, AgentOperation } from "@budibase/types"
   import { confirm } from "@/helpers/confirm"
   import { contextMenuStore } from "@/stores/builder"
   import OperationNameModal from "./OperationNameModal.svelte"
   import OperationLiveBadge from "./OperationLiveBadge.svelte"
-  import OperationSidePanel from "./OperationSidePanel.svelte"
+  import * as routify from "@roxi/routify"
+
+  const { goto } = routify
+
+  $goto
 
   const DEFAULT_PROMPT_INSTRUCTIONS = `**Operation role**
 What is this operation responsible for?
@@ -29,28 +31,10 @@ Any constraints this operation must follow.
 
   let {
     agent = $bindable(),
-    agentId,
-    promptBindings = [],
-    bindingIcons = {},
-    completions = [],
-    toolsLoaded = false,
-    availableTools = [],
-    webSearchConfigured = false,
-    onAddApiConnection = () => {},
-    onConfigureWebSearch = () => {},
     onSetOperationLive = async () => false,
     onUpdated,
   }: {
     agent: Agent
-    agentId?: string
-    promptBindings?: EnrichedBinding[]
-    bindingIcons?: Record<string, string | undefined>
-    completions?: BindingCompletion[]
-    toolsLoaded?: boolean
-    availableTools?: AgentTool[]
-    webSearchConfigured?: boolean
-    onAddApiConnection?: () => void
-    onConfigureWebSearch?: () => void
     onSetOperationLive?: (
       operationId: string,
       live: boolean
@@ -59,7 +43,6 @@ Any constraints this operation must follow.
   } = $props()
 
   let selectedOperationId = $state<string | undefined>(undefined)
-  let operationPanelOpen = $state(false)
   let renameOperationId = $state<string | undefined>(undefined)
   let createOperationModal: OperationNameModal | undefined = $state()
   let renameOperationModal: OperationNameModal | undefined = $state()
@@ -80,14 +63,9 @@ Any constraints this operation must follow.
 
   const normalizeName = (value: string) => value.trim().toLowerCase()
 
-  const openOperationPanel = (operationId: string) => {
+  const openOperation = (operationId: string) => {
     selectedOperationId = operationId
-    operationPanelOpen = true
-  }
-
-  const closeOperationPanel = () => {
-    selectedOperationId = undefined
-    operationPanelOpen = false
+    $goto(`./operation/${operationId}`)
   }
 
   const openRenameModal = () => {
@@ -167,7 +145,7 @@ Any constraints this operation must follow.
     agent.operations = [...(agent.operations || []), operation]
     selectedOperationId = operation.id
     await onUpdated()
-    openOperationPanel(operation.id)
+    openOperation(operation.id)
   }
 
   const deleteOperation = async () => {
@@ -187,9 +165,7 @@ Any constraints this operation must follow.
             operation => operation.id !== operationIdToDelete
           )
           await onUpdated()
-          if (selectedOperationId === operationIdToDelete) {
-            closeOperationPanel()
-          }
+          selectedOperationId = undefined
           notifications.success("Operation deleted.")
         } catch (error) {
           console.error(error)
@@ -227,9 +203,7 @@ Any constraints this operation must follow.
       ],
       { x: event.clientX, y: event.clientY },
       () => {
-        if (!operationPanelOpen) {
-          selectedOperationId = undefined
-        }
+        selectedOperationId = undefined
       }
     )
   }
@@ -260,7 +234,7 @@ Any constraints this operation must follow.
           <button
             class="operation-open-button"
             type="button"
-            onclick={() => openOperationPanel(operation.id)}
+            onclick={() => openOperation(operation.id)}
             oncontextmenu={event => {
               selectedOperationId = operation.id
               openOperationContextMenu(event)
@@ -304,26 +278,6 @@ Any constraints this operation must follow.
   validateName={validateCreateOperationName}
   onConfirm={createOperation}
 />
-
-{#if selectedOperation}
-  <OperationSidePanel
-    open={operationPanelOpen}
-    {agentId}
-    bind:operation={selectedOperation}
-    {promptBindings}
-    {bindingIcons}
-    {completions}
-    {toolsLoaded}
-    {availableTools}
-    {webSearchConfigured}
-    {onAddApiConnection}
-    {onConfigureWebSearch}
-    onRenameOperation={openRenameModal}
-    {onSetOperationLive}
-    {onUpdated}
-    onClose={closeOperationPanel}
-  />
-{/if}
 
 <OperationNameModal
   bind:this={renameOperationModal}

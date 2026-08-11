@@ -35,6 +35,7 @@
   let agentUpdateOverrides = $state<Record<string, unknown>>({})
   let lastToolsAiConfigId = $state<string | null | undefined>(null)
   let testsEnabled = $derived($featureFlags[FeatureFlag.AI_TESTS])
+  let operationPage = $derived($isActive("./operation"))
 
   let activeTab = $derived.by(() => {
     if ($isActive("./knowledge")) {
@@ -127,105 +128,112 @@
   onDestroy(() => stopSyncing?.())
 </script>
 
-<div class="config-wrapper">
-  <TopBar
-    breadcrumbs={[
-      { text: "Agents", url: "../", tag: "Beta" },
-      { text: currentAgent?.name || "Agent" },
-    ]}
-    icon="Effect"
-  ></TopBar>
-  <div class="secondary-bar">
-    <div class="filter">
-      <ActionButton
-        quiet
-        selected={activeTab === "Configuration"}
-        on:click={() => $goto("./config")}
-      >
-        Configuration
-      </ActionButton>
-      <ActionButton
-        quiet
-        selected={activeTab === "Deployment"}
-        on:click={() => $goto("./deployment")}
-      >
-        Deployment
-      </ActionButton>
-      {#if testsEnabled}
+{#if operationPage}
+  <slot />
+{:else}
+  <div class="config-wrapper">
+    <TopBar
+      breadcrumbs={[
+        { text: "Agents", url: "../", tag: "Beta" },
+        { text: currentAgent?.name || "Agent" },
+      ]}
+      icon="Effect"
+    ></TopBar>
+    <div class="secondary-bar">
+      <div class="filter">
         <ActionButton
           quiet
-          selected={activeTab === "Tests"}
-          on:click={() => $goto("./tests")}
+          selected={activeTab === "Configuration"}
+          on:click={() => $goto("./config")}
         >
-          Tests
+          Configuration
         </ActionButton>
-      {/if}
-      <ActionButton
-        quiet
-        selected={activeTab === "Logs"}
-        on:click={() => $goto("./logs")}
+        <ActionButton
+          quiet
+          selected={activeTab === "Deployment"}
+          on:click={() => $goto("./deployment")}
+        >
+          Deployment
+        </ActionButton>
+        {#if testsEnabled}
+          <ActionButton
+            quiet
+            selected={activeTab === "Tests"}
+            on:click={() => $goto("./tests")}
+          >
+            Tests
+          </ActionButton>
+        {/if}
+        <ActionButton
+          quiet
+          selected={activeTab === "Logs"}
+          on:click={() => $goto("./logs")}
+        >
+          Logs
+        </ActionButton>
+        {#if hasPublishedUnpublishedChanges}
+          <div class="unpublished-changes-indicator">
+            <StatusLight
+              color="var(--spectrum-global-color-blue-600)"
+              size="L"
+            />
+            <span>Unpublished changes</span>
+          </div>
+        {/if}
+      </div>
+      <div class="start-pause-row">
+        <div class="status-icons">
+          <Icon
+            tooltip="Documentation"
+            on:click={() =>
+              window.open(
+                "https://docs.budibase.com/docs/agent-building-101",
+                "_blank"
+              )}
+            name="info"
+            size="M"
+            color="var(--spectrum-global-color-gray-600)"
+          />
+        </div>
+        <LiveToggleButton
+          live={currentAgent?.live === true}
+          disabled={togglingLive}
+          on:click={toggleAgentLive}
+        />
+      </div>
+    </div>
+    <div
+      class="config-page"
+      class:full-width={activeTab === "Logs" || activeTab === "Tests"}
+    >
+      <div
+        class="config-content"
+        class:full-width={activeTab === "Logs" || activeTab === "Tests"}
+        class:logs-tab={activeTab === "Logs" || activeTab === "Tests"}
       >
-        Logs
-      </ActionButton>
-      {#if hasPublishedUnpublishedChanges}
-        <div class="unpublished-changes-indicator">
-          <StatusLight color="var(--spectrum-global-color-blue-600)" size="L" />
-          <span>Unpublished changes</span>
+        <div class="config-form">
+          {#if activeTab === "Logs" || activeTab === "Tests"}
+            <!-- svelte-ignore slot_element_deprecated -->
+            <slot />
+          {:else}
+            <!-- svelte-ignore slot_element_deprecated -->
+            <Layout gap="L">
+              <slot />
+            </Layout>
+          {/if}
+        </div>
+      </div>
+      {#if activeTab !== "Logs" && activeTab !== "Tests"}
+        <div class="config-preview">
+          <AgentChatPanel
+            agentId={currentAgent?._id}
+            workspaceId={$params.workspaceId || ""}
+          />
         </div>
       {/if}
     </div>
-    <div class="start-pause-row">
-      <div class="status-icons">
-        <Icon
-          tooltip="Documentation"
-          on:click={() =>
-            window.open(
-              "https://docs.budibase.com/docs/agent-building-101",
-              "_blank"
-            )}
-          name="info"
-          size="M"
-          color="var(--spectrum-global-color-gray-600)"
-        />
-      </div>
-      <LiveToggleButton
-        live={currentAgent?.live === true}
-        disabled={togglingLive}
-        on:click={toggleAgentLive}
-      />
-    </div>
   </div>
-  <div
-    class="config-page"
-    class:full-width={activeTab === "Logs" || activeTab === "Tests"}
-  >
-    <div
-      class="config-content"
-      class:full-width={activeTab === "Logs" || activeTab === "Tests"}
-      class:logs-tab={activeTab === "Logs" || activeTab === "Tests"}
-    >
-      <div class="config-form">
-        {#if activeTab === "Logs" || activeTab === "Tests"}
-          <!-- svelte-ignore slot_element_deprecated -->
-          <slot />
-        {:else}
-          <!-- svelte-ignore slot_element_deprecated -->
-          <Layout gap="L">
-            <slot />
-          </Layout>
-        {/if}
-      </div>
-    </div>
-    {#if activeTab !== "Logs" && activeTab !== "Tests"}
-      <div class="config-preview">
-        <AgentChatPanel
-          agentId={currentAgent?._id}
-          workspaceId={$params.workspaceId || ""}
-        />
-      </div>
-    {/if}
-  </div>
-</div>
+{/if}
 
 <style>
   .config-wrapper {

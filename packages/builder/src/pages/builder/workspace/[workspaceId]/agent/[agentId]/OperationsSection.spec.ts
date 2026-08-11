@@ -8,6 +8,10 @@ import MockControllableModal from "@/test/mocks/MockControllableModal.svelte"
 import MockInput from "@/test/mocks/MockInput.svelte"
 import MockModalContent from "@/test/mocks/MockModalContent.svelte"
 
+const mocks = vi.hoisted(() => ({
+  goto: vi.fn(),
+}))
+
 vi.mock("@budibase/bbui", () => ({
   Body: MockBody,
   Button: MockButton,
@@ -38,9 +42,10 @@ vi.mock("./OperationLiveBadge.svelte", () => ({
   default: MockComponent,
 }))
 
-vi.mock("./OperationSidePanel.svelte", () => ({
-  default: MockComponent,
-}))
+vi.mock("@roxi/routify", async () => {
+  const { writable } = await import("svelte/store")
+  return { goto: writable(mocks.goto) }
+})
 
 import OperationsSection from "./OperationsSection.svelte"
 
@@ -79,6 +84,31 @@ describe("OperationsSection", () => {
       name: "Customer support",
       live: false,
     })
+    expect(mocks.goto).toHaveBeenCalledWith("./operation/operation_123")
+  })
+
+  it("navigates to an operation when its row is selected", async () => {
+    const agent: Agent = {
+      name: "Support agent",
+      aiconfig: "config-1",
+      operations: [
+        {
+          id: "operation_existing",
+          name: "Customer support",
+          live: false,
+          promptInstructions: "Help the customer",
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
+    }
+
+    render(OperationsSection, {
+      props: { agent, onUpdated: vi.fn(async () => true) },
+    })
+
+    await fireEvent.click(screen.getByText("Customer support"))
+
+    expect(mocks.goto).toHaveBeenCalledWith("./operation/operation_existing")
   })
 
   it("does not allow creating a second operation with the same name", async () => {

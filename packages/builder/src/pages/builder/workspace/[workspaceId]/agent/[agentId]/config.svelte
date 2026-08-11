@@ -7,7 +7,6 @@
     WebSearchProvider,
     type Agent,
     type ToolMetadata,
-    type EnrichedBinding,
   } from "@budibase/types"
   import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
   import {
@@ -24,12 +23,6 @@
   import { bb } from "@/stores/bb"
   import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
   import type { AgentTool } from "./toolTypes"
-  import { getToolBindingCategory } from "./toolBindingUtils"
-  import {
-    EditorModes,
-    hbAutocomplete,
-    bindingsToCompletions,
-  } from "@/components/common/CodeEditor"
   import BudibaseLogo from "../logos/Budibase.svelte"
   import WebSearchLogo from "../logos/WebSearch.svelte"
   import RestLogo from "../logos/Rest.svelte"
@@ -43,7 +36,6 @@
   import { shouldAutoSelectAgentModel } from "./configUtils"
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
   import OperationsSection from "./OperationsSection.svelte"
-  import WebSearchConfigModal from "./WebSearchConfigModal.svelte"
 
   // Code editor tag icons must be URL strings (see `hbsTags.ts`).
   // Use URLs derived from the same Phosphor SVG paths as the Svelte logo components.
@@ -79,7 +71,6 @@
 
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
   let saving = $state(false)
-  let webSearchConfigModal: WebSearchConfigModal | undefined = $state()
   let preloadedKnowledgeAgentId: string | undefined = $state()
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
@@ -100,7 +91,6 @@
   let webSearchConfigured = $derived(
     !!webSearchConfig?.apiKey && !!webSearchConfig.provider
   )
-  let toolsLoaded = $derived(!!$agentsStore.tools)
 
   function enrichToolMetadata(tool: ToolMetadata): AgentTool {
     const { sourceType, sourceLabel } = tool
@@ -152,52 +142,16 @@
   })
 
   // Build lookup maps from readable binding to runtime binding and icon URL
-  let { readableToRuntimeBinding, readableToIcon } = $derived.by(() => {
+  let readableToRuntimeBinding = $derived.by(() => {
     const runtimeMap: Record<string, string> = {}
-    const iconMap: Record<string, string | undefined> = {}
     for (const tool of availableTools) {
       if (tool.readableBinding) {
         if (tool.runtimeBinding) {
           runtimeMap[tool.readableBinding] = tool.runtimeBinding
         }
-        iconMap[tool.readableBinding] = tool.tagIconUrl
       }
     }
-    return { readableToRuntimeBinding: runtimeMap, readableToIcon: iconMap }
-  })
-
-  let promptBindings: EnrichedBinding[] = $derived.by(() => {
-    return availableTools
-      .filter(tool => !!tool.name)
-      .filter(
-        tool =>
-          tool.sourceType !== ToolType.SEARCH ||
-          (webSearchConfigured && tool.runtimeBinding)
-      )
-      .map(tool => ({
-        runtimeBinding: tool.runtimeBinding,
-        readableBinding: tool.readableBinding,
-        category: getToolBindingCategory(tool.sourceType, tool.sourceLabel),
-        display: {
-          name:
-            tool.sourceType === ToolType.SEARCH
-              ? "Web search"
-              : formatToolLabel(tool),
-          type: "tool",
-          rank: tool.sourceType === ToolType.SEARCH ? 0 : 1,
-        },
-        icon: tool.tagIconUrl,
-      }))
-  })
-
-  let promptCompletions = $derived.by(() => {
-    return promptBindings.length > 0
-      ? [
-          hbAutocomplete([
-            ...bindingsToCompletions(promptBindings, EditorModes.Handlebars),
-          ]),
-        ]
-      : []
+    return runtimeMap
   })
 
   $effect(() => {
@@ -368,18 +322,6 @@
     return "tool"
   }
 
-  // list_tables -> List tables
-  const formatToolLabel = (tool: AgentTool) =>
-    (tool.readableName || tool.name)
-      .split(".")
-      .map(part =>
-        part
-          .split("_")
-          .join(" ")
-          .replace(/\b\w/g, l => l.toUpperCase())
-      )
-      .join(".")
-
   function getWebSearchRuntimeBinding(
     configured?: boolean,
     config?: typeof webSearchConfig
@@ -520,10 +462,6 @@
       saveAgent({ showNotifications: false })
     }
   })
-
-  const openWebSearchConfigModal = () => {
-    webSearchConfigModal?.show()
-  }
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -573,24 +511,10 @@
 {#key currentAgent?._id}
   <OperationsSection
     bind:agent={draft}
-    agentId={currentAgent?._id}
-    {promptBindings}
-    bindingIcons={readableToIcon}
-    completions={promptCompletions}
-    {toolsLoaded}
-    {availableTools}
-    {webSearchConfigured}
-    onAddApiConnection={() => bb.settings("/connections/apis")}
-    onConfigureWebSearch={openWebSearchConfigModal}
     onSetOperationLive={setOperationLive}
     onUpdated={() => scheduleSave(true)}
   />
 {/key}
-
-<WebSearchConfigModal
-  bind:this={webSearchConfigModal}
-  aiconfigId={draft.aiconfig}
-/>
 
 <style>
   .llm-section-container {
