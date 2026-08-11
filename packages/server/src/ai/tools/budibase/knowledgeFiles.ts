@@ -200,6 +200,9 @@ export const createKnowledgeFilesTool = (
   sourceLabel: "Budibase",
   description:
     "List knowledge files attached to this agent, including metadata like size, status, and upload time",
+  executionPolicy: {
+    mode: "admin",
+  },
   authorization: {
     permissionType: PermissionType.WORKSPACE,
     permissionLevel: PermissionLevel.READ,
@@ -295,6 +298,9 @@ export const createKnowledgeSearchTool = (
   sourceLabel: "Budibase",
   description:
     "Search the agent knowledge files and return relevant context snippets with source metadata",
+  executionPolicy: {
+    mode: "admin",
+  },
   authorization: {
     permissionType: PermissionType.WORKSPACE,
     permissionLevel: PermissionLevel.READ,

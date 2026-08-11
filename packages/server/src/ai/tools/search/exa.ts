@@ -16,6 +16,9 @@ export const createExaTool = (apiKey: string): BudibaseToolDefinition => ({
   name: "search_web_search",
   sourceType: ToolType.SEARCH,
   sourceLabel: "Exa",
+  executionPolicy: {
+    mode: "admin",
+  },
   description: "Search the web using Exa",
   authorization: {
     permissionType: PermissionType.WORKSPACE,

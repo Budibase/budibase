@@ -12,6 +12,15 @@ export enum ToolType {
   ESCALATION = "ESCALATION",
 }
 
+export enum ToolExecutionPrincipal {
+  REQUESTER = "requester",
+  ADMIN = "admin",
+}
+
+export type ToolExecutionPolicy =
+  | { mode: "admin" }
+  | { mode: "configurable"; defaultPrincipal: ToolExecutionPrincipal }
+
 export interface ToolMetadata {
   name: string
   readableName?: string
@@ -19,6 +28,7 @@ export interface ToolMetadata {
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
+  executionPolicy: ToolExecutionPolicy
 }
 
 interface ChatAgentIntegration {
@@ -126,11 +136,6 @@ export interface AgentEscalationConfig {
   recipients?: EscalationRecipient[]
   // How long the escalation is kept before being marked as expired.
   delay?: number
-}
-
-export enum ToolExecutionPrincipal {
-  REQUESTER = "requester",
-  ADMIN = "admin",
 }
 
 export interface AgentOperationToolConfig {

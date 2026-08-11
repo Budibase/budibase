@@ -187,6 +187,11 @@
     return config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
   }
 
+  const getEffectiveToolPrincipal = (tool: AgentTool) =>
+    tool.executionPolicy.mode === "admin"
+      ? ToolExecutionPrincipal.ADMIN
+      : getToolPrincipal(tool.runtimeBinding)
+
   const setToolPrincipal = (
     toolName: string,
     executionPrincipal: ToolExecutionPrincipal
@@ -378,24 +383,26 @@
                       </div>
                     </div>
                     <div class="tool-actions">
-                      <span class="run-as-label">Run as</span>
-                      <Select
-                        size="S"
-                        bordered={false}
-                        placeholder={false}
-                        autoWidth
-                        popoverAutoWidth
-                        value={getToolPrincipal(tool.runtimeBinding)}
-                        options={executionPrincipalOptions}
-                        getOptionLabel={option => option.label}
-                        getOptionValue={option => option.value}
-                        tooltip={`Execution identity for ${formatToolLabel(tool)}`}
-                        on:change={event =>
-                          setToolPrincipal(
-                            tool.runtimeBinding,
-                            event.detail as ToolExecutionPrincipal
-                          )}
-                      />
+                      {#if tool.executionPolicy.mode === "configurable"}
+                        <span class="run-as-label">Run as</span>
+                        <Select
+                          size="S"
+                          bordered={false}
+                          placeholder={false}
+                          autoWidth
+                          popoverAutoWidth
+                          value={getEffectiveToolPrincipal(tool)}
+                          options={executionPrincipalOptions}
+                          getOptionLabel={option => option.label}
+                          getOptionValue={option => option.value}
+                          tooltip={`Execution identity for ${formatToolLabel(tool)}`}
+                          on:change={event =>
+                            setToolPrincipal(
+                              tool.runtimeBinding,
+                              event.detail as ToolExecutionPrincipal
+                            )}
+                        />
+                      {/if}
                       <button
                         class="tool-close-button"
                         type="button"

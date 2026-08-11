@@ -60,7 +60,7 @@ export const createEscalateTool = ({
   getMessages,
   getRequestId,
   executionContext,
-  executionPrincipal = ToolExecutionPrincipal.REQUESTER,
+  executionPrincipal = ToolExecutionPrincipal.ADMIN,
 }: CreateEscalateToolParams) =>
   tool({
     description:
@@ -138,6 +138,9 @@ export const createEscalatePlaceholderTool = (): AiToolDefinition => ({
     "cannot proceed safely. Reference this where sign-off is required.",
   sourceType: ToolType.ESCALATION,
   sourceLabel: "Escalation",
+  executionPolicy: {
+    mode: "admin",
+  },
   authorization: ESCALATE_TOOL_AUTHORIZATION,
   tool: tool({
     description:

@@ -637,7 +637,7 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
         sessionId: "session_1",
         recipients,
         delayMs: 120000,
-        executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+        executionPrincipal: ToolExecutionPrincipal.ADMIN,
         executionContext: expect.objectContaining({
           agentId: "agent_1",
           operationId: operationWithRecipients.id,

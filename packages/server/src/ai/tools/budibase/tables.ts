@@ -30,6 +30,9 @@ export const createTableTools = (
       sourceType: ToolType.INTERNAL_TABLE,
       sourceLabel: "Budibase",
       description: "List tables configured for the current operation",
+      executionPolicy: {
+        mode: "admin",
+      },
       authorization: {
         permissionType: PermissionType.WORKSPACE,
         permissionLevel: PermissionLevel.READ,
@@ -73,6 +76,9 @@ export const createTableTools = (
       sourceType: ToolType.INTERNAL_TABLE,
       sourceLabel: "Budibase",
       description: "Get details about a specific table by ID",
+      executionPolicy: {
+        mode: "admin",
+      },
       authorization: {
         permissionType: PermissionType.TABLE,
         permissionLevel: PermissionLevel.READ,

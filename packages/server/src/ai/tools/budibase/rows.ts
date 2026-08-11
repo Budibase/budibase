@@ -8,6 +8,7 @@ import {
   ToolType,
   PermissionLevel,
   PermissionType,
+  ToolExecutionPrincipal,
   type Row,
   type RowSearchParams,
   type TableSchema,
@@ -433,6 +434,10 @@ export const createRowTools = ({
       sourceLabel: resolvedSourceLabel,
       sourceIconType,
       description,
+      executionPolicy: {
+        mode: "configurable",
+        defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+      },
       authorization: {
         permissionType: PermissionType.TABLE,
         permissionLevel:

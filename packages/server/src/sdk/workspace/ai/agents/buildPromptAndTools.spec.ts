@@ -1,4 +1,4 @@
-import { ToolType, type Agent } from "@budibase/types"
+import { ToolExecutionPrincipal, ToolType, type Agent } from "@budibase/types"
 import type { Tool } from "ai"
 import { requesterTools } from "../tests/utils"
 
@@ -272,6 +272,10 @@ describe("buildPromptAndTools", () => {
         description: "Search invoices",
         sourceType: ToolType.INTERNAL_TABLE,
         sourceLabel: "Budibase",
+        executionPolicy: {
+          mode: "configurable",
+          defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+        },
         tool: {} as Tool,
       },
       {
@@ -281,6 +285,10 @@ describe("buildPromptAndTools", () => {
         description: "Search suppliers",
         sourceType: ToolType.INTERNAL_TABLE,
         sourceLabel: "Budibase",
+        executionPolicy: {
+          mode: "configurable",
+          defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+        },
         tool: {} as Tool,
       },
     ])

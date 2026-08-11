@@ -76,11 +76,21 @@
     return getIncludedToolRuntimeBindings(
       operation.promptInstructions,
       readableToRuntimeBinding
-    ).map(toolName => ({
-      toolName,
-      executionPrincipal:
-        existing.get(toolName) ?? ToolExecutionPrincipal.REQUESTER,
-    }))
+    ).map(toolName => {
+      const tool = availableTools.find(tool => tool.runtimeBinding === toolName)
+      let executionPrincipal =
+        existing.get(toolName) ?? ToolExecutionPrincipal.REQUESTER
+      if (tool?.executionPolicy.mode === "admin") {
+        executionPrincipal = ToolExecutionPrincipal.ADMIN
+      } else if (tool?.executionPolicy.mode === "configurable") {
+        executionPrincipal =
+          existing.get(toolName) ?? tool.executionPolicy.defaultPrincipal
+      }
+      return {
+        toolName,
+        executionPrincipal,
+      }
+    })
   }
 
   // Agent state
@@ -152,6 +162,9 @@
       description: "Configure web search",
       sourceType: ToolType.SEARCH,
       sourceLabel: "Search tools",
+      executionPolicy: {
+        mode: "admin",
+      },
     }
     const enriched = enrichToolMetadata(webSearchTool)
     return {

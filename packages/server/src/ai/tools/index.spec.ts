@@ -6,13 +6,21 @@ import {
 } from "@budibase/types"
 import { tool } from "ai"
 import { z } from "zod"
-import { toToolSet, type AiToolDefinition } from "."
+import {
+  resolveToolExecutionPrincipal,
+  toToolSet,
+  type AiToolDefinition,
+} from "."
 import { filterAgentToolCollectionResult } from "./authorization"
 
 const definition = (execute: jest.Mock): AiToolDefinition => ({
   name: "secured_tool",
   description: "A secured tool",
   sourceType: ToolType.INTERNAL_TABLE,
+  executionPolicy: {
+    mode: "configurable",
+    defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+  },
   authorization: {
     permissionType: PermissionType.TABLE,
     permissionLevel: PermissionLevel.READ,
@@ -36,6 +44,33 @@ const executionContext = {
     authorization: { mode: "current" as const },
   },
 }
+
+describe("resolveToolExecutionPrincipal", () => {
+  it("uses the configured principal for configurable tools", () => {
+    const toolDefinition = definition(jest.fn())
+
+    expect(
+      resolveToolExecutionPrincipal(toolDefinition, {
+        toolName: toolDefinition.name,
+        executionPrincipal: ToolExecutionPrincipal.ADMIN,
+      })
+    ).toBe(ToolExecutionPrincipal.ADMIN)
+  })
+
+  it("uses admin for non-configurable tools", () => {
+    const toolDefinition = definition(jest.fn())
+    toolDefinition.executionPolicy = {
+      mode: "admin",
+    }
+
+    expect(
+      resolveToolExecutionPrincipal(toolDefinition, {
+        toolName: toolDefinition.name,
+        executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+      })
+    ).toBe(ToolExecutionPrincipal.ADMIN)
+  })
+})
 
 describe("secured AI tool execution", () => {
   it("authorizes immediately before executing the tool", async () => {

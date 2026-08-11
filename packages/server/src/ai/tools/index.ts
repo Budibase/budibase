@@ -4,6 +4,8 @@ import {
   ToolExecutionPrincipal,
   ToolType,
   type AgentExecutionContext,
+  type AgentOperationToolConfig,
+  type ToolExecutionPolicy,
 } from "@budibase/types"
 import { type Tool, type ToolSet } from "ai"
 
@@ -23,6 +25,7 @@ export interface AiToolDefinition {
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
+  executionPolicy: ToolExecutionPolicy
   authorization?: ToolAuthorization
   filterResult?: (
     result: unknown,
@@ -42,6 +45,14 @@ export interface ToolAuthorizationRequest {
   executionContext: AgentExecutionContext
   principal: ToolExecutionPrincipal
 }
+
+export const resolveToolExecutionPrincipal = (
+  tool: AiToolDefinition,
+  config?: AgentOperationToolConfig
+) =>
+  tool.executionPolicy.mode === "admin"
+    ? ToolExecutionPrincipal.ADMIN
+    : (config?.executionPrincipal ?? tool.executionPolicy.defaultPrincipal)
 
 const getToolFailure = (result: unknown): string | undefined => {
   if (!result || typeof result !== "object" || !("error" in result)) {

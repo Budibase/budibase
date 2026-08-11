@@ -9,6 +9,7 @@ import {
   ToolType,
   PermissionLevel,
   PermissionType,
+  ToolExecutionPrincipal,
 } from "@budibase/types"
 import * as triggers from "../../../automations/triggers"
 import sdk from "../../../sdk"
@@ -88,6 +89,9 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
     sourceType: ToolType.AUTOMATION,
     sourceLabel: "Budibase",
     description: "List all automations in the current workspace",
+    executionPolicy: {
+      mode: "admin",
+    },
     authorization: {
       permissionType: PermissionType.WORKSPACE,
       permissionLevel: PermissionLevel.READ,
@@ -118,6 +122,9 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
     sourceType: ToolType.AUTOMATION,
     sourceLabel: "Budibase",
     description: "Get details about a specific automation by ID",
+    executionPolicy: {
+      mode: "admin",
+    },
     authorization: {
       permissionType: PermissionType.AUTOMATION,
       permissionLevel: PermissionLevel.READ,
@@ -151,7 +158,7 @@ const createAutomationTools = (
         automation._id &&
         automation.definition?.trigger?.stepId === AutomationTriggerStepId.APP
     )
-    .map(automation => {
+    .map((automation): BudibaseToolDefinition => {
       const automationName = automation.name || automation._id!
       const sanitizedAutomationId = automation._id!.replace(
         /[^A-Za-z0-9_-]/g,
@@ -172,6 +179,10 @@ const createAutomationTools = (
         sourceType: ToolType.AUTOMATION,
         sourceLabel: "Budibase",
         description,
+        executionPolicy: {
+          mode: "configurable",
+          defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+        },
         authorization: {
           permissionType: PermissionType.AUTOMATION,
           permissionLevel: PermissionLevel.EXECUTE,

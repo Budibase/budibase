@@ -7,7 +7,6 @@ import {
   WebSearchProvider,
   ESCALATE_TOOL_NAME,
   EscalateToolResultStatus,
-  ToolExecutionPrincipal,
   type AgentExecutionContext,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
@@ -23,6 +22,7 @@ import { isToolUIPart, getToolName } from "ai"
 import {
   createRestQueryTool,
   createDatasourceQueryTool,
+  resolveToolExecutionPrincipal,
   toToolSet,
   type AiToolDefinition,
   type ToolAuthorizationRuntime,
@@ -69,6 +69,7 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
     sourceType: tool.sourceType,
     sourceLabel: tool.sourceLabel,
     sourceIconType: tool.sourceIconType,
+    executionPolicy: tool.executionPolicy,
   }
 }
 
@@ -209,8 +210,7 @@ export async function buildPromptAndTools(
     const { executionContext } = options
     for (const tool of enabledTools) {
       const config = toolConfigs.find(config => config.toolName === tool.name)
-      const principal =
-        config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
+      const principal = resolveToolExecutionPrincipal(tool, config)
       if (!tool.authorization) {
         continue
       }

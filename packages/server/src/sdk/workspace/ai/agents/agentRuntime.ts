@@ -562,10 +562,6 @@ export const prepareAgentChatRun = async ({
       if (!executionContext) {
         throw new Error("Agent execution context is required")
       }
-      const escalationPrincipal =
-        selectedOperation.enabledTools?.find(
-          config => config.toolName === ESCALATE_TOOL_NAME
-        )?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
       tools.escalate = createEscalateTool({
         agentId,
         operationId: selectedOperation.id,
@@ -578,7 +574,7 @@ export const prepareAgentChatRun = async ({
         userId: user?._id,
         getMessages: () => modelMessages,
         getRequestId: () => getRequestId?.(),
-        executionPrincipal: escalationPrincipal,
+        executionPrincipal: ToolExecutionPrincipal.ADMIN,
         executionContext,
       })
     }
