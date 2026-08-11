@@ -31,7 +31,6 @@ import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 import { HTTPError } from "@budibase/backend-core"
 import { authorizeAgentToolCall } from "../../../../ai/tools/authorization"
-import { getReadableAgentToolBinding } from "@budibase/shared-core"
 
 const HELPER_TOOL_NAMES = new Set([
   "list_tables",
@@ -45,31 +44,6 @@ const HELPER_TOOL_NAMES = new Set([
 
 const isHelperTool = (tool: Pick<AiToolDefinition, "name">) =>
   HELPER_TOOL_NAMES.has(tool.name)
-
-const escapeRegExp = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-
-export const replaceUnavailableToolBindings = ({
-  promptInstructions,
-  bindings,
-}: {
-  promptInstructions?: string
-  bindings: Array<{ readableBinding: string; label: string }>
-}) => {
-  if (!promptInstructions || !bindings.length) {
-    return promptInstructions
-  }
-  return bindings.reduce((instructions, binding) => {
-    const expression = new RegExp(
-      `\\{\\{\\s*${escapeRegExp(binding.readableBinding)}\\s*\\}\\}`,
-      "g"
-    )
-    return instructions.replace(
-      expression,
-      `[Unavailable in this security context: ${binding.label}]`
-    )
-  }, promptInstructions)
-}
 
 export const getLiveOperations = (agent: Agent): AgentOperation[] =>
   (agent.operations || []).filter(operation => operation.live === true)
@@ -263,37 +237,14 @@ export async function buildPromptAndTools(
   const authorizedTools = options.executionContext
     ? enabledTools.filter(tool => runtimes.has(tool.name))
     : enabledTools
-  const authorizedToolNames = new Set(authorizedTools.map(tool => tool.name))
-  const unavailableBindings = options.executionContext
-    ? enabledTools
-        .filter(
-          tool =>
-            enabledToolNames.has(tool.name) &&
-            !authorizedToolNames.has(tool.name)
-        )
-        .map(tool => ({
-          readableBinding: getReadableAgentToolBinding({
-            sourceType: tool.sourceType,
-            sourceLabel: tool.sourceLabel,
-            toolName: tool.readableName || tool.name,
-          }),
-          label: tool.readableName || tool.name,
-        }))
-    : []
-  const promptInstructions = operation
-    ? replaceUnavailableToolBindings({
-        promptInstructions: operation.promptInstructions,
-        bindings: unavailableBindings,
-      })
-    : fallbackPromptInstructions
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
     promptInstructions: operation
-      ? [`Current operation: ${operation.name}`, promptInstructions]
+      ? [`Current operation: ${operation.name}`, operation.promptInstructions]
           .filter(Boolean)
           .join("\n\n")
-      : promptInstructions,
+      : fallbackPromptInstructions,
     includeGoal,
   })
 

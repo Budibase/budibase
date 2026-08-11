@@ -15,7 +15,6 @@ import {
   getToolDisplayNames,
   IncompleteToolCall,
   groupToolResultsByOutcome,
-  replaceUnavailableToolBindings,
   updatePendingToolCalls,
   updateUnrecoveredToolFailures,
 } from "./utils"
@@ -24,25 +23,6 @@ type MessagePart = NonNullable<UIMessage["parts"]>[number]
 
 const toolPart = (part: Record<string, unknown>): MessagePart =>
   part as MessagePart
-
-describe("replaceUnavailableToolBindings", () => {
-  it("replaces unavailable bindings while preserving authorized bindings", () => {
-    expect(
-      replaceUnavailableToolBindings({
-        promptInstructions:
-          "Read with {{ budibase.Expenses.get_row }} then write with {{ budibase.Expenses.create_row }}.",
-        bindings: [
-          {
-            readableBinding: "budibase.Expenses.create_row",
-            label: "Expenses.create_row",
-          },
-        ],
-      })
-    ).toEqual(
-      "Read with {{ budibase.Expenses.get_row }} then write with [Unavailable in this security context: Expenses.create_row]."
-    )
-  })
-})
 
 describe("getToolDisplayNames", () => {
   it("returns readable names keyed by raw tool name", () => {

@@ -54,47 +54,6 @@ export const getReadableQueryToolBinding = ({
   return `${readablePrefix}.${queryName || "query"}`
 }
 
-interface ReadableAgentToolBindingOptions {
-  sourceType: ToolType
-  sourceLabel?: string
-  toolName: string
-}
-
-const sanitiseReadableBindingSegment = (value: string) =>
-  value.replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_|_$/g, "")
-
-export const getReadableAgentToolBinding = ({
-  sourceType,
-  sourceLabel,
-  toolName,
-}: ReadableAgentToolBindingOptions) => {
-  if (isQueryToolType(sourceType)) {
-    return getReadableQueryToolBinding({
-      sourceType,
-      sourceLabel,
-      queryName: toolName,
-    })
-  }
-
-  let prefix = "tool"
-  if (
-    sourceType === ToolType.INTERNAL_TABLE ||
-    sourceType === ToolType.AUTOMATION
-  ) {
-    prefix = "budibase"
-  } else if (sourceType === ToolType.EXTERNAL_TABLE) {
-    prefix = sourceLabel
-      ? sanitiseReadableBindingSegment(sourceLabel)
-      : "external"
-  } else if (sourceType === ToolType.SEARCH) {
-    prefix = "search"
-  } else if (sourceType === ToolType.ESCALATION) {
-    prefix = "escalation"
-  }
-
-  return `${prefix}.${toolName}`
-}
-
 export const getQueryToolBindings = ({
   sourceType,
   sourceLabel,

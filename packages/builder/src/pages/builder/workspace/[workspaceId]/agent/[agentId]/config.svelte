@@ -11,7 +11,10 @@
     type EnrichedBinding,
   } from "@budibase/types"
   import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
-  import { getReadableAgentToolBinding } from "@budibase/shared-core"
+  import {
+    getReadableQueryToolBinding,
+    isQueryToolType,
+  } from "@budibase/shared-core"
   import {
     datasources,
     restTemplates,
@@ -134,11 +137,13 @@
       sourceLabel,
     })
     const displayName = tool.readableName || tool.name
-    const readableBinding = getReadableAgentToolBinding({
-      sourceType,
-      sourceLabel,
-      toolName: displayName,
-    })
+    const readableBinding = isQueryToolType(sourceType)
+      ? getReadableQueryToolBinding({
+          sourceType,
+          sourceLabel,
+          queryName: displayName,
+        })
+      : `${getBindingPrefix(sourceType, sourceLabel)}.${displayName}`
     return {
       ...tool,
       sourceLabel,
@@ -367,6 +372,32 @@
     }
 
     return {}
+  }
+
+  function sanitizeString(str: string) {
+    return str.replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_|_$/g, "")
+  }
+
+  function getBindingPrefix(
+    sourceType: ToolType | undefined,
+    sourceLabel: string | undefined
+  ): string {
+    if (
+      sourceType === ToolType.INTERNAL_TABLE ||
+      sourceType === ToolType.AUTOMATION
+    ) {
+      return "budibase"
+    }
+    if (sourceType === ToolType.EXTERNAL_TABLE) {
+      return sourceLabel ? sanitizeString(sourceLabel) : "external"
+    }
+    if (sourceType === ToolType.SEARCH) {
+      return "search"
+    }
+    if (sourceType === ToolType.ESCALATION) {
+      return "escalation"
+    }
+    return "tool"
   }
 
   // list_tables -> List tables
