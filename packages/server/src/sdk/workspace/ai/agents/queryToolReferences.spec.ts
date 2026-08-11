@@ -101,6 +101,37 @@ describe("updateAgentQueryToolReferences", () => {
     })
   })
 
+  it("preserves the legacy principal when renaming a runtime binding", () => {
+    const legacyConfig = {
+      toolName: existingBindings.runtimeBinding,
+      executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+    }
+    const agent = makeAgent({
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main",
+          live: true,
+          enabledTools: [legacyConfig],
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
+    })
+
+    const updated = updateAgentQueryToolReferences({
+      agent,
+      existingBindings,
+      updatedBindings,
+    })
+
+    expect(updated?.operations?.[0].enabledTools).toEqual([
+      {
+        ...legacyConfig,
+        toolName: updatedBindings.runtimeBinding,
+      },
+    ])
+  })
+
   it.each(["legacy-first", "updated-first"])(
     "preserves the existing destination principal when %s",
     order => {
