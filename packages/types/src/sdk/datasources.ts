@@ -1,4 +1,4 @@
-import { Table, Row } from "../documents"
+import { Table, Row, RestQueryFields } from "../documents"
 import { EnrichedQueryJson } from "./search"
 
 export const PASSWORD_REPLACEMENT = "--secret-value--"
@@ -181,7 +181,7 @@ export interface RestPreviewConfig {
 
 export interface IntegrationRequestOpts {
   includeRequest?: boolean
-  previewFields?: Record<string, any>
+  previewFields?: RestQueryFields
   previewConfig?: RestPreviewConfig
 }
 

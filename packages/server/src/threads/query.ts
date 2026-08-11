@@ -12,6 +12,7 @@ import {
   Query,
   QueryVerb,
   RestPreviewConfig,
+  RestQueryFields,
   Row,
   SourceName,
   SSOUser,
@@ -152,7 +153,7 @@ class QueryRunner {
     }
     let query: Record<string, any>
     let preview:
-      | { fields: Record<string, any>; config?: RestPreviewConfig }
+      | { fields: RestQueryFields; config?: RestPreviewConfig }
       | undefined
 
     // Handle SQL pagination bindings
@@ -398,9 +399,9 @@ class QueryRunner {
 
   // Builds the display-oriented preview
   async buildPreview(
-    fields: Record<string, any>,
-    parameters: Record<string, any>
-  ): Promise<{ fields: Record<string, any>; config?: RestPreviewConfig }> {
+    fields: RestQueryFields,
+    parameters: Record<string, unknown>
+  ): Promise<{ fields: RestQueryFields; config?: RestPreviewConfig }> {
     const envVars = context.getEnvironmentVariables() || {}
     const maskedEnv = Object.fromEntries(
       Object.keys(envVars).map(name => [name, `{{ env.${name} }}`])
@@ -443,7 +444,7 @@ class QueryRunner {
           }
         )
         if (resolvedConfigUrl) {
-          fields.path = applyBaseUrl(fields.path, resolvedConfigUrl)
+          fields.path = applyBaseUrl(fields.path ?? "", resolvedConfigUrl)
         }
       }
       return {
