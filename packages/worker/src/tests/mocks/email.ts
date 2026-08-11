@@ -4,6 +4,16 @@ import { SMTPServer } from "smtp-server"
 import type { SMTPServerOptions, SMTPServerSession } from "smtp-server"
 import TestConfiguration from "../TestConfiguration"
 
+export function mock() {
+  const sendMailMock = jest.fn()
+  const nodemailer = require("nodemailer")
+  nodemailer.createTransport.mockReturnValue({
+    sendMail: sendMailMock,
+    verify: jest.fn(),
+  })
+  return sendMailMock
+}
+
 export interface Address {
   address: string
   name: string
