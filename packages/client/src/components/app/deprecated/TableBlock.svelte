@@ -1,12 +1,11 @@
 <script>
   import { getContext } from "svelte"
   import { get } from "svelte/store"
-  import { generate } from "shortid"
   import Block from "@/components/Block.svelte"
   import BlockComponent from "@/components/BlockComponent.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import { enrichSearchColumns, enrichFilter } from "@/utils/blocks"
-  import { Utils } from "@budibase/frontend-core"
+  import { generateId as generate, Utils } from "@budibase/frontend-core"
 
   export let title
   export let dataSource

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount, setContext, tick } from "svelte"
   import { writable } from "svelte/store"
-  import { generate } from "shortid"
   import { fade } from "svelte/transition"
   import Portal from "svelte-portal"
   import {
@@ -15,6 +14,7 @@
     isActiveOverlay,
     Context,
   } from "@budibase/bbui"
+  import { generateId as generate } from "@budibase/frontend-core"
 
   let {
     title = "",

@@ -2,7 +2,7 @@
   import Block from "@/components/Block.svelte"
   import BlockComponent from "@/components/BlockComponent.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
-  import { generate } from "shortid"
+  import { generateId as generate } from "@budibase/frontend-core"
   import { get } from "svelte/store"
   import { getContext } from "svelte"
 

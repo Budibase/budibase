@@ -16,8 +16,12 @@
   import { cloneDeep } from "lodash"
   import ColorPicker from "./ColorPicker.svelte"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
-  import { QueryUtils, Constants, FilterUsers } from "@budibase/frontend-core"
-  import { generate } from "shortid"
+  import {
+    Constants,
+    FilterUsers,
+    generateId as generate,
+    QueryUtils,
+  } from "@budibase/frontend-core"
   import { FieldType, FormulaType } from "@budibase/types"
   import { dndzone } from "svelte-dnd-action"
   import { flip } from "svelte/animate"

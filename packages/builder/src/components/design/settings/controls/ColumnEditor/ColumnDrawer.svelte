@@ -9,9 +9,9 @@
     Body,
     Input,
   } from "@budibase/bbui"
+  import { generateId as generate } from "@budibase/frontend-core"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
-  import { generate } from "shortid"
   import type { TableSchema } from "@budibase/types"
   import CellEditor from "./CellEditor.svelte"
   import type { ColumnConfig } from "./types"

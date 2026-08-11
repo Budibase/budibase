@@ -78,6 +78,7 @@
     "date-fns": "^4.1.0",
     "dayjs": "^1.10.8",
     "easymde": "^2.16.1",
+    "nanoid": "6.0.1",
     "sanitize-html": "^2.13.0",
     "svelte-portal": "^2.2.1"
   },

@@ -1,9 +1,9 @@
 <script>
   import { dndzone } from "svelte-dnd-action"
   import { createEventDispatcher, setContext } from "svelte"
-  import { generate } from "shortid"
   import { writable, get } from "svelte/store"
   import { Icon } from "@budibase/bbui"
+  import { generateId as generate } from "@budibase/frontend-core"
 
   export let items = []
   export let showHandle = true

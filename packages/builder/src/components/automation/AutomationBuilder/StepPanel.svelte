@@ -7,7 +7,6 @@
     Modal,
     DetailSummary,
   } from "@budibase/bbui"
-  import { generate } from "shortid"
   import {
     type Automation,
     type AutomationStep,
@@ -21,7 +20,7 @@
     AutomationFeature,
     isLoopV2Step,
   } from "@budibase/types"
-  import { memo } from "@budibase/frontend-core"
+  import { generateId as generate, memo } from "@budibase/frontend-core"
   import {
     automationStore,
     selectedAutomation,

@@ -42,7 +42,11 @@ import {
 } from "@budibase/types"
 
 import { notifications } from "@budibase/bbui"
-import { QueryUtils, Utils } from "@budibase/frontend-core"
+import {
+  generateId as generate,
+  QueryUtils,
+  Utils,
+} from "@budibase/frontend-core"
 import { sdk } from "@budibase/shared-core"
 import { makePropSafe } from "@budibase/string-templates"
 import {
@@ -99,7 +103,6 @@ import {
   type RestTemplateId,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
-import { generate } from "shortid"
 import { derived, get, readable, Readable } from "svelte/store"
 import { EnvVar } from "../portal/environment"
 import { rowActions } from "./rowActions"

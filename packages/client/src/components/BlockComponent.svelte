@@ -1,6 +1,6 @@
 <script>
   import { getContext, onDestroy } from "svelte"
-  import { generate } from "shortid"
+  import { generateId as generate } from "@budibase/frontend-core"
   import { builderStore } from "@/stores/builder"
   import Component from "@/components/Component.svelte"
 

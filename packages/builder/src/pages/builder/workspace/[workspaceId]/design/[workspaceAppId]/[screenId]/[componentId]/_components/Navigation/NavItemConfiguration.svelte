@@ -2,9 +2,8 @@
   import { navigationStore } from "@/stores/builder"
   import DraggableList from "@/components/design/settings/controls/DraggableList.svelte"
   import NavItem from "./NavItem.svelte"
-  import { generate } from "shortid"
   import { getSequentialName } from "@/helpers/duplicate"
-  import { Constants } from "@budibase/frontend-core"
+  import { Constants, generateId as generate } from "@budibase/frontend-core"
 
   export let bindings
 

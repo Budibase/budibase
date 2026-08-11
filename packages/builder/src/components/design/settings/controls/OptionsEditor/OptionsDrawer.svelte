@@ -8,7 +8,7 @@
     Body,
     Label,
   } from "@budibase/bbui"
-  import { generate } from "shortid"
+  import { generateId as generate } from "@budibase/frontend-core"
 
   export let options = []
 

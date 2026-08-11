@@ -11,7 +11,7 @@
     Search,
   } from "@budibase/bbui"
   import { getAvailableActions } from "./index"
-  import { generate } from "shortid"
+  import { generateId as generate } from "@budibase/frontend-core"
   import {
     getEventContextBindings,
     getActionBindings,

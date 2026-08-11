@@ -22,7 +22,7 @@
     UrlValidationProtocol,
   } from "@budibase/types"
   import { isJSBinding } from "@budibase/string-templates"
-  import { generate } from "shortid"
+  import { generateId as generate } from "@budibase/frontend-core"
   import { SvelteSet } from "svelte/reactivity"
   import { selectedScreen, selectedComponent } from "@/stores/builder"
   import { findClosestMatchingComponent } from "@/helpers/components"

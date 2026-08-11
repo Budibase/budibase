@@ -8,9 +8,9 @@
     Input,
     Drawer,
   } from "@budibase/bbui"
+  import { generateId as generate } from "@budibase/frontend-core"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
-  import { generate } from "shortid"
   import { screenStore } from "@/stores/builder"
   import DrawerBindableCombobox from "@/components/common/bindings/DrawerBindableCombobox.svelte"
 

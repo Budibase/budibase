@@ -3,7 +3,7 @@
   import { isNoOpBlockMove } from "@/stores/builder/automations"
   import { getContext, onDestroy, onMount } from "svelte"
   import { type Writable } from "svelte/store"
-  import { generate } from "shortid"
+  import { generateId as generate } from "@budibase/frontend-core"
   import type { DragView } from "./FlowCanvas/FlowChartDnD"
 
   export let path: any

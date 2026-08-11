@@ -13,8 +13,11 @@
   } from "@budibase/bbui"
   import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
   import DrawerBindableSlot from "@/components/common/bindings/DrawerBindableSlot.svelte"
-  import { QueryUtils, Constants } from "@budibase/frontend-core"
-  import { generate } from "shortid"
+  import {
+    Constants,
+    generateId as generate,
+    QueryUtils,
+  } from "@budibase/frontend-core"
   import { dndzone } from "svelte-dnd-action"
   import { flip } from "svelte/animate"
   import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"

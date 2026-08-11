@@ -66,7 +66,7 @@
 </script>
 
 <script lang="ts">
-  import { generate } from "shortid"
+  import { nanoid } from "nanoid"
   import { createEventDispatcher, onDestroy, setContext } from "svelte"
   import type { TransitionConfig } from "svelte/transition"
   import Portal from "svelte-portal"
@@ -93,7 +93,7 @@
   const spacing = 11
 
   let visible: boolean = false
-  let drawerId: string = generate()
+  let drawerId: string = nanoid(9)
   let depth: number = 0
   let stackIndex: number = -1
   let computedZIndex: number = BASE_Z_INDEX

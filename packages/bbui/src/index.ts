@@ -122,5 +122,4 @@ export { createNotificationStore, notifications } from "./Stores/notifications"
 
 // Helpers
 export * as Helpers from "./helpers"
-
 export type * from "./types"

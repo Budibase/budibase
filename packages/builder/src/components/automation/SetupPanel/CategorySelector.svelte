@@ -1,7 +1,7 @@
 <script lang="ts">
   import { ActionButton, Input, Icon } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { generate } from "shortid"
+  import { generateId as generate } from "@budibase/frontend-core"
 
   const dispatch = createEventDispatcher()
 
