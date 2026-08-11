@@ -90,7 +90,6 @@ export const SecretTag = {
   BASIC: "{{ Auth credential }}",
   BEARER: "{{ Auth token }}",
   OAUTH2: "{{ OAuth2 token }}",
-  API_KEY: "{{ API key }}",
   GENERIC: "{{ Redacted }}",
 }
 

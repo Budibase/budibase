@@ -86,15 +86,6 @@ describe("sanitiseHeaders", () => {
     expect(sanitised.Authorization).toEqual(`Bearer ${SecretTag.OAUTH2}`)
   })
 
-  it("should replace an api key held in a user named header", () => {
-    const sanitised = sanitiseHeaders({
-      headers: { "x-custom-key": "supersecret" },
-      authHeaderKeys: ["x-custom-key"],
-      authType: "apiKey",
-    })
-    expect(sanitised["x-custom-key"]).toEqual(SecretTag.API_KEY)
-  })
-
   it("should replace sensitive headers which did not come from an auth config", () => {
     const sanitised = sanitiseHeaders({
       headers: {

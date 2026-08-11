@@ -23,8 +23,6 @@ export function tagForAuthType(authType?: string): string {
       return SecretTag.BEARER
     case RestAuthType.OAUTH2:
       return SecretTag.OAUTH2
-    case "apiKey":
-      return SecretTag.API_KEY
     default:
       return SecretTag.GENERIC
   }
