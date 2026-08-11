@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount, setContext, tick } from "svelte"
   import { writable } from "svelte/store"
-  import { generate } from "shortid"
   import { fade } from "svelte/transition"
   import Portal from "svelte-portal"
   import {
@@ -14,6 +13,7 @@
     BASE_Z_INDEX,
     isActiveOverlay,
     Context,
+    generateId,
   } from "@budibase/bbui"
 
   let {
@@ -33,7 +33,7 @@
   const EXPANDED_MARGIN = 0.15
   const EXPANDED_SIZE = 0.7
 
-  const overlayId = generate()
+  const overlayId = generateId()
   let expanded = $state(false)
 
   // Wire up the popover portal override context so popovers opened inside the
