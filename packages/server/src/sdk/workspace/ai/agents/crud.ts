@@ -21,8 +21,15 @@ import { cleanupKnowledgeForOperation, knowledgeSourceSyncQueue } from "../rag"
 import { getValidProjectIdsForDuplication } from "../../projects/utils"
 
 // TODO: this will eventually go away, after a grace period
+type DeprecatedAgentOperationToolConfig = Omit<
+  AgentOperationToolConfig,
+  "executionPrincipal"
+> & {
+  executionPrincipal?: ToolExecutionPrincipal | null
+}
+
 type DeprecatedAgentOperation = Omit<AgentOperation, "enabledTools"> & {
-  enabledTools?: Array<string | AgentOperationToolConfig>
+  enabledTools?: Array<string | DeprecatedAgentOperationToolConfig>
 }
 
 type DeprecatedAgent = Omit<Agent, "operations"> & {
@@ -44,7 +51,11 @@ export const normalizePersistedOperationTools = (
           toolName: tool,
           executionPrincipal: ToolExecutionPrincipal.ADMIN,
         }
-      : tool
+      : {
+          ...tool,
+          executionPrincipal:
+            tool.executionPrincipal ?? ToolExecutionPrincipal.ADMIN,
+        }
   )
 
 const SECRET_MASK = "********"

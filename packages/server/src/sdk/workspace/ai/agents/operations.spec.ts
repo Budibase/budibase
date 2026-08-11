@@ -20,10 +20,34 @@ describe("normalizePersistedOperationTools", () => {
     ])
   })
 
+  it("populates missing principals with admin authority", () => {
+    expect(
+      normalizePersistedOperationTools([{ toolName: "approve_holiday" }])
+    ).toEqual([
+      {
+        toolName: "approve_holiday",
+        executionPrincipal: ToolExecutionPrincipal.ADMIN,
+      },
+    ])
+  })
+
+  it("populates null principals with admin authority", () => {
+    expect(
+      normalizePersistedOperationTools([
+        { toolName: "approve_holiday", executionPrincipal: null },
+      ])
+    ).toEqual([
+      {
+        toolName: "approve_holiday",
+        executionPrincipal: ToolExecutionPrincipal.ADMIN,
+      },
+    ])
+  })
+
   it("preserves explicit delegated authority", () => {
     const config = {
       toolName: "approve_holiday",
-      executionPrincipal: ToolExecutionPrincipal.ADMIN,
+      executionPrincipal: ToolExecutionPrincipal.REQUESTER,
     }
     expect(normalizePersistedOperationTools([config])).toEqual([config])
   })

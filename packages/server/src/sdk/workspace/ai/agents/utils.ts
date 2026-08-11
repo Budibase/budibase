@@ -251,7 +251,7 @@ export async function buildPromptAndTools(
     for (const tool of enabledTools) {
       const config = toolConfigs.find(config => config.toolName === tool.name)
       const principal =
-        config?.executionPrincipal ?? ToolExecutionPrincipal.ADMIN
+        config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
       if (!tool.authorization) {
         continue
       }

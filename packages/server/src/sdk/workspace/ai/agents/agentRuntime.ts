@@ -536,7 +536,7 @@ export const prepareAgentChatRun = async ({
       const escalationPrincipal =
         selectedOperation.enabledTools?.find(
           config => config.toolName === ESCALATE_TOOL_NAME
-        )?.executionPrincipal ?? ToolExecutionPrincipal.ADMIN
+        )?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
       tools.escalate = createEscalateTool({
         agentId,
         operationId: selectedOperation.id,
