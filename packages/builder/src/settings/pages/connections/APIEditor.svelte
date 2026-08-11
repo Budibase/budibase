@@ -124,7 +124,7 @@
     datasource === undefined &&
     initialised
   ) {
-    bb.settings("/connections/apis")
+    bb.settings("/connections/api-connections")
   }
 
   // Template
@@ -955,7 +955,7 @@
 <DeleteDataConfirmationModal
   bind:this={deleteModal}
   source={datasource}
-  onDeleted={() => bb.settings("/connections/apis")}
+  onDeleted={() => bb.settings("/connections/api-connections")}
 />
 
 <style>

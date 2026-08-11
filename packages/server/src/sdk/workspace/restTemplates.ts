@@ -248,7 +248,7 @@ export const update = async (
   }
 ) =>
   withCustomRestTemplateLock({
-    resource: params.restTemplateId,
+    resource: "workspace",
     task: () => updateWithoutLock(params),
   })
 
