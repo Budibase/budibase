@@ -229,17 +229,16 @@
       end: current.length,
     }
     const binding = `{{ ${tool.readableBinding} }}`
+    const nextInstructions =
+      current.slice(0, caret.start) + binding + current.slice(caret.end)
+    operation.promptInstructions = nextInstructions
     insertAtPos?.({
       start: caret.start,
       end: caret.end,
       value: binding,
       cursor: { anchor: caret.start + binding.length },
     })
-    if (!insertAtPos) {
-      operation.promptInstructions =
-        current.slice(0, caret.start) + binding + current.slice(caret.end)
-    }
-    saveOperation()
+    saveOperation({ promptInstructions: nextInstructions })
   }
 
   const removeTool = (tool: AgentTool) => {
@@ -355,15 +354,17 @@
             <span
               >Use <code>{`{{`}</code> to add tools to your instructions.</span
             >
-            <ToolsDropdown
-              {filteredTools}
-              {toolSections}
-              bind:toolSearch
-              webSearchEnabled={false}
-              onToolClick={insertTool}
-              onAddApiConnection={() => bb.settings("/connections/apis")}
-              onConfigureWebSearch={() => bb.settings("/connections/ai")}
-            />
+            <div class="tools-popover-container">
+              <ToolsDropdown
+                {filteredTools}
+                {toolSections}
+                bind:toolSearch
+                webSearchEnabled={false}
+                onToolClick={insertTool}
+                onAddApiConnection={() => bb.settings("/connections/apis")}
+                onConfigureWebSearch={() => bb.settings("/connections/ai")}
+              />
+            </div>
           </div>
         </div>
       </main>
@@ -390,15 +391,17 @@
           {#if activeTab === "tools"}
             <div class="rail-heading">
               <Body size="S" weight="500">Tools</Body>
-              <ToolsDropdown
-                {filteredTools}
-                {toolSections}
-                bind:toolSearch
-                webSearchEnabled={false}
-                onToolClick={insertTool}
-                onAddApiConnection={() => bb.settings("/connections/apis")}
-                onConfigureWebSearch={() => bb.settings("/connections/ai")}
-              />
+              <div class="tools-popover-container">
+                <ToolsDropdown
+                  {filteredTools}
+                  {toolSections}
+                  bind:toolSearch
+                  webSearchEnabled={false}
+                  onToolClick={insertTool}
+                  onAddApiConnection={() => bb.settings("/connections/apis")}
+                  onConfigureWebSearch={() => bb.settings("/connections/ai")}
+                />
+              </div>
             </div>
             <div class="tools-list">
               {#each includedTools as tool (tool.runtimeBinding)}
