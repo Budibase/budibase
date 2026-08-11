@@ -138,7 +138,7 @@
     <div>
       <Body size="S">Request inputs</Body>
       <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-        Collect and confirm these arguments before running the tool.
+        Collect these arguments before running the tool.
       </Body>
     </div>
 

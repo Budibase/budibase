@@ -101,9 +101,9 @@ describe("guardToolRequestInputs", () => {
     expect(execute).not.toHaveBeenCalled()
   })
 
-  it("requires confirmation before execution", async () => {
+  it("executes immediately when required values have been collected", async () => {
     mockStream.mockResolvedValueOnce(extractionResult("2", "two"))
-    const execute = jest.fn()
+    const execute = jest.fn().mockResolvedValue({ created: true })
     const guardedTool = createGuardedTool({
       modelMessages: [{ role: "user", content: "Create two rows" }],
       execute,
@@ -114,12 +114,8 @@ describe("guardToolRequestInputs", () => {
       executionOptions
     )
 
-    expect(result).toEqual(
-      expect.objectContaining({
-        status: "request_inputs_confirmation_required",
-      })
-    )
-    expect(execute).not.toHaveBeenCalled()
+    expect(result).toEqual({ created: true })
+    expect(execute).toHaveBeenCalledTimes(1)
   })
 
   it("rejects extracted values without verbatim evidence", async () => {
@@ -146,38 +142,9 @@ describe("guardToolRequestInputs", () => {
     expect(execute).not.toHaveBeenCalled()
   })
 
-  it("executes exactly once after confirmed values match", async () => {
-    mockStream
-      .mockResolvedValueOnce(extractionResult("2", "two"))
-      .mockResolvedValueOnce({ output: Promise.resolve({ confirmed: true }) })
+  it("does not compare collected values with proposed tool arguments", async () => {
+    mockStream.mockResolvedValueOnce(extractionResult("2", "two"))
     const execute = jest.fn().mockResolvedValue({ created: true })
-    const guardedTool = createGuardedTool({
-      modelMessages: [
-        { role: "user", content: "Create two rows" },
-        {
-          role: "assistant",
-          content: "Quantity: 2. Please confirm.",
-        },
-        { role: "user", content: "Yes" },
-      ],
-      execute,
-    })
-
-    const result = await guardedTool.execute?.(
-      { data: { quantity: 2 } },
-      executionOptions
-    )
-
-    expect(result).toEqual({ created: true })
-    expect(execute).toHaveBeenCalledTimes(1)
-    expect(ToolLoopAgent).toHaveBeenCalledTimes(2)
-  })
-
-  it("blocks execution when confirmed and proposed values differ", async () => {
-    mockStream
-      .mockResolvedValueOnce(extractionResult("2", "two"))
-      .mockResolvedValueOnce({ output: Promise.resolve({ confirmed: true }) })
-    const execute = jest.fn()
     const guardedTool = createGuardedTool({
       modelMessages: [
         { role: "user", content: "Create two rows" },
@@ -195,13 +162,11 @@ describe("guardToolRequestInputs", () => {
       executionOptions
     )
 
-    expect(result).toEqual(
-      expect.objectContaining({
-        status: "request_inputs_mismatch",
-        inputs: [expect.objectContaining({ value: "2", proposedValue: 3 })],
-      })
+    expect(result).toEqual({ created: true })
+    expect(execute).toHaveBeenCalledWith(
+      { data: { quantity: 3 } },
+      executionOptions
     )
-    expect(execute).not.toHaveBeenCalled()
   })
 
   it("fails closed when extraction fails", async () => {
