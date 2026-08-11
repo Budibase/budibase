@@ -63,7 +63,7 @@ services:
 
   litellm-service:
     container_name: budi-litellm-dev
-    image: ghcr.io/berriai/litellm:main-v1.83.10-stable
+    image: docker.io/litellm/litellm:main-v1.83.10-stable.patch.3
     ports:
       - "${LITELLM_PORT:-4000}:4000"
     volumes:
