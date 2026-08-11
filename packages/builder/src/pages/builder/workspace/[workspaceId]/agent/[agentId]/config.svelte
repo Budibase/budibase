@@ -11,10 +11,7 @@
     type EnrichedBinding,
   } from "@budibase/types"
   import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
-  import {
-    getReadableAgentToolBinding,
-    getReadableAgentToolBindings,
-  } from "@budibase/shared-core"
+  import { getReadableAgentToolBinding } from "@budibase/shared-core"
   import {
     datasources,
     restTemplates,
@@ -164,21 +161,7 @@
     const mappedTools = tools
       .filter(tool => tool.sourceType !== ToolType.SEARCH)
       .map(enrichToolMetadata)
-    const readableBindings = getReadableAgentToolBindings(
-      mappedTools.map(tool => ({
-        sourceType: tool.sourceType,
-        sourceLabel: tool.sourceLabel,
-        sourceId: tool.sourceId,
-        toolName: tool.readableName || tool.name,
-        runtimeBinding: tool.runtimeBinding,
-      }))
-    )
-    const disambiguatedTools = mappedTools.map(tool => ({
-      ...tool,
-      readableBinding:
-        readableBindings[tool.runtimeBinding] || tool.readableBinding,
-    }))
-    return [createWebSearchTool(), ...disambiguatedTools]
+    return [createWebSearchTool(), ...mappedTools]
   })
 
   // Build lookup maps from readable binding to runtime binding and icon URL

@@ -376,7 +376,6 @@ export const createRowTools = ({
   tableSourceType,
   tableSchema,
   sourceLabel,
-  sourceId,
   sourceIconType,
 }: {
   tableId: string
@@ -384,7 +383,6 @@ export const createRowTools = ({
   tableSourceType: TableSourceType
   tableSchema: TableSchema
   sourceLabel?: string
-  sourceId?: string
   sourceIconType?: string
 }): BudibaseToolDefinition[] => {
   const isExternal = tableSourceType === TableSourceType.EXTERNAL
@@ -433,7 +431,6 @@ export const createRowTools = ({
       tableId,
       sourceType: resolvedSourceType,
       sourceLabel: resolvedSourceLabel,
-      sourceId,
       sourceIconType,
       description,
       authorization: {

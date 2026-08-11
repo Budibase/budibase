@@ -18,7 +18,6 @@ export interface ToolMetadata {
   description?: string
   sourceType: ToolType
   sourceLabel?: string
-  sourceId?: string
   sourceIconType?: string
 }
 

@@ -22,7 +22,6 @@ export interface AiToolDefinition {
   tool: Tool
   sourceType: ToolType
   sourceLabel?: string
-  sourceId?: string
   sourceIconType?: string
   authorization?: ToolAuthorization
   filterResult?: (
