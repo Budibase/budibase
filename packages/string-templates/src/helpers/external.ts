@@ -1,7 +1,5 @@
-// @ts-ignore we don't have types for it
-import helpers from "@budibase/handlebars-helpers"
-
 import { date, difference, duration, durationFromNow } from "./date"
+import { externalHelperCollections } from "./list"
 import {
   HelperFunctionBuiltin,
   EXTERNAL_FUNCTION_COLLECTIONS,
@@ -25,7 +23,13 @@ export function registerAll(handlebars: typeof Handlebars) {
   let externalNames = []
   for (let collection of EXTERNAL_FUNCTION_COLLECTIONS) {
     // collect information about helper
-    let hbsHelperInfo = helpers[collection]()
+    const hbsHelperInfo =
+      externalHelperCollections[
+        collection as keyof typeof externalHelperCollections
+      ]
+    for (const [name, helper] of Object.entries(hbsHelperInfo)) {
+      handlebars.registerHelper(name, helper)
+    }
     for (let entry of Object.entries(hbsHelperInfo)) {
       const name = entry[0]
       // skip built-in functions and ones seen already
@@ -38,9 +42,6 @@ export function registerAll(handlebars: typeof Handlebars) {
       externalNames.push(name)
     }
     // attach it to our handlebars instance
-    helpers[collection]({
-      handlebars,
-    })
   }
   // add date external functionality
   externalHelperNames = externalNames.concat(Object.keys(ADDED_HELPERS))

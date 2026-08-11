@@ -5,8 +5,11 @@
 
 module.exports = {
   transform: {
-    "^.+\\.ts$": "@swc/jest",
+    "^.+\\.[jt]s$": "@swc/jest",
   },
+  transformIgnorePatterns: [
+    "/node_modules/(?!@budibase/handlebars-helpers/)",
+  ],
   // All imported modules in your tests should be mocked automatically
   // automock: false,
 

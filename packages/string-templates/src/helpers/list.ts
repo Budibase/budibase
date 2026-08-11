@@ -1,4 +1,5 @@
 import { date, difference, duration, durationFromNow } from "./date"
+import type Handlebars from "handlebars"
 
 /* 
 @budibase/handlebars-helpers is not treeshakeable, so we can't use the barrel files. 
@@ -6,36 +7,46 @@ Otherwise, we have issues when generating the isolated-vm bundle because of the 
 */
 /* eslint-disable local-rules/no-budibase-imports */
 // @ts-expect-error
-import math from "@budibase/handlebars-helpers/lib/math"
+import * as math from "@budibase/handlebars-helpers/lib/math"
 // @ts-expect-error
-import array from "@budibase/handlebars-helpers/lib/array"
+import * as array from "@budibase/handlebars-helpers/lib/array"
 // @ts-expect-error
-import number from "@budibase/handlebars-helpers/lib/number"
+import * as number from "@budibase/handlebars-helpers/lib/number"
 // @ts-expect-error
-import url from "@budibase/handlebars-helpers/lib/url"
+import * as url from "@budibase/handlebars-helpers/lib/url"
 // @ts-expect-error
-import string from "@budibase/handlebars-helpers/lib/string"
+import * as string from "@budibase/handlebars-helpers/lib/string"
 // @ts-expect-error
-import comparison from "@budibase/handlebars-helpers/lib/comparison"
+import * as comparison from "@budibase/handlebars-helpers/lib/comparison"
 // @ts-expect-error
-import object from "@budibase/handlebars-helpers/lib/object"
+import * as object from "@budibase/handlebars-helpers/lib/object"
 // @ts-expect-error
-import regex from "@budibase/handlebars-helpers/lib/regex"
+import * as regex from "@budibase/handlebars-helpers/lib/regex"
 // @ts-expect-error
-import uuid from "@budibase/handlebars-helpers/lib/uuid"
+import * as uuid from "@budibase/handlebars-helpers/lib/uuid"
 /* eslint-enable local-rules/no-budibase-imports */
 
 // https://github.com/evanw/esbuild/issues/56
-const externalCollections = {
-  math,
-  array,
-  number,
-  url,
-  string,
-  comparison,
-  object,
-  regex,
-  uuid,
+const helperCollection = (collection: Record<string, unknown>) => {
+  const helpers: Record<string, Handlebars.HelperDelegate> = {}
+  for (const [name, helper] of Object.entries(collection)) {
+    if (typeof helper === "function") {
+      helpers[name] = (...args) => helper(...args)
+    }
+  }
+  return helpers
+}
+
+export const externalHelperCollections = {
+  math: helperCollection(math),
+  array: helperCollection(array),
+  number: helperCollection(number),
+  url: helperCollection(url),
+  string: helperCollection(string),
+  comparison: helperCollection(comparison),
+  object: helperCollection(object),
+  regex: helperCollection(regex),
+  uuid: helperCollection(uuid),
 }
 
 export const helpersToRemoveForJs = ["sortBy", "map"]
@@ -55,7 +66,7 @@ export function getJsHelperList() {
   }
 
   helpers = {}
-  for (let collection of Object.values(externalCollections)) {
+  for (let collection of Object.values(externalHelperCollections)) {
     for (let [key, func] of Object.entries<any>(collection)) {
       // Handlebars injects the hbs options to the helpers by default. We are adding an empty {} as a last parameter to simulate it
       helpers[key] = (...props: any) => func(...props, {})
