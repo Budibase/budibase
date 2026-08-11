@@ -907,7 +907,7 @@ describe("REST Integration", () => {
         queueJsonResponse(() => {}, { foo: "bar" })
 
         const fields = {
-          headers: { "x-query": "from-query" },
+          headers: { "x-query": "from-query", "x-kept": "still-here" },
           disabledHeaders: { "x-query": true, "x-connection": true },
         }
         const { extra } = await integration.read(fields, {
@@ -917,6 +917,7 @@ describe("REST Integration", () => {
 
         expect(extra?.request?.headers).not.toHaveProperty("x-query")
         expect(extra?.request?.headers).not.toHaveProperty("x-connection")
+        expect(extra?.request?.headers).toHaveProperty("x-kept", "still-here")
       })
 
       it("includes the content type generated for a form data body", async () => {
