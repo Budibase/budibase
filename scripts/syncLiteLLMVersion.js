@@ -42,9 +42,19 @@ function main() {
   const imageTag = `main-v${version}-${channel}`
 
   const dockerHubImagePattern =
-    /image:\s*docker\.io\/litellm\/litellm:main-v\d+\.\d+\.\d+-[a-zA-Z0-9]+((?:\.[a-zA-Z0-9]+)*)/
-  const dockerHubImageReplacement = (_match, suffix) =>
-    `image: docker.io/litellm/litellm:${imageTag}${suffix}`
+    /image:\s*docker\.io\/litellm\/litellm:main-v(\d+\.\d+\.\d+)-([a-zA-Z0-9]+)((?:\.[a-zA-Z0-9]+)*)/
+  const dockerHubImageReplacement = (
+    _match,
+    existingVersion,
+    existingChannel,
+    suffix
+  ) => {
+    const isSameRelease =
+      existingVersion === version && existingChannel === channel
+    return `image: docker.io/litellm/litellm:${imageTag}${
+      isSameRelease ? suffix : ""
+    }`
+  }
 
   const updates = [
     {
