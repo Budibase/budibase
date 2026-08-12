@@ -26,7 +26,7 @@
     "dotenv": "16.0.1",
     "download": "8.0.0",
     "find-free-port": "^2.0.0",
-    "inquirer": "8.0.0",
+    "inquirer": "12.9.6",
     "lookpath": "1.1.0",
     "node-fetch": "2.6.7",
     "open": "8.4.2",
