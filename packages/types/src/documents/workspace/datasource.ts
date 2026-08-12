@@ -96,7 +96,7 @@ export interface RestConfig {
   url: string
   rejectUnauthorized?: boolean
   downloadImages?: boolean
-  allowCrossOriginPaths?: boolean
+  allowedOrigins?: string[]
   defaultHeaders?: {
     [key: string]: any
   }
