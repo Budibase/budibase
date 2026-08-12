@@ -511,8 +511,15 @@
     }
   }
 
-  const validateAllowedOrigins = (newErrors: Record<string, string>) => {
-    if (parsedAllowedOrigins.invalidOrigins.length > 0) {
+  const validateAllowedOrigins = ({
+    origins,
+    newErrors,
+  }: {
+    origins: string[]
+    newErrors: Record<string, string>
+  }) => {
+    const { invalidOrigins } = extractOriginList(origins)
+    if (invalidOrigins.length > 0) {
       newErrors.allowedOrigins = "Enter valid http or https origins."
     } else {
       delete newErrors.allowedOrigins
@@ -521,7 +528,10 @@
 
   const syncAllowedOriginsError = () => {
     const nextErrors = { ...errors }
-    validateAllowedOrigins(nextErrors)
+    validateAllowedOrigins({
+      origins: data.allowedOrigins || [],
+      newErrors: nextErrors,
+    })
     errors = nextErrors
   }
 
@@ -543,7 +553,10 @@
     const newErrors = { ...errors }
     validateName(newErrors)
     validateBaseUrl(newErrors)
-    validateAllowedOrigins(newErrors)
+    validateAllowedOrigins({
+      origins: data.allowedOrigins || [],
+      newErrors,
+    })
     if (childPickerIncomplete) {
       newErrors.childId = "Please select an API"
     } else {

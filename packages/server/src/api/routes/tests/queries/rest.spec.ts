@@ -133,7 +133,6 @@ describe("rest", () => {
   beforeAll(async () => {
     restoreEnv = setServerEnv({
       REST_REJECT_UNAUTHORIZED: false,
-      REST_ALLOW_CROSS_ORIGIN_PATHS: true,
     })
     config = setup.getConfig()
     await config.init()
@@ -1090,22 +1089,43 @@ describe("rest", () => {
       })
     })
 
-    it("should allow cross-origin paths when the allowlist includes the target origin", async () => {
+    it("should reject cross-origin paths when only the allowlist is enabled", async () => {
       const ds = await createRestDatasource({
         url: "http://budibase.com",
         allowedOrigins: ["http://example.com:8080"],
       })
 
-      mockAgent!
-        .get("http://example.com:8080")
-        .intercept({ path: "/data", method: "GET" })
-        .reply(200, { ok: true }, { headers: jsonHeaders })
-
       await previewPath({
         datasourceId: ds._id!,
         fields: { path: "{{ t }}" },
         parameters: [{ name: "t", default: "http://example.com:8080/data" }],
+        expectations: originError,
       })
+    })
+
+    it("should allow cross-origin paths when the allowlist includes the target origin", async () => {
+      const restoreCrossOriginEnv = setServerEnv({
+        REST_ALLOW_CROSS_ORIGIN_PATHS: true,
+      })
+      try {
+        const ds = await createRestDatasource({
+          url: "http://budibase.com",
+          allowedOrigins: ["http://example.com:8080"],
+        })
+
+        mockAgent!
+          .get("http://example.com:8080")
+          .intercept({ path: "/data", method: "GET" })
+          .reply(200, { ok: true }, { headers: jsonHeaders })
+
+        await previewPath({
+          datasourceId: ds._id!,
+          fields: { path: "{{ t }}" },
+          parameters: [{ name: "t", default: "http://example.com:8080/data" }],
+        })
+      } finally {
+        restoreCrossOriginEnv()
+      }
     })
 
     it("should treat a different port as a different origin", async () => {

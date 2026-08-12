@@ -1,6 +1,16 @@
 export const extractOrigin = (value: string): string | null => {
   try {
-    return new URL(value).origin
+    const origin = new URL(value).origin
+    if (origin === "null") {
+      return null
+    }
+
+    const protocol = new URL(value).protocol
+    if (protocol !== "http:" && protocol !== "https:") {
+      return null
+    }
+
+    return origin
   } catch {
     return null
   }

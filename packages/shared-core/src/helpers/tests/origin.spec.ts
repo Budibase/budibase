@@ -11,6 +11,13 @@ describe("origin helpers", () => {
     it("returns null for invalid input", () => {
       expect(extractOrigin("not a url")).toBeNull()
     })
+
+    it("returns null for urls whose origin is null", () => {
+      expect(extractOrigin("example.com:8080")).toBeNull()
+      expect(extractOrigin("mailto:a@b.com")).toBeNull()
+      expect(extractOrigin("file:///etc/passwd")).toBeNull()
+      expect(extractOrigin("ftp://example.com")).toBeNull()
+    })
   })
 
   describe("extractOriginList", () => {
@@ -20,13 +27,23 @@ describe("origin helpers", () => {
           "http://example.com:8080/path",
           "http://example.com:8080",
           "https://example.com",
+          "example.com:8080",
+          "mailto:a@b.com",
+          "file:///etc/passwd",
+          "ftp://example.com",
           "sdfsdfew",
           42,
           "",
         ])
       ).toEqual({
         origins: ["http://example.com:8080", "https://example.com"],
-        invalidOrigins: ["sdfsdfew"],
+        invalidOrigins: [
+          "example.com:8080",
+          "mailto:a@b.com",
+          "file:///etc/passwd",
+          "ftp://example.com",
+          "sdfsdfew",
+        ],
       })
     })
   })

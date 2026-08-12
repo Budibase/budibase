@@ -36,6 +36,7 @@ import {
   FormData as UndiciFormData,
 } from "undici"
 import TestConfiguration from "../../../src/tests/utilities/TestConfiguration"
+import { setEnv as setServerEnv } from "../../environment"
 import sdk from "../../sdk"
 import { RestIntegration } from "../rest"
 
@@ -271,13 +272,10 @@ describe("REST Integration", () => {
   })
 
   it("allows cross-origin paths when the env flag and allowlist are enabled", async () => {
-    const environment = require("../../environment").default
-    const originalEnv = process.env.REST_ALLOW_CROSS_ORIGIN_PATHS
-
+    const restoreEnv = setServerEnv({
+      REST_ALLOW_CROSS_ORIGIN_PATHS: true,
+    })
     try {
-      process.env.REST_ALLOW_CROSS_ORIGIN_PATHS = "true"
-      environment._set("REST_ALLOW_CROSS_ORIGIN_PATHS", true)
-
       queueJsonResponse(
         (url, options) => {
           expect(url).toEqual("http://example.com:8080/data")
@@ -296,27 +294,15 @@ describe("REST Integration", () => {
       })
       expect(data).toEqual({ ok: true })
     } finally {
-      if (originalEnv === undefined) {
-        delete process.env.REST_ALLOW_CROSS_ORIGIN_PATHS
-        environment._set("REST_ALLOW_CROSS_ORIGIN_PATHS", false)
-      } else {
-        process.env.REST_ALLOW_CROSS_ORIGIN_PATHS = originalEnv
-        environment._set(
-          "REST_ALLOW_CROSS_ORIGIN_PATHS",
-          originalEnv === "true"
-        )
-      }
+      restoreEnv()
     }
   })
 
   it("rejects cross-origin paths when only the env flag is enabled", async () => {
-    const environment = require("../../environment").default
-    const originalEnv = process.env.REST_ALLOW_CROSS_ORIGIN_PATHS
-
+    const restoreEnv = setServerEnv({
+      REST_ALLOW_CROSS_ORIGIN_PATHS: true,
+    })
     try {
-      process.env.REST_ALLOW_CROSS_ORIGIN_PATHS = "true"
-      environment._set("REST_ALLOW_CROSS_ORIGIN_PATHS", true)
-
       const crossOriginIntegration = new RestIntegration({
         url: "http://example.com",
       })
@@ -327,16 +313,7 @@ describe("REST Integration", () => {
         })
       ).rejects.toThrow("REST query path must remain on the datasource origin")
     } finally {
-      if (originalEnv === undefined) {
-        delete process.env.REST_ALLOW_CROSS_ORIGIN_PATHS
-        environment._set("REST_ALLOW_CROSS_ORIGIN_PATHS", false)
-      } else {
-        process.env.REST_ALLOW_CROSS_ORIGIN_PATHS = originalEnv
-        environment._set(
-          "REST_ALLOW_CROSS_ORIGIN_PATHS",
-          originalEnv === "true"
-        )
-      }
+      restoreEnv()
     }
   })
 
