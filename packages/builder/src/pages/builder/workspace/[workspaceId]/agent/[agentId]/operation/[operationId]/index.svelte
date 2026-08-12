@@ -18,6 +18,7 @@
     hbAutocomplete,
   } from "@/components/common/CodeEditor"
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
+  import { confirm } from "@/helpers/confirm"
   import { bb } from "@/stores/bb"
   import {
     contextMenuStore,
@@ -240,6 +241,16 @@
     saveOperation()
   }
 
+  const confirmRemoveTool = (tool: AgentTool) => {
+    confirm({
+      title: "Remove tool?",
+      body: `Remove ${tool.readableBinding} from this operation? Its binding will also be removed from the instructions.`,
+      okText: "Remove",
+      warning: true,
+      onConfirm: () => removeTool(tool),
+    })
+  }
+
   const openToolMenu = (event: MouseEvent, tool: AgentTool) => {
     event.stopPropagation()
     contextMenuStore.open(
@@ -249,7 +260,7 @@
           icon: "trash",
           name: "Remove tool",
           visible: true,
-          callback: () => removeTool(tool),
+          callback: () => confirmRemoveTool(tool),
         },
       ],
       { x: event.clientX, y: event.clientY }
