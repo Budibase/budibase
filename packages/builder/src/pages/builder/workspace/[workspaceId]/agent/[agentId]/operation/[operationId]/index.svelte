@@ -19,7 +19,7 @@
   } from "@/components/common/CodeEditor"
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
   import { bb } from "@/stores/bb"
-  import { workspaceDeploymentStore } from "@/stores/builder"
+  import { contextMenuStore, workspaceDeploymentStore } from "@/stores/builder"
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import GenerateInstructionsControl from "../../GenerateInstructionsControl.svelte"
   import Knowledge from "../../knowledge/index.svelte"
@@ -250,6 +250,22 @@
     saveOperation()
   }
 
+  const openToolMenu = (event: MouseEvent, tool: AgentTool) => {
+    event.stopPropagation()
+    contextMenuStore.open(
+      "agent-operation-tool",
+      [
+        {
+          icon: "trash",
+          name: "Remove tool",
+          visible: true,
+          callback: () => removeTool(tool),
+        },
+      ],
+      { x: event.clientX, y: event.clientY }
+    )
+  }
+
   const updateRecipients = (recipients: any[]) => {
     if (!operation) return
     operation.escalation = { ...(operation.escalation || {}), recipients }
@@ -390,7 +406,11 @@
         <div class="rail-content">
           {#if activeTab === "tools"}
             <div class="rail-heading">
-              <Body size="S" weight="500">Tools</Body>
+              <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+                Give the operation access to the tools it needs to complete
+                requests and take action.
+              </Body>
+
               <div class="tools-popover-container">
                 <ToolsDropdown
                   {filteredTools}
@@ -411,10 +431,10 @@
                     <span>{tool.readableBinding}</span>
                   </div>
                   <button
-                    aria-label={`Remove ${tool.readableBinding}`}
-                    onclick={() => removeTool(tool)}
+                    aria-label={`Actions for ${tool.readableBinding}`}
+                    onclick={event => openToolMenu(event, tool)}
                   >
-                    <Icon name="x" size="XS" />
+                    <Icon name="dots-three" size="XS" />
                   </button>
                 </div>
               {:else}
@@ -493,10 +513,8 @@
     flex-direction: column;
     gap: 10px;
     padding: 10px 12px 12px;
-    border-right: 1px solid var(--spectrum-global-color-gray-200);
   }
-  .instructions-header,
-  .rail-heading {
+  .instructions-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -547,46 +565,61 @@
     min-height: 0;
     flex-direction: column;
     background: var(--background);
+    border-left: 1px solid var(--spectrum-global-color-gray-200);
   }
   .rail-tabs {
     display: flex;
-    height: 42px;
-    padding: 0 8px;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 2px 12px;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
   }
   .rail-tabs button {
     border: 0;
-    border-bottom: 2px solid transparent;
-    padding: 0 10px;
+    border-radius: 6px;
+    padding: 4px 8px;
     background: transparent;
     color: var(--spectrum-global-color-gray-700);
     cursor: pointer;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 19px;
   }
   .rail-tabs button.active {
-    border-bottom-color: var(--spectrum-global-color-gray-900);
+    background: var(--spectrum-global-color-gray-200);
     color: var(--spectrum-global-color-gray-900);
+    font-weight: 600;
   }
   .rail-content {
     min-height: 0;
     flex: 1 1 auto;
     overflow: auto;
-    padding: 12px;
+    padding: 20px 12px;
+  }
+  .rail-heading {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .rail-heading :global(.spectrum-Button) {
+    border-radius: 100px;
   }
   .tools-list,
   .approval-panel {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 12px;
+    gap: 6px;
+    margin-top: 16px;
   }
   .tool-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    min-height: 36px;
-    padding: 0 10px;
+    min-height: 34px;
+    padding: 0 12px;
     border-radius: 4px;
     background: var(--spectrum-global-color-gray-100);
   }
@@ -595,7 +628,7 @@
     min-width: 0;
     align-items: center;
     gap: 8px;
-    font-size: 12px;
+    font-size: 14px;
   }
   .tool-name span {
     overflow: hidden;
