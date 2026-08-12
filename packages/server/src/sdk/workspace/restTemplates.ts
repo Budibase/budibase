@@ -27,7 +27,7 @@ interface CreateCustomRestTemplateParams {
 }
 
 const getObjectStoreFolder = (restTemplateId: CustomRestTemplateId) => {
-  return `${context.getOrThrowWorkspaceId()}/${restTemplateId}`
+  return `${context.getOrThrowWorkspaceId()}/rest/${restTemplateId}`
 }
 
 const getLockResource = (resource: string) =>
@@ -144,7 +144,7 @@ const createWithoutLock = async ({
 
   try {
     await objectStore.upload({
-      bucket: objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
+      bucket: objectStore.ObjectStoreBuckets.APPS,
       filename: objectStoreKey,
       body: Buffer.from(data),
       type: fileExtension === "json" ? "application/json" : "text/yaml",
@@ -152,10 +152,7 @@ const createWithoutLock = async ({
   } catch (error) {
     await Promise.allSettled([
       db.remove(document._id, revision),
-      objectStore.deleteFolder(
-        objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
-        folder
-      ),
+      objectStore.deleteFolder(objectStore.ObjectStoreBuckets.APPS, folder),
     ])
     throw error
   }
@@ -205,7 +202,7 @@ const updateWithoutLock = async ({
     restTemplateId
   )}/openapi.${fileExtension}`
   await objectStore.upload({
-    bucket: objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
+    bucket: objectStore.ObjectStoreBuckets.APPS,
     filename: objectStoreKey,
     body: Buffer.from(data),
     type: fileExtension === "json" ? "application/json" : "text/yaml",
@@ -225,7 +222,7 @@ const updateWithoutLock = async ({
   } catch (error) {
     if (objectStoreKey !== document.objectStoreKey) {
       await objectStore.deleteFile(
-        objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
+        objectStore.ObjectStoreBuckets.APPS,
         objectStoreKey
       )
     }
@@ -234,7 +231,7 @@ const updateWithoutLock = async ({
 
   if (objectStoreKey !== document.objectStoreKey) {
     await objectStore.deleteFile(
-      objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
+      objectStore.ObjectStoreBuckets.APPS,
       document.objectStoreKey
     )
   }
@@ -262,7 +259,7 @@ export const getSpec = async (
   }
 
   const content = await objectStore.retrieve(
-    objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
+    objectStore.ObjectStoreBuckets.APPS,
     document.objectStoreKey
   )
   if (typeof content === "string") {
@@ -284,7 +281,7 @@ const removeWithoutLock = async (restTemplateId: CustomRestTemplateId) => {
   }
 
   await objectStore.deleteFolder(
-    objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
+    objectStore.ObjectStoreBuckets.APPS,
     getObjectStoreFolder(restTemplateId)
   )
   await db.remove(document._id, document._rev)

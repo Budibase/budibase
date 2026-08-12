@@ -332,14 +332,12 @@ export const workspaceRoutes = (
     },
     {
       section: "AI models",
-      title: "AI models",
       access: () => isCreator,
       path: "connections",
       icon: "brain",
       routes: [
         {
           path: AIConfigType.COMPLETIONS,
-          title: "AI models",
           component: Pages.get("ai_configs"),
           routes: [
             {

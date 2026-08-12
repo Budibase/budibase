@@ -42,7 +42,6 @@ const DefaultBucketName = {
   BACKUPS: "backups",
   APPS: "prod-budi-app-assets",
   TEMPLATES: "templates",
-  CUSTOM_OPENAPI_TEMPLATES: "custom-openapi-templates",
   GLOBAL: "global",
   PLUGINS: "plugins",
   TEMP: "tmp-file-attachments",
@@ -217,9 +216,6 @@ const environment = {
   APPS_BUCKET_NAME: process.env.APPS_BUCKET_NAME || DefaultBucketName.APPS,
   TEMPLATES_BUCKET_NAME:
     process.env.TEMPLATES_BUCKET_NAME || DefaultBucketName.TEMPLATES,
-  CUSTOM_OPENAPI_TEMPLATES_BUCKET_NAME:
-    process.env.CUSTOM_OPENAPI_TEMPLATES_BUCKET_NAME ||
-    DefaultBucketName.CUSTOM_OPENAPI_TEMPLATES,
   GLOBAL_BUCKET_NAME:
     process.env.GLOBAL_BUCKET_NAME || DefaultBucketName.GLOBAL,
   PLUGIN_BUCKET_NAME:

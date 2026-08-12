@@ -100,8 +100,8 @@ describe("/rest-templates", () => {
     )
     expect(objectStore.upload).toHaveBeenCalledWith(
       expect.objectContaining({
-        bucket: objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
-        filename: `${config.getDevWorkspaceId()}/${template.id}/openapi.json`,
+        bucket: objectStore.ObjectStoreBuckets.APPS,
+        filename: `${config.getDevWorkspaceId()}/rest/${template.id}/openapi.json`,
       })
     )
 
@@ -121,12 +121,12 @@ describe("/rest-templates", () => {
     )
     expect(objectStore.upload).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        filename: `${config.getDevWorkspaceId()}/${template.id}/openapi.yaml`,
+        filename: `${config.getDevWorkspaceId()}/rest/${template.id}/openapi.yaml`,
       })
     )
     expect(objectStore.deleteFile).toHaveBeenCalledWith(
-      objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
-      `${config.getDevWorkspaceId()}/${template.id}/openapi.json`
+      objectStore.ObjectStoreBuckets.APPS,
+      `${config.getDevWorkspaceId()}/rest/${template.id}/openapi.json`
     )
 
     const listResponse = await request
@@ -148,8 +148,8 @@ describe("/rest-templates", () => {
       .expect(200)
     expect(importInfoResponse.body.endpoints).toHaveLength(1)
     expect(objectStore.retrieve).toHaveBeenCalledWith(
-      objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
-      `${config.getDevWorkspaceId()}/${template.id}/openapi.yaml`
+      objectStore.ObjectStoreBuckets.APPS,
+      `${config.getDevWorkspaceId()}/rest/${template.id}/openapi.yaml`
     )
 
     const importResponse = await request
@@ -263,8 +263,8 @@ describe("/rest-templates", () => {
       .expect(200)
 
     expect(objectStore.deleteFolder).toHaveBeenCalledWith(
-      objectStore.ObjectStoreBuckets.CUSTOM_OPENAPI_TEMPLATES,
-      `${config.getDevWorkspaceId()}/${template.id}`
+      objectStore.ObjectStoreBuckets.APPS,
+      `${config.getDevWorkspaceId()}/rest/${template.id}`
     )
 
     const afterDeleteResponse = await request
