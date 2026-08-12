@@ -1,5 +1,12 @@
-import { ToolType, type Agent } from "@budibase/types"
+import {
+  PermissionLevel,
+  PermissionType,
+  ToolExecutionPrincipal,
+  ToolType,
+  type Agent,
+} from "@budibase/types"
 import type { Tool } from "ai"
+import { requesterTools } from "../tests/utils"
 
 jest.mock("../../..", () => ({
   __esModule: true,
@@ -74,8 +81,16 @@ jest.mock("../../../../ai/tools", () => ({
   __esModule: true,
   createRestQueryTool: jest.fn(),
   createDatasourceQueryTool: jest.fn(),
+  resolveToolExecutionPrincipal: jest.fn(
+    (_tool, config) =>
+      config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
+  ),
   toToolSet: (tools: any[]) =>
     Object.fromEntries(tools.map(t => [t.name, t.tool])),
+}))
+
+jest.mock("../../../../ai/tools/authorization", () => ({
+  authorizeAgentToolCall: jest.fn(),
 }))
 
 jest.mock("@budibase/pro", () => ({
@@ -94,6 +109,7 @@ import {
 } from "../../../../ai/tools/budibase"
 import { buildPromptAndTools } from "./utils"
 import { generator } from "@budibase/backend-core/tests"
+import { authorizeAgentToolCall } from "../../../../ai/tools/authorization"
 
 describe("buildPromptAndTools", () => {
   beforeEach(() => {
@@ -120,7 +136,7 @@ describe("buildPromptAndTools", () => {
           id: "operation_1",
           name: "Main operation",
           live: true,
-          enabledTools: [],
+          enabledTools: requesterTools(),
           knowledgeBases: ["kb_1"],
           allowKnowledgeSourceDownload: true,
         },
@@ -158,7 +174,7 @@ describe("buildPromptAndTools", () => {
           id: "operation_1",
           name: "Main operation",
           live: true,
-          enabledTools: [],
+          enabledTools: requesterTools(),
           knowledgeBases: [],
           allowKnowledgeSourceDownload: true,
         },
@@ -181,7 +197,7 @@ describe("buildPromptAndTools", () => {
           id: "operation_1",
           name: "Main operation",
           live: true,
-          enabledTools: [],
+          enabledTools: requesterTools(),
           knowledgeBases: ["kb_1"],
           allowKnowledgeSourceDownload: true,
         },
@@ -204,7 +220,7 @@ describe("buildPromptAndTools", () => {
           name: "Main operation",
           live: false,
           promptInstructions: "Draft instructions",
-          enabledTools: ["draft_tool"],
+          enabledTools: requesterTools("draft_tool"),
           knowledgeBases: ["kb_1"],
           allowKnowledgeSourceDownload: generator.bool(),
         },
@@ -234,7 +250,7 @@ describe("buildPromptAndTools", () => {
           name: "IT support",
           live: true,
           promptInstructions: "Handle IT requests",
-          enabledTools: [],
+          enabledTools: requesterTools(),
           knowledgeBases: [],
           allowKnowledgeSourceDownload: generator.bool(),
         },
@@ -243,7 +259,7 @@ describe("buildPromptAndTools", () => {
           name: "Knowledge support",
           live: true,
           promptInstructions: "Handle knowledge requests",
-          enabledTools: [],
+          enabledTools: requesterTools(),
           knowledgeBases: [],
           allowKnowledgeSourceDownload: generator.bool(),
         },
@@ -271,6 +287,10 @@ describe("buildPromptAndTools", () => {
         description: "Search invoices",
         sourceType: ToolType.INTERNAL_TABLE,
         sourceLabel: "Budibase",
+        executionPolicy: {
+          mode: "configurable",
+          defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+        },
         tool: {} as Tool,
       },
       {
@@ -280,6 +300,10 @@ describe("buildPromptAndTools", () => {
         description: "Search suppliers",
         sourceType: ToolType.INTERNAL_TABLE,
         sourceLabel: "Budibase",
+        executionPolicy: {
+          mode: "configurable",
+          defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+        },
         tool: {} as Tool,
       },
     ])
@@ -292,7 +316,7 @@ describe("buildPromptAndTools", () => {
           id: "operation_1",
           name: "Invoice lookup",
           live: true,
-          enabledTools: ["ta_invoices_search_rows"],
+          enabledTools: requesterTools("ta_invoices_search_rows"),
           knowledgeBases: [],
           allowKnowledgeSourceDownload: false,
         },
@@ -304,5 +328,66 @@ describe("buildPromptAndTools", () => {
     expect(createTableTools).toHaveBeenCalledWith(["ta_invoices"])
     expect(Reflect.get(result.tools, "list_tables")).toBeDefined()
     expect(Reflect.get(result.tools, "get_table")).toBeDefined()
+  })
+
+  it("keeps configured tools available until execution authorization", async () => {
+    jest.mocked(getBudibaseTools).mockReturnValue([
+      {
+        name: "ta_large_expenses_create_row",
+        readableName: "Large expenses.create_row",
+        tableId: "ta_large_expenses",
+        description: "Create a large expense",
+        sourceType: ToolType.INTERNAL_TABLE,
+        sourceLabel: "Budibase",
+        executionPolicy: {
+          mode: "configurable",
+          defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+        },
+        authorization: {
+          permissionType: PermissionType.TABLE,
+          permissionLevel: PermissionLevel.WRITE,
+          resourceId: "ta_large_expenses",
+        },
+        tool: {} as Tool,
+      },
+    ])
+    const agent = {
+      _id: "agent_expenses",
+      name: "Expense Agent",
+      aiconfig: "",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Track expenses",
+          live: true,
+          enabledTools: requesterTools("ta_large_expenses_create_row"),
+          knowledgeBases: [],
+          allowKnowledgeSourceDownload: false,
+        },
+      ],
+    } satisfies Agent
+
+    const result = await buildPromptAndTools(agent, agent.operations[0], {
+      toolSecurityEnabled: true,
+      executionContext: {
+        tenantId: "tenant_1",
+        workspaceId: "app_1",
+        agentId: agent._id,
+        operationId: "operation_1",
+        conversationId: "conversation_1",
+        requester: {
+          userId: "user_1",
+          authorization: { mode: "current" },
+        },
+      },
+    })
+
+    expect(
+      Reflect.get(result.tools, "ta_large_expenses_create_row")
+    ).toBeDefined()
+    expect(authorizeAgentToolCall).not.toHaveBeenCalled()
+    expect(result.systemPrompt).toContain(
+      "do not substitute a different tool or resource"
+    )
   })
 })
