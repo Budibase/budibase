@@ -195,6 +195,38 @@ describe("AI Tools - Rows", () => {
     expect(persistedRow.description).toBe("original description")
   })
 
+  it("does not return row fields from a redacted write tool", async () => {
+    const table = await config.api.table.save(basicTable())
+    const createdRow = await config.api.row.save(
+      table._id!,
+      basicRow(table._id!)
+    )
+    const updateTool = getBudibaseTools([table]).find(
+      tool => tool.name === `${table._id}_update_row`
+    )
+    const execute = updateTool?.requesterRedactedTool?.execute
+    if (!execute) {
+      throw new Error("Redacted update tool not found")
+    }
+
+    const result = await runInContext(() =>
+      execute(
+        {
+          rowId: createdRow._id!,
+          rowRev: createdRow._rev!,
+          data: { name: "Updated without read access" },
+        },
+        { toolCallId: "test-tool-call", messages: [] }
+      )
+    )
+
+    expect(result).toEqual({ success: true })
+    expect(result).not.toHaveProperty("row")
+    await expect(
+      config.api.row.get(table._id!, createdRow._id!)
+    ).resolves.toMatchObject({ name: "Updated without read access" })
+  })
+
   it("should create and update rows via table alias tools", async () => {
     const table = await config.api.table.save(basicTable())
     const tools = getBudibaseTools([table])

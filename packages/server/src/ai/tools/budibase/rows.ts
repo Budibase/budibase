@@ -224,6 +224,10 @@ type RowToolResult =
     }
   | { error: string }
 
+interface RedactedWriteResult {
+  success: true
+}
+
 const sanitizeRowToolResult = (
   result: RowToolResult,
   tableSchema: TableSchema
@@ -434,6 +438,14 @@ export const createRowTools = ({
         await def.execute(tableId, input, fields),
         tableSchema
       )
+    const executeRequesterRedacted = async (
+      input: Parameters<typeof def.execute>[1]
+    ): Promise<RowToolResult | RedactedWriteResult> => {
+      const result = await execute(input)
+      return action === "create_row" || action === "update_row"
+        ? { success: true }
+        : result
+    }
     return {
       name: toolName,
       readableName: `${tableName}.${action}`,
@@ -462,7 +474,7 @@ export const createRowTools = ({
       requesterRedactedTool: tool({
         description: getRequesterRedactedDescription(action),
         inputSchema: def.inputSchema,
-        execute,
+        execute: executeRequesterRedacted,
       }),
     }
   })
