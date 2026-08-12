@@ -1,3 +1,4 @@
+import { permissions } from "@budibase/backend-core"
 import type { ContextUserMetadata } from "@budibase/types"
 import {
   PermissionLevel,
@@ -31,7 +32,10 @@ jest.mock("@budibase/backend-core", () => ({
   users: { isBuilder: jest.fn(() => false) },
 }))
 
-import { authorizeAgentToolCall } from "./authorization"
+import {
+  authorizeAgentToolCall,
+  canRequesterReadAgentToolResource,
+} from "./authorization"
 
 const authorization = {
   permissionType: PermissionType.TABLE,
@@ -86,5 +90,24 @@ describe("authorizeAgentToolCall", () => {
         principal: ToolExecutionPrincipal.ADMIN,
       })
     ).resolves.toBeUndefined()
+  })
+
+  it("checks requester read visibility without emitting execution audit logs", async () => {
+    mockGetFullUser.mockResolvedValue({
+      _id: "user_1",
+      roleId: "BASIC",
+    } as ContextUserMetadata)
+    jest.mocked(permissions.doesHaveBasePermission).mockReturnValue(false)
+    const log = jest.spyOn(console, "log").mockImplementation()
+
+    await expect(
+      canRequesterReadAgentToolResource({
+        resourceId: "ta_1",
+        executionContext,
+      })
+    ).resolves.toBe(false)
+    expect(log).not.toHaveBeenCalled()
+
+    log.mockRestore()
   })
 })

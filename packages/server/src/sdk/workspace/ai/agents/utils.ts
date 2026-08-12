@@ -31,7 +31,10 @@ import {
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 import { HTTPError } from "@budibase/backend-core"
-import { authorizeAgentToolCall } from "../../../../ai/tools/authorization"
+import {
+  authorizeAgentToolCall,
+  canRequesterReadAgentToolResource,
+} from "../../../../ai/tools/authorization"
 
 const HELPER_TOOL_NAMES = new Set([
   "list_tables",
@@ -188,9 +191,32 @@ export async function buildPromptAndTools(
   const configuredTools = allTools.filter(
     tool => enabledToolNames.has(tool.name) && !isHelperTool(tool)
   )
-  const enabledTools = options.toolSecurityEnabled
+  let enabledTools = options.toolSecurityEnabled
     ? configuredTools
     : addLegacyHelperTools(configuredTools, allTools)
+
+  if (options.toolSecurityEnabled && options.executionContext) {
+    const executionContext = options.executionContext
+    const visibilityByTable = new Map<string, Promise<boolean>>()
+    enabledTools = await Promise.all(
+      enabledTools.map(async tool => {
+        if (!tool.tableId || !tool.requesterRedactedTool) {
+          return tool
+        }
+        let visibility = visibilityByTable.get(tool.tableId)
+        if (!visibility) {
+          visibility = canRequesterReadAgentToolResource({
+            resourceId: tool.tableId,
+            executionContext,
+          })
+          visibilityByTable.set(tool.tableId, visibility)
+        }
+        return (await visibility)
+          ? tool
+          : { ...tool, tool: tool.requesterRedactedTool }
+      })
+    )
+  }
 
   if (
     operation &&

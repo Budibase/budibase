@@ -101,6 +101,35 @@ describe("AI Tools - Rows", () => {
     }
   })
 
+  it("provides schema-free requester definitions for every row action", () => {
+    const tools = createRowTools({
+      tableId: "ta_employees",
+      tableName: "Employees",
+      tableSourceType: TableSourceType.INTERNAL,
+      tableSchema: {
+        "Employee Level": {
+          name: "Employee Level",
+          type: FieldType.OPTIONS,
+          constraints: { inclusion: ["Apprentice", "Manager"] },
+        },
+      },
+    })
+
+    expect(tools).toHaveLength(5)
+    for (const rowTool of tools) {
+      expect(rowTool.requesterRedactedTool).toBeDefined()
+      const serializedDefinition = JSON.stringify({
+        description: rowTool.requesterRedactedTool?.description,
+        inputSchema: rowTool.requesterRedactedTool?.inputSchema,
+      })
+      expect(serializedDefinition).not.toContain("Employees")
+      expect(serializedDefinition).not.toContain("Employee Level")
+      expect(serializedDefinition).not.toContain("Apprentice")
+      expect(serializedDefinition).not.toContain("Manager")
+      expect(serializedDefinition).toContain("Resource metadata is restricted")
+    }
+  })
+
   async function executeTool<T extends BudibaseToolDefinition>(
     tool: ToolLike<T>,
     input: ToolInput<T>
