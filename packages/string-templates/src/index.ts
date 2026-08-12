@@ -325,13 +325,14 @@ const quoteRawJsonBindings = (template: string) => {
     }
 
     if (char === "{" && template[i + 1] === "{") {
-      const end = template.indexOf("}}", i + 2)
+      const closing = template[i + 2] === "{" ? "}}}" : "}}"
+      const end = template.indexOf(closing, i + closing.length)
       if (end !== -1) {
-        const block = template.slice(i, end + 2)
+        const block = template.slice(i, end + closing.length)
         const token = `${RAW_JSON_BINDING_PREFIX}${bindings.length}__`
         bindings.push({ token, block })
         output += JSON.stringify(token)
-        i = end + 1
+        i = end + closing.length - 1
         continue
       }
     }
@@ -413,11 +414,12 @@ const splitTopLevelJsonObjects = (template: string): string[] | null => {
     }
 
     if (char === "{" && template[i + 1] === "{") {
-      const end = template.indexOf("}}", i + 2)
+      const closing = template[i + 2] === "{" ? "}}}" : "}}"
+      const end = template.indexOf(closing, i + closing.length)
       if (end === -1) {
         return null
       }
-      i = end + 1
+      i = end + closing.length - 1
       continue
     }
 

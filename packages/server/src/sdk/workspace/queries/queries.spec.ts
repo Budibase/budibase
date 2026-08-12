@@ -178,6 +178,26 @@ describe("queries SDK", () => {
       )
     })
 
+    it("keeps triple-brace JSON parameters safe in multi-object MongoDB templates", async () => {
+      const injected = 'x","name":{"$exists":true},"$comment":"esc'
+      const result = await enrichContext(
+        {
+          json: '{"criteria": {{{ extra }}}, "name":"{{ name }}"} {"$set":{"touched":true}} {}',
+        },
+        {
+          extra: '{"active":true}',
+          name: injected,
+        }
+      )
+
+      expect(result.json).toEqual(
+        `${JSON.stringify({
+          criteria: { active: true },
+          name: injected,
+        })} ${JSON.stringify({ $set: { touched: true } })} {}`
+      )
+    })
+
     it("falls back to requestBody when json is blank", async () => {
       const result = await enrichContext({
         json: "",

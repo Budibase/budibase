@@ -187,6 +187,29 @@ describe("Test that JSON string processing works correctly", () => {
     })
   })
 
+  it("handles unquoted triple-brace bindings before splitting JSON", () => {
+    const injectedName = 'x","name":{"$exists":true},"$comment":"esc'
+    const output = processJsonStringSync(
+      '{"criteria": {{{ extra }}}, "name":"{{ name }}"} {"$set":{"touched":true}} {}',
+      {
+        extra: '{"active":true}',
+        name: injectedName,
+      },
+      options
+    )
+
+    expect(output).toEqual(
+      JSON.stringify({
+        criteria: { active: true },
+        name: injectedName,
+      }) +
+        " " +
+        JSON.stringify({ $set: { touched: true } }) +
+        " " +
+        JSON.stringify({})
+    )
+  })
+
   it("fails closed when a multi-object template is not strict JSON", () => {
     expect(() =>
       processJsonStringSync(
