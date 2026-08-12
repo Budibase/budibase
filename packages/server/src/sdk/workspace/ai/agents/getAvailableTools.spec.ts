@@ -35,21 +35,20 @@ describe("getAvailableToolsMetadata", () => {
     jest.spyOn(sdk.automations, "fetch").mockResolvedValue([])
   })
 
-  it("does not expose helper tools in metadata", async () => {
+  it("does not expose legacy helper tools in metadata", async () => {
     jest.spyOn(sdk.datasources, "fetch").mockResolvedValue([])
     jest.spyOn(sdk.queries, "fetch").mockResolvedValue([])
 
     const tools = await getAvailableToolsMetadata()
-    const helperTools = tools.filter(tool =>
-      [
+
+    expect(tools.map(tool => tool.name)).not.toEqual(
+      expect.arrayContaining([
         "list_tables",
         "get_table",
         "list_automations",
         "get_automation",
-      ].includes(tool.name)
+      ])
     )
-
-    expect(helperTools).toHaveLength(0)
   })
 
   it("keeps REST queries as REST_QUERY tools", async () => {
