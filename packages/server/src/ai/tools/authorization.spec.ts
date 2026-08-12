@@ -60,6 +60,10 @@ describe("authorizeAgentToolCall", () => {
     jest.clearAllMocks()
   })
 
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   it("denies admin execution when a workspace member is now public", async () => {
     mockGetFullUser.mockResolvedValue({
       _id: "user_1",
@@ -107,7 +111,5 @@ describe("authorizeAgentToolCall", () => {
       })
     ).resolves.toBe(false)
     expect(log).not.toHaveBeenCalled()
-
-    log.mockRestore()
   })
 })
