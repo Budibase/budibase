@@ -105,6 +105,7 @@ jest.mock("@budibase/pro", () => ({
 
 import sdk from "../../.."
 import {
+  createTableTools,
   getBudibaseTools,
   createKnowledgeFilesTool,
   createKnowledgeSearchTool,
@@ -467,6 +468,7 @@ describe("buildPromptAndTools", () => {
       toolSecurityEnabled: false,
     })
 
+    expect(createTableTools).toHaveBeenCalledWith(["ta_expenses"])
     expect(Reflect.get(result.tools, "list_tables")).toBeDefined()
     expect(Reflect.get(result.tools, "get_table")).toBeDefined()
   })
