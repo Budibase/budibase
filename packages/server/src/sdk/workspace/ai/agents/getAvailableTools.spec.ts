@@ -1,4 +1,9 @@
-import { Datasource, Query, SourceName, ToolType } from "@budibase/types"
+import {
+  SourceName,
+  ToolType,
+  type Datasource,
+  type Query,
+} from "@budibase/types"
 import sdk from "../../.."
 import { getAvailableToolsMetadata } from "./utils"
 
