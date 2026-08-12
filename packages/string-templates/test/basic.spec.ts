@@ -187,6 +187,21 @@ describe("Test that JSON string processing works correctly", () => {
     })
   })
 
+  it("keeps dynamic keys safe across multi-object JSON templates", () => {
+    const injectedKey = 'name":{"$exists":true},"$comment'
+    const output = processJsonStringSync(
+      '{"{{ key }}":"fixed"} {"$set":{"touched":true}}',
+      { key: injectedKey },
+      options
+    )
+
+    expect(output).toEqual(
+      JSON.stringify({ [injectedKey]: "fixed" }) +
+        " " +
+        JSON.stringify({ $set: { touched: true } })
+    )
+  })
+
   it("handles unquoted triple-brace bindings before splitting JSON", () => {
     const injectedName = 'x","name":{"$exists":true},"$comment":"esc'
     const output = processJsonStringSync(

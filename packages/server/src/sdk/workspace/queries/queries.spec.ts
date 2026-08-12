@@ -178,6 +178,24 @@ describe("queries SDK", () => {
       )
     })
 
+    it("keeps dynamic keys safe in multi-object MongoDB templates", async () => {
+      const injectedKey = 'name":{"$exists":true},"$comment'
+      const result = await enrichContext(
+        {
+          json: '{"{{ key }}":"fixed"} {"$set":{"touched":true}}',
+        },
+        {
+          key: injectedKey,
+        }
+      )
+
+      expect(result.json).toEqual(
+        `${JSON.stringify({ [injectedKey]: "fixed" })} ${JSON.stringify({
+          $set: { touched: true },
+        })}`
+      )
+    })
+
     it("keeps triple-brace JSON parameters safe in multi-object MongoDB templates", async () => {
       const injected = 'x","name":{"$exists":true},"$comment":"esc'
       const result = await enrichContext(

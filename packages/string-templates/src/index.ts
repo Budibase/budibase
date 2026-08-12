@@ -375,7 +375,7 @@ const processJsonTemplateValue = (
   if (value && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value).map(([key, child]) => [
-        key,
+        processJsonTemplateString(key, context, opts),
         processJsonTemplateValue(child, bindings, context, opts),
       ])
     )
