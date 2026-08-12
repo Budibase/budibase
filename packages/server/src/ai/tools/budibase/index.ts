@@ -1,10 +1,5 @@
-import type { Tool } from "ai"
-import {
-  Automation,
-  TableSourceType,
-  type Table,
-  type ToolType,
-} from "@budibase/types"
+import { Automation, TableSourceType, type Table } from "@budibase/types"
+import type { AiToolDefinition } from ".."
 import createAutomationTools from "./automations"
 import { createRowTools } from "./rows"
 import {
@@ -12,15 +7,8 @@ import {
   createKnowledgeSearchTool,
 } from "./knowledgeFiles"
 
-export interface BudibaseToolDefinition {
-  name: string
-  sourceType: ToolType
+export interface BudibaseToolDefinition extends AiToolDefinition {
   sourceLabel: string
-  sourceIconType?: string
-  description: string
-  tool: Tool
-  readableName?: string
-  tableId?: string
 }
 
 export const getBudibaseTools = (

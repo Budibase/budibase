@@ -6,6 +6,9 @@ import {
   SortOrder,
   TableSourceType,
   ToolType,
+  PermissionLevel,
+  PermissionType,
+  ToolExecutionPrincipal,
   type Row,
   type RowSearchParams,
   type TableSchema,
@@ -431,6 +434,18 @@ export const createRowTools = ({
       sourceLabel: resolvedSourceLabel,
       sourceIconType,
       description,
+      executionPolicy: {
+        mode: "configurable",
+        defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+      },
+      authorization: {
+        permissionType: PermissionType.TABLE,
+        permissionLevel:
+          action === "create_row" || action === "update_row"
+            ? PermissionLevel.WRITE
+            : PermissionLevel.READ,
+        resourceId: tableId,
+      },
       tool: tool({
         description,
         inputSchema,
