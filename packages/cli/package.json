@@ -6,6 +6,9 @@
   "bin": {
     "budi": "dist/index.js"
   },
+  "engines": {
+    "node": ">=22.19.0"
+  },
   "author": "Budibase",
   "license": "GPL-3.0",
   "scripts": {
