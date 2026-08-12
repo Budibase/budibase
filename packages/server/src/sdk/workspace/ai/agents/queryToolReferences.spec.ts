@@ -1,5 +1,6 @@
-import { SourceName } from "@budibase/types"
+import { SourceName, ToolExecutionPrincipal } from "@budibase/types"
 import type { Agent, Datasource, Query } from "@budibase/types"
+import { requesterTools } from "../tests/utils"
 import { fetch, update } from "./crud"
 import {
   migrateQueryToolReferences,
@@ -42,11 +43,11 @@ describe("updateAgentQueryToolReferences", () => {
           live: true,
           promptInstructions:
             "Use {{ api.owen_wilson.GET random wow }} then {{api.owen_wilson.GET random wow}}.",
-          enabledTools: [
+          enabledTools: requesterTools(
             existingBindings.runtimeBinding,
             updatedBindings.runtimeBinding,
-            "other_tool",
-          ],
+            "other_tool"
+          ),
           allowKnowledgeSourceDownload: true,
         },
       ],
@@ -61,7 +62,10 @@ describe("updateAgentQueryToolReferences", () => {
     expect(updated?.operations?.[0]).toMatchObject({
       promptInstructions:
         "Use {{ api.owen_wilson.GET another wow }} then {{api.owen_wilson.GET another wow}}.",
-      enabledTools: [updatedBindings.runtimeBinding, "other_tool"],
+      enabledTools: requesterTools(
+        updatedBindings.runtimeBinding,
+        "other_tool"
+      ),
     })
   })
 
@@ -73,7 +77,7 @@ describe("updateAgentQueryToolReferences", () => {
           name: "Main",
           live: false,
           promptInstructions: "{{ api.owen_wilson.Old name }}",
-          enabledTools: ["rest_owen_wilson_same_name"],
+          enabledTools: requesterTools("rest_owen_wilson_same_name"),
           allowKnowledgeSourceDownload: true,
         },
       ],
@@ -93,9 +97,77 @@ describe("updateAgentQueryToolReferences", () => {
 
     expect(updated?.operations?.[0]).toMatchObject({
       promptInstructions: "{{ api.owen_wilson.New name }}",
-      enabledTools: ["rest_owen_wilson_same_name"],
+      enabledTools: requesterTools("rest_owen_wilson_same_name"),
     })
   })
+
+  it("preserves the legacy principal when renaming a runtime binding", () => {
+    const legacyConfig = {
+      toolName: existingBindings.runtimeBinding,
+      executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+    }
+    const agent = makeAgent({
+      operations: [
+        {
+          id: "operation_1",
+          name: "Main",
+          live: true,
+          enabledTools: [legacyConfig],
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
+    })
+
+    const updated = updateAgentQueryToolReferences({
+      agent,
+      existingBindings,
+      updatedBindings,
+    })
+
+    expect(updated?.operations?.[0].enabledTools).toEqual([
+      {
+        ...legacyConfig,
+        toolName: updatedBindings.runtimeBinding,
+      },
+    ])
+  })
+
+  it.each(["legacy-first", "updated-first"])(
+    "preserves the existing destination principal when %s",
+    order => {
+      const legacyConfig = {
+        toolName: existingBindings.runtimeBinding,
+        executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+      }
+      const destinationConfig = {
+        toolName: updatedBindings.runtimeBinding,
+        executionPrincipal: ToolExecutionPrincipal.ADMIN,
+      }
+      const enabledTools =
+        order === "legacy-first"
+          ? [legacyConfig, destinationConfig]
+          : [destinationConfig, legacyConfig]
+      const agent = makeAgent({
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main",
+            live: true,
+            enabledTools,
+            allowKnowledgeSourceDownload: true,
+          },
+        ],
+      })
+
+      const updated = updateAgentQueryToolReferences({
+        agent,
+        existingBindings,
+        updatedBindings,
+      })
+
+      expect(updated?.operations?.[0].enabledTools).toEqual([destinationConfig])
+    }
+  )
 
   it("does not update unrelated agents", () => {
     const agent = makeAgent({
@@ -106,7 +178,7 @@ describe("updateAgentQueryToolReferences", () => {
           live: false,
           promptInstructions:
             "Mention api.owen_wilson.GET random wow as plain text.",
-          enabledTools: ["other_tool"],
+          enabledTools: requesterTools("other_tool"),
           allowKnowledgeSourceDownload: true,
         },
       ],
@@ -136,10 +208,10 @@ describe("migrateQueryToolReferences", () => {
           live: false,
           promptInstructions:
             "Use {{ api.old_api.First query }} and {{ api.old_api.Second query }}.",
-          enabledTools: [
+          enabledTools: requesterTools(
             "rest_old_api_first_query_uery_first_query",
-            "rest_old_api_second_query_ery_second_query",
-          ],
+            "rest_old_api_second_query_ery_second_query"
+          ),
           allowKnowledgeSourceDownload: true,
         },
       ],
@@ -186,10 +258,10 @@ describe("migrateQueryToolReferences", () => {
           expect.objectContaining({
             promptInstructions:
               "Use {{ api.new_api.First query }} and {{ api.new_api.Second query }}.",
-            enabledTools: [
+            enabledTools: requesterTools(
               "rest_new_api_first_query_uery_first_query",
-              "rest_new_api_second_query_ery_second_query",
-            ],
+              "rest_new_api_second_query_ery_second_query"
+            ),
           }),
         ],
       })
