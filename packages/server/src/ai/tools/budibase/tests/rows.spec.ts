@@ -1,5 +1,7 @@
 import {
   FieldType,
+  PermissionLevel,
+  PermissionType,
   RelationshipType,
   TableSourceType,
   type TableSchema,
@@ -57,6 +59,24 @@ describe("AI Tools - Rows", () => {
       expect(tool.name).toMatch(/^[A-Za-z0-9_-]+$/)
       expect(tool.name.endsWith(`_${action}`)).toBe(true)
     }
+  })
+
+  it.each([
+    ["get_row", PermissionLevel.READ],
+    ["search_rows", PermissionLevel.READ],
+    ["create_row", PermissionLevel.WRITE],
+    ["update_row", PermissionLevel.WRITE],
+  ])("requires the correct permission for %s", (action, permissionLevel) => {
+    const tableId = `${datasourceId}__Notes`
+    const rowTool = getExternalRowTools("Notes").find(tool =>
+      tool.readableName?.endsWith(`.${action}`)
+    )
+
+    expect(rowTool?.authorization).toMatchObject({
+      permissionType: PermissionType.TABLE,
+      permissionLevel,
+      resourceId: tableId,
+    })
   })
 
   it("distinguishes long table IDs with the same prefix", () => {
