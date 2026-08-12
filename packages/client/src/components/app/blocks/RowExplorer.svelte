@@ -2,7 +2,7 @@
   import Block from "@/components/Block.svelte"
   import BlockComponent from "@/components/BlockComponent.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
-  import { generate } from "shortid"
+  import { generateId } from "@budibase/bbui"
   import { get } from "svelte/store"
   import { getContext } from "svelte"
 
@@ -18,7 +18,7 @@
   export let noRowsMessage
   export let autoRefresh
 
-  const stateKey = generate()
+  const stateKey = generateId()
   const context = getContext("context")
   const { generateGoldenSample } = getContext("sdk")
 

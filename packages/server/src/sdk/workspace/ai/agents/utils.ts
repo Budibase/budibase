@@ -7,12 +7,15 @@ import {
   WebSearchProvider,
   ESCALATE_TOOL_NAME,
   EscalateToolResultStatus,
+  ToolExecutionPrincipal,
+  type AgentExecutionContext,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import {
   createKnowledgeFilesTool,
   createKnowledgeSearchTool,
   createEscalatePlaceholderTool,
+  createTableTools,
   getBudibaseTools,
 } from "../../../../ai/tools/budibase"
 import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
@@ -20,12 +23,15 @@ import { isToolUIPart, getToolName } from "ai"
 import {
   createRestQueryTool,
   createDatasourceQueryTool,
+  resolveToolExecutionPrincipal,
   toToolSet,
   type AiToolDefinition,
+  type ToolAuthorizationRuntime,
 } from "../../../../ai/tools"
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 import { HTTPError } from "@budibase/backend-core"
+import { authorizeAgentToolCall } from "../../../../ai/tools/authorization"
 
 const HELPER_TOOL_NAMES = new Set([
   "list_tables",
@@ -64,6 +70,7 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
     sourceType: tool.sourceType,
     sourceLabel: tool.sourceLabel,
     sourceIconType: tool.sourceIconType,
+    executionPolicy: tool.executionPolicy,
   }
 }
 
@@ -151,6 +158,8 @@ export interface BuildPromptAndToolsOptions {
   baseSystemPrompt?: string
   includeGoal?: boolean
   fallbackPromptInstructions?: string
+  executionContext?: AgentExecutionContext
+  toolSecurityEnabled?: boolean
 }
 
 export async function buildPromptAndTools(
@@ -174,7 +183,8 @@ export async function buildPromptAndTools(
   const hasKnowledgeBases = operation?.knowledgeBases?.some(Boolean) ?? false
 
   const allTools = await getAvailableTools(agent.aiconfig)
-  const enabledToolNames = new Set(operation?.enabledTools || [])
+  const toolConfigs = operation?.enabledTools || []
+  const enabledToolNames = new Set(toolConfigs.map(config => config.toolName))
   const enabledTools = addHelperTools(
     allTools.filter(
       tool => enabledToolNames.has(tool.name) && !isHelperTool(tool)
@@ -197,6 +207,22 @@ export async function buildPromptAndTools(
     enabledTools.push(createKnowledgeSearchTool(agentId, operation.id))
   }
 
+  const runtimes = new Map<string, ToolAuthorizationRuntime>()
+  if (operation && options.executionContext) {
+    const { executionContext } = options
+    for (const tool of enabledTools) {
+      const config = toolConfigs.find(config => config.toolName === tool.name)
+      const principal = options.toolSecurityEnabled
+        ? resolveToolExecutionPrincipal(tool, config)
+        : ToolExecutionPrincipal.ADMIN
+      runtimes.set(tool.name, {
+        executionContext,
+        principal,
+        authorize: authorizeAgentToolCall,
+      })
+    }
+  }
+
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
@@ -209,6 +235,9 @@ export async function buildPromptAndTools(
   })
 
   let resolvedSystemPrompt = systemPrompt
+  if (options.toolSecurityEnabled) {
+    resolvedSystemPrompt += `\n\nA configured tool may still be unavailable to the requesting user. If a tool call fails because it is unavailable in the security context, do not substitute a different tool or resource and do not claim the action succeeded. Tell the user that they do not have permission to perform the requested action.`
+  }
   if (hasKnowledgeBases) {
     resolvedSystemPrompt += `\n\nWhen users ask about attached files (for example size, type, upload status, processing errors, or file counts), call list_knowledge_files with a filename when possible. Do not guess file metadata. If list_knowledge_files returns ambiguous results, ask a clarification question before answering. If it returns no matches, say that you couldn't find a matching file.\n\nFor any non-trivial user question, call search_knowledge before answering. Do not say the answer is unavailable, unknown, or unsupported until after you have searched knowledge. If search_knowledge returns no relevant context, say that you couldn't find supporting knowledge.\n\nIf you used search_knowledge context in your final answer, call report_used_sources immediately before your final response and pass only sourceIds that directly support the final answer. Do not include sources that were merely searched/consulted. If your conclusion is that the answer is not found in the documents, call report_used_sources with an empty sourceIds list.`
   }
@@ -218,7 +247,7 @@ export async function buildPromptAndTools(
 
   return {
     systemPrompt: resolvedSystemPrompt,
-    tools: toToolSet(enabledTools),
+    tools: toToolSet(enabledTools, runtimes),
     toolDisplayNames: getToolDisplayNames(enabledTools),
   }
 }
@@ -234,20 +263,14 @@ function addHelperTools(
   const seenTools = new Set(enabledTools.map(tool => tool.name))
   const toolByName = new Map(allTools.map(tool => [tool.name, tool]))
 
-  if (
-    enabledTools.some(
-      tool =>
-        tool.sourceType === ToolType.EXTERNAL_TABLE ||
-        tool.sourceType === ToolType.INTERNAL_TABLE
+  if (enabledTools.some(tool => tool.tableId)) {
+    const tableIds = enabledTools.flatMap(tool =>
+      tool.tableId ? [tool.tableId] : []
     )
-  ) {
-    for (const toolName of ["get_table", "list_tables"]) {
-      if (seenTools.has(toolName)) continue
-      let tool = toolByName.get(toolName)
-      if (tool) {
-        enabledTools.push(tool)
-        seenTools.add(tool.name)
-      }
+    for (const tool of createTableTools(tableIds)) {
+      if (seenTools.has(tool.name)) continue
+      enabledTools.push(tool)
+      seenTools.add(tool.name)
     }
   }
 
