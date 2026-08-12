@@ -268,7 +268,7 @@ describe("REST Integration", () => {
     expect(data).toEqual({ foo: "bar" })
   })
 
-  it("allows cross-origin paths when the env flag and datasource opt-in are enabled", async () => {
+  it("allows cross-origin paths when the env flag and allowlist are enabled", async () => {
     const environment = require("../../environment").default
     const originalEnv = process.env.REST_ALLOW_CROSS_ORIGIN_PATHS
 
@@ -286,7 +286,7 @@ describe("REST Integration", () => {
 
       const crossOriginIntegration = new RestIntegration({
         url: "http://example.com",
-        allowCrossOriginPaths: true,
+        allowedOrigins: ["http://example.com:8080"],
       })
 
       const { data } = await crossOriginIntegration.read({
@@ -336,6 +336,19 @@ describe("REST Integration", () => {
         )
       }
     }
+  })
+
+  it("rejects cross-origin paths when only the allowlist is enabled", async () => {
+    const integration = new RestIntegration({
+      url: "http://example.com",
+      allowedOrigins: ["http://example.com:8080"],
+    })
+
+    await expect(
+      integration.read({
+        path: "http://example.com:8080/data",
+      })
+    ).rejects.toThrow("REST query path must remain on the datasource origin")
   })
 
   it("calls the update method with the correct params", async () => {

@@ -23,7 +23,7 @@ import { parse } from "content-disposition"
 import path from "path"
 import { Builder as XmlBuilder } from "xml2js"
 import { getAttachmentHeaders } from "./utils/restUtils"
-import { helpers } from "@budibase/shared-core"
+import { helpers, extractOrigin } from "@budibase/shared-core"
 import sdk from "../sdk"
 import { getDispatcher } from "../utilities"
 import {
@@ -96,12 +96,6 @@ const SCHEMA: Integration = {
       type: DatasourceFieldType.OBJECT,
       required: false,
       default: {},
-    },
-    allowCrossOriginPaths: {
-      display: "Allow cross-origin paths",
-      type: DatasourceFieldType.BOOLEAN,
-      default: false,
-      required: false,
     },
     rejectUnauthorized: {
       display: "Reject Unauthorized",
@@ -663,17 +657,8 @@ export class RestIntegration implements IntegrationBase {
     return this.buildHeadersFromAuthConfig(resolved.auth)
   }
 
-  private getOrigin(urlString: string): string | null {
-    try {
-      const parsed = new URL(urlString)
-      return `${parsed.protocol}//${parsed.host}`
-    } catch {
-      return null
-    }
-  }
-
   private assertSameOrigin(url: string, rawPath: string | undefined) {
-    const finalOrigin = this.getOrigin(url)
+    const finalOrigin = extractOrigin(url)
 
     const expectedOriginUrls: string[] = []
     if (this.config.url) {
@@ -684,11 +669,40 @@ export class RestIntegration implements IntegrationBase {
     }
 
     const isCrossOrigin = expectedOriginUrls.some(
-      expectedUrl => this.getOrigin(expectedUrl) !== finalOrigin
+      expectedUrl => extractOrigin(expectedUrl) !== finalOrigin
     )
     if (isCrossOrigin) {
       throw new Error("REST query path must remain on the datasource origin")
     }
+  }
+
+  private getAllowedOrigins(): string[] {
+    const configuredOrigins = this.config.allowedOrigins || []
+    const allowedOrigins = new Set<string>()
+
+    if (this.config.url) {
+      const baseOrigin = extractOrigin(this.getUrl())
+      if (baseOrigin) {
+        allowedOrigins.add(baseOrigin)
+      }
+    }
+
+    for (const origin of configuredOrigins) {
+      const normalisedOrigin = extractOrigin(origin)
+      if (normalisedOrigin) {
+        allowedOrigins.add(normalisedOrigin)
+      }
+    }
+
+    return [...allowedOrigins]
+  }
+
+  private isAllowedOrigin(url: string): boolean {
+    const finalOrigin = extractOrigin(url)
+    if (!finalOrigin) {
+      return false
+    }
+    return this.getAllowedOrigins().includes(finalOrigin)
   }
 
   async _req(query: RestQuery, retry401 = true): Promise<ParsedResponse> {
@@ -723,13 +737,12 @@ export class RestIntegration implements IntegrationBase {
       paginationValues
     )
 
-    const allowCrossOriginPaths =
-      environment.REST_ALLOW_CROSS_ORIGIN_PATHS &&
-      this.config.allowCrossOriginPaths === true
+    const allowAllowedOrigin =
+      environment.REST_ALLOW_CROSS_ORIGIN_PATHS && this.isAllowedOrigin(url)
 
     // Resolve and validate the destination BEFORE attaching any
     // datasource-scoped credentials or headers below.
-    if (!allowCrossOriginPaths) {
+    if (!allowAllowedOrigin) {
       this.assertSameOrigin(url, rawPath)
     }
 
