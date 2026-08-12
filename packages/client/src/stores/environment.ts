@@ -10,6 +10,7 @@ const initialState: EnvironmentState = {
   multiTenancy: false,
   offlineMode: false,
   cloud: false,
+  restAllowCrossOriginPaths: false,
   disableAccountPortal: false,
   isDev: false,
   maintenance: [],
