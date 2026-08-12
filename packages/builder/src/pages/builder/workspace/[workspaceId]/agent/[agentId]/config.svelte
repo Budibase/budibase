@@ -10,10 +10,6 @@
   } from "@budibase/types"
   import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
   import {
-    getReadableQueryToolBinding,
-    isQueryToolType,
-  } from "@budibase/shared-core"
-  import {
     datasources,
     restTemplates,
     workspaceDeploymentStore,
@@ -21,26 +17,12 @@
   import { getRestTemplateIdentifier } from "@/stores/builder/datasources"
   import { onDestroy, onMount } from "svelte"
   import { bb } from "@/stores/bb"
-  import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
   import type { AgentTool } from "./toolTypes"
-  import BudibaseLogo from "../logos/Budibase.svelte"
-  import WebSearchLogo from "../logos/WebSearch.svelte"
-  import RestLogo from "../logos/Rest.svelte"
-  import {
-    REST_TAG_ICON_URL,
-    WEB_SEARCH_TAG_ICON_URL,
-    ESCALATION_TAG_ICON_URL,
-  } from "../logos/tagIconUrls"
-  import { DATASOURCE_TAG_ICON_URLS } from "../datasourceIconUrls"
-  import BudibaseLogoSvg from "assets/bb-emblem.svg"
+  import { enrichAgentTool } from "./agentToolUtils"
   import { shouldAutoSelectAgentModel } from "./configUtils"
   import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
   import OperationsSection from "./OperationsSection.svelte"
 
-  // Code editor tag icons must be URL strings (see `hbsTags.ts`).
-  // Use URLs derived from the same Phosphor SVG paths as the Svelte logo components.
-  const WebSearchIconSvg = WEB_SEARCH_TAG_ICON_URL
-  const RestIconSvg = REST_TAG_ICON_URL
   const AUTO_SAVE_DEBOUNCE_MS = 800
 
   const toDraftOperation = (
@@ -92,31 +74,14 @@
     !!webSearchConfig?.apiKey && !!webSearchConfig.provider
   )
 
-  function enrichToolMetadata(tool: ToolMetadata): AgentTool {
-    const { sourceType, sourceLabel } = tool
-    const { icon, tagIconUrl } = resolveAgentToolIcons(tool, {
-      sourceType,
-      sourceLabel,
-    })
-    const displayName = tool.readableName || tool.name
-    const readableBinding = isQueryToolType(sourceType)
-      ? getReadableQueryToolBinding({
-          sourceType,
-          sourceLabel,
-          queryName: displayName,
-        })
-      : `${getBindingPrefix(sourceType, sourceLabel)}.${displayName}`
-    return {
-      ...tool,
-      sourceLabel,
-      sourceType,
-      readableBinding,
-      runtimeBinding: tool.name,
-      icon,
-      tagIconUrl,
-      fallbackIcon: sourceType === ToolType.ESCALATION ? "User" : undefined,
-    }
+  const resolveRestTemplateIcon = (sourceLabel?: string) => {
+    const datasource = $datasources.list.find(item => item.name === sourceLabel)
+    const identifier = getRestTemplateIdentifier(datasource)
+    return identifier ? restTemplates.get(identifier)?.icon : undefined
   }
+
+  const enrichToolMetadata = (tool: ToolMetadata) =>
+    enrichAgentTool(tool, { resolveRestTemplateIcon })
 
   function createWebSearchTool(): AgentTool {
     const webSearchTool: ToolMetadata = {
@@ -209,118 +174,6 @@
         console.error(error)
       })
   })
-
-  function resolveAgentToolIcons(
-    tool: ToolMetadata,
-    {
-      sourceType,
-      sourceLabel,
-    }: { sourceType: ToolType | undefined; sourceLabel: string | undefined }
-  ): { icon?: IconInfo; tagIconUrl?: string } {
-    const resolveDatasourceIcon = (sourceIconType?: string) => {
-      if (!sourceIconType) {
-        return undefined
-      }
-      const integrationIcon = getIntegrationIcon(sourceIconType)
-      if (!integrationIcon) {
-        return undefined
-      }
-      if (integrationIcon.url) {
-        return {
-          icon: integrationIcon,
-          tagIconUrl: integrationIcon.url,
-        }
-      }
-      if (integrationIcon.icon) {
-        const iconKey = sourceIconType.toUpperCase()
-        const tagIconUrl =
-          DATASOURCE_TAG_ICON_URLS[iconKey] ||
-          DATASOURCE_TAG_ICON_URLS.CUSTOM ||
-          BudibaseLogoSvg
-        return { icon: integrationIcon, tagIconUrl }
-      }
-      return undefined
-    }
-
-    if (
-      sourceType === ToolType.INTERNAL_TABLE ||
-      sourceType === ToolType.EXTERNAL_TABLE ||
-      sourceType === ToolType.AUTOMATION
-    ) {
-      if (sourceType === ToolType.EXTERNAL_TABLE) {
-        const externalIcon = resolveDatasourceIcon(tool.sourceIconType)
-        if (externalIcon) {
-          return externalIcon
-        }
-      }
-      return {
-        icon: { icon: BudibaseLogo },
-        tagIconUrl: BudibaseLogoSvg,
-      }
-    }
-
-    if (sourceType === ToolType.SEARCH) {
-      return {
-        icon: { icon: WebSearchLogo },
-        tagIconUrl: WebSearchIconSvg,
-      }
-    }
-
-    if (sourceType === ToolType.ESCALATION) {
-      return { tagIconUrl: ESCALATION_TAG_ICON_URL }
-    }
-
-    if (sourceType === ToolType.REST_QUERY) {
-      const ds = $datasources.list.find(d => d.name === sourceLabel)
-      const templateIconUrl = getRestTemplateIdentifier(ds)
-        ? restTemplates.get(getRestTemplateIdentifier(ds))?.icon
-        : undefined
-
-      if (templateIconUrl) {
-        return { icon: { url: templateIconUrl }, tagIconUrl: templateIconUrl }
-      }
-
-      return { icon: { icon: RestLogo }, tagIconUrl: RestIconSvg }
-    }
-
-    if (sourceType === ToolType.DATASOURCE_QUERY) {
-      const datasourceIcon = resolveDatasourceIcon(tool.sourceIconType)
-      if (datasourceIcon) {
-        return datasourceIcon
-      }
-      return {
-        icon: { icon: BudibaseLogo },
-        tagIconUrl: BudibaseLogoSvg,
-      }
-    }
-
-    return {}
-  }
-
-  function sanitizeString(str: string) {
-    return str.replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_|_$/g, "")
-  }
-  function getBindingPrefix(
-    sourceType: ToolType | undefined,
-    sourceLabel: string | undefined
-  ): string {
-    if (
-      sourceType === ToolType.INTERNAL_TABLE ||
-      sourceType === ToolType.AUTOMATION
-    ) {
-      return "budibase"
-    }
-    if (sourceType === ToolType.EXTERNAL_TABLE) {
-      return sourceLabel ? sanitizeString(sourceLabel) : "external"
-    }
-    if (sourceType === ToolType.SEARCH) {
-      return "search"
-    }
-    if (sourceType === ToolType.ESCALATION) {
-      return "escalation"
-    }
-    return "tool"
-  }
 
   function getWebSearchRuntimeBinding(
     configured?: boolean,

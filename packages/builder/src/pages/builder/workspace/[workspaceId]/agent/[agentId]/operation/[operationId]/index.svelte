@@ -19,13 +19,20 @@
   } from "@/components/common/CodeEditor"
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
   import { bb } from "@/stores/bb"
-  import { contextMenuStore, workspaceDeploymentStore } from "@/stores/builder"
+  import {
+    contextMenuStore,
+    datasources,
+    restTemplates,
+    workspaceDeploymentStore,
+  } from "@/stores/builder"
+  import { getRestTemplateIdentifier } from "@/stores/builder/datasources"
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import GenerateInstructionsControl from "../../GenerateInstructionsControl.svelte"
   import Knowledge from "../../knowledge/index.svelte"
   import OperationNameModal from "../../OperationNameModal.svelte"
   import ToolIcon from "../../ToolIcon.svelte"
   import ToolsDropdown from "../../ToolsDropdown.svelte"
+  import { enrichAgentTool } from "../../agentToolUtils"
   import { getIncludedToolRuntimeBindings } from "../../toolBindingUtils"
   import type { AgentTool } from "../../toolTypes"
 
@@ -50,23 +57,6 @@
   let operationName = $derived(operation?.name?.trim() || "Untitled operation")
   let toolsLoaded = $derived($agentsStore.tools !== undefined)
 
-  const getBindingPrefix = (tool: AgentTool) => {
-    if (
-      tool.sourceType === ToolType.INTERNAL_TABLE ||
-      tool.sourceType === ToolType.AUTOMATION
-    ) {
-      return "budibase"
-    }
-    if (tool.sourceType === ToolType.EXTERNAL_TABLE) {
-      return (tool.sourceLabel || "external")
-        .replace(/[^a-zA-Z0-9]+/g, "_")
-        .replace(/^_|_$/g, "")
-    }
-    if (tool.sourceType === ToolType.SEARCH) return "search"
-    if (tool.sourceType === ToolType.ESCALATION) return "escalation"
-    return "tool"
-  }
-
   const formatToolLabel = (tool: AgentTool) =>
     (tool.readableName || tool.name)
       .split(".")
@@ -79,17 +69,17 @@
       .join(".")
 
   let availableTools: AgentTool[] = $derived.by(() =>
-    ($agentsStore.tools || []).map(tool => {
-      const enriched = tool as AgentTool
-      const readableName = tool.readableName || tool.name
-      return {
-        ...enriched,
-        readableBinding:
-          enriched.readableBinding ||
-          `${getBindingPrefix(enriched)}.${readableName}`,
-        runtimeBinding: enriched.runtimeBinding || tool.name,
-      }
-    })
+    ($agentsStore.tools || []).map(tool =>
+      enrichAgentTool(tool, {
+        resolveRestTemplateIcon: sourceLabel => {
+          const datasource = $datasources.list.find(
+            item => item.name === sourceLabel
+          )
+          const identifier = getRestTemplateIdentifier(datasource)
+          return identifier ? restTemplates.get(identifier)?.icon : undefined
+        },
+      })
+    )
   )
 
   let promptBindings: EnrichedBinding[] = $derived(
@@ -427,7 +417,13 @@
               {#each includedTools as tool (tool.runtimeBinding)}
                 <div class="tool-row">
                   <div class="tool-name">
-                    <ToolIcon icon={tool.icon} size="S" fallbackIcon="Wrench" />
+                    <span class="tool-icon">
+                      <ToolIcon
+                        icon={tool.icon}
+                        size="S"
+                        fallbackIcon="Wrench"
+                      />
+                    </span>
                     <span>{tool.readableBinding}</span>
                   </div>
                   <button
@@ -621,14 +617,29 @@
     min-height: 34px;
     padding: 0 12px;
     border-radius: 4px;
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--background-alt);
   }
   .tool-name {
     display: flex;
     min-width: 0;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
+    gap: 7px;
+    font-size: 13px;
+    line-height: 17px;
+  }
+  .tool-icon {
+    display: flex;
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .tool-icon :global(img),
+  .tool-icon :global(svg) {
+    width: 14px !important;
+    height: 14px !important;
   }
   .tool-name span {
     overflow: hidden;
