@@ -80,13 +80,34 @@ const getRowRequestInputParameter = ({
       },
     ]
   }
+  if (
+    schema.type === FieldType.ARRAY &&
+    Array.isArray(options) &&
+    options.length > 0 &&
+    options.every(option => typeof option === "string")
+  ) {
+    return [
+      {
+        parameterPath,
+        name,
+        type: "multiselect",
+        options,
+        nativeRequired,
+      },
+    ]
+  }
   if (schema.type === FieldType.NUMBER || schema.type === FieldType.BIGINT) {
     return [{ parameterPath, name, type: "number", nativeRequired }]
+  }
+  if (schema.type === FieldType.BOOLEAN) {
+    return [{ parameterPath, name, type: "boolean", nativeRequired }]
+  }
+  if (schema.type === FieldType.DATETIME) {
+    return [{ parameterPath, name, type: "datetime", nativeRequired }]
   }
   if (
     schema.type === FieldType.STRING ||
     schema.type === FieldType.LONGFORM ||
-    schema.type === FieldType.DATETIME ||
     schema.type === FieldType.BARCODEQR
   ) {
     return [{ parameterPath, name, type: "text", nativeRequired }]

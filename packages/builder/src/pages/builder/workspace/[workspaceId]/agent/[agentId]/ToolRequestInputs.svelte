@@ -113,7 +113,7 @@
 
   const parameterSubtitle = (parameter: AgentToolRequestInputParameter) => {
     const details = [parameter.type, parameter.parameterPath.join(" → ")]
-    if (parameter.type === "select") {
+    if (parameter.type === "select" || parameter.type === "multiselect") {
       details.push(parameter.options.join(", "))
     }
     return details.join(" · ")

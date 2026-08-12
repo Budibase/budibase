@@ -43,7 +43,7 @@ describe("guardToolRequestInputs", () => {
   }
 
   const extractionResult = (
-    value: string | null,
+    value: string | string[] | null,
     sourceQuote: string | null
   ) => ({
     output: Promise.resolve({
@@ -214,6 +214,72 @@ describe("guardToolRequestInputs", () => {
     expect(result).toEqual({ created: true })
     expect(execute).toHaveBeenCalledTimes(1)
     expect(ToolLoopAgent).toHaveBeenCalledTimes(1)
+  })
+
+  it.each([
+    ["boolean", "true"],
+    ["datetime", "2026-08-12T09:30:00Z"],
+  ] as const)("collects a %s value", async (type, value) => {
+    mockStream.mockResolvedValueOnce(extractionResult(value, value))
+    const execute = jest.fn().mockResolvedValue({ created: true })
+    const guardedTool = guardToolRequestInputs({
+      toolName: "create_row",
+      tool: tool({ inputSchema: z.object({ value: z.any() }), execute }),
+      config: {
+        requestInputs: [{ parameterPath: ["value"], required: true }],
+        parameters: [
+          {
+            parameterPath: ["value"],
+            name: "Value",
+            type,
+            nativeRequired: true,
+          },
+        ],
+      },
+      modelMessages: [{ role: "user", content: value }],
+      llm,
+    })
+
+    const result = await guardedTool.execute?.({ value }, executionOptions)
+
+    expect(result).toEqual({ created: true })
+    expect(execute).toHaveBeenCalledTimes(1)
+  })
+
+  it("collects canonical multiselect values", async () => {
+    mockStream.mockResolvedValueOnce(
+      extractionResult(["remote", "Office"], "remote and Office")
+    )
+    const execute = jest.fn().mockResolvedValue({ created: true })
+    const guardedTool = guardToolRequestInputs({
+      toolName: "create_row",
+      tool: tool({
+        inputSchema: z.object({ tags: z.array(z.string()) }),
+        execute,
+      }),
+      config: {
+        requestInputs: [{ parameterPath: ["tags"], required: true }],
+        parameters: [
+          {
+            parameterPath: ["tags"],
+            name: "Tags",
+            type: "multiselect",
+            options: ["Remote", "Office"],
+            nativeRequired: true,
+          },
+        ],
+      },
+      modelMessages: [{ role: "user", content: "remote and Office" }],
+      llm,
+    })
+
+    const result = await guardedTool.execute?.(
+      { tags: ["Remote", "Office"] },
+      executionOptions
+    )
+
+    expect(result).toEqual({ created: true })
+    expect(execute).toHaveBeenCalledTimes(1)
   })
 
   it("fails closed when a configured parameter path no longer exists", async () => {

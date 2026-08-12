@@ -29,11 +29,11 @@ interface AgentToolRequestInputParameterBase {
 
 export type AgentToolRequestInputParameter =
   | (AgentToolRequestInputParameterBase & {
-      type: "text" | "number"
+      type: "text" | "number" | "boolean" | "datetime"
       options?: never
     })
   | (AgentToolRequestInputParameterBase & {
-      type: "select"
+      type: "select" | "multiselect"
       options: string[]
     })
 

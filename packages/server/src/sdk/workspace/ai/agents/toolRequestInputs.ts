@@ -17,7 +17,7 @@ import { z } from "zod"
 interface CollectedToolRequestInput {
   parameter: AgentToolRequestInputParameter
   required: boolean
-  value?: string
+  value?: string | string[]
 }
 
 export interface ToolRequestInputRuntimeConfig {
@@ -30,7 +30,7 @@ interface ToolRequestInputGuardValue {
   parameterPath: string[]
   type?: AgentToolRequestInputParameter["type"]
   options?: string[]
-  value?: string
+  value?: string | string[]
 }
 
 export interface ToolRequestInputGuardResult {
@@ -43,7 +43,7 @@ export interface ToolRequestInputGuardResult {
 }
 
 const requestInputEvidenceSchema = z.object({
-  value: z.string().nullable(),
+  value: z.union([z.string(), z.array(z.string())]).nullable(),
   sourceMessageIndex: z.number().int().nullable(),
   sourceQuote: z.string().nullable(),
 })
@@ -64,8 +64,24 @@ const getValidValue = ({
   value,
 }: {
   parameter: AgentToolRequestInputParameter
-  value: string
+  value: string | string[]
 }) => {
+  if (parameter.type === "multiselect") {
+    if (!Array.isArray(value) || !value.length) {
+      return undefined
+    }
+    const canonicalValues = value.map(value =>
+      parameter.options.find(
+        option => option.toLowerCase() === value.trim().toLowerCase()
+      )
+    )
+    return canonicalValues.every(value => value !== undefined)
+      ? Array.from(new Set(canonicalValues))
+      : undefined
+  }
+  if (Array.isArray(value)) {
+    return undefined
+  }
   if (parameter.type === "text") {
     return value
   }
@@ -73,6 +89,18 @@ const getValidValue = ({
     return parameter.options.find(
       option => option.toLowerCase() === value.toLowerCase()
     )
+  }
+  if (parameter.type === "boolean") {
+    if (/^(?:true|yes)$/i.test(value)) {
+      return "true"
+    }
+    if (/^(?:false|no)$/i.test(value)) {
+      return "false"
+    }
+    return undefined
+  }
+  if (parameter.type === "datetime") {
+    return Number.isNaN(Date.parse(value)) ? undefined : value
   }
   return /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(value) &&
     Number.isFinite(Number(value))
@@ -132,10 +160,23 @@ Select inputs:
 - Classify indirect language by meaning only when it clearly supports exactly one configured option.
 - If multiple options are plausible, return null.
 
+Multiselect inputs:
+- Return an array containing one or more configured options.
+- Match each option case-insensitively and return its canonical configured spelling.
+- Include only options clearly supported by the user's words. If none are supported, return null.
+
+Boolean inputs:
+- Return "true" or "false" only when the user clearly expresses an affirmative or negative value for that input.
+- Do not treat conversational agreement unrelated to the input as its boolean value.
+
+Datetime inputs:
+- Return an ISO 8601 date or datetime only when the user provides a clear date or time expression for that input.
+- Preserve the stated timezone or offset. Do not invent one when none is supplied.
+
 Evidence:
 - sourceMessageIndex must be the zero-based index of the supporting user message.
 - sourceQuote must be an exact verbatim substring of that message.
-- For normalized numbers and classified select values, sourceQuote must support the value but does not need to contain it verbatim.
+- For normalized numbers, booleans, datetimes, and classified select or multiselect values, sourceQuote must support the value but does not need to contain it verbatim.
 
 Configured inputs: ${JSON.stringify(
       inputs.map((input, index) => ({
@@ -161,21 +202,24 @@ Configured inputs: ${JSON.stringify(
     const output = (await result.output) as z.infer<typeof outputSchema>
     return inputs.map((input, index) => {
       const evidence = output.values[`input_${index}`]
-      const value = evidence.value?.trim()
+      const value = Array.isArray(evidence.value)
+        ? evidence.value.map(value => value.trim()).filter(Boolean)
+        : evidence.value?.trim()
       const sourceMessage =
         evidence.sourceMessageIndex === null
           ? undefined
           : userMessages[evidence.sourceMessageIndex]
-      const validValue = value
-        ? getValidValue({ parameter: input.parameter, value })
-        : undefined
+      const validValue =
+        value && (!Array.isArray(value) || value.length)
+          ? getValidValue({ parameter: input.parameter, value })
+          : undefined
       const hasValidEvidence =
         value &&
         validValue &&
         evidence.sourceQuote &&
         sourceMessage?.includes(evidence.sourceQuote) &&
         (input.parameter.type !== "text" ||
-          evidence.sourceQuote.includes(value))
+          (typeof value === "string" && evidence.sourceQuote.includes(value)))
       return {
         ...input,
         value: hasValidEvidence ? validValue : undefined,
@@ -194,7 +238,9 @@ const toGuardValue = (
   parameterPath: input.parameter.parameterPath,
   type: input.parameter.type,
   options:
-    input.parameter.type === "select" ? input.parameter.options : undefined,
+    input.parameter.type === "select" || input.parameter.type === "multiselect"
+      ? input.parameter.options
+      : undefined,
   value: input.value,
 })
 

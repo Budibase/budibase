@@ -150,11 +150,45 @@ const getRequestInputParameters = ({
       },
     ]
   }
+  const itemSchema =
+    schemaType === "array" &&
+    schema.items &&
+    !Array.isArray(schema.items) &&
+    typeof schema.items !== "boolean"
+      ? schema.items
+      : undefined
+  if (
+    itemSchema?.enum?.length &&
+    itemSchema.enum.every(option => typeof option === "string")
+  ) {
+    return [
+      {
+        parameterPath,
+        name,
+        type: "multiselect",
+        options: itemSchema.enum,
+        nativeRequired,
+      },
+    ]
+  }
   if (schemaType === "string") {
-    return [{ parameterPath, name, type: "text", nativeRequired }]
+    return [
+      {
+        parameterPath,
+        name,
+        type:
+          schema.format === "date" || schema.format === "date-time"
+            ? "datetime"
+            : "text",
+        nativeRequired,
+      },
+    ]
   }
   if (schemaType === "number" || schemaType === "integer") {
     return [{ parameterPath, name, type: "number", nativeRequired }]
+  }
+  if (schemaType === "boolean") {
+    return [{ parameterPath, name, type: "boolean", nativeRequired }]
   }
   return []
 }

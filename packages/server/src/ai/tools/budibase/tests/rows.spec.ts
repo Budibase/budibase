@@ -1,5 +1,6 @@
 import {
   FieldType,
+  JsonFieldSubType,
   PermissionLevel,
   PermissionType,
   RelationshipType,
@@ -79,6 +80,15 @@ describe("AI Tools - Rows", () => {
           constraints: { inclusion: ["Food", "Travel"] },
         },
         approved: { name: "approved", type: FieldType.BOOLEAN },
+        tags: {
+          name: "tags",
+          type: FieldType.ARRAY,
+          constraints: {
+            type: JsonFieldSubType.ARRAY,
+            inclusion: ["Remote", "Office"],
+          },
+        },
+        startsAt: { name: "startsAt", type: FieldType.DATETIME },
       },
     })
     const createTool = tools.find(tool =>
@@ -103,6 +113,25 @@ describe("AI Tools - Rows", () => {
         name: "category",
         type: "select",
         options: ["Food", "Travel"],
+        nativeRequired: false,
+      },
+      {
+        parameterPath: ["data", "approved"],
+        name: "approved",
+        type: "boolean",
+        nativeRequired: false,
+      },
+      {
+        parameterPath: ["data", "tags"],
+        name: "tags",
+        type: "multiselect",
+        options: ["Remote", "Office"],
+        nativeRequired: false,
+      },
+      {
+        parameterPath: ["data", "startsAt"],
+        name: "startsAt",
+        type: "datetime",
         nativeRequired: false,
       },
     ])

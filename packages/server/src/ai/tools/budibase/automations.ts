@@ -53,11 +53,15 @@ const getAutomationRequestInputParameters = (
     if (type === AutomationIOType.NUMBER) {
       return [{ parameterPath, name, type: "number", nativeRequired }]
     }
+    if (type === AutomationIOType.BOOLEAN) {
+      return [{ parameterPath, name, type: "boolean", nativeRequired }]
+    }
+    if (type === AutomationIOType.DATE || type === AutomationIOType.DATETIME) {
+      return [{ parameterPath, name, type: "datetime", nativeRequired }]
+    }
     if (
       type === AutomationIOType.STRING ||
-      type === AutomationIOType.LONGFORM ||
-      type === AutomationIOType.DATE ||
-      type === AutomationIOType.DATETIME
+      type === AutomationIOType.LONGFORM
     ) {
       return [{ parameterPath, name, type: "text", nativeRequired }]
     }
