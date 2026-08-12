@@ -39,6 +39,11 @@
   $: importedTemplates = $restTemplates.templates
     .filter(template => template.custom)
     .sort((a, b) => a.name.localeCompare(b.name))
+  $: filteredImportedTemplates = importedTemplates.filter(template =>
+    searchValue
+      ? template.name.toLowerCase().includes(searchValue.toLowerCase())
+      : true
+  )
   $: prebuiltTemplates = $restTemplates.templates
     .filter(template => !template.custom)
     .filter(template =>
@@ -55,58 +60,63 @@
 </script>
 
 <Layout noPadding gap="XS">
-  {#if locked}
-    <RouteActions>
+  <RouteActions>
+    {#if locked}
       <Button secondary on:click={() => bb.clearSettings()}>Cancel</Button>
-    </RouteActions>
+    {:else}
+      <div class="route-actions">
+        <div class="search">
+          <Search
+            placeholder="Search templates"
+            value={searchValue}
+            on:change={event => (searchValue = event.detail)}
+          />
+        </div>
+        <Button size="M" cta on:click={importSpec}>Import OpenAPI spec</Button>
+      </div>
+    {/if}
+  </RouteActions>
+
+  {#if importedTemplates.length}
+    <section>
+      <div class="section-header">
+        <div class="section-title">Imported API specs</div>
+      </div>
+
+      <div class="imported-table">
+        <Table
+          compact
+          data={filteredImportedTemplates}
+          schema={importedSchema}
+          customRenderers={importedRenderers}
+          hideHeader
+          rounded
+          placeholderText="No templates found"
+          allowClickRows={false}
+          allowEditRows={false}
+        />
+      </div>
+    </section>
   {/if}
 
   <section>
     <div class="section-header">
-      <div class="section-title">Imported API specs</div>
-      {#if !locked}
-        <Button icon="upload-simple" size="S" on:click={importSpec}>
-          Import OpenAPI spec
-        </Button>
-      {/if}
+      <div class="section-title">Pre-built OpenAPI templates</div>
     </div>
 
-    {#if importedTemplates.length}
+    <div class="prebuilt-table">
       <Table
         compact
-        data={importedTemplates}
-        schema={importedSchema}
-        customRenderers={importedRenderers}
+        data={prebuiltTemplates}
+        schema={prebuiltSchema}
+        {customRenderers}
         hideHeader
         rounded
+        placeholderText="No templates found"
         allowClickRows={false}
         allowEditRows={false}
       />
-    {/if}
-  </section>
-
-  <section>
-    <div class="section-header">
-      <div class="section-title">Pre-built OpenAPI templates</div>
-      <div class="search">
-        <Search
-          placeholder="Search templates"
-          value={searchValue}
-          on:change={event => (searchValue = event.detail)}
-        />
-      </div>
     </div>
-
-    <Table
-      compact
-      data={prebuiltTemplates}
-      schema={prebuiltSchema}
-      {customRenderers}
-      hideHeader
-      rounded
-      allowClickRows={false}
-      allowEditRows={false}
-    />
   </section>
 </Layout>
 
@@ -148,12 +158,34 @@
   }
 
   .search {
-    width: 312px;
-    max-width: 45%;
+    width: 200px;
   }
 
   .search :global(.spectrum-Form-item) {
     width: 100%;
+  }
+
+  .route-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+
+  .imported-table :global(.placeholder),
+  .prebuilt-table :global(.placeholder) {
+    height: var(--row-height);
+    padding: 0 var(--spacing-l);
+  }
+
+  .imported-table :global(.placeholder-content),
+  .prebuilt-table :global(.placeholder-content) {
+    flex-direction: row;
+    gap: var(--spacing-s);
+  }
+
+  .imported-table :global(.placeholder-content div),
+  .prebuilt-table :global(.placeholder-content div) {
+    margin-top: 0;
   }
 
   .section-title {

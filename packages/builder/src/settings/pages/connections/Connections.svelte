@@ -4,6 +4,7 @@
   import { bb } from "@/stores/bb"
   import { oauth2 } from "@/stores/builder/oauth2"
   import { workspaceConnections } from "@/stores/builder/workspaceConnection"
+  import RouteActions from "@/settings/components/RouteActions.svelte"
   import EditConnectionRenderer from "./_components/EditConnectionRenderer.svelte"
   import IconRenderer from "./_components/IconRenderer.svelte"
   import TypeRenderer from "./_components/TypeRenderer.svelte"
@@ -26,17 +27,18 @@
 </script>
 
 <Layout noPadding gap="XS">
+  <RouteActions>
+    <Button
+      size="M"
+      cta
+      on:click={() => bb.settings("/connections/api-connections/new")}
+    >
+      Create a custom connection
+    </Button>
+  </RouteActions>
+
   <section class="connections-list-section">
-    <div class="section-header">
-      <div class="section-title">Your connections</div>
-      <Button
-        icon="plus"
-        size="S"
-        on:click={() => bb.settings("/connections/api-connections/new")}
-      >
-        Create a custom connection
-      </Button>
-    </div>
+    <div class="section-title">Your connections</div>
 
     <Table
       compact
@@ -58,14 +60,6 @@
     flex-direction: column;
     gap: var(--spacing-xs);
     margin-top: var(--spacing-l);
-  }
-
-  .section-header {
-    display: flex;
-    height: 24px;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
   }
 
   .section-title {
