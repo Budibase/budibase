@@ -307,7 +307,7 @@
     <div class="operation-content">
       <main class="instructions-pane">
         <div class="instructions-header">
-          <Body size="S" weight="500">Instructions</Body>
+          <Body size="S" weight="500">Operation instructions</Body>
           <div class="instructions-actions">
             <GenerateInstructionsControl
               triggerLabel="Help write instructions"
@@ -320,7 +320,7 @@
             <Button
               primary
               size="S"
-              icon={operation.live ? "stop" : "play"}
+              icon={operation.live ? "stop" : "play-circle"}
               disabled={saving}
               on:click={() => saveOperation({ live: !operation?.live })}
             >
