@@ -20,6 +20,7 @@
   import { oauth2 } from "@/stores/builder/oauth2"
   import { workspaceConnections } from "@/stores/builder/workspaceConnection"
   import { restTemplates } from "@/stores/builder/restTemplates"
+  import { admin } from "@/stores/portal/admin"
   import { licensing, environment } from "@/stores/portal"
   import { bb } from "@/stores/bb"
   import {
@@ -42,6 +43,7 @@
     Toggle,
     notifications,
   } from "@budibase/bbui"
+  import { extractOriginList } from "@budibase/shared-core"
   import { cloneDeep, isEqual } from "lodash"
   import { API } from "@/api"
   import { confirm } from "@/helpers"
@@ -83,7 +85,7 @@
     defaultHeaders: Record<string, string>
     staticVariables: Record<string, string>
     queryParams: Record<string, string>
-    allowCrossOriginPaths: boolean
+    allowedOrigins: string[]
     rejectUnauthorized: boolean
     downloadImages: boolean
   }
@@ -202,6 +204,10 @@
   )
   $: parsedHeaders = runtimeToReadableMap(restBindings, data.defaultHeaders)
   $: parsedQueryParams = runtimeToReadableMap(restBindings, data.queryParams)
+  $: parsedAllowedOrigins = extractOriginList(data.allowedOrigins || [])
+  $: allowedOriginValues = (
+    data.allowedOrigins?.length ? data.allowedOrigins : [""]
+  ).map(origin => (typeof origin === "string" ? origin : ""))
 
   const autoSelectSingleChild = (
     isIndependent: boolean,
@@ -249,7 +255,7 @@
       defaultHeaders: cloneDeep(connection.props?.headers || {}),
       staticVariables: cloneDeep(connection.props?.staticVariables || {}),
       queryParams: cloneDeep(connection.props?.query || {}),
-      allowCrossOriginPaths: ds?.config?.allowCrossOriginPaths ?? false,
+      allowedOrigins: cloneDeep(ds?.config?.allowedOrigins || [""]),
       rejectUnauthorized: ds?.config?.rejectUnauthorized ?? true,
       downloadImages: ds?.config?.downloadImages ?? true,
     }
@@ -392,7 +398,7 @@
         staticVariables: data.staticVariables || {},
         defaultHeaders: data.defaultHeaders || {},
         defaultQueryParameters: data.queryParams || {},
-        allowCrossOriginPaths: data.allowCrossOriginPaths ?? false,
+        allowedOrigins: getAllowedOrigins(),
         rejectUnauthorized: data.rejectUnauthorized ?? true,
         downloadImages: data.downloadImages ?? true,
       },
@@ -429,7 +435,7 @@
         staticVariables: data.staticVariables,
         defaultHeaders: data.defaultHeaders,
         defaultQueryParameters: data.queryParams,
-        allowCrossOriginPaths: data.allowCrossOriginPaths,
+        allowedOrigins: getAllowedOrigins(),
         rejectUnauthorized: data.rejectUnauthorized,
         downloadImages: data.downloadImages,
       },
@@ -473,12 +479,50 @@
     return url.replace(/\/$/, "")
   }
 
+  const getAllowedOrigins = () => parsedAllowedOrigins.origins
+
+  const addAllowedOrigin = () => {
+    data.allowedOrigins = [...(data.allowedOrigins || []), ""]
+    data = { ...data }
+    syncAllowedOriginsError()
+  }
+
+  const updateAllowedOrigin = (index: number, value: string) => {
+    const origins = [...(data.allowedOrigins || [])]
+    origins[index] = value
+    data.allowedOrigins = origins
+    data = { ...data }
+    syncAllowedOriginsError()
+  }
+
+  const deleteAllowedOrigin = (index: number) => {
+    const origins = [...(data.allowedOrigins || [])]
+    origins.splice(index, 1)
+    data.allowedOrigins = origins.length ? origins : [""]
+    data = { ...data }
+    syncAllowedOriginsError()
+  }
+
   const validateBaseUrl = (newErrors: Record<string, string>) => {
     if (data.baseUrl && normaliseBaseUrl(data.baseUrl) === null) {
       newErrors.baseUrl = "Must be a valid http or https URL"
     } else {
       delete newErrors.baseUrl
     }
+  }
+
+  const validateAllowedOrigins = (newErrors: Record<string, string>) => {
+    if (parsedAllowedOrigins.invalidOrigins.length > 0) {
+      newErrors.allowedOrigins = "Enter valid http or https origins."
+    } else {
+      delete newErrors.allowedOrigins
+    }
+  }
+
+  const syncAllowedOriginsError = () => {
+    const nextErrors = { ...errors }
+    validateAllowedOrigins(nextErrors)
+    errors = nextErrors
   }
 
   const validateName = (newErrors: Record<string, string>) => {
@@ -499,13 +543,14 @@
     const newErrors = { ...errors }
     validateName(newErrors)
     validateBaseUrl(newErrors)
+    validateAllowedOrigins(newErrors)
     if (childPickerIncomplete) {
       newErrors.childId = "Please select an API"
     } else {
       delete newErrors.childId
     }
     errors = newErrors
-    if (hasErrors || !validateAuth()) {
+    if (Object.keys(newErrors).length > 0 || !validateAuth()) {
       return
     }
     saving = true
@@ -823,31 +868,6 @@
           </div>
           <div class="settings-item">
             <div class="settings-item-text">
-              <span>Allow cross-origin paths</span>
-              <span class="settings-item-blurb">
-                Requires `REST_ALLOW_CROSS_ORIGIN_PATHS=true` in Hosting
-                settings.
-                <a
-                  href="https://docs.budibase.com/docs/hosting-settings"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Learn more
-                </a>
-              </span>
-            </div>
-            <div class="settings-item-control">
-              <Toggle
-                value={data.allowCrossOriginPaths ?? false}
-                on:change={e => {
-                  data.allowCrossOriginPaths = e.detail
-                  data = { ...data }
-                }}
-              />
-            </div>
-          </div>
-          <div class="settings-item">
-            <div class="settings-item-text">
               <span>Download images</span>
               <span class="settings-item-blurb"
                 >Download and return image responses as base64 data.</span
@@ -861,6 +881,56 @@
               }}
             />
           </div>
+          {#if $admin.loaded && !$admin.cloud && $admin.restAllowCrossOriginPaths}
+            <div class="settings-item settings-item--stacked">
+              <div class="allowed-origins-header">
+                <div class="settings-item-text">
+                  <span>Allowed origins</span>
+                  <span class="settings-item-blurb">
+                    Requires `REST_ALLOW_CROSS_ORIGIN_PATHS=true` in Hosting
+                    settings. Add one origin per row, for example
+                    `http://example.com:8080`.
+                    <a
+                      href="https://docs.budibase.com/docs/hosting-settings"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Learn more
+                    </a>
+                  </span>
+                </div>
+                <div class="icon-wrap">
+                  <Icon
+                    name="plus"
+                    hoverable
+                    on:click={addAllowedOrigin}
+                    tooltip="Add origin"
+                    tooltipType={TooltipType.Info}
+                    tooltipPosition={TooltipPosition.Top}
+                  />
+                </div>
+              </div>
+              <div class="allowed-origins">
+                {#each allowedOriginValues as origin, index}
+                  <div class="allowed-origin-row">
+                    <Input
+                      value={origin}
+                      placeholder="http://example.com:8080"
+                      error={errors.allowedOrigins}
+                      on:change={e => updateAllowedOrigin(index, e.detail)}
+                    />
+                    <div class="delete-cell">
+                      <Icon
+                        name="x"
+                        hoverable
+                        on:click={() => deleteAllowedOrigin(index)}
+                      />
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            </div>
+          {/if}
         </div>
       {:else}
         <Layout gap="M" noPadding>
@@ -1060,17 +1130,25 @@
     border-top: none;
   }
 
+  .settings-item--stacked {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .allowed-origins-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-l);
+    width: 100%;
+  }
+
   .settings-item-text {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
     font-size: var(--font-size-s);
-  }
-
-  .settings-item-control {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
   }
 
   .settings-item-blurb {
@@ -1080,6 +1158,36 @@
   .settings-item-blurb a {
     color: inherit;
     text-decoration: underline;
+  }
+
+  .allowed-origins {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+    width: 100%;
+    min-width: 0;
+  }
+
+  .allowed-origin-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    width: 100%;
+  }
+
+  .allowed-origin-row :global(.spectrum-Form-item.above) {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+
+  .allowed-origin-row :global(.spectrum-Textfield) {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .allowed-origin-row .delete-cell {
+    width: auto;
+    flex: 0 0 auto;
   }
 
   .settings-item :global(.spectrum-Switch) {

@@ -23,6 +23,7 @@ export class AdminStore extends BudiStore<AdminState> {
       isDev: false,
       multiTenancy: false,
       cloud: false,
+      restAllowCrossOriginPaths: false,
       disableAccountPortal: false,
       offlineMode: false,
       maintenance: [],
@@ -51,6 +52,7 @@ export class AdminStore extends BudiStore<AdminState> {
       store.isDev = environment.isDev
       store.multiTenancy = environment.multiTenancy
       store.cloud = environment.cloud
+      store.restAllowCrossOriginPaths = environment.restAllowCrossOriginPaths
       store.disableAccountPortal = environment.disableAccountPortal
       store.accountPortalUrl = environment.accountPortalUrl
       store.baseUrl = environment.baseUrl
