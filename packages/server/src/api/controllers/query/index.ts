@@ -25,6 +25,7 @@ import {
   Query,
   QueryResponse,
   QuerySchema,
+  RestPreviewConfig,
   SaveQueryRequest,
   SaveQueryResponse,
   SessionCookie,
@@ -262,9 +263,16 @@ function enrichParameters(
 export async function preview(
   ctx: UserCtx<PreviewQueryRequest, PreviewQueryResponse>
 ) {
-  const { datasource, envVars } = await sdk.datasources.getWithEnvVars(
-    ctx.request.body.datasourceId
-  )
+  const rawDatasource = await sdk.datasources.get(ctx.request.body.datasourceId)
+  const { datasource, envVars } =
+    await sdk.datasources.enrichDatasourceWithValues(rawDatasource)
+  // Kept unresolved so the request preview can show bindings rather than the
+  // values they resolve to
+  const previewConfig: RestPreviewConfig = {
+    url: rawDatasource.config?.url,
+    defaultHeaders: rawDatasource.config?.defaultHeaders,
+    defaultQueryParameters: rawDatasource.config?.defaultQueryParameters,
+  }
   // preview may not have a queryId as it hasn't been saved, but if it does
   // this stops dynamic variables from calling the same query
   const queryId = ctx.request.body.queryId
@@ -392,6 +400,8 @@ export async function preview(
     nullDefaultSupport: query.nullDefaultSupport,
     queryId,
     datasource,
+    includeRequest: true,
+    previewConfig,
     // have to pass down to the thread runner - can't put into context now
     environmentVariables: envVars,
     ctx: {
