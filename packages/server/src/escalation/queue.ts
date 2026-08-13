@@ -441,6 +441,7 @@ export async function resumeOperation({
   // (preserving completion order) and flush the tail (await toolCallChain
   // below) before writing the terminal status.
   let toolCallChain = Promise.resolve()
+  let needsInputUpdate = Promise.resolve()
 
   try {
     const result = await run.stream({
@@ -449,14 +450,16 @@ export async function resumeOperation({
       onToolCalls: toolNames => {
         const requestId = doc.requestId
         if (requestId && toolNames.includes(ESCALATE_TOOL_NAME)) {
-          sdk.ai.agentRequests
-            .updateRequestStatus({ requestId, status: "needs_input" })
-            .catch(error => {
-              console.error(
-                "Failed to update agent request status to needs_input",
-                { escalationId, agentId: ctx.agentId, error }
-              )
-            })
+          needsInputUpdate = needsInputUpdate.then(() =>
+            sdk.ai.agentRequests
+              .updateRequestStatus({ requestId, status: "needs_input" })
+              .catch(error => {
+                console.error(
+                  "Failed to update agent request status to needs_input",
+                  { escalationId, agentId: ctx.agentId, error }
+                )
+              })
+          )
         }
       },
       onToolCallCompleted: ({ toolName, status, input, output }) => {
@@ -537,6 +540,7 @@ export async function resumeOperation({
     const toolCallsIncomplete =
       pendingToolCalls.size > 0 || finishReason === "tool-calls"
     await toolCallChain
+    await needsInputUpdate
 
     if (doc.requestId) {
       const judged = await sdk.ai.agentRequests.resolveFinalRequestOutcome({
