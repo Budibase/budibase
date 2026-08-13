@@ -1,5 +1,22 @@
 import { ToolType, WebSearchProvider } from "@budibase/types"
 import { describe, expect, it, vi } from "vitest"
+import type { AgentTool } from "./toolTypes"
+
+const tableTool = {
+  name: "find_rows",
+  description: "Find rows",
+  sourceType: ToolType.INTERNAL_TABLE,
+  sourceLabel: "Employees",
+  executionPolicy: { mode: "admin" as const },
+}
+
+const searchTool = {
+  name: "api_search",
+  description: "Search",
+  sourceType: ToolType.SEARCH,
+  sourceLabel: "Search tools",
+  executionPolicy: { mode: "admin" as const },
+}
 
 vi.mock("./agentToolUtils", () => ({
   enrichAgentTool: (tool: {
@@ -64,20 +81,7 @@ describe("agentAvailableTools", () => {
 
   it("prepends web search and filters api search tools", () => {
     const tools = buildAvailableAgentTools({
-      storeTools: [
-        {
-          name: "find_rows",
-          description: "Find rows",
-          sourceType: ToolType.INTERNAL_TABLE,
-          sourceLabel: "Employees",
-        },
-        {
-          name: "api_search",
-          description: "Search",
-          sourceType: ToolType.SEARCH,
-          sourceLabel: "Search tools",
-        },
-      ],
+      storeTools: [tableTool, searchTool],
       webSearchConfigured: true,
       webSearchConfig: {
         provider: WebSearchProvider.EXA,
@@ -121,14 +125,7 @@ describe("agentAvailableTools", () => {
 
   it("resolves available tools with datasource icons and web search", () => {
     const tools = resolveAvailableAgentTools({
-      storeTools: [
-        {
-          name: "find_rows",
-          description: "Find rows",
-          sourceType: ToolType.INTERNAL_TABLE,
-          sourceLabel: "Employees",
-        },
-      ],
+      storeTools: [tableTool],
       datasourceList: [],
       getRestTemplateIcon: () => undefined,
       webSearchConfig: {
@@ -165,6 +162,7 @@ describe("agentAvailableTools", () => {
         {
           readableBinding: "search.web_search",
           runtimeBinding: "search_web_search",
+          category: "Search tools",
           icon: "https://example.com/search.svg",
         },
       ])
@@ -179,16 +177,20 @@ describe("agentAvailableTools", () => {
         {
           name: "web_search",
           description: "",
+          sourceType: ToolType.SEARCH,
+          executionPolicy: { mode: "admin" },
           readableBinding: "search.web_search",
           runtimeBinding: "search_web_search",
         },
         {
           name: "find_rows",
           description: "",
+          sourceType: ToolType.INTERNAL_TABLE,
+          executionPolicy: { mode: "admin" },
           readableBinding: "budibase.find_rows",
           runtimeBinding: "",
         },
-      ])
+      ] satisfies AgentTool[])
     ).toEqual({
       "search.web_search": "search_web_search",
     })

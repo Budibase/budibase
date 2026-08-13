@@ -90,9 +90,13 @@ describe("getConfiguredOperationTools", () => {
     {
       name: "search_rows",
       description: "Search rows",
+      sourceType: ToolType.INTERNAL_TABLE,
       readableBinding: "budibase.Employees.search_rows",
       runtimeBinding: "ta_employees_search_rows",
-      executionPolicy: { mode: "configurable", defaultPrincipal: "requester" },
+      executionPolicy: {
+        mode: "configurable",
+        defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+      },
     },
   ]
 

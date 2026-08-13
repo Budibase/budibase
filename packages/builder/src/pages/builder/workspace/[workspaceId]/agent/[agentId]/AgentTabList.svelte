@@ -1,13 +1,15 @@
 <script lang="ts">
   import type { Snippet } from "svelte"
 
-  interface Props {
+  let {
+    ariaLabel,
+    bordered = false,
+    children,
+  }: {
     ariaLabel: string
     bordered?: boolean
     children: Snippet
-  }
-
-  let { ariaLabel, bordered = false, children }: Props = $props()
+  } = $props()
 </script>
 
 <div

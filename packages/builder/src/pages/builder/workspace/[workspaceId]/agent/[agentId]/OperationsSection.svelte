@@ -7,6 +7,7 @@
   import OperationNameModal from "./OperationNameModal.svelte"
   import OperationLiveBadge from "./OperationLiveBadge.svelte"
   import * as routify from "@roxi/routify"
+  import { tick } from "svelte"
 
   const { goto } = routify
 
@@ -157,7 +158,10 @@ Any constraints this operation must follow.
     }
     const operationIdToDelete = selectedOperationId
 
-    confirm({
+    contextMenuStore.close()
+    await tick()
+
+    await confirm({
       title: "Confirm deletion",
       body: "Delete this operation? This will clear instructions and selected tools.",
       okText: "Delete",

@@ -2,14 +2,17 @@
   import { Body } from "@budibase/bbui"
   import type { Snippet } from "svelte"
 
-  interface Props {
+  let {
+    title,
+    description,
+    descriptionContent,
+    actions,
+  }: {
     title: string
     description?: string
     descriptionContent?: Snippet
     actions?: Snippet
-  }
-
-  let { title, description, descriptionContent, actions }: Props = $props()
+  } = $props()
 </script>
 
 <div class="rail-section-header">
