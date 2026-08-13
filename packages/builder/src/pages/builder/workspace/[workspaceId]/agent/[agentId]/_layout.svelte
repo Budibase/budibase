@@ -5,7 +5,6 @@
   import { syncURLToState } from "@/helpers/urlStateSync"
   import {
     agentsStore,
-    aiConfigsStore,
     featureFlags,
     selectedAgent,
   } from "@/stores/portal"
@@ -103,7 +102,6 @@
     if (!$agentsStore.agentsLoaded) {
       await agentsStore.init()
     }
-    await aiConfigsStore.fetch()
   })
 
   async function toggleAgentLive() {
