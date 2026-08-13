@@ -4,10 +4,7 @@
   import {
     FeatureFlag,
     AIConfigType,
-    ToolType,
-    WebSearchProvider,
     type Agent,
-    type ToolMetadata,
   } from "@budibase/types"
   import {
     agentsStore,
@@ -20,11 +17,14 @@
     restTemplates,
     workspaceDeploymentStore,
   } from "@/stores/builder"
-  import { getRestTemplateIdentifier } from "@/stores/builder/datasources"
   import { onDestroy, onMount } from "svelte"
   import { bb } from "@/stores/bb"
-  import type { AgentTool } from "./toolTypes"
-  import { enrichAgentTool } from "./agentToolUtils"
+  import {
+    buildAvailableAgentTools,
+    buildReadableToRuntimeBinding,
+    createRestTemplateIconResolver,
+    isWebSearchConfigured,
+  } from "./agentAvailableTools"
   import { shouldAutoSelectAgentModel } from "./configUtils"
   import { getConfiguredOperationTools } from "./toolBindingUtils"
   import OperationsSection from "./OperationsSection.svelte"
@@ -84,57 +84,24 @@
     $aiConfigsStore.customConfigs.find(config => config._id === draft.aiconfig)
       ?.webSearchConfig
   )
-  let webSearchConfigured = $derived(
-    !!webSearchConfig?.apiKey && !!webSearchConfig.provider
+  let webSearchConfigured = $derived(isWebSearchConfigured(webSearchConfig))
+
+  let availableTools = $derived.by(() => {
+    const resolveRestTemplateIcon = createRestTemplateIconResolver({
+      datasourceList: $datasources.list,
+      getRestTemplateIcon: identifier => restTemplates.get(identifier)?.icon,
+    })
+    return buildAvailableAgentTools({
+      storeTools: $agentsStore.tools || [],
+      webSearchConfigured,
+      webSearchConfig,
+      resolveRestTemplateIcon,
+    })
+  })
+
+  let readableToRuntimeBinding = $derived(
+    buildReadableToRuntimeBinding(availableTools)
   )
-
-  const resolveRestTemplateIcon = (sourceLabel?: string) => {
-    const datasource = $datasources.list.find(item => item.name === sourceLabel)
-    const identifier = getRestTemplateIdentifier(datasource)
-    return identifier ? restTemplates.get(identifier)?.icon : undefined
-  }
-
-  const enrichToolMetadata = (tool: ToolMetadata) =>
-    enrichAgentTool(tool, { resolveRestTemplateIcon })
-
-  function createWebSearchTool(): AgentTool {
-    const webSearchTool: ToolMetadata = {
-      name: "web_search",
-      description: "Configure web search",
-      sourceType: ToolType.SEARCH,
-      sourceLabel: "Search tools",
-      executionPolicy: {
-        mode: "admin",
-      },
-    }
-    const enriched = enrichToolMetadata(webSearchTool)
-    return {
-      ...enriched,
-      runtimeBinding:
-        getWebSearchRuntimeBinding(webSearchConfigured, webSearchConfig) || "",
-    }
-  }
-
-  let availableTools: AgentTool[] = $derived.by(() => {
-    const tools = $agentsStore.tools || []
-    const mappedTools = tools
-      .filter(tool => tool.sourceType !== ToolType.SEARCH)
-      .map(enrichToolMetadata)
-    return [createWebSearchTool(), ...mappedTools]
-  })
-
-  // Build lookup maps from readable binding to runtime binding and icon URL
-  let readableToRuntimeBinding = $derived.by(() => {
-    const runtimeMap: Record<string, string> = {}
-    for (const tool of availableTools) {
-      if (tool.readableBinding) {
-        if (tool.runtimeBinding) {
-          runtimeMap[tool.readableBinding] = tool.runtimeBinding
-        }
-      }
-    }
-    return runtimeMap
-  })
 
   $effect(() => {
     const agent = currentAgent
@@ -191,22 +158,6 @@
         console.error(error)
       })
   })
-
-  function getWebSearchRuntimeBinding(
-    configured?: boolean,
-    config?: typeof webSearchConfig
-  ) {
-    if (!configured || !config) {
-      return undefined
-    }
-    if (
-      config.provider === WebSearchProvider.EXA ||
-      config.provider === WebSearchProvider.PARALLEL
-    ) {
-      return "search_web_search"
-    }
-    return undefined
-  }
 
   async function saveAgent({
     showNotifications = true,

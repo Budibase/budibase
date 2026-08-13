@@ -10,7 +10,7 @@
     type InsertAtPositionFn,
   } from "@budibase/types"
   import * as routify from "@roxi/routify"
-  import { onDestroy } from "svelte"
+  import { onDestroy, onMount } from "svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import {
@@ -28,16 +28,23 @@
     restTemplates,
     workspaceDeploymentStore,
   } from "@/stores/builder"
-  import { getRestTemplateIdentifier } from "@/stores/builder/datasources"
-  import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
+  import { agentsStore, aiConfigsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import GenerateInstructionsControl from "../../GenerateInstructionsControl.svelte"
   import Knowledge from "../../knowledge/index.svelte"
+  import WebSearchConfigModal from "../../WebSearchConfigModal.svelte"
   import AgentTabList from "../../AgentTabList.svelte"
   import AgentUnpublishedChangesIndicator from "../../AgentUnpublishedChangesIndicator.svelte"
   import OperationRailSectionHeader from "../../OperationRailSectionHeader.svelte"
   import ToolIcon from "../../ToolIcon.svelte"
   import ToolsDropdown from "../../ToolsDropdown.svelte"
-  import { enrichAgentTool } from "../../agentToolUtils"
+  import {
+    buildAvailableAgentTools,
+    buildReadableToRuntimeBinding,
+    createRestTemplateIconResolver,
+    formatAgentToolLabel,
+    isWebSearchConfigured,
+    toAgentPromptBindings,
+  } from "../../agentAvailableTools"
   import {
     getConfiguredOperationTools,
     getIncludedToolRuntimeBindings,
@@ -60,50 +67,34 @@
   let removeToolDialog: ConfirmDialog | undefined = $state()
   let toolToRemove: AgentTool | undefined = $state()
   let lastSavedInstructions = $state("")
+  let webSearchConfigModal: WebSearchConfigModal | undefined = $state()
 
   let agent = $derived($selectedAgent)
   let agentId = $derived($params.agentId || agent?._id)
   let operationId = $derived($params.operationId)
   let operationName = $derived(operation?.name?.trim() || "Untitled operation")
   let toolsLoaded = $derived($agentsStore.tools !== undefined)
-
-  const formatToolLabel = (tool: AgentTool) =>
-    (tool.readableName || tool.name)
-      .split(".")
-      .map(part =>
-        part
-          .split("_")
-          .join(" ")
-          .replace(/\b\w/g, letter => letter.toUpperCase())
-      )
-      .join(".")
-
-  let availableTools: AgentTool[] = $derived.by(() =>
-    ($agentsStore.tools || []).map(tool =>
-      enrichAgentTool(tool, {
-        resolveRestTemplateIcon: sourceLabel => {
-          const datasource = $datasources.list.find(
-            item => item.name === sourceLabel
-          )
-          const identifier = getRestTemplateIdentifier(datasource)
-          return identifier ? restTemplates.get(identifier)?.icon : undefined
-        },
-      })
-    )
+  let webSearchConfig = $derived(
+    $aiConfigsStore.customConfigs.find(config => config._id === agent?.aiconfig)
+      ?.webSearchConfig
   )
+  let webSearchConfigured = $derived(isWebSearchConfigured(webSearchConfig))
+
+  let availableTools = $derived.by(() => {
+    const resolveRestTemplateIcon = createRestTemplateIconResolver({
+      datasourceList: $datasources.list,
+      getRestTemplateIcon: identifier => restTemplates.get(identifier)?.icon,
+    })
+    return buildAvailableAgentTools({
+      storeTools: $agentsStore.tools || [],
+      webSearchConfigured,
+      webSearchConfig,
+      resolveRestTemplateIcon,
+    })
+  })
 
   let promptBindings: EnrichedBinding[] = $derived(
-    availableTools.map(tool => ({
-      runtimeBinding: tool.runtimeBinding,
-      readableBinding: tool.readableBinding,
-      category: tool.sourceLabel || "Tools",
-      display: {
-        name: formatToolLabel(tool),
-        type: "tool",
-        rank: 1,
-      },
-      icon: tool.tagIconUrl,
-    }))
+    toAgentPromptBindings({ tools: availableTools, webSearchConfigured })
   )
   let bindingIcons = $derived(
     Object.fromEntries(
@@ -120,12 +111,7 @@
       : []
   )
   let readableToRuntimeBinding = $derived(
-    Object.fromEntries(
-      promptBindings.map(binding => [
-        binding.readableBinding,
-        binding.runtimeBinding,
-      ])
-    )
+    buildReadableToRuntimeBinding(availableTools)
   )
   let includedRuntimeBindings = $derived(
     getIncludedToolRuntimeBindings(
@@ -204,6 +190,16 @@
   }
 
   const close = () => $goto("../../config")
+
+  const openWebSearchConfigModal = () => {
+    webSearchConfigModal?.show()
+  }
+
+  onMount(async () => {
+    if (!$aiConfigsStore.customConfigs.length) {
+      await aiConfigsStore.fetch()
+    }
+  })
 
   const loadOperation = () => {
     if (!agent || !operationId) return
@@ -424,10 +420,10 @@
                 {filteredTools}
                 {toolSections}
                 bind:toolSearch
-                webSearchEnabled={false}
+                webSearchEnabled={webSearchConfigured}
                 onToolClick={insertTool}
                 onAddApiConnection={() => bb.settings("/connections/apis")}
-                onConfigureWebSearch={() => bb.settings("/connections/ai")}
+                onConfigureWebSearch={openWebSearchConfigModal}
               />
             </div>
           </div>
@@ -465,12 +461,11 @@
                       {filteredTools}
                       {toolSections}
                       bind:toolSearch
-                      webSearchEnabled={false}
+                      webSearchEnabled={webSearchConfigured}
                       onToolClick={insertTool}
                       onAddApiConnection={() =>
                         bb.settings("/connections/apis")}
-                      onConfigureWebSearch={() =>
-                        bb.settings("/connections/ai")}
+                      onConfigureWebSearch={openWebSearchConfigModal}
                     />
                   </div>
                 {/snippet}
@@ -521,7 +516,7 @@
                           options={executionPrincipalOptions}
                           getOptionLabel={option => option.label}
                           getOptionValue={option => option.value}
-                          tooltip={`Execution identity for ${formatToolLabel(tool)}`}
+                          tooltip={`Execution identity for ${formatAgentToolLabel(tool)}`}
                           on:change={event =>
                             setToolPrincipal(
                               tool.runtimeBinding,
@@ -573,6 +568,11 @@
       will also be removed from the instructions.
     {/if}
   </ConfirmDialog>
+
+  <WebSearchConfigModal
+    bind:this={webSearchConfigModal}
+    aiconfigId={agent?.aiconfig}
+  />
 {/if}
 
 <style>
