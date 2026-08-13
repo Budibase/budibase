@@ -338,7 +338,6 @@
   <div class="operation-page">
     <TopBar
       icon="Effect"
-      showPublish={false}
       breadcrumbs={[
         { text: "Agents", url: "../../../", tag: "Beta" },
         { text: agent?.name || "Agent", url: "../../config" },
