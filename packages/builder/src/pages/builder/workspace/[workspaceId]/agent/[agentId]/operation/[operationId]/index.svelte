@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { Body, Button, Icon, notifications } from "@budibase/bbui"
+  import { Body, Button, Icon, notifications, Select } from "@budibase/bbui"
   import {
     FeatureFlag,
+    ToolExecutionPrincipal,
     ToolType,
     type AgentOperation,
     type CaretPositionFn,
@@ -34,7 +35,10 @@
   import ToolIcon from "../../ToolIcon.svelte"
   import ToolsDropdown from "../../ToolsDropdown.svelte"
   import { enrichAgentTool } from "../../agentToolUtils"
-  import { getConfiguredOperationTools, getIncludedToolRuntimeBindings } from "../../toolBindingUtils"
+  import {
+    getConfiguredOperationTools,
+    getIncludedToolRuntimeBindings,
+  } from "../../toolBindingUtils"
   import type { AgentTool } from "../../toolTypes"
 
   const { goto, params } = routify
@@ -159,6 +163,40 @@
       {} as Record<string, AgentTool[]>
     )
   )
+
+  const executionPrincipalOptions = [
+    {
+      label: "Requester",
+      value: ToolExecutionPrincipal.REQUESTER,
+    },
+    {
+      label: "Admin (elevated)",
+      value: ToolExecutionPrincipal.ADMIN,
+    },
+  ]
+
+  const getToolPrincipal = (toolName: string) => {
+    const config = operation?.enabledTools?.find(tool => tool.toolName === toolName)
+    return config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
+  }
+
+  const getEffectiveToolPrincipal = (tool: AgentTool) =>
+    tool.executionPolicy.mode === "admin"
+      ? ToolExecutionPrincipal.ADMIN
+      : getToolPrincipal(tool.runtimeBinding)
+
+  const setToolPrincipal = (
+    toolName: string,
+    executionPrincipal: ToolExecutionPrincipal
+  ) => {
+    if (!operation) return
+    operation.enabledTools = includedRuntimeBindings.map(name => ({
+      toolName: name,
+      executionPrincipal:
+        name === toolName ? executionPrincipal : getToolPrincipal(name),
+    }))
+    saveOperation()
+  }
 
   const close = () => $goto("../../config")
 
@@ -438,25 +476,55 @@
               {#each includedTools as tool (tool.runtimeBinding)}
                 <div
                   class="tool-row"
+                  class:tool-row--with-run-as={$featureFlags[
+                    FeatureFlag.AI_AGENT_TOOL_SECURITY
+                  ] && tool.executionPolicy.mode === "configurable"}
                   role="listitem"
                   oncontextmenu={event => openToolMenu(event, tool)}
                 >
-                  <div class="tool-name">
-                    <span class="tool-icon">
-                      <ToolIcon
-                        icon={tool.icon}
-                        size="S"
-                        fallbackIcon="Wrench"
-                      />
-                    </span>
-                    <span>{tool.readableBinding}</span>
+                  <div class="tool-row-main">
+                    <div class="tool-name">
+                      <span class="tool-icon">
+                        <ToolIcon
+                          icon={tool.icon}
+                          size="S"
+                          fallbackIcon="Wrench"
+                        />
+                      </span>
+                      <span>{tool.readableBinding}</span>
+                    </div>
+                    <button
+                      aria-label={`Actions for ${tool.readableBinding}`}
+                      onclick={event => openToolMenu(event, tool)}
+                    >
+                      <Icon name="dots-three" size="XS" />
+                    </button>
                   </div>
-                  <button
-                    aria-label={`Actions for ${tool.readableBinding}`}
-                    onclick={event => openToolMenu(event, tool)}
-                  >
-                    <Icon name="dots-three" size="XS" />
-                  </button>
+                  {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] && tool.executionPolicy.mode === "configurable"}
+                    <div
+                      class="tool-row-run-as"
+                      oncontextmenu={event => event.stopPropagation()}
+                    >
+                      <span class="run-as-label">Run as</span>
+                      <Select
+                        size="S"
+                        bordered={false}
+                        placeholder={false}
+                        autoWidth
+                        popoverAutoWidth
+                        value={getEffectiveToolPrincipal(tool)}
+                        options={executionPrincipalOptions}
+                        getOptionLabel={option => option.label}
+                        getOptionValue={option => option.value}
+                        tooltip={`Execution identity for ${formatToolLabel(tool)}`}
+                        on:change={event =>
+                          setToolPrincipal(
+                            tool.runtimeBinding,
+                            event.detail as ToolExecutionPrincipal
+                          )}
+                      />
+                    </div>
+                  {/if}
                 </div>
               {:else}
                 <Body size="XS" color="var(--spectrum-global-color-gray-700)"
@@ -660,6 +728,24 @@
     padding: 0 12px;
     border-radius: 4px;
     background: var(--background-alt);
+    cursor: pointer;
+  }
+  .tool-row--with-run-as {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 8px 12px;
+  }
+  .tool-row-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .tool-row--with-run-as .tool-row-main {
+    width: 100%;
   }
   .tool-name {
     display: flex;
@@ -688,7 +774,21 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .tool-row button {
+  .tool-row-run-as {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    padding-left: 21px;
+  }
+  .run-as-label {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--font-size-xs);
+    white-space: nowrap;
+  }
+  .tool-row-run-as :global(.spectrum-Picker) {
+    min-width: 0;
+  }
+  .tool-row-main button {
     display: flex;
     border: 0;
     padding: 4px;
