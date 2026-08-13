@@ -41,6 +41,8 @@ const knowledgeConfiguration = { knowledgeSearchConfigured: true }
 const createEmptyState = () => ({
   agents: [] as Agent[],
   tools: [],
+  toolsLoading: false,
+  loadedToolsAiConfigId: undefined as string | undefined,
   agentsLoaded: false,
   knowledgeByOperation: {},
   knowledgeUploadByOperation: {},

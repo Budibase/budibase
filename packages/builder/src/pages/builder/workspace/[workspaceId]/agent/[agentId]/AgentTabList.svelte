@@ -15,7 +15,7 @@
 <div
   class="agent-tab-list"
   class:bordered
-  role="tablist"
+  role="navigation"
   aria-label={ariaLabel}
 >
   {@render children()}

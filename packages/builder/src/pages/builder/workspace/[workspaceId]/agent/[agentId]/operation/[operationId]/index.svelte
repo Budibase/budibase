@@ -88,7 +88,13 @@
   let operationName = $derived(
     storeOperation?.name?.trim() || "Untitled operation"
   )
-  let toolsLoaded = $derived($agentsStore.tools !== undefined)
+  let toolsLoaded = $derived.by(() => {
+    const expectedAiConfigId = agent?.aiconfig ?? ""
+    return (
+      !$agentsStore.toolsLoading &&
+      $agentsStore.loadedToolsAiConfigId === expectedAiConfigId
+    )
+  })
   let webSearchConfig = $derived(
     getAgentWebSearchConfig($aiConfigsStore.customConfigs, agent?.aiconfig)
   )
@@ -219,7 +225,7 @@
   })
 
   const persistOperation = async (): Promise<boolean> => {
-    if (!agentId || !pendingSave) {
+    if (!agentId || !pendingSave || !toolsLoaded) {
       return false
     }
 
@@ -279,6 +285,10 @@
       operation = { ...operation, ...updates }
     }
 
+    if (!toolsLoaded) {
+      return false
+    }
+
     pendingSave = {
       forOperationId: operation.id,
       snapshot: { ...operation },
@@ -286,6 +296,16 @@
 
     return operationSaveCoordinator.save()
   }
+
+  $effect(() => {
+    if (!toolsLoaded || !operation || saving || togglingLive) {
+      return
+    }
+    if (!hasUnsavedInstructions()) {
+      return
+    }
+    saveOperation()
+  })
 
   const updateInstructions = (instructions: string) => {
     if (!operation) {
@@ -460,7 +480,7 @@
             <LiveToggleButton
               live={operation.live === true}
               size="S"
-              disabled={togglingLive}
+              disabled={togglingLive || !toolsLoaded}
               on:click={toggleOperationLive}
             />
           </div>

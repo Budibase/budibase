@@ -3,11 +3,7 @@
   import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { syncURLToState } from "@/helpers/urlStateSync"
-  import {
-    agentsStore,
-    featureFlags,
-    selectedAgent,
-  } from "@/stores/portal"
+  import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
   import * as routify from "@roxi/routify"
   import { onDestroy, onMount } from "svelte"
@@ -78,11 +74,7 @@
 
   $effect(() => {
     const agentId = currentAgent?._id
-    if (
-      !agentId ||
-      operationPage ||
-      preloadedKnowledgeAgentId === agentId
-    ) {
+    if (!agentId || operationPage || preloadedKnowledgeAgentId === agentId) {
       return
     }
 

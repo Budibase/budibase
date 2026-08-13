@@ -5,12 +5,14 @@
   import { workspaceDeploymentStore } from "@/stores/builder"
   import { bb } from "@/stores/bb"
   import { shouldAutoSelectAgentModel } from "./configUtils"
+  import { createSaveCoordinator } from "./operationSaveCoordinator"
   import OperationsSection from "./OperationsSection.svelte"
 
   let draftAgentId: string | undefined = $state()
   let draftAiconfig = $state("")
   let hasUnsavedAiconfig = $state(false)
   let saving = $state(false)
+  let showSaveNotifications = $state(true)
 
   let currentAgent = $derived($selectedAgent)
   let completionConfigs = $derived($aiConfigsStore.customConfigs || [])
@@ -53,16 +55,12 @@
     ) {
       draftAiconfig = modelOptions[0].value
       hasUnsavedAiconfig = true
-      saveAiconfig()
+      saveAiconfig({ showNotifications: false })
     }
   })
 
-  async function saveAiconfig({
-    showNotifications = true,
-  }: {
-    showNotifications?: boolean
-  } = {}): Promise<boolean> {
-    if (!currentAgent?._id || saving) {
+  const persistAiconfig = async (): Promise<boolean> => {
+    if (!currentAgent?._id) {
       return false
     }
     if (draftAiconfig === currentAgent.aiconfig) {
@@ -70,14 +68,15 @@
       return true
     }
 
+    const aiconfigToSave = draftAiconfig
     saving = true
     try {
       await agentsStore.updateAgent({
         ...currentAgent,
-        aiconfig: draftAiconfig,
+        aiconfig: aiconfigToSave,
       })
       hasUnsavedAiconfig = false
-      if (showNotifications) {
+      if (showSaveNotifications) {
         notifications.success("Agent saved successfully")
       }
       await workspaceDeploymentStore.fetch()
@@ -88,6 +87,21 @@
     } finally {
       saving = false
     }
+  }
+
+  const aiconfigSaveCoordinator = createSaveCoordinator(persistAiconfig)
+
+  async function saveAiconfig({
+    showNotifications = true,
+  }: {
+    showNotifications?: boolean
+  } = {}): Promise<boolean> {
+    if (!currentAgent?._id) {
+      return false
+    }
+
+    showSaveNotifications = showNotifications
+    return aiconfigSaveCoordinator.save()
   }
 
   const handleAiconfigChange = () => {

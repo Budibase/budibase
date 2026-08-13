@@ -66,6 +66,8 @@ interface AgentStoreState {
   agents: Agent[]
   currentAgentId?: string
   tools: ToolMetadata[]
+  toolsLoading: boolean
+  loadedToolsAiConfigId?: string
   agentsLoaded: boolean
   knowledgeByOperation: Record<
     string,
@@ -103,6 +105,8 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     super({
       agents: [],
       tools: [],
+      toolsLoading: false,
+      loadedToolsAiConfigId: undefined,
       agentsLoaded: false,
       knowledgeByOperation: {},
       knowledgeUploadByOperation: {},
@@ -220,12 +224,29 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   }
 
   fetchTools = async (aiconfigId?: string) => {
-    const tools = await API.fetchTools(aiconfigId)
+    const configKey = aiconfigId ?? ""
+
     this.update(state => {
-      state.tools = tools
+      state.toolsLoading = true
       return state
     })
-    return tools
+
+    try {
+      const tools = await API.fetchTools(aiconfigId)
+      this.update(state => {
+        state.tools = tools
+        state.loadedToolsAiConfigId = configKey
+        state.toolsLoading = false
+        return state
+      })
+      return tools
+    } catch (error) {
+      this.update(state => {
+        state.toolsLoading = false
+        return state
+      })
+      throw error
+    }
   }
 
   createAgent = async (agent: CreateAgentRequest) => {
@@ -427,13 +448,12 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
     this.setKnowledgeLoading(cacheKey, true)
 
-    const promise = this.refreshOperationKnowledge(agentId)
-      .finally(() => {
-        if (this.knowledgeLoadByKey.get(cacheKey) === promise) {
-          this.knowledgeLoadByKey.delete(cacheKey)
-        }
-        this.setKnowledgeLoading(cacheKey, false)
-      })
+    const promise = this.refreshOperationKnowledge(agentId).finally(() => {
+      if (this.knowledgeLoadByKey.get(cacheKey) === promise) {
+        this.knowledgeLoadByKey.delete(cacheKey)
+      }
+      this.setKnowledgeLoading(cacheKey, false)
+    })
 
     this.knowledgeLoadByKey.set(cacheKey, promise)
     return await promise
