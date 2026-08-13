@@ -242,12 +242,12 @@
     grid-template-rows: 1fr;
     height: 0;
     overflow: hidden;
-    gap: var(--spacing-l);
+    gap: var(--spacing-xs);
   }
 
   .config-content {
     grid-column: span 13;
-    padding: var(--spacing-xl) var(--spacing-l) 20px;
+    padding: var(--spacing-xs) var(--spacing-s) 20px;
     min-width: 0;
     overflow-y: auto;
     scrollbar-width: thin;
