@@ -1,8 +1,9 @@
 <script lang="ts">
   import { Body, Button, Helpers, Icon, notifications } from "@budibase/bbui"
-  import type { Agent, AgentOperation } from "@budibase/types"
+  import type { AgentOperation } from "@budibase/types"
   import { confirm } from "@/helpers/confirm"
-  import { contextMenuStore } from "@/stores/builder"
+  import { contextMenuStore, workspaceDeploymentStore } from "@/stores/builder"
+  import { agentsStore, selectedAgent } from "@/stores/portal"
   import OperationNameModal from "./OperationNameModal.svelte"
   import OperationLiveBadge from "./OperationLiveBadge.svelte"
   import * as routify from "@roxi/routify"
@@ -29,25 +30,14 @@ What information does this operation receive?
 Any constraints this operation must follow.
 `
 
-  let {
-    agent = $bindable(),
-    onSetOperationLive = async () => false,
-    onUpdated,
-  }: {
-    agent: Agent
-    onSetOperationLive?: (
-      operationId: string,
-      live: boolean
-    ) => Promise<boolean>
-    onUpdated: () => Promise<boolean>
-  } = $props()
+  let { agentId }: { agentId: string } = $props()
 
   let selectedOperationId = $state<string | undefined>(undefined)
   let renameOperationId = $state<string | undefined>(undefined)
   let createOperationModal: OperationNameModal | undefined = $state()
   let renameOperationModal: OperationNameModal | undefined = $state()
 
-  let operations = $derived(agent.operations || [])
+  let operations = $derived($selectedAgent?.operations || [])
   let sortedOperations = $derived.by(() =>
     [...operations].sort((a, b) =>
       a.name.localeCompare(b.name, undefined, {
@@ -98,16 +88,17 @@ Any constraints this operation must follow.
     if (!renameOperationId) {
       return
     }
-    const operation = operations.find(
-      operation => operation.id === renameOperationId
-    )
-    if (!operation) {
-      return
-    }
 
-    operation.name = name
-    await onUpdated()
-    renameOperationId = undefined
+    try {
+      await agentsStore.updateAgentOperation(agentId, renameOperationId, {
+        name,
+      })
+      await workspaceDeploymentStore.fetch()
+      renameOperationId = undefined
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to rename operation")
+    }
   }
 
   const createDefaultOperation = (name: string) => {
@@ -124,15 +115,15 @@ Any constraints this operation must follow.
     if (!selectedOperation || selectedOperation.live === nextLive) {
       return
     }
-    const currentOperation = selectedOperation
-    const previousLive = currentOperation.live
-    currentOperation.live = nextLive
-    const saveSucceeded = await onSetOperationLive(
-      currentOperation.id,
-      nextLive
-    )
-    if (saveSucceeded === false) {
-      currentOperation.live = previousLive
+
+    try {
+      await agentsStore.updateAgentOperation(agentId, selectedOperation.id, {
+        live: nextLive,
+      })
+      await workspaceDeploymentStore.fetch()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to update operation")
     }
   }
 
@@ -142,10 +133,22 @@ Any constraints this operation must follow.
 
   const createOperation = async (name: string) => {
     const operation = createDefaultOperation(name)
-    agent.operations = [...(agent.operations || []), operation]
-    selectedOperationId = operation.id
-    await onUpdated()
-    openOperation(operation.id)
+
+    try {
+      await agentsStore.createAgentOperation(agentId, {
+        id: operation.id,
+        name: operation.name,
+        live: operation.live,
+        promptInstructions: operation.promptInstructions,
+        allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
+      })
+      await workspaceDeploymentStore.fetch()
+      selectedOperationId = operation.id
+      openOperation(operation.id)
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to create operation")
+    }
   }
 
   const deleteOperation = async () => {
@@ -161,10 +164,8 @@ Any constraints this operation must follow.
       warning: true,
       onConfirm: async () => {
         try {
-          agent.operations = (agent.operations || []).filter(
-            operation => operation.id !== operationIdToDelete
-          )
-          await onUpdated()
+          await agentsStore.deleteAgentOperation(agentId, operationIdToDelete)
+          await workspaceDeploymentStore.fetch()
           selectedOperationId = undefined
           notifications.success("Operation deleted.")
         } catch (error) {

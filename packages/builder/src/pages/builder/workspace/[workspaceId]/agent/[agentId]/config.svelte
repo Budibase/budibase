@@ -1,60 +1,22 @@
 <script lang="ts">
   import { Body, notifications, Select, Button } from "@budibase/bbui"
-  import type { AgentOperation, RequiredKeys } from "@budibase/types"
-  import { FeatureFlag, AIConfigType, type Agent } from "@budibase/types"
+  import { AIConfigType } from "@budibase/types"
   import {
     agentsStore,
     aiConfigsStore,
-    featureFlags,
     selectedAgent,
   } from "@/stores/portal"
-  import {
-    datasources,
-    restTemplates,
-    workspaceDeploymentStore,
-  } from "@/stores/builder"
-  import { onDestroy } from "svelte"
+  import { workspaceDeploymentStore } from "@/stores/builder"
   import { bb } from "@/stores/bb"
-  import {
-    buildReadableToRuntimeBinding,
-    getAgentWebSearchConfig,
-    resolveAvailableAgentTools,
-  } from "./agentAvailableTools"
   import { shouldAutoSelectAgentModel } from "./configUtils"
-  import { getConfiguredOperationTools } from "./toolBindingUtils"
   import OperationsSection from "./OperationsSection.svelte"
 
-  const AUTO_SAVE_DEBOUNCE_MS = 800
-
-  const toDraftOperation = (
-    operation: AgentOperation
-  ): RequiredKeys<AgentOperation> => ({
-    id: operation.id,
-    name: operation.name,
-    live: operation.live,
-    promptInstructions: operation.promptInstructions,
-    enabledTools: operation.enabledTools,
-    knowledgeBases: operation.knowledgeBases,
-    allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
-    knowledgeSources: operation.knowledgeSources,
-    escalation: operation.escalation,
-  })
-
-  // Agent state
   let draftAgentId: string | undefined = $state()
-  let draft = $state<Agent>({
-    name: "",
-    description: "",
-    aiconfig: "",
-    goal: "",
-    icon: "",
-    iconColor: "",
-    operations: [],
-  })
-
-  let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
+  let draftAiconfig = $state("")
+  let hasUnsavedAiconfig = $state(false)
   let saving = $state(false)
-  let currentAgent: Agent | undefined = $derived($selectedAgent)
+
+  let currentAgent = $derived($selectedAgent)
   let completionConfigs = $derived($aiConfigsStore.customConfigs || [])
   let modelOptions = $derived(
     completionConfigs.map(config => ({
@@ -63,45 +25,24 @@
     }))
   )
 
-  let lastToolsAiConfigId: string | undefined = $state()
-  let webSearchConfig = $derived(
-    getAgentWebSearchConfig($aiConfigsStore.customConfigs, draft.aiconfig)
-  )
-
-  let availableTools = $derived.by(() =>
-    resolveAvailableAgentTools({
-      storeTools: $agentsStore.tools || [],
-      datasourceList: $datasources.list,
-      getRestTemplateIcon: identifier => restTemplates.get(identifier)?.icon,
-      webSearchConfig,
-    })
-  )
-
-  let readableToRuntimeBinding = $derived(
-    buildReadableToRuntimeBinding(availableTools)
-  )
-
   $effect(() => {
     const agent = currentAgent
-    if (agent && agent._id !== draftAgentId) {
-      draft = {
-        name: agent.name || "",
-        description: agent.description || "",
-        aiconfig: agent.aiconfig || "",
-        goal: agent.goal || "",
-        icon: agent.icon || "",
-        iconColor: agent.iconColor || "",
-        operations: agent.operations?.map(toDraftOperation) || [],
-      }
-      draftAgentId = agent._id
+    if (!agent?._id) {
+      draftAgentId = undefined
+      draftAiconfig = ""
+      hasUnsavedAiconfig = false
+      return
     }
-  })
 
-  $effect(() => {
-    const nextAiConfigId = draft.aiconfig || undefined
-    if (nextAiConfigId !== lastToolsAiConfigId) {
-      lastToolsAiConfigId = nextAiConfigId
-      agentsStore.fetchTools(nextAiConfigId)
+    if (agent._id !== draftAgentId) {
+      draftAiconfig = agent.aiconfig || ""
+      draftAgentId = agent._id
+      hasUnsavedAiconfig = false
+      return
+    }
+
+    if (!hasUnsavedAiconfig && !saving) {
+      draftAiconfig = agent.aiconfig || ""
     }
   })
 
@@ -111,54 +52,38 @@
       shouldAutoSelectAgentModel({
         modelOptions,
         agentAiconfig: currentAgent.aiconfig,
-        draftAiconfig: draft.aiconfig,
+        draftAiconfig,
       })
     ) {
-      draft.aiconfig = modelOptions[0].value
-      scheduleSave(true)
+      draftAiconfig = modelOptions[0].value
+      hasUnsavedAiconfig = true
+      saveAiconfig()
     }
   })
 
-  async function saveAgent({
+  async function saveAiconfig({
     showNotifications = true,
   }: {
     showNotifications?: boolean
-  }): Promise<boolean> {
-    if (!currentAgent) return false
-    if (saving) return false
+  } = {}): Promise<boolean> {
+    if (!currentAgent?._id || saving) {
+      return false
+    }
+    if (draftAiconfig === currentAgent.aiconfig) {
+      hasUnsavedAiconfig = false
+      return true
+    }
 
     saving = true
     try {
-      const { operations: draftOperations, ...agentDraft } = draft
-      const operations =
-        draftOperations?.map(operation => ({
-          ...operation,
-          enabledTools: getConfiguredOperationTools({
-            operation,
-            readableToRuntimeBinding,
-            availableTools,
-            toolSecurityEnabled:
-              $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
-          }),
-        })) || []
-
       await agentsStore.updateAgent({
         ...currentAgent,
-        ...agentDraft,
+        aiconfig: draftAiconfig,
       })
-
-      if (currentAgent._id) {
-        await agentsStore.syncAgentOperations(
-          currentAgent._id,
-          currentAgent.operations,
-          operations
-        )
-      }
-
+      hasUnsavedAiconfig = false
       if (showNotifications) {
         notifications.success("Agent saved successfully")
       }
-      await agentsStore.fetchAgents()
       await workspaceDeploymentStore.fetch()
       return true
     } catch (error) {
@@ -169,72 +94,10 @@
     }
   }
 
-  async function setOperationLive(
-    operationId: string,
-    live: boolean
-  ): Promise<boolean> {
-    if (!currentAgent) {
-      return false
-    }
-
-    try {
-      if (!currentAgent._id) {
-        return false
-      }
-
-      const updated = await agentsStore.updateAgentOperation(
-        currentAgent._id,
-        operationId,
-        { live }
-      )
-
-      draft = {
-        ...draft,
-        name: updated.name || "",
-        description: updated.description || "",
-        aiconfig: updated.aiconfig || "",
-        goal: updated.goal || "",
-        icon: updated.icon || "",
-        iconColor: updated.iconColor || "",
-        operations: updated.operations?.map(toDraftOperation) || [],
-      }
-
-      await agentsStore.fetchAgents()
-      await workspaceDeploymentStore.fetch()
-      return true
-    } catch (error) {
-      notifications.error(`Error saving agent: ${JSON.stringify(error)}`)
-      return false
-    }
+  const handleAiconfigChange = () => {
+    hasUnsavedAiconfig = true
+    saveAiconfig({ showNotifications: false })
   }
-
-  const scheduleSave = (immediate = false) => {
-    clearAutoSave()
-
-    if (immediate) {
-      return saveAgent({ showNotifications: false })
-    }
-
-    autoSaveTimeout = setTimeout(() => {
-      saveAgent({ showNotifications: false })
-      autoSaveTimeout = undefined
-    }, AUTO_SAVE_DEBOUNCE_MS)
-    return Promise.resolve(false)
-  }
-  const clearAutoSave = () => {
-    if (autoSaveTimeout) {
-      clearTimeout(autoSaveTimeout)
-      autoSaveTimeout = undefined
-    }
-  }
-
-  onDestroy(() => {
-    const shouldFlushSave = !!autoSaveTimeout
-    clearAutoSave()
-    if (shouldFlushSave) {
-      saveAgent({ showNotifications: false })
-    }
-  })
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -270,24 +133,20 @@
         </Button>
       {:else}
         <Select
-          bind:value={draft.aiconfig}
+          bind:value={draftAiconfig}
           placeholder={false}
           options={modelOptions}
           size="S"
-          on:change={() => scheduleSave(true)}
+          on:change={handleAiconfigChange}
         />
       {/if}
     </div>
   </div>
 </div>
 
-{#key currentAgent?._id}
-  <OperationsSection
-    bind:agent={draft}
-    onSetOperationLive={setOperationLive}
-    onUpdated={() => scheduleSave(true)}
-  />
-{/key}
+{#if currentAgent?._id}
+  <OperationsSection agentId={currentAgent._id} />
+{/if}
 
 <style>
   .llm-section-container {

@@ -1,6 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/svelte"
-import type { Agent } from "@budibase/types"
-import { describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi, beforeEach } from "vitest"
 import MockBody from "@/test/mocks/MockBody.svelte"
 import MockButton from "@/test/mocks/MockButton.svelte"
 import MockComponent from "@/test/mocks/MockComponent.svelte"
@@ -8,9 +7,22 @@ import MockControllableModal from "@/test/mocks/MockControllableModal.svelte"
 import MockInput from "@/test/mocks/MockInput.svelte"
 import MockModalContent from "@/test/mocks/MockModalContent.svelte"
 
-const mocks = vi.hoisted(() => ({
-  goto: vi.fn(),
-}))
+const mocks = vi.hoisted(() => {
+  const { writable } = require("svelte/store")
+  return {
+    goto: vi.fn(),
+    createAgentOperation: vi.fn(),
+    updateAgentOperation: vi.fn(),
+    deleteAgentOperation: vi.fn(),
+    fetchDeployment: vi.fn(),
+    selectedAgent: writable({
+      _id: "agent-1",
+      name: "Support agent",
+      aiconfig: "config-1",
+      operations: [],
+    }),
+  }
+})
 
 vi.mock("@budibase/bbui", () => ({
   Body: MockBody,
@@ -36,6 +48,18 @@ vi.mock("@/stores/builder", () => ({
   contextMenuStore: {
     open: vi.fn(),
   },
+  workspaceDeploymentStore: {
+    fetch: mocks.fetchDeployment,
+  },
+}))
+
+vi.mock("@/stores/portal", () => ({
+  agentsStore: {
+    createAgentOperation: mocks.createAgentOperation,
+    updateAgentOperation: mocks.updateAgentOperation,
+    deleteAgentOperation: mocks.deleteAgentOperation,
+  },
+  selectedAgent: mocks.selectedAgent,
 }))
 
 vi.mock("./OperationLiveBadge.svelte", () => ({
@@ -50,18 +74,32 @@ vi.mock("@roxi/routify", async () => {
 import OperationsSection from "./OperationsSection.svelte"
 
 describe("OperationsSection", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   it("opens a create modal before adding an operation", async () => {
-    const onUpdated = vi.fn(async () => true)
-    const agent: Agent = {
+    mocks.selectedAgent.set({
+      _id: "agent-1",
       name: "Support agent",
       aiconfig: "config-1",
       operations: [],
-    }
+    })
+    mocks.createAgentOperation.mockResolvedValue({
+      _id: "agent-1",
+      operations: [
+        {
+          id: "operation_123",
+          name: "Customer support",
+          live: false,
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
+    })
 
     render(OperationsSection, {
       props: {
-        agent,
-        onUpdated,
+        agentId: "agent-1",
       },
     })
 
@@ -70,25 +108,26 @@ describe("OperationsSection", () => {
     await fireEvent.click(screen.getByText("Add operation"))
 
     expect(screen.getByText("New operation")).toBeInTheDocument()
-    expect(agent.operations).toHaveLength(0)
 
     await fireEvent.input(screen.getByLabelText("Name"), {
       target: { value: "Customer support" },
     })
     await fireEvent.click(screen.getByText("Create"))
 
-    expect(onUpdated).toHaveBeenCalledTimes(1)
-    expect(agent.operations).toHaveLength(1)
-    expect(agent.operations?.[0]).toMatchObject({
+    expect(mocks.createAgentOperation).toHaveBeenCalledWith("agent-1", {
       id: "operation_123",
       name: "Customer support",
       live: false,
+      promptInstructions: expect.stringContaining("**Operation role**"),
+      allowKnowledgeSourceDownload: true,
     })
+    expect(mocks.fetchDeployment).toHaveBeenCalled()
     expect(mocks.goto).toHaveBeenCalledWith("./operation/operation_123")
   })
 
   it("navigates to an operation when its row is selected", async () => {
-    const agent: Agent = {
+    mocks.selectedAgent.set({
+      _id: "agent-1",
       name: "Support agent",
       aiconfig: "config-1",
       operations: [
@@ -100,10 +139,10 @@ describe("OperationsSection", () => {
           allowKnowledgeSourceDownload: true,
         },
       ],
-    }
+    })
 
     render(OperationsSection, {
-      props: { agent, onUpdated: vi.fn(async () => true) },
+      props: { agentId: "agent-1" },
     })
 
     await fireEvent.click(screen.getByText("Customer support"))
@@ -112,8 +151,8 @@ describe("OperationsSection", () => {
   })
 
   it("does not allow creating a second operation with the same name", async () => {
-    const onUpdated = vi.fn(async () => true)
-    const agent: Agent = {
+    mocks.selectedAgent.set({
+      _id: "agent-1",
       name: "Support agent",
       aiconfig: "config-1",
       operations: [
@@ -125,12 +164,11 @@ describe("OperationsSection", () => {
           allowKnowledgeSourceDownload: true,
         },
       ],
-    }
+    })
 
     render(OperationsSection, {
       props: {
-        agent,
-        onUpdated,
+        agentId: "agent-1",
       },
     })
 
@@ -144,7 +182,6 @@ describe("OperationsSection", () => {
     ).toBeInTheDocument()
     expect(screen.getByText("Create")).toBeDisabled()
 
-    expect(onUpdated).not.toHaveBeenCalled()
-    expect(agent.operations).toHaveLength(1)
+    expect(mocks.createAgentOperation).not.toHaveBeenCalled()
   })
 })
