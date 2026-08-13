@@ -98,6 +98,38 @@ export const buildAvailableAgentTools = ({
   ]
 }
 
+export const getAgentWebSearchConfig = (
+  customConfigs: Array<{ _id?: string; webSearchConfig?: WebSearchConfig }>,
+  aiconfigId?: string | null
+) => customConfigs.find(config => config._id === aiconfigId)?.webSearchConfig
+
+export const resolveAvailableAgentTools = ({
+  storeTools,
+  datasourceList,
+  getRestTemplateIcon,
+  webSearchConfig,
+}: {
+  storeTools: ToolMetadata[]
+  datasourceList: Array<{
+    name?: string
+    restTemplateId?: string
+    restTemplate?: string
+  }>
+  getRestTemplateIcon: (identifier: string) => string | undefined
+  webSearchConfig?: WebSearchConfig | null
+}): AgentTool[] => {
+  const webSearchConfigured = isWebSearchConfigured(webSearchConfig)
+  return buildAvailableAgentTools({
+    storeTools,
+    webSearchConfigured,
+    webSearchConfig,
+    resolveRestTemplateIcon: createRestTemplateIconResolver({
+      datasourceList,
+      getRestTemplateIcon,
+    }),
+  })
+}
+
 export const buildReadableToRuntimeBinding = (tools: AgentTool[]) => {
   const runtimeMap: Record<string, string> = {}
   for (const tool of tools) {

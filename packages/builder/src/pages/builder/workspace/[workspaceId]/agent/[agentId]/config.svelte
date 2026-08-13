@@ -20,10 +20,9 @@
   import { onDestroy } from "svelte"
   import { bb } from "@/stores/bb"
   import {
-    buildAvailableAgentTools,
     buildReadableToRuntimeBinding,
-    createRestTemplateIconResolver,
-    isWebSearchConfigured,
+    getAgentWebSearchConfig,
+    resolveAvailableAgentTools,
   } from "./agentAvailableTools"
   import { shouldAutoSelectAgentModel } from "./configUtils"
   import { getConfiguredOperationTools } from "./toolBindingUtils"
@@ -70,23 +69,17 @@
 
   let lastToolsAiConfigId: string | undefined = $state()
   let webSearchConfig = $derived(
-    $aiConfigsStore.customConfigs.find(config => config._id === draft.aiconfig)
-      ?.webSearchConfig
+    getAgentWebSearchConfig($aiConfigsStore.customConfigs, draft.aiconfig)
   )
-  let webSearchConfigured = $derived(isWebSearchConfigured(webSearchConfig))
 
-  let availableTools = $derived.by(() => {
-    const resolveRestTemplateIcon = createRestTemplateIconResolver({
+  let availableTools = $derived.by(() =>
+    resolveAvailableAgentTools({
+      storeTools: $agentsStore.tools || [],
       datasourceList: $datasources.list,
       getRestTemplateIcon: identifier => restTemplates.get(identifier)?.icon,
-    })
-    return buildAvailableAgentTools({
-      storeTools: $agentsStore.tools || [],
-      webSearchConfigured,
       webSearchConfig,
-      resolveRestTemplateIcon,
     })
-  })
+  )
 
   let readableToRuntimeBinding = $derived(
     buildReadableToRuntimeBinding(availableTools)

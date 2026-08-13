@@ -18,8 +18,10 @@ import {
   buildAvailableAgentTools,
   buildBindingIcons,
   buildReadableToRuntimeBinding,
+  getAgentWebSearchConfig,
   getWebSearchRuntimeBinding,
   isWebSearchConfigured,
+  resolveAvailableAgentTools,
   toAgentPromptBindings,
 } from "./agentAvailableTools"
 
@@ -112,6 +114,46 @@ describe("agentAvailableTools", () => {
     expect(
       toAgentPromptBindings({ tools: configuredTools, webSearchConfigured: true })
     ).toHaveLength(1)
+  })
+
+  it("resolves available tools with datasource icons and web search", () => {
+    const tools = resolveAvailableAgentTools({
+      storeTools: [
+        {
+          name: "find_rows",
+          description: "Find rows",
+          sourceType: ToolType.INTERNAL_TABLE,
+          sourceLabel: "Employees",
+        },
+      ],
+      datasourceList: [],
+      getRestTemplateIcon: () => undefined,
+      webSearchConfig: {
+        provider: WebSearchProvider.EXA,
+        apiKey: "key",
+      },
+    })
+
+    expect(tools).toHaveLength(2)
+    expect(tools[0].name).toBe("web_search")
+    expect(tools[0].runtimeBinding).toBe("search_web_search")
+  })
+
+  it("gets web search config for an ai config id", () => {
+    expect(
+      getAgentWebSearchConfig(
+        [
+          {
+            _id: "config-1",
+            webSearchConfig: {
+              provider: WebSearchProvider.EXA,
+              apiKey: "key",
+            },
+          },
+        ],
+        "config-1"
+      )?.apiKey
+    ).toBe("key")
   })
 
   it("builds binding icons from prompt bindings", () => {

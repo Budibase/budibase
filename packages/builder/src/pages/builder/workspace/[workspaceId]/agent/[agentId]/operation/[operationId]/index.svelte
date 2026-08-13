@@ -38,12 +38,12 @@
   import ToolIcon from "../../ToolIcon.svelte"
   import ToolsDropdown from "../../ToolsDropdown.svelte"
   import {
-    buildAvailableAgentTools,
     buildBindingIcons,
     buildReadableToRuntimeBinding,
-    createRestTemplateIconResolver,
     formatAgentToolLabel,
+    getAgentWebSearchConfig,
     isWebSearchConfigured,
+    resolveAvailableAgentTools,
     toAgentPromptBindings,
   } from "../../agentAvailableTools"
   import {
@@ -76,23 +76,18 @@
   let operationName = $derived(operation?.name?.trim() || "Untitled operation")
   let toolsLoaded = $derived($agentsStore.tools !== undefined)
   let webSearchConfig = $derived(
-    $aiConfigsStore.customConfigs.find(config => config._id === agent?.aiconfig)
-      ?.webSearchConfig
+    getAgentWebSearchConfig($aiConfigsStore.customConfigs, agent?.aiconfig)
   )
   let webSearchConfigured = $derived(isWebSearchConfigured(webSearchConfig))
 
-  let availableTools = $derived.by(() => {
-    const resolveRestTemplateIcon = createRestTemplateIconResolver({
+  let availableTools = $derived.by(() =>
+    resolveAvailableAgentTools({
+      storeTools: $agentsStore.tools || [],
       datasourceList: $datasources.list,
       getRestTemplateIcon: identifier => restTemplates.get(identifier)?.icon,
-    })
-    return buildAvailableAgentTools({
-      storeTools: $agentsStore.tools || [],
-      webSearchConfigured,
       webSearchConfig,
-      resolveRestTemplateIcon,
     })
-  })
+  )
 
   let promptBindings: EnrichedBinding[] = $derived(
     toAgentPromptBindings({ tools: availableTools, webSearchConfigured })
