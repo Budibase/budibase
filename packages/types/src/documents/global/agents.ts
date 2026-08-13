@@ -60,7 +60,6 @@ export interface SlackAgentIntegration extends ChatAgentIntegration {
   botToken?: string
   botUserId?: string
   signingSecret?: string
-  teamId?: string
   teamName?: string
   messagingEndpointUrl?: string
   // Bots Slack workspace - derived via auth.test when the token is saved
