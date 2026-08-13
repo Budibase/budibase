@@ -56,6 +56,8 @@ const getLatestCloudReleaseTag = () => {
     return process.env.TAG
   }
 
+  run("git", ["fetch", "origin", "--tags"])
+
   const tags = run("git", [
     "tag",
     "--list",
