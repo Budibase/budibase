@@ -412,7 +412,8 @@ if [[ -z "${REDIS_CONFIG}" ]]; then
 fi
 
 if [[ -n "${REDIS_CONFIG}" && -f "${REDIS_CONFIG}" ]]; then
-    sed -i "s#DATA_DIR#${DATA_DIR}#g" "${REDIS_CONFIG}"
+    escaped_data_dir="$(printf '%s\n' "${DATA_DIR}" | sed 's/[\\&#]/\\&/g')"
+    sed -i "s#DATA_DIR#${escaped_data_dir}#g" "${REDIS_CONFIG}"
 fi
 
 if [[ -n "${USE_DEFAULT_REDIS_CONFIG}" ]]; then
