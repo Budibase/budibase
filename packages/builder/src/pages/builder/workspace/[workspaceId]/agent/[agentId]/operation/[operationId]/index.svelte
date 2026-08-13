@@ -344,13 +344,30 @@
   }
 
   const toggleOperationLive = async () => {
-    if (!operation || togglingLive) {
+    if (!operation || togglingLive || !agentId) {
       return
     }
 
+    const nextLive = operation.live !== true
+
     togglingLive = true
     try {
-      await saveOperation({ live: !operation.live })
+      const updated = await agentsStore.updateAgentOperation(
+        agentId,
+        operation.id,
+        { live: nextLive }
+      )
+      const storeOperation = updated.operations?.find(
+        item => item.id === operation?.id
+      )
+      if (storeOperation && operationId === operation.id) {
+        operation = { ...operation, live: storeOperation.live }
+        syncedAgentRev = updated._rev
+      }
+      await workspaceDeploymentStore.fetch()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to update operation")
     } finally {
       togglingLive = false
     }
