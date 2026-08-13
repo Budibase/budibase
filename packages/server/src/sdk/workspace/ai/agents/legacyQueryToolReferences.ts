@@ -15,6 +15,19 @@ const sanitiseLegacyNameSegment = (name: string, maxLength: number) =>
     .replace(/^_|_$/g, "")
     .substring(0, maxLength)
 
+const MAX_LEGACY_DATASOURCE_SEGMENT_LENGTH = 20
+const MAX_LEGACY_QUERY_SEGMENT_LENGTH = 24
+const MAX_LEGACY_REST_BINDING_LENGTH =
+  "rest_".length +
+  MAX_LEGACY_DATASOURCE_SEGMENT_LENGTH +
+  1 +
+  MAX_LEGACY_QUERY_SEGMENT_LENGTH
+const MAX_LEGACY_DATASOURCE_BINDING_LENGTH =
+  "ds_".length +
+  MAX_LEGACY_DATASOURCE_SEGMENT_LENGTH +
+  1 +
+  MAX_LEGACY_QUERY_SEGMENT_LENGTH
+
 const getSourceType = (datasource: Datasource): QueryToolType =>
   datasource.source === SourceName.REST
     ? ToolType.REST_QUERY
@@ -34,9 +47,15 @@ export const getLegacyQueryToolRuntimeBinding = ({
   const sourceType = getSourceType(datasource)
   const runtimePrefix = sourceType === ToolType.REST_QUERY ? "rest" : "ds"
   const datasourceSegment =
-    sanitiseLegacyNameSegment(getSourceLabel(datasource), 20) || "datasource"
+    sanitiseLegacyNameSegment(
+      getSourceLabel(datasource),
+      MAX_LEGACY_DATASOURCE_SEGMENT_LENGTH
+    ) || "datasource"
   const querySegment =
-    sanitiseLegacyNameSegment(query.name || "query", 24) || "query"
+    sanitiseLegacyNameSegment(
+      query.name || "query",
+      MAX_LEGACY_QUERY_SEGMENT_LENGTH
+    ) || "query"
 
   return `${runtimePrefix}_${datasourceSegment}_${querySegment}`
 }
@@ -166,13 +185,18 @@ export const replaceLegacyQueryToolReferences = ({
   return changed ? { ...agent, operations } : agent
 }
 
-export const hasQueryToolReferences = (agents: Agent[]) => {
+export const hasPotentialLegacyQueryToolReferences = (agents: Agent[]) => {
   return agents.some(agent =>
     agent.operations?.some(operation =>
-      operation.enabledTools?.some(
-        tool =>
-          tool.toolName.startsWith("rest_") || tool.toolName.startsWith("ds_")
-      )
+      operation.enabledTools?.some(tool => {
+        if (tool.toolName.startsWith("rest_")) {
+          return tool.toolName.length <= MAX_LEGACY_REST_BINDING_LENGTH
+        }
+        if (tool.toolName.startsWith("ds_")) {
+          return tool.toolName.length <= MAX_LEGACY_DATASOURCE_BINDING_LENGTH
+        }
+        return false
+      })
     )
   )
 }

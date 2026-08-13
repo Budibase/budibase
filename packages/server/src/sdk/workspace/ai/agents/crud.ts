@@ -1,4 +1,5 @@
 import {
+  cache,
   context,
   docIds,
   encryption,
@@ -23,7 +24,7 @@ import { cleanupKnowledgeForOperation, knowledgeSourceSyncQueue } from "../rag"
 import { getValidProjectIdsForDuplication } from "../../projects/utils"
 import {
   getLegacyQueryToolBindingReplacements,
-  hasQueryToolReferences,
+  hasPotentialLegacyQueryToolReferences,
   replaceLegacyQueryToolReferences,
 } from "./legacyQueryToolReferences"
 
@@ -69,6 +70,7 @@ const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 const NAME_REQUIRED_ERROR = "Agent name is required."
 const DEFAULT_OPERATION_NAME = "Main operation"
+const LEGACY_QUERY_TOOL_REPLACEMENTS_CACHE_TTL_SECONDS = 60
 
 const fetchRaw = async (): Promise<DeprecatedAgent[]> => {
   const db = context.getWorkspaceDB()
@@ -266,31 +268,41 @@ const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
 // TODO: remove after agents created before query tool IDs were introduced have
 // had enough time to be resaved with their current bindings.
 const withCurrentQueryToolReferences = async (agents: Agent[]) => {
-  if (!hasQueryToolReferences(agents)) {
+  if (!hasPotentialLegacyQueryToolReferences(agents)) {
     return agents
   }
 
-  const db = context.getWorkspaceDB()
-  const [datasourceResult, queryResult] = await Promise.all([
-    db.allDocs<Datasource>(
-      docIds.getDocParams(DocumentType.DATASOURCE, undefined, {
-        include_docs: true,
-      })
-    ),
-    db.allDocs<Query>(
-      docIds.getDocParams(DocumentType.QUERY, undefined, {
-        include_docs: true,
-      })
-    ),
-  ])
-  const replacements = getLegacyQueryToolBindingReplacements({
-    datasources: datasourceResult.rows
-      .map(row => row.doc)
-      .filter((doc): doc is Datasource => !!doc),
-    queries: queryResult.rows
-      .map(row => row.doc)
-      .filter((doc): doc is Query => !!doc),
-  })
+  const workspaceId = context.getOrThrowWorkspaceId()
+  const replacementEntries = await cache.withCache<[string, string][]>(
+    `legacy_agent_query_tool_replacements_${workspaceId}`,
+    LEGACY_QUERY_TOOL_REPLACEMENTS_CACHE_TTL_SECONDS,
+    async () => {
+      const db = context.getWorkspaceDB()
+      const [datasourceResult, queryResult] = await Promise.all([
+        db.allDocs<Datasource>(
+          docIds.getDocParams(DocumentType.DATASOURCE, undefined, {
+            include_docs: true,
+          })
+        ),
+        db.allDocs<Query>(
+          docIds.getDocParams(DocumentType.QUERY, undefined, {
+            include_docs: true,
+          })
+        ),
+      ])
+      return Array.from(
+        getLegacyQueryToolBindingReplacements({
+          datasources: datasourceResult.rows
+            .map(row => row.doc)
+            .filter((doc): doc is Datasource => !!doc),
+          queries: queryResult.rows
+            .map(row => row.doc)
+            .filter((doc): doc is Query => !!doc),
+        }).entries()
+      )
+    }
+  )
+  const replacements = new Map(replacementEntries)
 
   return agents.map(agent =>
     replaceLegacyQueryToolReferences({ agent, replacements })

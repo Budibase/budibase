@@ -2,6 +2,22 @@ const mockDbRemove = jest.fn()
 const mockDbTryGet = jest.fn()
 const mockDbPut = jest.fn()
 const mockDbAllDocs = jest.fn().mockResolvedValue({ rows: [] })
+const mockReplacementCache = new Map<string, [string, string][]>()
+const mockCacheWithCache = jest.fn(
+  async (
+    key: string,
+    _ttl: number,
+    fetchFn: () => Promise<[string, string][]>
+  ) => {
+    const cached = mockReplacementCache.get(key)
+    if (cached) {
+      return cached
+    }
+    const value = await fetchFn()
+    mockReplacementCache.set(key, value)
+    return value
+  }
+)
 const mockGetWorkspaceDB = jest.fn(() => ({
   tryGet: (...args: any[]) => mockDbTryGet(...args),
   remove: (...args: any[]) => mockDbRemove(...args),
@@ -37,8 +53,14 @@ jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
   return {
     ...actual,
+    cache: {
+      ...actual.cache,
+      withCache: (...args: Parameters<typeof mockCacheWithCache>) =>
+        mockCacheWithCache(...args),
+    },
     context: {
       ...actual.context,
+      getOrThrowWorkspaceId: () => "app_1",
       getWorkspaceDB: (...args: Parameters<typeof mockGetWorkspaceDB>) =>
         mockGetWorkspaceDB(...args),
     },
@@ -84,6 +106,7 @@ import { generator } from "@budibase/backend-core/tests"
 describe("agents crud", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockReplacementCache.clear()
   })
 
   describe("fetch", () => {
@@ -144,6 +167,64 @@ describe("agents crud", () => {
         },
       ])
       expect(mockDbPut).not.toHaveBeenCalled()
+    })
+
+    it("skips compatibility lookups for bindings longer than legacy names", async () => {
+      const toolName = getQueryToolBindings({
+        sourceType: ToolType.REST_QUERY,
+        sourceLabel: "A very long datasource name",
+        queryName: "A very long query name",
+        queryId: "query_0123456789abcdef0123456789abcdef",
+      }).runtimeBinding
+      mockDbAllDocs.mockResolvedValueOnce({
+        rows: [
+          {
+            doc: {
+              _id: "agent_current",
+              name: "Current Agent",
+              operations: [
+                {
+                  id: "operation_1",
+                  name: "Main",
+                  live: true,
+                  enabledTools: [toolName],
+                },
+              ],
+            },
+          },
+        ],
+      })
+
+      await agentsCrud.fetch()
+
+      expect(mockDbAllDocs).toHaveBeenCalledTimes(1)
+      expect(mockCacheWithCache).not.toHaveBeenCalled()
+    })
+
+    it("caches lookups for bindings that could be legacy names", async () => {
+      const agent = {
+        _id: "agent_legacy",
+        name: "Legacy Agent",
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main",
+            live: true,
+            enabledTools: ["rest_api_get_todo"],
+          },
+        ],
+      }
+      mockDbAllDocs
+        .mockResolvedValueOnce({ rows: [{ doc: agent }] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [{ doc: agent }] })
+
+      await agentsCrud.fetch()
+      await agentsCrud.fetch()
+
+      expect(mockDbAllDocs).toHaveBeenCalledTimes(4)
+      expect(mockCacheWithCache).toHaveBeenCalledTimes(2)
     })
 
     it("migrates legacy promptInstructions into the default operation", async () => {

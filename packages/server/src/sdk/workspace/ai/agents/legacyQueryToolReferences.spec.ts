@@ -4,6 +4,7 @@ import type { Agent, Datasource, Query } from "@budibase/types"
 import {
   getLegacyQueryToolBindingReplacements,
   getLegacyQueryToolRuntimeBinding,
+  hasPotentialLegacyQueryToolReferences,
   replaceLegacyQueryToolReferences,
 } from "./legacyQueryToolReferences"
 
@@ -251,5 +252,26 @@ describe("legacy agent query tool references", () => {
     expect(getLegacyQueryToolRuntimeBinding({ datasource, query })).toBe(
       "rest_a_very_long_datasour_a_very_long_query_name_t"
     )
+  })
+
+  it("only flags query bindings that could fit the legacy format", () => {
+    const definitelyCurrent = getQueryToolBindings({
+      sourceType: ToolType.REST_QUERY,
+      sourceLabel: "A very long datasource name",
+      queryName: "A very long query name",
+      queryId: "query_0123456789abcdef0123456789abcdef",
+    }).runtimeBinding
+
+    expect(
+      hasPotentialLegacyQueryToolReferences([makeAgent([definitelyCurrent])])
+    ).toBe(false)
+    expect(
+      hasPotentialLegacyQueryToolReferences([
+        makeAgent(["rest_api_get_todo", "ds_warehouse_monthly_sales"]),
+      ])
+    ).toBe(true)
+    expect(
+      hasPotentialLegacyQueryToolReferences([makeAgent(["other_tool"])])
+    ).toBe(false)
   })
 })
