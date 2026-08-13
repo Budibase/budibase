@@ -1,5 +1,127 @@
 #!/bin/bash
 
+notify() {
+    local service="$1"
+    shift
+    echo "$*"
+    if [[ -w /proc/1/fd/1 ]]; then
+        echo "${service}: $*" >/proc/1/fd/1
+    fi
+}
+
+start_redis_server() {
+    local cmd=("redis-server")
+
+    if [[ -n "${REDIS_CONFIG}" ]]; then
+        cmd=("redis-server" "${REDIS_CONFIG}")
+    fi
+
+    if [[ -n "${REDIS_USERNAME}" && -n "${REDIS_PASSWORD}" ]]; then
+        cmd+=("--user" "${REDIS_USERNAME}" "--requirepass" "${REDIS_PASSWORD}")
+    elif [[ -n "${REDIS_PASSWORD}" ]]; then
+        cmd+=("--requirepass" "${REDIS_PASSWORD}")
+    fi
+
+    exec "${cmd[@]}"
+}
+
+litellm_cluster_exists() {
+    [[ -f "$1/PG_VERSION" ]]
+}
+
+litellm_prepare_data_dir() {
+    local dir="$1"
+    mkdir -p "$dir" 2>/dev/null || return 1
+    chown -R postgres:postgres "$dir" 2>/dev/null || true
+    chmod 700 "$dir" 2>/dev/null || true
+    [[ "$(stat -c "%a" "$dir" 2>/dev/null)" == "700" ]] || return 1
+    su postgres -s /bin/bash -c "test -x \"${dir}\" && test -w \"${dir}\"" >/dev/null 2>&1
+}
+
+start_litellm_postgres() {
+    set -eo pipefail
+
+    local db_port="${LITELLM_DB_PORT:-5432}"
+    local primary_data_dir="${LITELLM_PGDATA:-${DATA_DIR}/litellm/postgres}"
+    local fallback_data_dir="${LITELLM_PGDATA_FALLBACK:-/var/lib/postgresql/budibase-litellm}"
+    local bin_dir="${POSTGRES_BIN_DIR:-$(pg_config --bindir 2>/dev/null || true)}"
+
+    if [[ -z "${bin_dir}" ]]; then
+        echo "Unable to locate postgres binaries with pg_config."
+        return 1
+    fi
+
+    local postgres_bin="${bin_dir}/postgres"
+    local initdb_bin="${bin_dir}/initdb"
+
+    if [[ ! -x "${postgres_bin}" || ! -x "${initdb_bin}" ]]; then
+        echo "Postgres binaries are missing from ${bin_dir}."
+        return 1
+    fi
+
+    local data_dir
+    if litellm_cluster_exists "${primary_data_dir}"; then
+        # An existing cluster is never relocated, even if its permissions look wrong.
+        data_dir="${primary_data_dir}"
+        litellm_prepare_data_dir "${data_dir}" || \
+            notify litellm-postgres "Warning: ${data_dir} holds an existing cluster the postgres user may not be able to read."
+    elif litellm_prepare_data_dir "${primary_data_dir}"; then
+        data_dir="${primary_data_dir}"
+    elif [[ -n "${LITELLM_PGDATA}" ]]; then
+        notify litellm-postgres "LITELLM_PGDATA is set to ${LITELLM_PGDATA}, but the postgres user cannot use that directory."
+        notify litellm-postgres "Point LITELLM_PGDATA at a path postgres can own with mode 700, or set LITELLM_INTERNAL_DB=false and supply DATABASE_URL."
+        return 1
+    elif litellm_prepare_data_dir "${fallback_data_dir}" || litellm_cluster_exists "${fallback_data_dir}"; then
+        data_dir="${fallback_data_dir}"
+        notify litellm-postgres "Warning: ${primary_data_dir} cannot be used by the postgres user. The volume may ignore chown/chmod, or restrict the postgres uid with ACLs."
+        notify litellm-postgres "Warning: falling back to ${fallback_data_dir}, which lives in the container and is lost when the container is recreated."
+        notify litellm-postgres "Warning: set LITELLM_PGDATA to a usable path, or LITELLM_INTERNAL_DB=false with DATABASE_URL, to persist LiteLLM data."
+    else
+        notify litellm-postgres "Unable to prepare a postgres data directory for LiteLLM. Tried ${primary_data_dir} and ${fallback_data_dir}."
+        return 1
+    fi
+
+    notify litellm-postgres "Using postgres data directory ${data_dir} for LiteLLM."
+
+    if ! litellm_cluster_exists "${data_dir}"; then
+        echo "Initializing LiteLLM postgres data directory at ${data_dir}..."
+        su postgres -s /bin/bash -c "\"${initdb_bin}\" -D \"${data_dir}\" --auth-local=trust --auth-host=scram-sha-256"
+    fi
+
+    local postgres_config="${data_dir}/postgresql.conf"
+    local postgres_hba="${data_dir}/pg_hba.conf"
+
+    if grep -qE "^#?listen_addresses\\s*=" "${postgres_config}"; then
+        sed -i "s/^#\\?listen_addresses\\s*=.*/listen_addresses = '127.0.0.1'/" "${postgres_config}"
+    else
+        echo "listen_addresses = '127.0.0.1'" >> "${postgres_config}"
+    fi
+
+    if grep -qE "^#?port\\s*=" "${postgres_config}"; then
+        sed -i "s/^#\\?port\\s*=.*/port = ${db_port}/" "${postgres_config}"
+    else
+        echo "port = ${db_port}" >> "${postgres_config}"
+    fi
+
+    if ! grep -qE "^host\\s+all\\s+all\\s+127\\.0\\.0\\.1/32\\s+scram-sha-256" "${postgres_hba}"; then
+        echo "host all all 127.0.0.1/32 scram-sha-256" >> "${postgres_hba}"
+    fi
+
+    echo "Starting postgres for LiteLLM on 127.0.0.1:${db_port}..."
+    exec su postgres -s /bin/bash -c "\"${postgres_bin}\" -D \"${data_dir}\" -p \"${db_port}\" -h 127.0.0.1"
+}
+
+case "${1:-}" in
+    redis-server)
+        start_redis_server
+        exit $?
+        ;;
+    litellm-postgres)
+        start_litellm_postgres
+        exit $?
+        ;;
+esac
+
 echo "Starting runner.sh..."
 
 # Set defaults for Docker-related variables
@@ -283,7 +405,27 @@ chown -R postgres:postgres ${DATA_DIR}/litellm
 chmod 700 ${DATA_DIR}/litellm/postgres
 
 echo "Starting Redis runner..."
-./redis-runner.sh
+using_default_redis_config="false"
+if [[ -z "${REDIS_CONFIG}" ]]; then
+    REDIS_CONFIG="/etc/redis/redis.conf"
+    using_default_redis_config="true"
+fi
+
+if [[ -n "${REDIS_CONFIG}" && -f "${REDIS_CONFIG}" ]]; then
+    sed -i "s#DATA_DIR#${DATA_DIR}#g" "${REDIS_CONFIG}"
+fi
+
+if [[ -n "${USE_DEFAULT_REDIS_CONFIG}" ]]; then
+    unset REDIS_CONFIG
+elif [[ "${using_default_redis_config}" == "true" && ! -w "${DATA_DIR}/redis" ]]; then
+    echo "Warning: ${DATA_DIR}/redis is not writable, starting redis with its built-in defaults. Cached data will not persist."
+    unset REDIS_CONFIG
+else
+    export REDIS_CONFIG
+fi
+
+echo "Starting redis-server with pm2..."
+pm2 start ./runner.sh --name redis-server --interpreter bash -- redis-server
 
 echo "Starting callback CouchDB runner..."
 ./bbcouch-runner.sh &
@@ -328,21 +470,38 @@ if [[ "${LITELLM_INTERNAL_DB}" == "true" && -z "${DATABASE_URL}" ]]; then
     export DATABASE_URL="postgresql://${LITELLM_DB_USER}:${LITELLM_DB_PASSWORD}@127.0.0.1:${LITELLM_DB_PORT}/${LITELLM_DB_NAME}"
 fi
 
+litellm_db_ready="true"
+
 if [[ "${LITELLM_INTERNAL_DB}" == "true" ]]; then
     echo "Starting internal LiteLLM postgres runner..."
-    pm2 start ./litellm-db-runner.sh --name litellm-postgres --interpreter bash
+    pm2 start ./runner.sh --name litellm-postgres --interpreter bash --restart-delay 5000 -- litellm-postgres
 
     echo "Waiting for internal LiteLLM postgres to become ready..."
+    litellm_db_timeout="${LITELLM_DB_READY_TIMEOUT_SECONDS:-60}"
+    litellm_db_ready="false"
     postgres_wait_seconds=0
-    until pg_isready -p "${LITELLM_DB_PORT}" -U postgres >/dev/null 2>&1; do
+    while true; do
+        if pg_isready -p "${LITELLM_DB_PORT}" -U postgres >/dev/null 2>&1; then
+            litellm_db_ready="true"
+            break
+        fi
         postgres_wait_seconds=$((postgres_wait_seconds + 1))
-        if [[ "${postgres_wait_seconds}" -ge 60 ]]; then
-            echo "Timed out waiting for internal LiteLLM postgres to start."
-            exit 1
+        if [[ "${postgres_wait_seconds}" -ge "${litellm_db_timeout}" ]]; then
+            break
         fi
         sleep 1
     done
+fi
 
+if [[ "${LITELLM_INTERNAL_DB}" == "true" && "${litellm_db_ready}" == "false" ]]; then
+    echo "Timed out waiting for internal LiteLLM postgres to start after ${litellm_db_timeout}s."
+    echo "--- litellm-postgres log ---"
+    pm2 logs litellm-postgres --lines 50 --nostream 2>&1 | tail -60
+    echo "--- end litellm-postgres log ---"
+    echo "Continuing startup without LiteLLM. AI features will be unavailable until the container is restarted."
+fi
+
+if [[ "${LITELLM_INTERNAL_DB}" == "true" && "${litellm_db_ready}" == "true" ]]; then
     psql \
       -v ON_ERROR_STOP=1 \
       --set=bb_user="${LITELLM_DB_USER}" \
@@ -379,38 +538,42 @@ upsert_env_var "COUCH_DB_URL" "${COUCH_DB_URL}"
 # Wait for backend services to start
 sleep 10
 
-LITELLM_CONFIG_PATH="/litellm/config.yaml"
-if [ -f "${DATA_DIR}/litellm/config.yaml" ]; then
-    echo "Using user-mounted litellm config from ${DATA_DIR}/litellm/config.yaml"
-    LITELLM_CONFIG_PATH="${DATA_DIR}/litellm/config.yaml"
-fi
-
-pm2 start /opt/venv/litellm/bin/litellm \
-  --name litellm \
-  --interpreter /opt/venv/litellm/bin/python \
-  --restart-delay 5000 \
-  --time \
-  -- -c "${LITELLM_CONFIG_PATH}"
-
-echo "Waiting for LiteLLM to become ready..."
-litellm_ready_timeout="${LITELLM_READY_TIMEOUT_SECONDS:-120}"
-litellm_wait_seconds=0
 litellm_ready="false"
-until [[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/health/liveliness) -eq 200 ]]; do
-    litellm_wait_seconds=$((litellm_wait_seconds + 1))
-    if [[ "${litellm_wait_seconds}" -ge "${litellm_ready_timeout}" ]]; then
-        echo "Timed out waiting for LiteLLM readiness after ${litellm_ready_timeout}s. Continuing startup without waiting further."
-        break
-    fi
-    sleep 1
-done
-if [[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/health/liveliness) -eq 200 ]]; then
-    litellm_ready="true"
-fi
-if [[ "${litellm_ready}" == "true" ]]; then
-    echo "LiteLLM is ready."
+if [[ "${litellm_db_ready}" != "true" ]]; then
+    echo "Skipping LiteLLM startup, its metadata database is unavailable. App and worker will still start."
 else
-    echo "LiteLLM is not ready yet. App and worker will still start."
+    LITELLM_CONFIG_PATH="/litellm/config.yaml"
+    if [ -f "${DATA_DIR}/litellm/config.yaml" ]; then
+        echo "Using user-mounted litellm config from ${DATA_DIR}/litellm/config.yaml"
+        LITELLM_CONFIG_PATH="${DATA_DIR}/litellm/config.yaml"
+    fi
+
+    pm2 start /opt/venv/litellm/bin/litellm \
+      --name litellm \
+      --interpreter /opt/venv/litellm/bin/python \
+      --restart-delay 5000 \
+      --time \
+      -- -c "${LITELLM_CONFIG_PATH}"
+
+    echo "Waiting for LiteLLM to become ready..."
+    litellm_ready_timeout="${LITELLM_READY_TIMEOUT_SECONDS:-120}"
+    litellm_wait_seconds=0
+    until [[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/health/liveliness) -eq 200 ]]; do
+        litellm_wait_seconds=$((litellm_wait_seconds + 1))
+        if [[ "${litellm_wait_seconds}" -ge "${litellm_ready_timeout}" ]]; then
+            echo "Timed out waiting for LiteLLM readiness after ${litellm_ready_timeout}s. Continuing startup without waiting further."
+            break
+        fi
+        sleep 1
+    done
+    if [[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/health/liveliness) -eq 200 ]]; then
+        litellm_ready="true"
+    fi
+    if [[ "${litellm_ready}" == "true" ]]; then
+        echo "LiteLLM is ready."
+    else
+        echo "LiteLLM is not ready yet. App and worker will still start."
+    fi
 fi
 
 pushd app
