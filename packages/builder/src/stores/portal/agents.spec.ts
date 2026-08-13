@@ -4,9 +4,11 @@ import {
   KnowledgeBaseFileSourceType,
   KnowledgeBaseFileStatus,
   AgentKnowledgeSourceSyncRunStatus,
+  ToolType,
   type Agent,
   type AgentFileUploadResponse,
   type KnowledgeBaseFile,
+  type ToolMetadata,
 } from "@budibase/types"
 import { API } from "@/api"
 import { AgentsStore } from "./agents"
@@ -399,6 +401,12 @@ describe("AgentsStore file operations", () => {
 describe("agentsStore fetchTools", () => {
   let store: AgentsStore
 
+  const createTool = (name: string): ToolMetadata => ({
+    name,
+    sourceType: ToolType.INTERNAL_TABLE,
+    executionPolicy: { mode: "admin" },
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     store = new AgentsStore()
@@ -406,24 +414,24 @@ describe("agentsStore fetchTools", () => {
   })
 
   it("ignores stale tool responses when fetchTools requests overlap", async () => {
-    let resolveFirst: ((tools: { name: string }[]) => void) | undefined
-    const firstRequest = new Promise<{ name: string }[]>(resolve => {
+    let resolveFirst: ((tools: ToolMetadata[]) => void) | undefined
+    const firstRequest = new Promise<ToolMetadata[]>(resolve => {
       resolveFirst = resolve
     })
 
     fetchTools
       .mockImplementationOnce(() => firstRequest)
-      .mockResolvedValueOnce([{ name: "latest-tool" }])
+      .mockResolvedValueOnce([createTool("latest-tool")])
 
     const firstFetch = store.fetchTools()
     const secondFetch = store.fetchTools()
 
-    resolveFirst?.([{ name: "stale-tool" }])
+    resolveFirst?.([createTool("stale-tool")])
     await firstFetch
     await secondFetch
 
     const state = get(store.store)
-    expect(state.tools).toEqual([{ name: "latest-tool" }])
+    expect(state.tools).toEqual([createTool("latest-tool")])
     expect(state.toolsLoaded).toBe(true)
     expect(state.toolsLoading).toBe(false)
   })
