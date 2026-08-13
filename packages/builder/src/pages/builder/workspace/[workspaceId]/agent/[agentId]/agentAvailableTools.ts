@@ -108,6 +108,13 @@ export const buildReadableToRuntimeBinding = (tools: AgentTool[]) => {
   return runtimeMap
 }
 
+export const buildBindingIcons = (bindings: EnrichedBinding[]) =>
+  Object.fromEntries(
+    bindings
+      .filter(binding => binding.readableBinding)
+      .map(binding => [binding.readableBinding, binding.icon])
+  )
+
 export const toAgentPromptBindings = ({
   tools,
   webSearchConfigured,

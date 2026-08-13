@@ -16,6 +16,7 @@ vi.mock("./agentToolUtils", () => ({
 
 import {
   buildAvailableAgentTools,
+  buildBindingIcons,
   buildReadableToRuntimeBinding,
   getWebSearchRuntimeBinding,
   isWebSearchConfigured,
@@ -111,6 +112,20 @@ describe("agentAvailableTools", () => {
     expect(
       toAgentPromptBindings({ tools: configuredTools, webSearchConfigured: true })
     ).toHaveLength(1)
+  })
+
+  it("builds binding icons from prompt bindings", () => {
+    expect(
+      buildBindingIcons([
+        {
+          readableBinding: "search.web_search",
+          runtimeBinding: "search_web_search",
+          icon: "https://example.com/search.svg",
+        },
+      ])
+    ).toEqual({
+      "search.web_search": "https://example.com/search.svg",
+    })
   })
 
   it("builds readable to runtime binding map", () => {

@@ -10,7 +10,7 @@
     type InsertAtPositionFn,
   } from "@budibase/types"
   import * as routify from "@roxi/routify"
-  import { onDestroy, onMount } from "svelte"
+  import { onDestroy } from "svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import {
@@ -39,6 +39,7 @@
   import ToolsDropdown from "../../ToolsDropdown.svelte"
   import {
     buildAvailableAgentTools,
+    buildBindingIcons,
     buildReadableToRuntimeBinding,
     createRestTemplateIconResolver,
     formatAgentToolLabel,
@@ -96,11 +97,7 @@
   let promptBindings: EnrichedBinding[] = $derived(
     toAgentPromptBindings({ tools: availableTools, webSearchConfigured })
   )
-  let bindingIcons = $derived(
-    Object.fromEntries(
-      availableTools.map(tool => [tool.readableBinding, tool.tagIconUrl])
-    )
-  )
+  let bindingIcons = $derived(buildBindingIcons(promptBindings))
   let completions = $derived(
     promptBindings.length
       ? [
@@ -194,12 +191,6 @@
   const openWebSearchConfigModal = () => {
     webSearchConfigModal?.show()
   }
-
-  onMount(async () => {
-    if (!$aiConfigsStore.customConfigs.length) {
-      await aiConfigsStore.fetch()
-    }
-  })
 
   const loadOperation = () => {
     if (!agent || !operationId) return

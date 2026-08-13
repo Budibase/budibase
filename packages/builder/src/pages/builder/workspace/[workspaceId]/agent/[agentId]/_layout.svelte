@@ -3,10 +3,15 @@
   import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { syncURLToState } from "@/helpers/urlStateSync"
-  import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
+  import {
+    agentsStore,
+    aiConfigsStore,
+    featureFlags,
+    selectedAgent,
+  } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
   import * as routify from "@roxi/routify"
-  import { onDestroy } from "svelte"
+  import { onDestroy, onMount } from "svelte"
   import AgentChatPanel from "./AgentChatPanel.svelte"
   import AgentTabList from "./AgentTabList.svelte"
   import AgentUnpublishedChangesIndicator from "./AgentUnpublishedChangesIndicator.svelte"
@@ -29,6 +34,7 @@
   let togglingLive = $state(false)
   let agentUpdateOverrides = $state<Record<string, unknown>>({})
   let lastToolsAiConfigId = $state<string | null | undefined>(null)
+  let preloadedKnowledgeAgentId = $state<string | undefined>()
   let testsEnabled = $derived($featureFlags[FeatureFlag.AI_TESTS])
   let operationPage = $derived($isActive("./operation"))
 
@@ -69,6 +75,31 @@
     agentsStore.fetchTools(nextAiConfigId).catch(error => {
       console.error("Failed to load agent tools", error)
     })
+  })
+
+  $effect(() => {
+    const agentId = currentAgent?._id
+    if (!agentId || preloadedKnowledgeAgentId === agentId) {
+      return
+    }
+
+    agentsStore
+      .fetchAgentKnowledge(agentId)
+      .then(() => {
+        if (currentAgent?._id === agentId) {
+          preloadedKnowledgeAgentId = agentId
+        }
+      })
+      .catch(error => {
+        console.error(error)
+      })
+  })
+
+  onMount(async () => {
+    if (!$agentsStore.agentsLoaded) {
+      await agentsStore.init()
+    }
+    await aiConfigsStore.fetch()
   })
 
   async function toggleAgentLive() {

@@ -17,7 +17,7 @@
     restTemplates,
     workspaceDeploymentStore,
   } from "@/stores/builder"
-  import { onDestroy, onMount } from "svelte"
+  import { onDestroy } from "svelte"
   import { bb } from "@/stores/bb"
   import {
     buildAvailableAgentTools,
@@ -45,14 +45,6 @@
     escalation: operation.escalation,
   })
 
-  const getConfiguredTools = (operation: AgentOperation) =>
-    getConfiguredOperationTools({
-      operation,
-      readableToRuntimeBinding,
-      availableTools,
-      toolSecurityEnabled: $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
-    })
-
   // Agent state
   let draftAgentId: string | undefined = $state()
   let draft = $state<Agent>({
@@ -67,8 +59,6 @@
 
   let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined
   let saving = $state(false)
-  let preloadedKnowledgeAgentId: string | undefined = $state()
-
   let currentAgent: Agent | undefined = $derived($selectedAgent)
   let completionConfigs = $derived($aiConfigsStore.customConfigs || [])
   let modelOptions = $derived(
@@ -78,8 +68,7 @@
     }))
   )
 
-  // Web search Config
-  let lastWebSearchConfigId: string | undefined = $state()
+  let lastToolsAiConfigId: string | undefined = $state()
   let webSearchConfig = $derived(
     $aiConfigsStore.customConfigs.find(config => config._id === draft.aiconfig)
       ?.webSearchConfig
@@ -121,8 +110,8 @@
 
   $effect(() => {
     const nextAiConfigId = draft.aiconfig || undefined
-    if (nextAiConfigId !== lastWebSearchConfigId) {
-      lastWebSearchConfigId = nextAiConfigId
+    if (nextAiConfigId !== lastToolsAiConfigId) {
+      lastToolsAiConfigId = nextAiConfigId
       agentsStore.fetchTools(nextAiConfigId)
     }
   })
@@ -141,24 +130,6 @@
     }
   })
 
-  $effect(() => {
-    const agentId = currentAgent?._id
-    if (!agentId || preloadedKnowledgeAgentId === agentId) {
-      return
-    }
-
-    agentsStore
-      .fetchAgentKnowledge(agentId)
-      .then(() => {
-        if (currentAgent?._id === agentId) {
-          preloadedKnowledgeAgentId = agentId
-        }
-      })
-      .catch(error => {
-        console.error(error)
-      })
-  })
-
   async function saveAgent({
     showNotifications = true,
   }: {
@@ -173,7 +144,13 @@
       const operations =
         draftOperations?.map(operation => ({
           ...operation,
-          enabledTools: getConfiguredTools(operation),
+          enabledTools: getConfiguredOperationTools({
+            operation,
+            readableToRuntimeBinding,
+            availableTools,
+            toolSecurityEnabled:
+              $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
+          }),
         })) || []
 
       await agentsStore.updateAgent({
@@ -261,17 +238,6 @@
       autoSaveTimeout = undefined
     }
   }
-
-  onMount(async () => {
-    if (!$agentsStore.agentsLoaded) {
-      await agentsStore.init()
-    }
-    await aiConfigsStore.fetch()
-
-    if (draft.aiconfig) {
-      agentsStore.fetchTools(draft.aiconfig)
-    }
-  })
 
   onDestroy(() => {
     const shouldFlushSave = !!autoSaveTimeout
