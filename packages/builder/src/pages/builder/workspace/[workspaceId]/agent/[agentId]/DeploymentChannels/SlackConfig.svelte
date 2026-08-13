@@ -5,15 +5,17 @@
     Checkbox,
     CopyInput,
     Input,
+    Link,
     notifications,
   } from "@budibase/bbui"
-  import { ChatCommands } from "@budibase/shared-core"
+  import { ChatCommands, sdk } from "@budibase/shared-core"
   import type {
     Agent,
     ProvisionAgentSlackChannelResponse,
   } from "@budibase/types"
-  import { agentsStore } from "@/stores/portal"
+  import { agentsStore, auth } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
+  import { bb } from "@/stores/bb"
   import ChannelConfigLayout from "./ChannelConfigLayout.svelte"
   import {
     DEFAULT_IDLE_TIMEOUT_MINUTES,
@@ -52,6 +54,8 @@
   const isProvisioned = $derived.by(
     () => messagingEndpointUrl.trim().length > 0
   )
+
+  const isAdmin = $derived(sdk.users.isAdmin($auth.user))
 
   $effect(() => {
     const currentAgent = agent
@@ -223,17 +227,10 @@
     <div class="guided-setup">
       <Body size="S">
         Slack app creation uses the tenant Slack app configuration token managed
-        in tenant settings.
+        in {#if isAdmin}<Link on:click={() => bb.settings("/slack-app-config")}
+            >tenant settings</Link
+          >{:else}tenant settings{/if}.
       </Body>
-      <Button
-        secondary
-        on:click={createSlackApp}
-        disabled={creatingSlackApp ||
-          loadingSlackAppConfig ||
-          !slackAppConfigConfigured}
-      >
-        {creatingSlackApp ? "Creating app..." : "Create Slack app"}
-      </Button>
       {#if !loadingSlackAppConfig && !slackAppConfigConfigured}
         <Body size="S">
           Configure the Slack app token in tenant settings before creating a
@@ -241,31 +238,32 @@
         </Body>
       {/if}
     </div>
-    <div class="manifest-action">
-      <Button
-        secondary
-        on:click={copySlackManifest}
-        disabled={provisioning || copyingManifest || !hasRequiredCredentials}
-      >
-        {copyingManifest ? "Copying..." : "Copy manifest"}
-      </Button>
-    </div>
+  {/snippet}
+
+  {#snippet additionalActions()}
+    <Button
+      secondary
+      on:click={createSlackApp}
+      disabled={creatingSlackApp ||
+        loadingSlackAppConfig ||
+        !slackAppConfigConfigured}
+    >
+      {creatingSlackApp ? "Creating app..." : "Create Slack app"}
+    </Button>
+    <Button
+      secondary
+      on:click={copySlackManifest}
+      disabled={provisioning || copyingManifest || !hasRequiredCredentials}
+    >
+      {copyingManifest ? "Copying..." : "Copy manifest"}
+    </Button>
   {/snippet}
 </ChannelConfigLayout>
 
 <style>
-  .manifest-action {
-    display: flex;
-    justify-content: flex-start;
-  }
-
   .guided-setup {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
-  }
-
-  .guided-setup :global(button) {
-    align-self: flex-start;
   }
 </style>
