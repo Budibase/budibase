@@ -55,6 +55,7 @@
   let getCaretPosition: CaretPositionFn | undefined = $state()
   let toolSearch = $state("")
   let saving = $state(false)
+  let togglingLive = $state(false)
   let operation = $state<AgentOperation | undefined>()
   let removeToolDialog: ConfirmDialog | undefined = $state()
   let toolToRemove: AgentTool | undefined = $state()
@@ -221,7 +222,9 @@
 
   const saveOperation = async (updates: Partial<AgentOperation> = {}) => {
     if (!agentId || !operation || saving) return false
-    operation = { ...operation, ...updates }
+    if (Object.keys(updates).length > 0) {
+      operation = { ...operation, ...updates }
+    }
     const enabledTools = getConfiguredOperationTools({
       operation,
       readableToRuntimeBinding,
@@ -255,6 +258,19 @@
       return false
     } finally {
       saving = false
+    }
+  }
+
+  const toggleOperationLive = async () => {
+    if (!operation || togglingLive || saving) {
+      return
+    }
+
+    togglingLive = true
+    try {
+      await saveOperation({ live: !operation.live })
+    } finally {
+      togglingLive = false
     }
   }
 
@@ -363,8 +379,8 @@
             <LiveToggleButton
               live={operation.live === true}
               size="S"
-              disabled={saving}
-              on:click={() => saveOperation({ live: !operation?.live })}
+              disabled={togglingLive}
+              on:click={toggleOperationLive}
             />
           </div>
         </div>
