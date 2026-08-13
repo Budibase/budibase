@@ -2,6 +2,8 @@
   import { Body, notifications, Select, Button } from "@budibase/bbui"
   import type { AgentOperation, RequiredKeys } from "@budibase/types"
   import {
+    FeatureFlag,
+    ToolExecutionPrincipal,
     AIConfigType,
     ToolType,
     WebSearchProvider,
@@ -9,7 +11,12 @@
     type ToolMetadata,
     type EnrichedBinding,
   } from "@budibase/types"
-  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
+  import {
+    agentsStore,
+    aiConfigsStore,
+    featureFlags,
+    selectedAgent,
+  } from "@/stores/portal"
   import {
     getReadableQueryToolBinding,
     isQueryToolType,
@@ -64,6 +71,36 @@
     knowledgeSources: operation.knowledgeSources,
     escalation: operation.escalation,
   })
+
+  const getConfiguredTools = (operation: AgentOperation) => {
+    const existing = new Map(
+      (operation.enabledTools || []).map(tool => [
+        tool.toolName,
+        tool.executionPrincipal,
+      ])
+    )
+    return getIncludedToolRuntimeBindings(
+      operation.promptInstructions,
+      readableToRuntimeBinding
+    ).map(toolName => {
+      const tool = availableTools.find(tool => tool.runtimeBinding === toolName)
+      let executionPrincipal =
+        existing.get(toolName) ?? ToolExecutionPrincipal.REQUESTER
+      if (!$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]) {
+        executionPrincipal =
+          existing.get(toolName) ?? ToolExecutionPrincipal.ADMIN
+      } else if (tool?.executionPolicy.mode === "admin") {
+        executionPrincipal = ToolExecutionPrincipal.ADMIN
+      } else if (tool?.executionPolicy.mode === "configurable") {
+        executionPrincipal =
+          existing.get(toolName) ?? tool.executionPolicy.defaultPrincipal
+      }
+      return {
+        toolName,
+        executionPrincipal,
+      }
+    })
+  }
 
   // Agent state
   let draftAgentId: string | undefined = $state()
@@ -134,6 +171,9 @@
       description: "Configure web search",
       sourceType: ToolType.SEARCH,
       sourceLabel: "Search tools",
+      executionPolicy: {
+        mode: "admin",
+      },
     }
     const enriched = enrichToolMetadata(webSearchTool)
     return {
@@ -346,6 +386,7 @@
   function sanitizeString(str: string) {
     return str.replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_|_$/g, "")
   }
+
   function getBindingPrefix(
     sourceType: ToolType | undefined,
     sourceLabel: string | undefined
@@ -410,10 +451,7 @@
       const operations =
         draftOperations?.map(operation => ({
           ...operation,
-          enabledTools: getIncludedToolRuntimeBindings(
-            operation.promptInstructions,
-            readableToRuntimeBinding
-          ),
+          enabledTools: getConfiguredTools(operation),
         })) || []
 
       await agentsStore.updateAgent({

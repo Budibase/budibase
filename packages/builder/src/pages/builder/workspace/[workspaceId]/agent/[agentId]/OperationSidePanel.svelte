@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { Body, Icon } from "@budibase/bbui"
+  import { Body, Icon, Select } from "@budibase/bbui"
   import {
     FeatureFlag,
+    ToolExecutionPrincipal,
     ToolType,
     type AgentOperation,
     type CaretPositionFn,
@@ -175,6 +176,42 @@
           .replace(/\b\w/g, l => l.toUpperCase())
       )
       .join(".")
+
+  const executionPrincipalOptions = [
+    {
+      label: "Requester",
+      value: ToolExecutionPrincipal.REQUESTER,
+    },
+    {
+      label: "Admin (elevated)",
+      value: ToolExecutionPrincipal.ADMIN,
+    },
+  ]
+
+  const getToolPrincipal = (toolName: string) => {
+    const config = operation.enabledTools?.find(
+      tool => tool.toolName === toolName
+    )
+    return config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
+  }
+
+  const getEffectiveToolPrincipal = (tool: AgentTool) =>
+    tool.executionPolicy.mode === "admin"
+      ? ToolExecutionPrincipal.ADMIN
+      : getToolPrincipal(tool.runtimeBinding)
+
+  const setToolPrincipal = (
+    toolName: string,
+    executionPrincipal: ToolExecutionPrincipal
+  ) => {
+    const toolNames = includedToolRuntimeBindings
+    operation.enabledTools = toolNames.map(name => ({
+      toolName: name,
+      executionPrincipal:
+        name === toolName ? executionPrincipal : getToolPrincipal(name),
+    }))
+    onUpdated()
+  }
 
   const escapeRegExp = (str: string) =>
     str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -354,6 +391,26 @@
                       </div>
                     </div>
                     <div class="tool-actions">
+                      {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] && tool.executionPolicy.mode === "configurable"}
+                        <span class="run-as-label">Run as</span>
+                        <Select
+                          size="S"
+                          bordered={false}
+                          placeholder={false}
+                          autoWidth
+                          popoverAutoWidth
+                          value={getEffectiveToolPrincipal(tool)}
+                          options={executionPrincipalOptions}
+                          getOptionLabel={option => option.label}
+                          getOptionValue={option => option.value}
+                          tooltip={`Execution identity for ${formatToolLabel(tool)}`}
+                          on:change={event =>
+                            setToolPrincipal(
+                              tool.runtimeBinding,
+                              event.detail as ToolExecutionPrincipal
+                            )}
+                        />
+                      {/if}
                       <button
                         class="tool-close-button"
                         type="button"
@@ -554,6 +611,13 @@
   .tool-actions {
     display: flex;
     align-items: center;
+    gap: var(--spacing-s);
+  }
+
+  .run-as-label {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--font-size-xs);
+    white-space: nowrap;
   }
 
   .tool-close-button {
@@ -564,5 +628,6 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    margin-left: var(--spacing-s);
   }
 </style>
