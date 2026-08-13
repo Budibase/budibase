@@ -259,6 +259,7 @@
   }
 
   const openToolMenu = (event: MouseEvent, tool: AgentTool) => {
+    event.preventDefault()
     event.stopPropagation()
     contextMenuStore.open(
       "agent-operation-tool",
@@ -433,7 +434,10 @@
             </div>
             <div class="tools-list">
               {#each includedTools as tool (tool.runtimeBinding)}
-                <div class="tool-row">
+                <div
+                  class="tool-row"
+                  oncontextmenu={event => openToolMenu(event, tool)}
+                >
                   <div class="tool-name">
                     <span class="tool-icon">
                       <ToolIcon
