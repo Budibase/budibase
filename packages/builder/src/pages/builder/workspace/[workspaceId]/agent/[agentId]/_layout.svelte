@@ -154,6 +154,7 @@
         <div class="status-icons">
           <Icon
             tooltip="Documentation"
+            hoverable
             on:click={() =>
               window.open(
                 "https://docs.budibase.com/docs/agent-building-101",
