@@ -163,7 +163,7 @@
     "@types/uuid": "8.3.4",
     "copyfiles": "2.4.1",
     "docker-compose": "1.2.0",
-    "ioredis-mock": "8.9.0",
+    "ioredis-mock": "8.13.1",
     "jest-extended": "^4.0.2",
     "jest-mock": "^30.0.5",
     "jest-openapi": "0.14.2",
