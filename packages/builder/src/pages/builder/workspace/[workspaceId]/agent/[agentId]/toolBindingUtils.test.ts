@@ -1,10 +1,12 @@
-import { ToolType } from "@budibase/types"
+import { ToolType, ToolExecutionPrincipal } from "@budibase/types"
 import { describe, expect, it } from "vitest"
 
 import {
+  getConfiguredOperationTools,
   getToolBindingCategory,
   getIncludedToolRuntimeBindings,
 } from "./toolBindingUtils"
+import type { AgentTool } from "./toolTypes"
 
 describe("getIncludedToolRuntimeBindings", () => {
   const bindingsMap = {
@@ -80,5 +82,41 @@ describe("getToolBindingCategory", () => {
     expect(getToolBindingCategory(ToolType.REST_QUERY, "Second API")).toBe(
       "Second API"
     )
+  })
+})
+
+describe("getConfiguredOperationTools", () => {
+  const availableTools: AgentTool[] = [
+    {
+      name: "search_rows",
+      description: "Search rows",
+      readableBinding: "budibase.Employees.search_rows",
+      runtimeBinding: "ta_employees_search_rows",
+      executionPolicy: { mode: "configurable", defaultPrincipal: "requester" },
+    },
+  ]
+
+  it("returns tool config objects for bindings in instructions", () => {
+    expect(
+      getConfiguredOperationTools({
+        operation: {
+          id: "operation_1",
+          name: "Support",
+          live: false,
+          allowKnowledgeSourceDownload: false,
+          promptInstructions: "Use {{ budibase.Employees.search_rows }}",
+        },
+        readableToRuntimeBinding: {
+          "budibase.Employees.search_rows": "ta_employees_search_rows",
+        },
+        availableTools,
+        toolSecurityEnabled: true,
+      })
+    ).toEqual([
+      {
+        toolName: "ta_employees_search_rows",
+        executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+      },
+    ])
   })
 })

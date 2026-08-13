@@ -34,7 +34,7 @@
   import ToolIcon from "../../ToolIcon.svelte"
   import ToolsDropdown from "../../ToolsDropdown.svelte"
   import { enrichAgentTool } from "../../agentToolUtils"
-  import { getIncludedToolRuntimeBindings } from "../../toolBindingUtils"
+  import { getConfiguredOperationTools, getIncludedToolRuntimeBindings } from "../../toolBindingUtils"
   import type { AgentTool } from "../../toolTypes"
 
   const { goto, params } = routify
@@ -180,10 +180,12 @@
   const saveOperation = async (updates: Partial<AgentOperation> = {}) => {
     if (!agentId || !operation || saving) return false
     operation = { ...operation, ...updates }
-    const enabledTools = getIncludedToolRuntimeBindings(
-      operation.promptInstructions,
-      readableToRuntimeBinding
-    )
+    const enabledTools = getConfiguredOperationTools({
+      operation,
+      readableToRuntimeBinding,
+      availableTools,
+      toolSecurityEnabled: $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
+    })
     saving = true
     try {
       const updated = await agentsStore.updateAgentOperation(

@@ -3,7 +3,6 @@
   import type { AgentOperation, RequiredKeys } from "@budibase/types"
   import {
     FeatureFlag,
-    ToolExecutionPrincipal,
     AIConfigType,
     ToolType,
     WebSearchProvider,
@@ -27,7 +26,7 @@
   import type { AgentTool } from "./toolTypes"
   import { enrichAgentTool } from "./agentToolUtils"
   import { shouldAutoSelectAgentModel } from "./configUtils"
-  import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
+  import { getConfiguredOperationTools } from "./toolBindingUtils"
   import OperationsSection from "./OperationsSection.svelte"
 
   const AUTO_SAVE_DEBOUNCE_MS = 800
@@ -46,35 +45,13 @@
     escalation: operation.escalation,
   })
 
-  const getConfiguredTools = (operation: AgentOperation) => {
-    const existing = new Map(
-      (operation.enabledTools || []).map(tool => [
-        tool.toolName,
-        tool.executionPrincipal,
-      ])
-    )
-    return getIncludedToolRuntimeBindings(
-      operation.promptInstructions,
-      readableToRuntimeBinding
-    ).map(toolName => {
-      const tool = availableTools.find(tool => tool.runtimeBinding === toolName)
-      let executionPrincipal =
-        existing.get(toolName) ?? ToolExecutionPrincipal.REQUESTER
-      if (!$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]) {
-        executionPrincipal =
-          existing.get(toolName) ?? ToolExecutionPrincipal.ADMIN
-      } else if (tool?.executionPolicy.mode === "admin") {
-        executionPrincipal = ToolExecutionPrincipal.ADMIN
-      } else if (tool?.executionPolicy.mode === "configurable") {
-        executionPrincipal =
-          existing.get(toolName) ?? tool.executionPolicy.defaultPrincipal
-      }
-      return {
-        toolName,
-        executionPrincipal,
-      }
+  const getConfiguredTools = (operation: AgentOperation) =>
+    getConfiguredOperationTools({
+      operation,
+      readableToRuntimeBinding,
+      availableTools,
+      toolSecurityEnabled: $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
     })
-  }
 
   // Agent state
   let draftAgentId: string | undefined = $state()
