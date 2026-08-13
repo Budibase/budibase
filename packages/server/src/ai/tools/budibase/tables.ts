@@ -1,9 +1,22 @@
-import { ToolType } from "@budibase/types"
+import { PermissionLevel, PermissionType, ToolType } from "@budibase/types"
 import { tool } from "ai"
 import { z } from "zod"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
+import { filterAgentToolCollectionResult } from "../authorization"
 import { sanitizeAgentTable } from "./tableScope"
+
+const resolveTableId = (table: unknown) => {
+  if (!table || typeof table !== "object") {
+    return
+  }
+  if ("id" in table) {
+    return String(table.id)
+  }
+  if ("_id" in table) {
+    return String(table._id)
+  }
+}
 
 export const createTableTools = (
   tableIds: string[]
@@ -17,6 +30,22 @@ export const createTableTools = (
       sourceType: ToolType.INTERNAL_TABLE,
       sourceLabel: "Budibase",
       description: "List tables configured for the current operation",
+      executionPolicy: {
+        mode: "admin",
+      },
+      authorization: {
+        permissionType: PermissionType.WORKSPACE,
+        permissionLevel: PermissionLevel.READ,
+      },
+      filterResult: (result, runtime) =>
+        filterAgentToolCollectionResult({
+          result,
+          collectionKey: "tables",
+          permissionType: PermissionType.TABLE,
+          permissionLevel: PermissionLevel.READ,
+          resolveResourceId: resolveTableId,
+          runtime,
+        }),
       tool: tool({
         description: "List tables configured for the current operation",
         inputSchema: z.object({
@@ -27,7 +56,6 @@ export const createTableTools = (
             )
             .default(false),
         }),
-
         execute: async input => {
           const { showSchema } = input
           const tables = await sdk.tables.getTables(allowedTableIds)
@@ -43,12 +71,22 @@ export const createTableTools = (
         },
       }),
     },
-
     {
       name: "get_table",
       sourceType: ToolType.INTERNAL_TABLE,
       sourceLabel: "Budibase",
       description: "Get details about a specific table by ID",
+      executionPolicy: {
+        mode: "admin",
+      },
+      authorization: {
+        permissionType: PermissionType.TABLE,
+        permissionLevel: PermissionLevel.READ,
+        resolveResourceId: input =>
+          typeof input === "object" && input && "tableId" in input
+            ? String(input.tableId)
+            : undefined,
+      },
       tool: tool({
         description: "Get details about a specific table by ID",
         inputSchema: z.object({
