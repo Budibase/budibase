@@ -17,8 +17,8 @@
     bindingsToCompletions,
     hbAutocomplete,
   } from "@/components/common/CodeEditor"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
-  import { confirm } from "@/helpers/confirm"
   import { bb } from "@/stores/bb"
   import {
     contextMenuStore,
@@ -50,6 +50,8 @@
   let saving = $state(false)
   let operation = $state<AgentOperation | undefined>()
   let renameModal: OperationNameModal | undefined = $state()
+  let removeToolDialog: ConfirmDialog | undefined = $state()
+  let toolToRemove: AgentTool | undefined = $state()
   let lastSavedInstructions = $state("")
 
   let agent = $derived($selectedAgent)
@@ -242,13 +244,18 @@
   }
 
   const confirmRemoveTool = (tool: AgentTool) => {
-    confirm({
-      title: "Remove tool?",
-      body: `Remove ${tool.readableBinding} from this operation? Its binding will also be removed from the instructions.`,
-      okText: "Remove",
-      warning: true,
-      onConfirm: () => removeTool(tool),
-    })
+    toolToRemove = tool
+    removeToolDialog?.show()
+  }
+
+  const handleRemoveToolConfirm = () => {
+    if (!toolToRemove) return
+    removeTool(toolToRemove)
+    toolToRemove = undefined
+  }
+
+  const clearToolToRemove = () => {
+    toolToRemove = undefined
   }
 
   const openToolMenu = (event: MouseEvent, tool: AgentTool) => {
@@ -480,6 +487,21 @@
       await saveOperation({ name })
     }}
   />
+
+  <ConfirmDialog
+    bind:this={removeToolDialog}
+    title="Remove tool?"
+    okText="Remove"
+    warning={true}
+    onOk={handleRemoveToolConfirm}
+    onCancel={clearToolToRemove}
+    onClose={clearToolToRemove}
+  >
+    {#if toolToRemove?.readableBinding}
+      Remove <b>{toolToRemove.readableBinding}</b> from this operation? Its binding
+      will also be removed from the instructions.
+    {/if}
+  </ConfirmDialog>
 {/if}
 
 <style>
