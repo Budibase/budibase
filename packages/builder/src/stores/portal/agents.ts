@@ -427,8 +427,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
     this.setKnowledgeLoading(cacheKey, true)
 
-    const promise = this.fetchAgentKnowledge(agentId)
-      .then(() => undefined)
+    const promise = this.refreshOperationKnowledge(agentId)
       .finally(() => {
         if (this.knowledgeLoadByKey.get(cacheKey) === promise) {
           this.knowledgeLoadByKey.delete(cacheKey)

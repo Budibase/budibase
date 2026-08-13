@@ -79,12 +79,16 @@
 
   $effect(() => {
     const agentId = currentAgent?._id
-    if (!agentId || preloadedKnowledgeAgentId === agentId) {
+    if (
+      !agentId ||
+      operationPage ||
+      preloadedKnowledgeAgentId === agentId
+    ) {
       return
     }
 
     agentsStore
-      .fetchAgentKnowledge(agentId)
+      .refreshOperationKnowledge(agentId)
       .then(() => {
         if (currentAgent?._id === agentId) {
           preloadedKnowledgeAgentId = agentId
