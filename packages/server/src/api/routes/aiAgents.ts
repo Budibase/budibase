@@ -1,5 +1,6 @@
 import { auth } from "@budibase/backend-core"
 import { aiTestsEnabled } from "../../middleware/aiTestsEnabled"
+import { knowledgeSearchConfigured } from "../../middleware/knowledgeSearchConfigured"
 import * as ai from "../controllers/ai"
 import {
   builderAdminRoutes,
@@ -116,17 +117,18 @@ aiTestBuilderAdminRoutes
   )
   .get("/api/agent/:agentId/tests/run/:runId", ai.fetchAgentTestRun)
 
+const knowledgeSearchRoutes = endpointGroupList.group(
+  auth.builderOrAdmin,
+  knowledgeSearchConfigured
+)
+knowledgeSearchRoutes.lockMiddleware()
+
 builderAdminRoutes
   .get(
     "/api/agent/knowledge-sources/sharepoint/connect",
     ai.startSharePointAuth
   )
   .get("/api/agent/:agentId/knowledge", ai.fetchAgentKnowledgeIndex)
-  .post("/api/agent/:agentId/operations/:operationId/files", ai.uploadAgentFile)
-  .delete(
-    "/api/agent/:agentId/operations/:operationId/files/:fileId",
-    ai.deleteAgentFile
-  )
   .get(
     "/api/agent/:agentId/operations/:operationId/files/:fileId/url",
     ai.fetchAgentFileUrl
@@ -138,6 +140,13 @@ builderAdminRoutes
   .get(
     "/api/agent/:agentId/operations/:operationId/knowledge-sources/sharepoint/entries",
     ai.fetchAgentKnowledgeSourceEntries
+  )
+
+knowledgeSearchRoutes
+  .post("/api/agent/:agentId/operations/:operationId/files", ai.uploadAgentFile)
+  .delete(
+    "/api/agent/:agentId/operations/:operationId/files/:fileId",
+    ai.deleteAgentFile
   )
   .post(
     "/api/agent/:agentId/operations/:operationId/knowledge-sources/sharepoint/sites",

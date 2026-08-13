@@ -1,8 +1,11 @@
-import { buildQuery, multiSort, runQuery } from "../filters"
+import { buildQuery, cleanupQuery, multiSort, runQuery } from "../filters"
 import {
+  ArrayOperator,
   BasicOperator,
   EmptyFilterOption,
   FieldType,
+  LogicalOperator,
+  RangeOperator,
   SortOrder,
   SortType,
   UILogicalOperator,
@@ -155,6 +158,34 @@ describe("filter to query conversion", () => {
       },
     })
   })
+
+  it("preserves timezone-less datetime filter values", () => {
+    const value = "2026-08-05T23:59:00.000"
+    const filter: UISearchFilter = {
+      groups: [
+        {
+          filters: [
+            {
+              field: "date",
+              operator: "rangeHigh",
+              type: FieldType.DATETIME,
+              value,
+            },
+          ],
+        },
+      ],
+    }
+
+    const query = buildQuery(filter)
+
+    expect(query.$and?.conditions[0].$and?.conditions[0]).toEqual({
+      [RangeOperator.RANGE]: {
+        date: {
+          high: value,
+        },
+      },
+    })
+  })
 })
 
 describe("runQuery notOneOf", () => {
@@ -188,6 +219,162 @@ describe("runQuery notOneOf", () => {
     expect(oneOfResult.map(d => d.id)).toEqual([1, 2])
     expect(notOneOfResult.map(d => d.id)).toEqual([3, 4])
   })
+})
+
+describe("empty array filters", () => {
+  const docs = [
+    { id: 1, name: "foo", status: "Available", tags: ["one"] },
+    { id: 2, name: "bar", status: "Unavailable", tags: ["two"] },
+  ]
+
+  it.each([
+    ArrayOperator.ONE_OF,
+    ArrayOperator.NOT_ONE_OF,
+    ArrayOperator.CONTAINS,
+    ArrayOperator.NOT_CONTAINS,
+    ArrayOperator.CONTAINS_ANY,
+  ])("removes an empty %s filter when the query is empty", operator => {
+    const query = cleanupQuery({ [operator]: { name: [] } })
+
+    expect(query).toEqual({ [operator]: {} })
+  })
+
+  it.each([
+    ArrayOperator.ONE_OF,
+    ArrayOperator.NOT_ONE_OF,
+    ArrayOperator.CONTAINS,
+    ArrayOperator.NOT_CONTAINS,
+    ArrayOperator.CONTAINS_ANY,
+  ])("preserves an empty %s filter in a populated query", operator => {
+    const query = cleanupQuery({
+      [LogicalOperator.AND]: {
+        conditions: [
+          { [operator]: { name: [] } },
+          { [BasicOperator.EQUAL]: { status: "Available" } },
+        ],
+      },
+    })
+
+    expect(query).toEqual({
+      [LogicalOperator.AND]: {
+        conditions: [
+          { [operator]: { name: [] } },
+          { [BasicOperator.EQUAL]: { status: "Available" } },
+        ],
+      },
+    })
+  })
+
+  it.each([
+    ArrayOperator.ONE_OF,
+    ArrayOperator.NOT_ONE_OF,
+    ArrayOperator.CONTAINS,
+    ArrayOperator.NOT_CONTAINS,
+    ArrayOperator.CONTAINS_ANY,
+  ])("respects RETURN_ALL for an empty %s filter", operator => {
+    const result = runQuery(docs, {
+      onEmptyFilter: EmptyFilterOption.RETURN_ALL,
+      [operator]: { tags: [] },
+    })
+
+    expect(result).toEqual(docs)
+  })
+
+  it.each([
+    ArrayOperator.ONE_OF,
+    ArrayOperator.NOT_ONE_OF,
+    ArrayOperator.CONTAINS,
+    ArrayOperator.NOT_CONTAINS,
+    ArrayOperator.CONTAINS_ANY,
+  ])("respects RETURN_NONE for an empty %s filter", operator => {
+    const result = runQuery(docs, {
+      onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+      [operator]: { tags: [] },
+    })
+
+    expect(result).toEqual([])
+  })
+
+  it("removes empty strings for array membership operators", () => {
+    const query = cleanupQuery({
+      [ArrayOperator.ONE_OF]: {
+        // @ts-expect-error Verifies invalid empty string cleanup
+        name: "",
+      },
+      [ArrayOperator.NOT_ONE_OF]: {
+        // @ts-expect-error Verifies invalid empty string cleanup
+        name: "",
+      },
+    })
+
+    expect(query).toEqual({
+      [ArrayOperator.ONE_OF]: {},
+      [ArrayOperator.NOT_ONE_OF]: {},
+    })
+  })
+
+  it("matches no rows when an ALL group contains oneOf an empty array", () => {
+    const result = runQuery(docs, {
+      [LogicalOperator.AND]: {
+        conditions: [
+          { [ArrayOperator.ONE_OF]: { name: [] } },
+          { [BasicOperator.EQUAL]: { status: "Available" } },
+        ],
+      },
+    })
+
+    expect(result).toEqual([])
+  })
+
+  it("ignores oneOf an empty array when matching an ANY group", () => {
+    const result = runQuery(docs, {
+      [LogicalOperator.OR]: {
+        conditions: [
+          { [ArrayOperator.ONE_OF]: { name: [] } },
+          { [BasicOperator.EQUAL]: { status: "Available" } },
+        ],
+      },
+    })
+
+    expect(result).toEqual([docs[0]])
+  })
+
+  it("matches every row for notOneOf an empty array", () => {
+    const result = runQuery(docs, {
+      [ArrayOperator.NOT_ONE_OF]: { name: [] },
+    })
+
+    expect(result).toEqual(docs)
+  })
+
+  it("matches the configured rows for contains an empty array", () => {
+    const result = runQuery(docs, {
+      [LogicalOperator.AND]: {
+        conditions: [
+          { [ArrayOperator.CONTAINS]: { tags: [] } },
+          { [BasicOperator.EQUAL]: { status: "Available" } },
+        ],
+      },
+    })
+
+    expect(result).toEqual([docs[0]])
+  })
+
+  it.each([ArrayOperator.NOT_CONTAINS, ArrayOperator.CONTAINS_ANY])(
+    "matches no rows for %s with an empty array",
+    operator => {
+      const result = runQuery(docs, {
+        [LogicalOperator.AND]: {
+          conditions: [
+            { [operator]: { tags: [] } },
+            { [BasicOperator.EQUAL]: { status: "Available" } },
+          ],
+        },
+      })
+
+      expect(result).toEqual([])
+    }
+  )
 })
 
 describe("multiSort", () => {

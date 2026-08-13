@@ -1038,16 +1038,27 @@ if (descriptions.length) {
                   }).toContainExactly([{ name: "foo" }, { name: "bar" }])
                 })
 
-                it("empty arrays returns all when onEmptyFilter is set to return 'all'", async () => {
+                it("empty arrays return all when onEmptyFilter is set to return 'all'", async () => {
                   await expectQuery({
                     onEmptyFilter: EmptyFilterOption.RETURN_ALL,
                     oneOf: { name: [] },
                   }).toContainExactly([{ name: "foo" }, { name: "bar" }])
                 })
 
+                it("empty arrays return no rows when combined with another filter", async () => {
+                  await expectQuery({
+                    $and: {
+                      conditions: [
+                        { oneOf: { name: [] } },
+                        { equal: { name: "foo" } },
+                      ],
+                    },
+                  }).toContainExactly([])
+                })
+
                 // onEmptyFilter cannot be sent to view searches
                 !isView &&
-                  it("empty arrays returns all when onEmptyFilter is set to return 'none'", async () => {
+                  it("empty arrays return no rows when onEmptyFilter is set to return 'none'", async () => {
                     await expectQuery({
                       onEmptyFilter: EmptyFilterOption.RETURN_NONE,
                       oneOf: { name: [] },
@@ -1584,6 +1595,63 @@ if (descriptions.length) {
                 })
               })
             })
+
+            isInternal &&
+              describe("datetime - ignore timezones", () => {
+                const BEFORE = "2026-08-05T23:58:00.000"
+                const EXACT = "2026-08-05T23:59:00.000"
+                const AFTER = "2026-08-06T00:00:00.000"
+
+                beforeAll(async () => {
+                  tableOrViewId = await createTableOrView({
+                    dateid: { name: "dateid", type: FieldType.STRING },
+                    date: {
+                      name: "date",
+                      type: FieldType.DATETIME,
+                      ignoreTimezones: true,
+                    },
+                  })
+
+                  await createRows([
+                    { dateid: "before", date: BEFORE },
+                    { dateid: "exact", date: EXACT },
+                    { dateid: "after", date: AFTER },
+                  ])
+                })
+
+                it("matches an exact timezone-less datetime", async () => {
+                  await expectQuery({
+                    equal: { date: EXACT },
+                  }).toContainExactly([{ dateid: "exact", date: EXACT }])
+                })
+
+                it("excludes an exact timezone-less datetime", async () => {
+                  await expectQuery({
+                    notEqual: { date: EXACT },
+                  }).toContainExactly([
+                    { dateid: "before", date: BEFORE },
+                    { dateid: "after", date: AFTER },
+                  ])
+                })
+
+                it("includes the high range boundary", async () => {
+                  await expectQuery({
+                    range: { date: { high: EXACT } },
+                  }).toContainExactly([
+                    { dateid: "before", date: BEFORE },
+                    { dateid: "exact", date: EXACT },
+                  ])
+                })
+
+                it("includes the low range boundary", async () => {
+                  await expectQuery({
+                    range: { date: { low: EXACT } },
+                  }).toContainExactly([
+                    { dateid: "exact", date: EXACT },
+                    { dateid: "after", date: AFTER },
+                  ])
+                })
+              })
 
             !isInternal &&
               describe("datetime - time only", () => {

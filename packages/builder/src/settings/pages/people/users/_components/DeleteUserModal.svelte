@@ -1,13 +1,21 @@
-<script>
+<script lang="ts">
   import { goto as gotoStore } from "@roxi/routify"
   import { Body, ModalContent, notifications } from "@budibase/bbui"
   import { users } from "@/stores/portal/users"
+  import type { User } from "@budibase/types"
 
-  $: goto = $gotoStore
+  interface Props {
+    user?: User
+  }
 
-  export let user
+  let { user }: Props = $props()
+  const goto = $derived($gotoStore)
 
   async function deleteUser() {
+    if (!user?._id) {
+      notifications.error("Error deleting user")
+      return
+    }
     try {
       await users.delete(user._id)
       notifications.success(`User ${user?.email} deleted.`)

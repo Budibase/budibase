@@ -7,8 +7,16 @@
   } from "@budibase/types"
   import type { UIMessage } from "ai"
   import { Chatbox } from "@budibase/frontend-core/src/components"
+  import { Constants } from "@budibase/frontend-core"
+  import { Select } from "@budibase/bbui"
   import { escalationsStore } from "@/stores/portal/escalations"
-  import { featureFlags } from "@/stores/portal"
+  import { auth, featureFlags } from "@/stores/portal"
+  import { roles } from "@/stores/builder"
+  import { onMount } from "svelte"
+  import {
+    loadPromptHistory,
+    savePromptHistory,
+  } from "@/utils/chatPreviewPromptHistory"
 
   type DraftChat = WithoutDocMetadata<DraftChatConversation>
 
@@ -27,8 +35,28 @@
   }
 
   let chat: DraftChatConversation = $state({ ...INITIAL_CHAT })
-  let lastKey = $state("")
+  let lastKey = $state<string | undefined>()
   let refreshKey = $state(0)
+  let promptHistory = $state<string[]>([])
+  let previewRoleId = $state(Constants.Roles.ADMIN)
+  let previewRolesLoading = $state(false)
+  let toolSecurityEnabled = $derived(
+    $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]
+  )
+
+  const refreshPreviewRoles = async () => {
+    if (previewRolesLoading) {
+      return
+    }
+    previewRolesLoading = true
+    try {
+      await roles.fetchByAppId(workspaceId)
+    } finally {
+      previewRolesLoading = false
+    }
+  }
+
+  onMount(refreshPreviewRoles)
 
   // Preview is transient, so escalation polling lives here, not in Chatbox.
   let chatbox = $state<
@@ -78,17 +106,63 @@
     resetChat(agentId)
   }
 
+  const selectPreviewRole = (roleId: string) => {
+    previewRoleId = roleId
+    resetChat(agentId)
+  }
+
+  const previewRoleOptions = $derived(
+    $roles.map(role => ({
+      label: role.uiMetadata?.displayName || role.name,
+      value: role._id,
+    }))
+  )
+
+  const handlePromptSubmitted = (prompt: string) => {
+    const tenantId = $auth.tenantId
+    const userId = $auth.user?._id
+    if (!agentId || !userId) {
+      return
+    }
+
+    promptHistory = savePromptHistory({
+      tenantId,
+      userId,
+      workspaceId,
+      agentId,
+      history: [...promptHistory, prompt],
+    })
+  }
+
   $effect(() => {
     if (!workspaceId) {
       return
     }
 
-    const nextKey = `${workspaceId}:${agentId || ""}`
+    const tenantId = $auth.tenantId
+    const userId = $auth.user?._id
+
+    if (!userId || !agentId) {
+      if (lastKey !== undefined) {
+        lastKey = undefined
+        promptHistory = []
+        resetChat(agentId)
+      }
+      return
+    }
+
+    const nextKey = JSON.stringify([tenantId, userId, workspaceId, agentId])
     if (nextKey === lastKey) {
       return
     }
 
     lastKey = nextKey
+    promptHistory = loadPromptHistory({
+      tenantId,
+      userId,
+      workspaceId,
+      agentId,
+    })
     resetChat(agentId)
   })
 </script>
@@ -96,9 +170,27 @@
 <div class="agent-chat-panel">
   <div class="chat-preview-header">
     <span class="chat-preview-pill">Chat preview</span>
-    <button class="chat-preview-refresh" type="button" onclick={refreshChat}>
-      Clear chat
-    </button>
+    <div class="chat-preview-actions">
+      {#if toolSecurityEnabled}
+        <label class="preview-user-picker">
+          <span>Test as</span>
+          <Select
+            value={previewRoleId}
+            options={previewRoleOptions}
+            placeholder={false}
+            size="S"
+            autoWidth
+            popoverAutoWidth
+            loading={previewRolesLoading}
+            on:click={refreshPreviewRoles}
+            on:change={event => selectPreviewRole(event.detail)}
+          />
+        </label>
+      {/if}
+      <button class="chat-preview-refresh" type="button" onclick={refreshChat}>
+        Clear chat
+      </button>
+    </div>
   </div>
   <div class="chat-preview-body">
     {#key refreshKey}
@@ -108,6 +200,9 @@
         persistConversation={false}
         {workspaceId}
         isAgentPreviewChat={true}
+        previewRoleId={toolSecurityEnabled ? previewRoleId : undefined}
+        {promptHistory}
+        onpromptsubmitted={handlePromptSubmitted}
         onEscalationPending={handleEscalationPending}
         escalationState={$escalationsStore.escalations}
         showInlineApproval={$featureFlags[FeatureFlag.ESCALATION]}
@@ -149,6 +244,18 @@
     color: var(--spectrum-global-color-gray-700);
     font-size: 14px;
     cursor: pointer;
+  }
+
+  .chat-preview-actions,
+  .preview-user-picker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .preview-user-picker {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 12px;
   }
 
   .chat-preview-body {

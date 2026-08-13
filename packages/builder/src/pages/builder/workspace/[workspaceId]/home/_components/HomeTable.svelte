@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { AbsTooltip, Body, Helpers, Icon } from "@budibase/bbui"
   import dayjs from "dayjs"

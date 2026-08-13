@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { UIEvent } from "@budibase/types"
+  import type { UIEvent } from "../types"
   import { createEventDispatcher, onMount } from "svelte"
   import { fade } from "svelte/transition"
   import FancyField from "./FancyField.svelte"

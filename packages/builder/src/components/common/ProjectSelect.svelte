@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { Multiselect, type LabelPosition } from "@budibase/bbui"
   import { FeatureFlag } from "@budibase/types"
