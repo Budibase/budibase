@@ -1,11 +1,7 @@
 <script lang="ts">
   import { Body, notifications, Select, Button } from "@budibase/bbui"
   import { AIConfigType } from "@budibase/types"
-  import {
-    agentsStore,
-    aiConfigsStore,
-    selectedAgent,
-  } from "@/stores/portal"
+  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
   import { workspaceDeploymentStore } from "@/stores/builder"
   import { bb } from "@/stores/bb"
   import { shouldAutoSelectAgentModel } from "./configUtils"
