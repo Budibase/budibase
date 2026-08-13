@@ -271,50 +271,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return this.replaceAgentInStore(updated)
   }
 
-  syncAgentOperations = async (
-    agentId: string,
-    currentOperations: AgentOperation[] | undefined,
-    draftOperations: AgentOperation[]
-  ) => {
-    const current = currentOperations ?? []
-    const draftIds = new Set(draftOperations.map(operation => operation.id))
-    const currentIds = new Set(current.map(operation => operation.id))
-
-    let latestAgent: Agent | undefined
-
-    for (const operation of current) {
-      if (!draftIds.has(operation.id)) {
-        latestAgent = await this.deleteAgentOperation(agentId, operation.id)
-      }
-    }
-
-    for (const operation of draftOperations) {
-      const payload: UpdateAgentOperationRequest = {
-        name: operation.name,
-        live: operation.live,
-        promptInstructions: operation.promptInstructions,
-        enabledTools: operation.enabledTools,
-        allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
-        escalation: operation.escalation,
-      }
-
-      latestAgent = currentIds.has(operation.id)
-        ? await this.updateAgentOperation(agentId, operation.id, payload)
-        : await this.createAgentOperation(agentId, {
-            id: operation.id,
-            name: operation.name,
-            live: operation.live,
-            promptInstructions: operation.promptInstructions,
-            enabledTools: operation.enabledTools,
-            allowKnowledgeSourceDownload:
-              operation.allowKnowledgeSourceDownload,
-            escalation: operation.escalation,
-          })
-    }
-
-    return latestAgent
-  }
-
   getAgentOperation = (
     agentId: string,
     operationId: string
