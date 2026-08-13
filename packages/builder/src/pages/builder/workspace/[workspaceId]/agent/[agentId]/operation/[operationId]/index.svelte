@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Body, Button, Icon, notifications, Select } from "@budibase/bbui"
+  import { Body, Icon, notifications, Select } from "@budibase/bbui"
   import {
     FeatureFlag,
     ToolExecutionPrincipal,
@@ -19,6 +19,7 @@
     hbAutocomplete,
   } from "@/components/common/CodeEditor"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
   import { bb } from "@/stores/bb"
   import {
@@ -385,17 +386,12 @@
               onApplyInstructions={instructions =>
                 saveOperation({ promptInstructions: instructions })}
             />
-            <Button
-              secondary={operation.live}
+            <LiveToggleButton
+              live={operation.live === true}
               size="S"
-              icon={operation.live ? "stop" : "play"}
-              iconSize="XXS"
-              iconWeight="fill"
               disabled={saving}
               on:click={() => saveOperation({ live: !operation?.live })}
-            >
-              {operation.live ? "Stop" : "Set live"}
-            </Button>
+            />
           </div>
         </div>
 
@@ -640,6 +636,7 @@
     align-items: center;
     gap: var(--spacing-m);
   }
+
   .editor-shell {
     display: flex;
     min-height: 0;
