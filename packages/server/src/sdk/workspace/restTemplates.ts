@@ -170,11 +170,10 @@ const updateWithoutLock = async ({
   restTemplateId,
   name,
   description,
-  data,
-  fileExtension,
-  operationsCount,
-}: CreateCustomRestTemplateParams & {
+}: {
   restTemplateId: CustomRestTemplateId
+  name: string
+  description: string
 }): Promise<RestTemplate> => {
   const db = context.getWorkspaceDB()
   const document = await db.tryGet<CustomRestTemplateDocument>(restTemplateId)
@@ -198,52 +197,22 @@ const updateWithoutLock = async ({
     )
   }
 
-  const objectStoreKey = `${getObjectStoreFolder(
-    restTemplateId
-  )}/openapi.${fileExtension}`
-  await objectStore.upload({
-    bucket: objectStore.ObjectStoreBuckets.APPS,
-    filename: objectStoreKey,
-    body: Buffer.from(data),
-    type: fileExtension === "json" ? "application/json" : "text/yaml",
-  })
-
   const updatedDocument: CustomRestTemplateDocument = {
     ...document,
     name: name.trim(),
     description: description.trim(),
-    objectStoreKey,
-    fileExtension,
-    operationsCount,
   }
 
-  try {
-    await db.put(updatedDocument)
-  } catch (error) {
-    if (objectStoreKey !== document.objectStoreKey) {
-      await objectStore.deleteFile(
-        objectStore.ObjectStoreBuckets.APPS,
-        objectStoreKey
-      )
-    }
-    throw error
-  }
-
-  if (objectStoreKey !== document.objectStoreKey) {
-    await objectStore.deleteFile(
-      objectStore.ObjectStoreBuckets.APPS,
-      document.objectStoreKey
-    )
-  }
+  await db.put(updatedDocument)
 
   return toRestTemplate(updatedDocument)
 }
 
-export const update = async (
-  params: CreateCustomRestTemplateParams & {
-    restTemplateId: CustomRestTemplateId
-  }
-) =>
+export const update = async (params: {
+  restTemplateId: CustomRestTemplateId
+  name: string
+  description: string
+}) =>
   withCustomRestTemplateLock({
     resource: "workspace",
     task: () => updateWithoutLock(params),

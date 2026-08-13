@@ -3286,18 +3286,15 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
     restTemplateId,
     name,
     description,
-    file,
   }: {
     restTemplateId: CustomRestTemplateId
     name: string
     description: string
-    file: File
   }) {
     const { template } = await API.updateCustomRestTemplate({
       restTemplateId,
       name,
       description,
-      file,
     })
     this.setCustomTemplates([
       ...this.templates.filter(

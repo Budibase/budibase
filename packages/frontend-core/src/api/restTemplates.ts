@@ -13,9 +13,10 @@ interface UploadCustomRestTemplateParams {
   file: File
 }
 
-interface UpdateCustomRestTemplateParams
-  extends UploadCustomRestTemplateParams {
+interface UpdateCustomRestTemplateParams {
   restTemplateId: CustomRestTemplateId
+  name: string
+  description: string
 }
 
 export interface RestTemplateEndpoints {
@@ -53,16 +54,10 @@ export const buildRestTemplateEndpoints = (
     })
   },
 
-  updateCustomRestTemplate: async ({
-    restTemplateId,
-    name,
-    description,
-    file,
-  }) => {
+  updateCustomRestTemplate: async ({ restTemplateId, name, description }) => {
     const body = new FormData()
     body.append("name", name)
     body.append("description", description)
-    body.append("file", file)
 
     return await API.put<FormData, UpdateCustomRestTemplateResponse>({
       url: `/api/rest-templates/${encodeURIComponent(restTemplateId)}`,

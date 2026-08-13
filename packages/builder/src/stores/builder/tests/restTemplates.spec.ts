@@ -79,12 +79,10 @@ describe("RestTemplatesStore", () => {
       })
       await store.fetchCustom()
 
-      const file = new File(["{}"], "openapi.json")
       await store.updateCustom({
         restTemplateId: "rest_template_example",
         name: "Updated example",
         description: "Example API",
-        file,
       })
 
       expect(store.get("rest_template_example")?.name).toBe("Updated example")

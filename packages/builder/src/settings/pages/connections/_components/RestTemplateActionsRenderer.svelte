@@ -57,7 +57,7 @@
     <div slot="control" class="more-control">
       <Icon size="S" hoverable name="dots-three" />
     </div>
-    <MenuItem icon="upload-simple" on:click={updateSpec}>Update spec</MenuItem>
+    <MenuItem icon="pencil" on:click={updateSpec}>Update spec</MenuItem>
     <MenuItem icon="trash" disabled={isInUse} on:click={deleteSpec}>
       Delete spec
     </MenuItem>

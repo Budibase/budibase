@@ -26,7 +26,7 @@
   let fileError: string | undefined
   let nameError: string | undefined
 
-  $: disabled = !name.trim() || !file
+  $: disabled = !name.trim() || (!template && !file)
 
   const handleFileChange = (
     event: CustomEvent<Array<UIFile | File | undefined>>
@@ -41,14 +41,20 @@
   }
 
   const upload = async () => {
-    if (!file || disabled) {
+    if (disabled) {
       return keepOpen
     }
 
-    const extension = file.name.split(".").pop()?.toLowerCase()
-    if (!extension || !["json", "yaml", "yml"].includes(extension)) {
-      fileError = "Choose a JSON or YAML file."
-      return keepOpen
+    if (!template) {
+      if (!file) {
+        return keepOpen
+      }
+
+      const extension = file.name.split(".").pop()?.toLowerCase()
+      if (!extension || !["json", "yaml", "yml"].includes(extension)) {
+        fileError = "Choose a JSON or YAML file."
+        return keepOpen
+      }
     }
 
     const nameSlug = kebabCase(name)
@@ -81,9 +87,11 @@
           restTemplateId: templateId,
           name: name.trim(),
           description: description.trim(),
-          file,
         })
       } else {
+        if (!file) {
+          return keepOpen
+        }
         savedTemplate = await restTemplates.uploadCustom({
           name: name.trim(),
           description: description.trim(),
@@ -124,8 +132,9 @@
   onConfirm={upload}
 >
   <Body size="S">
-    {template ? "Replace" : "Upload"} an OpenAPI 2.0 or 3.0 schema to reuse it when
-    creating REST API connections.
+    {template
+      ? "Update the template details used when creating REST API connections."
+      : "Upload an OpenAPI 2.0 or 3.0 schema to reuse it when creating REST API connections."}
   </Body>
 
   <Layout noPadding gap="S">
@@ -141,15 +150,17 @@
       placeholder="Describe this API"
       bind:value={description}
     />
-    <Dropzone
-      gallery={false}
-      label="OpenAPI schema"
-      fileTags={["JSON", "YAML"]}
-      extensions=".json,.yaml,.yml"
-      maximum={1}
-      error={fileError}
-      {handleTooManyFiles}
-      on:change={handleFileChange}
-    />
+    {#if !template}
+      <Dropzone
+        gallery={false}
+        label="OpenAPI schema"
+        fileTags={["JSON", "YAML"]}
+        extensions=".json,.yaml,.yml"
+        maximum={1}
+        error={fileError}
+        {handleTooManyFiles}
+        on:change={handleFileChange}
+      />
+    {/if}
   </Layout>
 </ModalContent>

@@ -110,7 +110,6 @@ describe("/rest-templates", () => {
       .set(config.defaultHeaders())
       .field("name", "Updated Example API")
       .field("description", "An updated example API")
-      .attach("file", Buffer.from(OPENAPI_SCHEMA), "openapi.yaml")
       .expect(200)
     expect(updateResponse.body.template).toEqual(
       expect.objectContaining({
@@ -119,15 +118,8 @@ describe("/rest-templates", () => {
         description: "An updated example API",
       })
     )
-    expect(objectStore.upload).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        filename: `${config.getDevWorkspaceId()}/rest/${template.id}/openapi.yaml`,
-      })
-    )
-    expect(objectStore.deleteFile).toHaveBeenCalledWith(
-      objectStore.ObjectStoreBuckets.APPS,
-      `${config.getDevWorkspaceId()}/rest/${template.id}/openapi.json`
-    )
+    expect(objectStore.upload).toHaveBeenCalledTimes(1)
+    expect(objectStore.deleteFile).not.toHaveBeenCalled()
 
     const listResponse = await request
       .get("/api/rest-templates")
@@ -149,7 +141,7 @@ describe("/rest-templates", () => {
     expect(importInfoResponse.body.endpoints).toHaveLength(1)
     expect(objectStore.retrieve).toHaveBeenCalledWith(
       objectStore.ObjectStoreBuckets.APPS,
-      `${config.getDevWorkspaceId()}/rest/${template.id}/openapi.yaml`
+      `${config.getDevWorkspaceId()}/rest/${template.id}/openapi.json`
     )
 
     const importResponse = await request
