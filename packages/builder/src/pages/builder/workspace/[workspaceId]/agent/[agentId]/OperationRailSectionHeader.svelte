@@ -4,11 +4,12 @@
 
   interface Props {
     title: string
-    description: string
+    description?: string
+    descriptionContent?: Snippet
     actions?: Snippet
   }
 
-  let { title, description, actions }: Props = $props()
+  let { title, description, descriptionContent, actions }: Props = $props()
 </script>
 
 <div class="rail-section-header">
@@ -17,7 +18,11 @@
       {title}
     </Body>
     <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-      {description}
+      {#if descriptionContent}
+        {@render descriptionContent()}
+      {:else}
+        {description}
+      {/if}
     </Body>
   </div>
   {#if actions}

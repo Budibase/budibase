@@ -32,7 +32,6 @@
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import GenerateInstructionsControl from "../../GenerateInstructionsControl.svelte"
   import Knowledge from "../../knowledge/index.svelte"
-  import OperationNameModal from "../../OperationNameModal.svelte"
   import OperationRailSectionHeader from "../../OperationRailSectionHeader.svelte"
   import ToolIcon from "../../ToolIcon.svelte"
   import ToolsDropdown from "../../ToolsDropdown.svelte"
@@ -55,7 +54,6 @@
   let toolSearch = $state("")
   let saving = $state(false)
   let operation = $state<AgentOperation | undefined>()
-  let renameModal: OperationNameModal | undefined = $state()
   let removeToolDialog: ConfirmDialog | undefined = $state()
   let toolToRemove: AgentTool | undefined = $state()
   let lastSavedInstructions = $state("")
@@ -325,15 +323,6 @@
     saveOperation()
   }
 
-  const validateName = (name: string) =>
-    agent?.operations?.some(
-      item =>
-        item.id !== operation?.id &&
-        item.name.trim().toLowerCase() === name.trim().toLowerCase()
-    )
-      ? "An operation with this name already exists"
-      : undefined
-
   onDestroy(() => {
     if (
       operation &&
@@ -354,24 +343,7 @@
         { text: agent?.name || "Agent", url: "../../config" },
         { text: operationName },
       ]}
-    >
-      <div class="header-actions">
-        <button
-          class="header-button"
-          aria-label="Rename operation"
-          onclick={() => renameModal?.show(operationName)}
-        >
-          <Icon name="pencil" size="S" />
-        </button>
-        <button
-          class="header-button"
-          aria-label="Close operation"
-          onclick={close}
-        >
-          <Icon name="x" size="M" />
-        </button>
-      </div>
-    </TopBar>
+    />
 
     <div class="operation-content">
       <main class="instructions-pane">
@@ -560,15 +532,6 @@
     </div>
   </div>
 
-  <OperationNameModal
-    bind:this={renameModal}
-    title="Rename operation"
-    confirmText="Save"
-    {validateName}
-    onConfirm={async name => {
-      await saveOperation({ name })
-    }}
-  />
 
   <ConfirmDialog
     bind:this={removeToolDialog}
@@ -593,23 +556,6 @@
     min-height: 0;
     flex-direction: column;
     background: var(--background);
-  }
-  .header-actions {
-    margin-left: auto;
-    display: flex;
-    gap: 6px;
-  }
-  .header-button {
-    width: 36px;
-    height: 28px;
-    border: 0;
-    border-radius: 999px;
-    background: var(--spectrum-global-color-gray-200);
-    color: inherit;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   .operation-content {
     display: grid;

@@ -1,6 +1,5 @@
 <script lang="ts">
   import {
-    ActionButton,
     Icon,
     Layout,
     StatusLight,
@@ -140,47 +139,43 @@
       icon="Effect"
     ></TopBar>
     <div class="secondary-bar">
-      <div class="filter">
-        <ActionButton
-          quiet
-          selected={activeTab === "Configuration"}
-          on:click={() => $goto("./config")}
+      <div class="agent-tabs" role="tablist" aria-label="Agent settings">
+        <button
+          class:active={activeTab === "Configuration"}
+          onclick={() => $goto("./config")}
         >
           Configuration
-        </ActionButton>
-        <ActionButton
-          quiet
-          selected={activeTab === "Deployment"}
-          on:click={() => $goto("./deployment")}
+        </button>
+        <button
+          class:active={activeTab === "Deployment"}
+          onclick={() => $goto("./deployment")}
         >
           Deployment
-        </ActionButton>
+        </button>
         {#if testsEnabled}
-          <ActionButton
-            quiet
-            selected={activeTab === "Tests"}
-            on:click={() => $goto("./tests")}
+          <button
+            class:active={activeTab === "Tests"}
+            onclick={() => $goto("./tests")}
           >
             Tests
-          </ActionButton>
+          </button>
         {/if}
-        <ActionButton
-          quiet
-          selected={activeTab === "Logs"}
-          on:click={() => $goto("./logs")}
+        <button
+          class:active={activeTab === "Logs"}
+          onclick={() => $goto("./logs")}
         >
           Logs
-        </ActionButton>
-        {#if hasPublishedUnpublishedChanges}
-          <div class="unpublished-changes-indicator">
-            <StatusLight
-              color="var(--spectrum-global-color-blue-600)"
-              size="L"
-            />
-            <span>Unpublished changes</span>
-          </div>
-        {/if}
+        </button>
       </div>
+      {#if hasPublishedUnpublishedChanges}
+        <div class="unpublished-changes-indicator">
+          <StatusLight
+            color="var(--spectrum-global-color-blue-600)"
+            size="L"
+          />
+          <span>Unpublished changes</span>
+        </div>
+      {/if}
       <div class="start-pause-row">
         <div class="status-icons">
           <Icon
@@ -197,6 +192,7 @@
         </div>
         <LiveToggleButton
           live={currentAgent?.live === true}
+          size="S"
           disabled={togglingLive}
           on:click={toggleAgentLive}
         />
@@ -316,18 +312,36 @@
   }
 
   .secondary-bar {
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 2px 12px;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
   }
 
-  .filter {
+  .agent-tabs {
     display: flex;
-    gap: 10px;
     align-items: center;
+    gap: 8px;
     flex: 1 1 auto;
+  }
+
+  .agent-tabs button {
+    border: 0;
+    border-radius: 6px;
+    padding: 4px 8px;
+    background: transparent;
+    color: var(--spectrum-global-color-gray-700);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 19px;
+  }
+
+  .agent-tabs button.active {
+    background: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-900);
   }
 
   .unpublished-changes-indicator {
@@ -338,22 +352,25 @@
     font-size: var(--font-size-s);
     font-weight: 500;
     margin-left: auto;
-    margin-right: var(--spacing-s);
     white-space: nowrap;
   }
 
-  .filter :global(.spectrum-ActionButton) {
-    border-radius: 8px;
-    transition:
-      border-color 130ms ease-out,
-      background 130ms ease-out;
-    border: 1px solid transparent;
-    padding: 3px 10px;
-    height: auto;
+  .start-pause-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-shrink: 0;
   }
 
-  .filter :global(.spectrum-ActionButton-label) {
-    font-weight: 500;
+  .status-icons {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    margin-right: var(--spacing-m);
+  }
+
+  .start-pause-row :global(.spectrum-Button.new-styles .spectrum-Button-label) {
+    font-weight: 400;
   }
 
   :global(.form-row) {
@@ -374,23 +391,6 @@
     width: var(--spectrum-alias-item-height-m);
     height: var(--spectrum-alias-item-height-m);
     flex-shrink: 0;
-  }
-
-  .start-pause-row {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-  }
-
-  .status-icons {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-    margin-right: var(--spacing-m);
-  }
-
-  .start-pause-row :global(.spectrum-Button.new-styles .spectrum-Button-label) {
-    font-weight: 400;
   }
 
   :global(
