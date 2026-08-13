@@ -143,9 +143,10 @@ Any constraints this operation must follow.
         promptInstructions: operation.promptInstructions,
         allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
       })
-      await workspaceDeploymentStore.fetch()
-      selectedOperationId = operation.id
-      openOperation(operation.id)
+      $goto(`./operation/${operation.id}`)
+      workspaceDeploymentStore.fetch().catch(error => {
+        console.error(error)
+      })
     } catch (error) {
       console.error(error)
       notifications.error("Failed to create operation")

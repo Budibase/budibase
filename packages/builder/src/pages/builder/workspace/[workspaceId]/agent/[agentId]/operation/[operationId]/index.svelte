@@ -175,6 +175,23 @@
   const hasUnsavedInstructions = () =>
     operation && (operation.promptInstructions || "") !== lastSavedInstructions
 
+  $effect.pre(() => {
+    if (!agent?._id || !operationId) {
+      return
+    }
+
+    const selected = agent.operations?.find(item => item.id === operationId)
+    if (!selected) {
+      return
+    }
+
+    if (operation?.id !== operationId) {
+      operation = { ...selected }
+      lastSavedInstructions = operation.promptInstructions || ""
+      syncedAgentRev = agent._rev
+    }
+  })
+
   $effect(() => {
     if (!agent?._id || !operationId) {
       operation = undefined
@@ -188,14 +205,8 @@
       return
     }
 
-    if (operation?.id !== operationId) {
-      operation = { ...selected }
-      lastSavedInstructions = operation.promptInstructions || ""
-      syncedAgentRev = agent._rev
-      return
-    }
-
     if (
+      operation?.id === operationId &&
       agent._rev !== syncedAgentRev &&
       !saving &&
       !togglingLive &&
