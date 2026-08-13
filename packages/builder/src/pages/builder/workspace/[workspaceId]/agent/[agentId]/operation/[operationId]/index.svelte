@@ -54,6 +54,7 @@
     getConfiguredOperationTools,
     getIncludedToolRuntimeBindings,
   } from "../../toolBindingUtils"
+  import { createSaveCoordinator } from "../../operationSaveCoordinator"
   import type { AgentTool } from "../../toolTypes"
 
   const { goto, params } = routify
@@ -75,8 +76,8 @@
   let removeToolDialog: ConfirmDialog | undefined = $state()
   let toolToRemove: AgentTool | undefined = $state()
 
-  let flushPromise: Promise<boolean> | null = null
-  let saveAgain = false
+  let pendingSave: { forOperationId: string; snapshot: AgentOperation } | null =
+    null
 
   let agent = $derived($selectedAgent)
   let agentId = $derived($params.agentId || agent?._id)
@@ -207,12 +208,15 @@
   })
 
   const persistOperation = async (): Promise<boolean> => {
-    if (!agentId || !operation) {
+    if (!agentId || !pendingSave) {
       return false
     }
 
+    const { forOperationId, snapshot } = pendingSave
+    pendingSave = null
+
     const enabledTools = getConfiguredOperationTools({
-      operation,
+      operation: snapshot,
       readableToRuntimeBinding,
       availableTools,
       toolSecurityEnabled: $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
@@ -221,22 +225,26 @@
     try {
       const updated = await agentsStore.updateAgentOperation(
         agentId,
-        operation.id,
+        forOperationId,
         {
-          name: operation.name,
-          live: operation.live,
-          promptInstructions: operation.promptInstructions,
+          name: snapshot.name,
+          live: snapshot.live,
+          promptInstructions: snapshot.promptInstructions,
           enabledTools,
-          allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
-          escalation: operation.escalation,
+          allowKnowledgeSourceDownload: snapshot.allowKnowledgeSourceDownload,
+          escalation: snapshot.escalation,
         }
       )
-      operation = {
-        ...(updated.operations?.find(item => item.id === operation?.id) ||
-          operation),
+
+      if (operationId === forOperationId) {
+        operation = {
+          ...(updated.operations?.find(item => item.id === forOperationId) ||
+            snapshot),
+        }
+        lastSavedInstructions = operation.promptInstructions || ""
+        syncedAgentRev = updated._rev
       }
-      lastSavedInstructions = operation.promptInstructions || ""
-      syncedAgentRev = updated._rev
+
       await workspaceDeploymentStore.fetch()
       return true
     } catch (error) {
@@ -248,6 +256,8 @@
     }
   }
 
+  const operationSaveCoordinator = createSaveCoordinator(persistOperation)
+
   const saveOperation = async (
     updates: Partial<AgentOperation> = {}
   ): Promise<boolean> => {
@@ -258,19 +268,12 @@
       operation = { ...operation, ...updates }
     }
 
-    saveAgain = true
-    if (!flushPromise) {
-      flushPromise = Promise.resolve().then(async () => {
-        let result = false
-        while (saveAgain) {
-          saveAgain = false
-          result = await persistOperation()
-        }
-        flushPromise = null
-        return result
-      })
+    pendingSave = {
+      forOperationId: operation.id,
+      snapshot: { ...operation },
     }
-    return flushPromise
+
+    return operationSaveCoordinator.save()
   }
 
   const updateInstructions = (instructions: string) => {
