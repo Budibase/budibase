@@ -702,7 +702,6 @@
   .rail-tabs button.active {
     background: var(--spectrum-global-color-gray-200);
     color: var(--spectrum-global-color-gray-900);
-    font-weight: 600;
   }
   .rail-content {
     min-height: 0;
