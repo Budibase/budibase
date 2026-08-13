@@ -13,7 +13,6 @@
   let refreshToken = $state("")
   let configured = $state(false)
   let needsReconfiguration = $state(false)
-  let updatedAt = $state<string | undefined>()
   let expiresAt = $state<string | undefined>()
   let loading = $state(false)
   let saving = $state(false)
@@ -25,7 +24,6 @@
       const config = await agentsStore.fetchSlackAppConfig()
       configured = config.configured
       needsReconfiguration = !!config.needsReconfiguration
-      updatedAt = config.updatedAt
       expiresAt = config.expiresAt
     } catch (error) {
       console.error(error)
@@ -47,7 +45,6 @@
       })
       configured = config.configured
       needsReconfiguration = !!config.needsReconfiguration
-      updatedAt = config.updatedAt
       expiresAt = config.expiresAt
       configToken = ""
       refreshToken = ""
@@ -66,7 +63,6 @@
       const config = await agentsStore.deleteSlackAppConfig()
       configured = config.configured
       needsReconfiguration = !!config.needsReconfiguration
-      updatedAt = config.updatedAt
       expiresAt = config.expiresAt
       configToken = ""
       refreshToken = ""
@@ -91,25 +87,6 @@
     the matching Slack refresh token before it expires.
   </Body>
 
-  <div class="status">
-    <Label size="L">Status</Label>
-    <Body size="S">
-      {#if loading}
-        Loading...
-      {:else if needsReconfiguration}
-        Needs reconfiguration
-      {:else if configured}
-        Configured{updatedAt
-          ? `, updated ${new Date(updatedAt).toLocaleString()}`
-          : ""}{expiresAt
-          ? `, expires ${new Date(expiresAt).toLocaleString()}`
-          : ""}
-      {:else}
-        Not configured
-      {/if}
-    </Body>
-  </div>
-
   <div class="field">
     <Label size="L">Configuration token</Label>
     <Input
@@ -130,6 +107,21 @@
         : "Slack app configuration refresh token"}
       bind:value={refreshToken}
     />
+  </div>
+
+  <div class="status">
+    <Label size="L">Expires</Label>
+    <Body size="S">
+      {#if loading}
+        Loading...
+      {:else if needsReconfiguration}
+        Needs reconfiguration
+      {:else if configured}
+        {expiresAt ? new Date(expiresAt).toLocaleDateString() : "Unknown"}
+      {:else}
+        Not configured
+      {/if}
+    </Body>
   </div>
 
   <div class="actions">
