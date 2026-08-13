@@ -62,13 +62,15 @@
   })
 
   $effect(() => {
-    if ($agentsStore.toolsLoaded || $agentsStore.toolsLoading) {
+    if (
+      $agentsStore.toolsLoaded ||
+      $agentsStore.toolsLoading ||
+      $agentsStore.toolsLoadFailed
+    ) {
       return
     }
 
-    agentsStore.fetchTools().catch(error => {
-      console.error("Failed to load agent tools", error)
-    })
+    agentsStore.fetchTools()
   })
 
   $effect(() => {

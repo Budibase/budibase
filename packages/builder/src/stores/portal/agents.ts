@@ -68,6 +68,7 @@ interface AgentStoreState {
   tools: ToolMetadata[]
   toolsLoading: boolean
   toolsLoaded: boolean
+  toolsLoadFailed: boolean
   agentsLoaded: boolean
   knowledgeByOperation: Record<
     string,
@@ -108,6 +109,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       tools: [],
       toolsLoading: false,
       toolsLoaded: false,
+      toolsLoadFailed: false,
       agentsLoaded: false,
       knowledgeByOperation: {},
       knowledgeUploadByOperation: {},
@@ -196,10 +198,12 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   }
 
   init = async () => {
+    this.fetchToolsRequestId += 1
     this.update(state => {
       state.tools = []
       state.toolsLoaded = false
       state.toolsLoading = false
+      state.toolsLoadFailed = false
       return state
     })
     await this.fetchAgents()
@@ -235,6 +239,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
     this.update(state => {
       state.toolsLoading = true
+      state.toolsLoadFailed = false
       return state
     })
 
@@ -248,6 +253,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
         state.tools = tools
         state.toolsLoaded = true
         state.toolsLoading = false
+        state.toolsLoadFailed = false
         return state
       })
       return tools
@@ -255,10 +261,12 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       if (requestId === this.fetchToolsRequestId) {
         this.update(state => {
           state.toolsLoading = false
+          state.toolsLoadFailed = true
           return state
         })
       }
-      throw error
+      console.error("Failed to fetch agent tools", error)
+      return []
     }
   }
 

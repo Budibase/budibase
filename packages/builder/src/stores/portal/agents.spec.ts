@@ -47,6 +47,7 @@ const createEmptyState = () => ({
   tools: [],
   toolsLoading: false,
   toolsLoaded: false,
+  toolsLoadFailed: false,
   agentsLoaded: false,
   knowledgeByOperation: {},
   knowledgeUploadByOperation: {},
@@ -409,6 +410,7 @@ describe("agentsStore fetchTools", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    fetchAgents.mockResolvedValue({ agents: [] })
     store = new AgentsStore()
     store.set(createEmptyState())
   })
@@ -435,6 +437,36 @@ describe("agentsStore fetchTools", () => {
     expect(state.tools).toEqual([createTool("fresh-tool")])
     expect(state.toolsLoaded).toBe(true)
     expect(state.toolsLoading).toBe(false)
+  })
+
+  it("does not apply stale tools when init runs without a follow-up fetch", async () => {
+    let resolveFirst: ((tools: ToolMetadata[]) => void) | undefined
+    const firstRequest = new Promise<ToolMetadata[]>(resolve => {
+      resolveFirst = resolve
+    })
+
+    fetchTools.mockImplementationOnce(() => firstRequest)
+
+    const staleFetch = store.fetchTools()
+    await store.init()
+
+    resolveFirst?.([createTool("stale-tool")])
+    await staleFetch
+
+    const state = get(store.store)
+    expect(state.tools).toEqual([])
+    expect(state.toolsLoaded).toBe(false)
+    expect(state.toolsLoading).toBe(false)
+  })
+
+  it("stops retrying after fetchTools fails", async () => {
+    fetchTools.mockRejectedValue(new Error("network error"))
+
+    await store.fetchTools()
+
+    expect(fetchTools).toHaveBeenCalledTimes(1)
+    expect(get(store.store).toolsLoadFailed).toBe(true)
+    expect(get(store.store).toolsLoading).toBe(false)
   })
 
   it("clears tools when init runs on workspace change", async () => {

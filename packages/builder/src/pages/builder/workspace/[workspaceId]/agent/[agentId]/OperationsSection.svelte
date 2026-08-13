@@ -202,9 +202,7 @@ Any constraints this operation must follow.
           icon: menuOperationLive ? "stop" : "play",
           name: menuOperationLive ? "Stop" : "Set live",
           visible: true,
-          callback: () => {
-            setOperationLive(operationId, !menuOperationLive)
-          },
+          callback: () => setOperationLive(operationId, !menuOperationLive),
         },
         {
           icon: "pencil",
