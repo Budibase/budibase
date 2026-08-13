@@ -558,6 +558,7 @@ export async function resumeOperation({
     }
   } catch (error) {
     await toolCallChain
+    await needsInputUpdate
     await markEscalationRequestResolved({
       status: "failed",
       error: error instanceof Error ? error.message : String(error),
