@@ -43,6 +43,7 @@
     getIncludedToolRuntimeBindings,
   } from "../../toolBindingUtils"
   import type { AgentTool } from "../../toolTypes"
+  import { createSaveCoordinator } from "../../operationSaveCoordinator"
 
   const { goto, params } = routify
 
@@ -54,7 +55,6 @@
   let insertAtPos: InsertAtPositionFn | undefined = $state()
   let getCaretPosition: CaretPositionFn | undefined = $state()
   let toolSearch = $state("")
-  let saving = $state(false)
   let togglingLive = $state(false)
   let operation = $state<AgentOperation | undefined>()
   let removeToolDialog: ConfirmDialog | undefined = $state()
@@ -220,18 +220,17 @@
 
   $effect(loadOperation)
 
-  const saveOperation = async (updates: Partial<AgentOperation> = {}) => {
-    if (!agentId || !operation || saving) return false
-    if (Object.keys(updates).length > 0) {
-      operation = { ...operation, ...updates }
+  const persistOperation = async (): Promise<boolean> => {
+    if (!agentId || !operation) {
+      return false
     }
+
     const enabledTools = getConfiguredOperationTools({
       operation,
       readableToRuntimeBinding,
       availableTools,
       toolSecurityEnabled: $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
     })
-    saving = true
     try {
       const updated = await agentsStore.updateAgentOperation(
         agentId,
@@ -256,13 +255,23 @@
       console.error(error)
       notifications.error("Failed to save operation")
       return false
-    } finally {
-      saving = false
     }
   }
 
+  const operationSaveCoordinator = createSaveCoordinator(persistOperation)
+
+  const saveOperation = async (updates: Partial<AgentOperation> = {}) => {
+    if (!agentId || !operation) {
+      return false
+    }
+    if (Object.keys(updates).length > 0) {
+      operation = { ...operation, ...updates }
+    }
+    return operationSaveCoordinator.save()
+  }
+
   const toggleOperationLive = async () => {
-    if (!operation || togglingLive || saving) {
+    if (!operation || togglingLive) {
       return
     }
 
