@@ -258,8 +258,11 @@ Any constraints this operation must follow.
             class="operation-menu-trigger"
             type="button"
             aria-label="Operation actions"
-            onclick={event => {
+            onclick={async event => {
+              event.preventDefault()
+              event.stopPropagation()
               selectedOperationId = operation.id
+              await tick()
               openOperationContextMenu(event)
             }}
           >
