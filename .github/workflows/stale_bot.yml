@@ -19,4 +19,5 @@ jobs:
         days-before-pr-stale: 7
         days-before-pr-close: 14
         exempt-pr-labels: pinned,security,roadmap
+        exempt-draft-pr: true
         operations-per-run: 100
