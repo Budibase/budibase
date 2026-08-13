@@ -76,8 +76,7 @@
   let removeToolDialog: ConfirmDialog | undefined = $state()
   let toolToRemove: AgentTool | undefined = $state()
 
-  let pendingSave: { forOperationId: string; snapshot: AgentOperation } | null =
-    null
+  let previousToolsLoaded = false
 
   let agent = $derived($selectedAgent)
   let agentId = $derived($params.agentId || agent?._id)
@@ -88,13 +87,7 @@
   let operationName = $derived(
     storeOperation?.name?.trim() || "Untitled operation"
   )
-  let toolsLoaded = $derived.by(() => {
-    const expectedAiConfigId = agent?.aiconfig ?? ""
-    return (
-      !$agentsStore.toolsLoading &&
-      $agentsStore.loadedToolsAiConfigId === expectedAiConfigId
-    )
-  })
+  let toolsLoaded = $derived($agentsStore.toolsLoaded)
   let webSearchConfig = $derived(
     getAgentWebSearchConfig($aiConfigsStore.customConfigs, agent?.aiconfig)
   )
@@ -181,26 +174,10 @@
   const hasUnsavedInstructions = () =>
     operation && (operation.promptInstructions || "") !== lastSavedInstructions
 
-  $effect.pre(() => {
-    if (!agent?._id || !operationId) {
-      return
-    }
-
-    const selected = agent.operations?.find(item => item.id === operationId)
-    if (!selected) {
-      return
-    }
-
-    if (operation?.id !== operationId) {
-      operation = { ...selected }
-      lastSavedInstructions = operation.promptInstructions || ""
-      syncedAgentRev = agent._rev
-    }
-  })
-
   $effect(() => {
     if (!agent?._id || !operationId) {
       operation = undefined
+      lastSavedInstructions = ""
       syncedAgentRev = undefined
       return
     }
@@ -211,8 +188,14 @@
       return
     }
 
+    if (operation?.id !== operationId) {
+      operation = { ...selected }
+      lastSavedInstructions = operation.promptInstructions || ""
+      syncedAgentRev = agent._rev
+      return
+    }
+
     if (
-      operation?.id === operationId &&
       agent._rev !== syncedAgentRev &&
       !saving &&
       !togglingLive &&
@@ -225,12 +208,12 @@
   })
 
   const persistOperation = async (): Promise<boolean> => {
-    if (!agentId || !pendingSave || !toolsLoaded) {
+    if (!agentId || !operation || !toolsLoaded) {
       return false
     }
 
-    const { forOperationId, snapshot } = pendingSave
-    pendingSave = null
+    const forOperationId = operation.id
+    const snapshot = { ...operation }
 
     const enabledTools = getConfiguredOperationTools({
       operation: snapshot,
@@ -253,12 +236,17 @@
         }
       )
 
-      if (operationId === forOperationId) {
-        operation = {
-          ...(updated.operations?.find(item => item.id === forOperationId) ||
-            snapshot),
+      if (operationId === forOperationId && operation) {
+        const savedInstructions = snapshot.promptInstructions || ""
+        const currentInstructions = operation.promptInstructions || ""
+
+        if (currentInstructions === savedInstructions) {
+          operation = {
+            ...(updated.operations?.find(item => item.id === forOperationId) ||
+              snapshot),
+          }
+          lastSavedInstructions = currentInstructions
         }
-        lastSavedInstructions = operation.promptInstructions || ""
         syncedAgentRev = updated._rev
       }
 
@@ -289,22 +277,22 @@
       return false
     }
 
-    pendingSave = {
-      forOperationId: operation.id,
-      snapshot: { ...operation },
-    }
-
     return operationSaveCoordinator.save()
   }
 
   $effect(() => {
-    if (!toolsLoaded || !operation || saving || togglingLive) {
-      return
+    const justLoaded = toolsLoaded && !previousToolsLoaded
+    previousToolsLoaded = toolsLoaded
+
+    if (
+      justLoaded &&
+      operation &&
+      hasUnsavedInstructions() &&
+      !saving &&
+      !togglingLive
+    ) {
+      saveOperation()
     }
-    if (!hasUnsavedInstructions()) {
-      return
-    }
-    saveOperation()
   })
 
   const updateInstructions = (instructions: string) => {

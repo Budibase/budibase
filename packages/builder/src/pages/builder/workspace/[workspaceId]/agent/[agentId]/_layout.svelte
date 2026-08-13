@@ -28,7 +28,6 @@
 
   let togglingLive = $state(false)
   let agentUpdateOverrides = $state<Record<string, unknown>>({})
-  let lastToolsAiConfigId = $state<string | null | undefined>(null)
   let preloadedKnowledgeAgentId = $state<string | undefined>()
   let testsEnabled = $derived($featureFlags[FeatureFlag.AI_TESTS])
   let operationPage = $derived($isActive("./operation"))
@@ -56,20 +55,15 @@
     }
   })
 
-  $effect(() => {
-    if (!currentAgent?._id) {
-      return
+  onMount(async () => {
+    if (!$agentsStore.agentsLoaded) {
+      await agentsStore.init()
     }
-
-    const nextAiConfigId = currentAgent.aiconfig || undefined
-    if (nextAiConfigId === lastToolsAiConfigId) {
-      return
+    if (!$agentsStore.toolsLoaded && !$agentsStore.toolsLoading) {
+      agentsStore.fetchTools().catch(error => {
+        console.error("Failed to load agent tools", error)
+      })
     }
-
-    lastToolsAiConfigId = nextAiConfigId
-    agentsStore.fetchTools(nextAiConfigId).catch(error => {
-      console.error("Failed to load agent tools", error)
-    })
   })
 
   $effect(() => {
@@ -88,12 +82,6 @@
       .catch(error => {
         console.error(error)
       })
-  })
-
-  onMount(async () => {
-    if (!$agentsStore.agentsLoaded) {
-      await agentsStore.init()
-    }
   })
 
   async function toggleAgentLive() {

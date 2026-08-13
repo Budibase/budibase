@@ -15,6 +15,7 @@ vi.mock("@/api", () => {
   return {
     API: {
       fetchAgents: vi.fn(),
+      fetchTools: vi.fn(),
       updateAgent: vi.fn(),
       fetchAgentKnowledge: vi.fn(),
       uploadOperationFile: vi.fn(),
@@ -26,6 +27,7 @@ vi.mock("@/api", () => {
 })
 
 const fetchAgents = vi.mocked(API.fetchAgents)
+const fetchTools = vi.mocked(API.fetchTools)
 const fetchAgentKnowledge = vi.mocked(API.fetchAgentKnowledge)
 const uploadOperationFile = vi.mocked(API.uploadOperationFile)
 const deleteOperationFile = vi.mocked(API.deleteOperationFile)
@@ -42,7 +44,7 @@ const createEmptyState = () => ({
   agents: [] as Agent[],
   tools: [],
   toolsLoading: false,
-  loadedToolsAiConfigId: undefined as string | undefined,
+  toolsLoaded: false,
   agentsLoaded: false,
   knowledgeByOperation: {},
   knowledgeUploadByOperation: {},
@@ -391,5 +393,38 @@ describe("AgentsStore file operations", () => {
       "operation_1"
     )
     expect(fetchAgentKnowledge).toHaveBeenCalledWith("agent_1")
+  })
+})
+
+describe("agentsStore fetchTools", () => {
+  let store: AgentsStore
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    store = new AgentsStore()
+    store.set(createEmptyState())
+  })
+
+  it("ignores stale tool responses when fetchTools requests overlap", async () => {
+    let resolveFirst: ((tools: { name: string }[]) => void) | undefined
+    const firstRequest = new Promise<{ name: string }[]>(resolve => {
+      resolveFirst = resolve
+    })
+
+    fetchTools
+      .mockImplementationOnce(() => firstRequest)
+      .mockResolvedValueOnce([{ name: "latest-tool" }])
+
+    const firstFetch = store.fetchTools()
+    const secondFetch = store.fetchTools()
+
+    resolveFirst?.([{ name: "stale-tool" }])
+    await firstFetch
+    await secondFetch
+
+    const state = get(store.store)
+    expect(state.tools).toEqual([{ name: "latest-tool" }])
+    expect(state.toolsLoaded).toBe(true)
+    expect(state.toolsLoading).toBe(false)
   })
 })

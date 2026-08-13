@@ -12,7 +12,6 @@
   let draftAiconfig = $state("")
   let hasUnsavedAiconfig = $state(false)
   let saving = $state(false)
-  let showSaveNotifications = $state(true)
 
   let currentAgent = $derived($selectedAgent)
   let completionConfigs = $derived($aiConfigsStore.customConfigs || [])
@@ -76,9 +75,6 @@
         aiconfig: aiconfigToSave,
       })
       hasUnsavedAiconfig = false
-      if (showSaveNotifications) {
-        notifications.success("Agent saved successfully")
-      }
       await workspaceDeploymentStore.fetch()
       return true
     } catch (error) {
@@ -100,8 +96,11 @@
       return false
     }
 
-    showSaveNotifications = showNotifications
-    return aiconfigSaveCoordinator.save()
+    const saved = await aiconfigSaveCoordinator.save()
+    if (saved && showNotifications) {
+      notifications.success("Agent saved successfully")
+    }
+    return saved
   }
 
   const handleAiconfigChange = () => {

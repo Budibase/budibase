@@ -67,7 +67,7 @@ interface AgentStoreState {
   currentAgentId?: string
   tools: ToolMetadata[]
   toolsLoading: boolean
-  loadedToolsAiConfigId?: string
+  toolsLoaded: boolean
   agentsLoaded: boolean
   knowledgeByOperation: Record<
     string,
@@ -93,6 +93,7 @@ const emptyUploadState = (): OperationKnowledgeUploadState => ({
 export class AgentsStore extends BudiStore<AgentStoreState> {
   private knowledgeRefreshByAgent = new Map<string, Promise<void>>()
   private knowledgeLoadByKey = new Map<string, Promise<void>>()
+  private fetchToolsRequestId = 0
   private knowledgePolling = createOperationKnowledgePollingController({
     intervalMs: KNOWLEDGE_POLL_INTERVAL_MS,
     onPoll: agentId => this.refreshOperationKnowledge(agentId),
@@ -106,7 +107,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       agents: [],
       tools: [],
       toolsLoading: false,
-      loadedToolsAiConfigId: undefined,
+      toolsLoaded: false,
       agentsLoaded: false,
       knowledgeByOperation: {},
       knowledgeUploadByOperation: {},
@@ -223,8 +224,8 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     })
   }
 
-  fetchTools = async (aiconfigId?: string) => {
-    const configKey = aiconfigId ?? ""
+  fetchTools = async () => {
+    const requestId = ++this.fetchToolsRequestId
 
     this.update(state => {
       state.toolsLoading = true
@@ -232,19 +233,25 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     })
 
     try {
-      const tools = await API.fetchTools(aiconfigId)
+      const tools = await API.fetchTools()
+      if (requestId !== this.fetchToolsRequestId) {
+        return tools
+      }
+
       this.update(state => {
         state.tools = tools
-        state.loadedToolsAiConfigId = configKey
+        state.toolsLoaded = true
         state.toolsLoading = false
         return state
       })
       return tools
     } catch (error) {
-      this.update(state => {
-        state.toolsLoading = false
-        return state
-      })
+      if (requestId === this.fetchToolsRequestId) {
+        this.update(state => {
+          state.toolsLoading = false
+          return state
+        })
+      }
       throw error
     }
   }
