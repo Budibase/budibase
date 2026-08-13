@@ -64,11 +64,20 @@ jest.mock("@chat-adapter/slack", () => ({
 // this mock the real client retries against the nock net-connect block until
 // the test times out.
 jest.mock("@slack/web-api", () => ({
-  WebClient: jest.fn(() => ({
-    auth: {
-      test: jest.fn().mockResolvedValue({ ok: true, team_id: "T123" }),
-    },
-  })),
+  WebClient: jest.fn((token: string) => {
+    let teamId = "T123"
+    if (token === "xoxb-oauth-bot-token") {
+      teamId = "T_SLACK"
+    }
+    if (token === "xoxb-live-oauth-bot-token") {
+      teamId = "T_LIVE_SLACK"
+    }
+    return {
+      auth: {
+        test: jest.fn().mockResolvedValue({ ok: true, team_id: teamId }),
+      },
+    }
+  }),
 }))
 
 jest.mock("@chat-adapter/state-memory", () => ({
