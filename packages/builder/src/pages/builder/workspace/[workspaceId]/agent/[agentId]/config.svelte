@@ -54,7 +54,7 @@
     ) {
       draftAiconfig = modelOptions[0].value
       hasUnsavedAiconfig = true
-      saveAiconfig({ showNotifications: false })
+      saveAiconfig()
     }
   })
 
@@ -87,25 +87,17 @@
 
   const aiconfigSaveCoordinator = createSaveCoordinator(persistAiconfig)
 
-  async function saveAiconfig({
-    showNotifications = true,
-  }: {
-    showNotifications?: boolean
-  } = {}): Promise<boolean> {
+  async function saveAiconfig(): Promise<boolean> {
     if (!currentAgent?._id) {
       return false
     }
 
-    const saved = await aiconfigSaveCoordinator.save()
-    if (saved && showNotifications) {
-      notifications.success("Agent saved successfully")
-    }
-    return saved
+    return aiconfigSaveCoordinator.save()
   }
 
   const handleAiconfigChange = () => {
     hasUnsavedAiconfig = true
-    saveAiconfig({ showNotifications: false })
+    saveAiconfig()
   }
 </script>
 

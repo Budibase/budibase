@@ -196,6 +196,12 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   }
 
   init = async () => {
+    this.update(state => {
+      state.tools = []
+      state.toolsLoaded = false
+      state.toolsLoading = false
+      return state
+    })
     await this.fetchAgents()
   }
 

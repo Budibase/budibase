@@ -413,7 +413,7 @@ describe("agentsStore fetchTools", () => {
     store.set(createEmptyState())
   })
 
-  it("ignores stale tool responses when fetchTools requests overlap", async () => {
+  it("ignores stale tool responses when init runs during fetch", async () => {
     let resolveFirst: ((tools: ToolMetadata[]) => void) | undefined
     const firstRequest = new Promise<ToolMetadata[]>(resolve => {
       resolveFirst = resolve
@@ -421,18 +421,30 @@ describe("agentsStore fetchTools", () => {
 
     fetchTools
       .mockImplementationOnce(() => firstRequest)
-      .mockResolvedValueOnce([createTool("latest-tool")])
+      .mockResolvedValueOnce([createTool("fresh-tool")])
 
-    const firstFetch = store.fetchTools()
-    const secondFetch = store.fetchTools()
+    const staleFetch = store.fetchTools()
+    await store.init()
+    const freshFetch = store.fetchTools()
 
     resolveFirst?.([createTool("stale-tool")])
-    await firstFetch
-    await secondFetch
+    await staleFetch
+    await freshFetch
 
     const state = get(store.store)
-    expect(state.tools).toEqual([createTool("latest-tool")])
+    expect(state.tools).toEqual([createTool("fresh-tool")])
     expect(state.toolsLoaded).toBe(true)
     expect(state.toolsLoading).toBe(false)
+  })
+
+  it("clears tools when init runs on workspace change", async () => {
+    fetchTools.mockResolvedValue([createTool("workspace-tool")])
+
+    await store.fetchTools()
+    await store.init()
+
+    expect(fetchTools).toHaveBeenCalledTimes(1)
+    expect(get(store.store).tools).toEqual([])
+    expect(get(store.store).toolsLoaded).toBe(false)
   })
 })

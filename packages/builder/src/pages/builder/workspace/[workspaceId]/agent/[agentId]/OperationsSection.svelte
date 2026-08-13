@@ -46,22 +46,13 @@ Any constraints this operation must follow.
       })
     )
   )
-  let selectedOperation = $derived(
-    operations.find(operation => operation.id === selectedOperationId)
-  )
   let hasOperation = $derived(operations.length > 0)
-  let operationLive = $derived(selectedOperation?.live === true)
 
   const normalizeName = (value: string) => value.trim().toLowerCase()
 
   const openOperation = (operationId: string) => {
     selectedOperationId = operationId
     $goto(`./operation/${operationId}`)
-  }
-
-  const openRenameModal = () => {
-    renameOperationId = selectedOperation?.id
-    renameOperationModal?.show(selectedOperation?.name || "")
   }
 
   const validateCreateOperationName = (name: string) => {
@@ -112,13 +103,16 @@ Any constraints this operation must follow.
     } satisfies AgentOperation
   }
 
-  const setOperationLive = async (nextLive: boolean) => {
-    if (!selectedOperation || selectedOperation.live === nextLive) {
+  const setOperationLive = async (operationId: string, nextLive: boolean) => {
+    const targetOperation = operations.find(
+      operation => operation.id === operationId
+    )
+    if (!targetOperation || targetOperation.live === nextLive) {
       return
     }
 
     try {
-      await agentsStore.updateAgentOperation(agentId, selectedOperation.id, {
+      await agentsStore.updateAgentOperation(agentId, targetOperation.id, {
         live: nextLive,
       })
       await workspaceDeploymentStore.fetch()
@@ -153,13 +147,15 @@ Any constraints this operation must follow.
     }
   }
 
-  const deleteOperation = async () => {
-    if (!selectedOperationId) {
-      return
-    }
-    const operationIdToDelete = selectedOperationId
+  const openRenameModal = (operationId: string) => {
+    const targetOperation = operations.find(
+      operation => operation.id === operationId
+    )
+    renameOperationId = operationId
+    renameOperationModal?.show(targetOperation?.name || "")
+  }
 
-    contextMenuStore.close()
+  const confirmDeleteOperation = async (operationId: string) => {
     await tick()
 
     await confirm({
@@ -169,9 +165,8 @@ Any constraints this operation must follow.
       warning: true,
       onConfirm: async () => {
         try {
-          await agentsStore.deleteAgentOperation(agentId, operationIdToDelete)
+          await agentsStore.deleteAgentOperation(agentId, operationId)
           await workspaceDeploymentStore.fetch()
-          selectedOperationId = undefined
           notifications.success("Operation deleted.")
         } catch (error) {
           console.error(error)
@@ -181,30 +176,47 @@ Any constraints this operation must follow.
     })
   }
 
-  const openOperationContextMenu = (event: MouseEvent) => {
+  const deleteOperation = (operationId: string) => {
+    confirmDeleteOperation(operationId).catch(error => {
+      console.error(error)
+    })
+  }
+
+  const openOperationContextMenu = (event: MouseEvent, operationId: string) => {
+    const menuOperation = operations.find(
+      operation => operation.id === operationId
+    )
+    if (!menuOperation) {
+      return
+    }
+
     event.preventDefault()
     event.stopPropagation()
+
+    const menuOperationLive = menuOperation.live === true
 
     contextMenuStore.open(
       "agent-operation",
       [
         {
-          icon: operationLive ? "stop" : "play",
-          name: operationLive ? "Stop" : "Set live",
+          icon: menuOperationLive ? "stop" : "play",
+          name: menuOperationLive ? "Stop" : "Set live",
           visible: true,
-          callback: async () => await setOperationLive(!operationLive),
+          callback: () => {
+            setOperationLive(operationId, !menuOperationLive)
+          },
         },
         {
           icon: "pencil",
           name: "Rename",
           visible: true,
-          callback: openRenameModal,
+          callback: () => openRenameModal(operationId),
         },
         {
           icon: "trash",
           name: "Delete",
           visible: true,
-          callback: deleteOperation,
+          callback: () => deleteOperation(operationId),
         },
       ],
       { x: event.clientX, y: event.clientY },
@@ -243,7 +255,7 @@ Any constraints this operation must follow.
             onclick={() => openOperation(operation.id)}
             oncontextmenu={event => {
               selectedOperationId = operation.id
-              openOperationContextMenu(event)
+              openOperationContextMenu(event, operation.id)
             }}
           >
             <span class="operation-name"
@@ -263,7 +275,7 @@ Any constraints this operation must follow.
               event.stopPropagation()
               selectedOperationId = operation.id
               await tick()
-              openOperationContextMenu(event)
+              openOperationContextMenu(event, operation.id)
             }}
           >
             <Icon

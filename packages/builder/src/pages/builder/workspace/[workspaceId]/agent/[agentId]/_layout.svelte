@@ -59,11 +59,16 @@
     if (!$agentsStore.agentsLoaded) {
       await agentsStore.init()
     }
-    if (!$agentsStore.toolsLoaded && !$agentsStore.toolsLoading) {
-      agentsStore.fetchTools().catch(error => {
-        console.error("Failed to load agent tools", error)
-      })
+  })
+
+  $effect(() => {
+    if ($agentsStore.toolsLoaded || $agentsStore.toolsLoading) {
+      return
     }
+
+    agentsStore.fetchTools().catch(error => {
+      console.error("Failed to load agent tools", error)
+    })
   })
 
   $effect(() => {

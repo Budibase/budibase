@@ -237,17 +237,13 @@
       )
 
       if (operationId === forOperationId && operation) {
-        const savedInstructions = snapshot.promptInstructions || ""
-        const currentInstructions = operation.promptInstructions || ""
-
-        if (currentInstructions === savedInstructions) {
-          operation = {
-            ...(updated.operations?.find(item => item.id === forOperationId) ||
-              snapshot),
-          }
-          lastSavedInstructions = currentInstructions
-        }
         syncedAgentRev = updated._rev
+        if (
+          (operation.promptInstructions || "") ===
+          (snapshot.promptInstructions || "")
+        ) {
+          lastSavedInstructions = snapshot.promptInstructions || ""
+        }
       }
 
       await workspaceDeploymentStore.fetch()
