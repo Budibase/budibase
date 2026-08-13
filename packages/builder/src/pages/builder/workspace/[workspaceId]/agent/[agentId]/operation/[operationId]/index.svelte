@@ -386,9 +386,11 @@
                 saveOperation({ promptInstructions: instructions })}
             />
             <Button
-              primary
+              secondary={operation.live}
               size="S"
-              icon={operation.live ? "stop" : "play-circle"}
+              icon={operation.live ? "stop" : "play"}
+              iconSize="XXS"
+              iconWeight="fill"
               disabled={saving}
               on:click={() => saveOperation({ live: !operation?.live })}
             >
