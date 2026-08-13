@@ -32,6 +32,7 @@
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import GenerateInstructionsControl from "../../GenerateInstructionsControl.svelte"
   import Knowledge from "../../knowledge/index.svelte"
+  import AgentTabList from "../../AgentTabList.svelte"
   import OperationRailSectionHeader from "../../OperationRailSectionHeader.svelte"
   import ToolIcon from "../../ToolIcon.svelte"
   import ToolsDropdown from "../../ToolsDropdown.svelte"
@@ -408,7 +409,7 @@
       </main>
 
       <aside class="settings-rail">
-        <div class="rail-tabs" role="tablist" aria-label="Operation settings">
+        <AgentTabList ariaLabel="Operation settings" bordered>
           <button
             class:active={activeTab === "tools"}
             onclick={() => (activeTab = "tools")}>Tools</button
@@ -423,7 +424,7 @@
               onclick={() => (activeTab = "approvals")}>Approvals</button
             >
           {/if}
-        </div>
+        </AgentTabList>
 
         <div class="rail-content">
           {#if activeTab === "tools"}
@@ -624,29 +625,6 @@
     flex-direction: column;
     background: var(--background);
     border-left: 1px solid var(--spectrum-global-color-gray-200);
-  }
-  .rail-tabs {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 40px;
-    padding: 2px 12px;
-    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
-  }
-  .rail-tabs button {
-    border: 0;
-    border-radius: 6px;
-    padding: 4px 8px;
-    background: transparent;
-    color: var(--spectrum-global-color-gray-700);
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 19px;
-  }
-  .rail-tabs button.active {
-    background: var(--spectrum-global-color-gray-200);
-    color: var(--spectrum-global-color-gray-900);
   }
   .rail-content {
     min-height: 0;

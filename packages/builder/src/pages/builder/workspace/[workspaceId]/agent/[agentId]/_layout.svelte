@@ -14,6 +14,7 @@
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
   import AgentChatPanel from "./AgentChatPanel.svelte"
+  import AgentTabList from "./AgentTabList.svelte"
   import { FeatureFlag } from "@budibase/types"
 
   const { goto, isActive, params } = routify
@@ -139,7 +140,7 @@
       icon="Effect"
     ></TopBar>
     <div class="secondary-bar">
-      <div class="agent-tabs" role="tablist" aria-label="Agent settings">
+      <AgentTabList ariaLabel="Agent settings">
         <button
           class:active={activeTab === "Configuration"}
           onclick={() => $goto("./config")}
@@ -166,7 +167,7 @@
         >
           Logs
         </button>
-      </div>
+      </AgentTabList>
       {#if hasPublishedUnpublishedChanges}
         <div class="unpublished-changes-indicator">
           <StatusLight
@@ -318,30 +319,6 @@
     min-height: 40px;
     padding: 2px 12px;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
-  }
-
-  .agent-tabs {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 1 1 auto;
-  }
-
-  .agent-tabs button {
-    border: 0;
-    border-radius: 6px;
-    padding: 4px 8px;
-    background: transparent;
-    color: var(--spectrum-global-color-gray-700);
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 19px;
-  }
-
-  .agent-tabs button.active {
-    background: var(--spectrum-global-color-gray-200);
-    color: var(--spectrum-global-color-gray-900);
   }
 
   .unpublished-changes-indicator {
