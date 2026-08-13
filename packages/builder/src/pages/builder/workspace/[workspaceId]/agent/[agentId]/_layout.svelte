@@ -1,20 +1,15 @@
 <script lang="ts">
-  import {
-    Icon,
-    Layout,
-    StatusLight,
-    notifications,
-  } from "@budibase/bbui"
+  import { Icon, Layout, notifications } from "@budibase/bbui"
   import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { syncURLToState } from "@/helpers/urlStateSync"
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
-  import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
   import AgentChatPanel from "./AgentChatPanel.svelte"
   import AgentTabList from "./AgentTabList.svelte"
+  import AgentUnpublishedChangesIndicator from "./AgentUnpublishedChangesIndicator.svelte"
   import { FeatureFlag } from "@budibase/types"
 
   const { goto, isActive, params } = routify
@@ -53,20 +48,6 @@
     return "Configuration"
   })
   let currentAgent = $derived($selectedAgent)
-  let hasPublishedUnpublishedChanges = $derived.by(() => {
-    if (!currentAgent?._id) {
-      return false
-    }
-    if (!currentAgent.live) {
-      return false
-    }
-    const publishStatus = $workspaceDeploymentStore.agents[currentAgent._id]
-    if (!publishStatus?.publishedAt) {
-      return false
-    }
-
-    return publishStatus.unpublishedChanges === true
-  })
 
   $effect(() => {
     if (!testsEnabled && $isActive("./tests")) {
@@ -168,15 +149,7 @@
           Logs
         </button>
       </AgentTabList>
-      {#if hasPublishedUnpublishedChanges}
-        <div class="unpublished-changes-indicator">
-          <StatusLight
-            color="var(--spectrum-global-color-blue-600)"
-            size="L"
-          />
-          <span>Unpublished changes</span>
-        </div>
-      {/if}
+      <AgentUnpublishedChangesIndicator />
       <div class="start-pause-row">
         <div class="status-icons">
           <Icon
@@ -319,17 +292,6 @@
     min-height: 40px;
     padding: 2px 12px;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
-  }
-
-  .unpublished-changes-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    color: var(--spectrum-global-color-gray-700);
-    font-size: var(--font-size-s);
-    font-weight: 500;
-    margin-left: auto;
-    white-space: nowrap;
   }
 
   .start-pause-row {

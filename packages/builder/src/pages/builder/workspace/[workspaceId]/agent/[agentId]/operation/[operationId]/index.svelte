@@ -33,6 +33,7 @@
   import GenerateInstructionsControl from "../../GenerateInstructionsControl.svelte"
   import Knowledge from "../../knowledge/index.svelte"
   import AgentTabList from "../../AgentTabList.svelte"
+  import AgentUnpublishedChangesIndicator from "../../AgentUnpublishedChangesIndicator.svelte"
   import OperationRailSectionHeader from "../../OperationRailSectionHeader.svelte"
   import ToolIcon from "../../ToolIcon.svelte"
   import ToolsDropdown from "../../ToolsDropdown.svelte"
@@ -350,6 +351,7 @@
         <div class="instructions-header">
           <Body size="S" weight="500">Operation instructions</Body>
           <div class="instructions-actions">
+            <AgentUnpublishedChangesIndicator />
             <GenerateInstructionsControl
               triggerLabel="Help write instructions"
               promptInstructions={operation.promptInstructions || ""}
@@ -531,7 +533,6 @@
       </aside>
     </div>
   </div>
-
 
   <ConfirmDialog
     bind:this={removeToolDialog}
