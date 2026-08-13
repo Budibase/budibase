@@ -281,6 +281,7 @@ export const workspaceRoutes = (
         {
           path: "apis",
           title: "API Specs",
+          new: true,
           component: Pages.get("create_connection"),
           routes: [
             {
