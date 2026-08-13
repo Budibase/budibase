@@ -160,6 +160,62 @@ describe("queries SDK", () => {
       })
     })
 
+    it("keeps quoted JSON parameters safe in multi-object MongoDB templates", async () => {
+      const injected = 'x","name":{"$exists":true},"$comment":"esc'
+      const result = await enrichContext(
+        {
+          json: '{"name":"{{ name }}"} {"$set":{"touched":true}}',
+        },
+        {
+          name: injected,
+        }
+      )
+
+      expect(result.json).toEqual(
+        `${JSON.stringify({ name: injected })} ${JSON.stringify({
+          $set: { touched: true },
+        })}`
+      )
+    })
+
+    it("keeps dynamic keys safe in multi-object MongoDB templates", async () => {
+      const injectedKey = 'name":{"$exists":true},"$comment'
+      const result = await enrichContext(
+        {
+          json: '{"{{ key }}":"fixed"} {"$set":{"touched":true}}',
+        },
+        {
+          key: injectedKey,
+        }
+      )
+
+      expect(result.json).toEqual(
+        `${JSON.stringify({ [injectedKey]: "fixed" })} ${JSON.stringify({
+          $set: { touched: true },
+        })}`
+      )
+    })
+
+    it("keeps triple-brace JSON parameters safe in multi-object MongoDB templates", async () => {
+      const injected = 'x","name":{"$exists":true},"$comment":"esc'
+      const result = await enrichContext(
+        {
+          json: '{"criteria": {{{ extra }}}, "name":"{{ name }}"} {"$set":{"touched":true}} {}',
+        },
+        {
+          extra: '{"active":true}',
+          name: injected,
+        }
+      )
+
+      expect(result.json).toEqual(
+        `${JSON.stringify({
+          criteria: { active: true },
+          name: injected,
+        })} ${JSON.stringify({ $set: { touched: true } })} {}`
+      )
+    })
+
     it("falls back to requestBody when json is blank", async () => {
       const result = await enrichContext({
         json: "",
