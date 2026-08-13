@@ -644,6 +644,8 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+  }
+  .tools-list {
     margin-top: 16px;
   }
   .tool-row {

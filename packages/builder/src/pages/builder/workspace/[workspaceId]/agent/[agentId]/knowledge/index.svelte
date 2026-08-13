@@ -348,7 +348,6 @@
 
 <Layout gap="S" noPadding>
   <div class="section-header">
-    <Body size="S">Knowledge</Body>
     <div class="section-header-actions">
       {#if hasStoreAccessFailures}
         <Button
