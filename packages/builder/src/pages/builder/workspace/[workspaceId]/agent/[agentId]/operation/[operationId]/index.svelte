@@ -176,7 +176,9 @@
   ]
 
   const getToolPrincipal = (toolName: string) => {
-    const config = operation?.enabledTools?.find(tool => tool.toolName === toolName)
+    const config = operation?.enabledTools?.find(
+      tool => tool.toolName === toolName
+    )
     return config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
   }
 
@@ -503,6 +505,8 @@
                   {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] && tool.executionPolicy.mode === "configurable"}
                     <div
                       class="tool-row-run-as"
+                      role="group"
+                      aria-label="Run as"
                       oncontextmenu={event => event.stopPropagation()}
                     >
                       <span class="run-as-label">Run as</span>
