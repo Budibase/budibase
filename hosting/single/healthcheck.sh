@@ -26,8 +26,7 @@ if [[ $(curl -s -w "%{http_code}\n" http://localhost:4002/health -o /dev/null) -
 fi
 
 if [[ $(curl -s -w "%{http_code}\n" http://localhost:4000/health/liveliness -o /dev/null) -ne 200 ]]; then
-    echo 'ERROR: LiteLLM is not running';
-    healthy=false
+    echo 'WARNING: LiteLLM is not running, AI features are unavailable';
 fi
 
 if [[ $(curl -s -w "%{http_code}\n" http://localhost:5984/_up -o /dev/null) -ne 200 ]]; then
@@ -41,8 +40,7 @@ fi
 
 if [[ "${LITELLM_INTERNAL_DB}" == "true" ]]; then
     if ! pg_isready -p "${LITELLM_DB_PORT:-5432}" -U postgres >/dev/null 2>&1; then
-        echo 'ERROR: LiteLLM Postgres is down';
-        healthy=false
+        echo 'WARNING: LiteLLM Postgres is down, AI features are unavailable';
     fi
 fi
 # mino, clouseau, 
