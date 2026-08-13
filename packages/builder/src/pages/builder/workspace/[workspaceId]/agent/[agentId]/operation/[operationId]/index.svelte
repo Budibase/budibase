@@ -434,10 +434,11 @@
                 />
               </div>
             </div>
-            <div class="tools-list">
+            <div class="tools-list" role="list">
               {#each includedTools as tool (tool.runtimeBinding)}
                 <div
                   class="tool-row"
+                  role="listitem"
                   oncontextmenu={event => openToolMenu(event, tool)}
                 >
                   <div class="tool-name">
