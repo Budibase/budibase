@@ -32,6 +32,7 @@
   import GenerateInstructionsControl from "../../GenerateInstructionsControl.svelte"
   import Knowledge from "../../knowledge/index.svelte"
   import OperationNameModal from "../../OperationNameModal.svelte"
+  import OperationRailSectionHeader from "../../OperationRailSectionHeader.svelte"
   import ToolIcon from "../../ToolIcon.svelte"
   import ToolsDropdown from "../../ToolsDropdown.svelte"
   import { enrichAgentTool } from "../../agentToolUtils"
@@ -456,94 +457,98 @@
 
         <div class="rail-content">
           {#if activeTab === "tools"}
-            <div class="rail-heading">
-              <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-                Give the operation access to the tools it needs to complete
-                requests and take action.
-              </Body>
-
-              <div class="tools-popover-container">
-                <ToolsDropdown
-                  {filteredTools}
-                  {toolSections}
-                  bind:toolSearch
-                  webSearchEnabled={false}
-                  onToolClick={insertTool}
-                  onAddApiConnection={() => bb.settings("/connections/apis")}
-                  onConfigureWebSearch={() => bb.settings("/connections/ai")}
-                />
-              </div>
-            </div>
-            <div class="tools-list" role="list">
-              {#each includedTools as tool (tool.runtimeBinding)}
-                <div
-                  class="tool-row"
-                  class:tool-row--with-run-as={$featureFlags[
-                    FeatureFlag.AI_AGENT_TOOL_SECURITY
-                  ] && tool.executionPolicy.mode === "configurable"}
-                  role="listitem"
-                  oncontextmenu={event => openToolMenu(event, tool)}
-                >
-                  <div class="tool-row-main">
-                    <div class="tool-name">
-                      <span class="tool-icon">
-                        <ToolIcon
-                          icon={tool.icon}
-                          size="S"
-                          fallbackIcon="Wrench"
-                        />
-                      </span>
-                      <span>{tool.readableBinding}</span>
-                    </div>
-                    <button
-                      aria-label={`Actions for ${tool.readableBinding}`}
-                      onclick={event => openToolMenu(event, tool)}
-                    >
-                      <Icon name="dots-three" size="XS" />
-                    </button>
+            <div class="rail-section">
+              <OperationRailSectionHeader
+                title="Tools"
+                description="Give the operation access to the tools it needs to complete requests and take action."
+              >
+                {#snippet actions()}
+                  <div class="tools-popover-container">
+                    <ToolsDropdown
+                      {filteredTools}
+                      {toolSections}
+                      bind:toolSearch
+                      webSearchEnabled={false}
+                      onToolClick={insertTool}
+                      onAddApiConnection={() =>
+                        bb.settings("/connections/apis")}
+                      onConfigureWebSearch={() =>
+                        bb.settings("/connections/ai")}
+                    />
                   </div>
-                  {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] && tool.executionPolicy.mode === "configurable"}
-                    <div
-                      class="tool-row-run-as"
-                      role="group"
-                      aria-label="Run as"
-                      oncontextmenu={event => event.stopPropagation()}
-                    >
-                      <span class="run-as-label">Run as</span>
-                      <Select
-                        size="S"
-                        bordered={false}
-                        placeholder={false}
-                        autoWidth
-                        popoverAutoWidth
-                        value={getEffectiveToolPrincipal(tool)}
-                        options={executionPrincipalOptions}
-                        getOptionLabel={option => option.label}
-                        getOptionValue={option => option.value}
-                        tooltip={`Execution identity for ${formatToolLabel(tool)}`}
-                        on:change={event =>
-                          setToolPrincipal(
-                            tool.runtimeBinding,
-                            event.detail as ToolExecutionPrincipal
-                          )}
-                      />
+                {/snippet}
+              </OperationRailSectionHeader>
+              <div class="tools-list" role="list">
+                {#each includedTools as tool (tool.runtimeBinding)}
+                  <div
+                    class="tool-row"
+                    class:tool-row--with-run-as={$featureFlags[
+                      FeatureFlag.AI_AGENT_TOOL_SECURITY
+                    ] && tool.executionPolicy.mode === "configurable"}
+                    role="listitem"
+                    oncontextmenu={event => openToolMenu(event, tool)}
+                  >
+                    <div class="tool-row-main">
+                      <div class="tool-name">
+                        <span class="tool-icon">
+                          <ToolIcon
+                            icon={tool.icon}
+                            size="S"
+                            fallbackIcon="Wrench"
+                          />
+                        </span>
+                        <span>{tool.readableBinding}</span>
+                      </div>
+                      <button
+                        aria-label={`Actions for ${tool.readableBinding}`}
+                        onclick={event => openToolMenu(event, tool)}
+                      >
+                        <Icon name="dots-three" size="XS" />
+                      </button>
                     </div>
-                  {/if}
-                </div>
-              {:else}
-                <Body size="XS" color="var(--spectrum-global-color-gray-700)"
-                  >No tools are referenced in these instructions.</Body
-                >
-              {/each}
+                    {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] && tool.executionPolicy.mode === "configurable"}
+                      <div
+                        class="tool-row-run-as"
+                        role="group"
+                        aria-label="Run as"
+                        oncontextmenu={event => event.stopPropagation()}
+                      >
+                        <span class="run-as-label">Run as</span>
+                        <Select
+                          size="S"
+                          bordered={false}
+                          placeholder={false}
+                          autoWidth
+                          popoverAutoWidth
+                          value={getEffectiveToolPrincipal(tool)}
+                          options={executionPrincipalOptions}
+                          getOptionLabel={option => option.label}
+                          getOptionValue={option => option.value}
+                          tooltip={`Execution identity for ${formatToolLabel(tool)}`}
+                          on:change={event =>
+                            setToolPrincipal(
+                              tool.runtimeBinding,
+                              event.detail as ToolExecutionPrincipal
+                            )}
+                        />
+                      </div>
+                    {/if}
+                  </div>
+                {:else}
+                  <Body size="XS" color="var(--spectrum-global-color-gray-700)"
+                    >No tools are referenced in these instructions.</Body
+                  >
+                {/each}
+              </div>
             </div>
           {:else if activeTab === "knowledge"}
             <Knowledge bind:operation onUpdated={() => saveOperation()} />
           {:else}
-            <div class="approval-panel">
-              <Body size="S" weight="500">Escalation recipients</Body>
-              <Body size="XS" color="var(--spectrum-global-color-gray-700)"
-                >Who gets notified when this operation escalates for approval.</Body
-              >
+            <div class="rail-section approval-panel">
+              <OperationRailSectionHeader
+                title="Approvals"
+                description="Choose who gets notified when this operation escalates for approval."
+              />
               <EscalationRecipients
                 single
                 recipients={operation.escalation?.recipients || []}
@@ -705,24 +710,18 @@
     overflow: auto;
     padding: 20px 12px;
   }
-  .rail-heading {
+  .rail-section {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
+    gap: 16px;
   }
-  .rail-heading :global(.spectrum-Button) {
-    border-radius: 100px;
-  }
-  .tools-list,
-  .approval-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
+
   .tools-list {
-    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
+
   .tool-row {
     display: flex;
     align-items: center;
