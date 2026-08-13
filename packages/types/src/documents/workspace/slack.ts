@@ -1,7 +1,6 @@
-import type { Document } from "../../"
+import type { Document } from "../document"
 
 export interface SlackAppConfig extends Document {
-  tenantId: string
   configToken: string
   refreshToken?: string
   expiresAt?: string

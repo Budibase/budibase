@@ -1,7 +1,13 @@
-import { context, encryption, HTTPError, tenancy } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  encryption,
+  HTTPError,
+} from "@budibase/backend-core"
 import {
   DocumentType,
   PASSWORD_REPLACEMENT,
+  SEPARATOR,
   type SlackAppConfig,
 } from "@budibase/types"
 import { rotateSlackConfigToken } from "./deployments/slack"
@@ -9,8 +15,18 @@ import { rotateSlackConfigToken } from "./deployments/slack"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 const TOKEN_EXPIRY_BUFFER_MS = 5 * 60 * 1000
 
-const getDocId = (tenantId: string) =>
-  `${DocumentType.SLACK_APP_CONFIG}_${encodeURIComponent(tenantId)}`
+const SLACK_APP_CONFIG_ID = `${DocumentType.SLACK_APP_CONFIG}${SEPARATOR}config`
+
+const getWorkspaceDB = () => {
+  const workspaceId = context.getWorkspaceId()
+  if (!workspaceId || !dbCore.isDevWorkspaceID(workspaceId)) {
+    throw new HTTPError(
+      "Slack app configuration requires a development workspace",
+      400
+    )
+  }
+  return context.getWorkspaceDB()
+}
 
 const encodeSecret = (value: string): string => {
   if (!value || value.startsWith(SECRET_ENCODING_PREFIX)) {
@@ -27,9 +43,7 @@ const decodeSecret = (value: string): string => {
 }
 
 export const fetch = async () => {
-  const tenantId = context.getTenantId()
-  const db = tenancy.getGlobalDB()
-  return await db.tryGet<SlackAppConfig>(getDocId(tenantId))
+  return await getWorkspaceDB().tryGet<SlackAppConfig>(SLACK_APP_CONFIG_ID)
 }
 
 const tokenNeedsRotation = (expiresAt?: string) => {
@@ -47,7 +61,7 @@ const saveRotatedConfig = async (
     expiresAt: string
   }
 ) => {
-  const db = tenancy.getGlobalDB()
+  const db = getWorkspaceDB()
   const next: SlackAppConfig = {
     ...existing,
     configToken: encodeSecret(rotated.configToken),
@@ -66,7 +80,7 @@ export const fetchConfigToken = async () => {
   const config = await fetch()
   if (!config?.configToken) {
     throw new HTTPError(
-      "Slack app configuration token is not configured for this tenant",
+      "Slack app configuration token is not configured for this workspace",
       400
     )
   }
@@ -92,8 +106,7 @@ export const fetchConfigToken = async () => {
 }
 
 export const save = async (configToken: string, refreshToken: string) => {
-  const tenantId = context.getTenantId()
-  const db = tenancy.getGlobalDB()
+  const db = getWorkspaceDB()
   const existing = await fetch()
   const now = new Date().toISOString()
   const trimmedToken = configToken.trim()
@@ -125,9 +138,8 @@ export const save = async (configToken: string, refreshToken: string) => {
   })
 
   const next: SlackAppConfig = {
-    _id: getDocId(tenantId),
+    _id: SLACK_APP_CONFIG_ID,
     ...(existing?._rev ? { _rev: existing._rev } : {}),
-    tenantId,
     configToken: encodeSecret(rotated.configToken),
     refreshToken: encodeSecret(rotated.refreshToken),
     expiresAt: rotated.expiresAt,
@@ -147,6 +159,6 @@ export const remove = async () => {
   if (!existing) {
     return
   }
-  const db = tenancy.getGlobalDB()
+  const db = getWorkspaceDB()
   await db.remove(existing)
 }

@@ -495,7 +495,7 @@ describe("agent slack integration provisioning", () => {
     expect(persisted.slackIntegration?.botToken).toBeUndefined()
   })
 
-  it("requires a tenant Slack app configuration token when creating a Slack app", async () => {
+  it("requires a workspace Slack app configuration token when creating a Slack app", async () => {
     const agent = await config.api.agent.create({
       name: "Slack Missing Config App",
     })

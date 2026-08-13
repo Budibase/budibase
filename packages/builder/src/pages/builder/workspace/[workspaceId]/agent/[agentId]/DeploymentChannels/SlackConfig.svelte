@@ -8,12 +8,12 @@
     Link,
     notifications,
   } from "@budibase/bbui"
-  import { ChatCommands, sdk } from "@budibase/shared-core"
+  import { ChatCommands } from "@budibase/shared-core"
   import type {
     Agent,
     ProvisionAgentSlackChannelResponse,
   } from "@budibase/types"
-  import { agentsStore, auth } from "@/stores/portal"
+  import { agentsStore } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
   import { bb } from "@/stores/bb"
   import ChannelConfigLayout from "./ChannelConfigLayout.svelte"
@@ -54,8 +54,6 @@
   const isProvisioned = $derived.by(
     () => messagingEndpointUrl.trim().length > 0
   )
-
-  const isAdmin = $derived(sdk.users.isAdmin($auth.user))
 
   $effect(() => {
     const currentAgent = agent
@@ -226,14 +224,14 @@
     />
     <div class="guided-setup">
       <Body size="S">
-        Slack app creation uses the tenant Slack app configuration token managed
-        in {#if isAdmin}<Link on:click={() => bb.settings("/slack-app-config")}
-            >tenant settings</Link
-          >{:else}tenant settings{/if}.
+        Slack app creation uses the configuration token managed in
+        <Link on:click={() => bb.settings("/connections/slack")}
+          >workspace settings</Link
+        >.
       </Body>
       {#if !loadingSlackAppConfig && !slackAppConfigConfigured}
         <Body size="S">
-          Configure the Slack app token in tenant settings before creating a
+          Configure the Slack app token in workspace settings before creating a
           Slack app automatically.
         </Body>
       {/if}

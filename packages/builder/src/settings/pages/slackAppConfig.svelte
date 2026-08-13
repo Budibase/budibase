@@ -82,9 +82,9 @@
 
 <Layout noPadding gap="M">
   <Body size="S">
-    Store the tenant-wide Slack app configuration token used to create Slack
-    apps automatically for agent deployments. Budibase rotates the token using
-    the matching Slack refresh token before it expires.
+    Store the Slack app configuration token used to create Slack apps
+    automatically in this workspace. Budibase rotates the token using the
+    matching Slack refresh token before it expires.
   </Body>
 
   <div class="field">

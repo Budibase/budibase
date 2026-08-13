@@ -1,3 +1,7 @@
+import { constants, context, roles } from "@budibase/backend-core"
+import { structures } from "@budibase/backend-core/tests"
+import { DocumentType, SEPARATOR, type SlackAppConfig } from "@budibase/types"
+import sdk from "../../../../sdk"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 const slackJsonResponse = (body: Record<string, unknown>) =>
@@ -29,13 +33,15 @@ describe("Slack app config routes", () => {
     }
   })
 
-  it("allows builders to read the config status", async () => {
-    const admin = await config.globalUser({
-      builder: { global: true },
-      admin: { global: true },
-    })
-    const builder = await config.globalUser({
-      builder: { global: true },
+  it("allows workspace builders to manage the config", async () => {
+    const builder = await config.createUser({
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+      builder: {
+        global: false,
+        apps: [config.getProdWorkspaceId()],
+      },
       admin: { global: false },
     })
 
@@ -48,17 +54,44 @@ describe("Slack app config routes", () => {
       })
     )
 
-    await config.withUser(admin, async () => {
-      await config.api.ai.saveSlackAppConfig({
+    await config.withUser(builder, async () => {
+      let response = await config.api.ai.fetchSlackAppConfig()
+      expect(response.configured).toBe(false)
+
+      response = await config.api.ai.saveSlackAppConfig({
         configToken: "xoxe-test-token",
         refreshToken: "xoxe-test-refresh-token",
       })
-    })
-
-    await config.withUser(builder, async () => {
-      const response = await config.api.ai.fetchSlackAppConfig()
       expect(response.configured).toBe(true)
 
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const persisted = await context
+          .getWorkspaceDB()
+          .get<SlackAppConfig>(
+            `${DocumentType.SLACK_APP_CONFIG}${SEPARATOR}config`
+          )
+        expect(persisted.configToken).not.toContain("xoxe-rotated-config-token")
+        expect(persisted.refreshToken).not.toContain(
+          "xoxe-rotated-refresh-token"
+        )
+      })
+
+      response = await config.api.ai.deleteSlackAppConfig()
+      expect(response.configured).toBe(false)
+    })
+  })
+
+  it("denies users without builder access to the workspace", async () => {
+    const user = await config.createUser({
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+      builder: { global: false, apps: ["app_another_workspace"] },
+      admin: { global: false },
+    })
+
+    await config.withUser(user, async () => {
+      await config.api.ai.fetchSlackAppConfig({ status: 403 })
       await config.api.ai.saveSlackAppConfig(
         {
           configToken: "xoxe-test-token",
@@ -70,37 +103,58 @@ describe("Slack app config routes", () => {
     })
   })
 
-  it("allows admins", async () => {
-    const admin = await config.globalUser({
-      builder: { global: true },
-      admin: { global: true },
+  it("isolates Slack app configuration by workspace", async () => {
+    const firstWorkspaceId = config.getDevWorkspaceId()
+    const secondWorkspace = await config.api.workspace.create({
+      name: structures.generator.word(),
     })
 
-    await config.withUser(admin, async () => {
-      let response = await config.api.ai.fetchSlackAppConfig()
-      expect(response.configured).toBe(false)
+    jest.spyOn(global, "fetch").mockImplementation(async (_url, init) => {
+      const refreshToken = (init?.body as URLSearchParams).get("refresh_token")
+      return slackJsonResponse({
+        ok: true,
+        token: `${refreshToken}-rotated`,
+        refresh_token: `${refreshToken}-next`,
+        exp: Math.floor(Date.now() / 1000) + 43200,
+      })
+    })
 
-      jest.spyOn(global, "fetch").mockImplementation(async (url, init) => {
-        expect(String(url)).toContain("/tooling.tokens.rotate")
-        expect((init?.body as URLSearchParams).get("refresh_token")).toEqual(
-          "xoxe-test-refresh-token"
+    await config.api.ai.saveSlackAppConfig({
+      configToken: "xoxe-first-token",
+      refreshToken: "xoxe-first-refresh",
+    })
+
+    await config.withHeaders(
+      { [constants.Header.WORKSPACE_ID]: secondWorkspace.appId },
+      async () => {
+        expect((await config.api.ai.fetchSlackAppConfig()).configured).toBe(
+          false
         )
-        return slackJsonResponse({
-          ok: true,
-          token: "xoxe-rotated-config-token",
-          refresh_token: "xoxe-rotated-refresh-token",
-          exp: Math.floor(Date.now() / 1000) + 43200,
+        await config.api.ai.saveSlackAppConfig({
+          configToken: "xoxe-second-token",
+          refreshToken: "xoxe-second-refresh",
         })
-      })
+      }
+    )
 
-      response = await config.api.ai.saveSlackAppConfig({
-        configToken: "xoxe-test-token",
-        refreshToken: "xoxe-test-refresh-token",
-      })
-      expect(response.configured).toBe(true)
-
-      response = await config.api.ai.deleteSlackAppConfig()
-      expect(response.configured).toBe(false)
+    await context.doInWorkspaceContext(firstWorkspaceId, async () => {
+      expect(await sdk.ai.slackAppConfig.fetchConfigToken()).toEqual(
+        "xoxe-first-refresh-rotated"
+      )
     })
+    await context.doInWorkspaceContext(secondWorkspace.appId, async () => {
+      expect(await sdk.ai.slackAppConfig.fetchConfigToken()).toEqual(
+        "xoxe-second-refresh-rotated"
+      )
+    })
+  })
+
+  it("rejects production workspace context", async () => {
+    await config.withHeaders(
+      { [constants.Header.WORKSPACE_ID]: config.getProdWorkspaceId() },
+      async () => {
+        await config.api.ai.fetchSlackAppConfig({ status: 400 })
+      }
+    )
   })
 })
