@@ -112,7 +112,10 @@ describe("agentAvailableTools", () => {
     })
 
     expect(
-      toAgentPromptBindings({ tools: configuredTools, webSearchConfigured: true })
+      toAgentPromptBindings({
+        tools: configuredTools,
+        webSearchConfigured: true,
+      })
     ).toHaveLength(1)
   })
 

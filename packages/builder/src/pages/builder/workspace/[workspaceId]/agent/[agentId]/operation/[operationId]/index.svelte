@@ -28,7 +28,12 @@
     restTemplates,
     workspaceDeploymentStore,
   } from "@/stores/builder"
-  import { agentsStore, aiConfigsStore, featureFlags, selectedAgent } from "@/stores/portal"
+  import {
+    agentsStore,
+    aiConfigsStore,
+    featureFlags,
+    selectedAgent,
+  } from "@/stores/portal"
   import GenerateInstructionsControl from "../../GenerateInstructionsControl.svelte"
   import Knowledge from "../../knowledge/index.svelte"
   import WebSearchConfigModal from "../../WebSearchConfigModal.svelte"

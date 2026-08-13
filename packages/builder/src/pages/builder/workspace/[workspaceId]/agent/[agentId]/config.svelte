@@ -1,11 +1,7 @@
 <script lang="ts">
   import { Body, notifications, Select, Button } from "@budibase/bbui"
   import type { AgentOperation, RequiredKeys } from "@budibase/types"
-  import {
-    FeatureFlag,
-    AIConfigType,
-    type Agent,
-  } from "@budibase/types"
+  import { FeatureFlag, AIConfigType, type Agent } from "@budibase/types"
   import {
     agentsStore,
     aiConfigsStore,

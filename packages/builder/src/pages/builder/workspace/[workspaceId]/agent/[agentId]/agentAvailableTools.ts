@@ -1,4 +1,8 @@
-import type { EnrichedBinding, ToolMetadata, WebSearchConfig } from "@budibase/types"
+import type {
+  EnrichedBinding,
+  ToolMetadata,
+  WebSearchConfig,
+} from "@budibase/types"
 import { ToolType, WebSearchProvider } from "@budibase/types"
 import { enrichAgentTool } from "./agentToolUtils"
 import type { AgentTool } from "./toolTypes"
