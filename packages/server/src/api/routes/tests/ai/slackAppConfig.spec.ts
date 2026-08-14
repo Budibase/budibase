@@ -1,8 +1,10 @@
-import { constants, context, roles } from "@budibase/backend-core"
+import { constants, context, encryption, roles } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import { DocumentType, SEPARATOR, type SlackAppConfig } from "@budibase/types"
 import sdk from "../../../../sdk"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+
+const SECRET_ENCODING_PREFIX = "bbai_enc::"
 
 const slackJsonResponse = (body: Record<string, unknown>) =>
   new Response(JSON.stringify(body), {
@@ -70,10 +72,20 @@ describe("Slack app config routes", () => {
           .get<SlackAppConfig>(
             `${DocumentType.SLACK_APP_CONFIG}${SEPARATOR}config`
           )
-        expect(persisted.configToken).not.toContain("xoxe-rotated-config-token")
-        expect(persisted.refreshToken).not.toContain(
-          "xoxe-rotated-refresh-token"
-        )
+        expect(persisted.configToken).toStartWith(SECRET_ENCODING_PREFIX)
+        expect(
+          encryption.compare(
+            "xoxe-rotated-config-token",
+            persisted.configToken.slice(SECRET_ENCODING_PREFIX.length)
+          )
+        ).toBeTrue()
+        expect(persisted.refreshToken).toStartWith(SECRET_ENCODING_PREFIX)
+        expect(
+          encryption.compare(
+            "xoxe-rotated-refresh-token",
+            persisted.refreshToken!.slice(SECRET_ENCODING_PREFIX.length)
+          )
+        ).toBeTrue()
       })
 
       response = await config.api.ai.deleteSlackAppConfig()
