@@ -16,10 +16,15 @@ start_redis_server() {
         cmd=("redis-server" "${REDIS_CONFIG}")
     fi
 
-    if [[ -n "${REDIS_USERNAME}" && -n "${REDIS_PASSWORD}" ]]; then
-        cmd+=("--user" "${REDIS_USERNAME}" "--requirepass" "${REDIS_PASSWORD}")
-    elif [[ -n "${REDIS_PASSWORD}" ]]; then
+    if [[ -n "${REDIS_PASSWORD}" ]]; then
         cmd+=("--requirepass" "${REDIS_PASSWORD}")
+    fi
+
+    if [[ -n "${REDIS_USERNAME}" && -n "${REDIS_PASSWORD}" ]]; then
+        # Declaring a user without rules leaves it off, with no password and no
+        # permissions, so clients authenticating as it are rejected with WRONGPASS.
+        # Give it the same access the default user gets from requirepass.
+        cmd+=("--user" "${REDIS_USERNAME}" "on" ">${REDIS_PASSWORD}" "allkeys" "allchannels" "allcommands")
     fi
 
     exec "${cmd[@]}"
