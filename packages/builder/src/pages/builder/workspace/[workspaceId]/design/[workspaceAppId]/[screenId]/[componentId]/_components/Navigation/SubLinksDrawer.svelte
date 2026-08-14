@@ -7,10 +7,10 @@
     Layout,
     Input,
     Drawer,
+    generateId,
   } from "@budibase/bbui"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
-  import { generate } from "shortid"
   import { screenStore } from "@/stores/builder"
   import DrawerBindableCombobox from "@/components/common/bindings/DrawerBindableCombobox.svelte"
 
@@ -29,7 +29,7 @@
   $: drawerTitle = navItem.text ? `${navItem.text} sub links` : "Sub links"
   $: subLinks.forEach(subLink => {
     if (!subLink.id) {
-      subLink.id = generate()
+      subLink.id = generateId()
     }
   })
   $: urlOptions = screenStore.routes

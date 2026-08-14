@@ -3,7 +3,11 @@ import {
   KnowledgeBaseFileStatus,
 } from "@budibase/types"
 
-export interface FileKnowledgeTableRow {
+interface KnowledgeTableRowBase {
+  knowledgeSearchConfigured: boolean
+}
+
+export interface FileKnowledgeTableRow extends KnowledgeTableRowBase {
   kind: "file"
   __clickable?: boolean
   _id?: string
@@ -18,7 +22,7 @@ export interface FileKnowledgeTableRow {
   errorMessage?: string
 }
 
-export interface SharePointConnectionTableRow {
+export interface SharePointConnectionTableRow extends KnowledgeTableRowBase {
   kind: "sharepoint_connection"
   __clickable: boolean
   _id: string

@@ -137,6 +137,26 @@ describe("SMTP email automations", () => {
     })
   })
 
+  it("should allow the SMTP configuration to provide the from address", async () => {
+    jest
+      .spyOn(workerRequests, "sendSmtpEmail")
+      .mockImplementationOnce(async () =>
+        generateResponse("user1@example.com", "configured@example.com")
+      )
+
+    const { steps } = await createAutomationBuilder(config)
+      .onAppAction()
+      .sendSmtpEmail(smtpInputs({ from: undefined }))
+      .test({ fields: {} })
+
+    expect(steps[0].outputs.success).toEqual(true)
+    expect(workerRequests.sendSmtpEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: undefined,
+      })
+    )
+  })
+
   it("should support a single attachment without an invite", async () => {
     jest
       .spyOn(workerRequests, "sendSmtpEmail")

@@ -2,6 +2,8 @@
   import { Body, notifications, Select, Button } from "@budibase/bbui"
   import type { AgentOperation, RequiredKeys } from "@budibase/types"
   import {
+    FeatureFlag,
+    ToolExecutionPrincipal,
     AIConfigType,
     ToolType,
     WebSearchProvider,
@@ -9,7 +11,16 @@
     type ToolMetadata,
     type EnrichedBinding,
   } from "@budibase/types"
-  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
+  import {
+    agentsStore,
+    aiConfigsStore,
+    featureFlags,
+    selectedAgent,
+  } from "@/stores/portal"
+  import {
+    getReadableQueryToolBinding,
+    isQueryToolType,
+  } from "@budibase/shared-core"
   import {
     datasources,
     restTemplates,
@@ -61,6 +72,36 @@
     escalation: operation.escalation,
   })
 
+  const getConfiguredTools = (operation: AgentOperation) => {
+    const existing = new Map(
+      (operation.enabledTools || []).map(tool => [
+        tool.toolName,
+        tool.executionPrincipal,
+      ])
+    )
+    return getIncludedToolRuntimeBindings(
+      operation.promptInstructions,
+      readableToRuntimeBinding
+    ).map(toolName => {
+      const tool = availableTools.find(tool => tool.runtimeBinding === toolName)
+      let executionPrincipal =
+        existing.get(toolName) ?? ToolExecutionPrincipal.REQUESTER
+      if (!$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]) {
+        executionPrincipal =
+          existing.get(toolName) ?? ToolExecutionPrincipal.ADMIN
+      } else if (tool?.executionPolicy.mode === "admin") {
+        executionPrincipal = ToolExecutionPrincipal.ADMIN
+      } else if (tool?.executionPolicy.mode === "configurable") {
+        executionPrincipal =
+          existing.get(toolName) ?? tool.executionPolicy.defaultPrincipal
+      }
+      return {
+        toolName,
+        executionPrincipal,
+      }
+    })
+  }
+
   // Agent state
   let draftAgentId: string | undefined = $state()
   let draft = $state<Agent>({
@@ -100,17 +141,23 @@
 
   function enrichToolMetadata(tool: ToolMetadata): AgentTool {
     const { sourceType, sourceLabel } = tool
-    const prefix = getBindingPrefix(sourceType, sourceLabel)
     const { icon, tagIconUrl } = resolveAgentToolIcons(tool, {
       sourceType,
       sourceLabel,
     })
     const displayName = tool.readableName || tool.name
+    const readableBinding = isQueryToolType(sourceType)
+      ? getReadableQueryToolBinding({
+          sourceType,
+          sourceLabel,
+          queryName: displayName,
+        })
+      : `${getBindingPrefix(sourceType, sourceLabel)}.${displayName}`
     return {
       ...tool,
       sourceLabel,
       sourceType,
-      readableBinding: `${prefix}.${displayName}`,
+      readableBinding,
       runtimeBinding: tool.name,
       icon,
       tagIconUrl,
@@ -124,6 +171,9 @@
       description: "Configure web search",
       sourceType: ToolType.SEARCH,
       sourceLabel: "Search tools",
+      executionPolicy: {
+        mode: "admin",
+      },
     }
     const enriched = enrichToolMetadata(webSearchTool)
     return {
@@ -333,11 +383,10 @@
     return {}
   }
 
-  function sanitizeString(str: string, lowercase = false) {
-    const base = lowercase ? str.toLowerCase() : str
-    const pattern = lowercase ? /[^a-z0-9]+/g : /[^a-zA-Z0-9]+/g
-    return base.replace(pattern, "_").replace(/^_|_$/g, "")
+  function sanitizeString(str: string) {
+    return str.replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_|_$/g, "")
   }
+
   function getBindingPrefix(
     sourceType: ToolType | undefined,
     sourceLabel: string | undefined
@@ -353,12 +402,6 @@
     }
     if (sourceType === ToolType.SEARCH) {
       return "search"
-    }
-    if (sourceType === ToolType.REST_QUERY && sourceLabel) {
-      return `api.${sanitizeString(sourceLabel, true)}`
-    }
-    if (sourceType === ToolType.DATASOURCE_QUERY) {
-      return sourceLabel ? sanitizeString(sourceLabel, true) : "datasource"
     }
     if (sourceType === ToolType.ESCALATION) {
       return "escalation"
@@ -408,10 +451,7 @@
       const operations =
         draftOperations?.map(operation => ({
           ...operation,
-          enabledTools: getIncludedToolRuntimeBindings(
-            operation.promptInstructions,
-            readableToRuntimeBinding
-          ),
+          enabledTools: getConfiguredTools(operation),
         })) || []
 
       await agentsStore.updateAgent({

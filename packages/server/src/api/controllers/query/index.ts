@@ -25,6 +25,7 @@ import {
   Query,
   QueryResponse,
   QuerySchema,
+  RestPreviewConfig,
   SaveQueryRequest,
   SaveQueryResponse,
   SessionCookie,
@@ -183,6 +184,7 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const datasource = await sdk.datasources.get(query.datasourceId)
 
   let eventFn
+  let existingQuery: Query | undefined
   if (!query._id && !query._rev) {
     query.projectIds = await resolveProjectIds(query.projectIds)
     query._id = generateQueryID(query.datasourceId)
@@ -192,7 +194,7 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   } else {
     // check if flag has previously been set, don't let it change
     // allow it to be explicitly set to false via API incase this is ever needed
-    const existingQuery = await db.get<Query>(query._id)
+    existingQuery = await db.get<Query>(query._id)
     if (existingQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
       query.nullDefaultSupport = true
     }
@@ -201,6 +203,14 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
       existingQuery.projectIds
     )
     eventFn = () => events.query.updated(datasource, query)
+  }
+  if (existingQuery && existingQuery.name !== query.name) {
+    await sdk.ai.agents.migrateQueryToolReferences({
+      existingDatasource: datasource,
+      updatedDatasource: datasource,
+      existingQuery,
+      updatedQuery: query,
+    })
   }
   const response = await db.put(query)
   await eventFn()
@@ -253,9 +263,16 @@ function enrichParameters(
 export async function preview(
   ctx: UserCtx<PreviewQueryRequest, PreviewQueryResponse>
 ) {
-  const { datasource, envVars } = await sdk.datasources.getWithEnvVars(
-    ctx.request.body.datasourceId
-  )
+  const rawDatasource = await sdk.datasources.get(ctx.request.body.datasourceId)
+  const { datasource, envVars } =
+    await sdk.datasources.enrichDatasourceWithValues(rawDatasource)
+  // Kept unresolved so the request preview can show bindings rather than the
+  // values they resolve to
+  const previewConfig: RestPreviewConfig = {
+    url: rawDatasource.config?.url,
+    defaultHeaders: rawDatasource.config?.defaultHeaders,
+    defaultQueryParameters: rawDatasource.config?.defaultQueryParameters,
+  }
   // preview may not have a queryId as it hasn't been saved, but if it does
   // this stops dynamic variables from calling the same query
   const queryId = ctx.request.body.queryId
@@ -383,6 +400,8 @@ export async function preview(
     nullDefaultSupport: query.nullDefaultSupport,
     queryId,
     datasource,
+    includeRequest: true,
+    previewConfig,
     // have to pass down to the thread runner - can't put into context now
     environmentVariables: envVars,
     ctx: {

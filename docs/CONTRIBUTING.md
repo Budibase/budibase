@@ -35,8 +35,8 @@ All pull requests remain subject to our normal review and contribution requireme
 
 ## External PR Ticket Check
 
-Pull requests from external contributors must reference an existing issue in
-this repository. The issue must:
+Pull requests whose branches come from outside this repository must reference an
+existing issue in this repository. The issue must:
 
 - Be open.
 - Be assigned to the pull request author.
@@ -49,9 +49,8 @@ are checked per pull request.
 
 Pull requests without a valid assigned issue are tagged with
 `closed: missing-ticket`, given an explanatory comment, and closed automatically.
-After linking a valid assigned issue, you can reopen the pull request. Bot-authored
-pull requests and pull requests from repository owners, members, and collaborators
-are excluded from this check.
+After linking a valid assigned issue, you can reopen the pull request. Pull
+requests whose branches are in this repository are excluded from this check.
 
 ## Not Sure Where to Start?
 

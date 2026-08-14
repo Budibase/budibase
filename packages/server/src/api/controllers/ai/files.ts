@@ -164,6 +164,10 @@ export async function fetchAgentKnowledgeIndex(
 
   ctx.body = {
     operations: Object.fromEntries(knowledgeEntries),
+    configuration: {
+      knowledgeSearchConfigured:
+        sdk.ai.knowledgeBase.isGeminiFileSearchConfigured(),
+    },
   }
   ctx.status = 200
 }
