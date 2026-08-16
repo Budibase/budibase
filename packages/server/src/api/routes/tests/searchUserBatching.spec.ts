@@ -3,6 +3,7 @@ import {
   BBReferenceFieldSubType,
   FieldType,
   Table,
+  TableSchema,
   User,
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -11,17 +12,17 @@ import { basicTable } from "../../../tests/utilities/structures"
 const ROW_COUNT = 20
 const USER_COUNT = 5
 
-const userColumns = {
+const userColumns: TableSchema = {
   single_user: {
     name: "single_user",
-    type: FieldType.BB_REFERENCE_SINGLE as const,
+    type: FieldType.BB_REFERENCE_SINGLE,
     subtype: BBReferenceFieldSubType.USER,
   },
   multi_user: {
     name: "multi_user",
-    type: FieldType.BB_REFERENCE as const,
+    type: FieldType.BB_REFERENCE,
     subtype: BBReferenceFieldSubType.USER,
-    constraints: { type: "array" as const },
+    constraints: { type: "array" },
   },
 }
 
