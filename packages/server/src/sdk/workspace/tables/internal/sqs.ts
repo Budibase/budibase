@@ -141,12 +141,6 @@ async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
   return definition
 }
 
-// The definition is replicated from development to production on publish, while
-// both databases can also write it locally - a search that hits a missing table
-// or column resyncs it in whichever workspace the query ran. That leaves CouchDB
-// holding unrelated revision branches for the same document, and every losing
-// branch is a full copy of the projection that has to be retained and reconciled
-// on each read. Drop them once the winning definition is in place.
 async function pruneConflicts(db: Database) {
   const conflicts = await db.getConflicts(SQLITE_DESIGN_DOC_ID)
   if (!conflicts.length) {
