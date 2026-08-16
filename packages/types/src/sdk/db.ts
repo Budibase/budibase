@@ -127,6 +127,10 @@ export interface Database {
    */
   get<T extends Document>(id?: string): Promise<T>
   tryGet<T extends Document>(id?: string): Promise<T | undefined>
+  /**
+   * Returns the revisions of any losing conflict branches held for a document.
+   */
+  getConflicts(id: string): Promise<string[]>
   getMultiple<T extends Document>(
     ids?: string[],
     opts?: { allowMissing?: boolean; excludeDocs?: boolean }

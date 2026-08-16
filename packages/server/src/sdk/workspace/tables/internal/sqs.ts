@@ -1,6 +1,7 @@
 import { context, sql, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
 import { helpers, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
 import {
+  Database,
   FieldType,
   PreSaveSQLiteDefinition,
   RelationshipFieldMetadata,
@@ -140,6 +141,23 @@ async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
   return definition
 }
 
+// The definition is replicated from development to production on publish, while
+// both databases can also write it locally - a search that hits a missing table
+// or column resyncs it in whichever workspace the query ran. That leaves CouchDB
+// holding unrelated revision branches for the same document, and every losing
+// branch is a full copy of the projection that has to be retained and reconciled
+// on each read. Drop them once the winning definition is in place.
+async function pruneConflicts(db: Database) {
+  const conflicts = await db.getConflicts(SQLITE_DESIGN_DOC_ID)
+  if (!conflicts.length) {
+    return
+  }
+  await db.bulkRemove(
+    conflicts.map(rev => ({ _id: SQLITE_DESIGN_DOC_ID, _rev: rev })),
+    { silenceErrors: true }
+  )
+}
+
 export async function syncDefinition(
   db = context.getWorkspaceDB()
 ): Promise<void> {
@@ -159,6 +177,7 @@ export async function syncDefinition(
   if (!existing || !isEqual(existing.sql, definition.sql)) {
     await db.put(definition)
   }
+  await pruneConflicts(db)
 }
 
 export async function addTable(table: Table) {
