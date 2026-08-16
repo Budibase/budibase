@@ -45,4 +45,19 @@ describe("sqs definition conflicts", () => {
     const definition = await prodDb.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
     expect(definition.sql.tables[table._id!]).toBeDefined()
   })
+
+  it("still writes the definition when pruning fails", async () => {
+    const table = await config.api.table.save(basicTable())
+    const db = dbCore.getDB(config.getDevWorkspaceId())
+    jest
+      .spyOn(db, "getConflicts")
+      .mockRejectedValue(new Error("couch unavailable"))
+
+    await config.doInContext(config.getDevWorkspaceId(), () =>
+      sdk.tables.sqs.syncDefinition(db)
+    )
+
+    const definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
+    expect(definition.sql.tables[table._id!]).toBeDefined()
+  })
 })

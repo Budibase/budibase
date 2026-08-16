@@ -141,15 +141,20 @@ async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
   return definition
 }
 
+// best effort - the definition is already written, the next sync retries
 async function pruneConflicts(db: Database) {
-  const conflicts = await db.getConflicts(SQLITE_DESIGN_DOC_ID)
-  if (!conflicts.length) {
-    return
+  try {
+    const conflicts = await db.getConflicts(SQLITE_DESIGN_DOC_ID)
+    if (!conflicts.length) {
+      return
+    }
+    await db.bulkRemove(
+      conflicts.map(rev => ({ _id: SQLITE_DESIGN_DOC_ID, _rev: rev })),
+      { silenceErrors: true }
+    )
+  } catch (err) {
+    console.warn("Unable to prune conflicting SQLite definitions", err)
   }
-  await db.bulkRemove(
-    conflicts.map(rev => ({ _id: SQLITE_DESIGN_DOC_ID, _rev: rev })),
-    { silenceErrors: true }
-  )
 }
 
 export async function syncDefinition(
