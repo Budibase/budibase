@@ -57,6 +57,7 @@
   /* The nested selector for data-type is the wrapper around all components */
   .direction-row :global(> .component > .size-grow) {
     width: 0;
+    flex: 1 1 auto;
   }
 
   .size-shrink {
@@ -64,6 +65,16 @@
   }
   .size-grow {
     flex: 1 1 auto;
+  }
+
+  /* Form fields (e.g. User Fields, text fields, etc.) inside a row flex
+     container should grow to fill available space equally, instead of
+     collapsing to their intrinsic content width (which can be <50px due
+     to picker-label width: 0 ellipsis tricks). Two User Fields side by
+     side in a row each take 50% of the container width. */
+  .direction-row :global(> .component > .spectrum-Form-item) {
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .direction-row.hAlign-left,
