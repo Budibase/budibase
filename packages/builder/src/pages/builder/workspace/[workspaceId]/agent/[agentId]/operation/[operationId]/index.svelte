@@ -513,7 +513,6 @@
             <AgentUnpublishedChangesIndicator />
             <GenerateInstructionsControl
               triggerLabel="Help write instructions"
-              promptInstructions={operation.promptInstructions || ""}
               {promptBindings}
               {bindingIcons}
               onApplyInstructions={instructions =>
