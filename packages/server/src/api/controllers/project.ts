@@ -21,8 +21,6 @@ import { HTTPError } from "@budibase/backend-core"
 import fsp from "fs/promises"
 import sdk from "../../sdk"
 import {
-  createProjectDependencyFingerprint,
-  getProjectAssignableDependencies,
   getProjectAssignmentPreview,
   propagateProjectIdsToDependencyIdsWithWarning,
   resolveProjectIds,
@@ -108,18 +106,20 @@ export async function updateAssignment(
       (await resolveProjectIds(ctx.request.body.projectIds)) || []
     await sdk.projects.getProjectAssignableResource(resourceId)
 
-    const dependencies = projectIds.length
-      ? await getProjectAssignableDependencies(resourceId)
-      : []
+    const preview = await getProjectAssignmentPreview({
+      resourceId,
+      projectIds,
+    })
     if (
       projectIds.length &&
-      createProjectDependencyFingerprint(dependencies) !== dependencyFingerprint
+      preview.dependencyFingerprint !== dependencyFingerprint
     ) {
       throw new HTTPError(
         "Resource dependencies changed. Preview the project assignment again.",
         409
       )
     }
+    const { dependencies } = preview
 
     let selectedDependencyIds: string[] = []
     if (dependencyIds.length) {
