@@ -9,6 +9,7 @@ import {
   type FunctionDocument,
   type FunctionQueryCapabilityInput,
   type FunctionResponse,
+  type FunctionSummary,
 } from "@budibase/types"
 import { compileFunction } from "./compiler"
 import {
@@ -254,6 +255,18 @@ export const toFunctionResponse = async (
   fn: FunctionDocument
 ): Promise<FunctionResponse> => ({
   ...fn,
+  readiness: await getFunctionReadiness(fn),
+})
+
+export const toFunctionSummary = async (
+  fn: FunctionDocument
+): Promise<FunctionSummary> => ({
+  _id: fn._id,
+  _rev: fn._rev,
+  name: fn.name,
+  appId: fn.appId,
+  createdAt: fn.createdAt,
+  updatedAt: fn.updatedAt,
   readiness: await getFunctionReadiness(fn),
 })
 

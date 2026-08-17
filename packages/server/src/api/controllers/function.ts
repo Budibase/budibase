@@ -18,7 +18,7 @@ export const fetch = async (ctx: UserCtx<void, FetchFunctionsResponse>) => {
   const functions = await sdk.functions.fetch()
   ctx.body = {
     functions: await Promise.all(
-      functions.map(fn => sdk.functions.toFunctionResponse(fn))
+      functions.map(fn => sdk.functions.toFunctionSummary(fn))
     ),
   }
 }
