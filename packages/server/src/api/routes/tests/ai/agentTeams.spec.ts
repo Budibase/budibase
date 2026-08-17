@@ -63,7 +63,11 @@ jest.mock("../../../../sdk/workspace/ai/rag", () => {
   }
 })
 
-import sdk from "../../../../sdk"
+import fs from "fs/promises"
+import os from "os"
+import path from "path"
+
+import extract from "extract-zip"
 import { context, docIds, roles } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
 import {
@@ -73,6 +77,7 @@ import {
   type ChatConversation,
   type WebhookChatCompleteResult,
 } from "@budibase/types"
+import sdk from "../../../../sdk"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
 import { webhookChat } from "../../../controllers/ai/chatConversations"
@@ -225,6 +230,71 @@ describe("agent teams integration provisioning", () => {
     await config.api.agent.provisionMSTeamsChannel(agent._id!, undefined, {
       status: 400,
     })
+  })
+
+  it("downloads a Teams app package for an agent", async () => {
+    const agent = await config.api.agent.create({
+      name: "Teams Package Agent",
+      description: "Answers questions in Teams.",
+      MSTeamsIntegration: {
+        appId: "11111111-1111-1111-1111-111111111111",
+        appPassword: "teams-package-password",
+        tenantId: "azure-tenant-id",
+      },
+    })
+
+    const packageBuffer = await config.api.agent.downloadMSTeamsPackage(
+      agent._id!,
+      {
+        headers: {
+          "Content-Disposition":
+            /budibase-teams-teams-package-agent-package\.zip/,
+          "Content-Type": /application\/zip/,
+        },
+      }
+    )
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "teams-package-"))
+    const zipPath = path.join(tempDir, "package.zip")
+    await fs.writeFile(zipPath, new Uint8Array(packageBuffer))
+
+    try {
+      await extract(zipPath, { dir: tempDir })
+      const manifestText = await fs.readFile(
+        path.join(tempDir, "manifest.json"),
+        "utf8"
+      )
+      const manifest = JSON.parse(manifestText)
+      const colorIcon = await fs.readFile(path.join(tempDir, "color.png"))
+      const outlineIcon = await fs.readFile(path.join(tempDir, "outline.png"))
+
+      expect(colorIcon.readUInt32BE(16)).toEqual(192)
+      expect(colorIcon.readUInt32BE(20)).toEqual(192)
+      expect(outlineIcon.readUInt32BE(16)).toEqual(32)
+      expect(outlineIcon.readUInt32BE(20)).toEqual(32)
+      expect(manifest.manifestVersion).toEqual("1.28")
+      expect(manifest.name.short).toEqual("Teams Package Agent")
+      expect(manifest.description.short).toEqual("Answers questions in Teams.")
+      expect(manifest.accentColor).toEqual("#7052FF")
+      expect(manifest.id).toEqual("11111111-1111-1111-1111-111111111111")
+      expect(manifest.bots[0].botId).toEqual(
+        "11111111-1111-1111-1111-111111111111"
+      )
+      expect(manifest.bots[0].scopes).toEqual(["personal", "team", "groupChat"])
+      expect(manifest.bots[0].commandLists[0].commands).toContainEqual({
+        title: ChatCommands.LINK,
+        description: "Link your Microsoft Teams user to Budibase.",
+      })
+      expect(manifest.validDomains).toHaveLength(1)
+      expect(manifestText).not.toContain("teams-package-password")
+
+      const { agents } = await config.api.agent.fetch()
+      const updated = agents.find(candidate => candidate._id === agent._id)
+      expect(updated?.MSTeamsIntegration?.messagingEndpointUrl).toContain(
+        "/api/webhooks/ms-teams/"
+      )
+    } finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
   })
 
   describe("teams webhook auth validation", () => {

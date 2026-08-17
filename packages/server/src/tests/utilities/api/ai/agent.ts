@@ -158,6 +158,24 @@ export class AgentAPI extends TestAPI {
     )
   }
 
+  downloadMSTeamsPackage = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<Buffer> => {
+    const response = this._checkResponse(
+      await this.request
+        .get(`/api/agent/${agentId}/ms-teams/package`)
+        .set(
+          await this.getHeaders(undefined, {
+            "x-budibase-include-stacktrace": "true",
+          })
+        )
+        .responseType("blob"),
+      expectations
+    )
+    return response.body as Buffer
+  }
+
   provisionSlackChannel = async (
     agentId: string,
     body?: ProvisionAgentSlackChannelRequest,

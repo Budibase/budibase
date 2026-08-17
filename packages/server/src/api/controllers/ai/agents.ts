@@ -1,3 +1,6 @@
+import archiver from "archiver"
+import stream from "stream"
+
 import {
   cache,
   configs,
@@ -40,6 +43,15 @@ import { toAgentResponse } from "./agentResponse"
 
 const SLACK_OAUTH_STATE_TTL_SECONDS = 600
 const SLACK_OAUTH_CALLBACK_PATH = "/api/agent/slack/oauth/callback"
+
+const TEAMS_COLOR_ICON = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAMAAABlApw1AAAAJFBMVEX////5d3f7amr+U1P/Tk7/T09uVv+biv+fj/+hkf98Zv+cjP8m5C9zAAAAAXRSTlMAQObYZgAABOdJREFUeNrt3NlyqzAMBmBvdYzz/u/bELJA8Ib5LY1m0E1ncnqKPisKi+0o9QgNDKOtqod1TdHyp7DpL4bqcdvSbyTA85+jfEjTDnCGB1AU/B3I/xEs+Rcb4UgB6jUYBCiV4Fj+tRqMAmggwLIANA7geAAWBzAsAI0DuD8WgMEBCm0wEJCrQQ/A8QAsDmBYABoHyLbBWIDBAXJtMBaQrEEnwPEALA5gWAAaB0i3wXCAwQGSbTAcsK9BP8DxACwOYFgAGgdI1IACYIAAywH4qcEpgOMBaBzASAf81oAIYIAAywFY1+AswPEANA5gpAM2NaADGCDAcgA+NQAAHA9A4wBGOuBbA1KAAQIsB2CpAQbgeAAaBzA8AAsDvGpADTBAgOUAPN5EMIDjARyc4yuFYQFoHGB+UiQb4MQD/qQD3AVgBhjpAPE9wPEpdHCtRzEsA8A0rtZqLAA9wOKuhQzLtZD0q1HcDc3rppI+fxjguifuzF/wUwkDfC70ebhIPv4ggPBno6sH7PT5S306/R00aP4ip5g2c0wCAduJVvr8Rc5SbgYNmr+8pQa/aw2kAXYLbujzl7fc5nfQgA1AA1BAgJINSC28pM//BEAxABKDBmwAAoACApRsQGYBPn3+klavpwcNmr+YLSjZPSgj87c4QH4jFn0BugCKAZAdNGADDAUoIEDJBhQ35NLnD96Oa8akXxo0YAOMq4ACAlQ5hpSgOGgHZ/lULQa8fypfpnBoxVA1f3gNjK4esb0GbV+NoSzRm2d1xKZo+1tXXHHFFVdccQVveH+Dhfetx6xHa/phgkYI9UPGlvwbDZv8wxzJpHKv//7W82fluK3ZtxHCK72fSL/6SrDwe/M/1wSHADWBn+CA+ZXSYZvfP02CkAXkCTXA/F9hBagJJjxgfm260wECPJ41uOEAsfgWGhBLETwMUKzBCMCiCECAZwDk20AKIIQbDhA5ALk26AHkazCyApk26AN4BkCmDQQBQvJs0AmIHIDkRVEnIFODwfmn2qAb4BkAqTYQBti3QT8gMgASZ4N+QKoG4wG7NjgD8PSAh+AuGrC/NzgFiCyAbRucAuxqMBwQdrfIJwGeA7BpA2mAJW44QGQBrNrgLGBbA6r8V21wHuA5KvBtA5mA1dkAAIgsgHcbAACrGtABPm0AAXjyHgifs4FUQHjfImMAkQOwnA0wgHcNyAY/LI0MBHgGwPNsIBMQwufKGgaI9IDnvAEw6Jt4vqTACugB4BKQAwIU4KUDonSA+ArQA8Cfo+IB9J9Ck/DzALYAkeFa6HFLgBx/hos54NUoB0Du/cALALwjixz3xAF3T+wZ7olfz1XEAqQ/FwrIJ3PfZ4tkw/+dpkGOP+mjReDTaXLAZpoMmj8dADhDs5ljIkp/PcuHHH8ywHqeVSJA9DzxbsEKsAHIAAoHUPQA6GoVDoD09ULIFVuJNWejs09s5kCOPwFgv+5SFkD6utEJuHI3vfZ4WOZTyO1mQo7/WEBm/b0UQHY3GTT/gZuAJugOjuwelEFvn+ePzD4m5PiPBGT3YQkBSN5H9txnjNzJV9qL+D4mHJHfz4oc/2EA6G7WBgB6TyvhfuJB7yDgju7iZlyV3VPfPfZTKG4mPl6BSv7zpno0INzKhzxSgtr4P+KGzb/+rQyHalDPH0uYwr3pyyyaihAb/tQ/Syweie2fy1oAAAAASUVORK5CYII=",
+  "base64"
+)
+const TEAMS_OUTLINE_ICON = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAQAAADZc7J/AAABGklEQVRIx+2UsS4EYRSFz7+2UdGJIBS2tx0vQEXwBpa3kFB4BhUPoN1CTSKhlWyislEIlijGBmET82k2s/8/Y0ZusaHY032ZuSdz7z1zpYH+mWgT6olFxAzNLl9TRRQYZHXOBBVaCdcZtRnAAXPcJxSzR8lm8ME+Dx5HbPg1LjT40bejksoet9x4D/I/p6crvQV8ZmuhwSp3Hp8yZTGIWGbW28ItC0VbiFPlX+wgKskQ39lK5yAcYk0jwbNH1fWqYa1rTMjpRsfqhEVlFcl130WxkCsKYV4Lu6kWNq1RjlhJDXHeGuUGa8EaT5i0GcAlUcBH+VvoS5Q/dahnj1+0bWsh+zsPWQwubAcle9KWENPJSWv+ctIG+iN9A9KwF3TItSBSAAAAAElFTkSuQmCC",
+  "base64"
+)
 
 interface SlackOAuthState {
   agentId: string
@@ -269,6 +281,30 @@ const configureSlackDeployment = async ({
       }),
   })
 
+const configureMSTeamsDeployment = async ({
+  agent,
+  agentId,
+  requestedChatAppId,
+}: {
+  agent: Agent
+  agentId: string
+  requestedChatAppId?: string
+}) =>
+  await configureDeploymentChannel({
+    agent,
+    agentId,
+    requestedChatAppId,
+    validateIntegration: sdk.ai.deployments.MSTeams.validateMSTeamsIntegration,
+    resolveChatAppForAgent: sdk.ai.deployments.MSTeams.resolveChatAppForAgent,
+    buildEndpointUrl: sdk.ai.deployments.MSTeams.buildMSTeamsWebhookUrl,
+    persistIntegration: async (chatAppId, messagingEndpointUrl) =>
+      await persistMSTeamsDeployment({
+        agent,
+        chatAppId,
+        messagingEndpointUrl,
+      }),
+  })
+
 const configureSlackAppCreationDeployment = async ({
   agent,
   agentId,
@@ -381,6 +417,9 @@ const toSafeFilenameSegment = (value: string) => {
     .replace(/^-+|-+$/g, "")
   return safe || "agent"
 }
+
+const toSafeTeamsPackageName = (agent: Agent) =>
+  `budibase-teams-${toSafeFilenameSegment(agent.name)}-package.zip`
 
 export async function fetchTools(ctx: UserCtx<void, ToolMetadata[]>) {
   const rawAiconfigId = ctx.query.aiconfigId
@@ -503,19 +542,10 @@ export async function provisionAgentMSTeamsChannel(
   const { agentId } = ctx.params
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   const requestedChatAppId = parseOptionalChatAppId(ctx.request.body?.chatAppId)
-  const { chatAppId, endpointUrl } = await configureDeploymentChannel({
+  const { chatAppId, endpointUrl } = await configureMSTeamsDeployment({
     agent,
     agentId,
     requestedChatAppId,
-    validateIntegration: sdk.ai.deployments.MSTeams.validateMSTeamsIntegration,
-    resolveChatAppForAgent: sdk.ai.deployments.MSTeams.resolveChatAppForAgent,
-    buildEndpointUrl: sdk.ai.deployments.MSTeams.buildMSTeamsWebhookUrl,
-    persistIntegration: async (chatAppId, messagingEndpointUrl) =>
-      await persistMSTeamsDeployment({
-        agent,
-        chatAppId,
-        messagingEndpointUrl,
-      }),
   })
 
   ctx.body = {
@@ -523,6 +553,40 @@ export async function provisionAgentMSTeamsChannel(
     chatAppId,
     messagingEndpointUrl: endpointUrl,
   }
+  ctx.status = 200
+}
+
+export async function downloadAgentMSTeamsPackage(
+  ctx: UserCtx<void, stream.PassThrough, { agentId: string }>
+) {
+  const { agentId } = ctx.params
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const requestedChatAppId = parseOptionalChatAppId(
+    agent.MSTeamsIntegration?.chatAppId
+  )
+  const { endpointUrl } = await configureMSTeamsDeployment({
+    agent,
+    agentId,
+    requestedChatAppId,
+  })
+  const manifest = sdk.ai.deployments.MSTeams.buildMSTeamsManifest({
+    agent,
+    messagingEndpointUrl: endpointUrl,
+  })
+
+  const passThrough = new stream.PassThrough()
+  const archive = archiver.create("zip")
+  archive.pipe(passThrough)
+  archive.append(`${JSON.stringify(manifest, null, 2)}\n`, {
+    name: "manifest.json",
+  })
+  archive.append(TEAMS_COLOR_ICON, { name: "color.png" })
+  archive.append(TEAMS_OUTLINE_ICON, { name: "outline.png" })
+
+  ctx.attachment(toSafeTeamsPackageName(agent))
+  ctx.type = "zip"
+  ctx.body = passThrough
+  await archive.finalize()
   ctx.status = 200
 }
 
