@@ -330,6 +330,51 @@ export default async function (): Promise<FunctionResult> {
     })
   })
 
+  it("records a failed build when linked query declarations cannot be resolved", async () => {
+    await withFunctionsEnabled(async () => {
+      const query = await createQuery()
+      const { function: created } = await config.api.function.create({
+        name: "Missing declaration Function",
+        source: validSource,
+        capabilities: [
+          {
+            queryId: query._id!,
+            datasourceAlias: "Inventory",
+            queryAlias: "findRooms",
+          },
+        ],
+      })
+      const { function: built } = await config.api.function.build(created._id, {
+        _rev: created._rev!,
+      })
+      const builtDocument = (await config.api.function.find(built._id)).function
+
+      await config.api.query.delete(query)
+
+      const { function: failedSummary } = await config.api.function.build(
+        built._id,
+        { _rev: builtDocument._rev! }
+      )
+
+      expect(failedSummary.readiness).toBe("build_failed")
+      const { function: failed } = await config.api.function.find(built._id)
+      expect(failed.artifact).toEqual(builtDocument.artifact)
+      expect(failed.lastBuild).toEqual(
+        expect.objectContaining({
+          status: "failed",
+          sourceHash: builtDocument.artifact?.sourceHash,
+          declarationsHash: builtDocument.artifact?.declarationsHash,
+          diagnostics: [
+            expect.objectContaining({
+              code: "FUNCTION_DECLARATION_ERROR",
+              message: `Query '${query._id}' not found.`,
+            }),
+          ],
+        })
+      )
+    })
+  })
+
   it("rejects a stale build revision", async () => {
     await withFunctionsEnabled(async () => {
       const query = await createQuery()
