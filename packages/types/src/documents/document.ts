@@ -60,6 +60,7 @@ export enum DocumentType {
   WORKSPACE_APP = "workspace_app",
   WORKSPACE_FAVOURITE = "workspace_favourite",
   PROJECT = "project",
+  REST_TEMPLATE = "rest_template",
   AUTO_COLUMN_STATE = "autocolumn_state",
   ESCALATION_CONTEXT = "escalation_context",
   ESCALATION_NOTIFICATION = "escalation_notification",
