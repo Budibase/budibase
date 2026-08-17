@@ -1306,7 +1306,7 @@ describe("/projects", () => {
       })
     })
 
-    it("accepts a valid dependency selection that became assigned after preview", async () => {
+    it("rejects an assignment when dependency projects change after preview", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
           name: "Operations",
@@ -1335,17 +1335,23 @@ describe("/projects", () => {
           projectIds: [project._id],
         })
 
-        const updated = await config.api.project.updateAssignment(
+        await config.api.project.updateAssignment(
           workspaceApp._id!,
           {
             resourceRev: workspaceApp._rev!,
             projectIds: [project._id],
             dependencyIds: [automation._id!],
-          }
+            dependencyFingerprint: preview.dependencyFingerprint,
+          },
+          { status: 409 }
         )
 
-        expect(updated.projectIds).toEqual([project._id])
-        expect(updated.assignedDependencyIds).toEqual([automation._id])
+        expect(
+          (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
+        ).toBeUndefined()
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toEqual([project._id])
       })
     })
 

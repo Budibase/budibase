@@ -7,6 +7,7 @@ import {
   DocumentType,
   FeatureFlag,
   prefixed,
+  type PreviewProjectAssignmentResponse,
   type ProjectAssignmentDependency,
   ResourceType,
   WithDocMetadata,
@@ -174,38 +175,34 @@ const isAssignableDependency = (dependency: {
   isProjectAssignableResourceType(dependency.type) &&
   !isDisallowedProjectAssignmentResourceId(dependency.id)
 
-export const createProjectDependencyFingerprint = (
-  dependencies: Array<{ id: string }>
-) =>
-  createHash("sha256")
+const createProjectAssignmentPreview = (
+  dependencies: ProjectAssignmentDependency[]
+): PreviewProjectAssignmentResponse => ({
+  dependencies,
+  dependencyFingerprint: createHash("sha256")
     .update(
       JSON.stringify(
         dependencies.map(dependency => dependency.id).sort(compareResourceIds)
       )
     )
-    .digest("base64url")
+    .digest("base64url"),
+})
 
 export const getProjectAssignmentPreview = async ({
   resourceId,
   projectIds,
-}: ProjectDependencyPreviewInput): Promise<{
-  dependencies: ProjectAssignmentDependency[]
-  dependencyFingerprint: string
-}> => {
-  const assignableDependencies =
-    await getProjectAssignableDependencies(resourceId)
-  const dependencyFingerprint = createProjectDependencyFingerprint(
-    assignableDependencies
-  )
+}: ProjectDependencyPreviewInput): Promise<PreviewProjectAssignmentResponse> => {
   if (!projectIds.length) {
-    return { dependencies: [], dependencyFingerprint }
+    return createProjectAssignmentPreview([])
   }
 
+  const assignableDependencies =
+    await getProjectAssignableDependencies(resourceId)
   const dependenciesById = new Map(
     assignableDependencies.map(dependency => [dependency.id, dependency])
   )
   if (!dependenciesById.size) {
-    return { dependencies: [], dependencyFingerprint }
+    return createProjectAssignmentPreview([])
   }
 
   const db = context.getWorkspaceDB()
@@ -225,7 +222,7 @@ export const getProjectAssignmentPreview = async ({
     )
     return projectIdsToAdd.length ? [{ ...dependency, projectIdsToAdd }] : []
   })
-  return { dependencies, dependencyFingerprint }
+  return createProjectAssignmentPreview(dependencies)
 }
 
 export const getProjectAssignableDependencies = async (resourceId: string) => {
