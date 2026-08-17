@@ -62,7 +62,7 @@ export interface BuildFunctionRequest {
 }
 
 export interface BuildFunctionResponse {
-  function: FunctionResponse
+  function: FunctionSummary
 }
 
 export type FunctionQueryKind = "data" | "api"

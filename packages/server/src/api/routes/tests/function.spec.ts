@@ -230,9 +230,17 @@ export default async function (): Promise<FunctionResult> {
         ],
       })
 
-      const { function: built } = await config.api.function.build(created._id, {
-        _rev: created._rev!,
-      })
+      const { function: buildSummary } = await config.api.function.build(
+        created._id,
+        {
+          _rev: created._rev!,
+        }
+      )
+
+      expect(buildSummary.readiness).toBe("ready")
+      expect(buildSummary).not.toHaveProperty("artifact")
+
+      const { function: built } = await config.api.function.find(created._id)
 
       expect(built.readiness).toBe("ready")
       expect(built.lastBuild).toEqual(
@@ -286,9 +294,10 @@ export default async function (): Promise<FunctionResult> {
           },
         ],
       })
-      const { function: built } = await config.api.function.build(created._id, {
+      await config.api.function.build(created._id, {
         _rev: created._rev!,
       })
+      const { function: built } = await config.api.function.find(created._id)
       const { function: invalid } = await config.api.function.update(
         built._id,
         {
@@ -299,12 +308,14 @@ export default async function (): Promise<FunctionResult> {
         }
       )
 
-      const { function: failed } = await config.api.function.build(
+      const { function: failedSummary } = await config.api.function.build(
         invalid._id,
         { _rev: invalid._rev! }
       )
 
-      expect(failed.readiness).toBe("build_failed")
+      expect(failedSummary.readiness).toBe("build_failed")
+      expect(failedSummary).not.toHaveProperty("artifact")
+      const { function: failed } = await config.api.function.find(invalid._id)
       expect(failed.artifact).toEqual(built.artifact)
       expect(failed.lastBuild).toEqual(
         expect.objectContaining({

@@ -21,6 +21,11 @@ const unwrapParentheses = (expression: ts.Expression) => {
 export const lintFunctionSource = (
   source: string
 ): FunctionBuildDiagnostic[] => {
+  const compilerOptions: ts.CompilerOptions = {
+    noLib: true,
+    noResolve: true,
+    target: ts.ScriptTarget.ES2022,
+  }
   const sourceFile = ts.createSourceFile(
     FUNCTION_VIRTUAL_SOURCE_FILE,
     source,
@@ -28,6 +33,20 @@ export const lintFunctionSource = (
     true,
     ts.ScriptKind.TS
   )
+  const compilerHost = ts.createCompilerHost(compilerOptions)
+  compilerHost.fileExists = fileName =>
+    fileName === FUNCTION_VIRTUAL_SOURCE_FILE
+  compilerHost.getSourceFile = fileName =>
+    fileName === FUNCTION_VIRTUAL_SOURCE_FILE ? sourceFile : undefined
+  compilerHost.readFile = fileName =>
+    fileName === FUNCTION_VIRTUAL_SOURCE_FILE ? source : undefined
+  const typeChecker = ts
+    .createProgram(
+      [FUNCTION_VIRTUAL_SOURCE_FILE],
+      compilerOptions,
+      compilerHost
+    )
+    .getTypeChecker()
   const diagnostics: FunctionBuildDiagnostic[] = []
   let defaultEntrypoints = 0
 
@@ -88,7 +107,8 @@ export const lintFunctionSource = (
     if (
       ts.isCallExpression(node) &&
       ts.isIdentifier(node.expression) &&
-      node.expression.text === "require"
+      node.expression.text === "require" &&
+      !typeChecker.getSymbolAtLocation(node.expression)
     ) {
       addNodeDiagnostic(
         "FUNCTION_IMPORT_NOT_ALLOWED",
