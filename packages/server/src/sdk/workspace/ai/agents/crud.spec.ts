@@ -381,13 +381,11 @@ describe("agents crud", () => {
       ])
       expect(mockDbPut).not.toHaveBeenCalled()
 
-      mockDbAllDocs
-        .mockResolvedValueOnce({ rows: [{ doc: datasource }] })
-        .mockResolvedValueOnce({ rows: [{ doc: query }] })
       mockDbPut.mockResolvedValue({ rev: "2-abc" })
 
       await agentsCrud.update(agent)
 
+      expect(mockDbAllDocs).toHaveBeenCalledTimes(2)
       expect(mockDbPut).toHaveBeenCalledWith(
         expect.objectContaining({
           operations: [
