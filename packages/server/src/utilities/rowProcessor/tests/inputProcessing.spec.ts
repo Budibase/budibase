@@ -14,6 +14,8 @@ jest.mock("../bbReferenceProcessor", (): typeof bbReferenceProcessor => ({
   processInputBBReferences: jest.fn(),
   processOutputBBReference: jest.fn(),
   processOutputBBReferences: jest.fn(),
+  getBBReferenceIds: jest.fn(),
+  fetchUserReferences: jest.fn(),
 }))
 
 describe("rowProcessor - inputProcessing", () => {

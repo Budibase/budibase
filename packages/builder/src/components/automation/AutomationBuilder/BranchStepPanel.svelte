@@ -30,6 +30,10 @@
     isBranchStep,
   } from "@budibase/types"
   import { QueryUtils, Utils, memo } from "@budibase/frontend-core"
+  import {
+    readableToRuntimeBinding,
+    runtimeToReadableBinding,
+  } from "@/dataBinding"
   import { cloneDeep } from "lodash/fp"
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
@@ -295,6 +299,8 @@
       schemaFields={branchSchemaFields}
       datasource={{ type: "custom" }}
       panel={AutomationBindingPanel}
+      toReadable={runtimeToReadableBinding}
+      toRuntime={readableToRuntimeBinding}
       on:change={e => {
         editableBranchConditionUI = e.detail
       }}
