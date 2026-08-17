@@ -44,7 +44,7 @@ export const build = async (
 ) => {
   const fn = await sdk.functions.build(ctx.params.id, ctx.request.body._rev)
   ctx.body = {
-    function: await sdk.functions.toFunctionResponse(fn),
+    function: await sdk.functions.toFunctionSummary(fn),
   }
 }
 
