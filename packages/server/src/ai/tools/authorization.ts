@@ -1,5 +1,9 @@
 import { context, permissions, roles, users } from "@budibase/backend-core"
-import { ToolExecutionPrincipal } from "@budibase/types"
+import {
+  PermissionLevel,
+  PermissionType,
+  ToolExecutionPrincipal,
+} from "@budibase/types"
 import sdk from "../../sdk"
 import { getFullUser } from "../../utilities/users"
 import type {
@@ -65,7 +69,26 @@ export const authorizeAgentToolCall = async ({
   executionContext,
   principal,
 }: ToolAuthorizationRequest) => {
-  const audit = (decision: "allowed" | "denied", resourceId?: string) =>
+  await evaluateAgentToolAuthorization({
+    authorization,
+    input,
+    executionContext,
+    principal,
+    audit: true,
+  })
+}
+
+const evaluateAgentToolAuthorization = async ({
+  authorization,
+  input,
+  executionContext,
+  principal,
+  audit: shouldAudit,
+}: ToolAuthorizationRequest & { audit: boolean }) => {
+  const audit = (decision: "allowed" | "denied", resourceId?: string) => {
+    if (!shouldAudit) {
+      return
+    }
     console.log("Agent tool authorization", {
       decision,
       requesterId: executionContext.requester.userId,
@@ -78,6 +101,7 @@ export const authorizeAgentToolCall = async ({
       permissionType: authorization.permissionType,
       permissionLevel: authorization.permissionLevel,
     })
+  }
 
   const resourceId =
     authorization.resourceId || authorization.resolveResourceId?.(input)
@@ -143,5 +167,30 @@ export const authorizeAgentToolCall = async ({
   } catch {
     audit("denied", resourceId)
     throw new Error(DENIED_MESSAGE)
+  }
+}
+
+export const canRequesterReadAgentToolResource = async ({
+  resourceId,
+  executionContext,
+}: {
+  resourceId: string
+  executionContext: ToolAuthorizationRequest["executionContext"]
+}) => {
+  try {
+    await evaluateAgentToolAuthorization({
+      authorization: {
+        permissionType: PermissionType.TABLE,
+        permissionLevel: PermissionLevel.READ,
+        resourceId,
+      },
+      input: undefined,
+      executionContext,
+      principal: ToolExecutionPrincipal.REQUESTER,
+      audit: false,
+    })
+    return true
+  } catch {
+    return false
   }
 }
