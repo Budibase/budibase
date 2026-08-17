@@ -131,13 +131,16 @@ export const snippetAutoComplete = (snippets: Snippet[]): BindingCompletion => {
 
 const bindingFilter = (options: BindingCompletionOption[], query: string) => {
   return options.filter(completion => {
-    const section_parsed = completion.section?.toString().toLowerCase()
-    const label_parsed = completion.label.toLowerCase()
-    const query_parsed = query.toLowerCase()
+    const section =
+      typeof completion.section === "string"
+        ? completion.section
+        : completion.section?.name
+    const parsedSection = section?.toLowerCase()
+    const parsedLabel = completion.label.toLowerCase()
+    const parsedQuery = query.toLowerCase()
 
     return (
-      section_parsed?.includes(query_parsed) ||
-      label_parsed.includes(query_parsed)
+      parsedSection?.includes(parsedQuery) || parsedLabel.includes(parsedQuery)
     )
   })
 }

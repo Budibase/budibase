@@ -213,6 +213,9 @@ describe("chat route auth split", () => {
   const config = new TestConfiguration()
   let chatApp: ChatApp
   let basicUser: User
+  let workspaceBuilder: User
+  let otherWorkspaceBuilder: User
+  let adminUser: User
   let agentId: string
   let disabledAgentId: string
   let restrictedAgentId: string
@@ -225,6 +228,27 @@ describe("chat route auth split", () => {
       },
       builder: { global: false },
       admin: { global: false },
+    })
+    workspaceBuilder = await config.createUser({
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+      builder: { global: false, apps: [config.getProdWorkspaceId()] },
+      admin: { global: false },
+    })
+    otherWorkspaceBuilder = await config.createUser({
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+      builder: { global: false, apps: ["app_another_workspace"] },
+      admin: { global: false },
+    })
+    adminUser = await config.createUser({
+      roles: {
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+      },
+      builder: { global: false },
+      admin: { global: true },
     })
 
     await context.doInWorkspaceContext(
@@ -499,6 +523,100 @@ describe("chat route auth split", () => {
     expect(
       currentChatEntries.map((entry: { agentId: string }) => entry.agentId)
     ).toContain(restrictedAgentId)
+  })
+
+  it("blocks builders of another workspace when the chat app is not live", async () => {
+    await setChatAppLive(false)
+    const headers = await headersForUser(otherWorkspaceBuilder)
+
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(403)
+
+    await setChatAppLive(true)
+  })
+
+  it("allows builders of this workspace when the chat app is not live", async () => {
+    await setChatAppLive(false)
+    const headers = await headersForUser(workspaceBuilder)
+
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+
+    await setChatAppLive(true)
+  })
+
+  it("hides role-restricted agents from builders of another workspace", async () => {
+    const headers = await headersForUser(otherWorkspaceBuilder)
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/agents`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(
+      res.body.agents.map((agent: { _id: string }) => agent._id)
+    ).not.toContain(restrictedAgentId)
+  })
+
+  it("shows role-restricted agents to builders of this workspace", async () => {
+    const headers = await headersForUser(workspaceBuilder)
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/agents`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(
+      res.body.agents.map((agent: { _id: string }) => agent._id)
+    ).toContain(restrictedAgentId)
+  })
+
+  it("allows admins when the chat app is not live", async () => {
+    await setChatAppLive(false)
+    const headers = await headersForUser(adminUser)
+
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+
+    await setChatAppLive(true)
+  })
+
+  it("shows role-restricted agents to admins", async () => {
+    const headers = await headersForUser(adminUser)
+    const res = await config
+      .getRequest()!
+      .get(`/api/chatapps/${chatApp._id}/agents`)
+      .set(headers)
+
+    expect(res.status).toBe(200)
+    expect(
+      res.body.agents.map((agent: { _id: string }) => agent._id)
+    ).toContain(restrictedAgentId)
+  })
+
+  it("blocks preview chat for builders of another workspace", async () => {
+    const headers = await headersForUser(otherWorkspaceBuilder)
+    const res = await config
+      .getRequest()!
+      .post(
+        `/api/chatapps/${chatApp._id}/conversations/conversation_preview/stream`
+      )
+      .set(headers)
+      .send({ isPreview: true, messages: [] })
+
+    expect(res.status).toBe(403)
   })
 
   it("blocks basic users from PUT /api/chatapps/:chatAppId", async () => {

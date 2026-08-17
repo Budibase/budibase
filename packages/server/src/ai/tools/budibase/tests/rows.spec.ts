@@ -1,4 +1,14 @@
-import { BudibaseToolDefinition, getBudibaseTools } from ".."
+import {
+  FieldType,
+  PermissionLevel,
+  PermissionType,
+  RelationshipType,
+  TableSourceType,
+  type TableSchema,
+} from "@budibase/types"
+import { type BudibaseToolDefinition, getBudibaseTools } from ".."
+import { createRowTools } from "../rows"
+import sdk from "../../../../sdk"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { basicRow, basicTable } from "../../../../tests/utilities/structures"
 
@@ -16,6 +26,15 @@ type NonIterable<T> = T extends AsyncIterable<any> ? never : T
 
 describe("AI Tools - Rows", () => {
   const config = new TestConfiguration()
+  const datasourceId = `datasource_plus_${"a".repeat(32)}`
+
+  const getExternalRowTools = (tableName: string) =>
+    createRowTools({
+      tableId: `${datasourceId}__${tableName}`,
+      tableName,
+      tableSourceType: TableSourceType.EXTERNAL,
+      tableSchema: {},
+    })
 
   const runInContext = async <T>(fn: () => Promise<T>): Promise<T> => {
     return config.doInContext(undefined, fn)
@@ -27,6 +46,88 @@ describe("AI Tools - Rows", () => {
 
   afterAll(() => {
     config.end()
+  })
+
+  it("generates unique runtime names for long external table IDs", () => {
+    const tools = getExternalRowTools("SignOffLimits")
+    const names = tools.map(tool => tool.name)
+
+    expect(new Set(names).size).toBe(tools.length)
+    for (const tool of tools) {
+      const action = tool.readableName?.split(".").at(-1)
+      expect(tool.name.length).toBeLessThanOrEqual(64)
+      expect(tool.name).toMatch(/^[A-Za-z0-9_-]+$/)
+      expect(tool.name.endsWith(`_${action}`)).toBe(true)
+    }
+  })
+
+  it.each([
+    ["get_row", PermissionLevel.READ],
+    ["search_rows", PermissionLevel.READ],
+    ["create_row", PermissionLevel.WRITE],
+    ["update_row", PermissionLevel.WRITE],
+  ])("requires the correct permission for %s", (action, permissionLevel) => {
+    const tableId = `${datasourceId}__Notes`
+    const rowTool = getExternalRowTools("Notes").find(tool =>
+      tool.readableName?.endsWith(`.${action}`)
+    )
+
+    expect(rowTool?.authorization).toMatchObject({
+      permissionType: PermissionType.TABLE,
+      permissionLevel,
+      resourceId: tableId,
+    })
+  })
+
+  it("distinguishes long table IDs with the same prefix", () => {
+    const firstNames = getExternalRowTools("SignOffLimitsAlpha").map(
+      tool => tool.name
+    )
+    const secondNames = getExternalRowTools("SignOffLimitsBeta").map(
+      tool => tool.name
+    )
+
+    expect(firstNames).not.toEqual(secondNames)
+    expect(firstNames.some(name => secondNames.includes(name))).toBe(false)
+  })
+
+  it("preserves existing truncated runtime names when they are unique", () => {
+    const tableId = `${datasourceId}__Notes`
+    const tools = getExternalRowTools("Notes")
+
+    for (const tool of tools) {
+      const action = tool.readableName?.split(".").at(-1)
+      expect(tool.name).toBe(`${tableId}_${action}`.substring(0, 64))
+    }
+  })
+
+  it("provides schema-free requester definitions for every row action", () => {
+    const tools = createRowTools({
+      tableId: "ta_employees",
+      tableName: "Employees",
+      tableSourceType: TableSourceType.INTERNAL,
+      tableSchema: {
+        "Employee Level": {
+          name: "Employee Level",
+          type: FieldType.OPTIONS,
+          constraints: { inclusion: ["Apprentice", "Manager"] },
+        },
+      },
+    })
+
+    expect(tools).toHaveLength(5)
+    for (const rowTool of tools) {
+      expect(rowTool.requesterRedactedTool).toBeDefined()
+      const serializedDefinition = JSON.stringify({
+        description: rowTool.requesterRedactedTool?.description,
+        inputSchema: rowTool.requesterRedactedTool?.inputSchema,
+      })
+      expect(serializedDefinition).not.toContain("Employees")
+      expect(serializedDefinition).not.toContain("Employee Level")
+      expect(serializedDefinition).not.toContain("Apprentice")
+      expect(serializedDefinition).not.toContain("Manager")
+      expect(serializedDefinition).toContain("Resource metadata is restricted")
+    }
   })
 
   async function executeTool<T extends BudibaseToolDefinition>(
@@ -92,6 +193,38 @@ describe("AI Tools - Rows", () => {
 
     expect(persistedRow.name).toBe("Updated name")
     expect(persistedRow.description).toBe("original description")
+  })
+
+  it("does not return row fields from a redacted write tool", async () => {
+    const table = await config.api.table.save(basicTable())
+    const createdRow = await config.api.row.save(
+      table._id!,
+      basicRow(table._id!)
+    )
+    const updateTool = getBudibaseTools([table]).find(
+      tool => tool.name === `${table._id}_update_row`
+    )
+    const execute = updateTool?.requesterRedactedTool?.execute
+    if (!execute) {
+      throw new Error("Redacted update tool not found")
+    }
+
+    const result = await runInContext(() =>
+      execute(
+        {
+          rowId: createdRow._id!,
+          rowRev: createdRow._rev!,
+          data: { name: "Updated without read access" },
+        },
+        { toolCallId: "test-tool-call", messages: [] }
+      )
+    )
+
+    expect(result).toEqual({ success: true })
+    expect(result).not.toHaveProperty("row")
+    await expect(
+      config.api.row.get(table._id!, createdRow._id!)
+    ).resolves.toMatchObject({ name: "Updated without read access" })
   })
 
   it("should create and update rows via table alias tools", async () => {
@@ -251,5 +384,65 @@ describe("AI Tools - Rows", () => {
     expect(result.rows).toHaveLength(2)
     expect(result.rows[0].name).toBe("Alice")
     expect(result.rows[1].name).toBe("Bob")
+  })
+
+  it("does not return relationship-derived values to the agent", async () => {
+    const tableSchema: TableSchema = {
+      invoiceNumber: {
+        name: "invoiceNumber",
+        type: FieldType.STRING,
+      },
+      supplier: {
+        name: "supplier",
+        fieldName: "supplier",
+        type: FieldType.LINK,
+        tableId: "ta_suppliers",
+        relationshipType: RelationshipType.MANY_TO_ONE,
+      },
+      supplierAccount: {
+        name: "supplierAccount",
+        type: FieldType.FORMULA,
+        formula: "{{ supplier.0.primaryDisplay }}",
+      },
+    }
+    const search = jest.spyOn(sdk.rows, "search").mockResolvedValue({
+      rows: [
+        {
+          _id: "ro_invoice_1",
+          invoiceNumber: "INV-001",
+          supplier: [
+            {
+              _id: "supplier_1",
+              primaryDisplay: "ACCOUNT-4100-UNEXPOSED",
+            },
+          ],
+          supplierAccount: "ACCOUNT-4100-UNEXPOSED",
+        },
+      ],
+    })
+    const tools = createRowTools({
+      tableId: "ta_invoices",
+      tableName: "Invoices",
+      tableSourceType: TableSourceType.INTERNAL,
+      tableSchema,
+    })
+    const searchTool = tools.find(
+      tool => tool.name === "ta_invoices_search_rows"
+    )
+    if (!searchTool) {
+      throw new Error("search_rows tool not found")
+    }
+
+    const result = await executeTool(searchTool, {})
+
+    expect(search).toHaveBeenCalledWith(
+      expect.objectContaining({ fields: ["invoiceNumber"] })
+    )
+    expect(result.rows).toEqual([
+      {
+        _id: "ro_invoice_1",
+        invoiceNumber: "INV-001",
+      },
+    ])
   })
 })

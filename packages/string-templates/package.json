@@ -8,6 +8,7 @@
   "license": "MPL-2.0",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "require": "./dist/bundle.cjs",
       "import": "./dist/bundle.mjs"
     },
