@@ -134,16 +134,6 @@ export const resolveAvailableAgentTools = ({
   })
 }
 
-export const buildReadableToRuntimeBinding = (tools: AgentTool[]) => {
-  const runtimeMap: Record<string, string> = {}
-  for (const tool of tools) {
-    if (tool.readableBinding && tool.runtimeBinding) {
-      runtimeMap[tool.readableBinding] = tool.runtimeBinding
-    }
-  }
-  return runtimeMap
-}
-
 export const buildBindingIcons = (bindings: EnrichedBinding[]) =>
   Object.fromEntries(
     bindings
