@@ -430,6 +430,7 @@ export const createRowTools = ({
       name: toolName,
       readableName: `${tableName}.${action}`,
       tableId,
+      sourceId: tableId,
       sourceType: resolvedSourceType,
       sourceLabel: resolvedSourceLabel,
       sourceIconType,

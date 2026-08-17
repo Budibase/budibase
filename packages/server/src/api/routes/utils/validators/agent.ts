@@ -1,6 +1,6 @@
 import { auth } from "@budibase/backend-core"
 import { REVIEWER_TYPES } from "@budibase/shared-core"
-import { EscalationNotificationChannel } from "@budibase/types"
+import { EscalationNotificationChannel, ResolutionStrategy } from "@budibase/types"
 import Joi from "joi"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
@@ -63,6 +63,24 @@ const ESCALATION_RECIPIENT_SCHEMA = Joi.object({
   config: Joi.object().optional(),
 })
 
+const TOOL_EXECUTION_RULE_SCHEMA = Joi.object({
+  conditions: Joi.array().items(Joi.object()).optional(),
+  policyId: Joi.string().required(),
+})
+
+const APPROVAL_POLICY_SCHEMA = Joi.object({
+  id: Joi.string().required(),
+  name: Joi.string().required(),
+  approvalType: Joi.string()
+    .valid(...Object.values(ResolutionStrategy))
+    .optional(),
+  approvers: Joi.array().items(Joi.string()).optional(),
+  notifications: Joi.object({
+    recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
+    delay: Joi.number().integer().positive().optional(),
+  }).required(),
+})
+
 const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
   name: OPTIONAL_STRING,
   live: Joi.boolean().optional(),
@@ -72,9 +90,13 @@ const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
       Joi.object({
         toolName: Joi.string().required(),
         executionPrincipal: Joi.string().valid("requester", "admin").required(),
+        executionRules: Joi.array()
+          .items(TOOL_EXECUTION_RULE_SCHEMA)
+          .optional(),
       })
     )
     .optional(),
+  approvalPolicies: Joi.array().items(APPROVAL_POLICY_SCHEMA).optional(),
   allowKnowledgeSourceDownload: Joi.boolean().optional(),
   escalation: Joi.object({
     recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),

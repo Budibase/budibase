@@ -5,7 +5,6 @@ import {
   ToolMetadata,
   SourceName,
   WebSearchProvider,
-  ESCALATE_TOOL_NAME,
   EscalateToolResultStatus,
   ToolExecutionPrincipal,
   type AgentExecutionContext,
@@ -26,8 +25,13 @@ import {
   resolveToolExecutionPrincipal,
   toToolSet,
   type AiToolDefinition,
+  type EscalationGateRuntime,
   type ToolAuthorizationRuntime,
 } from "../../../../ai/tools"
+import {
+  createEscalationGateRuntime,
+  type EscalationGateContext,
+} from "./escalationGate"
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 import { HTTPError } from "@budibase/backend-core"
@@ -160,6 +164,7 @@ export interface BuildPromptAndToolsOptions {
   fallbackPromptInstructions?: string
   executionContext?: AgentExecutionContext
   toolSecurityEnabled?: boolean
+  escalationGateContext?: EscalationGateContext
 }
 
 export async function buildPromptAndTools(
@@ -170,6 +175,7 @@ export async function buildPromptAndTools(
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
+  toolSources: Record<string, string | undefined>
 }> {
   const {
     baseSystemPrompt,
@@ -223,6 +229,29 @@ export async function buildPromptAndTools(
     }
   }
 
+  const gates = new Map<string, EscalationGateRuntime>()
+  if (operation && options.escalationGateContext) {
+    const { escalationGateContext } = options
+    for (const tool of enabledTools) {
+      const config = toolConfigs.find(config => config.toolName === tool.name)
+      if (!config?.executionRules?.length) {
+        continue
+      }
+      gates.set(
+        tool.name,
+        createEscalationGateRuntime({
+          agentId,
+          operation,
+          toolName: tool.name,
+          readableName: tool.readableName,
+          sourceId: tool.sourceId,
+          rules: config.executionRules,
+          gateContext: escalationGateContext,
+        })
+      )
+    }
+  }
+
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
@@ -247,8 +276,11 @@ export async function buildPromptAndTools(
 
   return {
     systemPrompt: resolvedSystemPrompt,
-    tools: toToolSet(enabledTools, runtimes),
+    tools: toToolSet(enabledTools, runtimes, gates),
     toolDisplayNames: getToolDisplayNames(enabledTools),
+    toolSources: Object.fromEntries(
+      enabledTools.map(tool => [tool.name, tool.sourceId])
+    ),
   }
 }
 
@@ -353,11 +385,13 @@ export function updateUnrecoveredToolFailures(
   }
 }
 
-// escalate can return a technically-successful tool-result that isn't a real
-// escalation (e.g. the "no reviewers configured" placeholder responds with
-// status "unavailable" instead of throwing). Split tool results so callers
-// can treat that case as a failure rather than a genuine success, while every
-// other tool keeps its normal success/failure handling untouched.
+// Escalation results can be technically-successful tool-results that aren't a
+// real escalation (status "unavailable" when no reviewers are configured -
+// from the escalate placeholder or a misconfigured gate). Split tool results
+// so callers can treat that case as a failure rather than a genuine success,
+// while every other tool keeps its normal success/failure handling untouched.
+// Keyed on the output status so it covers the escalate tool and gated tools
+// alike.
 export function groupToolResultsByOutcome(
   toolResults: TypedToolResult<ToolSet>[]
 ): {
@@ -372,12 +406,6 @@ export function groupToolResultsByOutcome(
   const semanticFailureResults: TypedToolResult<ToolSet>[] = []
 
   for (const toolResult of toolResults) {
-    if (toolResult.toolName !== ESCALATE_TOOL_NAME) {
-      successResults.push(toolResult)
-      successNames.push(toolResult.toolName)
-      continue
-    }
-
     const status = (toolResult.output as { status?: string } | undefined)
       ?.status
 
@@ -388,7 +416,7 @@ export function groupToolResultsByOutcome(
     }
 
     successResults.push(toolResult)
-    if (status === EscalateToolResultStatus.PENDING_APPROVAL) {
+    if (status !== EscalateToolResultStatus.ALREADY_APPROVED) {
       successNames.push(toolResult.toolName)
     }
   }
