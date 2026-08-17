@@ -158,6 +158,9 @@ class Replication {
         if (toDev && doc._id.startsWith("_design")) {
           return false
         }
+        if (startsWithID(doc._id, DocumentType.SLACK_APP_CONFIG)) {
+          return false
+        }
         // always replicate deleted documents
         if (doc._deleted) {
           return true

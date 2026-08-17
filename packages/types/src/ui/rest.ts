@@ -124,6 +124,9 @@ export type RestTemplateId =
   | TwilioRestTemplateId
   | "zendesk"
   | ZendeskRestTemplateId
+  | CustomRestTemplateId
+
+export type CustomRestTemplateId = `rest_template_${string}`
 
 export type HubSpotRestTemplateId =
   | "hubspot-account-info"
@@ -307,6 +310,7 @@ export interface RestTemplate {
   templates?: RestTemplate[]
   connectionMode?: ConnectionMode
   mixin?: RestTemplateMixin
+  custom?: boolean
 }
 
 export interface TemplateSelectionContext {

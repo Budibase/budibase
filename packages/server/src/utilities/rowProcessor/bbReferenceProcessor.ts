@@ -4,6 +4,7 @@ import {
   BBReferenceFieldSubType,
   DocumentType,
   SEPARATOR,
+  User,
 } from "@budibase/types"
 import { getUserFullName } from "../users"
 import { InvalidBBRefError } from "./errors"
@@ -117,70 +118,80 @@ interface UserReferenceInfo {
   fullName?: string
 }
 
-export async function processOutputBBReference(
+export type UserReferenceMap = Record<string, UserReferenceInfo>
+
+function toUserReference(user: User): UserReferenceInfo {
+  return {
+    _id: user._id!,
+    primaryDisplay: user.email,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    fullName: getUserFullName(user),
+  }
+}
+
+export function getBBReferenceIds(
+  value: string | string[] | null | undefined
+): string[] {
+  if (!value) {
+    return []
+  }
+  const ids = typeof value === "string" ? value.split(",") : value
+  return ids.filter(id => !!id)
+}
+
+export async function fetchUserReferences(
+  ids: string[]
+): Promise<UserReferenceMap> {
+  const uniqueIds = Array.from(new Set(ids.filter(id => !!id)))
+  if (!uniqueIds.length) {
+    return {}
+  }
+
+  const { users } = await cache.user.getUsers(uniqueIds)
+  return users.reduce((acc: UserReferenceMap, user) => {
+    acc[user._id!] = toUserReference(user)
+    return acc
+  }, {})
+}
+
+export function processOutputBBReference(
   value: string | null | undefined,
-  subtype: BBReferenceFieldSubType.USER
-): Promise<UserReferenceInfo | undefined> {
+  subtype: BBReferenceFieldSubType.USER,
+  users: UserReferenceMap
+): UserReferenceInfo | undefined {
   if (!value) {
     return undefined
   }
 
   switch (subtype) {
-    case BBReferenceFieldSubType.USER: {
-      let user
-      try {
-        user = await cache.user.getUser({
-          userId: value as string,
-        })
-      } catch (err: any) {
-        if (err.statusCode !== 404) {
-          throw err
-        }
-      }
-      if (!user) {
-        return undefined
-      }
-
-      return {
-        _id: user._id!,
-        primaryDisplay: user.email,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        fullName: getUserFullName(user),
-      }
-    }
+    case BBReferenceFieldSubType.USER:
+      return users[value]
     default:
       throw utils.unreachable(subtype)
   }
 }
 
-export async function processOutputBBReferences(
+export function processOutputBBReferences(
   value: string | string[] | null | undefined,
-  subtype: BBReferenceFieldSubType
-): Promise<UserReferenceInfo[] | undefined> {
+  subtype: BBReferenceFieldSubType,
+  users: UserReferenceMap
+): UserReferenceInfo[] | undefined {
   if (!value || (Array.isArray(value) && value.length === 0)) {
     return undefined
   }
-  const ids =
-    typeof value === "string" ? value.split(",").filter(id => !!id) : value
+  const ids = getBBReferenceIds(value)
 
   switch (subtype) {
     case BBReferenceFieldSubType.USER:
     case BBReferenceFieldSubType.USERS: {
-      const { users } = await cache.user.getUsers(ids)
-      if (!users.length) {
+      const found = ids.map(id => users[id]).filter(user => !!user)
+      if (!found.length) {
         return undefined
       }
 
-      return users.map(u => ({
-        _id: u._id!,
-        primaryDisplay: u.email,
-        email: u.email,
-        firstName: u.firstName,
-        lastName: u.lastName,
-        fullName: getUserFullName(u),
-      }))
+      return found
     }
     default:
       throw utils.unreachable(subtype)

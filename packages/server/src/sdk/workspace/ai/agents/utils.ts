@@ -35,7 +35,10 @@ import {
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 import { HTTPError } from "@budibase/backend-core"
-import { authorizeAgentToolCall } from "../../../../ai/tools/authorization"
+import {
+  authorizeAgentToolCall,
+  canRequesterReadAgentToolResource,
+} from "../../../../ai/tools/authorization"
 
 const HELPER_TOOL_NAMES = new Set([
   "list_tables",
@@ -191,12 +194,35 @@ export async function buildPromptAndTools(
   const allTools = await getAvailableTools(agent.aiconfig)
   const toolConfigs = operation?.enabledTools || []
   const enabledToolNames = new Set(toolConfigs.map(config => config.toolName))
-  const enabledTools = addHelperTools(
-    allTools.filter(
-      tool => enabledToolNames.has(tool.name) && !isHelperTool(tool)
-    ),
-    allTools
+  const configuredTools = allTools.filter(
+    tool => enabledToolNames.has(tool.name) && !isHelperTool(tool)
   )
+  let enabledTools = options.toolSecurityEnabled
+    ? configuredTools
+    : addLegacyHelperTools(configuredTools, allTools)
+
+  if (options.toolSecurityEnabled && options.executionContext) {
+    const executionContext = options.executionContext
+    const visibilityByTable = new Map<string, Promise<boolean>>()
+    enabledTools = await Promise.all(
+      enabledTools.map(async tool => {
+        if (!tool.tableId || !tool.requesterRedactedTool) {
+          return tool
+        }
+        let visibility = visibilityByTable.get(tool.tableId)
+        if (!visibility) {
+          visibility = canRequesterReadAgentToolResource({
+            resourceId: tool.tableId,
+            executionContext,
+          })
+          visibilityByTable.set(tool.tableId, visibility)
+        }
+        return (await visibility)
+          ? tool
+          : { ...tool, tool: tool.requesterRedactedTool }
+      })
+    )
+  }
 
   if (
     operation &&
@@ -284,14 +310,10 @@ export async function buildPromptAndTools(
   }
 }
 
-/*
-We want to add these tools for automations / tables if user has added related tools.
-This abstracts the decision of what tools to add away from the user.
-*/
-function addHelperTools(
+const addLegacyHelperTools = (
   enabledTools: AiToolDefinition[],
   allTools: AiToolDefinition[]
-) {
+) => {
   const seenTools = new Set(enabledTools.map(tool => tool.name))
   const toolByName = new Map(allTools.map(tool => [tool.name, tool]))
 
@@ -309,11 +331,10 @@ function addHelperTools(
   if (enabledTools.some(tool => tool.sourceType === ToolType.AUTOMATION)) {
     for (const toolName of ["get_automation", "list_automations"]) {
       if (seenTools.has(toolName)) continue
-      let tool = toolByName.get(toolName)
-      if (tool) {
-        enabledTools.push(tool)
-        seenTools.add(tool.name)
-      }
+      const tool = toolByName.get(toolName)
+      if (!tool) continue
+      enabledTools.push(tool)
+      seenTools.add(tool.name)
     }
   }
 

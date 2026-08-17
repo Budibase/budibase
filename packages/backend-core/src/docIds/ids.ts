@@ -1,3 +1,4 @@
+import type { CustomRestTemplateId } from "@budibase/types"
 import {
   DocumentType,
   InternalTable,
@@ -192,4 +193,8 @@ export const generateProjectID = () => {
 
 export const generateKnowledgeBaseID = () => {
   return `${DocumentType.KNOWLEDGE_BASE}${SEPARATOR}${newid()}`
+}
+
+export const generateRestTemplateID = (): CustomRestTemplateId => {
+  return `${DocumentType.REST_TEMPLATE}${SEPARATOR}${newid()}`
 }
