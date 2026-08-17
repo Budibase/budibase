@@ -6,6 +6,9 @@ import {
   SortOrder,
   TableSourceType,
   ToolType,
+  PermissionLevel,
+  PermissionType,
+  ToolExecutionPrincipal,
   type Row,
   type RowSearchParams,
   type TableSchema,
@@ -221,6 +224,10 @@ type RowToolResult =
     }
   | { error: string }
 
+interface RedactedWriteResult {
+  success: true
+}
+
 const sanitizeRowToolResult = (
   result: RowToolResult,
   tableSchema: TableSchema
@@ -357,6 +364,9 @@ const formatActionLabel = (action: string) =>
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ")
 
+const getRequesterRedactedDescription = (action: string) =>
+  `${formatActionLabel(action)} on the configured resource. Resource metadata is restricted. Do not infer its schema or substitute another resource if this tool is denied.`
+
 const buildCollisionSafeToolName = (tableId: string, action: string) => {
   const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
   const tableIdHash = createHash("sha256")
@@ -423,6 +433,19 @@ export const createRowTools = ({
     } else if (action === "search_rows") {
       inputSchema = searchInputSchema
     }
+    const execute = async (input: Parameters<typeof def.execute>[1]) =>
+      sanitizeRowToolResult(
+        await def.execute(tableId, input, fields),
+        tableSchema
+      )
+    const executeRequesterRedacted = async (
+      input: Parameters<typeof def.execute>[1]
+    ): Promise<RowToolResult | RedactedWriteResult> => {
+      const result = await execute(input)
+      return action === "create_row" || action === "update_row"
+        ? { success: true }
+        : result
+    }
     return {
       name: toolName,
       readableName: `${tableName}.${action}`,
@@ -431,14 +454,27 @@ export const createRowTools = ({
       sourceLabel: resolvedSourceLabel,
       sourceIconType,
       description,
+      executionPolicy: {
+        mode: "configurable",
+        defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+      },
+      authorization: {
+        permissionType: PermissionType.TABLE,
+        permissionLevel:
+          action === "create_row" || action === "update_row"
+            ? PermissionLevel.WRITE
+            : PermissionLevel.READ,
+        resourceId: tableId,
+      },
       tool: tool({
         description,
         inputSchema,
-        execute: async input =>
-          sanitizeRowToolResult(
-            await def.execute(tableId, input, fields),
-            tableSchema
-          ),
+        execute,
+      }),
+      requesterRedactedTool: tool({
+        description: getRequesterRedactedDescription(action),
+        inputSchema: def.inputSchema,
+        execute: executeRequesterRedacted,
       }),
     }
   })
