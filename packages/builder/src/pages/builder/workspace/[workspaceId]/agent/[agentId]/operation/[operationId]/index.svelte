@@ -117,6 +117,12 @@
   let promptBindings = $derived(
     toAgentPromptBindings({ tools: configuredTools, webSearchConfigured })
   )
+  let availablePromptBindings = $derived(
+    toAgentPromptBindings({ tools: availableTools, webSearchConfigured })
+  )
+  let availableBindingIcons = $derived(
+    buildBindingIcons(availablePromptBindings)
+  )
   const bindingIcons: Record<string, string | undefined> = {}
   $effect(() => {
     const nextIcons = buildBindingIcons(promptBindings)
@@ -513,8 +519,8 @@
             <AgentUnpublishedChangesIndicator />
             <GenerateInstructionsControl
               triggerLabel="Help write instructions"
-              {promptBindings}
-              {bindingIcons}
+              promptBindings={availablePromptBindings}
+              bindingIcons={availableBindingIcons}
               onApplyInstructions={instructions =>
                 saveOperation({ promptInstructions: instructions })}
             />
