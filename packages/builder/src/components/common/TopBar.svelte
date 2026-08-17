@@ -114,6 +114,7 @@
 <style>
   .top-bar {
     height: 50px;
+    flex-shrink: 0;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
