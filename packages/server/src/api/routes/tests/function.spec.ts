@@ -436,7 +436,6 @@ export default async function (): Promise<FunctionResult> {
         _rev: built._rev!,
       })
       expect(rebuilt.readiness).toBe("ready")
-
     })
   })
 
