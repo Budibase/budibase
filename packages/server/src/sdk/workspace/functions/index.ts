@@ -149,6 +149,15 @@ const getFunctionDeclarationsForReadiness = async (
   return getFunctionDeclarations(fn)
 }
 
+const getPersistedFunctionDeclarations = (fn: FunctionDocument) => {
+  const declarations = generateFunctionDeclarations(fn.capabilities)
+  return {
+    capabilities: fn.capabilities,
+    declarations,
+    declarationsHash: hashFunctionDeclarations(declarations),
+  }
+}
+
 export const getFunctionDeclarationsHash = async (fn: FunctionDocument) =>
   (await getFunctionDeclarations(fn)).declarationsHash
 
@@ -163,6 +172,12 @@ export const getFunctionReadiness = async (
       .declarationsHash
   } catch (error) {
     if (error instanceof HTTPError) {
+      if (
+        fn.lastBuild?.status === "failed" &&
+        fn.lastBuild.sourceHash === sourceHash
+      ) {
+        return "build_failed"
+      }
       return "build_required"
     }
     throw error
@@ -241,30 +256,54 @@ export const build = async (id: string, revision: string) => {
   assertRevision(fn, revision)
 
   const sourceHash = getFunctionSourceHash(fn.source)
-  const declarationResult = await getFunctionDeclarations(fn)
-  const result = await compileFunction({
-    source: fn.source,
-    declarations: declarationResult.declarations,
-  })
-  const diagnostics = getCompileDiagnostics(result.diagnostics, !!result.output)
+  let declarationResult
+  let declarationError: HTTPError | undefined
+  try {
+    declarationResult = await getFunctionDeclarations(fn)
+  } catch (error) {
+    if (!(error instanceof HTTPError)) {
+      throw error
+    }
+    declarationError = error
+    declarationResult = getPersistedFunctionDeclarations(fn)
+  }
+
+  const result = declarationError
+    ? undefined
+    : await compileFunction({
+        source: fn.source,
+        declarations: declarationResult.declarations,
+      })
+  const diagnostics = declarationError
+    ? [
+        {
+          code: "FUNCTION_DECLARATION_ERROR",
+          message: declarationError.message,
+        },
+      ]
+    : getCompileDiagnostics(result?.diagnostics || [], !!result?.output)
 
   const current = await get(id)
   if (!current) {
     throw new HTTPError(`Function with id '${id}' not found.`, 404)
   }
   assertRevision(current, revision)
-  const currentDeclarations = await getFunctionDeclarations(current)
-  if (
-    currentDeclarations.declarationsHash !== declarationResult.declarationsHash
-  ) {
-    throw new HTTPError(
-      "Function query declarations changed during compilation.",
-      409
-    )
+  let capabilities = current.capabilities
+  if (!declarationError) {
+    const currentDeclarations = await getFunctionDeclarations(current)
+    if (
+      currentDeclarations.declarationsHash !== declarationResult.declarationsHash
+    ) {
+      throw new HTTPError(
+        "Function query declarations changed during compilation.",
+        409
+      )
+    }
+    capabilities = currentDeclarations.capabilities
   }
 
   const attemptedAt = new Date().toISOString()
-  const successfulOutput = diagnostics.length ? undefined : result.output
+  const successfulOutput = diagnostics.length ? undefined : result?.output
   const lastBuild = {
     status: successfulOutput ? "success" : "failed",
     sourceHash,
@@ -287,7 +326,7 @@ export const build = async (id: string, revision: string) => {
       {
         ...current,
         _rev: revision,
-        capabilities: currentDeclarations.capabilities,
+        capabilities,
         artifact,
         lastBuild,
       },
