@@ -20,6 +20,12 @@ interface ImportProjectParams {
   expectations?: Expectations
 }
 
+type TestUpdateProjectAssignmentRequest = Omit<
+  UpdateProjectAssignmentRequest,
+  "dependencyFingerprint"
+> &
+  Partial<Pick<UpdateProjectAssignmentRequest, "dependencyFingerprint">>
+
 export class ProjectAPI extends TestAPI {
   fetch = async (expectations?: Expectations) => {
     return await this._get<FetchProjectsResponse>("/api/projects", {
@@ -114,13 +120,21 @@ export class ProjectAPI extends TestAPI {
 
   updateAssignment = async (
     resourceId: string,
-    request: UpdateProjectAssignmentRequest,
+    request: TestUpdateProjectAssignmentRequest,
     expectations?: Expectations
   ) => {
+    const dependencyFingerprint =
+      request.dependencyFingerprint ||
+      (
+        await this.previewAssignment({
+          resourceId,
+          projectIds: request.projectIds,
+        })
+      ).dependencyFingerprint
     return await this._put<UpdateProjectAssignmentResponse>(
       `/api/projects/assignments/${resourceId}`,
       {
-        body: request,
+        body: { ...request, dependencyFingerprint },
         expectations,
       }
     )

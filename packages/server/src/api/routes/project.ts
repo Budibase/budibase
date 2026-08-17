@@ -32,6 +32,7 @@ builderRoutes
         resourceRev: Joi.string().required(),
         projectIds: Joi.array().items(Joi.string()).required(),
         dependencyIds: Joi.array().items(Joi.string()).required(),
+        dependencyFingerprint: Joi.string().required(),
       }),
       { allowUnknown: false }
     ),

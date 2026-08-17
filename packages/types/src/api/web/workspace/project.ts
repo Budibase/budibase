@@ -48,12 +48,14 @@ export interface ProjectAssignmentDependency extends UsedResource {
 
 export interface PreviewProjectAssignmentResponse {
   dependencies: ProjectAssignmentDependency[]
+  dependencyFingerprint: string
 }
 
 export interface UpdateProjectAssignmentRequest {
   resourceRev: string
   projectIds: string[]
   dependencyIds: string[]
+  dependencyFingerprint: string
 }
 
 export interface UpdateProjectAssignmentResponse {
