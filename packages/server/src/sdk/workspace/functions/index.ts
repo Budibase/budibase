@@ -1,5 +1,10 @@
 import { createHash } from "crypto"
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  docIds,
+  HTTPError,
+} from "@budibase/backend-core"
 import {
   DEFAULT_FUNCTION_LIMITS,
   DocumentType,
@@ -9,13 +14,15 @@ import {
   type FunctionDocument,
   type FunctionQueryCapabilityInput,
   type FunctionResponse,
+  type FunctionQueryCatalogEntry,
+  type FunctionSummary,
 } from "@budibase/types"
 import { compileFunction } from "./compiler"
 import {
   generateFunctionDeclarations,
   hashFunctionDeclarations,
 } from "./declarations"
-import { buildCapabilities } from "./queryCatalog"
+import { buildCapabilities, getQueryCatalog } from "./queryCatalog"
 
 export {
   generateFunctionDeclarations,
@@ -108,6 +115,49 @@ export const getFunctionDeclarations = async (fn: FunctionDocument) => {
   }
 }
 
+type FunctionQueryCatalog = ReadonlyMap<string, FunctionQueryCatalogEntry>
+
+const getFunctionDeclarationsFromCatalog = (
+  fn: FunctionDocument,
+  catalog: FunctionQueryCatalog
+) => {
+  const capabilities = fn.capabilities.map(capability => {
+    const query = catalog.get(capability.queryId)
+    if (!query) {
+      throw new HTTPError(`Query '${capability.queryId}' not found.`, 404)
+    }
+    return {
+      ...capability,
+      parameterNames: query.parameters.map(parameter => parameter.name),
+    }
+  })
+  const declarations = generateFunctionDeclarations(capabilities)
+  return {
+    capabilities,
+    declarations,
+    declarationsHash: hashFunctionDeclarations(declarations),
+  }
+}
+
+const getFunctionDeclarationsForReadiness = async (
+  fn: FunctionDocument,
+  catalog?: FunctionQueryCatalog
+) => {
+  if (catalog) {
+    return getFunctionDeclarationsFromCatalog(fn, catalog)
+  }
+  return getFunctionDeclarations(fn)
+}
+
+const getPersistedFunctionDeclarations = (fn: FunctionDocument) => {
+  const declarations = generateFunctionDeclarations(fn.capabilities)
+  return {
+    capabilities: fn.capabilities,
+    declarations,
+    declarationsHash: hashFunctionDeclarations(declarations),
+  }
+}
+
 export const getFunctionDeclarationsHash = async (fn: FunctionDocument) =>
   (await getFunctionDeclarations(fn)).declarationsHash
 
@@ -119,14 +169,22 @@ export type FunctionPublishReadiness =
   | "missing_query"
 
 export const getFunctionPublishReadiness = async (
-  fn: FunctionDocument
+  fn: FunctionDocument,
+  catalog?: FunctionQueryCatalog
 ): Promise<FunctionPublishReadiness> => {
   const sourceHash = getFunctionSourceHash(fn.source)
   let declarationsHash: string
   try {
-    declarationsHash = await getFunctionDeclarationsHash(fn)
+    declarationsHash = (await getFunctionDeclarationsForReadiness(fn, catalog))
+      .declarationsHash
   } catch (error) {
     if (error instanceof HTTPError) {
+      if (
+        fn.lastBuild?.status === "failed" &&
+        fn.lastBuild.sourceHash === sourceHash
+      ) {
+        return "build_failed"
+      }
       return "missing_query"
     }
     throw error
@@ -155,8 +213,11 @@ export const getFunctionPublishReadiness = async (
   return "build_required"
 }
 
-export const getFunctionReadiness = async (fn: FunctionDocument) => {
-  const readiness = await getFunctionPublishReadiness(fn)
+export const getFunctionReadiness = async (
+  fn: FunctionDocument,
+  catalog?: FunctionQueryCatalog
+) => {
+  const readiness = await getFunctionPublishReadiness(fn, catalog)
   return readiness === "declarations_changed" || readiness === "missing_query"
     ? "build_required"
     : readiness
@@ -212,30 +273,55 @@ export const build = async (id: string, revision: string) => {
   assertRevision(fn, revision)
 
   const sourceHash = getFunctionSourceHash(fn.source)
-  const declarationResult = await getFunctionDeclarations(fn)
-  const result = await compileFunction({
-    source: fn.source,
-    declarations: declarationResult.declarations,
-  })
-  const diagnostics = getCompileDiagnostics(result.diagnostics, !!result.output)
+  let declarationResult
+  let declarationError: HTTPError | undefined
+  try {
+    declarationResult = await getFunctionDeclarations(fn)
+  } catch (error) {
+    if (!(error instanceof HTTPError)) {
+      throw error
+    }
+    declarationError = error
+    declarationResult = getPersistedFunctionDeclarations(fn)
+  }
+
+  const result = declarationError
+    ? undefined
+    : await compileFunction({
+        source: fn.source,
+        declarations: declarationResult.declarations,
+      })
+  const diagnostics = declarationError
+    ? [
+        {
+          code: "FUNCTION_DECLARATION_ERROR",
+          message: declarationError.message,
+        },
+      ]
+    : getCompileDiagnostics(result?.diagnostics || [], !!result?.output)
 
   const current = await get(id)
   if (!current) {
     throw new HTTPError(`Function with id '${id}' not found.`, 404)
   }
   assertRevision(current, revision)
-  const currentDeclarations = await getFunctionDeclarations(current)
-  if (
-    currentDeclarations.declarationsHash !== declarationResult.declarationsHash
-  ) {
-    throw new HTTPError(
-      "Function query declarations changed during compilation.",
-      409
-    )
+  let capabilities = current.capabilities
+  if (!declarationError) {
+    const currentDeclarations = await getFunctionDeclarations(current)
+    if (
+      currentDeclarations.declarationsHash !==
+      declarationResult.declarationsHash
+    ) {
+      throw new HTTPError(
+        "Function query declarations changed during compilation.",
+        409
+      )
+    }
+    capabilities = currentDeclarations.capabilities
   }
 
   const attemptedAt = new Date().toISOString()
-  const successfulOutput = diagnostics.length ? undefined : result.output
+  const successfulOutput = diagnostics.length ? undefined : result?.output
   const lastBuild = {
     status: successfulOutput ? "success" : "failed",
     sourceHash,
@@ -253,17 +339,24 @@ export const build = async (id: string, revision: string) => {
         compiledAt: attemptedAt,
       }
     : current.artifact
-  const response = await getDb().put(
-    {
-      ...current,
-      _rev: revision,
-      capabilities: currentDeclarations.capabilities,
-      artifact,
-      lastBuild,
-    },
-    { returnDoc: true }
-  )
-  return response.doc
+  try {
+    const response = await getDb().put(
+      {
+        ...current,
+        _rev: revision,
+        capabilities,
+        artifact,
+        lastBuild,
+      },
+      { returnDoc: true }
+    )
+    return response.doc
+  } catch (error) {
+    if (dbCore.isDocumentConflictError(error)) {
+      throw new HTTPError("Function revision does not match.", 409)
+    }
+    throw error
+  }
 }
 
 export const toFunctionResponse = async (
@@ -272,6 +365,28 @@ export const toFunctionResponse = async (
   ...fn,
   readiness: await getFunctionReadiness(fn),
 })
+
+export const toFunctionSummary = async (
+  fn: FunctionDocument,
+  catalog?: FunctionQueryCatalog
+): Promise<FunctionSummary> => ({
+  _id: fn._id,
+  _rev: fn._rev,
+  name: fn.name,
+  appId: fn.appId,
+  createdAt: fn.createdAt,
+  updatedAt: fn.updatedAt,
+  readiness: await getFunctionReadiness(fn, catalog),
+})
+
+export const toFunctionSummaries = async (fns: FunctionDocument[]) => {
+  if (!fns.length) {
+    return []
+  }
+  const catalog = await getQueryCatalog()
+  const entries = new Map(catalog.map(entry => [entry.queryId, entry]))
+  return await Promise.all(fns.map(fn => toFunctionSummary(fn, entries)))
+}
 
 export const fetch = async (): Promise<FunctionDocument[]> => {
   const result = await getDb().allDocs<FunctionDocument>(
