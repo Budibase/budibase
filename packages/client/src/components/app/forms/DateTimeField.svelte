@@ -32,7 +32,7 @@
   export let timeOnly = false
   export let setTimeTo: string | undefined = undefined
   export let ignoreTimezones = false
-  export let startDayOfWeek: Weekday = "Monday"
+  export let startDayOfWeek: Weekday | undefined = undefined
   export let validation: UIFieldValidationRule[] | undefined = undefined
   export let defaultValue: FieldDefaultValue = undefined
   export let onChange: ((args: { value: string | null }) => void) | undefined =

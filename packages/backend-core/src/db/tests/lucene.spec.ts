@@ -141,7 +141,7 @@ describe("lucene", () => {
       expect(resp.rows.length).toBe(2)
     })
 
-    it("should return all rows when doing a one of search against falsey value", async () => {
+    it("should return all rows when doing a one of search without a value", async () => {
       const builder = new QueryBuilder(dbName, INDEX_NAME)
       builder.addOneOf("property", null)
       let resp = await builder.run()
@@ -154,10 +154,20 @@ describe("lucene", () => {
       builder.addOneOf("property", "")
       resp = await builder.run()
       expect(resp.rows.length).toBe(3)
+    })
 
+    it("should return no rows when doing a one of search against an empty array", async () => {
+      const builder = new QueryBuilder(dbName, INDEX_NAME)
       builder.addOneOf("property", [])
-      resp = await builder.run()
+      const resp = await builder.run()
       expect(resp.rows.length).toBe(0)
+    })
+
+    it("should return all rows when doing a not one of search against an empty array", async () => {
+      const builder = new QueryBuilder(dbName, INDEX_NAME)
+      builder.addNotOneOf("property", [])
+      const resp = await builder.run()
+      expect(resp.rows.length).toBe(3)
     })
 
     it("should be able to perform a contains search", async () => {
