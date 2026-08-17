@@ -1,20 +1,15 @@
 <script lang="ts">
-  import {
-    ActionButton,
-    Icon,
-    Layout,
-    StatusLight,
-    notifications,
-  } from "@budibase/bbui"
+  import { Icon, Layout, notifications } from "@budibase/bbui"
   import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { syncURLToState } from "@/helpers/urlStateSync"
   import { agentsStore, featureFlags, selectedAgent } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
-  import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
   import * as routify from "@roxi/routify"
-  import { onDestroy } from "svelte"
+  import { onDestroy, onMount } from "svelte"
   import AgentChatPanel from "./AgentChatPanel.svelte"
+  import AgentTabList from "./AgentTabList.svelte"
+  import AgentUnpublishedChangesIndicator from "./AgentUnpublishedChangesIndicator.svelte"
   import { FeatureFlag } from "@budibase/types"
 
   const { goto, isActive, params } = routify
@@ -33,8 +28,9 @@
 
   let togglingLive = $state(false)
   let agentUpdateOverrides = $state<Record<string, unknown>>({})
-  let lastToolsAiConfigId = $state<string | null | undefined>(null)
+  let preloadedKnowledgeAgentId = $state<string | undefined>()
   let testsEnabled = $derived($featureFlags[FeatureFlag.AI_TESTS])
+  let operationPage = $derived($isActive("./operation"))
 
   let activeTab = $derived.by(() => {
     if ($isActive("./knowledge")) {
@@ -52,20 +48,6 @@
     return "Configuration"
   })
   let currentAgent = $derived($selectedAgent)
-  let hasPublishedUnpublishedChanges = $derived.by(() => {
-    if (!currentAgent?._id) {
-      return false
-    }
-    if (!currentAgent.live) {
-      return false
-    }
-    const publishStatus = $workspaceDeploymentStore.agents[currentAgent._id]
-    if (!publishStatus?.publishedAt) {
-      return false
-    }
-
-    return publishStatus.unpublishedChanges === true
-  })
 
   $effect(() => {
     if (!testsEnabled && $isActive("./tests")) {
@@ -73,20 +55,40 @@
     }
   })
 
+  onMount(async () => {
+    if (!$agentsStore.agentsLoaded) {
+      await agentsStore.init()
+    }
+  })
+
   $effect(() => {
-    if (!currentAgent?._id) {
+    if (
+      $agentsStore.toolsLoaded ||
+      $agentsStore.toolsLoading ||
+      $agentsStore.toolsLoadFailed
+    ) {
       return
     }
 
-    const nextAiConfigId = currentAgent.aiconfig || undefined
-    if (nextAiConfigId === lastToolsAiConfigId) {
+    agentsStore.fetchTools()
+  })
+
+  $effect(() => {
+    const agentId = currentAgent?._id
+    if (!agentId || operationPage || preloadedKnowledgeAgentId === agentId) {
       return
     }
 
-    lastToolsAiConfigId = nextAiConfigId
-    agentsStore.fetchTools(nextAiConfigId).catch(error => {
-      console.error("Failed to load agent tools", error)
-    })
+    agentsStore
+      .refreshOperationKnowledge(agentId)
+      .then(() => {
+        if (currentAgent?._id === agentId) {
+          preloadedKnowledgeAgentId = agentId
+        }
+      })
+      .catch(error => {
+        console.error(error)
+      })
   })
 
   async function toggleAgentLive() {
@@ -127,105 +129,102 @@
   onDestroy(() => stopSyncing?.())
 </script>
 
-<div class="config-wrapper">
-  <TopBar
-    breadcrumbs={[
-      { text: "Agents", url: "../", tag: "Beta" },
-      { text: currentAgent?.name || "Agent" },
-    ]}
-    icon="Effect"
-  ></TopBar>
-  <div class="secondary-bar">
-    <div class="filter">
-      <ActionButton
-        quiet
-        selected={activeTab === "Configuration"}
-        on:click={() => $goto("./config")}
-      >
-        Configuration
-      </ActionButton>
-      <ActionButton
-        quiet
-        selected={activeTab === "Deployment"}
-        on:click={() => $goto("./deployment")}
-      >
-        Deployment
-      </ActionButton>
-      {#if testsEnabled}
-        <ActionButton
-          quiet
-          selected={activeTab === "Tests"}
-          on:click={() => $goto("./tests")}
+{#if operationPage}
+  <slot />
+{:else}
+  <div class="config-wrapper">
+    <TopBar
+      breadcrumbs={[
+        { text: "Agents", url: "../", tag: "Beta" },
+        { text: currentAgent?.name || "Agent" },
+      ]}
+      icon="Effect"
+    ></TopBar>
+    <div class="secondary-bar">
+      <AgentTabList ariaLabel="Agent settings">
+        <button
+          class:active={activeTab === "Configuration"}
+          onclick={() => $goto("./config")}
         >
-          Tests
-        </ActionButton>
-      {/if}
-      <ActionButton
-        quiet
-        selected={activeTab === "Logs"}
-        on:click={() => $goto("./logs")}
+          Configuration
+        </button>
+        <button
+          class:active={activeTab === "Deployment"}
+          onclick={() => $goto("./deployment")}
+        >
+          Deployment
+        </button>
+        {#if testsEnabled}
+          <button
+            class:active={activeTab === "Tests"}
+            onclick={() => $goto("./tests")}
+          >
+            Tests
+          </button>
+        {/if}
+        <button
+          class:active={activeTab === "Logs"}
+          onclick={() => $goto("./logs")}
+        >
+          Logs
+        </button>
+      </AgentTabList>
+      <AgentUnpublishedChangesIndicator />
+      <div class="start-pause-row">
+        <div class="status-icons">
+          <Icon
+            tooltip="Documentation"
+            hoverable
+            on:click={() =>
+              window.open(
+                "https://docs.budibase.com/docs/agent-building-101",
+                "_blank"
+              )}
+            name="info"
+            size="M"
+            color="var(--spectrum-global-color-gray-600)"
+          />
+        </div>
+        <LiveToggleButton
+          live={currentAgent?.live === true}
+          size="S"
+          disabled={togglingLive}
+          on:click={toggleAgentLive}
+        />
+      </div>
+    </div>
+    <div
+      class="config-page"
+      class:full-width={activeTab === "Logs" || activeTab === "Tests"}
+    >
+      <div
+        class="config-content"
+        class:full-width={activeTab === "Logs" || activeTab === "Tests"}
+        class:logs-tab={activeTab === "Logs" || activeTab === "Tests"}
       >
-        Logs
-      </ActionButton>
-      {#if hasPublishedUnpublishedChanges}
-        <div class="unpublished-changes-indicator">
-          <StatusLight color="var(--spectrum-global-color-blue-600)" size="L" />
-          <span>Unpublished changes</span>
+        <div class="config-form">
+          {#if activeTab === "Logs" || activeTab === "Tests"}
+            <!-- svelte-ignore slot_element_deprecated -->
+            <slot />
+          {:else}
+            <!-- svelte-ignore slot_element_deprecated -->
+            <Layout gap="L">
+              <slot />
+            </Layout>
+          {/if}
+        </div>
+      </div>
+      {#if activeTab !== "Logs" && activeTab !== "Tests"}
+        <div class="config-preview">
+          <AgentChatPanel
+            agentId={currentAgent?._id}
+            workspaceId={$params.workspaceId || ""}
+          />
         </div>
       {/if}
     </div>
-    <div class="start-pause-row">
-      <div class="status-icons">
-        <Icon
-          tooltip="Documentation"
-          on:click={() =>
-            window.open(
-              "https://docs.budibase.com/docs/agent-building-101",
-              "_blank"
-            )}
-          name="info"
-          size="M"
-          color="var(--spectrum-global-color-gray-600)"
-        />
-      </div>
-      <LiveToggleButton
-        live={currentAgent?.live === true}
-        disabled={togglingLive}
-        on:click={toggleAgentLive}
-      />
-    </div>
   </div>
-  <div
-    class="config-page"
-    class:full-width={activeTab === "Logs" || activeTab === "Tests"}
-  >
-    <div
-      class="config-content"
-      class:full-width={activeTab === "Logs" || activeTab === "Tests"}
-      class:logs-tab={activeTab === "Logs" || activeTab === "Tests"}
-    >
-      <div class="config-form">
-        {#if activeTab === "Logs" || activeTab === "Tests"}
-          <!-- svelte-ignore slot_element_deprecated -->
-          <slot />
-        {:else}
-          <!-- svelte-ignore slot_element_deprecated -->
-          <Layout gap="L">
-            <slot />
-          </Layout>
-        {/if}
-      </div>
-    </div>
-    {#if activeTab !== "Logs" && activeTab !== "Tests"}
-      <div class="config-preview">
-        <AgentChatPanel
-          agentId={currentAgent?._id}
-          workspaceId={$params.workspaceId || ""}
-        />
-      </div>
-    {/if}
-  </div>
-</div>
+{/if}
 
 <style>
   .config-wrapper {
@@ -243,12 +242,12 @@
     grid-template-rows: 1fr;
     height: 0;
     overflow: hidden;
-    gap: var(--spacing-l);
+    gap: var(--spacing-xs);
   }
 
   .config-content {
     grid-column: span 13;
-    padding: var(--spacing-xl) var(--spacing-l) 20px;
+    padding: var(--spacing-xs) var(--spacing-s) 20px;
     min-width: 0;
     overflow-y: auto;
     scrollbar-width: thin;
@@ -308,44 +307,30 @@
   }
 
   .secondary-bar {
-    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 2px 12px;
     border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .start-pause-row {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
+    flex-shrink: 0;
   }
 
-  .filter {
+  .status-icons {
     display: flex;
-    gap: 10px;
     align-items: center;
-    flex: 1 1 auto;
+    gap: var(--spacing-s);
+    margin-right: var(--spacing-m);
   }
 
-  .unpublished-changes-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    color: var(--spectrum-global-color-gray-700);
-    font-size: var(--font-size-s);
-    font-weight: 500;
-    margin-left: auto;
-    margin-right: var(--spacing-s);
-    white-space: nowrap;
-  }
-
-  .filter :global(.spectrum-ActionButton) {
-    border-radius: 8px;
-    transition:
-      border-color 130ms ease-out,
-      background 130ms ease-out;
-    border: 1px solid transparent;
-    padding: 3px 10px;
-    height: auto;
-  }
-
-  .filter :global(.spectrum-ActionButton-label) {
-    font-weight: 500;
+  .start-pause-row :global(.spectrum-Button.new-styles .spectrum-Button-label) {
+    font-weight: 400;
   }
 
   :global(.form-row) {
@@ -366,23 +351,6 @@
     width: var(--spectrum-alias-item-height-m);
     height: var(--spectrum-alias-item-height-m);
     flex-shrink: 0;
-  }
-
-  .start-pause-row {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-  }
-
-  .status-icons {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-    margin-right: var(--spacing-m);
-  }
-
-  .start-pause-row :global(.spectrum-Button.new-styles .spectrum-Button-label) {
-    font-weight: 400;
   }
 
   :global(

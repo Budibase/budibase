@@ -1,0 +1,157 @@
+<script lang="ts">
+  import {
+    Body,
+    Button,
+    Input,
+    Label,
+    Layout,
+    notifications,
+  } from "@budibase/bbui"
+  import { agentsStore } from "@/stores/portal"
+
+  let configToken = $state("")
+  let refreshToken = $state("")
+  let configured = $state(false)
+  let needsReconfiguration = $state(false)
+  let expiresAt = $state<string | undefined>()
+  let loading = $state(false)
+  let saving = $state(false)
+  let removing = $state(false)
+
+  const load = async () => {
+    loading = true
+    try {
+      const config = await agentsStore.fetchSlackAppConfig()
+      configured = config.configured
+      needsReconfiguration = !!config.needsReconfiguration
+      expiresAt = config.expiresAt
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to load Slack app configuration")
+    } finally {
+      loading = false
+    }
+  }
+
+  const save = async () => {
+    if (!configToken.trim() || !refreshToken.trim()) {
+      return
+    }
+    saving = true
+    try {
+      const config = await agentsStore.saveSlackAppConfig({
+        configToken: configToken.trim(),
+        refreshToken: refreshToken.trim(),
+      })
+      configured = config.configured
+      needsReconfiguration = !!config.needsReconfiguration
+      expiresAt = config.expiresAt
+      configToken = ""
+      refreshToken = ""
+      notifications.success("Slack app configuration saved")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to save Slack app configuration")
+    } finally {
+      saving = false
+    }
+  }
+
+  const remove = async () => {
+    removing = true
+    try {
+      const config = await agentsStore.deleteSlackAppConfig()
+      configured = config.configured
+      needsReconfiguration = !!config.needsReconfiguration
+      expiresAt = config.expiresAt
+      configToken = ""
+      refreshToken = ""
+      notifications.success("Slack app configuration removed")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to remove Slack app configuration")
+    } finally {
+      removing = false
+    }
+  }
+
+  $effect(() => {
+    load()
+  })
+</script>
+
+<Layout noPadding gap="M">
+  <Body size="S">
+    Store the Slack app configuration access token used to create Slack apps
+    automatically in this workspace. Budibase rotates the token using the
+    matching Slack refresh token before it expires.
+  </Body>
+
+  <div class="field">
+    <Label size="L">Access token</Label>
+    <Input
+      type="password"
+      autocomplete="new-password"
+      placeholder={configured
+        ? "Enter a new access token to replace the saved token"
+        : "Slack app configuration access token"}
+      bind:value={configToken}
+    />
+  </div>
+
+  <div class="field">
+    <Label size="L">Refresh token</Label>
+    <Input
+      type="password"
+      autocomplete="new-password"
+      placeholder={configured
+        ? "Enter a new refresh token to replace the saved token"
+        : "Slack app configuration refresh token"}
+      bind:value={refreshToken}
+    />
+  </div>
+
+  <div class="status">
+    <Label size="L">Expires</Label>
+    <Body size="S">
+      {#if loading}
+        Loading...
+      {:else if needsReconfiguration}
+        Needs reconfiguration
+      {:else if configured}
+        {expiresAt ? new Date(expiresAt).toLocaleDateString() : "Unknown"}
+      {:else}
+        Not configured
+      {/if}
+    </Body>
+  </div>
+
+  <div class="actions">
+    <Button
+      cta
+      disabled={saving || !configToken.trim() || !refreshToken.trim()}
+      on:click={save}
+    >
+      {saving ? "Saving..." : "Save"}
+    </Button>
+    <Button secondary disabled={removing || !configured} on:click={remove}>
+      {removing ? "Removing..." : "Remove"}
+    </Button>
+  </div>
+</Layout>
+
+<style>
+  .field,
+  .status {
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr);
+    gap: var(--spacing-l);
+    align-items: center;
+    max-width: 720px;
+  }
+
+  .actions {
+    display: flex;
+    gap: var(--spacing-s);
+  }
+</style>

@@ -3,7 +3,6 @@
   import { KNOWLEDGE_FILE_ACCEPT_ATTRIBUTE } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
   import AddKnowledgeModal from "./new/AddKnowledgeModal.svelte"
-  import addKnowledgeIcons from "assets/add-knowledge-icons.svg"
   import { MAX_OPERATION_KNOWLEDGE_FILE_SIZE_LABEL } from "@/stores/portal/agents"
 
   export interface Props {
@@ -120,7 +119,7 @@
 
 <div class="add-knowledge-button">
   <Button
-    icon="plus"
+    icon="plus-circle"
     size="S"
     secondary
     {tooltip}
@@ -134,7 +133,6 @@
           ? uploadState.progress || "Uploading..."
           : "Add knowledge"}
       </span>
-      <img src={addKnowledgeIcons} alt="" />
     </span>
   </Button>
 </div>
@@ -168,13 +166,6 @@
   .add-knowledge-button {
     display: inline-flex;
     width: max-content;
-  }
-
-  .add-knowledge-label img {
-    object-fit: contain;
-    pointer-events: none;
-    flex: 0 0 auto;
-    height: 18px;
   }
 
   .add-knowledge-button :global(.spectrum-Button-label) {
