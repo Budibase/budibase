@@ -12,6 +12,15 @@ export enum ToolType {
   ESCALATION = "ESCALATION",
 }
 
+export enum ToolExecutionPrincipal {
+  REQUESTER = "requester",
+  ADMIN = "admin",
+}
+
+export type ToolExecutionPolicy =
+  | { mode: "admin" }
+  | { mode: "configurable"; defaultPrincipal: ToolExecutionPrincipal }
+
 export interface ToolMetadata {
   name: string
   readableName?: string
@@ -19,6 +28,7 @@ export interface ToolMetadata {
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
+  executionPolicy: ToolExecutionPolicy
 }
 
 interface ChatAgentIntegration {
@@ -44,9 +54,17 @@ export interface MSTeamsAgentIntegration extends ChatAgentIntegration {
 }
 
 export interface SlackAgentIntegration extends ChatAgentIntegration {
+  appId?: string
+  clientId?: string
+  clientSecret?: string
   botToken?: string
+  botUserId?: string
   signingSecret?: string
+  teamName?: string
   messagingEndpointUrl?: string
+  // Bots Slack workspace - derived via auth.test when the token is saved
+  // Need this to filter the user picker
+  teamId?: string
 }
 
 export interface TelegramAgentIntegration extends ChatAgentIntegration {
@@ -60,9 +78,47 @@ export enum AgentKnowledgeSourceType {
   SHAREPOINT = "sharepoint",
 }
 
-export interface AgentKnowledgeSourceFilterConfig {
-  patterns?: string[]
+export enum SharePointScopeMode {
+  ALL = "all",
+  SELECTED = "selected",
 }
+
+export enum SharePointScopeTargetType {
+  DRIVE = "drive",
+  FOLDER = "folder",
+  FILE = "file",
+  LIST = "list",
+}
+
+interface SharePointDriveScopeTarget {
+  type: SharePointScopeTargetType.DRIVE
+  driveId: string
+}
+
+interface SharePointDriveItemScopeTarget {
+  type: SharePointScopeTargetType.FOLDER | SharePointScopeTargetType.FILE
+  driveId: string
+  itemId: string
+}
+
+interface SharePointListScopeTarget {
+  type: SharePointScopeTargetType.LIST
+  listId: string
+}
+
+export type SharePointScopeTarget =
+  | SharePointDriveScopeTarget
+  | SharePointDriveItemScopeTarget
+  | SharePointListScopeTarget
+
+export type AgentSharePointKnowledgeSourceScope =
+  | {
+      mode: SharePointScopeMode.ALL
+    }
+  | {
+      mode: SharePointScopeMode.SELECTED
+      targets: SharePointScopeTarget[]
+    }
 
 export interface AgentSharePointKnowledgeSource {
   id: string
@@ -75,7 +131,7 @@ export interface AgentSharePointKnowledgeSource {
       name?: string
       webUrl?: string
     }
-    filters?: AgentKnowledgeSourceFilterConfig
+    scope?: AgentSharePointKnowledgeSourceScope
   }
 }
 
@@ -87,12 +143,31 @@ export interface AgentEscalationConfig {
   delay?: number
 }
 
+export interface AgentOperationToolConfig {
+  toolName: string
+  executionPrincipal: ToolExecutionPrincipal
+}
+
+export interface AgentRequester {
+  userId: string
+  authorization: { mode: "current" } | { mode: "preview"; roleId: string }
+}
+
+export interface AgentExecutionContext {
+  tenantId: string
+  workspaceId: string
+  agentId: string
+  operationId: string
+  conversationId: string
+  requester: AgentRequester
+}
+
 export interface AgentOperation {
   id: string
   name: string
   live: boolean
   promptInstructions?: string
-  enabledTools?: string[]
+  enabledTools?: AgentOperationToolConfig[]
   knowledgeBases?: string[]
   knowledgeSources?: AgentKnowledgeSource[]
   allowKnowledgeSourceDownload: boolean

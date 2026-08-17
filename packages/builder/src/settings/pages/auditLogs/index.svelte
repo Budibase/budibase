@@ -19,7 +19,7 @@
   } from "@budibase/bbui"
   import { licensing } from "@/stores/portal/licensing"
   import { users } from "@/stores/portal/users"
-  import { appsStore } from "@/stores/portal/apps"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { auditLogs } from "@/stores/portal/auditLogs"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import { createPaginationStore } from "@/helpers/pagination"
@@ -27,7 +27,7 @@
   import ViewDetailsRenderer from "./_components/ViewDetailsRenderer.svelte"
   import UserRenderer from "./_components/UserRenderer.svelte"
   import TimeRenderer from "./_components/TimeRenderer.svelte"
-  import AppColumnRenderer from "./_components/AppColumnRenderer.svelte"
+  import WorkspaceColumnRenderer from "./_components/WorkspaceColumnRenderer.svelte"
   import { cloneDeep } from "lodash"
   import DateRangePicker from "@/components/common/DateRangePicker.svelte"
   import dayjs from "dayjs"
@@ -55,7 +55,7 @@
     },
     {
       column: "app",
-      component: AppColumnRenderer,
+      component: WorkspaceColumnRenderer,
     },
   ]
 
@@ -103,7 +103,10 @@
     enrich(parseEventObject($auditLogs.events), selectedEvents, "id"),
     "id"
   )
-  $: sortedApps = sort(enrich($appsStore.apps, selectedApps, "appId"), "name")
+  $: sortedApps = sort(
+    enrich($workspacesStore.apps, selectedApps, "appId"),
+    "name"
+  )
 
   const debounce = value => {
     clearTimeout(timer)

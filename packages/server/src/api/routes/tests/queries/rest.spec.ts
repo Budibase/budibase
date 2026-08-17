@@ -1157,6 +1157,89 @@ describe("rest", () => {
     })
   })
 
+  describe("request preview", () => {
+    let previewDatasource: Datasource
+
+    const interceptThings = () =>
+      mockAgent!
+        .get("http://www.example.com")
+        .intercept({ path: "/things", method: "GET" })
+        .reply(200, [{ id: "1" }], { headers: jsonHeaders })
+
+    const savePreviewQuery = async (fields: any) =>
+      await config.api.query.save({
+        name: generator.guid(),
+        datasourceId: previewDatasource._id!,
+        parameters: [],
+        fields,
+        transformer: "",
+        schema: {},
+        readable: true,
+        queryVerb: "read",
+      })
+
+    beforeAll(async () => {
+      previewDatasource = await config.api.datasource.create({
+        name: generator.guid(),
+        type: "test",
+        source: SourceName.REST,
+        config: {},
+      })
+    })
+
+    it("returns the sent request when previewing", async () => {
+      interceptThings()
+
+      const res = await config.api.query.preview({
+        datasourceId: previewDatasource._id!,
+        name: generator.guid(),
+        parameters: [],
+        queryVerb: "read",
+        transformer: "",
+        schema: {},
+        readable: true,
+        fields: {
+          path: "www.example.com/things",
+          headers: { Accept: "application/json" },
+        },
+      })
+
+      expect(res.extra.request).toEqual({
+        url: "http://www.example.com/things",
+        path: "/things",
+        method: "GET",
+        headers: { Accept: "application/json" },
+        params: {},
+        body: undefined,
+      })
+    })
+
+    it("never returns the request when executing", async () => {
+      interceptThings()
+
+      const query = await savePreviewQuery({
+        path: "www.example.com/things",
+        headers: { Accept: "application/json" },
+      })
+
+      const res = await config.api.query.execute(query._id!)
+      expect(res).not.toHaveProperty("request")
+    })
+
+    it("never returns the request when a saved query asks for it", async () => {
+      interceptThings()
+
+      // fields are not validated on save, so a persisted flag must stay inert
+      const query = await savePreviewQuery({
+        path: "www.example.com/things",
+        includeRequest: true,
+      })
+
+      const res = await config.api.query.execute(query._id!)
+      expect(res).not.toHaveProperty("request")
+    })
+  })
+
   describe("datasource auth and connection properties", () => {
     it("should merge datasource defaultHeaders into the request", async () => {
       const ds = await config.api.datasource.create({
@@ -1650,7 +1733,7 @@ describe("rest", () => {
       }
     })
 
-    it("should resolve env var bindings in datasource staticVariables", async () => {
+    it("should never apply a static variable containing a binding", async () => {
       const restoreCoreEnv = setCoreEnv({ ENCRYPTION_KEY: "budibase" })
       mocks.licenses.useEnvironmentVariables()
       try {
@@ -1681,14 +1764,10 @@ describe("rest", () => {
 
         mockAgent!
           .get("http://www.example.com")
-          .intercept({
-            path: "/",
-            method: "GET",
-            query: { tenant: "env-tenant-42" },
-          })
+          .intercept({ path: "/", method: "GET" })
           .reply(200, { ok: true }, { headers: jsonHeaders })
 
-        await config.api.query.preview({
+        const res = await config.api.query.preview({
           datasourceId: ds._id!,
           name: generator.guid(),
           parameters: [{ name: "tenantId", default: "{{ tenantId }}" }],
@@ -1701,6 +1780,8 @@ describe("rest", () => {
             queryString: "tenant={{tenantId}}",
           },
         })
+
+        expect(JSON.stringify(res.extra.request)).not.toContain("env-tenant-42")
       } finally {
         await config.api.environment.destroy("TENANT_ID")
         restoreCoreEnv()

@@ -4,10 +4,15 @@ import type {
   IndexAgentLogOperationInput,
   SessionLogIndexer,
 } from "@budibase/types"
-import { fetchLiteLLMRequestSummaryById } from "./liteLLM"
+import {
+  fetchLiteLLMRequestSummaryById,
+  fetchLiteLLMSessionRows,
+} from "./liteLLM"
 import { upsertSessionIndexDoc } from "./sessionIndex"
 import {
   determineTrigger,
+  getExpectedEndUser,
+  getLiteLLMRequestUser,
   isPreviewSession,
   maxDate,
   minDate,
@@ -84,9 +89,23 @@ async function enqueueSessionLogIndex(job: AgentLogIndexJob) {
 export async function addSessionLog(
   input: IndexAgentLogOperationInput
 ): Promise<void> {
-  const uniqueRequestIds = [...new Set(input.requestIds)].filter(Boolean)
-  if (!input.agentId || !input.sessionId || !uniqueRequestIds.length) {
+  if (!input.agentId || !input.sessionId) {
     return
+  }
+
+  let uniqueRequestIds = [...new Set(input.requestIds)].filter(Boolean)
+  if (!uniqueRequestIds.length) {
+    const { rows } = await fetchLiteLLMSessionRows(input.sessionId)
+    uniqueRequestIds = rows
+      .filter(
+        row => getLiteLLMRequestUser(row) === getExpectedEndUser(input.agentId)
+      )
+      .map(row => row.request_id)
+      .filter((requestId): requestId is string => !!requestId)
+  }
+
+  if (!uniqueRequestIds.length) {
+    throw new HTTPError("Agent log details not ready", 404)
   }
 
   const db = context.getWorkspaceDB()
@@ -185,10 +204,6 @@ export function createSessionLogIndexer({
       return [...requestIds]
     },
     async index() {
-      if (!requestIds.size) {
-        return
-      }
-
       const workspaceId = context.getWorkspaceId()
       if (!workspaceId) {
         console.error(`Failed to queue ${errorLabel} logs`, {

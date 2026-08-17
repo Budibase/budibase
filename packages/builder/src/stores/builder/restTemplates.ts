@@ -1,4 +1,10 @@
-import type { RestTemplate, RestTemplateId } from "@budibase/types"
+import { API } from "@/api"
+import {
+  MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID,
+  type CustomRestTemplateId,
+  type RestTemplate,
+  type RestTemplateId,
+} from "@budibase/types"
 import { BudiStore } from "../BudiStore"
 import ActiveCampaignLogo from "assets/rest-template-icons/activecampaign.avif"
 import AnsibleLogo from "assets/rest-template-icons/ansible.svg"
@@ -1942,7 +1948,7 @@ export const MICROSOFT_SHAREPOINT_NAME_ALIASES: Record<string, string> = {
 }
 
 const microsoftSharepointRestTemplateGroup: RestTemplate = {
-  id: "microsoft-sharepoint",
+  id: MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID,
   name: "Microsoft SharePoint",
   icon: MicrosoftSharepointLogo,
   description:
@@ -3235,6 +3241,77 @@ export class RestTemplatesStore extends BudiStore<RestTemplatesState> {
   // Returns top-level entries only — collections appear as single entries.
   get flatTemplates(): RestTemplate[] {
     return this.templates
+  }
+
+  private setCustomTemplates(templates: RestTemplate[]) {
+    this.update(state => ({
+      ...state,
+      templates: [
+        ...state.templates.filter(template => !template.custom),
+        ...templates.map(template => ({
+          ...template,
+          custom: true,
+        })),
+      ],
+    }))
+  }
+
+  async fetchCustom() {
+    const templates = await API.getCustomRestTemplates()
+    this.setCustomTemplates(templates)
+  }
+
+  async uploadCustom({
+    name,
+    description,
+    file,
+  }: {
+    name: string
+    description: string
+    file: File
+  }) {
+    const { template } = await API.uploadCustomRestTemplate({
+      name,
+      description,
+      file,
+    })
+    this.setCustomTemplates([
+      ...this.templates.filter(existing => existing.custom),
+      template,
+    ])
+    return template
+  }
+
+  async updateCustom({
+    restTemplateId,
+    name,
+    description,
+  }: {
+    restTemplateId: CustomRestTemplateId
+    name: string
+    description: string
+  }) {
+    const { template } = await API.updateCustomRestTemplate({
+      restTemplateId,
+      name,
+      description,
+    })
+    this.setCustomTemplates([
+      ...this.templates.filter(
+        existing => existing.custom && existing.id !== restTemplateId
+      ),
+      template,
+    ])
+    return template
+  }
+
+  async deleteCustom(restTemplateId: CustomRestTemplateId) {
+    await API.deleteCustomRestTemplate(restTemplateId)
+    this.setCustomTemplates(
+      this.templates.filter(
+        template => template.custom && template.id !== restTemplateId
+      )
+    )
   }
 
   getByName(name?: string): RestTemplate | undefined {

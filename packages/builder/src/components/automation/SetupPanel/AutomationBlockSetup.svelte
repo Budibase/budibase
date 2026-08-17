@@ -73,7 +73,7 @@
   import { utils } from "@budibase/shared-core"
   import DrawerBindableCodeEditorField from "@/components/common/bindings/DrawerBindableCodeEditorField.svelte"
   import { API } from "@/api"
-  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[workspaceId]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
 
   export let automation
   export let block
@@ -139,7 +139,7 @@
   $: schemaFields = search.getFields(
     $tables.list,
     Object.values(schema || {}),
-    { allowLinks: false }
+    { allowLinks: !isTrigger }
   )
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = $memoBlock?.type === AutomationStepType.TRIGGER

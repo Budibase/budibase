@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { ActionButton, Input, Icon } from "@budibase/bbui"
+  import { ActionButton, Input, Icon, generateId } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { generate } from "shortid"
 
   const dispatch = createEventDispatcher()
 
@@ -13,7 +12,7 @@
     if (Array.isArray(value)) {
       categories = value.map(item => ({
         ...item,
-        id: item.id || generate(),
+        id: item.id || generateId(),
       }))
     } else {
       categories = []
@@ -22,7 +21,7 @@
 
   function addCategory() {
     const newCategory = {
-      id: generate(),
+      id: generateId(),
       category: "",
     }
     categories = [...categories, newCategory]

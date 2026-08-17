@@ -6,7 +6,7 @@ import type {
   TypedToolResult,
   UIMessage,
 } from "ai"
-import { ToolType } from "@budibase/types"
+import { ToolExecutionPrincipal, ToolType } from "@budibase/types"
 import {
   findIncompleteToolCalls,
   formatIncompleteToolCallError,
@@ -33,12 +33,19 @@ describe("getToolDisplayNames", () => {
           readableName: "Research Notes.list_rows",
           description: "List rows",
           sourceType: ToolType.INTERNAL_TABLE,
+          executionPolicy: {
+            mode: "configurable",
+            defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+          },
           tool: {} as Tool,
         },
         {
           name: "list_tables",
           description: "List tables",
           sourceType: ToolType.INTERNAL_TABLE,
+          executionPolicy: {
+            mode: "admin",
+          },
           tool: {} as Tool,
         },
       ])

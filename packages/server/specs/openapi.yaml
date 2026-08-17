@@ -2135,25 +2135,47 @@ components:
                                   - type: object
                                   - type: array
         sort:
-          type: object
-          required:
-            - field
-          properties:
-            field:
-              type: string
-              description: The field from the table/view schema to sort on.
-            order:
-              type: string
-              description: The order in which to sort.
-              enum:
-                - ascending
-                - descending
-            type:
-              type: string
-              description: The type of sort to perform (by number, or by alphabetically).
-              enum:
-                - string
-                - number
+          oneOf:
+            - type: object
+              required:
+                - field
+              properties:
+                field:
+                  type: string
+                  description: The field from the table/view schema to sort on.
+                order:
+                  type: string
+                  description: The order in which to sort.
+                  enum:
+                    - ascending
+                    - descending
+                type:
+                  type: string
+                  description: The type of sort to perform (by number, or by alphabetically).
+                  enum:
+                    - string
+                    - number
+            - type: array
+              items:
+                type: object
+                required:
+                  - field
+                properties:
+                  field:
+                    type: string
+                    description: The field from the table/view schema to sort on.
+                  order:
+                    type: string
+                    description: The order in which to sort.
+                    enum:
+                      - ascending
+                      - descending
+                  type:
+                    type: string
+                    description: The type of sort to perform (by number, or by alphabetically).
+                    enum:
+                      - string
+                      - number
         schema:
           type: object
           additionalProperties:
@@ -2346,25 +2368,47 @@ components:
                                       - type: object
                                       - type: array
             sort:
-              type: object
-              required:
-                - field
-              properties:
-                field:
-                  type: string
-                  description: The field from the table/view schema to sort on.
-                order:
-                  type: string
-                  description: The order in which to sort.
-                  enum:
-                    - ascending
-                    - descending
-                type:
-                  type: string
-                  description: The type of sort to perform (by number, or by alphabetically).
-                  enum:
-                    - string
-                    - number
+              oneOf:
+                - type: object
+                  required:
+                    - field
+                  properties:
+                    field:
+                      type: string
+                      description: The field from the table/view schema to sort on.
+                    order:
+                      type: string
+                      description: The order in which to sort.
+                      enum:
+                        - ascending
+                        - descending
+                    type:
+                      type: string
+                      description: The type of sort to perform (by number, or by alphabetically).
+                      enum:
+                        - string
+                        - number
+                - type: array
+                  items:
+                    type: object
+                    required:
+                      - field
+                    properties:
+                      field:
+                        type: string
+                        description: The field from the table/view schema to sort on.
+                      order:
+                        type: string
+                        description: The order in which to sort.
+                        enum:
+                          - ascending
+                          - descending
+                      type:
+                        type: string
+                        description: The type of sort to perform (by number, or by alphabetically).
+                        enum:
+                          - string
+                          - number
             schema:
               type: object
               additionalProperties:
@@ -2564,25 +2608,47 @@ components:
                                         - type: object
                                         - type: array
               sort:
-                type: object
-                required:
-                  - field
-                properties:
-                  field:
-                    type: string
-                    description: The field from the table/view schema to sort on.
-                  order:
-                    type: string
-                    description: The order in which to sort.
-                    enum:
-                      - ascending
-                      - descending
-                  type:
-                    type: string
-                    description: The type of sort to perform (by number, or by alphabetically).
-                    enum:
-                      - string
-                      - number
+                oneOf:
+                  - type: object
+                    required:
+                      - field
+                    properties:
+                      field:
+                        type: string
+                        description: The field from the table/view schema to sort on.
+                      order:
+                        type: string
+                        description: The order in which to sort.
+                        enum:
+                          - ascending
+                          - descending
+                      type:
+                        type: string
+                        description: The type of sort to perform (by number, or by alphabetically).
+                        enum:
+                          - string
+                          - number
+                  - type: array
+                    items:
+                      type: object
+                      required:
+                        - field
+                      properties:
+                        field:
+                          type: string
+                          description: The field from the table/view schema to sort on.
+                        order:
+                          type: string
+                          description: The order in which to sort.
+                          enum:
+                            - ascending
+                            - descending
+                        type:
+                          type: string
+                          description: The type of sort to perform (by number, or by alphabetically).
+                          enum:
+                            - string
+                            - number
               schema:
                 type: object
                 additionalProperties:

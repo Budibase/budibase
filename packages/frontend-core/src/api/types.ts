@@ -1,6 +1,6 @@
 import { AIEndpoints } from "./ai"
 import { AnalyticsEndpoints } from "./analytics"
-import { AppEndpoints } from "./app"
+import { AppEndpoints } from "./workspace"
 import { AttachmentEndpoints } from "./attachments"
 import { AuditLogEndpoints } from "./auditLogs"
 import { AuthEndpoints } from "./auth"
@@ -45,6 +45,7 @@ import { EscalationEndpoints } from "./escalations"
 import { NavigationEndpoints } from "./navigation"
 import { WorkspaceAppEndpoints } from "./workspaceApps"
 import { ResourceEndpoints } from "./resource"
+import { RestTemplateEndpoints } from "./restTemplates"
 import { DeploymentEndpoints } from "./deploy"
 import { WorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { WorkspaceHomeEndpoints } from "./workspaceHome"
@@ -159,6 +160,7 @@ export type APIClient = BaseAPIClient &
   SelfEndpoints &
   TableEndpoints &
   TemplateEndpoints &
+  RestTemplateEndpoints &
   UserEndpoints &
   FeatureFlagEndpoints &
   ViewEndpoints & {

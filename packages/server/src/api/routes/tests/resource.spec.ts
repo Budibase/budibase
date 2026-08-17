@@ -1,6 +1,7 @@
 import {
   context,
   db,
+  docIds,
   events,
   features,
   objectStore,
@@ -28,7 +29,7 @@ import os from "os"
 import path from "path"
 import tk from "timekeeper"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
-import { generateRowActionsID } from "../../../db/utils"
+import { generateAutomationID, generateRowActionsID } from "../../../db/utils"
 import { buildExternalTableId } from "../../../integrations/utils"
 import {
   basicDatasource,
@@ -39,6 +40,16 @@ import {
 } from "../../../tests/utilities/structures"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { ObjectStoreBuckets } from "../../../constants"
+
+// Agent create/update resolves the Slack workspace via auth.test - mocked so
+// tests never call out to Slack.
+jest.mock("@slack/web-api", () => ({
+  WebClient: jest.fn(() => ({
+    auth: {
+      test: jest.fn().mockResolvedValue({ ok: true, team_id: "T123" }),
+    },
+  })),
+}))
 
 describe("/api/resources/usage", () => {
   const config = new TestConfiguration()
@@ -61,6 +72,75 @@ describe("/api/resources/usage", () => {
   })
 
   describe("resource usage analysis", () => {
+    it("discovers Function query dependencies and automation references", async () => {
+      const datasource = await config.createDatasource()
+      const query = await config.api.query.save(basicQuery(datasource._id))
+      const functionId = docIds.generateFunctionID()
+      const automationId = generateAutomationID()
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        await context.getWorkspaceDB().bulkDocs([
+          {
+            _id: functionId,
+            appId: config.getDevWorkspaceId(),
+            name: "Resource Function",
+            source: "export default async function () {}",
+            capabilities: [
+              {
+                capabilityId: "capability-1",
+                queryId: query._id,
+                datasourceAlias: "Inventory",
+                queryAlias: "findRooms",
+                parameterNames: [],
+              },
+            ],
+          },
+          {
+            _id: automationId,
+            appId: config.getDevWorkspaceId(),
+            name: "Resource automation",
+            definition: {
+              trigger: {},
+              steps: [
+                {
+                  stepId: "EXECUTE_FUNCTION",
+                  inputs: { functionId },
+                },
+              ],
+            },
+          },
+        ])
+      })
+
+      const result = await config.api.resource.getResourceDependencies()
+
+      expect(result.body.resources[functionId]).toEqual({
+        dependencies: expect.arrayContaining([
+          {
+            id: query._id,
+            name: query.name,
+            type: ResourceType.QUERY,
+          },
+        ]),
+      })
+      expect(result.body.resources[functionId].dependencies).not.toContainEqual(
+        expect.objectContaining({ id: functionId })
+      )
+      expect(result.body.resources[automationId]).toEqual({
+        dependencies: expect.arrayContaining([
+          {
+            id: functionId,
+            name: "Resource Function",
+            type: ResourceType.FUNCTION,
+          },
+          expect.objectContaining({
+            id: query._id,
+            type: ResourceType.QUERY,
+          }),
+        ]),
+      })
+    })
+
     it("should detect datasource usage via query screens", async () => {
       const datasource = await config.createDatasource()
       const query = await config.api.query.save(basicQuery(datasource._id))
@@ -536,80 +616,104 @@ describe("/api/resources/usage", () => {
         updatedAt: new Date().toISOString(),
       })
 
-      await config.withHeaders({ [Header.APP_ID]: workspaceId }, async () => {
-        const { workspaceApps: resultingWorkspaceApps } =
-          await config.api.workspaceApp.fetch()
+      await config.withHeaders(
+        { [Header.WORKSPACE_ID]: workspaceId },
+        async () => {
+          const { workspaceApps: resultingWorkspaceApps } =
+            await config.api.workspaceApp.fetch()
 
-        expect(resultingWorkspaceApps.sort(sortById)).toEqual(
-          resultingWorkspaceApps.sort((a, b) => a._id!.localeCompare(b._id!))
-        )
-
-        const screens = await config.api.screen.list()
-        expect(screens.sort(sortById).map(copiedMetadata)).toEqual(
-          (expected.screens || [])
-            .sort(sortById)
-            .map(s => copiedMetadata({ ...s, pluginAdded: undefined }))
-        )
-
-        const tables = await config.api.table.fetch()
-        const actualTableIds = tables.map(table => table._id!).sort()
-        const expectedTableIds = [
-          "ta_users",
-          ...(expected.tables || []).map(table => table._id!),
-        ].sort()
-        expect(actualTableIds).toEqual(expectedTableIds)
-
-        const datasources = await config.api.datasource.fetch()
-        const actualDatasourceIds = datasources
-          .map(datasource => datasource._id!)
-          .sort()
-        const expectedDatasourceIds = [
-          "bb_internal",
-          ...(expected.datasource || []).map(ds => ds._id!),
-        ].sort()
-        expect(actualDatasourceIds).toEqual(expectedDatasourceIds)
-
-        const queries = await config.api.query.fetch()
-        expect(queries.sort()).toEqual(
-          (expected.queries || []).map(copiedMetadata).sort()
-        )
-
-        const { automations } = await config.api.automation.fetch()
-        expect(automations.sort(sortById)).toEqual(
-          (expected.automations || [])
-            // Automation sdk trims fields such as fromWorkspace
-            .map(a => copiedMetadata({ ...a, fromWorkspace: undefined }))
-            .sort(sortById)
-        )
-
-        const workspaceDb = db.getDB(db.getDevWorkspaceID(workspaceId), {
-          skip_setup: true,
-        })
-        expect(
-          await workspaceDb.getMultiple(automations.map(a => a._id!))
-        ).toEqual(
-          automations.map(a =>
-            expect.objectContaining({
-              _id: a._id,
-              fromWorkspace: config.getDevWorkspaceId(),
-            })
+          expect(resultingWorkspaceApps.sort(sortById)).toEqual(
+            resultingWorkspaceApps.sort((a, b) => a._id!.localeCompare(b._id!))
           )
-        )
 
-        for (const rowActionExpectation of expected.rowActions || []) {
-          const rowActionsResponse = await config.api.rowAction.find(
-            rowActionExpectation.tableId
+          const screens = await config.api.screen.list()
+          expect(screens.sort(sortById).map(copiedMetadata)).toEqual(
+            (expected.screens || [])
+              .sort(sortById)
+              .map(s => copiedMetadata({ ...s, pluginAdded: undefined }))
           )
-          const actual = Object.values(rowActionsResponse.actions).sort(
-            (a, b) => a.id.localeCompare(b.id)
+
+          const tables = await config.api.table.fetch()
+          const actualTableIds = tables.map(table => table._id!).sort()
+          const expectedTableIds = [
+            "ta_users",
+            ...(expected.tables || []).map(table => table._id!),
+          ].sort()
+          expect(actualTableIds).toEqual(expectedTableIds)
+
+          const datasources = await config.api.datasource.fetch()
+          const actualDatasourceIds = datasources
+            .map(datasource => datasource._id!)
+            .sort()
+          const expectedDatasourceIds = [
+            "bb_internal",
+            ...(expected.datasource || []).map(ds => ds._id!),
+          ].sort()
+          expect(actualDatasourceIds).toEqual(expectedDatasourceIds)
+
+          const queries = await config.api.query.fetch()
+          expect(queries.sort()).toEqual(
+            (expected.queries || []).map(copiedMetadata).sort()
           )
-          const expectedRowActions = [...rowActionExpectation.actions].sort(
-            (a, b) => a.id.localeCompare(b.id)
+
+          const { automations } = await config.api.automation.fetch()
+          expect(automations.sort(sortById)).toEqual(
+            (expected.automations || [])
+              // Automation sdk trims fields such as fromWorkspace
+              .map(a => copiedMetadata({ ...a, fromWorkspace: undefined }))
+              .sort(sortById)
           )
-          expect(actual).toEqual(expectedRowActions)
+
+          const workspaceDb = db.getDB(db.getDevWorkspaceID(workspaceId), {
+            skip_setup: true,
+          })
+          expect(
+            await workspaceDb.getMultiple(automations.map(a => a._id!))
+          ).toEqual(
+            automations.map(a =>
+              expect.objectContaining({
+                _id: a._id,
+                fromWorkspace: config.getDevWorkspaceId(),
+              })
+            )
+          )
+
+          for (const rowActionExpectation of expected.rowActions || []) {
+            const rowActionsResponse = await config.api.rowAction.find(
+              rowActionExpectation.tableId
+            )
+            const actual = Object.values(rowActionsResponse.actions).sort(
+              (a, b) => a.id.localeCompare(b.id)
+            )
+            const expectedRowActions = [...rowActionExpectation.actions].sort(
+              (a, b) => a.id.localeCompare(b.id)
+            )
+            expect(actual).toEqual(expectedRowActions)
+          }
         }
-      })
+      )
     }
+
+    it("allows global admins without builder permissions to duplicate resources", async () => {
+      const newWorkspace = await config.api.workspace.create({
+        name: `Destination ${generator.natural()}`,
+      })
+      const table = await createInternalTable({
+        name: "Admin duplicated table",
+      })
+      const admin = await config.createUser({
+        admin: { global: true },
+        builder: { global: false },
+      })
+
+      await config.withUser(admin, async () => {
+        await duplicateResources([table._id!], newWorkspace.appId)
+      })
+
+      await validateWorkspace(newWorkspace.appId, {
+        tables: [table],
+      })
+    })
 
     it("emits duplication events with the expected payload", async () => {
       const destinationName = `Destination ${generator.natural()}`
@@ -773,7 +877,7 @@ describe("/api/resources/usage", () => {
         await duplicateResources([datasource._id!], newWorkspace.appId)
 
         await config.withHeaders(
-          { [Header.APP_ID]: newWorkspace.appId },
+          { [Header.WORKSPACE_ID]: newWorkspace.appId },
           async () => {
             const copiedDatasource = await config.api.datasource.get(
               datasource._id!
@@ -801,7 +905,7 @@ describe("/api/resources/usage", () => {
         await duplicateResources([datasource._id!], newWorkspace.appId)
 
         await config.withHeaders(
-          { [Header.APP_ID]: newWorkspace.appId },
+          { [Header.WORKSPACE_ID]: newWorkspace.appId },
           async () => {
             const copiedDatasource = await config.api.datasource.get(
               datasource._id!
@@ -1098,7 +1202,7 @@ describe("/api/resources/usage", () => {
       await duplicateResources([table._id!], newWorkspace.appId)
 
       await config.withHeaders(
-        { [Header.APP_ID]: newWorkspace.appId },
+        { [Header.WORKSPACE_ID]: newWorkspace.appId },
         async () => {
           const rows = await config.api.row.fetch(table._id!)
           expect(rows).toEqual([
@@ -1134,7 +1238,7 @@ describe("/api/resources/usage", () => {
       )
 
       await config.withHeaders(
-        { [Header.APP_ID]: newWorkspace.appId },
+        { [Header.WORKSPACE_ID]: newWorkspace.appId },
         async () => {
           const rows = await config.api.row.fetch(table._id!)
           expect(rows).toEqual([])
@@ -1163,7 +1267,7 @@ describe("/api/resources/usage", () => {
       )
 
       await config.withHeaders(
-        { [Header.APP_ID]: newWorkspace.appId },
+        { [Header.WORKSPACE_ID]: newWorkspace.appId },
         async () => {
           const rows = await config.api.row.fetch(table._id!)
           expect(rows).toEqual([])
@@ -1180,7 +1284,7 @@ describe("/api/resources/usage", () => {
       )
 
       await config.withHeaders(
-        { [Header.APP_ID]: newWorkspace.appId },
+        { [Header.WORKSPACE_ID]: newWorkspace.appId },
         async () => {
           const rows = await config.api.row.fetch(table._id!)
           expect(rows).toEqual([
@@ -1247,7 +1351,7 @@ describe("/api/resources/usage", () => {
       const destinationProdId = db.getProdWorkspaceID(newWorkspace.appId)
 
       await config.withHeaders(
-        { [Header.APP_ID]: newWorkspace.appId },
+        { [Header.WORKSPACE_ID]: newWorkspace.appId },
         async () => {
           const rows = await config.api.row.fetch(table._id!)
           expect(rows).toEqual([

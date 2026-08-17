@@ -164,6 +164,10 @@ export async function fetchAgentKnowledgeIndex(
 
   ctx.body = {
     operations: Object.fromEntries(knowledgeEntries),
+    configuration: {
+      knowledgeSearchConfigured:
+        sdk.ai.knowledgeBase.isGeminiFileSearchConfigured(),
+    },
   }
   ctx.status = 200
 }
@@ -302,7 +306,7 @@ export async function fetchAgentKnowledgeSourceOptions(
   ctx.status = 200
 }
 
-export async function fetchAgentKnowledgeSourceAllEntries(
+export async function fetchAgentKnowledgeSourceEntries(
   ctx: UserCtx<
     void,
     FetchAgentKnowledgeSourceEntriesResponse,
@@ -314,10 +318,19 @@ export async function fetchAgentKnowledgeSourceAllEntries(
   if (!siteId) {
     throw new HTTPError("siteId is required", 400)
   }
-  ctx.body = await sdk.ai.rag.fetchAllSharePointEntriesForOperation(
+  const driveId = String(ctx.query.driveId || "").trim() || undefined
+  const parentItemId = String(ctx.query.parentItemId || "").trim() || undefined
+  const parentPath = String(ctx.query.parentPath || "").trim()
+  if (parentItemId && !driveId) {
+    throw new HTTPError("driveId is required with parentItemId", 400)
+  }
+  ctx.body = await sdk.ai.rag.fetchSharePointEntriesForOperation(
     agentId,
     operationId,
-    siteId
+    siteId,
+    driveId,
+    parentItemId,
+    parentPath
   )
   ctx.status = 200
 }
@@ -381,23 +394,49 @@ export async function connectAgentSharePointSite(
   >
 ) {
   const { agentId, operationId } = ctx.params
-  const { datasourceId, authConfigId, site, filters } = ctx.request.body
+  const { datasourceId, authConfigId, site, scope } = ctx.request.body
   const siteId = site.id
   if (!siteId) {
     throw new HTTPError("siteId is required", 400)
   }
 
   const existingAgent = await sdk.ai.agents.getOrThrow(agentId)
-  const existingSites = new Set(
-    getSharePointSourcesForOperation(existingAgent, operationId)
-      .map(source => source.config.site.id.trim())
-      .filter((id): id is string => !!id)
-  )
-  if (existingSites.has(siteId)) {
-    ctx.body = await fetchSharePointOptionsForDatasourceAuthConfig(
-      datasourceId,
-      authConfigId
+  const existingSource = getSharePointSourcesForOperation(
+    existingAgent,
+    operationId
+  ).find(source => source.config.site.id.trim() === siteId)
+  if (existingSource) {
+    const availableOptions =
+      await fetchSharePointOptionsForDatasourceAuthConfig(
+        datasourceId,
+        authConfigId
+      )
+    const updated = await sdk.ai.agents.update({
+      ...existingAgent,
+      operations: updateOperationKnowledgeSources(
+        existingAgent,
+        operationId,
+        sources =>
+          sources.map(source =>
+            source.id === existingSource.id
+              ? {
+                  ...source,
+                  config: {
+                    ...source.config,
+                    scope,
+                  },
+                }
+              : source
+          )
+      ),
+    })
+    await sdk.ai.rag.knowledgeSourceSyncQueue.reconcileAgentJobs(updated)
+    await sdk.ai.rag.knowledgeSourceSyncQueue.enqueueAgentJobs(
+      agentId,
+      AgentKnowledgeSourceType.SHAREPOINT,
+      [existingSource.id]
     )
+    ctx.body = availableOptions
     ctx.status = 200
     return
   }
@@ -419,7 +458,7 @@ export async function connectAgentSharePointSite(
         name: selectedOption?.name || site.name,
         webUrl: selectedOption?.webUrl || site.webUrl,
       },
-      filters: filters ? { patterns: filters } : undefined,
+      scope,
     },
   }
   console.log("Connecting SharePoint site to agent", {
@@ -476,7 +515,7 @@ export async function updateAgentSharePointSite(
     )
   }
 
-  const { filters } = ctx.request.body
+  const { scope } = ctx.request.body
   const updated = await sdk.ai.agents.update({
     ...existingAgent,
     operations: updateOperationKnowledgeSources(
@@ -494,7 +533,7 @@ export async function updateAgentSharePointSite(
                   ...existingSource,
                   config: {
                     ...existingSource.config,
-                    filters: filters ? { patterns: filters } : undefined,
+                    scope,
                   },
                 }
               : existingSource
