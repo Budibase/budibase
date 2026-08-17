@@ -1,3 +1,4 @@
+import { createHash } from "crypto"
 import { context, features, HTTPError } from "@budibase/backend-core"
 import { Header } from "@budibase/shared-core"
 import {
@@ -173,20 +174,38 @@ const isAssignableDependency = (dependency: {
   isProjectAssignableResourceType(dependency.type) &&
   !isDisallowedProjectAssignmentResourceId(dependency.id)
 
-export const getProjectAssignmentDependencies = async ({
+export const createProjectDependencyFingerprint = (
+  dependencies: Array<{ id: string }>
+) =>
+  createHash("sha256")
+    .update(
+      JSON.stringify(
+        dependencies.map(dependency => dependency.id).sort(compareResourceIds)
+      )
+    )
+    .digest("base64url")
+
+export const getProjectAssignmentPreview = async ({
   resourceId,
   projectIds,
-}: ProjectDependencyPreviewInput): Promise<ProjectAssignmentDependency[]> => {
+}: ProjectDependencyPreviewInput): Promise<{
+  dependencies: ProjectAssignmentDependency[]
+  dependencyFingerprint: string
+}> => {
+  const assignableDependencies =
+    await getProjectAssignableDependencies(resourceId)
+  const dependencyFingerprint = createProjectDependencyFingerprint(
+    assignableDependencies
+  )
   if (!projectIds.length) {
-    return []
+    return { dependencies: [], dependencyFingerprint }
   }
 
-  const dependencies = await getProjectAssignableDependencies(resourceId)
   const dependenciesById = new Map(
-    dependencies.map(dependency => [dependency.id, dependency])
+    assignableDependencies.map(dependency => [dependency.id, dependency])
   )
   if (!dependenciesById.size) {
-    return []
+    return { dependencies: [], dependencyFingerprint }
   }
 
   const db = context.getWorkspaceDB()
@@ -195,7 +214,7 @@ export const getProjectAssignmentDependencies = async ({
     { allowMissing: true }
   )
 
-  return docs.flatMap(doc => {
+  const dependencies = docs.flatMap(doc => {
     const dependency = dependenciesById.get(doc._id!)
     if (!dependency) {
       return []
@@ -206,6 +225,7 @@ export const getProjectAssignmentDependencies = async ({
     )
     return projectIdsToAdd.length ? [{ ...dependency, projectIdsToAdd }] : []
   })
+  return { dependencies, dependencyFingerprint }
 }
 
 export const getProjectAssignableDependencies = async (resourceId: string) => {

@@ -21,8 +21,9 @@ import { HTTPError } from "@budibase/backend-core"
 import fsp from "fs/promises"
 import sdk from "../../sdk"
 import {
-  getProjectAssignmentDependencies,
+  createProjectDependencyFingerprint,
   getProjectAssignableDependencies,
+  getProjectAssignmentPreview,
   propagateProjectIdsToDependencyIdsWithWarning,
   resolveProjectIds,
 } from "../../utilities/projects"
@@ -93,12 +94,7 @@ export async function previewAssignment(
     (await resolveProjectIds(ctx.request.body.projectIds)) || []
   await sdk.projects.getProjectAssignableResource(resourceId)
 
-  ctx.body = {
-    dependencies: await getProjectAssignmentDependencies({
-      resourceId,
-      projectIds,
-    }),
-  }
+  ctx.body = await getProjectAssignmentPreview({ resourceId, projectIds })
 }
 
 export async function updateAssignment(
@@ -106,10 +102,24 @@ export async function updateAssignment(
 ) {
   await sdk.projects.doWithProjectAssignmentsLock(async () => {
     const { resourceId } = ctx.params
-    const { resourceRev, dependencyIds } = ctx.request.body
+    const { dependencyFingerprint, resourceRev, dependencyIds } =
+      ctx.request.body
     const projectIds =
       (await resolveProjectIds(ctx.request.body.projectIds)) || []
     await sdk.projects.getProjectAssignableResource(resourceId)
+
+    const dependencies = projectIds.length
+      ? await getProjectAssignableDependencies(resourceId)
+      : []
+    if (
+      projectIds.length &&
+      createProjectDependencyFingerprint(dependencies) !== dependencyFingerprint
+    ) {
+      throw new HTTPError(
+        "Resource dependencies changed. Preview the project assignment again.",
+        409
+      )
+    }
 
     let selectedDependencyIds: string[] = []
     if (dependencyIds.length) {
@@ -120,7 +130,6 @@ export async function updateAssignment(
         )
       }
 
-      const dependencies = await getProjectAssignableDependencies(resourceId)
       const dependencyIdsSet = new Set(dependencyIds)
       const validDependencyIds = new Set(
         dependencies.map(dependency => dependency.id)

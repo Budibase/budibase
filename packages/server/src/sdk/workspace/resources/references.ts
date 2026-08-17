@@ -14,7 +14,13 @@ const matchesBinding = (block: string, target: ResourceSearchTarget) => {
     return false
   }
   if (target.matchExactly === false) {
-    return block.includes(target.idToSearch)
+    const escapedTarget = target.idToSearch.replace(
+      /[.*+?^${}()|[\]\\]/g,
+      "\\$&"
+    )
+    return new RegExp(
+      `(?:^|[^A-Za-z0-9_.-])${escapedTarget}(?![A-Za-z0-9_-])`
+    ).test(block)
   }
   return (
     block.includes(`${target.idToSearch}.`) ||
@@ -61,7 +67,9 @@ export const findResourceSearchTargets = ({
     }
     for (const [key, nestedValue] of Object.entries(value)) {
       addStringMatches(key)
-      visit(nestedValue, key)
+      const nestedProperty =
+        property === "enabledTools" && key === "toolName" ? property : key
+      visit(nestedValue, nestedProperty)
     }
   }
 

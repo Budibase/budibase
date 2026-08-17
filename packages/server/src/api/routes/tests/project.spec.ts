@@ -359,6 +359,7 @@ describe("/projects", () => {
         resourceRev: "1-test",
         projectIds: [],
         dependencyIds: [],
+        dependencyFingerprint: "not-used",
       },
       { status: 404 }
     )
@@ -1345,6 +1346,68 @@ describe("/projects", () => {
 
         expect(updated.projectIds).toEqual([project._id])
         expect(updated.assignedDependencyIds).toEqual([automation._id])
+      })
+    })
+
+    it("rejects an assignment when dependencies change after preview", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+          })
+        )
+        const existingAutomation = await config.createAutomation()
+        const screen = await config.api.screen.save(
+          createAutomationButtonScreen(
+            workspaceApp._id!,
+            existingAutomation._id!
+          )
+        )
+        const preview = await config.api.project.previewAssignment({
+          resourceId: workspaceApp._id!,
+          projectIds: [project._id],
+        })
+
+        const addedAutomation = await config.createAutomation()
+        const addedButton = createAutomationButtonScreen(
+          workspaceApp._id!,
+          addedAutomation._id!
+        ).props!._children![0]
+        await config.api.screen.save({
+          ...screen,
+          props: {
+            ...screen.props,
+            _children: [
+              ...screen.props!._children!,
+              { ...addedButton, _id: "added-automation-button" },
+            ],
+          },
+        })
+
+        await config.api.project.updateAssignment(
+          workspaceApp._id!,
+          {
+            resourceRev: workspaceApp._rev!,
+            projectIds: [project._id],
+            dependencyIds: [existingAutomation._id!],
+            dependencyFingerprint: preview.dependencyFingerprint,
+          },
+          { status: 409 }
+        )
+
+        expect(
+          (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
+        ).toBeUndefined()
+        expect(
+          (await config.api.automation.get(existingAutomation._id!)).projectIds
+        ).toBeUndefined()
+        expect(
+          (await config.api.automation.get(addedAutomation._id!)).projectIds
+        ).toBeUndefined()
       })
     })
 
