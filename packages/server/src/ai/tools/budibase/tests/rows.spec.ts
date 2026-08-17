@@ -1,6 +1,14 @@
-import { TableSourceType } from "@budibase/types"
+import {
+  FieldType,
+  PermissionLevel,
+  PermissionType,
+  RelationshipType,
+  TableSourceType,
+  type TableSchema,
+} from "@budibase/types"
 import { type BudibaseToolDefinition, getBudibaseTools } from ".."
 import { createRowTools } from "../rows"
+import sdk from "../../../../sdk"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { basicRow, basicTable } from "../../../../tests/utilities/structures"
 
@@ -51,6 +59,24 @@ describe("AI Tools - Rows", () => {
       expect(tool.name).toMatch(/^[A-Za-z0-9_-]+$/)
       expect(tool.name.endsWith(`_${action}`)).toBe(true)
     }
+  })
+
+  it.each([
+    ["get_row", PermissionLevel.READ],
+    ["search_rows", PermissionLevel.READ],
+    ["create_row", PermissionLevel.WRITE],
+    ["update_row", PermissionLevel.WRITE],
+  ])("requires the correct permission for %s", (action, permissionLevel) => {
+    const tableId = `${datasourceId}__Notes`
+    const rowTool = getExternalRowTools("Notes").find(tool =>
+      tool.readableName?.endsWith(`.${action}`)
+    )
+
+    expect(rowTool?.authorization).toMatchObject({
+      permissionType: PermissionType.TABLE,
+      permissionLevel,
+      resourceId: tableId,
+    })
   })
 
   it("distinguishes long table IDs with the same prefix", () => {
@@ -297,5 +323,65 @@ describe("AI Tools - Rows", () => {
     expect(result.rows).toHaveLength(2)
     expect(result.rows[0].name).toBe("Alice")
     expect(result.rows[1].name).toBe("Bob")
+  })
+
+  it("does not return relationship-derived values to the agent", async () => {
+    const tableSchema: TableSchema = {
+      invoiceNumber: {
+        name: "invoiceNumber",
+        type: FieldType.STRING,
+      },
+      supplier: {
+        name: "supplier",
+        fieldName: "supplier",
+        type: FieldType.LINK,
+        tableId: "ta_suppliers",
+        relationshipType: RelationshipType.MANY_TO_ONE,
+      },
+      supplierAccount: {
+        name: "supplierAccount",
+        type: FieldType.FORMULA,
+        formula: "{{ supplier.0.primaryDisplay }}",
+      },
+    }
+    const search = jest.spyOn(sdk.rows, "search").mockResolvedValue({
+      rows: [
+        {
+          _id: "ro_invoice_1",
+          invoiceNumber: "INV-001",
+          supplier: [
+            {
+              _id: "supplier_1",
+              primaryDisplay: "ACCOUNT-4100-UNEXPOSED",
+            },
+          ],
+          supplierAccount: "ACCOUNT-4100-UNEXPOSED",
+        },
+      ],
+    })
+    const tools = createRowTools({
+      tableId: "ta_invoices",
+      tableName: "Invoices",
+      tableSourceType: TableSourceType.INTERNAL,
+      tableSchema,
+    })
+    const searchTool = tools.find(
+      tool => tool.name === "ta_invoices_search_rows"
+    )
+    if (!searchTool) {
+      throw new Error("search_rows tool not found")
+    }
+
+    const result = await executeTool(searchTool, {})
+
+    expect(search).toHaveBeenCalledWith(
+      expect.objectContaining({ fields: ["invoiceNumber"] })
+    )
+    expect(result.rows).toEqual([
+      {
+        _id: "ro_invoice_1",
+        invoiceNumber: "INV-001",
+      },
+    ])
   })
 })

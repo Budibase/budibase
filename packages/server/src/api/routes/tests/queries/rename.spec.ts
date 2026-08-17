@@ -1,4 +1,5 @@
 import { SourceName } from "@budibase/types"
+import { requesterTools } from "../../../../sdk/workspace/ai/tests/utils"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 
 describe.each([
@@ -68,10 +69,10 @@ describe.each([
           name: "Get a wow",
           live: false,
           promptInstructions: `Use {{ ${oldReadableBinding} }} then {{${oldReadableBinding}}}. Keep {{ other.tool }}.`,
-          enabledTools: [
+          enabledTools: requesterTools(
             `${oldRuntimeBinding}_${runtimeIdentifier}`,
-            "other_tool",
-          ],
+            "other_tool"
+          ),
           allowKnowledgeSourceDownload: true,
         }
       )
@@ -82,7 +83,7 @@ describe.each([
           name: "Other operation",
           live: false,
           promptInstructions: "Use {{ other.tool }}.",
-          enabledTools: ["other_tool"],
+          enabledTools: requesterTools("other_tool"),
           allowKnowledgeSourceDownload: false,
         }
       )
@@ -103,10 +104,10 @@ describe.each([
         name: "Get a wow",
         live: false,
         promptInstructions: `Use {{ ${newReadableBinding} }} then {{${newReadableBinding}}}. Keep {{ other.tool }}.`,
-        enabledTools: [
+        enabledTools: requesterTools(
           `${newRuntimeBinding}_${runtimeIdentifier}`,
-          "other_tool",
-        ],
+          "other_tool"
+        ),
         allowKnowledgeSourceDownload: true,
       })
       expect(unchangedAgent?._rev).toBe(unrelatedAgent._rev)
@@ -138,7 +139,9 @@ describe.each([
           name: "Get a wow",
           live: false,
           promptInstructions: `Use {{ ${oldReadableBinding} }}.`,
-          enabledTools: [`${oldRuntimeBinding}_${runtimeIdentifier}`],
+          enabledTools: requesterTools(
+            `${oldRuntimeBinding}_${runtimeIdentifier}`
+          ),
           allowKnowledgeSourceDownload: true,
         }
       )
@@ -176,7 +179,9 @@ describe.each([
           name: "Get a wow",
           live: false,
           promptInstructions: `Use {{ ${oldReadableBinding} }}.`,
-          enabledTools: [`${oldRuntimeBinding}_${runtimeIdentifier}`],
+          enabledTools: requesterTools(
+            `${oldRuntimeBinding}_${runtimeIdentifier}`
+          ),
           allowKnowledgeSourceDownload: true,
         }
       )
@@ -191,9 +196,9 @@ describe.each([
         agents.find(candidate => candidate._id === agent._id)?.operations?.[0]
       ).toMatchObject({
         promptInstructions: `Use {{ ${renamedDatasourceReadableBinding} }}.`,
-        enabledTools: [
-          `${renamedDatasourceRuntimeBinding}_${runtimeIdentifier}`,
-        ],
+        enabledTools: requesterTools(
+          `${renamedDatasourceRuntimeBinding}_${runtimeIdentifier}`
+        ),
       })
     })
   }
