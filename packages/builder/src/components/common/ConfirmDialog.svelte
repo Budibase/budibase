@@ -11,6 +11,7 @@
   export let onClose: (() => void) | undefined = undefined
   export let warning: boolean = true
   export let disabled: boolean = false
+  export let showCancelButton: boolean = true
 
   let modal: Modal
 
@@ -39,6 +40,7 @@
     {cancelText}
     {warning}
     {disabled}
+    {showCancelButton}
     {size}
   >
     <Body size="S">

@@ -401,6 +401,16 @@
   }
 
   const confirmRemoveTool = (tool: AgentTool) => {
+    if (
+      isToolReferenced({
+        prompt: operation?.promptInstructions,
+        tool,
+      })
+    ) {
+      blockedTool = tool
+      blockedToolDialog?.show()
+      return
+    }
     toolToRemove = tool
     removeToolDialog?.show()
   }
@@ -664,8 +674,23 @@
     onClose={clearToolToRemove}
   >
     {#if toolToRemove?.readableBinding}
-      Remove <b>{toolToRemove.readableBinding}</b> from this operation? Its binding
-      will also be removed from the instructions.
+      Remove <b>{toolToRemove.readableBinding}</b> from this operation?
+    {/if}
+  </ConfirmDialog>
+
+  <ConfirmDialog
+    bind:this={blockedToolDialog}
+    title="Tool is used in instructions"
+    okText="Close"
+    showCancelButton={false}
+    warning={false}
+    onOk={() => (blockedTool = undefined)}
+    onCancel={() => (blockedTool = undefined)}
+    onClose={() => (blockedTool = undefined)}
+  >
+    {#if blockedTool?.readableBinding}
+      Remove every <b>{`{{ ${blockedTool.readableBinding} }}`}</b> reference from
+      the instructions before removing this tool.
     {/if}
   </ConfirmDialog>
 
