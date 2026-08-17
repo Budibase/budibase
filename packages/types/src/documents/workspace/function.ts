@@ -28,6 +28,7 @@ export interface FunctionDocument extends Document {
   _id: string
   name: string
   appId: string
+  projectIds?: string[]
   source: string
   capabilities: FunctionQueryCapability[]
   artifact?: FunctionArtifact
