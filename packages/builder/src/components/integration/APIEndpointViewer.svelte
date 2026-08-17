@@ -1673,7 +1673,7 @@
     position: relative;
   }
   .request-top {
-    z-index: 2;
+    z-index: 101;
   }
   .request-bottom {
     z-index: 1;

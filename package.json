@@ -95,6 +95,7 @@
     "build:digitalocean": "cd hosting/digitalocean && ./build.sh && cd -",
     "build:docker:single:multiarch": "docker buildx build --platform linux/arm64,linux/amd64 -f hosting/single/Dockerfile -t budibase:latest .",
     "build:docker:single": "./scripts/build-single-image.sh",
+    "test:docker:single": "./scripts/test-single-image.sh",
     "check:litellm-version": "node ./scripts/syncLiteLLMVersion.js --check",
     "sync:litellm-version": "node ./scripts/syncLiteLLMVersion.js",
     "build:docker:dependencies": "docker build -f hosting/dependencies/Dockerfile -t budibase/dependencies:latest ./hosting",

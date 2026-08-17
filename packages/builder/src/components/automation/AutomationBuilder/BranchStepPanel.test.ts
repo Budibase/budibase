@@ -72,7 +72,14 @@ Object.assign(mocks.automationStore, {
   actions: {
     buildEnvironmentBindings: () => [],
     buildSettingBindings: () => [],
-    buildStateBindings: () => [],
+    buildStateBindings: () => [
+      {
+        category: "State",
+        display: { name: "State.sanitized_output" },
+        readableBinding: "State.sanitized_output",
+        runtimeBinding: "state.sanitized_output",
+      },
+    ],
     buildUserBindings: () => [],
     deleteBranch: vi.fn(),
     generateDefaultConditions: () => {
@@ -92,6 +99,7 @@ Object.assign(mocks.automationStore, {
       {
         category: "Trigger",
         display: { name: "ID" },
+        readableBinding: "trigger.id",
         runtimeBinding: "trigger.id",
       },
     ],
@@ -192,5 +200,46 @@ describe("BranchStepPanel", () => {
       ],
     })
     expect(savedBranch.condition).not.toEqual({})
+  })
+
+  it("converts readable state bindings to runtime bindings", async () => {
+    render(BranchStepPanel)
+
+    await fireEvent.click(screen.getByText("Add condition"))
+    await fireEvent.click(screen.getByText("Add condition group"))
+    const fieldInput = document.querySelector(
+      ".field-wrap input"
+    ) as HTMLInputElement
+    await fireEvent.input(fieldInput, {
+      target: { value: "{{ State.sanitized_output }}" },
+    })
+    await fireEvent.input(screen.getByPlaceholderText("Value"), {
+      target: { value: "Partnership" },
+    })
+    await fireEvent.click(screen.getByText("Save"))
+
+    await waitFor(() => {
+      expect(mocks.save).toHaveBeenCalledOnce()
+    })
+
+    const savedAutomation = mocks.save.mock.calls[0][0] as Automation
+    const savedBranch = (savedAutomation.definition.steps[0] as any).inputs
+      .branches[0]
+
+    expect(savedBranch.condition).toMatchObject({
+      $and: {
+        conditions: [
+          {
+            $or: {
+              conditions: [
+                {
+                  equal: { "{{ state.sanitized_output }}": "Partnership" },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    })
   })
 })
