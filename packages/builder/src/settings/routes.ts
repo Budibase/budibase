@@ -358,6 +358,11 @@ export const workspaceRoutes = (
             },
           ],
         },
+        {
+          path: "slack",
+          title: "Slack",
+          component: Pages.get("slack_app_config"),
+        },
       ],
     },
     {

@@ -132,6 +132,7 @@ const encodeSlackIntegrationSecrets = (
 
   return {
     ...slackIntegration,
+    clientSecret: encodeSecret(slackIntegration.clientSecret),
     botToken: encodeSecret(slackIntegration.botToken),
     signingSecret: encodeSecret(slackIntegration.signingSecret),
   }
@@ -146,6 +147,7 @@ const decodeSlackIntegrationSecrets = (
 
   return {
     ...slackIntegration,
+    clientSecret: decodeSecret(slackIntegration.clientSecret),
     botToken: decodeSecret(slackIntegration.botToken),
     signingSecret: decodeSecret(slackIntegration.signingSecret),
   }
@@ -290,6 +292,7 @@ const sanitiseSlackIntegration = (
   }
 
   const {
+    clientSecret: _clientSecret,
     botToken: _botToken,
     signingSecret: _signingSecret,
     chatAppId: _chatAppId,
@@ -460,6 +463,10 @@ const mergeSlackIntegration = ({
 
   if (incoming.botToken === SECRET_MASK && existing?.botToken) {
     merged.botToken = existing.botToken
+  }
+
+  if (incoming.clientSecret === SECRET_MASK && existing?.clientSecret) {
+    merged.clientSecret = existing.clientSecret
   }
 
   if (incoming.signingSecret === SECRET_MASK && existing?.signingSecret) {
