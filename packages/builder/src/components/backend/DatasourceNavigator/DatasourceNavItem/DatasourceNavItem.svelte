@@ -30,6 +30,10 @@
   import UpdateDatasourceModal from "@/components/backend/DatasourceNavigator/modals/UpdateDatasourceModal.svelte"
   import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
   import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
+  import {
+    saveProjectAssignment,
+    type ProjectAssignmentSelection,
+  } from "@/components/projects/assignments"
   import { featureFlags, projectsStore } from "@/stores/portal"
 
   $goto
@@ -90,40 +94,20 @@
     assignProjectModal?.show()
   }
 
-  const previewProjectAssignment = async (
-    resourceId: string,
-    projectIds: string[]
-  ) => await projectsStore.previewAssignment({ resourceId, projectIds })
-
-  const assignProject = async ({
-    projectIds,
-    dependencyIds,
-  }: {
-    projectIds: string[]
-    dependencyIds: string[]
-  }) => {
+  const assignProject = async (selection: ProjectAssignmentSelection) => {
     if (!assignableDatasource) {
       return keepOpen
     }
 
-    try {
-      const result = await projectsStore.updateAssignment(
-        assignableDatasource._id!,
-        {
-          resourceRev: assignableDatasource._rev!,
-          projectIds,
-          dependencyIds,
-        }
-      )
-      if (result.assignedDependencyIds.length === dependencyIds.length) {
-        notifications.success("Projects updated successfully")
-      }
-      assignProjectModal?.hide()
-    } catch (error) {
-      console.error(error)
-      notifications.error("Unable to update project")
+    const saved = await saveProjectAssignment({
+      resourceId: assignableDatasource._id!,
+      resourceRev: assignableDatasource._rev!,
+      selection,
+    })
+    if (!saved) {
       return keepOpen
     }
+    assignProjectModal?.hide()
 
     await refreshDataStores()
   }
@@ -227,7 +211,7 @@
   {#key assignProjectModalKey}
     <AssignProjectModal
       resource={projectAssignmentResource}
-      onPreview={previewProjectAssignment}
+      onPreview={projectsStore.previewAssignment}
       onConfirm={assignProject}
     />
   {/key}

@@ -2,10 +2,12 @@
   import ProjectSelect from "@/components/common/ProjectSelect.svelte"
   import { Body, Checkbox, ModalContent, ProgressCircle } from "@budibase/bbui"
   import {
+    type PreviewProjectAssignmentRequest,
     type PreviewProjectAssignmentResponse,
     type ProjectAssignmentDependency,
   } from "@budibase/types"
   import { getErrorMessage } from "@/helpers/errors"
+  import type { ProjectAssignmentSelection } from "./assignments"
 
   interface AssignableProjectResource {
     id: string
@@ -15,23 +17,20 @@
     projectIds?: string[]
   }
 
-  interface ProjectAssignmentSelection {
-    projectIds: string[]
-    dependencyIds: string[]
-  }
-
   interface Props {
     resource?: AssignableProjectResource | null
     onPreview?: (
-      _resourceId: string,
-      _projectIds: string[]
+      _request: PreviewProjectAssignmentRequest
     ) => Promise<PreviewProjectAssignmentResponse>
     onConfirm?: (_selection: ProjectAssignmentSelection) => unknown
   }
 
   let {
     resource = null,
-    onPreview = async () => ({ dependencies: [] }),
+    onPreview = async () => ({
+      dependencies: [],
+      dependencyFingerprint: "",
+    }),
     onConfirm = () => {},
   }: Props = $props()
 
@@ -39,6 +38,7 @@
     resource?.projectIds ? [...resource.projectIds] : []
   )
   let dependencies = $state<ProjectAssignmentDependency[]>([])
+  let dependencyFingerprint = $state("")
   let deselectedDependencyIds = $state<Set<string>>(new Set())
   let previewLoading = $state(false)
   let previewError = $state("")
@@ -96,6 +96,7 @@
     const request = ++previewRequest
     previewLoading = true
     previewError = ""
+    dependencyFingerprint = ""
 
     const timeout = setTimeout(async () => {
       if (!resourceId) {
@@ -105,11 +106,12 @@
       }
 
       try {
-        const response = await onPreview(resourceId, projectIds)
+        const response = await onPreview({ resourceId, projectIds })
         if (request !== previewRequest) {
           return
         }
         dependencies = sortDependencies(response.dependencies)
+        dependencyFingerprint = response.dependencyFingerprint
         const dependencyIds = new Set(
           dependencies.map(dependency => dependency.id)
         )
@@ -123,6 +125,7 @@
           return
         }
         dependencies = []
+        dependencyFingerprint = ""
         previewError = getErrorMessage(error)
       } finally {
         if (request === previewRequest) {
@@ -139,11 +142,15 @@
   title={`Assign projects${resource ? ` to ${resource.name}` : ""}`}
   confirmText="Save"
   size="M"
-  disabled={previewLoading || !!previewError || !resource?.revision}
+  disabled={previewLoading ||
+    !!previewError ||
+    !resource?.revision ||
+    !dependencyFingerprint}
   onConfirm={() =>
     onConfirm({
       projectIds: selectedProjectIds,
       dependencyIds: selectedDependencyIds,
+      dependencyFingerprint,
     })}
 >
   {#if resource}

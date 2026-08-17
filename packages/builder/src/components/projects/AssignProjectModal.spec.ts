@@ -7,6 +7,7 @@ import {
 } from "@testing-library/svelte"
 import {
   FeatureFlag,
+  type PreviewProjectAssignmentRequest,
   type PreviewProjectAssignmentResponse,
   ResourceType,
 } from "@budibase/types"
@@ -66,10 +67,12 @@ const resource = {
   typeLabel: "App",
   projectIds: ["project_1"],
 }
+const dependencyFingerprint = "dependency-fingerprint"
 
 describe("AssignProjectModal", () => {
   it("selects previewed dependencies by default and submits deselections", async () => {
     const onPreview = vi.fn().mockResolvedValue({
+      dependencyFingerprint,
       dependencies: [
         {
           id: "automation_1",
@@ -96,7 +99,10 @@ describe("AssignProjectModal", () => {
         screen.getByText("2 of 2 dependencies will be added.")
       ).toBeTruthy()
     )
-    expect(onPreview).toHaveBeenCalledWith("workspace_app_1", ["project_1"])
+    expect(onPreview).toHaveBeenCalledWith({
+      resourceId: "workspace_app_1",
+      projectIds: ["project_1"],
+    })
     expect(
       screen
         .getAllByRole("checkbox")
@@ -112,6 +118,7 @@ describe("AssignProjectModal", () => {
     expect(onConfirm).toHaveBeenCalledWith({
       projectIds: ["project_1"],
       dependencyIds: ["datasource_1"],
+      dependencyFingerprint,
     })
   })
 
@@ -146,7 +153,8 @@ describe("AssignProjectModal", () => {
       projectIdsToAdd: ["project_2"],
     }
     const onPreview = vi.fn(
-      async (_resourceId: string, projectIds: string[]) => ({
+      async ({ projectIds }: PreviewProjectAssignmentRequest) => ({
+        dependencyFingerprint,
         dependencies: projectIds.includes("project_2")
           ? [automation, datasource]
           : [automation],
@@ -188,6 +196,7 @@ describe("AssignProjectModal", () => {
     expect(onConfirm).toHaveBeenCalledWith({
       projectIds: ["project_1", "project_2"],
       dependencyIds: ["datasource_1"],
+      dependencyFingerprint,
     })
   })
 
@@ -208,11 +217,13 @@ describe("AssignProjectModal", () => {
       .fn()
       .mockReturnValueOnce(firstPreview)
       .mockReturnValueOnce(secondPreview)
+    const onConfirm = vi.fn()
 
     render(AssignProjectModal, {
       props: {
         resource,
         onPreview,
+        onConfirm,
       },
     })
 
@@ -226,6 +237,7 @@ describe("AssignProjectModal", () => {
     await waitFor(() => expect(onPreview).toHaveBeenCalledTimes(2))
 
     resolveSecond({
+      dependencyFingerprint,
       dependencies: [
         {
           id: "datasource_latest",
@@ -240,6 +252,7 @@ describe("AssignProjectModal", () => {
     )
 
     resolveFirst({
+      dependencyFingerprint: "stale-fingerprint",
       dependencies: [
         {
           id: "automation_stale",
@@ -253,5 +266,12 @@ describe("AssignProjectModal", () => {
 
     expect(screen.queryByText("Stale dependency")).toBeNull()
     expect(screen.getByText("Latest dependency")).toBeTruthy()
+
+    await fireEvent.click(screen.getByText("Save"))
+    expect(onConfirm).toHaveBeenCalledWith({
+      projectIds: ["project_1", "project_2"],
+      dependencyIds: ["datasource_latest"],
+      dependencyFingerprint,
+    })
   })
 })

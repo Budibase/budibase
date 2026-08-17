@@ -7,6 +7,10 @@
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
+  import {
+    saveProjectAssignment,
+    type ProjectAssignmentSelection,
+  } from "@/components/projects/assignments"
   import CreateProjectModal from "./_components/CreateProjectModal.svelte"
   import ExportProjectModal from "./_components/ExportProjectModal.svelte"
   import HomeControls from "./_components/HomeControls.svelte"
@@ -396,46 +400,28 @@
     }
   }
 
-  const previewProjectAssignment = async (
-    resourceId: string,
-    projectIds: string[]
-  ) => await projectsStore.previewAssignment({ resourceId, projectIds })
-
-  const assignProject = async ({
-    projectIds,
-    dependencyIds,
-  }: {
-    projectIds: string[]
-    dependencyIds: string[]
-  }) => {
+  const assignProject = async (selection: ProjectAssignmentSelection) => {
     if (!projectsEnabled || !selectedRow) {
       return keepOpen
     }
 
+    const saved = await saveProjectAssignment({
+      resourceId: selectedRow.id,
+      resourceRev: selectedRow.resource._rev!,
+      selection,
+    })
+    if (!saved) {
+      return keepOpen
+    }
+    assignProjectModal?.hide()
+
     try {
-      const result = await projectsStore.updateAssignment(selectedRow.id, {
-        resourceRev: selectedRow.resource._rev!,
-        projectIds,
-        dependencyIds,
-      })
-
-      if (result.assignedDependencyIds.length === dependencyIds.length) {
-        notifications.success("Projects updated successfully")
-      }
-      assignProjectModal?.hide()
-
-      try {
-        await Promise.all([appStore.refresh(), agentsStore.fetchAgents()])
-      } catch (error) {
-        console.error(error)
-        notifications.warning(
-          "Projects updated, but some resources could not be refreshed. Reload the workspace to see all changes."
-        )
-      }
+      await Promise.all([appStore.refresh(), agentsStore.fetchAgents()])
     } catch (error) {
       console.error(error)
-      notifications.error("Unable to update project")
-      return keepOpen
+      notifications.warning(
+        "Projects updated, but some resources could not be refreshed. Reload the workspace to see all changes."
+      )
     }
   }
 
@@ -1164,7 +1150,7 @@
     {#key assignProjectModalKey}
       <AssignProjectModal
         resource={selectedProjectResource}
-        onPreview={previewProjectAssignment}
+        onPreview={projectsStore.previewAssignment}
         onConfirm={assignProject}
       />
     {/key}

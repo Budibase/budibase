@@ -22,6 +22,10 @@
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import { FeatureFlag, WorkspaceResource, type Table } from "@budibase/types"
   import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
+  import {
+    saveProjectAssignment,
+    type ProjectAssignmentSelection,
+  } from "@/components/projects/assignments"
   import { auth, featureFlags, projectsStore } from "@/stores/portal"
   import { getErrorMessage } from "@/helpers/errors"
   import type { MenuItem } from "@/types"
@@ -74,30 +78,13 @@
     assignProjectModal?.show()
   }
 
-  const previewProjectAssignment = async (
-    resourceId: string,
-    projectIds: string[]
-  ) => await projectsStore.previewAssignment({ resourceId, projectIds })
-
-  const assignProject = async ({
-    projectIds,
-    dependencyIds,
-  }: {
-    projectIds: string[]
-    dependencyIds: string[]
-  }) => {
-    try {
-      const result = await projectsStore.updateAssignment(tableId, {
-        resourceRev: table._rev!,
-        projectIds,
-        dependencyIds,
-      })
-      if (result.assignedDependencyIds.length === dependencyIds.length) {
-        notifications.success("Projects updated successfully")
-      }
-    } catch (error) {
-      console.error(error)
-      notifications.error("Unable to update project")
+  const assignProject = async (selection: ProjectAssignmentSelection) => {
+    const saved = await saveProjectAssignment({
+      resourceId: tableId,
+      resourceRev: table._rev!,
+      selection,
+    })
+    if (!saved) {
       return keepOpen
     }
 
@@ -193,7 +180,7 @@
   {#key assignProjectModalKey}
     <AssignProjectModal
       resource={projectAssignmentResource}
-      onPreview={previewProjectAssignment}
+      onPreview={projectsStore.previewAssignment}
       onConfirm={assignProject}
     />
   {/key}
