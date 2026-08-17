@@ -251,6 +251,12 @@ export default async function (): Promise<FunctionResult> {
         })
       )
 
+      const { functions } = await config.api.function.fetch()
+      const listed = functions.find(fn => fn._id === built._id)
+      expect(listed).not.toHaveProperty("source")
+      expect(listed).not.toHaveProperty("artifact")
+      expect(listed).not.toHaveProperty("lastBuild")
+
       const { function: updated } = await config.api.function.update(
         built._id,
         {
@@ -521,7 +527,18 @@ export default async function (): Promise<FunctionResult> {
       expect(created.lastBuild).toBeUndefined()
 
       const { functions } = await config.api.function.fetch()
-      expect(functions.map(fn => fn._id)).toContain(created._id)
+      const listed = functions.find(fn => fn._id === created._id)
+      expect(listed).toEqual(
+        expect.objectContaining({
+          _id: created._id,
+          _rev: created._rev,
+          name: created.name,
+          appId: created.appId,
+          readiness: "build_required",
+        })
+      )
+      expect(listed).not.toHaveProperty("source")
+      expect(listed).not.toHaveProperty("capabilities")
 
       const { function: fetched } = await config.api.function.find(created._id)
       expect(fetched.source).toBe("export default async function {")
