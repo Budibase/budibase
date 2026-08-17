@@ -288,6 +288,16 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     AND pg_class.relkind = 'r';
   `
 
+  // Uses pg_catalog rather than information_schema
+  VISIBLE_TABLES_SQL = () => `
+  SELECT pg_class.relname as table_name
+  FROM pg_class
+  JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+  WHERE pg_namespace.nspname = ANY(current_schemas(false))
+    AND pg_table_is_visible(pg_class.oid)
+    AND pg_class.relkind = 'r';
+  `
+
   constructor(config: PostgresConfig) {
     super(SqlClient.POSTGRES)
     this.config = config
@@ -502,6 +512,21 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
 
       const finalizedTables = finaliseExternalTables(tables, entities)
       const errors = checkExternalTables(finalizedTables)
+
+      if (Object.keys(tables).length === 0) {
+        try {
+          const visibleTablesResponse = await this.client.query(
+            this.VISIBLE_TABLES_SQL()
+          )
+          for (const { table_name } of visibleTablesResponse.rows) {
+            errors[table_name] =
+              "This table is visible but its columns could not be read. The datasource user is likely missing SELECT privilege on it - granting USAGE on the schema alone is not sufficient."
+          }
+        } catch {
+          // best-effort diagnostic only, don't fail the schema build over it
+        }
+      }
+
       return { tables: finalizedTables, errors }
     } catch (err) {
       // @ts-ignore
@@ -516,8 +541,29 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       await this.openConnection()
       const columnsResponse: { rows: PostgresColumn[] } =
         await this.client.query(this.COLUMNS_SQL())
-      const names = columnsResponse.rows.map(row => row.table_name)
-      return [...new Set(names)]
+      const names = [
+        ...new Set(columnsResponse.rows.map(row => row.table_name)),
+      ]
+
+      if (names.length === 0) {
+        const visibleTablesResponse = await this.client.query(
+          this.VISIBLE_TABLES_SQL()
+        )
+        const visibleNames = visibleTablesResponse.rows.map(
+          row => row.table_name
+        )
+        if (visibleNames.length > 0) {
+          throw new Error(
+            `Found ${visibleNames.length} table(s) in the "${
+              this.config.schema
+            }" schema (${visibleNames.join(
+              ", "
+            )}), but none of their columns could be read. The datasource user is likely missing SELECT privilege on them - granting USAGE on the schema alone is not sufficient.`
+          )
+        }
+      }
+
+      return names
     } finally {
       await this.closeConnection()
     }
