@@ -32,6 +32,7 @@
     selectedAgent,
   } from "@/stores/portal"
   import { bb } from "@/stores/bb"
+  import type { BindingCompletion } from "@/types"
   import AgentTabList from "../../AgentTabList.svelte"
   import AgentUnpublishedChangesIndicator from "../../AgentUnpublishedChangesIndicator.svelte"
   import ConfigureOperationToolModal from "../../ConfigureOperationToolModal.svelte"
@@ -43,15 +44,15 @@
   import WebSearchConfigModal from "../../WebSearchConfigModal.svelte"
   import {
     buildBindingIcons,
-    buildReadableToRuntimeBinding,
     getAgentWebSearchConfig,
     isWebSearchConfigured,
     resolveAvailableAgentTools,
     toAgentPromptBindings,
   } from "../../agentAvailableTools"
   import {
-    getConfiguredOperationTools,
-    getIncludedToolRuntimeBindings,
+    getDefaultToolExecutionPrincipal,
+    isToolReferenced,
+    normalizeConfiguredOperationTools,
   } from "../../toolBindingUtils"
   import { createSaveCoordinator } from "../../operationSaveCoordinator"
   import type { AgentTool } from "../../toolTypes"
@@ -75,6 +76,10 @@
   let removeToolDialog: ConfirmDialog | undefined = $state()
   let configureToolModal: ConfigureOperationToolModal | undefined = $state()
   let toolToRemove: AgentTool | undefined = $state()
+  let blockedTool: AgentTool | undefined = $state()
+  let blockedToolDialog: ConfirmDialog | undefined = $state()
+  let insertToolAfterAdding = $state(false)
+  let addingTool: AgentTool | undefined = $state()
 
   let previousToolsLoaded = false
 
@@ -102,35 +107,39 @@
     })
   )
 
+  let configuredTools = $derived.by(() =>
+    (operation?.enabledTools || [])
+      .map(config =>
+        availableTools.find(tool => tool.runtimeBinding === config.toolName)
+      )
+      .filter((tool): tool is AgentTool => !!tool)
+  )
   let promptBindings = $derived(
-    toAgentPromptBindings({ tools: availableTools, webSearchConfigured })
+    toAgentPromptBindings({ tools: configuredTools, webSearchConfigured })
   )
-  let bindingIcons = $derived(buildBindingIcons(promptBindings))
-  let completions = $derived(
-    promptBindings.length
-      ? [
-          hbAutocomplete(
-            bindingsToCompletions(promptBindings, EditorModes.Handlebars)
-          ),
-        ]
-      : []
-  )
-  let readableToRuntimeBinding = $derived(
-    buildReadableToRuntimeBinding(availableTools)
-  )
-  let includedRuntimeBindings = $derived(
-    getIncludedToolRuntimeBindings(
-      operation?.promptInstructions,
-      readableToRuntimeBinding
-    )
-  )
-  let includedTools = $derived(
-    availableTools.filter(tool =>
-      includedRuntimeBindings.includes(tool.runtimeBinding)
-    )
-  )
+  const bindingIcons: Record<string, string | undefined> = {}
+  $effect(() => {
+    const nextIcons = buildBindingIcons(promptBindings)
+    for (const binding of Object.keys(bindingIcons)) {
+      delete bindingIcons[binding]
+    }
+    Object.assign(bindingIcons, nextIcons)
+  })
+
+  const operationAutocomplete: BindingCompletion = context =>
+    hbAutocomplete(
+      bindingsToCompletions(promptBindings, EditorModes.Handlebars)
+    )(context)
+  const completions = [operationAutocomplete]
   let filteredTools = $derived.by(() =>
     availableTools.filter(tool => {
+      if (
+        operation?.enabledTools?.some(
+          config => config.toolName === tool.runtimeBinding
+        )
+      ) {
+        return false
+      }
       if (
         tool.sourceType === ToolType.ESCALATION &&
         !$featureFlags[FeatureFlag.ESCALATION]
@@ -204,11 +213,9 @@
     const forOperationId = operation.id
     const snapshot = { ...operation }
 
-    const enabledTools = getConfiguredOperationTools({
+    const enabledTools = normalizeConfiguredOperationTools({
       operation: snapshot,
-      readableToRuntimeBinding,
       availableTools,
-      toolSecurityEnabled: $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
     })
     saving = true
     try {
@@ -287,7 +294,7 @@
     operation.promptInstructions = instructions
   }
 
-  const insertTool = (tool: AgentTool) => {
+  const insertToolBinding = (tool: AgentTool) => {
     if (!operation || !tool.readableBinding) {
       return
     }
@@ -310,14 +317,14 @@
   }
 
   const removeTool = (tool: AgentTool) => {
-    if (!operation || !tool.readableBinding) {
+    if (!operation) {
       return
     }
-    const escaped = tool.readableBinding.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    const nextInstructions = (operation.promptInstructions || "")
-      .replace(new RegExp(`\\{\\{\\s*${escaped}\\s*\\}\\}`, "g"), "")
-      .replace(/\n{3,}/g, "\n\n")
-    saveOperation({ promptInstructions: nextInstructions })
+    saveOperation({
+      enabledTools: (operation.enabledTools || []).filter(
+        config => config.toolName !== tool.runtimeBinding
+      ),
+    })
   }
 
   const getToolPrincipal = (toolName: string) =>
@@ -340,10 +347,12 @@
     if (!operation) {
       return
     }
-    operation.enabledTools = includedRuntimeBindings.map(name => ({
-      toolName: name,
+    operation.enabledTools = (operation.enabledTools || []).map(config => ({
+      ...config,
       executionPrincipal:
-        name === toolName ? executionPrincipal : getToolPrincipal(name),
+        config.toolName === toolName
+          ? executionPrincipal
+          : config.executionPrincipal,
     }))
     saveOperation()
   }
@@ -409,12 +418,69 @@
   }
 
   const configureTool = (tool: AgentTool) => {
+    addingTool = undefined
     configureToolModal?.show(
       tool,
       getEffectiveToolPrincipal(tool),
       $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
         tool.executionPolicy.mode === "configurable"
     )
+  }
+
+  const beginAddingTool = (tool: AgentTool, insertAfterAdding = false) => {
+    addingTool = tool
+    insertToolAfterAdding = insertAfterAdding
+    configureToolModal?.show(
+      tool,
+      getDefaultToolExecutionPrincipal({
+        tool,
+        toolSecurityEnabled: $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
+      }),
+      $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
+        tool.executionPolicy.mode === "configurable",
+      true
+    )
+  }
+
+  const saveToolConfiguration = async ({
+    tool,
+    executionPrincipal,
+  }: {
+    tool: AgentTool
+    executionPrincipal: ToolExecutionPrincipal
+  }) => {
+    if (addingTool?.runtimeBinding !== tool.runtimeBinding || !operation) {
+      setToolPrincipal({
+        toolName: tool.runtimeBinding,
+        executionPrincipal,
+      })
+      return
+    }
+
+    const shouldInsertTool = insertToolAfterAdding
+    addingTool = undefined
+    insertToolAfterAdding = false
+    const alreadyConfigured = operation.enabledTools?.some(
+      config => config.toolName === tool.runtimeBinding
+    )
+    if (!alreadyConfigured) {
+      const saved = await saveOperation({
+        enabledTools: [
+          ...(operation.enabledTools || []),
+          { toolName: tool.runtimeBinding, executionPrincipal },
+        ],
+      })
+      if (!saved) {
+        return
+      }
+    }
+    if (shouldInsertTool) {
+      insertToolBinding(tool)
+    }
+  }
+
+  const selectEditorTool = (tool: AgentTool) => {
+    beginAddingTool(tool, true)
   }
 </script>
 
@@ -480,7 +546,7 @@
                 {toolSections}
                 bind:toolSearch
                 webSearchEnabled={webSearchConfigured}
-                onToolClick={insertTool}
+                onToolClick={selectEditorTool}
                 onAddApiConnection={() => bb.settings("/connections/apis")}
                 onConfigureWebSearch={() => webSearchConfigModal?.show()}
               />
@@ -521,7 +587,7 @@
                       {toolSections}
                       bind:toolSearch
                       webSearchEnabled={webSearchConfigured}
-                      onToolClick={insertTool}
+                      onToolClick={tool => beginAddingTool(tool)}
                       onAddApiConnection={() =>
                         bb.settings("/connections/apis")}
                       onConfigureWebSearch={() => webSearchConfigModal?.show()}
@@ -530,7 +596,7 @@
                 {/snippet}
               </OperationRailSectionHeader>
               <div class="tools-list" role="list">
-                {#each includedTools as tool (tool.runtimeBinding)}
+                {#each configuredTools as tool (tool.runtimeBinding)}
                   <div role="listitem">
                     <button
                       class="tool-row"
@@ -562,7 +628,7 @@
                   </div>
                 {:else}
                   <Body size="XS" color="var(--spectrum-global-color-gray-700)"
-                    >No tools are referenced in these instructions.</Body
+                    >No tools are configured for this operation.</Body
                   >
                 {/each}
               </div>
@@ -605,12 +671,12 @@
 
   <ConfigureOperationToolModal
     bind:this={configureToolModal}
-    onSave={({ tool, executionPrincipal }) =>
-      setToolPrincipal({
-        toolName: tool.runtimeBinding,
-        executionPrincipal,
-      })}
+    onSave={saveToolConfiguration}
     onRemove={confirmRemoveTool}
+    onClose={() => {
+      addingTool = undefined
+      insertToolAfterAdding = false
+    }}
   />
 
   <WebSearchConfigModal

@@ -7,12 +7,14 @@
   export let onSave: (args: {
     tool: AgentTool
     executionPrincipal: ToolExecutionPrincipal
-  }) => void
+  }) => void | Promise<void>
   export let onRemove: (tool: AgentTool) => void
+  export let onClose: (() => void) | undefined = undefined
 
   let modal: Modal
   let tool: AgentTool | undefined
   let principalConfigurable = false
+  let adding = false
   let executionPrincipal = ToolExecutionPrincipal.REQUESTER
 
   const options = [
@@ -23,17 +25,19 @@
   export const show = (
     selectedTool: AgentTool,
     principal: ToolExecutionPrincipal,
-    canConfigurePrincipal: boolean
+    canConfigurePrincipal: boolean,
+    add = false
   ) => {
     tool = selectedTool
     executionPrincipal = principal
     principalConfigurable = canConfigurePrincipal
+    adding = add
     modal.show()
   }
 
-  const save = () => {
+  const save = async () => {
     if (tool) {
-      onSave({ tool, executionPrincipal })
+      await onSave({ tool, executionPrincipal })
     }
   }
 
@@ -45,11 +49,11 @@
   }
 </script>
 
-<Modal bind:this={modal}>
+<Modal bind:this={modal} on:hide={() => onClose?.()}>
   <ModalContent
     size="M"
-    confirmText="Save tool"
-    showSecondaryButton
+    confirmText={adding ? "Add tool" : "Save tool"}
+    showSecondaryButton={!adding}
     secondaryButtonText="Remove tool"
     secondaryButtonWarning
     secondaryAction={remove}
