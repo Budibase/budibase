@@ -91,6 +91,7 @@
     <Label size="L">Configuration token</Label>
     <Input
       type="password"
+      autocomplete="new-password"
       placeholder={configured
         ? "Enter a new token to replace the saved token"
         : "Slack app configuration token"}
@@ -102,6 +103,7 @@
     <Label size="L">Refresh token</Label>
     <Input
       type="password"
+      autocomplete="new-password"
       placeholder={configured
         ? "Enter a new refresh token to replace the saved token"
         : "Slack app configuration refresh token"}
