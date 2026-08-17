@@ -5,11 +5,13 @@ import {
   events,
   HTTPError,
 } from "@budibase/backend-core"
-import { DocumentType } from "@budibase/types"
+import { WebClient } from "@slack/web-api"
+import { DocumentType, ToolExecutionPrincipal } from "@budibase/types"
 import type {
   Agent,
   AgentKnowledgeSource,
   AgentOperation,
+  AgentOperationToolConfig,
   Optional,
 } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
@@ -19,7 +21,19 @@ import { cleanupKnowledgeForOperation, knowledgeSourceSyncQueue } from "../rag"
 import { getValidProjectIdsForDuplication } from "../../projects/utils"
 
 // TODO: this will eventually go away, after a grace period
-type DeprecatedAgent = Agent & {
+type DeprecatedAgentOperationToolConfig = Omit<
+  AgentOperationToolConfig,
+  "executionPrincipal"
+> & {
+  executionPrincipal?: ToolExecutionPrincipal | null
+}
+
+type DeprecatedAgentOperation = Omit<AgentOperation, "enabledTools"> & {
+  enabledTools?: Array<string | DeprecatedAgentOperationToolConfig>
+}
+
+type DeprecatedAgent = Omit<Agent, "operations"> & {
+  operations?: DeprecatedAgentOperation[]
   promptInstructions?: string
   operationName?: string
   enabledTools?: string[]
@@ -27,6 +41,22 @@ type DeprecatedAgent = Agent & {
   knowledgeSources?: AgentKnowledgeSource[]
   allowKnowledgeSourceDownload?: boolean
 }
+
+export const normalizePersistedOperationTools = (
+  tools: DeprecatedAgentOperation["enabledTools"] = []
+): AgentOperationToolConfig[] =>
+  tools.map(tool =>
+    typeof tool === "string"
+      ? {
+          toolName: tool,
+          executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        }
+      : {
+          ...tool,
+          executionPrincipal:
+            tool.executionPrincipal ?? ToolExecutionPrincipal.ADMIN,
+        }
+  )
 
 const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
@@ -102,6 +132,7 @@ const encodeSlackIntegrationSecrets = (
 
   return {
     ...slackIntegration,
+    clientSecret: encodeSecret(slackIntegration.clientSecret),
     botToken: encodeSecret(slackIntegration.botToken),
     signingSecret: encodeSecret(slackIntegration.signingSecret),
   }
@@ -116,6 +147,7 @@ const decodeSlackIntegrationSecrets = (
 
   return {
     ...slackIntegration,
+    clientSecret: decodeSecret(slackIntegration.clientSecret),
     botToken: decodeSecret(slackIntegration.botToken),
     signingSecret: decodeSecret(slackIntegration.signingSecret),
   }
@@ -167,7 +199,10 @@ const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
   const legacyAllowKnowledgeSourceDownload = raw.allowKnowledgeSourceDownload
 
   if (Object.prototype.hasOwnProperty.call(raw, "operations")) {
-    return raw.operations || []
+    return (raw.operations || []).map(operation => ({
+      ...operation,
+      enabledTools: normalizePersistedOperationTools(operation.enabledTools),
+    }))
   }
 
   if (
@@ -183,7 +218,7 @@ const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
         name: raw.operationName || DEFAULT_OPERATION_NAME,
         live: true,
         promptInstructions: raw.promptInstructions || "",
-        enabledTools: raw.enabledTools || [],
+        enabledTools: normalizePersistedOperationTools(raw.enabledTools),
         knowledgeBases: raw.knowledgeBases || [],
         knowledgeSources: legacyKnowledgeSources || [],
         allowKnowledgeSourceDownload:
@@ -257,6 +292,7 @@ const sanitiseSlackIntegration = (
   }
 
   const {
+    clientSecret: _clientSecret,
     botToken: _botToken,
     signingSecret: _signingSecret,
     chatAppId: _chatAppId,
@@ -375,6 +411,37 @@ const mergeMSTeamsIntegration = ({
   return merged
 }
 
+const withSlackTeamId = async (
+  integration: Agent["slackIntegration"],
+  existing?: Agent["slackIntegration"]
+): Promise<Agent["slackIntegration"]> => {
+  const botToken = integration?.botToken
+  if (!integration || !botToken) {
+    return integration
+  }
+  // teamId is server-derived, never trusted from the client.
+  if (botToken === existing?.botToken && existing?.teamId) {
+    return { ...integration, teamId: existing.teamId }
+  }
+  // Drop any inherited teamId - it belongs to the old token's workspace,
+  // and leaving it unset on failure lets the next save retry.
+  const { teamId: _teamId, ...withoutTeamId } = integration
+  try {
+    // Single attempt - the default retry policy would block the save for 30 minutes.
+    const client = new WebClient(botToken, {
+      retryConfig: { retries: 0 },
+      timeout: 5000,
+    })
+    const auth = await client.auth.test()
+    return { ...withoutTeamId, teamId: auth.team_id }
+  } catch (err) {
+    console.warn("Failed to resolve Slack workspace for integration", {
+      error: err instanceof Error ? err.message : String(err),
+    })
+    return withoutTeamId
+  }
+}
+
 const mergeSlackIntegration = ({
   existing,
   incoming,
@@ -396,6 +463,10 @@ const mergeSlackIntegration = ({
 
   if (incoming.botToken === SECRET_MASK && existing?.botToken) {
     merged.botToken = existing.botToken
+  }
+
+  if (incoming.clientSecret === SECRET_MASK && existing?.clientSecret) {
+    merged.clientSecret = existing.clientSecret
   }
 
   if (incoming.signingSecret === SECRET_MASK && existing?.signingSecret) {
@@ -494,7 +565,7 @@ export async function create(
     createdBy: request.createdBy,
     discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
-    slackIntegration: request.slackIntegration,
+    slackIntegration: await withSlackTeamId(request.slackIntegration),
     telegramIntegration: request.telegramIntegration,
   }
 
@@ -592,6 +663,11 @@ export async function update(agent: Agent): Promise<Agent> {
       incoming: agent.telegramIntegration,
     }),
   } satisfies Agent)
+
+  updated.slackIntegration = await withSlackTeamId(
+    updated.slackIntegration,
+    existing?.slackIntegration
+  )
 
   if (updated.live) {
     await assertAgentHasValidConfig(updated)

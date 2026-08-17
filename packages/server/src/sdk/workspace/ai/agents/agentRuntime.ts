@@ -1,4 +1,4 @@
-import { cache, features } from "@budibase/backend-core"
+import { cache, context, features } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import {
   ActionType,
@@ -7,7 +7,12 @@ import {
   AgentMessageMetadata,
   ChatConversationRequest,
   ContextUser,
+  ESCALATE_TOOL_NAME,
+  EscalateToolResultStatus,
   FeatureFlag,
+  ToolExecutionPrincipal,
+  type AgentExecutionContext,
+  type AgentRequester,
 } from "@budibase/types"
 import {
   Output,
@@ -16,6 +21,7 @@ import {
   ToolLoopAgent,
   type LanguageModelUsage,
   type ModelMessage,
+  type StepResult,
   type StreamTextResult,
   type ToolSet,
   wrapLanguageModel,
@@ -331,6 +337,7 @@ export interface PrepareAgentRunContextParams {
   buildPromptOptions?: BuildPromptAndToolsOptions
   // When set, pin the run to this operation instead of routing on the question.
   operationId?: string
+  requester?: AgentRequester
 }
 
 export interface AgentRunContext {
@@ -341,6 +348,7 @@ export interface AgentRunContext {
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
+  executionContext?: AgentExecutionContext
 }
 
 const buildOperationsSummaryPrompt = (operations: AgentOperation[]) =>
@@ -371,6 +379,7 @@ export const prepareAgentRunContext = async ({
   span,
   buildPromptOptions,
   operationId,
+  requester,
 }: PrepareAgentRunContextParams): Promise<AgentRunContext> => {
   const llm = await sdk.ai.llm.createLLM(
     aiConfigId ?? agent.aiconfig,
@@ -385,6 +394,24 @@ export const prepareAgentRunContext = async ({
     operationId,
     llm,
   })
+  const toolSecurityEnabled = await features.isEnabled(
+    FeatureFlag.AI_AGENT_TOOL_SECURITY
+  )
+  let executionContext: AgentExecutionContext | undefined
+  if (routingDecision.operation && requester) {
+    const workspaceId = context.getWorkspaceId()
+    if (!workspaceId) {
+      throw new Error("Workspace context is required")
+    }
+    executionContext = {
+      tenantId: context.getTenantId(),
+      workspaceId,
+      agentId,
+      operationId: routingDecision.operation.id,
+      conversationId: sessionId,
+      requester,
+    }
+  }
   const promptAndTools = await buildPromptAndTools(
     agent,
     routingDecision.operation,
@@ -394,6 +421,8 @@ export const prepareAgentRunContext = async ({
         routingDecision.action === "summarize_operations"
           ? buildOperationsSummaryPrompt(getLiveOperations(agent))
           : buildPromptOptions?.fallbackPromptInstructions,
+      executionContext,
+      toolSecurityEnabled,
     }
   )
 
@@ -405,8 +434,45 @@ export const prepareAgentRunContext = async ({
         ? routingDecision.intent
         : undefined,
     routingAction: routingDecision.action,
+    executionContext,
     ...promptAndTools,
   }
+}
+
+// A pending escalation suspends the turn - once one exists, later steps run
+// with no tools so the model can wrap up in text but cannot act before a
+// human responds. Keyed on the result status rather than the tool name so
+// resumed runs (ALREADY_APPROVED) keep their tools.
+const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
+  steps.some(step =>
+    step.toolResults.some(result => {
+      if (result.toolName !== ESCALATE_TOOL_NAME) {
+        return false
+      }
+      const output = result.output
+      return (
+        typeof output === "object" &&
+        output !== null &&
+        "status" in output &&
+        output.status === EscalateToolResultStatus.PENDING_APPROVAL
+      )
+    })
+  )
+
+const getAgentRequester = ({
+  user,
+  chat,
+}: {
+  user: ContextUser
+  chat?: ChatConversationRequest
+}): AgentRequester => {
+  if (chat?.isPreview && chat.previewRoleId) {
+    return {
+      userId: user._id!,
+      authorization: { mode: "preview", roleId: chat.previewRoleId },
+    }
+  }
+  return { userId: user._id!, authorization: { mode: "current" } }
 }
 
 export const prepareAgentChatRun = async ({
@@ -433,6 +499,7 @@ export const prepareAgentChatRun = async ({
     errorLabel,
     startedAt,
   })
+  const requester = getAgentRequester({ user, chat })
 
   const [runContext, modelMessages] = await Promise.all([
     prepareAgentRunContext({
@@ -442,8 +509,9 @@ export const prepareAgentChatRun = async ({
       latestQuestion,
       aiConfigId,
       operationId,
+      requester,
       buildPromptOptions: {
-        baseSystemPrompt: ai.agentSystemPrompt(user),
+        baseSystemPrompt: ai.agentSystemPrompt(user, chat?.timezone),
         includeGoal: false,
       },
     }),
@@ -455,6 +523,7 @@ export const prepareAgentChatRun = async ({
     operationIntent,
     tools,
     toolDisplayNames,
+    executionContext,
     systemPrompt: baseSystemPrompt,
   } = runContext
   const retrievedKnowledgeSourceById = new Map<
@@ -494,6 +563,9 @@ export const prepareAgentChatRun = async ({
     if (selectedOperation && recipients?.length) {
       // Always the real tool, on resumes too. A resumed run must still be
       // able to raise a genuinely new escalation.
+      if (!executionContext) {
+        throw new Error("Agent execution context is required")
+      }
       tools.escalate = createEscalateTool({
         agentId,
         operationId: selectedOperation.id,
@@ -506,6 +578,8 @@ export const prepareAgentChatRun = async ({
         userId: user?._id,
         getMessages: () => modelMessages,
         getRequestId: () => getRequestId?.(),
+        executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        executionContext,
       })
     }
 
@@ -533,6 +607,9 @@ export const prepareAgentChatRun = async ({
     tools: hasTools ? tools : undefined,
     ...(hasTools ? { toolChoice: "auto" as const } : {}),
     stopWhen: stepCountIs(30),
+    // Anthropic rejects those without a tools param.
+    prepareStep: ({ steps }) =>
+      hasPendingEscalation(steps) ? { toolChoice: "none" as const } : undefined,
     providerOptions: llm.providerOptions?.(hasTools),
   })
 

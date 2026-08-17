@@ -38,7 +38,7 @@
   export let validation: UIFieldValidationRule[] | undefined = undefined
   export let autocomplete: boolean = true
   export let defaultValue: ValueType | undefined = undefined
-  export let onChange: (_props: { value: ValueType; label?: string }) => void
+  export let onChange: (props: { value: ValueType; label?: string }) => void
   export let filter: UISearchFilter | LegacyFilter[] | undefined = undefined
   export let datasourceType: "table" | "user" = "table"
   export let primaryDisplay: string | undefined = undefined

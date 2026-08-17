@@ -1,4 +1,4 @@
-const inquirer = require("inquirer")
+const { default: inquirer } = require("inquirer")
 
 export async function confirmation(question: string) {
   const config = {

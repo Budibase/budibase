@@ -7,10 +7,14 @@ import {
   AutomationStatus,
   AutomationTriggerStepId,
   ToolType,
+  PermissionLevel,
+  PermissionType,
+  ToolExecutionPrincipal,
 } from "@budibase/types"
 import * as triggers from "../../../automations/triggers"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
+import { filterAgentToolCollectionResult } from "../authorization"
 
 const TRIGGER_AUTOMATION_BASE_DESCRIPTION =
   "Trigger this automation (APP triggers only). Returns all step outputs."
@@ -84,9 +88,28 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
     name: "list_automations",
     sourceType: ToolType.AUTOMATION,
     sourceLabel: "Budibase",
-    description: "List all automations in the current app",
+    description: "List all automations in the current workspace",
+    executionPolicy: {
+      mode: "admin",
+    },
+    authorization: {
+      permissionType: PermissionType.WORKSPACE,
+      permissionLevel: PermissionLevel.READ,
+    },
+    filterResult: (result, runtime) =>
+      filterAgentToolCollectionResult({
+        result,
+        collectionKey: "automations",
+        permissionType: PermissionType.AUTOMATION,
+        permissionLevel: PermissionLevel.READ,
+        resolveResourceId: automation =>
+          typeof automation === "object" && automation && "_id" in automation
+            ? String(automation._id)
+            : undefined,
+        runtime,
+      }),
     tool: tool({
-      description: "List all automations in the current app",
+      description: "List all automations in the current workspace",
       inputSchema: z.object({}),
       execute: async () => {
         const automations = await sdk.automations.fetch()
@@ -99,6 +122,17 @@ const AUTOMATION_TOOLS: BudibaseToolDefinition[] = [
     sourceType: ToolType.AUTOMATION,
     sourceLabel: "Budibase",
     description: "Get details about a specific automation by ID",
+    executionPolicy: {
+      mode: "admin",
+    },
+    authorization: {
+      permissionType: PermissionType.AUTOMATION,
+      permissionLevel: PermissionLevel.READ,
+      resolveResourceId: input =>
+        typeof input === "object" && input && "automationId" in input
+          ? String(input.automationId)
+          : undefined,
+    },
     tool: tool({
       description: "Get details about a specific automation by ID",
       inputSchema: z.object({
@@ -124,7 +158,7 @@ const createAutomationTools = (
         automation._id &&
         automation.definition?.trigger?.stepId === AutomationTriggerStepId.APP
     )
-    .map(automation => {
+    .map((automation): BudibaseToolDefinition => {
       const automationName = automation.name || automation._id!
       const sanitizedAutomationId = automation._id!.replace(
         /[^A-Za-z0-9_-]/g,
@@ -145,6 +179,15 @@ const createAutomationTools = (
         sourceType: ToolType.AUTOMATION,
         sourceLabel: "Budibase",
         description,
+        executionPolicy: {
+          mode: "configurable",
+          defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+        },
+        authorization: {
+          permissionType: PermissionType.AUTOMATION,
+          permissionLevel: PermissionLevel.EXECUTE,
+          resourceId: automation._id!,
+        },
         tool: tool({
           description,
           inputSchema: z.object({

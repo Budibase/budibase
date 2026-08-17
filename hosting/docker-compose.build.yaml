@@ -1,5 +1,3 @@
-version: "3"
-
 # optional ports are specified throughout for more advanced use cases.
 
 services:
@@ -88,7 +86,7 @@ services:
       - couchdb-service
 
   litellm-service:
-    image: ghcr.io/berriai/litellm:main-v1.83.10-stable
+    image: docker.io/litellm/litellm:main-v1.83.10-stable.patch.3
     ports:
       - "${LITELLM_PORT:-4000}:4000"
     volumes:
@@ -106,7 +104,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "wget --no-verbose --tries=1 http://localhost:4000/health/liveliness || exit 1",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:4000/health/liveliness')\"",
         ]
       interval: 30s
       timeout: 10s

@@ -1,6 +1,7 @@
 import { Optional } from "../../../shared"
 import {
   Agent,
+  AgentSharePointKnowledgeSourceScope,
   AgentKnowledgeSourceSyncRunStatus,
   AgentOperation,
   ChatApp,
@@ -65,13 +66,20 @@ export interface FetchAgentKnowledgeResponse {
 
 export interface FetchAgentKnowledgeIndexResponse {
   operations: Record<string, FetchAgentKnowledgeResponse>
+  configuration: {
+    knowledgeSearchConfigured: boolean
+  }
 }
 
 export interface KnowledgeSourceEntry {
   id: string
   name: string
   path: string
-  type: "folder" | "file" | "list"
+  type: "drive" | "folder" | "file" | "list"
+  driveId?: string
+  itemId?: string
+  listId?: string
+  hasChildren?: boolean
   webUrl?: string
 }
 
@@ -104,14 +112,14 @@ export interface ConnectAgentSharePointSiteRequest {
   site: KnowledgeSourceOption
   datasourceId: string
   authConfigId: string
-  filters?: string[]
+  scope: AgentSharePointKnowledgeSourceScope
 }
 
 export type ConnectAgentSharePointSiteResponse =
   FetchAgentKnowledgeSourceOptionsResponse
 
 export interface UpdateAgentSharePointSiteRequest {
-  filters?: string[]
+  scope: AgentSharePointKnowledgeSourceScope
 }
 
 export type UpdateAgentSharePointSiteResponse =
@@ -159,6 +167,27 @@ export type ProvisionAgentSlackChannelRequest =
 export interface ProvisionAgentSlackChannelResponse
   extends ConfigureAgentDeploymentChannelResponse {
   messagingEndpointUrl: string
+}
+
+export type CreateAgentSlackAppRequest = Record<string, never>
+
+export interface CreateAgentSlackAppResponse
+  extends ConfigureAgentDeploymentChannelResponse {
+  appId: string
+  oauthAuthorizeUrl: string
+  messagingEndpointUrl: string
+}
+
+export interface SlackAppConfigResponse {
+  configured: boolean
+  updatedAt?: string
+  expiresAt?: string
+  needsReconfiguration?: boolean
+}
+
+export interface SaveSlackAppConfigRequest {
+  configToken: string
+  refreshToken: string
 }
 
 export type ProvisionAgentTelegramChannelRequest =

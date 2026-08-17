@@ -4,13 +4,13 @@
   import { ActionMenu, MenuItem, Icon, StatusLight } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
-  import AppContextMenuModals from "@/components/start/AppContextMenuModals.svelte"
-  import getAppContextMenuItems from "@/components/start/getAppContextMenuItems"
+  import WorkspaceContextMenuModals from "@/components/start/WorkspaceContextMenuModals.svelte"
+  import getWorkspaceContextMenuItems from "@/components/start/getWorkspaceContextMenuItems"
   import { appStore } from "@/stores/builder"
   import { contextMenuStore } from "@/stores/builder/contextMenu"
   import { bb } from "@/stores/bb"
   import { enrichedApps, auth, licensing } from "@/stores/portal"
-  import { appsStore, sortBy } from "@/stores/portal/apps"
+  import { workspacesStore, sortBy } from "@/stores/portal/workspaces"
   import WorkspaceSortMenu from "./WorkspaceSortMenu.svelte"
   import type { EnrichedApp } from "@/types"
 
@@ -38,7 +38,7 @@
   let activeIndex = -1
   let itemEls: (HTMLElement | null)[] = []
   let selectedWorkspaceForMenu: EnrichedApp | null = null
-  let appContextMenuModals:
+  let workspaceContextMenuModals:
     | {
         showDuplicateModal: () => void
         showExportDevModal: () => void
@@ -112,12 +112,12 @@
     }
     selectedWorkspaceForMenu = ws
 
-    const items = getAppContextMenuItems({
+    const items = getWorkspaceContextMenuItems({
       app: ws,
-      onDuplicate: () => appContextMenuModals?.showDuplicateModal(),
-      onExportDev: () => appContextMenuModals?.showExportDevModal(),
-      onExportProd: () => appContextMenuModals?.showExportProdModal(),
-      onDelete: () => appContextMenuModals?.showDeleteModal(),
+      onDuplicate: () => workspaceContextMenuModals?.showDuplicateModal(),
+      onExportDev: () => workspaceContextMenuModals?.showExportDevModal(),
+      onExportProd: () => workspaceContextMenuModals?.showExportProdModal(),
+      onDelete: () => workspaceContextMenuModals?.showDeleteModal(),
     })
 
     contextMenuStore.open(`workspace-select-${ws.appId}`, items, {
@@ -181,7 +181,7 @@
     } catch (error) {
       console.error("Failed to save sort preference", error)
     }
-    await appsStore.updateSort(key)
+    await workspacesStore.updateSort(key)
     setTimeout(() => filterInput?.focus(), 0)
   }
 
@@ -216,7 +216,7 @@
     try {
       const saved = localStorage.getItem(SORT_STORAGE_KEY)
       if (saved && saved !== currentSort) {
-        appsStore.updateSort(saved)
+        workspacesStore.updateSort(saved)
       }
     } catch (error) {
       console.error("Failed to load sort preference", error)
@@ -357,9 +357,9 @@
 </ActionMenu>
 
 {#if selectedWorkspaceForMenu}
-  <AppContextMenuModals
+  <WorkspaceContextMenuModals
     app={selectedWorkspaceForMenu}
-    bind:this={appContextMenuModals}
+    bind:this={workspaceContextMenuModals}
   />
 {/if}
 
