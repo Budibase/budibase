@@ -243,7 +243,7 @@ describe("SelectSharePointSiteModal quick add", () => {
       await fireEvent.click(screen.getByText("Advanced setup"))
 
       expect(mocks.settings).toHaveBeenCalledWith(
-        "/connections/apis/datasource-id"
+        "/connections/api-connections/datasource-id"
       )
     } finally {
       errorSpy.mockRestore()

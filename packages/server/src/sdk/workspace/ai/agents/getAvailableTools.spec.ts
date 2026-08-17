@@ -1,4 +1,9 @@
-import { Datasource, Query, SourceName, ToolType } from "@budibase/types"
+import {
+  SourceName,
+  ToolType,
+  type Datasource,
+  type Query,
+} from "@budibase/types"
 import sdk from "../../.."
 import { getAvailableToolsMetadata } from "./utils"
 
@@ -30,7 +35,7 @@ describe("getAvailableToolsMetadata", () => {
     jest.spyOn(sdk.automations, "fetch").mockResolvedValue([])
   })
 
-  it("does not expose helper tools in metadata", async () => {
+  it("does not expose legacy helper tools in metadata", async () => {
     jest.spyOn(sdk.datasources, "fetch").mockResolvedValue([])
     jest.spyOn(sdk.queries, "fetch").mockResolvedValue([])
 

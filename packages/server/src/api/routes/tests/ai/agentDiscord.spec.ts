@@ -5,10 +5,6 @@ interface MockWebhookChatPayload {
   }
 }
 
-jest.mock("@chat-adapter/discord", () => ({
-  createDiscordAdapter: jest.fn((options: Record<string, unknown>) => options),
-}))
-
 jest.mock("@chat-adapter/state-memory", () => ({
   createMemoryState: jest.fn(() => ({})),
 }))
