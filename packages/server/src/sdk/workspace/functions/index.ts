@@ -1,5 +1,10 @@
 import { createHash } from "crypto"
-import { context, docIds, HTTPError } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  docIds,
+  HTTPError,
+} from "@budibase/backend-core"
 import {
   DEFAULT_FUNCTION_LIMITS,
   DocumentType,
@@ -8,6 +13,7 @@ import {
   type FunctionBuildDiagnostic,
   type FunctionDocument,
   type FunctionQueryCapabilityInput,
+  type FunctionQueryCatalogEntry,
   type FunctionResponse,
   type FunctionSummary,
 } from "@budibase/types"
@@ -16,7 +22,7 @@ import {
   generateFunctionDeclarations,
   hashFunctionDeclarations,
 } from "./declarations"
-import { buildCapabilities } from "./queryCatalog"
+import { buildCapabilities, getQueryCatalog } from "./queryCatalog"
 
 export {
   generateFunctionDeclarations,
@@ -109,14 +115,52 @@ export const getFunctionDeclarations = async (fn: FunctionDocument) => {
   }
 }
 
+type FunctionQueryCatalog = ReadonlyMap<string, FunctionQueryCatalogEntry>
+
+const getFunctionDeclarationsFromCatalog = (
+  fn: FunctionDocument,
+  catalog: FunctionQueryCatalog
+) => {
+  const capabilities = fn.capabilities.map(capability => {
+    const query = catalog.get(capability.queryId)
+    if (!query) {
+      throw new HTTPError(`Query '${capability.queryId}' not found.`, 404)
+    }
+    return {
+      ...capability,
+      parameterNames: query.parameters.map(parameter => parameter.name),
+    }
+  })
+  const declarations = generateFunctionDeclarations(capabilities)
+  return {
+    capabilities,
+    declarations,
+    declarationsHash: hashFunctionDeclarations(declarations),
+  }
+}
+
+const getFunctionDeclarationsForReadiness = async (
+  fn: FunctionDocument,
+  catalog?: FunctionQueryCatalog
+) => {
+  if (catalog) {
+    return getFunctionDeclarationsFromCatalog(fn, catalog)
+  }
+  return getFunctionDeclarations(fn)
+}
+
 export const getFunctionDeclarationsHash = async (fn: FunctionDocument) =>
   (await getFunctionDeclarations(fn)).declarationsHash
 
-export const getFunctionReadiness = async (fn: FunctionDocument) => {
+export const getFunctionReadiness = async (
+  fn: FunctionDocument,
+  catalog?: FunctionQueryCatalog
+) => {
   const sourceHash = getFunctionSourceHash(fn.source)
   let declarationsHash: string
   try {
-    declarationsHash = await getFunctionDeclarationsHash(fn)
+    declarationsHash = (await getFunctionDeclarationsForReadiness(fn, catalog))
+      .declarationsHash
   } catch (error) {
     if (error instanceof HTTPError) {
       return "build_required"
@@ -238,17 +282,24 @@ export const build = async (id: string, revision: string) => {
         compiledAt: attemptedAt,
       }
     : current.artifact
-  const response = await getDb().put(
-    {
-      ...current,
-      _rev: revision,
-      capabilities: currentDeclarations.capabilities,
-      artifact,
-      lastBuild,
-    },
-    { returnDoc: true }
-  )
-  return response.doc
+  try {
+    const response = await getDb().put(
+      {
+        ...current,
+        _rev: revision,
+        capabilities: currentDeclarations.capabilities,
+        artifact,
+        lastBuild,
+      },
+      { returnDoc: true }
+    )
+    return response.doc
+  } catch (error) {
+    if (dbCore.isDocumentConflictError(error)) {
+      throw new HTTPError("Function revision does not match.", 409)
+    }
+    throw error
+  }
 }
 
 export const toFunctionResponse = async (
@@ -259,7 +310,8 @@ export const toFunctionResponse = async (
 })
 
 export const toFunctionSummary = async (
-  fn: FunctionDocument
+  fn: FunctionDocument,
+  catalog?: FunctionQueryCatalog
 ): Promise<FunctionSummary> => ({
   _id: fn._id,
   _rev: fn._rev,
@@ -267,8 +319,17 @@ export const toFunctionSummary = async (
   appId: fn.appId,
   createdAt: fn.createdAt,
   updatedAt: fn.updatedAt,
-  readiness: await getFunctionReadiness(fn),
+  readiness: await getFunctionReadiness(fn, catalog),
 })
+
+export const toFunctionSummaries = async (fns: FunctionDocument[]) => {
+  if (!fns.length) {
+    return []
+  }
+  const catalog = await getQueryCatalog()
+  const entries = new Map(catalog.map(entry => [entry.queryId, entry]))
+  return await Promise.all(fns.map(fn => toFunctionSummary(fn, entries)))
+}
 
 export const fetch = async (): Promise<FunctionDocument[]> => {
   const result = await getDb().allDocs<FunctionDocument>(
