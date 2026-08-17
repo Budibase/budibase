@@ -20,6 +20,7 @@ import {
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   RequiredKeys,
+  type ResolvedSlackIntegration,
   ToggleAgentDeploymentRequest,
   ToggleAgentDeploymentResponse,
   SyncAgentDiscordCommandsRequest,
@@ -87,9 +88,7 @@ type DiscordDeployment = ConfiguredDeployment<
   ReturnType<typeof sdk.ai.deployments.discord.validateDiscordIntegration>
 >
 
-type SlackDeployment = ConfiguredDeployment<
-  ReturnType<typeof sdk.ai.deployments.slack.validateSlackIntegration>
->
+type SlackDeployment = ConfiguredDeployment<ResolvedSlackIntegration>
 
 const configureDeploymentChannel = async <
   TValidatedIntegration extends { chatAppId?: string },

@@ -82,19 +82,19 @@
 
 <Layout noPadding gap="M">
   <Body size="S">
-    Store the Slack app configuration token used to create Slack apps
+    Store the Slack app configuration access token used to create Slack apps
     automatically in this workspace. Budibase rotates the token using the
     matching Slack refresh token before it expires.
   </Body>
 
   <div class="field">
-    <Label size="L">Configuration token</Label>
+    <Label size="L">Access token</Label>
     <Input
       type="password"
       autocomplete="new-password"
       placeholder={configured
-        ? "Enter a new token to replace the saved token"
-        : "Slack app configuration token"}
+        ? "Enter a new access token to replace the saved token"
+        : "Slack app configuration access token"}
       bind:value={configToken}
     />
   </div>

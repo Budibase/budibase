@@ -224,15 +224,15 @@
     />
     <div class="guided-setup">
       <Body size="S">
-        Slack app creation uses the configuration token managed in
+        Slack app creation uses the access token managed in
         <Link on:click={() => bb.settings("/connections/slack")}
           >workspace settings</Link
         >.
       </Body>
       {#if !loadingSlackAppConfig && !slackAppConfigConfigured}
         <Body size="S">
-          Configure the Slack app token in workspace settings before creating a
-          Slack app automatically.
+          Configure the Slack app access token in workspace settings before
+          creating a Slack app automatically.
         </Body>
       {/if}
     </div>
