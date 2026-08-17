@@ -22,6 +22,7 @@
     undefined
   export let gallery: boolean = true
   export let fileTags: string[] = []
+  export let extensions: string = "*"
   export let maximum: number | undefined = undefined
   export let compact: boolean = false
   export let helpText: string | undefined = undefined
@@ -44,6 +45,7 @@
     {handleTooManyFiles}
     {gallery}
     {fileTags}
+    {extensions}
     {maximum}
     {compact}
     on:change={onChange}

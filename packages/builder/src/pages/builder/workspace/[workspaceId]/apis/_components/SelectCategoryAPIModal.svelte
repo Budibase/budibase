@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, CollapsibleSearch, Divider } from "@budibase/bbui"
+  import { Button, CollapsibleSearch, Divider, Icon } from "@budibase/bbui"
   import { createEventDispatcher, onDestroy, onMount, tick } from "svelte"
   import type { RestTemplate } from "@budibase/types"
   import ProjectSelect from "@/components/common/ProjectSelect.svelte"
@@ -12,6 +12,7 @@
   const dispatch = createEventDispatcher<{
     selectTemplate: RestTemplate
     custom: void
+    importTemplate: void
   }>()
 
   let scrolling = false
@@ -78,6 +79,10 @@
     dispatch("custom")
   }
 
+  const handleImportTemplateClick = () => {
+    dispatch("importTemplate")
+  }
+
   const handleIntersect = async (entries: IntersectionObserverEntry[]) => {
     if (loadingMore || !hasNextPage) return
     const isVisible = entries.some(entry => entry.isIntersecting)
@@ -125,11 +130,18 @@
       <ProjectSelect bind:value={projectIds} />
       <Button
         secondary
+        icon="upload-simple"
+        tooltip="Import OpenAPI template"
+        disabled={loading || customDisabled}
+        on:click={handleImportTemplateClick}
+      />
+      <Button
+        secondary
         icon="plus"
         disabled={loading || customDisabled}
         on:click={handleCustomClick}
       >
-        Custom REST API
+        Create custom
       </Button>
     </div>
   </div>
@@ -150,9 +162,16 @@
             on:click={() => handleTemplateSelection(template)}
           >
             <div class="api-icon">
-              <img src={template.icon} alt={template.name} />
+              {#if template.custom}
+                <Icon name="globe-simple" size="S" />
+              {:else}
+                <img src={template.icon} alt={template.name} />
+              {/if}
             </div>
             <div class="api-name">{template.name}</div>
+            {#if template.custom}
+              <Icon name="package" size="S" tooltip="Custom OpenAPI template" />
+            {/if}
           </div>
         {/each}
       </div>
