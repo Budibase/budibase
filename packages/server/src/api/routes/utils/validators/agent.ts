@@ -34,11 +34,16 @@ const TEAMS_INTEGRATION_SCHEMA = Joi.object({
   .allow(null)
 
 const SLACK_INTEGRATION_SCHEMA = Joi.object({
+  appId: OPTIONAL_STRING,
+  clientId: OPTIONAL_STRING,
+  clientSecret: OPTIONAL_STRING,
   botToken: OPTIONAL_STRING,
+  botUserId: OPTIONAL_STRING,
   signingSecret: OPTIONAL_STRING,
+  teamId: OPTIONAL_STRING,
+  teamName: OPTIONAL_STRING,
   chatAppId: OPTIONAL_STRING,
   messagingEndpointUrl: OPTIONAL_STRING,
-  teamId: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
   requireUserLink: Joi.boolean().optional(),
 })
@@ -67,7 +72,14 @@ const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
   name: OPTIONAL_STRING,
   live: Joi.boolean().optional(),
   promptInstructions: OPTIONAL_STRING,
-  enabledTools: Joi.array().items(Joi.string()).optional(),
+  enabledTools: Joi.array()
+    .items(
+      Joi.object({
+        toolName: Joi.string().required(),
+        executionPrincipal: Joi.string().valid("requester", "admin").required(),
+      })
+    )
+    .optional(),
   allowKnowledgeSourceDownload: Joi.boolean().optional(),
   escalation: Joi.object({
     recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
@@ -147,6 +159,10 @@ export function provisionAgentMSTeamsChannelValidator() {
 
 export function provisionAgentSlackChannelValidator() {
   return chatAppIdBodyValidator()
+}
+
+export function createAgentSlackAppValidator() {
+  return auth.joiValidator.body(Joi.object().optional().allow(null))
 }
 
 export function provisionAgentTelegramChannelValidator() {

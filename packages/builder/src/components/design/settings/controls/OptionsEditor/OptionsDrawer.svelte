@@ -7,8 +7,8 @@
     Layout,
     Body,
     Label,
+    generateId,
   } from "@budibase/bbui"
-  import { generate } from "shortid"
 
   export let options = []
 
@@ -20,7 +20,7 @@
     options = [
       ...options,
       {
-        id: generate(),
+        id: generateId(),
         label: null,
         value: null,
       },

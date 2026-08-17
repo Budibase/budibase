@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto, isActive } from "@roxi/routify"
   import type {
+    ImportRestQueryInfoRequest,
     ImportRestQueryInfoResponse,
     Datasource,
     UIInternalDatasource,
@@ -30,6 +31,7 @@
   import RouteActions from "@/settings/components/RouteActions.svelte"
   import {
     Button,
+    Badge,
     Input,
     Layout,
     Divider,
@@ -45,6 +47,7 @@
   import { cloneDeep, isEqual } from "lodash"
   import { API } from "@/api"
   import { confirm } from "@/helpers"
+  import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import HTTPAuthEditor from "./HTTPAuthEditor.svelte"
   import OAuth2Editor from "./OAuth2Editor.svelte"
   import ServerUrlInput from "./ServerUrlInput.svelte"
@@ -121,7 +124,7 @@
     datasource === undefined &&
     initialised
   ) {
-    bb.settings("/connections/apis")
+    bb.settings("/connections/api-connections")
   }
 
   // Template
@@ -142,12 +145,16 @@
       ? template?.templates?.find(t => t.id === selectedChildId)
       : undefined
   $: spec = (childTemplate ?? template)?.specs?.[0]
+  $: openApiInfoRequest = getRestTemplateImportInfoRequest(
+    spec,
+    (childTemplate ?? template)?.id
+  )
 
   // Fetch OpenAPI info from the active spec, then seed derived values from it
   // selectedChildId is referenced here to re-trigger when the child selection changes
-  $: if (spec?.url) {
+  $: if (openApiInfoRequest) {
     selectedChildId
-    fetchOpenApiInfo()
+    fetchOpenApiInfo(openApiInfoRequest)
   }
   $: serverOptions = openApiInfo?.servers?.length
     ? openApiInfo.servers
@@ -258,11 +265,10 @@
     queryParamFieldsCount = Object.keys(initial.queryParams || {}).length
   }
 
-  async function fetchOpenApiInfo() {
-    if (!spec?.url) return
+  async function fetchOpenApiInfo(request: ImportRestQueryInfoRequest) {
     loadingOpenApiInfo = true
     try {
-      openApiInfo = await API.getImportInfo({ url: spec.url })
+      openApiInfo = await API.getImportInfo(request)
     } finally {
       loadingOpenApiInfo = false
     }
@@ -405,9 +411,9 @@
         templateId: ds.restTemplateId,
         query: { datasourceId: ds._id },
       })
-      bb.hideSettings(`/connections/apis/${ds._id}`)
+      bb.hideSettings(`/connections/api-connections/${ds._id}`)
     } else {
-      bb.settings(`/connections/apis/${ds._id}`)
+      bb.settings(`/connections/api-connections/${ds._id}`)
     }
   }
 
@@ -647,6 +653,11 @@
       </div>
     </RouteActions>
     <div class="details-box">
+      {#if template?.custom}
+        <div class="custom-template-badge">
+          <Badge size="S" grey>Custom REST template</Badge>
+        </div>
+      {/if}
       <Input
         label="Display name"
         placeholder="Type here..."
@@ -944,7 +955,7 @@
 <DeleteDataConfirmationModal
   bind:this={deleteModal}
   source={datasource}
-  onDeleted={() => bb.settings("/connections/apis")}
+  onDeleted={() => bb.settings("/connections/api-connections")}
 />
 
 <style>
@@ -1006,6 +1017,10 @@
     padding: var(--spacing-l);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: var(--border-radius-m);
+  }
+
+  .custom-template-badge {
+    display: flex;
   }
 
   .details-box--no-padding {

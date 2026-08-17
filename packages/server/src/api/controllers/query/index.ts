@@ -1,4 +1,10 @@
-import { constants, context, events, utils } from "@budibase/backend-core"
+import {
+  constants,
+  context,
+  events,
+  HTTPError,
+  utils,
+} from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { utils as JsonUtils, ValidQueryNameRegex } from "@budibase/shared-core"
 import { findHBSBlocks } from "@budibase/string-templates"
@@ -25,6 +31,7 @@ import {
   Query,
   QueryResponse,
   QuerySchema,
+  RestPreviewConfig,
   SaveQueryRequest,
   SaveQueryResponse,
   SessionCookie,
@@ -41,6 +48,7 @@ import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
+import { builderSocket } from "../../../websockets"
 import {
   resolveProjectIds,
   resolveUpdatedProjectIds,
@@ -83,8 +91,10 @@ const _import = async (
   ctx: UserCtx<ImportRestQueryRequest, ImportRestQueryResponse>
 ) => {
   const body = ctx.request.body
-
-  const importer = await createImporter(body)
+  const importerInput = body.restTemplateId
+    ? { data: await sdk.restTemplates.getSpec(body.restTemplateId) }
+    : body
+  const importer = await createImporter(importerInput)
   const importInfo = importer.getInfo()
 
   let datasourceId
@@ -101,6 +111,7 @@ const _import = async (
       type: "datasource",
       source: rest.source || SourceName.REST,
       name: rest.name || importInfo?.name,
+      ...(body.restTemplateId ? { restTemplateId: body.restTemplateId } : {}),
       config: {
         ...config,
         defaultHeaders: config.defaultHeaders ?? {},
@@ -122,6 +133,35 @@ const _import = async (
     await saveDatasource(datasourceCtx)
     datasourceId = datasourceCtx.body.datasource._id
   } else {
+    if (body.restTemplateId) {
+      await sdk.restTemplates.withCustomRestTemplateLock({
+        resource: body.restTemplateId,
+        task: async () => {
+          const templateExists = await sdk.restTemplates.exists(
+            body.restTemplateId!
+          )
+          if (!templateExists) {
+            throw new HTTPError("Custom REST template not found", 404)
+          }
+
+          const datasource = await sdk.datasources.get(body.datasourceId!)
+          if (datasource.source !== SourceName.REST) {
+            throw new HTTPError(
+              "Custom REST templates can only be associated with REST datasources",
+              400
+            )
+          }
+          importer.prepareDatasourceConfig(datasource)
+          datasource.restTemplateId = body.restTemplateId
+          const response = await context
+            .getWorkspaceDB()
+            .put(sdk.tables.populateExternalTableSchemas(datasource))
+          datasource._rev = response.rev
+          await events.datasource.updated(datasource)
+          builderSocket?.emitDatasourceUpdate(ctx, datasource)
+        },
+      })
+    }
     // use existing datasource
     datasourceId = body.datasourceId
   }
@@ -152,12 +192,16 @@ export async function importInfo(
   const { body } = ctx.request
 
   let info: ImportInfo
-  if (body.data) {
+  if (body.restTemplateId) {
+    info = await getImportInfo({
+      data: await sdk.restTemplates.getSpec(body.restTemplateId),
+    })
+  } else if (body.data) {
     info = await getImportInfo({ data: body.data })
   } else if (body.url) {
     info = await getImportInfo({ url: body.url })
   } else {
-    ctx.throw(400, "Import data or url is required")
+    ctx.throw(400, "Import data, url, or REST template ID is required")
   }
   ctx.body = {
     name: info.name,
@@ -262,9 +306,16 @@ function enrichParameters(
 export async function preview(
   ctx: UserCtx<PreviewQueryRequest, PreviewQueryResponse>
 ) {
-  const { datasource, envVars } = await sdk.datasources.getWithEnvVars(
-    ctx.request.body.datasourceId
-  )
+  const rawDatasource = await sdk.datasources.get(ctx.request.body.datasourceId)
+  const { datasource, envVars } =
+    await sdk.datasources.enrichDatasourceWithValues(rawDatasource)
+  // Kept unresolved so the request preview can show bindings rather than the
+  // values they resolve to
+  const previewConfig: RestPreviewConfig = {
+    url: rawDatasource.config?.url,
+    defaultHeaders: rawDatasource.config?.defaultHeaders,
+    defaultQueryParameters: rawDatasource.config?.defaultQueryParameters,
+  }
   // preview may not have a queryId as it hasn't been saved, but if it does
   // this stops dynamic variables from calling the same query
   const queryId = ctx.request.body.queryId
@@ -392,6 +443,8 @@ export async function preview(
     nullDefaultSupport: query.nullDefaultSupport,
     queryId,
     datasource,
+    includeRequest: true,
+    previewConfig,
     // have to pass down to the thread runner - can't put into context now
     environmentVariables: envVars,
     ctx: {
