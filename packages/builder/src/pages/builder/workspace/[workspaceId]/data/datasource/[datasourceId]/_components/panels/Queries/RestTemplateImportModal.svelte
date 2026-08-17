@@ -74,8 +74,10 @@
   let currentTemplateSpecVersion: string | undefined
   let templateDocsBaseUrl: string | undefined
 
-  $: templateSpecImportRequest =
-    getRestTemplateImportInfoRequest(selectedTemplateSpec)
+  $: templateSpecImportRequest = getRestTemplateImportInfoRequest(
+    selectedTemplateSpec,
+    template?.id
+  )
 
   $: if (isTemplateDatasource && templateSpecImportRequest) {
     const specVersion = selectedTemplateSpec?.version
@@ -198,6 +200,9 @@
       }
       if (endpointsImportRequest.url) {
         body.url = endpointsImportRequest.url
+      }
+      if (endpointsImportRequest.restTemplateId) {
+        body.restTemplateId = endpointsImportRequest.restTemplateId
       }
       const importResult = await queries.importQueries(body)
       if (!datasourceId) {

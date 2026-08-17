@@ -120,6 +120,7 @@ const refreshBuilderData = async () => {
     datasources.init(),
     integrations.init(),
     queries.init(),
+    restTemplates.fetchCustom(),
     tables.init(),
     roles.fetch(),
     flags.fetch(),

@@ -6,6 +6,7 @@
   import { onMount } from "svelte"
   import AIConfigList from "./AIConfigList.svelte"
   import { ensureAILicenseStatus } from "../licenseStatus"
+  import RouteActions from "@/settings/components/RouteActions.svelte"
 
   let completionConfigs = $derived(
     [...$aiConfigsStore.customConfigsPerType.completions]
@@ -74,6 +75,12 @@
 </script>
 
 <Layout noPadding gap="XS">
+  <RouteActions>
+    <Button size="M" cta on:click={() => createAIConfig()}>
+      Connect to a custom provider
+    </Button>
+  </RouteActions>
+
   {#if completionConfigs.length}
     <div class="section-header">
       <div class="section-title">Connected models</div>
@@ -83,11 +90,6 @@
   {/if}
   <div class="section-header new-provider-section">
     <div class="section-title">Model providers</div>
-    <div class="provider-controls">
-      <Button icon="plus" size="S" on:click={() => createAIConfig()}
-        >Connect to a custom provider</Button
-      >
-    </div>
   </div>
   <div class="model-list">
     <AIConfigList
@@ -114,11 +116,5 @@
   .section-title {
     font-size: 13px;
     color: var(--grey-7, #a2a2a2);
-  }
-
-  .provider-controls {
-    display: flex;
-    align-items: center;
-    gap: 16px;
   }
 </style>

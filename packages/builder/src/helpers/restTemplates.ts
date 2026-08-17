@@ -1,8 +1,10 @@
 import type {
   ImportEndpoint,
   ImportRestQueryInfoRequest,
+  RestTemplateId,
   RestTemplateSpec,
 } from "@budibase/types"
+import { isCustomRestTemplateId } from "@budibase/shared-core"
 
 const normalizeEndpointLabel = (value?: string) =>
   (value || "").toLowerCase().replace(/[^a-z0-9]/g, "")
@@ -30,17 +32,18 @@ export const formatEndpointLabel = (endpoint: ImportEndpoint) => {
 }
 
 export const getRestTemplateImportInfoRequest = (
-  spec?: RestTemplateSpec | null
+  spec?: RestTemplateSpec | null,
+  restTemplateId?: RestTemplateId
 ): ImportRestQueryInfoRequest | undefined => {
-  if (!spec) {
-    return undefined
+  if (restTemplateId && isCustomRestTemplateId(restTemplateId)) {
+    return {
+      restTemplateId,
+    }
   }
-  const payload: ImportRestQueryInfoRequest = {}
-  if (spec.url) {
-    payload.url = spec.url
+  if (spec?.url) {
+    return {
+      url: spec.url,
+    }
   }
-  if (!payload.url) {
-    return undefined
-  }
-  return payload
+  return undefined
 }
