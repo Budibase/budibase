@@ -17,6 +17,7 @@
   } from "@/stores/portal"
   import KnowledgeTable from "./KnowledgeTable.svelte"
   import KnowledgeAddControls from "./KnowledgeAddControls.svelte"
+  import OperationRailSectionHeader from "../OperationRailSectionHeader.svelte"
   import SelectSharePointSiteModal from "./new/SelectSharePointSiteModal.svelte"
   import { onDestroy, onMount } from "svelte"
   import type {
@@ -347,78 +348,84 @@
 </script>
 
 <Layout gap="S" noPadding>
-  <div class="section-header">
-    <Body size="S">Knowledge</Body>
-    <div class="section-header-actions">
-      {#if hasStoreAccessFailures}
-        <Button
-          quiet
-          size="S"
-          secondary
-          tooltip={knowledgeActionsTooltip}
-          disabled={resetting || knowledgeSearchUnavailable}
-          iconColor="var(--orange)"
-          icon="cloud-rain"
-          on:click={resetKnowledgeStore}
-        >
-          Reset store
-        </Button>
-      {/if}
-      <KnowledgeAddControls
-        {agentId}
-        {operationId}
-        disabled={knowledgeSearchUnavailable}
-        tooltip={knowledgeActionsTooltip}
-        onUploaded={async () => {
-          syncOperationFromStore()
-          await refreshDeploymentStatus()
-        }}
-        onSharePoint={() =>
-          openSharePointFlow().catch(error => {
-            console.error(error)
-            notifications.error("Failed to fetch SharePoint sites")
-          })}
-      />
-    </div>
-  </div>
+  <div class="knowledge-section">
+    <OperationRailSectionHeader
+      title="Knowledge"
+      description="Add files and sources this operation can search when handling requests."
+    >
+      {#snippet actions()}
+        <div class="section-header-actions">
+          {#if hasStoreAccessFailures}
+            <Button
+              quiet
+              size="S"
+              secondary
+              tooltip={knowledgeActionsTooltip}
+              disabled={resetting || knowledgeSearchUnavailable}
+              iconColor="var(--orange)"
+              icon="cloud-rain"
+              on:click={resetKnowledgeStore}
+            >
+              Reset store
+            </Button>
+          {/if}
+          <KnowledgeAddControls
+            {agentId}
+            {operationId}
+            disabled={knowledgeSearchUnavailable}
+            tooltip={knowledgeActionsTooltip}
+            onUploaded={async () => {
+              syncOperationFromStore()
+              await refreshDeploymentStatus()
+            }}
+            onSharePoint={() =>
+              openSharePointFlow().catch(error => {
+                console.error(error)
+                notifications.error("Failed to fetch SharePoint sites")
+              })}
+          />
+        </div>
+      {/snippet}
+    </OperationRailSectionHeader>
 
-  {#if knowledgeTableRows.length}
-    <div class="sources-access">
-      <Toggle
-        bind:value={operation.allowKnowledgeSourceDownload}
-        disabled={savingAllowKnowledgeSourceDownload || !agentId}
-        on:change={async () => {
-          savingAllowKnowledgeSourceDownload = true
-          try {
-            await tick()
-            await onUpdated()
-          } finally {
-            savingAllowKnowledgeSourceDownload = false
-          }
-        }}
-      />
-      <div>
-        <Body
-          color={"var(--spectrum-global-color-gray-900)"}
-          weight="500"
-          size="XS"
-        >
-          Allow users to download knowledge source files from chat
-        </Body>
-        <Body color={"var(--spectrum-global-color-gray-700)"} size="XS">
-          When disabled, chat still shows which files were used, without a
-          download link.
-        </Body>
+    {#if knowledgeTableRows.length}
+      <div class="sources-access">
+        <Toggle
+          bind:value={operation.allowKnowledgeSourceDownload}
+          disabled={savingAllowKnowledgeSourceDownload || !agentId}
+          on:change={async () => {
+            savingAllowKnowledgeSourceDownload = true
+            try {
+              await tick()
+              await onUpdated()
+            } finally {
+              savingAllowKnowledgeSourceDownload = false
+            }
+          }}
+        />
+        <div>
+          <Body
+            color={"var(--spectrum-global-color-gray-900)"}
+            weight="500"
+            size="XS"
+          >
+            Allow users to download knowledge source files from chat
+          </Body>
+          <Body color={"var(--spectrum-global-color-gray-700)"} size="XS">
+            When disabled, chat still shows which files were used, without a
+            download link.
+          </Body>
+        </div>
       </div>
-    </div>
-  {/if}
+    {/if}
 
-  <KnowledgeTable
-    {loading}
-    isUploading={uploadState.uploading}
-    rows={knowledgeTableRows}
-    onRowClick={handleKnowledgeRowClick}
-  />
+    <KnowledgeTable
+      {loading}
+      isUploading={uploadState.uploading}
+      rows={knowledgeTableRows}
+      onRowClick={handleKnowledgeRowClick}
+    />
+  </div>
 </Layout>
 
 <SelectSharePointSiteModal
@@ -445,15 +452,14 @@
 />
 
 <style>
-  .sources-access {
+  .knowledge-section {
     display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 
-  .section-header {
+  .sources-access {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--spacing-m);
   }
 
   .section-header-actions {
