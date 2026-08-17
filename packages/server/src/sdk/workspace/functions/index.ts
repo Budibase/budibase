@@ -292,7 +292,8 @@ export const build = async (id: string, revision: string) => {
   if (!declarationError) {
     const currentDeclarations = await getFunctionDeclarations(current)
     if (
-      currentDeclarations.declarationsHash !== declarationResult.declarationsHash
+      currentDeclarations.declarationsHash !==
+      declarationResult.declarationsHash
     ) {
       throw new HTTPError(
         "Function query declarations changed during compilation.",
