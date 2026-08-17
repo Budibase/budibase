@@ -18,6 +18,7 @@ import {
   ResourceType,
   RestAuthType,
   SourceName,
+  ToolExecutionPrincipal,
   ToolType,
   type Automation,
   type Datasource,
@@ -1739,7 +1740,12 @@ describe("/projects", () => {
           id: "operation_1",
           name: "Run operations",
           live: false,
-          enabledTools: [`${automation._id}_trigger`],
+          enabledTools: [
+            {
+              toolName: `${automation._id}_trigger`,
+              executionPrincipal: ToolExecutionPrincipal.ADMIN,
+            },
+          ],
           allowKnowledgeSourceDownload: true,
         })
 
@@ -1765,7 +1771,12 @@ describe("/projects", () => {
             id: "operation_1",
             name: "Run operations",
             live: false,
-            enabledTools: [`${excludedAutomation._id}_trigger`],
+            enabledTools: [
+              {
+                toolName: `${excludedAutomation._id}_trigger`,
+                executionPrincipal: ToolExecutionPrincipal.ADMIN,
+              },
+            ],
             allowKnowledgeSourceDownload: true,
           }
         )
@@ -1777,8 +1788,14 @@ describe("/projects", () => {
 
         await config.api.agent.updateOperation(agent._id!, "operation_1", {
           enabledTools: [
-            `${excludedAutomation._id}_trigger`,
-            `${addedAutomation._id}_trigger`,
+            {
+              toolName: `${excludedAutomation._id}_trigger`,
+              executionPrincipal: ToolExecutionPrincipal.ADMIN,
+            },
+            {
+              toolName: `${addedAutomation._id}_trigger`,
+              executionPrincipal: ToolExecutionPrincipal.ADMIN,
+            },
           ],
         })
 
@@ -2060,7 +2077,12 @@ describe("/projects", () => {
             name: "Run query",
             live: false,
             promptInstructions: `Use {{ ${bindings.readableBinding} }}.`,
-            enabledTools: [bindings.runtimeBinding],
+            enabledTools: [
+              {
+                toolName: bindings.runtimeBinding,
+                executionPrincipal: ToolExecutionPrincipal.ADMIN,
+              },
+            ],
             allowKnowledgeSourceDownload: true,
           }
         )

@@ -1,6 +1,11 @@
 import { context } from "@budibase/backend-core"
 import { getQueryToolBindings, type QueryToolType } from "@budibase/shared-core"
-import { ToolType } from "@budibase/types"
+import {
+  PermissionLevel,
+  PermissionType,
+  ToolExecutionPrincipal,
+  ToolType,
+} from "@budibase/types"
 import type { Query } from "@budibase/types"
 import { tool } from "ai"
 import { z } from "zod"
@@ -70,6 +75,15 @@ const createQueryTool = ({
     sourceType,
     sourceLabel,
     sourceIconType,
+    executionPolicy: {
+      mode: "configurable",
+      defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+    },
+    authorization: {
+      permissionType: PermissionType.QUERY,
+      permissionLevel: PermissionLevel.WRITE,
+      resourceId: query._id,
+    },
     tool: tool({
       description,
       inputSchema: parametersSchema,
