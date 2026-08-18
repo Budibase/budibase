@@ -4,6 +4,7 @@ export const FUNCTION_RUN_REQUEST_FIXTURE: FunctionRunRequest = {
   runId: "run-fixture-1",
   artifact: {
     compiledJavaScript: "export default async function run() { return {} }",
+    capabilityIds: ["capability-1", "first", "second", "query"],
     sourceMap: "{}",
     sourceHash: "source-hash-fixture",
     declarationsHash: "declarations-hash-fixture",

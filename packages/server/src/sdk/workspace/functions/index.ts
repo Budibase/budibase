@@ -9,8 +9,10 @@ import {
   DEFAULT_FUNCTION_LIMITS,
   DocumentType,
   type Automation,
+  type FunctionArtifact,
   type FunctionBuildDiagnostic,
   type FunctionDocument,
+  type FunctionQueryCapability,
   type FunctionQueryCapabilityInput,
   type FunctionResponse,
   type FunctionQueryCatalogEntry,
@@ -157,6 +159,62 @@ const getPersistedFunctionDeclarations = (fn: FunctionDocument) => {
   }
 }
 
+const hasMatchingCapabilityIds = (
+  artifactCapabilityIds: string[],
+  capabilities: FunctionQueryCapability[]
+) => {
+  const expectedCapabilityIds = capabilities
+    .map(capability => capability.capabilityId)
+    .sort()
+  const actualCapabilityIds = [...artifactCapabilityIds].sort()
+  return (
+    actualCapabilityIds.length === expectedCapabilityIds.length &&
+    actualCapabilityIds.every(
+      (capabilityId, index) => capabilityId === expectedCapabilityIds[index]
+    )
+  )
+}
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === "string" && value.length > 0
+
+const hasValidCapabilityIds = (value: unknown): value is string[] =>
+  Array.isArray(value) &&
+  value.every(capabilityId => isNonEmptyString(capabilityId))
+
+const isArtifactCurrent = ({
+  artifact,
+  capabilities,
+  declarationsHash,
+  sourceHash,
+}: {
+  artifact?: FunctionArtifact
+  capabilities: FunctionQueryCapability[]
+  declarationsHash: string
+  sourceHash: string
+}) => {
+  if (!artifact) {
+    return false
+  }
+
+  if (!isNonEmptyString(artifact.compiledJavaScript)) {
+    return false
+  }
+  if (!isNonEmptyString(artifact.compiledAt)) {
+    return false
+  }
+  if (!hasValidCapabilityIds(artifact.capabilityIds)) {
+    return false
+  }
+  if (!hasMatchingCapabilityIds(artifact.capabilityIds, capabilities)) {
+    return false
+  }
+  return (
+    artifact.sourceHash === sourceHash &&
+    artifact.declarationsHash === declarationsHash
+  )
+}
+
 export const getFunctionDeclarationsHash = async (fn: FunctionDocument) =>
   (await getFunctionDeclarations(fn)).declarationsHash
 
@@ -172,10 +230,11 @@ export const getFunctionPublishReadiness = async (
   catalog?: FunctionQueryCatalog
 ): Promise<FunctionPublishReadiness> => {
   const sourceHash = getFunctionSourceHash(fn.source)
-  let declarationsHash: string
+  let declarationResult: Awaited<
+    ReturnType<typeof getFunctionDeclarationsForReadiness>
+  >
   try {
-    declarationsHash = (await getFunctionDeclarationsForReadiness(fn, catalog))
-      .declarationsHash
+    declarationResult = await getFunctionDeclarationsForReadiness(fn, catalog)
   } catch (error) {
     if (error instanceof HTTPError) {
       if (
@@ -188,6 +247,7 @@ export const getFunctionPublishReadiness = async (
     }
     throw error
   }
+  const { capabilities, declarationsHash } = declarationResult
 
   if (fn.lastBuild?.sourceHash !== sourceHash) {
     return "build_required"
@@ -199,12 +259,12 @@ export const getFunctionPublishReadiness = async (
     return "build_failed"
   }
   if (
-    typeof fn.artifact?.compiledJavaScript === "string" &&
-    fn.artifact.compiledJavaScript.length > 0 &&
-    typeof fn.artifact.compiledAt === "string" &&
-    fn.artifact.compiledAt.length > 0 &&
-    fn.artifact?.sourceHash === sourceHash &&
-    fn.artifact.declarationsHash === declarationsHash
+    isArtifactCurrent({
+      artifact: fn.artifact,
+      capabilities,
+      declarationsHash,
+      sourceHash,
+    })
   ) {
     return "ready"
   }
@@ -332,6 +392,7 @@ export const build = async (id: string, revision: string) => {
   const artifact = successfulOutput
     ? {
         compiledJavaScript: successfulOutput.compiledJavaScript,
+        capabilityIds: capabilities.map(capability => capability.capabilityId),
         sourceMap: successfulOutput.sourceMap,
         sourceHash,
         declarationsHash: declarationResult.declarationsHash,

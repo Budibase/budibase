@@ -167,6 +167,8 @@ const failureMessage = (code: FunctionErrorCode) => {
       return INVALID_OUTPUT_MESSAGE
     case FunctionErrorCode.FUNCTION_QUERY_LIMIT:
       return QUERY_LIMIT_MESSAGE
+    case FunctionErrorCode.FUNCTION_PROTOCOL_ERROR:
+      return INVALID_QUERY_MESSAGE
     case FunctionErrorCode.FUNCTION_MEMORY_LIMIT:
       return MEMORY_LIMIT_MESSAGE
     case FunctionErrorCode.FUNCTION_TIMEOUT:
@@ -205,6 +207,7 @@ export const executeFunctionInIsolate = async (
   let concurrentQueryCount = 0
   let queryLimitExceeded = false
   let queryProtocolError = false
+  const allowedCapabilityIds = new Set(request.artifact.capabilityIds)
   let errorCode: FunctionErrorCode = FunctionErrorCode.FUNCTION_RUNTIME_ERROR
   let wallTimedOut = false
   const queryAbortController = new AbortController()
@@ -230,6 +233,11 @@ export const executeFunctionInIsolate = async (
     const queryReference = new ivm.Reference(
       async (capabilityIdValue: unknown, parametersValue: unknown) => {
         if (typeof capabilityIdValue !== "string" || !capabilityIdValue) {
+          queryProtocolError = true
+          errorCode = FunctionErrorCode.FUNCTION_PROTOCOL_ERROR
+          return { error: INVALID_QUERY_MESSAGE }
+        }
+        if (!allowedCapabilityIds.has(capabilityIdValue)) {
           queryProtocolError = true
           errorCode = FunctionErrorCode.FUNCTION_PROTOCOL_ERROR
           return { error: INVALID_QUERY_MESSAGE }

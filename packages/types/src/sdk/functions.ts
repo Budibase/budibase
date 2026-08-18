@@ -112,6 +112,7 @@ export const getFunctionLimits = (
 
 export interface FunctionArtifact {
   compiledJavaScript: string
+  capabilityIds: string[]
   sourceMap?: string
   sourceHash: string
   declarationsHash: string

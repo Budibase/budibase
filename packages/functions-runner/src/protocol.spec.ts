@@ -46,6 +46,22 @@ describe("Functions runner protocol", () => {
     ).toEqual(FUNCTION_RUN_RESULT_FIXTURE)
   })
 
+  it("rejects an empty artifact capability ID", () => {
+    expectProtocolError(
+      () =>
+        parseFunctionRunRequest(
+          JSON.stringify({
+            ...FUNCTION_RUN_REQUEST_FIXTURE,
+            artifact: {
+              ...FUNCTION_RUN_REQUEST_FIXTURE.artifact,
+              capabilityIds: [""],
+            },
+          })
+        ),
+      "Malformed Function run request"
+    )
+  })
+
   it("rejects malformed requests without exposing their contents", () => {
     const secret = "do-not-expose-this-token"
 

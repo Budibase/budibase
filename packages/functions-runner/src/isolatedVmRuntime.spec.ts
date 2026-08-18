@@ -47,6 +47,32 @@ describe("Functions isolate", () => {
     })
   })
 
+  it("rejects queries to capabilities absent from the artifact", async () => {
+    const queryHandler = jest.fn(async () => ({}))
+    const result = await executeFunctionInIsolate(
+      request(`
+        export default async function run() {
+          try {
+            await globalThis.__budibaseInvokeQuery("undeclared", {})
+          } catch {}
+          return { output: { bypassed: true } }
+        }
+      `),
+      queryHandler
+    )
+
+    expect(result).toMatchObject({
+      status: "error",
+      metrics: { queryCount: 0 },
+      error: {
+        code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
+        message: "Function query payload is invalid",
+      },
+    })
+    expect(result.output).toBeUndefined()
+    expect(queryHandler).not.toHaveBeenCalled()
+  })
+
   it("does not expose Node or network globals", async () => {
     const result = await executeFunctionInIsolate(
       request(`
@@ -312,7 +338,10 @@ describe("Functions isolate", () => {
       }))
     ).resolves.toMatchObject({
       status: "error",
-      error: { code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR },
+      error: {
+        code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
+        message: "Function query payload is invalid",
+      },
     })
   })
 
@@ -334,7 +363,10 @@ describe("Functions isolate", () => {
     expect(result).toMatchObject({
       status: "error",
       metrics: { queryCount: 1 },
-      error: { code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR },
+      error: {
+        code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
+        message: "Function query payload is invalid",
+      },
     })
     expect(result.output).toBeUndefined()
   })

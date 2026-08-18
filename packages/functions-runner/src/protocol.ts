@@ -38,6 +38,7 @@ export const jsonRecordSchema = z.record(z.string(), jsonValueSchema)
 const functionArtifactSchema = z
   .object({
     compiledJavaScript: z.string(),
+    capabilityIds: z.array(z.string().min(1)),
     sourceMap: z.string().optional(),
     sourceHash: z.string().min(1),
     declarationsHash: z.string().min(1),
