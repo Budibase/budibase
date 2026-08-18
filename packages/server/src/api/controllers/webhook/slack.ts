@@ -18,6 +18,7 @@ import {
   type Thread,
 } from "chat"
 import sdk from "../../../sdk"
+import type { IncomingConversationAttachment } from "../../../sdk/workspace/ai/chatConversations"
 import { escalationProcessor } from "../../../escalation/processor"
 import { handleChatMessage } from "./chatHandler"
 import { getSlackState } from "./chatState"
@@ -184,7 +185,10 @@ export const pickSlackConversation = ({
 
 type SlackReplyTarget = PrivatePostTarget
 
-type SlackCommand = typeof ChatCommands.ASK | typeof ChatCommands.LINK
+type SlackCommand =
+  | typeof ChatCommands.ASK
+  | typeof ChatCommands.LINK
+  | typeof ChatCommands.NEW
 
 type SlackInput = {
   target: SlackReplyTarget
@@ -192,6 +196,7 @@ type SlackInput = {
   author: Message["author"]
   command: SlackCommand
   content: string
+  attachments?: IncomingConversationAttachment[]
   channelId: string
   externalUserId: string
   isDirectMessage: boolean
@@ -220,6 +225,7 @@ const createSlackInputHandler = ({
     author,
     command,
     content,
+    attachments,
     channelId,
     externalUserId,
     isDirectMessage,
@@ -280,6 +286,7 @@ const createSlackInputHandler = ({
         channelEnabled,
         command,
         content,
+        attachments,
         user: { externalUserId, displayName },
         channel,
         scope,
@@ -303,7 +310,16 @@ const createSlackMessageHandler = (
   return async (thread: Thread, message: Message) => {
     const raw = message.raw as SlackEvent | undefined
     const content = extractSlackMessageContent(raw?.text || message.text)
-    if (!content) {
+    const attachments: IncomingConversationAttachment[] = (
+      message.attachments || []
+    ).map((attachment, index) => ({
+      providerFileId: raw?.files?.[index]?.id || "",
+      filename: attachment.name || "slack-file",
+      mimetype: attachment.mimeType || "",
+      size: attachment.size,
+      fetchData: attachment.fetchData,
+    }))
+    if (!content && !attachments.length) {
       await thread.post("Send a message to continue.")
       return
     }
@@ -318,6 +334,7 @@ const createSlackMessageHandler = (
       author: message.author,
       command: ChatCommands.ASK,
       content,
+      attachments,
       channelId: thread.channelId,
       threadId: thread.id || undefined,
       externalUserId: message.author.userId,
@@ -406,6 +423,31 @@ export async function slackWebhook(
           })
         }
       )
+      chat.onSlashCommand(
+        `/${ChatCommands.NEW}`,
+        async (event: SlashCommandEvent) => {
+          const raw = event.raw as Record<string, string | undefined>
+          const channelId = raw.channel_id
+          if (!channelId || !event.user.userId) {
+            await event.channel.post("Missing Slack command metadata.")
+            return
+          }
+          await handleSlackInput({
+            target: event.channel as SlackReplyTarget,
+            privateTarget: event.channel as SlackReplyTarget,
+            author: event.user,
+            command: ChatCommands.NEW,
+            content: event.text,
+            channelId,
+            externalUserId: event.user.userId,
+            isDirectMessage: isSlackDirectMessage({
+              type: "message",
+              channel: raw.channel_id,
+            }),
+            teamId: raw.team_id,
+          })
+        }
+      )
       // TODO: Make these a strict set
       chat.onAction(async (event: ActionEvent) => {
         if (!event.actionId.startsWith("esc_")) {
@@ -480,7 +522,7 @@ export async function slackWebhook(
 
       chat.onNewMention(handler)
       chat.onSubscribedMessage(handler)
-      chat.onNewMessage(/./, async (thread, message) => {
+      chat.onNewMessage(/.*/, async (thread, message) => {
         const raw = message.raw as SlackEvent | undefined
         if (!isSlackDirectMessage(raw) || message.isMention) {
           return

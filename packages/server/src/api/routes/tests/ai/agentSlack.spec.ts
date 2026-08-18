@@ -136,9 +136,9 @@ const { resetMockChatState, setMockPostEphemeralResult } = jest.requireActual(
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
 const mockedGetFileUrlForAgent = jest.mocked(sdk.ai.rag.getFileUrlForAgent)
 
-const slackJsonResponse = (body: Record<string, unknown>) =>
+const slackJsonResponse = (body: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(body), {
-    status: 200,
+    status,
     headers: {
       "Content-Type": "application/json",
     },
@@ -372,6 +372,13 @@ describe("agent slack integration provisioning", () => {
       usage_hint: `/${ChatCommands.LINK}`,
       should_escape: false,
     })
+    expect(manifest.features.slash_commands).toContainEqual({
+      command: `/${ChatCommands.NEW}`,
+      url: endpointUrl,
+      description: "Start a new conversation with this agent.",
+      usage_hint: `/${ChatCommands.NEW}`,
+      should_escape: false,
+    })
     expect(manifest.settings.event_subscriptions.bot_events).toEqual([
       "app_mention",
       "message.im",
@@ -381,6 +388,7 @@ describe("agent slack integration provisioning", () => {
       "channels:history",
       "chat:write",
       "commands",
+      "files:read",
       "im:history",
       "im:read",
       "im:write",
@@ -548,6 +556,7 @@ describe("agent slack integration provisioning", () => {
     const agent = await config.api.agent.create({
       name: "Slack OAuth App",
     })
+    let oauthExchangeAttempts = 0
     jest.spyOn(global, "fetch").mockImplementation(async (url, init) => {
       if (String(url).endsWith("/tooling.tokens.rotate")) {
         expect(
@@ -579,9 +588,13 @@ describe("agent slack integration provisioning", () => {
       }
 
       expect(String(url)).toContain("/oauth.v2.access")
+      oauthExchangeAttempts += 1
       const body = init?.body as URLSearchParams
       expect(body.get("code")).toEqual("slack-oauth-code")
       expect(body.get("client_id")).toEqual("slack-oauth-client-id")
+      if (oauthExchangeAttempts === 1) {
+        return slackJsonResponse({ ok: false }, 503)
+      }
       return slackJsonResponse({
         ok: true,
         access_token: "xoxb-oauth-bot-token",
@@ -608,7 +621,15 @@ describe("agent slack integration provisioning", () => {
       .get(
         `/api/agent/slack/oauth/callback?code=slack-oauth-code&state=${state}`
       )
+      .expect(503)
+
+    await config
+      .getRequest()!
+      .get(
+        `/api/agent/slack/oauth/callback?code=slack-oauth-code&state=${state}`
+      )
       .expect(302)
+    expect(oauthExchangeAttempts).toEqual(2)
 
     const persisted = await getPersistedAgent(agent._id)
     expect(
@@ -1154,6 +1175,73 @@ describe("agent slack integration provisioning", () => {
         })
         expect(link).toBeUndefined()
       })
+    })
+
+    it("persists a file-only upload for the next Slack conversation turn", async () => {
+      const { agent, chatAppId, linkExternalUser } =
+        await setupProvisionedSlackAgent()
+      await linkExternalUser("user-file")
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const content = "quarterly revenue is 42"
+
+      const uploadResponse = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "",
+            user: "user-file",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+            files: [
+              {
+                id: "F123",
+                name: "report.txt",
+                mimetype: "text/plain",
+                size: Buffer.byteLength(content),
+                content,
+              },
+            ],
+          },
+        },
+      })
+
+      expect(uploadResponse.body.messages).toContain(
+        "Added report.txt to this conversation."
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+
+      await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "what is the revenue?",
+            user: "user-file",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.200",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
+      expect(mockedWebhookChat.mock.calls[0]?.[0].chat.attachments).toEqual([
+        expect.objectContaining({
+          providerFileId: "F123",
+          filename: "report.txt",
+          mimetype: "text/plain",
+          size: Buffer.byteLength(content),
+        }),
+      ])
+      const conversations = await fetchConversations()
+      expect(conversations).toHaveLength(1)
+      expect(conversations[0]?.attachments).toHaveLength(1)
     })
 
     it("blocks optional-link unlinked users when the agent requires a higher role", async () => {

@@ -60,6 +60,17 @@ export interface ChatConversationChannel {
   serviceUrl?: string
 }
 
+export interface ChatConversationAttachment {
+  id: string
+  provider: AgentChannelProvider.SLACK
+  providerFileId: string
+  filename: string
+  mimetype: string
+  size: number
+  textLength?: number
+  uploadedAt: string
+}
+
 export interface ChatConversationRequest extends Document {
   chatAppId: string
   agentId: string
@@ -71,6 +82,8 @@ export interface ChatConversationRequest extends Document {
   previewRoleId?: string
   sessionId?: string
   channel?: ChatConversationChannel
+  attachments?: ChatConversationAttachment[]
+  attachmentExpiresAt?: string
 }
 
 export interface WebhookChatCompleteResult {

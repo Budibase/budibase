@@ -27,6 +27,7 @@ import {
   webhookChat,
   type WebhookAssistantStream,
 } from "../ai/chatConversations"
+import type { IncomingConversationAttachment } from "../../../sdk/workspace/ai/chatConversations"
 import {
   isConversationExpired,
   pickLatestConversation,
@@ -380,6 +381,7 @@ export interface HandleChatMessageParams {
   channelEnabled: boolean
   command: SupportedChatCommand
   content: string
+  attachments?: IncomingConversationAttachment[]
   user: {
     externalUserId: string
     displayName?: string
@@ -476,6 +478,7 @@ export const handleChatMessage = async ({
   channelEnabled,
   command,
   content,
+  attachments: incomingAttachments = [],
   user,
   channel,
   scope,
@@ -636,7 +639,34 @@ export const handleChatMessage = async ({
       return
     }
 
-    if (command === ChatCommands.NEW && !content) {
+    if (
+      provider === AgentChannelProvider.SLACK &&
+      command === ChatCommands.NEW
+    ) {
+      const previousChat = await findConversation({
+        db,
+        workspaceId,
+        scope,
+        provider,
+        idleTimeoutMs,
+      })
+      if (previousChat?.attachments?.length) {
+        await db.put({
+          ...previousChat,
+          attachmentExpiresAt: new Date(0).toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+        await sdk.ai.chatConversations.attachmentCleanupQueue.cleanupConversationAttachments(
+          previousChat._id!
+        )
+      }
+    }
+
+    if (
+      command === ChatCommands.NEW &&
+      !content &&
+      !incomingAttachments.length
+    ) {
       const chatId = docIds.generateChatConversationID()
       await db.put(
         sdk.ai.chatConversations.prepareChatConversationForSave({
@@ -668,7 +698,7 @@ export const handleChatMessage = async ({
       return
     }
 
-    if (!content) {
+    if (!content && !incomingAttachments.length) {
       const msg =
         provider === AgentChannelProvider.DISCORD
           ? `Please provide a message after /${ChatCommands.ASK}.`
@@ -677,7 +707,7 @@ export const handleChatMessage = async ({
       return
     }
 
-    const existingChat =
+    let existingChat =
       command === ChatCommands.NEW
         ? undefined
         : await findConversation({
@@ -688,13 +718,165 @@ export const handleChatMessage = async ({
             idleTimeoutMs,
           })
 
+    const chatId = existingChat?._id ?? docIds.generateChatConversationID()
+    let conversationAttachments = existingChat?.attachments || []
+    let uploadedAttachments = [] as typeof conversationAttachments
+    const attachmentExpiresAt =
+      conversationAttachments.length || incomingAttachments.length
+        ? new Date(Date.now() + idleTimeoutMs).toISOString()
+        : undefined
+
+    if (incomingAttachments.length) {
+      uploadedAttachments =
+        await sdk.ai.chatConversations.uploadConversationAttachments({
+          conversation: {
+            _id: chatId,
+            attachments: conversationAttachments,
+          },
+          incoming: incomingAttachments,
+        })
+      conversationAttachments = [
+        ...conversationAttachments,
+        ...uploadedAttachments,
+      ]
+
+      if (uploadedAttachments.length) {
+        const attachmentChat =
+          sdk.ai.chatConversations.prepareChatConversationForSave({
+            chatId,
+            chatAppId,
+            userId,
+            title:
+              existingChat?.title ||
+              sdk.ai.chatConversations.truncateTitle(
+                content || uploadedAttachments[0].filename
+              ),
+            messages: existingChat?.messages || [],
+            chat: {
+              ...(existingChat || {}),
+              _id: chatId,
+              chatAppId,
+              agentId,
+              messages: existingChat?.messages || [],
+              channel,
+              attachments: conversationAttachments,
+              attachmentExpiresAt,
+            },
+            existingChat,
+          })
+        try {
+          const saved = await db.put(attachmentChat)
+          existingChat = { ...attachmentChat, _rev: saved.rev }
+          await sdk.ai.chatConversations.attachmentCleanupQueue.scheduleConversationAttachmentCleanup(
+            {
+              workspaceId,
+              conversationId: chatId,
+              expiresAt: attachmentExpiresAt!,
+            }
+          )
+        } catch (error) {
+          await sdk.ai.chatConversations
+            .deleteConversationAttachmentObjects({
+              conversationId: chatId,
+              attachments: uploadedAttachments,
+            })
+            .catch(cleanupError => {
+              console.error(
+                "Failed to roll back persisted conversation attachments",
+                cleanupError
+              )
+            })
+          throw error
+        }
+      }
+    }
+
+    if (
+      existingChat?.attachments?.length &&
+      !uploadedAttachments.length &&
+      attachmentExpiresAt
+    ) {
+      const touchedChat = {
+        ...existingChat,
+        attachmentExpiresAt,
+        updatedAt: new Date().toISOString(),
+      }
+      const saved = await db.put(touchedChat)
+      existingChat = { ...touchedChat, _rev: saved.rev }
+      await sdk.ai.chatConversations.attachmentCleanupQueue.scheduleConversationAttachmentCleanup(
+        {
+          workspaceId,
+          conversationId: chatId,
+          expiresAt: attachmentExpiresAt,
+        }
+      )
+    }
+
+    if (!content && incomingAttachments.length && !uploadedAttachments.length) {
+      await reply("Those files are already available in this conversation.")
+      return
+    }
+
+    const attachmentMarker = uploadedAttachments.length
+      ? `\n\n[Attached files: ${uploadedAttachments
+          .map(file => file.filename)
+          .join(", ")}]`
+      : ""
     const userMessage: ChatConversationRequest["messages"][number] = {
       id: v4(),
       role: "user",
-      parts: [{ type: "text", text: content }],
+      parts: [
+        {
+          type: "text",
+          text: `${content}${attachmentMarker}`.trim(),
+        },
+      ],
     }
 
-    const chatId = existingChat?._id ?? docIds.generateChatConversationID()
+    if (!content && uploadedAttachments.length) {
+      const messages = [...(existingChat?.messages || []), userMessage]
+      const uploadOnlyChat =
+        sdk.ai.chatConversations.prepareChatConversationForSave({
+          chatId,
+          chatAppId,
+          userId,
+          title:
+            existingChat?.title ||
+            sdk.ai.chatConversations.truncateTitle(
+              uploadedAttachments[0].filename
+            ),
+          messages,
+          chat: {
+            ...(existingChat || {}),
+            _id: chatId,
+            chatAppId,
+            agentId,
+            messages,
+            channel,
+            attachments: conversationAttachments,
+            attachmentExpiresAt,
+          },
+          existingChat,
+        })
+      await db.put(uploadOnlyChat)
+      await sdk.ai.chatConversations.attachmentCleanupQueue.scheduleConversationAttachmentCleanup(
+        {
+          workspaceId,
+          conversationId: chatId,
+          expiresAt: attachmentExpiresAt!,
+        }
+      )
+      await cacheConversationId({
+        cacheKey: getCacheKey({ workspaceId, scope }),
+        chatId,
+        idleTimeoutMs,
+      })
+      await reply(
+        `Added ${uploadedAttachments.map(file => file.filename).join(", ")} to this conversation.`
+      )
+      return
+    }
+
     const draftChat: ChatConversationRequest = {
       _id: chatId,
       chatAppId,
@@ -703,6 +885,10 @@ export const handleChatMessage = async ({
         existingChat?.title || sdk.ai.chatConversations.truncateTitle(content),
       messages: [...(existingChat?.messages || []), userMessage],
       channel,
+      ...(conversationAttachments.length && {
+        attachments: conversationAttachments,
+        attachmentExpiresAt,
+      }),
     }
 
     let result: Awaited<ReturnType<typeof webhookChat>>
@@ -741,6 +927,15 @@ export const handleChatMessage = async ({
         existingChat,
       })
     )
+    if (conversationAttachments.length && attachmentExpiresAt) {
+      await sdk.ai.chatConversations.attachmentCleanupQueue.scheduleConversationAttachmentCleanup(
+        {
+          workspaceId,
+          conversationId: chatId,
+          expiresAt: attachmentExpiresAt,
+        }
+      )
+    }
     await cacheConversationId({
       cacheKey: getCacheKey({ workspaceId, scope }),
       chatId,
