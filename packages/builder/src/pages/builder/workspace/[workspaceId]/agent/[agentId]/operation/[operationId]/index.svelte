@@ -354,11 +354,10 @@
     })
   }
 
-  const removeEmptyToolPlaceholder = (position?: PendingToolInsertion) => {
+  const cancelPendingToolInsertion = (position?: PendingToolInsertion) => {
     if (!operation || !position?.removeOnCancel || !instructionsEditor) {
       return
     }
-    pendingAutocompleteInsertion = undefined
     const nextInstructions = instructionsEditor.replaceRange({
       from: position.from,
       to: position.to,
@@ -597,14 +596,14 @@
   const cancelAutocompleteToolAddition = () => {
     const position = pendingAutocompleteInsertion
     pendingAutocompleteInsertion = undefined
-    removeEmptyToolPlaceholder(position)
+    cancelPendingToolInsertion(position)
   }
 
   const closeToolConfiguration = () => {
     const insertPosition = pendingToolInsertion
     addingTool = undefined
     pendingToolInsertion = undefined
-    removeEmptyToolPlaceholder(insertPosition)
+    cancelPendingToolInsertion(insertPosition)
   }
 </script>
 
