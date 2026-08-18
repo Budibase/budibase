@@ -81,9 +81,8 @@
   let configureToolModal: ConfigureOperationToolModal | undefined = $state()
   let editorToolsDropdown: ToolsDropdown | undefined = $state()
   let toolToRemove: AgentTool | undefined = $state()
+  let toolToRemoveIsReferenced = $state(false)
   let restoreToolConfiguration = $state(false)
-  let blockedTool: AgentTool | undefined = $state()
-  let blockedToolDialog: ConfirmDialog | undefined = $state()
   let addingTool: AgentTool | undefined = $state()
   let pendingAutocompleteInsertion: PendingToolInsertion | undefined = $state()
   let pendingToolInsertion: PendingToolInsertion | undefined = $state()
@@ -480,17 +479,11 @@
     returnToConfiguration = false
   ) => {
     restoreToolConfiguration = returnToConfiguration
-    if (
-      isToolReferenced({
-        prompt: operation?.promptInstructions,
-        tool,
-      })
-    ) {
-      blockedTool = tool
-      blockedToolDialog?.show()
-      return
-    }
     toolToRemove = tool
+    toolToRemoveIsReferenced = isToolReferenced({
+      prompt: operation?.promptInstructions,
+      tool,
+    })
     removeToolDialog?.show()
   }
 
@@ -500,6 +493,7 @@
     }
     removeTool(toolToRemove)
     toolToRemove = undefined
+    toolToRemoveIsReferenced = false
     restoreToolConfiguration = false
   }
 
@@ -507,16 +501,7 @@
     const tool = toolToRemove
     const shouldRestore = restoreToolConfiguration
     toolToRemove = undefined
-    restoreToolConfiguration = false
-    if (tool && shouldRestore) {
-      configureTool(tool)
-    }
-  }
-
-  const handleBlockedToolClose = () => {
-    const tool = blockedTool
-    const shouldRestore = restoreToolConfiguration
-    blockedTool = undefined
+    toolToRemoveIsReferenced = false
     restoreToolConfiguration = false
     if (tool && shouldRestore) {
       configureTool(tool)
@@ -829,29 +814,21 @@
 
   <ConfirmDialog
     bind:this={removeToolDialog}
-    title="Remove tool?"
+    title={toolToRemoveIsReferenced
+      ? "Tool is used in instructions"
+      : "Remove tool?"}
     okText="Remove"
     warning={true}
     onOk={handleRemoveToolConfirm}
     onClose={handleRemoveToolClose}
   >
     {#if toolToRemove?.readableBinding}
-      Remove <b>{toolToRemove.readableBinding}</b> from this operation?
-    {/if}
-  </ConfirmDialog>
-
-  <ConfirmDialog
-    bind:this={blockedToolDialog}
-    title="Tool is used in instructions"
-    okText="Close"
-    showCancelButton={false}
-    warning={false}
-    onOk={handleBlockedToolClose}
-    onClose={handleBlockedToolClose}
-  >
-    {#if blockedTool?.readableBinding}
-      Remove every <b>{`{{ ${blockedTool.readableBinding} }}`}</b> reference from
-      the instructions before removing this tool.
+      {#if toolToRemoveIsReferenced}
+        <b>{toolToRemove.readableBinding}</b> is referenced in the instructions.
+        Removing the tool will leave those references in place.
+      {:else}
+        Remove <b>{toolToRemove.readableBinding}</b> from this operation?
+      {/if}
     {/if}
   </ConfirmDialog>
 
