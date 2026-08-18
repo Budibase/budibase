@@ -55,6 +55,10 @@
     isToolReferenced,
     normalizeConfiguredOperationTools,
   } from "../../toolBindingUtils"
+  import {
+    getPendingToolInsertion,
+    type PendingToolInsertion,
+  } from "../../toolAutocomplete"
   import { createSaveCoordinator } from "../../operationSaveCoordinator"
   import type { AgentTool } from "../../toolTypes"
 
@@ -63,11 +67,6 @@
   $goto
 
   type RailTab = "tools" | "knowledge" | "approvals"
-  interface PendingToolInsertion {
-    from: number
-    to: number
-    removeOnCancel: boolean
-  }
 
   let togglingLive = $state(false)
   let saving = $state(false)
@@ -152,18 +151,11 @@
       from: number,
       to: number
     ) => {
-      const textBeforeCompletion = view.state.doc.sliceString(0, from)
-      const bindingPrefix = textBeforeCompletion.match(/(?:\{){2,}\s*$/)?.[0]
-      const closingBraces = view.state.doc.sliceString(to, to + 2) === "}}"
-      const rangeFrom = bindingPrefix ? from - bindingPrefix.length : from
-      const rangeTo = closingBraces ? to + 2 : to
-      pendingAutocompleteInsertion = {
-        from: rangeFrom,
-        to: rangeTo,
-        removeOnCancel: /^\{\{\s*\}\}$/.test(
-          view.state.doc.sliceString(rangeFrom, rangeTo)
-        ),
-      }
+      pendingAutocompleteInsertion = getPendingToolInsertion({
+        text: view.state.doc.toString(),
+        from,
+        to,
+      })
       editorToolsDropdown?.show()
     },
   }
