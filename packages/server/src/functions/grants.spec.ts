@@ -114,6 +114,24 @@ describe("Function run grants", () => {
     ).resolves.toBeNull()
   })
 
+  it("expires a recreated query counter with the grant", async () => {
+    const { grantToken } = await createFunctionRunGrant(
+      scope,
+      FUNCTION_RUN_REQUEST_FIXTURE.limits,
+      client
+    )
+    const queryCallCountKey = `${scope.runId}:query-call-count`
+    await client.delete(queryCallCountKey)
+
+    await expect(
+      getFunctionRunGrant(scope.runId, grantToken, client)
+    ).resolves.toMatchObject({
+      remainingQueryCalls:
+        FUNCTION_RUN_REQUEST_FIXTURE.limits.maxQueryCalls - 1,
+    })
+    expect(await client.getTTL(queryCallCountKey)).toBeGreaterThan(0)
+  })
+
   it("does not replace an existing run grant", async () => {
     await createFunctionRunGrant(
       scope,

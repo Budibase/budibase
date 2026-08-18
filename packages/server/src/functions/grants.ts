@@ -110,9 +110,14 @@ export const getFunctionRunGrant = async (
     return null
   }
 
-  const queryCallCount = await redisClient.increment(
-    getQueryCallCountKey(runId)
-  )
+  const queryCallCountKey = getQueryCallCountKey(runId)
+  const ttlSeconds = await redisClient.getTTL(runId)
+  if (ttlSeconds <= 0) {
+    return null
+  }
+
+  const queryCallCount = await redisClient.increment(queryCallCountKey)
+  await redisClient.setExpiry(queryCallCountKey, ttlSeconds)
   if (queryCallCount > storedGrant.limits.maxQueryCalls) {
     return null
   }
