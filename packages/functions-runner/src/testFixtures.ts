@@ -1,4 +1,4 @@
-import type { FunctionRunRequest, FunctionRunResult } from "./functions"
+import type { FunctionRunRequest, FunctionRunResult } from "@budibase/types"
 
 export const FUNCTION_RUN_REQUEST_FIXTURE: FunctionRunRequest = {
   runId: "run-fixture-1",
