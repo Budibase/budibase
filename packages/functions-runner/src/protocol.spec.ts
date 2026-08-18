@@ -24,8 +24,10 @@ const expectProtocolError = (callback: () => void, message: string) => {
 }
 
 describe("Functions runner protocol", () => {
+  let protocolLogger: jest.SpyInstance
+
   beforeEach(() => {
-    jest.spyOn(console, "error").mockImplementation()
+    protocolLogger = jest.spyOn(console, "error").mockImplementation()
   })
 
   afterEach(() => {
@@ -70,11 +72,11 @@ describe("Functions runner protocol", () => {
       () => validateFunctionRunResult(invalidValue),
       "Malformed Function run result"
     )
-    expect(console.error).toHaveBeenCalledWith(
+    expect(protocolLogger).toHaveBeenCalledWith(
       "Function protocol validation failed",
       expect.objectContaining({ issues: expect.any(Array) })
     )
-    expect(console.error).not.toHaveBeenCalledWith(
+    expect(protocolLogger).not.toHaveBeenCalledWith(
       "Function protocol validation failed",
       invalidValue
     )
