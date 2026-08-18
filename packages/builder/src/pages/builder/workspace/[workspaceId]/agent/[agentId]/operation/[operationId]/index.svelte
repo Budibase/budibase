@@ -350,17 +350,16 @@
   const insertToolBinding = (
     tool: AgentTool,
     position?: PendingToolInsertion
-  ) => {
-    if (!operation || !tool.readableBinding || !instructionsEditor) {
+  ): string | undefined => {
+    if (!tool.readableBinding || !instructionsEditor) {
       return
     }
     const binding = `{{ ${tool.readableBinding} }}`
-    const nextInstructions = instructionsEditor.replaceRange({
+    return instructionsEditor.replaceRange({
       from: position?.from,
       to: position?.to,
       insert: binding,
     })
-    saveOperation({ promptInstructions: nextInstructions })
   }
 
   const removeEmptyToolPlaceholder = (position?: PendingToolInsertion) => {
@@ -579,19 +578,21 @@
     const alreadyConfigured = operation.enabledTools?.some(
       config => config.toolName === tool.runtimeBinding
     )
+    const updates: Partial<AgentOperation> = {}
     if (!alreadyConfigured) {
-      const saved = await saveOperation({
-        enabledTools: [
-          ...(operation.enabledTools || []),
-          { toolName: tool.runtimeBinding, executionPrincipal },
-        ],
-      })
-      if (!saved) {
-        return
-      }
+      updates.enabledTools = [
+        ...(operation.enabledTools || []),
+        { toolName: tool.runtimeBinding, executionPrincipal },
+      ]
     }
     if (insertPosition) {
-      insertToolBinding(tool, insertPosition)
+      const nextInstructions = insertToolBinding(tool, insertPosition)
+      if (nextInstructions !== undefined) {
+        updates.promptInstructions = nextInstructions
+      }
+    }
+    if (Object.keys(updates).length > 0) {
+      await saveOperation(updates)
     }
   }
 
