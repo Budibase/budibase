@@ -2,6 +2,7 @@
   import { Modal, notifications } from "@budibase/bbui"
   import { beforeUrlChange } from "@roxi/routify"
   import { restTemplates } from "@/stores/builder/restTemplates"
+  import { bb } from "@/stores/bb"
   import { sortedIntegrations as integrations } from "@/stores/builder/sortedIntegrations"
   import { queries } from "@/stores/builder"
   import { configFromIntegration } from "@/stores/selectors"
@@ -10,12 +11,16 @@
   import {
     type RestTemplateSpec,
     type RestTemplate,
+    type RestTemplateId,
+    type ImportRestQueryInfoResponse,
     type TemplateSelectionContext,
     type UIIntegration,
   } from "@budibase/types"
   import { goto as gotoStore } from "@roxi/routify"
   import { getRestTemplateImportInfoRequest } from "@/helpers/restTemplates"
   import SelectCategoryAPIModal from "./SelectCategoryAPIModal.svelte"
+  import ImportRestTemplateModal from "@/settings/pages/connections/_components/ImportRestTemplateModal.svelte"
+  import { createImportedRestConnection } from "@/settings/pages/connections/_components/createImportedRestConnection"
 
   export const show = () => {
     resetModalState()
@@ -24,6 +29,7 @@
   export const hide = () => modal.hide()
 
   let modal: Modal
+  let importTemplateModal: Modal
   let loading = false
 
   let selectedTemplate: TemplateSelectionContext | null = null
@@ -69,8 +75,11 @@
     resetModalState()
   }
 
-  const loadTemplateInfo = async (spec?: RestTemplateSpec | null) => {
-    const request = getRestTemplateImportInfoRequest(spec)
+  const loadTemplateInfo = async (
+    spec?: RestTemplateSpec | null,
+    restTemplateId?: RestTemplateId
+  ): Promise<ImportRestQueryInfoResponse | undefined> => {
+    const request = getRestTemplateImportInfoRequest(spec, restTemplateId)
     if (!request) {
       return undefined
     }
@@ -146,8 +155,17 @@
 
       targetSpec = template.specs?.[0] || null
 
-      const config = configFromIntegration(restIntegration)
-      const templateInfo = await loadTemplateInfo(targetSpec)
+      const templateInfo = await loadTemplateInfo(
+        targetSpec,
+        template.restTemplateId
+      )
+      // OpenAPI 3 exposes servers, while OpenAPI 2 exposes the normalized url.
+      const templateBaseUrl =
+        templateInfo?.servers?.[0]?.url ?? templateInfo?.url
+      const config = {
+        ...configFromIntegration(restIntegration),
+        ...(templateBaseUrl ? { url: templateBaseUrl } : {}),
+      }
       applySecurityHeaders(config, templateInfo?.securityHeaders)
       applyTemplateStaticVariables(config, templateInfo?.staticVariables)
 
@@ -216,9 +234,28 @@
         customDisabled={!restIntegration}
         bind:projectIds
         on:custom={() => handleCustom(restIntegration)}
+        on:importTemplate={() => importTemplateModal.show()}
         on:selectTemplate={onSelectTemplate}
       />
     </div>
+  </Modal>
+  <Modal bind:this={importTemplateModal}>
+    <ImportRestTemplateModal
+      onCancel={() => importTemplateModal.hide()}
+      onUploaded={async template => {
+        if (!restIntegration) {
+          throw new Error("REST integration unavailable")
+        }
+        const datasource = await createImportedRestConnection({
+          template,
+          integration: restIntegration,
+          projectIds,
+        })
+        importTemplateModal.hide()
+        modal.hide()
+        bb.settings(`/connections/api-connections/${datasource._id}`)
+      }}
+    />
   </Modal>
 </div>
 

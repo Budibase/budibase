@@ -31,12 +31,14 @@ import {
   CreateAgentOperationRequest,
   UpdateAgentOperationRequest,
   AgentOperationMutationResponse,
+  CreateAgentSlackAppRequest,
+  CreateAgentSlackAppResponse,
 } from "@budibase/types"
 
 import { BaseAPIClient } from "./types"
 
 export interface AgentEndpoints {
-  fetchTools: (aiconfigId?: string) => Promise<ToolMetadata[]>
+  fetchTools: () => Promise<ToolMetadata[]>
   fetchAgents: () => Promise<FetchAgentsResponse>
   fetchAgentKnowledge: (
     agentId: string
@@ -70,6 +72,11 @@ export interface AgentEndpoints {
     agentId: string,
     body?: ProvisionAgentSlackChannelRequest
   ) => Promise<ProvisionAgentSlackChannelResponse>
+  downloadAgentSlackManifest: (agentId: string) => Promise<string>
+  createAgentSlackApp: (
+    agentId: string,
+    body?: CreateAgentSlackAppRequest
+  ) => Promise<CreateAgentSlackAppResponse>
   provisionAgentTelegramChannel: (
     agentId: string,
     body?: ProvisionAgentTelegramChannelRequest
@@ -147,12 +154,9 @@ export interface AgentEndpoints {
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
-  fetchTools: async (aiconfigId?: string) => {
-    const query = aiconfigId
-      ? `?aiconfigId=${encodeURIComponent(aiconfigId)}`
-      : ""
+  fetchTools: async () => {
     return await API.get({
-      url: `/api/agent/tools${query}`,
+      url: "/api/agent/tools",
     })
   },
   fetchAgents: async () => {
@@ -239,6 +243,23 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
       ProvisionAgentSlackChannelResponse
     >({
       url: `/api/agent/${agentId}/slack/provision`,
+      body,
+    })
+  },
+
+  downloadAgentSlackManifest: async (agentId: string) => {
+    return await API.get<string>({
+      url: `/api/agent/${agentId}/slack/manifest`,
+      parseResponse: async response => await response.text(),
+    })
+  },
+
+  createAgentSlackApp: async (agentId: string, body) => {
+    return await API.post<
+      CreateAgentSlackAppRequest | undefined,
+      CreateAgentSlackAppResponse
+    >({
+      url: `/api/agent/${agentId}/slack/app/create`,
       body,
     })
   },

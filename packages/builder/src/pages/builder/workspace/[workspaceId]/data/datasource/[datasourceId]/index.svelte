@@ -45,10 +45,12 @@
   let templateIcon
 
   $: datasource = $datasources.selected
-  $: templateIcon =
-    getRestTemplateIdentifier(datasource) && $restTemplates
-      ? restTemplates.get(getRestTemplateIdentifier(datasource))?.icon
+  $: restTemplateIdentifier = getRestTemplateIdentifier(datasource)
+  $: selectedRestTemplate =
+    restTemplateIdentifier && $restTemplates
+      ? restTemplates.get(restTemplateIdentifier)
       : undefined
+  $: templateIcon = selectedRestTemplate?.icon
 
   $: isRestDatasource = datasource?.source === IntegrationTypes.REST
   $: getOptions(datasource)
@@ -108,7 +110,6 @@
 </script>
 
 <PromptQueryModal />
-
 <section>
   <Layout noPadding>
     <Layout gap="XS" noPadding>
@@ -143,13 +144,14 @@
             {/if}
             {#if restPanel.component === QueriesPanel}
               <svelte:component this={restPanel.component} {datasource}>
-                <SaveDatasourceButton
-                  slot="global-save"
-                  {datasource}
-                  {updatedDatasource}
-                  isDirty={restConfigDirty}
-                  onSaved={handleRestConfigSaved}
-                />
+                <div slot="global-save" class="global-save-actions">
+                  <SaveDatasourceButton
+                    {datasource}
+                    {updatedDatasource}
+                    isDirty={restConfigDirty}
+                    onSaved={handleRestConfigSaved}
+                  />
+                </div>
               </svelte:component>
             {:else}
               <svelte:component
@@ -219,5 +221,11 @@
     align-items: center;
     gap: var(--spacing-s);
     margin-bottom: var(--spacing-m);
+  }
+
+  .global-save-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
   }
 </style>

@@ -17,7 +17,7 @@ import {
   FeatureFlag,
 } from "@budibase/types"
 import { Chat, type ActionEvent } from "chat"
-import { createDiscordAdapter } from "@chat-adapter/discord"
+import { createSafeDiscordAdapter } from "./discordAdapter"
 import sdk from "../../../sdk"
 import { escalationProcessor } from "../../../escalation/processor"
 import { pickLatestConversation, resolveEscalationWorkspaceId } from "./utils"
@@ -114,7 +114,11 @@ export async function discordWebhook(
       const chat = new Chat({
         userName: "Budibase",
         adapters: {
-          discord: createDiscordAdapter({ applicationId, publicKey, botToken }),
+          discord: createSafeDiscordAdapter({
+            applicationId,
+            publicKey,
+            botToken,
+          }),
         },
         state: await getDiscordState(),
         logger: "silent",

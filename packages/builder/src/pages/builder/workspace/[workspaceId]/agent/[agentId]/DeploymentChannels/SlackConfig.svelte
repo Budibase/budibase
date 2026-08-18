@@ -1,9 +1,11 @@
 <script lang="ts">
   import {
     Body,
+    Button,
     Checkbox,
     CopyInput,
     Input,
+    Link,
     notifications,
   } from "@budibase/bbui"
   import { ChatCommands } from "@budibase/shared-core"
@@ -13,6 +15,7 @@
   } from "@budibase/types"
   import { agentsStore } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
+  import { bb } from "@/stores/bb"
   import ChannelConfigLayout from "./ChannelConfigLayout.svelte"
   import {
     DEFAULT_IDLE_TIMEOUT_MINUTES,
@@ -32,6 +35,10 @@
   })
 
   let provisioning = $state(false)
+  let creatingSlackApp = $state(false)
+  let copyingManifest = $state(false)
+  let loadingSlackAppConfig = $state(false)
+  let slackAppConfigConfigured = $state(false)
   let provisionResult = $state<ProvisionAgentSlackChannelResponse | undefined>()
 
   const messagingEndpointUrl = $derived(
@@ -66,9 +73,25 @@
     draftAgentId = currentAgent._id
   })
 
-  const provisionSlackChannel = async () => {
+  $effect(() => {
+    const loadSlackAppConfig = async () => {
+      loadingSlackAppConfig = true
+      try {
+        const config = await agentsStore.fetchSlackAppConfig()
+        slackAppConfigConfigured = config.configured
+      } catch (error) {
+        console.error(error)
+        slackAppConfigConfigured = false
+      } finally {
+        loadingSlackAppConfig = false
+      }
+    }
+    loadSlackAppConfig()
+  })
+
+  const provisionSlackChannel = async (showNotification = true) => {
     if (!agent?._id || provisioning) {
-      return
+      return false
     }
 
     provisioning = true
@@ -88,12 +111,67 @@
       if (agent.live) {
         await deploymentStore.publishApp()
       }
-      notifications.success("Slack channel settings saved")
+      if (showNotification) {
+        notifications.success("Slack channel settings saved")
+      }
+      return true
     } catch (error) {
       console.error(error)
       notifications.error("Failed to save Slack channel settings")
+      return false
     } finally {
       provisioning = false
+    }
+  }
+
+  const saveSlackChannel = async () => {
+    await provisionSlackChannel()
+  }
+
+  const copySlackManifest = async () => {
+    if (!agent?._id || copyingManifest || !hasRequiredCredentials) {
+      return
+    }
+
+    copyingManifest = true
+    try {
+      const saved = await provisionSlackChannel(false)
+      if (!saved) {
+        return
+      }
+      const manifest = await agentsStore.downloadSlackManifest(agent._id)
+      await navigator.clipboard.writeText(manifest)
+      notifications.success("Slack manifest copied to clipboard")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to copy Slack manifest")
+    } finally {
+      copyingManifest = false
+    }
+  }
+
+  const createSlackApp = async () => {
+    if (!agent?._id || creatingSlackApp || !slackAppConfigConfigured) {
+      return
+    }
+
+    creatingSlackApp = true
+    try {
+      await agentsStore.updateAgent({
+        ...agent,
+        slackIntegration: {
+          ...agent.slackIntegration,
+          idleTimeoutMinutes: toOptionalIdleTimeout(draft.idleTimeoutMinutes),
+          requireUserLink: draft.requireUserLink,
+        },
+      })
+      const result = await agentsStore.createSlackApp(agent._id)
+      window.location.href = result.oauthAuthorizeUrl
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to create Slack app")
+    } finally {
+      creatingSlackApp = false
     }
   }
 </script>
@@ -108,7 +186,7 @@
       ? "Save changes"
       : "Save channel"}
   actionDisabled={provisioning || !hasRequiredCredentials}
-  onAction={provisionSlackChannel}
+  onAction={saveSlackChannel}
 >
   {#snippet fields()}
     <Input label="Bot token" type="password" bind:value={draft.botToken} />
@@ -144,5 +222,46 @@
       value={messagingEndpointUrl}
       disabled
     />
+    <div class="guided-setup">
+      <Body size="S">
+        Slack app creation uses the access token managed in
+        <Link on:click={() => bb.settings("/connections/slack")}
+          >workspace settings</Link
+        >.
+      </Body>
+      {#if !loadingSlackAppConfig && !slackAppConfigConfigured}
+        <Body size="S">
+          Configure the Slack app access token in workspace settings before
+          creating a Slack app automatically.
+        </Body>
+      {/if}
+    </div>
+  {/snippet}
+
+  {#snippet additionalActions()}
+    <Button
+      secondary
+      on:click={createSlackApp}
+      disabled={creatingSlackApp ||
+        loadingSlackAppConfig ||
+        !slackAppConfigConfigured}
+    >
+      {creatingSlackApp ? "Creating app..." : "Create Slack app"}
+    </Button>
+    <Button
+      secondary
+      on:click={copySlackManifest}
+      disabled={provisioning || copyingManifest || !hasRequiredCredentials}
+    >
+      {copyingManifest ? "Copying..." : "Copy manifest"}
+    </Button>
   {/snippet}
 </ChannelConfigLayout>
+
+<style>
+  .guided-setup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+  }
+</style>

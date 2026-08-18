@@ -24,20 +24,22 @@ jest.mock("../../..", () => ({
 jest.mock("../../../../ai/tools/budibase", () => ({
   __esModule: true,
   getBudibaseTools: jest.fn(() => []),
-  createTableTools: jest.fn((tableIds: string[]) => [
+  createTableTools: jest.fn(() => [
     {
       name: "list_tables",
       description: "List configured tables",
       sourceType: "INTERNAL_TABLE",
       sourceLabel: "Budibase",
-      tool: { execute: jest.fn().mockResolvedValue({ tableIds }) },
+      executionPolicy: { mode: "admin" },
+      tool: {} as Tool,
     },
     {
       name: "get_table",
       description: "Get a configured table",
       sourceType: "INTERNAL_TABLE",
       sourceLabel: "Budibase",
-      tool: { execute: jest.fn().mockResolvedValue({ tableIds }) },
+      executionPolicy: { mode: "admin" },
+      tool: {} as Tool,
     },
   ]),
   createKnowledgeFilesTool: jest.fn((agentId: string, operationId: string) => ({
@@ -91,6 +93,7 @@ jest.mock("../../../../ai/tools", () => ({
 
 jest.mock("../../../../ai/tools/authorization", () => ({
   authorizeAgentToolCall: jest.fn(),
+  canRequesterReadAgentToolResource: jest.fn().mockResolvedValue(true),
 }))
 
 jest.mock("@budibase/pro", () => ({
@@ -109,7 +112,10 @@ import {
 } from "../../../../ai/tools/budibase"
 import { buildPromptAndTools } from "./utils"
 import { generator } from "@budibase/backend-core/tests"
-import { authorizeAgentToolCall } from "../../../../ai/tools/authorization"
+import {
+  authorizeAgentToolCall,
+  canRequesterReadAgentToolResource,
+} from "../../../../ai/tools/authorization"
 
 describe("buildPromptAndTools", () => {
   beforeEach(() => {
@@ -124,6 +130,7 @@ describe("buildPromptAndTools", () => {
     fetchDatasources.mockResolvedValue([])
     fetchTables.mockResolvedValue([])
     fetchAutomations.mockResolvedValue([])
+    jest.mocked(canRequesterReadAgentToolResource).mockResolvedValue(true)
   })
 
   it("adds knowledge files helper when agent has a knowledge base", async () => {
@@ -278,58 +285,6 @@ describe("buildPromptAndTools", () => {
     )
   })
 
-  it("scopes table helpers to tables with explicitly enabled tools", async () => {
-    jest.mocked(getBudibaseTools).mockReturnValue([
-      {
-        name: "ta_invoices_search_rows",
-        readableName: "Invoices.search_rows",
-        tableId: "ta_invoices",
-        description: "Search invoices",
-        sourceType: ToolType.INTERNAL_TABLE,
-        sourceLabel: "Budibase",
-        executionPolicy: {
-          mode: "configurable",
-          defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
-        },
-        tool: {} as Tool,
-      },
-      {
-        name: "ta_suppliers_search_rows",
-        readableName: "Suppliers.search_rows",
-        tableId: "ta_suppliers",
-        description: "Search suppliers",
-        sourceType: ToolType.INTERNAL_TABLE,
-        sourceLabel: "Budibase",
-        executionPolicy: {
-          mode: "configurable",
-          defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
-        },
-        tool: {} as Tool,
-      },
-    ])
-    const agent = {
-      _id: "agent_tables",
-      name: "Invoice Agent",
-      aiconfig: "",
-      operations: [
-        {
-          id: "operation_1",
-          name: "Invoice lookup",
-          live: true,
-          enabledTools: requesterTools("ta_invoices_search_rows"),
-          knowledgeBases: [],
-          allowKnowledgeSourceDownload: false,
-        },
-      ],
-    } satisfies Agent
-
-    const result = await buildPromptAndTools(agent, agent.operations[0])
-
-    expect(createTableTools).toHaveBeenCalledWith(["ta_invoices"])
-    expect(Reflect.get(result.tools, "list_tables")).toBeDefined()
-    expect(Reflect.get(result.tools, "get_table")).toBeDefined()
-  })
-
   it("keeps configured tools available until execution authorization", async () => {
     jest.mocked(getBudibaseTools).mockReturnValue([
       {
@@ -389,5 +344,185 @@ describe("buildPromptAndTools", () => {
     expect(result.systemPrompt).toContain(
       "do not substitute a different tool or resource"
     )
+    expect(Reflect.get(result.tools, "list_tables")).toBeUndefined()
+    expect(Reflect.get(result.tools, "get_table")).toBeUndefined()
+  })
+
+  it("redacts restricted table definitions without removing the tools", async () => {
+    jest.mocked(canRequesterReadAgentToolResource).mockResolvedValue(false)
+    const restrictedTool = {
+      description: "Create Row on the configured resource",
+    } as Tool
+    jest.mocked(getBudibaseTools).mockReturnValue([
+      {
+        name: "ta_employees_create_row",
+        readableName: "Employees.create_row",
+        tableId: "ta_employees",
+        description: "Create an Employee with Manager or Apprentice level",
+        sourceType: ToolType.INTERNAL_TABLE,
+        sourceLabel: "Budibase",
+        executionPolicy: {
+          mode: "configurable",
+          defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+        },
+        authorization: {
+          permissionType: PermissionType.TABLE,
+          permissionLevel: PermissionLevel.WRITE,
+          resourceId: "ta_employees",
+        },
+        tool: { description: "Fields: Email, Employee Level" } as Tool,
+        requesterRedactedTool: restrictedTool,
+      },
+      {
+        name: "ta_employees_search_rows",
+        readableName: "Employees.search_rows",
+        tableId: "ta_employees",
+        description: "Search Employees by Email",
+        sourceType: ToolType.INTERNAL_TABLE,
+        sourceLabel: "Budibase",
+        executionPolicy: {
+          mode: "configurable",
+          defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+        },
+        authorization: {
+          permissionType: PermissionType.TABLE,
+          permissionLevel: PermissionLevel.READ,
+          resourceId: "ta_employees",
+        },
+        tool: { description: "Fields: Email" } as Tool,
+        requesterRedactedTool: restrictedTool,
+      },
+    ])
+    const agent = {
+      _id: "agent_employees",
+      name: "Employee Agent",
+      aiconfig: "",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Manage employees",
+          live: true,
+          enabledTools: requesterTools(
+            "ta_employees_create_row",
+            "ta_employees_search_rows"
+          ),
+          knowledgeBases: [],
+          allowKnowledgeSourceDownload: false,
+        },
+      ],
+    } satisfies Agent
+
+    const result = await buildPromptAndTools(agent, agent.operations[0], {
+      toolSecurityEnabled: true,
+      executionContext: {
+        tenantId: "tenant_1",
+        workspaceId: "app_1",
+        agentId: agent._id,
+        operationId: "operation_1",
+        conversationId: "conversation_1",
+        requester: {
+          userId: "user_1",
+          authorization: { mode: "current" },
+        },
+      },
+    })
+
+    expect(result.tools.ta_employees_create_row).toBe(restrictedTool)
+    expect(result.tools.ta_employees_search_rows).toBe(restrictedTool)
+    expect(canRequesterReadAgentToolResource).toHaveBeenCalledTimes(1)
+  })
+
+  it("keeps legacy discovery helpers when tool security is disabled", async () => {
+    jest.mocked(getBudibaseTools).mockReturnValue([
+      {
+        name: "ta_expenses_create_row",
+        readableName: "Expenses.create_row",
+        tableId: "ta_expenses",
+        description: "Create an expense",
+        sourceType: ToolType.INTERNAL_TABLE,
+        sourceLabel: "Budibase",
+        executionPolicy: {
+          mode: "configurable",
+          defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+        },
+        tool: {} as Tool,
+      },
+    ])
+    const agent = {
+      _id: "agent_expenses",
+      name: "Expense Agent",
+      aiconfig: "",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Track expenses",
+          live: true,
+          enabledTools: requesterTools("ta_expenses_create_row"),
+          knowledgeBases: [],
+          allowKnowledgeSourceDownload: false,
+        },
+      ],
+    } satisfies Agent
+
+    const result = await buildPromptAndTools(agent, agent.operations[0], {
+      toolSecurityEnabled: false,
+    })
+
+    expect(createTableTools).toHaveBeenCalledWith(["ta_expenses"])
+    expect(Reflect.get(result.tools, "list_tables")).toBeDefined()
+    expect(Reflect.get(result.tools, "get_table")).toBeDefined()
+  })
+
+  it("feature flags legacy automation discovery helpers", async () => {
+    const triggerTool = {
+      name: "automation_1_trigger",
+      readableName: "Notify finance.trigger",
+      description: "Trigger Notify finance",
+      sourceType: ToolType.AUTOMATION,
+      sourceLabel: "Budibase",
+      executionPolicy: {
+        mode: "configurable" as const,
+        defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+      },
+      tool: {} as Tool,
+    }
+    const helperTools = ["list_automations", "get_automation"].map(name => ({
+      name,
+      description: name,
+      sourceType: ToolType.AUTOMATION,
+      sourceLabel: "Budibase",
+      executionPolicy: { mode: "admin" as const },
+      tool: {} as Tool,
+    }))
+    jest.mocked(getBudibaseTools).mockReturnValue([triggerTool, ...helperTools])
+    const agent = {
+      _id: "agent_automations",
+      name: "Automation Agent",
+      aiconfig: "",
+      operations: [
+        {
+          id: "operation_1",
+          name: "Notify finance",
+          live: true,
+          enabledTools: requesterTools("automation_1_trigger"),
+          knowledgeBases: [],
+          allowKnowledgeSourceDownload: false,
+        },
+      ],
+    } satisfies Agent
+
+    const legacyResult = await buildPromptAndTools(agent, agent.operations[0], {
+      toolSecurityEnabled: false,
+    })
+    const securedResult = await buildPromptAndTools(
+      agent,
+      agent.operations[0],
+      { toolSecurityEnabled: true }
+    )
+
+    expect(Reflect.get(legacyResult.tools, "list_automations")).toBeDefined()
+    expect(Reflect.get(legacyResult.tools, "get_automation")).toBeDefined()
+    expect(Reflect.get(securedResult.tools, "list_automations")).toBeUndefined()
+    expect(Reflect.get(securedResult.tools, "get_automation")).toBeUndefined()
   })
 })
