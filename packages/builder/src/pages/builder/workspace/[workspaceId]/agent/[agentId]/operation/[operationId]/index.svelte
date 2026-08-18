@@ -75,6 +75,8 @@
   let removeToolDialog: ConfirmDialog | undefined = $state()
   let configureToolModal: ConfigureOperationToolModal | undefined = $state()
   let toolToRemove: AgentTool | undefined = $state()
+  let toolToAdd: AgentTool | undefined = $state()
+  let toolInsertPosition: { start: number; end: number } | undefined = $state()
 
   let previousToolsLoaded = false
 
@@ -287,15 +289,19 @@
     operation.promptInstructions = instructions
   }
 
-  const insertTool = (tool: AgentTool) => {
+  const insertTool = (
+    tool: AgentTool,
+    position?: { start: number; end: number }
+  ) => {
     if (!operation || !tool.readableBinding) {
       return
     }
     const current = operation.promptInstructions || ""
-    const caret = getCaretPosition?.() || {
-      start: current.length,
-      end: current.length,
-    }
+    const caret = position ||
+      getCaretPosition?.() || {
+        start: current.length,
+        end: current.length,
+      }
     const binding = `{{ ${tool.readableBinding} }}`
     const nextInstructions =
       current.slice(0, caret.start) + binding + current.slice(caret.end)
@@ -329,6 +335,16 @@
     tool.executionPolicy.mode === "admin"
       ? ToolExecutionPrincipal.ADMIN
       : getToolPrincipal(tool.runtimeBinding)
+
+  const getDefaultToolPrincipal = (tool: AgentTool) => {
+    if (
+      !$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] ||
+      tool.executionPolicy.mode === "admin"
+    ) {
+      return ToolExecutionPrincipal.ADMIN
+    }
+    return tool.executionPolicy.defaultPrincipal
+  }
 
   const setToolPrincipal = ({
     toolName,
@@ -409,12 +425,52 @@
   }
 
   const configureTool = (tool: AgentTool) => {
+    toolToAdd = undefined
+    toolInsertPosition = undefined
+    configureToolModal?.show(
+      tool,
+      getDefaultToolPrincipal(tool),
+      $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
+        tool.executionPolicy.mode === "configurable"
+    )
+  }
+
+  const addTool = (tool: AgentTool) => {
+    toolToAdd = tool
+    toolInsertPosition = getCaretPosition?.()
     configureToolModal?.show(
       tool,
       getEffectiveToolPrincipal(tool),
       $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
-        tool.executionPolicy.mode === "configurable"
+        tool.executionPolicy.mode === "configurable",
+      true
     )
+  }
+
+  const saveToolConfiguration = ({
+    tool,
+    executionPrincipal,
+  }: {
+    tool: AgentTool
+    executionPrincipal: ToolExecutionPrincipal
+  }) => {
+    if (toolToAdd?.runtimeBinding === tool.runtimeBinding && operation) {
+      operation.enabledTools = [
+        ...(operation.enabledTools || []).filter(
+          configured => configured.toolName !== tool.runtimeBinding
+        ),
+        { toolName: tool.runtimeBinding, executionPrincipal },
+      ]
+      insertTool(tool, toolInsertPosition)
+      toolToAdd = undefined
+      toolInsertPosition = undefined
+      return
+    }
+
+    setToolPrincipal({
+      toolName: tool.runtimeBinding,
+      executionPrincipal,
+    })
   }
 </script>
 
@@ -480,7 +536,7 @@
                 {toolSections}
                 bind:toolSearch
                 webSearchEnabled={webSearchConfigured}
-                onToolClick={insertTool}
+                onToolClick={addTool}
                 onAddApiConnection={() => bb.settings("/connections/apis")}
                 onConfigureWebSearch={() => webSearchConfigModal?.show()}
               />
@@ -521,7 +577,7 @@
                       {toolSections}
                       bind:toolSearch
                       webSearchEnabled={webSearchConfigured}
-                      onToolClick={insertTool}
+                      onToolClick={addTool}
                       onAddApiConnection={() =>
                         bb.settings("/connections/apis")}
                       onConfigureWebSearch={() => webSearchConfigModal?.show()}
@@ -605,11 +661,7 @@
 
   <ConfigureOperationToolModal
     bind:this={configureToolModal}
-    onSave={({ tool, executionPrincipal }) =>
-      setToolPrincipal({
-        toolName: tool.runtimeBinding,
-        executionPrincipal,
-      })}
+    onSave={saveToolConfiguration}
     onRemove={confirmRemoveTool}
   />
 

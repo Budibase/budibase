@@ -20,6 +20,7 @@
   let modal: Modal
   let tool: AgentTool | undefined
   let principalConfigurable = false
+  let adding = false
   let executionPrincipal = ToolExecutionPrincipal.REQUESTER
 
   const options = [
@@ -30,11 +31,13 @@
   export const show = (
     selectedTool: AgentTool,
     principal: ToolExecutionPrincipal,
-    canConfigurePrincipal: boolean
+    canConfigurePrincipal: boolean,
+    isAdding = false
   ) => {
     tool = selectedTool
     executionPrincipal = principal
     principalConfigurable = canConfigurePrincipal
+    adding = isAdding
     modal.show()
   }
 
@@ -56,7 +59,7 @@
   <ModalContent
     size="M"
     confirmText="Save tool"
-    showSecondaryButton
+    showSecondaryButton={!adding}
     secondaryButtonText="Remove tool"
     secondaryButtonWarning
     secondaryAction={remove}
@@ -66,7 +69,10 @@
       {#if tool}
         <ToolIcon icon={tool.icon} size="S" fallbackIcon="Wrench" />
 
-        <Heading size="S">Configure {tool.readableBinding}</Heading>
+        <Heading size="S">
+          {adding ? "Add" : "Configure"}
+          {tool.readableBinding}
+        </Heading>
       {/if}
     </div>
 
