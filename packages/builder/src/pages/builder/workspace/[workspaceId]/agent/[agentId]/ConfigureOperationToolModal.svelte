@@ -86,7 +86,6 @@
         </div>
         <Select
           id="operation-tool-execution-principal"
-          label="Run as"
           size="M"
           bind:value={executionPrincipal}
           placeholder={false}
