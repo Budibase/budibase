@@ -82,10 +82,8 @@
   let configureToolModal: ConfigureOperationToolModal | undefined = $state()
   let editorToolsDropdown: ToolsDropdown | undefined = $state()
   let toolToRemove: AgentTool | undefined = $state()
-  let toolToRemoveIsReferenced = $state(false)
   let restoreToolConfiguration = $state(false)
   let addingTool: AgentTool | undefined = $state()
-  let pendingAutocompleteInsertion: PendingToolInsertion | undefined = $state()
   let pendingToolInsertion: PendingToolInsertion | undefined = $state()
 
   let previousToolsLoaded = false
@@ -132,6 +130,13 @@
     buildBindingIcons(availablePromptBindings)
   )
   let bindingIcons = $derived(buildBindingIcons(promptBindings))
+  let toolToRemoveIsReferenced = $derived(
+    !!toolToRemove &&
+      isToolReferenced({
+        prompt: operation?.promptInstructions,
+        tool: toolToRemove,
+      })
+  )
 
   const addToolCompletion: BindingCompletionOption = {
     label: "Add tool",
@@ -145,7 +150,7 @@
       from: number,
       to: number
     ) => {
-      pendingAutocompleteInsertion = getPendingToolInsertion({
+      pendingToolInsertion = getPendingToolInsertion({
         text: view.state.doc.toString(),
         from,
         to,
@@ -482,10 +487,6 @@
   ) => {
     restoreToolConfiguration = returnToConfiguration
     toolToRemove = tool
-    toolToRemoveIsReferenced = isToolReferenced({
-      prompt: operation?.promptInstructions,
-      tool,
-    })
     removeToolDialog?.show()
   }
 
@@ -495,7 +496,6 @@
     }
     removeTool(toolToRemove)
     toolToRemove = undefined
-    toolToRemoveIsReferenced = false
     restoreToolConfiguration = false
   }
 
@@ -503,7 +503,6 @@
     const tool = toolToRemove
     const shouldRestore = restoreToolConfiguration
     toolToRemove = undefined
-    toolToRemoveIsReferenced = false
     restoreToolConfiguration = false
     if (tool && shouldRestore) {
       configureTool(tool)
@@ -600,14 +599,15 @@
   }
 
   const selectEditorTool = (tool: AgentTool) => {
-    const insertPosition = pendingAutocompleteInsertion
-    pendingAutocompleteInsertion = undefined
-    beginAddingTool(tool, insertPosition)
+    beginAddingTool(tool, pendingToolInsertion)
   }
 
   const cancelAutocompleteToolAddition = () => {
-    const position = pendingAutocompleteInsertion
-    pendingAutocompleteInsertion = undefined
+    if (addingTool) {
+      return
+    }
+    const position = pendingToolInsertion
+    pendingToolInsertion = undefined
     cancelPendingToolInsertion(position)
   }
 
