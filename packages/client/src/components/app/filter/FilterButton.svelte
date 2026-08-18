@@ -200,10 +200,13 @@
     color: var(--grey-6);
   }
 
+  /* Symmetric vertical padding; Spectrum's asymmetric default shifts the label 1px up. */
   .spectrum-Button {
     position: relative;
     display: flex;
     gap: var(--spacing-xs);
+    padding-top: var(--spectrum-button-padding-y);
+    padding-bottom: var(--spectrum-button-padding-y);
   }
 
   .spectrum-Button--sizeM,
