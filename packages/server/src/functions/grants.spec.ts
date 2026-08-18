@@ -70,6 +70,7 @@ describe("Function run grants", () => {
 
     const storedGrant = await client.get(scope.runId)
     expect(storedGrant).not.toHaveProperty("grantToken")
+    expect(storedGrant).not.toHaveProperty("remainingQueryCalls")
     expect(storedGrant).toHaveProperty("tokenHash")
   })
 
@@ -85,7 +86,32 @@ describe("Function run grants", () => {
     ).resolves.toBeNull()
     await expect(
       getFunctionRunGrant(scope.runId, grantToken, client)
-    ).resolves.toEqual(grant)
+    ).resolves.toEqual({
+      ...grant,
+      remainingQueryCalls: grant.remainingQueryCalls - 1,
+    })
+  })
+
+  it("consumes the query allowance atomically", async () => {
+    const limits = {
+      ...FUNCTION_RUN_REQUEST_FIXTURE.limits,
+      maxQueryCalls: 2,
+    }
+    const { grantToken } = await createFunctionRunGrant(scope, limits, client)
+
+    const results = await Promise.all(
+      Array.from({ length: limits.maxQueryCalls + 1 }, () =>
+        getFunctionRunGrant(scope.runId, grantToken, client)
+      )
+    )
+    expect(results.filter(Boolean)).toHaveLength(limits.maxQueryCalls)
+    expect(
+      results.filter(Boolean).map(result => result?.remainingQueryCalls)
+    ).toEqual(expect.arrayContaining([0, 1]))
+
+    await expect(
+      getFunctionRunGrant(scope.runId, "incorrect-token", client)
+    ).resolves.toBeNull()
   })
 
   it("does not replace an existing run grant", async () => {
@@ -115,7 +141,7 @@ describe("Function run grants", () => {
       ...request,
       grantToken: expect.any(String),
     })
-    expect(await client.get(scope.runId)).toBeNull()
+    expect(await client.keys("*")).toHaveLength(0)
   })
 
   it("cleans up after runner failure", async () => {
@@ -127,6 +153,6 @@ describe("Function run grants", () => {
     await expect(
       executeWithFunctionRunGrant({ execute }, request, scope, client)
     ).rejects.toThrow("runner failed")
-    expect(await client.get(scope.runId)).toBeNull()
+    expect(await client.keys("*")).toHaveLength(0)
   })
 })
