@@ -108,6 +108,10 @@
     })
   )
 
+  let toolModalEnabled = $derived(
+    $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] ||
+      $featureFlags[FeatureFlag.AI_TOOL_ESCALATION]
+  )
   let escalationToolHidden = $derived(
     !$featureFlags[FeatureFlag.ESCALATION] ||
       $featureFlags[FeatureFlag.AI_TOOL_ESCALATION]
@@ -564,7 +568,7 @@
   }
 
   const addTool = (tool: AgentTool) => {
-    if (!$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]) {
+    if (!toolModalEnabled) {
       insertTool(tool)
       return
     }
@@ -731,11 +735,9 @@
                   <div role="listitem">
                     <div
                       class="tool-row"
-                      class:tool-row--with-run-as={$featureFlags[
-                        FeatureFlag.AI_AGENT_TOOL_SECURITY
-                      ]}
+                      class:tool-row--with-run-as={toolModalEnabled}
                     >
-                      {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                      {#if toolModalEnabled}
                         <button
                           class="tool-row-activation"
                           aria-label={`Configure ${tool.readableBinding}`}
@@ -753,10 +755,12 @@
                           </div>
                           <div class="tool-row-summary">
                             <span class="tool-row-run-as">
-                              Run as {getEffectiveToolPrincipal(tool) ===
-                              ToolExecutionPrincipal.ADMIN
-                                ? "Admin"
-                                : "Requester"}
+                              {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                                Run as {getEffectiveToolPrincipal(tool) ===
+                                ToolExecutionPrincipal.ADMIN
+                                  ? "Admin"
+                                  : "Requester"}
+                              {/if}
                             </span>
                             {#if getToolApprovalCount(tool.runtimeBinding)}
                               <span class="tool-row-approvals">
@@ -783,7 +787,7 @@
                           </div>
                         </div>
                       {/if}
-                      {#if !$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                      {#if !toolModalEnabled}
                         <button
                           class="tool-actions"
                           aria-label={`Actions for ${tool.readableBinding}`}
@@ -856,7 +860,7 @@
     {/if}
   </ConfirmDialog>
 
-  {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+  {#if toolModalEnabled}
     <ConfigureOperationToolModal
       bind:this={configureToolModal}
       {agentId}

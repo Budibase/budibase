@@ -7,11 +7,12 @@
     ModalContent,
     Select,
   } from "@budibase/bbui"
-  import { ToolExecutionPrincipal } from "@budibase/types"
+  import { FeatureFlag, ToolExecutionPrincipal } from "@budibase/types"
   import type {
     EscalationNotificationChannel,
     EscalationRecipient,
   } from "@budibase/types"
+  import { featureFlags } from "@/stores/portal"
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
   import ToolIcon from "./ToolIcon.svelte"
   import type { AgentTool } from "./toolTypes"
@@ -93,23 +94,25 @@
     </div>
 
     {#if tool}
-      <div class="configuration-field">
-        <div class="field-copy">
-          <Label size="M">Run as</Label>
-          <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-            Choose the role used to access data and perform this action.
-          </Body>
+      {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+        <div class="configuration-field">
+          <div class="field-copy">
+            <Label size="M">Run as</Label>
+            <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+              Choose the role used to access data and perform this action.
+            </Body>
+          </div>
+          <Select
+            size="M"
+            bind:value={executionPrincipal}
+            placeholder={false}
+            {options}
+            getOptionLabel={option => option.label}
+            getOptionValue={option => option.value}
+            disabled={!principalConfigurable}
+          />
         </div>
-        <Select
-          size="M"
-          bind:value={executionPrincipal}
-          placeholder={false}
-          {options}
-          getOptionLabel={option => option.label}
-          getOptionValue={option => option.value}
-          disabled={!principalConfigurable}
-        />
-      </div>
+      {/if}
       {#if escalationConfigurable}
         <div class="configuration-field">
           <div class="field-copy">
