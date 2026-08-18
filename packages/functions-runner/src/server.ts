@@ -29,6 +29,7 @@ const readBody = (request: http.IncomingMessage) =>
       bytes += chunk.length
       if (bytes > MAX_REQUEST_BYTES) {
         failed = true
+        request.destroy()
         reject(new FunctionProtocolError("Function run request is too large"))
         return
       }
@@ -91,8 +92,11 @@ const handleRequest = async (
     return
   }
 
-  if (request.method === "DELETE" && request.url?.startsWith("/runs/")) {
-    const runId = request.url.slice("/runs/".length)
+  if (request.method === "DELETE" && request.url) {
+    const pathname = new URL(request.url, "http://example.com").pathname
+    const runId = pathname.startsWith("/runs/")
+      ? pathname.slice("/runs/".length)
+      : undefined
     if (runId) {
       try {
         supervisor.terminate(decodeURIComponent(runId))
