@@ -443,11 +443,22 @@
   }
 
   const handleToolActions = (event: MouseEvent, tool: AgentTool) => {
+    event.stopPropagation()
     if ($featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]) {
       configureTool(tool)
       return
     }
     openToolMenu(event, tool)
+  }
+
+  const handleToolRowKeydown = (event: KeyboardEvent, tool: AgentTool) => {
+    if (
+      $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
+      (event.key === "Enter" || event.key === " ")
+    ) {
+      event.preventDefault()
+      configureTool(tool)
+    }
   }
 
   const configureTool = (tool: AgentTool) => {
@@ -619,11 +630,27 @@
               <div class="tools-list" role="list">
                 {#each includedTools as tool (tool.runtimeBinding)}
                   <div role="listitem">
+                    <!-- svelte-ignore a11y_no_noninteractive_tabindex (role and tabindex are enabled together) -->
                     <div
                       class="tool-row"
+                      class:tool-row--interactive={$featureFlags[
+                        FeatureFlag.AI_AGENT_TOOL_SECURITY
+                      ]}
                       class:tool-row--with-run-as={$featureFlags[
                         FeatureFlag.AI_AGENT_TOOL_SECURITY
                       ]}
+                      role={$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]
+                        ? "button"
+                        : undefined}
+                      tabindex={$featureFlags[
+                        FeatureFlag.AI_AGENT_TOOL_SECURITY
+                      ]
+                        ? 0
+                        : undefined}
+                      onclick={() =>
+                        $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
+                        configureTool(tool)}
+                      onkeydown={event => handleToolRowKeydown(event, tool)}
                     >
                       <div class="tool-row-main">
                         <div class="tool-name">
@@ -838,6 +865,10 @@
     justify-content: center;
     gap: 4px;
     padding: 8px 12px;
+  }
+
+  .tool-row--interactive {
+    cursor: pointer;
   }
 
   .tool-row-main {
