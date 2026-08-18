@@ -2,9 +2,12 @@ import { redis, type RedisClient } from "@budibase/backend-core"
 import { FunctionErrorCode } from "@budibase/types"
 import type { FunctionRunRequest } from "@budibase/types"
 import {
+  consumeFunctionQueryGrant,
   createFunctionRunGrant,
+  deleteFunctionRunGrant,
   executeWithFunctionRunGrant,
   getFunctionRunGrant,
+  releaseFunctionQueryGrant,
   type FunctionRunGrantScope,
 } from "./grants"
 import {
@@ -86,6 +89,79 @@ describe("Function run grants", () => {
     await expect(
       getFunctionRunGrant(scope.runId, grantToken, client)
     ).resolves.toEqual(grant)
+  })
+
+  it("treats a missing active query count as zero", async () => {
+    const { grantToken } = await createFunctionRunGrant(
+      scope,
+      FUNCTION_RUN_REQUEST_FIXTURE.limits,
+      client
+    )
+    const storedGrant = await client.get(scope.runId)
+    delete storedGrant.activeQueryCalls
+    await client.store(
+      scope.runId,
+      storedGrant,
+      await client.getTTL(scope.runId)
+    )
+
+    await expect(
+      consumeFunctionQueryGrant(
+        scope.runId,
+        grantToken,
+        "cap_customers",
+        ["status"],
+        scope.workspaceId,
+        client
+      )
+    ).resolves.toMatchObject({ status: "allowed" })
+    expect((await client.get(scope.runId)).activeQueryCalls).toBe(1)
+
+    await releaseFunctionQueryGrant(scope.runId, grantToken, client)
+    expect((await client.get(scope.runId)).activeQueryCalls).toBe(0)
+  })
+
+  it("does not recreate a grant when cleanup races with consumption", async () => {
+    const { grantToken } = await createFunctionRunGrant(
+      scope,
+      FUNCTION_RUN_REQUEST_FIXTURE.limits,
+      client
+    )
+    const originalStore = client.store.bind(client)
+    let continueStore: () => void = () => {}
+    const storeContinue = new Promise<void>(resolve => {
+      continueStore = resolve
+    })
+    let resolveStoreStarted: () => void = () => {}
+    const storeStarted = new Promise<void>(resolve => {
+      resolveStoreStarted = resolve
+    })
+    const storeSpy = jest.spyOn(client, "store")
+    storeSpy.mockImplementation(async (key, value, expirySeconds) => {
+      if (key === scope.runId) {
+        resolveStoreStarted()
+        await storeContinue
+      }
+      return await originalStore(key, value, expirySeconds)
+    })
+
+    try {
+      const consumed = consumeFunctionQueryGrant(
+        scope.runId,
+        grantToken,
+        "cap_customers",
+        ["status"],
+        scope.workspaceId,
+        client
+      )
+      await storeStarted
+      const deleted = deleteFunctionRunGrant(scope.runId, client)
+      continueStore()
+      await Promise.all([consumed, deleted])
+      expect(await client.get(scope.runId)).toBeNull()
+    } finally {
+      storeSpy.mockRestore()
+    }
   })
 
   it("does not replace an existing run grant", async () => {

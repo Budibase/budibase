@@ -375,4 +375,37 @@ describe("Function query broker", () => {
       expect.any(Function)
     )
   })
+
+  it("preserves the result when grant cleanup fails", async () => {
+    const record = jest.fn()
+    const originalStore = client.store.bind(client)
+    let storeCalls = 0
+    const storeSpy = jest.spyOn(client, "store")
+    storeSpy.mockImplementation(async (key, value, expirySeconds) => {
+      if (key === scope.runId && storeCalls++ === 1) {
+        throw new Error("cleanup failed")
+      }
+      return await originalStore(key, value, expirySeconds)
+    })
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {})
+
+    try {
+      await expect(
+        executeFunctionQuery(request(), scope.workspaceId, {
+          ...dependencies(),
+          record,
+        })
+      ).resolves.toEqual({ data: [{ id: 1 }] })
+      expect(record).toHaveBeenCalledWith({
+        capabilityId: "cap_customers",
+        durationMs: expect.any(Number),
+        responseBytes: expect.any(Number),
+        result: "success",
+      })
+      expect(logSpy).toHaveBeenCalled()
+    } finally {
+      storeSpy.mockRestore()
+      logSpy.mockRestore()
+    }
+  })
 })

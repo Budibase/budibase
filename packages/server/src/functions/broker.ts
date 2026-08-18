@@ -252,14 +252,6 @@ export const executeFunctionQuery = async (
 
   const grant = consumed.grant
   const capability = grant.capabilities[request.capabilityId]
-  if (!capability) {
-    await releaseFunctionQueryGrant(
-      request.runId,
-      request.grantToken,
-      dependencies.client
-    )
-    throw denied()
-  }
 
   const executeQuery = dependencies.executeQuery || defaultExecuteQuery
   const record = dependencies.record || defaultRecord
@@ -291,11 +283,17 @@ export const executeFunctionQuery = async (
     }
     throw new FunctionExecutionError(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
   } finally {
-    await releaseFunctionQueryGrant(
-      request.runId,
-      request.grantToken,
-      dependencies.client
-    )
+    try {
+      await releaseFunctionQueryGrant(
+        request.runId,
+        request.grantToken,
+        dependencies.client
+      )
+    } catch {
+      console.log(
+        `Function query grant cleanup failed for run ${request.runId}; awaiting TTL expiry`
+      )
+    }
     record({
       capabilityId: request.capabilityId,
       durationMs: Date.now() - startedAt,
