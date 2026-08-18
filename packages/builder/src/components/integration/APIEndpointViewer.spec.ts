@@ -237,7 +237,10 @@ const REST_DS_ID_2 = "datasource_aaaabbbbccccdddd1111222233334444"
 
 const mockRestTemplates = (
   templates: Partial<
-    Record<RestTemplateId, Pick<RestTemplate, "id" | "name" | "icon">>
+    Record<
+      RestTemplateId,
+      Partial<RestTemplate> & Pick<RestTemplate, "id" | "name">
+    >
   >
 ) => {
   const fullTemplates = Object.fromEntries(
@@ -249,13 +252,13 @@ const mockRestTemplates = (
         ...template,
       },
     ])
-  ) as Partial<Record<RestTemplateId, RestTemplate>>
+  ) as Record<string, RestTemplate>
 
   vi.mocked(restTemplates.get).mockImplementation((templateId?: string) => {
     if (!templateId) {
       return undefined
     }
-    return fullTemplates[templateId as RestTemplateId]
+    return fullTemplates[templateId]
   })
   restTemplates.flatTemplates.splice(
     0,
@@ -2014,6 +2017,57 @@ describe("API Endpoint Viewer", () => {
         expect(container.querySelector(".url-input")).toBeNull()
         // TemplateEndpointInput wraps the endpoint Select in .input-wrap
         expect(container.querySelector(".input-wrap")).not.toBeNull()
+      })
+    })
+
+    it("loads endpoints for a custom OpenAPI template by template ID", async () => {
+      const templateId = "rest_template_github"
+      mockRestTemplates({
+        [templateId]: {
+          id: templateId,
+          name: "GitHub",
+          specs: [{ version: "custom" }],
+          custom: true,
+        },
+      })
+      await setupDatasources({
+        ...REST_DS,
+        restTemplateId: templateId,
+      })
+      vi.mocked(getRestTemplateIdentifier).mockReturnValue(templateId)
+      vi.spyOn(queries, "fetchImportInfo").mockResolvedValue({
+        name: "GitHub",
+        endpoints: [
+          {
+            id: "get-user",
+            operationId: "get-user",
+            name: "Get user",
+            method: "GET",
+            path: "/users/{username}",
+            queryVerb: "read",
+          },
+        ],
+      })
+
+      const { container } = setupDOM({ datasourceId: REST_DS_ID })
+
+      await waitFor(() => {
+        expect(queries.fetchImportInfo).toHaveBeenCalledWith({
+          restTemplateId: templateId,
+        })
+      })
+      const pickerTrigger = await waitFor(() => {
+        const element = container.querySelector(".input-wrap .spectrum-Picker")
+        expect(element).not.toBeNull()
+        return element
+      })
+      await fireEvent.click(pickerTrigger!)
+      await waitFor(() => {
+        expect(
+          Array.from(document.querySelectorAll(".spectrum-Menu-item")).some(
+            element => element.textContent?.includes("Get user")
+          )
+        ).toBe(true)
       })
     })
 

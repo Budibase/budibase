@@ -229,7 +229,7 @@
     const datasourceId = quickDatasource?._id
     bb.settings(
       datasourceId
-        ? `/connections/apis/${datasourceId}`
+        ? `/connections/api-connections/${datasourceId}`
         : `/connections/apis/new/${MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID}`
     )
   }
@@ -320,7 +320,7 @@
     const datasourceId =
       selectedDatasourceId ||
       $knowledgeConnectionsStore.sharePointDatasourceIds[0]
-    bb.settings(`/connections/apis/${datasourceId}`)
+    bb.settings(`/connections/api-connections/${datasourceId}`)
   }}
   onConnectionChange={connectionId => {
     selectedConnectionId = connectionId

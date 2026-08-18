@@ -27,6 +27,7 @@
     primary={!live}
     secondary={live}
     icon={live ? "stop" : "play"}
+    iconSize="XXS"
     {iconColor}
     iconWeight="fill"
     {disabled}

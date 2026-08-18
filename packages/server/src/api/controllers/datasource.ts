@@ -35,6 +35,7 @@ import {
   VerifyDatasourceRequest,
   VerifyDatasourceResponse,
 } from "@budibase/types"
+import { isCustomRestTemplateId } from "@budibase/shared-core"
 import { isEqual } from "lodash"
 import { getQueryParams, getTableParams } from "../../db/utils"
 import sdk from "../../sdk"
@@ -298,10 +299,28 @@ async function updateUnlocked(
     )
   }
   await clearOAuth2TokenCaches(baseDatasource)
-  const response = await db.put(
-    sdk.tables.populateExternalTableSchemas(datasource)
-  )
-  await events.datasource.updated(datasource)
+  const persistDatasource = async () => {
+    const restTemplateId = datasource.restTemplateId
+    if (isCustomRestTemplateId(restTemplateId)) {
+      const templateExists = await sdk.restTemplates.exists(restTemplateId)
+      if (!templateExists) {
+        throw new HTTPError("Custom REST template not found", 404)
+      }
+    }
+
+    const response = await db.put(
+      sdk.tables.populateExternalTableSchemas(datasource)
+    )
+    await events.datasource.updated(datasource)
+    return response
+  }
+  const restTemplateId = datasource.restTemplateId
+  const response = isCustomRestTemplateId(restTemplateId)
+    ? await sdk.restTemplates.withCustomRestTemplateLock({
+        resource: restTemplateId,
+        task: persistDatasource,
+      })
+    : await persistDatasource()
   datasource._rev = response.rev
 
   await propagateProjectDependencyChangesWithWarning(ctx, {
@@ -347,10 +366,28 @@ async function saveUnlocked(
   } = ctx.request.body
   datasourceData.projectIds = await resolveProjectIds(datasourceData.projectIds)
   preserveLegacyDatasourceEntityProjectIds(datasourceData)
-  const { datasource, errors } = await sdk.datasources.save(datasourceData, {
-    fetchSchema,
-    tablesFilter,
-  })
+  const persistDatasource = async () => {
+    const restTemplateId = datasourceData.restTemplateId
+    if (isCustomRestTemplateId(restTemplateId)) {
+      const templateExists = await sdk.restTemplates.exists(restTemplateId)
+      if (!templateExists) {
+        throw new HTTPError("Custom REST template not found", 404)
+      }
+    }
+
+    return await sdk.datasources.save(datasourceData, {
+      fetchSchema,
+      tablesFilter,
+    })
+  }
+
+  const restTemplateId = datasourceData.restTemplateId
+  const { datasource, errors } = isCustomRestTemplateId(restTemplateId)
+    ? await sdk.restTemplates.withCustomRestTemplateLock({
+        resource: restTemplateId,
+        task: persistDatasource,
+      })
+    : await persistDatasource()
 
   await propagateProjectDependencyChangesWithWarning(ctx, {
     rootResourceId: datasource._id!,
