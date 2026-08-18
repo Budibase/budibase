@@ -81,9 +81,7 @@
     draftAgentId = currentAgent._id
   })
 
-  const provisionMSTeamsChannel = async ({
-    showNotification = true,
-  }: { showNotification?: boolean } = {}) => {
+  const provisionMSTeamsChannel = async () => {
     if (!agent?._id || provisioning) {
       return false
     }
@@ -107,9 +105,7 @@
       if (agent.live) {
         await deploymentStore.publishApp()
       }
-      if (showNotification) {
-        notifications.success("Microsoft Teams channel settings saved")
-      }
+      notifications.success("Microsoft Teams channel settings saved")
       return true
     } catch (error) {
       console.error(error)
@@ -121,17 +117,12 @@
   }
 
   const downloadMSTeamsPackage = async () => {
-    if (!agent?._id || downloadingPackage || !hasRequiredCredentials) {
+    if (!agent?._id || downloadingPackage || !isProvisioned) {
       return
     }
 
     downloadingPackage = true
     try {
-      const saved = await provisionMSTeamsChannel({ showNotification: false })
-      if (!saved) {
-        return
-      }
-
       const response = await agentsStore.downloadMSTeamsPackage(agent._id)
       await downloadStream(response)
       notifications.success("Microsoft Teams app package downloaded")
@@ -204,7 +195,7 @@
     <Button
       secondary
       on:click={downloadMSTeamsPackage}
-      disabled={provisioning || downloadingPackage || !hasRequiredCredentials}
+      disabled={provisioning || downloadingPackage || !isProvisioned}
     >
       {downloadingPackage ? "Downloading..." : "Download app package"}
     </Button>

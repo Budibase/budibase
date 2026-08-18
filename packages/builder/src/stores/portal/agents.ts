@@ -374,9 +374,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     )
 
   downloadMSTeamsPackage = async (agentId: string): Promise<Response> =>
-    await this.runAndRefreshAgents(() =>
-      API.downloadAgentMSTeamsPackage(agentId)
-    )
+    await API.downloadAgentMSTeamsPackage(agentId)
 
   provisionSlackChannel = async (
     agentId: string,

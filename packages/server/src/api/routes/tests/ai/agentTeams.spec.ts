@@ -232,6 +232,19 @@ describe("agent teams integration provisioning", () => {
     })
   })
 
+  it("rejects package downloads before the Teams channel is provisioned", async () => {
+    const agent = await config.api.agent.create({
+      name: "Unprovisioned Teams Package Agent",
+      MSTeamsIntegration: {
+        appId: "11111111-1111-1111-1111-111111111111",
+        appPassword: "teams-package-password",
+        tenantId: "azure-tenant-id",
+      },
+    })
+
+    await config.api.agent.downloadMSTeamsPackage(agent._id!, { status: 400 })
+  })
+
   it("downloads a Teams app package for an agent", async () => {
     const agent = await config.api.agent.create({
       name: "Teams Package Agent",
@@ -242,6 +255,11 @@ describe("agent teams integration provisioning", () => {
         tenantId: "azure-tenant-id",
       },
     })
+    await config.api.agent.provisionMSTeamsChannel(agent._id!)
+    const { agents: agentsBeforeDownload } = await config.api.agent.fetch()
+    const agentBeforeDownload = agentsBeforeDownload.find(
+      candidate => candidate._id === agent._id
+    )
 
     const packageBuffer = await config.api.agent.downloadMSTeamsPackage(
       agent._id!,
@@ -287,11 +305,17 @@ describe("agent teams integration provisioning", () => {
       expect(manifest.validDomains).toHaveLength(1)
       expect(manifestText).not.toContain("teams-package-password")
 
-      const { agents } = await config.api.agent.fetch()
-      const updated = agents.find(candidate => candidate._id === agent._id)
-      expect(updated?.MSTeamsIntegration?.messagingEndpointUrl).toContain(
-        "/api/webhooks/ms-teams/"
+      const { agents: agentsAfterDownload } = await config.api.agent.fetch()
+      const agentAfterDownload = agentsAfterDownload.find(
+        candidate => candidate._id === agent._id
       )
+      expect(agentAfterDownload?._rev).toEqual(agentBeforeDownload?._rev)
+      expect(agentAfterDownload?.MSTeamsIntegration?.chatAppId).toEqual(
+        agentBeforeDownload?.MSTeamsIntegration?.chatAppId
+      )
+      expect(
+        agentAfterDownload?.MSTeamsIntegration?.messagingEndpointUrl
+      ).toEqual(agentBeforeDownload?.MSTeamsIntegration?.messagingEndpointUrl)
     } finally {
       await fs.rm(tempDir, { recursive: true, force: true })
     }

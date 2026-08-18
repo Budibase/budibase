@@ -556,17 +556,17 @@ export async function downloadAgentMSTeamsPackage(
 ) {
   const { agentId } = ctx.params
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const requestedChatAppId = parseOptionalChatAppId(
-    agent.MSTeamsIntegration?.chatAppId
-  )
-  const { endpointUrl } = await configureMSTeamsDeployment({
-    agent,
-    agentId,
-    requestedChatAppId,
-  })
+  const messagingEndpointUrl =
+    agent.MSTeamsIntegration?.messagingEndpointUrl?.trim()
+  if (!messagingEndpointUrl) {
+    throw new HTTPError(
+      "Teams integration must be provisioned before downloading the app package",
+      400
+    )
+  }
   const manifest = sdk.ai.deployments.MSTeams.buildMSTeamsManifest({
     agent,
-    messagingEndpointUrl: endpointUrl,
+    messagingEndpointUrl,
   })
 
   const passThrough = new stream.PassThrough()
