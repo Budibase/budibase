@@ -782,7 +782,6 @@
   }
 
   .tool-row-run-as {
-    padding-left: 21px;
     color: var(--spectrum-global-color-gray-700);
     font-size: 11px;
     line-height: 15px;
