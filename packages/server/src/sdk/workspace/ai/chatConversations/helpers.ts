@@ -31,6 +31,9 @@ export const prepareChatConversationForSave = ({
   const rev = existingChat?._rev || chat._rev
   const agentId = existingChat?.agentId || chat.agentId
   const channel = chat.channel || existingChat?.channel
+  const attachments = chat.attachments ?? existingChat?.attachments
+  const attachmentExpiresAt =
+    chat.attachmentExpiresAt ?? existingChat?.attachmentExpiresAt
 
   if (!agentId) {
     throw new HTTPError("agentId is required", 400)
@@ -46,6 +49,8 @@ export const prepareChatConversationForSave = ({
     updatedAt,
     ...(createdAt && { createdAt }),
     ...(channel && { channel }),
+    ...(attachments?.length && { attachments }),
+    ...(attachmentExpiresAt && { attachmentExpiresAt }),
   }
 }
 

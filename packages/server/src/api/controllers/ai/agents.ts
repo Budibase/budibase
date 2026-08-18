@@ -577,13 +577,13 @@ export async function completeSlackOAuth(ctx: UserCtx<void, void>) {
   const statePayload = (await cache.get(cacheKey, {
     useTenancy: false,
   })) as SlackOAuthState | undefined
-  await cache.destroy(cacheKey, { useTenancy: false })
   if (!statePayload?.agentId || !statePayload.workspaceId) {
     throw new Error("Slack OAuth state is invalid or expired")
   }
 
   const oauthError = String(ctx.query.error || "").trim()
   if (oauthError) {
+    await cache.destroy(cacheKey, { useTenancy: false })
     throw new Error("Slack OAuth authorization failed")
   }
 
@@ -625,6 +625,7 @@ export async function completeSlackOAuth(ctx: UserCtx<void, void>) {
     })
     await publishSlackIntegrationForLiveAgent(updatedAgent)
   })
+  await cache.destroy(cacheKey, { useTenancy: false })
 
   ctx.redirect(
     `/builder/workspace/${statePayload.workspaceId}/agent/${statePayload.agentId}/deployment?slack_connected=1`
