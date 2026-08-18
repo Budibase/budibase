@@ -21,6 +21,7 @@
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
   import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import {
+    contextMenuStore,
     datasources,
     restTemplates,
     workspaceDeploymentStore,
@@ -76,6 +77,7 @@
   let removeToolDialog: ConfirmDialog | undefined = $state()
   let configureToolModal: ConfigureOperationToolModal | undefined = $state()
   let toolToRemove: AgentTool | undefined = $state()
+  let restoreToolConfiguration = $state(false)
   let blockedTool: AgentTool | undefined = $state()
   let blockedToolDialog: ConfirmDialog | undefined = $state()
   let insertToolAfterAdding = $state(false)
@@ -406,7 +408,11 @@
     saveOperation()
   }
 
-  const confirmRemoveTool = (tool: AgentTool) => {
+  const confirmRemoveTool = (
+    tool: AgentTool,
+    returnToConfiguration = false
+  ) => {
+    restoreToolConfiguration = returnToConfiguration
     if (
       isToolReferenced({
         prompt: operation?.promptInstructions,
@@ -427,10 +433,44 @@
     }
     removeTool(toolToRemove)
     toolToRemove = undefined
+    restoreToolConfiguration = false
   }
 
-  const clearToolToRemove = () => {
+  const handleRemoveToolClose = () => {
+    const tool = toolToRemove
+    const shouldRestore = restoreToolConfiguration
     toolToRemove = undefined
+    restoreToolConfiguration = false
+    if (tool && shouldRestore) {
+      configureTool(tool)
+    }
+  }
+
+  const handleBlockedToolClose = () => {
+    const tool = blockedTool
+    const shouldRestore = restoreToolConfiguration
+    blockedTool = undefined
+    restoreToolConfiguration = false
+    if (tool && shouldRestore) {
+      configureTool(tool)
+    }
+  }
+
+  const openToolMenu = (event: MouseEvent, tool: AgentTool) => {
+    event.preventDefault()
+    event.stopPropagation()
+    contextMenuStore.open(
+      "agent-operation-tool",
+      [
+        {
+          icon: "trash",
+          name: "Remove tool",
+          visible: true,
+          callback: () => confirmRemoveTool(tool),
+        },
+      ],
+      { x: event.clientX, y: event.clientY }
+    )
   }
 
   const configureTool = (tool: AgentTool) => {
@@ -446,12 +486,17 @@
   const beginAddingTool = (tool: AgentTool, insertAfterAdding = false) => {
     addingTool = tool
     insertToolAfterAdding = insertAfterAdding
+    const executionPrincipal = getDefaultToolExecutionPrincipal({
+      tool,
+      toolSecurityEnabled: $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
+    })
+    if (!$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]) {
+      saveToolConfiguration({ tool, executionPrincipal })
+      return
+    }
     configureToolModal?.show(
       tool,
-      getDefaultToolExecutionPrincipal({
-        tool,
-        toolSecurityEnabled: $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
-      }),
+      executionPrincipal,
       $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
         tool.executionPolicy.mode === "configurable",
       true
@@ -613,33 +658,59 @@
               <div class="tools-list" role="list">
                 {#each configuredTools as tool (tool.runtimeBinding)}
                   <div role="listitem">
-                    <button
+                    <div
                       class="tool-row"
-                      aria-label={`Configure ${tool.readableBinding}`}
-                      onclick={() => configureTool(tool)}
+                      class:tool-row--with-run-as={$featureFlags[
+                        FeatureFlag.AI_AGENT_TOOL_SECURITY
+                      ]}
                     >
-                      <div class="tool-row-main">
-                        <div class="tool-name">
-                          <span class="tool-icon">
-                            <ToolIcon
-                              icon={tool.icon}
-                              size="S"
-                              fallbackIcon="Wrench"
-                            />
-                          </span>
-                          <span>{tool.readableBinding}</span>
+                      {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                        <button
+                          class="tool-row-activation"
+                          aria-label={`Configure ${tool.readableBinding}`}
+                          onclick={() => configureTool(tool)}
+                        >
+                          <div class="tool-name">
+                            <span class="tool-icon">
+                              <ToolIcon
+                                icon={tool.icon}
+                                size="S"
+                                fallbackIcon="Wrench"
+                              />
+                            </span>
+                            <span>{tool.readableBinding}</span>
+                          </div>
+                          <div class="tool-row-run-as">
+                            Run as {getEffectiveToolPrincipal(tool) ===
+                            ToolExecutionPrincipal.ADMIN
+                              ? "Admin"
+                              : "Requester"}
+                          </div>
+                        </button>
+                      {:else}
+                        <div class="tool-row-activation">
+                          <div class="tool-name">
+                            <span class="tool-icon">
+                              <ToolIcon
+                                icon={tool.icon}
+                                size="S"
+                                fallbackIcon="Wrench"
+                              />
+                            </span>
+                            <span>{tool.readableBinding}</span>
+                          </div>
                         </div>
-                        <span class="tool-actions" aria-hidden="true">
+                      {/if}
+                      {#if !$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                        <button
+                          class="tool-actions"
+                          aria-label={`Actions for ${tool.readableBinding}`}
+                          onclick={event => openToolMenu(event, tool)}
+                        >
                           <Icon name="dots-three" size="XS" />
-                        </span>
-                      </div>
-                      <div class="tool-row-run-as">
-                        Run as {getEffectiveToolPrincipal(tool) ===
-                        ToolExecutionPrincipal.ADMIN
-                          ? "Admin"
-                          : "Requester"}
-                      </div>
-                    </button>
+                        </button>
+                      {/if}
+                    </div>
                   </div>
                 {:else}
                   <Body size="XS" color="var(--spectrum-global-color-gray-700)"
@@ -675,8 +746,7 @@
     okText="Remove"
     warning={true}
     onOk={handleRemoveToolConfirm}
-    onCancel={clearToolToRemove}
-    onClose={clearToolToRemove}
+    onClose={handleRemoveToolClose}
   >
     {#if toolToRemove?.readableBinding}
       Remove <b>{toolToRemove.readableBinding}</b> from this operation?
@@ -689,9 +759,8 @@
     okText="Close"
     showCancelButton={false}
     warning={false}
-    onOk={() => (blockedTool = undefined)}
-    onCancel={() => (blockedTool = undefined)}
-    onClose={() => (blockedTool = undefined)}
+    onOk={handleBlockedToolClose}
+    onClose={handleBlockedToolClose}
   >
     {#if blockedTool?.readableBinding}
       Remove every <b>{`{{ ${blockedTool.readableBinding} }}`}</b> reference from
@@ -699,15 +768,17 @@
     {/if}
   </ConfirmDialog>
 
-  <ConfigureOperationToolModal
-    bind:this={configureToolModal}
-    onSave={saveToolConfiguration}
-    onRemove={confirmRemoveTool}
-    onClose={() => {
-      addingTool = undefined
-      insertToolAfterAdding = false
-    }}
-  />
+  {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+    <ConfigureOperationToolModal
+      bind:this={configureToolModal}
+      onSave={saveToolConfiguration}
+      onRemove={tool => confirmRemoveTool(tool, true)}
+      onClose={() => {
+        addingTool = undefined
+        insertToolAfterAdding = false
+      }}
+    />
+  {/if}
 
   <WebSearchConfigModal
     bind:this={webSearchConfigModal}
@@ -822,28 +893,45 @@
 
   .tool-row {
     display: flex;
-    align-items: stretch;
-    flex-direction: column;
-    gap: 4px;
-    min-height: 50px;
-    padding: 8px 12px;
-    border-radius: 4px;
-    background: var(--background-alt);
-    border: 0;
-    width: 100%;
-    color: inherit;
-    font-family: inherit;
-    text-align: left;
-    cursor: pointer;
-  }
-
-  .tool-row-main {
-    display: flex;
+    box-sizing: border-box;
+    min-height: 34px;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
+    padding: 0 12px;
+    border-radius: 4px;
+    background: var(--background-alt);
+    width: 100%;
+    color: inherit;
+    text-align: left;
+  }
+
+  .tool-row--with-run-as {
+    min-height: 50px;
+    padding: 8px 12px;
+  }
+
+  .tool-row-activation {
+    display: flex;
     min-width: 0;
     flex: 1 1 auto;
+    align-items: center;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+  }
+
+  button.tool-row-activation {
+    cursor: pointer;
+  }
+
+  .tool-row--with-run-as .tool-row-activation {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .tool-name {
@@ -887,6 +975,10 @@
   .tool-actions {
     display: flex;
     padding: 4px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
   }
 
   @media (max-width: 900px) {

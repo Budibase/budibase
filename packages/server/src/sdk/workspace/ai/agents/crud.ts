@@ -1,4 +1,5 @@
 import {
+  cache,
   context,
   docIds,
   encryption,
@@ -12,13 +13,20 @@ import type {
   AgentKnowledgeSource,
   AgentOperation,
   AgentOperationToolConfig,
+  Datasource,
   Optional,
+  Query,
 } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
 import { assertAgentHasValidConfig } from "./utils"
 import { cleanupKnowledgeForOperation, knowledgeSourceSyncQueue } from "../rag"
 import { getValidProjectIdsForDuplication } from "../../projects/utils"
+import {
+  getLegacyQueryToolBindingReplacements,
+  hasPotentialLegacyQueryToolReferences,
+  replaceLegacyQueryToolReferences,
+} from "./legacyQueryToolReferences"
 
 // TODO: this will eventually go away, after a grace period
 type DeprecatedAgentOperationToolConfig = Omit<
@@ -62,13 +70,27 @@ const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
 const NAME_REQUIRED_ERROR = "Agent name is required."
 const DEFAULT_OPERATION_NAME = "Main operation"
+const LEGACY_QUERY_TOOL_REPLACEMENTS_CACHE_TTL_SECONDS = 60
+
+const fetchRaw = async (): Promise<DeprecatedAgent[]> => {
+  const db = context.getWorkspaceDB()
+  const result = await db.allDocs<DeprecatedAgent>(
+    docIds.getDocParams(DocumentType.AGENT, undefined, {
+      include_docs: true,
+    })
+  )
+
+  return result.rows
+    .map(row => row.doc)
+    .filter((doc): doc is DeprecatedAgent => !!doc)
+}
 
 const guardName = async (name: string, id?: string) => {
   if (!name.trim()) {
     throw new HTTPError(NAME_REQUIRED_ERROR, 400)
   }
 
-  const agents = await fetch()
+  const agents = await fetchRaw()
   const normalizedName = helpers.normalizeForComparison(name)
   const duplicate = agents.find(
     agent =>
@@ -132,6 +154,7 @@ const encodeSlackIntegrationSecrets = (
 
   return {
     ...slackIntegration,
+    clientSecret: encodeSecret(slackIntegration.clientSecret),
     botToken: encodeSecret(slackIntegration.botToken),
     signingSecret: encodeSecret(slackIntegration.signingSecret),
   }
@@ -146,6 +169,7 @@ const decodeSlackIntegrationSecrets = (
 
   return {
     ...slackIntegration,
+    clientSecret: decodeSecret(slackIntegration.clientSecret),
     botToken: decodeSecret(slackIntegration.botToken),
     signingSecret: decodeSecret(slackIntegration.signingSecret),
   }
@@ -241,6 +265,50 @@ const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
   }
 }
 
+// TODO: remove after agents created before query tool IDs were introduced have
+// had enough time to be resaved with their current bindings.
+const withCurrentQueryToolReferences = async (agents: Agent[]) => {
+  if (!hasPotentialLegacyQueryToolReferences(agents)) {
+    return agents
+  }
+
+  const workspaceId = context.getOrThrowWorkspaceId()
+  const replacementEntries = await cache.withCache<[string, string][]>(
+    `legacy_agent_query_tool_replacements_${workspaceId}`,
+    LEGACY_QUERY_TOOL_REPLACEMENTS_CACHE_TTL_SECONDS,
+    async () => {
+      const db = context.getWorkspaceDB()
+      const [datasourceResult, queryResult] = await Promise.all([
+        db.allDocs<Datasource>(
+          docIds.getDocParams(DocumentType.DATASOURCE, undefined, {
+            include_docs: true,
+          })
+        ),
+        db.allDocs<Query>(
+          docIds.getDocParams(DocumentType.QUERY, undefined, {
+            include_docs: true,
+          })
+        ),
+      ])
+      return Array.from(
+        getLegacyQueryToolBindingReplacements({
+          datasources: datasourceResult.rows
+            .map(row => row.doc)
+            .filter((doc): doc is Datasource => !!doc),
+          queries: queryResult.rows
+            .map(row => row.doc)
+            .filter((doc): doc is Query => !!doc),
+        }).entries()
+      )
+    }
+  )
+  const replacements = new Map(replacementEntries)
+
+  return agents.map(agent =>
+    replaceLegacyQueryToolReferences({ agent, replacements })
+  )
+}
+
 type AgentIntegrationKeys = {
   [K in keyof Required<Agent>]: K extends `${string}Integration` ? K : never
 }[keyof Required<Agent>]
@@ -290,6 +358,7 @@ const sanitiseSlackIntegration = (
   }
 
   const {
+    clientSecret: _clientSecret,
     botToken: _botToken,
     signingSecret: _signingSecret,
     chatAppId: _chatAppId,
@@ -462,6 +531,10 @@ const mergeSlackIntegration = ({
     merged.botToken = existing.botToken
   }
 
+  if (incoming.clientSecret === SECRET_MASK && existing?.clientSecret) {
+    merged.clientSecret = existing.clientSecret
+  }
+
   if (incoming.signingSecret === SECRET_MASK && existing?.signingSecret) {
     merged.signingSecret = existing.signingSecret
   }
@@ -503,17 +576,8 @@ const mergeTelegramIntegration = ({
 }
 
 export async function fetch(): Promise<Agent[]> {
-  const db = context.getWorkspaceDB()
-  const result = await db.allDocs<DeprecatedAgent>(
-    docIds.getDocParams(DocumentType.AGENT, undefined, {
-      include_docs: true,
-    })
-  )
-
-  return result.rows
-    .map(row => row.doc)
-    .filter(doc => !!doc)
-    .map(withAgentDefaults)
+  const agents = (await fetchRaw()).map(withAgentDefaults)
+  return withCurrentQueryToolReferences(agents)
 }
 
 export async function getOrThrow(agentId: string | undefined): Promise<Agent> {
@@ -522,13 +586,14 @@ export async function getOrThrow(agentId: string | undefined): Promise<Agent> {
   }
 
   const db = context.getWorkspaceDB()
-
-  const agent = await db.tryGet<DeprecatedAgent>(agentId)
-  if (!agent) {
+  const rawAgent = await db.tryGet<DeprecatedAgent>(agentId)
+  if (!rawAgent) {
     throw new HTTPError("Agent not found", 404)
   }
 
-  return withAgentDefaults(agent)
+  const agent = withAgentDefaults(rawAgent)
+  const [resolvedAgent] = await withCurrentQueryToolReferences([agent])
+  return resolvedAgent
 }
 
 export async function create(
