@@ -76,9 +76,9 @@ const functionLogEntrySchema = z
 const functionRunMetricsSchema = z
   .object({
     durationMs: z.number().nonnegative(),
-    queryCount: z.number().nonnegative(),
-    outputBytes: z.number().nonnegative(),
-    logBytes: z.number().nonnegative(),
+    queryCount: z.number().int().nonnegative(),
+    outputBytes: z.number().int().nonnegative(),
+    logBytes: z.number().int().nonnegative(),
   })
   .strict()
 
@@ -117,11 +117,13 @@ const validate = <T>(
   value: unknown,
   malformedMessage: string
 ): T => {
-  try {
-    return schema.parse(value)
-  } catch {
+  const result = schema.safeParse(value)
+  if (!result.success) {
+    console.error("Function protocol validation failed", result.error)
     throw new FunctionProtocolError(malformedMessage)
   }
+
+  return result.data
 }
 
 const decodeJSON = (payload: string, malformedMessage: string): unknown => {
