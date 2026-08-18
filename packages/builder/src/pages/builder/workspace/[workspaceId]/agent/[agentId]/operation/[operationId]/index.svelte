@@ -21,6 +21,7 @@
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
   import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import {
+    contextMenuStore,
     datasources,
     restTemplates,
     workspaceDeploymentStore,
@@ -424,6 +425,31 @@
     toolToRemove = undefined
   }
 
+  const openToolMenu = (event: MouseEvent, tool: AgentTool) => {
+    event.preventDefault()
+    event.stopPropagation()
+    contextMenuStore.open(
+      "agent-operation-tool",
+      [
+        {
+          icon: "trash",
+          name: "Remove tool",
+          visible: true,
+          callback: () => confirmRemoveTool(tool),
+        },
+      ],
+      { x: event.clientX, y: event.clientY }
+    )
+  }
+
+  const handleToolActions = (event: MouseEvent, tool: AgentTool) => {
+    if ($featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]) {
+      configureTool(tool)
+      return
+    }
+    openToolMenu(event, tool)
+  }
+
   const configureTool = (tool: AgentTool) => {
     toolToAdd = undefined
     toolInsertPosition = undefined
@@ -593,7 +619,12 @@
               <div class="tools-list" role="list">
                 {#each includedTools as tool (tool.runtimeBinding)}
                   <div role="listitem">
-                    <div class="tool-row">
+                    <div
+                      class="tool-row"
+                      class:tool-row--with-run-as={$featureFlags[
+                        FeatureFlag.AI_AGENT_TOOL_SECURITY
+                      ]}
+                    >
                       <div class="tool-row-main">
                         <div class="tool-name">
                           <span class="tool-icon">
@@ -605,15 +636,13 @@
                           </span>
                           <span>{tool.readableBinding}</span>
                         </div>
-                        {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
-                          <button
-                            class="tool-actions"
-                            aria-label={`Configure ${tool.readableBinding}`}
-                            onclick={() => configureTool(tool)}
-                          >
-                            <Icon name="dots-three" size="XS" />
-                          </button>
-                        {/if}
+                        <button
+                          class="tool-actions"
+                          aria-label={`Actions for ${tool.readableBinding}`}
+                          onclick={event => handleToolActions(event, tool)}
+                        >
+                          <Icon name="dots-three" size="XS" />
+                        </button>
                       </div>
                       {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
                         <div class="tool-row-run-as">
@@ -790,16 +819,25 @@
   .tool-row {
     display: flex;
     box-sizing: border-box;
-    align-items: stretch;
-    flex-direction: column;
-    gap: 4px;
-    min-height: 50px;
-    padding: 8px 12px;
+    min-height: 34px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 12px;
     border-radius: 4px;
     background: var(--background-alt);
     width: 100%;
     color: inherit;
     text-align: left;
+  }
+
+  .tool-row--with-run-as {
+    min-height: 50px;
+    align-items: stretch;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 12px;
   }
 
   .tool-row-main {
