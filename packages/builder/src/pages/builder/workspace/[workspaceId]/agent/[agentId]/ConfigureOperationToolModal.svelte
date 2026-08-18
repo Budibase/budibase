@@ -81,6 +81,7 @@
         <Select
           size="M"
           value={executionPrincipal}
+          placeholder={false}
           {options}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
