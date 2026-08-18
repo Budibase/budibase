@@ -369,6 +369,29 @@
     saveOperation({ promptInstructions: nextInstructions })
   }
 
+  const removeEmptyToolPlaceholder = (position?: {
+    start: number
+    end: number
+  }) => {
+    if (!operation || !position) {
+      return
+    }
+    const current = operation.promptInstructions || ""
+    if (!/^\{\{\s*\}\}$/.test(current.slice(position.start, position.end))) {
+      return
+    }
+    const nextInstructions =
+      current.slice(0, position.start) + current.slice(position.end)
+    autocompleteToolPosition = undefined
+    insertAtPos?.({
+      start: position.start,
+      end: position.end,
+      value: "",
+      cursor: { anchor: position.start },
+    })
+    saveOperation({ promptInstructions: nextInstructions })
+  }
+
   const removeTool = (tool: AgentTool) => {
     if (!operation) {
       return
@@ -597,6 +620,20 @@
     autocompleteToolPosition = undefined
     beginAddingTool(tool, true, insertPosition)
   }
+
+  const cancelAutocompleteToolAddition = () => {
+    const position = autocompleteToolPosition
+    autocompleteToolPosition = undefined
+    removeEmptyToolPlaceholder(position)
+  }
+
+  const closeToolConfiguration = () => {
+    const insertPosition = addingToolInsertPosition
+    addingTool = undefined
+    insertToolAfterAdding = false
+    addingToolInsertPosition = undefined
+    removeEmptyToolPlaceholder(insertPosition)
+  }
 </script>
 
 {#if operation && agentId}
@@ -662,7 +699,7 @@
                 bind:toolSearch
                 webSearchEnabled={webSearchConfigured}
                 onToolClick={selectEditorTool}
-                onClose={() => (autocompleteToolPosition = undefined)}
+                onClose={cancelAutocompleteToolAddition}
                 onAddApiConnection={() => bb.settings("/connections/apis")}
                 onConfigureWebSearch={() => webSearchConfigModal?.show()}
               />
@@ -829,11 +866,7 @@
       bind:this={configureToolModal}
       onSave={saveToolConfiguration}
       onRemove={tool => confirmRemoveTool(tool, true)}
-      onClose={() => {
-        addingTool = undefined
-        insertToolAfterAdding = false
-        addingToolInsertPosition = undefined
-      }}
+      onClose={closeToolConfiguration}
     />
   {/if}
 
