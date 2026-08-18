@@ -1,6 +1,9 @@
 import { auth } from "@budibase/backend-core"
 import { REVIEWER_TYPES } from "@budibase/shared-core"
-import { EscalationNotificationChannel, ResolutionStrategy } from "@budibase/types"
+import {
+  EscalationNotificationChannel,
+  ResolutionStrategy,
+} from "@budibase/types"
 import Joi from "joi"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")

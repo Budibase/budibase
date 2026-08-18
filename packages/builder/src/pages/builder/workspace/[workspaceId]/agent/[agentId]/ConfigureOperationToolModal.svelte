@@ -121,8 +121,8 @@
           </div>
           {#if !providers.length}
             <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-              There are currently no deployments configured on this agent, so
-              no one can be notified. Add one in deployments first.
+              There are currently no deployments configured on this agent, so no
+              one can be notified. Add one in deployments first.
             </Body>
           {:else}
             <EscalationRecipients

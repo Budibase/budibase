@@ -1,6 +1,9 @@
 import { Document } from "../../"
 import type { UIMessage } from "ai"
-import { EscalationRecipient, ResolutionStrategy } from "../workspace/escalation"
+import {
+  EscalationRecipient,
+  ResolutionStrategy,
+} from "../workspace/escalation"
 
 export enum ToolType {
   INTERNAL_TABLE = "INTERNAL_TABLE",

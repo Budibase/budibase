@@ -5,7 +5,7 @@ import {
   Duration,
   utils,
 } from "@budibase/backend-core"
-import { ESCALATE_TOOL_NAME, EscalateToolResultStatus } from "@budibase/types"
+import { EscalateToolResultStatus } from "@budibase/types"
 import type {
   AgentRequest,
   AgentRequestAction,
