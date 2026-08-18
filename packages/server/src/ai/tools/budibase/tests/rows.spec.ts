@@ -1,5 +1,7 @@
 import {
   FieldType,
+  PermissionLevel,
+  PermissionType,
   RelationshipType,
   TableSourceType,
   type TableSchema,
@@ -59,6 +61,24 @@ describe("AI Tools - Rows", () => {
     }
   })
 
+  it.each([
+    ["get_row", PermissionLevel.READ],
+    ["search_rows", PermissionLevel.READ],
+    ["create_row", PermissionLevel.WRITE],
+    ["update_row", PermissionLevel.WRITE],
+  ])("requires the correct permission for %s", (action, permissionLevel) => {
+    const tableId = `${datasourceId}__Notes`
+    const rowTool = getExternalRowTools("Notes").find(tool =>
+      tool.readableName?.endsWith(`.${action}`)
+    )
+
+    expect(rowTool?.authorization).toMatchObject({
+      permissionType: PermissionType.TABLE,
+      permissionLevel,
+      resourceId: tableId,
+    })
+  })
+
   it("distinguishes long table IDs with the same prefix", () => {
     const firstNames = getExternalRowTools("SignOffLimitsAlpha").map(
       tool => tool.name
@@ -78,6 +98,35 @@ describe("AI Tools - Rows", () => {
     for (const tool of tools) {
       const action = tool.readableName?.split(".").at(-1)
       expect(tool.name).toBe(`${tableId}_${action}`.substring(0, 64))
+    }
+  })
+
+  it("provides schema-free requester definitions for every row action", () => {
+    const tools = createRowTools({
+      tableId: "ta_employees",
+      tableName: "Employees",
+      tableSourceType: TableSourceType.INTERNAL,
+      tableSchema: {
+        "Employee Level": {
+          name: "Employee Level",
+          type: FieldType.OPTIONS,
+          constraints: { inclusion: ["Apprentice", "Manager"] },
+        },
+      },
+    })
+
+    expect(tools).toHaveLength(5)
+    for (const rowTool of tools) {
+      expect(rowTool.requesterRedactedTool).toBeDefined()
+      const serializedDefinition = JSON.stringify({
+        description: rowTool.requesterRedactedTool?.description,
+        inputSchema: rowTool.requesterRedactedTool?.inputSchema,
+      })
+      expect(serializedDefinition).not.toContain("Employees")
+      expect(serializedDefinition).not.toContain("Employee Level")
+      expect(serializedDefinition).not.toContain("Apprentice")
+      expect(serializedDefinition).not.toContain("Manager")
+      expect(serializedDefinition).toContain("Resource metadata is restricted")
     }
   })
 
@@ -144,6 +193,38 @@ describe("AI Tools - Rows", () => {
 
     expect(persistedRow.name).toBe("Updated name")
     expect(persistedRow.description).toBe("original description")
+  })
+
+  it("does not return row fields from a redacted write tool", async () => {
+    const table = await config.api.table.save(basicTable())
+    const createdRow = await config.api.row.save(
+      table._id!,
+      basicRow(table._id!)
+    )
+    const updateTool = getBudibaseTools([table]).find(
+      tool => tool.name === `${table._id}_update_row`
+    )
+    const execute = updateTool?.requesterRedactedTool?.execute
+    if (!execute) {
+      throw new Error("Redacted update tool not found")
+    }
+
+    const result = await runInContext(() =>
+      execute(
+        {
+          rowId: createdRow._id!,
+          rowRev: createdRow._rev!,
+          data: { name: "Updated without read access" },
+        },
+        { toolCallId: "test-tool-call", messages: [] }
+      )
+    )
+
+    expect(result).toEqual({ success: true })
+    expect(result).not.toHaveProperty("row")
+    await expect(
+      config.api.row.get(table._id!, createdRow._id!)
+    ).resolves.toMatchObject({ name: "Updated without read access" })
   })
 
   it("should create and update rows via table alias tools", async () => {

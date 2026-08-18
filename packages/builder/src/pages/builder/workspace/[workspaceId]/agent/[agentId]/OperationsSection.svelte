@@ -1,13 +1,17 @@
 <script lang="ts">
   import { Body, Button, Helpers, Icon, notifications } from "@budibase/bbui"
-  import type { Agent, AgentOperation, EnrichedBinding } from "@budibase/types"
-  import type { AgentTool } from "./toolTypes"
-  import type { BindingCompletion } from "@/types"
+  import type { AgentOperation } from "@budibase/types"
   import { confirm } from "@/helpers/confirm"
-  import { contextMenuStore } from "@/stores/builder"
+  import { contextMenuStore, workspaceDeploymentStore } from "@/stores/builder"
+  import { agentsStore, selectedAgent } from "@/stores/portal"
   import OperationNameModal from "./OperationNameModal.svelte"
   import OperationLiveBadge from "./OperationLiveBadge.svelte"
-  import OperationSidePanel from "./OperationSidePanel.svelte"
+  import * as routify from "@roxi/routify"
+  import { tick } from "svelte"
+
+  const { goto } = routify
+
+  $goto
 
   const DEFAULT_PROMPT_INSTRUCTIONS = `**Operation role**
 What is this operation responsible for?
@@ -27,44 +31,14 @@ What information does this operation receive?
 Any constraints this operation must follow.
 `
 
-  let {
-    agent = $bindable(),
-    agentId,
-    promptBindings = [],
-    bindingIcons = {},
-    completions = [],
-    toolsLoaded = false,
-    availableTools = [],
-    webSearchConfigured = false,
-    onAddApiConnection = () => {},
-    onConfigureWebSearch = () => {},
-    onSetOperationLive = async () => false,
-    onUpdated,
-  }: {
-    agent: Agent
-    agentId?: string
-    promptBindings?: EnrichedBinding[]
-    bindingIcons?: Record<string, string | undefined>
-    completions?: BindingCompletion[]
-    toolsLoaded?: boolean
-    availableTools?: AgentTool[]
-    webSearchConfigured?: boolean
-    onAddApiConnection?: () => void
-    onConfigureWebSearch?: () => void
-    onSetOperationLive?: (
-      operationId: string,
-      live: boolean
-    ) => Promise<boolean>
-    onUpdated: () => Promise<boolean>
-  } = $props()
+  let { agentId }: { agentId: string } = $props()
 
   let selectedOperationId = $state<string | undefined>(undefined)
-  let operationPanelOpen = $state(false)
   let renameOperationId = $state<string | undefined>(undefined)
   let createOperationModal: OperationNameModal | undefined = $state()
   let renameOperationModal: OperationNameModal | undefined = $state()
 
-  let operations = $derived(agent.operations || [])
+  let operations = $derived($selectedAgent?.operations || [])
   let sortedOperations = $derived.by(() =>
     [...operations].sort((a, b) =>
       a.name.localeCompare(b.name, undefined, {
@@ -72,27 +46,13 @@ Any constraints this operation must follow.
       })
     )
   )
-  let selectedOperation = $derived(
-    operations.find(operation => operation.id === selectedOperationId)
-  )
   let hasOperation = $derived(operations.length > 0)
-  let operationLive = $derived(selectedOperation?.live === true)
 
   const normalizeName = (value: string) => value.trim().toLowerCase()
 
-  const openOperationPanel = (operationId: string) => {
+  const openOperation = (operationId: string) => {
     selectedOperationId = operationId
-    operationPanelOpen = true
-  }
-
-  const closeOperationPanel = () => {
-    selectedOperationId = undefined
-    operationPanelOpen = false
-  }
-
-  const openRenameModal = () => {
-    renameOperationId = selectedOperation?.id
-    renameOperationModal?.show(selectedOperation?.name || "")
+    $goto(`./operation/${operationId}`)
   }
 
   const validateCreateOperationName = (name: string) => {
@@ -120,16 +80,17 @@ Any constraints this operation must follow.
     if (!renameOperationId) {
       return
     }
-    const operation = operations.find(
-      operation => operation.id === renameOperationId
-    )
-    if (!operation) {
-      return
-    }
 
-    operation.name = name
-    await onUpdated()
-    renameOperationId = undefined
+    try {
+      await agentsStore.updateAgentOperation(agentId, renameOperationId, {
+        name,
+      })
+      await workspaceDeploymentStore.fetch()
+      renameOperationId = undefined
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to rename operation")
+    }
   }
 
   const createDefaultOperation = (name: string) => {
@@ -142,19 +103,22 @@ Any constraints this operation must follow.
     } satisfies AgentOperation
   }
 
-  const setOperationLive = async (nextLive: boolean) => {
-    if (!selectedOperation || selectedOperation.live === nextLive) {
+  const setOperationLive = async (operationId: string, nextLive: boolean) => {
+    const targetOperation = operations.find(
+      operation => operation.id === operationId
+    )
+    if (!targetOperation || targetOperation.live === nextLive) {
       return
     }
-    const currentOperation = selectedOperation
-    const previousLive = currentOperation.live
-    currentOperation.live = nextLive
-    const saveSucceeded = await onSetOperationLive(
-      currentOperation.id,
-      nextLive
-    )
-    if (saveSucceeded === false) {
-      currentOperation.live = previousLive
+
+    try {
+      await agentsStore.updateAgentOperation(agentId, targetOperation.id, {
+        live: nextLive,
+      })
+      await workspaceDeploymentStore.fetch()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to update operation")
     }
   }
 
@@ -164,32 +128,45 @@ Any constraints this operation must follow.
 
   const createOperation = async (name: string) => {
     const operation = createDefaultOperation(name)
-    agent.operations = [...(agent.operations || []), operation]
-    selectedOperationId = operation.id
-    await onUpdated()
-    openOperationPanel(operation.id)
+
+    try {
+      await agentsStore.createAgentOperation(agentId, {
+        id: operation.id,
+        name: operation.name,
+        live: operation.live,
+        promptInstructions: operation.promptInstructions,
+        allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
+      })
+      $goto(`./operation/${operation.id}`)
+      workspaceDeploymentStore.fetch().catch(error => {
+        console.error(error)
+      })
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to create operation")
+    }
   }
 
-  const deleteOperation = async () => {
-    if (!selectedOperationId) {
-      return
-    }
-    const operationIdToDelete = selectedOperationId
+  const openRenameModal = (operationId: string) => {
+    const targetOperation = operations.find(
+      operation => operation.id === operationId
+    )
+    renameOperationId = operationId
+    renameOperationModal?.show(targetOperation?.name || "")
+  }
 
-    confirm({
+  const confirmDeleteOperation = async (operationId: string) => {
+    await tick()
+
+    await confirm({
       title: "Confirm deletion",
       body: "Delete this operation? This will clear instructions and selected tools.",
       okText: "Delete",
       warning: true,
       onConfirm: async () => {
         try {
-          agent.operations = (agent.operations || []).filter(
-            operation => operation.id !== operationIdToDelete
-          )
-          await onUpdated()
-          if (selectedOperationId === operationIdToDelete) {
-            closeOperationPanel()
-          }
+          await agentsStore.deleteAgentOperation(agentId, operationId)
+          await workspaceDeploymentStore.fetch()
           notifications.success("Operation deleted.")
         } catch (error) {
           console.error(error)
@@ -199,37 +176,50 @@ Any constraints this operation must follow.
     })
   }
 
-  const openOperationContextMenu = (event: MouseEvent) => {
+  const deleteOperation = (operationId: string) => {
+    confirmDeleteOperation(operationId).catch(error => {
+      console.error(error)
+    })
+  }
+
+  const openOperationContextMenu = (event: MouseEvent, operationId: string) => {
+    const menuOperation = operations.find(
+      operation => operation.id === operationId
+    )
+    if (!menuOperation) {
+      return
+    }
+
     event.preventDefault()
     event.stopPropagation()
+
+    const menuOperationLive = menuOperation.live === true
 
     contextMenuStore.open(
       "agent-operation",
       [
         {
-          icon: operationLive ? "stop" : "play",
-          name: operationLive ? "Stop" : "Set live",
+          icon: menuOperationLive ? "stop" : "play",
+          name: menuOperationLive ? "Stop" : "Set live",
           visible: true,
-          callback: async () => await setOperationLive(!operationLive),
+          callback: () => setOperationLive(operationId, !menuOperationLive),
         },
         {
           icon: "pencil",
           name: "Rename",
           visible: true,
-          callback: openRenameModal,
+          callback: () => openRenameModal(operationId),
         },
         {
           icon: "trash",
           name: "Delete",
           visible: true,
-          callback: deleteOperation,
+          callback: () => deleteOperation(operationId),
         },
       ],
       { x: event.clientX, y: event.clientY },
       () => {
-        if (!operationPanelOpen) {
-          selectedOperationId = undefined
-        }
+        selectedOperationId = undefined
       }
     )
   }
@@ -260,10 +250,10 @@ Any constraints this operation must follow.
           <button
             class="operation-open-button"
             type="button"
-            onclick={() => openOperationPanel(operation.id)}
+            onclick={() => openOperation(operation.id)}
             oncontextmenu={event => {
               selectedOperationId = operation.id
-              openOperationContextMenu(event)
+              openOperationContextMenu(event, operation.id)
             }}
           >
             <span class="operation-name"
@@ -278,9 +268,12 @@ Any constraints this operation must follow.
             class="operation-menu-trigger"
             type="button"
             aria-label="Operation actions"
-            onclick={event => {
+            onclick={async event => {
+              event.preventDefault()
+              event.stopPropagation()
               selectedOperationId = operation.id
-              openOperationContextMenu(event)
+              await tick()
+              openOperationContextMenu(event, operation.id)
             }}
           >
             <Icon
@@ -304,26 +297,6 @@ Any constraints this operation must follow.
   validateName={validateCreateOperationName}
   onConfirm={createOperation}
 />
-
-{#if selectedOperation}
-  <OperationSidePanel
-    open={operationPanelOpen}
-    {agentId}
-    bind:operation={selectedOperation}
-    {promptBindings}
-    {bindingIcons}
-    {completions}
-    {toolsLoaded}
-    {availableTools}
-    {webSearchConfigured}
-    {onAddApiConnection}
-    {onConfigureWebSearch}
-    onRenameOperation={openRenameModal}
-    {onSetOperationLive}
-    {onUpdated}
-    onClose={closeOperationPanel}
-  />
-{/if}
 
 <OperationNameModal
   bind:this={renameOperationModal}

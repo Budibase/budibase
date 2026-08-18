@@ -12,6 +12,15 @@ export enum ToolType {
   ESCALATION = "ESCALATION",
 }
 
+export enum ToolExecutionPrincipal {
+  REQUESTER = "requester",
+  ADMIN = "admin",
+}
+
+export type ToolExecutionPolicy =
+  | { mode: "admin" }
+  | { mode: "configurable"; defaultPrincipal: ToolExecutionPrincipal }
+
 export interface ToolMetadata {
   name: string
   readableName?: string
@@ -19,6 +28,7 @@ export interface ToolMetadata {
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
+  executionPolicy: ToolExecutionPolicy
 }
 
 interface ChatAgentIntegration {
@@ -44,8 +54,13 @@ export interface MSTeamsAgentIntegration extends ChatAgentIntegration {
 }
 
 export interface SlackAgentIntegration extends ChatAgentIntegration {
+  appId?: string
+  clientId?: string
+  clientSecret?: string
   botToken?: string
+  botUserId?: string
   signingSecret?: string
+  teamName?: string
   messagingEndpointUrl?: string
   // Bots Slack workspace - derived via auth.test when the token is saved
   // Need this to filter the user picker
@@ -128,12 +143,31 @@ export interface AgentEscalationConfig {
   delay?: number
 }
 
+export interface AgentOperationToolConfig {
+  toolName: string
+  executionPrincipal: ToolExecutionPrincipal
+}
+
+export interface AgentRequester {
+  userId: string
+  authorization: { mode: "current" } | { mode: "preview"; roleId: string }
+}
+
+export interface AgentExecutionContext {
+  tenantId: string
+  workspaceId: string
+  agentId: string
+  operationId: string
+  conversationId: string
+  requester: AgentRequester
+}
+
 export interface AgentOperation {
   id: string
   name: string
   live: boolean
   promptInstructions?: string
-  enabledTools?: string[]
+  enabledTools?: AgentOperationToolConfig[]
   knowledgeBases?: string[]
   knowledgeSources?: AgentKnowledgeSource[]
   allowKnowledgeSourceDownload: boolean
