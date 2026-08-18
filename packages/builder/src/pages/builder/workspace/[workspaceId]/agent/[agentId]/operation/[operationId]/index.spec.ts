@@ -1,5 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
-import { ToolExecutionPrincipal, type AgentOperation } from "@budibase/types"
+import {
+  ToolExecutionPrincipal,
+  type Agent,
+  type AgentOperation,
+} from "@budibase/types"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { writable } from "svelte/store"
 import MockBody from "@/test/mocks/MockBody.svelte"
@@ -53,6 +57,7 @@ const mocks = vi.hoisted(() => {
 
 vi.mock("@budibase/bbui", () => ({
   Body: MockBody,
+  Helpers: { uuid: vi.fn(() => "test-session-id") },
   Icon: MockComponent,
   notifications: { error: vi.fn() },
 }))
@@ -147,6 +152,22 @@ describe("operation page tool autocomplete", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.updateAgentOperation.mockResolvedValue({ _rev: "2" })
+    mocks.selectedAgent.set({
+      _id: "agent-1",
+      _rev: "1",
+      name: "Support agent",
+      aiconfig: "config-1",
+      operations: [
+        {
+          id: "operation-1",
+          name: "Update inventory",
+          live: false,
+          promptInstructions: "{{}}",
+          enabledTools: [],
+          allowKnowledgeSourceDownload: false,
+        },
+      ],
+    })
   })
 
   it("configures and inserts an autocomplete tool in one update", async () => {
@@ -194,5 +215,24 @@ describe("operation page tool autocomplete", () => {
         ],
       })
     )
+  })
+
+  it("shows configured tools that are no longer available", () => {
+    mocks.selectedAgent.update((agent: Agent) => ({
+      ...agent,
+      operations: agent.operations?.map((operation: AgentOperation) => ({
+        ...operation,
+        enabledTools: [
+          {
+            toolName: "missing_tool",
+            executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+          },
+        ],
+      })),
+    }))
+
+    render(OperationPage)
+
+    expect(screen.getByText("missing_tool")).toBeInTheDocument()
   })
 })

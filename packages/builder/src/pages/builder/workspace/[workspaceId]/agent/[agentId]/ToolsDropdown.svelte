@@ -49,7 +49,7 @@
   const handleKeydown = (event: KeyboardEvent) => {
     const items = Array.from(
       toolsMenuElement?.querySelectorAll<HTMLElement>(
-        '[role="menuitem"]:not(.is-disabled)'
+        '[role="menuitem"]:not(.is-disabled), button:not(:disabled)'
       ) || []
     )
     const focusableElements = searchInput ? [searchInput, ...items] : items

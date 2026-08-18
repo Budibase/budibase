@@ -16,6 +16,7 @@ export interface EditorRangeReplacement {
   to?: number
   insert: string
   selection?: { anchor: number }
+  preserveSelection?: boolean
 }
 
 export type CodeValidator = Record<

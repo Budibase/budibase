@@ -191,6 +191,7 @@
     to,
     insert,
     selection,
+    preserveSelection = false,
   }: EditorRangeReplacement): string => {
     const currentSelection = editor.state.selection.main
     const rangeFrom = from ?? currentSelection.from
@@ -201,7 +202,9 @@
         to: rangeTo,
         insert,
       },
-      selection: selection ?? { anchor: rangeFrom + insert.length },
+      selection: preserveSelection
+        ? undefined
+        : (selection ?? { anchor: rangeFrom + insert.length }),
     })
     return editor.state.doc.toString()
   }
@@ -221,6 +224,7 @@
         to: opts.end ?? opts.start,
         insert: opts.value,
         selection: opts.cursor,
+        preserveSelection: !opts.cursor,
       })
     }
   }

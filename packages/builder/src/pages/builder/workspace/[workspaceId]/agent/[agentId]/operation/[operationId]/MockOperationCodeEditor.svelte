@@ -9,13 +9,20 @@
     from = 0,
     to = from,
     insert,
-  }: EditorRangeReplacement) => value.slice(0, from) + insert + value.slice(to)
+  }: EditorRangeReplacement) => {
+    value = value.slice(0, from) + insert + value.slice(to)
+    return value
+  }
 
   const triggerAddTool = () => {
     const context = {
       matchBefore: () => ({ from: 0, to: 2, text: "{{" }),
     }
-    const result = Reflect.apply(completions[0], undefined, [context])
+    const completionSource = completions[0]
+    if (!completionSource) {
+      return
+    }
+    const result = Reflect.apply(completionSource, undefined, [context])
     const completion = result?.options.find(
       (option: BindingCompletionOption) => option.label === "Add tool"
     )
