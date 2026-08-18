@@ -1,7 +1,4 @@
-import {
-  DEFAULT_FUNCTION_LIMITS,
-  FunctionErrorCode,
-} from "@budibase/types"
+import { DEFAULT_FUNCTION_LIMITS, FunctionErrorCode } from "@budibase/types"
 import { spawn } from "node:child_process"
 import type { ChildProcess } from "node:child_process"
 import type { FunctionQueryHandler } from "./isolatedVmRuntime"
@@ -184,7 +181,7 @@ describe("FunctionSupervisor", () => {
     expect(supervisor.activeRunCount()).toBe(0)
   })
 
-  it("returns a stable result when a child hits its memory ceiling", async () => {
+  it("reports a SIGABRT child exit as a runtime error", async () => {
     const supervisor = createSupervisor({ mode: "memory-abort" })
 
     await expect(
@@ -193,8 +190,8 @@ describe("FunctionSupervisor", () => {
       runId: "run-memory",
       status: "error",
       error: {
-        code: FunctionErrorCode.FUNCTION_MEMORY_LIMIT,
-        message: "Function memory limit exceeded",
+        code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+        message: "Function child process exited unexpectedly",
       },
     })
     expect(supervisor.activeRunCount()).toBe(0)
@@ -363,6 +360,7 @@ describe("FunctionSupervisor", () => {
     }
 
     await expect(supervisor.execute(runRequest)).resolves.toMatchObject({
+      metrics: { queryCount: 1 },
       error: { code: FunctionErrorCode.FUNCTION_QUERY_LIMIT },
     })
     expect(supervisor.activeRunCount()).toBe(0)
@@ -381,6 +379,7 @@ describe("FunctionSupervisor", () => {
     }
 
     await expect(supervisor.execute(runRequest)).resolves.toMatchObject({
+      metrics: { queryCount: 1 },
       error: {
         code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
         message: "Function query payload is invalid",

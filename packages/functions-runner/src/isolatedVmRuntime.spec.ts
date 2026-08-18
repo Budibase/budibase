@@ -316,6 +316,45 @@ describe("Functions isolate", () => {
     })
   })
 
+  it("discards output when the function catches an invalid query response", async () => {
+    const runRequest = request(`
+      export default async function run() {
+        try {
+          await globalThis.__budibaseInvokeQuery("query", {})
+        } catch {}
+        return { output: { caught: true } }
+      }
+    `)
+
+    const result = await executeFunctionInIsolate(
+      runRequest,
+      async () => Number.NaN
+    )
+
+    expect(result).toMatchObject({
+      status: "error",
+      metrics: { queryCount: 1 },
+      error: { code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR },
+    })
+    expect(result.output).toBeUndefined()
+  })
+
+  it("preserves __proto__ keys in output", async () => {
+    const result = await executeFunctionInIsolate(
+      request(`
+        export default async function run() {
+          return { output: JSON.parse('{"__proto__":{"safe":true}}') }
+        }
+      `),
+      noQueries
+    )
+
+    expect(result).toMatchObject({
+      status: "success",
+      output: JSON.parse('{"__proto__":{"safe":true}}'),
+    })
+  })
+
   it("provides a frozen no-op console", async () => {
     const result = await executeFunctionInIsolate(
       request(`

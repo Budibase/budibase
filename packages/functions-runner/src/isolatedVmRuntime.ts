@@ -86,7 +86,12 @@ const normalizeJSON = (
 
     const result: Record<string, JSONValue> = {}
     for (const [key, item] of Object.entries(value)) {
-      result[key] = normalizeJSON(item, maxDepth, message, depth + 1, ancestors)
+      Object.defineProperty(result, key, {
+        configurable: true,
+        enumerable: true,
+        value: normalizeJSON(item, maxDepth, message, depth + 1, ancestors),
+        writable: true,
+      })
     }
     return result
   } finally {
@@ -199,6 +204,7 @@ export const executeFunctionInIsolate = async (
   let queryCount = 0
   let concurrentQueryCount = 0
   let queryLimitExceeded = false
+  let queryProtocolError = false
   let errorCode: FunctionErrorCode = FunctionErrorCode.FUNCTION_RUNTIME_ERROR
   let wallTimedOut = false
   const queryAbortController = new AbortController()
@@ -224,6 +230,7 @@ export const executeFunctionInIsolate = async (
     const queryReference = new ivm.Reference(
       async (capabilityIdValue: unknown, parametersValue: unknown) => {
         if (typeof capabilityIdValue !== "string" || !capabilityIdValue) {
+          queryProtocolError = true
           errorCode = FunctionErrorCode.FUNCTION_PROTOCOL_ERROR
           return { error: INVALID_QUERY_MESSAGE }
         }
@@ -236,6 +243,7 @@ export const executeFunctionInIsolate = async (
             INVALID_QUERY_MESSAGE
           ).normalized
         } catch {
+          queryProtocolError = true
           errorCode = FunctionErrorCode.FUNCTION_PROTOCOL_ERROR
           return { error: INVALID_QUERY_MESSAGE }
         }
@@ -273,6 +281,7 @@ export const executeFunctionInIsolate = async (
             ).normalized,
           }
         } catch {
+          queryProtocolError = true
           errorCode = FunctionErrorCode.FUNCTION_PROTOCOL_ERROR
           return { error: INVALID_QUERY_MESSAGE }
         }
@@ -320,12 +329,14 @@ export const executeFunctionInIsolate = async (
             result: { copy: true, promise: true },
             timeout: request.limits.timeoutMs,
           })
-          if (queryLimitExceeded) {
+          if (queryLimitExceeded || queryProtocolError) {
             return createFailure(
               request,
               startedAt,
               queryCount,
-              FunctionErrorCode.FUNCTION_QUERY_LIMIT
+              queryLimitExceeded
+                ? FunctionErrorCode.FUNCTION_QUERY_LIMIT
+                : FunctionErrorCode.FUNCTION_PROTOCOL_ERROR
             )
           }
           try {

@@ -26,7 +26,6 @@ const INPUT_INVALID_MESSAGE = "Function input is invalid"
 const QUERY_LIMIT_MESSAGE = "Function query limit exceeded"
 const QUERY_PAYLOAD_INVALID_MESSAGE = "Function query payload is invalid"
 const RUNNER_BUSY_MESSAGE = "Functions runner is busy"
-const MEMORY_LIMIT_MESSAGE = "Function memory limit exceeded"
 
 type TerminationReason = "cancelled" | "timeout" | "shutdown"
 
@@ -47,13 +46,16 @@ const failureResult = (
   startedAt: number,
   code: FunctionErrorCode,
   message: string,
-  status: "error" | "stopped" = "error"
+  options: {
+    status?: "error" | "stopped"
+    queryCount?: number
+  } = {}
 ): FunctionRunResult => ({
   runId,
-  status,
+  status: options.status || "error",
   metrics: {
     durationMs: Date.now() - startedAt,
-    queryCount: 0,
+    queryCount: options.queryCount || 0,
     outputBytes: 0,
     logBytes: 0,
   },
@@ -357,7 +359,8 @@ export class FunctionSupervisor {
               request.runId,
               startedAt,
               FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
-              QUERY_PAYLOAD_INVALID_MESSAGE
+              QUERY_PAYLOAD_INVALID_MESSAGE,
+              { queryCount }
             )
           )
           requestChildExit()
@@ -372,7 +375,8 @@ export class FunctionSupervisor {
               request.runId,
               startedAt,
               FunctionErrorCode.FUNCTION_QUERY_LIMIT,
-              QUERY_LIMIT_MESSAGE
+              QUERY_LIMIT_MESSAGE,
+              { queryCount }
             )
           )
           requestChildExit()
@@ -405,7 +409,8 @@ export class FunctionSupervisor {
                       request.runId,
                       startedAt,
                       FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
-                      QUERY_PAYLOAD_INVALID_MESSAGE
+                      QUERY_PAYLOAD_INVALID_MESSAGE,
+                      { queryCount }
                     )
                   )
                   requestChildExit()
@@ -442,7 +447,7 @@ export class FunctionSupervisor {
         )
       })
 
-      child.on("close", (code, signal) => {
+      child.on("close", (code, _signal) => {
         closed = true
         queryAbortController.abort()
         clearRunTimer()
@@ -458,7 +463,7 @@ export class FunctionSupervisor {
               startedAt,
               FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
               RUN_CANCELLED_MESSAGE,
-              "stopped"
+              { status: "stopped" }
             )
           )
           return
@@ -493,18 +498,6 @@ export class FunctionSupervisor {
           resolve(receivedResult)
           return
         }
-        if (signal === "SIGABRT" || signal === "SIGKILL" || code === 134) {
-          resolve(
-            failureResult(
-              request.runId,
-              startedAt,
-              FunctionErrorCode.FUNCTION_MEMORY_LIMIT,
-              MEMORY_LIMIT_MESSAGE
-            )
-          )
-          return
-        }
-
         resolve(
           failureResult(
             request.runId,

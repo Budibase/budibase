@@ -252,9 +252,7 @@ export default async function (): Promise<FunctionResult> {
       )
       expect(built.artifact).toEqual(
         expect.objectContaining({
-          compiledJavaScript: expect.stringContaining(
-            "__budibaseFunctionModule"
-          ),
+          compiledJavaScript: expect.stringContaining("__budibaseInputs"),
         })
       )
 

@@ -11,6 +11,9 @@ const visitJSON = (value: JSONValue, maxDepth: number, depth: number): void => {
   if (depth > maxDepth) {
     throw new JSONLimitError()
   }
+  if (typeof value === "number" && !Number.isFinite(value)) {
+    throw new JSONLimitError()
+  }
   if (Array.isArray(value)) {
     for (const item of value) {
       visitJSON(item, maxDepth, depth + 1)
