@@ -25,7 +25,7 @@ const expectProtocolError = (callback: () => void, message: string) => {
 
 describe("Functions runner protocol", () => {
   beforeEach(() => {
-    jest.spyOn(console, "log").mockImplementation()
+    jest.spyOn(console, "error").mockImplementation()
   })
 
   afterEach(() => {
