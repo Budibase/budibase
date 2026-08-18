@@ -87,10 +87,13 @@ export const createFunctionRunGrant = async (
     activeQueryCalls: 0,
   }
   const ttlSeconds = Math.ceil((expiresAt - Date.now()) / 1_000)
+  const redisClient = await getClient(client)
 
-  const stored = await (
-    await getClient(client)
-  ).storeIfNotExists(scope.runId, storedGrant, ttlSeconds)
+  const stored = await redisClient.storeIfNotExists(
+    scope.runId,
+    storedGrant,
+    ttlSeconds
+  )
   if (!stored) {
     throw new FunctionExecutionError(FunctionErrorCode.FUNCTION_PROTOCOL_ERROR)
   }
@@ -102,9 +105,8 @@ export const getFunctionRunGrant = async (
   grantToken: string,
   client?: RedisClient
 ): Promise<FunctionRunGrant | null> => {
-  const storedGrant = await (
-    await getClient(client)
-  ).get<StoredFunctionRunGrant>(runId)
+  const redisClient = await getClient(client)
+  const storedGrant = await redisClient.get<StoredFunctionRunGrant>(runId)
   if (
     !storedGrant ||
     storedGrant.expiresAt <= Date.now() ||
@@ -154,16 +156,15 @@ export const consumeFunctionQueryGrant = async (
     if (storedGrant.remainingQueryCalls <= 0) {
       return { status: "budget_exceeded" }
     }
-    if (
-      storedGrant.activeQueryCalls >= storedGrant.limits.maxConcurrentQueryCalls
-    ) {
+    const activeQueryCalls = storedGrant.activeQueryCalls ?? 0
+    if (activeQueryCalls >= storedGrant.limits.maxConcurrentQueryCalls) {
       return { status: "concurrency_exceeded" }
     }
 
     const updatedGrant: StoredFunctionRunGrant = {
       ...storedGrant,
       remainingQueryCalls: storedGrant.remainingQueryCalls - 1,
-      activeQueryCalls: storedGrant.activeQueryCalls + 1,
+      activeQueryCalls: activeQueryCalls + 1,
     }
     const ttlSeconds = await redisClient.getTTL(runId)
     if (ttlSeconds <= 0) {
@@ -200,7 +201,7 @@ export const releaseFunctionQueryGrant = async (
     }
     const updatedGrant: StoredFunctionRunGrant = {
       ...storedGrant,
-      activeQueryCalls: Math.max(storedGrant.activeQueryCalls - 1, 0),
+      activeQueryCalls: Math.max((storedGrant.activeQueryCalls ?? 0) - 1, 0),
     }
     const ttlSeconds = await redisClient.getTTL(runId)
     if (ttlSeconds <= 0) {
@@ -214,7 +215,10 @@ export const deleteFunctionRunGrant = async (
   runId: string,
   client?: RedisClient
 ) => {
-  await (await getClient(client)).delete(runId)
+  const redisClient = await getClient(client)
+  await withGrantLock(runId, async () => {
+    await redisClient.delete(runId)
+  })
 }
 
 export const executeWithFunctionRunGrant = async (

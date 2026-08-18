@@ -140,7 +140,7 @@ if (env.SELF_HOSTED) {
 }
 
 export async function getActionDefinitions(): Promise<
-  Record<keyof typeof AutomationActionStepId, AutomationStepDefinition>
+  Partial<Record<keyof typeof AutomationActionStepId, AutomationStepDefinition>>
 > {
   // Create a shallow copy here to avoid mutating shared object
   const actionDefinitions: Record<string, AutomationStepDefinition> = {

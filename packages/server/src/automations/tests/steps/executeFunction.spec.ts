@@ -80,14 +80,15 @@ const run = (
   inputs: ExecuteFunctionStepInputs = {
     functionId: fn._id,
     inputs: { name: "Ada" },
-  }
+  },
+  context: { automationId?: string; stepId?: string } = {}
 ) =>
   executeFunction(
     {
       inputs,
       appId: fn.appId,
-      automationId: "automation-1",
-      stepId: "step-1",
+      automationId: context.automationId ?? "automation-1",
+      stepId: context.stepId ?? "step-1",
       context: {
         user: {
           _id: "user-1",
@@ -180,6 +181,62 @@ describe("Run Function automation action", () => {
       expect.any(Object)
     )
   })
+
+  it.each([
+    ["a number", { value: 42 }, { value: 42 }],
+    ["an object", { value: { nested: 1 } }, { value: { nested: 1 } }],
+    ["an invalid JSON string", { value: "not-json" }, { value: "not-json" }],
+  ])(
+    "preserves a real input object containing %s",
+    async (_name, inputs, expected) => {
+      const deps = dependencies()
+
+      await run(deps, {
+        functionId: fn._id,
+        inputs: inputs as ExecuteFunctionStepInputs["inputs"],
+      })
+
+      expect(deps.execute).toHaveBeenCalledWith(
+        deps.executor,
+        expect.objectContaining({ inputs: expected }),
+        expect.any(Object)
+      )
+    }
+  )
+
+  it.each([
+    {
+      missing: "the Function ID",
+      inputs: { functionId: "", inputs: { name: "Ada" } },
+      context: {},
+    },
+    {
+      missing: "the automation ID",
+      inputs: { functionId: fn._id, inputs: { name: "Ada" } },
+      context: { automationId: "" },
+    },
+    {
+      missing: "the step ID",
+      inputs: { functionId: fn._id, inputs: { name: "Ada" } },
+      context: { stepId: "" },
+    },
+  ])(
+    "returns a configuration error when $missing is missing",
+    async ({ inputs, context }) => {
+      const deps = dependencies()
+
+      await expect(run(deps, inputs, context)).resolves.toEqual({
+        success: false,
+        status: "error",
+        error: {
+          code: FunctionErrorCode.FUNCTION_CONFIGURATION_ERROR,
+          message:
+            "The Function automation step is missing required configuration",
+        },
+      })
+      expect(deps.execute).not.toHaveBeenCalled()
+    }
+  )
 
   it.each([
     [
