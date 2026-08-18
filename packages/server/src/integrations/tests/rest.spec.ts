@@ -21,9 +21,11 @@ import {
   BasicRestAuthConfig,
   BearerRestAuthConfig,
   BodyType,
+  HttpMethod,
   OAuth2CredentialsMethod,
   OAuth2GrantType,
   RestAuthType,
+  SecretTag,
 } from "@budibase/types"
 import { createServer } from "http"
 import { AddressInfo } from "net"
@@ -230,7 +232,7 @@ describe("REST Integration", () => {
     expect(data).toEqual({ foo: "bar" })
   })
 
-  it("validates redirect targets against the outbound blacklist", async () => {
+  it("rejects a redirect to a different origin, even when the target is otherwise blacklisted", async () => {
     queueResponse(async (url, options) => {
       expect(url).toEqual("https://example.com/redirect")
       expect(options?.redirect).toEqual("manual")
@@ -241,7 +243,7 @@ describe("REST Integration", () => {
     })
 
     await expect(integration.read({ path: "redirect" })).rejects.toThrow(
-      "URL is blocked or could not be resolved safely."
+      "Redirect to a different origin is not permitted."
     )
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
@@ -725,6 +727,249 @@ describe("REST Integration", () => {
         oauthConfig._id
       )
       expect(getTokenMock).toHaveBeenCalledTimes(2)
+    })
+
+    describe("request preview", () => {
+      it("does not include the request unless asked to", async () => {
+        queueJsonResponse(() => {}, { foo: "bar" })
+        const { extra } = await integration.read({
+          authConfigId: bearerAuth._id,
+        })
+        expect(extra?.request).toBeUndefined()
+      })
+
+      it("does not include the request when preview fields are unavailable", async () => {
+        queueJsonResponse(() => {}, { foo: "bar" })
+        const { extra } = await integration.read(
+          { path: "api/things" },
+          { includeRequest: true }
+        )
+        expect(extra?.request).toBeUndefined()
+      })
+
+      it("still returns a preview when the url cannot be parsed", async () => {
+        queueJsonResponse(() => {}, { foo: "bar" })
+        const { extra } = await integration.read(
+          { path: "api/things" },
+          {
+            includeRequest: true,
+            previewFields: { path: "api/things", queryString: "foo=bar" },
+            previewConfig: { url: "not a valid url" },
+          }
+        )
+        expect(extra?.request?.url).toEqual(
+          "http://not a valid url/api/things?foo=bar"
+        )
+        expect(extra?.request?.path).toEqual("")
+        expect(extra?.request?.params).toEqual({ foo: "bar" })
+      })
+
+      it("returns no request when the preview cannot be built", async () => {
+        queueJsonResponse(() => {}, { foo: "bar" })
+        const { extra } = await integration.read(
+          { path: "api/things" },
+          {
+            includeRequest: true,
+            previewFields: { path: "api/things%E0%A4%A" },
+          }
+        )
+        expect(extra?.request).toBeUndefined()
+      })
+
+      it("shows env bindings in the query fields rather than resolved values", async () => {
+        queueJsonResponse(() => {}, { foo: "bar" })
+        const fields = {
+          path: "api/things",
+          queryString: "key={{ env.API_KEY }}",
+          headers: { "x-custom-key": "{{env.API_KEY}}" },
+          bodyType: BodyType.JSON,
+          requestBody: JSON.stringify({ token: "{{ env.API_KEY }}" }),
+        }
+        const resolved = {
+          ...fields,
+          queryString: "key=realsecret",
+          headers: { "x-custom-key": "realsecret" },
+          requestBody: JSON.stringify({ token: "realsecret" }),
+        }
+        const { extra } = await integration.create(resolved, {
+          includeRequest: true,
+          previewFields: fields,
+        })
+        expect(extra?.request?.params).toEqual({ key: "{{ env.API_KEY }}" })
+        expect(extra?.request?.headers["x-custom-key"]).toEqual(
+          "{{env.API_KEY}}"
+        )
+        expect(extra?.request?.body).toEqual({ token: "{{ env.API_KEY }}" })
+        expect(JSON.stringify(extra?.request)).not.toContain("realsecret")
+      })
+
+      it("shows env bindings in the connection config rather than resolved values", async () => {
+        integration = new RestIntegration({
+          url: "https://example.com",
+          defaultHeaders: { "x-connection": "realsecret" },
+          defaultQueryParameters: { key: "realsecret" },
+        })
+        queueJsonResponse(() => {}, { foo: "bar" })
+
+        const fields = { path: "api/things" }
+        const { extra } = await integration.read(fields, {
+          includeRequest: true,
+          previewFields: fields,
+          previewConfig: {
+            url: "https://example.com",
+            defaultHeaders: { "x-connection": "{{ env.CONN_KEY }}" },
+            defaultQueryParameters: { key: "{{ env.CONN_KEY }}" },
+          },
+        })
+        expect(extra?.request?.headers["x-connection"]).toEqual(
+          "{{ env.CONN_KEY }}"
+        )
+        expect(extra?.request?.params).toEqual({ key: "{{ env.CONN_KEY }}" })
+        expect(extra?.request?.url).toEqual(
+          "https://example.com/api/things?key={{ env.CONN_KEY }}"
+        )
+        expect(JSON.stringify(extra?.request)).not.toContain("realsecret")
+      })
+
+      it("includes a sanitised request when asked to", async () => {
+        queueJsonResponse(() => {}, { foo: "bar" })
+        const fields = {
+          path: "api/things",
+          queryString: "foo=bar",
+          headers: { Accept: "application/json" },
+          authConfigId: bearerAuth._id,
+        }
+        const { extra } = await integration.read(fields, {
+          includeRequest: true,
+          previewFields: fields,
+        })
+        expect(extra?.request).toEqual({
+          url: "https://example.com/api/things?foo=bar",
+          path: "/api/things",
+          method: HttpMethod.GET,
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${SecretTag.BEARER}`,
+          },
+          params: { foo: "bar" },
+          body: undefined,
+        })
+      })
+
+      it("includes headers and params merged in from the connection", async () => {
+        integration = new RestIntegration({
+          url: "https://example.com",
+          authConfigs: [bearerAuth],
+          defaultHeaders: { "x-connection": "from-connection" },
+          defaultQueryParameters: { tenant: "acme" },
+        })
+        queueJsonResponse(() => {}, { foo: "bar" })
+
+        const fields = {
+          queryString: "foo=bar",
+          headers: { "x-query": "from-query" },
+          authConfigId: bearerAuth._id,
+        }
+        const { extra } = await integration.read(fields, {
+          includeRequest: true,
+          previewFields: fields,
+        })
+
+        expect(extra?.request?.headers).toMatchObject({
+          "x-connection": "from-connection",
+          "x-query": "from-query",
+          Authorization: `Bearer ${SecretTag.BEARER}`,
+        })
+        expect(extra?.request?.params).toEqual({
+          foo: "bar",
+          tenant: "acme",
+        })
+      })
+
+      it("returns a JSON body as JSON rather than an escaped string", async () => {
+        queueJsonResponse(() => {}, { foo: "bar" })
+        const fields = {
+          bodyType: BodyType.JSON,
+          requestBody: JSON.stringify({ hello: "test" }),
+        }
+        const { extra } = await integration.create(fields, {
+          includeRequest: true,
+          previewFields: fields,
+        })
+        expect(extra?.request?.body).toEqual({ hello: "test" })
+      })
+
+      it("omits disabled headers", async () => {
+        integration = new RestIntegration({
+          url: "https://example.com",
+          defaultHeaders: { "x-connection": "from-connection" },
+        })
+        queueJsonResponse(() => {}, { foo: "bar" })
+
+        const fields = {
+          headers: { "x-query": "from-query", "x-kept": "still-here" },
+          disabledHeaders: { "x-query": true, "x-connection": true },
+        }
+        const { extra } = await integration.read(fields, {
+          includeRequest: true,
+          previewFields: fields,
+        })
+
+        expect(extra?.request?.headers).not.toHaveProperty("x-query")
+        expect(extra?.request?.headers).not.toHaveProperty("x-connection")
+        expect(extra?.request?.headers).toHaveProperty("x-kept", "still-here")
+      })
+
+      it("includes the content type generated for a form data body", async () => {
+        queueJsonResponse(() => {}, { foo: "bar" })
+        const fields = {
+          bodyType: BodyType.FORM_DATA,
+          requestBody: { hello: "world" },
+        }
+        const { extra } = await integration.create(fields, {
+          includeRequest: true,
+          previewFields: fields,
+        })
+        expect(extra?.request?.headers["content-type"]).toMatch(
+          /^multipart\/form-data; boundary=/
+        )
+        expect(extra?.request?.body).toEqual({ hello: "world" })
+      })
+
+      it("retains the request across an OAuth2 401 retry", async () => {
+        const oauth2Url = generator.url()
+        const { config: oauthConfig } = await config.api.oauth2.create({
+          name: generator.guid(),
+          url: oauth2Url,
+          clientId: generator.guid(),
+          clientSecret: generator.hash(),
+          method: OAuth2CredentialsMethod.HEADER,
+          grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+        })
+
+        getTokenMock
+          .mockResolvedValueOnce(`Bearer ${generator.guid()}`)
+          .mockResolvedValueOnce(`Bearer ${generator.guid()}`)
+        queueJsonResponse(() => {}, {}, 401)
+        queueJsonResponse(() => {}, { foo: "bar" })
+
+        const fields = {
+          authConfigId: oauthConfig._id,
+          authConfigType: RestAuthType.OAUTH2,
+        }
+        const { extra } = await config.doInContext(
+          config.devWorkspaceId,
+          async () =>
+            await integration.read(fields, {
+              includeRequest: true,
+              previewFields: fields,
+            })
+        )
+
+        expect(extra?.request?.headers).toEqual({
+          Authorization: `Bearer ${SecretTag.OAUTH2}`,
+        })
+      })
     })
   })
 

@@ -7,14 +7,15 @@ import {
   type Ctx,
   type DiscordConversationScope,
   type DiscordInteraction,
+  EscalationAction,
   type EscalationNotificationDoc,
   FeatureFlag,
 } from "@budibase/types"
 import { Chat, type ActionEvent } from "chat"
-import { createDiscordAdapter } from "@chat-adapter/discord"
+import { createSafeDiscordAdapter } from "./discordAdapter"
 import sdk from "../../../sdk"
 import { escalationProcessor } from "../../../escalation/processor"
-import { pickLatestConversation } from "./utils"
+import { pickLatestConversation, resolveEscalationWorkspaceId } from "./utils"
 import { handleChatMessage } from "./chatHandler"
 import { getDiscordState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
@@ -108,7 +109,11 @@ export async function discordWebhook(
       const chat = new Chat({
         userName: "Budibase",
         adapters: {
-          discord: createDiscordAdapter({ applicationId, publicKey, botToken }),
+          discord: createSafeDiscordAdapter({
+            applicationId,
+            publicKey,
+            botToken,
+          }),
         },
         state: await getDiscordState(),
         logger: "silent",
@@ -212,6 +217,8 @@ export async function discordWebhook(
 
       chat.onAction(async (event: ActionEvent) => {
         const customId = event.actionId
+        // esc_a/esc_r: short action codes - Discord packs everything into the
+        // 100-char custom_id. Decoded to the canonical esc_approve/esc_reject.
         const isApprove = customId.startsWith("esc_a:")
         const isReject = customId.startsWith("esc_r:")
         if (!isApprove && !isReject) {
@@ -234,14 +241,28 @@ export async function discordWebhook(
         const notificationDocId = `escalation_notification_${shortNotifId}`
 
         const discordResponse = {
-          actionId: isApprove ? "escalation_approve" : "escalation_reject",
+          actionId: isApprove
+            ? EscalationAction.APPROVE
+            : EscalationAction.REJECT,
           user: event.user,
           messageId: event.messageId,
           threadId: event.threadId,
         }
 
         try {
-          const result = await context.doInContext(workspaceId, async () => {
+          const appId = await resolveEscalationWorkspaceId(
+            workspaceId,
+            notificationDocId
+          )
+          if (!appId) {
+            console.warn("Discord escalation action: notification not found", {
+              workspaceId,
+              notificationDocId,
+            })
+            return
+          }
+
+          const result = await context.doInContext(appId, async () => {
             if (!(await features.isEnabled(FeatureFlag.ESCALATION))) {
               return { status: "closed" as const }
             }

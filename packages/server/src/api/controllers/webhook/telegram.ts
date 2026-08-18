@@ -20,7 +20,7 @@ import { handleChatMessage } from "./chatHandler"
 import { getTelegramState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
-import { pickLatestConversation } from "./utils"
+import { pickLatestConversation, resolveEscalationWorkspaceId } from "./utils"
 
 const TELEGRAM_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
@@ -302,7 +302,19 @@ export async function telegramWebhook(
         }
 
         try {
-          const result = await context.doInContext(workspaceId, async () => {
+          const appId = await resolveEscalationWorkspaceId(
+            workspaceId,
+            notificationDocId
+          )
+          if (!appId) {
+            console.warn("Telegram escalation action: notification not found", {
+              workspaceId,
+              notificationDocId,
+            })
+            return
+          }
+
+          const result = await context.doInContext(appId, async () => {
             if (!(await features.isEnabled(FeatureFlag.ESCALATION))) {
               return { status: "closed" as const }
             }

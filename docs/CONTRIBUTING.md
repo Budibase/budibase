@@ -17,6 +17,7 @@ If you do plan to raise a pull request, please take a look at the guide below.
 ## Table of contents
 
 - [Vouching](#vouching)
+- [External PR Ticket Check](#external-pr-ticket-check)
 - [Where to start](#not-sure-where-to-start)
 - [Contributor Licence Agreement](#contributor-license-agreement-cla)
 - [Glossary of Terms](#glossary-of-terms)
@@ -24,11 +25,32 @@ If you do plan to raise a pull request, please take a look at the guide below.
 
 ## Vouching
 
-Due to the high code volume LLM era, we have decided to implement [Vouch](https://github.com/mitchellh/vouch) for our pull requests.
+We use [Vouch](https://github.com/mitchellh/vouch) to prevent explicitly denounced users from contributing pull requests.
 
-Your PR will not be merged unless you are added to our vouch list by our engineers.
+You do not need to be vouched for before opening or merging a pull request. Pull requests from users who have been explicitly denounced will be closed automatically.
 
-This is to ensure the quality of the product and free up time for our team. Thank you for your understanding.
+Each contributor may have only one open pull request at a time.
+
+All pull requests remain subject to our normal review and contribution requirements.
+
+## External PR Ticket Check
+
+Pull requests whose branches come from outside this repository must reference an
+existing issue in this repository. The issue must:
+
+- Be open.
+- Be assigned to the pull request author.
+- Have completed triage and not have a `needs-triage`, `wontfix`,
+  `out-of-scope`, or `closed-stale` label.
+
+Add the issue to the **Addresses** section of the pull request description using
+its full GitHub URL or a `#123` reference. At most ten distinct issue references
+are checked per pull request.
+
+Pull requests without a valid assigned issue are tagged with
+`closed: missing-ticket`, given an explanatory comment, and closed automatically.
+After linking a valid assigned issue, you can reopen the pull request. Pull
+requests whose branches are in this repository are excluded from this check.
 
 ## Not Sure Where to Start?
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { FLOW_ITEM_ACTION_BAR_WIDTH } from "../FlowCanvas/FlowGeometry"
 import {
+  getCustomEdgeLabelPosition,
+  getCustomEdgePath,
   getLoopEdgePath,
   getPrimaryBranchPath,
 } from "../FlowCanvas/FlowEdgePaths"
@@ -204,5 +206,110 @@ describe("getLoopEdgePath", () => {
     })
 
     expectLineSegmentsToBeOrthogonal(path)
+  })
+})
+
+describe("getCustomEdgeLabelPosition", () => {
+  it("places loop source labels at the loop insert action offset", () => {
+    expect(
+      getCustomEdgeLabelPosition({
+        baseLabelX: 250,
+        baseLabelY: 125,
+        sourceX: 200,
+        sourceY: 120,
+        targetX: 420,
+        targetY: 240,
+        isAnchorTarget: false,
+        isLoopTarget: false,
+        isLoopSource: true,
+        isLoopInsertAnchor: false,
+        isBranchSource: false,
+        loopInsertActionOffset: 76,
+        branchLoopInsertActionOffset: 92,
+      })
+    ).toEqual({
+      labelX: 276,
+      labelY: 120,
+    })
+  })
+
+  it("uses the branch loop insert offset for branch source loop anchors", () => {
+    expect(
+      getCustomEdgeLabelPosition({
+        baseLabelX: 250,
+        baseLabelY: 125,
+        sourceX: 200,
+        sourceY: 120,
+        targetX: 420,
+        targetY: 240,
+        isAnchorTarget: true,
+        isLoopTarget: false,
+        isLoopSource: false,
+        isLoopInsertAnchor: true,
+        isBranchSource: true,
+        loopInsertActionOffset: 76,
+        branchLoopInsertActionOffset: 92,
+      })
+    ).toEqual({
+      labelX: 292,
+      labelY: 120,
+    })
+  })
+})
+
+describe("getCustomEdgePath", () => {
+  it("uses anchor paths before all other paths", () => {
+    expect(
+      getCustomEdgePath({
+        isAnchorTarget: true,
+        anchorPath: "anchor",
+        loopTargetPath: "loop-target",
+        loopSourcePath: "loop-source",
+        primaryBranchPath: "primary-branch",
+        basePath: "base",
+      })
+    ).toBe("anchor")
+  })
+
+  it("prefers loop paths over primary branch and base paths", () => {
+    expect(
+      getCustomEdgePath({
+        isAnchorTarget: false,
+        anchorPath: "anchor",
+        loopTargetPath: "loop-target",
+        loopSourcePath: "loop-source",
+        primaryBranchPath: "primary-branch",
+        basePath: "base",
+      })
+    ).toBe("loop-target")
+
+    expect(
+      getCustomEdgePath({
+        isAnchorTarget: false,
+        anchorPath: "anchor",
+        loopSourcePath: "loop-source",
+        primaryBranchPath: "primary-branch",
+        basePath: "base",
+      })
+    ).toBe("loop-source")
+  })
+
+  it("falls back to primary branch and base paths", () => {
+    expect(
+      getCustomEdgePath({
+        isAnchorTarget: false,
+        anchorPath: "anchor",
+        primaryBranchPath: "primary-branch",
+        basePath: "base",
+      })
+    ).toBe("primary-branch")
+
+    expect(
+      getCustomEdgePath({
+        isAnchorTarget: false,
+        anchorPath: "anchor",
+        basePath: "base",
+      })
+    ).toBe("base")
   })
 })

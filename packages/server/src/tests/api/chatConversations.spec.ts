@@ -20,6 +20,7 @@ import TestConfiguration from "../utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../utilities/aiConfig"
 import sdk from "../../sdk"
 import * as agentLogs from "../../sdk/workspace/ai/agentLogs"
+import { requesterTools } from "../../sdk/workspace/ai/tests/utils"
 import type { LanguageModelV3 } from "@ai-sdk/provider"
 import { webhookChat } from "../../api/controllers/ai"
 import { MockLanguageModelV3 } from "ai/test"
@@ -66,6 +67,19 @@ jest.mock("ai", () => {
     }
 
     async stream(options: Record<string, any>) {
+      if (
+        this.settings.headers?.["x-litellm-tags"] === "bb-operation-routing"
+      ) {
+        return {
+          output: Promise.resolve({
+            action: "select_operation",
+            operationId: "op-1",
+            intent: "execute",
+            reason: "Test operation",
+          }),
+        }
+      }
+
       const { instructions, ...settings } = this.settings
       return mockStreamText({
         ...settings,
@@ -186,7 +200,7 @@ const buildWebhookTestAgent = (
         name: "Support",
         live: true,
         promptInstructions: "Help the user.",
-        enabledTools: [],
+        enabledTools: requesterTools(),
         ...operationOverrides,
       },
     ],
@@ -1118,9 +1132,9 @@ describe("chat conversation path validation", () => {
     expect(res.status).toBe(400)
   })
 
-  it("rejects preview mode for non-builder users before input validation", async () => {
+  it("rejects preview mode for non-builder users in development", async () => {
     const headers = await config.withUser(basicUser, async () =>
-      config.defaultHeaders({}, true)
+      config.defaultHeaders()
     )
 
     const res = await config
@@ -1135,6 +1149,43 @@ describe("chat conversation path validation", () => {
       })
 
     expect(res.status).toBe(403)
+  })
+
+  it("rejects preview mode in production workspaces", async () => {
+    const headers = await config.defaultHeaders({}, true)
+
+    const res = await config
+      .getRequest()!
+      .post("/api/chatapps/chatapp-path/conversations/new/stream")
+      .set(headers)
+      .send({
+        agentId: "agent-1",
+        isPreview: true,
+        messages: [],
+        title: "hello",
+      })
+
+    expect(res.status).toBe(400)
+  })
+
+  it("rejects a preview role outside preview mode", async () => {
+    const headers = await config.withUser(basicUser, async () =>
+      config.defaultHeaders({}, true)
+    )
+
+    const res = await config
+      .getRequest()!
+      .post(`/api/chatapps/${pathChatApp._id}/conversations/new/stream`)
+      .set(headers)
+      .send({
+        chatAppId: pathChatApp._id,
+        agentId: "agent-1",
+        previewRoleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+        messages: [],
+        title: "hello",
+      })
+
+    expect(res.status).toBe(400)
   })
 })
 
@@ -1462,7 +1513,9 @@ describe("Agent chat tool call tracking", () => {
         sdk.ai.agents.getOrThrow as jest.MockedFunction<
           typeof sdk.ai.agents.getOrThrow
         >
-      ).mockResolvedValue(buildWebhookTestAgent({ enabledTools: ["escalate"] }))
+      ).mockResolvedValue(
+        buildWebhookTestAgent({ enabledTools: requesterTools("escalate") })
+      )
 
       await features.testutils.withFeatureFlags(
         config.getTenantId(),
@@ -1865,7 +1918,9 @@ describe("Agent chat tool call tracking", () => {
         sdk.ai.agents.getOrThrow as jest.MockedFunction<
           typeof sdk.ai.agents.getOrThrow
         >
-      ).mockResolvedValue(buildWebhookTestAgent({ enabledTools: ["escalate"] }))
+      ).mockResolvedValue(
+        buildWebhookTestAgent({ enabledTools: requesterTools("escalate") })
+      )
 
       await features.testutils.withFeatureFlags(
         config.getTenantId(),
@@ -1936,7 +1991,9 @@ describe("Agent chat tool call tracking", () => {
         sdk.ai.agents.getOrThrow as jest.MockedFunction<
           typeof sdk.ai.agents.getOrThrow
         >
-      ).mockResolvedValue(buildWebhookTestAgent({ enabledTools: ["escalate"] }))
+      ).mockResolvedValue(
+        buildWebhookTestAgent({ enabledTools: requesterTools("escalate") })
+      )
 
       await features.testutils.withFeatureFlags(
         config.getTenantId(),

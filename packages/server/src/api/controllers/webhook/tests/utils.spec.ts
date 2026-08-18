@@ -1,6 +1,11 @@
-import { configs } from "@budibase/backend-core"
+import { configs, context } from "@budibase/backend-core"
 
-import { isAbsoluteUrl, toAbsoluteUrl } from "../utils"
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import {
+  isAbsoluteUrl,
+  resolveEscalationWorkspaceId,
+  toAbsoluteUrl,
+} from "../utils"
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual<typeof import("@budibase/backend-core")>(
@@ -73,5 +78,56 @@ describe("webhook controller utils", () => {
       )
       expect(getPlatformUrl).not.toHaveBeenCalled()
     })
+  })
+})
+
+describe("resolveEscalationWorkspaceId", () => {
+  const config = new TestConfiguration()
+  const notificationDocId = "escalation_notification_test"
+
+  beforeEach(async () => {
+    await config.newTenant()
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  const putNotificationDoc = async (workspaceId: string) => {
+    await config.doInContext(workspaceId, async () => {
+      const db = context.getWorkspaceDB()
+      await db.put({ _id: notificationDocId })
+    })
+  }
+
+  it("returns the prod workspace id when the notification lives in the prod workspace", async () => {
+    await putNotificationDoc(config.getProdWorkspaceId())
+
+    await expect(
+      resolveEscalationWorkspaceId(
+        config.getDevWorkspaceId(),
+        notificationDocId
+      )
+    ).resolves.toEqual(config.getProdWorkspaceId())
+  })
+
+  it("returns the dev workspace id when the notification only exists in the dev workspace", async () => {
+    await putNotificationDoc(config.getDevWorkspaceId())
+
+    await expect(
+      resolveEscalationWorkspaceId(
+        config.getProdWorkspaceId(),
+        notificationDocId
+      )
+    ).resolves.toEqual(config.getDevWorkspaceId())
+  })
+
+  it("returns undefined when neither workspace holds the notification", async () => {
+    await expect(
+      resolveEscalationWorkspaceId(
+        config.getProdWorkspaceId(),
+        notificationDocId
+      )
+    ).resolves.toBeUndefined()
   })
 })

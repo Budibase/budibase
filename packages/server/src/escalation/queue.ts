@@ -7,6 +7,7 @@ import {
   AutomationActionStepId,
   ContextUser,
   DocumentType,
+  ESCALATE_TOOL_NAME,
   EscalationContextDoc,
   EscalationNotificationDoc,
   EscalationRecipient,
@@ -89,7 +90,39 @@ async function processNotify(job: Job<EscalationJob>) {
       return
     }
 
+    if (doc.resolution !== "pending") {
+      console.log(
+        "Escalation notify: escalation already resolved, discarding",
+        {
+          escalationId,
+          resolution: doc.resolution,
+          jobId: job.id,
+        }
+      )
+      return
+    }
+
     const resumeJobId = `esc_${escalationId}_resume`
+
+    const resumeJob: EscalationJob = {
+      phase: "waiting",
+      escalationId,
+      appId,
+      tenantId: job.data.tenantId,
+      message,
+      expiresAt: new Date(Date.now() + doc.delay).toISOString(),
+      isTest: job.data.isTest,
+    }
+    await addEscalationJob(resumeJob, doc.delay, resumeJobId)
+
+    console.log("Escalation notify: resume job enqueued", {
+      jobId: job.id,
+      escalationId,
+      message,
+      resumeJobId,
+      delayMs: doc.delay,
+      expiresAt: resumeJob.expiresAt,
+    })
 
     // TODO: consider one Bull job per recipient rather than batching all in one job -
     // gives independent retry/backoff per channel so a Slack failure doesn't block Teams etc.
@@ -129,29 +162,6 @@ async function processNotify(job: Job<EscalationJob>) {
         }
       })
     }
-
-    await db.put({ ...doc, updatedAt: new Date().toISOString() })
-
-    const resumeJob: EscalationJob = {
-      phase: "waiting",
-      escalationId,
-      appId,
-      tenantId: job.data.tenantId,
-      message,
-      expiresAt: new Date(Date.now() + doc.delay).toISOString(),
-      isTest: job.data.isTest,
-    }
-
-    await addEscalationJob(resumeJob, doc.delay, resumeJobId)
-
-    console.log("Escalation notify: resume job enqueued", {
-      jobId: job.id,
-      escalationId,
-      message,
-      resumeJobId,
-      delayMs: doc.delay,
-      expiresAt: new Date(Date.now() + doc.delay).toISOString(),
-    })
   })
 }
 
@@ -339,14 +349,16 @@ export async function resumeOperation({
   // approval as user input.
   const approvalInstructions =
     "ESCALATION APPROVAL: The user's request in this conversation has been " +
-    "reviewed and APPROVED by an authorised human reviewer. Approval is already " +
-    "granted - do NOT escalate or ask for approval again. Begin your reply by " +
-    "briefly confirming the request was approved, then CARRY OUT the user's " +
-    "original request: take the action they asked for using " +
-    "your available tools. Actually attempt it. If you cannot complete it because " +
-    "a required tool or capability is missing, say specifically what is missing " +
-    "and that the request could not be completed - never imply it was done when " +
-    "it was not."
+    "reviewed and APPROVED by an authorised human reviewer. This specific " +
+    "request is already approved - do not escalate or ask for approval again " +
+    "for it. Begin your reply by briefly confirming the request was approved, " +
+    "then CARRY OUT the user's original request: take the action they asked " +
+    "for using your available tools. Actually attempt it. If you cannot " +
+    "complete it because a required tool or capability is missing, say " +
+    "specifically what is missing and that the request could not be " +
+    "completed - never imply it was done when it was not. If doing so " +
+    "surfaces a genuinely new request that needs its own human sign-off, you " +
+    "may escalate that separately."
 
   const resumeUserId = ctx.userId ?? "escalation-resume"
 
@@ -399,7 +411,9 @@ export async function resumeOperation({
               decision: "approved",
               note:
                 "An authorised human reviewer approved this request. Proceed " +
-                "to fulfil it and confirm to the user. Do not escalate again.",
+                "to fulfil it and confirm to the user. Do not escalate this " +
+                "same request again - a genuinely new, different request " +
+                "can still be escalated separately.",
             },
           },
         },
@@ -415,8 +429,8 @@ export async function resumeOperation({
     sessionId: ctx.sessionId,
     user,
     operationId: ctx.operationId,
-    escalationResolved: true,
     additionalInstructions: approvalInstructions,
+    getRequestId: () => doc.requestId,
   })
 
   const pendingToolCalls = new Set<string>()
@@ -427,11 +441,27 @@ export async function resumeOperation({
   // (preserving completion order) and flush the tail (await toolCallChain
   // below) before writing the terminal status.
   let toolCallChain = Promise.resolve()
+  let needsInputUpdate = Promise.resolve()
 
   try {
     const result = await run.stream({
       pendingToolCalls,
       unrecoveredToolFailures,
+      onToolCalls: toolNames => {
+        const requestId = doc.requestId
+        if (requestId && toolNames.includes(ESCALATE_TOOL_NAME)) {
+          needsInputUpdate = needsInputUpdate.then(() =>
+            sdk.ai.agentRequests
+              .updateRequestStatus({ requestId, status: "needs_input" })
+              .catch(error => {
+                console.error(
+                  "Failed to update agent request status to needs_input",
+                  { escalationId, agentId: ctx.agentId, error }
+                )
+              })
+          )
+        }
+      },
       onToolCallCompleted: ({ toolName, status, input, output }) => {
         const requestId = doc.requestId
         if (!requestId) {
@@ -510,6 +540,7 @@ export async function resumeOperation({
     const toolCallsIncomplete =
       pendingToolCalls.size > 0 || finishReason === "tool-calls"
     await toolCallChain
+    await needsInputUpdate
 
     if (doc.requestId) {
       const judged = await sdk.ai.agentRequests.resolveFinalRequestOutcome({
@@ -527,6 +558,7 @@ export async function resumeOperation({
     }
   } catch (error) {
     await toolCallChain
+    await needsInputUpdate
     await markEscalationRequestResolved({
       status: "failed",
       error: error instanceof Error ? error.message : String(error),
@@ -544,6 +576,22 @@ async function processResume(job: Job<EscalationJob>) {
 
     if (!doc) {
       console.error("Escalation resume: context doc not found, discarding", {
+        escalationId,
+        jobId: job.id,
+      })
+      return
+    }
+
+    if (doc.resolution === "cancelled") {
+      console.log("Escalation resume: escalation cancelled, discarding", {
+        escalationId,
+        jobId: job.id,
+      })
+      return
+    }
+
+    if (doc.resumeResultCompressed) {
+      console.log("Escalation resume: already resumed, discarding", {
         escalationId,
         jobId: job.id,
       })

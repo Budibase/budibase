@@ -101,25 +101,18 @@ async function queueRelevantRowAutomations(
     })
 
     for (const automation of automations) {
-      // don't queue events which are for dev workspaces, only way to test automations is
-      // running tests on them, in production the test flag will never
-      // be checked due to lazy evaluation (first always false)
-      if (
-        !env.ALLOW_DEV_AUTOMATIONS &&
-        isDevWorkspaceID(event.appId) &&
-        !(await checkTestFlag(automation._id!))
-      ) {
-        continue
-      }
-
       const shouldTrigger = await checkTriggerFilters(automation, {
         row: event.row,
         oldRow: event.oldRow,
       })
       if (shouldTrigger) {
         try {
+          const isTestRun = isDevWorkspaceID(event.appId)
           await quotas.addAction(ActionType.AUTOMATION_STEP, () =>
-            automationQueue.add({ automation, event }, JOB_OPTS)
+            automationQueue.add(
+              { automation, event, ...(isTestRun ? { isTestRun } : {}) },
+              JOB_OPTS
+            )
           )
         } catch (e) {
           logging.logAlert("Failed to queue automation", e)
@@ -213,8 +206,13 @@ export async function externalTrigger(
     throw new Error("Automation is disabled")
   }
 
+  const workspaceId = params.appId || context.getWorkspaceId()
+  const isDevRun = workspaceId ? isDevWorkspaceID(workspaceId) : false
+  const shouldRunAsTest = Boolean(isTestRun || isDevRun)
+
   if (
     sdk.automations.isAppAction(automation) &&
+    !isTestRun &&
     !(await checkTestFlag(automation._id!))
   ) {
     if (params.fields == null) {
@@ -252,7 +250,11 @@ export async function externalTrigger(
     }
   }
 
-  const data: AutomationData = { automation, event: params }
+  const data: AutomationData = {
+    automation,
+    event: params,
+    ...(shouldRunAsTest ? { isTestRun: true } : {}),
+  }
 
   const shouldTrigger = await checkTriggerFilters(automation, {
     row: data.event?.row ?? {},
@@ -272,11 +274,14 @@ export async function externalTrigger(
   if (getResponses) {
     data.event = {
       ...data.event,
-      appId: context.getWorkspaceId(),
+      appId: workspaceId,
       automation,
     }
     return quotas.addAction(ActionType.AUTOMATION_STEP, () =>
-      executeInThread({ data } as AutomationJob, { onProgress, isTestRun })
+      executeInThread({ data } as AutomationJob, {
+        onProgress,
+        isTestRun: shouldRunAsTest,
+      })
     )
   } else {
     return quotas.addAction(ActionType.AUTOMATION_STEP, () =>

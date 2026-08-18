@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     ActionMenu,
     Heading,
@@ -14,12 +14,12 @@
   } from "@budibase/bbui"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { roles } from "@/stores/builder"
-  import { appsStore } from "@/stores/portal/apps"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { auth } from "@/stores/portal/auth"
   import { groups } from "@/stores/portal/groups"
   import { onMount, setContext, getContext } from "svelte"
-  import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
-  import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
+  import WorkspaceNameTableRenderer from "../users/_components/WorkspaceNameTableRenderer.svelte"
+  import WorkspaceRoleTableRenderer from "../users/_components/WorkspaceRoleTableRenderer.svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import GroupIcon from "./_components/GroupIcon.svelte"
   import GroupUsers from "./_components/GroupUsers.svelte"
@@ -29,10 +29,14 @@
   import { sdk } from "@budibase/shared-core"
   import { Constants } from "@budibase/frontend-core"
   import { bb } from "@/stores/bb"
+  import type { StoreApp } from "@/types"
+  import type { UserGroup } from "@budibase/types"
+  import type { Readable } from "svelte/store"
 
-  export let groupId
+  export let groupId: string
 
-  const routing = getContext("routing")
+  const routing =
+    getContext<Readable<{ params: { groupId?: string } }>>("routing")
 
   // Override
   $: params = $routing?.params
@@ -42,12 +46,14 @@
   }
 
   let loaded = false
-  let editModal, deleteModal, editWorkspaceRoleModal
-  let selectedWorkspace
+  let editModal: Modal
+  let deleteModal: ConfirmDialog
+  let editWorkspaceRoleModal: Modal
+  let selectedWorkspace: (StoreApp & { prodAppId: string }) | undefined
   let editWorkspaceRoleModalToken = 0
-  let workspaceSearch
+  let workspaceSearch = ""
   let workspacePageNumber = 0
-  let previousWorkspaceSearch
+  let previousWorkspaceSearch = ""
   let defaultUpdating = false
   const WORKSPACE_PAGE_SIZE = 3
 
@@ -76,34 +82,46 @@
   const customAppTableRenderers = [
     {
       column: "name",
-      component: AppNameTableRenderer,
+      component: WorkspaceNameTableRenderer,
     },
     {
       column: "role",
-      component: AppRoleTableRenderer,
+      component: WorkspaceRoleTableRenderer,
     },
     {
       column: "prodAppId",
       component: RemoveWorkspaceTableRenderer,
     },
   ]
-  $: groupApps = $appsStore.apps
+  $: groupApps = $workspacesStore.apps
     .filter(app => {
-      const prodAppId = appsStore.getProdAppID(app.devId)
-      return groups.getGroupAppIds(group).includes(prodAppId)
+      const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
+        app.devId || ""
+      )
+      return (
+        !!prodWorkspaceId &&
+        !!group &&
+        groups.getGroupAppIds(group).includes(prodWorkspaceId)
+      )
     })
     .map(app => {
-      const prodAppId = appsStore.getProdAppID(app.devId)
+      const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
+        app.devId || ""
+      )
+      if (!prodWorkspaceId) {
+        return undefined
+      }
       return {
         ...app,
-        _id: prodAppId,
-        prodAppId,
+        _id: prodWorkspaceId,
+        prodAppId: prodWorkspaceId,
         readonly: workspaceReadonly,
-        role: group?.builder?.apps.includes(prodAppId)
+        role: group?.builder?.apps.includes(prodWorkspaceId)
           ? Constants.Roles.CREATOR
-          : group?.roles?.[prodAppId],
+          : group?.roles?.[prodWorkspaceId],
       }
     })
+    .filter(app => app !== undefined)
   $: filteredGroupApps = workspaceSearch
     ? groupApps.filter(app =>
         app.name?.toLowerCase().includes(workspaceSearch.toLowerCase())
@@ -130,7 +148,7 @@
       ? [...Array(WORKSPACE_PAGE_SIZE - workspacePageRows.length)].map(
           (_, index) => ({
             _id: `workspace-filler-${workspacePageNumber}-${index}`,
-            __skeleton: true,
+            __skeleton: true as const,
             __selectable: false,
           })
         )
@@ -146,6 +164,9 @@
 
   async function deleteGroup() {
     try {
+      if (!group) {
+        return
+      }
       await groups.delete(group)
       notifications.success("User group deleted successfully")
       bb.settings("/people/groups")
@@ -154,11 +175,11 @@
     }
   }
 
-  async function saveGroup(group) {
+  async function saveGroup(group: UserGroup) {
     try {
       await groups.save(group)
-    } catch (error) {
-      if (error.message) {
+    } catch (error: any) {
+      if (error?.message) {
         notifications.error(error.message)
       } else {
         notifications.error(`Failed to save user group`)
@@ -166,7 +187,7 @@
     }
   }
 
-  async function updateDefaultStatus(isDefault) {
+  async function updateDefaultStatus(isDefault: boolean) {
     if (!group?._id || group?.isDefault === isDefault || defaultUpdating) {
       return
     }
@@ -176,14 +197,14 @@
       notifications.success(
         isDefault ? "Default group updated" : "Default group removed"
       )
-    } catch (error) {
+    } catch (error: any) {
       notifications.error(error?.message || "Failed to update default group")
     } finally {
       defaultUpdating = false
     }
   }
 
-  const removeApp = async app => {
+  const removeApp = async (app: string) => {
     try {
       await groups.removeApp(groupId, app)
     } catch (error) {
@@ -191,7 +212,11 @@
     }
   }
 
-  const openWorkspaceRoleModal = workspace => {
+  const openWorkspaceRoleModal = (
+    workspace:
+      | (StoreApp & { prodAppId: string; __skeleton?: boolean })
+      | { __skeleton: true }
+  ) => {
     if (workspaceReadonly || workspace?.__skeleton) {
       return
     }
@@ -223,7 +248,7 @@
       <div class="header-actions">
         <div
           class="default-toggle"
-          title={isScimGroup && "Group synced from your AD"}
+          title={isScimGroup ? "Group synced from your AD" : undefined}
         >
           <Toggle
             value={!!group?.isDefault}
@@ -243,7 +268,7 @@
           >
             Edit
           </MenuItem>
-          <div title={isScimGroup && "Group synced from your AD"}>
+          <div title={isScimGroup ? "Group synced from your AD" : undefined}>
             <MenuItem
               icon="trash"
               on:click={() => deleteModal.show()}

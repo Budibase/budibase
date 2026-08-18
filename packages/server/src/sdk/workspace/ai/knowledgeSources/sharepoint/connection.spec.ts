@@ -9,9 +9,13 @@ jest.mock("../../../oauth2", () => {
 
 import {
   collectSharePointFilesRecursive,
+  fetchSharePointListDocument,
   fetchSharePointSitesByDatasourceAuthConfig,
   isAllowedSharePointNextLink,
+  listSharePointDriveItems,
   listSharePointDrives,
+  listSharePointLists,
+  MAX_SHAREPOINT_GENERATED_LIST_SIZE_BYTES,
 } from "./connection"
 import { type Datasource, OAuth2GrantType, RestAuthType } from "@budibase/types"
 import sdk from "../../../.."
@@ -63,6 +67,300 @@ describe("isAllowedSharePointNextLink", () => {
 
   it("rejects invalid URLs", () => {
     expect(isAllowedSharePointNextLink("not-a-url")).toBe(false)
+  })
+})
+
+describe("SharePoint lists", () => {
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  it("returns visible lists without document libraries", async () => {
+    jest.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        value: [
+          {
+            id: "list-1",
+            displayName: "FAQs",
+            webUrl: "https://example.com/faqs",
+            list: { hidden: false, template: "genericList" },
+          },
+          {
+            id: "documents",
+            displayName: "Documents",
+            list: { hidden: false, template: "documentLibrary" },
+          },
+          {
+            id: "hidden",
+            displayName: "Hidden",
+            list: { hidden: true, template: "genericList" },
+          },
+        ],
+      }),
+    } as Response)
+
+    await expect(
+      listSharePointLists("Bearer token", "site-1")
+    ).resolves.toEqual([
+      {
+        id: "list-1",
+        name: "FAQs",
+        webUrl: "https://example.com/faqs",
+      },
+    ])
+  })
+
+  it("aborts an in-flight list request without retrying", async () => {
+    const controller = new AbortController()
+    const timeoutError = new Error("SharePoint sync timed out")
+    const fetchMock = jest
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async (_input, init) => {
+        await new Promise<void>((_resolve, reject) => {
+          init?.signal?.addEventListener(
+            "abort",
+            () => reject(init.signal?.reason),
+            { once: true }
+          )
+        })
+        throw new Error("unreachable")
+      })
+
+    const result = listSharePointLists(
+      "Bearer token",
+      "site-1",
+      controller.signal
+    )
+    controller.abort(timeoutError)
+
+    await expect(result).rejects.toBe(timeoutError)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("builds CSV from visible columns and list items", async () => {
+    jest.spyOn(globalThis, "fetch").mockImplementation(async input => {
+      const url = input.toString()
+      if (url.includes("/columns")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              { name: "Title", displayName: "Title", hidden: false },
+              { name: "Details", displayName: "Details", hidden: false },
+              { name: "Internal", displayName: "Internal", hidden: true },
+            ],
+          }),
+        } as Response
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          value: [
+            {
+              id: "2",
+              fields: { Title: "Second", Details: ["a", "b"] },
+            },
+            {
+              id: "1",
+              fields: { Title: "First", Details: { b: 2, a: 1 } },
+            },
+          ],
+        }),
+      } as Response
+    })
+
+    const document = await fetchSharePointListDocument(
+      "Bearer token",
+      "site-1",
+      "list-1"
+    )
+
+    expect(document.itemCount).toBe(2)
+    expect(document.buffer.toString()).toBe(
+      [
+        "SharePoint Item ID,Created,Modified,Web URL,Details,Title",
+        '2,,,,"[""a"",""b""]",Second',
+        '1,,,,"{""a"":1,""b"":2}",First',
+      ].join("\n")
+    )
+  })
+
+  it("aborts an in-flight list document request without retrying", async () => {
+    const controller = new AbortController()
+    const timeoutError = new Error("SharePoint sync timed out")
+    let itemRequestStarted!: () => void
+    const itemRequestStartedPromise = new Promise<void>(resolve => {
+      itemRequestStarted = resolve
+    })
+    const fetchMock = jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ value: [] }),
+      } as Response)
+      .mockImplementationOnce(async (_input, init) => {
+        itemRequestStarted()
+        await new Promise<void>((_resolve, reject) => {
+          init?.signal?.addEventListener(
+            "abort",
+            () => reject(init.signal?.reason),
+            { once: true }
+          )
+        })
+        throw new Error("unreachable")
+      })
+
+    const result = fetchSharePointListDocument(
+      "Bearer token",
+      "site-1",
+      "list-1",
+      MAX_SHAREPOINT_GENERATED_LIST_SIZE_BYTES,
+      controller.signal
+    )
+    await itemRequestStartedPromise
+    controller.abort(timeoutError)
+
+    await expect(result).rejects.toBe(timeoutError)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it("neutralizes formula-like values in generated CSV cells", async () => {
+    jest.spyOn(globalThis, "fetch").mockImplementation(async input => {
+      const url = input.toString()
+      if (url.includes("/columns")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              { name: "Formula", displayName: "＝Formula", hidden: false },
+              { name: "Safe", displayName: "Safe", hidden: false },
+            ],
+          }),
+        } as Response
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          value: [
+            {
+              id: "1",
+              fields: {
+                Formula: '=HYPERLINK("https://example.com")',
+                Safe: "plain text",
+              },
+            },
+            {
+              id: "2",
+              fields: { Formula: "+SUM(1,1)", Safe: "plain text" },
+            },
+            {
+              id: "3",
+              fields: { Formula: "-1", Safe: "plain text" },
+            },
+            {
+              id: "4",
+              fields: { Formula: "@SUM(1)", Safe: "plain text" },
+            },
+            {
+              id: "5",
+              fields: { Formula: "\t=1", Safe: "plain text" },
+            },
+            {
+              id: "6",
+              fields: { Formula: "\r=1", Safe: "plain text" },
+            },
+            {
+              id: "7",
+              fields: { Formula: "\n=1", Safe: "plain text" },
+            },
+            {
+              id: "8",
+              fields: { Formula: "＝1+1", Safe: "plain text" },
+            },
+            {
+              id: "9",
+              fields: { Formula: "＋1+1", Safe: "plain text" },
+            },
+            {
+              id: "10",
+              fields: { Formula: "－1", Safe: "plain text" },
+            },
+            {
+              id: "11",
+              fields: { Formula: "＠SUM(1)", Safe: "plain text" },
+            },
+          ],
+        }),
+      } as Response
+    })
+
+    const document = await fetchSharePointListDocument(
+      "Bearer token",
+      "site-1",
+      "list-1"
+    )
+
+    expect(document.buffer.toString()).toBe(
+      [
+        "SharePoint Item ID,Created,Modified,Web URL,'＝Formula,Safe",
+        '1,,,,"\'=HYPERLINK(""https://example.com"")",plain text',
+        '2,,,,"\'+SUM(1,1)",plain text',
+        "3,,,,'-1,plain text",
+        "4,,,,'@SUM(1),plain text",
+        "5,,,,'\t=1,plain text",
+        '6,,,,"\'\r=1",plain text',
+        '7,,,,"\'\n=1",plain text',
+        "8,,,,'＝1+1,plain text",
+        "9,,,,'＋1+1,plain text",
+        "10,,,,'－1,plain text",
+        "11,,,,'＠SUM(1),plain text",
+      ].join("\n")
+    )
+  })
+
+  it("rejects generated list CSVs while paging when they exceed the size limit", async () => {
+    const fetchMock = jest
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async input => {
+        const url = input.toString()
+        if (url.includes("/columns")) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              value: [{ name: "Title", displayName: "Title", hidden: false }],
+            }),
+          } as Response
+        }
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              {
+                id: "1",
+                fields: { Title: "x".repeat(100) },
+              },
+            ],
+            "@odata.nextLink": `${url}&skiptoken=next`,
+          }),
+        } as Response
+      })
+
+    await expect(
+      fetchSharePointListDocument("Bearer token", "site-1", "list-1", 80)
+    ).rejects.toThrow(
+      "Generated SharePoint list CSV exceeds the 100 MB knowledge file limit"
+    )
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 })
 
@@ -523,13 +821,68 @@ describe("SharePoint Graph retries", () => {
         ok: true,
         status: 200,
         headers: { get: () => null },
-        json: async () => ({ value: [{ id: "drive-1" }] }),
+        json: async () => ({
+          value: [{ id: "drive-1", name: "Documents" }, { name: "Missing ID" }],
+        }),
       } as unknown as Response)
 
     const drives = await listSharePointDrives(bearerToken, "site-1")
 
     expect(fetchMock).toHaveBeenCalledTimes(2)
-    expect(drives).toEqual(["drive-1"])
+    expect(drives).toEqual([{ id: "drive-1", name: "Documents" }])
+  })
+
+  it("paginates SharePoint drives", async () => {
+    const nextLink =
+      "https://graph.microsoft.com/v1.0/sites/site-1/drives?$skiptoken=next"
+    const fetchMock = jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        json: async () => ({
+          value: [{ id: "drive-1", name: "Documents" }],
+          "@odata.nextLink": nextLink,
+        }),
+      } as unknown as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        json: async () => ({
+          value: [{ id: "drive-2" }],
+        }),
+      } as unknown as Response)
+
+    const drives = await listSharePointDrives(bearerToken, "site-1")
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock).toHaveBeenNthCalledWith(2, nextLink, expect.any(Object))
+    expect(drives).toEqual([
+      { id: "drive-1", name: "Documents" },
+      { id: "drive-2", name: "drive-2" },
+    ])
+  })
+
+  it("rejects invalid SharePoint drive pagination URLs", async () => {
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      json: async () => ({
+        value: [{ id: "drive-1", name: "Documents" }],
+        "@odata.nextLink": "https://example.com/drives?$skiptoken=next",
+      }),
+    } as unknown as Response)
+
+    await expect(listSharePointDrives(bearerToken, "site-1")).rejects.toEqual(
+      expect.objectContaining({
+        message: "Invalid SharePoint pagination URL",
+        status: 400,
+      })
+    )
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
   it("does not retry listSharePointDrives on 403", async () => {
@@ -594,6 +947,68 @@ describe("SharePoint Graph retries", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(3)
     expect(files.map(file => file.path)).toEqual(["doc-1.txt", "doc-2.txt"])
+  })
+
+  it("returns an empty listing when the initial drive items request is missing", async () => {
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: false,
+      status: 404,
+      headers: { get: () => null },
+      json: async () => ({}),
+    } as unknown as Response)
+
+    await expect(
+      listSharePointDriveItems(bearerToken, "drive-1", "missing-folder")
+    ).resolves.toEqual([])
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("rejects when a paginated drive items request is missing", async () => {
+    const nextLink =
+      "https://graph.microsoft.com/v1.0/drives/drive-1/root/children?$skiptoken=next"
+    const errorSpy = jest.spyOn(console, "error").mockImplementation()
+    const fetchMock = jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        json: async () => ({
+          value: [
+            {
+              id: "item-1",
+              name: "doc-1.txt",
+              file: { mimeType: "text/plain" },
+            },
+          ],
+          "@odata.nextLink": nextLink,
+        }),
+      } as unknown as Response)
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        headers: { get: () => null },
+        json: async () => ({}),
+      } as unknown as Response)
+
+    await expect(
+      listSharePointDriveItems(bearerToken, "drive-1")
+    ).rejects.toEqual(
+      expect.objectContaining({
+        message: "Failed to list SharePoint drive items (404)",
+        status: 400,
+      })
+    )
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock).toHaveBeenNthCalledWith(2, nextLink, expect.any(Object))
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Failed to list SharePoint drive items",
+      {
+        status: 404,
+        driveId: "drive-1",
+        hasItemId: false,
+      }
+    )
   })
 
   it("aborts an in-flight recursive listing without retrying", async () => {

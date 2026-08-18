@@ -17,6 +17,83 @@ interface PrimaryBranchPathArgs {
   preBranchLabelX: number
 }
 
+interface CustomEdgeLabelPositionArgs {
+  baseLabelX: number
+  baseLabelY: number
+  sourceX: number
+  sourceY: number
+  targetX: number
+  targetY: number
+  isAnchorTarget: boolean
+  isLoopTarget: boolean
+  isLoopSource: boolean
+  isLoopInsertAnchor: boolean
+  isBranchSource: boolean
+  loopInsertActionOffset: number
+  branchLoopInsertActionOffset: number
+}
+
+interface CustomEdgePathArgs {
+  isAnchorTarget: boolean
+  anchorPath: string
+  loopTargetPath?: string
+  loopSourcePath?: string
+  primaryBranchPath?: string
+  basePath: string
+}
+
+export const getCustomEdgeLabelPosition = ({
+  baseLabelX,
+  baseLabelY,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  isAnchorTarget,
+  isLoopTarget,
+  isLoopSource,
+  isLoopInsertAnchor,
+  isBranchSource,
+  loopInsertActionOffset,
+  branchLoopInsertActionOffset,
+}: CustomEdgeLabelPositionArgs) => {
+  let labelX = baseLabelX
+  let labelY = baseLabelY
+
+  if (isAnchorTarget || isLoopTarget || isLoopSource) {
+    labelX = Math.round(((sourceX ?? 0) + (targetX ?? 0)) / 2)
+    labelY = isLoopSource ? (targetY ?? 0) : (sourceY ?? 0)
+  }
+  if (isLoopSource) {
+    labelX = sourceX + loopInsertActionOffset
+    labelY = sourceY
+  }
+  if (isLoopInsertAnchor && !isBranchSource) {
+    labelX = sourceX + loopInsertActionOffset
+    labelY = sourceY
+  }
+  if (isLoopInsertAnchor && isBranchSource) {
+    labelX = sourceX + branchLoopInsertActionOffset
+    labelY = sourceY
+  }
+
+  return { labelX, labelY }
+}
+
+export const getCustomEdgePath = ({
+  isAnchorTarget,
+  anchorPath,
+  loopTargetPath,
+  loopSourcePath,
+  primaryBranchPath,
+  basePath,
+}: CustomEdgePathArgs) => {
+  if (isAnchorTarget) {
+    return anchorPath
+  }
+  return loopTargetPath || loopSourcePath || primaryBranchPath || basePath
+}
+
 export const getPrimaryBranchPath = ({
   sourceX,
   sourceY,

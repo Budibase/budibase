@@ -5,6 +5,7 @@ import {
   features,
   getErrorMessage,
   HTTPError,
+  roles,
 } from "@budibase/backend-core"
 import { v4 } from "uuid"
 import {
@@ -32,6 +33,7 @@ import {
   type UIMessageChunk,
 } from "ai"
 import sdk from "../../../sdk"
+import { isDevWorkspaceID } from "../../../db/utils"
 import {
   buildAgentMessageUsage,
   formatIncompleteToolCallError,
@@ -112,18 +114,23 @@ const startAgentRequestTracking = async ({
     return undefined
   }
 
+  const operation =
+    run.selectedOperation && run.operationIntent !== "query"
+      ? {
+          name: run.selectedOperation.name,
+          prompt: run.selectedOperation.promptInstructions || "",
+        }
+      : undefined
+
   let trackingHandle: AgentRequestTrackingHandle
 
-  if (run.selectedOperation) {
+  if (operation) {
     trackingHandle = await sdk.ai.agentRequests
       .initActiveRequest({
         agentId,
         sessionId,
         latestPrompt: run.latestQuestion,
-        operation: {
-          name: run.selectedOperation.name,
-          prompt: run.selectedOperation.promptInstructions || "",
-        },
+        operation,
         userId,
         source: determineTrigger(sessionId),
       })
@@ -135,31 +142,26 @@ const startAgentRequestTracking = async ({
         })
         return undefined
       })
-  }
 
-  sdk.ai.agentRequests
-    .enqueueRequestTracking({
-      agentId,
-      sessionId,
-      latestUserPrompt: run.latestQuestion,
-      recentChatContext: getRecentChatContext(chatMessages),
-      operation: run.selectedOperation
-        ? {
-            name: run.selectedOperation.name,
-            prompt: run.selectedOperation.promptInstructions || "",
-          }
-        : undefined,
-      userId,
-      existingRequestId: trackingHandle?.requestId,
-    })
-    .catch(error => {
-      console.error("Failed to enqueue agent request tracking", {
+    sdk.ai.agentRequests
+      .enqueueRequestTracking({
         agentId,
         sessionId,
+        latestUserPrompt: run.latestQuestion,
+        recentChatContext: getRecentChatContext(chatMessages),
+        operation,
         userId,
-        error,
+        existingRequestId: trackingHandle?.requestId,
       })
-    })
+      .catch(error => {
+        console.error("Failed to enqueue agent request tracking", {
+          agentId,
+          sessionId,
+          userId,
+          error,
+        })
+      })
+  }
 
   return trackingHandle
 }
@@ -408,15 +410,15 @@ const getChatConversation = async (
 
 interface ResolvedChatStreamRequest {
   agentId: string
-  canUsePreview: boolean
   chat: ChatAgentRequest
   chatAppId?: string
   existingChat?: ChatConversation
   userId: string
+  user: ContextUser
 }
 
 interface getExistingChatForStreamParams {
-  canUsePreview: boolean
+  isPreview: boolean
   chat: ChatAgentRequest
   chatAppId?: string
   db: ReturnType<typeof context.getWorkspaceDB>
@@ -451,7 +453,7 @@ const applyChatStreamPathParams = (
 }
 
 const getExistingChatForStream = async ({
-  canUsePreview,
+  isPreview,
   chat,
   chatAppId,
   db,
@@ -465,7 +467,7 @@ const getExistingChatForStream = async ({
   if (!existingChat) {
     throw new HTTPError("chat not found", 404)
   }
-  if (!canUsePreview && existingChat.chatAppId !== chatAppId) {
+  if (!isPreview && existingChat.chatAppId !== chatAppId) {
     throw new HTTPError("chat does not belong to this chat app", 400)
   }
   if (existingChat.userId && existingChat.userId !== userId) {
@@ -486,22 +488,47 @@ const resolveChatStreamRequest = async (
   applyChatStreamPathParams(chat, ctx.params)
 
   const db = context.getWorkspaceDB()
+  const workspaceId = context.getWorkspaceId()
+  if (!workspaceId) {
+    throw new HTTPError("Workspace context is required", 400)
+  }
   const chatAppId = chat.chatAppId
-  const isBuilderOrAdmin = usersSdk.users.isAdminOrBuilder(ctx.user)
-  const requestedPreview = chat.isPreview === true
+  const isBuilderOrAdmin = usersSdk.users.isAdminOrBuilder(
+    ctx.user,
+    workspaceId
+  )
+  const isPreview = chat.isPreview === true
 
-  if (requestedPreview && !isBuilderOrAdmin) {
+  if (chat.previewRoleId && !isPreview) {
+    throw new HTTPError("previewRoleId requires preview mode", 400)
+  }
+
+  if (isPreview && !isBuilderOrAdmin) {
     throw new HTTPError("Forbidden", 403)
   }
 
-  const canUsePreview = requestedPreview
+  if (isPreview && !isDevWorkspaceID(workspaceId)) {
+    throw new HTTPError("Preview mode requires a development workspace", 400)
+  }
 
-  if (!canUsePreview && !chatAppId) {
+  let user = ctx.user
+  if (isPreview && chat.previewRoleId) {
+    const previewRole = await roles.getRole(chat.previewRoleId)
+    if (!previewRole?._id) {
+      throw new HTTPError("Preview role not found", 400)
+    }
+    user = {
+      ...ctx.user,
+      roleId: previewRole._id,
+    }
+  }
+
+  if (!isPreview && !chatAppId) {
     throw new HTTPError("chatAppId is required", 400)
   }
 
   let chatApp: ChatApp | undefined
-  if (!canUsePreview) {
+  if (!isPreview) {
     chatApp = await db.tryGet<ChatApp>(chatAppId)
     if (!chatApp) {
       throw new HTTPError("Chat app not found", 404)
@@ -510,7 +537,7 @@ const resolveChatStreamRequest = async (
   }
 
   const existingChat = await getExistingChatForStream({
-    canUsePreview,
+    isPreview,
     chat,
     chatAppId,
     db,
@@ -522,7 +549,7 @@ const resolveChatStreamRequest = async (
     throw new HTTPError("agentId is required", 400)
   }
 
-  if (!canUsePreview && chatApp) {
+  if (!isPreview && chatApp) {
     const chatAgentConfig = getEnabledChatAgentConfig(chatApp, agentId)
     await assertCanAccessChatAgent(ctx, chatAgentConfig)
   }
@@ -531,11 +558,11 @@ const resolveChatStreamRequest = async (
 
   return {
     agentId,
-    canUsePreview,
     chat,
     chatAppId,
     existingChat,
     userId,
+    user,
   }
 }
 
@@ -788,7 +815,7 @@ export async function webhookChat({
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   const db = context.getWorkspaceDB()
-  const { agentId, chat, chatAppId, userId } =
+  const { agentId, chat, chatAppId, userId, user } =
     await resolveChatStreamRequest(ctx)
 
   ctx.status = 200
@@ -814,7 +841,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       chat,
       errorLabel: "chat stream",
       sessionId,
-      user: ctx.user,
+      user,
       getRequestId: () => trackingHandle?.requestId,
     })
 

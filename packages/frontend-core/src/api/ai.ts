@@ -5,6 +5,8 @@ import {
   GenerateJsResponse,
   GenerateTablesRequest,
   GenerateTablesResponse,
+  SaveSlackAppConfigRequest,
+  SlackAppConfigResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
@@ -49,6 +51,11 @@ export interface AIEndpoints {
     req: GenerateTablesRequest,
     onProgress?: (message: string) => void
   ) => Promise<GenerateTablesResponse>
+  fetchSlackAppConfig: () => Promise<SlackAppConfigResponse>
+  saveSlackAppConfig: (
+    req: SaveSlackAppConfigRequest
+  ) => Promise<SlackAppConfigResponse>
+  deleteSlackAppConfig: () => Promise<SlackAppConfigResponse>
 }
 
 export const buildAIEndpoints = (API: BaseAPIClient): AIEndpoints => ({
@@ -127,6 +134,25 @@ export const buildAIEndpoints = (API: BaseAPIClient): AIEndpoints => ({
           throw new Error(error?.message || "Error generating tables")
         }
       },
+    })
+  },
+
+  fetchSlackAppConfig: async () => {
+    return await API.get({
+      url: "/api/ai/slack/app-config",
+    })
+  },
+
+  saveSlackAppConfig: async req => {
+    return await API.put({
+      url: "/api/ai/slack/app-config",
+      body: req,
+    })
+  },
+
+  deleteSlackAppConfig: async () => {
+    return await API.delete({
+      url: "/api/ai/slack/app-config",
     })
   },
 })

@@ -4,6 +4,7 @@ import { builderAdminRoutes, endpointGroupList } from "./endpointGroups"
 import { generateAgentInstructionsValidator } from "./utils/validators/agent"
 import {
   createAIConfigValidator,
+  saveSlackAppConfigValidator,
   updateAIConfigValidator,
 } from "./utils/validators/aiConfig"
 
@@ -20,6 +21,13 @@ builderAdminRoutes
   .post("/api/configs", createAIConfigValidator(), ai.createAIConfig)
   .put("/api/configs", updateAIConfigValidator(), ai.updateAIConfig)
   .delete("/api/configs/:id", ai.deleteAIConfig)
+  .get("/api/ai/slack/app-config", ai.fetchSlackAppConfig)
+  .put(
+    "/api/ai/slack/app-config",
+    saveSlackAppConfigValidator(),
+    ai.saveSlackAppConfig
+  )
+  .delete("/api/ai/slack/app-config", ai.deleteSlackAppConfig)
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
 

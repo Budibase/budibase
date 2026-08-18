@@ -37,6 +37,7 @@ import {
   Row,
   RowExportFormat,
   SaveTableRequest,
+  SortOrder,
   StaticQuotaName,
   Table,
   TableSchema,
@@ -1179,6 +1180,51 @@ if (descriptions.length) {
 
             const rows = await config.api.row.fetch(table._id!)
             expect(rows).toHaveLength(1)
+          })
+
+        isMSSQL &&
+          it("can create and update rows for temporal external tables", async () => {
+            const tableName = uuid.v4().replaceAll("-", "").substring(0, 20)
+            await client!.raw(`
+              CREATE TABLE [dbo].[${tableName}](
+                [email] NVARCHAR(255) NOT NULL,
+                [first_name] NVARCHAR(100) NOT NULL,
+                [last_name] NVARCHAR(100) NOT NULL,
+                [ValidFrom] DATETIME2(7) GENERATED ALWAYS AS ROW START NOT NULL,
+                [ValidTo] DATETIME2(7) GENERATED ALWAYS AS ROW END NOT NULL,
+                CONSTRAINT [PK_${tableName}] PRIMARY KEY CLUSTERED ([email]),
+                PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo])
+              )
+              WITH (
+                SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[${tableName}_History])
+              )
+            `)
+
+            const schemaRes = await config.api.datasource.fetchSchema({
+              datasourceId: datasource!._id!,
+            })
+            const temporalTable = schemaRes.datasource.entities![tableName]
+
+            const createdRow = await config.api.row.save(temporalTable._id!, {
+              email: "john.doe@example.com",
+              first_name: "John",
+              last_name: "Doe",
+            })
+
+            const updatedRow = await config.api.row.save(temporalTable._id!, {
+              _id: createdRow._id!,
+              first_name: "Johnny",
+              last_name: "Doe",
+            })
+
+            expect(updatedRow.first_name).toEqual("Johnny")
+
+            const rows = await config.api.row.fetch(temporalTable._id!)
+            expect(rows).toHaveLength(1)
+            expect(rows[0].first_name).toEqual("Johnny")
+            expect(
+              schemaRes.datasource.entities![`${tableName}_History`]
+            ).toBeUndefined()
           })
 
         describe("relations to same table", () => {
@@ -2695,6 +2741,39 @@ if (descriptions.length) {
           expect(row._id).toEqual(existing._id)
         })
 
+        isInternal &&
+          it("should export rows using multiple sort columns", async () => {
+            await config.api.row.save(table._id!, {
+              name: "A",
+              description: "1",
+            })
+            await config.api.row.save(table._id!, {
+              name: "B",
+              description: "1",
+            })
+            await config.api.row.save(table._id!, {
+              name: "A",
+              description: "2",
+            })
+
+            const response = await config.api.row.exportRows(table._id!, {
+              sort: {
+                name: {
+                  direction: SortOrder.ASCENDING,
+                },
+                description: {
+                  direction: SortOrder.DESCENDING,
+                },
+              },
+            })
+
+            expect(
+              JSON.parse(response).map(
+                (row: Row) => `${row.name}-${row.description}`
+              )
+            ).toEqual(["A-2", "A-1", "B-1"])
+          })
+
         it("should allow exporting only certain columns", async () => {
           const existing = await config.api.row.save(table._id!, {
             name: "foo",
@@ -4184,6 +4263,15 @@ if (descriptions.length) {
             await config.api.row.save(table._id!, mainRow)
             const { rows } = await config.api.row.search(table._id!)
             expect(rows[0].formula).toBe(1)
+          })
+
+        isInternal &&
+          it("should expose relationship primary display values to static formulas", async () => {
+            await updateFormulaColumn("{{ links.0.primaryDisplay }}", {
+              formulaType: FormulaType.STATIC,
+            })
+            const { rows } = await config.api.row.search(table._id!)
+            expect(rows[0].formula).toBe(relatedRow.name)
           })
       })
 

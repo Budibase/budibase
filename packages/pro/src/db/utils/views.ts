@@ -1,4 +1,5 @@
 import { context, db as dbCore, tenancy } from "@budibase/backend-core"
+import { BackupStatus, BackupType } from "@budibase/types"
 
 const { ViewName, AutomationViewMode, SEPARATOR, DocumentType, createView } =
   dbCore
@@ -37,4 +38,19 @@ export async function createWorkspaceBackupTriggerView() {
     }
   }`
   await createView(db, viewJs, ViewName.WORKSPACE_BACKUP_BY_TRIGGER)
+}
+
+export async function createWorkspaceBackupExpiryView() {
+  const db = tenancy.getGlobalDB()
+  const viewJs = `function(doc) {
+    if (
+      doc._id.startsWith("${WORKSPACE_BACKUP_PREFIX}") &&
+      doc.type === "${BackupType.BACKUP}" &&
+      doc.status === "${BackupStatus.COMPLETE}" &&
+      doc.timestamp
+    ) {
+      emit(doc.timestamp + "${SEPARATOR}" + doc._id)
+    }
+  }`
+  await createView(db, viewJs, ViewName.WORKSPACE_BACKUP_BY_EXPIRY)
 }

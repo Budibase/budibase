@@ -37,6 +37,16 @@ import {
   newAutomation,
 } from "../../../tests/utilities/structures"
 
+// Agent create/update resolves the Slack workspace via auth.test - mocked so
+// tests never call out to Slack.
+jest.mock("@slack/web-api", () => ({
+  WebClient: jest.fn(() => ({
+    auth: {
+      test: jest.fn().mockResolvedValue({ ok: true, team_id: "T123" }),
+    },
+  })),
+}))
+
 describe("/projects", () => {
   const config = new TestConfiguration()
   let cleanupAIConfig: undefined | (() => Promise<void>)
@@ -1135,6 +1145,7 @@ describe("/projects", () => {
         expect(exportedAgent.slackIntegration).toEqual({
           idleTimeoutMinutes: 20,
           requireUserLink: true,
+          teamId: "T123",
         })
         expect(exportedAgent.telegramIntegration).toEqual({
           botUserName: "ops_bot",
@@ -1255,7 +1266,7 @@ describe("/projects", () => {
       })
 
       await config.withHeaders(
-        { [Header.APP_ID]: destinationWorkspace.appId },
+        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
         async () => {
           const imported = await config.api.project.import(body)
           expect(imported.resources).toEqual({
@@ -1301,7 +1312,7 @@ describe("/projects", () => {
         name: "Imported external data",
       })
       await config.withHeaders(
-        { [Header.APP_ID]: destinationWorkspace.appId },
+        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
         async () => {
           const imported = await config.api.project.import(body)
           const importedDatasourceId = imported.resources.datasource?.[0]!
@@ -1369,7 +1380,7 @@ describe("/projects", () => {
       })
 
       await config.withHeaders(
-        { [Header.APP_ID]: destinationWorkspace.appId },
+        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
         async () => {
           const imported = await config.api.project.import(body)
           const importedScreens = await config.api.screen.list()
@@ -1406,7 +1417,7 @@ describe("/projects", () => {
       })
 
       await config.withHeaders(
-        { [Header.APP_ID]: destinationWorkspace.appId },
+        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
         async () => {
           const imported = await config.api.project.import(body)
           expect(imported.resources.table).toHaveLength(1)
@@ -1493,7 +1504,7 @@ describe("/projects", () => {
       })
 
       await config.withHeaders(
-        { [Header.APP_ID]: destinationWorkspace.appId },
+        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
         async () => {
           await config.api.workspaceApp.create({
             name: "Existing app",
@@ -1658,7 +1669,7 @@ describe("/projects", () => {
       })
 
       await config.withHeaders(
-        { [Header.APP_ID]: destinationWorkspace.appId },
+        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
         async () => {
           const imported = await config.api.project.import(body)
           const importedQuery = await config.api.query.get(

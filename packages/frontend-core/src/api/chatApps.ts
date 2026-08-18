@@ -55,6 +55,14 @@ export interface ChatAppEndpoints {
   >
 }
 
+const getBrowserTimezone = () => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone
+  } catch {
+    return undefined
+  }
+}
+
 const throwOnErrorChunk = () =>
   new TransformStream<UIMessageChunk, UIMessageChunk>({
     transform(chunk, controller) {
@@ -82,7 +90,10 @@ export const buildChatAppEndpoints = (
       throw new Error("chatAppId is required to stream a chat conversation")
     }
 
-    const body: ChatAgentRequest = chat
+    const body: ChatAgentRequest = {
+      ...chat,
+      timezone: chat.timezone ?? getBrowserTimezone(),
+    }
     const conversationId = chat._id || "new"
 
     const response = await fetch(
@@ -92,7 +103,7 @@ export const buildChatAppEndpoints = (
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          [Header.APP_ID]: workspaceId,
+          [Header.WORKSPACE_ID]: workspaceId,
         },
         body: JSON.stringify(body),
         credentials: "same-origin",
@@ -166,7 +177,7 @@ export const buildChatAppEndpoints = (
     const url = "/api/chatapps"
     const headers = workspaceId
       ? {
-          [Header.APP_ID]: workspaceId,
+          [Header.WORKSPACE_ID]: workspaceId,
         }
       : undefined
     return await API.get({
@@ -218,7 +229,7 @@ export const buildChatAppEndpoints = (
     }
 
     if (resolvedWorkspaceId) {
-      headers[Header.APP_ID] = resolvedWorkspaceId
+      headers[Header.WORKSPACE_ID] = resolvedWorkspaceId
     }
 
     const response = await fetch(`/api/chatapps/${chatAppId}/conversations`, {

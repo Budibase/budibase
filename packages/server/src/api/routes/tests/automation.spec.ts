@@ -25,7 +25,6 @@ import {
   TRIGGER_DEFINITIONS,
 } from "../../../automations"
 import * as emailAutomation from "../../../automations/email"
-import { withEnv } from "../../../environment"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import sdk from "../../../sdk"
 import { basicTable } from "../../../tests/utilities/structures"
@@ -431,7 +430,7 @@ describe("/automations", () => {
   })
 
   describe("trigger", () => {
-    it("does not trigger an automation when not synchronous and in dev", async () => {
+    it("triggers an asynchronous automation in dev", async () => {
       const { automation } = await config.api.automation.post(newAutomation())
       await config.api.automation.trigger(
         automation._id!,
@@ -440,9 +439,9 @@ describe("/automations", () => {
           timeout: 1000,
         },
         {
-          status: 400,
+          status: 200,
           body: {
-            message: "Only apps in production support this endpoint",
+            message: `Automation ${automation._id} has been triggered.`,
           },
         }
       )
@@ -508,49 +507,6 @@ describe("/automations", () => {
           }
         )
       )
-    })
-
-    it("triggers an asynchronous automation in dev when ALLOW_DEV_AUTOMATIONS is enabled", async () => {
-      const { automation } = await config.api.automation.post(newAutomation())
-
-      await withEnv({ ALLOW_DEV_AUTOMATIONS: "1" }, async () => {
-        await config.api.automation.trigger(
-          automation._id!,
-          {
-            fields: {},
-            timeout: 1000,
-          },
-          {
-            status: 200,
-            body: {
-              message: `Automation ${automation._id} has been triggered.`,
-            },
-          }
-        )
-      })
-    })
-
-    it("triggers an asynchronous automation in production when ALLOW_DEV_AUTOMATIONS is enabled", async () => {
-      const { automation } = await config.api.automation.post(newAutomation())
-      await config.publish()
-
-      await withEnv({ ALLOW_DEV_AUTOMATIONS: "1" }, async () => {
-        await config.withProdApp(() =>
-          config.api.automation.trigger(
-            automation._id!,
-            {
-              fields: {},
-              timeout: 1000,
-            },
-            {
-              status: 200,
-              body: {
-                message: `Automation ${automation._id} has been triggered.`,
-              },
-            }
-          )
-        )
-      })
     })
   })
 

@@ -8,6 +8,8 @@ const mockKnowledgeBaseListFiles = jest.fn()
 const mockKnowledgeBaseUploadFile = jest.fn()
 const mockRetryKnowledgeBaseFileIngestion = jest.fn()
 const mockGetSharePointBearerToken = jest.fn()
+const mockListSharePointLists = jest.fn()
+const mockFetchSharePointListDocument = jest.fn()
 const mockEnsureKnowledgeBaseForOperation = jest.fn()
 const mockDeleteFileForOperation = jest.fn()
 
@@ -52,6 +54,9 @@ jest.mock("../../../knowledgeSources/sharepoint", () => {
     ...actual,
     getSharePointBearerToken: (...args: any[]) =>
       mockGetSharePointBearerToken(...args),
+    listSharePointLists: (...args: any[]) => mockListSharePointLists(...args),
+    fetchSharePointListDocument: (...args: any[]) =>
+      mockFetchSharePointListDocument(...args),
   }
 })
 
@@ -66,14 +71,20 @@ jest.mock("../../files", () => {
 
 import {
   AgentKnowledgeSourceType,
+  AgentKnowledgeSourceSyncRunStatus,
   KnowledgeBaseFileSourceType,
   KnowledgeBaseFileStatus,
   KnowledgeBaseType,
+  SharePointScopeMode,
+  SharePointScopeTargetType,
   type AgentOperation,
   type Agent,
+  type AgentSharePointKnowledgeSourceScope,
   type KnowledgeBaseFile,
+  type SharePointScopeTarget,
 } from "@budibase/types"
 import {
+  fetchSharePointEntriesForOperation,
   SharePointSyncTimeoutError,
   syncSharePointSourcesForAgent,
 } from "./sharepoint"
@@ -90,7 +101,9 @@ const toArrayBuffer = (value: string) => {
 const makeSharePointAgent = (
   sourceId: string,
   siteId: string,
-  patterns?: string[],
+  scope: AgentSharePointKnowledgeSourceScope = {
+    mode: SharePointScopeMode.ALL,
+  },
   datasourceId = "datasource_1",
   authConfigId = "auth_1"
 ): Agent =>
@@ -111,7 +124,7 @@ const makeSharePointAgent = (
               datasourceId,
               authConfigId,
               site: { id: siteId },
-              ...(patterns ? { filters: { patterns } } : {}),
+              scope,
             },
           },
         ],
@@ -119,6 +132,36 @@ const makeSharePointAgent = (
       } satisfies AgentOperation,
     ],
   }) as Agent
+
+const selectiveScope = (
+  targets: SharePointScopeTarget[]
+): AgentSharePointKnowledgeSourceScope => ({
+  mode: SharePointScopeMode.SELECTED,
+  targets,
+})
+
+const folderTarget = (
+  driveId: string,
+  itemId: string
+): SharePointScopeTarget => ({
+  type: SharePointScopeTargetType.FOLDER,
+  driveId,
+  itemId,
+})
+
+const fileTarget = (
+  driveId: string,
+  itemId: string
+): SharePointScopeTarget => ({
+  type: SharePointScopeTargetType.FILE,
+  driveId,
+  itemId,
+})
+
+const listTarget = (listId: string): SharePointScopeTarget => ({
+  type: SharePointScopeTargetType.LIST,
+  listId,
+})
 
 const makeSharePointFile = ({
   id,
@@ -147,7 +190,7 @@ const makeSharePointFile = ({
     _id: id,
     knowledgeBaseId: "kb_1",
     source: {
-      type: KnowledgeBaseFileSourceType.SHAREPOINT,
+      type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE,
       knowledgeSourceId: sourceId,
       siteId,
       driveId,
@@ -159,6 +202,41 @@ const makeSharePointFile = ({
       ...(remoteSize !== undefined ? { remoteSize } : {}),
     },
     filename: "file.txt",
+    objectStoreKey: `key-${id}`,
+    ragSourceId: `rag-${id}`,
+    status,
+    uploadedBy: "sharepoint",
+  }) satisfies KnowledgeBaseFile
+
+const makeSharePointListFile = ({
+  id,
+  sourceId,
+  siteId,
+  listId,
+  contentHash,
+  status = KnowledgeBaseFileStatus.READY,
+}: {
+  id: string
+  sourceId: string
+  siteId: string
+  listId: string
+  contentHash: string
+  status?: KnowledgeBaseFileStatus
+}): KnowledgeBaseFile =>
+  ({
+    _id: id,
+    knowledgeBaseId: "kb_1",
+    source: {
+      type: KnowledgeBaseFileSourceType.SHAREPOINT_LIST,
+      knowledgeSourceId: sourceId,
+      siteId,
+      listId,
+      listName: "FAQs",
+      webUrl: "https://example.com/faqs",
+      contentHash,
+      itemCount: 1,
+    },
+    filename: "FAQs.csv",
     objectStoreKey: `key-${id}`,
     ragSourceId: `rag-${id}`,
     status,
@@ -191,6 +269,7 @@ describe("rag/sharepoint sync deduplication", () => {
     })
     mockGenerateSyncStateId.mockReturnValue("sync_state_1")
     mockGetSharePointBearerToken.mockResolvedValue("Bearer token")
+    mockListSharePointLists.mockResolvedValue([])
     mockDoWithLock.mockImplementation(
       async (_options: any, handler: () => Promise<any>) => ({
         result: await handler(),
@@ -212,6 +291,128 @@ describe("rag/sharepoint sync deduplication", () => {
   afterEach(() => {
     jest.restoreAllMocks()
     jest.useRealTimers()
+  })
+
+  it("fails closed for outdated SharePoint source configurations", async () => {
+    const agent = makeSharePointAgent("sharepoint_source_1", "site-1")
+    const source = agent.operations?.[0]?.knowledgeSources?.[0]
+    if (source?.type === AgentKnowledgeSourceType.SHAREPOINT) {
+      delete source.config.scope
+    }
+    mockAgentsGetOrThrow.mockResolvedValue(agent)
+
+    await expect(
+      syncSharePointSourcesForAgent("agent_1", "sharepoint_source_1")
+    ).rejects.toThrow("Delete and reconnect")
+    expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
+  })
+
+  it("returns document libraries without enumerating their contents", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              { id: "drive-a", name: "Documents" },
+              { id: "drive-b", name: "Department Files" },
+              { id: "drive-empty", name: "Empty Library" },
+            ],
+          }),
+        } as Response,
+      },
+    ])
+
+    const result = await fetchSharePointEntriesForOperation(
+      "agent_1",
+      "operation_1",
+      siteId
+    )
+
+    expect(result.entries).toEqual([
+      expect.objectContaining({
+        name: "Department Files",
+        path: "Department Files",
+        type: "drive",
+      }),
+      expect.objectContaining({
+        name: "Documents",
+        path: "Documents",
+        type: "drive",
+      }),
+      expect.objectContaining({
+        name: "Empty Library",
+        path: "Empty Library",
+        type: "drive",
+      }),
+    ])
+  })
+
+  it("returns only the immediate children of an expanded folder", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [{ id: "drive-a", name: "Documents" }],
+          }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/items/folder-1/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              { id: "folder-2", name: "Archive", folder: {} },
+              {
+                id: "file-1",
+                name: "handbook.txt",
+                file: { mimeType: "text/plain" },
+              },
+            ],
+          }),
+        } as Response,
+      },
+    ])
+
+    const result = await fetchSharePointEntriesForOperation(
+      "agent_1",
+      "operation_1",
+      siteId,
+      "drive-a",
+      "folder-1",
+      "Documents/Policies"
+    )
+
+    expect(result.entries).toEqual([
+      expect.objectContaining({
+        itemId: "folder-2",
+        path: "Documents/Policies/Archive",
+        type: "folder",
+      }),
+      expect.objectContaining({
+        itemId: "file-1",
+        path: "Documents/Policies/handbook.txt",
+        type: "file",
+      }),
+    ])
   })
 
   it("does not skip a new file when itemId matches an existing file from another drive", async () => {
@@ -278,12 +479,12 @@ describe("rag/sharepoint sync deduplication", () => {
       expect.objectContaining({
         knowledgeBaseId: "kb_1",
         source: expect.objectContaining({
-          type: KnowledgeBaseFileSourceType.SHAREPOINT,
+          type: KnowledgeBaseFileSourceType.SHAREPOINT_SITE,
           knowledgeSourceId: sourceId,
           siteId,
           driveId: "drive-b",
           itemId: "item-1",
-          path: "new.txt",
+          path: "drive-b/new.txt",
           externalId: `${siteId}:drive-b:item-1`,
         }),
         filename: "new.txt",
@@ -365,12 +566,12 @@ describe("rag/sharepoint sync deduplication", () => {
     })
   })
 
-  it("deletes existing files that no longer match source filters", async () => {
+  it("deletes existing files without listing an empty selected scope", async () => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"
 
     mockAgentsGetOrThrow.mockResolvedValue(
-      makeSharePointAgent(sourceId, siteId, ["!**", "allowed/**"])
+      makeSharePointAgent(sourceId, siteId, selectiveScope([]))
     )
 
     mockKnowledgeBaseListFiles.mockResolvedValue([
@@ -384,22 +585,8 @@ describe("rag/sharepoint sync deduplication", () => {
       }),
     ])
 
-    const fetchMock = createFetchMock([
-      {
-        match: `/sites/${encodeURIComponent(siteId)}/drives`,
-        response: {
-          ok: true,
-          status: 200,
-          json: async () => ({
-            value: [],
-          }),
-        } as Response,
-      },
-    ])
-
     const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
 
-    expect(fetchMock).toHaveBeenCalled()
     expect(mockDeleteFileForOperation).toHaveBeenCalledTimes(1)
     expect(mockDeleteFileForOperation).toHaveBeenCalledWith(
       "agent_1",
@@ -418,41 +605,181 @@ describe("rag/sharepoint sync deduplication", () => {
     })
   })
 
-  it("does not inflate already synced count with filtered-out files", async () => {
+  it.each([
+    {
+      name: "syncs selected folders across libraries",
+      targets: [
+        folderTarget("drive-a", "folder-drive-a"),
+        folderTarget("drive-b", "folder-drive-b"),
+        fileTarget("drive-a", "item-drive-a"),
+      ],
+      expectedDriveIds: ["drive-a", "drive-b"],
+      expectedPaths: [
+        "Documents/Policies/handbook.txt",
+        "Department Files/Policies/handbook.txt",
+      ],
+    },
+    {
+      name: "limits folder selection to one library",
+      targets: [folderTarget("drive-a", "folder-drive-a")],
+      expectedDriveIds: ["drive-a"],
+      expectedPaths: ["Documents/Policies/handbook.txt"],
+    },
+  ])("$name", async ({ targets, expectedDriveIds, expectedPaths }) => {
     const sourceId = "sharepoint_source_1"
     const siteId = "site-1"
 
     mockAgentsGetOrThrow.mockResolvedValue(
-      makeSharePointAgent(sourceId, siteId, ["keep/**"])
+      makeSharePointAgent(sourceId, siteId, selectiveScope(targets))
     )
+    mockKnowledgeBaseListFiles.mockResolvedValue([])
 
-    mockKnowledgeBaseListFiles.mockResolvedValue([
-      makeSharePointFile({
-        id: "existing_keep",
-        sourceId,
-        siteId,
-        driveId: "drive-a",
-        itemId: "item-keep",
-        path: "keep/file.txt",
-      }),
-      makeSharePointFile({
-        id: "existing_drop",
-        sourceId,
-        siteId,
-        driveId: "drive-a",
-        itemId: "item-drop",
-        path: "drop/file.txt",
-      }),
-    ])
-
-    const fetchMock = createFetchMock([
+    createFetchMock([
       {
         match: `/sites/${encodeURIComponent(siteId)}/drives`,
         response: {
           ok: true,
           status: 200,
           json: async () => ({
-            value: [{ id: "drive-a" }],
+            value: [
+              { id: "drive-a", name: "Documents" },
+              { id: "drive-b", name: "Department Files" },
+            ],
+          }),
+        } as Response,
+      },
+      ...["drive-a", "drive-b"].flatMap(driveId => [
+        {
+          match: `/drives/${driveId}/items/folder-${driveId}?`,
+          response: {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              id: `folder-${driveId}`,
+              name: "Policies",
+              folder: {},
+              parentReference: { path: `/drives/${driveId}/root:` },
+            }),
+          } as Response,
+        },
+        {
+          match: `/drives/${driveId}/root/children`,
+          response: {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              value: [
+                {
+                  id: `folder-${driveId}`,
+                  name: "Policies",
+                  folder: {},
+                },
+              ],
+            }),
+          } as Response,
+        },
+        {
+          match: `/drives/${driveId}/items/folder-${driveId}/children`,
+          response: {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              value: [
+                {
+                  id: `item-${driveId}`,
+                  name: "handbook.txt",
+                  file: { mimeType: "text/plain" },
+                },
+              ],
+            }),
+          } as Response,
+        },
+        {
+          match: `/drives/${driveId}/items/item-${driveId}?`,
+          response: {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              id: `item-${driveId}`,
+              name: "handbook.txt",
+              file: { mimeType: "text/plain" },
+              parentReference: {
+                path: `/drives/${driveId}/root:/Policies`,
+              },
+            }),
+          } as Response,
+        },
+        {
+          match: `/drives/${driveId}/items/item-${driveId}/content`,
+          response: {
+            ok: true,
+            status: 200,
+            arrayBuffer: async () => toArrayBuffer(`${driveId} content`),
+          } as Response,
+        },
+      ]),
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+    const uploadedDriveIds = mockKnowledgeBaseUploadFile.mock.calls.map(
+      ([input]) => input.source.driveId
+    )
+    const uploadedPaths = mockKnowledgeBaseUploadFile.mock.calls.map(
+      ([input]) => input.source.path
+    )
+
+    expect(uploadedDriveIds.sort()).toEqual([...expectedDriveIds].sort())
+    expect(uploadedPaths.sort()).toEqual([...expectedPaths].sort())
+    expect(result).toMatchObject({
+      synced: expectedDriveIds.length,
+      failed: 0,
+      totalDiscovered: expectedDriveIds.length,
+    })
+  })
+
+  it("does not delete existing files inside selected folders", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(
+        sourceId,
+        siteId,
+        selectiveScope([folderTarget("drive-a", "folder-drive-a")])
+      )
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointFile({
+        id: "existing_selected",
+        sourceId,
+        siteId,
+        driveId: "drive-a",
+        itemId: "item-drive-a",
+        path: "Documents/Policies/handbook.txt",
+      }),
+    ])
+
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [{ id: "drive-a", name: "Documents" }],
+          }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-a/items/folder-drive-a?",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            id: "folder-drive-a",
+            name: "Policies",
+            folder: {},
+            parentReference: { path: "/drives/drive-a/root:" },
           }),
         } as Response,
       },
@@ -462,73 +789,38 @@ describe("rag/sharepoint sync deduplication", () => {
           ok: true,
           status: 200,
           json: async () => ({
-            value: [
-              {
-                id: "folder-keep",
-                name: "keep",
-                folder: {},
-              },
-              {
-                id: "folder-drop",
-                name: "drop",
-                folder: {},
-              },
-            ],
+            value: [{ id: "folder-drive-a", name: "Policies", folder: {} }],
           }),
         } as Response,
       },
       {
-        match: "/drives/drive-a/items/folder-keep/children",
+        match: "/drives/drive-a/items/folder-drive-a/children",
         response: {
           ok: true,
           status: 200,
           json: async () => ({
             value: [
               {
-                id: "item-keep",
-                name: "file.txt",
+                id: "item-drive-a",
+                name: "handbook.txt",
                 file: { mimeType: "text/plain" },
               },
             ],
           }),
-        } as Response,
-      },
-      {
-        match: "/drives/drive-a/items/folder-drop/children",
-        response: {
-          ok: true,
-          status: 200,
-          json: async () => ({
-            value: [
-              {
-                id: "item-drop",
-                name: "file.txt",
-                file: { mimeType: "text/plain" },
-              },
-            ],
-          }),
-        } as Response,
-      },
-      {
-        match: "/drives/drive-a/items/item-1/content",
-        response: {
-          ok: true,
-          status: 200,
-          arrayBuffer: async () => toArrayBuffer("legacy content"),
         } as Response,
       },
     ])
 
     const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
 
-    expect(fetchMock).toHaveBeenCalled()
+    expect(mockDeleteFileForOperation).not.toHaveBeenCalled()
+    expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
     expect(result).toMatchObject({
       synced: 0,
       alreadySynced: 1,
-      deleted: 1,
+      deleted: 0,
       failed: 0,
-      unsupported: 0,
-      totalDiscovered: 2,
+      totalDiscovered: 1,
     })
   })
 
@@ -673,6 +965,111 @@ describe("rag/sharepoint sync deduplication", () => {
       jest.runOnlyPendingTimers()
 
       await expect(result).rejects.toBeInstanceOf(SharePointSyncTimeoutError)
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
+  it("times out while listing a selected SharePoint list scope", async () => {
+    jest.useFakeTimers()
+
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(
+        sourceId,
+        siteId,
+        selectiveScope([listTarget("list-1")])
+      )
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([])
+
+    let listingStarted!: () => void
+    const listingStartedPromise = new Promise<void>(resolve => {
+      listingStarted = resolve
+    })
+    mockListSharePointLists.mockImplementation(
+      (_bearerToken: string, _siteId: string, signal?: AbortSignal) => {
+        listingStarted()
+        return new Promise((_resolve, reject) => {
+          signal?.addEventListener("abort", () => reject(signal.reason), {
+            once: true,
+          })
+        })
+      }
+    )
+
+    try {
+      const result = syncSharePointSourcesForAgent("agent_1", sourceId)
+      await listingStartedPromise
+
+      jest.runOnlyPendingTimers()
+
+      await expect(result).rejects.toBeInstanceOf(SharePointSyncTimeoutError)
+      expect(mockListSharePointLists).toHaveBeenCalledWith(
+        "Bearer token",
+        siteId,
+        expect.any(AbortSignal)
+      )
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
+  it("times out while fetching a selected SharePoint list document", async () => {
+    jest.useFakeTimers()
+
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(
+        sourceId,
+        siteId,
+        selectiveScope([listTarget("list-1")])
+      )
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+    ])
+
+    let documentFetchStarted!: () => void
+    const documentFetchStartedPromise = new Promise<void>(resolve => {
+      documentFetchStarted = resolve
+    })
+    mockFetchSharePointListDocument.mockImplementation(
+      (
+        _bearerToken: string,
+        _siteId: string,
+        _listId: string,
+        _maxSizeBytes: number,
+        signal?: AbortSignal
+      ) => {
+        documentFetchStarted()
+        return new Promise((_resolve, reject) => {
+          signal?.addEventListener("abort", () => reject(signal.reason), {
+            once: true,
+          })
+        })
+      }
+    )
+
+    try {
+      const result = syncSharePointSourcesForAgent("agent_1", sourceId)
+      await documentFetchStartedPromise
+
+      jest.runOnlyPendingTimers()
+
+      await expect(result).rejects.toBeInstanceOf(SharePointSyncTimeoutError)
+      expect(mockFetchSharePointListDocument).toHaveBeenCalledWith(
+        "Bearer token",
+        siteId,
+        "list-1",
+        expect.any(Number),
+        expect.any(AbortSignal)
+      )
     } finally {
       jest.useRealTimers()
     }
@@ -1228,6 +1625,526 @@ describe("rag/sharepoint sync deduplication", () => {
       alreadySynced: 1,
       failed: 0,
       unsupported: 0,
+      totalDiscovered: 1,
+    })
+  })
+
+  it("generates and uploads one CSV knowledge file per selected list", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+    const csv = Buffer.from("Title\nExample")
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+    ])
+    mockFetchSharePointListDocument.mockResolvedValue({
+      buffer: csv,
+      itemCount: 1,
+    })
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        knowledgeBaseId: "kb_1",
+        mimetype: "text/csv",
+        buffer: csv,
+        source: expect.objectContaining({
+          type: KnowledgeBaseFileSourceType.SHAREPOINT_LIST,
+          knowledgeSourceId: sourceId,
+          siteId,
+          listId: "list-1",
+          listName: "FAQs",
+          itemCount: 1,
+        }),
+      })
+    )
+    expect(result).toMatchObject({
+      synced: 1,
+      failed: 0,
+      totalDiscovered: 1,
+    })
+  })
+
+  it("syncs no lists for an empty selected scope", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId, selectiveScope([]))
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointListFile({
+        id: "existing_list_1",
+        sourceId,
+        siteId,
+        listId: "list-1",
+        contentHash: "existing-hash",
+      }),
+    ])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+    ])
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(mockFetchSharePointListDocument).not.toHaveBeenCalled()
+    expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
+    expect(mockDeleteFileForOperation).toHaveBeenCalledWith(
+      "agent_1",
+      "operation_1",
+      "existing_list_1"
+    )
+    expect(result).toMatchObject({
+      synced: 0,
+      totalDiscovered: 0,
+    })
+  })
+
+  it("includes only explicitly selected lists", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(
+        sourceId,
+        siteId,
+        selectiveScope([listTarget("list-1")])
+      )
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+      {
+        id: "list-2",
+        name: "Policies",
+        webUrl: "https://example.com/policies",
+      },
+    ])
+    mockFetchSharePointListDocument.mockResolvedValue({
+      buffer: Buffer.from("Title\nExample"),
+      itemCount: 1,
+    })
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [{ id: "drive-1" }] }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-1/root/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [{ id: "folder-1", name: "__list__", folder: {} }],
+          }),
+        } as Response,
+      },
+      {
+        match: "/drives/drive-1/items/folder-1/children",
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            value: [
+              {
+                id: "file-1",
+                name: "list-1",
+                file: { mimeType: "text/plain" },
+              },
+            ],
+          }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(mockFetchSharePointListDocument).toHaveBeenCalledTimes(1)
+    expect(mockFetchSharePointListDocument).toHaveBeenCalledWith(
+      "Bearer token",
+      siteId,
+      "list-1",
+      expect.any(Number),
+      expect.any(AbortSignal)
+    )
+    expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        source: expect.objectContaining({ listId: "list-1" }),
+      })
+    )
+    expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledTimes(1)
+    expect(result).toMatchObject({
+      synced: 1,
+      failed: 0,
+      totalDiscovered: 1,
+    })
+  })
+
+  it("marks stale list deletion failures as sync failures", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointListFile({
+        id: "stale_list_1",
+        sourceId,
+        siteId,
+        listId: "removed-list",
+        contentHash: "old-hash",
+      }),
+    ])
+    mockListSharePointLists.mockResolvedValue([])
+    mockDeleteFileForOperation.mockRejectedValue(new Error("delete failed"))
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+    const workspaceDb = mockContextGetWorkspaceDb.mock.results[0].value
+
+    expect(mockDeleteFileForOperation).toHaveBeenCalledWith(
+      "agent_1",
+      "operation_1",
+      "stale_list_1"
+    )
+    expect(result).toMatchObject({
+      synced: 0,
+      failed: 1,
+      totalDiscovered: 0,
+    })
+    expect(workspaceDb.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        failed: 1,
+        status: AgentKnowledgeSourceSyncRunStatus.FAILED,
+        errorMessage: expect.stringContaining(
+          "Failed to delete stale SharePoint list file stale_list_1: delete failed"
+        ),
+      })
+    )
+  })
+
+  it("keeps the existing list file when the replacement upload fails", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointListFile({
+        id: "existing_list_1",
+        sourceId,
+        siteId,
+        listId: "list-1",
+        contentHash: "old-hash",
+      }),
+    ])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+    ])
+    mockFetchSharePointListDocument.mockResolvedValue({
+      buffer: Buffer.from("Title\nChanged"),
+      itemCount: 1,
+    })
+    mockKnowledgeBaseUploadFile.mockRejectedValue(new Error("upload failed"))
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(mockKnowledgeBaseUploadFile).toHaveBeenCalledTimes(1)
+    expect(mockDeleteFileForOperation).not.toHaveBeenCalled()
+    expect(result).toMatchObject({
+      synced: 0,
+      failed: 1,
+      deleted: 0,
+      totalDiscovered: 1,
+    })
+  })
+
+  it("uploads a changed list before deleting the existing file", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+    const replacementFile = makeSharePointListFile({
+      id: "replacement_list_1",
+      sourceId,
+      siteId,
+      listId: "list-1",
+      contentHash: "new-hash",
+    })
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointListFile({
+        id: "existing_list_1",
+        sourceId,
+        siteId,
+        listId: "list-1",
+        contentHash: "old-hash",
+      }),
+    ])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+    ])
+    mockFetchSharePointListDocument.mockResolvedValue({
+      buffer: Buffer.from("Title\nChanged"),
+      itemCount: 1,
+    })
+    mockKnowledgeBaseUploadFile.mockResolvedValue(replacementFile)
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(
+      mockKnowledgeBaseUploadFile.mock.invocationCallOrder[0]
+    ).toBeLessThan(mockDeleteFileForOperation.mock.invocationCallOrder[0])
+    expect(mockDeleteFileForOperation).toHaveBeenCalledWith(
+      "agent_1",
+      "operation_1",
+      "existing_list_1"
+    )
+    expect(result).toMatchObject({
+      synced: 1,
+      failed: 0,
+      deleted: 1,
+      totalDiscovered: 1,
+    })
+  })
+
+  it("rolls back the replacement when the existing list file cannot be deleted", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+    const replacementFile = makeSharePointListFile({
+      id: "replacement_list_1",
+      sourceId,
+      siteId,
+      listId: "list-1",
+      contentHash: "new-hash",
+    })
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointListFile({
+        id: "existing_list_1",
+        sourceId,
+        siteId,
+        listId: "list-1",
+        contentHash: "old-hash",
+      }),
+    ])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+    ])
+    mockFetchSharePointListDocument.mockResolvedValue({
+      buffer: Buffer.from("Title\nChanged"),
+      itemCount: 1,
+    })
+    mockKnowledgeBaseUploadFile.mockResolvedValue(replacementFile)
+    mockDeleteFileForOperation
+      .mockRejectedValueOnce(new Error("existing delete failed"))
+      .mockResolvedValueOnce(undefined)
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(mockDeleteFileForOperation).toHaveBeenNthCalledWith(
+      1,
+      "agent_1",
+      "operation_1",
+      "existing_list_1"
+    )
+    expect(mockDeleteFileForOperation).toHaveBeenNthCalledWith(
+      2,
+      "agent_1",
+      "operation_1",
+      "replacement_list_1"
+    )
+    expect(result).toMatchObject({
+      synced: 0,
+      failed: 1,
+      deleted: 1,
+      totalDiscovered: 1,
+    })
+  })
+
+  it("reports both deletion failures when replacement rollback fails", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+    const replacementFile = makeSharePointListFile({
+      id: "replacement_list_1",
+      sourceId,
+      siteId,
+      listId: "list-1",
+      contentHash: "new-hash",
+    })
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointListFile({
+        id: "existing_list_1",
+        sourceId,
+        siteId,
+        listId: "list-1",
+        contentHash: "old-hash",
+      }),
+    ])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+    ])
+    mockFetchSharePointListDocument.mockResolvedValue({
+      buffer: Buffer.from("Title\nChanged"),
+      itemCount: 1,
+    })
+    mockKnowledgeBaseUploadFile.mockResolvedValue(replacementFile)
+    mockDeleteFileForOperation
+      .mockRejectedValueOnce(new Error("existing delete failed"))
+      .mockRejectedValueOnce(new Error("rollback delete failed"))
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+    const workspaceDb = mockContextGetWorkspaceDb.mock.results[0].value
+
+    expect(result).toMatchObject({
+      synced: 0,
+      failed: 1,
+      deleted: 0,
+      totalDiscovered: 1,
+    })
+    expect(workspaceDb.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: AgentKnowledgeSourceSyncRunStatus.FAILED,
+        errorMessage: expect.stringContaining(
+          "existing delete failed; failed to roll back replacement file replacement_list_1: rollback delete failed"
+        ),
+      })
+    )
+  })
+
+  it("does not delete an existing list file when regenerated CSV exceeds the size limit", async () => {
+    const sourceId = "sharepoint_source_1"
+    const siteId = "site-1"
+    const oversizedCsv = Buffer.from("Title\nChanged")
+    Object.defineProperty(oversizedCsv, "byteLength", {
+      value: 100 * 1024 * 1024 + 1,
+    })
+
+    mockAgentsGetOrThrow.mockResolvedValue(
+      makeSharePointAgent(sourceId, siteId)
+    )
+    mockKnowledgeBaseListFiles.mockResolvedValue([
+      makeSharePointListFile({
+        id: "existing_list_1",
+        sourceId,
+        siteId,
+        listId: "list-1",
+        contentHash: "old-hash",
+      }),
+    ])
+    mockListSharePointLists.mockResolvedValue([
+      { id: "list-1", name: "FAQs", webUrl: "https://example.com/faqs" },
+    ])
+    mockFetchSharePointListDocument.mockResolvedValue({
+      buffer: oversizedCsv,
+      itemCount: 1,
+    })
+    createFetchMock([
+      {
+        match: `/sites/${encodeURIComponent(siteId)}/drives`,
+        response: {
+          ok: true,
+          status: 200,
+          json: async () => ({ value: [] }),
+        } as Response,
+      },
+    ])
+
+    const result = await syncSharePointSourcesForAgent("agent_1", sourceId)
+
+    expect(mockDeleteFileForOperation).not.toHaveBeenCalled()
+    expect(mockKnowledgeBaseUploadFile).not.toHaveBeenCalled()
+    expect(result).toMatchObject({
+      synced: 0,
+      failed: 1,
       totalDiscovered: 1,
     })
   })

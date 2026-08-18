@@ -160,13 +160,24 @@ export interface BranchFlowContext {
   branchStepId: string
 }
 
+export type LoopFlowContext = AutomationBlockContext & {
+  insertIntoLoopV2: true
+  loopStepId: string
+  loopChildInsertIndex?: number
+  branchStepId?: string
+  branchIdx?: number
+}
+
 export interface SelectedBranchNode {
   nodeId: string
   stepId: string
   branchIdx: number
 }
 
-export type FlowBlockContext = AutomationBlockContext | BranchFlowContext
+export type FlowBlockContext =
+  | AutomationBlockContext
+  | BranchFlowContext
+  | LoopFlowContext
 
 export type AutomationBlockRef = BlockRef & {
   stepId?: string
@@ -310,8 +321,14 @@ export type BlockStatus = {
 /**
  * SvelteFlow Node Data Types
  */
+export interface FlowNodeLayout {
+  width: number
+  height: number
+}
+
 export interface StepNodeData {
   block: AutomationBlock
+  layout: FlowNodeLayout
   [key: string]: unknown
 }
 
@@ -319,6 +336,7 @@ export interface BranchNodeData {
   block: AutomationBlock
   branch: Branch
   branchIdx: number
+  layout: FlowNodeLayout
   isSubflow?: boolean
   laneWidth?: number
   [key: string]: unknown
@@ -329,10 +347,12 @@ export interface LoopV2NodeData {
   containerHeight: number
   containerWidth: number
   handleY: number
+  layout: FlowNodeLayout
   [key: string]: unknown
 }
 
 export interface AnchorNodeData {
+  layout: FlowNodeLayout
   [key: string]: unknown
 }
 
@@ -376,6 +396,8 @@ export interface LoopEdgeData extends BaseEdgeData {
   insertIntoLoopV2?: boolean
   loopStepId: string
   loopChildInsertIndex: number
+  branchStepId?: string
+  branchIdx?: number
 }
 
 export type EdgeData = BaseEdgeData | BranchEdgeData | LoopEdgeData

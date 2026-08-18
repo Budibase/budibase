@@ -7,11 +7,7 @@
   import { type BranchStep } from "@budibase/types"
   import { SUBFLOW } from "../FlowGeometry"
   import { getLogStepData } from "../../AutomationStepHelpers"
-  import {
-    didBranchStopWithoutMatch,
-    getRunHighlight,
-    isTerminalFailure,
-  } from "../FlowRunHelpers"
+  import { getBranchRunState, getRunHighlight } from "../FlowRunHelpers"
 
   export let data: BranchNodeData
 
@@ -40,40 +36,18 @@
       ? $automationStore.selectedLog
       : $automationStore.testResults
   )
-  $: hasBranchResultValue = hasBranchResult(branchResult)
-  $: branchExecuted =
-    branchIdx !== undefined && hasBranchResultValue
-      ? branchResult.outputs.branchId ===
-        stepBlock.inputs.branches?.[branchIdx]?.id
-      : false
-  $: branchStepFailed = isTerminalFailure(branchResult)
-  $: branchStepFailure =
-    branchStepFailed && (branchExecuted || !hasBranchResultValue)
-  $: branchStoppedWithoutMatch = didBranchStopWithoutMatch(branchResult)
-  $: branchError =
-    !branchStoppedWithoutMatch &&
-    runHighlight !== "stopped" &&
-    (branchStepFailure || (branchExecuted && runHighlight === "error"))
-  $: branchSuccess =
-    !branchError && branchExecuted && runHighlight === "success"
-  $: branchStopped =
-    branchStoppedWithoutMatch ||
-    (!branchError && branchExecuted && runHighlight === "stopped")
-
-  type BranchResult = {
-    outputs: {
-      branchId?: string
-      success?: boolean
-    }
-  }
-
-  const hasBranchResult = (value: unknown): value is BranchResult => {
-    if (!value || typeof value !== "object" || !("outputs" in value)) {
-      return false
-    }
-    const outputs = value.outputs
-    return !!outputs && typeof outputs === "object" && "branchId" in outputs
-  }
+  $: branchId =
+    branchIdx !== undefined
+      ? stepBlock.inputs.branches?.[branchIdx]?.id
+      : undefined
+  $: branchRunState = getBranchRunState({
+    branchResult,
+    branchId,
+    runHighlight,
+  })
+  $: branchError = branchRunState.error
+  $: branchSuccess = branchRunState.success
+  $: branchStopped = branchRunState.stopped
 </script>
 
 <div

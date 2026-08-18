@@ -1,4 +1,4 @@
-import { cache, features } from "@budibase/backend-core"
+import { cache, context, features } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import {
   ActionType,
@@ -7,7 +7,12 @@ import {
   AgentMessageMetadata,
   ChatConversationRequest,
   ContextUser,
+  ESCALATE_TOOL_NAME,
+  EscalateToolResultStatus,
   FeatureFlag,
+  ToolExecutionPrincipal,
+  type AgentExecutionContext,
+  type AgentRequester,
 } from "@budibase/types"
 import {
   Output,
@@ -16,6 +21,7 @@ import {
   ToolLoopAgent,
   type LanguageModelUsage,
   type ModelMessage,
+  type StepResult,
   type StreamTextResult,
   type ToolSet,
   wrapLanguageModel,
@@ -37,10 +43,7 @@ import {
 } from "./utils"
 import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
-import {
-  createEscalateTool,
-  createResolvedEscalateTool,
-} from "../../../../ai/tools/budibase/escalate"
+import { createEscalateTool } from "../../../../ai/tools/budibase"
 import {
   createListSessionEscalationsTool,
   LIST_SESSION_ESCALATIONS_TOOL_NAME,
@@ -70,8 +73,6 @@ interface PrepareAgentChatRunParams {
   startedAt?: string
   // Pin the run to a specific operation instead of routing on the question.
   operationId?: string
-  // On resume swap escalate for a resolved stub so the model can't trigger a fresh escalation
-  escalationResolved?: boolean
   // Appended to the system prompt - a trusted channel for run-time directives
   // Puting it in the user input made it suspicious.
   additionalInstructions?: string
@@ -84,6 +85,7 @@ interface PrepareAgentChatRunParams {
 export interface AgentChatRun {
   latestQuestion: string
   selectedOperation?: AgentOperation
+  operationIntent?: OperationIntent
   getUsedKnowledgeSourcesMetadata: () => AgentMessageMetadata["ragSources"]
   sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
   stream: (
@@ -122,31 +124,42 @@ const operationRoutingActionSchema = z.enum([
   "no_operation",
 ])
 
+const operationIntentSchema = z.enum(["execute", "query"])
+
 const operationRouterOutputSchema = z.object({
   action: operationRoutingActionSchema,
   operationId: z.string().nullable(),
+  intent: operationIntentSchema.nullable(),
   reason: z.string(),
 })
 
 type OperationRoutingAction = z.infer<typeof operationRoutingActionSchema>
 type OperationRouterOutput = z.infer<typeof operationRouterOutputSchema>
+export type OperationIntent = z.infer<typeof operationIntentSchema>
 type OperationRoute =
   | {
       action: "select_operation"
       operation: AgentOperation
+      intent: OperationIntent
     }
   | {
       action: Exclude<OperationRoutingAction, "select_operation">
       operation?: undefined
     }
 
+const INTENT_DECISION_GUIDANCE = `- "execute" when fulfilling this message performs the concrete action that operation's instructions define - including an operation whose defined goal is to react to a topic (e.g. escalate to a human whenever a subject comes up), where a question about that subject still triggers the goal.
+- "query" when fulfilling this message does not perform that action - e.g. asking about the status or history of something the operation manages, without asking it to act again.
+This is about the operation's specific goal, not the grammatical form of the message: a question can be "execute" and an instruction-shaped sentence can be "query". If genuinely unsure, return "execute" - losing track of a real action is worse than tracking an extra query.
+Do not use the presence of a question mark, or an imperative verb, as a shortcut for this decision - always check it against the specific operation's own goal. For example: for an operation whose goal is to persist a new record, "create a ticket for my broken laptop" is "execute", "how many tickets do I have open?" is "query" (it asks about existing records, it doesn't create one), "I changed my mind about the ticket I just asked for" is still "execute" (it changes the outcome of the action, even if it isn't the original request), and "what kind of tickets can I create?" is "query" (it uses the word "create" but only asks what's possible). For an operation whose goal is to react whenever a topic comes up (e.g. escalate to a human whenever a subject is mentioned), both a statement and a question about that subject are "execute" - either one triggers the operation's actual goal, neither is just asking about a past record.`
+
 const buildOperationRoutingInstructions = (
   operations: AgentOperation[]
 ) => `You decide whether the assistant should use one Budibase agent operation, summarize the available operations, or proceed without an operation.
 
-Return action "select_operation" only when exactly one live operation is clearly the best match for the latest user request. In that case, return its operationId.
-Return action "summarize_operations" when the user is asking broadly what the agent can do, what it can help with, or wants an overview of available capabilities across operations. In that case, return operationId as null.
-Return action "no_operation" when the request does not fit any operation and should not trigger a capabilities summary. In that case, return operationId as null.
+Return action "select_operation" only when exactly one live operation is clearly the best match for the latest user request. In that case, return its operationId, and also decide its intent:
+${INTENT_DECISION_GUIDANCE}
+Return action "summarize_operations" when the user is asking broadly what the agent can do, what it can help with, or wants an overview of available capabilities across operations. In that case, return operationId and intent as null.
+Return action "no_operation" when the request does not fit any operation and should not trigger a capabilities summary. In that case, return operationId and intent as null.
 Be conservative. If the request is ambiguous, too broad, or unrelated to a specific operation, do not select one unless it is clearly a capabilities-overview request.
 Use the operation name, instructions, tools, and knowledge setup as signals.
 Return only the structured output.
@@ -201,15 +214,6 @@ export const chooseOperationForQuestion = async ({
       action: "no_operation",
     }
   }
-  const multipleOperationsEnabled = await features.isEnabled(
-    FeatureFlag.MULTIPLE_OPERATIONS
-  )
-  if (!multipleOperationsEnabled) {
-    return {
-      action: "select_operation",
-      operation: liveOperations[0],
-    }
-  }
   if (!latestQuestion.trim()) {
     return {
       action: "no_operation",
@@ -262,6 +266,7 @@ export const chooseOperationForQuestion = async ({
     return {
       action: "select_operation",
       operation,
+      intent: route.intent ?? "execute",
     }
   } catch (error) {
     console.error("Operation routing failed", {
@@ -295,20 +300,23 @@ const selectOperationForRun = async ({
   if (operationId) {
     const operation = getLiveOperations(agent).find(o => o.id === operationId)
     route = operation
-      ? { action: "select_operation", operation }
+      ? { action: "select_operation", operation, intent: "execute" }
       : { action: "no_operation" }
   } else {
     route = await chooseOperationForQuestion({ agent, latestQuestion, llm })
   }
 
-  // Sticky
   if (route.action === "no_operation" && !operationId) {
     const lastOperationId = await getSessionOperationId(sessionId)
     const lastOperation = lastOperationId
       ? getLiveOperations(agent).find(o => o.id === lastOperationId)
       : undefined
     if (lastOperation) {
-      route = { action: "select_operation", operation: lastOperation }
+      route = {
+        action: "select_operation",
+        operation: lastOperation,
+        intent: "execute",
+      }
     }
   }
 
@@ -329,15 +337,18 @@ export interface PrepareAgentRunContextParams {
   buildPromptOptions?: BuildPromptAndToolsOptions
   // When set, pin the run to this operation instead of routing on the question.
   operationId?: string
+  requester?: AgentRequester
 }
 
 export interface AgentRunContext {
   llm: Awaited<ReturnType<typeof sdk.ai.llm.createLLM>>
   selectedOperation?: AgentOperation
+  operationIntent?: OperationIntent
   routingAction: OperationRoute["action"]
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
+  executionContext?: AgentExecutionContext
 }
 
 const buildOperationsSummaryPrompt = (operations: AgentOperation[]) =>
@@ -368,6 +379,7 @@ export const prepareAgentRunContext = async ({
   span,
   buildPromptOptions,
   operationId,
+  requester,
 }: PrepareAgentRunContextParams): Promise<AgentRunContext> => {
   const llm = await sdk.ai.llm.createLLM(
     aiConfigId ?? agent.aiconfig,
@@ -382,6 +394,24 @@ export const prepareAgentRunContext = async ({
     operationId,
     llm,
   })
+  const toolSecurityEnabled = await features.isEnabled(
+    FeatureFlag.AI_AGENT_TOOL_SECURITY
+  )
+  let executionContext: AgentExecutionContext | undefined
+  if (routingDecision.operation && requester) {
+    const workspaceId = context.getWorkspaceId()
+    if (!workspaceId) {
+      throw new Error("Workspace context is required")
+    }
+    executionContext = {
+      tenantId: context.getTenantId(),
+      workspaceId,
+      agentId,
+      operationId: routingDecision.operation.id,
+      conversationId: sessionId,
+      requester,
+    }
+  }
   const promptAndTools = await buildPromptAndTools(
     agent,
     routingDecision.operation,
@@ -391,15 +421,58 @@ export const prepareAgentRunContext = async ({
         routingDecision.action === "summarize_operations"
           ? buildOperationsSummaryPrompt(getLiveOperations(agent))
           : buildPromptOptions?.fallbackPromptInstructions,
+      executionContext,
+      toolSecurityEnabled,
     }
   )
 
   return {
     llm,
     selectedOperation: routingDecision.operation,
+    operationIntent:
+      routingDecision.action === "select_operation"
+        ? routingDecision.intent
+        : undefined,
     routingAction: routingDecision.action,
+    executionContext,
     ...promptAndTools,
   }
+}
+
+// A pending escalation suspends the turn - once one exists, later steps run
+// with no tools so the model can wrap up in text but cannot act before a
+// human responds. Keyed on the result status rather than the tool name so
+// resumed runs (ALREADY_APPROVED) keep their tools.
+const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
+  steps.some(step =>
+    step.toolResults.some(result => {
+      if (result.toolName !== ESCALATE_TOOL_NAME) {
+        return false
+      }
+      const output = result.output
+      return (
+        typeof output === "object" &&
+        output !== null &&
+        "status" in output &&
+        output.status === EscalateToolResultStatus.PENDING_APPROVAL
+      )
+    })
+  )
+
+const getAgentRequester = ({
+  user,
+  chat,
+}: {
+  user: ContextUser
+  chat?: ChatConversationRequest
+}): AgentRequester => {
+  if (chat?.isPreview && chat.previewRoleId) {
+    return {
+      userId: user._id!,
+      authorization: { mode: "preview", roleId: chat.previewRoleId },
+    }
+  }
+  return { userId: user._id!, authorization: { mode: "current" } }
 }
 
 export const prepareAgentChatRun = async ({
@@ -414,7 +487,6 @@ export const prepareAgentChatRun = async ({
   user,
   startedAt,
   operationId,
-  escalationResolved,
   additionalInstructions,
   getRequestId,
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
@@ -427,6 +499,7 @@ export const prepareAgentChatRun = async ({
     errorLabel,
     startedAt,
   })
+  const requester = getAgentRequester({ user, chat })
 
   const [runContext, modelMessages] = await Promise.all([
     prepareAgentRunContext({
@@ -436,8 +509,9 @@ export const prepareAgentChatRun = async ({
       latestQuestion,
       aiConfigId,
       operationId,
+      requester,
       buildPromptOptions: {
-        baseSystemPrompt: ai.agentSystemPrompt(user),
+        baseSystemPrompt: ai.agentSystemPrompt(user, chat?.timezone),
         includeGoal: false,
       },
     }),
@@ -446,8 +520,10 @@ export const prepareAgentChatRun = async ({
   const {
     llm,
     selectedOperation,
+    operationIntent,
     tools,
     toolDisplayNames,
+    executionContext,
     systemPrompt: baseSystemPrompt,
   } = runContext
   const retrievedKnowledgeSourceById = new Map<
@@ -484,14 +560,12 @@ export const prepareAgentChatRun = async ({
 
   if (tools.escalate) {
     const recipients = selectedOperation?.escalation?.recipients
-    if (escalationResolved) {
-      // Resumed run: replace with a no-op so the model can't re-escalate.
-      // The prior escalate call is in the message history, so the tool must
-      // remain in the schema or the model will see an unresolved tool call.
-      tools.escalate = createResolvedEscalateTool()
-    } else if (selectedOperation && recipients?.length) {
-      // Fresh run: escalation is configured per operation, so resolve it from
-      // the operation this run actually selected - never a different one.
+    if (selectedOperation && recipients?.length) {
+      // Always the real tool, on resumes too. A resumed run must still be
+      // able to raise a genuinely new escalation.
+      if (!executionContext) {
+        throw new Error("Agent execution context is required")
+      }
       tools.escalate = createEscalateTool({
         agentId,
         operationId: selectedOperation.id,
@@ -504,6 +578,8 @@ export const prepareAgentChatRun = async ({
         userId: user?._id,
         getMessages: () => modelMessages,
         getRequestId: () => getRequestId?.(),
+        executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        executionContext,
       })
     }
 
@@ -531,6 +607,9 @@ export const prepareAgentChatRun = async ({
     tools: hasTools ? tools : undefined,
     ...(hasTools ? { toolChoice: "auto" as const } : {}),
     stopWhen: stepCountIs(30),
+    // Anthropic rejects those without a tools param.
+    prepareStep: ({ steps }) =>
+      hasPendingEscalation(steps) ? { toolChoice: "none" as const } : undefined,
     providerOptions: llm.providerOptions?.(hasTools),
   })
 
@@ -540,6 +619,7 @@ export const prepareAgentChatRun = async ({
   return {
     latestQuestion,
     selectedOperation,
+    operationIntent,
     sessionLogIndexer,
     getUsedKnowledgeSourcesMetadata: () =>
       Array.from(usedKnowledgeSourceById.values()),

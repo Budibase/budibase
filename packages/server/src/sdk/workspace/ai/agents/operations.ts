@@ -77,7 +77,13 @@ export async function createOperation(
 
   return update({
     ...existing,
-    operations: [...(existing.operations ?? []), operation],
+    operations: [
+      ...(existing.operations ?? []),
+      {
+        ...operation,
+        enabledTools: operation.enabledTools || [],
+      },
+    ],
   })
 }
 
