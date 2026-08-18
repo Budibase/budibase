@@ -1,9 +1,5 @@
 import { redis, type RedisClient } from "@budibase/backend-core"
-import {
-  FUNCTION_RUN_REQUEST_FIXTURE,
-  FUNCTION_RUN_RESULT_FIXTURE,
-  FunctionErrorCode,
-} from "@budibase/types"
+import { FunctionErrorCode } from "@budibase/types"
 import type { FunctionRunRequest } from "@budibase/types"
 import {
   createFunctionRunGrant,
@@ -11,6 +7,10 @@ import {
   getFunctionRunGrant,
   type FunctionRunGrantScope,
 } from "./grants"
+import {
+  FUNCTION_RUN_REQUEST_FIXTURE,
+  FUNCTION_RUN_RESULT_FIXTURE,
+} from "./testFixtures"
 
 describe("Function run grants", () => {
   let client: RedisClient

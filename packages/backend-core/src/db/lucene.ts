@@ -92,8 +92,8 @@ export class QueryBuilder<T> {
     return this
   }
 
-  setSort(sort?: string) {
-    if (sort != null) {
+  setSort(sort?: SearchParams["sort"]) {
+    if (typeof sort === "string") {
       this.#sort = sort
     }
     return this
@@ -340,6 +340,9 @@ export class QueryBuilder<T> {
       if (isEmpty(value)) {
         return `*:*`
       }
+      if (Array.isArray(value) && value.length === 0) {
+        return `(*:* AND NOT *:*)`
+      }
       if (!Array.isArray(value)) {
         if (typeof value === "string") {
           value = value.split(",")
@@ -360,6 +363,9 @@ export class QueryBuilder<T> {
     const notOneOf = (key: string, value: any) => {
       if (isEmpty(value)) {
         return null
+      }
+      if (Array.isArray(value) && value.length === 0) {
+        return `*:*`
       }
       if (!Array.isArray(value)) {
         if (typeof value === "string") {

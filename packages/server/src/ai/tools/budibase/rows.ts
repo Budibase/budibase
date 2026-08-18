@@ -1,12 +1,17 @@
+import { createHash } from "crypto"
 import { tool } from "ai"
 import { z } from "zod"
 import {
   FieldType,
-  RowSearchParams,
   SortOrder,
-  TableSchema,
   TableSourceType,
   ToolType,
+  PermissionLevel,
+  PermissionType,
+  ToolExecutionPrincipal,
+  type Row,
+  type RowSearchParams,
+  type TableSchema,
 } from "@budibase/types"
 import {
   PROTECTED_EXTERNAL_COLUMNS,
@@ -14,6 +19,7 @@ import {
 } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
+import { getAgentTableFields, sanitizeAgentRow } from "./tableScope"
 
 const PLAIN_TEXT_WARNING =
   "CRITICAL: Use plain text values only. Do NOT include HTML tags, markdown formatting, " +
@@ -41,6 +47,8 @@ const SEARCH_QUERY_DESCRIPTION =
   `Combine fuzzy name with exact status: {"fuzzy": {"name": "John"}, "equal": {"status": "active"}}.`
 
 const MAX_SCHEMA_FIELDS = 30
+const MAX_TOOL_NAME_LENGTH = 64
+const TOOL_NAME_HASH_LENGTH = 12
 
 type TableSchemaField = {
   name: string
@@ -108,9 +116,6 @@ const formatFieldSummary = ({ name, schema }: TableSchemaField) => {
     options.length > 0
   ) {
     summary += ` options: ${options.join(" | ")}`
-  }
-  if (schema.type === FieldType.LINK && "tableId" in schema && schema.tableId) {
-    summary += ` -> ${schema.tableId}`
   }
   return summary
 }
@@ -203,7 +208,40 @@ const buildSearchInputSchema = (schemaSummary: string) =>
 interface RowTool {
   description: string
   inputSchema: z.ZodObject<any>
-  execute: (tableId: string, input: any) => Promise<any>
+  execute: (
+    tableId: string,
+    input: any,
+    fields: string[]
+  ) => Promise<RowToolResult>
+}
+
+type RowToolResult =
+  | { row: Row }
+  | {
+      rows: Row[]
+      hasNextPage?: boolean
+      bookmark?: string | number
+    }
+  | { error: string }
+
+interface RedactedWriteResult {
+  success: true
+}
+
+const sanitizeRowToolResult = (
+  result: RowToolResult,
+  tableSchema: TableSchema
+): RowToolResult => {
+  if ("row" in result) {
+    return { ...result, row: sanitizeAgentRow(result.row, tableSchema) }
+  }
+  if ("rows" in result) {
+    return {
+      ...result,
+      rows: result.rows.map(row => sanitizeAgentRow(row, tableSchema)),
+    }
+  }
+  return result
 }
 
 const ROW_TOOL: Record<string, RowTool> = {
@@ -216,12 +254,13 @@ const ROW_TOOL: Record<string, RowTool> = {
         .nullish()
         .describe("Bookmark for pagination (returned from previous request)"),
     }),
-    execute: async (tableId, { limit, bookmark }) => {
+    execute: async (tableId, { limit, bookmark }, fields) => {
       const searchParams: RowSearchParams = {
         tableId,
         query: {},
         limit: limit ?? undefined,
         bookmark: bookmark ?? undefined,
+        fields,
       }
       const result = await sdk.rows.search(searchParams)
       return {
@@ -291,7 +330,7 @@ const ROW_TOOL: Record<string, RowTool> = {
         .describe("Sort configuration"),
       limit: z.number().nullish().describe("Maximum number of results"),
     }),
-    execute: async (tableId, { query, sort, limit }) => {
+    execute: async (tableId, { query, sort, limit }, fields) => {
       let resolvedQuery = query
       if (typeof resolvedQuery === "string") {
         try {
@@ -304,6 +343,7 @@ const ROW_TOOL: Record<string, RowTool> = {
         tableId,
         query: (resolvedQuery as Record<string, any>) || {},
         limit: limit ?? undefined,
+        fields,
       }
       if (sort) {
         searchParams.sort = sort.column
@@ -323,6 +363,20 @@ const formatActionLabel = (action: string) =>
     .split("_")
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ")
+
+const getRequesterRedactedDescription = (action: string) =>
+  `${formatActionLabel(action)} on the configured resource. Resource metadata is restricted. Do not infer its schema or substitute another resource if this tool is denied.`
+
+const buildCollisionSafeToolName = (tableId: string, action: string) => {
+  const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
+  const tableIdHash = createHash("sha256")
+    .update(tableId)
+    .digest("hex")
+    .substring(0, TOOL_NAME_HASH_LENGTH)
+  const suffix = `_${tableIdHash}_${action}`
+  const tableIdLength = MAX_TOOL_NAME_LENGTH - suffix.length
+  return `${sanitizedTableId.substring(0, tableIdLength)}${suffix}`
+}
 
 export const createRowTools = ({
   tableId,
@@ -350,12 +404,23 @@ export const createRowTools = ({
   const schemaSummary = buildSchemaSummary(writableFields)
   const dataSchema = buildRowDataSchema(writableFields, schemaSummary)
   const searchInputSchema = buildSearchInputSchema(schemaSummary)
+  const fields = getAgentTableFields(tableSchema)
+  const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
+  const truncatedToolNames = Object.fromEntries(
+    Object.keys(ROW_TOOL).map(action => [
+      action,
+      `${sanitizedTableId}_${action}`.substring(0, MAX_TOOL_NAME_LENGTH),
+    ])
+  )
+  const hasToolNameCollision =
+    new Set(Object.values(truncatedToolNames)).size !==
+    Object.keys(truncatedToolNames).length
 
   return Object.entries(ROW_TOOL).map(([action, def]) => {
     const description = `${formatActionLabel(action)} in "${tableName}". ${def.description}`
-    // OpenAI tool names must match [A-Za-z0-9_-] and be ≤64 chars
-    const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
-    const toolName = `${sanitizedTableId}_${action}`.substring(0, 64)
+    const toolName = hasToolNameCollision
+      ? buildCollisionSafeToolName(tableId, action)
+      : truncatedToolNames[action]
     let inputSchema = def.inputSchema
     if (action === "create_row") {
       inputSchema = z.object({ data: dataSchema })
@@ -368,17 +433,48 @@ export const createRowTools = ({
     } else if (action === "search_rows") {
       inputSchema = searchInputSchema
     }
+    const execute = async (input: Parameters<typeof def.execute>[1]) =>
+      sanitizeRowToolResult(
+        await def.execute(tableId, input, fields),
+        tableSchema
+      )
+    const executeRequesterRedacted = async (
+      input: Parameters<typeof def.execute>[1]
+    ): Promise<RowToolResult | RedactedWriteResult> => {
+      const result = await execute(input)
+      return action === "create_row" || action === "update_row"
+        ? { success: true }
+        : result
+    }
     return {
       name: toolName,
       readableName: `${tableName}.${action}`,
+      tableId,
       sourceType: resolvedSourceType,
       sourceLabel: resolvedSourceLabel,
       sourceIconType,
       description,
+      executionPolicy: {
+        mode: "configurable",
+        defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
+      },
+      authorization: {
+        permissionType: PermissionType.TABLE,
+        permissionLevel:
+          action === "create_row" || action === "update_row"
+            ? PermissionLevel.WRITE
+            : PermissionLevel.READ,
+        resourceId: tableId,
+      },
       tool: tool({
         description,
         inputSchema,
-        execute: async input => def.execute(tableId, input),
+        execute,
+      }),
+      requesterRedactedTool: tool({
+        description: getRequesterRedactedDescription(action),
+        inputSchema: def.inputSchema,
+        execute: executeRequesterRedacted,
       }),
     }
   })

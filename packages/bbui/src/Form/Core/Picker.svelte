@@ -36,9 +36,9 @@
   export let isOptionEnabled = (option: O, _index?: number) =>
     option as unknown as boolean
   export let tooltipMessage:
-    | ((_option: O, _index?: number) => string)
+    | ((option: O, index?: number) => string)
     | undefined = undefined
-  export let onSelectOption: (_value: V) => void = () => {}
+  export let onSelectOption: (value: V) => void = () => {}
   export let getOptionLabel = (option: O, _index?: number) => `${option}`
   export let getOptionValue = (option: O, _index?: number) =>
     option as unknown as V
@@ -65,14 +65,8 @@
   export let footer: string | undefined = undefined
   export let customAnchor: HTMLElement | undefined = undefined
   export let loading: boolean = false
-  export let onOptionMouseenter: (
-    _e: MouseEvent,
-    _option: any
-  ) => void = () => {}
-  export let onOptionMouseleave: (
-    _e: MouseEvent,
-    _option: any
-  ) => void = () => {}
+  export let onOptionMouseenter: (e: MouseEvent, option: any) => void = () => {}
+  export let onOptionMouseleave: (e: MouseEvent, option: any) => void = () => {}
   export let showSelectAll: boolean = false
   export let selectAllText: string = "Select all"
   export let indeterminate: boolean = false
@@ -151,7 +145,7 @@
 
   const getSortedOptions = (
     options: any[],
-    getLabel: (_option: any) => string,
+    getLabel: (option: any) => string,
     sort: boolean
   ) => {
     if (!options?.length || !Array.isArray(options)) {
@@ -170,7 +164,7 @@
   const getFilteredOptions = (
     options: any[],
     term: string | null,
-    getLabel: (_option: any) => string
+    getLabel: (option: any) => string
   ) => {
     if (autocomplete && term) {
       const lowerCaseTerm = term.toLowerCase()

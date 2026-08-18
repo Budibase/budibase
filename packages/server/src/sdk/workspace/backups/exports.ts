@@ -7,17 +7,10 @@ import { join } from "path"
 import * as tar from "tar"
 import { v4 as uuid } from "uuid"
 import { ObjectStoreBuckets } from "../../../constants"
-import {
-  AGENT_LOG_SESSION_PREFIX,
-  AUTOMATION_LOG_PREFIX,
-  FUNCTION_RUN_LOG_PREFIX,
-  LINK_USER_METADATA_PREFIX,
-  TABLE_ROW_PREFIX,
-  USER_METDATA_PREFIX,
-} from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { streamFile } from "../../../utilities/fileSystem"
 import { ATTACHMENT_DIRECTORY, DB_EXPORT_FILE } from "./constants"
+import { createWorkspaceExportFilter } from "./filters"
 
 const MemoryStream = require("memorystream")
 
@@ -84,22 +77,6 @@ export async function exportDB(
   })
 }
 
-function defineFilter(excludeRows?: boolean) {
-  const ids = [
-    USER_METDATA_PREFIX,
-    LINK_USER_METADATA_PREFIX,
-    AUTOMATION_LOG_PREFIX,
-    FUNCTION_RUN_LOG_PREFIX,
-    // agent execution logs must not carry over on duplicate/export-import
-    AGENT_LOG_SESSION_PREFIX,
-  ]
-  if (excludeRows) {
-    ids.push(TABLE_ROW_PREFIX)
-  }
-  return (doc: any) =>
-    !ids.map(key => doc._id.includes(key)).reduce((prev, curr) => prev || curr)
-}
-
 /**
  * Local utility to back up the database state for an workspace, excluding global user
  * data or user relationships.
@@ -150,7 +127,7 @@ export const exportWorkspace: ExportWorkspaceFn = async (
     // enforce an export of workspace DB to the tmp path
     const dbPath = join(tmpPath, DB_EXPORT_FILE)
     await exportDB(workspaceId, {
-      filter: defineFilter(config?.excludeRows),
+      filter: createWorkspaceExportFilter(config?.excludeRows),
       exportPath: dbPath,
     })
 

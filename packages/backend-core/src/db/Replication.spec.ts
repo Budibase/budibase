@@ -93,6 +93,48 @@ describe("Replication", () => {
       expect((opts.filter as Function)(deletedDoc, {})).toBe(true)
     })
 
+    it.each([
+      {
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      },
+      {
+        source: `${DocumentType.WORKSPACE}_source`,
+        target: `${DocumentType.WORKSPACE_DEV}_target`,
+      },
+    ])(
+      "should filter out Slack app config documents in both directions",
+      ({ source, target }) => {
+        const replication = new Replication({ source, target })
+        const opts = replication.appReplicateOpts({ isCreation: true })
+
+        expect(
+          (opts.filter as Function)(
+            { _id: `${DocumentType.SLACK_APP_CONFIG}_config` },
+            {}
+          )
+        ).toBe(false)
+      }
+    )
+
+    it("should filter out Slack app config tombstones", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      const opts = replication.appReplicateOpts({ isCreation: false })
+
+      expect(
+        (opts.filter as Function)(
+          {
+            _id: `${DocumentType.SLACK_APP_CONFIG}_config`,
+            _deleted: true,
+          },
+          {}
+        )
+      ).toBe(false)
+    })
+
     it("should filter out automation logs", () => {
       const replication = new Replication({
         source: `${DocumentType.WORKSPACE_DEV}_source`,
@@ -109,7 +151,7 @@ describe("Replication", () => {
       expect((opts.filter as Function)(automationLogDoc, {})).toBe(false)
     })
 
-    it("should filter out Function run logs", () => {
+    it("should filter out Function run summaries", () => {
       const replication = new Replication({
         source: `${DocumentType.WORKSPACE_DEV}_source`,
         target: `${DocumentType.WORKSPACE}_target`,
@@ -117,11 +159,11 @@ describe("Replication", () => {
 
       const opts = replication.appReplicateOpts({ isCreation: true })
 
-      const functionRunLogDoc = {
+      const functionRunSummary = {
         _id: `${DocumentType.FUNCTION_RUN_LOG}_123`,
       }
 
-      expect((opts.filter as Function)(functionRunLogDoc, {})).toBe(false)
+      expect((opts.filter as Function)(functionRunSummary, {})).toBe(false)
     })
 
     it("should filter out app metadata", () => {

@@ -456,7 +456,7 @@ export default class TestConfiguration {
       return {
         Accept: "application/json",
         Cookie: [`${constants.Cookie.Auth}=${authToken}`],
-        [constants.Header.APP_ID]: appId,
+        [constants.Header.WORKSPACE_ID]: appId,
         ...this.temporaryHeaders,
       }
     })
@@ -538,9 +538,9 @@ export default class TestConfiguration {
     }
 
     if (prodApp) {
-      headers[constants.Header.APP_ID] = this.prodWorkspaceId
+      headers[constants.Header.WORKSPACE_ID] = this.prodWorkspaceId
     } else if (this.devWorkspaceId) {
-      headers[constants.Header.APP_ID] = this.devWorkspaceId
+      headers[constants.Header.WORKSPACE_ID] = this.devWorkspaceId
     }
     return {
       ...headers,
@@ -559,7 +559,7 @@ export default class TestConfiguration {
       Cookie: "",
     }
     if (appId) {
-      headers[constants.Header.APP_ID] = appId
+      headers[constants.Header.WORKSPACE_ID] = appId
     }
 
     headers[constants.Header.TENANT_ID] = this.getTenantId()

@@ -246,6 +246,8 @@ describe("renderLoopV2Container", () => {
       {
         loopStepId: "loop-with-branch",
         loopChildInsertIndex: 1,
+        branchStepId: "loop-branch",
+        branchIdx: 1,
       }
     )
     expectLoopEdge(

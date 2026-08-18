@@ -1,10 +1,6 @@
 import { redis, type RedisClient } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
-import {
-  ActionType,
-  FUNCTION_RUN_REQUEST_FIXTURE,
-  FunctionErrorCode,
-} from "@budibase/types"
+import { ActionType, FunctionErrorCode } from "@budibase/types"
 import type {
   FunctionQueryBrokerRequest,
   FunctionRunLimits,
@@ -16,6 +12,7 @@ import {
   getFunctionRunGrant,
   type FunctionRunGrantScope,
 } from "./grants"
+import { FUNCTION_RUN_REQUEST_FIXTURE } from "./testFixtures"
 import * as queryController from "../api/controllers/query"
 
 jest.mock("@budibase/pro", () => ({

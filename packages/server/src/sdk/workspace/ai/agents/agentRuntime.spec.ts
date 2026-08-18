@@ -1,5 +1,9 @@
 import type { Agent, LLMResponse } from "@budibase/types"
-import { EscalationNotificationChannel, FeatureFlag } from "@budibase/types"
+import {
+  EscalationNotificationChannel,
+  FeatureFlag,
+  ToolExecutionPrincipal,
+} from "@budibase/types"
 
 const mockRouterStream = jest.fn()
 
@@ -90,6 +94,11 @@ jest.mock("@budibase/backend-core", () => {
       ...actual.cache,
       get: jest.fn().mockResolvedValue(undefined),
       store: jest.fn().mockResolvedValue(undefined),
+    },
+    context: {
+      ...actual.context,
+      getTenantId: jest.fn(() => "tenant_1"),
+      getWorkspaceId: jest.fn(() => "app_1"),
     },
   }
 })
@@ -450,6 +459,72 @@ describe("prepareAgentRunContext", () => {
     expect(result.operationIntent).toBe("query")
   })
 
+  it("preserves legacy tool execution for runs without a requester", async () => {
+    mockIsEnabled.mockResolvedValue(true)
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "select_operation",
+        operationId: "operation_2",
+        intent: "execute",
+        reason: "Automation selected HR support",
+      }),
+    })
+
+    await prepareAgentRunContext({
+      agent,
+      agentId: "agent_1",
+      sessionId: "session_1",
+      latestQuestion: "Process pending leave requests",
+    })
+
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      agent.operations[1],
+      expect.objectContaining({ executionContext: undefined })
+    )
+  })
+
+  it("enables delegated authorization when a requester is present", async () => {
+    mockIsEnabled.mockResolvedValue(true)
+    mockRouterStream.mockResolvedValue({
+      output: Promise.resolve({
+        action: "select_operation",
+        operationId: "operation_2",
+        intent: "query",
+        reason: "User selected HR support",
+      }),
+    })
+
+    await prepareAgentRunContext({
+      agent,
+      agentId: "agent_1",
+      sessionId: "session_1",
+      latestQuestion: "Show my leave requests",
+      requester: {
+        userId: "user_1",
+        authorization: { mode: "current" },
+      },
+    })
+
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      agent.operations[1],
+      expect.objectContaining({
+        executionContext: {
+          tenantId: expect.any(String),
+          workspaceId: expect.any(String),
+          agentId: "agent_1",
+          operationId: "operation_2",
+          conversationId: "session_1",
+          requester: {
+            userId: "user_1",
+            authorization: { mode: "current" },
+          },
+        },
+      })
+    )
+  })
+
   it("defaults operationIntent to execute for a sticky follow-up", async () => {
     mockIsEnabled.mockResolvedValue(true)
     mockRouterStream.mockResolvedValue({
@@ -562,11 +637,82 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
         sessionId: "session_1",
         recipients,
         delayMs: 120000,
+        executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        executionContext: expect.objectContaining({
+          agentId: "agent_1",
+          operationId: operationWithRecipients.id,
+          conversationId: "session_1",
+        }),
       })
     )
     expect(ToolLoopAgent).toHaveBeenCalledWith(
       expect.objectContaining({
         tools: expect.objectContaining({ escalate: realTool }),
+      })
+    )
+  })
+
+  it("passes the chat timezone to the agent system prompt", async () => {
+    await runFor(operationWithoutRecipients, {
+      chat: {
+        chatAppId: "chatapp_1",
+        agentId: "agent_1",
+        messages: [],
+        timezone: "Europe/London",
+      },
+    })
+
+    const { ai } = jest.requireMock("@budibase/pro")
+    expect(ai.agentSystemPrompt).toHaveBeenCalledWith(user, "Europe/London")
+  })
+
+  it("ignores a preview role when the chat is not in preview mode", async () => {
+    await runFor(operationWithoutRecipients, {
+      user: { _id: "user_1" } as ContextUser,
+      chat: {
+        chatAppId: "chatapp_1",
+        agentId: "agent_1",
+        messages: [],
+        previewRoleId: "ADMIN",
+      },
+    })
+
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      operationWithoutRecipients,
+      expect.objectContaining({
+        executionContext: expect.objectContaining({
+          requester: {
+            userId: "user_1",
+            authorization: { mode: "current" },
+          },
+        }),
+      })
+    )
+  })
+
+  it("uses public access as a preview role", async () => {
+    await runFor(operationWithoutRecipients, {
+      user: { _id: "user_1" } as ContextUser,
+      chat: {
+        chatAppId: "chatapp_1",
+        agentId: "agent_1",
+        messages: [],
+        isPreview: true,
+        previewRoleId: "PUBLIC",
+      },
+    })
+
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      operationWithoutRecipients,
+      expect.objectContaining({
+        executionContext: expect.objectContaining({
+          requester: {
+            userId: "user_1",
+            authorization: { mode: "preview", roleId: "PUBLIC" },
+          },
+        }),
       })
     )
   })

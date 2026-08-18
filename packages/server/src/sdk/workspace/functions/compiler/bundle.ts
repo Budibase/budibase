@@ -25,25 +25,37 @@ const toBuildDiagnostic = (message: Message) =>
   )
 
 const renderRuntimeModule = (capabilities: FunctionQueryCapability[]) => {
-  const grouped = new Map<string, FunctionQueryCapability[]>()
-  for (const capability of capabilities) {
-    const datasourceCapabilities = grouped.get(capability.datasourceAlias) || []
-    datasourceCapabilities.push(capability)
-    grouped.set(capability.datasourceAlias, datasourceCapabilities)
-  }
-
-  const queries = [...grouped.entries()].map(
-    ([datasourceAlias, datasourceCapabilities]) =>
-      `${JSON.stringify(datasourceAlias)}: Object.freeze({${datasourceCapabilities
-        .map(
-          capability =>
-            `${JSON.stringify(capability.queryAlias)}: (parameters = {}) => globalThis.__budibaseInvokeQuery(${JSON.stringify(capability.capabilityId)}, parameters)`
-        )
-        .join(",")}})`
+  const runtimeCapabilities = capabilities.map(
+    ({ capabilityId, datasourceAlias, queryAlias }) => ({
+      capabilityId,
+      datasourceAlias,
+      queryAlias,
+    })
   )
 
-  return `export const inputs = globalThis.__budibaseInputs
-export const queries = Object.freeze({${queries.join(",")}})`
+  return `const capabilities = ${JSON.stringify(runtimeCapabilities)}
+const groupedCapabilities = new Map()
+for (const capability of capabilities) {
+  const group = groupedCapabilities.get(capability.datasourceAlias) || []
+  group.push(capability)
+  groupedCapabilities.set(capability.datasourceAlias, group)
+}
+
+const queryEntries = [...groupedCapabilities].map(
+  ([datasourceAlias, group]) => [
+    datasourceAlias,
+    Object.freeze(Object.fromEntries(group.map(capability => [
+      capability.queryAlias,
+      (parameters = {}) => globalThis.__budibaseInvokeQuery(
+        capability.capabilityId,
+        parameters
+      ),
+    ]))),
+  ]
+)
+
+export const inputs = globalThis.__budibaseInputs
+export const queries = Object.freeze(Object.fromEntries(queryEntries))`
 }
 
 export const bundleFunction = async (

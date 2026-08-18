@@ -16,6 +16,7 @@ import * as permissions from "./workspace/permissions"
 import * as projects from "./workspace/projects"
 import { default as queries } from "./workspace/queries"
 import * as resources from "./workspace/resources"
+import * as restTemplates from "./workspace/restTemplates"
 import * as rowActions from "./workspace/rowActions"
 import { default as rows } from "./workspace/rows"
 import * as screens from "./workspace/screens"
@@ -48,6 +49,7 @@ const sdk = {
   workspaceApps,
   navigation,
   resources,
+  restTemplates,
   deployment,
   embedSSO,
   dev,

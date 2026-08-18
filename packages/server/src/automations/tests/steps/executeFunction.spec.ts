@@ -12,6 +12,7 @@ import { FunctionExecutionError } from "../../../functions/errors"
 
 const artifact = {
   compiledJavaScript: "export default async function run() {}",
+  capabilityIds: ["capability-1"],
   sourceHash: "source-hash",
   declarationsHash: "declarations-hash",
   compiledAt: "2026-01-01T00:00:00.000Z",

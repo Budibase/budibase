@@ -143,7 +143,7 @@ export function checkDatasourceTypes(schema: Integration, config: any) {
   return config
 }
 
-async function enrichDatasourceWithValues(
+export async function enrichDatasourceWithValues(
   datasource: Datasource,
   variables?: Record<string, string>
 ) {
@@ -151,12 +151,20 @@ async function enrichDatasourceWithValues(
   const env = variables ? variables : await getEnvironmentVariables()
   //Do not process entities, as we do not want to process formulas
   const { entities, ...clonedWithoutEntities } = cloned
+  // Do not process static variables, bindings are not permitted in them
+  const staticVariables = clonedWithoutEntities.config?.staticVariables
+  if (clonedWithoutEntities.config) {
+    delete clonedWithoutEntities.config.staticVariables
+  }
   const processed = processObjectSync(
     clonedWithoutEntities,
     { env },
     { onlyFound: true }
   ) as Datasource
   processed.entities = entities
+  if (staticVariables && processed.config) {
+    processed.config.staticVariables = staticVariables
+  }
   const definition = await getDefinition(processed.source)
   if (definition) {
     processed.config = checkDatasourceTypes(definition, processed.config)

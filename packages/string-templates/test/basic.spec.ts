@@ -166,6 +166,84 @@ describe("Test that JSON string processing works correctly", () => {
       },
     })
   })
+
+  it("keeps quoted bindings safe across multi-object JSON templates", () => {
+    const injectedName = 'x","name":{"$exists":true},"$comment":"esc'
+    const output = processJsonStringSync(
+      '{"name":"{{ name }}"} {"$set":{"touched":true}} {}',
+      { name: injectedName },
+      options
+    )
+
+    expect(output).toEqual(
+      JSON.stringify({ name: injectedName }) +
+        " " +
+        JSON.stringify({ $set: { touched: true } }) +
+        " " +
+        JSON.stringify({})
+    )
+    expect(JSON.parse(String(output).split(" ")[0])).toEqual({
+      name: injectedName,
+    })
+  })
+
+  it("keeps dynamic keys safe across multi-object JSON templates", () => {
+    const injectedKey = 'name":{"$exists":true},"$comment'
+    const output = processJsonStringSync(
+      '{"{{ key }}":"fixed"} {"$set":{"touched":true}}',
+      { key: injectedKey },
+      options
+    )
+
+    expect(output).toEqual(
+      JSON.stringify({ [injectedKey]: "fixed" }) +
+        " " +
+        JSON.stringify({ $set: { touched: true } })
+    )
+  })
+
+  it("handles unquoted triple-brace bindings before splitting JSON", () => {
+    const injectedName = 'x","name":{"$exists":true},"$comment":"esc'
+    const output = processJsonStringSync(
+      '{"criteria": {{{ extra }}}, "name":"{{ name }}"} {"$set":{"touched":true}} {}',
+      {
+        extra: '{"active":true}',
+        name: injectedName,
+      },
+      options
+    )
+
+    expect(output).toEqual(
+      JSON.stringify({
+        criteria: { active: true },
+        name: injectedName,
+      }) +
+        " " +
+        JSON.stringify({ $set: { touched: true } }) +
+        " " +
+        JSON.stringify({})
+    )
+  })
+
+  it("fails closed when a multi-object template is not strict JSON", () => {
+    expect(() =>
+      processJsonStringSync(
+        '{"name":"{{ name }}"} {"$set":{"touched":true},}',
+        { name: "one" },
+        options
+      )
+    ).toThrow("Multi-object JSON templates must be valid JSON objects")
+  })
+
+  it("does not treat multiple Handlebars bindings as JSON objects", () => {
+    const output = processJsonStringSync(
+      "{{ firstName }} {{ lastName }}",
+      { firstName: "Joe", lastName: "Smith" },
+      options
+    )
+
+    expect(output).toEqual("Joe Smith")
+  })
 })
 
 describe("check arrays", () => {

@@ -252,7 +252,7 @@
   const editConnection = (e: MouseEvent) => {
     e.stopPropagation()
     if (connection) {
-      bb.settings(`/connections/apis/${connection.sourceId}`, {
+      bb.settings(`/connections/api-connections/${connection.sourceId}`, {
         locked: lockedMode,
       })
     }
