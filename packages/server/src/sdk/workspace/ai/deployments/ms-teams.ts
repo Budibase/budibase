@@ -80,9 +80,11 @@ export const buildMSTeamsWebhookUrl = async (
 export const buildMSTeamsManifest = ({
   agent,
   messagingEndpointUrl,
+  appPackageVersion,
 }: {
   agent: Agent
   messagingEndpointUrl: string
+  appPackageVersion: string
 }) => {
   const integration = validateMSTeamsIntegration(agent)
   const name = normaliseAppName(agent.name)
@@ -93,7 +95,7 @@ export const buildMSTeamsManifest = ({
     $schema:
       "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
     manifestVersion: "1.28",
-    version: "1.0.0",
+    version: appPackageVersion,
     id: integration.appId,
     packageName: `com.budibase.agent.${normalisePackageSegment(
       agent._id || integration.appId

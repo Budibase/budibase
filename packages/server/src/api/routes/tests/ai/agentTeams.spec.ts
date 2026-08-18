@@ -290,6 +290,7 @@ describe("agent teams integration provisioning", () => {
       expect(outlineIcon.readUInt32BE(16)).toEqual(32)
       expect(outlineIcon.readUInt32BE(20)).toEqual(32)
       expect(manifest.manifestVersion).toEqual("1.28")
+      expect(manifest.version).toEqual("1.0.1")
       expect(manifest.name.short).toEqual("Teams Package Agent")
       expect(manifest.description.short).toEqual("Answers questions in Teams.")
       expect(manifest.accentColor).toEqual("#7052FF")
@@ -305,17 +306,41 @@ describe("agent teams integration provisioning", () => {
       expect(manifest.validDomains).toHaveLength(1)
       expect(manifestText).not.toContain("teams-package-password")
 
+      const secondPackageBuffer = await config.api.agent.downloadMSTeamsPackage(
+        agent._id!
+      )
+      const secondTempDir = path.join(tempDir, "second")
+      await fs.mkdir(secondTempDir)
+      const secondZipPath = path.join(secondTempDir, "package.zip")
+      await fs.writeFile(secondZipPath, new Uint8Array(secondPackageBuffer))
+      await extract(secondZipPath, { dir: secondTempDir })
+      const secondManifest = JSON.parse(
+        await fs.readFile(path.join(secondTempDir, "manifest.json"), "utf8")
+      )
+
+      expect(secondManifest.version).toEqual("1.0.2")
+      expect(secondManifest.id).toEqual(manifest.id)
+
       const { agents: agentsAfterDownload } = await config.api.agent.fetch()
       const agentAfterDownload = agentsAfterDownload.find(
         candidate => candidate._id === agent._id
       )
-      expect(agentAfterDownload?._rev).toEqual(agentBeforeDownload?._rev)
+      expect(agentAfterDownload?._rev).not.toEqual(agentBeforeDownload?._rev)
+      expect(
+        agentAfterDownload?.MSTeamsIntegration?.appPackageVersion
+      ).toBeUndefined()
       expect(agentAfterDownload?.MSTeamsIntegration?.chatAppId).toEqual(
         agentBeforeDownload?.MSTeamsIntegration?.chatAppId
       )
       expect(
         agentAfterDownload?.MSTeamsIntegration?.messagingEndpointUrl
       ).toEqual(agentBeforeDownload?.MSTeamsIntegration?.messagingEndpointUrl)
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        const stored = await db.get<Agent>(agent._id!)
+        expect(stored.MSTeamsIntegration?.appPackageVersion).toEqual("1.0.2")
+      })
     } finally {
       await fs.rm(tempDir, { recursive: true, force: true })
     }
