@@ -9,7 +9,6 @@
   import type { LabelPosition } from "../types"
 
   export let value: V | undefined = undefined
-  export let id: string | undefined = undefined
   export let label: string | undefined = undefined
   export let disabled: boolean = false
   export let readonly: boolean = false
@@ -75,7 +74,6 @@
 </script>
 
 <Field
-  {id}
   {helpText}
   {label}
   {labelPosition}

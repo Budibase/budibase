@@ -85,7 +85,6 @@
           </Body>
         </div>
         <Select
-          id="operation-tool-execution-principal"
           size="M"
           bind:value={executionPrincipal}
           placeholder={false}
