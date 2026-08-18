@@ -84,6 +84,7 @@ describe("discord escalation mentions", () => {
         applicationId: "app-id",
         publicKey: "public-key",
         botToken: "discord-bot-token",
+        interactionsEndpointUrl: "https://example.com/api/discord/interactions",
       },
     })
   })

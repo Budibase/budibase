@@ -29,7 +29,10 @@ describe("replyToConversation", () => {
     mockSendMessage()
     agent = await config.api.agent.create({
       name: "Telegram Agent",
-      telegramIntegration: { botToken: BOT_TOKEN },
+      telegramIntegration: {
+        botToken: BOT_TOKEN,
+        messagingEndpointUrl: "https://example.com/api/telegram/webhook",
+      },
     })
   })
 
