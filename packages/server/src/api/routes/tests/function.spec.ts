@@ -252,10 +252,10 @@ export default async function (): Promise<FunctionResult> {
       )
       expect(built.artifact).toEqual(
         expect.objectContaining({
-          runnerProtocolVersion: 1,
-          compiledJavaScript: expect.stringContaining(
-            "__budibaseFunctionModule"
+          capabilityIds: built.capabilities.map(
+            capability => capability.capabilityId
           ),
+          compiledJavaScript: expect.stringContaining("as default"),
         })
       )
 
@@ -438,15 +438,14 @@ export default async function (): Promise<FunctionResult> {
       })
       expect(rebuilt.readiness).toBe("ready")
 
+      const rebuiltDocument = (await config.api.function.find(rebuilt._id))
+        .function
       await config.doInContext(config.getDevWorkspaceId(), async () => {
-        const current = await context
-          .getWorkspaceDB()
-          .get<FunctionDocument>(rebuilt._id)
         await context.getWorkspaceDB().put({
-          ...current,
+          ...rebuiltDocument,
           artifact: {
-            ...current.artifact!,
-            runnerProtocolVersion: 2,
+            ...rebuiltDocument.artifact!,
+            capabilityIds: ["tampered-capability"],
           },
         })
       })
@@ -692,7 +691,6 @@ export default async function (): Promise<FunctionResult> {
         source: "",
         capabilities: [],
         artifact: {
-          runnerProtocolVersion: 1,
           compiledJavaScript: "malicious",
           sourceHash: "fake",
           declarationsHash: "fake",

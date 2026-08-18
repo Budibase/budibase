@@ -1,3 +1,4 @@
+import type { FunctionQueryCapability } from "@budibase/types"
 import { build, type BuildFailure, type Message } from "esbuild"
 import {
   FUNCTION_VIRTUAL_SOURCE_FILE,
@@ -23,14 +24,48 @@ const toBuildDiagnostic = (message: Message) =>
     message.location ? message.location.column + 1 : undefined
   )
 
+const renderRuntimeModule = (capabilities: FunctionQueryCapability[]) => {
+  const runtimeCapabilities = capabilities.map(
+    ({ capabilityId, datasourceAlias, queryAlias }) => ({
+      capabilityId,
+      datasourceAlias,
+      queryAlias,
+    })
+  )
+
+  return `const capabilities = ${JSON.stringify(runtimeCapabilities)}
+const groupedCapabilities = new Map()
+for (const capability of capabilities) {
+  const group = groupedCapabilities.get(capability.datasourceAlias) || []
+  group.push(capability)
+  groupedCapabilities.set(capability.datasourceAlias, group)
+}
+
+const queryEntries = [...groupedCapabilities].map(
+  ([datasourceAlias, group]) => [
+    datasourceAlias,
+    Object.freeze(Object.fromEntries(group.map(capability => [
+      capability.queryAlias,
+      (parameters = {}) => globalThis.__budibaseInvokeQuery(
+        capability.capabilityId,
+        parameters
+      ),
+    ]))),
+  ]
+)
+
+export const inputs = globalThis.__budibaseInputs
+export const queries = Object.freeze(Object.fromEntries(queryEntries))`
+}
+
 export const bundleFunction = async (
-  source: string
+  source: string,
+  capabilities: FunctionQueryCapability[]
 ): Promise<FunctionCompilerResult> => {
   try {
     const result = await build({
       bundle: true,
-      format: "iife",
-      globalName: "__budibaseFunctionModule",
+      format: "esm",
       legalComments: "none",
       outfile: "function.js",
       platform: "neutral",
@@ -52,9 +87,7 @@ export const bundleFunction = async (
             build.onLoad(
               { filter: /.*/, namespace: VIRTUAL_MODULE_NAMESPACE },
               () => ({
-                contents: `const runtime = globalThis.__budibaseFunctionsRuntime
-export const inputs = runtime.inputs
-export const queries = runtime.queries`,
+                contents: renderRuntimeModule(capabilities),
                 loader: "js",
               })
             )
