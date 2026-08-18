@@ -122,16 +122,6 @@ export class FunctionSupervisor {
         }
       }
 
-      const recordResult = (result: FunctionRunResult) => {
-        receivedResult = result
-        clearRunTimer()
-      }
-
-      const recordFailure = (result: FunctionRunResult) => {
-        failure = result
-        clearRunTimer()
-      }
-
       const requestChildExit = () => {
         if (closed || killTimer) {
           return
@@ -143,6 +133,17 @@ export class FunctionSupervisor {
           }
         }, this.terminationGraceMs)
         killTimer.unref()
+      }
+
+      const recordResult = (result: FunctionRunResult) => {
+        receivedResult = result
+        clearRunTimer()
+        requestChildExit()
+      }
+
+      const recordFailure = (result: FunctionRunResult) => {
+        failure = result
+        clearRunTimer()
       }
 
       const terminateChild = (reason: TerminationReason) => {

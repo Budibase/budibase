@@ -1,14 +1,17 @@
-import {
-  FUNCTION_RUN_REQUEST_FIXTURE,
-  FunctionErrorCode,
-} from "@budibase/types"
+import { FunctionErrorCode } from "@budibase/types"
 import { spawn } from "node:child_process"
 import type { ChildProcess } from "node:child_process"
 import { FunctionSupervisor } from "./supervisor"
+import { FUNCTION_RUN_REQUEST_FIXTURE } from "./testFixtures"
 
 const childFixture = String.raw`
 const mode = process.argv[1]
-if (mode === "ignore-termination" || mode === "malformed-ignore-termination") {
+if (
+  mode === "ignore-termination" ||
+  mode === "malformed-ignore-termination" ||
+  mode === "result-delayed-close" ||
+  mode === "result-never-closes"
+) {
   process.on("SIGTERM", () => {})
 }
 process.on("message", request => {
@@ -45,6 +48,10 @@ process.on("message", request => {
     process.send(result, () => setTimeout(() => process.disconnect(), 1100))
     return
   }
+  if (mode === "result-never-closes") {
+    process.send(result, () => setInterval(() => {}, 1000))
+    return
+  }
   process.send(result, () => process.disconnect())
 })
 `
@@ -61,6 +68,7 @@ type ChildMode =
   | "hang"
   | "ignore-termination"
   | "result-delayed-close"
+  | "result-never-closes"
 
 const createSupervisor = ({
   mode,
@@ -210,7 +218,10 @@ describe("FunctionSupervisor", () => {
   })
 
   it("does not replace a completed result with a timeout during child teardown", async () => {
-    const supervisor = createSupervisor({ mode: "result-delayed-close" })
+    const supervisor = createSupervisor({
+      mode: "result-delayed-close",
+      terminationGraceMs: 1_500,
+    })
 
     await expect(
       supervisor.execute(
@@ -218,6 +229,21 @@ describe("FunctionSupervisor", () => {
       )
     ).resolves.toMatchObject({
       runId: "run-result-before-timeout",
+      status: "success",
+    })
+    expect(supervisor.activeRunCount()).toBe(0)
+  })
+
+  it("terminates a child that remains alive after returning a result", async () => {
+    const supervisor = createSupervisor({
+      mode: "result-never-closes",
+      terminationGraceMs: 10,
+    })
+
+    await expect(
+      supervisor.execute(request({ runId: "run-result-stuck-child" }))
+    ).resolves.toMatchObject({
+      runId: "run-result-stuck-child",
       status: "success",
     })
     expect(supervisor.activeRunCount()).toBe(0)

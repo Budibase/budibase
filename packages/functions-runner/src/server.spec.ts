@@ -1,12 +1,10 @@
-import {
-  FUNCTION_RUN_REQUEST_FIXTURE,
-  FunctionErrorCode,
-} from "@budibase/types"
+import { FunctionErrorCode } from "@budibase/types"
 import { spawn } from "node:child_process"
 import net from "node:net"
 import type { AddressInfo } from "node:net"
 import { createServer } from "./server"
 import { FunctionSupervisor } from "./supervisor"
+import { FUNCTION_RUN_REQUEST_FIXTURE } from "./testFixtures"
 
 describe("Functions runner service", () => {
   it("reports its health", async () => {
