@@ -523,7 +523,7 @@ const resolveSlackIntegration = ({
   }
 
   if (incoming.clientSecret === SECRET_MASK && existing?.clientSecret) {
-    merged.clientSecret = existing.clientSecret
+    resolved.clientSecret = existing.clientSecret
   }
 
   if (incoming.signingSecret === SECRET_MASK && existing?.signingSecret) {
