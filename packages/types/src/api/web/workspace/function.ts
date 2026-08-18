@@ -28,8 +28,13 @@ export interface FunctionResponse extends FunctionDocument {
   readiness: FunctionReadiness
 }
 
+export type FunctionSummary = Pick<
+  FunctionResponse,
+  "_id" | "_rev" | "name" | "appId" | "createdAt" | "updatedAt" | "readiness"
+>
+
 export interface FetchFunctionsResponse {
-  functions: FunctionResponse[]
+  functions: FunctionSummary[]
 }
 
 export interface CreateFunctionResponse {
@@ -57,7 +62,7 @@ export interface BuildFunctionRequest {
 }
 
 export interface BuildFunctionResponse {
-  function: FunctionResponse
+  function: FunctionSummary
 }
 
 export type FunctionQueryKind = "data" | "api"

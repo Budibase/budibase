@@ -308,7 +308,7 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
           throw new Error(
             `Automation with ID ${
               this.automation._id
-            } not found in app ${this.config.getDevWorkspaceId()}. You may have forgotten to call config.api.workspace.publish().`,
+            } not found in workspace ${this.config.getDevWorkspaceId()}. You may have forgotten to call config.api.workspace.publish().`,
             { cause: e }
           )
         } else {

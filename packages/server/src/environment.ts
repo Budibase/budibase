@@ -1,5 +1,10 @@
 import { env as coreEnv, Duration } from "@budibase/backend-core"
-import { ServiceType } from "@budibase/types"
+import {
+  DEFAULT_FUNCTION_LIMITS,
+  getFunctionLimits,
+  ServiceType,
+  type FunctionLimits,
+} from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
 import { join, resolve } from "path"
 
@@ -22,6 +27,128 @@ function parseIntSafe(number?: string) {
     return parseInt(number)
   }
 }
+
+function parsePositiveInteger(value: string | undefined, fallback: number) {
+  if (!value) {
+    return fallback
+  }
+
+  const parsed = Number(value)
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback
+}
+
+const getFunctionLimit = (
+  envVars: Record<string, string | undefined>,
+  name: string,
+  fallback: number
+) => parsePositiveInteger(envVars[`BUDIBASE_FUNCTIONS_${name}`], fallback)
+
+export const getConfiguredFunctionLimits = (
+  envVars: Record<string, string | undefined> = process.env
+): FunctionLimits =>
+  getFunctionLimits({
+    compile: {
+      maxSourceBytes: getFunctionLimit(
+        envVars,
+        "COMPILE_MAX_SOURCE_BYTES",
+        DEFAULT_FUNCTION_LIMITS.compile.maxSourceBytes
+      ),
+      timeoutMs: getFunctionLimit(
+        envVars,
+        "COMPILE_TIMEOUT_MS",
+        DEFAULT_FUNCTION_LIMITS.compile.timeoutMs
+      ),
+      memoryLimitMb: getFunctionLimit(
+        envVars,
+        "COMPILE_MEMORY_LIMIT_MB",
+        DEFAULT_FUNCTION_LIMITS.compile.memoryLimitMb
+      ),
+    },
+    run: {
+      maxInputBytes: getFunctionLimit(
+        envVars,
+        "RUN_MAX_INPUT_BYTES",
+        DEFAULT_FUNCTION_LIMITS.run.maxInputBytes
+      ),
+      maxInputDepth: getFunctionLimit(
+        envVars,
+        "RUN_MAX_INPUT_DEPTH",
+        DEFAULT_FUNCTION_LIMITS.run.maxInputDepth
+      ),
+      isolateMemoryLimitMb: getFunctionLimit(
+        envVars,
+        "RUN_ISOLATE_MEMORY_LIMIT_MB",
+        DEFAULT_FUNCTION_LIMITS.run.isolateMemoryLimitMb
+      ),
+      timeoutMs: getFunctionLimit(
+        envVars,
+        "RUN_TIMEOUT_MS",
+        DEFAULT_FUNCTION_LIMITS.run.timeoutMs
+      ),
+      maxQueryCalls: getFunctionLimit(
+        envVars,
+        "RUN_MAX_QUERY_CALLS",
+        DEFAULT_FUNCTION_LIMITS.run.maxQueryCalls
+      ),
+      maxConcurrentQueryCalls: getFunctionLimit(
+        envVars,
+        "RUN_MAX_CONCURRENT_QUERY_CALLS",
+        DEFAULT_FUNCTION_LIMITS.run.maxConcurrentQueryCalls
+      ),
+      maxQueryResponseBytes: getFunctionLimit(
+        envVars,
+        "RUN_MAX_QUERY_RESPONSE_BYTES",
+        DEFAULT_FUNCTION_LIMITS.run.maxQueryResponseBytes
+      ),
+      maxQueryResponseDepth: getFunctionLimit(
+        envVars,
+        "RUN_MAX_QUERY_RESPONSE_DEPTH",
+        DEFAULT_FUNCTION_LIMITS.run.maxQueryResponseDepth
+      ),
+      maxOutputBytes: getFunctionLimit(
+        envVars,
+        "RUN_MAX_OUTPUT_BYTES",
+        DEFAULT_FUNCTION_LIMITS.run.maxOutputBytes
+      ),
+      maxOutputDepth: getFunctionLimit(
+        envVars,
+        "RUN_MAX_OUTPUT_DEPTH",
+        DEFAULT_FUNCTION_LIMITS.run.maxOutputDepth
+      ),
+      maxLogEntries: getFunctionLimit(
+        envVars,
+        "RUN_MAX_LOG_ENTRIES",
+        DEFAULT_FUNCTION_LIMITS.run.maxLogEntries
+      ),
+      maxLogBytes: getFunctionLimit(
+        envVars,
+        "RUN_MAX_LOG_BYTES",
+        DEFAULT_FUNCTION_LIMITS.run.maxLogBytes
+      ),
+      maxLogEntryBytes: getFunctionLimit(
+        envVars,
+        "RUN_MAX_LOG_ENTRY_BYTES",
+        DEFAULT_FUNCTION_LIMITS.run.maxLogEntryBytes
+      ),
+    },
+    service: {
+      maxConcurrentRuns: getFunctionLimit(
+        envVars,
+        "SERVICE_MAX_CONCURRENT_RUNS",
+        DEFAULT_FUNCTION_LIMITS.service.maxConcurrentRuns
+      ),
+      maxRunSummaryErrorMessageLength: getFunctionLimit(
+        envVars,
+        "SERVICE_MAX_RUN_SUMMARY_ERROR_MESSAGE_LENGTH",
+        DEFAULT_FUNCTION_LIMITS.service.maxRunSummaryErrorMessageLength
+      ),
+      maxRunSummaryBytes: getFunctionLimit(
+        envVars,
+        "SERVICE_MAX_RUN_SUMMARY_BYTES",
+        DEFAULT_FUNCTION_LIMITS.service.maxRunSummaryBytes
+      ),
+    },
+  })
 
 const DEFAULTS = {
   QUERY_THREAD_TIMEOUT: 15000,
@@ -133,6 +260,7 @@ const environment = {
   SELF_HOSTED: process.env.SELF_HOSTED,
   BUDIBASE_FUNCTIONS_ENABLED: process.env.BUDIBASE_FUNCTIONS_ENABLED,
   FUNCTIONS_RUNNER_URL: process.env.FUNCTIONS_RUNNER_URL,
+  FUNCTIONS_LIMITS: getConfiguredFunctionLimits(),
   HTTP_MB_LIMIT: process.env.HTTP_MB_LIMIT,
   HTTP_SERVER_TIMEOUT_MS: process.env.HTTP_SERVER_TIMEOUT_MS,
   HTTP_HEADERS_TIMEOUT_MS: process.env.HTTP_HEADERS_TIMEOUT_MS,

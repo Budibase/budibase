@@ -1,22 +1,32 @@
-<script>
+<script lang="ts">
   import Button from "../Button/Button.svelte"
-  import Popover from "../Popover/Popover.svelte"
+  import Popover, { type PopoverAPI } from "../Popover/Popover.svelte"
   import Menu from "../Menu/Menu.svelte"
   import MenuItem from "../Menu/Item.svelte"
+  import type { PopoverAlignment } from "../constants"
 
-  export let buttons
-  export let text = "Action"
-  export let size = "M"
-  export let align = "left"
-  export let offset
-  export let animate
-  export let quiet = false
+  type ButtonSize = "XXS" | "XS" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL"
 
-  let anchor
-  let popover
+  interface CollapsedButton {
+    icon?: string
+    text?: string
+    disabled?: boolean
+    onClick?: () => void | Promise<void>
+  }
 
-  const handleClick = async button => {
-    popover.hide()
+  export let buttons: CollapsedButton[]
+  export let text: string = "Action"
+  export let size: ButtonSize = "M"
+  export let align: PopoverAlignment | `${PopoverAlignment}` = "left"
+  export let offset: number | undefined = undefined
+  export let animate: boolean | undefined = undefined
+  export let quiet: boolean = false
+
+  let anchor: HTMLButtonElement | undefined
+  let popover: PopoverAPI | undefined
+
+  const handleClick = async (button: CollapsedButton) => {
+    popover?.hide()
     await button.onClick?.()
   }
 </script>

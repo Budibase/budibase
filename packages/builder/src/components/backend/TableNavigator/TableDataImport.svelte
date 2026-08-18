@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
   import { Select, Icon, Layout, Label } from "@budibase/bbui"
   import { FIELDS } from "@/constants/backend"

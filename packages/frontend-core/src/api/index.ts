@@ -13,7 +13,7 @@ import { Header } from "@budibase/shared-core"
 import { ApiVersion } from "../constants"
 import { buildAnalyticsEndpoints } from "./analytics"
 import { buildAIEndpoints } from "./ai"
-import { buildAppEndpoints } from "./app"
+import { buildAppEndpoints } from "./workspace"
 import { buildAttachmentEndpoints } from "./attachments"
 import { buildAuthEndpoints } from "./auth"
 import { buildAutomationEndpoints } from "./automations"
@@ -58,6 +58,7 @@ import { buildFeatureFlagEndpoints } from "./features"
 import { buildNavigationEndpoints } from "./navigation"
 import { buildWorkspaceAppEndpoints } from "./workspaceApps"
 import { buildResourceEndpoints } from "./resource"
+import { buildRestTemplateEndpoints } from "./restTemplates"
 import { buildDeploymentEndpoints } from "./deploy"
 import { buildWorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { buildWorkspaceHomeEndpoints } from "./workspaceHome"
@@ -282,7 +283,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     getAppID: (): string => {
       let headers: Headers = {}
       config?.attachHeaders?.(headers)
-      return headers?.[Header.APP_ID]
+      return headers?.[Header.WORKSPACE_ID]
     },
   }
 
@@ -309,6 +310,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     ...buildScreenEndpoints(API),
     ...buildTableEndpoints(API),
     ...buildTemplateEndpoints(API),
+    ...buildRestTemplateEndpoints(API),
     ...buildUserEndpoints(API),
     ...buildViewEndpoints(API),
     ...buildSelfEndpoints(API),

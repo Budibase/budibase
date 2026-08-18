@@ -1,5 +1,6 @@
 import { auth } from "@budibase/backend-core"
 import { aiTestsEnabled } from "../../middleware/aiTestsEnabled"
+import { knowledgeSearchConfigured } from "../../middleware/knowledgeSearchConfigured"
 import * as ai from "../controllers/ai"
 import {
   builderAdminRoutes,
@@ -8,6 +9,7 @@ import {
 } from "./endpointGroups"
 import {
   connectAgentSharePointSiteValidator,
+  createAgentSlackAppValidator,
   createAgentOperationValidator,
   createAgentValidator,
   provisionAgentSlackChannelValidator,
@@ -77,6 +79,12 @@ builderAdminRoutes
     ai.provisionAgentSlackChannel
   )
   .post(
+    "/api/agent/:agentId/slack/app/create",
+    createAgentSlackAppValidator(),
+    ai.createAgentSlackApp
+  )
+  .get("/api/agent/:agentId/slack/manifest", ai.downloadAgentSlackManifest)
+  .post(
     "/api/agent/:agentId/telegram/toggle",
     toggleAgentTelegramDeploymentValidator(),
     ai.toggleAgentTelegramDeployment
@@ -109,17 +117,18 @@ aiTestBuilderAdminRoutes
   )
   .get("/api/agent/:agentId/tests/run/:runId", ai.fetchAgentTestRun)
 
+const knowledgeSearchRoutes = endpointGroupList.group(
+  auth.builderOrAdmin,
+  knowledgeSearchConfigured
+)
+knowledgeSearchRoutes.lockMiddleware()
+
 builderAdminRoutes
   .get(
     "/api/agent/knowledge-sources/sharepoint/connect",
     ai.startSharePointAuth
   )
   .get("/api/agent/:agentId/knowledge", ai.fetchAgentKnowledgeIndex)
-  .post("/api/agent/:agentId/operations/:operationId/files", ai.uploadAgentFile)
-  .delete(
-    "/api/agent/:agentId/operations/:operationId/files/:fileId",
-    ai.deleteAgentFile
-  )
   .get(
     "/api/agent/:agentId/operations/:operationId/files/:fileId/url",
     ai.fetchAgentFileUrl
@@ -129,8 +138,15 @@ builderAdminRoutes
     ai.fetchAgentKnowledgeSourceOptions
   )
   .get(
-    "/api/agent/:agentId/operations/:operationId/knowledge-sources/sharepoint/entries/all",
-    ai.fetchAgentKnowledgeSourceAllEntries
+    "/api/agent/:agentId/operations/:operationId/knowledge-sources/sharepoint/entries",
+    ai.fetchAgentKnowledgeSourceEntries
+  )
+
+knowledgeSearchRoutes
+  .post("/api/agent/:agentId/operations/:operationId/files", ai.uploadAgentFile)
+  .delete(
+    "/api/agent/:agentId/operations/:operationId/files/:fileId",
+    ai.deleteAgentFile
   )
   .post(
     "/api/agent/:agentId/operations/:operationId/knowledge-sources/sharepoint/sites",
@@ -160,3 +176,4 @@ publicRoutes.get(
   "/api/agent/knowledge-sources/sharepoint/callback",
   ai.completeSharePointAuth
 )
+publicRoutes.get("/api/agent/slack/oauth/callback", ai.completeSlackOAuth)

@@ -1,8 +1,11 @@
 import { InviteUsersResponse, OIDCUser, User } from "@budibase/types"
+import { randomUUID } from "crypto"
 
 import {
   accounts as _accounts,
+  cache,
   events,
+  middleware,
   tenancy,
   withEnv,
 } from "@budibase/backend-core"
@@ -402,6 +405,60 @@ describe("/api/global/users", () => {
       expect(user?.roles?.[workspaceId]).toBe("CREATOR")
       expect(user?.builder?.creator).toBe(true)
       expect(user?.builder?.apps).toEqual([workspaceId])
+    })
+
+    it("reconciles an OIDC login with a pending invite for the same email, regardless of casing or email verification", async () => {
+      const email = structures.users.newEmail()
+      const workspaceId = "app_oidc_invite_workspace"
+      const request = [
+        {
+          email,
+          userInfo: {
+            apps: { [workspaceId]: "BASIC" },
+          },
+        },
+      ]
+
+      await config.api.users.sendMultiUserInvite(request)
+
+      // different casing, no email_verified claim
+      const uppercaseEmail = email.toUpperCase()
+      const ssoUserId = `oidc-test-${randomUUID()}`
+      const verify: any = middleware.oidc.buildVerifyFn(userSdk.db.save, false)
+
+      const { err, user: loggedInUser } = await config.doInTenant(
+        () =>
+          new Promise<{ err: any; user: any }>(resolve => {
+            verify(
+              "https://issuer.example.com",
+              { id: ssoUserId, _json: { email: uppercaseEmail } } as any,
+              { id: ssoUserId, emails: [] } as any,
+              {} as any,
+              "id-token",
+              "access-token",
+              "refresh-token",
+              {},
+              (err: any, user: any) => resolve({ err, user })
+            )
+          })
+      )
+
+      expect(err).toBeFalsy()
+      expect(loggedInUser.email).toBe(email.toLowerCase())
+      expect(loggedInUser.roles?.[workspaceId]).toBe("BASIC")
+
+      // a single reconciled user, invite consumed
+      const remainingInvites = await config.doInTenant(() =>
+        cache.invite.getInviteCodes()
+      )
+      expect(
+        remainingInvites.some(
+          invite => invite.email.toLowerCase() === email.toLowerCase()
+        )
+      ).toBe(false)
+      expect(events.user.inviteAccepted).toHaveBeenCalledWith(
+        expect.objectContaining({ email: email.toLowerCase() })
+      )
     })
 
     it("should not be able to generate an invitation for existing user", async () => {

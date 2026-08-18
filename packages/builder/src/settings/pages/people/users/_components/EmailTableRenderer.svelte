@@ -1,8 +1,14 @@
-<script>
+<script lang="ts">
   import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
 
-  export let value
-  export let row
+  interface Props {
+    value: string
+    row: {
+      scimInfo?: { isSync: boolean }
+    }
+  }
+
+  let { value, row }: Props = $props()
 </script>
 
 <span title={value} class="email">

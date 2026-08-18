@@ -13,7 +13,7 @@ function ctx(opts?: { appId: string }) {
     },
   } as unknown as UserCtx
   if (opts?.appId) {
-    ctx.request.headers[Header.APP_ID] = opts.appId
+    ctx.request.headers[Header.WORKSPACE_ID] = opts.appId
   }
   return ctx
 }

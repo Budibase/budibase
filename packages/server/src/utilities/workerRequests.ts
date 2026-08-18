@@ -108,7 +108,7 @@ export async function sendSmtpEmail({
   attachments,
 }: {
   to: string
-  from: string
+  from?: string
   replyTo?: string
   subject: string
   contents: string

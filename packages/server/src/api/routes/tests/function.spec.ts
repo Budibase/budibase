@@ -1,6 +1,7 @@
 import { context, features } from "@budibase/backend-core"
 import {
   DocumentType,
+  DEFAULT_FUNCTION_LIMITS,
   FeatureFlag,
   type FunctionDocument,
   prefixed,
@@ -229,9 +230,17 @@ export default async function (): Promise<FunctionResult> {
         ],
       })
 
-      const { function: built } = await config.api.function.build(created._id, {
-        _rev: created._rev!,
-      })
+      const { function: buildSummary } = await config.api.function.build(
+        created._id,
+        {
+          _rev: created._rev!,
+        }
+      )
+
+      expect(buildSummary.readiness).toBe("ready")
+      expect(buildSummary).not.toHaveProperty("artifact")
+
+      const { function: built } = await config.api.function.find(created._id)
 
       expect(built.readiness).toBe("ready")
       expect(built.lastBuild).toEqual(
@@ -243,11 +252,18 @@ export default async function (): Promise<FunctionResult> {
       )
       expect(built.artifact).toEqual(
         expect.objectContaining({
-          compiledJavaScript: expect.stringContaining(
-            "__budibaseFunctionModule"
+          capabilityIds: built.capabilities.map(
+            capability => capability.capabilityId
           ),
+          compiledJavaScript: expect.stringContaining("as default"),
         })
       )
+
+      const { functions } = await config.api.function.fetch()
+      const listed = functions.find(fn => fn._id === built._id)
+      expect(listed).not.toHaveProperty("source")
+      expect(listed).not.toHaveProperty("artifact")
+      expect(listed).not.toHaveProperty("lastBuild")
 
       const { function: updated } = await config.api.function.update(
         built._id,
@@ -278,9 +294,10 @@ export default async function (): Promise<FunctionResult> {
           },
         ],
       })
-      const { function: built } = await config.api.function.build(created._id, {
+      await config.api.function.build(created._id, {
         _rev: created._rev!,
       })
+      const { function: built } = await config.api.function.find(created._id)
       const { function: invalid } = await config.api.function.update(
         built._id,
         {
@@ -291,12 +308,14 @@ export default async function (): Promise<FunctionResult> {
         }
       )
 
-      const { function: failed } = await config.api.function.build(
+      const { function: failedSummary } = await config.api.function.build(
         invalid._id,
         { _rev: invalid._rev! }
       )
 
-      expect(failed.readiness).toBe("build_failed")
+      expect(failedSummary.readiness).toBe("build_failed")
+      expect(failedSummary).not.toHaveProperty("artifact")
+      const { function: failed } = await config.api.function.find(invalid._id)
       expect(failed.artifact).toEqual(built.artifact)
       expect(failed.lastBuild).toEqual(
         expect.objectContaining({
@@ -306,6 +325,51 @@ export default async function (): Promise<FunctionResult> {
               code: "FUNCTION_ENTRYPOINT_INVALID",
             }),
           ]),
+        })
+      )
+    })
+  })
+
+  it("records a failed build when linked query declarations cannot be resolved", async () => {
+    await withFunctionsEnabled(async () => {
+      const query = await createQuery()
+      const { function: created } = await config.api.function.create({
+        name: "Missing declaration Function",
+        source: validSource,
+        capabilities: [
+          {
+            queryId: query._id!,
+            datasourceAlias: "Inventory",
+            queryAlias: "findRooms",
+          },
+        ],
+      })
+      const { function: built } = await config.api.function.build(created._id, {
+        _rev: created._rev!,
+      })
+      const builtDocument = (await config.api.function.find(built._id)).function
+
+      await config.api.query.delete(query)
+
+      const { function: failedSummary } = await config.api.function.build(
+        built._id,
+        { _rev: builtDocument._rev! }
+      )
+
+      expect(failedSummary.readiness).toBe("build_failed")
+      const { function: failed } = await config.api.function.find(built._id)
+      expect(failed.artifact).toEqual(builtDocument.artifact)
+      expect(failed.lastBuild).toEqual(
+        expect.objectContaining({
+          status: "failed",
+          sourceHash: builtDocument.artifact?.sourceHash,
+          declarationsHash: builtDocument.artifact?.declarationsHash,
+          diagnostics: [
+            expect.objectContaining({
+              code: "FUNCTION_DECLARATION_ERROR",
+              message: `Query '${query._id}' not found.`,
+            }),
+          ],
         })
       )
     })
@@ -374,15 +438,14 @@ export default async function (): Promise<FunctionResult> {
       })
       expect(rebuilt.readiness).toBe("ready")
 
+      const rebuiltDocument = (await config.api.function.find(rebuilt._id))
+        .function
       await config.doInContext(config.getDevWorkspaceId(), async () => {
-        const current = await context
-          .getWorkspaceDB()
-          .get<FunctionDocument>(rebuilt._id)
         await context.getWorkspaceDB().put({
-          ...current,
+          ...rebuiltDocument,
           artifact: {
-            ...current.artifact!,
-            sourceHash: "tampered",
+            ...rebuiltDocument.artifact!,
+            capabilityIds: ["tampered-capability"],
           },
         })
       })
@@ -519,7 +582,18 @@ export default async function (): Promise<FunctionResult> {
       expect(created.lastBuild).toBeUndefined()
 
       const { functions } = await config.api.function.fetch()
-      expect(functions.map(fn => fn._id)).toContain(created._id)
+      const listed = functions.find(fn => fn._id === created._id)
+      expect(listed).toEqual(
+        expect.objectContaining({
+          _id: created._id,
+          _rev: created._rev,
+          name: created.name,
+          appId: created.appId,
+          readiness: "build_required",
+        })
+      )
+      expect(listed).not.toHaveProperty("source")
+      expect(listed).not.toHaveProperty("capabilities")
 
       const { function: fetched } = await config.api.function.find(created._id)
       expect(fetched.source).toBe("export default async function {")
@@ -570,19 +644,42 @@ export default async function (): Promise<FunctionResult> {
       )
 
       const query = await createQuery()
+      // JavaScript's `$` anchor can match before a trailing line terminator.
+      for (const lineTerminator of ["\r", "\n", "\u2028", "\u2029"]) {
+        await config.api.function.create(
+          {
+            name: "Invalid alias",
+            source: "",
+            capabilities: [
+              {
+                queryId: query._id!,
+                datasourceAlias: `Inventory${lineTerminator}`,
+                queryAlias: "findRooms",
+              },
+            ],
+          },
+          { status: 400 }
+        )
+      }
+    })
+  })
+
+  it("enforces the source limit using UTF-8 byte length", async () => {
+    await withFunctionsEnabled(async () => {
+      const source = "é".repeat(
+        Math.floor(DEFAULT_FUNCTION_LIMITS.compile.maxSourceBytes / 2) + 1
+      )
+
       await config.api.function.create(
         {
-          name: "Invalid alias",
-          source: "",
-          capabilities: [
-            {
-              queryId: query._id!,
-              datasourceAlias: "Invalid alias",
-              queryAlias: "findRooms",
-            },
-          ],
+          name: "Oversized source",
+          source,
+          capabilities: [],
         },
-        { status: 400 }
+        {
+          status: 400,
+          body: { message: "Function source exceeds the maximum size." },
+        }
       )
     })
   })
@@ -670,6 +767,101 @@ export default async function (): Promise<FunctionResult> {
           message: "Function is used by: Room workflow.",
         },
       })
+    })
+  })
+  it("blocks publishing enabled automations until their Functions are ready and keeps the published Function snapshot unchanged after development edits", async () => {
+    await withFunctionsEnabled(async () => {
+      const query = await createQuery()
+      const { function: created } = await config.api.function.create({
+        name: "Published lookup",
+        source: validSource,
+        capabilities: [
+          {
+            queryId: query._id!,
+            datasourceAlias: "Inventory",
+            queryAlias: "findRooms",
+          },
+        ],
+      })
+
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        await context.getWorkspaceDB().put({
+          _id: generateAutomationID(),
+          name: "Published workflow",
+          appId: config.getDevWorkspaceId(),
+          disabled: false,
+          definition: {
+            trigger: {},
+            steps: [
+              {
+                stepId: "EXECUTE_FUNCTION",
+                inputs: { functionId: created._id },
+              },
+            ],
+          },
+        })
+      })
+
+      await config.api.workspace.publish(config.getDevWorkspaceId(), {
+        status: 500,
+        body: {
+          message: expect.stringContaining("Build required"),
+        },
+      })
+
+      await config.api.function.build(created._id, {
+        _rev: created._rev!,
+      })
+      const { function: built } = await config.api.function.find(created._id)
+      await config.api.query.save({
+        ...query,
+        parameters: [
+          ...(query.parameters || []),
+          { name: "roomType", default: "" },
+        ],
+      })
+
+      await config.api.workspace.publish(config.getDevWorkspaceId(), {
+        status: 500,
+        body: {
+          message: expect.stringContaining("Function query bindings changed"),
+        },
+      })
+
+      await config.api.function.build(built._id, {
+        _rev: built._rev!,
+      })
+      const { function: rebuilt } = await config.api.function.find(built._id)
+      await config.api.workspace.publish(config.getDevWorkspaceId())
+
+      const published = await context.doInWorkspaceContext(
+        config.getProdWorkspaceId(),
+        async () => await sdk.functions.get(rebuilt._id)
+      )
+      expect(published?.artifact).toEqual(rebuilt.artifact)
+
+      await config.api.function.update(rebuilt._id, {
+        _rev: rebuilt._rev!,
+        name: rebuilt.name,
+        source: `${rebuilt.source}\n// development edit`,
+        capabilities: toCapabilityInputs(rebuilt),
+      })
+
+      const unchangedPublished = await context.doInWorkspaceContext(
+        config.getProdWorkspaceId(),
+        async () => await sdk.functions.get(rebuilt._id)
+      )
+      expect(unchangedPublished?.source).toBe(rebuilt.source)
+
+      const status = await config.api.deploy.publishStatus()
+      expect(status.functions[rebuilt._id]).toEqual(
+        expect.objectContaining({
+          published: true,
+          name: rebuilt.name,
+          unpublishedChanges: true,
+          state: "published",
+        })
+      )
     })
   })
 })

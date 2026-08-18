@@ -17,9 +17,7 @@ import sdk from "../../sdk"
 export const fetch = async (ctx: UserCtx<void, FetchFunctionsResponse>) => {
   const functions = await sdk.functions.fetch()
   ctx.body = {
-    functions: await Promise.all(
-      functions.map(fn => sdk.functions.toFunctionResponse(fn))
-    ),
+    functions: await sdk.functions.toFunctionSummaries(functions),
   }
 }
 
@@ -44,7 +42,7 @@ export const build = async (
 ) => {
   const fn = await sdk.functions.build(ctx.params.id, ctx.request.body._rev)
   ctx.body = {
-    function: await sdk.functions.toFunctionResponse(fn),
+    function: await sdk.functions.toFunctionSummary(fn),
   }
 }
 
