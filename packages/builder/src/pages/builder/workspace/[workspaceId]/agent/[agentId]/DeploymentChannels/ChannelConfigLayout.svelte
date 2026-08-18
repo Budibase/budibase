@@ -11,6 +11,7 @@
     onAction,
     fields,
     response,
+    additionalActions,
   }: {
     statusPositive: boolean
     positiveStatusLabel: string
@@ -20,6 +21,7 @@
     onAction: () => void | Promise<void>
     fields: Snippet
     response: Snippet
+    additionalActions?: Snippet
   } = $props()
 </script>
 
@@ -39,6 +41,11 @@
   </div>
 
   <div class="actions">
+    {#if additionalActions}
+      <div class="additional-actions">
+        {@render additionalActions()}
+      </div>
+    {/if}
     <Button cta on:click={() => onAction()} disabled={actionDisabled}>
       {actionLabel}
     </Button>
@@ -76,7 +83,13 @@
 
   .actions {
     display: flex;
-    justify-content: flex-end;
+    gap: var(--spacing-s);
+    justify-content: space-between;
+  }
+
+  .additional-actions {
+    display: flex;
+    gap: var(--spacing-s);
   }
 
   @media (max-width: 900px) {

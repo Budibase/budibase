@@ -1,4 +1,4 @@
-import { context, features } from "@budibase/backend-core"
+import { context, features, isHTTPError } from "@budibase/backend-core"
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
@@ -432,8 +432,9 @@ const createTeamsMessageHandler = ({
       })
     } catch (error) {
       console.error("Teams webhook processing failed", error)
-      const msg =
-        error instanceof Error ? error.message : TEAMS_FALLBACK_ERROR_MESSAGE
+      const msg = isHTTPError(error)
+        ? error.message
+        : TEAMS_FALLBACK_ERROR_MESSAGE
       await editOrPostTextReply(msg)
     }
   }

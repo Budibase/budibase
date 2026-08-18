@@ -391,6 +391,7 @@
     isIndependentCollection || isSharedCollection
       ? activeChildTemplate?.specs?.[0]
       : template?.specs?.[0]
+  $: activeRestTemplateId = (activeChildTemplate ?? template)?.id
 
   $: if (
     spec &&
@@ -399,7 +400,7 @@
     !endpointLoadError &&
     !(editableQuery?._id && editableQuery?.restTemplateMetadata)
   ) {
-    loadEndpoints(spec)
+    loadEndpoints(spec, activeRestTemplateId)
   }
 
   $: endpointOptions = buildEndpointOptions(endpoints, selectedEndpointOption)
@@ -493,8 +494,11 @@
     }
   }
 
-  const loadEndpoints = async (spec?: RestTemplateSpec) => {
-    const request = getRestTemplateImportInfoRequest(spec)
+  const loadEndpoints = async (
+    spec?: RestTemplateSpec,
+    templateId?: RestTemplateId
+  ) => {
+    const request = getRestTemplateImportInfoRequest(spec, templateId)
     if (!request) {
       return
     }
@@ -1669,7 +1673,7 @@
     position: relative;
   }
   .request-top {
-    z-index: 2;
+    z-index: 101;
   }
   .request-bottom {
     z-index: 1;

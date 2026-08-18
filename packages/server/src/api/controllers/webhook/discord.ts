@@ -1,4 +1,9 @@
-import { context, features, HTTPError } from "@budibase/backend-core"
+import {
+  context,
+  features,
+  HTTPError,
+  isHTTPError,
+} from "@budibase/backend-core"
 import { ChatCommands, SupportedChatCommands } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
@@ -12,7 +17,7 @@ import {
   FeatureFlag,
 } from "@budibase/types"
 import { Chat, type ActionEvent } from "chat"
-import { createDiscordAdapter } from "@chat-adapter/discord"
+import { createSafeDiscordAdapter } from "./discordAdapter"
 import sdk from "../../../sdk"
 import { escalationProcessor } from "../../../escalation/processor"
 import { pickLatestConversation, resolveEscalationWorkspaceId } from "./utils"
@@ -109,7 +114,11 @@ export async function discordWebhook(
       const chat = new Chat({
         userName: "Budibase",
         adapters: {
-          discord: createDiscordAdapter({ applicationId, publicKey, botToken }),
+          discord: createSafeDiscordAdapter({
+            applicationId,
+            publicKey,
+            botToken,
+          }),
         },
         state: await getDiscordState(),
         logger: "silent",
@@ -198,10 +207,9 @@ export async function discordWebhook(
             })
           } catch (error) {
             console.error("Discord webhook processing failed", error)
-            const msg =
-              error instanceof Error
-                ? error.message
-                : "Sorry, something went wrong while processing your request."
+            const msg = isHTTPError(error)
+              ? error.message
+              : "Sorry, something went wrong while processing your request."
             try {
               await event.channel.post(msg)
             } catch {

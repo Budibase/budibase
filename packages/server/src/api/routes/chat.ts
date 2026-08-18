@@ -1,6 +1,7 @@
 import * as ai from "../controllers/ai"
-import { permissions } from "@budibase/backend-core"
+import { auth, permissions } from "@budibase/backend-core"
 import { authorizedMiddleware as authorized } from "../../middleware/authorized"
+import { escalationEnabled } from "../../middleware/escalationEnabled"
 import {
   builderAdminRoutes,
   endpointGroupList,
@@ -15,10 +16,16 @@ const userRoutes = endpointGroupList.group({
   first: false,
 })
 
-builderAdminRoutes
+const escalationSupportRoutes = endpointGroupList
+  .group(auth.builderOrAdmin)
+  .addGroupMiddleware(escalationEnabled)
+
+escalationSupportRoutes
   .get("/api/chat-links", ai.listChatIdentityLinks)
   .get("/api/slack-channels", ai.listSlackChannels)
   .get("/api/teams-channels", ai.listMSTeamsChannels)
+
+builderAdminRoutes
   .put("/api/chatapps/:chatAppId", ai.updateChatApp)
   .post("/api/chatapps/:chatAppId/agent", ai.setChatAppAgent)
 

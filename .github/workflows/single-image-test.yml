@@ -1,0 +1,52 @@
+name: Single Image Validation
+
+on:
+  pull_request:
+    paths:
+      - "hosting/single/**"
+      - "scripts/build-single-image.sh"
+      - "scripts/test-single-image.sh"
+      - ".github/workflows/single-image-test.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  HUSKY: 0
+
+jobs:
+  structure-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+
+      - name: Restore hoisted node_modules cache
+        id: hoisted-modules-cache-restore
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+
+      - name: Install dependencies
+        if: steps.hoisted-modules-cache-restore.outputs.cache-hit != 'true'
+        run: yarn --frozen-lockfile
+
+      - name: Build the single image
+        run: yarn build:docker:single
+
+      - name: Run container structure tests
+        run: yarn test:docker:single
