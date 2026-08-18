@@ -180,7 +180,7 @@
     padding: 64px;
     display: flex;
     flex-direction: row;
-    justify-content: center;
+    justify-content: safe center;
     align-items: flex-start;
   }
   .container {
