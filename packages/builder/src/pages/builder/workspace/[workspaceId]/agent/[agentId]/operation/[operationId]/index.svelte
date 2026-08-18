@@ -76,6 +76,7 @@
   let removeToolDialog: ConfirmDialog | undefined = $state()
   let configureToolModal: ConfigureOperationToolModal | undefined = $state()
   let toolToRemove: AgentTool | undefined = $state()
+  let restoreToolConfiguration = $state(false)
   let toolToAdd: AgentTool | undefined = $state()
   let toolInsertPosition: { start: number; end: number } | undefined = $state()
 
@@ -424,8 +425,12 @@
     saveOperation()
   }
 
-  const confirmRemoveTool = (tool: AgentTool) => {
+  const confirmRemoveTool = (
+    tool: AgentTool,
+    returnToConfiguration = false
+  ) => {
     toolToRemove = tool
+    restoreToolConfiguration = returnToConfiguration
     removeToolDialog?.show()
   }
 
@@ -435,10 +440,17 @@
     }
     removeTool(toolToRemove)
     toolToRemove = undefined
+    restoreToolConfiguration = false
   }
 
-  const clearToolToRemove = () => {
+  const handleRemoveToolClose = () => {
+    const tool = toolToRemove
+    const shouldRestore = restoreToolConfiguration
     toolToRemove = undefined
+    restoreToolConfiguration = false
+    if (tool && shouldRestore) {
+      configureTool(tool)
+    }
   }
 
   const openToolMenu = (event: MouseEvent, tool: AgentTool) => {
@@ -456,15 +468,6 @@
       ],
       { x: event.clientX, y: event.clientY }
     )
-  }
-
-  const handleToolActions = (event: MouseEvent, tool: AgentTool) => {
-    event.stopPropagation()
-    if ($featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]) {
-      configureTool(tool)
-      return
-    }
-    openToolMenu(event, tool)
   }
 
   const getToolApprovalCount = (toolName: string) =>
@@ -778,6 +781,15 @@
                           </div>
                         </div>
                       {/if}
+                      {#if !$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                        <button
+                          class="tool-actions"
+                          aria-label={`Actions for ${tool.readableBinding}`}
+                          onclick={event => openToolMenu(event, tool)}
+                        >
+                          <Icon name="dots-three" size="XS" />
+                        </button>
+                      {/if}
                     </div>
                   </div>
                 {:else}
@@ -814,8 +826,7 @@
     okText="Remove"
     warning={true}
     onOk={handleRemoveToolConfirm}
-    onCancel={clearToolToRemove}
-    onClose={clearToolToRemove}
+    onClose={handleRemoveToolClose}
   >
     {#if toolToRemove?.readableBinding}
       Remove <b>{toolToRemove.readableBinding}</b> from this operation? Its binding
@@ -828,7 +839,7 @@
       bind:this={configureToolModal}
       {agentId}
       onSave={saveToolConfiguration}
-      onRemove={confirmRemoveTool}
+      onRemove={tool => confirmRemoveTool(tool, true)}
     />
   {/if}
 
