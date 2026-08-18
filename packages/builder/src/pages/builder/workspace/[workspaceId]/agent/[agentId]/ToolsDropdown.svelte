@@ -28,6 +28,7 @@
   }: Props = $props()
 
   let toolsMenu: ActionMenu | undefined
+  let toolsMenuElement: HTMLDivElement | undefined
   let searchInput: HTMLInputElement | undefined
 
   const focusSearch = async () => {
@@ -45,6 +46,44 @@
     openWebSearchConfig()
   }
 
+  const handleKeydown = (event: KeyboardEvent) => {
+    const items = Array.from(
+      toolsMenuElement?.querySelectorAll<HTMLElement>(
+        '[role="menuitem"]:not(.is-disabled)'
+      ) || []
+    )
+    const focusableElements = searchInput ? [searchInput, ...items] : items
+    const activeElement = document.activeElement as HTMLElement
+    const activeIndex = focusableElements.indexOf(activeElement)
+    const activeItemIndex = items.indexOf(activeElement)
+
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      if (!focusableElements.length) {
+        return
+      }
+      event.preventDefault()
+      const direction = event.key === "ArrowDown" ? 1 : -1
+      let nextIndex
+      if (activeIndex === -1) {
+        nextIndex = direction === 1 ? 0 : focusableElements.length - 1
+      } else {
+        nextIndex =
+          (activeIndex + direction + focusableElements.length) %
+          focusableElements.length
+      }
+      focusableElements[nextIndex].focus()
+    } else if (
+      (event.key === "Enter" || event.key === " ") &&
+      activeItemIndex >= 0
+    ) {
+      event.preventDefault()
+      items[activeItemIndex].click()
+    } else if (event.key === "Escape") {
+      event.preventDefault()
+      toolsMenu?.hide()
+    }
+  }
+
   export const show = () => toolsMenu?.show()
 </script>
 
@@ -60,7 +99,12 @@
     <Button secondary size="S" icon="plus-circle">Add tools</Button>
   </div>
 
-  <div class="tools-menu">
+  <div
+    class="tools-menu"
+    role="presentation"
+    bind:this={toolsMenuElement}
+    onkeydown={handleKeydown}
+  >
     <div class="tools-menu-header">
       <input
         bind:this={searchInput}
