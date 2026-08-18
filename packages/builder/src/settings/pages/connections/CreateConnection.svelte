@@ -1,120 +1,201 @@
 <script lang="ts">
-  import { restTemplates } from "@/stores/builder/restTemplates"
+  import { Button, Layout, Modal, Search, Table } from "@budibase/bbui"
   import { bb } from "@/stores/bb"
-  import { Heading, Button, CollapsibleSearch } from "@budibase/bbui"
+  import { restTemplates } from "@/stores/builder/restTemplates"
   import RouteActions from "@/settings/components/RouteActions.svelte"
+  import ConnectRestTemplateRenderer from "./_components/ConnectRestTemplateRenderer.svelte"
+  import ImportRestTemplateModal from "./_components/ImportRestTemplateModal.svelte"
+  import RestTemplateActionsRenderer from "./_components/RestTemplateActionsRenderer.svelte"
+  import RestTemplateIconRenderer from "./_components/RestTemplateIconRenderer.svelte"
+
+  let searchValue = ""
+  let templateModal: Modal
+  let modalKey = 0
+
+  const customRenderers = [
+    { column: "icon", component: RestTemplateIconRenderer },
+    { column: "connect", component: ConnectRestTemplateRenderer },
+  ]
+  const importedRenderers = [
+    ...customRenderers,
+    { column: "more", component: RestTemplateActionsRenderer },
+  ]
+  const importedSchema = {
+    icon: { width: "40px" },
+    name: { width: "200px" },
+    description: { width: "1fr" },
+    connect: { width: "100px", align: "Right" },
+    more: { width: "40px", align: "Right" },
+  }
+  const prebuiltSchema = {
+    icon: { width: "40px" },
+    name: { width: "200px" },
+    description: { width: "1fr" },
+    connect: { width: "100px", align: "Right" },
+  }
 
   $: locked = $bb.settings.locked
 
-  let searchValue: string = ""
-
-  $: connectionCards = restTemplates.flatTemplates
-    .filter(t => {
-      if (!searchValue) return true
-      return t.name.toLowerCase().includes(searchValue.toLowerCase())
-    })
+  $: importedTemplates = $restTemplates.templates
+    .filter(template => template.custom)
+    .sort((a, b) => a.name.localeCompare(b.name))
+  $: filteredImportedTemplates = importedTemplates.filter(template =>
+    searchValue
+      ? template.name.toLowerCase().includes(searchValue.toLowerCase())
+      : true
+  )
+  $: prebuiltTemplates = $restTemplates.templates
+    .filter(template => !template.custom)
+    .filter(template =>
+      searchValue
+        ? template.name.toLowerCase().includes(searchValue.toLowerCase())
+        : true
+    )
     .sort((a, b) => a.name.localeCompare(b.name))
 
-  const handleSelect = (id: string) => {
-    bb.settings(`/connections/apis/new/${id}`)
+  const importSpec = () => {
+    modalKey += 1
+    templateModal.show()
   }
 </script>
 
-<div class="connections">
+<Layout noPadding gap="XS">
   <RouteActions>
-    <div class="header-buttons">
-      <CollapsibleSearch
-        placeholder="Search"
-        value={searchValue}
-        on:change={event => (searchValue = event.detail)}
-      />
-      {#if locked}
-        <Button secondary on:click={() => bb.clearSettings()}>Cancel</Button>
-      {:else}
-        <Button
-          on:click={() => {
-            bb.settings("/connections/apis/new")
-          }}
-          icon="plus"
-        >
-          Create custom
-        </Button>
-      {/if}
-    </div>
-  </RouteActions>
-  <div class="connection-group">
-    <Heading size="XS">APIs</Heading>
-    <div class="grid">
-      {#each connectionCards as card (card.id)}
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <div class="connection" on:click={() => handleSelect(card.id)}>
-          <div class="connection-icon">
-            <img src={card.icon} alt={card.name} />
-          </div>
-          {card.name}
+    {#if locked}
+      <Button secondary on:click={() => bb.clearSettings()}>Cancel</Button>
+    {:else}
+      <div class="route-actions">
+        <div class="search">
+          <Search
+            placeholder="Search templates"
+            value={searchValue}
+            on:change={event => (searchValue = event.detail)}
+          />
         </div>
-      {/each}
+        <Button size="M" cta on:click={importSpec}>Import OpenAPI spec</Button>
+      </div>
+    {/if}
+  </RouteActions>
+
+  {#if importedTemplates.length}
+    <section>
+      <div class="section-header">
+        <div class="section-title">Imported API specs</div>
+      </div>
+
+      <div class="imported-table">
+        <Table
+          compact
+          data={filteredImportedTemplates}
+          schema={importedSchema}
+          customRenderers={importedRenderers}
+          hideHeader
+          rounded
+          placeholderText="No templates found"
+          allowClickRows={false}
+          allowEditRows={false}
+        />
+      </div>
+    </section>
+  {/if}
+
+  <section>
+    <div class="section-header">
+      <div class="section-title">Pre-built OpenAPI templates</div>
     </div>
-  </div>
-</div>
+
+    <div class="prebuilt-table">
+      <Table
+        compact
+        data={prebuiltTemplates}
+        schema={prebuiltSchema}
+        {customRenderers}
+        hideHeader
+        rounded
+        placeholderText="No templates found"
+        allowClickRows={false}
+        allowEditRows={false}
+      />
+    </div>
+  </section>
+</Layout>
+
+<Modal bind:this={templateModal}>
+  {#key modalKey}
+    <ImportRestTemplateModal
+      onCancel={() => templateModal.hide()}
+      onUploaded={() => templateModal.hide()}
+    />
+  {/key}
+</Modal>
 
 <style>
-  .header-buttons {
+  section {
     display: flex;
-    gap: var(--spacing-m);
-  }
-  .connection-group {
-    display: flex;
-    gap: var(--spacing-m);
+    min-width: 0;
     flex-direction: column;
+    gap: var(--spacing-xs);
   }
 
-  .connections {
+  section:first-child {
+    margin-top: var(--spacing-l);
+  }
+
+  section + section {
+    margin-top: var(--spacing-l);
+  }
+
+  section:last-child {
+    gap: var(--spacing-l);
+  }
+
+  .section-header {
     display: flex;
-    gap: 12px;
-    flex-direction: column;
-  }
-
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 12px;
-  }
-
-  .connection {
-    display: flex;
-    height: 38px;
-    padding: 6px 12px;
+    height: 24px;
     align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-    cursor: pointer;
-    font-size: 14px;
-    border-radius: 8px;
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    background-color: var(--spectrum-global-color-gray-100);
-    position: relative;
+    justify-content: space-between;
+    gap: 16px;
   }
 
-  .connection:hover {
-    background-color: var(--spectrum-global-color-gray-300);
+  .search {
+    width: 200px;
   }
 
-  .connection-icon {
-    border-radius: 4px;
-    border: 1px solid var(--spectrum-global-color-gray-200);
+  .search :global(.spectrum-Form-item) {
+    width: 100%;
+  }
+
+  .route-actions {
     display: flex;
-    width: 36px;
-    height: 36px;
-    justify-content: center;
     align-items: center;
-    flex-shrink: 0;
-    margin-right: 10px;
+    gap: var(--spacing-s);
   }
 
-  .connection-icon img {
-    width: 20px;
-    height: 20px;
+  .imported-table :global(.placeholder),
+  .prebuilt-table :global(.placeholder) {
+    height: var(--row-height);
+    padding: 0 var(--spacing-l);
+  }
+
+  .imported-table :global(.placeholder-content),
+  .prebuilt-table :global(.placeholder-content) {
+    flex-direction: row;
+    gap: var(--spacing-s);
+  }
+
+  .imported-table :global(.placeholder-content div),
+  .prebuilt-table :global(.placeholder-content div) {
+    margin-top: 0;
+  }
+
+  .section-title {
+    color: var(--grey-7, #a2a2a2);
+    font-size: 13px;
+  }
+
+  @media (max-width: 720px) {
+    .search {
+      width: 220px;
+    }
   }
 </style>

@@ -1,10 +1,10 @@
+import { FunctionErrorCode } from "@budibase/types"
+import { FunctionExecutionError } from "../errors"
+import { LocalRunnerFunctionExecutor } from "./localRunner"
 import {
   FUNCTION_RUN_REQUEST_FIXTURE,
   FUNCTION_RUN_RESULT_FIXTURE,
-  FunctionErrorCode,
-} from "@budibase/types"
-import { FunctionExecutionError } from "../errors"
-import { LocalRunnerFunctionExecutor } from "./localRunner"
+} from "../testFixtures"
 
 describe("LocalRunnerFunctionExecutor", () => {
   const baseUrl = "https://example.com"

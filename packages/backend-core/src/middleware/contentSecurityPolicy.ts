@@ -195,8 +195,18 @@ export const contentSecurityPolicy = (async (ctx: Ctx, next: Next) => {
   }
 
   const cspHeader = Object.entries(directives)
-    .map(([key, sources]) => `${key} ${sources.join(" ")}`)
+    .map(([key, sources]) => `${key} ${Array.from(new Set(sources)).join(" ")}`)
     .join("; ")
   ctx.set("Content-Security-Policy", cspHeader)
   await next()
+
+  // CSP on JSON does not control the document that requested it and can make
+  // API response headers exceed proxy limits.
+  const responseType = ctx.response.type?.toLowerCase()
+  if (
+    !ctx.headerSent &&
+    (responseType === "application/json" || responseType?.endsWith("+json"))
+  ) {
+    ctx.remove("Content-Security-Policy")
+  }
 }) as Middleware

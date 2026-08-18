@@ -1,5 +1,5 @@
 import type { JSONValue } from "../core"
-import type { UserBindings } from "../documents"
+import type { FunctionQueryCapability, UserBindings } from "../documents"
 
 export enum FunctionErrorCode {
   FUNCTIONS_DISABLED = "FUNCTIONS_DISABLED",
@@ -60,6 +60,12 @@ export interface FunctionLimits {
   service: FunctionServiceLimits
 }
 
+export interface FunctionLimitsOverrides {
+  compile?: Partial<FunctionCompileLimits>
+  run?: Partial<FunctionRunLimits>
+  service?: Partial<FunctionServiceLimits>
+}
+
 export const DEFAULT_FUNCTION_LIMITS: FunctionLimits = {
   compile: {
     maxSourceBytes: 256 * 1024,
@@ -88,8 +94,26 @@ export const DEFAULT_FUNCTION_LIMITS: FunctionLimits = {
   },
 }
 
+export const getFunctionLimits = (
+  overrides: FunctionLimitsOverrides = {}
+): FunctionLimits => ({
+  compile: {
+    ...DEFAULT_FUNCTION_LIMITS.compile,
+    ...overrides.compile,
+  },
+  run: {
+    ...DEFAULT_FUNCTION_LIMITS.run,
+    ...overrides.run,
+  },
+  service: {
+    ...DEFAULT_FUNCTION_LIMITS.service,
+    ...overrides.service,
+  },
+})
+
 export interface FunctionArtifact {
   compiledJavaScript: string
+  capabilityIds: string[]
   sourceMap?: string
   sourceHash: string
   declarationsHash: string
@@ -138,14 +162,6 @@ export interface FunctionExecutor {
   health: () => Promise<FunctionExecutorHealth>
   execute: (request: FunctionRunRequest) => Promise<FunctionRunResult>
   terminate: (runId: string) => Promise<void>
-}
-
-export interface FunctionQueryCapability {
-  capabilityId: string
-  queryId: string
-  datasourceAlias: string
-  queryAlias: string
-  parameterNames: string[]
 }
 
 export interface FunctionQueryBrokerRequest {

@@ -6,8 +6,8 @@
     Icon,
     Modal,
     DetailSummary,
+    generateId,
   } from "@budibase/bbui"
-  import { generate } from "shortid"
   import {
     type Automation,
     type AutomationStep,
@@ -209,7 +209,7 @@
   const cloneStepWithNewIds = (step: AutomationStep): AutomationStep => {
     const base: AutomationStep = {
       ...step,
-      id: generate(),
+      id: generateId(),
     }
 
     // Recurse into Loop V2 children
@@ -486,7 +486,7 @@
     transition:
       height 300ms ease-out,
       max-height 300ms ease-out;
-    height: 520px;
+    height: 440px;
     box-sizing: border-box;
   }
   .config.panel .content {

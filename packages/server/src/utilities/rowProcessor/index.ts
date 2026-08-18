@@ -33,10 +33,13 @@ import { InternalTables } from "../../db/utils"
 import { isExternalTableID } from "../../integrations/utils"
 import sdk from "../../sdk"
 import {
+  fetchUserReferences,
+  getBBReferenceIds,
   processInputBBReference,
   processInputBBReferences,
   processOutputBBReference,
   processOutputBBReferences,
+  UserReferenceMap,
 } from "./bbReferenceProcessor"
 import { allocateAutoColumnValues } from "./autoColumnState"
 import { TYPE_TRANSFORM_MAP } from "./map"
@@ -373,6 +376,23 @@ export async function coreOutputProcessing(
     table = source
   }
 
+  let userReferences: UserReferenceMap = {}
+  if (!opts.skipBBReferences) {
+    const referencedIds: string[] = []
+    for (const [property, column] of Object.entries(table.schema)) {
+      if (
+        column.type !== FieldType.BB_REFERENCE &&
+        column.type !== FieldType.BB_REFERENCE_SINGLE
+      ) {
+        continue
+      }
+      for (const row of rows) {
+        referencedIds.push(...getBBReferenceIds(row[property]))
+      }
+    }
+    userReferences = await fetchUserReferences(referencedIds)
+  }
+
   // process complex types: attachments, bb references...
   for (const [property, column] of Object.entries(table.schema)) {
     if (
@@ -408,9 +428,10 @@ export async function coreOutputProcessing(
       column.type == FieldType.BB_REFERENCE
     ) {
       for (const row of rows) {
-        row[property] = await processOutputBBReferences(
+        row[property] = processOutputBBReferences(
           row[property],
-          column.subtype
+          column.subtype,
+          userReferences
         )
       }
     } else if (
@@ -418,9 +439,10 @@ export async function coreOutputProcessing(
       column.type == FieldType.BB_REFERENCE_SINGLE
     ) {
       for (const row of rows) {
-        row[property] = await processOutputBBReference(
+        row[property] = processOutputBBReference(
           row[property],
-          column.subtype
+          column.subtype,
+          userReferences
         )
       }
     } else if (column.type === FieldType.DATETIME && column.timeOnly) {

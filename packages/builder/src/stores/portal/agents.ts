@@ -7,6 +7,8 @@ import {
   ConnectAgentSharePointSiteRequest,
   ConnectAgentSharePointSiteResponse,
   CreateAgentRequest,
+  CreateAgentSlackAppRequest,
+  CreateAgentSlackAppResponse,
   DisconnectAgentSharePointSiteResponse,
   FetchAgentKnowledgeIndexResponse,
   FetchAgentKnowledgeResponse,
@@ -24,6 +26,8 @@ import {
   SyncAgentDiscordCommandsRequest,
   SyncAgentDiscordCommandsResponse,
   SyncAgentKnowledgeSourcesResponse,
+  SaveSlackAppConfigRequest,
+  SlackAppConfigResponse,
   ToolMetadata,
   UpdateAgentSharePointSiteRequest,
   UpdateAgentSharePointSiteResponse,
@@ -66,6 +70,9 @@ interface AgentStoreState {
   agents: Agent[]
   currentAgentId?: string
   tools: ToolMetadata[]
+  toolsLoading: boolean
+  toolsLoaded: boolean
+  toolsLoadFailed: boolean
   agentsLoaded: boolean
   knowledgeByOperation: Record<
     string,
@@ -76,6 +83,7 @@ interface AgentStoreState {
   >
   knowledgeUploadByOperation: Record<string, OperationKnowledgeUploadState>
   knowledgeLoadingByOperation: Record<string, boolean>
+  knowledgeConfiguration?: FetchAgentKnowledgeIndexResponse["configuration"]
 }
 
 const getOperationKnowledgeCacheKey = (agentId: string, operationId: string) =>
@@ -90,6 +98,7 @@ const emptyUploadState = (): OperationKnowledgeUploadState => ({
 export class AgentsStore extends BudiStore<AgentStoreState> {
   private knowledgeRefreshByAgent = new Map<string, Promise<void>>()
   private knowledgeLoadByKey = new Map<string, Promise<void>>()
+  private fetchToolsRequestId = 0
   private knowledgePolling = createOperationKnowledgePollingController({
     intervalMs: KNOWLEDGE_POLL_INTERVAL_MS,
     onPoll: agentId => this.refreshOperationKnowledge(agentId),
@@ -102,10 +111,14 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     super({
       agents: [],
       tools: [],
+      toolsLoading: false,
+      toolsLoaded: false,
+      toolsLoadFailed: false,
       agentsLoaded: false,
       knowledgeByOperation: {},
       knowledgeUploadByOperation: {},
       knowledgeLoadingByOperation: {},
+      knowledgeConfiguration: undefined,
     })
   }
 
@@ -189,6 +202,14 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   }
 
   init = async () => {
+    this.fetchToolsRequestId += 1
+    this.update(state => {
+      state.tools = []
+      state.toolsLoaded = false
+      state.toolsLoading = false
+      state.toolsLoadFailed = false
+      return state
+    })
     await this.fetchAgents()
   }
 
@@ -217,13 +238,40 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     })
   }
 
-  fetchTools = async (aiconfigId?: string) => {
-    const tools = await API.fetchTools(aiconfigId)
+  fetchTools = async () => {
+    const requestId = ++this.fetchToolsRequestId
+
     this.update(state => {
-      state.tools = tools
+      state.toolsLoading = true
+      state.toolsLoadFailed = false
       return state
     })
-    return tools
+
+    try {
+      const tools = await API.fetchTools()
+      if (requestId !== this.fetchToolsRequestId) {
+        return tools
+      }
+
+      this.update(state => {
+        state.tools = tools
+        state.toolsLoaded = true
+        state.toolsLoading = false
+        state.toolsLoadFailed = false
+        return state
+      })
+      return tools
+    } catch (error) {
+      if (requestId === this.fetchToolsRequestId) {
+        this.update(state => {
+          state.toolsLoading = false
+          state.toolsLoadFailed = true
+          return state
+        })
+      }
+      console.error("Failed to fetch agent tools", error)
+      return []
+    }
   }
 
   createAgent = async (agent: CreateAgentRequest) => {
@@ -267,50 +315,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   deleteAgentOperation = async (agentId: string, operationId: string) => {
     const updated = await API.deleteAgentOperation(agentId, operationId)
     return this.replaceAgentInStore(updated)
-  }
-
-  syncAgentOperations = async (
-    agentId: string,
-    currentOperations: AgentOperation[] | undefined,
-    draftOperations: AgentOperation[]
-  ) => {
-    const current = currentOperations ?? []
-    const draftIds = new Set(draftOperations.map(operation => operation.id))
-    const currentIds = new Set(current.map(operation => operation.id))
-
-    let latestAgent: Agent | undefined
-
-    for (const operation of current) {
-      if (!draftIds.has(operation.id)) {
-        latestAgent = await this.deleteAgentOperation(agentId, operation.id)
-      }
-    }
-
-    for (const operation of draftOperations) {
-      const payload: UpdateAgentOperationRequest = {
-        name: operation.name,
-        live: operation.live,
-        promptInstructions: operation.promptInstructions,
-        enabledTools: operation.enabledTools,
-        allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
-        escalation: operation.escalation,
-      }
-
-      latestAgent = currentIds.has(operation.id)
-        ? await this.updateAgentOperation(agentId, operation.id, payload)
-        : await this.createAgentOperation(agentId, {
-            id: operation.id,
-            name: operation.name,
-            live: operation.live,
-            promptInstructions: operation.promptInstructions,
-            enabledTools: operation.enabledTools,
-            allowKnowledgeSourceDownload:
-              operation.allowKnowledgeSourceDownload,
-            escalation: operation.escalation,
-          })
-    }
-
-    return latestAgent
   }
 
   getAgentOperation = (
@@ -377,6 +381,27 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       API.provisionAgentSlackChannel(agentId, body)
     )
 
+  downloadSlackManifest = async (agentId: string): Promise<string> =>
+    await this.runAndRefreshAgents(() =>
+      API.downloadAgentSlackManifest(agentId)
+    )
+
+  createSlackApp = async (
+    agentId: string,
+    body?: CreateAgentSlackAppRequest
+  ): Promise<CreateAgentSlackAppResponse> =>
+    await this.runAndRefreshAgents(() => API.createAgentSlackApp(agentId, body))
+
+  fetchSlackAppConfig = async (): Promise<SlackAppConfigResponse> =>
+    await API.fetchSlackAppConfig()
+
+  saveSlackAppConfig = async (
+    body: SaveSlackAppConfigRequest
+  ): Promise<SlackAppConfigResponse> => await API.saveSlackAppConfig(body)
+
+  deleteSlackAppConfig = async (): Promise<SlackAppConfigResponse> =>
+    await API.deleteSlackAppConfig()
+
   provisionTelegramChannel = async (
     agentId: string,
     body?: ProvisionAgentTelegramChannelRequest
@@ -424,6 +449,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
           getOperationKnowledgeCacheKey(agentId, operationId)
         ] = knowledge
       }
+      state.knowledgeConfiguration = response.configuration
       return state
     })
 
@@ -468,14 +494,12 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
 
     this.setKnowledgeLoading(cacheKey, true)
 
-    const promise = this.fetchAgentKnowledge(agentId)
-      .then(() => undefined)
-      .finally(() => {
-        if (this.knowledgeLoadByKey.get(cacheKey) === promise) {
-          this.knowledgeLoadByKey.delete(cacheKey)
-        }
-        this.setKnowledgeLoading(cacheKey, false)
-      })
+    const promise = this.refreshOperationKnowledge(agentId).finally(() => {
+      if (this.knowledgeLoadByKey.get(cacheKey) === promise) {
+        this.knowledgeLoadByKey.delete(cacheKey)
+      }
+      this.setKnowledgeLoading(cacheKey, false)
+    })
 
     this.knowledgeLoadByKey.set(cacheKey, promise)
     return await promise
@@ -492,6 +516,8 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     get(this.store).knowledgeByOperation[
       getOperationKnowledgeCacheKey(agentId, operationId)
     ]
+
+  getKnowledgeConfiguration = () => get(this.store).knowledgeConfiguration
 
   isOperationKnowledgeLoading = (
     agentId: string,
@@ -676,15 +702,21 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     )
   }
 
-  fetchOperationKnowledgeSourceAllEntries = async (
+  fetchOperationKnowledgeSourceEntries = async (
     agentId: string,
     operationId: string,
-    siteId: string
+    siteId: string,
+    options?: {
+      driveId?: string
+      parentItemId?: string
+      parentPath?: string
+    }
   ): Promise<FetchAgentKnowledgeSourceEntriesResponse> => {
-    return await API.fetchOperationKnowledgeSourceAllEntries(
+    return await API.fetchOperationKnowledgeSourceEntries(
       agentId,
       operationId,
-      siteId
+      siteId,
+      options
     )
   }
 
@@ -717,7 +749,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     )
   }
 
-  applyOperationSharePointSiteFilters = async (
+  applyOperationSharePointSiteScope = async (
     agentId: string,
     operationId: string,
     siteId: string,

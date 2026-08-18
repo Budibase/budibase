@@ -1,6 +1,6 @@
 <script>
   import { getContext, onDestroy } from "svelte"
-  import { generate } from "shortid"
+  import { generateId } from "@budibase/bbui"
   import { builderStore } from "@/stores/builder"
   import Component from "@/components/Component.svelte"
 
@@ -18,7 +18,7 @@
 
   const component = getContext("component")
   const block = getContext("block")
-  const rand = generate()
+  const rand = generateId()
 
   // Create a fake component instance so that we can use the core Component
   // to render this part of the block, taking advantage of binding enrichment

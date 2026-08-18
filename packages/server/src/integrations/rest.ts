@@ -4,6 +4,7 @@ import {
   HttpMethod,
   Integration,
   IntegrationBase,
+  IntegrationRequestOpts,
   JSONValue,
   OAuth2RestAuthConfig,
   PaginationConfig,
@@ -11,7 +12,9 @@ import {
   QueryType,
   RestAuthType,
   RestConfig,
+  RestPreviewConfig,
   RestQueryFields as RestQuery,
+  RestRequestPreview,
 } from "@budibase/types"
 import get from "lodash/get"
 import qs from "querystring"
@@ -22,12 +25,18 @@ import { handleFileResponse, handleXml } from "./utils"
 import { parse } from "content-disposition"
 import path from "path"
 import { Builder as XmlBuilder } from "xml2js"
-import { getAttachmentHeaders } from "./utils/restUtils"
+import {
+  getAttachmentHeaders,
+  normaliseHeaders,
+  sanitiseBody,
+  sanitiseHeaders,
+} from "./utils/restUtils"
 import { helpers } from "@budibase/shared-core"
 import sdk from "../sdk"
 import { getDispatcher } from "../utilities"
 import {
   fetch,
+  Request,
   Response,
   RequestInit,
   Headers,
@@ -153,10 +162,22 @@ interface ParsedResponse {
   extra?: {
     raw: string | undefined
     headers: Record<string, string[] | string>
+    request?: RestRequestPreview
   }
   pagination?: {
     cursor: JSONValue | undefined
   }
+}
+
+interface BuiltRequest {
+  url: string
+  input: RequestInit
+  authHeaders: Record<string, string>
+  authType?: string
+}
+
+interface RequestOpts extends IntegrationRequestOpts {
+  retry401?: boolean
 }
 
 interface NormalisedBody {
@@ -350,7 +371,8 @@ export class RestIntegration implements IntegrationBase {
     path = "",
     queryString = "",
     pagination?: PaginationConfig,
-    paginationValues?: PaginationValues
+    paginationValues?: PaginationValues,
+    baseUrl: string | undefined = this.config.url
   ): string {
     // Add pagination params to query string if required
     if (pagination?.location === "query" && paginationValues) {
@@ -396,8 +418,8 @@ export class RestIntegration implements IntegrationBase {
     const main = `${path}${queryString}`
 
     let complete = main
-    if (this.config.url && !main.startsWith("http")) {
-      complete = !this.config.url ? main : `${this.config.url}/${main}`
+    if (baseUrl && !main.startsWith("http")) {
+      complete = `${baseUrl}/${main}`
     }
     if (!complete.startsWith("http")) {
       complete = `http://${complete}`
@@ -630,7 +652,7 @@ export class RestIntegration implements IntegrationBase {
   async getAuthHeaders(
     authConfigId?: string,
     authConfigType?: RestAuthType
-  ): Promise<Record<string, string>> {
+  ): Promise<{ headers: Record<string, string>; authType?: string }> {
     if (authConfigId && authConfigType === RestAuthType.OAUTH2) {
       const inlineOAuth2 = this.config.authConfigs?.find(
         c => c._id === authConfigId && c.type === RestAuthType.OAUTH2
@@ -640,21 +662,32 @@ export class RestIntegration implements IntegrationBase {
           authConfigId,
           inlineOAuth2 as OAuth2RestAuthConfig
         )
-        return { Authorization: token }
+        return {
+          headers: { Authorization: token },
+          authType: RestAuthType.OAUTH2,
+        }
       }
     }
 
     const resolved = await this.resolveAuthConfig(authConfigId, authConfigType)
 
     if (!resolved) {
-      return {}
+      return { headers: {} }
     }
 
     if (resolved.type === "oauth2") {
-      return { Authorization: await sdk.oauth2.getToken(resolved.sourceId) }
+      return {
+        headers: {
+          Authorization: await sdk.oauth2.getToken(resolved.sourceId),
+        },
+        authType: RestAuthType.OAUTH2,
+      }
     }
 
-    return this.buildHeadersFromAuthConfig(resolved.auth)
+    return {
+      headers: this.buildHeadersFromAuthConfig(resolved.auth),
+      authType: resolved.auth.type,
+    }
   }
 
   private getOrigin(urlString: string): string | null {
@@ -685,59 +718,63 @@ export class RestIntegration implements IntegrationBase {
     }
   }
 
-  async _req(query: RestQuery, retry401 = true): Promise<ParsedResponse> {
+  private mergedQueryParams(fields: RestQuery, config: RestPreviewConfig) {
+    const queryParams = fields.queryString ? qs.decode(fields.queryString) : {}
+    return { ...(config.defaultQueryParameters || {}), ...queryParams }
+  }
+
+  private composeUrl(fields: RestQuery, config: RestPreviewConfig): string {
+    const { path = "", queryString = "", pagination, paginationValues } = fields
+    const defaultQueryParameters = config.defaultQueryParameters || {}
+    let mergedQueryString = queryString
+    if (Object.keys(defaultQueryParameters).length > 0) {
+      mergedQueryString = qs.encode(this.mergedQueryParams(fields, config))
+    }
+
+    return this.getUrl(
+      path,
+      mergedQueryString,
+      pagination,
+      paginationValues,
+      config.url
+    )
+  }
+
+  private composeRequest({
+    fields,
+    config,
+    authHeaders,
+  }: {
+    fields: RestQuery
+    config: RestPreviewConfig
+    authHeaders: Record<string, string>
+  }): { url: string; input: RequestInit } {
     const {
-      path = "",
-      queryString = "",
-      rawPath,
       headers = {},
       method = HttpMethod.GET,
       disabledHeaders,
       bodyType = BodyType.NONE,
       requestBody,
-      authConfigId,
-      authConfigType,
       pagination,
       paginationValues,
-    } = query
+    } = fields
 
-    const defaultQueryParameters = this.config.defaultQueryParameters || {}
-    let mergedQueryString = queryString
-    if (Object.keys(defaultQueryParameters).length > 0) {
-      const queryParams = queryString ? qs.decode(queryString) : {}
-      const merged = { ...defaultQueryParameters, ...queryParams }
-      mergedQueryString = qs.encode(merged)
-    }
+    const url = this.composeUrl(fields, config)
 
-    this.startTimeMs = performance.now()
-    const url = this.getUrl(
-      path,
-      mergedQueryString,
-      pagination,
-      paginationValues
-    )
-
-    // Resolve and validate the destination BEFORE attaching any
-    // datasource-scoped credentials or headers below.
-    this.assertSameOrigin(url, rawPath)
-
-    const authHeaders = await this.getAuthHeaders(authConfigId, authConfigType)
-
-    this.headers = {
-      ...(this.config.defaultHeaders || {}),
+    const mergedHeaders: Record<string, string> = {
+      ...(config.defaultHeaders || {}),
       ...headers,
       ...authHeaders,
     }
-
     if (disabledHeaders) {
-      for (let headerKey of Object.keys(this.headers)) {
+      for (let headerKey of Object.keys(mergedHeaders)) {
         if (disabledHeaders[headerKey]) {
-          delete this.headers[headerKey]
+          delete mergedHeaders[headerKey]
         }
       }
     }
 
-    let input: RequestInit = { method, headers: this.headers }
+    let input: RequestInit = { method, headers: mergedHeaders }
     input = this.addBody(
       bodyType,
       requestBody,
@@ -745,6 +782,137 @@ export class RestIntegration implements IntegrationBase {
       pagination,
       paginationValues
     )
+    return { url, input }
+  }
+
+  private async buildRequest(query: RestQuery): Promise<BuiltRequest> {
+    const { rawPath, authConfigId, authConfigType } = query
+
+    // Resolve and validate the destination BEFORE attaching any
+    // datasource-scoped credentials or headers below.
+    const url = this.composeUrl(query, this.config)
+    this.assertSameOrigin(url, rawPath)
+
+    const { headers: authHeaders, authType } = await this.getAuthHeaders(
+      authConfigId,
+      authConfigType
+    )
+
+    const { input } = this.composeRequest({
+      fields: query,
+      config: this.config,
+      authHeaders,
+    })
+    this.headers = normaliseHeaders(input.headers)
+
+    return {
+      url,
+      input,
+      authHeaders,
+      authType,
+    }
+  }
+
+  // Headers derived from the body, such as the multipart content-type
+  private resolveHeaders(built: BuiltRequest): Record<string, string> {
+    const headers = normaliseHeaders(built.input.headers)
+    try {
+      const request = new Request(built.url, built.input)
+      for (const [key, value] of request.headers.entries()) {
+        if (!Object.keys(headers).some(k => k.toLowerCase() === key)) {
+          headers[key] = value
+        }
+      }
+    } catch (err) {
+      console.log("[rest integration] Unable to materialise request headers", {
+        error: (err as Error).message,
+      })
+    }
+    return headers
+  }
+
+  // The preview is only ever built from the unresolved preview inputs - the
+  // resolved request contains real credential values, so on failure there is
+  // no preview rather than an unmasked fallback.
+  private buildRequestPreview(
+    built: BuiltRequest,
+    opts: IntegrationRequestOpts
+  ): RestRequestPreview | undefined {
+    const { previewFields, previewConfig } = opts
+    if (!previewFields) {
+      return undefined
+    }
+    try {
+      const fields: RestQuery = {
+        ...previewFields,
+        method: built.input.method as HttpMethod,
+      }
+      const config = previewConfig ?? this.config
+      const { url, input } = this.composeRequest({
+        fields,
+        config,
+        authHeaders: built.authHeaders,
+      })
+
+      const headers = normaliseHeaders(input.headers)
+      for (const [key, value] of Object.entries(this.resolveHeaders(built))) {
+        if (
+          !Object.keys(headers).some(k => k.toLowerCase() === key.toLowerCase())
+        ) {
+          headers[key] = value
+        }
+      }
+
+      const displayUrl = decodeURI(url)
+      let path = ""
+      try {
+        path = decodeURI(new URL(url).pathname)
+      } catch {
+        // url contains bindings
+      }
+      const params: Record<string, string> = {}
+      for (const [key, value] of Object.entries(
+        this.mergedQueryParams(fields, config)
+      )) {
+        if (value == null || value === "") {
+          continue
+        }
+        // for scenarios with tag=a&tag=b, take the last
+        params[key] = Array.isArray(value)
+          ? String(value.at(-1))
+          : String(value)
+      }
+      return {
+        url: displayUrl,
+        path,
+        method: input.method || HttpMethod.GET,
+        headers: sanitiseHeaders({
+          headers,
+          authHeaderKeys: Object.keys(built.authHeaders),
+          authType: built.authType,
+        }),
+        params,
+        body: sanitiseBody(input.body),
+      }
+    } catch (err) {
+      console.log("[rest integration] Unable to build request preview", {
+        error: (err as Error).message,
+      })
+      return undefined
+    }
+  }
+
+  async _req(
+    query: RestQuery,
+    opts: RequestOpts = {}
+  ): Promise<ParsedResponse> {
+    const { retry401 = true, includeRequest = false } = opts
+    const { pagination } = query
+
+    this.startTimeMs = performance.now()
+
+    const built = await this.buildRequest(query)
+    const { url, input } = built
 
     // Deprecated by rejectUnauthorized
     if (this.config.legacyHttpParser) {
@@ -846,32 +1014,45 @@ export class RestIntegration implements IntegrationBase {
       throw error
     }
     if (response.status === 401 && retry401) {
+      const { authConfigId, authConfigType } = query
       if (authConfigType === RestAuthType.OAUTH2 && authConfigId) {
         await sdk.oauth2.cleanStoredTokensForAuthConfig(authConfigId)
-        return await this._req(query, false)
+        return await this._req(query, { ...opts, retry401: false })
       }
     }
-    return await this.parseResponse(response, pagination)
+    const parsed = await this.parseResponse(response, pagination)
+    if (includeRequest) {
+      const request = this.buildRequestPreview(built, opts)
+      if (request) {
+        parsed.extra = {
+          raw: undefined,
+          headers: {},
+          ...parsed.extra,
+          request,
+        }
+      }
+    }
+    return parsed
   }
 
-  async create(opts: RestQuery) {
-    return this._req({ ...opts, method: HttpMethod.POST })
+  async create(opts: RestQuery, reqOpts?: RequestOpts) {
+    return this._req({ ...opts, method: HttpMethod.POST }, reqOpts)
   }
 
-  async read(opts: RestQuery) {
-    return this._req({ ...opts, method: HttpMethod.GET })
+  async read(opts: RestQuery, reqOpts?: RequestOpts) {
+    return this._req({ ...opts, method: HttpMethod.GET }, reqOpts)
   }
 
-  async update(opts: RestQuery) {
-    return this._req({ ...opts, method: HttpMethod.PUT })
+  async update(opts: RestQuery, reqOpts?: RequestOpts) {
+    return this._req({ ...opts, method: HttpMethod.PUT }, reqOpts)
   }
 
-  async patch(opts: RestQuery) {
-    return this._req({ ...opts, method: HttpMethod.PATCH })
+  async patch(opts: RestQuery, reqOpts?: RequestOpts) {
+    return this._req({ ...opts, method: HttpMethod.PATCH }, reqOpts)
   }
 
-  async delete(opts: RestQuery) {
-    return this._req({ ...opts, method: HttpMethod.DELETE })
+  async delete(opts: RestQuery, reqOpts?: RequestOpts) {
+    return this._req({ ...opts, method: HttpMethod.DELETE }, reqOpts)
   }
 }
 

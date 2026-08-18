@@ -1,7 +1,7 @@
 import { ReadStream } from "fs"
 import stream from "node:stream"
 import { Row } from "../../../../documents"
-import { SearchFilters } from "../../../../sdk"
+import { SearchFilters, SortJson } from "../../../../sdk"
 import { SortOrder } from "../../pagination"
 
 export {
@@ -31,7 +31,7 @@ export interface ExportRowsRequest {
   rows?: string[]
   columns?: string[]
   query?: SearchFilters
-  sort?: string
+  sort?: string | SortJson
   sortOrder?: SortOrder
   delimiter?: string
   customHeaders?: { [key: string]: string }

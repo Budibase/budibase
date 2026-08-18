@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     type ChatIdentityLink,
+    type ChatIdentityLinkProvider,
     EscalationNotificationChannel,
   } from "@budibase/types"
   import { API } from "@/api"
@@ -20,6 +21,19 @@
 
   type Recipient = { type: string; config: Record<string, any> }
 
+  interface PendingRecipient {
+    provider: EscalationNotificationChannel | undefined
+    targetType: "user" | "channel"
+    userId: string
+    channelId: string
+    discordChannelId: string
+    teamsInputMode: "lookup" | "url" | "manual"
+    teamsUrl: string
+    teamsChannelId: string
+    teamsTeamId: string
+    teamsChannelName: string
+  }
+
   export let recipients: Recipient[] = []
   export let agentId: string | undefined = undefined
   export let onChange: (recipients: Recipient[]) => void = () => {}
@@ -38,21 +52,8 @@
     PROVIDER_OPTIONS.map(o => [o.value, o.label])
   )
 
-  interface PendingRecipient {
-    provider: EscalationNotificationChannel | ""
-    targetType: "user" | "channel"
-    userId: string
-    channelId: string
-    discordChannelId: string
-    teamsInputMode: "lookup" | "url" | "manual"
-    teamsUrl: string
-    teamsChannelId: string
-    teamsTeamId: string
-    teamsChannelName: string
-  }
-
   const DEFAULT_PENDING: PendingRecipient = {
-    provider: "",
+    provider: undefined,
     targetType: "user",
     userId: "",
     channelId: "",
@@ -64,7 +65,10 @@
     teamsChannelName: "",
   }
 
-  let identityLinks: ChatIdentityLink[] = []
+  const loadingProviders = new Set<string>()
+
+  let linkCache: Record<string, ChatIdentityLink[]> = {}
+  let loadedAgentId: string | undefined = undefined
   let slackChannels: SlackChannel[] = []
   let teamsChannels: MSTeamsChannel[] = []
 
@@ -75,7 +79,7 @@
   const resetPending = (keepProvider = false) => {
     pending = {
       ...DEFAULT_PENDING,
-      provider: keepProvider ? pending.provider : "",
+      provider: keepProvider ? pending.provider : undefined,
     }
   }
 
@@ -91,21 +95,59 @@
     }
   }
 
-  $: recipientLabels = recipients.map(r => getRecipientLabel(r, identityLinks))
-
-  $: {
-    API.fetchChatIdentityLinks().then((links: ChatIdentityLink[]) => {
-      identityLinks = links
-    })
+  const loadLinks = async (provider: string) => {
+    if (linkCache[provider] || loadingProviders.has(provider)) {
+      return
+    }
+    loadingProviders.add(provider)
+    const requestedAgentId = agentId
+    try {
+      const links = await API.fetchChatIdentityLinks(
+        provider as ChatIdentityLinkProvider,
+        agentId
+      )
+      // Drop a response that arrived after the bot changed.
+      if (requestedAgentId !== agentId) {
+        return
+      }
+      linkCache = { ...linkCache, [provider]: links }
+    } catch (error) {
+      console.error("Failed to load chat identity links", error)
+    } finally {
+      loadingProviders.delete(provider)
+    }
   }
 
-  // Dedupe by globalUserId - a user linked in multiple workspaces/tenants has
-  // several links for one provider, and the picker keys options by globalUserId.
-  $: filteredIdentityLinks = identityLinks
-    .filter(l => (l.provider as string) === (pending.provider as string))
-    .filter(
-      (l, i, arr) => arr.findIndex(x => x.globalUserId === l.globalUserId) === i
-    )
+  // Refresh links on agent change. An automation concern
+  $: if (agentId !== loadedAgentId) {
+    loadedAgentId = agentId
+    linkCache = {}
+    loadingProviders.clear()
+    if (pending.provider) {
+      loadLinks(pending.provider)
+    }
+    recipients
+      .filter(r => r.config?.globalUserId)
+      .forEach(r => loadLinks(r.type))
+  }
+
+  $: if (pending.provider) {
+    loadLinks(pending.provider)
+  }
+
+  $: recipients
+    .filter(r => r.config?.globalUserId)
+    .forEach(r => loadLinks(r.type))
+
+  $: recipientLabels = recipients.map(r => getRecipientLabel(r, linkCache))
+
+  $: filteredIdentityLinks = (
+    pending.provider ? linkCache[pending.provider] || [] : []
+  ).filter(
+    (l, i, arr) => arr.findIndex(x => x.globalUserId === l.globalUserId) === i
+  )
+
+  $: linksLoaded = !!pending.provider && pending.provider in linkCache
 
   $: supportsChannel =
     pending.provider === EscalationNotificationChannel.SLACK ||
@@ -176,33 +218,35 @@
 
   const getRecipientLabel = (
     r: Recipient,
-    links: ChatIdentityLink[]
+    cache: Record<string, ChatIdentityLink[]>
   ): string => {
     if (r.config?.channelName) return `#${r.config.channelName}`
     if (r.config?.channelId) return r.config.channelId
+    const links = cache[r.type]
+    if (!links) {
+      return r.config?.globalUserId || "Unknown"
+    }
     const link = links.find(l => l.globalUserId === r.config?.globalUserId)
     return (
       link?.externalUserName ||
       link?.externalUserId ||
-      r.config?.globalUserId ||
-      "Unknown"
+      "Not linked in this workspace"
     )
   }
 
   const addRecipient = () => {
-    if (!canAdd) return
+    const provider = pending.provider
+    if (!canAdd || !provider) return
 
     let recipient: Recipient | undefined
 
     if (pending.targetType === "user") {
-      const link = identityLinks.find(
-        l =>
-          l.globalUserId === pending.userId &&
-          (l.provider as string) === (pending.provider as string)
+      const link = filteredIdentityLinks.find(
+        l => l.globalUserId === pending.userId
       )
       if (!link) return
       recipient = {
-        type: pending.provider,
+        type: provider,
         config: {
           globalUserId: link.globalUserId,
           externalUserId: link.externalUserId,
@@ -210,19 +254,19 @@
           ...(link.guildId && { guildId: link.guildId }),
         },
       }
-    } else if (pending.provider === EscalationNotificationChannel.SLACK) {
+    } else if (provider === EscalationNotificationChannel.SLACK) {
       const channel = slackChannels.find(c => c.id === pending.channelId)
       if (!channel) return
       recipient = {
         type: EscalationNotificationChannel.SLACK,
         config: { channelId: channel.id, channelName: channel.name },
       }
-    } else if (pending.provider === EscalationNotificationChannel.DISCORD) {
+    } else if (provider === EscalationNotificationChannel.DISCORD) {
       recipient = {
         type: EscalationNotificationChannel.DISCORD,
         config: { channelId: pending.discordChannelId },
       }
-    } else if (pending.provider === EscalationNotificationChannel.MSTEAMS) {
+    } else if (provider === EscalationNotificationChannel.MSTEAMS) {
       if (pending.teamsInputMode === "url") {
         const parsed = parseTeamsChannelUrl(pending.teamsUrl)
         if (!parsed) return
@@ -289,7 +333,7 @@
         getOptionLabel={o => o.label}
         getOptionValue={o => o.value}
         on:change={e => {
-          pending = { ...DEFAULT_PENDING, provider: e.detail || "" }
+          pending = { ...DEFAULT_PENDING, provider: e.detail }
         }}
       />
 
@@ -318,14 +362,18 @@
         {/if}
 
         {#if pending.targetType === "user"}
-          <Select
-            options={filteredIdentityLinks}
-            value={pending.userId}
-            placeholder="Select user..."
-            getOptionLabel={l => l.externalUserName || l.externalUserId}
-            getOptionValue={l => l.globalUserId}
-            on:change={e => (pending.userId = e.detail ?? "")}
-          />
+          {#if linksLoaded && !filteredIdentityLinks.length}
+            <div class="no-links">No linked users in this bot's workspace</div>
+          {:else}
+            <Select
+              options={filteredIdentityLinks}
+              value={pending.userId}
+              placeholder="Select user..."
+              getOptionLabel={l => l.externalUserName || l.externalUserId}
+              getOptionValue={l => l.globalUserId}
+              on:change={e => (pending.userId = e.detail ?? "")}
+            />
+          {/if}
         {:else if pending.provider === EscalationNotificationChannel.SLACK}
           <Select
             options={slackChannels}
@@ -421,6 +469,11 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
+  }
+
+  .no-links {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: var(--font-size-s);
   }
 
   .recipients :global(.spectrum-Tags-item) {
