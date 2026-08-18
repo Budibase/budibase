@@ -86,14 +86,12 @@
         </div>
         <Select
           size="M"
-          value={executionPrincipal}
+          bind:value={executionPrincipal}
           placeholder={false}
           {options}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
           disabled={!principalConfigurable}
-          on:change={event =>
-            (executionPrincipal = event.detail as ToolExecutionPrincipal)}
         />
       </div>
     {/if}

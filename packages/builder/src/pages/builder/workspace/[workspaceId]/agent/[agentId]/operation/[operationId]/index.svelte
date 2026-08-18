@@ -429,7 +429,7 @@
     toolInsertPosition = undefined
     configureToolModal?.show(
       tool,
-      getDefaultToolPrincipal(tool),
+      getEffectiveToolPrincipal(tool),
       $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
         tool.executionPolicy.mode === "configurable"
     )
@@ -440,7 +440,7 @@
     toolInsertPosition = getCaretPosition?.()
     configureToolModal?.show(
       tool,
-      getEffectiveToolPrincipal(tool),
+      getDefaultToolPrincipal(tool),
       $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
         tool.executionPolicy.mode === "configurable",
       true
