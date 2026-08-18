@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { writable } from "svelte/store"
 import MockBody from "@/test/mocks/MockBody.svelte"
 import MockComponent from "@/test/mocks/MockComponent.svelte"
+import MockGenerateInstructionsControl from "./MockGenerateInstructionsControl.svelte"
 import MockOperationCodeEditor from "./MockOperationCodeEditor.svelte"
 import MockToolsDropdown from "./MockToolsDropdown.svelte"
 
@@ -82,7 +83,7 @@ vi.mock("../../ConfigureOperationToolModal.svelte", () => ({
   default: MockComponent,
 }))
 vi.mock("../../GenerateInstructionsControl.svelte", () => ({
-  default: MockComponent,
+  default: MockGenerateInstructionsControl,
 }))
 vi.mock("../../knowledge/index.svelte", () => ({ default: MockComponent }))
 vi.mock("../../OperationRailSectionHeader.svelte", () => ({
@@ -126,7 +127,13 @@ vi.mock("../../agentAvailableTools", () => ({
 
 vi.mock("../../toolBindingUtils", () => ({
   getDefaultToolExecutionPrincipal: () => mocks.requesterPrincipal,
-  isToolReferenced: () => false,
+  isToolReferenced: ({
+    prompt,
+    tool,
+  }: {
+    prompt?: string
+    tool: { readableBinding?: string }
+  }) => !!tool.readableBinding && !!prompt?.includes(tool.readableBinding),
   normalizeConfiguredOperationTools: ({
     operation,
   }: {
@@ -156,6 +163,29 @@ describe("operation page tool autocomplete", () => {
       "operation-1",
       expect.objectContaining({
         promptInstructions: "{{ budibase.Inventory.update_row }}",
+        enabledTools: [
+          {
+            toolName: "ta_inventory_update_row",
+            executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+          },
+        ],
+      })
+    )
+  })
+
+  it("configures tools referenced by generated instructions", async () => {
+    render(OperationPage)
+
+    await fireEvent.click(screen.getByText("Apply generated instructions"))
+
+    await waitFor(() =>
+      expect(mocks.updateAgentOperation).toHaveBeenCalledTimes(1)
+    )
+    expect(mocks.updateAgentOperation).toHaveBeenCalledWith(
+      "agent-1",
+      "operation-1",
+      expect.objectContaining({
+        promptInstructions: "Use {{ budibase.Inventory.update_row }}",
         enabledTools: [
           {
             toolName: "ta_inventory_update_row",

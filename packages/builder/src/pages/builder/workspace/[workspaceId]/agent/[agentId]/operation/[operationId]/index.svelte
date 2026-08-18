@@ -130,14 +130,7 @@
   let availableBindingIcons = $derived(
     buildBindingIcons(availablePromptBindings)
   )
-  const bindingIcons: Record<string, string | undefined> = {}
-  $effect(() => {
-    const nextIcons = buildBindingIcons(promptBindings)
-    for (const binding of Object.keys(bindingIcons)) {
-      delete bindingIcons[binding]
-    }
-    Object.assign(bindingIcons, nextIcons)
-  })
+  let bindingIcons = $derived(buildBindingIcons(promptBindings))
 
   const addToolCompletion: BindingCompletionOption = {
     label: "Add tool",
@@ -337,6 +330,38 @@
       return
     }
     operation.promptInstructions = instructions
+  }
+
+  const applyGeneratedInstructions = (instructions: string) => {
+    if (!operation) {
+      return
+    }
+    const configuredToolNames = new Set(
+      (operation.enabledTools || []).map(config => config.toolName)
+    )
+    const generatedToolConfigs = availableTools
+      .filter(
+        tool =>
+          tool.runtimeBinding &&
+          !configuredToolNames.has(tool.runtimeBinding) &&
+          isToolReferenced({ prompt: instructions, tool })
+      )
+      .map(tool => ({
+        toolName: tool.runtimeBinding,
+        executionPrincipal: getDefaultToolExecutionPrincipal({
+          tool,
+          toolSecurityEnabled:
+            $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
+        }),
+      }))
+
+    saveOperation({
+      promptInstructions: instructions,
+      enabledTools: [
+        ...(operation.enabledTools || []),
+        ...generatedToolConfigs,
+      ],
+    })
   }
 
   const insertToolBinding = (
@@ -628,8 +653,7 @@
               triggerLabel="Help write instructions"
               promptBindings={availablePromptBindings}
               bindingIcons={availableBindingIcons}
-              onApplyInstructions={instructions =>
-                saveOperation({ promptInstructions: instructions })}
+              onApplyInstructions={applyGeneratedInstructions}
             />
             <LiveToggleButton
               live={operation.live === true}
