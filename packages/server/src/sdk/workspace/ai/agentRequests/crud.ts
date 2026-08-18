@@ -380,7 +380,7 @@ export async function recordToolCall({
   input?: unknown
   output?: unknown
 }): Promise<void> {
-  if (toolName === ESCALATE_TOOL_NAME && status === "success") {
+  if (status === "success") {
     const escalationOutput = output as
       | { status?: string; escalationId?: string }
       | undefined

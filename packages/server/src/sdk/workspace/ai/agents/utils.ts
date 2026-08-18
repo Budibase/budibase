@@ -296,7 +296,10 @@ export async function buildPromptAndTools(
   if (hasKnowledgeBases) {
     resolvedSystemPrompt += `\n\nWhen users ask about attached files (for example size, type, upload status, processing errors, or file counts), call list_knowledge_files with a filename when possible. Do not guess file metadata. If list_knowledge_files returns ambiguous results, ask a clarification question before answering. If it returns no matches, say that you couldn't find a matching file.\n\nFor any non-trivial user question, call search_knowledge before answering. Do not say the answer is unavailable, unknown, or unsupported until after you have searched knowledge. If search_knowledge returns no relevant context, say that you couldn't find supporting knowledge.\n\nIf you used search_knowledge context in your final answer, call report_used_sources immediately before your final response and pass only sourceIds that directly support the final answer. Do not include sources that were merely searched/consulted. If your conclusion is that the answer is not found in the documents, call report_used_sources with an empty sourceIds list.`
   }
-  if (enabledToolNames.has("escalate")) {
+  if (options.escalationGateContext) {
+    resolvedSystemPrompt += `\n\nYou have no escalation or approval-request capability of your own. Never claim to have escalated, flagged, or referred anything for human review - approvals happen automatically when you use tools that require them. If instructions ask you to escalate a topic, tell the user you cannot escalate it and continue normally.`
+  }
+  if (enabledToolNames.has("escalate") && !options.escalationGateContext) {
     resolvedSystemPrompt += `\n\nBefore calling escalate, call list_session_escalations to check whether this same request is already awaiting approval or has already been approved in this conversation. If an equivalent request is still pending, do not escalate again - tell the user it is already awaiting approval. If it has already been approved, proceed instead of escalating again. Only escalate genuinely new requests.`
   }
 

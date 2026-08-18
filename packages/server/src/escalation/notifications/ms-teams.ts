@@ -27,7 +27,9 @@ export const getMSTeamsIntegration = async (
   const agent = await findIntegrationAgent(
     appId,
     agentId,
-    a => !!(a.MSTeamsIntegration?.appId && a.MSTeamsIntegration?.appPassword)
+    a =>
+      !!(a.MSTeamsIntegration?.appId && a.MSTeamsIntegration?.appPassword) &&
+      !!a.MSTeamsIntegration?.messagingEndpointUrl?.trim()
   )
   if (
     !agent?.MSTeamsIntegration?.appId ||

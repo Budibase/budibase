@@ -62,7 +62,9 @@ const getSlackIntegration = async (
   const agent = await findIntegrationAgent(
     appId,
     agentId,
-    a => !!a.slackIntegration?.botToken
+    a =>
+      !!a.slackIntegration?.botToken &&
+      !!a.slackIntegration?.messagingEndpointUrl?.trim()
   )
   if (!agent) {
     return undefined

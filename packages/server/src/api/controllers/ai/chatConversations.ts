@@ -18,6 +18,7 @@ import {
   CreateChatConversationRequest,
   DocumentType,
   ESCALATE_TOOL_NAME,
+  EscalateToolResultStatus,
   FeatureFlag,
   FetchAgentHistoryResponse,
   FetchAgentFileUrlResponse,
@@ -223,6 +224,20 @@ const buildToolCallTrackingHandler = ({
   }) => {
     if (!trackingHandle) {
       return
+    }
+    const outputStatus = (output as { status?: string } | undefined)?.status
+    if (outputStatus === EscalateToolResultStatus.PENDING_APPROVAL) {
+      sdk.ai.agentRequests
+        .updateRequestStatus({
+          requestId: trackingHandle.requestId,
+          status: "needs_input",
+        })
+        .catch(error => {
+          console.error(
+            "Failed to update agent request status to needs_input",
+            { agentId, sessionId, error }
+          )
+        })
     }
     chain = chain.then(() =>
       sdk.ai.agentRequests

@@ -46,6 +46,13 @@ export interface SuspendedAutomationContext {
   state: Record<string, any>
 }
 
+export interface PendingToolCall {
+  toolCallId: string
+  toolName: string
+  args: unknown
+  sourceId?: string
+}
+
 export interface SuspendedOperationContext {
   agentId: string
   operationId: string
@@ -53,6 +60,7 @@ export interface SuspendedOperationContext {
   messages: ModelMessage[]
   channel?: ChatConversationChannel
   userId?: string
+  pendingToolCall?: PendingToolCall
 }
 
 export type SuspendedContext =

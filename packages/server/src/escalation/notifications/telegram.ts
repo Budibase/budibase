@@ -45,7 +45,9 @@ const getTelegramBotToken = async (
   const agent = await findIntegrationAgent(
     appId,
     agentId,
-    a => !!a.telegramIntegration?.botToken
+    a =>
+      !!a.telegramIntegration?.botToken &&
+      !!a.telegramIntegration?.messagingEndpointUrl?.trim()
   )
   return agent?.telegramIntegration?.botToken?.trim() || undefined
 }

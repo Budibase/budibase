@@ -8,12 +8,20 @@
     Select,
   } from "@budibase/bbui"
   import { ToolExecutionPrincipal } from "@budibase/types"
+  import type {
+    EscalationNotificationChannel,
+    EscalationRecipient,
+  } from "@budibase/types"
+  import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
   import ToolIcon from "./ToolIcon.svelte"
   import type { AgentTool } from "./toolTypes"
 
+  export let agentId: string | undefined = undefined
+  export let providers: EscalationNotificationChannel[] = []
   export let onSave: (args: {
     tool: AgentTool
     executionPrincipal: ToolExecutionPrincipal
+    recipients?: EscalationRecipient[]
   }) => void
   export let onRemove: (tool: AgentTool) => void
 
@@ -22,6 +30,8 @@
   let principalConfigurable = false
   let adding = false
   let executionPrincipal = ToolExecutionPrincipal.REQUESTER
+  let escalationConfigurable = false
+  let recipients: EscalationRecipient[] = []
 
   const options = [
     { label: "Requester", value: ToolExecutionPrincipal.REQUESTER },
@@ -32,18 +42,25 @@
     selectedTool: AgentTool,
     principal: ToolExecutionPrincipal,
     canConfigurePrincipal: boolean,
-    isAdding = false
+    isAdding = false,
+    escalation?: { enabled: boolean; recipients: EscalationRecipient[] }
   ) => {
     tool = selectedTool
     executionPrincipal = principal
     principalConfigurable = canConfigurePrincipal
     adding = isAdding
+    escalationConfigurable = escalation?.enabled ?? false
+    recipients = escalation?.recipients ?? []
     modal.show()
   }
 
   const save = () => {
     if (tool) {
-      onSave({ tool, executionPrincipal })
+      onSave({
+        tool,
+        executionPrincipal,
+        recipients: escalationConfigurable ? recipients : undefined,
+      })
     }
   }
 
@@ -93,6 +110,32 @@
           disabled={!principalConfigurable}
         />
       </div>
+      {#if escalationConfigurable}
+        <div class="configuration-field">
+          <div class="field-copy">
+            <Label size="M">Escalation</Label>
+            <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+              Require human approval before this tool runs. Choose who gets
+              notified.
+            </Body>
+          </div>
+          {#if !providers.length}
+            <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+              There are currently no deployments configured on this agent, so
+              no one can be notified. Add one in deployments first.
+            </Body>
+          {:else}
+            <EscalationRecipients
+              single
+              {recipients}
+              {agentId}
+              {providers}
+              onChange={updated =>
+                (recipients = updated as EscalationRecipient[])}
+            />
+          {/if}
+        </div>
+      {/if}
     {/if}
   </ModalContent>
 </Modal>

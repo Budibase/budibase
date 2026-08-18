@@ -56,7 +56,9 @@ const getDiscordBotToken = async (
   const agent = await findIntegrationAgent(
     appId,
     agentId,
-    a => !!a.discordIntegration?.botToken
+    a =>
+      !!a.discordIntegration?.botToken &&
+      !!a.discordIntegration?.interactionsEndpointUrl?.trim()
   )
   return agent?.discordIntegration?.botToken?.trim() || undefined
 }

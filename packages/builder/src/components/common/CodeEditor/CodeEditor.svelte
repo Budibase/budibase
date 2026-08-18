@@ -601,6 +601,9 @@
     line-height: 1.4;
     white-space: nowrap;
   }
+  :global(.hbs-tag--error) {
+    background: #e3485033;
+  }
   :global(.hbs-tag__icon) {
     width: 14px;
     height: 14px;

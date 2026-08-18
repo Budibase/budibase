@@ -860,6 +860,7 @@
     <ConfigureOperationToolModal
       bind:this={configureToolModal}
       {agentId}
+      providers={escalationProviders}
       onSave={saveToolConfiguration}
       onRemove={tool => confirmRemoveTool(tool, true)}
     />
