@@ -10,12 +10,14 @@
     type InsertAtPositionFn,
   } from "@budibase/types"
   import * as routify from "@roxi/routify"
+  import type { EditorView } from "@codemirror/view"
   import TopBar from "@/components/common/TopBar.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import {
     EditorModes,
     bindingsToCompletions,
+    buildSectionHeader,
     hbAutocomplete,
   } from "@/components/common/CodeEditor"
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
@@ -33,7 +35,7 @@
     selectedAgent,
   } from "@/stores/portal"
   import { bb } from "@/stores/bb"
-  import type { BindingCompletion } from "@/types"
+  import type { BindingCompletion, BindingCompletionOption } from "@/types"
   import AgentTabList from "../../AgentTabList.svelte"
   import AgentUnpublishedChangesIndicator from "../../AgentUnpublishedChangesIndicator.svelte"
   import ConfigureOperationToolModal from "../../ConfigureOperationToolModal.svelte"
@@ -76,12 +78,17 @@
   let webSearchConfigModal: WebSearchConfigModal | undefined = $state()
   let removeToolDialog: ConfirmDialog | undefined = $state()
   let configureToolModal: ConfigureOperationToolModal | undefined = $state()
+  let editorToolsDropdown: ToolsDropdown | undefined = $state()
   let toolToRemove: AgentTool | undefined = $state()
   let restoreToolConfiguration = $state(false)
   let blockedTool: AgentTool | undefined = $state()
   let blockedToolDialog: ConfirmDialog | undefined = $state()
   let insertToolAfterAdding = $state(false)
   let addingTool: AgentTool | undefined = $state()
+  let autocompleteToolPosition: { start: number; end: number } | undefined =
+    $state()
+  let addingToolInsertPosition: { start: number; end: number } | undefined =
+    $state()
 
   let previousToolsLoaded = false
 
@@ -134,10 +141,44 @@
     Object.assign(bindingIcons, nextIcons)
   })
 
-  const operationAutocomplete: BindingCompletion = context =>
-    hbAutocomplete(
-      bindingsToCompletions(promptBindings, EditorModes.Handlebars)
-    )(context)
+  const addToolCompletion: BindingCompletionOption = {
+    label: "Add tool",
+    detail: "Configure a new tool",
+    type: "keyword",
+    section: buildSectionHeader(null, "Actions", "", Number.MAX_SAFE_INTEGER),
+    boost: -100,
+    apply: (
+      view: EditorView,
+      _completion: BindingCompletionOption,
+      from: number,
+      to: number
+    ) => {
+      const textBeforeCompletion = view.state.doc.sliceString(0, from)
+      const bindingPrefix = textBeforeCompletion.match(/(?:\{){2,}\s*$/)?.[0]
+      const closingBraces = view.state.doc.sliceString(to, to + 2) === "}}"
+      autocompleteToolPosition = {
+        start: bindingPrefix ? from - bindingPrefix.length : from,
+        end: closingBraces ? to + 2 : to,
+      }
+      editorToolsDropdown?.show()
+    },
+  }
+  const operationAutocomplete: BindingCompletion = context => {
+    const result = hbAutocomplete([
+      ...bindingsToCompletions(promptBindings, EditorModes.Handlebars),
+      addToolCompletion,
+    ])(context)
+    if (!result) {
+      return null
+    }
+    return {
+      ...result,
+      options: [
+        ...result.options.filter(option => option !== addToolCompletion),
+        addToolCompletion,
+      ],
+    }
+  }
   const completions = [operationAutocomplete]
   let filteredTools = $derived.by(() =>
     availableTools.filter(tool => {
@@ -302,15 +343,19 @@
     operation.promptInstructions = instructions
   }
 
-  const insertToolBinding = (tool: AgentTool) => {
+  const insertToolBinding = (
+    tool: AgentTool,
+    position?: { start: number; end: number }
+  ) => {
     if (!operation || !tool.readableBinding) {
       return
     }
     const current = operation.promptInstructions || ""
-    const caret = getCaretPosition?.() || {
-      start: current.length,
-      end: current.length,
-    }
+    const caret = position ||
+      getCaretPosition?.() || {
+        start: current.length,
+        end: current.length,
+      }
     const binding = `{{ ${tool.readableBinding} }}`
     const nextInstructions =
       current.slice(0, caret.start) + binding + current.slice(caret.end)
@@ -483,9 +528,14 @@
     )
   }
 
-  const beginAddingTool = (tool: AgentTool, insertAfterAdding = false) => {
+  const beginAddingTool = (
+    tool: AgentTool,
+    insertAfterAdding = false,
+    insertPosition?: { start: number; end: number }
+  ) => {
     addingTool = tool
     insertToolAfterAdding = insertAfterAdding
+    addingToolInsertPosition = insertPosition
     const executionPrincipal = getDefaultToolExecutionPrincipal({
       tool,
       toolSecurityEnabled: $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
@@ -519,8 +569,10 @@
     }
 
     const shouldInsertTool = insertToolAfterAdding
+    const insertPosition = addingToolInsertPosition
     addingTool = undefined
     insertToolAfterAdding = false
+    addingToolInsertPosition = undefined
     const alreadyConfigured = operation.enabledTools?.some(
       config => config.toolName === tool.runtimeBinding
     )
@@ -536,12 +588,14 @@
       }
     }
     if (shouldInsertTool) {
-      insertToolBinding(tool)
+      insertToolBinding(tool, insertPosition)
     }
   }
 
   const selectEditorTool = (tool: AgentTool) => {
-    beginAddingTool(tool, true)
+    const insertPosition = autocompleteToolPosition
+    autocompleteToolPosition = undefined
+    beginAddingTool(tool, true, insertPosition)
   }
 </script>
 
@@ -602,11 +656,13 @@
             >
             <div class="tools-popover-container">
               <ToolsDropdown
+                bind:this={editorToolsDropdown}
                 {filteredTools}
                 {toolSections}
                 bind:toolSearch
                 webSearchEnabled={webSearchConfigured}
                 onToolClick={selectEditorTool}
+                onClose={() => (autocompleteToolPosition = undefined)}
                 onAddApiConnection={() => bb.settings("/connections/apis")}
                 onConfigureWebSearch={() => webSearchConfigModal?.show()}
               />
@@ -776,6 +832,7 @@
       onClose={() => {
         addingTool = undefined
         insertToolAfterAdding = false
+        addingToolInsertPosition = undefined
       }}
     />
   {/if}

@@ -62,7 +62,7 @@ const toSpectrumIcon = (name: string) => {
   `
 }
 
-const buildSectionHeader = (
+export const buildSectionHeader = (
   type: string | null,
   sectionName: string,
   icon: string,

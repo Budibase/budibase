@@ -13,6 +13,7 @@
     onToolClick: (tool: AgentTool) => void
     onAddApiConnection: () => void
     onConfigureWebSearch: () => void
+    onClose?: () => void
   }
 
   let {
@@ -23,6 +24,7 @@
     onToolClick,
     onAddApiConnection,
     onConfigureWebSearch,
+    onClose,
   }: Props = $props()
 
   let toolsMenu: ActionMenu | undefined
@@ -42,11 +44,14 @@
     event.stopPropagation()
     openWebSearchConfig()
   }
+
+  export const show = () => toolsMenu?.show()
 </script>
 
 <ActionMenu
   bind:this={toolsMenu}
   on:open={focusSearch}
+  on:close={() => onClose?.()}
   align="right"
   roundedPopover
   portalTarget=".tools-popover-container"
@@ -94,6 +99,7 @@
             </div>
             {#each toolSections[section] as tool}
               <MenuItem
+                noClose
                 on:click={() => {
                   if (
                     tool.sourceType === ToolType.SEARCH &&
@@ -103,6 +109,7 @@
                     return
                   }
                   onToolClick(tool)
+                  toolsMenu?.hide()
                 }}
               >
                 <div class="tool-item">
