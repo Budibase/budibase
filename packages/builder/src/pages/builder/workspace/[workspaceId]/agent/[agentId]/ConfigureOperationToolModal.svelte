@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { Body, Label, Modal, ModalContent, Select } from "@budibase/bbui"
+  import {
+    Body,
+    Heading,
+    Label,
+    Modal,
+    ModalContent,
+    Select,
+  } from "@budibase/bbui"
   import { ToolExecutionPrincipal } from "@budibase/types"
   import ToolIcon from "./ToolIcon.svelte"
   import type { AgentTool } from "./toolTypes"
@@ -57,10 +64,9 @@
   >
     <div slot="header" class="modal-title">
       {#if tool}
-        <span class="modal-title-icon">
-          <ToolIcon icon={tool.icon} size="S" fallbackIcon="Wrench" />
-        </span>
-        <span>Configure {tool.readableBinding}</span>
+        <ToolIcon icon={tool.icon} size="S" fallbackIcon="Wrench" />
+
+        <Heading size="S">Configure {tool.readableBinding}</Heading>
       {/if}
     </div>
 
@@ -68,7 +74,7 @@
       <div class="configuration-field">
         <div class="field-copy">
           <Label size="M">Run as</Label>
-          <Body size="S" color="var(--spectrum-global-color-gray-700)">
+          <Body size="XS" color="var(--spectrum-global-color-gray-700)">
             Choose the role used to access data and perform this action.
           </Body>
         </div>
@@ -92,16 +98,7 @@
     display: flex;
     min-width: 0;
     align-items: center;
-    gap: var(--spacing-m);
-  }
-
-  .modal-title-icon {
-    display: flex;
-    width: 20px;
-    height: 20px;
-    flex: 0 0 20px;
-    align-items: center;
-    justify-content: center;
+    gap: var(--spacing-s);
   }
 
   .configuration-field {
