@@ -28,6 +28,7 @@ export interface AiToolDefinition {
   sourceIconType?: string
   executionPolicy: ToolExecutionPolicy
   authorization?: ToolAuthorization
+  requesterRedactedTool?: Tool
   filterResult?: (
     result: unknown,
     runtime: ToolAuthorizationRuntime

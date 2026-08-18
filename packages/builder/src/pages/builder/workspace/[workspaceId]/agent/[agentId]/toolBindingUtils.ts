@@ -1,4 +1,9 @@
-import { ToolType } from "@budibase/types"
+import {
+  ToolExecutionPrincipal,
+  ToolType,
+  type AgentOperation,
+} from "@budibase/types"
+import type { AgentTool } from "./toolTypes"
 
 const normaliseBinding = (binding: string) =>
   binding
@@ -47,4 +52,49 @@ export const getIncludedToolRuntimeBindings = (
         .filter(Boolean)
     )
   )
+}
+
+export const getConfiguredOperationTools = ({
+  operation,
+  readableToRuntimeBinding,
+  availableTools,
+  toolSecurityEnabled,
+}: {
+  operation: AgentOperation
+  readableToRuntimeBinding: Record<string, string>
+  availableTools: AgentTool[]
+  toolSecurityEnabled: boolean
+}) => {
+  const existing = new Map(
+    (operation.enabledTools || []).map(tool => [tool.toolName, tool])
+  )
+
+  return getIncludedToolRuntimeBindings(
+    operation.promptInstructions,
+    readableToRuntimeBinding
+  ).map(toolName => {
+    const tool = availableTools.find(item => item.runtimeBinding === toolName)
+    const existingConfig = existing.get(toolName)
+    let executionPrincipal =
+      existingConfig?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
+
+    if (!toolSecurityEnabled) {
+      executionPrincipal =
+        existingConfig?.executionPrincipal ?? ToolExecutionPrincipal.ADMIN
+    } else if (tool?.executionPolicy.mode === "admin") {
+      executionPrincipal = ToolExecutionPrincipal.ADMIN
+    } else if (tool?.executionPolicy.mode === "configurable") {
+      executionPrincipal =
+        existingConfig?.executionPrincipal ??
+        tool.executionPolicy.defaultPrincipal
+    }
+
+    return {
+      toolName,
+      executionPrincipal,
+      ...(existingConfig?.requestInputs
+        ? { requestInputs: existingConfig.requestInputs }
+        : {}),
+    }
+  })
 }

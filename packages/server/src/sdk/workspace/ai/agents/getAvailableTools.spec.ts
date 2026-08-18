@@ -35,7 +35,7 @@ describe("getAvailableToolsMetadata", () => {
     jest.spyOn(sdk.automations, "fetch").mockResolvedValue([])
   })
 
-  it("does not expose helper tools in metadata", async () => {
+  it("does not expose legacy helper tools in metadata", async () => {
     jest.spyOn(sdk.datasources, "fetch").mockResolvedValue([])
     jest.spyOn(sdk.queries, "fetch").mockResolvedValue([])
 
