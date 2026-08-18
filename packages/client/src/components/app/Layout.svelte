@@ -3,6 +3,7 @@
   import { writable } from "svelte/store"
   import { Heading, Icon, Button, clickOutside } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
+  import { ScreenVariant } from "@budibase/types"
   import NavItem from "./NavItem.svelte"
   import UserMenu from "./UserMenu.svelte"
   import Logo from "./Logo.svelte"
@@ -383,7 +384,10 @@
   data-name="Screen"
   data-icon="browser"
 >
-  <div class="screen-wrapper layout-body">
+  <div
+    class="screen-wrapper layout-body"
+    class:pdf-screen={$builderStore.screen?.variant === ScreenVariant.PDF}
+  >
     {#if showBanner && (typeClass !== "left" || mobile)}
       <div class="banner" style={bannerStyle}>
         <div class="banner-content">
@@ -622,6 +626,9 @@
     overflow-x: hidden;
     position: relative;
     background: var(--spectrum-alias-background-color-secondary);
+  }
+  .layout-body.pdf-screen {
+    overflow-x: auto;
   }
   .layout-content {
     display: flex;

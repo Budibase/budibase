@@ -3,7 +3,10 @@ import html2pdf from "html2pdf.js"
 export const pxToPt = (px: number) => (px / 4) * 3
 export const ptToPx = (pt: number) => (pt / 3) * 4
 
-export const A4HeightPx = ptToPx(841.92) + 1
+export const A4WidthPt = 595.28
+export const A4HeightPt = 841.92
+export const A4WidthPx = ptToPx(A4WidthPt)
+export const A4HeightPx = ptToPx(A4HeightPt) + 1
 
 export interface PDFOptions {
   fileName?: string
