@@ -1,8 +1,6 @@
-import {
-  FUNCTION_RUN_REQUEST_FIXTURE,
-  FunctionErrorCode,
-} from "@budibase/types"
+import { FunctionErrorCode } from "@budibase/types"
 import { executeFunctionInIsolate } from "./isolatedVmRuntime"
+import { FUNCTION_RUN_REQUEST_FIXTURE } from "./testFixtures"
 
 const request = (compiledJavaScript: string, runId = "isolate-run") => ({
   ...FUNCTION_RUN_REQUEST_FIXTURE,

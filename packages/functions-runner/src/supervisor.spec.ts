@@ -1,15 +1,21 @@
 import {
   DEFAULT_FUNCTION_LIMITS,
-  FUNCTION_RUN_REQUEST_FIXTURE,
   FunctionErrorCode,
 } from "@budibase/types"
 import { spawn } from "node:child_process"
+import type { ChildProcess } from "node:child_process"
 import type { FunctionQueryHandler } from "./isolatedVmRuntime"
 import { FunctionSupervisor } from "./supervisor"
+import { FUNCTION_RUN_REQUEST_FIXTURE } from "./testFixtures"
 
 const childFixture = String.raw`
 const mode = process.argv[1]
-if (mode === "ignore-termination" || mode === "malformed-ignore-termination") {
+if (
+  mode === "ignore-termination" ||
+  mode === "malformed-ignore-termination" ||
+  mode === "result-delayed-close" ||
+  mode === "result-never-closes"
+) {
   process.on("SIGTERM", () => {})
 }
 process.on("message", request => {
@@ -82,15 +88,51 @@ process.on("message", request => {
     process.send({ type: "result", result }, sent)
     return
   }
+  if (mode === "result-delayed-close") {
+    // Send the result immediately, but simulate teardown completing after the deadline.
+    process.send(
+      { type: "result", result },
+      () => setTimeout(() => process.disconnect(), 1100)
+    )
+    return
+  }
+  if (mode === "result-never-closes") {
+    process.send({ type: "result", result }, () =>
+      setInterval(() => {}, 1000)
+    )
+    return
+  }
   process.send({ type: "result", result }, () => process.disconnect())
 })
 `
 
-const createSupervisor = (
-  mode: string,
+// Scenarios used to test child process supervision.
+type ChildMode =
+  | "success"
+  | "crash"
+  | "memory-abort"
+  | "no-result"
+  | "malformed"
+  | "malformed-ignore-termination"
+  | "extra-message"
+  | "wrong-run-id"
+  | "hang"
+  | "ignore-termination"
+  | "result-delayed-close"
+  | "result-never-closes"
+  | "query"
+  | "queries"
+  | "limits"
+
+const createSupervisor = ({
+  mode,
   terminationGraceMs = 25,
+  queryHandler,
+}: {
+  mode: ChildMode
+  terminationGraceMs?: number
   queryHandler?: FunctionQueryHandler
-) =>
+}) =>
   new FunctionSupervisor({
     childFactory: () =>
       spawn(process.execPath, ["-e", childFixture, mode], {
@@ -100,7 +142,13 @@ const createSupervisor = (
     terminationGraceMs,
   })
 
-const request = (runId: string, timeoutMs = 1_000) => ({
+const request = ({
+  runId,
+  timeoutMs = 1_000,
+}: {
+  runId: string
+  timeoutMs?: number
+}) => ({
   ...FUNCTION_RUN_REQUEST_FIXTURE,
   runId,
   limits: {
@@ -111,20 +159,20 @@ const request = (runId: string, timeoutMs = 1_000) => ({
 
 describe("FunctionSupervisor", () => {
   it("uses a fresh child process for every sequential invocation", async () => {
-    const supervisor = createSupervisor("success")
+    const supervisor = createSupervisor({ mode: "success" })
 
-    const first = await supervisor.execute(request("run-1"))
-    const second = await supervisor.execute(request("run-2"))
+    const first = await supervisor.execute(request({ runId: "run-1" }))
+    const second = await supervisor.execute(request({ runId: "run-2" }))
 
     expect(first.output?.pid).not.toEqual(second.output?.pid)
     expect(supervisor.activeRunCount()).toBe(0)
   })
 
   it("returns a stable result when a child crashes", async () => {
-    const supervisor = createSupervisor("crash")
+    const supervisor = createSupervisor({ mode: "crash" })
 
     await expect(
-      supervisor.execute(request("run-crash"))
+      supervisor.execute(request({ runId: "run-crash" }))
     ).resolves.toMatchObject({
       runId: "run-crash",
       status: "error",
@@ -137,10 +185,10 @@ describe("FunctionSupervisor", () => {
   })
 
   it("returns a stable result when a child hits its memory ceiling", async () => {
-    const supervisor = createSupervisor("memory-abort")
+    const supervisor = createSupervisor({ mode: "memory-abort" })
 
     await expect(
-      supervisor.execute(request("run-memory", 10_000))
+      supervisor.execute(request({ runId: "run-memory", timeoutMs: 10_000 }))
     ).resolves.toMatchObject({
       runId: "run-memory",
       status: "error",
@@ -153,10 +201,10 @@ describe("FunctionSupervisor", () => {
   })
 
   it("returns a stable result when a child exits without a result", async () => {
-    const supervisor = createSupervisor("no-result")
+    const supervisor = createSupervisor({ mode: "no-result" })
 
     await expect(
-      supervisor.execute(request("run-no-result"))
+      supervisor.execute(request({ runId: "run-no-result" }))
     ).resolves.toMatchObject({
       status: "error",
       error: {
@@ -166,16 +214,18 @@ describe("FunctionSupervisor", () => {
     })
   })
 
-  it.each([
+  const malformedModes: Array<[ChildMode, string]> = [
     ["malformed", "Malformed Function child result"],
     ["malformed-ignore-termination", "Malformed Function child result"],
     ["extra-message", "Malformed Function child result"],
     ["wrong-run-id", "Function child result run ID does not match request"],
-  ])("rejects %s child result", async (mode, message) => {
-    const supervisor = createSupervisor(mode)
+  ]
+
+  it.each(malformedModes)("rejects %s child result", async (mode, message) => {
+    const supervisor = createSupervisor({ mode })
 
     await expect(
-      supervisor.execute(request(`run-${mode}`))
+      supervisor.execute(request({ runId: `run-${mode}` }))
     ).resolves.toMatchObject({
       status: "error",
       error: {
@@ -194,7 +244,7 @@ describe("FunctionSupervisor", () => {
     })
 
     await expect(
-      supervisor.execute(request("run-spawn-failure"))
+      supervisor.execute(request({ runId: "run-spawn-failure" }))
     ).resolves.toMatchObject({
       status: "error",
       error: {
@@ -206,10 +256,10 @@ describe("FunctionSupervisor", () => {
 
   it("forwards query capabilities without exposing the run envelope", async () => {
     const queryHandler = jest.fn(async () => ({ rows: [{ id: "row-1" }] }))
-    const supervisor = createSupervisor("query", 25, queryHandler)
+    const supervisor = createSupervisor({ mode: "query", queryHandler })
 
     await expect(
-      supervisor.execute(request("run-query"))
+      supervisor.execute(request({ runId: "run-query" }))
     ).resolves.toMatchObject({
       status: "success",
       output: {
@@ -233,7 +283,7 @@ describe("FunctionSupervisor", () => {
       })
     )
     const supervisor = new FunctionSupervisor({ childFactory })
-    const runRequest = request("run-clamped-limits")
+    const runRequest = request({ runId: "run-clamped-limits" })
     for (const key of Object.keys(runRequest.limits)) {
       runRequest.limits[key as keyof typeof runRequest.limits] =
         Number.MAX_SAFE_INTEGER
@@ -253,7 +303,7 @@ describe("FunctionSupervisor", () => {
       throw new Error("must not spawn")
     })
     const supervisor = new FunctionSupervisor({ childFactory })
-    const runRequest = request("run-large-input")
+    const runRequest = request({ runId: "run-large-input" })
     runRequest.inputs = { value: "too large" }
     runRequest.limits = { ...runRequest.limits, maxInputBytes: 10 }
 
@@ -275,10 +325,12 @@ describe("FunctionSupervisor", () => {
       maxConcurrentRuns: 1,
       terminationGraceMs: 10,
     })
-    const first = supervisor.execute(request("run-capacity-1", 5_000))
+    const first = supervisor.execute(
+      request({ runId: "run-capacity-1", timeoutMs: 5_000 })
+    )
 
     await expect(
-      supervisor.execute(request("run-capacity-busy"))
+      supervisor.execute(request({ runId: "run-capacity-busy" }))
     ).resolves.toMatchObject({
       error: {
         code: FunctionErrorCode.FUNCTION_RUNNER_BUSY,
@@ -288,7 +340,9 @@ describe("FunctionSupervisor", () => {
     supervisor.terminate("run-capacity-1")
     await first
 
-    const second = supervisor.execute(request("run-capacity-2", 5_000))
+    const second = supervisor.execute(
+      request({ runId: "run-capacity-2", timeoutMs: 5_000 })
+    )
     expect(supervisor.activeRunCount()).toBe(1)
     supervisor.terminate("run-capacity-2")
     await second
@@ -296,8 +350,12 @@ describe("FunctionSupervisor", () => {
   })
 
   it("enforces the query count at the supervisor boundary", async () => {
-    const supervisor = createSupervisor("queries", 10, async () => ({}))
-    const runRequest = request("run-query-limit")
+    const supervisor = createSupervisor({
+      mode: "queries",
+      terminationGraceMs: 10,
+      queryHandler: async () => ({}),
+    })
+    const runRequest = request({ runId: "run-query-limit" })
     runRequest.limits = {
       ...runRequest.limits,
       maxQueryCalls: 1,
@@ -311,10 +369,12 @@ describe("FunctionSupervisor", () => {
   })
 
   it("rejects oversized query results at the supervisor boundary", async () => {
-    const supervisor = createSupervisor("query", 10, async () => ({
-      value: "too large",
-    }))
-    const runRequest = request("run-query-response-limit")
+    const supervisor = createSupervisor({
+      mode: "query",
+      terminationGraceMs: 10,
+      queryHandler: async () => ({ value: "too large" }),
+    })
+    const runRequest = request({ runId: "run-query-response-limit" })
     runRequest.limits = {
       ...runRequest.limits,
       maxQueryResponseBytes: 10,
@@ -339,21 +399,27 @@ describe("FunctionSupervisor", () => {
     const queryCancelled = new Promise<void>(resolve => {
       notifyQueryCancelled = resolve
     })
-    const supervisor = createSupervisor("query", 10, request => {
-      querySignal = request.signal
-      notifyQueryStarted?.()
-      return new Promise((_resolve, reject) => {
-        request.signal.addEventListener(
-          "abort",
-          () => {
-            notifyQueryCancelled?.()
-            reject(new Error("Query cancelled"))
-          },
-          { once: true }
-        )
-      })
+    const supervisor = createSupervisor({
+      mode: "query",
+      terminationGraceMs: 10,
+      queryHandler: request => {
+        querySignal = request.signal
+        notifyQueryStarted?.()
+        return new Promise((_resolve, reject) => {
+          request.signal.addEventListener(
+            "abort",
+            () => {
+              notifyQueryCancelled?.()
+              reject(new Error("Query cancelled"))
+            },
+            { once: true }
+          )
+        })
+      },
     })
-    const resultPromise = supervisor.execute(request("run-query-timeout", 500))
+    const resultPromise = supervisor.execute(
+      request({ runId: "run-query-timeout", timeoutMs: 500 })
+    )
 
     await queryStarted
     expect(querySignal?.aborted).toBe(false)
@@ -366,8 +432,10 @@ describe("FunctionSupervisor", () => {
   })
 
   it("cancels an active child and cleans up its state", async () => {
-    const supervisor = createSupervisor("hang")
-    const resultPromise = supervisor.execute(request("run-cancel", 5_000))
+    const supervisor = createSupervisor({ mode: "hang" })
+    const resultPromise = supervisor.execute(
+      request({ runId: "run-cancel", timeoutMs: 5_000 })
+    )
 
     supervisor.terminate("run-cancel")
 
@@ -382,10 +450,13 @@ describe("FunctionSupervisor", () => {
   })
 
   it("escalates a timed-out child that ignores graceful termination", async () => {
-    const supervisor = createSupervisor("ignore-termination", 10)
+    const supervisor = createSupervisor({
+      mode: "ignore-termination",
+      terminationGraceMs: 10,
+    })
 
     await expect(
-      supervisor.execute(request("run-timeout", 10))
+      supervisor.execute(request({ runId: "run-timeout", timeoutMs: 10 }))
     ).resolves.toMatchObject({
       status: "error",
       error: {
@@ -396,10 +467,69 @@ describe("FunctionSupervisor", () => {
     expect(supervisor.activeRunCount()).toBe(0)
   })
 
+  it("does not replace a completed result with a timeout during child teardown", async () => {
+    const supervisor = createSupervisor({
+      mode: "result-delayed-close",
+      terminationGraceMs: 1_500,
+    })
+
+    await expect(
+      supervisor.execute(
+        request({ runId: "run-result-before-timeout", timeoutMs: 1_000 })
+      )
+    ).resolves.toMatchObject({
+      runId: "run-result-before-timeout",
+      status: "success",
+    })
+    expect(supervisor.activeRunCount()).toBe(0)
+  })
+
+  it("terminates a child that remains alive after returning a result", async () => {
+    const supervisor = createSupervisor({
+      mode: "result-never-closes",
+      terminationGraceMs: 10,
+    })
+
+    await expect(
+      supervisor.execute(request({ runId: "run-result-stuck-child" }))
+    ).resolves.toMatchObject({
+      runId: "run-result-stuck-child",
+      status: "success",
+    })
+    expect(supervisor.activeRunCount()).toBe(0)
+  })
+
+  it("does not replace a protocol failure with a timeout during child teardown", async () => {
+    const supervisor = createSupervisor({
+      mode: "malformed-ignore-termination",
+      terminationGraceMs: 1_000,
+    })
+
+    await expect(
+      supervisor.execute(
+        request({ runId: "run-protocol-failure", timeoutMs: 500 })
+      )
+    ).resolves.toMatchObject({
+      status: "error",
+      error: {
+        code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
+        message: "Malformed Function child result",
+      },
+    })
+    expect(supervisor.activeRunCount()).toBe(0)
+  })
+
   it("terminates and reaps every child during shutdown", async () => {
-    const supervisor = createSupervisor("ignore-termination", 10)
-    const first = supervisor.execute(request("run-shutdown-1", 5_000))
-    const second = supervisor.execute(request("run-shutdown-2", 5_000))
+    const supervisor = createSupervisor({
+      mode: "ignore-termination",
+      terminationGraceMs: 10,
+    })
+    const first = supervisor.execute(
+      request({ runId: "run-shutdown-1", timeoutMs: 5_000 })
+    )
+    const second = supervisor.execute(
+      request({ runId: "run-shutdown-2", timeoutMs: 5_000 })
+    )
 
     await supervisor.shutdown()
 
@@ -416,5 +546,44 @@ describe("FunctionSupervisor", () => {
     )
     expect(supervisor.activeRunCount()).toBe(0)
     expect(supervisor.isHealthy()).toBe(false)
+  })
+
+  it("waits for close when shutdown starts after child exit", async () => {
+    let resolveChild: ((child: ChildProcess) => void) | undefined
+    const childCreated = new Promise<ChildProcess>(resolve => {
+      resolveChild = resolve
+    })
+    const supervisor = new FunctionSupervisor({
+      childFactory: () => {
+        const child = spawn(process.execPath, ["-e", childFixture, "hang"], {
+          stdio: ["ignore", "ignore", "ignore", "ipc"],
+        })
+        resolveChild?.(child)
+        return child
+      },
+    })
+    const result = supervisor.execute(
+      request({ runId: "run-exit-close-race", timeoutMs: 5_000 })
+    )
+    const child = await childCreated
+    await new Promise<void>(resolve => child.once("spawn", resolve))
+
+    let shutdown = Promise.resolve()
+    let shutdownResolved = false
+    const resolvedBeforeClose = new Promise<boolean>(resolve => {
+      child.once("exit", () => {
+        shutdown = supervisor.shutdown()
+        shutdown.then(() => {
+          shutdownResolved = true
+        })
+      })
+      child.once("close", () => resolve(shutdownResolved))
+    })
+    child.kill("SIGKILL")
+
+    await expect(resolvedBeforeClose).resolves.toBe(false)
+    await shutdown
+    await result
+    expect(supervisor.activeRunCount()).toBe(0)
   })
 })

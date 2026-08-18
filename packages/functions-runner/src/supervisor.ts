@@ -225,6 +225,13 @@ export class FunctionSupervisor {
       let queryCount = 0
       let concurrentQueryCount = 0
 
+      const clearRunTimer = () => {
+        if (runTimer) {
+          clearTimeout(runTimer)
+          runTimer = undefined
+        }
+      }
+
       const requestChildExit = () => {
         if (closed || killTimer) {
           return
@@ -237,6 +244,17 @@ export class FunctionSupervisor {
           }
         }, this.terminationGraceMs)
         killTimer.unref()
+      }
+
+      const recordResult = (result: FunctionRunResult) => {
+        receivedResult = result
+        clearRunTimer()
+        requestChildExit()
+      }
+
+      const recordFailure = (result: FunctionRunResult) => {
+        failure = result
+        clearRunTimer()
       }
 
       const terminateChild = (reason: TerminationReason) => {
@@ -254,11 +272,13 @@ export class FunctionSupervisor {
 
       const setProtocolFailure = (message: string) => {
         if (!failure) {
-          failure = failureResult(
-            request.runId,
-            startedAt,
-            FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
-            message
+          recordFailure(
+            failureResult(
+              request.runId,
+              startedAt,
+              FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
+              message
+            )
           )
         }
         requestChildExit()
@@ -268,22 +288,26 @@ export class FunctionSupervisor {
         try {
           child.send(message, error => {
             if (error && !closed && !terminationReason && !failure) {
-              failure = failureResult(
-                request.runId,
-                startedAt,
-                FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
-                CHILD_CRASHED_MESSAGE
+              recordFailure(
+                failureResult(
+                  request.runId,
+                  startedAt,
+                  FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+                  CHILD_CRASHED_MESSAGE
+                )
               )
               requestChildExit()
             }
           })
         } catch {
           if (!closed && !failure) {
-            failure = failureResult(
-              request.runId,
-              startedAt,
-              FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
-              CHILD_CRASHED_MESSAGE
+            recordFailure(
+              failureResult(
+                request.runId,
+                startedAt,
+                FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+                CHILD_CRASHED_MESSAGE
+              )
             )
             requestChildExit()
           }
@@ -308,7 +332,7 @@ export class FunctionSupervisor {
             setProtocolFailure(RUN_ID_MISMATCH_MESSAGE)
             return
           }
-          receivedResult = message.result
+          recordResult(message.result)
           return
         }
 
@@ -328,11 +352,13 @@ export class FunctionSupervisor {
             maxDepth: request.limits.maxInputDepth,
           })
         } catch {
-          failure = failureResult(
-            request.runId,
-            startedAt,
-            FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
-            QUERY_PAYLOAD_INVALID_MESSAGE
+          recordFailure(
+            failureResult(
+              request.runId,
+              startedAt,
+              FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
+              QUERY_PAYLOAD_INVALID_MESSAGE
+            )
           )
           requestChildExit()
           return
@@ -341,11 +367,13 @@ export class FunctionSupervisor {
           queryCount >= request.limits.maxQueryCalls ||
           concurrentQueryCount >= request.limits.maxConcurrentQueryCalls
         ) {
-          failure = failureResult(
-            request.runId,
-            startedAt,
-            FunctionErrorCode.FUNCTION_QUERY_LIMIT,
-            QUERY_LIMIT_MESSAGE
+          recordFailure(
+            failureResult(
+              request.runId,
+              startedAt,
+              FunctionErrorCode.FUNCTION_QUERY_LIMIT,
+              QUERY_LIMIT_MESSAGE
+            )
           )
           requestChildExit()
           return
@@ -372,11 +400,13 @@ export class FunctionSupervisor {
                     maxDepth: request.limits.maxQueryResponseDepth,
                   })
                 } catch {
-                  failure = failureResult(
-                    request.runId,
-                    startedAt,
-                    FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
-                    QUERY_PAYLOAD_INVALID_MESSAGE
+                  recordFailure(
+                    failureResult(
+                      request.runId,
+                      startedAt,
+                      FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
+                      QUERY_PAYLOAD_INVALID_MESSAGE
+                    )
                   )
                   requestChildExit()
                   return
@@ -402,20 +432,20 @@ export class FunctionSupervisor {
       })
 
       child.on("error", () => {
-        failure = failureResult(
-          request.runId,
-          startedAt,
-          FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
-          CHILD_CRASHED_MESSAGE
+        recordFailure(
+          failureResult(
+            request.runId,
+            startedAt,
+            FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+            CHILD_CRASHED_MESSAGE
+          )
         )
       })
 
       child.on("close", (code, signal) => {
         closed = true
         queryAbortController.abort()
-        if (runTimer) {
-          clearTimeout(runTimer)
-        }
+        clearRunTimer()
         if (killTimer) {
           clearTimeout(killTimer)
         }
@@ -486,33 +516,38 @@ export class FunctionSupervisor {
       })
 
       if (!child.connected) {
-        failure = failureResult(
-          request.runId,
-          startedAt,
-          FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
-          CHILD_CRASHED_MESSAGE
+        recordFailure(
+          failureResult(
+            request.runId,
+            startedAt,
+            FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+            CHILD_CRASHED_MESSAGE
+          )
         )
         child.kill("SIGKILL")
         return
       }
 
+      runTimer = setTimeout(() => {
+        if (!failure && !receivedResult) {
+          terminateChild("timeout")
+        }
+      }, request.limits.timeoutMs)
+      runTimer.unref()
+
       try {
         sendMessage({ type: "run", request })
       } catch {
-        failure = failureResult(
-          request.runId,
-          startedAt,
-          FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
-          CHILD_CRASHED_MESSAGE
+        recordFailure(
+          failureResult(
+            request.runId,
+            startedAt,
+            FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+            CHILD_CRASHED_MESSAGE
+          )
         )
         requestChildExit()
       }
-
-      runTimer = setTimeout(
-        () => terminateChild("timeout"),
-        request.limits.timeoutMs
-      )
-      runTimer.unref()
     })
   }
 
@@ -523,20 +558,15 @@ export class FunctionSupervisor {
   async shutdown() {
     this.shuttingDown = true
     const children = [...this.activeRuns.values()]
+    const closed = children.map(
+      run =>
+        new Promise<void>(resolve => {
+          run.child.once("close", () => resolve())
+        })
+    )
     for (const run of children) {
       run.terminate("shutdown")
     }
-    await Promise.all(
-      children.map(
-        run =>
-          new Promise<void>(resolve => {
-            if (run.child.exitCode !== null || run.child.signalCode !== null) {
-              resolve()
-              return
-            }
-            run.child.once("close", () => resolve())
-          })
-      )
-    )
+    await Promise.all(closed)
   }
 }
