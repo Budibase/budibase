@@ -7,6 +7,7 @@
     Input,
     notifications,
   } from "@budibase/bbui"
+  import { downloadStream } from "@budibase/frontend-core"
   import { ChatCommands } from "@budibase/shared-core"
   import type {
     Agent,
@@ -131,13 +132,8 @@
         return
       }
 
-      const blob = await agentsStore.downloadMSTeamsPackage(agent._id)
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.href = url
-      link.download = "budibase-teams-app-package.zip"
-      link.click()
-      URL.revokeObjectURL(url)
+      const response = await agentsStore.downloadMSTeamsPackage(agent._id)
+      await downloadStream(response)
       notifications.success("Microsoft Teams app package downloaded")
     } catch (error) {
       console.error(error)

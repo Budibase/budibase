@@ -375,7 +375,7 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
       API.provisionAgentMSTeamsChannel(agentId, body)
     )
 
-  downloadMSTeamsPackage = async (agentId: string): Promise<Blob> =>
+  downloadMSTeamsPackage = async (agentId: string): Promise<Response> =>
     await this.runAndRefreshAgents(() =>
       API.downloadAgentMSTeamsPackage(agentId)
     )
