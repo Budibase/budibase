@@ -9421,6 +9421,22 @@
         "label": "Button text",
         "key": "buttonText",
         "defaultValue": "Download PDF"
+      },
+      {
+        "type": "select",
+        "label": "Page orientation",
+        "key": "orientation",
+        "options": [
+          {
+            "label": "Portrait",
+            "value": "portrait"
+          },
+          {
+            "label": "Landscape",
+            "value": "landscape"
+          }
+        ],
+        "defaultValue": "portrait"
       }
     ]
   },

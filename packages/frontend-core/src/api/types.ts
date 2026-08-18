@@ -45,6 +45,7 @@ import { EscalationEndpoints } from "./escalations"
 import { NavigationEndpoints } from "./navigation"
 import { WorkspaceAppEndpoints } from "./workspaceApps"
 import { ResourceEndpoints } from "./resource"
+import { RestTemplateEndpoints } from "./restTemplates"
 import { DeploymentEndpoints } from "./deploy"
 import { WorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { WorkspaceHomeEndpoints } from "./workspaceHome"
@@ -161,6 +162,7 @@ export type APIClient = BaseAPIClient &
   SelfEndpoints &
   TableEndpoints &
   TemplateEndpoints &
+  RestTemplateEndpoints &
   UserEndpoints &
   FeatureFlagEndpoints &
   ViewEndpoints & {

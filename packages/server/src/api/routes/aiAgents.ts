@@ -9,6 +9,7 @@ import {
 } from "./endpointGroups"
 import {
   connectAgentSharePointSiteValidator,
+  createAgentSlackAppValidator,
   createAgentOperationValidator,
   createAgentValidator,
   provisionAgentSlackChannelValidator,
@@ -77,6 +78,12 @@ builderAdminRoutes
     provisionAgentSlackChannelValidator(),
     ai.provisionAgentSlackChannel
   )
+  .post(
+    "/api/agent/:agentId/slack/app/create",
+    createAgentSlackAppValidator(),
+    ai.createAgentSlackApp
+  )
+  .get("/api/agent/:agentId/slack/manifest", ai.downloadAgentSlackManifest)
   .post(
     "/api/agent/:agentId/telegram/toggle",
     toggleAgentTelegramDeploymentValidator(),
@@ -169,3 +176,4 @@ publicRoutes.get(
   "/api/agent/knowledge-sources/sharepoint/callback",
   ai.completeSharePointAuth
 )
+publicRoutes.get("/api/agent/slack/oauth/callback", ai.completeSlackOAuth)

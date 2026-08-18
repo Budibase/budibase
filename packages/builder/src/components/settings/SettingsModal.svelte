@@ -397,7 +397,9 @@
 
   .setting-page {
     flex: 1 1 auto;
+    min-width: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: var(--spacing-l);
   }
 
@@ -437,6 +439,7 @@
 
   .setting-main {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     background-color: var(--background);
