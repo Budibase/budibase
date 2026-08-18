@@ -84,6 +84,7 @@ export default abstract class BaseDataFetch<
   }
   store: Writable<DataFetchStore<TDefinition, TQuery, TRow>>
   derivedStore: Readable<DataFetchDerivedStore<TDefinition, TQuery, TRow>>
+  initialDataRequestId = 0
 
   /**
    * Constructs a new DataFetch instance.
@@ -201,13 +202,20 @@ export default abstract class BaseDataFetch<
    * Fetches a fresh set of data from the server, resetting pagination
    */
   async getInitialData() {
+    const requestId = ++this.initialDataRequestId
     const { filter, paginate } = this.options
 
     // Fetch datasource definition and extract sort properties if configured
     const definition = await this.getDefinition()
+    if (requestId !== this.initialDataRequestId) {
+      return
+    }
 
     // Determine feature flags
     const features = await this.determineFeatureFlags()
+    if (requestId !== this.initialDataRequestId) {
+      return
+    }
     this.features = {
       supportsSearch: !!features?.supportsSearch,
       supportsSort: !!features?.supportsSort,
@@ -259,6 +267,9 @@ export default abstract class BaseDataFetch<
 
     // Actually fetch data
     const page = await this.getPage()
+    if (requestId !== this.initialDataRequestId) {
+      return
+    }
     this.store.update($store => ({
       ...$store,
       loading: false,
