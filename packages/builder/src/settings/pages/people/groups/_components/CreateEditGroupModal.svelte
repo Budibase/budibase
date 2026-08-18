@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     keepOpen,
     ColorPicker,
@@ -7,13 +7,17 @@
     Input,
     IconPicker,
   } from "@budibase/bbui"
+  import type { UserGroup } from "@budibase/types"
 
-  export let group
-  export let saveGroup
+  interface Props {
+    group: UserGroup
+    saveGroup: (group: UserGroup) => void | Promise<void>
+  }
 
-  let readonlyTitle = group?.scimInfo?.isSync
+  let { group, saveGroup }: Props = $props()
 
-  let nameError
+  const readonlyTitle = $derived(group?.scimInfo?.isSync)
+  let nameError = $state<string | undefined>()
 </script>
 
 <ModalContent

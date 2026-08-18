@@ -17,7 +17,7 @@
   import { workspacesStore } from "@/stores/portal/workspaces"
   import { auth } from "@/stores/portal/auth"
   import { groups } from "@/stores/portal/groups"
-  import { onMount, setContext, getContext } from "svelte"
+  import { onMount, setContext, untrack } from "svelte"
   import WorkspaceNameTableRenderer from "../users/_components/WorkspaceNameTableRenderer.svelte"
   import WorkspaceRoleTableRenderer from "../users/_components/WorkspaceRoleTableRenderer.svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
@@ -31,38 +31,37 @@
   import { bb } from "@/stores/bb"
   import type { StoreApp } from "@/types"
   import type { UserGroup } from "@budibase/types"
-  import type { Readable } from "svelte/store"
 
-  export let groupId: string
-
-  const routing =
-    getContext<Readable<{ params: { groupId?: string } }>>("routing")
-
-  // Override
-  $: params = $routing?.params
-  $: if (params.groupId && groupId !== params.groupId) {
-    // Will set, but not clear.
-    groupId = params.groupId
+  export interface Props {
+    groupId: string
   }
 
-  let loaded = false
-  let editModal: Modal
-  let deleteModal: ConfirmDialog
-  let editWorkspaceRoleModal: Modal
-  let selectedWorkspace: (StoreApp & { prodAppId: string }) | undefined
-  let editWorkspaceRoleModalToken = 0
-  let workspaceSearch = ""
-  let workspacePageNumber = 0
-  let previousWorkspaceSearch = ""
-  let defaultUpdating = false
+  interface WorkspaceRow extends StoreApp {
+    prodAppId: string
+    role?: string
+    readonly: boolean
+    __skeleton?: boolean
+  }
+
+  let { groupId }: Props = $props()
+
+  let loaded = $state(false)
+  let editModal = $state<Modal>()
+  let deleteModal = $state<ConfirmDialog>()
+  let editWorkspaceRoleModal = $state<Modal>()
+  let selectedWorkspace = $state<WorkspaceRow>()
+  let editWorkspaceRoleModalToken = $state(0)
+  let workspaceSearch = $state("")
+  let workspacePageNumber = $state(0)
+  let defaultUpdating = $state(false)
   const WORKSPACE_PAGE_SIZE = 3
 
-  $: group = $groups.find(x => x._id === groupId)
-  $: isScimGroup = group?.scimInfo?.isSync
-  $: isAdmin = sdk.users.isAdmin($auth.user)
-  $: groupReadonly = !isAdmin || isScimGroup
-  $: workspaceReadonly = !isAdmin
-  $: appSchema = {
+  const group = $derived($groups.find(x => x._id === groupId))
+  const isScimGroup = $derived(!!group?.scimInfo?.isSync)
+  const isAdmin = $derived(sdk.users.isAdmin($auth.user))
+  const groupReadonly = $derived(!isAdmin || isScimGroup)
+  const workspaceReadonly = $derived(!isAdmin)
+  const appSchema = $derived({
     name: {
       width: "1fr",
     },
@@ -78,7 +77,7 @@
             borderLeft: true,
           },
         }),
-  }
+  })
   const customAppTableRenderers = [
     {
       column: "name",
@@ -93,57 +92,57 @@
       component: RemoveWorkspaceTableRenderer,
     },
   ]
-  $: groupApps = $workspacesStore.apps
-    .filter(app => {
-      const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
-        app.devId || ""
-      )
-      return (
-        !!prodWorkspaceId &&
-        !!group &&
-        groups.getGroupAppIds(group).includes(prodWorkspaceId)
-      )
-    })
-    .map(app => {
-      const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
-        app.devId || ""
-      )
-      if (!prodWorkspaceId) {
-        return undefined
-      }
-      return {
-        ...app,
-        _id: prodWorkspaceId,
-        prodAppId: prodWorkspaceId,
-        readonly: workspaceReadonly,
-        role: group?.builder?.apps.includes(prodWorkspaceId)
-          ? Constants.Roles.CREATOR
-          : group?.roles?.[prodWorkspaceId],
-      }
-    })
-    .filter(app => app !== undefined)
-  $: filteredGroupApps = workspaceSearch
-    ? groupApps.filter(app =>
-        app.name?.toLowerCase().includes(workspaceSearch.toLowerCase())
-      )
-    : groupApps
-  $: showWorkspacePagination = filteredGroupApps.length > WORKSPACE_PAGE_SIZE
-  $: workspacePageCount = Math.max(
-    1,
-    Math.ceil(filteredGroupApps.length / WORKSPACE_PAGE_SIZE)
+  const groupApps = $derived(
+    $workspacesStore.apps
+      .filter(app => {
+        const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
+          app.devId || ""
+        )
+        return (
+          !!prodWorkspaceId &&
+          !!group &&
+          groups.getGroupAppIds(group).includes(prodWorkspaceId)
+        )
+      })
+      .map(app => {
+        const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
+          app.devId || ""
+        )
+        if (!prodWorkspaceId) {
+          return undefined
+        }
+        return {
+          ...app,
+          _id: prodWorkspaceId,
+          prodAppId: prodWorkspaceId,
+          readonly: workspaceReadonly,
+          role: group?.builder?.apps?.includes(prodWorkspaceId)
+            ? Constants.Roles.CREATOR
+            : group?.roles?.[prodWorkspaceId],
+        }
+      })
+      .filter(app => app !== undefined)
   )
-  $: if (workspaceSearch !== previousWorkspaceSearch) {
-    workspacePageNumber = 0
-    previousWorkspaceSearch = workspaceSearch
-  }
-  $: if (workspacePageNumber > workspacePageCount - 1) {
-    workspacePageNumber = Math.max(workspacePageCount - 1, 0)
-  }
-  $: workspacePageRows = filteredGroupApps.slice(
-    workspacePageNumber * WORKSPACE_PAGE_SIZE,
-    (workspacePageNumber + 1) * WORKSPACE_PAGE_SIZE
+  const filteredGroupApps = $derived(
+    workspaceSearch
+      ? groupApps.filter(app =>
+          app.name?.toLowerCase().includes(workspaceSearch.toLowerCase())
+        )
+      : groupApps
   )
-  $: workspaceFillerRows =
+  const showWorkspacePagination = $derived(
+    filteredGroupApps.length > WORKSPACE_PAGE_SIZE
+  )
+  const workspacePageCount = $derived(
+    Math.max(1, Math.ceil(filteredGroupApps.length / WORKSPACE_PAGE_SIZE))
+  )
+  const workspacePageRows = $derived(
+    filteredGroupApps.slice(
+      workspacePageNumber * WORKSPACE_PAGE_SIZE,
+      (workspacePageNumber + 1) * WORKSPACE_PAGE_SIZE
+    )
+  )
+  const workspaceFillerRows = $derived(
     showWorkspacePagination && workspacePageRows.length < WORKSPACE_PAGE_SIZE
       ? [...Array(WORKSPACE_PAGE_SIZE - workspacePageRows.length)].map(
           (_, index) => ({
@@ -153,14 +152,30 @@
           })
         )
       : []
-  $: paginatedGroupApps = [...workspacePageRows, ...workspaceFillerRows]
+  )
+  const paginatedGroupApps = $derived([
+    ...workspacePageRows,
+    ...workspaceFillerRows,
+  ])
 
-  // Need to ensure the redirect isn't retriggered
-  $: {
+  $effect(() => {
+    workspaceSearch
+    untrack(() => {
+      workspacePageNumber = 0
+    })
+  })
+
+  $effect(() => {
+    if (workspacePageNumber > workspacePageCount - 1) {
+      workspacePageNumber = Math.max(workspacePageCount - 1, 0)
+    }
+  })
+
+  $effect(() => {
     if (loaded && !group?._id && groupId) {
       bb.settings("/people/groups")
     }
-  }
+  })
 
   async function deleteGroup() {
     try {
@@ -178,8 +193,8 @@
   async function saveGroup(group: UserGroup) {
     try {
       await groups.save(group)
-    } catch (error: any) {
-      if (error?.message) {
+    } catch (error) {
+      if (error instanceof Error) {
         notifications.error(error.message)
       } else {
         notifications.error(`Failed to save user group`)
@@ -197,8 +212,12 @@
       notifications.success(
         isDefault ? "Default group updated" : "Default group removed"
       )
-    } catch (error: any) {
-      notifications.error(error?.message || "Failed to update default group")
+    } catch (error) {
+      notifications.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update default group"
+      )
     } finally {
       defaultUpdating = false
     }
@@ -213,9 +232,7 @@
   }
 
   const openWorkspaceRoleModal = (
-    workspace:
-      | (StoreApp & { prodAppId: string; __skeleton?: boolean })
-      | { __skeleton: true }
+    workspace: WorkspaceRow | { __skeleton: true }
   ) => {
     if (workspaceReadonly || workspace?.__skeleton) {
       return
@@ -263,7 +280,7 @@
           </span>
           <MenuItem
             icon="pencil"
-            on:click={() => editModal.show()}
+            on:click={() => editModal?.show()}
             disabled={!isAdmin}
           >
             Edit
@@ -271,7 +288,7 @@
           <div title={isScimGroup ? "Group synced from your AD" : undefined}>
             <MenuItem
               icon="trash"
-              on:click={() => deleteModal.show()}
+              on:click={() => deleteModal?.show()}
               disabled={groupReadonly}
             >
               Delete
@@ -302,7 +319,7 @@
         customPlaceholder
         allowEditRows={false}
         customRenderers={customAppTableRenderers}
-        on:click={e => openWorkspaceRoleModal(e.detail)}
+        on:click={e => openWorkspaceRoleModal(e.detail as WorkspaceRow)}
         allowEditColumns={false}
       >
         <div class="placeholder" slot="placeholder">
@@ -336,7 +353,9 @@
 {/if}
 
 <Modal bind:this={editModal}>
-  <CreateEditGroupModal {group} {saveGroup} />
+  {#if group}
+    <CreateEditGroupModal {group} {saveGroup} />
+  {/if}
 </Modal>
 
 <Modal bind:this={editWorkspaceRoleModal} closeOnOutsideClick={false}>

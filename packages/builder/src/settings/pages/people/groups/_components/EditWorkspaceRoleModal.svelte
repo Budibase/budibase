@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Body,
     Layout,
@@ -11,10 +11,25 @@
   import { API } from "@/api"
   import { groups } from "@/stores/portal/groups"
   import { Constants } from "@budibase/frontend-core"
+  import type { StoreApp } from "@/types"
+  import type { Role } from "@budibase/types"
 
-  export let groupId
-  export let workspace
-  export let openToken = 0
+  interface Workspace extends StoreApp {
+    prodAppId: string
+    role?: string
+  }
+
+  interface IdentifiedRole extends Role {
+    _id: string
+  }
+
+  interface Props {
+    groupId: string
+    workspace?: Workspace
+    openToken?: number
+  }
+
+  let { groupId, workspace, openToken = 0 }: Props = $props()
 
   const workspaceRoleOptions = Constants.BudibaseRoleOptions.filter(
     option =>
@@ -29,35 +44,34 @@
     Constants.Roles.GROUP,
   ]
 
-  let selectedRole = Constants.BudibaseRoles.AppUser
-  let selectedEndUserRole = Constants.Roles.BASIC
-  let workspaceRoles = []
-  let workspaceRolesLoaded = false
+  let selectedRole = $state(Constants.BudibaseRoles.AppUser)
+  let selectedEndUserRole = $state(Constants.Roles.BASIC)
+  let workspaceRoles = $state<Role[]>([])
+  let workspaceRolesLoaded = $state(false)
   let roleRequestId = 0
 
-  $: workspaceId = workspace?.prodAppId
-  $: if (workspaceId && openToken) {
-    workspaceRolesLoaded = false
-    setInitialRoleValues()
-    fetchWorkspaceRoles(workspaceId)
-  }
-  $: if (!workspaceId) {
-    workspaceRoles = []
-  }
-  $: roleColorLookup = workspaceRoles.reduce((acc, role) => {
-    acc[role._id] = role.uiMetadata?.color
-    return acc
-  }, {})
-  $: customEndUserRoleOptions = workspaceRoles
-    .filter(role => !excludedRoleIds.includes(role._id))
-    .map(role => ({
-      label: role.uiMetadata?.displayName || role.name || "Custom role",
-      value: role._id,
-      color:
-        role.uiMetadata?.color ||
-        "var(--spectrum-global-color-static-magenta-400)",
-    }))
-  $: endUserRoleOptions = [
+  const workspaceId = $derived(workspace?.prodAppId)
+  const roleColorLookup = $derived(
+    workspaceRoles.reduce<Record<string, string | undefined>>((acc, role) => {
+      if (role._id) acc[role._id] = role.uiMetadata?.color
+      return acc
+    }, {})
+  )
+  const customEndUserRoleOptions = $derived(
+    workspaceRoles
+      .filter(
+        (role): role is IdentifiedRole =>
+          !!role._id && !excludedRoleIds.includes(role._id)
+      )
+      .map(role => ({
+        label: role.uiMetadata?.displayName || role.name || "Custom role",
+        value: role._id,
+        color:
+          role.uiMetadata?.color ||
+          "var(--spectrum-global-color-static-magenta-400)",
+      }))
+  )
+  const endUserRoleOptions = $derived([
     {
       label: "Basic user",
       value: Constants.Roles.BASIC,
@@ -69,17 +83,11 @@
       color: roleColorLookup[Constants.Roles.ADMIN],
     },
     ...customEndUserRoleOptions,
-  ]
-  $: if (
-    workspaceRolesLoaded &&
-    selectedRole === Constants.BudibaseRoles.AppUser &&
-    !endUserRoleOptions.find(option => option.value === selectedEndUserRole)
-  ) {
-    selectedEndUserRole = Constants.Roles.BASIC
-  }
-  $: confirmDisabled =
+  ])
+  const confirmDisabled = $derived(
     !workspaceId ||
-    (selectedRole === Constants.BudibaseRoles.AppUser && !selectedEndUserRole)
+      (selectedRole === Constants.BudibaseRoles.AppUser && !selectedEndUserRole)
+  )
 
   function setInitialRoleValues() {
     if (workspace?.role === Constants.Roles.CREATOR) {
@@ -91,7 +99,7 @@
     selectedEndUserRole = workspace?.role || Constants.Roles.BASIC
   }
 
-  async function fetchWorkspaceRoles(appId) {
+  const fetchWorkspaceRoles = async (appId: string) => {
     const requestId = ++roleRequestId
     try {
       const response = await API.getRolesForApp(appId)
@@ -112,6 +120,28 @@
     }
   }
 
+  $effect(() => {
+    if (!workspaceId) {
+      workspaceRoles = []
+      return
+    }
+    if (openToken) {
+      workspaceRolesLoaded = false
+      setInitialRoleValues()
+      fetchWorkspaceRoles(workspaceId)
+    }
+  })
+
+  $effect(() => {
+    if (
+      workspaceRolesLoaded &&
+      selectedRole === Constants.BudibaseRoles.AppUser &&
+      !endUserRoleOptions.find(option => option.value === selectedEndUserRole)
+    ) {
+      selectedEndUserRole = Constants.Roles.BASIC
+    }
+  })
+
   const getWorkspaceRole = () => {
     if (selectedRole === Constants.BudibaseRoles.Creator) {
       return Constants.Roles.CREATOR
@@ -120,11 +150,12 @@
   }
 
   const onConfirm = async () => {
-    if (confirmDisabled) {
+    const id = workspaceId
+    if (confirmDisabled || !id) {
       return keepOpen
     }
     try {
-      await groups.addApp(groupId, workspaceId, getWorkspaceRole())
+      await groups.addApp(groupId, id, getWorkspaceRole())
     } catch (error) {
       notifications.error("Error updating workspace role")
       return keepOpen

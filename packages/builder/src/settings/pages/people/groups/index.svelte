@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Layout,
     Button,
@@ -20,8 +20,9 @@
   import { bb } from "@/stores/bb"
   import RouteActions from "@/settings/components/RouteActions.svelte"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
+  import type { UserGroup } from "@budibase/types"
 
-  const DefaultGroup = {
+  const DefaultGroup: UserGroup = {
     name: "",
     icon: "users",
     color: "var(--spectrum-global-color-blue-600)",
@@ -30,42 +31,49 @@
     roles: {},
   }
 
-  let modal
-  let searchString
-  let group = cloneDeep(DefaultGroup)
-  let customRenderers = [
+  let modal = $state<Modal>()
+  let searchString = $state("")
+  let group = $state(cloneDeep(DefaultGroup))
+  const customRenderers = [
     { column: "name", component: GroupNameTableRenderer },
     { column: "users", component: UsersTableRenderer },
     { column: "roles", component: GroupWorkspacesTableRenderer },
   ]
 
-  $: readonly = !sdk.users.isAdmin($auth.user)
-  $: schema = {
+  const readonly = $derived(!sdk.users.isAdmin($auth.user))
+  const schema = $derived({
     name: { displayName: "Group", width: "2fr", minWidth: "200px" },
     users: { sortable: false, width: "1fr" },
     roles: { sortable: false, displayName: "Workspaces", width: "1fr" },
-  }
-  $: filteredGroups = filterGroups($groups, searchString)
+  })
 
-  const filterGroups = (groups, searchString) => {
-    if (!searchString) {
-      return groups
+  const filterGroups = ({
+    allGroups,
+    search,
+  }: {
+    allGroups: UserGroup[]
+    search: string
+  }) => {
+    if (!search) {
+      return allGroups
     }
-    searchString = searchString.toLocaleLowerCase()
-    return groups?.filter(group => {
-      return group.name?.toLowerCase().includes(searchString)
+    const normalizedSearch = search.toLocaleLowerCase()
+    return allGroups.filter(group => {
+      return group.name?.toLowerCase().includes(normalizedSearch)
     })
   }
 
-  async function saveGroup(group) {
+  const filteredGroups = $derived(
+    filterGroups({ allGroups: $groups, search: searchString })
+  )
+
+  const saveGroup = async (groupToSave: UserGroup) => {
     try {
-      group = await groups.save(group)
+      group = await groups.save(groupToSave)
       bb.settings(`/people/groups/${group._id}/`)
       notifications.success(`User group created successfully`)
     } catch (error) {
-      if (error.status === 400) {
-        notifications.error(error.message)
-      } else if (error.message) {
+      if (error instanceof Error) {
         notifications.error(error.message)
       } else {
         notifications.error(`Failed to save group`)
@@ -134,7 +142,7 @@
 </LockedFeature>
 
 <Modal bind:this={modal}>
-  <CreateEditGroupModal bind:group {saveGroup} />
+  <CreateEditGroupModal {group} {saveGroup} />
 </Modal>
 
 <style>
