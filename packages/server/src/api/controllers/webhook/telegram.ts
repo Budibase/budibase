@@ -1,4 +1,4 @@
-import { context, features } from "@budibase/backend-core"
+import { context, features, isHTTPError } from "@budibase/backend-core"
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import type { TelegramMessage } from "@chat-adapter/telegram"
 import { createTelegramAdapter } from "@chat-adapter/telegram"
@@ -180,8 +180,9 @@ const createTelegramInputHandler = ({
       })
     } catch (error) {
       console.error("Telegram webhook processing failed", error)
-      const msg =
-        error instanceof Error ? error.message : TELEGRAM_FALLBACK_ERROR_MESSAGE
+      const msg = isHTTPError(error)
+        ? error.message
+        : TELEGRAM_FALLBACK_ERROR_MESSAGE
       await target.post(msg)
     }
   }

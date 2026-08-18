@@ -157,9 +157,14 @@ export async function replyToConversation({
     return
   }
 
+  // Reply into the originating forum topic when there is one - without
+  // message_thread_id the reply lands in the group's General topic.
+  const threadId = channel.threadId ? Number(channel.threadId) : NaN
+
   // Telegram enforces a 4096-character message limit.
   await telegramPost(botToken, "sendMessage", {
     chat_id: channel.channelId,
     text: text.slice(0, 4096),
+    ...(Number.isFinite(threadId) ? { message_thread_id: threadId } : {}),
   })
 }
