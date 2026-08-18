@@ -36,6 +36,9 @@ interface CreateEscalateToolParams {
   userId?: string
   // Resolves the conversation history to snapshot at the point escalate is called.
   getMessages: () => ModelMessage[]
+  getSuspendedMessages?: () => ModelMessage[]
+  conversationId?: string
+  attachmentIds?: string[]
   // Resolves the AgentRequest id tracking this run. Read lazily since it's
   // only assigned after this tool is built. Undefined when activity tracking
   // is off for this run (non-prod workspace or the AI_AGENT_ACTIVITY flag is
@@ -58,6 +61,9 @@ export const createEscalateTool = ({
   channel,
   userId,
   getMessages,
+  getSuspendedMessages,
+  conversationId,
+  attachmentIds,
   getRequestId,
   executionContext,
   executionPrincipal = ToolExecutionPrincipal.ADMIN,
@@ -114,7 +120,9 @@ export const createEscalateTool = ({
           sessionId,
           channel,
           userId,
-          messages: getMessages(),
+          messages: getSuspendedMessages?.() ?? getMessages(),
+          ...(conversationId && { conversationId }),
+          ...(attachmentIds?.length && { attachmentIds }),
         },
       })
 
