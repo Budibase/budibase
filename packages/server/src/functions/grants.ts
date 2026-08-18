@@ -87,10 +87,13 @@ export const createFunctionRunGrant = async (
     activeQueryCalls: 0,
   }
   const ttlSeconds = Math.ceil((expiresAt - Date.now()) / 1_000)
+  const redisClient = await getClient(client)
 
-  const stored = await (
-    await getClient(client)
-  ).storeIfNotExists(scope.runId, storedGrant, ttlSeconds)
+  const stored = await redisClient.storeIfNotExists(
+    scope.runId,
+    storedGrant,
+    ttlSeconds
+  )
   if (!stored) {
     throw new FunctionExecutionError(FunctionErrorCode.FUNCTION_PROTOCOL_ERROR)
   }
@@ -102,9 +105,8 @@ export const getFunctionRunGrant = async (
   grantToken: string,
   client?: RedisClient
 ): Promise<FunctionRunGrant | null> => {
-  const storedGrant = await (
-    await getClient(client)
-  ).get<StoredFunctionRunGrant>(runId)
+  const redisClient = await getClient(client)
+  const storedGrant = await redisClient.get<StoredFunctionRunGrant>(runId)
   if (
     !storedGrant ||
     storedGrant.expiresAt <= Date.now() ||
@@ -214,7 +216,8 @@ export const deleteFunctionRunGrant = async (
   runId: string,
   client?: RedisClient
 ) => {
-  await (await getClient(client)).delete(runId)
+  const redisClient = await getClient(client)
+  await redisClient.delete(runId)
 }
 
 export const executeWithFunctionRunGrant = async (
