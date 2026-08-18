@@ -1,5 +1,5 @@
 import fetch from "node-fetch"
-import { cache, tenancy } from "@budibase/backend-core"
+import { cache, HTTPError, tenancy } from "@budibase/backend-core"
 import {
   AgentChannelProvider,
   type ChatConversationChannel,
@@ -93,17 +93,43 @@ const graphGet = async <T>(url: string, token: string): Promise<T> => {
   return (await resp.json()) as T
 }
 
-// Lists channels across every team the app can see, using a Graph token (a
+// Opaque base64url Graph nextLink. Validate origin + exact pathname so the
+// Graph token can only ever be sent to the teams collection.
+const decodeTeamsCursor = (cursor: string): string => {
+  const decoded = Buffer.from(cursor, "base64url").toString()
+  let url: URL
+  try {
+    url = new URL(decoded)
+  } catch {
+    throw new HTTPError("Invalid cursor", 400)
+  }
+  if (
+    url.origin !== "https://graph.microsoft.com" ||
+    url.pathname !== "/v1.0/teams"
+  ) {
+    throw new HTTPError("Invalid cursor", 400)
+  }
+  return url.toString()
+}
+
+// Lists channels for one page of teams the app can see, using a Graph token (a
 // separate scope from the bot credentials). Requires Team.ReadBasic.All and
 // Channel.ReadBasic.All application permissions consented in Azure.
 export const listTeamsChannels = async (
-  graphToken: string
-): Promise<
-  { id: string; name: string; teamId: string; teamName: string }[]
-> => {
-  const { value: teams } = await graphGet<{
+  graphToken: string,
+  cursor?: string
+): Promise<{
+  channels: { id: string; name: string; teamId: string; teamName: string }[]
+  hasNext: boolean
+  cursor?: string
+}> => {
+  const url = cursor
+    ? decodeTeamsCursor(cursor)
+    : `${GRAPH_BASE}/teams?$select=id,displayName&$top=100`
+  const { value: teams, "@odata.nextLink": nextLink } = await graphGet<{
     value: { id: string; displayName: string }[]
-  }>(`${GRAPH_BASE}/teams?$select=id,displayName&$top=100`, graphToken)
+    "@odata.nextLink"?: string
+  }>(url, graphToken)
 
   const channelsByTeam = await Promise.all(
     teams.map(async team => {
@@ -122,7 +148,11 @@ export const listTeamsChannels = async (
     })
   )
 
-  return channelsByTeam.flat()
+  return {
+    channels: channelsByTeam.flat(),
+    hasNext: !!nextLink,
+    cursor: nextLink ? Buffer.from(nextLink).toString("base64url") : undefined,
+  }
 }
 
 const buildAdaptiveCard = ({

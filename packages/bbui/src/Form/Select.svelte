@@ -116,5 +116,6 @@
     {wrapText}
     on:change={onChange}
     on:click
+    on:loadMore
   />
 </Field>
