@@ -210,6 +210,13 @@ export class DatabaseImpl implements Database {
     })
   }
 
+  async getConflicts(id: string): Promise<string[]> {
+    const doc = await this.performCall(db => {
+      return () => db.get(id, { conflicts: true })
+    })
+    return (doc as Document & { _conflicts?: string[] })._conflicts || []
+  }
+
   async tryGet<T extends Document>(id?: string): Promise<T | undefined> {
     try {
       return await this.get<T>(id)

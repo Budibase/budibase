@@ -422,12 +422,7 @@ const toSafeTeamsPackageName = (agent: Agent) =>
   `budibase-teams-${toSafeFilenameSegment(agent.name)}-package.zip`
 
 export async function fetchTools(ctx: UserCtx<void, ToolMetadata[]>) {
-  const rawAiconfigId = ctx.query.aiconfigId
-
-  if (typeof rawAiconfigId !== "string") {
-    ctx.throw(400, "Invalid aiconfig ID")
-  }
-  ctx.body = await sdk.ai.agents.getAvailableToolsMetadata(rawAiconfigId)
+  ctx.body = await sdk.ai.agents.getAvailableToolsMetadata()
 }
 
 export async function fetchAgents(ctx: UserCtx<void, FetchAgentsResponse>) {

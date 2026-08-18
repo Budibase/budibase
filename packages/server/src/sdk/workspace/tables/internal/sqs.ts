@@ -1,6 +1,7 @@
 import { context, sql, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
 import { helpers, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
 import {
+  Database,
   FieldType,
   PreSaveSQLiteDefinition,
   RelationshipFieldMetadata,
@@ -140,6 +141,22 @@ async function buildBaseDefinition(): Promise<PreSaveSQLiteDefinition> {
   return definition
 }
 
+// best effort - the definition is already written, the next sync retries
+async function pruneConflicts(db: Database) {
+  try {
+    const conflicts = await db.getConflicts(SQLITE_DESIGN_DOC_ID)
+    if (!conflicts.length) {
+      return
+    }
+    await db.bulkRemove(
+      conflicts.map(rev => ({ _id: SQLITE_DESIGN_DOC_ID, _rev: rev })),
+      { silenceErrors: true }
+    )
+  } catch (err) {
+    console.warn("Unable to prune conflicting SQLite definitions", err)
+  }
+}
+
 export async function syncDefinition(
   db = context.getWorkspaceDB()
 ): Promise<void> {
@@ -159,6 +176,7 @@ export async function syncDefinition(
   if (!existing || !isEqual(existing.sql, definition.sql)) {
     await db.put(definition)
   }
+  await pruneConflicts(db)
 }
 
 export async function addTable(table: Table) {
