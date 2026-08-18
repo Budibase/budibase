@@ -51,6 +51,7 @@ import { WorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { WorkspaceHomeEndpoints } from "./workspaceHome"
 import { RecaptchaEndpoints } from "./recaptcha"
 import { AIConfigEndpoints } from "./aiConfig"
+import type { APIWarningCode } from "@budibase/types"
 
 export enum HTTPMethod {
   POST = "POST",
@@ -69,6 +70,7 @@ export type APIClientConfig = {
     request?: { url: string; method: HTTPMethod }
   ) => void
   onError?: (error: APIError) => void
+  onWarning?: (warning: APIWarningCode) => void
   onMigrationDetected?: (migration: string) => void
 }
 
