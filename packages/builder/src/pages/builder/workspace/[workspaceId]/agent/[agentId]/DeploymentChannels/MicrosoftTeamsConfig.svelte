@@ -144,7 +144,7 @@
     : isProvisioned
       ? "Save changes"
       : "Save channel"}
-  actionDisabled={provisioning || !hasRequiredCredentials}
+  actionDisabled={provisioning || downloadingPackage || !hasRequiredCredentials}
   onAction={async () => {
     await provisionMSTeamsChannel()
   }}
