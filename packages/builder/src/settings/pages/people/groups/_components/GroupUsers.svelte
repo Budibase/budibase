@@ -14,7 +14,7 @@
   import { fetchData, Utils } from "@budibase/frontend-core"
   import { API } from "@/api"
   import { groups } from "@/stores/portal/groups"
-  import { setContext } from "svelte"
+  import { setContext, untrack } from "svelte"
   import { bb } from "@/stores/bb"
 
   import RemoveUserTableRenderer from "../_components/RemoveUserTableRenderer.svelte"
@@ -40,33 +40,30 @@
   const debouncedUpdateEmailSearch = Utils.debounce((value?: string) => {
     emailSearch = value || undefined
   }, 200)
-  const createGroupUsersFetch = ({
-    groupId,
-    emailSearch,
-  }: {
-    groupId: string
-    emailSearch?: string
-  }) =>
-    fetchData({
-      API,
-      datasource: {
-        type: "groupUser",
+  const fetchGroupUsers = fetchData({
+    API,
+    datasource: {
+      type: "groupUser",
+    },
+    options: {
+      limit: PAGE_SIZE,
+      query: {
+        groupId: untrack(() => groupId),
       },
-      options: {
-        limit: PAGE_SIZE,
-        query: {
-          groupId,
-          emailSearch,
-        },
-      },
-    })
-
-  const fetchGroupUsers = $derived(
-    createGroupUsersFetch({ groupId, emailSearch })
-  )
+    },
+  })
 
   $effect(() => {
     debouncedUpdateEmailSearch(emailSearchInput)
+  })
+
+  $effect(() => {
+    fetchGroupUsers.update({
+      query: {
+        groupId,
+        emailSearch,
+      },
+    })
   })
 
   const userSchema = $derived({
@@ -96,7 +93,7 @@
       __selectable: false,
     }))
   )
-  const loadedRows = $derived($fetchGroupUsers?.rows || [])
+  const loadedRows = $derived($fetchGroupUsers.rows || [])
   const hasPagination = $derived(
     $fetchGroupUsers.hasPrevPage || $fetchGroupUsers.hasNextPage
   )
