@@ -62,7 +62,11 @@
     type InsertAtPositionFn,
   } from "@budibase/types"
   import { tooltips } from "@codemirror/view"
-  import type { BindingCompletion, CodeValidator } from "@/types"
+  import type {
+    BindingCompletion,
+    CodeValidator,
+    EditorRangeReplacement,
+  } from "@/types"
   import { validateHbsTemplate } from "./validator/hbs"
   import { validateJsTemplate } from "./validator/js"
   import AIGen from "./AIGen.svelte"
@@ -176,6 +180,26 @@
     }
   }
 
+  export const replaceRange = ({
+    from,
+    to,
+    insert,
+    selection,
+  }: EditorRangeReplacement): string => {
+    const currentSelection = editor.state.selection.main
+    const rangeFrom = from ?? currentSelection.from
+    const rangeTo = to ?? currentSelection.to
+    editor.dispatch({
+      changes: {
+        from: rangeFrom,
+        to: rangeTo,
+        insert,
+      },
+      selection: selection ?? { anchor: rangeFrom + insert.length },
+    })
+    return editor.state.doc.toString()
+  }
+
   const exposeEditorApi = () => {
     getCaretPosition = () => {
       const selection_range = editor.state.selection.ranges[0]
@@ -186,19 +210,11 @@
     }
 
     insertAtPos = opts => {
-      // Updating the value inside.
-      // Retain focus
-      editor.dispatch({
-        changes: {
-          from: opts.start || editor.state.doc.length,
-          to: opts.end || editor.state.doc.length,
-          insert: opts.value,
-        },
-        selection: opts.cursor
-          ? {
-              anchor: opts.start + opts.value.length,
-            }
-          : undefined,
+      replaceRange({
+        from: opts.start,
+        to: opts.end ?? opts.start,
+        insert: opts.value,
+        selection: opts.cursor,
       })
     }
   }

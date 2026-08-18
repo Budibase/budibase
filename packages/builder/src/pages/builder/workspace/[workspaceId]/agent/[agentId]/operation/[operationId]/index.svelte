@@ -5,9 +5,7 @@
     ToolExecutionPrincipal,
     ToolType,
     type AgentOperation,
-    type CaretPositionFn,
     type EscalationRecipient,
-    type InsertAtPositionFn,
   } from "@budibase/types"
   import * as routify from "@roxi/routify"
   import type { EditorView } from "@codemirror/view"
@@ -65,6 +63,11 @@
   $goto
 
   type RailTab = "tools" | "knowledge" | "approvals"
+  interface PendingToolInsertion {
+    from: number
+    to: number
+    removeOnCancel: boolean
+  }
 
   let togglingLive = $state(false)
   let saving = $state(false)
@@ -73,8 +76,7 @@
   let syncedAgentRev: string | undefined = $state()
   let toolSearch = $state("")
   let activeTab = $state<RailTab>("tools")
-  let insertAtPos: InsertAtPositionFn | undefined = $state()
-  let getCaretPosition: CaretPositionFn | undefined = $state()
+  let instructionsEditor: CodeEditor | undefined = $state()
   let webSearchConfigModal: WebSearchConfigModal | undefined = $state()
   let removeToolDialog: ConfirmDialog | undefined = $state()
   let configureToolModal: ConfigureOperationToolModal | undefined = $state()
@@ -83,12 +85,9 @@
   let restoreToolConfiguration = $state(false)
   let blockedTool: AgentTool | undefined = $state()
   let blockedToolDialog: ConfirmDialog | undefined = $state()
-  let insertToolAfterAdding = $state(false)
   let addingTool: AgentTool | undefined = $state()
-  let autocompleteToolPosition: { start: number; end: number } | undefined =
-    $state()
-  let addingToolInsertPosition: { start: number; end: number } | undefined =
-    $state()
+  let pendingAutocompleteInsertion: PendingToolInsertion | undefined = $state()
+  let pendingToolInsertion: PendingToolInsertion | undefined = $state()
 
   let previousToolsLoaded = false
 
@@ -156,9 +155,14 @@
       const textBeforeCompletion = view.state.doc.sliceString(0, from)
       const bindingPrefix = textBeforeCompletion.match(/(?:\{){2,}\s*$/)?.[0]
       const closingBraces = view.state.doc.sliceString(to, to + 2) === "}}"
-      autocompleteToolPosition = {
-        start: bindingPrefix ? from - bindingPrefix.length : from,
-        end: closingBraces ? to + 2 : to,
+      const rangeFrom = bindingPrefix ? from - bindingPrefix.length : from
+      const rangeTo = closingBraces ? to + 2 : to
+      pendingAutocompleteInsertion = {
+        from: rangeFrom,
+        to: rangeTo,
+        removeOnCancel: /^\{\{\s*\}\}$/.test(
+          view.state.doc.sliceString(rangeFrom, rangeTo)
+        ),
       }
       editorToolsDropdown?.show()
     },
@@ -345,49 +349,29 @@
 
   const insertToolBinding = (
     tool: AgentTool,
-    position?: { start: number; end: number }
+    position?: PendingToolInsertion
   ) => {
-    if (!operation || !tool.readableBinding) {
+    if (!operation || !tool.readableBinding || !instructionsEditor) {
       return
     }
-    const current = operation.promptInstructions || ""
-    const caret = position ||
-      getCaretPosition?.() || {
-        start: current.length,
-        end: current.length,
-      }
     const binding = `{{ ${tool.readableBinding} }}`
-    const nextInstructions =
-      current.slice(0, caret.start) + binding + current.slice(caret.end)
-
-    insertAtPos?.({
-      start: caret.start,
-      end: caret.end,
-      value: binding,
-      cursor: { anchor: caret.start + binding.length },
+    const nextInstructions = instructionsEditor.replaceRange({
+      from: position?.from,
+      to: position?.to,
+      insert: binding,
     })
     saveOperation({ promptInstructions: nextInstructions })
   }
 
-  const removeEmptyToolPlaceholder = (position?: {
-    start: number
-    end: number
-  }) => {
-    if (!operation || !position) {
+  const removeEmptyToolPlaceholder = (position?: PendingToolInsertion) => {
+    if (!operation || !position?.removeOnCancel || !instructionsEditor) {
       return
     }
-    const current = operation.promptInstructions || ""
-    if (!/^\{\{\s*\}\}$/.test(current.slice(position.start, position.end))) {
-      return
-    }
-    const nextInstructions =
-      current.slice(0, position.start) + current.slice(position.end)
-    autocompleteToolPosition = undefined
-    insertAtPos?.({
-      start: position.start,
-      end: position.end,
-      value: "",
-      cursor: { anchor: position.start },
+    pendingAutocompleteInsertion = undefined
+    const nextInstructions = instructionsEditor.replaceRange({
+      from: position.from,
+      to: position.to,
+      insert: "",
     })
     saveOperation({ promptInstructions: nextInstructions })
   }
@@ -553,12 +537,10 @@
 
   const beginAddingTool = (
     tool: AgentTool,
-    insertAfterAdding = false,
-    insertPosition?: { start: number; end: number }
+    insertPosition?: PendingToolInsertion
   ) => {
     addingTool = tool
-    insertToolAfterAdding = insertAfterAdding
-    addingToolInsertPosition = insertPosition
+    pendingToolInsertion = insertPosition
     const executionPrincipal = getDefaultToolExecutionPrincipal({
       tool,
       toolSecurityEnabled: $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
@@ -591,11 +573,9 @@
       return
     }
 
-    const shouldInsertTool = insertToolAfterAdding
-    const insertPosition = addingToolInsertPosition
+    const insertPosition = pendingToolInsertion
     addingTool = undefined
-    insertToolAfterAdding = false
-    addingToolInsertPosition = undefined
+    pendingToolInsertion = undefined
     const alreadyConfigured = operation.enabledTools?.some(
       config => config.toolName === tool.runtimeBinding
     )
@@ -610,28 +590,27 @@
         return
       }
     }
-    if (shouldInsertTool) {
+    if (insertPosition) {
       insertToolBinding(tool, insertPosition)
     }
   }
 
   const selectEditorTool = (tool: AgentTool) => {
-    const insertPosition = autocompleteToolPosition
-    autocompleteToolPosition = undefined
-    beginAddingTool(tool, true, insertPosition)
+    const insertPosition = pendingAutocompleteInsertion
+    pendingAutocompleteInsertion = undefined
+    beginAddingTool(tool, insertPosition)
   }
 
   const cancelAutocompleteToolAddition = () => {
-    const position = autocompleteToolPosition
-    autocompleteToolPosition = undefined
+    const position = pendingAutocompleteInsertion
+    pendingAutocompleteInsertion = undefined
     removeEmptyToolPlaceholder(position)
   }
 
   const closeToolConfiguration = () => {
-    const insertPosition = addingToolInsertPosition
+    const insertPosition = pendingToolInsertion
     addingTool = undefined
-    insertToolAfterAdding = false
-    addingToolInsertPosition = undefined
+    pendingToolInsertion = undefined
     removeEmptyToolPlaceholder(insertPosition)
   }
 </script>
@@ -673,6 +652,7 @@
           <div class="editor-body">
             {#if toolsLoaded}
               <CodeEditor
+                bind:this={instructionsEditor}
                 value={operation.promptInstructions || ""}
                 bindings={promptBindings}
                 {bindingIcons}
@@ -680,8 +660,6 @@
                 mode={EditorModes.Handlebars}
                 renderBindingsAsTags
                 renderMarkdownDecorations
-                bind:insertAtPos
-                bind:getCaretPosition
                 on:change={event => updateInstructions(event.detail || "")}
                 on:blur={() => saveOperation()}
               />
