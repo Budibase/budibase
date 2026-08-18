@@ -16,12 +16,14 @@ import * as permissions from "./workspace/permissions"
 import * as projects from "./workspace/projects"
 import { default as queries } from "./workspace/queries"
 import * as resources from "./workspace/resources"
+import * as restTemplates from "./workspace/restTemplates"
 import * as rowActions from "./workspace/rowActions"
 import { default as rows } from "./workspace/rows"
 import * as screens from "./workspace/screens"
 import { default as tables } from "./workspace/tables"
 import * as views from "./workspace/views"
 import * as escalations from "./workspace/escalations"
+import * as functions from "./workspace/functions"
 import * as workspaceApps from "./workspace/workspaceApps"
 import { default as workspaces } from "./workspace/workspaces"
 
@@ -47,11 +49,13 @@ const sdk = {
   workspaceApps,
   navigation,
   resources,
+  restTemplates,
   deployment,
   embedSSO,
   dev,
   workspace,
   escalations,
+  functions,
 }
 
 // default export for TS

@@ -41,7 +41,7 @@ import {
   isTestAutomationResponse,
 } from "@budibase/types"
 
-import { notifications } from "@budibase/bbui"
+import { generateId, notifications } from "@budibase/bbui"
 import { QueryUtils, Utils } from "@budibase/frontend-core"
 import { sdk } from "@budibase/shared-core"
 import { makePropSafe } from "@budibase/string-templates"
@@ -99,7 +99,6 @@ import {
   type RestTemplateId,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
-import { generate } from "shortid"
 import { derived, get, readable, Readable } from "svelte/store"
 import { EnvVar } from "../portal/environment"
 import { rowActions } from "./rowActions"
@@ -141,8 +140,9 @@ export const isNoOpBlockMove = (
   }
 
   const isOwnDragzone = pathSource.id === pathEnd.id
-  const isFirstBranchStep =
+  const isOwnBranchNode =
     pathEnd.branchStepId &&
+    pathEnd.id === pathEnd.branchStepId &&
     pathEnd.branchStepId === pathSource.branchStepId &&
     pathEnd.branchIdx === pathSource.branchIdx &&
     pathSource.stepIdx === 0
@@ -150,7 +150,7 @@ export const isNoOpBlockMove = (
     sameMoveContainer(sourcePath, destPath) &&
     pathEnd.stepIdx === pathSource.stepIdx - 1
 
-  return Boolean(isOwnDragzone || isFirstBranchStep || isPreviousSibling)
+  return Boolean(isOwnDragzone || isOwnBranchNode || isPreviousSibling)
 }
 
 const initialAutomationState: AutomationStoreState = {
@@ -1641,7 +1641,7 @@ const automationActions = (store: AutomationStore) => ({
       inputs: blockDefinition.inputs || {},
       stepId,
       type,
-      id: generate(),
+      id: generateId(),
     }
     const newName = getNewStepName(get(selectedAutomation)?.data, newStep)
     newStep.name = newName
@@ -1870,7 +1870,7 @@ const automationActions = (store: AutomationStore) => ({
     const createBranch = (name: string): Branch => ({
       name,
       ...store.actions.generateDefaultConditions(),
-      id: generate(),
+      id: generateId(),
     })
 
     // Traverse the path and resolve the array (container) that holds the
@@ -2685,7 +2685,7 @@ const automationActions = (store: AutomationStore) => ({
     }
 
     const newNote = {
-      id: generate(),
+      id: generateId(),
       title: "Note",
       text: "",
       x: position?.x ?? 100 + notes.length * 30,

@@ -309,9 +309,72 @@ export async function confirmChatLinkSession(
   ctx.body = renderLinkSuccessPage()
 }
 
+const resolveAgentSlackTeamId = async (
+  appId: string,
+  agentId: string
+): Promise<string | undefined> => {
+  return await context.doInWorkspaceContext(appId, async () => {
+    const agents = await sdk.ai.agents.fetch()
+    const agent = agents.find(
+      a => a._id === agentId && a.slackIntegration?.botToken
+    )
+    if (!agent?.slackIntegration?.botToken) {
+      return undefined
+    }
+    if (agent.slackIntegration.teamId) {
+      return agent.slackIntegration.teamId
+    }
+    try {
+      const { botToken } =
+        sdk.ai.deployments.slack.validateSlackIntegration(agent)
+      return (await new WebClient(botToken).auth.test()).team_id
+    } catch (err) {
+      console.warn("listChatIdentityLinks: failed to resolve Slack workspace", {
+        agentId,
+        error: err instanceof Error ? err.message : String(err),
+      })
+      return undefined
+    }
+  })
+}
+
 export async function listChatIdentityLinks(ctx: UserCtx) {
   const provider = ctx.query.provider as ChatIdentityLinkProvider | undefined
-  ctx.body = await sdk.ai.chatIdentityLinks.listChatIdentityLinks(provider)
+  const agentId = ctx.query.agentId as string | undefined
+  const links = await sdk.ai.chatIdentityLinks.listChatIdentityLinks(provider)
+
+  if (!provider || !agentId) {
+    ctx.body = links
+    return
+  }
+
+  const appId = ctx.appId
+  if (!appId) {
+    ctx.throw(400, "appId is required")
+  }
+
+  // Scope the links to identities the agent's bot can actually reach
+  if (provider === AgentChannelProvider.SLACK) {
+    const teamId = await resolveAgentSlackTeamId(appId, agentId)
+    ctx.body = teamId ? links.filter(l => l.teamId === teamId) : []
+    return
+  }
+
+  if (provider === AgentChannelProvider.MSTEAMS) {
+    const tenantId = await context.doInWorkspaceContext(appId, async () => {
+      const agents = await sdk.ai.agents.fetch()
+      return agents
+        .find(a => a._id === agentId)
+        ?.MSTeamsIntegration?.tenantId?.trim()
+    })
+    // Fail closed when the tenant can't be resolved.
+    ctx.body = tenantId
+      ? links.filter(l => l.providerTenantId === tenantId)
+      : []
+    return
+  }
+
+  ctx.body = links
 }
 
 export async function listSlackChannels(ctx: UserCtx) {

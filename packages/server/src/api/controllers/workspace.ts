@@ -1383,7 +1383,7 @@ export async function duplicateWorkspace(
   const [workspace] = await dbCore.getWorkspacesByIDs([sourceAppId])
 
   if (!workspace) {
-    ctx.throw(404, "Source app not found")
+    ctx.throw(404, "Source workspace not found")
   }
 
   const workspaces = await dbCore.getAllWorkspaces({

@@ -20,13 +20,6 @@ import {
 } from "./utils/requestBody"
 import { buildEndpointName } from "./utils/endpointName"
 
-const parameterNotRef = (
-  param: OpenAPIV2.Parameter | OpenAPIV2.ReferenceObject
-): param is OpenAPIV2.Parameter => {
-  // all refs are deferenced by parser library
-  return true
-}
-
 const isOpenAPI2 = (document: any): document is OpenAPIV2.Document => {
   if (document.swagger === "2.0") {
     return true
@@ -37,18 +30,12 @@ const isOpenAPI2 = (document: any): document is OpenAPIV2.Document => {
 
 const methods: string[] = Object.values(OpenAPIV2.HttpMethods)
 
-const isOperation = (
-  key: string,
-  pathItem: any
-): pathItem is OpenAPIV2.OperationObject => {
+const isOperation = (key: string) => {
   return methods.includes(key)
 }
 
-const isParameter = (
-  key: string,
-  pathItem: any
-): pathItem is OpenAPIV2.Parameter => {
-  return !isOperation(key, pathItem)
+const isParameter = (key: string) => {
+  return !isOperation(key)
 }
 
 /**
@@ -268,7 +255,7 @@ export class OpenAPI2 extends OpenAPISource {
       let pathParams: OpenAPIV2.Parameter[] = []
 
       for (let [key, opOrParams] of Object.entries(pathItem)) {
-        if (isParameter(key, opOrParams)) {
+        if (isParameter(key)) {
           const pathParameters = opOrParams as OpenAPIV2.Parameter[]
           pathParams.push(...pathParameters)
           continue
@@ -313,8 +300,8 @@ export class OpenAPI2 extends OpenAPISource {
         const allParams = [...pathParams, ...operationParams]
 
         for (let param of allParams) {
-          if (parameterNotRef(param)) {
-            let skipParameterBinding = false
+          let skipParameterBinding = false
+          if ("in" in param) {
             switch (param.in) {
               case "query": {
                 let prefix = ""

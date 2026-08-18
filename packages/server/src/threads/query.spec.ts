@@ -10,6 +10,7 @@ jest.mock("@budibase/backend-core", () => {
       ...actual.context,
       doInWorkspaceContext: jest.fn((_appId: any, fn: any) => fn()),
       doInEnvironmentContext: jest.fn((_vars: any, fn: any) => fn()),
+      getEnvironmentVariables: jest.fn(() => null),
     },
   }
 })
@@ -47,6 +48,7 @@ jest.mock("../integrations/utils", () => ({
   isSQL: jest.fn(() => false),
 }))
 
+import { context } from "@budibase/backend-core"
 import { getIntegration } from "../integrations"
 import { execute } from "./query"
 import { BodyType, SourceName } from "@budibase/types"
@@ -90,6 +92,26 @@ const runEvent = (event: QueryEvent): Promise<string | undefined> => {
     execute(event, (err, _result) => {
       if (err) reject(err)
       else resolve(capturedPath)
+    })
+  })
+}
+
+const runEventForPreview = (
+  event: QueryEvent
+): Promise<Record<string, any> | undefined> => {
+  return new Promise((resolve, reject) => {
+    let capturedPreviewFields: Record<string, any> | undefined
+    ;(getIntegration as jest.Mock).mockResolvedValue(
+      class {
+        read = jest.fn(async (_query: any, opts: any) => {
+          capturedPreviewFields = opts?.previewFields
+          return []
+        })
+      }
+    )
+    execute(event, (err, _result) => {
+      if (err) reject(err)
+      else resolve(capturedPreviewFields)
     })
   })
 }
@@ -183,6 +205,79 @@ describe("QueryRunner - template datasource URL resolution", () => {
     })
     const path = await runEvent(event)
     expect(path).toBe("https://new.example.com/v2/objects/{{object}}")
+  })
+
+  it("applies the swapped base URL to the request preview fields", async () => {
+    const event = buildEvent({
+      datasource: {
+        _id: "ds_1",
+        type: "datasource",
+        source: SourceName.REST,
+        config: { url: "https://new.example.com" },
+        name: "Test DS",
+        isSQL: false,
+        restTemplateId: "gitlab",
+      },
+      includeRequest: true,
+      previewConfig: { url: "https://new.example.com" },
+    })
+    const previewFields = await runEventForPreview(event)
+    expect(previewFields?.path).toBe("https://new.example.com/api/v1/users")
+  })
+
+  it("resolves a static variable in the preview config URL before swapping", async () => {
+    const event = buildEvent({
+      datasource: {
+        _id: "ds_1",
+        type: "datasource",
+        source: SourceName.REST,
+        config: {
+          url: "https://new.example.com",
+          staticVariables: { host: "https://new.example.com" },
+        },
+        name: "Test DS",
+        isSQL: false,
+        restTemplateId: "attio",
+      },
+      includeRequest: true,
+      previewConfig: { url: "{{host}}" },
+    })
+    const previewFields = await runEventForPreview(event)
+    expect(previewFields?.path).toBe("https://new.example.com/api/v1/users")
+  })
+
+  it("does not rewrite the preview path for a non-template datasource", async () => {
+    const event = buildEvent({
+      includeRequest: true,
+      previewConfig: { url: "https://new.example.com" },
+    })
+    const previewFields = await runEventForPreview(event)
+    expect(previewFields?.path).toBe("https://old.example.com/api/v1/users")
+  })
+
+  it("still runs the query without a preview when the preview build fails", async () => {
+    ;(context.getEnvironmentVariables as jest.Mock).mockImplementationOnce(
+      () => {
+        throw new Error("preview build failure")
+      }
+    )
+    const event = buildEvent({ includeRequest: true })
+    let capturedQuery: Record<string, any> | undefined
+    let capturedPreviewFields: Record<string, any> | undefined
+    ;(getIntegration as jest.Mock).mockResolvedValue(
+      class {
+        read = jest.fn(async (query: any, opts: any) => {
+          capturedQuery = query
+          capturedPreviewFields = opts?.previewFields
+          return []
+        })
+      }
+    )
+    await new Promise<void>((resolve, reject) => {
+      execute(event, err => (err ? reject(err) : resolve()))
+    })
+    expect(capturedQuery?.path).toBe("https://old.example.com/api/v1/users")
+    expect(capturedPreviewFields).toBeUndefined()
   })
 
   it("falls back to datasource base when path host is an unresolved HBS binding", async () => {

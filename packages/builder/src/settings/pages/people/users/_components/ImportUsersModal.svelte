@@ -16,48 +16,73 @@
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
   const MAX_USERS_UPLOAD_LIMIT = 1000
 
-  export let createUsersFromCsv: (_data: {
+  interface ImportUsersData {
     userEmails: string[]
     usersRole: string
     userGroups: string[]
-  }) => void
+  }
 
-  let files: File[] = []
-  let csvString: string | undefined = undefined
-  let userEmails: string[] = []
-  let userGroups: string[] = []
-  let usersRole: string = Constants.BudibaseRoles.AppUser
-  let invalidEmails: string[] = []
+  interface Props {
+    createUsersFromCsv: (data: ImportUsersData) => void
+  }
 
-  $: userCount = ($licensing?.userCount || 0) + userEmails.length
-  $: exceed = licensing.usersLimitExceeded(userCount)
-  $: importDisabled =
-    !userEmails.length || !validEmails(userEmails) || !usersRole || exceed
+  interface EmailValidation {
+    valid: boolean
+    invalidEmails: string[]
+    exceedsUploadLimit: boolean
+  }
 
-  $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
+  let { createUsersFromCsv }: Props = $props()
 
-  const validEmails = (userEmails: string[]): boolean => {
-    invalidEmails = [] // Reset invalid emails
-    if ($admin.cloud && userEmails.length > MAX_USERS_UPLOAD_LIMIT) {
+  let files = $state<File[]>([])
+  let userEmails = $state<string[]>([])
+  let userGroups = $state<string[]>([])
+  let usersRole = $state<string>(Constants.BudibaseRoles.AppUser)
+
+  const userCount = $derived(($licensing?.userCount || 0) + userEmails.length)
+  const exceed = $derived(licensing.usersLimitExceeded(userCount))
+  const internalGroups = $derived($groups?.filter(g => !g?.scimInfo?.isSync))
+
+  const validateEmails = ({
+    emails,
+    cloud,
+  }: {
+    emails: string[]
+    cloud: boolean
+  }): EmailValidation => {
+    const exceedsUploadLimit = cloud && emails.length > MAX_USERS_UPLOAD_LIMIT
+    const invalidEmails = emails.filter(email => emailValidator(email) !== true)
+
+    return {
+      valid: !exceedsUploadLimit && !invalidEmails.length,
+      invalidEmails,
+      exceedsUploadLimit,
+    }
+  }
+
+  const notifyValidationError = (validation: EmailValidation): void => {
+    if (validation.exceedsUploadLimit) {
       notifications.error(
         `Max limit for upload is 1000 users. Please reduce file size and try again.`
       )
-      return false
-    }
-    for (const email of userEmails) {
-      if (emailValidator(email) !== true) invalidEmails.push(email)
+      return
     }
 
-    if (!invalidEmails.length) return true
-
-    notifications.error(
-      `Error, please check the following email${
-        invalidEmails.length > 1 ? "s" : ""
-      }: ${invalidEmails.join(", ")}`
-    )
-
-    return false
+    if (validation.invalidEmails.length) {
+      notifications.error(
+        `Error, please check the following email${
+          validation.invalidEmails.length > 1 ? "s" : ""
+        }: ${validation.invalidEmails.join(", ")}`
+      )
+    }
   }
+
+  const emailValidation = $derived(
+    validateEmails({ emails: userEmails, cloud: !!$admin.cloud })
+  )
+  const importDisabled = $derived(
+    !userEmails.length || !emailValidation.valid || !usersRole || exceed
+  )
 
   async function handleFile(evt: Event): Promise<void> {
     const target = evt.target as HTMLInputElement
@@ -78,9 +103,15 @@
     reader.addEventListener("load", function (e) {
       const result = e.target?.result
       if (typeof result === "string") {
-        csvString = result
+        const parsedEmails = parseUserEmailsFromCSV(result)
+        const validation = validateEmails({
+          emails: parsedEmails,
+          cloud: !!$admin.cloud,
+        })
+
         files = fileArray
-        userEmails = parseUserEmailsFromCSV(csvString)
+        userEmails = parsedEmails
+        notifyValidationError(validation)
       }
     })
     reader.readAsText(fileArray[0])
@@ -104,7 +135,7 @@
   <Body size="S">Import your users email addresses from a CSV file</Body>
 
   <div class="dropzone">
-    <input id="file-upload" accept=".csv" type="file" on:change={handleFile} />
+    <input id="file-upload" accept=".csv" type="file" onchange={handleFile} />
     <label for="file-upload" class:uploaded={files[0]}>
       {#if files[0]}{files[0].name}{:else}Upload{/if}
     </label>

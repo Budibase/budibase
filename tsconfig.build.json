@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "module": "commonjs",
+    "module": "preserve",
+    "moduleResolution": "bundler",
     "lib": ["es2020"],
     "strict": true,
     "noImplicitAny": true,
@@ -10,7 +11,6 @@
     "skipLibCheck": true,
     "declaration": true,
     "isolatedModules": true,
-    "baseUrl": ".",
     "sourceMap": true,
     "paths": {
       "@budibase/types": ["./packages/types/src"],

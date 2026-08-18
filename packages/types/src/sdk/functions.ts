@@ -60,6 +60,12 @@ export interface FunctionLimits {
   service: FunctionServiceLimits
 }
 
+export interface FunctionLimitsOverrides {
+  compile?: Partial<FunctionCompileLimits>
+  run?: Partial<FunctionRunLimits>
+  service?: Partial<FunctionServiceLimits>
+}
+
 export const DEFAULT_FUNCTION_LIMITS: FunctionLimits = {
   compile: {
     maxSourceBytes: 256 * 1024,
@@ -88,8 +94,26 @@ export const DEFAULT_FUNCTION_LIMITS: FunctionLimits = {
   },
 }
 
+export const getFunctionLimits = (
+  overrides: FunctionLimitsOverrides = {}
+): FunctionLimits => ({
+  compile: {
+    ...DEFAULT_FUNCTION_LIMITS.compile,
+    ...overrides.compile,
+  },
+  run: {
+    ...DEFAULT_FUNCTION_LIMITS.run,
+    ...overrides.run,
+  },
+  service: {
+    ...DEFAULT_FUNCTION_LIMITS.service,
+    ...overrides.service,
+  },
+})
+
 export interface FunctionArtifact {
   compiledJavaScript: string
+  capabilityIds: string[]
   sourceMap?: string
   sourceHash: string
   declarationsHash: string

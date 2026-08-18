@@ -3,6 +3,7 @@
   import { writable } from "svelte/store"
   import { Heading, Icon, Button, clickOutside } from "@budibase/bbui"
   import { Constants } from "@budibase/frontend-core"
+  import { ScreenVariant } from "@budibase/types"
   import NavItem from "./NavItem.svelte"
   import UserMenu from "./UserMenu.svelte"
   import Logo from "./Logo.svelte"
@@ -13,6 +14,7 @@
   } from "@/utils/conditions"
   import { authStore } from "@/stores/auth"
   import { currentRole } from "@/stores/derived/currentRole.js"
+  import { urlMatchesTemplate } from "@/utils/routeMatching"
 
   const sdk = getContext("sdk")
   const {
@@ -174,17 +176,6 @@
     }
   }
 
-  const getRouteWithoutQueryParams = route => {
-    if (!route) {
-      return route
-    }
-    try {
-      return new URL(route, "http://localhost").pathname
-    } catch (error) {
-      return route
-    }
-  }
-
   const canAccessSubLink = (subLink, accessibleRoutes) => {
     if ($builderStore.inBuilder) {
       return true
@@ -200,7 +191,9 @@
       return true
     }
 
-    return accessibleRoutes.has(getRouteWithoutQueryParams(url))
+    return [...accessibleRoutes].some(route =>
+      urlMatchesTemplate({ template: route, url })
+    )
   }
 
   const enrichNavItems = (navItems, userRoleHierarchy, routeEntries = []) => {
@@ -391,7 +384,10 @@
   data-name="Screen"
   data-icon="browser"
 >
-  <div class="screen-wrapper layout-body">
+  <div
+    class="screen-wrapper layout-body"
+    class:pdf-screen={$builderStore.screen?.variant === ScreenVariant.PDF}
+  >
     {#if showBanner && (typeClass !== "left" || mobile)}
       <div class="banner" style={bannerStyle}>
         <div class="banner-content">
@@ -630,6 +626,9 @@
     overflow-x: hidden;
     position: relative;
     background: var(--spectrum-alias-background-color-secondary);
+  }
+  .layout-body.pdf-screen {
+    overflow-x: auto;
   }
   .layout-content {
     display: flex;
