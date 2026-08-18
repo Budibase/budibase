@@ -8,22 +8,20 @@ export const normalizeConfiguredOperationTools = ({
   operation: AgentOperation
   availableTools: AgentTool[]
 }) => {
-  return (operation.enabledTools || []).flatMap(config => {
+  return (operation.enabledTools || []).map(config => {
     const tool = availableTools.find(
       item => item.runtimeBinding === config.toolName
     )
     if (!tool) {
-      return []
+      return config
     }
-    return [
-      {
-        ...config,
-        executionPrincipal:
-          tool.executionPolicy.mode === "admin"
-            ? ToolExecutionPrincipal.ADMIN
-            : config.executionPrincipal,
-      },
-    ]
+    return {
+      ...config,
+      executionPrincipal:
+        tool.executionPolicy.mode === "admin"
+          ? ToolExecutionPrincipal.ADMIN
+          : config.executionPrincipal,
+    }
   })
 }
 

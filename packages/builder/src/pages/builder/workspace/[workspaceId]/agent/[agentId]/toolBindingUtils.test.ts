@@ -65,7 +65,7 @@ describe("normalizeConfiguredOperationTools", () => {
     ).toEqual([])
   })
 
-  it("drops configured tools that are no longer available", () => {
+  it("preserves configured tools that are temporarily unavailable", () => {
     expect(
       normalizeConfiguredOperationTools({
         operation: {
@@ -82,7 +82,12 @@ describe("normalizeConfiguredOperationTools", () => {
         },
         availableTools,
       })
-    ).toEqual([])
+    ).toEqual([
+      {
+        toolName: "missing_tool",
+        executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+      },
+    ])
   })
 
   it("enforces fixed-admin tool policies", () => {
