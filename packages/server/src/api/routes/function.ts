@@ -14,7 +14,16 @@ const capabilitySchema = Joi.object({
 const draftSchema = {
   name: Joi.string().max(255).required(),
   source: Joi.string()
-    .max(DEFAULT_FUNCTION_LIMITS.compile.maxSourceBytes)
+    .custom((value, helpers) => {
+      if (
+        Buffer.byteLength(value, "utf8") >
+        DEFAULT_FUNCTION_LIMITS.compile.maxSourceBytes
+      ) {
+        return helpers.error("string.max")
+      }
+      return value
+    })
+    .messages({ "string.max": "Function source exceeds the maximum size." })
     .required()
     .allow(""),
   capabilities: Joi.array().items(capabilitySchema).required(),

@@ -32,6 +32,7 @@ const jsonValueSchema: z.ZodType<JSONValue> = z.lazy(() =>
 )
 
 const jsonRecordSchema = z.record(z.string(), jsonValueSchema)
+const jsonEditorInputSchema = z.object({ value: z.string() }).strict()
 
 export interface ExecuteFunctionDependencies {
   executor: FunctionExecutor
@@ -72,6 +73,12 @@ const invalidInputs = () =>
     "Function inputs must be a JSON-compatible object"
   )
 
+const invalidConfiguration = () =>
+  new FunctionExecutionError(
+    FunctionErrorCode.FUNCTION_CONFIGURATION_ERROR,
+    "The Function automation step is missing required configuration"
+  )
+
 const getJsonDepth = (value: JSONValue): number => {
   const pending: { value: JSONValue; depth: number }[] = [{ value, depth: 0 }]
   let maxDepth = 0
@@ -100,14 +107,18 @@ const parseInputs = (
   inputs: ExecuteFunctionStepInputs["inputs"]
 ): Record<string, JSONValue> => {
   let value: unknown = inputs
-  if (
-    value &&
-    typeof value === "object" &&
-    !Array.isArray(value) &&
-    Object.keys(value).length === 1 &&
-    "value" in value
-  ) {
-    value = value.value
+  const editorInput = jsonEditorInputSchema.safeParse(value)
+  if (editorInput.success) {
+    try {
+      const parsed = jsonRecordSchema.safeParse(
+        JSON.parse(editorInput.data.value)
+      )
+      if (parsed.success) {
+        value = parsed.data
+      }
+    } catch {
+      // Keep a real single-key input object unchanged.
+    }
   }
   if (typeof value === "string") {
     try {
@@ -181,7 +192,7 @@ export const executeFunction = async (
       throw new FunctionExecutionError(FunctionErrorCode.FUNCTIONS_DISABLED)
     }
     if (!inputs.functionId || !automationId || !stepId) {
-      throw invalidInputs()
+      throw invalidConfiguration()
     }
     const functionInputs = parseInputs(inputs.inputs)
     const fn = await dependencies.getFunction(inputs.functionId)

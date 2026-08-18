@@ -39,7 +39,7 @@ describe("getActionDefinitions", () => {
     try {
       const definitions = await getActionDefinitions()
 
-      expect(definitions.OPENAI.deprecated).toEqual(true)
+      expect(definitions.OPENAI).toMatchObject({ deprecated: true })
       expect(mockPluginFetch).toHaveBeenCalledWith(PluginType.AUTOMATION)
     } finally {
       restoreEnv()
@@ -99,11 +99,11 @@ describe("getActionDefinitions", () => {
 
     try {
       const first = await getActionDefinitions()
-      first.OPENAI.deprecated = false
+      first.OPENAI!.deprecated = false
 
       const second = await getActionDefinitions()
 
-      expect(second.OPENAI.deprecated).toEqual(true)
+      expect(second.OPENAI).toMatchObject({ deprecated: true })
       expect(env.SELF_HOSTED).toEqual("1")
     } finally {
       restoreEnv()
