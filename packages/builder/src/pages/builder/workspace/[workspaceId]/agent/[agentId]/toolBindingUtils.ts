@@ -8,18 +8,22 @@ export const normalizeConfiguredOperationTools = ({
   operation: AgentOperation
   availableTools: AgentTool[]
 }) => {
-  return (operation.enabledTools || []).map(config => {
+  return (operation.enabledTools || []).flatMap(config => {
     const tool = availableTools.find(
       item => item.runtimeBinding === config.toolName
     )
-
-    return {
-      ...config,
-      executionPrincipal:
-        tool?.executionPolicy.mode === "admin"
-          ? ToolExecutionPrincipal.ADMIN
-          : config.executionPrincipal,
+    if (!tool) {
+      return []
     }
+    return [
+      {
+        ...config,
+        executionPrincipal:
+          tool.executionPolicy.mode === "admin"
+            ? ToolExecutionPrincipal.ADMIN
+            : config.executionPrincipal,
+      },
+    ]
   })
 }
 
@@ -41,7 +45,7 @@ export const isToolReferenced = ({
   tool,
 }: {
   prompt?: string | null
-  tool: Pick<AgentTool, "readableBinding">
+  tool: AgentTool
 }) => {
   if (!tool.readableBinding) {
     return false

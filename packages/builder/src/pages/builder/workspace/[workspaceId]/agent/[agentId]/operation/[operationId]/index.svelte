@@ -68,7 +68,6 @@
   $goto
 
   type RailTab = "tools" | "knowledge" | "approvals"
-  type RemovableTool = Pick<AgentTool, "readableBinding" | "runtimeBinding">
 
   let togglingLive = $state(false)
   let saving = $state(false)
@@ -82,7 +81,7 @@
   let removeToolDialog: ConfirmDialog | undefined = $state()
   let configureToolModal: ConfigureOperationToolModal | undefined = $state()
   let editorToolsDropdown: ToolsDropdown | undefined = $state()
-  let toolToRemove: RemovableTool | undefined = $state()
+  let toolToRemove: AgentTool | undefined = $state()
   let restoreToolConfiguration = $state(false)
   let addingTool: AgentTool | undefined = $state()
   let pendingToolInsertion: PendingToolInsertion | undefined = $state()
@@ -120,14 +119,6 @@
         availableTools.find(tool => tool.runtimeBinding === config.toolName)
       )
       .filter((tool): tool is AgentTool => !!tool)
-  )
-  let configuredToolList = $derived(
-    (operation?.enabledTools || []).map(config => ({
-      config,
-      tool: availableTools.find(
-        availableTool => availableTool.runtimeBinding === config.toolName
-      ),
-    }))
   )
   let promptBindings = $derived(
     toAgentPromptBindings({ tools: configuredTools, webSearchConfigured })
@@ -406,7 +397,7 @@
     saveOperation({ promptInstructions: nextInstructions })
   }
 
-  const removeTool = (tool: RemovableTool) => {
+  const removeTool = (tool: AgentTool) => {
     if (!operation) {
       return
     }
@@ -491,7 +482,7 @@
   }
 
   const confirmRemoveTool = (
-    tool: RemovableTool,
+    tool: AgentTool,
     returnToConfiguration = false
   ) => {
     restoreToolConfiguration = returnToConfiguration
@@ -514,16 +505,11 @@
     toolToRemove = undefined
     restoreToolConfiguration = false
     if (tool && shouldRestore) {
-      const configuredTool = availableTools.find(
-        availableTool => availableTool.runtimeBinding === tool.runtimeBinding
-      )
-      if (configuredTool) {
-        configureTool(configuredTool)
-      }
+      configureTool(tool)
     }
   }
 
-  const openToolMenu = (event: MouseEvent, tool: RemovableTool) => {
+  const openToolMenu = (event: MouseEvent, tool: AgentTool) => {
     event.preventDefault()
     event.stopPropagation()
     contextMenuStore.open(
@@ -744,25 +730,15 @@
                 {/snippet}
               </OperationRailSectionHeader>
               <div class="tools-list" role="list">
-                {#each configuredToolList as item (item.config.toolName)}
-                  {@const tool = item.tool}
+                {#each configuredTools as tool (tool.runtimeBinding)}
                   <div role="listitem">
                     <div
                       class="tool-row"
-                      class:tool-row--with-run-as={tool &&
-                        $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                      class:tool-row--with-run-as={$featureFlags[
+                        FeatureFlag.AI_AGENT_TOOL_SECURITY
+                      ]}
                     >
-                      {#if !tool}
-                        <div class="tool-row-activation">
-                          <div class="tool-name">
-                            <span class="tool-icon">
-                              <Icon name="Wrench" size="XS" />
-                            </span>
-                            <span>{item.config.toolName}</span>
-                            <span class="tool-unavailable">Unavailable</span>
-                          </div>
-                        </div>
-                      {:else if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                      {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
                         <button
                           class="tool-row-activation"
                           aria-label={`Configure ${tool.readableBinding}`}
@@ -799,18 +775,11 @@
                           </div>
                         </div>
                       {/if}
-                      {#if !tool || !$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                      {#if !$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
                         <button
                           class="tool-actions"
-                          aria-label={`Actions for ${tool?.readableBinding || item.config.toolName}`}
-                          onclick={event =>
-                            openToolMenu(
-                              event,
-                              tool || {
-                                readableBinding: item.config.toolName,
-                                runtimeBinding: item.config.toolName,
-                              }
-                            )}
+                          aria-label={`Actions for ${tool.readableBinding}`}
+                          onclick={event => openToolMenu(event, tool)}
                         >
                           <Icon name="dots-three" size="XS" />
                         </button>
@@ -1086,12 +1055,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .tool-name .tool-unavailable {
-    flex: 0 0 auto;
-    color: var(--spectrum-global-color-gray-700);
-    font-size: 11px;
   }
 
   .tool-row-run-as {

@@ -65,6 +65,26 @@ describe("normalizeConfiguredOperationTools", () => {
     ).toEqual([])
   })
 
+  it("drops configured tools that are no longer available", () => {
+    expect(
+      normalizeConfiguredOperationTools({
+        operation: {
+          id: "operation_1",
+          name: "Support",
+          live: false,
+          allowKnowledgeSourceDownload: false,
+          enabledTools: [
+            {
+              toolName: "missing_tool",
+              executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+            },
+          ],
+        },
+        availableTools,
+      })
+    ).toEqual([])
+  })
+
   it("enforces fixed-admin tool policies", () => {
     const adminTool: AgentTool = {
       ...availableTools[0],
