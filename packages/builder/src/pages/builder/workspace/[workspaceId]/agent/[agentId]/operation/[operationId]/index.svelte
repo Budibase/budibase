@@ -451,16 +451,6 @@
     openToolMenu(event, tool)
   }
 
-  const handleToolRowKeydown = (event: KeyboardEvent, tool: AgentTool) => {
-    if (
-      $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
-      (event.key === "Enter" || event.key === " ")
-    ) {
-      event.preventDefault()
-      configureTool(tool)
-    }
-  }
-
   const configureTool = (tool: AgentTool) => {
     toolToAdd = undefined
     toolInsertPosition = undefined
@@ -630,55 +620,56 @@
               <div class="tools-list" role="list">
                 {#each includedTools as tool (tool.runtimeBinding)}
                   <div role="listitem">
-                    <!-- svelte-ignore a11y_no_noninteractive_tabindex (role and tabindex are enabled together) -->
                     <div
                       class="tool-row"
-                      class:tool-row--interactive={$featureFlags[
-                        FeatureFlag.AI_AGENT_TOOL_SECURITY
-                      ]}
                       class:tool-row--with-run-as={$featureFlags[
                         FeatureFlag.AI_AGENT_TOOL_SECURITY
                       ]}
-                      role={$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]
-                        ? "button"
-                        : undefined}
-                      tabindex={$featureFlags[
-                        FeatureFlag.AI_AGENT_TOOL_SECURITY
-                      ]
-                        ? 0
-                        : undefined}
-                      onclick={() =>
-                        $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
-                        configureTool(tool)}
-                      onkeydown={event => handleToolRowKeydown(event, tool)}
                     >
-                      <div class="tool-row-main">
-                        <div class="tool-name">
-                          <span class="tool-icon">
-                            <ToolIcon
-                              icon={tool.icon}
-                              size="S"
-                              fallbackIcon="Wrench"
-                            />
-                          </span>
-                          <span>{tool.readableBinding}</span>
-                        </div>
-                        <button
-                          class="tool-actions"
-                          aria-label={`Actions for ${tool.readableBinding}`}
-                          onclick={event => handleToolActions(event, tool)}
-                        >
-                          <Icon name="dots-three" size="XS" />
-                        </button>
-                      </div>
                       {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
-                        <div class="tool-row-run-as">
-                          Run as {getEffectiveToolPrincipal(tool) ===
-                          ToolExecutionPrincipal.ADMIN
-                            ? "Admin"
-                            : "Requester"}
+                        <button
+                          class="tool-row-activation"
+                          aria-label={`Configure ${tool.readableBinding}`}
+                          onclick={() => configureTool(tool)}
+                        >
+                          <div class="tool-name">
+                            <span class="tool-icon">
+                              <ToolIcon
+                                icon={tool.icon}
+                                size="S"
+                                fallbackIcon="Wrench"
+                              />
+                            </span>
+                            <span>{tool.readableBinding}</span>
+                          </div>
+                          <div class="tool-row-run-as">
+                            Run as {getEffectiveToolPrincipal(tool) ===
+                            ToolExecutionPrincipal.ADMIN
+                              ? "Admin"
+                              : "Requester"}
+                          </div>
+                        </button>
+                      {:else}
+                        <div class="tool-row-activation">
+                          <div class="tool-name">
+                            <span class="tool-icon">
+                              <ToolIcon
+                                icon={tool.icon}
+                                size="S"
+                                fallbackIcon="Wrench"
+                              />
+                            </span>
+                            <span>{tool.readableBinding}</span>
+                          </div>
                         </div>
                       {/if}
+                      <button
+                        class="tool-actions"
+                        aria-label={`Actions for ${tool.readableBinding}`}
+                        onclick={event => handleToolActions(event, tool)}
+                      >
+                        <Icon name="dots-three" size="XS" />
+                      </button>
                     </div>
                   </div>
                 {:else}
@@ -860,24 +851,30 @@
 
   .tool-row--with-run-as {
     min-height: 50px;
-    align-items: stretch;
-    flex-direction: column;
-    justify-content: center;
-    gap: 4px;
     padding: 8px 12px;
   }
 
-  .tool-row--interactive {
+  .tool-row-activation {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+  }
+
+  button.tool-row-activation {
     cursor: pointer;
   }
 
-  .tool-row-main {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    min-width: 0;
-    flex: 1 1 auto;
+  .tool-row--with-run-as .tool-row-activation {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .tool-name {
