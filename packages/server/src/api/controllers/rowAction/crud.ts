@@ -8,6 +8,7 @@ import {
   RowActionsResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { propagateProjectDependencyChangesWithWarning } from "../../../utilities/projects"
 
 async function getTable(ctx: Ctx) {
   const { tableId } = ctx.params
@@ -50,7 +51,7 @@ export async function find(ctx: Ctx<void, RowActionsResponse>) {
   ctx.body = result
 }
 
-export async function create(
+async function createUnlocked(
   ctx: Ctx<CreateRowActionRequest, RowActionResponse>
 ) {
   const table = await getTable(ctx)
@@ -58,6 +59,13 @@ export async function create(
 
   const createdAction = await sdk.rowActions.create(tableId, {
     name: ctx.request.body.name,
+  })
+
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: tableId,
+    currentProjectIds: table.projectIds,
+    previousProjectIds: table.projectIds,
+    savedResource: createdAction,
   })
 
   await events.rowAction.created(createdAction)
@@ -70,6 +78,12 @@ export async function create(
     allowedSources: flattenAllowedSources(tableId, createdAction.permissions),
   }
   ctx.status = 201
+}
+
+export async function create(
+  ctx: Ctx<CreateRowActionRequest, RowActionResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(() => createUnlocked(ctx))
 }
 
 export async function remove(ctx: Ctx<void, void>) {

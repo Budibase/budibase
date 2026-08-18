@@ -48,11 +48,8 @@ import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
+import { propagateProjectDependencyChangesWithWarning } from "../../../utilities/projects"
 import { builderSocket } from "../../../websockets"
-import {
-  resolveProjectIds,
-  resolveUpdatedProjectIds,
-} from "../../../utilities/projects"
 import { createImporter, getImportInfo } from "./import"
 import { ImportInfo } from "./import/sources/base"
 import { mergePreviewSchema } from "./schema"
@@ -215,7 +212,7 @@ export async function importInfo(
   }
 }
 
-export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
+async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const db = context.getWorkspaceDB()
   const query: Query = ctx.request.body
 
@@ -229,7 +226,7 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   let eventFn
   let existingQuery: Query | undefined
   if (!query._id && !query._rev) {
-    query.projectIds = await resolveProjectIds(query.projectIds)
+    delete query.projectIds
     query._id = generateQueryID(query.datasourceId)
     // flag to state whether the default bindings are empty strings (old behaviour) or null
     query.nullDefaultSupport = true
@@ -241,10 +238,11 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
     if (existingQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
       query.nullDefaultSupport = true
     }
-    query.projectIds = await resolveUpdatedProjectIds(
-      query.projectIds,
-      existingQuery.projectIds
-    )
+    if (Array.isArray(existingQuery.projectIds)) {
+      query.projectIds = [...existingQuery.projectIds]
+    } else {
+      delete query.projectIds
+    }
     eventFn = () => events.query.updated(datasource, query)
   }
   if (existingQuery && existingQuery.name !== query.name) {
@@ -259,7 +257,19 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   await eventFn()
   query._rev = response.rev
 
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: datasource._id!,
+    currentProjectIds: datasource.projectIds,
+    previousProjectIds: datasource.projectIds,
+    previousResource: existingQuery,
+    savedResource: query,
+  })
+
   ctx.body = query
+}
+
+export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
+  await sdk.projects.doWithProjectAssignmentsLock(() => saveUnlocked(ctx))
 }
 
 export async function find(ctx: UserCtx<void, FindQueryResponse>) {

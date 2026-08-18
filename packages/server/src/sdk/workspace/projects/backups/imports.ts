@@ -1,11 +1,20 @@
-import { context, docIds, HTTPError, utils } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  docIds,
+  HTTPError,
+  utils,
+} from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
+import { findHBSBlocks } from "@budibase/string-templates"
 import {
   Agent,
   AnyDocument,
+  Automation,
   Datasource,
   DocumentType,
   ImportProjectResponse,
+  isWebhookTrigger,
   Project,
   ProjectImportRequirement,
   ProjectPackageDependencyIndex,
@@ -17,6 +26,7 @@ import {
   SEPARATOR,
   VirtualDocumentType,
   WorkspaceApp,
+  WebhookActionType,
   prefixed,
 } from "@budibase/types"
 import fs from "fs"
@@ -37,6 +47,7 @@ import { isExternalTableID } from "../../../../integrations/utils"
 import { decryptFiles, untarFile } from "../../backups/imports"
 import sdk from "../../.."
 import { getAppUrl } from "../../workspaces/utils"
+import { doWithProjectAssignmentsLock } from "../lock"
 import {
   PROJECT_DEPENDENCY_INDEX_FILE,
   PROJECT_DOCS_DIRECTORY,
@@ -367,30 +378,75 @@ const remapObjectKeys = <T>(
   )
 }
 
-const remapValue = (value: unknown, idMap: Map<string, string>): unknown => {
+interface ProjectImportIdRemapper {
+  idMap: Map<string, string>
+  referencePattern?: RegExp
+}
+
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+const createProjectImportIdRemapper = (
+  idMap: Map<string, string>
+): ProjectImportIdRemapper => {
+  const references = Array.from(idMap.keys(), sourceId => `${sourceId}.`).sort(
+    (a, b) => b.length - a.length
+  )
+  return {
+    idMap,
+    referencePattern: references.length
+      ? new RegExp(references.map(escapeRegExp).join("|"), "g")
+      : undefined,
+  }
+}
+
+const remapIdReferences = (
+  value: string,
+  remapper: ProjectImportIdRemapper
+) => {
+  if (!remapper.referencePattern) {
+    return value
+  }
+  return value.replace(remapper.referencePattern, sourceReference => {
+    const sourceId = sourceReference.slice(0, -1)
+    const destinationId = remapper.idMap.get(sourceId)
+    return destinationId ? `${destinationId}.` : sourceReference
+  })
+}
+
+const remapHandlebarsReferences = (
+  value: string,
+  remapper: ProjectImportIdRemapper
+) => {
+  return findHBSBlocks(value).reduce(
+    (remapped, block) =>
+      remapped.replace(block, remapIdReferences(block, remapper)),
+    value
+  )
+}
+
+const remapValue = (
+  value: unknown,
+  remapper: ProjectImportIdRemapper
+): unknown => {
   if (typeof value === "string") {
-    return idMap.get(value) || value
+    return (
+      remapper.idMap.get(value) || remapHandlebarsReferences(value, remapper)
+    )
   }
   if (Array.isArray(value)) {
-    return value.map(item => remapValue(item, idMap))
+    return value.map(item => remapValue(item, remapper))
   }
   if (value && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value).map(([key, nestedValue]) => [
-        key,
-        remapValue(nestedValue, idMap),
+        remapper.idMap.get(key) || key,
+        remapValue(nestedValue, remapper),
       ])
     )
   }
   return value
 }
-
-const remapIdReferences = (value: string, idMap: Map<string, string>) =>
-  [...idMap.entries()].reduce(
-    (remapped, [sourceId, destinationId]) =>
-      remapped.split(`${sourceId}.`).join(`${destinationId}.`),
-    value
-  )
 
 const getDatasourceEntities = (
   datasource: Datasource
@@ -486,6 +542,11 @@ const sanitizeImportedProjectAssignments = (
   resourceType: ResourceType,
   importedProjectId: string
 ) => {
+  if (resourceType === ResourceType.QUERY) {
+    delete doc.projectIds
+    return
+  }
+
   if (getProjectIds(doc).includes(importedProjectId)) {
     doc.projectIds = [importedProjectId]
   } else {
@@ -505,11 +566,7 @@ const sanitizeImportedProjectAssignments = (
   datasource.entities = Object.fromEntries(
     Object.entries(entities).map(([key, entity]) => {
       const sanitizedEntity = { ...entity }
-      if (getProjectIds(sanitizedEntity).includes(importedProjectId)) {
-        sanitizedEntity.projectIds = [importedProjectId]
-      } else {
-        delete sanitizedEntity.projectIds
-      }
+      delete sanitizedEntity.projectIds
       return [key, sanitizedEntity]
     })
   )
@@ -518,12 +575,13 @@ const sanitizeImportedProjectAssignments = (
 const sanitizeImportedDoc = async (
   doc: AnyDocument,
   resourceType: ResourceType,
-  idMap: Map<string, string>,
+  remapper: ProjectImportIdRemapper,
   workspaceId: string,
   importedProjectId: string,
   deconflictWorkspaceApp: (_workspaceApp: WorkspaceApp) => void
 ): Promise<AnyDocument> => {
-  const remapped = remapValue(structuredClone(doc), idMap) as AnyDocument
+  const { idMap } = remapper
+  const remapped = remapValue(structuredClone(doc), remapper) as AnyDocument
   delete remapped._rev
 
   if (resourceType === ResourceType.ROW_ACTION) {
@@ -538,7 +596,7 @@ const sanitizeImportedDoc = async (
           return [
             idMap.get(actionId) || actionId,
             {
-              ...(remapValue(action, idMap) as typeof action),
+              ...(remapValue(action, remapper) as typeof action),
               permissions: {
                 ...permissions,
                 views: remapObjectKeys<RowActionPermissions["views"][string]>(
@@ -563,7 +621,10 @@ const sanitizeImportedDoc = async (
     const datasource = remapped as Datasource
     for (const entity of Object.values(getDatasourceEntities(datasource))) {
       if (typeof entity.primaryDisplay === "string") {
-        entity.primaryDisplay = remapIdReferences(entity.primaryDisplay, idMap)
+        entity.primaryDisplay = remapIdReferences(
+          entity.primaryDisplay,
+          remapper
+        )
       }
     }
   }
@@ -909,6 +970,36 @@ const bulkInsertDocs = async (
   }
 }
 
+const createImportedAutomationWebhook = async (
+  doc: AnyDocument,
+  workspaceId: string,
+  insertedDocs: InsertedDocRef[]
+) => {
+  const automation = doc as Automation
+  const trigger = automation.definition?.trigger
+  if (!trigger || !isWebhookTrigger(trigger)) {
+    return
+  }
+
+  const webhook = await sdk.automations.webhook.save(
+    sdk.automations.webhook.newDoc(
+      "Automation webhook",
+      WebhookActionType.AUTOMATION,
+      automation._id!
+    )
+  )
+  insertedDocs.push({
+    _id: webhook._id!,
+    _rev: webhook._rev!,
+  })
+
+  trigger.webhookId = webhook._id
+  trigger.inputs = {
+    schemaUrl: `api/webhooks/schema/${workspaceId}/${webhook._id}/${webhook.schemaToken}`,
+    triggerUrl: `api/webhooks/trigger/${dbCore.getProdWorkspaceID(workspaceId)}/${webhook._id}`,
+  }
+}
+
 async function extractProjectPackage(
   file: { path: string },
   encryptPassword?: string
@@ -1090,87 +1181,106 @@ export async function importProject(
   }
 
   const extracted = await extractProjectPackage(file, opts?.encryptPassword)
-  const insertedDocs: InsertedDocRef[] = []
-  let importedProject: Project | undefined
   try {
-    importedProject = await sdk.projects.create({
-      name: extracted.project.name,
-      description: extracted.project.description,
-      color: extracted.project.color,
-    })
-    const importedProjectId = importedProject._id!
+    return await doWithProjectAssignmentsLock(async () => {
+      const insertedDocs: InsertedDocRef[] = []
+      let importedProject: Project | undefined
+      try {
+        importedProject = await sdk.projects.create({
+          name: extracted.project.name,
+          description: extracted.project.description,
+          color: extracted.project.color,
+        })
+        const importedProjectId = importedProject._id!
 
-    const idMap = new Map<string, string>([
-      [extracted.project._id!, importedProjectId],
-      [extracted.manifest.sourceWorkspace.id, workspaceId],
-    ])
+        const idMap = new Map<string, string>([
+          [extracted.project._id!, importedProjectId],
+          [extracted.manifest.sourceWorkspace.id, workspaceId],
+        ])
 
-    assignImportedIds(extracted.docs, idMap)
-    const deconflictWorkspaceApp = await createWorkspaceAppImportDeconflicter()
+        assignImportedIds(extracted.docs, idMap)
+        const idRemapper = createProjectImportIdRemapper(idMap)
+        const deconflictWorkspaceApp =
+          await createWorkspaceAppImportDeconflicter()
 
-    const resources: Partial<Record<ResourceType, string[]>> = {
-      [ResourceType.PROJECT]: [importedProject._id!],
-    }
+        const resources: Partial<Record<ResourceType, string[]>> = {
+          [ResourceType.PROJECT]: [importedProject._id!],
+        }
 
-    for (const resourceType of IMPORT_ORDER) {
-      const docsToInsert = await Promise.all(
-        extracted.docs
-          .filter(doc => doc.resourceType === resourceType)
-          .map(async ({ doc }) => {
-            const newId = idMap.get(doc._id!)
-            const remappedDoc = await sanitizeImportedDoc(
-              { ...doc, _id: newId },
-              resourceType,
-              idMap,
-              workspaceId,
-              importedProjectId,
-              deconflictWorkspaceApp
-            )
-            return remappedDoc
+        for (const resourceType of IMPORT_ORDER) {
+          const docsToInsert = await Promise.all(
+            extracted.docs
+              .filter(doc => doc.resourceType === resourceType)
+              .map(async ({ doc }) => {
+                const newId = idMap.get(doc._id!)
+                const remappedDoc = await sanitizeImportedDoc(
+                  { ...doc, _id: newId },
+                  resourceType,
+                  idRemapper,
+                  workspaceId,
+                  importedProjectId,
+                  deconflictWorkspaceApp
+                )
+                return remappedDoc
+              })
+          )
+
+          if (!docsToInsert.length) {
+            continue
+          }
+
+          if (resourceType === ResourceType.AUTOMATION) {
+            for (const doc of docsToInsert) {
+              await createImportedAutomationWebhook(
+                doc,
+                workspaceId,
+                insertedDocs
+              )
+            }
+          }
+
+          await bulkInsertDocs(docsToInsert, insertedDocs)
+          resources[resourceType] = docsToInsert.map(doc => doc._id!)
+        }
+
+        const requirements = buildRequirements(extracted.docs).map(
+          requirement => ({
+            ...requirement,
+            resourceId:
+              idMap.get(requirement.resourceId) || requirement.resourceId,
           })
-      )
+        )
 
-      if (!docsToInsert.length) {
-        continue
+        const createdAt = getProjectCreatedAt(importedProject)
+        return {
+          project: {
+            _id: importedProject._id!,
+            _rev: importedProject._rev!,
+            name: importedProject.name,
+            description: importedProject.description,
+            color: importedProject.color,
+            createdAt,
+            updatedAt: toTimestamp(importedProject.updatedAt) ?? createdAt,
+          },
+          resources,
+          unsupportedContent: extracted.manifest.unsupportedContent,
+          requirements,
+        }
+      } catch (err) {
+        if (insertedDocs.length) {
+          await context.getWorkspaceDB().bulkRemove(insertedDocs, {
+            silenceErrors: true,
+          })
+        }
+        if (importedProject?._id && importedProject._rev) {
+          await context
+            .getWorkspaceDB()
+            .remove(importedProject._id, importedProject._rev)
+            .catch(() => {})
+        }
+        throw err
       }
-
-      await bulkInsertDocs(docsToInsert, insertedDocs)
-      resources[resourceType] = docsToInsert.map(doc => doc._id!)
-    }
-
-    const requirements = buildRequirements(extracted.docs).map(requirement => ({
-      ...requirement,
-      resourceId: idMap.get(requirement.resourceId) || requirement.resourceId,
-    }))
-
-    const createdAt = getProjectCreatedAt(importedProject)
-    return {
-      project: {
-        _id: importedProject._id!,
-        _rev: importedProject._rev!,
-        name: importedProject.name,
-        description: importedProject.description,
-        color: importedProject.color,
-        createdAt,
-        updatedAt: toTimestamp(importedProject.updatedAt) ?? createdAt,
-      },
-      resources,
-      unsupportedContent: extracted.manifest.unsupportedContent,
-      requirements,
-    }
-  } catch (err) {
-    if (insertedDocs.length) {
-      await context.getWorkspaceDB().bulkRemove(insertedDocs, {
-        silenceErrors: true,
-      })
-    }
-    if (importedProject?._id && importedProject._rev) {
-      await context
-        .getWorkspaceDB()
-        .remove(importedProject._id, importedProject._rev)
-        .catch(() => {})
-    }
-    throw err
+    })
   } finally {
     await fsp.rm(extracted.tmpPath, { recursive: true, force: true })
   }
