@@ -72,8 +72,10 @@
       group = await groups.save(groupToSave)
       bb.settings(`/people/groups/${group._id}/`)
       notifications.success(`User group created successfully`)
-    } catch (error) {
-      if (error instanceof Error) {
+    } catch (error: any) {
+      if (error.status === 400) {
+        notifications.error(error.message)
+      } else if (error.message) {
         notifications.error(error.message)
       } else {
         notifications.error(`Failed to save group`)
