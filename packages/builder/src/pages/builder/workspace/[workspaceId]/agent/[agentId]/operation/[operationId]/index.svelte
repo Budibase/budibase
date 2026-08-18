@@ -436,6 +436,11 @@
   }
 
   const addTool = (tool: AgentTool) => {
+    if (!$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]) {
+      insertTool(tool)
+      return
+    }
+
     toolToAdd = tool
     toolInsertPosition = getCaretPosition?.()
     configureToolModal?.show(
@@ -588,11 +593,7 @@
               <div class="tools-list" role="list">
                 {#each includedTools as tool (tool.runtimeBinding)}
                   <div role="listitem">
-                    <button
-                      class="tool-row"
-                      aria-label={`Configure ${tool.readableBinding}`}
-                      onclick={() => configureTool(tool)}
-                    >
+                    <div class="tool-row">
                       <div class="tool-row-main">
                         <div class="tool-name">
                           <span class="tool-icon">
@@ -604,17 +605,25 @@
                           </span>
                           <span>{tool.readableBinding}</span>
                         </div>
-                        <span class="tool-actions" aria-hidden="true">
-                          <Icon name="dots-three" size="XS" />
-                        </span>
+                        {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                          <button
+                            class="tool-actions"
+                            aria-label={`Configure ${tool.readableBinding}`}
+                            onclick={() => configureTool(tool)}
+                          >
+                            <Icon name="dots-three" size="XS" />
+                          </button>
+                        {/if}
                       </div>
-                      <div class="tool-row-run-as">
-                        Run as {getEffectiveToolPrincipal(tool) ===
-                        ToolExecutionPrincipal.ADMIN
-                          ? "Admin"
-                          : "Requester"}
-                      </div>
-                    </button>
+                      {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                        <div class="tool-row-run-as">
+                          Run as {getEffectiveToolPrincipal(tool) ===
+                          ToolExecutionPrincipal.ADMIN
+                            ? "Admin"
+                            : "Requester"}
+                        </div>
+                      {/if}
+                    </div>
                   </div>
                 {:else}
                   <Body size="XS" color="var(--spectrum-global-color-gray-700)"
@@ -659,11 +668,13 @@
     {/if}
   </ConfirmDialog>
 
-  <ConfigureOperationToolModal
-    bind:this={configureToolModal}
-    onSave={saveToolConfiguration}
-    onRemove={confirmRemoveTool}
-  />
+  {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+    <ConfigureOperationToolModal
+      bind:this={configureToolModal}
+      onSave={saveToolConfiguration}
+      onRemove={confirmRemoveTool}
+    />
+  {/if}
 
   <WebSearchConfigModal
     bind:this={webSearchConfigModal}
@@ -778,6 +789,7 @@
 
   .tool-row {
     display: flex;
+    box-sizing: border-box;
     align-items: stretch;
     flex-direction: column;
     gap: 4px;
@@ -785,12 +797,9 @@
     padding: 8px 12px;
     border-radius: 4px;
     background: var(--background-alt);
-    border: 0;
     width: 100%;
     color: inherit;
-    font-family: inherit;
     text-align: left;
-    cursor: pointer;
   }
 
   .tool-row-main {
@@ -842,6 +851,10 @@
   .tool-actions {
     display: flex;
     padding: 4px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
   }
 
   @media (max-width: 900px) {
