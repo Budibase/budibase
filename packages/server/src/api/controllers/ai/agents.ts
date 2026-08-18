@@ -440,6 +440,8 @@ const allocateMSTeamsAppPackageVersion = async (agentId: string) => {
       )
     }
 
+    sdk.ai.deployments.MSTeams.validateMSTeamsIntegration(agent)
+
     const currentVersion =
       agent.MSTeamsIntegration?.appPackageVersion ||
       INITIAL_TEAMS_APP_PACKAGE_VERSION

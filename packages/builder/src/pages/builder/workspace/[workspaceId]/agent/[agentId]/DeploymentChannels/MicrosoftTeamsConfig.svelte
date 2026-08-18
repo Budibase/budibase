@@ -24,6 +24,8 @@
 
   const MS_TEAMS_NEW_COMMAND = ChatCommands.NEW
   const MS_TEAMS_LINK_COMMAND = ChatCommands.LINK
+  const UUID_PATTERN =
+    /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i
   let { agent }: { agent?: Agent } = $props()
 
   let draftAgentId: string | undefined = $state()
@@ -48,14 +50,21 @@
       ""
   )
 
-  const hasRequiredCredentials = $derived.by(
-    () =>
-      !!(
-        draft.appId.trim() &&
-        draft.appPassword.trim() &&
-        draft.tenantId.trim()
-      )
-  )
+  const appIdError = $derived.by(() => {
+    const appId = draft.appId.trim()
+    return appId && !UUID_PATTERN.test(appId)
+      ? "App ID must be a valid UUID"
+      : undefined
+  })
+
+  const hasRequiredCredentials = $derived.by(() => {
+    return !!(
+      draft.appId.trim() &&
+      !appIdError &&
+      draft.appPassword.trim() &&
+      draft.tenantId.trim()
+    )
+  })
 
   const isProvisioned = $derived.by(
     () => messagingEndpointUrl.trim().length > 0
@@ -150,7 +159,11 @@
   }}
 >
   {#snippet fields()}
-    <Input label="App ID (client ID)" bind:value={draft.appId} />
+    <Input
+      label="App ID (client ID)"
+      bind:value={draft.appId}
+      error={appIdError}
+    />
     <Input
       label="Client secret (value)"
       type="password"

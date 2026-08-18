@@ -86,6 +86,7 @@ const { getMockChatOptions, resetMockChatState, setMockPostEphemeralResult } =
   jest.requireActual("chat") as ChatMockModule
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
 const mockedGetFileUrlForAgent = jest.mocked(sdk.ai.rag.getFileUrlForAgent)
+const TEAMS_APP_ID = "11111111-1111-4111-8111-111111111111"
 
 const extractLinkUrl = (messages: string[]) => {
   const urls = messages
@@ -131,7 +132,7 @@ describe("agent teams integration provisioning", () => {
     const agent = await config.api.agent.create({
       name: "Teams Agent",
       MSTeamsIntegration: {
-        appId: "teams-app-id",
+        appId: TEAMS_APP_ID,
         appPassword: "teams-app-password",
         tenantId: "azure-tenant-id",
       },
@@ -164,7 +165,7 @@ describe("agent teams integration provisioning", () => {
     const agent = await config.api.agent.create({
       name: "Teams Agent With Internal Chat",
       MSTeamsIntegration: {
-        appId: "teams-app-id",
+        appId: TEAMS_APP_ID,
         appPassword: "teams-app-password",
         tenantId: "azure-tenant-id",
       },
@@ -195,7 +196,7 @@ describe("agent teams integration provisioning", () => {
       name: "Teams Obfuscation Agent",
       aiconfig: "test-config",
       MSTeamsIntegration: {
-        appId: "teams-app-id",
+        appId: TEAMS_APP_ID,
         appPassword: "teams-app-password",
         tenantId: "azure-tenant-id",
       },
@@ -232,11 +233,29 @@ describe("agent teams integration provisioning", () => {
     })
   })
 
+  it("rejects an invalid Teams app ID when updating an agent", async () => {
+    const agent = await config.api.agent.create({
+      name: "Invalid Teams App ID Agent",
+    })
+
+    await config.api.agent.update(
+      {
+        ...agent,
+        MSTeamsIntegration: {
+          appId: "not-a-uuid",
+          appPassword: "teams-app-password",
+          tenantId: "azure-tenant-id",
+        },
+      },
+      { status: 400 }
+    )
+  })
+
   it("rejects package downloads before the Teams channel is provisioned", async () => {
     const agent = await config.api.agent.create({
       name: "Unprovisioned Teams Package Agent",
       MSTeamsIntegration: {
-        appId: "11111111-1111-1111-1111-111111111111",
+        appId: TEAMS_APP_ID,
         appPassword: "teams-package-password",
         tenantId: "azure-tenant-id",
       },
@@ -245,12 +264,44 @@ describe("agent teams integration provisioning", () => {
     await config.api.agent.downloadMSTeamsPackage(agent._id!, { status: 400 })
   })
 
+  it("rejects package downloads for a stored invalid Teams app ID", async () => {
+    const agent = await config.api.agent.create({
+      name: "Invalid Teams Package Agent",
+      MSTeamsIntegration: {
+        appId: TEAMS_APP_ID,
+        appPassword: "teams-package-password",
+        tenantId: "azure-tenant-id",
+      },
+    })
+    await config.api.agent.provisionMSTeamsChannel(agent._id!)
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const stored = await db.get<Agent>(agent._id!)
+      await db.put({
+        ...stored,
+        MSTeamsIntegration: {
+          ...stored.MSTeamsIntegration,
+          appId: "not-a-uuid",
+        },
+      })
+    })
+
+    await config.api.agent.downloadMSTeamsPackage(agent._id!, { status: 400 })
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const stored = await db.get<Agent>(agent._id!)
+      expect(stored.MSTeamsIntegration?.appPackageVersion).toBeUndefined()
+    })
+  })
+
   it("downloads a Teams app package for an agent", async () => {
     const agent = await config.api.agent.create({
       name: "Teams Package Agent",
       description: "Answers questions in Teams.",
       MSTeamsIntegration: {
-        appId: "11111111-1111-1111-1111-111111111111",
+        appId: TEAMS_APP_ID,
         appPassword: "teams-package-password",
         tenantId: "azure-tenant-id",
       },
@@ -294,10 +345,8 @@ describe("agent teams integration provisioning", () => {
       expect(manifest.name.short).toEqual("Teams Package Agent")
       expect(manifest.description.short).toEqual("Answers questions in Teams.")
       expect(manifest.accentColor).toEqual("#7052FF")
-      expect(manifest.id).toEqual("11111111-1111-1111-1111-111111111111")
-      expect(manifest.bots[0].botId).toEqual(
-        "11111111-1111-1111-1111-111111111111"
-      )
+      expect(manifest.id).toEqual(TEAMS_APP_ID)
+      expect(manifest.bots[0].botId).toEqual(TEAMS_APP_ID)
       expect(manifest.bots[0].scopes).toEqual(["personal", "team", "groupChat"])
       expect(manifest.bots[0].commandLists[0].commands).toContainEqual({
         title: ChatCommands.LINK,
@@ -351,7 +400,7 @@ describe("agent teams integration provisioning", () => {
       const agent = await config.api.agent.create({
         name: "Teams Webhook Agent",
         MSTeamsIntegration: {
-          appId: "teams-app-id",
+          appId: TEAMS_APP_ID,
           appPassword: "teams-app-password",
           tenantId: "azure-tenant-id",
         },
@@ -413,7 +462,7 @@ describe("agent teams integration provisioning", () => {
         {
           name: "Teams Incoming Messages Agent",
           MSTeamsIntegration: {
-            appId: "teams-app-id",
+            appId: TEAMS_APP_ID,
             appPassword: "teams-app-password",
             tenantId: "azure-tenant-id",
             ...(requireUserLink !== undefined && { requireUserLink }),

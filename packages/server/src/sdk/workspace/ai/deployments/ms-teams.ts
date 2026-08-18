@@ -5,6 +5,7 @@ import {
   type Agent,
   type ResolvedMSTeamsIntegration,
 } from "@budibase/types"
+import { validate as isValidUUID } from "uuid"
 import * as shared from "./shared"
 
 const MAX_APP_NAME_LENGTH = 30
@@ -52,6 +53,10 @@ export const validateMSTeamsIntegration = (
       "Teams integration requires appId (client ID) and appPassword (client secret value)",
       400
     )
+  }
+
+  if (!isValidUUID(appId)) {
+    throw new HTTPError("Teams integration appId must be a valid UUID", 400)
   }
 
   return {
