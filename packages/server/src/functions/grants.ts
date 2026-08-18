@@ -156,16 +156,15 @@ export const consumeFunctionQueryGrant = async (
     if (storedGrant.remainingQueryCalls <= 0) {
       return { status: "budget_exceeded" }
     }
-    if (
-      storedGrant.activeQueryCalls >= storedGrant.limits.maxConcurrentQueryCalls
-    ) {
+    const activeQueryCalls = storedGrant.activeQueryCalls ?? 0
+    if (activeQueryCalls >= storedGrant.limits.maxConcurrentQueryCalls) {
       return { status: "concurrency_exceeded" }
     }
 
     const updatedGrant: StoredFunctionRunGrant = {
       ...storedGrant,
       remainingQueryCalls: storedGrant.remainingQueryCalls - 1,
-      activeQueryCalls: storedGrant.activeQueryCalls + 1,
+      activeQueryCalls: activeQueryCalls + 1,
     }
     const ttlSeconds = await redisClient.getTTL(runId)
     if (ttlSeconds <= 0) {
@@ -202,7 +201,7 @@ export const releaseFunctionQueryGrant = async (
     }
     const updatedGrant: StoredFunctionRunGrant = {
       ...storedGrant,
-      activeQueryCalls: Math.max(storedGrant.activeQueryCalls - 1, 0),
+      activeQueryCalls: Math.max((storedGrant.activeQueryCalls ?? 0) - 1, 0),
     }
     const ttlSeconds = await redisClient.getTTL(runId)
     if (ttlSeconds <= 0) {
@@ -217,7 +216,9 @@ export const deleteFunctionRunGrant = async (
   client?: RedisClient
 ) => {
   const redisClient = await getClient(client)
-  await redisClient.delete(runId)
+  await withGrantLock(runId, async () => {
+    await redisClient.delete(runId)
+  })
 }
 
 export const executeWithFunctionRunGrant = async (
