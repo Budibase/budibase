@@ -182,6 +182,25 @@ describe("Run Function automation action", () => {
     )
   })
 
+  it("rejects null Function inputs", async () => {
+    const deps = dependencies()
+
+    await expect(
+      run(deps, {
+        functionId: fn._id,
+        // @ts-expect-error - malformed persisted steps may contain null
+        inputs: null,
+      })
+    ).resolves.toMatchObject({
+      success: false,
+      status: "error",
+      error: {
+        code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
+      },
+    })
+    expect(deps.execute).not.toHaveBeenCalled()
+  })
+
   it.each([
     ["a number", { value: 42 }, { value: 42 }],
     ["an object", { value: { nested: 1 } }, { value: { nested: 1 } }],
@@ -324,6 +343,29 @@ describe("Run Function automation action", () => {
     expect(deps.finalizeRunSummary).toHaveBeenCalledWith("run-1", {
       status: "error",
       code: FunctionErrorCode.FUNCTION_RUNNER_UNAVAILABLE,
+    })
+  })
+
+  it("preserves the execution error when summary finalization fails", async () => {
+    const deps = dependencies({
+      execute: jest
+        .fn()
+        .mockRejectedValue(
+          new FunctionExecutionError(
+            FunctionErrorCode.FUNCTION_RUNNER_UNAVAILABLE
+          )
+        ),
+      finalizeRunSummary: jest
+        .fn()
+        .mockRejectedValue(new Error("Database unavailable")),
+    })
+
+    await expect(run(deps)).resolves.toMatchObject({
+      success: false,
+      status: "error",
+      error: {
+        code: FunctionErrorCode.FUNCTION_RUNNER_UNAVAILABLE,
+      },
     })
   })
 

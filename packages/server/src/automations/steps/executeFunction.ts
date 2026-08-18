@@ -19,7 +19,7 @@ import { validateFunctionRunResult } from "../../functions/executor/protocol"
 
 const jsonPrimitiveSchema = z.union([
   z.string(),
-  z.number().finite(),
+  z.number(),
   z.boolean(),
   z.null(),
 ])
@@ -214,7 +214,9 @@ export const executeFunction = async (
     if (!inputs.functionId || !automationId || !stepId) {
       throw invalidConfiguration()
     }
-    const functionInputs = parseInputs(inputs.inputs)
+    const functionInputs = parseInputs(
+      inputs.inputs === undefined ? {} : inputs.inputs
+    )
     const fn = await dependencies.getFunction(inputs.functionId)
     if (!fn) {
       throw new FunctionExecutionError(
@@ -278,10 +280,17 @@ export const executeFunction = async (
         error instanceof FunctionExecutionError
           ? error
           : new FunctionExecutionError(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
-      await dependencies.finalizeRunSummary(runId, {
-        status: "error",
-        code: safeError.code,
-      })
+      try {
+        await dependencies.finalizeRunSummary(runId, {
+          status: "error",
+          code: safeError.code,
+        })
+      } catch (finalizationError) {
+        console.error(
+          `Failed to finalize Function run summary "${runId}"`,
+          finalizationError
+        )
+      }
       return failure(safeError)
     }
   } catch (error) {

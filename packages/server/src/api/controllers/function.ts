@@ -10,11 +10,29 @@ import {
   type FetchFunctionRunsResponse,
   type FetchFunctionQueryCatalogResponse,
   type FetchFunctionsResponse,
+  type FunctionEnvironment,
   type UpdateFunctionRequest,
   type UpdateFunctionResponse,
   type UserCtx,
 } from "@budibase/types"
+import { HTTPError } from "@budibase/backend-core"
 import sdk from "../../sdk"
+
+const getRunEnvironment = (value: unknown): FunctionEnvironment => {
+  if (Array.isArray(value)) {
+    throw new HTTPError(
+      "Function run history environment must be specified once.",
+      400
+    )
+  }
+  if (value === "development" || value === "published") {
+    return value
+  }
+  throw new HTTPError(
+    "Function run history environment must be development or published.",
+    400
+  )
+}
 
 export const fetch = async (ctx: UserCtx<void, FetchFunctionsResponse>) => {
   const functions = await sdk.functions.fetch()
@@ -92,6 +110,13 @@ export const fetchRuns = async (
   if (!fn) {
     ctx.throw(404, `Function with id '${ctx.params.id}' not found.`)
   }
+  if (Array.isArray(ctx.query.bookmark)) {
+    ctx.throw(400, "Function run history bookmark must be specified once.")
+  }
+  if (Array.isArray(ctx.query.limit)) {
+    ctx.throw(400, "Function run history limit must be specified once.")
+  }
+  const environment = getRunEnvironment(ctx.query.environment)
   const bookmark =
     typeof ctx.query.bookmark === "string" ? ctx.query.bookmark : undefined
   if (bookmark && bookmark.length > 2048) {
@@ -104,7 +129,12 @@ export const fetchRuns = async (
       ctx.throw(400, "Function run history limit must be between 1 and 100.")
     }
   }
-  ctx.body = await sdk.functions.listRunHistory(ctx.params.id, bookmark, limit)
+  ctx.body = await sdk.functions.listRunHistory({
+    functionId: ctx.params.id,
+    environment,
+    bookmark,
+    requestedLimit: limit,
+  })
 }
 
 export const findRun = async (ctx: UserCtx<void, FetchFunctionRunResponse>) => {
@@ -112,7 +142,11 @@ export const findRun = async (ctx: UserCtx<void, FetchFunctionRunResponse>) => {
   if (!fn) {
     ctx.throw(404, `Function with id '${ctx.params.id}' not found.`)
   }
-  const run = await sdk.functions.getRunHistory(ctx.params.id, ctx.params.runId)
+  const run = await sdk.functions.getRunHistory({
+    functionId: ctx.params.id,
+    environment: getRunEnvironment(ctx.query.environment),
+    runId: ctx.params.runId,
+  })
   if (!run) {
     ctx.throw(404, `Function run '${ctx.params.runId}' not found.`)
   }

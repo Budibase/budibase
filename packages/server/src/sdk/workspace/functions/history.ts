@@ -7,7 +7,9 @@ import {
 import { automations } from "@budibase/pro"
 import {
   DEFAULT_FUNCTION_LIMITS,
+  DocumentType,
   FunctionErrorCode,
+  SEPARATOR,
   type FunctionEnvironment,
   type FunctionRunResult,
   type FunctionRunSummary,
@@ -20,6 +22,7 @@ const MAX_PAGE_SIZE = 100
 const CLEANUP_LIMIT = 100
 const MAX_ERROR_MESSAGE_LENGTH = 512
 const ORPHAN_GRACE_MS = 60_000
+const FUNCTION_RUN_PREFIX = `${DocumentType.FUNCTION_RUN_LOG}${SEPARATOR}`
 const functionErrorCodes = new Set<FunctionErrorCode>(
   Object.values(FunctionErrorCode)
 )
@@ -36,10 +39,70 @@ interface CreateRunSummaryInput {
 const runCursorSchema = z
   .object({
     startedAt: z.iso.datetime(),
-    environment: z.enum(["development", "published"]),
     runId: z.string().min(1),
   })
   .strict()
+
+const conflictErrorSchema = z.object({ status: z.literal(409) }).passthrough()
+
+type WorkspaceDatabase = ReturnType<typeof context.getWorkspaceDB>
+
+const buildRunsByFunctionView = () => `function(doc) {
+  if (
+    doc._id &&
+    doc._id.startsWith("${FUNCTION_RUN_PREFIX}") &&
+    doc.functionId &&
+    doc.startedAt &&
+    doc.runId
+  ) {
+    emit([doc.functionId, doc.startedAt, doc.runId], null)
+  }
+}`
+
+const buildRunsByStartedAtView = () => `function(doc) {
+  if (
+    doc._id &&
+    doc._id.startsWith("${FUNCTION_RUN_PREFIX}") &&
+    doc.status !== "running" &&
+    doc.startedAt
+  ) {
+    emit(doc.startedAt, null)
+  }
+}`
+
+const buildRunningRunsByStartedAtView = () => `function(doc) {
+  if (
+    doc._id &&
+    doc._id.startsWith("${FUNCTION_RUN_PREFIX}") &&
+    doc.status === "running" &&
+    doc.startedAt
+  ) {
+    emit(doc.startedAt, null)
+  }
+}`
+
+const queryRunView = async ({
+  database,
+  viewName,
+  buildView,
+  params,
+}: {
+  database: WorkspaceDatabase
+  viewName: dbCore.ViewName
+  buildView: () => string
+  params: Parameters<WorkspaceDatabase["query"]>[1]
+}): Promise<FunctionRunSummary[]> => {
+  const createView = async () => {
+    await dbCore.createView(database, buildView(), viewName)
+  }
+  const response = await dbCore.queryViewRaw<FunctionRunSummary>(
+    viewName,
+    params,
+    database,
+    createView
+  )
+  return response.rows.flatMap(row => (row.doc ? [row.doc] : []))
+}
 
 const getEnvironment = (): FunctionEnvironment =>
   dbCore.isDevWorkspaceID(context.getWorkspaceId())
@@ -83,17 +146,6 @@ const sanitizeSummary = (summary: FunctionRunSummary): FunctionRunSummary => ({
   ...(summary.error ? { error: sanitizeError(summary.error.code) } : {}),
 })
 
-const getRunDocs = async (
-  database: ReturnType<typeof context.getWorkspaceDB>
-) => {
-  const response = await database.allDocs<FunctionRunSummary>(
-    docIds.getFunctionRunLogParams(null, { include_docs: true })
-  )
-  return response.rows
-    .map(row => row.doc)
-    .filter((doc): doc is FunctionRunSummary => !!doc)
-}
-
 export const createRunSummary = async ({
   runId,
   functionId,
@@ -135,52 +187,66 @@ export const finalizeRunSummary = async (
 ): Promise<FunctionRunSummary> => {
   const database = context.getWorkspaceDB()
   const id = docIds.generateFunctionRunLogID(runId)
-  const summary = await database.tryGet<FunctionRunSummary>(id)
-  if (!summary) {
-    throw new FunctionExecutionError(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
-  }
-  if (summary.status !== "running") {
-    return sanitizeSummary(summary)
-  }
-
-  const finishedAt = new Date().toISOString()
-  const durationMs =
-    "metrics" in result
-      ? result.metrics.durationMs
-      : Math.max(0, Date.parse(finishedAt) - Date.parse(summary.startedAt))
-  let errorCode: FunctionErrorCode | undefined
-  if (result.status === "error") {
-    if ("error" in result && result.error) {
-      errorCode = result.error.code
-    } else if ("code" in result) {
-      errorCode = result.code
-    } else {
-      errorCode = FunctionErrorCode.FUNCTION_RUNTIME_ERROR
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const summary = await database.tryGet<FunctionRunSummary>(id)
+    if (!summary) {
+      throw new FunctionExecutionError(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
     }
-  } else if (result.status === "stopped" && result.error) {
-    errorCode = result.error.code
+    if (summary.status !== "running") {
+      return sanitizeSummary(summary)
+    }
+
+    const finishedAt = new Date().toISOString()
+    const durationMs =
+      "metrics" in result
+        ? result.metrics.durationMs
+        : Math.max(0, Date.parse(finishedAt) - Date.parse(summary.startedAt))
+    let errorCode: FunctionErrorCode | undefined
+    if (result.status === "error") {
+      if ("error" in result && result.error) {
+        errorCode = result.error.code
+      } else if ("code" in result) {
+        errorCode = result.code
+      } else {
+        errorCode = FunctionErrorCode.FUNCTION_RUNTIME_ERROR
+      }
+    } else if (result.status === "stopped" && result.error) {
+      errorCode = result.error.code
+    }
+    const updated: FunctionRunSummary = {
+      ...summary,
+      status: result.status,
+      finishedAt,
+      durationMs,
+      queryCount: "metrics" in result ? result.metrics.queryCount : 0,
+      ...(errorCode ? { error: sanitizeError(errorCode) } : {}),
+    }
+    try {
+      const response = await database.put(updated, { returnDoc: true })
+      return sanitizeSummary(response.doc)
+    } catch (error) {
+      if (conflictErrorSchema.safeParse(error).success && attempt < 2) {
+        continue
+      }
+      throw error
+    }
   }
-  const updated: FunctionRunSummary = {
-    ...summary,
-    status: result.status,
-    finishedAt,
-    durationMs,
-    queryCount: "metrics" in result ? result.metrics.queryCount : 0,
-    ...(errorCode ? { error: sanitizeError(errorCode) } : {}),
-  }
-  const response = await database.put(updated, { returnDoc: true })
-  return sanitizeSummary(response.doc)
+  throw new FunctionExecutionError(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
 }
 
-export const reconcileRunning = async (
-  database: ReturnType<typeof context.getWorkspaceDB>
-) => {
+export const reconcileRunning = async (database: WorkspaceDatabase) => {
   const cutoff =
     Date.now() - DEFAULT_FUNCTION_LIMITS.run.timeoutMs - ORPHAN_GRACE_MS
-  const running = (await getRunDocs(database)).filter(
-    summary =>
-      summary.status === "running" && Date.parse(summary.startedAt) <= cutoff
-  )
+  const running = await queryRunView({
+    database,
+    viewName: dbCore.ViewName.RUNNING_FUNCTION_RUNS_BY_STARTED_AT,
+    buildView: buildRunningRunsByStartedAtView,
+    params: {
+      include_docs: true,
+      endkey: new Date(cutoff).toISOString(),
+      limit: CLEANUP_LIMIT,
+    },
+  })
   if (!running.length) {
     return
   }
@@ -201,15 +267,24 @@ export const reconcileRunning = async (
 }
 
 export const clearOldHistory = async (
-  database: ReturnType<typeof context.getWorkspaceDB>,
+  database: WorkspaceDatabase,
   oldestDate?: string
 ) => {
   try {
+    await reconcileRunning(database)
     const retentionDate = oldestDate || (await automations.logs.oldestLogDate())
-    const expired = (await getRunDocs(database))
-      .filter(summary => summary.startedAt < retentionDate)
-      .sort((a, b) => a.startedAt.localeCompare(b.startedAt))
-      .slice(0, CLEANUP_LIMIT)
+    const expired = (
+      await queryRunView({
+        database,
+        viewName: dbCore.ViewName.COMPLETED_FUNCTION_RUNS_BY_STARTED_AT,
+        buildView: buildRunsByStartedAtView,
+        params: {
+          include_docs: true,
+          endkey: retentionDate,
+          limit: CLEANUP_LIMIT,
+        },
+      })
+    ).filter(summary => summary.startedAt < retentionDate)
     if (expired.length) {
       await database.bulkRemove(expired)
     }
@@ -222,18 +297,14 @@ export const clearOldHistory = async (
 }
 
 const compareRunsNewestFirst = (
-  a: Pick<FunctionRunSummary, "startedAt" | "environment" | "runId">,
-  b: Pick<FunctionRunSummary, "startedAt" | "environment" | "runId">
-) =>
-  b.startedAt.localeCompare(a.startedAt) ||
-  a.environment.localeCompare(b.environment) ||
-  b.runId.localeCompare(a.runId)
+  a: Pick<FunctionRunSummary, "startedAt" | "runId">,
+  b: Pick<FunctionRunSummary, "startedAt" | "runId">
+) => b.startedAt.localeCompare(a.startedAt) || b.runId.localeCompare(a.runId)
 
 const encodeCursor = (summary: FunctionRunSummary) =>
   Buffer.from(
     JSON.stringify({
       startedAt: summary.startedAt,
-      environment: summary.environment,
       runId: summary.runId,
     })
   ).toString("base64url")
@@ -256,27 +327,42 @@ const decodeCursor = (bookmark: string) => {
   return result.data
 }
 
-export const listRunHistory = async (
-  functionId: string,
-  bookmark?: string,
-  requestedLimit = DEFAULT_PAGE_SIZE
-) => {
+const getRunHistoryDatabase = (environment: FunctionEnvironment) =>
+  environment === "development"
+    ? context.getDevWorkspaceDB()
+    : context.getProdWorkspaceDB()
+
+export const listRunHistory = async ({
+  functionId,
+  environment,
+  bookmark,
+  requestedLimit = DEFAULT_PAGE_SIZE,
+}: {
+  functionId: string
+  environment: FunctionEnvironment
+  bookmark?: string
+  requestedLimit?: number
+}) => {
   const limit = Math.min(Math.max(1, requestedLimit), MAX_PAGE_SIZE)
-  const databases = [context.getDevWorkspaceDB(), context.getProdWorkspaceDB()]
-  await Promise.all(
-    databases.map(async database => {
-      await reconcileRunning(database)
-      await clearOldHistory(database)
+  const database = getRunHistoryDatabase(environment)
+  await clearOldHistory(database)
+  const cursor = bookmark ? decodeCursor(bookmark) : undefined
+  const runs = (
+    await queryRunView({
+      database,
+      viewName: dbCore.ViewName.FUNCTION_RUNS_BY_FUNCTION,
+      buildView: buildRunsByFunctionView,
+      params: {
+        include_docs: true,
+        descending: true,
+        startkey: [functionId, cursor?.startedAt || {}, cursor?.runId || {}],
+        endkey: [functionId],
+        limit: limit + 2,
+      },
     })
   )
-  const histories = await Promise.all(databases.map(getRunDocs))
-  const cursor = bookmark ? decodeCursor(bookmark) : undefined
-  const runs = histories
-    .flat()
-    .filter(summary => summary.functionId === functionId)
-    .map(sanitizeSummary)
-    .sort(compareRunsNewestFirst)
     .filter(summary => !cursor || compareRunsNewestFirst(summary, cursor) > 0)
+    .map(sanitizeSummary)
     .slice(0, limit + 1)
   const hasMore = runs.length > limit
   if (hasMore) {
@@ -291,21 +377,21 @@ export const listRunHistory = async (
   }
 }
 
-export const getRunHistory = async (
-  functionId: string,
+export const getRunHistory = async ({
+  functionId,
+  environment,
+  runId,
+}: {
+  functionId: string
+  environment: FunctionEnvironment
   runId: string
-): Promise<FunctionRunSummary | undefined> => {
-  const databases = [context.getDevWorkspaceDB(), context.getProdWorkspaceDB()]
-  await Promise.all(
-    databases.map(async database => {
-      await reconcileRunning(database)
-      await clearOldHistory(database)
-    })
-  )
+}): Promise<FunctionRunSummary | undefined> => {
+  const database = getRunHistoryDatabase(environment)
+  await clearOldHistory(database)
   const id = docIds.generateFunctionRunLogID(runId)
-  const summaries = await Promise.all(
-    databases.map(database => database.tryGet<FunctionRunSummary>(id))
-  )
-  const summary = summaries.find(item => item?.functionId === functionId)
-  return summary ? sanitizeSummary(summary) : undefined
+  const summary = await database.tryGet<FunctionRunSummary>(id)
+  if (summary?.functionId !== functionId) {
+    return undefined
+  }
+  return sanitizeSummary(summary)
 }

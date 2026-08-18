@@ -10,6 +10,7 @@ import type {
   FetchFunctionRunsResponse,
   FetchFunctionQueryCatalogResponse,
   FetchFunctionsResponse,
+  FunctionEnvironment,
   UpdateFunctionRequest,
   UpdateFunctionResponse,
 } from "@budibase/types"
@@ -69,28 +70,45 @@ export class FunctionAPI extends TestAPI {
     })
   }
 
-  fetchRuns = async (
-    id: string,
-    query?: { bookmark?: string; limit?: number },
+  fetchRuns = async ({
+    id,
+    environment,
+    bookmark,
+    limit,
+    expectations,
+  }: {
+    id: string
+    environment: FunctionEnvironment
+    bookmark?: string
+    limit?: number
     expectations?: Expectations
-  ) => {
-    const search = new URLSearchParams()
-    if (query?.bookmark) {
-      search.set("bookmark", query.bookmark)
+  }) => {
+    const search = new URLSearchParams({ environment })
+    if (bookmark) {
+      search.set("bookmark", bookmark)
     }
-    if (query?.limit) {
-      search.set("limit", String(query.limit))
+    if (limit) {
+      search.set("limit", String(limit))
     }
-    const suffix = search.size ? `?${search}` : ""
     return await this._get<FetchFunctionRunsResponse>(
-      `/api/functions/${id}/runs${suffix}`,
+      `/api/functions/${id}/runs?${search}`,
       { expectations }
     )
   }
 
-  findRun = async (id: string, runId: string, expectations?: Expectations) => {
+  findRun = async ({
+    id,
+    environment,
+    runId,
+    expectations,
+  }: {
+    id: string
+    environment: FunctionEnvironment
+    runId: string
+    expectations?: Expectations
+  }) => {
     return await this._get<FetchFunctionRunResponse>(
-      `/api/functions/${id}/runs/${runId}`,
+      `/api/functions/${id}/runs/${runId}?environment=${environment}`,
       { expectations }
     )
   }

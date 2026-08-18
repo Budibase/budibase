@@ -827,17 +827,18 @@ export default async function (): Promise<FunctionResult> {
         expect(stored?.error?.message.length).toBeLessThanOrEqual(512)
       })
 
-      const { run } = await config.api.function.findRun(
-        created._id,
-        "sanitized-run"
-      )
+      const { run } = await config.api.function.findRun({
+        id: created._id,
+        environment: "development",
+        runId: "sanitized-run",
+      })
       expect(run).not.toHaveProperty("output")
       expect(run).not.toHaveProperty("logs")
       expect(run).not.toHaveProperty("stack")
     })
   })
 
-  it("merges development and published run history with stable pagination", async () => {
+  it("lists development and published run history separately", async () => {
     await withFunctionsEnabled(async () => {
       const { function: created } = await createFunction()
       const putRun = async (
@@ -887,32 +888,102 @@ export default async function (): Promise<FunctionResult> {
         "2026-07-23T12:01:00.000Z"
       )
 
-      const firstPage = await config.api.function.fetchRuns(created._id, {
-        limit: 2,
+      const firstPage = await config.api.function.fetchRuns({
+        id: created._id,
+        environment: "development",
+        limit: 1,
       })
-      expect(firstPage.runs.map(run => run.runId)).toEqual(["newest", "middle"])
+      expect(firstPage.runs.map(run => run.runId)).toEqual(["newest"])
       expect(firstPage.runs.map(run => run.environment)).toEqual([
         "development",
-        "published",
       ])
       expect(firstPage.hasMore).toBe(true)
       expect(firstPage.nextBookmark).toBeDefined()
       expect(JSON.stringify(firstPage)).not.toContain("sensitivePayload")
 
-      const secondPage = await config.api.function.fetchRuns(created._id, {
-        limit: 2,
+      const secondPage = await config.api.function.fetchRuns({
+        id: created._id,
+        environment: "development",
+        limit: 1,
         bookmark: firstPage.nextBookmark,
       })
       expect(secondPage.runs.map(run => run.runId)).toEqual(["oldest"])
       expect(secondPage.hasMore).toBe(false)
+
+      const published = await config.api.function.fetchRuns({
+        id: created._id,
+        environment: "published",
+      })
+      expect(published.runs.map(run => run.runId)).toEqual(["middle"])
+      expect(published.runs.map(run => run.environment)).toEqual(["published"])
+      expect(published.hasMore).toBe(false)
+
+      await expect(
+        config.api.function.findRun({
+          id: created._id,
+          environment: "published",
+          runId: "middle",
+        })
+      ).resolves.toMatchObject({
+        run: {
+          runId: "middle",
+          environment: "published",
+        },
+      })
     })
   })
+
+  it.each([
+    ["a missing", ""],
+    ["an invalid", "?environment=preview"],
+  ])("rejects %s run history environment", async (_name, query) => {
+    await withFunctionsEnabled(async () => {
+      const { function: created } = await createFunction()
+      const headers = await config.defaultHeaders()
+
+      await config
+        .getRequest()!
+        .get(`/api/functions/${created._id}/runs${query}`)
+        .set(headers)
+        .expect(400)
+    })
+  })
+
+  it.each(["bookmark", "limit", "environment"])(
+    "rejects repeated %s run history parameters",
+    async parameter => {
+      await withFunctionsEnabled(async () => {
+        const { function: created } = await createFunction()
+        const headers = await config.defaultHeaders()
+
+        let query = `environment=development&${parameter}=1&${parameter}=2`
+        if (parameter === "environment") {
+          query = "environment=development&environment=published"
+        }
+
+        await config
+          .getRequest()!
+          .get(`/api/functions/${created._id}/runs?${query}`)
+          .set(headers)
+          .expect(400)
+      })
+    }
+  )
 
   it("reconciles interrupted runs and removes only expired summaries", async () => {
     await withFunctionsEnabled(async () => {
       const { function: created } = await createFunction()
       const interruptedId = docIds.generateFunctionRunLogID("interrupted")
       const expiredId = docIds.generateFunctionRunLogID("expired")
+      const retainedId = docIds.generateFunctionRunLogID("retained")
+      const activeId = docIds.generateFunctionRunLogID("active")
+      const retentionDate = new Date().toISOString()
+      const activeStartedAt = new Date(
+        Date.parse(retentionDate) - 1_000
+      ).toISOString()
+      const retainedAt = new Date(
+        Date.parse(retentionDate) + 1_000
+      ).toISOString()
       await config.doInContext(config.getDevWorkspaceId(), async () => {
         const database = context.getWorkspaceDB()
         await database.put({
@@ -933,10 +1004,11 @@ export default async function (): Promise<FunctionResult> {
         })
       })
 
-      const { run } = await config.api.function.findRun(
-        created._id,
-        "interrupted"
-      )
+      const { run } = await config.api.function.findRun({
+        id: created._id,
+        environment: "development",
+        runId: "interrupted",
+      })
       expect(run).toMatchObject({
         status: "error",
         error: {
@@ -952,10 +1024,23 @@ export default async function (): Promise<FunctionResult> {
           runId: "expired",
           startedAt: "2025-01-01T00:00:00.000Z",
         })
-        await sdk.functions.clearOldHistory(
-          database,
-          "2026-01-01T00:00:00.000Z"
-        )
+        await database.put({
+          ...run,
+          _id: retainedId,
+          runId: "retained",
+          startedAt: retainedAt,
+        })
+        await database.put({
+          ...run,
+          _id: activeId,
+          runId: "active",
+          status: "running",
+          startedAt: activeStartedAt,
+          finishedAt: undefined,
+          durationMs: undefined,
+          error: undefined,
+        })
+        await sdk.functions.clearOldHistory(database, retentionDate)
       })
 
       await config.doInContext(config.getDevWorkspaceId(), async () => {
@@ -963,8 +1048,46 @@ export default async function (): Promise<FunctionResult> {
           undefined
         )
         await expect(
-          context.getWorkspaceDB().tryGet(created._id)
+          context.getWorkspaceDB().tryGet(retainedId)
         ).resolves.toBeDefined()
+        await expect(
+          context.getWorkspaceDB().tryGet(activeId)
+        ).resolves.toBeDefined()
+      })
+    })
+  })
+
+  it("retries run finalization after a revision conflict", async () => {
+    await withFunctionsEnabled(async () => {
+      const { function: created } = await createFunction()
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        await sdk.functions.createRunSummary({
+          runId: "conflicted-run",
+          functionId: created._id,
+          functionName: created.name,
+          sourceHash: "source-hash",
+          automationId: "automation-1",
+          stepId: "step-1",
+        })
+        const database = context.getWorkspaceDB()
+        const put = jest
+          .spyOn(database, "put")
+          .mockRejectedValueOnce({ status: 409 })
+
+        await expect(
+          sdk.functions.finalizeRunSummary("conflicted-run", {
+            runId: "conflicted-run",
+            status: "success",
+            output: {},
+            metrics: {
+              durationMs: 1,
+              queryCount: 0,
+              outputBytes: 2,
+              logBytes: 0,
+            },
+          })
+        ).resolves.toMatchObject({ status: "success" })
+        put.mockRestore()
       })
     })
   })
