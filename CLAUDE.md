@@ -30,6 +30,9 @@
 - Functions: Prefer arrow functions, use async/await over Promises
 - Error handling: Use try/catch
 - Types: Use `interface` for objects, `type` for unions/primitives, do NOT cast to any or unknown.
+- Prefer importing and using named domain types directly instead of deriving them
+  through indexed access when a named type already exists. For example, use
+  `RestTemplateId` instead of `TemplateSelectionContext["restTemplateId"]`.
 - Do not add backwards compatibility paths or broad "handle every scenario" logic unless explicitly instructed to do so for the task.
 - Testing: Jest framework, use describe/it structure, mock external services
   using `nock`.
@@ -45,7 +48,9 @@
 - Prefer a svelte5 approach over svelte4.
 - Don't use // @ts-nocheck when asked to fix type errors.
 - When writing tests involving a URL, use example.com as the domain.
-- Prefer object params for function signatures.
+- Use object parameters for functions with multiple inputs. This is required for
+  new or refactored functions; only retain positional parameters when preserving
+  an existing external API.
 
 ## Test style - packages/server
 

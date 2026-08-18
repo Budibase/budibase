@@ -10,7 +10,7 @@
   import ConditionBuilder from "@/components/common/ConditionBuilder.svelte"
   import AutomationBindingPanel from "@/components/common/bindings/ServerBindingPanel.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[workspaceId]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import { PropField } from "../SetupPanel"
   import BlockHeader from "../SetupPanel/BlockHeader.svelte"
   import { getVerticalResizeActions } from "@/components/common/resizable"
@@ -30,6 +30,10 @@
     isBranchStep,
   } from "@budibase/types"
   import { QueryUtils, Utils, memo } from "@budibase/frontend-core"
+  import {
+    readableToRuntimeBinding,
+    runtimeToReadableBinding,
+  } from "@/dataBinding"
   import { cloneDeep } from "lodash/fp"
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
@@ -295,6 +299,8 @@
       schemaFields={branchSchemaFields}
       datasource={{ type: "custom" }}
       panel={AutomationBindingPanel}
+      toReadable={runtimeToReadableBinding}
+      toRuntime={readableToRuntimeBinding}
       on:change={e => {
         editableBranchConditionUI = e.detail
       }}

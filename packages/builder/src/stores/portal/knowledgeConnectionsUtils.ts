@@ -1,4 +1,5 @@
 import {
+  MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID,
   type Datasource,
   type RestAuthConfig,
   isOAuth2ClientCredentialsAuthConfig,
@@ -6,14 +7,13 @@ import {
 
 import { restTemplates } from "@/stores/builder/restTemplates"
 
-const SHAREPOINT_TEMPLATE_ID = "microsoft-sharepoint"
-
 const isSharePointDatasource = (datasource: Datasource) => {
   const templateRef = datasource.restTemplateId || datasource.restTemplate
   const templateId = restTemplates.get(templateRef)?.id
 
   return templateId
-    ? restTemplates.getById(templateId)?.id === SHAREPOINT_TEMPLATE_ID
+    ? restTemplates.getById(templateId)?.id ===
+        MICROSOFT_SHAREPOINT_REST_TEMPLATE_ID
     : false
 }
 

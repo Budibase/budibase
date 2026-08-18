@@ -325,13 +325,14 @@ const quoteRawJsonBindings = (template: string) => {
     }
 
     if (char === "{" && template[i + 1] === "{") {
-      const end = template.indexOf("}}", i + 2)
+      const closing = template[i + 2] === "{" ? "}}}" : "}}"
+      const end = template.indexOf(closing, i + closing.length)
       if (end !== -1) {
-        const block = template.slice(i, end + 2)
+        const block = template.slice(i, end + closing.length)
         const token = `${RAW_JSON_BINDING_PREFIX}${bindings.length}__`
         bindings.push({ token, block })
         output += JSON.stringify(token)
-        i = end + 1
+        i = end + closing.length - 1
         continue
       }
     }
@@ -374,13 +375,83 @@ const processJsonTemplateValue = (
   if (value && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value).map(([key, child]) => [
-        key,
+        processJsonTemplateString(key, context, opts),
         processJsonTemplateValue(child, bindings, context, opts),
       ])
     )
   }
 
   return value
+}
+
+// Multi-object Mongo templates (`{filter} {update}`) aren't valid single JSON;
+// process each object via the binding-safe path instead of raw string substitution.
+// Handlebars `{{ ... }}` blocks must not be treated as JSON objects.
+const splitTopLevelJsonObjects = (template: string): string[] | null => {
+  const documents: string[] = []
+  let openCount = 0
+  let inQuotes = false
+  let escaped = false
+  let startIndex = -1
+
+  for (let i = 0; i < template.length; i++) {
+    const char = template[i]
+
+    if (inQuotes) {
+      if (escaped) {
+        escaped = false
+      } else if (char === "\\") {
+        escaped = true
+      } else if (char === '"') {
+        inQuotes = false
+      }
+      continue
+    }
+
+    if (char === '"') {
+      inQuotes = true
+      continue
+    }
+
+    if (char === "{" && template[i + 1] === "{") {
+      const closing = template[i + 2] === "{" ? "}}}" : "}}"
+      const end = template.indexOf(closing, i + closing.length)
+      if (end === -1) {
+        return null
+      }
+      i = end + closing.length - 1
+      continue
+    }
+
+    if (char === "{") {
+      if (openCount === 0) {
+        startIndex = i
+      }
+      openCount++
+      continue
+    }
+
+    if (char === "}") {
+      if (openCount === 0) {
+        return null
+      }
+      openCount--
+      if (openCount === 0 && startIndex !== -1) {
+        documents.push(template.slice(startIndex, i + 1))
+        startIndex = -1
+      }
+      continue
+    }
+
+    if (openCount === 0 && !/\s/.test(char)) {
+      return null
+    }
+  }
+
+  if (openCount !== 0 || documents.length < 2) {
+    return null
+  }
+  return documents
 }
 
 export function processJsonStringSync(
@@ -393,7 +464,32 @@ export function processJsonStringSync(
     const parsed = JSON.parse(prepared.template) as JsonTemplateValue
     return processJsonTemplateValue(parsed, prepared.bindings, context, opts)
   } catch (_err) {
-    return processStringSync(template, context, opts)
+    const documents = splitTopLevelJsonObjects(template)
+    if (!documents) {
+      return processStringSync(template, context, opts)
+    }
+    // Fail closed: each object must be strict JSON so bindings are applied to
+    // the parsed tree. Do not fall back to raw string substitution here — that
+    // reopens quote-breaking operator injection for multi-object templates.
+    try {
+      return documents
+        .map(document => {
+          const preparedDocument = quoteRawJsonBindings(document)
+          const parsed = JSON.parse(
+            preparedDocument.template
+          ) as JsonTemplateValue
+          return processJsonTemplateValue(
+            parsed,
+            preparedDocument.bindings,
+            context,
+            opts
+          )
+        })
+        .map(value => JSON.stringify(value))
+        .join(" ")
+    } catch {
+      throw new Error("Multi-object JSON templates must be valid JSON objects")
+    }
   }
 }
 

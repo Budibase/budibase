@@ -1266,7 +1266,7 @@ describe("/projects", () => {
       })
 
       await config.withHeaders(
-        { [Header.APP_ID]: destinationWorkspace.appId },
+        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
         async () => {
           const imported = await config.api.project.import(body)
           expect(imported.resources).toEqual({
@@ -1312,7 +1312,7 @@ describe("/projects", () => {
         name: "Imported external data",
       })
       await config.withHeaders(
-        { [Header.APP_ID]: destinationWorkspace.appId },
+        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
         async () => {
           const imported = await config.api.project.import(body)
           const importedDatasourceId = imported.resources.datasource?.[0]!
@@ -1380,7 +1380,7 @@ describe("/projects", () => {
       })
 
       await config.withHeaders(
-        { [Header.APP_ID]: destinationWorkspace.appId },
+        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
         async () => {
           const imported = await config.api.project.import(body)
           const importedScreens = await config.api.screen.list()
@@ -1417,7 +1417,7 @@ describe("/projects", () => {
       })
 
       await config.withHeaders(
-        { [Header.APP_ID]: destinationWorkspace.appId },
+        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
         async () => {
           const imported = await config.api.project.import(body)
           expect(imported.resources.table).toHaveLength(1)
@@ -1504,7 +1504,7 @@ describe("/projects", () => {
       })
 
       await config.withHeaders(
-        { [Header.APP_ID]: destinationWorkspace.appId },
+        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
         async () => {
           await config.api.workspaceApp.create({
             name: "Existing app",
@@ -1669,7 +1669,7 @@ describe("/projects", () => {
       })
 
       await config.withHeaders(
-        { [Header.APP_ID]: destinationWorkspace.appId },
+        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
         async () => {
           const imported = await config.api.project.import(body)
           const importedQuery = await config.api.query.get(

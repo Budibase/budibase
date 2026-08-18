@@ -4950,6 +4950,16 @@
         "defaultValue": false
       },
       {
+        "type": "time",
+        "label": "Set time to",
+        "key": "setTimeTo",
+        "defaultValue": "",
+        "dependsOn": [
+          { "setting": "enableTime", "value": false },
+          { "setting": "timeOnly", "value": false }
+        ]
+      },
+      {
         "type": "boolean",
         "label": "Ignore time zones",
         "key": "ignoreTimezones",

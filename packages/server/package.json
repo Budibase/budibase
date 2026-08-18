@@ -33,7 +33,7 @@
     "dev": "yarn run dev:stack:up && nodemon",
     "dev:built": "yarn run dev:stack:up && yarn run run:docker",
     "ai:evals": "NODE_OPTIONS=\"--no-node-snapshot $NODE_OPTIONS\" ts-node --transpileOnly -r tsconfig-paths/register ./scripts/ai-refactor-evals.ts",
-    "specs": "ts-node specs/generate.ts && openapi-typescript specs/openapi.yaml --output src/definitions/openapi.ts"
+    "specs": "TS_NODE_BASEURL=../.. ts-node specs/generate.ts && openapi-typescript specs/openapi.yaml --output src/definitions/openapi.ts"
   },
   "keywords": [
     "budibase"
@@ -86,7 +86,7 @@
     "csvtojson": "2.0.13",
     "curlconverter": "3.21.0",
     "dayjs": "^1.10.8",
-    "dd-trace": "5.63.0",
+    "dd-trace": "5.109.0",
     "dotenv": "8.2.0",
     "execa": "^5.1.1",
     "extract-zip": "^2.0.1",
@@ -99,7 +99,7 @@
     "ioredis": "5.3.2",
     "isolated-vm": "^6.0.1",
     "joi": "18.2.1",
-    "js-yaml": "5.2.2",
+    "js-yaml": "5.2.3",
     "jsonschema": "1.4.0",
     "jsonwebtoken": "9.0.2",
     "knex": "2.4.2",
@@ -110,7 +110,7 @@
     "koa-useragent": "^4.1.0",
     "koa2-ratelimit": "1.1.3",
     "lodash": "4.18.1",
-    "mailparser": "3.9.11",
+    "mailparser": "3.9.15",
     "memorystream": "0.3.1",
     "mongodb": "6.7.0",
     "mssql": "11.0.1",
@@ -163,7 +163,7 @@
     "@types/uuid": "8.3.4",
     "copyfiles": "2.4.1",
     "docker-compose": "1.2.0",
-    "ioredis-mock": "8.9.0",
+    "ioredis-mock": "8.13.1",
     "jest-extended": "^4.0.2",
     "jest-mock": "^30.0.5",
     "jest-openapi": "0.14.2",

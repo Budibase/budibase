@@ -1,4 +1,4 @@
-import { ToolType } from "@budibase/types"
+import { PermissionLevel, PermissionType, ToolType } from "@budibase/types"
 import { tool } from "ai"
 import { z } from "zod"
 import { BudibaseToolDefinition } from "../budibase"
@@ -16,7 +16,14 @@ export const createExaTool = (apiKey: string): BudibaseToolDefinition => ({
   name: "search_web_search",
   sourceType: ToolType.SEARCH,
   sourceLabel: "Exa",
+  executionPolicy: {
+    mode: "admin",
+  },
   description: "Search the web using Exa",
+  authorization: {
+    permissionType: PermissionType.WORKSPACE,
+    permissionLevel: PermissionLevel.READ,
+  },
   tool: tool({
     description: "Search the web using Exa",
     inputSchema: exaSearchParams,
