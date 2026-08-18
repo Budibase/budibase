@@ -49,8 +49,7 @@
 
   const remove = () => {
     if (tool) {
-      const selectedTool = tool
-      setTimeout(() => onRemove(selectedTool))
+      onRemove(tool)
     }
   }
 </script>
