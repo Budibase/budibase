@@ -1,6 +1,4 @@
-import {
-  FunctionErrorCode,
-} from "@budibase/types"
+import { FunctionErrorCode } from "@budibase/types"
 import {
   FUNCTION_RUN_REQUEST_FIXTURE,
   FUNCTION_RUN_RESULT_FIXTURE,
