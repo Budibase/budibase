@@ -167,10 +167,10 @@ export const consumeFunctionQueryGrant = async (
       activeQueryCalls: activeQueryCalls + 1,
     }
     const ttlSeconds = await redisClient.getTTL(runId)
-    if (ttlSeconds <= 0) {
+    if (ttlSeconds < 0) {
       return { status: "denied" }
     }
-    await redisClient.store(runId, updatedGrant, ttlSeconds)
+    await redisClient.store(runId, updatedGrant, Math.max(ttlSeconds, 1))
 
     const {
       tokenHash: _tokenHash,
