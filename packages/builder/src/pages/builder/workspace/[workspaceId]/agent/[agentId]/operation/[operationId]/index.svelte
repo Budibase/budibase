@@ -339,6 +339,7 @@
     if (!operation || !tool.readableBinding) {
       return
     }
+    applyToolEscalation(tool, [])
     const escaped = tool.readableBinding.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     const nextInstructions = (operation.promptInstructions || "")
       .replace(new RegExp(`\\{\\{\\s*${escaped}\\s*\\}\\}`, "g"), "")
@@ -501,6 +502,8 @@
     return policy?.notifications?.recipients ?? []
   }
 
+  // Auto-deleting unreferenced policies is interim behaviour - retire it
+  // when the policies work makes them user-owned and reusable.
   const applyToolEscalation = (
     tool: AgentTool,
     recipients: EscalationRecipient[] | undefined
