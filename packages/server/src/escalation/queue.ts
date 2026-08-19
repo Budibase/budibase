@@ -266,7 +266,10 @@ const executeApprovedToolCall = async ({
   appId: string
   user: ContextUser
   pending: PendingToolCall
-}): Promise<{ messages: ModelMessage[] } | undefined> => {
+}): Promise<
+  | { messages: ModelMessage[]; toolName: string; output: unknown; failed: boolean }
+  | undefined
+> => {
   const operation = agent.operations?.find(
     operation => operation.id === ctx.operationId
   )
@@ -312,18 +315,23 @@ const executeApprovedToolCall = async ({
   }
 
   let output: unknown
+  let failed = false
   try {
     output = await tool.execute(pending.args, {
       toolCallId: pending.toolCallId,
       messages: [],
     })
   } catch (error) {
+    failed = true
     output = {
       error: error instanceof Error ? error.message : String(error),
     }
   }
 
   return {
+    toolName,
+    output,
+    failed,
     messages: [
       {
         role: "assistant",
@@ -477,6 +485,7 @@ export async function resumeOperation({
   // approval as user input.
   let approvalInstructions: string
   let messages: ModelMessage[]
+  let storedCallFailure: string | undefined
 
   if (ctx.pendingToolCall) {
     // Gate-raised escalation (AI_TOOL_ESCALATION): the frozen call is
@@ -495,6 +504,27 @@ export async function resumeOperation({
       await deliverOperationResult(ctx, text)
       await markEscalationRequestResolved({ status: "failed", error: text })
       return
+    }
+    if (executed.failed) {
+      storedCallFailure = executed.toolName
+    }
+    if (doc.requestId) {
+      await sdk.ai.agentRequests
+        .recordToolCall({
+          requestId: doc.requestId,
+          agentId: ctx.agentId,
+          sessionId: ctx.sessionId,
+          toolName: executed.toolName,
+          status: executed.failed ? "error" : "success",
+          input: ctx.pendingToolCall.args,
+          output: executed.output,
+        })
+        .catch(error => {
+          console.error(
+            "Failed to record approved tool call on escalation resume",
+            { escalationId, agentId: ctx.agentId, error }
+          )
+        })
     }
     approvalInstructions =
       "ESCALATION APPROVAL: The user's request in this conversation was " +
@@ -581,6 +611,9 @@ export async function resumeOperation({
 
   const pendingToolCalls = new Set<string>()
   const unrecoveredToolFailures = new Set<string>()
+  if (storedCallFailure) {
+    unrecoveredToolFailures.add(storedCallFailure)
+  }
   // recordToolCall awaits an LLM summary internally, and the runtime awaits
   // onToolCallCompleted between steps. Returning its promise would stall
   // every step on that summary. Instead, chain the calls in the background
