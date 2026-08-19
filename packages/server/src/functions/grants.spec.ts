@@ -2,9 +2,12 @@ import { redis, type RedisClient } from "@budibase/backend-core"
 import { FunctionErrorCode } from "@budibase/types"
 import type { FunctionRunRequest } from "@budibase/types"
 import {
+  consumeFunctionQueryGrant,
   createFunctionRunGrant,
+  deleteFunctionRunGrant,
   executeWithFunctionRunGrant,
   getFunctionRunGrant,
+  releaseFunctionQueryGrant,
   type FunctionRunGrantScope,
 } from "./grants"
 import {
@@ -70,7 +73,6 @@ describe("Function run grants", () => {
 
     const storedGrant = await client.get(scope.runId)
     expect(storedGrant).not.toHaveProperty("grantToken")
-    expect(storedGrant).not.toHaveProperty("remainingQueryCalls")
     expect(storedGrant).toHaveProperty("tokenHash")
   })
 
@@ -86,50 +88,37 @@ describe("Function run grants", () => {
     ).resolves.toBeNull()
     await expect(
       getFunctionRunGrant(scope.runId, grantToken, client)
-    ).resolves.toEqual({
-      ...grant,
-      remainingQueryCalls: grant.remainingQueryCalls - 1,
-    })
+    ).resolves.toEqual(grant)
   })
 
-  it("consumes the query allowance atomically", async () => {
-    const limits = {
-      ...FUNCTION_RUN_REQUEST_FIXTURE.limits,
-      maxQueryCalls: 2,
-    }
-    const { grantToken } = await createFunctionRunGrant(scope, limits, client)
-
-    const results = await Promise.all(
-      Array.from({ length: limits.maxQueryCalls + 1 }, () =>
-        getFunctionRunGrant(scope.runId, grantToken, client)
-      )
-    )
-    expect(results.filter(Boolean)).toHaveLength(limits.maxQueryCalls)
-    expect(
-      results.filter(Boolean).map(result => result?.remainingQueryCalls)
-    ).toEqual(expect.arrayContaining([0, 1]))
-
-    await expect(
-      getFunctionRunGrant(scope.runId, "incorrect-token", client)
-    ).resolves.toBeNull()
-  })
-
-  it("expires a recreated query counter with the grant", async () => {
+  it("treats a missing active query count as zero", async () => {
     const { grantToken } = await createFunctionRunGrant(
       scope,
       FUNCTION_RUN_REQUEST_FIXTURE.limits,
       client
     )
-    const queryCallCountKey = `${scope.runId}:query-call-count`
-    await client.delete(queryCallCountKey)
+    const storedGrant = await client.get(scope.runId)
+    delete storedGrant.activeQueryCalls
+    await client.store(
+      scope.runId,
+      storedGrant,
+      await client.getTTL(scope.runId)
+    )
 
     await expect(
-      getFunctionRunGrant(scope.runId, grantToken, client)
-    ).resolves.toMatchObject({
-      remainingQueryCalls:
-        FUNCTION_RUN_REQUEST_FIXTURE.limits.maxQueryCalls - 1,
-    })
-    expect(await client.getTTL(queryCallCountKey)).toBeGreaterThan(0)
+      consumeFunctionQueryGrant(
+        scope.runId,
+        grantToken,
+        "cap_customers",
+        ["status"],
+        scope.workspaceId,
+        client
+      )
+    ).resolves.toMatchObject({ status: "allowed" })
+    expect((await client.get(scope.runId)).activeQueryCalls).toBe(1)
+
+    await releaseFunctionQueryGrant(scope.runId, grantToken, client)
+    expect((await client.get(scope.runId)).activeQueryCalls).toBe(0)
   })
 
   it("accepts a live grant when Redis reports a zero-second TTL", async () => {
@@ -139,19 +128,77 @@ describe("Function run grants", () => {
       client
     )
     const getTTL = jest.spyOn(client, "getTTL").mockResolvedValueOnce(0)
-    const incrementWithExpiry = jest.spyOn(client, "incrementWithExpiry")
+    const store = jest.spyOn(client, "store")
 
     await expect(
-      getFunctionRunGrant(scope.runId, grantToken, client)
+      consumeFunctionQueryGrant(
+        scope.runId,
+        grantToken,
+        "cap_customers",
+        ["status"],
+        scope.workspaceId,
+        client
+      )
     ).resolves.toMatchObject({
-      remainingQueryCalls:
-        FUNCTION_RUN_REQUEST_FIXTURE.limits.maxQueryCalls - 1,
+      status: "allowed",
+      grant: {
+        remainingQueryCalls:
+          FUNCTION_RUN_REQUEST_FIXTURE.limits.maxQueryCalls - 1,
+      },
     })
     expect(getTTL).toHaveBeenCalledWith(scope.runId)
-    expect(incrementWithExpiry).toHaveBeenCalledWith({
-      key: `${scope.runId}:query-call-count`,
-      expirySeconds: 1,
+    expect(store).toHaveBeenCalledWith(
+      scope.runId,
+      expect.objectContaining({
+        remainingQueryCalls:
+          FUNCTION_RUN_REQUEST_FIXTURE.limits.maxQueryCalls - 1,
+        activeQueryCalls: 1,
+      }),
+      1
+    )
+  })
+
+  it("does not recreate a grant when cleanup races with consumption", async () => {
+    const { grantToken } = await createFunctionRunGrant(
+      scope,
+      FUNCTION_RUN_REQUEST_FIXTURE.limits,
+      client
+    )
+    const originalStore = client.store.bind(client)
+    let continueStore: () => void = () => {}
+    const storeContinue = new Promise<void>(resolve => {
+      continueStore = resolve
     })
+    let resolveStoreStarted: () => void = () => {}
+    const storeStarted = new Promise<void>(resolve => {
+      resolveStoreStarted = resolve
+    })
+    const storeSpy = jest.spyOn(client, "store")
+    storeSpy.mockImplementation(async (key, value, expirySeconds) => {
+      if (key === scope.runId) {
+        resolveStoreStarted()
+        await storeContinue
+      }
+      return await originalStore(key, value, expirySeconds)
+    })
+
+    try {
+      const consumed = consumeFunctionQueryGrant(
+        scope.runId,
+        grantToken,
+        "cap_customers",
+        ["status"],
+        scope.workspaceId,
+        client
+      )
+      await storeStarted
+      const deleted = deleteFunctionRunGrant(scope.runId, client)
+      continueStore()
+      await Promise.all([consumed, deleted])
+      expect(await client.get(scope.runId)).toBeNull()
+    } finally {
+      storeSpy.mockRestore()
+    }
   })
 
   it("does not replace an existing run grant", async () => {
@@ -181,7 +228,7 @@ describe("Function run grants", () => {
       ...request,
       grantToken: expect.any(String),
     })
-    expect(await client.keys("*")).toHaveLength(0)
+    expect(await client.get(scope.runId)).toBeNull()
   })
 
   it("cleans up after runner failure", async () => {
@@ -193,6 +240,6 @@ describe("Function run grants", () => {
     await expect(
       executeWithFunctionRunGrant({ execute }, request, scope, client)
     ).rejects.toThrow("runner failed")
-    expect(await client.keys("*")).toHaveLength(0)
+    expect(await client.get(scope.runId)).toBeNull()
   })
 })

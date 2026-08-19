@@ -164,6 +164,17 @@ export interface FunctionExecutor {
   terminate: (runId: string) => Promise<void>
 }
 
+export interface FunctionQueryBrokerRequest {
+  runId: string
+  capabilityId: string
+  parameters: Record<string, string | null>
+  grantToken: string
+}
+
+export interface FunctionQueryBrokerResponse {
+  data: JSONValue
+}
+
 export interface FunctionRunGrant {
   runId: string
   workspaceId: string
