@@ -155,6 +155,27 @@ describe("Run Function automation action", () => {
     )
   })
 
+  it.each(["42", "[1,2]", '"hi"'])(
+    "rejects a JSON editor input that is not an object: %s",
+    async value => {
+      const deps = dependencies()
+
+      await expect(
+        run(deps, {
+          functionId: fn._id,
+          inputs: { value },
+        })
+      ).resolves.toMatchObject({
+        success: false,
+        status: "error",
+        error: {
+          code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
+        },
+      })
+      expect(deps.execute).not.toHaveBeenCalled()
+    }
+  )
+
   it.each([
     ["a number", { value: 42 }, { value: 42 }],
     ["an object", { value: { nested: 1 } }, { value: { nested: 1 } }],

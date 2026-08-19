@@ -113,10 +113,14 @@ const parseInputs = (
       const parsed = jsonRecordSchema.safeParse(
         JSON.parse(editorInput.data.value)
       )
-      if (parsed.success) {
-        value = parsed.data
+      if (!parsed.success) {
+        throw invalidInputs()
       }
-    } catch {
+      value = parsed.data
+    } catch (error) {
+      if (error instanceof FunctionExecutionError) {
+        throw error
+      }
       // Keep a real single-key input object unchanged.
     }
   }
