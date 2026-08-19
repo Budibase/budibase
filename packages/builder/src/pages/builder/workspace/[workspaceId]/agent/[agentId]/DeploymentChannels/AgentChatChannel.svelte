@@ -21,7 +21,7 @@
     "Failed to save agent chat settings"
   const AGENT_CHAT_DEPRECATION_TITLE = "Agent Chat is deprecated"
   const AGENT_CHAT_DEPRECATION_MESSAGE =
-    "Agent Chat will be removed in a future release. We recommend deploying your agent to Slack, Microsoft Teams, or Discord instead."
+    "Agent Chat will be removed in a future release. We recommend deploying your agent to Slack or Microsoft Teams instead."
 
   export let agentId: string
   export let agentName: string

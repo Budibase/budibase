@@ -14,12 +14,6 @@ const maskSecretFields = <T extends object>(obj: T, fields: (keyof T)[]): T => {
 
 export const obfuscateAgentSecrets = (agent: Agent): Agent => ({
   ...agent,
-  ...(agent.discordIntegration && {
-    discordIntegration: maskSecretFields(agent.discordIntegration, [
-      "publicKey",
-      "botToken",
-    ]),
-  }),
   ...(agent.MSTeamsIntegration && {
     MSTeamsIntegration: maskSecretFields(agent.MSTeamsIntegration, [
       "appPassword",
@@ -30,12 +24,6 @@ export const obfuscateAgentSecrets = (agent: Agent): Agent => ({
       "clientSecret",
       "botToken",
       "signingSecret",
-    ]),
-  }),
-  ...(agent.telegramIntegration && {
-    telegramIntegration: maskSecretFields(agent.telegramIntegration, [
-      "botToken",
-      "webhookSecretToken",
     ]),
   }),
 })

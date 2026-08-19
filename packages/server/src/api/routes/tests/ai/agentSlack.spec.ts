@@ -8,7 +8,7 @@ interface MockWebhookChatPayload {
 interface ChatMockModule {
   resetMockChatState: () => void
   setMockPostEphemeralResult: (
-    provider: "slack" | "teams" | "telegram",
+    provider: "slack" | "teams",
     result: { usedFallback: boolean }
   ) => void
 }

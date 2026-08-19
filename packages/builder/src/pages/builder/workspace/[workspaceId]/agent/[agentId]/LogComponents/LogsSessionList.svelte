@@ -48,7 +48,6 @@
       "Chat",
       "Chat Preview",
       "Test",
-      "Discord",
       "Microsoft Teams",
       "Slack",
     ].map(trigger => ({

@@ -1,7 +1,6 @@
 <script lang="ts">
   import {
     ActionButton,
-    Badge,
     Body,
     Modal,
     ModalContent,
@@ -17,14 +16,10 @@
   import { selectedAgent, agentsStore } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
   import AgentChatChannel from "./DeploymentChannels/AgentChatChannel.svelte"
-  import DiscordConfig from "./DeploymentChannels/DiscordConfig.svelte"
   import MicrosoftTeamsConfig from "./DeploymentChannels/MicrosoftTeamsConfig.svelte"
   import SlackConfig from "./DeploymentChannels/SlackConfig.svelte"
-  import TelegramConfig from "./DeploymentChannels/TelegramConfig.svelte"
-  import DiscordLogo from "assets/discord.svg"
   import MSTeamsLogo from "assets/rest-template-icons/microsoft-teams.svg"
   import SlackLogo from "assets/slack.svg"
-  import TelegramLogo from "assets/telegram.svg"
 
   const AI_CONFIG_REQUIRED_MESSAGE =
     "Select an AI model in Agent config before enabling this channel."
@@ -33,7 +28,6 @@
     name: string
     logo: string
     details: string
-    deprecationMessage?: string
   }
 
   interface DeploymentRow {
@@ -43,30 +37,17 @@
     status: "Enabled" | "Disabled"
     details: string
     configurable?: boolean
-    deprecationMessage?: string
   }
 
   let currentAgent: Agent | undefined = $derived($selectedAgent)
-  let discordModal: Modal
   let MSTeamsModal: Modal
   let slackModal: Modal
-  let telegramModal: Modal
   let toggling = $state(false)
   let toggleRenderKeys = $state<Record<string, number>>({})
 
   const resetChannelToggle = (channelId: string) => {
     toggleRenderKeys[channelId] = (toggleRenderKeys[channelId] || 0) + 1
   }
-
-  const discordConfigured = $derived.by(() => {
-    const integration = currentAgent?.discordIntegration
-    return !!(
-      integration?.applicationId?.trim() &&
-      integration?.publicKey?.trim() &&
-      integration?.botToken?.trim() &&
-      integration?.guildId?.trim()
-    )
-  })
 
   const MSTeamsConfigured = $derived.by(() => {
     const integration = currentAgent?.MSTeamsIntegration
@@ -84,37 +65,17 @@
     )
   })
 
-  const telegramConfigured = $derived.by(() => {
-    const integration = currentAgent?.telegramIntegration
-    return !!integration?.botToken?.trim()
-  })
-
   const MSTeamsEnabled = $derived(
     !!currentAgent?.MSTeamsIntegration?.messagingEndpointUrl?.trim()
-  )
-
-  const discordEnabled = $derived(
-    !!currentAgent?.discordIntegration?.interactionsEndpointUrl
   )
 
   const slackEnabled = $derived(
     !!currentAgent?.slackIntegration?.messagingEndpointUrl?.trim()
   )
 
-  const telegramEnabled = $derived(
-    !!currentAgent?.telegramIntegration?.messagingEndpointUrl?.trim()
-  )
-
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
 
   const channelMetadata: Record<AgentChannelProvider, ChannelMetadata> = {
-    [AgentChannelProvider.DISCORD]: {
-      name: "Discord",
-      logo: DiscordLogo,
-      details: "Allow this agent to respond in Discord channels and threads",
-      deprecationMessage:
-        "Deprecated: Discord will be removed in a future release.",
-    },
     [AgentChannelProvider.MSTEAMS]: {
       name: "Microsoft Teams",
       logo: MSTeamsLogo,
@@ -127,63 +88,37 @@
       details:
         "Allow this agent to respond in Slack channels, threads, and DMs",
     },
-    [AgentChannelProvider.TELEGRAM]: {
-      name: "Telegram",
-      logo: TelegramLogo,
-      details:
-        "Allow this agent to respond in Telegram private and group chats",
-      deprecationMessage:
-        "Deprecated: Telegram will be removed in a future release.",
-    },
   }
 
   const channelStatus = $derived.by(
     () =>
       ({
-        [AgentChannelProvider.DISCORD]: discordEnabled ? "Enabled" : "Disabled",
         [AgentChannelProvider.MSTEAMS]: MSTeamsEnabled ? "Enabled" : "Disabled",
         [AgentChannelProvider.SLACK]: slackEnabled ? "Enabled" : "Disabled",
-        [AgentChannelProvider.TELEGRAM]: telegramEnabled
-          ? "Enabled"
-          : "Disabled",
       }) as const
   )
 
   const channels = $derived.by<DeploymentRow[]>(() =>
-    (
-      [
-        AgentChannelProvider.MSTEAMS,
-        AgentChannelProvider.SLACK,
-        AgentChannelProvider.DISCORD,
-        AgentChannelProvider.TELEGRAM,
-      ] as const
-    ).map(provider => ({
-      id: DEPLOYMENT_CHANNEL_IDS[provider],
-      name: channelMetadata[provider].name,
-      logo: channelMetadata[provider].logo,
-      status: channelStatus[provider],
-      details: channelMetadata[provider].details,
-      deprecationMessage: channelMetadata[provider].deprecationMessage,
-      configurable: true,
-    }))
+    ([AgentChannelProvider.MSTEAMS, AgentChannelProvider.SLACK] as const).map(
+      provider => ({
+        id: DEPLOYMENT_CHANNEL_IDS[provider],
+        name: channelMetadata[provider].name,
+        logo: channelMetadata[provider].logo,
+        status: channelStatus[provider],
+        details: channelMetadata[provider].details,
+        configurable: true,
+      })
+    )
   )
 
   const onConfigureChannel = (channel: DeploymentRow) => {
     const provider = DEPLOYMENT_ID_TO_PROVIDER[channel.id]
-    if (provider === AgentChannelProvider.DISCORD) {
-      discordModal?.show()
-      return
-    }
     if (provider === AgentChannelProvider.MSTEAMS) {
       MSTeamsModal?.show()
       return
     }
     if (provider === AgentChannelProvider.SLACK) {
       slackModal?.show()
-      return
-    }
-    if (provider === AgentChannelProvider.TELEGRAM) {
-      telegramModal?.show()
       return
     }
   }
@@ -202,19 +137,7 @@
     try {
       const provider = DEPLOYMENT_ID_TO_PROVIDER[channel.id]
       let channelUpdated = false
-      if (provider === AgentChannelProvider.DISCORD) {
-        if (isChannelEnabled) {
-          await agentsStore.toggleDiscordDeployment(currentAgent._id, false)
-          channelUpdated = true
-          notifications.success("Discord channel disabled")
-        } else if (discordConfigured) {
-          await agentsStore.toggleDiscordDeployment(currentAgent._id, true)
-          channelUpdated = true
-          notifications.success("Discord channel enabled")
-        } else {
-          discordModal?.show()
-        }
-      } else if (provider === AgentChannelProvider.MSTEAMS) {
+      if (provider === AgentChannelProvider.MSTEAMS) {
         if (isChannelEnabled) {
           await agentsStore.toggleMSTeamsDeployment(currentAgent._id, false)
           channelUpdated = true
@@ -237,18 +160,6 @@
           notifications.success("Slack channel enabled")
         } else {
           slackModal?.show()
-        }
-      } else if (provider === AgentChannelProvider.TELEGRAM) {
-        if (isChannelEnabled) {
-          await agentsStore.toggleTelegramDeployment(currentAgent._id, false)
-          channelUpdated = true
-          notifications.success("Telegram channel disabled")
-        } else if (telegramConfigured) {
-          await agentsStore.toggleTelegramDeployment(currentAgent._id, true)
-          channelUpdated = true
-          notifications.success("Telegram channel enabled")
-        } else {
-          telegramModal?.show()
         }
       }
 
@@ -316,12 +227,6 @@
               <Body color={"var(--spectrum-global-color-gray-700)"} size="XS"
                 >{channel.details}</Body
               >
-              {#if channel.deprecationMessage}
-                <Body
-                  color={"var(--spectrum-global-color-orange-900)"}
-                  size="XS">{channel.deprecationMessage}</Body
-                >
-              {/if}
             </div>
           </div>
           <div class="row-action">
@@ -351,39 +256,6 @@
     </div>
   </section>
 </div>
-
-<Modal bind:this={discordModal}>
-  <ModalContent
-    size="L"
-    showCloseIcon
-    showConfirmButton={false}
-    showCancelButton={false}
-  >
-    <svelte:fragment slot="header">
-      <div class="modal-header">
-        <img
-          alt="Discord"
-          width="24px"
-          height="24px"
-          src={DiscordLogo}
-          class="modal-header-logo"
-        />
-        <div class="modal-header-copy">
-          <Body color={"var(--spectrum-global-color-gray-900)"} weight="500"
-            >Discord</Body
-          >
-        </div>
-      </div>
-    </svelte:fragment>
-    <div class="deprecation-notice">
-      <Badge orange size="S">Deprecated</Badge>
-      <Body size="XS" color="var(--spectrum-global-color-gray-600)">
-        Discord will be removed in a future release.
-      </Body>
-    </div>
-    <DiscordConfig agent={currentAgent} />
-  </ModalContent>
-</Modal>
 
 <Modal bind:this={MSTeamsModal}>
   <ModalContent
@@ -436,39 +308,6 @@
       </div>
     </svelte:fragment>
     <SlackConfig agent={currentAgent} />
-  </ModalContent>
-</Modal>
-
-<Modal bind:this={telegramModal}>
-  <ModalContent
-    size="L"
-    showCloseIcon
-    showConfirmButton={false}
-    showCancelButton={false}
-  >
-    <svelte:fragment slot="header">
-      <div class="modal-header">
-        <img
-          alt="Telegram"
-          width="24px"
-          height="24px"
-          src={TelegramLogo}
-          class="modal-header-logo"
-        />
-        <div class="modal-header-copy">
-          <Body color={"var(--spectrum-global-color-gray-900)"} weight="500"
-            >Telegram</Body
-          >
-        </div>
-      </div>
-    </svelte:fragment>
-    <div class="deprecation-notice">
-      <Badge orange size="S">Deprecated</Badge>
-      <Body size="XS" color="var(--spectrum-global-color-gray-600)">
-        Telegram will be removed in a future release.
-      </Body>
-    </div>
-    <TelegramConfig agent={currentAgent} />
   </ModalContent>
 </Modal>
 
@@ -559,16 +398,5 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-  }
-
-  .deprecation-notice {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--spacing-s);
-  }
-
-  .deprecation-notice :global(p) {
-    margin: 0;
   }
 </style>

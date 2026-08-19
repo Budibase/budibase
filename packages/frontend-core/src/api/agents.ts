@@ -13,12 +13,8 @@ import {
   FetchAgentsResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
-  ProvisionAgentTelegramChannelRequest,
-  ProvisionAgentTelegramChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
-  SyncAgentDiscordCommandsRequest,
-  SyncAgentDiscordCommandsResponse,
   SyncAgentKnowledgeSourcesRequest,
   SyncAgentKnowledgeSourcesResponse,
   ToggleAgentDeploymentRequest,
@@ -60,10 +56,6 @@ export interface AgentEndpoints {
   ) => Promise<AgentOperationMutationResponse>
   duplicateAgent: (agentId: string) => Promise<DuplicateAgentResponse>
   deleteAgent: (agentId: string) => Promise<{ deleted: true }>
-  syncAgentDiscordCommands: (
-    agentId: string,
-    body?: SyncAgentDiscordCommandsRequest
-  ) => Promise<SyncAgentDiscordCommandsResponse>
   provisionAgentMSTeamsChannel: (
     agentId: string,
     body?: ProvisionAgentMSTeamsChannelRequest
@@ -77,23 +69,11 @@ export interface AgentEndpoints {
     agentId: string,
     body?: CreateAgentSlackAppRequest
   ) => Promise<CreateAgentSlackAppResponse>
-  provisionAgentTelegramChannel: (
-    agentId: string,
-    body?: ProvisionAgentTelegramChannelRequest
-  ) => Promise<ProvisionAgentTelegramChannelResponse>
-  toggleAgentDiscordDeployment: (
-    agentId: string,
-    enabled: boolean
-  ) => Promise<ToggleAgentDeploymentResponse>
   toggleAgentMSTeamsDeployment: (
     agentId: string,
     enabled: boolean
   ) => Promise<ToggleAgentDeploymentResponse>
   toggleAgentSlackDeployment: (
-    agentId: string,
-    enabled: boolean
-  ) => Promise<ToggleAgentDeploymentResponse>
-  toggleAgentTelegramDeployment: (
     agentId: string,
     enabled: boolean
   ) => Promise<ToggleAgentDeploymentResponse>
@@ -217,16 +197,6 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  syncAgentDiscordCommands: async (agentId: string, body) => {
-    return await API.post<
-      SyncAgentDiscordCommandsRequest | undefined,
-      SyncAgentDiscordCommandsResponse
-    >({
-      url: `/api/agent/${agentId}/discord/sync`,
-      body,
-    })
-  },
-
   provisionAgentMSTeamsChannel: async (agentId: string, body) => {
     return await API.post<
       ProvisionAgentMSTeamsChannelRequest | undefined,
@@ -264,26 +234,6 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  provisionAgentTelegramChannel: async (agentId: string, body) => {
-    return await API.post<
-      ProvisionAgentTelegramChannelRequest | undefined,
-      ProvisionAgentTelegramChannelResponse
-    >({
-      url: `/api/agent/${agentId}/telegram/provision`,
-      body,
-    })
-  },
-
-  toggleAgentDiscordDeployment: async (agentId: string, enabled: boolean) => {
-    return await API.post<
-      ToggleAgentDeploymentRequest,
-      ToggleAgentDeploymentResponse
-    >({
-      url: `/api/agent/${agentId}/discord/toggle`,
-      body: { enabled },
-    })
-  },
-
   toggleAgentMSTeamsDeployment: async (agentId: string, enabled: boolean) => {
     return await API.post<
       ToggleAgentDeploymentRequest,
@@ -300,16 +250,6 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
       ToggleAgentDeploymentResponse
     >({
       url: `/api/agent/${agentId}/slack/toggle`,
-      body: { enabled },
-    })
-  },
-
-  toggleAgentTelegramDeployment: async (agentId: string, enabled: boolean) => {
-    return await API.post<
-      ToggleAgentDeploymentRequest,
-      ToggleAgentDeploymentResponse
-    >({
-      url: `/api/agent/${agentId}/telegram/toggle`,
       body: { enabled },
     })
   },

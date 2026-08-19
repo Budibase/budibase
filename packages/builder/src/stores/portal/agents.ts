@@ -19,12 +19,8 @@ import {
   SharePointKnowledgeSourceSnapshot,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
-  ProvisionAgentTelegramChannelRequest,
-  ProvisionAgentTelegramChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
-  SyncAgentDiscordCommandsRequest,
-  SyncAgentDiscordCommandsResponse,
   SyncAgentKnowledgeSourcesResponse,
   SaveSlackAppConfigRequest,
   SlackAppConfigResponse,
@@ -357,14 +353,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
     return result
   }
 
-  syncDiscordCommands = async (
-    agentId: string,
-    body?: SyncAgentDiscordCommandsRequest
-  ): Promise<SyncAgentDiscordCommandsResponse> =>
-    await this.runAndRefreshAgents(() =>
-      API.syncAgentDiscordCommands(agentId, body)
-    )
-
   provisionMSTeamsChannel = async (
     agentId: string,
     body?: ProvisionAgentMSTeamsChannelRequest
@@ -402,19 +390,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   deleteSlackAppConfig = async (): Promise<SlackAppConfigResponse> =>
     await API.deleteSlackAppConfig()
 
-  provisionTelegramChannel = async (
-    agentId: string,
-    body?: ProvisionAgentTelegramChannelRequest
-  ): Promise<ProvisionAgentTelegramChannelResponse> =>
-    await this.runAndRefreshAgents(() =>
-      API.provisionAgentTelegramChannel(agentId, body)
-    )
-
-  toggleDiscordDeployment = async (agentId: string, enabled: boolean) =>
-    await this.runAndRefreshAgents(() =>
-      API.toggleAgentDiscordDeployment(agentId, enabled)
-    )
-
   toggleMSTeamsDeployment = async (agentId: string, enabled: boolean) =>
     await this.runAndRefreshAgents(() =>
       API.toggleAgentMSTeamsDeployment(agentId, enabled)
@@ -423,11 +398,6 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   toggleSlackDeployment = async (agentId: string, enabled: boolean) =>
     await this.runAndRefreshAgents(() =>
       API.toggleAgentSlackDeployment(agentId, enabled)
-    )
-
-  toggleTelegramDeployment = async (agentId: string, enabled: boolean) =>
-    await this.runAndRefreshAgents(() =>
-      API.toggleAgentTelegramDeployment(agentId, enabled)
     )
 
   fetchAgentKnowledge = async (
