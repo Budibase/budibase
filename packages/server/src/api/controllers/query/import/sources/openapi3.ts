@@ -14,10 +14,9 @@ import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
 import {
   GeneratedRequestBody,
-  buildSerializableRequestBody,
+  buildEndpointRequestBody,
   generateRequestBodyFromExample,
   generateRequestBodyFromSchema,
-  buildKeyValueRequestBody,
 } from "./utils/requestBody"
 import { buildEndpointName } from "./utils/endpointName"
 
@@ -183,14 +182,10 @@ export class OpenAPI3 extends OpenAPISource {
       originalPath: path,
     }
 
-    let parsedBody = buildSerializableRequestBody(requestBody?.body)
-    if (
-      parsedBody !== undefined &&
-      bodyType &&
-      (bodyType === BodyType.FORM_DATA || bodyType === BodyType.ENCODED)
-    ) {
-      parsedBody = buildKeyValueRequestBody(parsedBody)
-    }
+    const parsedBody = buildEndpointRequestBody({
+      body: requestBody?.body,
+      bodyType,
+    })
     if (parsedBody !== undefined) {
       metadata.originalRequestBody = parsedBody
     }

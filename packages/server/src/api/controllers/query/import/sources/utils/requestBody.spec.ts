@@ -1,8 +1,9 @@
+import { BodyType } from "@budibase/types"
 import {
   BINDING_TOKEN_PREFIX,
+  buildEndpointRequestBody,
   buildKeyValueRequestBody,
   buildRequestBodyFromFormDataParameters,
-  buildSerializableRequestBody,
   generateRequestBodyFromExample,
   generateRequestBodyFromSchema,
   serialiseRequestBody,
@@ -122,35 +123,50 @@ describe("serialiseRequestBody", () => {
   })
 })
 
-describe("buildSerializableRequestBody", () => {
+describe("buildEndpointRequestBody", () => {
+  const schema = {
+    type: "object",
+    properties: {
+      name: { type: "string" },
+      verified: { type: "boolean" },
+      attempts: { type: "integer" },
+    },
+    required: ["name", "verified", "attempts"],
+  }
+
   it("returns undefined when no body is provided", () => {
-    expect(buildSerializableRequestBody(undefined)).toBeUndefined()
+    expect(
+      buildEndpointRequestBody({ body: undefined, bodyType: BodyType.JSON })
+    ).toBeUndefined()
   })
 
-  it("preserves structure and converts bindings into moustache tokens", () => {
-    const schema = {
-      type: "object",
-      properties: {
-        name: { type: "string" },
-        nested: {
-          type: "object",
-          properties: {
-            count: { type: "integer" },
-          },
-          required: ["count"],
-        },
-      },
-      required: ["name", "nested"],
-    }
-
+  it("leaves non-string bindings unquoted for JSON bodies", () => {
     const generated = generateRequestBodyFromSchema(schema)
-    const serializable = buildSerializableRequestBody(generated?.body)
+    const body = buildEndpointRequestBody({
+      body: generated?.body,
+      bodyType: BodyType.JSON,
+    })
 
-    expect(serializable).toEqual({
+    expect(body).toBe(
+      `{
+  "name": "{{ name }}",
+  "verified": {{ verified }},
+  "attempts": {{ attempts }}
+}`
+    )
+  })
+
+  it("flattens key/value bodies into a record", () => {
+    const generated = generateRequestBodyFromSchema(schema)
+    const body = buildEndpointRequestBody({
+      body: generated?.body,
+      bodyType: BodyType.ENCODED,
+    })
+
+    expect(body).toEqual({
       name: "{{ name }}",
-      nested: {
-        count: "{{ nested_count }}",
-      },
+      verified: "{{ verified }}",
+      attempts: "{{ attempts }}",
     })
   })
 })

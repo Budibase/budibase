@@ -1,4 +1,5 @@
 import type { OpenAPIV2, OpenAPIV3 } from "openapi-types"
+import { BodyType } from "@budibase/types"
 
 type ReferenceObject = OpenAPIV3.ReferenceObject | OpenAPIV2.ReferenceObject
 
@@ -593,39 +594,6 @@ export const serialiseRequestBody = (body: unknown): string | undefined => {
   })
 }
 
-const cloneSerializableRequestBody = (value: unknown): unknown => {
-  if (value == null) {
-    return value
-  }
-
-  if (Array.isArray(value)) {
-    return value.map(item => cloneSerializableRequestBody(item))
-  }
-
-  if (typeof value === "object") {
-    const binding = extractBindingFromPlaceholder(value)
-    if (binding) {
-      return `{{ ${binding} }}`
-    }
-    return Object.entries(value as Record<string, unknown>).reduce(
-      (acc, [key, child]) => {
-        acc[key] = cloneSerializableRequestBody(child)
-        return acc
-      },
-      {} as Record<string, unknown>
-    )
-  }
-
-  return value
-}
-
-export const buildSerializableRequestBody = (body: unknown): unknown => {
-  if (body === undefined) {
-    return undefined
-  }
-  return cloneSerializableRequestBody(body)
-}
-
 const extractBindingFromPlaceholder = (value: unknown): string | undefined => {
   if (!value || typeof value !== "object") {
     return undefined
@@ -718,6 +686,28 @@ export const buildKeyValueRequestBody = (
   }
 
   return accumulator
+}
+
+export const isKeyValueBodyType = (type: BodyType | undefined): boolean => {
+  return type === BodyType.FORM_DATA || type === BodyType.ENCODED
+}
+
+/**
+ * Key/value body types are represented as a flat record, everything else is
+ * serialised to a JSON template string so that non-string bindings stay
+ * unquoted and keep their type once enriched.
+ */
+export const buildEndpointRequestBody = ({
+  body,
+  bodyType,
+}: {
+  body: unknown
+  bodyType: BodyType | undefined
+}): string | Record<string, string> | undefined => {
+  if (isKeyValueBodyType(bodyType)) {
+    return buildKeyValueRequestBody(body)
+  }
+  return serialiseRequestBody(body)
 }
 
 const toFormDataParameter = (param: FormDataParameter): FormDataParameter => {

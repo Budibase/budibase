@@ -11,11 +11,10 @@ import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
 import {
   GeneratedRequestBody,
+  buildEndpointRequestBody,
   buildRequestBodyFromFormDataParameters,
-  buildSerializableRequestBody,
   generateRequestBodyFromExample,
   generateRequestBodyFromSchema,
-  buildKeyValueRequestBody,
   type FormDataParameter,
 } from "./utils/requestBody"
 import { buildEndpointName } from "./utils/endpointName"
@@ -106,14 +105,10 @@ export class OpenAPI2 extends OpenAPISource {
       originalPath: path,
     }
 
-    let parsedBody = buildSerializableRequestBody(requestBody?.body)
-    if (
-      parsedBody !== undefined &&
-      bodyType &&
-      (bodyType === BodyType.FORM_DATA || bodyType === BodyType.ENCODED)
-    ) {
-      parsedBody = buildKeyValueRequestBody(parsedBody)
-    }
+    const parsedBody = buildEndpointRequestBody({
+      body: requestBody?.body,
+      bodyType,
+    })
     if (parsedBody !== undefined) {
       metadata.originalRequestBody = parsedBody
     }

@@ -505,12 +505,7 @@ describe("Rest Importer", () => {
       docsUrl: "https://docs.example.com/users#create",
       description: "Creates a user",
       originalPath: "/users",
-      originalRequestBody: {
-        name: "{{ name }}",
-        email: "{{ email }}",
-        age: "{{ age }}",
-        verified: "{{ verified }}",
-      },
+      originalRequestBody: expectedBody,
       defaultBindings: {
         name: "",
         email: "",

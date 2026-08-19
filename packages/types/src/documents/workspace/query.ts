@@ -12,9 +12,12 @@ export interface QuerySchema {
 
 export type QueryVerb = "read" | "create" | "update" | "delete" | "patch"
 
+// JSON/text bodies are template strings, key/value bodies are flat records
+export type EndpointRequestBody = string | Record<string, string>
+
 export interface EndpointMetadata {
   originalPath?: string
-  originalRequestBody?: unknown
+  originalRequestBody?: EndpointRequestBody
   defaultBindings?: Record<string, string>
 }
 
@@ -29,7 +32,7 @@ export interface ImportEndpoint {
   operationId?: string
   docsUrl?: string
   originalPath?: string
-  originalRequestBody?: unknown
+  originalRequestBody?: EndpointRequestBody
   defaultBindings?: Record<string, string>
   bodyType?: BodyType
   headers?: Record<string, unknown>
@@ -182,7 +185,7 @@ export interface RestTemplateQueryMetadata {
   docsUrl?: string
   description?: string
   originalPath?: string
-  originalRequestBody?: unknown
+  originalRequestBody?: EndpointRequestBody
   defaultBindings?: Record<string, string>
   restTemplateId?: RestTemplateId
 }

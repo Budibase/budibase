@@ -11,8 +11,8 @@ import {
 import { ValidQueryNameRegex } from "@budibase/shared-core"
 import { URL } from "url"
 import {
-  buildKeyValueRequestBody,
-  serialiseRequestBody,
+  buildEndpointRequestBody,
+  isKeyValueBodyType,
 } from "../utils/requestBody"
 
 export interface ImportInfo {
@@ -192,15 +192,13 @@ export abstract class ImportSource {
       combinedParameters.push({ name, default: defaultValue })
     }
 
-    let requestBody: string | Record<string, string> | undefined
+    let requestBody = buildEndpointRequestBody({
+      body,
+      bodyType: explicitBodyType,
+    })
     let resolvedBodyType: BodyType
 
-    const isKeyValueBodyType = (type: BodyType | undefined) => {
-      return type === BodyType.FORM_DATA || type === BodyType.ENCODED
-    }
-
     if (isKeyValueBodyType(explicitBodyType)) {
-      requestBody = buildKeyValueRequestBody(body)
       if ((!requestBody || Object.keys(requestBody).length === 0) && body) {
         requestBody = Object.keys(bodyBindings).reduce<Record<string, string>>(
           (acc, key) => {
@@ -212,7 +210,6 @@ export abstract class ImportSource {
       }
       resolvedBodyType = explicitBodyType as BodyType
     } else {
-      requestBody = serialiseRequestBody(body)
       resolvedBodyType = explicitBodyType
         ? (explicitBodyType as BodyType)
         : requestBody

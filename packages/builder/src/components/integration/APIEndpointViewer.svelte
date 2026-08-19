@@ -915,12 +915,7 @@
     const bodyType =
       endpoint?.bodyType ||
       (endpoint?.originalRequestBody ? BodyType.JSON : BodyType.NONE)
-    let requestBody = endpoint?.originalRequestBody
-    const isKeyValueBodyType =
-      bodyType === BodyType.FORM_DATA || bodyType === BodyType.ENCODED
-    if (requestBody && typeof requestBody === "object" && !isKeyValueBodyType) {
-      requestBody = JSON.stringify(requestBody, null, 2)
-    }
+    const requestBody = endpoint?.originalRequestBody
     const headers = endpoint?.headers || {}
     const disabledHeaders: Record<string, boolean> = {}
     for (const header of Object.keys(headers)) {
