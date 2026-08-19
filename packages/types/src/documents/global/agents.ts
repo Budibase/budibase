@@ -43,6 +43,7 @@ export interface MSTeamsAgentIntegration extends ChatAgentIntegration {
   tenantId?: string
   teamId?: string
   messagingEndpointUrl?: string
+  appPackageVersion?: string
 }
 
 export interface SlackAgentIntegration extends ChatAgentIntegration {

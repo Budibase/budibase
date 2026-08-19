@@ -2,14 +2,21 @@ import { auth } from "@budibase/backend-core"
 import { REVIEWER_TYPES } from "@budibase/shared-core"
 import { EscalationNotificationChannel } from "@budibase/types"
 import Joi from "joi"
+import { validate as isValidUUID } from "uuid"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
 const OPTIONAL_AICONFIG = Joi.string().optional().allow("")
 const NON_EMPTY_STRING = Joi.string().trim().min(1)
+const OPTIONAL_UUID = OPTIONAL_STRING.custom((value: string, helpers) => {
+  if (!value.trim() || isValidUUID(value.trim())) {
+    return value
+  }
+  return helpers.message({ custom: "{{#label}} must be a valid UUID" })
+})
 
 const TEAMS_INTEGRATION_SCHEMA = Joi.object({
-  appId: OPTIONAL_STRING,
+  appId: OPTIONAL_UUID,
   appPassword: OPTIONAL_STRING,
   tenantId: NON_EMPTY_STRING.required(),
   chatAppId: OPTIONAL_STRING,
