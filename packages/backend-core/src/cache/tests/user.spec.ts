@@ -1,7 +1,7 @@
 import { User } from "@budibase/types"
 import { generator, structures } from "../../../tests"
 import { DBTestConfiguration } from "../../../tests/extra"
-import { getUsers } from "../user"
+import { getUser, getUsers } from "../user"
 import { getGlobalDB } from "../../context"
 import _ from "lodash"
 
@@ -11,6 +11,9 @@ import * as redis from "../../redis/init"
 import { UserDB } from "../../users"
 
 const config = new DBTestConfiguration()
+
+const withAccountPortal = <T>(f: () => Promise<T>) =>
+  withEnv({ SELF_HOSTED: false, DISABLE_ACCOUNT_PORTAL: "" }, f)
 
 describe("user cache", () => {
   describe("getUsers", () => {
@@ -121,9 +124,6 @@ describe("user cache", () => {
     })
 
     describe("account portal", () => {
-      const withAccountPortal = <T>(f: () => Promise<T>) =>
-        withEnv({ SELF_HOSTED: false, DISABLE_ACCOUNT_PORTAL: "" }, f)
-
       afterEach(() => {
         jest.restoreAllMocks()
       })
@@ -225,6 +225,61 @@ describe("user cache", () => {
         ),
         notFoundIds: expect.arrayContaining(missingIds),
       })
+    })
+  })
+
+  describe("getUser", () => {
+    let user: User
+
+    beforeAll(async () => {
+      await config.doInTenant(async () => {
+        user = structures.users.user({ _id: generator.guid() })
+        await getGlobalDB().put(user)
+      })
+    })
+
+    beforeEach(async () => {
+      jest.restoreAllMocks()
+
+      const redisClient = await redis.getUserClient()
+      await redisClient.clear()
+    })
+
+    it("a failing account lookup does not fail the lookup", async () => {
+      jest
+        .spyOn(accounts, "getAccount")
+        .mockRejectedValue(new Error("account portal is down"))
+
+      const result = await withAccountPortal(() =>
+        config.doInTenant(() => getUser({ userId: user._id! }))
+      )
+
+      expect(result).toEqual({
+        ...user,
+        budibaseAccess: true,
+        _rev: expect.any(String),
+      })
+    })
+
+    it("a user with a failed account lookup is not cached", async () => {
+      const account = structures.accounts.cloudAccount()
+      const getAccountSpy = jest
+        .spyOn(accounts, "getAccount")
+        .mockRejectedValue(new Error("account portal is down"))
+
+      await withAccountPortal(() =>
+        config.doInTenant(() => getUser({ userId: user._id! }))
+      )
+
+      getAccountSpy.mockResolvedValue(account)
+
+      const result = await withAccountPortal(() =>
+        config.doInTenant(() => getUser({ userId: user._id! }))
+      )
+
+      expect(result).toEqual(
+        expect.objectContaining({ account, accountPortalAccess: true })
+      )
     })
   })
 })
