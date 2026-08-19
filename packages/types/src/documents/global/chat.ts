@@ -41,7 +41,43 @@ export interface ChatConversationAttachment {
   size: number
   textLength?: number
   pageCount?: number
+  status: ConversationAttachmentStatus
+  ragSourceId?: string
+  errorMessage?: string
+  processedAt?: string
   uploadedAt: string
+}
+
+export enum ConversationAttachmentStatus {
+  QUEUED = "queued",
+  PROCESSING = "processing",
+  READY = "ready",
+  FAILED = "failed",
+  DELETING = "deleting",
+}
+
+export enum ConversationAttachmentTurnStatus {
+  QUEUED = "queued",
+  PROCESSING = "processing",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  CANCELLED = "cancelled",
+}
+
+export interface ConversationAttachmentTurn {
+  id: string
+  message: UIMessage<AgentMessageMetadata>
+  attachmentIds: string[]
+  status: ConversationAttachmentTurnStatus
+  requester: {
+    userId: string
+    linked: boolean
+    displayName?: string
+  }
+  createdAt: string
+  updatedAt: string
+  errorMessage?: string
+  responseText?: string
 }
 
 export interface ChatConversationRequest extends Document {
@@ -55,6 +91,9 @@ export interface ChatConversationRequest extends Document {
   channel?: ChatConversationChannel
   attachments?: ChatConversationAttachment[]
   attachmentExpiresAt?: string
+  attachmentVectorStoreId?: string
+  attachmentDeletingAt?: string
+  pendingAttachmentTurns?: ConversationAttachmentTurn[]
 }
 
 export interface WebhookChatCompleteResult {

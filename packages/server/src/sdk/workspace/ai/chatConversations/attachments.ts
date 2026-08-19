@@ -1,17 +1,23 @@
-import { buffer as consumeBuffer } from "node:stream/consumers"
 import { context, HTTPError, objectStore, utils } from "@budibase/backend-core"
 import {
   AgentChannelProvider,
   type ChatConversation,
   type ChatConversationAttachment,
+  ConversationAttachmentStatus,
 } from "@budibase/types"
 import type { ModelMessage, UserContent } from "ai"
 import { PDFParse } from "pdf-parse"
 import { ObjectStoreBuckets } from "../../../../constants"
+import {
+  searchGeminiFileStore,
+  type RagSearchResultItem,
+} from "../knowledgeBase/geminiFileStore"
 
 export const MAX_CONVERSATION_ATTACHMENT_COUNT = 3
-export const MAX_CONVERSATION_ATTACHMENT_BYTES = 10 * 1024 * 1024
-export const MAX_CONVERSATION_ATTACHMENT_TEXT_LENGTH = 200_000
+export const MAX_CONVERSATION_ATTACHMENT_BYTES = 20 * 1024 * 1024
+export const MAX_CONVERSATION_ATTACHMENT_CONTEXT_TOKENS = 12_000
+const MAX_CONVERSATION_ATTACHMENT_CONTEXT_CHUNKS = 10
+const ESTIMATED_CHARACTERS_PER_TOKEN = 4
 
 const TEXT_MIME_TYPES = new Set([
   "text/plain",
@@ -24,12 +30,7 @@ const TEXT_MIME_TYPES = new Set([
   "application/xml",
   "text/xml",
 ])
-const IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/jpg"])
-const SUPPORTED_MIME_TYPES = new Set([
-  ...TEXT_MIME_TYPES,
-  ...IMAGE_MIME_TYPES,
-  "application/pdf",
-])
+const SUPPORTED_MIME_TYPES = new Set([...TEXT_MIME_TYPES, "application/pdf"])
 const MIME_TYPE_EXTENSIONS = new Map<string, Set<string>>([
   ["text/plain", new Set([".txt"])],
   ["text/markdown", new Set([".md", ".markdown"])],
@@ -40,9 +41,6 @@ const MIME_TYPE_EXTENSIONS = new Map<string, Set<string>>([
   ["text/yaml", new Set([".yaml", ".yml"])],
   ["application/xml", new Set([".xml"])],
   ["text/xml", new Set([".xml"])],
-  ["image/png", new Set([".png"])],
-  ["image/jpeg", new Set([".jpg", ".jpeg"])],
-  ["image/jpg", new Set([".jpg", ".jpeg"])],
   ["application/pdf", new Set([".pdf"])],
 ])
 
@@ -51,7 +49,6 @@ export interface IncomingConversationAttachment {
   filename: string
   mimetype: string
   size?: number
-  fetchData?: () => Promise<Buffer>
 }
 
 const normalizeMimetype = (mimetype: string) =>
@@ -85,13 +82,16 @@ const assertSupportedMetadata = (
       400
     )
   }
-  if (!attachment.fetchData) {
-    throw new HTTPError(`${attachment.filename} cannot be downloaded`, 400)
-  }
   const mimetype = normalizeMimetype(attachment.mimetype)
   if (!SUPPORTED_MIME_TYPES.has(mimetype)) {
     throw new HTTPError(
       `${attachment.filename} has an unsupported file type`,
+      400
+    )
+  }
+  if (attachment.size > MAX_CONVERSATION_ATTACHMENT_BYTES) {
+    throw new HTTPError(
+      `${attachment.filename} exceeds the 20 MB file limit`,
       400
     )
   }
@@ -136,20 +136,6 @@ const validateFileContent = async ({
     }
   }
 
-  if (mimetype === "image/png") {
-    if (!hasPrefix(data, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) {
-      throw new HTTPError(`${filename} is not a valid PNG image`, 400)
-    }
-    return {}
-  }
-
-  if (IMAGE_MIME_TYPES.has(mimetype)) {
-    if (!hasPrefix(data, [0xff, 0xd8, 0xff])) {
-      throw new HTTPError(`${filename} is not a valid JPEG image`, 400)
-    }
-    return {}
-  }
-
   try {
     return {
       textLength: new TextDecoder("utf-8", { fatal: true }).decode(data).length,
@@ -159,13 +145,13 @@ const validateFileContent = async ({
   }
 }
 
-export const uploadConversationAttachments = async ({
+export const prepareConversationAttachments = ({
   conversation,
   incoming,
 }: {
   conversation: Pick<ChatConversation, "_id" | "attachments">
   incoming: IncomingConversationAttachment[]
-}): Promise<ChatConversationAttachment[]> => {
+}): ChatConversationAttachment[] => {
   const conversationId = conversation._id
   if (!conversationId) {
     throw new HTTPError("Conversation ID is required", 400)
@@ -185,86 +171,61 @@ export const uploadConversationAttachments = async ({
 
   deduplicated.forEach(assertSupportedMetadata)
   const nextCount = existing.length + deduplicated.length
-  const nextSize =
-    existing.reduce((total, file) => total + file.size, 0) +
-    deduplicated.reduce((total, file) => total + file.size!, 0)
   if (nextCount > MAX_CONVERSATION_ATTACHMENT_COUNT) {
     throw new HTTPError(
       `A conversation can contain at most ${MAX_CONVERSATION_ATTACHMENT_COUNT} files. Use /new to start another conversation.`,
       400
     )
   }
-  if (nextSize > MAX_CONVERSATION_ATTACHMENT_BYTES) {
+  return deduplicated.map(input => ({
+    id: utils.newid(),
+    provider: AgentChannelProvider.SLACK,
+    providerFileId: input.providerFileId,
+    filename: input.filename.trim(),
+    mimetype: normalizeMimetype(input.mimetype),
+    size: input.size!,
+    status: ConversationAttachmentStatus.QUEUED,
+    uploadedAt: new Date().toISOString(),
+  }))
+}
+
+export const persistConversationAttachment = async ({
+  conversationId,
+  attachment,
+  data,
+}: {
+  conversationId: string
+  attachment: ChatConversationAttachment
+  data: Buffer
+}): Promise<ValidatedFileMetadata> => {
+  if (data.byteLength > MAX_CONVERSATION_ATTACHMENT_BYTES) {
     throw new HTTPError(
-      "Conversation files cannot exceed 10 MB in total. Use /new to start another conversation.",
+      `${attachment.filename} exceeds the 20 MB file limit`,
       400
     )
   }
-
-  const workspaceId = context.getOrThrowWorkspaceId()
-  const uploaded: ChatConversationAttachment[] = []
-  let textLength = existing.reduce(
-    (total, attachment) => total + (attachment.textLength || 0),
-    0
-  )
-  try {
-    for (const input of deduplicated) {
-      const data = await input.fetchData!()
-      if (data.byteLength !== input.size) {
-        throw new HTTPError(
-          `${input.filename} did not match the size reported by Slack`,
-          400
-        )
-      }
-      const mimetype = normalizeMimetype(input.mimetype)
-      const metadata = await validateFileContent({
-        data,
-        filename: input.filename,
-        mimetype,
-      })
-      textLength += metadata.textLength || 0
-      if (textLength > MAX_CONVERSATION_ATTACHMENT_TEXT_LENGTH) {
-        throw new HTTPError(
-          "Conversation text attachments exceed the 200,000-character limit. Use /new to start another conversation.",
-          400
-        )
-      }
-
-      const attachment: ChatConversationAttachment = {
-        id: utils.newid(),
-        provider: AgentChannelProvider.SLACK,
-        providerFileId: input.providerFileId,
-        filename: input.filename.trim(),
-        mimetype,
-        size: data.byteLength,
-        ...metadata,
-        uploadedAt: new Date().toISOString(),
-      }
-      await objectStore.upload({
-        bucket: ObjectStoreBuckets.APPS,
-        filename: getConversationAttachmentObjectStoreKey({
-          workspaceId,
-          conversationId,
-          attachmentId: attachment.id,
-        }),
-        body: data,
-        type: mimetype,
-      })
-      uploaded.push(attachment)
-    }
-    return uploaded
-  } catch (error) {
-    await deleteConversationAttachmentObjects({
-      conversationId,
-      attachments: uploaded,
-    }).catch(cleanupError => {
-      console.error(
-        "Failed to roll back conversation attachments",
-        cleanupError
-      )
-    })
-    throw error
+  if (data.byteLength !== attachment.size) {
+    throw new HTTPError(
+      `${attachment.filename} did not match the size reported by Slack`,
+      400
+    )
   }
+  const metadata = await validateFileContent({
+    data,
+    filename: attachment.filename,
+    mimetype: attachment.mimetype,
+  })
+  await objectStore.upload({
+    bucket: ObjectStoreBuckets.APPS,
+    filename: getConversationAttachmentObjectStoreKey({
+      workspaceId: context.getOrThrowWorkspaceId(),
+      conversationId,
+      attachmentId: attachment.id,
+    }),
+    body: data,
+    type: attachment.mimetype,
+  })
+  return metadata
 }
 
 export const deleteConversationAttachmentObjects = async ({
@@ -290,23 +251,54 @@ export const deleteConversationAttachmentObjects = async ({
   )
 }
 
-const readAttachment = async ({
-  conversationId,
-  attachment,
-}: {
-  conversationId: string
-  attachment: ChatConversationAttachment
-}) => {
-  const workspaceId = context.getOrThrowWorkspaceId()
-  const { stream } = await objectStore.getReadStream(
-    ObjectStoreBuckets.APPS,
-    getConversationAttachmentObjectStoreKey({
-      workspaceId,
-      conversationId,
-      attachmentId: attachment.id,
-    })
+const getSearchResultText = (row: RagSearchResultItem) => {
+  if (typeof row.content === "string") {
+    return row.content.trim()
+  }
+  return (row.content || [])
+    .map(part =>
+      [part.text, part.retrievedContext?.text, part.retrieved_context?.text]
+        .find(value => typeof value === "string")
+        ?.trim()
+    )
+    .filter((value): value is string => !!value)
+    .join("\n")
+}
+
+const getSearchResultContexts = (row: RagSearchResultItem) => [
+  row.retrievedContext,
+  row.retrieved_context,
+  ...(Array.isArray(row.content)
+    ? row.content.flatMap(part => [
+        part.retrievedContext,
+        part.retrieved_context,
+      ])
+    : []),
+]
+
+const getSearchResultSource = (row: RagSearchResultItem) => {
+  const candidates = [
+    row.file_id,
+    row.filename,
+    ...getSearchResultContexts(row).flatMap(searchContext => [
+      searchContext?.mediaId,
+      searchContext?.media_id,
+      searchContext?.title,
+      searchContext?.uri,
+    ]),
+    row.id,
+  ]
+  return candidates.find(
+    (candidate): candidate is string =>
+      typeof candidate === "string" && !!candidate.trim()
   )
-  return await consumeBuffer(stream)
+}
+
+const getSearchResultPage = (row: RagSearchResultItem) => {
+  const page = getSearchResultContexts(row)
+    .map(context => context?.pageNumber ?? context?.page_number)
+    .find(value => value != null)
+  return page == null ? undefined : String(page)
 }
 
 export const addConversationAttachmentsToModelMessages = async ({
@@ -315,55 +307,99 @@ export const addConversationAttachmentsToModelMessages = async ({
   attachmentIds,
 }: {
   messages: ModelMessage[]
-  conversation: Pick<ChatConversation, "_id" | "attachments">
+  conversation: Pick<
+    ChatConversation,
+    "_id" | "attachments" | "attachmentVectorStoreId"
+  >
   attachmentIds?: string[]
 }): Promise<ModelMessage[]> => {
   const conversationId = conversation._id
-  if (!conversationId) {
+  if (!conversationId || !conversation.attachmentVectorStoreId) {
     return messages
   }
   const selectedIds = attachmentIds ? new Set(attachmentIds) : undefined
   const attachments = (conversation.attachments || []).filter(
-    attachment => !selectedIds || selectedIds.has(attachment.id)
+    attachment =>
+      attachment.status === ConversationAttachmentStatus.READY &&
+      (!selectedIds || selectedIds.has(attachment.id))
   )
   if (!attachments.length) {
     return messages
   }
 
-  const content: UserContent = []
-  let textLength = 0
-  for (const attachment of attachments) {
-    const data = await readAttachment({ conversationId, attachment })
-    if (TEXT_MIME_TYPES.has(attachment.mimetype)) {
-      const text = new TextDecoder("utf-8", { fatal: true }).decode(data)
-      textLength += text.length
-      if (textLength > MAX_CONVERSATION_ATTACHMENT_TEXT_LENGTH) {
-        throw new HTTPError(
-          "Conversation text attachments exceed the 200,000-character limit",
-          400
-        )
-      }
-      content.push({
-        type: "text",
-        text: `\n\n<conversation-file name=${JSON.stringify(
-          attachment.filename
-        )}>\n${text}\n</conversation-file>`,
-      })
-    } else if (IMAGE_MIME_TYPES.has(attachment.mimetype)) {
-      content.push({
-        type: "image",
-        image: data,
-        mediaType: attachment.mimetype,
-      })
-    } else {
-      content.push({
-        type: "file",
-        data,
-        filename: attachment.filename,
-        mediaType: attachment.mimetype,
-      })
-    }
+  const lastUserMessage = messages.findLast(message => message.role === "user")
+  if (!lastUserMessage) {
+    return messages
   }
+  const question =
+    typeof lastUserMessage.content === "string"
+      ? lastUserMessage.content
+      : lastUserMessage.content
+          .filter(part => part.type === "text")
+          .map(part => part.text)
+          .join("\n")
+  if (!question.trim()) {
+    return messages
+  }
+
+  const selectedSources = new Map(
+    attachments.flatMap(attachment =>
+      attachment.ragSourceId
+        ? [
+            [attachment.ragSourceId, attachment] as const,
+            [attachment.filename, attachment] as const,
+          ]
+        : []
+    )
+  )
+  const rows = await searchGeminiFileStore({
+    vectorStoreId: conversation.attachmentVectorStoreId,
+    query: question,
+  })
+  const maxCharacters =
+    MAX_CONVERSATION_ATTACHMENT_CONTEXT_TOKENS * ESTIMATED_CHARACTERS_PER_TOKEN
+  let usedCharacters = 0
+  let usedChunks = 0
+  const contextParts: string[] = []
+  for (const row of rows) {
+    if (usedChunks >= MAX_CONVERSATION_ATTACHMENT_CONTEXT_CHUNKS) {
+      break
+    }
+    const source = getSearchResultSource(row)
+    const attachment = source ? selectedSources.get(source) : undefined
+    if (!attachment) {
+      continue
+    }
+    const text = getSearchResultText(row)
+    if (!text) {
+      continue
+    }
+    const remaining = maxCharacters - usedCharacters
+    if (remaining <= 0) {
+      break
+    }
+    const page = getSearchResultPage(row)
+    const selectedText = text.slice(0, remaining)
+    contextParts.push(
+      `<conversation-file name=${JSON.stringify(attachment.filename)}${
+        page ? ` page=${JSON.stringify(page)}` : ""
+      }>\n${selectedText}\n</conversation-file>`
+    )
+    usedCharacters += selectedText.length
+    usedChunks++
+  }
+  if (!contextParts.length) {
+    return messages
+  }
+
+  const content: UserContent = [
+    {
+      type: "text",
+      text: `\n\nRelevant context retrieved from conversation files:\n${contextParts.join(
+        "\n\n"
+      )}`,
+    },
+  ]
 
   const lastUserIndex = messages.findLastIndex(
     message => message.role === "user"

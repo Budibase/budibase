@@ -34,6 +34,12 @@ export const prepareChatConversationForSave = ({
   const attachments = chat.attachments ?? existingChat?.attachments
   const attachmentExpiresAt =
     chat.attachmentExpiresAt ?? existingChat?.attachmentExpiresAt
+  const attachmentVectorStoreId =
+    chat.attachmentVectorStoreId ?? existingChat?.attachmentVectorStoreId
+  const attachmentDeletingAt =
+    chat.attachmentDeletingAt ?? existingChat?.attachmentDeletingAt
+  const pendingAttachmentTurns =
+    chat.pendingAttachmentTurns ?? existingChat?.pendingAttachmentTurns
 
   if (!agentId) {
     throw new HTTPError("agentId is required", 400)
@@ -51,6 +57,9 @@ export const prepareChatConversationForSave = ({
     ...(channel && { channel }),
     ...(attachments?.length && { attachments }),
     ...(attachmentExpiresAt && { attachmentExpiresAt }),
+    ...(attachmentVectorStoreId && { attachmentVectorStoreId }),
+    ...(attachmentDeletingAt && { attachmentDeletingAt }),
+    ...(pendingAttachmentTurns?.length && { pendingAttachmentTurns }),
   }
 }
 
