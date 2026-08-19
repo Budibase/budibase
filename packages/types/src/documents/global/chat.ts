@@ -68,6 +68,7 @@ export interface ChatConversationAttachment {
   mimetype: string
   size: number
   textLength?: number
+  pageCount?: number
   uploadedAt: string
 }
 

@@ -12,7 +12,6 @@ import { ObjectStoreBuckets } from "../../../../constants"
 export const MAX_CONVERSATION_ATTACHMENT_COUNT = 3
 export const MAX_CONVERSATION_ATTACHMENT_BYTES = 10 * 1024 * 1024
 export const MAX_CONVERSATION_ATTACHMENT_TEXT_LENGTH = 200_000
-export const MAX_CONVERSATION_ATTACHMENT_PDF_PAGES = 50
 
 const TEXT_MIME_TYPES = new Set([
   "text/plain",
@@ -110,6 +109,11 @@ const assertSupportedMetadata = (
 const hasPrefix = (data: Buffer, prefix: number[]) =>
   prefix.every((byte, index) => data[index] === byte)
 
+interface ValidatedFileMetadata {
+  textLength?: number
+  pageCount?: number
+}
+
 const validateFileContent = async ({
   data,
   filename,
@@ -118,7 +122,7 @@ const validateFileContent = async ({
   data: Buffer
   filename: string
   mimetype: string
-}) => {
+}): Promise<ValidatedFileMetadata> => {
   if (mimetype === "application/pdf") {
     if (!hasPrefix(data, [0x25, 0x50, 0x44, 0x46, 0x2d])) {
       throw new HTTPError(`${filename} is not a valid PDF`, 400)
@@ -126,34 +130,30 @@ const validateFileContent = async ({
     const parser = new PDFParse({ data: Uint8Array.from(data) })
     try {
       const info = await parser.getInfo()
-      if (info.total > MAX_CONVERSATION_ATTACHMENT_PDF_PAGES) {
-        throw new HTTPError(
-          `${filename} exceeds the ${MAX_CONVERSATION_ATTACHMENT_PDF_PAGES}-page limit`,
-          400
-        )
-      }
+      return { pageCount: info.total }
     } finally {
       await parser.destroy()
     }
-    return
   }
 
   if (mimetype === "image/png") {
     if (!hasPrefix(data, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) {
       throw new HTTPError(`${filename} is not a valid PNG image`, 400)
     }
-    return
+    return {}
   }
 
   if (IMAGE_MIME_TYPES.has(mimetype)) {
     if (!hasPrefix(data, [0xff, 0xd8, 0xff])) {
       throw new HTTPError(`${filename} is not a valid JPEG image`, 400)
     }
-    return
+    return {}
   }
 
   try {
-    return new TextDecoder("utf-8", { fatal: true }).decode(data).length
+    return {
+      textLength: new TextDecoder("utf-8", { fatal: true }).decode(data).length,
+    }
   } catch {
     throw new HTTPError(`${filename} is not valid UTF-8 text`, 400)
   }
@@ -217,12 +217,12 @@ export const uploadConversationAttachments = async ({
         )
       }
       const mimetype = normalizeMimetype(input.mimetype)
-      const attachmentTextLength = await validateFileContent({
+      const metadata = await validateFileContent({
         data,
         filename: input.filename,
         mimetype,
       })
-      textLength += attachmentTextLength || 0
+      textLength += metadata.textLength || 0
       if (textLength > MAX_CONVERSATION_ATTACHMENT_TEXT_LENGTH) {
         throw new HTTPError(
           "Conversation text attachments exceed the 200,000-character limit. Use /new to start another conversation.",
@@ -237,7 +237,7 @@ export const uploadConversationAttachments = async ({
         filename: input.filename.trim(),
         mimetype,
         size: data.byteLength,
-        textLength: attachmentTextLength,
+        ...metadata,
         uploadedAt: new Date().toISOString(),
       }
       await objectStore.upload({
