@@ -172,19 +172,12 @@ export default class BaseCache {
   ): Promise<number> {
     key = opts.useTenancy ? generateTenantKey(key) : key
     const client = await this.getClient()
-    const count = await client.increment(key)
     if (ttlSeconds) {
-      await client.setExpiry(key, ttlSeconds)
+      return await client.incrementWithExpiry({
+        key,
+        expirySeconds: ttlSeconds,
+      })
     }
-    return count
-  }
-
-  /**
-   * Delete the entry if the provided value matches the stored one.
-   */
-  async deleteIfValue(key: string, value: any, opts = { useTenancy: true }) {
-    key = opts.useTenancy ? generateTenantKey(key) : key
-    const client = await this.getClient()
-    await client.deleteIfValue(key, value)
+    return await client.increment(key)
   }
 }

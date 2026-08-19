@@ -1,4 +1,5 @@
 import type { JSONValue } from "../core"
+import type { FunctionQueryCapability, UserBindings } from "../documents"
 
 export enum FunctionErrorCode {
   FUNCTIONS_DISABLED = "FUNCTIONS_DISABLED",
@@ -161,4 +162,18 @@ export interface FunctionExecutor {
   health: () => Promise<FunctionExecutorHealth>
   execute: (request: FunctionRunRequest) => Promise<FunctionRunResult>
   terminate: (runId: string) => Promise<void>
+}
+
+export interface FunctionRunGrant {
+  runId: string
+  workspaceId: string
+  functionId: string
+  sourceHash: string
+  automationId: string
+  automationStepId: string
+  executionUser?: UserBindings
+  capabilities: Record<string, FunctionQueryCapability>
+  remainingQueryCalls: number
+  limits: FunctionRunLimits
+  expiresAt: number
 }
