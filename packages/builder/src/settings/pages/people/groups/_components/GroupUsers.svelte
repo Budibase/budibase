@@ -14,7 +14,7 @@
   import { fetchData, Utils } from "@budibase/frontend-core"
   import { API } from "@/api"
   import { groups } from "@/stores/portal/groups"
-  import { setContext, untrack } from "svelte"
+  import { setContext } from "svelte"
   import { bb } from "@/stores/bb"
 
   import RemoveUserTableRenderer from "../_components/RemoveUserTableRenderer.svelte"
@@ -40,30 +40,24 @@
   const debouncedUpdateEmailSearch = Utils.debounce((value?: string) => {
     emailSearch = value || undefined
   }, 200)
-  const fetchGroupUsers = fetchData({
-    API,
-    datasource: {
-      type: "groupUser",
-    },
-    options: {
-      limit: PAGE_SIZE,
-      query: {
-        groupId: untrack(() => groupId),
+  const fetchGroupUsers = $derived(
+    fetchData({
+      API,
+      datasource: {
+        type: "groupUser",
       },
-    },
-  })
+      options: {
+        limit: PAGE_SIZE,
+        query: {
+          groupId,
+          emailSearch,
+        },
+      },
+    })
+  )
 
   $effect(() => {
     debouncedUpdateEmailSearch(emailSearchInput)
-  })
-
-  $effect(() => {
-    fetchGroupUsers.update({
-      query: {
-        groupId,
-        emailSearch,
-      },
-    })
   })
 
   const userSchema = $derived({
