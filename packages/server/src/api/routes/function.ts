@@ -1,5 +1,6 @@
 import Joi from "joi"
 import { middleware } from "@budibase/backend-core"
+import { DEFAULT_FUNCTION_LIMITS } from "@budibase/types"
 import { functionsEnabled } from "../../middleware/functionsEnabled"
 import * as controller from "../controllers/function"
 import { builderRoutes } from "./endpointGroups"
@@ -12,7 +13,19 @@ const capabilitySchema = Joi.object({
 
 const draftSchema = {
   name: Joi.string().max(255).required(),
-  source: Joi.string().required().allow(""),
+  source: Joi.string()
+    .custom((value, helpers) => {
+      if (
+        Buffer.byteLength(value, "utf8") >
+        DEFAULT_FUNCTION_LIMITS.compile.maxSourceBytes
+      ) {
+        return helpers.error("string.max")
+      }
+      return value
+    })
+    .messages({ "string.max": "Function source exceeds the maximum size." })
+    .required()
+    .allow(""),
   capabilities: Joi.array().items(capabilitySchema).required(),
 }
 

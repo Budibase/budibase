@@ -678,7 +678,9 @@ export default async function (): Promise<FunctionResult> {
         },
         {
           status: 400,
-          body: { message: "Function source exceeds the maximum size." },
+          body: {
+            message: "Invalid body - Function source exceeds the maximum size.",
+          },
         }
       )
     })
