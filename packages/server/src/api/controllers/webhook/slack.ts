@@ -1,4 +1,4 @@
-import { context, HTTPError } from "@budibase/backend-core"
+import { context, isHTTPError } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
 import type { SlackEvent } from "@chat-adapter/slack"
 import { createSlackAdapter } from "@chat-adapter/slack"
@@ -288,10 +288,9 @@ const createSlackInputHandler = ({
       })
     } catch (error) {
       console.error("Slack webhook processing failed", error)
-      const msg =
-        error instanceof HTTPError
-          ? error.message
-          : SLACK_FALLBACK_ERROR_MESSAGE
+      const msg = isHTTPError(error)
+        ? error.message
+        : SLACK_FALLBACK_ERROR_MESSAGE
       await target.post(msg)
     }
   }

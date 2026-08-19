@@ -1,6 +1,6 @@
 import { WebClient } from "@slack/web-api"
 import { createSlackAdapter } from "@chat-adapter/slack"
-import { context, tenancy } from "@budibase/backend-core"
+import { tenancy } from "@budibase/backend-core"
 import {
   AgentChannelProvider,
   type ChatConversationChannel,
@@ -10,7 +10,7 @@ import {
   EscalationNotificationChannel,
 } from "@budibase/types"
 import sdk from "../../sdk"
-import { getEscalationText } from "./utils"
+import { findIntegrationAgent, getEscalationText } from "./utils"
 
 const buildEscalationBlocks = ({
   title,
@@ -59,21 +59,20 @@ const getSlackIntegration = async (
 ): Promise<
   { botToken: string; signingSecret: string; teamId?: string } | undefined
 > => {
-  return await context.doInWorkspaceContext(appId, async () => {
-    const agents = await sdk.ai.agents.fetch()
-    const agent = agentId
-      ? agents.find(a => a._id === agentId && a.slackIntegration?.botToken)
-      : agents.find(a => a.slackIntegration?.botToken)
-    if (!agent?.slackIntegration?.botToken) {
-      return undefined
-    }
-    const integration = sdk.ai.deployments.slack.validateSlackIntegration(agent)
-    return {
-      botToken: integration.botToken,
-      signingSecret: integration.signingSecret,
-      teamId: agent.slackIntegration.teamId,
-    }
-  })
+  const agent = await findIntegrationAgent(
+    appId,
+    agentId,
+    a => !!a.slackIntegration?.botToken
+  )
+  if (!agent) {
+    return undefined
+  }
+  const integration = sdk.ai.deployments.slack.validateSlackIntegration(agent)
+  return {
+    botToken: integration.botToken,
+    signingSecret: integration.signingSecret,
+    teamId: agent.slackIntegration?.teamId,
+  }
 }
 
 export async function sendSlackNotification({

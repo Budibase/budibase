@@ -16,13 +16,27 @@ export interface MSTeamsChannel {
   teamName: string
 }
 
+// Cursor is an opaque provider token - callers only act on hasNext and echo
+// the cursor back verbatim.
+export interface PagedChannels<T> {
+  channels: T[]
+  hasNext: boolean
+  cursor?: string
+}
+
 export interface ChatLinksEndpoints {
   fetchChatIdentityLinks: (
     provider?: ChatIdentityLinkProvider,
     agentId?: string
   ) => Promise<ChatIdentityLink[]>
-  fetchSlackChannels: (agentId: string) => Promise<SlackChannel[]>
-  fetchMSTeamsChannels: (agentId: string) => Promise<MSTeamsChannel[]>
+  fetchSlackChannels: (
+    agentId: string,
+    cursor?: string
+  ) => Promise<PagedChannels<SlackChannel>>
+  fetchMSTeamsChannels: (
+    agentId: string,
+    cursor?: string
+  ) => Promise<PagedChannels<MSTeamsChannel>>
 }
 
 export const buildChatLinksEndpoints = (
@@ -36,12 +50,18 @@ export const buildChatLinksEndpoints = (
     const query = params ? `?${params}` : ""
     return await API.get({ url: `/api/chat-links${query}` })
   },
-  fetchSlackChannels: async agentId => {
-    const query = new URLSearchParams({ agentId }).toString()
+  fetchSlackChannels: async (agentId, cursor) => {
+    const query = new URLSearchParams({
+      agentId,
+      ...(cursor ? { cursor } : {}),
+    }).toString()
     return await API.get({ url: `/api/slack-channels?${query}` })
   },
-  fetchMSTeamsChannels: async agentId => {
-    const query = new URLSearchParams({ agentId }).toString()
+  fetchMSTeamsChannels: async (agentId, cursor) => {
+    const query = new URLSearchParams({
+      agentId,
+      ...(cursor ? { cursor } : {}),
+    }).toString()
     return await API.get({ url: `/api/teams-channels?${query}` })
   },
 })

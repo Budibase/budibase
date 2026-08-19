@@ -1,4 +1,9 @@
-import { context, features, HTTPError } from "@budibase/backend-core"
+import {
+  context,
+  features,
+  HTTPError,
+  isHTTPError,
+} from "@budibase/backend-core"
 import { ChatCommands, SupportedChatCommands } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
@@ -202,10 +207,9 @@ export async function discordWebhook(
             })
           } catch (error) {
             console.error("Discord webhook processing failed", error)
-            const msg =
-              error instanceof Error
-                ? error.message
-                : "Sorry, something went wrong while processing your request."
+            const msg = isHTTPError(error)
+              ? error.message
+              : "Sorry, something went wrong while processing your request."
             try {
               await event.channel.post(msg)
             } catch {
