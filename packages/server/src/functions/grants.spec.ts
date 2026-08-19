@@ -132,6 +132,28 @@ describe("Function run grants", () => {
     expect(await client.getTTL(queryCallCountKey)).toBeGreaterThan(0)
   })
 
+  it("accepts a live grant when Redis reports a zero-second TTL", async () => {
+    const { grantToken } = await createFunctionRunGrant(
+      scope,
+      FUNCTION_RUN_REQUEST_FIXTURE.limits,
+      client
+    )
+    const getTTL = jest.spyOn(client, "getTTL").mockResolvedValueOnce(0)
+    const incrementWithExpiry = jest.spyOn(client, "incrementWithExpiry")
+
+    await expect(
+      getFunctionRunGrant(scope.runId, grantToken, client)
+    ).resolves.toMatchObject({
+      remainingQueryCalls:
+        FUNCTION_RUN_REQUEST_FIXTURE.limits.maxQueryCalls - 1,
+    })
+    expect(getTTL).toHaveBeenCalledWith(scope.runId)
+    expect(incrementWithExpiry).toHaveBeenCalledWith({
+      key: `${scope.runId}:query-call-count`,
+      expirySeconds: 1,
+    })
+  })
+
   it("does not replace an existing run grant", async () => {
     await createFunctionRunGrant(
       scope,
