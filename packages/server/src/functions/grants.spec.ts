@@ -121,6 +121,43 @@ describe("Function run grants", () => {
     expect((await client.get(scope.runId)).activeQueryCalls).toBe(0)
   })
 
+  it("accepts a live grant when Redis reports a zero-second TTL", async () => {
+    const { grantToken } = await createFunctionRunGrant(
+      scope,
+      FUNCTION_RUN_REQUEST_FIXTURE.limits,
+      client
+    )
+    const getTTL = jest.spyOn(client, "getTTL").mockResolvedValueOnce(0)
+    const store = jest.spyOn(client, "store")
+
+    await expect(
+      consumeFunctionQueryGrant(
+        scope.runId,
+        grantToken,
+        "cap_customers",
+        ["status"],
+        scope.workspaceId,
+        client
+      )
+    ).resolves.toMatchObject({
+      status: "allowed",
+      grant: {
+        remainingQueryCalls:
+          FUNCTION_RUN_REQUEST_FIXTURE.limits.maxQueryCalls - 1,
+      },
+    })
+    expect(getTTL).toHaveBeenCalledWith(scope.runId)
+    expect(store).toHaveBeenCalledWith(
+      scope.runId,
+      expect.objectContaining({
+        remainingQueryCalls:
+          FUNCTION_RUN_REQUEST_FIXTURE.limits.maxQueryCalls - 1,
+        activeQueryCalls: 1,
+      }),
+      1
+    )
+  })
+
   it("does not recreate a grant when cleanup races with consumption", async () => {
     const { grantToken } = await createFunctionRunGrant(
       scope,
