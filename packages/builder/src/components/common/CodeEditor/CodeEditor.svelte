@@ -588,7 +588,7 @@
   }
 
   /* HBS tags */
-  :global(.hbs-tag) {
+  .code-editor :global(.hbs-tag) {
     display: inline-flex;
     align-items: center;
     vertical-align: middle;
@@ -601,17 +601,17 @@
     line-height: 1.4;
     white-space: nowrap;
   }
-  :global(.hbs-tag--error) {
+  .code-editor :global(.hbs-tag--error) {
     background: #e3485033;
   }
-  :global(.hbs-tag__icon) {
+  .code-editor :global(.hbs-tag__icon) {
     width: 14px;
     height: 14px;
     border-radius: 3px;
     object-fit: contain;
     flex-shrink: 0;
   }
-  :global(.hbs-tag__text) {
+  .code-editor :global(.hbs-tag__text) {
     line-height: 1.3;
   }
 
