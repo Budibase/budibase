@@ -142,5 +142,4 @@ describe("normalizeConfiguredOperationTools", () => {
       })
     ).toBe(false)
   })
-
 })

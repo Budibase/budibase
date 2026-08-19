@@ -114,13 +114,6 @@
     })
   )
 
-  let configuredTools = $derived.by(() =>
-    (operation?.enabledTools || [])
-      .map(config =>
-        availableTools.find(tool => tool.runtimeBinding === config.toolName)
-      )
-      .filter((tool): tool is AgentTool => !!tool)
-  )
   let configuredToolList = $derived(
     (operation?.enabledTools || [])
       .map(config => ({
@@ -134,6 +127,11 @@
           b.tool?.readableBinding || b.config.toolName
         )
       )
+  )
+  let configuredTools = $derived(
+    configuredToolList
+      .map(item => item.tool)
+      .filter((tool): tool is AgentTool => !!tool)
   )
   let promptBindings = $derived(
     toAgentPromptBindings({ tools: configuredTools, webSearchConfigured })
@@ -888,8 +886,8 @@
     {#if toolToRemove?.readableBinding}
       {#if toolToRemoveIsReferenced}
         <b>{toolToRemove.readableBinding}</b> is referenced in the instructions.
-        Removing the tool will leave those references in place, and they won't
-        resolve until the tool is reconfigured.
+        Removing the tool will leave those references in place, and they won't resolve
+        until the tool is reconfigured.
       {:else}
         Remove <b>{toolToRemove.readableBinding}</b> from this operation?
       {/if}
