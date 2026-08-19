@@ -198,10 +198,8 @@
 
   <section class="section">
     <div>
-      <Body
-        color="var(--spectrum-global-color-gray-900)"
-        weight="500"
-        size="XS">Messaging channels</Body
+      <Body color="var(--spectrum-global-color-gray-900)" weight="500" size="XS"
+        >Messaging channels</Body
       >
     </div>
     <div>
