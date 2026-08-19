@@ -174,12 +174,7 @@ export const createRunSummary = async ({
   const response = await database.put(summary, {
     returnDoc: true,
   })
-  clearOldHistory(database).catch(error => {
-    console.error(
-      `Failed to start Function run history cleanup for database "${database.name}"`,
-      error
-    )
-  })
+  void clearOldHistory(database)
   return sanitizeSummary(response.doc)
 }
 
@@ -296,7 +291,7 @@ export const clearOldHistory = async (
       await database.bulkRemove(expired)
     }
   } catch (error) {
-    console.log(
+    console.error(
       `Failed to cleanup Function run history for database "${database.name}"`,
       error
     )
