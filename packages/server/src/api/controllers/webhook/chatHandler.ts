@@ -234,19 +234,6 @@ const matchesScope = ({
     return false
   }
 
-  if (provider === AgentChannelProvider.DISCORD) {
-    if (
-      ch?.channelId !== scope.channelId ||
-      (ch?.threadId || undefined) !== scope.threadId
-    ) {
-      return false
-    }
-    if (ch?.externalUserId) {
-      return ch.externalUserId === scope.externalUserId
-    }
-    return chat.userId === `discord:${scope.externalUserId}`
-  }
-
   if (provider === AgentChannelProvider.MSTEAMS) {
     return (
       ch?.conversationId === scope.conversationId &&
@@ -257,14 +244,6 @@ const matchesScope = ({
   }
 
   if (provider === AgentChannelProvider.SLACK) {
-    return (
-      ch?.channelId === scope.channelId &&
-      (ch?.threadId || undefined) === scope.threadId &&
-      ch?.externalUserId === scope.externalUserId
-    )
-  }
-
-  if (provider === AgentChannelProvider.TELEGRAM) {
     return (
       ch?.channelId === scope.channelId &&
       (ch?.threadId || undefined) === scope.threadId &&
@@ -391,14 +370,8 @@ export interface HandleChatMessageParams {
 }
 
 const providerDisplayName = (provider: HandleChatMessageParams["provider"]) => {
-  if (provider === AgentChannelProvider.DISCORD) {
-    return "Discord"
-  }
   if (provider === AgentChannelProvider.MSTEAMS) {
     return "Teams"
-  }
-  if (provider === AgentChannelProvider.TELEGRAM) {
-    return "Telegram"
   }
   return "Slack"
 }
@@ -429,13 +402,7 @@ const getSyntheticUserId = ({
       : `msteams:${externalUserId}`
   }
 
-  if (provider === AgentChannelProvider.DISCORD) {
-    return channel.guildId
-      ? `discord:${channel.guildId}:${externalUserId}`
-      : `discord:${externalUserId}`
-  }
-
-  return `${provider}:${externalUserId}`
+  throw provider satisfies never
 }
 
 const createTransientPublicUser = ({
@@ -660,19 +627,13 @@ export const handleChatMessage = async ({
         chatId,
         idleTimeoutMs,
       })
-      const msg =
-        provider === AgentChannelProvider.DISCORD
-          ? `Started a new conversation. Use /${ChatCommands.ASK} with a message.`
-          : "Started a new conversation. Send a message to continue."
+      const msg = "Started a new conversation. Send a message to continue."
       await reply(msg)
       return
     }
 
     if (!content) {
-      const msg =
-        provider === AgentChannelProvider.DISCORD
-          ? `Please provide a message after /${ChatCommands.ASK}.`
-          : `Please provide a message after "${ChatCommands.ASK}", or just send a normal message.`
+      const msg = `Please provide a message after "${ChatCommands.ASK}", or just send a normal message.`
       await reply(msg)
       return
     }

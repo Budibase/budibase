@@ -138,14 +138,8 @@ const getCurrentGlobalUserId = (ctx: UserCtx) => {
 }
 
 const providerDisplayName = (provider: ChatIdentityLinkProvider) => {
-  if (provider === AgentChannelProvider.DISCORD) {
-    return "Discord"
-  }
   if (provider === AgentChannelProvider.MSTEAMS) {
     return "Teams"
-  }
-  if (provider === AgentChannelProvider.TELEGRAM) {
-    return "Telegram"
   }
   if (provider === AgentChannelProvider.SLACK) {
     return "Slack"

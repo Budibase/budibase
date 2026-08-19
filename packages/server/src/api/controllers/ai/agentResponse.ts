@@ -21,12 +21,6 @@ const toMSTeamsIntegrationResponse = (
 
 export const obfuscateAgentSecrets = (agent: Agent): Agent => ({
   ...agent,
-  ...(agent.discordIntegration && {
-    discordIntegration: maskSecretFields(agent.discordIntegration, [
-      "publicKey",
-      "botToken",
-    ]),
-  }),
   ...(agent.MSTeamsIntegration && {
     MSTeamsIntegration: toMSTeamsIntegrationResponse(agent.MSTeamsIntegration),
   }),
@@ -35,12 +29,6 @@ export const obfuscateAgentSecrets = (agent: Agent): Agent => ({
       "clientSecret",
       "botToken",
       "signingSecret",
-    ]),
-  }),
-  ...(agent.telegramIntegration && {
-    telegramIntegration: maskSecretFields(agent.telegramIntegration, [
-      "botToken",
-      "webhookSecretToken",
     ]),
   }),
 })

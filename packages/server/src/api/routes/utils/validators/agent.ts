@@ -15,19 +15,6 @@ const OPTIONAL_UUID = OPTIONAL_STRING.custom((value: string, helpers) => {
   return helpers.message({ custom: "{{#label}} must be a valid UUID" })
 })
 
-const DISCORD_INTEGRATION_SCHEMA = Joi.object({
-  applicationId: OPTIONAL_STRING,
-  publicKey: OPTIONAL_STRING,
-  botToken: OPTIONAL_STRING,
-  guildId: OPTIONAL_STRING,
-  chatAppId: OPTIONAL_STRING,
-  interactionsEndpointUrl: OPTIONAL_STRING,
-  idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
-  requireUserLink: Joi.boolean().optional(),
-})
-  .optional()
-  .allow(null)
-
 const TEAMS_INTEGRATION_SCHEMA = Joi.object({
   appId: OPTIONAL_UUID,
   appPassword: OPTIONAL_STRING,
@@ -53,17 +40,6 @@ const SLACK_INTEGRATION_SCHEMA = Joi.object({
   messagingEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
   requireUserLink: Joi.boolean().optional(),
-})
-  .optional()
-  .allow(null)
-
-const TELEGRAM_INTEGRATION_SCHEMA = Joi.object({
-  botToken: OPTIONAL_STRING,
-  webhookSecretToken: OPTIONAL_STRING,
-  botUserName: OPTIONAL_STRING,
-  chatAppId: OPTIONAL_STRING,
-  messagingEndpointUrl: OPTIONAL_STRING,
-  idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
 })
   .optional()
   .allow(null)
@@ -107,10 +83,8 @@ export function createAgentValidator() {
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
-      discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
-      telegramIntegration: TELEGRAM_INTEGRATION_SCHEMA,
     })
   )
 }
@@ -134,10 +108,8 @@ export function updateAgentValidator() {
       updatedAt: OPTIONAL_STRING,
       publishedAt: OPTIONAL_STRING,
       createdBy: OPTIONAL_STRING,
-      discordIntegration: DISCORD_INTEGRATION_SCHEMA,
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
-      telegramIntegration: TELEGRAM_INTEGRATION_SCHEMA,
     }).unknown(true)
   )
 }
@@ -156,10 +128,6 @@ export function updateAgentOperationValidator() {
   return auth.joiValidator.body(AGENT_OPERATION_CONFIG_SCHEMA.min(1).required())
 }
 
-export function syncAgentDiscordCommandsValidator() {
-  return chatAppIdBodyValidator()
-}
-
 export function provisionAgentMSTeamsChannelValidator() {
   return chatAppIdBodyValidator()
 }
@@ -172,10 +140,6 @@ export function createAgentSlackAppValidator() {
   return auth.joiValidator.body(Joi.object().optional().allow(null))
 }
 
-export function provisionAgentTelegramChannelValidator() {
-  return chatAppIdBodyValidator()
-}
-
 function chatAppIdBodyValidator() {
   return auth.joiValidator.body(
     Joi.object({
@@ -183,14 +147,6 @@ function chatAppIdBodyValidator() {
     })
       .optional()
       .allow(null)
-  )
-}
-
-export function toggleAgentDiscordDeploymentValidator() {
-  return auth.joiValidator.body(
-    Joi.object({
-      enabled: Joi.boolean().required(),
-    }).required()
   )
 }
 
@@ -203,14 +159,6 @@ export function toggleAgentMSTeamsDeploymentValidator() {
 }
 
 export function toggleAgentSlackDeploymentValidator() {
-  return auth.joiValidator.body(
-    Joi.object({
-      enabled: Joi.boolean().required(),
-    }).required()
-  )
-}
-
-export function toggleAgentTelegramDeploymentValidator() {
   return auth.joiValidator.body(
     Joi.object({
       enabled: Joi.boolean().required(),

@@ -19,16 +19,12 @@ import {
   FetchAgentsResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
-  ProvisionAgentTelegramChannelRequest,
-  ProvisionAgentTelegramChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
   RequiredKeys,
   type ResolvedSlackIntegration,
   ToggleAgentDeploymentRequest,
   ToggleAgentDeploymentResponse,
-  SyncAgentDiscordCommandsRequest,
-  SyncAgentDiscordCommandsResponse,
   ToolMetadata,
   UpdateAgentRequest,
   UpdateAgentResponse,
@@ -99,10 +95,6 @@ interface ConfiguredDeployment<TValidatedIntegration> {
   integration: TValidatedIntegration
 }
 
-type DiscordDeployment = ConfiguredDeployment<
-  ReturnType<typeof sdk.ai.deployments.discord.validateDiscordIntegration>
->
-
 type SlackDeployment = ConfiguredDeployment<ResolvedSlackIntegration>
 
 const configureDeploymentChannel = async <
@@ -153,25 +145,6 @@ const configureDeploymentChannel = async <
   }
 }
 
-const persistDiscordDeployment = async ({
-  agent,
-  chatAppId,
-  interactionsEndpointUrl,
-}: {
-  agent: Agent
-  chatAppId?: string
-  interactionsEndpointUrl?: string
-}) => {
-  await sdk.ai.agents.update({
-    ...agent,
-    discordIntegration: {
-      ...agent.discordIntegration,
-      chatAppId,
-      interactionsEndpointUrl,
-    },
-  })
-}
-
 const persistMSTeamsDeployment = async ({
   agent,
   chatAppId,
@@ -209,56 +182,6 @@ const persistSlackDeployment = async ({
     },
   })
 }
-
-const persistTelegramDeployment = async ({
-  agent,
-  chatAppId,
-  messagingEndpointUrl,
-}: {
-  agent: Agent
-  chatAppId: string
-  messagingEndpointUrl: string
-}) => {
-  await sdk.ai.agents.update({
-    ...agent,
-    telegramIntegration: {
-      ...agent.telegramIntegration,
-      chatAppId,
-      messagingEndpointUrl,
-    },
-  })
-}
-
-const configureDiscordDeployment = async ({
-  agent,
-  agentId,
-  requestedChatAppId,
-}: {
-  agent: Agent
-  agentId: string
-  requestedChatAppId?: string
-}): Promise<DiscordDeployment> =>
-  await configureDeploymentChannel({
-    agent,
-    agentId,
-    requestedChatAppId,
-    validateIntegration: sdk.ai.deployments.discord.validateDiscordIntegration,
-    resolveChatAppForAgent: sdk.ai.deployments.discord.resolveChatAppForAgent,
-    buildEndpointUrl: sdk.ai.deployments.discord.buildDiscordWebhookUrl,
-    beforeBuildEndpoint: async ({ applicationId, botToken, guildId }) => {
-      await sdk.ai.deployments.discord.syncApplicationCommands(
-        applicationId,
-        botToken,
-        guildId
-      )
-    },
-    persistIntegration: async (chatAppId, interactionsEndpointUrl) =>
-      await persistDiscordDeployment({
-        agent,
-        chatAppId,
-        interactionsEndpointUrl,
-      }),
-  })
 
 const configureSlackDeployment = async ({
   agent,
@@ -501,10 +424,8 @@ export async function createAgent(
     live: body.live,
     _deleted: false,
     createdBy: globalId,
-    discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
-    telegramIntegration: body.telegramIntegration,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
@@ -535,10 +456,8 @@ export async function updateAgent(
     iconColor: body.iconColor,
     live: body.live,
     publishedAt: undefined,
-    discordIntegration: body.discordIntegration,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
-    telegramIntegration: body.telegramIntegration,
   }
 
   const agent = await sdk.ai.agents.update({
@@ -547,35 +466,6 @@ export async function updateAgent(
   })
 
   ctx.body = toAgentResponse(agent)
-  ctx.status = 200
-}
-
-export async function syncAgentDiscordCommands(
-  ctx: UserCtx<
-    SyncAgentDiscordCommandsRequest,
-    SyncAgentDiscordCommandsResponse,
-    { agentId: string }
-  >
-) {
-  const { agentId } = ctx.params
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const requestedChatAppId = parseOptionalChatAppId(ctx.request.body?.chatAppId)
-
-  const { chatAppId, endpointUrl, integration } =
-    await configureDiscordDeployment({
-      agent,
-      agentId,
-      requestedChatAppId,
-    })
-
-  ctx.body = {
-    success: true,
-    chatAppId,
-    interactionsEndpointUrl: endpointUrl,
-    inviteUrl: sdk.ai.deployments.discord.buildDiscordInviteUrl(
-      integration.applicationId
-    ),
-  }
   ctx.status = 200
 }
 
@@ -835,82 +725,6 @@ export async function completeSlackOAuth(ctx: UserCtx<void, void>) {
   )
 }
 
-export async function provisionAgentTelegramChannel(
-  ctx: UserCtx<
-    ProvisionAgentTelegramChannelRequest,
-    ProvisionAgentTelegramChannelResponse,
-    { agentId: string }
-  >
-) {
-  const { agentId } = ctx.params
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const requestedChatAppId = parseOptionalChatAppId(ctx.request.body?.chatAppId)
-  const { chatAppId, endpointUrl, integration } =
-    await configureDeploymentChannel({
-      agent,
-      agentId,
-      requestedChatAppId,
-      validateIntegration:
-        sdk.ai.deployments.telegram.validateTelegramIntegration,
-      resolveChatAppForAgent:
-        sdk.ai.deployments.telegram.resolveChatAppForAgent,
-      buildEndpointUrl: sdk.ai.deployments.telegram.buildTelegramWebhookUrl,
-      persistIntegration: async (chatAppId, messagingEndpointUrl) =>
-        await persistTelegramDeployment({
-          agent,
-          chatAppId,
-          messagingEndpointUrl,
-        }),
-    })
-
-  let warning: string | undefined
-  try {
-    await sdk.ai.deployments.telegram.setTelegramWebhook({
-      botToken: integration.botToken,
-      webhookUrl: endpointUrl,
-      secretToken: integration.webhookSecretToken,
-    })
-  } catch (error: any) {
-    warning = error.message || "Failed to register webhook with Telegram"
-  }
-
-  ctx.body = {
-    success: true,
-    chatAppId,
-    messagingEndpointUrl: endpointUrl,
-    ...(warning ? { warning } : {}),
-  }
-  ctx.status = 200
-}
-
-export async function toggleAgentDiscordDeployment(
-  ctx: UserCtx<
-    ToggleAgentDeploymentRequest,
-    ToggleAgentDeploymentResponse,
-    { agentId: string }
-  >
-) {
-  const { agentId } = ctx.params
-  const { enabled } = ctx.request.body
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
-
-  if (enabled) {
-    await configureDiscordDeployment({
-      agent,
-      agentId,
-    })
-  } else {
-    await persistDiscordDeployment({
-      agent,
-      interactionsEndpointUrl: undefined,
-      chatAppId: undefined,
-    })
-  }
-
-  ctx.body = { success: true, enabled }
-  ctx.status = 200
-}
-
 export async function toggleAgentMSTeamsDeployment(
   ctx: UserCtx<
     ToggleAgentDeploymentRequest,
@@ -989,66 +803,6 @@ export async function toggleAgentSlackDeployment(
       ...agent,
       slackIntegration: {
         ...agent.slackIntegration,
-        messagingEndpointUrl: undefined,
-      },
-    })
-  }
-
-  ctx.body = { success: true, enabled }
-  ctx.status = 200
-}
-
-export async function toggleAgentTelegramDeployment(
-  ctx: UserCtx<
-    ToggleAgentDeploymentRequest,
-    ToggleAgentDeploymentResponse,
-    { agentId: string }
-  >
-) {
-  const { agentId } = ctx.params
-  const { enabled } = ctx.request.body
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
-
-  if (enabled) {
-    const requestedChatAppId = parseOptionalChatAppId(
-      agent.telegramIntegration?.chatAppId?.trim() || undefined
-    )
-    const { endpointUrl, integration } = await configureDeploymentChannel({
-      agent,
-      agentId,
-      requestedChatAppId,
-      validateIntegration:
-        sdk.ai.deployments.telegram.validateTelegramIntegration,
-      resolveChatAppForAgent:
-        sdk.ai.deployments.telegram.resolveChatAppForAgent,
-      buildEndpointUrl: sdk.ai.deployments.telegram.buildTelegramWebhookUrl,
-      persistIntegration: async (chatAppId, messagingEndpointUrl) =>
-        await persistTelegramDeployment({
-          agent,
-          chatAppId,
-          messagingEndpointUrl,
-        }),
-    })
-
-    await sdk.ai.deployments.telegram.setTelegramWebhook({
-      botToken: integration.botToken,
-      webhookUrl: endpointUrl,
-      secretToken: integration.webhookSecretToken,
-    })
-  } else {
-    const chatAppId = agent.telegramIntegration?.chatAppId?.trim()
-
-    if (chatAppId) {
-      await sdk.ai.deployments.shared.disableAgentOnChatApp({
-        chatAppId,
-        agentId,
-      })
-    }
-
-    await sdk.ai.agents.update({
-      ...agent,
-      telegramIntegration: {
-        ...agent.telegramIntegration,
         messagingEndpointUrl: undefined,
       },
     })

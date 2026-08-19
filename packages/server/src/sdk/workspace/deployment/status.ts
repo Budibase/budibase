@@ -122,19 +122,6 @@ export async function status() {
       aiconfig: agent.aiconfig,
       goal: agent.goal,
       live: agent.live,
-      discordIntegration: agent.discordIntegration
-        ? {
-            applicationId: agent.discordIntegration.applicationId,
-            publicKey: agent.discordIntegration.publicKey,
-            botToken: agent.discordIntegration.botToken,
-            guildId: agent.discordIntegration.guildId,
-            interactionsEndpointUrl:
-              agent.discordIntegration.interactionsEndpointUrl,
-            chatAppId: agent.discordIntegration.chatAppId,
-            idleTimeoutMinutes: agent.discordIntegration.idleTimeoutMinutes,
-            requireUserLink: agent.discordIntegration.requireUserLink,
-          }
-        : undefined,
       MSTeamsIntegration: agent.MSTeamsIntegration
         ? {
             appId: agent.MSTeamsIntegration.appId,

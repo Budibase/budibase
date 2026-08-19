@@ -13,15 +13,11 @@ import {
   createAgentOperationValidator,
   createAgentValidator,
   provisionAgentSlackChannelValidator,
-  provisionAgentTelegramChannelValidator,
   provisionAgentMSTeamsChannelValidator,
-  syncAgentDiscordCommandsValidator,
   syncAgentKnowledgeSourcesValidator,
-  toggleAgentDiscordDeploymentValidator,
   toggleAgentMSTeamsDeploymentValidator,
   toggleAgentSlackDeploymentValidator,
   runAgentTestSuiteValidator,
-  toggleAgentTelegramDeploymentValidator,
   updateAgentSharePointSiteValidator,
   updateAgentOperationValidator,
   updateAgentTestSuiteValidator,
@@ -49,16 +45,6 @@ builderAdminRoutes
   .post("/api/agent/:agentId/duplicate", ai.duplicateAgent)
   .delete("/api/agent/:agentId", ai.deleteAgent)
   .post(
-    "/api/agent/:agentId/discord/sync",
-    syncAgentDiscordCommandsValidator(),
-    ai.syncAgentDiscordCommands
-  )
-  .post(
-    "/api/agent/:agentId/discord/toggle",
-    toggleAgentDiscordDeploymentValidator(),
-    ai.toggleAgentDiscordDeployment
-  )
-  .post(
     "/api/agent/:agentId/ms-teams/provision",
     provisionAgentMSTeamsChannelValidator(),
     ai.provisionAgentMSTeamsChannel
@@ -85,16 +71,6 @@ builderAdminRoutes
     ai.createAgentSlackApp
   )
   .get("/api/agent/:agentId/slack/manifest", ai.downloadAgentSlackManifest)
-  .post(
-    "/api/agent/:agentId/telegram/toggle",
-    toggleAgentTelegramDeploymentValidator(),
-    ai.toggleAgentTelegramDeployment
-  )
-  .post(
-    "/api/agent/:agentId/telegram/provision",
-    provisionAgentTelegramChannelValidator(),
-    ai.provisionAgentTelegramChannel
-  )
   .get("/api/agent/tools", ai.fetchTools)
   .get("/api/agent/requests", ai.fetchAgentRequests)
   .get("/api/agent/:agentId/logs", ai.fetchAgentLogs)

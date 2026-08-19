@@ -22,16 +22,8 @@ export const configuredEscalationProviders = (
       agent?.slackIntegration?.messagingEndpointUrl,
     ],
     [
-      EscalationNotificationChannel.DISCORD,
-      agent?.discordIntegration?.interactionsEndpointUrl,
-    ],
-    [
       EscalationNotificationChannel.MSTEAMS,
       agent?.MSTeamsIntegration?.messagingEndpointUrl,
-    ],
-    [
-      EscalationNotificationChannel.TELEGRAM,
-      agent?.telegramIntegration?.messagingEndpointUrl,
     ],
   ]
   return channels.filter(([, url]) => url?.trim()).map(([provider]) => provider)

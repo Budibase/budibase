@@ -14,16 +14,10 @@ import {
   FetchAgentFileUrlResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
-  ProvisionAgentTelegramChannelRequest,
-  ProvisionAgentTelegramChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
-  SyncAgentDiscordCommandsRequest,
-  SyncAgentDiscordCommandsResponse,
   SyncAgentKnowledgeSourcesRequest,
   SyncAgentKnowledgeSourcesResponse,
-  ToggleAgentDeploymentRequest,
-  ToggleAgentDeploymentResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
   CreateAgentOperationRequest,
@@ -130,20 +124,6 @@ export class AgentAPI extends TestAPI {
     })
   }
 
-  syncDiscordCommands = async (
-    agentId: string,
-    body?: SyncAgentDiscordCommandsRequest,
-    expectations?: Expectations
-  ): Promise<SyncAgentDiscordCommandsResponse> => {
-    return await this._post<SyncAgentDiscordCommandsResponse>(
-      `/api/agent/${agentId}/discord/sync`,
-      {
-        body,
-        expectations,
-      }
-    )
-  }
-
   provisionMSTeamsChannel = async (
     agentId: string,
     body?: ProvisionAgentMSTeamsChannelRequest,
@@ -210,48 +190,6 @@ export class AgentAPI extends TestAPI {
   ): Promise<CreateAgentSlackAppResponse> => {
     return await this._post<CreateAgentSlackAppResponse>(
       `/api/agent/${agentId}/slack/app/create`,
-      {
-        body,
-        expectations,
-      }
-    )
-  }
-
-  provisionTelegramChannel = async (
-    agentId: string,
-    body?: ProvisionAgentTelegramChannelRequest,
-    expectations?: Expectations
-  ): Promise<ProvisionAgentTelegramChannelResponse> => {
-    return await this._post<ProvisionAgentTelegramChannelResponse>(
-      `/api/agent/${agentId}/telegram/provision`,
-      {
-        body,
-        expectations,
-      }
-    )
-  }
-
-  toggleDiscordDeployment = async (
-    agentId: string,
-    body?: ToggleAgentDeploymentRequest | Record<string, unknown>,
-    expectations?: Expectations
-  ): Promise<ToggleAgentDeploymentResponse> => {
-    return await this._post<ToggleAgentDeploymentResponse>(
-      `/api/agent/${agentId}/discord/toggle`,
-      {
-        body,
-        expectations,
-      }
-    )
-  }
-
-  toggleTelegramDeployment = async (
-    agentId: string,
-    body?: ToggleAgentDeploymentRequest | Record<string, unknown>,
-    expectations?: Expectations
-  ): Promise<ToggleAgentDeploymentResponse> => {
-    return await this._post<ToggleAgentDeploymentResponse>(
-      `/api/agent/${agentId}/telegram/toggle`,
       {
         body,
         expectations,

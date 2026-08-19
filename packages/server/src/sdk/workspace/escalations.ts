@@ -62,7 +62,7 @@ export async function getResult(
 }
 
 // Human-readable label for a recipient. The channel's or the person's real
-// name, never the provider (Slack/Discord/...). A globalUserId recipient is
+// name, never the provider (Slack/Teams/...). A globalUserId recipient is
 // always a real Budibase user (the builder's recipient picker only offers
 // users with an existing chat identity link), so the profile name is always
 // resolvable
