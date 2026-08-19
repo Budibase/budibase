@@ -122,12 +122,18 @@
       .filter((tool): tool is AgentTool => !!tool)
   )
   let configuredToolList = $derived(
-    (operation?.enabledTools || []).map(config => ({
-      config,
-      tool: availableTools.find(
-        availableTool => availableTool.runtimeBinding === config.toolName
-      ),
-    }))
+    (operation?.enabledTools || [])
+      .map(config => ({
+        config,
+        tool: availableTools.find(
+          availableTool => availableTool.runtimeBinding === config.toolName
+        ),
+      }))
+      .sort((a, b) =>
+        (a.tool?.readableBinding || a.config.toolName).localeCompare(
+          b.tool?.readableBinding || b.config.toolName
+        )
+      )
   )
   let promptBindings = $derived(
     toAgentPromptBindings({ tools: configuredTools, webSearchConfigured })
@@ -185,28 +191,32 @@
   }
   const completions = [operationAutocomplete]
   let filteredTools = $derived.by(() =>
-    availableTools.filter(tool => {
-      if (
-        operation?.enabledTools?.some(
-          config => config.toolName === tool.runtimeBinding
+    availableTools
+      .filter(tool => {
+        if (
+          operation?.enabledTools?.some(
+            config => config.toolName === tool.runtimeBinding
+          )
+        ) {
+          return false
+        }
+        if (
+          tool.sourceType === ToolType.ESCALATION &&
+          !$featureFlags[FeatureFlag.ESCALATION]
+        ) {
+          return false
+        }
+        const query = toolSearch.trim().toLowerCase()
+        return (
+          !query ||
+          `${tool.sourceLabel || ""} ${tool.readableName || tool.name}`
+            .toLowerCase()
+            .includes(query)
         )
-      ) {
-        return false
-      }
-      if (
-        tool.sourceType === ToolType.ESCALATION &&
-        !$featureFlags[FeatureFlag.ESCALATION]
-      ) {
-        return false
-      }
-      const query = toolSearch.trim().toLowerCase()
-      return (
-        !query ||
-        `${tool.sourceLabel || ""} ${tool.readableName || tool.name}`
-          .toLowerCase()
-          .includes(query)
+      })
+      .sort((a, b) =>
+        (a.readableName || a.name).localeCompare(b.readableName || b.name)
       )
-    })
   )
   let toolSections = $derived.by(() =>
     filteredTools.reduce(
