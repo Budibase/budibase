@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { Body, Icon, Link, notifications } from "@budibase/bbui"
+  import {
+    Body,
+    Icon,
+    Link,
+    notifications,
+    ProgressCircle,
+  } from "@budibase/bbui"
   import {
     FeatureFlag,
     ToolExecutionPrincipal,
@@ -143,11 +149,17 @@
     buildBindingIcons(availablePromptBindings)
   )
   let bindingIcons = $derived(buildBindingIcons(promptBindings))
-  let toolToRemoveIsReferenced = $derived(
+  let toolToRemoveIsAvailable = $derived(
     !!toolToRemove &&
+      availableTools.some(
+        tool => tool.runtimeBinding === toolToRemove?.runtimeBinding
+      )
+  )
+  let toolToRemoveIsReferenced = $derived(
+    toolToRemoveIsAvailable &&
       isToolReferenced({
         prompt: operation?.promptInstructions,
-        tool: toolToRemove,
+        tool: toolToRemove!,
       })
   )
 
@@ -688,26 +700,33 @@
                 on:change={event => updateInstructions(event.detail || "")}
                 on:blur={() => saveOperation()}
               />
+            {:else}
+              <div class="loading-state">
+                <ProgressCircle size="S" />
+                <Body size="XS">Loading...</Body>
+              </div>
             {/if}
           </div>
-          <div class="editor-footer">
-            <span
-              >Use <code>{`{{`}</code> to add tools to your instructions.</span
-            >
-            <div class="tools-popover-container">
-              <ToolsDropdown
-                bind:this={editorToolsDropdown}
-                {filteredTools}
-                {toolSections}
-                bind:toolSearch
-                webSearchEnabled={webSearchConfigured}
-                onToolClick={selectEditorTool}
-                onClose={cancelAutocompleteToolAddition}
-                onAddApiConnection={() => bb.settings("/connections/apis")}
-                onConfigureWebSearch={() => webSearchConfigModal?.show()}
-              />
+          {#if toolsLoaded}
+            <div class="editor-footer">
+              <span
+                >Use <code>{`{{`}</code> to add tools to your instructions.</span
+              >
+              <div class="tools-popover-container">
+                <ToolsDropdown
+                  bind:this={editorToolsDropdown}
+                  {filteredTools}
+                  {toolSections}
+                  bind:toolSearch
+                  webSearchEnabled={webSearchConfigured}
+                  onToolClick={selectEditorTool}
+                  onClose={cancelAutocompleteToolAddition}
+                  onAddApiConnection={() => bb.settings("/connections/apis")}
+                  onConfigureWebSearch={() => webSearchConfigModal?.show()}
+                />
+              </div>
             </div>
-          </div>
+          {/if}
         </div>
       </main>
 
@@ -731,107 +750,117 @@
 
         <div class="rail-content">
           {#if activeTab === "tools"}
-            <div class="rail-section">
-              <OperationRailSectionHeader
-                title="Tools"
-                description="Give the operation access to the tools it needs to complete requests and take action."
-              >
-                {#snippet actions()}
-                  <div class="tools-popover-container">
-                    <ToolsDropdown
-                      {filteredTools}
-                      {toolSections}
-                      bind:toolSearch
-                      webSearchEnabled={webSearchConfigured}
-                      onToolClick={tool => beginAddingTool(tool)}
-                      onAddApiConnection={() =>
-                        bb.settings("/connections/apis")}
-                      onConfigureWebSearch={() => webSearchConfigModal?.show()}
-                    />
-                  </div>
-                {/snippet}
-              </OperationRailSectionHeader>
-              <div class="tools-list" role="list">
-                {#each configuredToolList as item (item.config.toolName)}
-                  {@const tool = item.tool}
-                  <div role="listitem">
-                    <div
-                      class="tool-row"
-                      class:tool-row--with-run-as={tool &&
-                        $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
-                    >
-                      {#if !tool}
-                        <div class="tool-row-activation">
-                          <div class="tool-name">
-                            <span class="tool-icon">
-                              <Icon name="Wrench" size="XS" />
-                            </span>
-                            <span>{item.config.toolName}</span>
-                            <span class="tool-unavailable">Unavailable</span>
-                          </div>
-                        </div>
-                      {:else if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
-                        <button
-                          class="tool-row-activation"
-                          aria-label={`Configure ${tool.readableBinding}`}
-                          onclick={() => configureTool(tool)}
-                        >
-                          <div class="tool-name">
-                            <span class="tool-icon">
-                              <ToolIcon
-                                icon={tool.icon}
-                                size="S"
-                                fallbackIcon="Wrench"
-                              />
-                            </span>
-                            <span>{tool.readableBinding}</span>
-                          </div>
-                          <div class="tool-row-run-as">
-                            Run as {getEffectiveToolPrincipal(tool) ===
-                            ToolExecutionPrincipal.ADMIN
-                              ? "Admin"
-                              : "Requester"}
-                          </div>
-                        </button>
-                      {:else}
-                        <div class="tool-row-activation">
-                          <div class="tool-name">
-                            <span class="tool-icon">
-                              <ToolIcon
-                                icon={tool.icon}
-                                size="S"
-                                fallbackIcon="Wrench"
-                              />
-                            </span>
-                            <span>{tool.readableBinding}</span>
-                          </div>
-                        </div>
-                      {/if}
-                      {#if !tool || !$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
-                        <button
-                          class="tool-actions"
-                          aria-label={`Actions for ${tool?.readableBinding || item.config.toolName}`}
-                          onclick={event =>
-                            openToolMenu(
-                              event,
-                              tool || {
-                                readableBinding: item.config.toolName,
-                                runtimeBinding: item.config.toolName,
-                              }
-                            )}
-                        >
-                          <Icon name="dots-three" size="XS" />
-                        </button>
-                      {/if}
-                    </div>
-                  </div>
-                {:else}
-                  <Body size="XS" color="var(--spectrum-global-color-gray-700)"
-                    >No tools are configured for this operation.</Body
-                  >
-                {/each}
+            {#if !toolsLoaded}
+              <div class="loading-state">
+                <ProgressCircle size="S" />
+                <Body size="XS">Loading tools...</Body>
               </div>
-            </div>
+            {:else}
+              <div class="rail-section">
+                <OperationRailSectionHeader
+                  title="Tools"
+                  description="Give the operation access to the tools it needs to complete requests and take action."
+                >
+                  {#snippet actions()}
+                    <div class="tools-popover-container">
+                      <ToolsDropdown
+                        {filteredTools}
+                        {toolSections}
+                        bind:toolSearch
+                        webSearchEnabled={webSearchConfigured}
+                        onToolClick={tool => beginAddingTool(tool)}
+                        onAddApiConnection={() =>
+                          bb.settings("/connections/apis")}
+                        onConfigureWebSearch={() =>
+                          webSearchConfigModal?.show()}
+                      />
+                    </div>
+                  {/snippet}
+                </OperationRailSectionHeader>
+                <div class="tools-list" role="list">
+                  {#each configuredToolList as item (item.config.toolName)}
+                    {@const tool = item.tool}
+                    <div role="listitem">
+                      <div
+                        class="tool-row"
+                        class:tool-row--with-run-as={tool &&
+                          $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                      >
+                        {#if !tool}
+                          <div class="tool-row-activation">
+                            <div class="tool-name">
+                              <span class="tool-icon">
+                                <Icon name="Wrench" size="XS" />
+                              </span>
+                              <span>{item.config.toolName}</span>
+                              <span class="tool-unavailable">Unavailable</span>
+                            </div>
+                          </div>
+                        {:else if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                          <button
+                            class="tool-row-activation"
+                            aria-label={`Configure ${tool.readableBinding}`}
+                            onclick={() => configureTool(tool)}
+                          >
+                            <div class="tool-name">
+                              <span class="tool-icon">
+                                <ToolIcon
+                                  icon={tool.icon}
+                                  size="S"
+                                  fallbackIcon="Wrench"
+                                />
+                              </span>
+                              <span>{tool.readableBinding}</span>
+                            </div>
+                            <div class="tool-row-run-as">
+                              Run as {getEffectiveToolPrincipal(tool) ===
+                              ToolExecutionPrincipal.ADMIN
+                                ? "Admin"
+                                : "Requester"}
+                            </div>
+                          </button>
+                        {:else}
+                          <div class="tool-row-activation">
+                            <div class="tool-name">
+                              <span class="tool-icon">
+                                <ToolIcon
+                                  icon={tool.icon}
+                                  size="S"
+                                  fallbackIcon="Wrench"
+                                />
+                              </span>
+                              <span>{tool.readableBinding}</span>
+                            </div>
+                          </div>
+                        {/if}
+                        {#if !tool || !$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                          <button
+                            class="tool-actions"
+                            aria-label={`Actions for ${tool?.readableBinding || item.config.toolName}`}
+                            onclick={event =>
+                              openToolMenu(
+                                event,
+                                tool || {
+                                  readableBinding: item.config.toolName,
+                                  runtimeBinding: item.config.toolName,
+                                }
+                              )}
+                          >
+                            <Icon name="dots-three" size="XS" />
+                          </button>
+                        {/if}
+                      </div>
+                    </div>
+                  {:else}
+                    <Body
+                      size="XS"
+                      color="var(--spectrum-global-color-gray-700)"
+                      >No tools are configured for this operation.</Body
+                    >
+                  {/each}
+                </div>
+              </div>
+            {/if}
           {:else if activeTab === "knowledge"}
             <Knowledge bind:operation onUpdated={() => saveOperation()} />
           {:else}
@@ -884,7 +913,11 @@
     onClose={handleRemoveToolClose}
   >
     {#if toolToRemove?.readableBinding}
-      {#if toolToRemoveIsReferenced}
+      {#if !toolToRemoveIsAvailable}
+        Remove <b>{toolToRemove.readableBinding}</b> from this operation? If it is
+        referenced in the instructions, those references will remain and won't resolve
+        until the tool is reconfigured.
+      {:else if toolToRemoveIsReferenced}
         <b>{toolToRemove.readableBinding}</b> is referenced in the instructions.
         Removing the tool will leave those references in place, and they won't resolve
         until the tool is reconfigured.
@@ -962,6 +995,16 @@
     min-height: 0;
     flex: 1 1 auto;
     overflow: auto;
+  }
+
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-s);
+    padding: 24px 0;
+    min-height: 100%;
   }
 
   .editor-body :global(.cm-editor) {
