@@ -1,11 +1,16 @@
-import { context, db, queue, utils } from "@budibase/backend-core"
+import { context, db, locks, queue, utils } from "@budibase/backend-core"
 import {
   type ChatConversation,
+  ConversationAttachmentStatus,
+  ConversationAttachmentTurnStatus,
   DocumentType,
   type EscalationContextDoc,
+  LockName,
+  LockType,
 } from "@budibase/types"
 import env from "../../../../environment"
 import { deleteConversationAttachmentObjects } from "./attachments"
+import { deleteGeminiVectorStore } from "../knowledgeBase/geminiFileStore"
 
 interface ConversationAttachmentCleanupJob {
   workspaceId: string
@@ -77,45 +82,88 @@ export const scheduleConversationAttachmentCleanup = async ({
 }
 
 export const cleanupConversationAttachments = async (
-  conversationId: string
-) => {
-  const workspaceDb = context.getWorkspaceDB()
-  const conversation =
-    await workspaceDb.tryGet<ChatConversation>(conversationId)
-  if (!conversation?.attachments?.length) {
-    return
-  }
+  conversationId: string,
+  { force = false }: { force?: boolean } = {}
+) =>
+  await locks.doWithLock(
+    {
+      name: LockName.CONVERSATION_ATTACHMENT,
+      type: LockType.AUTO_EXTEND,
+      resource: conversationId,
+    },
+    async () => {
+      const workspaceDb = context.getWorkspaceDB()
+      let conversation =
+        await workspaceDb.tryGet<ChatConversation>(conversationId)
+      if (
+        !conversation ||
+        (!conversation.attachments?.length &&
+          !conversation.attachmentVectorStoreId)
+      ) {
+        return
+      }
 
-  if (conversation.attachmentExpiresAt) {
-    const expiresAt = new Date(conversation.attachmentExpiresAt).getTime()
-    if (expiresAt > Date.now()) {
-      await scheduleConversationAttachmentCleanup({
-        workspaceId: context.getOrThrowWorkspaceId(),
-        conversationId,
-        expiresAt: conversation.attachmentExpiresAt,
-      })
-      return
+      if (!force && conversation.attachmentExpiresAt) {
+        const expiresAt = new Date(conversation.attachmentExpiresAt).getTime()
+        if (expiresAt > Date.now()) {
+          await scheduleConversationAttachmentCleanup({
+            workspaceId: context.getOrThrowWorkspaceId(),
+            conversationId,
+            expiresAt: conversation.attachmentExpiresAt,
+          })
+          return
+        }
+      }
+
+      if (!force && (await hasPendingEscalation(conversationId))) {
+        await scheduleConversationAttachmentCleanup({
+          workspaceId: context.getOrThrowWorkspaceId(),
+          conversationId,
+          expiresAt: new Date(Date.now() + RETRY_DELAY_MS).toISOString(),
+        })
+        return
+      }
+
+      const deletingAt =
+        conversation.attachmentDeletingAt || new Date().toISOString()
+      const deletingConversation = {
+        ...conversation,
+        attachmentDeletingAt: deletingAt,
+        attachments: conversation.attachments?.map(attachment => ({
+          ...attachment,
+          status: ConversationAttachmentStatus.DELETING,
+        })),
+        pendingAttachmentTurns: conversation.pendingAttachmentTurns?.map(
+          turn => ({
+            ...turn,
+            status: ConversationAttachmentTurnStatus.CANCELLED,
+            updatedAt: deletingAt,
+          })
+        ),
+        updatedAt: deletingAt,
+      }
+      const deletingResult = await workspaceDb.put(deletingConversation)
+      conversation = { ...deletingConversation, _rev: deletingResult.rev }
+
+      if (conversation.attachmentVectorStoreId) {
+        await deleteGeminiVectorStore(conversation.attachmentVectorStoreId)
+      }
+      if (conversation.attachments?.length) {
+        await deleteConversationAttachmentObjects({
+          conversationId,
+          attachments: conversation.attachments,
+        })
+      }
+
+      const updated = { ...conversation }
+      delete updated.attachments
+      delete updated.attachmentExpiresAt
+      delete updated.attachmentVectorStoreId
+      delete updated.attachmentDeletingAt
+      delete updated.pendingAttachmentTurns
+      await workspaceDb.put(updated)
     }
-  }
-
-  if (await hasPendingEscalation(conversationId)) {
-    await scheduleConversationAttachmentCleanup({
-      workspaceId: context.getOrThrowWorkspaceId(),
-      conversationId,
-      expiresAt: new Date(Date.now() + RETRY_DELAY_MS).toISOString(),
-    })
-    return
-  }
-
-  await deleteConversationAttachmentObjects({
-    conversationId,
-    attachments: conversation.attachments,
-  })
-  const updated = { ...conversation }
-  delete updated.attachments
-  delete updated.attachmentExpiresAt
-  await workspaceDb.put(updated)
-}
+  )
 
 export const init = (concurrency = DEFAULT_CONCURRENCY) => {
   if (cleanupQueueInitialised) {

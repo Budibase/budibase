@@ -238,6 +238,7 @@ const createSlackInputHandler = ({
       provider: AgentChannelProvider.SLACK,
       channelId,
       threadId,
+      conversationType: isDirectMessage ? "im" : "channel",
       teamId,
       externalUserId,
       externalUserName: displayName,
@@ -317,7 +318,6 @@ const createSlackMessageHandler = (
       filename: attachment.name || "slack-file",
       mimetype: attachment.mimeType || "",
       size: attachment.size,
-      fetchData: attachment.fetchData,
     }))
     if (!content && !attachments.length) {
       await thread.post("Send a message to continue.")

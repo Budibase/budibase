@@ -1151,13 +1151,16 @@ export async function removeChatConversation(ctx: UserCtx<void, void>) {
     userId
   )
 
-  if (chat.attachments?.length) {
-    await sdk.ai.chatConversations.deleteConversationAttachmentObjects({
-      conversationId: chat._id!,
-      attachments: chat.attachments,
-    })
+  if (chat.attachments?.length || chat.attachmentVectorStoreId) {
+    await sdk.ai.chatConversations.attachmentCleanupQueue.cleanupConversationAttachments(
+      chat._id!,
+      { force: true }
+    )
   }
-  await db.remove(chat)
+  const latest = await db.tryGet<ChatConversation>(chat._id!)
+  if (latest) {
+    await db.remove(latest)
+  }
   ctx.status = 204
 }
 

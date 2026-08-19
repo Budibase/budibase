@@ -17,9 +17,15 @@ import type {
   ChatConversationChannel,
   ChatConversationRequest,
   ContextUser,
+  ConversationAttachmentTurn,
   WebhookChatCompleteResult,
 } from "@budibase/types"
-import { AgentChannelProvider, DocumentType } from "@budibase/types"
+import {
+  AgentChannelProvider,
+  ConversationAttachmentStatus,
+  ConversationAttachmentTurnStatus,
+  DocumentType,
+} from "@budibase/types"
 import sdk from "../../../sdk"
 import { getGlobalUser } from "../../../utilities/global"
 import { canAccessChatAppAgentForUser } from "../ai/chatApps"
@@ -720,105 +726,37 @@ export const handleChatMessage = async ({
 
     const chatId = existingChat?._id ?? docIds.generateChatConversationID()
     let conversationAttachments = existingChat?.attachments || []
-    let uploadedAttachments = [] as typeof conversationAttachments
-    const attachmentExpiresAt =
-      conversationAttachments.length || incomingAttachments.length
-        ? new Date(Date.now() + idleTimeoutMs).toISOString()
-        : undefined
-
-    if (incomingAttachments.length) {
-      uploadedAttachments =
-        await sdk.ai.chatConversations.uploadConversationAttachments({
+    const queuedAttachments = incomingAttachments.length
+      ? sdk.ai.chatConversations.prepareConversationAttachments({
           conversation: {
             _id: chatId,
             attachments: conversationAttachments,
           },
           incoming: incomingAttachments,
         })
-      conversationAttachments = [
-        ...conversationAttachments,
-        ...uploadedAttachments,
-      ]
-
-      if (uploadedAttachments.length) {
-        const attachmentChat =
-          sdk.ai.chatConversations.prepareChatConversationForSave({
-            chatId,
-            chatAppId,
-            userId,
-            title:
-              existingChat?.title ||
-              sdk.ai.chatConversations.truncateTitle(
-                content || uploadedAttachments[0].filename
-              ),
-            messages: existingChat?.messages || [],
-            chat: {
-              ...(existingChat || {}),
-              _id: chatId,
-              chatAppId,
-              agentId,
-              messages: existingChat?.messages || [],
-              channel,
-              attachments: conversationAttachments,
-              attachmentExpiresAt,
-            },
-            existingChat,
-          })
-        try {
-          const saved = await db.put(attachmentChat)
-          existingChat = { ...attachmentChat, _rev: saved.rev }
-          await sdk.ai.chatConversations.attachmentCleanupQueue.scheduleConversationAttachmentCleanup(
-            {
-              workspaceId,
-              conversationId: chatId,
-              expiresAt: attachmentExpiresAt!,
-            }
-          )
-        } catch (error) {
-          await sdk.ai.chatConversations
-            .deleteConversationAttachmentObjects({
-              conversationId: chatId,
-              attachments: uploadedAttachments,
-            })
-            .catch(cleanupError => {
-              console.error(
-                "Failed to roll back persisted conversation attachments",
-                cleanupError
-              )
-            })
-          throw error
-        }
-      }
-    }
-
+      : []
+    conversationAttachments = [...conversationAttachments, ...queuedAttachments]
     if (
-      existingChat?.attachments?.length &&
-      !uploadedAttachments.length &&
-      attachmentExpiresAt
+      queuedAttachments.length &&
+      !sdk.ai.knowledgeBase.isGeminiFileSearchConfigured()
     ) {
-      const touchedChat = {
-        ...existingChat,
-        attachmentExpiresAt,
-        updatedAt: new Date().toISOString(),
-      }
-      const saved = await db.put(touchedChat)
-      existingChat = { ...touchedChat, _rev: saved.rev }
-      await sdk.ai.chatConversations.attachmentCleanupQueue.scheduleConversationAttachmentCleanup(
-        {
-          workspaceId,
-          conversationId: chatId,
-          expiresAt: attachmentExpiresAt,
-        }
+      throw new HTTPError(
+        "Conversation documents require Gemini File Search to be configured",
+        400
       )
     }
+    const attachmentExpiresAt =
+      conversationAttachments.length || incomingAttachments.length
+        ? new Date(Date.now() + idleTimeoutMs).toISOString()
+        : undefined
 
-    if (!content && incomingAttachments.length && !uploadedAttachments.length) {
+    if (!content && incomingAttachments.length && !queuedAttachments.length) {
       await reply("Those files are already available in this conversation.")
       return
     }
 
-    const attachmentMarker = uploadedAttachments.length
-      ? `\n\n[Attached files: ${uploadedAttachments
+    const attachmentMarker = queuedAttachments.length
+      ? `\n\n[Attached files: ${queuedAttachments
           .map(file => file.filename)
           .join(", ")}]`
       : ""
@@ -833,32 +771,104 @@ export const handleChatMessage = async ({
       ],
     }
 
-    if (!content && uploadedAttachments.length) {
-      const messages = [...(existingChat?.messages || []), userMessage]
-      const uploadOnlyChat =
-        sdk.ai.chatConversations.prepareChatConversationForSave({
-          chatId,
-          chatAppId,
+    const hasProcessingAttachments = conversationAttachments.some(
+      attachment =>
+        attachment.status === ConversationAttachmentStatus.QUEUED ||
+        attachment.status === ConversationAttachmentStatus.PROCESSING
+    )
+    const hasPendingAttachmentTurns =
+      existingChat?.pendingAttachmentTurns?.some(
+        turn =>
+          turn.status === ConversationAttachmentTurnStatus.QUEUED ||
+          turn.status === ConversationAttachmentTurnStatus.PROCESSING
+      )
+    if (
+      queuedAttachments.length ||
+      hasProcessingAttachments ||
+      hasPendingAttachmentTurns
+    ) {
+      const now = new Date().toISOString()
+      const turn: ConversationAttachmentTurn = {
+        id: v4(),
+        message: userMessage,
+        attachmentIds: conversationAttachments
+          .filter(
+            attachment =>
+              attachment.status !== ConversationAttachmentStatus.FAILED
+          )
+          .map(attachment => attachment.id),
+        status: ConversationAttachmentTurnStatus.QUEUED,
+        requester: {
           userId,
-          title:
-            existingChat?.title ||
-            sdk.ai.chatConversations.truncateTitle(
-              uploadedAttachments[0].filename
-            ),
-          messages,
-          chat: {
-            ...(existingChat || {}),
-            _id: chatId,
+          linked: !!existingLink,
+          displayName: user.displayName,
+        },
+        createdAt: now,
+        updatedAt: now,
+      }
+      let chatToUpdate = existingChat
+      let saved = false
+      for (let attempt = 0; attempt < 5 && !saved; attempt++) {
+        const currentAttachments = chatToUpdate?.attachments || []
+        const mergedAttachments = [
+          ...currentAttachments,
+          ...conversationAttachments.filter(
+            attachment =>
+              !currentAttachments.some(current => current.id === attachment.id)
+          ),
+        ]
+        const currentTurns = chatToUpdate?.pendingAttachmentTurns || []
+        const queuedChat =
+          sdk.ai.chatConversations.prepareChatConversationForSave({
+            chatId,
             chatAppId,
-            agentId,
-            messages,
-            channel,
-            attachments: conversationAttachments,
-            attachmentExpiresAt,
-          },
-          existingChat,
-        })
-      await db.put(uploadOnlyChat)
+            userId,
+            title:
+              chatToUpdate?.title ||
+              sdk.ai.chatConversations.truncateTitle(
+                content || queuedAttachments[0]?.filename || "Document question"
+              ),
+            messages: chatToUpdate?.messages || [],
+            chat: {
+              ...(chatToUpdate || {}),
+              _id: chatId,
+              chatAppId,
+              agentId,
+              messages: chatToUpdate?.messages || [],
+              channel,
+              attachments: mergedAttachments,
+              attachmentExpiresAt,
+              pendingAttachmentTurns: [
+                ...currentTurns,
+                ...(currentTurns.some(current => current.id === turn.id)
+                  ? []
+                  : [turn]),
+              ],
+            },
+            existingChat: chatToUpdate,
+          })
+        try {
+          await db.put(queuedChat)
+          saved = true
+        } catch (error) {
+          const isConflict =
+            error instanceof Error && "status" in error && error.status === 409
+          if (!isConflict) {
+            throw error
+          }
+          chatToUpdate = await db.tryGet<ChatConversation>(chatId)
+        }
+      }
+      if (!saved) {
+        throw new HTTPError("Conversation update conflict", 409)
+      }
+      await sdk.ai.chatConversations.attachmentIngestionQueue.scheduleConversationAttachmentIngestion(
+        {
+          workspaceId,
+          conversationId: chatId,
+          turnId: turn.id,
+        }
+      )
       await sdk.ai.chatConversations.attachmentCleanupQueue.scheduleConversationAttachmentCleanup(
         {
           workspaceId,
@@ -872,7 +882,11 @@ export const handleChatMessage = async ({
         idleTimeoutMs,
       })
       await reply(
-        `Added ${uploadedAttachments.map(file => file.filename).join(", ")} to this conversation.`
+        queuedAttachments.length
+          ? `Processing ${queuedAttachments
+              .map(file => file.filename)
+              .join(", ")}. I'll reply here when ready.`
+          : "The conversation files are still processing. I'll reply here when ready."
       )
       return
     }

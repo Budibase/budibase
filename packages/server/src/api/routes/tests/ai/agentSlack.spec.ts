@@ -183,6 +183,7 @@ const secretMatch = (plain: string, encoded: string) => {
 describe("agent slack integration provisioning", () => {
   const config = new TestConfiguration()
   let cleanupAIConfig: undefined | (() => Promise<void>)
+  let restoreGeminiFileSearchConfig: undefined | (() => void)
 
   async function getPersistedAgent(id: string | undefined) {
     const result = await db.doWithDB(config.getDevWorkspaceId(), db =>
@@ -216,6 +217,8 @@ describe("agent slack integration provisioning", () => {
     }
     await cleanupAIConfig?.()
     cleanupAIConfig = undefined
+    restoreGeminiFileSearchConfig?.()
+    restoreGeminiFileSearchConfig = undefined
   })
 
   afterAll(() => {
@@ -1177,9 +1180,13 @@ describe("agent slack integration provisioning", () => {
       })
     })
 
-    it("persists a file-only upload for the next Slack conversation turn", async () => {
+    it("queues file ingestion and subsequent Slack turns", async () => {
       const { agent, chatAppId, linkExternalUser } =
         await setupProvisionedSlackAgent()
+      const geminiConfigured = jest
+        .spyOn(sdk.ai.knowledgeBase, "isGeminiFileSearchConfigured")
+        .mockReturnValue(true)
+      restoreGeminiFileSearchConfig = () => geminiConfigured.mockRestore()
       await linkExternalUser("user-file")
       const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
       const content = "quarterly revenue is 42"
@@ -1210,11 +1217,11 @@ describe("agent slack integration provisioning", () => {
       })
 
       expect(uploadResponse.body.messages).toContain(
-        "Added report.txt to this conversation."
+        "Processing report.txt. I'll reply here when ready."
       )
       expect(mockedWebhookChat).not.toHaveBeenCalled()
 
-      await postSlackMessage({
+      const questionResponse = await postSlackMessage({
         path,
         body: {
           type: "event_callback",
@@ -1230,18 +1237,22 @@ describe("agent slack integration provisioning", () => {
         },
       })
 
-      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
-      expect(mockedWebhookChat.mock.calls[0]?.[0].chat.attachments).toEqual([
+      expect(questionResponse.body.messages).toContain(
+        "The conversation files are still processing. I'll reply here when ready."
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+      const conversations = await fetchConversations()
+      expect(conversations).toHaveLength(1)
+      expect(conversations[0]?.attachments).toEqual([
         expect.objectContaining({
           providerFileId: "F123",
           filename: "report.txt",
           mimetype: "text/plain",
           size: Buffer.byteLength(content),
+          status: "queued",
         }),
       ])
-      const conversations = await fetchConversations()
-      expect(conversations).toHaveLength(1)
-      expect(conversations[0]?.attachments).toHaveLength(1)
+      expect(conversations[0]?.pendingAttachmentTurns).toHaveLength(2)
     })
 
     it("blocks optional-link unlinked users when the agent requires a higher role", async () => {

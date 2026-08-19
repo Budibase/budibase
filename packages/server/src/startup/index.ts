@@ -30,6 +30,7 @@ import { watch } from "../watch"
 import { initialise as initialiseWebsockets } from "../websockets"
 import * as workspaceMigrations from "../workspaceMigrations/queue"
 import { agentRequests, rag, tests as agentTests } from "../sdk/workspace/ai"
+import { processConversationAttachmentJob } from "../api/controllers/webhook/conversationAttachmentProcessor"
 
 export type State = "uninitialised" | "starting" | "ready"
 let STATE: State = "uninitialised"
@@ -180,11 +181,26 @@ export async function startup(
   queuePromises.push(agentTests.init())
   queuePromises.push(sdk.ai.chatConversations.attachmentCleanupQueue.init())
   queuePromises.push(
+    sdk.ai.chatConversations.attachmentIngestionQueue.init(
+      processConversationAttachmentJob
+    )
+  )
+  queuePromises.push(
     sdk.ai.chatConversations.attachmentCleanupQueue
       .rehydrateScheduledJobs()
       .catch(err => {
         console.error(
           "Failed to rehydrate conversation attachment cleanup jobs",
+          err
+        )
+      })
+  )
+  queuePromises.push(
+    sdk.ai.chatConversations.attachmentIngestionQueue
+      .rehydrateScheduledJobs()
+      .catch(err => {
+        console.error(
+          "Failed to rehydrate conversation attachment ingestion jobs",
           err
         )
       })
