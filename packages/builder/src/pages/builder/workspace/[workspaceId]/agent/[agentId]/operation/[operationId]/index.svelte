@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     Body,
+    Button,
     Icon,
     Link,
     notifications,
@@ -106,6 +107,7 @@
     storeOperation?.name?.trim() || "Untitled operation"
   )
   let toolsLoaded = $derived($agentsStore.toolsLoaded)
+  let toolsLoadFailed = $derived($agentsStore.toolsLoadFailed)
   let webSearchConfig = $derived(
     getAgentWebSearchConfig($aiConfigsStore.customConfigs, agent?.aiconfig)
   )
@@ -651,7 +653,23 @@
     pendingToolInsertion = undefined
     cancelPendingToolInsertion(insertPosition)
   }
+
+  const retryLoadTools = () => agentsStore.fetchTools()
 </script>
+
+{#snippet toolsLoadStatus()}
+  {#if toolsLoadFailed}
+    <div class="loading-state">
+      <Body size="XS">Failed to load tools</Body>
+      <Button secondary size="S" on:click={retryLoadTools}>Retry</Button>
+    </div>
+  {:else}
+    <div class="loading-state">
+      <ProgressCircle size="S" />
+      <Body size="XS">Loading tools...</Body>
+    </div>
+  {/if}
+{/snippet}
 
 {#if operation && agentId}
   <div class="operation-page">
@@ -701,10 +719,7 @@
                 on:blur={() => saveOperation()}
               />
             {:else}
-              <div class="loading-state">
-                <ProgressCircle size="S" />
-                <Body size="XS">Loading...</Body>
-              </div>
+              {@render toolsLoadStatus()}
             {/if}
           </div>
           {#if toolsLoaded}
@@ -751,10 +766,7 @@
         <div class="rail-content">
           {#if activeTab === "tools"}
             {#if !toolsLoaded}
-              <div class="loading-state">
-                <ProgressCircle size="S" />
-                <Body size="XS">Loading tools...</Body>
-              </div>
+              {@render toolsLoadStatus()}
             {:else}
               <div class="rail-section">
                 <OperationRailSectionHeader
