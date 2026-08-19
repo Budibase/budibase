@@ -43,7 +43,7 @@ export const isToolReferenced = ({
   tool,
 }: {
   prompt?: string | null
-  tool: AgentTool
+  tool: Pick<AgentTool, "readableBinding">
 }) => {
   if (!tool.readableBinding) {
     return false
