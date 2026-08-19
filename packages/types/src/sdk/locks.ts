@@ -26,6 +26,7 @@ export enum LockName {
   LITELLM_KEY = "litellm_key",
   AGENT_RAG_KNOWLEDGE_BASE = "agent_rag_knowledge_base",
   CUSTOM_REST_TEMPLATES = "custom_rest_templates",
+  CONVERSATION_ATTACHMENT = "conversation_attachment",
 }
 
 export type LockOptions = {

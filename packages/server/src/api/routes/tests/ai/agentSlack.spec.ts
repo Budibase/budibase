@@ -182,6 +182,7 @@ const secretMatch = (plain: string, encoded: string) => {
 describe("agent slack integration provisioning", () => {
   const config = new TestConfiguration()
   let cleanupAIConfig: undefined | (() => Promise<void>)
+  let restoreGeminiFileSearchConfig: undefined | (() => void)
 
   async function getPersistedAgent(id: string | undefined) {
     const result = await db.doWithDB(config.getDevWorkspaceId(), db =>
@@ -210,6 +211,8 @@ describe("agent slack integration provisioning", () => {
     }
     await cleanupAIConfig?.()
     cleanupAIConfig = undefined
+    restoreGeminiFileSearchConfig?.()
+    restoreGeminiFileSearchConfig = undefined
   })
 
   afterAll(() => {
@@ -1173,6 +1176,80 @@ describe("agent slack integration provisioning", () => {
         "I sent you a DM with your Budibase link."
       )
       expect(extractLinkUrl(response.body.messages)).toBeUndefined()
+    })
+
+    it("queues file ingestion and subsequent Slack turns", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const geminiConfigured = jest
+        .spyOn(sdk.ai.knowledgeBase, "isGeminiFileSearchConfigured")
+        .mockReturnValue(true)
+      restoreGeminiFileSearchConfig = () => geminiConfigured.mockRestore()
+      await linkExternalUser("user-file")
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      const content = "quarterly revenue is 42"
+
+      const uploadResponse = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "",
+            user: "user-file",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+            files: [
+              {
+                id: "F123",
+                name: "report.txt",
+                mimetype: "text/plain",
+                size: Buffer.byteLength(content),
+                content,
+              },
+            ],
+          },
+        },
+      })
+
+      expect(uploadResponse.body.messages).toContain(
+        "Processing report.txt. I'll reply here when ready."
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+
+      const questionResponse = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "what is the revenue?",
+            user: "user-file",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.200",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(questionResponse.body.messages).toContain(
+        "The conversation files are still processing. I'll reply here when ready."
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+      const conversations = await fetchConversations()
+      expect(conversations).toHaveLength(1)
+      expect(conversations[0]?.attachments).toEqual([
+        expect.objectContaining({
+          providerFileId: "F123",
+          filename: "report.txt",
+          mimetype: "text/plain",
+          size: Buffer.byteLength(content),
+          status: "queued",
+        }),
+      ])
+      expect(conversations[0]?.pendingAttachmentTurns).toHaveLength(2)
     })
 
     it("creates a conversation from an incoming message", async () => {
