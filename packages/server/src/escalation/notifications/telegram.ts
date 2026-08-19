@@ -40,14 +40,16 @@ const buildEscalationKeyboard = (shortId: string) => ({
 
 const getTelegramBotToken = async (
   appId: string,
-  agentId?: string
+  agentId?: string,
+  { requireDeployment = false } = {}
 ): Promise<string | undefined> => {
   const agent = await findIntegrationAgent(
     appId,
     agentId,
     a =>
       !!a.telegramIntegration?.botToken &&
-      !!a.telegramIntegration?.messagingEndpointUrl?.trim()
+      (!requireDeployment ||
+        !!a.telegramIntegration?.messagingEndpointUrl?.trim())
   )
   return agent?.telegramIntegration?.botToken?.trim() || undefined
 }
@@ -82,7 +84,8 @@ export async function sendTelegramNotification({
   const config = notifDoc.recipient.config as Record<string, string>
   const botToken = await getTelegramBotToken(
     contextDoc.appId,
-    contextDoc.agentId
+    contextDoc.agentId,
+    { requireDeployment: true }
   )
   if (!botToken) {
     console.warn("sendTelegramNotification: no Telegram-enabled agent found", {

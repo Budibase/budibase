@@ -51,14 +51,16 @@ const buildEscalationComponents = ({
 
 const getDiscordBotToken = async (
   appId: string,
-  agentId?: string
+  agentId?: string,
+  { requireDeployment = false } = {}
 ): Promise<string | undefined> => {
   const agent = await findIntegrationAgent(
     appId,
     agentId,
     a =>
       !!a.discordIntegration?.botToken &&
-      !!a.discordIntegration?.interactionsEndpointUrl?.trim()
+      (!requireDeployment ||
+        !!a.discordIntegration?.interactionsEndpointUrl?.trim())
   )
   return agent?.discordIntegration?.botToken?.trim() || undefined
 }
@@ -96,7 +98,8 @@ export async function sendDiscordNotification({
   const config = notifDoc.recipient.config as Record<string, string>
   const botToken = await getDiscordBotToken(
     contextDoc.appId,
-    contextDoc.agentId
+    contextDoc.agentId,
+    { requireDeployment: true }
   )
   if (!botToken) {
     console.warn("sendDiscordNotification: no Discord-enabled agent found", {

@@ -55,7 +55,8 @@ const buildEscalationBlocks = ({
 
 const getSlackIntegration = async (
   appId: string,
-  agentId?: string
+  agentId?: string,
+  { requireDeployment = false } = {}
 ): Promise<
   { botToken: string; signingSecret: string; teamId?: string } | undefined
 > => {
@@ -64,7 +65,8 @@ const getSlackIntegration = async (
     agentId,
     a =>
       !!a.slackIntegration?.botToken &&
-      !!a.slackIntegration?.messagingEndpointUrl?.trim()
+      (!requireDeployment ||
+        !!a.slackIntegration?.messagingEndpointUrl?.trim())
   )
   if (!agent) {
     return undefined
@@ -92,7 +94,8 @@ export async function sendSlackNotification({
 
   const integration = await getSlackIntegration(
     contextDoc.appId,
-    contextDoc.agentId
+    contextDoc.agentId,
+    { requireDeployment: true }
   )
   if (!integration) {
     console.warn("sendSlackNotification: no Slack-enabled agent found", {
