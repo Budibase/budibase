@@ -6,7 +6,7 @@ import env from "../environment"
 import * as accounts from "../accounts"
 import { UserDB } from "../users"
 import { sdk } from "@budibase/shared-core"
-import { User, SSOUser, UserMetadata } from "@budibase/types"
+import { ContextUser, User, SSOUser, UserMetadata } from "@budibase/types"
 
 const EXPIRY_SECONDS = 3600
 
@@ -26,7 +26,7 @@ async function populateFromDB(
 
 // returns false when the account portal lookup failed - the user is still
 // usable, but must not be cached so that the next lookup can retry
-async function populateAccountInfo(user: User): Promise<boolean> {
+async function populateAccountInfo(user: ContextUser): Promise<boolean> {
   if (env.SELF_HOSTED || env.DISABLE_ACCOUNT_PORTAL) {
     return true
   }
