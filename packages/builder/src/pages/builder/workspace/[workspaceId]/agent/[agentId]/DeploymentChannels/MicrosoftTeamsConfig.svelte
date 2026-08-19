@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { validate as isValidUUID } from "uuid"
   import {
     Body,
     Button,
@@ -24,8 +25,6 @@
 
   const MS_TEAMS_NEW_COMMAND = ChatCommands.NEW
   const MS_TEAMS_LINK_COMMAND = ChatCommands.LINK
-  const UUID_PATTERN =
-    /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i
   let { agent }: { agent?: Agent } = $props()
 
   let draftAgentId: string | undefined = $state()
@@ -52,7 +51,7 @@
 
   const appIdError = $derived.by(() => {
     const appId = draft.appId.trim()
-    return appId && !UUID_PATTERN.test(appId)
+    return appId && !isValidUUID(appId)
       ? "App ID must be a valid UUID"
       : undefined
   })

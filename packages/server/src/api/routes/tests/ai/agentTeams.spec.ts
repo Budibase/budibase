@@ -69,6 +69,7 @@ import path from "path"
 
 import extract from "extract-zip"
 import { context, docIds, roles } from "@budibase/backend-core"
+import { generator } from "@budibase/backend-core/tests"
 import { ChatCommands } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
@@ -86,7 +87,7 @@ const { getMockChatOptions, resetMockChatState, setMockPostEphemeralResult } =
   jest.requireActual("chat") as ChatMockModule
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
 const mockedGetFileUrlForAgent = jest.mocked(sdk.ai.rag.getFileUrlForAgent)
-const TEAMS_APP_ID = "11111111-1111-4111-8111-111111111111"
+const TEAMS_APP_ID = generator.guid()
 
 const extractLinkUrl = (messages: string[]) => {
   const urls = messages
