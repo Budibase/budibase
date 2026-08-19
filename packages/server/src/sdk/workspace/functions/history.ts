@@ -170,8 +170,15 @@ export const createRunSummary = async ({
     startedAt: new Date().toISOString(),
     queryCount: 0,
   }
-  const response = await context.getWorkspaceDB().put(summary, {
+  const database = context.getWorkspaceDB()
+  const response = await database.put(summary, {
     returnDoc: true,
+  })
+  clearOldHistory(database).catch(error => {
+    console.error(
+      `Failed to start Function run history cleanup for database "${database.name}"`,
+      error
+    )
   })
   return sanitizeSummary(response.doc)
 }

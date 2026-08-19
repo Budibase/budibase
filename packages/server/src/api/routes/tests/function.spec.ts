@@ -838,6 +838,54 @@ export default async function (): Promise<FunctionResult> {
     })
   })
 
+  it("cleans expired history in the current environment when creating a run", async () => {
+    await withFunctionsEnabled(async () => {
+      const { function: created } = await createFunction()
+      const expiredDevelopmentId = docIds.generateFunctionRunLogID(
+        "expired-development"
+      )
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const database = context.getWorkspaceDB()
+        await database.put({
+          _id: expiredDevelopmentId,
+          runId: "expired-development",
+          functionId: created._id,
+          functionName: created.name,
+          sourceHash: "source-hash",
+          environment: "development",
+          status: "success",
+          invocation: {
+            type: "automation",
+            automationId: "automation-1",
+            stepId: "step-1",
+          },
+          startedAt: "1960-01-01T00:00:00.000Z",
+          finishedAt: "1960-01-01T00:00:00.000Z",
+          durationMs: 1,
+          queryCount: 0,
+        })
+        await sdk.functions.createRunSummary({
+          runId: "development-run",
+          functionId: created._id,
+          functionName: created.name,
+          sourceHash: "source-hash",
+          automationId: "automation-1",
+          stepId: "step-1",
+        })
+        // Poll because run creation starts cleanup in the background.
+        for (let attempt = 0; attempt < 50; attempt++) {
+          if (!(await database.tryGet(expiredDevelopmentId))) {
+            break
+          }
+          await new Promise(resolve => setTimeout(resolve, 20))
+        }
+        await expect(
+          database.tryGet(expiredDevelopmentId)
+        ).resolves.toBeUndefined()
+      })
+    })
+  })
+
   it("lists development and published run history separately", async () => {
     await withFunctionsEnabled(async () => {
       const { function: created } = await createFunction()
