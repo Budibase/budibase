@@ -451,7 +451,9 @@ const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
         typeof output === "object" &&
         output !== null &&
         "status" in output &&
-        output.status === EscalateToolResultStatus.PENDING_APPROVAL
+        output.status === EscalateToolResultStatus.PENDING_APPROVAL &&
+        "escalationId" in output &&
+        !!output.escalationId
       )
     })
   )
