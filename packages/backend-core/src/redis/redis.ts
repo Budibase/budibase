@@ -64,6 +64,12 @@ export interface Entry {
   key: string
   value: any
 }
+
+interface IncrementWithExpiryOptions {
+  key: string
+  expirySeconds: number
+}
+
 function promisifyStream(
   stream: ScanStream,
   client: Redis | Cluster
@@ -333,15 +339,33 @@ class RedisWrapper {
     })
   }
 
-  async deleteIfValue(key: string, value: any) {
-    return await this.trace("RedisWrapper.deleteIfValue", async span => {
-      span.addTags({ key })
-      const luaScript = `
-      if redis.call('GET', KEYS[1]) == ARGV[1] then
-        redis.call('DEL', KEYS[1])
-      end
-      `
-      await this.client.eval(luaScript, 1, this.prefixed(key), value)
+  async incrementWithExpiry({
+    key,
+    expirySeconds,
+  }: IncrementWithExpiryOptions): Promise<number> {
+    return await this.trace("RedisWrapper.incrementWithExpiry", async span => {
+      span.addTags({ key, expirySeconds })
+      const transaction = this.client
+        .multi()
+        .incr(this.prefixed(key))
+        .expire(this.prefixed(key), expirySeconds)
+      const results = await transaction.exec()
+      if (!results || results.length !== 2) {
+        throw new Error(`Redis failed to increment and expire ${key}`)
+      }
+
+      const [incrementError, incrementResult] = results[0]
+      const [expiryError] = results[1]
+      if (incrementError) {
+        throw incrementError
+      }
+      if (expiryError) {
+        throw expiryError
+      }
+      if (typeof incrementResult !== "number") {
+        throw new Error(`Redis failed to increment and expire ${key}`)
+      }
+      return incrementResult
     })
   }
 }

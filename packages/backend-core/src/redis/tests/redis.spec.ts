@@ -215,25 +215,25 @@ describe("redis", () => {
     })
   })
 
-  describe("deleteIfValue", () => {
-    it("can delete if the value matches", async () => {
+  describe("incrementWithExpiry", () => {
+    it("atomically increments a new key and applies its expiry", async () => {
       const key = structures.uuid()
-      const value = generator.word()
-      await redis.store(key, value)
 
-      await redis.deleteIfValue(key, value)
-
-      expect(await redis.get(key)).toBeNull()
+      await expect(
+        redis.incrementWithExpiry({ key, expirySeconds: 10 })
+      ).resolves.toBe(1)
+      expect(await redis.getTTL(key)).toBeGreaterThan(0)
     })
 
-    it("will not delete if the value does not matches", async () => {
+    it("increments an existing key and updates its expiry", async () => {
       const key = structures.uuid()
-      const value = generator.word()
-      await redis.store(key, value)
+      await redis.store(key, 1, 20)
 
-      await redis.deleteIfValue(key, generator.word())
-
-      expect(await redis.get(key)).toEqual(value)
+      await expect(
+        redis.incrementWithExpiry({ key, expirySeconds: 10 })
+      ).resolves.toBe(2)
+      expect(await redis.getTTL(key)).toBeLessThanOrEqual(10)
+      expect(await redis.getTTL(key)).toBeGreaterThan(0)
     })
   })
 })
