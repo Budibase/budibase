@@ -384,6 +384,7 @@ describe("agent slack integration provisioning", () => {
       "im:history",
       "im:read",
       "im:write",
+      "users:read",
     ])
     expect(manifestText).not.toContain("xoxb-token-manifest")
     expect(manifestText).not.toContain("slack-signing-secret-manifest")
