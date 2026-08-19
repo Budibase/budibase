@@ -115,8 +115,8 @@
     const escalationId = output?.escalationId
     return {
       escalationId,
-      title: input?.title ?? output?.title,
-      summary: input?.summary ?? output?.summary,
+      title: output?.title ?? input?.title,
+      summary: output?.summary ?? input?.summary,
       resolution:
         (escalationId && escalationState?.[escalationId]?.resolution) ||
         "pending",
