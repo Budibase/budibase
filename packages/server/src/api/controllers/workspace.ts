@@ -37,7 +37,6 @@ import {
   FetchAppPackageResponse,
   FetchMicrofrontendBootstrapResponse,
   FetchPublishedAppsResponse,
-  FetchPublishedChatAppsResponse,
   FetchWorkspacesResponse,
   FieldType,
   Feature,
@@ -361,91 +360,6 @@ export async function fetchClientApps(
   ctx.body = { apps: result }
 }
 
-export async function fetchClientChatApps(
-  ctx: UserCtx<void, FetchPublishedChatAppsResponse>
-) {
-  const workspaces = await sdk.workspaces.fetch(
-    WorkspaceStatus.DEPLOYED,
-    ctx.user
-  )
-
-  const chatApps: FetchPublishedChatAppsResponse["chatApps"] = []
-  for (const workspace of workspaces) {
-    const isBuilderOrAdmin = users.isAdminOrBuilder(ctx.user, workspace.appId)
-    const workspaceRoleId =
-      ctx.user?.roles?.[workspace.appId] || roles.BUILTIN_ROLE_IDS.PUBLIC
-
-    const { chatApp, workspaceAgents, accessibleEnabledAgentIds } =
-      await context.doInWorkspaceContext(workspace.appId, async () => {
-        const [chatApp, workspaceAgents] = await Promise.all([
-          sdk.ai.chatApps.getSingle(),
-          sdk.ai.agents.fetch(),
-        ])
-
-        const accessController = new roles.AccessController()
-        const accessibleEnabledAgentIds = new Set<string>()
-
-        for (const chatAgent of chatApp?.agents || []) {
-          if (!chatAgent.isEnabled) {
-            continue
-          }
-
-          const canAccessAgent =
-            isBuilderOrAdmin ||
-            !chatAgent.roleId ||
-            (await accessController.hasAccess(
-              chatAgent.roleId,
-              workspaceRoleId
-            ))
-
-          if (canAccessAgent) {
-            accessibleEnabledAgentIds.add(chatAgent.agentId)
-          }
-        }
-
-        return {
-          chatApp,
-          workspaceAgents,
-          accessibleEnabledAgentIds: [...accessibleEnabledAgentIds],
-        }
-      })
-
-    if (!chatApp?.live || !chatApp._id) {
-      continue
-    }
-
-    const workspaceAgentsById = new Map(
-      workspaceAgents
-        .filter(agent => agent._id)
-        .map(agent => [agent._id!, agent])
-    )
-
-    const enabledChatAgents = (chatApp.agents || []).filter(
-      agent =>
-        agent.isEnabled && accessibleEnabledAgentIds.includes(agent.agentId)
-    )
-
-    for (const chatAgent of enabledChatAgents) {
-      const workspaceAgent = workspaceAgentsById.get(chatAgent.agentId)
-      if (!workspaceAgent?.live) {
-        continue
-      }
-
-      chatApps.push({
-        appId: workspace.appId,
-        chatAppId: chatApp._id,
-        agentId: chatAgent.agentId,
-        agentName: workspaceAgent.name,
-        name: workspaceAgent.name,
-        url: `${workspace.url}/agent/${chatAgent.agentId}`.replace(/\/$/, ""),
-        updatedAt: chatApp.updatedAt || workspace.updatedAt,
-      })
-    }
-  }
-
-  ctx.body = { chatApps }
-}
-
 export async function fetchAppDefinition(
   ctx: UserCtx<void, FetchAppDefinitionResponse>
 ) {
@@ -561,9 +475,7 @@ export async function fetchAppPackage(
       embedPath ||
       (ctx.headers.referer ? new URL(ctx.headers.referer).pathname : "")
     const normalizedUrlPath = urlPath.split("?")[0].replace(/\/$/, "")
-    const isChatRoute =
-      normalizedUrlPath.startsWith("/app-chat/") ||
-      /\/_chat(?:\/.*)?$/.test(normalizedUrlPath)
+    const isChatRoute = /\/_chat(?:\/.*)?$/.test(normalizedUrlPath)
 
     let matchedWorkspaceApp =
       await sdk.workspaceApps.getMatchedWorkspaceApp(urlPath)
@@ -636,10 +548,7 @@ const parseMicrofrontendAppPath = (value: unknown) => {
     return undefined
   }
   const normalizedPath = value.trim().split("?")[0].replace(/\/$/, "")
-  if (
-    !normalizedPath.startsWith("/app/") &&
-    !normalizedPath.startsWith("/app-chat/")
-  ) {
+  if (!normalizedPath.startsWith("/app/")) {
     return undefined
   }
 
@@ -678,10 +587,7 @@ export async function fetchMicrofrontendBootstrap(
 
   const appPath = parseMicrofrontendAppPath(ctx.query.appPath)
   if (!appPath) {
-    ctx.throw(
-      400,
-      "Invalid appPath. Provide /app/<workspace-url> or /app-chat/<workspace-url>."
-    )
+    ctx.throw(400, "Invalid appPath. Provide /app/<workspace-url>.")
   }
 
   const workspaceId = await resolveProdWorkspaceIdFromAppPath(appPath)
@@ -689,19 +595,13 @@ export async function fetchMicrofrontendBootstrap(
     ctx.throw(404, `No matching workspace app found for URL path: ${appPath}`)
   }
 
-  const isChatRoute =
-    appPath === "/app-chat" || appPath.startsWith("/app-chat/")
-
   const bootstrap = await context.doInWorkspaceContext(
     workspaceId,
     async () => {
       const matchedWorkspaceApp =
         await sdk.workspaceApps.getMatchedWorkspaceApp(appPath)
 
-      if (
-        !isChatRoute &&
-        (!matchedWorkspaceApp || matchedWorkspaceApp.disabled)
-      ) {
+      if (!matchedWorkspaceApp || matchedWorkspaceApp.disabled) {
         ctx.throw(
           404,
           `No matching workspace app found for URL path: ${appPath}`

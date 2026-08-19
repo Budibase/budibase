@@ -5,7 +5,6 @@
     admin,
     auth,
     clientAppsStore,
-    clientChatAppsStore,
     licensing,
     organisation,
     translations,
@@ -42,10 +41,9 @@
   let userInfoModal: Modal
   let changePasswordModal: Modal
 
-  const { accountPortalAccountUrl, appChatUrl } = helpers
+  const { accountPortalAccountUrl } = helpers
 
   $: userApps = $clientAppsStore.apps
-  $: liveChatApps = $clientChatAppsStore.chatApps
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
   function getUrl(app: EnrichedApp | PublishedWorkspaceData) {
@@ -70,8 +68,6 @@
     } catch (error) {
       notifications.error("Error loading apps")
     }
-
-    await clientChatAppsStore.load()
 
     loaded = true
   })
@@ -196,44 +192,7 @@
                 </Layout>
               </div>
             {/if}
-            {#if liveChatApps.length}
-              <Heading size="S">Chat</Heading>
-              <div class="group">
-                <Layout gap="S" noPadding>
-                  {#each liveChatApps as chatApp (`${chatApp.chatAppId}:${chatApp.url}`)}
-                    <a
-                      class="app"
-                      target="_blank"
-                      rel="noreferrer"
-                      href={appChatUrl(chatApp.url)}
-                    >
-                      <div
-                        class="preview"
-                        use:gradient={{ seed: chatApp.name }}
-                      ></div>
-                      <div class="app-info">
-                        <Heading size="XS">{chatApp.name}</Heading>
-                        <Body size="S">
-                          {#if chatApp.updatedAt}
-                            {processStringSync(portalLabels.updatedAgo, {
-                              time:
-                                new Date().getTime() -
-                                new Date(chatApp.updatedAt).getTime(),
-                            })}
-                          {:else}
-                            {portalLabels.neverUpdated}
-                          {/if}
-                        </Body>
-                      </div>
-                      <div class="icon-muted">
-                        <Icon name="caret-right" />
-                      </div>
-                    </a>
-                  {/each}
-                </Layout>
-              </div>
-            {/if}
-            {#if !userApps.length && !liveChatApps.length}
+            {#if !userApps.length}
               <Layout gap="XS" noPadding>
                 <Heading size="S">{portalLabels.noAppsHeading}</Heading>
                 <Body size="S">{portalLabels.noAppsDescription}</Body>
@@ -313,9 +272,6 @@
     cursor: pointer;
     background: var(--spectrum-global-color-gray-200);
     transition: background-color 130ms ease-in-out;
-  }
-  .app .icon-muted {
-    color: var(--spectrum-global-color-gray-500);
   }
   .preview {
     height: 40px;

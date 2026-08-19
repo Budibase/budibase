@@ -490,41 +490,6 @@ describe("chat route auth split", () => {
     ).toContain(restrictedAgentId)
   })
 
-  it("hides role-restricted chat links in /api/client/chatapps", async () => {
-    const headers = await headersForUser(basicUser)
-    const res = await config
-      .getRequest()!
-      .get("/api/client/chatapps")
-      .set(headers)
-
-    expect(res.status).toBe(200)
-    const currentChatEntries = res.body.chatApps.filter(
-      (entry: { chatAppId: string }) => entry.chatAppId === chatApp._id
-    )
-    expect(
-      currentChatEntries.map((entry: { agentId: string }) => entry.agentId)
-    ).toContain(agentId)
-    expect(
-      currentChatEntries.map((entry: { agentId: string }) => entry.agentId)
-    ).not.toContain(restrictedAgentId)
-  })
-
-  it("includes role-restricted chat links for builders in /api/client/chatapps", async () => {
-    const headers = await headersForUser(config.getUser())
-    const res = await config
-      .getRequest()!
-      .get("/api/client/chatapps")
-      .set(headers)
-
-    expect(res.status).toBe(200)
-    const currentChatEntries = res.body.chatApps.filter(
-      (entry: { chatAppId: string }) => entry.chatAppId === chatApp._id
-    )
-    expect(
-      currentChatEntries.map((entry: { agentId: string }) => entry.agentId)
-    ).toContain(restrictedAgentId)
-  })
-
   it("blocks builders of another workspace when the chat app is not live", async () => {
     await setChatAppLive(false)
     const headers = await headersForUser(otherWorkspaceBuilder)

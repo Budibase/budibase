@@ -7,7 +7,6 @@ import {
   ChatApp,
   ChatAppAgent,
   FetchAgentHistoryResponse,
-  FetchPublishedChatAppsResponse,
   UpdateChatAppRequest,
   AgentMessageMetadata,
   FetchAgentFileUrlResponse,
@@ -50,9 +49,6 @@ export interface ChatAppEndpoints {
     workspaceId?: string
   ) => Promise<ChatConversation>
   updateChatApp: (chatApp: UpdateChatAppRequest) => Promise<ChatApp>
-  getPublishedChatApps: () => Promise<
-    FetchPublishedChatAppsResponse["chatApps"]
-  >
 }
 
 const getBrowserTimezone = () => {
@@ -257,12 +253,5 @@ export const buildChatAppEndpoints = (
       url: `/api/chatapps/${chatApp._id}`,
       body: chatApp as any,
     })
-  },
-
-  getPublishedChatApps: async () => {
-    const response = await API.get<FetchPublishedChatAppsResponse>({
-      url: "/api/client/chatapps",
-    })
-    return response.chatApps
   },
 })

@@ -1375,7 +1375,7 @@ describe("/applications", () => {
           await config.withProdApp(() =>
             config.withHeaders(
               {
-                referer: `http://localhost:10000/app-chat${config.prodWorkspace?.url}`,
+                referer: `http://localhost:10000/app${config.prodWorkspace?.url}/_chat`,
               },
               async () => {
                 const res = await config.api.workspace.getAppPackage(

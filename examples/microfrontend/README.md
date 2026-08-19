@@ -10,7 +10,7 @@ No iframe is used.
 ## What this PoC does
 
 - Mounts Budibase as a non-iframe microfrontend.
-- Keeps app routes (`/app/*`, `/app-chat/*`) owned by the host shell.
+- Keeps app routes (`/app/*`) owned by the host shell.
 - Resolves app metadata from:
   - `GET /api/microfrontend/bootstrap?appPath=/app/<workspace-url>`
 - Supports deep links and host/browser navigation with hash routes.
@@ -31,7 +31,7 @@ Requirements:
 
 - absolute URL
 - same origin as host shell
-- path starts with `/app/` or `/app-chat/`
+- path starts with `/app/`
 
 ## Mode 1: No OIDC bridge (default)
 

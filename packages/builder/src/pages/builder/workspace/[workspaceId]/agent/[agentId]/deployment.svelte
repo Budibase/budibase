@@ -15,7 +15,6 @@
   } from "@budibase/types"
   import { selectedAgent, agentsStore } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
-  import AgentChatChannel from "./DeploymentChannels/AgentChatChannel.svelte"
   import MicrosoftTeamsConfig from "./DeploymentChannels/MicrosoftTeamsConfig.svelte"
   import SlackConfig from "./DeploymentChannels/SlackConfig.svelte"
   import MSTeamsLogo from "assets/rest-template-icons/microsoft-teams.svg"
@@ -184,11 +183,11 @@
     <div class="agent-node">
       <div>
         <Body
-          color={"var(--spectrum-global-color-gray-900)"}
+          color="var(--spectrum-global-color-gray-900)"
           weight="500"
           size="XS">Agent in automations</Body
         >
-        <Body color={"var(--spectrum-global-color-gray-700)"} size="XS"
+        <Body color="var(--spectrum-global-color-gray-700)" size="XS"
           >This agent can be triggered from within Budibase Automations via the
           Agent node</Body
         >
@@ -200,13 +199,13 @@
   <section class="section">
     <div>
       <Body
-        color={"var(--spectrum-global-color-gray-900)"}
+        color="var(--spectrum-global-color-gray-900)"
         weight="500"
         size="XS">Messaging channels</Body
       >
     </div>
     <div>
-      <Body color={"var(--spectrum-global-color-gray-700)"} size="XS"
+      <Body color="var(--spectrum-global-color-gray-700)" size="XS"
         >Deploy your agent to the following messaging channels.</Body
       >
     </div>
@@ -221,10 +220,10 @@
               src={channel.logo}
             />
             <div class="channel-details">
-              <Body color={"var(--spectrum-global-color-gray-900)"} size="XS"
+              <Body color="var(--spectrum-global-color-gray-900)" size="XS"
                 >{channel.name}</Body
               >
-              <Body color={"var(--spectrum-global-color-gray-700)"} size="XS"
+              <Body color="var(--spectrum-global-color-gray-700)" size="XS"
                 >{channel.details}</Body
               >
             </div>
@@ -246,13 +245,6 @@
           </div>
         </div>
       {/each}
-      {#if currentAgent?._id}
-        <AgentChatChannel
-          agentId={currentAgent._id}
-          agentName={currentAgent.name || "Agent"}
-          agentLive={!!currentAgent.live}
-        />
-      {/if}
     </div>
   </section>
 </div>
@@ -274,7 +266,7 @@
           class="modal-header-logo"
         />
         <div class="modal-header-copy">
-          <Body color={"var(--spectrum-global-color-gray-900)"} weight="500"
+          <Body color="var(--spectrum-global-color-gray-900)" weight="500"
             >Microsoft Teams</Body
           >
         </div>
@@ -301,7 +293,7 @@
           class="modal-header-logo"
         />
         <div class="modal-header-copy">
-          <Body color={"var(--spectrum-global-color-gray-900)"} weight="500"
+          <Body color="var(--spectrum-global-color-gray-900)" weight="500"
             >Slack</Body
           >
         </div>
