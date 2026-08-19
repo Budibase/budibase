@@ -355,6 +355,21 @@ describe("agent teams integration provisioning", () => {
       expect(manifest.validDomains).toHaveLength(1)
       expect(manifestText).not.toContain("teams-package-password")
 
+      const { agents: agentsAfterFirstDownload } =
+        await config.api.agent.fetch()
+      const agentAfterFirstDownload = agentsAfterFirstDownload.find(
+        candidate => candidate._id === agent._id
+      )
+      expect(
+        agentAfterFirstDownload?.MSTeamsIntegration?.appPackageVersion
+      ).toBeUndefined()
+      await config.api.agent.update({
+        ...(agentAfterFirstDownload as NonNullable<
+          typeof agentAfterFirstDownload
+        >),
+        description: "Updated after downloading the Teams package.",
+      })
+
       const secondPackageBuffer = await config.api.agent.downloadMSTeamsPackage(
         agent._id!
       )
