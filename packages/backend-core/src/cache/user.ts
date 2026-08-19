@@ -13,21 +13,19 @@ const EXPIRY_SECONDS = 3600
 /**
  * The default populate user function
  */
-async function populateFromDB(userId: string, tenantId: string) {
+async function populateFromDB(
+  userId: string,
+  tenantId: string
+): Promise<{ user: UserMetadata; accountLookupFailed: boolean }> {
   const db = tenancy.getTenantDB(tenantId)
   const user = await db.get<UserMetadata>(userId)
   user.budibaseAccess = true
-  if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-    const account = await accounts.getAccount(user.email)
-    if (account) {
-      user.account = account
-      user.accountPortalAccess = true
-    }
-  }
-
-  return user
+  const populated = await populateAccountInfo(user)
+  return { user, accountLookupFailed: !populated }
 }
 
+// returns false when the account portal lookup failed - the user is still
+// usable, but must not be cached so that the next lookup can retry
 async function populateAccountInfo(user: User): Promise<boolean> {
   if (env.SELF_HOSTED || env.DISABLE_ACCOUNT_PORTAL) {
     return true
@@ -98,9 +96,6 @@ export async function getUser({
     email?: string
   ) => Promise<User>
 }) {
-  if (!populateUser) {
-    populateUser = populateFromDB
-  }
   if (!tenantId) {
     try {
       tenantId = context.getTenantId()
@@ -112,8 +107,16 @@ export async function getUser({
   // try cache
   let user: User | SSOUser = await client.get(userId)
   if (!user) {
-    user = await populateUser(userId, tenantId, email)
-    await client.store(userId, user, EXPIRY_SECONDS)
+    const populated = populateUser
+      ? {
+          user: await populateUser(userId, tenantId, email),
+          accountLookupFailed: false,
+        }
+      : await populateFromDB(userId, tenantId)
+    user = populated.user
+    if (!populated.accountLookupFailed) {
+      await client.store(userId, user, EXPIRY_SECONDS)
+    }
   }
   if (user && !user.tenantId && tenantId) {
     // make sure the tenant ID is always correct/set
