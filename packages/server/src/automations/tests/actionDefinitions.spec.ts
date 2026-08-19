@@ -64,7 +64,9 @@ describe("getActionDefinitions", () => {
 
     mockAreFunctionsEnabled.mockResolvedValue(true)
 
-    expect((await getActionDefinitions()).EXECUTE_FUNCTION).toBeDefined()
+    const definition = (await getActionDefinitions()).EXECUTE_FUNCTION
+    expect(definition).toBeDefined()
+    expect(definition?.inputs).toEqual({ inputs: { value: "{}" } })
   })
 
   it("adds self-hosted automation plugin definitions as custom actions", async () => {

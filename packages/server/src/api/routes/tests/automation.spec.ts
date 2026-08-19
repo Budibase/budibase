@@ -119,9 +119,7 @@ describe("/automations", () => {
     it("returns all of the definitions in one", async () => {
       const { action, trigger } = await config.api.automation.getDefinitions()
       const functionsEnabled = await areFunctionsEnabled()
-      const availableBuiltinActions = Object.keys(
-        BUILTIN_ACTION_DEFINITIONS
-      ).filter(
+      const requiredActionIds = Object.keys(BUILTIN_ACTION_DEFINITIONS).filter(
         actionId =>
           functionsEnabled ||
           actionId !== AutomationActionStepId.EXECUTE_FUNCTION
@@ -133,8 +131,8 @@ describe("/automations", () => {
         expect(action[AutomationActionStepId.EXECUTE_FUNCTION]).toBeUndefined()
       }
 
-      expect(Object.keys(action).length).toBeGreaterThanOrEqual(
-        availableBuiltinActions.length
+      expect(Object.keys(action)).toEqual(
+        expect.arrayContaining(requiredActionIds)
       )
       expect(Object.keys(trigger).length).toEqual(
         Object.keys(TRIGGER_DEFINITIONS).length

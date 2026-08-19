@@ -7,6 +7,7 @@ import {
   type FunctionDocument,
   type FunctionExecutor,
   type FunctionRunResult,
+  type FunctionRunSummary,
   type JSONValue,
 } from "@budibase/types"
 import { z } from "zod"
@@ -18,7 +19,7 @@ import { validateFunctionRunResult } from "../../functions/executor/protocol"
 
 const jsonPrimitiveSchema = z.union([
   z.string(),
-  z.number().finite(),
+  z.number(),
   z.boolean(),
   z.null(),
 ])
@@ -43,6 +44,18 @@ export interface ExecuteFunctionDependencies {
   ) => Promise<"ready" | "build_required" | "build_failed">
   execute: typeof executeWithFunctionRunGrant
   createRunId: () => string
+  createRunSummary: (input: {
+    runId: string
+    functionId: string
+    functionName: string
+    sourceHash: string
+    automationId: string
+    stepId: string
+  }) => Promise<FunctionRunSummary>
+  finalizeRunSummary: (
+    runId: string,
+    result: FunctionRunResult | { status: "error"; code: FunctionErrorCode }
+  ) => Promise<FunctionRunSummary>
 }
 
 const defaultDependencies: ExecuteFunctionDependencies = {
@@ -54,6 +67,13 @@ const defaultDependencies: ExecuteFunctionDependencies = {
     (await import("../../sdk/workspace/functions")).getFunctionReadiness(fn),
   execute: executeWithFunctionRunGrant,
   createRunId: uuid,
+  createRunSummary: async input =>
+    (await import("../../sdk/workspace/functions")).createRunSummary(input),
+  finalizeRunSummary: async (runId, result) =>
+    (await import("../../sdk/workspace/functions")).finalizeRunSummary(
+      runId,
+      result
+    ),
 }
 
 const failure = (
@@ -198,7 +218,9 @@ export const executeFunction = async (
     if (!inputs.functionId || !automationId || !stepId) {
       throw invalidConfiguration()
     }
-    const functionInputs = parseInputs(inputs.inputs)
+    const functionInputs = parseInputs(
+      inputs.inputs === undefined ? {} : inputs.inputs
+    )
     const fn = await dependencies.getFunction(inputs.functionId)
     if (!fn) {
       throw new FunctionExecutionError(
@@ -220,33 +242,61 @@ export const executeFunction = async (
     const capabilities = Object.fromEntries(
       fn.capabilities.map(capability => [capability.capabilityId, capability])
     )
-    const result = validateFunctionRunResult(
-      await dependencies.execute(
-        dependencies.executor,
-        {
-          runId,
-          artifact: fn.artifact,
-          inputs: functionInputs,
-          limits: DEFAULT_FUNCTION_LIMITS.run,
-        },
-        {
-          runId,
-          workspaceId: appId,
-          functionId: fn._id,
-          sourceHash: fn.artifact.sourceHash,
-          automationId,
-          automationStepId: stepId,
-          executionUser: context.user,
-          capabilities,
-        }
+    await dependencies.createRunSummary({
+      runId,
+      functionId: fn._id,
+      functionName: fn.name,
+      sourceHash: fn.artifact.sourceHash,
+      automationId,
+      stepId,
+    })
+    try {
+      const result = validateFunctionRunResult(
+        await dependencies.execute(
+          dependencies.executor,
+          {
+            runId,
+            artifact: fn.artifact,
+            inputs: functionInputs,
+            limits: DEFAULT_FUNCTION_LIMITS.run,
+          },
+          {
+            runId,
+            workspaceId: appId,
+            functionId: fn._id,
+            sourceHash: fn.artifact.sourceHash,
+            automationId,
+            automationStepId: stepId,
+            executionUser: context.user,
+            capabilities,
+          }
+        )
       )
-    )
-    if (result.runId !== runId) {
-      throw new FunctionExecutionError(
-        FunctionErrorCode.FUNCTION_PROTOCOL_ERROR
-      )
+      if (result.runId !== runId) {
+        throw new FunctionExecutionError(
+          FunctionErrorCode.FUNCTION_PROTOCOL_ERROR
+        )
+      }
+      await dependencies.finalizeRunSummary(runId, result)
+      return resultToOutputs(result)
+    } catch (error) {
+      const safeError =
+        error instanceof FunctionExecutionError
+          ? error
+          : new FunctionExecutionError(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
+      try {
+        await dependencies.finalizeRunSummary(runId, {
+          status: "error",
+          code: safeError.code,
+        })
+      } catch (finalizationError) {
+        console.error(
+          `Failed to finalize Function run summary "${runId}"`,
+          finalizationError
+        )
+      }
+      return failure(safeError)
     }
-    return resultToOutputs(result)
   } catch (error) {
     return failure(
       error instanceof FunctionExecutionError

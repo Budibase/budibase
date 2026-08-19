@@ -359,7 +359,7 @@ describe("Function query broker", () => {
       executeFunctionQuery(request(), scope.workspaceId, deps)
     ).rejects.toMatchObject({
       code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
-      message: "The Function query failed",
+      message: "The Function execution failed",
     })
     expect(JSON.stringify(record.mock.calls)).not.toContain(grantToken)
     expect(JSON.stringify(record.mock.calls)).not.toContain("active")

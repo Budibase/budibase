@@ -70,6 +70,8 @@ const dependencies = (
   getReadiness: jest.fn().mockResolvedValue("ready"),
   execute: jest.fn().mockResolvedValue(successResult),
   createRunId: jest.fn().mockReturnValue("run-1"),
+  createRunSummary: jest.fn().mockResolvedValue({}),
+  finalizeRunSummary: jest.fn().mockResolvedValue({}),
   ...overrides,
 })
 
@@ -132,6 +134,15 @@ describe("Run Function automation action", () => {
         },
       }
     )
+    expect(deps.createRunSummary).toHaveBeenCalledWith({
+      runId: "run-1",
+      functionId: fn._id,
+      functionName: fn.name,
+      sourceHash: artifact.sourceHash,
+      automationId: "automation-1",
+      stepId: "step-1",
+    })
+    expect(deps.finalizeRunSummary).toHaveBeenCalledWith("run-1", successResult)
   })
 
   it("parses JSON editor input", async () => {
@@ -153,6 +164,41 @@ describe("Run Function automation action", () => {
       }),
       expect.any(Object)
     )
+  })
+
+  it("defaults omitted Function inputs to an empty object", async () => {
+    const deps = dependencies()
+
+    await run(deps, {
+      functionId: fn._id,
+      // @ts-expect-error - older steps may not have persisted the editor default
+      inputs: undefined,
+    })
+
+    expect(deps.execute).toHaveBeenCalledWith(
+      deps.executor,
+      expect.objectContaining({ inputs: {} }),
+      expect.any(Object)
+    )
+  })
+
+  it("rejects null Function inputs", async () => {
+    const deps = dependencies()
+
+    await expect(
+      run(deps, {
+        functionId: fn._id,
+        // @ts-expect-error - malformed persisted steps may contain null
+        inputs: null,
+      })
+    ).resolves.toMatchObject({
+      success: false,
+      status: "error",
+      error: {
+        code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
+      },
+    })
+    expect(deps.execute).not.toHaveBeenCalled()
   })
 
   it.each(["42", "[1,2]", '"hi"'])(
@@ -313,6 +359,33 @@ describe("Run Function automation action", () => {
       error: {
         code: FunctionErrorCode.FUNCTION_RUNNER_UNAVAILABLE,
         message: "The Function runner is unavailable",
+      },
+    })
+    expect(deps.finalizeRunSummary).toHaveBeenCalledWith("run-1", {
+      status: "error",
+      code: FunctionErrorCode.FUNCTION_RUNNER_UNAVAILABLE,
+    })
+  })
+
+  it("preserves the execution error when summary finalization fails", async () => {
+    const deps = dependencies({
+      execute: jest
+        .fn()
+        .mockRejectedValue(
+          new FunctionExecutionError(
+            FunctionErrorCode.FUNCTION_RUNNER_UNAVAILABLE
+          )
+        ),
+      finalizeRunSummary: jest
+        .fn()
+        .mockRejectedValue(new Error("Database unavailable")),
+    })
+
+    await expect(run(deps)).resolves.toMatchObject({
+      success: false,
+      status: "error",
+      error: {
+        code: FunctionErrorCode.FUNCTION_RUNNER_UNAVAILABLE,
       },
     })
   })

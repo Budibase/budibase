@@ -6,13 +6,33 @@ import {
   type CreateFunctionRequest,
   type CreateFunctionResponse,
   type FetchFunctionResponse,
+  type FetchFunctionRunResponse,
+  type FetchFunctionRunsResponse,
   type FetchFunctionQueryCatalogResponse,
   type FetchFunctionsResponse,
+  type FunctionEnvironment,
   type UpdateFunctionRequest,
   type UpdateFunctionResponse,
   type UserCtx,
 } from "@budibase/types"
+import { HTTPError } from "@budibase/backend-core"
 import sdk from "../../sdk"
+
+const getRunEnvironment = (value: unknown): FunctionEnvironment => {
+  if (Array.isArray(value)) {
+    throw new HTTPError(
+      "Function run history environment must be specified once.",
+      400
+    )
+  }
+  if (value === "development" || value === "published") {
+    return value
+  }
+  throw new HTTPError(
+    "Function run history environment must be development or published.",
+    400
+  )
+}
 
 export const fetch = async (ctx: UserCtx<void, FetchFunctionsResponse>) => {
   const functions = await sdk.functions.fetch()
@@ -81,4 +101,54 @@ export const update = async (
 export const remove = async (ctx: UserCtx<void, void>) => {
   await sdk.functions.remove(ctx.params.id, ctx.params.rev)
   ctx.status = 204
+}
+
+export const fetchRuns = async (
+  ctx: UserCtx<void, FetchFunctionRunsResponse>
+) => {
+  const fn = await sdk.functions.get(ctx.params.id)
+  if (!fn) {
+    ctx.throw(404, `Function with id '${ctx.params.id}' not found.`)
+  }
+  if (Array.isArray(ctx.query.bookmark)) {
+    ctx.throw(400, "Function run history bookmark must be specified once.")
+  }
+  if (Array.isArray(ctx.query.limit)) {
+    ctx.throw(400, "Function run history limit must be specified once.")
+  }
+  const environment = getRunEnvironment(ctx.query.environment)
+  const bookmark =
+    typeof ctx.query.bookmark === "string" ? ctx.query.bookmark : undefined
+  if (bookmark && bookmark.length > 2048) {
+    ctx.throw(400, "Function run history bookmark is too long.")
+  }
+  let limit: number | undefined
+  if (typeof ctx.query.limit === "string") {
+    limit = Number(ctx.query.limit)
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      ctx.throw(400, "Function run history limit must be between 1 and 100.")
+    }
+  }
+  ctx.body = await sdk.functions.listRunHistory({
+    functionId: ctx.params.id,
+    environment,
+    bookmark,
+    requestedLimit: limit,
+  })
+}
+
+export const findRun = async (ctx: UserCtx<void, FetchFunctionRunResponse>) => {
+  const fn = await sdk.functions.get(ctx.params.id)
+  if (!fn) {
+    ctx.throw(404, `Function with id '${ctx.params.id}' not found.`)
+  }
+  const run = await sdk.functions.getRunHistory({
+    functionId: ctx.params.id,
+    environment: getRunEnvironment(ctx.query.environment),
+    runId: ctx.params.runId,
+  })
+  if (!run) {
+    ctx.throw(404, `Function run '${ctx.params.runId}' not found.`)
+  }
+  ctx.body = { run }
 }
