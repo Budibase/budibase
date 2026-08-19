@@ -166,8 +166,7 @@ const createChatTestLanguageModel = () =>
 
 const buildChatApp = (overrides: Partial<ChatApp> = {}): ChatApp => ({
   _id: docIds.generateChatAppID(),
-  agents: [{ agentId: "agent-1", isEnabled: true, isDefault: false }],
-  live: true,
+  agents: [{ agentId: "agent-1" }],
   createdAt: new Date().toISOString(),
   ...overrides,
 })
@@ -237,13 +236,13 @@ describe("chat conversations authorization", () => {
         const db = context.getWorkspaceDB()
         chatApp = buildChatApp({
           agents: [
-            { agentId: "agent-1", isEnabled: true, isDefault: false },
-            { agentId: "agent-2", isEnabled: true, isDefault: false },
-            { agentId: "agent-3", isEnabled: false, isDefault: false },
+            { agentId: "agent-1" },
+            { agentId: "agent-2" },
+            { agentId: "agent-3" },
           ],
         })
         otherChatApp = buildChatApp({
-          agents: [{ agentId: "agent-2", isEnabled: true, isDefault: false }],
+          agents: [{ agentId: "agent-2" }],
         })
         convoA = buildChatConversation({
           chatAppId: chatApp._id!,
@@ -332,7 +331,7 @@ describe("chat conversations authorization", () => {
     )
   })
 
-  it("filters history to the requested enabled agent", async () => {
+  it("filters history to the requested agent", async () => {
     const headers = await headersForUser(userA)
 
     const res = await config
@@ -346,7 +345,7 @@ describe("chat conversations authorization", () => {
     ])
   })
 
-  it("rejects history filtering by non-enabled agents", async () => {
+  it("returns no history for agents without conversations", async () => {
     const headers = await headersForUser(userA)
 
     const res = await config
@@ -354,8 +353,8 @@ describe("chat conversations authorization", () => {
       .get(`/api/chatapps/${chatApp._id}/conversations?agentId=agent-3`)
       .set(headers)
 
-    expect(res.status).toBe(400)
-    expect(res.body.message).toBe("agentId is not enabled for this chat app")
+    expect(res.status).toBe(200)
+    expect(res.body).toEqual([])
   })
 
   it("hides conversations from other agents when filtered", async () => {
@@ -768,7 +767,7 @@ describe("chat conversation transient behavior", () => {
       async () => {
         const db = context.getWorkspaceDB()
         chatApp = buildChatApp({
-          agents: [{ agentId, isEnabled: true, isDefault: false }],
+          agents: [{ agentId }],
         })
         await db.put(chatApp)
       }
@@ -1072,10 +1071,10 @@ describe("chat conversation path validation", () => {
       async () => {
         const db = context.getWorkspaceDB()
         bodyChatApp = buildChatApp({
-          agents: [{ agentId: "agent-1", isEnabled: true, isDefault: true }],
+          agents: [{ agentId: "agent-1" }],
         })
         pathChatApp = buildChatApp({
-          agents: [{ agentId: "agent-1", isEnabled: true, isDefault: true }],
+          agents: [{ agentId: "agent-1" }],
         })
         pathConversation = buildChatConversation({
           chatAppId: pathChatApp._id!,
@@ -1779,25 +1778,23 @@ describe("Agent chat tool call tracking", () => {
   })
 
   describe("webhookChat", () => {
-    it("allows configured channel deployments when internal agent chat is disabled", async () => {
+    it("allows configured channel deployments for agents on the chat app", async () => {
       jest.mocked(streamText).mockImplementation(makeWebhookStreamTextMock({}))
 
       await context.doInWorkspaceContext(
         config.getProdWorkspaceId(),
         async () => {
           const db = context.getWorkspaceDB()
-          const disabledChatApp: ChatApp = {
+          const channelChatApp: ChatApp = {
             ...chatApp,
             _id: docIds.generateChatAppID(),
-            agents: [
-              { agentId: "agent-1", isEnabled: false, isDefault: false },
-            ],
+            agents: [{ agentId: "agent-1" }],
           }
-          await db.put(disabledChatApp)
+          await db.put(channelChatApp)
 
           const result = await webhookChat({
             chat: {
-              chatAppId: disabledChatApp._id!,
+              chatAppId: channelChatApp._id!,
               agentId: "agent-1",
               channel: {
                 provider: AgentChannelProvider.MSTEAMS,

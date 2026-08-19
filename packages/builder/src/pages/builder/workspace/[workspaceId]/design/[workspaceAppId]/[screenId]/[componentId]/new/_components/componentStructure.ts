@@ -100,11 +100,5 @@ export function getComponentStructure() {
     },
   ]
 
-  structure.push({
-    name: "AI",
-    icon: "GraphBarVertical",
-    children: ["chatbox"],
-  })
-
   return structure
 }

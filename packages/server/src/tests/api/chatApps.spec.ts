@@ -3,185 +3,6 @@ import type { Agent, ChatApp, ChatConversation, User } from "@budibase/types"
 import sdk from "../../sdk"
 import TestConfiguration from "../utilities/TestConfiguration"
 
-describe("chat apps validation", () => {
-  const config = new TestConfiguration()
-  let chatApp: ChatApp
-
-  beforeAll(async () => {
-    await config.init("chat-app-validation")
-
-    await context.doInWorkspaceContext(
-      config.getProdWorkspaceId(),
-      async () => {
-        const db = context.getWorkspaceDB()
-        const now = new Date().toISOString()
-
-        const doc: ChatApp = {
-          _id: docIds.generateChatAppID(),
-          agents: [{ agentId: "agent-1", isEnabled: true, isDefault: false }],
-          createdAt: now,
-          updatedAt: now,
-        }
-
-        const { rev } = await db.put(doc)
-        chatApp = { ...doc, _rev: rev }
-      }
-    )
-  })
-
-  afterAll(() => {
-    config.end()
-  })
-
-  const updateChatApp = async (body: any) => {
-    const headers = await config.defaultHeaders({}, true)
-    const res = await config
-      .getRequest()!
-      .put(`/api/chatapps/${chatApp._id}`)
-      .set(headers)
-      .send(body)
-
-    if (res.status === 200 && res.body?._rev) {
-      chatApp = { ...chatApp, _rev: res.body._rev }
-    }
-
-    return res
-  }
-
-  it("rejects agents entries without agentId", async () => {
-    const res = await updateChatApp({
-      _id: chatApp._id,
-      _rev: chatApp._rev,
-      agents: [{}],
-    })
-
-    expect(res.status).toBe(400)
-  })
-
-  it("rejects agents entries with empty agentId", async () => {
-    const res = await updateChatApp({
-      _id: chatApp._id,
-      _rev: chatApp._rev,
-      agents: [{ agentId: "" }],
-    })
-
-    expect(res.status).toBe(400)
-  })
-
-  it("rejects null agents", async () => {
-    const res = await updateChatApp({
-      _id: chatApp._id,
-      _rev: chatApp._rev,
-      agents: null,
-    })
-
-    expect(res.status).toBe(400)
-  })
-
-  it("allows empty agents", async () => {
-    const res = await updateChatApp({
-      _id: chatApp._id,
-      _rev: chatApp._rev,
-      agents: [],
-    })
-
-    expect(res.status).toBe(200)
-    expect(res.body.agents).toEqual([])
-  })
-
-  it("rejects invalid conversation starters", async () => {
-    const res = await updateChatApp({
-      _id: chatApp._id,
-      _rev: chatApp._rev,
-      agents: [
-        {
-          agentId: "agent-1",
-          isEnabled: true,
-          isDefault: false,
-          conversationStarters: [{ prompt: 123 }],
-        },
-      ],
-    })
-
-    expect(res.status).toBe(400)
-  })
-
-  it("rejects more than three starters", async () => {
-    const res = await updateChatApp({
-      _id: chatApp._id,
-      _rev: chatApp._rev,
-      agents: [
-        {
-          agentId: "agent-1",
-          isEnabled: true,
-          isDefault: false,
-          conversationStarters: [
-            { prompt: "One" },
-            { prompt: "Two" },
-            { prompt: "Three" },
-            { prompt: "Four" },
-          ],
-        },
-      ],
-    })
-
-    expect(res.status).toBe(400)
-  })
-
-  it("persists roleId for agents", async () => {
-    const res = await updateChatApp({
-      _id: chatApp._id,
-      _rev: chatApp._rev,
-      agents: [
-        {
-          agentId: "agent-1",
-          isEnabled: true,
-          isDefault: false,
-          roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-        },
-      ],
-    })
-
-    expect(res.status).toBe(200)
-    expect(res.body.agents[0].roleId).toBe(roles.BUILTIN_ROLE_IDS.BASIC)
-  })
-
-  it("normalizes empty roleId to unrestricted", async () => {
-    const res = await updateChatApp({
-      _id: chatApp._id,
-      _rev: chatApp._rev,
-      agents: [
-        {
-          agentId: "agent-1",
-          isEnabled: true,
-          isDefault: false,
-          roleId: "   ",
-        },
-      ],
-    })
-
-    expect(res.status).toBe(200)
-    expect(res.body.agents[0].roleId).toBeUndefined()
-  })
-
-  it("rejects non-string roleId", async () => {
-    const res = await updateChatApp({
-      _id: chatApp._id,
-      _rev: chatApp._rev,
-      agents: [
-        {
-          agentId: "agent-1",
-          isEnabled: true,
-          isDefault: false,
-          roleId: 123,
-        },
-      ],
-    })
-
-    expect(res.status).toBe(400)
-  })
-})
-
 describe("chat apps create validation", () => {
   const config = new TestConfiguration()
 
@@ -207,21 +28,37 @@ describe("chat apps create validation", () => {
       }
     )
   })
+
+  it("normalizes agents to membership-only entries", async () => {
+    await context.doInWorkspaceContext(
+      config.getProdWorkspaceId(),
+      async () => {
+        const created = await sdk.ai.chatApps.create({
+          agents: [
+            {
+              agentId: "agent-1",
+              isEnabled: true,
+              isDefault: true,
+              roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+            } as any,
+          ],
+        })
+
+        expect(created.agents).toEqual([{ agentId: "agent-1" }])
+      }
+    )
+  })
 })
 
-describe("chat route auth split", () => {
+describe("chat route access", () => {
   const config = new TestConfiguration()
   let chatApp: ChatApp
   let basicUser: User
-  let workspaceBuilder: User
-  let otherWorkspaceBuilder: User
-  let adminUser: User
-  let agentId: string
-  let disabledAgentId: string
-  let restrictedAgentId: string
+  let liveAgentId: string
+  let offlineAgentId: string
 
   beforeAll(async () => {
-    await config.init("chat-route-auth-split")
+    await config.init("chat-route-access")
     basicUser = await config.createUser({
       roles: {
         [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
@@ -229,34 +66,13 @@ describe("chat route auth split", () => {
       builder: { global: false },
       admin: { global: false },
     })
-    workspaceBuilder = await config.createUser({
-      roles: {
-        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
-      },
-      builder: { global: false, apps: [config.getProdWorkspaceId()] },
-      admin: { global: false },
-    })
-    otherWorkspaceBuilder = await config.createUser({
-      roles: {
-        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
-      },
-      builder: { global: false, apps: ["app_another_workspace"] },
-      admin: { global: false },
-    })
-    adminUser = await config.createUser({
-      roles: {
-        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
-      },
-      builder: { global: false },
-      admin: { global: true },
-    })
 
     await context.doInWorkspaceContext(
       config.getProdWorkspaceId(),
       async () => {
         const db = context.getWorkspaceDB()
         const now = new Date().toISOString()
-        const agent: Agent = {
+        const liveAgent: Agent = {
           _id: docIds.generateAgentID(),
           name: "Support agent",
           aiconfig: "",
@@ -274,14 +90,14 @@ describe("chat route auth split", () => {
             },
           ],
         }
-        await db.put(agent)
-        agentId = agent._id!
+        await db.put(liveAgent)
+        liveAgentId = liveAgent._id!
 
-        const disabledAgent: Agent = {
+        const offlineAgent: Agent = {
           _id: docIds.generateAgentID(),
-          name: "Disabled support agent",
+          name: "Offline support agent",
           aiconfig: "",
-          live: true,
+          live: false,
           icon: "robot",
           iconColor: "#9f8cd1",
           createdAt: now,
@@ -295,43 +111,12 @@ describe("chat route auth split", () => {
             },
           ],
         }
-        await db.put(disabledAgent)
-        disabledAgentId = disabledAgent._id!
-
-        const restrictedAgent: Agent = {
-          _id: docIds.generateAgentID(),
-          name: "Restricted support agent",
-          aiconfig: "",
-          live: true,
-          icon: "robot",
-          iconColor: "#a56f6f",
-          createdAt: now,
-          operations: [
-            {
-              id: "operation_1",
-              name: "Main operation",
-              live: false,
-              enabledTools: [],
-              allowKnowledgeSourceDownload: true,
-            },
-          ],
-        }
-        await db.put(restrictedAgent)
-        restrictedAgentId = restrictedAgent._id!
+        await db.put(offlineAgent)
+        offlineAgentId = offlineAgent._id!
 
         const doc: ChatApp = {
           _id: docIds.generateChatAppID(),
-          agents: [
-            { agentId, isEnabled: true, isDefault: true },
-            { agentId: disabledAgentId, isEnabled: false, isDefault: false },
-            {
-              agentId: restrictedAgentId,
-              isEnabled: true,
-              isDefault: false,
-              roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
-            },
-          ],
-          live: true,
+          agents: [{ agentId: liveAgentId }, { agentId: offlineAgentId }],
           createdAt: now,
           updatedAt: now,
         }
@@ -348,23 +133,6 @@ describe("chat route auth split", () => {
   const headersForUser = async (user: User) =>
     await config.withUser(user, async () => config.defaultHeaders({}, true))
 
-  const setChatAppLive = async (live: boolean) => {
-    await context.doInWorkspaceContext(
-      config.getProdWorkspaceId(),
-      async () => {
-        const db = context.getWorkspaceDB()
-        const existing = await db.get<ChatApp>(chatApp._id!)
-        const updated: ChatApp = {
-          ...existing,
-          live,
-          updatedAt: new Date().toISOString(),
-        }
-        const { rev } = await db.put(updated)
-        chatApp = { ...updated, _rev: rev }
-      }
-    )
-  }
-
   const createConversation = async (title: string) => {
     let conversation: ChatConversation | undefined
     await context.doInWorkspaceContext(
@@ -375,7 +143,7 @@ describe("chat route auth split", () => {
         const doc: ChatConversation = {
           _id: docIds.generateChatConversationID(),
           chatAppId: chatApp._id!,
-          agentId,
+          agentId: liveAgentId,
           userId: basicUser._id!,
           messages: [],
           title,
@@ -395,11 +163,6 @@ describe("chat route auth split", () => {
 
     expect(res.status).toBe(200)
     expect(res.body?._id).toBe(chatApp._id)
-    expect(
-      (res.body.agents || [])
-        .filter((agent: { isEnabled: boolean }) => agent.isEnabled)
-        .map((agent: { agentId: string }) => agent.agentId)
-    ).not.toContain(restrictedAgentId)
   })
 
   it("allows basic users to access GET /api/chatapps/:chatAppId", async () => {
@@ -424,35 +187,7 @@ describe("chat route auth split", () => {
     expect(res.status).toBe(404)
   })
 
-  it("blocks basic users from GET /api/chatapps/:chatAppId when chat app is not live", async () => {
-    await setChatAppLive(false)
-    const headers = await headersForUser(basicUser)
-
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}`)
-      .set(headers)
-
-    expect(res.status).toBe(403)
-
-    await setChatAppLive(true)
-  })
-
-  it("allows builders to access GET /api/chatapps/:chatAppId when chat app is not live", async () => {
-    await setChatAppLive(false)
-    const headers = await headersForUser(config.getUser())
-
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}`)
-      .set(headers)
-
-    expect(res.status).toBe(200)
-
-    await setChatAppLive(true)
-  })
-
-  it("allows basic users to access GET /api/chatapps/:chatAppId/agents", async () => {
+  it("returns only live agents from GET /api/chatapps/:chatAppId/agents", async () => {
     const headers = await headersForUser(basicUser)
     const res = await config
       .getRequest()!
@@ -460,154 +195,18 @@ describe("chat route auth split", () => {
       .set(headers)
 
     expect(res.status).toBe(200)
-    expect(res.body.agents).toHaveLength(1)
-    expect(res.body.agents[0]).toEqual({
-      _id: agentId,
-      name: "Support agent",
-      icon: "robot",
-      iconColor: "#6a9bcc",
-      live: true,
-    })
-    expect(res.body.agents[0]).not.toHaveProperty("aiconfig")
+    expect(res.body.agents).toEqual([
+      {
+        _id: liveAgentId,
+        name: "Support agent",
+        icon: "robot",
+        iconColor: "#6a9bcc",
+        live: true,
+      },
+    ])
     expect(
       res.body.agents.map((agent: { _id: string }) => agent._id)
-    ).not.toContain(disabledAgentId)
-    expect(
-      res.body.agents.map((agent: { _id: string }) => agent._id)
-    ).not.toContain(restrictedAgentId)
-  })
-
-  it("allows builders to see role-restricted agents", async () => {
-    const headers = await headersForUser(config.getUser())
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}/agents`)
-      .set(headers)
-
-    expect(res.status).toBe(200)
-    expect(
-      res.body.agents.map((agent: { _id: string }) => agent._id)
-    ).toContain(restrictedAgentId)
-  })
-
-  it("blocks builders of another workspace when the chat app is not live", async () => {
-    await setChatAppLive(false)
-    const headers = await headersForUser(otherWorkspaceBuilder)
-
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}`)
-      .set(headers)
-
-    expect(res.status).toBe(403)
-
-    await setChatAppLive(true)
-  })
-
-  it("allows builders of this workspace when the chat app is not live", async () => {
-    await setChatAppLive(false)
-    const headers = await headersForUser(workspaceBuilder)
-
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}`)
-      .set(headers)
-
-    expect(res.status).toBe(200)
-
-    await setChatAppLive(true)
-  })
-
-  it("hides role-restricted agents from builders of another workspace", async () => {
-    const headers = await headersForUser(otherWorkspaceBuilder)
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}/agents`)
-      .set(headers)
-
-    expect(res.status).toBe(200)
-    expect(
-      res.body.agents.map((agent: { _id: string }) => agent._id)
-    ).not.toContain(restrictedAgentId)
-  })
-
-  it("shows role-restricted agents to builders of this workspace", async () => {
-    const headers = await headersForUser(workspaceBuilder)
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}/agents`)
-      .set(headers)
-
-    expect(res.status).toBe(200)
-    expect(
-      res.body.agents.map((agent: { _id: string }) => agent._id)
-    ).toContain(restrictedAgentId)
-  })
-
-  it("allows admins when the chat app is not live", async () => {
-    await setChatAppLive(false)
-    const headers = await headersForUser(adminUser)
-
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}`)
-      .set(headers)
-
-    expect(res.status).toBe(200)
-
-    await setChatAppLive(true)
-  })
-
-  it("shows role-restricted agents to admins", async () => {
-    const headers = await headersForUser(adminUser)
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}/agents`)
-      .set(headers)
-
-    expect(res.status).toBe(200)
-    expect(
-      res.body.agents.map((agent: { _id: string }) => agent._id)
-    ).toContain(restrictedAgentId)
-  })
-
-  it("blocks preview chat for builders of another workspace", async () => {
-    const headers = await headersForUser(otherWorkspaceBuilder)
-    const res = await config
-      .getRequest()!
-      .post(
-        `/api/chatapps/${chatApp._id}/conversations/conversation_preview/stream`
-      )
-      .set(headers)
-      .send({ isPreview: true, messages: [] })
-
-    expect(res.status).toBe(403)
-  })
-
-  it("blocks basic users from PUT /api/chatapps/:chatAppId", async () => {
-    const headers = await headersForUser(basicUser)
-    const res = await config
-      .getRequest()!
-      .put(`/api/chatapps/${chatApp._id}`)
-      .set(headers)
-      .send({
-        _id: chatApp._id,
-        _rev: chatApp._rev,
-        agents: chatApp.agents,
-      })
-
-    expect(res.status).toBe(403)
-  })
-
-  it("blocks basic users from POST /api/chatapps/:chatAppId/agent", async () => {
-    const headers = await headersForUser(basicUser)
-    const res = await config
-      .getRequest()!
-      .post(`/api/chatapps/${chatApp._id}/agent`)
-      .set(headers)
-      .send({ agentId })
-
-    expect(res.status).toBe(403)
+    ).not.toContain(offlineAgentId)
   })
 
   it("allows basic users to access GET /api/chatapps/:chatAppId/conversations", async () => {
@@ -622,20 +221,6 @@ describe("chat route auth split", () => {
     expect(res.body.map((chat: ChatConversation) => chat._id)).toContain(
       conversation._id
     )
-  })
-
-  it("blocks basic users from GET /api/chatapps/:chatAppId/conversations when chat app is not live", async () => {
-    await setChatAppLive(false)
-    const headers = await headersForUser(basicUser)
-
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}/conversations`)
-      .set(headers)
-
-    expect(res.status).toBe(403)
-
-    await setChatAppLive(true)
   })
 
   it("allows basic users to access GET /api/chatapps/:chatAppId/conversations/:chatConversationId", async () => {
@@ -658,16 +243,16 @@ describe("chat route auth split", () => {
       .set(headers)
       .send({
         chatAppId: chatApp._id,
-        agentId,
+        agentId: liveAgentId,
         title: "basic user conversation",
       })
 
     expect(res.status).toBe(201)
     expect(res.body.chatAppId).toBe(chatApp._id)
-    expect(res.body.agentId).toBe(agentId)
+    expect(res.body.agentId).toBe(liveAgentId)
   })
 
-  it("blocks basic users from POST /api/chatapps/:chatAppId/conversations for role-restricted agents", async () => {
+  it("blocks basic users from POST /api/chatapps/:chatAppId/conversations for offline agents", async () => {
     const headers = await headersForUser(basicUser)
     const res = await config
       .getRequest()!
@@ -675,11 +260,11 @@ describe("chat route auth split", () => {
       .set(headers)
       .send({
         chatAppId: chatApp._id,
-        agentId: restrictedAgentId,
-        title: "restricted conversation",
+        agentId: offlineAgentId,
+        title: "offline conversation",
       })
 
-    expect(res.status).toBe(403)
+    expect(res.status).toBe(400)
   })
 
   it("allows basic users to access DELETE /api/chatapps/:chatAppId/conversations/:chatConversationId", async () => {
@@ -701,45 +286,10 @@ describe("chat route auth split", () => {
       .set(headers)
       .send({
         chatAppId: "mismatched-chat-app-id",
-        agentId,
+        agentId: liveAgentId,
         messages: [],
       })
 
     expect(res.status).toBe(400)
-  })
-
-  it("blocks basic users from POST /api/chatapps/:chatAppId/conversations/:chatConversationId/stream when chat app is not live", async () => {
-    await setChatAppLive(false)
-    const headers = await headersForUser(basicUser)
-
-    const res = await config
-      .getRequest()!
-      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
-      .set(headers)
-      .send({
-        chatAppId: chatApp._id,
-        agentId,
-        messages: [],
-      })
-
-    expect(res.status).toBe(403)
-
-    await setChatAppLive(true)
-  })
-
-  it("blocks basic users from POST /api/chatapps/:chatAppId/conversations/:chatConversationId/stream for role-restricted agents", async () => {
-    const headers = await headersForUser(basicUser)
-
-    const res = await config
-      .getRequest()!
-      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
-      .set(headers)
-      .send({
-        chatAppId: chatApp._id,
-        agentId: restrictedAgentId,
-        messages: [],
-      })
-
-    expect(res.status).toBe(403)
   })
 })

@@ -22,7 +22,6 @@ import type {
 import { AgentChannelProvider, DocumentType } from "@budibase/types"
 import sdk from "../../../sdk"
 import { getGlobalUser } from "../../../utilities/global"
-import { canAccessChatAppAgentForUser } from "../ai/chatApps"
 import {
   webhookChat,
   type WebhookAssistantStream,
@@ -585,22 +584,6 @@ export const handleChatMessage = async ({
         userId,
         displayName: user.displayName,
       })
-    }
-
-    const hasAccess = await canAccessChatAppAgentForUser(
-      {
-        user: chatUser,
-        roleId: chatUser.roleId ?? undefined,
-      },
-      chatAgentConfig
-    )
-    if (!hasAccess) {
-      await reply(
-        existingLink
-          ? "Your linked Budibase account does not have access to this agent."
-          : "This agent is not available to unlinked users."
-      )
-      return
     }
 
     if (command === ChatCommands.NEW && !content) {

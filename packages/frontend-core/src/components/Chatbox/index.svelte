@@ -38,7 +38,6 @@
     workspaceId: string
     chat: ChatConversationLike
     persistConversation?: boolean
-    conversationStarters?: { prompt: string }[]
     initialPrompt?: string
     onchatsaved?: (event: {
       detail: { chatId?: string; chat: ChatConversationLike }
@@ -60,7 +59,7 @@
     isAgentPreviewChat?: boolean
     previewRoleId?: string
     readOnly?: boolean
-    readOnlyReason?: "disabled" | "deleted" | "offline"
+    readOnlyReason?: "deleted" | "offline"
     promptHistory?: string[]
     onpromptsubmitted?: (prompt: string) => void
   }
@@ -69,7 +68,6 @@
     workspaceId,
     chat = $bindable(),
     persistConversation = true,
-    conversationStarters = [],
     initialPrompt = "",
     onchatsaved,
     onEscalationPending,
@@ -297,11 +295,11 @@
   let resolvedChatAppId = $state<string | undefined>()
   let resolvedConversationId = $state<string | undefined>()
 
-  const applyConversationStarter = async (starterPrompt: string) => {
+  const applyPrompt = async (prompt: string) => {
     if (isBusy) {
       return
     }
-    inputValue = starterPrompt
+    inputValue = prompt
     await sendMessage()
   }
 
@@ -316,7 +314,7 @@
     }
 
     lastInitialPrompt = initialPrompt
-    applyConversationStarter(initialPrompt)
+    applyPrompt(initialPrompt)
   })
 
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
@@ -451,19 +449,10 @@
   )
   let canStart = $derived(inputValue.trim().length > 0)
   let hasMessages = $derived(messages.length > 0)
-  let showConversationStarters = $derived(
-    !isRequestPending &&
-      !hasMessages &&
-      conversationStarters.length > 0 &&
-      !isAgentPreviewChat &&
-      !readOnly
-  )
   let readOnlyMessage = $derived(
     readOnlyReason === "deleted"
       ? "This agent was deleted. Select another agent to resume chatting."
-      : readOnlyReason === "offline"
-        ? "This agent is no longer live. Make it live in Settings to resume chatting."
-        : "This agent is disabled. Enable it in Settings to resume chatting."
+      : "This agent is no longer live. Make it live in Settings to resume chatting."
   )
 
   let lastChatId = $state<string | undefined>(chat?._id)
@@ -545,15 +534,9 @@
           chatAppId: "",
           agentId: "",
         }
-        const fallbackAgentId =
-          chatApp.agents?.find(agent => agent.isEnabled && agent.isDefault)
-            ?.agentId || chatApp.agents?.find(agent => agent.isEnabled)?.agentId
         chat = {
           ...baseChat,
           chatAppId: chatApp._id,
-          ...(fallbackAgentId && !baseChat.agentId
-            ? { agentId: fallbackAgentId }
-            : {}),
         }
         resolvedChatAppId = chatApp._id
         return chatApp._id
@@ -733,22 +716,7 @@
 
 <div class="chat-area" bind:this={chatAreaElement}>
   <div class="chatbox">
-    {#if showConversationStarters}
-      <div class="starter-section">
-        <div class="starter-title">Conversation starters</div>
-        <div class="starter-grid">
-          {#each conversationStarters as starter, index (index)}
-            <button
-              type="button"
-              class="starter-card"
-              onclick={() => applyConversationStarter(starter.prompt)}
-            >
-              {starter.prompt}
-            </button>
-          {/each}
-        </div>
-      </div>
-    {:else if !hasMessages && !isRequestPending}
+    {#if !hasMessages && !isRequestPending}
       <div class="empty-state">
         <div class="empty-state-icon">
           <Icon
@@ -1050,50 +1018,6 @@
   .empty-state-icon {
     --size: 24px;
   }
-  .starter-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-xl);
-    margin: auto 0;
-  }
-
-  .starter-title {
-    font-size: 14px;
-    letter-spacing: 0;
-    color: var(--spectrum-global-color-gray-700);
-    text-align: center;
-  }
-
-  .starter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: var(--spacing-m);
-    width: min(520px, 100%);
-    margin: 0 auto;
-  }
-
-  .starter-card {
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 12px;
-    padding: var(--spacing-m);
-    background: var(--spectrum-global-color-gray-50);
-    color: var(--spectrum-global-color-gray-800);
-    font: inherit;
-    font-size: 14px;
-    line-height: 1.4;
-    text-align: center;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .starter-card:hover {
-    border-color: var(--spectrum-global-color-gray-300);
-    background: var(--spectrum-global-color-gray-100);
-  }
-
   .message {
     display: flex;
     flex-direction: column;

@@ -148,16 +148,12 @@ describe("agent teams integration provisioning", () => {
     )
 
     const chatApp = await getPersistedChatApp()
-    expect(chatApp?.agents).toContainEqual({
-      agentId: agent._id,
-      isEnabled: false,
-      isDefault: false,
-    })
+    expect(chatApp?.agents).toContainEqual({ agentId: agent._id })
   })
 
-  it("preserves internal agent chat state when provisioning teams", async () => {
+  it("keeps an existing chat app membership when provisioning teams", async () => {
     const agent = await config.api.agent.create({
-      name: "Teams Agent With Internal Chat",
+      name: "Teams Agent With Existing Chat App",
       MSTeamsIntegration: {
         appId: "teams-app-id",
         appPassword: "teams-app-password",
@@ -169,8 +165,7 @@ describe("agent teams integration provisioning", () => {
       const db = context.getWorkspaceDB()
       await db.put({
         _id: docIds.generateChatAppID(),
-        agents: [{ agentId: agent._id!, isEnabled: true, isDefault: true }],
-        live: true,
+        agents: [{ agentId: agent._id! }],
         createdAt: new Date().toISOString(),
       })
     })
@@ -178,11 +173,7 @@ describe("agent teams integration provisioning", () => {
     await config.api.agent.provisionMSTeamsChannel(agent._id!)
 
     const chatApp = await getPersistedChatApp()
-    expect(chatApp?.agents).toContainEqual({
-      agentId: agent._id,
-      isEnabled: true,
-      isDefault: true,
-    })
+    expect(chatApp?.agents).toContainEqual({ agentId: agent._id })
   })
 
   it("obfuscates teams secrets in responses and preserves them on update", async () => {

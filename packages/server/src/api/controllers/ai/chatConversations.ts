@@ -43,10 +43,6 @@ import {
 } from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
 import {
-  assertChatAppIsLiveForUser,
-  canAccessChatAppAgentForUser,
-} from "./chatApps"
-import {
   prepareChatConversationForSave,
   truncateTitle,
 } from "../../../sdk/workspace/ai/chatConversations"
@@ -326,7 +322,7 @@ const finalizeAgentRequestTracking = async ({
 const findLiveOperation = (agent: Agent, operationId: string) =>
   getLiveOperations(agent).find(operation => operation.id === operationId)
 
-const resolveRequestedAgentId = async (ctx: UserCtx, chatApp: ChatApp) => {
+const resolveRequestedAgentId = (ctx: UserCtx) => {
   const rawAgentId = ctx.query.agentId
   if (rawAgentId === undefined) {
     return undefined
@@ -335,21 +331,18 @@ const resolveRequestedAgentId = async (ctx: UserCtx, chatApp: ChatApp) => {
     throw new HTTPError("agentId must be a non-empty string", 400)
   }
 
-  const agentId = rawAgentId.trim()
-  const chatAgentConfig = getEnabledChatAgentConfig(chatApp, agentId)
-  await assertCanAccessChatAgent(ctx, chatAgentConfig)
-  return agentId
+  return rawAgentId.trim()
 }
 
-const getEnabledChatAgentConfig = (chatApp: ChatApp, agentId: string) => {
-  const chatAgentConfig = chatApp.agents?.find(
-    agent => agent.agentId === agentId
-  )
-  if (!chatAgentConfig?.isEnabled) {
-    throw new HTTPError("agentId is not enabled for this chat app", 400)
+// Chat surfaces offer every live agent in the workspace, so being live is the
+// only thing that makes an agent available to chat with.
+const getLiveAgentOrThrow = async (agentId: string) => {
+  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  if (!agent.live) {
+    throw new HTTPError("agentId is not live", 400)
   }
 
-  return chatAgentConfig
+  return agent
 }
 
 const getConfiguredChatAgentConfig = (chatApp: ChatApp, agentId: string) => {
@@ -363,24 +356,19 @@ const getConfiguredChatAgentConfig = (chatApp: ChatApp, agentId: string) => {
   return chatAgentConfig
 }
 
-const assertCanAccessChatAgent = async (
-  ctx: UserCtx,
-  chatAgentConfig: NonNullable<NonNullable<ChatApp["agents"]>[number]>
-) => {
-  if (!(await canAccessChatAppAgentForUser(ctx, chatAgentConfig))) {
-    throw new HTTPError("Forbidden", 403)
-  }
-}
-
-const getChatConversation = async (
-  db: ReturnType<typeof context.getWorkspaceDB>,
-  ctx: UserCtx,
-  chatApp: ChatApp,
-  chatAppId: string,
-  chatConversationId: string,
-  requestedAgentId: string | undefined,
+const getChatConversation = async ({
+  db,
+  chatAppId,
+  chatConversationId,
+  requestedAgentId,
+  userId,
+}: {
+  db: ReturnType<typeof context.getWorkspaceDB>
+  chatAppId: string
+  chatConversationId: string
+  requestedAgentId: string | undefined
   userId: string
-) => {
+}) => {
   const chat = await db.tryGet<ChatConversation>(chatConversationId)
   if (
     !chat ||
@@ -393,16 +381,6 @@ const getChatConversation = async (
 
   if (chat.userId && chat.userId !== userId) {
     throw new HTTPError("Forbidden", 403)
-  }
-
-  const chatAgentConfig = chatApp.agents?.find(
-    agent => agent.agentId === chat.agentId
-  )
-  if (
-    !chatAgentConfig ||
-    !(await canAccessChatAppAgentForUser(ctx, chatAgentConfig))
-  ) {
-    throw new HTTPError("chat not found", 404)
   }
 
   return chat
@@ -527,13 +505,11 @@ const resolveChatStreamRequest = async (
     throw new HTTPError("chatAppId is required", 400)
   }
 
-  let chatApp: ChatApp | undefined
   if (!isPreview) {
-    chatApp = await db.tryGet<ChatApp>(chatAppId)
+    const chatApp = await db.tryGet<ChatApp>(chatAppId)
     if (!chatApp) {
       throw new HTTPError("Chat app not found", 404)
     }
-    assertChatAppIsLiveForUser(ctx, chatApp)
   }
 
   const existingChat = await getExistingChatForStream({
@@ -549,9 +525,8 @@ const resolveChatStreamRequest = async (
     throw new HTTPError("agentId is required", 400)
   }
 
-  if (!isPreview && chatApp) {
-    const chatAgentConfig = getEnabledChatAgentConfig(chatApp, agentId)
-    await assertCanAccessChatAgent(ctx, chatAgentConfig)
+  if (!isPreview) {
+    await getLiveAgentOrThrow(agentId)
   }
 
   chat.agentId = agentId
@@ -1034,21 +1009,9 @@ export async function fetchChatAppAgentFileUrl(
 ) {
   const { chatAppId, agentId, operationId, fileId } = ctx.params
 
-  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
-  assertChatAppIsLiveForUser(ctx, chatApp)
+  await sdk.ai.chatApps.getOrThrow(chatAppId)
 
-  const chatAgentConfig = chatApp.agents?.find(
-    agent => agent.agentId === agentId
-  )
-  if (!chatAgentConfig?.isEnabled) {
-    throw new HTTPError("chat agent not found", 404)
-  }
-
-  if (!(await canAccessChatAppAgentForUser(ctx, chatAgentConfig))) {
-    throw new HTTPError("Forbidden", 403)
-  }
-
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
+  const agent = await getLiveAgentOrThrow(agentId)
   const operation = findLiveOperation(agent, operationId)
 
   if (!operation) {
@@ -1086,10 +1049,8 @@ export async function createChatConversation(
     throw new HTTPError("agentId is required", 400)
   }
 
-  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
-  assertChatAppIsLiveForUser(ctx, chatApp)
-  const chatAgentConfig = getEnabledChatAgentConfig(chatApp, agentId)
-  await assertCanAccessChatAgent(ctx, chatAgentConfig)
+  await sdk.ai.chatApps.getOrThrow(chatAppId)
+  await getLiveAgentOrThrow(agentId)
 
   const db = context.getWorkspaceDB()
   const chatId = docIds.generateChatConversationID()
@@ -1128,18 +1089,14 @@ export async function removeChatConversation(ctx: UserCtx<void, void>) {
     throw new HTTPError("chatAppId is required", 400)
   }
 
-  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
-  assertChatAppIsLiveForUser(ctx, chatApp)
-  const requestedAgentId = await resolveRequestedAgentId(ctx, chatApp)
-  const chat = await getChatConversation(
+  await sdk.ai.chatApps.getOrThrow(chatAppId)
+  const chat = await getChatConversation({
     db,
-    ctx,
-    chatApp,
     chatAppId,
     chatConversationId,
-    requestedAgentId,
-    userId
-  )
+    requestedAgentId: resolveRequestedAgentId(ctx),
+    userId,
+  })
 
   await db.remove(chat)
   ctx.status = 204
@@ -1156,18 +1113,8 @@ export async function fetchChatHistory(
     throw new HTTPError("chatAppId is required", 400)
   }
 
-  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
-  assertChatAppIsLiveForUser(ctx, chatApp)
-  const requestedAgentId = await resolveRequestedAgentId(ctx, chatApp)
-  const accessibleAgentIds = new Set<string>()
-  for (const chatAgent of chatApp.agents || []) {
-    if (!chatAgent.isEnabled) {
-      continue
-    }
-    if (await canAccessChatAppAgentForUser(ctx, chatAgent)) {
-      accessibleAgentIds.add(chatAgent.agentId)
-    }
-  }
+  await sdk.ai.chatApps.getOrThrow(chatAppId)
+  const requestedAgentId = resolveRequestedAgentId(ctx)
 
   const allChats = await db.allDocs<ChatConversation>(
     docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
@@ -1184,7 +1131,6 @@ export async function fetchChatHistory(
         (!chat.userId || chat.userId === userId) &&
         (!requestedAgentId || chat.agentId === requestedAgentId)
     )
-    .filter(chat => accessibleAgentIds.has(chat.agentId))
     .sort((a, b) => {
       const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
@@ -1211,19 +1157,13 @@ export async function fetchChatConversation(
     throw new HTTPError("chatConversationId is required", 400)
   }
 
-  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
-  assertChatAppIsLiveForUser(ctx, chatApp)
-  const requestedAgentId = await resolveRequestedAgentId(ctx, chatApp)
+  await sdk.ai.chatApps.getOrThrow(chatAppId)
 
-  const chat = await getChatConversation(
+  ctx.body = await getChatConversation({
     db,
-    ctx,
-    chatApp,
     chatAppId,
     chatConversationId,
-    requestedAgentId,
-    userId
-  )
-
-  ctx.body = chat
+    requestedAgentId: resolveRequestedAgentId(ctx),
+    userId,
+  })
 }

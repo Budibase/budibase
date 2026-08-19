@@ -250,11 +250,7 @@ describe("agent slack integration provisioning", () => {
     )
 
     const chatApp = await getPersistedChatApp()
-    expect(chatApp?.agents).toContainEqual({
-      agentId: agent._id,
-      isEnabled: false,
-      isDefault: false,
-    })
+    expect(chatApp?.agents).toContainEqual({ agentId: agent._id })
   })
 
   it("obfuscates slack secrets in responses and preserves them on update", async () => {
@@ -706,11 +702,7 @@ describe("agent slack integration provisioning", () => {
       config.getProdWorkspaceId(),
       workspaceDb => workspaceDb.tryGet<ChatApp>(created.chatAppId)
     )
-    expect(prodChatApp?.agents).toContainEqual({
-      agentId: liveAgent._id,
-      isEnabled: false,
-      isDefault: false,
-    })
+    expect(prodChatApp?.agents).toContainEqual({ agentId: liveAgent._id })
 
     const state = new URL(created.oauthAuthorizeUrl).searchParams.get("state")
     expect(state).toBeTruthy()

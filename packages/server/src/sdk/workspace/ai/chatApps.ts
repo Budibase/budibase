@@ -3,55 +3,8 @@ import { ChatApp, DocumentType } from "@budibase/types"
 
 const withDefaults = (chatApp: ChatApp): ChatApp => ({
   ...chatApp,
-  live: chatApp.live ?? false,
   agents: chatApp.agents ?? [],
 })
-
-const normalizeConversationStarters = (
-  starters?: ChatApp["agents"][number]["conversationStarters"]
-) => {
-  if (starters === undefined) {
-    return undefined
-  }
-  if (!Array.isArray(starters)) {
-    throw new HTTPError("conversationStarters must contain prompt entries", 400)
-  }
-  if (starters.length > 3) {
-    throw new HTTPError(
-      "conversationStarters may contain at most 3 starters",
-      400
-    )
-  }
-
-  return starters.map(starter => {
-    if (!starter || typeof starter !== "object") {
-      throw new HTTPError(
-        "conversationStarters must contain prompt entries",
-        400
-      )
-    }
-    if (typeof starter.prompt !== "string") {
-      throw new HTTPError(
-        "conversationStarters must contain prompt entries",
-        400
-      )
-    }
-    return { prompt: starter.prompt }
-  })
-}
-
-const normalizeRoleId = (roleId?: unknown) => {
-  if (roleId === undefined) {
-    return undefined
-  }
-
-  if (typeof roleId !== "string") {
-    throw new HTTPError("roleId must be a string", 400)
-  }
-
-  const trimmedRoleId = roleId.trim()
-  return trimmedRoleId.length ? trimmedRoleId : undefined
-}
 
 const normalizeAgents = (agents?: ChatApp["agents"]) => {
   if (agents === undefined) {
@@ -72,15 +25,7 @@ const normalizeAgents = (agents?: ChatApp["agents"]) => {
     throw new HTTPError("agents must contain valid agentId entries", 400)
   }
 
-  return agents.map(agent => ({
-    agentId: agent.agentId,
-    isEnabled: agent.isEnabled === true,
-    isDefault: agent.isDefault === true,
-    roleId: normalizeRoleId(agent.roleId),
-    conversationStarters: normalizeConversationStarters(
-      agent.conversationStarters
-    ),
-  }))
+  return agents.map(agent => ({ agentId: agent.agentId }))
 }
 
 export async function getSingle(): Promise<ChatApp | undefined> {

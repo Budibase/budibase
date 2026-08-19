@@ -35,15 +35,5 @@ export async function getMatchedWorkspaceApp(
       isWorkspaceAppMatch(urlPath, workspaceApp)
     )
 
-  const matchedWorkspaceApp = findWorkspaceApp(normalizedFromUrl)
-  if (matchedWorkspaceApp) {
-    return matchedWorkspaceApp
-  }
-
-  const chatPath = normalizedFromUrl.replace(/\/_chat(?:\/.*)?$/, "")
-  if (chatPath !== normalizedFromUrl) {
-    return findWorkspaceApp(chatPath)
-  }
-
-  return matchedWorkspaceApp
+  return findWorkspaceApp(normalizedFromUrl)
 }

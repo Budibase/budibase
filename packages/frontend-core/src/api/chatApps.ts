@@ -5,9 +5,7 @@ import {
   CreateChatConversationRequest,
   FetchChatAppAgentsResponse,
   ChatApp,
-  ChatAppAgent,
   FetchAgentHistoryResponse,
-  UpdateChatAppRequest,
   AgentMessageMetadata,
   FetchAgentFileUrlResponse,
 } from "@budibase/types"
@@ -37,7 +35,6 @@ export interface ChatAppEndpoints {
     agentId?: string
   ) => Promise<FetchAgentHistoryResponse>
   fetchChatApp: (workspaceId?: string) => Promise<ChatApp | null>
-  setChatAppAgent: (chatAppId: string, agentId: string) => Promise<ChatAppAgent>
   fetchChatAppAgentFileUrl: (
     chatAppId: string,
     agentId: string,
@@ -48,7 +45,6 @@ export interface ChatAppEndpoints {
     chat: CreateChatConversationRequest,
     workspaceId?: string
   ) => Promise<ChatConversation>
-  updateChatApp: (chatApp: UpdateChatAppRequest) => Promise<ChatApp>
 }
 
 const getBrowserTimezone = () => {
@@ -182,19 +178,6 @@ export const buildChatAppEndpoints = (
     })
   },
 
-  setChatAppAgent: async (chatAppId: string, agentId: string) => {
-    if (!chatAppId) {
-      throw new Error("chatAppId is required to set chat app agent")
-    }
-    if (!agentId) {
-      throw new Error("agentId is required to set chat app agent")
-    }
-    return await API.post({
-      url: `/api/chatapps/${chatAppId}/agent`,
-      body: { agentId } as any,
-    })
-  },
-
   fetchChatAppAgentFileUrl: async (
     chatAppId: string,
     agentId: string,
@@ -243,15 +226,5 @@ export const buildChatAppEndpoints = (
     }
 
     return (await response.json()) as ChatConversation
-  },
-
-  updateChatApp: async (chatApp: UpdateChatAppRequest) => {
-    if (!chatApp._id) {
-      throw new Error("chatAppId is required to update a chat app")
-    }
-    return await API.put({
-      url: `/api/chatapps/${chatApp._id}`,
-      body: chatApp as any,
-    })
   },
 })
