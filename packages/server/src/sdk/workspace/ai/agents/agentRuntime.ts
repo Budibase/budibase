@@ -550,6 +550,7 @@ export const prepareAgentChatRun = async ({
         sessionId,
         channel: chat?.channel,
         userId: user?._id,
+        requester,
         getMessages: () => resolvedModelMessages,
         getRequestId: () => getRequestId?.(),
         generateCardCopy,

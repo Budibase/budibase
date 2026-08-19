@@ -281,7 +281,10 @@ const executeApprovedToolCall = async ({
     agentId: ctx.agentId,
     operationId: ctx.operationId,
     conversationId: ctx.sessionId,
-    requester: { userId: requesterId, authorization: { mode: "current" } },
+    requester: ctx.requester ?? {
+      userId: requesterId,
+      authorization: { mode: "current" },
+    },
   }
   const { tools, toolSources } = await sdk.ai.agents.buildPromptAndTools(
     agent,

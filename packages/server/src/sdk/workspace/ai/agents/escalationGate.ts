@@ -3,6 +3,7 @@ import {
   AgentEscalationConfig,
   AgentOperation,
   AgentOperationApprovalPolicy,
+  AgentRequester,
   ChatConversationChannel,
   EscalateToolResultStatus,
   EscalationSource,
@@ -22,6 +23,7 @@ export interface EscalationGateContext {
   sessionId: string
   channel?: ChatConversationChannel
   userId?: string
+  requester?: AgentRequester
   getMessages: () => ModelMessage[]
   getRequestId: () => string | undefined
   generateCardCopy?: (input: {
@@ -139,6 +141,7 @@ export const createEscalationGateRuntime = ({
         sessionId: gateContext.sessionId,
         channel: gateContext.channel,
         userId: gateContext.userId,
+        requester: gateContext.requester,
         messages: gateContext.getMessages(),
         pendingToolCall: {
           toolCallId,
