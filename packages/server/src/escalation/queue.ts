@@ -267,7 +267,12 @@ const executeApprovedToolCall = async ({
   user: ContextUser
   pending: PendingToolCall
 }): Promise<
-  | { messages: ModelMessage[]; toolName: string; output: unknown; failed: boolean }
+  | {
+      messages: ModelMessage[]
+      toolName: string
+      output: unknown
+      failed: boolean
+    }
   | undefined
 > => {
   const operation = agent.operations?.find(

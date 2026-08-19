@@ -65,8 +65,7 @@ const getSlackIntegration = async (
     agentId,
     a =>
       !!a.slackIntegration?.botToken &&
-      (!requireDeployment ||
-        !!a.slackIntegration?.messagingEndpointUrl?.trim())
+      (!requireDeployment || !!a.slackIntegration?.messagingEndpointUrl?.trim())
   )
   if (!agent) {
     return undefined
