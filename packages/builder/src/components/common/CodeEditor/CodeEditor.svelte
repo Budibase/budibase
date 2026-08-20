@@ -66,7 +66,7 @@
   import { validateHbsTemplate } from "./validator/hbs"
   import { validateJsTemplate } from "./validator/js"
   import AIGen from "./AIGen.svelte"
-  import { hbsTagPlugin, stripHbsDelimiters } from "./hbsTags"
+  import { bindingsChanged, hbsTagPlugin, stripHbsDelimiters } from "./hbsTags"
   import { markdownDecorationPlugin } from "./markdownDecorations"
 
   export let label: string | undefined = undefined
@@ -144,6 +144,9 @@
       if (binding.readableBinding) {
         validBindingSet.add(binding.readableBinding)
       }
+    }
+    if (isEditorInitialised) {
+      editor.dispatch({ effects: bindingsChanged.of(undefined) })
     }
   }
 

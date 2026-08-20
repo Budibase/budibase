@@ -1,4 +1,5 @@
 import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
+import { StateEffect } from "@codemirror/state"
 import {
   Decoration,
   EditorView,
@@ -6,6 +7,8 @@ import {
   ViewUpdate,
   WidgetType,
 } from "@codemirror/view"
+
+export const bindingsChanged = StateEffect.define<void>()
 
 const UNSUPPORTED_TOOL_TOOLTIP = "Tool is unsupported"
 const UNSUPPORTED_TOOL_ICON =
@@ -117,7 +120,10 @@ export const hbsTagPlugin = (
         if (
           update.docChanged ||
           update.viewportChanged ||
-          update.selectionSet
+          update.selectionSet ||
+          update.transactions.some(tr =>
+            tr.effects.some(effect => effect.is(bindingsChanged))
+          )
         ) {
           this.decorations = buildHbsTagDecorations(
             update.view,
