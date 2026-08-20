@@ -80,6 +80,9 @@ interface PrepareAgentChatRunParams {
   // stamp onto the escalation it raises. Read lazily since the caller only
   // knows it after this run's operation is resolved.
   getRequestId?: () => string | undefined
+  // Set on escalation-resume runs: the approved call that was just executed.
+  // Its gate refuses instead of re-escalating - one approval, one attempt.
+  executedApproval?: { toolName: string; sourceId?: string }
 }
 
 export interface AgentChatRun {
@@ -488,6 +491,7 @@ export const prepareAgentChatRun = async ({
   operationId,
   additionalInstructions,
   getRequestId,
+  executedApproval,
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
   const latestQuestion =
     providedLatestQuestion ?? (chat ? findLatestUserQuestion(chat) : "")
@@ -556,6 +560,7 @@ export const prepareAgentChatRun = async ({
         getMessages: () => resolvedModelMessages,
         getRequestId: () => getRequestId?.(),
         generateCardCopy,
+        executedApproval,
       }
     : undefined
 

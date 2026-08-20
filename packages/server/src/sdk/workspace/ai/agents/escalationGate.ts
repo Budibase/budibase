@@ -26,6 +26,7 @@ export interface EscalationGateContext {
   requester?: AgentRequester
   getMessages: () => ModelMessage[]
   getRequestId: () => string | undefined
+  executedApproval?: { toolName: string; sourceId?: string }
   generateCardCopy?: (input: {
     label: string
     args: unknown
@@ -82,8 +83,22 @@ export const createEscalationGateRuntime = ({
   rules,
   gateContext,
 }: CreateGateParams): EscalationGateRuntime => ({
-  intercept: async (input, { toolCallId }) => {
+  intercept: async (input, { toolCallId, messages }) => {
     const label = readableName ?? toolName
+    const executed = gateContext.executedApproval
+    if (
+      executed &&
+      (executed.toolName === toolName ||
+        (executed.sourceId && executed.sourceId === sourceId))
+    ) {
+      return {
+        status: EscalateToolResultStatus.UNAVAILABLE,
+        note:
+          `"${label}" was already executed under this conversation's ` +
+          "approval - its result is above. Report that outcome. The user " +
+          "must ask again before another attempt can be requested.",
+      }
+    }
     const rule = matchRule(rules)
     if (!rule) {
       return unavailableResult(label)
@@ -96,6 +111,9 @@ export const createEscalationGateRuntime = ({
       return unavailableResult(label)
     }
 
+    const frozenMessages = messages?.length
+      ? messages
+      : gateContext.getMessages()
     const appId = context.getWorkspaceId()
     const tenantId = context.getTenantId()
     if (!appId) {
@@ -142,7 +160,7 @@ export const createEscalationGateRuntime = ({
         channel: gateContext.channel,
         userId: gateContext.userId,
         requester: gateContext.requester,
-        messages: gateContext.getMessages(),
+        messages: frozenMessages,
         pendingToolCall: {
           toolCallId,
           toolName,

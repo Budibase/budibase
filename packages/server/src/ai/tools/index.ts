@@ -7,7 +7,7 @@ import {
   type AgentOperationToolConfig,
   type ToolExecutionPolicy,
 } from "@budibase/types"
-import { type Tool, type ToolSet } from "ai"
+import { type ModelMessage, type Tool, type ToolSet } from "ai"
 
 export interface ToolAuthorization {
   permissionType: PermissionType
@@ -51,7 +51,7 @@ export interface ToolAuthorizationRequest {
 export interface EscalationGateRuntime {
   intercept: (
     input: unknown,
-    options: { toolCallId: string }
+    options: { toolCallId: string; messages?: ModelMessage[] }
   ) => Promise<Record<string, unknown>>
 }
 
@@ -123,6 +123,7 @@ const wrapTool = (
     if (gate) {
       return await gate.intercept(input, {
         toolCallId: options?.toolCallId ?? "",
+        messages: options?.messages,
       })
     }
     try {
