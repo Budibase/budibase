@@ -1,5 +1,5 @@
-<script>
-  import { writable, get } from "svelte/store"
+<script lang="ts">
+  import { writable, get, derived } from "svelte/store"
   import { setContext, onMount } from "svelte"
   import { Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
@@ -7,7 +7,6 @@
     redirectToLoginWithReturnUrl,
     invalidationMessage,
     popNumSessionsInvalidated,
-    derivedMemo,
   } from "@budibase/frontend-core"
   import { getThemeClassNames } from "@budibase/shared-core"
   import Component from "./Component.svelte"
@@ -139,23 +138,26 @@
         embedded: !!$appStore.embedded,
       })
     }
+  })
+
+  onMount(() => {
     const handleHashChange = () => {
       const { open: sidePanelOpen } = $sidePanelStore
       // only close if the sidepanel is open and theres no onload side panel actions on the screen.
       if (
         sidePanelOpen &&
-        !$screenStore.activeScreen.onLoad?.some(
+        !$screenStore.activeScreen?.onLoad?.some(
           item => item["##eventHandlerType"] === "Open Side Panel"
         )
       ) {
         sidePanelStore.actions.close()
       }
 
-      const { open: modalOpen } = $modalStore
+      const modalOpen = $modalStore.contentId != null
       // only close if the modal is open and theres onload modals actions on the screen.
       if (
         modalOpen &&
-        !$screenStore.activeScreen.onLoad?.some(
+        !$screenStore.activeScreen?.onLoad?.some(
           item => item["##eventHandlerType"] === "Open Modal"
         )
       ) {
@@ -174,7 +176,7 @@
     }
   }
 
-  const builderActiveScreenId = derivedMemo(
+  const builderActiveScreenId = derived(
     [builderStore, screenStore],
     ([$builderStore, $screenStore]) =>
       $builderStore.inBuilder ? $screenStore.activeScreen?._id : undefined
