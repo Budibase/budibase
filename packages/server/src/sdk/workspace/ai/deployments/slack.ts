@@ -21,6 +21,7 @@ export const SLACK_BOT_SCOPES = [
   "im:history",
   "im:read",
   "im:write",
+  "users:read",
 ]
 
 const truncate = (value: string, maxLength: number) =>

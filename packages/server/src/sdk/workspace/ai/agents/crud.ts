@@ -365,6 +365,13 @@ const resolveMSTeamsIntegration = ({
     resolved.appPassword = existing.appPassword
   }
 
+  if (
+    incoming.appPackageVersion === undefined &&
+    existing?.appPackageVersion !== undefined
+  ) {
+    resolved.appPackageVersion = existing.appPackageVersion
+  }
+
   return resolved
 }
 
