@@ -37,7 +37,6 @@
   interface Props {
     workspaceId: string
     chat: ChatConversationLike
-    initialPrompt?: string
     // Fired when an escalation parks; the consumer polls the outcome and
     // injects it via appendAssistantMessage.
     onEscalationPending?: (detail: { escalationId: string }) => void
@@ -53,8 +52,6 @@
       accepted: boolean
     ) => Promise<EscalationRespondResult | undefined>
     previewRoleId?: string
-    readOnly?: boolean
-    readOnlyReason?: "deleted" | "offline"
     promptHistory?: string[]
     onpromptsubmitted?: (prompt: string) => void
   }
@@ -62,14 +59,11 @@
   let {
     workspaceId,
     chat = $bindable(),
-    initialPrompt = "",
     onEscalationPending,
     escalationState,
     showInlineApproval = false,
     onResolve,
     previewRoleId,
-    readOnly = false,
-    readOnlyReason,
     promptHistory = [],
     onpromptsubmitted,
   }: Props = $props()
@@ -130,7 +124,6 @@
   let reasoningTextByMessageId = $state<Record<string, string>>({})
   let inputValue = $state("")
   let promptHistoryIndex = $state<number | undefined>()
-  let lastInitialPrompt = $state("")
   let isPreparingResponse = $state(false)
   const resetPendingResponse = () => {
     isPreparingResponse = false
@@ -274,28 +267,6 @@
   let resolvedChatAppId = $state<string | undefined>()
   let resolvedConversationId = $state<string | undefined>()
 
-  const applyPrompt = async (prompt: string) => {
-    if (isBusy) {
-      return
-    }
-    inputValue = prompt
-    await sendMessage()
-  }
-
-  $effect(() => {
-    if (!initialPrompt) {
-      lastInitialPrompt = ""
-      return
-    }
-
-    if (initialPrompt === lastInitialPrompt) {
-      return
-    }
-
-    lastInitialPrompt = initialPrompt
-    applyPrompt(initialPrompt)
-  })
-
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
     transport: new DefaultChatTransport({
       headers: () => ({ [Header.WORKSPACE_ID]: workspaceId }),
@@ -404,11 +375,6 @@
   )
   let canStart = $derived(inputValue.trim().length > 0)
   let hasMessages = $derived(messages.length > 0)
-  let readOnlyMessage = $derived(
-    readOnlyReason === "deleted"
-      ? "This agent was deleted. Select another agent to resume chatting."
-      : "This agent is no longer live. Make it live in Settings to resume chatting."
-  )
 
   let lastChatId = $state<string | undefined>(chat?._id)
   $effect(() => {
@@ -475,10 +441,6 @@
   }
 
   const handleKeyDown = async (event: KeyboardEvent) => {
-    if (readOnly) {
-      return
-    }
-
     const navigationState = navigatePromptHistory({
       key: event.key,
       history: promptHistory,
@@ -501,10 +463,6 @@
   }
 
   const sendMessage = async () => {
-    if (readOnly) {
-      return
-    }
-
     const text = inputValue.trim()
     if (!text) {
       return
@@ -588,7 +546,7 @@
   })
 
   $effect(() => {
-    if (readOnly || isRequestPending) {
+    if (isRequestPending) {
       return
     }
 
@@ -834,48 +792,38 @@
     {/if}
   </div>
 
-  {#if readOnly}
-    <div class="input-wrapper">
-      <div class="read-only-notice">
-        <Body size="S" color="var(--spectrum-global-color-gray-700)">
-          {readOnlyMessage}
-        </Body>
-      </div>
+  <div class="input-wrapper">
+    <div class="input-container">
+      <textarea
+        bind:value={inputValue}
+        bind:this={textareaElement}
+        class="input spectrum-Textfield-input"
+        onkeydown={handleKeyDown}
+        oninput={() => (promptHistoryIndex = undefined)}
+        placeholder="Ask..."
+        disabled={isRequestPending}
+      ></textarea>
+      <button
+        type="button"
+        class="prompt-action"
+        class:running={isRequestPending}
+        onclick={handlePromptAction}
+        aria-label={isBusy ? "Pause response" : "Start response"}
+        disabled={isPreparingResponse || (!isBusy && !canStart)}
+      >
+        {#if isBusy}
+          <Icon name="stop" size="M" weight="fill" color="#ffffff" />
+        {:else if isPreparingResponse}
+          <ProgressCircle size="S" />
+        {:else}
+          <Icon name="arrow-up" size="M" weight="bold" color="#111111" />
+        {/if}
+      </button>
     </div>
-  {:else}
-    <div class="input-wrapper">
-      <div class="input-container">
-        <textarea
-          bind:value={inputValue}
-          bind:this={textareaElement}
-          class="input spectrum-Textfield-input"
-          onkeydown={handleKeyDown}
-          oninput={() => (promptHistoryIndex = undefined)}
-          placeholder="Ask..."
-          disabled={isRequestPending}
-        ></textarea>
-        <button
-          type="button"
-          class="prompt-action"
-          class:running={isRequestPending}
-          onclick={handlePromptAction}
-          aria-label={isBusy ? "Pause response" : "Start response"}
-          disabled={isPreparingResponse || (!isBusy && !canStart)}
-        >
-          {#if isBusy}
-            <Icon name="stop" size="M" weight="fill" color="#ffffff" />
-          {:else if isPreparingResponse}
-            <ProgressCircle size="S" />
-          {:else}
-            <Icon name="arrow-up" size="M" weight="bold" color="#111111" />
-          {/if}
-        </button>
-      </div>
-      <div class="input-footer">
-        <ContextUsage usage={lastAssistantUsage} />
-      </div>
+    <div class="input-footer">
+      <ContextUsage usage={lastAssistantUsage} />
     </div>
-  {/if}
+  </div>
 </div>
 
 <style>
@@ -962,14 +910,6 @@
     display: flex;
     justify-content: flex-end;
     padding: 0 4px;
-  }
-
-  .read-only-notice {
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 10px;
-    padding: var(--spacing-m);
-    background-color: var(--spectrum-global-color-gray-50);
-    text-align: center;
   }
 
   .input-container {
