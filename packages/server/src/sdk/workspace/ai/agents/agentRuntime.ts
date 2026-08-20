@@ -82,7 +82,7 @@ interface PrepareAgentChatRunParams {
   getRequestId?: () => string | undefined
   // Set on escalation-resume runs: the approved call that was just executed.
   // Its gate refuses instead of re-escalating - one approval, one attempt.
-  executedApproval?: { toolName: string; sourceId?: string }
+  executedApproval?: { toolName: string }
 }
 
 export interface AgentChatRun {

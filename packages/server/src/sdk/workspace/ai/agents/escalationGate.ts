@@ -26,7 +26,7 @@ export interface EscalationGateContext {
   requester?: AgentRequester
   getMessages: () => ModelMessage[]
   getRequestId: () => string | undefined
-  executedApproval?: { toolName: string; sourceId?: string }
+  executedApproval?: { toolName: string }
   generateCardCopy?: (input: {
     label: string
     args: unknown
@@ -86,11 +86,7 @@ export const createEscalationGateRuntime = ({
   intercept: async (input, { toolCallId, messages }) => {
     const label = readableName ?? toolName
     const executed = gateContext.executedApproval
-    if (
-      executed &&
-      (executed.toolName === toolName ||
-        (executed.sourceId && executed.sourceId === sourceId))
-    ) {
+    if (executed && executed.toolName === toolName) {
       return {
         status: EscalateToolResultStatus.UNAVAILABLE,
         note:

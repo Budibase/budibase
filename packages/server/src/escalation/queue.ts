@@ -481,7 +481,7 @@ export async function resumeOperation({
   let approvalInstructions: string
   let messages: ModelMessage[]
   let storedCallFailure: string | undefined
-  let executedApproval: { toolName: string; sourceId?: string } | undefined
+  let executedApproval: { toolName: string } | undefined
 
   if (ctx.pendingToolCall) {
     // Gate-raised escalation (AI_TOOL_ESCALATION): the frozen call is
@@ -531,10 +531,7 @@ export async function resumeOperation({
       "an error, say the action failed and why - never imply it succeeded. " +
       "A genuinely new, different request may still be escalated separately."
     messages = [...ctx.messages, ...executed.messages]
-    executedApproval = {
-      toolName: executed.toolName,
-      sourceId: ctx.pendingToolCall.sourceId,
-    }
+    executedApproval = { toolName: executed.toolName }
   } else {
     // LEGACY: free-form escalate-tool escalation - nothing has executed, the
     // model re-performs the action itself. Kept only to drain in-flight
