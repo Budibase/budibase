@@ -141,6 +141,17 @@ interface MockTeamsActivity {
     name?: string
   }
   entities?: MockTeamsMentionEntity[]
+  attachments?: Array<{
+    contentType?: string
+    contentUrl?: string
+    name?: string
+    content?: {
+      downloadUrl?: string
+      uniqueId?: string
+      fileType?: string
+      etag?: string
+    }
+  }>
 }
 
 const isSlackDirectMessage = (event: MockSlackEvent) =>

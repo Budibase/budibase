@@ -29,6 +29,9 @@ jest.mock("@budibase/backend-core", () => {
         return { executed: true }
       },
     },
+    blacklist: {
+      isBlacklisted: jest.fn().mockResolvedValue(false),
+    },
   }
 })
 
@@ -81,8 +84,16 @@ jest.mock("../../../escalation/notifications/slack", () => ({
   replyToConversation: (args: object) => mockReply(args),
 }))
 
+jest.mock("../../../escalation/notifications/ms-teams", () => ({
+  replyToConversation: (args: object) => mockReply(args),
+}))
+
 jest.mock("./slack", () => ({
   formatSlackAssistantReply: (args: object) => mockFormatReply(args),
+}))
+
+jest.mock("./ms-teams", () => ({
+  formatTeamsQueuedAssistantReply: (args: object) => mockFormatReply(args),
 }))
 
 import {
@@ -91,10 +102,32 @@ import {
   ConversationAttachmentStatus,
   ConversationAttachmentTurnStatus,
 } from "@budibase/types"
+import { blacklist, encryption } from "@budibase/backend-core"
 import { processConversationAttachmentJob } from "./conversationAttachmentProcessor"
 
 describe("conversation attachment processor", () => {
   let conversation: ChatConversation
+
+  const useTeamsAttachment = () => {
+    conversation.userId = "msteams:tenant-1:user-1"
+    conversation.channel = {
+      provider: AgentChannelProvider.MSTEAMS,
+      conversationId: "conversation-1",
+      conversationType: "personal",
+      threadId: "teams:conversation-1",
+    }
+    conversation.attachments = [
+      {
+        ...conversation.attachments![0],
+        provider: AgentChannelProvider.MSTEAMS,
+        providerFileId: "drive-item-1:etag-1",
+        encryptedDownloadUrl: encryption.encrypt(
+          "https://files.example.com/report.txt"
+        ),
+        size: undefined,
+      },
+    ]
+  }
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -257,6 +290,77 @@ describe("conversation attachment processor", () => {
     )
     expect(mockReply).toHaveBeenCalledWith(
       expect.objectContaining({ text: "I couldn't process report.txt." })
+    )
+  })
+
+  it("downloads and ingests a Teams personal-chat file", async () => {
+    useTeamsAttachment()
+
+    await processConversationAttachmentJob({
+      workspaceId: "workspace_1",
+      conversationId: "chat_1",
+      turnId: "turn_1",
+    })
+
+    expect(mockFilesInfo).not.toHaveBeenCalled()
+    expect(conversation.attachments?.[0]).toEqual(
+      expect.objectContaining({
+        provider: AgentChannelProvider.MSTEAMS,
+        size: Buffer.byteLength("content"),
+        status: ConversationAttachmentStatus.READY,
+      })
+    )
+    expect(conversation.attachments?.[0].encryptedDownloadUrl).toBeUndefined()
+    expect(mockReply).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: expect.objectContaining({
+          provider: AgentChannelProvider.MSTEAMS,
+        }),
+      })
+    )
+  })
+
+  it("rejects Teams downloads that exceed the file limit", async () => {
+    useTeamsAttachment()
+    jest.mocked(globalThis.fetch).mockResolvedValue(
+      new Response("content", {
+        status: 200,
+        headers: { "content-length": String(20 * 1024 * 1024 + 1) },
+      })
+    )
+
+    await processConversationAttachmentJob({
+      workspaceId: "workspace_1",
+      conversationId: "chat_1",
+      turnId: "turn_1",
+    })
+
+    expect(conversation.attachments?.[0]).toEqual(
+      expect.objectContaining({
+        status: ConversationAttachmentStatus.FAILED,
+        errorMessage: "report.txt exceeds the 20 MB file limit",
+      })
+    )
+    expect(conversation.attachments?.[0].encryptedDownloadUrl).toBeUndefined()
+    expect(mockIngestFile).not.toHaveBeenCalled()
+  })
+
+  it("rejects unsafe Teams download targets", async () => {
+    useTeamsAttachment()
+    jest.mocked(blacklist.isBlacklisted).mockResolvedValueOnce(true)
+
+    await processConversationAttachmentJob({
+      workspaceId: "workspace_1",
+      conversationId: "chat_1",
+      turnId: "turn_1",
+    })
+
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+    expect(conversation.attachments?.[0]).toEqual(
+      expect.objectContaining({
+        status: ConversationAttachmentStatus.FAILED,
+        errorMessage: "report.txt has an unsafe download URL",
+      })
     )
   })
 })

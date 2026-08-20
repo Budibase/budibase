@@ -94,6 +94,7 @@ const getLinkPath = (linkUrl: string) => new URL(linkUrl).pathname
 describe("agent teams integration provisioning", () => {
   const config = new TestConfiguration()
   let cleanupAIConfig: undefined | (() => Promise<void>)
+  let restoreGeminiFileSearchConfig: undefined | (() => void)
 
   const getPersistedChatApp = async (
     workspaceId = config.getDevWorkspaceId()
@@ -116,6 +117,8 @@ describe("agent teams integration provisioning", () => {
   afterEach(async () => {
     await cleanupAIConfig?.()
     cleanupAIConfig = undefined
+    restoreGeminiFileSearchConfig?.()
+    restoreGeminiFileSearchConfig = undefined
   })
 
   afterAll(() => {
@@ -921,6 +924,109 @@ describe("agent teams integration provisioning", () => {
             message.parts?.[0]?.type === "text" && message.parts[0].text
         )
       expect(userTexts).toEqual(["first", "second"])
+    })
+
+    it("queues file ingestion from a personal chat", async () => {
+      const { agent, chatAppId, linkExternalUser } =
+        await setupProvisionedTeamsAgent()
+      const geminiConfigured = jest
+        .spyOn(sdk.ai.knowledgeBase, "isGeminiFileSearchConfigured")
+        .mockReturnValue(true)
+      restoreGeminiFileSearchConfig = () => geminiConfigured.mockRestore()
+      await linkExternalUser("user-file")
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-file-1",
+          type: "message",
+          text: "",
+          from: { id: "user-file", name: "Teams User" },
+          conversation: {
+            id: "conversation-file-1",
+            conversationType: "personal",
+          },
+          channelData: { tenant: { id: "tenant-1" } },
+          attachments: [
+            {
+              contentType: "application/vnd.microsoft.teams.file.download.info",
+              name: "report.txt",
+              content: {
+                downloadUrl: "https://files.example.com/report.txt",
+                uniqueId: "drive-item-1",
+                fileType: "txt",
+                etag: "etag-1",
+              },
+            },
+          ],
+        },
+      })
+
+      expect(response.body.messages).toContain(
+        "Processing report.txt. I'll reply here when ready."
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+      const conversations = await fetchConversations()
+      expect(conversations).toHaveLength(1)
+      expect(conversations[0]?.attachments).toEqual([
+        expect.objectContaining({
+          provider: AgentChannelProvider.MSTEAMS,
+          providerFileId: "drive-item-1:etag-1",
+          filename: "report.txt",
+          mimetype: "text/plain",
+          encryptedDownloadUrl: expect.any(String),
+          status: "queued",
+        }),
+      ])
+    })
+
+    it("rejects file uploads outside personal chats", async () => {
+      const { agent, chatAppId } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-file-channel-1",
+          type: "message",
+          text: "review this",
+          from: { id: "user-file", name: "Teams User" },
+          recipient: { id: "bot-1" },
+          conversation: {
+            id: "conversation-channel-1",
+            conversationType: "channel",
+          },
+          channelData: {
+            channel: { id: "channel-1" },
+            team: { id: "team-1" },
+            tenant: { id: "tenant-1" },
+          },
+          entities: [
+            {
+              type: "mention",
+              mentioned: { id: "bot-1" },
+              text: "<at>Bot</at>",
+            },
+          ],
+          attachments: [
+            {
+              contentType: "application/vnd.microsoft.teams.file.download.info",
+              name: "report.txt",
+              content: {
+                downloadUrl: "https://files.example.com/report.txt",
+                uniqueId: "drive-item-1",
+                fileType: "txt",
+              },
+            },
+          ],
+        },
+      })
+
+      expect(response.body.messages).toContain(
+        "File uploads are supported only in personal chats with this agent."
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
     })
 
     it("starts a new empty conversation for /new without calling chat completion", async () => {

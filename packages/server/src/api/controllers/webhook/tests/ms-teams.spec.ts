@@ -5,6 +5,7 @@ import {
 } from "@budibase/types"
 import { ChatCommands } from "@budibase/shared-core"
 import {
+  extractTeamsConversationAttachments,
   isTeamsLifecycleActivity,
   isTeamsMentionActivity,
   parseTeamsCommand,
@@ -73,6 +74,54 @@ const makeChat = (
 })
 
 describe("teams webhook helpers", () => {
+  it("extracts Teams personal-chat file metadata", () => {
+    expect(
+      extractTeamsConversationAttachments({
+        attachments: [
+          {
+            contentType: "application/vnd.microsoft.teams.file.download.info",
+            name: "report.pdf",
+            content: {
+              downloadUrl: "https://files.example.com/report.pdf",
+              uniqueId: "drive-item-1",
+              fileType: "pdf",
+              etag: "etag-1",
+            },
+          },
+          {
+            contentType: "application/vnd.microsoft.card.adaptive",
+            name: "ignored.json",
+          },
+        ],
+      })
+    ).toEqual([
+      {
+        providerFileId: "drive-item-1:etag-1",
+        downloadUrl: "https://files.example.com/report.pdf",
+        filename: "report.pdf",
+        mimetype: "application/pdf",
+      },
+    ])
+  })
+
+  it("rejects mismatched Teams file types during shared validation", () => {
+    expect(
+      extractTeamsConversationAttachments({
+        attachments: [
+          {
+            contentType: "application/vnd.microsoft.teams.file.download.info",
+            name: "report.pdf",
+            content: {
+              downloadUrl: "https://files.example.com/report.pdf",
+              uniqueId: "drive-item-1",
+              fileType: "txt",
+            },
+          },
+        ],
+      })[0]?.mimetype
+    ).toEqual("")
+  })
+
   it("strips teams mention entities", () => {
     expect(
       stripTeamsMentions(`<at>Budibase Bot</at> hello`, [

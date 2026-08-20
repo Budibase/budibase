@@ -1,4 +1,10 @@
-import { context, HTTPError, objectStore, utils } from "@budibase/backend-core"
+import {
+  context,
+  encryption,
+  HTTPError,
+  objectStore,
+  utils,
+} from "@budibase/backend-core"
 import {
   AgentChannelProvider,
   type ChatConversation,
@@ -46,13 +52,27 @@ const MIME_TYPE_EXTENSIONS = new Map<string, Set<string>>([
 
 export interface IncomingConversationAttachment {
   providerFileId: string
+  downloadUrl?: string
   filename: string
   mimetype: string
   size?: number
 }
 
+const MIME_TYPE_BY_EXTENSION = new Map(
+  [...MIME_TYPE_EXTENSIONS.entries()].flatMap(([mimetype, extensions]) =>
+    [...extensions].map(extension => [extension, mimetype] as const)
+  )
+)
+
 const normalizeMimetype = (mimetype: string) =>
   mimetype.split(";", 1)[0].trim().toLowerCase()
+
+export const getConversationAttachmentMimetype = (filename: string) => {
+  const dotIndex = filename.lastIndexOf(".")
+  const extension =
+    dotIndex >= 0 ? filename.slice(dotIndex).trim().toLowerCase() : ""
+  return MIME_TYPE_BY_EXTENSION.get(extension)
+}
 
 export const getConversationAttachmentObjectStoreKey = ({
   workspaceId,
@@ -68,17 +88,21 @@ export const getConversationAttachmentObjectStoreKey = ({
   )}/attachments/${encodeURIComponent(attachmentId)}`
 
 const assertSupportedMetadata = (
-  attachment: IncomingConversationAttachment
+  attachment: IncomingConversationAttachment,
+  provider: ChatConversationAttachment["provider"]
 ) => {
   if (!attachment.providerFileId.trim()) {
-    throw new HTTPError("Slack file ID is required", 400)
+    throw new HTTPError("File ID is required", 400)
   }
   if (!attachment.filename.trim()) {
-    throw new HTTPError("Slack filename is required", 400)
+    throw new HTTPError("Filename is required", 400)
   }
-  if (!attachment.size || attachment.size <= 0) {
+  if (
+    provider === AgentChannelProvider.SLACK &&
+    (!attachment.size || attachment.size <= 0)
+  ) {
     throw new HTTPError(
-      `Slack did not provide a valid size for ${attachment.filename}`,
+      `The provider did not supply a valid size for ${attachment.filename}`,
       400
     )
   }
@@ -89,9 +113,18 @@ const assertSupportedMetadata = (
       400
     )
   }
-  if (attachment.size > MAX_CONVERSATION_ATTACHMENT_BYTES) {
+  if (attachment.size && attachment.size > MAX_CONVERSATION_ATTACHMENT_BYTES) {
     throw new HTTPError(
       `${attachment.filename} exceeds the 20 MB file limit`,
+      400
+    )
+  }
+  if (
+    provider === AgentChannelProvider.MSTEAMS &&
+    !attachment.downloadUrl?.trim()
+  ) {
+    throw new HTTPError(
+      `Teams did not provide a download URL for ${attachment.filename}`,
       400
     )
   }
@@ -148,9 +181,11 @@ const validateFileContent = async ({
 export const prepareConversationAttachments = ({
   conversation,
   incoming,
+  provider = AgentChannelProvider.SLACK,
 }: {
   conversation: Pick<ChatConversation, "_id" | "attachments">
   incoming: IncomingConversationAttachment[]
+  provider?: ChatConversationAttachment["provider"]
 }): ChatConversationAttachment[] => {
   const conversationId = conversation._id
   if (!conversationId) {
@@ -169,7 +204,9 @@ export const prepareConversationAttachments = ({
     return []
   }
 
-  deduplicated.forEach(assertSupportedMetadata)
+  deduplicated.forEach(attachment =>
+    assertSupportedMetadata(attachment, provider)
+  )
   const nextCount = existing.length + deduplicated.length
   if (nextCount > MAX_CONVERSATION_ATTACHMENT_COUNT) {
     throw new HTTPError(
@@ -179,11 +216,14 @@ export const prepareConversationAttachments = ({
   }
   return deduplicated.map(input => ({
     id: utils.newid(),
-    provider: AgentChannelProvider.SLACK,
+    provider,
     providerFileId: input.providerFileId,
+    ...(input.downloadUrl && {
+      encryptedDownloadUrl: encryption.encrypt(input.downloadUrl),
+    }),
     filename: input.filename.trim(),
     mimetype: normalizeMimetype(input.mimetype),
-    size: input.size!,
+    ...(input.size && { size: input.size }),
     status: ConversationAttachmentStatus.QUEUED,
     uploadedAt: new Date().toISOString(),
   }))
@@ -198,15 +238,18 @@ export const persistConversationAttachment = async ({
   attachment: ChatConversationAttachment
   data: Buffer
 }): Promise<ValidatedFileMetadata> => {
+  if (!data.byteLength) {
+    throw new HTTPError(`${attachment.filename} is empty`, 400)
+  }
   if (data.byteLength > MAX_CONVERSATION_ATTACHMENT_BYTES) {
     throw new HTTPError(
       `${attachment.filename} exceeds the 20 MB file limit`,
       400
     )
   }
-  if (data.byteLength !== attachment.size) {
+  if (attachment.size && data.byteLength !== attachment.size) {
     throw new HTTPError(
-      `${attachment.filename} did not match the size reported by Slack`,
+      `${attachment.filename} did not match the size reported by the provider`,
       400
     )
   }

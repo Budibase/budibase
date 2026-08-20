@@ -1,6 +1,14 @@
 import { WebClient } from "@slack/web-api"
-import { context, HTTPError, locks, roles } from "@budibase/backend-core"
 import {
+  blacklist,
+  context,
+  encryption,
+  HTTPError,
+  locks,
+  roles,
+} from "@budibase/backend-core"
+import {
+  AgentChannelProvider,
   type ChatApp,
   type ChatConversation,
   type ChatConversationAttachment,
@@ -14,11 +22,16 @@ import sdk from "../../../sdk"
 import { getGlobalUser } from "../../../utilities/global"
 import { canAccessChatAppAgentForUser } from "../ai/chatApps"
 import { webhookChat } from "../ai/chatConversations"
-import { replyToConversation } from "../../../escalation/notifications/slack"
+import * as slackNotifications from "../../../escalation/notifications/slack"
+import * as teamsNotifications from "../../../escalation/notifications/ms-teams"
 import { formatSlackAssistantReply } from "./slack"
+import { formatTeamsQueuedAssistantReply } from "./ms-teams"
 import type { ConversationAttachmentIngestionJob } from "../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue"
+import { MAX_CONVERSATION_ATTACHMENT_BYTES } from "../../../sdk/workspace/ai/chatConversations/attachments"
 
 const MAX_UPDATE_ATTEMPTS = 5
+const MAX_DOWNLOAD_REDIRECTS = 3
+const DOWNLOAD_TIMEOUT_MS = 30_000
 
 const isConflict = (error: Error) => "status" in error && error.status === 409
 
@@ -139,6 +152,147 @@ const getSlackFileData = async ({
   return data
 }
 
+const getBoundedResponseData = async ({
+  response,
+  filename,
+}: {
+  response: Response
+  filename: string
+}) => {
+  const contentLength = Number(response.headers.get("content-length"))
+  if (
+    Number.isFinite(contentLength) &&
+    contentLength > MAX_CONVERSATION_ATTACHMENT_BYTES
+  ) {
+    throw new HTTPError(`${filename} exceeds the 20 MB file limit`, 400)
+  }
+  if (!response.body) {
+    return Buffer.alloc(0)
+  }
+
+  const reader = response.body.getReader()
+  const chunks: Uint8Array[] = []
+  let size = 0
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) {
+        break
+      }
+      size += value.byteLength
+      if (size > MAX_CONVERSATION_ATTACHMENT_BYTES) {
+        await reader.cancel()
+        throw new HTTPError(`${filename} exceeds the 20 MB file limit`, 400)
+      }
+      chunks.push(value)
+    }
+  } finally {
+    reader.releaseLock()
+  }
+  return Buffer.concat(chunks, size)
+}
+
+const getTeamsFileData = async (attachment: ChatConversationAttachment) => {
+  if (!attachment.encryptedDownloadUrl) {
+    throw new HTTPError(`${attachment.filename} cannot be downloaded`, 400)
+  }
+
+  let url = encryption.decrypt(attachment.encryptedDownloadUrl)
+  for (let redirect = 0; redirect <= MAX_DOWNLOAD_REDIRECTS; redirect++) {
+    let parsed: URL
+    try {
+      parsed = new URL(url)
+    } catch {
+      throw new HTTPError(
+        `${attachment.filename} has an invalid download URL`,
+        400
+      )
+    }
+    if (
+      parsed.protocol !== "https:" ||
+      (await blacklist.isBlacklisted(parsed.hostname))
+    ) {
+      throw new HTTPError(
+        `${attachment.filename} has an unsafe download URL`,
+        400
+      )
+    }
+
+    const response = await fetch(parsed, {
+      redirect: "manual",
+      signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
+    })
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location")
+      if (!location || redirect === MAX_DOWNLOAD_REDIRECTS) {
+        throw new HTTPError(
+          `Failed to download ${attachment.filename} from Teams`,
+          400
+        )
+      }
+      url = new URL(location, parsed).toString()
+      continue
+    }
+    if (!response.ok) {
+      throw new HTTPError(
+        `Failed to download ${attachment.filename} from Teams`,
+        response.status
+      )
+    }
+    return await getBoundedResponseData({
+      response,
+      filename: attachment.filename,
+    })
+  }
+  throw new HTTPError(
+    `Failed to download ${attachment.filename} from Teams`,
+    400
+  )
+}
+
+const getFileData = async ({
+  conversation,
+  attachment,
+}: {
+  conversation: ChatConversation
+  attachment: ChatConversationAttachment
+}) => {
+  if (attachment.provider === AgentChannelProvider.SLACK) {
+    return await getSlackFileData({ conversation, attachment })
+  }
+  return await getTeamsFileData(attachment)
+}
+
+const replyToConversation = async ({
+  appId,
+  agentId,
+  channel,
+  text,
+}: {
+  appId: string
+  agentId: string
+  channel: NonNullable<ChatConversation["channel"]>
+  text: string
+}) => {
+  if (channel.provider === AgentChannelProvider.SLACK) {
+    return await slackNotifications.replyToConversation({
+      appId,
+      agentId,
+      channel,
+      text,
+    })
+  }
+  if (channel.provider === AgentChannelProvider.MSTEAMS) {
+    return await teamsNotifications.replyToConversation({
+      appId,
+      agentId,
+      channel,
+      text,
+    })
+  }
+  throw new HTTPError("Conversation attachment provider is not supported", 400)
+}
+
 const ensureConversationVectorStore = async (
   conversationId: string
 ): Promise<string> => {
@@ -220,7 +374,7 @@ const processAttachment = async ({
       (await context
         .getWorkspaceDB()
         .tryGet<ChatConversation>(conversationId)) || conversation
-    const data = await getSlackFileData({ conversation, attachment })
+    const data = await getFileData({ conversation, attachment })
     const metadata =
       await sdk.ai.chatConversations.persistConversationAttachment({
         conversationId,
@@ -244,14 +398,19 @@ const processAttachment = async ({
     await updateAttachment({
       conversationId,
       attachmentId,
-      update: current => ({
-        ...current,
-        ...metadata,
-        status: ConversationAttachmentStatus.READY,
-        ragSourceId: ingested.fileId,
-        processedAt: new Date().toISOString(),
-        errorMessage: undefined,
-      }),
+      update: current => {
+        const { encryptedDownloadUrl: _encryptedDownloadUrl, ...attachment } =
+          current
+        return {
+          ...attachment,
+          ...metadata,
+          size: data.byteLength,
+          status: ConversationAttachmentStatus.READY,
+          ragSourceId: ingested.fileId,
+          processedAt: new Date().toISOString(),
+          errorMessage: undefined,
+        }
+      },
     })
   } catch (error) {
     if (!finalAttempt && !isPermanentError(error)) {
@@ -261,12 +420,16 @@ const processAttachment = async ({
     await updateAttachment({
       conversationId,
       attachmentId,
-      update: current => ({
-        ...current,
-        status: ConversationAttachmentStatus.FAILED,
-        processedAt: new Date().toISOString(),
-        errorMessage: message,
-      }),
+      update: current => {
+        const { encryptedDownloadUrl: _encryptedDownloadUrl, ...attachment } =
+          current
+        return {
+          ...attachment,
+          status: ConversationAttachmentStatus.FAILED,
+          processedAt: new Date().toISOString(),
+          errorMessage: message,
+        }
+      },
     })
   }
 }
@@ -394,11 +557,17 @@ const processTurn = async ({
       user: requester,
     })
     messages = result.messages
-    responseText = await formatSlackAssistantReply({
-      agentId: current.agentId,
-      result,
-      isDirectMessage: current.channel?.conversationType === "im",
-    })
+    responseText =
+      current.channel?.provider === AgentChannelProvider.MSTEAMS
+        ? await formatTeamsQueuedAssistantReply({
+            agentId: current.agentId,
+            result,
+          })
+        : await formatSlackAssistantReply({
+            agentId: current.agentId,
+            result,
+            isDirectMessage: current.channel?.conversationType === "im",
+          })
     if (failed.length) {
       responseText += `\n\nI couldn't process: ${failed
         .map(file => file.filename)

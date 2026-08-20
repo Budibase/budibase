@@ -645,10 +645,7 @@ export const handleChatMessage = async ({
       return
     }
 
-    if (
-      provider === AgentChannelProvider.SLACK &&
-      command === ChatCommands.NEW
-    ) {
+    if (command === ChatCommands.NEW) {
       const previousChat = await findConversation({
         db,
         workspaceId,
@@ -733,6 +730,10 @@ export const handleChatMessage = async ({
             attachments: conversationAttachments,
           },
           incoming: incomingAttachments,
+          provider:
+            provider === AgentChannelProvider.MSTEAMS
+              ? AgentChannelProvider.MSTEAMS
+              : AgentChannelProvider.SLACK,
         })
       : []
     conversationAttachments = [...conversationAttachments, ...queuedAttachments]

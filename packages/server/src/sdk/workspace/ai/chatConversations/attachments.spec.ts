@@ -29,6 +29,7 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
+import { encryption } from "@budibase/backend-core"
 import {
   AgentChannelProvider,
   ConversationAttachmentStatus,
@@ -129,6 +130,52 @@ describe("conversation attachments", () => {
         ],
       })
     ).toThrow("image.png has an unsupported file type")
+  })
+
+  it("rejects an empty downloaded file", async () => {
+    await expect(
+      persistConversationAttachment({
+        conversationId: "chat_1",
+        attachment: {
+          id: "attachment_1",
+          provider: AgentChannelProvider.MSTEAMS,
+          providerFileId: "drive-item-1",
+          filename: "empty.txt",
+          mimetype: "text/plain",
+          status: ConversationAttachmentStatus.PROCESSING,
+          uploadedAt: new Date().toISOString(),
+        },
+        data: Buffer.alloc(0),
+      })
+    ).rejects.toThrow("empty.txt is empty")
+  })
+
+  it("accepts Teams metadata without a reported size and encrypts its download URL", () => {
+    const downloadUrl = "https://files.example.com/report.txt"
+    const attachments = prepareConversationAttachments({
+      conversation: { _id: "chat_1", attachments: [] },
+      provider: AgentChannelProvider.MSTEAMS,
+      incoming: [
+        {
+          providerFileId: "drive-item-1:etag-1",
+          filename: "report.txt",
+          mimetype: "text/plain",
+          downloadUrl,
+        },
+      ],
+    })
+
+    expect(attachments[0]).toEqual(
+      expect.objectContaining({
+        provider: AgentChannelProvider.MSTEAMS,
+        providerFileId: "drive-item-1:etag-1",
+        encryptedDownloadUrl: expect.any(String),
+      })
+    )
+    expect(attachments[0].size).toBeUndefined()
+    expect(
+      encryption.compare(downloadUrl, attachments[0].encryptedDownloadUrl!)
+    ).toBe(true)
   })
 
   it("retrieves bounded context instead of adding the file buffer", async () => {

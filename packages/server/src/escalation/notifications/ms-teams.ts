@@ -227,25 +227,31 @@ export async function replyToConversation({
   const isChannel =
     !!channel.channelId && channel.conversationType !== "personal"
 
-  let message: Record<string, unknown>
-  if (isChannel && channel.externalUserId) {
-    const name = channel.externalUserName?.trim() || "there"
-    message = {
-      type: "message",
-      text: `<at>${name}</at> ${text}`,
-      entities: [
-        {
-          type: "mention",
-          text: `<at>${name}</at>`,
-          mentioned: { id: channel.externalUserId, name },
-        },
-      ],
+  const chunks = Array.from(
+    { length: Math.max(1, Math.ceil(text.length / 3500)) },
+    (_, index) => text.slice(index * 3500, (index + 1) * 3500)
+  )
+  for (const chunk of chunks) {
+    let message: Record<string, unknown>
+    if (isChannel && channel.externalUserId) {
+      const name = channel.externalUserName?.trim() || "there"
+      message = {
+        type: "message",
+        text: `<at>${name}</at> ${chunk}`,
+        entities: [
+          {
+            type: "mention",
+            text: `<at>${name}</at>`,
+            mentioned: { id: channel.externalUserId, name },
+          },
+        ],
+      }
+    } else {
+      message = { type: "message", text: chunk }
     }
-  } else {
-    message = { type: "message", text }
-  }
 
-  await teamsPost(serviceUrl, token, channel.conversationId, message)
+    await teamsPost(serviceUrl, token, channel.conversationId, message)
+  }
 }
 
 export async function sendMSTeamsNotification({

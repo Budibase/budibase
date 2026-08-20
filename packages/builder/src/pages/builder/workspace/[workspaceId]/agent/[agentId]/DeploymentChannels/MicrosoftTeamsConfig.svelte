@@ -152,6 +152,10 @@
   {#snippet response()}
     <Body size="S">Send a normal message to ask a question.</Body>
     <Body size="S">
+      File uploads are supported in personal chats when your Teams app manifest
+      sets `bots[].supportsFiles` to `true`.
+    </Body>
+    <Body size="S">
       Use `{MS_TEAMS_NEW_COMMAND}` to start a new conversation.
     </Body>
     <Body size="S">

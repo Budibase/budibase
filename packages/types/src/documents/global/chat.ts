@@ -62,11 +62,12 @@ export interface ChatConversationChannel {
 
 export interface ChatConversationAttachment {
   id: string
-  provider: AgentChannelProvider.SLACK
+  provider: AgentChannelProvider.SLACK | AgentChannelProvider.MSTEAMS
   providerFileId: string
+  encryptedDownloadUrl?: string
   filename: string
   mimetype: string
-  size: number
+  size?: number
   textLength?: number
   pageCount?: number
   status: ConversationAttachmentStatus

@@ -119,7 +119,7 @@
       name: "Microsoft Teams",
       logo: MSTeamsLogo,
       details:
-        "Configure this agent for Microsoft Teams personal, group, and team chats",
+        "Configure this agent for Microsoft Teams chats; file uploads are supported in personal chats",
     },
     [AgentChannelProvider.SLACK]: {
       name: "Slack",

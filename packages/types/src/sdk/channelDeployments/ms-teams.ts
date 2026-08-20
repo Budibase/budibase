@@ -29,6 +29,20 @@ export interface MSTeamsActivityEntity {
   mentioned?: MSTeamsMentionedEntity
 }
 
+export interface MSTeamsFileDownloadInfo {
+  downloadUrl?: string
+  uniqueId?: string
+  fileType?: string
+  etag?: string
+}
+
+export interface MSTeamsActivityAttachment {
+  contentType?: string
+  contentUrl?: string
+  name?: string
+  content?: MSTeamsFileDownloadInfo
+}
+
 export interface MSTeamsActivity {
   id?: string
   type?: string
@@ -42,6 +56,7 @@ export interface MSTeamsActivity {
   conversation?: MSTeamsConversationAccount
   channelData?: MSTeamsChannelData
   entities?: MSTeamsActivityEntity[]
+  attachments?: MSTeamsActivityAttachment[]
 }
 
 export interface MSTeamsConversationScope {

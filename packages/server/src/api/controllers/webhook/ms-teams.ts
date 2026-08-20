@@ -21,6 +21,8 @@ import {
 } from "chat"
 import { createTeamsAdapter } from "@chat-adapter/teams"
 import sdk from "../../../sdk"
+import type { IncomingConversationAttachment } from "../../../sdk/workspace/ai/chatConversations"
+import { getConversationAttachmentMimetype } from "../../../sdk/workspace/ai/chatConversations"
 import { escalationProcessor } from "../../../escalation/processor"
 import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
 import { getTeamsState } from "./chatState"
@@ -32,6 +34,8 @@ const TEAMS_FALLBACK_ERROR_MESSAGE =
   "Sorry, something went wrong while processing your request."
 const TEAMS_PROCESSING_MESSAGE = "Thinking..."
 const TEAMS_STREAMING_UPDATE_INTERVAL_MS = 750
+const TEAMS_FILE_DOWNLOAD_CONTENT_TYPE =
+  "application/vnd.microsoft.teams.file.download.info"
 
 const formatTeamsLinkLabel = (value: string) =>
   value
@@ -77,6 +81,27 @@ const getTeamsKnowledgeSourceLinks = async ({
     }
   }
   return links
+}
+
+export const formatTeamsQueuedAssistantReply = async ({
+  agentId,
+  result,
+}: {
+  agentId: string
+  result: WebhookChatCompleteResult
+}) => {
+  const assistantText = await formatTeamsAssistantReply({ result })
+  const sourceLinks = await getTeamsKnowledgeSourceLinks({
+    agentId,
+    result,
+    isPersonalConversation: true,
+  })
+  if (!sourceLinks.length) {
+    return assistantText
+  }
+  return `${assistantText}\n\nSources:\n${sourceLinks
+    .map(source => `- [${source.label}](${source.url})`)
+    .join("\n")}`
 }
 
 export const formatTeamsAssistantReply = async ({
@@ -189,6 +214,39 @@ export const parseTeamsCommand = (
   return { command: ChatCommands.ASK, content: normalized }
 }
 
+export const extractTeamsConversationAttachments = (
+  activity?: MSTeamsActivity
+): IncomingConversationAttachment[] =>
+  (activity?.attachments || [])
+    .filter(
+      attachment =>
+        attachment.contentType?.trim().toLowerCase() ===
+        TEAMS_FILE_DOWNLOAD_CONTENT_TYPE
+    )
+    .map(attachment => {
+      const filename = attachment.name?.trim() || "teams-file"
+      const content = attachment.content
+      const uniqueId = content?.uniqueId?.trim() || ""
+      const etag = content?.etag?.trim()
+      const extension = filename.includes(".")
+        ? filename.slice(filename.lastIndexOf(".") + 1).toLowerCase()
+        : ""
+      const fileType = content?.fileType
+        ?.trim()
+        .replace(/^\./, "")
+        .toLowerCase()
+      const mimetype =
+        fileType && fileType === extension
+          ? getConversationAttachmentMimetype(filename) || ""
+          : ""
+      return {
+        providerFileId: etag ? `${uniqueId}:${etag}` : uniqueId,
+        downloadUrl: content?.downloadUrl?.trim(),
+        filename,
+        mimetype,
+      }
+    })
+
 export const splitTeamsMessage = (
   content: string,
   maxLength = 3500
@@ -260,7 +318,26 @@ const createTeamsMessageHandler = ({
     const raw = message.raw as MSTeamsActivity | undefined
     const messageText = message.text || ""
 
-    const { command, content } = parseTeamsCommand(messageText, raw?.entities)
+    const conversationType = raw?.conversation?.conversationType?.trim()
+    const hasFileAttachments = (raw?.attachments || []).some(
+      attachment =>
+        attachment.contentType?.trim().toLowerCase() ===
+        TEAMS_FILE_DOWNLOAD_CONTENT_TYPE
+    )
+    if (hasFileAttachments && !isTeamsPersonalConversation(conversationType)) {
+      await thread.post(
+        "File uploads are supported only in personal chats with this agent."
+      )
+      return
+    }
+    const attachments = extractTeamsConversationAttachments(raw)
+
+    const parsed = parseTeamsCommand(messageText, raw?.entities)
+    const command =
+      parsed.command === ChatCommands.UNSUPPORTED && attachments.length
+        ? ChatCommands.ASK
+        : parsed.command
+    const content = parsed.content
     if (command === ChatCommands.UNSUPPORTED) {
       await thread.post(
         `Send a message to chat, or "${ChatCommands.NEW}" to start a new conversation.`
@@ -279,7 +356,6 @@ const createTeamsMessageHandler = ({
     const teamId = raw?.channelData?.team?.id?.trim()
     const tenantId =
       raw?.channelData?.tenant?.id?.trim() || raw?.from?.tenantId?.trim()
-    const conversationType = raw?.conversation?.conversationType?.trim()
     const serviceUrl = raw?.serviceUrl?.trim()
 
     if (!conversationId) {
@@ -421,6 +497,7 @@ const createTeamsMessageHandler = ({
         channelEnabled,
         command,
         content,
+        attachments,
         user: {
           externalUserId,
           displayName,
