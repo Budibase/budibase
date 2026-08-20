@@ -254,6 +254,7 @@ const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,
   [FeatureFlag.AI_AGENT_ACTIVITY]: false,
   [FeatureFlag.AI_AGENT_TOOL_SECURITY]: false,
+  [FeatureFlag.AI_AGENT_TOOL_REQUEST_INPUTS]: false,
 }
 export const flags = new FlagSet(featureFlagDefaults)
 

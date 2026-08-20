@@ -60,6 +60,24 @@ const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
       Joi.object({
         toolName: Joi.string().required(),
         executionPrincipal: Joi.string().valid("requester", "admin").required(),
+        requestInputs: Joi.array()
+          .items(
+            Joi.object({
+              parameterPath: Joi.array()
+                .items(Joi.string().trim().required())
+                .min(1)
+                .required(),
+              required: Joi.boolean().required(),
+            })
+          )
+          .unique(
+            (left, right) =>
+              left.parameterPath.every(
+                (part: string, index: number) =>
+                  part === right.parameterPath[index]
+              ) && left.parameterPath.length === right.parameterPath.length
+          )
+          .optional(),
       })
     )
     .optional(),

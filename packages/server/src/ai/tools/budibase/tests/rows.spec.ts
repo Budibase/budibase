@@ -1,5 +1,6 @@
 import {
   FieldType,
+  JsonFieldSubType,
   PermissionLevel,
   PermissionType,
   RelationshipType,
@@ -59,6 +60,81 @@ describe("AI Tools - Rows", () => {
       expect(tool.name).toMatch(/^[A-Za-z0-9_-]+$/)
       expect(tool.name.endsWith(`_${action}`)).toBe(true)
     }
+  })
+
+  it("exposes supported row fields as request input parameters", () => {
+    const tools = createRowTools({
+      tableId: "ta_expenses",
+      tableName: "Expenses",
+      tableSourceType: TableSourceType.INTERNAL,
+      tableSchema: {
+        reason: {
+          name: "reason",
+          type: FieldType.STRING,
+          constraints: { presence: true },
+        },
+        amount: { name: "amount", type: FieldType.NUMBER },
+        category: {
+          name: "category",
+          type: FieldType.OPTIONS,
+          constraints: { inclusion: ["Food", "Travel"] },
+        },
+        approved: { name: "approved", type: FieldType.BOOLEAN },
+        tags: {
+          name: "tags",
+          type: FieldType.ARRAY,
+          constraints: {
+            type: JsonFieldSubType.ARRAY,
+            inclusion: ["Remote", "Office"],
+          },
+        },
+        startsAt: { name: "startsAt", type: FieldType.DATETIME },
+      },
+    })
+    const createTool = tools.find(tool =>
+      tool.readableName?.endsWith(".create_row")
+    )
+
+    expect(createTool?.requestInputParameters).toEqual([
+      {
+        parameterPath: ["data", "reason"],
+        name: "reason",
+        type: "text",
+        nativeRequired: true,
+      },
+      {
+        parameterPath: ["data", "amount"],
+        name: "amount",
+        type: "number",
+        nativeRequired: false,
+      },
+      {
+        parameterPath: ["data", "category"],
+        name: "category",
+        type: "select",
+        options: ["Food", "Travel"],
+        nativeRequired: false,
+      },
+      {
+        parameterPath: ["data", "approved"],
+        name: "approved",
+        type: "boolean",
+        nativeRequired: false,
+      },
+      {
+        parameterPath: ["data", "tags"],
+        name: "tags",
+        type: "multiselect",
+        options: ["Remote", "Office"],
+        nativeRequired: false,
+      },
+      {
+        parameterPath: ["data", "startsAt"],
+        name: "startsAt",
+        type: "datetime",
+        nativeRequired: false,
+      },
+    ])
   })
 
   it.each([

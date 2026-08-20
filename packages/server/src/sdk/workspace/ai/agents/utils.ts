@@ -1,6 +1,5 @@
 import {
   Agent,
-  AgentOperation,
   ToolType,
   ToolMetadata,
   SourceName,
@@ -9,7 +8,11 @@ import {
   EscalateToolResultStatus,
   ToolExecutionPrincipal,
   type AgentExecutionContext,
+  type AgentOperation,
+  type AgentToolRequestInputParameter,
 } from "@budibase/types"
+import type { JSONSchema7 } from "json-schema"
+import { asSchema } from "ai"
 import { ai } from "@budibase/pro"
 import {
   createKnowledgeFilesTool,
@@ -35,6 +38,7 @@ import {
   authorizeAgentToolCall,
   canRequesterReadAgentToolResource,
 } from "../../../../ai/tools/authorization"
+import type { ToolRequestInputRuntimeConfig } from "./toolRequestInputs"
 
 const HELPER_TOOL_NAMES = new Set([
   "list_tables",
@@ -65,7 +69,17 @@ export function getToolDisplayNames(
   )
 }
 
-export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
+export async function toToolMetadata(
+  tool: AiToolDefinition
+): Promise<ToolMetadata> {
+  const derivedParameters = getRequestInputParameters({
+    schema: await asSchema(tool.tool.inputSchema).jsonSchema,
+  })
+  const requestInputParameters = new Map(
+    [...derivedParameters, ...(tool.requestInputParameters ?? [])].map(
+      parameter => [JSON.stringify(parameter.parameterPath), parameter]
+    )
+  )
   return {
     name: tool.name,
     readableName: tool.readableName,
@@ -74,7 +88,112 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
     sourceLabel: tool.sourceLabel,
     sourceIconType: tool.sourceIconType,
     executionPolicy: tool.executionPolicy,
+    requestInputParameters: Array.from(requestInputParameters.values()),
   }
+}
+
+const getSchemaType = (schema: JSONSchema7) =>
+  Array.isArray(schema.type)
+    ? schema.type.find(type => type !== "null")
+    : schema.type
+
+const getRequestInputParameters = ({
+  schema,
+  parameterPath = [],
+  nativeRequired = true,
+}: {
+  schema: JSONSchema7
+  parameterPath?: string[]
+  nativeRequired?: boolean
+}): AgentToolRequestInputParameter[] => {
+  const nonNullAlternatives = schema.anyOf?.filter(
+    alternative =>
+      typeof alternative !== "boolean" && getSchemaType(alternative) !== "null"
+  )
+  if (nonNullAlternatives?.length === 1) {
+    return getRequestInputParameters({
+      schema: nonNullAlternatives[0] as JSONSchema7,
+      parameterPath,
+      nativeRequired,
+    })
+  }
+
+  const schemaType = getSchemaType(schema)
+  if (schemaType === "object" || schema.properties) {
+    const required = new Set(schema.required ?? [])
+    return Object.entries(schema.properties ?? {}).flatMap(
+      ([name, definition]) => {
+        if (typeof definition === "boolean") {
+          return []
+        }
+        return getRequestInputParameters({
+          schema: definition,
+          parameterPath: [...parameterPath, name],
+          nativeRequired: nativeRequired && required.has(name),
+        })
+      }
+    )
+  }
+
+  const name = schema.title || parameterPath.at(-1)
+  if (!name || !parameterPath.length) {
+    return []
+  }
+  if (
+    schema.enum?.length &&
+    schema.enum.every(option => typeof option === "string")
+  ) {
+    return [
+      {
+        parameterPath,
+        name,
+        type: "select",
+        options: schema.enum,
+        nativeRequired,
+      },
+    ]
+  }
+  const itemSchema =
+    schemaType === "array" &&
+    schema.items &&
+    !Array.isArray(schema.items) &&
+    typeof schema.items !== "boolean"
+      ? schema.items
+      : undefined
+  if (
+    itemSchema?.enum?.length &&
+    itemSchema.enum.every(option => typeof option === "string")
+  ) {
+    return [
+      {
+        parameterPath,
+        name,
+        type: "multiselect",
+        options: itemSchema.enum,
+        nativeRequired,
+      },
+    ]
+  }
+  if (schemaType === "string") {
+    return [
+      {
+        parameterPath,
+        name,
+        type:
+          schema.format === "date" || schema.format === "date-time"
+            ? "datetime"
+            : "text",
+        nativeRequired,
+      },
+    ]
+  }
+  if (schemaType === "number" || schemaType === "integer") {
+    return [{ parameterPath, name, type: "number", nativeRequired }]
+  }
+  if (schemaType === "boolean") {
+    return [{ parameterPath, name, type: "boolean", nativeRequired }]
+  }
+  return []
 }
 
 export async function getAvailableTools(
@@ -154,7 +273,9 @@ export async function getAvailableToolsMetadata(
   aiconfigId?: string
 ): Promise<ToolMetadata[]> {
   const tools = await getAvailableTools(aiconfigId)
-  return tools.filter(tool => !isHelperTool(tool)).map(toToolMetadata)
+  return Promise.all(
+    tools.filter(tool => !isHelperTool(tool)).map(toToolMetadata)
+  )
 }
 
 export interface BuildPromptAndToolsOptions {
@@ -163,6 +284,7 @@ export interface BuildPromptAndToolsOptions {
   fallbackPromptInstructions?: string
   executionContext?: AgentExecutionContext
   toolSecurityEnabled?: boolean
+  toolRequestInputsEnabled?: boolean
 }
 
 export async function buildPromptAndTools(
@@ -173,6 +295,7 @@ export async function buildPromptAndTools(
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
+  toolRequestInputConfigs: Map<string, ToolRequestInputRuntimeConfig>
 }> {
   const {
     baseSystemPrompt,
@@ -271,10 +394,38 @@ export async function buildPromptAndTools(
     resolvedSystemPrompt += `\n\nBefore calling escalate, call list_session_escalations to check whether this same request is already awaiting approval or has already been approved in this conversation. If an equivalent request is still pending, do not escalate again - tell the user it is already awaiting approval. If it has already been approved, proceed instead of escalating again. Only escalate genuinely new requests.`
   }
 
+  const toolRequestInputConfigs = options.toolRequestInputsEnabled
+    ? new Map(
+        await Promise.all(
+          enabledTools.flatMap(tool => {
+            const requestInputs = toolConfigs.find(
+              config => config.toolName === tool.name
+            )?.requestInputs
+            if (!requestInputs?.length) {
+              return []
+            }
+            return [
+              toToolMetadata(tool).then(
+                metadata =>
+                  [
+                    tool.name,
+                    {
+                      requestInputs,
+                      parameters: metadata.requestInputParameters ?? [],
+                    },
+                  ] as const
+              ),
+            ]
+          })
+        )
+      )
+    : new Map<string, ToolRequestInputRuntimeConfig>()
+
   return {
     systemPrompt: resolvedSystemPrompt,
     tools: toToolSet(enabledTools, runtimes),
     toolDisplayNames: getToolDisplayNames(enabledTools),
+    toolRequestInputConfigs,
   }
 }
 

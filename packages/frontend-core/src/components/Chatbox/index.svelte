@@ -221,6 +221,20 @@
       part => isReasoningUIPart(part) && part.state === "streaming"
     )
 
+  const isRequestInputGuardOutput = (output: unknown) =>
+    typeof output === "object" &&
+    output !== null &&
+    "status" in output &&
+    typeof output.status === "string" &&
+    output.status.startsWith("request_inputs_")
+
+  const isVisibleToolPart = (part: UIMessage["parts"][number]) =>
+    isToolUIPart(part) &&
+    !(
+      part.state === "output-available" &&
+      isRequestInputGuardOutput(part.output)
+    )
+
   const hasVisibleAssistantContent = (
     message: UIMessage<AgentMessageMetadata>
   ) => {
@@ -232,7 +246,7 @@
       (message.parts ?? []).some(
         part =>
           (isTextUIPart(part) && part.text.trim().length > 0) ||
-          isToolUIPart(part)
+          isVisibleToolPart(part)
       )
     ) {
       return true
@@ -810,7 +824,7 @@
             {#each message.parts ?? [] as part, partIndex}
               {#if isTextUIPart(part)}
                 <MarkdownViewer value={part.text} />
-              {:else if isToolUIPart(part) && getToolName(part) === ESCALATE_TOOL_NAME && isRaisedEscalation(part.output)}
+              {:else if isToolUIPart(part) && part.state === "output-available" && isRequestInputGuardOutput(part.output)}{:else if isToolUIPart(part) && getToolName(part) === ESCALATE_TOOL_NAME && isRaisedEscalation(part.output)}
                 {@const card = escalationCardProps(part)}
                 <EscalationCard
                   title={card.title}

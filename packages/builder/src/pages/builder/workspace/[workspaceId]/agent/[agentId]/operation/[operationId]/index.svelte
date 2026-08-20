@@ -5,6 +5,7 @@
     ToolExecutionPrincipal,
     ToolType,
     type AgentOperation,
+    type AgentOperationToolConfig,
     type CaretPositionFn,
     type EscalationRecipient,
     type InsertAtPositionFn,
@@ -41,6 +42,7 @@
   import Knowledge from "../../knowledge/index.svelte"
   import OperationRailSectionHeader from "../../OperationRailSectionHeader.svelte"
   import ToolIcon from "../../ToolIcon.svelte"
+  import ToolRequestInputs from "../../ToolRequestInputs.svelte"
   import ToolsDropdown from "../../ToolsDropdown.svelte"
   import WebSearchConfigModal from "../../WebSearchConfigModal.svelte"
   import {
@@ -334,6 +336,10 @@
     operation?.enabledTools?.find(tool => tool.toolName === toolName)
       ?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
 
+  const getToolRequestInputs = (toolName: string) =>
+    operation?.enabledTools?.find(tool => tool.toolName === toolName)
+      ?.requestInputs
+
   const getEffectiveToolPrincipal = (tool: AgentTool) =>
     !$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] ||
     tool.executionPolicy.mode === "admin"
@@ -364,8 +370,34 @@
       toolName: name,
       executionPrincipal:
         name === toolName ? executionPrincipal : getToolPrincipal(name),
+      requestInputs: getToolRequestInputs(name),
     }))
     saveOperation()
+  }
+
+  const setToolRequestInputs = async ({
+    toolName,
+    requestInputs,
+  }: {
+    toolName: string
+    requestInputs: NonNullable<AgentOperationToolConfig["requestInputs"]>
+  }) => {
+    if (!operation) {
+      return false
+    }
+
+    const previousTools = operation.enabledTools
+    operation.enabledTools = includedRuntimeBindings.map(name => ({
+      toolName: name,
+      executionPrincipal: getToolPrincipal(name),
+      requestInputs:
+        name === toolName ? requestInputs : getToolRequestInputs(name),
+    }))
+    const saved = await saveOperation()
+    if (!saved) {
+      operation.enabledTools = previousTools
+    }
+    return saved
   }
 
   const toggleOperationLive = async () => {
@@ -667,6 +699,19 @@
                             <span>{tool.readableBinding}</span>
                           </div>
                         </div>
+                      {/if}
+                      {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_REQUEST_INPUTS]}
+                        <ToolRequestInputs
+                          {tool}
+                          requestInputs={getToolRequestInputs(
+                            tool.runtimeBinding
+                          )}
+                          onUpdated={requestInputs =>
+                            setToolRequestInputs({
+                              toolName: tool.runtimeBinding,
+                              requestInputs,
+                            })}
+                        />
                       {/if}
                       {#if !$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
                         <button

@@ -21,6 +21,22 @@ export type ToolExecutionPolicy =
   | { mode: "admin" }
   | { mode: "configurable"; defaultPrincipal: ToolExecutionPrincipal }
 
+interface AgentToolRequestInputParameterBase {
+  parameterPath: string[]
+  name: string
+  nativeRequired: boolean
+}
+
+export type AgentToolRequestInputParameter =
+  | (AgentToolRequestInputParameterBase & {
+      type: "text" | "number" | "boolean" | "datetime"
+      options?: never
+    })
+  | (AgentToolRequestInputParameterBase & {
+      type: "select" | "multiselect"
+      options: string[]
+    })
+
 export interface ToolMetadata {
   name: string
   readableName?: string
@@ -29,6 +45,7 @@ export interface ToolMetadata {
   sourceLabel?: string
   sourceIconType?: string
   executionPolicy: ToolExecutionPolicy
+  requestInputParameters?: AgentToolRequestInputParameter[]
 }
 
 interface ChatAgentIntegration {
@@ -132,6 +149,12 @@ export interface AgentEscalationConfig {
 export interface AgentOperationToolConfig {
   toolName: string
   executionPrincipal: ToolExecutionPrincipal
+  requestInputs?: AgentToolRequestInputConfig[]
+}
+
+export interface AgentToolRequestInputConfig {
+  parameterPath: string[]
+  required: boolean
 }
 
 export interface AgentRequester {

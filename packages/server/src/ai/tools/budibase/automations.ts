@@ -10,6 +10,7 @@ import {
   PermissionLevel,
   PermissionType,
   ToolExecutionPrincipal,
+  type AgentToolRequestInputParameter,
 } from "@budibase/types"
 import * as triggers from "../../../automations/triggers"
 import sdk from "../../../sdk"
@@ -36,6 +37,36 @@ const getAutomationFieldsSummary = (automation: Automation) => {
   return Object.entries(fields)
     .map(([name, type]) => `${name} (${type})`)
     .join(", ")
+}
+
+const getAutomationRequestInputParameters = (
+  automation: Automation
+): AgentToolRequestInputParameter[] => {
+  const triggerInputs = automation.definition?.trigger?.inputs as {
+    fields?: Record<string, AutomationIOType>
+  } | null
+  return Object.entries(
+    triggerInputs?.fields ?? {}
+  ).flatMap<AgentToolRequestInputParameter>(([name, type]) => {
+    const parameterPath = ["fields", name]
+    const nativeRequired = false
+    if (type === AutomationIOType.NUMBER) {
+      return [{ parameterPath, name, type: "number", nativeRequired }]
+    }
+    if (type === AutomationIOType.BOOLEAN) {
+      return [{ parameterPath, name, type: "boolean", nativeRequired }]
+    }
+    if (type === AutomationIOType.DATE || type === AutomationIOType.DATETIME) {
+      return [{ parameterPath, name, type: "datetime", nativeRequired }]
+    }
+    if (
+      type === AutomationIOType.STRING ||
+      type === AutomationIOType.LONGFORM
+    ) {
+      return [{ parameterPath, name, type: "text", nativeRequired }]
+    }
+    return []
+  })
 }
 
 const triggerAutomationById = async ({
@@ -188,6 +219,7 @@ const createAutomationTools = (
           permissionLevel: PermissionLevel.EXECUTE,
           resourceId: automation._id!,
         },
+        requestInputParameters: getAutomationRequestInputParameters(automation),
         tool: tool({
           description,
           inputSchema: z.object({
