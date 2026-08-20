@@ -801,6 +801,25 @@ describe("agent slack integration provisioning", () => {
       expect(linkUrl).toContain("/handoff")
     })
 
+    it("still serves legacy webhook URLs containing the removed chat app segment", async () => {
+      const { agent } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/chatapp_legacy/${agent._id}`
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          command: `/${ChatCommands.LINK}`,
+          text: "",
+          channel_id: "D123",
+          user_id: "user-1",
+          user_name: "Slack User",
+          team_id: "T123",
+        },
+      })
+
+      expect(extractLinkUrl(response.body.messages)).toContain("/handoff")
+    })
+
     it(`shows already-linked guidance when /${ChatCommands.LINK} is run for an existing mapping`, async () => {
       const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
       const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`

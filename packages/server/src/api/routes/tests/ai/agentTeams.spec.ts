@@ -312,6 +312,25 @@ describe("agent teams integration provisioning", () => {
       expect(handoff.text).not.toContain("msteams")
     })
 
+    it("still serves legacy webhook URLs containing the removed chat app segment", async () => {
+      const { agent } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/chatapp_legacy/${agent._id}`
+
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-link-legacy",
+          type: "message",
+          text: ChatCommands.LINK,
+          from: { id: "user-1", name: "Teams User" },
+          conversation: { id: "conversation-1", conversationType: "personal" },
+          channelData: { tenant: { id: "tenant-1" } },
+        },
+      })
+
+      expect(extractLinkUrl(response.body.messages)).toBeTruthy()
+    })
+
     it("blocks unlinked users and guides them to link first", async () => {
       const { agent } = await setupProvisionedTeamsAgent()
       const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
