@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-# exec so that node replaces this shell as PID 1 and receives SIGTERM directly.
-# Going through yarn left a ~81MB node process resident for the lifetime of the
-# container, and bash does not forward signals to a foreground child, so
-# graceful shutdown never ran.
 
 NODE_ARGS=()
 if [ "$DISABLE_SOURCE_MAPS" != "1" ]; then
