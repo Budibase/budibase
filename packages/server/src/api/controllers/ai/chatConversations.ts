@@ -36,10 +36,7 @@ import {
   type AgentChatRun,
 } from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
-import {
-  prepareChatConversationForSave,
-  truncateTitle,
-} from "../../../sdk/workspace/ai/chatConversations"
+import { truncateTitle } from "../../../sdk/workspace/ai/chatConversations"
 import { determineTrigger } from "../../../sdk/workspace/ai/agentLogs/shared"
 
 const getGlobalUserId = (ctx: UserCtx) => {
