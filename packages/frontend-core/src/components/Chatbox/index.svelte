@@ -14,7 +14,7 @@
     EscalationContextDoc,
     EscalationRespondResult,
   } from "@budibase/types"
-  import { ESCALATE_TOOL_NAME, EscalateToolResultStatus } from "@budibase/types"
+  import { EscalateToolResultStatus } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
   import { tick, untrack } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
@@ -92,13 +92,15 @@
   // The escalate part's input/output are loosely typed by the AI SDK, so the
   // casts live here rather than cluttering the template.
   const escalationCardProps = (part: { input?: unknown; output?: unknown }) => {
-    const output = part.output as { escalationId?: string } | undefined
+    const output = part.output as
+      | { escalationId?: string; title?: string; summary?: string }
+      | undefined
     const input = part.input as { title?: string; summary?: string } | undefined
     const escalationId = output?.escalationId
     return {
       escalationId,
-      title: input?.title,
-      summary: input?.summary,
+      title: output?.title ?? input?.title,
+      summary: output?.summary ?? input?.summary,
       resolution:
         (escalationId && escalationState?.[escalationId]?.resolution) ||
         "pending",
@@ -317,11 +319,7 @@
     const ids: string[] = []
     for (const message of messages) {
       for (const part of message.parts ?? []) {
-        if (
-          !isToolUIPart(part) ||
-          getToolName(part) !== ESCALATE_TOOL_NAME ||
-          part.state !== "output-available"
-        ) {
+        if (!isToolUIPart(part) || part.state !== "output-available") {
           continue
         }
         const output = part.output as
@@ -609,7 +607,7 @@
             {#each message.parts ?? [] as part, partIndex}
               {#if isTextUIPart(part)}
                 <MarkdownViewer value={part.text} />
-              {:else if isToolUIPart(part) && getToolName(part) === ESCALATE_TOOL_NAME && isRaisedEscalation(part.output)}
+              {:else if isToolUIPart(part) && isRaisedEscalation(part.output)}
                 {@const card = escalationCardProps(part)}
                 <EscalationCard
                   title={card.title}
