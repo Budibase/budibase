@@ -149,6 +149,27 @@ describe("resumeOperation", () => {
     })
   })
 
+  it("preserves a system requester when resuming an automated agent run", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      mockApprovedRun("Approved and booked.")
+      const requester = {
+        userId: "automation:automation_1",
+        authorization: { mode: "system" as const },
+      }
+
+      await resumeOperation({
+        doc: baseDoc({ response: { accepted: true } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: { ...baseCtx, requester },
+      })
+
+      expect(prepareAgentChatRunMock).toHaveBeenCalledWith(
+        expect.objectContaining({ requester })
+      )
+    })
+  })
+
   it("records escalation_resolved with outcome rejected", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!

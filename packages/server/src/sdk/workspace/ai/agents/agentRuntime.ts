@@ -71,6 +71,7 @@ interface PrepareAgentChatRunParams {
   errorLabel: string
   sessionId: string
   user: ContextUser
+  requester?: AgentRequester
   startedAt?: string
   // Pin the run to a specific operation instead of routing on the question.
   operationId?: string
@@ -555,6 +556,7 @@ export const prepareAgentChatRun = async ({
   operationId,
   additionalInstructions,
   getRequestId,
+  requester: providedRequester,
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
   const latestQuestion =
     providedLatestQuestion ?? (chat ? findLatestUserQuestion(chat) : "")
@@ -565,7 +567,7 @@ export const prepareAgentChatRun = async ({
     errorLabel,
     startedAt,
   })
-  const requester = getAgentRequester({ user, chat })
+  const requester = providedRequester ?? getAgentRequester({ user, chat })
 
   const [runContext, modelMessages] = await Promise.all([
     prepareAgentRunContext({

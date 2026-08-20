@@ -114,6 +114,7 @@ export const createEscalateTool = ({
           sessionId,
           channel,
           userId,
+          requester: executionContext.requester,
           messages: getMessages(),
         },
       })
