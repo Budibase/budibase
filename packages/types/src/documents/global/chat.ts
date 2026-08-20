@@ -31,7 +31,6 @@ export interface ChatConversationChannel {
   provider: AgentChannelProvider
   conversationId?: string
   conversationType?: string
-  guildId?: string
   teamId?: string
   tenantId?: string
   channelId?: string
@@ -78,7 +77,6 @@ export interface ChatIdentityLink extends Document {
   linkedBy?: string
   externalUserName?: string
   teamId?: string
-  guildId?: string
   providerTenantId?: string
   serviceUrl?: string
 }

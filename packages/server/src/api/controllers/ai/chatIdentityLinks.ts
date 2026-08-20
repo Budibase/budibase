@@ -292,7 +292,6 @@ export async function confirmChatLinkSession(
     externalUserId: consumedSession.externalUserId,
     externalUserName: consumedSession.externalUserName,
     teamId: consumedSession.teamId,
-    guildId: consumedSession.guildId,
     providerTenantId: consumedSession.providerTenantId,
     serviceUrl: consumedSession.serviceUrl,
     globalUserId: currentGlobalUserId,

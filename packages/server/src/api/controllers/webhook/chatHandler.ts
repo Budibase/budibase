@@ -491,7 +491,6 @@ export const handleChatMessage = async ({
           externalUserId: user.externalUserId,
           externalUserName: user.displayName,
           teamId: channel.teamId,
-          guildId: channel.guildId,
           providerTenantId: channel.tenantId,
           serviceUrl: channel.serviceUrl,
         })
