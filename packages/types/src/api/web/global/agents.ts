@@ -4,7 +4,6 @@ import {
   AgentSharePointKnowledgeSourceScope,
   AgentKnowledgeSourceSyncRunStatus,
   AgentOperation,
-  ChatApp,
   ChatConversation,
   ChatConversationRequest,
   CreateChatConversationRequest,
@@ -16,12 +15,6 @@ export type ChatAgentRequest = ChatConversationRequest
 export type FetchAgentHistoryResponse = ChatConversation[]
 
 export type { CreateChatConversationRequest }
-
-export type CreateChatAppRequest = Omit<
-  ChatApp,
-  "_id" | "_rev" | "createdAt" | "updatedAt"
->
-export type UpdateChatAppRequest = Omit<ChatApp, "createdAt" | "updatedAt">
 
 export interface FetchAgentsResponse {
   agents: Agent[]
@@ -129,10 +122,6 @@ export interface DisconnectAgentSharePointSiteResponse {
   agentId: string
   disconnected: true
   siteId: string
-}
-
-export interface FetchChatAppAgentsResponse {
-  agents: Pick<Agent, "_id" | "name" | "icon" | "iconColor" | "live">[]
 }
 
 interface ConfigureAgentDeploymentChannelRequest {

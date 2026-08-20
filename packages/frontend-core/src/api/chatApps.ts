@@ -3,7 +3,6 @@ import {
   ChatConversation,
   ChatConversationRequest,
   CreateChatConversationRequest,
-  FetchChatAppAgentsResponse,
   ChatApp,
   FetchAgentHistoryResponse,
   AgentMessageMetadata,
@@ -29,7 +28,6 @@ export interface ChatAppEndpoints {
     chatConversationId: string,
     agentId?: string
   ) => Promise<ChatConversation>
-  fetchChatAppAgents: (chatAppId: string) => Promise<FetchChatAppAgentsResponse>
   fetchChatHistory: (
     chatAppId: string,
     agentId?: string
@@ -147,12 +145,6 @@ export const buildChatAppEndpoints = (
         `/api/chatapps/${chatAppId}/conversations/${chatConversationId}`,
         agentId
       ),
-    })
-  },
-
-  fetchChatAppAgents: async (chatAppId: string) => {
-    return await API.get({
-      url: `/api/chatapps/${chatAppId}/agents`,
     })
   },
 

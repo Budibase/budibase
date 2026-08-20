@@ -33,7 +33,6 @@ publicRoutes.post(
 userRoutes
   .get("/api/chatapps", ai.fetchChatApp)
   .get("/api/chatapps/:chatAppId", ai.fetchChatAppById)
-  .get("/api/chatapps/:chatAppId/agents", ai.fetchChatAppAgents)
   .get(
     "/api/chatapps/:chatAppId/agents/:agentId/operations/:operationId/files/:fileId/url",
     ai.fetchChatAppAgentFileUrl

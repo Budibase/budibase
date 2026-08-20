@@ -187,28 +187,6 @@ describe("chat route access", () => {
     expect(res.status).toBe(404)
   })
 
-  it("returns only live agents from GET /api/chatapps/:chatAppId/agents", async () => {
-    const headers = await headersForUser(basicUser)
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}/agents`)
-      .set(headers)
-
-    expect(res.status).toBe(200)
-    expect(res.body.agents).toEqual([
-      {
-        _id: liveAgentId,
-        name: "Support agent",
-        icon: "robot",
-        iconColor: "#6a9bcc",
-        live: true,
-      },
-    ])
-    expect(
-      res.body.agents.map((agent: { _id: string }) => agent._id)
-    ).not.toContain(offlineAgentId)
-  })
-
   it("allows basic users to access GET /api/chatapps/:chatAppId/conversations", async () => {
     const headers = await headersForUser(basicUser)
     const conversation = await createConversation("history conversation")
