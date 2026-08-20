@@ -37,12 +37,6 @@
   interface Props {
     workspaceId: string
     chat: ChatConversationLike
-    persistConversation?: boolean
-    conversationStarters?: { prompt: string }[]
-    initialPrompt?: string
-    onchatsaved?: (event: {
-      detail: { chatId?: string; chat: ChatConversationLike }
-    }) => void
     // Fired when an escalation parks; the consumer polls the outcome and
     // injects it via appendAssistantMessage.
     onEscalationPending?: (detail: { escalationId: string }) => void
@@ -57,10 +51,7 @@
       escalationId: string,
       accepted: boolean
     ) => Promise<EscalationRespondResult | undefined>
-    isAgentPreviewChat?: boolean
     previewRoleId?: string
-    readOnly?: boolean
-    readOnlyReason?: "disabled" | "deleted" | "offline"
     promptHistory?: string[]
     onpromptsubmitted?: (prompt: string) => void
   }
@@ -68,18 +59,11 @@
   let {
     workspaceId,
     chat = $bindable(),
-    persistConversation = true,
-    conversationStarters = [],
-    initialPrompt = "",
-    onchatsaved,
     onEscalationPending,
     escalationState,
     showInlineApproval = false,
     onResolve,
-    isAgentPreviewChat = false,
     previewRoleId,
-    readOnly = false,
-    readOnlyReason,
     promptHistory = [],
     onpromptsubmitted,
   }: Props = $props()
@@ -133,8 +117,7 @@
     })
   )
 
-  const createStableSessionId = () =>
-    isAgentPreviewChat ? `chat-preview:${Helpers.uuid()}` : Helpers.uuid()
+  const createStableSessionId = () => `chat-preview:${Helpers.uuid()}`
 
   let stableSessionId = $state(createStableSessionId())
   let chatAreaElement = $state<HTMLDivElement>()
@@ -143,7 +126,6 @@
   let reasoningTextByMessageId = $state<Record<string, string>>({})
   let inputValue = $state("")
   let promptHistoryIndex = $state<number | undefined>()
-  let lastInitialPrompt = $state("")
   let isPreparingResponse = $state(false)
   const resetPendingResponse = () => {
     isPreparingResponse = false
@@ -167,27 +149,15 @@
 
     try {
       const resolvedUrl =
-        !isAgentPreviewChat &&
-        chat?.chatAppId &&
-        chat?.agentId &&
-        selectedOperationId
+        chat?.agentId && selectedOperationId
           ? (
-              await API.fetchChatAppAgentFileUrl(
-                chat.chatAppId,
+              await API.fetchOperationFileUrl(
                 chat.agentId,
-                source.fileId,
-                selectedOperationId
+                selectedOperationId,
+                source.fileId
               )
             ).url
-          : isAgentPreviewChat && chat?.agentId && selectedOperationId
-            ? (
-                await API.fetchOperationFileUrl(
-                  chat.agentId,
-                  selectedOperationId,
-                  source.fileId
-                )
-              ).url
-            : undefined
+          : undefined
       if (!resolvedUrl) {
         notifications.error("Could not resolve source file URL")
         return
@@ -294,48 +264,21 @@
     return displayName
   }
 
-  const PREVIEW_CHAT_APP_ID = "agent-preview"
-
-  let resolvedChatAppId = $state<string | undefined>()
   let resolvedConversationId = $state<string | undefined>()
-
-  const applyConversationStarter = async (starterPrompt: string) => {
-    if (isBusy) {
-      return
-    }
-    inputValue = starterPrompt
-    await sendMessage()
-  }
-
-  $effect(() => {
-    if (!initialPrompt) {
-      lastInitialPrompt = ""
-      return
-    }
-
-    if (initialPrompt === lastInitialPrompt) {
-      return
-    }
-
-    lastInitialPrompt = initialPrompt
-    applyConversationStarter(initialPrompt)
-  })
 
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
     transport: new DefaultChatTransport({
       headers: () => ({ [Header.WORKSPACE_ID]: workspaceId }),
       prepareSendMessagesRequest: ({ messages }) => {
-        const chatAppId = resolvedChatAppId || chat?.chatAppId
         const conversationId = resolvedConversationId || chat?._id || "new"
+        const agentId = chat?.agentId
         return {
-          api: `/api/chatapps/${chatAppId}/conversations/${conversationId}/stream`,
+          api: `/api/agents/${agentId}/conversations/${conversationId}/stream`,
           body: {
             _id: resolvedConversationId || chat?._id,
-            chatAppId,
-            agentId: chat?.agentId,
-            transient: !persistConversation,
-            isPreview: isAgentPreviewChat,
-            previewRoleId: isAgentPreviewChat ? previewRoleId : undefined,
+            agentId,
+            isPreview: true,
+            previewRoleId,
             sessionId: stableSessionId,
             title: chat?.title,
             messages,
@@ -346,31 +289,7 @@
     messages: chat?.messages || [],
     onFinish: async () => {
       isPreparingResponse = false
-
-      if (persistConversation && !chat._id && chat.chatAppId) {
-        try {
-          const history = await API.fetchChatHistory(
-            chat.chatAppId,
-            chat.agentId
-          )
-          const msgs = chatInstance.messages
-          const lastMessageId = msgs[msgs.length - 1]?.id
-          const savedConversation =
-            history?.find(convo =>
-              convo.messages.some(message => message.id === lastMessageId)
-            ) || history?.[0]
-
-          if (savedConversation) {
-            chat = { ...chat, ...savedConversation }
-            resolvedConversationId = savedConversation._id
-          }
-        } catch (historyError) {
-          console.error(historyError)
-        }
-      }
-
       chat = { ...chat, messages: chatInstance.messages }
-      onchatsaved?.({ detail: { chatId: chat._id, chat } })
     },
     onError: error => {
       resetPendingResponse()
@@ -449,20 +368,6 @@
   )
   let canStart = $derived(inputValue.trim().length > 0)
   let hasMessages = $derived(messages.length > 0)
-  let showConversationStarters = $derived(
-    !isRequestPending &&
-      !hasMessages &&
-      conversationStarters.length > 0 &&
-      !isAgentPreviewChat &&
-      !readOnly
-  )
-  let readOnlyMessage = $derived(
-    readOnlyReason === "deleted"
-      ? "This agent was deleted. Select another agent to resume chatting."
-      : readOnlyReason === "offline"
-        ? "This agent is no longer live. Make it live in Settings to resume chatting."
-        : "This agent is disabled. Enable it in Settings to resume chatting."
-  )
 
   let lastChatId = $state<string | undefined>(chat?._id)
   $effect(() => {
@@ -520,68 +425,20 @@
     }
   })
 
-  const ensureChatApp = async (): Promise<string | undefined> => {
-    if (chat?.chatAppId) {
-      resolvedChatAppId = chat.chatAppId
-      return chat.chatAppId
-    }
-
-    if (isAgentPreviewChat) {
-      resolvedChatAppId = PREVIEW_CHAT_APP_ID
-      if (chat) {
-        chat = { ...chat, chatAppId: PREVIEW_CHAT_APP_ID }
-      }
-      return PREVIEW_CHAT_APP_ID
-    }
-
-    try {
-      const chatApp = await API.fetchChatApp(workspaceId)
-      if (chatApp?._id) {
-        const baseChat = chat || {
-          title: "",
-          messages: [],
-          chatAppId: "",
-          agentId: "",
-        }
-        const fallbackAgentId =
-          chatApp.agents?.find(agent => agent.isEnabled && agent.isDefault)
-            ?.agentId || chatApp.agents?.find(agent => agent.isEnabled)?.agentId
-        chat = {
-          ...baseChat,
-          chatAppId: chatApp._id,
-          ...(fallbackAgentId && !baseChat.agentId
-            ? { agentId: fallbackAgentId }
-            : {}),
-        }
-        resolvedChatAppId = chatApp._id
-        return chatApp._id
-      }
-    } catch (err) {
-      console.error(err)
-    }
-    return undefined
-  }
-
   const handleKeyDown = async (event: KeyboardEvent) => {
-    if (readOnly) {
+    const navigationState = navigatePromptHistory({
+      key: event.key,
+      history: promptHistory,
+      inputValue,
+      index: promptHistoryIndex,
+    })
+    if (navigationState) {
+      event.preventDefault()
+      inputValue = navigationState.inputValue
+      promptHistoryIndex = navigationState.index
+      await tick()
+      textareaElement?.setSelectionRange(inputValue.length, inputValue.length)
       return
-    }
-
-    if (isAgentPreviewChat) {
-      const navigationState = navigatePromptHistory({
-        key: event.key,
-        history: promptHistory,
-        inputValue,
-        index: promptHistoryIndex,
-      })
-      if (navigationState) {
-        event.preventDefault()
-        inputValue = navigationState.inputValue
-        promptHistoryIndex = navigationState.index
-        await tick()
-        textareaElement?.setSelectionRange(inputValue.length, inputValue.length)
-        return
-      }
     }
 
     if (event.key === "Enter" && !event.shiftKey) {
@@ -591,10 +448,6 @@
   }
 
   const sendMessage = async () => {
-    if (readOnly) {
-      return
-    }
-
     const text = inputValue.trim()
     if (!text) {
       return
@@ -610,52 +463,22 @@
 
     isPreparingResponse = true
 
-    const chatAppIdFromEnsure = await ensureChatApp()
-
     if (!chat) {
-      chat = { title: "", messages: [], chatAppId: "", agentId: "" }
+      chat = {
+        title: "",
+        messages: [],
+        agentId: "",
+      }
     }
 
-    const chatAppId = chat.chatAppId || chatAppIdFromEnsure
     const agentId = chat.agentId
-
-    if (!chatAppId) {
-      failToStartResponse("Chat app could not be created")
-      return
-    }
 
     if (!agentId) {
       failToStartResponse("Agent is required to start a chat")
       return
     }
 
-    resolvedChatAppId = chatAppId
-
-    if (isAgentPreviewChat) {
-      resolvedConversationId = chat._id
-    } else if (
-      persistConversation &&
-      !chat._id &&
-      (!chat.messages || chat.messages.length === 0)
-    ) {
-      try {
-        const newChat = await API.createChatConversation(
-          { chatAppId, agentId, title: chat.title },
-          workspaceId
-        )
-        chat = { ...chat, ...newChat, chatAppId }
-        resolvedConversationId = newChat._id
-      } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "Could not start a new chat conversation"
-        failToStartResponse(errorMessage, err)
-        return
-      }
-    } else if (chat._id) {
-      resolvedConversationId = chat._id
-    }
+    resolvedConversationId = chat._id
 
     inputValue = ""
     promptHistoryIndex = undefined
@@ -687,8 +510,6 @@
       .map(p => p.text)
       .join("") || "[Empty message]"
 
-  let mounted = $state(false)
-
   $effect(() => {
     const currentChatId = chat?._id
     if (currentChatId) {
@@ -697,14 +518,7 @@
   })
 
   $effect(() => {
-    if (!mounted) {
-      mounted = true
-      ensureChatApp()
-    }
-  })
-
-  $effect(() => {
-    if (readOnly || isRequestPending) {
+    if (isRequestPending) {
       return
     }
 
@@ -731,22 +545,7 @@
 
 <div class="chat-area" bind:this={chatAreaElement}>
   <div class="chatbox">
-    {#if showConversationStarters}
-      <div class="starter-section">
-        <div class="starter-title">Conversation starters</div>
-        <div class="starter-grid">
-          {#each conversationStarters as starter, index (index)}
-            <button
-              type="button"
-              class="starter-card"
-              onclick={() => applyConversationStarter(starter.prompt)}
-            >
-              {starter.prompt}
-            </button>
-          {/each}
-        </div>
-      </div>
-    {:else if !hasMessages && !isRequestPending}
+    {#if !hasMessages && !isRequestPending}
       <div class="empty-state">
         <div class="empty-state-icon">
           <Icon
@@ -965,48 +764,38 @@
     {/if}
   </div>
 
-  {#if readOnly}
-    <div class="input-wrapper">
-      <div class="read-only-notice">
-        <Body size="S" color="var(--spectrum-global-color-gray-700)">
-          {readOnlyMessage}
-        </Body>
-      </div>
+  <div class="input-wrapper">
+    <div class="input-container">
+      <textarea
+        bind:value={inputValue}
+        bind:this={textareaElement}
+        class="input spectrum-Textfield-input"
+        onkeydown={handleKeyDown}
+        oninput={() => (promptHistoryIndex = undefined)}
+        placeholder="Ask..."
+        disabled={isRequestPending}
+      ></textarea>
+      <button
+        type="button"
+        class="prompt-action"
+        class:running={isRequestPending}
+        onclick={handlePromptAction}
+        aria-label={isBusy ? "Pause response" : "Start response"}
+        disabled={isPreparingResponse || (!isBusy && !canStart)}
+      >
+        {#if isBusy}
+          <Icon name="stop" size="M" weight="fill" color="#ffffff" />
+        {:else if isPreparingResponse}
+          <ProgressCircle size="S" />
+        {:else}
+          <Icon name="arrow-up" size="M" weight="bold" color="#111111" />
+        {/if}
+      </button>
     </div>
-  {:else}
-    <div class="input-wrapper">
-      <div class="input-container">
-        <textarea
-          bind:value={inputValue}
-          bind:this={textareaElement}
-          class="input spectrum-Textfield-input"
-          onkeydown={handleKeyDown}
-          oninput={() => (promptHistoryIndex = undefined)}
-          placeholder="Ask..."
-          disabled={isRequestPending}
-        ></textarea>
-        <button
-          type="button"
-          class="prompt-action"
-          class:running={isRequestPending}
-          onclick={handlePromptAction}
-          aria-label={isBusy ? "Pause response" : "Start response"}
-          disabled={isPreparingResponse || (!isBusy && !canStart)}
-        >
-          {#if isBusy}
-            <Icon name="stop" size="M" weight="fill" color="#ffffff" />
-          {:else if isPreparingResponse}
-            <ProgressCircle size="S" />
-          {:else}
-            <Icon name="arrow-up" size="M" weight="bold" color="#111111" />
-          {/if}
-        </button>
-      </div>
-      <div class="input-footer">
-        <ContextUsage usage={lastAssistantUsage} />
-      </div>
+    <div class="input-footer">
+      <ContextUsage usage={lastAssistantUsage} />
     </div>
-  {/if}
+  </div>
 </div>
 
 <style>
@@ -1048,50 +837,6 @@
   .empty-state-icon {
     --size: 24px;
   }
-  .starter-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-xl);
-    margin: auto 0;
-  }
-
-  .starter-title {
-    font-size: 14px;
-    letter-spacing: 0;
-    color: var(--spectrum-global-color-gray-700);
-    text-align: center;
-  }
-
-  .starter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: var(--spacing-m);
-    width: min(520px, 100%);
-    margin: 0 auto;
-  }
-
-  .starter-card {
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 12px;
-    padding: var(--spacing-m);
-    background: var(--spectrum-global-color-gray-50);
-    color: var(--spectrum-global-color-gray-800);
-    font: inherit;
-    font-size: 14px;
-    line-height: 1.4;
-    text-align: center;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .starter-card:hover {
-    border-color: var(--spectrum-global-color-gray-300);
-    background: var(--spectrum-global-color-gray-100);
-  }
-
   .message {
     display: flex;
     flex-direction: column;
@@ -1137,14 +882,6 @@
     display: flex;
     justify-content: flex-end;
     padding: 0 4px;
-  }
-
-  .read-only-notice {
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 10px;
-    padding: var(--spacing-m);
-    background-color: var(--spectrum-global-color-gray-50);
-    text-align: center;
   }
 
   .input-container {

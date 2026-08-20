@@ -396,6 +396,30 @@ describe("agents crud", () => {
         })
       )
     })
+
+    it("strips the deprecated chatAppId from persisted integrations", async () => {
+      mockDbTryGet.mockResolvedValue({
+        _id: "agent_legacy_chat_app",
+        _rev: "1-abc",
+        name: "Legacy Chat App Agent",
+        aiconfig: "cfg_1",
+        operations: [],
+        slackIntegration: {
+          chatAppId: "chatapp_1",
+          botToken: "xoxb-token",
+          teamId: "T123",
+        },
+        MSTeamsIntegration: {
+          chatAppId: "chatapp_1",
+          appId: "teams-app",
+        },
+      })
+
+      const agent = await agentsCrud.getOrThrow("agent_legacy_chat_app")
+
+      expect(agent.slackIntegration).not.toHaveProperty("chatAppId")
+      expect(agent.MSTeamsIntegration).not.toHaveProperty("chatAppId")
+    })
   })
 
   describe("remove", () => {
@@ -642,6 +666,38 @@ describe("agents crud", () => {
       expect(mockAgentUpdated).toHaveBeenCalledWith(
         expect.objectContaining({ _id: "agent_upd", name: "Updated Name" })
       )
+    })
+
+    it("drops the deprecated chatAppId when resaving a legacy agent", async () => {
+      mockDbTryGet.mockResolvedValue({
+        _id: "agent_upd",
+        _rev: "1-abc",
+        name: "Original Name",
+        aiconfig: "cfg_1",
+        operations: [],
+        slackIntegration: {
+          chatAppId: "chatapp_1",
+          botToken: "xoxb-token",
+          teamId: "T123",
+        },
+        MSTeamsIntegration: {
+          chatAppId: "chatapp_1",
+          appId: "teams-app",
+        },
+      })
+      mockDbPut.mockResolvedValue({ rev: "2-abc" })
+
+      const existing = await agentsCrud.getOrThrow("agent_upd")
+      const updated = await agentsCrud.update({
+        ...existing,
+        name: "Updated Name",
+      })
+
+      const [persisted] = mockDbPut.mock.calls[0]
+      expect(persisted.slackIntegration).not.toHaveProperty("chatAppId")
+      expect(persisted.MSTeamsIntegration).not.toHaveProperty("chatAppId")
+      expect(updated.slackIntegration).not.toHaveProperty("chatAppId")
+      expect(updated.MSTeamsIntegration).not.toHaveProperty("chatAppId")
     })
 
     it("validates the AI config before publishing an agent", async () => {

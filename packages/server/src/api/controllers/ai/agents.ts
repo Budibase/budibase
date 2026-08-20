@@ -55,7 +55,6 @@ const TEAMS_OUTLINE_ICON = Buffer.from(
 interface SlackOAuthState {
   agentId: string
   workspaceId: string
-  chatAppId: string
 }
 
 const getSlackOAuthStateCacheKey = (state: string) =>
@@ -81,65 +80,38 @@ const buildSlackInstallUrl = ({
   return url.toString()
 }
 
-const parseOptionalChatAppId = (value: unknown) => {
-  if (typeof value !== "string") {
-    return undefined
-  }
-  const trimmed = value.trim()
-  return trimmed.length > 0 ? trimmed : undefined
-}
-
 interface ConfiguredDeployment<TValidatedIntegration> {
-  chatAppId: string
   endpointUrl: string
   integration: TValidatedIntegration
 }
 
 type SlackDeployment = ConfiguredDeployment<ResolvedSlackIntegration>
 
-const configureDeploymentChannel = async <
-  TValidatedIntegration extends { chatAppId?: string },
->({
+const configureDeploymentChannel = async <TValidatedIntegration>({
   agent,
   agentId,
-  requestedChatAppId,
   validateIntegration,
-  resolveChatAppForAgent,
   buildEndpointUrl,
   persistIntegration,
   beforeBuildEndpoint,
 }: {
   agent: Agent
   agentId: string
-  requestedChatAppId?: string
   validateIntegration: (agent: Agent) => TValidatedIntegration
-  resolveChatAppForAgent: (
-    agentId: string,
-    chatAppId?: string
-  ) => Promise<{ _id?: string }>
-  buildEndpointUrl: (chatAppId: string, agentId: string) => Promise<string>
-  persistIntegration: (chatAppId: string, endpointUrl: string) => Promise<void>
+  buildEndpointUrl: (agentId: string) => Promise<string>
+  persistIntegration: (endpointUrl: string) => Promise<void>
   beforeBuildEndpoint?: (integration: TValidatedIntegration) => Promise<void>
 }): Promise<ConfiguredDeployment<TValidatedIntegration>> => {
   const integration = validateIntegration(agent)
-  const chatApp = await resolveChatAppForAgent(
-    agentId,
-    requestedChatAppId || integration.chatAppId
-  )
-  const chatAppId = chatApp._id
-  if (!chatAppId) {
-    throw new HTTPError("chatAppId is required", 400)
-  }
 
   if (beforeBuildEndpoint) {
     await beforeBuildEndpoint(integration)
   }
 
-  const endpointUrl = await buildEndpointUrl(chatAppId, agentId)
-  await persistIntegration(chatAppId, endpointUrl)
+  const endpointUrl = await buildEndpointUrl(agentId)
+  await persistIntegration(endpointUrl)
 
   return {
-    chatAppId,
     endpointUrl,
     integration,
   }
@@ -147,18 +119,15 @@ const configureDeploymentChannel = async <
 
 const persistMSTeamsDeployment = async ({
   agent,
-  chatAppId,
   messagingEndpointUrl,
 }: {
   agent: Agent
-  chatAppId: string
   messagingEndpointUrl: string
 }) => {
   await sdk.ai.agents.update({
     ...agent,
     MSTeamsIntegration: {
       ...agent.MSTeamsIntegration,
-      chatAppId,
       messagingEndpointUrl,
     },
   })
@@ -166,18 +135,15 @@ const persistMSTeamsDeployment = async ({
 
 const persistSlackDeployment = async ({
   agent,
-  chatAppId,
   messagingEndpointUrl,
 }: {
   agent: Agent
-  chatAppId: string
   messagingEndpointUrl: string
 }) => {
   await sdk.ai.agents.update({
     ...agent,
     slackIntegration: {
       ...agent.slackIntegration,
-      chatAppId,
       messagingEndpointUrl,
     },
   })
@@ -186,72 +152,27 @@ const persistSlackDeployment = async ({
 const configureSlackDeployment = async ({
   agent,
   agentId,
-  requestedChatAppId,
 }: {
   agent: Agent
   agentId: string
-  requestedChatAppId?: string
 }): Promise<SlackDeployment> =>
   await configureDeploymentChannel({
     agent,
     agentId,
-    requestedChatAppId,
     validateIntegration: sdk.ai.deployments.slack.validateSlackIntegration,
-    resolveChatAppForAgent: sdk.ai.deployments.slack.resolveChatAppForAgent,
     buildEndpointUrl: sdk.ai.deployments.slack.buildSlackWebhookUrl,
-    persistIntegration: async (chatAppId, messagingEndpointUrl) =>
+    persistIntegration: async messagingEndpointUrl =>
       await persistSlackDeployment({
         agent,
-        chatAppId,
         messagingEndpointUrl,
       }),
   })
 
-const configureMSTeamsDeployment = async ({
-  agent,
-  agentId,
-  requestedChatAppId,
-}: {
-  agent: Agent
-  agentId: string
-  requestedChatAppId?: string
-}) =>
-  await configureDeploymentChannel({
-    agent,
-    agentId,
-    requestedChatAppId,
-    validateIntegration: sdk.ai.deployments.MSTeams.validateMSTeamsIntegration,
-    resolveChatAppForAgent: sdk.ai.deployments.MSTeams.resolveChatAppForAgent,
-    buildEndpointUrl: sdk.ai.deployments.MSTeams.buildMSTeamsWebhookUrl,
-    persistIntegration: async (chatAppId, messagingEndpointUrl) =>
-      await persistMSTeamsDeployment({
-        agent,
-        chatAppId,
-        messagingEndpointUrl,
-      }),
-  })
-
-const configureSlackAppCreationDeployment = async ({
-  agent,
-  agentId,
-}: {
-  agent: Agent
-  agentId: string
-}) => {
-  const chatApp = await sdk.ai.deployments.slack.resolveChatAppForAgent(
-    agentId,
-    agent.slackIntegration?.chatAppId
-  )
-  const chatAppId = chatApp._id
-  if (!chatAppId) {
-    throw new HTTPError("chatAppId is required", 400)
-  }
-
+const configureSlackAppCreationDeployment = async (agentId: string) => {
   const messagingEndpointUrl =
-    await sdk.ai.deployments.slack.buildSlackWebhookUrl(chatAppId, agentId)
+    await sdk.ai.deployments.slack.buildSlackWebhookUrl(agentId)
 
   return {
-    chatAppId,
     messagingEndpointUrl,
   }
 }
@@ -281,10 +202,7 @@ const getPublishedLiveSlackDeployment = async ({
       return undefined
     }
 
-    return await configureSlackAppCreationDeployment({
-      agent: prodAgent,
-      agentId,
-    })
+    return await configureSlackAppCreationDeployment(agentId)
   })
 }
 
@@ -310,11 +228,9 @@ const publishSlackIntegrationForLiveAgent = async (agent: Agent) => {
       return
     }
 
-    const { chatAppId, messagingEndpointUrl } =
-      await configureSlackAppCreationDeployment({
-        agent: prodAgent,
-        agentId: agent._id!,
-      })
+    const { messagingEndpointUrl } = await configureSlackAppCreationDeployment(
+      agent._id!
+    )
 
     await sdk.ai.agents.update({
       ...prodAgent,
@@ -324,7 +240,6 @@ const publishSlackIntegrationForLiveAgent = async (agent: Agent) => {
         clientId: agent.slackIntegration?.clientId,
         clientSecret: agent.slackIntegration?.clientSecret,
         signingSecret: agent.slackIntegration?.signingSecret,
-        chatAppId,
         messagingEndpointUrl,
         botToken: agent.slackIntegration?.botToken,
         botUserId: agent.slackIntegration?.botUserId,
@@ -478,16 +393,20 @@ export async function provisionAgentMSTeamsChannel(
 ) {
   const { agentId } = ctx.params
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const requestedChatAppId = parseOptionalChatAppId(ctx.request.body?.chatAppId)
-  const { chatAppId, endpointUrl } = await configureMSTeamsDeployment({
+  const { endpointUrl } = await configureDeploymentChannel({
     agent,
     agentId,
-    requestedChatAppId,
+    validateIntegration: sdk.ai.deployments.MSTeams.validateMSTeamsIntegration,
+    buildEndpointUrl: sdk.ai.deployments.MSTeams.buildMSTeamsWebhookUrl,
+    persistIntegration: async messagingEndpointUrl =>
+      await persistMSTeamsDeployment({
+        agent,
+        messagingEndpointUrl,
+      }),
   })
 
   ctx.body = {
     success: true,
-    chatAppId,
     messagingEndpointUrl: endpointUrl,
   }
   ctx.status = 200
@@ -530,16 +449,13 @@ export async function provisionAgentSlackChannel(
 ) {
   const { agentId } = ctx.params
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const requestedChatAppId = parseOptionalChatAppId(ctx.request.body?.chatAppId)
-  const { chatAppId, endpointUrl } = await configureSlackDeployment({
+  const { endpointUrl } = await configureSlackDeployment({
     agent,
     agentId,
-    requestedChatAppId,
   })
 
   ctx.body = {
     success: true,
-    chatAppId,
     messagingEndpointUrl: endpointUrl,
   }
   ctx.status = 200
@@ -550,14 +466,10 @@ export async function downloadAgentSlackManifest(
 ) {
   const { agentId } = ctx.params
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const { chatAppId, messagingEndpointUrl } =
-    await configureSlackAppCreationDeployment({
-      agent,
-      agentId,
-    })
+  const { messagingEndpointUrl } =
+    await configureSlackAppCreationDeployment(agentId)
   await persistSlackDeployment({
     agent,
-    chatAppId,
     messagingEndpointUrl,
   })
   const manifest = sdk.ai.deployments.slack.buildSlackManifest({
@@ -586,10 +498,7 @@ export async function createAgentSlackApp(
   }
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const devDeployment = await configureSlackAppCreationDeployment({
-    agent,
-    agentId,
-  })
+  const devDeployment = await configureSlackAppCreationDeployment(agentId)
   const liveDeployment = await getPublishedLiveSlackDeployment({
     agent,
     agentId,
@@ -628,7 +537,6 @@ export async function createAgentSlackApp(
     {
       agentId,
       workspaceId,
-      chatAppId: slackAppDeployment.chatAppId,
     } satisfies SlackOAuthState,
     SLACK_OAUTH_STATE_TTL_SECONDS,
     { useTenancy: false }
@@ -642,14 +550,12 @@ export async function createAgentSlackApp(
       clientId,
       clientSecret,
       signingSecret,
-      chatAppId: devDeployment.chatAppId,
       messagingEndpointUrl: devDeployment.messagingEndpointUrl,
     },
   })
 
   ctx.body = {
     success: true,
-    chatAppId: slackAppDeployment.chatAppId,
     appId,
     messagingEndpointUrl: slackAppDeployment.messagingEndpointUrl,
     oauthAuthorizeUrl: buildSlackInstallUrl({
@@ -737,21 +643,15 @@ export async function toggleAgentMSTeamsDeployment(
   const agent = await sdk.ai.agents.getOrThrow(agentId)
 
   if (enabled) {
-    const requestedChatAppId = parseOptionalChatAppId(
-      agent.MSTeamsIntegration?.chatAppId?.trim() || undefined
-    )
     await configureDeploymentChannel({
       agent,
       agentId,
-      requestedChatAppId,
       validateIntegration:
         sdk.ai.deployments.MSTeams.validateMSTeamsIntegration,
-      resolveChatAppForAgent: sdk.ai.deployments.MSTeams.resolveChatAppForAgent,
       buildEndpointUrl: sdk.ai.deployments.MSTeams.buildMSTeamsWebhookUrl,
-      persistIntegration: async (chatAppId, messagingEndpointUrl) =>
+      persistIntegration: async messagingEndpointUrl =>
         await persistMSTeamsDeployment({
           agent,
-          chatAppId,
           messagingEndpointUrl,
         }),
     })
@@ -781,20 +681,14 @@ export async function toggleAgentSlackDeployment(
   const agent = await sdk.ai.agents.getOrThrow(agentId)
 
   if (enabled) {
-    const requestedChatAppId = parseOptionalChatAppId(
-      agent.slackIntegration?.chatAppId?.trim() || undefined
-    )
     await configureDeploymentChannel({
       agent,
       agentId,
-      requestedChatAppId,
       validateIntegration: sdk.ai.deployments.slack.validateSlackIntegration,
-      resolveChatAppForAgent: sdk.ai.deployments.slack.resolveChatAppForAgent,
       buildEndpointUrl: sdk.ai.deployments.slack.buildSlackWebhookUrl,
-      persistIntegration: async (chatAppId, messagingEndpointUrl) =>
+      persistIntegration: async messagingEndpointUrl =>
         await persistSlackDeployment({
           agent,
-          chatAppId,
           messagingEndpointUrl,
         }),
     })

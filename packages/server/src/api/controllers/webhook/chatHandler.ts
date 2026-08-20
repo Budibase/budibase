@@ -12,7 +12,6 @@ import {
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import type { RedisClient } from "@budibase/backend-core"
 import type {
-  ChatApp,
   ChatConversation,
   ChatConversationChannel,
   ChatConversationRequest,
@@ -22,7 +21,6 @@ import type {
 import { AgentChannelProvider, DocumentType } from "@budibase/types"
 import sdk from "../../../sdk"
 import { getGlobalUser } from "../../../utilities/global"
-import { canAccessChatAppAgentForUser } from "../ai/chatApps"
 import {
   webhookChat,
   type WebhookAssistantStream,
@@ -46,7 +44,6 @@ let conversationCacheClientInitInFlight:
 let conversationCacheClientLastFailureAt = 0
 
 interface ConversationScope {
-  chatAppId: string
   agentId: string
   externalUserId: string
   channelId?: string
@@ -68,7 +65,6 @@ const getCacheKey = ({
 }) =>
   [
     workspaceId,
-    scope.chatAppId,
     scope.agentId,
     scope.channelId || "",
     scope.threadId || "",
@@ -226,11 +222,7 @@ const matchesScope = ({
   provider: AgentChannelProvider
 }) => {
   const ch = chat.channel
-  if (
-    chat.chatAppId !== scope.chatAppId ||
-    chat.agentId !== scope.agentId ||
-    ch?.provider !== provider
-  ) {
+  if (chat.agentId !== scope.agentId || ch?.provider !== provider) {
     return false
   }
 
@@ -353,7 +345,6 @@ export interface HandleChatMessageParams {
   beforeAssistantWebhook?: () => Promise<void>
   replyLinkPrompt: (message: LinkPromptMessage) => Promise<void>
   workspaceId: string
-  chatAppId: string
   agentId: string
   provider: AgentChannelProvider
   channelEnabled: boolean
@@ -437,7 +428,6 @@ export const handleChatMessage = async ({
   beforeAssistantWebhook,
   replyLinkPrompt,
   workspaceId,
-  chatAppId,
   agentId,
   provider,
   channelEnabled,
@@ -452,22 +442,9 @@ export const handleChatMessage = async ({
   await context.doInWorkspaceContext(workspaceId, async () => {
     const idleTimeoutMs = getIdleTimeoutMs(idleTimeoutMinutes)
     const db = context.getWorkspaceDB()
-    const chatApp = await db.tryGet<ChatApp>(chatAppId)
-    if (!chatApp) {
-      await reply("Chat app not found.")
-      return
-    }
 
     if (!channelEnabled) {
-      await reply("Agent is not enabled for this chat app.")
-      return
-    }
-
-    const chatAgentConfig = chatApp.agents?.find(
-      agent => agent.agentId === agentId
-    )
-    if (!chatAgentConfig) {
-      await reply("Agent is not enabled for this chat app.")
+      await reply("Agent is not enabled for this channel.")
       return
     }
 
@@ -492,7 +469,6 @@ export const handleChatMessage = async ({
           externalUserId: user.externalUserId,
           externalUserName: user.displayName,
           teamId: channel.teamId,
-          guildId: channel.guildId,
           providerTenantId: channel.tenantId,
           serviceUrl: channel.serviceUrl,
         })
@@ -559,7 +535,6 @@ export const handleChatMessage = async ({
 
         logging.logWarn("chat_link_lookup_miss", {
           workspaceId,
-          chatAppId,
           agentId,
           provider,
           externalUserIdTried: user.externalUserId,
@@ -587,34 +562,16 @@ export const handleChatMessage = async ({
       })
     }
 
-    const hasAccess = await canAccessChatAppAgentForUser(
-      {
-        user: chatUser,
-        roleId: chatUser.roleId ?? undefined,
-      },
-      chatAgentConfig
-    )
-    if (!hasAccess) {
-      await reply(
-        existingLink
-          ? "Your linked Budibase account does not have access to this agent."
-          : "This agent is not available to unlinked users."
-      )
-      return
-    }
-
     if (command === ChatCommands.NEW && !content) {
       const chatId = docIds.generateChatConversationID()
       await db.put(
         sdk.ai.chatConversations.prepareChatConversationForSave({
           chatId,
-          chatAppId,
           userId,
           title: "New conversation",
           messages: [],
           chat: {
             _id: chatId,
-            chatAppId,
             agentId,
             title: "New conversation",
             messages: [],
@@ -658,7 +615,6 @@ export const handleChatMessage = async ({
     const chatId = existingChat?._id ?? docIds.generateChatConversationID()
     const draftChat: ChatConversationRequest = {
       _id: chatId,
-      chatAppId,
       agentId,
       title:
         existingChat?.title || sdk.ai.chatConversations.truncateTitle(content),
@@ -694,7 +650,6 @@ export const handleChatMessage = async ({
     await db.put(
       sdk.ai.chatConversations.prepareChatConversationForSave({
         chatId,
-        chatAppId,
         userId,
         title: existingChat?.title || result.title,
         messages: result.messages,

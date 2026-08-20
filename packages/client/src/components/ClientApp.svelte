@@ -1,5 +1,5 @@
-<script>
-  import { writable, get } from "svelte/store"
+<script lang="ts">
+  import { writable, get, derived } from "svelte/store"
   import { setContext, onMount } from "svelte"
   import { Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
@@ -7,7 +7,6 @@
     redirectToLoginWithReturnUrl,
     invalidationMessage,
     popNumSessionsInvalidated,
-    derivedMemo,
   } from "@budibase/frontend-core"
   import { getThemeClassNames } from "@budibase/shared-core"
   import Component from "./Component.svelte"
@@ -58,9 +57,6 @@
   import DNDSelectionIndicators from "./preview/DNDSelectionIndicators.svelte"
   import RecaptchaV2 from "./RecaptchaV2.svelte"
   import { ActionTypes } from "@/constants"
-  import { API } from "@/api"
-  import AppChatbox from "./app/Chatbox.svelte"
-  import PausedChat from "./app/PausedChat.svelte"
 
   // Provide contexts
 
@@ -78,27 +74,17 @@
   let dataLoaded = false
   let permissionError = false
   let embedNoScreens = false
-  let chatRoutePaused = false
 
   $: displayPreviewDevice =
     $builderStore.previewModalDevice || $builderStore.previewDevice
 
   // Determine if we should show devtools or not
   $: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek
-  $: isChatOnlyRoute =
-    typeof window !== "undefined" &&
-    (window.location.pathname.replace(/\/$/, "").endsWith("/_chat") ||
-      window.location.pathname.startsWith("/app-chat/"))
   $: resolvedThemeClassNames = getThemeClassNames($themeStore.theme)
 
   // Handle no matching route
   $: {
-    if (
-      !isChatOnlyRoute &&
-      dataLoaded &&
-      $routeStore.routerLoaded &&
-      !$routeStore.activeRoute
-    ) {
+    if (dataLoaded && $routeStore.routerLoaded && !$routeStore.activeRoute) {
       if ($screenStore.screens.length) {
         // If we have some available screens, use the first screen which
         // represents the best route based on rank
@@ -122,28 +108,6 @@
         redirectToLoginWithReturnUrl()
       }
     }
-  }
-
-  const refreshChatRoutePausedState = async () => {
-    if (!isChatOnlyRoute || $builderStore.inBuilder) {
-      chatRoutePaused = false
-      return
-    }
-
-    try {
-      const chatApp = await API.get({
-        url: "/api/chatapps",
-        suppressErrors: true,
-      })
-      chatRoutePaused = chatApp?.live === false
-    } catch (error) {
-      console.error(error)
-      chatRoutePaused = false
-    }
-  }
-
-  $: if (dataLoaded && isChatOnlyRoute) {
-    refreshChatRoutePausedState()
   }
 
   let fontsLoaded = false
@@ -174,23 +138,26 @@
         embedded: !!$appStore.embedded,
       })
     }
+  })
+
+  onMount(() => {
     const handleHashChange = () => {
       const { open: sidePanelOpen } = $sidePanelStore
       // only close if the sidepanel is open and theres no onload side panel actions on the screen.
       if (
         sidePanelOpen &&
-        !$screenStore.activeScreen.onLoad?.some(
+        !$screenStore.activeScreen?.onLoad?.some(
           item => item["##eventHandlerType"] === "Open Side Panel"
         )
       ) {
         sidePanelStore.actions.close()
       }
 
-      const { open: modalOpen } = $modalStore
+      const modalOpen = $modalStore.contentId != null
       // only close if the modal is open and theres onload modals actions on the screen.
       if (
         modalOpen &&
-        !$screenStore.activeScreen.onLoad?.some(
+        !$screenStore.activeScreen?.onLoad?.some(
           item => item["##eventHandlerType"] === "Open Modal"
         )
       ) {
@@ -209,7 +176,7 @@
     }
   }
 
-  const builderActiveScreenId = derivedMemo(
+  const builderActiveScreenId = derived(
     [builderStore, screenStore],
     ([$builderStore, $screenStore]) =>
       $builderStore.inBuilder ? $screenStore.activeScreen?._id : undefined
@@ -292,24 +259,6 @@
                                   </Body>
                                 </Layout>
                               </div>
-                            {:else if isChatOnlyRoute}
-                              <CustomThemeWrapper>
-                                <div class="chat-route-shell">
-                                  <div class="chat-app-container">
-                                    {#if chatRoutePaused && !$builderStore.inBuilder}
-                                      <PausedChat />
-                                    {:else}
-                                      <AppChatbox />
-                                    {/if}
-                                  </div>
-                                </div>
-
-                                <!-- Layers on top of app -->
-                                <NotificationDisplay />
-                                <ConfirmationDisplay />
-                                <PeekScreenDisplay />
-                                <InstallPrompt />
-                              </CustomThemeWrapper>
                             {:else if !$screenStore.activeLayout}
                               <div class="error">
                                 <Layout justifyItems="center" gap="S">
@@ -467,29 +416,6 @@
     font-weight: 400;
   }
 
-  .chat-route-shell {
-    display: flex;
-    flex: 1 1 auto;
-    width: 100%;
-    height: 100%;
-    min-width: 0;
-    min-height: 0;
-    padding: var(--spacing-xl);
-    background: var(--background-alt);
-    box-sizing: border-box;
-  }
-
-  .chat-app-container {
-    flex: 1 1 auto;
-    display: flex;
-    border-radius: 24px;
-    border: var(--border-light);
-    background: transparent;
-    overflow: hidden;
-    min-width: 0;
-    min-height: 0;
-  }
-
   /* Preview styles */
   #clip-root.preview {
     padding: 6px;
@@ -515,16 +441,6 @@
   #clip-root.modal-mobile-preview.mobile-preview {
     width: 100%;
     height: 100%;
-  }
-
-  @media (max-width: 1000px) {
-    .chat-route-shell {
-      padding: var(--spacing-m);
-    }
-
-    .chat-app-container {
-      border-radius: 16px;
-    }
   }
 
   /* Print styles */

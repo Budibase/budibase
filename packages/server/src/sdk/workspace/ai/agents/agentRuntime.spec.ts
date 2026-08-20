@@ -657,7 +657,6 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
   it("passes the chat timezone to the agent system prompt", async () => {
     await runFor(operationWithoutRecipients, {
       chat: {
-        chatAppId: "chatapp_1",
         agentId: "agent_1",
         messages: [],
         timezone: "Europe/London",
@@ -672,7 +671,6 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     await runFor(operationWithoutRecipients, {
       user: { _id: "user_1" } as ContextUser,
       chat: {
-        chatAppId: "chatapp_1",
         agentId: "agent_1",
         messages: [],
         previewRoleId: "ADMIN",
@@ -697,7 +695,6 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     await runFor(operationWithoutRecipients, {
       user: { _id: "user_1" } as ContextUser,
       chat: {
-        chatAppId: "chatapp_1",
         agentId: "agent_1",
         messages: [],
         isPreview: true,

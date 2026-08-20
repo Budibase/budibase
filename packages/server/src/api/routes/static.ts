@@ -37,8 +37,6 @@ router
   .get("/app/service-worker.js", controller.serveServiceWorker)
   .get("/app/:appUrl", controller.serveApp)
   .get("/app/:appUrl/*path", controller.serveApp)
-  .get("/app-chat/:appUrl", controller.serveApp)
-  .get("/app-chat/:appUrl/*path", controller.serveApp)
   .get(`/${devAppIdPath}`, controller.serveApp)
   .get(`/${devAppIdPath}/*path`, controller.serveApp)
   .post(

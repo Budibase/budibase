@@ -40,7 +40,6 @@ export enum DocumentType {
   OAUTH2_CONFIG = "oauth2",
   OAUTH2_CONFIG_LOG = "oauth2log",
   AGENT = "agent",
-  CHAT_APP = "chatapp",
   CHAT_CONVERSATION = "chatconvo",
   CHAT_IDENTITY_LINK = "chatidentitylink",
   SLACK_APP_CONFIG = "slackappconfig",
