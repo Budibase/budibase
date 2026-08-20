@@ -451,10 +451,15 @@ export const handleChatMessage = async ({
   await context.doInWorkspaceContext(workspaceId, async () => {
     const idleTimeoutMs = getIdleTimeoutMs(idleTimeoutMinutes)
     const db = context.getWorkspaceDB()
-    const chatApp = await db.tryGet<ChatApp>(chatAppId)
-    if (!chatApp) {
-      await reply("Chat app not found.")
-      return
+    let chatApp: ChatApp
+    try {
+      chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
+    } catch (error) {
+      if (error instanceof HTTPError && error.status === 404) {
+        await reply("Chat app not found.")
+        return
+      }
+      throw error
     }
 
     if (!channelEnabled) {
@@ -462,10 +467,7 @@ export const handleChatMessage = async ({
       return
     }
 
-    const chatAgentConfig = chatApp.agents?.find(
-      agent => agent.agentId === agentId
-    )
-    if (!chatAgentConfig) {
+    if (!chatApp.agents.includes(agentId)) {
       await reply("Agent is not enabled for this chat app.")
       return
     }

@@ -165,7 +165,7 @@ const createChatTestLanguageModel = () =>
 
 const buildChatApp = (overrides: Partial<ChatApp> = {}): ChatApp => ({
   _id: docIds.generateChatAppID(),
-  agents: [{ agentId: "agent-1" }],
+  agents: ["agent-1"],
   createdAt: new Date().toISOString(),
   ...overrides,
 })
@@ -457,7 +457,7 @@ describe("chat conversation preview stream", () => {
       async () => {
         const db = context.getWorkspaceDB()
         chatApp = buildChatApp({
-          agents: [{ agentId }],
+          agents: [agentId],
         })
         await db.put(chatApp)
       }
@@ -734,10 +734,10 @@ describe("chat conversation path validation", () => {
       async () => {
         const db = context.getWorkspaceDB()
         bodyChatApp = buildChatApp({
-          agents: [{ agentId: "agent-1" }],
+          agents: ["agent-1"],
         })
         pathChatApp = buildChatApp({
-          agents: [{ agentId: "agent-1" }],
+          agents: ["agent-1"],
         })
         pathConversation = buildChatConversation({
           chatAppId: pathChatApp._id!,
@@ -1357,7 +1357,7 @@ describe("Agent chat tool call tracking", () => {
           const channelChatApp: ChatApp = {
             ...chatApp,
             _id: docIds.generateChatAppID(),
-            agents: [{ agentId: "agent-1" }],
+            agents: ["agent-1"],
           }
           await db.put(channelChatApp)
 

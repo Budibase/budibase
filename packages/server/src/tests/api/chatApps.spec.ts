@@ -1,4 +1,4 @@
-import { context, roles } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import type { ChatApp } from "@budibase/types"
 import sdk from "../../sdk"
 import TestConfiguration from "../utilities/TestConfiguration"
@@ -23,28 +23,21 @@ describe("chat apps create validation", () => {
         } as unknown as Omit<ChatApp, "_id" | "_rev">
 
         await expect(sdk.ai.chatApps.create(payload)).rejects.toThrow(
-          "agents must contain valid agentId entries"
+          "agents must contain valid agent IDs"
         )
       }
     )
   })
 
-  it("normalizes agents to membership-only entries", async () => {
+  it("stores agent membership as agent IDs", async () => {
     await context.doInWorkspaceContext(
       config.getProdWorkspaceId(),
       async () => {
         const created = await sdk.ai.chatApps.create({
-          agents: [
-            {
-              agentId: "agent-1",
-              isEnabled: true,
-              isDefault: true,
-              roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-            } as any,
-          ],
+          agents: ["agent-1"],
         })
 
-        expect(created.agents).toEqual([{ agentId: "agent-1" }])
+        expect(created.agents).toEqual(["agent-1"])
       }
     )
   })

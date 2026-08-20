@@ -114,7 +114,7 @@ jest.mock("../../../../sdk/workspace/ai/rag", () => {
 })
 
 import sdk from "../../../../sdk"
-import { context, db, docIds, encryption, roles } from "@budibase/backend-core"
+import { context, db, docIds, encryption } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
@@ -250,7 +250,7 @@ describe("agent slack integration provisioning", () => {
     )
 
     const chatApp = await getPersistedChatApp()
-    expect(chatApp?.agents).toContainEqual({ agentId: agent._id })
+    expect(chatApp?.agents).toContain(agent._id)
   })
 
   it("obfuscates slack secrets in responses and preserves them on update", async () => {
@@ -702,7 +702,7 @@ describe("agent slack integration provisioning", () => {
       config.getProdWorkspaceId(),
       workspaceDb => workspaceDb.tryGet<ChatApp>(created.chatAppId)
     )
-    expect(prodChatApp?.agents).toContainEqual({ agentId: liveAgent._id })
+    expect(prodChatApp?.agents).toContain(liveAgent._id)
 
     const state = new URL(created.oauthAuthorizeUrl).searchParams.get("state")
     expect(state).toBeTruthy()
@@ -763,11 +763,9 @@ describe("agent slack integration provisioning", () => {
 
     const setupProvisionedSlackAgent = async ({
       requireUserLink,
-      roleId,
       allowKnowledgeSourceDownload,
     }: {
       requireUserLink?: boolean
-      roleId?: string
       allowKnowledgeSourceDownload?: boolean
     } = {}) => {
       const agent = await config.api.agent.createWithOperation(
@@ -788,22 +786,6 @@ describe("agent slack integration provisioning", () => {
         }
       )
       const channel = await config.api.agent.provisionSlackChannel(agent._id!)
-      if (roleId) {
-        await config.doInContext(config.getDevWorkspaceId(), async () => {
-          const chatApp = await sdk.ai.chatApps.getSingle()
-          if (!chatApp) {
-            throw new Error("Chat app not found")
-          }
-          await sdk.ai.chatApps.update({
-            ...chatApp,
-            agents: chatApp.agents.map(chatAgent =>
-              chatAgent.agentId === agent._id
-                ? { ...chatAgent, roleId }
-                : chatAgent
-            ),
-          })
-        })
-      }
       await config.publish()
       const linkExternalUser = async (
         externalUserId: string,
@@ -1146,35 +1128,6 @@ describe("agent slack integration provisioning", () => {
         })
         expect(link).toBeUndefined()
       })
-    })
-
-    it("blocks optional-link unlinked users when the agent requires a higher role", async () => {
-      const { agent, chatAppId } = await setupProvisionedSlackAgent({
-        requireUserLink: false,
-        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-      })
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
-
-      const response = await postSlackMessage({
-        path,
-        body: {
-          type: "event_callback",
-          event: {
-            type: "message",
-            text: "hello slack",
-            user: "user-unlinked",
-            channel: "D123",
-            channel_type: "im",
-            ts: "1700000000.100",
-            team_id: "T123",
-          },
-        },
-      })
-
-      expect(mockedWebhookChat).not.toHaveBeenCalled()
-      expect(response.body.messages).toContain(
-        "This agent is not available to unlinked users."
-      )
     })
 
     it("uses the linked Budibase user when linking is optional", async () => {

@@ -16,13 +16,13 @@ export const WEBHOOK_PATH_BY_PROVIDER: Record<AgentChannelProvider, string> = {
 
 const ensureAgentOnChatApp = async (chatApp: ChatApp, agentId: string) => {
   const existingAgents = chatApp.agents || []
-  if (existingAgents.some(agent => agent.agentId === agentId)) {
+  if (existingAgents.includes(agentId)) {
     return chatApp
   }
 
   return await chatApps.update({
     ...chatApp,
-    agents: [...existingAgents, { agentId }],
+    agents: [...existingAgents, agentId],
   })
 }
 
@@ -43,7 +43,7 @@ export const resolveChatAppForAgent = async ({
     return await ensureAgentOnChatApp(existing, agentId)
   }
 
-  return await chatApps.create({ agents: [{ agentId }] })
+  return await chatApps.create({ agents: [agentId] })
 }
 
 export const resolveProviderChatAppForAgent = async (

@@ -310,15 +310,10 @@ const finalizeAgentRequestTracking = async ({
     })
 }
 
-const getConfiguredChatAgentConfig = (chatApp: ChatApp, agentId: string) => {
-  const chatAgentConfig = chatApp.agents?.find(
-    agent => agent.agentId === agentId
-  )
-  if (!chatAgentConfig) {
+const assertAgentOnChatApp = (chatApp: ChatApp, agentId: string) => {
+  if (!chatApp.agents?.includes(agentId)) {
     throw new HTTPError("agentId is not configured for this chat app", 400)
   }
-
-  return chatAgentConfig
 }
 
 interface ResolvedChatStreamRequest {
@@ -457,17 +452,14 @@ export async function webhookChat({
     throw new HTTPError("chatAppId is required", 400)
   }
 
-  const chatApp = await db.tryGet<ChatApp>(chatAppId)
-  if (!chatApp) {
-    throw new HTTPError("Chat app not found", 404)
-  }
+  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
 
   const agentId = chat.agentId
   if (!agentId) {
     throw new HTTPError("agentId is required", 400)
   }
 
-  getConfiguredChatAgentConfig(chatApp, agentId)
+  assertAgentOnChatApp(chatApp, agentId)
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   const providerPrefix = chat.channel?.provider || "chat"
   const chatId = chat._id ?? docIds.generateChatConversationID()

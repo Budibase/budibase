@@ -1,31 +1,46 @@
 import { context, docIds, HTTPError } from "@budibase/backend-core"
 import { ChatApp, DocumentType } from "@budibase/types"
 
+const agentIdFromEntry = (entry: unknown): string | undefined => {
+  if (typeof entry === "string" && entry.trim().length) {
+    return entry
+  }
+  if (
+    entry &&
+    typeof entry === "object" &&
+    "agentId" in entry &&
+    typeof entry.agentId === "string" &&
+    entry.agentId.trim().length
+  ) {
+    return entry.agentId
+  }
+  return undefined
+}
+
 const withDefaults = (chatApp: ChatApp): ChatApp => ({
   ...chatApp,
-  agents: chatApp.agents ?? [],
+  agents: normalizeAgents(chatApp.agents) ?? [],
 })
 
-const normalizeAgents = (agents?: ChatApp["agents"]) => {
+const normalizeAgents = (agents?: unknown) => {
   if (agents === undefined) {
     return undefined
   }
   if (!Array.isArray(agents)) {
-    throw new HTTPError("agents must contain valid agentId entries", 400)
+    throw new HTTPError("agents must contain valid agent IDs", 400)
   }
   if (agents.length === 0) {
     return []
   }
 
-  const allValid = agents.every(
-    agent => typeof agent?.agentId === "string" && agent.agentId.trim().length
-  )
-
-  if (!allValid) {
-    throw new HTTPError("agents must contain valid agentId entries", 400)
+  const agentIds = agents
+    .map(agentIdFromEntry)
+    .filter((agentId): agentId is string => !!agentId)
+  if (agentIds.length !== agents.length) {
+    throw new HTTPError("agents must contain valid agent IDs", 400)
   }
 
-  return agents.map(agent => ({ agentId: agent.agentId }))
+  return agentIds
 }
 
 export async function getSingle(): Promise<ChatApp | undefined> {

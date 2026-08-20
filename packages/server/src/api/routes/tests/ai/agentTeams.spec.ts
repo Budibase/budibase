@@ -64,7 +64,7 @@ jest.mock("../../../../sdk/workspace/ai/rag", () => {
 })
 
 import sdk from "../../../../sdk"
-import { context, docIds, roles } from "@budibase/backend-core"
+import { context, docIds } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
@@ -148,7 +148,7 @@ describe("agent teams integration provisioning", () => {
     )
 
     const chatApp = await getPersistedChatApp()
-    expect(chatApp?.agents).toContainEqual({ agentId: agent._id })
+    expect(chatApp?.agents).toContain(agent._id)
   })
 
   it("keeps an existing chat app membership when provisioning teams", async () => {
@@ -165,7 +165,7 @@ describe("agent teams integration provisioning", () => {
       const db = context.getWorkspaceDB()
       await db.put({
         _id: docIds.generateChatAppID(),
-        agents: [{ agentId: agent._id! }],
+        agents: [agent._id!],
         createdAt: new Date().toISOString(),
       })
     })
@@ -173,7 +173,7 @@ describe("agent teams integration provisioning", () => {
     await config.api.agent.provisionMSTeamsChannel(agent._id!)
 
     const chatApp = await getPersistedChatApp()
-    expect(chatApp?.agents).toContainEqual({ agentId: agent._id })
+    expect(chatApp?.agents).toContain(agent._id)
   })
 
   it("obfuscates teams secrets in responses and preserves them on update", async () => {
@@ -274,11 +274,9 @@ describe("agent teams integration provisioning", () => {
 
     const setupProvisionedTeamsAgent = async ({
       requireUserLink,
-      roleId,
       allowKnowledgeSourceDownload,
     }: {
       requireUserLink?: boolean
-      roleId?: string
       allowKnowledgeSourceDownload?: boolean
     } = {}) => {
       const agent = await config.api.agent.createWithOperation(
@@ -300,22 +298,6 @@ describe("agent teams integration provisioning", () => {
         }
       )
       const channel = await config.api.agent.provisionMSTeamsChannel(agent._id!)
-      if (roleId) {
-        await config.doInContext(config.getDevWorkspaceId(), async () => {
-          const chatApp = await sdk.ai.chatApps.getSingle()
-          if (!chatApp) {
-            throw new Error("Chat app not found")
-          }
-          await sdk.ai.chatApps.update({
-            ...chatApp,
-            agents: chatApp.agents.map(chatAgent =>
-              chatAgent.agentId === agent._id
-                ? { ...chatAgent, roleId }
-                : chatAgent
-            ),
-          })
-        })
-      }
       await config.publish()
       const linkExternalUser = async (
         externalUserId: string,
@@ -431,31 +413,6 @@ describe("agent teams integration provisioning", () => {
         })
         expect(link).toBeUndefined()
       })
-    })
-
-    it("blocks optional-link unlinked users when the agent requires a higher role", async () => {
-      const { agent, chatAppId } = await setupProvisionedTeamsAgent({
-        requireUserLink: false,
-        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-      })
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
-
-      const response = await postTeamsMessage({
-        path,
-        body: {
-          id: "activity-ask-optional-blocked",
-          type: "message",
-          text: "hello teams",
-          from: { id: "user-unlinked", name: "Teams User" },
-          conversation: { id: "conversation-1", conversationType: "personal" },
-          channelData: { tenant: { id: "tenant-1" } },
-        },
-      })
-
-      expect(mockedWebhookChat).not.toHaveBeenCalled()
-      expect(response.body.messages).toContain(
-        "This agent is not available to unlinked users."
-      )
     })
 
     it("uses the linked Budibase user when linking is optional", async () => {

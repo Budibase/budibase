@@ -19,12 +19,8 @@ export const DEPLOYMENT_ID_TO_PROVIDER: Record<string, AgentChannelProvider> = {
   slack: AgentChannelProvider.SLACK,
 }
 
-export interface ChatAppAgent {
-  agentId: string
-}
-
 export interface ChatApp extends Document {
-  agents: ChatAppAgent[]
+  agents: string[]
 }
 
 export interface ChatConversationChannel {
