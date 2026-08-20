@@ -10,17 +10,12 @@ import {
 import { v4 } from "uuid"
 import {
   ActionFailureReason,
-  Agent,
   ChatAgentRequest,
   ChatApp,
   ChatConversation,
   ChatConversationRequest,
-  CreateChatConversationRequest,
-  DocumentType,
   ESCALATE_TOOL_NAME,
   FeatureFlag,
-  FetchAgentHistoryResponse,
-  FetchAgentFileUrlResponse,
   ContextUser,
   UserCtx,
   WebhookChatCompleteResult,
@@ -37,7 +32,6 @@ import { isDevWorkspaceID } from "../../../db/utils"
 import {
   buildAgentMessageUsage,
   formatIncompleteToolCallError,
-  getLiveOperations,
   prepareAgentChatRun,
   type AgentChatRun,
 } from "../../../sdk/workspace/ai/agents"
@@ -319,32 +313,6 @@ const finalizeAgentRequestTracking = async ({
     })
 }
 
-const findLiveOperation = (agent: Agent, operationId: string) =>
-  getLiveOperations(agent).find(operation => operation.id === operationId)
-
-const resolveRequestedAgentId = (ctx: UserCtx) => {
-  const rawAgentId = ctx.query.agentId
-  if (rawAgentId === undefined) {
-    return undefined
-  }
-  if (typeof rawAgentId !== "string" || rawAgentId.trim().length === 0) {
-    throw new HTTPError("agentId must be a non-empty string", 400)
-  }
-
-  return rawAgentId.trim()
-}
-
-// Chat surfaces offer every live agent in the workspace, so being live is the
-// only thing that makes an agent available to chat with.
-const getLiveAgentOrThrow = async (agentId: string) => {
-  const agent = await sdk.ai.agents.getOrThrow(agentId)
-  if (!agent.live) {
-    throw new HTTPError("agentId is not live", 400)
-  }
-
-  return agent
-}
-
 const getConfiguredChatAgentConfig = (chatApp: ChatApp, agentId: string) => {
   const chatAgentConfig = chatApp.agents?.find(
     agent => agent.agentId === agentId
@@ -356,51 +324,12 @@ const getConfiguredChatAgentConfig = (chatApp: ChatApp, agentId: string) => {
   return chatAgentConfig
 }
 
-const getChatConversation = async ({
-  db,
-  chatAppId,
-  chatConversationId,
-  requestedAgentId,
-  userId,
-}: {
-  db: ReturnType<typeof context.getWorkspaceDB>
-  chatAppId: string
-  chatConversationId: string
-  requestedAgentId: string | undefined
-  userId: string
-}) => {
-  const chat = await db.tryGet<ChatConversation>(chatConversationId)
-  if (
-    !chat ||
-    chat.chatAppId !== chatAppId ||
-    !!chat.channel ||
-    (requestedAgentId && chat.agentId !== requestedAgentId)
-  ) {
-    throw new HTTPError("chat not found", 404)
-  }
-
-  if (chat.userId && chat.userId !== userId) {
-    throw new HTTPError("Forbidden", 403)
-  }
-
-  return chat
-}
-
 interface ResolvedChatStreamRequest {
   agentId: string
   chat: ChatAgentRequest
   chatAppId?: string
-  existingChat?: ChatConversation
   userId: string
   user: ContextUser
-}
-
-interface getExistingChatForStreamParams {
-  isPreview: boolean
-  chat: ChatAgentRequest
-  chatAppId?: string
-  db: ReturnType<typeof context.getWorkspaceDB>
-  userId: string
 }
 
 const applyChatStreamPathParams = (
@@ -430,34 +359,6 @@ const applyChatStreamPathParams = (
   }
 }
 
-const getExistingChatForStream = async ({
-  isPreview,
-  chat,
-  chatAppId,
-  db,
-  userId,
-}: getExistingChatForStreamParams) => {
-  if (!chat._id) {
-    return undefined
-  }
-
-  const existingChat = await db.tryGet<ChatConversation>(chat._id)
-  if (!existingChat) {
-    throw new HTTPError("chat not found", 404)
-  }
-  if (!isPreview && existingChat.chatAppId !== chatAppId) {
-    throw new HTTPError("chat does not belong to this chat app", 400)
-  }
-  if (existingChat.userId && existingChat.userId !== userId) {
-    throw new HTTPError("Forbidden", 403)
-  }
-  if (chat.agentId && chat.agentId !== existingChat.agentId) {
-    throw new HTTPError("agentId cannot be changed", 400)
-  }
-
-  return existingChat
-}
-
 const resolveChatStreamRequest = async (
   ctx: UserCtx<ChatAgentRequest, void>
 ): Promise<ResolvedChatStreamRequest> => {
@@ -465,7 +366,6 @@ const resolveChatStreamRequest = async (
   const userId = getGlobalUserId(ctx)
   applyChatStreamPathParams(chat, ctx.params)
 
-  const db = context.getWorkspaceDB()
   const workspaceId = context.getWorkspaceId()
   if (!workspaceId) {
     throw new HTTPError("Workspace context is required", 400)
@@ -475,22 +375,21 @@ const resolveChatStreamRequest = async (
     ctx.user,
     workspaceId
   )
-  const isPreview = chat.isPreview === true
 
-  if (chat.previewRoleId && !isPreview) {
-    throw new HTTPError("previewRoleId requires preview mode", 400)
+  if (chat.isPreview !== true) {
+    throw new HTTPError("Preview mode is required", 400)
   }
 
-  if (isPreview && !isBuilderOrAdmin) {
+  if (!isBuilderOrAdmin) {
     throw new HTTPError("Forbidden", 403)
   }
 
-  if (isPreview && !isDevWorkspaceID(workspaceId)) {
+  if (!isDevWorkspaceID(workspaceId)) {
     throw new HTTPError("Preview mode requires a development workspace", 400)
   }
 
   let user = ctx.user
-  if (isPreview && chat.previewRoleId) {
+  if (chat.previewRoleId) {
     const previewRole = await roles.getRole(chat.previewRoleId)
     if (!previewRole?._id) {
       throw new HTTPError("Preview role not found", 400)
@@ -501,41 +400,15 @@ const resolveChatStreamRequest = async (
     }
   }
 
-  if (!isPreview && !chatAppId) {
-    throw new HTTPError("chatAppId is required", 400)
-  }
-
-  if (!isPreview) {
-    const chatApp = await db.tryGet<ChatApp>(chatAppId)
-    if (!chatApp) {
-      throw new HTTPError("Chat app not found", 404)
-    }
-  }
-
-  const existingChat = await getExistingChatForStream({
-    isPreview,
-    chat,
-    chatAppId,
-    db,
-    userId,
-  })
-
-  const agentId = existingChat?.agentId || chat.agentId
+  const agentId = chat.agentId
   if (!agentId) {
     throw new HTTPError("agentId is required", 400)
   }
-
-  if (!isPreview) {
-    await getLiveAgentOrThrow(agentId)
-  }
-
-  chat.agentId = agentId
 
   return {
     agentId,
     chat,
     chatAppId,
-    existingChat,
     userId,
     user,
   }
@@ -789,7 +662,6 @@ export async function webhookChat({
 }
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
-  const db = context.getWorkspaceDB()
   const { agentId, chat, chatAppId, userId, user } =
     await resolveChatStreamRequest(ctx)
 
@@ -809,7 +681,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   try {
     const chatId = chat._id ?? docIds.generateChatConversationID()
-    sessionId = chat.transient ? chat.sessionId || chatId : chatId
+    sessionId = chat.sessionId || chatId
     const run = await prepareAgentChatRun({
       agent,
       agentId,
@@ -848,10 +720,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       }),
       onToolCallCompleted: toolCallTracking.onToolCallCompleted,
     })
-
-    const title = run.latestQuestion
-      ? truncateTitle(run.latestQuestion)
-      : chat.title
 
     ctx.respond = false
     const streamStartTime = Date.now()
@@ -945,8 +813,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         const finalAssistantMessage = [...messages]
           .reverse()
           .find(message => message.role === "assistant")
-        // Involves an LLM call to judge the outcome. Kick it off now, but don't
-        // make saving the conversation wait behind it.
         const finalizeTask = finalizeAgentRequestTracking({
           trackingHandle,
           agentId,
@@ -955,24 +821,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           unrecoveredToolFailures,
           finalResponse: getAssistantMessageText(finalAssistantMessage),
         })
-
-        if (!chat.transient && chatAppId) {
-          const existingChat = chat._id
-            ? await db.tryGet<ChatConversation>(chat._id)
-            : null
-
-          const chatToSave = prepareChatConversationForSave({
-            chatId,
-            chatAppId,
-            userId,
-            title,
-            messages,
-            chat,
-            existingChat,
-          })
-
-          await db.put(chatToSave)
-        }
 
         await finalizeTask
       },
@@ -993,177 +841,4 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     )
     ctx.res.end()
   }
-}
-
-export async function fetchChatAppAgentFileUrl(
-  ctx: UserCtx<
-    void,
-    FetchAgentFileUrlResponse,
-    {
-      chatAppId: string
-      agentId: string
-      operationId: string
-      fileId: string
-    }
-  >
-) {
-  const { chatAppId, agentId, operationId, fileId } = ctx.params
-
-  await sdk.ai.chatApps.getOrThrow(chatAppId)
-
-  const agent = await getLiveAgentOrThrow(agentId)
-  const operation = findLiveOperation(agent, operationId)
-
-  if (!operation) {
-    throw new HTTPError("Operation not found", 404)
-  }
-
-  if (!operation.allowKnowledgeSourceDownload) {
-    throw new HTTPError(
-      "Knowledge source downloads are disabled for this agent",
-      403
-    )
-  }
-
-  const url = await sdk.ai.rag.getFileUrlForOperation(
-    agentId,
-    operation.id,
-    fileId
-  )
-  ctx.body = { url }
-  ctx.status = 200
-}
-
-export async function createChatConversation(
-  ctx: UserCtx<CreateChatConversationRequest, ChatConversation>
-) {
-  const { title, agentId } = ctx.request.body
-  const chatAppId = ctx.request.body.chatAppId || ctx.params.chatAppId
-  const userId = getGlobalUserId(ctx)
-
-  if (!chatAppId) {
-    throw new HTTPError("chatAppId is required", 400)
-  }
-
-  if (!agentId) {
-    throw new HTTPError("agentId is required", 400)
-  }
-
-  await sdk.ai.chatApps.getOrThrow(chatAppId)
-  await getLiveAgentOrThrow(agentId)
-
-  const db = context.getWorkspaceDB()
-  const chatId = docIds.generateChatConversationID()
-
-  const newChat = prepareChatConversationForSave({
-    chatId,
-    chatAppId,
-    userId,
-    title,
-    messages: [],
-    chat: {
-      _id: chatId,
-      chatAppId,
-      agentId,
-      title,
-      messages: [],
-    },
-  })
-
-  await db.put(newChat)
-
-  ctx.status = 201
-  ctx.body = newChat
-}
-
-export async function removeChatConversation(ctx: UserCtx<void, void>) {
-  const db = context.getWorkspaceDB()
-
-  const chatConversationId = ctx.params.chatConversationId
-  const chatAppId = ctx.params.chatAppId
-  const userId = getGlobalUserId(ctx)
-  if (!chatConversationId) {
-    throw new HTTPError("chatConversationId is required", 400)
-  }
-  if (!chatAppId) {
-    throw new HTTPError("chatAppId is required", 400)
-  }
-
-  await sdk.ai.chatApps.getOrThrow(chatAppId)
-  const chat = await getChatConversation({
-    db,
-    chatAppId,
-    chatConversationId,
-    requestedAgentId: resolveRequestedAgentId(ctx),
-    userId,
-  })
-
-  await db.remove(chat)
-  ctx.status = 204
-}
-
-export async function fetchChatHistory(
-  ctx: UserCtx<void, FetchAgentHistoryResponse, { chatAppId: string }>
-) {
-  const db = context.getWorkspaceDB()
-  const chatAppId = ctx.params.chatAppId
-  const userId = getGlobalUserId(ctx)
-
-  if (!chatAppId) {
-    throw new HTTPError("chatAppId is required", 400)
-  }
-
-  await sdk.ai.chatApps.getOrThrow(chatAppId)
-  const requestedAgentId = resolveRequestedAgentId(ctx)
-
-  const allChats = await db.allDocs<ChatConversation>(
-    docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
-      include_docs: true,
-    })
-  )
-
-  ctx.body = allChats.rows
-    .map(row => row.doc!)
-    .filter(
-      chat =>
-        chat.chatAppId === chatAppId &&
-        !chat.channel &&
-        (!chat.userId || chat.userId === userId) &&
-        (!requestedAgentId || chat.agentId === requestedAgentId)
-    )
-    .sort((a, b) => {
-      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
-      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
-      return timeB - timeA
-    })
-}
-
-export async function fetchChatConversation(
-  ctx: UserCtx<
-    void,
-    ChatConversation,
-    { chatAppId: string; chatConversationId: string }
-  >
-) {
-  const db = context.getWorkspaceDB()
-  const chatAppId = ctx.params.chatAppId
-  const chatConversationId = ctx.params.chatConversationId
-  const userId = getGlobalUserId(ctx)
-
-  if (!chatAppId) {
-    throw new HTTPError("chatAppId is required", 400)
-  }
-  if (!chatConversationId) {
-    throw new HTTPError("chatConversationId is required", 400)
-  }
-
-  await sdk.ai.chatApps.getOrThrow(chatAppId)
-
-  ctx.body = await getChatConversation({
-    db,
-    chatAppId,
-    chatConversationId,
-    requestedAgentId: resolveRequestedAgentId(ctx),
-    userId,
-  })
 }

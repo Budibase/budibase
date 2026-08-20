@@ -17,7 +17,6 @@ import type { LanguageModelUsage, ModelMessage, ToolSet } from "ai"
 import { convertToModelMessages, pruneMessages, streamText } from "ai"
 import { quotas } from "@budibase/pro"
 import TestConfiguration from "../utilities/TestConfiguration"
-import { setupDefaultCompletionsAIConfig } from "../utilities/aiConfig"
 import sdk from "../../sdk"
 import * as agentLogs from "../../sdk/workspace/ai/agentLogs"
 import { requesterTools } from "../../sdk/workspace/ai/tests/utils"
@@ -204,315 +203,6 @@ const buildWebhookTestAgent = (
       },
     ],
   }) as Agent
-
-describe("chat conversations authorization", () => {
-  const config = new TestConfiguration()
-  let cleanupAIConfig: undefined | (() => Promise<void>)
-  let userA: User
-  let userB: User
-  let chatApp: ChatApp
-  let otherChatApp: ChatApp
-  let convoA: ChatConversation
-  let convoAAgent2: ChatConversation
-  let convoB: ChatConversation
-  let externalChannelConvo: ChatConversation
-  let otherAppConvo: ChatConversation
-
-  beforeAll(async () => {
-    await config.init("chat-conversation-scope")
-    cleanupAIConfig = await setupDefaultCompletionsAIConfig(config, "default")
-    userA = config.getUser()
-    userB = await config.createUser({
-      roles: {
-        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
-      },
-      builder: { global: true },
-      admin: { global: false },
-    })
-
-    await context.doInWorkspaceContext(
-      config.getProdWorkspaceId(),
-      async () => {
-        const db = context.getWorkspaceDB()
-        chatApp = buildChatApp({
-          agents: [
-            { agentId: "agent-1" },
-            { agentId: "agent-2" },
-            { agentId: "agent-3" },
-          ],
-        })
-        otherChatApp = buildChatApp({
-          agents: [{ agentId: "agent-2" }],
-        })
-        convoA = buildChatConversation({
-          chatAppId: chatApp._id!,
-          agentId: "agent-1",
-          userId: userA._id!,
-          title: "user A conversation",
-        })
-        convoB = buildChatConversation({
-          chatAppId: chatApp._id!,
-          agentId: "agent-1",
-          userId: userB._id!,
-          title: "user B conversation",
-        })
-        convoAAgent2 = buildChatConversation({
-          chatAppId: chatApp._id!,
-          agentId: "agent-2",
-          userId: userA._id!,
-          title: "user A conversation on agent 2",
-        })
-        externalChannelConvo = buildChatConversation({
-          chatAppId: chatApp._id!,
-          agentId: "agent-1",
-          userId: userA._id!,
-          title: "slack conversation",
-          channel: {
-            provider: "slack" as AgentChannelProvider,
-            channelId: "C123",
-            externalUserId: "external-user-1",
-          },
-        })
-        otherAppConvo = buildChatConversation({
-          chatAppId: otherChatApp._id!,
-          agentId: "agent-2",
-          userId: userA._id!,
-          title: "other app conversation",
-        })
-        await db.put(chatApp)
-        await db.put(convoA)
-        await db.put(convoAAgent2)
-        await db.put(convoB)
-        await db.put(externalChannelConvo)
-        await db.put(otherChatApp)
-        await db.put(otherAppConvo)
-      }
-    )
-  })
-
-  afterAll(async () => {
-    await cleanupAIConfig?.()
-    config.end()
-  })
-
-  afterEach(() => {
-    jest.restoreAllMocks()
-  })
-
-  const headersForUser = async (user: User) =>
-    await config.withUser(user, async () => config.defaultHeaders({}, true))
-
-  it("filters history results to the requesting user", async () => {
-    const headers = await headersForUser(userA)
-
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}/conversations`)
-      .set(headers)
-
-    expect(res.status).toBe(200)
-    expect(res.body).toHaveLength(2)
-    expect(res.body.map((chat: ChatConversation) => chat._id)).toEqual(
-      expect.arrayContaining([convoA._id, convoAAgent2._id])
-    )
-  })
-
-  it("hides channel conversations from web chat history", async () => {
-    const headers = await headersForUser(userA)
-
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}/conversations`)
-      .set(headers)
-
-    expect(res.status).toBe(200)
-    expect(res.body.map((chat: ChatConversation) => chat._id)).not.toContain(
-      externalChannelConvo._id
-    )
-  })
-
-  it("filters history to the requested agent", async () => {
-    const headers = await headersForUser(userA)
-
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}/conversations?agentId=agent-2`)
-      .set(headers)
-
-    expect(res.status).toBe(200)
-    expect(res.body.map((chat: ChatConversation) => chat._id)).toEqual([
-      convoAAgent2._id,
-    ])
-  })
-
-  it("returns no history for agents without conversations", async () => {
-    const headers = await headersForUser(userA)
-
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}/conversations?agentId=agent-3`)
-      .set(headers)
-
-    expect(res.status).toBe(200)
-    expect(res.body).toEqual([])
-  })
-
-  it("hides conversations from other agents when filtered", async () => {
-    const headers = await headersForUser(userA)
-
-    const res = await config
-      .getRequest()!
-      .get(
-        `/api/chatapps/${chatApp._id}/conversations/${convoA._id}?agentId=agent-2`
-      )
-      .set(headers)
-
-    expect(res.status).toBe(404)
-  })
-
-  it("blocks deleting a conversation when filtered to a different agent", async () => {
-    const headers = await headersForUser(userA)
-
-    const res = await config
-      .getRequest()!
-      .delete(
-        `/api/chatapps/${chatApp._id}/conversations/${convoA._id}?agentId=agent-2`
-      )
-      .set(headers)
-
-    expect(res.status).toBe(404)
-  })
-
-  it("blocks access to another user's conversation", async () => {
-    const headers = await headersForUser(userA)
-
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}/conversations/${convoB._id}`)
-      .set(headers)
-
-    expect(res.status).toBe(403)
-  })
-
-  it("allows a user to fetch their own conversation", async () => {
-    const headers = await headersForUser(userB)
-
-    const res = await config
-      .getRequest()!
-      .get(`/api/chatapps/${chatApp._id}/conversations/${convoB._id}`)
-      .set(headers)
-
-    expect(res.status).toBe(200)
-    expect(res.body._id).toBe(convoB._id)
-  })
-
-  it("blocks access to channel conversations from web chat routes", async () => {
-    const headers = await headersForUser(userA)
-
-    const res = await config
-      .getRequest()!
-      .get(
-        `/api/chatapps/${chatApp._id}/conversations/${externalChannelConvo._id}`
-      )
-      .set(headers)
-
-    expect(res.status).toBe(404)
-  })
-
-  it("blocks deleting a conversation from a different chat app", async () => {
-    const headers = await headersForUser(userA)
-
-    const res = await config
-      .getRequest()!
-      .delete(`/api/chatapps/${chatApp._id}/conversations/${otherAppConvo._id}`)
-      .set(headers)
-
-    expect(res.status).toBe(404)
-  })
-
-  it("blocks deleting channel conversations from web chat routes", async () => {
-    const headers = await headersForUser(userA)
-
-    const res = await config
-      .getRequest()!
-      .delete(
-        `/api/chatapps/${chatApp._id}/conversations/${externalChannelConvo._id}`
-      )
-      .set(headers)
-
-    expect(res.status).toBe(404)
-  })
-
-  it("rejects download requests for unknown operations", async () => {
-    const headers = await headersForUser(userA)
-    const getAgentSpy = jest.spyOn(sdk.ai.agents, "getOrThrow")
-
-    getAgentSpy.mockResolvedValue({
-      _id: "agent-1",
-      name: "Support agent",
-      aiconfig: "config-1",
-      operations: [
-        {
-          id: "operation_1",
-          name: "Operation 1",
-          live: true,
-          allowKnowledgeSourceDownload: true,
-        },
-        {
-          id: "operation_2",
-          name: "Operation 2",
-          live: true,
-          allowKnowledgeSourceDownload: true,
-        },
-      ],
-    } as Agent)
-
-    const res = await config
-      .getRequest()!
-      .get(
-        `/api/chatapps/${chatApp._id}/agents/agent-1/operations/operation_3/files/file-1/url`
-      )
-      .set(headers)
-
-    expect(res.status).toBe(404)
-    expect(res.body.message).toBe("Operation not found")
-  })
-
-  it("rejects download requests for draft operations", async () => {
-    const headers = await headersForUser(userA)
-    const getAgentSpy = jest.spyOn(sdk.ai.agents, "getOrThrow")
-
-    getAgentSpy.mockResolvedValue({
-      _id: "agent-1",
-      name: "Support agent",
-      aiconfig: "config-1",
-      operations: [
-        {
-          id: "operation_1",
-          name: "Operation 1",
-          live: true,
-          allowKnowledgeSourceDownload: true,
-        },
-        {
-          id: "operation_2",
-          name: "Operation 2",
-          live: false,
-          allowKnowledgeSourceDownload: true,
-        },
-      ],
-    } as Agent)
-
-    const res = await config
-      .getRequest()!
-      .get(
-        `/api/chatapps/${chatApp._id}/agents/agent-1/operations/operation_2/files/file-1/url`
-      )
-      .set(headers)
-
-    expect(res.status).toBe(404)
-    expect(res.body.message).toBe("Operation not found")
-  })
-})
 
 describe("prepareChatConversationForSave", () => {
   const now = new Date("2024-01-01T00:00:00.000Z")
@@ -847,7 +537,7 @@ describe("chat conversation transient behavior", () => {
 
   it("does not persist transient conversations", async () => {
     setupMocks()
-    const headers = await config.defaultHeaders({}, true)
+    const headers = await config.defaultHeaders()
 
     const res = await config
       .getRequest()!
@@ -855,6 +545,7 @@ describe("chat conversation transient behavior", () => {
       .set(headers)
       .send({
         agentId,
+        isPreview: true,
         messages: [
           {
             id: "message-0",
@@ -881,9 +572,9 @@ describe("chat conversation transient behavior", () => {
     )
   })
 
-  it("persists conversations by default", async () => {
+  it("rejects stream without preview mode", async () => {
     setupMocks()
-    const headers = await config.defaultHeaders({}, true)
+    const headers = await config.defaultHeaders()
 
     const res = await config
       .getRequest()!
@@ -900,42 +591,13 @@ describe("chat conversation transient behavior", () => {
         ],
       })
 
-    expect(res.status).toBe(200)
-
-    await context.doInWorkspaceContext(
-      config.getProdWorkspaceId(),
-      async () => {
-        const db = context.getWorkspaceDB()
-        const docs = await db.allDocs<ChatConversation>(
-          docIds.getDocParams(DocumentType.CHAT_CONVERSATION, undefined, {
-            include_docs: true,
-          })
-        )
-        expect(docs.rows.length).toBe(1)
-        expect(docs.rows[0].doc?.chatAppId).toBe(chatApp._id)
-        const persisted = docs.rows[0].doc?.messages ?? []
-        expect(persisted).toHaveLength(2)
-        expect(persisted[0]).toMatchObject({
-          id: "message-0",
-          role: "user",
-          parts: [{ type: "text", text: "hi" }],
-        })
-        expect(persisted[1]).toMatchObject({
-          role: "assistant",
-          parts: expect.arrayContaining([
-            expect.objectContaining({
-              type: "text",
-              text: "hello",
-            }),
-          ]),
-        })
-      }
-    )
+    expect(res.status).toBe(400)
+    expect(res.body.message).toBe("Preview mode is required")
   })
 
   it("disables tool calling when no tools are enabled", async () => {
     setupMocks()
-    const headers = await config.defaultHeaders({}, true)
+    const headers = await config.defaultHeaders()
 
     const res = await config
       .getRequest()!
@@ -943,6 +605,7 @@ describe("chat conversation transient behavior", () => {
       .set(headers)
       .send({
         agentId,
+        isPreview: true,
         messages: [
           {
             id: "message-0",
@@ -974,7 +637,7 @@ describe("chat conversation transient behavior", () => {
     jest.mocked(convertToModelMessages).mockResolvedValue(modelMessages)
     jest.mocked(pruneMessages).mockReturnValue(prunedMessages)
 
-    const headers = await config.defaultHeaders({}, true)
+    const headers = await config.defaultHeaders()
 
     const res = await config
       .getRequest()!
@@ -982,6 +645,7 @@ describe("chat conversation transient behavior", () => {
       .set(headers)
       .send({
         agentId,
+        isPreview: true,
         messages: [
           {
             id: "message-0",
@@ -1095,7 +759,7 @@ describe("chat conversation path validation", () => {
   })
 
   it("rejects mismatched chatAppId between path and body", async () => {
-    const headers = await config.defaultHeaders({}, true)
+    const headers = await config.defaultHeaders()
 
     const res = await config
       .getRequest()!
@@ -1104,6 +768,7 @@ describe("chat conversation path validation", () => {
       .send({
         chatAppId: bodyChatApp._id,
         agentId: "agent-1",
+        isPreview: true,
         messages: [],
         title: "hello",
       })
@@ -1112,7 +777,7 @@ describe("chat conversation path validation", () => {
   })
 
   it("rejects mismatched chatConversationId between path and body", async () => {
-    const headers = await config.defaultHeaders({}, true)
+    const headers = await config.defaultHeaders()
 
     const res = await config
       .getRequest()!
@@ -1123,6 +788,7 @@ describe("chat conversation path validation", () => {
       .send({
         chatAppId: pathChatApp._id,
         agentId: "agent-1",
+        isPreview: true,
         _id: docIds.generateChatConversationID(),
         messages: [],
         title: "hello",
@@ -1160,26 +826,6 @@ describe("chat conversation path validation", () => {
       .send({
         agentId: "agent-1",
         isPreview: true,
-        messages: [],
-        title: "hello",
-      })
-
-    expect(res.status).toBe(400)
-  })
-
-  it("rejects a preview role outside preview mode", async () => {
-    const headers = await config.withUser(basicUser, async () =>
-      config.defaultHeaders({}, true)
-    )
-
-    const res = await config
-      .getRequest()!
-      .post(`/api/chatapps/${pathChatApp._id}/conversations/new/stream`)
-      .set(headers)
-      .send({
-        chatAppId: pathChatApp._id,
-        agentId: "agent-1",
-        previewRoleId: roles.BUILTIN_ROLE_IDS.ADMIN,
         messages: [],
         title: "hello",
       })
@@ -1443,13 +1089,14 @@ describe("Agent chat tool call tracking", () => {
         }) as any
       )
 
-      const headers = await config.defaultHeaders({}, true)
+      const headers = await config.defaultHeaders()
       const res = await config
         .getRequest()!
         .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
         .set(headers)
         .send({
           agentId: "agent-1",
+          isPreview: true,
           messages: [
             {
               id: "msg-1",
@@ -1467,13 +1114,14 @@ describe("Agent chat tool call tracking", () => {
     it("counts zero actions when the agent makes no tool calls", async () => {
       jest.mocked(streamText).mockImplementation(mockPipeStreamText() as any)
 
-      const headers = await config.defaultHeaders({}, true)
+      const headers = await config.defaultHeaders()
       const res = await config
         .getRequest()!
         .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
         .set(headers)
         .send({
           agentId: "agent-1",
+          isPreview: true,
           messages: [
             {
               id: "msg-1",
@@ -1486,82 +1134,6 @@ describe("Agent chat tool call tracking", () => {
 
       expect(res.status).toBe(200)
       expect(addActionMock).not.toHaveBeenCalled()
-    })
-
-    it("records a tool_call action for each completed tool call when activity tracking is on", async () => {
-      jest.mocked(streamText).mockImplementation(
-        mockPipeStreamText({
-          content: [
-            {
-              type: "tool-error",
-              toolCallId: "c2",
-              toolName: "list_calendars",
-              error: new Error("boom"),
-            },
-          ],
-          toolResults: [
-            {
-              toolCallId: "c1",
-              toolName: "escalate",
-              output: { status: "pending_approval" },
-            } as any,
-          ],
-        }) as any
-      )
-      ;(
-        sdk.ai.agents.getOrThrow as jest.MockedFunction<
-          typeof sdk.ai.agents.getOrThrow
-        >
-      ).mockResolvedValue(
-        buildWebhookTestAgent({ enabledTools: requesterTools("escalate") })
-      )
-
-      await features.testutils.withFeatureFlags(
-        config.getTenantId(),
-        { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
-        async () => {
-          const headers = await config.defaultHeaders({}, true)
-          const res = await config
-            .getRequest()!
-            .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
-            .set(headers)
-            .send({
-              agentId: "agent-1",
-              messages: [
-                {
-                  id: "msg-1",
-                  role: "user",
-                  parts: [{ type: "text", text: "book a meeting" }],
-                },
-              ],
-              transient: true,
-            })
-
-          expect(res.status).toBe(200)
-
-          await context.doInWorkspaceContext(
-            config.getProdWorkspaceId(),
-            async () => {
-              const [request] =
-                await sdk.ai.agentRequests.fetchRequestsByAgent("agent-1")
-              const toolCallActions = (request.actions ?? []).filter(
-                action => action.type === "tool_call"
-              )
-              expect(toolCallActions).toEqual([
-                expect.objectContaining({
-                  toolName: "escalate",
-                  readableName: "Escalate to human",
-                  status: "success",
-                }),
-                expect.objectContaining({
-                  toolName: "list_calendars",
-                  status: "error",
-                }),
-              ])
-            }
-          )
-        }
-      )
     })
 
     it("exposes context usage from the first model step in metadata", async () => {
@@ -1578,13 +1150,14 @@ describe("Agent chat tool call tracking", () => {
         }) as any
       )
 
-      const headers = await config.defaultHeaders({}, true)
+      const headers = await config.defaultHeaders()
       const res = await config
         .getRequest()!
         .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
         .set(headers)
         .send({
           agentId: "agent-1",
+          isPreview: true,
           messages: [
             {
               id: "msg-1",
@@ -1628,13 +1201,14 @@ describe("Agent chat tool call tracking", () => {
         }) as any
       )
 
-      const headers = await config.defaultHeaders({}, true)
+      const headers = await config.defaultHeaders()
       const res = await config
         .getRequest()!
         .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
         .set(headers)
         .send({
           agentId: "agent-1",
+          isPreview: true,
           messages: [
             {
               id: "msg-1",
@@ -1693,13 +1267,14 @@ describe("Agent chat tool call tracking", () => {
         }) as any
       )
 
-      const headers = await config.defaultHeaders({}, true)
+      const headers = await config.defaultHeaders()
       const res = await config
         .getRequest()!
         .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
         .set(headers)
         .send({
           agentId: "agent-1",
+          isPreview: true,
           messages: [
             {
               id: "msg-1",
@@ -1755,13 +1330,14 @@ describe("Agent chat tool call tracking", () => {
         }) as any
       )
 
-      const headers = await config.defaultHeaders({}, true)
+      const headers = await config.defaultHeaders()
       const res = await config
         .getRequest()!
         .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
         .set(headers)
         .send({
           agentId: "agent-1",
+          isPreview: true,
           messages: [
             {
               id: "msg-1",

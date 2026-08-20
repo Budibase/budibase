@@ -4,17 +4,11 @@ import {
   AgentSharePointKnowledgeSourceScope,
   AgentKnowledgeSourceSyncRunStatus,
   AgentOperation,
-  ChatConversation,
   ChatConversationRequest,
-  CreateChatConversationRequest,
   KnowledgeBaseFile,
 } from "../../../documents"
 
 export type ChatAgentRequest = ChatConversationRequest
-
-export type FetchAgentHistoryResponse = ChatConversation[]
-
-export type { CreateChatConversationRequest }
 
 export interface FetchAgentsResponse {
   agents: Agent[]

@@ -62,11 +62,6 @@ export interface WebhookChatCompleteResult {
   title?: string
 }
 
-export type CreateChatConversationRequest = Pick<
-  ChatConversationRequest,
-  "chatAppId" | "agentId" | "title"
->
-
 export type DraftChatConversation = Omit<ChatConversationRequest, "agentId"> & {
   agentId?: string
 }

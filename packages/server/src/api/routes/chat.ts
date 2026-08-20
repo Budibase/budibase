@@ -30,24 +30,7 @@ publicRoutes.post(
   ai.confirmChatLinkSession
 )
 
-userRoutes
-  .get("/api/chatapps", ai.fetchChatApp)
-  .get("/api/chatapps/:chatAppId", ai.fetchChatAppById)
-  .get(
-    "/api/chatapps/:chatAppId/agents/:agentId/operations/:operationId/files/:fileId/url",
-    ai.fetchChatAppAgentFileUrl
-  )
-  .get("/api/chatapps/:chatAppId/conversations", ai.fetchChatHistory)
-  .get(
-    "/api/chatapps/:chatAppId/conversations/:chatConversationId",
-    ai.fetchChatConversation
-  )
-  .post("/api/chatapps/:chatAppId/conversations", ai.createChatConversation)
-  .delete(
-    "/api/chatapps/:chatAppId/conversations/:chatConversationId",
-    ai.removeChatConversation
-  )
-  .post(
-    "/api/chatapps/:chatAppId/conversations/:chatConversationId/stream",
-    ai.agentChatStream
-  )
+userRoutes.post(
+  "/api/chatapps/:chatAppId/conversations/:chatConversationId/stream",
+  ai.agentChatStream
+)
