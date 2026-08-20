@@ -145,7 +145,11 @@
         validBindingSet.add(binding.readableBinding)
       }
     }
-    if (isEditorInitialised) {
+    if (
+      isEditorInitialised &&
+      renderBindingsAsTags &&
+      mode.name === "handlebars"
+    ) {
       editor.dispatch({ effects: bindingsChanged.of(undefined) })
     }
   }

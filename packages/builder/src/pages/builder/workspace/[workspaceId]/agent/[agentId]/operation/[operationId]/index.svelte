@@ -10,6 +10,7 @@
     type InsertAtPositionFn,
   } from "@budibase/types"
   import * as routify from "@roxi/routify"
+  import { ToolBindingPrefix } from "@/constants"
   import TopBar from "@/components/common/TopBar.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
@@ -123,7 +124,10 @@
     })
     return escalationToolHidden
       ? bindings.filter(
-          binding => !binding.readableBinding?.startsWith("escalation.")
+          binding =>
+            !binding.readableBinding?.startsWith(
+              `${ToolBindingPrefix.ESCALATION}.`
+            )
         )
       : bindings
   })

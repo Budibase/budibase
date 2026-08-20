@@ -4,6 +4,7 @@ import {
 } from "@budibase/shared-core"
 import { ToolType, type ToolMetadata } from "@budibase/types"
 import { getIntegrationIcon, type IconInfo } from "@/helpers/integrationIcons"
+import { ToolBindingPrefix } from "@/constants"
 import BudibaseLogo from "../logos/Budibase.svelte"
 import RestLogo from "../logos/Rest.svelte"
 import WebSearchLogo from "../logos/WebSearch.svelte"
@@ -31,14 +32,14 @@ const getBindingPrefix = (
     sourceType === ToolType.INTERNAL_TABLE ||
     sourceType === ToolType.AUTOMATION
   ) {
-    return "budibase"
+    return ToolBindingPrefix.BUDIBASE
   }
   if (sourceType === ToolType.EXTERNAL_TABLE) {
-    return sourceLabel ? sanitizeString(sourceLabel) : "external"
+    return sourceLabel ? sanitizeString(sourceLabel) : ToolBindingPrefix.EXTERNAL
   }
-  if (sourceType === ToolType.SEARCH) return "search"
-  if (sourceType === ToolType.ESCALATION) return "escalation"
-  return "tool"
+  if (sourceType === ToolType.SEARCH) return ToolBindingPrefix.SEARCH
+  if (sourceType === ToolType.ESCALATION) return ToolBindingPrefix.ESCALATION
+  return ToolBindingPrefix.TOOL
 }
 
 const resolveDatasourceIcon = (sourceIconType?: string) => {

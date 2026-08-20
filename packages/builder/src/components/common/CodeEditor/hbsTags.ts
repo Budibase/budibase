@@ -1,5 +1,6 @@
 import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
 import { StateEffect } from "@codemirror/state"
+import { ToolBindingPrefix } from "@/constants"
 import {
   Decoration,
   EditorView,
@@ -68,6 +69,10 @@ const buildHbsTagDecorations = (
   const regex = new RegExp(FIND_ANY_HBS_REGEX)
   const isValidBinding = (binding: string) =>
     !validBindings || validBindings.size === 0 || validBindings.has(binding)
+  const knownNamespaces = new Set<string>([ToolBindingPrefix.ESCALATION])
+  for (const binding of validBindings || []) {
+    knownNamespaces.add(binding.split(".")[0])
+  }
 
   // Get all cursor/selection positions to check if cursor is inside a binding
   const cursorPositions = view.state.selection.ranges.map(r => ({
@@ -92,8 +97,12 @@ const buildHbsTagDecorations = (
       }
 
       const clean = stripHbsDelimiters(match[0])
+      const invalid = !isValidBinding(clean)
+      if (invalid && !knownNamespaces.has(clean.split(".")[0])) {
+        continue
+      }
       const icon = bindingIcons?.[clean]
-      const widget = new HbsTagWidget(clean, icon, !isValidBinding(clean))
+      const widget = new HbsTagWidget(clean, icon, invalid)
       decos.push(
         Decoration.replace({ widget, inclusive: true }).range(start, end)
       )
