@@ -320,7 +320,6 @@
           globalUserId: link.globalUserId,
           externalUserId: link.externalUserId,
           ...(link.teamId && { teamId: link.teamId }),
-          ...(link.guildId && { guildId: link.guildId }),
         },
       }
     } else if (provider === EscalationNotificationChannel.SLACK) {

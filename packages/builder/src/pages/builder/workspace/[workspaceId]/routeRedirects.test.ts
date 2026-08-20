@@ -2,7 +2,6 @@ import { render, waitFor } from "@testing-library/svelte"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import AgentIndex from "./agent/index.svelte"
 import AutomationIndex from "./automation/index.svelte"
-import ChatIndex from "./chat/index.svelte"
 import DesignIndex from "./design/index.svelte"
 import WorkspaceIndex from "./index.svelte"
 
@@ -58,11 +57,5 @@ describe("workspace route redirects", () => {
     render(AgentIndex)
 
     expect(mocks.redirect).toHaveBeenCalledWith("../home?type=agent")
-  })
-
-  it("redirects the chat landing page to home", () => {
-    render(ChatIndex)
-
-    expect(mocks.redirect).toHaveBeenCalledWith("../home")
   })
 })

@@ -1,5 +1,4 @@
 export interface SlackConversationScope {
-  chatAppId: string
   agentId: string
   channelId: string
   threadId?: string
@@ -9,5 +8,4 @@ export interface SlackConversationScope {
 export interface ResolvedSlackIntegration {
   botToken: string
   signingSecret: string
-  chatAppId?: string
 }

@@ -1420,7 +1420,6 @@ describe("/api/resources/usage", () => {
           appId: "teams-app-id",
           appPassword: "teams-app-password",
           tenantId: "teams-tenant-id",
-          chatAppId: "app_source",
           idleTimeoutMinutes: 20,
           requireUserLink: true,
           messagingEndpointUrl: "https://source.example/teams",
@@ -1428,7 +1427,6 @@ describe("/api/resources/usage", () => {
         slackIntegration: {
           botToken: "slack-bot-token",
           signingSecret: "slack-signing-secret",
-          chatAppId: "app_source",
           idleTimeoutMinutes: 25,
           requireUserLink: false,
           messagingEndpointUrl: "https://source.example/slack",

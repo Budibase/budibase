@@ -243,14 +243,12 @@ const isTeamsPersonalConversation = (conversationType?: string) =>
 
 const createTeamsMessageHandler = ({
   workspaceId,
-  chatAppId,
   agentId,
   channelEnabled,
   idleTimeoutMinutes,
   requireUserLink,
 }: {
   workspaceId: string
-  chatAppId: string
   agentId: string
   channelEnabled: boolean
   idleTimeoutMinutes?: number
@@ -309,7 +307,6 @@ const createTeamsMessageHandler = ({
     }
 
     const scope: MSTeamsConversationScope = {
-      chatAppId,
       agentId,
       conversationId,
       threadId,
@@ -415,7 +412,6 @@ const createTeamsMessageHandler = ({
             isPersonalConversation,
           }),
         workspaceId,
-        chatAppId,
         agentId,
         provider: AgentChannelProvider.MSTEAMS,
         channelEnabled,
@@ -441,16 +437,12 @@ const createTeamsMessageHandler = ({
 }
 
 export async function MSTeamsWebhook(
-  ctx: Ctx<
-    unknown,
-    unknown,
-    { instance: string; chatAppId: string; agentId: string }
-  >
+  ctx: Ctx<unknown, unknown, { instance: string; agentId: string }>
 ) {
   await runChatWebhook({
     ctx,
     providerName: "Teams",
-    createWebhookHandler: async ({ workspaceId, chatAppId, agentId }) => {
+    createWebhookHandler: async ({ workspaceId, agentId }) => {
       const {
         integration,
         idleTimeoutMinutes,
@@ -486,7 +478,6 @@ export async function MSTeamsWebhook(
 
       const handler = createTeamsMessageHandler({
         workspaceId,
-        chatAppId,
         agentId,
         channelEnabled,
         idleTimeoutMinutes,
