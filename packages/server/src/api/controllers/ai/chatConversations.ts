@@ -445,7 +445,6 @@ export async function webhookChat({
   user: ContextUser
   onAssistantStream?: (stream: WebhookAssistantStream) => Promise<void>
 }): Promise<WebhookChatCompleteResult> {
-  const db = context.getWorkspaceDB()
   const chatAppId = chat.chatAppId
 
   if (!chatAppId) {
