@@ -96,6 +96,41 @@ describe("authorizeAgentToolCall", () => {
     ).resolves.toBeUndefined()
   })
 
+  it("allows admin execution for a system requester without rehydrating a user", async () => {
+    await expect(
+      authorizeAgentToolCall({
+        authorization,
+        input: undefined,
+        executionContext: {
+          ...executionContext,
+          requester: {
+            userId: "automation:automation_1",
+            authorization: { mode: "system" },
+          },
+        },
+        principal: ToolExecutionPrincipal.ADMIN,
+      })
+    ).resolves.toBeUndefined()
+    expect(mockGetFullUser).not.toHaveBeenCalled()
+  })
+
+  it("denies requester execution for a system requester", async () => {
+    await expect(
+      authorizeAgentToolCall({
+        authorization,
+        input: undefined,
+        executionContext: {
+          ...executionContext,
+          requester: {
+            userId: "automation:automation_1",
+            authorization: { mode: "system" },
+          },
+        },
+        principal: ToolExecutionPrincipal.REQUESTER,
+      })
+    ).rejects.toThrow("Tool is not available in this security context")
+  })
+
   it("checks requester read visibility without emitting execution audit logs", async () => {
     mockGetFullUser.mockResolvedValue({
       _id: "user_1",

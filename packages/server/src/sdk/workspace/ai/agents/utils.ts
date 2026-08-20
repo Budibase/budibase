@@ -238,9 +238,11 @@ export async function buildPromptAndTools(
     const { executionContext } = options
     for (const tool of enabledTools) {
       const config = toolConfigs.find(config => config.toolName === tool.name)
-      const principal = options.toolSecurityEnabled
-        ? resolveToolExecutionPrincipal(tool, config)
-        : ToolExecutionPrincipal.ADMIN
+      const principal =
+        options.toolSecurityEnabled &&
+        executionContext.requester.authorization.mode !== "system"
+          ? resolveToolExecutionPrincipal(tool, config)
+          : ToolExecutionPrincipal.ADMIN
       runtimes.set(tool.name, {
         executionContext,
         principal,

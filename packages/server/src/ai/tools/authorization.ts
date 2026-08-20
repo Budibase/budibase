@@ -113,9 +113,17 @@ const evaluateAgentToolAuthorization = async ({
       throw new Error(DENIED_MESSAGE)
     }
 
-    // Always rehydrate the requester, including admin-authority calls. This
-    // makes removal of the initiating user revoke delayed work.
     const { requester } = executionContext
+    if (requester.authorization.mode === "system") {
+      if (principal !== ToolExecutionPrincipal.ADMIN) {
+        throw new Error(DENIED_MESSAGE)
+      }
+      audit("allowed", resourceId)
+      return
+    }
+
+    // Always rehydrate human requesters, including admin-authority calls. This
+    // makes removal of the initiating user revoke delayed work.
     const requestingUser = await getFullUser(requester.userId)
     if (
       requester.authorization.mode === "current" &&
