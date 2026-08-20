@@ -7,6 +7,7 @@ jest.mock("../../sdk/workspace/ai/agents", () => {
   return {
     ...actual,
     prepareAgentRunContext: jest.fn(),
+    configureAgentEscalationTools: jest.fn(),
   }
 })
 
@@ -122,6 +123,9 @@ describe("Agent step tool call tracking", () => {
   const { prepareAgentRunContext } = jest.requireMock(
     "../../sdk/workspace/ai/agents"
   )
+  const { configureAgentEscalationTools } = jest.requireMock(
+    "../../sdk/workspace/ai/agents"
+  )
   const liveOperation = {
     id: "operation_1",
     name: "Main operation",
@@ -166,7 +170,20 @@ describe("Agent step tool call tracking", () => {
       sessionId: expect.any(String),
       latestQuestion: "Find the answer in knowledge",
       span: expect.any(Object),
+      requester: {
+        userId: expect.stringMatching(/^automation:/),
+        authorization: { mode: "system" },
+      },
     })
+    expect(configureAgentEscalationTools).toHaveBeenCalledWith(
+      expect.objectContaining({
+        agentId: "agent-id",
+        sessionId: expect.any(String),
+        selectedOperation: liveOperation,
+        getMessages: expect.any(Function),
+        getRequestId: expect.any(Function),
+      })
+    )
   })
 
   it("counts each completed tool call as one action", async () => {

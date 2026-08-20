@@ -4,6 +4,7 @@ import { quotas } from "@budibase/pro"
 import {
   ActionFailureReason,
   ActionType,
+  type AgentRequester,
   AgentStepInputs,
   AgentStepOutputs,
   AutomationStepInputBase,
@@ -12,8 +13,10 @@ import { helpers } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import {
   prepareAgentRunContext,
+  configureAgentEscalationTools,
   findIncompleteToolCalls,
   formatIncompleteToolCallError,
+  hasPendingEscalation,
   updatePendingToolCalls,
 } from "../../../sdk/workspace/ai/agents"
 import { createSessionLogIndexer } from "../../../sdk/workspace/ai/agentLogs"
@@ -26,6 +29,7 @@ import {
   jsonSchema,
   wrapLanguageModel,
   extractReasoningMiddleware,
+  type ModelMessage,
 } from "ai"
 import { v4 } from "uuid"
 import { isProdWorkspaceID } from "../../../db/utils"
@@ -35,6 +39,8 @@ import env from "../../../environment"
 export async function run({
   inputs,
   appId,
+  context,
+  automationId,
 }: {
   inputs: AgentStepInputs
 } & AutomationStepInputBase): Promise<AgentStepOutputs> {
@@ -56,6 +62,20 @@ export async function run({
 
   const sessionId = v4()
   const operationStartedAt = new Date().toISOString()
+  const userId =
+    context.user?._id || context.user?.globalId || context.user?.userId
+  const requester: AgentRequester = userId
+    ? {
+        userId,
+        authorization: { mode: "current" },
+      }
+    : {
+        userId: automationId
+          ? `automation:${automationId}`
+          : `automation:${sessionId}`,
+        authorization: { mode: "system" },
+      }
+  const modelMessages: ModelMessage[] = [{ role: "user", content: prompt }]
 
   return tracer.llmobs.trace(
     { kind: "agent", name: "automation.agent", sessionId },
@@ -94,14 +114,31 @@ export async function run({
           }
         }
 
-        const { llm, selectedOperation, systemPrompt, tools } =
-          await prepareAgentRunContext({
-            agent: agentConfig,
-            agentId,
-            sessionId,
-            latestQuestion: prompt,
-            span: agentSpan,
-          })
+        const {
+          llm,
+          selectedOperation,
+          systemPrompt,
+          tools,
+          executionContext,
+        } = await prepareAgentRunContext({
+          agent: agentConfig,
+          agentId,
+          sessionId,
+          latestQuestion: prompt,
+          span: agentSpan,
+          requester,
+        })
+
+        await configureAgentEscalationTools({
+          tools,
+          selectedOperation,
+          executionContext,
+          agentId,
+          sessionId,
+          userId,
+          getMessages: () => modelMessages,
+          getRequestId: () => undefined,
+        })
 
         tracer.llmobs.annotate(agentSpan, {
           metadata: {
@@ -143,6 +180,10 @@ export async function run({
           tools: hasTools ? tools : undefined,
           toolChoice: hasTools ? "auto" : "none",
           stopWhen: stepCountIs(30),
+          prepareStep: ({ steps }) =>
+            hasPendingEscalation(steps)
+              ? { toolChoice: "none" as const }
+              : undefined,
           providerOptions: providerOptions?.(hasTools),
           output: outputOption,
           async onStepFinish({ content, toolCalls, toolResults, response }) {
