@@ -415,6 +415,10 @@ describe("check that disabling escaping function works", () => {
       "{{{ name }}} welcome to {{{ name }}}"
     )
   })
+
+  it("should treat expression characters literally", () => {
+    expect(disableEscaping("{{ (a+)+ }}")).toEqual("{{{ (a+)+ }}}")
+  })
 })
 
 describe("check find hbs blocks function", () => {
