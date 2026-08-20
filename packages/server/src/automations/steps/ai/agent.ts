@@ -14,6 +14,7 @@ import {
   prepareAgentRunContext,
   findIncompleteToolCalls,
   formatIncompleteToolCallError,
+  UnavailableAgentToolsError,
   updatePendingToolCalls,
 } from "../../../sdk/workspace/ai/agents"
 import { createSessionLogIndexer } from "../../../sdk/workspace/ai/agentLogs"
@@ -94,7 +95,7 @@ export async function run({
           }
         }
 
-        const { llm, selectedOperation, systemPrompt, tools } =
+        const { llm, selectedOperation, systemPrompt, tools, toolResolution } =
           await prepareAgentRunContext({
             agent: agentConfig,
             agentId,
@@ -106,6 +107,7 @@ export async function run({
         tracer.llmobs.annotate(agentSpan, {
           metadata: {
             toolCount: Object.keys(tools).length,
+            ...toolResolution,
             ...(selectedOperation
               ? {
                   operationId: selectedOperation.id,
@@ -189,13 +191,14 @@ export async function run({
         }
 
         const returnStreamingFailure = async (
-          errorMessage: string
+          errorMessage: string,
+          errorType = "StreamingError"
         ): Promise<AgentStepOutputs> => {
           sessionLogIndexer.addRequestId(requestId)
           await sessionLogIndexer.index()
           tracer.llmobs.annotate(agentSpan, {
             outputData: errorMessage,
-            tags: { error: "1", "error.type": "StreamingError" },
+            tags: { error: "1", "error.type": errorType },
           })
           return {
             success: false,
@@ -261,19 +264,29 @@ export async function run({
           return returnStreamingFailure(outputError)
         }
 
+        if (!responseText?.trim() && output === undefined) {
+          return returnStreamingFailure(
+            "Agent completed without producing a response.",
+            "EmptyAgentResponse"
+          )
+        }
+
         sessionLogIndexer.addRequestId(requestId)
         await sessionLogIndexer.index()
 
         tracer.llmobs.annotate(agentSpan, {
           outputData: responseText,
-          metadata: { stepCount: assistantMessage?.parts?.length ?? 0 },
+          metadata: {
+            responseLength: responseText?.length ?? 0,
+            stepCount: assistantMessage?.parts?.length ?? 0,
+          },
         })
 
         events.action.aiAgentExecuted({ agentId })
 
         return {
           success: true,
-          response: responseText,
+          response: responseText || "",
           usage,
           message: assistantMessage,
           sessionId,
@@ -283,8 +296,14 @@ export async function run({
         const errorMessage = automationUtils.getError(err)
         await sessionLogIndexer.index()
 
+        const toolResolutionMetadata =
+          err instanceof UnavailableAgentToolsError
+            ? err.toolResolution
+            : undefined
+
         tracer.llmobs.annotate(agentSpan, {
           outputData: errorMessage,
+          metadata: toolResolutionMetadata,
           tags: {
             error: "1",
             "error.type": err?.name || "UnknownError",

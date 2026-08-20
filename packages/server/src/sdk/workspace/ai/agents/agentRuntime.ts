@@ -40,6 +40,7 @@ import {
   buildPromptAndTools,
   getLiveOperations,
   type BuildPromptAndToolsOptions,
+  type ToolResolutionSummary,
 } from "./utils"
 import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
@@ -349,6 +350,7 @@ export interface AgentRunContext {
   tools: ToolSet
   toolDisplayNames: Record<string, string>
   executionContext?: AgentExecutionContext
+  toolResolution: ToolResolutionSummary
 }
 
 const buildOperationsSummaryPrompt = (operations: AgentOperation[]) =>

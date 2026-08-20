@@ -824,7 +824,16 @@ describe("chat conversation transient behavior", () => {
       sdk.ai.agents.buildPromptAndTools as jest.MockedFunction<
         typeof sdk.ai.agents.buildPromptAndTools
       >
-    ).mockResolvedValue({ systemPrompt: "system", tools, toolDisplayNames: {} })
+    ).mockResolvedValue({
+      systemPrompt: "system",
+      tools,
+      toolDisplayNames: {},
+      toolResolution: {
+        configuredToolCount: 0,
+        resolvedToolCount: 0,
+        unresolvedToolCount: 0,
+      },
+    })
     ;(
       sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
     ).mockResolvedValue({
@@ -1416,6 +1425,11 @@ describe("Agent chat tool call tracking", () => {
       systemPrompt: "system",
       tools: { tool1: {} as any },
       toolDisplayNames: {},
+      toolResolution: {
+        configuredToolCount: 1,
+        resolvedToolCount: 1,
+        unresolvedToolCount: 0,
+      },
     })
     ;(
       sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>

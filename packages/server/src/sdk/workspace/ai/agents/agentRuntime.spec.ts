@@ -397,6 +397,11 @@ describe("prepareAgentRunContext", () => {
       systemPrompt: "system prompt",
       tools: {},
       toolDisplayNames: {},
+      toolResolution: {
+        configuredToolCount: 0,
+        resolvedToolCount: 0,
+        unresolvedToolCount: 0,
+      },
     })
   })
 
@@ -613,6 +618,11 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
       systemPrompt: "system prompt",
       tools: { escalate: escalatePlaceholder },
       toolDisplayNames: {},
+      toolResolution: {
+        configuredToolCount: 0,
+        resolvedToolCount: 0,
+        unresolvedToolCount: 0,
+      },
     })
 
     return prepareAgentChatRun({

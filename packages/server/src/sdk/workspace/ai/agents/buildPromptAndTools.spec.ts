@@ -4,6 +4,7 @@ import {
   ToolExecutionPrincipal,
   ToolType,
   type Agent,
+  type AgentOperation,
 } from "@budibase/types"
 import type { Tool } from "ai"
 import { requesterTools } from "../tests/utils"
@@ -110,7 +111,11 @@ import {
   createKnowledgeFilesTool,
   createKnowledgeSearchTool,
 } from "../../../../ai/tools/budibase"
-import { buildPromptAndTools } from "./utils"
+import {
+  assertConfiguredToolsAvailable,
+  buildPromptAndTools,
+  UnavailableAgentToolsError,
+} from "./utils"
 import { generator } from "@budibase/backend-core/tests"
 import {
   authorizeAgentToolCall,
@@ -525,4 +530,79 @@ describe("buildPromptAndTools", () => {
     expect(Reflect.get(securedResult.tools, "list_automations")).toBeUndefined()
     expect(Reflect.get(securedResult.tools, "get_automation")).toBeUndefined()
   })
+})
+
+describe("assertConfiguredToolsAvailable", () => {
+  const makeOperation = (enabledTools: string[]): AgentOperation => ({
+    id: "operation_1",
+    name: "Main operation",
+    live: true,
+    enabledTools: requesterTools(...enabledTools),
+    allowKnowledgeSourceDownload: true,
+  })
+
+  it("returns resolution counts when every configured tool is available", () => {
+    expect(
+      assertConfiguredToolsAvailable(makeOperation(["first", "second"]), [
+        { name: "first" },
+        { name: "second" },
+        { name: "helper" },
+      ])
+    ).toEqual({
+      configuredToolCount: 2,
+      resolvedToolCount: 2,
+      unresolvedToolCount: 0,
+    })
+  })
+
+  it("allows operations that intentionally configure no tools", () => {
+    expect(assertConfiguredToolsAvailable(makeOperation([]), [])).toEqual({
+      configuredToolCount: 0,
+      resolvedToolCount: 0,
+      unresolvedToolCount: 0,
+    })
+  })
+
+  it("counts configured helper tools as available", () => {
+    expect(
+      assertConfiguredToolsAvailable(makeOperation(["list_tables"]), [
+        { name: "list_tables" },
+      ])
+    ).toEqual({
+      configuredToolCount: 1,
+      resolvedToolCount: 1,
+      unresolvedToolCount: 0,
+    })
+  })
+
+  it.each([
+    {
+      label: "some",
+      enabledTools: ["first", "missing"],
+      availableTools: [{ name: "first" }],
+      resolvedToolCount: 1,
+    },
+    {
+      label: "all",
+      enabledTools: ["first", "second"],
+      availableTools: [],
+      resolvedToolCount: 0,
+    },
+  ])(
+    "throws when $label configured tools are unavailable",
+    ({ enabledTools, availableTools, resolvedToolCount }) => {
+      expect(() =>
+        assertConfiguredToolsAvailable(
+          makeOperation(enabledTools),
+          availableTools
+        )
+      ).toThrow(
+        new UnavailableAgentToolsError(makeOperation(enabledTools), {
+          configuredToolCount: enabledTools.length,
+          resolvedToolCount,
+          unresolvedToolCount: enabledTools.length - resolvedToolCount,
+        })
+      )
+    }
+  )
 })
