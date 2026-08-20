@@ -47,7 +47,6 @@ export interface ChatConversationRequest extends Document {
   title?: string
   messages: UIMessage<AgentMessageMetadata>[]
   timezone?: string
-  transient?: boolean
   isPreview?: boolean
   previewRoleId?: string
   sessionId?: string

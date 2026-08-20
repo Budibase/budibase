@@ -264,22 +264,19 @@
 
   const PREVIEW_CHAT_APP_ID = "agent-preview"
 
-  let resolvedChatAppId = $state<string | undefined>()
   let resolvedConversationId = $state<string | undefined>()
 
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
     transport: new DefaultChatTransport({
       headers: () => ({ [Header.WORKSPACE_ID]: workspaceId }),
       prepareSendMessagesRequest: ({ messages }) => {
-        const chatAppId = resolvedChatAppId || chat?.chatAppId
         const conversationId = resolvedConversationId || chat?._id || "new"
         return {
-          api: `/api/chatapps/${chatAppId}/conversations/${conversationId}/stream`,
+          api: `/api/chatapps/${PREVIEW_CHAT_APP_ID}/conversations/${conversationId}/stream`,
           body: {
             _id: resolvedConversationId || chat?._id,
-            chatAppId,
+            chatAppId: PREVIEW_CHAT_APP_ID,
             agentId: chat?.agentId,
-            transient: true,
             isPreview: true,
             previewRoleId,
             sessionId: stableSessionId,
@@ -432,14 +429,6 @@
     }
   })
 
-  const ensureChatApp = async (): Promise<string> => {
-    resolvedChatAppId = PREVIEW_CHAT_APP_ID
-    if (chat) {
-      chat = { ...chat, chatAppId: PREVIEW_CHAT_APP_ID }
-    }
-    return PREVIEW_CHAT_APP_ID
-  }
-
   const handleKeyDown = async (event: KeyboardEvent) => {
     const navigationState = navigatePromptHistory({
       key: event.key,
@@ -478,8 +467,6 @@
 
     isPreparingResponse = true
 
-    await ensureChatApp()
-
     if (!chat) {
       chat = {
         title: "",
@@ -496,7 +483,6 @@
       return
     }
 
-    resolvedChatAppId = PREVIEW_CHAT_APP_ID
     resolvedConversationId = chat._id
 
     inputValue = ""
@@ -529,19 +515,10 @@
       .map(p => p.text)
       .join("") || "[Empty message]"
 
-  let mounted = $state(false)
-
   $effect(() => {
     const currentChatId = chat?._id
     if (currentChatId) {
       resolvedConversationId = currentChatId
-    }
-  })
-
-  $effect(() => {
-    if (!mounted) {
-      mounted = true
-      ensureChatApp()
     }
   })
 

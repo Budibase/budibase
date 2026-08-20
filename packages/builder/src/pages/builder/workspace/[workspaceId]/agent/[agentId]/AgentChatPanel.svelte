@@ -30,7 +30,7 @@
   const INITIAL_CHAT: DraftChat = {
     title: "",
     messages: [],
-    chatAppId: "",
+    chatAppId: "agent-preview",
     agentId: "",
   }
 
@@ -58,7 +58,7 @@
 
   onMount(refreshPreviewRoles)
 
-  // Preview is transient, so escalation polling lives here, not in Chatbox.
+  // Preview is not persisted, so escalation polling lives here, not in Chatbox.
   let chatbox = $state<
     | { appendAssistantMessage: (m: UIMessage<AgentMessageMetadata>) => void }
     | undefined

@@ -1,16 +1,11 @@
 import * as ai from "../controllers/ai"
-import { auth, permissions } from "@budibase/backend-core"
-import { authorizedMiddleware as authorized } from "../../middleware/authorized"
+import { auth } from "@budibase/backend-core"
 import { escalationEnabled } from "../../middleware/escalationEnabled"
-import { endpointGroupList, publicRoutes } from "./endpointGroups"
-
-const userRoutes = endpointGroupList.group({
-  middleware: authorized(
-    permissions.PermissionType.WORKSPACE,
-    permissions.PermissionLevel.READ
-  ),
-  first: false,
-})
+import {
+  builderAdminRoutes,
+  endpointGroupList,
+  publicRoutes,
+} from "./endpointGroups"
 
 const escalationSupportRoutes = endpointGroupList
   .group(auth.builderOrAdmin)
@@ -30,7 +25,7 @@ publicRoutes.post(
   ai.confirmChatLinkSession
 )
 
-userRoutes.post(
+builderAdminRoutes.post(
   "/api/chatapps/:chatAppId/conversations/:chatConversationId/stream",
   ai.agentChatStream
 )

@@ -444,14 +444,14 @@ describe("prepareChatConversationForSave", () => {
   })
 })
 
-describe("chat conversation transient behavior", () => {
+describe("chat conversation preview stream", () => {
   const config = new TestConfiguration()
   const agentId = "agent-1"
   let chatApp: ChatApp
   let sessionLogIndexer: ReturnType<typeof createMockSessionLogIndexer>
 
   beforeAll(async () => {
-    await config.init("chat-conversation-transient")
+    await config.init("chat-conversation-preview")
     await context.doInWorkspaceContext(
       config.getProdWorkspaceId(),
       async () => {
@@ -535,7 +535,7 @@ describe("chat conversation transient behavior", () => {
     )
   }
 
-  it("does not persist transient conversations", async () => {
+  it("does not persist preview conversations", async () => {
     setupMocks()
     const headers = await config.defaultHeaders()
 
@@ -553,7 +553,6 @@ describe("chat conversation transient behavior", () => {
             parts: [{ type: "text", text: "hi" }],
           },
         ],
-        transient: true,
       })
 
     expect(res.status).toBe(200)
@@ -1104,7 +1103,6 @@ describe("Agent chat tool call tracking", () => {
               parts: [{ type: "text", text: "hello" }],
             },
           ],
-          transient: true,
         })
 
       expect(res.status).toBe(200)
@@ -1129,7 +1127,6 @@ describe("Agent chat tool call tracking", () => {
               parts: [{ type: "text", text: "hello" }],
             },
           ],
-          transient: true,
         })
 
       expect(res.status).toBe(200)
@@ -1165,7 +1162,6 @@ describe("Agent chat tool call tracking", () => {
               parts: [{ type: "text", text: "hello" }],
             },
           ],
-          transient: true,
         })
 
       expect(res.status).toBe(200)
@@ -1216,7 +1212,6 @@ describe("Agent chat tool call tracking", () => {
               parts: [{ type: "text", text: "summarize the pricing file" }],
             },
           ],
-          transient: true,
         })
 
       expect(res.status).toBe(200)
@@ -1282,7 +1277,6 @@ describe("Agent chat tool call tracking", () => {
               parts: [{ type: "text", text: "summarize the pricing file" }],
             },
           ],
-          transient: true,
         })
 
       expect(res.status).toBe(200)
@@ -1345,7 +1339,6 @@ describe("Agent chat tool call tracking", () => {
               parts: [{ type: "text", text: "summarize the pricing file" }],
             },
           ],
-          transient: true,
         })
 
       expect(res.status).toBe(200)
