@@ -444,9 +444,12 @@ export async function webhookChat({
   }
 
   const agent = await sdk.ai.agents.getOrThrow(agentId)
-  const providerPrefix = chat.channel?.provider || "chat"
+  const provider = chat.channel?.provider
+  if (!provider) {
+    throw new HTTPError("channel.provider is required", 400)
+  }
   const chatId = chat._id ?? docIds.generateChatConversationID()
-  const sessionId = `${providerPrefix}:${chatId}`
+  const sessionId = `${provider}:${chatId}`
   let trackingHandle: AgentRequestTrackingHandle
   const run = await prepareAgentChatRun({
     agent,

@@ -37,7 +37,7 @@ function createSessionDoc(
     _id: getSessionDocId(overrides.agentId, overrides.sessionId),
     tableId: AGENT_LOG_SESSION_TABLE_ID,
     type: "agent_log_session",
-    trigger: "Chat",
+    trigger: "Slack",
     isPreview: false,
     firstInput: "",
     requestIds: JSON.stringify([]),

@@ -58,7 +58,7 @@ const seedAgentWithLogs = async (appId: string) => {
       goal: "Help the user",
       createdAt: now,
     })
-    const sessionId = "chat:session-1"
+    const sessionId = "slack:session-1"
     const logId = `${DocumentType.AGENT_LOG_SESSION}${SEPARATOR}${encodeURIComponent(
       agentId
     )}${SEPARATOR}${encodeURIComponent(sessionId)}`
@@ -67,7 +67,7 @@ const seedAgentWithLogs = async (appId: string) => {
       type: "agent_log_session",
       agentId,
       sessionId,
-      trigger: "Chat",
+      trigger: "Slack",
       isPreview: false,
       firstInput: "Hello",
       requestIds: JSON.stringify(["req-1"]),

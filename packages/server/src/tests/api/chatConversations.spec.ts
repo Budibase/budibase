@@ -1405,6 +1405,11 @@ describe("Agent chat tool call tracking", () => {
           await webhookChat({
             chat: {
               agentId,
+              channel: {
+                provider: AgentChannelProvider.SLACK,
+                channelId: "C123",
+                externalUserId: "slack-user-1",
+              },
               messages: [
                 {
                   id: "msg-1",
@@ -1777,6 +1782,11 @@ describe("Agent chat tool call tracking", () => {
           await webhookChat({
             chat: {
               agentId,
+              channel: {
+                provider: AgentChannelProvider.SLACK,
+                channelId: "C123",
+                externalUserId: "slack-user-1",
+              },
               messages: [
                 {
                   id: "msg-1",
@@ -1820,6 +1830,11 @@ describe("Agent chat tool call tracking", () => {
           await webhookChat({
             chat: {
               agentId,
+              channel: {
+                provider: AgentChannelProvider.SLACK,
+                channelId: "C123",
+                externalUserId: "slack-user-1",
+              },
               messages: [
                 {
                   id: "msg-1",
@@ -1850,6 +1865,11 @@ describe("Agent chat tool call tracking", () => {
           await webhookChat({
             chat: {
               agentId,
+              channel: {
+                provider: AgentChannelProvider.SLACK,
+                channelId: "C123",
+                externalUserId: "slack-user-1",
+              },
               messages: [
                 {
                   id: "msg-1",
@@ -1900,6 +1920,11 @@ describe("Agent chat tool call tracking", () => {
           const result = await webhookChat({
             chat: {
               agentId,
+              channel: {
+                provider: AgentChannelProvider.SLACK,
+                channelId: "C123",
+                externalUserId: "slack-user-1",
+              },
               messages: [
                 {
                   id: "msg-1",
@@ -1941,6 +1966,11 @@ describe("Agent chat tool call tracking", () => {
           await webhookChat({
             chat: {
               agentId,
+              channel: {
+                provider: AgentChannelProvider.SLACK,
+                channelId: "C123",
+                externalUserId: "slack-user-1",
+              },
               messages: [
                 {
                   id: "msg-1",
@@ -1991,6 +2021,11 @@ describe("Agent chat tool call tracking", () => {
           await webhookChat({
             chat: {
               agentId,
+              channel: {
+                provider: AgentChannelProvider.SLACK,
+                channelId: "C123",
+                externalUserId: "slack-user-1",
+              },
               messages: [
                 {
                   id: "msg-1",
