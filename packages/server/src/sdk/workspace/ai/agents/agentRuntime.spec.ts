@@ -728,13 +728,13 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     expect(getRequestId).toHaveBeenCalledTimes(1)
   })
 
-  it("leaves the placeholder tool untouched when the operation has no recipients configured", async () => {
+  it("removes the catalog tool when the operation has no recipients configured", async () => {
     await runFor(operationWithoutRecipients)
 
     expect(mockCreateEscalateTool).not.toHaveBeenCalled()
     expect(ToolLoopAgent).toHaveBeenCalledWith(
       expect.objectContaining({
-        tools: expect.objectContaining({ escalate: escalatePlaceholder }),
+        tools: undefined,
       })
     )
   })

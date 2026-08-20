@@ -5,6 +5,7 @@ import {
   Agent,
   AgentOperation,
   AgentMessageMetadata,
+  type ChatConversationChannel,
   ChatConversationRequest,
   ContextUser,
   ESCALATE_TOOL_NAME,
@@ -443,7 +444,7 @@ export const prepareAgentRunContext = async ({
 // with no tools so the model can wrap up in text but cannot act before a
 // human responds. Keyed on the result status rather than the tool name so
 // resumed runs (ALREADY_APPROVED) keep their tools.
-const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
+export const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
   steps.some(step =>
     step.toolResults.some(result => {
       if (result.toolName !== ESCALATE_TOOL_NAME) {
@@ -458,6 +459,71 @@ const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
       )
     })
   )
+
+interface ConfigureAgentEscalationToolsParams {
+  tools: ToolSet
+  selectedOperation?: AgentOperation
+  executionContext?: AgentExecutionContext
+  agentId: string
+  sessionId: string
+  channel?: ChatConversationChannel
+  userId?: string
+  getMessages: () => ModelMessage[]
+  getRequestId: () => string | undefined
+}
+
+export const configureAgentEscalationTools = async ({
+  tools,
+  selectedOperation,
+  executionContext,
+  agentId,
+  sessionId,
+  channel,
+  userId,
+  getMessages,
+  getRequestId,
+}: ConfigureAgentEscalationToolsParams) => {
+  const escalationConfigured = Boolean(tools.escalate)
+
+  // The catalog tool only supplies builder metadata. It must never be exposed
+  // to a running agent.
+  delete tools.escalate
+  delete tools.list_session_escalations
+
+  if (
+    !escalationConfigured ||
+    !(await features.isEnabled(FeatureFlag.ESCALATION))
+  ) {
+    return
+  }
+
+  const recipients = selectedOperation?.escalation?.recipients
+  if (!selectedOperation || !recipients?.length) {
+    return
+  }
+  if (!executionContext) {
+    throw new Error("Agent execution context is required")
+  }
+
+  tools.escalate = createEscalateTool({
+    agentId,
+    operationId: selectedOperation.id,
+    sessionId,
+    recipients,
+    delayMs:
+      (selectedOperation.escalation?.delay ??
+        DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
+    channel,
+    userId,
+    getMessages,
+    getRequestId,
+    executionPrincipal: ToolExecutionPrincipal.ADMIN,
+    executionContext,
+  })
+  tools.list_session_escalations = createListSessionEscalationsTool({
+    sessionId,
+  })
+}
 
 const getAgentRequester = ({
   user,
@@ -553,43 +619,17 @@ export const prepareAgentChatRun = async ({
     tools.report_used_sources = reportUsedSourcesTool
   }
 
-  // Escalation gate: when off, strip the escalate tool entirely
-  if (tools.escalate && !(await features.isEnabled(FeatureFlag.ESCALATION))) {
-    delete tools.escalate
-  }
-
-  if (tools.escalate) {
-    const recipients = selectedOperation?.escalation?.recipients
-    if (selectedOperation && recipients?.length) {
-      // Always the real tool, on resumes too. A resumed run must still be
-      // able to raise a genuinely new escalation.
-      if (!executionContext) {
-        throw new Error("Agent execution context is required")
-      }
-      tools.escalate = createEscalateTool({
-        agentId,
-        operationId: selectedOperation.id,
-        sessionId,
-        recipients,
-        delayMs:
-          (selectedOperation.escalation?.delay ??
-            DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
-        channel: chat?.channel,
-        userId: user?._id,
-        getMessages: () => modelMessages,
-        getRequestId: () => getRequestId?.(),
-        executionPrincipal: ToolExecutionPrincipal.ADMIN,
-        executionContext,
-      })
-    }
-
-    // Give the model read-only visibility of this session's escalations so it
-    // can tell whether a request has already been raised/approved before
-    // escalating again.
-    tools.list_session_escalations = createListSessionEscalationsTool({
-      sessionId,
-    })
-  }
+  await configureAgentEscalationTools({
+    tools,
+    selectedOperation,
+    executionContext,
+    agentId,
+    sessionId,
+    channel: chat?.channel,
+    userId: user?._id,
+    getMessages: () => modelMessages,
+    getRequestId: () => getRequestId?.(),
+  })
 
   const systemPrompt = [baseSystemPrompt, additionalInstructions]
     .filter(Boolean)
