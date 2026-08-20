@@ -2,27 +2,21 @@ import { AgentMessageMetadata, Document } from "../../"
 import type { UIMessage } from "ai"
 
 export enum AgentChannelProvider {
-  DISCORD = "discord",
   MSTEAMS = "msteams",
   SLACK = "slack",
-  TELEGRAM = "telegram",
 }
 
 export type ChatIdentityLinkProvider = AgentChannelProvider
 
 /** Maps provider to deployment UI channel id (e.g. MSTeams for display) */
 export const DEPLOYMENT_CHANNEL_IDS: Record<AgentChannelProvider, string> = {
-  [AgentChannelProvider.DISCORD]: "discord",
   [AgentChannelProvider.MSTEAMS]: "MSTeams",
   [AgentChannelProvider.SLACK]: "slack",
-  [AgentChannelProvider.TELEGRAM]: "telegram",
 }
 
 export const DEPLOYMENT_ID_TO_PROVIDER: Record<string, AgentChannelProvider> = {
-  discord: AgentChannelProvider.DISCORD,
   MSTeams: AgentChannelProvider.MSTEAMS,
   slack: AgentChannelProvider.SLACK,
-  telegram: AgentChannelProvider.TELEGRAM,
 }
 
 export interface ConversationStarter {

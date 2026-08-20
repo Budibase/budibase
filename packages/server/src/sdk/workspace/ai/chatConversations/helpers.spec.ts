@@ -103,7 +103,7 @@ describe("prepareChatConversationForSave", () => {
         createdAt: "2019-01-01T00:00:00.000Z",
         updatedAt: "2019-06-01T00:00:00.000Z",
         _rev: "1-abc",
-        channel: { provider: AgentChannelProvider.DISCORD },
+        channel: { provider: AgentChannelProvider.MSTEAMS },
       },
     })
 

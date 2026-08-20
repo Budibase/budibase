@@ -1,11 +1,14 @@
 <script lang="ts">
+  import { validate as isValidUUID } from "uuid"
   import {
     Body,
+    Button,
     Checkbox,
     CopyInput,
     Input,
     notifications,
   } from "@budibase/bbui"
+  import { downloadStream } from "@budibase/frontend-core"
   import { ChatCommands } from "@budibase/shared-core"
   import type {
     Agent,
@@ -35,6 +38,7 @@
   })
 
   let provisioning = $state(false)
+  let downloadingPackage = $state(false)
   let provisionResult = $state<
     ProvisionAgentMSTeamsChannelResponse | undefined
   >()
@@ -45,14 +49,21 @@
       ""
   )
 
-  const hasRequiredCredentials = $derived.by(
-    () =>
-      !!(
-        draft.appId.trim() &&
-        draft.appPassword.trim() &&
-        draft.tenantId.trim()
-      )
-  )
+  const appIdError = $derived.by(() => {
+    const appId = draft.appId.trim()
+    return appId && !isValidUUID(appId)
+      ? "App ID must be a valid UUID"
+      : undefined
+  })
+
+  const hasRequiredCredentials = $derived.by(() => {
+    return !!(
+      draft.appId.trim() &&
+      !appIdError &&
+      draft.appPassword.trim() &&
+      draft.tenantId.trim()
+    )
+  })
 
   const isProvisioned = $derived.by(
     () => messagingEndpointUrl.trim().length > 0
@@ -80,7 +91,7 @@
 
   const provisionMSTeamsChannel = async () => {
     if (!agent?._id || provisioning) {
-      return
+      return false
     }
 
     provisioning = true
@@ -103,11 +114,31 @@
         await deploymentStore.publishApp()
       }
       notifications.success("Microsoft Teams channel settings saved")
+      return true
     } catch (error) {
       console.error(error)
       notifications.error("Failed to save Microsoft Teams channel settings")
+      return false
     } finally {
       provisioning = false
+    }
+  }
+
+  const downloadMSTeamsPackage = async () => {
+    if (!agent?._id || downloadingPackage || !isProvisioned) {
+      return
+    }
+
+    downloadingPackage = true
+    try {
+      const response = await agentsStore.downloadMSTeamsPackage(agent._id)
+      await downloadStream(response)
+      notifications.success("Microsoft Teams app package downloaded")
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to download Microsoft Teams app package")
+    } finally {
+      downloadingPackage = false
     }
   }
 </script>
@@ -121,11 +152,17 @@
     : isProvisioned
       ? "Save changes"
       : "Save channel"}
-  actionDisabled={provisioning || !hasRequiredCredentials}
-  onAction={provisionMSTeamsChannel}
+  actionDisabled={provisioning || downloadingPackage || !hasRequiredCredentials}
+  onAction={async () => {
+    await provisionMSTeamsChannel()
+  }}
 >
   {#snippet fields()}
-    <Input label="App ID (client ID)" bind:value={draft.appId} />
+    <Input
+      label="App ID (client ID)"
+      bind:value={draft.appId}
+      error={appIdError}
+    />
     <Input
       label="Client secret (value)"
       type="password"
@@ -164,5 +201,15 @@
       value={messagingEndpointUrl}
       disabled
     />
+  {/snippet}
+
+  {#snippet additionalActions()}
+    <Button
+      secondary
+      on:click={downloadMSTeamsPackage}
+      disabled={provisioning || downloadingPackage || !isProvisioned}
+    >
+      {downloadingPackage ? "Downloading..." : "Download app package"}
+    </Button>
   {/snippet}
 </ChannelConfigLayout>

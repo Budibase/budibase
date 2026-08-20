@@ -108,8 +108,6 @@ export enum EscalationNotificationChannel {
   BUDIBASE = "budibase",
   SLACK = "slack",
   MSTEAMS = "msteams",
-  DISCORD = "discord",
-  TELEGRAM = "telegram",
 }
 
 export enum EscalationAction {

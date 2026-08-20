@@ -28,8 +28,6 @@ import { automationQueue } from "../automations"
 import sdk from "../sdk"
 import { getFullUser } from "../utilities/users"
 import * as slack from "./notifications/slack"
-import * as discord from "./notifications/discord"
-import * as telegram from "./notifications/telegram"
 import * as teams from "./notifications/ms-teams"
 import { v4 } from "uuid"
 
@@ -153,8 +151,6 @@ async function processNotify(job: Job<EscalationJob>) {
       const notifResults = await Promise.allSettled(
         notifDocs.flatMap(notifDoc => [
           slack.sendSlackNotification({ notifDoc, contextDoc: doc }),
-          discord.sendDiscordNotification({ notifDoc, contextDoc: doc }),
-          telegram.sendTelegramNotification({ notifDoc, contextDoc: doc }),
           teams.sendMSTeamsNotification({ notifDoc, contextDoc: doc }),
         ])
       )
@@ -203,12 +199,6 @@ async function deliverOperationResult(
         break
       case AgentChannelProvider.SLACK:
         await slack.replyToConversation(reply)
-        break
-      case AgentChannelProvider.DISCORD:
-        await discord.replyToConversation(reply)
-        break
-      case AgentChannelProvider.TELEGRAM:
-        await telegram.replyToConversation(reply)
         break
       default:
         console.log(

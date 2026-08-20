@@ -99,14 +99,6 @@ export function determineTrigger(sessionId: string): string {
     return "Microsoft Teams"
   }
 
-  if (sessionId.startsWith("discord:")) {
-    return "Discord"
-  }
-
-  if (sessionId.startsWith("telegram:")) {
-    return "Telegram"
-  }
-
   if (sessionId.startsWith("chat:") || sessionId.startsWith("chatconvo_")) {
     return "Chat"
   }
