@@ -36,7 +36,10 @@ import {
 } from "../../../sdk/workspace/ai/agents"
 import { sdk as usersSdk } from "@budibase/shared-core"
 import { truncateTitle } from "../../../sdk/workspace/ai/chatConversations"
-import { determineTrigger } from "../../../sdk/workspace/ai/agentLogs/shared"
+import {
+  determineTrigger,
+  resolvePreviewSessionId,
+} from "../../../sdk/workspace/ai/agentLogs/shared"
 
 const getGlobalUserId = (ctx: UserCtx) => {
   const userId = ctx.user?.globalId || ctx.user?.userId || ctx.user?._id
@@ -647,7 +650,10 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
 
   try {
     const chatId = chat._id ?? docIds.generateChatConversationID()
-    sessionId = chat.sessionId || chatId
+    sessionId = resolvePreviewSessionId({
+      sessionId: chat.sessionId,
+      fallbackId: chatId,
+    })
     const run = await prepareAgentChatRun({
       agent,
       agentId,

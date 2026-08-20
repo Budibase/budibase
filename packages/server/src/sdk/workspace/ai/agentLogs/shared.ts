@@ -82,6 +82,8 @@ export function extractError(
   }
 }
 
+export const PREVIEW_SESSION_PREFIX = "chat-preview:"
+
 export function determineTrigger(sessionId: string): string {
   if (sessionId.startsWith("test:")) {
     return "Test"
@@ -103,7 +105,18 @@ export function determineTrigger(sessionId: string): string {
 }
 
 export function isPreviewSession(sessionId: string): boolean {
-  return sessionId.startsWith("chat-preview:")
+  return sessionId.startsWith(PREVIEW_SESSION_PREFIX)
+}
+
+export const resolvePreviewSessionId = ({
+  sessionId,
+  fallbackId,
+}: {
+  sessionId?: string
+  fallbackId: string
+}) => {
+  const raw = sessionId?.trim() || fallbackId
+  return isPreviewSession(raw) ? raw : `${PREVIEW_SESSION_PREFIX}${raw}`
 }
 
 export function determineStatus(

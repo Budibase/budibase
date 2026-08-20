@@ -1061,6 +1061,66 @@ describe("Agent chat tool call tracking", () => {
       expect(addActionMock).toHaveBeenCalledTimes(2)
     })
 
+    it("classifies preview streams as Chat Preview even without a sessionId", async () => {
+      jest.mocked(streamText).mockImplementation(mockPipeStreamText() as any)
+
+      const headers = await config.defaultHeaders()
+      const res = await config
+        .getRequest()!
+        .post(agentPreviewStreamPath(agentId, "chatconvo_preview"))
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          _id: "chatconvo_preview",
+          isPreview: true,
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "hello" }],
+            },
+          ],
+        })
+
+      expect(res.status).toBe(200)
+      expect(sdk.ai.llm.createLLM).toHaveBeenCalledWith(
+        "config-1",
+        "chat-preview:chatconvo_preview",
+        undefined,
+        "agent-1"
+      )
+    })
+
+    it("prefixes a supplied preview sessionId that is missing the chat-preview marker", async () => {
+      jest.mocked(streamText).mockImplementation(mockPipeStreamText() as any)
+
+      const headers = await config.defaultHeaders()
+      const res = await config
+        .getRequest()!
+        .post(agentPreviewStreamPath(agentId))
+        .set(headers)
+        .send({
+          agentId: "agent-1",
+          isPreview: true,
+          sessionId: "builder-tab-1",
+          messages: [
+            {
+              id: "msg-1",
+              role: "user",
+              parts: [{ type: "text", text: "hello" }],
+            },
+          ],
+        })
+
+      expect(res.status).toBe(200)
+      expect(sdk.ai.llm.createLLM).toHaveBeenCalledWith(
+        "config-1",
+        "chat-preview:builder-tab-1",
+        undefined,
+        "agent-1"
+      )
+    })
+
     it("counts zero actions when the agent makes no tool calls", async () => {
       jest.mocked(streamText).mockImplementation(mockPipeStreamText() as any)
 
