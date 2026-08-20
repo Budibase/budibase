@@ -35,7 +35,9 @@ const getBindingPrefix = (
     return ToolBindingPrefix.BUDIBASE
   }
   if (sourceType === ToolType.EXTERNAL_TABLE) {
-    return sourceLabel ? sanitizeString(sourceLabel) : ToolBindingPrefix.EXTERNAL
+    return sourceLabel
+      ? sanitizeString(sourceLabel)
+      : ToolBindingPrefix.EXTERNAL
   }
   if (sourceType === ToolType.SEARCH) return ToolBindingPrefix.SEARCH
   if (sourceType === ToolType.ESCALATION) return ToolBindingPrefix.ESCALATION
