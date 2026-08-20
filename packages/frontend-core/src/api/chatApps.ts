@@ -1,12 +1,7 @@
 import {
   ChatAgentRequest,
-  ChatConversation,
   ChatConversationRequest,
-  CreateChatConversationRequest,
-  ChatApp,
-  FetchAgentHistoryResponse,
   AgentMessageMetadata,
-  FetchAgentFileUrlResponse,
 } from "@budibase/types"
 import { Header } from "@budibase/shared-core"
 import { BaseAPIClient } from "./types"
@@ -18,31 +13,6 @@ export interface ChatAppEndpoints {
     chat: ChatConversationRequest,
     workspaceId: string
   ) => Promise<AsyncIterable<UIMessage<AgentMessageMetadata>>>
-  deleteChatConversation: (
-    chatConversationId: string,
-    chatAppId: string,
-    agentId?: string
-  ) => Promise<void>
-  fetchChatConversation: (
-    chatAppId: string,
-    chatConversationId: string,
-    agentId?: string
-  ) => Promise<ChatConversation>
-  fetchChatHistory: (
-    chatAppId: string,
-    agentId?: string
-  ) => Promise<FetchAgentHistoryResponse>
-  fetchChatApp: (workspaceId?: string) => Promise<ChatApp | null>
-  fetchChatAppAgentFileUrl: (
-    chatAppId: string,
-    agentId: string,
-    fileId: string,
-    operationId: string
-  ) => Promise<FetchAgentFileUrlResponse>
-  createChatConversation: (
-    chat: CreateChatConversationRequest,
-    workspaceId?: string
-  ) => Promise<ChatConversation>
 }
 
 const getBrowserTimezone = () => {
@@ -63,17 +33,8 @@ const throwOnErrorChunk = () =>
     },
   })
 
-const withAgentIdQuery = (url: string, agentId?: string) => {
-  if (!agentId) {
-    return url
-  }
-
-  const query = new URLSearchParams({ agentId })
-  return `${url}?${query.toString()}`
-}
-
 export const buildChatAppEndpoints = (
-  API: BaseAPIClient
+  _API: BaseAPIClient
 ): ChatAppEndpoints => ({
   streamChatConversation: async (chat, workspaceId) => {
     if (!chat.chatAppId) {
@@ -120,103 +81,5 @@ export const buildChatAppEndpoints = (
       stream: chunkStream,
       terminateOnError: true,
     })
-  },
-
-  deleteChatConversation: async (
-    chatConversationId: string,
-    chatAppId: string,
-    agentId?: string
-  ) => {
-    return await API.delete({
-      url: withAgentIdQuery(
-        `/api/chatapps/${chatAppId}/conversations/${chatConversationId}`,
-        agentId
-      ),
-    })
-  },
-
-  fetchChatConversation: async (
-    chatAppId: string,
-    chatConversationId: string,
-    agentId?: string
-  ) => {
-    return await API.get({
-      url: withAgentIdQuery(
-        `/api/chatapps/${chatAppId}/conversations/${chatConversationId}`,
-        agentId
-      ),
-    })
-  },
-
-  fetchChatHistory: async (chatAppId: string, agentId?: string) => {
-    return await API.get({
-      url: withAgentIdQuery(
-        `/api/chatapps/${chatAppId}/conversations`,
-        agentId
-      ),
-    })
-  },
-
-  fetchChatApp: async (workspaceId?: string) => {
-    const url = "/api/chatapps"
-    const headers = workspaceId
-      ? {
-          [Header.WORKSPACE_ID]: workspaceId,
-        }
-      : undefined
-    return await API.get({
-      url,
-      ...(headers && { headers }),
-    })
-  },
-
-  fetchChatAppAgentFileUrl: async (
-    chatAppId: string,
-    agentId: string,
-    fileId: string,
-    operationId: string
-  ) => {
-    if (!operationId) {
-      throw new Error("operationId is required to fetch a chat app agent file")
-    }
-    return await API.get<FetchAgentFileUrlResponse>({
-      url: `/api/chatapps/${chatAppId}/agents/${agentId}/operations/${operationId}/files/${fileId}/url`,
-    })
-  },
-
-  createChatConversation: async (
-    chat: CreateChatConversationRequest,
-    workspaceId?: string
-  ) => {
-    const resolvedWorkspaceId = workspaceId || API.getAppID()
-    const { chatAppId } = chat
-    if (!chatAppId) {
-      throw new Error("chatAppId is required to create a chat conversation")
-    }
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    }
-
-    if (resolvedWorkspaceId) {
-      headers[Header.WORKSPACE_ID] = resolvedWorkspaceId
-    }
-
-    const response = await fetch(`/api/chatapps/${chatAppId}/conversations`, {
-      method: "POST",
-      headers,
-      credentials: "same-origin",
-      body: JSON.stringify(chat),
-    })
-
-    if (!response.ok) {
-      const errorBody = await response.json().catch(() => null)
-      throw new Error(
-        errorBody?.message || `HTTP error! status: ${response.status}`
-      )
-    }
-
-    return (await response.json()) as ChatConversation
   },
 })

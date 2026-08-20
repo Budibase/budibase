@@ -204,9 +204,7 @@
       <Chatbox
         bind:this={chatbox}
         bind:chat
-        persistConversation={false}
         {workspaceId}
-        isAgentPreviewChat={true}
         previewRoleId={toolSecurityEnabled ? previewRoleId : undefined}
         {promptHistory}
         onpromptsubmitted={handlePromptSubmitted}

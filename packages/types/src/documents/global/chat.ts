@@ -24,11 +24,7 @@ export interface ChatAppAgent {
 }
 
 export interface ChatApp extends Document {
-  title?: string
-  greeting?: string
-  description?: string
   agents: ChatAppAgent[]
-  settings?: Record<string, any>
 }
 
 export interface ChatConversationChannel {

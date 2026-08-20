@@ -37,11 +37,7 @@
   interface Props {
     workspaceId: string
     chat: ChatConversationLike
-    persistConversation?: boolean
     initialPrompt?: string
-    onchatsaved?: (event: {
-      detail: { chatId?: string; chat: ChatConversationLike }
-    }) => void
     // Fired when an escalation parks; the consumer polls the outcome and
     // injects it via appendAssistantMessage.
     onEscalationPending?: (detail: { escalationId: string }) => void
@@ -56,7 +52,6 @@
       escalationId: string,
       accepted: boolean
     ) => Promise<EscalationRespondResult | undefined>
-    isAgentPreviewChat?: boolean
     previewRoleId?: string
     readOnly?: boolean
     readOnlyReason?: "deleted" | "offline"
@@ -67,14 +62,11 @@
   let {
     workspaceId,
     chat = $bindable(),
-    persistConversation = true,
     initialPrompt = "",
-    onchatsaved,
     onEscalationPending,
     escalationState,
     showInlineApproval = false,
     onResolve,
-    isAgentPreviewChat = false,
     previewRoleId,
     readOnly = false,
     readOnlyReason,
@@ -129,8 +121,7 @@
     })
   )
 
-  const createStableSessionId = () =>
-    isAgentPreviewChat ? `chat-preview:${Helpers.uuid()}` : Helpers.uuid()
+  const createStableSessionId = () => `chat-preview:${Helpers.uuid()}`
 
   let stableSessionId = $state(createStableSessionId())
   let chatAreaElement = $state<HTMLDivElement>()
@@ -163,27 +154,15 @@
 
     try {
       const resolvedUrl =
-        !isAgentPreviewChat &&
-        chat?.chatAppId &&
-        chat?.agentId &&
-        selectedOperationId
+        chat?.agentId && selectedOperationId
           ? (
-              await API.fetchChatAppAgentFileUrl(
-                chat.chatAppId,
+              await API.fetchOperationFileUrl(
                 chat.agentId,
-                source.fileId,
-                selectedOperationId
+                selectedOperationId,
+                source.fileId
               )
             ).url
-          : isAgentPreviewChat && chat?.agentId && selectedOperationId
-            ? (
-                await API.fetchOperationFileUrl(
-                  chat.agentId,
-                  selectedOperationId,
-                  source.fileId
-                )
-              ).url
-            : undefined
+          : undefined
       if (!resolvedUrl) {
         notifications.error("Could not resolve source file URL")
         return
@@ -329,9 +308,9 @@
             _id: resolvedConversationId || chat?._id,
             chatAppId,
             agentId: chat?.agentId,
-            transient: !persistConversation,
-            isPreview: isAgentPreviewChat,
-            previewRoleId: isAgentPreviewChat ? previewRoleId : undefined,
+            transient: true,
+            isPreview: true,
+            previewRoleId,
             sessionId: stableSessionId,
             title: chat?.title,
             messages,
@@ -342,31 +321,7 @@
     messages: chat?.messages || [],
     onFinish: async () => {
       isPreparingResponse = false
-
-      if (persistConversation && !chat._id && chat.chatAppId) {
-        try {
-          const history = await API.fetchChatHistory(
-            chat.chatAppId,
-            chat.agentId
-          )
-          const msgs = chatInstance.messages
-          const lastMessageId = msgs[msgs.length - 1]?.id
-          const savedConversation =
-            history?.find(convo =>
-              convo.messages.some(message => message.id === lastMessageId)
-            ) || history?.[0]
-
-          if (savedConversation) {
-            chat = { ...chat, ...savedConversation }
-            resolvedConversationId = savedConversation._id
-          }
-        } catch (historyError) {
-          console.error(historyError)
-        }
-      }
-
       chat = { ...chat, messages: chatInstance.messages }
-      onchatsaved?.({ detail: { chatId: chat._id, chat } })
     },
     onError: error => {
       resetPendingResponse()
@@ -511,40 +466,12 @@
     }
   })
 
-  const ensureChatApp = async (): Promise<string | undefined> => {
-    if (chat?.chatAppId) {
-      resolvedChatAppId = chat.chatAppId
-      return chat.chatAppId
+  const ensureChatApp = async (): Promise<string> => {
+    resolvedChatAppId = PREVIEW_CHAT_APP_ID
+    if (chat) {
+      chat = { ...chat, chatAppId: PREVIEW_CHAT_APP_ID }
     }
-
-    if (isAgentPreviewChat) {
-      resolvedChatAppId = PREVIEW_CHAT_APP_ID
-      if (chat) {
-        chat = { ...chat, chatAppId: PREVIEW_CHAT_APP_ID }
-      }
-      return PREVIEW_CHAT_APP_ID
-    }
-
-    try {
-      const chatApp = await API.fetchChatApp(workspaceId)
-      if (chatApp?._id) {
-        const baseChat = chat || {
-          title: "",
-          messages: [],
-          chatAppId: "",
-          agentId: "",
-        }
-        chat = {
-          ...baseChat,
-          chatAppId: chatApp._id,
-        }
-        resolvedChatAppId = chatApp._id
-        return chatApp._id
-      }
-    } catch (err) {
-      console.error(err)
-    }
-    return undefined
+    return PREVIEW_CHAT_APP_ID
   }
 
   const handleKeyDown = async (event: KeyboardEvent) => {
@@ -552,21 +479,19 @@
       return
     }
 
-    if (isAgentPreviewChat) {
-      const navigationState = navigatePromptHistory({
-        key: event.key,
-        history: promptHistory,
-        inputValue,
-        index: promptHistoryIndex,
-      })
-      if (navigationState) {
-        event.preventDefault()
-        inputValue = navigationState.inputValue
-        promptHistoryIndex = navigationState.index
-        await tick()
-        textareaElement?.setSelectionRange(inputValue.length, inputValue.length)
-        return
-      }
+    const navigationState = navigatePromptHistory({
+      key: event.key,
+      history: promptHistory,
+      inputValue,
+      index: promptHistoryIndex,
+    })
+    if (navigationState) {
+      event.preventDefault()
+      inputValue = navigationState.inputValue
+      promptHistoryIndex = navigationState.index
+      await tick()
+      textareaElement?.setSelectionRange(inputValue.length, inputValue.length)
+      return
     }
 
     if (event.key === "Enter" && !event.shiftKey) {
@@ -595,52 +520,26 @@
 
     isPreparingResponse = true
 
-    const chatAppIdFromEnsure = await ensureChatApp()
+    await ensureChatApp()
 
     if (!chat) {
-      chat = { title: "", messages: [], chatAppId: "", agentId: "" }
+      chat = {
+        title: "",
+        messages: [],
+        chatAppId: PREVIEW_CHAT_APP_ID,
+        agentId: "",
+      }
     }
 
-    const chatAppId = chat.chatAppId || chatAppIdFromEnsure
     const agentId = chat.agentId
-
-    if (!chatAppId) {
-      failToStartResponse("Chat app could not be created")
-      return
-    }
 
     if (!agentId) {
       failToStartResponse("Agent is required to start a chat")
       return
     }
 
-    resolvedChatAppId = chatAppId
-
-    if (isAgentPreviewChat) {
-      resolvedConversationId = chat._id
-    } else if (
-      persistConversation &&
-      !chat._id &&
-      (!chat.messages || chat.messages.length === 0)
-    ) {
-      try {
-        const newChat = await API.createChatConversation(
-          { chatAppId, agentId, title: chat.title },
-          workspaceId
-        )
-        chat = { ...chat, ...newChat, chatAppId }
-        resolvedConversationId = newChat._id
-      } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "Could not start a new chat conversation"
-        failToStartResponse(errorMessage, err)
-        return
-      }
-    } else if (chat._id) {
-      resolvedConversationId = chat._id
-    }
+    resolvedChatAppId = PREVIEW_CHAT_APP_ID
+    resolvedConversationId = chat._id
 
     inputValue = ""
     promptHistoryIndex = undefined
