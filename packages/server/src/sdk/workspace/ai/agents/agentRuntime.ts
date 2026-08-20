@@ -444,8 +444,8 @@ export const prepareAgentRunContext = async ({
 
 // A pending escalation suspends the turn - once one exists, later steps run
 // with no tools so the model can wrap up in text but cannot act before a
-// human responds. Keyed on the result status alone so it covers both the
-// escalate tool and gate-raised refusals from any gated tool.
+// human responds. Keyed on pending status plus escalationId so it covers the
+// escalate tool and gate refusals without tripping on lookalike statuses.
 const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
   steps.some(step =>
     step.toolResults.some(result => {
