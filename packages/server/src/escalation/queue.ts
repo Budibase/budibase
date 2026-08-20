@@ -482,6 +482,10 @@ export async function resumeOperation({
   let messages: ModelMessage[]
   let storedCallFailure: string | undefined
   let executedApproval: { toolName: string } | undefined
+  // recordToolCall awaits an LLM summary internally - chain the calls in the
+  // background (preserving completion order) and flush the tail (await
+  // toolCallChain below) before writing the terminal status.
+  let toolCallChain = Promise.resolve()
 
   if (ctx.pendingToolCall) {
     // Gate-raised escalation (AI_TOOL_ESCALATION): the frozen call is
@@ -505,22 +509,25 @@ export async function resumeOperation({
       storedCallFailure = executed.toolName
     }
     if (doc.requestId) {
-      await sdk.ai.agentRequests
-        .recordToolCall({
-          requestId: doc.requestId,
-          agentId: ctx.agentId,
-          sessionId: ctx.sessionId,
-          toolName: executed.toolName,
-          status: executed.failed ? "error" : "success",
-          input: ctx.pendingToolCall.args,
-          output: executed.output,
-        })
-        .catch(error => {
-          console.error(
-            "Failed to record approved tool call on escalation resume",
-            { escalationId, agentId: ctx.agentId, error }
-          )
-        })
+      const requestId = doc.requestId
+      toolCallChain = toolCallChain.then(() =>
+        sdk.ai.agentRequests
+          .recordToolCall({
+            requestId,
+            agentId: ctx.agentId,
+            sessionId: ctx.sessionId,
+            toolName: executed.toolName,
+            status: executed.failed ? "error" : "success",
+            input: ctx.pendingToolCall!.args,
+            output: executed.output,
+          })
+          .catch(error => {
+            console.error(
+              "Failed to record approved tool call on escalation resume",
+              { escalationId, agentId: ctx.agentId, error }
+            )
+          })
+      )
     }
     approvalInstructions =
       "ESCALATION APPROVAL: The user's request in this conversation was " +
@@ -612,12 +619,6 @@ export async function resumeOperation({
   if (storedCallFailure) {
     unrecoveredToolFailures.add(storedCallFailure)
   }
-  // recordToolCall awaits an LLM summary internally, and the runtime awaits
-  // onToolCallCompleted between steps. Returning its promise would stall
-  // every step on that summary. Instead, chain the calls in the background
-  // (preserving completion order) and flush the tail (await toolCallChain
-  // below) before writing the terminal status.
-  let toolCallChain = Promise.resolve()
   let needsInputUpdate = Promise.resolve()
 
   try {
