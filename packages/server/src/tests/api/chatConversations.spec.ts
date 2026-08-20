@@ -8,7 +8,6 @@ import {
 import type {
   Agent,
   AgentOperation,
-  ChatApp,
   ChatConversation,
   ChatConversationRequest,
   User,
@@ -163,15 +162,11 @@ const createChatTestLanguageModel = () =>
     }),
   })
 
-const buildChatApp = (overrides: Partial<ChatApp> = {}): ChatApp => ({
-  _id: docIds.generateChatAppID(),
-  agents: ["agent-1"],
-  createdAt: new Date().toISOString(),
-  ...overrides,
-})
+const agentPreviewStreamPath = (agentId: string, chatConversationId = "new") =>
+  `/api/agents/${agentId}/conversations/${chatConversationId}/stream`
 
 const buildChatConversation = (
-  overrides: Partial<ChatConversation> & { chatAppId: string; agentId: string }
+  overrides: Partial<ChatConversation> & { agentId: string }
 ): ChatConversation => ({
   _id: docIds.generateChatConversationID(),
   userId: "user-1",
@@ -220,7 +215,6 @@ describe("prepareChatConversationForSave", () => {
     const existingChat: ChatConversation = {
       _id: "chat-1",
       _rev: "1",
-      chatAppId: "chat-app-1",
       agentId: "agent-1",
       userId: "user-1",
       title: "old title",
@@ -231,7 +225,6 @@ describe("prepareChatConversationForSave", () => {
 
     const result = sdk.ai.chatConversations.prepareChatConversationForSave({
       chatId: existingChat._id!,
-      chatAppId: existingChat.chatAppId,
       userId: existingChat.userId!,
       title: "new title",
       messages: [],
@@ -247,7 +240,6 @@ describe("prepareChatConversationForSave", () => {
   it("sets createdAt when saving a new conversation", () => {
     const chat: ChatConversation = {
       _id: "chat-2",
-      chatAppId: "chat-app-2",
       agentId: "agent-2",
       userId: "user-2",
       title: "new chat",
@@ -256,7 +248,6 @@ describe("prepareChatConversationForSave", () => {
 
     const result = sdk.ai.chatConversations.prepareChatConversationForSave({
       chatId: chat._id!,
-      chatAppId: chat.chatAppId,
       userId: chat.userId!,
       title: chat.title,
       messages: [],
@@ -271,7 +262,6 @@ describe("prepareChatConversationForSave", () => {
     const largeOutput = "a".repeat(9000)
     const chat: ChatConversation = {
       _id: "chat-3",
-      chatAppId: "chat-app-3",
       agentId: "agent-3",
       userId: "user-3",
       title: "tool output chat",
@@ -312,7 +302,6 @@ describe("prepareChatConversationForSave", () => {
 
     const result = sdk.ai.chatConversations.prepareChatConversationForSave({
       chatId: chat._id!,
-      chatAppId: chat.chatAppId,
       userId: chat.userId!,
       title: chat.title,
       messages: chat.messages,
@@ -358,7 +347,6 @@ describe("prepareChatConversationForSave", () => {
     }
     const chat: ChatConversation = {
       _id: "chat-4",
-      chatAppId: "chat-app-4",
       agentId: "agent-4",
       userId: "user-4",
       title: "structured tool output chat",
@@ -399,7 +387,6 @@ describe("prepareChatConversationForSave", () => {
 
     const result = sdk.ai.chatConversations.prepareChatConversationForSave({
       chatId: chat._id!,
-      chatAppId: chat.chatAppId,
       userId: chat.userId!,
       title: chat.title,
       messages: chat.messages,
@@ -447,21 +434,10 @@ describe("prepareChatConversationForSave", () => {
 describe("chat conversation preview stream", () => {
   const config = new TestConfiguration()
   const agentId = "agent-1"
-  let chatApp: ChatApp
   let sessionLogIndexer: ReturnType<typeof createMockSessionLogIndexer>
 
   beforeAll(async () => {
     await config.init("chat-conversation-preview")
-    await context.doInWorkspaceContext(
-      config.getProdWorkspaceId(),
-      async () => {
-        const db = context.getWorkspaceDB()
-        chatApp = buildChatApp({
-          agents: [agentId],
-        })
-        await db.put(chatApp)
-      }
-    )
   })
 
   afterAll(() => {
@@ -541,7 +517,7 @@ describe("chat conversation preview stream", () => {
 
     const res = await config
       .getRequest()!
-      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+      .post(agentPreviewStreamPath(agentId))
       .set(headers)
       .send({
         agentId,
@@ -577,7 +553,7 @@ describe("chat conversation preview stream", () => {
 
     const res = await config
       .getRequest()!
-      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+      .post(agentPreviewStreamPath(agentId))
       .set(headers)
       .send({
         agentId,
@@ -600,7 +576,7 @@ describe("chat conversation preview stream", () => {
 
     const res = await config
       .getRequest()!
-      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+      .post(agentPreviewStreamPath(agentId))
       .set(headers)
       .send({
         agentId,
@@ -640,7 +616,7 @@ describe("chat conversation preview stream", () => {
 
     const res = await config
       .getRequest()!
-      .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+      .post(agentPreviewStreamPath(agentId))
       .set(headers)
       .send({
         agentId,
@@ -672,7 +648,6 @@ describe("chat conversation preview stream", () => {
 describe("chat conversation title helpers", () => {
   const baseChat: ChatConversationRequest = {
     _id: "chat-1",
-    chatAppId: "chat-app-1",
     agentId: "agent-1",
     messages: [],
   }
@@ -715,9 +690,8 @@ describe("chat conversation title helpers", () => {
 
 describe("chat conversation path validation", () => {
   const config = new TestConfiguration()
+  const agentId = "agent-1"
   let basicUser: User
-  let bodyChatApp: ChatApp
-  let pathChatApp: ChatApp
   let pathConversation: ChatConversation
 
   beforeAll(async () => {
@@ -733,21 +707,11 @@ describe("chat conversation path validation", () => {
       config.getProdWorkspaceId(),
       async () => {
         const db = context.getWorkspaceDB()
-        bodyChatApp = buildChatApp({
-          agents: ["agent-1"],
-        })
-        pathChatApp = buildChatApp({
-          agents: ["agent-1"],
-        })
         pathConversation = buildChatConversation({
-          chatAppId: pathChatApp._id!,
-          agentId: "agent-1",
+          agentId,
           userId: config.getUser()._id!,
           title: "body conversation",
         })
-
-        await db.put(bodyChatApp)
-        await db.put(pathChatApp)
         await db.put(pathConversation)
       }
     )
@@ -757,16 +721,15 @@ describe("chat conversation path validation", () => {
     config.end()
   })
 
-  it("rejects mismatched chatAppId between path and body", async () => {
+  it("rejects mismatched agentId between path and body", async () => {
     const headers = await config.defaultHeaders()
 
     const res = await config
       .getRequest()!
-      .post(`/api/chatapps/${pathChatApp._id}/conversations/new/stream`)
+      .post(agentPreviewStreamPath(agentId))
       .set(headers)
       .send({
-        chatAppId: bodyChatApp._id,
-        agentId: "agent-1",
+        agentId: "agent-2",
         isPreview: true,
         messages: [],
         title: "hello",
@@ -780,13 +743,10 @@ describe("chat conversation path validation", () => {
 
     const res = await config
       .getRequest()!
-      .post(
-        `/api/chatapps/${pathChatApp._id}/conversations/${pathConversation._id}/stream`
-      )
+      .post(agentPreviewStreamPath(agentId, pathConversation._id))
       .set(headers)
       .send({
-        chatAppId: pathChatApp._id,
-        agentId: "agent-1",
+        agentId,
         isPreview: true,
         _id: docIds.generateChatConversationID(),
         messages: [],
@@ -803,10 +763,10 @@ describe("chat conversation path validation", () => {
 
     const res = await config
       .getRequest()!
-      .post("/api/chatapps/chatapp-path/conversations/new/stream")
+      .post(agentPreviewStreamPath(agentId))
       .set(headers)
       .send({
-        agentId: "agent-1",
+        agentId,
         isPreview: true,
         messages: [],
         title: "hello",
@@ -820,10 +780,10 @@ describe("chat conversation path validation", () => {
 
     const res = await config
       .getRequest()!
-      .post("/api/chatapps/chatapp-path/conversations/new/stream")
+      .post(agentPreviewStreamPath(agentId))
       .set(headers)
       .send({
-        agentId: "agent-1",
+        agentId,
         isPreview: true,
         messages: [],
         title: "hello",
@@ -835,7 +795,7 @@ describe("chat conversation path validation", () => {
 
 describe("Agent chat tool call tracking", () => {
   const config = new TestConfiguration()
-  let chatApp: ChatApp
+  const agentId = "agent-1"
   let sessionLogIndexer: ReturnType<typeof createMockSessionLogIndexer>
   const addActionMock = jest.mocked(quotas.addAction)
 
@@ -1022,14 +982,6 @@ describe("Agent chat tool call tracking", () => {
 
   beforeAll(async () => {
     await config.init("chat-conversation-quota")
-    await context.doInWorkspaceContext(
-      config.getProdWorkspaceId(),
-      async () => {
-        const db = context.getWorkspaceDB()
-        chatApp = buildChatApp()
-        await db.put(chatApp)
-      }
-    )
   })
 
   afterAll(() => {
@@ -1091,7 +1043,7 @@ describe("Agent chat tool call tracking", () => {
       const headers = await config.defaultHeaders()
       const res = await config
         .getRequest()!
-        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .post(agentPreviewStreamPath(agentId))
         .set(headers)
         .send({
           agentId: "agent-1",
@@ -1115,7 +1067,7 @@ describe("Agent chat tool call tracking", () => {
       const headers = await config.defaultHeaders()
       const res = await config
         .getRequest()!
-        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .post(agentPreviewStreamPath(agentId))
         .set(headers)
         .send({
           agentId: "agent-1",
@@ -1150,7 +1102,7 @@ describe("Agent chat tool call tracking", () => {
       const headers = await config.defaultHeaders()
       const res = await config
         .getRequest()!
-        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .post(agentPreviewStreamPath(agentId))
         .set(headers)
         .send({
           agentId: "agent-1",
@@ -1200,7 +1152,7 @@ describe("Agent chat tool call tracking", () => {
       const headers = await config.defaultHeaders()
       const res = await config
         .getRequest()!
-        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .post(agentPreviewStreamPath(agentId))
         .set(headers)
         .send({
           agentId: "agent-1",
@@ -1265,7 +1217,7 @@ describe("Agent chat tool call tracking", () => {
       const headers = await config.defaultHeaders()
       const res = await config
         .getRequest()!
-        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .post(agentPreviewStreamPath(agentId))
         .set(headers)
         .send({
           agentId: "agent-1",
@@ -1327,7 +1279,7 @@ describe("Agent chat tool call tracking", () => {
       const headers = await config.defaultHeaders()
       const res = await config
         .getRequest()!
-        .post(`/api/chatapps/${chatApp._id}/conversations/new/stream`)
+        .post(agentPreviewStreamPath(agentId))
         .set(headers)
         .send({
           agentId: "agent-1",
@@ -1347,24 +1299,15 @@ describe("Agent chat tool call tracking", () => {
   })
 
   describe("webhookChat", () => {
-    it("allows configured channel deployments for agents on the chat app", async () => {
+    it("allows configured channel deployments", async () => {
       jest.mocked(streamText).mockImplementation(makeWebhookStreamTextMock({}))
 
       await context.doInWorkspaceContext(
         config.getProdWorkspaceId(),
         async () => {
-          const db = context.getWorkspaceDB()
-          const channelChatApp: ChatApp = {
-            ...chatApp,
-            _id: docIds.generateChatAppID(),
-            agents: ["agent-1"],
-          }
-          await db.put(channelChatApp)
-
           const result = await webhookChat({
             chat: {
-              chatAppId: channelChatApp._id!,
-              agentId: "agent-1",
+              agentId,
               channel: {
                 provider: AgentChannelProvider.MSTEAMS,
                 externalUserId: "teams-user-1",
@@ -1401,8 +1344,7 @@ describe("Agent chat tool call tracking", () => {
         async () => {
           await webhookChat({
             chat: {
-              chatAppId: chatApp._id!,
-              agentId: "agent-1",
+              agentId,
               messages: [
                 {
                   id: "msg-1",
@@ -1436,8 +1378,7 @@ describe("Agent chat tool call tracking", () => {
             async () => {
               await webhookChat({
                 chat: {
-                  chatAppId: chatApp._id!,
-                  agentId: "agent-1",
+                  agentId,
                   channel: {
                     provider: AgentChannelProvider.SLACK,
                     channelId: "C123",
@@ -1497,8 +1438,7 @@ describe("Agent chat tool call tracking", () => {
             async () => {
               await webhookChat({
                 chat: {
-                  chatAppId: chatApp._id!,
-                  agentId: "agent-1",
+                  agentId,
                   channel: {
                     provider: AgentChannelProvider.SLACK,
                     channelId: "C999",
@@ -1570,8 +1510,7 @@ describe("Agent chat tool call tracking", () => {
             async () => {
               await webhookChat({
                 chat: {
-                  chatAppId: chatApp._id!,
-                  agentId: "agent-1",
+                  agentId,
                   channel: {
                     provider: AgentChannelProvider.SLACK,
                     channelId: "C888",
@@ -1633,8 +1572,7 @@ describe("Agent chat tool call tracking", () => {
             async () => {
               await webhookChat({
                 chat: {
-                  chatAppId: chatApp._id!,
-                  agentId: "agent-1",
+                  agentId,
                   channel: {
                     provider: AgentChannelProvider.SLACK,
                     channelId: "C777",
@@ -1698,8 +1636,7 @@ describe("Agent chat tool call tracking", () => {
             async () => {
               await webhookChat({
                 chat: {
-                  chatAppId: chatApp._id!,
-                  agentId: "agent-1",
+                  agentId,
                   channel: {
                     provider: AgentChannelProvider.SLACK,
                     channelId: "C666",
@@ -1779,8 +1716,7 @@ describe("Agent chat tool call tracking", () => {
         async () =>
           await webhookChat({
             chat: {
-              chatAppId: chatApp._id!,
-              agentId: "agent-1",
+              agentId,
               messages: [
                 {
                   id: "msg-1",
@@ -1823,8 +1759,7 @@ describe("Agent chat tool call tracking", () => {
         async () =>
           await webhookChat({
             chat: {
-              chatAppId: chatApp._id!,
-              agentId: "agent-1",
+              agentId,
               messages: [
                 {
                   id: "msg-1",
@@ -1854,8 +1789,7 @@ describe("Agent chat tool call tracking", () => {
         async () =>
           await webhookChat({
             chat: {
-              chatAppId: chatApp._id!,
-              agentId: "agent-1",
+              agentId,
               messages: [
                 {
                   id: "msg-1",
@@ -1905,8 +1839,7 @@ describe("Agent chat tool call tracking", () => {
         async () => {
           const result = await webhookChat({
             chat: {
-              chatAppId: chatApp._id!,
-              agentId: "agent-1",
+              agentId,
               messages: [
                 {
                   id: "msg-1",
@@ -1947,8 +1880,7 @@ describe("Agent chat tool call tracking", () => {
         async () => {
           await webhookChat({
             chat: {
-              chatAppId: chatApp._id!,
-              agentId: "agent-1",
+              agentId,
               messages: [
                 {
                   id: "msg-1",
@@ -1998,8 +1930,7 @@ describe("Agent chat tool call tracking", () => {
         context.doInWorkspaceContext(config.getProdWorkspaceId(), async () => {
           await webhookChat({
             chat: {
-              chatAppId: chatApp._id!,
-              agentId: "agent-1",
+              agentId,
               messages: [
                 {
                   id: "msg-1",

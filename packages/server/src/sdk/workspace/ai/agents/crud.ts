@@ -14,8 +14,10 @@ import type {
   AgentOperation,
   AgentOperationToolConfig,
   Datasource,
+  MSTeamsAgentIntegration,
   Optional,
   Query,
+  SlackAgentIntegration,
 } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
@@ -40,8 +42,17 @@ type DeprecatedAgentOperation = Omit<AgentOperation, "enabledTools"> & {
   enabledTools?: Array<string | DeprecatedAgentOperationToolConfig>
 }
 
-type DeprecatedAgent = Omit<Agent, "operations"> & {
+type DeprecatedChatAgentIntegration<T> = T & {
+  chatAppId?: string
+}
+
+type DeprecatedAgent = Omit<
+  Agent,
+  "operations" | "MSTeamsIntegration" | "slackIntegration"
+> & {
   operations?: DeprecatedAgentOperation[]
+  MSTeamsIntegration?: DeprecatedChatAgentIntegration<MSTeamsAgentIntegration>
+  slackIntegration?: DeprecatedChatAgentIntegration<SlackAgentIntegration>
   promptInstructions?: string
   operationName?: string
   enabledTools?: string[]
@@ -147,6 +158,17 @@ const decodeSlackIntegrationSecrets = (
   }
 }
 
+const stripDeprecatedIntegrationFields = <T extends object>(
+  integration: DeprecatedChatAgentIntegration<T> | undefined
+): T | undefined => {
+  if (!integration) {
+    return integration
+  }
+
+  const { chatAppId: _chatAppId, ...sanitised } = integration
+  return sanitised as T
+}
+
 const stripDeprecatedAgentFields = (raw: DeprecatedAgent): Agent => {
   const {
     promptInstructions: _promptInstructions,
@@ -157,7 +179,13 @@ const stripDeprecatedAgentFields = (raw: DeprecatedAgent): Agent => {
     allowKnowledgeSourceDownload: _allowKnowledgeSourceDownload,
     ...agent
   } = raw
-  return agent as Agent
+  return {
+    ...agent,
+    MSTeamsIntegration: stripDeprecatedIntegrationFields(
+      agent.MSTeamsIntegration
+    ),
+    slackIntegration: stripDeprecatedIntegrationFields(agent.slackIntegration),
+  } as Agent
 }
 
 const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
@@ -197,11 +225,12 @@ const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
 }
 
 const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
+  const agent = stripDeprecatedAgentFields(raw)
   return {
-    ...stripDeprecatedAgentFields(raw),
+    ...agent,
     live: raw.live ?? false,
     operations: migrateOperations(raw),
-    slackIntegration: decodeSlackIntegrationSecrets(raw.slackIntegration),
+    slackIntegration: decodeSlackIntegrationSecrets(agent.slackIntegration),
   }
 }
 
@@ -266,7 +295,6 @@ const sanitiseMSTeamsIntegration = (
 
   const {
     appPassword: _appPassword,
-    chatAppId: _chatAppId,
     messagingEndpointUrl: _messagingEndpointUrl,
     ...sanitised
   } = msTeamsIntegration
@@ -284,7 +312,6 @@ const sanitiseSlackIntegration = (
     clientSecret: _clientSecret,
     botToken: _botToken,
     signingSecret: _signingSecret,
-    chatAppId: _chatAppId,
     messagingEndpointUrl: _messagingEndpointUrl,
     ...sanitised
   } = slackIntegration

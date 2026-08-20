@@ -12,7 +12,6 @@ const TEAMS_INTEGRATION_SCHEMA = Joi.object({
   appId: OPTIONAL_STRING,
   appPassword: OPTIONAL_STRING,
   tenantId: NON_EMPTY_STRING.required(),
-  chatAppId: OPTIONAL_STRING,
   messagingEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
   requireUserLink: Joi.boolean().optional(),
@@ -29,7 +28,6 @@ const SLACK_INTEGRATION_SCHEMA = Joi.object({
   signingSecret: OPTIONAL_STRING,
   teamId: OPTIONAL_STRING,
   teamName: OPTIONAL_STRING,
-  chatAppId: OPTIONAL_STRING,
   messagingEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
   requireUserLink: Joi.boolean().optional(),
@@ -122,26 +120,19 @@ export function updateAgentOperationValidator() {
 }
 
 export function provisionAgentMSTeamsChannelValidator() {
-  return chatAppIdBodyValidator()
+  return emptyOptionalBodyValidator()
 }
 
 export function provisionAgentSlackChannelValidator() {
-  return chatAppIdBodyValidator()
+  return emptyOptionalBodyValidator()
 }
 
 export function createAgentSlackAppValidator() {
   return auth.joiValidator.body(Joi.object().optional().allow(null))
 }
 
-function chatAppIdBodyValidator() {
-  return auth.joiValidator.body(
-    Joi.object({
-      chatAppId: OPTIONAL_STRING,
-    })
-      .optional()
-      .allow(null)
-  )
-}
+const emptyOptionalBodyValidator = () =>
+  auth.joiValidator.body(Joi.object().optional().allow(null))
 
 export function toggleAgentMSTeamsDeploymentValidator() {
   return auth.joiValidator.body(

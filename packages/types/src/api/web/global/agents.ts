@@ -118,25 +118,18 @@ export interface DisconnectAgentSharePointSiteResponse {
   siteId: string
 }
 
-interface ConfigureAgentDeploymentChannelRequest {
-  chatAppId?: string
-}
-
 interface ConfigureAgentDeploymentChannelResponse {
   success: boolean
-  chatAppId: string
 }
 
-export type ProvisionAgentMSTeamsChannelRequest =
-  ConfigureAgentDeploymentChannelRequest
+export type ProvisionAgentMSTeamsChannelRequest = Record<string, never>
 
 export interface ProvisionAgentMSTeamsChannelResponse
   extends ConfigureAgentDeploymentChannelResponse {
   messagingEndpointUrl: string
 }
 
-export type ProvisionAgentSlackChannelRequest =
-  ConfigureAgentDeploymentChannelRequest
+export type ProvisionAgentSlackChannelRequest = Record<string, never>
 
 export interface ProvisionAgentSlackChannelResponse
   extends ConfigureAgentDeploymentChannelResponse {

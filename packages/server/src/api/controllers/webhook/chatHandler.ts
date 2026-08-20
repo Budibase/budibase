@@ -12,7 +12,6 @@ import {
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import type { RedisClient } from "@budibase/backend-core"
 import type {
-  ChatApp,
   ChatConversation,
   ChatConversationChannel,
   ChatConversationRequest,
@@ -45,7 +44,6 @@ let conversationCacheClientInitInFlight:
 let conversationCacheClientLastFailureAt = 0
 
 interface ConversationScope {
-  chatAppId: string
   agentId: string
   externalUserId: string
   channelId?: string
@@ -67,7 +65,6 @@ const getCacheKey = ({
 }) =>
   [
     workspaceId,
-    scope.chatAppId,
     scope.agentId,
     scope.channelId || "",
     scope.threadId || "",
@@ -225,11 +222,7 @@ const matchesScope = ({
   provider: AgentChannelProvider
 }) => {
   const ch = chat.channel
-  if (
-    chat.chatAppId !== scope.chatAppId ||
-    chat.agentId !== scope.agentId ||
-    ch?.provider !== provider
-  ) {
+  if (chat.agentId !== scope.agentId || ch?.provider !== provider) {
     return false
   }
 
@@ -352,7 +345,6 @@ export interface HandleChatMessageParams {
   beforeAssistantWebhook?: () => Promise<void>
   replyLinkPrompt: (message: LinkPromptMessage) => Promise<void>
   workspaceId: string
-  chatAppId: string
   agentId: string
   provider: AgentChannelProvider
   channelEnabled: boolean
@@ -436,7 +428,6 @@ export const handleChatMessage = async ({
   beforeAssistantWebhook,
   replyLinkPrompt,
   workspaceId,
-  chatAppId,
   agentId,
   provider,
   channelEnabled,
@@ -451,24 +442,9 @@ export const handleChatMessage = async ({
   await context.doInWorkspaceContext(workspaceId, async () => {
     const idleTimeoutMs = getIdleTimeoutMs(idleTimeoutMinutes)
     const db = context.getWorkspaceDB()
-    let chatApp: ChatApp
-    try {
-      chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
-    } catch (error) {
-      if (error instanceof HTTPError && error.status === 404) {
-        await reply("Chat app not found.")
-        return
-      }
-      throw error
-    }
 
     if (!channelEnabled) {
-      await reply("Agent is not enabled for this chat app.")
-      return
-    }
-
-    if (!chatApp.agents.includes(agentId)) {
-      await reply("Agent is not enabled for this chat app.")
+      await reply("Agent is not enabled for this channel.")
       return
     }
 
@@ -559,7 +535,6 @@ export const handleChatMessage = async ({
 
         logging.logWarn("chat_link_lookup_miss", {
           workspaceId,
-          chatAppId,
           agentId,
           provider,
           externalUserIdTried: user.externalUserId,
@@ -592,13 +567,11 @@ export const handleChatMessage = async ({
       await db.put(
         sdk.ai.chatConversations.prepareChatConversationForSave({
           chatId,
-          chatAppId,
           userId,
           title: "New conversation",
           messages: [],
           chat: {
             _id: chatId,
-            chatAppId,
             agentId,
             title: "New conversation",
             messages: [],
@@ -642,7 +615,6 @@ export const handleChatMessage = async ({
     const chatId = existingChat?._id ?? docIds.generateChatConversationID()
     const draftChat: ChatConversationRequest = {
       _id: chatId,
-      chatAppId,
       agentId,
       title:
         existingChat?.title || sdk.ai.chatConversations.truncateTitle(content),
@@ -678,7 +650,6 @@ export const handleChatMessage = async ({
     await db.put(
       sdk.ai.chatConversations.prepareChatConversationForSave({
         chatId,
-        chatAppId,
         userId,
         title: existingChat?.title || result.title,
         messages: result.messages,

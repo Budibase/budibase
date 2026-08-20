@@ -8,15 +8,10 @@ export const runChatWebhook = async ({
   providerName,
   createWebhookHandler,
 }: {
-  ctx: Ctx<
-    unknown,
-    unknown,
-    { instance: string; chatAppId: string; agentId: string }
-  >
+  ctx: Ctx<unknown, unknown, { instance: string; agentId: string }>
   providerName: string
   createWebhookHandler: (args: {
     workspaceId: string
-    chatAppId: string
     agentId: string
   }) => Promise<(request: Request) => Promise<Response>>
 }): Promise<void> => {
@@ -33,7 +28,6 @@ export const runChatWebhook = async ({
   try {
     handleWebhook = await createWebhookHandler({
       workspaceId: prodWorkspaceId,
-      chatAppId: ctx.params.chatAppId,
       agentId: ctx.params.agentId,
     })
   } catch (error) {

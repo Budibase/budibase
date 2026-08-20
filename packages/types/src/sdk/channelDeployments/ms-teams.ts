@@ -45,7 +45,6 @@ export interface MSTeamsActivity {
 }
 
 export interface MSTeamsConversationScope {
-  chatAppId: string
   agentId: string
   conversationId: string
   threadId: string
@@ -57,5 +56,4 @@ export interface ResolvedMSTeamsIntegration {
   appId: string
   appPassword: string
   tenantId: string
-  chatAppId?: string
 }

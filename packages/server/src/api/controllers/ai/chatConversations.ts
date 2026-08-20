@@ -11,7 +11,6 @@ import { v4 } from "uuid"
 import {
   ActionFailureReason,
   ChatAgentRequest,
-  ChatApp,
   ChatConversation,
   ChatConversationRequest,
   ESCALATE_TOOL_NAME,
@@ -310,16 +309,9 @@ const finalizeAgentRequestTracking = async ({
     })
 }
 
-const assertAgentOnChatApp = (chatApp: ChatApp, agentId: string) => {
-  if (!chatApp.agents?.includes(agentId)) {
-    throw new HTTPError("agentId is not configured for this chat app", 400)
-  }
-}
-
 interface ResolvedChatStreamRequest {
   agentId: string
   chat: ChatAgentRequest
-  chatAppId?: string
   userId: string
   user: ContextUser
 }
@@ -328,9 +320,9 @@ const applyChatStreamPathParams = (
   chat: ChatAgentRequest,
   params: UserCtx<ChatAgentRequest, void>["params"]
 ) => {
-  const chatAppId = params?.chatAppId
-  if (chatAppId && chat.chatAppId && chat.chatAppId !== chatAppId) {
-    throw new HTTPError("chatAppId in body does not match path", 400)
+  const agentId = params?.agentId
+  if (agentId && chat.agentId && chat.agentId !== agentId) {
+    throw new HTTPError("agentId in body does not match path", 400)
   }
 
   const chatConversationId = params?.chatConversationId
@@ -343,8 +335,8 @@ const applyChatStreamPathParams = (
     throw new HTTPError("chatConversationId in body does not match path", 400)
   }
 
-  if (chatAppId) {
-    chat.chatAppId = chatAppId
+  if (agentId) {
+    chat.agentId = agentId
   }
   if (chatConversationId && chatConversationId !== "new") {
     chat._id = chatConversationId
@@ -362,7 +354,6 @@ const resolveChatStreamRequest = async (
   if (!workspaceId) {
     throw new HTTPError("Workspace context is required", 400)
   }
-  const chatAppId = chat.chatAppId
   const isBuilderOrAdmin = usersSdk.users.isAdminOrBuilder(
     ctx.user,
     workspaceId
@@ -400,7 +391,6 @@ const resolveChatStreamRequest = async (
   return {
     agentId,
     chat,
-    chatAppId,
     userId,
     user,
   }
@@ -445,20 +435,11 @@ export async function webhookChat({
   user: ContextUser
   onAssistantStream?: (stream: WebhookAssistantStream) => Promise<void>
 }): Promise<WebhookChatCompleteResult> {
-  const chatAppId = chat.chatAppId
-
-  if (!chatAppId) {
-    throw new HTTPError("chatAppId is required", 400)
-  }
-
-  const chatApp = await sdk.ai.chatApps.getOrThrow(chatAppId)
-
   const agentId = chat.agentId
   if (!agentId) {
     throw new HTTPError("agentId is required", 400)
   }
 
-  assertAgentOnChatApp(chatApp, agentId)
   const agent = await sdk.ai.agents.getOrThrow(agentId)
   const providerPrefix = chat.channel?.provider || "chat"
   const chatId = chat._id ?? docIds.generateChatConversationID()
@@ -569,7 +550,6 @@ export async function webhookChat({
   if (assistantMessageResult.status === "rejected") {
     console.error("Agent streaming error", {
       agentId,
-      chatAppId,
       sessionId,
       error: assistantMessageResult.reason,
     })
@@ -590,7 +570,6 @@ export async function webhookChat({
   if (responseResult.status === "rejected") {
     console.error("Agent response metadata error", {
       agentId,
-      chatAppId,
       sessionId,
       error: responseResult.reason,
     })
@@ -650,8 +629,7 @@ export async function webhookChat({
 }
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
-  const { agentId, chat, chatAppId, userId, user } =
-    await resolveChatStreamRequest(ctx)
+  const { agentId, chat, userId, user } = await resolveChatStreamRequest(ctx)
 
   ctx.status = 200
   ctx.set("Content-Type", "text/event-stream")
@@ -768,14 +746,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         run.sessionLogIndexer.index().catch(indexError => {
           console.error("Failed to index agent session after stream error", {
             agentId,
-            chatAppId,
             sessionId,
             error: indexError,
           })
         })
         console.error("Agent streaming error", {
           agentId,
-          chatAppId,
           sessionId,
           error,
         })

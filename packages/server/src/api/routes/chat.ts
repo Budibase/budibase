@@ -26,6 +26,6 @@ publicRoutes.post(
 )
 
 builderAdminRoutes.post(
-  "/api/chatapps/:chatAppId/conversations/:chatConversationId/stream",
+  "/api/agents/:agentId/conversations/:chatConversationId/stream",
   ai.agentChatStream
 )

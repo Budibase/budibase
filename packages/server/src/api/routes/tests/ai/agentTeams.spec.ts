@@ -95,13 +95,6 @@ describe("agent teams integration provisioning", () => {
   const config = new TestConfiguration()
   let cleanupAIConfig: undefined | (() => Promise<void>)
 
-  const getPersistedChatApp = async (
-    workspaceId = config.getDevWorkspaceId()
-  ) =>
-    await config.doInContext(workspaceId, async () => {
-      return await sdk.ai.chatApps.getSingle()
-    })
-
   beforeEach(async () => {
     await config.newTenant()
     cleanupAIConfig = await setupDefaultCompletionsAIConfig(
@@ -135,45 +128,17 @@ describe("agent teams integration provisioning", () => {
     const result = await config.api.agent.provisionMSTeamsChannel(agent._id!)
 
     expect(result.success).toBe(true)
-    expect(result.chatAppId).toBeTruthy()
     expect(result.messagingEndpointUrl).toContain("/api/webhooks/ms-teams/")
-    expect(result.messagingEndpointUrl).toContain(`/${result.chatAppId}/`)
+    expect(result.messagingEndpointUrl).toContain(
+      `/${config.getProdWorkspaceId()}/`
+    )
     expect(result.messagingEndpointUrl).toContain(`/${agent._id}`)
 
     const { agents } = await config.api.agent.fetch()
     const updated = agents.find(candidate => candidate._id === agent._id)
-    expect(updated?.MSTeamsIntegration?.chatAppId).toEqual(result.chatAppId)
     expect(updated?.MSTeamsIntegration?.messagingEndpointUrl).toEqual(
       result.messagingEndpointUrl
     )
-
-    const chatApp = await getPersistedChatApp()
-    expect(chatApp?.agents).toContain(agent._id)
-  })
-
-  it("keeps an existing chat app membership when provisioning teams", async () => {
-    const agent = await config.api.agent.create({
-      name: "Teams Agent With Existing Chat App",
-      MSTeamsIntegration: {
-        appId: "teams-app-id",
-        appPassword: "teams-app-password",
-        tenantId: "azure-tenant-id",
-      },
-    })
-
-    await config.doInContext(config.getDevWorkspaceId(), async () => {
-      const db = context.getWorkspaceDB()
-      await db.put({
-        _id: docIds.generateChatAppID(),
-        agents: [agent._id!],
-        createdAt: new Date().toISOString(),
-      })
-    })
-
-    await config.api.agent.provisionMSTeamsChannel(agent._id!)
-
-    const chatApp = await getPersistedChatApp()
-    expect(chatApp?.agents).toContain(agent._id)
   })
 
   it("obfuscates teams secrets in responses and preserves them on update", async () => {
@@ -233,7 +198,7 @@ describe("agent teams integration provisioning", () => {
       const response = await config
         .getRequest()!
         .post(
-          `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/chatapp-test/${agent._id}`
+          `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
         )
         .send({})
         .expect(401)
@@ -297,7 +262,7 @@ describe("agent teams integration provisioning", () => {
           allowKnowledgeSourceDownload: allowKnowledgeSourceDownload ?? true,
         }
       )
-      const channel = await config.api.agent.provisionMSTeamsChannel(agent._id!)
+      await config.api.agent.provisionMSTeamsChannel(agent._id!)
       await config.publish()
       const linkExternalUser = async (
         externalUserId: string,
@@ -313,12 +278,12 @@ describe("agent teams integration provisioning", () => {
           })
         })
       }
-      return { agent, chatAppId: channel.chatAppId, linkExternalUser }
+      return { agent, linkExternalUser }
     }
 
     it(`returns a private link prompt for ${ChatCommands.LINK} and /${ChatCommands.LINK} commands`, async () => {
-      const { agent, chatAppId } = await setupProvisionedTeamsAgent()
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
 
       const response = await postTeamsMessage({
         path,
@@ -348,8 +313,8 @@ describe("agent teams integration provisioning", () => {
     })
 
     it("blocks unlinked users and guides them to link first", async () => {
-      const { agent, chatAppId } = await setupProvisionedTeamsAgent()
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
 
       const response = await postTeamsMessage({
         path,
@@ -369,10 +334,10 @@ describe("agent teams integration provisioning", () => {
     })
 
     it("allows optional-link unlinked users and reuses their synthetic conversation", async () => {
-      const { agent, chatAppId } = await setupProvisionedTeamsAgent({
+      const { agent } = await setupProvisionedTeamsAgent({
         requireUserLink: false,
       })
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
 
       await postTeamsMessage({
         path,
@@ -416,11 +381,10 @@ describe("agent teams integration provisioning", () => {
     })
 
     it("uses the linked Budibase user when linking is optional", async () => {
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedTeamsAgent({
-          requireUserLink: false,
-        })
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent({
+        requireUserLink: false,
+      })
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       await postTeamsMessage({
@@ -443,8 +407,8 @@ describe("agent teams integration provisioning", () => {
     it("acknowledges when the link prompt falls back to a DM", async () => {
       setMockPostEphemeralResult("teams", { usedFallback: true })
 
-      const { agent, chatAppId } = await setupProvisionedTeamsAgent()
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
 
       const response = await postTeamsMessage({
         path,
@@ -470,9 +434,8 @@ describe("agent teams integration provisioning", () => {
     })
 
     it("creates a conversation from an incoming plain Teams message", async () => {
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedTeamsAgent()
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       const response = await postTeamsMessage({
@@ -524,9 +487,8 @@ describe("agent teams integration provisioning", () => {
         title: "Mock conversation",
       } satisfies WebhookChatCompleteResult)
 
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedTeamsAgent()
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       const response = await postTeamsMessage({
@@ -568,9 +530,8 @@ describe("agent teams integration provisioning", () => {
         title: "Mock conversation",
       })
 
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedTeamsAgent()
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       const response = await postTeamsMessage({
@@ -617,9 +578,8 @@ describe("agent teams integration provisioning", () => {
         title: "Mock conversation",
       })
 
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedTeamsAgent()
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-channel-rag")
 
       const response = await postTeamsMessage({
@@ -668,11 +628,10 @@ describe("agent teams integration provisioning", () => {
         title: "Mock conversation",
       })
 
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedTeamsAgent({
-          allowKnowledgeSourceDownload: false,
-        })
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent({
+        allowKnowledgeSourceDownload: false,
+      })
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       const response = await postTeamsMessage({
@@ -694,9 +653,8 @@ describe("agent teams integration provisioning", () => {
     })
 
     it("replaces the channel working indicator with the assistant reply in team channels", async () => {
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedTeamsAgent()
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-channel-1")
 
       const response = await postTeamsMessage({
@@ -723,9 +681,8 @@ describe("agent teams integration provisioning", () => {
     })
 
     it("keeps the user linked for personal chat payloads that only include from.id", async () => {
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedTeamsAgent()
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
 
       const teamsUserId = "29:1ljv6N86roXr5pjPrCJVIz6xHh5QxjI-personal-only"
       await linkExternalUser(teamsUserId)
@@ -750,9 +707,8 @@ describe("agent teams integration provisioning", () => {
     })
 
     it("keeps the user linked when a later Teams payload includes aadObjectId for the same from.id", async () => {
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedTeamsAgent()
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
 
       const teamsUserId = "29:1ljv6N86roXr5pjPrCJVIz6xHh5QxjI-test"
       await linkExternalUser(teamsUserId)
@@ -778,9 +734,8 @@ describe("agent teams integration provisioning", () => {
     })
 
     it("logs the Teams external user id that was used for lookup", async () => {
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedTeamsAgent()
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
 
       const aadObjectId = "eddfa9d4-346e-4cce-a18f-fa6261ad776b"
       await linkExternalUser(aadObjectId)
@@ -829,9 +784,8 @@ describe("agent teams integration provisioning", () => {
     })
 
     it("reuses the existing conversation for subsequent messages in the same scope", async () => {
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedTeamsAgent()
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       await postTeamsMessage({
@@ -872,9 +826,8 @@ describe("agent teams integration provisioning", () => {
     })
 
     it("starts a new empty conversation for /new without calling chat completion", async () => {
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedTeamsAgent()
-      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       const response = await postTeamsMessage({

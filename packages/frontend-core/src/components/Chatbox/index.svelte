@@ -262,8 +262,6 @@
     return displayName
   }
 
-  const PREVIEW_CHAT_APP_ID = "agent-preview"
-
   let resolvedConversationId = $state<string | undefined>()
 
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
@@ -271,12 +269,12 @@
       headers: () => ({ [Header.WORKSPACE_ID]: workspaceId }),
       prepareSendMessagesRequest: ({ messages }) => {
         const conversationId = resolvedConversationId || chat?._id || "new"
+        const agentId = chat?.agentId
         return {
-          api: `/api/chatapps/${PREVIEW_CHAT_APP_ID}/conversations/${conversationId}/stream`,
+          api: `/api/agents/${agentId}/conversations/${conversationId}/stream`,
           body: {
             _id: resolvedConversationId || chat?._id,
-            chatAppId: PREVIEW_CHAT_APP_ID,
-            agentId: chat?.agentId,
+            agentId,
             isPreview: true,
             previewRoleId,
             sessionId: stableSessionId,
@@ -471,7 +469,6 @@
       chat = {
         title: "",
         messages: [],
-        chatAppId: PREVIEW_CHAT_APP_ID,
         agentId: "",
       }
     }

@@ -30,7 +30,6 @@
   const INITIAL_CHAT: DraftChat = {
     title: "",
     messages: [],
-    chatAppId: "agent-preview",
     agentId: "",
   }
 

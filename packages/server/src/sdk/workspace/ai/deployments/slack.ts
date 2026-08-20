@@ -65,24 +65,11 @@ export const validateSlackIntegration = (
   return {
     botToken,
     signingSecret,
-    chatAppId: integration.chatAppId?.trim() || undefined,
   }
 }
 
-export const resolveChatAppForAgent = async (
-  agentId: string,
-  chatAppId?: string
-) => await shared.resolveProviderChatAppForAgent(agentId, chatAppId)
-
-export const buildSlackWebhookUrl = async (
-  chatAppId: string,
-  agentId: string
-) =>
-  await shared.buildProviderWebhookUrl(
-    AgentChannelProvider.SLACK,
-    chatAppId,
-    agentId
-  )
+export const buildSlackWebhookUrl = async (agentId: string) =>
+  await shared.buildProviderWebhookUrl(AgentChannelProvider.SLACK, agentId)
 
 export const buildSlackManifest = ({
   agent,

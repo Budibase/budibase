@@ -32,7 +32,6 @@ export interface ToolMetadata {
 }
 
 interface ChatAgentIntegration {
-  chatAppId?: string
   idleTimeoutMinutes?: number
   requireUserLink?: boolean
 }
