@@ -10,12 +10,16 @@
   import { groups } from "@/stores/portal/groups"
   import { type BulkAddUsersToGroupResponse } from "@budibase/types"
 
-  export let groupId
-  export let onUsersAdded
+  interface Props {
+    groupId: string
+    onUsersAdded?: () => void
+  }
 
-  let files: File[] = []
-  let uploadLoading = false
-  let results: BulkAddUsersToGroupResponse | undefined = undefined
+  let { groupId, onUsersAdded }: Props = $props()
+
+  let files = $state<File[]>([])
+  let uploadLoading = $state(false)
+  let results = $state<BulkAddUsersToGroupResponse | undefined>()
 
   const handleFile = (evt: Event) => {
     const target = evt.target as HTMLInputElement
@@ -59,8 +63,10 @@
       } else {
         notifications.info("No users were added to the group")
       }
-    } catch (error: any) {
-      notifications.error(error?.message || "Failed to process CSV file")
+    } catch (error) {
+      notifications.error(
+        error instanceof Error ? error.message : "Failed to process CSV file"
+      )
     } finally {
       uploadLoading = false
     }

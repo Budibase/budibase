@@ -1,37 +1,45 @@
 <script lang="ts">
   import { Icon, Search, Layout } from "@budibase/bbui"
-  import type { ComponentType } from "svelte"
+  import type { Component } from "svelte"
   import { createEventDispatcher } from "svelte"
 
   interface PickerItem {
-    _id: string
-    [key: string]: unknown
+    _id?: string
+    email?: string
+    name?: string
+    icon?: string
+    color?: string
   }
 
   interface EnrichedPickerItem extends PickerItem {
     selected: boolean
   }
 
-  export let searchTerm = ""
-  export let selected: string[] | undefined = undefined
-  export let list: PickerItem[] = []
-  export let labelKey: string
-  export let iconComponent: ComponentType | null = null
-  export let extractIconProps: (
-    item: EnrichedPickerItem
-  ) => Record<string, unknown> = item => item
+  interface Props {
+    searchTerm?: string
+    selected?: string[]
+    list?: PickerItem[]
+    labelKey: "email" | "name"
+    iconComponent?: Component | null
+    extractIconProps?: (item: EnrichedPickerItem) => Record<string, unknown>
+  }
+
+  let {
+    searchTerm = $bindable(""),
+    selected,
+    list = [],
+    labelKey,
+    iconComponent = null,
+    extractIconProps = () => ({}),
+  }: Props = $props()
 
   const dispatch = createEventDispatcher<{
     select: string
     deselect: string
   }>()
 
-  $: enrichedList = enrich(list, selected)
-  $: filteredList = filter(enrichedList, searchTerm)
-  $: sortedList = sort(filteredList)
-
   const getLabel = (item: PickerItem | EnrichedPickerItem): string => {
-    return String(item[labelKey] ?? "")
+    return item[labelKey] || ""
   }
 
   const enrich = (
@@ -41,7 +49,7 @@
     return list.map(item => {
       return {
         ...item,
-        selected: selected?.includes(item._id) ?? false,
+        selected: item._id ? (selected?.includes(item._id) ?? false) : false,
       }
     })
   }
@@ -76,6 +84,10 @@
     }
     return list.filter(item => getLabel(item).toLowerCase().includes(search))
   }
+
+  const enrichedList = $derived(enrich(list, selected))
+  const filteredList = $derived(filter(enrichedList, searchTerm))
+  const sortedList = $derived(sort(filteredList))
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -89,18 +101,18 @@
       {#each sortedList as item}
         <div
           on:click={() => {
-            dispatch(item.selected ? "deselect" : "select", item._id)
+            if (item._id) {
+              dispatch(item.selected ? "deselect" : "select", item._id)
+            }
           }}
           class="item"
         >
           {#if iconComponent}
-            <svelte:component
-              this={iconComponent}
-              {...extractIconProps(item)}
-            />
+            {@const IconComponent = iconComponent}
+            <IconComponent {...extractIconProps(item)} />
           {/if}
           <div class="text">
-            {item[labelKey]}
+            {getLabel(item)}
           </div>
           {#if item.selected}
             <div>
