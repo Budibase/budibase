@@ -331,8 +331,7 @@ describe("buildPromptAndTools", () => {
         operationId: "operation_1",
         conversationId: "conversation_1",
         requester: {
-          userId: "user_1",
-          authorization: { mode: "current" },
+          executorRole: "BASIC",
         },
       },
     })
@@ -421,8 +420,7 @@ describe("buildPromptAndTools", () => {
         operationId: "operation_1",
         conversationId: "conversation_1",
         requester: {
-          userId: "user_1",
-          authorization: { mode: "current" },
+          executorRole: "BASIC",
         },
       },
     })

@@ -40,8 +40,7 @@ const executionContext = {
   operationId: "operation_1",
   conversationId: "conversation_1",
   requester: {
-    userId: "user_1",
-    authorization: { mode: "current" as const },
+    executorRole: "BASIC",
   },
 }
 

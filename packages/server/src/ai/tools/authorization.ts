@@ -1,11 +1,10 @@
-import { context, permissions, roles, users } from "@budibase/backend-core"
+import { context, permissions, roles } from "@budibase/backend-core"
 import {
   PermissionLevel,
   PermissionType,
   ToolExecutionPrincipal,
 } from "@budibase/types"
 import sdk from "../../sdk"
-import { getFullUser } from "../../utilities/users"
 import type {
   ToolAuthorization,
   ToolAuthorizationRequest,
@@ -91,7 +90,7 @@ const evaluateAgentToolAuthorization = async ({
     }
     console.log("Agent tool authorization", {
       decision,
-      requesterId: executionContext.requester.userId,
+      requesterId: executionContext.requester.executorRole,
       effectivePrincipal: principal,
       agentId: executionContext.agentId,
       operationId: executionContext.operationId,
@@ -113,33 +112,13 @@ const evaluateAgentToolAuthorization = async ({
       throw new Error(DENIED_MESSAGE)
     }
 
-    // Always rehydrate the requester, including admin-authority calls. This
-    // makes removal of the initiating user revoke delayed work.
     const { requester } = executionContext
-    const requestingUser = await getFullUser(requester.userId)
-    if (
-      requester.authorization.mode === "current" &&
-      requestingUser.roleId === roles.BUILTIN_ROLE_IDS.PUBLIC
-    ) {
-      throw new Error(DENIED_MESSAGE)
-    }
     if (principal === ToolExecutionPrincipal.ADMIN) {
       audit("allowed", resourceId)
       return
     }
-    if (
-      requester.authorization.mode === "current" &&
-      users.isBuilder(requestingUser, executionContext.workspaceId)
-    ) {
-      audit("allowed", resourceId)
-      return
-    }
 
-    let roleId = requestingUser.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
-    if (requester.authorization.mode === "preview") {
-      roleId = requester.authorization.roleId
-    }
-    const userRoles = await roles.getUserRoleHierarchy(roleId)
+    const userRoles = await roles.getUserRoleHierarchy(requester.executorRole)
     if (resourceId) {
       const resourcePermissions =
         await sdk.permissions.getResourcePerms(resourceId)

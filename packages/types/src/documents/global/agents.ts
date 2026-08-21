@@ -134,8 +134,7 @@ export interface AgentOperationToolConfig {
 }
 
 export interface AgentRequester {
-  userId: string
-  authorization: { mode: "current" } | { mode: "preview"; roleId: string }
+  executorRole: string
 }
 
 export interface AgentExecutionContext {

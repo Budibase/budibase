@@ -1,16 +1,10 @@
-import { permissions } from "@budibase/backend-core"
-import type { ContextUserMetadata } from "@budibase/types"
+import { permissions, roles } from "@budibase/backend-core"
 import {
   PermissionLevel,
   PermissionType,
   ToolExecutionPrincipal,
+  type Role,
 } from "@budibase/types"
-
-const mockGetFullUser = jest.fn()
-
-jest.mock("../../utilities/users", () => ({
-  getFullUser: (...args: unknown[]) => mockGetFullUser(...args),
-}))
 
 jest.mock("../../sdk", () => ({
   __esModule: true,
@@ -26,10 +20,9 @@ jest.mock("@budibase/backend-core", () => ({
   },
   permissions: { doesHaveBasePermission: jest.fn(() => true) },
   roles: {
-    BUILTIN_ROLE_IDS: { PUBLIC: "PUBLIC" },
+    BUILTIN_ROLE_IDS: { PUBLIC: "PUBLIC", ADMIN: "ADMIN", BASIC: "BASIC" },
     getUserRoleHierarchy: jest.fn().mockResolvedValue([]),
   },
-  users: { isBuilder: jest.fn(() => false) },
 }))
 
 import {
@@ -50,42 +43,24 @@ const executionContext = {
   operationId: "operation_1",
   conversationId: "conversation_1",
   requester: {
-    userId: "user_1",
-    authorization: { mode: "current" as const },
+    executorRole: "BASIC",
   },
 }
 
 describe("authorizeAgentToolCall", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.mocked(permissions.doesHaveBasePermission).mockReturnValue(true)
+    jest
+      .mocked(roles.getUserRoleHierarchy)
+      .mockResolvedValue([{ _id: "BASIC" } as Role])
   })
 
   afterEach(() => {
     jest.restoreAllMocks()
   })
 
-  it("denies admin execution when a workspace member is now public", async () => {
-    mockGetFullUser.mockResolvedValue({
-      _id: "user_1",
-      roleId: "PUBLIC",
-    } as ContextUserMetadata)
-
-    await expect(
-      authorizeAgentToolCall({
-        authorization,
-        input: undefined,
-        executionContext,
-        principal: ToolExecutionPrincipal.ADMIN,
-      })
-    ).rejects.toThrow("Tool is not available in this security context")
-  })
-
-  it("allows admin execution while the requester remains a workspace member", async () => {
-    mockGetFullUser.mockResolvedValue({
-      _id: "user_1",
-      roleId: "BASIC",
-    } as ContextUserMetadata)
-
+  it("allows admin execution regardless of executor role", async () => {
     await expect(
       authorizeAgentToolCall({
         authorization,
@@ -94,13 +69,35 @@ describe("authorizeAgentToolCall", () => {
         principal: ToolExecutionPrincipal.ADMIN,
       })
     ).resolves.toBeUndefined()
+    expect(roles.getUserRoleHierarchy).not.toHaveBeenCalled()
+  })
+
+  it("allows requester execution when the executor role has permission", async () => {
+    await expect(
+      authorizeAgentToolCall({
+        authorization,
+        input: undefined,
+        executionContext,
+        principal: ToolExecutionPrincipal.REQUESTER,
+      })
+    ).resolves.toBeUndefined()
+    expect(roles.getUserRoleHierarchy).toHaveBeenCalledWith("BASIC")
+  })
+
+  it("denies requester execution when the executor role lacks permission", async () => {
+    jest.mocked(permissions.doesHaveBasePermission).mockReturnValue(false)
+
+    await expect(
+      authorizeAgentToolCall({
+        authorization,
+        input: undefined,
+        executionContext,
+        principal: ToolExecutionPrincipal.REQUESTER,
+      })
+    ).rejects.toThrow("Tool is not available in this security context")
   })
 
   it("checks requester read visibility without emitting execution audit logs", async () => {
-    mockGetFullUser.mockResolvedValue({
-      _id: "user_1",
-      roleId: "BASIC",
-    } as ContextUserMetadata)
     jest.mocked(permissions.doesHaveBasePermission).mockReturnValue(false)
     const log = jest.spyOn(console, "log").mockImplementation()
 
