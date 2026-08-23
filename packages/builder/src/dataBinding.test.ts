@@ -1380,6 +1380,85 @@ describe("Builder dataBinding", () => {
       })
       expect(getSchemaForDatasourcePlus(undefined).schema).toEqual({})
     })
+
+    it("resolves link datasources to the related table schema", () => {
+      getTablesStore().set({
+        list: [
+          {
+            _id: "ta_source",
+            name: "Source",
+            sourceType: "internal",
+            schema: {
+              // The link field metadata carries the related table id
+              related: {
+                type: "link",
+                name: "related",
+                tableId: "ta_related",
+                fieldName: "source",
+                relationshipType: "one-to-many",
+              },
+              name: { type: "string", name: "name" },
+            },
+          },
+          {
+            _id: "ta_related",
+            name: "Related",
+            sourceType: "internal",
+            schema: {
+              title: { type: "string", name: "title" },
+              price: { type: "number", name: "price" },
+            },
+          },
+        ],
+      })
+
+      const { schema, table } = getSchemaForDatasource(null, {
+        type: "link",
+        tableId: "ta_source",
+        rowId: "{{ source._id }}",
+        rowTableId: "{{ source.tableId }}",
+        fieldName: "related",
+      })
+
+      expect(table).toMatchObject({ _id: "ta_related", name: "Related" })
+      expect(schema.title).toMatchObject({ type: "string", name: "title" })
+      expect(schema.price).toMatchObject({ type: "number", name: "price" })
+      // Fields from the source table must not leak through
+      expect(schema.name).toBeUndefined()
+      expect(schema.related).toBeUndefined()
+    })
+
+    it("returns an empty schema when a link field has no resolvable related table", () => {
+      getTablesStore().set({
+        list: [
+          {
+            _id: "ta_source",
+            name: "Source",
+            sourceType: "internal",
+            schema: {
+              // Link field with no matching related table in the store
+              related: {
+                type: "link",
+                name: "related",
+                tableId: "ta_missing",
+                fieldName: "source",
+                relationshipType: "one-to-many",
+              },
+            },
+          },
+        ],
+      })
+
+      const { schema } = getSchemaForDatasource(null, {
+        type: "link",
+        tableId: "ta_source",
+        rowId: "{{ source._id }}",
+        rowTableId: "{{ source.tableId }}",
+        fieldName: "related",
+      })
+
+      expect(schema).toEqual({})
+    })
   })
 
   describe("updateReferencesInObject", () => {

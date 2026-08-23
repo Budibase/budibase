@@ -63,7 +63,7 @@
       .filter(x => x != null)
   }
 
-  $: updateState(cachedValue, resourceId)
+  $: updateState(cachedValue, resourceId, datasource)
 
   // Builds unused ones only
   const buildUnconfiguredOptions = (schema, selected) => {

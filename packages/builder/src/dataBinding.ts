@@ -31,7 +31,12 @@ import ActionDefinitions from "@/components/design/settings/controls/ButtonActio
 import { environment, licensing } from "@/stores/portal"
 import { convertOldFieldFormat } from "@/components/design/settings/controls/FieldConfiguration/utils"
 import { FIELDS, DB_TYPE_INTERNAL } from "@/constants/backend"
-import { CalculationType, FieldType, TableSourceType } from "@budibase/types"
+import {
+  CalculationType,
+  FieldType,
+  TableSourceType,
+  isRelationshipField,
+} from "@budibase/types"
 import type {
   Component,
   ComponentContext,
@@ -1440,6 +1445,22 @@ export const getSchemaForDatasource = (
       schema = asSchema(
         JSONUtils.getJSONArrayDatasourceSchema(schema, datasourceConfig)
       )
+    }
+
+    // "link" datasources are relationship datasources, scoped to the rows
+    // related to the parent row through a link field. Those rows belong to
+    // the related (target) table, not the source table the link field lives
+    // on, so the schema must come from the related table.
+    else if (type === "link") {
+      const sourceTable = tables.find(
+        table => table._id === datasourceConfig.tableId
+      )
+      const linkField = sourceTable?.schema?.[datasourceConfig.fieldName]
+      const relatedTableId =
+        linkField && isRelationshipField(linkField)
+          ? linkField.tableId
+          : undefined
+      table = tables.find(table => table._id === relatedTableId)
     }
 
     // Otherwise we assume we're targeting an internal table or a plus
