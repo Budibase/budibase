@@ -90,4 +90,34 @@ describe("CreateEditGroupModal", () => {
       })
     )
   })
+
+  it("resets the draft when the group prop changes", async () => {
+    const saveGroup = vi.fn()
+    const { rerender } = render(CreateEditGroupModal, {
+      props: { group: buildGroup(), saveGroup },
+    })
+    await fireEvent.input(screen.getByLabelText("Name"), {
+      target: { value: "Stale draft" },
+    })
+
+    const replacementGroup = buildGroup({
+      _id: "group-2",
+      name: "Replacement group",
+      icon: "briefcase",
+      color: "#112233",
+    })
+    await rerender({ group: replacementGroup, saveGroup })
+
+    expect(screen.getByLabelText("Name")).toHaveValue("Replacement group")
+    expect(screen.getByLabelText("Icon")).toHaveValue("briefcase")
+    expect(screen.getByLabelText("Color")).toHaveValue("#112233")
+
+    await fireEvent.click(screen.getByRole("button", { name: "Save" }))
+    expect(saveGroup).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _id: "group-2",
+        name: "Replacement group",
+      })
+    )
+  })
 })

@@ -8,6 +8,7 @@
     IconPicker,
   } from "@budibase/bbui"
   import type { UserGroup } from "@budibase/types"
+  import { untrack } from "svelte"
 
   interface Props {
     group: UserGroup
@@ -19,6 +20,14 @@
   const readonlyTitle = $derived(group?.scimInfo?.isSync)
   let draft = $state({ ...group })
   let nameError = $state<string | undefined>()
+
+  $effect(() => {
+    const sourceGroup = group
+    untrack(() => {
+      draft = { ...sourceGroup }
+      nameError = undefined
+    })
+  })
 </script>
 
 <ModalContent
