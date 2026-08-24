@@ -1023,18 +1023,9 @@ describe("/projects", () => {
       slackIntegration: {
         botToken: "secret-token",
         signingSecret: "secret-signing-key",
-        chatAppId: "slack-app-id",
         messagingEndpointUrl: "https://source.example/slack",
         idleTimeoutMinutes: 20,
         requireUserLink: true,
-      },
-      telegramIntegration: {
-        botToken: "secret-telegram-token",
-        webhookSecretToken: "secret-telegram-webhook",
-        botUserName: "ops_bot",
-        chatAppId: "telegram-app-id",
-        messagingEndpointUrl: "https://source.example/telegram",
-        idleTimeoutMinutes: 25,
       },
       projectIds: [project._id],
     })
@@ -1146,10 +1137,6 @@ describe("/projects", () => {
           idleTimeoutMinutes: 20,
           requireUserLink: true,
           teamId: "T123",
-        })
-        expect(exportedAgent.telegramIntegration).toEqual({
-          botUserName: "ops_bot",
-          idleTimeoutMinutes: 25,
         })
       })
     })

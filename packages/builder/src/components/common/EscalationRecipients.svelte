@@ -27,7 +27,6 @@
     targetType: "user" | "channel"
     userId: string
     channelId: string
-    discordChannelId: string
     teamsInputMode: "lookup" | "url" | "manual"
     teamsUrl: string
     teamsChannelId: string
@@ -59,9 +58,7 @@
 
   const PROVIDER_OPTIONS = [
     { value: EscalationNotificationChannel.SLACK, label: "Slack" },
-    { value: EscalationNotificationChannel.DISCORD, label: "Discord" },
     { value: EscalationNotificationChannel.MSTEAMS, label: "Teams" },
-    { value: EscalationNotificationChannel.TELEGRAM, label: "Telegram" },
   ]
 
   const PROVIDER_LABELS: Record<string, string> = Object.fromEntries(
@@ -73,7 +70,6 @@
     targetType: "user",
     userId: "",
     channelId: "",
-    discordChannelId: "",
     teamsInputMode: "lookup",
     teamsUrl: "",
     teamsChannelId: "",
@@ -190,7 +186,6 @@
 
   $: supportsChannel =
     pending.provider === EscalationNotificationChannel.SLACK ||
-    pending.provider === EscalationNotificationChannel.DISCORD ||
     pending.provider === EscalationNotificationChannel.MSTEAMS
 
   // Appends the next provider page onto the pager; the caller reassigns the
@@ -262,8 +257,6 @@
     if (pending.targetType === "user") return !!pending.userId
     if (pending.provider === EscalationNotificationChannel.SLACK)
       return !!pending.channelId
-    if (pending.provider === EscalationNotificationChannel.DISCORD)
-      return !!pending.discordChannelId
     if (pending.provider === EscalationNotificationChannel.MSTEAMS) {
       if (pending.teamsInputMode === "url")
         return !!parseTeamsChannelUrl(pending.teamsUrl)
@@ -327,7 +320,6 @@
           globalUserId: link.globalUserId,
           externalUserId: link.externalUserId,
           ...(link.teamId && { teamId: link.teamId }),
-          ...(link.guildId && { guildId: link.guildId }),
         },
       }
     } else if (provider === EscalationNotificationChannel.SLACK) {
@@ -338,11 +330,6 @@
       recipient = {
         type: EscalationNotificationChannel.SLACK,
         config: { channelId: channel.id, channelName: channel.name },
-      }
-    } else if (provider === EscalationNotificationChannel.DISCORD) {
-      recipient = {
-        type: EscalationNotificationChannel.DISCORD,
-        config: { channelId: pending.discordChannelId },
       }
     } else if (provider === EscalationNotificationChannel.MSTEAMS) {
       if (pending.teamsInputMode === "url") {
@@ -461,12 +448,6 @@
             getOptionValue={c => c.id}
             on:change={e => (pending.channelId = e.detail ?? "")}
             on:loadMore={() => loadMoreChannels("slack")}
-          />
-        {:else if pending.provider === EscalationNotificationChannel.DISCORD}
-          <Input
-            value={pending.discordChannelId}
-            placeholder="Discord channel ID..."
-            on:change={e => (pending.discordChannelId = e.detail)}
           />
         {:else if pending.provider === EscalationNotificationChannel.MSTEAMS}
           <div class="target-type">

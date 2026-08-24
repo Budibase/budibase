@@ -10,7 +10,6 @@ import { truncateToolPartsForSave } from "./messages"
 
 interface PrepareChatConversationForSaveParams {
   chatId: string
-  chatAppId: string
   userId: string
   title?: string
   messages: ChatConversation["messages"]
@@ -20,7 +19,6 @@ interface PrepareChatConversationForSaveParams {
 
 export const prepareChatConversationForSave = ({
   chatId,
-  chatAppId,
   userId,
   title,
   messages,
@@ -41,7 +39,6 @@ export const prepareChatConversationForSave = ({
   return {
     _id: chatId,
     ...(rev && { _rev: rev }),
-    chatAppId,
     agentId,
     userId,
     title: title ?? chat.title,

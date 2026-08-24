@@ -21,9 +21,6 @@ export {
   builderSettingsAuthUrl,
   builderSettingsPeopleUsersUrl,
   builderAppsUrl,
-  appChatUrl,
-  appAgentUrl,
-  agentChatUrl,
   urlHelpers,
   applyBaseUrl,
 } from "./url"
