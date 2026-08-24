@@ -1865,7 +1865,7 @@ if (descriptions.length) {
                         type: FieldType.FORMULA,
                         formulaType: FormulaType.STATIC,
                         responseType: FieldType.STRING,
-                        formula: "{{ [label] }}",
+                        formula: '{{ "Group" }}',
                       },
                     },
                   })
@@ -1881,7 +1881,7 @@ if (descriptions.length) {
                       type: FieldType.FORMULA,
                       formulaType: FormulaType.STATIC,
                       responseType: FieldType.STRING,
-                      formula: "{{ [label] }}",
+                      formula: '{{ "Group" }}',
                     },
                   },
                 })
@@ -1911,16 +1911,82 @@ if (descriptions.length) {
                 })
 
                 const { rows } = await config.api.row.search(view.id)
-                expect(rows).toHaveLength(2)
+                expect(rows).toHaveLength(1)
                 expect(rows).toEqual(
                   expect.arrayContaining([
                     expect.objectContaining({
-                      staticFormula: "Group A",
-                      labelCount: 2,
+                      staticFormula: "Group",
+                      labelCount: 3,
                     }),
+                  ])
+                )
+              })
+
+            isInternal &&
+              it("can group by numeric static formula fields", async () => {
+                let table = await config.api.table.save(
+                  saveTableRequest({
+                    schema: {
+                      amount: {
+                        name: "amount",
+                        type: FieldType.NUMBER,
+                      },
+                      staticFormula: {
+                        name: "staticFormula",
+                        type: FieldType.FORMULA,
+                        formulaType: FormulaType.STATIC,
+                        responseType: FieldType.NUMBER,
+                        formula: "{{ 1 }}",
+                      },
+                    },
+                  })
+                )
+
+                table = await config.api.table.save({
+                  ...table,
+                  schema: {
+                    ...table.schema,
+                    staticFormula: {
+                      name: "staticFormula",
+                      type: FieldType.FORMULA,
+                      formulaType: FormulaType.STATIC,
+                      responseType: FieldType.NUMBER,
+                      formula: "{{ 1 }}",
+                    },
+                  },
+                })
+
+                await config.api.row.save(table._id!, { amount: 1 })
+                await config.api.row.save(table._id!, { amount: 1 })
+                await config.api.row.save(table._id!, { amount: 2 })
+
+                const view = await config.api.viewV2.create({
+                  tableId: table._id!,
+                  name: generator.guid(),
+                  type: ViewV2Type.CALCULATION,
+                  primaryDisplay: "staticFormula",
+                  schema: {
+                    amountCount: {
+                      visible: true,
+                      calculationType: CalculationType.COUNT,
+                      field: "amount",
+                    },
+                    amount: {
+                      visible: false,
+                    },
+                    staticFormula: {
+                      visible: true,
+                    },
+                  },
+                })
+
+                const { rows } = await config.api.row.search(view.id)
+                expect(rows).toHaveLength(1)
+                expect(rows).toEqual(
+                  expect.arrayContaining([
                     expect.objectContaining({
-                      staticFormula: "Group B",
-                      labelCount: 1,
+                      staticFormula: 1,
+                      amountCount: 3,
                     }),
                   ])
                 )
