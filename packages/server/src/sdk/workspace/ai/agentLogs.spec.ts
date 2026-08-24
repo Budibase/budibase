@@ -37,7 +37,7 @@ function createSessionDoc(
     _id: getSessionDocId(overrides.agentId, overrides.sessionId),
     tableId: AGENT_LOG_SESSION_TABLE_ID,
     type: "agent_log_session",
-    trigger: "Chat",
+    trigger: "Slack",
     isPreview: false,
     firstInput: "",
     requestIds: JSON.stringify([]),
@@ -269,7 +269,7 @@ describe("agentLogs", () => {
     await withWorkspace(async () => {
       await addSessionLog({
         agentId: "agent-1",
-        sessionId: "chatconvo_1",
+        sessionId: "slack:chatconvo_1",
         requestIds: ["req-1"],
         firstInput: "Hello",
         startedAt: "2026-03-08T09:00:00.000Z",
@@ -277,7 +277,7 @@ describe("agentLogs", () => {
       })
       await addSessionLog({
         agentId: "agent-1",
-        sessionId: "chatconvo_1",
+        sessionId: "slack:chatconvo_1",
         requestIds: ["req-1"],
         firstInput: "Hello",
         startedAt: "2026-03-08T09:00:00.000Z",
@@ -285,13 +285,13 @@ describe("agentLogs", () => {
       })
     })
 
-    const sessionDoc = await getSessionDoc("agent-1", "chatconvo_1")
+    const sessionDoc = await getSessionDoc("agent-1", "slack:chatconvo_1")
 
     expect(sessionDoc).toEqual(
       expect.objectContaining({
-        sessionId: "chatconvo_1",
+        sessionId: "slack:chatconvo_1",
         operations: 1,
-        trigger: "Chat",
+        trigger: "Slack",
         requestIds: JSON.stringify(["req-1"]),
       })
     )

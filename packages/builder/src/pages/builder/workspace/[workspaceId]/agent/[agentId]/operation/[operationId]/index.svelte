@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Body, Icon, notifications } from "@budibase/bbui"
+  import { Body, Icon, Link, notifications } from "@budibase/bbui"
   import {
     FeatureFlag,
     ToolExecutionPrincipal,
@@ -32,6 +32,7 @@
     featureFlags,
     selectedAgent,
   } from "@/stores/portal"
+  import { configuredEscalationProviders } from "@/stores/portal/escalations"
   import { bb } from "@/stores/bb"
   import AgentTabList from "../../AgentTabList.svelte"
   import AgentUnpublishedChangesIndicator from "../../AgentUnpublishedChangesIndicator.svelte"
@@ -84,6 +85,7 @@
 
   let agent = $derived($selectedAgent)
   let agentId = $derived($params.agentId || agent?._id)
+  let escalationProviders = $derived(configuredEscalationProviders(agent))
   let operationId = $derived($params.operationId)
   let storeOperation = $derived(
     agent?.operations?.find(item => item.id === operationId)
@@ -692,12 +694,32 @@
                 title="Approvals"
                 description="Choose who gets notified when this operation escalates for approval."
               />
-              <EscalationRecipients
-                single
-                recipients={operation.escalation?.recipients || []}
-                {agentId}
-                onChange={updateRecipients}
-              />
+              {#if !escalationProviders.length}
+                <div class="escalation-disabled">
+                  <Body
+                    size="S"
+                    weight="500"
+                    color="var(--spectrum-global-color-gray-900)"
+                  >
+                    Escalation disabled
+                  </Body>
+                  <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+                    There are currently no deployments configured on this agent.
+                    Add one in <Link
+                      on:click={() => $goto("../../deployment")}
+                      quiet>deployments</Link
+                    > to choose who gets notified.
+                  </Body>
+                </div>
+              {:else}
+                <EscalationRecipients
+                  single
+                  recipients={operation.escalation?.recipients || []}
+                  {agentId}
+                  providers={escalationProviders}
+                  onChange={updateRecipients}
+                />
+              {/if}
             </div>
           {/if}
         </div>
@@ -830,6 +852,15 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+  }
+
+  .escalation-disabled {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 6px;
   }
 
   .tools-list {

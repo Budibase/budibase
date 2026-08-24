@@ -5,7 +5,6 @@ import {
   BadRequestError,
   configs,
   context,
-  env as envCore,
   objectStore,
   roles,
   utils,
@@ -467,9 +466,6 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
-  const normalizedPath = ctx.path.replace(/\/$/, "")
-  const isChatRoute =
-    normalizedPath === "/app-chat" || normalizedPath.startsWith("/app-chat/")
   const [fullyMigrated, settingsConfig, recaptchaConfig] = await Promise.all([
     isWorkspaceFullyMigrated(workspaceId),
     configs.getSettingsConfigDoc(),
@@ -511,12 +507,8 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         }
       }
     }
-    const clientVersion = isChatRoute ? envCore.VERSION : appInfo.version
-    const clientCacheKey = await objectStore.getClientCacheKey(clientVersion)
-    const clientAssetScopeId = isChatRoute
-      ? GLOBAL_CLIENT_ASSET_ID
-      : workspaceId
-    const clientLibPath = `/api/assets/${clientAssetScopeId}/client?${clientCacheKey}`
+    const clientCacheKey = await objectStore.getClientCacheKey(appInfo.version)
+    const clientLibPath = `/api/assets/${workspaceId}/client?${clientCacheKey}`
     const hideDevTools = !!ctx.params.appUrl
     const sideNav = workspaceApp?.navigation.navigation === "Left"
     const hideFooter =
@@ -542,10 +534,8 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
        * BudibaseApp.svelte file as we can never detect if the types are correct. To get around this
        * I've created a type which expects what the app will expect to receive.
        */
-      const appName = isChatRoute
-        ? "Chat"
-        : workspaceApp?.name || `${appInfo.name}`
-      const appTitle = isChatRoute ? "Chat" : branding?.platformTitle || appName
+      const appName = workspaceApp?.name || `${appInfo.name}`
+      const appTitle = branding?.platformTitle || appName
       const nonce = ctx.state.nonce || ""
       let props: BudibaseAppProps = {
         title: appTitle,
@@ -557,9 +547,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
-        metaTitle: isChatRoute
-          ? "Chat"
-          : branding?.metaTitle || `${appName} - built with Budibase`,
+        metaTitle: branding?.metaTitle || `${appName} - built with Budibase`,
         clientCacheKey,
         clientLibPath,
         usedPlugins: plugins,

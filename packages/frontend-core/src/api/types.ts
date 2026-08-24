@@ -39,7 +39,6 @@ import { AgentEndpoints } from "./agents"
 import { AgentTestEndpoints } from "./agentTests"
 import { AgentLogEndpoints } from "./agentLogs"
 import { AgentRequestEndpoints } from "./agentRequests"
-import { ChatAppEndpoints } from "./chatApps"
 import { ChatLinksEndpoints } from "./chatLinks"
 import { EscalationEndpoints } from "./escalations"
 import { NavigationEndpoints } from "./navigation"
@@ -80,6 +79,7 @@ export type APICallConfig<RequestT, ResponseT> = {
   suppressErrors: boolean
   cache: boolean
   body?: RequestT
+  signal?: AbortSignal
   parseResponse?: (response: Response) => Promise<ResponseT> | ResponseT
 }
 
@@ -128,7 +128,6 @@ export type APIClient = BaseAPIClient &
   AgentTestEndpoints &
   AgentLogEndpoints &
   AgentRequestEndpoints &
-  ChatAppEndpoints &
   ChatLinksEndpoints &
   EscalationEndpoints &
   AnalyticsEndpoints &

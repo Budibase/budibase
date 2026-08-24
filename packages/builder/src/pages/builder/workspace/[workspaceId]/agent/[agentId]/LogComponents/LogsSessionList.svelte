@@ -43,18 +43,12 @@
 
   const triggerOptions = [
     { label: "All triggers", value: "all" },
-    ...[
-      "Automation",
-      "Chat",
-      "Chat Preview",
-      "Test",
-      "Discord",
-      "Microsoft Teams",
-      "Slack",
-    ].map(trigger => ({
-      label: trigger,
-      value: trigger,
-    })),
+    ...["Automation", "Chat Preview", "Test", "Microsoft Teams", "Slack"].map(
+      trigger => ({
+        label: trigger,
+        value: trigger,
+      })
+    ),
   ]
 
   const sessionTableSchema = {

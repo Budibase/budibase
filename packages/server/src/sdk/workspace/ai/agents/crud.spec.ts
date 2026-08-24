@@ -2,6 +2,22 @@ const mockDbRemove = jest.fn()
 const mockDbTryGet = jest.fn()
 const mockDbPut = jest.fn()
 const mockDbAllDocs = jest.fn().mockResolvedValue({ rows: [] })
+const mockReplacementCache = new Map<string, [string, string][]>()
+const mockCacheWithCache = jest.fn(
+  async (
+    key: string,
+    _ttl: number,
+    fetchFn: () => Promise<[string, string][]>
+  ) => {
+    const cached = mockReplacementCache.get(key)
+    if (cached) {
+      return cached
+    }
+    const value = await fetchFn()
+    mockReplacementCache.set(key, value)
+    return value
+  }
+)
 const mockGetWorkspaceDB = jest.fn(() => ({
   tryGet: (...args: any[]) => mockDbTryGet(...args),
   remove: (...args: any[]) => mockDbRemove(...args),
@@ -37,8 +53,14 @@ jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
   return {
     ...actual,
+    cache: {
+      ...actual.cache,
+      withCache: (...args: Parameters<typeof mockCacheWithCache>) =>
+        mockCacheWithCache(...args),
+    },
     context: {
       ...actual.context,
+      getOrThrowWorkspaceId: () => "app_1",
       getWorkspaceDB: (...args: Parameters<typeof mockGetWorkspaceDB>) =>
         mockGetWorkspaceDB(...args),
     },
@@ -69,16 +91,142 @@ jest.mock("./utils", () => {
   }
 })
 
-import type { Agent, KnowledgeBase, KnowledgeBaseFile } from "@budibase/types"
+import { getQueryToolBindings } from "@budibase/shared-core"
+import { SourceName, ToolExecutionPrincipal, ToolType } from "@budibase/types"
+import type {
+  Agent,
+  Datasource,
+  KnowledgeBase,
+  KnowledgeBaseFile,
+  Query,
+} from "@budibase/types"
 import * as agentsCrud from "./crud"
 import { generator } from "@budibase/backend-core/tests"
 
 describe("agents crud", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockReplacementCache.clear()
   })
 
   describe("fetch", () => {
+    it("maps legacy query tools without writing the agent", async () => {
+      const datasource: Datasource = {
+        _id: "datasource_1",
+        name: "Legacy API",
+        type: "datasource",
+        source: SourceName.REST,
+        config: {},
+      }
+      const query: Query = {
+        _id: "query_rest_unique_identifier",
+        datasourceId: datasource._id!,
+        fields: {},
+        name: "Get todo",
+        parameters: [],
+        queryVerb: "read",
+        readable: true,
+        schema: {},
+        transformer: "return data",
+      }
+      mockDbAllDocs
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              doc: {
+                _id: "agent_legacy",
+                _rev: "1-abc",
+                name: "Legacy Agent",
+                aiconfig: "cfg_1",
+                operations: [
+                  {
+                    id: "operation_1",
+                    name: "Main",
+                    live: true,
+                    enabledTools: ["rest_legacy_api_get_todo"],
+                  },
+                ],
+              },
+            },
+          ],
+        })
+        .mockResolvedValueOnce({ rows: [{ doc: datasource }] })
+        .mockResolvedValueOnce({ rows: [{ doc: query }] })
+
+      const agents = await agentsCrud.fetch()
+
+      expect(agents[0].operations?.[0].enabledTools).toEqual([
+        {
+          toolName: getQueryToolBindings({
+            sourceType: ToolType.REST_QUERY,
+            sourceLabel: datasource.name,
+            queryName: query.name,
+            queryId: query._id!,
+          }).runtimeBinding,
+          executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        },
+      ])
+      expect(mockDbPut).not.toHaveBeenCalled()
+    })
+
+    it("skips compatibility lookups for bindings longer than legacy names", async () => {
+      const toolName = getQueryToolBindings({
+        sourceType: ToolType.REST_QUERY,
+        sourceLabel: "A very long datasource name",
+        queryName: "A very long query name",
+        queryId: "query_0123456789abcdef0123456789abcdef",
+      }).runtimeBinding
+      mockDbAllDocs.mockResolvedValueOnce({
+        rows: [
+          {
+            doc: {
+              _id: "agent_current",
+              name: "Current Agent",
+              operations: [
+                {
+                  id: "operation_1",
+                  name: "Main",
+                  live: true,
+                  enabledTools: [toolName],
+                },
+              ],
+            },
+          },
+        ],
+      })
+
+      await agentsCrud.fetch()
+
+      expect(mockDbAllDocs).toHaveBeenCalledTimes(1)
+      expect(mockCacheWithCache).not.toHaveBeenCalled()
+    })
+
+    it("caches lookups for bindings that could be legacy names", async () => {
+      const agent = {
+        _id: "agent_legacy",
+        name: "Legacy Agent",
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main",
+            live: true,
+            enabledTools: ["rest_api_get_todo"],
+          },
+        ],
+      }
+      mockDbAllDocs
+        .mockResolvedValueOnce({ rows: [{ doc: agent }] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [{ doc: agent }] })
+
+      await agentsCrud.fetch()
+      await agentsCrud.fetch()
+
+      expect(mockDbAllDocs).toHaveBeenCalledTimes(4)
+      expect(mockCacheWithCache).toHaveBeenCalledTimes(2)
+    })
+
     it("migrates legacy promptInstructions into the default operation", async () => {
       mockDbAllDocs.mockResolvedValue({
         rows: [
@@ -177,6 +325,100 @@ describe("agents crud", () => {
           operations: [],
         }),
       ])
+    })
+  })
+
+  describe("getOrThrow", () => {
+    it("maps legacy query tools on read and persists them on save", async () => {
+      const datasource: Datasource = {
+        _id: "datasource_1",
+        name: "Warehouse",
+        type: "datasource",
+        source: SourceName.POSTGRES,
+        config: {},
+      }
+      const query: Query = {
+        _id: "query_sql_unique_identifier",
+        datasourceId: datasource._id!,
+        fields: {},
+        name: "Monthly sales",
+        parameters: [],
+        queryVerb: "read",
+        readable: true,
+        schema: {},
+        transformer: "return data",
+      }
+      mockDbTryGet.mockResolvedValue({
+        _id: "agent_legacy",
+        _rev: "1-abc",
+        name: "Legacy Agent",
+        aiconfig: "cfg_1",
+        operations: [
+          {
+            id: "operation_1",
+            name: "Main",
+            live: true,
+            enabledTools: ["ds_warehouse_monthly_sales"],
+          },
+        ],
+      })
+      mockDbAllDocs
+        .mockResolvedValueOnce({ rows: [{ doc: datasource }] })
+        .mockResolvedValueOnce({ rows: [{ doc: query }] })
+
+      const agent = await agentsCrud.getOrThrow("agent_legacy")
+
+      expect(agent.operations?.[0].enabledTools).toEqual([
+        {
+          toolName: getQueryToolBindings({
+            sourceType: ToolType.DATASOURCE_QUERY,
+            sourceLabel: datasource.name,
+            queryName: query.name,
+            queryId: query._id!,
+          }).runtimeBinding,
+          executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        },
+      ])
+      expect(mockDbPut).not.toHaveBeenCalled()
+
+      mockDbPut.mockResolvedValue({ rev: "2-abc" })
+
+      await agentsCrud.update(agent)
+
+      expect(mockDbAllDocs).toHaveBeenCalledTimes(2)
+      expect(mockDbPut).toHaveBeenCalledWith(
+        expect.objectContaining({
+          operations: [
+            expect.objectContaining({
+              enabledTools: agent.operations?.[0].enabledTools,
+            }),
+          ],
+        })
+      )
+    })
+
+    it("strips the deprecated chatAppId from persisted integrations", async () => {
+      mockDbTryGet.mockResolvedValue({
+        _id: "agent_legacy_chat_app",
+        _rev: "1-abc",
+        name: "Legacy Chat App Agent",
+        aiconfig: "cfg_1",
+        operations: [],
+        slackIntegration: {
+          chatAppId: "chatapp_1",
+          botToken: "xoxb-token",
+          teamId: "T123",
+        },
+        MSTeamsIntegration: {
+          chatAppId: "chatapp_1",
+          appId: "teams-app",
+        },
+      })
+
+      const agent = await agentsCrud.getOrThrow("agent_legacy_chat_app")
+
+      expect(agent.slackIntegration).not.toHaveProperty("chatAppId")
+      expect(agent.MSTeamsIntegration).not.toHaveProperty("chatAppId")
     })
   })
 
@@ -424,6 +666,38 @@ describe("agents crud", () => {
       expect(mockAgentUpdated).toHaveBeenCalledWith(
         expect.objectContaining({ _id: "agent_upd", name: "Updated Name" })
       )
+    })
+
+    it("drops the deprecated chatAppId when resaving a legacy agent", async () => {
+      mockDbTryGet.mockResolvedValue({
+        _id: "agent_upd",
+        _rev: "1-abc",
+        name: "Original Name",
+        aiconfig: "cfg_1",
+        operations: [],
+        slackIntegration: {
+          chatAppId: "chatapp_1",
+          botToken: "xoxb-token",
+          teamId: "T123",
+        },
+        MSTeamsIntegration: {
+          chatAppId: "chatapp_1",
+          appId: "teams-app",
+        },
+      })
+      mockDbPut.mockResolvedValue({ rev: "2-abc" })
+
+      const existing = await agentsCrud.getOrThrow("agent_upd")
+      const updated = await agentsCrud.update({
+        ...existing,
+        name: "Updated Name",
+      })
+
+      const [persisted] = mockDbPut.mock.calls[0]
+      expect(persisted.slackIntegration).not.toHaveProperty("chatAppId")
+      expect(persisted.MSTeamsIntegration).not.toHaveProperty("chatAppId")
+      expect(updated.slackIntegration).not.toHaveProperty("chatAppId")
+      expect(updated.MSTeamsIntegration).not.toHaveProperty("chatAppId")
     })
 
     it("validates the AI config before publishing an agent", async () => {

@@ -69,11 +69,6 @@ const joinBaseAndPath = (base?: string | null, path?: string) => {
   return `${sanitizedBase}${sanitizedPath}`
 }
 
-const trimTrailingSlash = (path: string) => path.replace(/\/+$/, "")
-
-const normalizeAppUrl = (appUrl: string) =>
-  trimTrailingSlash(normalizePath(appUrl))
-
 export const accountPortalAccountUrl = (accountPortalUrl?: string | null) =>
   joinBaseAndPath(accountPortalUrl, ACCOUNT_PORTAL_PATHS.ACCOUNT)
 
@@ -134,15 +129,6 @@ export const builderSettingsPeopleUsersUrl = (builderBaseUrl?: string | null) =>
 export const builderAppsUrl = (builderBaseUrl?: string | null) =>
   joinBaseAndPath(builderBaseUrl, BUILDER_URLS.APPS)
 
-export const appChatUrl = (appUrl: string) =>
-  `/app-chat${normalizeAppUrl(appUrl)}`
-
-export const appAgentUrl = (appUrl: string, agentId: string) =>
-  `${normalizeAppUrl(appUrl)}/agent/${encodeURIComponent(agentId)}`
-
-export const agentChatUrl = (appUrl: string, agentId: string) =>
-  appChatUrl(appAgentUrl(appUrl, agentId))
-
 export const urlHelpers = {
   accountPortalAccountUrl,
   accountPortalBillingUrl,
@@ -152,9 +138,6 @@ export const urlHelpers = {
   builderSettingsAuthUrl,
   builderSettingsPeopleUsersUrl,
   builderAppsUrl,
-  appChatUrl,
-  appAgentUrl,
-  agentChatUrl,
 }
 
 export default urlHelpers

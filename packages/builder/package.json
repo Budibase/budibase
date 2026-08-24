@@ -79,6 +79,7 @@
     "svelte-loading-spinners": "^0.3.6",
     "svelte-portal": "^2.2.1",
     "to-json-schema": "0.2.5",
+    "uuid": "^8.3.2",
     "yup": "^0.32.11"
   },
   "devDependencies": {
@@ -92,6 +93,7 @@
     "@testing-library/jest-dom": "6.4.2",
     "@testing-library/svelte": "^5.2.8",
     "@types/sanitize-html": "^2.13.0",
+    "@types/uuid": "8.3.4",
     "babel-jest": "^29.6.2",
     "identity-obj-proxy": "^3.0.0",
     "jsdom": "^21.1.1",
