@@ -17,23 +17,24 @@
   let { group, saveGroup }: Props = $props()
 
   const readonlyTitle = $derived(group?.scimInfo?.isSync)
+  let draft = $state({ ...group })
   let nameError = $state<string | undefined>()
 </script>
 
 <ModalContent
   onConfirm={() => {
-    if (!group.name?.trim()) {
+    if (!draft.name?.trim()) {
       nameError = "Group name cannot be empty"
       return keepOpen
     }
-    saveGroup(group)
+    saveGroup(draft)
   }}
   size="M"
   title={group?._rev ? "Edit group" : "Create group"}
   confirmText="Save"
 >
   <Input
-    bind:value={group.name}
+    bind:value={draft.name}
     label="Name"
     error={nameError}
     disabled={readonlyTitle}
@@ -43,8 +44,8 @@
       <Body size="XS">Icon</Body>
       <div class="modal-spacing">
         <IconPicker
-          bind:value={group.icon}
-          on:change={e => (group.icon = e.detail)}
+          bind:value={draft.icon}
+          on:change={e => (draft.icon = e.detail)}
         />
       </div>
     </div>
@@ -52,8 +53,8 @@
       <Body size="XS">Color</Body>
       <div class="modal-spacing">
         <ColorPicker
-          bind:value={group.color}
-          on:change={e => (group.color = e.detail)}
+          bind:value={draft.color}
+          on:change={e => (draft.color = e.detail)}
         />
       </div>
     </div>

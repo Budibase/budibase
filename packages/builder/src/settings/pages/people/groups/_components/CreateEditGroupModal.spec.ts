@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/svelte"
+import { fireEvent, render, screen } from "@testing-library/svelte"
 import { describe, expect, it, vi } from "vitest"
 import MockBody from "@/test/mocks/MockBody.svelte"
 import MockColorPicker from "@/test/mocks/MockColorPicker.svelte"
@@ -56,5 +56,38 @@ describe("CreateEditGroupModal", () => {
     expect(screen.getByLabelText("Name")).not.toBeDisabled()
     expect(screen.getByLabelText("Icon")).not.toBeDisabled()
     expect(screen.getByLabelText("Color")).not.toBeDisabled()
+  })
+
+  it("edits a draft without mutating the supplied group", async () => {
+    const group = buildGroup()
+    const saveGroup = vi.fn()
+    render(CreateEditGroupModal, {
+      props: { group, saveGroup },
+    })
+
+    await fireEvent.input(screen.getByLabelText("Name"), {
+      target: { value: "Updated group" },
+    })
+    await fireEvent.input(screen.getByLabelText("Icon"), {
+      target: { value: "briefcase" },
+    })
+    await fireEvent.input(screen.getByLabelText("Color"), {
+      target: { value: "#112233" },
+    })
+
+    expect(group).toMatchObject({
+      name: "Actions",
+      icon: "UserGroup",
+      color: "#336699",
+    })
+
+    await fireEvent.click(screen.getByRole("button", { name: "Save" }))
+    expect(saveGroup).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Updated group",
+        icon: "briefcase",
+        color: "#112233",
+      })
+    )
   })
 })
