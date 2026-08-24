@@ -269,6 +269,11 @@ export const workspaceRoutes = (
           path: "oauth2",
           component: Pages.get("oauth2"),
         },
+        {
+          title: "Automations",
+          path: "automations",
+          component: Pages.get("automations"),
+        },
       ],
     },
     {
@@ -358,21 +363,20 @@ export const workspaceRoutes = (
             },
           ],
         },
+      ],
+    },
+    {
+      section: "Channels",
+      access: () => isCreator,
+      path: "channels",
+      icon: "chat-teardrop-text",
+      new: true,
+      showNav: true,
+      routes: [
         {
           path: "slack",
           title: "Slack",
           component: Pages.get("slack_app_config"),
-        },
-      ],
-    },
-    {
-      section: "Automations",
-      icon: "lightning-a",
-      path: "automations",
-      routes: [
-        {
-          path: "logs",
-          component: Pages.get("automations"),
         },
       ],
     },
