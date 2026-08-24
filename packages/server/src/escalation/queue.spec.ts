@@ -93,6 +93,7 @@ describe("resumeOperation", () => {
     operationId: "op_1",
     sessionId: "session_1",
     messages: [],
+    requester: { executorRole: "BASIC" },
   }
 
   beforeEach(async () => {
@@ -146,6 +147,43 @@ describe("resumeOperation", () => {
 
       const { getRequestId } = prepareAgentChatRunMock.mock.calls[0][0]
       expect(getRequestId()).toEqual(requestId)
+    })
+  })
+
+  it("resumes with the snapshotted executor role", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      mockApprovedRun("Approved and booked.")
+      const requester = { executorRole: "POWER" }
+
+      await resumeOperation({
+        doc: baseDoc({ response: { accepted: true } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: { ...baseCtx, requester },
+      })
+
+      expect(prepareAgentChatRunMock).toHaveBeenCalledWith(
+        expect.objectContaining({ requester })
+      )
+    })
+  })
+
+  it("does not resume when the executor role was not snapshotted", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      mockApprovedRun("Approved and booked.")
+      const { requester: _requester, ...ctxWithoutRequester } = baseCtx
+
+      await expect(
+        resumeOperation({
+          doc: baseDoc({ response: { accepted: true } }),
+          escalationId: "esc_primary",
+          resolution: "resolved",
+          ctx: ctxWithoutRequester,
+        })
+      ).rejects.toThrow(
+        "Cannot resume an agent escalation without a snapshotted executor role"
+      )
+      expect(prepareAgentChatRunMock).not.toHaveBeenCalled()
     })
   })
 

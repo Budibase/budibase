@@ -350,9 +350,16 @@ export async function resumeOperation({
     "surfaces a genuinely new request that needs its own human sign-off, you " +
     "may escalate that separately."
 
+  if (!ctx.requester?.executorRole) {
+    throw new Error(
+      "Cannot resume an agent escalation without a snapshotted executor role"
+    )
+  }
+
   const resumeUserId = ctx.userId ?? "escalation-resume"
 
-  // Linked user check. Retrieve or generate transient.
+  // Linked user check. Retrieve or generate transient. Tool authorization
+  // uses the snapshotted executor role, not this user object.
   let user: ContextUser
   try {
     user = await getFullUser(resumeUserId)
@@ -362,8 +369,6 @@ export async function resumeOperation({
       globalId: resumeUserId,
       userId: resumeUserId,
       tenantId: context.getTenantId(),
-      // Synthetic address for an unlinked transient resume user (no real
-      // identity); revisit when user rehydration lands (see TODO below).
       email: `${encodeURIComponent(resumeUserId)}@escalation.budibase.local`,
     }
   }
@@ -421,6 +426,7 @@ export async function resumeOperation({
     operationId: ctx.operationId,
     additionalInstructions: approvalInstructions,
     getRequestId: () => doc.requestId,
+    requester: ctx.requester,
   })
 
   const pendingToolCalls = new Set<string>()
