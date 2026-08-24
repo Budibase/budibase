@@ -516,6 +516,9 @@ export function processStringWithLogsSync(
  * this function will find any double braces and switch to triple.
  * @param string the string to have double HBS statements converted to triple.
  */
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
 export function disableEscaping(string: string) {
   const matches = findDoubleHbsInstances(string)
   if (matches == null) {
@@ -526,7 +529,7 @@ export function disableEscaping(string: string) {
   const unique = [...new Set(matches)]
   for (let match of unique) {
     // add a negative lookahead to exclude any already
-    const regex = new RegExp(`${match}(?!})`, "g")
+    const regex = new RegExp(`${escapeRegExp(match)}(?!})`, "g")
     string = string.replace(regex, `{${match}}`)
   }
   return string

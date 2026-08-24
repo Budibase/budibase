@@ -2,6 +2,7 @@
   import {
     Body,
     Button,
+    Helpers,
     Icon,
     Link,
     notifications,
@@ -122,6 +123,14 @@
     })
   )
 
+  let toolModalEnabled = $derived(
+    $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] ||
+      $featureFlags[FeatureFlag.AI_TOOL_ESCALATION]
+  )
+  let escalationToolHidden = $derived(
+    !$featureFlags[FeatureFlag.ESCALATION] ||
+      $featureFlags[FeatureFlag.AI_TOOL_ESCALATION]
+  )
   let configuredToolList = $derived(
     (operation?.enabledTools || [])
       .map(config => ({
@@ -130,6 +139,13 @@
           availableTool => availableTool.runtimeBinding === config.toolName
         ),
       }))
+      .filter(
+        item =>
+          !(
+            item.tool?.sourceType === ToolType.ESCALATION &&
+            escalationToolHidden
+          )
+      )
       .sort((a, b) =>
         (a.tool?.readableBinding || a.config.toolName).localeCompare(
           b.tool?.readableBinding || b.config.toolName
@@ -139,13 +155,23 @@
   let configuredTools = $derived(
     configuredToolList
       .map(item => item.tool)
-      .filter((tool): tool is AgentTool => !!tool)
+      .filter(
+        (tool): tool is AgentTool =>
+          !!tool &&
+          !(tool.sourceType === ToolType.ESCALATION && escalationToolHidden)
+      )
   )
   let promptBindings = $derived(
     toAgentPromptBindings({ tools: configuredTools, webSearchConfigured })
   )
   let availablePromptBindings = $derived(
-    toAgentPromptBindings({ tools: availableTools, webSearchConfigured })
+    toAgentPromptBindings({
+      tools: availableTools.filter(
+        tool =>
+          !(tool.sourceType === ToolType.ESCALATION && escalationToolHidden)
+      ),
+      webSearchConfigured,
+    })
   )
   let availableBindingIcons = $derived(
     buildBindingIcons(availablePromptBindings)
@@ -212,10 +238,7 @@
         ) {
           return false
         }
-        if (
-          tool.sourceType === ToolType.ESCALATION &&
-          !$featureFlags[FeatureFlag.ESCALATION]
-        ) {
+        if (tool.sourceType === ToolType.ESCALATION && escalationToolHidden) {
           return false
         }
         const query = toolSearch.trim().toLowerCase()
@@ -302,6 +325,7 @@
           live: snapshot.live,
           promptInstructions: snapshot.promptInstructions,
           enabledTools,
+          approvalPolicies: snapshot.approvalPolicies,
           allowKnowledgeSourceDownload: snapshot.allowKnowledgeSourceDownload,
           escalation: snapshot.escalation,
         }
@@ -432,6 +456,7 @@
     if (!operation) {
       return
     }
+    applyToolEscalation(tool, [])
     saveOperation({
       enabledTools: (operation.enabledTools || []).filter(
         config => config.toolName !== tool.runtimeBinding
@@ -466,7 +491,6 @@
           ? executionPrincipal
           : config.executionPrincipal,
     }))
-    saveOperation()
   }
 
   const toggleOperationLive = async () => {
@@ -562,13 +586,95 @@
     )
   }
 
+  const getToolApprovalCount = (toolName: string) =>
+    $featureFlags[FeatureFlag.AI_TOOL_ESCALATION]
+      ? (operation?.enabledTools?.find(
+          configured => configured.toolName === toolName
+        )?.executionRules?.length ?? 0)
+      : 0
+
+  const getToolEscalationPolicyId = (toolName: string) =>
+    operation?.enabledTools?.find(
+      configured => configured.toolName === toolName
+    )?.executionRules?.[0]?.policyId
+
+  const getToolEscalationRecipients = (
+    toolName: string
+  ): EscalationRecipient[] => {
+    const policyId = getToolEscalationPolicyId(toolName)
+    if (!policyId) {
+      return []
+    }
+    const policy = operation?.approvalPolicies?.find(
+      candidate => candidate.id === policyId
+    )
+    return policy?.notifications?.recipients ?? []
+  }
+
+  // Auto-deleting unreferenced policies is interim behaviour - retire it
+  // when the policies work makes them user-owned and reusable.
+  const applyToolEscalation = (
+    tool: RemovableTool,
+    recipients: EscalationRecipient[] | undefined
+  ) => {
+    if (!operation || recipients === undefined) {
+      return
+    }
+    const toolName = tool.runtimeBinding
+    const existingPolicyId = getToolEscalationPolicyId(toolName)
+    const entry = operation.enabledTools?.find(
+      configured => configured.toolName === toolName
+    )
+    if (recipients.length) {
+      const policyId = existingPolicyId ?? Helpers.uuid()
+      const policy = {
+        id: policyId,
+        name: `${tool.readableBinding} approval`,
+        notifications: { recipients },
+      }
+      operation.approvalPolicies = [
+        ...(operation.approvalPolicies || []).filter(
+          candidate => candidate.id !== policyId
+        ),
+        policy,
+      ]
+      if (entry) {
+        entry.executionRules = [{ policyId }]
+      }
+    } else if (existingPolicyId) {
+      if (entry) {
+        delete entry.executionRules
+      }
+      const referenced = (operation.enabledTools || []).some(configured =>
+        configured.executionRules?.some(
+          rule => rule.policyId === existingPolicyId
+        )
+      )
+      if (!referenced) {
+        operation.approvalPolicies = (operation.approvalPolicies || []).filter(
+          candidate => candidate.id !== existingPolicyId
+        )
+      }
+    }
+  }
+
+  const toolEscalationOptions = (toolName: string) =>
+    $featureFlags[FeatureFlag.AI_TOOL_ESCALATION]
+      ? {
+          enabled: true,
+          recipients: getToolEscalationRecipients(toolName),
+        }
+      : undefined
+
   const configureTool = (tool: AgentTool) => {
     addingTool = undefined
     configureToolModal?.show(
       tool,
       getEffectiveToolPrincipal(tool),
       $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
-        tool.executionPolicy.mode === "configurable"
+        tool.executionPolicy.mode === "configurable",
+      false,
+      toolEscalationOptions(tool.runtimeBinding)
     )
   }
 
@@ -582,7 +688,7 @@
       tool,
       toolSecurityEnabled: $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
     })
-    if (!$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]) {
+    if (!toolModalEnabled) {
       saveToolConfiguration({ tool, executionPrincipal })
       return
     }
@@ -591,47 +697,55 @@
       executionPrincipal,
       $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
         tool.executionPolicy.mode === "configurable",
-      true
+      true,
+      toolEscalationOptions(tool.runtimeBinding)
     )
   }
 
   const saveToolConfiguration = async ({
     tool,
     executionPrincipal,
+    recipients,
   }: {
     tool: AgentTool
     executionPrincipal: ToolExecutionPrincipal
+    recipients?: EscalationRecipient[]
   }) => {
     if (addingTool?.runtimeBinding !== tool.runtimeBinding || !operation) {
       setToolPrincipal({
         toolName: tool.runtimeBinding,
         executionPrincipal,
       })
+      applyToolEscalation(tool, recipients)
+      await saveOperation()
       return
     }
 
     const insertPosition = pendingToolInsertion
     addingTool = undefined
     pendingToolInsertion = undefined
-    const alreadyConfigured = operation.enabledTools?.some(
+    const existingConfig = operation.enabledTools?.find(
       config => config.toolName === tool.runtimeBinding
     )
+    operation.enabledTools = [
+      ...(operation.enabledTools || []).filter(
+        config => config.toolName !== tool.runtimeBinding
+      ),
+      {
+        ...existingConfig,
+        toolName: tool.runtimeBinding,
+        executionPrincipal,
+      },
+    ]
+    applyToolEscalation(tool, recipients)
     const updates: Partial<AgentOperation> = {}
-    if (!alreadyConfigured) {
-      updates.enabledTools = [
-        ...(operation.enabledTools || []),
-        { toolName: tool.runtimeBinding, executionPrincipal },
-      ]
-    }
     if (insertPosition) {
       const nextInstructions = insertToolBinding(tool, insertPosition)
       if (nextInstructions !== undefined) {
         updates.promptInstructions = nextInstructions
       }
     }
-    if (Object.keys(updates).length > 0) {
-      await saveOperation(updates)
-    }
+    await saveOperation(updates)
   }
 
   const selectEditorTool = (tool: AgentTool) => {
@@ -755,7 +869,7 @@
             class:active={activeTab === "knowledge"}
             onclick={() => (activeTab = "knowledge")}>Knowledge</button
           >
-          {#if $featureFlags[FeatureFlag.ESCALATION]}
+          {#if !escalationToolHidden}
             <button
               class:active={activeTab === "approvals"}
               onclick={() => (activeTab = "approvals")}>Approvals</button
@@ -795,8 +909,7 @@
                     <div role="listitem">
                       <div
                         class="tool-row"
-                        class:tool-row--with-run-as={tool &&
-                          $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                        class:tool-row--with-run-as={tool && toolModalEnabled}
                       >
                         {#if !tool}
                           <div class="tool-row-activation">
@@ -808,7 +921,7 @@
                               <span class="tool-unavailable">Unavailable</span>
                             </div>
                           </div>
-                        {:else if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                        {:else if toolModalEnabled}
                           <button
                             class="tool-row-activation"
                             aria-label={`Configure ${tool.readableBinding}`}
@@ -824,11 +937,25 @@
                               </span>
                               <span>{tool.readableBinding}</span>
                             </div>
-                            <div class="tool-row-run-as">
-                              Run as {getEffectiveToolPrincipal(tool) ===
-                              ToolExecutionPrincipal.ADMIN
-                                ? "Admin"
-                                : "Requester"}
+                            <div class="tool-row-summary">
+                              {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                                <span class="tool-row-run-as">
+                                  Run as {getEffectiveToolPrincipal(tool) ===
+                                  ToolExecutionPrincipal.ADMIN
+                                    ? "Admin"
+                                    : "Requester"}
+                                </span>
+                              {/if}
+                              {#if getToolApprovalCount(tool.runtimeBinding)}
+                                <span class="tool-row-approvals">
+                                  <Icon name="shield-check" size="XS" />
+                                  {getToolApprovalCount(tool.runtimeBinding)}
+                                  {getToolApprovalCount(tool.runtimeBinding) ===
+                                  1
+                                    ? "approval"
+                                    : "approvals"}
+                                </span>
+                              {/if}
                             </div>
                           </button>
                         {:else}
@@ -845,7 +972,7 @@
                             </div>
                           </div>
                         {/if}
-                        {#if !tool || !$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                        {#if !tool || !toolModalEnabled}
                           <button
                             class="tool-actions"
                             aria-label={`Actions for ${tool?.readableBinding || item.config.toolName}`}
@@ -875,7 +1002,7 @@
             {/if}
           {:else if activeTab === "knowledge"}
             <Knowledge bind:operation onUpdated={() => saveOperation()} />
-          {:else}
+          {:else if !escalationToolHidden}
             <div class="rail-section approval-panel">
               <OperationRailSectionHeader
                 title="Approvals"
@@ -939,9 +1066,11 @@
     {/if}
   </ConfirmDialog>
 
-  {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+  {#if toolModalEnabled}
     <ConfigureOperationToolModal
       bind:this={configureToolModal}
+      {agentId}
+      providers={escalationProviders}
       onSave={saveToolConfiguration}
       onRemove={tool => confirmRemoveTool(tool, true)}
       onClose={closeToolConfiguration}
@@ -1158,8 +1287,25 @@
     font-size: 11px;
   }
 
+  .tool-row-summary {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .tool-row-run-as {
     padding-left: 21px;
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 11px;
+    line-height: 15px;
+  }
+
+  .tool-row-approvals {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
     color: var(--spectrum-global-color-gray-700);
     font-size: 11px;
     line-height: 15px;

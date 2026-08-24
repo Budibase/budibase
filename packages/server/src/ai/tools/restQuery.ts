@@ -71,6 +71,7 @@ const createQueryTool = ({
   return {
     name: toolName,
     readableName: query.name,
+    sourceId: query._id,
     description,
     sourceType,
     sourceLabel,
