@@ -88,6 +88,8 @@ describe("authorizeAgentToolCall", () => {
   })
 
   it("allows requester execution when the executor role has permission", async () => {
+    const log = jest.spyOn(console, "log").mockImplementation()
+
     await expect(
       authorizeAgentToolCall({
         authorization,
@@ -97,6 +99,11 @@ describe("authorizeAgentToolCall", () => {
       })
     ).resolves.toBeUndefined()
     expect(roles.getUserRoleHierarchy).toHaveBeenCalledWith("BASIC")
+    expect(log).toHaveBeenCalledWith(
+      "Agent tool authorization",
+      expect.objectContaining({ requesterRole: "BASIC" })
+    )
+    expect(log.mock.calls[0][1]).not.toHaveProperty("requesterId")
   })
 
   it("allows public requester execution when the public role has permission", async () => {

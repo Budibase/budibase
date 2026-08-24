@@ -90,7 +90,7 @@ const evaluateAgentToolAuthorization = async ({
     }
     console.log("Agent tool authorization", {
       decision,
-      requesterId: executionContext.requester.executorRole,
+      requesterRole: executionContext.requester.executorRole,
       effectivePrincipal: principal,
       agentId: executionContext.agentId,
       operationId: executionContext.operationId,
