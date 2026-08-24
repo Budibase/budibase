@@ -100,18 +100,24 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
       // Do nothing
     }
 
-    // account lockout
+    // account lockout and rate limiting
     const accountLocked = response.headers.get("X-Account-Locked") === "1"
     const retryAfter = response.headers.get("Retry-After")
-    if (accountLocked) {
+    const retryIn = (() => {
       const seconds = Number(retryAfter)
-      if (Number.isFinite(seconds)) {
-        const remainingTime = seconds < 60 ? seconds : Math.ceil(seconds / 60)
-        const timeUnit = seconds < 60 ? "second" : "minute"
-        message = `Account temporarily locked. Try again in ${remainingTime} ${timeUnit}${remainingTime === 1 ? "" : "s"}.`
-      } else {
-        message = "Account temporarily locked. Try again later."
+      if (retryAfter == null || !Number.isFinite(seconds) || seconds <= 0) {
+        return null
       }
+      const amount = seconds < 60 ? seconds : Math.ceil(seconds / 60)
+      const unit = seconds < 60 ? "second" : "minute"
+      return `${amount} ${unit}${amount === 1 ? "" : "s"}`
+    })()
+    if (accountLocked) {
+      message = retryIn
+        ? `Account temporarily locked. Try again in ${retryIn}.`
+        : "Account temporarily locked. Try again later."
+    } else if (response.status === 429 && retryIn) {
+      message = `${message} Try again in ${retryIn}.`
     }
     return {
       message,
@@ -121,6 +127,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
       method,
       handled: true,
       suppressErrors,
+      accountLocked,
     }
   }
 

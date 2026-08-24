@@ -120,6 +120,7 @@ export type APIError = {
   status: number
   handled: boolean
   suppressErrors: boolean
+  accountLocked?: boolean
 }
 
 export type APIClient = BaseAPIClient &

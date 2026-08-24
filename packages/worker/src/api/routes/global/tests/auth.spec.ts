@@ -242,7 +242,7 @@ describe("/api/global/auth", () => {
       })
 
       describe("IP lockout", () => {
-        it("returns 429 with Retry-After once the IP limit is exceeded", async () => {
+        it("does not count successful logins towards the IP limit", async () => {
           const { withEnv } = require("../../../../environment")
           const tenantId = config.tenantId!
           const email = config.user!.email!
@@ -251,9 +251,39 @@ describe("/api/global/auth", () => {
           await withEnv(
             { LOGIN_IP_LOCKOUT_LIMIT: 2, LOGIN_LOCKOUT_SECONDS: 900 },
             async () => {
-              await config.api.auth.login(tenantId, email, password)
-              await config.api.auth.login(tenantId, email, password)
+              for (let i = 0; i < 5; i++) {
+                const response = await config.api.auth.login(
+                  tenantId,
+                  email,
+                  password
+                )
+                expectSetAuthCookie(response)
+              }
+            }
+          )
+        })
 
+        it("returns 429 with Retry-After once failed attempts exceed the IP limit", async () => {
+          const { withEnv } = require("../../../../environment")
+          const tenantId = config.tenantId!
+          const email = config.user!.email!
+          const password = config.userPassword
+
+          await withEnv(
+            {
+              LOGIN_IP_LOCKOUT_LIMIT: 2,
+              LOGIN_LOCKOUT_SECONDS: 900,
+              // keep the per-email lock out of the way
+              LOGIN_MAX_FAILED_ATTEMPTS: 100,
+            },
+            async () => {
+              for (let i = 0; i < 2; i++) {
+                await config.api.auth.login(tenantId, email, "incorrect123", {
+                  status: 403,
+                })
+              }
+
+              // correct credentials, still blocked - the limiter runs before auth
               const res = await config.api.auth.login(
                 tenantId,
                 email,
@@ -261,6 +291,10 @@ describe("/api/global/auth", () => {
                 { status: 429 }
               )
               expect(res.headers["retry-after"]).toBe("900")
+              expect(res.body).toEqual({
+                message: "Too many login attempts. Try again later.",
+                status: 429,
+              })
             }
           )
         })

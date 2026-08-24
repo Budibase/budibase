@@ -31,6 +31,8 @@ import { Next } from "koa"
 
 import * as authSdk from "../../../sdk/auth"
 import * as userSdk from "../../../sdk/users"
+import { getClientIp } from "../../../utilities/clientIp"
+import { recordFailedAttemptForIp } from "../../../utilities/loginAttempts"
 
 const { Cookie, Header } = constants
 const { passport, ssoCallbackUrl, google, oidc } = authCore
@@ -53,7 +55,13 @@ const handleLockoutResponse = (ctx: Ctx, email: string) => {
   )
   return ctx.throw(403, "Account temporarily locked. Try again later.")
 }
-const onFailed = async (email: string) => {
+const onFailed = async ({ ctx, email }: { ctx: Ctx; email: string }) => {
+  const ip = getClientIp(ctx)
+  if (ip) {
+    const failures = await recordFailedAttemptForIp(ip)
+    console.log(`[auth] failed login ip=${ip} failures=${failures}`)
+  }
+
   if (!email) return
   const key = failKey(email)
   const currentAttempt = Number((await cache.get(key)) || 0) || 0
@@ -126,7 +134,7 @@ export const login = async (
     "local",
     async (err: any, user: User, info: any) => {
       if (err || !user) {
-        await onFailed(email)
+        await onFailed({ ctx, email })
         if (await isLocked(email)) {
           return handleLockoutResponse(ctx, email)
         }
@@ -194,11 +202,11 @@ export const reset = async (
   const { email } = ctx.request.body
 
   const lcEmail = (email || "").toLowerCase()
-  const ip = (ctx.ip || "").toString()
+  // not ctx.ip, which is the leftmost X-Forwarded-For hop and so client supplied
+  const ip = getClientIp(ctx)
 
   // rate limit keys
   const emailKey = `auth:pwdreset:email:${lcEmail}`
-  const ipKey = `auth:pwdreset:ip:${ip}`
 
   const increment = async (key: string, windowSeconds: number) => {
     const currentAttempt = Number((await cache.get(key)) || 0) || 0
@@ -207,15 +215,18 @@ export const reset = async (
     return nextAttempt
   }
 
-  // apply per-email and per-ip rate limits
+  // apply per-email and per-ip rate limits. With no resolvable address there is
+  // nothing to key on, and a shared empty bucket would limit everyone at once.
   const nextEmail = await increment(
     emailKey,
     env.PASSWORD_RESET_RATE_EMAIL_WINDOW_SECONDS
   )
-  const nextIp = await increment(
-    ipKey,
-    env.PASSWORD_RESET_RATE_IP_WINDOW_SECONDS
-  )
+  const nextIp = ip
+    ? await increment(
+        `auth:pwdreset:ip:${ip}`,
+        env.PASSWORD_RESET_RATE_IP_WINDOW_SECONDS
+      )
+    : 0
 
   const emailLimited = nextEmail > env.PASSWORD_RESET_RATE_EMAIL_LIMIT
   const ipLimited = nextIp > env.PASSWORD_RESET_RATE_IP_LIMIT
@@ -242,7 +253,7 @@ export const reset = async (
     )
     ctx.set("Retry-After", String(retryAfter))
     console.log(
-      `[auth] password reset rate limited email=${lcEmail} ip=${ip} emailCount=${nextEmail} ipCount=${nextIp}`
+      `[auth] password reset rate limited email=${lcEmail} ip=${ip ?? "unknown"} emailCount=${nextEmail} ipCount=${nextIp}`
     )
     return ctx.throw(429, "Too many password reset requests. Try again later.")
   }

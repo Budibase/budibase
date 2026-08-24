@@ -80,8 +80,11 @@
         }
       }
     } catch (err) {
+      const credentialsRejected = err?.status === 403 && !err?.accountLocked
       notifications.error(
-        passwordIncorrectError || err?.message || "Invalid credentials"
+        credentialsRejected
+          ? passwordIncorrectError
+          : err?.message || passwordIncorrectError || "Invalid credentials"
       )
     }
   }

@@ -1,29 +1,29 @@
-import { cache } from "@budibase/backend-core"
 import { Ctx } from "@budibase/types"
 import { Next } from "koa"
 import env from "../environment"
-
-const ipKey = (ip: string) => `auth:login:ip:${ip}`
+import { getClientIp } from "../utilities/clientIp"
+import { failedAttemptsForIp } from "../utilities/loginAttempts"
 
 /**
- * Middleware to rate-limit login attempts by source IP.
- * Blocks with 429 once the request count exceeds LOGIN_IP_LOCKOUT_LIMIT
- * within the LOGIN_LOCKOUT_SECONDS window.
+ * Middleware to block login attempts from an address that has already failed
+ * LOGIN_IP_LOCKOUT_LIMIT times inside the LOGIN_LOCKOUT_SECONDS window.
+ *
+ * This only reads the counter - the login controller records failures once
+ * authentication has actually been attempted.
  */
 export default async (ctx: Ctx, next: Next) => {
-  const ip = (ctx.ip || "").toString()
+  const ip = getClientIp(ctx)
 
   if (!ip) {
     return await next()
   }
 
-  const key = ipKey(ip)
-  const count = await cache.increment(key, env.LOGIN_LOCKOUT_SECONDS)
+  const failures = await failedAttemptsForIp(ip)
 
-  if (count > env.LOGIN_IP_LOCKOUT_LIMIT) {
+  if (failures >= env.LOGIN_IP_LOCKOUT_LIMIT) {
     ctx.set("Retry-After", String(env.LOGIN_LOCKOUT_SECONDS))
     console.log(
-      `[auth] login blocked due to IP lockout ip=${ip} count=${count}`
+      `[auth] login blocked due to IP lockout ip=${ip} failures=${failures}`
     )
     return ctx.throw(429, "Too many login attempts. Try again later.")
   }
