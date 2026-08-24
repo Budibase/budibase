@@ -366,7 +366,7 @@ export const workspaceRoutes = (
       ],
     },
     {
-      section: "Channels",
+      section: "Agent channels",
       access: () => isCreator,
       path: "channels",
       icon: "chat-teardrop-text",
