@@ -88,7 +88,7 @@ const logToolExecution = (
   console.log("Agent tool execution", {
     outcome,
     toolName: toolDef.name,
-    requesterId: runtime.executionContext.requester.userId,
+    requesterRole: runtime.executionContext.requester.executorRole,
     effectivePrincipal: runtime.principal,
     agentId: runtime.executionContext.agentId,
     operationId: runtime.executionContext.operationId,

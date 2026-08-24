@@ -40,8 +40,7 @@ const executionContext = {
   operationId: "operation_1",
   conversationId: "conversation_1",
   requester: {
-    userId: "user_1",
-    authorization: { mode: "current" as const },
+    executorRole: "BASIC",
   },
 }
 
@@ -73,9 +72,14 @@ describe("resolveToolExecutionPrincipal", () => {
 })
 
 describe("secured AI tool execution", () => {
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   it("authorizes immediately before executing the tool", async () => {
     const execute = jest.fn().mockResolvedValue({ success: true })
     const authorize = jest.fn().mockResolvedValue(undefined)
+    const log = jest.spyOn(console, "log").mockImplementation()
     const tools = toToolSet(
       [definition(execute)],
       new Map([
@@ -103,6 +107,11 @@ describe("secured AI tool execution", () => {
       })
     )
     expect(execute).toHaveBeenCalledTimes(1)
+    expect(log).toHaveBeenCalledWith(
+      "Agent tool execution",
+      expect.objectContaining({ requesterRole: "BASIC" })
+    )
+    expect(log.mock.calls[0][1]).not.toHaveProperty("requesterId")
   })
 
   it("does not execute after an authorization denial", async () => {

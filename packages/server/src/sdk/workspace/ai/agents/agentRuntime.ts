@@ -1,4 +1,4 @@
-import { cache, context, features } from "@budibase/backend-core"
+import { cache, context, features, roles } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import {
   ActionType,
@@ -469,12 +469,11 @@ const getAgentRequester = ({
   chat?: ChatConversationRequest
 }): AgentRequester => {
   if (chat?.isPreview && chat.previewRoleId) {
-    return {
-      userId: user._id!,
-      authorization: { mode: "preview", roleId: chat.previewRoleId },
-    }
+    return { executorRole: chat.previewRoleId }
   }
-  return { userId: user._id!, authorization: { mode: "current" } }
+  return {
+    executorRole: user.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC,
+  }
 }
 
 export const prepareAgentChatRun = async ({
