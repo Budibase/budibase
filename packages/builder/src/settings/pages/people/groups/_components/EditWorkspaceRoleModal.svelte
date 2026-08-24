@@ -150,12 +150,11 @@
   }
 
   const onConfirm = async () => {
-    const id = workspaceId
-    if (confirmDisabled || !id) {
+    if (confirmDisabled || !workspaceId) {
       return keepOpen
     }
     try {
-      await groups.addApp(groupId, id, getWorkspaceRole())
+      await groups.addApp(groupId, workspaceId, getWorkspaceRole())
     } catch (error) {
       notifications.error("Error updating workspace role")
       return keepOpen
