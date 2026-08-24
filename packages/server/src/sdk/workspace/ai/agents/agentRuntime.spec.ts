@@ -707,25 +707,6 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     )
   })
 
-  it("uses a provided requester instead of deriving one from the user", async () => {
-    await runFor(operationWithoutRecipients, {
-      user: { _id: "user_1", roleId: "BASIC" } as ContextUser,
-      requester: { executorRole: "POWER" },
-    })
-
-    expect(buildPromptAndTools).toHaveBeenCalledWith(
-      agent,
-      operationWithoutRecipients,
-      expect.objectContaining({
-        executionContext: expect.objectContaining({
-          requester: {
-            executorRole: "POWER",
-          },
-        }),
-      })
-    )
-  })
-
   it("uses public access as a preview role", async () => {
     await runFor(operationWithoutRecipients, {
       user: { _id: "user_1" } as ContextUser,

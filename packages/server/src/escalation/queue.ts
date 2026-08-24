@@ -350,16 +350,10 @@ export async function resumeOperation({
     "surfaces a genuinely new request that needs its own human sign-off, you " +
     "may escalate that separately."
 
-  if (!ctx.requester?.executorRole) {
-    throw new Error(
-      "Cannot resume an agent escalation without a snapshotted executor role"
-    )
-  }
-
   const resumeUserId = ctx.userId ?? "escalation-resume"
 
-  // Linked user check. Retrieve or generate transient. Tool authorization
-  // uses the snapshotted executor role, not this user object.
+  // Linked user check. Retrieve or generate transient. The current user state
+  // determines tool authorization when the operation resumes.
   let user: ContextUser
   try {
     user = await getFullUser(resumeUserId)
@@ -426,7 +420,6 @@ export async function resumeOperation({
     operationId: ctx.operationId,
     additionalInstructions: approvalInstructions,
     getRequestId: () => doc.requestId,
-    requester: ctx.requester,
   })
 
   const pendingToolCalls = new Set<string>()

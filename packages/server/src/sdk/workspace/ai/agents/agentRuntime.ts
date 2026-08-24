@@ -80,9 +80,6 @@ interface PrepareAgentChatRunParams {
   // stamp onto the escalation it raises. Read lazily since the caller only
   // knows it after this run's operation is resolved.
   getRequestId?: () => string | undefined
-  // When set, reuse a previously snapshotted requester (escalation resume)
-  // instead of deriving one from the current user.
-  requester?: AgentRequester
 }
 
 export interface AgentChatRun {
@@ -494,7 +491,6 @@ export const prepareAgentChatRun = async ({
   operationId,
   additionalInstructions,
   getRequestId,
-  requester: providedRequester,
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
   const latestQuestion =
     providedLatestQuestion ?? (chat ? findLatestUserQuestion(chat) : "")
@@ -505,7 +501,7 @@ export const prepareAgentChatRun = async ({
     errorLabel,
     startedAt,
   })
-  const requester = providedRequester ?? getAgentRequester({ user, chat })
+  const requester = getAgentRequester({ user, chat })
 
   const [runContext, modelMessages] = await Promise.all([
     prepareAgentRunContext({
