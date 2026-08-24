@@ -188,7 +188,7 @@ export function isDynamicFormula(
 ): schema is FormulaFieldMetadata {
   return (
     schema.type === FieldType.FORMULA &&
-    schema.formulaType === FormulaType.DYNAMIC
+    schema.formulaType !== FormulaType.STATIC
   )
 }
 

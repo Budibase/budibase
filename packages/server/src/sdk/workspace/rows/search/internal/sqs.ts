@@ -94,7 +94,7 @@ export async function buildInternalFieldList(
     const field = table.schema[f]
     return field != null && isDynamicFormula(field)
   })
-  // If are requesting for a formula field, we need to retrieve all fields
+  // Dynamic formulas need all source fields to be available for evaluation
   if (containsFormula) {
     schemaFields = Object.keys(table.schema)
   } else if (allowedFields) {
