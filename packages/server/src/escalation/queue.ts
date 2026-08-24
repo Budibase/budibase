@@ -6,7 +6,14 @@ import {
   type ModelMessage,
   type UIMessage,
 } from "ai"
-import { context, features, queue, utils } from "@budibase/backend-core"
+import {
+  context,
+  features,
+  queue,
+  roles,
+  users,
+  utils,
+} from "@budibase/backend-core"
 import {
   Agent,
   AgentChannelProvider,
@@ -272,6 +279,9 @@ const executeApprovedToolCall = async ({
   if (!operation || !requesterId) {
     return undefined
   }
+  const executorRole = users.isAdminOrBuilder(user, appId)
+    ? roles.BUILTIN_ROLE_IDS.ADMIN
+    : user.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
 
   const executionContext: AgentExecutionContext = {
     tenantId: context.getTenantId(),
@@ -279,10 +289,7 @@ const executeApprovedToolCall = async ({
     agentId: ctx.agentId,
     operationId: ctx.operationId,
     conversationId: ctx.sessionId,
-    requester: ctx.requester ?? {
-      userId: requesterId,
-      authorization: { mode: "current" },
-    },
+    requester: ctx.requester ?? { executorRole },
   }
   const { tools, toolSources } = await sdk.ai.agents.buildPromptAndTools(
     agent,

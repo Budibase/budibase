@@ -47,7 +47,7 @@ describe("escalation approval boundary", () => {
     agentId: "agent_test",
     operationId: "operation_test",
     conversationId: "session_test",
-    requester: { userId: "us_test", authorization: { mode: "current" } },
+    requester: { executorRole: "BASIC" },
   }
 
   const buildToolDefs = () => {
