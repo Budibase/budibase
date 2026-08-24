@@ -142,6 +142,7 @@ export LITELLM_DB_PORT="${LITELLM_DB_PORT:-5432}"
 # Set defaults for proxy rate limiting (matching production defaults)
 export PROXY_RATE_LIMIT_API_PER_SECOND="${PROXY_RATE_LIMIT_API_PER_SECOND:-50}"
 export PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND="${PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND:-10}"
+export PROXY_REAL_IP_FROM="${PROXY_REAL_IP_FROM:-127.0.0.1}"
 
 # Only set MINIO_URL if neither MINIO_URL nor USE_S3 is set
 if [[ -z "${MINIO_URL}" && -z "${USE_S3}" ]]; then
@@ -452,7 +453,7 @@ if [[ -z "${USE_S3}" ]]; then
 fi
 
 echo "Processing nginx configuration templates..."
-envsubst '${PROXY_RATE_LIMIT_API_PER_SECOND} ${PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND}' < /etc/nginx/nginx.conf > /tmp/nginx.conf && mv /tmp/nginx.conf /etc/nginx/nginx.conf
+envsubst '${PROXY_RATE_LIMIT_API_PER_SECOND} ${PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND} ${PROXY_REAL_IP_FROM}' < /etc/nginx/nginx.conf > /tmp/nginx.conf && mv /tmp/nginx.conf /etc/nginx/nginx.conf
 
 /etc/init.d/nginx restart
 if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then
