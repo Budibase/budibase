@@ -22,7 +22,11 @@
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import { FeatureFlag, WorkspaceResource, type Table } from "@budibase/types"
   import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
-  import { auth, featureFlags } from "@/stores/portal"
+  import {
+    saveProjectAssignment,
+    type ProjectAssignmentSelection,
+  } from "@/components/projects/assignments"
+  import { auth, featureFlags, projectsStore } from "@/stores/portal"
   import { getErrorMessage } from "@/helpers/errors"
   import type { MenuItem } from "@/types"
 
@@ -42,6 +46,7 @@
   let editModal: ModalRef
   let deleteConfirmationModal: ModalRef
   let assignProjectModal: ModalAPI
+  let assignProjectModalKey = 0
 
   $: favourite = tableId ? $favourites[tableId] : undefined
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
@@ -50,6 +55,8 @@
     tableId !== TableNames.USERS &&
     table?.sourceType !== DB_TYPE_EXTERNAL
   $: projectAssignmentResource = {
+    id: tableId,
+    revision: table._rev || "",
     name: table?.name || "Table",
     typeLabel: "table",
     projectIds: table?.projectIds,
@@ -67,22 +74,20 @@
   }
 
   const openAssignProjectModal = () => {
+    assignProjectModalKey += 1
     assignProjectModal?.show()
   }
 
-  const assignProject = async (projectIds: string[]) => {
-    try {
-      await tablesStore.save({
-        ...table,
-        projectIds,
-      })
-    } catch (error) {
-      console.error(error)
-      notifications.error("Unable to update project")
+  const assignProject = async (selection: ProjectAssignmentSelection) => {
+    const saved = await saveProjectAssignment({
+      resourceId: tableId,
+      resourceRev: table._rev!,
+      selection,
+    })
+    if (!saved) {
       return keepOpen
     }
 
-    notifications.success("Projects updated successfully")
     assignProjectModal?.hide()
 
     try {
@@ -172,10 +177,13 @@
 <EditModal {table} bind:this={editModal} />
 <DeleteConfirmationModal source={table} bind:this={deleteConfirmationModal} />
 <Modal bind:this={assignProjectModal}>
-  <AssignProjectModal
-    resource={projectAssignmentResource}
-    onConfirm={assignProject}
-  />
+  {#key assignProjectModalKey}
+    <AssignProjectModal
+      resource={projectAssignmentResource}
+      onPreview={projectsStore.previewAssignment}
+      onConfirm={assignProject}
+    />
+  {/key}
 </Modal>
 
 <style>
