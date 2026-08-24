@@ -24,6 +24,7 @@ export async function createAgentOperation(
     live: body.live ?? false,
     promptInstructions: body.promptInstructions,
     enabledTools: body.enabledTools,
+    approvalPolicies: body.approvalPolicies,
     allowKnowledgeSourceDownload: body.allowKnowledgeSourceDownload ?? true,
     escalation: body.escalation,
   })

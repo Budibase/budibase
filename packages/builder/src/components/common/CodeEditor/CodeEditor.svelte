@@ -66,7 +66,7 @@
   import { validateHbsTemplate } from "./validator/hbs"
   import { validateJsTemplate } from "./validator/js"
   import AIGen from "./AIGen.svelte"
-  import { hbsTagPlugin, stripHbsDelimiters } from "./hbsTags"
+  import { bindingsChanged, hbsTagPlugin, stripHbsDelimiters } from "./hbsTags"
   import { markdownDecorationPlugin } from "./markdownDecorations"
 
   export let label: string | undefined = undefined
@@ -144,6 +144,13 @@
       if (binding.readableBinding) {
         validBindingSet.add(binding.readableBinding)
       }
+    }
+    if (
+      isEditorInitialised &&
+      renderBindingsAsTags &&
+      mode.name === "handlebars"
+    ) {
+      editor.dispatch({ effects: bindingsChanged.of(undefined) })
     }
   }
 
@@ -588,7 +595,7 @@
   }
 
   /* HBS tags */
-  :global(.hbs-tag) {
+  .code-editor :global(.hbs-tag) {
     display: inline-flex;
     align-items: center;
     vertical-align: middle;
@@ -601,14 +608,17 @@
     line-height: 1.4;
     white-space: nowrap;
   }
-  :global(.hbs-tag__icon) {
+  .code-editor :global(.hbs-tag--error) {
+    background: #e3485033;
+  }
+  .code-editor :global(.hbs-tag__icon) {
     width: 14px;
     height: 14px;
     border-radius: 3px;
     object-fit: contain;
     flex-shrink: 0;
   }
-  :global(.hbs-tag__text) {
+  .code-editor :global(.hbs-tag__text) {
     line-height: 1.3;
   }
 

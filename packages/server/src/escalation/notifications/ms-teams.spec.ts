@@ -117,6 +117,7 @@ describe("sendMSTeamsNotification", () => {
         appId: "11111111-1111-4111-8111-111111111111",
         appPassword: "teams-app-password",
         tenantId: TENANT_RIGHT,
+        messagingEndpointUrl: "https://example.com/api/teams/messages",
       },
     })
 

@@ -489,7 +489,12 @@ describe("chat conversation preview stream", () => {
       sdk.ai.agents.buildPromptAndTools as jest.MockedFunction<
         typeof sdk.ai.agents.buildPromptAndTools
       >
-    ).mockResolvedValue({ systemPrompt: "system", tools, toolDisplayNames: {} })
+    ).mockResolvedValue({
+      systemPrompt: "system",
+      tools,
+      toolDisplayNames: {},
+      toolSources: {},
+    })
     ;(
       sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
     ).mockResolvedValue({
@@ -1012,6 +1017,7 @@ describe("Agent chat tool call tracking", () => {
       systemPrompt: "system",
       tools: { tool1: {} as any },
       toolDisplayNames: {},
+      toolSources: {},
     })
     ;(
       sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
