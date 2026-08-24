@@ -5,6 +5,7 @@
   import { groups } from "@/stores/portal/groups"
   import { users } from "@/stores/portal/users"
   import { untrack } from "svelte"
+  import { derived } from "svelte/store"
 
   interface Props {
     groupId: string
@@ -18,6 +19,7 @@
   let searchTerm = $state("")
   let prevSearch = $state<string | undefined>()
   const pageInfo = createPaginationStore()
+  const currentPage = derived(pageInfo, value => value.page)
 
   const group = $derived($groups.find(x => x._id === groupId))
 
@@ -50,7 +52,7 @@
   }
 
   $effect(() => {
-    const page = $pageInfo.page
+    const page = $currentPage
     const search = searchTerm || ""
     untrack(() => searchUsers({ page, search }))
   })
