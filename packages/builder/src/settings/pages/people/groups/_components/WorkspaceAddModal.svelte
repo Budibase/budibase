@@ -111,19 +111,22 @@
     selectedWorkspaceIdsForSubmit.length === 1
       ? selectedWorkspaceIdsForSubmit[0]
       : null
-  $: if (singleWorkspaceId) {
-    fetchWorkspaceRoles(singleWorkspaceId)
-  } else {
-    workspaceRoles = []
-  }
+  $: handleWorkspaceSelectionChange(singleWorkspaceId)
   $: if (
     !endUserRoleOptions.find(option => option.value === selectedEndUserRole)
   ) {
     selectedEndUserRole = Constants.Roles.BASIC
   }
 
-  async function fetchWorkspaceRoles(appId: string) {
+  function handleWorkspaceSelectionChange(workspaceId: string | null) {
     const requestId = ++roleRequestId
+    workspaceRoles = []
+    if (workspaceId) {
+      fetchWorkspaceRoles(workspaceId, requestId)
+    }
+  }
+
+  async function fetchWorkspaceRoles(appId: string, requestId: number) {
     try {
       const response = await API.getRolesForApp(appId)
       if (requestId === roleRequestId) {
