@@ -65,7 +65,7 @@
     border-bottom-left-radius: 4px;
   }
   /* redaction tags read as annotations here, not as bindings to act on */
-  .request-panel :global(.hbs-tag) {
+  .request-panel :global(.code-editor .hbs-tag) {
     background: none;
     border: 1px solid var(--spectrum-global-color-gray-300);
   }

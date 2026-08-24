@@ -248,6 +248,7 @@ const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.USE_ZOD_VALIDATOR]: false,
   [FeatureFlag.AI_TESTS]: false,
   [FeatureFlag.ESCALATION]: false,
+  [FeatureFlag.AI_TOOL_ESCALATION]: false,
   [FeatureFlag.FRONT_COMPANION]: false,
   [FeatureFlag.PROJECTS]: false,
   [FeatureFlag.DEBUG_UI]: env.isDev(),

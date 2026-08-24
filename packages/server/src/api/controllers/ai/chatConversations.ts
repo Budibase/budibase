@@ -14,6 +14,7 @@ import {
   ChatConversation,
   ChatConversationRequest,
   ESCALATE_TOOL_NAME,
+  EscalateToolResultStatus,
   FeatureFlag,
   ContextUser,
   UserCtx,
@@ -198,6 +199,7 @@ const buildToolCallTrackingHandler = ({
   // (preserving completion order) and let finalization flush() the tail
   // before writing the terminal status.
   let chain = Promise.resolve()
+  let needsInputUpdate = Promise.resolve()
 
   const onToolCallCompleted = ({
     toolName,
@@ -212,6 +214,22 @@ const buildToolCallTrackingHandler = ({
   }) => {
     if (!trackingHandle) {
       return
+    }
+    const outputStatus = (output as { status?: string } | undefined)?.status
+    if (outputStatus === EscalateToolResultStatus.PENDING_APPROVAL) {
+      needsInputUpdate = needsInputUpdate.then(() =>
+        sdk.ai.agentRequests
+          .updateRequestStatus({
+            requestId: trackingHandle.requestId,
+            status: "needs_input",
+          })
+          .catch(error => {
+            console.error(
+              "Failed to update agent request status to needs_input",
+              { agentId, sessionId, error }
+            )
+          })
+      )
     }
     chain = chain.then(() =>
       sdk.ai.agentRequests
@@ -236,7 +254,10 @@ const buildToolCallTrackingHandler = ({
     )
   }
 
-  return { onToolCallCompleted, flush: () => chain }
+  return {
+    onToolCallCompleted,
+    flush: () => Promise.all([chain, needsInputUpdate]),
+  }
 }
 
 const markAgentRequestFailed = async ({

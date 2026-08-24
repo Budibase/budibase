@@ -194,6 +194,7 @@ export type AgentOperationConfigRequest = Pick<
   | "live"
   | "promptInstructions"
   | "enabledTools"
+  | "approvalPolicies"
   | "allowKnowledgeSourceDownload"
   | "escalation"
 >
