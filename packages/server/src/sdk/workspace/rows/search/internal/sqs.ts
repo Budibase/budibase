@@ -90,12 +90,12 @@ export async function buildInternalFieldList(
     )
   }
 
-  const containsFormula = schemaFields.some(f => {
+  const containsDynamicFormula = schemaFields.some(f => {
     const field = table.schema[f]
     return field != null && isDynamicFormula(field)
   })
   // Dynamic formulas need all source fields to be available for evaluation
-  if (containsFormula) {
+  if (containsDynamicFormula) {
     schemaFields = Object.keys(table.schema)
   } else if (allowedFields) {
     schemaFields = schemaFields.filter(field => allowedFields.includes(field))
@@ -147,7 +147,7 @@ export async function buildInternalFieldList(
       // as part of the relationship to tell us which relationship column the junction is related to.
       const relatedFields = (
         await buildInternalFieldList(relatedTable, tables, {
-          includeHiddenFields: containsFormula,
+          includeHiddenFields: containsDynamicFormula,
         })
       ).concat(
         getJunctionFields(relatedTable, ["doc1.fieldName", "doc2.fieldName"])
