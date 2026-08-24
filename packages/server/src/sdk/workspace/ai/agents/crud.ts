@@ -14,8 +14,10 @@ import type {
   AgentOperation,
   AgentOperationToolConfig,
   Datasource,
+  MSTeamsAgentIntegration,
   Optional,
   Query,
+  SlackAgentIntegration,
 } from "@budibase/types"
 import { helpers } from "@budibase/shared-core"
 import * as knowledgeBaseSdk from "../knowledgeBase"
@@ -40,8 +42,17 @@ type DeprecatedAgentOperation = Omit<AgentOperation, "enabledTools"> & {
   enabledTools?: Array<string | DeprecatedAgentOperationToolConfig>
 }
 
-type DeprecatedAgent = Omit<Agent, "operations"> & {
+type DeprecatedChatAgentIntegration<T> = T & {
+  chatAppId?: string
+}
+
+type DeprecatedAgent = Omit<
+  Agent,
+  "operations" | "MSTeamsIntegration" | "slackIntegration"
+> & {
   operations?: DeprecatedAgentOperation[]
+  MSTeamsIntegration?: DeprecatedChatAgentIntegration<MSTeamsAgentIntegration>
+  slackIntegration?: DeprecatedChatAgentIntegration<SlackAgentIntegration>
   promptInstructions?: string
   operationName?: string
   enabledTools?: string[]
@@ -117,34 +128,6 @@ const decodeSecret = (value?: string): string | undefined => {
   return encryption.decrypt(value.slice(SECRET_ENCODING_PREFIX.length))
 }
 
-const encodeDiscordIntegrationSecrets = (
-  discordIntegration?: Agent["discordIntegration"]
-) => {
-  if (!discordIntegration) {
-    return discordIntegration
-  }
-
-  return {
-    ...discordIntegration,
-    publicKey: encodeSecret(discordIntegration.publicKey),
-    botToken: encodeSecret(discordIntegration.botToken),
-  }
-}
-
-const decodeDiscordIntegrationSecrets = (
-  discordIntegration?: Agent["discordIntegration"]
-) => {
-  if (!discordIntegration) {
-    return discordIntegration
-  }
-
-  return {
-    ...discordIntegration,
-    publicKey: decodeSecret(discordIntegration.publicKey),
-    botToken: decodeSecret(discordIntegration.botToken),
-  }
-}
-
 const encodeSlackIntegrationSecrets = (
   slackIntegration?: Agent["slackIntegration"]
 ) => {
@@ -175,32 +158,15 @@ const decodeSlackIntegrationSecrets = (
   }
 }
 
-const encodeTelegramIntegrationSecrets = (
-  telegramIntegration?: Agent["telegramIntegration"]
-) => {
-  if (!telegramIntegration) {
-    return telegramIntegration
+const stripDeprecatedIntegrationFields = <T extends object>(
+  integration: DeprecatedChatAgentIntegration<T> | undefined
+): T | undefined => {
+  if (!integration) {
+    return integration
   }
 
-  return {
-    ...telegramIntegration,
-    botToken: encodeSecret(telegramIntegration.botToken),
-    webhookSecretToken: encodeSecret(telegramIntegration.webhookSecretToken),
-  }
-}
-
-const decodeTelegramIntegrationSecrets = (
-  telegramIntegration?: Agent["telegramIntegration"]
-) => {
-  if (!telegramIntegration) {
-    return telegramIntegration
-  }
-
-  return {
-    ...telegramIntegration,
-    botToken: decodeSecret(telegramIntegration.botToken),
-    webhookSecretToken: decodeSecret(telegramIntegration.webhookSecretToken),
-  }
+  const { chatAppId: _chatAppId, ...sanitised } = integration
+  return sanitised as T
 }
 
 const stripDeprecatedAgentFields = (raw: DeprecatedAgent): Agent => {
@@ -213,7 +179,13 @@ const stripDeprecatedAgentFields = (raw: DeprecatedAgent): Agent => {
     allowKnowledgeSourceDownload: _allowKnowledgeSourceDownload,
     ...agent
   } = raw
-  return agent as Agent
+  return {
+    ...agent,
+    MSTeamsIntegration: stripDeprecatedIntegrationFields(
+      agent.MSTeamsIntegration
+    ),
+    slackIntegration: stripDeprecatedIntegrationFields(agent.slackIntegration),
+  } as Agent
 }
 
 const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
@@ -253,15 +225,12 @@ const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
 }
 
 const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
+  const agent = stripDeprecatedAgentFields(raw)
   return {
-    ...stripDeprecatedAgentFields(raw),
+    ...agent,
     live: raw.live ?? false,
     operations: migrateOperations(raw),
-    discordIntegration: decodeDiscordIntegrationSecrets(raw.discordIntegration),
-    slackIntegration: decodeSlackIntegrationSecrets(raw.slackIntegration),
-    telegramIntegration: decodeTelegramIntegrationSecrets(
-      raw.telegramIntegration
-    ),
+    slackIntegration: decodeSlackIntegrationSecrets(agent.slackIntegration),
   }
 }
 
@@ -317,23 +286,6 @@ type AgentIntegrationSanitisers = {
   [K in AgentIntegrationKeys]: (integration: Agent[K]) => Agent[K]
 }
 
-const sanitiseDiscordIntegration = (
-  discordIntegration: Agent["discordIntegration"]
-): Agent["discordIntegration"] => {
-  if (!discordIntegration) {
-    return discordIntegration
-  }
-
-  const {
-    publicKey: _publicKey,
-    botToken: _botToken,
-    chatAppId: _chatAppId,
-    interactionsEndpointUrl: _interactionsEndpointUrl,
-    ...sanitised
-  } = discordIntegration
-  return sanitised
-}
-
 const sanitiseMSTeamsIntegration = (
   msTeamsIntegration: Agent["MSTeamsIntegration"]
 ): Agent["MSTeamsIntegration"] => {
@@ -343,7 +295,6 @@ const sanitiseMSTeamsIntegration = (
 
   const {
     appPassword: _appPassword,
-    chatAppId: _chatAppId,
     messagingEndpointUrl: _messagingEndpointUrl,
     ...sanitised
   } = msTeamsIntegration
@@ -361,35 +312,15 @@ const sanitiseSlackIntegration = (
     clientSecret: _clientSecret,
     botToken: _botToken,
     signingSecret: _signingSecret,
-    chatAppId: _chatAppId,
     messagingEndpointUrl: _messagingEndpointUrl,
     ...sanitised
   } = slackIntegration
   return sanitised
 }
 
-const sanitiseTelegramIntegration = (
-  telegramIntegration: Agent["telegramIntegration"]
-): Agent["telegramIntegration"] => {
-  if (!telegramIntegration) {
-    return telegramIntegration
-  }
-
-  const {
-    botToken: _botToken,
-    webhookSecretToken: _webhookSecretToken,
-    chatAppId: _chatAppId,
-    messagingEndpointUrl: _messagingEndpointUrl,
-    ...sanitised
-  } = telegramIntegration
-  return sanitised
-}
-
 const agentIntegrationSanitisers: AgentIntegrationSanitisers = {
-  discordIntegration: sanitiseDiscordIntegration,
   MSTeamsIntegration: sanitiseMSTeamsIntegration,
   slackIntegration: sanitiseSlackIntegration,
-  telegramIntegration: sanitiseTelegramIntegration,
 }
 
 export type SanitisedAgent = Omit<Agent, "publishedAt">
@@ -404,48 +335,14 @@ export const sanitiseAgentForExport = (agent: Agent): SanitisedAgent => {
     knowledgeSources: [],
   }))
 
-  sanitised.discordIntegration = agentIntegrationSanitisers.discordIntegration(
-    sanitised.discordIntegration
-  )
   sanitised.MSTeamsIntegration = agentIntegrationSanitisers.MSTeamsIntegration(
     sanitised.MSTeamsIntegration
   )
   sanitised.slackIntegration = agentIntegrationSanitisers.slackIntegration(
     sanitised.slackIntegration
   )
-  sanitised.telegramIntegration =
-    agentIntegrationSanitisers.telegramIntegration(
-      sanitised.telegramIntegration
-    )
 
   return sanitised
-}
-
-const resolveDiscordIntegration = ({
-  existing,
-  incoming,
-}: {
-  existing?: Agent["discordIntegration"]
-  incoming?: Agent["discordIntegration"]
-}) => {
-  if (incoming === undefined) {
-    return existing
-  }
-  if (!incoming) {
-    return incoming
-  }
-
-  const resolved = { ...incoming }
-
-  if (incoming.publicKey === SECRET_MASK && existing?.publicKey) {
-    resolved.publicKey = existing.publicKey
-  }
-
-  if (incoming.botToken === SECRET_MASK && existing?.botToken) {
-    resolved.botToken = existing.botToken
-  }
-
-  return resolved
 }
 
 const resolveMSTeamsIntegration = ({
@@ -466,6 +363,13 @@ const resolveMSTeamsIntegration = ({
 
   if (incoming.appPassword === SECRET_MASK && existing?.appPassword) {
     resolved.appPassword = existing.appPassword
+  }
+
+  if (
+    incoming.appPackageVersion === undefined &&
+    existing?.appPackageVersion !== undefined
+  ) {
+    resolved.appPackageVersion = existing.appPackageVersion
   }
 
   return resolved
@@ -533,36 +437,6 @@ const resolveSlackIntegration = ({
   return resolved
 }
 
-const resolveTelegramIntegration = ({
-  existing,
-  incoming,
-}: {
-  existing?: Agent["telegramIntegration"]
-  incoming?: Agent["telegramIntegration"]
-}) => {
-  if (incoming === undefined) {
-    return existing
-  }
-  if (!incoming) {
-    return incoming
-  }
-
-  const resolved = { ...incoming }
-
-  if (incoming.botToken === SECRET_MASK && existing?.botToken) {
-    resolved.botToken = existing.botToken
-  }
-
-  if (
-    incoming.webhookSecretToken === SECRET_MASK &&
-    existing?.webhookSecretToken
-  ) {
-    resolved.webhookSecretToken = existing.webhookSecretToken
-  }
-
-  return resolved
-}
-
 export async function fetch(): Promise<Agent[]> {
   const agents = (await fetchRaw()).map(withAgentDefaults)
   return withCurrentQueryToolReferences(agents)
@@ -609,10 +483,8 @@ export async function create(
     goal: request.goal,
     createdAt: now,
     createdBy: request.createdBy,
-    discordIntegration: request.discordIntegration,
     MSTeamsIntegration: request.MSTeamsIntegration,
     slackIntegration: await withSlackTeamId(request.slackIntegration),
-    telegramIntegration: request.telegramIntegration,
   }
 
   if (agent.live) {
@@ -621,13 +493,7 @@ export async function create(
 
   const { rev } = await db.put({
     ...agent,
-    discordIntegration: encodeDiscordIntegrationSecrets(
-      agent.discordIntegration
-    ),
     slackIntegration: encodeSlackIntegrationSecrets(agent.slackIntegration),
-    telegramIntegration: encodeTelegramIntegrationSecrets(
-      agent.telegramIntegration
-    ),
   })
   agent._rev = rev
   const result = withAgentDefaults(agent)
@@ -692,10 +558,6 @@ export async function update(agent: Agent): Promise<Agent> {
     ...agent,
     updatedAt: now,
     operations: incomingOperations,
-    discordIntegration: resolveDiscordIntegration({
-      existing: existing?.discordIntegration,
-      incoming: agent.discordIntegration,
-    }),
     MSTeamsIntegration: resolveMSTeamsIntegration({
       existing: existing?.MSTeamsIntegration,
       incoming: agent.MSTeamsIntegration,
@@ -703,10 +565,6 @@ export async function update(agent: Agent): Promise<Agent> {
     slackIntegration: resolveSlackIntegration({
       existing: existing?.slackIntegration,
       incoming: agent.slackIntegration,
-    }),
-    telegramIntegration: resolveTelegramIntegration({
-      existing: existing?.telegramIntegration,
-      incoming: agent.telegramIntegration,
     }),
   } satisfies Agent)
 
@@ -733,13 +591,7 @@ export async function update(agent: Agent): Promise<Agent> {
 
   const { rev } = await db.put({
     ...updated,
-    discordIntegration: encodeDiscordIntegrationSecrets(
-      updated.discordIntegration
-    ),
     slackIntegration: encodeSlackIntegrationSecrets(updated.slackIntegration),
-    telegramIntegration: encodeTelegramIntegrationSecrets(
-      updated.telegramIntegration
-    ),
   })
   updated._rev = rev
   const result = withAgentDefaults(updated)

@@ -157,7 +157,7 @@ const normalizeAppPath = (pathOrUrl: string) => {
   if (!pathname) {
     return ""
   }
-  if (pathname.startsWith("/app/") || pathname.startsWith("/app-chat/")) {
+  if (pathname.startsWith("/app/")) {
     return pathname
   }
   return pathname.startsWith("/") ? `/app${pathname}` : `/app/${pathname}`
@@ -166,9 +166,7 @@ const normalizeAppPath = (pathOrUrl: string) => {
 const resolveAppIdFromPath = async (appPath: string) => {
   const publishedApps = await API.getPublishedApps()
   const pathToMatch = appPath.replace(/\/$/, "")
-  const matched = publishedApps.find(app => {
-    return [`/app${app.url}`, `/app-chat${app.url}`].includes(pathToMatch)
-  })
+  const matched = publishedApps.find(app => `/app${app.url}` === pathToMatch)
   if (!matched?.prodId) {
     throw new Error(`Could not resolve Budibase app for path: ${appPath}`)
   }

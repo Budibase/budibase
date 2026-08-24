@@ -32,7 +32,6 @@ describe("prepareChatConversationForSave", () => {
 
     const result = prepareChatConversationForSave({
       chatId: "chat_1",
-      chatAppId: "app_1",
       userId: "user_1",
       title: "My title",
       messages,
@@ -40,7 +39,6 @@ describe("prepareChatConversationForSave", () => {
     })
 
     expect(result._id).toBe("chat_1")
-    expect(result.chatAppId).toBe("app_1")
     expect(result.userId).toBe("user_1")
     expect(result.agentId).toBe("agent_1")
     expect(result.title).toBe("My title")
@@ -70,7 +68,6 @@ describe("prepareChatConversationForSave", () => {
 
     const result = prepareChatConversationForSave({
       chatId: "chat_1",
-      chatAppId: "app_1",
       userId: "user_1",
       messages,
       chat: { agentId: "agent_1" },
@@ -86,7 +83,6 @@ describe("prepareChatConversationForSave", () => {
 
     const result = prepareChatConversationForSave({
       chatId: "chat_1",
-      chatAppId: "app_1",
       userId: "user_1",
       messages,
       chat: {
@@ -96,14 +92,13 @@ describe("prepareChatConversationForSave", () => {
       },
       existingChat: {
         _id: "chat_1",
-        chatAppId: "app_1",
         userId: "user_1",
         agentId: "from_existing",
         messages,
         createdAt: "2019-01-01T00:00:00.000Z",
         updatedAt: "2019-06-01T00:00:00.000Z",
         _rev: "1-abc",
-        channel: { provider: AgentChannelProvider.DISCORD },
+        channel: { provider: AgentChannelProvider.MSTEAMS },
       },
     })
 
@@ -118,7 +113,6 @@ describe("prepareChatConversationForSave", () => {
 
     const result = prepareChatConversationForSave({
       chatId: "chat_1",
-      chatAppId: "app_1",
       userId: "user_1",
       messages,
       chat: { agentId: "agent_1", title: "Chat title" },
@@ -133,7 +127,6 @@ describe("prepareChatConversationForSave", () => {
     expect(() =>
       prepareChatConversationForSave({
         chatId: "chat_1",
-        chatAppId: "app_1",
         userId: "user_1",
         messages,
         chat: {},

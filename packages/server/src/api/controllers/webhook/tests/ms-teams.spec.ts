@@ -22,7 +22,6 @@ const matchesTeamsConversationScope = ({
 }) => {
   const ch = chat.channel
   return !!(
-    chat.chatAppId === scope.chatAppId &&
     chat.agentId === scope.agentId &&
     ch?.provider === AgentChannelProvider.MSTEAMS &&
     ch?.conversationId === scope.conversationId &&
@@ -55,7 +54,6 @@ const makeChat = (
   overrides: Partial<ChatConversation> = {}
 ): ChatConversation => ({
   _id: "chat-default",
-  chatAppId: "chat-app-1",
   agentId: "agent-1",
   userId: "msteams:user-1",
   title: "Conversation",
@@ -168,9 +166,8 @@ describe("teams webhook helpers", () => {
     ).toBe(false)
   })
 
-  it("scopes conversations by chat app, agent, conversation, channel, and user", () => {
+  it("scopes conversations by agent, conversation, channel, and user", () => {
     const scope = {
-      chatAppId: "chat-app-1",
       agentId: "agent-1",
       conversationId: "conversation-1",
       channelId: "channel-1",
@@ -233,7 +230,6 @@ describe("teams webhook helpers", () => {
     })
 
     const scope = {
-      chatAppId: "chat-app-1",
       agentId: "agent-1",
       conversationId: "conversation-1",
       channelId: "channel-1",
@@ -248,7 +244,6 @@ describe("teams webhook helpers", () => {
     const nowMs = new Date("2026-01-01T01:00:00.000Z").getTime()
     const idleTimeoutMs = 45 * 60 * 1000
     const scope = {
-      chatAppId: "chat-app-1",
       agentId: "agent-1",
       conversationId: "conversation-1",
       channelId: "channel-1",

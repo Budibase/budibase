@@ -5,7 +5,7 @@ import { findIntegrationAgent } from "./utils"
 describe("findIntegrationAgent", () => {
   const config = new TestConfiguration()
 
-  const hasTelegram = (agent: Agent) => !!agent.telegramIntegration?.botToken
+  const hasSlack = (agent: Agent) => !!agent.slackIntegration?.botToken
 
   let withIntegration: Agent
   let withoutIntegration: Agent
@@ -13,8 +13,8 @@ describe("findIntegrationAgent", () => {
   beforeEach(async () => {
     await config.newTenant()
     withIntegration = await config.api.agent.create({
-      name: "Telegram Agent",
-      telegramIntegration: { botToken: "telegram-token" },
+      name: "Slack Agent",
+      slackIntegration: { botToken: "slack-token" },
     })
     withoutIntegration = await config.api.agent.create({
       name: "Bare Agent",
@@ -29,7 +29,7 @@ describe("findIntegrationAgent", () => {
     const agent = await findIntegrationAgent(
       config.getDevWorkspaceId(),
       withIntegration._id,
-      hasTelegram
+      hasSlack
     )
     expect(agent?._id).toEqual(withIntegration._id)
   })
@@ -38,7 +38,7 @@ describe("findIntegrationAgent", () => {
     const agent = await findIntegrationAgent(
       config.getDevWorkspaceId(),
       withoutIntegration._id,
-      hasTelegram
+      hasSlack
     )
     expect(agent).toBeUndefined()
   })
@@ -47,7 +47,7 @@ describe("findIntegrationAgent", () => {
     const agent = await findIntegrationAgent(
       config.getDevWorkspaceId(),
       undefined,
-      hasTelegram
+      hasSlack
     )
     expect(agent).toBeUndefined()
   })

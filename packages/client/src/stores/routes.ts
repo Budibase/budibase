@@ -84,8 +84,8 @@ const createRouteStore = () => {
   }
   const navigate = (
     url: string,
-    peek: boolean,
-    externalNewTab: boolean,
+    peek = false,
+    externalNewTab = false,
     screenNewTab = false
   ) => {
     if (get(builderStore).inBuilder) {

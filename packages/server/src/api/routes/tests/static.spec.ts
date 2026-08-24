@@ -75,23 +75,6 @@ describe("/static", () => {
       )
     })
 
-    it("should serve app-chat with the global client library path", async () => {
-      const headers = config.defaultHeaders()
-      delete headers[constants.Header.WORKSPACE_ID]
-      const workspaceId = config.getProdWorkspaceId()
-
-      const res = await request
-        .get(`/app-chat${config.getProdWorkspace().url}`)
-        .set(headers)
-        .expect(200)
-
-      expect(res.body.appId).toBe(workspaceId)
-      expect(res.body.clientLibPath).toContain("/api/assets/global/client?")
-      expect(res.body.clientLibPath).not.toContain(
-        `/api/assets/${workspaceId}/client?`
-      )
-    })
-
     it("should serve the app preview by id", async () => {
       const res = await request
         .get(`/${config.devWorkspaceId}`)

@@ -17,7 +17,6 @@ const makeChat = (
   overrides: Partial<ChatConversation> = {}
 ): ChatConversation => ({
   _id: "chat-default",
-  chatAppId: "chat-app-1",
   agentId: "agent-1",
   userId: "slack:user-1",
   title: "Conversation",
@@ -128,9 +127,8 @@ describe("slack webhook helpers", () => {
     ).toBe(false)
   })
 
-  it("scopes conversations by chat app, agent, channel, thread, and user", () => {
+  it("scopes conversations by agent, channel, thread, and user", () => {
     const scope: SlackConversationScope = {
-      chatAppId: "chat-app-1",
       agentId: "agent-1",
       channelId: "C123",
       threadId: "slack:C123:1700000000.100",
@@ -176,7 +174,6 @@ describe("slack webhook helpers", () => {
     const nowMs = new Date("2026-01-01T01:00:00.000Z").getTime()
     const idleTimeoutMs = 45 * 60 * 1000
     const scope: SlackConversationScope = {
-      chatAppId: "chat-app-1",
       agentId: "agent-1",
       channelId: "C123",
       threadId: "slack:C123:1700000000.100",

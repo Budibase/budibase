@@ -4,24 +4,11 @@ import {
   AgentSharePointKnowledgeSourceScope,
   AgentKnowledgeSourceSyncRunStatus,
   AgentOperation,
-  ChatApp,
-  ChatConversation,
   ChatConversationRequest,
-  CreateChatConversationRequest,
   KnowledgeBaseFile,
 } from "../../../documents"
 
 export type ChatAgentRequest = ChatConversationRequest
-
-export type FetchAgentHistoryResponse = ChatConversation[]
-
-export type { CreateChatConversationRequest }
-
-export type CreateChatAppRequest = Omit<
-  ChatApp,
-  "_id" | "_rev" | "createdAt" | "updatedAt"
->
-export type UpdateChatAppRequest = Omit<ChatApp, "createdAt" | "updatedAt">
 
 export interface FetchAgentsResponse {
   agents: Agent[]
@@ -131,38 +118,18 @@ export interface DisconnectAgentSharePointSiteResponse {
   siteId: string
 }
 
-export interface FetchChatAppAgentsResponse {
-  agents: Pick<Agent, "_id" | "name" | "icon" | "iconColor" | "live">[]
-}
-
-interface ConfigureAgentDeploymentChannelRequest {
-  chatAppId?: string
-}
-
 interface ConfigureAgentDeploymentChannelResponse {
   success: boolean
-  chatAppId: string
 }
 
-export type SyncAgentDiscordCommandsRequest =
-  ConfigureAgentDeploymentChannelRequest
-
-export interface SyncAgentDiscordCommandsResponse
-  extends ConfigureAgentDeploymentChannelResponse {
-  interactionsEndpointUrl: string
-  inviteUrl: string
-}
-
-export type ProvisionAgentMSTeamsChannelRequest =
-  ConfigureAgentDeploymentChannelRequest
+export type ProvisionAgentMSTeamsChannelRequest = Record<string, never>
 
 export interface ProvisionAgentMSTeamsChannelResponse
   extends ConfigureAgentDeploymentChannelResponse {
   messagingEndpointUrl: string
 }
 
-export type ProvisionAgentSlackChannelRequest =
-  ConfigureAgentDeploymentChannelRequest
+export type ProvisionAgentSlackChannelRequest = Record<string, never>
 
 export interface ProvisionAgentSlackChannelResponse
   extends ConfigureAgentDeploymentChannelResponse {
@@ -188,15 +155,6 @@ export interface SlackAppConfigResponse {
 export interface SaveSlackAppConfigRequest {
   configToken: string
   refreshToken: string
-}
-
-export type ProvisionAgentTelegramChannelRequest =
-  ConfigureAgentDeploymentChannelRequest
-
-export interface ProvisionAgentTelegramChannelResponse
-  extends ConfigureAgentDeploymentChannelResponse {
-  messagingEndpointUrl: string
-  warning?: string
 }
 
 export interface ToggleAgentDeploymentRequest {

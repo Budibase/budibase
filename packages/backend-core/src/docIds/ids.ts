@@ -126,10 +126,6 @@ export const generateAgentID = () => {
   return `${DocumentType.AGENT}${SEPARATOR}${newid()}`
 }
 
-export const generateChatAppID = () => {
-  return `${DocumentType.CHAT_APP}${SEPARATOR}${newid()}`
-}
-
 export const generateChatConversationID = () => {
   return `${DocumentType.CHAT_CONVERSATION}${SEPARATOR}${newid()}`
 }
