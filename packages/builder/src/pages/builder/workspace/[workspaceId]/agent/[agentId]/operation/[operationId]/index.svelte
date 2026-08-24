@@ -1,22 +1,29 @@
 <script lang="ts">
-  import { Body, Icon, Link, Helpers, notifications } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    Helpers,
+    Icon,
+    Link,
+    notifications,
+    ProgressCircle,
+  } from "@budibase/bbui"
   import {
     FeatureFlag,
     ToolExecutionPrincipal,
     ToolType,
     type AgentOperation,
-    type CaretPositionFn,
     type EscalationRecipient,
-    type InsertAtPositionFn,
   } from "@budibase/types"
   import * as routify from "@roxi/routify"
-  import { ToolBindingPrefix } from "@/constants"
+  import type { EditorView } from "@codemirror/view"
   import TopBar from "@/components/common/TopBar.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import {
     EditorModes,
     bindingsToCompletions,
+    buildSectionHeader,
     hbAutocomplete,
   } from "@/components/common/CodeEditor"
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
@@ -35,6 +42,7 @@
   } from "@/stores/portal"
   import { configuredEscalationProviders } from "@/stores/portal/escalations"
   import { bb } from "@/stores/bb"
+  import type { BindingCompletion, BindingCompletionOption } from "@/types"
   import AgentTabList from "../../AgentTabList.svelte"
   import AgentUnpublishedChangesIndicator from "../../AgentUnpublishedChangesIndicator.svelte"
   import ConfigureOperationToolModal from "../../ConfigureOperationToolModal.svelte"
@@ -46,16 +54,20 @@
   import WebSearchConfigModal from "../../WebSearchConfigModal.svelte"
   import {
     buildBindingIcons,
-    buildReadableToRuntimeBinding,
     getAgentWebSearchConfig,
     isWebSearchConfigured,
     resolveAvailableAgentTools,
     toAgentPromptBindings,
   } from "../../agentAvailableTools"
   import {
-    getConfiguredOperationTools,
-    getIncludedToolRuntimeBindings,
+    getDefaultToolExecutionPrincipal,
+    isToolReferenced,
+    normalizeConfiguredOperationTools,
   } from "../../toolBindingUtils"
+  import {
+    getPendingToolInsertion,
+    type PendingToolInsertion,
+  } from "../../toolAutocomplete"
   import { createSaveCoordinator } from "../../operationSaveCoordinator"
   import type { AgentTool } from "../../toolTypes"
 
@@ -64,6 +76,7 @@
   $goto
 
   type RailTab = "tools" | "knowledge" | "approvals"
+  type RemovableTool = Pick<AgentTool, "readableBinding" | "runtimeBinding">
 
   let togglingLive = $state(false)
   let saving = $state(false)
@@ -72,15 +85,15 @@
   let syncedAgentRev: string | undefined = $state()
   let toolSearch = $state("")
   let activeTab = $state<RailTab>("tools")
-  let insertAtPos: InsertAtPositionFn | undefined = $state()
-  let getCaretPosition: CaretPositionFn | undefined = $state()
+  let instructionsEditor: CodeEditor | undefined = $state()
   let webSearchConfigModal: WebSearchConfigModal | undefined = $state()
   let removeToolDialog: ConfirmDialog | undefined = $state()
   let configureToolModal: ConfigureOperationToolModal | undefined = $state()
-  let toolToRemove: AgentTool | undefined = $state()
+  let editorToolsDropdown: ToolsDropdown | undefined = $state()
+  let toolToRemove: RemovableTool | undefined = $state()
   let restoreToolConfiguration = $state(false)
-  let toolToAdd: AgentTool | undefined = $state()
-  let toolInsertPosition: { start: number; end: number } | undefined = $state()
+  let addingTool: AgentTool | undefined = $state()
+  let pendingToolInsertion: PendingToolInsertion | undefined = $state()
 
   let previousToolsLoaded = false
 
@@ -95,6 +108,7 @@
     storeOperation?.name?.trim() || "Untitled operation"
   )
   let toolsLoaded = $derived($agentsStore.toolsLoaded)
+  let toolsLoadFailed = $derived($agentsStore.toolsLoadFailed)
   let webSearchConfig = $derived(
     getAgentWebSearchConfig($aiConfigsStore.customConfigs, agent?.aiconfig)
   )
@@ -117,59 +131,127 @@
     !$featureFlags[FeatureFlag.ESCALATION] ||
       $featureFlags[FeatureFlag.AI_TOOL_ESCALATION]
   )
-  let promptBindings = $derived.by(() => {
-    const bindings = toAgentPromptBindings({
-      tools: availableTools,
+  let configuredToolList = $derived(
+    (operation?.enabledTools || [])
+      .map(config => ({
+        config,
+        tool: availableTools.find(
+          availableTool => availableTool.runtimeBinding === config.toolName
+        ),
+      }))
+      .filter(
+        item =>
+          !(
+            item.tool?.sourceType === ToolType.ESCALATION &&
+            escalationToolHidden
+          )
+      )
+      .sort((a, b) =>
+        (a.tool?.readableBinding || a.config.toolName).localeCompare(
+          b.tool?.readableBinding || b.config.toolName
+        )
+      )
+  )
+  let configuredTools = $derived(
+    configuredToolList
+      .map(item => item.tool)
+      .filter(
+        (tool): tool is AgentTool =>
+          !!tool &&
+          !(tool.sourceType === ToolType.ESCALATION && escalationToolHidden)
+      )
+  )
+  let promptBindings = $derived(
+    toAgentPromptBindings({ tools: configuredTools, webSearchConfigured })
+  )
+  let availablePromptBindings = $derived(
+    toAgentPromptBindings({
+      tools: availableTools.filter(
+        tool =>
+          !(tool.sourceType === ToolType.ESCALATION && escalationToolHidden)
+      ),
       webSearchConfigured,
     })
-    return escalationToolHidden
-      ? bindings.filter(
-          binding =>
-            !binding.readableBinding?.startsWith(
-              `${ToolBindingPrefix.ESCALATION}.`
-            )
-        )
-      : bindings
-  })
+  )
+  let availableBindingIcons = $derived(
+    buildBindingIcons(availablePromptBindings)
+  )
   let bindingIcons = $derived(buildBindingIcons(promptBindings))
-  let completions = $derived(
-    promptBindings.length
-      ? [
-          hbAutocomplete(
-            bindingsToCompletions(promptBindings, EditorModes.Handlebars)
-          ),
-        ]
-      : []
-  )
-  let readableToRuntimeBinding = $derived(
-    buildReadableToRuntimeBinding(availableTools)
-  )
-  let includedRuntimeBindings = $derived(
-    getIncludedToolRuntimeBindings(
-      operation?.promptInstructions,
-      readableToRuntimeBinding
-    )
-  )
-  let includedTools = $derived(
-    availableTools.filter(
-      tool =>
-        includedRuntimeBindings.includes(tool.runtimeBinding) &&
-        !(tool.sourceType === ToolType.ESCALATION && escalationToolHidden)
-    )
-  )
-  let filteredTools = $derived.by(() =>
-    availableTools.filter(tool => {
-      if (tool.sourceType === ToolType.ESCALATION && escalationToolHidden) {
-        return false
-      }
-      const query = toolSearch.trim().toLowerCase()
-      return (
-        !query ||
-        `${tool.sourceLabel || ""} ${tool.readableName || tool.name}`
-          .toLowerCase()
-          .includes(query)
+  let toolToRemoveIsAvailable = $derived(
+    !!toolToRemove &&
+      availableTools.some(
+        tool => tool.runtimeBinding === toolToRemove?.runtimeBinding
       )
-    })
+  )
+  let toolToRemoveIsReferenced = $derived(
+    toolToRemoveIsAvailable &&
+      isToolReferenced({
+        prompt: operation?.promptInstructions,
+        tool: toolToRemove!,
+      })
+  )
+
+  const addToolCompletion: BindingCompletionOption = {
+    label: "Add tool",
+    detail: "Configure a new tool",
+    type: "keyword",
+    section: buildSectionHeader(null, "Actions", "", Number.MAX_SAFE_INTEGER),
+    boost: -100,
+    apply: (
+      view: EditorView,
+      _completion: BindingCompletionOption,
+      from: number,
+      to: number
+    ) => {
+      pendingToolInsertion = getPendingToolInsertion({
+        text: view.state.doc.toString(),
+        from,
+        to,
+      })
+      editorToolsDropdown?.show()
+    },
+  }
+  const operationAutocomplete: BindingCompletion = context => {
+    const result = hbAutocomplete([
+      ...bindingsToCompletions(promptBindings, EditorModes.Handlebars),
+      addToolCompletion,
+    ])(context)
+    if (!result) {
+      return null
+    }
+    return {
+      ...result,
+      options: [
+        ...result.options.filter(option => option !== addToolCompletion),
+        addToolCompletion,
+      ],
+    }
+  }
+  const completions = [operationAutocomplete]
+  let filteredTools = $derived.by(() =>
+    availableTools
+      .filter(tool => {
+        if (
+          operation?.enabledTools?.some(
+            config => config.toolName === tool.runtimeBinding
+          )
+        ) {
+          return false
+        }
+        if (tool.sourceType === ToolType.ESCALATION && escalationToolHidden) {
+          return false
+        }
+        const query = toolSearch.trim().toLowerCase()
+        return (
+          !query ||
+          `${tool.sourceLabel || ""} ${tool.readableName || tool.name}`
+            .toLowerCase()
+            .includes(query)
+        )
+      })
+      .sort((a, b) =>
+        (a.readableName || a.name).localeCompare(b.readableName || b.name)
+      )
   )
   let toolSections = $derived.by(() =>
     filteredTools.reduce(
@@ -229,11 +311,9 @@
     const forOperationId = operation.id
     const snapshot = { ...operation }
 
-    const enabledTools = getConfiguredOperationTools({
+    const enabledTools = normalizeConfiguredOperationTools({
       operation: snapshot,
-      readableToRuntimeBinding,
       availableTools,
-      toolSecurityEnabled: $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
     })
     saving = true
     try {
@@ -313,42 +393,75 @@
     operation.promptInstructions = instructions
   }
 
-  const insertTool = (
-    tool: AgentTool,
-    position?: { start: number; end: number }
-  ) => {
-    if (!operation || !tool.readableBinding) {
+  const applyGeneratedInstructions = (instructions: string) => {
+    if (!operation) {
       return
     }
-    const current = operation.promptInstructions || ""
-    const caret = position ||
-      getCaretPosition?.() || {
-        start: current.length,
-        end: current.length,
-      }
-    const binding = `{{ ${tool.readableBinding} }}`
-    const nextInstructions =
-      current.slice(0, caret.start) + binding + current.slice(caret.end)
+    const configuredToolNames = new Set(
+      (operation.enabledTools || []).map(config => config.toolName)
+    )
+    const generatedToolConfigs = availableTools
+      .filter(
+        tool =>
+          tool.runtimeBinding &&
+          !configuredToolNames.has(tool.runtimeBinding) &&
+          isToolReferenced({ prompt: instructions, tool })
+      )
+      .map(tool => ({
+        toolName: tool.runtimeBinding,
+        executionPrincipal: getDefaultToolExecutionPrincipal({
+          tool,
+          toolSecurityEnabled:
+            $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
+        }),
+      }))
 
-    insertAtPos?.({
-      start: caret.start,
-      end: caret.end,
-      value: binding,
-      cursor: { anchor: caret.start + binding.length },
+    saveOperation({
+      promptInstructions: instructions,
+      enabledTools: [
+        ...(operation.enabledTools || []),
+        ...generatedToolConfigs,
+      ],
+    })
+  }
+
+  const insertToolBinding = (
+    tool: AgentTool,
+    position?: PendingToolInsertion
+  ): string | undefined => {
+    if (!tool.readableBinding || !instructionsEditor) {
+      return
+    }
+    const binding = `{{ ${tool.readableBinding} }}`
+    return instructionsEditor.replaceRange({
+      from: position?.from,
+      to: position?.to,
+      insert: binding,
+    })
+  }
+
+  const cancelPendingToolInsertion = (position?: PendingToolInsertion) => {
+    if (!operation || !position?.removeOnCancel || !instructionsEditor) {
+      return
+    }
+    const nextInstructions = instructionsEditor.replaceRange({
+      from: position.from,
+      to: position.to,
+      insert: "",
     })
     saveOperation({ promptInstructions: nextInstructions })
   }
 
-  const removeTool = (tool: AgentTool) => {
-    if (!operation || !tool.readableBinding) {
+  const removeTool = (tool: RemovableTool) => {
+    if (!operation) {
       return
     }
     applyToolEscalation(tool, [])
-    const escaped = tool.readableBinding.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    const nextInstructions = (operation.promptInstructions || "")
-      .replace(new RegExp(`\\{\\{\\s*${escaped}\\s*\\}\\}`, "g"), "")
-      .replace(/\n{3,}/g, "\n\n")
-    saveOperation({ promptInstructions: nextInstructions })
+    saveOperation({
+      enabledTools: (operation.enabledTools || []).filter(
+        config => config.toolName !== tool.runtimeBinding
+      ),
+    })
   }
 
   const getToolPrincipal = (toolName: string) =>
@@ -361,16 +474,6 @@
       ? ToolExecutionPrincipal.ADMIN
       : getToolPrincipal(tool.runtimeBinding)
 
-  const getDefaultToolPrincipal = (tool: AgentTool) => {
-    if (
-      !$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] ||
-      tool.executionPolicy.mode === "admin"
-    ) {
-      return ToolExecutionPrincipal.ADMIN
-    }
-    return tool.executionPolicy.defaultPrincipal
-  }
-
   const setToolPrincipal = ({
     toolName,
     executionPrincipal,
@@ -381,16 +484,13 @@
     if (!operation) {
       return
     }
-    const existing = new Map(
-      (operation.enabledTools || []).map(tool => [tool.toolName, tool])
-    )
-    operation.enabledTools = includedRuntimeBindings.map(name => ({
-      ...existing.get(name),
-      toolName: name,
+    operation.enabledTools = (operation.enabledTools || []).map(config => ({
+      ...config,
       executionPrincipal:
-        name === toolName ? executionPrincipal : getToolPrincipal(name),
+        config.toolName === toolName
+          ? executionPrincipal
+          : config.executionPrincipal,
     }))
-    saveOperation()
   }
 
   const toggleOperationLive = async () => {
@@ -437,11 +537,11 @@
   }
 
   const confirmRemoveTool = (
-    tool: AgentTool,
+    tool: RemovableTool,
     returnToConfiguration = false
   ) => {
-    toolToRemove = tool
     restoreToolConfiguration = returnToConfiguration
+    toolToRemove = tool
     removeToolDialog?.show()
   }
 
@@ -460,11 +560,16 @@
     toolToRemove = undefined
     restoreToolConfiguration = false
     if (tool && shouldRestore) {
-      configureTool(tool)
+      const availableTool = availableTools.find(
+        item => item.runtimeBinding === tool.runtimeBinding
+      )
+      if (availableTool) {
+        configureTool(availableTool)
+      }
     }
   }
 
-  const openToolMenu = (event: MouseEvent, tool: AgentTool) => {
+  const openToolMenu = (event: MouseEvent, tool: RemovableTool) => {
     event.preventDefault()
     event.stopPropagation()
     contextMenuStore.open(
@@ -509,7 +614,7 @@
   // Auto-deleting unreferenced policies is interim behaviour - retire it
   // when the policies work makes them user-owned and reusable.
   const applyToolEscalation = (
-    tool: AgentTool,
+    tool: RemovableTool,
     recipients: EscalationRecipient[] | undefined
   ) => {
     if (!operation || recipients === undefined) {
@@ -562,8 +667,7 @@
       : undefined
 
   const configureTool = (tool: AgentTool) => {
-    toolToAdd = undefined
-    toolInsertPosition = undefined
+    addingTool = undefined
     configureToolModal?.show(
       tool,
       getEffectiveToolPrincipal(tool),
@@ -574,17 +678,23 @@
     )
   }
 
-  const addTool = (tool: AgentTool) => {
+  const beginAddingTool = (
+    tool: AgentTool,
+    insertPosition?: PendingToolInsertion
+  ) => {
+    addingTool = tool
+    pendingToolInsertion = insertPosition
+    const executionPrincipal = getDefaultToolExecutionPrincipal({
+      tool,
+      toolSecurityEnabled: $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
+    })
     if (!toolModalEnabled) {
-      insertTool(tool)
+      saveToolConfiguration({ tool, executionPrincipal })
       return
     }
-
-    toolToAdd = tool
-    toolInsertPosition = getCaretPosition?.()
     configureToolModal?.show(
       tool,
-      getDefaultToolPrincipal(tool),
+      executionPrincipal,
       $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
         tool.executionPolicy.mode === "configurable",
       true,
@@ -592,7 +702,7 @@
     )
   }
 
-  const saveToolConfiguration = ({
+  const saveToolConfiguration = async ({
     tool,
     executionPrincipal,
     recipients,
@@ -601,30 +711,79 @@
     executionPrincipal: ToolExecutionPrincipal
     recipients?: EscalationRecipient[]
   }) => {
-    if (toolToAdd?.runtimeBinding === tool.runtimeBinding && operation) {
-      operation.enabledTools = [
-        ...(operation.enabledTools || []).filter(
-          configured => configured.toolName !== tool.runtimeBinding
-        ),
-        { toolName: tool.runtimeBinding, executionPrincipal },
-      ]
+    if (addingTool?.runtimeBinding !== tool.runtimeBinding || !operation) {
+      setToolPrincipal({
+        toolName: tool.runtimeBinding,
+        executionPrincipal,
+      })
       applyToolEscalation(tool, recipients)
-      insertTool(tool, toolInsertPosition)
-      toolToAdd = undefined
-      toolInsertPosition = undefined
+      await saveOperation()
       return
     }
 
-    setToolPrincipal({
-      toolName: tool.runtimeBinding,
-      executionPrincipal,
-    })
+    const insertPosition = pendingToolInsertion
+    addingTool = undefined
+    pendingToolInsertion = undefined
+    const existingConfig = operation.enabledTools?.find(
+      config => config.toolName === tool.runtimeBinding
+    )
+    operation.enabledTools = [
+      ...(operation.enabledTools || []).filter(
+        config => config.toolName !== tool.runtimeBinding
+      ),
+      {
+        ...existingConfig,
+        toolName: tool.runtimeBinding,
+        executionPrincipal,
+      },
+    ]
     applyToolEscalation(tool, recipients)
-    if (recipients !== undefined) {
-      saveOperation()
+    const updates: Partial<AgentOperation> = {}
+    if (insertPosition) {
+      const nextInstructions = insertToolBinding(tool, insertPosition)
+      if (nextInstructions !== undefined) {
+        updates.promptInstructions = nextInstructions
+      }
     }
+    await saveOperation(updates)
   }
+
+  const selectEditorTool = (tool: AgentTool) => {
+    beginAddingTool(tool, pendingToolInsertion)
+  }
+
+  const cancelAutocompleteToolAddition = () => {
+    if (addingTool) {
+      return
+    }
+    const position = pendingToolInsertion
+    pendingToolInsertion = undefined
+    cancelPendingToolInsertion(position)
+  }
+
+  const closeToolConfiguration = () => {
+    const insertPosition = pendingToolInsertion
+    addingTool = undefined
+    pendingToolInsertion = undefined
+    cancelPendingToolInsertion(insertPosition)
+  }
+
+  const retryLoadTools = () => agentsStore.fetchTools()
 </script>
+
+{#snippet toolsLoadStatus()}
+  {#if toolsLoadFailed}
+    <div class="loading-state">
+      <Body size="XS">Failed to load tools</Body>
+      <Button secondary size="S" on:click={retryLoadTools}>Retry</Button>
+    </div>
+  {:else}
+    <div class="loading-state">
+      <ProgressCircle size="S" />
+      <Body size="XS">Loading tools...</Body>
+    </div>
+  {/if}
+{/snippet}
 
 {#if operation && agentId}
   <div class="operation-page">
@@ -645,11 +804,9 @@
             <AgentUnpublishedChangesIndicator />
             <GenerateInstructionsControl
               triggerLabel="Help write instructions"
-              promptInstructions={operation.promptInstructions || ""}
-              {promptBindings}
-              {bindingIcons}
-              onApplyInstructions={instructions =>
-                saveOperation({ promptInstructions: instructions })}
+              promptBindings={availablePromptBindings}
+              bindingIcons={availableBindingIcons}
+              onApplyInstructions={applyGeneratedInstructions}
             />
             <LiveToggleButton
               live={operation.live === true}
@@ -664,6 +821,7 @@
           <div class="editor-body">
             {#if toolsLoaded}
               <CodeEditor
+                bind:this={instructionsEditor}
                 value={operation.promptInstructions || ""}
                 bindings={promptBindings}
                 {bindingIcons}
@@ -671,29 +829,33 @@
                 mode={EditorModes.Handlebars}
                 renderBindingsAsTags
                 renderMarkdownDecorations
-                bind:insertAtPos
-                bind:getCaretPosition
                 on:change={event => updateInstructions(event.detail || "")}
                 on:blur={() => saveOperation()}
               />
+            {:else}
+              {@render toolsLoadStatus()}
             {/if}
           </div>
-          <div class="editor-footer">
-            <span
-              >Use <code>{`{{`}</code> to add tools to your instructions.</span
-            >
-            <div class="tools-popover-container">
-              <ToolsDropdown
-                {filteredTools}
-                {toolSections}
-                bind:toolSearch
-                webSearchEnabled={webSearchConfigured}
-                onToolClick={addTool}
-                onAddApiConnection={() => bb.settings("/connections/apis")}
-                onConfigureWebSearch={() => webSearchConfigModal?.show()}
-              />
+          {#if toolsLoaded}
+            <div class="editor-footer">
+              <span
+                >Use <code>{`{{`}</code> to add tools to your instructions.</span
+              >
+              <div class="tools-popover-container">
+                <ToolsDropdown
+                  bind:this={editorToolsDropdown}
+                  {filteredTools}
+                  {toolSections}
+                  bind:toolSearch
+                  webSearchEnabled={webSearchConfigured}
+                  onToolClick={selectEditorTool}
+                  onClose={cancelAutocompleteToolAddition}
+                  onAddApiConnection={() => bb.settings("/connections/apis")}
+                  onConfigureWebSearch={() => webSearchConfigModal?.show()}
+                />
+              </div>
             </div>
-          </div>
+          {/if}
         </div>
       </main>
 
@@ -717,101 +879,127 @@
 
         <div class="rail-content">
           {#if activeTab === "tools"}
-            <div class="rail-section">
-              <OperationRailSectionHeader
-                title="Tools"
-                description="Give the operation access to the tools it needs to complete requests and take action."
-              >
-                {#snippet actions()}
-                  <div class="tools-popover-container">
-                    <ToolsDropdown
-                      {filteredTools}
-                      {toolSections}
-                      bind:toolSearch
-                      webSearchEnabled={webSearchConfigured}
-                      onToolClick={addTool}
-                      onAddApiConnection={() =>
-                        bb.settings("/connections/apis")}
-                      onConfigureWebSearch={() => webSearchConfigModal?.show()}
-                    />
-                  </div>
-                {/snippet}
-              </OperationRailSectionHeader>
-              <div class="tools-list" role="list">
-                {#each includedTools as tool (tool.runtimeBinding)}
-                  <div role="listitem">
-                    <div
-                      class="tool-row"
-                      class:tool-row--with-run-as={toolModalEnabled}
-                    >
-                      {#if toolModalEnabled}
-                        <button
-                          class="tool-row-activation"
-                          aria-label={`Configure ${tool.readableBinding}`}
-                          onclick={() => configureTool(tool)}
-                        >
-                          <div class="tool-name">
-                            <span class="tool-icon">
-                              <ToolIcon
-                                icon={tool.icon}
-                                size="S"
-                                fallbackIcon="Wrench"
-                              />
-                            </span>
-                            <span>{tool.readableBinding}</span>
-                          </div>
-                          <div class="tool-row-summary">
-                            <span class="tool-row-run-as">
-                              {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
-                                Run as {getEffectiveToolPrincipal(tool) ===
-                                ToolExecutionPrincipal.ADMIN
-                                  ? "Admin"
-                                  : "Requester"}
-                              {/if}
-                            </span>
-                            {#if getToolApprovalCount(tool.runtimeBinding)}
-                              <span class="tool-row-approvals">
-                                <Icon name="shield-check" size="XS" />
-                                {getToolApprovalCount(tool.runtimeBinding)}
-                                {getToolApprovalCount(tool.runtimeBinding) === 1
-                                  ? "approval"
-                                  : "approvals"}
-                              </span>
-                            {/if}
-                          </div>
-                        </button>
-                      {:else}
-                        <div class="tool-row-activation">
-                          <div class="tool-name">
-                            <span class="tool-icon">
-                              <ToolIcon
-                                icon={tool.icon}
-                                size="S"
-                                fallbackIcon="Wrench"
-                              />
-                            </span>
-                            <span>{tool.readableBinding}</span>
-                          </div>
-                        </div>
-                      {/if}
-                      {#if !toolModalEnabled}
-                        <button
-                          class="tool-actions"
-                          aria-label={`Actions for ${tool.readableBinding}`}
-                          onclick={event => openToolMenu(event, tool)}
-                        >
-                          <Icon name="dots-three" size="XS" />
-                        </button>
-                      {/if}
+            {#if !toolsLoaded}
+              {@render toolsLoadStatus()}
+            {:else}
+              <div class="rail-section">
+                <OperationRailSectionHeader
+                  title="Tools"
+                  description="Give the operation access to the tools it needs to complete requests and take action."
+                >
+                  {#snippet actions()}
+                    <div class="tools-popover-container">
+                      <ToolsDropdown
+                        {filteredTools}
+                        {toolSections}
+                        bind:toolSearch
+                        webSearchEnabled={webSearchConfigured}
+                        onToolClick={tool => beginAddingTool(tool)}
+                        onAddApiConnection={() =>
+                          bb.settings("/connections/apis")}
+                        onConfigureWebSearch={() =>
+                          webSearchConfigModal?.show()}
+                      />
                     </div>
-                  </div>
-                {:else}
-                  <Body size="XS" color="var(--spectrum-global-color-gray-700)"
-                    >No tools are referenced in these instructions.</Body
-                  >
-                {/each}
+                  {/snippet}
+                </OperationRailSectionHeader>
+                <div class="tools-list" role="list">
+                  {#each configuredToolList as item (item.config.toolName)}
+                    {@const tool = item.tool}
+                    <div role="listitem">
+                      <div
+                        class="tool-row"
+                        class:tool-row--with-run-as={tool && toolModalEnabled}
+                      >
+                        {#if !tool}
+                          <div class="tool-row-activation">
+                            <div class="tool-name">
+                              <span class="tool-icon">
+                                <Icon name="Wrench" size="XS" />
+                              </span>
+                              <span>{item.config.toolName}</span>
+                              <span class="tool-unavailable">Unavailable</span>
+                            </div>
+                          </div>
+                        {:else if toolModalEnabled}
+                          <button
+                            class="tool-row-activation"
+                            aria-label={`Configure ${tool.readableBinding}`}
+                            onclick={() => configureTool(tool)}
+                          >
+                            <div class="tool-name">
+                              <span class="tool-icon">
+                                <ToolIcon
+                                  icon={tool.icon}
+                                  size="S"
+                                  fallbackIcon="Wrench"
+                                />
+                              </span>
+                              <span>{tool.readableBinding}</span>
+                            </div>
+                            <div class="tool-row-summary">
+                              {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
+                                <span class="tool-row-run-as">
+                                  Run as {getEffectiveToolPrincipal(tool) ===
+                                  ToolExecutionPrincipal.ADMIN
+                                    ? "Admin"
+                                    : "Requester"}
+                                </span>
+                              {/if}
+                              {#if getToolApprovalCount(tool.runtimeBinding)}
+                                <span class="tool-row-approvals">
+                                  <Icon name="shield-check" size="XS" />
+                                  {getToolApprovalCount(tool.runtimeBinding)}
+                                  {getToolApprovalCount(tool.runtimeBinding) ===
+                                  1
+                                    ? "approval"
+                                    : "approvals"}
+                                </span>
+                              {/if}
+                            </div>
+                          </button>
+                        {:else}
+                          <div class="tool-row-activation">
+                            <div class="tool-name">
+                              <span class="tool-icon">
+                                <ToolIcon
+                                  icon={tool.icon}
+                                  size="S"
+                                  fallbackIcon="Wrench"
+                                />
+                              </span>
+                              <span>{tool.readableBinding}</span>
+                            </div>
+                          </div>
+                        {/if}
+                        {#if !tool || !toolModalEnabled}
+                          <button
+                            class="tool-actions"
+                            aria-label={`Actions for ${tool?.readableBinding || item.config.toolName}`}
+                            onclick={event =>
+                              openToolMenu(
+                                event,
+                                tool || {
+                                  readableBinding: item.config.toolName,
+                                  runtimeBinding: item.config.toolName,
+                                }
+                              )}
+                          >
+                            <Icon name="dots-three" size="XS" />
+                          </button>
+                        {/if}
+                      </div>
+                    </div>
+                  {:else}
+                    <Body
+                      size="XS"
+                      color="var(--spectrum-global-color-gray-700)"
+                      >No tools are configured for this operation.</Body
+                    >
+                  {/each}
+                </div>
               </div>
-            </div>
+            {/if}
           {:else if activeTab === "knowledge"}
             <Knowledge bind:operation onUpdated={() => saveOperation()} />
           {:else if !escalationToolHidden}
@@ -855,15 +1043,26 @@
 
   <ConfirmDialog
     bind:this={removeToolDialog}
-    title="Remove tool?"
+    title={toolToRemoveIsReferenced
+      ? "Tool is used in instructions"
+      : "Remove tool?"}
     okText="Remove"
     warning={true}
     onOk={handleRemoveToolConfirm}
     onClose={handleRemoveToolClose}
   >
     {#if toolToRemove?.readableBinding}
-      Remove <b>{toolToRemove.readableBinding}</b> from this operation? Its binding
-      will also be removed from the instructions.
+      {#if !toolToRemoveIsAvailable}
+        Remove <b>{toolToRemove.readableBinding}</b> from this operation? If it is
+        referenced in the instructions, those references will remain and won't resolve
+        until the tool is reconfigured.
+      {:else if toolToRemoveIsReferenced}
+        <b>{toolToRemove.readableBinding}</b> is referenced in the instructions.
+        Removing the tool will leave those references in place, and they won't resolve
+        until the tool is reconfigured.
+      {:else}
+        Remove <b>{toolToRemove.readableBinding}</b> from this operation?
+      {/if}
     {/if}
   </ConfirmDialog>
 
@@ -874,6 +1073,7 @@
       providers={escalationProviders}
       onSave={saveToolConfiguration}
       onRemove={tool => confirmRemoveTool(tool, true)}
+      onClose={closeToolConfiguration}
     />
   {/if}
 
@@ -936,6 +1136,16 @@
     min-height: 0;
     flex: 1 1 auto;
     overflow: auto;
+  }
+
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-s);
+    padding: 24px 0;
+    min-height: 100%;
   }
 
   .editor-body :global(.cm-editor) {
@@ -1071,6 +1281,12 @@
     white-space: nowrap;
   }
 
+  .tool-name .tool-unavailable {
+    flex: 0 0 auto;
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 11px;
+  }
+
   .tool-row-summary {
     display: flex;
     align-items: center;
@@ -1080,6 +1296,7 @@
   }
 
   .tool-row-run-as {
+    padding-left: 21px;
     color: var(--spectrum-global-color-gray-700);
     font-size: 11px;
     line-height: 15px;

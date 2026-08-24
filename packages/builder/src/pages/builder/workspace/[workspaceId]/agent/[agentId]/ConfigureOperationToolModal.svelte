@@ -23,8 +23,9 @@
     tool: AgentTool
     executionPrincipal: ToolExecutionPrincipal
     recipients?: EscalationRecipient[]
-  }) => void
+  }) => void | Promise<void>
   export let onRemove: (tool: AgentTool) => void
+  export let onClose: (() => void) | undefined = undefined
 
   let modal: Modal
   let tool: AgentTool | undefined
@@ -55,9 +56,9 @@
     modal.show()
   }
 
-  const save = () => {
+  const save = async () => {
     if (tool) {
-      onSave({
+      await onSave({
         tool,
         executionPrincipal,
         recipients: escalationConfigurable ? recipients : undefined,
@@ -72,10 +73,13 @@
   }
 </script>
 
-<Modal bind:this={modal}>
+<Modal bind:this={modal} on:hide={() => onClose?.()}>
   <ModalContent
     size="M"
-    confirmText="Save tool"
+    confirmText={adding ? "Add tool" : "Save tool"}
+    showConfirmButton={adding ||
+      principalConfigurable ||
+      escalationConfigurable}
     showSecondaryButton={!adding}
     secondaryButtonText="Remove tool"
     secondaryButtonWarning
@@ -85,7 +89,6 @@
     <div slot="header" class="modal-title">
       {#if tool}
         <ToolIcon icon={tool.icon} size="S" fallbackIcon="Wrench" />
-
         <Heading size="S">
           {adding ? "Add" : "Configure"}
           {tool.readableBinding}
