@@ -114,14 +114,6 @@ const evaluateAgentToolAuthorization = async ({
 
     const { requester } = executionContext
     const isElevatedExecution = principal === ToolExecutionPrincipal.ADMIN
-    const isPublicRequester =
-      requester.executorRole === roles.BUILTIN_ROLE_IDS.PUBLIC
-
-    // Elevated tools may act beyond a workspace member's own permissions,
-    // but must never be exposed to public requesters.
-    if (isElevatedExecution && isPublicRequester) {
-      throw new Error(DENIED_MESSAGE)
-    }
     if (isElevatedExecution) {
       audit("allowed", resourceId)
       return

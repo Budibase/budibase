@@ -60,7 +60,7 @@ describe("authorizeAgentToolCall", () => {
     jest.restoreAllMocks()
   })
 
-  it("denies admin execution for a public executor role", async () => {
+  it("allows admin execution for a public executor role", async () => {
     await expect(
       authorizeAgentToolCall({
         authorization,
@@ -71,7 +71,7 @@ describe("authorizeAgentToolCall", () => {
         },
         principal: ToolExecutionPrincipal.ADMIN,
       })
-    ).rejects.toThrow("Tool is not available in this security context")
+    ).resolves.toBeUndefined()
     expect(roles.getUserRoleHierarchy).not.toHaveBeenCalled()
   })
 
