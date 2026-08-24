@@ -60,7 +60,22 @@ describe("authorizeAgentToolCall", () => {
     jest.restoreAllMocks()
   })
 
-  it("allows admin execution regardless of executor role", async () => {
+  it("denies admin execution for a public executor role", async () => {
+    await expect(
+      authorizeAgentToolCall({
+        authorization,
+        input: undefined,
+        executionContext: {
+          ...executionContext,
+          requester: { executorRole: "PUBLIC" },
+        },
+        principal: ToolExecutionPrincipal.ADMIN,
+      })
+    ).rejects.toThrow("Tool is not available in this security context")
+    expect(roles.getUserRoleHierarchy).not.toHaveBeenCalled()
+  })
+
+  it("allows admin execution for a non-public executor role", async () => {
     await expect(
       authorizeAgentToolCall({
         authorization,
@@ -82,6 +97,25 @@ describe("authorizeAgentToolCall", () => {
       })
     ).resolves.toBeUndefined()
     expect(roles.getUserRoleHierarchy).toHaveBeenCalledWith("BASIC")
+  })
+
+  it("allows public requester execution when the public role has permission", async () => {
+    jest
+      .mocked(roles.getUserRoleHierarchy)
+      .mockResolvedValue([{ _id: "PUBLIC" } as Role])
+
+    await expect(
+      authorizeAgentToolCall({
+        authorization,
+        input: undefined,
+        executionContext: {
+          ...executionContext,
+          requester: { executorRole: "PUBLIC" },
+        },
+        principal: ToolExecutionPrincipal.REQUESTER,
+      })
+    ).resolves.toBeUndefined()
+    expect(roles.getUserRoleHierarchy).toHaveBeenCalledWith("PUBLIC")
   })
 
   it("denies requester execution when the executor role lacks permission", async () => {

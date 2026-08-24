@@ -472,7 +472,7 @@ const getAgentRequester = ({
   if (chat?.isPreview && chat.previewRoleId) {
     return { executorRole: chat.previewRoleId }
   }
-  if (users.isBuilder(user, context.getWorkspaceId())) {
+  if (users.isAdminOrBuilder(user, context.getWorkspaceId())) {
     return { executorRole: roles.BUILTIN_ROLE_IDS.ADMIN }
   }
   return {
