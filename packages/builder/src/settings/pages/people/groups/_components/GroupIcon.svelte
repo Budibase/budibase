@@ -1,9 +1,17 @@
 <script lang="ts">
   import { IconAvatar } from "@budibase/bbui"
-  import type { UserGroup } from "@budibase/types"
 
-  export let group: UserGroup | undefined = undefined
-  export let size: "XS" | "S" | "M" | "L" = "M"
+  interface GroupIconData {
+    icon?: string
+    color?: string
+  }
+
+  interface Props {
+    group?: GroupIconData
+    size?: "XS" | "S" | "M" | "L"
+  }
+
+  let { group, size = "M" }: Props = $props()
 </script>
 
 <div class="icon-group">
