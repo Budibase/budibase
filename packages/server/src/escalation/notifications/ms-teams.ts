@@ -20,14 +20,18 @@ const DEFAULT_SERVICE_URL =
 
 export const getMSTeamsIntegration = async (
   appId: string,
-  agentId?: string
+  agentId?: string,
+  { requireDeployment = false } = {}
 ): Promise<
   { msClientId: string; appPassword: string; msTenantId: string } | undefined
 > => {
   const agent = await findIntegrationAgent(
     appId,
     agentId,
-    a => !!(a.MSTeamsIntegration?.appId && a.MSTeamsIntegration?.appPassword)
+    a =>
+      !!(a.MSTeamsIntegration?.appId && a.MSTeamsIntegration?.appPassword) &&
+      (!requireDeployment ||
+        !!a.MSTeamsIntegration?.messagingEndpointUrl?.trim())
   )
   if (
     !agent?.MSTeamsIntegration?.appId ||
@@ -293,7 +297,8 @@ export async function sendMSTeamsNotification({
 
   const integration = await getMSTeamsIntegration(
     contextDoc.appId,
-    contextDoc.agentId
+    contextDoc.agentId,
+    { requireDeployment: true }
   )
   if (!integration) {
     console.warn("sendMSTeamsNotification: no Teams-enabled agent found", {
