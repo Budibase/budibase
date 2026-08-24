@@ -106,6 +106,7 @@ describe("sendSlackNotification", () => {
       slackIntegration: {
         botToken: "xoxb-token",
         signingSecret: "signing-secret",
+        messagingEndpointUrl: "https://example.com/api/slack/events",
       },
     })
   })

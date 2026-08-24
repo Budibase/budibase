@@ -7,7 +7,6 @@ import {
   AgentMessageMetadata,
   ChatConversationRequest,
   ContextUser,
-  ESCALATE_TOOL_NAME,
   EscalateToolResultStatus,
   FeatureFlag,
   ToolExecutionPrincipal,
@@ -17,6 +16,7 @@ import {
 import {
   Output,
   extractReasoningMiddleware,
+  generateText,
   stepCountIs,
   ToolLoopAgent,
   type LanguageModelUsage,
@@ -80,6 +80,9 @@ interface PrepareAgentChatRunParams {
   // stamp onto the escalation it raises. Read lazily since the caller only
   // knows it after this run's operation is resolved.
   getRequestId?: () => string | undefined
+  // Set on escalation-resume runs: the approved call that was just executed.
+  // Its gate refuses instead of re-escalating - one approval, one attempt.
+  executedApproval?: { toolName: string }
 }
 
 export interface AgentChatRun {
@@ -441,20 +444,19 @@ export const prepareAgentRunContext = async ({
 
 // A pending escalation suspends the turn - once one exists, later steps run
 // with no tools so the model can wrap up in text but cannot act before a
-// human responds. Keyed on the result status rather than the tool name so
-// resumed runs (ALREADY_APPROVED) keep their tools.
+// human responds. Keyed on pending status plus escalationId so it covers the
+// escalate tool and gate refusals without tripping on lookalike statuses.
 const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
   steps.some(step =>
     step.toolResults.some(result => {
-      if (result.toolName !== ESCALATE_TOOL_NAME) {
-        return false
-      }
       const output = result.output
       return (
         typeof output === "object" &&
         output !== null &&
         "status" in output &&
-        output.status === EscalateToolResultStatus.PENDING_APPROVAL
+        output.status === EscalateToolResultStatus.PENDING_APPROVAL &&
+        "escalationId" in output &&
+        !!output.escalationId
       )
     })
   )
@@ -489,6 +491,7 @@ export const prepareAgentChatRun = async ({
   operationId,
   additionalInstructions,
   getRequestId,
+  executedApproval,
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
   const latestQuestion =
     providedLatestQuestion ?? (chat ? findLatestUserQuestion(chat) : "")
@@ -500,6 +503,66 @@ export const prepareAgentChatRun = async ({
     startedAt,
   })
   const requester = getAgentRequester({ user, chat })
+
+  let resolvedModelMessages: ModelMessage[] = []
+  let resolvedChatModel: Parameters<typeof generateText>[0]["model"] | undefined
+  const messageTextForCard = (message: ModelMessage) => {
+    if (typeof message.content === "string") {
+      return message.content
+    }
+    return message.content
+      .map(part => ("text" in part ? part.text : ""))
+      .filter(Boolean)
+      .join(" ")
+  }
+  const generateCardCopy = async ({
+    label,
+    args,
+  }: {
+    label: string
+    args: unknown
+  }) => {
+    if (!resolvedChatModel) {
+      return undefined
+    }
+    const recentMessages = resolvedModelMessages
+      .slice(-6)
+      .map(message => `${message.role}: ${messageTextForCard(message)}`)
+      .filter(line => !line.endsWith(": "))
+      .join("\n")
+    const result = await generateText({
+      model: resolvedChatModel,
+      system:
+        "You write escalation approval cards for human reviewers. Respond " +
+        "with exactly two lines:\n" +
+        'TITLE: <short label, e.g. "Expense request: Table £200">\n' +
+        "SUMMARY: <one line for the reviewer describing who wants what, " +
+        'e.g. "Steve wants to request a £200 expense for a table (Office).">\n' +
+        "Base both only on the conversation and the pending action. Use the " +
+        "requester's name if the conversation reveals it. No other lines.",
+      prompt:
+        `Conversation (latest last):\n${recentMessages}\n\n` +
+        `Pending action: ${label}\n` +
+        `Arguments: ${JSON.stringify(args)}`,
+    })
+    const title = result.text.match(/^TITLE:\s*(.+)$/m)?.[1]?.trim()
+    const summary = result.text.match(/^SUMMARY:\s*(.+)$/m)?.[1]?.trim()
+    return title && summary ? { title, summary } : undefined
+  }
+  const escalationGateContext = (await features.isEnabled(
+    FeatureFlag.AI_TOOL_ESCALATION
+  ))
+    ? {
+        sessionId,
+        channel: chat?.channel,
+        userId: user?._id,
+        requester,
+        getMessages: () => resolvedModelMessages,
+        getRequestId: () => getRequestId?.(),
+        generateCardCopy,
+        executedApproval,
+      }
+    : undefined
 
   const [runContext, modelMessages] = await Promise.all([
     prepareAgentRunContext({
@@ -513,10 +576,13 @@ export const prepareAgentChatRun = async ({
       buildPromptOptions: {
         baseSystemPrompt: ai.agentSystemPrompt(user, chat?.timezone),
         includeGoal: false,
+        escalationGateContext,
       },
     }),
     providedModelMessages ?? prepareModelMessages(chat?.messages ?? []),
   ])
+  resolvedModelMessages = modelMessages
+  resolvedChatModel = runContext.llm.chat
   const {
     llm,
     selectedOperation,
@@ -553,8 +619,13 @@ export const prepareAgentChatRun = async ({
     tools.report_used_sources = reportUsedSourcesTool
   }
 
-  // Escalation gate: when off, strip the escalate tool entirely
-  if (tools.escalate && !(await features.isEnabled(FeatureFlag.ESCALATION))) {
+  // The escalate tool exists only in the old mode: stripped when ESCALATION
+  // is off, and when AI_TOOL_ESCALATION is on (gating replaces it outright).
+  if (
+    tools.escalate &&
+    (escalationGateContext ||
+      !(await features.isEnabled(FeatureFlag.ESCALATION)))
+  ) {
     delete tools.escalate
   }
 
