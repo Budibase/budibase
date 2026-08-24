@@ -1,6 +1,5 @@
 import { ToolType, WebSearchProvider } from "@budibase/types"
 import { describe, expect, it, vi } from "vitest"
-import type { AgentTool } from "./toolTypes"
 
 const tableTool = {
   name: "find_rows",
@@ -34,7 +33,6 @@ vi.mock("./agentToolUtils", () => ({
 import {
   buildAvailableAgentTools,
   buildBindingIcons,
-  buildReadableToRuntimeBinding,
   getAgentWebSearchConfig,
   getWebSearchRuntimeBinding,
   isWebSearchConfigured,
@@ -168,31 +166,6 @@ describe("agentAvailableTools", () => {
       ])
     ).toEqual({
       "search.web_search": "https://example.com/search.svg",
-    })
-  })
-
-  it("builds readable to runtime binding map", () => {
-    expect(
-      buildReadableToRuntimeBinding([
-        {
-          name: "web_search",
-          description: "",
-          sourceType: ToolType.SEARCH,
-          executionPolicy: { mode: "admin" },
-          readableBinding: "search.web_search",
-          runtimeBinding: "search_web_search",
-        },
-        {
-          name: "find_rows",
-          description: "",
-          sourceType: ToolType.INTERNAL_TABLE,
-          executionPolicy: { mode: "admin" },
-          readableBinding: "budibase.find_rows",
-          runtimeBinding: "",
-        },
-      ] satisfies AgentTool[])
-    ).toEqual({
-      "search.web_search": "search_web_search",
     })
   })
 })

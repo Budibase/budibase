@@ -11,12 +11,10 @@
   import { tick } from "svelte"
   import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
   import { EditorModes } from "@/components/common/CodeEditor"
-  import { getIncludedToolRuntimeBindings } from "./toolBindingUtils"
 
   export interface Props {
     agentName?: string
     goal?: string
-    promptInstructions?: string
     promptBindings?: EnrichedBinding[]
     bindingIcons?: Record<string, string | undefined>
     onApplyInstructions?: (instructions: string) => void
@@ -26,38 +24,14 @@
   let {
     agentName = "",
     goal = "",
-    promptInstructions = "",
     promptBindings = [],
     bindingIcons = {},
     onApplyInstructions = () => {},
     triggerLabel = "Generate",
   }: Props = $props()
 
-  let readableToRuntimeBinding = $derived.by(() => {
-    return promptBindings.reduce<Record<string, string>>((acc, binding) => {
-      if (binding.readableBinding && binding.runtimeBinding) {
-        acc[binding.readableBinding] = binding.runtimeBinding
-      }
-      return acc
-    }, {})
-  })
-
-  let includedToolRuntimeBindings = $derived(
-    getIncludedToolRuntimeBindings(promptInstructions, readableToRuntimeBinding)
-  )
-
-  let includedToolsWithDetails = $derived(
-    includedToolRuntimeBindings
-      .map(runtimeBinding =>
-        promptBindings.find(
-          binding => binding.runtimeBinding === runtimeBinding
-        )
-      )
-      .filter((binding): binding is EnrichedBinding => !!binding)
-  )
-
   let enabledToolReferences = $derived(
-    includedToolsWithDetails
+    promptBindings
       .map(tool => tool.readableBinding)
       .filter((binding): binding is string => !!binding)
       .map(binding => `{{ ${binding} }}`)
