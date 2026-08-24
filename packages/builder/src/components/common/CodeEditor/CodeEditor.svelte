@@ -62,11 +62,15 @@
     type InsertAtPositionFn,
   } from "@budibase/types"
   import { tooltips } from "@codemirror/view"
-  import type { BindingCompletion, CodeValidator } from "@/types"
+  import type {
+    BindingCompletion,
+    CodeValidator,
+    EditorRangeReplacement,
+  } from "@/types"
   import { validateHbsTemplate } from "./validator/hbs"
   import { validateJsTemplate } from "./validator/js"
   import AIGen from "./AIGen.svelte"
-  import { bindingsChanged, hbsTagPlugin, stripHbsDelimiters } from "./hbsTags"
+  import { hbsTagPlugin, stripHbsDelimiters } from "./hbsTags"
   import { markdownDecorationPlugin } from "./markdownDecorations"
 
   export let label: string | undefined = undefined
@@ -109,6 +113,7 @@
   let currentTheme = $themeStore?.theme
   let isDark = !currentTheme.includes("light")
   let themeConfig = new Compartment()
+  let bindingDecorationConfig = new Compartment()
 
   $: aiGenEnabled = mode.name === "javascript" && !readonly && aiEnabled
   $: {
@@ -139,19 +144,17 @@
   // Wait to try and gracefully replace
   $: refresh(value, isEditorInitialised, mounted)
   $: {
-    validBindingSet.clear()
-    for (const binding of bindings || []) {
-      if (binding.readableBinding) {
-        validBindingSet.add(binding.readableBinding)
-      }
-    }
-    if (
-      isEditorInitialised &&
-      renderBindingsAsTags &&
-      mode.name === "handlebars"
-    ) {
-      editor.dispatch({ effects: bindingsChanged.of(undefined) })
-    }
+    validBindingSet = new Set(
+      (bindings || [])
+        .map(binding => binding.readableBinding)
+        .filter((binding): binding is string => !!binding)
+    )
+    reconfigureBindingDecorations(
+      bindingIcons,
+      validBindingSet,
+      isEditorInitialised,
+      mounted
+    )
   }
 
   /**
@@ -183,6 +186,29 @@
     }
   }
 
+  export const replaceRange = ({
+    from,
+    to,
+    insert,
+    selection,
+    preserveSelection = false,
+  }: EditorRangeReplacement): string => {
+    const currentSelection = editor.state.selection.main
+    const rangeFrom = from ?? currentSelection.from
+    const rangeTo = to ?? currentSelection.to
+    editor.dispatch({
+      changes: {
+        from: rangeFrom,
+        to: rangeTo,
+        insert,
+      },
+      selection: preserveSelection
+        ? undefined
+        : (selection ?? { anchor: rangeFrom + insert.length }),
+    })
+    return editor.state.doc.toString()
+  }
+
   const exposeEditorApi = () => {
     getCaretPosition = () => {
       const selection_range = editor.state.selection.ranges[0]
@@ -193,21 +219,45 @@
     }
 
     insertAtPos = opts => {
-      // Updating the value inside.
-      // Retain focus
-      editor.dispatch({
-        changes: {
-          from: opts.start || editor.state.doc.length,
-          to: opts.end || editor.state.doc.length,
-          insert: opts.value,
-        },
-        selection: opts.cursor
-          ? {
-              anchor: opts.start + opts.value.length,
-            }
-          : undefined,
+      replaceRange({
+        from: opts.start,
+        to: opts.end ?? opts.start,
+        insert: opts.value,
+        selection: opts.cursor,
+        preserveSelection: !opts.cursor,
       })
     }
+  }
+
+  const getBindingDecorationExtension = (
+    icons: Record<string, string | undefined>,
+    validBindings: Set<string>
+  ) =>
+    renderBindingsAsTags
+      ? hbsTagPlugin(icons, validBindings)
+      : hbsMatchDecoPlugin
+
+  const reconfigureBindingDecorations = (
+    icons: Record<string, string | undefined>,
+    validBindings: Set<string>,
+    initialised: boolean,
+    mounted: boolean
+  ) => {
+    if (
+      !editor ||
+      !initialised ||
+      !mounted ||
+      mode.name === "javascript" ||
+      mode.name === "json" ||
+      mode.name === "html"
+    ) {
+      return
+    }
+    editor.dispatch({
+      effects: bindingDecorationConfig.reconfigure(
+        getBindingDecorationExtension(icons, validBindings)
+      ),
+    })
   }
 
   // Match decoration for HBS bindings
@@ -424,9 +474,11 @@
     }
     // HBS only plugins
     else {
-      renderBindingsAsTags
-        ? complete.push(hbsTagPlugin(bindingIcons, validBindingSet))
-        : complete.push(hbsMatchDecoPlugin)
+      complete.push(
+        bindingDecorationConfig.of(
+          getBindingDecorationExtension(bindingIcons, validBindingSet)
+        )
+      )
 
       // Add markdown decorations if enabled (works alongside HBS)
       if (renderMarkdownDecorations) {
