@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Layout, Body, Heading, Toggle, notifications } from "@budibase/bbui"
   import { appStore } from "@/stores/builder"
   import { admin } from "@/stores/portal/admin"
@@ -6,7 +6,7 @@
   $: isCloud = $admin.cloud
   $: chainAutomations = $appStore.automations?.chainAutomations ?? !isCloud
 
-  async function save({ detail }) {
+  async function save({ detail }: CustomEvent<boolean>) {
     try {
       await appStore.updateApp({
         automations: {
