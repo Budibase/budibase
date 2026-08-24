@@ -384,6 +384,28 @@ const buildCollisionSafeToolName = (tableId: string, action: string) => {
   return `${sanitizedTableId.substring(0, tableIdLength)}${suffix}`
 }
 
+export const getRowToolNames = (tableId: string): Record<string, string> => {
+  const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
+  const truncatedToolNames = Object.fromEntries(
+    Object.keys(ROW_TOOL).map(action => [
+      action,
+      `${sanitizedTableId}_${action}`.substring(0, MAX_TOOL_NAME_LENGTH),
+    ])
+  )
+  const hasToolNameCollision =
+    new Set(Object.values(truncatedToolNames)).size !==
+    Object.keys(truncatedToolNames).length
+  if (!hasToolNameCollision) {
+    return truncatedToolNames
+  }
+  return Object.fromEntries(
+    Object.keys(ROW_TOOL).map(action => [
+      action,
+      buildCollisionSafeToolName(tableId, action),
+    ])
+  )
+}
+
 export const createRowTools = ({
   tableId,
   tableName,
@@ -410,23 +432,13 @@ export const createRowTools = ({
   const schemaSummary = buildSchemaSummary(writableFields)
   const dataSchema = buildRowDataSchema(writableFields, schemaSummary)
   const searchInputSchema = buildSearchInputSchema(schemaSummary)
+  const toolNames = getRowToolNames(tableId)
   const fields = getAgentTableFields(tableSchema)
-  const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
-  const truncatedToolNames = new Map(
-    ROW_TOOL_ACTIONS.map(action => [
-      action,
-      `${sanitizedTableId}_${action}`.substring(0, MAX_TOOL_NAME_LENGTH),
-    ])
-  )
-  const hasToolNameCollision =
-    new Set(truncatedToolNames.values()).size !== truncatedToolNames.size
 
   return ROW_TOOL_ACTIONS.map(action => {
     const def = ROW_TOOL[action]
     const description = `${formatActionLabel(action)} in "${tableName}". ${def.description}`
-    const toolName = hasToolNameCollision
-      ? buildCollisionSafeToolName(tableId, action)
-      : truncatedToolNames.get(action)!
+    const toolName = toolNames[action]
     const isWrite =
       action === ToolAction.CREATE_ROW || action === ToolAction.UPDATE_ROW
     let inputSchema = def.inputSchema
