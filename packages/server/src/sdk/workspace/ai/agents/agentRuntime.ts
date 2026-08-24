@@ -1,4 +1,4 @@
-import { cache, context, features, roles, users } from "@budibase/backend-core"
+import { cache, context, features, roles } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import {
   ActionType,
@@ -470,9 +470,6 @@ const getAgentRequester = ({
 }): AgentRequester => {
   if (chat?.isPreview && chat.previewRoleId) {
     return { executorRole: chat.previewRoleId }
-  }
-  if (users.isAdminOrBuilder(user, context.getWorkspaceId())) {
-    return { executorRole: roles.BUILTIN_ROLE_IDS.ADMIN }
   }
   return {
     executorRole: user.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC,

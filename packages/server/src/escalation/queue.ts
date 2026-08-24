@@ -6,14 +6,7 @@ import {
   type ModelMessage,
   type UIMessage,
 } from "ai"
-import {
-  context,
-  features,
-  queue,
-  roles,
-  users,
-  utils,
-} from "@budibase/backend-core"
+import { context, features, queue, roles, utils } from "@budibase/backend-core"
 import {
   Agent,
   AgentChannelProvider,
@@ -279,9 +272,7 @@ const executeApprovedToolCall = async ({
   if (!operation || !requesterId) {
     return undefined
   }
-  const executorRole = users.isAdminOrBuilder(user, appId)
-    ? roles.BUILTIN_ROLE_IDS.ADMIN
-    : user.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
+  const executorRole = user.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
 
   const executionContext: AgentExecutionContext = {
     tenantId: context.getTenantId(),

@@ -688,10 +688,11 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     )
   })
 
-  it("uses admin access for a global admin without builder access", async () => {
+  it("uses the workspace role for a global admin", async () => {
     await runFor(operationWithoutRecipients, {
       user: {
         _id: "user_1",
+        roleId: "BASIC",
         admin: { global: true },
       } as ContextUser,
     })
@@ -702,7 +703,29 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
       expect.objectContaining({
         executionContext: expect.objectContaining({
           requester: {
-            executorRole: "ADMIN",
+            executorRole: "BASIC",
+          },
+        }),
+      })
+    )
+  })
+
+  it("uses the workspace role for a builder", async () => {
+    await runFor(operationWithoutRecipients, {
+      user: {
+        _id: "user_1",
+        roleId: "BASIC",
+        builder: { global: true },
+      } as ContextUser,
+    })
+
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      operationWithoutRecipients,
+      expect.objectContaining({
+        executionContext: expect.objectContaining({
+          requester: {
+            executorRole: "BASIC",
           },
         }),
       })
