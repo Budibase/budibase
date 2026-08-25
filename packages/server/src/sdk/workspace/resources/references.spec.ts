@@ -2,6 +2,7 @@ import { ResourceType, ToolExecutionPrincipal } from "@budibase/types"
 import { encodeJSBinding } from "@budibase/string-templates"
 import {
   createBindingSearchTarget,
+  createSearchTarget,
   createToolSearchTarget,
   findResourceSearchTargets,
 } from "./references"
@@ -68,6 +69,45 @@ describe("resource references", () => {
     ).toEqual([target])
   })
 
+  it("prefers the most specific hierarchical readable binding", () => {
+    const ordersTarget = createBindingSearchTarget({
+      resource: { ...queryResource, id: "query_all_orders" },
+      binding: "api.orders",
+    })
+    const monthlyOrdersTarget = createBindingSearchTarget({
+      resource: queryResource,
+      binding: "api.orders.by_month",
+    })
+
+    expect(
+      findResourceSearchTargets({
+        resource: { prompt: "Use {{ api.orders.by_month.rows }}" },
+        targets: [ordersTarget, monthlyOrdersTarget],
+      })
+    ).toEqual([monthlyOrdersTarget])
+  })
+
+  it("keeps separate hierarchical readable binding matches", () => {
+    const ordersTarget = createBindingSearchTarget({
+      resource: { ...queryResource, id: "query_all_orders" },
+      binding: "api.orders",
+    })
+    const monthlyOrdersTarget = createBindingSearchTarget({
+      resource: queryResource,
+      binding: "api.orders.by_month",
+    })
+
+    expect(
+      findResourceSearchTargets({
+        resource: {
+          prompt:
+            "Use {{ api.orders.rows }} and {{ api.orders.by_month.rows }}",
+        },
+        targets: [ordersTarget, monthlyOrdersTarget],
+      })
+    ).toEqual([ordersTarget, monthlyOrdersTarget])
+  })
+
   it("matches resource references inside JavaScript bindings", () => {
     const target = createBindingSearchTarget({
       resource: queryResource,
@@ -111,6 +151,31 @@ describe("resource references", () => {
     expect(
       findResourceSearchTargets({
         resource: { [queryResource.id]: "id key" },
+        targets: [target],
+      })
+    ).toEqual([target])
+  })
+
+  it("does not match resource ids used as free-form text", () => {
+    const target = createSearchTarget(queryResource)
+
+    expect(
+      findResourceSearchTargets({
+        resource: { description: queryResource.id },
+        targets: [target],
+      })
+    ).toEqual([])
+  })
+
+  it("matches resource ids in structured reference fields", () => {
+    const target = createSearchTarget(queryResource)
+
+    expect(
+      findResourceSearchTargets({
+        resource: {
+          queryId: queryResource.id,
+          props: { dependencies: [queryResource.id] },
+        },
         targets: [target],
       })
     ).toEqual([target])
