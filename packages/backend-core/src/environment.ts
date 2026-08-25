@@ -93,21 +93,14 @@ function getPackageJsonFields(): {
     return parsedContent
   }
 
-  let localVersion: string | undefined
-  if (isDev() && !isTest()) {
-    try {
-      const lerna = getParentFile("lerna.json")
-      localVersion = `${lerna.version}+local`
-    } catch {
-      //
-    }
-  }
-
   try {
     const parsedContent = getParentFile("package.json")
     return {
       VERSION:
-        localVersion || process.env.BUDIBASE_VERSION || parsedContent.version,
+        process.env.BUDIBASE_VERSION ||
+        (isDev() && !isTest()
+          ? `${parsedContent.version}+local`
+          : parsedContent.version),
       SERVICE_NAME: parsedContent.name,
     }
   } catch {
