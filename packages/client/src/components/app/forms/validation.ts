@@ -232,7 +232,7 @@ const parseType = (value: unknown, type: `${FieldType}`) => {
     if (typeof value !== "string" || !value) {
       return null
     }
-    return value
+    return [value]
   }
 
   // Parse array, treating no elements as null

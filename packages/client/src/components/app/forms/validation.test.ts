@@ -66,6 +66,46 @@ describe("form validation", () => {
     )
   })
 
+  describe("link length validation", () => {
+    const createLinkLengthValidator = (
+      constraint: "minLength" | "maxLength",
+      value: number
+    ) =>
+      createValidatorFromConstraints(
+        null,
+        [
+          {
+            type: FieldType.LINK,
+            constraint,
+            value,
+            error: "Invalid relationship count",
+          },
+        ],
+        "user",
+        undefined
+      )
+
+    it("counts a single relationship as one selected item", () => {
+      expect(createLinkLengthValidator("minLength", 1)("user-1")).toBeNull()
+      expect(createLinkLengthValidator("maxLength", 1)("user-1")).toBeNull()
+      expect(createLinkLengthValidator("minLength", 2)("user-1")).toBe(
+        "Invalid relationship count"
+      )
+      expect(createLinkLengthValidator("maxLength", 0)("user-1")).toBe(
+        "Invalid relationship count"
+      )
+    })
+
+    it("counts multiple relationships as selected items", () => {
+      expect(
+        createLinkLengthValidator("minLength", 2)(["user-1", "user-2"])
+      ).toBeNull()
+      expect(
+        createLinkLengthValidator("maxLength", 1)(["user-1", "user-2"])
+      ).toBe("Invalid relationship count")
+    })
+  })
+
   describe("validator fallback errors", () => {
     it("uses a default error for custom rules without an error", () => {
       const validate = createValidatorFromConstraints(
