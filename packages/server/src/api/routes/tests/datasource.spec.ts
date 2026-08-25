@@ -528,6 +528,32 @@ describe("/datasources", () => {
       expect(ds.usesEnvironmentVariables).toBe(true)
     })
 
+    it("does not treat nested env properties as environment variables", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST nested env property",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Nested Env Auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "user",
+                password: "{{ user.env.PASSWORD }}",
+              },
+            },
+          ],
+        },
+      })
+
+      expect(ds.usesEnvironmentVariables).toBe(false)
+      expect(ds.config!.authConfigs[0].config.password).toBe(
+        PASSWORD_REPLACEMENT
+      )
+    })
+
     it("scrubs secrets containing mixed literals and env var references", async () => {
       const ds = await config.api.datasource.create({
         type: "datasource",
