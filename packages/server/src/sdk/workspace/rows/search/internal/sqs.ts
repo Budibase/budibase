@@ -18,6 +18,7 @@ import {
   DocumentType,
   EnrichedQueryJson,
   FieldType,
+  isDynamicFormula,
   isLogicalSearchOperator,
   isStaticFormula,
   LockName,
@@ -89,11 +90,12 @@ export async function buildInternalFieldList(
     )
   }
 
-  const containsFormula = schemaFields.some(
-    f => table.schema[f]?.type === FieldType.FORMULA
-  )
-  // If are requesting for a formula field, we need to retrieve all fields
-  if (containsFormula) {
+  const containsDynamicFormula = schemaFields.some(f => {
+    const field = table.schema[f]
+    return field != null && isDynamicFormula(field)
+  })
+  // Dynamic formulas need all source fields to be available for evaluation
+  if (containsDynamicFormula) {
     schemaFields = Object.keys(table.schema)
   } else if (allowedFields) {
     schemaFields = schemaFields.filter(field => allowedFields.includes(field))
@@ -145,7 +147,7 @@ export async function buildInternalFieldList(
       // as part of the relationship to tell us which relationship column the junction is related to.
       const relatedFields = (
         await buildInternalFieldList(relatedTable, tables, {
-          includeHiddenFields: containsFormula,
+          includeHiddenFields: containsDynamicFormula,
         })
       ).concat(
         getJunctionFields(relatedTable, ["doc1.fieldName", "doc2.fieldName"])

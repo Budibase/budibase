@@ -46,6 +46,7 @@ export interface Route {
   group?: string
   color?: string // for highlighting
   skipNav?: boolean // Exclude from nav tabs but still process as navigable route
+  showNav?: boolean // Show nav tabs even when there is only one visible child route
   props?: Record<string, unknown> // Props to pass to the component
 
   nav?: Route[]
@@ -97,9 +98,10 @@ export const flatten = (
       // Exclude routes with skipNav: true
       const pageSiblings = entry.routes.filter(r => r.component && !r.skipNav)
 
-      // Build nav only if there is more than one sibling page
+      // Build nav when there are multiple sibling pages or the parent opts in
+      // to showing a tab for a single child page.
       nav =
-        pageSiblings.length > 1
+        pageSiblings.length > 1 || entry.showNav
           ? pageSiblings.map(r => ({
               path: `${currentPath}/${r.path}`,
               new: r.new,

@@ -6,7 +6,7 @@ import {
   type ModelMessage,
   type UIMessage,
 } from "ai"
-import { context, features, queue, utils } from "@budibase/backend-core"
+import { context, features, queue, roles, utils } from "@budibase/backend-core"
 import {
   Agent,
   AgentChannelProvider,
@@ -272,6 +272,7 @@ const executeApprovedToolCall = async ({
   if (!operation || !requesterId) {
     return undefined
   }
+  const executorRole = user.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
 
   const executionContext: AgentExecutionContext = {
     tenantId: context.getTenantId(),
@@ -279,10 +280,7 @@ const executeApprovedToolCall = async ({
     agentId: ctx.agentId,
     operationId: ctx.operationId,
     conversationId: ctx.sessionId,
-    requester: ctx.requester ?? {
-      userId: requesterId,
-      authorization: { mode: "current" },
-    },
+    requester: ctx.requester ?? { executorRole },
   }
   const { tools, toolSources } = await sdk.ai.agents.buildPromptAndTools(
     agent,
@@ -461,7 +459,8 @@ export async function resumeOperation({
 
   const resumeUserId = ctx.userId ?? "escalation-resume"
 
-  // Linked user check. Retrieve or generate transient.
+  // Linked user check. Retrieve or generate transient. The current user state
+  // determines tool authorization when the operation resumes.
   let user: ContextUser
   try {
     user = await getFullUser(resumeUserId)
@@ -471,8 +470,6 @@ export async function resumeOperation({
       globalId: resumeUserId,
       userId: resumeUserId,
       tenantId: context.getTenantId(),
-      // Synthetic address for an unlinked transient resume user (no real
-      // identity); revisit when user rehydration lands (see TODO below).
       email: `${encodeURIComponent(resumeUserId)}@escalation.budibase.local`,
     }
   }

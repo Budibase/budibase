@@ -15,12 +15,16 @@
   import { Constants } from "@budibase/frontend-core"
   import GroupIcon from "./GroupIcon.svelte"
 
-  export let groupId: string
-
   interface WorkspaceOption {
     label: string
     value: string
   }
+
+  interface Props {
+    groupId: string
+  }
+
+  let { groupId }: Props = $props()
 
   const workspaceRoleOptions = Constants.BudibaseRoleOptions.filter(
     option =>
@@ -28,19 +32,19 @@
       option.value === Constants.BudibaseRoles.AppUser
   )
 
-  let selectedWorkspaceIds: string[] = []
-  let selectedRole = Constants.BudibaseRoles.AppUser
-  let selectedEndUserRole = Constants.Roles.BASIC
-  let workspaceSearchTerm = ""
+  let selectedWorkspaceIds = $state<string[]>([])
+  let selectedRole = $state(Constants.BudibaseRoles.AppUser)
+  let selectedEndUserRole = $state(Constants.Roles.BASIC)
+  let workspaceSearchTerm = $state("")
 
-  $: group = $groups.find(x => x._id === groupId)
-  $: roleColorLookup = ($roles || []).reduce<
-    Record<string, string | undefined>
-  >((acc, role) => {
-    acc[role._id] = role.uiMetadata?.color
-    return acc
-  }, {})
-  $: endUserRoleOptions = [
+  const group = $derived($groups.find(x => x._id === groupId))
+  const roleColorLookup = $derived(
+    ($roles || []).reduce<Record<string, string | undefined>>((acc, role) => {
+      acc[role._id] = role.uiMetadata?.color
+      return acc
+    }, {})
+  )
+  const endUserRoleOptions = $derived([
     {
       label: "Basic user",
       value: Constants.Roles.BASIC,
@@ -51,39 +55,44 @@
       value: Constants.Roles.ADMIN,
       color: roleColorLookup[Constants.Roles.ADMIN],
     },
-  ]
-  $: assignedWorkspaceIds = group ? groups.getGroupAppIds(group) : []
-  $: workspaceOptions = Object.values(
-    $workspacesStore.apps.reduce<Record<string, WorkspaceOption>>(
-      (acc, workspace) => {
-        const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
-          workspace.devId || ""
-        )
-        if (!prodWorkspaceId) {
-          return acc
-        }
-        if (
-          assignedWorkspaceIds.includes(prodWorkspaceId) ||
-          acc[prodWorkspaceId]
-        ) {
-          return acc
-        }
-        acc[prodWorkspaceId] = {
-          label: workspace.name,
-          value: prodWorkspaceId,
-        }
-        return acc
-      },
-      {}
-    )
-  ).sort((a, b) => a.label.localeCompare(b.label))
-  $: validOptionIds = workspaceOptions.map(option => option.value)
-  $: selectedWorkspaceIdsForSubmit = selectedWorkspaceIds.filter(id =>
-    validOptionIds.includes(id)
+  ])
+  const assignedWorkspaceIds = $derived(
+    group ? groups.getGroupAppIds(group) : []
   )
-  $: confirmDisabled =
+  const workspaceOptions = $derived(
+    Object.values(
+      $workspacesStore.apps.reduce<Record<string, WorkspaceOption>>(
+        (acc, workspace) => {
+          const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
+            workspace.devId || ""
+          )
+          if (!prodWorkspaceId) {
+            return acc
+          }
+          if (
+            assignedWorkspaceIds.includes(prodWorkspaceId) ||
+            acc[prodWorkspaceId]
+          ) {
+            return acc
+          }
+          acc[prodWorkspaceId] = {
+            label: workspace.name,
+            value: prodWorkspaceId,
+          }
+          return acc
+        },
+        {}
+      )
+    ).sort((a, b) => a.label.localeCompare(b.label))
+  )
+  const validOptionIds = $derived(workspaceOptions.map(option => option.value))
+  const selectedWorkspaceIdsForSubmit = $derived(
+    selectedWorkspaceIds.filter(id => validOptionIds.includes(id))
+  )
+  const confirmDisabled = $derived(
     !selectedWorkspaceIdsForSubmit.length ||
-    (selectedRole === Constants.BudibaseRoles.AppUser && !selectedEndUserRole)
+      (selectedRole === Constants.BudibaseRoles.AppUser && !selectedEndUserRole)
+  )
 
   export function reset() {
     selectedWorkspaceIds = []

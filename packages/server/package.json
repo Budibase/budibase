@@ -108,7 +108,7 @@
     "koa-useragent": "^4.1.0",
     "koa2-ratelimit": "1.1.3",
     "lodash": "4.18.1",
-    "mailparser": "3.9.15",
+    "mailparser": "3.9.16",
     "memorystream": "0.3.1",
     "mongodb": "6.7.0",
     "mssql": "11.0.1",
@@ -135,8 +135,7 @@
     "validate.js": "0.13.1",
     "worker-farm": "1.7.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
-    "xml2js": "0.6.2",
-    "zod-validation-error": "^5.0.0"
+    "xml2js": "0.6.2"
   },
   "devDependencies": {
     "@babel/core": "^7.22.5",
