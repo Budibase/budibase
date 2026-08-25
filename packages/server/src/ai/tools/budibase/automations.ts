@@ -22,6 +22,9 @@ const TRIGGER_AUTOMATION_BASE_DESCRIPTION =
 const DEFAULT_FIELDS_DESCRIPTION =
   "Fields map: key/value pairs. Values must be string, number, boolean, or array (no nested objects)."
 
+export const getAutomationTriggerToolName = (automationId: string) =>
+  `${automationId.replace(/[^A-Za-z0-9_-]/g, "_")}_trigger`.substring(0, 64)
+
 type AutomationFieldValue = string | number | boolean | unknown[]
 
 const getAutomationFieldsSummary = (automation: Automation) => {
@@ -160,11 +163,7 @@ const createAutomationTools = (
     )
     .map((automation): BudibaseToolDefinition => {
       const automationName = automation.name || automation._id!
-      const sanitizedAutomationId = automation._id!.replace(
-        /[^A-Za-z0-9_-]/g,
-        "_"
-      )
-      const toolName = `${sanitizedAutomationId}_trigger`.substring(0, 64)
+      const toolName = getAutomationTriggerToolName(automation._id!)
       const fieldsSummary = getAutomationFieldsSummary(automation)
       const fieldsDescription = fieldsSummary
         ? `${DEFAULT_FIELDS_DESCRIPTION} Available fields: ${fieldsSummary}.`

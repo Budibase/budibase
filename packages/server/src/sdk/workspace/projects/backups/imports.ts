@@ -6,11 +6,16 @@ import {
   utils,
 } from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
-import { findHBSBlocks } from "@budibase/string-templates"
+import {
+  decodeJSBinding,
+  encodeJSBinding,
+  findHBSBlocks,
+} from "@budibase/string-templates"
 import {
   Agent,
   AnyDocument,
   Automation,
+  AutomationTriggerStepId,
   Datasource,
   DocumentType,
   ImportProjectResponse,
@@ -19,6 +24,7 @@ import {
   ProjectImportRequirement,
   ProjectPackageDependencyIndex,
   ProjectPackageManifest,
+  Query,
   ResourceType,
   RowActionPermissions,
   Table,
@@ -44,8 +50,12 @@ import {
   generateTableID,
 } from "../../../../db/utils"
 import { isExternalTableID } from "../../../../integrations/utils"
+import { getAutomationTriggerToolName } from "../../../../ai/tools/budibase/automations"
+import { getRowToolNames } from "../../../../ai/tools/budibase/rows"
 import { decryptFiles, untarFile } from "../../backups/imports"
 import sdk from "../../.."
+import { getQueryToolBindingsForResource } from "../../ai/agents/queryToolReferences"
+import { getResourceType } from "../../resources/utils"
 import { getAppUrl } from "../../workspaces/utils"
 import { doWithProjectAssignmentsLock } from "../lock"
 import {
@@ -331,21 +341,6 @@ const getResourceTypeForDocPath = (
   return resourceType as ResourceType
 }
 
-const RESOURCE_ID_PREFIXES: Record<ResourceType, string[]> = {
-  [ResourceType.PROJECT]: [prefixed(DocumentType.PROJECT)],
-  [ResourceType.AGENT]: [prefixed(DocumentType.AGENT)],
-  [ResourceType.DATASOURCE]: [
-    prefixed(DocumentType.DATASOURCE),
-    prefixed(DocumentType.DATASOURCE_PLUS),
-  ],
-  [ResourceType.TABLE]: [prefixed(DocumentType.TABLE)],
-  [ResourceType.ROW_ACTION]: [prefixed(DocumentType.ROW_ACTIONS)],
-  [ResourceType.QUERY]: [prefixed(DocumentType.QUERY)],
-  [ResourceType.AUTOMATION]: [prefixed(DocumentType.AUTOMATION)],
-  [ResourceType.WORKSPACE_APP]: [prefixed(DocumentType.WORKSPACE_APP)],
-  [ResourceType.SCREEN]: [prefixed(DocumentType.SCREEN)],
-}
-
 const validateDocMatchesPath = (importedDoc: ImportedDoc) => {
   const id = importedDoc.doc._id
   if (!id) {
@@ -357,8 +352,7 @@ const validateDocMatchesPath = (importedDoc: ImportedDoc) => {
     throw new HTTPError(`Project package doc path does not match '${id}'.`, 400)
   }
 
-  const validPrefixes = RESOURCE_ID_PREFIXES[importedDoc.resourceType]
-  if (!validPrefixes.some(prefix => id.startsWith(prefix))) {
+  if (getResourceType(id) !== importedDoc.resourceType) {
     throw new HTTPError(
       `Project package doc '${id}' does not match resource type '${importedDoc.resourceType}'.`,
       400
@@ -380,6 +374,7 @@ const remapObjectKeys = <T>(
 
 interface ProjectImportIdRemapper {
   idMap: Map<string, string>
+  exactValueMap: Map<string, string>
   referencePattern?: RegExp
 }
 
@@ -387,15 +382,19 @@ const escapeRegExp = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
 const createProjectImportIdRemapper = (
-  idMap: Map<string, string>
+  idMap: Map<string, string>,
+  exactValueMap = new Map<string, string>()
 ): ProjectImportIdRemapper => {
-  const references = Array.from(idMap.keys(), sourceId => `${sourceId}.`).sort(
-    (a, b) => b.length - a.length
-  )
+  const sourceIds = Array.from(idMap.keys()).sort((a, b) => b.length - a.length)
+  const sourceIdPattern = sourceIds.map(escapeRegExp).join("|")
   return {
     idMap,
-    referencePattern: references.length
-      ? new RegExp(references.map(escapeRegExp).join("|"), "g")
+    exactValueMap,
+    referencePattern: sourceIdPattern
+      ? new RegExp(
+          `(^|[^A-Za-z0-9_.-])(${sourceIdPattern})\\.|\\[(${sourceIdPattern})\\]`,
+          "g"
+        )
       : undefined,
   }
 }
@@ -407,11 +406,36 @@ const remapIdReferences = (
   if (!remapper.referencePattern) {
     return value
   }
-  return value.replace(remapper.referencePattern, sourceReference => {
-    const sourceId = sourceReference.slice(0, -1)
-    const destinationId = remapper.idMap.get(sourceId)
-    return destinationId ? `${destinationId}.` : sourceReference
-  })
+  return value.replace(
+    remapper.referencePattern,
+    (
+      sourceReference,
+      prefix: string | undefined,
+      dottedSourceId: string | undefined,
+      bracketedSourceId: string | undefined
+    ) => {
+      const sourceId = dottedSourceId || bracketedSourceId
+      const destinationId = sourceId ? remapper.idMap.get(sourceId) : undefined
+      if (!destinationId) {
+        return sourceReference
+      }
+      return bracketedSourceId
+        ? `[${destinationId}]`
+        : `${prefix || ""}${destinationId}.`
+    }
+  )
+}
+
+const remapBinding = (block: string, remapper: ProjectImportIdRemapper) => {
+  try {
+    const javascript = decodeJSBinding(block)
+    if (javascript != null) {
+      return encodeJSBinding(remapIdReferences(javascript, remapper))
+    }
+  } catch {
+    return remapIdReferences(block, remapper)
+  }
+  return remapIdReferences(block, remapper)
 }
 
 const remapHandlebarsReferences = (
@@ -419,20 +443,22 @@ const remapHandlebarsReferences = (
   remapper: ProjectImportIdRemapper
 ) => {
   return findHBSBlocks(value).reduce(
-    (remapped, block) =>
-      remapped.replace(block, remapIdReferences(block, remapper)),
+    (remapped, block) => remapped.replace(block, remapBinding(block, remapper)),
     value
   )
 }
+
+const remapString = (value: string, remapper: ProjectImportIdRemapper) =>
+  remapper.exactValueMap.get(value) ??
+  remapper.idMap.get(value) ??
+  remapHandlebarsReferences(value, remapper)
 
 const remapValue = (
   value: unknown,
   remapper: ProjectImportIdRemapper
 ): unknown => {
   if (typeof value === "string") {
-    return (
-      remapper.idMap.get(value) || remapHandlebarsReferences(value, remapper)
-    )
+    return remapString(value, remapper)
   }
   if (Array.isArray(value)) {
     return value.map(item => remapValue(item, remapper))
@@ -440,7 +466,7 @@ const remapValue = (
   if (value && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value).map(([key, nestedValue]) => [
-        remapper.idMap.get(key) || key,
+        remapString(key, remapper),
         remapValue(nestedValue, remapper),
       ])
     )
@@ -937,6 +963,95 @@ const assignImportedIds = (docs: ImportedDoc[], idMap: Map<string, string>) => {
   }
 }
 
+const addRowToolNameMappings = ({
+  sourceTableId,
+  destinationTableId,
+  toolNameMap,
+}: {
+  sourceTableId: string
+  destinationTableId: string
+  toolNameMap: Map<string, string>
+}) => {
+  const sourceToolNames = getRowToolNames(sourceTableId)
+  const destinationToolNames = getRowToolNames(destinationTableId)
+  for (const [action, sourceToolName] of Object.entries(sourceToolNames)) {
+    const destinationToolName = destinationToolNames[action]
+    if (destinationToolName) {
+      toolNameMap.set(sourceToolName, destinationToolName)
+    }
+  }
+}
+
+const buildImportedToolNameMap = (
+  docs: ImportedDoc[],
+  idMap: Map<string, string>
+) => {
+  const toolNameMap = new Map<string, string>()
+  const datasourcesById = new Map(
+    docs
+      .filter(doc => doc.resourceType === ResourceType.DATASOURCE)
+      .map(({ doc }) => [doc._id!, doc as Datasource])
+  )
+
+  for (const importedDoc of docs) {
+    const sourceId = importedDoc.doc._id!
+    const destinationId = idMap.get(sourceId)
+    if (!destinationId) {
+      continue
+    }
+
+    if (
+      importedDoc.resourceType === ResourceType.AUTOMATION &&
+      (importedDoc.doc as Automation).definition?.trigger?.stepId ===
+        AutomationTriggerStepId.APP
+    ) {
+      toolNameMap.set(
+        getAutomationTriggerToolName(sourceId),
+        getAutomationTriggerToolName(destinationId)
+      )
+    }
+
+    if (importedDoc.resourceType === ResourceType.TABLE) {
+      addRowToolNameMappings({
+        sourceTableId: sourceId,
+        destinationTableId: destinationId,
+        toolNameMap,
+      })
+    }
+
+    if (importedDoc.resourceType === ResourceType.DATASOURCE) {
+      for (const entity of Object.values(
+        getDatasourceEntities(importedDoc.doc as Datasource)
+      )) {
+        const destinationEntityId = entity._id && idMap.get(entity._id)
+        if (entity._id && destinationEntityId) {
+          addRowToolNameMappings({
+            sourceTableId: entity._id,
+            destinationTableId: destinationEntityId,
+            toolNameMap,
+          })
+        }
+      }
+    }
+
+    if (importedDoc.resourceType === ResourceType.QUERY) {
+      const query = importedDoc.doc as Query
+      const datasource = datasourcesById.get(query.datasourceId)
+      if (datasource) {
+        toolNameMap.set(
+          getQueryToolBindingsForResource({ datasource, query }).runtimeBinding,
+          getQueryToolBindingsForResource({
+            datasource,
+            query: { ...query, _id: destinationId },
+          }).runtimeBinding
+        )
+      }
+    }
+  }
+
+  return toolNameMap
+}
+
 const bulkInsertDocs = async (
   docs: AnyDocument[],
   insertedDocs: InsertedDocRef[]
@@ -1194,7 +1309,10 @@ export async function importProject(
         ])
 
         assignImportedIds(extracted.docs, idMap)
-        const idRemapper = createProjectImportIdRemapper(idMap)
+        const idRemapper = createProjectImportIdRemapper(
+          idMap,
+          buildImportedToolNameMap(extracted.docs, idMap)
+        )
         const deconflictWorkspaceApp =
           await createWorkspaceAppImportDeconflicter()
 
