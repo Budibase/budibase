@@ -1,5 +1,6 @@
 import { cache, context, features, roles } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
+import { helpers } from "@budibase/shared-core"
 import {
   ActionType,
   Agent,
@@ -17,6 +18,7 @@ import {
   Output,
   extractReasoningMiddleware,
   generateText,
+  jsonSchema,
   stepCountIs,
   ToolLoopAgent,
   type LanguageModelUsage,
@@ -83,6 +85,8 @@ interface PrepareAgentChatRunParams {
   // Set on escalation-resume runs: the approved call that was just executed.
   // Its gate refuses instead of re-escalating - one approval, one attempt.
   executedApproval?: { toolName: string }
+  requester?: AgentRequester
+  outputSchema?: Record<string, any>
 }
 
 export interface AgentChatRun {
@@ -93,7 +97,8 @@ export interface AgentChatRun {
   sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
   stream: (
     options?: AgentChatStreamOptions
-  ) => Promise<StreamTextResult<ToolSet, never>>
+  ) => Promise<StreamTextResult<ToolSet, ReturnType<typeof Output.object>>>
+  isSuspended: () => boolean
   toolDisplayNames: Record<string, string>
   contextWindowTokens?: number
   systemPromptTokens: number
@@ -446,20 +451,23 @@ export const prepareAgentRunContext = async ({
 // with no tools so the model can wrap up in text but cannot act before a
 // human responds. Keyed on pending status plus escalationId so it covers the
 // escalate tool and gate refusals without tripping on lookalike statuses.
+const hasPendingEscalationResult = (
+  toolResults: Array<StepResult<ToolSet>["toolResults"][number]>
+) =>
+  toolResults.some(result => {
+    const output = result.output
+    return (
+      typeof output === "object" &&
+      output !== null &&
+      "status" in output &&
+      output.status === EscalateToolResultStatus.PENDING_APPROVAL &&
+      "escalationId" in output &&
+      !!output.escalationId
+    )
+  })
+
 const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
-  steps.some(step =>
-    step.toolResults.some(result => {
-      const output = result.output
-      return (
-        typeof output === "object" &&
-        output !== null &&
-        "status" in output &&
-        output.status === EscalateToolResultStatus.PENDING_APPROVAL &&
-        "escalationId" in output &&
-        !!output.escalationId
-      )
-    })
-  )
+  steps.some(step => hasPendingEscalationResult(step.toolResults))
 
 const getAgentRequester = ({
   user,
@@ -491,6 +499,8 @@ export const prepareAgentChatRun = async ({
   additionalInstructions,
   getRequestId,
   executedApproval,
+  requester: providedRequester,
+  outputSchema,
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
   const latestQuestion =
     providedLatestQuestion ?? (chat ? findLatestUserQuestion(chat) : "")
@@ -501,7 +511,7 @@ export const prepareAgentChatRun = async ({
     errorLabel,
     startedAt,
   })
-  const requester = getAgentRequester({ user, chat })
+  const requester = providedRequester ?? getAgentRequester({ user, chat })
 
   let resolvedModelMessages: ModelMessage[] = []
   let resolvedChatModel: Parameters<typeof generateText>[0]["model"] | undefined
@@ -666,6 +676,17 @@ export const prepareAgentChatRun = async ({
     .join("\n\n")
 
   const hasTools = Object.keys(tools).length > 0
+  const output =
+    outputSchema && Object.keys(outputSchema).length > 0
+      ? Output.object({
+          schema: jsonSchema(
+            helpers.structuredOutput.normalizeSchemaForStructuredOutput(
+              outputSchema
+            )
+          ),
+        })
+      : undefined
+  let suspended = false
   const agentRunner = new ToolLoopAgent({
     model: wrapLanguageModel({
       model: llm.chat,
@@ -681,6 +702,7 @@ export const prepareAgentChatRun = async ({
     prepareStep: ({ steps }) =>
       hasPendingEscalation(steps) ? { toolChoice: "none" as const } : undefined,
     providerOptions: llm.providerOptions?.(hasTools),
+    output,
   })
 
   const contextUsage: AgentChatRun["contextUsage"] = {}
@@ -697,6 +719,7 @@ export const prepareAgentChatRun = async ({
     contextWindowTokens: llm.contextWindowTokens,
     systemPromptTokens,
     contextUsage,
+    isSuspended: () => suspended,
     stream: async ({
       onFinish,
       onToolCalls,
@@ -725,6 +748,7 @@ export const prepareAgentChatRun = async ({
               semanticFailureNames,
               semanticFailureResults,
             } = groupToolResultsByOutcome(toolResults)
+            suspended ||= hasPendingEscalationResult(toolResults)
             const erroredParts = content.filter(
               (
                 part

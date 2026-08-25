@@ -175,6 +175,28 @@ describe("resumeOperation", () => {
     })
   })
 
+  it("preserves the requester when an escalation is approved", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      mockApprovedRun("Approved and created.")
+
+      await resumeOperation({
+        doc: baseDoc({ response: { accepted: true } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: {
+          ...baseCtx,
+          requester: { executorRole: "ADMIN" },
+        },
+      })
+
+      expect(prepareAgentChatRunMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          requester: { executorRole: "ADMIN" },
+        })
+      )
+    })
+  })
+
   it("records escalation_resolved with outcome expired", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!

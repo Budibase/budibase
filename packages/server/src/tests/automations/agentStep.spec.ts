@@ -1,26 +1,13 @@
-import { quotas } from "@budibase/pro"
-import { ActionType } from "@budibase/types"
 import { run } from "../../automations/steps/ai/agent"
+import sdk from "../../sdk"
 
-jest.mock("../../sdk/workspace/ai/agents", () => {
-  const actual = jest.requireActual("../../sdk/workspace/ai/agents")
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
   return {
     ...actual,
-    prepareAgentRunContext: jest.fn(),
-  }
-})
-
-jest.mock("@budibase/pro", () => {
-  const actual = jest.requireActual("@budibase/pro")
-  return {
-    ...actual,
-    quotas: {
-      ...actual.quotas,
-      addAction: jest
-        .fn()
-        .mockImplementation((_type: ActionType, fn: () => Promise<unknown>) =>
-          fn()
-        ),
+    context: {
+      ...actual.context,
+      getTenantId: jest.fn().mockReturnValue("tenant-id"),
     },
   }
 })
@@ -33,114 +20,89 @@ jest.mock("../../sdk", () => ({
         getOrThrow: jest.fn().mockResolvedValue({
           _id: "agent-id",
           name: "Test Agent",
-          aiconfig: { provider: "openai", model: "gpt-4" },
           live: true,
         }),
-        buildPromptAndTools: jest.fn().mockResolvedValue({
-          systemPrompt: "You are a helpful assistant",
-          tools: { queryTable: {}, callApi: {} },
-        }),
-      },
-      llm: {
-        createLLM: jest.fn().mockResolvedValue({
-          chat: {},
-          providerOptions: undefined,
-        }),
+        prepareAgentChatRun: jest.fn(),
       },
     },
   },
 }))
 
-jest.mock("ai", () => ({
-  ToolLoopAgent: jest.fn(),
-  stepCountIs: jest.fn().mockReturnValue(() => false),
-  readUIMessageStream: jest.fn().mockReturnValue({
-    [Symbol.asyncIterator]: () => {
-      let done = false
-      return {
-        next: async () => {
-          if (!done) {
-            done = true
-            return { done: false, value: { role: "assistant", parts: [] } }
-          }
-          return { done: true, value: undefined }
-        },
-      }
-    },
-  }),
-  wrapLanguageModel: jest.fn().mockReturnValue({}),
-  extractReasoningMiddleware: jest.fn().mockReturnValue({}),
-  Output: { object: jest.fn() },
-  jsonSchema: jest.fn(),
-  tool: jest.fn().mockImplementation((t: any) => t),
-}))
+jest.mock("ai", () => {
+  const actual = jest.requireActual("ai")
+  return {
+    ...actual,
+    readUIMessageStream: jest.fn().mockReturnValue({
+      [Symbol.asyncIterator]: () => {
+        let done = false
+        return {
+          next: async () => {
+            if (!done) {
+              done = true
+              return {
+                done: false,
+                value: { role: "assistant", parts: [] },
+              }
+            }
+            return { done: true, value: undefined }
+          },
+        }
+      },
+    }),
+  }
+})
 
-function makeNoOutputError() {
+const prepareAgentChatRunMock = sdk.ai.agents.prepareAgentChatRun as jest.Mock
+const emitter = {
+  emitRow: jest.fn(),
+  emitTable: jest.fn(),
+}
+
+const makeNoOutputError = () => {
   const error = new Error("No output generated. Check the stream for errors.")
   error.name = "AI_NoOutputGeneratedError"
   return error
 }
 
-function makeToolLoopAgentMock(
-  toolResults: { toolCallId: string }[],
-  overrides: {
-    response?: Promise<{ id: string; headers: Record<string, string> }>
-    text?: Promise<string>
-    usage?: Promise<{ totalTokens: number }>
-    output?: Promise<Record<string, unknown> | undefined>
-  } = {}
-) {
-  return ({ onStepFinish }: any) => ({
-    stream: jest.fn().mockImplementation(async () => {
-      onStepFinish({
-        content: [],
-        toolCalls: toolResults.map(r => ({ toolCallId: r.toolCallId })),
-        toolResults,
-      })
-      return {
-        toUIMessageStream: jest.fn().mockReturnValue({}),
-        response:
-          overrides.response ??
-          Promise.resolve({
-            id: "gen-test",
-            headers: {
-              "x-litellm-response-cost": "0.0001",
-            },
-          }),
-        text: overrides.text ?? Promise.resolve("Agent response"),
-        usage: overrides.usage ?? Promise.resolve({ totalTokens: 50 }),
-        output: overrides.output ?? Promise.resolve(undefined),
-      }
+const mockAgentRun = ({
+  suspended = false,
+  text = "Agent response",
+  textError,
+  usage = { totalTokens: 50 },
+  usageError,
+  output,
+  outputError,
+}: {
+  suspended?: boolean
+  text?: string
+  textError?: Error
+  usage?: { totalTokens: number }
+  usageError?: Error
+  output?: Record<string, unknown>
+  outputError?: Error
+} = {}) => {
+  const index = jest.fn().mockResolvedValue(undefined)
+  prepareAgentChatRunMock.mockResolvedValue({
+    isSuspended: () => suspended,
+    sessionLogIndexer: { index },
+    stream: jest.fn().mockResolvedValue({
+      toUIMessageStream: jest.fn().mockReturnValue({}),
+      get text() {
+        return textError ? Promise.reject(textError) : Promise.resolve(text)
+      },
+      usage: usageError ? Promise.reject(usageError) : Promise.resolve(usage),
+      output: outputError
+        ? Promise.reject(outputError)
+        : Promise.resolve(output),
     }),
   })
+  return { index }
 }
 
-describe("Agent step tool call tracking", () => {
-  const addActionMock = quotas.addAction as jest.MockedFunction<
-    typeof quotas.addAction
-  >
-  const { prepareAgentRunContext } = jest.requireMock(
-    "../../sdk/workspace/ai/agents"
-  )
-  const liveOperation = {
-    id: "operation_1",
-    name: "Main operation",
-    live: true,
-    enabledTools: [],
-    knowledgeBases: ["kb_1"],
-    allowKnowledgeSourceDownload: true,
-  }
-
+describe("automation agent step", () => {
   beforeEach(() => {
-    addActionMock.mockClear()
-    prepareAgentRunContext.mockResolvedValue({
-      llm: { chat: {}, providerOptions: undefined },
-      selectedOperation: liveOperation,
-      systemPrompt: "You are a helpful assistant",
-      tools: { queryTable: {}, callApi: {} },
-      toolDisplayNames: {},
-    })
-    jest.mocked(require("ai").ToolLoopAgent).mockClear()
+    prepareAgentChatRunMock.mockReset()
+    mockAgentRun()
     jest.spyOn(console, "error").mockImplementation(() => {})
   })
 
@@ -148,136 +110,46 @@ describe("Agent step tool call tracking", () => {
     jest.restoreAllMocks()
   })
 
-  it("prepares agent run context before executing the automation agent", async () => {
-    jest
-      .mocked(require("ai").ToolLoopAgent)
-      .mockImplementationOnce(makeToolLoopAgentMock([]))
-
+  it("invokes the shared agent runner with an admin identity", async () => {
     await run({
-      inputs: { agentId: "agent-id", prompt: "Find the answer in knowledge" },
+      inputs: { agentId: "agent-id", prompt: "Create the row" },
       appId: "test",
-      context: {},
-      emitter: {} as any,
+      automationId: "automation-id",
+      stepId: "agent-step",
+      context: { _stepResults: [], state: { retained: true } },
+      emitter,
     })
 
-    expect(prepareAgentRunContext).toHaveBeenCalledWith({
-      agent: expect.objectContaining({ _id: "agent-id" }),
-      agentId: "agent-id",
-      sessionId: expect.any(String),
-      latestQuestion: "Find the answer in knowledge",
-      span: expect.any(Object),
-    })
-  })
-
-  it("counts each completed tool call as one action", async () => {
-    jest
-      .mocked(require("ai").ToolLoopAgent)
-      .mockImplementationOnce(
-        makeToolLoopAgentMock([
-          { toolCallId: "c1" },
-          { toolCallId: "c2" },
-          { toolCallId: "c3" },
-        ])
-      )
-
-    const result = await run({
-      inputs: { agentId: "agent-id", prompt: "Do things with tools" },
-      appId: "test",
-      context: {},
-      emitter: {} as any,
-    })
-
-    expect(addActionMock).toHaveBeenCalledTimes(3)
-    expect(result.sessionId).toEqual(expect.any(String))
-  })
-
-  it("counts zero extra actions when the agent makes no tool calls", async () => {
-    jest
-      .mocked(require("ai").ToolLoopAgent)
-      .mockImplementationOnce(makeToolLoopAgentMock([]))
-
-    await run({
-      inputs: { agentId: "agent-id", prompt: "Direct answer, no tools" },
-      appId: "test",
-      context: {},
-      emitter: {} as any,
-    })
-
-    expect(addActionMock).not.toHaveBeenCalled()
-  })
-
-  it("returns a controlled failure when response metadata has no generated output", async () => {
-    jest.mocked(require("ai").ToolLoopAgent).mockImplementationOnce(
-      makeToolLoopAgentMock([], {
-        response: Promise.reject(makeNoOutputError()),
-        text: Promise.resolve(""),
+    expect(prepareAgentChatRunMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        agent: expect.objectContaining({ _id: "agent-id" }),
+        agentId: "agent-id",
+        latestQuestion: "Create the row",
+        requester: { executorRole: "ADMIN" },
+        user: expect.objectContaining({ roleId: "ADMIN" }),
       })
     )
-
-    const result = await run({
-      inputs: { agentId: "agent-id", prompt: "Evaluate data" },
-      appId: "test",
-      context: {},
-      emitter: {} as any,
-    })
-
-    expect(result).toMatchObject({
-      success: false,
-      response: "No output generated. Check the stream for errors.",
-      sessionId: expect.any(String),
-    })
   })
 
-  it("returns a controlled failure when text extraction has no generated output", async () => {
-    jest.mocked(require("ai").ToolLoopAgent).mockImplementationOnce(
-      makeToolLoopAgentMock([], {
-        text: Promise.reject(makeNoOutputError()),
-      })
-    )
+  it("returns the agent result without suspending the automation", async () => {
+    mockAgentRun({ suspended: true })
 
     const result = await run({
-      inputs: { agentId: "agent-id", prompt: "Evaluate data" },
+      inputs: { agentId: "agent-id", prompt: "Create the row" },
       appId: "test",
-      context: {},
-      emitter: {} as any,
+      automationId: "automation-id",
+      stepId: "agent-step",
+      context: { _stepResults: [], state: {} },
+      emitter,
     })
 
-    expect(result).toMatchObject({
-      success: false,
-      response: "No output generated. Check the stream for errors.",
-      sessionId: expect.any(String),
-    })
+    expect(result).toEqual(
+      expect.objectContaining({ success: true, response: "Agent response" })
+    )
   })
 
-  it("returns a controlled failure when usage metadata has no generated output", async () => {
-    jest.mocked(require("ai").ToolLoopAgent).mockImplementationOnce(
-      makeToolLoopAgentMock([], {
-        text: Promise.resolve(""),
-        usage: Promise.reject(makeNoOutputError()),
-      })
-    )
-
-    const result = await run({
-      inputs: { agentId: "agent-id", prompt: "Evaluate data" },
-      appId: "test",
-      context: {},
-      emitter: {} as any,
-    })
-
-    expect(result).toMatchObject({
-      success: false,
-      response: "No output generated. Check the stream for errors.",
-      sessionId: expect.any(String),
-    })
-  })
-
-  it("returns a controlled failure when structured output has no generated output", async () => {
-    jest.mocked(require("ai").Output.object).mockReturnValueOnce({})
-    jest.mocked(require("ai").ToolLoopAgent).mockImplementationOnce(
-      makeToolLoopAgentMock([], {
-        output: Promise.reject(makeNoOutputError()),
-      })
-    )
+  it("passes structured output configuration through the shared runner", async () => {
+    mockAgentRun({ output: { sentiment: "positive" } })
 
     const result = await run({
       inputs: {
@@ -288,7 +160,23 @@ describe("Agent step tool call tracking", () => {
       },
       appId: "test",
       context: {},
-      emitter: {} as any,
+      emitter,
+    })
+
+    expect(prepareAgentChatRunMock).toHaveBeenCalledWith(
+      expect.objectContaining({ outputSchema: { sentiment: "string" } })
+    )
+    expect(result.output).toEqual({ sentiment: "positive" })
+  })
+
+  it("returns a controlled failure when the shared run has no output", async () => {
+    mockAgentRun({ textError: makeNoOutputError() })
+
+    const result = await run({
+      inputs: { agentId: "agent-id", prompt: "Evaluate data" },
+      appId: "test",
+      context: {},
+      emitter,
     })
 
     expect(result).toMatchObject({
@@ -296,5 +184,50 @@ describe("Agent step tool call tracking", () => {
       response: "No output generated. Check the stream for errors.",
       sessionId: expect.any(String),
     })
+  })
+
+  it("returns a completed response when usage metadata fails", async () => {
+    mockAgentRun({ usageError: new Error("Usage metadata unavailable") })
+
+    const result = await run({
+      inputs: { agentId: "agent-id", prompt: "Evaluate data" },
+      appId: "test",
+      context: {},
+      emitter,
+    })
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        response: "Agent response",
+        usage: undefined,
+      })
+    )
+  })
+
+  it("indexes the session log when structured output parsing fails", async () => {
+    const { index } = mockAgentRun({
+      outputError: new Error("Invalid structured output"),
+    })
+
+    const result = await run({
+      inputs: {
+        agentId: "agent-id",
+        prompt: "Evaluate data",
+        useStructuredOutput: true,
+        outputSchema: { sentiment: "string" },
+      },
+      appId: "test",
+      context: {},
+      emitter,
+    })
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: false,
+        response: "Error: Invalid structured output",
+      })
+    )
+    expect(index).toHaveBeenCalledTimes(1)
   })
 })

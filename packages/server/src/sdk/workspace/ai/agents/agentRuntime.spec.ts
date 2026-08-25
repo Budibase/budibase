@@ -652,6 +652,24 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     )
   })
 
+  it("does not configure structured output for an empty schema", async () => {
+    await runFor(operationWithoutRecipients, { outputSchema: {} })
+
+    expect(ToolLoopAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ output: undefined })
+    )
+  })
+
+  it("configures structured output for a populated schema", async () => {
+    await runFor(operationWithoutRecipients, {
+      outputSchema: { sentiment: "string" },
+    })
+
+    expect(ToolLoopAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ output: expect.anything() })
+    )
+  })
+
   it("passes the chat timezone to the agent system prompt", async () => {
     await runFor(operationWithoutRecipients, {
       chat: {

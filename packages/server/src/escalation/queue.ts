@@ -609,6 +609,7 @@ export async function resumeOperation({
     additionalInstructions: approvalInstructions,
     getRequestId: () => doc.requestId,
     executedApproval,
+    requester: ctx.requester,
   })
 
   const pendingToolCalls = new Set<string>()
