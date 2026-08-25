@@ -91,9 +91,11 @@ const mockAgentRun = ({
         return textError ? Promise.reject(textError) : Promise.resolve(text)
       },
       usage: usageError ? Promise.reject(usageError) : Promise.resolve(usage),
-      output: outputError
-        ? Promise.reject(outputError)
-        : Promise.resolve(output),
+      get output() {
+        return outputError
+          ? Promise.reject(outputError)
+          : Promise.resolve(output)
+      },
     }),
   })
   return { index }
@@ -167,6 +169,35 @@ describe("automation agent step", () => {
       expect.objectContaining({ outputSchema: { sentiment: "string" } })
     )
     expect(result.output).toEqual({ sentiment: "positive" })
+  })
+
+  it("does not read structured output when the schema is empty", async () => {
+    mockAgentRun({
+      outputError: new Error("No output generated"),
+    })
+
+    const result = await run({
+      inputs: {
+        agentId: "agent-id",
+        prompt: "Evaluate data",
+        useStructuredOutput: true,
+        outputSchema: {},
+      },
+      appId: "test",
+      context: {},
+      emitter,
+    })
+
+    expect(prepareAgentChatRunMock).toHaveBeenCalledWith(
+      expect.objectContaining({ outputSchema: undefined })
+    )
+    expect(result).toEqual(
+      expect.objectContaining({
+        success: true,
+        response: "Agent response",
+        output: undefined,
+      })
+    )
   })
 
   it("returns a controlled failure when the shared run has no output", async () => {

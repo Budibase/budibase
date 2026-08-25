@@ -47,6 +47,10 @@ export async function run({
   }
 
   const sessionId = v4()
+  const structuredOutputSchema =
+    useStructuredOutput && outputSchema && Object.keys(outputSchema).length > 0
+      ? outputSchema
+      : undefined
 
   return tracer.llmobs.trace(
     { kind: "agent", name: "automation.agent", sessionId },
@@ -98,7 +102,7 @@ export async function run({
           sessionId,
           user,
           requester,
-          outputSchema: useStructuredOutput ? outputSchema : undefined,
+          outputSchema: structuredOutputSchema,
         })
 
         const pendingToolCalls = new Set<string>()
@@ -169,7 +173,7 @@ export async function run({
         }
 
         const output =
-          useStructuredOutput && !agentRun.isSuspended()
+          structuredOutputSchema && !agentRun.isSuspended()
             ? ((await streamResult.output) as AgentStepOutputs["output"])
             : undefined
 
