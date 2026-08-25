@@ -53,6 +53,9 @@ import {
   validate as validateSchema,
 } from "../../../utilities/schema"
 import { handleDataImport } from "./utils"
+import {
+  propagateProjectDependencyChangesWithWarning,
+} from "../../../utilities/projects"
 import { builderSocket } from "../../../websockets"
 import * as external from "./external"
 import * as internal from "./internal"
@@ -163,22 +166,23 @@ export async function find(ctx: UserCtx<void, FindTableResponse>) {
   ctx.body = result
 }
 
-export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
+async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const appId = ctx.appId
   const { rows, ...table } = ctx.request.body
   const isImport = rows
   const renaming = ctx.request.body._rename
 
   const isCreate = !table._id
+  let previousTable: Table | undefined
 
   if (!isExternalTable(table)) {
     if (isCreate) {
       table.projectIds = await sdk.projects.resolveProjectIds(table.projectIds)
     } else {
-      const existingTable = await sdk.tables.getTable(table._id!)
+      previousTable = await sdk.tables.getTable(table._id!)
       table.projectIds = await sdk.projects.resolveUpdatedProjectIds({
         projectIds: table.projectIds,
-        currentProjectIds: existingTable.projectIds,
+        currentProjectIds: previousTable.projectIds,
       })
       ctx.request.body.projectIds = table.projectIds
     }
@@ -211,11 +215,28 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   if (isImport) {
     await events.table.imported(savedTable)
   }
+
+  if (!isExternalTable(savedTable)) {
+    await propagateProjectDependencyChangesWithWarning(ctx, {
+      rootResourceId: savedTable._id!,
+      currentProjectIds: savedTable.projectIds,
+      previousProjectIds: previousTable?.projectIds || [],
+      previousResource: previousTable,
+      savedResource: savedTable,
+    })
+  }
+
   ctx.message = `Table ${table.name} saved successfully.`
   ctx.eventEmitter?.emitTable(EventType.TABLE_SAVE, appId, { ...savedTable })
 
   ctx.body = savedTable
   builderSocket?.emitTableUpdate(ctx, cloneDeep(savedTable))
+}
+
+export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    saveUnlocked(ctx)
+  )
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteTableResponse>) {
@@ -316,7 +337,7 @@ export async function migrate(
   ctx.body = { message: `Column ${oldColumn} migrated.` }
 }
 
-export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
+async function duplicateUnlocked(ctx: UserCtx<void, SaveTableResponse>) {
   const tableId = ctx.params.tableId as string
   const table = await sdk.tables.getTable(tableId)
 
@@ -325,12 +346,26 @@ export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
   }
 
   const duplicatedTable = await sdk.tables.duplicate(table, ctx.user._id)
+  if (!isExternalTable(duplicatedTable)) {
+    await propagateProjectDependencyChangesWithWarning(ctx, {
+      rootResourceId: duplicatedTable._id!,
+      currentProjectIds: duplicatedTable.projectIds,
+      previousProjectIds: [],
+      savedResource: duplicatedTable,
+    })
+  }
 
   ctx.message = `Table ${table.name} duplicated successfully.`
   ctx.body = duplicatedTable
 
   const processedTable = await processTable(duplicatedTable)
   builderSocket?.emitTableUpdate(ctx, cloneDeep(processedTable))
+}
+
+export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    duplicateUnlocked(ctx)
+  )
 }
 
 export async function publish(

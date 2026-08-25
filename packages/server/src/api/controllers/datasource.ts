@@ -41,6 +41,9 @@ import { getQueryParams, getTableParams } from "../../db/utils"
 import sdk from "../../sdk"
 import { processTable } from "../../sdk/workspace/tables/getters"
 import { invalidateCachedVariable } from "../../threads/utils"
+import {
+  propagateProjectDependencyChangesWithWarning,
+} from "../../utilities/projects"
 import { builderSocket } from "../../websockets"
 
 async function clearOAuth2TokenCaches(datasource: Datasource) {
@@ -225,7 +228,7 @@ const validateDatasourceEntities = (datasource: Datasource) => {
   }
 }
 
-export async function update(
+async function updateUnlocked(
   ctx: UserCtx<UpdateDatasourceRequest, UpdateDatasourceResponse>
 ) {
   const db = context.getWorkspaceDB()
@@ -308,6 +311,14 @@ export async function update(
     : await persistDatasource()
   datasource._rev = response.rev
 
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: datasource._id!,
+    currentProjectIds: datasource.projectIds,
+    previousProjectIds: baseDatasource.projectIds,
+    previousResource: baseDatasource,
+    savedResource: datasource,
+  })
+
   ctx.message = "Datasource saved successfully."
   ctx.body = {
     datasource: await sdk.datasources.removeSecretSingle(
@@ -327,7 +338,15 @@ export async function update(
   }
 }
 
-export async function save(
+export async function update(
+  ctx: UserCtx<UpdateDatasourceRequest, UpdateDatasourceResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    updateUnlocked(ctx)
+  )
+}
+
+async function saveUnlocked(
   ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
 ) {
   const {
@@ -339,7 +358,7 @@ export async function save(
     datasourceData.projectIds
   )
   validateDatasourceEntities(datasourceData)
-  const saveDatasource = async () => {
+  const persistDatasource = async () => {
     const restTemplateId = datasourceData.restTemplateId
     if (isCustomRestTemplateId(restTemplateId)) {
       const templateExists = await sdk.restTemplates.exists(restTemplateId)
@@ -348,29 +367,42 @@ export async function save(
       }
     }
 
-    const { datasource, errors } = await sdk.datasources.save(datasourceData, {
+    return await sdk.datasources.save(datasourceData, {
       fetchSchema,
       tablesFilter,
     })
-
-    ctx.body = {
-      datasource: await sdk.datasources.removeSecretSingle(
-        sdk.datasources.addDatasourceFlags(datasource)
-      ),
-      errors,
-    }
-    builderSocket?.emitDatasourceUpdate(ctx, datasource)
   }
 
   const restTemplateId = datasourceData.restTemplateId
-  if (isCustomRestTemplateId(restTemplateId)) {
-    await sdk.restTemplates.withCustomRestTemplateLock({
-      resource: restTemplateId,
-      task: saveDatasource,
-    })
-  } else {
-    await saveDatasource()
+  const { datasource, errors } = isCustomRestTemplateId(restTemplateId)
+    ? await sdk.restTemplates.withCustomRestTemplateLock({
+        resource: restTemplateId,
+        task: persistDatasource,
+      })
+    : await persistDatasource()
+
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: datasource._id!,
+    currentProjectIds: datasource.projectIds,
+    previousProjectIds: [],
+    savedResource: datasource,
+  })
+
+  ctx.body = {
+    datasource: await sdk.datasources.removeSecretSingle(
+      sdk.datasources.addDatasourceFlags(datasource)
+    ),
+    errors,
   }
+  builderSocket?.emitDatasourceUpdate(ctx, datasource)
+}
+
+export async function save(
+  ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    saveUnlocked(ctx)
+  )
 }
 
 async function destroyInternalTablesBySourceId(datasourceId: string) {
