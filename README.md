@@ -76,7 +76,7 @@ Employees ask questions, request approvals, and report issues every day. Budibas
 
 ### Agents that take action
 
-Budibase agents don’t just answer questions. They run workflows across your business - creating records, routing approvals, updating apps, and notifying teams automatically.
+Budibase agents don't just answer questions. They run workflows across your business - creating records, routing approvals, updating apps, and notifying teams automatically.
 
 <p align="center">
   <img alt="Budibase agent actions" src="https://res.cloudinary.com/daog6scxm/image/upload/v1775572270/github/Agent_Actions.jpg">
@@ -124,6 +124,7 @@ Deploy Budibase using Docker, Kubernetes, and Digital Ocean on your existing inf
 - [Kubernetes](https://docs.budibase.com/docs/kubernetes-k8s)
 - [Digital Ocean](https://docs.budibase.com/docs/digitalocean)
 - [Portainer](https://docs.budibase.com/docs/portainer)
+- [RepoCloud](https://repocloud.io/details/Budibase/)
 
 ### [Get started with Budibase Cloud](https://budibase.com)
 
