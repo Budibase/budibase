@@ -14,6 +14,7 @@ import {
 import sdk from "../../sdk"
 import { defaultAppNavigator } from "../../constants/definitions"
 import {
+  propagateProjectDependencyChangesWithWarning,
   resolveProjectIds,
   resolveUpdatedProjectIds,
 } from "../../utilities/projects"
@@ -44,7 +45,7 @@ export async function fetch(ctx: Ctx<void, FetchWorkspaceAppResponse>) {
   }
 }
 
-export async function duplicate(
+async function duplicateUnlocked(
   ctx: Ctx<void, InsertWorkspaceAppResponse, { id: string }>
 ) {
   const { id } = ctx.params
@@ -54,10 +55,24 @@ export async function duplicate(
   }
 
   const duplicatedApp = await sdk.workspaceApps.duplicate(workspaceApp)
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: duplicatedApp._id!,
+    currentProjectIds: duplicatedApp.projectIds,
+    previousProjectIds: [],
+    savedResource: duplicatedApp,
+  })
 
   ctx.message = `App ${workspaceApp.name} duplicated successfully.`
   ctx.body = { workspaceApp: toWorkspaceAppResponse(duplicatedApp) }
   ctx.status = 201
+}
+
+export async function duplicate(
+  ctx: Ctx<void, InsertWorkspaceAppResponse, { id: string }>
+) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    duplicateUnlocked(ctx)
+  )
 }
 
 export async function find(
@@ -72,7 +87,7 @@ export async function find(
   ctx.body = toWorkspaceAppResponse(workspaceApp)
 }
 
-export async function create(
+async function createUnlocked(
   ctx: Ctx<InsertWorkspaceAppRequest, InsertWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
@@ -90,13 +105,27 @@ export async function create(
   }
 
   const workspaceApp = await sdk.workspaceApps.create(newWorkspaceApp)
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: workspaceApp._id!,
+    currentProjectIds: workspaceApp.projectIds,
+    previousProjectIds: [],
+    savedResource: workspaceApp,
+  })
   ctx.status = 201
   ctx.body = {
     workspaceApp: toWorkspaceAppResponse(workspaceApp),
   }
 }
 
-export async function edit(
+export async function create(
+  ctx: Ctx<InsertWorkspaceAppRequest, InsertWorkspaceAppResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    createUnlocked(ctx)
+  )
+}
+
+async function editUnlocked(
   ctx: Ctx<UpdateWorkspaceAppRequest, UpdateWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
@@ -129,9 +158,24 @@ export async function edit(
       ? { customTheme: body.customTheme }
       : {}),
   })
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: workspaceApp._id!,
+    currentProjectIds: workspaceApp.projectIds,
+    previousProjectIds: existingWorkspaceApp.projectIds,
+    previousResource: existingWorkspaceApp,
+    savedResource: workspaceApp,
+  })
   ctx.body = {
     workspaceApp: toWorkspaceAppResponse(workspaceApp),
   }
+}
+
+export async function edit(
+  ctx: Ctx<UpdateWorkspaceAppRequest, UpdateWorkspaceAppResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    editUnlocked(ctx)
+  )
 }
 
 export async function remove(ctx: Ctx<void, void>) {

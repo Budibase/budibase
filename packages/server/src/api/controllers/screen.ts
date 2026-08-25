@@ -20,6 +20,7 @@ import {
 } from "@budibase/types"
 import { DocumentType } from "../../db/utils"
 import sdk from "../../sdk"
+import { propagateProjectDependencyChangesWithWarning } from "../../utilities/projects"
 import { builderSocket } from "../../websockets"
 import { updateWorkspacePackage } from "./workspace"
 
@@ -36,21 +37,39 @@ export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
   )
 }
 
-export async function save(
+async function saveUnlocked(
   ctx: UserCtx<SaveScreenRequest, SaveScreenResponse>
 ) {
   const db = context.getWorkspaceDB()
   const { navigationLinkLabel, ...screen } = ctx.request.body
 
-  if (!(await sdk.workspaceApps.get(screen.workspaceAppId))) {
+  const owningWorkspaceApp = await sdk.workspaceApps.get(screen.workspaceAppId)
+  if (!owningWorkspaceApp) {
     ctx.throw(400, "Workspace app id not valid")
   }
 
   const isCreation = !screen._id
+  const previousScreen = isCreation
+    ? undefined
+    : await db.get<Screen>(screen._id!)
 
   const savedScreen = isCreation
     ? await sdk.screens.create(screen)
     : await sdk.screens.update(screen)
+
+  // Screens don't carry their own projectIds - resources they reference
+  // (e.g. a button that triggers an automation) are attributed to the owning
+  // workspace app in the dependency graph, so propagate from there.
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: owningWorkspaceApp._id!,
+    currentProjectIds: owningWorkspaceApp.projectIds,
+    previousProjectIds: owningWorkspaceApp.projectIds,
+    previousResource:
+      previousScreen?.workspaceAppId === owningWorkspaceApp._id
+        ? previousScreen
+        : undefined,
+    savedResource: savedScreen,
+  })
 
   // Find any custom components being used
   let pluginNames: string[] = []
@@ -122,6 +141,14 @@ export async function save(
     pluginAdded,
   }
   builderSocket?.emitScreenUpdate(ctx, savedScreen)
+}
+
+export async function save(
+  ctx: UserCtx<SaveScreenRequest, SaveScreenResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    saveUnlocked(ctx)
+  )
 }
 
 export async function destroy(ctx: UserCtx<void, DeleteScreenResponse>) {
