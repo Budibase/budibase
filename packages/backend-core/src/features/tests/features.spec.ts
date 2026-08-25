@@ -91,6 +91,27 @@ describe("feature flags", () => {
     nock.cleanAll()
   })
 
+  it("can resolve trusted flags without request overrides", async () => {
+    await withEnv(
+      { TENANT_FEATURE_FLAGS: "default:TEST_BOOLEAN" },
+      async () => {
+        await context.doInTenant("default", async () => {
+          await context.doInFeatureFlagOverrideContext(
+            { TEST_BOOLEAN: false },
+            async () => {
+              expect(await flags.isEnabled("TEST_BOOLEAN")).toBe(false)
+              expect(
+                await flags.isEnabled("TEST_BOOLEAN", {
+                  includeOverrides: false,
+                })
+              ).toBe(true)
+            }
+          )
+        })
+      }
+    )
+  })
+
   it.each<TestCase>([
     {
       it: "should should find a simple boolean flag in the environment",
