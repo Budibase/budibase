@@ -32,7 +32,10 @@ import { Next } from "koa"
 import * as authSdk from "../../../sdk/auth"
 import * as userSdk from "../../../sdk/users"
 import { getClientIp } from "../../../utilities/clientIp"
-import { recordFailedAttemptForIp } from "../../../utilities/loginAttempts"
+import {
+  clearFailedAttemptsForIp,
+  recordFailedAttemptForIp,
+} from "../../../utilities/loginAttempts"
 
 const { Cookie, Header } = constants
 const { passport, ssoCallbackUrl, google, oidc } = authCore
@@ -78,10 +81,20 @@ const onFailed = async ({ ctx, email }: { ctx: Ctx; email: string }) => {
     )
   }
 }
-const clearFailureState = async (email: string) => {
-  if (!email) return
-  await cache.destroy(failKey(email))
-  await cache.destroy(lockKey(email))
+const clearFailureState = async ({
+  email,
+  ip,
+}: {
+  email: string
+  ip?: string
+}) => {
+  if (email) {
+    await cache.destroy(failKey(email))
+    await cache.destroy(lockKey(email))
+  }
+  if (ip) {
+    await clearFailedAttemptsForIp(ip)
+  }
 }
 
 async function passportCallback(
@@ -147,7 +160,7 @@ export const login = async (
         return passportCallback(ctx, user as any, err, info)
       }
 
-      await clearFailureState(email)
+      await clearFailureState({ email, ip: getClientIp(ctx) })
       console.log(
         `[auth] password auth success email=${normalizeEmail(user.email)}`
       )
