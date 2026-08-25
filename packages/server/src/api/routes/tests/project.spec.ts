@@ -14,6 +14,7 @@ import {
   isWebhookTrigger,
   RestAuthType,
   SourceName,
+  ToolExecutionPrincipal,
   type Automation,
   type EmailTrigger,
   type EmailTriggerInputs,
@@ -22,6 +23,7 @@ import {
   type Webhook,
 } from "@budibase/types"
 import { Header } from "@budibase/shared-core"
+import { decodeJSBinding, encodeJSBinding } from "@budibase/string-templates"
 import fsp from "fs/promises"
 import { tmpdir } from "os"
 import { join } from "path"
@@ -29,7 +31,10 @@ import { Readable } from "stream"
 import { pipeline } from "stream/promises"
 import * as tar from "tar"
 import { TRIGGER_DEFINITIONS } from "../../../automations"
+import { getAutomationTriggerToolName } from "../../../ai/tools/budibase/automations"
+import { getRowToolNames } from "../../../ai/tools/budibase/rows"
 import sdk from "../../../sdk"
+import { getQueryToolBindingsForResource } from "../../../sdk/workspace/ai/agents/queryToolReferences"
 import * as projects from "../../../sdk/workspace/projects/crud"
 import { buildExternalTableId } from "../../../integrations/utils"
 import { getQueryIndex } from "../../../db/utils"
@@ -1437,6 +1442,56 @@ describe("/projects", () => {
     })
   })
 
+  it("tracks external table agent tools as datasource dependencies", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "External data agent",
+      })
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
+      const externalTableId = buildExternalTableId(datasource._id!, "Orders")
+      await config.api.datasource.update({
+        ...datasource,
+        entities: {
+          Orders: basicTable(datasource, {
+            _id: externalTableId,
+            name: "Orders",
+          }),
+        },
+      })
+      const agent = await config.api.agent.create({
+        name: "External data agent",
+        aiconfig: "default",
+        projectIds: [project._id],
+      })
+      await config.api.agent.createOperation(agent._id!, {
+        id: "operation_1",
+        name: "Create orders",
+        live: false,
+        enabledTools: [
+          {
+            toolName: getRowToolNames(externalTableId).create_row,
+            executionPrincipal: ToolExecutionPrincipal.ADMIN,
+          },
+        ],
+        allowKnowledgeSourceDownload: true,
+      })
+
+      const resourceGraph = await config.api.resource.getResourceDependencies()
+      expect(
+        resourceGraph.body.resources[agent._id!].dependencies.map(
+          dependency => dependency.id
+        )
+      ).toContain(datasource._id)
+      expect(
+        resourceGraph.body.resources[project._id].dependencies.map(
+          dependency => dependency.id
+        )
+      ).not.toContain(datasource._id)
+    })
+  })
+
   it("exports and imports app screens that need workspace app repair", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
@@ -1595,9 +1650,16 @@ describe("/projects", () => {
         props: {
           ...queryScreen.props,
           testBinding: `{{ ${query._id}.rows }}`,
+          testBracketBinding: `{{ [${query._id}].[rows] }}`,
           testBlockBinding: `{{#if ${query._id}.rows}}{{ ${query._id}.rows }}{{/if}}`,
+          testJavascriptBinding: encodeJSBinding(
+            `return $("${query._id}.rows")`
+          ),
           ordinaryText: `Docs: ${query._id}.rows`,
           ordinaryUrl: `https://example.com/${query._id}.rows`,
+          bindingKeyed: {
+            [`{{ ${query._id}.rows }}`]: "binding key",
+          },
           idKeyed: {
             [query._id!]: {
               resourceId: query._id,
@@ -1624,6 +1686,13 @@ describe("/projects", () => {
         throw new Error("Expected source automation to use a webhook trigger")
       }
       const sourceWebhookId = assignedAutomation.definition.trigger.webhookId
+      const createdToolAutomation = await config.createAutomation()
+      const { automation: toolAutomation } = await config.api.automation.update(
+        {
+          ...createdToolAutomation,
+          projectIds: [project._id],
+        }
+      )
       const agent = await config.api.agent.create({
         name: "Ops agent",
         aiconfig: "default",
@@ -1633,6 +1702,27 @@ describe("/projects", () => {
           signingSecret: "secret-signing-key",
         },
         projectIds: [project._id],
+      })
+      await config.api.agent.createOperation(agent._id!, {
+        id: "operation_1",
+        name: "Use project resources",
+        live: false,
+        enabledTools: [
+          {
+            toolName: getAutomationTriggerToolName(toolAutomation._id!),
+            executionPrincipal: ToolExecutionPrincipal.ADMIN,
+          },
+          {
+            toolName: getRowToolNames(table._id!).create_row,
+            executionPrincipal: ToolExecutionPrincipal.ADMIN,
+          },
+          {
+            toolName: getQueryToolBindingsForResource({ datasource, query })
+              .runtimeBinding,
+            executionPrincipal: ToolExecutionPrincipal.ADMIN,
+          },
+        ],
+        allowKnowledgeSourceDownload: true,
       })
 
       const body = await config.api.project.export(project._id)
@@ -1654,7 +1744,7 @@ describe("/projects", () => {
           expect(imported.resources.datasource).toHaveLength(1)
           expect(imported.resources.query).toHaveLength(1)
           expect(imported.resources.table).toHaveLength(1)
-          expect(imported.resources.automation).toHaveLength(1)
+          expect(imported.resources.automation).toHaveLength(2)
           expect(imported.resources.agent).toHaveLength(1)
           expect(imported.resources.workspace_app).toHaveLength(1)
           expect(imported.resources.screen).toHaveLength(1)
@@ -1699,15 +1789,24 @@ describe("/projects", () => {
           expect(importedScreen!.props.testBinding).toBe(
             `{{ ${imported.resources.query?.[0]}.rows }}`
           )
+          expect(importedScreen!.props.testBracketBinding).toBe(
+            `{{ [${imported.resources.query?.[0]}].[rows] }}`
+          )
           expect(importedScreen!.props.testBlockBinding).toBe(
             `{{#if ${imported.resources.query?.[0]}.rows}}{{ ${imported.resources.query?.[0]}.rows }}{{/if}}`
           )
+          expect(
+            decodeJSBinding(importedScreen!.props.testJavascriptBinding)
+          ).toBe(`return $("${imported.resources.query?.[0]}.rows")`)
           expect(importedScreen!.props.ordinaryText).toBe(
             `Docs: ${query._id}.rows`
           )
           expect(importedScreen!.props.ordinaryUrl).toBe(
             `https://example.com/${query._id}.rows`
           )
+          expect(importedScreen!.props.bindingKeyed).toEqual({
+            [`{{ ${imported.resources.query?.[0]}.rows }}`]: "binding key",
+          })
           expect(importedScreen!.props.idKeyed).toEqual({
             [imported.resources.query?.[0]!]: {
               resourceId: imported.resources.query?.[0],
@@ -1728,9 +1827,14 @@ describe("/projects", () => {
           )
           expect(importedTable.projectIds).toEqual([imported.project._id])
 
-          const importedAutomation = await config.api.automation.get(
-            imported.resources.automation?.[0]!
+          const importedAutomations = await Promise.all(
+            imported.resources.automation!.map(id =>
+              config.api.automation.get(id)
+            )
           )
+          const importedAutomation = importedAutomations.find(automation =>
+            isWebhookTrigger(automation.definition.trigger)
+          )!
           expect(importedAutomation.projectIds).toEqual([imported.project._id])
           expect(importedAutomation.appId).toBe(destinationWorkspace.appId)
           expect(importedAutomation.disabled).toBe(true)
@@ -1760,6 +1864,16 @@ describe("/projects", () => {
           )
           expect(importedWebhook.action.target).toBe(importedAutomation._id)
 
+          const importedToolAutomation = importedAutomations.find(
+            automation =>
+              automation.definition.trigger.stepId ===
+              AutomationTriggerStepId.APP
+          )!
+          expect(importedToolAutomation).toBeDefined()
+          expect(importedToolAutomation.projectIds).toEqual([
+            imported.project._id,
+          ])
+
           const importedDatasource = await config.api.datasource.get(
             imported.resources.datasource?.[0]!
           )
@@ -1773,6 +1887,18 @@ describe("/projects", () => {
           expect(importedAgent).toBeDefined()
           expect(importedAgent?.projectIds).toEqual([imported.project._id])
           expect(importedAgent?.live).toBe(false)
+          expect(
+            importedAgent?.operations?.[0].enabledTools?.map(
+              tool => tool.toolName
+            )
+          ).toEqual([
+            getAutomationTriggerToolName(importedToolAutomation._id!),
+            getRowToolNames(importedTable._id!).create_row,
+            getQueryToolBindingsForResource({
+              datasource: importedDatasource,
+              query: importedQuery,
+            }).runtimeBinding,
+          ])
 
           const resourceGraph =
             await config.api.resource.getResourceDependencies()
@@ -1785,7 +1911,7 @@ describe("/projects", () => {
               imported.resources.datasource?.[0],
               imported.resources.query?.[0],
               imported.resources.table?.[0],
-              imported.resources.automation?.[0],
+              ...imported.resources.automation!,
               imported.resources.agent?.[0],
               imported.resources.workspace_app?.[0],
               imported.resources.screen?.[0],

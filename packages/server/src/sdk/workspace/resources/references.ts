@@ -1,4 +1,4 @@
-import { findHBSBlocks } from "@budibase/string-templates"
+import { decodeJSBinding, findHBSBlocks } from "@budibase/string-templates"
 import type { AnyDocument, UsedResource } from "@budibase/types"
 
 export interface ResourceSearchTarget extends UsedResource {
@@ -28,6 +28,14 @@ const matchesBinding = (block: string, target: ResourceSearchTarget) => {
   )
 }
 
+const getSearchableBinding = (block: string) => {
+  try {
+    return decodeJSBinding(block) ?? block
+  } catch {
+    return block
+  }
+}
+
 export const findResourceSearchTargets = ({
   resource,
   targets,
@@ -38,7 +46,7 @@ export const findResourceSearchTargets = ({
   const matchedIds = new Set<string>()
 
   const addStringMatches = (value: string, property?: string) => {
-    const blocks = findHBSBlocks(value)
+    const blocks = findHBSBlocks(value).map(getSearchableBinding)
     for (const target of targets) {
       const exactMatch =
         target.matchExactly !== false && value === target.idToSearch
