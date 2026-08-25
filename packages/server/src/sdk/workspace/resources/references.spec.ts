@@ -1,4 +1,5 @@
 import { ResourceType, ToolExecutionPrincipal } from "@budibase/types"
+import { encodeJSBinding } from "@budibase/string-templates"
 import {
   createBindingSearchTarget,
   createToolSearchTarget,
@@ -62,6 +63,54 @@ describe("resource references", () => {
     expect(
       findResourceSearchTargets({
         resource: { prompt: "Use {{ api.sales.getOrders.rows }}" },
+        targets: [target],
+      })
+    ).toEqual([target])
+  })
+
+  it("matches resource references inside JavaScript bindings", () => {
+    const target = createBindingSearchTarget({
+      resource: queryResource,
+      binding: "api.sales.getOrders",
+    })
+
+    expect(
+      findResourceSearchTargets({
+        resource: {
+          prompt: encodeJSBinding(
+            'return $("api.sales.getOrders.rows").length'
+          ),
+        },
+        targets: [target],
+      })
+    ).toEqual([target])
+  })
+
+  it("matches bindings used as object keys", () => {
+    const bindingTarget = createBindingSearchTarget({
+      resource: queryResource,
+      binding: "api.sales.getOrders",
+    })
+
+    expect(
+      findResourceSearchTargets({
+        resource: {
+          [`{{ ${bindingTarget.idToSearch}.rows }}`]: "binding key",
+        },
+        targets: [bindingTarget],
+      })
+    ).toEqual([bindingTarget])
+  })
+
+  it("matches resource ids used as object keys", () => {
+    const target = {
+      ...queryResource,
+      idToSearch: queryResource.id,
+    }
+
+    expect(
+      findResourceSearchTargets({
+        resource: { [queryResource.id]: "id key" },
         targets: [target],
       })
     ).toEqual([target])

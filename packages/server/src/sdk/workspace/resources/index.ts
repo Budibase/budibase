@@ -12,6 +12,7 @@ import {
   AnyDocument,
   Agent,
   Automation,
+  AutomationTriggerStepId,
   Datasource,
   DocumentType,
   INTERNAL_TABLE_SOURCE_ID,
@@ -32,6 +33,7 @@ import {
   WorkspaceApp,
 } from "@budibase/types"
 import sdk from "../.."
+import { getAutomationTriggerToolName } from "../../../ai/tools/budibase/automations"
 import { getRowToolNames } from "../../../ai/tools/budibase/rows"
 import { ObjectStoreBuckets } from "../../../constants"
 import { extractTableIdFromRowActionsID, getRowParams } from "../../../db/utils"
@@ -209,13 +211,30 @@ async function buildResourceDependencyAnalysis({
   baseSearchTargets.push(
     ...datasources
       .filter(d => d._id !== INTERNAL_TABLE_SOURCE_ID)
-      .map(datasource =>
-        createSearchTarget({
+      .flatMap(datasource => {
+        const resource: UsedResource = {
           id: datasource._id!,
           name: datasource.name!,
           type: ResourceType.DATASOURCE,
+        }
+        const externalTableTargets = Object.values(
+          datasource.entities || {}
+        ).flatMap(table => {
+          if (!table?._id) {
+            return []
+          }
+          return [
+            {
+              ...resource,
+              idToSearch: table._id,
+            },
+            ...Object.values(getRowToolNames(table._id)).map(toolName =>
+              createToolSearchTarget({ resource, toolName })
+            ),
+          ]
         })
-      )
+        return [createSearchTarget(resource), ...externalTableTargets]
+      })
   )
 
   baseSearchTargets.push(
@@ -225,13 +244,18 @@ async function buildResourceDependencyAnalysis({
         name: automation.name!,
         type: ResourceType.AUTOMATION,
       }
-      return [
-        createSearchTarget(resource),
-        createToolSearchTarget({
-          resource,
-          toolName: `${resource.id}_trigger`,
-        }),
-      ]
+      const targets: ResourceSearchTarget[] = [createSearchTarget(resource)]
+      if (
+        automation.definition?.trigger?.stepId === AutomationTriggerStepId.APP
+      ) {
+        targets.push(
+          createToolSearchTarget({
+            resource,
+            toolName: getAutomationTriggerToolName(resource.id),
+          })
+        )
+      }
+      return targets
     })
   )
 
