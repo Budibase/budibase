@@ -79,7 +79,7 @@
           goto("/builder")
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       const credentialsRejected = err?.status === 403 && !err?.accountLocked
       notifications.error(
         credentialsRejected
