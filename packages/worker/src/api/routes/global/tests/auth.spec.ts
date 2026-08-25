@@ -298,6 +298,50 @@ describe("/api/global/auth", () => {
             }
           )
         })
+
+        it("resets the shared IP counter on a successful login, so unrelated failures do not accumulate forever", async () => {
+          const { withEnv } = require("../../../../environment")
+          const tenantId = config.tenantId!
+          const email = config.user!.email!
+          const password = config.userPassword
+
+          await withEnv(
+            {
+              LOGIN_IP_LOCKOUT_LIMIT: 2,
+              LOGIN_LOCKOUT_SECONDS: 900,
+              // keep the per-email lock out of the way
+              LOGIN_MAX_FAILED_ATTEMPTS: 100,
+            },
+            async () => {
+              // one failure from someone else behind the same address
+              await config.api.auth.login(tenantId, email, "incorrect123", {
+                status: 403,
+              })
+
+              // a legitimate login should wipe the slate for this address
+              const success = await config.api.auth.login(
+                tenantId,
+                email,
+                password
+              )
+              expectSetAuthCookie(success)
+
+              // another unrelated failure - without the reset this would be
+              // the 2nd strike against the (unreset) previous failure and
+              // trip the limit
+              await config.api.auth.login(tenantId, email, "incorrect123", {
+                status: 403,
+              })
+
+              const stillWorks = await config.api.auth.login(
+                tenantId,
+                email,
+                password
+              )
+              expectSetAuthCookie(stillWorks)
+            }
+          )
+        })
       })
     })
 
