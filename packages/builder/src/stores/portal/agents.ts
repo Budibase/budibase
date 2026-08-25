@@ -16,6 +16,7 @@ import {
   FetchAgentKnowledgeSourceOptionsResponse,
   KnowledgeBaseFileStatus,
   AgentKnowledgeSourceSyncRunStatus,
+  AgentKnowledgeConfiguration,
   SharePointKnowledgeSourceSnapshot,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
@@ -79,7 +80,7 @@ interface AgentStoreState {
   >
   knowledgeUploadByOperation: Record<string, OperationKnowledgeUploadState>
   knowledgeLoadingByOperation: Record<string, boolean>
-  knowledgeConfiguration?: FetchAgentKnowledgeIndexResponse["configuration"]
+  knowledgeConfiguration?: AgentKnowledgeConfiguration
 }
 
 const getOperationKnowledgeCacheKey = (agentId: string, operationId: string) =>
@@ -210,10 +211,11 @@ export class AgentsStore extends BudiStore<AgentStoreState> {
   }
 
   fetchAgents = async () => {
-    const { agents } = await API.fetchAgents()
+    const { agents, configuration } = await API.fetchAgents()
     this.update(state => {
       state.agents = agents
       state.agentsLoaded = true
+      state.knowledgeConfiguration = configuration
       return state
     })
     return agents

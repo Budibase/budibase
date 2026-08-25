@@ -209,12 +209,14 @@ const createSlackInputHandler = ({
   channelEnabled,
   idleTimeoutMinutes,
   requireUserLink,
+  allowConversationAttachments,
 }: {
   workspaceId: string
   agentId: string
   channelEnabled: boolean
   idleTimeoutMinutes?: number
   requireUserLink?: boolean
+  allowConversationAttachments: boolean
 }) => {
   return async ({
     target,
@@ -283,6 +285,7 @@ const createSlackInputHandler = ({
         command,
         content,
         attachments,
+        allowConversationAttachments,
         user: { externalUserId, displayName },
         channel,
         scope,
@@ -350,12 +353,15 @@ export async function slackWebhook(
         idleTimeoutMinutes,
         channelEnabled,
         requireUserLink,
+        allowConversationAttachments,
       } = await context.doInWorkspaceContext(workspaceId, async () => {
         const agent = await sdk.ai.agents.getOrThrow(agentId)
         return {
           integration: sdk.ai.deployments.slack.validateSlackIntegration(agent),
           idleTimeoutMinutes: agent.slackIntegration?.idleTimeoutMinutes,
           requireUserLink: agent.slackIntegration?.requireUserLink,
+          allowConversationAttachments:
+            agent.allowConversationAttachments !== false,
           channelEnabled:
             !!agent.slackIntegration?.messagingEndpointUrl?.trim(),
         }
@@ -384,6 +390,7 @@ export async function slackWebhook(
         channelEnabled,
         idleTimeoutMinutes,
         requireUserLink,
+        allowConversationAttachments,
       })
       const handler = createSlackMessageHandler(handleSlackInput)
 

@@ -84,6 +84,32 @@ jest.mock("@chat-adapter/state-memory", () => ({
   createMemoryState: jest.fn(() => ({})),
 }))
 
+jest.mock(
+  "../../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue",
+  () => {
+    const actual = jest.requireActual<
+      typeof import("../../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue")
+    >("../../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue")
+    return {
+      ...actual,
+      scheduleConversationAttachmentIngestion: jest.fn(),
+    }
+  }
+)
+
+jest.mock(
+  "../../../../sdk/workspace/ai/chatConversations/attachmentCleanupQueue",
+  () => {
+    const actual = jest.requireActual<
+      typeof import("../../../../sdk/workspace/ai/chatConversations/attachmentCleanupQueue")
+    >("../../../../sdk/workspace/ai/chatConversations/attachmentCleanupQueue")
+    return {
+      ...actual,
+      scheduleConversationAttachmentCleanup: jest.fn(),
+    }
+  }
+)
+
 jest.mock("../../../controllers/ai/chatConversations", () => {
   const actual = jest.requireActual("../../../controllers/ai/chatConversations")
   return {
@@ -146,6 +172,14 @@ const { resetMockChatState, setMockPostEphemeralResult } = jest.requireActual(
 
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
 const mockedGetFileUrlForAgent = jest.mocked(sdk.ai.rag.getFileUrlForAgent)
+const mockedScheduleAttachmentIngestion = jest.mocked(
+  sdk.ai.chatConversations.attachmentIngestionQueue
+    .scheduleConversationAttachmentIngestion
+)
+const mockedScheduleAttachmentCleanup = jest.mocked(
+  sdk.ai.chatConversations.attachmentCleanupQueue
+    .scheduleConversationAttachmentCleanup
+)
 const mockedIsGeminiFileSearchConfigured = jest.mocked(
   geminiFileStore.isGeminiFileSearchConfigured
 )
@@ -223,6 +257,8 @@ describe("agent slack integration provisioning", () => {
     mockedIsGeminiFileSearchConfigured.mockImplementation(
       actualGeminiFileStore.isGeminiFileSearchConfigured
     )
+    mockedScheduleAttachmentIngestion.mockReset()
+    mockedScheduleAttachmentCleanup.mockReset()
     resetMockChatState()
   })
 
@@ -762,13 +798,16 @@ describe("agent slack integration provisioning", () => {
     const setupProvisionedSlackAgent = async ({
       requireUserLink,
       allowKnowledgeSourceDownload,
+      allowConversationAttachments,
     }: {
       requireUserLink?: boolean
       allowKnowledgeSourceDownload?: boolean
+      allowConversationAttachments?: boolean
     } = {}) => {
       const agent = await config.api.agent.createWithOperation(
         {
           name: "Slack Incoming Messages Agent",
+          allowConversationAttachments,
           slackIntegration: {
             botToken: "xoxb-token-3",
             signingSecret: "slack-signing-secret-3",
@@ -1277,15 +1316,6 @@ describe("agent slack integration provisioning", () => {
       mockedIsGeminiFileSearchConfigured.mockReturnValue(false)
       await linkExternalUser("user-file-disabled")
       const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
-      const scheduleIngestion = jest.spyOn(
-        sdk.ai.chatConversations.attachmentIngestionQueue,
-        "scheduleConversationAttachmentIngestion"
-      )
-      const scheduleCleanup = jest.spyOn(
-        sdk.ai.chatConversations.attachmentCleanupQueue,
-        "scheduleConversationAttachmentCleanup"
-      )
-
       const response = await postSlackMessage({
         path,
         body: {
@@ -1315,12 +1345,77 @@ describe("agent slack integration provisioning", () => {
         "I can't process file attachments because Gemini File Search isn't enabled. Please ask your Budibase administrator to enable it."
       )
       expect(mockedWebhookChat).not.toHaveBeenCalled()
-      expect(scheduleIngestion).not.toHaveBeenCalled()
-      expect(scheduleCleanup).not.toHaveBeenCalled()
+      expect(mockedScheduleAttachmentIngestion).not.toHaveBeenCalled()
+      expect(mockedScheduleAttachmentCleanup).not.toHaveBeenCalled()
       expect(await fetchConversations()).toHaveLength(0)
+    })
 
-      scheduleIngestion.mockRestore()
-      scheduleCleanup.mockRestore()
+    it("rejects file turns when conversation attachments are disabled", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent({
+        allowConversationAttachments: false,
+      })
+      mockedIsGeminiFileSearchConfigured.mockReturnValue(false)
+      await linkExternalUser("user-file-disabled-by-agent")
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "Summarise this report",
+            user: "user-file-disabled-by-agent",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.350",
+            team_id: "T123",
+            files: [
+              {
+                id: "F_AGENT_DISABLED",
+                name: "report.txt",
+                mimetype: "text/plain",
+                size: 7,
+                content: "content",
+              },
+            ],
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain(
+        "File attachments aren't enabled for this agent."
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+      expect(mockedScheduleAttachmentIngestion).not.toHaveBeenCalled()
+      expect(mockedScheduleAttachmentCleanup).not.toHaveBeenCalled()
+      expect(await fetchConversations()).toHaveLength(0)
+    })
+
+    it("processes text-only turns when conversation attachments are disabled", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent({
+        allowConversationAttachments: false,
+      })
+      await linkExternalUser("user-text-with-files-disabled")
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "hello without a file",
+            user: "user-text-with-files-disabled",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.360",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain("Mock assistant response")
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
     })
 
     it("creates a conversation from an incoming message", async () => {

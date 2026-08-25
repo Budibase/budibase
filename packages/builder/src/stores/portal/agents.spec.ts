@@ -69,6 +69,17 @@ describe("agentsStore sharepoint and file syncing", () => {
     store.stopOperationKnowledgePolling()
   })
 
+  it("stores knowledge configuration when fetching agents", async () => {
+    fetchAgents.mockResolvedValue({
+      agents: [],
+      configuration: knowledgeConfiguration,
+    })
+
+    await store.fetchAgents()
+
+    expect(store.getKnowledgeConfiguration()).toEqual(knowledgeConfiguration)
+  })
+
   it("syncOperationKnowledgeSources refreshes knowledge after sync", async () => {
     syncOperationKnowledgeSources.mockResolvedValue({
       agentId: "agent_1",
@@ -310,7 +321,10 @@ describe("AgentsStore file operations", () => {
       } as AgentFileUploadResponse["file"],
     }
     uploadOperationFile.mockResolvedValue(uploadResponse)
-    fetchAgents.mockResolvedValue({ agents })
+    fetchAgents.mockResolvedValue({
+      agents,
+      configuration: knowledgeConfiguration,
+    })
 
     await store.uploadOperationFile("agent_1", "operation_1", {} as File)
 
@@ -327,7 +341,10 @@ describe("AgentsStore file operations", () => {
   })
 
   it("refreshes knowledge after removing a file", async () => {
-    fetchAgents.mockResolvedValue({ agents: [] })
+    fetchAgents.mockResolvedValue({
+      agents: [],
+      configuration: knowledgeConfiguration,
+    })
     fetchAgentKnowledge.mockResolvedValue({
       operations: {
         operation_1: { files: [], sharePointSources: [] },
@@ -355,7 +372,10 @@ describe("AgentsStore file operations", () => {
     uploadOperationFile.mockResolvedValue({
       file: uploadedFile,
     })
-    fetchAgents.mockResolvedValue({ agents: [] })
+    fetchAgents.mockResolvedValue({
+      agents: [],
+      configuration: knowledgeConfiguration,
+    })
     fetchAgentKnowledge.mockResolvedValue({
       operations: {
         operation_1: { files: [uploadedFile], sharePointSources: [] },
@@ -410,7 +430,10 @@ describe("agentsStore fetchTools", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    fetchAgents.mockResolvedValue({ agents: [] })
+    fetchAgents.mockResolvedValue({
+      agents: [],
+      configuration: knowledgeConfiguration,
+    })
     store = new AgentsStore()
     store.set(createEmptyState())
   })

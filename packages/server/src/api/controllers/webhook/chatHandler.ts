@@ -358,6 +358,7 @@ export interface HandleChatMessageParams {
   command: SupportedChatCommand
   content: string
   attachments?: IncomingConversationAttachment[]
+  allowConversationAttachments: boolean
   user: {
     externalUserId: string
     displayName?: string
@@ -442,6 +443,7 @@ export const handleChatMessage = async ({
   command,
   content,
   attachments: incomingAttachments = [],
+  allowConversationAttachments,
   user,
   channel,
   scope,
@@ -641,6 +643,11 @@ export const handleChatMessage = async ({
             provider,
             idleTimeoutMs,
           })
+
+    if (incomingAttachments.length && !allowConversationAttachments) {
+      await reply("File attachments aren't enabled for this agent.")
+      return
+    }
 
     if (
       incomingAttachments.length &&
