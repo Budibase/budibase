@@ -1,23 +1,6 @@
 import { Ctx } from "@budibase/types"
 import env from "../environment"
 
-/**
- * Resolving the end user's address for rate limiting has to be done from the
- * trusted proxy chain, because both naive readings of X-Forwarded-For are wrong:
- *
- *  - the leftmost hop is whatever the client sent, so any limiter keyed on it is
- *    bypassed by sending a different value on every request
- *  - the rightmost hop is our own load balancer, so every user on the platform
- *    collapses onto a single bucket (Budibase/account-portal#1826)
- *
- * `ctx.ip` is the leftmost hop, because the app sets `app.proxy = true`.
- *
- * Our edge proxies stamp X-Real-IP from $remote_addr after nginx real_ip
- * resolution, and `proxy_set_header` always overwrites whatever the client sent,
- * so that header is authoritative when it is present. X-Forwarded-For is only a
- * fallback, and is walked right to left past the hops we recognise as our own.
- */
-
 const DEFAULT_TRUSTED_PROXY_CIDRS = [
   "127.0.0.0/8",
   "::1/128",
@@ -216,14 +199,21 @@ const headerValue = (ctx: Ctx, name: string): string | undefined => {
  * should fall back to a non-IP identifier rather than guessing.
  */
 export const getClientIp = (ctx: Ctx): string | undefined => {
+  const socketIp = normaliseIp(
+    (ctx.req?.socket?.remoteAddress as string | undefined) || ""
+  )
+
+  // nothing forwarded to us is worth reading unless one of our own proxies is
+  // the thing that forwarded it
+  if (!socketIp || !isTrustedProxy(socketIp)) {
+    return socketIp
+  }
+
+  // the address our own edge saw, so it beats anything derived from the chain
   const realIp = normaliseIp(headerValue(ctx, "x-real-ip") || "")
   if (realIp && toBytes(realIp)) {
     return realIp
   }
-
-  const socketIp = normaliseIp(
-    (ctx.req?.socket?.remoteAddress as string | undefined) || ""
-  )
 
   const xff = headerValue(ctx, "x-forwarded-for")
   if (xff) {

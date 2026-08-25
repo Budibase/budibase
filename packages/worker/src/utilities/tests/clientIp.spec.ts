@@ -179,4 +179,69 @@ describe("getClientIp", () => {
   it("returns undefined when there is nothing to go on", () => {
     expect(getClientIp(ctxFor({}))).toBeUndefined()
   })
+
+  it("ignores X-Real-IP from a peer that is not one of our proxies", () => {
+    // reaching the worker directly, so the headers are entirely attacker chosen
+    const ctx = ctxFor({
+      headers: { "x-real-ip": "203.0.113.10" },
+      socket: "198.51.100.4",
+    })
+    expect(getClientIp(ctx)).toBe("198.51.100.4")
+  })
+
+  it("ignores X-Forwarded-For from a peer that is not one of our proxies", () => {
+    const ctx = ctxFor({
+      headers: { "x-forwarded-for": "203.0.113.10, 10.0.0.1" },
+      socket: "198.51.100.4",
+    })
+    expect(getClientIp(ctx)).toBe("198.51.100.4")
+  })
+
+  it("cannot be made to pick a victim's address by a direct caller", () => {
+    const victim = "203.0.113.55"
+    const attacker = "198.51.100.4"
+    const ctx = ctxFor({
+      headers: {
+        "x-real-ip": victim,
+        "x-forwarded-for": `${victim}, ${victim}`,
+      },
+      socket: attacker,
+    })
+    expect(getClientIp(ctx)).toBe(attacker)
+  })
+
+  it("does not let a peer inside the trusted range forge its own address", () => {
+    const ctx = ctxFor({
+      headers: {
+        "x-real-ip": "10.77.0.4",
+        "x-forwarded-for": "203.0.113.7, 10.77.0.4",
+      },
+      socket: "10.77.0.3",
+    })
+    // walking the chain would skip 10.77.0.4 as infrastructure and land on the
+    // forged hop, which is why X-Real-IP wins even when it is private
+    expect(getClientIp(ctx)).toBe("10.77.0.4")
+  })
+
+  it("prefers a private X-Real-IP over the chain", () => {
+    // a LAN deployment, where the client's own address is private
+    const ctx = ctxFor({
+      headers: {
+        "x-real-ip": "192.168.1.50",
+        "x-forwarded-for": "203.0.113.7, 192.168.1.50",
+      },
+      socket: "10.0.0.1",
+    })
+    expect(getClientIp(ctx)).toBe("192.168.1.50")
+  })
+
+  it("honours forwarded headers once the peer is a configured proxy", async () => {
+    await withEnv({ TRUSTED_PROXY_CIDRS: "198.51.100.0/24" }, async () => {
+      const ctx = ctxFor({
+        headers: { "x-real-ip": "203.0.113.10" },
+        socket: "198.51.100.4",
+      })
+      expect(getClientIp(ctx)).toBe("203.0.113.10")
+    })
+  })
 })
