@@ -117,7 +117,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
         ? `Account temporarily locked. Try again in ${retryIn}.`
         : "Account temporarily locked. Try again later."
     } else if (response.status === 429 && retryIn) {
-      message = `${message} Try again in ${retryIn}.`
+      message = `${message.replace(/\s*Try again later\.?$/i, "")} Try again in ${retryIn}.`
     }
     return {
       message,
