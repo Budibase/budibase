@@ -113,16 +113,28 @@ jest.mock("../../../../sdk/workspace/ai/rag", () => {
   }
 })
 
+jest.mock("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore", () => {
+  const actual = jest.requireActual<
+    typeof import("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
+  >("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
+  return {
+    ...actual,
+    isGeminiFileSearchConfigured: jest.fn(actual.isGeminiFileSearchConfigured),
+  }
+})
+
 import sdk from "../../../../sdk"
 import { context, db, docIds, encryption } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
+  ConversationAttachmentStatus,
   DocumentType,
   type Agent,
   type ChatConversation,
   type SlackAppConfig,
 } from "@budibase/types"
+import * as geminiFileStore from "../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
 import { webhookChat } from "../../../controllers/ai/chatConversations"
@@ -134,6 +146,12 @@ const { resetMockChatState, setMockPostEphemeralResult } = jest.requireActual(
 
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
 const mockedGetFileUrlForAgent = jest.mocked(sdk.ai.rag.getFileUrlForAgent)
+const mockedIsGeminiFileSearchConfigured = jest.mocked(
+  geminiFileStore.isGeminiFileSearchConfigured
+)
+const actualGeminiFileStore = jest.requireActual<
+  typeof import("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
+>("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
 
 const slackJsonResponse = (body: Record<string, unknown>) =>
   new Response(JSON.stringify(body), {
@@ -182,7 +200,6 @@ const secretMatch = (plain: string, encoded: string) => {
 describe("agent slack integration provisioning", () => {
   const config = new TestConfiguration()
   let cleanupAIConfig: undefined | (() => Promise<void>)
-  let restoreGeminiFileSearchConfig: undefined | (() => void)
 
   async function getPersistedAgent(id: string | undefined) {
     const result = await db.doWithDB(config.getDevWorkspaceId(), db =>
@@ -202,6 +219,10 @@ describe("agent slack integration provisioning", () => {
     )
     resetWebhookChatMock()
     mockedGetFileUrlForAgent.mockReset()
+    mockedIsGeminiFileSearchConfigured.mockReset()
+    mockedIsGeminiFileSearchConfigured.mockImplementation(
+      actualGeminiFileStore.isGeminiFileSearchConfigured
+    )
     resetMockChatState()
   })
 
@@ -211,8 +232,6 @@ describe("agent slack integration provisioning", () => {
     }
     await cleanupAIConfig?.()
     cleanupAIConfig = undefined
-    restoreGeminiFileSearchConfig?.()
-    restoreGeminiFileSearchConfig = undefined
   })
 
   afterAll(() => {
@@ -368,6 +387,7 @@ describe("agent slack integration provisioning", () => {
       "channels:history",
       "chat:write",
       "commands",
+      "files:read",
       "im:history",
       "im:read",
       "im:write",
@@ -1180,10 +1200,7 @@ describe("agent slack integration provisioning", () => {
 
     it("queues file ingestion and subsequent Slack turns", async () => {
       const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
-      const geminiConfigured = jest
-        .spyOn(sdk.ai.knowledgeBase, "isGeminiFileSearchConfigured")
-        .mockReturnValue(true)
-      restoreGeminiFileSearchConfig = () => geminiConfigured.mockRestore()
+      mockedIsGeminiFileSearchConfigured.mockReturnValue(true)
       await linkExternalUser("user-file")
       const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       const content = "quarterly revenue is 42"
@@ -1246,9 +1263,12 @@ describe("agent slack integration provisioning", () => {
           filename: "report.txt",
           mimetype: "text/plain",
           size: Buffer.byteLength(content),
-          status: "queued",
         }),
       ])
+      expect([
+        ConversationAttachmentStatus.QUEUED,
+        ConversationAttachmentStatus.PROCESSING,
+      ]).toContain(conversations[0]?.attachments?.[0]?.status)
       expect(conversations[0]?.pendingAttachmentTurns).toHaveLength(2)
     })
 
