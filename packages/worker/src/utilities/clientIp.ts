@@ -125,7 +125,11 @@ interface Cidr {
 }
 
 const parseCidr = (value: string): Cidr | undefined => {
-  const [address, prefixPart] = (value || "").trim().split("/")
+  const parts = (value || "").trim().split("/")
+  if (parts.length > 2) {
+    return undefined
+  }
+  const [address, prefixPart] = parts
   const ip = normaliseIp(address)
   if (!ip) {
     return undefined
@@ -135,8 +139,14 @@ const parseCidr = (value: string): Cidr | undefined => {
     return undefined
   }
   const maxPrefix = bytes.length * 8
-  const prefix = prefixPart === undefined ? maxPrefix : Number(prefixPart)
-  if (!Number.isInteger(prefix) || prefix < 0 || prefix > maxPrefix) {
+  if (prefixPart === undefined) {
+    return { bytes, prefix: maxPrefix }
+  }
+  if (!/^\d+$/.test(prefixPart)) {
+    return undefined
+  }
+  const prefix = Number(prefixPart)
+  if (prefix > maxPrefix) {
     return undefined
   }
   return { bytes, prefix }
