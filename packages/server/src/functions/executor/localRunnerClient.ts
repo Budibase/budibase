@@ -16,7 +16,7 @@ const RESPONSE_ENVELOPE_BYTES = 64 * 1024
 
 type Fetch = typeof fetch
 
-interface LocalRunnerFunctionExecutorOptions {
+interface LocalRunnerClientOptions {
   baseUrl?: string
   fetch?: Fetch
 }
@@ -64,11 +64,11 @@ const readBoundedBody = async (response: Response, maxBytes: number) => {
   return new TextDecoder().decode(body)
 }
 
-export class LocalRunnerFunctionExecutor implements FunctionExecutor {
+export class LocalRunnerClient implements FunctionExecutor {
   private readonly baseUrl?: string
   private readonly fetch: Fetch
 
-  constructor(options: LocalRunnerFunctionExecutorOptions = {}) {
+  constructor(options: LocalRunnerClientOptions = {}) {
     this.baseUrl = options.baseUrl ?? env.FUNCTIONS_RUNNER_URL
     this.fetch = options.fetch ?? globalThis.fetch
   }

@@ -1,12 +1,12 @@
 import { FunctionErrorCode } from "@budibase/types"
 import { FunctionExecutionError } from "../errors"
-import { LocalRunnerFunctionExecutor } from "./localRunner"
+import { LocalRunnerClient } from "./localRunnerClient"
 import {
   FUNCTION_RUN_REQUEST_FIXTURE,
   FUNCTION_RUN_RESULT_FIXTURE,
 } from "../testFixtures"
 
-describe("LocalRunnerFunctionExecutor", () => {
+describe("LocalRunnerClient", () => {
   const baseUrl = "https://example.com"
   let fetch: jest.MockedFunction<typeof globalThis.fetch>
 
@@ -30,7 +30,7 @@ describe("LocalRunnerFunctionExecutor", () => {
     )
 
     await expect(
-      new LocalRunnerFunctionExecutor({ baseUrl, fetch }).health()
+      new LocalRunnerClient({ baseUrl, fetch }).health()
     ).resolves.toEqual({
       healthy: true,
     })
@@ -44,7 +44,7 @@ describe("LocalRunnerFunctionExecutor", () => {
     )
 
     await expect(
-      new LocalRunnerFunctionExecutor({ baseUrl, fetch }).health()
+      new LocalRunnerClient({ baseUrl, fetch }).health()
     ).resolves.toEqual({
       healthy: false,
     })
@@ -54,7 +54,7 @@ describe("LocalRunnerFunctionExecutor", () => {
     fetch.mockResolvedValue(jsonResponse(FUNCTION_RUN_RESULT_FIXTURE))
 
     await expect(
-      new LocalRunnerFunctionExecutor({ baseUrl, fetch }).execute(
+      new LocalRunnerClient({ baseUrl, fetch }).execute(
         FUNCTION_RUN_REQUEST_FIXTURE
       )
     ).resolves.toEqual(FUNCTION_RUN_RESULT_FIXTURE)
@@ -73,7 +73,7 @@ describe("LocalRunnerFunctionExecutor", () => {
     fetch.mockResolvedValue(new Response("internal runner detail", { status }))
 
     await expect(
-      new LocalRunnerFunctionExecutor({ baseUrl, fetch }).execute(
+      new LocalRunnerClient({ baseUrl, fetch }).execute(
         FUNCTION_RUN_REQUEST_FIXTURE
       )
     ).rejects.toMatchObject({
@@ -91,7 +91,7 @@ describe("LocalRunnerFunctionExecutor", () => {
     )
 
     try {
-      await new LocalRunnerFunctionExecutor({ baseUrl, fetch }).execute(
+      await new LocalRunnerClient({ baseUrl, fetch }).execute(
         FUNCTION_RUN_REQUEST_FIXTURE
       )
       throw new Error("Expected the request to fail")
@@ -129,7 +129,7 @@ describe("LocalRunnerFunctionExecutor", () => {
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
 
     await expect(
-      new LocalRunnerFunctionExecutor({ baseUrl, fetch }).execute({
+      new LocalRunnerClient({ baseUrl, fetch }).execute({
         ...FUNCTION_RUN_REQUEST_FIXTURE,
         limits: {
           ...FUNCTION_RUN_REQUEST_FIXTURE.limits,
@@ -149,7 +149,7 @@ describe("LocalRunnerFunctionExecutor", () => {
 
   it("fails fast when no runner is configured", async () => {
     await expect(
-      new LocalRunnerFunctionExecutor({ baseUrl: "", fetch }).execute(
+      new LocalRunnerClient({ baseUrl: "", fetch }).execute(
         FUNCTION_RUN_REQUEST_FIXTURE
       )
     ).rejects.toMatchObject({

@@ -1,1 +1,1 @@
-export * from "./localRunner"
+export * from "./localRunnerClient"
