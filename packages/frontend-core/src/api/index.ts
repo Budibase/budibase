@@ -74,6 +74,7 @@ export type { APIClient } from "./types"
  * that we can ignore events caused by ourselves.
  */
 export const APISessionID = Helpers.uuid()
+const API_WARNING_CODES = Object.values(APIWarningCode)
 
 /**
  * Constructs an API client with the provided configuration.
@@ -236,11 +237,12 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
   }
 
   const handleWarnings = (response: Response) => {
+    if (!config.onWarning) {
+      return
+    }
     const warning = response.headers.get(Header.API_WARNING)
-    const warningCode = Object.values(APIWarningCode).find(
-      code => code === warning
-    )
-    if (warningCode && config.onWarning) {
+    const warningCode = API_WARNING_CODES.find(code => code === warning)
+    if (warningCode) {
       config.onWarning(warningCode)
     }
   }
