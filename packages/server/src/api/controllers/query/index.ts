@@ -48,6 +48,7 @@ import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
+import { propagateProjectDependencyChangesWithWarning } from "../../../utilities/projects"
 import { builderSocket } from "../../../websockets"
 import { createImporter, getImportInfo } from "./import"
 import { ImportInfo } from "./import/sources/base"
@@ -211,7 +212,7 @@ export async function importInfo(
   }
 }
 
-export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
+async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const db = context.getWorkspaceDB()
   const query: Query = ctx.request.body
   delete query.projectIds
@@ -251,7 +252,21 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   await eventFn()
   query._rev = response.rev
 
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: datasource._id!,
+    currentProjectIds: datasource.projectIds,
+    previousProjectIds: datasource.projectIds,
+    previousResource: existingQuery,
+    savedResource: query,
+  })
+
   ctx.body = query
+}
+
+export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    saveUnlocked(ctx)
+  )
 }
 
 export async function find(ctx: UserCtx<void, FindQueryResponse>) {
