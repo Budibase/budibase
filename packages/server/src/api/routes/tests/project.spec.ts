@@ -1388,10 +1388,9 @@ describe("/projects", () => {
       const { project } = await config.api.project.create({
         name: "External data",
       })
-      const datasource = await config.api.datasource.create({
-        ...basicDatasource().datasource,
-        projectIds: [project._id],
-      })
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
       const externalTableId = buildExternalTableId(datasource._id!, "TestTable")
       const externalTable = basicTable(datasource, {
         _id: externalTableId,
@@ -1432,6 +1431,7 @@ describe("/projects", () => {
             "TestTable"
           )
 
+          expect(importedDatasource.projectIds).toEqual([imported.project._id])
           expect(importedExternalTable._id).toBe(importedExternalTableId)
           expect(importedExternalTable.projectIds).toBeUndefined()
           expect(importedExternalTable.primaryDisplay).toBe(

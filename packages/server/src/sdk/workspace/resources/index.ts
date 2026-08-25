@@ -40,8 +40,10 @@ import { extractTableIdFromRowActionsID, getRowParams } from "../../../db/utils"
 import { getQueryToolBindingsForResource } from "../ai/agents/queryToolReferences"
 import { doWithProjectAssignmentsLock } from "../projects/lock"
 import {
+  getProjectAssignmentIds,
   getProjectIds,
   hasProject,
+  hasProjectAssignment,
   isProjectAssignableResourceType,
   type ProjectAssignable,
   withProjectIds,
@@ -480,7 +482,7 @@ async function buildResourceDependencyAnalysis({
         ...agents,
         ...workspaceApps,
       ].flatMap(resource =>
-        resource._id ? [[resource._id, getProjectIds(resource)]] : []
+        resource._id ? [[resource._id, getProjectAssignmentIds(resource)]] : []
       )
     )
 
@@ -495,7 +497,10 @@ async function buildResourceDependencyAnalysis({
           .filter(
             datasource =>
               datasource._id !== INTERNAL_TABLE_SOURCE_ID &&
-              hasProject(datasource, project._id)
+              hasProjectAssignment({
+                doc: datasource,
+                projectId: project._id,
+              })
           )
           .map(datasource =>
             buildUsedResource(datasource, ResourceType.DATASOURCE)

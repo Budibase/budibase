@@ -40,7 +40,9 @@ import {
 import { doWithProjectAssignmentsLock } from "../lock"
 import {
   fetchAssignedProjectDocs,
+  getProjectAssignmentIds,
   hasProject,
+  hasProjectAssignment,
   isProjectAssignableResourceType,
 } from "../utils"
 
@@ -120,7 +122,7 @@ async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
           !!datasource._id &&
           datasource._id.startsWith("datasource_") &&
           typeof datasource.source === "string" &&
-          hasProject(datasource, projectId)
+          hasProjectAssignment({ doc: datasource, projectId })
       )
       .map(datasource => asUsedResource(datasource, ResourceType.DATASOURCE)),
     ...assignedDocs
@@ -256,6 +258,12 @@ async function sanitizeDocumentForExport(
 
   if (type === ResourceType.DATASOURCE) {
     const datasource = sanitized as Datasource
+    const projectIds = getProjectAssignmentIds(datasource)
+    if (projectIds.length) {
+      datasource.projectIds = projectIds
+    } else {
+      delete datasource.projectIds
+    }
     if (datasource.entities) {
       datasource.entities = Object.fromEntries(
         Object.entries(datasource.entities).map(([name, entity]) => {

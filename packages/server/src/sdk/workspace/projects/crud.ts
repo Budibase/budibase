@@ -10,8 +10,8 @@ import {
 import { isExternalTableID } from "../../../integrations/utils"
 import {
   fetchAssignedProjectDocs,
-  getProjectAssignedEntities,
   hasProject,
+  hasProjectAssignment,
   removeProjectId,
 } from "./utils"
 
@@ -168,12 +168,7 @@ async function clearAssignments(projectId: string) {
       return false
     }
 
-    return (
-      hasProject(datasource, projectId) ||
-      getProjectAssignedEntities(datasource).some(entity =>
-        hasProject(entity, projectId)
-      )
-    )
+    return hasProjectAssignment({ doc: datasource, projectId })
   })
 
   const datasourceUpdates = await Promise.all(
