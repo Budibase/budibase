@@ -5,8 +5,11 @@ import { recordFailedAttemptForIp } from "../../utilities/loginAttempts"
 
 /**
  * Regression test for budibase/budibase#19525. Drives the real client IP
- * resolution and a real counting cache, rather than stubbing them out, because
- * the original bug lived entirely in the bit that was stubbed.
+ * resolution against a fake counting cache, rather than stubbing that out too,
+ * because the original bug lived entirely in the bit that was stubbed. The
+ * fake cache honours the TTL passed to `increment` (mirroring
+ * BaseCache.increment's `setExpiry` call) so the lockout window itself is
+ * exercised, not just the counting.
  */
 
 jest.mock("@budibase/backend-core", () => ({
@@ -17,7 +20,21 @@ jest.mock("@budibase/backend-core", () => ({
   },
 }))
 
-const buckets = new Map<string, number>()
+interface Bucket {
+  count: number
+  expiresAt: number
+}
+
+const buckets = new Map<string, Bucket>()
+
+const liveBucket = (key: string): Bucket | undefined => {
+  const bucket = buckets.get(key)
+  if (!bucket || bucket.expiresAt <= Date.now()) {
+    buckets.delete(key)
+    return undefined
+  }
+  return bucket
+}
 
 // nginx forwards X-Real-IP from $remote_addr after real_ip resolution, and
 // appends its own peer to X-Forwarded-For
@@ -40,15 +57,25 @@ const ctxFor = (clientIp: string, email: string) => ({
 
 describe("#19525 login IP lockout", () => {
   beforeEach(() => {
+    jest.useFakeTimers()
     buckets.clear()
     jest.mocked(cache.get).mockImplementation(async (key: string) => {
-      return buckets.get(key) ?? null
+      return liveBucket(key)?.count ?? null
     })
-    jest.mocked(cache.increment).mockImplementation(async (key: string) => {
-      const count = (buckets.get(key) ?? 0) + 1
-      buckets.set(key, count)
-      return count
-    })
+    jest
+      .mocked(cache.increment)
+      .mockImplementation(async (key: string, ttlSeconds?: number) => {
+        const count = (liveBucket(key)?.count ?? 0) + 1
+        buckets.set(key, {
+          count,
+          expiresAt: Date.now() + (ttlSeconds ?? 0) * 1000,
+        })
+        return count
+      })
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
   })
 
   it("keys on the resolved client, not on the shared proxy hop", async () => {
@@ -101,5 +128,32 @@ describe("#19525 login IP lockout", () => {
     await expect(ipLockout(forged as any, jest.fn())).rejects.toThrow(
       "Too many login attempts. Try again later."
     )
+  })
+
+  it("keeps the client blocked while the lockout window is still active", async () => {
+    for (let i = 0; i < env.LOGIN_IP_LOCKOUT_LIMIT; i++) {
+      await recordFailedAttemptForIp("203.0.113.50")
+    }
+
+    jest.advanceTimersByTime((env.LOGIN_LOCKOUT_SECONDS - 1) * 1000)
+
+    const stillBlocked = ctxFor("203.0.113.50", "attacker@example.com")
+    await expect(ipLockout(stillBlocked as any, jest.fn())).rejects.toThrow(
+      "Too many login attempts. Try again later."
+    )
+  })
+
+  it("releases the client once the lockout window has elapsed", async () => {
+    for (let i = 0; i < env.LOGIN_IP_LOCKOUT_LIMIT; i++) {
+      await recordFailedAttemptForIp("203.0.113.50")
+    }
+
+    jest.advanceTimersByTime((env.LOGIN_LOCKOUT_SECONDS + 1) * 1000)
+
+    const releasedCtx = ctxFor("203.0.113.50", "attacker@example.com")
+    const next = jest.fn()
+    await ipLockout(releasedCtx as any, next)
+
+    expect(next).toHaveBeenCalled()
   })
 })
