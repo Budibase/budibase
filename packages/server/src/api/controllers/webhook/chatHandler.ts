@@ -844,6 +844,7 @@ export const handleChatMessage = async ({
       ...(conversationAttachments.length && {
         attachments: conversationAttachments,
         attachmentExpiresAt,
+        attachmentVectorStoreId: existingChat?.attachmentVectorStoreId,
       }),
     }
 

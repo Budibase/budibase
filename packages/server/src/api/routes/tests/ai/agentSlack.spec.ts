@@ -1311,7 +1311,7 @@ describe("agent slack integration provisioning", () => {
       expect(conversations[0]?.pendingAttachmentTurns).toHaveLength(2)
     })
 
-    it("renews attachment expiry before invoking the model", async () => {
+    it("renews attachment expiry and preserves file context before invoking the model", async () => {
       const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
       await linkExternalUser("user-ready-file")
       const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
@@ -1395,6 +1395,20 @@ describe("agent slack integration provisioning", () => {
       const [updatedConversation] = await fetchConversations()
       expect(response.body.messages).toContain("Mock assistant response")
       expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
+      expect(mockedWebhookChat).toHaveBeenCalledWith(
+        expect.objectContaining({
+          chat: expect.objectContaining({
+            attachmentVectorStoreId: "store_1",
+            attachments: [
+              expect.objectContaining({
+                id: "attachment_1",
+                status: ConversationAttachmentStatus.READY,
+                ragSourceId: "rag_1",
+              }),
+            ],
+          }),
+        })
+      )
       expect(new Date(persistedExpiresAt!).getTime()).toBeGreaterThan(
         new Date(previousExpiresAt).getTime()
       )
