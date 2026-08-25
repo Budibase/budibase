@@ -12,13 +12,7 @@
     FancyInput,
   } from "@budibase/bbui"
   import { goto as gotoStore } from "@roxi/routify"
-  import {
-    auth,
-    organisation,
-    oidc,
-    admin,
-    translations,
-  } from "@/stores/portal"
+  import { auth, organisation, admin, translations } from "@/stores/portal"
   import { resolveTranslationGroup } from "@budibase/shared-core"
   import GoogleButton from "./_components/GoogleButton.svelte"
   import OIDCButton from "./_components/OIDCButton.svelte"
@@ -30,10 +24,19 @@
 
   $: goto = $gotoStore
 
+  interface LoginFormData {
+    username?: string
+    password?: string
+  }
+  interface LoginFormErrors {
+    username?: string
+    password?: string
+  }
+
   let loaded = false
-  let form
-  let errors = {}
-  let formData = {}
+  let form: FancyForm
+  let errors: LoginFormErrors = {}
+  let formData: LoginFormData = {}
 
   $: company = $organisation.company || "Budibase"
   $: cloud = $admin.cloud
@@ -57,8 +60,8 @@
     }
     try {
       const loginResult = await auth.login(
-        formData?.username.trim(),
-        formData?.password
+        formData.username?.trim() || "",
+        formData.password || ""
       )
       if ($auth?.user?.forceResetPassword) {
         goto("./reset")
@@ -89,7 +92,7 @@
     }
   }
 
-  function handleKeydown(evt) {
+  function handleKeydown(evt: KeyboardEvent) {
     if (evt.key === "Enter") login()
   }
 
@@ -122,12 +125,7 @@
         <Layout gap="S" noPadding>
           {#if loaded && ($organisation.google || $organisation.oidc)}
             <FancyForm>
-              <OIDCButton
-                oidcIcon={$oidc.logo}
-                oidcName={$oidc.name}
-                loginWith={loginLabels.loginWith}
-                samePage
-              />
+              <OIDCButton loginWith={loginLabels.loginWith} samePage />
               <GoogleButton loginWith={loginLabels.loginWith} samePage />
             </FancyForm>
           {/if}
@@ -136,7 +134,7 @@
             <FancyForm bind:this={form}>
               <FancyInput
                 label={loginLabels.emailLabel}
-                value={formData.username}
+                value={formData.username || ""}
                 on:change={e => {
                   formData = {
                     ...formData,
@@ -150,12 +148,13 @@
                       : undefined,
                   }
                   errors = handleError({ ...errors, ...fieldError })
+                  return fieldError.username ?? null
                 }}
                 error={errors.username}
               />
               <FancyInput
                 label={loginLabels.passwordLabel}
-                value={formData.password}
+                value={formData.password || ""}
                 type="password"
                 on:change={e => {
                   formData = {
@@ -170,6 +169,7 @@
                       : undefined,
                   }
                   errors = handleError({ ...errors, ...fieldError })
+                  return fieldError.password ?? null
                 }}
                 error={errors.password}
               />
@@ -197,7 +197,7 @@
         {/if}
 
         {#if cloud}
-          <Body size="xs" textAlign="center">
+          <Body size="XS" textAlign="center">
             By using Budibase Cloud
             <br />
             you are agreeing to our
