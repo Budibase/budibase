@@ -71,6 +71,24 @@ export const getProjectAssignedEntities = (
   )
 }
 
+export const getProjectAssignmentIds = (doc: AnyDocument) =>
+  Array.from(
+    new Set([
+      ...getProjectIds(doc),
+      ...getProjectAssignedEntities(doc).flatMap(entity =>
+        getProjectIds(entity)
+      ),
+    ])
+  )
+
+export const hasProjectAssignment = ({
+  doc,
+  projectId,
+}: {
+  doc: AnyDocument
+  projectId: string
+}) => getProjectAssignmentIds(doc).includes(projectId)
+
 export const getValidProjectIdsForDuplication = async (
   projectIds?: string[]
 ) => {
