@@ -249,4 +249,3 @@ describe("prepareModelMessages", () => {
     expect(userMessage).toBeDefined()
   })
 })
-
