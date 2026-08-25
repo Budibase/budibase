@@ -229,7 +229,7 @@ const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
   return {
     ...agent,
     live: raw.live ?? false,
-    allowConversationAttachments: raw.allowConversationAttachments ?? true,
+    allowConversationAttachments: raw.allowConversationAttachments ?? false,
     operations: migrateOperations(raw),
     slackIntegration: decodeSlackIntegrationSecrets(agent.slackIntegration),
   }
