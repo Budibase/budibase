@@ -226,7 +226,10 @@ const parseType = (value: unknown, type: `${FieldType}`) => {
 
   // Parse links, treating no elements as null
   if (type === FieldType.LINK) {
-    if (!Array.isArray(value) || !value.length) {
+    if (Array.isArray(value)) {
+      return value.length ? value : null
+    }
+    if (typeof value !== "string" || !value) {
       return null
     }
     return value
