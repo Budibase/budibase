@@ -10608,10 +10608,10 @@ deep-is@^0.1.3:
   resolved "https://registry.yarnpkg.com/deep-is/-/deep-is-0.1.4.tgz#a6f2dce612fadd2ef1f519b73551f17e85199831"
   integrity sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==
 
-deepmerge-ts@^7.1.5:
-  version "7.1.6"
-  resolved "https://registry.yarnpkg.com/deepmerge-ts/-/deepmerge-ts-7.1.6.tgz#e226a79609c20aa6b89b00a1f4c5705ca71d9d2e"
-  integrity sha512-gQhL1ksGBLQbHeAo47YU6cs2ahd3Pv+8PFYoWogNZbQnNwQyOh9Ad5kbeHFiWwbKdeWQJ5Z7Y7mwb9ew2hXBLw==
+deepmerge-ts@^8.0.1:
+  version "8.0.2"
+  resolved "https://registry.yarnpkg.com/deepmerge-ts/-/deepmerge-ts-8.0.2.tgz#4f3e5588c3a7c59ea80d54b583948d6f404cf13e"
+  integrity sha512-uqbvqLUMrc6p0MO+WBRtTxY55hmyh94WRwI5a++PZe54X+bfVh59FSN7uWCBCW1CCVjzjnrwzfI8zidE2obMMw==
 
 deepmerge@^4.2.2, deepmerge@^4.3.1:
   version "4.3.1"
@@ -13317,13 +13317,13 @@ html-tag@^2.0.0:
     is-self-closing "^1.0.1"
     kind-of "^6.0.0"
 
-html-to-text@10.0.0:
-  version "10.0.0"
-  resolved "https://registry.yarnpkg.com/html-to-text/-/html-to-text-10.0.0.tgz#70fea95d6037c12cb1df28418c95dffab06beeab"
-  integrity sha512-2OH59Gtprdczel+7Rxgpz9hGVJREaf8Lt1H4kZwWHpEn70VQKRuMNGsb2eDbwaTzrYzb0hheiOG1P7Dim0B4dQ==
+html-to-text@10.0.1:
+  version "10.0.1"
+  resolved "https://registry.yarnpkg.com/html-to-text/-/html-to-text-10.0.1.tgz#69ce814bf3c1a9aaf05f721f98c48f3d40fe7308"
+  integrity sha512-GiVhRI1BatGARSCmlXWNCjDT0cWrwBWoeduLoV0WSKAgaV/wa+hUWy5LiQLUs4UwiUrE52ZCMfBGiKD87TDPrg==
   dependencies:
     "@selderee/plugin-htmlparser2" "~0.12.0"
-    deepmerge-ts "^7.1.5"
+    deepmerge-ts "^8.0.1"
     dom-serializer "^2.0.0"
     htmlparser2 "^10.1.0"
     selderee "~0.12.0"
@@ -16241,15 +16241,15 @@ magicast@^0.5.2:
     "@babel/types" "^7.29.0"
     source-map-js "^1.2.1"
 
-mailparser@3.9.15:
-  version "3.9.15"
-  resolved "https://registry.yarnpkg.com/mailparser/-/mailparser-3.9.15.tgz#e53ac2d0a8bd5a0608ffc258e02505c3ea9929da"
-  integrity sha512-/5hgybKDMKFS05jAh8OPeEE7N53lj8nF6ywlo89VPjF2TtwqIQbjaxumQWnJIkmaagnJ6u1eansMOViHFxIXwQ==
+mailparser@3.9.16:
+  version "3.9.16"
+  resolved "https://registry.yarnpkg.com/mailparser/-/mailparser-3.9.16.tgz#5a762fc71a659f4436ec1e6b20849af35047bc9f"
+  integrity sha512-TvbU4YMEDLPkDIft/oUTjjV5PvoR/mj9gw+zzNP6SHJHxBd9FsRWP+rDt80a1wOJ4dKyNesRrYATZ+n0RKyDtw==
   dependencies:
     "@zone-eu/mailsplit" "5.4.15"
     encoding-japanese "2.2.0"
     he "1.2.0"
-    html-to-text "10.0.0"
+    html-to-text "10.0.1"
     iconv-lite "0.7.3"
     libmime "5.4.2"
     linkify-it "5.0.2"
