@@ -32,7 +32,7 @@ describe("API error handling", () => {
     vi.unstubAllGlobals()
   })
 
-  it("keeps the server message for a rate limited request", async () => {
+  it("replaces the generic retry wording with the actual window for a rate limited request", async () => {
     respondWith({
       status: 429,
       body: { message: "Too many login attempts. Try again later." },
@@ -44,8 +44,20 @@ describe("API error handling", () => {
     expect(error.status).toBe(429)
     expect(error.accountLocked).toBe(false)
     expect(error.message).toBe(
-      "Too many login attempts. Try again later. Try again in 15 minutes."
+      "Too many login attempts. Try again in 15 minutes."
     )
+  })
+
+  it("appends the retry window when the server message has no generic retry wording to replace", async () => {
+    respondWith({
+      status: 429,
+      body: { message: "Too many requests" },
+      headers: { "Retry-After": "900" },
+    })
+
+    const error = await post()
+
+    expect(error.message).toBe("Too many requests Try again in 15 minutes.")
   })
 
   it("does not invent a retry window when Retry-After is absent", async () => {
