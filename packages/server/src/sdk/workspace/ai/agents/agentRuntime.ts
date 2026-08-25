@@ -26,6 +26,7 @@ import {
   type ToolSet,
   wrapLanguageModel,
 } from "ai"
+import type { Context } from "@ai-sdk/provider-utils"
 import { z } from "zod"
 import sdk from "../../.."
 import { createSessionLogIndexer } from "../agentLogs"
@@ -93,7 +94,7 @@ export interface AgentChatRun {
   sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
   stream: (
     options?: AgentChatStreamOptions
-  ) => Promise<StreamTextResult<ToolSet, never>>
+  ) => Promise<StreamTextResult<ToolSet, Context, never>>
   toolDisplayNames: Record<string, string>
   contextWindowTokens?: number
   systemPromptTokens: number

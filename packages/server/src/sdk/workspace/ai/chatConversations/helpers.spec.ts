@@ -1,8 +1,7 @@
 import { HTTPError } from "@budibase/backend-core"
-import { isToolUIPart, type ModelMessage } from "ai"
+import { isToolUIPart } from "ai"
 import { AgentChannelProvider, type ChatConversation } from "@budibase/types"
 import {
-  addRetrievedContextToMessages,
   extractUserText,
   findLatestUserQuestion,
   prepareChatConversationForSave,
@@ -251,24 +250,3 @@ describe("prepareModelMessages", () => {
   })
 })
 
-describe("addRetrievedContextToMessages", () => {
-  it("returns the same array when context is empty", () => {
-    const messages = [{ role: "user", content: "x" }] as ModelMessage[]
-    expect(addRetrievedContextToMessages(messages, "")).toBe(messages)
-  })
-
-  it("prepends a system message with retrieved knowledge", () => {
-    const messages = [{ role: "user", content: "x" }] as ModelMessage[]
-    const ctx = "fact about widgets"
-
-    const result = addRetrievedContextToMessages(messages, ctx)
-
-    expect(result).toEqual([
-      {
-        role: "system",
-        content: `Relevant knowledge:\n${ctx}\n\nUse this content when answering the user.`,
-      },
-      ...messages,
-    ])
-  })
-})

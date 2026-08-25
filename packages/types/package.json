@@ -14,7 +14,7 @@
     "check:types": "tsc -p tsconfig.json --noEmit --incremental --paths null"
   },
   "devDependencies": {
-    "@ai-sdk/provider-utils": "^4.0.19",
+    "@ai-sdk/provider-utils": "^5.0.29",
     "@budibase/nano": "10.1.6",
     "@types/json-schema": "^7.0.15",
     "@types/koa": "3.0.1",

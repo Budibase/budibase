@@ -105,19 +105,3 @@ export const prepareModelMessages = async (
   })
 }
 
-export const addRetrievedContextToMessages = (
-  messages: ModelMessage[],
-  retrievedContext: string
-): ModelMessage[] => {
-  if (!retrievedContext) {
-    return messages
-  }
-
-  return [
-    {
-      role: "system",
-      content: `Relevant knowledge:\n${retrievedContext}\n\nUse this content when answering the user.`,
-    },
-    ...messages,
-  ]
-}

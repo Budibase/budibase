@@ -315,6 +315,7 @@ const executeApprovedToolCall = async ({
     output = await tool.execute(pending.args, {
       toolCallId: pending.toolCallId,
       messages: [],
+      context: undefined,
     })
   } catch (error) {
     failed = true

@@ -92,7 +92,7 @@ describe("secured AI tool execution", () => {
 
     await tools.secured_tool.execute?.(
       { value: "hello" },
-      { toolCallId: "call_1", messages: [] }
+      { toolCallId: "call_1", messages: [], context: undefined }
     )
 
     expect(authorize).toHaveBeenCalledWith(
@@ -125,7 +125,7 @@ describe("secured AI tool execution", () => {
     await expect(
       tools.secured_tool.execute?.(
         { value: "hello" },
-        { toolCallId: "call_1", messages: [] }
+        { toolCallId: "call_1", messages: [], context: undefined }
       )
     ).rejects.toThrow("denied")
     expect(execute).not.toHaveBeenCalled()
@@ -153,7 +153,7 @@ describe("secured AI tool execution", () => {
     await expect(
       tools.secured_tool.execute?.(
         { value: "hello" },
-        { toolCallId: "call_1", messages: [] }
+        { toolCallId: "call_1", messages: [], context: undefined }
       )
     ).rejects.toThrow("Tool is not available in this security context")
     expect(authorize).not.toHaveBeenCalled()
@@ -202,7 +202,7 @@ describe("secured AI tool execution", () => {
     await expect(
       tools.secured_tool.execute?.(
         { value: "hello" },
-        { toolCallId: "call_1", messages: [] }
+        { toolCallId: "call_1", messages: [], context: undefined }
       )
     ).resolves.toEqual({
       tables: [{ id: "ta_allowed", name: "Allowed" }],
