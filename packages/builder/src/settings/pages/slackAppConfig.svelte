@@ -82,9 +82,8 @@
 
 <Layout noPadding gap="M">
   <Body size="S">
-    Store the Slack app configuration access token used to create Slack apps
-    automatically in this workspace. Budibase rotates the token using the
-    matching Slack refresh token before it expires.
+    Configure Slack for this workspace so agents can connect to and communicate
+    with users in Slack.
   </Body>
 
   <div class="field">
