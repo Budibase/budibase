@@ -112,6 +112,24 @@ describe("feature flags", () => {
     )
   })
 
+  it("re-evaluates cached flags when overrides change", async () => {
+    await context.doInTenant("default", async () => {
+      await context.doInFeatureFlagOverrideContext(
+        { TEST_BOOLEAN: false },
+        async () => {
+          expect(await flags.isEnabled("TEST_BOOLEAN")).toBe(false)
+
+          await context.doInFeatureFlagOverrideContext(
+            { TEST_BOOLEAN: true },
+            async () => {
+              expect(await flags.isEnabled("TEST_BOOLEAN")).toBe(true)
+            }
+          )
+        }
+      )
+    })
+  })
+
   it.each<TestCase>([
     {
       it: "should should find a simple boolean flag in the environment",
