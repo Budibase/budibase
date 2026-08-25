@@ -1,7 +1,10 @@
 import { cache } from "@budibase/backend-core"
 import env from "../../environment"
 import ipLockout from "../ipLockout"
-import { recordFailedAttemptForIp } from "../../utilities/loginAttempts"
+import {
+  failedAttemptsForIp,
+  recordFailedAttemptForIp,
+} from "../../utilities/loginAttempts"
 
 /**
  * Regression test for budibase/budibase#19525. Drives the real client IP
@@ -89,14 +92,28 @@ describe("#19525 login IP lockout", () => {
   })
 
   it("does not consume the allowance for successful logins", async () => {
-    for (let i = 0; i < env.LOGIN_IP_LOCKOUT_LIMIT + 5; i++) {
+    // seed a near-threshold count of real failures, so there is an
+    // allowance to consume in the first place
+    for (let i = 0; i < env.LOGIN_IP_LOCKOUT_LIMIT - 1; i++) {
+      await recordFailedAttemptForIp("203.0.113.50")
+    }
+    jest.mocked(cache.increment).mockClear()
+
+    // ipLockout only ever reads the counter - the login controller is what
+    // decides whether to call recordFailedAttemptForIp, and it only does so
+    // on a failed authentication - so driving the middleware alone here
+    // stands in for a run of successful logins
+    for (let i = 0; i < 5; i++) {
       const ctx = ctxFor("203.0.113.50", `user${i}@nursery.example.com`)
       const next = jest.fn()
       await ipLockout(ctx as any, next)
       expect(next).toHaveBeenCalled()
     }
 
-    expect(buckets.size).toBe(0)
+    expect(cache.increment).not.toHaveBeenCalled()
+    expect(await failedAttemptsForIp("203.0.113.50")).toBe(
+      env.LOGIN_IP_LOCKOUT_LIMIT - 1
+    )
   })
 
   it("does not let one client's failures block another behind the same proxy", async () => {
