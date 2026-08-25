@@ -101,6 +101,9 @@ async function queueRelevantRowAutomations(
       )
     })
 
+    let featureFlagOverrides: ReturnType<
+      typeof getAutomationFeatureFlagOverrides
+    >
     for (const automation of automations) {
       const shouldTrigger = await checkTriggerFilters(automation, {
         row: event.row,
@@ -109,12 +112,13 @@ async function queueRelevantRowAutomations(
       if (shouldTrigger) {
         try {
           const isTestRun = isDevWorkspaceID(event.appId)
+          featureFlagOverrides ??= getAutomationFeatureFlagOverrides()
           await quotas.addAction(ActionType.AUTOMATION_STEP, async () =>
             automationQueue.add(
               {
                 automation,
                 event,
-                featureFlagOverrides: await getAutomationFeatureFlagOverrides(),
+                featureFlagOverrides: await featureFlagOverrides,
                 ...(isTestRun ? { isTestRun } : {}),
               },
               JOB_OPTS
