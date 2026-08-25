@@ -1311,6 +1311,103 @@ describe("agent slack integration provisioning", () => {
       expect(conversations[0]?.pendingAttachmentTurns).toHaveLength(2)
     })
 
+    it("renews attachment expiry before invoking the model", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      await linkExternalUser("user-ready-file")
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+
+      await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "start the conversation",
+            user: "user-ready-file",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      const [conversation] = await fetchConversations()
+      const previousExpiresAt = new Date(Date.now() + 1000).toISOString()
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await context.getWorkspaceDB().put({
+          ...conversation,
+          attachmentExpiresAt: previousExpiresAt,
+          attachmentVectorStoreId: "store_1",
+          attachments: [
+            {
+              id: "attachment_1",
+              provider: AgentChannelProvider.SLACK,
+              providerFileId: "F_READY",
+              filename: "report.txt",
+              mimetype: "text/plain",
+              size: 100,
+              status: ConversationAttachmentStatus.READY,
+              ragSourceId: "rag_1",
+              uploadedAt: new Date().toISOString(),
+            },
+          ],
+        })
+      })
+
+      mockedWebhookChat.mockClear()
+      let persistedExpiresAt: string | undefined
+      mockedWebhookChat.mockImplementationOnce(async ({ chat }) => {
+        const persisted = await context
+          .getWorkspaceDB()
+          .tryGet<ChatConversation>(chat._id)
+        persistedExpiresAt = persisted?.attachmentExpiresAt
+        return {
+          messages: [
+            ...chat.messages,
+            {
+              id: `assistant-${chat.messages.length + 1}`,
+              role: "assistant",
+              parts: [{ type: "text", text: "Mock assistant response" }],
+            },
+          ],
+          assistantText: "Mock assistant response",
+          title: chat.title || "Mock conversation",
+        }
+      })
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "use the ready file",
+            user: "user-ready-file",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.200",
+            team_id: "T123",
+          },
+        },
+      })
+
+      const [updatedConversation] = await fetchConversations()
+      expect(response.body.messages).toContain("Mock assistant response")
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
+      expect(new Date(persistedExpiresAt!).getTime()).toBeGreaterThan(
+        new Date(previousExpiresAt).getTime()
+      )
+      expect(updatedConversation.attachmentExpiresAt).toEqual(
+        persistedExpiresAt
+      )
+      expect(mockedScheduleAttachmentCleanup).toHaveBeenCalledWith({
+        workspaceId: config.getProdWorkspaceId(),
+        conversationId: conversation._id,
+        expiresAt: persistedExpiresAt,
+      })
+    })
+
     it("rejects file turns when Gemini File Search is not enabled", async () => {
       const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
       mockedIsGeminiFileSearchConfigured.mockReturnValue(false)

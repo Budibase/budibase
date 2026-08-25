@@ -633,7 +633,7 @@ export const handleChatMessage = async ({
       return
     }
 
-    const existingChat =
+    let existingChat =
       command === ChatCommands.NEW
         ? undefined
         : await findConversation({
@@ -813,6 +813,25 @@ export const handleChatMessage = async ({
           : "The conversation files are still processing. I'll reply here when ready."
       )
       return
+    }
+
+    if (existingChat && conversationAttachments.length && attachmentExpiresAt) {
+      try {
+        const renewedChat = {
+          ...existingChat,
+          attachmentExpiresAt,
+          updatedAt: new Date().toISOString(),
+        }
+        const { rev } = await db.put(renewedChat)
+        existingChat = { ...renewedChat, _rev: rev }
+      } catch (error) {
+        const message =
+          error instanceof HTTPError
+            ? error.message
+            : "Sorry, something went wrong while processing your request."
+        await reply(message)
+        return
+      }
     }
 
     const draftChat: ChatConversationRequest = {
