@@ -15,10 +15,17 @@ jest.mock("@budibase/backend-core", (): typeof backendCore => {
       ...actual.locks,
       doWithLock: jest.fn(),
     },
+    features: {
+      ...actual.features,
+      isEnabled: jest.fn(),
+    },
   }
 })
 
-import { doWithProjectAssignmentsLock } from "../lock"
+import {
+  doWithProjectAssignmentsLock,
+  doWithProjectAssignmentsLockIfEnabled,
+} from "../lock"
 
 const getWorkspaceId = backendCore.context
   .getWorkspaceId as jest.MockedFunction<
@@ -26,6 +33,9 @@ const getWorkspaceId = backendCore.context
 >
 const doWithLock = backendCore.locks.doWithLock as jest.MockedFunction<
   typeof backendCore.locks.doWithLock
+>
+const isEnabled = backendCore.features.isEnabled as jest.MockedFunction<
+  typeof backendCore.features.isEnabled
 >
 
 describe("Project assignments lock", () => {
@@ -70,5 +80,25 @@ describe("Project assignments lock", () => {
         throw error
       })
     ).rejects.toBe(error)
+  })
+
+  it("skips the lock when Projects is disabled", async () => {
+    isEnabled.mockResolvedValue(false)
+
+    await expect(
+      doWithProjectAssignmentsLockIfEnabled(async () => "result")
+    ).resolves.toBe("result")
+
+    expect(doWithLock).not.toHaveBeenCalled()
+  })
+
+  it("uses the lock when Projects is enabled", async () => {
+    isEnabled.mockResolvedValue(true)
+
+    await expect(
+      doWithProjectAssignmentsLockIfEnabled(async () => "result")
+    ).resolves.toBe("result")
+
+    expect(doWithLock).toHaveBeenCalledTimes(1)
   })
 })

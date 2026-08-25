@@ -1,5 +1,5 @@
-import { context, db, locks } from "@budibase/backend-core"
-import { LockName, LockType } from "@budibase/types"
+import { context, db, features, locks } from "@budibase/backend-core"
+import { FeatureFlag, LockName, LockType } from "@budibase/types"
 
 export async function doWithProjectAssignmentsLock<T>(
   fn: () => Promise<T>,
@@ -20,4 +20,13 @@ export async function doWithProjectAssignmentsLock<T>(
     fn
   )
   return result
+}
+
+export async function doWithProjectAssignmentsLockIfEnabled<T>(
+  fn: () => Promise<T>
+): Promise<T> {
+  if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
+    return await fn()
+  }
+  return await doWithProjectAssignmentsLock(fn)
 }

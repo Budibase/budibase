@@ -37,6 +37,7 @@ import {
   PROJECT_FILE,
   PROJECT_MANIFEST_FILE,
 } from "./constants"
+import { doWithProjectAssignmentsLock } from "../lock"
 import {
   fetchAssignedProjectDocs,
   hasProject,
@@ -148,14 +149,15 @@ async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
   ])
 }
 
-async function getExcludedDependencies(
-  projectId: string,
+async function getExcludedDependencies({
+  projectId,
+  directMembers,
+  graph,
+}: {
+  projectId: string
   directMembers: UsedResource[]
-): Promise<UsedResource[]> {
-  const graph = await sdk.resources.getResourcesInfo({
-    includeProjects: false,
-    includeDatasourceQueries: true,
-  })
+  graph: Awaited<ReturnType<typeof sdk.resources.getResourcesInfo>>
+}): Promise<UsedResource[]> {
   const dependenciesById = new Map(
     directMembers
       .flatMap(member =>
@@ -373,33 +375,70 @@ export async function exportProject(
     throw new Error("Could not determine workspace for Project export")
   }
 
-  const project = await sdk.projects.get(projectId)
-  if (!project) {
-    throw new Error(`Project '${projectId}' not found`)
-  }
+  const snapshot = await doWithProjectAssignmentsLock(async () => {
+    const project = await sdk.projects.get(projectId)
+    if (!project) {
+      throw new Error(`Project '${projectId}' not found`)
+    }
 
-  const graph = await sdk.resources.getResourcesInfo({
-    includeDatasourceQueries: true,
-  })
-  const projectDependencies = sortResources(
-    Array.from(
-      new Map(
-        (graph[projectId]?.dependencies || []).map(resource => [
-          resource.id,
-          resource,
-        ])
-      ).values()
+    const graph = await sdk.resources.getResourcesInfo({
+      includeDatasourceQueries: true,
+    })
+    const projectDependencies = sortResources(
+      Array.from(
+        new Map(
+          (graph[projectId]?.dependencies || []).map(resource => [
+            resource.id,
+            resource,
+          ])
+        ).values()
+      )
     )
-  )
-  const [agents, workspaceApps] = await Promise.all([
-    sdk.ai.agents.fetch(),
-    sdk.workspaceApps.fetch(),
-  ])
-  const directMembers = await getDirectMembers(projectId)
-  const excludedDependencies = await getExcludedDependencies(
-    projectId,
-    directMembers
-  )
+    const [agents, workspaceApps, directMembers] = await Promise.all([
+      sdk.ai.agents.fetch(),
+      sdk.workspaceApps.fetch(),
+      getDirectMembers(projectId),
+    ])
+    const excludedDependencies = await getExcludedDependencies({
+      projectId,
+      directMembers,
+      graph,
+    })
+    const typeByResourceId = new Map(
+      projectDependencies.map(resource => [resource.id, resource.type])
+    )
+    const docsToExport = projectDependencies.map(resource => resource.id)
+    const exportedDocs = docsToExport.length
+      ? await context.getWorkspaceDB().getMultiple<AnyDocument>(docsToExport, {
+          allowMissing: false,
+        })
+      : []
+
+    return {
+      agents,
+      directMembers,
+      docsToExport,
+      excludedDependencies,
+      exportedDocs,
+      graph,
+      project,
+      projectDependencies,
+      typeByResourceId,
+      workspaceApps,
+    }
+  })
+  const {
+    agents,
+    directMembers,
+    docsToExport,
+    excludedDependencies,
+    exportedDocs,
+    graph,
+    project,
+    projectDependencies,
+    typeByResourceId,
+    workspaceApps,
+  } = snapshot
   const exportedAgentIds = new Set(
     projectDependencies
       .filter(resource => resource.type === ResourceType.AGENT)
@@ -420,10 +459,6 @@ export async function exportProject(
     })
   }
 
-  const typeByResourceId = new Map(
-    projectDependencies.map(resource => [resource.id, resource.type])
-  )
-  const docsToExport = projectDependencies.map(resource => resource.id)
   const exportedResourceIds = new Set(docsToExport)
   const getExportedDependencies = (resourceId: string) =>
     sortResources(
@@ -431,12 +466,6 @@ export async function exportProject(
         exportedResourceIds.has(dependency.id)
       )
     )
-  const exportedDocs = docsToExport.length
-    ? await context.getWorkspaceDB().getMultiple<AnyDocument>(docsToExport, {
-        allowMissing: false,
-      })
-    : []
-
   const dependencyIndex: ProjectPackageDependencyIndex = {
     rootProjectId: projectId,
     directMembers,
