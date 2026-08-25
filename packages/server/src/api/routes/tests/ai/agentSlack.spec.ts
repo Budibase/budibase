@@ -1272,6 +1272,57 @@ describe("agent slack integration provisioning", () => {
       expect(conversations[0]?.pendingAttachmentTurns).toHaveLength(2)
     })
 
+    it("rejects file turns when Gemini File Search is not enabled", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      mockedIsGeminiFileSearchConfigured.mockReturnValue(false)
+      await linkExternalUser("user-file-disabled")
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      const scheduleIngestion = jest.spyOn(
+        sdk.ai.chatConversations.attachmentIngestionQueue,
+        "scheduleConversationAttachmentIngestion"
+      )
+      const scheduleCleanup = jest.spyOn(
+        sdk.ai.chatConversations.attachmentCleanupQueue,
+        "scheduleConversationAttachmentCleanup"
+      )
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "Summarise this report",
+            user: "user-file-disabled",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.300",
+            team_id: "T123",
+            files: [
+              {
+                id: "F_DISABLED",
+                name: "report.txt",
+                mimetype: "text/plain",
+                size: 7,
+                content: "content",
+              },
+            ],
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain(
+        "I can't process file attachments because Gemini File Search isn't enabled. Please ask your Budibase administrator to enable it."
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+      expect(scheduleIngestion).not.toHaveBeenCalled()
+      expect(scheduleCleanup).not.toHaveBeenCalled()
+      expect(await fetchConversations()).toHaveLength(0)
+
+      scheduleIngestion.mockRestore()
+      scheduleCleanup.mockRestore()
+    })
+
     it("creates a conversation from an incoming message", async () => {
       const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
       const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`

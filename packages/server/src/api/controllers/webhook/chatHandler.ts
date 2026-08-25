@@ -642,6 +642,16 @@ export const handleChatMessage = async ({
             idleTimeoutMs,
           })
 
+    if (
+      incomingAttachments.length &&
+      !sdk.ai.knowledgeBase.isGeminiFileSearchConfigured()
+    ) {
+      await reply(
+        "I can't process file attachments because Gemini File Search isn't enabled. Please ask your Budibase administrator to enable it."
+      )
+      return
+    }
+
     const chatId = existingChat?._id ?? docIds.generateChatConversationID()
     let conversationAttachments = existingChat?.attachments || []
     const queuedAttachments = incomingAttachments.length
@@ -654,15 +664,6 @@ export const handleChatMessage = async ({
         })
       : []
     conversationAttachments = [...conversationAttachments, ...queuedAttachments]
-    if (
-      queuedAttachments.length &&
-      !sdk.ai.knowledgeBase.isGeminiFileSearchConfigured()
-    ) {
-      throw new HTTPError(
-        "Conversation documents require Gemini File Search to be configured",
-        400
-      )
-    }
     const attachmentExpiresAt =
       conversationAttachments.length || incomingAttachments.length
         ? new Date(Date.now() + idleTimeoutMs).toISOString()
