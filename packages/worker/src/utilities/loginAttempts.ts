@@ -18,3 +18,7 @@ export const failedAttemptsForIp = async (ip: string): Promise<number> => {
 export const recordFailedAttemptForIp = async (ip: string): Promise<number> => {
   return cache.increment(ipKey(ip), env.LOGIN_LOCKOUT_SECONDS)
 }
+
+export const clearFailedAttemptsForIp = async (ip: string): Promise<void> => {
+  await cache.destroy(ipKey(ip))
+}
