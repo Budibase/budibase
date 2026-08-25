@@ -63,6 +63,27 @@ describe("isTrustedProxy", () => {
       }
     )
   })
+
+  it.each([
+    "10.0.0.0/",
+    "10.0.0.0//8",
+    "10.0.0.0/-0",
+    "10.0.0.0/0x8",
+    "10.0.0.0/1e1",
+    "10.0.0.0/8/16",
+    "10.0.0.0/ 8",
+    "10.0.0.0/8.0",
+    "::/",
+  ])(
+    "does not let malformed CIDR %s widen the trusted range to match everything",
+    async malformed => {
+      await withEnv({ TRUSTED_PROXY_CIDRS: malformed }, async () => {
+        expect(isTrustedProxy("203.0.113.7")).toBe(false)
+        expect(isTrustedProxy("8.8.8.8")).toBe(false)
+        expect(isTrustedProxy("2001:db8::1")).toBe(false)
+      })
+    }
+  )
 })
 
 describe("getClientIp", () => {
