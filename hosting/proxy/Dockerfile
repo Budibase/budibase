@@ -22,6 +22,9 @@ RUN apt-get update \
 ENV NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx
 COPY nginx.prod.conf /etc/nginx/templates/nginx.conf.template
 
+COPY 25-real-ip.sh /docker-entrypoint.d/25-real-ip.sh
+RUN chmod +x /docker-entrypoint.d/25-real-ip.sh
+
 # IPv6 removal needs to happen after envsubst
 RUN rm -rf /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
 COPY 80-listen-on-ipv6-by-default.sh /docker-entrypoint.d/80-listen-on-ipv6-by-default.sh

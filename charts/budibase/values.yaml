@@ -200,6 +200,9 @@ services:
     # (e.g. restricted RBAC for `lookup`) — then use your cluster's DNS ClusterIP,
     # e.g. `kubectl -n kube-system get svc kube-dns -o jsonpath='{.spec.clusterIP}'`.
     resolver: ""
+    # -- Comma or space separated CIDRs that are allowed to set X-Forwarded-For.
+    # Example: "10.42.0.0/24,10.42.1.0/24"
+    realIpFrom: ""
     # @ignore (you should never need to change this)
     upstreams:
       apps: "http://app-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.apps.port }}"

@@ -453,7 +453,19 @@ if [[ -z "${USE_S3}" ]]; then
 fi
 
 echo "Processing nginx configuration templates..."
-envsubst '${PROXY_RATE_LIMIT_API_PER_SECOND} ${PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND} ${PROXY_REAL_IP_FROM}' < /etc/nginx/nginx.conf > /tmp/nginx.conf && mv /tmp/nginx.conf /etc/nginx/nginx.conf
+envsubst '${PROXY_RATE_LIMIT_API_PER_SECOND} ${PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND}' < /etc/nginx/nginx.conf > /tmp/nginx.conf && mv /tmp/nginx.conf /etc/nginx/nginx.conf
+
+# one set_real_ip_from per CIDR, which envsubst cannot express
+: > /etc/nginx/real-ip.conf
+for cidr in $(printf '%s' "${PROXY_REAL_IP_FROM}" | tr ',;' '  '); do
+  case "${cidr}" in
+    0.0.0.0/0 | ::/0 | any)
+      echo "PROXY_REAL_IP_FROM must not contain ${cidr}: it would trust X-Forwarded-For from every client, making rate limiting and login lockout trivially spoofable. List your load balancer's CIDRs instead."
+      exit 1
+      ;;
+  esac
+  echo "set_real_ip_from ${cidr};" >> /etc/nginx/real-ip.conf
+done
 
 /etc/init.d/nginx restart
 if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then
