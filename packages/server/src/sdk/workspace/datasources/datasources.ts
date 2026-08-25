@@ -40,6 +40,9 @@ import { getEnvironmentVariables } from "../../utils"
 import { ensureValidPrimaryDisplay } from "../tables/utils"
 
 const ENV_VAR_PREFIX = "env."
+const ENV_VAR_REFERENCE_PATTERN = new RegExp(
+  `(?:^|[^A-Za-z0-9_.-])${ENV_VAR_PREFIX.replace(".", "\\.")}`
+)
 
 export function addDatasourceFlags(datasource: Datasource) {
   datasource.isSQL = helpers.isSQL(datasource)
@@ -209,7 +212,7 @@ function containsEnvVarBinding(str: unknown) {
   if (typeof str !== "string") {
     return false
   }
-  return findHBSBlocks(str).some(block => block.includes(ENV_VAR_PREFIX))
+  return findHBSBlocks(str).some(block => ENV_VAR_REFERENCE_PATTERN.test(block))
 }
 
 function isEnvVarBinding(str: unknown) {
@@ -217,7 +220,10 @@ function isEnvVarBinding(str: unknown) {
     return false
   }
   const blocks = findHBSBlocks(str)
-  if (!blocks.length || blocks.some(block => !block.includes(ENV_VAR_PREFIX))) {
+  if (
+    !blocks.length ||
+    blocks.some(block => !ENV_VAR_REFERENCE_PATTERN.test(block))
+  ) {
     return false
   }
   const remaining = blocks.reduce(
