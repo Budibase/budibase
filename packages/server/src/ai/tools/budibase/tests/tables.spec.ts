@@ -40,7 +40,7 @@ describe("AI Tools - Tables", () => {
 
     const result = await listTables.tool.execute(
       { showSchema: true },
-      { toolCallId: "test-tool-call", messages: [] }
+      { toolCallId: "test-tool-call", messages: [], context: undefined }
     )
 
     expect(getTables).toHaveBeenCalledWith(["ta_invoices"])
@@ -71,7 +71,7 @@ describe("AI Tools - Tables", () => {
     await expect(
       getTableTool.tool.execute(
         { tableId: "ta_suppliers" },
-        { toolCallId: "test-tool-call", messages: [] }
+        { toolCallId: "test-tool-call", messages: [], context: undefined }
       )
     ).rejects.toThrow("Table is not configured for the current operation")
     expect(getTable).not.toHaveBeenCalled()

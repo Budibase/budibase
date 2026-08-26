@@ -148,7 +148,7 @@ export class TableGeneration {
     try {
       const result = await generateText({
         model: this.aiModel.chat,
-        messages: this.toModelMessages(request.messages),
+        ...this.toPrompt(request.messages),
         output: Output.object({ schema }),
         providerOptions,
       })
@@ -169,15 +169,28 @@ export class TableGeneration {
     return typeof error.message === "string" ? error.message : String(err)
   }
 
-  private toModelMessages(messages: Message[]): ModelMessage[] {
-    return messages.map(message => {
+  private toPrompt(messages: Message[]): {
+    instructions?: string
+    messages: ModelMessage[]
+  } {
+    const instructions: string[] = []
+    const modelMessages: ModelMessage[] = []
+    for (const message of messages) {
       if (typeof message.content !== "string") {
         throw new HTTPError("AI message content must be a string", 422)
       }
-      return {
-        role: message.role,
-        content: message.content,
-      } as ModelMessage
-    })
+      if (message.role === "system") {
+        instructions.push(message.content)
+      } else {
+        modelMessages.push({
+          role: message.role,
+          content: message.content,
+        } as ModelMessage)
+      }
+    }
+    return {
+      instructions: instructions.join("\n\n") || undefined,
+      messages: modelMessages,
+    }
   }
 }
