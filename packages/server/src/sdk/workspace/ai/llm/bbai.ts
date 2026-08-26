@@ -1,8 +1,8 @@
 import { createOpenAI } from "@ai-sdk/openai"
-import type { LanguageModelV3StreamResult } from "@ai-sdk/provider"
+import type { LanguageModelV4StreamResult } from "@ai-sdk/provider"
 import type {
-  LanguageModelV3StreamPart,
-  LanguageModelV3Usage,
+  LanguageModelV4StreamPart,
+  LanguageModelV4Usage,
 } from "@ai-sdk/provider"
 import { constants, context, env, HTTPError } from "@budibase/backend-core"
 import {
@@ -47,7 +47,7 @@ const calculateBudibaseAICredits = (
 ): number => outputTokens * 3 + inputTokens
 
 const incrementBudibaseAICreditsFromUsage = async (
-  usage?: LanguageModelV3Usage
+  usage?: LanguageModelV4Usage
 ) => {
   if (!usage) {
     return
@@ -184,7 +184,7 @@ export async function createBBAIClient(
   const chat = wrapLanguageModel({
     model: client.chat(model),
     middleware: {
-      specificationVersion: "v3",
+      specificationVersion: "v4",
       async wrapGenerate({ doGenerate }) {
         await quotas.throwIfBudibaseAICreditsExceeded()
         const result = await doGenerate()
@@ -195,8 +195,8 @@ export async function createBBAIClient(
         await quotas.throwIfBudibaseAICreditsExceeded()
         const result = await doStream()
         const transformStream = new TransformStream<
-          LanguageModelV3StreamPart,
-          LanguageModelV3StreamPart
+          LanguageModelV4StreamPart,
+          LanguageModelV4StreamPart
         >({
           async transform(chunk, controller) {
             controller.enqueue(chunk)
@@ -213,7 +213,7 @@ export async function createBBAIClient(
           ...result,
           stream: result.stream.pipeThrough(
             transformStream
-          ) as LanguageModelV3StreamResult["stream"],
+          ) as LanguageModelV4StreamResult["stream"],
         }
       },
     },
