@@ -49,7 +49,6 @@
   } from "@budibase/bbui"
   import {
     FeatureFlag,
-    type GetWorkspaceHomeMetricsResponse,
     type UIAutomation,
     type UIWorkspaceApp,
     type HomeRow,
@@ -127,8 +126,6 @@
   let typeFilter: HomeType = "all"
   let selectedProjectId = ""
   let searchTerm = ""
-  let metrics: GetWorkspaceHomeMetricsResponse | null = null
-
   let sortColumn: HomeSortColumn = "updated"
   let sortOrder: HomeSortOrder = "desc"
 
@@ -578,10 +575,7 @@
       notifications.success(`Imported project '${response.project.name}'`)
       notifyImportFollowUps(response)
 
-      const refreshes = await Promise.allSettled([
-        appStore.refresh(),
-        loadMetrics(),
-      ])
+      const refreshes = await Promise.allSettled([appStore.refresh()])
       if (refreshes.some(result => result.status === "rejected")) {
         notifications.warning(
           "Project imported, but some resources could not be refreshed. Reload the workspace to see all imported resources."
@@ -813,15 +807,6 @@
     }
   }
 
-  const loadMetrics = async () => {
-    try {
-      metrics = await API.workspaceHome.getMetrics()
-    } catch (err) {
-      console.error(err)
-      metrics = null
-    }
-  }
-
   const loadProjects = async (workspaceId: string) => {
     try {
       projectsRequestedForWorkspace = workspaceId
@@ -997,7 +982,7 @@
       projectsEnabled,
     })
 
-    await Promise.all([agentsStore.fetchAgents(), loadMetrics()])
+    await agentsStore.fetchAgents()
   })
 </script>
 
@@ -1059,7 +1044,7 @@
       </div>
     {/if}
 
-    <HomeMetrics {metrics} {showBudibaseAIMetric} />
+    <HomeMetrics {showBudibaseAIMetric} />
 
     {#if projectsEnabled}
       <div class="project-resources">
