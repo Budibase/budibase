@@ -624,6 +624,10 @@
         FIELDS.ATTACHMENT_SINGLE,
         FIELDS.ATTACHMENTS,
         FIELDS.SIGNATURE_SINGLE,
+        // only Postgres has a proven-safe native JSON column path in the
+        // backend DDL builder (sqlTable.ts) - other SQL dialects still reject
+        // it there
+        ...(datasource?.source === SourceName.POSTGRES ? [FIELDS.JSON] : []),
       ]
     } else if (isExternalTable && isGoogleSheet) {
       // google-sheets supports minimum set (no attachments or user references)

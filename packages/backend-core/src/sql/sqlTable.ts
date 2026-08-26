@@ -25,6 +25,7 @@ function generateSchema(
   schema: CreateTableBuilder,
   table: Table,
   tables: Record<string, Table>,
+  sqlClient: SqlClient,
   oldTable?: Table,
   renamed?: RenameColumn
 ) {
@@ -154,8 +155,17 @@ function generateSchema(
       case FieldType.AI:
         // This is allowed, but nothing to do on the external datasource
         break
-      case FieldType.AUTO:
       case FieldType.JSON:
+        // native JSON columns are only proven safe for Postgres here - other
+        // dialects go through knex's generic .json() emulation (e.g. a
+        // NVARCHAR+CHECK column in SQL Server) which hasn't been verified
+        // against this codebase's expectations
+        if (sqlClient === SqlClient.POSTGRES) {
+          schema.json(key)
+          break
+        }
+        throw new Error(`${column.type} is not a valid SQL type`)
+      case FieldType.AUTO:
       case FieldType.INTERNAL:
         throw new Error(`${column.type} is not a valid SQL type`)
 
@@ -192,10 +202,11 @@ function generateSchema(
 function buildCreateTable(
   knex: SchemaBuilder,
   table: Table,
-  tables: Record<string, Table>
+  tables: Record<string, Table>,
+  sqlClient: SqlClient
 ): SchemaBuilder {
   return knex.createTable(table.name, schema => {
-    generateSchema(schema, table, tables)
+    generateSchema(schema, table, tables, sqlClient)
   })
 }
 
@@ -203,11 +214,12 @@ function buildUpdateTable(
   knex: SchemaBuilder,
   table: Table,
   tables: Record<string, Table>,
+  sqlClient: SqlClient,
   oldTable?: Table,
   renamed?: RenameColumn
 ): SchemaBuilder {
   return knex.alterTable(table.name, schema => {
-    generateSchema(schema, table, tables, oldTable, renamed)
+    generateSchema(schema, table, tables, sqlClient, oldTable, renamed)
   })
 }
 
@@ -262,7 +274,12 @@ class SqlTableQueryBuilder {
 
     switch (this._operation(json)) {
       case Operation.CREATE_TABLE:
-        query = buildCreateTable(client, json.table, json.tables)
+        query = buildCreateTable(
+          client,
+          json.table,
+          json.tables,
+          this.sqlClient
+        )
         break
       case Operation.UPDATE_TABLE:
         if (!json.table) {
@@ -284,6 +301,7 @@ class SqlTableQueryBuilder {
           client,
           json.table,
           json.tables,
+          this.sqlClient,
           json.meta?.oldTable,
           json.meta?.renamed
         )
