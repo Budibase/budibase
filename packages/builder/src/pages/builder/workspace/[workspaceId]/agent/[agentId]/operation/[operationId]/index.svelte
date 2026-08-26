@@ -70,7 +70,10 @@
   } from "../../toolAutocomplete"
   import { createSaveCoordinator } from "../../operationSaveCoordinator"
   import type { AgentTool } from "../../toolTypes"
-  import { getWorkspaceHomeUrl } from "@/helpers/workspaceHomeNavigation"
+  import {
+    getWorkspaceHomeUrl,
+    withWorkspaceHomeReturn,
+  } from "@/helpers/workspaceHomeNavigation"
 
   const { goto, params } = routify
 
@@ -267,7 +270,7 @@
     )
   )
 
-  const close = () => $goto("../../config")
+  const close = () => $goto(withWorkspaceHomeReturn("../../config"))
 
   const hasUnsavedInstructions = () =>
     operation && (operation.promptInstructions || "") !== lastSavedInstructions
@@ -793,7 +796,10 @@
       icon="Effect"
       breadcrumbs={[
         { text: "Agents", url: homeUrl, tag: "Beta" },
-        { text: agent?.name || "Agent", url: "../../config" },
+        {
+          text: agent?.name || "Agent",
+          url: withWorkspaceHomeReturn("../../config"),
+        },
         { text: operationName },
       ]}
     />

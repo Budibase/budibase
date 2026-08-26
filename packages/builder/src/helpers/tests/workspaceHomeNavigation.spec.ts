@@ -68,4 +68,19 @@ describe("workspace home navigation", () => {
 
     expect(withWorkspaceHomeReturn("./screen_1")).toBe("./screen_1")
   })
+
+  it("retains the home URL when returning from an operation to its agent", () => {
+    window.history.replaceState(
+      {},
+      "",
+      "/builder/workspace/app_1/agent/agent_1/operation/operation_1?returnTo=%2Fbuilder%2Fworkspace%2Fapp_1%2Fhome%3Ftype%3Dagent%26q%3Dsupport"
+    )
+
+    const agentUrl = withWorkspaceHomeReturn("../../config")
+    const agentSearch = new URL(agentUrl, window.location.href).search
+
+    expect(getWorkspaceHomeUrl("app_1", agentSearch)).toBe(
+      "/builder/workspace/app_1/home?type=agent&q=support"
+    )
+  })
 })
