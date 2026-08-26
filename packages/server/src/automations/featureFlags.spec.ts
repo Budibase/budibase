@@ -19,6 +19,10 @@ describe("automation feature flag overrides", () => {
     jest.clearAllMocks()
   })
 
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   it("does not propagate overrides when Debug UI is not trusted", async () => {
     isDebugUiTrusted.mockResolvedValue(false)
     getOverrides.mockReturnValue({
@@ -40,8 +44,6 @@ describe("automation feature flag overrides", () => {
       "Unable to resolve automation feature flag overrides",
       error
     )
-
-    warn.mockRestore()
   })
 
   it("propagates all feature flag overrides", async () => {

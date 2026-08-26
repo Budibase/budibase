@@ -28,6 +28,7 @@ import {
   type ToolSet,
   wrapLanguageModel,
 } from "ai"
+import type { Context } from "@ai-sdk/provider-utils"
 import { z } from "zod"
 import sdk from "../../.."
 import { createSessionLogIndexer } from "../agentLogs"
@@ -97,7 +98,9 @@ export interface AgentChatRun {
   sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
   stream: (
     options?: AgentChatStreamOptions
-  ) => Promise<StreamTextResult<ToolSet, ReturnType<typeof Output.object>>>
+  ) => Promise<
+    StreamTextResult<ToolSet, Context, ReturnType<typeof Output.object>>
+  >
   isSuspended: () => boolean
   toolDisplayNames: Record<string, string>
   contextWindowTokens?: number

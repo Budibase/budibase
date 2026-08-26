@@ -8,7 +8,11 @@ const config: Config = {
   coverageReporters: ["lcov", "json", "clover"],
   transform: {
     "^.+\\.ts?$": "@swc/jest",
+    "^.+\\.js$": "@swc/jest",
   },
+  transformIgnorePatterns: [
+    "/node_modules/(?!ai/|@ai-sdk/|@workflow/|@smithy/|@aws-sdk/).*",
+  ],
   moduleNameMapper: {
     "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
     "@budibase/backend-core": "<rootDir>/../backend-core/src",

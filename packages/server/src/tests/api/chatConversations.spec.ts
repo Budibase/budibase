@@ -19,9 +19,9 @@ import TestConfiguration from "../utilities/TestConfiguration"
 import sdk from "../../sdk"
 import * as agentLogs from "../../sdk/workspace/ai/agentLogs"
 import { requesterTools } from "../../sdk/workspace/ai/tests/utils"
-import type { LanguageModelV3 } from "@ai-sdk/provider"
+import type { LanguageModelV4 } from "@ai-sdk/provider"
 import { webhookChat } from "../../api/controllers/ai"
-import { MockLanguageModelV3 } from "ai/test"
+import { MockLanguageModelV4 } from "ai/test"
 
 const mockAiConfigsFind = jest.fn()
 
@@ -144,7 +144,7 @@ const mockLanguageModelStreamUsage = {
 } as const
 
 const createChatTestLanguageModel = () =>
-  new MockLanguageModelV3({
+  new MockLanguageModelV4({
     doStream: async () => ({
       stream: aiActual.simulateReadableStream({
         chunks: [
@@ -498,7 +498,7 @@ describe("chat conversation preview stream", () => {
     ;(
       sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
     ).mockResolvedValue({
-      chat: createChatTestLanguageModel() as LanguageModelV3,
+      chat: createChatTestLanguageModel() as LanguageModelV4,
       providerOptions: jest.fn(),
       uploadFile: jest.fn(),
     })
