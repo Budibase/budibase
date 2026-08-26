@@ -1,4 +1,4 @@
-import { generateText, type ModelMessage } from "ai"
+import { generateText } from "ai"
 import { ai } from "@budibase/pro"
 
 import type { GenerateAgentInstructionsRequest } from "@budibase/types"
@@ -46,15 +46,11 @@ export async function generateAgentInstructions({
     throw new Error("AI prompt messages must be strings")
   }
 
-  const messages: ModelMessage[] = [
-    { role: "system", content: systemMessage },
-    { role: "user", content: userMessage },
-  ]
-
   const { chat, providerOptions } = await sdk.ai.llm.getDefaultLLMOrThrow()
   const result = await generateText({
     model: chat,
-    messages,
+    instructions: systemMessage,
+    prompt: userMessage,
     providerOptions: providerOptions?.(false),
   })
 

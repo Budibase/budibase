@@ -4,7 +4,9 @@ const config: Config = {
   testEnvironment: "node",
   transform: {
     "^.+\\.ts$": "@swc/jest",
+    "^.+\\.js$": "@swc/jest",
   },
+  transformIgnorePatterns: ["/node_modules/(?!ai/|@ai-sdk/|@workflow/).*"],
   setupFiles: ["./tests/jestEnv.ts"],
   globalSetup: "./../../globalSetup.ts",
   setupFilesAfterEnv: ["./tests/jestSetup.ts"],

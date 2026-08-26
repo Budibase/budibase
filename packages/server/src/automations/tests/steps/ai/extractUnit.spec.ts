@@ -1,5 +1,5 @@
 import { DocumentSourceType, SupportedFileType } from "@budibase/types"
-import { MockLanguageModelV3 } from "ai/test"
+import { MockLanguageModelV4 } from "ai/test"
 import sdk from "../../../../sdk"
 import { PDFParse } from "pdf-parse"
 import { Readable } from "stream"
@@ -25,7 +25,7 @@ jest.mock("../../../steps/utils", () => ({
   fetchWithBlacklist: jest.fn(),
 }))
 const createExtractMockLanguageModel = (data: unknown[]) =>
-  new MockLanguageModelV3({
+  new MockLanguageModelV4({
     doGenerate: async () => ({
       content: [{ type: "text" as const, text: JSON.stringify({ data }) }],
       finishReason: { unified: "stop" as const, raw: undefined },
@@ -104,7 +104,7 @@ describe("extract file data step unit tests", () => {
           content: expect.arrayContaining([
             expect.objectContaining({
               type: "file",
-              data: "file-123",
+              data: { type: "data", data: "file-123" },
               mediaType: "application/pdf",
             }),
           ]),
@@ -206,7 +206,7 @@ describe("extract file data step unit tests", () => {
             expect.objectContaining({
               type: "file",
               mediaType: "image/png",
-              data: "3q2+7w==",
+              data: { type: "data", data: "3q2+7w==" },
             }),
           ]),
         }),

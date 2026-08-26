@@ -22,7 +22,7 @@ const baseConfig: Config = {
     "^.+\\.svelte?$": "<rootDir>/scripts/svelteTransformer.js",
   },
   transformIgnorePatterns: [
-    "/node_modules/(?!svelte/|esm-env/|devalue/|chokidar/|readdirp/).*",
+    "/node_modules/(?!svelte/|esm-env/|devalue/|chokidar/|readdirp/|ai/|@ai-sdk/|@workflow/|@smithy/|@aws-sdk/).*",
   ],
   moduleNameMapper: {
     "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
