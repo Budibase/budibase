@@ -8,8 +8,6 @@ import { permissions } from "@budibase/backend-core"
 import { internalSearchValidator } from "./utils/validators"
 import recaptcha from "../../middleware/recaptcha"
 import { trimViewRowInfoMiddleware } from "../../middleware/trimViewRowInfo"
-import { validateBody } from "../../middleware/zod-validator"
-import { searchRowRequestValidator } from "@budibase/types"
 import { endpointGroupList, publicRoutes } from "./endpointGroups"
 
 const { PermissionType, PermissionLevel } = permissions
@@ -44,7 +42,6 @@ readRoutes
   .post(
     "/api/:sourceId/search",
     internalSearchValidator(),
-    validateBody(searchRowRequestValidator),
     paramResource("sourceId"),
     rowController.search
   )
@@ -94,7 +91,6 @@ writeRoutes
 publicRoutes.post(
   "/api/v2/views/:viewId/search",
   internalSearchValidator(),
-  validateBody(searchRowRequestValidator),
   authorizedResource(PermissionType.VIEW, PermissionLevel.READ, "viewId"),
   rowController.views.searchView
 )

@@ -58,7 +58,7 @@ const seedAgentWithLogs = async (appId: string) => {
       goal: "Help the user",
       createdAt: now,
     })
-    const sessionId = "chat:session-1"
+    const sessionId = "slack:session-1"
     const logId = `${DocumentType.AGENT_LOG_SESSION}${SEPARATOR}${encodeURIComponent(
       agentId
     )}${SEPARATOR}${encodeURIComponent(sessionId)}`
@@ -67,7 +67,7 @@ const seedAgentWithLogs = async (appId: string) => {
       type: "agent_log_session",
       agentId,
       sessionId,
-      trigger: "Chat",
+      trigger: "Slack",
       isPreview: false,
       firstInput: "Hello",
       requestIds: JSON.stringify(["req-1"]),
@@ -1351,44 +1351,6 @@ describe("/applications", () => {
                     )
                   )
                 )
-              }
-            )
-          )
-        })
-
-        it("should allow chat route app package when no workspace apps exist", async () => {
-          await config.publish()
-
-          await context.doInWorkspaceContext(
-            config.getProdWorkspaceId(),
-            async () => {
-              const workspaceApps = await sdk.workspaceApps.fetch()
-              for (const workspaceApp of workspaceApps) {
-                await sdk.workspaceApps.remove(
-                  workspaceApp._id!,
-                  workspaceApp._rev!
-                )
-              }
-            }
-          )
-
-          await config.withProdApp(() =>
-            config.withHeaders(
-              {
-                referer: `http://localhost:10000/app-chat${config.prodWorkspace?.url}`,
-              },
-              async () => {
-                const res = await config.api.workspace.getAppPackage(
-                  config.getDevWorkspaceId(),
-                  {
-                    headers: {
-                      [Header.TYPE]: "client",
-                    },
-                  }
-                )
-
-                expect(res.application).toBeDefined()
-                expect(res.screens).toEqual([])
               }
             )
           )

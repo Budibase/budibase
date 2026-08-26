@@ -103,7 +103,6 @@
           appPassword: toOptionalValue(draft.appPassword),
           tenantId: toOptionalValue(draft.tenantId),
           teamId: toOptionalValue(draft.teamId),
-          chatAppId: agent.MSTeamsIntegration?.chatAppId,
           messagingEndpointUrl: agent.MSTeamsIntegration?.messagingEndpointUrl,
           idleTimeoutMinutes: toOptionalIdleTimeout(draft.idleTimeoutMinutes),
           requireUserLink: draft.requireUserLink,

@@ -8,6 +8,7 @@ export type AgentOperationConfig = Pick<
   | "live"
   | "promptInstructions"
   | "enabledTools"
+  | "approvalPolicies"
   | "allowKnowledgeSourceDownload"
   | "escalation"
 >

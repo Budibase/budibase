@@ -1023,7 +1023,6 @@ describe("/projects", () => {
       slackIntegration: {
         botToken: "secret-token",
         signingSecret: "secret-signing-key",
-        chatAppId: "slack-app-id",
         messagingEndpointUrl: "https://source.example/slack",
         idleTimeoutMinutes: 20,
         requireUserLink: true,

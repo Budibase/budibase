@@ -1,6 +1,9 @@
 import { Document } from "../../"
 import type { UIMessage } from "ai"
-import { EscalationRecipient } from "../workspace/escalation"
+import {
+  EscalationRecipient,
+  ResolutionStrategy,
+} from "../workspace/escalation"
 
 export enum ToolType {
   INTERNAL_TABLE = "INTERNAL_TABLE",
@@ -32,7 +35,6 @@ export interface ToolMetadata {
 }
 
 interface ChatAgentIntegration {
-  chatAppId?: string
   idleTimeoutMinutes?: number
   requireUserLink?: boolean
 }
@@ -129,14 +131,29 @@ export interface AgentEscalationConfig {
   delay?: number
 }
 
+export interface AgentOperationApprovalPolicy {
+  id: string
+  name: string
+  approvalType?: ResolutionStrategy
+  approvers?: string[]
+  notifications: AgentEscalationConfig
+}
+
+export interface ToolExecutionCondition {}
+
+export interface ToolExecutionRule {
+  conditions?: ToolExecutionCondition[]
+  policyId: string
+}
+
 export interface AgentOperationToolConfig {
   toolName: string
   executionPrincipal: ToolExecutionPrincipal
+  executionRules?: ToolExecutionRule[]
 }
 
 export interface AgentRequester {
-  userId: string
-  authorization: { mode: "current" } | { mode: "preview"; roleId: string }
+  executorRole: string
 }
 
 export interface AgentExecutionContext {
@@ -154,6 +171,7 @@ export interface AgentOperation {
   live: boolean
   promptInstructions?: string
   enabledTools?: AgentOperationToolConfig[]
+  approvalPolicies?: AgentOperationApprovalPolicy[]
   knowledgeBases?: string[]
   knowledgeSources?: AgentKnowledgeSource[]
   allowKnowledgeSourceDownload: boolean

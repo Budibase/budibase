@@ -1,6 +1,9 @@
 import { auth } from "@budibase/backend-core"
 import { REVIEWER_TYPES } from "@budibase/shared-core"
-import { EscalationNotificationChannel } from "@budibase/types"
+import {
+  EscalationNotificationChannel,
+  ResolutionStrategy,
+} from "@budibase/types"
 import Joi from "joi"
 import { validate as isValidUUID } from "uuid"
 
@@ -19,7 +22,6 @@ const TEAMS_INTEGRATION_SCHEMA = Joi.object({
   appId: OPTIONAL_UUID,
   appPassword: OPTIONAL_STRING,
   tenantId: NON_EMPTY_STRING.required(),
-  chatAppId: OPTIONAL_STRING,
   messagingEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
   requireUserLink: Joi.boolean().optional(),
@@ -36,7 +38,6 @@ const SLACK_INTEGRATION_SCHEMA = Joi.object({
   signingSecret: OPTIONAL_STRING,
   teamId: OPTIONAL_STRING,
   teamName: OPTIONAL_STRING,
-  chatAppId: OPTIONAL_STRING,
   messagingEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
   requireUserLink: Joi.boolean().optional(),
@@ -51,6 +52,24 @@ const ESCALATION_RECIPIENT_SCHEMA = Joi.object({
   config: Joi.object().optional(),
 })
 
+const TOOL_EXECUTION_RULE_SCHEMA = Joi.object({
+  conditions: Joi.array().items(Joi.object()).optional(),
+  policyId: Joi.string().required(),
+})
+
+const APPROVAL_POLICY_SCHEMA = Joi.object({
+  id: Joi.string().required(),
+  name: Joi.string().required(),
+  approvalType: Joi.string()
+    .valid(...Object.values(ResolutionStrategy))
+    .optional(),
+  approvers: Joi.array().items(Joi.string()).optional(),
+  notifications: Joi.object({
+    recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
+    delay: Joi.number().integer().positive().optional(),
+  }).required(),
+})
+
 const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
   name: OPTIONAL_STRING,
   live: Joi.boolean().optional(),
@@ -60,9 +79,13 @@ const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
       Joi.object({
         toolName: Joi.string().required(),
         executionPrincipal: Joi.string().valid("requester", "admin").required(),
+        executionRules: Joi.array()
+          .items(TOOL_EXECUTION_RULE_SCHEMA)
+          .optional(),
       })
     )
     .optional(),
+  approvalPolicies: Joi.array().items(APPROVAL_POLICY_SCHEMA).optional(),
   allowKnowledgeSourceDownload: Joi.boolean().optional(),
   escalation: Joi.object({
     recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
@@ -129,26 +152,19 @@ export function updateAgentOperationValidator() {
 }
 
 export function provisionAgentMSTeamsChannelValidator() {
-  return chatAppIdBodyValidator()
+  return emptyOptionalBodyValidator()
 }
 
 export function provisionAgentSlackChannelValidator() {
-  return chatAppIdBodyValidator()
+  return emptyOptionalBodyValidator()
 }
 
 export function createAgentSlackAppValidator() {
   return auth.joiValidator.body(Joi.object().optional().allow(null))
 }
 
-function chatAppIdBodyValidator() {
-  return auth.joiValidator.body(
-    Joi.object({
-      chatAppId: OPTIONAL_STRING,
-    })
-      .optional()
-      .allow(null)
-  )
-}
+const emptyOptionalBodyValidator = () =>
+  auth.joiValidator.body(Joi.object().optional().allow(null))
 
 export function toggleAgentMSTeamsDeploymentValidator() {
   return auth.joiValidator.body(

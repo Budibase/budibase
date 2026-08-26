@@ -397,6 +397,7 @@ describe("prepareAgentRunContext", () => {
       systemPrompt: "system prompt",
       tools: {},
       toolDisplayNames: {},
+      toolSources: {},
     })
   })
 
@@ -501,8 +502,7 @@ describe("prepareAgentRunContext", () => {
       sessionId: "session_1",
       latestQuestion: "Show my leave requests",
       requester: {
-        userId: "user_1",
-        authorization: { mode: "current" },
+        executorRole: "BASIC",
       },
     })
 
@@ -517,8 +517,7 @@ describe("prepareAgentRunContext", () => {
           operationId: "operation_2",
           conversationId: "session_1",
           requester: {
-            userId: "user_1",
-            authorization: { mode: "current" },
+            executorRole: "BASIC",
           },
         },
       })
@@ -613,6 +612,7 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
       systemPrompt: "system prompt",
       tools: { escalate: escalatePlaceholder },
       toolDisplayNames: {},
+      toolSources: {},
     })
 
     return prepareAgentChatRun({
@@ -655,7 +655,6 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
   it("passes the chat timezone to the agent system prompt", async () => {
     await runFor(operationWithoutRecipients, {
       chat: {
-        chatAppId: "chatapp_1",
         agentId: "agent_1",
         messages: [],
         timezone: "Europe/London",
@@ -668,9 +667,8 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
 
   it("ignores a preview role when the chat is not in preview mode", async () => {
     await runFor(operationWithoutRecipients, {
-      user: { _id: "user_1" } as ContextUser,
+      user: { _id: "user_1", roleId: "BASIC" } as ContextUser,
       chat: {
-        chatAppId: "chatapp_1",
         agentId: "agent_1",
         messages: [],
         previewRoleId: "ADMIN",
@@ -683,8 +681,51 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
       expect.objectContaining({
         executionContext: expect.objectContaining({
           requester: {
-            userId: "user_1",
-            authorization: { mode: "current" },
+            executorRole: "BASIC",
+          },
+        }),
+      })
+    )
+  })
+
+  it("uses the workspace role for a global admin", async () => {
+    await runFor(operationWithoutRecipients, {
+      user: {
+        _id: "user_1",
+        roleId: "BASIC",
+        admin: { global: true },
+      } as ContextUser,
+    })
+
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      operationWithoutRecipients,
+      expect.objectContaining({
+        executionContext: expect.objectContaining({
+          requester: {
+            executorRole: "BASIC",
+          },
+        }),
+      })
+    )
+  })
+
+  it("uses the workspace role for a builder", async () => {
+    await runFor(operationWithoutRecipients, {
+      user: {
+        _id: "user_1",
+        roleId: "BASIC",
+        builder: { global: true },
+      } as ContextUser,
+    })
+
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      operationWithoutRecipients,
+      expect.objectContaining({
+        executionContext: expect.objectContaining({
+          requester: {
+            executorRole: "BASIC",
           },
         }),
       })
@@ -695,7 +736,6 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     await runFor(operationWithoutRecipients, {
       user: { _id: "user_1" } as ContextUser,
       chat: {
-        chatAppId: "chatapp_1",
         agentId: "agent_1",
         messages: [],
         isPreview: true,
@@ -709,8 +749,7 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
       expect.objectContaining({
         executionContext: expect.objectContaining({
           requester: {
-            userId: "user_1",
-            authorization: { mode: "preview", roleId: "PUBLIC" },
+            executorRole: "PUBLIC",
           },
         }),
       })

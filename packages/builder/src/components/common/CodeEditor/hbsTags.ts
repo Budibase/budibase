@@ -1,4 +1,6 @@
 import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
+import { StateEffect } from "@codemirror/state"
+import { ToolBindingPrefix } from "@/constants"
 import {
   Decoration,
   EditorView,
@@ -7,20 +9,39 @@ import {
   WidgetType,
 } from "@codemirror/view"
 
+export const bindingsChanged = StateEffect.define<void>()
+
+const UNSUPPORTED_TOOL_TOOLTIP = "Tool is unsupported"
+const UNSUPPORTED_TOOL_ICON =
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="#e34850"><path d="M236.8 188.09 149.35 36.22a24.76 24.76 0 0 0-42.7 0L19.2 188.09a23.51 23.51 0 0 0 0 23.72A24.35 24.35 0 0 0 40.55 224h174.9a24.35 24.35 0 0 0 21.33-12.19 23.51 23.51 0 0 0 .02-23.72ZM120 104a8 8 0 0 1 16 0v40a8 8 0 0 1-16 0Zm8 88a12 12 0 1 1 12-12 12 12 0 0 1-12 12Z"/></svg>'
+  )
+
 export class HbsTagWidget extends WidgetType {
   text: string
   icon?: string
-  constructor(text: string, icon?: string) {
+  invalid: boolean
+  constructor(text: string, icon?: string, invalid = false) {
     super()
     this.text = text
-    this.icon = icon
+    this.icon = invalid ? UNSUPPORTED_TOOL_ICON : icon
+    this.invalid = invalid
   }
   eq(other: HbsTagWidget) {
-    return other.text === this.text && other.icon === this.icon
+    return (
+      other.text === this.text &&
+      other.icon === this.icon &&
+      other.invalid === this.invalid
+    )
   }
   toDOM() {
     const tag = document.createElement("span")
     tag.className = "hbs-tag"
+    if (this.invalid) {
+      tag.classList.add("hbs-tag--error")
+      tag.title = UNSUPPORTED_TOOL_TOOLTIP
+    }
     if (this.icon) {
       const img = document.createElement("img")
       img.src = this.icon
@@ -48,6 +69,10 @@ const buildHbsTagDecorations = (
   const regex = new RegExp(FIND_ANY_HBS_REGEX)
   const isValidBinding = (binding: string) =>
     !validBindings || validBindings.size === 0 || validBindings.has(binding)
+  const knownNamespaces = new Set<string>([ToolBindingPrefix.ESCALATION])
+  for (const binding of validBindings || []) {
+    knownNamespaces.add(binding.split(".")[0])
+  }
 
   // Get all cursor/selection positions to check if cursor is inside a binding
   const cursorPositions = view.state.selection.ranges.map(r => ({
@@ -72,11 +97,12 @@ const buildHbsTagDecorations = (
       }
 
       const clean = stripHbsDelimiters(match[0])
-      if (!isValidBinding(clean)) {
+      const invalid = !isValidBinding(clean)
+      if (invalid && !knownNamespaces.has(clean.split(".")[0])) {
         continue
       }
       const icon = bindingIcons?.[clean]
-      const widget = new HbsTagWidget(clean, icon)
+      const widget = new HbsTagWidget(clean, icon, invalid)
       decos.push(
         Decoration.replace({ widget, inclusive: true }).range(start, end)
       )
@@ -103,7 +129,10 @@ export const hbsTagPlugin = (
         if (
           update.docChanged ||
           update.viewportChanged ||
-          update.selectionSet
+          update.selectionSet ||
+          update.transactions.some(tr =>
+            tr.effects.some(effect => effect.is(bindingsChanged))
+          )
         ) {
           this.decorations = buildHbsTagDecorations(
             update.view,
