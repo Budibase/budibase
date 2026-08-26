@@ -1,16 +1,5 @@
 import * as controller from "../controllers/features"
 import { debugUIEnabled } from "../../middleware/debugUIEnabled"
-import { validateBody } from "../../middleware/zod-validator"
-import { builderAdminRoutes } from "./endpointGroups"
-import { z } from "zod"
+import { publicRoutes } from "./endpointGroups"
 
-const validator = z.object({
-  flags: z.record(z.string(), z.boolean()),
-})
-
-builderAdminRoutes.patch(
-  "/api/features",
-  debugUIEnabled,
-  validateBody(validator),
-  controller.override
-)
+publicRoutes.patch("/api/features", debugUIEnabled, controller.override)
