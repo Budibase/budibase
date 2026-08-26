@@ -103,6 +103,7 @@ export async function run({
           user,
           requester,
           outputSchema: structuredOutputSchema,
+          promptMode: "automation",
         })
 
         const pendingToolCalls = new Set<string>()

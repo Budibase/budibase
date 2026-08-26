@@ -88,6 +88,7 @@ interface PrepareAgentChatRunParams {
   executedApproval?: { toolName: string }
   requester?: AgentRequester
   outputSchema?: Record<string, any>
+  promptMode?: "interactive" | "automation"
 }
 
 export interface AgentChatRun {
@@ -504,6 +505,7 @@ export const prepareAgentChatRun = async ({
   executedApproval,
   requester: providedRequester,
   outputSchema,
+  promptMode = "interactive",
 }: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
   const latestQuestion =
     providedLatestQuestion ?? (chat ? findLatestUserQuestion(chat) : "")
@@ -576,6 +578,17 @@ export const prepareAgentChatRun = async ({
       }
     : undefined
 
+  const buildPromptOptions: BuildPromptAndToolsOptions = {
+    includeGoal: promptMode === "automation",
+    escalationGateContext,
+  }
+  if (promptMode === "interactive") {
+    buildPromptOptions.baseSystemPrompt = ai.agentSystemPrompt(
+      user,
+      chat?.timezone
+    )
+  }
+
   const [runContext, modelMessages] = await Promise.all([
     prepareAgentRunContext({
       agent,
@@ -585,11 +598,7 @@ export const prepareAgentChatRun = async ({
       aiConfigId,
       operationId,
       requester,
-      buildPromptOptions: {
-        baseSystemPrompt: ai.agentSystemPrompt(user, chat?.timezone),
-        includeGoal: false,
-        escalationGateContext,
-      },
+      buildPromptOptions,
     }),
     providedModelMessages ?? prepareModelMessages(chat?.messages ?? []),
   ])

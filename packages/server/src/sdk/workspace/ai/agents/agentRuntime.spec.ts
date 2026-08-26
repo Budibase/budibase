@@ -683,6 +683,22 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     expect(ai.agentSystemPrompt).toHaveBeenCalledWith(user, "Europe/London")
   })
 
+  it("uses the non-interactive automation prompt configuration", async () => {
+    await runFor(operationWithoutRecipients, { promptMode: "automation" })
+
+    const { ai } = jest.requireMock("@budibase/pro")
+    expect(ai.agentSystemPrompt).not.toHaveBeenCalled()
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      operationWithoutRecipients,
+      expect.objectContaining({
+        includeGoal: true,
+      })
+    )
+    const buildOptions = jest.mocked(buildPromptAndTools).mock.calls.at(-1)?.[2]
+    expect(buildOptions).not.toHaveProperty("baseSystemPrompt")
+  })
+
   it("ignores a preview role when the chat is not in preview mode", async () => {
     await runFor(operationWithoutRecipients, {
       user: { _id: "user_1", roleId: "BASIC" } as ContextUser,
