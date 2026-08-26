@@ -6,8 +6,6 @@
   $redirect
 
   $redirect(
-    withWorkspaceHomeReturn(
-      `./${$workspaceAppStore.selectedWorkspaceApp}`
-    )
+    withWorkspaceHomeReturn(`./${$workspaceAppStore.selectedWorkspaceApp}`)
   )
 </script>

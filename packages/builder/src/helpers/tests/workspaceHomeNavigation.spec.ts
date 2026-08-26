@@ -11,10 +11,11 @@ describe("workspace home navigation", () => {
       "/builder/workspace/app_1/home?q=invoices&type=app&project=project_1&sort=name&order=asc"
     )
 
-    expect(getWorkspaceHomeUrl("app_1", new URL(result, location.origin).search))
-      .toBe(
-        "/builder/workspace/app_1/home?q=invoices&type=app&project=project_1&sort=name&order=asc"
-      )
+    expect(
+      getWorkspaceHomeUrl("app_1", new URL(result, location.origin).search)
+    ).toBe(
+      "/builder/workspace/app_1/home?q=invoices&type=app&project=project_1&sort=name&order=asc"
+    )
   })
 
   it("keeps return URLs isolated to the current workspace", () => {

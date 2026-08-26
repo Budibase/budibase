@@ -8,8 +8,6 @@
   $: selectedScreenId = $screenStore.selectedScreenId
 
   $: if (selectedScreenId) {
-    $redirect(
-      withWorkspaceHomeReturn(`./${selectedScreenId}-screen`)
-    )
+    $redirect(withWorkspaceHomeReturn(`./${selectedScreenId}-screen`))
   }
 </script>
