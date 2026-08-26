@@ -9,6 +9,8 @@ const CONTAINS_ERROR = 'Must contain "admin"'
 const NOT_CONTAINS_ERROR = 'Must not contain "guest"'
 
 describe("form validation", () => {
+  const jsBinding = '{{ js "cmV0dXJuICdoZWxsbyB3b3JsZCc=" }}'
+
   const createUrlValidator = (rule?: Partial<UIFieldValidationRule>) => {
     const rules: UIFieldValidationRule[] = [
       {
@@ -33,6 +35,164 @@ describe("form validation", () => {
 
     return createValidatorFromConstraints(null, rules, "email", undefined)
   }
+
+  describe("required link validation", () => {
+    const createRequiredLinkValidator = () =>
+      createValidatorFromConstraints(
+        null,
+        [
+          {
+            type: FieldType.LINK,
+            constraint: "required",
+            error: "Required",
+          },
+        ],
+        "user",
+        undefined
+      )
+
+    it.each(["user-1", ["user-1"]])(
+      "accepts a selected relationship value: %j",
+      value => {
+        expect(createRequiredLinkValidator()(value)).toBeNull()
+      }
+    )
+
+    it.each([null, "", []])(
+      "rejects an empty relationship value: %j",
+      value => {
+        expect(createRequiredLinkValidator()(value)).toBe("Required")
+      }
+    )
+  })
+
+  describe("link length validation", () => {
+    const createLinkLengthValidator = (
+      constraint: "minLength" | "maxLength",
+      value: number
+    ) =>
+      createValidatorFromConstraints(
+        null,
+        [
+          {
+            type: FieldType.LINK,
+            constraint,
+            value,
+            error: "Invalid relationship count",
+          },
+        ],
+        "user",
+        undefined
+      )
+
+    it("counts a single relationship as one selected item", () => {
+      expect(createLinkLengthValidator("minLength", 1)("user-1")).toBeNull()
+      expect(createLinkLengthValidator("maxLength", 1)("user-1")).toBeNull()
+      expect(createLinkLengthValidator("minLength", 2)("user-1")).toBe(
+        "Invalid relationship count"
+      )
+      expect(createLinkLengthValidator("maxLength", 0)("user-1")).toBe(
+        "Invalid relationship count"
+      )
+    })
+
+    it("counts multiple relationships as selected items", () => {
+      expect(
+        createLinkLengthValidator("minLength", 2)(["user-1", "user-2"])
+      ).toBeNull()
+      expect(
+        createLinkLengthValidator("maxLength", 1)(["user-1", "user-2"])
+      ).toBe("Invalid relationship count")
+    })
+  })
+
+  describe("validator fallback errors", () => {
+    it("uses a default error for custom rules without an error", () => {
+      const validate = createValidatorFromConstraints(
+        null,
+        [
+          {
+            type: FieldType.STRING,
+            constraint: "minLength",
+            value: 10,
+          },
+        ],
+        "name",
+        undefined
+      )
+
+      expect(validate("short")).toBe("Must be at least 10 characters")
+    })
+
+    it("uses custom errors when set", () => {
+      const validate = createValidatorFromConstraints(
+        null,
+        [
+          {
+            type: FieldType.STRING,
+            constraint: "minLength",
+            value: 10,
+            error: "Use a longer name",
+          },
+        ],
+        "name",
+        undefined
+      )
+
+      expect(validate("short")).toBe("Use a longer name")
+    })
+
+    it("does not include JavaScript binding values in fallback errors", () => {
+      const validate = createValidatorFromConstraints(
+        null,
+        [
+          {
+            type: FieldType.STRING,
+            constraint: "equal",
+            value: jsBinding,
+          },
+        ],
+        "name",
+        undefined
+      )
+
+      expect(validate("different value")).toBe("Invalid value")
+    })
+
+    it("uses date-specific minimum fallback errors for datetime rules", () => {
+      const validate = createValidatorFromConstraints(
+        null,
+        [
+          {
+            type: FieldType.DATETIME,
+            constraint: "minValue",
+            value: "2020-10-01",
+          },
+        ],
+        "paidAt",
+        undefined
+      )
+
+      expect(validate("2020-09-30")).toBe("Must be no earlier than 2020-10-01")
+    })
+
+    it("uses date-specific maximum fallback errors for datetime rules", () => {
+      const validate = createValidatorFromConstraints(
+        null,
+        [
+          {
+            type: FieldType.DATETIME,
+            constraint: "maxValue",
+            value: "2020-10-01",
+          },
+        ],
+        "paidAt",
+        undefined
+      )
+
+      expect(validate("2020-10-02")).toBe("Must be no later than 2020-10-01")
+    })
+  })
 
   describe("URL validation", () => {
     let validator: ReturnType<typeof createUrlValidator>
