@@ -269,7 +269,13 @@ export async function run({
           metadata: { stepCount: assistantMessage?.parts?.length ?? 0 },
         })
 
-        events.action.aiAgentExecuted({ agentId })
+        events.action.aiAgentExecuted({
+          agentId,
+          sourceType: "agent_session",
+          sourceId: sessionId,
+          sessionId,
+          requestId,
+        })
 
         return {
           success: true,
@@ -301,6 +307,10 @@ export async function run({
 
         events.action.aiAgentFailed({
           agentId,
+          sourceType: "agent_session",
+          sourceId: sessionId,
+          sessionId,
+          requestId: sessionLogIndexer.getRequestIds().at(-1),
           reason: ActionFailureReason.ERROR,
           errorMessage,
         })
