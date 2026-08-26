@@ -55,7 +55,7 @@ export const getQueue = () => {
   return cleanupQueue
 }
 
-const hasPendingEscalation = async (conversationId: string) => {
+const hasActiveEscalation = async (conversationId: string) => {
   const result = await context.getWorkspaceDB().allDocs<EscalationContextDoc>(
     db.getDocParams(DocumentType.ESCALATION_CONTEXT, undefined, {
       include_docs: true,
@@ -64,7 +64,8 @@ const hasPendingEscalation = async (conversationId: string) => {
   return result.rows.some(
     row =>
       row.doc?.conversationId === conversationId &&
-      row.doc.resolution === "pending"
+      row.doc.resolution !== "cancelled" &&
+      (row.doc.resolution === "pending" || !row.doc.resumeResultCompressed)
   )
 }
 
@@ -115,7 +116,7 @@ export const cleanupConversationAttachments = async (
         }
       }
 
-      if (!force && (await hasPendingEscalation(conversationId))) {
+      if (!force && (await hasActiveEscalation(conversationId))) {
         await scheduleConversationAttachmentCleanup({
           workspaceId: context.getOrThrowWorkspaceId(),
           conversationId,
