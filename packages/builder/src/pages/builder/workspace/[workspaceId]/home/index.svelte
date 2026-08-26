@@ -27,7 +27,6 @@
     workspaceAppStore,
     workspaceFavouriteStore,
   } from "@/stores/builder"
-  import { API } from "@/api"
   import {
     agentsStore,
     workspacesStore,
@@ -49,7 +48,6 @@
   } from "@budibase/bbui"
   import {
     FeatureFlag,
-    type GetWorkspaceHomeMetricsResponse,
     type UIAutomation,
     type UIWorkspaceApp,
     type HomeRow,
@@ -81,6 +79,7 @@
     normaliseHomeSortColumn,
     type HomeUrlState,
   } from "./_components/urlState"
+  import { withWorkspaceHomeReturn } from "@/helpers/workspaceHomeNavigation"
 
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
 
@@ -126,8 +125,6 @@
   let typeFilter: HomeType = "all"
   let selectedProjectId = ""
   let searchTerm = ""
-  let metrics: GetWorkspaceHomeMetricsResponse | null = null
-
   let sortColumn: HomeSortColumn = "updated"
   let sortOrder: HomeSortOrder = "desc"
 
@@ -218,6 +215,12 @@
       state
     )
     history.replaceState({}, "", next)
+  }
+
+  const goToResource = (route: string) => {
+    const targetUrl = url(route)
+    const homeUrl = `${window.location.pathname}${window.location.search}`
+    goto(withWorkspaceHomeReturn(targetUrl, homeUrl))
   }
 
   const setTypeFilter = (value: string) => {
@@ -571,10 +574,7 @@
       notifications.success(`Imported project '${response.project.name}'`)
       notifyImportFollowUps(response)
 
-      const refreshes = await Promise.allSettled([
-        appStore.refresh(),
-        loadMetrics(),
-      ])
+      const refreshes = await Promise.allSettled([appStore.refresh()])
       if (refreshes.some(result => result.status === "rejected")) {
         notifications.warning(
           "Project imported, but some resources could not be refreshed. Reload the workspace to see all imported resources."
@@ -781,15 +781,15 @@
 
   const openRow = (row: HomeRow) => {
     if (row.type === "app") {
-      goto(url(`../design/${row.id}`))
+      goToResource(`../design/${row.id}`)
       return
     }
     if (row.type === "automation") {
-      goto(url(`../automation/${row.id}`))
+      goToResource(`../automation/${row.id}`)
       return
     }
     if (row.type === "agent") {
-      goto(url(`../agent/${row.id}/config`))
+      goToResource(`../agent/${row.id}/config`)
       return
     }
     if (row.type === "datasource") {
@@ -803,15 +803,6 @@
     if (row.type === "table") {
       goto(url(`../data/table/${row.id}`))
       return
-    }
-  }
-
-  const loadMetrics = async () => {
-    try {
-      metrics = await API.workspaceHome.getMetrics()
-    } catch (err) {
-      console.error(err)
-      metrics = null
     }
   }
 
@@ -925,7 +916,7 @@
   }
 
   const goToAutomationError = (automationId: string) => {
-    goto(url(`../automation/${automationId}`))
+    goToResource(`../automation/${automationId}`)
   }
 
   const dismissAutomationError = async (automationId: string) => {
@@ -990,7 +981,7 @@
       projectsEnabled,
     })
 
-    await Promise.all([agentsStore.fetchAgents(), loadMetrics()])
+    await agentsStore.fetchAgents()
   })
 </script>
 
@@ -1052,7 +1043,7 @@
       </div>
     {/if}
 
-    <HomeMetrics {metrics} {showBudibaseAIMetric} />
+    <HomeMetrics {showBudibaseAIMetric} />
 
     {#if projectsEnabled}
       <div class="project-resources">

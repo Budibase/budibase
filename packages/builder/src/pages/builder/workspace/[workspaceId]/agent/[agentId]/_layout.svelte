@@ -11,6 +11,7 @@
   import AgentTabList from "./AgentTabList.svelte"
   import AgentUnpublishedChangesIndicator from "./AgentUnpublishedChangesIndicator.svelte"
   import { FeatureFlag } from "@budibase/types"
+  import { getWorkspaceHomeUrl } from "@/helpers/workspaceHomeNavigation"
 
   const { goto, isActive, params } = routify
 
@@ -27,6 +28,7 @@
   })
 
   let togglingLive = $state(false)
+  let homeUrl = $derived(getWorkspaceHomeUrl($params.workspaceId))
   let agentUpdateOverrides = $state<Record<string, unknown>>({})
   let preloadedKnowledgeAgentId = $state<string | undefined>()
   let testsEnabled = $derived($featureFlags[FeatureFlag.AI_TESTS])
@@ -135,7 +137,7 @@
   <div class="config-wrapper">
     <TopBar
       breadcrumbs={[
-        { text: "Agents", url: "../", tag: "Beta" },
+        { text: "Agents", url: homeUrl, tag: "Beta" },
         { text: currentAgent?.name || "Agent" },
       ]}
       icon="Effect"
