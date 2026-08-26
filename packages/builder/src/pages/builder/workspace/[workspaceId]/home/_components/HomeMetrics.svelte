@@ -1,7 +1,7 @@
 <script module lang="ts">
-  import type { GetWorkspaceHomeMetricsResponse } from "@budibase/types"
+  import type { GetTenantMetricsResponse } from "@budibase/types"
 
-  let cachedHomeMetrics: GetWorkspaceHomeMetricsResponse | null = null
+  let cachedHomeMetrics: GetTenantMetricsResponse | null = null
   let cachedGithubStars: number | null = null
 </script>
 

@@ -1,5 +1,5 @@
 import {
-  type GetWorkspaceHomeMetricsResponse,
+  type GetTenantMetricsResponse,
   type UserCtx,
 } from "@budibase/types"
 
@@ -7,7 +7,7 @@ import { getWorkspaceHomeMetrics } from "../../services/workspaceHome/metrics"
 import { context } from "@budibase/backend-core"
 
 export async function metrics(
-  ctx: UserCtx<void, GetWorkspaceHomeMetricsResponse>
+  ctx: UserCtx<void, GetTenantMetricsResponse>
 ) {
   const workspaceId = context.getWorkspaceId()
   if (!workspaceId) {
