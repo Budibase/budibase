@@ -3,11 +3,9 @@ const buildHomePath = (workspaceId: string) =>
 
 export const withWorkspaceHomeReturn = (
   targetUrl: string,
-  homeUrl = new URLSearchParams(
-    typeof window === "undefined" ? "" : window.location.search
-  ).get("returnTo")
+  homeUrl = new URLSearchParams(window.location.search).get("returnTo")
 ) => {
-  if (!homeUrl || typeof window === "undefined") {
+  if (!homeUrl) {
     return targetUrl
   }
 
@@ -23,11 +21,11 @@ export const withWorkspaceHomeReturn = (
 
 export const getWorkspaceHomeUrl = (
   workspaceId: string,
-  search = typeof window === "undefined" ? "" : window.location.search
+  search = window.location.search
 ) => {
   const fallbackUrl = buildHomePath(workspaceId)
   const returnTo = new URLSearchParams(search).get("returnTo")
-  if (!returnTo || typeof window === "undefined") {
+  if (!returnTo) {
     return fallbackUrl
   }
 
