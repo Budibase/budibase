@@ -261,7 +261,7 @@ const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.AI_TOOL_ESCALATION]: false,
   [FeatureFlag.FRONT_COMPANION]: false,
   [FeatureFlag.PROJECTS]: false,
-  [FeatureFlag.DEBUG_UI]: env.isDev(),
+  [FeatureFlag.FEATURE_FLAG_OVERRIDES]: env.isDev(),
   [FeatureFlag.DEV_USE_CLIENT_FROM_STORAGE]: false,
   [FeatureFlag.AI_AGENT_ACTIVITY]: false,
   [FeatureFlag.AI_AGENT_TOOL_SECURITY]: false,
