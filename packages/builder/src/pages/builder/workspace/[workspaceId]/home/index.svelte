@@ -27,7 +27,6 @@
     workspaceAppStore,
     workspaceFavouriteStore,
   } from "@/stores/builder"
-  import { API } from "@/api"
   import {
     agentsStore,
     workspacesStore,
