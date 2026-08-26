@@ -33,6 +33,7 @@ import { checkTestFlag } from "../utilities/redis"
 import { automationQueue } from "./bullboard"
 import * as utils from "./utils"
 import { AutomationTestProgressEvent } from "./testProgress"
+import { getAutomationFeatureFlagOverrides } from "./featureFlags"
 
 export const TRIGGER_DEFINITIONS = automations.triggers.definitions
 const JOB_OPTS = {
@@ -100,6 +101,9 @@ async function queueRelevantRowAutomations(
       )
     })
 
+    let featureFlagOverrides: ReturnType<
+      typeof getAutomationFeatureFlagOverrides
+    >
     for (const automation of automations) {
       const shouldTrigger = await checkTriggerFilters(automation, {
         row: event.row,
@@ -108,9 +112,15 @@ async function queueRelevantRowAutomations(
       if (shouldTrigger) {
         try {
           const isTestRun = isDevWorkspaceID(event.appId)
-          await quotas.addAction(ActionType.AUTOMATION_STEP, () =>
+          featureFlagOverrides ??= getAutomationFeatureFlagOverrides()
+          await quotas.addAction(ActionType.AUTOMATION_STEP, async () =>
             automationQueue.add(
-              { automation, event, ...(isTestRun ? { isTestRun } : {}) },
+              {
+                automation,
+                event,
+                featureFlagOverrides: await featureFlagOverrides,
+                ...(isTestRun ? { isTestRun } : {}),
+              },
               JOB_OPTS
             )
           )
@@ -253,6 +263,7 @@ export async function externalTrigger(
   const data: AutomationData = {
     automation,
     event: params,
+    featureFlagOverrides: await getAutomationFeatureFlagOverrides(),
     ...(shouldRunAsTest ? { isTestRun: true } : {}),
   }
 
