@@ -1,10 +1,14 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import {
   getWorkspaceHomeUrl,
   withWorkspaceHomeReturn,
 } from "../workspaceHomeNavigation"
 
 describe("workspace home navigation", () => {
+  afterEach(() => {
+    window.history.replaceState({}, "", "/")
+  })
+
   it("passes the complete home URL through the resource query", () => {
     const result = withWorkspaceHomeReturn(
       "/builder/workspace/app_1/automation/automation_1",
@@ -57,5 +61,11 @@ describe("workspace home navigation", () => {
     expect(withWorkspaceHomeReturn("./operation/operation_1")).toBe(
       "./operation/operation_1?returnTo=%2Fbuilder%2Fworkspace%2Fapp_1%2Fhome%3Ftype%3Dagent%26q%3Dsupport"
     )
+  })
+
+  it("ignores a malformed return query during nested navigation", () => {
+    window.history.replaceState({}, "", "/?returnTo=http://[invalid")
+
+    expect(withWorkspaceHomeReturn("./screen_1")).toBe("./screen_1")
   })
 })

@@ -11,10 +11,14 @@ export const withWorkspaceHomeReturn = (
     return targetUrl
   }
 
-  const home = new URL(homeUrl, window.location.origin)
-  const separator = targetUrl.includes("?") ? "&" : "?"
-  const returnTo = encodeURIComponent(`${home.pathname}${home.search}`)
-  return `${targetUrl}${separator}returnTo=${returnTo}`
+  try {
+    const home = new URL(homeUrl, window.location.origin)
+    const separator = targetUrl.includes("?") ? "&" : "?"
+    const returnTo = encodeURIComponent(`${home.pathname}${home.search}`)
+    return `${targetUrl}${separator}returnTo=${returnTo}`
+  } catch (_error) {
+    return targetUrl
+  }
 }
 
 export const getWorkspaceHomeUrl = (
