@@ -108,12 +108,17 @@ export async function updateAllFormulasInTable(table: Table) {
   let enrichedRows = await outputProcessing(table, cloneDeep(rows), {
     squash: false,
   })
+  const enrichedRowsById = new Map<Row["_id"], Row>()
+  for (const enrichedRow of enrichedRows) {
+    const enrichedId = enrichedRow._id
+    if (!enrichedRowsById.has(enrichedId)) {
+      enrichedRowsById.set(enrichedId, enrichedRow)
+    }
+  }
   const updatedRows = []
   for (let row of rows) {
     // find the enriched row, if found process the formulas
-    const enrichedRow = enrichedRows.find(
-      (enriched: Row) => enriched._id === row._id
-    )
+    const enrichedRow = enrichedRowsById.get(row._id)
     if (enrichedRow) {
       let processed = await processFormulas(table, cloneDeep(row), {
         dynamic: false,
