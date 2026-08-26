@@ -8,6 +8,7 @@
   import OperationLiveBadge from "./OperationLiveBadge.svelte"
   import * as routify from "@roxi/routify"
   import { tick } from "svelte"
+  import { withWorkspaceHomeReturn } from "@/helpers/workspaceHomeNavigation"
 
   const { goto } = routify
 
@@ -52,7 +53,7 @@ Any constraints this operation must follow.
 
   const openOperation = (operationId: string) => {
     selectedOperationId = operationId
-    $goto(`./operation/${operationId}`)
+    $goto(withWorkspaceHomeReturn(`./operation/${operationId}`))
   }
 
   const validateCreateOperationName = (name: string) => {
@@ -137,7 +138,7 @@ Any constraints this operation must follow.
         promptInstructions: operation.promptInstructions,
         allowKnowledgeSourceDownload: operation.allowKnowledgeSourceDownload,
       })
-      $goto(`./operation/${operation.id}`)
+      $goto(withWorkspaceHomeReturn(`./operation/${operation.id}`))
       workspaceDeploymentStore.fetch().catch(error => {
         console.error(error)
       })
