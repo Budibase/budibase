@@ -152,6 +152,7 @@ describe("AI Tools - Rows", () => {
       const result = (await executableTool.tool.execute(input, {
         toolCallId: "test-tool-call",
         messages: [],
+        context: undefined,
       })) as ToolOutput<T>
 
       if (isAsyncIterable(result)) {
@@ -216,7 +217,7 @@ describe("AI Tools - Rows", () => {
           rowRev: createdRow._rev!,
           data: { name: "Updated without read access" },
         },
-        { toolCallId: "test-tool-call", messages: [] }
+        { toolCallId: "test-tool-call", messages: [], context: undefined }
       )
     )
 

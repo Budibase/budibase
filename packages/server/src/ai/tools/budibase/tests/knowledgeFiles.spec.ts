@@ -48,6 +48,7 @@ const executeTool = async (
   return await toolDef.tool.execute(input, {
     toolCallId: "test-tool-call",
     messages: [],
+    context: undefined,
   })
 }
 
@@ -64,6 +65,7 @@ const executeSearchTool = async (
   return await toolDef.tool.execute(input, {
     toolCallId: "test-tool-call",
     messages: [],
+    context: undefined,
   })
 }
 

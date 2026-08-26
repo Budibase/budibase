@@ -714,15 +714,12 @@ describe("agent test runner", () => {
         latestQuestion: "Say hello",
         modelMessages: [
           {
-            role: "system",
-            content:
-              "Additional test context:\nKeep it brief\n\nUse this context when answering the user.",
-          },
-          {
             role: "user",
             content: "Say hello",
           },
         ],
+        additionalInstructions:
+          "Additional test context:\nKeep it brief\n\nUse this context when answering the user.",
         sessionId: "test:run-1:case-1:config-1",
         user,
       })
