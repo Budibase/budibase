@@ -81,6 +81,7 @@
     normaliseHomeSortColumn,
     type HomeUrlState,
   } from "./_components/urlState"
+  import { withWorkspaceHomeReturn } from "@/helpers/workspaceHomeNavigation"
 
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
 
@@ -218,6 +219,12 @@
       state
     )
     history.replaceState({}, "", next)
+  }
+
+  const goToResource = (route: string) => {
+    const targetUrl = url(route)
+    const homeUrl = `${window.location.pathname}${window.location.search}`
+    goto(withWorkspaceHomeReturn(targetUrl, homeUrl))
   }
 
   const setTypeFilter = (value: string) => {
@@ -781,15 +788,15 @@
 
   const openRow = (row: HomeRow) => {
     if (row.type === "app") {
-      goto(url(`../design/${row.id}`))
+      goToResource(`../design/${row.id}`)
       return
     }
     if (row.type === "automation") {
-      goto(url(`../automation/${row.id}`))
+      goToResource(`../automation/${row.id}`)
       return
     }
     if (row.type === "agent") {
-      goto(url(`../agent/${row.id}/config`))
+      goToResource(`../agent/${row.id}/config`)
       return
     }
     if (row.type === "datasource") {
@@ -925,7 +932,7 @@
   }
 
   const goToAutomationError = (automationId: string) => {
-    goto(url(`../automation/${automationId}`))
+    goToResource(`../automation/${automationId}`)
   }
 
   const dismissAutomationError = async (automationId: string) => {

@@ -11,6 +11,7 @@
   import { onDestroy } from "svelte"
   import LeftPanel from "./_components/LeftPanel.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
+  import { getWorkspaceHomeUrl } from "@/helpers/workspaceHomeNavigation"
 
   // Extract stores from namespace for Svelte 5 compatibility
   const { goto, params, url, redirect, isActive, page, layout } = routify
@@ -22,6 +23,7 @@
   $isActive
   $page
   $layout
+  $: homeUrl = getWorkspaceHomeUrl($params.workspaceId)
 
   // Keep URL and state in sync for selected screen ID
   const stopSyncing = syncURLToState({
@@ -54,7 +56,7 @@
   <div class="design" class:resizing-panel={$builderStore.isResizingPanel}>
     <TopBar
       breadcrumbs={[
-        { text: "Apps", url: "../../" },
+        { text: "Apps", url: homeUrl },
         { text: $workspaceAppStore.selectedWorkspaceApp?.name },
       ]}
       icon="browser"

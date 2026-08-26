@@ -1,0 +1,39 @@
+const buildHomePath = (workspaceId: string) =>
+  `/builder/workspace/${workspaceId}/home`
+
+export const withWorkspaceHomeReturn = (
+  targetUrl: string,
+  homeUrl = new URLSearchParams(
+    typeof window === "undefined" ? "" : window.location.search
+  ).get("returnTo")
+) => {
+  if (!homeUrl || typeof window === "undefined") {
+    return targetUrl
+  }
+
+  const home = new URL(homeUrl, window.location.origin)
+  const separator = targetUrl.includes("?") ? "&" : "?"
+  const returnTo = encodeURIComponent(`${home.pathname}${home.search}`)
+  return `${targetUrl}${separator}returnTo=${returnTo}`
+}
+
+export const getWorkspaceHomeUrl = (
+  workspaceId: string,
+  search = typeof window === "undefined" ? "" : window.location.search
+) => {
+  const fallbackUrl = buildHomePath(workspaceId)
+  const returnTo = new URLSearchParams(search).get("returnTo")
+  if (!returnTo || typeof window === "undefined") {
+    return fallbackUrl
+  }
+
+  try {
+    const url = new URL(returnTo, window.location.origin)
+    if (url.origin !== window.location.origin || url.pathname !== fallbackUrl) {
+      return fallbackUrl
+    }
+    return `${url.pathname}${url.search}`
+  } catch (_error) {
+    return fallbackUrl
+  }
+}
