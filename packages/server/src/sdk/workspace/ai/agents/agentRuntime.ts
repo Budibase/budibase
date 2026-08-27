@@ -86,7 +86,6 @@ interface PrepareAgentChatRunParams {
   // Set on escalation-resume runs: the approved call that was just executed.
   // Its gate refuses instead of re-escalating - one approval, one attempt.
   executedApproval?: { toolName: string }
-  requester?: AgentRequester
   outputSchema?: Record<string, any>
   promptMode?: "interactive" | "automation"
 }
@@ -507,7 +506,6 @@ const prepareAgentChatRunInternal = async ({
   additionalInstructions,
   getRequestId,
   executedApproval,
-  requester: providedRequester,
   outputSchema,
   promptMode = "interactive",
   sessionLogIndexer,
@@ -518,7 +516,7 @@ const prepareAgentChatRunInternal = async ({
     latestQuestion: providedLatestQuestion,
     chat,
   })
-  const requester = providedRequester ?? getAgentRequester({ user, chat })
+  const requester = getAgentRequester({ user, chat })
 
   let resolvedModelMessages: ModelMessage[] = []
   let resolvedChatModel: Parameters<typeof generateText>[0]["model"] | undefined

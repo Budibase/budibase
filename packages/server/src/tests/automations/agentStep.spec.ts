@@ -133,7 +133,6 @@ describe("automation agent step", () => {
         agent: expect.objectContaining({ _id: "agent-id" }),
         agentId: "agent-id",
         latestQuestion: "Create the row",
-        requester: { executorRole: "ADMIN" },
         user: expect.objectContaining({ roleId: "ADMIN" }),
         promptMode: "automation",
       })

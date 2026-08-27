@@ -82,7 +82,6 @@ export async function run({
           }
         }
 
-        const requester = { executorRole: roles.BUILTIN_ROLE_IDS.ADMIN }
         const userId = `automation:${sessionId}`
         const user: ContextUser = {
           _id: userId,
@@ -101,7 +100,6 @@ export async function run({
           errorLabel: "automation agent",
           sessionId,
           user,
-          requester,
           outputSchema: structuredOutputSchema,
           promptMode: "automation",
         })
