@@ -64,7 +64,9 @@ const dependencies = (
   overrides: Partial<ExecuteFunctionDependencies> = {}
 ): ExecuteFunctionDependencies => ({
   executor: {
+    health: jest.fn().mockResolvedValue({ healthy: true }),
     execute: jest.fn().mockResolvedValue(successResult),
+    terminate: jest.fn().mockResolvedValue(undefined),
   },
   functionsEnabled: jest.fn().mockResolvedValue(true),
   getFunction: jest.fn().mockResolvedValue(fn),
@@ -234,6 +236,7 @@ describe("Run Function automation action", () => {
   it("passes stable executor failures to the automation", async () => {
     const deps = dependencies({
       executor: {
+        health: jest.fn().mockResolvedValue({ healthy: true }),
         execute: jest.fn().mockResolvedValue({
           ...successResult,
           status: "error",
@@ -243,6 +246,7 @@ describe("Run Function automation action", () => {
             message: "Function executor is busy",
           },
         }),
+        terminate: jest.fn().mockResolvedValue(undefined),
       },
     })
 
@@ -256,11 +260,13 @@ describe("Run Function automation action", () => {
   it("returns stopped as a successful terminal step status", async () => {
     const deps = dependencies({
       executor: {
+        health: jest.fn().mockResolvedValue({ healthy: true }),
         execute: jest.fn().mockResolvedValue({
           ...successResult,
           status: "stopped",
           output: undefined,
         }),
+        terminate: jest.fn().mockResolvedValue(undefined),
       },
     })
 
@@ -276,11 +282,13 @@ describe("Run Function automation action", () => {
     const deps = dependencies({
       createCapabilitySession: jest.fn().mockResolvedValue(session),
       executor: {
+        health: jest.fn().mockResolvedValue({ healthy: true }),
         execute: jest.fn().mockImplementation(async (_request, context) => {
           outerController.abort()
           expect(context.signal.aborted).toBe(true)
           return { ...successResult, status: "stopped", output: undefined }
         }),
+        terminate: jest.fn().mockResolvedValue(undefined),
       },
     })
 
@@ -292,10 +300,12 @@ describe("Run Function automation action", () => {
   it("rejects a mismatched executor result", async () => {
     const deps = dependencies({
       executor: {
+        health: jest.fn().mockResolvedValue({ healthy: true }),
         execute: jest.fn().mockResolvedValue({
           ...successResult,
           runId: "another-run",
         }),
+        terminate: jest.fn().mockResolvedValue(undefined),
       },
     })
 
