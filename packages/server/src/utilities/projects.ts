@@ -3,14 +3,14 @@ import { context, features, HTTPError } from "@budibase/backend-core"
 import { Header } from "@budibase/shared-core"
 import {
   APIWarningCode,
-  AnyDocument,
+  type AnyDocument,
   DocumentType,
   FeatureFlag,
   prefixed,
   type PreviewProjectAssignmentResponse,
   type ProjectAssignmentDependency,
   ResourceType,
-  WithDocMetadata,
+  type WithDocMetadata,
 } from "@budibase/types"
 import sdk from "../sdk"
 import { collectTransitiveResourceDependencies } from "../sdk/workspace/resources"
@@ -90,27 +90,6 @@ export const resolveUpdatedProjectIds = async (
   if (projectIds === undefined) {
     return currentProjectIds
   }
-
-  const projectsEnabled = await features.isEnabled(FeatureFlag.PROJECTS)
-
-  if (!projectsEnabled) {
-    const validated = validateProjectIds(projectIds)
-    const requestedProjectIds = validated?.length
-      ? dedupeProjectIds(validated)
-      : undefined
-    const requested = new Set(requestedProjectIds || [])
-    const current = new Set(currentProjectIds || [])
-    const unchanged =
-      requested.size === current.size &&
-      Array.from(requested).every(projectId => current.has(projectId))
-
-    if (unchanged) {
-      return currentProjectIds
-    }
-
-    throw new HTTPError("Projects feature is not enabled.", 404)
-  }
-
   return await resolveProjectIds(projectIds)
 }
 
