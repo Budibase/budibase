@@ -30,6 +30,7 @@ import {
   Table,
   TableRowActions,
   SEPARATOR,
+  UsedResource,
   VirtualDocumentType,
   WorkspaceApp,
   WebhookActionType,
@@ -745,6 +746,8 @@ const validateManifest = (manifest: ProjectPackageManifest) => {
   if (
     !isRecord(manifest.sourceWorkspace) ||
     typeof manifest.sourceWorkspace.id !== "string" ||
+    !manifest.sourceWorkspace.id ||
+    !dbCore.isDevWorkspaceID(manifest.sourceWorkspace.id) ||
     !isRecord(manifest.resourcesByType) ||
     !Array.isArray(manifest.unsupportedContent)
   ) {
@@ -772,6 +775,7 @@ const validateProject = (project: Project) => {
   if (
     !isRecord(project) ||
     typeof project._id !== "string" ||
+    getResourceType(project._id) !== ResourceType.PROJECT ||
     typeof project.name !== "string"
   ) {
     throw new HTTPError("Project package project.json is invalid.", 400)
@@ -826,6 +830,10 @@ const validateDependencyIndex = (
   }
 
   const actualDocIds = new Set(docs.map(doc => doc.doc._id!))
+  const actualResourceTypes = new Map<string, ResourceType>([
+    [project._id!, ResourceType.PROJECT],
+    ...docs.map(doc => [doc.doc._id!, doc.resourceType] as const),
+  ])
   const expectedDocIds = new Set(
     Object.keys(dependencyIndex.resources).filter(
       id => id !== dependencyIndex.rootProjectId
@@ -838,6 +846,27 @@ const validateDependencyIndex = (
       400
     )
   }
+
+  const validateIndexedResource = (resource: UsedResource) => {
+    const actualType = actualResourceTypes.get(resource.id)
+    if (!actualType) {
+      throw new HTTPError(
+        "Project package dependency index references missing docs.",
+        400
+      )
+    }
+    if (resource.type !== actualType) {
+      throw new HTTPError(
+        "Project package dependency index resource types do not match package docs.",
+        400
+      )
+    }
+  }
+
+  dependencyIndex.directMembers.forEach(validateIndexedResource)
+  Object.values(dependencyIndex.resources).forEach(resource => {
+    resource.dependencies.forEach(validateIndexedResource)
+  })
 
   for (const doc of docs) {
     validateDocMatchesPath(doc)
