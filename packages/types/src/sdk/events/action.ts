@@ -10,12 +10,18 @@ export enum ActionFailureReason {
   NO_CONDITION_MET = "no_condition_met",
 }
 
-export interface ActionAutomationStepExecuted extends BaseEvent {
+export interface ActionAutomationStepExecuted
+  extends BaseEvent,
+    ActionSourceContext {
   stepId: string
+  automationId: string
 }
 
-export interface ActionAutomationStepFailed extends BaseEvent {
+export interface ActionAutomationStepFailed
+  extends BaseEvent,
+    ActionSourceContext {
   stepId: string
+  automationId: string
   reason: ActionFailureReason
   errorMessage?: string
 }
