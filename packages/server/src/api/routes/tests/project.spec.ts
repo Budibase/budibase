@@ -243,7 +243,7 @@ describe("/projects", () => {
       exportedAt: new Date().toISOString(),
       project,
       sourceWorkspace: {
-        id: "app_source",
+        id: "app_dev_source",
       },
       resourcesByType: {
         project: 1,
@@ -2086,6 +2086,36 @@ describe("/projects", () => {
     }
   )
 
+  it("rejects packages with an invalid source project id", async () => {
+    await withProjectsEnabled(async () => {
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({
+          project: { _id: "invalid" },
+        })
+      )
+
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: { message: "Project package project.json is invalid." },
+      })
+    })
+  })
+
+  it("rejects packages with an invalid source workspace id", async () => {
+    await withProjectsEnabled(async () => {
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({
+          manifest: { sourceWorkspace: { id: "invalid" } },
+        })
+      )
+
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: { message: "Project package manifest is invalid." },
+      })
+    })
+  })
+
   it("rejects packages with docs that are not declared in the dependency index", async () => {
     await withProjectsEnabled(async () => {
       const packageBuffer = await createTarPackage(
@@ -2159,6 +2189,87 @@ describe("/projects", () => {
       })
     })
   })
+
+  it.each(["dependency", "direct member"])(
+    "rejects a missing %s resource",
+    async location => {
+      await withProjectsEnabled(async () => {
+        const missing = {
+          id: "au_missing",
+          name: "Missing automation",
+          type: "automation",
+        }
+        const dependencyIndex =
+          location === "dependency"
+            ? {
+                resources: {
+                  project_source: { dependencies: [missing] },
+                },
+              }
+            : { directMembers: [missing] }
+        const packageBuffer = await createTarPackage(
+          createMinimalPackageEntries({ dependencyIndex })
+        )
+
+        await config.api.project.import(packageBuffer, undefined, {
+          status: 400,
+          body: {
+            message:
+              "Project package dependency index references missing docs.",
+          },
+        })
+      })
+    }
+  )
+
+  it.each(["dependency", "direct member"])(
+    "rejects a %s with the wrong resource type",
+    async location => {
+      await withProjectsEnabled(async () => {
+        const tableId = "ta_mistyped"
+        const table = {
+          id: tableId,
+          name: "Mistyped table",
+          type: "table",
+        }
+        const mistyped = { ...table, type: "automation" }
+        const packageBuffer = await createTarPackage(
+          createMinimalPackageEntries({
+            manifest: {
+              resourcesByType: {
+                project: 1,
+                table: 1,
+              },
+            },
+            dependencyIndex: {
+              directMembers: location === "direct member" ? [mistyped] : [],
+              resources: {
+                project_source: {
+                  dependencies: [location === "dependency" ? mistyped : table],
+                },
+                [tableId]: { dependencies: [] },
+              },
+            },
+            docs: {
+              [`docs/table/${tableId}.json`]: {
+                ...basicTable(),
+                _id: tableId,
+                name: "Mistyped table",
+              },
+            },
+          })
+        )
+
+        await config.api.project.import(packageBuffer, undefined, {
+          status: 400,
+          body: {
+            message:
+              "Project package dependency index resource types do not match package docs.",
+          },
+        })
+      })
+    }
+  )
 
   it("rejects packages with docs that are not reachable from the project", async () => {
     await withProjectsEnabled(async () => {
