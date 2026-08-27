@@ -1,8 +1,4 @@
-import {
-  ErrorCode,
-  WebClient,
-  type WebAPIPlatformError,
-} from "@slack/web-api"
+import { ErrorCode, WebClient, type WebAPIPlatformError } from "@slack/web-api"
 import { context, HTTPError, locks, roles } from "@budibase/backend-core"
 import {
   type ChatConversation,
@@ -343,7 +339,9 @@ const getAttachmentFailureText = (
     messages.push(
       `I couldn't access ${missingFilesReadScope
         .map(file => file.filename)
-        .join(", ")} because this Slack app is missing the \`files:read\` permission. Ask a Slack workspace admin to reinstall the app, then upload the file again.`
+        .join(
+          ", "
+        )} because this Slack app is missing the \`files:read\` permission. Ask a Slack workspace admin to reinstall the app, then upload the file again.`
     )
   }
   if (otherFailures.length) {
