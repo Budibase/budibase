@@ -1181,6 +1181,53 @@ describe("/api/resources/usage", () => {
       })
     })
 
+    it("strips inert screen project assignments when duplicating a project", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create({
+          name: "Operations app",
+          url: "/operations",
+          projectIds: [project._id],
+        })
+        const screen = await config.api.screen.save({
+          ...basicScreen(),
+          workspaceAppId: workspaceApp._id,
+        })
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const db = context.getWorkspaceDB()
+          const storedScreen = await db.get<Screen & { projectIds?: string[] }>(
+            screen._id!
+          )
+          await db.put({
+            ...storedScreen,
+            projectIds: [project._id],
+          })
+        })
+        const destination = await config.api.workspace.create({
+          name: `Destination ${generator.natural()}`,
+        })
+
+        const resourcesToCopy = await collectDependantResourceIds(project._id)
+        expect(resourcesToCopy).toEqual([
+          project._id,
+          screen._id,
+          workspaceApp._id,
+        ])
+        await duplicateResources(resourcesToCopy, destination.appId)
+
+        const destinationDb = db.getDB(
+          db.getDevWorkspaceID(destination.appId),
+          { skip_setup: true }
+        )
+        const duplicatedScreen = await destinationDb.get<
+          Screen & { projectIds?: string[] }
+        >(screen._id!)
+        expect(duplicatedScreen.projectIds).toBeUndefined()
+      })
+    })
+
     it("includes internal tables in project dependency graph", async () => {
       await features.testutils.withFeatureFlags(
         config.getTenantId(),
