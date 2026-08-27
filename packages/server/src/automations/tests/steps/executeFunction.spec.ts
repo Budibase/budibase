@@ -279,6 +279,7 @@ describe("Run Function automation action", () => {
   it("propagates cancellation and closes the capability session", async () => {
     const outerController = new AbortController()
     const session = capabilitySession()
+    const terminate = jest.fn().mockResolvedValue(undefined)
     const deps = dependencies({
       createCapabilitySession: jest.fn().mockResolvedValue(session),
       executor: {
@@ -288,12 +289,13 @@ describe("Run Function automation action", () => {
           expect(context.signal.aborted).toBe(true)
           return { ...successResult, status: "stopped", output: undefined }
         }),
-        terminate: jest.fn().mockResolvedValue(undefined),
+        terminate,
       },
     })
 
     await run(deps, undefined, { signal: outerController.signal })
 
+    expect(terminate).toHaveBeenCalledWith("run-1")
     expect(session.close).toHaveBeenCalledTimes(1)
   })
 
