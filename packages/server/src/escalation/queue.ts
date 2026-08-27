@@ -466,12 +466,16 @@ export async function resumeOperation({
   try {
     user = await getFullUser(resumeUserId)
   } catch {
+    const roleId = resumeUserId.startsWith("automation:")
+      ? ctx.requester?.executorRole
+      : undefined
     user = {
       _id: resumeUserId,
       globalId: resumeUserId,
       userId: resumeUserId,
       tenantId: context.getTenantId(),
       email: `${encodeURIComponent(resumeUserId)}@escalation.budibase.local`,
+      roleId,
     }
   }
 

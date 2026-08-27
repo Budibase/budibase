@@ -11,7 +11,9 @@ jest.mock("@budibase/backend-core", () => ({
   },
 }))
 
-const isDebugUiTrusted = jest.mocked(features.isEnabledWithoutOverrides)
+const areFeatureFlagOverridesTrusted = jest.mocked(
+  features.isEnabledWithoutOverrides
+)
 const getOverrides = jest.mocked(context.getFeatureFlagOverrides)
 
 describe("automation feature flag overrides", () => {
@@ -23,21 +25,23 @@ describe("automation feature flag overrides", () => {
     jest.restoreAllMocks()
   })
 
-  it("does not propagate overrides when Debug UI is not trusted", async () => {
-    isDebugUiTrusted.mockResolvedValue(false)
+  it("does not propagate overrides when feature flag overrides are not trusted", async () => {
+    areFeatureFlagOverridesTrusted.mockResolvedValue(false)
     getOverrides.mockReturnValue({
-      [FeatureFlag.DEBUG_UI]: true,
+      [FeatureFlag.FEATURE_FLAG_OVERRIDES]: true,
     })
 
     await expect(getAutomationFeatureFlagOverrides()).resolves.toEqual({})
-    expect(isDebugUiTrusted).toHaveBeenCalledWith(FeatureFlag.DEBUG_UI)
+    expect(areFeatureFlagOverridesTrusted).toHaveBeenCalledWith(
+      FeatureFlag.FEATURE_FLAG_OVERRIDES
+    )
     expect(getOverrides).not.toHaveBeenCalled()
   })
 
   it("does not prevent automation execution when trusted flags cannot be resolved", async () => {
     const error = new Error("Unable to load flags")
     const warn = jest.spyOn(console, "warn").mockImplementation()
-    isDebugUiTrusted.mockRejectedValue(error)
+    areFeatureFlagOverridesTrusted.mockRejectedValue(error)
 
     await expect(getAutomationFeatureFlagOverrides()).resolves.toEqual({})
     expect(warn).toHaveBeenCalledWith(
@@ -47,19 +51,19 @@ describe("automation feature flag overrides", () => {
   })
 
   it("propagates all feature flag overrides", async () => {
-    isDebugUiTrusted.mockResolvedValue(true)
+    areFeatureFlagOverridesTrusted.mockResolvedValue(true)
     getOverrides.mockReturnValue({
       [FeatureFlag.AI_TOOL_ESCALATION]: true,
       [FeatureFlag.AI_AGENT_TOOL_SECURITY]: false,
       [FeatureFlag.AI_AGENT_ACTIVITY]: true,
-      [FeatureFlag.DEBUG_UI]: true,
+      [FeatureFlag.FEATURE_FLAG_OVERRIDES]: true,
     })
 
     await expect(getAutomationFeatureFlagOverrides()).resolves.toEqual({
       [FeatureFlag.AI_TOOL_ESCALATION]: true,
       [FeatureFlag.AI_AGENT_TOOL_SECURITY]: false,
       [FeatureFlag.AI_AGENT_ACTIVITY]: true,
-      [FeatureFlag.DEBUG_UI]: true,
+      [FeatureFlag.FEATURE_FLAG_OVERRIDES]: true,
     })
   })
 })
