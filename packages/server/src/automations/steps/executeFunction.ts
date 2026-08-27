@@ -19,6 +19,10 @@ import type {
   FunctionCapabilityService,
   FunctionInvocationScopeInput,
 } from "../functions/capabilities"
+import type {
+  CreateRunSummaryInput,
+  FinalizeRunSummaryInput,
+} from "../../sdk/workspace/functions/history"
 import { functionRunSupervisor } from "../functions/supervisor"
 import { JSONLimitError, validateJSONLimits } from "../functions/jsonLimits"
 
@@ -81,6 +85,11 @@ export interface ExecuteFunctionDependencies {
   createCapabilitySession: (
     input: FunctionInvocationScopeInput
   ) => Promise<FunctionCapabilitySession>
+  createRunSummary: (input: CreateRunSummaryInput) => Promise<void>
+  finalizeRunSummary: (
+    runId: string,
+    result: FinalizeRunSummaryInput
+  ) => Promise<void>
   createRunId: () => string
 }
 
@@ -95,6 +104,16 @@ const defaultDependencies: ExecuteFunctionDependencies = {
     const { createFunctionInvocationScope, FunctionCapabilityService } =
       await import("../functions/capabilities")
     return new FunctionCapabilityService(createFunctionInvocationScope(input))
+  },
+  createRunSummary: async input => {
+    await (
+      await import("../../sdk/workspace/functions/history")
+    ).createRunSummary(input)
+  },
+  finalizeRunSummary: async (runId, result) => {
+    await (
+      await import("../../sdk/workspace/functions/history")
+    ).finalizeRunSummary(runId, result)
   },
   createRunId: uuid,
 }
@@ -222,6 +241,18 @@ export const executeFunction = async (
       capabilities: fn.capabilities,
       limits: DEFAULT_FUNCTION_LIMITS.run,
     })
+    let summaryResult: FinalizeRunSummaryInput = {
+      status: "error",
+      code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+    }
+    await dependencies.createRunSummary({
+      runId,
+      functionId: fn._id,
+      functionName: fn.name,
+      sourceHash: fn.artifact.sourceHash,
+      automationId,
+      stepId,
+    })
     try {
       const result = await dependencies.supervisor.execute({
         request: {
@@ -238,9 +269,20 @@ export const executeFunction = async (
       if (result.runId !== runId) {
         throw new FunctionActionError(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
       }
+      summaryResult = result
       return resultToOutputs(result)
+    } catch (error) {
+      summaryResult = {
+        status: "error",
+        code:
+          error instanceof FunctionActionError
+            ? error.code
+            : FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+      }
+      throw error
     } finally {
       capabilitySession.close()
+      await dependencies.finalizeRunSummary(runId, summaryResult)
     }
   } catch (error) {
     return error instanceof FunctionActionError
