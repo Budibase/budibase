@@ -839,7 +839,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           agentId,
           ...buildAgentSessionActionContext({
             sessionId,
-            requestId: trackingHandle?.requestId,
+            requestId:
+              trackingHandle?.requestId ??
+              run.sessionLogIndexer.getRequestIds().at(-1),
           }),
         })
 
