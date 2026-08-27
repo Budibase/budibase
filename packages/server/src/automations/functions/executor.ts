@@ -94,8 +94,8 @@ export class LocalFunctionExecutor implements FunctionExecutor {
     this.runControllers.set(request.runId, runController)
     try {
       return await executeFunctionInIsolate(request, {
-        ...context,
         signal: runController.signal,
+        invokeCapability: context.invokeCapability,
       })
     } finally {
       this.runControllers.delete(request.runId)

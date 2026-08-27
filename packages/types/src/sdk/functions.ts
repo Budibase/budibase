@@ -166,7 +166,6 @@ export type FunctionCapabilityHandler = (
 ) => Promise<JSONValue>
 
 export interface FunctionExecutionContext {
-  signal: AbortSignal
   invokeCapability: FunctionCapabilityHandler
 }
 

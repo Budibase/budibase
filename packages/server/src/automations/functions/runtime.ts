@@ -1,6 +1,6 @@
 import { FunctionErrorCode } from "@budibase/types"
 import type {
-  FunctionExecutionContext,
+  FunctionCapabilityHandler,
   FunctionRunRequest,
   FunctionRunResult,
   JSONValue,
@@ -197,9 +197,14 @@ const createStopped = (
   },
 })
 
+interface FunctionRuntimeContext {
+  signal: AbortSignal
+  invokeCapability: FunctionCapabilityHandler
+}
+
 export const executeFunctionInIsolate = async (
   request: FunctionRunRequest,
-  executionContext: FunctionExecutionContext
+  runtimeContext: FunctionRuntimeContext
 ): Promise<FunctionRunResult> => {
   const startedAt = Date.now()
   let queryCount = 0
@@ -209,7 +214,7 @@ export const executeFunctionInIsolate = async (
   const allowedCapabilityIds = new Set(request.artifact.capabilityIds)
   let errorCode: FunctionErrorCode = FunctionErrorCode.FUNCTION_RUNTIME_ERROR
   let wallTimedOut = false
-  let cancelled = executionContext.signal.aborted
+  let cancelled = runtimeContext.signal.aborted
   const queryAbortController = new AbortController()
   let isolate: ivm.Isolate
   try {
@@ -227,7 +232,7 @@ export const executeFunctionInIsolate = async (
       isolate.dispose()
     }
   }
-  executionContext.signal.addEventListener("abort", cancel, { once: true })
+  runtimeContext.signal.addEventListener("abort", cancel, { once: true })
   if (cancelled) {
     cancel()
   }
@@ -279,7 +284,7 @@ export const executeFunctionInIsolate = async (
         concurrentQueryCount += 1
         let result: JSONValue
         try {
-          result = await executionContext.invokeCapability({
+          result = await runtimeContext.invokeCapability({
             runId: request.runId,
             capabilityId: capabilityIdValue,
             parameters,
@@ -389,7 +394,7 @@ export const executeFunctionInIsolate = async (
     return createFailure(request, startedAt, queryCount, errorCode)
   } finally {
     clearTimeout(wallTimer)
-    executionContext.signal.removeEventListener("abort", cancel)
+    runtimeContext.signal.removeEventListener("abort", cancel)
     queryAbortController.abort()
     if (!isolate.isDisposed) {
       isolate.dispose()

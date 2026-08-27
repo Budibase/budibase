@@ -19,11 +19,7 @@ const request = (
   },
 })
 
-const context = (
-  invokeCapability: FunctionCapabilityHandler,
-  signal = new AbortController().signal
-) => ({
-  signal,
+const context = (invokeCapability: FunctionCapabilityHandler) => ({
   invokeCapability,
 })
 
