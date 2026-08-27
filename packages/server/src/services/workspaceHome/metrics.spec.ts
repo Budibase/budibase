@@ -1,4 +1,4 @@
-import { type GetWorkspaceHomeMetricsResponse } from "@budibase/types"
+import { type GetTenantMetricsResponse } from "@budibase/types"
 
 describe("workspace home metrics caching", () => {
   let cacheGet: jest.Mock
@@ -6,7 +6,7 @@ describe("workspace home metrics caching", () => {
   let getUserCount: jest.Mock
   let getQuotaUsage: jest.Mock
   let cacheState: Map<string, unknown>
-  let getWorkspaceHomeMetrics: () => Promise<GetWorkspaceHomeMetricsResponse>
+  let getWorkspaceHomeMetrics: () => Promise<GetTenantMetricsResponse>
 
   beforeEach(() => {
     jest.resetModules()

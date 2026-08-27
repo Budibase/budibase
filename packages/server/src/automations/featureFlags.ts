@@ -3,7 +3,11 @@ import { FeatureFlag } from "@budibase/types"
 
 export const getAutomationFeatureFlagOverrides = async () => {
   try {
-    if (!(await features.isEnabledWithoutOverrides(FeatureFlag.DEBUG_UI))) {
+    if (
+      !(await features.isEnabledWithoutOverrides(
+        FeatureFlag.FEATURE_FLAG_OVERRIDES
+      ))
+    ) {
       return {}
     }
 

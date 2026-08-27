@@ -284,11 +284,11 @@
   }
 
   const featureFlagCommands = flags => {
-    if (!flags.DEBUG_UI) {
+    if (!flags.FEATURE_FLAG_OVERRIDES) {
       return []
     }
     return Object.entries(flags)
-      .filter(([flag]) => flag !== FeatureFlag.DEBUG_UI)
+      .filter(([flag]) => flag !== FeatureFlag.FEATURE_FLAG_OVERRIDES)
       .map(([flag, value]) => ({
         type: "Feature Flag",
         name: value ? "Disable" : "Enable",
