@@ -2,7 +2,6 @@
   import {
     Body,
     Button,
-    Helpers,
     Icon,
     Link,
     notifications,
@@ -13,7 +12,9 @@
     ToolExecutionPrincipal,
     ToolType,
     type AgentOperation,
+    type AgentOperationApprovalPolicy,
     type EscalationRecipient,
+    type ToolExecutionRule,
   } from "@budibase/types"
   import * as routify from "@roxi/routify"
   import type { EditorView } from "@codemirror/view"
@@ -46,6 +47,8 @@
   import AgentTabList from "../../AgentTabList.svelte"
   import AgentUnpublishedChangesIndicator from "../../AgentUnpublishedChangesIndicator.svelte"
   import ConfigureOperationToolModal from "../../ConfigureOperationToolModal.svelte"
+  import OperationApprovalPolicyModal from "../../OperationApprovalPolicyModal.svelte"
+  import OperationApprovalRuleModal from "../../OperationApprovalRuleModal.svelte"
   import GenerateInstructionsControl from "../../GenerateInstructionsControl.svelte"
   import Knowledge from "../../knowledge/index.svelte"
   import OperationRailSectionHeader from "../../OperationRailSectionHeader.svelte"
@@ -89,6 +92,21 @@
   let webSearchConfigModal: WebSearchConfigModal | undefined = $state()
   let removeToolDialog: ConfirmDialog | undefined = $state()
   let configureToolModal: ConfigureOperationToolModal | undefined = $state()
+  let approvalPolicyModal: OperationApprovalPolicyModal | undefined = $state()
+  let approvalRuleModal: OperationApprovalRuleModal | undefined = $state()
+  let stagedToolConfig = $state<
+    | {
+        tool: AgentTool
+        executionPrincipal: ToolExecutionPrincipal
+        adding: boolean
+        rules: ToolExecutionRule[]
+      }
+    | undefined
+  >()
+  let stagedRule = $state<{ index?: number; policyId?: string } | undefined>()
+  let chainingToolModal = false
+  let chainingRuleModal = false
+  let policyModalFromRule = false
   let editorToolsDropdown: ToolsDropdown | undefined = $state()
   let toolToRemove: RemovableTool | undefined = $state()
   let restoreToolConfiguration = $state(false)
@@ -131,6 +149,13 @@
     !$featureFlags[FeatureFlag.ESCALATION] ||
       $featureFlags[FeatureFlag.AI_TOOL_ESCALATION]
   )
+  let toolApprovalsEnabled = $derived(
+    $featureFlags[FeatureFlag.AI_TOOL_ESCALATION]
+  )
+  let approvalsTabVisible = $derived(
+    !escalationToolHidden || toolApprovalsEnabled
+  )
+  let approvalPolicies = $derived(operation?.approvalPolicies || [])
   let configuredToolList = $derived(
     (operation?.enabledTools || [])
       .map(config => ({
@@ -456,7 +481,6 @@
     if (!operation) {
       return
     }
-    applyToolEscalation(tool, [])
     saveOperation({
       enabledTools: (operation.enabledTools || []).filter(
         config => config.toolName !== tool.runtimeBinding
@@ -593,78 +617,216 @@
         )?.executionRules?.length ?? 0)
       : 0
 
-  const getToolEscalationPolicyId = (toolName: string) =>
+  const getToolExecutionRules = (toolName: string): ToolExecutionRule[] =>
     operation?.enabledTools?.find(
       configured => configured.toolName === toolName
-    )?.executionRules?.[0]?.policyId
+    )?.executionRules ?? []
 
-  const getToolEscalationRecipients = (
-    toolName: string
-  ): EscalationRecipient[] => {
-    const policyId = getToolEscalationPolicyId(toolName)
-    if (!policyId) {
-      return []
-    }
-    const policy = operation?.approvalPolicies?.find(
-      candidate => candidate.id === policyId
-    )
-    return policy?.notifications?.recipients ?? []
-  }
-
-  // Auto-deleting unreferenced policies is interim behaviour - retire it
-  // when the policies work makes them user-owned and reusable.
-  const applyToolEscalation = (
-    tool: RemovableTool,
-    recipients: EscalationRecipient[] | undefined
+  const applyExecutionRules = (
+    toolName: string,
+    rules: ToolExecutionRule[] | undefined
   ) => {
-    if (!operation || recipients === undefined) {
+    if (!operation || rules === undefined) {
       return
     }
-    const toolName = tool.runtimeBinding
-    const existingPolicyId = getToolEscalationPolicyId(toolName)
     const entry = operation.enabledTools?.find(
       configured => configured.toolName === toolName
     )
-    if (recipients.length) {
-      const policyId = existingPolicyId ?? Helpers.uuid()
-      const policy = {
-        id: policyId,
-        name: `${tool.readableBinding} approval`,
-        notifications: { recipients },
-      }
-      operation.approvalPolicies = [
-        ...(operation.approvalPolicies || []).filter(
-          candidate => candidate.id !== policyId
-        ),
-        policy,
-      ]
-      if (entry) {
-        entry.executionRules = [{ policyId }]
-      }
-    } else if (existingPolicyId) {
-      if (entry) {
-        delete entry.executionRules
-      }
-      const referenced = (operation.enabledTools || []).some(configured =>
-        configured.executionRules?.some(
-          rule => rule.policyId === existingPolicyId
-        )
-      )
-      if (!referenced) {
-        operation.approvalPolicies = (operation.approvalPolicies || []).filter(
-          candidate => candidate.id !== existingPolicyId
-        )
-      }
+    if (!entry) {
+      return
+    }
+    if (rules.length) {
+      entry.executionRules = rules
+    } else {
+      delete entry.executionRules
     }
   }
 
-  const toolEscalationOptions = (toolName: string) =>
-    $featureFlags[FeatureFlag.AI_TOOL_ESCALATION]
+  const policyUsageCount = (policyId: string) =>
+    (operation?.enabledTools || []).filter(configured =>
+      configured.executionRules?.some(rule => rule.policyId === policyId)
+    ).length
+
+  const savePolicy = async (policy: AgentOperationApprovalPolicy) => {
+    if (!operation) {
+      return
+    }
+    const existingIndex = (operation.approvalPolicies || []).findIndex(
+      candidate => candidate.id === policy.id
+    )
+    const policies = [...(operation.approvalPolicies || [])]
+    if (existingIndex === -1) {
+      policies.push(policy)
+    } else {
+      policies[existingIndex] = policy
+    }
+    operation.approvalPolicies = policies
+    await saveOperation()
+  }
+
+  const deletePolicy = (policy: AgentOperationApprovalPolicy) => {
+    if (!operation) {
+      return
+    }
+    const usage = policyUsageCount(policy.id)
+    if (usage) {
+      notifications.error(
+        `"${policy.name}" is used by ${usage} tool ${usage === 1 ? "rule" : "rules"} and cannot be deleted`
+      )
+      return
+    }
+    operation.approvalPolicies = (operation.approvalPolicies || []).filter(
+      candidate => candidate.id !== policy.id
+    )
+    saveOperation()
+  }
+
+  const openPolicyMenu = (
+    event: MouseEvent,
+    policy: AgentOperationApprovalPolicy
+  ) => {
+    event.preventDefault()
+    event.stopPropagation()
+    contextMenuStore.open(
+      "agent-operation-policy",
+      [
+        {
+          icon: "trash",
+          name: "Delete policy",
+          visible: true,
+          callback: () => deletePolicy(policy),
+        },
+      ],
+      { x: event.clientX, y: event.clientY }
+    )
+  }
+
+  const toolApprovalOptions = (toolName: string) =>
+    toolApprovalsEnabled
       ? {
           enabled: true,
-          recipients: getToolEscalationRecipients(toolName),
+          rules: getToolExecutionRules(toolName),
+          policies: approvalPolicies,
         }
       : undefined
+
+  const beginRuleEdit = ({
+    tool,
+    executionPrincipal,
+    rules,
+    index,
+  }: {
+    tool: AgentTool
+    executionPrincipal: ToolExecutionPrincipal
+    rules: ToolExecutionRule[]
+    index?: number
+  }) => {
+    stagedToolConfig = {
+      tool,
+      executionPrincipal,
+      adding: !!addingTool,
+      rules: [...rules],
+    }
+    chainingToolModal = true
+    configureToolModal?.hide()
+    approvalRuleModal?.show({
+      policies: approvalPolicies,
+      rule: index !== undefined ? rules[index] : undefined,
+      index,
+    })
+  }
+
+  const reopenToolModal = () => {
+    const staged = stagedToolConfig
+    if (!staged) {
+      return
+    }
+    stagedToolConfig = undefined
+    configureToolModal?.show(
+      staged.tool,
+      staged.executionPrincipal,
+      $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
+        staged.tool.executionPolicy.mode === "configurable",
+      staged.adding,
+      {
+        enabled: true,
+        rules: staged.rules,
+        policies: approvalPolicies,
+      }
+    )
+  }
+
+  const handleRuleSave = ({
+    rule,
+    index,
+  }: {
+    rule: ToolExecutionRule
+    index?: number
+  }) => {
+    if (!stagedToolConfig) {
+      return
+    }
+    const rules = [...stagedToolConfig.rules]
+    if (index !== undefined) {
+      rules[index] = rule
+    } else {
+      rules.push(rule)
+    }
+    stagedToolConfig = { ...stagedToolConfig, rules }
+  }
+
+  const handleRuleRemove = (index: number) => {
+    if (!stagedToolConfig) {
+      return
+    }
+    stagedToolConfig = {
+      ...stagedToolConfig,
+      rules: stagedToolConfig.rules.filter((_, i) => i !== index),
+    }
+  }
+
+  const handleRuleModalClose = () => {
+    if (chainingRuleModal) {
+      chainingRuleModal = false
+      return
+    }
+    reopenToolModal()
+  }
+
+  const beginPolicyCreateFromRule = ({
+    index,
+    policyId,
+  }: {
+    index?: number
+    policyId?: string
+  }) => {
+    stagedRule = { index, policyId }
+    policyModalFromRule = true
+    chainingRuleModal = true
+    approvalRuleModal?.hide()
+    approvalPolicyModal?.show()
+  }
+
+  const handlePolicySave = async (policy: AgentOperationApprovalPolicy) => {
+    await savePolicy(policy)
+    if (policyModalFromRule && stagedRule) {
+      stagedRule = { ...stagedRule, policyId: policy.id }
+    }
+  }
+
+  const handlePolicyModalClose = () => {
+    if (!policyModalFromRule) {
+      return
+    }
+    policyModalFromRule = false
+    const pending = stagedRule
+    stagedRule = undefined
+    approvalRuleModal?.show({
+      policies: approvalPolicies,
+      rule: pending?.policyId ? { policyId: pending.policyId } : undefined,
+      index: pending?.index,
+    })
+  }
 
   const configureTool = (tool: AgentTool) => {
     addingTool = undefined
@@ -674,7 +836,7 @@
       $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
         tool.executionPolicy.mode === "configurable",
       false,
-      toolEscalationOptions(tool.runtimeBinding)
+      toolApprovalOptions(tool.runtimeBinding)
     )
   }
 
@@ -698,25 +860,25 @@
       $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
         tool.executionPolicy.mode === "configurable",
       true,
-      toolEscalationOptions(tool.runtimeBinding)
+      toolApprovalOptions(tool.runtimeBinding)
     )
   }
 
   const saveToolConfiguration = async ({
     tool,
     executionPrincipal,
-    recipients,
+    executionRules,
   }: {
     tool: AgentTool
     executionPrincipal: ToolExecutionPrincipal
-    recipients?: EscalationRecipient[]
+    executionRules?: ToolExecutionRule[]
   }) => {
     if (addingTool?.runtimeBinding !== tool.runtimeBinding || !operation) {
       setToolPrincipal({
         toolName: tool.runtimeBinding,
         executionPrincipal,
       })
-      applyToolEscalation(tool, recipients)
+      applyExecutionRules(tool.runtimeBinding, executionRules)
       await saveOperation()
       return
     }
@@ -737,7 +899,7 @@
         executionPrincipal,
       },
     ]
-    applyToolEscalation(tool, recipients)
+    applyExecutionRules(tool.runtimeBinding, executionRules)
     const updates: Partial<AgentOperation> = {}
     if (insertPosition) {
       const nextInstructions = insertToolBinding(tool, insertPosition)
@@ -762,6 +924,10 @@
   }
 
   const closeToolConfiguration = () => {
+    if (chainingToolModal) {
+      chainingToolModal = false
+      return
+    }
     const insertPosition = pendingToolInsertion
     addingTool = undefined
     pendingToolInsertion = undefined
@@ -869,7 +1035,7 @@
             class:active={activeTab === "knowledge"}
             onclick={() => (activeTab = "knowledge")}>Knowledge</button
           >
-          {#if !escalationToolHidden}
+          {#if approvalsTabVisible}
             <button
               class:active={activeTab === "approvals"}
               onclick={() => (activeTab = "approvals")}>Approvals</button
@@ -1002,6 +1168,53 @@
             {/if}
           {:else if activeTab === "knowledge"}
             <Knowledge bind:operation onUpdated={() => saveOperation()} />
+          {:else if toolApprovalsEnabled}
+            <div class="rail-section">
+              <OperationRailSectionHeader
+                title="Approvals"
+                description="Reusable approval policies deciding who reviews this operation's gated actions."
+              >
+                {#snippet actions()}
+                  <Button
+                    secondary
+                    size="S"
+                    icon="plus-circle"
+                    on:click={() => approvalPolicyModal?.show()}
+                  >
+                    Add approval policy
+                  </Button>
+                {/snippet}
+              </OperationRailSectionHeader>
+              <div class="policies-list" role="list">
+                {#each approvalPolicies as policy (policy.id)}
+                  <div role="listitem" class="policy-row">
+                    <button
+                      class="policy-row-activation"
+                      aria-label={`Edit ${policy.name}`}
+                      onclick={() => approvalPolicyModal?.show(policy)}
+                    >
+                      <span class="policy-name">{policy.name}</span>
+                      <span class="policy-usage">
+                        {policyUsageCount(policy.id)}
+                        {policyUsageCount(policy.id) === 1 ? "rule" : "rules"}
+                      </span>
+                    </button>
+                    <button
+                      class="tool-actions"
+                      aria-label={`Actions for ${policy.name}`}
+                      onclick={event => openPolicyMenu(event, policy)}
+                    >
+                      <Icon name="dots-three" size="XS" />
+                    </button>
+                  </div>
+                {:else}
+                  <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+                    No approval policies yet. Create one here, or add an
+                    approval rule to a tool.
+                  </Body>
+                {/each}
+              </div>
+            </div>
           {:else if !escalationToolHidden}
             <div class="rail-section approval-panel">
               <OperationRailSectionHeader
@@ -1069,11 +1282,27 @@
   {#if toolModalEnabled}
     <ConfigureOperationToolModal
       bind:this={configureToolModal}
-      {agentId}
-      providers={escalationProviders}
       onSave={saveToolConfiguration}
       onRemove={tool => confirmRemoveTool(tool, true)}
+      onEditRule={beginRuleEdit}
       onClose={closeToolConfiguration}
+    />
+  {/if}
+
+  {#if toolApprovalsEnabled}
+    <OperationApprovalPolicyModal
+      bind:this={approvalPolicyModal}
+      {agentId}
+      providers={escalationProviders}
+      onSave={handlePolicySave}
+      onClose={handlePolicyModalClose}
+    />
+    <OperationApprovalRuleModal
+      bind:this={approvalRuleModal}
+      onSave={handleRuleSave}
+      onRemove={handleRuleRemove}
+      onCreatePolicy={beginPolicyCreateFromRule}
+      onClose={handleRuleModalClose}
     />
   {/if}
 
@@ -1318,6 +1547,55 @@
     background: transparent;
     color: inherit;
     cursor: pointer;
+  }
+
+  .policies-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .policy-row {
+    display: flex;
+    box-sizing: border-box;
+    min-height: 34px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 12px;
+    border-radius: 4px;
+    background: var(--background-alt);
+    width: 100%;
+  }
+
+  .policy-row-activation {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .policy-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    line-height: 17px;
+  }
+
+  .policy-usage {
+    flex: 0 0 auto;
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 11px;
   }
 
   @media (max-width: 900px) {
