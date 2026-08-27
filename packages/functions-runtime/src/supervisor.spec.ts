@@ -99,6 +99,7 @@ describe("LocalFunctionRunSupervisor", () => {
     })
     const terminate = jest.fn().mockImplementation(() => {
       finishRun(result)
+      return Promise.resolve()
     })
     const supervisor = new LocalFunctionRunSupervisor({
       executor: executor({
@@ -129,6 +130,7 @@ describe("LocalFunctionRunSupervisor", () => {
     const execute = jest.fn().mockReturnValue(execution)
     const terminate = jest.fn().mockImplementation(() => {
       finishRun(result)
+      return Promise.resolve()
     })
     const supervisor = new LocalFunctionRunSupervisor({
       executor: executor({ execute, terminate }),
@@ -153,6 +155,7 @@ describe("LocalFunctionRunSupervisor", () => {
     })
     const terminate = jest.fn().mockImplementation(() => {
       finishRun(result)
+      return Promise.resolve()
     })
     const supervisor = new LocalFunctionRunSupervisor({
       executor: executor({
@@ -178,5 +181,24 @@ describe("LocalFunctionRunSupervisor", () => {
         code: FunctionErrorCode.FUNCTION_ORCHESTRATOR_INTERRUPTED,
       },
     })
+  })
+
+  it("reports termination failures", async () => {
+    const terminationError = new Error("termination failed")
+    const log = jest.spyOn(console, "error").mockImplementation(() => {})
+    const supervisor = new LocalFunctionRunSupervisor({
+      executor: executor({
+        terminate: jest.fn().mockRejectedValue(terminationError),
+      }),
+    })
+
+    supervisor.terminate(request.runId)
+    await Promise.resolve()
+
+    expect(log).toHaveBeenCalledWith(
+      `Failed to terminate function run ${request.runId}`,
+      terminationError
+    )
+    log.mockRestore()
   })
 })

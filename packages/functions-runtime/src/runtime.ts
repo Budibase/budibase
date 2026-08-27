@@ -219,6 +219,18 @@ export const executeFunctionInIsolate = async (
       isolate.dispose()
     }
   }
+  const createRuntimeFailure = (error: unknown) => {
+    if (wallTimedOut) {
+      errorCode = FunctionErrorCode.FUNCTION_TIMEOUT
+    } else if (error instanceof FunctionOutputError) {
+      errorCode = FunctionErrorCode.FUNCTION_OUTPUT_INVALID
+    } else if (isolate.isDisposed) {
+      errorCode = FunctionErrorCode.FUNCTION_MEMORY_LIMIT
+    } else if (String(error).toLowerCase().includes("timed out")) {
+      errorCode = FunctionErrorCode.FUNCTION_TIMEOUT
+    }
+    return createFailure(request, startedAt, queryCount, errorCode)
+  }
   const unregisterTermination =
     runtimeContext.registerTermination?.(terminateRuntime)
 
@@ -358,20 +370,13 @@ export const executeFunctionInIsolate = async (
         artifact.release()
       }
     } catch (error) {
-      if (wallTimedOut) {
-        errorCode = FunctionErrorCode.FUNCTION_TIMEOUT
-      } else if (error instanceof FunctionOutputError) {
-        errorCode = FunctionErrorCode.FUNCTION_OUTPUT_INVALID
-      } else if (isolate.isDisposed) {
-        errorCode = FunctionErrorCode.FUNCTION_MEMORY_LIMIT
-      } else if (String(error).toLowerCase().includes("timed out")) {
-        errorCode = FunctionErrorCode.FUNCTION_TIMEOUT
-      }
-      return createFailure(request, startedAt, queryCount, errorCode)
+      return createRuntimeFailure(error)
     } finally {
       capabilityReference.release()
       context.release()
     }
+  } catch (error) {
+    return createRuntimeFailure(error)
   } finally {
     clearTimeout(wallTimer)
     unregisterTermination?.()

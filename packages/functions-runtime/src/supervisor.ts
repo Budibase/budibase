@@ -78,7 +78,9 @@ export class LocalFunctionRunSupervisor
     if (activeRun) {
       activeRun.terminationRequested = true
     }
-    void this.executor.terminate(runId)
+    this.executor.terminate(runId).catch(error => {
+      console.error(`Failed to terminate function run ${runId}`, error)
+    })
   }
 
   async execute(
@@ -87,7 +89,6 @@ export class LocalFunctionRunSupervisor
     if (this.shuttingDown) {
       return Promise.resolve(createShutdownResult(options.request))
     }
-
     const activeRun: ActiveRun = { terminationRequested: false }
     this.activeRuns.set(options.request.runId, activeRun)
     const execution = this.executeRun(options, activeRun)

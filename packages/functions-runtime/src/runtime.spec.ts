@@ -1,4 +1,6 @@
+import { FunctionErrorCode } from "@budibase/types"
 import type {
+  FunctionCapabilityRequest,
   FunctionCapabilityHandler,
   FunctionRunRequest,
 } from "@budibase/types"
@@ -61,11 +63,16 @@ describe("Function runtime", () => {
   })
 
   it("registers termination for a host that owns the isolate", async () => {
-    const invokeCapability: FunctionCapabilityHandler = request => {
-      return new Promise((_resolve, reject) => {
+    let capabilityInvoked = () => {}
+    const capabilityWasInvoked = new Promise<void>(resolve => {
+      capabilityInvoked = resolve
+    })
+    const invokeCapability = jest.fn((request: FunctionCapabilityRequest) => {
+      capabilityInvoked()
+      return new Promise<never>((_resolve, reject) => {
         request.signal.addEventListener("abort", () => reject(new Error()))
       })
-    }
+    })
     const abortController = new AbortController()
 
     const result = executeFunctionInIsolate(
@@ -89,10 +96,41 @@ describe("Function runtime", () => {
         },
       }
     )
+    await capabilityWasInvoked
     abortController.abort()
 
     await expect(result).resolves.toMatchObject({
       runId: "runtime-run",
+      status: "error",
+      error: {
+        code: FunctionErrorCode.FUNCTION_MEMORY_LIMIT,
+      },
+    })
+    expect(invokeCapability).toHaveBeenCalledTimes(1)
+  })
+
+  it("returns an error result when termination occurs during setup", async () => {
+    await expect(
+      executeFunctionInIsolate(
+        request(`
+          export default async function run() {
+            return { output: {} }
+          }
+        `),
+        {
+          invokeCapability: jest.fn(async () => ({})),
+          registerTermination: terminate => {
+            terminate()
+            return () => {}
+          },
+        }
+      )
+    ).resolves.toMatchObject({
+      runId: "runtime-run",
+      status: "error",
+      error: {
+        code: FunctionErrorCode.FUNCTION_MEMORY_LIMIT,
+      },
     })
   })
 })

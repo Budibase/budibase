@@ -1,4 +1,4 @@
-import { DEFAULT_FUNCTION_LIMITS, FunctionErrorCode } from "@budibase/types"
+import { FunctionErrorCode } from "@budibase/types"
 import type {
   FunctionExecutionContext,
   FunctionExecutorHealth,
@@ -6,8 +6,9 @@ import type {
   FunctionRunRequest,
   FunctionRunResult,
 } from "@budibase/types"
+import env from "../../environment"
 import { executeInternalFunctionInIsolate } from "./internal-runtime"
-import { JSONLimitError, validateJSONLimits } from "./jsonLimits"
+import { validateJSONLimits } from "./jsonLimits"
 
 const BUSY_MESSAGE = "Function executor is busy"
 const INVALID_INPUT_MESSAGE = "Function input is invalid"
@@ -42,7 +43,7 @@ export class LocalFunctionExecutor implements FunctionExecutor {
   private readonly maxConcurrentRuns: number
 
   constructor({
-    maxConcurrentRuns = DEFAULT_FUNCTION_LIMITS.service.maxConcurrentRuns,
+    maxConcurrentRuns = env.FUNCTIONS_LIMITS.service.maxConcurrentRuns,
   }: LocalFunctionExecutorOptions = {}) {
     this.maxConcurrentRuns = maxConcurrentRuns
   }
@@ -77,16 +78,13 @@ export class LocalFunctionExecutor implements FunctionExecutor {
         maxBytes: request.limits.maxInputBytes,
         maxDepth: request.limits.maxInputDepth,
       })
-    } catch (error) {
-      if (error instanceof JSONLimitError) {
-        return failureResult(
-          request,
-          startedAt,
-          FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
-          INVALID_INPUT_MESSAGE
-        )
-      }
-      throw error
+    } catch {
+      return failureResult(
+        request,
+        startedAt,
+        FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+        INVALID_INPUT_MESSAGE
+      )
     }
 
     this.activeRunIds.add(request.runId)
