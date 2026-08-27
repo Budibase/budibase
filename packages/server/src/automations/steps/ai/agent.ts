@@ -108,6 +108,10 @@ export async function run({
 
         const pendingToolCalls = new Set<string>()
         const streamResult = await agentRun.stream({ pendingToolCalls })
+        const responseErrorPromise = streamResult.response.then(
+          () => undefined,
+          error => getErrorMessage(error)
+        )
         let assistantMessage: UIMessage | undefined
         let streamingError: string | undefined
 
@@ -124,12 +128,7 @@ export async function run({
           assistantMessage = uiMessage
         }
 
-        let responseError: string | undefined
-        try {
-          await streamResult.response
-        } catch (error) {
-          responseError = getErrorMessage(error)
-        }
+        const responseError = await responseErrorPromise
 
         const incompleteTools = assistantMessage
           ? findIncompleteToolCalls([assistantMessage])

@@ -90,11 +90,9 @@ const mockAgentRun = ({
     sessionLogIndexer: { index },
     stream: jest.fn().mockResolvedValue({
       toUIMessageStream: jest.fn().mockReturnValue({}),
-      get response() {
-        return responseError
-          ? Promise.reject(responseError)
-          : Promise.resolve({ id: "response-id" })
-      },
+      response: responseError
+        ? Promise.reject(responseError)
+        : Promise.resolve({ id: "response-id" }),
       get text() {
         return textError ? Promise.reject(textError) : Promise.resolve(text)
       },
