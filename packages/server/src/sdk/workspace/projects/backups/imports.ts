@@ -65,7 +65,7 @@ import {
   PROJECT_FILE,
   PROJECT_MANIFEST_FILE,
 } from "./constants"
-import { getProjectIds } from "../utils"
+import { getProjectIds, isProjectAssignableResourceType } from "../utils"
 
 const IMPORT_ORDER: ResourceType[] = [
   ResourceType.AGENT,
@@ -466,7 +466,7 @@ const remapValue = (
   if (value && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value).map(([key, nestedValue]) => [
-        remapString(key, remapper),
+        key,
         remapValue(nestedValue, remapper),
       ])
     )
@@ -568,7 +568,7 @@ const sanitizeImportedProjectAssignments = (
   resourceType: ResourceType,
   importedProjectId: string
 ) => {
-  if (resourceType === ResourceType.QUERY) {
+  if (!isProjectAssignableResourceType(resourceType)) {
     delete doc.projectIds
     return
   }
