@@ -6,6 +6,8 @@ import type {
   CreateFunctionRequest,
   CreateFunctionResponse,
   FetchFunctionResponse,
+  FetchFunctionRunResponse,
+  FetchFunctionRunsResponse,
   FetchFunctionQueryCatalogResponse,
   FetchFunctionsResponse,
   UpdateFunctionRequest,
@@ -14,6 +16,32 @@ import type {
 import { type Expectations, TestAPI } from "./base"
 
 export class FunctionAPI extends TestAPI {
+  fetchRuns = async (
+    id: string,
+    query: { bookmark?: string; limit?: number } = {},
+    expectations?: Expectations
+  ) => {
+    const params = new URLSearchParams()
+    if (query.bookmark) {
+      params.set("bookmark", query.bookmark)
+    }
+    if (query.limit) {
+      params.set("limit", `${query.limit}`)
+    }
+    const queryString = params.size ? `?${params}` : ""
+    return await this._get<FetchFunctionRunsResponse>(
+      `/api/functions/${id}/runs${queryString}`,
+      { expectations }
+    )
+  }
+
+  findRun = async (id: string, runId: string, expectations?: Expectations) => {
+    return await this._get<FetchFunctionRunResponse>(
+      `/api/functions/${id}/runs/${runId}`,
+      { expectations }
+    )
+  }
+
   compile = async (
     body: CompileFunctionRequest,
     expectations?: Expectations

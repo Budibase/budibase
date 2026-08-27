@@ -632,3 +632,13 @@ export const remove = async (id: string, rev: string) => {
   }
   return await getDb().remove(id, rev)
 }
+
+export {
+  clearOldHistory,
+  createRunSummary,
+  finalizeRunSummary,
+  getRunHistory,
+  listRunHistory,
+  reconcileRunning,
+} from "./history"
+export type { CreateRunSummaryInput, FinalizeRunSummaryInput } from "./history"
