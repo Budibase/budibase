@@ -580,6 +580,35 @@ describe("/datasources", () => {
       )
     })
 
+    it.each([
+      '{{ env.PASSWORD || "fallback-secret" }}',
+      '{{ env.PASSWORD||"fallback-secret" }}',
+      '{{ "prefix-" + env.PASSWORD }}',
+    ])("scrubs mixed environment expressions: %s", async password => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST environment expression",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Environment expression auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "{{ env.USERNAME }}",
+                password,
+              },
+            },
+          ],
+        },
+      })
+
+      expect(ds.config!.authConfigs[0].config.password).toBe(
+        PASSWORD_REPLACEMENT
+      )
+    })
+
     it("preserves secrets composed of adjacent env var references", async () => {
       const password = "{{ env.PASSWORD_PREFIX }}{{ env.PASSWORD_SUFFIX }}"
       const ds = await config.api.datasource.create({
