@@ -623,6 +623,33 @@ describe("/static", () => {
           await fsp.rm(sensitiveDir, { recursive: true, force: true })
         }
       })
+
+      it("rejects a zip entry that is a symlink", async () => {
+        const symlinkExternalAttr = (0o120777 << 16) >>> 0
+
+        mockedExtract.mockImplementation(
+          async (_zipPath: string, opts: any) => {
+            await fsp.mkdir(opts.dir, { recursive: true })
+            opts.onEntry?.(
+              {
+                fileName: "payload.txt",
+                uncompressedSize: 10,
+                externalFileAttributes: symlinkExternalAttr,
+              },
+              {}
+            )
+          }
+        )
+
+        const res = await request
+          .post("/api/pwa/process-zip")
+          .attach("file", Buffer.from("fake-zip"), "icons.zip")
+          .set(config.defaultHeaders())
+
+        expect(res.status).toEqual(400)
+        expect(res.body.message).toEqual("Invalid zip")
+        expect(mockedUpload).not.toHaveBeenCalled()
+      })
     })
 
     describe("resource limits", () => {
