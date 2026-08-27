@@ -135,43 +135,42 @@ const _import = async (
     await saveDatasource(datasourceCtx)
     datasourceId = datasourceCtx.body.datasource._id
   } else {
-    if (body.restTemplateId) {
-      await sdk.restTemplates.withCustomRestTemplateLock({
-        resource: body.restTemplateId,
-        task: async () => {
-          const templateExists = await sdk.restTemplates.exists(
-            body.restTemplateId!
-          )
-          if (!templateExists) {
-            throw new HTTPError("Custom REST template not found", 404)
-          }
-
-          const datasource = await sdk.datasources.get(body.datasourceId!)
-          if (datasource.source !== SourceName.REST) {
-            throw new HTTPError(
-              "Custom REST templates can only be associated with REST datasources",
-              400
-            )
-          }
-          importer.prepareDatasourceConfig(datasource)
-          datasource.restTemplateId = body.restTemplateId
-          const response = await context
-            .getWorkspaceDB()
-            .put(sdk.tables.populateExternalTableSchemas(datasource))
-          datasource._rev = response.rev
-          await events.datasource.updated(datasource)
-          builderSocket?.emitDatasourceUpdate(ctx, datasource)
-        },
-      })
-    }
-    // use existing datasource
     datasourceId = body.datasourceId
   }
 
-  let importResult
-  try {
-    importResult = await sdk.projects.doWithProjectAssignmentsLockIfEnabled(
-      async () => {
+  const importResult = await sdk.projects.doWithProjectAssignmentsLockIfEnabled(
+    async () => {
+      if (body.datasourceId && body.restTemplateId) {
+        await sdk.restTemplates.withCustomRestTemplateLock({
+          resource: body.restTemplateId,
+          task: async () => {
+            const templateExists = await sdk.restTemplates.exists(
+              body.restTemplateId!
+            )
+            if (!templateExists) {
+              throw new HTTPError("Custom REST template not found", 404)
+            }
+
+            const datasource = await sdk.datasources.get(body.datasourceId!)
+            if (datasource.source !== SourceName.REST) {
+              throw new HTTPError(
+                "Custom REST templates can only be associated with REST datasources",
+                400
+              )
+            }
+            importer.prepareDatasourceConfig(datasource)
+            datasource.restTemplateId = body.restTemplateId
+            const response = await context
+              .getWorkspaceDB()
+              .put(sdk.tables.populateExternalTableSchemas(datasource))
+            datasource._rev = response.rev
+            await events.datasource.updated(datasource)
+            builderSocket?.emitDatasourceUpdate(ctx, datasource)
+          },
+        })
+      }
+
+      try {
         const result = await importer.importQueries(
           datasourceId,
           body.selectedEndpointId
@@ -183,14 +182,14 @@ const _import = async (
           savedResources: result.queries,
         })
         return result
+      } catch (error) {
+        if (body.selectedEndpointId && error instanceof Error) {
+          ctx.throw(400, error.message)
+        }
+        throw error
       }
-    )
-  } catch (error: any) {
-    if (body.selectedEndpointId && error?.message) {
-      ctx.throw(400, error.message)
     }
-    throw error
-  }
+  )
 
   ctx.body = {
     ...importResult,
