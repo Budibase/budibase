@@ -637,14 +637,6 @@ function isDatasource(doc: AnyDocument): doc is Datasource {
   return type === ResourceType.DATASOURCE
 }
 
-function isQuery(doc: AnyDocument): doc is Query {
-  if (!doc._id) {
-    return false
-  }
-  const type = getResourceType(doc._id)
-  return type === ResourceType.QUERY
-}
-
 function isTable(doc: AnyDocument): doc is WithDocMetadata<Table> {
   if (!doc._id) {
     return false
@@ -1045,7 +1037,7 @@ async function duplicateResourcesToWorkspaceUnlocked(
   if (docsToInsert.length) {
     await destinationDb.bulkDocs(
       docsToInsert.map<AnyDocument>(doc => {
-        const sanitizedDoc = sanitizeProjectAssignment({
+        let sanitizedDoc = sanitizeProjectAssignment({
           ...(isAgent(doc) ? sdk.ai.agents.sanitiseAgentForExport(doc) : doc),
           fromWorkspace,
         })
@@ -1060,8 +1052,11 @@ async function duplicateResourcesToWorkspaceUnlocked(
         if (isAutomation(sanitizedDoc)) {
           sanitizedDoc.appId = toWorkspace
         }
-        if (isQuery(sanitizedDoc)) {
-          delete sanitizedDoc.projectIds
+        const resourceType = sanitizedDoc._id
+          ? getResourceType(sanitizedDoc._id)
+          : undefined
+        if (!resourceType || !isProjectAssignableResourceType(resourceType)) {
+          sanitizedDoc = withProjectIds(sanitizedDoc)
         }
         if (isDatasource(sanitizedDoc) && sanitizedDoc.entities) {
           sanitizedDoc.entities = Object.fromEntries(
