@@ -1,4 +1,4 @@
-import { configs, context, events } from "@budibase/backend-core"
+import { configs, context, events, roles } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import {
   Automation,
@@ -372,6 +372,20 @@ describe("/automations", () => {
   })
 
   describe("test", () => {
+    it("runs with the selected preview role", async () => {
+      const result = await createAutomationBuilder(config)
+        .onAppAction()
+        .serverLog({ text: "{{ [user].[roleId] }}" })
+        .test({
+          fields: {},
+          previewRoleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        })
+
+      expect(result.steps[0].outputs.message).toEndWith(
+        roles.BUILTIN_ROLE_IDS.BASIC
+      )
+    })
+
     it("tests the automation successfully", async () => {
       let table = await config.createTable()
       let automation = newAutomation()

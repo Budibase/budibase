@@ -5,15 +5,43 @@
     TextArea,
     notifications,
     ActionButton,
+    Select,
   } from "@budibase/bbui"
-  import { automationStore, selectedAutomation } from "@/stores/builder"
+  import { automationStore, roles, selectedAutomation } from "@/stores/builder"
+  import { auth } from "@/stores/portal"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import { cloneDeep } from "lodash/fp"
   import { AutomationEventType } from "@budibase/types"
+  import { Constants } from "@budibase/frontend-core"
+  import { onMount } from "svelte"
 
   let failedParse = null
   let trigger = {}
   let schemaProperties = {}
+  let previewRolesLoading = false
+  let previewRoleId = $auth.user?.roleId || Constants.Roles.ADMIN
+
+  $: previewRoleOptions = $roles.map(role => ({
+    label: role.uiMetadata?.displayName || role.name,
+    value: role._id,
+  }))
+
+  const refreshPreviewRoles = async () => {
+    const workspaceId = $selectedAutomation.data?.appId
+    if (!workspaceId || previewRolesLoading) {
+      return
+    }
+    previewRolesLoading = true
+    try {
+      await roles.fetchByAppId(workspaceId)
+    } catch (error) {
+      notifications.error(error)
+    } finally {
+      previewRolesLoading = false
+    }
+  }
+
+  onMount(refreshPreviewRoles)
 
   const rowTriggers = [
     AutomationEventType.ROW_DELETE,
@@ -121,7 +149,10 @@
     // Ensure testData reactiveness is processed
     await tick()
     try {
-      await automationStore.actions.test($selectedAutomation.data, testData)
+      await automationStore.actions.test($selectedAutomation.data, {
+        ...testData,
+        previewRoleId,
+      })
       automationStore.update(state => ({ ...state, showTestModal: false }))
     } catch (error) {
       notifications.error(error)
@@ -145,6 +176,19 @@
   onConfirm={testAutomation}
   cancelText="Cancel"
 >
+  <div class="test-as">
+    <span>Test as</span>
+    <div class="test-as-picker">
+      <Select
+        value={previewRoleId}
+        options={previewRoleOptions}
+        placeholder={false}
+        loading={previewRolesLoading}
+        on:click={refreshPreviewRoles}
+        on:change={event => (previewRoleId = event.detail)}
+      />
+    </div>
+  </div>
   <div class="size">
     <div class="options">
       <ActionButton quiet selected={selectedValues} on:click={toggle}
@@ -189,6 +233,18 @@
 
   .tab-content-padding {
     padding: 0 var(--spacing-s);
+  }
+
+  .test-as {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    align-items: center;
+    gap: var(--spacing-m);
+    margin-bottom: var(--spacing-m);
+  }
+
+  .test-as-picker {
+    width: 100%;
   }
 
   .options {

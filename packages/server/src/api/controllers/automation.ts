@@ -4,6 +4,7 @@ import {
   db as dbCore,
   events,
   HTTPError,
+  roles,
 } from "@budibase/backend-core"
 import { automations, features } from "@budibase/pro"
 import { sdk as coreSdk } from "@budibase/shared-core"
@@ -371,7 +372,19 @@ export async function test(
   const asyncFlag =
     isQsTrue(String(query?.async)) || isQsTrue(String(bodyAsync))
 
-  const { async: _async, ...testBody } = body
+  const { async: _async, previewRoleId, ...testBody } = body
+
+  let testUser = ctx.user
+  if (previewRoleId) {
+    const previewRole = await roles.getRole(previewRoleId)
+    if (!previewRole?._id) {
+      throw new HTTPError("Preview role not found", 400)
+    }
+    testUser = {
+      ...ctx.user,
+      roleId: previewRole._id,
+    }
+  }
 
   let table: Table | undefined
   if (coreSdk.automations.isRowAction(automation) && testBody.row?.tableId) {
@@ -408,7 +421,7 @@ export async function test(
     const result = await withTestFlag(automation._id!, async () => {
       await updateTestHistory(automation, { ...testBody, occurredAt })
       const input = prepareTestInput(testBody)
-      const user = sdk.users.getUserContextBindings(ctx.user)
+      const user = sdk.users.getUserContextBindings(testUser)
       return await triggers.externalTrigger(
         { ...automation, disabled: false },
         { ...{ ...input, ...(table ? { table } : {}) }, appId, user },
