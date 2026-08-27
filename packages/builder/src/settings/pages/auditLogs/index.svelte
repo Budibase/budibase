@@ -219,7 +219,7 @@
     // with the key as the id and the value as the name
     if (obj) {
       return Object.entries(obj).map(([id, label]) => {
-        return { id: id as Event, label, selected: false }
+        return { id: id as Event, label: label.trim(), selected: false }
       })
     } else {
       return []
@@ -239,13 +239,13 @@
         selectedEvents,
         event => event.id
       ),
-      event => event.id
+      event => event.label.toLowerCase()
     )
   )
-  const sortedApps = $derived(
+  const sortedWorkspaces = $derived(
     sort(
       enrich($workspacesStore.apps, selectedApps, app => app.appId),
-      app => app.name
+      app => app.name.toLocaleLowerCase()
     )
   )
 
@@ -351,7 +351,7 @@
         label="Workspaces"
         getOptionValue={app => app.instance._id}
         getOptionLabel={app => app.name}
-        options={sortedApps}
+        options={sortedWorkspaces}
         bind:value={selectedApps}
       />
     </div>
