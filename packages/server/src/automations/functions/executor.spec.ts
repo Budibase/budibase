@@ -32,6 +32,12 @@ const noCapabilities = async () => {
 }
 
 describe("LocalFunctionExecutor", () => {
+  it("reports a healthy local executor", async () => {
+    await expect(new LocalFunctionExecutor().health()).resolves.toEqual({
+      healthy: true,
+    })
+  })
+
   it("runs a Function with a direct capability callback", async () => {
     const invokeCapability = jest.fn(async () => ({ id: "row-1" }))
     const executor = new LocalFunctionExecutor()
@@ -131,6 +137,37 @@ describe("LocalFunctionExecutor", () => {
     )
     await capabilityStarted
     abortController.abort()
+
+    await expect(result).resolves.toMatchObject({ status: "stopped" })
+  })
+
+  it("terminates an active run by ID", async () => {
+    const executor = new LocalFunctionExecutor()
+    let markStarted = () => {}
+    const capabilityStarted = new Promise<void>(resolve => {
+      markStarted = resolve
+    })
+    const invokeCapability: FunctionCapabilityHandler = request => {
+      markStarted()
+      return new Promise((_resolve, reject) => {
+        request.signal.addEventListener("abort", () => reject(new Error()))
+      })
+    }
+
+    const result = executor.execute(
+      request(
+        `
+        export default async function run() {
+          await globalThis.__budibaseInvokeQuery("capability-1", {})
+          return { output: {} }
+        }
+      `,
+        "terminated-run"
+      ),
+      context(invokeCapability)
+    )
+    await capabilityStarted
+    await executor.terminate("terminated-run")
 
     await expect(result).resolves.toMatchObject({ status: "stopped" })
   })

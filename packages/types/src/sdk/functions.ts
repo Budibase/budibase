@@ -150,6 +150,10 @@ export interface FunctionRunResult {
   error?: FunctionError
 }
 
+export interface FunctionExecutorHealth {
+  healthy: boolean
+}
+
 export interface FunctionCapabilityRequest {
   runId: string
   capabilityId: string
@@ -167,8 +171,10 @@ export interface FunctionExecutionContext {
 }
 
 export interface FunctionExecutor {
+  health: () => Promise<FunctionExecutorHealth>
   execute: (
     request: FunctionRunRequest,
     context: FunctionExecutionContext
   ) => Promise<FunctionRunResult>
+  terminate: (runId: string) => Promise<void>
 }
