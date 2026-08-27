@@ -54,6 +54,7 @@ const FLOW_LOGIC_STEPS = new Set<AutomationStepId>([
 
 const CODE_STEPS = new Set<AutomationStepId>([
   AutomationActionStepId.EXECUTE_BASH,
+  AutomationActionStepId.EXECUTE_FUNCTION,
   AutomationActionStepId.EXECUTE_SCRIPT,
   AutomationActionStepId.EXECUTE_SCRIPT_V2,
   AutomationActionStepId.SERVER_LOG,
