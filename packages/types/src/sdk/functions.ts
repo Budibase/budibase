@@ -177,3 +177,11 @@ export interface FunctionExecutor {
   ) => Promise<FunctionRunResult>
   terminate: (runId: string) => Promise<void>
 }
+
+export interface FunctionSupervisor<TRequest> {
+  isHealthy(): boolean
+  activeRunCount(): number
+  execute(request: TRequest): Promise<FunctionRunResult>
+  terminate(runId: string): void
+  shutdown(): Promise<void>
+}
