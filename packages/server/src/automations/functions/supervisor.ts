@@ -10,6 +10,16 @@ interface FunctionRunSupervisorOptions {
   executor?: FunctionExecutor
 }
 
+const createStopped = (result: FunctionRunResult): FunctionRunResult => ({
+  runId: result.runId,
+  status: "stopped",
+  metrics: {
+    ...result.metrics,
+    outputBytes: 0,
+    logBytes: 0,
+  },
+})
+
 export interface SuperviseFunctionRunOptions {
   request: FunctionRunRequest
   context: FunctionExecutionContext
@@ -45,7 +55,8 @@ export class FunctionRunSupervisor {
       if (signal?.aborted) {
         terminate()
       }
-      return await execution
+      const result = await execution
+      return terminationRequested ? createStopped(result) : result
     } finally {
       signal?.removeEventListener("abort", terminate)
     }

@@ -3,7 +3,7 @@ import type {
   FunctionCapabilityHandler,
   FunctionRunRequest,
 } from "@budibase/types"
-import { executeFunctionInIsolate as executeRuntime } from "./runtime"
+import { executeFunctionInIsolate as executeRuntime } from "./internal-runtime"
 import { FUNCTION_RUN_REQUEST_FIXTURE } from "./testFixtures"
 
 const request = (compiledJavaScript: string, runId = "isolate-run") => ({

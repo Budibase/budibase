@@ -22,6 +22,16 @@ const executor = (
   ...overrides,
 })
 
+const stoppedResult: FunctionRunResult = {
+  runId: FUNCTION_RUN_RESULT_FIXTURE.runId,
+  status: "stopped",
+  metrics: {
+    ...FUNCTION_RUN_RESULT_FIXTURE.metrics,
+    outputBytes: 0,
+    logBytes: 0,
+  },
+}
+
 describe("FunctionRunSupervisor", () => {
   it("executes a run without adding cancellation to its context", async () => {
     const runExecutor = executor()
@@ -47,13 +57,8 @@ describe("FunctionRunSupervisor", () => {
     const execution = new Promise<FunctionRunResult>(resolve => {
       finishRun = resolve
     })
-    const stoppedResult: FunctionRunResult = {
-      ...FUNCTION_RUN_RESULT_FIXTURE,
-      status: "stopped",
-      output: undefined,
-    }
     const terminate = jest.fn().mockImplementation(async () => {
-      finishRun(stoppedResult)
+      finishRun(FUNCTION_RUN_RESULT_FIXTURE)
     })
     const supervisor = new FunctionRunSupervisor({
       executor: executor({
@@ -81,14 +86,9 @@ describe("FunctionRunSupervisor", () => {
     const execution = new Promise<FunctionRunResult>(resolve => {
       finishRun = resolve
     })
-    const stoppedResult: FunctionRunResult = {
-      ...FUNCTION_RUN_RESULT_FIXTURE,
-      status: "stopped",
-      output: undefined,
-    }
     const execute = jest.fn().mockReturnValue(execution)
     const terminate = jest.fn().mockImplementation(async () => {
-      finishRun(stoppedResult)
+      finishRun(FUNCTION_RUN_RESULT_FIXTURE)
     })
     const supervisor = new FunctionRunSupervisor({
       executor: executor({ execute, terminate }),
