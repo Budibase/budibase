@@ -1,9 +1,15 @@
-<script>
+<script lang="ts">
   import { UserAvatar } from "@budibase/frontend-core"
+  import type { AuditLogEnriched } from "@budibase/types"
 
-  export let row
+  interface Props {
+    row: AuditLogEnriched
+  }
+
+  let { row }: Props = $props()
+  const user = $derived(row.user)
 </script>
 
-{#if row?.user?.email}
-  <UserAvatar user={row.user} />
+{#if user?.email}
+  <UserAvatar {user} />
 {/if}
