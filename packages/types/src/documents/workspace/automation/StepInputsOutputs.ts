@@ -17,6 +17,8 @@ import {
 import { AutomationStep } from "./schema"
 import type { EscalationRecipient, EscalationResponse } from "../escalation"
 import type { ToolExecutionPrincipal } from "../../global/agents"
+import type { JSONValue } from "../../../core"
+import type { FunctionError, FunctionRunStatus } from "../../../sdk/functions"
 
 export enum FilterCondition {
   EQUAL = "EQUAL",
@@ -103,6 +105,19 @@ export type ExecuteQueryStepInputs = {
 
 export type ExecuteQueryStepOutputs = BaseAutomationOutputs & {
   info?: any
+}
+
+export interface ExecuteFunctionStepInputs {
+  functionId: string
+  inputs: Record<string, JSONValue> | JSONEditorInput<Record<string, JSONValue>>
+  continueOnError?: boolean
+}
+
+export interface ExecuteFunctionStepOutputs {
+  success: boolean
+  status: FunctionRunStatus
+  output?: Record<string, JSONValue>
+  error?: FunctionError
 }
 
 export type APIRequestStepInputs = {
