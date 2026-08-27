@@ -123,7 +123,6 @@ describe("normalizeConfiguredOperationTools", () => {
     expect(
       getDefaultToolExecutionPrincipal({
         tool: availableTools[0],
-        toolSecurityEnabled: true,
       })
     ).toBe(ToolExecutionPrincipal.REQUESTER)
   })

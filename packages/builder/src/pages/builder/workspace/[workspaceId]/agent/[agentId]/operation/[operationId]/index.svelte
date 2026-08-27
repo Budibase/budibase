@@ -128,10 +128,6 @@
     })
   )
 
-  let toolModalEnabled = $derived(
-    $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] ||
-      $featureFlags[FeatureFlag.AI_TOOL_ESCALATION]
-  )
   let escalationToolHidden = $derived(
     !$featureFlags[FeatureFlag.ESCALATION] ||
       $featureFlags[FeatureFlag.AI_TOOL_ESCALATION]
@@ -414,11 +410,7 @@
       )
       .map(tool => ({
         toolName: tool.runtimeBinding,
-        executionPrincipal: getDefaultToolExecutionPrincipal({
-          tool,
-          toolSecurityEnabled:
-            $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
-        }),
+        executionPrincipal: getDefaultToolExecutionPrincipal({ tool }),
       }))
 
     saveOperation({
@@ -474,7 +466,6 @@
       ?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
 
   const getEffectiveToolPrincipal = (tool: AgentTool) =>
-    !$featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] ||
     tool.executionPolicy.mode === "admin"
       ? ToolExecutionPrincipal.ADMIN
       : getToolPrincipal(tool.runtimeBinding)
@@ -676,8 +667,7 @@
     configureToolModal?.show(
       tool,
       getEffectiveToolPrincipal(tool),
-      $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
-        tool.executionPolicy.mode === "configurable",
+      tool.executionPolicy.mode === "configurable",
       false,
       toolEscalationOptions(tool.runtimeBinding)
     )
@@ -689,19 +679,11 @@
   ) => {
     addingTool = tool
     pendingToolInsertion = insertPosition
-    const executionPrincipal = getDefaultToolExecutionPrincipal({
-      tool,
-      toolSecurityEnabled: $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY],
-    })
-    if (!toolModalEnabled) {
-      saveToolConfiguration({ tool, executionPrincipal })
-      return
-    }
+    const executionPrincipal = getDefaultToolExecutionPrincipal({ tool })
     configureToolModal?.show(
       tool,
       executionPrincipal,
-      $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY] &&
-        tool.executionPolicy.mode === "configurable",
+      tool.executionPolicy.mode === "configurable",
       true,
       toolEscalationOptions(tool.runtimeBinding)
     )
@@ -915,10 +897,7 @@
                   {#each configuredToolList as item (item.config.toolName)}
                     {@const tool = item.tool}
                     <div role="listitem">
-                      <div
-                        class="tool-row"
-                        class:tool-row--with-run-as={tool && toolModalEnabled}
-                      >
+                      <div class="tool-row" class:tool-row--with-run-as={tool}>
                         {#if !tool}
                           <div class="tool-row-activation">
                             <div class="tool-name">
@@ -929,7 +908,7 @@
                               <span class="tool-unavailable">Unavailable</span>
                             </div>
                           </div>
-                        {:else if toolModalEnabled}
+                        {:else}
                           <button
                             class="tool-row-activation"
                             aria-label={`Configure ${tool.readableBinding}`}
@@ -946,14 +925,12 @@
                               <span>{tool.readableBinding}</span>
                             </div>
                             <div class="tool-row-summary">
-                              {#if $featureFlags[FeatureFlag.AI_AGENT_TOOL_SECURITY]}
-                                <span class="tool-row-run-as">
-                                  Run as {getEffectiveToolPrincipal(tool) ===
-                                  ToolExecutionPrincipal.ADMIN
-                                    ? "Admin"
-                                    : "Requester"}
-                                </span>
-                              {/if}
+                              <span class="tool-row-run-as">
+                                Run as {getEffectiveToolPrincipal(tool) ===
+                                ToolExecutionPrincipal.ADMIN
+                                  ? "Admin"
+                                  : "Requester"}
+                              </span>
                               {#if getToolApprovalCount(tool.runtimeBinding)}
                                 <span class="tool-row-approvals">
                                   <Icon name="shield-check" size="XS" />
@@ -966,32 +943,16 @@
                               {/if}
                             </div>
                           </button>
-                        {:else}
-                          <div class="tool-row-activation">
-                            <div class="tool-name">
-                              <span class="tool-icon">
-                                <ToolIcon
-                                  icon={tool.icon}
-                                  size="S"
-                                  fallbackIcon="Wrench"
-                                />
-                              </span>
-                              <span>{tool.readableBinding}</span>
-                            </div>
-                          </div>
                         {/if}
-                        {#if !tool || !toolModalEnabled}
+                        {#if !tool}
                           <button
                             class="tool-actions"
-                            aria-label={`Actions for ${tool?.readableBinding || item.config.toolName}`}
+                            aria-label={`Actions for ${item.config.toolName}`}
                             onclick={event =>
-                              openToolMenu(
-                                event,
-                                tool || {
-                                  readableBinding: item.config.toolName,
-                                  runtimeBinding: item.config.toolName,
-                                }
-                              )}
+                              openToolMenu(event, {
+                                readableBinding: item.config.toolName,
+                                runtimeBinding: item.config.toolName,
+                              })}
                           >
                             <Icon name="dots-three" size="XS" />
                           </button>
@@ -1074,16 +1035,14 @@
     {/if}
   </ConfirmDialog>
 
-  {#if toolModalEnabled}
-    <ConfigureOperationToolModal
-      bind:this={configureToolModal}
-      {agentId}
-      providers={escalationProviders}
-      onSave={saveToolConfiguration}
-      onRemove={tool => confirmRemoveTool(tool, true)}
-      onClose={closeToolConfiguration}
-    />
-  {/if}
+  <ConfigureOperationToolModal
+    bind:this={configureToolModal}
+    {agentId}
+    providers={escalationProviders}
+    onSave={saveToolConfiguration}
+    onRemove={tool => confirmRemoveTool(tool, true)}
+    onClose={closeToolConfiguration}
+  />
 
   <WebSearchConfigModal
     bind:this={webSearchConfigModal}
