@@ -1,5 +1,6 @@
 import { v4 as uuid } from "uuid"
 import { z } from "zod"
+import type { SuperviseFunctionRunOptions } from "@budibase/functions-runtime"
 import {
   DEFAULT_FUNCTION_LIMITS,
   FunctionErrorCode,
@@ -10,6 +11,7 @@ import {
   type FunctionError,
   type FunctionReadiness,
   type FunctionRunResult,
+  type FunctionSupervisor,
   type JSONValue,
 } from "@budibase/types"
 import { areFunctionsEnabled } from "../../middleware/functionsEnabled"
@@ -17,10 +19,7 @@ import type {
   FunctionCapabilityService,
   FunctionInvocationScopeInput,
 } from "../functions/capabilities"
-import {
-  functionRunSupervisor,
-  type FunctionRunSupervisor,
-} from "../functions/supervisor"
+import { functionRunSupervisor } from "../functions/supervisor"
 import { JSONLimitError, validateJSONLimits } from "../functions/jsonLimits"
 
 const ERROR_MESSAGES: Record<FunctionErrorCode, string> = {
@@ -75,7 +74,7 @@ export interface FunctionCapabilitySession {
 }
 
 export interface ExecuteFunctionDependencies {
-  supervisor: Pick<FunctionRunSupervisor, "execute">
+  supervisor: Pick<FunctionSupervisor<SuperviseFunctionRunOptions>, "execute">
   functionsEnabled: () => Promise<boolean>
   getFunction: (functionId: string) => Promise<FunctionDocument | undefined>
   getReadiness: (fn: FunctionDocument) => Promise<FunctionReadiness>
