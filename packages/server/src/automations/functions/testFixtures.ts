@@ -16,7 +16,6 @@ export const FUNCTION_RUN_REQUEST_FIXTURE: FunctionRunRequest = {
     enabled: true,
     nested: { value: null },
   },
-  grantToken: "grant-token-fixture",
   limits: {
     maxInputBytes: 256 * 1024,
     maxInputDepth: 20,

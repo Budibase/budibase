@@ -30,6 +30,7 @@ const baseConfig: Config = {
     "@budibase/backend-core": "<rootDir>/../backend-core/src",
     "@budibase/shared-core": "<rootDir>/../shared-core/src",
     "@budibase/types": "<rootDir>/../types/src",
+    "@budibase/functions-runtime": "<rootDir>/../functions-runtime/src",
     "@budibase/string-templates/(.*)": ["<rootDir>/../string-templates/$1"],
     "@budibase/string-templates": ["<rootDir>/../string-templates/src"],
     "^chokidar$": "<rootDir>/__mocks__/chokidar.ts",

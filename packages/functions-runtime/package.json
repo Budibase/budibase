@@ -1,0 +1,44 @@
+{
+  "name": "@budibase/functions-runtime",
+  "version": "0.0.0",
+  "description": "Budibase shared Functions isolate runtime",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "author": "Budibase",
+  "license": "GPL-3.0",
+  "scripts": {
+    "prebuild": "rimraf dist/",
+    "build": "node ../../scripts/build.js && yarn build:types",
+    "build:dev": "yarn prebuild && tsc -p tsconfig.build.json --watch --preserveWatchOutput --paths null",
+    "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly --paths null",
+    "check:types": "tsc -p tsconfig.json --noEmit --incremental --paths null",
+    "test": "jest",
+    "test:watch": "yarn test --watchAll"
+  },
+  "dependencies": {
+    "@budibase/types": "*",
+    "isolated-vm": "^6.0.1",
+    "zod": "^4.2.1"
+  },
+  "devDependencies": {
+    "rimraf": "3.0.2"
+  },
+  "engines": {
+    "node": ">=22.13.0 <23.0.0"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/types"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
+  }
+}
