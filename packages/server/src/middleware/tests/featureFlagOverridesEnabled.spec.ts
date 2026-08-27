@@ -1,6 +1,6 @@
 import { features } from "@budibase/backend-core"
 import { FeatureFlag, type Ctx } from "@budibase/types"
-import { debugUIEnabled } from "../debugUIEnabled"
+import { featureFlagOverridesEnabled } from "../featureFlagOverridesEnabled"
 
 jest.mock("@budibase/backend-core", () => ({
   features: {
@@ -15,30 +15,30 @@ const createCtx = (): Ctx =>
     }),
   }) as unknown as Ctx
 
-describe("debugUIEnabled middleware", () => {
+describe("featureFlagOverridesEnabled middleware", () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
-  it("rejects overrides when trusted Debug UI is disabled", async () => {
+  it("rejects overrides when trusted overrides are disabled", async () => {
     jest.mocked(features.isEnabledWithoutOverrides).mockResolvedValue(false)
     const next = jest.fn()
 
-    await expect(debugUIEnabled(createCtx(), next)).rejects.toMatchObject({
-      status: 403,
-    })
+    await expect(
+      featureFlagOverridesEnabled(createCtx(), next)
+    ).rejects.toMatchObject({ status: 403 })
 
     expect(features.isEnabledWithoutOverrides).toHaveBeenCalledWith(
-      FeatureFlag.DEBUG_UI
+      FeatureFlag.FEATURE_FLAG_OVERRIDES
     )
     expect(next).not.toHaveBeenCalled()
   })
 
-  it("allows overrides when trusted Debug UI is enabled", async () => {
+  it("allows overrides when trusted overrides are enabled", async () => {
     jest.mocked(features.isEnabledWithoutOverrides).mockResolvedValue(true)
     const next = jest.fn()
 
-    await debugUIEnabled(createCtx(), next)
+    await featureFlagOverridesEnabled(createCtx(), next)
 
     expect(next).toHaveBeenCalled()
   })
