@@ -1,6 +1,6 @@
 #!/bin/sh
 
-packages_to_remove="@budibase/backend-core @budibase/bbui @budibase/builder @budibase/cli @budibase/client @budibase/frontend-core @budibase/pro @budibase/sdk @budibase/server @budibase/shared-core @budibase/string-templates @budibase/types @budibase/worker"
+packages_to_remove="@budibase/backend-core @budibase/bbui @budibase/builder @budibase/cli @budibase/client @budibase/frontend-core @budibase/functions-runtime @budibase/pro @budibase/sdk @budibase/server @budibase/shared-core @budibase/string-templates @budibase/types @budibase/worker"
 
 package_json_path="$1"
 
