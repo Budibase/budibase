@@ -30,9 +30,6 @@
   "nx": {
     "targets": {
       "build": {
-        "outputs": [
-          "{projectRoot}/dist"
-        ],
         "dependsOn": [
           {
             "projects": [
