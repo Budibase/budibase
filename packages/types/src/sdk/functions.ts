@@ -12,10 +12,8 @@ export enum FunctionErrorCode {
   FUNCTION_QUERY_DENIED = "FUNCTION_QUERY_DENIED",
   FUNCTION_QUERY_LIMIT = "FUNCTION_QUERY_LIMIT",
   FUNCTION_OUTPUT_INVALID = "FUNCTION_OUTPUT_INVALID",
-  FUNCTION_RUNNER_BUSY = "FUNCTION_RUNNER_BUSY",
-  FUNCTION_RUNNER_UNAVAILABLE = "FUNCTION_RUNNER_UNAVAILABLE",
+  FUNCTION_EXECUTOR_BUSY = "FUNCTION_EXECUTOR_BUSY",
   FUNCTION_ORCHESTRATOR_INTERRUPTED = "FUNCTION_ORCHESTRATOR_INTERRUPTED",
-  FUNCTION_PROTOCOL_ERROR = "FUNCTION_PROTOCOL_ERROR",
 }
 
 export interface FunctionError {
@@ -140,7 +138,6 @@ export interface FunctionRunRequest {
   runId: string
   artifact: FunctionArtifact
   inputs: Record<string, JSONValue>
-  grantToken: string
   limits: FunctionRunLimits
 }
 
@@ -153,12 +150,25 @@ export interface FunctionRunResult {
   error?: FunctionError
 }
 
-export interface FunctionExecutorHealth {
-  healthy: boolean
+export interface FunctionCapabilityRequest {
+  runId: string
+  capabilityId: string
+  parameters: Record<string, JSONValue>
+  signal: AbortSignal
+}
+
+export type FunctionCapabilityHandler = (
+  request: FunctionCapabilityRequest
+) => Promise<JSONValue>
+
+export interface FunctionExecutionContext {
+  signal: AbortSignal
+  invokeCapability: FunctionCapabilityHandler
 }
 
 export interface FunctionExecutor {
-  health: () => Promise<FunctionExecutorHealth>
-  execute: (request: FunctionRunRequest) => Promise<FunctionRunResult>
-  terminate: (runId: string) => Promise<void>
+  execute: (
+    request: FunctionRunRequest,
+    context: FunctionExecutionContext
+  ) => Promise<FunctionRunResult>
 }

@@ -1,3 +1,4 @@
+export const isolateBootstrap = `
 ;(() => {
   const deepFreeze = value => {
     if (value && typeof value === "object" && !Object.isFrozen(value)) {
@@ -10,12 +11,12 @@
   }
 
   const inputsValue = Reflect.get(globalThis, "__budibaseInputsValue")
-  const queryReference = Reflect.get(
+  const capabilityReference = Reflect.get(
     globalThis,
-    "__budibaseInvokeQueryReference"
+    "__budibaseInvokeCapabilityReference"
   )
-  const query = async (capabilityId, parameters) => {
-    const response = await queryReference.apply(
+  const invokeCapability = async (capabilityId, parameters) => {
+    const response = await capabilityReference.apply(
       undefined,
       [capabilityId, parameters],
       {
@@ -43,7 +44,7 @@
     configurable: false,
   })
   Object.defineProperty(globalThis, "__budibaseInvokeQuery", {
-    value: Object.freeze(query),
+    value: Object.freeze(invokeCapability),
     writable: false,
     configurable: false,
   })
@@ -53,5 +54,6 @@
     configurable: false,
   })
   Reflect.deleteProperty(globalThis, "__budibaseInputsValue")
-  Reflect.deleteProperty(globalThis, "__budibaseInvokeQueryReference")
+  Reflect.deleteProperty(globalThis, "__budibaseInvokeCapabilityReference")
 })()
+`
