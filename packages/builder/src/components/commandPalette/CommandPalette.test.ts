@@ -36,7 +36,7 @@ vi.mock("@/stores/bb", () => ({
 vi.mock("@/stores/portal", async () => {
   const { writable } = await import("svelte/store")
   const featureFlagsStore = writable({
-    DEBUG_UI: true,
+    FEATURE_FLAG_OVERRIDES: true,
     TEST_FLAG: false,
   })
 

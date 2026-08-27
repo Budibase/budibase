@@ -14,6 +14,7 @@
   import LogDetailsPanel from "@/components/automation/AutomationBuilder/FlowChart/LogDetailsPanel.svelte"
   import AutomationLogsPanel from "@/components/automation/AutomationBuilder/FlowChart/AutomationLogsPanel.svelte"
   import type { AutomationLog } from "@budibase/types"
+  import { getWorkspaceHomeUrl } from "@/helpers/workspaceHomeNavigation"
 
   const SIDE_PANEL_STORAGE_KEY = "automation-side-panel-width"
   const SIDE_PANEL_DEFAULT_WIDTH = 480
@@ -41,6 +42,7 @@
     )
   $: panelOpen = actionPanelOpen || stepPanelOpen
   $: panelWidth = panelOpen ? sidePanelWidth : 0
+  $: homeUrl = getWorkspaceHomeUrl($params.workspaceId)
   $: if (automationId) {
     builderStore.selectResource(automationId)
   }
@@ -79,7 +81,7 @@
 <div class="wrapper" class:resizing-panel={$builderStore.isResizingPanel}>
   <TopBar
     breadcrumbs={[
-      { text: "Automations", url: "../" },
+      { text: "Automations", url: homeUrl },
       { text: $selectedAutomation?.data?.name },
     ]}
     icon="path"
