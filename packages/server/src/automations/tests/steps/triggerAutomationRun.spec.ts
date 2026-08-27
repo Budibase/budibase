@@ -39,6 +39,26 @@ describe("Test triggering an automation from another automation", () => {
     expect(result.steps[0].outputs.success).toBe(true)
   })
 
+  it("should pass the triggering user to the child automation", async () => {
+    const { automation } = await createAutomationBuilder(config)
+      .onAppAction()
+      .serverLog({ text: "{{ [user].[email] }}" })
+      .save()
+
+    const result = await createAutomationBuilder(config)
+      .onAppAction()
+      .triggerAutomationRun({
+        automation: {
+          automationId: automation._id!,
+        },
+      })
+      .test({ fields: {} })
+
+    expect(result.steps[0].outputs.value[1].outputs.message).toContain(
+      "example.com"
+    )
+  })
+
   it("should fail gracefully if the automation id is incorrect", async () => {
     const result = await createAutomationBuilder(config)
       .onAppAction()

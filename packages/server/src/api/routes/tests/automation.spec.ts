@@ -373,6 +373,57 @@ describe("/automations", () => {
   })
 
   describe("test", () => {
+    it("rejects preview role selection by non-builders", async () => {
+      const runner = await createAutomationBuilder(config)
+        .onAppAction()
+        .serverLog({ text: "ran" })
+        .save()
+      await config.api.permission.add({
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        resourceId: runner.automation._id!,
+        level: PermissionLevel.EXECUTE,
+      })
+      const headers = await config.login({
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        userId: "automation-test-user@example.com",
+        builder: false,
+        prodApp: false,
+      })
+
+      await config.withHeaders(headers, async () => {
+        await config.api.automation.test(
+          runner.automation._id!,
+          {
+            fields: {},
+            previewRoleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+          },
+          {
+            status: 403,
+            body: {
+              message: "Only builders or admins can select a preview role",
+            },
+          }
+        )
+      })
+    })
+
+    it("rejects non-string preview roles", async () => {
+      const runner = await createAutomationBuilder(config)
+        .onAppAction()
+        .serverLog({ text: "ran" })
+        .save()
+
+      const response = await config
+        .request!.post(`/api/automations/${runner.automation._id}/test`)
+        .send({ fields: {}, previewRoleId: 123 })
+        .set(config.defaultHeaders())
+        .expect(400)
+
+      expect(response.body).toMatchObject({
+        message: "Preview role must be a string",
+      })
+    })
+
     it("runs with the selected preview role", async () => {
       const result = await createAutomationBuilder(config)
         .onAppAction()

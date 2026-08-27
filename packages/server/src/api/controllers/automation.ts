@@ -5,6 +5,7 @@ import {
   events,
   HTTPError,
   roles,
+  users,
 } from "@budibase/backend-core"
 import { automations, features } from "@budibase/pro"
 import { sdk as coreSdk } from "@budibase/shared-core"
@@ -377,7 +378,16 @@ export async function test(
   const { async: _async, previewRoleId, ...testBody } = body
 
   let testUser = ctx.user
-  if (previewRoleId) {
+  if (previewRoleId !== undefined) {
+    if (!users.isAdminOrBuilder(ctx.user, appId)) {
+      throw new HTTPError(
+        "Only builders or admins can select a preview role",
+        403
+      )
+    }
+    if (typeof previewRoleId !== "string") {
+      throw new HTTPError("Preview role must be a string", 400)
+    }
     const previewRole = await roles.getRole(previewRoleId)
     if (!previewRole?._id) {
       throw new HTTPError("Preview role not found", 400)

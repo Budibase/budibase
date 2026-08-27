@@ -207,13 +207,7 @@
         ...testData,
         previewRoleId,
       }
-      const updatedAuto =
-        automationStore.actions.addTestDataToAutomation(persistedTestData)
-      if (!updatedAuto) {
-        throw new Error("No automation selected")
-      }
-      const savedAuto = await automationStore.actions.save(updatedAuto)
-      await automationStore.actions.test(savedAuto, persistedTestData)
+      await automationStore.actions.test(automation, persistedTestData)
       automationStore.update(state => ({ ...state, showTestModal: false }))
     } catch (error) {
       notifications.error(getErrorMessage(error))
