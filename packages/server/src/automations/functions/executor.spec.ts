@@ -108,7 +108,7 @@ describe("LocalFunctionExecutor", () => {
     await expect(firstRun).resolves.toMatchObject({ status: "success" })
   })
 
-  it("stops execution and aborts capabilities when cancelled", async () => {
+  it("terminates execution and aborts capabilities when cancelled", async () => {
     const executor = new LocalFunctionExecutor()
     let markStarted = () => {}
     const capabilityStarted = new Promise<void>(resolve => {
@@ -133,7 +133,10 @@ describe("LocalFunctionExecutor", () => {
     await capabilityStarted
     await executor.terminate("executor-run")
 
-    await expect(result).resolves.toMatchObject({ status: "stopped" })
+    await expect(result).resolves.toMatchObject({
+      status: "error",
+      error: { code: FunctionErrorCode.FUNCTION_MEMORY_LIMIT },
+    })
   })
 
   it("terminates an active run by ID", async () => {
@@ -164,7 +167,10 @@ describe("LocalFunctionExecutor", () => {
     await capabilityStarted
     await executor.terminate("terminated-run")
 
-    await expect(result).resolves.toMatchObject({ status: "stopped" })
+    await expect(result).resolves.toMatchObject({
+      status: "error",
+      error: { code: FunctionErrorCode.FUNCTION_MEMORY_LIMIT },
+    })
   })
 
   it("rejects oversized inputs before creating an isolate", async () => {

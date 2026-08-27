@@ -53,6 +53,7 @@
     "@budibase/backend-core": "*",
     "@budibase/client": "*",
     "@budibase/frontend-core": "*",
+    "@budibase/functions-runtime": "*",
     "@budibase/nano": "10.1.6",
     "@budibase/pro": "*",
     "@budibase/shared-core": "*",
