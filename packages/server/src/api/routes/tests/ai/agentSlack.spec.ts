@@ -11,6 +11,7 @@ interface ChatMockModule {
     provider: "slack" | "teams",
     result: { usedFallback: boolean }
   ) => void
+  setMockSubscribeError: (error?: Error) => void
 }
 
 interface SlackManifest {
@@ -128,9 +129,11 @@ import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiC
 import { webhookChat } from "../../../controllers/ai/chatConversations"
 
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
-const { resetMockChatState, setMockPostEphemeralResult } = jest.requireActual(
-  "chat"
-) as ChatMockModule
+const {
+  resetMockChatState,
+  setMockPostEphemeralResult,
+  setMockSubscribeError,
+} = jest.requireActual("chat") as ChatMockModule
 
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
 const mockedGetFileUrlForAgent = jest.mocked(sdk.ai.rag.getFileUrlForAgent)
@@ -1066,6 +1069,33 @@ describe("agent slack integration provisioning", () => {
         `/${ChatCommands.LINK}`
       )
       expect(extractLinkUrl(response.body.messages)).toBeTruthy()
+    })
+
+    it("posts a fallback error when thread subscribe fails", async () => {
+      const { agent } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      setMockSubscribeError(new Error("missing conversations:write"))
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "hello slack",
+            user: "user-1",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+      expect(response.body.messages).toContain(
+        "Sorry, something went wrong while processing your request."
+      )
     })
 
     it("allows optional-link unlinked users and reuses their synthetic conversation", async () => {
