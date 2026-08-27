@@ -64,7 +64,7 @@
     date: { width: "0.8fr" },
     user: { width: "0.5fr" },
     name: { width: "2fr", displayName: "Event" },
-    app: { width: "1.5fr" },
+    app: { width: "1.5fr", displayName: "Workspace" },
     view: { width: "0.1fr", borderLeft: true, displayName: "" },
   }
 
