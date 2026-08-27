@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { tick } from "svelte"
   import {
     ModalContent,
@@ -8,21 +8,45 @@
     Select,
   } from "@budibase/bbui"
   import { automationStore, roles, selectedAutomation } from "@/stores/builder"
-  import { auth } from "@/stores/portal"
+  import { getErrorMessage } from "@/helpers/errors"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import { cloneDeep } from "lodash/fp"
-  import { AutomationEventType } from "@budibase/types"
+  import {
+    AutomationEventType,
+    type AutomationTrigger,
+    type AutomationTriggerResultOutputs,
+    type BaseIOStructure,
+  } from "@budibase/types"
   import { Constants } from "@budibase/frontend-core"
   import { onMount } from "svelte"
 
-  let failedParse = null
-  let trigger = {}
-  let schemaProperties = {}
+  type TestSchemaProperty = BaseIOStructure | { customType: "fields" }
+  type SchemaPropertyEntry = [string, TestSchemaProperty]
+
+  const requireSelectedAutomation = () => {
+    const automation = $selectedAutomation.data
+    if (!automation) {
+      throw new Error("No automation selected")
+    }
+    return automation
+  }
+
+  const getTriggerTableId = (trigger: AutomationTrigger) => {
+    const inputs = trigger.inputs
+    return inputs && typeof inputs === "object" && "tableId" in inputs
+      ? inputs.tableId
+      : undefined
+  }
+
+  let automation = requireSelectedAutomation()
+  let failedParse: string | undefined = undefined
+  let trigger: AutomationTrigger = cloneDeep(automation.definition.trigger)
+  let schemaProperties: SchemaPropertyEntry[] = []
   let previewRolesLoading = false
   let previewRoleId =
-    $selectedAutomation.data?.testData?.previewRoleId ||
-    $auth.user?.roleId ||
-    Constants.Roles.ADMIN
+    automation.testData?.previewRoleId || Constants.Roles.ADMIN
+
+  $: automation = requireSelectedAutomation()
 
   $: previewRoleOptions = $roles.map(role => ({
     label: role.uiMetadata?.displayName || role.name,
@@ -30,7 +54,7 @@
   }))
 
   const refreshPreviewRoles = async () => {
-    const workspaceId = $selectedAutomation.data?.appId
+    const workspaceId = automation.appId
     if (!workspaceId || previewRolesLoading) {
       return
     }
@@ -38,13 +62,13 @@
     try {
       await roles.fetchByAppId(workspaceId)
     } catch (error) {
-      notifications.error(error)
+      notifications.error(getErrorMessage(error))
     } finally {
       previewRolesLoading = false
     }
   }
 
-  const updatePreviewRole = async event => {
+  const updatePreviewRole = async (event: CustomEvent<string>) => {
     previewRoleId = event.detail
     testData = {
       ...testData,
@@ -53,6 +77,9 @@
     try {
       const updatedAuto =
         automationStore.actions.addTestDataToAutomation(testData)
+      if (!updatedAuto) {
+        throw new Error("No automation selected")
+      }
       await automationStore.actions.save(updatedAuto)
     } catch (error) {
       notifications.error("Error saving automation")
@@ -74,13 +101,16 @@
    * @returns {object} valid testData
    * @todo Parse *all* data for each trigger type and relay adequate feedback
    */
-  const parseTestData = testData => {
-    const autoTrigger = $selectedAutomation.data?.definition?.trigger
-    const { tableId } = autoTrigger?.inputs || {}
+  const parseTestData = (
+    testData: AutomationTriggerResultOutputs = {}
+  ): AutomationTriggerResultOutputs => {
+    const autoTrigger = automation.definition.trigger
+    const tableId = getTriggerTableId(autoTrigger)
 
     // Ensure the tableId matches the trigger table for row trigger automations
     if (
-      rowTriggers.includes(autoTrigger?.event) &&
+      autoTrigger.event &&
+      rowTriggers.includes(autoTrigger.event) &&
       testData?.row?.tableId !== tableId
     ) {
       return {
@@ -102,24 +132,27 @@
    * @returns {boolean} validation status
    * @todo Parse *all* trigger types relay adequate feedback
    */
-  const isTriggerValid = trigger => {
-    if (rowTriggers.includes(trigger?.event) && !trigger?.inputs?.tableId) {
+  const isTriggerValid = (trigger: AutomationTrigger) => {
+    const tableId = getTriggerTableId(trigger)
+    if (trigger.event && rowTriggers.includes(trigger.event) && !tableId) {
       return false
     }
     return true
   }
 
-  $: currentTestData = $selectedAutomation.data.testData
+  $: currentTestData = automation.testData
 
   // Can be updated locally to avoid race condition when testing
   $: testData = parseTestData(currentTestData)
 
   $: {
     // clone the trigger so we're not mutating the reference
-    trigger = cloneDeep($selectedAutomation.data.definition.trigger)
+    trigger = cloneDeep(automation.definition.trigger)
 
     // get the outputs so we can define the fields
-    let schema = Object.entries(trigger.schema?.outputs?.properties || {})
+    let schema: SchemaPropertyEntry[] = Object.entries(
+      trigger.schema.outputs.properties || {}
+    )
 
     if (trigger?.event === AutomationEventType.APP_TRIGGER) {
       schema = [["fields", { customType: "fields" }]]
@@ -131,22 +164,22 @@
   $: isError =
     !isTriggerValid(trigger) ||
     !(trigger.schema.outputs.required || []).every(
-      required => testData?.[required] || required !== "row"
+      (required: string) => testData?.[required] || required !== "row"
     )
 
-  async function parseTestJSON(e) {
-    let jsonUpdate
+  async function parseTestJSON(e: CustomEvent<string>) {
+    let jsonUpdate: AutomationTriggerResultOutputs
 
     try {
       jsonUpdate = JSON.parse(e.detail)
-      failedParse = null
-    } catch (e) {
+      failedParse = undefined
+    } catch (_error) {
       failedParse = "Invalid JSON"
       return false
     }
 
-    if (rowTriggers.includes(trigger?.event)) {
-      const tableId = trigger?.inputs?.tableId
+    if (trigger.event && rowTriggers.includes(trigger.event)) {
+      const tableId = getTriggerTableId(trigger)
 
       if (!jsonUpdate.row) {
         jsonUpdate.row = {}
@@ -160,6 +193,9 @@
 
     const updatedAuto =
       automationStore.actions.addTestDataToAutomation(jsonUpdate)
+    if (!updatedAuto) {
+      throw new Error("No automation selected")
+    }
     await automationStore.actions.save(updatedAuto)
   }
 
@@ -173,11 +209,14 @@
       }
       const updatedAuto =
         automationStore.actions.addTestDataToAutomation(persistedTestData)
+      if (!updatedAuto) {
+        throw new Error("No automation selected")
+      }
       const savedAuto = await automationStore.actions.save(updatedAuto)
       await automationStore.actions.test(savedAuto, persistedTestData)
       automationStore.update(state => ({ ...state, showTestModal: false }))
     } catch (error) {
-      notifications.error(error)
+      notifications.error(getErrorMessage(error))
     }
   }
 
@@ -225,11 +264,14 @@
   {#if selectedValues}
     <div class="tab-content-padding">
       <AutomationBlockSetup
+        {automation}
         {schemaProperties}
         isTestModal
         {testData}
         block={trigger}
-        on:update={e => {
+        on:update={(
+          e: CustomEvent<{ testData: AutomationTriggerResultOutputs }>
+        ) => {
           const { testData: updatedTestData } = e.detail
           testData = parseTestData(updatedTestData)
         }}
@@ -239,7 +281,7 @@
   {#if selectedJSON}
     <div class="text-area-container">
       <TextArea
-        value={JSON.stringify($selectedAutomation.data.testData, null, 2)}
+        value={JSON.stringify(automation.testData, null, 2)}
         error={failedParse}
         on:change={async e => await parseTestJSON(e)}
       />
