@@ -82,6 +82,10 @@ const MAX_PWA_ZIP_FILE_COUNT = 100
 const MAX_PWA_ZIP_ENTRY_SIZE = 10 * 1024 * 1024 // 10MB per file
 const MAX_PWA_ZIP_TOTAL_SIZE = 50 * 1024 * 1024 // 50MB uncompressed total
 const MAX_PWA_ZIP_DEPTH = 10
+// used in attribute checks for security remediation, see
+// https://github.com/Budibase/budibase/pull/19564
+const ZIP_FILE_TYPE_MASK = 0o170000
+const ZIP_SYMLINK_FILE_TYPE = 0o120000
 
 const validatePWAZipEntries = () => {
   let fileCount = 0
@@ -97,7 +101,8 @@ const validatePWAZipEntries = () => {
       return
     }
 
-    if (((entry.externalFileAttributes >>> 16) & 0o170000) === 0o120000) {
+    const fileType = (entry.externalFileAttributes >>> 16) & ZIP_FILE_TYPE_MASK
+    if (fileType === ZIP_SYMLINK_FILE_TYPE) {
       throw new BadRequestError(
         `Invalid zip`
       )
