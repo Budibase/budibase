@@ -83,9 +83,15 @@ vi.mock("@roxi/routify", () => {
       return () => {}
     },
   }
+  const params = {
+    subscribe: (run: (value: { workspaceId: string }) => void) => {
+      run({ workspaceId: "app_1" })
+      return () => {}
+    },
+  }
   return {
     goto: routeStore,
-    params: routeStore,
+    params,
     url: routeStore,
     redirect: routeStore,
     isActive: routeStore,

@@ -1127,25 +1127,30 @@ export async function execute(
       workspaceId,
       automationId,
       task: async () => {
-        try {
-          await reloadAutomation(job)
-          await context.ensureSnippetContext()
-          const envVars = await sdkUtils.getEnvironmentVariables()
-          await context.doInEnvironmentContext(envVars, async () => {
-            const orchestrator = new Orchestrator(job, {
-              isTestRun: job.data.isTestRun,
-            })
-            callback(null, await orchestrator.execute())
-          })
-        } catch (err) {
-          console.error(
-            "automation worker failed",
-            { _logKey: "automation", ...getAutomationLogContext(job) },
-            { _logKey: "bull", jobId: job.id },
-            { _logKey: "error", ...getErrorLogDetails(err) }
-          )
-          callback(err)
-        }
+        await context.doInFeatureFlagOverrideContext(
+          job.data.featureFlagOverrides || {},
+          async () => {
+            try {
+              await reloadAutomation(job)
+              await context.ensureSnippetContext()
+              const envVars = await sdkUtils.getEnvironmentVariables()
+              await context.doInEnvironmentContext(envVars, async () => {
+                const orchestrator = new Orchestrator(job, {
+                  isTestRun: job.data.isTestRun,
+                })
+                callback(null, await orchestrator.execute())
+              })
+            } catch (err) {
+              console.error(
+                "automation worker failed",
+                { _logKey: "automation", ...getAutomationLogContext(job) },
+                { _logKey: "bull", jobId: job.id },
+                { _logKey: "error", ...getErrorLogDetails(err) }
+              )
+              callback(err)
+            }
+          }
+        )
       },
     })
   })
@@ -1167,13 +1172,18 @@ export async function executeInThread(
     span.addTags({ workspaceId, automationId: job.data.automation?._id })
 
     return await context.doInWorkspaceContext(workspaceId, async () => {
-      await reloadAutomation(job)
-      await context.ensureSnippetContext()
-      const envVars = await sdkUtils.getEnvironmentVariables()
-      return await context.doInEnvironmentContext(envVars, async () => {
-        const orchestrator = new Orchestrator(job, opts)
-        return orchestrator.execute()
-      })
+      return await context.doInFeatureFlagOverrideContext(
+        job.data.featureFlagOverrides || {},
+        async () => {
+          await reloadAutomation(job)
+          await context.ensureSnippetContext()
+          const envVars = await sdkUtils.getEnvironmentVariables()
+          return await context.doInEnvironmentContext(envVars, async () => {
+            const orchestrator = new Orchestrator(job, opts)
+            return orchestrator.execute()
+          })
+        }
+      )
     })
   })
 }

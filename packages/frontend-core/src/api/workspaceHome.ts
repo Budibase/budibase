@@ -1,11 +1,11 @@
 import {
   GetGitHubStarsResponse,
-  GetWorkspaceHomeMetricsResponse,
+  GetTenantMetricsResponse,
 } from "@budibase/types"
 import { BaseAPIClient } from "./types"
 
 export interface WorkspaceHomeEndpoints {
-  getMetrics: () => Promise<GetWorkspaceHomeMetricsResponse>
+  getMetrics: () => Promise<GetTenantMetricsResponse>
   getGitHubStars: () => Promise<GetGitHubStarsResponse>
 }
 

@@ -73,6 +73,10 @@
   } from "../../toolAutocomplete"
   import { createSaveCoordinator } from "../../operationSaveCoordinator"
   import type { AgentTool } from "../../toolTypes"
+  import {
+    getWorkspaceHomeUrl,
+    withWorkspaceHomeReturn,
+  } from "@/helpers/workspaceHomeNavigation"
 
   const { goto, params } = routify
 
@@ -116,6 +120,7 @@
   let previousToolsLoaded = false
 
   let agent = $derived($selectedAgent)
+  let homeUrl = $derived(getWorkspaceHomeUrl($params.workspaceId))
   let agentId = $derived($params.agentId || agent?._id)
   let escalationProviders = $derived(configuredEscalationProviders(agent))
   let operationId = $derived($params.operationId)
@@ -290,7 +295,7 @@
     )
   )
 
-  const close = () => $goto("../../config")
+  const close = () => $goto(withWorkspaceHomeReturn("../../config"))
 
   const hasUnsavedInstructions = () =>
     operation && (operation.promptInstructions || "") !== lastSavedInstructions
@@ -956,8 +961,11 @@
     <TopBar
       icon="Effect"
       breadcrumbs={[
-        { text: "Agents", url: "../../../", tag: "Beta" },
-        { text: agent?.name || "Agent", url: "../../config" },
+        { text: "Agents", url: homeUrl, tag: "Beta" },
+        {
+          text: agent?.name || "Agent",
+          url: withWorkspaceHomeReturn("../../config"),
+        },
         { text: operationName },
       ]}
     />
