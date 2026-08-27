@@ -8,8 +8,9 @@
 
   let { row }: Props = $props()
   const user = $derived(row.user)
+  const displayUser = $derived(
+    user.email ? { ...user, email: user.email } : undefined
+  )
 </script>
 
-{#if user?.email}
-  <UserAvatar {user} />
-{/if}
+<UserAvatar user={displayUser} />
