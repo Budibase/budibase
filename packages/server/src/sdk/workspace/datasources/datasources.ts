@@ -43,6 +43,8 @@ const ENV_VAR_PREFIX = "env."
 const ENV_VAR_REFERENCE_PATTERN = new RegExp(
   `(?:^|[^A-Za-z0-9_.-])${ENV_VAR_PREFIX.replace(".", "\\.")}`
 )
+const ENV_VAR_BINDING_PATTERN =
+  /^(?:{{\s*env\.[A-Za-z0-9_.-]+\s*}}|{{{\s*env\.[A-Za-z0-9_.-]+\s*}}})$/
 
 export function addDatasourceFlags(datasource: Datasource) {
   datasource.isSQL = helpers.isSQL(datasource)
@@ -222,7 +224,7 @@ function isEnvVarBinding(str: unknown) {
   const blocks = findHBSBlocks(str)
   if (
     !blocks.length ||
-    blocks.some(block => !ENV_VAR_REFERENCE_PATTERN.test(block))
+    blocks.some(block => !ENV_VAR_BINDING_PATTERN.test(block))
   ) {
     return false
   }
