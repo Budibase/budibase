@@ -11,6 +11,7 @@ interface ChatMockModule {
     provider: "slack" | "teams",
     result: { usedFallback: boolean }
   ) => void
+  setMockSubscribeError: (error?: Error) => void
 }
 
 interface SlackManifest {
@@ -128,9 +129,11 @@ import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiC
 import { webhookChat } from "../../../controllers/ai/chatConversations"
 
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
-const { resetMockChatState, setMockPostEphemeralResult } = jest.requireActual(
-  "chat"
-) as ChatMockModule
+const {
+  resetMockChatState,
+  setMockPostEphemeralResult,
+  setMockSubscribeError,
+} = jest.requireActual("chat") as ChatMockModule
 
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
 const mockedGetFileUrlForAgent = jest.mocked(sdk.ai.rag.getFileUrlForAgent)
@@ -1068,6 +1071,33 @@ describe("agent slack integration provisioning", () => {
       expect(extractLinkUrl(response.body.messages)).toBeTruthy()
     })
 
+    it("posts a fallback error when thread subscribe fails", async () => {
+      const { agent } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      setMockSubscribeError(new Error("missing conversations:write"))
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "hello slack",
+            user: "user-1",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+      expect(response.body.messages).toContain(
+        "Sorry, something went wrong while processing your request."
+      )
+    })
+
     it("allows optional-link unlinked users and reuses their synthetic conversation", async () => {
       const { agent } = await setupProvisionedSlackAgent({
         requireUserLink: false,
@@ -1356,6 +1386,51 @@ describe("agent slack integration provisioning", () => {
       expect(response.body.messages.join("\n")).not.toContain("Sources:")
       expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
       expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
+    })
+
+    it("handles replies in a channel thread without another mention", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "<@U123> first question",
+            user: "user-1",
+            channel: "C123",
+            channel_type: "channel",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "follow-up question",
+            user: "user-1",
+            channel: "C123",
+            channel_type: "channel",
+            ts: "1700000000.200",
+            thread_ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain("Mock assistant response")
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(2)
+      const conversations = await fetchConversations()
+      expect(conversations).toHaveLength(1)
+      expect(conversations[0]?.messages).toHaveLength(4)
     })
 
     it("does not append RAG source links when downloads are disabled", async () => {
