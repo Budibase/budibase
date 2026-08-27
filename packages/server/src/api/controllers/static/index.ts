@@ -87,10 +87,20 @@ const validatePWAZipEntries = () => {
   let fileCount = 0
   let totalUncompressedSize = 0
 
-  return (entry: { fileName: string; uncompressedSize: number }) => {
+  return (entry: {
+    fileName: string
+    uncompressedSize: number
+    externalFileAttributes: number
+  }) => {
     // extract-zip skips these itself, so don't count them against the limits.
     if (entry.fileName.startsWith("__MACOSX/")) {
       return
+    }
+
+    if (((entry.externalFileAttributes >>> 16) & 0o170000) === 0o120000) {
+      throw new BadRequestError(
+        `Invalid zip - "${entry.fileName}" is a symlink, which is not allowed`
+      )
     }
 
     const depth =
