@@ -11,7 +11,8 @@ import {
   type PreviewProjectAssignmentResponse,
   ResourceType,
 } from "@budibase/types"
-import { describe, expect, it, vi } from "vitest"
+import { tick } from "svelte"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import MockBody from "@/test/mocks/MockBody.svelte"
 import MockCheckbox from "@/test/mocks/MockCheckbox.svelte"
 import MockModalContent from "@/test/mocks/MockModalContent.svelte"
@@ -68,8 +69,21 @@ const resource = {
   projectIds: ["project_1"],
 }
 const dependencyFingerprint = "dependency-fingerprint"
+const advancePreviewDebounce = async () => {
+  await vi.advanceTimersByTimeAsync(150)
+  await tick()
+}
 
 describe("AssignProjectModal", () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.clearAllTimers()
+    vi.useRealTimers()
+  })
+
   it("selects previewed dependencies by default and submits deselections", async () => {
     const onPreview = vi.fn().mockResolvedValue({
       dependencyFingerprint,
@@ -94,6 +108,7 @@ describe("AssignProjectModal", () => {
       props: { resource, onPreview, onConfirm },
     })
 
+    await advancePreviewDebounce()
     await waitFor(() =>
       expect(
         screen.getByText("2 of 2 dependencies will be added.")
@@ -132,6 +147,7 @@ describe("AssignProjectModal", () => {
       },
     })
 
+    await advancePreviewDebounce()
     await waitFor(() =>
       expect(screen.getByText(/Unable to load dependencies/)).toBeTruthy()
     )
@@ -170,6 +186,7 @@ describe("AssignProjectModal", () => {
       },
     })
 
+    await advancePreviewDebounce()
     await waitFor(() =>
       expect(
         screen.getByText("1 of 1 dependencies will be added.")
@@ -184,6 +201,7 @@ describe("AssignProjectModal", () => {
     reportingOption.selected = true
     await fireEvent.change(projectSelect)
 
+    await advancePreviewDebounce()
     await waitFor(() =>
       expect(
         screen.getByText("1 of 2 dependencies will be added.")
@@ -227,6 +245,7 @@ describe("AssignProjectModal", () => {
       },
     })
 
+    await advancePreviewDebounce()
     await waitFor(() => expect(onPreview).toHaveBeenCalledTimes(1))
     const projectSelect = screen.getByLabelText("Projects")
     const reportingOption = within(projectSelect).getByRole("option", {
@@ -234,6 +253,7 @@ describe("AssignProjectModal", () => {
     }) as HTMLOptionElement
     reportingOption.selected = true
     await fireEvent.change(projectSelect)
+    await advancePreviewDebounce()
     await waitFor(() => expect(onPreview).toHaveBeenCalledTimes(2))
 
     resolveSecond({
@@ -262,7 +282,7 @@ describe("AssignProjectModal", () => {
         },
       ],
     })
-    await Promise.resolve()
+    await tick()
 
     expect(screen.queryByText("Stale dependency")).toBeNull()
     expect(screen.getByText("Latest dependency")).toBeTruthy()
