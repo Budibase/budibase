@@ -8,7 +8,6 @@ import {
   type ExecuteFunctionStepOutputs,
   type FunctionDocument,
   type FunctionError,
-  type FunctionExecutor,
   type FunctionReadiness,
   type FunctionRunResult,
   type JSONValue,
@@ -18,7 +17,10 @@ import type {
   FunctionCapabilityService,
   FunctionInvocationScopeInput,
 } from "../functions/capabilities"
-import { functionExecutor } from "../functions/executor"
+import {
+  functionRunSupervisor,
+  type FunctionRunSupervisor,
+} from "../functions/supervisor"
 import { JSONLimitError, validateJSONLimits } from "../functions/jsonLimits"
 
 const ERROR_MESSAGES: Record<FunctionErrorCode, string> = {
@@ -73,7 +75,7 @@ export interface FunctionCapabilitySession {
 }
 
 export interface ExecuteFunctionDependencies {
-  executor: FunctionExecutor
+  supervisor: Pick<FunctionRunSupervisor, "execute">
   functionsEnabled: () => Promise<boolean>
   getFunction: (functionId: string) => Promise<FunctionDocument | undefined>
   getReadiness: (fn: FunctionDocument) => Promise<FunctionReadiness>
@@ -84,7 +86,7 @@ export interface ExecuteFunctionDependencies {
 }
 
 const defaultDependencies: ExecuteFunctionDependencies = {
-  executor: functionExecutor,
+  supervisor: functionRunSupervisor,
   functionsEnabled: areFunctionsEnabled,
   getFunction: async functionId =>
     (await import("../../sdk/workspace/functions")).get(functionId),
@@ -208,24 +210,8 @@ export const executeFunction = async (
     }
 
     const runId = dependencies.createRunId()
-    const abortController = new AbortController()
-    let terminationRequested = false
-    const terminateRun = () => {
-      if (terminationRequested) {
-        return
-      }
-      terminationRequested = true
-      abortController.abort()
-      dependencies.executor.terminate(runId).catch(() => {})
-    }
     const contextSignal =
       context.signal instanceof AbortSignal ? context.signal : undefined
-    if (contextSignal) {
-      contextSignal.addEventListener("abort", terminateRun, { once: true })
-      if (contextSignal.aborted) {
-        terminateRun()
-      }
-    }
     const capabilitySession = await dependencies.createCapabilitySession({
       runId,
       workspaceId: appId,
@@ -238,29 +224,23 @@ export const executeFunction = async (
       limits: DEFAULT_FUNCTION_LIMITS.run,
     })
     try {
-      const execution = dependencies.executor.execute(
-        {
+      const result = await dependencies.supervisor.execute({
+        request: {
           runId,
           artifact: fn.artifact,
           inputs: functionInputs,
           limits: DEFAULT_FUNCTION_LIMITS.run,
         },
-        {
-          signal: abortController.signal,
+        context: {
           invokeCapability: capabilitySession.invokeCapability,
-        }
-      )
-      if (abortController.signal.aborted) {
-        terminateRun()
-      }
-      const result = await execution
+        },
+        signal: contextSignal,
+      })
       if (result.runId !== runId) {
         throw new FunctionActionError(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
       }
       return resultToOutputs(result)
     } finally {
-      contextSignal?.removeEventListener("abort", terminateRun)
-      abortController.abort()
       capabilitySession.close()
     }
   } catch (error) {
