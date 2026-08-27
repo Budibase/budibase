@@ -4,6 +4,7 @@ import type {
   FunctionRunRequest,
   JSONValue,
 } from "@budibase/types"
+import env from "../../environment"
 import { LocalFunctionExecutor } from "./executor"
 import { FUNCTION_RUN_REQUEST_FIXTURE } from "./testFixtures"
 
@@ -32,6 +33,55 @@ describe("LocalFunctionExecutor", () => {
     await expect(new LocalFunctionExecutor().health()).resolves.toEqual({
       healthy: true,
     })
+  })
+
+  it("uses the configured service concurrency limit by default", async () => {
+    const configuredMaxConcurrentRuns =
+      env.FUNCTIONS_LIMITS.service.maxConcurrentRuns
+    env.FUNCTIONS_LIMITS.service.maxConcurrentRuns = 1
+
+    try {
+      const executor = new LocalFunctionExecutor()
+      let releaseCapability = (_value: JSONValue) => {}
+      let markStarted = () => {}
+      const capabilityStarted = new Promise<void>(resolve => {
+        markStarted = resolve
+      })
+      const capabilityResult = new Promise<JSONValue>(resolve => {
+        releaseCapability = resolve
+      })
+      const invokeCapability = async () => {
+        markStarted()
+        return capabilityResult
+      }
+      const compiledJavaScript = `
+        export default async function run() {
+          await globalThis.__budibaseInvokeQuery("capability-1", {})
+          return { output: {} }
+        }
+      `
+      const firstRun = executor.execute(
+        request(compiledJavaScript, "first-configured-run"),
+        context(invokeCapability)
+      )
+      await capabilityStarted
+
+      await expect(
+        executor.execute(
+          request(compiledJavaScript, "second-configured-run"),
+          context(invokeCapability)
+        )
+      ).resolves.toMatchObject({
+        status: "error",
+        error: { code: FunctionErrorCode.FUNCTION_EXECUTOR_BUSY },
+      })
+
+      releaseCapability({})
+      await expect(firstRun).resolves.toMatchObject({ status: "success" })
+    } finally {
+      env.FUNCTIONS_LIMITS.service.maxConcurrentRuns =
+        configuredMaxConcurrentRuns
+    }
   })
 
   it("runs a Function with a direct capability callback", async () => {
@@ -108,69 +158,50 @@ describe("LocalFunctionExecutor", () => {
     await expect(firstRun).resolves.toMatchObject({ status: "success" })
   })
 
-  it("terminates execution and aborts capabilities when cancelled", async () => {
+  it("terminates only the requested active run", async () => {
     const executor = new LocalFunctionExecutor()
-    let markStarted = () => {}
-    const capabilityStarted = new Promise<void>(resolve => {
-      markStarted = resolve
+    const startedRuns = new Set<string>()
+    let markBothStarted = () => {}
+    const bothStarted = new Promise<void>(resolve => {
+      markBothStarted = resolve
     })
-    const invokeCapability: FunctionCapabilityHandler = request => {
-      markStarted()
-      return new Promise((_resolve, reject) => {
-        request.signal.addEventListener("abort", () => reject(new Error()))
+    const capabilityResolvers = new Map<string, (value: JSONValue) => void>()
+    const invokeCapability: FunctionCapabilityHandler = capabilityRequest => {
+      startedRuns.add(capabilityRequest.runId)
+      if (startedRuns.size === 2) {
+        markBothStarted()
+      }
+      return new Promise((resolve, reject) => {
+        capabilityResolvers.set(capabilityRequest.runId, resolve)
+        capabilityRequest.signal.addEventListener("abort", () =>
+          reject(new Error())
+        )
       })
     }
-
-    const result = executor.execute(
-      request(`
+    const compiledJavaScript = `
         export default async function run() {
           await globalThis.__budibaseInvokeQuery("capability-1", {})
           return { output: {} }
         }
-      `),
+      `
+
+    const terminatedRun = executor.execute(
+      request(compiledJavaScript, "terminated-run"),
       context(invokeCapability)
     )
-    await capabilityStarted
-    await executor.terminate("executor-run")
-
-    await expect(result).resolves.toMatchObject({
-      status: "error",
-      error: { code: FunctionErrorCode.FUNCTION_MEMORY_LIMIT },
-    })
-  })
-
-  it("terminates an active run by ID", async () => {
-    const executor = new LocalFunctionExecutor()
-    let markStarted = () => {}
-    const capabilityStarted = new Promise<void>(resolve => {
-      markStarted = resolve
-    })
-    const invokeCapability: FunctionCapabilityHandler = request => {
-      markStarted()
-      return new Promise((_resolve, reject) => {
-        request.signal.addEventListener("abort", () => reject(new Error()))
-      })
-    }
-
-    const result = executor.execute(
-      request(
-        `
-        export default async function run() {
-          await globalThis.__budibaseInvokeQuery("capability-1", {})
-          return { output: {} }
-        }
-      `,
-        "terminated-run"
-      ),
+    const activeRun = executor.execute(
+      request(compiledJavaScript, "active-run"),
       context(invokeCapability)
     )
-    await capabilityStarted
+    await bothStarted
     await executor.terminate("terminated-run")
+    capabilityResolvers.get("active-run")?.({})
 
-    await expect(result).resolves.toMatchObject({
+    await expect(terminatedRun).resolves.toMatchObject({
       status: "error",
       error: { code: FunctionErrorCode.FUNCTION_MEMORY_LIMIT },
     })
+    await expect(activeRun).resolves.toMatchObject({ status: "success" })
   })
 
   it("rejects oversized inputs before creating an isolate", async () => {
@@ -185,6 +216,31 @@ describe("LocalFunctionExecutor", () => {
 
     await expect(
       executor.execute(runRequest, context(noCapabilities))
+    ).resolves.toMatchObject({
+      status: "error",
+      error: {
+        code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+        message: "Function input is invalid",
+      },
+    })
+  })
+
+  it("returns invalid input when validation throws an unexpected error", async () => {
+    const circularInputs: Record<string, JSONValue> = {}
+    circularInputs.self = circularInputs
+    const runRequest = request(`
+      export default async function run() {
+        return { output: {} }
+      }
+    `)
+    runRequest.inputs = circularInputs
+    runRequest.limits = {
+      ...runRequest.limits,
+      maxInputDepth: Number.MAX_SAFE_INTEGER,
+    }
+
+    await expect(
+      new LocalFunctionExecutor().execute(runRequest, context(noCapabilities))
     ).resolves.toMatchObject({
       status: "error",
       error: {
