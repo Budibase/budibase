@@ -209,17 +209,21 @@ export const executeFunction = async (
 
     const runId = dependencies.createRunId()
     const abortController = new AbortController()
-    if (context.signal instanceof AbortSignal) {
-      if (context.signal.aborted) {
-        abortController.abort()
-      } else {
-        context.signal.addEventListener(
-          "abort",
-          () => abortController.abort(),
-          {
-            once: true,
-          }
-        )
+    let terminationRequested = false
+    const terminateRun = () => {
+      if (terminationRequested) {
+        return
+      }
+      terminationRequested = true
+      abortController.abort()
+      dependencies.executor.terminate(runId).catch(() => {})
+    }
+    const contextSignal =
+      context.signal instanceof AbortSignal ? context.signal : undefined
+    if (contextSignal) {
+      contextSignal.addEventListener("abort", terminateRun, { once: true })
+      if (contextSignal.aborted) {
+        terminateRun()
       }
     }
     const capabilitySession = await dependencies.createCapabilitySession({
@@ -234,7 +238,7 @@ export const executeFunction = async (
       limits: DEFAULT_FUNCTION_LIMITS.run,
     })
     try {
-      const result = await dependencies.executor.execute(
+      const execution = dependencies.executor.execute(
         {
           runId,
           artifact: fn.artifact,
@@ -246,11 +250,16 @@ export const executeFunction = async (
           invokeCapability: capabilitySession.invokeCapability,
         }
       )
+      if (abortController.signal.aborted) {
+        terminateRun()
+      }
+      const result = await execution
       if (result.runId !== runId) {
         throw new FunctionActionError(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
       }
       return resultToOutputs(result)
     } finally {
+      contextSignal?.removeEventListener("abort", terminateRun)
       abortController.abort()
       capabilitySession.close()
     }
