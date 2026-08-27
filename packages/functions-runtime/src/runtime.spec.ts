@@ -2,7 +2,7 @@ import type {
   FunctionCapabilityHandler,
   FunctionRunRequest,
 } from "@budibase/types"
-import { startFunctionInIsolate } from "./runtime"
+import { executeFunctionInIsolate } from "./runtime"
 
 const request = (compiledJavaScript: string): FunctionRunRequest => ({
   runId: "runtime-run",
@@ -35,7 +35,7 @@ const request = (compiledJavaScript: string): FunctionRunRequest => ({
 const execute = (
   runRequest: FunctionRunRequest,
   invokeCapability: FunctionCapabilityHandler
-) => startFunctionInIsolate(runRequest, { invokeCapability }).result
+) => executeFunctionInIsolate(runRequest, { invokeCapability })
 
 describe("Function runtime", () => {
   it("runs with an injected capability handler", async () => {
@@ -60,25 +60,38 @@ describe("Function runtime", () => {
     })
   })
 
-  it("exposes termination for a host that owns the isolate", async () => {
+  it("registers termination for a host that owns the isolate", async () => {
     const invokeCapability: FunctionCapabilityHandler = request => {
       return new Promise((_resolve, reject) => {
         request.signal.addEventListener("abort", () => reject(new Error()))
       })
     }
+    const abortController = new AbortController()
 
-    const execution = startFunctionInIsolate(
+    const result = executeFunctionInIsolate(
       request(`
         export default async function run() {
           await globalThis.__budibaseInvokeQuery("capability-1", {})
           return { output: {} }
         }
       `),
-      { invokeCapability }
+      {
+        invokeCapability,
+        registerTermination: terminate => {
+          abortController.signal.addEventListener("abort", terminate, {
+            once: true,
+          })
+          if (abortController.signal.aborted) {
+            terminate()
+          }
+          return () =>
+            abortController.signal.removeEventListener("abort", terminate)
+        },
+      }
     )
-    execution.terminate()
+    abortController.abort()
 
-    await expect(execution.result).resolves.toMatchObject({
+    await expect(result).resolves.toMatchObject({
       runId: "runtime-run",
     })
   })

@@ -182,194 +182,180 @@ const createFailure = (
   },
 })
 
+export type TerminationHandler = () => void
+export type UnregisterTermination = () => void
+
 export interface FunctionRuntimeContext {
   invokeCapability: FunctionCapabilityHandler
+  /** Required by the internal runner to terminate an active isolate. */
+  registerTermination?: (terminate: TerminationHandler) => UnregisterTermination
 }
 
-export interface FunctionRuntimeExecution {
-  result: Promise<FunctionRunResult>
-  terminate: () => void
-}
-
-export const startFunctionInIsolate = (
+export const executeFunctionInIsolate = async (
   request: FunctionRunRequest,
   runtimeContext: FunctionRuntimeContext
-): FunctionRuntimeExecution => {
-  let terminated = false
-  let terminateRuntime = () => {}
-  const result = (async (): Promise<FunctionRunResult> => {
-    const startedAt = Date.now()
-    let queryCount = 0
-    let concurrentQueryCount = 0
-    let queryLimitExceeded = false
-    let queryDenied = false
-    const allowedCapabilityIds = new Set(request.artifact.capabilityIds)
-    let errorCode: FunctionErrorCode = FunctionErrorCode.FUNCTION_RUNTIME_ERROR
-    let wallTimedOut = false
-    const queryAbortController = new AbortController()
-    let isolate: ivm.Isolate
-    try {
-      isolate = new ivm.Isolate({
-        memoryLimit: request.limits.isolateMemoryLimitMb,
-      })
-    } catch {
-      return createFailure(request, startedAt, queryCount, errorCode)
-    }
+): Promise<FunctionRunResult> => {
+  const startedAt = Date.now()
+  let queryCount = 0
+  let concurrentQueryCount = 0
+  let queryLimitExceeded = false
+  let queryDenied = false
+  const allowedCapabilityIds = new Set(request.artifact.capabilityIds)
+  let errorCode: FunctionErrorCode = FunctionErrorCode.FUNCTION_RUNTIME_ERROR
+  let wallTimedOut = false
+  const queryAbortController = new AbortController()
+  let isolate: ivm.Isolate
+  try {
+    isolate = new ivm.Isolate({
+      memoryLimit: request.limits.isolateMemoryLimitMb,
+    })
+  } catch {
+    return createFailure(request, startedAt, queryCount, errorCode)
+  }
 
-    terminateRuntime = () => {
-      queryAbortController.abort()
-      if (!isolate.isDisposed) {
-        isolate.dispose()
-      }
+  const terminateRuntime = () => {
+    queryAbortController.abort()
+    if (!isolate.isDisposed) {
+      isolate.dispose()
     }
-    if (terminated) {
-      terminateRuntime()
-    }
+  }
+  const unregisterTermination =
+    runtimeContext.registerTermination?.(terminateRuntime)
 
-    const wallTimer = setTimeout(() => {
-      wallTimedOut = true
-      queryAbortController.abort()
-      if (!isolate.isDisposed) {
-        isolate.dispose()
-      }
-    }, request.limits.timeoutMs)
+  const wallTimer = setTimeout(() => {
+    wallTimedOut = true
+    terminateRuntime()
+  }, request.limits.timeoutMs)
 
-    try {
-      const context = await isolate.createContext()
-      const capabilityReference = new ivm.Reference(
-        async (capabilityIdValue: unknown, parametersValue: unknown) => {
-          if (typeof capabilityIdValue !== "string" || !capabilityIdValue) {
-            queryDenied = true
-            errorCode = FunctionErrorCode.FUNCTION_QUERY_DENIED
-            return { error: QUERY_DENIED_MESSAGE }
-          }
-          if (!allowedCapabilityIds.has(capabilityIdValue)) {
-            queryDenied = true
-            errorCode = FunctionErrorCode.FUNCTION_QUERY_DENIED
-            return { error: QUERY_DENIED_MESSAGE }
-          }
-          let parameters: Record<string, JSONValue>
-          try {
-            parameters = normalizeRecord(
-              parametersValue,
-              request.limits.maxInputDepth,
-              request.limits.maxInputBytes,
-              QUERY_DENIED_MESSAGE
-            ).normalized
-          } catch {
-            queryDenied = true
-            errorCode = FunctionErrorCode.FUNCTION_QUERY_DENIED
-            return { error: QUERY_DENIED_MESSAGE }
-          }
-          if (
-            queryCount >= request.limits.maxQueryCalls ||
-            concurrentQueryCount >= request.limits.maxConcurrentQueryCalls
-          ) {
-            queryLimitExceeded = true
-            errorCode = FunctionErrorCode.FUNCTION_QUERY_LIMIT
-            return { error: QUERY_LIMIT_MESSAGE }
-          }
-          queryCount += 1
-          concurrentQueryCount += 1
-          let result: JSONValue
-          try {
-            result = await runtimeContext.invokeCapability({
-              runId: request.runId,
-              capabilityId: capabilityIdValue,
-              parameters,
-              signal: queryAbortController.signal,
-            })
-          } catch {
-            return { error: QUERY_FAILED_MESSAGE }
-          } finally {
-            concurrentQueryCount -= 1
-          }
-          try {
-            return {
-              result: normalizeValue(
-                result,
-                request.limits.maxQueryResponseDepth,
-                request.limits.maxQueryResponseBytes,
-                QUERY_DENIED_MESSAGE
-              ).normalized,
-            }
-          } catch {
-            queryDenied = true
-            errorCode = FunctionErrorCode.FUNCTION_QUERY_DENIED
-            return { error: QUERY_DENIED_MESSAGE }
-          }
+  try {
+    const context = await isolate.createContext()
+    const capabilityReference = new ivm.Reference(
+      async (capabilityIdValue: unknown, parametersValue: unknown) => {
+        if (typeof capabilityIdValue !== "string" || !capabilityIdValue) {
+          queryDenied = true
+          errorCode = FunctionErrorCode.FUNCTION_QUERY_DENIED
+          return { error: QUERY_DENIED_MESSAGE }
         }
+        if (!allowedCapabilityIds.has(capabilityIdValue)) {
+          queryDenied = true
+          errorCode = FunctionErrorCode.FUNCTION_QUERY_DENIED
+          return { error: QUERY_DENIED_MESSAGE }
+        }
+        let parameters: Record<string, JSONValue>
+        try {
+          parameters = normalizeRecord(
+            parametersValue,
+            request.limits.maxInputDepth,
+            request.limits.maxInputBytes,
+            QUERY_DENIED_MESSAGE
+          ).normalized
+        } catch {
+          queryDenied = true
+          errorCode = FunctionErrorCode.FUNCTION_QUERY_DENIED
+          return { error: QUERY_DENIED_MESSAGE }
+        }
+        if (
+          queryCount >= request.limits.maxQueryCalls ||
+          concurrentQueryCount >= request.limits.maxConcurrentQueryCalls
+        ) {
+          queryLimitExceeded = true
+          errorCode = FunctionErrorCode.FUNCTION_QUERY_LIMIT
+          return { error: QUERY_LIMIT_MESSAGE }
+        }
+        queryCount += 1
+        concurrentQueryCount += 1
+        let result: JSONValue
+        try {
+          result = await runtimeContext.invokeCapability({
+            runId: request.runId,
+            capabilityId: capabilityIdValue,
+            parameters,
+            signal: queryAbortController.signal,
+          })
+        } catch {
+          return { error: QUERY_FAILED_MESSAGE }
+        } finally {
+          concurrentQueryCount -= 1
+        }
+        try {
+          return {
+            result: normalizeValue(
+              result,
+              request.limits.maxQueryResponseDepth,
+              request.limits.maxQueryResponseBytes,
+              QUERY_DENIED_MESSAGE
+            ).normalized,
+          }
+        } catch {
+          queryDenied = true
+          errorCode = FunctionErrorCode.FUNCTION_QUERY_DENIED
+          return { error: QUERY_DENIED_MESSAGE }
+        }
+      }
+    )
+    try {
+      const jail = context.global
+      await jail.set("globalThis", jail.derefInto())
+      await jail.set(
+        "__budibaseInputsValue",
+        new ivm.ExternalCopy(request.inputs).copyInto({ release: true })
+      )
+      await jail.set("__budibaseInvokeCapabilityReference", capabilityReference)
+
+      const bootstrap = await isolate.compileScript(isolateBootstrap, {
+        filename: "function:///sdk.js",
+      })
+      try {
+        await bootstrap.run(context, { timeout: request.limits.timeoutMs })
+      } finally {
+        bootstrap.release()
+      }
+
+      const artifact = await isolate.compileModule(
+        request.artifact.compiledJavaScript,
+        { filename: "function:///artifact.js" }
       )
       try {
-        const jail = context.global
-        await jail.set("globalThis", jail.derefInto())
-        await jail.set(
-          "__budibaseInputsValue",
-          new ivm.ExternalCopy(request.inputs).copyInto({ release: true })
-        )
-        await jail.set(
-          "__budibaseInvokeCapabilityReference",
-          capabilityReference
-        )
+        if (artifact.dependencySpecifiers.length > 0) {
+          throw new Error("Function artifact contains unresolved imports")
+        }
+        await artifact.instantiate(context, () => {
+          throw new Error("Function artifact contains unresolved imports")
+        })
+        await artifact.evaluate({ timeout: request.limits.timeoutMs })
 
-        const bootstrap = await isolate.compileScript(isolateBootstrap, {
-          filename: "function:///sdk.js",
+        const entrypoint = await artifact.namespace.get("default", {
+          reference: true,
         })
         try {
-          await bootstrap.run(context, { timeout: request.limits.timeoutMs })
-        } finally {
-          bootstrap.release()
-        }
-
-        const artifact = await isolate.compileModule(
-          request.artifact.compiledJavaScript,
-          { filename: "function:///artifact.js" }
-        )
-        try {
-          if (artifact.dependencySpecifiers.length > 0) {
-            throw new Error("Function artifact contains unresolved imports")
+          if (entrypoint.typeof !== "function") {
+            throw new Error("Function artifact has no default entrypoint")
           }
-          await artifact.instantiate(context, () => {
-            throw new Error("Function artifact contains unresolved imports")
+          const value: unknown = await entrypoint.apply(undefined, [], {
+            result: { copy: true, promise: true },
+            timeout: request.limits.timeoutMs,
           })
-          await artifact.evaluate({ timeout: request.limits.timeoutMs })
-
-          const entrypoint = await artifact.namespace.get("default", {
-            reference: true,
-          })
+          if (queryLimitExceeded || queryDenied) {
+            return createFailure(
+              request,
+              startedAt,
+              queryCount,
+              queryLimitExceeded
+                ? FunctionErrorCode.FUNCTION_QUERY_LIMIT
+                : FunctionErrorCode.FUNCTION_QUERY_DENIED
+            )
+          }
           try {
-            if (entrypoint.typeof !== "function") {
-              throw new Error("Function artifact has no default entrypoint")
-            }
-            const value: unknown = await entrypoint.apply(undefined, [], {
-              result: { copy: true, promise: true },
-              timeout: request.limits.timeoutMs,
-            })
-            if (queryLimitExceeded || queryDenied) {
-              return createFailure(
-                request,
-                startedAt,
-                queryCount,
-                queryLimitExceeded
-                  ? FunctionErrorCode.FUNCTION_QUERY_LIMIT
-                  : FunctionErrorCode.FUNCTION_QUERY_DENIED
-              )
-            }
-            try {
-              return createResult(request, startedAt, queryCount, value)
-            } catch {
-              errorCode = FunctionErrorCode.FUNCTION_OUTPUT_INVALID
-              throw new FunctionOutputError(INVALID_OUTPUT_MESSAGE)
-            }
-          } finally {
-            entrypoint.release()
+            return createResult(request, startedAt, queryCount, value)
+          } catch {
+            errorCode = FunctionErrorCode.FUNCTION_OUTPUT_INVALID
+            throw new FunctionOutputError(INVALID_OUTPUT_MESSAGE)
           }
         } finally {
-          artifact.release()
+          entrypoint.release()
         }
       } finally {
-        capabilityReference.release()
-        context.release()
+        artifact.release()
       }
     } catch (error) {
       if (wallTimedOut) {
@@ -383,19 +369,12 @@ export const startFunctionInIsolate = (
       }
       return createFailure(request, startedAt, queryCount, errorCode)
     } finally {
-      clearTimeout(wallTimer)
-      queryAbortController.abort()
-      if (!isolate.isDisposed) {
-        isolate.dispose()
-      }
+      capabilityReference.release()
+      context.release()
     }
-  })()
-
-  return {
-    result,
-    terminate: () => {
-      terminated = true
-      terminateRuntime()
-    },
+  } finally {
+    clearTimeout(wallTimer)
+    unregisterTermination?.()
+    terminateRuntime()
   }
 }

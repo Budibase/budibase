@@ -1,9 +1,10 @@
 export {
   FUNCTION_INPUTS_GLOBAL,
   FUNCTION_INVOKE_QUERY_GLOBAL,
-  startFunctionInIsolate,
+  executeFunctionInIsolate,
 } from "./runtime"
 export type {
   FunctionRuntimeContext,
-  FunctionRuntimeExecution,
+  TerminationHandler,
+  UnregisterTermination,
 } from "./runtime"

@@ -3,7 +3,7 @@ import type {
   FunctionCapabilityHandler,
   FunctionRunRequest,
 } from "@budibase/types"
-import { executeFunctionInIsolate as executeRuntime } from "./internal-runtime"
+import { executeInternalFunctionInIsolate } from "./internal-runtime"
 import { FUNCTION_RUN_REQUEST_FIXTURE } from "./testFixtures"
 
 const request = (compiledJavaScript: string, runId = "isolate-run") => ({
@@ -23,7 +23,7 @@ const executeFunctionInIsolate = (
   runRequest: FunctionRunRequest,
   invokeCapability: FunctionCapabilityHandler
 ) =>
-  executeRuntime(runRequest, {
+  executeInternalFunctionInIsolate(runRequest, {
     signal: new AbortController().signal,
     invokeCapability,
   })

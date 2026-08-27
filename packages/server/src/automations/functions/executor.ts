@@ -6,7 +6,7 @@ import type {
   FunctionRunRequest,
   FunctionRunResult,
 } from "@budibase/types"
-import { executeFunctionInIsolate } from "./internal-runtime"
+import { executeInternalFunctionInIsolate } from "./internal-runtime"
 import { JSONLimitError, validateJSONLimits } from "./jsonLimits"
 
 const BUSY_MESSAGE = "Function executor is busy"
@@ -93,7 +93,7 @@ export class LocalFunctionExecutor implements FunctionExecutor {
     const runController = new AbortController()
     this.runControllers.set(request.runId, runController)
     try {
-      return await executeFunctionInIsolate(request, {
+      return await executeInternalFunctionInIsolate(request, {
         signal: runController.signal,
         invokeCapability: context.invokeCapability,
       })

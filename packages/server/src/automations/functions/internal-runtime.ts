@@ -3,36 +3,33 @@ import type {
   FunctionRunRequest,
   FunctionRunResult,
 } from "@budibase/types"
-import { startFunctionInIsolate } from "@budibase/functions-runtime"
+import { executeFunctionInIsolate } from "@budibase/functions-runtime"
 
 export interface InternalFunctionRuntimeContext {
   signal: AbortSignal
   invokeCapability: FunctionCapabilityHandler
 }
 
-export const executeFunctionInIsolate = async (
+export const executeInternalFunctionInIsolate = (
   request: FunctionRunRequest,
   runtimeContext: InternalFunctionRuntimeContext
-): Promise<FunctionRunResult> => {
-  let terminationRequested = false
-  const execution = startFunctionInIsolate(request, {
+): Promise<FunctionRunResult> =>
+  executeFunctionInIsolate(request, {
     invokeCapability: runtimeContext.invokeCapability,
-  })
-  const terminate = () => {
-    if (terminationRequested) {
-      return
-    }
-    terminationRequested = true
-    execution.terminate()
-  }
+    registerTermination: terminateRuntime => {
+      let terminationRequested = false
+      const terminate = () => {
+        if (terminationRequested) {
+          return
+        }
+        terminationRequested = true
+        terminateRuntime()
+      }
 
-  runtimeContext.signal.addEventListener("abort", terminate, { once: true })
-  if (runtimeContext.signal.aborted) {
-    terminate()
-  }
-  try {
-    return await execution.result
-  } finally {
-    runtimeContext.signal.removeEventListener("abort", terminate)
-  }
-}
+      runtimeContext.signal.addEventListener("abort", terminate, { once: true })
+      if (runtimeContext.signal.aborted) {
+        terminate()
+      }
+      return () => runtimeContext.signal.removeEventListener("abort", terminate)
+    },
+  })
