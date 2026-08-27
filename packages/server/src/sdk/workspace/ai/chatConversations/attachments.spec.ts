@@ -184,4 +184,126 @@ describe("conversation attachments", () => {
       },
     ])
   })
+
+  it("rejects ambiguous filename matches when attachments are filtered", async () => {
+    mockSearch.mockResolvedValue([
+      {
+        filename: "report.pdf",
+        content: "Content from the unselected attachment.",
+      },
+      {
+        file_id: "rag-selected",
+        filename: "report.pdf",
+        content: "Content from the selected attachment.",
+      },
+    ])
+
+    const messages = await addConversationAttachmentsToModelMessages({
+      messages: [{ role: "user", content: "What was in the report?" }],
+      conversation: {
+        _id: "chat_1",
+        attachmentVectorStoreId: "store_1",
+        attachments: [
+          {
+            id: "attachment_selected",
+            provider: AgentChannelProvider.SLACK,
+            providerFileId: "F1",
+            filename: "report.pdf",
+            mimetype: "application/pdf",
+            size: 1024,
+            status: ConversationAttachmentStatus.READY,
+            ragSourceId: "rag-selected",
+            uploadedAt: new Date().toISOString(),
+          },
+          {
+            id: "attachment_unselected",
+            provider: AgentChannelProvider.SLACK,
+            providerFileId: "F2",
+            filename: "report.pdf",
+            mimetype: "application/pdf",
+            size: 1024,
+            status: ConversationAttachmentStatus.READY,
+            ragSourceId: "rag-unselected",
+            uploadedAt: new Date().toISOString(),
+          },
+        ],
+      },
+      attachmentIds: ["attachment_selected"],
+    })
+
+    expect(messages).toEqual([
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "What was in the report?" },
+          {
+            type: "text",
+            text: expect.stringContaining(
+              "Content from the selected attachment."
+            ),
+          },
+        ],
+      },
+    ])
+    expect(JSON.stringify(messages)).not.toContain(
+      "Content from the unselected attachment."
+    )
+  })
+
+  it("accepts a unique filename match when attachments are filtered", async () => {
+    mockSearch.mockResolvedValue([
+      {
+        filename: "selected.pdf",
+        content: "Content from the selected attachment.",
+      },
+    ])
+
+    const messages = await addConversationAttachmentsToModelMessages({
+      messages: [{ role: "user", content: "What was in the report?" }],
+      conversation: {
+        _id: "chat_1",
+        attachmentVectorStoreId: "store_1",
+        attachments: [
+          {
+            id: "attachment_selected",
+            provider: AgentChannelProvider.SLACK,
+            providerFileId: "F1",
+            filename: "selected.pdf",
+            mimetype: "application/pdf",
+            size: 1024,
+            status: ConversationAttachmentStatus.READY,
+            ragSourceId: "rag-selected",
+            uploadedAt: new Date().toISOString(),
+          },
+          {
+            id: "attachment_unselected",
+            provider: AgentChannelProvider.SLACK,
+            providerFileId: "F2",
+            filename: "other.pdf",
+            mimetype: "application/pdf",
+            size: 1024,
+            status: ConversationAttachmentStatus.READY,
+            ragSourceId: "rag-unselected",
+            uploadedAt: new Date().toISOString(),
+          },
+        ],
+      },
+      attachmentIds: ["attachment_selected"],
+    })
+
+    expect(messages).toEqual([
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "What was in the report?" },
+          {
+            type: "text",
+            text: expect.stringContaining(
+              '<conversation-file name="selected.pdf">\nContent from the selected attachment.'
+            ),
+          },
+        ],
+      },
+    ])
+  })
 })

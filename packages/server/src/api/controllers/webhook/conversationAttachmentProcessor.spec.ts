@@ -32,6 +32,9 @@ jest.mock("@budibase/backend-core", () => {
 })
 
 jest.mock("@slack/web-api", () => ({
+  ErrorCode: {
+    PlatformError: "slack_webapi_platform_error",
+  },
   WebClient: jest.fn(() => ({
     files: { info: (args: object) => mockFilesInfo(args) },
   })),
@@ -89,9 +92,11 @@ import { processConversationAttachmentJob } from "./conversationAttachmentProces
 
 describe("conversation attachment processor", () => {
   let conversation: ChatConversation
+  let consoleErrorSpy: jest.SpiedFunction<typeof console.error>
 
   beforeEach(() => {
     jest.clearAllMocks()
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation()
     const now = new Date().toISOString()
     conversation = {
       _id: "chat_1",
@@ -242,6 +247,52 @@ describe("conversation attachment processor", () => {
     )
     expect(mockReply).toHaveBeenCalledWith(
       expect.objectContaining({ text: "I couldn't process report.txt." })
+    )
+  })
+
+  it("explains how to grant the missing Slack file permission", async () => {
+    mockFilesInfo.mockRejectedValue(
+      Object.assign(new Error("An API error occurred: missing_scope"), {
+        code: "slack_webapi_platform_error",
+        data: {
+          ok: false,
+          error: "missing_scope",
+          needed: "files:read",
+          provided: "chat:write",
+        },
+      })
+    )
+
+    await processConversationAttachmentJob(
+      {
+        workspaceId: "workspace_1",
+        conversationId: "chat_1",
+        turnId: "turn_1",
+      },
+      false
+    )
+
+    expect(conversation.attachments?.[0]).toEqual(
+      expect.objectContaining({
+        status: ConversationAttachmentStatus.FAILED,
+        errorCode: "slack_missing_files_read_scope",
+      })
+    )
+    expect(conversation.pendingAttachmentTurns?.[0].status).toEqual(
+      ConversationAttachmentTurnStatus.COMPLETED
+    )
+    expect(mockReply).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: "I couldn't access report.txt because this Slack app is missing the `files:read` permission. Ask a Slack workspace admin to reinstall the app, then upload the file again.",
+      })
+    )
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Conversation attachment processing failed",
+      expect.objectContaining({
+        conversationId: "chat_1",
+        providerFileId: "F1",
+        errorCode: "slack_missing_files_read_scope",
+      })
     )
   })
 })

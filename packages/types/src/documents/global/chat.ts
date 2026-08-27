@@ -43,9 +43,14 @@ export interface ChatConversationAttachment {
   pageCount?: number
   status: ConversationAttachmentStatus
   ragSourceId?: string
+  errorCode?: ConversationAttachmentErrorCode
   errorMessage?: string
   processedAt?: string
   uploadedAt: string
+}
+
+export enum ConversationAttachmentErrorCode {
+  SLACK_MISSING_FILES_READ_SCOPE = "slack_missing_files_read_scope",
 }
 
 export enum ConversationAttachmentStatus {

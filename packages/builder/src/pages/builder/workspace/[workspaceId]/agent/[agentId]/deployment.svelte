@@ -2,6 +2,7 @@
   import {
     ActionButton,
     Body,
+    Link,
     Modal,
     ModalContent,
     Toggle,
@@ -257,7 +258,13 @@
         </Body>
         {#if !knowledgeSearchConfigured}
           <Body color="var(--spectrum-global-color-gray-700)" size="XS">
-            Configure Gemini File Search to enable file attachments.
+            Set <code>GEMINI_API_KEY</code> in the Budibase server environment,
+            then restart Budibase. <Link
+              href="https://aistudio.google.com/app/apikey"
+              target="_blank"
+              rel="noopener noreferrer"
+              size="S">Get a Gemini API key</Link
+            >.
           </Body>
         {/if}
       </div>

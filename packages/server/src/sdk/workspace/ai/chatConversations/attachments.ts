@@ -301,6 +301,37 @@ const getSearchResultPage = (row: RagSearchResultItem) => {
   return page == null ? undefined : String(page)
 }
 
+const normalizeFilenameLookup = (value: string) => value.trim().toLowerCase()
+
+const getUnambiguousAttachmentsByFilename = (
+  attachments: ChatConversationAttachment[]
+) => {
+  const attachmentByFilename = new Map<string, ChatConversationAttachment>()
+  const ambiguousFilenames = new Set<string>()
+
+  for (const attachment of attachments) {
+    if (!attachment.ragSourceId) {
+      continue
+    }
+
+    const filename = normalizeFilenameLookup(attachment.filename)
+    if (!filename || ambiguousFilenames.has(filename)) {
+      continue
+    }
+
+    const existing = attachmentByFilename.get(filename)
+    if (existing && existing.ragSourceId !== attachment.ragSourceId) {
+      attachmentByFilename.delete(filename)
+      ambiguousFilenames.add(filename)
+      continue
+    }
+
+    attachmentByFilename.set(filename, attachment)
+  }
+
+  return attachmentByFilename
+}
+
 export const addConversationAttachmentsToModelMessages = async ({
   messages,
   conversation,
@@ -317,11 +348,12 @@ export const addConversationAttachmentsToModelMessages = async ({
   if (!conversationId || !conversation.attachmentVectorStoreId) {
     return messages
   }
+  const readyAttachments = (conversation.attachments || []).filter(
+    attachment => attachment.status === ConversationAttachmentStatus.READY
+  )
   const selectedIds = attachmentIds ? new Set(attachmentIds) : undefined
-  const attachments = (conversation.attachments || []).filter(
-    attachment =>
-      attachment.status === ConversationAttachmentStatus.READY &&
-      (!selectedIds || selectedIds.has(attachment.id))
+  const attachments = readyAttachments.filter(
+    attachment => !selectedIds || selectedIds.has(attachment.id)
   )
   if (!attachments.length) {
     return messages
@@ -345,11 +377,16 @@ export const addConversationAttachmentsToModelMessages = async ({
   const selectedSources = new Map(
     attachments.flatMap(attachment =>
       attachment.ragSourceId
-        ? [
-            [attachment.ragSourceId, attachment] as const,
-            [attachment.filename, attachment] as const,
-          ]
+        ? [[attachment.ragSourceId, attachment] as const]
         : []
+    )
+  )
+  const selectedAttachmentIds = new Set(
+    attachments.map(attachment => attachment.id)
+  )
+  const selectedFilenames = new Map(
+    [...getUnambiguousAttachmentsByFilename(readyAttachments)].filter(
+      ([, attachment]) => selectedAttachmentIds.has(attachment.id)
     )
   )
   const rows = await searchGeminiFileStore({
@@ -366,7 +403,10 @@ export const addConversationAttachmentsToModelMessages = async ({
       break
     }
     const source = getSearchResultSource(row)
-    const attachment = source ? selectedSources.get(source) : undefined
+    const attachment = source
+      ? selectedSources.get(source) ||
+        selectedFilenames.get(normalizeFilenameLookup(source))
+      : undefined
     if (!attachment) {
       continue
     }

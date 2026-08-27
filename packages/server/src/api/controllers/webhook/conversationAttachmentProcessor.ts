@@ -1,9 +1,14 @@
-import { WebClient } from "@slack/web-api"
+import {
+  ErrorCode,
+  WebClient,
+  type WebAPIPlatformError,
+} from "@slack/web-api"
 import { context, HTTPError, locks, roles } from "@budibase/backend-core"
 import {
   type ChatConversation,
   type ChatConversationAttachment,
   type ContextUser,
+  ConversationAttachmentErrorCode,
   ConversationAttachmentStatus,
   ConversationAttachmentTurnStatus,
   LockName,
@@ -26,6 +31,24 @@ const isPermanentError = (error: unknown) =>
   error.status < 500 &&
   error.status !== 408 &&
   error.status !== 429
+
+class SlackMissingFilesReadScopeError extends HTTPError {
+  constructor() {
+    super("Slack app is missing the files:read permission", 403)
+  }
+}
+
+const isSlackMissingScopeError = (
+  error: unknown
+): error is WebAPIPlatformError =>
+  error instanceof Error &&
+  "code" in error &&
+  error.code === ErrorCode.PlatformError &&
+  "data" in error &&
+  typeof error.data === "object" &&
+  error.data !== null &&
+  "error" in error.data &&
+  error.data.error === "missing_scope"
 
 const updateConversation = async (
   conversationId: string,
@@ -105,7 +128,16 @@ const getSlackFileData = async ({
     retryConfig: { retries: 0 },
     timeout: 30_000,
   })
-  const response = await client.files.info({ file: attachment.providerFileId })
+  const response = await (async () => {
+    try {
+      return await client.files.info({ file: attachment.providerFileId })
+    } catch (error) {
+      if (isSlackMissingScopeError(error)) {
+        throw new SlackMissingFilesReadScopeError()
+      }
+      throw error
+    }
+  })()
   const file = response.file
   if (!file) {
     throw new HTTPError(`${attachment.filename} is no longer available`, 400)
@@ -209,6 +241,7 @@ const processAttachment = async ({
     update: current => ({
       ...current,
       status: ConversationAttachmentStatus.PROCESSING,
+      errorCode: undefined,
       errorMessage: undefined,
     }),
   })
@@ -248,6 +281,7 @@ const processAttachment = async ({
         status: ConversationAttachmentStatus.READY,
         ragSourceId: ingested.fileId,
         processedAt: new Date().toISOString(),
+        errorCode: undefined,
         errorMessage: undefined,
       }),
     })
@@ -256,6 +290,17 @@ const processAttachment = async ({
       throw error
     }
     const message = error instanceof Error ? error.message : String(error)
+    const errorCode =
+      error instanceof SlackMissingFilesReadScopeError
+        ? ConversationAttachmentErrorCode.SLACK_MISSING_FILES_READ_SCOPE
+        : undefined
+    console.error("Conversation attachment processing failed", {
+      conversationId,
+      attachmentId,
+      providerFileId: attachment.providerFileId,
+      errorCode,
+      error: message,
+    })
     await updateAttachment({
       conversationId,
       attachmentId,
@@ -263,6 +308,7 @@ const processAttachment = async ({
         ...current,
         status: ConversationAttachmentStatus.FAILED,
         processedAt: new Date().toISOString(),
+        errorCode,
         errorMessage: message,
       }),
     })
@@ -278,6 +324,37 @@ const getRequester = async (
         userId: turn.requester.userId,
         displayName: turn.requester.displayName,
       })
+
+const getAttachmentFailureText = (
+  attachments: ChatConversationAttachment[]
+) => {
+  const missingFilesReadScope = attachments.filter(
+    attachment =>
+      attachment.errorCode ===
+      ConversationAttachmentErrorCode.SLACK_MISSING_FILES_READ_SCOPE
+  )
+  const otherFailures = attachments.filter(
+    attachment =>
+      attachment.errorCode !==
+      ConversationAttachmentErrorCode.SLACK_MISSING_FILES_READ_SCOPE
+  )
+  const messages: string[] = []
+  if (missingFilesReadScope.length) {
+    messages.push(
+      `I couldn't access ${missingFilesReadScope
+        .map(file => file.filename)
+        .join(", ")} because this Slack app is missing the \`files:read\` permission. Ask a Slack workspace admin to reinstall the app, then upload the file again.`
+    )
+  }
+  if (otherFailures.length) {
+    messages.push(
+      `I couldn't process ${otherFailures
+        .map(file => file.filename)
+        .join(", ")}.`
+    )
+  }
+  return messages.join("\n\n")
+}
 
 const processTurn = async ({
   workspaceId,
@@ -358,15 +435,11 @@ const processTurn = async ({
     const readyText = ready.length
       ? `Ready: ${ready.map(file => file.filename).join(", ")}.`
       : ""
-    const failedText = failed.length
-      ? ` Failed: ${failed.map(file => file.filename).join(", ")}.`
-      : ""
-    responseText = `${readyText}${failedText}`.trim()
+    const failedText = getAttachmentFailureText(failed)
+    responseText = [readyText, failedText].filter(Boolean).join("\n\n")
   } else if (!ready.length) {
     messages = [...messages, turn.message]
-    responseText = `I couldn't process ${failed
-      .map(file => file.filename)
-      .join(", ")}.`
+    responseText = getAttachmentFailureText(failed)
   } else {
     const requester = await getRequester(turn)
     const result = await webhookChat({
@@ -383,9 +456,7 @@ const processTurn = async ({
       isDirectMessage: current.channel?.conversationType === "im",
     })
     if (failed.length) {
-      responseText += `\n\nI couldn't process: ${failed
-        .map(file => file.filename)
-        .join(", ")}.`
+      responseText += `\n\n${getAttachmentFailureText(failed)}`
     }
   }
 
