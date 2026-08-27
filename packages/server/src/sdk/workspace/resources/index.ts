@@ -40,10 +40,8 @@ import { extractTableIdFromRowActionsID, getRowParams } from "../../../db/utils"
 import { getQueryToolBindingsForResource } from "../ai/agents/queryToolReferences"
 import { doWithProjectAssignmentsLock } from "../projects/lock"
 import {
-  getProjectAssignmentIds,
   getProjectIds,
   hasProject,
-  hasProjectAssignment,
   isProjectAssignableResourceType,
   type ProjectAssignable,
   withProjectIds,
@@ -482,7 +480,7 @@ async function buildResourceDependencyAnalysis({
         ...agents,
         ...workspaceApps,
       ].flatMap(resource =>
-        resource._id ? [[resource._id, getProjectAssignmentIds(resource)]] : []
+        resource._id ? [[resource._id, getProjectIds(resource)]] : []
       )
     )
 
@@ -497,10 +495,7 @@ async function buildResourceDependencyAnalysis({
           .filter(
             datasource =>
               datasource._id !== INTERNAL_TABLE_SOURCE_ID &&
-              hasProjectAssignment({
-                doc: datasource,
-                projectId: project._id,
-              })
+              hasProject(datasource, project._id)
           )
           .map(datasource =>
             buildUsedResource(datasource, ResourceType.DATASOURCE)
@@ -1013,14 +1008,7 @@ async function duplicateResourcesToWorkspaceUnlocked(
   const referencedProjectIds = Array.from(
     new Set(
       docsToInsert
-        .flatMap(doc => [
-          ...getProjectIds(doc),
-          ...(isDatasource(doc)
-            ? Object.values(doc.entities || {}).flatMap(entity =>
-                getProjectIds(entity)
-              )
-            : []),
-        ])
+        .flatMap(getProjectIds)
         .filter((projectId): projectId is string => !!projectId)
     )
   )

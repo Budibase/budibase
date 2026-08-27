@@ -112,7 +112,6 @@ describe("/projects", () => {
     const externalTable = basicTable(datasource, {
       _id: buildExternalTableId(datasource._id!, entityKey),
       name: "Updated table",
-      projectIds: [projectId],
     })
     await config.api.datasource.update({
       ...datasource,
@@ -132,7 +131,6 @@ describe("/projects", () => {
     const plusExternalTable = basicTable(datasourcePlus, {
       _id: buildExternalTableId(datasourcePlus._id!, plusEntityKey),
       name: "Updated plus table",
-      projectIds: [projectId],
     })
     await config.api.datasource.update({
       ...datasourcePlus,
@@ -435,10 +433,6 @@ describe("/projects", () => {
 
   it("rejects assigning an unknown project id", async () => {
     await withProjectsEnabled(async () => {
-      const datasource = await config.api.datasource.create(
-        basicDatasource().datasource
-      )
-
       await config.api.workspaceApp.create(
         structures.workspaceApps.createRequest({
           name: "Ops app",
@@ -452,26 +446,42 @@ describe("/projects", () => {
           },
         }
       )
+    })
+  })
 
+  it("strips project assignments from external tables", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
       const externalTable = basicTable(datasource, {
         _id: buildExternalTableId(datasource._id!, "TestTable"),
-        projectIds: ["project_missing"],
+        projectIds: [project._id],
+      })
+      const datasourceWithTable = await config.api.datasource.update({
+        ...datasource,
+        entities: {
+          [externalTable.name]: externalTable,
+        },
       })
 
-      await config.api.datasource.update(
-        {
-          ...datasource,
-          entities: {
-            [externalTable.name]: externalTable,
-          },
-        },
-        {
-          status: 404,
-          body: {
-            message: "Project 'project_missing' not found.",
-          },
-        }
-      )
+      expect(
+        datasourceWithTable.entities![externalTable.name].projectIds
+      ).toBeUndefined()
+
+      const savedTable = await config.api.table.save({
+        ...datasourceWithTable.entities![externalTable.name],
+        projectIds: [project._id],
+      })
+      expect(savedTable.projectIds).toBeUndefined()
+
+      const storedDatasource = await config.api.datasource.get(datasource._id!)
+      expect(
+        storedDatasource.entities![externalTable.name].projectIds
+      ).toBeUndefined()
     })
   })
 
@@ -493,7 +503,7 @@ describe("/projects", () => {
     })
   })
 
-  it("clears external datasource and entity assignments when deleting a project", async () => {
+  it("clears external datasource assignments when deleting a project", async () => {
     await withProjectsEnabled(async () => {
       const project = await createAssignedProject()
       const { datasource, entityKey } = await createAssignedExternalDatasource(
@@ -508,7 +518,7 @@ describe("/projects", () => {
     })
   })
 
-  it("clears datasource_plus entity assignments when deleting a project", async () => {
+  it("clears datasource_plus assignments when deleting a project", async () => {
     await withProjectsEnabled(async () => {
       const project = await createAssignedProject()
       const { datasourcePlus, plusEntityKey } =
@@ -599,10 +609,8 @@ describe("/projects", () => {
       expect(fetchedAgent?.projectIds).toEqual(expectedProjectIds)
       expect(fetchedTable.projectIds).toEqual(expectedProjectIds)
       expect(fetchedDatasource.projectIds).toEqual(expectedProjectIds)
-      expect(fetchedDatasource.entities![entityKey].projectIds).toEqual(
-        expectedProjectIds
-      )
-      expect(fetchedQuery.projectIds).toEqual(expectedProjectIds)
+      expect(fetchedDatasource.entities![entityKey].projectIds).toBeUndefined()
+      expect(fetchedQuery.projectIds).toBeUndefined()
     })
   })
 
@@ -859,7 +867,7 @@ describe("/projects", () => {
       })
     })
 
-    it("preserves query assignments", async () => {
+    it("strips query assignments", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
           name: "Operations",
@@ -872,7 +880,7 @@ describe("/projects", () => {
           name: "Ops query updated",
         })
 
-        expect(updatedQuery.projectIds).toEqual([project._id])
+        expect(updatedQuery.projectIds).toBeUndefined()
       })
     })
   })
@@ -1024,6 +1032,13 @@ describe("/projects", () => {
       ...createQueryScreen(datasource._id!, query),
       workspaceAppId: workspaceApp._id,
     })
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const storedScreen = await db.get<
+        typeof screen & { projectIds?: string[] }
+      >(screen._id!)
+      await db.put({ ...storedScreen, projectIds: [project._id] })
+    })
 
     const automation = await config.createAutomation()
     await config.api.automation.update({
@@ -1135,7 +1150,7 @@ describe("/projects", () => {
 
     it("sanitises exported secrets and agent integrations", async () => {
       await withProjectsEnabled(async () => {
-        const { datasource, query, agent, files } =
+        const { datasource, query, agent, screen, files } =
           await createProjectExportFixture()
 
         const exportedDatasource = JSON.parse(
@@ -1147,6 +1162,11 @@ describe("/projects", () => {
           files.get(`docs/query/${query._id}.json`)!.toString()
         )
         expect(exportedQuery.projectIds).toBeUndefined()
+
+        const exportedScreen = JSON.parse(
+          files.get(`docs/screen/${screen._id}.json`)!.toString()
+        )
+        expect(exportedScreen.projectIds).toBeUndefined()
 
         const exportedAgent = JSON.parse(
           files.get(`docs/agent/${agent._id}.json`)!.toString()
@@ -1383,20 +1403,20 @@ describe("/projects", () => {
     })
   })
 
-  it("exports and remaps assigned external tables through their datasource", async () => {
+  it("exports and remaps external tables through their assigned datasource", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
         name: "External data",
       })
-      const datasource = await config.api.datasource.create(
-        basicDatasource().datasource
-      )
+      const datasource = await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        projectIds: [project._id],
+      })
       const externalTableId = buildExternalTableId(datasource._id!, "TestTable")
       const externalTable = basicTable(datasource, {
         _id: externalTableId,
         name: "TestTable",
         primaryDisplay: `{{ ${externalTableId}.name }}`,
-        projectIds: [project._id],
       })
       await config.api.datasource.update({
         ...datasource,
@@ -1805,10 +1825,10 @@ describe("/projects", () => {
             `https://example.com/${query._id}.rows`
           )
           expect(importedScreen!.props.bindingKeyed).toEqual({
-            [`{{ ${imported.resources.query?.[0]}.rows }}`]: "binding key",
+            [`{{ ${query._id}.rows }}`]: "binding key",
           })
           expect(importedScreen!.props.idKeyed).toEqual({
-            [imported.resources.query?.[0]!]: {
+            [query._id!]: {
               resourceId: imported.resources.query?.[0],
             },
           })
