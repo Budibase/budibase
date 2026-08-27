@@ -124,6 +124,13 @@ export async function run({
           assistantMessage = uiMessage
         }
 
+        let responseError: string | undefined
+        try {
+          await streamResult.response
+        } catch (error) {
+          responseError = getErrorMessage(error)
+        }
+
         const incompleteTools = assistantMessage
           ? findIncompleteToolCalls([assistantMessage])
           : []
@@ -145,10 +152,11 @@ export async function run({
             streamingError = getErrorMessage(error)
           }
         }
-        if (streamingError && !responseText) {
+        const runError = streamingError || responseError
+        if (runError && !responseText) {
           return {
             success: false,
-            response: streamingError,
+            response: runError,
             message: assistantMessage,
             sessionId,
           }

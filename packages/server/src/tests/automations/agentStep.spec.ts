@@ -69,6 +69,7 @@ const mockAgentRun = ({
   suspended = false,
   text = "Agent response",
   textError,
+  responseError,
   usage = { totalTokens: 50 },
   usageError,
   output,
@@ -77,6 +78,7 @@ const mockAgentRun = ({
   suspended?: boolean
   text?: string
   textError?: Error
+  responseError?: Error
   usage?: { totalTokens: number }
   usageError?: Error
   output?: Record<string, unknown>
@@ -88,6 +90,11 @@ const mockAgentRun = ({
     sessionLogIndexer: { index },
     stream: jest.fn().mockResolvedValue({
       toUIMessageStream: jest.fn().mockReturnValue({}),
+      get response() {
+        return responseError
+          ? Promise.reject(responseError)
+          : Promise.resolve({ id: "response-id" })
+      },
       get text() {
         return textError ? Promise.reject(textError) : Promise.resolve(text)
       },
@@ -218,6 +225,27 @@ describe("automation agent step", () => {
 
   it("returns a controlled failure when the shared run has no output", async () => {
     const { index } = mockAgentRun({ textError: makeNoOutputError() })
+
+    const result = await run({
+      inputs: { agentId: "agent-id", prompt: "Evaluate data" },
+      appId: "test",
+      context: {},
+      emitter,
+    })
+
+    expect(result).toMatchObject({
+      success: false,
+      response: "No output generated. Check the stream for errors.",
+      sessionId: expect.any(String),
+    })
+    expect(index).toHaveBeenCalledTimes(1)
+  })
+
+  it("returns a controlled failure when response metadata has no output", async () => {
+    const { index } = mockAgentRun({
+      text: "",
+      responseError: makeNoOutputError(),
+    })
 
     const result = await run({
       inputs: { agentId: "agent-id", prompt: "Evaluate data" },
