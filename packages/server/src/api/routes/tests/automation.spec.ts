@@ -2,6 +2,7 @@ import { configs, context, events } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import {
   Automation,
+  AutomationActionStepId,
   AutomationResults,
   AutomationTriggerStepId,
   ConfigType,
@@ -26,6 +27,7 @@ import {
 } from "../../../automations"
 import * as emailAutomation from "../../../automations/email"
 import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
+import { areFunctionsEnabled } from "../../../middleware/functionsEnabled"
 import sdk from "../../../sdk"
 import { basicTable } from "../../../tests/utilities/structures"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -116,9 +118,23 @@ describe("/automations", () => {
 
     it("returns all of the definitions in one", async () => {
       const { action, trigger } = await config.api.automation.getDefinitions()
+      const functionsEnabled = await areFunctionsEnabled()
+      const availableBuiltinActions = Object.keys(
+        BUILTIN_ACTION_DEFINITIONS
+      ).filter(
+        actionId =>
+          functionsEnabled ||
+          actionId !== AutomationActionStepId.EXECUTE_FUNCTION
+      )
+
+      if (functionsEnabled) {
+        expect(action[AutomationActionStepId.EXECUTE_FUNCTION]).toBeDefined()
+      } else {
+        expect(action[AutomationActionStepId.EXECUTE_FUNCTION]).toBeUndefined()
+      }
 
       expect(Object.keys(action).length).toBeGreaterThanOrEqual(
-        Object.keys(BUILTIN_ACTION_DEFINITIONS).length
+        availableBuiltinActions.length
       )
       expect(Object.keys(trigger).length).toEqual(
         Object.keys(TRIGGER_DEFINITIONS).length
