@@ -488,6 +488,12 @@ const getAgentRequester = ({
   }
 }
 
+const resolveLatestQuestion = ({
+  latestQuestion,
+  chat,
+}: Pick<PrepareAgentChatRunParams, "latestQuestion" | "chat">) =>
+  latestQuestion ?? (chat ? findLatestUserQuestion(chat) : "")
+
 const prepareAgentChatRunInternal = async ({
   agent,
   agentId,
@@ -508,8 +514,10 @@ const prepareAgentChatRunInternal = async ({
 }: PrepareAgentChatRunParams & {
   sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
 }): Promise<AgentChatRun> => {
-  const latestQuestion =
-    providedLatestQuestion ?? (chat ? findLatestUserQuestion(chat) : "")
+  const latestQuestion = resolveLatestQuestion({
+    latestQuestion: providedLatestQuestion,
+    chat,
+  })
   const requester = providedRequester ?? getAgentRequester({ user, chat })
 
   let resolvedModelMessages: ModelMessage[] = []
@@ -863,9 +871,7 @@ const prepareAgentChatRunInternal = async ({
 export const prepareAgentChatRun = async (
   params: PrepareAgentChatRunParams
 ): Promise<AgentChatRun> => {
-  const latestQuestion =
-    params.latestQuestion ??
-    (params.chat ? findLatestUserQuestion(params.chat) : "")
+  const latestQuestion = resolveLatestQuestion(params)
   const sessionLogIndexer = createSessionLogIndexer({
     agentId: params.agentId,
     sessionId: params.sessionId,

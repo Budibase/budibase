@@ -224,6 +224,32 @@ describe("resumeOperation", () => {
     })
   })
 
+  it("does not restore a requester role for a missing persisted user", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      mockApprovedRun("Approved and created.")
+
+      await resumeOperation({
+        doc: baseDoc({ response: { accepted: true } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: {
+          ...baseCtx,
+          userId: "missing-user",
+          requester: { executorRole: "ADMIN" },
+        },
+      })
+
+      expect(prepareAgentChatRunMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user: expect.objectContaining({
+            _id: "missing-user",
+            roleId: undefined,
+          }),
+        })
+      )
+    })
+  })
+
   it("records escalation_resolved with outcome expired", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!

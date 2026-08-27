@@ -129,7 +129,6 @@ export async function run({
           : []
         if (pendingToolCalls.size > 0 || incompleteTools.length > 0) {
           const errorMessage = formatIncompleteToolCallError(incompleteTools)
-          await agentRun.sessionLogIndexer.index()
           return {
             success: false,
             response: errorMessage,
@@ -147,7 +146,6 @@ export async function run({
           }
         }
         if (streamingError && !responseText) {
-          await agentRun.sessionLogIndexer.index()
           return {
             success: false,
             response: streamingError,
@@ -164,7 +162,6 @@ export async function run({
           usageError = getErrorMessage(error)
         }
         if (usageError && !responseText) {
-          await agentRun.sessionLogIndexer.index()
           return {
             success: false,
             response: usageError,
@@ -178,7 +175,6 @@ export async function run({
             ? ((await streamResult.output) as AgentStepOutputs["output"])
             : undefined
 
-        await agentRun.sessionLogIndexer.index()
         tracer.llmobs.annotate(agentSpan, {
           outputData: responseText,
           metadata: { stepCount: assistantMessage?.parts?.length ?? 0 },
@@ -195,13 +191,6 @@ export async function run({
         }
       } catch (err: any) {
         const errorMessage = automationUtils.getError(err)
-        await agentRun?.sessionLogIndexer.index().catch(indexError => {
-          console.error("Failed to index automation agent session log", {
-            agentId,
-            sessionId,
-            error: getErrorMessage(indexError),
-          })
-        })
         tracer.llmobs.annotate(agentSpan, {
           outputData: errorMessage,
           tags: {
@@ -226,6 +215,14 @@ export async function run({
           response: errorMessage,
           sessionId,
         }
+      } finally {
+        await agentRun?.sessionLogIndexer.index().catch(indexError => {
+          console.error("Failed to index automation agent session log", {
+            agentId,
+            sessionId,
+            error: getErrorMessage(indexError),
+          })
+        })
       }
     }
   )

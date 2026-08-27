@@ -57,6 +57,7 @@ const emitter = {
   emitRow: jest.fn(),
   emitTable: jest.fn(),
 }
+let consoleErrorSpy: jest.SpyInstance
 
 const makeNoOutputError = () => {
   const error = new Error("No output generated. Check the stream for errors.")
@@ -105,7 +106,7 @@ describe("automation agent step", () => {
   beforeEach(() => {
     prepareAgentChatRunMock.mockReset()
     mockAgentRun()
-    jest.spyOn(console, "error").mockImplementation(() => {})
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {})
   })
 
   afterEach(() => {
@@ -135,7 +136,7 @@ describe("automation agent step", () => {
   })
 
   it("omits structured output when the agent run is suspended", async () => {
-    mockAgentRun({
+    const { index } = mockAgentRun({
       suspended: true,
       output: { sentiment: "positive" },
     })
@@ -161,10 +162,11 @@ describe("automation agent step", () => {
         output: undefined,
       })
     )
+    expect(index).toHaveBeenCalledTimes(1)
   })
 
   it("passes structured output configuration through the shared runner", async () => {
-    mockAgentRun({ output: { sentiment: "positive" } })
+    const { index } = mockAgentRun({ output: { sentiment: "positive" } })
 
     const result = await run({
       inputs: {
@@ -182,6 +184,7 @@ describe("automation agent step", () => {
       expect.objectContaining({ outputSchema: { sentiment: "string" } })
     )
     expect(result.output).toEqual({ sentiment: "positive" })
+    expect(index).toHaveBeenCalledTimes(1)
   })
 
   it("does not read structured output when the schema is empty", async () => {
@@ -214,7 +217,7 @@ describe("automation agent step", () => {
   })
 
   it("returns a controlled failure when the shared run has no output", async () => {
-    mockAgentRun({ textError: makeNoOutputError() })
+    const { index } = mockAgentRun({ textError: makeNoOutputError() })
 
     const result = await run({
       inputs: { agentId: "agent-id", prompt: "Evaluate data" },
@@ -228,6 +231,7 @@ describe("automation agent step", () => {
       response: "No output generated. Check the stream for errors.",
       sessionId: expect.any(String),
     })
+    expect(index).toHaveBeenCalledTimes(1)
   })
 
   it("returns a completed response when usage metadata fails", async () => {
@@ -253,6 +257,7 @@ describe("automation agent step", () => {
     const { index } = mockAgentRun({
       outputError: new Error("Invalid structured output"),
     })
+    index.mockRejectedValueOnce(new Error("Index unavailable"))
 
     const result = await run({
       inputs: {
@@ -273,5 +278,9 @@ describe("automation agent step", () => {
       })
     )
     expect(index).toHaveBeenCalledTimes(1)
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Failed to index automation agent session log",
+      expect.objectContaining({ error: "Index unavailable" })
+    )
   })
 })
