@@ -438,6 +438,8 @@ describe("/automations", () => {
         .serverLog({ text: "{{ [user].[roleId] }}" })
         .test({
           row: { tableId: table._id },
+          id: "ro_test",
+          revision: "1-test",
           previewRoleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
         })
 
