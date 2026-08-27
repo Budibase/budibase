@@ -99,7 +99,7 @@ const validatePWAZipEntries = () => {
 
     if (((entry.externalFileAttributes >>> 16) & 0o170000) === 0o120000) {
       throw new BadRequestError(
-        `Invalid zip - "${entry.fileName}" is a symlink, which is not allowed`
+        `Invalid zip`
       )
     }
 
