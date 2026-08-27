@@ -134,11 +134,19 @@ describe("automation agent step", () => {
     )
   })
 
-  it("returns the agent result without suspending the automation", async () => {
-    mockAgentRun({ suspended: true })
+  it("omits structured output when the agent run is suspended", async () => {
+    mockAgentRun({
+      suspended: true,
+      output: { sentiment: "positive" },
+    })
 
     const result = await run({
-      inputs: { agentId: "agent-id", prompt: "Create the row" },
+      inputs: {
+        agentId: "agent-id",
+        prompt: "Create the row",
+        useStructuredOutput: true,
+        outputSchema: { sentiment: "string" },
+      },
       appId: "test",
       automationId: "automation-id",
       stepId: "agent-step",
@@ -147,7 +155,11 @@ describe("automation agent step", () => {
     })
 
     expect(result).toEqual(
-      expect.objectContaining({ success: true, response: "Agent response" })
+      expect.objectContaining({
+        success: true,
+        response: "Agent response",
+        output: undefined,
+      })
     )
   })
 
