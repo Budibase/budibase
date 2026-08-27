@@ -554,6 +554,21 @@ describe("/datasources", () => {
       )
     })
 
+    it.each([
+      ["quoted text", '{{ "env.HOST" }}'],
+      ["a short comment", "{{! env.HOST }}"],
+      ["a long comment", "{{!-- env.HOST --}}"],
+    ])("does not treat %s as an environment reference", async (_label, url) => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST inactive env reference",
+        source: SourceName.REST,
+        config: { url },
+      })
+
+      expect(ds.usesEnvironmentVariables).toBe(false)
+    })
+
     it("scrubs secrets containing mixed literals and env var references", async () => {
       const ds = await config.api.datasource.create({
         type: "datasource",
@@ -566,7 +581,7 @@ describe("/datasources", () => {
               name: "Mixed Env Auth",
               type: RestAuthType.BASIC,
               config: {
-                username: "{{ env.USERNAME }}",
+                username: "user",
                 password: "prefix {{ env.PASSWORD }}",
               },
             },

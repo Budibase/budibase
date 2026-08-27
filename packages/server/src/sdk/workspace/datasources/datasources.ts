@@ -45,6 +45,37 @@ const ENV_VAR_REFERENCE_PATTERN = new RegExp(
 )
 const ENV_VAR_BINDING_PATTERN =
   /^(?:{{\s*env\.[A-Za-z0-9_.-]+\s*}}|{{{\s*env\.[A-Za-z0-9_.-]+\s*}}})$/
+const QUOTE_CHARACTERS = new Set(['"', "'", "`"])
+
+const withoutQuotedContent = (value: string) => {
+  let quote: string | undefined
+  let escaped = false
+
+  return Array.from(value, character => {
+    if (!quote) {
+      if (QUOTE_CHARACTERS.has(character)) {
+        quote = character
+        return " "
+      }
+      return character
+    }
+
+    if (escaped) {
+      escaped = false
+    } else if (character === "\\") {
+      escaped = true
+    } else if (character === quote) {
+      quote = undefined
+    }
+    return " "
+  }).join("")
+}
+
+const isHbsComment = (value: string) =>
+  value
+    .slice(value.startsWith("{{{") ? 3 : 2)
+    .trimStart()
+    .startsWith("!")
 
 export function addDatasourceFlags(datasource: Datasource) {
   datasource.isSQL = helpers.isSQL(datasource)
@@ -214,7 +245,11 @@ function containsEnvVarBinding(str: unknown) {
   if (typeof str !== "string") {
     return false
   }
-  return findHBSBlocks(str).some(block => ENV_VAR_REFERENCE_PATTERN.test(block))
+  return findHBSBlocks(str).some(
+    block =>
+      !isHbsComment(block) &&
+      ENV_VAR_REFERENCE_PATTERN.test(withoutQuotedContent(block))
+  )
 }
 
 function isEnvVarBinding(str: unknown) {
