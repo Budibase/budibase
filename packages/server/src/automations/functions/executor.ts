@@ -1,6 +1,7 @@
 import { DEFAULT_FUNCTION_LIMITS, FunctionErrorCode } from "@budibase/types"
 import type {
   FunctionExecutionContext,
+  FunctionExecutorHealth,
   FunctionExecutor,
   FunctionRunRequest,
   FunctionRunResult,
@@ -37,12 +38,21 @@ const failureResult = (
 
 export class LocalFunctionExecutor implements FunctionExecutor {
   private readonly activeRunIds = new Set<string>()
+  private readonly runControllers = new Map<string, AbortController>()
   private readonly maxConcurrentRuns: number
 
   constructor({
     maxConcurrentRuns = DEFAULT_FUNCTION_LIMITS.service.maxConcurrentRuns,
   }: LocalFunctionExecutorOptions = {}) {
     this.maxConcurrentRuns = maxConcurrentRuns
+  }
+
+  async health(): Promise<FunctionExecutorHealth> {
+    return { healthy: true }
+  }
+
+  async terminate(runId: string): Promise<void> {
+    this.runControllers.get(runId)?.abort()
   }
 
   async execute(
@@ -80,9 +90,21 @@ export class LocalFunctionExecutor implements FunctionExecutor {
     }
 
     this.activeRunIds.add(request.runId)
+    const runController = new AbortController()
+    const abortFromContext = () => runController.abort()
+    context.signal.addEventListener("abort", abortFromContext, { once: true })
+    if (context.signal.aborted) {
+      runController.abort()
+    }
+    this.runControllers.set(request.runId, runController)
     try {
-      return await executeFunctionInIsolate(request, context)
+      return await executeFunctionInIsolate(request, {
+        ...context,
+        signal: runController.signal,
+      })
     } finally {
+      context.signal.removeEventListener("abort", abortFromContext)
+      this.runControllers.delete(request.runId)
       this.activeRunIds.delete(request.runId)
     }
   }
