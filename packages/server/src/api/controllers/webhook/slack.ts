@@ -306,6 +306,8 @@ const createSlackMessageHandler = (
       return
     }
 
+    await thread.subscribe()
+
     await handleSlackInput({
       target: thread as SlackReplyTarget,
       privateTarget: thread.channel as SlackReplyTarget,
