@@ -49,10 +49,6 @@ import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
 import { builderSocket } from "../../../websockets"
-import {
-  resolveProjectIds,
-  resolveUpdatedProjectIds,
-} from "../../../utilities/projects"
 import { createImporter, getImportInfo } from "./import"
 import { ImportInfo } from "./import/sources/base"
 import { mergePreviewSchema } from "./schema"
@@ -218,6 +214,7 @@ export async function importInfo(
 export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const db = context.getWorkspaceDB()
   const query: Query = ctx.request.body
+  delete query.projectIds
 
   // Validate query name
   if (!query?.name.match(ValidQueryNameRegex)) {
@@ -229,7 +226,6 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   let eventFn
   let existingQuery: Query | undefined
   if (!query._id && !query._rev) {
-    query.projectIds = await resolveProjectIds(query.projectIds)
     query._id = generateQueryID(query.datasourceId)
     // flag to state whether the default bindings are empty strings (old behaviour) or null
     query.nullDefaultSupport = true
@@ -241,10 +237,6 @@ export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
     if (existingQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
       query.nullDefaultSupport = true
     }
-    query.projectIds = await resolveUpdatedProjectIds(
-      query.projectIds,
-      existingQuery.projectIds
-    )
     eventFn = () => events.query.updated(datasource, query)
   }
   if (existingQuery && existingQuery.name !== query.name) {
