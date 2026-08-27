@@ -1937,21 +1937,46 @@ describe("/projects", () => {
       })
     })
 
-    it("propagates dependencies and tool bindings when a query moves", async () => {
+    it("preserves project exclusions and tool bindings when a query moves", async () => {
       await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
+        const { project: sharedProject } = await config.api.project.create({
+          name: "Shared project",
         })
+        const { project: destinationProject } = await config.api.project.create(
+          {
+            name: "Destination project",
+          }
+        )
+        const { project: agentProject } = await config.api.project.create({
+          name: "Agent project",
+        })
+        const { project: excludedAgentProject } =
+          await config.api.project.create({
+            name: "Excluded agent project",
+          })
         const sourceDatasource = await config.api.datasource.create({
           ...basicDatasource().datasource,
           name: "Source datasource",
+          projectIds: [sharedProject._id, agentProject._id],
         })
         const destinationDatasource = await config.api.datasource.create({
           ...basicDatasource().datasource,
           name: "Destination datasource",
-          projectIds: [project._id],
         })
         const table = await config.api.table.save(basicTable())
+        const excludedTable = await config.api.table.save(
+          basicTable(undefined, { name: "Excluded table" })
+        )
+        await config.api.query.save({
+          ...basicQuery(destinationDatasource._id!),
+          name: "Excluded query",
+          transformer: `return "{{ ${excludedTable._id}._id }}"`,
+        })
+        await config.api.project.updateAssignment(destinationDatasource._id!, {
+          resourceRev: destinationDatasource._rev!,
+          projectIds: [sharedProject._id, destinationProject._id],
+          dependencyIds: [],
+        })
         const query = await config.api.query.save({
           ...basicQuery(sourceDatasource._id!),
           transformer: `return "{{ ${table._id}._id }}"`,
@@ -1961,7 +1986,10 @@ describe("/projects", () => {
           query,
         })
         const agent = await config.api.agent.createWithOperation(
-          { name: "Query agent" },
+          {
+            name: "Query agent",
+            projectIds: [sharedProject._id, agentProject._id],
+          },
           {
             id: "operation_1",
             name: "Run query",
@@ -1976,15 +2004,49 @@ describe("/projects", () => {
             allowKnowledgeSourceDownload: true,
           }
         )
+        await config.api.project.updateAssignment(agent._id!, {
+          resourceRev: agent._rev!,
+          projectIds: [
+            sharedProject._id,
+            agentProject._id,
+            excludedAgentProject._id,
+          ],
+          dependencyIds: [],
+        })
+        const persistedTable = await config.api.table.get(table._id!)
+        await config.api.project.updateAssignment(table._id!, {
+          resourceRev: persistedTable._rev!,
+          projectIds: [agentProject._id],
+          dependencyIds: [],
+        })
 
         const movedQuery = await config.api.query.save({
           ...query,
           datasourceId: destinationDatasource._id!,
         })
 
-        expect((await config.api.table.get(table._id!)).projectIds).toEqual([
-          project._id,
-        ])
+        expect(
+          new Set(
+            (
+              await config.api.datasource.get(destinationDatasource._id!)
+            ).projectIds
+          )
+        ).toEqual(
+          new Set([sharedProject._id, destinationProject._id, agentProject._id])
+        )
+        expect(
+          new Set((await config.api.table.get(table._id!)).projectIds)
+        ).toEqual(new Set([destinationProject._id, agentProject._id]))
+        expect(
+          (await config.api.table.get(excludedTable._id!)).projectIds
+        ).toEqual([agentProject._id])
+        expect(
+          (await config.api.datasource.get(destinationDatasource._id!))
+            .projectIds
+        ).not.toContain(excludedAgentProject._id)
+        expect(
+          (await config.api.table.get(table._id!)).projectIds
+        ).not.toContain(excludedAgentProject._id)
         const updatedBindings = getQueryToolBindingsForResource({
           datasource: destinationDatasource,
           query: movedQuery,
