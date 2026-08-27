@@ -11,6 +11,7 @@ import { findHBSBlocks } from "@budibase/string-templates"
 import {
   ActionFailureReason,
   ActionType,
+  Agent,
   ContextUser,
   CreateDatasourceRequest,
   Datasource,
@@ -51,6 +52,7 @@ import { save as saveDatasource } from "../datasource"
 import {
   propagateCreatedResourceDependenciesWithWarning,
   propagateProjectDependencyChangesWithWarning,
+  propagateProjectIdsToDependencySubtreesWithWarning,
 } from "../../../utilities/projects"
 import { builderSocket } from "../../../websockets"
 import { createImporter, getImportInfo } from "./import"
@@ -249,11 +251,14 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   } else {
     // check if flag has previously been set, don't let it change
     // allow it to be explicitly set to false via API incase this is ever needed
-    existingQuery = await db.get<Query>(query._id)
-    if (existingQuery.datasourceId !== datasource._id) {
-      existingDatasource = await sdk.datasources.get(existingQuery.datasourceId)
+    const persistedQuery = await db.get<Query>(query._id)
+    existingQuery = persistedQuery
+    if (persistedQuery.datasourceId !== datasource._id) {
+      existingDatasource = await sdk.datasources.get(
+        persistedQuery.datasourceId
+      )
     }
-    if (existingQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
+    if (persistedQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
       query.nullDefaultSupport = true
     }
     eventFn = () => events.query.updated(datasource, query)
@@ -261,11 +266,12 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const datasourceChanged =
     existingQuery?.datasourceId !== undefined &&
     existingQuery.datasourceId !== datasource._id
+  let referencingAgents: Agent[] = []
   if (
     existingQuery &&
     (datasourceChanged || existingQuery.name !== query.name)
   ) {
-    await sdk.ai.agents.migrateQueryToolReferences({
+    referencingAgents = await sdk.ai.agents.migrateQueryToolReferences({
       existingDatasource,
       updatedDatasource: datasource,
       existingQuery,
@@ -276,13 +282,59 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   await eventFn()
   query._rev = response.rev
 
-  await propagateProjectDependencyChangesWithWarning(ctx, {
-    rootResourceId: datasource._id!,
-    currentProjectIds: datasource.projectIds,
-    previousProjectIds: datasource.projectIds,
-    previousResource: datasourceChanged ? undefined : existingQuery,
-    savedResource: query,
-  })
+  if (!existingQuery || existingQuery.datasourceId === datasource._id) {
+    await propagateProjectDependencyChangesWithWarning(ctx, {
+      rootResourceId: datasource._id!,
+      currentProjectIds: datasource.projectIds,
+      previousProjectIds: datasource.projectIds,
+      previousResource: existingQuery,
+      savedResource: query,
+    })
+  } else {
+    const sourceProjectIds = new Set(existingDatasource.projectIds || [])
+    const destinationProjectIds = new Set(datasource.projectIds || [])
+    const sharedProjectIds = Array.from(destinationProjectIds).filter(
+      projectId => sourceProjectIds.has(projectId)
+    )
+    const destinationOnlyProjectIds = Array.from(destinationProjectIds).filter(
+      projectId => !sourceProjectIds.has(projectId)
+    )
+
+    await propagateProjectDependencyChangesWithWarning(ctx, {
+      rootResourceId: datasource._id!,
+      currentProjectIds: sharedProjectIds,
+      previousProjectIds: sharedProjectIds,
+      previousResource: existingQuery,
+      savedResource: query,
+    })
+    await propagateProjectDependencyChangesWithWarning(ctx, {
+      rootResourceId: datasource._id!,
+      currentProjectIds: destinationOnlyProjectIds,
+      previousProjectIds: destinationOnlyProjectIds,
+      savedResource: query,
+    })
+
+    const newAgentProjectIds = Array.from(
+      new Set(referencingAgents.flatMap(agent => agent.projectIds || []))
+    ).filter(
+      projectId =>
+        sourceProjectIds.has(projectId) && !destinationProjectIds.has(projectId)
+    )
+
+    await propagateProjectDependencyChangesWithWarning(ctx, {
+      rootResourceId: datasource._id!,
+      currentProjectIds: newAgentProjectIds,
+      previousProjectIds: newAgentProjectIds,
+      previousResource: existingQuery,
+      savedResource: query,
+    })
+
+    await propagateProjectIdsToDependencySubtreesWithWarning(ctx, {
+      blockedResourceIds: [query._id!],
+      dependencyIds: [datasource._id!],
+      projectIds: newAgentProjectIds,
+    })
+  }
 
   ctx.body = query
 }

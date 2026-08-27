@@ -23,6 +23,9 @@ interface ToolBindings {
 const escapeRegExp = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
+const readableBindingRegex = (binding: string) =>
+  new RegExp(`(\\{\\{\\s*)${escapeRegExp(binding)}(\\s*\\}\\})`, "g")
+
 const replaceReadableBinding = (
   promptInstructions: string | undefined,
   existingBinding: string,
@@ -32,12 +35,8 @@ const replaceReadableBinding = (
     return promptInstructions
   }
 
-  const bindingRegex = new RegExp(
-    `(\\{\\{\\s*)${escapeRegExp(existingBinding)}(\\s*\\}\\})`,
-    "g"
-  )
   return promptInstructions.replace(
-    bindingRegex,
+    readableBindingRegex(existingBinding),
     (_match, opening: string, closing: string) =>
       `${opening}${updatedBinding}${closing}`
   )
@@ -75,6 +74,35 @@ const replaceRuntimeBinding = (
     return true
   })
 }
+
+const agentReferencesQueryTool = ({
+  agent,
+  bindings,
+}: {
+  agent: Agent
+  bindings: ToolBindings
+}) =>
+  agent.operations?.some(
+    operation =>
+      (operation.promptInstructions &&
+        readableBindingRegex(bindings.readableBinding).test(
+          operation.promptInstructions
+        )) ||
+      operation.enabledTools?.some(
+        tool => tool.toolName === bindings.runtimeBinding
+      )
+  ) || false
+
+const agentReferencesRuntimeTool = ({
+  agent,
+  runtimeBinding,
+}: {
+  agent: Agent
+  runtimeBinding: string
+}) =>
+  agent.operations?.some(operation =>
+    operation.enabledTools?.some(tool => tool.toolName === runtimeBinding)
+  ) || false
 
 export const updateAgentQueryToolReferences = ({
   agent,
@@ -142,36 +170,43 @@ export const getQueryToolBindingsForResource = ({
 
 export const migrateQueryToolReferences = async (
   migrations: QueryToolReferenceMigration | QueryToolReferenceMigration[]
-): Promise<void> => {
-  const bindingChanges = (Array.isArray(migrations) ? migrations : [migrations])
-    .map(migration => ({
-      existingBindings: getQueryToolBindingsForResource({
-        datasource: migration.existingDatasource,
-        query: migration.existingQuery,
-      }),
-      updatedBindings: getQueryToolBindingsForResource({
-        datasource: migration.updatedDatasource,
-        query: migration.updatedQuery,
-      }),
-    }))
-    .filter(
-      ({ existingBindings, updatedBindings }) =>
-        existingBindings.readableBinding !== updatedBindings.readableBinding ||
-        existingBindings.runtimeBinding !== updatedBindings.runtimeBinding
-    )
+): Promise<Agent[]> => {
+  const bindingMigrations = (
+    Array.isArray(migrations) ? migrations : [migrations]
+  ).map(migration => ({
+    existingBindings: getQueryToolBindingsForResource({
+      datasource: migration.existingDatasource,
+      query: migration.existingQuery,
+    }),
+    updatedBindings: getQueryToolBindingsForResource({
+      datasource: migration.updatedDatasource,
+      query: migration.updatedQuery,
+    }),
+  }))
 
-  if (!bindingChanges.length) {
-    return
+  if (!bindingMigrations.length) {
+    return []
   }
 
   const agents = await fetch()
+  const referencingAgents: Agent[] = []
   for (const agent of agents) {
     let updatedAgent: Agent | undefined
     let currentAgent = agent
-    for (const bindingChange of bindingChanges) {
+    let referencesQuery = false
+    for (const bindingMigration of bindingMigrations) {
+      referencesQuery ||=
+        agentReferencesQueryTool({
+          agent,
+          bindings: bindingMigration.existingBindings,
+        }) ||
+        agentReferencesRuntimeTool({
+          agent,
+          runtimeBinding: bindingMigration.updatedBindings.runtimeBinding,
+        })
       const result = updateAgentQueryToolReferences({
         agent: currentAgent,
-        ...bindingChange,
+        ...bindingMigration,
       })
       if (result) {
         currentAgent = result
@@ -179,7 +214,11 @@ export const migrateQueryToolReferences = async (
       }
     }
     if (updatedAgent) {
-      await update(updatedAgent)
+      updatedAgent = await update(updatedAgent)
+    }
+    if (referencesQuery) {
+      referencingAgents.push(updatedAgent || agent)
     }
   }
+  return referencingAgents
 }
