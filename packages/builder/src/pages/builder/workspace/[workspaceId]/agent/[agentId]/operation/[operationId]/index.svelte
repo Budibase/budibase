@@ -410,7 +410,7 @@
       )
       .map(tool => ({
         toolName: tool.runtimeBinding,
-        executionPrincipal: getDefaultToolExecutionPrincipal({ tool }),
+        executionPrincipal: getDefaultToolExecutionPrincipal(tool),
       }))
 
     saveOperation({
@@ -679,7 +679,7 @@
   ) => {
     addingTool = tool
     pendingToolInsertion = insertPosition
-    const executionPrincipal = getDefaultToolExecutionPrincipal({ tool })
+    const executionPrincipal = getDefaultToolExecutionPrincipal(tool)
     configureToolModal?.show(
       tool,
       executionPrincipal,
