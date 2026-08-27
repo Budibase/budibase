@@ -36,7 +36,7 @@ export class FunctionRunSupervisor {
         return
       }
       terminationRequested = true
-      void this.executor.terminate(request.runId).catch(() => {})
+      void this.executor.terminate(request.runId)
     }
 
     signal?.addEventListener("abort", terminate, { once: true })
