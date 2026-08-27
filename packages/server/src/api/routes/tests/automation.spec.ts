@@ -10,6 +10,7 @@ import {
   EmailTriggerInputs,
   FieldType,
   FilterCondition,
+  PermissionLevel,
   RowActionTriggerInputs,
   RowCreatedTriggerInputs,
   RowDeletedTriggerInputs,
@@ -383,6 +384,65 @@ describe("/automations", () => {
 
       expect(result.steps[0].outputs.message).toEndWith(
         roles.BUILTIN_ROLE_IDS.BASIC
+      )
+    })
+
+    it("rejects on-demand tests when the preview role cannot execute the automation", async () => {
+      const runner = await createAutomationBuilder(config)
+        .onAppAction()
+        .serverLog({ text: "ran" })
+        .save()
+
+      await config.api.automation.test(
+        runner.automation._id!,
+        {
+          fields: {},
+          previewRoleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+        },
+        {
+          status: 400,
+          body: {
+            message:
+              "The selected role does not have permission to run this automation",
+          },
+        }
+      )
+    })
+
+    it("allows on-demand tests as public when execute permission is public", async () => {
+      const runner = await createAutomationBuilder(config)
+        .onAppAction()
+        .serverLog({ text: "{{ [user].[roleId] }}" })
+        .save()
+
+      await config.api.permission.add({
+        roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+        resourceId: runner.automation._id!,
+        level: PermissionLevel.EXECUTE,
+      })
+
+      const result = await runner.test({
+        fields: {},
+        previewRoleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+      })
+
+      expect(result.steps[0].outputs.message).toEndWith(
+        roles.BUILTIN_ROLE_IDS.PUBLIC
+      )
+    })
+
+    it("does not apply execute permission to non on-demand test runs", async () => {
+      const table = await config.createTable()
+      const result = await createAutomationBuilder(config)
+        .onRowSaved({ tableId: table._id! })
+        .serverLog({ text: "{{ [user].[roleId] }}" })
+        .test({
+          row: { tableId: table._id },
+          previewRoleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+        })
+
+      expect(result.steps[0].outputs.message).toEndWith(
+        roles.BUILTIN_ROLE_IDS.PUBLIC
       )
     })
 

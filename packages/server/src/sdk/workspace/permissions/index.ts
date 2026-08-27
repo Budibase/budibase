@@ -1,4 +1,4 @@
-import { context, roles } from "@budibase/backend-core"
+import { context, permissions, roles } from "@budibase/backend-core"
 import {
   getTableIdFromViewId,
   isTableIdOrExternalTableId,
@@ -8,6 +8,7 @@ import {
   Database,
   PermissionLevel,
   PermissionSource,
+  PermissionType,
   Role,
   VirtualDocumentType,
 } from "@budibase/types"
@@ -94,6 +95,38 @@ export async function getResourcePerms(
     : permissions
 
   return { ...basePermissions, ...mergeablePermissions }
+}
+
+export async function canRoleAccessResource({
+  roleId,
+  resourceId,
+  permissionType,
+  permissionLevel,
+}: {
+  roleId: string
+  resourceId: string
+  permissionType: PermissionType
+  permissionLevel: PermissionLevel
+}): Promise<boolean> {
+  const userRoles = await roles.getUserRoleHierarchy(roleId)
+  const resourcePermissions = await getResourcePerms(resourceId)
+  const allowedRole = resourcePermissions[permissionLevel]?.role
+
+  if (allowedRole === roles.BUILTIN_ROLE_IDS.PUBLIC) {
+    return true
+  }
+
+  if (allowedRole) {
+    return userRoles.some(
+      role => role._id && roles.roleIDsAreEqual(role._id, allowedRole)
+    )
+  }
+
+  return permissions.doesHaveBasePermission(
+    permissionType,
+    permissionLevel,
+    userRoles
+  )
 }
 
 export async function getDependantResources(

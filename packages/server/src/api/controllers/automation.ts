@@ -24,6 +24,8 @@ import {
   GetAutomationActionDefinitionsResponse,
   GetAutomationStepDefinitionsResponse,
   GetAutomationTriggerDefinitionsResponse,
+  PermissionLevel,
+  PermissionType,
   SearchAutomationLogsRequest,
   SearchAutomationLogsResponse,
   Table,
@@ -383,6 +385,21 @@ export async function test(
     testUser = {
       ...ctx.user,
       roleId: previewRole._id,
+    }
+
+    if (coreSdk.automations.isAppAction(automation)) {
+      const canExecute = await sdk.permissions.canRoleAccessResource({
+        roleId: previewRole._id,
+        resourceId: automation._id!,
+        permissionType: PermissionType.AUTOMATION,
+        permissionLevel: PermissionLevel.EXECUTE,
+      })
+      if (!canExecute) {
+        throw new HTTPError(
+          "The selected role does not have permission to run this automation",
+          400
+        )
+      }
     }
   }
 
