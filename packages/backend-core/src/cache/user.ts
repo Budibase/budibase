@@ -6,31 +6,48 @@ import env from "../environment"
 import * as accounts from "../accounts"
 import { UserDB } from "../users"
 import { sdk } from "@budibase/shared-core"
-import { User, SSOUser, UserMetadata } from "@budibase/types"
+import { ContextUser, User, SSOUser, UserMetadata } from "@budibase/types"
 
 const EXPIRY_SECONDS = 3600
 
 /**
  * The default populate user function
  */
-async function populateFromDB(userId: string, tenantId: string) {
+async function populateFromDB(
+  userId: string,
+  tenantId: string
+): Promise<{ user: UserMetadata; accountLookupFailed: boolean }> {
   const db = tenancy.getTenantDB(tenantId)
   const user = await db.get<UserMetadata>(userId)
   user.budibaseAccess = true
-  if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
+  const populated = await populateAccountInfo(user)
+  return { user, accountLookupFailed: !populated }
+}
+
+// returns false when the account portal lookup failed - the user is still
+// usable, but must not be cached so that the next lookup can retry
+async function populateAccountInfo(user: ContextUser): Promise<boolean> {
+  if (env.SELF_HOSTED || env.DISABLE_ACCOUNT_PORTAL) {
+    return true
+  }
+  try {
     const account = await accounts.getAccount(user.email)
     if (account) {
       user.account = account
       user.accountPortalAccess = true
     }
+    return true
+  } catch (err) {
+    console.error(`Failed to retrieve account for user ${user._id}`, err)
+    return false
   }
-
-  return user
 }
 
-async function populateUsersFromDB(
-  userIds: string[]
-): Promise<{ users: User[]; notFoundIds?: string[] }> {
+async function populateUsersFromDB(userIds: string[]): Promise<{
+  users: User[]
+  notFoundIds?: string[]
+  accountLookupFailedIds: string[]
+}> {
   const getUsersResponse = await UserDB.bulkGet(userIds)
 
   // Handle missed user ids
@@ -38,23 +55,20 @@ async function populateUsersFromDB(
 
   const users = getUsersResponse.filter(x => x)
 
+  const accountLookupFailedIds: string[] = []
   await Promise.all(
     users.map(async (user: any) => {
       user.budibaseAccess = true
-      if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-        const account = await accounts.getAccount(user.email)
-        if (account) {
-          user.account = account
-          user.accountPortalAccess = true
-        }
+      if (!(await populateAccountInfo(user))) {
+        accountLookupFailedIds.push(user._id)
       }
     })
   )
 
   if (notFoundIds.length) {
-    return { users, notFoundIds }
+    return { users, notFoundIds, accountLookupFailedIds }
   }
-  return { users }
+  return { users, accountLookupFailedIds }
 }
 
 /**
@@ -82,9 +96,6 @@ export async function getUser({
     email?: string
   ) => Promise<User>
 }) {
-  if (!populateUser) {
-    populateUser = populateFromDB
-  }
   if (!tenantId) {
     try {
       tenantId = context.getTenantId()
@@ -96,8 +107,16 @@ export async function getUser({
   // try cache
   let user: User | SSOUser = await client.get(userId)
   if (!user) {
-    user = await populateUser(userId, tenantId, email)
-    await client.store(userId, user, EXPIRY_SECONDS)
+    const populated = populateUser
+      ? {
+          user: await populateUser(userId, tenantId, email),
+          accountLookupFailed: false,
+        }
+      : await populateFromDB(userId, tenantId)
+    user = populated.user
+    if (!populated.accountLookupFailed) {
+      await client.store(userId, user, EXPIRY_SECONDS)
+    }
   }
   if (user && !user.tenantId && tenantId) {
     // make sure the tenant ID is always correct/set
@@ -140,7 +159,11 @@ export async function getUsers(
     const usersFromDb = await populateUsersFromDB(missingUsersFromCache)
 
     notFoundIds = usersFromDb.notFoundIds
+    const accountLookupFailedIds = new Set(usersFromDb.accountLookupFailedIds)
     for (const userToCache of usersFromDb.users) {
+      if (accountLookupFailedIds.has(userToCache._id!)) {
+        continue
+      }
       await client.store(userToCache._id!, userToCache, EXPIRY_SECONDS)
     }
     users.push(...usersFromDb.users)

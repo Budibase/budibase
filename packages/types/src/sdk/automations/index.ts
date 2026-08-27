@@ -32,6 +32,7 @@ export interface AutomationDataEvent {
 export interface AutomationData {
   event: AutomationDataEvent
   automation: Automation
+  featureFlagOverrides?: Record<string, boolean>
   // Builder preview runs should execute with test-run behaviour against dev data.
   isTestRun?: boolean
   // Set server-side on resume to skip the quota increment

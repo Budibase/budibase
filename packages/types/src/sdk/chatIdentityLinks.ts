@@ -8,7 +8,6 @@ export interface ChatIdentityLinkSession {
   externalUserId: string
   externalUserName?: string
   teamId?: string
-  guildId?: string
   providerTenantId?: string
   serviceUrl?: string
   confirmationToken?: string
@@ -27,7 +26,6 @@ export interface UpsertChatIdentityLinkInput {
   externalUserId: string
   externalUserName?: string
   teamId?: string
-  guildId?: string
   providerTenantId?: string
   serviceUrl?: string
   globalUserId: string
@@ -40,7 +38,6 @@ export interface CreateChatIdentityLinkSessionInput {
   externalUserId: string
   externalUserName?: string
   teamId?: string
-  guildId?: string
   providerTenantId?: string
   serviceUrl?: string
 }

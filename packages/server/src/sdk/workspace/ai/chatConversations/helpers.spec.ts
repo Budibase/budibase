@@ -1,8 +1,7 @@
 import { HTTPError } from "@budibase/backend-core"
-import { isToolUIPart, type ModelMessage } from "ai"
+import { isToolUIPart } from "ai"
 import { AgentChannelProvider, type ChatConversation } from "@budibase/types"
 import {
-  addRetrievedContextToMessages,
   extractUserText,
   findLatestUserQuestion,
   prepareChatConversationForSave,
@@ -32,7 +31,6 @@ describe("prepareChatConversationForSave", () => {
 
     const result = prepareChatConversationForSave({
       chatId: "chat_1",
-      chatAppId: "app_1",
       userId: "user_1",
       title: "My title",
       messages,
@@ -40,7 +38,6 @@ describe("prepareChatConversationForSave", () => {
     })
 
     expect(result._id).toBe("chat_1")
-    expect(result.chatAppId).toBe("app_1")
     expect(result.userId).toBe("user_1")
     expect(result.agentId).toBe("agent_1")
     expect(result.title).toBe("My title")
@@ -70,7 +67,6 @@ describe("prepareChatConversationForSave", () => {
 
     const result = prepareChatConversationForSave({
       chatId: "chat_1",
-      chatAppId: "app_1",
       userId: "user_1",
       messages,
       chat: { agentId: "agent_1" },
@@ -86,7 +82,6 @@ describe("prepareChatConversationForSave", () => {
 
     const result = prepareChatConversationForSave({
       chatId: "chat_1",
-      chatAppId: "app_1",
       userId: "user_1",
       messages,
       chat: {
@@ -96,14 +91,13 @@ describe("prepareChatConversationForSave", () => {
       },
       existingChat: {
         _id: "chat_1",
-        chatAppId: "app_1",
         userId: "user_1",
         agentId: "from_existing",
         messages,
         createdAt: "2019-01-01T00:00:00.000Z",
         updatedAt: "2019-06-01T00:00:00.000Z",
         _rev: "1-abc",
-        channel: { provider: AgentChannelProvider.DISCORD },
+        channel: { provider: AgentChannelProvider.MSTEAMS },
       },
     })
 
@@ -118,7 +112,6 @@ describe("prepareChatConversationForSave", () => {
 
     const result = prepareChatConversationForSave({
       chatId: "chat_1",
-      chatAppId: "app_1",
       userId: "user_1",
       messages,
       chat: { agentId: "agent_1", title: "Chat title" },
@@ -133,7 +126,6 @@ describe("prepareChatConversationForSave", () => {
     expect(() =>
       prepareChatConversationForSave({
         chatId: "chat_1",
-        chatAppId: "app_1",
         userId: "user_1",
         messages,
         chat: {},
@@ -255,27 +247,5 @@ describe("prepareModelMessages", () => {
     expect(result.length).toBeGreaterThan(0)
     const userMessage = result.find(m => m.role === "user")
     expect(userMessage).toBeDefined()
-  })
-})
-
-describe("addRetrievedContextToMessages", () => {
-  it("returns the same array when context is empty", () => {
-    const messages = [{ role: "user", content: "x" }] as ModelMessage[]
-    expect(addRetrievedContextToMessages(messages, "")).toBe(messages)
-  })
-
-  it("prepends a system message with retrieved knowledge", () => {
-    const messages = [{ role: "user", content: "x" }] as ModelMessage[]
-    const ctx = "fact about widgets"
-
-    const result = addRetrievedContextToMessages(messages, ctx)
-
-    expect(result).toEqual([
-      {
-        role: "system",
-        content: `Relevant knowledge:\n${ctx}\n\nUse this content when answering the user.`,
-      },
-      ...messages,
-    ])
   })
 })

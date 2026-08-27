@@ -1,6 +1,12 @@
+<script module lang="ts">
+  import type { GetTenantMetricsResponse } from "@budibase/types"
+
+  let cachedHomeMetrics: GetTenantMetricsResponse | null = null
+  let cachedGithubStars: number | null = null
+</script>
+
 <script lang="ts">
   import { Body, Icon, Modal } from "@budibase/bbui"
-  import type { GetWorkspaceHomeMetricsResponse } from "@budibase/types"
   import { onMount } from "svelte"
   import type { Route } from "@/types/routing"
 
@@ -13,13 +19,13 @@
   const GITHUB_REPO_URL = "https://github.com/Budibase/budibase"
 
   interface Props {
-    metrics?: GetWorkspaceHomeMetricsResponse | null
     showBudibaseAIMetric?: boolean
   }
 
-  let { metrics = null, showBudibaseAIMetric = true }: Props = $props()
+  let { showBudibaseAIMetric = true }: Props = $props()
 
-  let githubStars: number | null = $state(null)
+  let metrics = $state(cachedHomeMetrics)
+  let githubStars: number | null = $state(cachedGithubStars)
   let actionsBreakdownModal = $state<Modal>()
 
   const canViewOrganisationUsers = $derived(
@@ -44,13 +50,28 @@
     }).format(stars)
   }
 
-  onMount(async () => {
+  const loadMetrics = async () => {
+    try {
+      metrics = await API.workspaceHome.getMetrics()
+      cachedHomeMetrics = metrics
+    } catch (err) {
+      console.error("Failed to load workspace home metrics", err)
+    }
+  }
+
+  const loadGithubStars = async () => {
     try {
       const response = await API.workspaceHome.getGitHubStars()
       githubStars = response.stars
+      cachedGithubStars = response.stars
     } catch (err) {
       console.error("Failed to load GitHub stars", err)
     }
+  }
+
+  onMount(() => {
+    loadMetrics()
+    loadGithubStars()
   })
 </script>
 

@@ -1,9 +1,23 @@
-<script>
+<script lang="ts">
   import GroupIcon from "./GroupIcon.svelte"
   import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
 
-  export let value
-  export let row
+  interface GroupRow {
+    name?: string
+    icon?: string
+    color?: string
+    isDefault?: boolean
+    scimInfo?: {
+      isSync?: boolean
+    }
+  }
+
+  interface Props {
+    value?: string | null
+    row: GroupRow
+  }
+
+  let { value, row }: Props = $props()
 </script>
 
 <div class="align">

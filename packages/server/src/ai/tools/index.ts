@@ -7,7 +7,7 @@ import {
   type AgentOperationToolConfig,
   type ToolExecutionPolicy,
 } from "@budibase/types"
-import { type Tool, type ToolSet } from "ai"
+import { type ModelMessage, type Tool, type ToolSet } from "ai"
 
 export interface ToolAuthorization {
   permissionType: PermissionType
@@ -20,6 +20,7 @@ export interface AiToolDefinition {
   name: string
   readableName?: string
   tableId?: string
+  sourceId?: string
   description: string
   tool: Tool
   sourceType: ToolType
@@ -45,6 +46,13 @@ export interface ToolAuthorizationRequest {
   input: unknown
   executionContext: AgentExecutionContext
   principal: ToolExecutionPrincipal
+}
+
+export interface EscalationGateRuntime {
+  intercept: (
+    input: unknown,
+    options: { toolCallId: string; messages?: ModelMessage[] }
+  ) => Promise<Record<string, unknown>>
 }
 
 export const resolveToolExecutionPrincipal = (
@@ -80,7 +88,7 @@ const logToolExecution = (
   console.log("Agent tool execution", {
     outcome,
     toolName: toolDef.name,
-    requesterId: runtime.executionContext.requester.userId,
+    requesterRole: runtime.executionContext.requester.executorRole,
     effectivePrincipal: runtime.principal,
     agentId: runtime.executionContext.agentId,
     operationId: runtime.executionContext.operationId,
@@ -89,27 +97,37 @@ const logToolExecution = (
 
 const wrapTool = (
   toolDef: AiToolDefinition,
-  runtime?: ToolAuthorizationRuntime
+  runtime?: ToolAuthorizationRuntime,
+  gate?: EscalationGateRuntime
 ): Tool => {
   const execute = toolDef.tool.execute
   if (!execute) {
     return toolDef.tool
   }
 
-  const wrappedExecute: NonNullable<Tool["execute"]> = async (...args) => {
+  const wrappedExecute: NonNullable<Tool["execute"]> = async (
+    input,
+    options
+  ) => {
     if (runtime) {
       if (!toolDef.authorization) {
         throw new Error("Tool is not available in this security context")
       }
       await runtime.authorize({
         authorization: toolDef.authorization,
-        input: args[0],
+        input,
         executionContext: runtime.executionContext,
         principal: runtime.principal,
       })
     }
+    if (gate) {
+      return await gate.intercept(input, {
+        toolCallId: options?.toolCallId ?? "",
+        messages: options?.messages,
+      })
+    }
     try {
-      const result = await execute(...args)
+      const result = await execute(input, options)
       const failureMessage = getToolFailure(result)
       if (failureMessage) {
         throw new Error(failureMessage)
@@ -138,12 +156,13 @@ const wrapTool = (
 
 export const toToolSet = (
   tools: AiToolDefinition[],
-  runtimes: Map<string, ToolAuthorizationRuntime> = new Map()
+  runtimes: Map<string, ToolAuthorizationRuntime> = new Map(),
+  gates: Map<string, EscalationGateRuntime> = new Map()
 ): ToolSet => {
   return Object.fromEntries(
     tools.map(toolDef => [
       toolDef.name,
-      wrapTool(toolDef, runtimes.get(toolDef.name)),
+      wrapTool(toolDef, runtimes.get(toolDef.name), gates.get(toolDef.name)),
     ])
   )
 }

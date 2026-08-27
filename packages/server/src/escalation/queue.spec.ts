@@ -310,8 +310,7 @@ describe("resumeOperation", () => {
                 operationId: "op_1",
                 conversationId: "session_1",
                 requester: {
-                  userId: config.getUser()._id!,
-                  authorization: { mode: "current" },
+                  executorRole: "BASIC",
                 },
               },
             })
@@ -322,6 +321,7 @@ describe("resumeOperation", () => {
             const output = await escalateTool.execute(secondEscalationInput, {
               toolCallId: "tc_second_escalation",
               messages: [],
+              context: {},
             })
 
             onToolCalls?.([ESCALATE_TOOL_NAME])

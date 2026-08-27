@@ -2,6 +2,7 @@ import type { ModelMessage, UIMessage } from "ai"
 import { Document } from "../document"
 import { Automation, AutomationStepResult } from "./automation"
 import { ChatConversationChannel } from "../global"
+import type { AgentRequester } from "../global/agents"
 
 // This does need a degree of flexibility
 // {accepted: boolean} is a given for now, but response text
@@ -46,6 +47,13 @@ export interface SuspendedAutomationContext {
   state: Record<string, any>
 }
 
+export interface PendingToolCall {
+  toolCallId: string
+  toolName: string
+  args: unknown
+  sourceId?: string
+}
+
 export interface SuspendedOperationContext {
   agentId: string
   operationId: string
@@ -53,6 +61,8 @@ export interface SuspendedOperationContext {
   messages: ModelMessage[]
   channel?: ChatConversationChannel
   userId?: string
+  requester?: AgentRequester
+  pendingToolCall?: PendingToolCall
 }
 
 export type SuspendedContext =
@@ -98,8 +108,6 @@ export enum EscalationNotificationChannel {
   BUDIBASE = "budibase",
   SLACK = "slack",
   MSTEAMS = "msteams",
-  DISCORD = "discord",
-  TELEGRAM = "telegram",
 }
 
 export enum EscalationAction {

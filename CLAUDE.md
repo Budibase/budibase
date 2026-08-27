@@ -46,6 +46,8 @@
   against, provided there are no type errors.
 - Avoid adding nested ternary statements.
 - Prefer a svelte5 approach over svelte4.
+- Builder code runs in a browser context, so do not guard browser globals such
+  as `window` with `typeof window === "undefined"` checks.
 - Don't use // @ts-nocheck when asked to fix type errors.
 - When writing tests involving a URL, use example.com as the domain.
 - Use object parameters for functions with multiple inputs. This is required for

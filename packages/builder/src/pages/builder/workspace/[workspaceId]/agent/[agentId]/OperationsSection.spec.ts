@@ -76,6 +76,7 @@ import OperationsSection from "./OperationsSection.svelte"
 describe("OperationsSection", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    window.history.replaceState({}, "", "/")
   })
 
   it("opens a create modal before adding an operation", async () => {
@@ -148,6 +149,38 @@ describe("OperationsSection", () => {
     await fireEvent.click(screen.getByText("Customer support"))
 
     expect(mocks.goto).toHaveBeenCalledWith("./operation/operation_existing")
+  })
+
+  it("preserves the home return URL when opening an operation", async () => {
+    window.history.replaceState(
+      {},
+      "",
+      "/builder/workspace/app_1/agent/agent-1/config?returnTo=%2Fbuilder%2Fworkspace%2Fapp_1%2Fhome%3Ftype%3Dagent"
+    )
+    mocks.selectedAgent.set({
+      _id: "agent-1",
+      name: "Support agent",
+      aiconfig: "config-1",
+      operations: [
+        {
+          id: "operation_existing",
+          name: "Customer support",
+          live: false,
+          promptInstructions: "Help the customer",
+          allowKnowledgeSourceDownload: true,
+        },
+      ],
+    })
+
+    render(OperationsSection, {
+      props: { agentId: "agent-1" },
+    })
+
+    await fireEvent.click(screen.getByText("Customer support"))
+
+    expect(mocks.goto).toHaveBeenCalledWith(
+      "./operation/operation_existing?returnTo=%2Fbuilder%2Fworkspace%2Fapp_1%2Fhome%3Ftype%3Dagent"
+    )
   })
 
   it("does not allow creating a second operation with the same name", async () => {

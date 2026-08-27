@@ -176,6 +176,7 @@ const createAutomationTools = (
       return {
         name: toolName,
         readableName: `${automationName}.trigger`,
+        sourceId: automation._id,
         sourceType: ToolType.AUTOMATION,
         sourceLabel: "Budibase",
         description,

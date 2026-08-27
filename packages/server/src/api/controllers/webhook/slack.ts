@@ -1,4 +1,4 @@
-import { context, HTTPError } from "@budibase/backend-core"
+import { context, isHTTPError } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
 import type { SlackEvent } from "@chat-adapter/slack"
 import { createSlackAdapter } from "@chat-adapter/slack"
@@ -154,7 +154,6 @@ export const matchesSlackConversationScope = ({
 }) => {
   const ch = chat.channel
   return !!(
-    chat.chatAppId === scope.chatAppId &&
     chat.agentId === scope.agentId &&
     ch?.provider === AgentChannelProvider.SLACK &&
     ch?.channelId === scope.channelId &&
@@ -201,14 +200,12 @@ type SlackInput = {
 
 const createSlackInputHandler = ({
   workspaceId,
-  chatAppId,
   agentId,
   channelEnabled,
   idleTimeoutMinutes,
   requireUserLink,
 }: {
   workspaceId: string
-  chatAppId: string
   agentId: string
   channelEnabled: boolean
   idleTimeoutMinutes?: number
@@ -238,7 +235,6 @@ const createSlackInputHandler = ({
     }
 
     const scope: SlackConversationScope = {
-      chatAppId,
       agentId,
       channelId,
       threadId,
@@ -274,7 +270,6 @@ const createSlackInputHandler = ({
             isDirectMessage,
           }),
         workspaceId,
-        chatAppId,
         agentId,
         provider: AgentChannelProvider.SLACK,
         channelEnabled,
@@ -288,10 +283,9 @@ const createSlackInputHandler = ({
       })
     } catch (error) {
       console.error("Slack webhook processing failed", error)
-      const msg =
-        error instanceof HTTPError
-          ? error.message
-          : SLACK_FALLBACK_ERROR_MESSAGE
+      const msg = isHTTPError(error)
+        ? error.message
+        : SLACK_FALLBACK_ERROR_MESSAGE
       await target.post(msg)
     }
   }
@@ -328,16 +322,12 @@ const createSlackMessageHandler = (
 }
 
 export async function slackWebhook(
-  ctx: Ctx<
-    unknown,
-    unknown,
-    { instance: string; chatAppId: string; agentId: string }
-  >
+  ctx: Ctx<unknown, unknown, { instance: string; agentId: string }>
 ) {
   await runChatWebhook({
     ctx,
     providerName: "Slack",
-    createWebhookHandler: async ({ workspaceId, chatAppId, agentId }) => {
+    createWebhookHandler: async ({ workspaceId, agentId }) => {
       const {
         integration,
         idleTimeoutMinutes,
@@ -373,7 +363,6 @@ export async function slackWebhook(
 
       const handleSlackInput = createSlackInputHandler({
         workspaceId,
-        chatAppId,
         agentId,
         channelEnabled,
         idleTimeoutMinutes,

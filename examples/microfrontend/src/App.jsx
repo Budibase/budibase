@@ -26,10 +26,8 @@ const parseConfiguredBudibaseUrl = () => {
   }
 
   const appPath = parsed.pathname.replace(/\/$/, "")
-  if (!appPath.startsWith("/app/") && !appPath.startsWith("/app-chat/")) {
-    throw new Error(
-      "window.__BUDIBASE_APP_URL__ path must start with /app/ or /app-chat/."
-    )
+  if (!appPath.startsWith("/app/")) {
+    throw new Error("window.__BUDIBASE_APP_URL__ path must start with /app/.")
   }
 
   return { appUrl: parsed.toString(), appPath }

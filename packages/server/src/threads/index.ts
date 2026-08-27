@@ -8,6 +8,19 @@ export enum ThreadType {
   AUTOMATION = "automation",
 }
 
+// child_process inherits the parent's execArgv when execArgv isn't given, which
+// duplicates flags that are only ever meant for the main process: --inspect
+// fights over the debugger port, and --max-semi-space-size reserves a whole
+// extra V8 young generation in every thread. Only forward what the threads
+// themselves need.
+const FORWARDED_EXEC_ARGV = ["--enable-source-maps"]
+
+function threadExecArgv() {
+  return process.execArgv.filter(arg =>
+    FORWARDED_EXEC_ARGV.some(flag => arg === flag || arg.startsWith(`${flag}=`))
+  )
+}
+
 function typeToFile(type: ThreadType) {
   let filename = null
   switch (type) {
@@ -57,11 +70,7 @@ export class Thread {
             FORKED_PROCESS: "1",
             FORKED_PROCESS_NAME: type,
           },
-          execArgv: process.execArgv.some(arg =>
-            arg.startsWith("--enable-source-maps")
-          )
-            ? ["--enable-source-maps"]
-            : undefined,
+          execArgv: threadExecArgv(),
         },
       }
       if (opts.timeoutMs) {

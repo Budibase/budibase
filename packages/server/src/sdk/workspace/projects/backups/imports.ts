@@ -1067,12 +1067,7 @@ const buildRequirements = (docs: ImportedDoc[]): ProjectImportRequirement[] => {
 
     if (importedDoc.resourceType === ResourceType.AGENT) {
       const doc = importedDoc.doc as Agent
-      if (
-        doc.discordIntegration ||
-        doc.slackIntegration ||
-        doc.MSTeamsIntegration ||
-        doc.telegramIntegration
-      ) {
+      if (doc.slackIntegration || doc.MSTeamsIntegration) {
         return [
           {
             type: "agent_secrets" as const,

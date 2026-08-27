@@ -101,7 +101,6 @@
         slackIntegration: {
           botToken: toOptionalValue(draft.botToken),
           signingSecret: toOptionalValue(draft.signingSecret),
-          chatAppId: agent.slackIntegration?.chatAppId,
           messagingEndpointUrl: agent.slackIntegration?.messagingEndpointUrl,
           idleTimeoutMinutes: toOptionalIdleTimeout(draft.idleTimeoutMinutes),
           requireUserLink: draft.requireUserLink,
@@ -225,7 +224,7 @@
     <div class="guided-setup">
       <Body size="S">
         Slack app creation uses the access token managed in
-        <Link on:click={() => bb.settings("/connections/slack")}
+        <Link on:click={() => bb.settings("/channels/slack")}
           >workspace settings</Link
         >.
       </Body>

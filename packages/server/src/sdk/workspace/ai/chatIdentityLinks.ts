@@ -130,10 +130,7 @@ export const buildChatIdentityProviderRedirectUrl = ({
   if (provider === AgentChannelProvider.MSTEAMS) {
     return "https://teams.microsoft.com"
   }
-  if (provider === AgentChannelProvider.TELEGRAM) {
-    return "https://web.telegram.org"
-  }
-  return "https://discord.com/channels/@me"
+  throw provider satisfies never
 }
 
 export const createChatIdentityLinkSession = async ({
@@ -142,7 +139,6 @@ export const createChatIdentityLinkSession = async ({
   externalUserId,
   externalUserName,
   teamId,
-  guildId,
   providerTenantId,
   serviceUrl,
 }: CreateChatIdentityLinkSessionInput) => {
@@ -159,7 +155,6 @@ export const createChatIdentityLinkSession = async ({
     externalUserId,
     externalUserName,
     teamId,
-    guildId,
     providerTenantId,
     serviceUrl,
     createdAt: now.toISOString(),
@@ -229,7 +224,6 @@ export const upsertChatIdentityLink = async ({
   externalUserId,
   externalUserName,
   teamId,
-  guildId,
   providerTenantId,
   serviceUrl,
   globalUserId,
@@ -259,7 +253,6 @@ export const upsertChatIdentityLink = async ({
     linkedBy,
     externalUserName: externalUserName || existing?.externalUserName,
     teamId: teamId || existing?.teamId,
-    guildId: guildId || existing?.guildId,
     providerTenantId: providerTenantId || existing?.providerTenantId,
     serviceUrl: serviceUrl || existing?.serviceUrl,
     createdAt: existing?.createdAt || now,

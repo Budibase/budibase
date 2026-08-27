@@ -1,4 +1,4 @@
-import { context, features } from "@budibase/backend-core"
+import { context, features, isHTTPError } from "@budibase/backend-core"
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
@@ -243,14 +243,12 @@ const isTeamsPersonalConversation = (conversationType?: string) =>
 
 const createTeamsMessageHandler = ({
   workspaceId,
-  chatAppId,
   agentId,
   channelEnabled,
   idleTimeoutMinutes,
   requireUserLink,
 }: {
   workspaceId: string
-  chatAppId: string
   agentId: string
   channelEnabled: boolean
   idleTimeoutMinutes?: number
@@ -309,7 +307,6 @@ const createTeamsMessageHandler = ({
     }
 
     const scope: MSTeamsConversationScope = {
-      chatAppId,
       agentId,
       conversationId,
       threadId,
@@ -415,7 +412,6 @@ const createTeamsMessageHandler = ({
             isPersonalConversation,
           }),
         workspaceId,
-        chatAppId,
         agentId,
         provider: AgentChannelProvider.MSTEAMS,
         channelEnabled,
@@ -432,24 +428,21 @@ const createTeamsMessageHandler = ({
       })
     } catch (error) {
       console.error("Teams webhook processing failed", error)
-      const msg =
-        error instanceof Error ? error.message : TEAMS_FALLBACK_ERROR_MESSAGE
+      const msg = isHTTPError(error)
+        ? error.message
+        : TEAMS_FALLBACK_ERROR_MESSAGE
       await editOrPostTextReply(msg)
     }
   }
 }
 
 export async function MSTeamsWebhook(
-  ctx: Ctx<
-    unknown,
-    unknown,
-    { instance: string; chatAppId: string; agentId: string }
-  >
+  ctx: Ctx<unknown, unknown, { instance: string; agentId: string }>
 ) {
   await runChatWebhook({
     ctx,
     providerName: "Teams",
-    createWebhookHandler: async ({ workspaceId, chatAppId, agentId }) => {
+    createWebhookHandler: async ({ workspaceId, agentId }) => {
       const {
         integration,
         idleTimeoutMinutes,
@@ -485,7 +478,6 @@ export async function MSTeamsWebhook(
 
       const handler = createTeamsMessageHandler({
         workspaceId,
-        chatAppId,
         agentId,
         channelEnabled,
         idleTimeoutMinutes,
