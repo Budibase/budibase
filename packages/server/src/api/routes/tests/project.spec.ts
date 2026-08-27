@@ -574,7 +574,7 @@ describe("/projects", () => {
     })
   })
 
-  it("rejects unknown direct project ids and strips entity project ids", async () => {
+  it("rejects unknown direct project ids", async () => {
     await withProjectsEnabled(async () => {
       await config.api.workspaceApp.create(
         structures.workspaceApps.createRequest({
