@@ -240,13 +240,13 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     ? getNewLinkedTableIds({ previousTable, savedTable })
     : []
   const existingProjectIds = new Set(savedTable.projectIds || [])
-  for (const linkedTableId of newLinkedTableIds) {
-    const linkedTable = await sdk.tables.getTable(linkedTableId)
+  const newLinkedTables = await sdk.tables.getTables(newLinkedTableIds)
+  for (const linkedTable of newLinkedTables) {
     const reciprocalProjectIds = (linkedTable.projectIds || []).filter(
       projectId => !existingProjectIds.has(projectId)
     )
     await propagateProjectIdsToDependencySubtreesWithWarning(ctx, {
-      blockedResourceIds: [linkedTableId],
+      blockedResourceIds: [linkedTable._id!],
       dependencyIds: [savedTable._id!],
       projectIds: reciprocalProjectIds,
     })

@@ -2253,6 +2253,37 @@ describe("/projects", () => {
       })
     })
 
+    it("keeps table saves successful when a new linked table is missing", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const table = await config.api.table.save({
+          ...basicTable(),
+          projectIds: [project._id],
+        })
+        const missingTableId = "ta_missing"
+
+        await config.api.table.save({
+          ...table,
+          schema: {
+            ...table.schema,
+            missing: {
+              type: FieldType.LINK,
+              name: "Missing",
+              fieldName: "source",
+              relationshipType: RelationshipType.MANY_TO_MANY,
+              tableId: missingTableId,
+            },
+          },
+        })
+
+        expect(
+          (await config.api.table.get(table._id!)).schema.missing
+        ).toMatchObject({ tableId: missingTableId })
+      })
+    })
+
     it("does not propagate resource ids from ordinary text", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
