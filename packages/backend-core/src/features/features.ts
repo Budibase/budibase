@@ -88,14 +88,22 @@ export class FlagSet<T extends { [name: string]: boolean }> {
     return this.flagSchema[name as keyof T] !== undefined
   }
 
-  async isEnabled<K extends keyof T>(key: K): Promise<T[K]> {
-    const flags = await this.fetch()
+  async isEnabled<K extends keyof T>(
+    key: K,
+    options: { includeOverrides?: boolean } = {}
+  ): Promise<T[K]> {
+    const flags = await this.fetch(options)
     return flags[key]
   }
 
-  async fetch(): Promise<T> {
+  async fetch({
+    includeOverrides = true,
+  }: { includeOverrides?: boolean } = {}): Promise<T> {
     return await tracer.trace("features.fetch", async span => {
-      const cachedFlags = context.getFeatureFlags(this.setId)
+      const cacheKey = includeOverrides
+        ? this.setId
+        : `${this.setId}:without-overrides`
+      const cachedFlags = context.getFeatureFlags(cacheKey)
       if (cachedFlags) {
         span?.addTags({ fromCache: true })
         return cachedFlags as T
@@ -218,22 +226,24 @@ export class FlagSet<T extends { [name: string]: boolean }> {
         }
       }
 
-      const overrides = context.getFeatureFlagOverrides()
-      for (const [key, value] of Object.entries(overrides)) {
-        if (!this.isFlagName(key)) {
-          continue
-        }
+      if (includeOverrides) {
+        const overrides = context.getFeatureFlagOverrides()
+        for (const [key, value] of Object.entries(overrides)) {
+          if (!this.isFlagName(key)) {
+            continue
+          }
 
-        if (typeof value !== "boolean") {
-          continue
-        }
+          if (typeof value !== "boolean") {
+            continue
+          }
 
-        // @ts-expect-error - TS does not like you writing into a generic type.
-        flagValues[key] = value
-        tags[`flags.${key}.source`] = "override"
+          // @ts-expect-error - TS does not like you writing into a generic type.
+          flagValues[key] = value
+          tags[`flags.${key}.source`] = "override"
+        }
       }
 
-      context.setFeatureFlags(this.setId, flagValues)
+      context.setFeatureFlags(cacheKey, flagValues)
       for (const [key, value] of Object.entries(flagValues)) {
         tags[`flags.${key}.value`] = value
       }
@@ -245,7 +255,6 @@ export class FlagSet<T extends { [name: string]: boolean }> {
 }
 
 const featureFlagDefaults: Record<FeatureFlag, boolean> = {
-  [FeatureFlag.USE_ZOD_VALIDATOR]: false,
   [FeatureFlag.AI_TESTS]: false,
   [FeatureFlag.ESCALATION]: false,
   [FeatureFlag.AI_TOOL_ESCALATION]: false,
@@ -260,6 +269,10 @@ export const flags = new FlagSet(featureFlagDefaults)
 
 export async function isEnabled(flag: FeatureFlag) {
   return await flags.isEnabled(flag)
+}
+
+export async function isEnabledWithoutOverrides(flag: FeatureFlag) {
+  return await flags.isEnabled(flag, { includeOverrides: false })
 }
 
 export async function all() {

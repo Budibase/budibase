@@ -2,6 +2,12 @@ jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
   return {
     ...actual,
+    context: {
+      ...actual.context,
+      doInFeatureFlagOverrideContext: jest.fn(
+        actual.context.doInFeatureFlagOverrideContext
+      ),
+    },
     events: {
       ...actual.events,
       action: {
@@ -54,6 +60,33 @@ describe("automation thread", () => {
 
   afterAll(() => {
     config.end()
+  })
+
+  it("restores feature flag overrides for the automation run", async () => {
+    const appId = config.getProdWorkspaceId()
+    const featureFlagOverrides = {
+      AI_TOOL_ESCALATION: true,
+      AI_AGENT_TOOL_SECURITY: true,
+    }
+    const overrideContext = jest.mocked(context.doInFeatureFlagOverrideContext)
+    const automation = basicAutomation({ appId })
+    const data: AutomationData = {
+      automation,
+      event: { appId },
+      featureFlagOverrides,
+    }
+    const job = {
+      id: "feature-flag-job",
+      data,
+    } as Job<AutomationData>
+
+    await executeInThread(job)
+
+    expect(overrideContext).toHaveBeenCalledWith(
+      featureFlagOverrides,
+      expect.any(Function)
+    )
+    overrideContext.mockClear()
   })
 
   it("does not disable a cron schedule when a repeatable job stalls", async () => {
