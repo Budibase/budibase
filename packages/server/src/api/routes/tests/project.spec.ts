@@ -2390,6 +2390,41 @@ describe("/projects", () => {
       })
     })
 
+    it("preserves exclusions when saving a screen with a repaired app id", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const workspaceApp = await config.api.workspaceApp.find(
+          config.getDefaultWorkspaceAppId()
+        )
+        const automation = await config.createAutomation()
+        const screen = await config.api.screen.save(
+          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+        )
+        await config.api.project.updateAssignment(workspaceApp._id!, {
+          resourceRev: workspaceApp._rev!,
+          projectIds: [project._id],
+          dependencyIds: [],
+        })
+
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          await context.getWorkspaceDB().put({
+            ...screen,
+            workspaceAppId: undefined,
+          })
+        })
+        const repairedScreen = (await config.api.screen.list()).find(
+          candidate => candidate._id === screen._id
+        )!
+        await config.api.screen.save(repairedScreen)
+
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
     it("adds the project id to the generated automation when creating a row action for a project table", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
@@ -2745,6 +2780,74 @@ describe("/projects", () => {
       expect(
         (await config.api.table.get(automationDependency._id!)).projectIds
       ).toBeUndefined()
+    })
+  })
+
+  it("restores a duplicated automation without its source", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const dependency = await config.api.table.save(
+        basicTable(undefined, { name: "Automation dependency" })
+      )
+      const definition = newAutomation()
+      definition.definition.steps[0].inputs = {
+        ...definition.definition.steps[0].inputs,
+        tableId: dependency._id!,
+      }
+      const source = await config.createAutomation(definition)
+      await config.api.project.updateAssignment(source._id!, {
+        resourceRev: source._rev!,
+        projectIds: [project._id],
+        dependencyIds: [],
+      })
+      const persistedSource = await config.api.automation.get(source._id!)
+      const { automation: duplicate } = await config.api.automation.update({
+        ...persistedSource,
+        _id: undefined,
+        _rev: undefined,
+        name: `${persistedSource.name} copy`,
+        sourceAutomationId: persistedSource._id,
+      })
+
+      await config.api.automation.delete(duplicate)
+      await config.api.automation.delete(persistedSource)
+      const { automation: restored } = await config.api.automation.update({
+        ...duplicate,
+        _rev: undefined,
+        sourceAutomationId: persistedSource._id,
+      })
+
+      expect(restored._id).toBe(duplicate._id)
+      expect(restored.projectIds).toEqual([project._id])
+      expect(
+        (await config.api.table.get(dependency._id!)).projectIds
+      ).toBeUndefined()
+    })
+  })
+
+  it("propagates dependencies for explicit-id automation creations", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const dependency = await config.api.table.save(
+        basicTable(undefined, { name: "Automation dependency" })
+      )
+      const automation = newAutomation()
+      automation._id = "au_explicit_id"
+      automation.projectIds = [project._id]
+      automation.definition.steps[0].inputs = {
+        ...automation.definition.steps[0].inputs,
+        tableId: dependency._id!,
+      }
+
+      await config.api.automation.post(automation)
+
+      expect((await config.api.table.get(dependency._id!)).projectIds).toEqual([
+        project._id,
+      ])
     })
   })
 

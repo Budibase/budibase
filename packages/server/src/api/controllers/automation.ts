@@ -80,9 +80,11 @@ async function createUnlocked(
     return
   }
 
-  const sourceAutomation = sourceAutomationId
-    ? await sdk.automations.get(sourceAutomationId)
-    : undefined
+  const restoringDeletedAutomation = ctx.method === "PUT" && !!automation._id
+  const sourceAutomation =
+    sourceAutomationId && !restoringDeletedAutomation
+      ? await sdk.automations.get(sourceAutomationId)
+      : undefined
   automation.projectIds = sourceAutomation
     ? await getValidProjectIdsForDuplication(sourceAutomation.projectIds)
     : await resolveProjectIds(automation.projectIds)
@@ -110,13 +112,16 @@ async function createUnlocked(
     createdAutomation = await sdk.automations.create(automation)
   }
 
-  await propagateProjectDependencyChangesWithWarning(ctx, {
-    rootResourceId: createdAutomation._id!,
-    currentProjectIds: createdAutomation.projectIds,
-    previousProjectIds: sourceAutomation?.projectIds,
-    previousResource: sourceAutomation,
-    savedResource: createdAutomation,
-  })
+  // A history restore replays the saved snapshot, including its exclusions.
+  if (!restoringDeletedAutomation) {
+    await propagateProjectDependencyChangesWithWarning(ctx, {
+      rootResourceId: createdAutomation._id!,
+      currentProjectIds: createdAutomation.projectIds,
+      previousProjectIds: sourceAutomation?.projectIds,
+      previousResource: sourceAutomation,
+      savedResource: createdAutomation,
+    })
+  }
 
   ctx.body = {
     message: "Automation created successfully",
