@@ -19,7 +19,10 @@
   let trigger = {}
   let schemaProperties = {}
   let previewRolesLoading = false
-  let previewRoleId = $auth.user?.roleId || Constants.Roles.ADMIN
+  let previewRoleId =
+    $selectedAutomation.data?.testData?.previewRoleId ||
+    $auth.user?.roleId ||
+    Constants.Roles.ADMIN
 
   $: previewRoleOptions = $roles.map(role => ({
     label: role.uiMetadata?.displayName || role.name,
@@ -38,6 +41,21 @@
       notifications.error(error)
     } finally {
       previewRolesLoading = false
+    }
+  }
+
+  const updatePreviewRole = async event => {
+    previewRoleId = event.detail
+    testData = {
+      ...testData,
+      previewRoleId,
+    }
+    try {
+      const updatedAuto =
+        automationStore.actions.addTestDataToAutomation(testData)
+      await automationStore.actions.save(updatedAuto)
+    } catch (error) {
+      notifications.error("Error saving automation")
     }
   }
 
@@ -149,10 +167,14 @@
     // Ensure testData reactiveness is processed
     await tick()
     try {
-      await automationStore.actions.test($selectedAutomation.data, {
+      const persistedTestData = {
         ...testData,
         previewRoleId,
-      })
+      }
+      const updatedAuto =
+        automationStore.actions.addTestDataToAutomation(persistedTestData)
+      const savedAuto = await automationStore.actions.save(updatedAuto)
+      await automationStore.actions.test(savedAuto, persistedTestData)
       automationStore.update(state => ({ ...state, showTestModal: false }))
     } catch (error) {
       notifications.error(error)
@@ -185,7 +207,7 @@
         placeholder={false}
         loading={previewRolesLoading}
         on:click={refreshPreviewRoles}
-        on:change={event => (previewRoleId = event.detail)}
+        on:change={updatePreviewRole}
       />
     </div>
   </div>
