@@ -114,7 +114,6 @@ describe("LocalFunctionExecutor", () => {
 
   it("stops execution and aborts capabilities when cancelled", async () => {
     const executor = new LocalFunctionExecutor()
-    const abortController = new AbortController()
     let markStarted = () => {}
     const capabilityStarted = new Promise<void>(resolve => {
       markStarted = resolve
@@ -133,10 +132,10 @@ describe("LocalFunctionExecutor", () => {
           return { output: {} }
         }
       `),
-      context(invokeCapability, abortController.signal)
+      context(invokeCapability)
     )
     await capabilityStarted
-    abortController.abort()
+    await executor.terminate("executor-run")
 
     await expect(result).resolves.toMatchObject({ status: "stopped" })
   })
