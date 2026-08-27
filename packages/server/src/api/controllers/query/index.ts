@@ -48,7 +48,10 @@ import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
 import { invalidateCachedVariable } from "../../../threads/utils"
 import { save as saveDatasource } from "../datasource"
-import { propagateProjectDependencyChangesWithWarning } from "../../../utilities/projects"
+import {
+  propagateCreatedResourceDependenciesWithWarning,
+  propagateProjectDependencyChangesWithWarning,
+} from "../../../utilities/projects"
 import { builderSocket } from "../../../websockets"
 import { createImporter, getImportInfo } from "./import"
 import { ImportInfo } from "./import/sources/base"
@@ -165,9 +168,20 @@ const _import = async (
 
   let importResult
   try {
-    importResult = await importer.importQueries(
-      datasourceId,
-      body.selectedEndpointId
+    importResult = await sdk.projects.doWithProjectAssignmentsLockIfEnabled(
+      async () => {
+        const result = await importer.importQueries(
+          datasourceId,
+          body.selectedEndpointId
+        )
+        const datasource = await sdk.datasources.get(datasourceId)
+        await propagateCreatedResourceDependenciesWithWarning(ctx, {
+          rootResourceId: datasourceId,
+          projectIds: datasource.projectIds,
+          savedResources: result.queries,
+        })
+        return result
+      }
     )
   } catch (error: any) {
     if (body.selectedEndpointId && error?.message) {
@@ -226,6 +240,7 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
 
   let eventFn
   let existingQuery: Query | undefined
+  let existingDatasource = datasource
   if (!query._id && !query._rev) {
     query._id = generateQueryID(query.datasourceId)
     // flag to state whether the default bindings are empty strings (old behaviour) or null
@@ -235,14 +250,23 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
     // check if flag has previously been set, don't let it change
     // allow it to be explicitly set to false via API incase this is ever needed
     existingQuery = await db.get<Query>(query._id)
+    if (existingQuery.datasourceId !== datasource._id) {
+      existingDatasource = await sdk.datasources.get(existingQuery.datasourceId)
+    }
     if (existingQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
       query.nullDefaultSupport = true
     }
     eventFn = () => events.query.updated(datasource, query)
   }
-  if (existingQuery && existingQuery.name !== query.name) {
+  const datasourceChanged =
+    existingQuery?.datasourceId !== undefined &&
+    existingQuery.datasourceId !== datasource._id
+  if (
+    existingQuery &&
+    (datasourceChanged || existingQuery.name !== query.name)
+  ) {
     await sdk.ai.agents.migrateQueryToolReferences({
-      existingDatasource: datasource,
+      existingDatasource,
       updatedDatasource: datasource,
       existingQuery,
       updatedQuery: query,
@@ -256,7 +280,7 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
     rootResourceId: datasource._id!,
     currentProjectIds: datasource.projectIds,
     previousProjectIds: datasource.projectIds,
-    previousResource: existingQuery,
+    previousResource: datasourceChanged ? undefined : existingQuery,
     savedResource: query,
   })
 

@@ -55,6 +55,7 @@ import {
 import { handleDataImport } from "./utils"
 import {
   propagateProjectDependencyChangesWithWarning,
+  propagateProjectIdsToDependencySubtreesWithWarning,
   resolveProjectIds,
   resolveUpdatedProjectIds,
 } from "../../../utilities/projects"
@@ -62,6 +63,7 @@ import { builderSocket } from "../../../websockets"
 import * as external from "./external"
 import * as internal from "./internal"
 import { getRowParams } from "../../../db/utils"
+import { getLinkedTableIDs } from "../../../db/linkedRows/linkUtils"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && isExternalTable(table)) {
@@ -71,6 +73,21 @@ function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
     return external
   }
   return internal
+}
+
+const getNewLinkedTableIds = ({
+  previousTable,
+  savedTable,
+}: {
+  previousTable?: Table
+  savedTable: Table
+}) => {
+  const previousIds = new Set(
+    previousTable ? getLinkedTableIDs(previousTable.schema) : []
+  )
+  return Array.from(new Set(getLinkedTableIDs(savedTable.schema))).filter(
+    tableId => tableId !== savedTable._id && !previousIds.has(tableId)
+  )
 }
 
 function checkDefaultFields(table: Table) {
@@ -219,6 +236,22 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     await events.table.imported(savedTable)
   }
 
+  const newLinkedTableIds = !isExternalTable(savedTable)
+    ? getNewLinkedTableIds({ previousTable, savedTable })
+    : []
+  const existingProjectIds = new Set(savedTable.projectIds || [])
+  for (const linkedTableId of newLinkedTableIds) {
+    const linkedTable = await sdk.tables.getTable(linkedTableId)
+    const reciprocalProjectIds = (linkedTable.projectIds || []).filter(
+      projectId => !existingProjectIds.has(projectId)
+    )
+    await propagateProjectIdsToDependencySubtreesWithWarning(ctx, {
+      blockedResourceIds: [linkedTableId],
+      dependencyIds: [savedTable._id!],
+      projectIds: reciprocalProjectIds,
+    })
+  }
+
   if (!isExternalTable(savedTable)) {
     await propagateProjectDependencyChangesWithWarning(ctx, {
       rootResourceId: savedTable._id!,
@@ -227,6 +260,12 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
       previousResource: previousTable,
       savedResource: savedTable,
     })
+  }
+
+  if (newLinkedTableIds.length) {
+    const persistedTable = await sdk.tables.getTable(savedTable._id!)
+    savedTable._rev = persistedTable._rev
+    savedTable.projectIds = persistedTable.projectIds
   }
 
   ctx.message = `Table ${table.name} saved successfully.`
@@ -349,14 +388,6 @@ async function duplicateUnlocked(ctx: UserCtx<void, SaveTableResponse>) {
   }
 
   const duplicatedTable = await sdk.tables.duplicate(table, ctx.user._id)
-  if (!isExternalTable(duplicatedTable)) {
-    await propagateProjectDependencyChangesWithWarning(ctx, {
-      rootResourceId: duplicatedTable._id!,
-      currentProjectIds: duplicatedTable.projectIds,
-      previousProjectIds: [],
-      savedResource: duplicatedTable,
-    })
-  }
 
   ctx.message = `Table ${table.name} duplicated successfully.`
   ctx.body = duplicatedTable

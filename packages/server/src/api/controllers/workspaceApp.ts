@@ -55,12 +55,6 @@ async function duplicateUnlocked(
   }
 
   const duplicatedApp = await sdk.workspaceApps.duplicate(workspaceApp)
-  await propagateProjectDependencyChangesWithWarning(ctx, {
-    rootResourceId: duplicatedApp._id!,
-    currentProjectIds: duplicatedApp.projectIds,
-    previousProjectIds: [],
-    savedResource: duplicatedApp,
-  })
 
   ctx.message = `App ${workspaceApp.name} duplicated successfully.`
   ctx.body = { workspaceApp: toWorkspaceAppResponse(duplicatedApp) }

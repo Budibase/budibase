@@ -53,6 +53,7 @@ import { DocumentType } from "../../db/utils"
 import env from "../../environment"
 import sdk from "../../sdk"
 import { isMaskedPassword } from "../../sdk/workspace/automations/utils"
+import { getValidProjectIdsForDuplication } from "../../sdk/workspace/projects/utils"
 import { isQsTrue } from "../../utilities"
 import {
   propagateProjectDependencyChangesWithWarning,
@@ -71,7 +72,7 @@ import { builderSocket } from "../../websockets"
 async function createUnlocked(
   ctx: UserCtx<CreateAutomationRequest, CreateAutomationResponse>
 ) {
-  let automation = ctx.request.body
+  const { sourceAutomationId, ...automation } = ctx.request.body
 
   // call through to update if already exists
   if (automation._id && automation._rev) {
@@ -79,7 +80,12 @@ async function createUnlocked(
     return
   }
 
-  automation.projectIds = await resolveProjectIds(automation.projectIds)
+  const sourceAutomation = sourceAutomationId
+    ? await sdk.automations.get(sourceAutomationId)
+    : undefined
+  automation.projectIds = sourceAutomation
+    ? await getValidProjectIdsForDuplication(sourceAutomation.projectIds)
+    : await resolveProjectIds(automation.projectIds)
   automation.appId = ctx.appId
 
   let createdAutomation: Automation
@@ -107,7 +113,8 @@ async function createUnlocked(
   await propagateProjectDependencyChangesWithWarning(ctx, {
     rootResourceId: createdAutomation._id!,
     currentProjectIds: createdAutomation.projectIds,
-    previousProjectIds: [],
+    previousProjectIds: sourceAutomation?.projectIds,
+    previousResource: sourceAutomation,
     savedResource: createdAutomation,
   })
 
@@ -121,7 +128,8 @@ async function createUnlocked(
 async function updateUnlocked(
   ctx: UserCtx<UpdateAutomationRequest, UpdateAutomationResponse>
 ) {
-  let automation = ctx.request.body
+  const { sourceAutomationId: _sourceAutomationId, ...automation } =
+    ctx.request.body
   automation.appId = ctx.appId
 
   // Call through to create if it doesn't exist

@@ -11,11 +11,13 @@ import {
   APIWarningCode,
   DesignDocument,
   FeatureFlag,
+  FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
   isEmailTrigger,
   isWebhookTrigger,
   ResourceType,
+  RelationshipType,
   RestAuthType,
   SourceName,
   ToolExecutionPrincipal,
@@ -1935,6 +1937,133 @@ describe("/projects", () => {
       })
     })
 
+    it("propagates dependencies and tool bindings when a query moves", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const sourceDatasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          name: "Source datasource",
+        })
+        const destinationDatasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          name: "Destination datasource",
+          projectIds: [project._id],
+        })
+        const table = await config.api.table.save(basicTable())
+        const query = await config.api.query.save({
+          ...basicQuery(sourceDatasource._id!),
+          transformer: `return "{{ ${table._id}._id }}"`,
+        })
+        const existingBindings = getQueryToolBindingsForResource({
+          datasource: sourceDatasource,
+          query,
+        })
+        const agent = await config.api.agent.createWithOperation(
+          { name: "Query agent" },
+          {
+            id: "operation_1",
+            name: "Run query",
+            live: false,
+            promptInstructions: `Use {{ ${existingBindings.readableBinding} }}.`,
+            enabledTools: [
+              {
+                toolName: existingBindings.runtimeBinding,
+                executionPrincipal: ToolExecutionPrincipal.ADMIN,
+              },
+            ],
+            allowKnowledgeSourceDownload: true,
+          }
+        )
+
+        const movedQuery = await config.api.query.save({
+          ...query,
+          datasourceId: destinationDatasource._id!,
+        })
+
+        expect((await config.api.table.get(table._id!)).projectIds).toEqual([
+          project._id,
+        ])
+        const updatedBindings = getQueryToolBindingsForResource({
+          datasource: destinationDatasource,
+          query: movedQuery,
+        })
+        const updatedAgent = (await config.api.agent.fetch()).agents.find(
+          candidate => candidate._id === agent._id
+        )!
+        expect(updatedAgent.operations?.[0].promptInstructions).toBe(
+          `Use {{ ${updatedBindings.readableBinding} }}.`
+        )
+        expect(updatedAgent.operations?.[0].enabledTools?.[0].toolName).toBe(
+          updatedBindings.runtimeBinding
+        )
+      })
+    })
+
+    it("propagates imported query dependencies without restoring exclusions", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create({
+          type: "datasource",
+          name: "REST datasource",
+          source: SourceName.REST,
+          config: { url: "https://example.com" },
+        })
+        const excludedTable = await config.api.table.save(
+          basicTable(undefined, { name: "Excluded table" })
+        )
+        const importedTable = await config.api.table.save(
+          basicTable(undefined, { name: "Imported table" })
+        )
+        await config.api.query.save({
+          ...basicQuery(datasource._id!),
+          transformer: `return "{{ ${excludedTable._id}._id }}"`,
+        })
+        await config.api.project.updateAssignment(datasource._id!, {
+          resourceRev: datasource._rev!,
+          projectIds: [project._id],
+          dependencyIds: [],
+        })
+
+        await config.api.query.import({
+          datasource,
+          datasourceId: datasource._id,
+          data: JSON.stringify({
+            openapi: "3.0.0",
+            info: { title: "Imported API", version: "1.0.0" },
+            servers: [{ url: "https://example.com" }],
+            paths: {
+              "/records": {
+                get: {
+                  parameters: [
+                    {
+                      name: "table",
+                      in: "query",
+                      schema: {
+                        type: "string",
+                        default: `{{ ${importedTable._id}._id }}`,
+                      },
+                    },
+                  ],
+                  responses: { "200": { description: "OK" } },
+                },
+              },
+            },
+          }),
+        })
+
+        expect(
+          (await config.api.table.get(importedTable._id!)).projectIds
+        ).toEqual([project._id])
+        expect(
+          (await config.api.table.get(excludedTable._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
     it("does not restore excluded sibling query dependencies", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
@@ -1970,6 +2099,95 @@ describe("/projects", () => {
         expect(
           (await config.api.table.get(includedTable._id!)).projectIds
         ).toEqual([project._id])
+      })
+    })
+
+    it("propagates reciprocal table dependencies without crossing excluded cycles", async () => {
+      await withProjectsEnabled(async () => {
+        const { project: sourceProject } = await config.api.project.create({
+          name: "Source project",
+        })
+        const { project: targetProject } = await config.api.project.create({
+          name: "Target project",
+        })
+        const sourceSibling = await config.api.table.save(
+          basicTable(undefined, { name: "Source sibling" })
+        )
+        const targetSibling = await config.api.table.save(
+          basicTable(undefined, { name: "Target sibling" })
+        )
+        const sourceDefinition = basicTable(undefined, { name: "Source" })
+        const source = await config.api.table.save({
+          ...sourceDefinition,
+          schema: {
+            ...sourceDefinition.schema,
+            sourceSibling: {
+              type: FieldType.LINK,
+              name: "Source sibling",
+              fieldName: "source",
+              relationshipType: RelationshipType.MANY_TO_MANY,
+              tableId: sourceSibling._id!,
+            },
+          },
+        })
+        const targetDefinition = basicTable(undefined, { name: "Target" })
+        const target = await config.api.table.save({
+          ...targetDefinition,
+          schema: {
+            ...targetDefinition.schema,
+            targetSibling: {
+              type: FieldType.LINK,
+              name: "Target sibling",
+              fieldName: "target",
+              relationshipType: RelationshipType.MANY_TO_MANY,
+              tableId: targetSibling._id!,
+            },
+          },
+        })
+        await config.api.project.updateAssignment(source._id!, {
+          resourceRev: source._rev!,
+          projectIds: [sourceProject._id],
+          dependencyIds: [],
+        })
+        await config.api.project.updateAssignment(target._id!, {
+          resourceRev: target._rev!,
+          projectIds: [targetProject._id, sourceProject._id],
+          dependencyIds: [],
+        })
+
+        const persistedSource = await config.api.table.get(source._id!)
+        await config.api.table.save({
+          ...persistedSource,
+          schema: {
+            ...persistedSource.schema,
+            target: {
+              type: FieldType.LINK,
+              name: "Target",
+              fieldName: "source",
+              relationshipType: RelationshipType.MANY_TO_MANY,
+              tableId: target._id!,
+            },
+          },
+        })
+
+        const updatedSource = await config.api.table.get(source._id!)
+        const updatedTarget = await config.api.table.get(target._id!)
+        const updatedSourceSibling = await config.api.table.get(
+          sourceSibling._id!
+        )
+        const updatedTargetSibling = await config.api.table.get(
+          targetSibling._id!
+        )
+        expect(updatedSource.projectIds).toEqual(
+          expect.arrayContaining([sourceProject._id, targetProject._id])
+        )
+        expect(updatedTarget.projectIds).toEqual(
+          expect.arrayContaining([sourceProject._id, targetProject._id])
+        )
+        expect(updatedSourceSibling.projectIds).toContain(targetProject._id)
+        expect(updatedSourceSibling.projectIds).not.toContain(sourceProject._id)
+        expect(updatedTargetSibling.projectIds).toContain(sourceProject._id)
+        expect(updatedTargetSibling.projectIds).not.toContain(targetProject._id)
       })
     })
 
@@ -2350,34 +2568,90 @@ describe("/projects", () => {
     })
   })
 
-  it("preserves valid project assignments when duplicating resources", async () => {
+  it("preserves project assignments and exclusions when duplicating resources", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
         name: "Operations",
       })
-      const table = await config.api.table.save({
-        ...basicTable(),
-        projectIds: [project._id],
-      })
+      const table = await config.api.table.save(
+        basicTable(undefined, { name: "Source table" })
+      )
       const { workspaceApp } = await config.api.workspaceApp.create({
         name: "Operations app",
         url: "/operations-app",
-        projectIds: [project._id],
       })
-      const agent = await config.api.agent.create({
-        name: "Ops agent",
-        aiconfig: "default",
-        projectIds: [project._id],
+      const appDependency = await config.createAutomation()
+      const appScreen = basicScreen()
+      await config.api.screen.save({
+        ...appScreen,
+        workspaceAppId: workspaceApp._id,
+        props: {
+          ...appScreen.props,
+          dependencies: [appDependency._id],
+        },
       })
+      const agentDependency = await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        name: "Agent dependency",
+      })
+      const agent = await config.api.agent.createWithOperation(
+        { name: "Ops agent" },
+        {
+          id: "operation_1",
+          name: "Use datasource",
+          live: false,
+          promptInstructions: `Use {{ ${agentDependency._id}.rows }}.`,
+          enabledTools: [],
+          allowKnowledgeSourceDownload: true,
+        }
+      )
+      const automationDependency = await config.api.table.save(
+        basicTable(undefined, { name: "Automation dependency" })
+      )
+      const automationDefinition = newAutomation()
+      automationDefinition.definition.steps[0].inputs = {
+        ...automationDefinition.definition.steps[0].inputs,
+        tableId: automationDependency._id!,
+      }
+      const automation = await config.createAutomation(automationDefinition)
+
+      for (const resource of [table, workspaceApp, agent, automation]) {
+        await config.api.project.updateAssignment(resource._id!, {
+          resourceRev: resource._rev!,
+          projectIds: [project._id],
+          dependencyIds: [],
+        })
+      }
 
       const duplicatedTable = await config.api.table.duplicate(table._id!)
       const { workspaceApp: duplicatedWorkspaceApp } =
         await config.api.workspaceApp.duplicate(workspaceApp._id!)
       const duplicatedAgent = await config.api.agent.duplicate(agent._id!)
+      const persistedAutomation = await config.api.automation.get(
+        automation._id!
+      )
+      const { automation: duplicatedAutomation } =
+        await config.api.automation.update({
+          ...persistedAutomation,
+          _id: undefined,
+          _rev: undefined,
+          name: `${persistedAutomation.name} copy`,
+          sourceAutomationId: persistedAutomation._id,
+        })
 
       expect(duplicatedTable.projectIds).toEqual([project._id])
       expect(duplicatedWorkspaceApp.projectIds).toEqual([project._id])
       expect(duplicatedAgent.projectIds).toEqual([project._id])
+      expect(duplicatedAutomation.projectIds).toEqual([project._id])
+      expect(
+        (await config.api.automation.get(appDependency._id!)).projectIds
+      ).toBeUndefined()
+      expect(
+        (await config.api.datasource.get(agentDependency._id!)).projectIds
+      ).toBeUndefined()
+      expect(
+        (await config.api.table.get(automationDependency._id!)).projectIds
+      ).toBeUndefined()
     })
   })
 
@@ -2385,6 +2659,7 @@ describe("/projects", () => {
     let tableId = ""
     let workspaceAppId = ""
     let agentId = ""
+    let automationId = ""
 
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
@@ -2404,20 +2679,35 @@ describe("/projects", () => {
         aiconfig: "default",
         projectIds: [project._id],
       })
+      const automation = await config.createAutomation({
+        ...newAutomation(),
+        projectIds: [project._id],
+      })
 
       tableId = table._id!
       workspaceAppId = workspaceApp._id!
       agentId = agent._id!
+      automationId = automation._id!
     })
 
     const duplicatedTable = await config.api.table.duplicate(tableId!)
     const { workspaceApp: duplicatedWorkspaceApp } =
       await config.api.workspaceApp.duplicate(workspaceAppId!)
     const duplicatedAgent = await config.api.agent.duplicate(agentId!)
+    const automation = await config.api.automation.get(automationId)
+    const { automation: duplicatedAutomation } =
+      await config.api.automation.update({
+        ...automation,
+        _id: undefined,
+        _rev: undefined,
+        name: `${automation.name} copy`,
+        sourceAutomationId: automationId,
+      })
 
     expect(duplicatedTable.projectIds).toBeUndefined()
     expect(duplicatedWorkspaceApp.projectIds).toBeUndefined()
     expect(duplicatedAgent.projectIds).toBeUndefined()
+    expect(duplicatedAutomation.projectIds).toBeUndefined()
   })
 
   const createProjectExportFixture = async () => {

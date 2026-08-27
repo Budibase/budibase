@@ -743,12 +743,6 @@ async function duplicateAgentUnlocked(
   const createdBy = ctx.user?._id!
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
   const duplicated = await sdk.ai.agents.duplicate(sourceAgent, globalId)
-  await propagateProjectDependencyChangesWithWarning(ctx, {
-    rootResourceId: duplicated._id!,
-    currentProjectIds: duplicated.projectIds,
-    previousProjectIds: [],
-    savedResource: duplicated,
-  })
 
   ctx.body = toAgentResponse(duplicated)
   ctx.status = 201
