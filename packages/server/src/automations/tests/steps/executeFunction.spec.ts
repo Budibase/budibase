@@ -70,6 +70,8 @@ const dependencies = (
   getFunction: jest.fn().mockResolvedValue(fn),
   getReadiness: jest.fn().mockResolvedValue("ready"),
   createCapabilitySession: jest.fn().mockResolvedValue(capabilitySession()),
+  createRunSummary: jest.fn().mockResolvedValue(undefined),
+  finalizeRunSummary: jest.fn().mockResolvedValue(undefined),
   createRunId: jest.fn().mockReturnValue("run-1"),
   ...overrides,
 })
@@ -135,6 +137,15 @@ describe("Run Function automation action", () => {
       },
       signal: undefined,
     })
+    expect(deps.createRunSummary).toHaveBeenCalledWith({
+      runId: "run-1",
+      functionId: fn._id,
+      functionName: fn.name,
+      sourceHash: artifact.sourceHash,
+      automationId: "automation-1",
+      stepId: "step-1",
+    })
+    expect(deps.finalizeRunSummary).toHaveBeenCalledWith("run-1", successResult)
     expect(session.close).toHaveBeenCalledTimes(1)
   })
 
@@ -304,6 +315,10 @@ describe("Run Function automation action", () => {
     await expect(run(deps)).resolves.toMatchObject({
       success: false,
       error: { code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR },
+    })
+    expect(deps.finalizeRunSummary).toHaveBeenCalledWith("run-1", {
+      status: "error",
+      code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
     })
   })
 })
