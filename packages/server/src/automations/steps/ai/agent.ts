@@ -11,6 +11,8 @@ import {
   AgentStepOutputs,
   AutomationStepInputBase,
   ContextUser,
+  ToolExecutionPrincipal,
+  UserBindings,
 } from "@budibase/types"
 import { readUIMessageStream, UIMessage } from "ai"
 import tracer from "dd-trace"
@@ -24,13 +26,59 @@ import {
   formatIncompleteToolCallError,
 } from "../../../sdk/workspace/ai/agents"
 
+const getAdminUser = ({ sessionId }: { sessionId: string }): ContextUser => {
+  const userId = `automation:${sessionId}`
+  return {
+    _id: userId,
+    globalId: userId,
+    userId,
+    tenantId: backendContext.getTenantId(),
+    email: `${encodeURIComponent(userId)}@automation.budibase.local`,
+    roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+  }
+}
+
+const getRequesterUser = ({
+  requester,
+}: {
+  requester: UserBindings & { _id: string }
+}): ContextUser => {
+  const userId = requester.userId || requester.globalId || requester._id
+  return {
+    _id: requester._id,
+    globalId: requester.globalId || requester._id,
+    userId,
+    tenantId: backendContext.getTenantId(),
+    email:
+      requester.email ||
+      `${encodeURIComponent(userId)}@automation.budibase.local`,
+    roleId: requester.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC,
+    firstName: requester.firstName,
+    lastName: requester.lastName,
+    oauth2: requester.oauth2,
+    provider: requester.provider,
+    providerType: requester.providerType,
+  }
+}
+
+const hasAuthenticatedRequester = (
+  requester?: UserBindings
+): requester is UserBindings & { _id: string } => !!requester?._id
+
 export async function run({
   inputs,
   appId,
+  context,
 }: {
   inputs: AgentStepInputs
 } & AutomationStepInputBase): Promise<AgentStepOutputs> {
-  const { agentId, prompt, useStructuredOutput, outputSchema } = inputs
+  const {
+    agentId,
+    prompt,
+    executionPrincipal = ToolExecutionPrincipal.ADMIN,
+    useStructuredOutput,
+    outputSchema,
+  } = inputs
 
   if (!agentId) {
     return {
@@ -45,6 +93,23 @@ export async function run({
       response: "Agent step failed: No prompt provided",
     }
   }
+
+  const requester: UserBindings | undefined = context.user
+  if (
+    executionPrincipal === ToolExecutionPrincipal.REQUESTER &&
+    !hasAuthenticatedRequester(requester)
+  ) {
+    return {
+      success: false,
+      response:
+        "Agent step failed: This automation was not triggered by an authenticated user",
+    }
+  }
+  const requesterUser =
+    executionPrincipal === ToolExecutionPrincipal.REQUESTER &&
+    hasAuthenticatedRequester(requester)
+      ? getRequesterUser({ requester })
+      : undefined
 
   const sessionId = v4()
   const structuredOutputSchema =
@@ -82,15 +147,11 @@ export async function run({
           }
         }
 
-        const userId = `automation:${sessionId}`
-        const user: ContextUser = {
-          _id: userId,
-          globalId: userId,
-          userId,
-          tenantId: backendContext.getTenantId(),
-          email: `${encodeURIComponent(userId)}@automation.budibase.local`,
-          roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
-        }
+        const user =
+          executionPrincipal === ToolExecutionPrincipal.REQUESTER &&
+          requesterUser
+            ? requesterUser
+            : getAdminUser({ sessionId })
 
         agentRun = await sdk.ai.agents.prepareAgentChatRun({
           agent,
