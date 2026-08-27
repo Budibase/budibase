@@ -660,6 +660,24 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     )
   })
 
+  it("indexes the session log when run preparation fails", async () => {
+    const index = jest.fn().mockResolvedValue(undefined)
+    jest.mocked(createSessionLogIndexer).mockReturnValue({
+      addRequestId: jest.fn(),
+      getRequestIds: jest.fn().mockReturnValue([]),
+      index,
+    })
+    jest
+      .mocked(sdk.ai.llm.createLLM)
+      .mockRejectedValueOnce(new Error("Failed to prepare model"))
+
+    await expect(runFor(operationWithoutRecipients)).rejects.toThrow(
+      "Failed to prepare model"
+    )
+
+    expect(index).toHaveBeenCalledTimes(1)
+  })
+
   it("configures structured output for a populated schema", async () => {
     await runFor(operationWithoutRecipients, {
       outputSchema: { sentiment: "string" },

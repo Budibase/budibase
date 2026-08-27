@@ -488,17 +488,15 @@ const getAgentRequester = ({
   }
 }
 
-export const prepareAgentChatRun = async ({
+const prepareAgentChatRunInternal = async ({
   agent,
   agentId,
   chat,
   modelMessages: providedModelMessages,
   latestQuestion: providedLatestQuestion,
   aiConfigId,
-  errorLabel,
   sessionId,
   user,
-  startedAt,
   operationId,
   additionalInstructions,
   getRequestId,
@@ -506,16 +504,12 @@ export const prepareAgentChatRun = async ({
   requester: providedRequester,
   outputSchema,
   promptMode = "interactive",
-}: PrepareAgentChatRunParams): Promise<AgentChatRun> => {
+  sessionLogIndexer,
+}: PrepareAgentChatRunParams & {
+  sessionLogIndexer: ReturnType<typeof createSessionLogIndexer>
+}): Promise<AgentChatRun> => {
   const latestQuestion =
     providedLatestQuestion ?? (chat ? findLatestUserQuestion(chat) : "")
-  const sessionLogIndexer = createSessionLogIndexer({
-    agentId,
-    sessionId,
-    firstInput: latestQuestion,
-    errorLabel,
-    startedAt,
-  })
   const requester = providedRequester ?? getAgentRequester({ user, chat })
 
   let resolvedModelMessages: ModelMessage[] = []
@@ -863,5 +857,30 @@ export const prepareAgentChatRun = async ({
           },
         })
       ),
+  }
+}
+
+export const prepareAgentChatRun = async (
+  params: PrepareAgentChatRunParams
+): Promise<AgentChatRun> => {
+  const latestQuestion =
+    params.latestQuestion ??
+    (params.chat ? findLatestUserQuestion(params.chat) : "")
+  const sessionLogIndexer = createSessionLogIndexer({
+    agentId: params.agentId,
+    sessionId: params.sessionId,
+    firstInput: latestQuestion,
+    errorLabel: params.errorLabel,
+    startedAt: params.startedAt,
+  })
+
+  try {
+    return await prepareAgentChatRunInternal({
+      ...params,
+      sessionLogIndexer,
+    })
+  } catch (error) {
+    await sessionLogIndexer.index()
+    throw error
   }
 }
