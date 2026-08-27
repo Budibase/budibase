@@ -471,6 +471,7 @@ export async function resumeOperation({
       userId: resumeUserId,
       tenantId: context.getTenantId(),
       email: `${encodeURIComponent(resumeUserId)}@escalation.budibase.local`,
+      roleId: ctx.requester?.executorRole,
     }
   }
 

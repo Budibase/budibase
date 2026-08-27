@@ -197,6 +197,33 @@ describe("resumeOperation", () => {
     })
   })
 
+  it("reconstructs an automation user with its requester role", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      mockApprovedRun("Approved and created.")
+
+      await resumeOperation({
+        doc: baseDoc({ response: { accepted: true } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: {
+          ...baseCtx,
+          userId: "automation:session_1",
+          requester: { executorRole: "ADMIN" },
+        },
+      })
+
+      expect(prepareAgentChatRunMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user: expect.objectContaining({
+            _id: "automation:session_1",
+            roleId: "ADMIN",
+          }),
+          requester: { executorRole: "ADMIN" },
+        })
+      )
+    })
+  })
+
   it("records escalation_resolved with outcome expired", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!
