@@ -103,9 +103,7 @@ const validatePWAZipEntries = () => {
 
     const fileType = (entry.externalFileAttributes >>> 16) & ZIP_FILE_TYPE_MASK
     if (fileType === ZIP_SYMLINK_FILE_TYPE) {
-      throw new BadRequestError(
-        `Invalid zip`
-      )
+      throw new BadRequestError(`Invalid zip`)
     }
 
     const depth =
