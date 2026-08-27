@@ -91,11 +91,6 @@ export class LocalFunctionExecutor implements FunctionExecutor {
 
     this.activeRunIds.add(request.runId)
     const runController = new AbortController()
-    const abortFromContext = () => runController.abort()
-    context.signal.addEventListener("abort", abortFromContext, { once: true })
-    if (context.signal.aborted) {
-      runController.abort()
-    }
     this.runControllers.set(request.runId, runController)
     try {
       return await executeFunctionInIsolate(request, {
@@ -103,7 +98,6 @@ export class LocalFunctionExecutor implements FunctionExecutor {
         signal: runController.signal,
       })
     } finally {
-      context.signal.removeEventListener("abort", abortFromContext)
       this.runControllers.delete(request.runId)
       this.activeRunIds.delete(request.runId)
     }
