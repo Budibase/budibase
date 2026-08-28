@@ -29,6 +29,10 @@ describe("/api/system/environment", () => {
         baseUrl: "http://localhost:10000",
         offlineMode: false,
         maintenance: [],
+        passwordPolicy: {
+          minLength: 12,
+          maxLength: 512,
+        },
       })
     })
 
@@ -43,6 +47,10 @@ describe("/api/system/environment", () => {
           baseUrl: "http://localhost:10000",
           offlineMode: false,
           maintenance: [],
+          passwordPolicy: {
+            minLength: 12,
+            maxLength: 512,
+          },
         })
       })
     })

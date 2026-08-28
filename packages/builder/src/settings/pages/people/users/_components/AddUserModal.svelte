@@ -28,6 +28,7 @@
   import type { UserInfo } from "@/types"
   import type { UserData as AddUsersData } from "../workspaceInviteUtils"
   import type { StrippedUser, UserGroup } from "@budibase/types"
+  import { generateTemporaryPassword } from "@/helpers/password"
 
   interface UserInput {
     email: string | null
@@ -88,7 +89,7 @@
     error: undefined,
   })
 
-  const password = generatePassword(12)
+  const password = generateTemporaryPassword({ policy: $admin.passwordPolicy })
   let userGroups = $state<string[]>([])
   let emailsInput = $state<string[]>([])
   let pendingEmailInput = $state("")
@@ -195,7 +196,12 @@
     userData = userData.filter((_input, i) => i !== idx)
   }
   function addNewInput() {
-    userData = [...userData, createUserInput(generatePassword(12))]
+    userData = [
+      ...userData,
+      createUserInput(
+        generateTemporaryPassword({ policy: $admin.passwordPolicy })
+      ),
+    ]
   }
 
   function validateInput(input: UserInput, index: number) {
@@ -366,7 +372,7 @@
         workspaceOnly && selectedRole === Constants.BudibaseRoles.AppUser
           ? endUserRole
           : undefined,
-      password: generatePassword(12),
+      password: generateTemporaryPassword({ policy: $admin.passwordPolicy }),
       forceResetPassword: true,
     }))
   }
@@ -378,14 +384,6 @@
       password: input.password,
       forceResetPassword: input.forceResetPassword,
     }))
-  }
-
-  function generatePassword(length: number) {
-    const array = new Uint8Array(length)
-    window.crypto.getRandomValues(array)
-    return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
-      .join("")
-      .slice(0, length)
   }
 
   const onConfirm = () => {

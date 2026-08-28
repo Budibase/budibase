@@ -29,7 +29,7 @@ describe("check BB_ADMIN environment variables", () => {
       .reply(200, {})
 
     const EMAIL = `${structures.generator.guid()}@budibase.com`
-    const PASSWORD = "budibase"
+    const PASSWORD = "budibase-password"
     await tenancy.doInTenant(tenancy.DEFAULT_TENANT_ID, async () => {
       await withEnv(
         {

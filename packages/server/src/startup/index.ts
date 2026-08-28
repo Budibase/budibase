@@ -221,7 +221,6 @@ export async function startup(
               password: bbAdminPassword,
               hashPassword: true,
               requirePassword: true,
-              skipPasswordValidation: true,
             }
           )
           // Need to set up an API key for automated integration tests

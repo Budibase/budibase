@@ -1,6 +1,7 @@
-import { API } from "@/api"
+import { DEFAULT_PASSWORD_POLICY } from "@budibase/shared-core"
 import type { GetEnvironmentResponse } from "@budibase/types"
 import { writable } from "svelte/store"
+import { API } from "@/api"
 
 interface EnvironmentState extends GetEnvironmentResponse {
   loaded: boolean
@@ -13,6 +14,7 @@ const initialState: EnvironmentState = {
   disableAccountPortal: false,
   isDev: false,
   maintenance: [],
+  passwordPolicy: DEFAULT_PASSWORD_POLICY,
   loaded: false,
 }
 

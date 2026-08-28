@@ -1,3 +1,10 @@
+export interface PasswordPolicy {
+  minLength: number
+  maxLength: number
+  regex?: string
+  regexErrorMessage?: string
+}
+
 export interface GetEnvironmentResponse {
   multiTenancy: boolean
   offlineMode: boolean
@@ -7,5 +14,5 @@ export interface GetEnvironmentResponse {
   baseUrl?: string
   isDev: boolean
   maintenance: { type: string }[]
-  passwordMinLength?: string
+  passwordPolicy: PasswordPolicy
 }

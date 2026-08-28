@@ -1,12 +1,16 @@
 <script lang="ts">
   import { ModalContent, Body, notifications } from "@budibase/bbui"
-  import PasswordRepeatInput from "./PasswordRepeatInput.svelte"
   import type { APIClient } from "@budibase/frontend-core"
+  import {
+    DEFAULT_PASSWORD_POLICY,
+    resolveTranslationGroup,
+  } from "@budibase/shared-core"
+  import type { PasswordPolicy } from "@budibase/types"
   import { createEventDispatcher } from "svelte"
-  import { resolveTranslationGroup } from "@budibase/shared-core"
+  import PasswordRepeatInput from "./PasswordRepeatInput.svelte"
 
   export let API: APIClient
-  export let passwordMinLength: string | undefined = undefined
+  export let passwordPolicy: PasswordPolicy = DEFAULT_PASSWORD_POLICY
   export let notifySuccess = notifications.success
   export let notifyError = notifications.error
   // Get the default translations for the password modal and derive a type from it.
@@ -55,7 +59,7 @@
   <PasswordRepeatInput
     bind:password
     bind:error
-    minLength={passwordMinLength}
+    policy={passwordPolicy}
     labels={resolvedLabels}
   />
 </ModalContent>

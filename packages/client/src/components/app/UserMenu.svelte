@@ -141,7 +141,7 @@
   <Modal bind:this={changePasswordModal}>
     <ChangePasswordModal
       {API}
-      passwordMinLength={$environmentStore.passwordMinLength}
+      passwordPolicy={$environmentStore.passwordPolicy}
       on:save={() => authStore.actions.logOut()}
       notifySuccess={notificationStore.actions.success}
       notifyError={notificationStore.actions.error}

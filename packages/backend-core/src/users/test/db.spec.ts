@@ -612,6 +612,26 @@ describe("UserDB", () => {
 
       expect(preventSpy).toHaveBeenCalled()
     })
+
+    it("requires a new password when completing a forced reset", async () => {
+      const dbUser = structures.users.user({
+        _id: "user_existing",
+        password: "existing-hash",
+        forceResetPassword: true,
+        tenantId,
+      })
+
+      await expect(
+        UserDB.buildUser(
+          { ...dbUser, forceResetPassword: false },
+          undefined,
+          tenantId,
+          dbUser
+        )
+      ).rejects.toThrow(
+        "A new password must be supplied when completing a forced reset."
+      )
+    })
   })
 
   describe("countUsersByWorkspace", () => {

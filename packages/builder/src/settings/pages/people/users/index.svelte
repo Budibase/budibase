@@ -52,6 +52,7 @@
   import { InternalTable } from "@budibase/types"
   import type { UserInfo } from "@/types"
   import RouteActions from "@/settings/components/RouteActions.svelte"
+  import { generateTemporaryPassword } from "@/helpers/password"
   import {
     assignCreatedUsersToWorkspace,
     assignExistingUsersToWorkspace,
@@ -327,7 +328,7 @@
           usersRole === Constants.BudibaseRoles.AppUser
             ? usersAppRole || Constants.Roles.BASIC
             : undefined,
-        password: generatePassword(12),
+        password: generateTemporaryPassword({ policy: $admin.passwordPolicy }),
         forceResetPassword: true,
       }
 
@@ -513,14 +514,6 @@
           : "Error deleting users"
       )
     }
-  }
-
-  const generatePassword = (length: number) => {
-    const array = new Uint8Array(length)
-    window.crypto.getRandomValues(array)
-    return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
-      .join("")
-      .slice(0, length)
   }
 
   const onRowClick = ({ detail }: { detail: EnrichedUser }) => {
