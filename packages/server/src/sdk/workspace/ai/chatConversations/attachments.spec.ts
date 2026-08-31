@@ -183,6 +183,9 @@ describe("conversation attachments", () => {
         ],
       },
     ])
+    expect(JSON.stringify(messages)).toContain(
+      "Use the relevant context above to answer the user's question with a complete response."
+    )
   })
 
   it("rejects ambiguous filename matches when attachments are filtered", async () => {

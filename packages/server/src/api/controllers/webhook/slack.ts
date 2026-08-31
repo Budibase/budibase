@@ -20,7 +20,7 @@ import {
 import sdk from "../../../sdk"
 import type { IncomingConversationAttachment } from "../../../sdk/workspace/ai/chatConversations"
 import { escalationProcessor } from "../../../escalation/processor"
-import { handleChatMessage } from "./chatHandler"
+import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
 import { getSlackState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
@@ -104,7 +104,9 @@ export const formatSlackAssistantReply = async ({
   result: WebhookChatCompleteResult
   isDirectMessage?: boolean
 }) => {
-  const assistantText = formatSlackMrkdwn(result.assistantText || "")
+  const assistantText =
+    formatSlackMrkdwn(result.assistantText || "").trim() ||
+    NO_ASSISTANT_RESPONSE_MESSAGE
   if (result.allowKnowledgeSourceDownload === false || !isDirectMessage) {
     return assistantText
   }
