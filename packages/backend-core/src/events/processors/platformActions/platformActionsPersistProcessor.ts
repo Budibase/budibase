@@ -10,6 +10,10 @@ import * as context from "../../../context"
 import { EventProcessor } from "../types"
 import { enqueuePlatformActionSessionIndex } from "./indexQueue"
 
+function toCompactTimestamp(isoTimestamp: string): string {
+  return isoTimestamp.replace(/[-:.]/g, "")
+}
+
 function isActionSourceContext(
   properties: Record<string, unknown>
 ): properties is Record<string, unknown> & {
@@ -39,9 +43,9 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
         ? new Date().toISOString()
         : new Date(timestamp).toISOString()
     const doc: PlatformActionEvent = {
-      _id: `${
-        DocumentType.PLATFORM_ACTION_EVENT
-      }${SEPARATOR}${new Date().toISOString()}${SEPARATOR}${uuidv4()}`,
+      _id: `${DocumentType.PLATFORM_ACTION_EVENT}${SEPARATOR}${toCompactTimestamp(
+        isoTimestamp
+      )}${SEPARATOR}${uuidv4()}`,
       sourceType: sourceType as PlatformActionEvent["sourceType"],
       sourceId,
       eventName: event,
