@@ -29,6 +29,8 @@ const mockWebhookState: Record<MockProvider, MockPostEphemeralResult> = {
   teams: defaultPostEphemeralResult(),
 }
 const mockChatOptions: ChatOptions[] = []
+const subscribedThreads = new Set<string>()
+let subscribeError: Error | undefined
 
 const toMessageText = (value: unknown) =>
   typeof value === "string" ? value : JSON.stringify(value)
@@ -172,6 +174,12 @@ export const resetMockChatState = () => {
   mockWebhookState.slack = defaultPostEphemeralResult()
   mockWebhookState.teams = defaultPostEphemeralResult()
   mockChatOptions.length = 0
+  subscribedThreads.clear()
+  subscribeError = undefined
+}
+
+export const setMockSubscribeError = (error?: Error) => {
+  subscribeError = error
 }
 
 export const setMockPostEphemeralResult = (
@@ -329,7 +337,12 @@ export class Chat {
           id: `slack:${channelId}:${threadTs}`,
           channelId,
           ...createMessageCollector("slack", messages),
-          subscribe: async () => {},
+          subscribe: async () => {
+            if (subscribeError) {
+              throw subscribeError
+            }
+            subscribedThreads.add(`slack:${channelId}:${threadTs}`)
+          },
           channel,
         }
         const isMention = isSlackMentionMessage(event)
@@ -356,7 +369,10 @@ export class Chat {
         } else {
           if (isMention) {
             await invokeHandlers(this.mentionHandlers, thread, message)
-          } else if (event.thread_ts) {
+          } else if (
+            event.thread_ts &&
+            subscribedThreads.has(`slack:${channelId}:${threadTs}`)
+          ) {
             await invokeHandlers(this.subscribedHandlers, thread, message)
           }
           await invokeHandlers(this.newMessageHandlers, thread, message)
