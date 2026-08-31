@@ -512,6 +512,36 @@ describe("sso", () => {
         expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
       })
 
+      it("reconciles an eligible invite when an admin invite for the same email appears first", async () => {
+        const adminInvite: InviteWithCode = {
+          code: structures.uuid(),
+          email: details.email!,
+          info: {
+            tenantId: context.getTenantId(),
+            admin: { global: true },
+          },
+        }
+        mockInvite.getExistingInvites.mockReset()
+        mockInvite.getExistingInvites.mockResolvedValueOnce([
+          adminInvite,
+          invite,
+        ])
+        const ssoUser = structures.users.ssoUser({ details })
+        mockSaveUser.mockReturnValueOnce(ssoUser)
+
+        await sso.authenticate(details, true, mockDone, mockSaveUser, true)
+
+        expect(mockInvite.getCode).toHaveBeenCalledWith(
+          invite.code,
+          invite.info.tenantId
+        )
+        expect(mockInvite.deleteCode).toHaveBeenCalledWith(
+          invite.code,
+          invite.info.tenantId
+        )
+        expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
+      })
+
       it("rejects an unverified login for an admin invite even when unverified email linking is allowed", async () => {
         invite.info.admin = { global: true }
 

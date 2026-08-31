@@ -72,14 +72,13 @@ export async function authenticate(
   let blockedInvite: InviteWithCode | undefined
   if (!dbUser) {
     const invites = await cache.invite.getExistingInvites([details.email])
-    const matchingInvite = invites[0]
-    const canClaimInvite =
-      details.emailVerified ||
-      (allowUnverifiedEmailLinking && !matchingInvite?.info.admin?.global)
-    if (canClaimInvite) {
-      pendingInvite = matchingInvite
-    } else {
-      blockedInvite = matchingInvite
+    if (details.emailVerified) {
+      pendingInvite = invites[0]
+    } else if (allowUnverifiedEmailLinking) {
+      pendingInvite = invites.find(invite => !invite.info.admin?.global)
+    }
+    if (!pendingInvite) {
+      blockedInvite = invites[0]
     }
   }
 
