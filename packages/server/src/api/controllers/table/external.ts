@@ -50,7 +50,9 @@ export async function updateTable(
       inputs,
       { tableId, renaming }
     )
-    builderSocket?.emitDatasourceUpdate(ctx, datasource)
+    const redactedDatasource =
+      await sdk.datasources.removeSecretSingle(datasource)
+    builderSocket?.emitDatasourceUpdate(ctx, redactedDatasource)
     return { table, oldTable }
   } catch (err: any) {
     if (err instanceof Error) {
@@ -71,7 +73,9 @@ export async function destroy(ctx: UserCtx) {
       datasourceId!,
       tableToDelete
     )
-    builderSocket?.emitDatasourceUpdate(ctx, datasource)
+    const redactedDatasource =
+      await sdk.datasources.removeSecretSingle(datasource)
+    builderSocket?.emitDatasourceUpdate(ctx, redactedDatasource)
     return table
   } catch (err: any) {
     if (err instanceof Error) {
