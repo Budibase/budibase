@@ -75,10 +75,10 @@ describe("SQL table identifier escaping", () => {
 
   it("escapes SQL Server rename identifiers and string literals", () => {
     const query = buildRenameQuery({
-      schema: "schema]",
-      tableName: "table'",
-      oldColumn: "old]'; DROP TABLE users; --",
-      updatedColumn: "new'name",
+      schema: "schema漢]",
+      tableName: "table字'",
+      oldColumn: "old名]'; DROP TABLE users; --",
+      updatedColumn: "new列'name",
     })
 
     const result = new SqlTable(SqlClient.MS_SQL)._tableQuery(query)
@@ -88,7 +88,7 @@ describe("SQL table identifier escaping", () => {
     )
 
     expect(renameQuery).toEqual({
-      sql: "exec sp_rename '[schema]]].[table''].[old]]''; DROP TABLE users; --]', 'new''name', 'COLUMN'",
+      sql: "exec sp_rename N'[schema漢]]].[table字''].[old名]]''; DROP TABLE users; --]', N'new列''name', N'COLUMN'",
       bindings: [],
     })
   })

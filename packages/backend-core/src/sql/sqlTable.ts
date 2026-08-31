@@ -24,8 +24,8 @@ const quoteSqlServerIdentifier = (identifier: string) => {
   return `[${identifier.replace(/]/g, "]]")}]`
 }
 
-const quoteSqlServerString = (value: string) => {
-  return `'${value.replace(/'/g, "''")}'`
+const quoteSqlServerUnicodeString = (value: string) => {
+  return `N'${value.replace(/'/g, "''")}'`
 }
 
 function isIgnoredType(type: FieldType) {
@@ -320,9 +320,11 @@ class SqlTableQueryBuilder {
           if (Array.isArray(sql)) {
             for (const query of sql) {
               if (query.sql.startsWith("exec sp_rename")) {
-                query.sql = `exec sp_rename ${quoteSqlServerString(
+                query.sql = `exec sp_rename ${quoteSqlServerUnicodeString(
                   oldColumnName
-                )}, ${quoteSqlServerString(updatedColumn)}, 'COLUMN'`
+                )}, ${quoteSqlServerUnicodeString(
+                  updatedColumn
+                )}, ${quoteSqlServerUnicodeString("COLUMN")}`
                 query.bindings = []
               }
             }
