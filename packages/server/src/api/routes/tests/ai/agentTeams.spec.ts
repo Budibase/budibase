@@ -402,7 +402,10 @@ describe("agent teams integration provisioning", () => {
         .getRequest()!
         .post(path)
         .set("Authorization", "Bearer valid-token")
-        .send(body)
+        .send({
+          serviceUrl: "https://smba.trafficmanager.net/emea/",
+          ...body,
+        })
         .expect(200)
 
     const fetchConversations = async () =>
@@ -461,6 +464,24 @@ describe("agent teams integration provisioning", () => {
       }
       return { agent, linkExternalUser }
     }
+
+    it("rejects an activity with an untrusted service URL", async () => {
+      const { agent } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
+
+      const response = await config
+        .getRequest()!
+        .post(path)
+        .set("Authorization", "Bearer valid-token")
+        .send({
+          type: "message",
+          serviceUrl: "https://example.com/",
+        })
+        .expect(400)
+
+      expect(response.body.error).toEqual("Invalid Microsoft Teams service URL")
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+    })
 
     it(`returns a private link prompt for ${ChatCommands.LINK} and /${ChatCommands.LINK} commands`, async () => {
       const { agent } = await setupProvisionedTeamsAgent()

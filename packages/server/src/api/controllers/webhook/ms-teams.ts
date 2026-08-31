@@ -1,4 +1,9 @@
-import { context, features, isHTTPError } from "@budibase/backend-core"
+import {
+  context,
+  features,
+  HTTPError,
+  isHTTPError,
+} from "@budibase/backend-core"
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
@@ -22,6 +27,7 @@ import {
 import { createTeamsAdapter } from "@chat-adapter/teams"
 import sdk from "../../../sdk"
 import { escalationProcessor } from "../../../escalation/processor"
+import { validateMSTeamsServiceUrl } from "../../../utilities/msTeams"
 import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
 import { getTeamsState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
@@ -442,6 +448,17 @@ export async function MSTeamsWebhook(
   await runChatWebhook({
     ctx,
     providerName: "Teams",
+    validateBody: body => {
+      if (
+        !body ||
+        typeof body !== "object" ||
+        !("serviceUrl" in body) ||
+        typeof body.serviceUrl !== "string"
+      ) {
+        throw new HTTPError("Missing Microsoft Teams service URL", 400)
+      }
+      validateMSTeamsServiceUrl(body.serviceUrl)
+    },
     createWebhookHandler: async ({ workspaceId, agentId }) => {
       const {
         integration,
