@@ -66,5 +66,4 @@ export const PASSWORD_MAX_LENGTH = PASSWORD_POLICY.maxLength
 export const validatePassword = (
   password: string,
   { enforceRegex = true }: ValidatePasswordOptions = {}
-) =>
-  validatePasswordPolicy({ password, policy: PASSWORD_POLICY, enforceRegex })
+) => validatePasswordPolicy({ password, policy: PASSWORD_POLICY, enforceRegex })
