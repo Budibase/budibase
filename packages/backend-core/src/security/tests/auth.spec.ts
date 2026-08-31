@@ -8,7 +8,7 @@ import {
 describe("auth", () => {
   describe("validatePassword", () => {
     it("a valid password returns successful", () => {
-      expect(validatePassword({ password: "password123!" })).toEqual({
+      expect(validatePassword("password123!")).toEqual({
         valid: true,
       })
     })
@@ -18,7 +18,7 @@ describe("auth", () => {
       ["null", null],
       ["empty", ""],
     ])("%s returns unsuccessful", (_, password) => {
-      expect(validatePassword({ password: password as string })).toEqual({
+      expect(validatePassword(password as string)).toEqual({
         valid: false,
         error: "Password invalid. Minimum 12 characters.",
       })
@@ -28,7 +28,7 @@ describe("auth", () => {
       generator.word({ length: PASSWORD_MAX_LENGTH }),
       generator.paragraph().substring(0, PASSWORD_MAX_LENGTH),
     ])(`can use passwords up to 512 characters in length`, password => {
-      expect(validatePassword({ password })).toEqual({
+      expect(validatePassword(password)).toEqual({
         valid: true,
       })
     })
@@ -41,7 +41,7 @@ describe("auth", () => {
     ])(
       `passwords cannot have more than ${PASSWORD_MAX_LENGTH} characters`,
       password => {
-        expect(validatePassword({ password })).toEqual({
+        expect(validatePassword(password)).toEqual({
           valid: false,
           error: "Password invalid. Maximum 512 characters.",
         })

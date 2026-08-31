@@ -14,6 +14,10 @@ interface BuildPasswordPolicyOptions {
   regexErrorMessage?: string
 }
 
+interface ValidatePasswordOptions {
+  enforceRegex?: boolean
+}
+
 export const buildPasswordPolicy = ({
   minLength,
   maxLength,
@@ -59,11 +63,8 @@ export const PASSWORD_POLICY = buildPasswordPolicy({
 export const PASSWORD_MIN_LENGTH = PASSWORD_POLICY.minLength
 export const PASSWORD_MAX_LENGTH = PASSWORD_POLICY.maxLength
 
-export const validatePassword = ({
-  password,
-  enforceRegex = true,
-}: {
-  password: string
-  enforceRegex?: boolean
-}) =>
+export const validatePassword = (
+  password: string,
+  { enforceRegex = true }: ValidatePasswordOptions = {}
+) =>
   validatePasswordPolicy({ password, policy: PASSWORD_POLICY, enforceRegex })

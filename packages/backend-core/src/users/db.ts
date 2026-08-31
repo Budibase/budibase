@@ -146,8 +146,7 @@ export class UserDB {
       }
 
       if (!opts.skipPasswordValidation) {
-        const passwordValidation = validatePassword({
-          password,
+        const passwordValidation = validatePassword(password, {
           enforceRegex: !opts.skipPasswordRegexValidation,
         })
         if (!passwordValidation.valid) {
