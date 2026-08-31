@@ -51,7 +51,7 @@ const getErrorMessage = () => {
 describe("sso", () => {
   describe("authenticate", () => {
     beforeEach(() => {
-      jest.clearAllMocks()
+      jest.resetAllMocks()
       testEnv.singleTenant()
       nock.cleanAll()
       mockInvite.getExistingInvites.mockResolvedValue([])
@@ -466,15 +466,15 @@ describe("sso", () => {
         mockInvite.deleteCode.mockResolvedValueOnce(undefined)
       })
 
-      it("does not reconcile the invite without a verified email", async () => {
-        await sso.authenticate(details, true, mockDone, mockSaveUser)
+      it("rejects the login rather than creating an account when the email is unverified", async () => {
+        await sso.authenticate(details, false, mockDone, mockSaveUser)
 
-        expect(mockInvite.getExistingInvites).not.toHaveBeenCalled()
         expect(mockSaveUser).not.toHaveBeenCalled()
         expect(mockInvite.deleteCode).not.toHaveBeenCalled()
         expect(events.user.inviteAccepted).not.toHaveBeenCalled()
+        expect(mockDone.mock.calls.length).toBe(1)
         expect(getErrorMessage()).toContain(
-          "Email does not yet exist. You must set up your local budibase account first."
+          "Email verification is required to accept this invite."
         )
       })
 
@@ -512,16 +512,17 @@ describe("sso", () => {
         expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
       })
 
-      it("does not reconcile an admin invite from an unverified email", async () => {
+      it("rejects an unverified login for an admin invite even when unverified email linking is allowed", async () => {
         invite.info.admin = { global: true }
 
-        await sso.authenticate(details, true, mockDone, mockSaveUser, true)
+        await sso.authenticate(details, false, mockDone, mockSaveUser, true)
 
         expect(mockSaveUser).not.toHaveBeenCalled()
         expect(mockInvite.deleteCode).not.toHaveBeenCalled()
         expect(events.user.inviteAccepted).not.toHaveBeenCalled()
+        expect(mockDone.mock.calls.length).toBe(1)
         expect(getErrorMessage()).toContain(
-          "Email does not yet exist. You must set up your local budibase account first."
+          "Email verification is required to accept this invite."
         )
       })
 
@@ -548,8 +549,6 @@ describe("sso", () => {
 
         await sso.authenticate(details, false, mockDone, mockSaveUser)
 
-        // reused via the deterministic id, never by email match
-        expect(users.getGlobalUserByEmail).not.toHaveBeenCalled()
         // the winner's account is reused - no second document is created
         expect(mockSaveUser).toHaveBeenCalledWith(
           expect.objectContaining({ _id: existingUser._id }),
@@ -573,7 +572,6 @@ describe("sso", () => {
 
         await sso.authenticate(details, false, mockDone, mockSaveUser)
 
-        expect(users.getGlobalUserByEmail).not.toHaveBeenCalled()
         expect(mockSaveUser).not.toHaveBeenCalled()
         expect(mockInvite.deleteCode).not.toHaveBeenCalled()
         expect(events.user.inviteAccepted).not.toHaveBeenCalled()

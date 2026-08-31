@@ -69,10 +69,24 @@ export async function authenticate(
   }
 
   let pendingInvite: InviteWithCode | undefined
-  if (!dbUser && (details.emailVerified || allowUnverifiedEmailLinking)) {
+  let blockedInvite: InviteWithCode | undefined
+  if (!dbUser) {
     const invites = await cache.invite.getExistingInvites([details.email])
-    pendingInvite = invites.find(
-      invite => details.emailVerified || !invite.info.admin?.global
+    const matchingInvite = invites[0]
+    const canClaimInvite =
+      details.emailVerified ||
+      (allowUnverifiedEmailLinking && !matchingInvite?.info.admin?.global)
+    if (canClaimInvite) {
+      pendingInvite = matchingInvite
+    } else {
+      blockedInvite = matchingInvite
+    }
+  }
+
+  if (blockedInvite) {
+    return authError(
+      done,
+      "Email verification is required to accept this invite."
     )
   }
 
