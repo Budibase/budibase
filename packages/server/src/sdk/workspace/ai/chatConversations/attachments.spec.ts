@@ -131,62 +131,65 @@ describe("conversation attachments", () => {
     ).toThrow("image.png has an unsupported file type")
   })
 
-  it("retrieves bounded context instead of adding the file buffer", async () => {
-    mockSearch.mockResolvedValue([
-      {
-        file_id: "rag-file-1",
-        content: [
-          {
-            text: "Quarterly revenue was 42.",
-            retrievedContext: { pageNumber: 37 },
-          },
-        ],
-      },
-    ])
+  it.each(["What was the revenue?", "Summarize the report."])(
+    "retrieves bounded context for the request: %s",
+    async request => {
+      mockSearch.mockResolvedValue([
+        {
+          file_id: "rag-file-1",
+          content: [
+            {
+              text: "Quarterly revenue was 42.",
+              retrievedContext: { pageNumber: 37 },
+            },
+          ],
+        },
+      ])
 
-    const messages = await addConversationAttachmentsToModelMessages({
-      messages: [{ role: "user", content: "What was the revenue?" }],
-      conversation: {
-        _id: "chat_1",
-        attachmentVectorStoreId: "store_1",
-        attachments: [
-          {
-            id: "attachment_1",
-            provider: AgentChannelProvider.SLACK,
-            providerFileId: "F1",
-            filename: "report.pdf",
-            mimetype: "application/pdf",
-            size: 1024,
-            status: ConversationAttachmentStatus.READY,
-            ragSourceId: "rag-file-1",
-            uploadedAt: new Date().toISOString(),
-          },
-        ],
-      },
-    })
+      const messages = await addConversationAttachmentsToModelMessages({
+        messages: [{ role: "user", content: request }],
+        conversation: {
+          _id: "chat_1",
+          attachmentVectorStoreId: "store_1",
+          attachments: [
+            {
+              id: "attachment_1",
+              provider: AgentChannelProvider.SLACK,
+              providerFileId: "F1",
+              filename: "report.pdf",
+              mimetype: "application/pdf",
+              size: 1024,
+              status: ConversationAttachmentStatus.READY,
+              ragSourceId: "rag-file-1",
+              uploadedAt: new Date().toISOString(),
+            },
+          ],
+        },
+      })
 
-    expect(mockSearch).toHaveBeenCalledWith({
-      vectorStoreId: "store_1",
-      query: "What was the revenue?",
-    })
-    expect(messages).toEqual([
-      {
-        role: "user",
-        content: [
-          { type: "text", text: "What was the revenue?" },
-          {
-            type: "text",
-            text: expect.stringContaining(
-              '<conversation-file name="report.pdf" page="37">\nQuarterly revenue was 42.'
-            ),
-          },
-        ],
-      },
-    ])
-    expect(JSON.stringify(messages)).toContain(
-      "Use the relevant context above to answer the user's question with a complete response."
-    )
-  })
+      expect(mockSearch).toHaveBeenCalledWith({
+        vectorStoreId: "store_1",
+        query: request,
+      })
+      expect(messages).toEqual([
+        {
+          role: "user",
+          content: [
+            { type: "text", text: request },
+            {
+              type: "text",
+              text: expect.stringContaining(
+                '<conversation-file name="report.pdf" page="37">\nQuarterly revenue was 42.'
+              ),
+            },
+          ],
+        },
+      ])
+      expect(JSON.stringify(messages)).toContain(
+        "Respond to the user's request above using the relevant context. Return a complete response."
+      )
+    }
+  )
 
   it("rejects ambiguous filename matches when attachments are filtered", async () => {
     mockSearch.mockResolvedValue([

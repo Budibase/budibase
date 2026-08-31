@@ -437,7 +437,7 @@ export const addConversationAttachmentsToModelMessages = async ({
       type: "text",
       text: `\n\nRelevant context retrieved from conversation files:\n${contextParts.join(
         "\n\n"
-      )}\n\nUse the relevant context above to answer the user's question with a complete response.`,
+      )}\n\nRespond to the user's request above using the relevant context. Return a complete response.`,
     },
   ]
 
