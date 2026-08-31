@@ -4,7 +4,8 @@ import type {
   PlatformActionContainerStatus,
   PlatformActionSessionIndexDoc,
 } from "@budibase/types"
-import { PLATFORM_ACTION_SESSION_TABLE_ID } from "../sqs/staticTables"
+
+const PLATFORM_ACTION_SESSION_TABLE_ID = "bb_platform_action_session"
 
 function encodeKeyPart(value: string): string {
   return encodeURIComponent(value)
