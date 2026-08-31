@@ -3,6 +3,13 @@ import { HTTPError } from "@budibase/backend-core"
 // Commercial Teams service URL — region-specific installs can override via TEAMS_API_URL
 const COMMERCIAL_MSTEAMS_SERVICE_URL = "https://smba.trafficmanager.net/apis/"
 
+const isSafeMSTeamsServiceUrl = (url: URL): boolean =>
+  url.protocol === "https:" &&
+  !url.username &&
+  !url.password &&
+  !url.search &&
+  !url.hash
+
 export const resolveDefaultMSTeamsServiceUrl = (
   configuredServiceUrl = process.env.TEAMS_API_URL
 ): string => {
@@ -12,13 +19,7 @@ export const resolveDefaultMSTeamsServiceUrl = (
 
   try {
     const parsed = new URL(configuredServiceUrl)
-    if (
-      parsed.protocol !== "https:" ||
-      parsed.username ||
-      parsed.password ||
-      parsed.search ||
-      parsed.hash
-    ) {
+    if (!isSafeMSTeamsServiceUrl(parsed)) {
       return COMMERCIAL_MSTEAMS_SERVICE_URL
     }
     return parsed.toString()
@@ -40,12 +41,8 @@ export const validateMSTeamsServiceUrl = (serviceUrl: string): string => {
   }
 
   if (
-    parsed.protocol !== "https:" ||
-    parsed.origin !== configuredServiceOrigin ||
-    parsed.username ||
-    parsed.password ||
-    parsed.search ||
-    parsed.hash
+    !isSafeMSTeamsServiceUrl(parsed) ||
+    parsed.origin !== configuredServiceOrigin
   ) {
     throw new HTTPError("Invalid Microsoft Teams service URL", 400)
   }
