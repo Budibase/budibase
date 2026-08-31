@@ -466,14 +466,24 @@ describe("sso", () => {
         mockInvite.deleteCode.mockResolvedValueOnce(undefined)
       })
 
-      it("reconciles the invite without requiring a verified email, deletes it, and fires the accepted event", async () => {
+      it("does not reconcile the invite without a verified email", async () => {
+        await sso.authenticate(details, true, mockDone, mockSaveUser)
+
+        expect(mockInvite.getExistingInvites).not.toHaveBeenCalled()
+        expect(mockSaveUser).not.toHaveBeenCalled()
+        expect(mockInvite.deleteCode).not.toHaveBeenCalled()
+        expect(events.user.inviteAccepted).not.toHaveBeenCalled()
+        expect(getErrorMessage()).toContain(
+          "Email does not yet exist. You must set up your local budibase account first."
+        )
+      })
+
+      it("reconciles the invite when the email is verified, deletes it, and fires the accepted event", async () => {
+        details.emailVerified = true
         const ssoUser = structures.users.ssoUser({ details })
         mockSaveUser.mockReturnValueOnce(ssoUser)
 
         await sso.authenticate(details, false, mockDone, mockSaveUser)
-
-        // the invite is matched purely on email - no account-linking lookup happens
-        expect(users.getGlobalUserByEmail).not.toHaveBeenCalled()
 
         expect(mockSaveUser).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -493,16 +503,30 @@ describe("sso", () => {
         expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
       })
 
-      it("reconciles the invite even when a local account would otherwise be required", async () => {
+      it("reconciles a non-admin invite when unverified email linking is explicitly allowed", async () => {
         const ssoUser = structures.users.ssoUser({ details })
         mockSaveUser.mockReturnValueOnce(ssoUser)
 
-        await sso.authenticate(details, true, mockDone, mockSaveUser)
+        await sso.authenticate(details, true, mockDone, mockSaveUser, true)
 
         expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
       })
 
+      it("does not reconcile an admin invite from an unverified email", async () => {
+        invite.info.admin = { global: true }
+
+        await sso.authenticate(details, true, mockDone, mockSaveUser, true)
+
+        expect(mockSaveUser).not.toHaveBeenCalled()
+        expect(mockInvite.deleteCode).not.toHaveBeenCalled()
+        expect(events.user.inviteAccepted).not.toHaveBeenCalled()
+        expect(getErrorMessage()).toContain(
+          "Email does not yet exist. You must set up your local budibase account first."
+        )
+      })
+
       it("reuses the account when the same identity's own concurrent login already claimed the invite", async () => {
+        details.emailVerified = true
         // simulates a second, racing request for this exact identity
         // (e.g. a double-submitted login) losing the lock race: the
         // winner already consumed the invite and saved the account for
@@ -537,6 +561,7 @@ describe("sso", () => {
       })
 
       it("fails closed when the invite can no longer be validated and no concurrent claim for this identity can be confirmed", async () => {
+        details.emailVerified = true
         // covers expired/revoked invites and failed reads alike - none of
         // these are a positively identified concurrent claim, so this must
         // not fall back to linking by email or creating a fresh account

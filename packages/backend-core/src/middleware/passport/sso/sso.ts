@@ -69,9 +69,11 @@ export async function authenticate(
   }
 
   let pendingInvite: InviteWithCode | undefined
-  if (!dbUser) {
+  if (!dbUser && (details.emailVerified || allowUnverifiedEmailLinking)) {
     const invites = await cache.invite.getExistingInvites([details.email])
-    pendingInvite = invites[0]
+    pendingInvite = invites.find(
+      invite => details.emailVerified || !invite.info.admin?.global
+    )
   }
 
   const emailLookupWasSkipped =
