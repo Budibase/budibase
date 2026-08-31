@@ -68,14 +68,6 @@ describe("auth", () => {
 
     it.each([
       [
-        { minLength: "invalid" },
-        "PASSWORD_MIN_LENGTH must be a positive integer.",
-      ],
-      [
-        { minLength: "20", maxLength: "12" },
-        "PASSWORD_MIN_LENGTH must not be greater than PASSWORD_MAX_LENGTH.",
-      ],
-      [
         { regex: ".+" },
         "PASSWORD_REGEX and PASSWORD_REGEX_ERROR_MESSAGE must be configured together.",
       ],

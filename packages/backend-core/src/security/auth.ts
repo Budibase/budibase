@@ -14,48 +14,14 @@ interface BuildPasswordPolicyOptions {
   regexErrorMessage?: string
 }
 
-const parseLength = ({
-  name,
-  value,
-  defaultValue,
-}: {
-  name: string
-  value: string | number | undefined
-  defaultValue: number
-}) => {
-  if (value === undefined || value === "") {
-    return defaultValue
-  }
-
-  const parsed = Number(value)
-  if (!Number.isInteger(parsed) || parsed < 1) {
-    throw new Error(`${name} must be a positive integer.`)
-  }
-  return parsed
-}
-
 export const buildPasswordPolicy = ({
   minLength,
   maxLength,
   regex,
   regexErrorMessage,
 }: BuildPasswordPolicyOptions): PasswordPolicy => {
-  const parsedMinLength = parseLength({
-    name: "PASSWORD_MIN_LENGTH",
-    value: minLength,
-    defaultValue: DEFAULT_PASSWORD_POLICY.minLength,
-  })
-  const parsedMaxLength = parseLength({
-    name: "PASSWORD_MAX_LENGTH",
-    value: maxLength,
-    defaultValue: DEFAULT_PASSWORD_POLICY.maxLength,
-  })
-
-  if (parsedMinLength > parsedMaxLength) {
-    throw new Error(
-      "PASSWORD_MIN_LENGTH must not be greater than PASSWORD_MAX_LENGTH."
-    )
-  }
+  const parsedMinLength = +(minLength || DEFAULT_PASSWORD_POLICY.minLength)
+  const parsedMaxLength = +(maxLength || DEFAULT_PASSWORD_POLICY.maxLength)
 
   if (!!regex !== !!regexErrorMessage) {
     throw new Error(
