@@ -407,7 +407,7 @@ describe("/api/global/users", () => {
       expect(user?.builder?.apps).toEqual([workspaceId])
     })
 
-    it("reconciles an OIDC login with a pending invite for the same email, regardless of casing or email verification", async () => {
+    it("reconciles a verified OIDC login with a pending invite regardless of email casing", async () => {
       const email = structures.users.newEmail()
       const workspaceId = "app_oidc_invite_workspace"
       const request = [
@@ -421,7 +421,7 @@ describe("/api/global/users", () => {
 
       await config.api.users.sendMultiUserInvite(request)
 
-      // different casing, no email_verified claim
+      // different casing with a verified email claim
       const uppercaseEmail = email.toUpperCase()
       const ssoUserId = `oidc-test-${randomUUID()}`
       const verify: any = middleware.oidc.buildVerifyFn(userSdk.db.save, false)
@@ -431,7 +431,10 @@ describe("/api/global/users", () => {
           new Promise<{ err: any; user: any }>(resolve => {
             verify(
               "https://issuer.example.com",
-              { id: ssoUserId, _json: { email: uppercaseEmail } } as any,
+              {
+                id: ssoUserId,
+                _json: { email: uppercaseEmail, email_verified: true },
+              } as any,
               { id: ssoUserId, emails: [] } as any,
               {} as any,
               "id-token",
