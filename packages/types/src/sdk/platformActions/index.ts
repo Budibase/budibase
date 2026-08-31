@@ -1,3 +1,5 @@
+import type { Document } from "../../documents"
+
 export const PLATFORM_ACTION_SOURCE_TYPES = [
   "agent_session",
   "automation_run",
@@ -10,4 +12,39 @@ export type PlatformActionSourceType =
 export interface ActionSourceContext {
   sourceType: PlatformActionSourceType
   sourceId: string
+}
+
+export const PLATFORM_ACTION_CONTAINER_STATUSES = [
+  "active",
+  "waiting",
+  "completed",
+  "failed",
+] as const
+
+export type PlatformActionContainerStatus =
+  (typeof PLATFORM_ACTION_CONTAINER_STATUSES)[number]
+
+export interface PlatformActionEvent extends Document, ActionSourceContext {
+  eventName: string
+  timestamp: string
+  assetType?: string
+  assetId?: string
+  payload: Record<string, unknown>
+}
+
+export interface PlatformActionSessionIndexDoc
+  extends Document,
+    ActionSourceContext {
+  tableId: string
+  status: PlatformActionContainerStatus
+  actionCount: number
+  assetType?: string
+  assetId?: string
+  assetLabel?: string
+  triggeredByType?: string
+  triggeredById?: string
+  triggeredByLabel?: string
+  startedAt: string
+  updatedAt: string
+  completedAt?: string
 }
