@@ -4,6 +4,7 @@ import * as accounts from "../../accounts"
 import * as cache from "../../cache"
 import { getGlobalDB } from "../../context"
 import { withEnv } from "../../environment"
+import { hash } from "../../utils"
 import { UserDB } from "../db"
 import { searchExistingEmails } from "../lookup"
 
@@ -624,6 +625,31 @@ describe("UserDB", () => {
       await expect(
         UserDB.buildUser(
           { ...dbUser, forceResetPassword: false },
+          undefined,
+          tenantId,
+          dbUser
+        )
+      ).rejects.toThrow(
+        "A new password must be supplied when completing a forced reset."
+      )
+    })
+
+    it("rejects the current plaintext password when completing a forced reset", async () => {
+      const temporaryPassword = "TemporaryPassword123!"
+      const dbUser = structures.users.user({
+        _id: "user_existing",
+        password: await hash(temporaryPassword),
+        forceResetPassword: true,
+        tenantId,
+      })
+
+      await expect(
+        UserDB.buildUser(
+          {
+            ...dbUser,
+            password: temporaryPassword,
+            forceResetPassword: false,
+          },
           undefined,
           tenantId,
           dbUser

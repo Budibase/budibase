@@ -23,7 +23,7 @@ import { EmailUnavailableError, HTTPError } from "../errors"
 import * as platform from "../platform"
 import { validatePassword } from "../security"
 import * as sessions from "../security/sessions"
-import { hash } from "../utils"
+import { compare, hash } from "../utils"
 import * as eventHelpers from "./events"
 import {
   getFirstPlatformUser,
@@ -128,10 +128,20 @@ export class UserDB {
     }
 
     const passwordChanged = !!password && password !== dbUser?.password
+    let isCurrentPassword = false
     if (
       dbUser?.forceResetPassword &&
       user.forceResetPassword === false &&
-      !passwordChanged
+      passwordChanged &&
+      password &&
+      dbUser.password
+    ) {
+      isCurrentPassword = await compare(password, dbUser.password)
+    }
+    if (
+      dbUser?.forceResetPassword &&
+      user.forceResetPassword === false &&
+      (!passwordChanged || isCurrentPassword)
     ) {
       throw new HTTPError(
         "A new password must be supplied when completing a forced reset.",
