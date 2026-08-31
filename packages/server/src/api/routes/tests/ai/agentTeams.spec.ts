@@ -81,6 +81,7 @@ import {
 import sdk from "../../../../sdk"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
+import { DEFAULT_MSTEAMS_SERVICE_URL } from "../../../../utilities/msTeams"
 import { webhookChat } from "../../../controllers/ai/chatConversations"
 
 const { getMockChatOptions, resetMockChatState, setMockPostEphemeralResult } =
@@ -403,7 +404,7 @@ describe("agent teams integration provisioning", () => {
         .post(path)
         .set("Authorization", "Bearer valid-token")
         .send({
-          serviceUrl: "https://smba.trafficmanager.net/emea/",
+          serviceUrl: DEFAULT_MSTEAMS_SERVICE_URL,
           ...body,
         })
         .expect(200)

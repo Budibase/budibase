@@ -1,7 +1,25 @@
 import {
   DEFAULT_MSTEAMS_SERVICE_URL,
+  resolveDefaultMSTeamsServiceUrl,
   validateMSTeamsServiceUrl,
 } from "../msTeams"
+
+describe("resolveDefaultMSTeamsServiceUrl", () => {
+  it.each(["not-a-url", "smba.trafficmanager.net", "http://example.com/"])(
+    "falls back from an invalid override: %s",
+    configuredServiceUrl => {
+      expect(resolveDefaultMSTeamsServiceUrl(configuredServiceUrl)).toBe(
+        "https://smba.trafficmanager.net/apis/"
+      )
+    }
+  )
+
+  it("accepts a valid HTTPS override", () => {
+    expect(resolveDefaultMSTeamsServiceUrl("https://example.com/custom/")).toBe(
+      "https://example.com/custom/"
+    )
+  })
+})
 
 describe("validateMSTeamsServiceUrl", () => {
   it("accepts paths on the configured Teams service origin", () => {
@@ -21,4 +39,13 @@ describe("validateMSTeamsServiceUrl", () => {
       "Invalid Microsoft Teams service URL"
     )
   })
+
+  it.each(["?region=emea", "#emea"])(
+    "rejects a configured-origin URL with suffix: %s",
+    suffix => {
+      expect(() =>
+        validateMSTeamsServiceUrl(`${DEFAULT_MSTEAMS_SERVICE_URL}${suffix}`)
+      ).toThrow("Invalid Microsoft Teams service URL")
+    }
+  )
 })
