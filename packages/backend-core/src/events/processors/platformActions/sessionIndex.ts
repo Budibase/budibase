@@ -55,7 +55,6 @@ export async function upsertPlatformActionSession(
               status,
               startedAt: input.timestamp,
             })
-        doc.updatedAt = input.timestamp
         doc.completedAt = input.timestamp
 
         try {
