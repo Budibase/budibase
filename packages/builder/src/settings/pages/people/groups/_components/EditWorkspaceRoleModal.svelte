@@ -15,7 +15,7 @@
   import type { Role } from "@budibase/types"
 
   interface Workspace extends StoreApp {
-    prodAppId: string
+    prodWorkspaceId: string
     role?: string
   }
 
@@ -50,7 +50,7 @@
   let workspaceRolesLoaded = $state(false)
   let roleRequestId = 0
 
-  const workspaceId = $derived(workspace?.prodAppId)
+  const workspaceId = $derived(workspace?.prodWorkspaceId)
   const roleColorLookup = $derived(
     workspaceRoles.reduce<Record<string, string | undefined>>((acc, role) => {
       if (role._id) acc[role._id] = role.uiMetadata?.color
@@ -99,10 +99,10 @@
     selectedEndUserRole = workspace?.role || Constants.Roles.BASIC
   }
 
-  const fetchWorkspaceRoles = async (appId: string) => {
+  const fetchWorkspaceRoles = async (workspaceId: string) => {
     const requestId = ++roleRequestId
     try {
-      const response = await API.getRolesForApp(appId)
+      const response = await API.getRolesForApp(workspaceId)
       if (requestId !== roleRequestId) {
         return
       }
@@ -154,7 +154,7 @@
       return keepOpen
     }
     try {
-      await groups.addApp(groupId, workspaceId, getWorkspaceRole())
+      await groups.addWorkspace(groupId, workspaceId, getWorkspaceRole())
     } catch (error) {
       notifications.error("Error updating workspace role")
       return keepOpen

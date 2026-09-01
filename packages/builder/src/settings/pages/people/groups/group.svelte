@@ -37,7 +37,7 @@
   }
 
   interface WorkspaceRow extends StoreApp {
-    prodAppId: string
+    prodWorkspaceId: string
     role?: string
     readonly: boolean
     __skeleton?: boolean
@@ -61,7 +61,7 @@
   const isAdmin = $derived(sdk.users.isAdmin($auth.user))
   const groupReadonly = $derived(!isAdmin || isScimGroup)
   const workspaceReadonly = $derived(!isAdmin)
-  const appSchema = $derived({
+  const workspaceSchema = $derived({
     name: {
       width: "1fr",
     },
@@ -71,14 +71,14 @@
     ...(workspaceReadonly
       ? {}
       : {
-          prodAppId: {
+          prodWorkspaceId: {
             displayName: "",
             width: "auto",
             borderLeft: true,
           },
         }),
   })
-  const customAppTableRenderers = [
+  const customWorkspaceTableRenderers = [
     {
       column: "name",
       component: WorkspaceNameTableRenderer,
@@ -88,56 +88,56 @@
       component: WorkspaceRoleTableRenderer,
     },
     {
-      column: "prodAppId",
+      column: "prodWorkspaceId",
       component: RemoveWorkspaceTableRenderer,
     },
   ]
-  const groupApps = $derived(
+  const groupWorkspaces = $derived(
     $workspacesStore.apps
-      .filter(app => {
+      .filter(workspace => {
         const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
-          app.devId || ""
+          workspace.devId || ""
         )
         return (
           !!prodWorkspaceId &&
           !!group &&
-          groups.getGroupAppIds(group).includes(prodWorkspaceId)
+          groups.getGroupWorkspaceIds(group).includes(prodWorkspaceId)
         )
       })
-      .map(app => {
+      .map(workspace => {
         const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
-          app.devId || ""
+          workspace.devId || ""
         )
         if (!prodWorkspaceId) {
           return undefined
         }
         return {
-          ...app,
+          ...workspace,
           _id: prodWorkspaceId,
-          prodAppId: prodWorkspaceId,
+          prodWorkspaceId,
           readonly: workspaceReadonly,
           role: group?.builder?.apps?.includes(prodWorkspaceId)
             ? Constants.Roles.CREATOR
             : group?.roles?.[prodWorkspaceId],
         }
       })
-      .filter(app => app !== undefined)
+      .filter(workspace => workspace !== undefined)
   )
-  const filteredGroupApps = $derived(
+  const filteredGroupWorkspaces = $derived(
     workspaceSearch
-      ? groupApps.filter(app =>
-          app.name?.toLowerCase().includes(workspaceSearch.toLowerCase())
+      ? groupWorkspaces.filter(workspace =>
+          workspace.name?.toLowerCase().includes(workspaceSearch.toLowerCase())
         )
-      : groupApps
+      : groupWorkspaces
   )
   const showWorkspacePagination = $derived(
-    filteredGroupApps.length > WORKSPACE_PAGE_SIZE
+    filteredGroupWorkspaces.length > WORKSPACE_PAGE_SIZE
   )
   const workspacePageCount = $derived(
-    Math.max(1, Math.ceil(filteredGroupApps.length / WORKSPACE_PAGE_SIZE))
+    Math.max(1, Math.ceil(filteredGroupWorkspaces.length / WORKSPACE_PAGE_SIZE))
   )
   const workspacePageRows = $derived(
-    filteredGroupApps.slice(
+    filteredGroupWorkspaces.slice(
       workspacePageNumber * WORKSPACE_PAGE_SIZE,
       (workspacePageNumber + 1) * WORKSPACE_PAGE_SIZE
     )
@@ -153,7 +153,7 @@
         )
       : []
   )
-  const paginatedGroupApps = $derived([
+  const paginatedGroupWorkspaces = $derived([
     ...workspacePageRows,
     ...workspaceFillerRows,
   ])
@@ -223,9 +223,9 @@
     }
   }
 
-  const removeApp = async (app: string) => {
+  const removeWorkspace = async (workspaceId: string) => {
     try {
-      await groups.removeApp(groupId, app)
+      await groups.removeWorkspace(groupId, workspaceId)
     } catch (error) {
       notifications.error("Error removing workspace")
     }
@@ -242,8 +242,8 @@
     editWorkspaceRoleModal?.show()
   }
 
-  setContext("groupApps", {
-    removeApp,
+  setContext("groupWorkspaces", {
+    removeWorkspace,
     getReadonly: () => workspaceReadonly,
   })
 
@@ -313,12 +313,12 @@
         </div>
       </div>
       <Table
-        schema={appSchema}
-        data={paginatedGroupApps}
+        schema={workspaceSchema}
+        data={paginatedGroupWorkspaces}
         rowCount={WORKSPACE_PAGE_SIZE}
         customPlaceholder
         allowEditRows={false}
-        customRenderers={customAppTableRenderers}
+        customRenderers={customWorkspaceTableRenderers}
         on:click={e => openWorkspaceRoleModal(e.detail as WorkspaceRow)}
         allowEditColumns={false}
       >

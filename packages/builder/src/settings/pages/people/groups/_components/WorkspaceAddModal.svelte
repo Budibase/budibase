@@ -57,7 +57,7 @@
     },
   ])
   const assignedWorkspaceIds = $derived(
-    group ? groups.getGroupAppIds(group) : []
+    group ? groups.getGroupWorkspaceIds(group) : []
   )
   const workspaceOptions = $derived(
     Object.values(
@@ -113,7 +113,7 @@
       return keepOpen
     }
     try {
-      await groups.addApps(
+      await groups.addWorkspaces(
         groupId,
         selectedWorkspaceIdsForSubmit,
         getWorkspaceRole()

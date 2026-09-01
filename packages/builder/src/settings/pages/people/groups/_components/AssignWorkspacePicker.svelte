@@ -15,7 +15,7 @@
 
   const group = $derived($groups.find(x => x._id === groupId))
   const assignedWorkspaceIds = $derived(
-    group ? groups.getGroupAppIds(group) : []
+    group ? groups.getGroupWorkspaceIds(group) : []
   )
   const availableWorkspaceIds = $derived(
     Object.keys(

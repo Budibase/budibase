@@ -89,41 +89,41 @@ class GroupStore extends BudiStore<UserGroup[]> {
     await this.refreshGroup(groupId)
   }
 
-  async addApp(groupId: string, appId: string, roleId: string) {
-    await API.addAppsToGroup(groupId, [{ appId, roleId }])
+  async addWorkspace(groupId: string, workspaceId: string, roleId: string) {
+    await API.addWorkspacesToGroup(groupId, [{ workspaceId, roleId }])
     await this.refreshGroup(groupId)
   }
 
-  async addApps(groupId: string, appIds: string[], roleId: string) {
-    if (!appIds.length) {
+  async addWorkspaces(groupId: string, workspaceIds: string[], roleId: string) {
+    if (!workspaceIds.length) {
       return
     }
-    await API.addAppsToGroup(
+    await API.addWorkspacesToGroup(
       groupId,
-      appIds.map(appId => ({ appId, roleId }))
+      workspaceIds.map(workspaceId => ({ workspaceId, roleId }))
     )
     await this.refreshGroup(groupId)
   }
 
-  async removeApp(groupId: string, appId: string) {
-    await API.removeAppsFromGroup(groupId, [{ appId }])
+  async removeWorkspace(groupId: string, workspaceId: string) {
+    await API.removeWorkspacesFromGroup(groupId, [{ workspaceId }])
     await this.refreshGroup(groupId)
   }
 
-  async removeApps(groupId: string, appIds: string[]) {
-    await API.removeAppsFromGroup(
+  async removeWorkspaces(groupId: string, workspaceIds: string[]) {
+    await API.removeWorkspacesFromGroup(
       groupId,
-      appIds.map(appId => ({ appId }))
+      workspaceIds.map(workspaceId => ({ workspaceId }))
     )
     await this.refreshGroup(groupId)
   }
 
-  getGroupAppIds(group: UserGroup) {
-    let groupAppIds = Object.keys(group?.roles || {})
+  getGroupWorkspaceIds(group: UserGroup) {
+    let groupWorkspaceIds = Object.keys(group?.roles || {})
     if (group?.builder?.apps) {
-      groupAppIds = groupAppIds.concat(group.builder.apps)
+      groupWorkspaceIds = groupWorkspaceIds.concat(group.builder.apps)
     }
-    return groupAppIds
+    return groupWorkspaceIds
   }
 
   async bulkAddUsersFromCsv(groupId: string, csvContent: string) {

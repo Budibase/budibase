@@ -7,14 +7,15 @@
     row?: { __skeleton?: boolean }
   }
 
-  interface GroupAppsContext {
-    removeApp: (workspaceId: string) => Promise<void>
+  interface GroupWorkspacesContext {
+    removeWorkspace: (workspaceId: string) => Promise<void>
     getReadonly?: () => boolean
   }
 
   let { value, row }: Props = $props()
 
-  const groupAppsContext = getContext<GroupAppsContext>("groupApps")
+  const groupWorkspacesContext =
+    getContext<GroupWorkspacesContext>("groupWorkspaces")
   let removing = $state(false)
 
   const onClick = async (e: MouseEvent) => {
@@ -24,7 +25,7 @@
     }
     removing = true
     try {
-      await groupAppsContext.removeApp(value)
+      await groupWorkspacesContext.removeWorkspace(value)
     } finally {
       removing = false
     }
@@ -38,7 +39,7 @@
     </div>
   {:else}
     <ActionButton
-      disabled={groupAppsContext.getReadonly?.()}
+      disabled={groupWorkspacesContext.getReadonly?.()}
       size="S"
       on:click={onClick}
     >

@@ -17,8 +17,14 @@ export interface GroupEndpoints {
   ) => Promise<SearchUserGroupResponse>
   addUsersToGroup: (groupId: string, userIds: string[]) => Promise<void>
   removeUsersFromGroup: (groupId: string, userIds: string[]) => Promise<void>
-  addAppsToGroup: (groupId: string, appArray: object[]) => Promise<void>
-  removeAppsFromGroup: (groupId: string, appArray: object[]) => Promise<void>
+  addWorkspacesToGroup: (
+    groupId: string,
+    workspaceArray: object[]
+  ) => Promise<void>
+  removeWorkspacesFromGroup: (
+    groupId: string,
+    workspaceArray: object[]
+  ) => Promise<void>
   bulkAddUsersFromCsv: (
     groupId: string,
     csvContent: string
@@ -27,7 +33,7 @@ export interface GroupEndpoints {
 
 enum GroupResource {
   USERS = "users",
-  APPS = "apps",
+  WORKSPACES = "workspaces",
 }
 
 enum GroupOperation {
@@ -43,7 +49,7 @@ type GetGroupUsersRequest = {
 }
 
 export const buildGroupsEndpoints = (API: BaseAPIClient): GroupEndpoints => {
-  // Underlying functionality of adding/removing users/apps to groups
+  // Underlying functionality of adding/removing users/workspaces to groups
   async function updateGroupResource(
     groupId: string,
     resource: GroupResource,
@@ -147,30 +153,30 @@ export const buildGroupsEndpoints = (API: BaseAPIClient): GroupEndpoints => {
     },
 
     /**
-     * Adds apps to a group
+     * Adds workspaces to a group
      * @param groupId The group to update
-     * @param appArray Array of objects, containing the appId and roleId to be added
+     * @param workspaceArray Array of objects, containing the workspaceId and roleId to be added
      */
-    addAppsToGroup: async (groupId, appArray) => {
+    addWorkspacesToGroup: async (groupId, workspaceArray) => {
       return updateGroupResource(
         groupId,
-        GroupResource.APPS,
+        GroupResource.WORKSPACES,
         GroupOperation.ADD,
-        appArray
+        workspaceArray
       )
     },
 
     /**
-     * Removes apps from a group
+     * Removes workspaces from a group
      * @param groupId The group to update
-     * @param appArray Array of objects, containing the appId to be removed
+     * @param workspaceArray Array of objects, containing the workspaceId to be removed
      */
-    removeAppsFromGroup: async (groupId, appArray) => {
+    removeWorkspacesFromGroup: async (groupId, workspaceArray) => {
       return updateGroupResource(
         groupId,
-        GroupResource.APPS,
+        GroupResource.WORKSPACES,
         GroupOperation.REMOVE,
-        appArray
+        workspaceArray
       )
     },
 

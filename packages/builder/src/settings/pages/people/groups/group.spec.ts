@@ -47,8 +47,8 @@ const {
     init: vi.fn().mockResolvedValue(undefined),
     save: vi.fn().mockResolvedValue(undefined),
     delete: vi.fn().mockResolvedValue(undefined),
-    removeApp: vi.fn().mockResolvedValue(undefined),
-    getGroupAppIds: (group?: UserGroup) => {
+    removeWorkspace: vi.fn().mockResolvedValue(undefined),
+    getGroupWorkspaceIds: (group?: UserGroup) => {
       let ids = Object.keys(group?.roles || {})
       if (group?.builder?.apps) {
         ids = ids.concat(group.builder.apps)

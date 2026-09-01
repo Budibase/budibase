@@ -20,7 +20,7 @@
     return sdk.users.hasAppBuilderPermissions(row)
       ? (row.builder?.apps?.length || 0) +
           Object.keys(row.roles || {}).filter(
-            appId => !row.builder?.apps?.includes(appId)
+            workspaceId => !row.builder?.apps?.includes(workspaceId)
           ).length
       : Object.keys(value || {}).length
   }
