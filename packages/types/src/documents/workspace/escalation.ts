@@ -54,6 +54,13 @@ export interface PendingToolCall {
   sourceId?: string
 }
 
+export interface EscalationReviewContext {
+  requestedBy: string
+  operation: string
+  action: string
+  parameters: string
+}
+
 export interface SuspendedOperationContext {
   agentId: string
   operationId: string
@@ -87,6 +94,7 @@ export interface EscalationContextDoc extends Document {
   // escalation trigger
   title?: string
   summary?: string
+  reviewContext?: EscalationReviewContext
   response?: EscalationResponse
   resolvedAt?: string
   isTest?: boolean

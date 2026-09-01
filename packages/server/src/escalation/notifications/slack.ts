@@ -1,3 +1,4 @@
+import type { Block, KnownBlock } from "@slack/types"
 import { WebClient } from "@slack/web-api"
 import { createSlackAdapter } from "@chat-adapter/slack"
 import { tenancy } from "@budibase/backend-core"
@@ -10,29 +11,68 @@ import {
   EscalationNotificationChannel,
 } from "@budibase/types"
 import sdk from "../../sdk"
+import { chunkText, truncateReviewField } from "../reviewContext"
 import { findIntegrationAgent, getEscalationText } from "./utils"
+
+const escapeMrkdwn = (value: string) =>
+  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 
 const buildEscalationBlocks = ({
   title,
   summary,
+  reviewContext,
   escalationId,
   notificationDocId,
   appId,
 }: {
   title: string
   summary?: string
+  reviewContext?: EscalationContextDoc["reviewContext"]
   escalationId: string
   notificationDocId: string
   appId: string
-}) => [
-  {
-    type: "section",
-    text: {
-      type: "mrkdwn",
-      text: summary ? `*${title}*\n${summary}` : `*${title}*`,
+}) => {
+  const blocks: (KnownBlock | Block)[] = [
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: truncateReviewField(
+          summary ? `*${title}*\n${summary}` : `*${title}*`,
+          2_900
+        ),
+      },
     },
-  },
-  {
+  ]
+  if (reviewContext) {
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text:
+          `*Requested by:* ${escapeMrkdwn(reviewContext.requestedBy)}\n` +
+          `*Operation:* ${escapeMrkdwn(reviewContext.operation)}\n` +
+          `*Action:* ${escapeMrkdwn(reviewContext.action)}`,
+      },
+    })
+    // Neutralise the fence before chunking - a ``` split across two chunks
+    // would survive a per-chunk replace and close the block early, letting the
+    // rest of the arguments render as mrkdwn.
+    const parameters = escapeMrkdwn(reviewContext.parameters).replace(
+      /```/g,
+      "'''"
+    )
+    chunkText(parameters).forEach((chunk, index) => {
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `${index === 0 ? "*Parameters*\n" : ""}\`\`\`${chunk}\`\`\``,
+        },
+      })
+    })
+  }
+  blocks.push({
     type: "actions",
     elements: [
       {
@@ -50,8 +90,9 @@ const buildEscalationBlocks = ({
         value: JSON.stringify({ escalationId, notificationDocId, appId }),
       },
     ],
-  },
-]
+  })
+  return blocks
+}
 
 const getSlackIntegration = async (
   appId: string,
@@ -108,6 +149,7 @@ export async function sendSlackNotification({
   const blocks = buildEscalationBlocks({
     title,
     summary,
+    reviewContext: contextDoc.reviewContext,
     escalationId: notifDoc.escalationId,
     notificationDocId: notifDoc._id!,
     appId: contextDoc.appId,

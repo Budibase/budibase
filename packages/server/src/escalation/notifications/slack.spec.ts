@@ -158,4 +158,27 @@ describe("sendSlackNotification", () => {
       expect.objectContaining({ retryConfig: { retries: 0 } })
     )
   })
+
+  it("includes requester and sanitized tool parameters in the approval card", async () => {
+    const { contextDoc, notifDoc, globalUserId } = buildDocs()
+    contextDoc.reviewContext = {
+      requestedBy: "Adria Navarro (adria@example.com)",
+      operation: "Prepare Cloud release",
+      action: "Trigger workflow",
+      parameters: "release_notes: ## Features\n- Useful change",
+    }
+    await seedLinks(globalUserId)
+    mockAuthTest.mockResolvedValue({ ok: true, team_id: TEAM_RIGHT })
+
+    await config.doInContext(config.getDevWorkspaceId(), () =>
+      sendSlackNotification({ notifDoc, contextDoc })
+    )
+
+    const payload = mockPostMessage.mock.calls[0][0]
+    const rendered = JSON.stringify(payload.blocks)
+    expect(rendered).toContain("Adria Navarro")
+    expect(rendered).toContain("Prepare Cloud release")
+    expect(rendered).toContain("release_notes")
+    expect(rendered).toContain("Useful change")
+  })
 })

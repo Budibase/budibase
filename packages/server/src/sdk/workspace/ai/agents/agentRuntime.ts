@@ -53,6 +53,10 @@ import {
 } from "../../../../ai/tools/budibase/listSessionEscalations"
 import type tracer from "dd-trace"
 import { withLiteLLMSessionId } from "../llm/requestSession"
+import {
+  formatToolParameters,
+  requesterLabel,
+} from "../../../../escalation/reviewContext"
 
 // How long to wait for a human response before the escalation expires, in
 // seconds, when the operation doesn't specify its own delay.
@@ -520,15 +524,6 @@ const prepareAgentChatRunInternal = async ({
 
   let resolvedModelMessages: ModelMessage[] = []
   let resolvedChatModel: Parameters<typeof generateText>[0]["model"] | undefined
-  const messageTextForCard = (message: ModelMessage) => {
-    if (typeof message.content === "string") {
-      return message.content
-    }
-    return message.content
-      .map(part => ("text" in part ? part.text : ""))
-      .filter(Boolean)
-      .join(" ")
-  }
   const generateCardCopy = async ({
     label,
     args,
@@ -539,11 +534,6 @@ const prepareAgentChatRunInternal = async ({
     if (!resolvedChatModel) {
       return undefined
     }
-    const recentMessages = resolvedModelMessages
-      .slice(-6)
-      .map(message => `${message.role}: ${messageTextForCard(message)}`)
-      .filter(line => !line.endsWith(": "))
-      .join("\n")
     const result = await generateText({
       model: resolvedChatModel,
       system:
@@ -552,12 +542,11 @@ const prepareAgentChatRunInternal = async ({
         'TITLE: <short label, e.g. "Expense request: Table £200">\n' +
         "SUMMARY: <one line for the reviewer describing who wants what, " +
         'e.g. "Steve wants to request a £200 expense for a table (Office).">\n' +
-        "Base both only on the conversation and the pending action. Use the " +
-        "requester's name if the conversation reveals it. No other lines.",
+        "Base both only on the pending action and its sanitized arguments. " +
+        "Never infer or add parameter values. No other lines.",
       prompt:
-        `Conversation (latest last):\n${recentMessages}\n\n` +
         `Pending action: ${label}\n` +
-        `Arguments: ${JSON.stringify(args)}`,
+        `Arguments:\n${formatToolParameters(args)}`,
     })
     const title = result.text.match(/^TITLE:\s*(.+)$/m)?.[1]?.trim()
     const summary = result.text.match(/^SUMMARY:\s*(.+)$/m)?.[1]?.trim()
@@ -571,6 +560,12 @@ const prepareAgentChatRunInternal = async ({
         channel: chat?.channel,
         userId: user?._id,
         requester,
+        requesterLabel: requesterLabel({
+          user,
+          ...(promptMode === "automation" && {
+            automation: { agentName: agent.name },
+          }),
+        }),
         getMessages: () => resolvedModelMessages,
         getRequestId: () => getRequestId?.(),
         generateCardCopy,

@@ -82,6 +82,7 @@ export class BullEscalationProcessor implements IEscalationProcessor {
       isTest,
       ...(input.title && { title: input.title }),
       ...(input.summary && { summary: input.summary }),
+      ...(input.reviewContext && { reviewContext: input.reviewContext }),
       ...(input.recipients?.length && { recipients: input.recipients }),
       ...(input.resolutionStrategy && {
         resolutionStrategy: input.resolutionStrategy,

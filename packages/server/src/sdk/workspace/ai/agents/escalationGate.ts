@@ -14,6 +14,10 @@ import type { ModelMessage } from "ai"
 import type { EscalationGateRuntime } from "../../../../ai/tools"
 import { escalationProcessor } from "../../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../../escalation/resolutionStrategies"
+import {
+  formatToolParameters,
+  truncateReviewField,
+} from "../../../../escalation/reviewContext"
 
 export const DEFAULT_ESCALATION_DELAY_SECONDS = 3600
 
@@ -24,6 +28,7 @@ export interface EscalationGateContext {
   channel?: ChatConversationChannel
   userId?: string
   requester?: AgentRequester
+  requesterLabel?: string
   getMessages: () => ModelMessage[]
   getRequestId: () => string | undefined
   executedApproval?: { toolName: string }
@@ -53,14 +58,11 @@ const resolvePolicy = (
 ): AgentOperationApprovalPolicy | undefined =>
   operation.approvalPolicies?.find(policy => policy.id === policyId)
 
+// Used for the notification title and summary whenever generated card copy is
+// unavailable, so it renders the same redacted arguments the reviewer sees
+// rather than the raw input.
 const summariseArgs = (label: string, input: unknown) => {
-  let args: string
-  try {
-    args = JSON.stringify(input)
-  } catch {
-    args = String(input)
-  }
-  const summary = `${label}: ${args}`
+  const summary = `${label}: ${formatToolParameters(input).replace(/\s+/g, " ")}`
   return summary.length > SUMMARY_MAX_LENGTH
     ? `${summary.slice(0, SUMMARY_MAX_LENGTH - 1)}…`
     : summary
@@ -141,6 +143,14 @@ export const createEscalationGateRuntime = ({
       message: summary,
       title,
       summary,
+      reviewContext: {
+        requestedBy: truncateReviewField(
+          gateContext.requesterLabel ?? "Unknown requester"
+        ),
+        operation: truncateReviewField(operation.name),
+        action: truncateReviewField(label),
+        parameters: formatToolParameters(input),
+      },
       delay: (notifications.delay ?? DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
       recipients: notifications.recipients,
       resolutionStrategy: resolutionStrategyBinding(
