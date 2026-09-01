@@ -123,12 +123,12 @@ describe("Run Function automation action", () => {
     })
   })
 
-  it("parses bindable JSON editor input", async () => {
+  it("passes plain JSON input through to the run orchestrator", async () => {
     const deps = dependencies()
 
     await run(deps, {
       functionId: fn._id,
-      inputs: { value: '{"bound":"value"}' },
+      inputs: { bound: "value" },
     })
 
     expect(deps.orchestrate).toHaveBeenCalledWith(
@@ -137,22 +137,6 @@ describe("Run Function automation action", () => {
       })
     )
   })
-
-  it.each(["42", "[1,2]", '"hi"'])(
-    "rejects editor JSON that is not an object: %s",
-    async value => {
-      const deps = dependencies()
-
-      await expect(
-        run(deps, { functionId: fn._id, inputs: { value } })
-      ).resolves.toMatchObject({
-        success: false,
-        status: "error",
-        error: { code: FunctionErrorCode.FUNCTION_INPUT_INVALID },
-      })
-      expect(deps.orchestrate).not.toHaveBeenCalled()
-    }
-  )
 
   it("preserves a real input object with a value property", async () => {
     const deps = dependencies()
