@@ -39,6 +39,7 @@ const projectFixtures = vi.hoisted(() => [
 vi.mock("@budibase/bbui", () => ({
   Body: MockBody,
   Checkbox: MockCheckbox,
+  Icon: MockSlot,
   ModalContent: MockModalContent,
   Multiselect: MockSelect,
   ProgressCircle: MockSlot,
@@ -110,10 +111,13 @@ describe("AssignProjectModal", () => {
 
     await advancePreviewDebounce()
     await waitFor(() =>
-      expect(
-        screen.getByText("2 of 2 dependencies will be added.")
-      ).toBeTruthy()
+      expect(screen.getByText("2 of 2 selected")).toBeTruthy()
     )
+    expect(
+      screen.getByText(
+        "Include the resources this app uses in the same projects"
+      )
+    ).toBeTruthy()
     expect(onPreview).toHaveBeenCalledWith({
       resourceId: "workspace_app_1",
       projectIds: ["project_1"],
@@ -125,10 +129,8 @@ describe("AssignProjectModal", () => {
     ).toEqual(["Notify operations", "Operations database"])
 
     await fireEvent.click(screen.getByLabelText("Notify operations"))
-    expect(
-      screen.getByText(/Deselected dependencies will not be part/)
-    ).toBeTruthy()
-    await fireEvent.click(screen.getByText("Save"))
+    expect(screen.getByText("1 related resource excluded")).toBeTruthy()
+    await fireEvent.click(screen.getByText("Save changes"))
 
     expect(onConfirm).toHaveBeenCalledWith({
       projectIds: ["project_1"],
@@ -149,9 +151,11 @@ describe("AssignProjectModal", () => {
 
     await advancePreviewDebounce()
     await waitFor(() =>
-      expect(screen.getByText(/Unable to load dependencies/)).toBeTruthy()
+      expect(
+        screen.getByText(/Related resources couldn't be loaded/)
+      ).toBeTruthy()
     )
-    expect(screen.getByText("Save")).toBeDisabled()
+    expect(screen.getByText("Save changes")).toBeDisabled()
     expect(onConfirm).not.toHaveBeenCalled()
   })
 
@@ -188,9 +192,7 @@ describe("AssignProjectModal", () => {
 
     await advancePreviewDebounce()
     await waitFor(() =>
-      expect(
-        screen.getByText("1 of 1 dependencies will be added.")
-      ).toBeTruthy()
+      expect(screen.getByText("1 of 1 selected")).toBeTruthy()
     )
     await fireEvent.click(screen.getByLabelText("Notify operations"))
 
@@ -200,17 +202,18 @@ describe("AssignProjectModal", () => {
     }) as HTMLOptionElement
     reportingOption.selected = true
     await fireEvent.change(projectSelect)
+    await tick()
+
+    expect(screen.queryByText("1 related resource excluded")).toBeNull()
 
     await advancePreviewDebounce()
     await waitFor(() =>
-      expect(
-        screen.getByText("1 of 2 dependencies will be added.")
-      ).toBeTruthy()
+      expect(screen.getByText("1 of 2 selected")).toBeTruthy()
     )
     expect(screen.getByLabelText("Notify operations")).not.toBeChecked()
     expect(screen.getByLabelText("Reporting database")).toBeChecked()
 
-    await fireEvent.click(screen.getByText("Save"))
+    await fireEvent.click(screen.getByText("Save changes"))
     expect(onConfirm).toHaveBeenCalledWith({
       projectIds: ["project_1", "project_2"],
       dependencyIds: ["datasource_1"],
@@ -287,7 +290,7 @@ describe("AssignProjectModal", () => {
     expect(screen.queryByText("Stale dependency")).toBeNull()
     expect(screen.getByText("Latest dependency")).toBeTruthy()
 
-    await fireEvent.click(screen.getByText("Save"))
+    await fireEvent.click(screen.getByText("Save changes"))
     expect(onConfirm).toHaveBeenCalledWith({
       projectIds: ["project_1", "project_2"],
       dependencyIds: ["datasource_latest"],
