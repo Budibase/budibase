@@ -160,7 +160,7 @@
     try {
       logsPageInfo.loading()
       const response = await auditLogs.search({
-        bookmark: page || undefined,
+        bookmark: page ? Number(page) : undefined,
         startDate: dateRange[0]?.toISOString(),
         endDate: dateRange[1]?.toISOString(),
         fullSearch: search,
