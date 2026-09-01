@@ -11,10 +11,13 @@ import {
   type FunctionError,
   type FunctionReadiness,
   type FunctionRunResult,
-  type FunctionSupervisor,
   type JSONValue,
 } from "@budibase/types"
 import { areFunctionsEnabled } from "../../middleware/functionsEnabled"
+import {
+  get as getFunction,
+  getFunctionReadiness,
+} from "../../sdk/workspace/functions"
 import type {
   FunctionCapabilityService,
   FunctionInvocationScopeInput,
@@ -74,7 +77,7 @@ export interface FunctionCapabilitySession {
 }
 
 export interface ExecuteFunctionDependencies {
-  supervisor: Pick<FunctionSupervisor<SuperviseFunctionRunOptions>, "execute">
+  execute: (options: SuperviseFunctionRunOptions) => Promise<FunctionRunResult>
   functionsEnabled: () => Promise<boolean>
   getFunction: (functionId: string) => Promise<FunctionDocument | undefined>
   getReadiness: (fn: FunctionDocument) => Promise<FunctionReadiness>
@@ -84,18 +87,20 @@ export interface ExecuteFunctionDependencies {
   createRunId: () => string
 }
 
+// Loading the capability service lazily avoids a cycle through the query controller
+// while the automation action modules are initialised.
+const createCapabilitySession = async (input: FunctionInvocationScopeInput) => {
+  const { createFunctionInvocationScope, FunctionCapabilityService } =
+    await import("../functions/capabilities")
+  return new FunctionCapabilityService(createFunctionInvocationScope(input))
+}
+
 const defaultDependencies: ExecuteFunctionDependencies = {
-  supervisor: functionRunSupervisor,
+  execute: options => functionRunSupervisor.execute(options),
   functionsEnabled: areFunctionsEnabled,
-  getFunction: async functionId =>
-    (await import("../../sdk/workspace/functions")).get(functionId),
-  getReadiness: async fn =>
-    (await import("../../sdk/workspace/functions")).getFunctionReadiness(fn),
-  createCapabilitySession: async input => {
-    const { createFunctionInvocationScope, FunctionCapabilityService } =
-      await import("../functions/capabilities")
-    return new FunctionCapabilityService(createFunctionInvocationScope(input))
-  },
+  getFunction,
+  getReadiness: getFunctionReadiness,
+  createCapabilitySession,
   createRunId: uuid,
 }
 
@@ -223,7 +228,7 @@ export const executeFunction = async (
       limits: DEFAULT_FUNCTION_LIMITS.run,
     })
     try {
-      const result = await dependencies.supervisor.execute({
+      const result = await dependencies.execute({
         request: {
           runId,
           artifact: fn.artifact,
