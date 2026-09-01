@@ -1177,7 +1177,7 @@ async function preDestroyWorkspace(ctx: UserCtx) {
 
 async function postDestroyWorkspace(ctx: UserCtx) {
   const rowCount = ctx.rowCount
-  await groups.cleanupApp(ctx.params.appId)
+  await groups.cleanupWorkspace(ctx.params.appId)
   if (rowCount) {
     await quotas.removeRows(rowCount)
   }

@@ -20,12 +20,12 @@ import * as db from "../../db"
 import * as features from "../features"
 import * as quotas from "../quotas"
 
-async function findHighestRole(groups: UserGroup[], appId: string) {
+async function findHighestRole(groups: UserGroup[], workspaceId: string) {
   try {
     const potentialRoles: string[] = []
     for (let group of groups) {
       if (group.roles) {
-        const role = group.roles[dbUtils.getProdWorkspaceID(appId)]
+        const role = group.roles[dbUtils.getProdWorkspaceID(workspaceId)]
         if (role) {
           potentialRoles.push(role)
         }
@@ -56,7 +56,7 @@ async function findHighestRole(groups: UserGroup[], appId: string) {
     return highestGroupRole
   } catch (error) {
     logging.logAlert(
-      `Error finding higest role for ${groups.length} on app ${appId}`,
+      `Error finding highest role for ${groups.length} on workspace ${workspaceId}`,
       error
     )
     throw error
@@ -74,25 +74,27 @@ async function groupList(groupIds: string[], groups?: UserGroup[]) {
   return groups
 }
 
-export async function getGroupBuilderAppIds(
+export async function getGroupBuilderWorkspaceIds(
   user: User | ContextUser,
-  opts?: { appId?: string; groups?: UserGroup[] }
+  opts?: { workspaceId?: string; groups?: UserGroup[] }
 ) {
   if (!user.userGroups) {
     return []
   }
   const groups = await groupList(user.userGroups, opts?.groups)
-  const prodAppId = opts?.appId ? dbUtils.getProdWorkspaceID(opts?.appId) : null
-  let appIds: string[] = []
+  const prodWorkspaceId = opts?.workspaceId
+    ? dbUtils.getProdWorkspaceID(opts.workspaceId)
+    : null
+  let workspaceIds: string[] = []
   for (let group of groups) {
-    const groupApps = group.builder?.apps
-    if (prodAppId && groupApps?.includes(prodAppId)) {
-      appIds.push(prodAppId)
-    } else if (!prodAppId) {
-      appIds = appIds.concat(groupApps || [])
+    const groupWorkspaces = group.builder?.apps
+    if (prodWorkspaceId && groupWorkspaces?.includes(prodWorkspaceId)) {
+      workspaceIds.push(prodWorkspaceId)
+    } else if (!prodWorkspaceId) {
+      workspaceIds = workspaceIds.concat(groupWorkspaces || [])
     }
   }
-  return [...new Set(appIds)]
+  return [...new Set(workspaceIds)]
 }
 
 export async function getGroupRoleId(
@@ -102,26 +104,26 @@ export async function getGroupRoleId(
 ) {
   // If the user is part of a group or groups, then we want to find the highest roleId for that user
   // within the group, and overwrite the user defined role, therefore providing group based access
-  // on a user / app level
+  // on a user / workspace level
   if (!user.userGroups) {
     return null
   }
 
   let groups: UserGroup[] = await groupList(user.userGroups, opts?.groups)
 
-  // if the user has a role for the app already, the group doesn't override it
-  const prodAppId = dbUtils.getProdWorkspaceID(workspaceId)
-  if (user.roles?.[prodAppId]) {
-    return user.roles[prodAppId]
+  // if the user has a role for the workspace already, the group doesn't override it
+  const prodWorkspaceId = dbUtils.getProdWorkspaceID(workspaceId)
+  if (user.roles?.[prodWorkspaceId]) {
+    return user.roles[prodWorkspaceId]
   }
 
-  // reduce the groups down to where the apps exist
+  // reduce the groups down to those assigned to the workspace
   groups = groups.filter((group: UserGroup) => {
     if (!group?.roles) {
       return false
     }
-    const appIds = Object.keys(group.roles)
-    return appIds.includes(prodAppId)
+    const workspaceIds = Object.keys(group.roles)
+    return workspaceIds.includes(prodWorkspaceId)
   })
 
   // Check if we're already in the correct workspace context
@@ -142,31 +144,35 @@ export async function enrichUserRolesFromGroups(user: User) {
     return user
   }
   const groups = await getBulk(user.userGroups, { enriched: false })
-  let allGroupAppIds: string[] = []
+  let allGroupWorkspaceIds: string[] = []
   for (let group of groups) {
     if (group?.roles) {
-      allGroupAppIds = allGroupAppIds.concat(Object.keys(group.roles))
+      allGroupWorkspaceIds = allGroupWorkspaceIds.concat(
+        Object.keys(group.roles)
+      )
     }
   }
-  // get the unique app IDs
-  allGroupAppIds = [...new Set(allGroupAppIds)]
-  for (let appId of allGroupAppIds) {
-    await context.doInWorkspaceContext(appId, async () => {
-      if (user.roles[appId]) {
+  // get the unique workspace IDs
+  allGroupWorkspaceIds = [...new Set(allGroupWorkspaceIds)]
+  for (let workspaceId of allGroupWorkspaceIds) {
+    await context.doInWorkspaceContext(workspaceId, async () => {
+      if (user.roles[workspaceId]) {
         return
       }
-      const role = await findHighestRole(groups, appId)
+      const role = await findHighestRole(groups, workspaceId)
       if (role) {
-        user.roles[appId] = role
+        user.roles[workspaceId] = role
       }
     })
   }
-  const builderAppIds = await getGroupBuilderAppIds(user, { groups })
-  if (builderAppIds.length && !user.builder?.global) {
-    const existing = user.builder?.apps || []
+  const builderWorkspaceIds = await getGroupBuilderWorkspaceIds(user, {
+    groups,
+  })
+  if (builderWorkspaceIds.length && !user.builder?.global) {
+    const existingWorkspaceIds = user.builder?.apps || []
     user.builder = {
       ...user.builder,
-      apps: existing.concat(builderAppIds),
+      apps: existingWorkspaceIds.concat(builderWorkspaceIds),
     }
   }
   return user
@@ -450,25 +456,25 @@ export async function removeUsers(groupId: string, userIds: string[]) {
   return toUpdate
 }
 
-export async function updateGroupApps(
+export async function updateGroupWorkspaces(
   groupId: string,
   opts: {
-    appsToRemove?: { appId: string }[]
-    appsToAdd?: { appId: string; roleId: string }[]
+    workspacesToRemove?: { workspaceId: string }[]
+    workspacesToAdd?: { workspaceId: string; roleId: string }[]
   }
 ) {
   const group = await get(groupId)
   if (!group.roles) {
     group.roles = {}
   }
-  if (opts.appsToAdd) {
-    for (let add of opts.appsToAdd) {
-      group.roles[add.appId] = add.roleId
+  if (opts.workspacesToAdd) {
+    for (let add of opts.workspacesToAdd) {
+      group.roles[add.workspaceId] = add.roleId
     }
   }
-  if (opts.appsToRemove) {
-    for (let remove of opts.appsToRemove) {
-      delete group.roles[remove.appId]
+  if (opts.workspacesToRemove) {
+    for (let remove of opts.workspacesToRemove) {
+      delete group.roles[remove.workspaceId]
     }
   }
 
@@ -481,14 +487,14 @@ export async function updateGroupApps(
   return await save(group)
 }
 
-export async function cleanupApp(appId: string) {
+export async function cleanupWorkspace(workspaceId: string) {
   const groupList = await fetch()
   const toUpdate = []
   for (let group of groupList) {
-    if (!group.roles || !group.roles[appId]) {
+    if (!group.roles || !group.roles[workspaceId]) {
       continue
     }
-    delete group.roles[appId]
+    delete group.roles[workspaceId]
     toUpdate.push(group)
   }
   return await db.groups.bulkSave(toUpdate)

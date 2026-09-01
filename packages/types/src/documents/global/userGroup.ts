@@ -37,11 +37,11 @@ export interface SearchGroupResponse {
   data: UserGroup[]
 }
 
-export interface UpdateGroupAppRequest {
-  add?: { appId: string; roleId: string }[]
-  remove?: { appId: string }[]
+export interface UpdateGroupWorkspaceRequest {
+  add?: { workspaceId: string; roleId: string }[]
+  remove?: { workspaceId: string }[]
 }
-export interface UpdateGroupAppResponse {
+export interface UpdateGroupWorkspaceResponse {
   id: string
   rev: string
 }

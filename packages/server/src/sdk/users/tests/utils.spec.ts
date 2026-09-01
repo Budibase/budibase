@@ -463,10 +463,10 @@ describe("syncGlobalUsers", () => {
         await syncGlobalUsers()
         expect(await rawUserMetadata()).toHaveLength(1)
 
-        await proSdk.groups.updateGroupApps(group.id, {
-          appsToAdd: [
+        await proSdk.groups.updateGroupWorkspaces(group.id, {
+          workspacesToAdd: [
             {
-              appId: config.prodWorkspaceId!,
+              workspaceId: config.prodWorkspaceId!,
               roleId: roles.BUILTIN_ROLE_IDS.BASIC,
             },
           ],
@@ -501,10 +501,10 @@ describe("syncGlobalUsers", () => {
         admin: { global: false },
         builder: { global: false },
       })
-      await proSdk.groups.updateGroupApps(group.id, {
-        appsToAdd: [
+      await proSdk.groups.updateGroupWorkspaces(group.id, {
+        workspacesToAdd: [
           {
-            appId: config.prodWorkspaceId!,
+            workspaceId: config.prodWorkspaceId!,
             roleId: roles.BUILTIN_ROLE_IDS.BASIC,
           },
         ],
@@ -515,8 +515,8 @@ describe("syncGlobalUsers", () => {
         await syncGlobalUsers()
         expect(await rawUserMetadata()).toHaveLength(3)
 
-        await proSdk.groups.updateGroupApps(group.id, {
-          appsToRemove: [{ appId: config.prodWorkspaceId! }],
+        await proSdk.groups.updateGroupWorkspaces(group.id, {
+          workspacesToRemove: [{ workspaceId: config.prodWorkspaceId! }],
         })
         await syncGlobalUsers()
 

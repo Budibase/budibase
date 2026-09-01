@@ -18,7 +18,10 @@ const validateAppRoleUpdate = (ctx: UserCtx, appId?: string) => {
   }
 
   if (!users.isAdmin(ctx.user) && !users.isBuilder(ctx.user, appId)) {
-    ctx.throw(403, "Only app builders or admins can update app permissions.")
+    ctx.throw(
+      403,
+      "Only workspace creators or admins can update workspace permissions."
+    )
   }
 }
 

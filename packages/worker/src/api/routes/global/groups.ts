@@ -84,10 +84,10 @@ router
     controller.bulkAddUsersFromCsv
   )
   .post(
-    "/api/global/groups/:groupId/apps",
+    "/api/global/groups/:groupId/workspaces",
     auth.builderOrAdmin,
     proMiddleware.feature.requireFeature(Feature.USER_GROUPS),
-    controller.updateGroupApps
+    controller.updateGroupWorkspaces
   )
 
 export default router

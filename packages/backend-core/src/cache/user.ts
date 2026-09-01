@@ -125,11 +125,11 @@ export async function getUser({
   // if has groups, could have builder permissions granted by a group
   if (user.userGroups && !sdk.users.isGlobalBuilder(user)) {
     await context.doInTenant(tenantId, async () => {
-      const appIds = await UserDB.getGroupBuilderAppIds(user)
-      if (appIds.length) {
-        const existing = user.builder?.apps || []
+      const workspaceIds = await UserDB.getGroupBuilderWorkspaceIds(user)
+      if (workspaceIds.length) {
+        const existingWorkspaceIds = user.builder?.apps || []
         user.builder = {
-          apps: [...new Set(existing.concat(appIds))],
+          apps: [...new Set(existingWorkspaceIds.concat(workspaceIds))],
         }
       }
     })

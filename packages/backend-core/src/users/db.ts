@@ -47,13 +47,13 @@ type QuotaUpdateFn = (
 type GroupUpdateFn = (groupId: string, userIds: string[]) => Promise<any>
 type FeatureFn = () => Promise<Boolean>
 type GroupGetFn = (ids: string[]) => Promise<UserGroup[]>
-type GroupBuildersFn = (user: User) => Promise<string[]>
+type GroupBuilderWorkspacesFn = (user: User) => Promise<string[]>
 type GetDefaultGroupFn = () => Promise<UserGroup | undefined>
 type QuotaFns = { addUsers: QuotaUpdateFn; removeUsers: QuotaUpdateFn }
 type GroupFns = {
   addUsers: GroupUpdateFn
   getBulk: GroupGetFn
-  getGroupBuilderAppIds: GroupBuildersFn
+  getGroupBuilderWorkspaceIds: GroupBuilderWorkspacesFn
   getDefaultGroup?: GetDefaultGroupFn
 }
 type CreateAdminUserOpts = {
@@ -629,7 +629,7 @@ export class UserDB {
     return await this.groups.getBulk(groupIds)
   }
 
-  static async getGroupBuilderAppIds(user: User) {
-    return await this.groups.getGroupBuilderAppIds(user)
+  static async getGroupBuilderWorkspaceIds(user: User) {
+    return await this.groups.getGroupBuilderWorkspaceIds(user)
   }
 }

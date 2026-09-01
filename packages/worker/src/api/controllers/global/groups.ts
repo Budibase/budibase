@@ -7,8 +7,8 @@ import {
   SearchGroupRequest,
   SearchGroupResponse,
   SearchUserGroupResponse,
-  UpdateGroupAppRequest,
-  UpdateGroupAppResponse,
+  UpdateGroupWorkspaceRequest,
+  UpdateGroupWorkspaceResponse,
   UserCtx,
   UserGroup,
 } from "@budibase/types"
@@ -67,8 +67,8 @@ export async function updateGroupUsers(ctx: UserCtx) {
   ctx.body = { added, removed }
 }
 
-export async function updateGroupApps(
-  ctx: UserCtx<UpdateGroupAppRequest, UpdateGroupAppResponse>
+export async function updateGroupWorkspaces(
+  ctx: UserCtx<UpdateGroupWorkspaceRequest, UpdateGroupWorkspaceResponse>
 ) {
   const groupId = ctx.params.groupId
   const toAdd = ctx.request.body.add,
@@ -79,12 +79,12 @@ export async function updateGroupApps(
   ) {
     ctx.throw(
       400,
-      "Must supply a list of objects, with appId and roleId to add or remove"
+      "Must supply a list of objects, with workspaceId and roleId to add or remove"
     )
   }
-  ctx.body = await groups.updateGroupApps(groupId, {
-    appsToAdd: toAdd,
-    appsToRemove: toRemove,
+  ctx.body = await groups.updateGroupWorkspaces(groupId, {
+    workspacesToAdd: toAdd,
+    workspacesToRemove: toRemove,
   })
 }
 

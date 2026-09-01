@@ -1,4 +1,4 @@
-import { UserGroup, UpdateGroupAppRequest } from "@budibase/types"
+import { UserGroup, UpdateGroupWorkspaceRequest } from "@budibase/types"
 import { TestAPI } from "./base"
 
 export class GroupsAPI extends TestAPI {
@@ -53,13 +53,13 @@ export class GroupsAPI extends TestAPI {
       .expect(expect)
   }
 
-  updateGroupApps = (
+  updateGroupWorkspaces = (
     groupId: string,
-    body: UpdateGroupAppRequest,
+    body: UpdateGroupWorkspaceRequest,
     { expect } = { expect: 200 }
   ) => {
     return this.request
-      .post(`/api/global/groups/${groupId}/apps`)
+      .post(`/api/global/groups/${groupId}/workspaces`)
       .send(body)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)

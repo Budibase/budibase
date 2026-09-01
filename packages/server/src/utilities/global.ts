@@ -48,17 +48,17 @@ export async function processUser(
       : await groups.getBulk(user.userGroups, { enriched: false })
   }
   // check if a group provides builder access
-  const builderAppIds = await groups.getGroupBuilderAppIds(user, {
-    appId: workspaceId,
+  const builderWorkspaceIds = await groups.getGroupBuilderWorkspaceIds(user, {
+    workspaceId,
     groups: groupList,
   })
-  if (builderAppIds.length && !users.isBuilder(user, workspaceId)) {
-    const existingApps = user.builder?.apps || []
+  if (builderWorkspaceIds.length && !users.isBuilder(user, workspaceId)) {
+    const existingWorkspaceIds = user.builder?.apps || []
     user.builder = {
-      apps: [...new Set(existingApps.concat(builderAppIds))],
+      apps: [...new Set(existingWorkspaceIds.concat(builderWorkspaceIds))],
     }
   }
-  // builders are always admins within the app
+  // creators are always admins within the workspace
   if (users.isBuilder(user, workspaceId)) {
     user.roleId = roles.BUILTIN_ROLE_IDS.ADMIN
   }

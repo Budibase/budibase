@@ -28,7 +28,7 @@ const quotas = {
 const groups = {
   addUsers: jest.fn(),
   getBulk: jest.fn(),
-  getGroupBuilderAppIds: jest.fn(),
+  getGroupBuilderWorkspaceIds: jest.fn(),
   getDefaultGroup: jest.fn(),
 }
 const features = { isSSOEnforced: jest.fn() }

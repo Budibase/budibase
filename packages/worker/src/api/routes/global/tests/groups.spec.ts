@@ -112,20 +112,20 @@ describe("/api/global/groups", () => {
     })
 
     it("should accept builder in save payload but not allow changing it", async () => {
-      const appId = "app_test123"
+      const workspaceId = "app_test123"
       const updatedName = generator.guid()
       const group = structures.groups.UserGroup()
       const { body: savedGroup } = await config.api.groups.saveGroup(group)
 
-      await config.api.groups.updateGroupApps(savedGroup._id, {
-        add: [{ appId, roleId: "CREATOR" }],
+      await config.api.groups.updateGroupWorkspaces(savedGroup._id, {
+        add: [{ workspaceId: workspaceId, roleId: "CREATOR" }],
         remove: [],
       })
 
       const { body: groupWithBuilder } = await config.api.groups.find(
         savedGroup._id
       )
-      expect(groupWithBuilder.builder.apps).toEqual([appId])
+      expect(groupWithBuilder.builder.apps).toEqual([workspaceId])
 
       await config.api.groups.saveGroup(
         {
@@ -142,7 +142,7 @@ describe("/api/global/groups", () => {
         savedGroup._id
       )
       expect(updatedGroup.name).toEqual(updatedName)
-      expect(updatedGroup.builder.apps).toEqual([appId])
+      expect(updatedGroup.builder.apps).toEqual([workspaceId])
     })
 
     describe("scim", () => {
@@ -336,19 +336,19 @@ describe("/api/global/groups", () => {
   })
 
   describe("role filtering", () => {
-    it("should filter out roles for non-existent apps when enriching group", async () => {
-      const fakeAppId = "app_fake"
+    it("should filter out roles for non-existent workspaces when enriching group", async () => {
+      const fakeWorkspaceId = "app_fake"
       const group = structures.groups.UserGroup()
 
       const { body: savedGroup } = await config.api.groups.saveGroup(group)
-      await config.api.groups.updateGroupApps(savedGroup._id, {
-        add: [{ appId: fakeAppId, roleId: "BASIC" }],
+      await config.api.groups.updateGroupWorkspaces(savedGroup._id, {
+        add: [{ workspaceId: fakeWorkspaceId, roleId: "BASIC" }],
       })
       const { body: retrievedGroup } = await config.api.groups.find(
         savedGroup._id
       )
 
-      expect(Object.keys(retrievedGroup.roles)).not.toContain(fakeAppId)
+      expect(Object.keys(retrievedGroup.roles)).not.toContain(fakeWorkspaceId)
     })
   })
 
@@ -517,46 +517,46 @@ describe("/api/global/groups", () => {
       group = groupResponse.body
     })
 
-    describe("updateGroupApps with CREATOR role", () => {
+    describe("updateGroupWorkspaces with CREATOR role", () => {
       it("should successfully update group with CREATOR role", async () => {
-        const appId = "app_test123"
+        const workspaceId = "app_test123"
 
         // This should succeed without throwing an error
-        await config.api.groups.updateGroupApps(group._id!, {
-          add: [{ appId, roleId: "CREATOR" }],
+        await config.api.groups.updateGroupWorkspaces(group._id!, {
+          add: [{ workspaceId: workspaceId, roleId: "CREATOR" }],
           remove: [],
         })
 
         const updatedGroup = await config.api.groups.find(group._id!)
         expect(updatedGroup.body._id).toBe(group._id)
-        expect(updatedGroup.body.builder.apps).toEqual([appId])
+        expect(updatedGroup.body.builder.apps).toEqual([workspaceId])
       })
 
       it("should fail to assign CREATOR role when feature is not enabled", async () => {
         mocks.licenses.useCloudFree() // Disable app builders feature
-        const appId = "app_test123"
+        const workspaceId = "app_test123"
 
-        await config.api.groups.updateGroupApps(
+        await config.api.groups.updateGroupWorkspaces(
           group._id!,
           {
-            add: [{ appId, roleId: "CREATOR" }],
+            add: [{ workspaceId: workspaceId, roleId: "CREATOR" }],
             remove: [],
           },
           { expect: 400 }
         )
       })
 
-      it("should handle multiple CREATOR apps update operation", async () => {
-        const appId1 = "app_test111"
-        const appId2 = "app_test222"
-        const appId3 = "app_test333"
+      it("should handle multiple CREATOR workspaces update operation", async () => {
+        const workspaceId1 = "app_test111"
+        const workspaceId2 = "app_test222"
+        const workspaceId3 = "app_test333"
 
         // This should succeed without throwing an error
-        await config.api.groups.updateGroupApps(group._id!, {
+        await config.api.groups.updateGroupWorkspaces(group._id!, {
           add: [
-            { appId: appId1, roleId: "CREATOR" },
-            { appId: appId2, roleId: "CREATOR" },
-            { appId: appId3, roleId: "BASIC" }, // Not a creator role
+            { workspaceId: workspaceId1, roleId: "CREATOR" },
+            { workspaceId: workspaceId2, roleId: "CREATOR" },
+            { workspaceId: workspaceId3, roleId: "BASIC" }, // Not a creator role
           ],
           remove: [],
         })
@@ -564,26 +564,29 @@ describe("/api/global/groups", () => {
         // Verify the operation completed successfully
         const updatedGroup = await config.api.groups.find(group._id!)
         expect(updatedGroup.body._id).toBe(group._id)
-        expect(updatedGroup.body.builder.apps).toEqual([appId1, appId2])
+        expect(updatedGroup.body.builder.apps).toEqual([
+          workspaceId1,
+          workspaceId2,
+        ])
       })
 
-      it("should handle removing apps from CREATOR group", async () => {
-        const appId1 = "app_test111"
-        const appId2 = "app_test222"
+      it("should handle removing workspaces from CREATOR group", async () => {
+        const workspaceId1 = "app_test111"
+        const workspaceId2 = "app_test222"
 
         // First add CREATOR roles
-        await config.api.groups.updateGroupApps(group._id!, {
+        await config.api.groups.updateGroupWorkspaces(group._id!, {
           add: [
-            { appId: appId1, roleId: "CREATOR" },
-            { appId: appId2, roleId: "CREATOR" },
+            { workspaceId: workspaceId1, roleId: "CREATOR" },
+            { workspaceId: workspaceId2, roleId: "CREATOR" },
           ],
           remove: [],
         })
 
         // Then remove one app - this should succeed
-        await config.api.groups.updateGroupApps(group._id!, {
+        await config.api.groups.updateGroupWorkspaces(group._id!, {
           add: [],
-          remove: [{ appId: appId1 }],
+          remove: [{ workspaceId: workspaceId1 }],
         })
 
         // Verify the operation completed successfully
