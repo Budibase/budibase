@@ -1,6 +1,12 @@
 <script lang="ts">
   import ProjectSelect from "@/components/common/ProjectSelect.svelte"
-  import { Body, Checkbox, ModalContent, ProgressCircle } from "@budibase/bbui"
+  import {
+    Body,
+    Checkbox,
+    Icon,
+    ModalContent,
+    ProgressCircle,
+  } from "@budibase/bbui"
   import {
     type PreviewProjectAssignmentRequest,
     type PreviewProjectAssignmentResponse,
@@ -60,25 +66,16 @@
         compareStrings(a.name, b.name) ||
         compareStrings(a.id, b.id)
     )
-  const groupedDependencies = $derived(
-    Object.entries(
-      dependencies.reduce<Record<string, ProjectAssignmentDependency[]>>(
-        (groups, dependency) => {
-          groups[dependency.type] = [
-            ...(groups[dependency.type] || []),
-            dependency,
-          ]
-          return groups
-        },
-        {}
-      )
-    )
-  )
   const deselectedCount = $derived(
     dependencies.filter(dependency =>
       deselectedDependencyIds.has(dependency.id)
     ).length
   )
+
+  const formatTypeLabel = (type: string) => {
+    const label = type.replaceAll("_", " ")
+    return `${label.charAt(0).toUpperCase()}${label.slice(1)}`
+  }
 
   const setDependencySelected = (dependencyId: string, selected: boolean) => {
     const nextDeselected = new Set(deselectedDependencyIds)
@@ -139,8 +136,8 @@
 </script>
 
 <ModalContent
-  title={`Assign projects${resource ? ` to ${resource.name}` : ""}`}
-  confirmText="Save"
+  title="Assign to projects"
+  confirmText="Save changes"
   size="M"
   disabled={previewLoading ||
     !!previewError ||
@@ -155,67 +152,114 @@
 >
   {#if resource}
     <Body size="S" color="var(--spectrum-global-color-gray-700)">
-      Choose which projects this {resource.typeLabel.toLowerCase()} belongs to.
+      Choose which projects include {resource.name}
     </Body>
   {/if}
 
   <ProjectSelect bind:value={selectedProjectIds} />
 
   <div class="dependencies">
-    <Body size="S" weight="medium">Dependencies</Body>
+    <div class="dependency-heading">
+      <Body size="S" weight="medium">Related resources</Body>
+      <div aria-live="polite" aria-atomic="true">
+        {#if !previewLoading && !previewError && dependencies.length}
+          <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+            {selectedDependencyIds.length} of {dependencies.length} selected
+          </Body>
+        {/if}
+      </div>
+    </div>
     {#if previewLoading}
       <div class="dependency-state">
         <ProgressCircle size="S" />
-        <Body size="S">Checking dependencies…</Body>
+        <Body size="S">Finding related resources</Body>
       </div>
     {:else if previewError}
       <Body size="S" color="var(--color-red-500)">
-        Unable to load dependencies: {previewError}
+        Related resources couldn't be loaded: {previewError}
       </Body>
     {:else if !dependencies.length}
       <Body size="S" color="var(--spectrum-global-color-gray-700)">
-        No additional dependencies
+        No related resources need to be added
       </Body>
     {:else}
-      <Body size="S" color="var(--spectrum-global-color-gray-700)">
-        {selectedDependencyIds.length} of {dependencies.length} dependencies will
-        be added.
-      </Body>
+      {#if resource}
+        <Body size="S" color="var(--spectrum-global-color-gray-700)">
+          Include the resources this {resource.typeLabel.toLowerCase()} uses in the
+          same projects
+        </Body>
+      {/if}
       <div class="dependency-list">
-        {#each groupedDependencies as [type, resources] (type)}
-          <div class="dependency-group">
-            <Body size="S" weight="medium">{type.replaceAll("_", " ")}</Body>
-            {#each resources as dependency (dependency.id)}
-              <Checkbox
-                size="S"
-                text={dependency.name}
-                value={selectedDependencyIds.includes(dependency.id)}
-                on:change={event =>
-                  setDependencySelected(dependency.id, event.detail)}
-              />
-            {/each}
+        {#each dependencies as dependency (dependency.id)}
+          <div class="dependency-row">
+            <Checkbox
+              size="S"
+              text={dependency.name}
+              value={selectedDependencyIds.includes(dependency.id)}
+              on:change={event =>
+                setDependencySelected(dependency.id, event.detail)}
+            />
+            <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+              {formatTypeLabel(dependency.type)}
+            </Body>
           </div>
         {/each}
       </div>
     {/if}
 
-    {#if deselectedCount}
-      <div class="dependency-warning">
-        <Body size="S" color="var(--color-orange-600)">
-          Deselected dependencies will not be part of these projects or their
-          exports. Referencing resources may not work after import.
-        </Body>
-      </div>
-    {/if}
+    <div role="status" aria-atomic="true">
+      {#if !previewLoading && !previewError && deselectedCount}
+        <div class="dependency-warning">
+          <div class="dependency-warning-icon">
+            <Icon
+              size="S"
+              name="warning"
+              color="var(--spectrum-global-color-yellow-400)"
+            />
+          </div>
+          <div class="dependency-warning-copy">
+            <Body
+              size="S"
+              weight="medium"
+              color="var(--spectrum-global-color-yellow-400)"
+            >
+              {deselectedCount} related {deselectedCount === 1
+                ? "resource"
+                : "resources"} excluded
+            </Body>
+            <Body size="S" color="var(--spectrum-global-color-gray-700)">
+              Exports without {deselectedCount === 1
+                ? "this resource"
+                : "these resources"} may not work as expected when imported
+            </Body>
+          </div>
+        </div>
+      {/if}
+    </div>
   </div>
 </ModalContent>
 
 <style>
   .dependencies,
-  .dependency-group {
+  .dependency-warning-copy {
     display: flex;
     flex-direction: column;
+  }
+
+  .dependencies {
     gap: var(--spacing-s);
+  }
+
+  .dependency-warning-copy {
+    gap: var(--spacing-xs);
+  }
+
+  .dependency-heading,
+  .dependency-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
   }
 
   .dependency-state {
@@ -227,17 +271,28 @@
   .dependency-list {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-m);
     max-height: 260px;
     overflow-y: auto;
-    padding: var(--spacing-s);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: var(--border-radius-s);
+  }
+
+  .dependency-row {
+    min-height: 40px;
+    padding: var(--spacing-xs) 0;
+  }
+
+  .dependency-row + .dependency-row {
+    border-top: 1px solid var(--spectrum-global-color-gray-300);
   }
 
   .dependency-warning {
-    padding: var(--spacing-s);
-    background: var(--color-orange-50);
-    border-radius: var(--border-radius-s);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-s);
+  }
+
+  .dependency-warning-icon {
+    display: flex;
+    align-items: center;
+    height: 20px;
   }
 </style>
