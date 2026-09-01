@@ -1,4 +1,4 @@
-import { context, events } from "@budibase/backend-core"
+import { context, events, HTTPError } from "@budibase/backend-core"
 import { ActionFailureReason } from "@budibase/types"
 import { findHBSBlocks } from "@budibase/string-templates"
 import type {
@@ -64,8 +64,25 @@ const enrichParameters = (
   return requestParameters
 }
 
-const copyUser = (user?: UserBindings): UserBindings | undefined =>
-  user ? cloneDeep(user) : undefined
+type UserWithQuerySensitiveFields = UserBindings & {
+  roles?: Record<string, string>
+  account?: object
+  license?: object
+}
+
+const copyUser = (user?: UserBindings): UserBindings | undefined => {
+  if (!user) {
+    return undefined
+  }
+  const userWithSensitiveFields: UserWithQuerySensitiveFields = user
+  const {
+    roles: _deletedRoles,
+    account: _deletedAccount,
+    license: _deletedLicense,
+    ...sanitisedUser
+  } = userWithSensitiveFields
+  return cloneDeep(sanitisedUser)
+}
 
 export const executeQueryAsAutomation = async (
   ctx: ExecuteQueryAsAutomationContext
@@ -109,6 +126,7 @@ export const executeQueryAsAutomation = async (
       type: query.queryVerb,
       reason: ActionFailureReason.ERROR,
     })
-    ctx.throw(400, err instanceof Error ? err : new Error(String(err)))
+    const error = err instanceof Error ? err : new Error(String(err))
+    ctx.throw(error instanceof HTTPError ? error.status : 400, error)
   }
 }

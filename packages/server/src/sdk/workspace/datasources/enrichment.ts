@@ -1,4 +1,4 @@
-import { context } from "@budibase/backend-core"
+import { context, NotFoundError } from "@budibase/backend-core"
 import { processObjectSync } from "@budibase/string-templates"
 import type { Datasource } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
@@ -9,7 +9,7 @@ export async function getDatasourceWithEnvVars(datasourceId: string) {
     .getWorkspaceDB()
     .tryGet<Datasource>(datasourceId)
   if (!datasource) {
-    throw new Error(`Datasource '${datasourceId}' not found`)
+    throw new NotFoundError(`Datasource '${datasourceId}' not found`)
   }
   return enrichDatasourceWithEnvironmentValues(datasource)
 }
