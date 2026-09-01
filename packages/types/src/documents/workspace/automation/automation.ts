@@ -41,6 +41,7 @@ export enum AutomationCustomIOType {
   AUTOMATION_FIELDS = "automationFields",
   MULTI_ATTACHMENTS = "multi_attachments",
   TRIGGER_FILTER = "trigger_filter",
+  FUNCTION_INPUTS = "functionInputs",
   CATEGORIES = "categories",
   AGENT = "agent",
   OUTPUT_SCHEMA = "outputSchema",

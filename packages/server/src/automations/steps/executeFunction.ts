@@ -67,7 +67,6 @@ const jsonValueSchema: z.ZodType<JSONValue> = z.lazy(() =>
 )
 
 const jsonRecordSchema = z.record(z.string(), jsonValueSchema)
-const jsonEditorInputSchema = z.object({ value: z.string() }).strict()
 
 export interface ExecuteFunctionDependencies {
   orchestrate: (
@@ -97,28 +96,9 @@ const actionFailure = (code: FunctionErrorCode) =>
   failure({ code, message: ERROR_MESSAGES[code] })
 
 const parseInputs = (
-  inputs: ExecuteFunctionStepInputs["inputs"]
+  inputs: Record<string, JSONValue>
 ): Record<string, JSONValue> => {
-  let value = inputs
-  const editorInput = jsonEditorInputSchema.safeParse(value)
-  if (editorInput.success) {
-    try {
-      const editorValue = jsonRecordSchema.safeParse(
-        JSON.parse(editorInput.data.value)
-      )
-      if (!editorValue.success) {
-        throw new FunctionActionError(FunctionErrorCode.FUNCTION_INPUT_INVALID)
-      }
-      value = editorValue.data
-    } catch (error) {
-      if (error instanceof FunctionActionError) {
-        throw error
-      }
-      // A real input object may legitimately contain a string named `value`.
-    }
-  }
-
-  const parsed = jsonRecordSchema.safeParse(value)
+  const parsed = jsonRecordSchema.safeParse(inputs)
   if (!parsed.success) {
     throw new FunctionActionError(FunctionErrorCode.FUNCTION_INPUT_INVALID)
   }

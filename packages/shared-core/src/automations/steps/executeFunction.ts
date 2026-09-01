@@ -1,5 +1,6 @@
 import {
   AutomationActionStepId,
+  AutomationCustomIOType,
   AutomationFeature,
   AutomationIOType,
   AutomationStepDefinition,
@@ -29,6 +30,7 @@ export const definition: AutomationStepDefinition = {
         },
         inputs: {
           type: AutomationIOType.JSON,
+          customType: AutomationCustomIOType.FUNCTION_INPUTS,
           title: "Inputs",
           description: "The JSON-compatible inputs passed to the Function",
         },
