@@ -454,6 +454,36 @@ describe("/api/global/groups", () => {
     })
   })
 
+  describe("update group app validation", () => {
+    let group: UserGroup
+
+    beforeAll(async () => {
+      const response = await config.api.groups.saveGroup(
+        structures.groups.UserGroup()
+      )
+      group = response.body as UserGroup
+    })
+
+    it("rejects malformed app entries", async () => {
+      await config.request
+        .post(`/api/global/groups/${group._id}/apps`)
+        .send({ add: [null] })
+        .set(config.defaultHeaders())
+        .expect(400)
+    })
+
+    it("allows internal requests", async () => {
+      await config.request
+        .post(`/api/global/groups/${group._id}/apps`)
+        .send({ add: [{ appId: "app_internal", roleId: "BASIC" }] })
+        .set({
+          ...config.internalAPIHeaders(),
+          ...config.tenantIdHeaders(),
+        })
+        .expect(200)
+    })
+  })
+
   describe("with basic role", () => {
     it("fetch should return forbidden", async () => {
       const user = await config.createUser({

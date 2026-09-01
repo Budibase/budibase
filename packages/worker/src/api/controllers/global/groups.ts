@@ -75,7 +75,12 @@ export async function updateGroupApps(
     toRemove = ctx.request.body.remove
   if (
     (toAdd && !Array.isArray(toAdd)) ||
-    (toRemove && !Array.isArray(toRemove))
+    (toRemove && !Array.isArray(toRemove)) ||
+    toAdd?.some(
+      app =>
+        !app || typeof app.appId !== "string" || typeof app.roleId !== "string"
+    ) ||
+    toRemove?.some(app => !app || typeof app.appId !== "string")
   ) {
     ctx.throw(
       400,
@@ -84,7 +89,7 @@ export async function updateGroupApps(
   }
 
   for (const { appId } of [...(toAdd || []), ...(toRemove || [])]) {
-    if (!users.isAdmin(ctx.user) && !users.isBuilder(ctx.user, appId)) {
+    if (!ctx.internal && !users.isAdminOrBuilder(ctx.user, appId)) {
       ctx.throw(403, "Only app builders or admins can update app permissions.")
     }
   }
