@@ -38,7 +38,7 @@ function buildGroupAppUpdateValidation() {
         .items(
           Joi.object({
             appId,
-            roleId: Joi.string().required(),
+            roleId: Joi.string().trim().required(),
           })
         )
         .optional(),

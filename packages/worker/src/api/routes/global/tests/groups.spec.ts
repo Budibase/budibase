@@ -495,10 +495,18 @@ describe("/api/global/groups", () => {
         .expect(400)
     })
 
-    it("allows internal requests", async () => {
+    it.each(["", "   "])("rejects a blank role ID: %p", async roleId => {
       await config.request
         .post(`/api/global/groups/${group._id}/apps`)
-        .send({ add: [{ appId: "app_internal", roleId: "BASIC" }] })
+        .send({ add: [{ appId: "app_test", roleId }] })
+        .set(config.defaultHeaders())
+        .expect(400)
+    })
+
+    it("normalizes internal app updates", async () => {
+      await config.request
+        .post(`/api/global/groups/${group._id}/apps`)
+        .send({ add: [{ appId: " app_internal ", roleId: " BASIC " }] })
         .set({
           ...config.internalAPIHeaders(),
           ...config.tenantIdHeaders(),
