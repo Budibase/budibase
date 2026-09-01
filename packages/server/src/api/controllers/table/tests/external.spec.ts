@@ -61,18 +61,18 @@ const createCtx = () =>
   })
 
 describe("external table controller", () => {
-  let consoleLogSpy: jest.SpyInstance
+  let consoleErrorSpy: jest.SpyInstance
 
   beforeEach(() => {
     jest.clearAllMocks()
-    consoleLogSpy = jest.spyOn(console, "log").mockImplementation()
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation()
     jest
       .mocked(sdk.datasources.removeSecretSingle)
       .mockResolvedValue(redactedDatasource)
   })
 
   afterEach(() => {
-    consoleLogSpy.mockRestore()
+    consoleErrorSpy.mockRestore()
   })
 
   it("redacts the datasource before broadcasting a table update", async () => {
@@ -126,7 +126,7 @@ describe("external table controller", () => {
       table,
     })
     expect(builderSocket?.emitDatasourceUpdate).not.toHaveBeenCalled()
-    expect(consoleLogSpy).toHaveBeenCalledWith(
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
       "Failed to broadcast external datasource update",
       redactionError
     )

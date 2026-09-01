@@ -38,7 +38,7 @@ async function emitDatasourceUpdate(ctx: UserCtx, datasource: Datasource) {
       await sdk.datasources.removeSecretSingle(datasource)
     builderSocket?.emitDatasourceUpdate(ctx, redactedDatasource)
   } catch (err) {
-    console.log("Failed to broadcast external datasource update", err)
+    console.error("Failed to broadcast external datasource update", err)
   }
 }
 
