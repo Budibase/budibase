@@ -317,13 +317,7 @@ export async function fetchTools(ctx: UserCtx<void, ToolMetadata[]>) {
 
 export async function fetchAgents(ctx: UserCtx<void, FetchAgentsResponse>) {
   const agents = await sdk.ai.agents.fetch()
-  ctx.body = {
-    agents: agents.map(toAgentResponse),
-    configuration: {
-      knowledgeSearchConfigured:
-        sdk.ai.knowledgeBase.isGeminiFileSearchConfigured(),
-    },
-  }
+  ctx.body = { agents: agents.map(toAgentResponse) }
 }
 
 export async function createAgent(

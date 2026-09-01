@@ -16,7 +16,6 @@ export interface AgentKnowledgeConfiguration {
 
 export interface FetchAgentsResponse {
   agents: Agent[]
-  configuration: AgentKnowledgeConfiguration
 }
 
 export interface AgentFileUploadResponse {
