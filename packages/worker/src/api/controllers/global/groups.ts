@@ -86,8 +86,7 @@ export async function updateGroupApps(
       )) ||
     (Array.isArray(toRemove) &&
       toRemove.some(
-        app =>
-          !app || typeof app.appId !== "string" || !app.appId.trim()
+        app => !app || typeof app.appId !== "string" || !app.appId.trim()
       ))
   ) {
     ctx.throw(
