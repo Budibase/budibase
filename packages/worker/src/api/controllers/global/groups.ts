@@ -73,27 +73,6 @@ export async function updateGroupApps(
   const groupId = ctx.params.groupId
   const toAdd = ctx.request.body.add,
     toRemove = ctx.request.body.remove
-  if (
-    (toAdd != null && !Array.isArray(toAdd)) ||
-    (toRemove != null && !Array.isArray(toRemove)) ||
-    (Array.isArray(toAdd) &&
-      toAdd.some(
-        app =>
-          !app ||
-          typeof app.appId !== "string" ||
-          !app.appId.trim() ||
-          typeof app.roleId !== "string"
-      )) ||
-    (Array.isArray(toRemove) &&
-      toRemove.some(
-        app => !app || typeof app.appId !== "string" || !app.appId.trim()
-      ))
-  ) {
-    ctx.throw(
-      400,
-      "Must supply a list of objects, with appId and roleId to add or remove"
-    )
-  }
 
   for (const { appId } of [...(toAdd || []), ...(toRemove || [])]) {
     if (!ctx.internal && !users.isAdminOrBuilder(ctx.user, appId)) {
