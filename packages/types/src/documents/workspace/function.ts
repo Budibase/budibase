@@ -56,7 +56,7 @@ export interface FunctionRunSummary extends Document {
   invocation: {
     type: "automation"
     automationId: string
-    stepId: string
+    automationStepId: string
   }
   startedAt: string
   finishedAt?: string
