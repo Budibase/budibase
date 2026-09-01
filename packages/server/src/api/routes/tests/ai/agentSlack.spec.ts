@@ -115,11 +115,18 @@ jest.mock("../../../../sdk/workspace/ai/rag", () => {
 })
 
 import sdk from "../../../../sdk"
-import { context, db, docIds, encryption } from "@budibase/backend-core"
+import {
+  context,
+  db,
+  docIds,
+  encryption,
+  features,
+} from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
   DocumentType,
+  FeatureFlag,
   type Agent,
   type ChatConversation,
   type SlackAppConfig,
@@ -217,6 +224,98 @@ describe("agent slack integration provisioning", () => {
 
   afterAll(() => {
     config.end()
+  })
+
+  const withEscalation = async <T>(f: () => Promise<T>) =>
+    features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.ESCALATION]: true },
+      f
+    )
+
+  describe("GET /api/chat-links", () => {
+    it.each([
+      ["without query parameters", {}],
+      ["without an agentId", { provider: AgentChannelProvider.SLACK }],
+      ["without a provider", { agentId: "agent-1" }],
+      [
+        "with an unsupported provider",
+        { provider: "discord", agentId: "agent-1" },
+      ],
+    ])("rejects requests %s", async (_description, query) => {
+      await withEscalation(async () => {
+        await config
+          .getRequest()!
+          .get("/api/chat-links")
+          .set(await config.defaultHeaders())
+          .query(query)
+          .expect(400)
+      })
+    })
+
+    it("returns only links in the agent's Slack workspace", async () => {
+      await withEscalation(async () => {
+        const agent = await config.api.agent.create({
+          name: "Slack Agent",
+          slackIntegration: {
+            botToken: "xoxb-token-1",
+            signingSecret: "slack-signing-secret",
+          },
+        })
+        const otherUser = await config.createUser()
+
+        await config.doInTenant(async () => {
+          await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
+            provider: AgentChannelProvider.SLACK,
+            externalUserId: "reachable-user",
+            teamId: "T123",
+            globalUserId: config.getUser()._id!,
+          })
+          await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
+            provider: AgentChannelProvider.SLACK,
+            externalUserId: "other-workspace-user",
+            teamId: "T_OTHER",
+            globalUserId: otherUser._id!,
+          })
+        })
+
+        const response = await config
+          .getRequest()!
+          .get("/api/chat-links")
+          .set(await config.defaultHeaders())
+          .query({ provider: AgentChannelProvider.SLACK, agentId: agent._id })
+          .expect(200)
+
+        expect(response.body).toEqual([
+          expect.objectContaining({ externalUserId: "reachable-user" }),
+        ])
+      })
+    })
+
+    it("returns no links for an unknown agent", async () => {
+      await withEscalation(async () => {
+        await config.doInTenant(async () => {
+          await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
+            provider: AgentChannelProvider.SLACK,
+            externalUserId: "linked-user",
+            teamId: "T123",
+            globalUserId: config.getUser()._id!,
+          })
+        })
+
+        const response = await config
+          .getRequest()!
+          .get("/api/chat-links")
+          .set(await config.defaultHeaders())
+          .query({
+            provider: AgentChannelProvider.SLACK,
+            agentId: "agent_from_another_workspace",
+          })
+          .expect(200)
+
+        expect(response.body).toEqual([])
+      })
+    })
   })
 
   it("provisions slack channel for an agent", async () => {

@@ -68,12 +68,13 @@ import os from "os"
 import path from "path"
 
 import extract from "extract-zip"
-import { context, docIds } from "@budibase/backend-core"
+import { context, docIds, features } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { ChatCommands } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
   DocumentType,
+  FeatureFlag,
   type Agent,
   type ChatConversation,
   type WebhookChatCompleteResult,
@@ -121,6 +122,53 @@ describe("agent teams integration provisioning", () => {
 
   afterAll(() => {
     config.end()
+  })
+
+  const withEscalation = async <T>(f: () => Promise<T>) =>
+    features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.ESCALATION]: true },
+      f
+    )
+
+  it("returns only chat links in the agent's Teams tenant", async () => {
+    await withEscalation(async () => {
+      const agent = await config.api.agent.create({
+        name: "Teams Agent",
+        MSTeamsIntegration: {
+          appId: TEAMS_APP_ID,
+          appPassword: "teams-app-password",
+          tenantId: "azure-tenant-id",
+        },
+      })
+      const otherUser = await config.createUser()
+
+      await config.doInTenant(async () => {
+        await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
+          provider: AgentChannelProvider.MSTEAMS,
+          externalUserId: "reachable-user",
+          providerTenantId: "azure-tenant-id",
+          globalUserId: config.getUser()._id!,
+        })
+        await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
+          provider: AgentChannelProvider.MSTEAMS,
+          externalUserId: "other-workspace-user",
+          providerTenantId: "other-tenant-id",
+          globalUserId: otherUser._id!,
+        })
+      })
+
+      const response = await config
+        .getRequest()!
+        .get("/api/chat-links")
+        .set(await config.defaultHeaders())
+        .query({ provider: AgentChannelProvider.MSTEAMS, agentId: agent._id })
+        .expect(200)
+
+      expect(response.body).toEqual([
+        expect.objectContaining({ externalUserId: "reachable-user" }),
+      ])
+    })
   })
 
   it("provisions teams channel for an agent", async () => {
