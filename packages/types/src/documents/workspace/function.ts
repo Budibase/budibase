@@ -2,11 +2,11 @@ import type { FunctionArtifact, FunctionErrorCode } from "../../sdk/functions"
 import type { Document } from "../document"
 
 export interface FunctionQueryCapability {
-  capabilityId: string
-  queryId: string
-  datasourceAlias: string
-  queryAlias: string
-  parameterNames: string[]
+  readonly capabilityId: string
+  readonly queryId: string
+  readonly datasourceAlias: string
+  readonly queryAlias: string
+  readonly parameterNames: readonly string[]
 }
 
 export interface FunctionBuildDiagnostic {
