@@ -71,13 +71,15 @@ export async function updateGroupApps(
   ctx: UserCtx<UpdateGroupAppRequest, UpdateGroupAppResponse>
 ) {
   const groupId = ctx.params.groupId
-  const toAdd = ctx.request.body.add?.map(({ appId, roleId }) => ({
-      appId: appId.trim(),
-      roleId: roleId.trim(),
-    })),
-    toRemove = ctx.request.body.remove?.map(({ appId }) => ({
-      appId: appId.trim(),
-    }))
+  const { add, remove } = ctx.request.body
+
+  const toAdd = add?.map(item => ({
+    appId: item.appId.trim(),
+    roleId: item.roleId.trim(),
+  }))
+  const toRemove = remove?.map(item => ({
+    appId: item.appId.trim(),
+  }))
 
   for (const { appId } of [...(toAdd || []), ...(toRemove || [])]) {
     if (!ctx.internal && !users.isAdminOrBuilder(ctx.user, appId)) {
