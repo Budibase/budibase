@@ -61,11 +61,18 @@ const createCtx = () =>
   })
 
 describe("external table controller", () => {
+  let consoleLogSpy: jest.SpyInstance
+
   beforeEach(() => {
     jest.clearAllMocks()
+    consoleLogSpy = jest.spyOn(console, "log").mockImplementation()
     jest
       .mocked(sdk.datasources.removeSecretSingle)
       .mockResolvedValue(redactedDatasource)
+  })
+
+  afterEach(() => {
+    consoleLogSpy.mockRestore()
   })
 
   it("redacts the datasource before broadcasting a table update", async () => {
@@ -100,5 +107,58 @@ describe("external table controller", () => {
       ctx,
       redactedDatasource
     )
+  })
+
+  it("returns the updated table when datasource redaction fails", async () => {
+    jest.mocked(sdk.tables.external.save).mockResolvedValue({
+      datasource,
+      oldTable: table,
+      table,
+    })
+    const redactionError = new Error("Plugin metadata unavailable")
+    jest
+      .mocked(sdk.datasources.removeSecretSingle)
+      .mockRejectedValue(redactionError)
+    const ctx = createCtx()
+
+    await expect(updateTable(ctx)).resolves.toEqual({
+      oldTable: table,
+      table,
+    })
+    expect(builderSocket?.emitDatasourceUpdate).not.toHaveBeenCalled()
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      "Failed to broadcast external datasource update",
+      redactionError
+    )
+  })
+
+  it("returns the deleted table when datasource redaction fails", async () => {
+    jest.mocked(sdk.tables.getTable).mockResolvedValue(table)
+    jest.mocked(sdk.tables.external.destroy).mockResolvedValue({
+      datasource,
+      table,
+    })
+    jest
+      .mocked(sdk.datasources.removeSecretSingle)
+      .mockRejectedValue(new Error("Plugin metadata unavailable"))
+
+    await expect(destroy(createCtx())).resolves.toEqual(table)
+    expect(builderSocket?.emitDatasourceUpdate).not.toHaveBeenCalled()
+  })
+
+  it("returns the updated table when the websocket broadcast fails", async () => {
+    jest.mocked(sdk.tables.external.save).mockResolvedValue({
+      datasource,
+      oldTable: table,
+      table,
+    })
+    jest.mocked(builderSocket!.emitDatasourceUpdate).mockImplementation(() => {
+      throw new Error("Websocket unavailable")
+    })
+
+    await expect(updateTable(createCtx())).resolves.toEqual({
+      oldTable: table,
+      table,
+    })
   })
 })

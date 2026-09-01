@@ -5,6 +5,7 @@ import { isRows, isSchema, parse } from "../../../utilities/schema"
 import {
   BulkImportRequest,
   BulkImportResponse,
+  Datasource,
   Operation,
   RenameColumn,
   SaveTableRequest,
@@ -31,6 +32,16 @@ function getDatasourceId(table: Table) {
   return breakExternalTableId(table._id).datasourceId
 }
 
+async function emitDatasourceUpdate(ctx: UserCtx, datasource: Datasource) {
+  try {
+    const redactedDatasource =
+      await sdk.datasources.removeSecretSingle(datasource)
+    builderSocket?.emitDatasourceUpdate(ctx, redactedDatasource)
+  } catch (err) {
+    console.log("Failed to broadcast external datasource update", err)
+  }
+}
+
 export async function updateTable(
   ctx: UserCtx<SaveTableRequest, SaveTableResponse>,
   renaming?: RenameColumn
@@ -50,9 +61,7 @@ export async function updateTable(
       inputs,
       { tableId, renaming }
     )
-    const redactedDatasource =
-      await sdk.datasources.removeSecretSingle(datasource)
-    builderSocket?.emitDatasourceUpdate(ctx, redactedDatasource)
+    await emitDatasourceUpdate(ctx, datasource)
     return { table, oldTable }
   } catch (err: any) {
     if (err instanceof Error) {
@@ -73,9 +82,7 @@ export async function destroy(ctx: UserCtx) {
       datasourceId!,
       tableToDelete
     )
-    const redactedDatasource =
-      await sdk.datasources.removeSecretSingle(datasource)
-    builderSocket?.emitDatasourceUpdate(ctx, redactedDatasource)
+    await emitDatasourceUpdate(ctx, datasource)
     return table
   } catch (err: any) {
     if (err instanceof Error) {
