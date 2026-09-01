@@ -383,6 +383,14 @@ describe("/api/global/groups", () => {
       })
     })
 
+    it("can update group app roles", async () => {
+      await config.withUser(builder, async () => {
+        await config.api.groups.updateGroupApps(group._id!, {
+          add: [{ appId: "app_global_builder", roleId: "BASIC" }],
+        })
+      })
+    })
+
     it("update should return forbidden", async () => {
       await config.withUser(builder, async () => {
         await config.api.groups.updateGroupUsers(
@@ -390,6 +398,55 @@ describe("/api/global/groups", () => {
           {
             add: [builder._id!],
             remove: [],
+          },
+          { expect: 403 }
+        )
+      })
+    })
+  })
+
+  describe("with app builder role", () => {
+    const allowedAppId = "app_allowed"
+    const disallowedAppId = "app_disallowed"
+    let builder: User
+    let group: UserGroup
+
+    beforeAll(async () => {
+      builder = await config.createUser({
+        builder: {
+          global: false,
+          creator: true,
+          apps: [allowedAppId],
+        },
+        admin: { global: false },
+        roles: { [allowedAppId]: "CREATOR" },
+      })
+
+      const response = await config.api.groups.saveGroup(
+        structures.groups.UserGroup()
+      )
+      group = response.body as UserGroup
+    })
+
+    it("forbids updating roles for an app the user does not build", async () => {
+      await config.withUser(builder, async () => {
+        await config.api.groups.updateGroupApps(
+          group._id!,
+          {
+            add: [{ appId: disallowedAppId, roleId: "ADMIN" }],
+          },
+          { expect: 403 }
+        )
+      })
+    })
+
+    it("forbids a mixed update containing an unauthorized app", async () => {
+      await config.withUser(builder, async () => {
+        await config.api.groups.updateGroupApps(
+          group._id!,
+          {
+            add: [{ appId: allowedAppId, roleId: "BASIC" }],
+            remove: [{ appId: disallowedAppId }],
           },
           { expect: 403 }
         )
