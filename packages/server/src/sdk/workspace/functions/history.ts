@@ -163,7 +163,7 @@ const sanitizeSummary = (summary: FunctionRunSummary): FunctionRunSummary => ({
   invocation: {
     type: "automation",
     automationId: summary.invocation.automationId,
-    stepId: summary.invocation.stepId,
+    automationStepId: summary.invocation.automationStepId,
   },
   startedAt: summary.startedAt,
   ...(summary.finishedAt ? { finishedAt: summary.finishedAt } : {}),
@@ -193,7 +193,7 @@ export const createRunSummary = async ({
     invocation: {
       type: "automation",
       automationId,
-      stepId,
+      automationStepId: stepId,
     },
     startedAt: new Date().toISOString(),
     queryCount: 0,
