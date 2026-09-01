@@ -1035,9 +1035,16 @@ describe("/applications", () => {
     })
 
     it("should not expose snippets to public calls", async () => {
+      const snippets = [{ name: "PrivateSnippet", code: "return 'secret'" }]
       await config.api.workspace.update(workspace.appId, {
-        snippets: [{ name: "PrivateSnippet", code: "return 'secret'" }],
+        snippets,
       })
+
+      const builderPackage = await config.api.workspace.getAppPackage(
+        workspace.appId
+      )
+      expect(builderPackage.application.snippets).toEqual(snippets)
+
       await config.publish()
 
       const res = await config.withHeaders(
