@@ -196,6 +196,7 @@ type SlackInput = {
   isDirectMessage: boolean
   teamId?: string
   threadId?: string
+  subscribe?: () => Promise<void>
 }
 
 const createSlackInputHandler = ({
@@ -222,6 +223,7 @@ const createSlackInputHandler = ({
     isDirectMessage,
     teamId,
     threadId,
+    subscribe,
   }: SlackInput) => {
     const displayName = author.fullName || author.userName || externalUserId
 
@@ -242,6 +244,7 @@ const createSlackInputHandler = ({
     }
 
     try {
+      await subscribe?.()
       await handleChatMessage({
         reply: async text => {
           await target.post(text)
@@ -317,6 +320,7 @@ const createSlackMessageHandler = (
       externalUserId: message.author.userId,
       isDirectMessage: isSlackDirectMessage(raw),
       teamId: raw?.team_id || raw?.team,
+      subscribe: () => thread.subscribe(),
     })
   }
 }
