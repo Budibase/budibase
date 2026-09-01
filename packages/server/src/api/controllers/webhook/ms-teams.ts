@@ -29,6 +29,7 @@ import sdk from "../../../sdk"
 import { escalationProcessor } from "../../../escalation/processor"
 import { validateMSTeamsServiceUrl } from "../../../utilities/msTeams"
 import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
+import { createChatLogger } from "./chatLogger"
 import { getTeamsState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
@@ -487,7 +488,7 @@ export async function MSTeamsWebhook(
           }),
         },
         state: await getTeamsState(),
-        logger: "silent",
+        logger: createChatLogger(),
         fallbackStreamingPlaceholderText: TEAMS_PROCESSING_MESSAGE,
         streamingUpdateIntervalMs: TEAMS_STREAMING_UPDATE_INTERVAL_MS,
       })

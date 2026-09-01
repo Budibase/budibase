@@ -20,6 +20,7 @@ import {
 import sdk from "../../../sdk"
 import { escalationProcessor } from "../../../escalation/processor"
 import { handleChatMessage } from "./chatHandler"
+import { createChatLogger } from "./chatLogger"
 import { getSlackState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
@@ -356,16 +357,18 @@ export async function slackWebhook(
         throw new Error("Slack state adapter is required")
       }
 
+      const logger = createChatLogger()
       const chat = new Chat({
         userName: "Budibase",
         adapters: {
           slack: createSlackAdapter({
             botToken: integration.botToken,
             signingSecret: integration.signingSecret,
+            logger: logger.child("slack"),
           }),
         },
         state,
-        logger: "silent",
+        logger,
       })
 
       const handleSlackInput = createSlackInputHandler({
