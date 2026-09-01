@@ -24,6 +24,7 @@ export {
 export type {
   FunctionCapabilityExecution,
   FunctionCapabilityLog,
+  FunctionCapabilityMeterResult,
   FunctionCapabilityServiceDependencies,
   FunctionInvocationScope,
   FunctionInvocationScopeInput,

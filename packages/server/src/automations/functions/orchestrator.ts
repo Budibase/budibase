@@ -3,6 +3,7 @@ import { quotas } from "@budibase/pro"
 import {
   createFunctionInvocationScope,
   FunctionCapabilityService,
+  type FunctionCapabilityMeterResult,
   FunctionRunOrchestrator,
   type OrchestrateFunctionRunOptions,
 } from "@budibase/functions-runtime"
@@ -30,8 +31,10 @@ const executeQuery = async ({
     return ctx.body
   })
 
-const meterQuery = async (execute: () => Promise<object>) => {
-  const outcome = await quotas.addAction(
+const meterQuery = (
+  execute: () => Promise<object>
+): Promise<FunctionCapabilityMeterResult> =>
+  quotas.addAction(
     ActionType.AUTOMATION_STEP,
     async (): Promise<
       { success: true; response: object } | { success: false }
@@ -46,11 +49,6 @@ const meterQuery = async (execute: () => Promise<object>) => {
       }
     }
   )
-  if (!outcome.success) {
-    throw new Error("Function query failed")
-  }
-  return outcome.response
-}
 
 const createCapabilitySession = async (input: FunctionInvocationScopeInput) => {
   return new FunctionCapabilityService(createFunctionInvocationScope(input), {

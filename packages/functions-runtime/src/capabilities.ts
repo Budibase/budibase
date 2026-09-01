@@ -62,9 +62,15 @@ export interface FunctionCapabilityLog {
 
 export interface FunctionCapabilityServiceDependencies {
   executeQuery: (execution: FunctionCapabilityExecution) => Promise<object>
-  meter?: (execute: () => Promise<object>) => Promise<object>
+  meter?: (
+    execute: () => Promise<object>
+  ) => Promise<FunctionCapabilityMeterResult>
   log?: (entry: FunctionCapabilityLog) => void
 }
+
+export type FunctionCapabilityMeterResult =
+  | { success: true; response: object }
+  | { success: false }
 
 export class FunctionCapabilityError extends Error {
   constructor(
@@ -134,7 +140,15 @@ export const createFunctionInvocationScope = ({
   })
 }
 
-const passthroughMeter = async (execute: () => Promise<object>) => execute()
+const passthroughMeter = async (
+  execute: () => Promise<object>
+): Promise<FunctionCapabilityMeterResult> => {
+  try {
+    return { success: true, response: await execute() }
+  } catch {
+    return { success: false }
+  }
+}
 
 // This can be replaced with persistent logging or metrics collection when needed.
 const defaultLog = (entry: FunctionCapabilityLog) => {
@@ -213,7 +227,9 @@ export class FunctionCapabilityService {
   private readonly executeQuery: (
     execution: FunctionCapabilityExecution
   ) => Promise<object>
-  private readonly meter: (execute: () => Promise<object>) => Promise<object>
+  private readonly meter: (
+    execute: () => Promise<object>
+  ) => Promise<FunctionCapabilityMeterResult>
   private readonly log: (entry: FunctionCapabilityLog) => void
 
   constructor(
@@ -243,18 +259,17 @@ export class FunctionCapabilityService {
     let responseBytes = 0
     let result: FunctionCapabilityLog["result"] = "error"
     try {
-      let response: object
-      try {
-        response = await this.meter(() =>
-          this.executeQuery({
-            scope: this.scope,
-            capability,
-            parameters,
-          })
-        )
-      } catch {
+      const outcome = await this.meter(() =>
+        this.executeQuery({
+          scope: this.scope,
+          capability,
+          parameters,
+        })
+      )
+      if (!outcome.success) {
         throw failed()
       }
+      const response = outcome.response
       const normalized = normalizeResponse(response, this.scope.limits)
       responseBytes = normalized.bytes
       result = "success"

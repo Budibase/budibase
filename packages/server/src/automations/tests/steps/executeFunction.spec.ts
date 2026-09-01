@@ -239,15 +239,19 @@ describe("Run Function automation action", () => {
 
   it("passes cancellation through to the run orchestrator", async () => {
     const outerController = new AbortController()
+    let receivedSignal: AbortSignal | undefined
     const deps = dependencies({
       orchestrate: jest.fn().mockImplementation(async execution => {
-        expect(execution.signal).toBe(outerController.signal)
+        receivedSignal = execution.signal
         outerController.abort()
         return { ...successResult, status: "stopped", output: undefined }
       }),
     })
 
-    await run(deps, undefined, { signal: outerController.signal })
+    await expect(
+      run(deps, undefined, { signal: outerController.signal })
+    ).resolves.toEqual({ success: true, status: "stopped" })
+    expect(receivedSignal).toBe(outerController.signal)
   })
 
   it("rejects a mismatched executor result", async () => {

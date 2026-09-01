@@ -11,9 +11,13 @@ import {
 import type { FunctionCapabilityServiceDependencies } from "./capabilities"
 
 describe("FunctionCapabilityService", () => {
-  const meterQuery = jest.fn(async (execute: () => Promise<object>) =>
-    execute()
-  )
+  const meterQuery = jest.fn(async (execute: () => Promise<object>) => {
+    try {
+      return { success: true as const, response: await execute() }
+    } catch {
+      return { success: false as const }
+    }
+  })
   const defaultTestLog = jest.fn()
   const capability = {
     capabilityId: "cap_customers",
@@ -261,6 +265,19 @@ describe("FunctionCapabilityService", () => {
     })
     expect(JSON.stringify(log.mock.calls)).not.toContain("credential-secret")
     expect(JSON.stringify(log.mock.calls)).not.toContain("active")
+  })
+
+  it("preserves errors raised by the metering layer", async () => {
+    const meterError = new Error("quota service unavailable")
+    const service = new FunctionCapabilityService(scope(), {
+      executeQuery: async () => ({ data: [] }),
+      meter: async () => {
+        throw meterError
+      },
+      log: defaultTestLog,
+    })
+
+    await expect(service.invokeCapability(request())).rejects.toBe(meterError)
   })
 
   it("rejects oversized and overly deep responses after metering", async () => {
