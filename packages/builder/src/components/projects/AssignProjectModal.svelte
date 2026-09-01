@@ -152,7 +152,8 @@
 >
   {#if resource}
     <Body size="S" color="var(--spectrum-global-color-gray-700)">
-      Choose which projects include {resource.name}
+      Choose which projects include
+      <span class="resource-name">{resource.name}</span>
     </Body>
   {/if}
 
@@ -294,5 +295,10 @@
     display: flex;
     align-items: center;
     height: 20px;
+  }
+
+  .resource-name {
+    color: var(--spectrum-global-color-gray-900);
+    font-weight: 500;
   }
 </style>
