@@ -4,15 +4,29 @@ import {
   createFunctionInvocationScope,
   FunctionCapabilityService,
   type FunctionCapabilityMeterResult,
+  type FunctionInvocation,
   FunctionRunOrchestrator,
-  type OrchestrateFunctionRunOptions,
 } from "@budibase/functions-runtime"
-import { ActionType } from "@budibase/types"
+import {
+  ActionType,
+  DEFAULT_FUNCTION_LIMITS,
+  FunctionErrorCode,
+  type FunctionArtifact,
+  type FunctionQueryCapability,
+  type JSONValue,
+  type FunctionRunResult,
+  type UserBindings,
+} from "@budibase/types"
 import type {
   FunctionCapabilityExecution,
   FunctionInvocationScopeInput,
 } from "@budibase/functions-runtime"
 import { executeQueryAsAutomation } from "../../api/controllers/query/executeAsAutomation"
+import {
+  createRunSummary,
+  finalizeRunSummary,
+  type FinalizeRunSummaryInput,
+} from "../../sdk/workspace/functions/history"
 import { buildCtx } from "../steps/utils"
 import { functionRunSupervisor } from "./supervisor"
 
@@ -57,10 +71,96 @@ const createCapabilitySession = async (input: FunctionInvocationScopeInput) => {
   })
 }
 
-export type FunctionRunOrchestrationOptions =
-  OrchestrateFunctionRunOptions<FunctionInvocationScopeInput>
+export interface FunctionRunDefinition {
+  id: string
+  name: string
+  artifact: FunctionArtifact
+  capabilities: FunctionQueryCapability[]
+}
 
-export const functionRunOrchestrator = new FunctionRunOrchestrator({
+export interface FunctionRunOrchestrationOptions {
+  runId: string
+  workspaceId: string
+  definition: FunctionRunDefinition
+  inputs: Record<string, JSONValue>
+  invocation: FunctionInvocation
+  executionUser?: UserBindings
+  signal?: AbortSignal
+}
+
+const runtimeOrchestrator = new FunctionRunOrchestrator({
   execute: options => functionRunSupervisor.execute(options),
   createCapabilitySession,
 })
+
+export const functionRunOrchestrator = {
+  execute: async ({
+    runId,
+    workspaceId,
+    definition,
+    inputs,
+    invocation,
+    executionUser,
+    signal,
+  }: FunctionRunOrchestrationOptions): Promise<FunctionRunResult> => {
+    const request = {
+      runId,
+      artifact: definition.artifact,
+      inputs,
+      limits: DEFAULT_FUNCTION_LIMITS.run,
+    }
+    const capabilityScope = {
+      runId,
+      workspaceId,
+      functionId: definition.id,
+      sourceHash: definition.artifact.sourceHash,
+      invocation,
+      executionUser,
+      capabilities: definition.capabilities,
+      limits: DEFAULT_FUNCTION_LIMITS.run,
+    }
+
+    let summaryCreated = false
+    try {
+      await createRunSummary({
+        runId,
+        functionId: definition.id,
+        functionName: definition.name,
+        sourceHash: definition.artifact.sourceHash,
+        automationId: invocation.automationId,
+        stepId: invocation.automationStepId,
+      })
+      summaryCreated = true
+    } catch (error) {
+      console.error(
+        `Failed to create Function run summary for run "${runId}"`,
+        error
+      )
+    }
+
+    let summaryResult: FinalizeRunSummaryInput = {
+      status: "error",
+      code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+    }
+    try {
+      const result = await runtimeOrchestrator.execute({
+        request,
+        capabilityScope,
+        signal,
+      })
+      summaryResult = result
+      return result
+    } finally {
+      if (summaryCreated) {
+        try {
+          await finalizeRunSummary(runId, summaryResult)
+        } catch (error) {
+          console.error(
+            `Failed to finalize Function run summary for run "${runId}"`,
+            error
+          )
+        }
+      }
+    }
+  },
+}
