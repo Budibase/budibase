@@ -159,7 +159,7 @@ describe("AssignProjectModal", () => {
     expect(onConfirm).not.toHaveBeenCalled()
   })
 
-  it("preserves deselections and selects newly discovered dependencies", async () => {
+  it("preserves deselections when dependencies disappear and return", async () => {
     const automation = {
       id: "automation_1",
       name: "Notify operations",
@@ -176,7 +176,7 @@ describe("AssignProjectModal", () => {
       async ({ projectIds }: PreviewProjectAssignmentRequest) => ({
         dependencyFingerprint,
         dependencies: projectIds.includes("project_2")
-          ? [automation, datasource]
+          ? [datasource]
           : [automation],
       })
     )
@@ -208,15 +208,23 @@ describe("AssignProjectModal", () => {
 
     await advancePreviewDebounce()
     await waitFor(() =>
-      expect(screen.getByText("1 of 2 selected")).toBeTruthy()
+      expect(screen.getByText("1 of 1 selected")).toBeTruthy()
+    )
+    expect(screen.queryByLabelText("Notify operations")).toBeNull()
+    expect(screen.getByLabelText("Reporting database")).toBeChecked()
+
+    reportingOption.selected = false
+    await fireEvent.change(projectSelect)
+    await advancePreviewDebounce()
+    await waitFor(() =>
+      expect(screen.getByText("0 of 1 selected")).toBeTruthy()
     )
     expect(screen.getByLabelText("Notify operations")).not.toBeChecked()
-    expect(screen.getByLabelText("Reporting database")).toBeChecked()
 
     await fireEvent.click(screen.getByText("Save changes"))
     expect(onConfirm).toHaveBeenCalledWith({
-      projectIds: ["project_1", "project_2"],
-      dependencyIds: ["datasource_1"],
+      projectIds: ["project_1"],
+      dependencyIds: [],
       dependencyFingerprint,
     })
   })
