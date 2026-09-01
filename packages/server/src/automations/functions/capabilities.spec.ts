@@ -37,8 +37,11 @@ describe("FunctionCapabilityService", () => {
       workspaceId: "app_workspace",
       functionId: "fn_function",
       sourceHash: "source-hash",
-      automationId: "au_automation",
-      automationStepId: "step_1",
+      invocation: {
+        type: "automation",
+        automationId: "au_automation",
+        automationStepId: "step_1",
+      },
       executionUser: {
         userId: "us_user",
         email: "builder@example.com",
@@ -188,13 +191,13 @@ describe("FunctionCapabilityService", () => {
     expect(addAction).toHaveBeenCalledTimes(1)
   })
 
-  it("meters failed reached queries and records only bounded metrics", async () => {
-    const record = jest.fn()
+  it("meters failed reached queries and logs only bounded metrics", async () => {
+    const log = jest.fn()
     const service = new FunctionCapabilityService(scope(), {
       executeQuery: async () => {
         throw new Error("credential-secret")
       },
-      record,
+      log,
       now: (() => {
         let now = 100
         return () => now++
@@ -206,14 +209,14 @@ describe("FunctionCapabilityService", () => {
       message: "Function query failed",
     })
     expect(addAction).toHaveBeenCalledTimes(1)
-    expect(record).toHaveBeenCalledWith({
+    expect(log).toHaveBeenCalledWith({
       capabilityId: capability.capabilityId,
       durationMs: 1,
       responseBytes: 0,
       result: "error",
     })
-    expect(JSON.stringify(record.mock.calls)).not.toContain("credential-secret")
-    expect(JSON.stringify(record.mock.calls)).not.toContain("active")
+    expect(JSON.stringify(log.mock.calls)).not.toContain("credential-secret")
+    expect(JSON.stringify(log.mock.calls)).not.toContain("active")
   })
 
   it("rejects oversized and overly deep responses after metering", async () => {

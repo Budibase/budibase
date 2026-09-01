@@ -8,7 +8,7 @@ export {
 } from "./capabilities"
 export type {
   FunctionCapabilityExecution,
-  FunctionCapabilityRecord,
+  FunctionCapabilityLog,
   FunctionInvocationScope,
   FunctionInvocationScopeInput,
 } from "./capabilities"

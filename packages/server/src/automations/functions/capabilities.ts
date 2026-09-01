@@ -22,8 +22,11 @@ export interface FunctionInvocationScope {
   workspaceId: string
   functionId: string
   sourceHash: string
-  automationId: string
-  automationStepId: string
+  invocation: {
+    type: "automation"
+    automationId: string
+    automationStepId: string
+  }
   executionUser?: UserBindings
   capabilities: Readonly<Record<string, FunctionQueryCapability>>
   limits: FunctionRunLimits
@@ -35,8 +38,11 @@ export interface FunctionInvocationScopeInput {
   workspaceId: string
   functionId: string
   sourceHash: string
-  automationId: string
-  automationStepId: string
+  invocation: {
+    type: "automation"
+    automationId: string
+    automationStepId: string
+  }
   executionUser?: UserBindings
   capabilities: FunctionQueryCapability[]
   limits: FunctionRunLimits
@@ -49,7 +55,7 @@ export interface FunctionCapabilityExecution {
   parameters: Record<string, string | null>
 }
 
-export interface FunctionCapabilityRecord {
+export interface FunctionCapabilityLog {
   capabilityId: string
   durationMs: number
   responseBytes: number
@@ -58,7 +64,7 @@ export interface FunctionCapabilityRecord {
 
 export interface FunctionCapabilityServiceDependencies {
   executeQuery?: (execution: FunctionCapabilityExecution) => Promise<object>
-  record?: (entry: FunctionCapabilityRecord) => void
+  log?: (entry: FunctionCapabilityLog) => void
   now?: () => number
 }
 
@@ -216,7 +222,8 @@ const validateParameters = (
   return validated
 }
 
-const defaultRecord = (entry: FunctionCapabilityRecord) => {
+// This can be replaced with persistent logging or metrics collection when needed.
+const defaultLog = (entry: FunctionCapabilityLog) => {
   console.log(
     `Function capability=${entry.capabilityId} result=${entry.result} durationMs=${entry.durationMs} responseBytes=${entry.responseBytes}`
   )
@@ -229,7 +236,7 @@ export class FunctionCapabilityService {
   private readonly executeQuery: (
     execution: FunctionCapabilityExecution
   ) => Promise<object>
-  private readonly record: (entry: FunctionCapabilityRecord) => void
+  private readonly log: (entry: FunctionCapabilityLog) => void
   private readonly now: () => number
 
   constructor(
@@ -238,7 +245,7 @@ export class FunctionCapabilityService {
   ) {
     this.remainingQueryCalls = scope.limits.maxQueryCalls
     this.executeQuery = dependencies.executeQuery || defaultExecuteQuery
-    this.record = dependencies.record || defaultRecord
+    this.log = dependencies.log || defaultLog
     this.now = dependencies.now || Date.now
   }
 
@@ -257,7 +264,7 @@ export class FunctionCapabilityService {
 
     const startedAt = this.now()
     let responseBytes = 0
-    let result: FunctionCapabilityRecord["result"] = "error"
+    let result: FunctionCapabilityLog["result"] = "error"
     try {
       const response = await executeMeteredQuery(() =>
         this.executeQuery({
@@ -272,7 +279,7 @@ export class FunctionCapabilityService {
       return normalized.value
     } finally {
       this.activeQueryCalls -= 1
-      this.record({
+      this.log({
         capabilityId: capability.capabilityId,
         durationMs: this.now() - startedAt,
         responseBytes,
