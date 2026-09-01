@@ -77,13 +77,9 @@
 
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
 
-  const knowledgeSearchConfigured = $derived.by(() => {
-    const _store = $agentsStore
-    return (
-      agentsStore.getKnowledgeConfiguration()?.knowledgeSearchConfigured ===
-      true
-    )
-  })
+  const knowledgeSearchConfigured = $derived(
+    $agentsStore.knowledgeConfiguration?.knowledgeSearchConfigured === true
+  )
 
   const conversationAttachmentsEnabled = $derived(
     knowledgeSearchConfigured &&
