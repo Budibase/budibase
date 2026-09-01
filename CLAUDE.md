@@ -40,8 +40,9 @@
 - Only comment when it's really necessary to explain an unclear behaviour.
 - Never use console.log in tests, the output will not be visible in STDOUT
   when you run the tests. It is a waste of time.
-- In application code use console.log instead of pino the logging framework.
-  We have made it so that console.log statements are redirected to pino.
+- In application code use console methods instead of pino the logging framework.
+  Use console.error when logging caught errors and console.log for ordinary
+  messages. Console statements are redirected to pino.
 - When you're writing tests, you don't need to assert or do conditional checks
   on intermediate states. Just assert the final outcome
   against, provided there are no type errors.
