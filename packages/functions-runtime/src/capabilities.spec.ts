@@ -1,5 +1,4 @@
-import { quotas } from "@budibase/pro"
-import { ActionType, FunctionErrorCode } from "@budibase/types"
+import { DEFAULT_FUNCTION_LIMITS, FunctionErrorCode } from "@budibase/types"
 import type {
   FunctionCapabilityRequest,
   FunctionRunLimits,
@@ -9,16 +8,17 @@ import {
   createFunctionInvocationScope,
   FunctionCapabilityService,
 } from "./capabilities"
-import { FUNCTION_RUN_REQUEST_FIXTURE } from "./testFixtures"
-
-jest.mock("@budibase/pro", () => ({
-  quotas: {
-    addAction: jest.fn(),
-  },
-}))
+import type { FunctionCapabilityServiceDependencies } from "./capabilities"
 
 describe("FunctionCapabilityService", () => {
-  const addAction = jest.mocked(quotas.addAction)
+  const meterQuery = jest.fn(async (execute: () => Promise<object>) => {
+    try {
+      return { success: true as const, response: await execute() }
+    } catch {
+      return { success: false as const }
+    }
+  })
+  const defaultTestLog = jest.fn()
   const capability = {
     capabilityId: "cap_customers",
     queryId: "query_customers",
@@ -27,7 +27,7 @@ describe("FunctionCapabilityService", () => {
     parameterNames: ["status"],
   }
   const limits: FunctionRunLimits = {
-    ...FUNCTION_RUN_REQUEST_FIXTURE.limits,
+    ...DEFAULT_FUNCTION_LIMITS.run,
     maxQueryCalls: 2,
     maxConcurrentQueryCalls: 2,
   }
@@ -37,8 +37,11 @@ describe("FunctionCapabilityService", () => {
       workspaceId: "app_workspace",
       functionId: "fn_function",
       sourceHash: "source-hash",
-      automationId: "au_automation",
-      automationStepId: "step_1",
+      invocation: {
+        type: "automation",
+        automationId: "au_automation",
+        automationStepId: "step_1",
+      },
       executionUser: {
         userId: "us_user",
         email: "builder@example.com",
@@ -57,17 +60,30 @@ describe("FunctionCapabilityService", () => {
     ...extra,
   })
 
+  const createService = (
+    invocationScope: ReturnType<typeof scope>,
+    dependencies: FunctionCapabilityServiceDependencies
+  ) =>
+    new FunctionCapabilityService(invocationScope, {
+      ...dependencies,
+      meter: meterQuery,
+      log: dependencies.log || defaultTestLog,
+    })
+
   beforeEach(() => {
-    addAction.mockReset()
-    addAction.mockImplementation(
-      async (_actionType, addActionFn) => await addActionFn()
-    )
+    meterQuery.mockClear()
+    defaultTestLog.mockClear()
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
   it("copies and freezes the capability allow-list for the invocation", () => {
     const invocationScope = scope()
 
     expect(Object.isFrozen(invocationScope.capabilities)).toBe(true)
+    expect(Object.getPrototypeOf(invocationScope.capabilities)).toBeNull()
     expect(Object.isFrozen(invocationScope.capabilities.cap_customers)).toBe(
       true
     )
@@ -76,9 +92,48 @@ describe("FunctionCapabilityService", () => {
     ).toBe(true)
   })
 
+  it("copies and freezes the invocation scope", () => {
+    const mutableLimits = { ...limits }
+    const mutableInvocation = {
+      type: "automation" as const,
+      automationId: "au_automation",
+      automationStepId: "step_1",
+    }
+    const mutableExecutionUser = {
+      userId: "us_user",
+      oauth2: {
+        accessToken: "token",
+      },
+    }
+    const invocationScope = createFunctionInvocationScope({
+      runId: "run-capabilities",
+      workspaceId: "app_workspace",
+      functionId: "fn_function",
+      sourceHash: "source-hash",
+      invocation: mutableInvocation,
+      executionUser: mutableExecutionUser,
+      capabilities: [capability],
+      limits: mutableLimits,
+      deadline: 1_000,
+    })
+
+    mutableLimits.maxQueryCalls = 0
+    mutableInvocation.automationId = "au_changed"
+    mutableExecutionUser.oauth2.accessToken = "changed"
+
+    expect(invocationScope.limits.maxQueryCalls).toBe(limits.maxQueryCalls)
+    expect(invocationScope.invocation.automationId).toBe("au_automation")
+    expect(invocationScope.executionUser?.oauth2?.accessToken).toBe("token")
+    expect(Object.isFrozen(invocationScope)).toBe(true)
+    expect(Object.isFrozen(invocationScope.limits)).toBe(true)
+    expect(Object.isFrozen(invocationScope.invocation)).toBe(true)
+    expect(Object.isFrozen(invocationScope.executionUser)).toBe(true)
+    expect(Object.isFrozen(invocationScope.executionUser?.oauth2)).toBe(true)
+  })
+
   it("executes the saved query mapped by the capability", async () => {
     const executeQuery = jest.fn(async () => ({ data: [{ id: "row-1" }] }))
-    const service = new FunctionCapabilityService(scope(), { executeQuery })
+    const service = createService(scope(), { executeQuery })
 
     await expect(service.invokeCapability(request())).resolves.toEqual({
       data: [{ id: "row-1" }],
@@ -95,21 +150,20 @@ describe("FunctionCapabilityService", () => {
       capability,
       parameters: { status: "active" },
     })
-    expect(addAction).toHaveBeenCalledWith(
-      ActionType.AUTOMATION_STEP,
-      expect.any(Function)
-    )
+    expect(meterQuery).toHaveBeenCalledTimes(1)
   })
 
   it.each([
     ["a guessed capability", { capabilityId: "cap_guessed" }],
+    ["an object prototype property", { capabilityId: "toString" }],
+    ["the object prototype setter", { capabilityId: "__proto__" }],
     ["a direct saved query ID", { capabilityId: "query_customers" }],
     ["an unknown parameter", { parameters: { secret: "value" } }],
     ["a non-string parameter", { parameters: { status: 1 } }],
     ["another run", { runId: "run_other" }],
   ])("denies %s before query execution", async (_name, extra) => {
     const executeQuery = jest.fn(async () => ({}))
-    const service = new FunctionCapabilityService(scope(), { executeQuery })
+    const service = createService(scope(), { executeQuery })
 
     await expect(
       service.invokeCapability(request(extra))
@@ -118,14 +172,13 @@ describe("FunctionCapabilityService", () => {
       message: "Function query denied",
     })
     expect(executeQuery).not.toHaveBeenCalled()
-    expect(addAction).not.toHaveBeenCalled()
+    expect(meterQuery).not.toHaveBeenCalled()
   })
 
   it("denies calls after the deadline or invocation closes", async () => {
-    const expiredScope = scope()
-    const expiredService = new FunctionCapabilityService(expiredScope, {
+    const expiredScope = { ...scope(), deadline: Date.now() - 1 }
+    const expiredService = createService(expiredScope, {
       executeQuery: async () => ({}),
-      now: () => expiredScope.deadline + 1,
     })
     await expect(
       expiredService.invokeCapability(request())
@@ -133,7 +186,7 @@ describe("FunctionCapabilityService", () => {
       code: FunctionErrorCode.FUNCTION_QUERY_DENIED,
     })
 
-    const closedService = new FunctionCapabilityService(scope(), {
+    const closedService = createService(scope(), {
       executeQuery: async () => ({}),
     })
     closedService.close()
@@ -142,14 +195,13 @@ describe("FunctionCapabilityService", () => {
     ).rejects.toMatchObject({
       code: FunctionErrorCode.FUNCTION_QUERY_DENIED,
     })
-    expect(addAction).not.toHaveBeenCalled()
+    expect(meterQuery).not.toHaveBeenCalled()
   })
 
   it("enforces the total query budget", async () => {
-    const service = new FunctionCapabilityService(
-      scope({ ...limits, maxQueryCalls: 1 }),
-      { executeQuery: async () => ({ data: [] }) }
-    )
+    const service = createService(scope({ ...limits, maxQueryCalls: 1 }), {
+      executeQuery: async () => ({ data: [] }),
+    })
 
     await expect(service.invokeCapability(request())).resolves.toEqual({
       data: [],
@@ -157,7 +209,7 @@ describe("FunctionCapabilityService", () => {
     await expect(service.invokeCapability(request())).rejects.toMatchObject({
       code: FunctionErrorCode.FUNCTION_QUERY_LIMIT,
     })
-    expect(addAction).toHaveBeenCalledTimes(1)
+    expect(meterQuery).toHaveBeenCalledTimes(1)
   })
 
   it("atomically enforces concurrent query limits", async () => {
@@ -173,7 +225,7 @@ describe("FunctionCapabilityService", () => {
       markStarted()
       return queryResult
     }
-    const service = new FunctionCapabilityService(
+    const service = createService(
       scope({ ...limits, maxConcurrentQueryCalls: 1 }),
       { executeQuery }
     )
@@ -185,39 +237,51 @@ describe("FunctionCapabilityService", () => {
     })
     releaseQuery({ data: [] })
     await expect(first).resolves.toEqual({ data: [] })
-    expect(addAction).toHaveBeenCalledTimes(1)
+    expect(meterQuery).toHaveBeenCalledTimes(1)
   })
 
-  it("meters failed reached queries and records only bounded metrics", async () => {
-    const record = jest.fn()
-    const service = new FunctionCapabilityService(scope(), {
+  it("meters failed reached queries and logs only bounded metrics", async () => {
+    const log = jest.fn()
+    const invocationScope = scope()
+    let currentTime = 100
+    jest.spyOn(Date, "now").mockImplementation(() => currentTime++)
+    const service = createService(invocationScope, {
       executeQuery: async () => {
         throw new Error("credential-secret")
       },
-      record,
-      now: (() => {
-        let now = 100
-        return () => now++
-      })(),
+      log,
     })
 
     await expect(service.invokeCapability(request())).rejects.toMatchObject({
       code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
       message: "Function query failed",
     })
-    expect(addAction).toHaveBeenCalledTimes(1)
-    expect(record).toHaveBeenCalledWith({
+    expect(meterQuery).toHaveBeenCalledTimes(1)
+    expect(log).toHaveBeenCalledWith({
       capabilityId: capability.capabilityId,
       durationMs: 1,
       responseBytes: 0,
       result: "error",
     })
-    expect(JSON.stringify(record.mock.calls)).not.toContain("credential-secret")
-    expect(JSON.stringify(record.mock.calls)).not.toContain("active")
+    expect(JSON.stringify(log.mock.calls)).not.toContain("credential-secret")
+    expect(JSON.stringify(log.mock.calls)).not.toContain("active")
+  })
+
+  it("preserves errors raised by the metering layer", async () => {
+    const meterError = new Error("quota service unavailable")
+    const service = new FunctionCapabilityService(scope(), {
+      executeQuery: async () => ({ data: [] }),
+      meter: async () => {
+        throw meterError
+      },
+      log: defaultTestLog,
+    })
+
+    await expect(service.invokeCapability(request())).rejects.toBe(meterError)
   })
 
   it("rejects oversized and overly deep responses after metering", async () => {
-    const service = new FunctionCapabilityService(
+    const service = createService(
       scope({
         ...limits,
         maxQueryResponseBytes: 10,
@@ -229,7 +293,7 @@ describe("FunctionCapabilityService", () => {
       code: FunctionErrorCode.FUNCTION_QUERY_LIMIT,
     })
 
-    const deepService = new FunctionCapabilityService(
+    const deepService = createService(
       scope({
         ...limits,
         maxQueryResponseBytes: 1_024,
@@ -242,13 +306,13 @@ describe("FunctionCapabilityService", () => {
         code: FunctionErrorCode.FUNCTION_QUERY_LIMIT,
       }
     )
-    expect(addAction).toHaveBeenCalledTimes(2)
+    expect(meterQuery).toHaveBeenCalledTimes(2)
   })
 
   it("denies an aborted capability call without metering", async () => {
     const abortController = new AbortController()
     abortController.abort()
-    const service = new FunctionCapabilityService(scope(), {
+    const service = createService(scope(), {
       executeQuery: async () => ({}),
     })
 
@@ -257,7 +321,7 @@ describe("FunctionCapabilityService", () => {
     ).rejects.toMatchObject({
       code: FunctionErrorCode.FUNCTION_QUERY_DENIED,
     })
-    expect(addAction).not.toHaveBeenCalled()
+    expect(meterQuery).not.toHaveBeenCalled()
   })
 
   it("normalizes query responses before returning them to the isolate", async () => {
@@ -265,7 +329,7 @@ describe("FunctionCapabilityService", () => {
       data: [{ id: "row-1" }],
       omitted: undefined,
     }
-    const service = new FunctionCapabilityService(scope(), {
+    const service = createService(scope(), {
       executeQuery: async () => response,
     })
 

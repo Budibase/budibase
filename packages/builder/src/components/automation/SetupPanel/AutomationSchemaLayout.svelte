@@ -7,6 +7,7 @@
     AutomationCustomIOType,
     AutomationIOType,
     AutomationStepType,
+    type JSONValue,
   } from "@budibase/types"
   import {
     AutomationSelector,
@@ -48,6 +49,24 @@
   export let block: AutomationStep | AutomationTrigger | undefined = undefined
   export let context: {} | undefined
   export let bindings: any[] | undefined = undefined
+
+  const parseFunctionInputs = (
+    value: string
+  ): Record<string, JSONValue> | undefined => {
+    try {
+      const parsed = JSON.parse(value)
+      if (
+        parsed === null ||
+        typeof parsed !== "object" ||
+        Array.isArray(parsed)
+      ) {
+        return
+      }
+      return parsed
+    } catch {
+      return
+    }
+  }
 
   const SchemaTypes: AutomationSchemaConfig = {
     [SchemaFieldTypes.ENUM]: {
@@ -151,6 +170,29 @@
           editorWidth: "448",
           mode: "json",
           readOnly: field.readonly,
+        }
+      },
+    },
+    [SchemaFieldTypes.FUNCTION_INPUTS]: {
+      comp: Editor,
+      props: (opts: FieldProps = {} as FieldProps) => {
+        const { field, value } = opts
+        return {
+          value: JSON.stringify(value || {}, null, 2),
+          editorHeight: "250",
+          editorWidth: "448",
+          mode: "json",
+          readOnly: field.readonly,
+        }
+      },
+      onChange: (event: CustomEvent<FormUpdate>) => {
+        const editorValue = event.detail?.value
+        if (!block || typeof editorValue !== "string") {
+          return
+        }
+        const parsed = parseFunctionInputs(editorValue)
+        if (parsed) {
+          automationStore.actions.requestUpdate({ inputs: parsed }, block)
         }
       },
     },
@@ -321,7 +363,10 @@
     field: BaseIOStructure,
     block?: AutomationStep | AutomationTrigger,
     key?: string,
-    rerenderTypes: SchemaFieldTypes[] = [SchemaFieldTypes.JSON]
+    rerenderTypes: SchemaFieldTypes[] = [
+      SchemaFieldTypes.JSON,
+      SchemaFieldTypes.FUNCTION_INPUTS,
+    ]
   ) => {
     if (!block) return null
     const fieldType = getFieldType(field, block)

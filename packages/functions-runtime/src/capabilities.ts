@@ -1,6 +1,4 @@
-import { context } from "@budibase/backend-core"
-import { quotas } from "@budibase/pro"
-import { ActionType, FunctionErrorCode } from "@budibase/types"
+import { FunctionErrorCode } from "@budibase/types"
 import type {
   FunctionCapabilityHandler,
   FunctionCapabilityRequest,
@@ -9,8 +7,6 @@ import type {
   JSONValue,
   UserBindings,
 } from "@budibase/types"
-import * as queryController from "../../api/controllers/query"
-import { buildCtx } from "../steps/utils"
 import { JSONLimitError, validateJSONLimits } from "./jsonLimits"
 
 const QUERY_DENIED_MESSAGE = "Function query denied"
@@ -18,16 +14,21 @@ const QUERY_LIMIT_MESSAGE = "Function query limit exceeded"
 const QUERY_FAILED_MESSAGE = "Function query failed"
 
 export interface FunctionInvocationScope {
-  runId: string
-  workspaceId: string
-  functionId: string
-  sourceHash: string
-  automationId: string
-  automationStepId: string
-  executionUser?: UserBindings
-  capabilities: Readonly<Record<string, FunctionQueryCapability>>
-  limits: FunctionRunLimits
-  deadline: number
+  readonly runId: string
+  readonly workspaceId: string
+  readonly functionId: string
+  readonly sourceHash: string
+  readonly invocation: {
+    readonly type: "automation"
+    readonly automationId: string
+    readonly automationStepId: string
+  }
+  readonly executionUser?: Readonly<UserBindings>
+  readonly capabilities: Readonly<
+    Record<string, Readonly<FunctionQueryCapability>>
+  >
+  readonly limits: Readonly<FunctionRunLimits>
+  readonly deadline: number
 }
 
 export interface FunctionInvocationScopeInput {
@@ -35,8 +36,11 @@ export interface FunctionInvocationScopeInput {
   workspaceId: string
   functionId: string
   sourceHash: string
-  automationId: string
-  automationStepId: string
+  invocation: {
+    type: "automation"
+    automationId: string
+    automationStepId: string
+  }
   executionUser?: UserBindings
   capabilities: FunctionQueryCapability[]
   limits: FunctionRunLimits
@@ -45,11 +49,11 @@ export interface FunctionInvocationScopeInput {
 
 export interface FunctionCapabilityExecution {
   scope: FunctionInvocationScope
-  capability: FunctionQueryCapability
+  capability: Readonly<FunctionQueryCapability>
   parameters: Record<string, string | null>
 }
 
-export interface FunctionCapabilityRecord {
+export interface FunctionCapabilityLog {
   capabilityId: string
   durationMs: number
   responseBytes: number
@@ -57,10 +61,16 @@ export interface FunctionCapabilityRecord {
 }
 
 export interface FunctionCapabilityServiceDependencies {
-  executeQuery?: (execution: FunctionCapabilityExecution) => Promise<object>
-  record?: (entry: FunctionCapabilityRecord) => void
-  now?: () => number
+  executeQuery: (execution: FunctionCapabilityExecution) => Promise<object>
+  meter?: (
+    execute: () => Promise<object>
+  ) => Promise<FunctionCapabilityMeterResult>
+  log?: (entry: FunctionCapabilityLog) => void
 }
+
+export type FunctionCapabilityMeterResult =
+  | { success: true; response: object }
+  | { success: false }
 
 export class FunctionCapabilityError extends Error {
   constructor(
@@ -92,65 +102,59 @@ const failed = () =>
 export const createFunctionInvocationScope = ({
   capabilities,
   deadline,
+  executionUser,
+  invocation,
   limits,
   ...input
 }: FunctionInvocationScopeInput): FunctionInvocationScope => {
-  const capabilityMap: Record<string, FunctionQueryCapability> = {}
+  const capabilityMap: Record<
+    string,
+    Readonly<FunctionQueryCapability>
+  > = Object.create(null)
   for (const capability of capabilities) {
-    const parameterNames = [...capability.parameterNames]
-    Object.freeze(parameterNames)
-    const storedCapability = {
+    const storedCapability = Object.freeze({
       ...capability,
-      parameterNames,
-    }
-    Object.freeze(storedCapability)
+      parameterNames: Object.freeze([...capability.parameterNames]),
+    })
     capabilityMap[capability.capabilityId] = storedCapability
   }
   Object.freeze(capabilityMap)
 
-  return {
+  const storedExecutionUser = executionUser
+    ? Object.freeze({
+        ...executionUser,
+        ...(executionUser.oauth2
+          ? { oauth2: Object.freeze({ ...executionUser.oauth2 }) }
+          : {}),
+      })
+    : undefined
+  const storedLimits = Object.freeze({ ...limits })
+
+  return Object.freeze({
     ...input,
+    invocation: Object.freeze({ ...invocation }),
+    executionUser: storedExecutionUser,
     capabilities: capabilityMap,
-    limits,
-    deadline: deadline ?? Date.now() + limits.timeoutMs,
+    limits: storedLimits,
+    deadline: deadline ?? Date.now() + storedLimits.timeoutMs,
+  })
+}
+
+const passthroughMeter = async (
+  execute: () => Promise<object>
+): Promise<FunctionCapabilityMeterResult> => {
+  try {
+    return { success: true, response: await execute() }
+  } catch {
+    return { success: false }
   }
 }
 
-const defaultExecuteQuery = async ({
-  scope,
-  capability,
-  parameters,
-}: FunctionCapabilityExecution) =>
-  context.doInWorkspaceContext(scope.workspaceId, async () => {
-    const ctx = buildCtx(scope.workspaceId, null, {
-      body: { parameters },
-      params: { queryId: capability.queryId },
-      user: scope.executionUser,
-    })
-    await queryController.executeV2AsAutomation(ctx)
-    return ctx.body
-  })
-
-const executeMeteredQuery = async (execute: () => Promise<object>) => {
-  const outcome = await quotas.addAction(
-    ActionType.AUTOMATION_STEP,
-    async (): Promise<
-      { success: true; response: object } | { success: false }
-    > => {
-      try {
-        return {
-          success: true,
-          response: await execute(),
-        }
-      } catch {
-        return { success: false }
-      }
-    }
+// This can be replaced with persistent logging or metrics collection when needed.
+const defaultLog = (entry: FunctionCapabilityLog) => {
+  console.log(
+    `Function capability=${entry.capabilityId} result=${entry.result} durationMs=${entry.durationMs} responseBytes=${entry.responseBytes}`
   )
-  if (!outcome.success) {
-    throw failed()
-  }
-  return outcome.response
 }
 
 const normalizeResponse = (
@@ -187,7 +191,7 @@ const normalizeResponse = (
 
 const validateParameters = (
   parameters: Record<string, JSONValue>,
-  capability: FunctionQueryCapability,
+  capability: Readonly<FunctionQueryCapability>,
   limits: FunctionRunLimits
 ): Record<string, string | null> => {
   try {
@@ -216,12 +220,6 @@ const validateParameters = (
   return validated
 }
 
-const defaultRecord = (entry: FunctionCapabilityRecord) => {
-  console.log(
-    `Function capability=${entry.capabilityId} result=${entry.result} durationMs=${entry.durationMs} responseBytes=${entry.responseBytes}`
-  )
-}
-
 export class FunctionCapabilityService {
   private active = true
   private remainingQueryCalls: number
@@ -229,17 +227,19 @@ export class FunctionCapabilityService {
   private readonly executeQuery: (
     execution: FunctionCapabilityExecution
   ) => Promise<object>
-  private readonly record: (entry: FunctionCapabilityRecord) => void
-  private readonly now: () => number
+  private readonly meter: (
+    execute: () => Promise<object>
+  ) => Promise<FunctionCapabilityMeterResult>
+  private readonly log: (entry: FunctionCapabilityLog) => void
 
   constructor(
     private readonly scope: FunctionInvocationScope,
-    dependencies: FunctionCapabilityServiceDependencies = {}
+    dependencies: FunctionCapabilityServiceDependencies
   ) {
     this.remainingQueryCalls = scope.limits.maxQueryCalls
-    this.executeQuery = dependencies.executeQuery || defaultExecuteQuery
-    this.record = dependencies.record || defaultRecord
-    this.now = dependencies.now || Date.now
+    this.executeQuery = dependencies.executeQuery
+    this.meter = dependencies.meter || passthroughMeter
+    this.log = dependencies.log || defaultLog
   }
 
   close = () => {
@@ -255,26 +255,30 @@ export class FunctionCapabilityService {
     )
     this.reserveQuery(request)
 
-    const startedAt = this.now()
+    const startedAt = Date.now()
     let responseBytes = 0
-    let result: FunctionCapabilityRecord["result"] = "error"
+    let result: FunctionCapabilityLog["result"] = "error"
     try {
-      const response = await executeMeteredQuery(() =>
+      const outcome = await this.meter(() =>
         this.executeQuery({
           scope: this.scope,
           capability,
           parameters,
         })
       )
+      if (!outcome.success) {
+        throw failed()
+      }
+      const response = outcome.response
       const normalized = normalizeResponse(response, this.scope.limits)
       responseBytes = normalized.bytes
       result = "success"
       return normalized.value
     } finally {
       this.activeQueryCalls -= 1
-      this.record({
+      this.log({
         capabilityId: capability.capabilityId,
-        durationMs: this.now() - startedAt,
+        durationMs: Date.now() - startedAt,
         responseBytes,
         result,
       })
@@ -286,16 +290,15 @@ export class FunctionCapabilityService {
       !this.active ||
       request.signal.aborted ||
       request.runId !== this.scope.runId ||
-      this.now() > this.scope.deadline
+      Date.now() > this.scope.deadline
     ) {
       throw denied()
     }
 
-    const capability = this.scope.capabilities[request.capabilityId]
-    if (!capability) {
+    if (!Object.hasOwn(this.scope.capabilities, request.capabilityId)) {
       throw denied()
     }
-    return capability
+    return this.scope.capabilities[request.capabilityId]
   }
 
   private reserveQuery(request: FunctionCapabilityRequest) {

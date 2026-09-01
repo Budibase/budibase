@@ -108,7 +108,7 @@ export type ExecuteQueryStepOutputs = BaseAutomationOutputs & {
 
 export interface ExecuteFunctionStepInputs {
   functionId: string
-  inputs: Record<string, JSONValue> | JSONEditorInput<Record<string, JSONValue>>
+  inputs: Record<string, JSONValue>
   continueOnError?: boolean
 }
 

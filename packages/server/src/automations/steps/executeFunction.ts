@@ -1,6 +1,6 @@
 import { v4 as uuid } from "uuid"
 import { z } from "zod"
-import type { SuperviseFunctionRunOptions } from "@budibase/functions-runtime"
+import { JSONLimitError, validateJSONLimits } from "@budibase/functions-runtime"
 import {
   DEFAULT_FUNCTION_LIMITS,
   FunctionErrorCode,
@@ -11,20 +11,24 @@ import {
   type FunctionError,
   type FunctionReadiness,
   type FunctionRunResult,
-  type FunctionSupervisor,
+  type FunctionRunSummary,
   type JSONValue,
 } from "@budibase/types"
 import { areFunctionsEnabled } from "../../middleware/functionsEnabled"
-import type {
-  FunctionCapabilityService,
-  FunctionInvocationScopeInput,
-} from "../functions/capabilities"
-import type {
-  CreateRunSummaryInput,
-  FinalizeRunSummaryInput,
+import {
+  get as getFunction,
+  getFunctionReadiness,
+} from "../../sdk/workspace/functions"
+import {
+  createRunSummary,
+  finalizeRunSummary,
+  type CreateRunSummaryInput,
+  type FinalizeRunSummaryInput,
 } from "../../sdk/workspace/functions/history"
-import { functionRunSupervisor } from "../functions/supervisor"
-import { JSONLimitError, validateJSONLimits } from "../functions/jsonLimits"
+import {
+  functionRunOrchestrator,
+  type FunctionRunOrchestrationOptions,
+} from "../functions/orchestrator"
 
 const ERROR_MESSAGES: Record<FunctionErrorCode, string> = {
   [FunctionErrorCode.FUNCTIONS_DISABLED]: "Functions are disabled",
@@ -56,7 +60,7 @@ class FunctionActionError extends Error {
 
 const jsonPrimitiveSchema = z.union([
   z.string(),
-  z.number().finite(),
+  z.number(),
   z.boolean(),
   z.null(),
 ])
@@ -70,51 +74,31 @@ const jsonValueSchema: z.ZodType<JSONValue> = z.lazy(() =>
 )
 
 const jsonRecordSchema = z.record(z.string(), jsonValueSchema)
-const jsonEditorInputSchema = z.object({ value: z.string() }).strict()
-
-export interface FunctionCapabilitySession {
-  invokeCapability: FunctionCapabilityService["invokeCapability"]
-  close: () => void
-}
 
 export interface ExecuteFunctionDependencies {
-  supervisor: Pick<FunctionSupervisor<SuperviseFunctionRunOptions>, "execute">
+  orchestrate: (
+    options: FunctionRunOrchestrationOptions
+  ) => Promise<FunctionRunResult>
   functionsEnabled: () => Promise<boolean>
   getFunction: (functionId: string) => Promise<FunctionDocument | undefined>
   getReadiness: (fn: FunctionDocument) => Promise<FunctionReadiness>
-  createCapabilitySession: (
-    input: FunctionInvocationScopeInput
-  ) => Promise<FunctionCapabilitySession>
-  createRunSummary: (input: CreateRunSummaryInput) => Promise<void>
+  createRunSummary: (
+    input: CreateRunSummaryInput
+  ) => Promise<FunctionRunSummary | undefined>
   finalizeRunSummary: (
     runId: string,
     result: FinalizeRunSummaryInput
-  ) => Promise<void>
+  ) => Promise<FunctionRunSummary | undefined>
   createRunId: () => string
 }
 
 const defaultDependencies: ExecuteFunctionDependencies = {
-  supervisor: functionRunSupervisor,
+  orchestrate: options => functionRunOrchestrator.execute(options),
   functionsEnabled: areFunctionsEnabled,
-  getFunction: async functionId =>
-    (await import("../../sdk/workspace/functions")).get(functionId),
-  getReadiness: async fn =>
-    (await import("../../sdk/workspace/functions")).getFunctionReadiness(fn),
-  createCapabilitySession: async input => {
-    const { createFunctionInvocationScope, FunctionCapabilityService } =
-      await import("../functions/capabilities")
-    return new FunctionCapabilityService(createFunctionInvocationScope(input))
-  },
-  createRunSummary: async input => {
-    await (
-      await import("../../sdk/workspace/functions/history")
-    ).createRunSummary(input)
-  },
-  finalizeRunSummary: async (runId, result) => {
-    await (
-      await import("../../sdk/workspace/functions/history")
-    ).finalizeRunSummary(runId, result)
-  },
+  getFunction,
+  getReadiness: getFunctionReadiness,
+  createRunSummary,
+  finalizeRunSummary,
   createRunId: uuid,
 }
 
@@ -130,26 +114,7 @@ const actionFailure = (code: FunctionErrorCode) =>
 const parseInputs = (
   inputs: ExecuteFunctionStepInputs["inputs"]
 ): Record<string, JSONValue> => {
-  let value = inputs
-  const editorInput = jsonEditorInputSchema.safeParse(value)
-  if (editorInput.success) {
-    try {
-      const editorValue = jsonRecordSchema.safeParse(
-        JSON.parse(editorInput.data.value)
-      )
-      if (!editorValue.success) {
-        throw new FunctionActionError(FunctionErrorCode.FUNCTION_INPUT_INVALID)
-      }
-      value = editorValue.data
-    } catch (error) {
-      if (error instanceof FunctionActionError) {
-        throw error
-      }
-      // A real input object may legitimately contain a string named `value`.
-    }
-  }
-
-  const parsed = jsonRecordSchema.safeParse(value)
+  const parsed = jsonRecordSchema.safeParse(inputs)
   if (!parsed.success) {
     throw new FunctionActionError(FunctionErrorCode.FUNCTION_INPUT_INVALID)
   }
@@ -196,12 +161,14 @@ export const executeFunction = async (
     automationId,
     stepId,
     context,
+    signal,
   }: {
     inputs: ExecuteFunctionStepInputs
     appId: string
     automationId?: string
     stepId?: string
     context: AutomationStepInputBase["context"]
+    signal?: AbortSignal
   },
   dependencies: ExecuteFunctionDependencies = defaultDependencies
 ): Promise<ExecuteFunctionStepOutputs> => {
@@ -228,19 +195,6 @@ export const executeFunction = async (
     }
 
     const runId = dependencies.createRunId()
-    const contextSignal =
-      context.signal instanceof AbortSignal ? context.signal : undefined
-    const capabilitySession = await dependencies.createCapabilitySession({
-      runId,
-      workspaceId: appId,
-      functionId: fn._id,
-      sourceHash: fn.artifact.sourceHash,
-      automationId,
-      automationStepId: stepId,
-      executionUser: context.user,
-      capabilities: fn.capabilities,
-      limits: DEFAULT_FUNCTION_LIMITS.run,
-    })
     let summaryResult: FinalizeRunSummaryInput = {
       status: "error",
       code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
@@ -254,17 +208,28 @@ export const executeFunction = async (
       stepId,
     })
     try {
-      const result = await dependencies.supervisor.execute({
+      const result = await dependencies.orchestrate({
         request: {
           runId,
           artifact: fn.artifact,
           inputs: functionInputs,
           limits: DEFAULT_FUNCTION_LIMITS.run,
         },
-        context: {
-          invokeCapability: capabilitySession.invokeCapability,
+        capabilityScope: {
+          runId,
+          workspaceId: appId,
+          functionId: fn._id,
+          sourceHash: fn.artifact.sourceHash,
+          invocation: {
+            type: "automation",
+            automationId,
+            automationStepId: stepId,
+          },
+          executionUser: context.user,
+          capabilities: fn.capabilities,
+          limits: DEFAULT_FUNCTION_LIMITS.run,
         },
-        signal: contextSignal,
+        signal,
       })
       if (result.runId !== runId) {
         throw new FunctionActionError(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
@@ -281,7 +246,6 @@ export const executeFunction = async (
       }
       throw error
     } finally {
-      capabilitySession.close()
       await dependencies.finalizeRunSummary(runId, summaryResult)
     }
   } catch (error) {

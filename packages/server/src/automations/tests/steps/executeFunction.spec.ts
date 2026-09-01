@@ -7,7 +7,6 @@ import {
 import {
   executeFunction,
   type ExecuteFunctionDependencies,
-  type FunctionCapabilitySession,
 } from "../../steps/executeFunction"
 
 const artifact = {
@@ -55,21 +54,13 @@ const successResult: FunctionRunResult = {
   },
 }
 
-const capabilitySession = (): FunctionCapabilitySession => ({
-  invokeCapability: jest.fn(),
-  close: jest.fn(),
-})
-
 const dependencies = (
   overrides: Partial<ExecuteFunctionDependencies> = {}
 ): ExecuteFunctionDependencies => ({
-  supervisor: {
-    execute: jest.fn().mockResolvedValue(successResult),
-  },
+  orchestrate: jest.fn().mockResolvedValue(successResult),
   functionsEnabled: jest.fn().mockResolvedValue(true),
   getFunction: jest.fn().mockResolvedValue(fn),
   getReadiness: jest.fn().mockResolvedValue("ready"),
-  createCapabilitySession: jest.fn().mockResolvedValue(capabilitySession()),
   createRunSummary: jest.fn().mockResolvedValue(undefined),
   finalizeRunSummary: jest.fn().mockResolvedValue(undefined),
   createRunId: jest.fn().mockReturnValue("run-1"),
@@ -96,45 +87,40 @@ const run = (
       stepId: options.stepId ?? "step-1",
       context: {
         user: { _id: "user-1" },
-        signal: options.signal,
       },
+      signal: options.signal,
     },
     deps
   )
 
 describe("Run Function automation action", () => {
-  it("executes a ready Function through the run supervisor", async () => {
-    const session = capabilitySession()
-    const deps = dependencies({
-      createCapabilitySession: jest.fn().mockResolvedValue(session),
-    })
+  it("executes a ready Function through the run orchestrator", async () => {
+    const deps = dependencies()
 
     await expect(run(deps)).resolves.toEqual({
       success: true,
       status: "success",
       output: { answer: 42 },
     })
-    expect(deps.createCapabilitySession).toHaveBeenCalledWith(
-      expect.objectContaining({
-        runId: "run-1",
-        workspaceId: fn.appId,
-        functionId: fn._id,
-        sourceHash: artifact.sourceHash,
-        automationId: "automation-1",
-        automationStepId: "step-1",
-        capabilities: fn.capabilities,
-      })
-    )
-    expect(deps.supervisor.execute).toHaveBeenCalledWith({
+    expect(deps.orchestrate).toHaveBeenCalledWith({
       request: {
         runId: "run-1",
         artifact,
         inputs: { name: "Ada" },
         limits: expect.any(Object),
       },
-      context: {
-        invokeCapability: session.invokeCapability,
-      },
+      capabilityScope: expect.objectContaining({
+        runId: "run-1",
+        workspaceId: fn.appId,
+        functionId: fn._id,
+        sourceHash: artifact.sourceHash,
+        invocation: {
+          type: "automation",
+          automationId: "automation-1",
+          automationStepId: "step-1",
+        },
+        capabilities: fn.capabilities,
+      }),
       signal: undefined,
     })
     expect(deps.createRunSummary).toHaveBeenCalledWith({
@@ -146,39 +132,22 @@ describe("Run Function automation action", () => {
       stepId: "step-1",
     })
     expect(deps.finalizeRunSummary).toHaveBeenCalledWith("run-1", successResult)
-    expect(session.close).toHaveBeenCalledTimes(1)
   })
 
-  it("parses bindable JSON editor input", async () => {
+  it("passes plain JSON input through to the run orchestrator", async () => {
     const deps = dependencies()
 
     await run(deps, {
       functionId: fn._id,
-      inputs: { value: '{"bound":"value"}' },
+      inputs: { bound: "value" },
     })
 
-    expect(deps.supervisor.execute).toHaveBeenCalledWith(
+    expect(deps.orchestrate).toHaveBeenCalledWith(
       expect.objectContaining({
         request: expect.objectContaining({ inputs: { bound: "value" } }),
       })
     )
   })
-
-  it.each(["42", "[1,2]", '"hi"'])(
-    "rejects editor JSON that is not an object: %s",
-    async value => {
-      const deps = dependencies()
-
-      await expect(
-        run(deps, { functionId: fn._id, inputs: { value } })
-      ).resolves.toMatchObject({
-        success: false,
-        status: "error",
-        error: { code: FunctionErrorCode.FUNCTION_INPUT_INVALID },
-      })
-      expect(deps.supervisor.execute).not.toHaveBeenCalled()
-    }
-  )
 
   it("preserves a real input object with a value property", async () => {
     const deps = dependencies()
@@ -188,7 +157,7 @@ describe("Run Function automation action", () => {
       inputs: { value: "not-json" },
     })
 
-    expect(deps.supervisor.execute).toHaveBeenCalledWith(
+    expect(deps.orchestrate).toHaveBeenCalledWith(
       expect.objectContaining({
         request: expect.objectContaining({ inputs: { value: "not-json" } }),
       })
@@ -226,7 +195,7 @@ describe("Run Function automation action", () => {
         status: "error",
         error: { code },
       })
-      expect(deps.supervisor.execute).not.toHaveBeenCalled()
+      expect(deps.orchestrate).not.toHaveBeenCalled()
     }
   )
 
@@ -246,17 +215,15 @@ describe("Run Function automation action", () => {
 
   it("passes stable executor failures to the automation", async () => {
     const deps = dependencies({
-      supervisor: {
-        execute: jest.fn().mockResolvedValue({
-          ...successResult,
-          status: "error",
-          output: undefined,
-          error: {
-            code: FunctionErrorCode.FUNCTION_EXECUTOR_BUSY,
-            message: "Function executor is busy",
-          },
-        }),
-      },
+      orchestrate: jest.fn().mockResolvedValue({
+        ...successResult,
+        status: "error",
+        output: undefined,
+        error: {
+          code: FunctionErrorCode.FUNCTION_EXECUTOR_BUSY,
+          message: "Function executor is busy",
+        },
+      }),
     })
 
     await expect(run(deps)).resolves.toMatchObject({
@@ -268,13 +235,11 @@ describe("Run Function automation action", () => {
 
   it("returns stopped as a successful terminal step status", async () => {
     const deps = dependencies({
-      supervisor: {
-        execute: jest.fn().mockResolvedValue({
-          ...successResult,
-          status: "stopped",
-          output: undefined,
-        }),
-      },
+      orchestrate: jest.fn().mockResolvedValue({
+        ...successResult,
+        status: "stopped",
+        output: undefined,
+      }),
     })
 
     await expect(run(deps)).resolves.toEqual({
@@ -283,33 +248,29 @@ describe("Run Function automation action", () => {
     })
   })
 
-  it("passes cancellation supervision through and closes the capability session", async () => {
+  it("passes cancellation through to the run orchestrator", async () => {
     const outerController = new AbortController()
-    const session = capabilitySession()
+    let receivedSignal: AbortSignal | undefined
     const deps = dependencies({
-      createCapabilitySession: jest.fn().mockResolvedValue(session),
-      supervisor: {
-        execute: jest.fn().mockImplementation(async execution => {
-          expect(execution.signal).toBe(outerController.signal)
-          outerController.abort()
-          return { ...successResult, status: "stopped", output: undefined }
-        }),
-      },
+      orchestrate: jest.fn().mockImplementation(async execution => {
+        receivedSignal = execution.signal
+        outerController.abort()
+        return { ...successResult, status: "stopped", output: undefined }
+      }),
     })
 
-    await run(deps, undefined, { signal: outerController.signal })
-
-    expect(session.close).toHaveBeenCalledTimes(1)
+    await expect(
+      run(deps, undefined, { signal: outerController.signal })
+    ).resolves.toEqual({ success: true, status: "stopped" })
+    expect(receivedSignal).toBe(outerController.signal)
   })
 
   it("rejects a mismatched executor result", async () => {
     const deps = dependencies({
-      supervisor: {
-        execute: jest.fn().mockResolvedValue({
-          ...successResult,
-          runId: "another-run",
-        }),
-      },
+      orchestrate: jest.fn().mockResolvedValue({
+        ...successResult,
+        runId: "another-run",
+      }),
     })
 
     await expect(run(deps)).resolves.toMatchObject({

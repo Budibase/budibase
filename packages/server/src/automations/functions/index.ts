@@ -2,12 +2,14 @@ export {
   createFunctionInvocationScope,
   FunctionCapabilityError,
   FunctionCapabilityService,
-} from "./capabilities"
+} from "@budibase/functions-runtime"
 export type {
   FunctionCapabilityExecution,
-  FunctionCapabilityRecord,
+  FunctionCapabilityLog,
   FunctionInvocationScope,
   FunctionInvocationScopeInput,
-} from "./capabilities"
+} from "@budibase/functions-runtime"
 export { functionExecutor, LocalFunctionExecutor } from "./executor"
 export { functionRunSupervisor, LocalFunctionRunSupervisor } from "./supervisor"
+export { functionRunOrchestrator } from "./orchestrator"
+export type { FunctionRunOrchestrationOptions } from "./orchestrator"
