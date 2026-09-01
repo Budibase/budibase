@@ -61,8 +61,6 @@ const dependencies = (
   functionsEnabled: jest.fn().mockResolvedValue(true),
   getFunction: jest.fn().mockResolvedValue(fn),
   getReadiness: jest.fn().mockResolvedValue("ready"),
-  createRunSummary: jest.fn().mockResolvedValue(undefined),
-  finalizeRunSummary: jest.fn().mockResolvedValue(undefined),
   createRunId: jest.fn().mockReturnValue("run-1"),
   ...overrides,
 })
@@ -103,35 +101,23 @@ describe("Run Function automation action", () => {
       output: { answer: 42 },
     })
     expect(deps.orchestrate).toHaveBeenCalledWith({
-      request: {
-        runId: "run-1",
-        artifact,
-        inputs: { name: "Ada" },
-        limits: expect.any(Object),
-      },
-      capabilityScope: expect.objectContaining({
-        runId: "run-1",
-        workspaceId: fn.appId,
-        functionId: fn._id,
-        sourceHash: artifact.sourceHash,
-        invocation: {
-          type: "automation",
-          automationId: "automation-1",
-          automationStepId: "step-1",
-        },
+      runId: "run-1",
+      workspaceId: fn.appId,
+      definition: {
+        id: fn._id,
+        name: fn.name,
+        artifact: fn.artifact,
         capabilities: fn.capabilities,
-      }),
+      },
+      inputs: { name: "Ada" },
+      invocation: {
+        type: "automation",
+        automationId: "automation-1",
+        automationStepId: "step-1",
+      },
+      executionUser: { _id: "user-1" },
       signal: undefined,
     })
-    expect(deps.createRunSummary).toHaveBeenCalledWith({
-      runId: "run-1",
-      functionId: fn._id,
-      functionName: fn.name,
-      sourceHash: artifact.sourceHash,
-      automationId: "automation-1",
-      stepId: "step-1",
-    })
-    expect(deps.finalizeRunSummary).toHaveBeenCalledWith("run-1", successResult)
   })
 
   it("passes plain JSON input through to the run orchestrator", async () => {
@@ -144,7 +130,7 @@ describe("Run Function automation action", () => {
 
     expect(deps.orchestrate).toHaveBeenCalledWith(
       expect.objectContaining({
-        request: expect.objectContaining({ inputs: { bound: "value" } }),
+        inputs: { bound: "value" },
       })
     )
   })
@@ -159,7 +145,7 @@ describe("Run Function automation action", () => {
 
     expect(deps.orchestrate).toHaveBeenCalledWith(
       expect.objectContaining({
-        request: expect.objectContaining({ inputs: { value: "not-json" } }),
+        inputs: { value: "not-json" },
       })
     )
   })
@@ -276,10 +262,6 @@ describe("Run Function automation action", () => {
     await expect(run(deps)).resolves.toMatchObject({
       success: false,
       error: { code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR },
-    })
-    expect(deps.finalizeRunSummary).toHaveBeenCalledWith("run-1", {
-      status: "error",
-      code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
     })
   })
 })

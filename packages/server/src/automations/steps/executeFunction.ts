@@ -11,7 +11,6 @@ import {
   type FunctionError,
   type FunctionReadiness,
   type FunctionRunResult,
-  type FunctionRunSummary,
   type JSONValue,
 } from "@budibase/types"
 import { areFunctionsEnabled } from "../../middleware/functionsEnabled"
@@ -19,12 +18,6 @@ import {
   get as getFunction,
   getFunctionReadiness,
 } from "../../sdk/workspace/functions"
-import {
-  createRunSummary,
-  finalizeRunSummary,
-  type CreateRunSummaryInput,
-  type FinalizeRunSummaryInput,
-} from "../../sdk/workspace/functions/history"
 import {
   functionRunOrchestrator,
   type FunctionRunOrchestrationOptions,
@@ -82,13 +75,6 @@ export interface ExecuteFunctionDependencies {
   functionsEnabled: () => Promise<boolean>
   getFunction: (functionId: string) => Promise<FunctionDocument | undefined>
   getReadiness: (fn: FunctionDocument) => Promise<FunctionReadiness>
-  createRunSummary: (
-    input: CreateRunSummaryInput
-  ) => Promise<FunctionRunSummary | undefined>
-  finalizeRunSummary: (
-    runId: string,
-    result: FinalizeRunSummaryInput
-  ) => Promise<FunctionRunSummary | undefined>
   createRunId: () => string
 }
 
@@ -97,8 +83,6 @@ const defaultDependencies: ExecuteFunctionDependencies = {
   functionsEnabled: areFunctionsEnabled,
   getFunction,
   getReadiness: getFunctionReadiness,
-  createRunSummary,
-  finalizeRunSummary,
   createRunId: uuid,
 }
 
@@ -112,7 +96,7 @@ const actionFailure = (code: FunctionErrorCode) =>
   failure({ code, message: ERROR_MESSAGES[code] })
 
 const parseInputs = (
-  inputs: ExecuteFunctionStepInputs["inputs"]
+  inputs: Record<string, JSONValue>
 ): Record<string, JSONValue> => {
   const parsed = jsonRecordSchema.safeParse(inputs)
   if (!parsed.success) {
@@ -195,59 +179,28 @@ export const executeFunction = async (
     }
 
     const runId = dependencies.createRunId()
-    let summaryResult: FinalizeRunSummaryInput = {
-      status: "error",
-      code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
-    }
-    await dependencies.createRunSummary({
+    const result = await dependencies.orchestrate({
       runId,
-      functionId: fn._id,
-      functionName: fn.name,
-      sourceHash: fn.artifact.sourceHash,
-      automationId,
-      stepId,
+      workspaceId: appId,
+      definition: {
+        id: fn._id,
+        name: fn.name,
+        artifact: fn.artifact,
+        capabilities: fn.capabilities,
+      },
+      inputs: functionInputs,
+      invocation: {
+        type: "automation",
+        automationId,
+        automationStepId: stepId,
+      },
+      executionUser: context.user,
+      signal,
     })
-    try {
-      const result = await dependencies.orchestrate({
-        request: {
-          runId,
-          artifact: fn.artifact,
-          inputs: functionInputs,
-          limits: DEFAULT_FUNCTION_LIMITS.run,
-        },
-        capabilityScope: {
-          runId,
-          workspaceId: appId,
-          functionId: fn._id,
-          sourceHash: fn.artifact.sourceHash,
-          invocation: {
-            type: "automation",
-            automationId,
-            automationStepId: stepId,
-          },
-          executionUser: context.user,
-          capabilities: fn.capabilities,
-          limits: DEFAULT_FUNCTION_LIMITS.run,
-        },
-        signal,
-      })
-      if (result.runId !== runId) {
-        throw new FunctionActionError(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
-      }
-      summaryResult = result
-      return resultToOutputs(result)
-    } catch (error) {
-      summaryResult = {
-        status: "error",
-        code:
-          error instanceof FunctionActionError
-            ? error.code
-            : FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
-      }
-      throw error
-    } finally {
-      await dependencies.finalizeRunSummary(runId, summaryResult)
+    if (result.runId !== runId) {
+      throw new FunctionActionError(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
     }
+    return resultToOutputs(result)
   } catch (error) {
     return error instanceof FunctionActionError
       ? actionFailure(error.code)
