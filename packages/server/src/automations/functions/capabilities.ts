@@ -18,19 +18,21 @@ const QUERY_LIMIT_MESSAGE = "Function query limit exceeded"
 const QUERY_FAILED_MESSAGE = "Function query failed"
 
 export interface FunctionInvocationScope {
-  runId: string
-  workspaceId: string
-  functionId: string
-  sourceHash: string
-  invocation: {
-    type: "automation"
-    automationId: string
-    automationStepId: string
+  readonly runId: string
+  readonly workspaceId: string
+  readonly functionId: string
+  readonly sourceHash: string
+  readonly invocation: {
+    readonly type: "automation"
+    readonly automationId: string
+    readonly automationStepId: string
   }
-  executionUser?: UserBindings
-  capabilities: Readonly<Record<string, Readonly<FunctionQueryCapability>>>
-  limits: FunctionRunLimits
-  deadline: number
+  readonly executionUser?: Readonly<UserBindings>
+  readonly capabilities: Readonly<
+    Record<string, Readonly<FunctionQueryCapability>>
+  >
+  readonly limits: Readonly<FunctionRunLimits>
+  readonly deadline: number
 }
 
 export interface FunctionInvocationScopeInput {
@@ -97,10 +99,15 @@ const failed = () =>
 export const createFunctionInvocationScope = ({
   capabilities,
   deadline,
+  executionUser,
+  invocation,
   limits,
   ...input
 }: FunctionInvocationScopeInput): FunctionInvocationScope => {
-  const capabilityMap: Record<string, Readonly<FunctionQueryCapability>> = {}
+  const capabilityMap: Record<
+    string,
+    Readonly<FunctionQueryCapability>
+  > = Object.create(null)
   for (const capability of capabilities) {
     const storedCapability = Object.freeze({
       ...capability,
@@ -110,12 +117,24 @@ export const createFunctionInvocationScope = ({
   }
   Object.freeze(capabilityMap)
 
-  return {
+  const storedExecutionUser = executionUser
+    ? Object.freeze({
+        ...executionUser,
+        ...(executionUser.oauth2
+          ? { oauth2: Object.freeze({ ...executionUser.oauth2 }) }
+          : {}),
+      })
+    : undefined
+  const storedLimits = Object.freeze({ ...limits })
+
+  return Object.freeze({
     ...input,
+    invocation: Object.freeze({ ...invocation }),
+    executionUser: storedExecutionUser,
     capabilities: capabilityMap,
-    limits,
-    deadline: deadline ?? Date.now() + limits.timeoutMs,
-  }
+    limits: storedLimits,
+    deadline: deadline ?? Date.now() + storedLimits.timeoutMs,
+  })
 }
 
 // Alpha-only implementation. Remove this in favour of the external runner.
@@ -293,11 +312,10 @@ export class FunctionCapabilityService {
       throw denied()
     }
 
-    const capability = this.scope.capabilities[request.capabilityId]
-    if (!capability) {
+    if (!Object.hasOwn(this.scope.capabilities, request.capabilityId)) {
       throw denied()
     }
-    return capability
+    return this.scope.capabilities[request.capabilityId]
   }
 
   private reserveQuery(request: FunctionCapabilityRequest) {
