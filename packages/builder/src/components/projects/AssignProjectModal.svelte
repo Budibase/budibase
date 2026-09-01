@@ -109,14 +109,6 @@
         }
         dependencies = sortDependencies(response.dependencies)
         dependencyFingerprint = response.dependencyFingerprint
-        const dependencyIds = new Set(
-          dependencies.map(dependency => dependency.id)
-        )
-        deselectedDependencyIds = new Set(
-          Array.from(deselectedDependencyIds).filter(id =>
-            dependencyIds.has(id)
-          )
-        )
       } catch (error) {
         if (request !== previewRequest) {
           return
