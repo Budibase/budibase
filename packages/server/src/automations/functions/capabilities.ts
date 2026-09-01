@@ -28,7 +28,7 @@ export interface FunctionInvocationScope {
     automationStepId: string
   }
   executionUser?: UserBindings
-  capabilities: Readonly<Record<string, FunctionQueryCapability>>
+  capabilities: Readonly<Record<string, Readonly<FunctionQueryCapability>>>
   limits: FunctionRunLimits
   deadline: number
 }
@@ -51,7 +51,7 @@ export interface FunctionInvocationScopeInput {
 
 export interface FunctionCapabilityExecution {
   scope: FunctionInvocationScope
-  capability: FunctionQueryCapability
+  capability: Readonly<FunctionQueryCapability>
   parameters: Record<string, string | null>
 }
 
@@ -65,7 +65,6 @@ export interface FunctionCapabilityLog {
 export interface FunctionCapabilityServiceDependencies {
   executeQuery?: (execution: FunctionCapabilityExecution) => Promise<object>
   log?: (entry: FunctionCapabilityLog) => void
-  now?: () => number
 }
 
 export class FunctionCapabilityError extends Error {
@@ -101,15 +100,12 @@ export const createFunctionInvocationScope = ({
   limits,
   ...input
 }: FunctionInvocationScopeInput): FunctionInvocationScope => {
-  const capabilityMap: Record<string, FunctionQueryCapability> = {}
+  const capabilityMap: Record<string, Readonly<FunctionQueryCapability>> = {}
   for (const capability of capabilities) {
-    const parameterNames = [...capability.parameterNames]
-    Object.freeze(parameterNames)
-    const storedCapability = {
+    const storedCapability = Object.freeze({
       ...capability,
-      parameterNames,
-    }
-    Object.freeze(storedCapability)
+      parameterNames: Object.freeze([...capability.parameterNames]),
+    })
     capabilityMap[capability.capabilityId] = storedCapability
   }
   Object.freeze(capabilityMap)
@@ -122,7 +118,8 @@ export const createFunctionInvocationScope = ({
   }
 }
 
-const defaultExecuteQuery = async ({
+// Alpha-only implementation. Remove this in favour of the external runner.
+const internalExecuteQuery = async ({
   scope,
   capability,
   parameters,
@@ -193,7 +190,7 @@ const normalizeResponse = (
 
 const validateParameters = (
   parameters: Record<string, JSONValue>,
-  capability: FunctionQueryCapability,
+  capability: Readonly<FunctionQueryCapability>,
   limits: FunctionRunLimits
 ): Record<string, string | null> => {
   try {
@@ -237,16 +234,14 @@ export class FunctionCapabilityService {
     execution: FunctionCapabilityExecution
   ) => Promise<object>
   private readonly log: (entry: FunctionCapabilityLog) => void
-  private readonly now: () => number
 
   constructor(
     private readonly scope: FunctionInvocationScope,
     dependencies: FunctionCapabilityServiceDependencies = {}
   ) {
     this.remainingQueryCalls = scope.limits.maxQueryCalls
-    this.executeQuery = dependencies.executeQuery || defaultExecuteQuery
+    this.executeQuery = dependencies.executeQuery || internalExecuteQuery
     this.log = dependencies.log || defaultLog
-    this.now = dependencies.now || Date.now
   }
 
   close = () => {
@@ -262,7 +257,7 @@ export class FunctionCapabilityService {
     )
     this.reserveQuery(request)
 
-    const startedAt = this.now()
+    const startedAt = Date.now()
     let responseBytes = 0
     let result: FunctionCapabilityLog["result"] = "error"
     try {
@@ -281,7 +276,7 @@ export class FunctionCapabilityService {
       this.activeQueryCalls -= 1
       this.log({
         capabilityId: capability.capabilityId,
-        durationMs: this.now() - startedAt,
+        durationMs: Date.now() - startedAt,
         responseBytes,
         result,
       })
@@ -293,7 +288,7 @@ export class FunctionCapabilityService {
       !this.active ||
       request.signal.aborted ||
       request.runId !== this.scope.runId ||
-      this.now() > this.scope.deadline
+      Date.now() > this.scope.deadline
     ) {
       throw denied()
     }

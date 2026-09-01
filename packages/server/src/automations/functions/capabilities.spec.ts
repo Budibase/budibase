@@ -67,6 +67,10 @@ describe("FunctionCapabilityService", () => {
     )
   })
 
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   it("copies and freezes the capability allow-list for the invocation", () => {
     const invocationScope = scope()
 
@@ -125,10 +129,9 @@ describe("FunctionCapabilityService", () => {
   })
 
   it("denies calls after the deadline or invocation closes", async () => {
-    const expiredScope = scope()
+    const expiredScope = { ...scope(), deadline: Date.now() - 1 }
     const expiredService = new FunctionCapabilityService(expiredScope, {
       executeQuery: async () => ({}),
-      now: () => expiredScope.deadline + 1,
     })
     await expect(
       expiredService.invokeCapability(request())
@@ -193,15 +196,17 @@ describe("FunctionCapabilityService", () => {
 
   it("meters failed reached queries and logs only bounded metrics", async () => {
     const log = jest.fn()
-    const service = new FunctionCapabilityService(scope(), {
+    const invocationScope = scope()
+    jest
+      .spyOn(Date, "now")
+      .mockReturnValueOnce(100)
+      .mockReturnValueOnce(101)
+      .mockReturnValueOnce(102)
+    const service = new FunctionCapabilityService(invocationScope, {
       executeQuery: async () => {
         throw new Error("credential-secret")
       },
       log,
-      now: (() => {
-        let now = 100
-        return () => now++
-      })(),
     })
 
     await expect(service.invokeCapability(request())).rejects.toMatchObject({
