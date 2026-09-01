@@ -464,10 +464,33 @@ describe("/api/global/groups", () => {
       group = response.body as UserGroup
     })
 
+    it.each([
+      { add: "" },
+      { add: 0 },
+      { add: false },
+      { remove: "" },
+      { remove: 0 },
+      { remove: false },
+    ])("rejects a malformed list value: %p", async body => {
+      await config.request
+        .post(`/api/global/groups/${group._id}/apps`)
+        .send(body)
+        .set(config.defaultHeaders())
+        .expect(400)
+    })
+
     it("rejects malformed app entries", async () => {
       await config.request
         .post(`/api/global/groups/${group._id}/apps`)
         .send({ add: [null] })
+        .set(config.defaultHeaders())
+        .expect(400)
+    })
+
+    it.each(["", "   "])("rejects a blank app ID: %p", async appId => {
+      await config.request
+        .post(`/api/global/groups/${group._id}/apps`)
+        .send({ add: [{ appId, roleId: "BASIC" }] })
         .set(config.defaultHeaders())
         .expect(400)
     })

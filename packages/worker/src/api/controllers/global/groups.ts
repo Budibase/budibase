@@ -74,13 +74,21 @@ export async function updateGroupApps(
   const toAdd = ctx.request.body.add,
     toRemove = ctx.request.body.remove
   if (
-    (toAdd && !Array.isArray(toAdd)) ||
-    (toRemove && !Array.isArray(toRemove)) ||
-    toAdd?.some(
-      app =>
-        !app || typeof app.appId !== "string" || typeof app.roleId !== "string"
-    ) ||
-    toRemove?.some(app => !app || typeof app.appId !== "string")
+    (toAdd != null && !Array.isArray(toAdd)) ||
+    (toRemove != null && !Array.isArray(toRemove)) ||
+    (Array.isArray(toAdd) &&
+      toAdd.some(
+        app =>
+          !app ||
+          typeof app.appId !== "string" ||
+          !app.appId.trim() ||
+          typeof app.roleId !== "string"
+      )) ||
+    (Array.isArray(toRemove) &&
+      toRemove.some(
+        app =>
+          !app || typeof app.appId !== "string" || !app.appId.trim()
+      ))
   ) {
     ctx.throw(
       400,
