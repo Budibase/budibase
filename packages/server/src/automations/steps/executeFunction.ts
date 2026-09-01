@@ -1,6 +1,6 @@
 import { v4 as uuid } from "uuid"
 import { z } from "zod"
-import type { SuperviseFunctionRunOptions } from "@budibase/functions-runtime"
+import { JSONLimitError, validateJSONLimits } from "@budibase/functions-runtime"
 import {
   DEFAULT_FUNCTION_LIMITS,
   FunctionErrorCode,
@@ -18,12 +18,10 @@ import {
   get as getFunction,
   getFunctionReadiness,
 } from "../../sdk/workspace/functions"
-import type {
-  FunctionCapabilityService,
-  FunctionInvocationScopeInput,
-} from "../functions/capabilities"
-import { functionRunSupervisor } from "../functions/supervisor"
-import { JSONLimitError, validateJSONLimits } from "../functions/jsonLimits"
+import {
+  functionRunOrchestrator,
+  type FunctionRunOrchestrationOptions,
+} from "../functions/orchestrator"
 
 const ERROR_MESSAGES: Record<FunctionErrorCode, string> = {
   [FunctionErrorCode.FUNCTIONS_DISABLED]: "Functions are disabled",
@@ -71,36 +69,21 @@ const jsonValueSchema: z.ZodType<JSONValue> = z.lazy(() =>
 const jsonRecordSchema = z.record(z.string(), jsonValueSchema)
 const jsonEditorInputSchema = z.object({ value: z.string() }).strict()
 
-export interface FunctionCapabilitySession {
-  invokeCapability: FunctionCapabilityService["invokeCapability"]
-  close: () => void
-}
-
 export interface ExecuteFunctionDependencies {
-  execute: (options: SuperviseFunctionRunOptions) => Promise<FunctionRunResult>
+  orchestrate: (
+    options: FunctionRunOrchestrationOptions
+  ) => Promise<FunctionRunResult>
   functionsEnabled: () => Promise<boolean>
   getFunction: (functionId: string) => Promise<FunctionDocument | undefined>
   getReadiness: (fn: FunctionDocument) => Promise<FunctionReadiness>
-  createCapabilitySession: (
-    input: FunctionInvocationScopeInput
-  ) => Promise<FunctionCapabilitySession>
   createRunId: () => string
 }
 
-// Loading the capability service lazily avoids a cycle through the query controller
-// while the automation action modules are initialised.
-const createCapabilitySession = async (input: FunctionInvocationScopeInput) => {
-  const { createFunctionInvocationScope, FunctionCapabilityService } =
-    await import("../functions/capabilities")
-  return new FunctionCapabilityService(createFunctionInvocationScope(input))
-}
-
 const defaultDependencies: ExecuteFunctionDependencies = {
-  execute: options => functionRunSupervisor.execute(options),
+  orchestrate: options => functionRunOrchestrator.execute(options),
   functionsEnabled: areFunctionsEnabled,
   getFunction,
   getReadiness: getFunctionReadiness,
-  createCapabilitySession,
   createRunId: uuid,
 }
 
@@ -216,37 +199,33 @@ export const executeFunction = async (
     const runId = dependencies.createRunId()
     const contextSignal =
       context.signal instanceof AbortSignal ? context.signal : undefined
-    const capabilitySession = await dependencies.createCapabilitySession({
-      runId,
-      workspaceId: appId,
-      functionId: fn._id,
-      sourceHash: fn.artifact.sourceHash,
-      automationId,
-      automationStepId: stepId,
-      executionUser: context.user,
-      capabilities: fn.capabilities,
-      limits: DEFAULT_FUNCTION_LIMITS.run,
+    const result = await dependencies.orchestrate({
+      request: {
+        runId,
+        artifact: fn.artifact,
+        inputs: functionInputs,
+        limits: DEFAULT_FUNCTION_LIMITS.run,
+      },
+      capabilityScope: {
+        runId,
+        workspaceId: appId,
+        functionId: fn._id,
+        sourceHash: fn.artifact.sourceHash,
+        invocation: {
+          type: "automation",
+          automationId,
+          automationStepId: stepId,
+        },
+        executionUser: context.user,
+        capabilities: fn.capabilities,
+        limits: DEFAULT_FUNCTION_LIMITS.run,
+      },
+      signal: contextSignal,
     })
-    try {
-      const result = await dependencies.execute({
-        request: {
-          runId,
-          artifact: fn.artifact,
-          inputs: functionInputs,
-          limits: DEFAULT_FUNCTION_LIMITS.run,
-        },
-        context: {
-          invokeCapability: capabilitySession.invokeCapability,
-        },
-        signal: contextSignal,
-      })
-      if (result.runId !== runId) {
-        throw new FunctionActionError(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
-      }
-      return resultToOutputs(result)
-    } finally {
-      capabilitySession.close()
+    if (result.runId !== runId) {
+      throw new FunctionActionError(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
     }
+    return resultToOutputs(result)
   } catch (error) {
     return error instanceof FunctionActionError
       ? actionFailure(error.code)

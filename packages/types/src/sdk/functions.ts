@@ -171,6 +171,12 @@ export interface FunctionExecutionContext {
   invokeCapability: FunctionCapabilityHandler
 }
 
+export interface FunctionRunExecutionOptions {
+  request: FunctionRunRequest
+  context: FunctionExecutionContext
+  signal?: AbortSignal
+}
+
 export interface FunctionExecutor {
   health: () => Promise<FunctionExecutorHealth>
   execute: (

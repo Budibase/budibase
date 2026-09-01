@@ -1,7 +1,6 @@
 import type {
-  FunctionExecutionContext,
   FunctionExecutor,
-  FunctionRunRequest,
+  FunctionRunExecutionOptions,
   FunctionRunResult,
 } from "@budibase/types"
 
@@ -14,12 +13,6 @@ const createStopped = (result: FunctionRunResult): FunctionRunResult => ({
     logBytes: 0,
   },
 })
-
-export interface SuperviseFunctionRunOptions {
-  request: FunctionRunRequest
-  context: FunctionExecutionContext
-  signal?: AbortSignal
-}
 
 export interface FunctionRunSupervisorOptions {
   executor: FunctionExecutor
@@ -55,7 +48,7 @@ export class FunctionRunSupervisor {
   }
 
   async execute(
-    options: SuperviseFunctionRunOptions
+    options: FunctionRunExecutionOptions
   ): Promise<FunctionRunResult> {
     const activeRun: ActiveRun = { terminationRequested: false }
     this.activeRuns.set(options.request.runId, activeRun)
@@ -68,7 +61,7 @@ export class FunctionRunSupervisor {
   }
 
   private async executeRun(
-    { request, context, signal }: SuperviseFunctionRunOptions,
+    { request, context, signal }: FunctionRunExecutionOptions,
     activeRun: ActiveRun
   ): Promise<FunctionRunResult> {
     const terminate = () => {

@@ -55,6 +55,7 @@ import {
 } from "../../../utilities/projects"
 import { createImporter, getImportInfo } from "./import"
 import { ImportInfo } from "./import/sources/base"
+import { executeQueryAsAutomation } from "./executeAsAutomation"
 import { mergePreviewSchema } from "./schema"
 
 const Runner = new Thread(ThreadType.QUERY, {
@@ -563,7 +564,7 @@ export async function executeV2(
 export async function executeV2AsAutomation(
   ctx: UserCtx<ExecuteQueryRequest, ExecuteV2QueryResponse>
 ) {
-  return execute(ctx, { rowsOnly: false, isAutomation: true })
+  return executeQueryAsAutomation(ctx)
 }
 
 const removeDynamicVariables = async (queryId: string) => {
