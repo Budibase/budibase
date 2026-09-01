@@ -13,6 +13,8 @@ export enum FunctionErrorCode {
   FUNCTION_QUERY_LIMIT = "FUNCTION_QUERY_LIMIT",
   FUNCTION_OUTPUT_INVALID = "FUNCTION_OUTPUT_INVALID",
   FUNCTION_EXECUTOR_BUSY = "FUNCTION_EXECUTOR_BUSY",
+  FUNCTION_CONFIGURATION_ERROR = "FUNCTION_CONFIGURATION_ERROR",
+  FUNCTION_INPUT_INVALID = "FUNCTION_INPUT_INVALID",
   FUNCTION_ORCHESTRATOR_INTERRUPTED = "FUNCTION_ORCHESTRATOR_INTERRUPTED",
 }
 
@@ -167,6 +169,12 @@ export type FunctionCapabilityHandler = (
 
 export interface FunctionExecutionContext {
   invokeCapability: FunctionCapabilityHandler
+}
+
+export interface FunctionRunExecutionOptions {
+  request: FunctionRunRequest
+  context: FunctionExecutionContext
+  signal?: AbortSignal
 }
 
 export interface FunctionExecutor {

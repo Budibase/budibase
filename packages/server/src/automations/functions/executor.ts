@@ -6,9 +6,9 @@ import type {
   FunctionRunRequest,
   FunctionRunResult,
 } from "@budibase/types"
+import { validateJSONLimits } from "@budibase/functions-runtime"
 import env from "../../environment"
 import { executeInternalFunctionInIsolate } from "./internal-runtime"
-import { validateJSONLimits } from "./jsonLimits"
 
 const BUSY_MESSAGE = "Function executor is busy"
 const INVALID_INPUT_MESSAGE = "Function input is invalid"

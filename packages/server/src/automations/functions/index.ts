@@ -1,20 +1,15 @@
-import { LocalFunctionRunSupervisor } from "@budibase/functions-runtime"
-import { functionExecutor } from "./executor"
-
 export {
   createFunctionInvocationScope,
   FunctionCapabilityError,
   FunctionCapabilityService,
-} from "./capabilities"
+} from "@budibase/functions-runtime"
 export type {
   FunctionCapabilityExecution,
   FunctionCapabilityLog,
   FunctionInvocationScope,
   FunctionInvocationScopeInput,
-} from "./capabilities"
+} from "@budibase/functions-runtime"
 export { functionExecutor, LocalFunctionExecutor } from "./executor"
-export { LocalFunctionRunSupervisor } from "@budibase/functions-runtime"
-
-export const functionRunSupervisor = new LocalFunctionRunSupervisor({
-  executor: functionExecutor,
-})
+export { functionRunSupervisor, LocalFunctionRunSupervisor } from "./supervisor"
+export { functionRunOrchestrator } from "./orchestrator"
+export type { FunctionRunOrchestrationOptions } from "./orchestrator"
