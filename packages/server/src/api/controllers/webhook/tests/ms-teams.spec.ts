@@ -90,6 +90,8 @@ describe("teams webhook helpers", () => {
     ],
     [ChatCommands.LINK, { command: ChatCommands.LINK, content: "" }],
     [`/${ChatCommands.LINK}`, { command: ChatCommands.LINK, content: "" }],
+    [ChatCommands.UNLINK, { command: ChatCommands.UNLINK, content: "" }],
+    [`/${ChatCommands.UNLINK}`, { command: ChatCommands.UNLINK, content: "" }],
     ["status", { command: ChatCommands.ASK, content: "status" }],
   ] as const)("parses command text %s", (text, expected) => {
     expect(parseTeamsCommand(text)).toEqual(expected)

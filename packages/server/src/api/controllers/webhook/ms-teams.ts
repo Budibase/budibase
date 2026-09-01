@@ -165,34 +165,33 @@ export const parseTeamsCommand = (
   }
   const lower = normalized.toLowerCase()
 
-  if (
-    lower === ChatCommands.NEW ||
-    lower === `/${ChatCommands.NEW}` ||
-    lower.startsWith(`/${ChatCommands.NEW} `)
-  ) {
-    return {
-      command: ChatCommands.NEW,
-      content: normalized.replace(
-        new RegExp(`^/?${ChatCommands.NEW}\\s*`, "i"),
-        ""
-      ),
+  const parseNamedCommand = (
+    command:
+      | typeof ChatCommands.NEW
+      | typeof ChatCommands.LINK
+      | typeof ChatCommands.UNLINK
+  ) => {
+    if (
+      lower === command ||
+      lower === `/${command}` ||
+      lower.startsWith(`/${command} `)
+    ) {
+      return {
+        command,
+        content: normalized.replace(new RegExp(`^/?${command}\\s*`, "i"), ""),
+      }
     }
-  }
-  if (
-    lower === ChatCommands.LINK ||
-    lower === `/${ChatCommands.LINK}` ||
-    lower.startsWith(`/${ChatCommands.LINK} `)
-  ) {
-    return {
-      command: ChatCommands.LINK,
-      content: normalized.replace(
-        new RegExp(`^/?${ChatCommands.LINK}\\s*`, "i"),
-        ""
-      ),
-    }
+    return undefined
   }
 
-  return { command: ChatCommands.ASK, content: normalized }
+  return (
+    parseNamedCommand(ChatCommands.NEW) ||
+    parseNamedCommand(ChatCommands.UNLINK) ||
+    parseNamedCommand(ChatCommands.LINK) || {
+      command: ChatCommands.ASK,
+      content: normalized,
+    }
+  )
 }
 
 export const splitTeamsMessage = (
