@@ -251,6 +251,9 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
     // check if flag has previously been set, don't let it change
     // allow it to be explicitly set to false via API incase this is ever needed
     const persistedQuery = await db.get<Query>(query._id)
+    if (persistedQuery._rev !== query._rev) {
+      ctx.throw(409, "Query revision does not match.")
+    }
     existingQuery = persistedQuery
     if (persistedQuery.datasourceId !== datasource._id) {
       existingDatasource = await sdk.datasources.get(
