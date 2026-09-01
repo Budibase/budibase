@@ -75,12 +75,52 @@ describe("FunctionCapabilityService", () => {
     const invocationScope = scope()
 
     expect(Object.isFrozen(invocationScope.capabilities)).toBe(true)
+    expect(Object.getPrototypeOf(invocationScope.capabilities)).toBeNull()
     expect(Object.isFrozen(invocationScope.capabilities.cap_customers)).toBe(
       true
     )
     expect(
       Object.isFrozen(invocationScope.capabilities.cap_customers.parameterNames)
     ).toBe(true)
+  })
+
+  it("copies and freezes the invocation scope", () => {
+    const mutableLimits = { ...limits }
+    const mutableInvocation = {
+      type: "automation" as const,
+      automationId: "au_automation",
+      automationStepId: "step_1",
+    }
+    const mutableExecutionUser = {
+      userId: "us_user",
+      oauth2: {
+        accessToken: "token",
+      },
+    }
+    const invocationScope = createFunctionInvocationScope({
+      runId: "run-capabilities",
+      workspaceId: "app_workspace",
+      functionId: "fn_function",
+      sourceHash: "source-hash",
+      invocation: mutableInvocation,
+      executionUser: mutableExecutionUser,
+      capabilities: [capability],
+      limits: mutableLimits,
+      deadline: 1_000,
+    })
+
+    mutableLimits.maxQueryCalls = 0
+    mutableInvocation.automationId = "au_changed"
+    mutableExecutionUser.oauth2.accessToken = "changed"
+
+    expect(invocationScope.limits.maxQueryCalls).toBe(limits.maxQueryCalls)
+    expect(invocationScope.invocation.automationId).toBe("au_automation")
+    expect(invocationScope.executionUser?.oauth2?.accessToken).toBe("token")
+    expect(Object.isFrozen(invocationScope)).toBe(true)
+    expect(Object.isFrozen(invocationScope.limits)).toBe(true)
+    expect(Object.isFrozen(invocationScope.invocation)).toBe(true)
+    expect(Object.isFrozen(invocationScope.executionUser)).toBe(true)
+    expect(Object.isFrozen(invocationScope.executionUser?.oauth2)).toBe(true)
   })
 
   it("executes the saved query mapped by the capability", async () => {
@@ -110,6 +150,8 @@ describe("FunctionCapabilityService", () => {
 
   it.each([
     ["a guessed capability", { capabilityId: "cap_guessed" }],
+    ["an object prototype property", { capabilityId: "toString" }],
+    ["the object prototype setter", { capabilityId: "__proto__" }],
     ["a direct saved query ID", { capabilityId: "query_customers" }],
     ["an unknown parameter", { parameters: { secret: "value" } }],
     ["a non-string parameter", { parameters: { status: 1 } }],
@@ -197,11 +239,8 @@ describe("FunctionCapabilityService", () => {
   it("meters failed reached queries and logs only bounded metrics", async () => {
     const log = jest.fn()
     const invocationScope = scope()
-    jest
-      .spyOn(Date, "now")
-      .mockReturnValueOnce(100)
-      .mockReturnValueOnce(101)
-      .mockReturnValueOnce(102)
+    let currentTime = 100
+    jest.spyOn(Date, "now").mockImplementation(() => currentTime++)
     const service = new FunctionCapabilityService(invocationScope, {
       executeQuery: async () => {
         throw new Error("credential-secret")
