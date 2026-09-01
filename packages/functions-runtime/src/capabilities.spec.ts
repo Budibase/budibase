@@ -1,5 +1,4 @@
-import { quotas } from "@budibase/pro"
-import { ActionType, FunctionErrorCode } from "@budibase/types"
+import { DEFAULT_FUNCTION_LIMITS, FunctionErrorCode } from "@budibase/types"
 import type {
   FunctionCapabilityRequest,
   FunctionRunLimits,
@@ -9,16 +8,13 @@ import {
   createFunctionInvocationScope,
   FunctionCapabilityService,
 } from "./capabilities"
-import { FUNCTION_RUN_REQUEST_FIXTURE } from "./testFixtures"
-
-jest.mock("@budibase/pro", () => ({
-  quotas: {
-    addAction: jest.fn(),
-  },
-}))
+import type { FunctionCapabilityServiceDependencies } from "./capabilities"
 
 describe("FunctionCapabilityService", () => {
-  const addAction = jest.mocked(quotas.addAction)
+  const meterQuery = jest.fn(async (execute: () => Promise<object>) =>
+    execute()
+  )
+  const defaultTestLog = jest.fn()
   const capability = {
     capabilityId: "cap_customers",
     queryId: "query_customers",
@@ -27,7 +23,7 @@ describe("FunctionCapabilityService", () => {
     parameterNames: ["status"],
   }
   const limits: FunctionRunLimits = {
-    ...FUNCTION_RUN_REQUEST_FIXTURE.limits,
+    ...DEFAULT_FUNCTION_LIMITS.run,
     maxQueryCalls: 2,
     maxConcurrentQueryCalls: 2,
   }
@@ -60,11 +56,19 @@ describe("FunctionCapabilityService", () => {
     ...extra,
   })
 
+  const createService = (
+    invocationScope: ReturnType<typeof scope>,
+    dependencies: FunctionCapabilityServiceDependencies
+  ) =>
+    new FunctionCapabilityService(invocationScope, {
+      ...dependencies,
+      meter: meterQuery,
+      log: dependencies.log || defaultTestLog,
+    })
+
   beforeEach(() => {
-    addAction.mockReset()
-    addAction.mockImplementation(
-      async (_actionType, addActionFn) => await addActionFn()
-    )
+    meterQuery.mockClear()
+    defaultTestLog.mockClear()
   })
 
   afterEach(() => {
@@ -125,7 +129,7 @@ describe("FunctionCapabilityService", () => {
 
   it("executes the saved query mapped by the capability", async () => {
     const executeQuery = jest.fn(async () => ({ data: [{ id: "row-1" }] }))
-    const service = new FunctionCapabilityService(scope(), { executeQuery })
+    const service = createService(scope(), { executeQuery })
 
     await expect(service.invokeCapability(request())).resolves.toEqual({
       data: [{ id: "row-1" }],
@@ -142,10 +146,7 @@ describe("FunctionCapabilityService", () => {
       capability,
       parameters: { status: "active" },
     })
-    expect(addAction).toHaveBeenCalledWith(
-      ActionType.AUTOMATION_STEP,
-      expect.any(Function)
-    )
+    expect(meterQuery).toHaveBeenCalledTimes(1)
   })
 
   it.each([
@@ -158,7 +159,7 @@ describe("FunctionCapabilityService", () => {
     ["another run", { runId: "run_other" }],
   ])("denies %s before query execution", async (_name, extra) => {
     const executeQuery = jest.fn(async () => ({}))
-    const service = new FunctionCapabilityService(scope(), { executeQuery })
+    const service = createService(scope(), { executeQuery })
 
     await expect(
       service.invokeCapability(request(extra))
@@ -167,12 +168,12 @@ describe("FunctionCapabilityService", () => {
       message: "Function query denied",
     })
     expect(executeQuery).not.toHaveBeenCalled()
-    expect(addAction).not.toHaveBeenCalled()
+    expect(meterQuery).not.toHaveBeenCalled()
   })
 
   it("denies calls after the deadline or invocation closes", async () => {
     const expiredScope = { ...scope(), deadline: Date.now() - 1 }
-    const expiredService = new FunctionCapabilityService(expiredScope, {
+    const expiredService = createService(expiredScope, {
       executeQuery: async () => ({}),
     })
     await expect(
@@ -181,7 +182,7 @@ describe("FunctionCapabilityService", () => {
       code: FunctionErrorCode.FUNCTION_QUERY_DENIED,
     })
 
-    const closedService = new FunctionCapabilityService(scope(), {
+    const closedService = createService(scope(), {
       executeQuery: async () => ({}),
     })
     closedService.close()
@@ -190,14 +191,13 @@ describe("FunctionCapabilityService", () => {
     ).rejects.toMatchObject({
       code: FunctionErrorCode.FUNCTION_QUERY_DENIED,
     })
-    expect(addAction).not.toHaveBeenCalled()
+    expect(meterQuery).not.toHaveBeenCalled()
   })
 
   it("enforces the total query budget", async () => {
-    const service = new FunctionCapabilityService(
-      scope({ ...limits, maxQueryCalls: 1 }),
-      { executeQuery: async () => ({ data: [] }) }
-    )
+    const service = createService(scope({ ...limits, maxQueryCalls: 1 }), {
+      executeQuery: async () => ({ data: [] }),
+    })
 
     await expect(service.invokeCapability(request())).resolves.toEqual({
       data: [],
@@ -205,7 +205,7 @@ describe("FunctionCapabilityService", () => {
     await expect(service.invokeCapability(request())).rejects.toMatchObject({
       code: FunctionErrorCode.FUNCTION_QUERY_LIMIT,
     })
-    expect(addAction).toHaveBeenCalledTimes(1)
+    expect(meterQuery).toHaveBeenCalledTimes(1)
   })
 
   it("atomically enforces concurrent query limits", async () => {
@@ -221,7 +221,7 @@ describe("FunctionCapabilityService", () => {
       markStarted()
       return queryResult
     }
-    const service = new FunctionCapabilityService(
+    const service = createService(
       scope({ ...limits, maxConcurrentQueryCalls: 1 }),
       { executeQuery }
     )
@@ -233,7 +233,7 @@ describe("FunctionCapabilityService", () => {
     })
     releaseQuery({ data: [] })
     await expect(first).resolves.toEqual({ data: [] })
-    expect(addAction).toHaveBeenCalledTimes(1)
+    expect(meterQuery).toHaveBeenCalledTimes(1)
   })
 
   it("meters failed reached queries and logs only bounded metrics", async () => {
@@ -241,7 +241,7 @@ describe("FunctionCapabilityService", () => {
     const invocationScope = scope()
     let currentTime = 100
     jest.spyOn(Date, "now").mockImplementation(() => currentTime++)
-    const service = new FunctionCapabilityService(invocationScope, {
+    const service = createService(invocationScope, {
       executeQuery: async () => {
         throw new Error("credential-secret")
       },
@@ -252,7 +252,7 @@ describe("FunctionCapabilityService", () => {
       code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
       message: "Function query failed",
     })
-    expect(addAction).toHaveBeenCalledTimes(1)
+    expect(meterQuery).toHaveBeenCalledTimes(1)
     expect(log).toHaveBeenCalledWith({
       capabilityId: capability.capabilityId,
       durationMs: 1,
@@ -264,7 +264,7 @@ describe("FunctionCapabilityService", () => {
   })
 
   it("rejects oversized and overly deep responses after metering", async () => {
-    const service = new FunctionCapabilityService(
+    const service = createService(
       scope({
         ...limits,
         maxQueryResponseBytes: 10,
@@ -276,7 +276,7 @@ describe("FunctionCapabilityService", () => {
       code: FunctionErrorCode.FUNCTION_QUERY_LIMIT,
     })
 
-    const deepService = new FunctionCapabilityService(
+    const deepService = createService(
       scope({
         ...limits,
         maxQueryResponseBytes: 1_024,
@@ -289,13 +289,13 @@ describe("FunctionCapabilityService", () => {
         code: FunctionErrorCode.FUNCTION_QUERY_LIMIT,
       }
     )
-    expect(addAction).toHaveBeenCalledTimes(2)
+    expect(meterQuery).toHaveBeenCalledTimes(2)
   })
 
   it("denies an aborted capability call without metering", async () => {
     const abortController = new AbortController()
     abortController.abort()
-    const service = new FunctionCapabilityService(scope(), {
+    const service = createService(scope(), {
       executeQuery: async () => ({}),
     })
 
@@ -304,7 +304,7 @@ describe("FunctionCapabilityService", () => {
     ).rejects.toMatchObject({
       code: FunctionErrorCode.FUNCTION_QUERY_DENIED,
     })
-    expect(addAction).not.toHaveBeenCalled()
+    expect(meterQuery).not.toHaveBeenCalled()
   })
 
   it("normalizes query responses before returning them to the isolate", async () => {
@@ -312,7 +312,7 @@ describe("FunctionCapabilityService", () => {
       data: [{ id: "row-1" }],
       omitted: undefined,
     }
-    const service = new FunctionCapabilityService(scope(), {
+    const service = createService(scope(), {
       executeQuery: async () => response,
     })
 

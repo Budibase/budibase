@@ -1,7 +1,7 @@
 import { FunctionErrorCode } from "@budibase/types"
 import type {
-  FunctionExecutionContext,
   FunctionExecutor,
+  FunctionRunExecutionOptions,
   FunctionSupervisor,
   FunctionRunRequest,
   FunctionRunResult,
@@ -36,12 +36,6 @@ const createShutdownResult = (
   },
 })
 
-export interface SuperviseFunctionRunOptions {
-  request: FunctionRunRequest
-  context: FunctionExecutionContext
-  signal?: AbortSignal
-}
-
 export interface LocalFunctionRunSupervisorOptions {
   executor: FunctionExecutor
 }
@@ -52,7 +46,7 @@ interface ActiveRun {
 }
 
 export class LocalFunctionRunSupervisor
-  implements FunctionSupervisor<SuperviseFunctionRunOptions>
+  implements FunctionSupervisor<FunctionRunExecutionOptions>
 {
   private readonly executor: FunctionExecutor
   private readonly activeRuns = new Map<string, ActiveRun>()
@@ -84,7 +78,7 @@ export class LocalFunctionRunSupervisor
   }
 
   async execute(
-    options: SuperviseFunctionRunOptions
+    options: FunctionRunExecutionOptions
   ): Promise<FunctionRunResult> {
     if (this.shuttingDown) {
       return Promise.resolve(createShutdownResult(options.request))
@@ -114,7 +108,7 @@ export class LocalFunctionRunSupervisor
   }
 
   private async executeRun(
-    { request, context, signal }: SuperviseFunctionRunOptions,
+    { request, context, signal }: FunctionRunExecutionOptions,
     activeRun: ActiveRun
   ): Promise<FunctionRunResult> {
     const terminate = () => {

@@ -1,6 +1,4 @@
-import { context } from "@budibase/backend-core"
-import { quotas } from "@budibase/pro"
-import { ActionType, FunctionErrorCode } from "@budibase/types"
+import { FunctionErrorCode } from "@budibase/types"
 import type {
   FunctionCapabilityHandler,
   FunctionCapabilityRequest,
@@ -9,8 +7,6 @@ import type {
   JSONValue,
   UserBindings,
 } from "@budibase/types"
-import * as queryController from "../../api/controllers/query"
-import { buildCtx } from "../steps/utils"
 import { JSONLimitError, validateJSONLimits } from "./jsonLimits"
 
 const QUERY_DENIED_MESSAGE = "Function query denied"
@@ -65,7 +61,8 @@ export interface FunctionCapabilityLog {
 }
 
 export interface FunctionCapabilityServiceDependencies {
-  executeQuery?: (execution: FunctionCapabilityExecution) => Promise<object>
+  executeQuery: (execution: FunctionCapabilityExecution) => Promise<object>
+  meter?: (execute: () => Promise<object>) => Promise<object>
   log?: (entry: FunctionCapabilityLog) => void
 }
 
@@ -137,42 +134,13 @@ export const createFunctionInvocationScope = ({
   })
 }
 
-// Alpha-only implementation. Remove this in favour of the external runner.
-const internalExecuteQuery = async ({
-  scope,
-  capability,
-  parameters,
-}: FunctionCapabilityExecution) =>
-  context.doInWorkspaceContext(scope.workspaceId, async () => {
-    const ctx = buildCtx(scope.workspaceId, null, {
-      body: { parameters },
-      params: { queryId: capability.queryId },
-      user: scope.executionUser,
-    })
-    await queryController.executeV2AsAutomation(ctx)
-    return ctx.body
-  })
+const passthroughMeter = async (execute: () => Promise<object>) => execute()
 
-const executeMeteredQuery = async (execute: () => Promise<object>) => {
-  const outcome = await quotas.addAction(
-    ActionType.AUTOMATION_STEP,
-    async (): Promise<
-      { success: true; response: object } | { success: false }
-    > => {
-      try {
-        return {
-          success: true,
-          response: await execute(),
-        }
-      } catch {
-        return { success: false }
-      }
-    }
+// This can be replaced with persistent logging or metrics collection when needed.
+const defaultLog = (entry: FunctionCapabilityLog) => {
+  console.log(
+    `Function capability=${entry.capabilityId} result=${entry.result} durationMs=${entry.durationMs} responseBytes=${entry.responseBytes}`
   )
-  if (!outcome.success) {
-    throw failed()
-  }
-  return outcome.response
 }
 
 const normalizeResponse = (
@@ -238,13 +206,6 @@ const validateParameters = (
   return validated
 }
 
-// This can be replaced with persistent logging or metrics collection when needed.
-const defaultLog = (entry: FunctionCapabilityLog) => {
-  console.log(
-    `Function capability=${entry.capabilityId} result=${entry.result} durationMs=${entry.durationMs} responseBytes=${entry.responseBytes}`
-  )
-}
-
 export class FunctionCapabilityService {
   private active = true
   private remainingQueryCalls: number
@@ -252,14 +213,16 @@ export class FunctionCapabilityService {
   private readonly executeQuery: (
     execution: FunctionCapabilityExecution
   ) => Promise<object>
+  private readonly meter: (execute: () => Promise<object>) => Promise<object>
   private readonly log: (entry: FunctionCapabilityLog) => void
 
   constructor(
     private readonly scope: FunctionInvocationScope,
-    dependencies: FunctionCapabilityServiceDependencies = {}
+    dependencies: FunctionCapabilityServiceDependencies
   ) {
     this.remainingQueryCalls = scope.limits.maxQueryCalls
-    this.executeQuery = dependencies.executeQuery || internalExecuteQuery
+    this.executeQuery = dependencies.executeQuery
+    this.meter = dependencies.meter || passthroughMeter
     this.log = dependencies.log || defaultLog
   }
 
@@ -280,13 +243,18 @@ export class FunctionCapabilityService {
     let responseBytes = 0
     let result: FunctionCapabilityLog["result"] = "error"
     try {
-      const response = await executeMeteredQuery(() =>
-        this.executeQuery({
-          scope: this.scope,
-          capability,
-          parameters,
-        })
-      )
+      let response: object
+      try {
+        response = await this.meter(() =>
+          this.executeQuery({
+            scope: this.scope,
+            capability,
+            parameters,
+          })
+        )
+      } catch {
+        throw failed()
+      }
       const normalized = normalizeResponse(response, this.scope.limits)
       responseBytes = normalized.bytes
       result = "success"
