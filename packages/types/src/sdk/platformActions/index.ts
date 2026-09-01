@@ -35,7 +35,6 @@ export interface PlatformActionEvent extends Document, ActionSourceContext {
 export interface PlatformActionSessionIndexDoc
   extends Document,
     ActionSourceContext {
-  tableId: string
   status: PlatformActionContainerStatus
   actionCount: number
   assetType?: string

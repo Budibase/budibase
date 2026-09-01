@@ -54,7 +54,6 @@ describe("platformActions utils", () => {
           sourceType: "agent_session",
           sourceId: "session-1",
         }),
-        tableId: "bb_platform_action_session",
         actionCount: 1,
         updatedAt: "2026-08-31T00:00:00.000Z",
         sourceType: "agent_session",

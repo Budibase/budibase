@@ -5,8 +5,6 @@ import type {
   PlatformActionSessionIndexDoc,
 } from "@budibase/types"
 
-const PLATFORM_ACTION_SESSION_TABLE_ID = "bb_platform_action_session"
-
 function encodeKeyPart(value: string): string {
   return encodeURIComponent(value)
 }
@@ -36,7 +34,6 @@ export function buildPlatformActionSession(
 ): PlatformActionSessionIndexDoc {
   return {
     _id: getPlatformActionSessionId(input),
-    tableId: PLATFORM_ACTION_SESSION_TABLE_ID,
     actionCount: 1,
     updatedAt: input.startedAt,
     ...input,
