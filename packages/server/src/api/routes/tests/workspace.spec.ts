@@ -1014,6 +1014,23 @@ describe("/applications", () => {
       )
     })
 
+    it("should not expose snippets to public calls", async () => {
+      await config.api.workspace.update(workspace.appId, {
+        snippets: [{ name: "PrivateSnippet", code: "return 'secret'" }],
+      })
+      await config.publish()
+
+      const res = await config.withHeaders(
+        { referer: `http://localhost:10000/app${workspace.url}` },
+        () =>
+          config.api.workspace.getAppPackage(config.getProdWorkspaceId(), {
+            publicUser: true,
+          })
+      )
+
+      expect(res.application.snippets).toBeUndefined()
+    })
+
     it("should expose recaptcha availability to public app packages", async () => {
       mocks.licenses.useUnlimited({ features: [Feature.RECAPTCHA] })
 
