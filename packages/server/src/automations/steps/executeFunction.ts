@@ -53,7 +53,7 @@ class FunctionActionError extends Error {
 
 const jsonPrimitiveSchema = z.union([
   z.string(),
-  z.number().finite(),
+  z.number(),
   z.boolean(),
   z.null(),
 ])
@@ -145,12 +145,14 @@ export const executeFunction = async (
     automationId,
     stepId,
     context,
+    signal,
   }: {
     inputs: ExecuteFunctionStepInputs
     appId: string
     automationId?: string
     stepId?: string
     context: AutomationStepInputBase["context"]
+    signal?: AbortSignal
   },
   dependencies: ExecuteFunctionDependencies = defaultDependencies
 ): Promise<ExecuteFunctionStepOutputs> => {
@@ -177,8 +179,6 @@ export const executeFunction = async (
     }
 
     const runId = dependencies.createRunId()
-    const contextSignal =
-      context.signal instanceof AbortSignal ? context.signal : undefined
     const result = await dependencies.orchestrate({
       request: {
         runId,
@@ -200,7 +200,7 @@ export const executeFunction = async (
         capabilities: fn.capabilities,
         limits: DEFAULT_FUNCTION_LIMITS.run,
       },
-      signal: contextSignal,
+      signal,
     })
     if (result.runId !== runId) {
       throw new FunctionActionError(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)

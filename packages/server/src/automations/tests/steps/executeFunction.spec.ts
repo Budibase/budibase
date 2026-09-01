@@ -85,8 +85,8 @@ const run = (
       stepId: options.stepId ?? "step-1",
       context: {
         user: { _id: "user-1" },
-        signal: options.signal,
       },
+      signal: options.signal,
     },
     deps
   )
