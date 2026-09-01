@@ -104,13 +104,15 @@ export const cleanupConversationAttachments = async (
         return
       }
 
-      if (!force && conversation.attachmentExpiresAt) {
-        const expiresAt = new Date(conversation.attachmentExpiresAt).getTime()
+      if (!force && conversation.attachmentContextExpiresAt) {
+        const expiresAt = new Date(
+          conversation.attachmentContextExpiresAt
+        ).getTime()
         if (expiresAt > Date.now()) {
           await scheduleConversationAttachmentCleanup({
             workspaceId: context.getOrThrowWorkspaceId(),
             conversationId,
-            expiresAt: conversation.attachmentExpiresAt,
+            expiresAt: conversation.attachmentContextExpiresAt,
           })
           return
         }
@@ -158,7 +160,7 @@ export const cleanupConversationAttachments = async (
 
       const updated = { ...conversation }
       delete updated.attachments
-      delete updated.attachmentExpiresAt
+      delete updated.attachmentContextExpiresAt
       delete updated.attachmentVectorStoreId
       delete updated.attachmentDeletingAt
       delete updated.pendingAttachmentTurns
@@ -199,12 +201,12 @@ export const rehydrateScheduledJobs = async () => {
         .map(row => row.doc)
         .filter(
           (doc): doc is ChatConversation =>
-            !!doc?.attachments?.length && !!doc.attachmentExpiresAt
+            !!doc?.attachments?.length && !!doc.attachmentContextExpiresAt
         )) {
         await scheduleConversationAttachmentCleanup({
           workspaceId,
           conversationId: conversation._id!,
-          expiresAt: conversation.attachmentExpiresAt!,
+          expiresAt: conversation.attachmentContextExpiresAt!,
         })
       }
     })

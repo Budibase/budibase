@@ -1367,7 +1367,7 @@ describe("agent slack integration provisioning", () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         await context.getWorkspaceDB().put({
           ...conversation,
-          attachmentExpiresAt: previousExpiresAt,
+          attachmentContextExpiresAt: previousExpiresAt,
           attachmentVectorStoreId: "store_1",
           attachments: [
             {
@@ -1391,7 +1391,7 @@ describe("agent slack integration provisioning", () => {
         const persisted = await context
           .getWorkspaceDB()
           .tryGet<ChatConversation>(chat._id)
-        persistedExpiresAt = persisted?.attachmentExpiresAt
+        persistedExpiresAt = persisted?.attachmentContextExpiresAt
         return {
           messages: [
             ...chat.messages,
@@ -1442,7 +1442,7 @@ describe("agent slack integration provisioning", () => {
       expect(new Date(persistedExpiresAt!).getTime()).toBeGreaterThan(
         new Date(previousExpiresAt).getTime()
       )
-      expect(updatedConversation.attachmentExpiresAt).toEqual(
+      expect(updatedConversation.attachmentContextExpiresAt).toEqual(
         persistedExpiresAt
       )
       expect(mockedScheduleAttachmentCleanup).toHaveBeenCalledWith({

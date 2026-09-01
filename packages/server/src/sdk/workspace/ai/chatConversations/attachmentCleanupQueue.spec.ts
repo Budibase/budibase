@@ -63,7 +63,7 @@ describe("conversation attachment cleanup", () => {
       userId: "user_1",
       messages: [],
       attachmentVectorStoreId: "store_1",
-      attachmentExpiresAt: now,
+      attachmentContextExpiresAt: now,
       attachments: [
         {
           id: "attachment_1",

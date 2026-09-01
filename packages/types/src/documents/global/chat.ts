@@ -95,7 +95,7 @@ export interface ChatConversationRequest extends Document {
   sessionId?: string
   channel?: ChatConversationChannel
   attachments?: ChatConversationAttachment[]
-  attachmentExpiresAt?: string
+  attachmentContextExpiresAt?: string
   attachmentVectorStoreId?: string
   attachmentDeletingAt?: string
   pendingAttachmentTurns?: ConversationAttachmentTurn[]

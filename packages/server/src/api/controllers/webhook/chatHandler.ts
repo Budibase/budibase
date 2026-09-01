@@ -587,7 +587,7 @@ export const handleChatMessage = async ({
       if (previousChat?.attachments?.length) {
         await db.put({
           ...previousChat,
-          attachmentExpiresAt: new Date(0).toISOString(),
+          attachmentContextExpiresAt: new Date(0).toISOString(),
           updatedAt: new Date().toISOString(),
         })
         await sdk.ai.chatConversations.attachmentCleanupQueue.cleanupConversationAttachments(
@@ -671,7 +671,7 @@ export const handleChatMessage = async ({
         })
       : []
     conversationAttachments = [...conversationAttachments, ...queuedAttachments]
-    const attachmentExpiresAt =
+    const attachmentContextExpiresAt =
       conversationAttachments.length || incomingAttachments.length
         ? new Date(Date.now() + idleTimeoutMs).toISOString()
         : undefined
@@ -761,7 +761,7 @@ export const handleChatMessage = async ({
               messages: chatToUpdate?.messages || [],
               channel,
               attachments: mergedAttachments,
-              attachmentExpiresAt,
+              attachmentContextExpiresAt,
               pendingAttachmentTurns: [
                 ...currentTurns,
                 ...(currentTurns.some(current => current.id === turn.id)
@@ -797,7 +797,7 @@ export const handleChatMessage = async ({
         {
           workspaceId,
           conversationId: chatId,
-          expiresAt: attachmentExpiresAt!,
+          expiresAt: attachmentContextExpiresAt!,
         }
       )
       await cacheConversationId({
@@ -815,11 +815,15 @@ export const handleChatMessage = async ({
       return
     }
 
-    if (existingChat && conversationAttachments.length && attachmentExpiresAt) {
+    if (
+      existingChat &&
+      conversationAttachments.length &&
+      attachmentContextExpiresAt
+    ) {
       try {
         const renewedChat = {
           ...existingChat,
-          attachmentExpiresAt,
+          attachmentContextExpiresAt,
           updatedAt: new Date().toISOString(),
         }
         const { rev } = await db.put(renewedChat)
@@ -843,7 +847,7 @@ export const handleChatMessage = async ({
       channel,
       ...(conversationAttachments.length && {
         attachments: conversationAttachments,
-        attachmentExpiresAt,
+        attachmentContextExpiresAt,
         attachmentVectorStoreId: existingChat?.attachmentVectorStoreId,
       }),
     }
@@ -883,12 +887,12 @@ export const handleChatMessage = async ({
         existingChat,
       })
     )
-    if (conversationAttachments.length && attachmentExpiresAt) {
+    if (conversationAttachments.length && attachmentContextExpiresAt) {
       await sdk.ai.chatConversations.attachmentCleanupQueue.scheduleConversationAttachmentCleanup(
         {
           workspaceId,
           conversationId: chatId,
-          expiresAt: attachmentExpiresAt,
+          expiresAt: attachmentContextExpiresAt,
         }
       )
     }

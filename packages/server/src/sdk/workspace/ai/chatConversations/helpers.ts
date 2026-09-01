@@ -32,8 +32,8 @@ export const prepareChatConversationForSave = ({
   const agentId = existingChat?.agentId || chat.agentId
   const channel = chat.channel || existingChat?.channel
   const attachments = chat.attachments ?? existingChat?.attachments
-  const attachmentExpiresAt =
-    chat.attachmentExpiresAt ?? existingChat?.attachmentExpiresAt
+  const attachmentContextExpiresAt =
+    chat.attachmentContextExpiresAt ?? existingChat?.attachmentContextExpiresAt
   const attachmentVectorStoreId =
     chat.attachmentVectorStoreId ?? existingChat?.attachmentVectorStoreId
   const attachmentDeletingAt =
@@ -56,7 +56,7 @@ export const prepareChatConversationForSave = ({
     ...(createdAt && { createdAt }),
     ...(channel && { channel }),
     ...(attachments?.length && { attachments }),
-    ...(attachmentExpiresAt && { attachmentExpiresAt }),
+    ...(attachmentContextExpiresAt && { attachmentContextExpiresAt }),
     ...(attachmentVectorStoreId && { attachmentVectorStoreId }),
     ...(attachmentDeletingAt && { attachmentDeletingAt }),
     ...(pendingAttachmentTurns?.length && { pendingAttachmentTurns }),
