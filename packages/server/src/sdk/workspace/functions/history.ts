@@ -200,9 +200,7 @@ export const createRunSummary = async ({
   }
   const database = context.getWorkspaceDB()
   const response = await database.put(summary, { returnDoc: true })
-  clearOldHistory(database).catch(error => {
-    console.log("Failed to schedule Function run history cleanup", error)
-  })
+  void clearOldHistory(database)
   return sanitizeSummary(response.doc)
 }
 
@@ -314,7 +312,7 @@ export const clearOldHistory = async (
       await database.bulkRemove(expired)
     }
   } catch (error) {
-    console.log(
+    console.error(
       `Failed to cleanup Function run history for database "${database.name}"`,
       error
     )

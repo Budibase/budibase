@@ -94,6 +94,11 @@ const summary: FunctionRunSummary = {
 const execute = jest.mocked(functionRunSupervisor.execute)
 const mockedCreateRunSummary = jest.mocked(createRunSummary)
 const mockedFinalizeRunSummary = jest.mocked(finalizeRunSummary)
+const consoleError = jest.spyOn(console, "error").mockImplementation()
+
+afterAll(() => {
+  consoleError.mockRestore()
+})
 
 const run = () =>
   functionRunOrchestrator.execute({
@@ -147,6 +152,23 @@ describe("server FunctionRunOrchestrator", () => {
       status: "error",
       code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
     })
+  })
+
+  it("executes without finalizing when run summary creation fails", async () => {
+    mockedCreateRunSummary.mockRejectedValue(new Error("creation failed"))
+    execute.mockResolvedValue(result)
+
+    await expect(run()).resolves.toEqual(result)
+
+    expect(execute).toHaveBeenCalledTimes(1)
+    expect(mockedFinalizeRunSummary).not.toHaveBeenCalled()
+  })
+
+  it("preserves a successful result when run summary finalization fails", async () => {
+    mockedFinalizeRunSummary.mockRejectedValue(new Error("finalization failed"))
+    execute.mockResolvedValue(result)
+
+    await expect(run()).resolves.toEqual(result)
   })
 })
 

@@ -120,14 +120,23 @@ export const functionRunOrchestrator = {
       limits: DEFAULT_FUNCTION_LIMITS.run,
     }
 
-    await createRunSummary({
-      runId,
-      functionId: definition.id,
-      functionName: definition.name,
-      sourceHash: definition.artifact.sourceHash,
-      automationId: invocation.automationId,
-      stepId: invocation.automationStepId,
-    })
+    let summaryCreated = false
+    try {
+      await createRunSummary({
+        runId,
+        functionId: definition.id,
+        functionName: definition.name,
+        sourceHash: definition.artifact.sourceHash,
+        automationId: invocation.automationId,
+        stepId: invocation.automationStepId,
+      })
+      summaryCreated = true
+    } catch (error) {
+      console.error(
+        `Failed to create Function run summary for run "${runId}"`,
+        error
+      )
+    }
 
     let summaryResult: FinalizeRunSummaryInput = {
       status: "error",
@@ -141,14 +150,17 @@ export const functionRunOrchestrator = {
       })
       summaryResult = result
       return result
-    } catch (error) {
-      summaryResult = {
-        status: "error",
-        code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
-      }
-      throw error
     } finally {
-      await finalizeRunSummary(runId, summaryResult)
+      if (summaryCreated) {
+        try {
+          await finalizeRunSummary(runId, summaryResult)
+        } catch (error) {
+          console.error(
+            `Failed to finalize Function run summary for run "${runId}"`,
+            error
+          )
+        }
+      }
     }
   },
 }
