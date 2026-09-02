@@ -2,36 +2,36 @@ import { ToolExecutionPrincipal } from "@budibase/types"
 import { normalizePersistedOperationTools } from "./crud"
 
 describe("normalizePersistedOperationTools", () => {
-  it("migrates legacy tool names to admin authority", () => {
+  it("migrates legacy tool names to requester authority", () => {
     expect(normalizePersistedOperationTools(["list_tables"])).toEqual([
       {
         toolName: "list_tables",
-        executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        executionPrincipal: ToolExecutionPrincipal.REQUESTER,
       },
     ])
   })
 
-  it("migrates legacy escalation tools to admin authority", () => {
+  it("migrates legacy escalation tools to requester authority", () => {
     expect(normalizePersistedOperationTools(["escalate"])).toEqual([
       {
         toolName: "escalate",
-        executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        executionPrincipal: ToolExecutionPrincipal.REQUESTER,
       },
     ])
   })
 
-  it("populates missing principals with admin authority", () => {
+  it("populates missing principals with requester authority", () => {
     expect(
       normalizePersistedOperationTools([{ toolName: "approve_holiday" }])
     ).toEqual([
       {
         toolName: "approve_holiday",
-        executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        executionPrincipal: ToolExecutionPrincipal.REQUESTER,
       },
     ])
   })
 
-  it("populates null principals with admin authority", () => {
+  it("populates null principals with requester authority", () => {
     expect(
       normalizePersistedOperationTools([
         { toolName: "approve_holiday", executionPrincipal: null },
@@ -39,7 +39,7 @@ describe("normalizePersistedOperationTools", () => {
     ).toEqual([
       {
         toolName: "approve_holiday",
-        executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        executionPrincipal: ToolExecutionPrincipal.REQUESTER,
       },
     ])
   })
