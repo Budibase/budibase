@@ -1,4 +1,9 @@
-import type { PlatformActionSessionIndexJob } from "@budibase/types"
+import { v4 as uuidv4 } from "uuid"
+import type {
+  ActionSourceContext,
+  PlatformActionContainerStatus,
+  PlatformActionSessionIndexJob,
+} from "@budibase/types"
 import * as context from "../../../context"
 import { BudibaseQueue, JobQueue } from "../../../queue"
 import { upsertPlatformActionSession } from "./sessionIndex"
@@ -6,6 +11,13 @@ import { upsertPlatformActionSession } from "./sessionIndex"
 const DEFAULT_INDEX_QUEUE_CONCURRENCY = 2
 const DEFAULT_INDEX_QUEUE_BACKOFF_MS = 5000
 const DEFAULT_INDEX_QUEUE_ATTEMPTS = 6
+
+export interface PlatformActionSessionLifecycleInput
+  extends ActionSourceContext {
+  signal: PlatformActionContainerStatus
+  timestamp?: string
+  lifecycleId?: string
+}
 
 let platformActionSessionIndexQueue:
   | BudibaseQueue<PlatformActionSessionIndexJob>
@@ -75,5 +87,28 @@ export async function enqueuePlatformActionSessionIndex(
   job: PlatformActionSessionIndexJob
 ): Promise<void> {
   initPlatformActionSessionIndexQueue()
-  await getIndexQueue().add(job, { jobId: job.platformActionId })
+  await getIndexQueue().add(job, { jobId: job.indexId })
+}
+
+export async function enqueuePlatformActionSessionLifecycle({
+  sourceType,
+  sourceId,
+  signal,
+  timestamp = new Date().toISOString(),
+  lifecycleId = `platform_action_lifecycle_${uuidv4()}`,
+}: PlatformActionSessionLifecycleInput): Promise<void> {
+  const workspaceId = context.getWorkspaceId()
+  if (!workspaceId) {
+    throw new Error("Cannot index platform action session without a workspace")
+  }
+
+  await enqueuePlatformActionSessionIndex({
+    workspaceId,
+    indexId: lifecycleId,
+    sourceType,
+    sourceId,
+    incrementsActionCount: false,
+    signal,
+    timestamp,
+  })
 }

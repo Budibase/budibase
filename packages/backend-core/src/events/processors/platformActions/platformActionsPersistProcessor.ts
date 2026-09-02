@@ -82,10 +82,9 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
 
     const indexJob: PlatformActionSessionIndexJob = {
       workspaceId,
-      platformActionId: platformActionEventId,
+      indexId: platformActionEventId,
       sourceType: doc.sourceType,
       sourceId: doc.sourceId,
-      eventName: event,
       incrementsActionCount: true,
       signal: event.endsWith(":failed") ? "failed" : "completed",
       timestamp: isoTimestamp,

@@ -1,10 +1,14 @@
 import type { PlatformActionSessionIndexJob } from "@budibase/types"
 import { structures } from "../../../../../tests"
+import * as context from "../../../../context"
 import * as db from "../../../../db"
 
 jest.mock("../sessionIndex")
 import { upsertPlatformActionSession } from "../sessionIndex"
-import { enqueuePlatformActionSessionIndex } from "../indexQueue"
+import {
+  enqueuePlatformActionSessionIndex,
+  enqueuePlatformActionSessionLifecycle,
+} from "../indexQueue"
 
 const mockUpsert = upsertPlatformActionSession as jest.MockedFunction<
   typeof upsertPlatformActionSession
@@ -32,14 +36,13 @@ describe("enqueuePlatformActionSessionIndex", () => {
     mockUpsert.mockResolvedValue(undefined)
   })
 
-  it("does not materialize a job twice when enqueued twice with the same platformActionId", async () => {
+  it("does not materialize a job twice when enqueued twice with the same indexId", async () => {
     const workspaceId = db.generateWorkspaceID(structures.tenant.id())
     const job: PlatformActionSessionIndexJob = {
       workspaceId,
-      platformActionId: `platform_action_${structures.uuid()}`,
+      indexId: `platform_action_${structures.uuid()}`,
       sourceType: "agent_session",
       sourceId: "session-1",
-      eventName: "action:ai_agent:executed",
       incrementsActionCount: true,
       signal: "completed",
       timestamp: new Date().toISOString(),
@@ -53,6 +56,30 @@ describe("enqueuePlatformActionSessionIndex", () => {
     await new Promise(resolve => setTimeout(resolve, SETTLE_MS))
 
     expect(mockUpsert).toHaveBeenCalledTimes(1)
+  })
+
+  it("enqueues lifecycle signals without incrementing actionCount", async () => {
+    const workspaceId = db.generateWorkspaceID(structures.tenant.id())
+
+    await context.doInWorkspaceContext(workspaceId, async () => {
+      await enqueuePlatformActionSessionLifecycle({
+        sourceType: "agent_session",
+        sourceId: "session-1",
+        signal: "active",
+        lifecycleId: "platform_action_lifecycle_test",
+      })
+    })
+
+    await waitFor(() => mockUpsert.mock.calls.length > 0)
+
+    expect(mockUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        incrementsActionCount: false,
+        signal: "active",
+        sourceType: "agent_session",
+        sourceId: "session-1",
+      })
+    )
   })
 })
 

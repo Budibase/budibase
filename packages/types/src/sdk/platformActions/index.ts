@@ -50,8 +50,7 @@ export interface PlatformActionSessionIndexDoc
 
 export interface PlatformActionSessionIndexJob extends ActionSourceContext {
   workspaceId: string
-  platformActionId: string
-  eventName: string
+  indexId: string
   incrementsActionCount: boolean
   signal: PlatformActionContainerStatus
   timestamp: string
