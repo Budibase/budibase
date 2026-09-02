@@ -5,6 +5,7 @@ import {
   Identity,
   PlatformActionEvent,
   PlatformActionSessionIndexJob,
+  PlatformActionSourceType,
   SEPARATOR,
 } from "@budibase/types"
 import * as context from "../../../context"
@@ -52,7 +53,7 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
     )}${SEPARATOR}${uuidv4()}`
     const doc: PlatformActionEvent = {
       _id: platformActionEventId,
-      sourceType: sourceType as PlatformActionEvent["sourceType"],
+      sourceType: sourceType as PlatformActionSourceType,
       sourceId,
       eventName: event,
       timestamp: isoTimestamp,
