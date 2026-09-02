@@ -367,11 +367,18 @@ async function importProcessor(
         logging.logAlert("LiteLLM reconciliation failed after app restore", err)
         status = BackupStatus.FAILED
         const errorMessage = err instanceof Error ? err.message : String(err)
-        await backups.trackBackupError(
-          appId,
-          backupId,
-          `Backup restore LiteLLM reconciliation failed: ${errorMessage}`
-        )
+        try {
+          await backups.trackBackupError(
+            appId,
+            backupId,
+            `Backup restore LiteLLM reconciliation failed: ${errorMessage}`
+          )
+        } catch (trackingErr) {
+          logging.logAlert(
+            "Failed to track LiteLLM reconciliation error after app restore",
+            trackingErr
+          )
+        }
       }
       try {
         await cleanupPromotedWorkspaceFiles(

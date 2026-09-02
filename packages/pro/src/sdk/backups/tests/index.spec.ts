@@ -8,6 +8,7 @@ import {
 } from "@budibase/types"
 import tk from "timekeeper"
 import { Readable } from "stream"
+import backupMetadata from "../backup"
 import { default as backups } from "../"
 import { DBTestConfiguration, mocks } from "../../../../tests"
 
@@ -293,9 +294,26 @@ describe("backups", () => {
       const backup = await createBackup()
       await waitForQueue()
       const replicateSpy = jest.spyOn(db.Replication.prototype, "replicate")
-      reconcileLiteLLMModelsFn.mockRejectedValue(
-        new Error("LiteLLM reconciliation failed")
+      const trackBackupErrorSpy = jest
+        .spyOn(backupMetadata, "trackBackupError")
+        .mockRejectedValue(new Error("Tracking failed"))
+      let streamUploadsBeforeReconciliation = 0
+      mockedObjectStore.listAllObjects.mockImplementation((_bucket, prefix) =>
+        (async function* () {
+          if (prefix?.includes("_temp_")) {
+            yield { Key: `${prefix}attachments/restore.txt` }
+          }
+          if (prefix === `${config.workspaceId}/`) {
+            yield { Key: `${prefix}attachments/restore.txt` }
+          }
+        })()
       )
+      mockedObjectStore.objectExists.mockResolvedValue(true)
+      reconcileLiteLLMModelsFn.mockImplementation(async () => {
+        streamUploadsBeforeReconciliation =
+          mockedObjectStore.streamUpload.mock.calls.length
+        throw new Error("LiteLLM reconciliation failed")
+      })
 
       try {
         const response = await backups.triggerWorkspaceRestore(
@@ -312,8 +330,13 @@ describe("backups", () => {
         expect(processedRestore.status).toEqual(BackupStatus.FAILED)
         expect(replicateSpy).toHaveBeenCalledTimes(1)
         expect(reconcileLiteLLMModelsFn).toHaveBeenCalledTimes(1)
+        expect(trackBackupErrorSpy).toHaveBeenCalledTimes(1)
+        expect(mockedObjectStore.streamUpload).toHaveBeenCalledTimes(
+          streamUploadsBeforeReconciliation
+        )
       } finally {
         replicateSpy.mockRestore()
+        trackBackupErrorSpy.mockRestore()
       }
     })
   })
