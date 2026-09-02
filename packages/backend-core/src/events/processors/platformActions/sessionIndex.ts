@@ -27,6 +27,14 @@ function nextStatus(
   return "completed"
 }
 
+function earliest(a: string, b: string): string {
+  return new Date(a) <= new Date(b) ? a : b
+}
+
+function latest(a: string, b: string): string {
+  return new Date(a) >= new Date(b) ? a : b
+}
+
 export async function upsertPlatformActionSession(
   input: UpsertPlatformActionSessionInput
 ): Promise<void> {
@@ -47,15 +55,28 @@ export async function upsertPlatformActionSession(
           await db.tryGet<PlatformActionSessionIndexDoc>(sessionId)
         const status = nextStatus(existing?.status, input.outcome)
 
+        // Prevent out-of-order event timestamps
+        const startedAt = existing
+          ? earliest(existing.startedAt, input.timestamp)
+          : input.timestamp
+        const completedAt = existing
+          ? latest(existing.completedAt ?? existing.startedAt, input.timestamp)
+          : input.timestamp
+
         const doc: PlatformActionSessionIndexDoc = existing
-          ? { ...existing, status, actionCount: existing.actionCount + 1 }
+          ? {
+              ...existing,
+              status,
+              actionCount: existing.actionCount + 1,
+              startedAt,
+            }
           : buildPlatformActionSession({
               sourceType: input.sourceType,
               sourceId: input.sourceId,
               status,
-              startedAt: input.timestamp,
+              startedAt,
             })
-        doc.completedAt = input.timestamp
+        doc.completedAt = completedAt
 
         try {
           await db.put(doc)

@@ -84,6 +84,33 @@ describe("upsertPlatformActionSession", () => {
     })
   })
 
+  it("keeps startedAt/completedAt chronologically correct when events are processed out of order", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+      const input = { sourceType: "agent_session" as const, sourceId }
+
+      // Simulates a later event's job winning the lock/processing race and
+      // being indexed before an earlier event's job (e.g. after a lock
+      // contention retry).
+      await upsertPlatformActionSession({
+        ...input,
+        outcome: "success",
+        timestamp: "2026-08-31T00:05:00.000Z",
+      })
+      await upsertPlatformActionSession({
+        ...input,
+        outcome: "success",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.actionCount).toBe(2)
+      expect(doc.startedAt).toBe("2026-08-31T00:00:00.000Z")
+      expect(doc.completedAt).toBe("2026-08-31T00:05:00.000Z")
+    })
+  })
+
   it("keeps status failed once set, even after a later success event", async () => {
     await run(async () => {
       const sourceId = generator.guid()
