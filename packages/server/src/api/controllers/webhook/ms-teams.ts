@@ -153,6 +153,24 @@ export const stripTeamsMentions = (
   return withoutMentionEntities.replace(/\s+/g, " ").trim()
 }
 
+const TEAMS_SLASH_COMMANDS = [
+  ChatCommands.UNLINK,
+  ChatCommands.NEW,
+  ChatCommands.LINK,
+] as const
+
+const parseTeamsSlashCommand = (text: string) => {
+  for (const command of TEAMS_SLASH_COMMANDS) {
+    if (!new RegExp(`^/?${command}(?:\\s|$)`, "i").test(text)) {
+      continue
+    }
+    return {
+      command,
+      content: text.replace(new RegExp(`^/?${command}\\s*`, "i"), ""),
+    }
+  }
+}
+
 export const parseTeamsCommand = (
   text?: string,
   entities?: MSTeamsActivity["entities"]
@@ -164,31 +182,9 @@ export const parseTeamsCommand = (
   if (!normalized) {
     return { command: ChatCommands.UNSUPPORTED, content: "" }
   }
-  const lower = normalized.toLowerCase()
-
-  const parseNamedCommand = (
-    command:
-      | typeof ChatCommands.NEW
-      | typeof ChatCommands.LINK
-      | typeof ChatCommands.UNLINK
-  ) => {
-    if (
-      lower === command ||
-      lower === `/${command}` ||
-      lower.startsWith(`/${command} `)
-    ) {
-      return {
-        command,
-        content: normalized.replace(new RegExp(`^/?${command}\\s*`, "i"), ""),
-      }
-    }
-    return undefined
-  }
 
   return (
-    parseNamedCommand(ChatCommands.NEW) ||
-    parseNamedCommand(ChatCommands.UNLINK) ||
-    parseNamedCommand(ChatCommands.LINK) || {
+    parseTeamsSlashCommand(normalized) || {
       command: ChatCommands.ASK,
       content: normalized,
     }
