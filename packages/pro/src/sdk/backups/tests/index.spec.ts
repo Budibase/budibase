@@ -174,7 +174,8 @@ describe("backups", () => {
 
   const exportWorkspaceFn = jest.fn(),
     importWorkspaceFn = jest.fn(),
-    statsFn = jest.fn()
+    statsFn = jest.fn(),
+    reconcileLiteLLMModelsFn = jest.fn()
 
   beforeAll(async () => {
     mocks.licenses.useBackups()
@@ -183,6 +184,7 @@ describe("backups", () => {
         exportWorkspaceFn,
         importWorkspaceFn,
         statsFn,
+        reconcileLiteLLMModels: reconcileLiteLLMModelsFn,
       },
     })
   })
@@ -194,6 +196,7 @@ describe("backups", () => {
     exportWorkspaceFn.mockReset().mockReturnValue("/path")
     importWorkspaceFn.mockReset().mockImplementation()
     statsFn.mockReset().mockImplementation()
+    reconcileLiteLLMModelsFn.mockReset().mockImplementation()
     mockedObjectStore.listAllObjects
       .mockReset()
       .mockImplementation(() => (async function* () {})())
@@ -263,8 +266,10 @@ describe("backups", () => {
         expect.objectContaining({
           objectStoreAppId: tempAppId,
           preserveLiteLLMConfig: true,
+          reconcileLiteLLMModels: false,
         })
       )
+      expect(reconcileLiteLLMModelsFn).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -280,6 +285,36 @@ describe("backups", () => {
       expect(restoreWorkspaceId).toEqual(
         db.getDevWorkspaceID(config.workspaceId)
       )
+    })
+  })
+
+  it("should mark restore as failed when LiteLLM reconciliation fails", async () => {
+    await config.doInTenant(async () => {
+      const backup = await createBackup()
+      await waitForQueue()
+      const replicateSpy = jest.spyOn(db.Replication.prototype, "replicate")
+      reconcileLiteLLMModelsFn.mockRejectedValue(
+        new Error("LiteLLM reconciliation failed")
+      )
+
+      try {
+        const response = await backups.triggerWorkspaceRestore(
+          config.workspaceId,
+          backup._id,
+          "backup restore",
+          USER_ID
+        )
+        await waitForQueue()
+
+        const processedRestore = await backups.getWorkspaceBackup(
+          response!.restoreId
+        )
+        expect(processedRestore.status).toEqual(BackupStatus.FAILED)
+        expect(replicateSpy).toHaveBeenCalledTimes(1)
+        expect(reconcileLiteLLMModelsFn).toHaveBeenCalledTimes(1)
+      } finally {
+        replicateSpy.mockRestore()
+      }
     })
   })
 

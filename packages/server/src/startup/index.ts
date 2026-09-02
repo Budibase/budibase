@@ -98,6 +98,7 @@ async function initPro() {
         exportWorkspaceFn: sdk.backups.exportWorkspace,
         importWorkspaceFn: sdk.backups.importApp,
         statsFn: sdk.backups.calculateBackupStats,
+        reconcileLiteLLMModels: sdk.ai.configs.reconcileLiteLLMModels,
       },
     },
   })

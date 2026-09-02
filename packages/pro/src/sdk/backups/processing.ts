@@ -345,6 +345,7 @@ async function importProcessor(
         {
           objectStoreAppId: tempWorkspaceId,
           preserveLiteLLMConfig: true,
+          reconcileLiteLLMModels: false,
         }
       )
       // Copy files before database cutover. We only add/overwrite desired keys
@@ -360,6 +361,21 @@ async function importProcessor(
         source: tempWorkspaceId,
         target: devWorkspaceId,
       }).replicate()
+      try {
+        await opts.reconcileLiteLLMModels()
+      } catch (err) {
+        logging.logAlert(
+          "LiteLLM reconciliation failed after app restore",
+          err
+        )
+        status = BackupStatus.FAILED
+        const errorMessage = err instanceof Error ? err.message : String(err)
+        await backups.trackBackupError(
+          appId,
+          backupId,
+          `Backup restore LiteLLM reconciliation failed: ${errorMessage}`
+        )
+      }
       try {
         await cleanupPromotedWorkspaceFiles(
           promotedWorkspaceFiles.sourceFileKeys,
