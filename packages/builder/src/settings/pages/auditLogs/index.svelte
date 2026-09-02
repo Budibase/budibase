@@ -310,7 +310,7 @@
     return {
       ...metadata,
       userId: user._id,
-      ...(app ? { appId: app._id } : {}),
+      ...(app ? { appId: "appId" in app ? app.appId : app._id } : {}),
     }
   }
 
