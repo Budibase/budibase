@@ -178,6 +178,51 @@ describe("backups", () => {
     statsFn = jest.fn(),
     reconcileLiteLLMModelsFn = jest.fn()
 
+  const expectRestoreToFailWithoutRollingBack = async (
+    backup: WorkspaceBackup
+  ) => {
+    let streamUploadsBeforeReconciliation = 0
+    mockedObjectStore.listAllObjects.mockImplementation((_bucket, prefix) =>
+      (async function* () {
+        if (prefix?.includes("_temp_")) {
+          yield { Key: `${prefix}attachments/restore.txt` }
+        }
+        if (prefix === `${config.workspaceId}/`) {
+          yield { Key: `${prefix}attachments/restore.txt` }
+        }
+      })()
+    )
+    mockedObjectStore.objectExists.mockResolvedValue(true)
+    reconcileLiteLLMModelsFn.mockImplementation(async () => {
+      streamUploadsBeforeReconciliation =
+        mockedObjectStore.streamUpload.mock.calls.length
+      throw new Error("LiteLLM reconciliation failed")
+    })
+
+    const replicateSpy = jest.spyOn(db.Replication.prototype, "replicate")
+    try {
+      const response = await backups.triggerWorkspaceRestore(
+        config.workspaceId,
+        backup._id,
+        "backup restore",
+        USER_ID
+      )
+      await waitForQueue()
+
+      const processedRestore = await backups.getWorkspaceBackup(
+        response!.restoreId
+      )
+      expect(processedRestore.status).toEqual(BackupStatus.FAILED)
+      expect(replicateSpy).toHaveBeenCalledTimes(1)
+      expect(reconcileLiteLLMModelsFn).toHaveBeenCalledTimes(1)
+      expect(mockedObjectStore.streamUpload).toHaveBeenCalledTimes(
+        streamUploadsBeforeReconciliation
+      )
+    } finally {
+      replicateSpy.mockRestore()
+    }
+  }
+
   beforeAll(async () => {
     mocks.licenses.useBackups()
     await backups.init({
@@ -293,49 +338,14 @@ describe("backups", () => {
     await config.doInTenant(async () => {
       const backup = await createBackup()
       await waitForQueue()
-      const replicateSpy = jest.spyOn(db.Replication.prototype, "replicate")
       const trackBackupErrorSpy = jest
         .spyOn(backupMetadata, "trackBackupError")
         .mockRejectedValue(new Error("Tracking failed"))
-      let streamUploadsBeforeReconciliation = 0
-      mockedObjectStore.listAllObjects.mockImplementation((_bucket, prefix) =>
-        (async function* () {
-          if (prefix?.includes("_temp_")) {
-            yield { Key: `${prefix}attachments/restore.txt` }
-          }
-          if (prefix === `${config.workspaceId}/`) {
-            yield { Key: `${prefix}attachments/restore.txt` }
-          }
-        })()
-      )
-      mockedObjectStore.objectExists.mockResolvedValue(true)
-      reconcileLiteLLMModelsFn.mockImplementation(async () => {
-        streamUploadsBeforeReconciliation =
-          mockedObjectStore.streamUpload.mock.calls.length
-        throw new Error("LiteLLM reconciliation failed")
-      })
 
       try {
-        const response = await backups.triggerWorkspaceRestore(
-          config.workspaceId,
-          backup._id,
-          "backup restore",
-          USER_ID
-        )
-        await waitForQueue()
-
-        const processedRestore = await backups.getWorkspaceBackup(
-          response!.restoreId
-        )
-        expect(processedRestore.status).toEqual(BackupStatus.FAILED)
-        expect(replicateSpy).toHaveBeenCalledTimes(1)
-        expect(reconcileLiteLLMModelsFn).toHaveBeenCalledTimes(1)
+        await expectRestoreToFailWithoutRollingBack(backup)
         expect(trackBackupErrorSpy).toHaveBeenCalledTimes(1)
-        expect(mockedObjectStore.streamUpload).toHaveBeenCalledTimes(
-          streamUploadsBeforeReconciliation
-        )
       } finally {
-        replicateSpy.mockRestore()
         trackBackupErrorSpy.mockRestore()
       }
     })
@@ -345,46 +355,7 @@ describe("backups", () => {
     await config.doInTenant(async () => {
       const backup = await createBackup()
       await waitForQueue()
-      const replicateSpy = jest.spyOn(db.Replication.prototype, "replicate")
-      let streamUploadsBeforeReconciliation = 0
-      mockedObjectStore.listAllObjects.mockImplementation((_bucket, prefix) =>
-        (async function* () {
-          if (prefix?.includes("_temp_")) {
-            yield { Key: `${prefix}attachments/restore.txt` }
-          }
-          if (prefix === `${config.workspaceId}/`) {
-            yield { Key: `${prefix}attachments/restore.txt` }
-          }
-        })()
-      )
-      mockedObjectStore.objectExists.mockResolvedValue(true)
-      reconcileLiteLLMModelsFn.mockImplementation(async () => {
-        streamUploadsBeforeReconciliation =
-          mockedObjectStore.streamUpload.mock.calls.length
-        throw new Error("LiteLLM reconciliation failed")
-      })
-
-      try {
-        const response = await backups.triggerWorkspaceRestore(
-          config.workspaceId,
-          backup._id,
-          "backup restore",
-          USER_ID
-        )
-        await waitForQueue()
-
-        const processedRestore = await backups.getWorkspaceBackup(
-          response!.restoreId
-        )
-        expect(processedRestore.status).toEqual(BackupStatus.FAILED)
-        expect(replicateSpy).toHaveBeenCalledTimes(1)
-        expect(reconcileLiteLLMModelsFn).toHaveBeenCalledTimes(1)
-        expect(mockedObjectStore.streamUpload).toHaveBeenCalledTimes(
-          streamUploadsBeforeReconciliation
-        )
-      } finally {
-        replicateSpy.mockRestore()
-      }
+      await expectRestoreToFailWithoutRollingBack(backup)
     })
   })
 
