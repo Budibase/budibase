@@ -40,7 +40,8 @@ describe("enqueuePlatformActionSessionIndex", () => {
       sourceType: "agent_session",
       sourceId: "session-1",
       eventName: "action:ai_agent:executed",
-      outcome: "success",
+      incrementsActionCount: true,
+      signal: "completed",
       timestamp: new Date().toISOString(),
     }
 

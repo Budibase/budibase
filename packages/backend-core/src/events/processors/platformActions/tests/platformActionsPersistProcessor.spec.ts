@@ -107,11 +107,11 @@ describe("PlatformActionPersistProcessor", () => {
   })
 
   it.each([
-    [Event.ACTION_AI_AGENT_EXECUTED, "success"],
-    [Event.ACTION_AI_AGENT_FAILED, "failure"],
+    [Event.ACTION_AI_AGENT_EXECUTED, "completed"],
+    [Event.ACTION_AI_AGENT_FAILED, "failed"],
   ])(
-    "enqueues a session index job with outcome %s for %s",
-    async (event, outcome) => {
+    "enqueues a session index job with signal %s for %s",
+    async (event, signal) => {
       await run(async () => {
         await processor.processEvent(
           event,
@@ -122,7 +122,8 @@ describe("PlatformActionPersistProcessor", () => {
 
         expect(mockEnqueue).toHaveBeenCalledWith(
           expect.objectContaining({
-            outcome,
+            incrementsActionCount: true,
+            signal,
             sourceType: "agent_session",
             sourceId: "session-1",
           })

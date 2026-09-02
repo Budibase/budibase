@@ -3,7 +3,6 @@ import {
   LockType,
   type ActionSourceContext,
   type PlatformActionContainerStatus,
-  type PlatformActionOutcome,
   type PlatformActionSessionIndexDoc,
 } from "@budibase/types"
 import * as context from "../../../context"
@@ -13,19 +12,32 @@ import { buildPlatformActionSession, getPlatformActionSessionId } from "./utils"
 const LOCK_TTL_MS = 10000
 const MAX_PUT_CONFLICT_ATTEMPTS = 3
 
+const TERMINAL_STATUSES: ReadonlySet<PlatformActionContainerStatus> = new Set([
+  "completed",
+  "failed",
+])
+
+function isTerminalSignal(signal: PlatformActionContainerStatus): boolean {
+  return TERMINAL_STATUSES.has(signal)
+}
+
 export interface UpsertPlatformActionSessionInput extends ActionSourceContext {
-  outcome: PlatformActionOutcome
+  incrementsActionCount: boolean
+  signal: PlatformActionContainerStatus
   timestamp: string
 }
 
 function nextStatus(
   existingStatus: PlatformActionContainerStatus | undefined,
-  outcome: PlatformActionOutcome
+  signal: PlatformActionContainerStatus
 ): PlatformActionContainerStatus {
-  if (existingStatus === "failed" || outcome === "failure") {
+  if (existingStatus === "failed" || signal === "failed") {
     return "failed"
   }
-  return "completed"
+  if (existingStatus && TERMINAL_STATUSES.has(existingStatus)) {
+    return existingStatus
+  }
+  return signal
 }
 
 function earliest(a: string, b: string): string {
@@ -40,6 +52,7 @@ export async function upsertPlatformActionSession(
   input: UpsertPlatformActionSessionInput
 ): Promise<void> {
   const sessionId = getPlatformActionSessionId(input)
+  const isTerminal = isTerminalSignal(input.signal)
 
   const lockResponse = await locks.doWithLock(
     {
@@ -54,31 +67,36 @@ export async function upsertPlatformActionSession(
       for (let attempt = 0; attempt < MAX_PUT_CONFLICT_ATTEMPTS; attempt++) {
         const existing =
           await db.tryGet<PlatformActionSessionIndexDoc>(sessionId)
-        const status = nextStatus(existing?.status, input.outcome)
-
-        // Prevent out-of-order event timestamps
+        const status = nextStatus(existing?.status, input.signal)
         const startedAt = existing
           ? earliest(existing.startedAt, input.timestamp)
           : input.timestamp
-        const completedAt = existing
-          ? latest(existing.completedAt ?? existing.startedAt, input.timestamp)
-          : input.timestamp
 
-        // updatedAt isn't known yet - db.put() below stamps it for real.
         const doc: Omit<PlatformActionSessionIndexDoc, "updatedAt"> = existing
           ? {
               ...existing,
               status,
-              actionCount: existing.actionCount + 1,
               startedAt,
+              ...(input.incrementsActionCount
+                ? { actionCount: existing.actionCount + 1 }
+                : {}),
             }
           : buildPlatformActionSession({
               sourceType: input.sourceType,
               sourceId: input.sourceId,
               status,
               startedAt,
+              actionCount: input.incrementsActionCount ? 1 : 0,
             })
-        doc.completedAt = completedAt
+
+        if (isTerminal) {
+          doc.completedAt = existing
+            ? latest(
+                existing.completedAt ?? existing.startedAt,
+                input.timestamp
+              )
+            : input.timestamp
+        }
 
         try {
           await db.put(doc)
@@ -95,9 +113,6 @@ export async function upsertPlatformActionSession(
   )
 
   if (!lockResponse.executed) {
-    // Another job already holds the lock for this session - let Bull's
-    // retry/backoff pick this update back up instead of dropping it, since
-    // every event must be reflected in actionCount.
     throw new Error(
       `Could not acquire lock to index platform action session ${sessionId}`
     )

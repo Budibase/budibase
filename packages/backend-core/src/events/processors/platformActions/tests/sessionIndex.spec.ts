@@ -28,7 +28,8 @@ describe("upsertPlatformActionSession", () => {
       await upsertPlatformActionSession({
         sourceType: "agent_session",
         sourceId,
-        outcome: "success",
+        incrementsActionCount: true,
+        signal: "completed",
         timestamp: "2026-08-31T00:00:00.000Z",
       })
 
@@ -49,7 +50,8 @@ describe("upsertPlatformActionSession", () => {
       await upsertPlatformActionSession({
         sourceType: "agent_session",
         sourceId,
-        outcome: "failure",
+        incrementsActionCount: true,
+        signal: "failed",
         timestamp: "2026-08-31T00:00:00.000Z",
       })
 
@@ -66,12 +68,14 @@ describe("upsertPlatformActionSession", () => {
 
       await upsertPlatformActionSession({
         ...input,
-        outcome: "success",
+        incrementsActionCount: true,
+        signal: "completed",
         timestamp: "2026-08-31T00:00:00.000Z",
       })
       await upsertPlatformActionSession({
         ...input,
-        outcome: "success",
+        incrementsActionCount: true,
+        signal: "completed",
         timestamp: "2026-08-31T00:05:00.000Z",
       })
 
@@ -94,12 +98,14 @@ describe("upsertPlatformActionSession", () => {
       // contention retry).
       await upsertPlatformActionSession({
         ...input,
-        outcome: "success",
+        incrementsActionCount: true,
+        signal: "completed",
         timestamp: "2026-08-31T00:05:00.000Z",
       })
       await upsertPlatformActionSession({
         ...input,
-        outcome: "success",
+        incrementsActionCount: true,
+        signal: "completed",
         timestamp: "2026-08-31T00:00:00.000Z",
       })
 
@@ -118,12 +124,14 @@ describe("upsertPlatformActionSession", () => {
 
       await upsertPlatformActionSession({
         ...input,
-        outcome: "failure",
+        incrementsActionCount: true,
+        signal: "failed",
         timestamp: "2026-08-31T00:00:00.000Z",
       })
       await upsertPlatformActionSession({
         ...input,
-        outcome: "success",
+        incrementsActionCount: true,
+        signal: "completed",
         timestamp: "2026-08-31T00:05:00.000Z",
       })
 
@@ -131,6 +139,38 @@ describe("upsertPlatformActionSession", () => {
 
       expect(doc.status).toBe("failed")
       expect(doc.actionCount).toBe(2)
+    })
+  })
+
+  it("updates lifecycle state without incrementing actionCount", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+      const input = { sourceType: "agent_session" as const, sourceId }
+
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: false,
+        signal: "active",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: false,
+        signal: "waiting",
+        timestamp: "2026-08-31T00:01:00.000Z",
+      })
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: false,
+        signal: "completed",
+        timestamp: "2026-08-31T00:02:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.status).toBe("completed")
+      expect(doc.actionCount).toBe(0)
+      expect(doc.completedAt).toBe("2026-08-31T00:02:00.000Z")
     })
   })
 
@@ -157,7 +197,8 @@ describe("upsertPlatformActionSession", () => {
           try {
             await upsertPlatformActionSession({
               ...input,
-              outcome: "success",
+              incrementsActionCount: true,
+              signal: "completed",
               timestamp,
             })
             return
@@ -207,7 +248,8 @@ describe("upsertPlatformActionSession", () => {
           () =>
             upsertPlatformActionSession({
               ...input,
-              outcome: "success",
+              incrementsActionCount: true,
+              signal: "completed",
               timestamp: "2026-08-31T00:00:00.000Z",
             })
         )

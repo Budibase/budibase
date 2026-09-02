@@ -48,14 +48,11 @@ export interface PlatformActionSessionIndexDoc
   completedAt?: string
 }
 
-export const PLATFORM_ACTION_OUTCOMES = ["success", "failure"] as const
-
-export type PlatformActionOutcome = (typeof PLATFORM_ACTION_OUTCOMES)[number]
-
 export interface PlatformActionSessionIndexJob extends ActionSourceContext {
   workspaceId: string
   platformActionId: string
   eventName: string
-  outcome: PlatformActionOutcome
+  incrementsActionCount: boolean
+  signal: PlatformActionContainerStatus
   timestamp: string
 }

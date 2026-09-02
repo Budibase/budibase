@@ -86,7 +86,8 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
       sourceType: doc.sourceType,
       sourceId: doc.sourceId,
       eventName: event,
-      outcome: event.endsWith(":failed") ? "failure" : "success",
+      incrementsActionCount: true,
+      signal: event.endsWith(":failed") ? "failed" : "completed",
       timestamp: isoTimestamp,
     }
 
