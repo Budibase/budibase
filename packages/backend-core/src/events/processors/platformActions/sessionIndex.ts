@@ -28,11 +28,11 @@ function nextStatus(
 }
 
 function earliest(a: string, b: string): string {
-  return new Date(a) <= new Date(b) ? a : b
+  return new Date(a) < new Date(b) ? a : b
 }
 
 function latest(a: string, b: string): string {
-  return new Date(a) >= new Date(b) ? a : b
+  return new Date(a) > new Date(b) ? a : b
 }
 
 export async function upsertPlatformActionSession(
