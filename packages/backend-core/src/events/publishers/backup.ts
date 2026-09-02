@@ -16,7 +16,7 @@ async function workspaceBackupRestored(backup: WorkspaceBackup) {
     name: backup.name as string,
   }
 
-  await publishEvent(Event.APP_BACKUP_RESTORED, properties)
+  await publishEvent(Event.WORKSPACE_BACKUP_RESTORED, properties)
 }
 
 async function workspaceBackupTriggered(
@@ -33,7 +33,7 @@ async function workspaceBackupTriggered(
     trigger,
     name,
   }
-  await publishEvent(Event.APP_BACKUP_TRIGGERED, properties)
+  await publishEvent(Event.WORKSPACE_BACKUP_TRIGGERED, properties)
 }
 
 export default {

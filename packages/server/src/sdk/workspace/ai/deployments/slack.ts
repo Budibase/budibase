@@ -107,6 +107,13 @@ export const buildSlackManifest = ({
           usage_hint: `/${ChatCommands.LINK}`,
           should_escape: false,
         },
+        {
+          command: `/${ChatCommands.UNLINK}`,
+          url: messagingEndpointUrl,
+          description: "Unlink your Slack user from your Budibase account.",
+          usage_hint: `/${ChatCommands.UNLINK}`,
+          should_escape: false,
+        },
       ],
     },
     oauth_config: {

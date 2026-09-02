@@ -219,6 +219,27 @@ export const getChatIdentityLink = async ({
   return await db.tryGet<ChatIdentityLink>(linkId)
 }
 
+export const deleteChatIdentityLink = async ({
+  provider,
+  externalUserId,
+  teamId,
+  providerTenantId,
+}: ChatIdentityLinkLookupInput): Promise<boolean> => {
+  const existing = await getChatIdentityLink({
+    provider,
+    externalUserId,
+    teamId,
+    providerTenantId,
+  })
+  if (!existing?._id || !existing._rev) {
+    return false
+  }
+
+  const db = tenancy.getGlobalDB()
+  await db.remove(existing._id, existing._rev)
+  return true
+}
+
 export const upsertChatIdentityLink = async ({
   provider,
   externalUserId,
