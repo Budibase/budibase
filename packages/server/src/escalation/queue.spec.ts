@@ -284,6 +284,11 @@ describe("resumeOperation", () => {
         ])
       )
       expect(request.status).toEqual("failed")
+      expect(enqueueLifecycleMock).toHaveBeenCalledWith({
+        sourceType: "agent_session",
+        sourceId: "session_1",
+        signal: "failed",
+      })
     })
   })
 

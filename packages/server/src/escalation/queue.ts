@@ -20,6 +20,7 @@ import {
   EscalationSource,
   EscalateToolResultStatus,
   PendingToolCall,
+  PlatformActionContainerStatus,
   SEPARATOR,
   SuspendedOperationContext,
   type AgentExecutionContext,
@@ -408,6 +409,28 @@ export async function resumeOperation({
       })
   }
 
+  const updatePlatformActionSessionStatus = async (
+    signal: PlatformActionContainerStatus
+  ) => {
+    if (!doc.requestId) {
+      return
+    }
+    await events.platformActions
+      .enqueuePlatformActionSessionLifecycle({
+        sourceType: "agent_session",
+        sourceId: ctx.sessionId,
+        signal,
+      })
+      .catch(error => {
+        console.error("Failed to update agent session status on escalation", {
+          escalationId,
+          agentId: ctx.agentId,
+          signal,
+          error,
+        })
+      })
+  }
+
   if (outcome !== "approved") {
     const text =
       outcome === "expired"
@@ -429,6 +452,7 @@ export async function resumeOperation({
             status: "failed",
             error: "Escalation expired without a response",
           })
+          await updatePlatformActionSessionStatus("failed")
         }
       } else {
         // A rejection is a human decision, not automatically a failure, let
@@ -444,6 +468,7 @@ export async function resumeOperation({
         })
         if (judged) {
           await markEscalationRequestResolved(judged)
+          await updatePlatformActionSessionStatus(judged.status)
         }
       }
     }
@@ -500,6 +525,7 @@ export async function resumeOperation({
       await persistResumeResult(escalationId, textMessage(text))
       await deliverOperationResult(ctx, text)
       await markEscalationRequestResolved({ status: "failed", error: text })
+      await updatePlatformActionSessionStatus("failed")
       return
     }
     if (executed.failed) {
@@ -619,24 +645,7 @@ export async function resumeOperation({
   let needsInputUpdate = Promise.resolve()
   let awaitingEscalation = false
 
-  if (doc.requestId) {
-    await events.platformActions
-      .enqueuePlatformActionSessionLifecycle({
-        sourceType: "agent_session",
-        sourceId: ctx.sessionId,
-        signal: "active",
-      })
-      .catch(error => {
-        console.error(
-          "Failed to mark agent session active on escalation resume",
-          {
-            escalationId,
-            agentId: ctx.agentId,
-            error,
-          }
-        )
-      })
-  }
+  await updatePlatformActionSessionStatus("active")
 
   try {
     const result = await run.stream({
