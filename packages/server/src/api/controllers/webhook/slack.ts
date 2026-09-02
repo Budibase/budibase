@@ -20,6 +20,7 @@ import {
 import sdk from "../../../sdk"
 import { escalationProcessor } from "../../../escalation/processor"
 import { handleChatMessage } from "./chatHandler"
+import { createChatLogger } from "./chatLogger"
 import { getSlackState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
@@ -183,7 +184,10 @@ export const pickSlackConversation = ({
 
 type SlackReplyTarget = PrivatePostTarget
 
-type SlackCommand = typeof ChatCommands.ASK | typeof ChatCommands.LINK
+type SlackCommand =
+  | typeof ChatCommands.ASK
+  | typeof ChatCommands.LINK
+  | typeof ChatCommands.UNLINK
 
 type SlackInput = {
   target: SlackReplyTarget
@@ -353,16 +357,18 @@ export async function slackWebhook(
         throw new Error("Slack state adapter is required")
       }
 
+      const logger = createChatLogger()
       const chat = new Chat({
         userName: "Budibase",
         adapters: {
           slack: createSlackAdapter({
             botToken: integration.botToken,
             signingSecret: integration.signingSecret,
+            logger: logger.child("slack"),
           }),
         },
         state,
-        logger: "silent",
+        logger,
       })
 
       const handleSlackInput = createSlackInputHandler({
@@ -374,8 +380,8 @@ export async function slackWebhook(
       })
       const handler = createSlackMessageHandler(handleSlackInput)
 
-      chat.onSlashCommand(
-        `/${ChatCommands.LINK}`,
+      const handleSlackSlashCommand =
+        (command: typeof ChatCommands.LINK | typeof ChatCommands.UNLINK) =>
         async (event: SlashCommandEvent) => {
           const raw = event.raw as Record<string, string | undefined>
           const channelId = raw.channel_id
@@ -387,7 +393,7 @@ export async function slackWebhook(
             target: event.channel as SlackReplyTarget,
             privateTarget: event.channel as SlackReplyTarget,
             author: event.user,
-            command: ChatCommands.LINK,
+            command,
             content: event.text,
             channelId,
             externalUserId: event.user.userId,
@@ -398,6 +404,14 @@ export async function slackWebhook(
             teamId: raw.team_id,
           })
         }
+
+      chat.onSlashCommand(
+        `/${ChatCommands.LINK}`,
+        handleSlackSlashCommand(ChatCommands.LINK)
+      )
+      chat.onSlashCommand(
+        `/${ChatCommands.UNLINK}`,
+        handleSlackSlashCommand(ChatCommands.UNLINK)
       )
       // TODO: Make these a strict set
       chat.onAction(async (event: ActionEvent) => {
