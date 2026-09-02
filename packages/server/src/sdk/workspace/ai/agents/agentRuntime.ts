@@ -405,9 +405,6 @@ export const prepareAgentRunContext = async ({
     operationId,
     llm,
   })
-  const toolSecurityEnabled = await features.isEnabled(
-    FeatureFlag.AI_AGENT_TOOL_SECURITY
-  )
   let executionContext: AgentExecutionContext | undefined
   if (routingDecision.operation && requester) {
     const workspaceId = context.getWorkspaceId()
@@ -433,7 +430,6 @@ export const prepareAgentRunContext = async ({
           ? buildOperationsSummaryPrompt(getLiveOperations(agent))
           : buildPromptOptions?.fallbackPromptInstructions,
       executionContext,
-      toolSecurityEnabled,
     }
   )
 
