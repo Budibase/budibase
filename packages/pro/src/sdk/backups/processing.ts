@@ -364,10 +364,7 @@ async function importProcessor(
       try {
         await opts.reconcileLiteLLMModels()
       } catch (err) {
-        logging.logAlert(
-          "LiteLLM reconciliation failed after app restore",
-          err
-        )
+        logging.logAlert("LiteLLM reconciliation failed after app restore", err)
         status = BackupStatus.FAILED
         const errorMessage = err instanceof Error ? err.message : String(err)
         await backups.trackBackupError(
