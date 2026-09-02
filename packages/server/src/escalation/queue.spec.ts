@@ -247,6 +247,70 @@ describe("resumeOperation", () => {
     })
   })
 
+  it("emits a failed action when the resumed agent cannot be prepared", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      getOrThrowMock.mockRejectedValue(new Error("Agent unavailable"))
+
+      await expect(
+        resumeOperation({
+          doc: baseDoc({ requestId, response: { accepted: true } }),
+          escalationId: "esc_primary",
+          resolution: "resolved",
+          ctx: baseCtx,
+        })
+      ).rejects.toThrow("Agent unavailable")
+
+      expect(aiAgentFailedMock).toHaveBeenCalledWith({
+        agentId: "agent_1",
+        sourceType: "agent_session",
+        sourceId: "session_1",
+        sessionId: "session_1",
+        requestId,
+        reason: "error",
+        errorMessage: "Agent unavailable",
+      })
+    })
+  })
+
+  it("keeps a completed agent action when session log indexing fails", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      prepareAgentChatRunMock.mockResolvedValue({
+        toolDisplayNames: {},
+        sessionLogIndexer: {
+          index: jest
+            .fn()
+            .mockRejectedValue(new Error("Log index unavailable")),
+        },
+        stream: jest.fn().mockResolvedValue({
+          finishReason: Promise.resolve("stop"),
+          toUIMessageStream: () =>
+            (async function* () {
+              yield {
+                id: "",
+                role: "assistant",
+                parts: [{ type: "text", text: "Approved and booked." }],
+              }
+            })(),
+        }),
+      })
+      getOrThrowMock.mockResolvedValue({ _id: "agent_1" } as Agent)
+
+      await resumeOperation({
+        doc: baseDoc({ requestId, response: { accepted: true } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: baseCtx,
+      })
+
+      expect(aiAgentExecutedMock).toHaveBeenCalledWith(
+        expect.objectContaining({ requestId })
+      )
+      expect(aiAgentFailedMock).not.toHaveBeenCalled()
+    })
+  })
+
   it("reconstructs an automation user with its requester role", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       mockApprovedRun("Approved and created.")
