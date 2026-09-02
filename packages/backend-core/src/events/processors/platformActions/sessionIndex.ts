@@ -29,15 +29,35 @@ export interface UpsertPlatformActionSessionInput extends ActionSourceContext {
 
 function nextStatus(
   existingStatus: PlatformActionContainerStatus | undefined,
-  signal: PlatformActionContainerStatus
-): PlatformActionContainerStatus {
-  if (existingStatus === "failed" || signal === "failed") {
-    return "failed"
+  existingStatusUpdatedAt: string | undefined,
+  signal: PlatformActionContainerStatus,
+  timestamp: string
+): {
+  status: PlatformActionContainerStatus
+  statusUpdatedAt: string
+  updated: boolean
+} {
+  if (!existingStatus || !existingStatusUpdatedAt) {
+    return { status: signal, statusUpdatedAt: timestamp, updated: true }
   }
-  if (existingStatus && TERMINAL_STATUSES.has(existingStatus)) {
-    return existingStatus
+
+  if (new Date(timestamp) > new Date(existingStatusUpdatedAt)) {
+    return { status: signal, statusUpdatedAt: timestamp, updated: true }
   }
-  return signal
+  if (
+    new Date(timestamp).getTime() ===
+      new Date(existingStatusUpdatedAt).getTime() &&
+    signal === "failed" &&
+    existingStatus !== "failed"
+  ) {
+    return { status: signal, statusUpdatedAt: timestamp, updated: true }
+  }
+
+  return {
+    status: existingStatus,
+    statusUpdatedAt: existingStatusUpdatedAt,
+    updated: false,
+  }
 }
 
 function earliest(a: string, b: string): string {
@@ -70,7 +90,21 @@ export async function upsertPlatformActionSession(
         if (!existing && !input.incrementsActionCount) {
           return
         }
-        const status = nextStatus(existing?.status, input.signal)
+        const existingStatusUpdatedAt = existing
+          ? (existing.statusUpdatedAt ??
+            existing.completedAt ??
+            existing.startedAt)
+          : undefined
+        const {
+          status,
+          statusUpdatedAt,
+          updated: updatesStatus,
+        } = nextStatus(
+          existing?.status,
+          existingStatusUpdatedAt,
+          input.signal,
+          input.timestamp
+        )
         const startedAt = existing
           ? earliest(existing.startedAt, input.timestamp)
           : input.timestamp
@@ -79,6 +113,7 @@ export async function upsertPlatformActionSession(
           ? {
               ...existing,
               status,
+              statusUpdatedAt,
               startedAt,
               ...(input.incrementsActionCount
                 ? { actionCount: existing.actionCount + 1 }
@@ -89,16 +124,19 @@ export async function upsertPlatformActionSession(
               sourceId: input.sourceId,
               status,
               startedAt,
+              statusUpdatedAt,
               actionCount: input.incrementsActionCount ? 1 : 0,
             })
 
-        if (isTerminal) {
+        if (isTerminal && updatesStatus) {
           doc.completedAt = existing
             ? latest(
                 existing.completedAt ?? existing.startedAt,
                 input.timestamp
               )
             : input.timestamp
+        } else if (updatesStatus) {
+          delete doc.completedAt
         }
 
         try {

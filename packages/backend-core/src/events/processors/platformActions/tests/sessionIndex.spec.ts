@@ -38,6 +38,7 @@ describe("upsertPlatformActionSession", () => {
       expect(doc.actionCount).toBe(1)
       expect(doc.status).toBe("completed")
       expect(doc.startedAt).toBe("2026-08-31T00:00:00.000Z")
+      expect(doc.statusUpdatedAt).toBe("2026-08-31T00:00:00.000Z")
       expect(doc.updatedAt).toBe(mocks.date.MOCK_DATE.toISOString())
       expect(doc.completedAt).toBe("2026-08-31T00:00:00.000Z")
     })
@@ -117,7 +118,7 @@ describe("upsertPlatformActionSession", () => {
     })
   })
 
-  it("keeps status failed once set, even after a later success event", async () => {
+  it("uses the latest signal to update the session status", async () => {
     await run(async () => {
       const sourceId = generator.guid()
       const input = { sourceType: "agent_session" as const, sourceId }
@@ -137,7 +138,8 @@ describe("upsertPlatformActionSession", () => {
 
       const doc = await getSessionDoc(sourceId)
 
-      expect(doc.status).toBe("failed")
+      expect(doc.status).toBe("completed")
+      expect(doc.statusUpdatedAt).toBe("2026-08-31T00:05:00.000Z")
       expect(doc.actionCount).toBe(2)
     })
   })
@@ -161,6 +163,59 @@ describe("upsertPlatformActionSession", () => {
         )
 
       expect(doc).toBeUndefined()
+    })
+  })
+
+  it("reopens an existing session without incrementing actionCount", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+      const input = { sourceType: "agent_session" as const, sourceId }
+
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: true,
+        signal: "completed",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: false,
+        signal: "active",
+        timestamp: "2026-08-31T00:05:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.status).toBe("active")
+      expect(doc.statusUpdatedAt).toBe("2026-08-31T00:05:00.000Z")
+      expect(doc.actionCount).toBe(1)
+      expect(doc.completedAt).toBeUndefined()
+    })
+  })
+
+  it("ignores a lifecycle signal older than the current status", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+      const input = { sourceType: "agent_session" as const, sourceId }
+
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: true,
+        signal: "completed",
+        timestamp: "2026-08-31T00:05:00.000Z",
+      })
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: false,
+        signal: "waiting",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.status).toBe("completed")
+      expect(doc.statusUpdatedAt).toBe("2026-08-31T00:05:00.000Z")
+      expect(doc.actionCount).toBe(1)
     })
   })
 

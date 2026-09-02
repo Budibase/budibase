@@ -132,6 +132,50 @@ describe("PlatformActionPersistProcessor", () => {
     }
   )
 
+  it("marks an agent action as waiting only when it awaits an escalation", async () => {
+    await run(async () => {
+      await processor.processEvent(
+        Event.ACTION_AI_AGENT_EXECUTED,
+        identity,
+        {
+          sourceType: "agent_session",
+          sourceId: "session-1",
+          awaitingEscalation: true,
+        },
+        undefined
+      )
+
+      expect(mockEnqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          incrementsActionCount: true,
+          signal: "waiting",
+        })
+      )
+    })
+  })
+
+  it("does not apply an escalation state to a non-agent action", async () => {
+    await run(async () => {
+      await processor.processEvent(
+        Event.ACTION_AUTOMATION_STEP_EXECUTED,
+        identity,
+        {
+          sourceType: "automation_run",
+          sourceId: "run-1",
+          awaitingEscalation: true,
+        },
+        undefined
+      )
+
+      expect(mockEnqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          incrementsActionCount: true,
+          signal: "completed",
+        })
+      )
+    })
+  })
+
   it("does not enqueue a session index job when Layer 1 persistence fails", async () => {
     await run(async () => {
       const putSpy = jest

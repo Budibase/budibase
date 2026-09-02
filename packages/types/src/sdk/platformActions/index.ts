@@ -44,6 +44,7 @@ export interface PlatformActionSessionIndexDoc
   triggeredById?: string
   triggeredByLabel?: string
   startedAt: string
+  statusUpdatedAt: string
   updatedAt: string
   completedAt?: string
 }

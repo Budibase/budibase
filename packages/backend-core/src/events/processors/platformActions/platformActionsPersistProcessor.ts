@@ -32,6 +32,22 @@ function isActionSourceContext(
   )
 }
 
+function getSessionSignal(
+  event: Event,
+  properties: Record<string, unknown>
+): PlatformActionSessionIndexJob["signal"] {
+  if (event.endsWith(":failed")) {
+    return "failed"
+  }
+  if (
+    event === Event.ACTION_AI_AGENT_EXECUTED &&
+    properties.awaitingEscalation === true
+  ) {
+    return "waiting"
+  }
+  return "completed"
+}
+
 export default class PlatformActionPersistProcessor implements EventProcessor {
   async processEvent(
     event: Event,
@@ -86,7 +102,7 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
       sourceType: doc.sourceType,
       sourceId: doc.sourceId,
       incrementsActionCount: true,
-      signal: event.endsWith(":failed") ? "failed" : "completed",
+      signal: getSessionSignal(event, properties),
       timestamp: isoTimestamp,
     }
 

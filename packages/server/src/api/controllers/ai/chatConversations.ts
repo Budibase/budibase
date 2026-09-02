@@ -213,6 +213,7 @@ const buildToolCallTrackingHandler = ({
   // before writing the terminal status.
   let chain = Promise.resolve()
   let needsInputUpdate = Promise.resolve()
+  let awaitingEscalation = false
 
   const onToolCallCompleted = ({
     toolName,
@@ -230,6 +231,7 @@ const buildToolCallTrackingHandler = ({
     }
     const outputStatus = (output as { status?: string } | undefined)?.status
     if (outputStatus === EscalateToolResultStatus.PENDING_APPROVAL) {
+      awaitingEscalation = true
       needsInputUpdate = needsInputUpdate.then(() =>
         sdk.ai.agentRequests
           .updateRequestStatus({
@@ -270,6 +272,7 @@ const buildToolCallTrackingHandler = ({
   return {
     onToolCallCompleted,
     flush: () => Promise.all([chain, needsInputUpdate]),
+    isAwaitingEscalation: () => awaitingEscalation,
   }
 }
 
@@ -646,6 +649,9 @@ export async function webhookChat({
       sessionId,
       requestId: trackingHandle?.requestId ?? requestId,
     }),
+    ...(toolCallTracking.isAwaitingEscalation()
+      ? { awaitingEscalation: true }
+      : {}),
   })
   const ragSources = run.getUsedKnowledgeSourcesMetadata()
 
@@ -843,6 +849,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
               trackingHandle?.requestId ??
               run.sessionLogIndexer.getRequestIds().at(-1),
           }),
+          ...(toolCallTracking.isAwaitingEscalation()
+            ? { awaitingEscalation: true }
+            : {}),
         })
 
         await toolCallTracking.flush()
