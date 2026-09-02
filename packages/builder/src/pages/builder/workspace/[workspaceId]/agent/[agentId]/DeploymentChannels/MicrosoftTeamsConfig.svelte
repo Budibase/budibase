@@ -25,6 +25,7 @@
 
   const MS_TEAMS_NEW_COMMAND = ChatCommands.NEW
   const MS_TEAMS_LINK_COMMAND = ChatCommands.LINK
+  const MS_TEAMS_UNLINK_COMMAND = ChatCommands.UNLINK
   let { agent }: { agent?: Agent } = $props()
 
   let draftAgentId: string | undefined = $state()
@@ -192,7 +193,8 @@
     </Body>
     <Body size="S">
       Use `{MS_TEAMS_LINK_COMMAND}` or `/{MS_TEAMS_LINK_COMMAND}` to link or
-      refresh your Budibase account.
+      refresh your Budibase account, and `{MS_TEAMS_UNLINK_COMMAND}` or `/{MS_TEAMS_UNLINK_COMMAND}`
+      to disconnect it.
     </Body>
 
     <CopyInput

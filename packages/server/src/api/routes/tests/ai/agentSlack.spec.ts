@@ -359,6 +359,13 @@ describe("agent slack integration provisioning", () => {
       usage_hint: `/${ChatCommands.LINK}`,
       should_escape: false,
     })
+    expect(manifest.features.slash_commands).toContainEqual({
+      command: `/${ChatCommands.UNLINK}`,
+      url: endpointUrl,
+      description: "Unlink your Slack user from your Budibase account.",
+      usage_hint: `/${ChatCommands.UNLINK}`,
+      should_escape: false,
+    })
     expect(manifest.settings.event_subscriptions.bot_events).toEqual([
       "app_mention",
       "message.im",
@@ -843,6 +850,53 @@ describe("agent slack integration provisioning", () => {
 
       expect(response.body.messages.join(" ")).toContain("already linked")
       expect(extractLinkUrl(response.body.messages)).toBeTruthy()
+    })
+
+    it(`unlinks an existing mapping when /${ChatCommands.UNLINK} is run`, async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          command: `/${ChatCommands.UNLINK}`,
+          text: "",
+          channel_id: "D123",
+          user_id: "user-1",
+          user_name: "Slack User",
+          team_id: "T123",
+        },
+      })
+
+      expect(response.body.messages.join(" ")).toContain("unlinked")
+      await config.doInTenant(async () => {
+        const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
+          provider: AgentChannelProvider.SLACK,
+          externalUserId: "user-1",
+          teamId: "T123",
+        })
+        expect(link).toBeUndefined()
+      })
+    })
+
+    it(`tells unlinked users they are not linked when /${ChatCommands.UNLINK} is run`, async () => {
+      const { agent } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          command: `/${ChatCommands.UNLINK}`,
+          text: "",
+          channel_id: "D123",
+          user_id: "user-1",
+          user_name: "Slack User",
+          team_id: "T123",
+        },
+      })
+
+      expect(response.body.messages.join(" ")).toContain("not linked")
     })
 
     it("stores Slack links separately for the same external user in different teams", async () => {
