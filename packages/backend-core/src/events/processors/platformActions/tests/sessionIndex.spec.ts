@@ -147,9 +147,13 @@ describe("upsertPlatformActionSession", () => {
       // through a read-merge-write on the same doc.
       const sessionId = getPlatformActionSessionId(input)
       const lockContentionMessage = `Could not acquire lock to index platform action session ${sessionId}`
+      const retryTimeoutMs = 1000
+      const retryIntervalMs = 30
 
       async function upsertWithRetry(timestamp: string) {
-        for (let attempt = 0; attempt < 20; attempt++) {
+        const deadline = Date.now() + retryTimeoutMs
+
+        while (true) {
           try {
             await upsertPlatformActionSession({
               ...input,
@@ -160,17 +164,19 @@ describe("upsertPlatformActionSession", () => {
           } catch (err) {
             // Only lock contention is expected/retryable here - anything
             // else is a real bug and should fail the test immediately
-            // instead of being masked behind 20 blind retries.
+            // instead of being masked behind blind retries.
             if (
               !(err instanceof Error) ||
               err.message !== lockContentionMessage
             ) {
               throw err
             }
-            await new Promise(resolve => setTimeout(resolve, 30))
+            if (Date.now() >= deadline) {
+              throw new Error("Could not upsert session within retry timeout")
+            }
+            await new Promise(resolve => setTimeout(resolve, retryIntervalMs))
           }
         }
-        throw new Error("Could not upsert session after retries")
       }
 
       await Promise.all(
