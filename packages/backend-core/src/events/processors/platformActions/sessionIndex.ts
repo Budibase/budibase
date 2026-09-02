@@ -11,6 +11,7 @@ import * as locks from "../../../redis/redlockImpl"
 import { buildPlatformActionSession, getPlatformActionSessionId } from "./utils"
 
 const LOCK_TTL_MS = 10000
+const MAX_PUT_CONFLICT_ATTEMPTS = 3
 
 export interface UpsertPlatformActionSessionInput extends ActionSourceContext {
   outcome: PlatformActionOutcome
@@ -50,7 +51,7 @@ export async function upsertPlatformActionSession(
     async () => {
       const db = context.getWorkspaceDB()
 
-      for (let attempt = 0; attempt < 3; attempt++) {
+      for (let attempt = 0; attempt < MAX_PUT_CONFLICT_ATTEMPTS; attempt++) {
         const existing =
           await db.tryGet<PlatformActionSessionIndexDoc>(sessionId)
         const status = nextStatus(existing?.status, input.outcome)
@@ -83,7 +84,8 @@ export async function upsertPlatformActionSession(
           await db.put(doc)
           return
         } catch (err: any) {
-          if (err?.status === 409 && attempt < 2) {
+          const isLastAttempt = attempt === MAX_PUT_CONFLICT_ATTEMPTS - 1
+          if (err?.status === 409 && !isLastAttempt) {
             continue
           }
           throw err
