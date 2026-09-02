@@ -161,7 +161,7 @@ const TEAMS_SLASH_COMMANDS = [
 
 const parseTeamsSlashCommand = (text: string) => {
   for (const command of TEAMS_SLASH_COMMANDS) {
-    if (!new RegExp(`^/?${command}(?:\\s|$)`, "i").test(text)) {
+    if (!new RegExp(`^(?:/${command}(?:\\s|$)|${command}$)`, "i").test(text)) {
       continue
     }
     return {
