@@ -96,7 +96,7 @@ describe("PlatformActionPersistProcessor", () => {
       expect(rows).toHaveLength(1)
       const doc = rows[0].doc!
 
-      expect(doc._id).toMatch(/^platformaction_\d{8}T\d{9}Z_[0-9a-f-]{36}$/)
+      expect(doc._id).toMatch(/^platform_action_\d{8}T\d{9}Z_[0-9a-f-]{36}$/)
       expect(doc._id).not.toMatch(/[:.]/)
       expect(doc.sourceType).toBe("agent_session")
       expect(doc.sourceId).toBe("session-1")

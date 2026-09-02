@@ -36,7 +36,7 @@ describe("enqueuePlatformActionSessionIndex", () => {
     const workspaceId = db.generateWorkspaceID(structures.tenant.id())
     const job: PlatformActionSessionIndexJob = {
       workspaceId,
-      platformActionId: `platformaction_${structures.uuid()}`,
+      platformActionId: `platform_action_${structures.uuid()}`,
       sourceType: "agent_session",
       sourceId: "session-1",
       eventName: "action:ai_agent:executed",

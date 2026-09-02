@@ -11,7 +11,7 @@ describe("platformActions utils", () => {
         sourceId: "session-1",
       })
 
-      expect(id).toBe("platformactionsession_agent_session_session-1")
+      expect(id).toBe("platform_action_session_agent_session_session-1")
     })
 
     it("is stable for the same source across calls", () => {
@@ -31,7 +31,7 @@ describe("platformActions utils", () => {
         sourceId: "a/b c",
       })
 
-      expect(id).toBe("platformactionsession_agent_session_a%2Fb%20c")
+      expect(id).toBe("platform_action_session_agent_session_a%2Fb%20c")
     })
   })
 
