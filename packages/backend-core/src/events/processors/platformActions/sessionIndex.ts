@@ -67,6 +67,9 @@ export async function upsertPlatformActionSession(
       for (let attempt = 0; attempt < MAX_PUT_CONFLICT_ATTEMPTS; attempt++) {
         const existing =
           await db.tryGet<PlatformActionSessionIndexDoc>(sessionId)
+        if (!existing && !input.incrementsActionCount) {
+          return
+        }
         const status = nextStatus(existing?.status, input.signal)
         const startedAt = existing
           ? earliest(existing.startedAt, input.timestamp)

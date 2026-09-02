@@ -142,7 +142,7 @@ describe("upsertPlatformActionSession", () => {
     })
   })
 
-  it("updates lifecycle state without incrementing actionCount", async () => {
+  it("does not create a session index for a lifecycle signal without an action", async () => {
     await run(async () => {
       const sourceId = generator.guid()
       const input = { sourceType: "agent_session" as const, sourceId }
@@ -153,24 +153,14 @@ describe("upsertPlatformActionSession", () => {
         signal: "active",
         timestamp: "2026-08-31T00:00:00.000Z",
       })
-      await upsertPlatformActionSession({
-        ...input,
-        incrementsActionCount: false,
-        signal: "waiting",
-        timestamp: "2026-08-31T00:01:00.000Z",
-      })
-      await upsertPlatformActionSession({
-        ...input,
-        incrementsActionCount: false,
-        signal: "completed",
-        timestamp: "2026-08-31T00:02:00.000Z",
-      })
 
-      const doc = await getSessionDoc(sourceId)
+      const doc = await context
+        .getWorkspaceDB()
+        .tryGet<PlatformActionSessionIndexDoc>(
+          getPlatformActionSessionId(input)
+        )
 
-      expect(doc.status).toBe("completed")
-      expect(doc.actionCount).toBe(0)
-      expect(doc.completedAt).toBe("2026-08-31T00:02:00.000Z")
+      expect(doc).toBeUndefined()
     })
   })
 
