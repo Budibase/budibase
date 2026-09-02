@@ -497,6 +497,30 @@ export const handleChatMessage = async ({
       return
     }
 
+    if (command === ChatCommands.UNLINK) {
+      if (!existingLink) {
+        await reply(
+          `Your ${providerDisplayName(provider)} account is not linked. Run ${getLinkCommand(
+            provider
+          )} to connect it.`
+        )
+        return
+      }
+
+      await sdk.ai.chatIdentityLinks.deleteChatIdentityLink({
+        provider,
+        externalUserId: user.externalUserId,
+        teamId: channel.teamId,
+        providerTenantId: channel.tenantId,
+      })
+      await reply(
+        `Your ${providerDisplayName(provider)} account has been unlinked from Budibase. Run ${getLinkCommand(
+          provider
+        )} to connect it again.`
+      )
+      return
+    }
+
     const linkingRequired = requireUserLink !== false
     let chatUser: ContextUser
     let userId: string
