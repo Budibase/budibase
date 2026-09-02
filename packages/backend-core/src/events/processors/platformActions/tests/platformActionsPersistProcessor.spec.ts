@@ -5,6 +5,11 @@ import * as db from "../../../../db"
 
 jest.mock("../indexQueue")
 import { enqueuePlatformActionSessionIndex } from "../indexQueue"
+
+jest.mock("../../../../utils", () => ({
+  ...jest.requireActual("../../../../utils"),
+  timeout: jest.fn().mockResolvedValue(undefined),
+}))
 import PlatformActionPersistProcessor from "../platformActionsPersistProcessor"
 
 const mockEnqueue = enqueuePlatformActionSessionIndex as jest.MockedFunction<
