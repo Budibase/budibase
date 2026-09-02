@@ -8746,6 +8746,11 @@ aws-cloudfront-sign@3.0.2:
   resolved "https://registry.yarnpkg.com/aws-cloudfront-sign/-/aws-cloudfront-sign-3.0.2.tgz#da5273b0301bcd70312c8c76293d5fec6d414f0a"
   integrity sha512-Z/yOGZ3Hd1rhYbY13mtRiLCbCDC1Xf/v+dQUyUwMLnyunD/nfDZd/2LMZ9MKxxOhVb2RzEmEwY0F9f+riPaSWQ==
 
+aws-ssl-profiles@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/aws-ssl-profiles/-/aws-ssl-profiles-1.1.2.tgz#157dd77e9f19b1d123678e93f120e6f193022641"
+  integrity sha512-NZKeq9AfyQvEeNlN0zSYAaWrmBffJh3IELMZfRpJVWgrpEbtEpnjvzqBPf+mxoI287JohRDoa+/nsfqqiZmF6g==
+
 axios@1.15.2, axios@1.18.1, axios@1.19.0, axios@^0.21.1, axios@^1.13.4, axios@^1.13.5, axios@^1.15.0, axios@^1.15.2, axios@^1.4.0, axios@^1.6.2:
   version "1.19.0"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.19.0.tgz#ddf864d4c8233c0e6873746ab59361537d05ad39"
@@ -13524,14 +13529,14 @@ iconv-lite@0.6.3, iconv-lite@^0.6.2, iconv-lite@^0.6.3:
   dependencies:
     safer-buffer ">= 2.1.2 < 3.0.0"
 
-iconv-lite@0.7.2, iconv-lite@^0.7.0, iconv-lite@^0.7.2, iconv-lite@~0.7.0:
+iconv-lite@0.7.2:
   version "0.7.2"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.7.2.tgz#d0bdeac3f12b4835b7359c2ad89c422a4d1cc72e"
   integrity sha512-im9DjEDQ55s9fL4EYzOAv0yMqmMBSZp6G0VvFyTMPKWxiSBHUj9NW/qqLmXUwXrrM7AvqSlTCfvqRb0cM8yYqw==
   dependencies:
     safer-buffer ">= 2.1.2 < 3.0.0"
 
-iconv-lite@0.7.3:
+iconv-lite@0.7.3, iconv-lite@^0.7.0, iconv-lite@^0.7.2, iconv-lite@~0.7.0:
   version "0.7.3"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.7.3.tgz#84ee12f963e7de50bc01a13e160a078b3b0f415f"
   integrity sha512-IKXpvIzjnC9XTAUbVBcMfGS0EPaIXtW6v+zr+RRp+hqULEpo0owZax6wyRwPOJbWbzjYspQwusTsfVr0ifh4uQ==
@@ -14962,17 +14967,17 @@ js-yaml@4.1.0:
   dependencies:
     argparse "^2.0.1"
 
-js-yaml@4.3.0:
+js-yaml@4.3.0, js-yaml@^4.0.0, js-yaml@^4.1.0, js-yaml@^4.1.1:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-4.3.0.tgz#d1900572a7f7cf0b5f540c83673e60bad3436592"
   integrity sha512-1td788aAnnZ5qs7V2QIRl1owjtYpbKt749Y3xauqQgwIIGF/xXWz1wMTEBx5O3LK3lXLVuqXPdPxj2BoFHaW9Q==
   dependencies:
     argparse "^2.0.1"
 
-js-yaml@5.2.3:
-  version "5.2.3"
-  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-5.2.3.tgz#0942ae8f507e22eb0e54624871789cd477106e54"
-  integrity sha512-n+mUVyUX5bVv7G/G2zyIHOhdxfuU1dY2NOFzTQUWiMUbFss8b57NFlgCCaggU78wSw5KVS9cllzeLyzyR+n5nw==
+js-yaml@5.3.0:
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-5.3.0.tgz#526430a6da31065127528ae695ce168cfc5f91f0"
+  integrity sha512-muutsYr+e2+d3rTgUGslq5rxbBlUy3cJ61IsHag2QNDQV+7zXWjkUpmALIajhrlLlrgRUiymj6U3zUr/TMK84Q==
   dependencies:
     argparse "^2.0.1"
 
@@ -14983,13 +14988,6 @@ js-yaml@^3.13.1:
   dependencies:
     argparse "^1.0.7"
     esprima "^4.0.0"
-
-js-yaml@^4.0.0, js-yaml@^4.1.0, js-yaml@^4.1.1:
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-4.2.0.tgz#2bd9e85682dd91bd469afb809d816043b3d49524"
-  integrity sha512-ePWsvanv0DWuDRsW8dnt+R4jQ31SCRCQ7hhNcPXZPsoBZiemuZNYGf7adZdqX2D86j6rvKp3RpCxVTSb8WQlOw==
-  dependencies:
-    argparse "^2.0.1"
 
 jsbarcode@^3.11.6:
   version "3.12.3"
@@ -16109,7 +16107,7 @@ logform@^2.7.0:
     safe-stable-stringify "^2.3.1"
     triple-beam "^1.3.0"
 
-long@^5.0.0, long@^5.2.1, long@^5.3.2:
+long@^5.0.0, long@^5.3.2:
   version "5.3.2"
   resolved "https://registry.yarnpkg.com/long/-/long-5.3.2.tgz#1d84463095999262d7d7b7f8bfd4a8cc55167f83"
   integrity sha512-mNAgZ1GmyNhD7AuqnTG3/VQ26o760+ZYBPKjPvugO8+nLbYfX6TVpJPseBvopbdY+qpZ/lKUnmEc1LeZYS3QAA==
@@ -16168,11 +16166,6 @@ lru-cache@^7.14.0, lru-cache@^7.14.1:
   resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-7.18.3.tgz#f793896e0fd0e954a59dfdd82f0773808df6aa89"
   integrity sha512-jumlc0BIUrS3qJGgIkWZsyfAM7NCWiBcCDhnd+3NNM5KbBmLTgHVfWBcg6W+rLUsIpzpERPsvwUP7CckAQSOoA==
 
-lru-cache@^8.0.0:
-  version "8.0.5"
-  resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-8.0.5.tgz#983fe337f3e176667f8e567cfcce7cb064ea214e"
-  integrity sha512-MhWWlVnuab1RG5/zMRRcVGXZLCXrZTgfwMikgzCegsPnG62yDQo5JnqKkrK4jO5iKqDAZGItAqN5CtKBCBWRUA==
-
 lru-memoizer@^2.2.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/lru-memoizer/-/lru-memoizer-2.3.0.tgz#ef0fbc021bceb666794b145eefac6be49dc47f31"
@@ -16181,10 +16174,10 @@ lru-memoizer@^2.2.0:
     lodash.clonedeep "^4.5.0"
     lru-cache "6.0.0"
 
-lru.min@^1.1.0:
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/lru.min/-/lru.min-1.1.4.tgz#6ea1737a8c1ba2300cc87ad46910a4bdffa0117b"
-  integrity sha512-DqC6n3QQ77zdFpCMASA1a3Jlb64Hv2N2DciFGkO/4L9+q/IpIAuRlKOvCXabtRW6cQf8usbmM6BE/TOPysCdIA==
+lru.min@^1.1.0, lru.min@^1.1.4:
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/lru.min/-/lru.min-1.1.5.tgz#bd32483f4e342261d0eb011b06d2219e6b5ef818"
+  integrity sha512-5J9ysMYUpYIg9RF2vJpy9SinEmSviFSe0GyPpCQ4L5QSkLAgeLXlTAOu2ZwWUU5m+0SBl6gUU1R1ZQB3aKypfA==
 
 ltgt@2.2.1, ltgt@^2.1.2, ltgt@~2.2.0:
   version "2.2.1"
@@ -17214,19 +17207,19 @@ mute-stream@^2.0.0:
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-2.0.0.tgz#a5446fc0c512b71c83c44d908d5c7b7b4c493b2b"
   integrity sha512-WWdIxpyjEn+FhQJQQv9aQAYlHoNVdzIzUySNV1gHUPDSdZJ3yZn7pAAbQcV7B56Mvu881q9FZV+0Vx2xC44VWA==
 
-mysql2@3.9.8:
-  version "3.9.8"
-  resolved "https://registry.yarnpkg.com/mysql2/-/mysql2-3.9.8.tgz#fe8a0f975f2c495ed76ca988ddc5505801dc49ce"
-  integrity sha512-+5JKNjPuks1FNMoy9TYpl77f+5frbTklz7eb3XDwbpsERRLEeXiW2PDEkakYF50UuKU2qwfGnyXpKYvukv8mGA==
+mysql2@3.22.0:
+  version "3.22.0"
+  resolved "https://registry.yarnpkg.com/mysql2/-/mysql2-3.22.0.tgz#1d5df436d1c9603d977596deda610a7f03afabaa"
+  integrity sha512-4jaJYBObj7FhD3lnZhqX1yDMuZN4mQNz+IolDySDXT7fbozMBpeGQNcuWXKUqo4ahkAEfkjUHPjnwuDI0/6VKw==
   dependencies:
+    aws-ssl-profiles "^1.1.2"
     denque "^2.1.0"
     generate-function "^2.3.1"
-    iconv-lite "^0.6.3"
-    long "^5.2.1"
-    lru-cache "^8.0.0"
-    named-placeholders "^1.1.3"
-    seq-queue "^0.0.5"
-    sqlstring "^2.3.2"
+    iconv-lite "^0.7.2"
+    long "^5.3.2"
+    lru.min "^1.1.4"
+    named-placeholders "^1.1.6"
+    sql-escaper "^1.3.3"
 
 mz@^2.7.0:
   version "2.7.0"
@@ -17237,7 +17230,7 @@ mz@^2.7.0:
     object-assign "^4.0.1"
     thenify-all "^1.0.0"
 
-named-placeholders@^1.1.3:
+named-placeholders@^1.1.6:
   version "1.1.6"
   resolved "https://registry.yarnpkg.com/named-placeholders/-/named-placeholders-1.1.6.tgz#c50c6920b43f258f59c16add1e56654f5cc02bb5"
   integrity sha512-Tz09sEL2EEuv5fFowm419c1+a/jSMiBjI9gHxVLrVdbUkkNUUfjsVYs9pVZu5oCon/kmRh9TfLEObFtkVxmY0w==
@@ -18943,9 +18936,9 @@ postcss-scss@^4.0.9:
   integrity sha512-AjKOeiwAitL/MXxQW2DliT28EKukvvbEWx3LBmJIRN8KfBGZbRTxNYW0kSqi1COiTZ57nZ9NW06S6ux//N1c9A==
 
 postcss-selector-parser@^7.0.0:
-  version "7.1.1"
-  resolved "https://registry.yarnpkg.com/postcss-selector-parser/-/postcss-selector-parser-7.1.1.tgz#e75d2e0d843f620e5df69076166f4e16f891cb9f"
-  integrity sha512-orRsuYpJVw8LdAwqqLykBj9ecS5/cRHlI5+nvTo8LcCKmzDmqVORXtOIYEEQuL9D4BxtA1lm5isAqzQZCoQ6Eg==
+  version "7.1.5"
+  resolved "https://registry.yarnpkg.com/postcss-selector-parser/-/postcss-selector-parser-7.1.5.tgz#ee7b090724eb60739b530660e5b402200e694a97"
+  integrity sha512-KvvtD7SrlBP7dlgkBghEE3r84CABm5SmV2aNcG4oCA+qDnJ/tvKonFVvwWAyyWUEwxuNawdfEAZKP9zM3oZ2Uw==
   dependencies:
     cssesc "^3.0.0"
     util-deprecate "^1.0.2"
@@ -20493,11 +20486,6 @@ send@^1.1.0, send@^1.2.0:
     range-parser "^1.2.1"
     statuses "^2.0.2"
 
-seq-queue@^0.0.5:
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/seq-queue/-/seq-queue-0.0.5.tgz#d56812e1c017a6e4e7c3e3a37a1da6d78dd3c93e"
-  integrity sha512-hr3Wtp/GZIc/6DAGPDcV4/9WoZhjrkXsi5B/07QgX8tsdc6ilr7BFM6PM6rbdAX1kFSDYeZGLipIZZKyQP0O5Q==
-
 serialize-error@^7.0.1:
   version "7.0.1"
   resolved "https://registry.yarnpkg.com/serialize-error/-/serialize-error-7.0.1.tgz#f1360b0447f61ffb483ec4157c737fab7d778e18"
@@ -20994,10 +20982,10 @@ sprintf-js@~1.0.2:
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
   integrity sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==
 
-sqlstring@^2.3.2:
-  version "2.3.3"
-  resolved "https://registry.yarnpkg.com/sqlstring/-/sqlstring-2.3.3.tgz#2ddc21f03bce2c387ed60680e739922c65751d0c"
-  integrity sha512-qC9iz2FlN7DQl3+wjwn3802RTyjCx7sDvfQEXchwa6CWOx07/WVfh91gBmQ9fahw8snwGEWU3xGzOt4tFyHLxg==
+sql-escaper@^1.3.3:
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/sql-escaper/-/sql-escaper-1.5.1.tgz#fbaee511294d1f7da92fb68ca1faee2255839c7b"
+  integrity sha512-4toX5E1fQbBrpfXidaHnF0669nkAdETeIPTs2SUjxxD7RRIs9ICG4gtpmfc68JCEKehsdwLFqBu9VlQqZ1P1gg==
 
 ssh-remote-port-forward@^1.0.4:
   version "1.0.4"
