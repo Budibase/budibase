@@ -95,7 +95,7 @@
   const logsPage = derived(logsPageInfo, value => value.page)
 
   let prevUserSearch = ""
-  let prevLogSearch = ""
+  let previousLogFilters: string | undefined
   let selectedUsers = $state<string[]>([])
   let selectedApps = $state<string[]>([])
   let selectedEvents = $state<Event[]>([])
@@ -151,12 +151,6 @@
     selectedApps,
     selectedEvents,
   }: LogSearchQuery) => {
-    // need to remove the page if they've started searching
-    if (search && !prevLogSearch) {
-      logsPageInfo.reset()
-      page = undefined
-    }
-    prevLogSearch = search
     try {
       logsPageInfo.loading()
       const response = await auditLogs.search({
@@ -256,8 +250,25 @@
   })
 
   $effect(() => {
+    const page = $logsPage
+    const filters = JSON.stringify({
+      search: logSearchTerm,
+      dateRange: dateRange.map(date => date?.toISOString()),
+      selectedUsers,
+      selectedApps,
+      selectedEvents,
+    })
+    const filtersChanged =
+      previousLogFilters !== undefined && previousLogFilters !== filters
+    previousLogFilters = filters
+
+    if (filtersChanged && page) {
+      untrack(() => logsPageInfo.reset())
+      return
+    }
+
     const query: LogSearchQuery = {
-      page: $logsPage,
+      page,
       search: logSearchTerm,
       dateRange: [...dateRange],
       selectedUsers: [...selectedUsers],
