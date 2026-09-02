@@ -49,6 +49,7 @@ const enqueueLifecycleMock = jest.spyOn(
   "enqueuePlatformActionSessionLifecycle"
 )
 const aiAgentExecutedMock = jest.spyOn(events.action, "aiAgentExecuted")
+const aiAgentFailedMock = jest.spyOn(events.action, "aiAgentFailed")
 
 const mockApprovedRun = (text: string) => {
   prepareAgentChatRunMock.mockResolvedValue({
@@ -105,6 +106,7 @@ describe("resumeOperation", () => {
     getOrThrowMock.mockReset()
     enqueueLifecycleMock.mockReset().mockResolvedValue(undefined)
     aiAgentExecutedMock.mockReset()
+    aiAgentFailedMock.mockReset()
     await config.newTenant()
   })
 
@@ -206,6 +208,42 @@ describe("resumeOperation", () => {
         ])
       )
       expect(prepareAgentChatRunMock).not.toHaveBeenCalled()
+    })
+  })
+
+  it("emits a failed action when the resumed agent stream fails", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      prepareAgentChatRunMock.mockResolvedValue({
+        toolDisplayNames: {},
+        sessionLogIndexer: { index: jest.fn().mockResolvedValue(undefined) },
+        stream: jest.fn().mockRejectedValue(new Error("Model unavailable")),
+      })
+      getOrThrowMock.mockResolvedValue({ _id: "agent_1" } as Agent)
+
+      await expect(
+        resumeOperation({
+          doc: baseDoc({ requestId, response: { accepted: true } }),
+          escalationId: "esc_primary",
+          resolution: "resolved",
+          ctx: baseCtx,
+        })
+      ).rejects.toThrow("Model unavailable")
+
+      expect(enqueueLifecycleMock).toHaveBeenCalledWith({
+        sourceType: "agent_session",
+        sourceId: "session_1",
+        signal: "active",
+      })
+      expect(aiAgentFailedMock).toHaveBeenCalledWith({
+        agentId: "agent_1",
+        sourceType: "agent_session",
+        sourceId: "session_1",
+        sessionId: "session_1",
+        requestId,
+        reason: "error",
+        errorMessage: "Model unavailable",
+      })
     })
   })
 
@@ -384,7 +422,7 @@ describe("resumeOperation", () => {
         sessionLogIndexer: { index: jest.fn().mockResolvedValue(undefined) },
         stream: jest
           .fn()
-          .mockImplementation(async ({ onToolCalls, onToolCallCompleted }) => {
+          .mockImplementation(async ({ onToolCallCompleted }) => {
             const escalateTool = createEscalateTool({
               agentId: "agent_1",
               operationId: "op_1",
@@ -420,7 +458,6 @@ describe("resumeOperation", () => {
               context: {},
             })
 
-            onToolCalls?.([ESCALATE_TOOL_NAME])
             await onToolCallCompleted?.({
               toolName: ESCALATE_TOOL_NAME,
               status: "success",
@@ -473,6 +510,13 @@ describe("resumeOperation", () => {
 
       // The new escalation is still pending, so the request must not close.
       expect(request.status).toEqual("needs_input")
+      expect(aiAgentExecutedMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          agentId: "agent_1",
+          requestId,
+          awaitingEscalation: true,
+        })
+      )
     })
   })
 })
