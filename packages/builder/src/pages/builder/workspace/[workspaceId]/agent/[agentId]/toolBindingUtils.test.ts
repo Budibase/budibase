@@ -1,4 +1,8 @@
-import { ToolType, ToolExecutionPrincipal } from "@budibase/types"
+import {
+  ToolType,
+  ToolExecutionPrincipal,
+  type AgentOperation,
+} from "@budibase/types"
 import { describe, expect, it } from "vitest"
 
 import {
@@ -39,6 +43,28 @@ describe("normalizeConfiguredOperationTools", () => {
             },
           ],
         },
+        availableTools,
+      })
+    ).toEqual([
+      {
+        toolName: "ta_employees_search_rows",
+        executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+      },
+    ])
+  })
+
+  it("migrates missing principals to the tool policy default", () => {
+    const legacyOperation = {
+      id: "operation_1",
+      name: "Support",
+      live: false,
+      allowKnowledgeSourceDownload: false,
+      enabledTools: [{ toolName: "ta_employees_search_rows" }],
+    } as AgentOperation
+
+    expect(
+      normalizeConfiguredOperationTools({
+        operation: legacyOperation,
         availableTools,
       })
     ).toEqual([

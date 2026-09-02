@@ -20,7 +20,8 @@ export const normalizeConfiguredOperationTools = ({
       executionPrincipal:
         tool.executionPolicy.mode === "admin"
           ? ToolExecutionPrincipal.ADMIN
-          : config.executionPrincipal,
+          : (config.executionPrincipal ??
+            getDefaultToolExecutionPrincipal(tool)),
     }
   })
 }
