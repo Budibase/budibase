@@ -322,7 +322,6 @@ export class Chat {
           id: `slack:${channelId}:${threadTs}`,
           channelId,
           ...createMessageCollector("slack", messages),
-          subscribe: async () => {},
           channel,
         }
         const isMention = isSlackMentionMessage(event)
@@ -342,8 +341,6 @@ export class Chat {
         } else {
           if (isMention) {
             await invokeHandlers(this.mentionHandlers, thread, message)
-          } else if (event.thread_ts) {
-            await invokeHandlers(this.subscribedHandlers, thread, message)
           }
           await invokeHandlers(this.newMessageHandlers, thread, message)
         }

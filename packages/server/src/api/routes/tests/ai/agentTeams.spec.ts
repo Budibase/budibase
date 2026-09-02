@@ -68,12 +68,13 @@ import os from "os"
 import path from "path"
 
 import extract from "extract-zip"
-import { context, docIds } from "@budibase/backend-core"
+import { context, docIds, features } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { ChatCommands } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
   DocumentType,
+  FeatureFlag,
   type Agent,
   type ChatConversation,
   type WebhookChatCompleteResult,
@@ -81,6 +82,7 @@ import {
 import sdk from "../../../../sdk"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
+import { DEFAULT_MSTEAMS_SERVICE_URL } from "../../../../utilities/msTeams"
 import { webhookChat } from "../../../controllers/ai/chatConversations"
 
 const { getMockChatOptions, resetMockChatState, setMockPostEphemeralResult } =
@@ -120,6 +122,53 @@ describe("agent teams integration provisioning", () => {
 
   afterAll(() => {
     config.end()
+  })
+
+  const withEscalation = async <T>(f: () => Promise<T>) =>
+    features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.ESCALATION]: true },
+      f
+    )
+
+  it("returns only chat links in the agent's Teams tenant", async () => {
+    await withEscalation(async () => {
+      const agent = await config.api.agent.create({
+        name: "Teams Agent",
+        MSTeamsIntegration: {
+          appId: TEAMS_APP_ID,
+          appPassword: "teams-app-password",
+          tenantId: "azure-tenant-id",
+        },
+      })
+      const otherUser = await config.createUser()
+
+      await config.doInTenant(async () => {
+        await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
+          provider: AgentChannelProvider.MSTEAMS,
+          externalUserId: "reachable-user",
+          providerTenantId: "azure-tenant-id",
+          globalUserId: config.getUser()._id!,
+        })
+        await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
+          provider: AgentChannelProvider.MSTEAMS,
+          externalUserId: "other-workspace-user",
+          providerTenantId: "other-tenant-id",
+          globalUserId: otherUser._id!,
+        })
+      })
+
+      const response = await config
+        .getRequest()!
+        .get("/api/chat-links")
+        .set(await config.defaultHeaders())
+        .query({ provider: AgentChannelProvider.MSTEAMS, agentId: agent._id })
+        .expect(200)
+
+      expect(response.body).toEqual([
+        expect.objectContaining({ externalUserId: "reachable-user" }),
+      ])
+    })
   })
 
   it("provisions teams channel for an agent", async () => {
@@ -309,6 +358,10 @@ describe("agent teams integration provisioning", () => {
         title: ChatCommands.LINK,
         description: "Link your Microsoft Teams user to Budibase.",
       })
+      expect(manifest.bots[0].commandLists[0].commands).toContainEqual({
+        title: ChatCommands.UNLINK,
+        description: "Unlink your Microsoft Teams user from Budibase.",
+      })
       expect(manifest.validDomains).toHaveLength(1)
       expect(manifestText).not.toContain("teams-package-password")
 
@@ -402,7 +455,10 @@ describe("agent teams integration provisioning", () => {
         .getRequest()!
         .post(path)
         .set("Authorization", "Bearer valid-token")
-        .send(body)
+        .send({
+          serviceUrl: DEFAULT_MSTEAMS_SERVICE_URL,
+          ...body,
+        })
         .expect(200)
 
     const fetchConversations = async () =>
@@ -461,6 +517,24 @@ describe("agent teams integration provisioning", () => {
       }
       return { agent, linkExternalUser }
     }
+
+    it("rejects an activity with an untrusted service URL", async () => {
+      const { agent } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
+
+      const response = await config
+        .getRequest()!
+        .post(path)
+        .set("Authorization", "Bearer valid-token")
+        .send({
+          type: "message",
+          serviceUrl: "https://example.com/",
+        })
+        .expect(400)
+
+      expect(response.body.error).toEqual("Invalid Microsoft Teams service URL")
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+    })
 
     it(`returns a private link prompt for ${ChatCommands.LINK} and /${ChatCommands.LINK} commands`, async () => {
       const { agent } = await setupProvisionedTeamsAgent()
@@ -531,6 +605,35 @@ describe("agent teams integration provisioning", () => {
       expect(mockedWebhookChat).not.toHaveBeenCalled()
       expect(response.body.messages.join(" ")).toContain(ChatCommands.LINK)
       expect(extractLinkUrl(response.body.messages)).toBeTruthy()
+    })
+
+    it(`unlinks an existing mapping when ${ChatCommands.UNLINK} is sent`, async () => {
+      const { agent, linkExternalUser } = await setupProvisionedTeamsAgent()
+      const path = `/api/webhooks/ms-teams/${config.getProdWorkspaceId()}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postTeamsMessage({
+        path,
+        body: {
+          id: "activity-unlink-1",
+          type: "message",
+          text: ChatCommands.UNLINK,
+          from: { id: "user-1", name: "Teams User" },
+          conversation: { id: "conversation-1", conversationType: "personal" },
+          channelData: { tenant: { id: "tenant-1" } },
+        },
+      })
+
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+      expect(response.body.messages.join(" ")).toContain("unlinked")
+      await config.doInTenant(async () => {
+        const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
+          provider: AgentChannelProvider.MSTEAMS,
+          externalUserId: "user-1",
+          providerTenantId: "tenant-1",
+        })
+        expect(link).toBeUndefined()
+      })
     })
 
     it("allows optional-link unlinked users and reuses their synthetic conversation", async () => {
