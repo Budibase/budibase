@@ -21,7 +21,7 @@ describe("PlatformActionPersistProcessor", () => {
   const identity = {} as Identity
 
   beforeEach(() => {
-    mockEnqueue.mockClear()
+    mockEnqueue.mockReset()
   })
 
   it("ignores events that are not action events", async () => {
