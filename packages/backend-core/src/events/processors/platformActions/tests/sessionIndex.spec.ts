@@ -145,6 +145,9 @@ describe("upsertPlatformActionSession", () => {
       // back up. Simulate that retry here to prove no increment is lost
       // under real concurrency, rather than two updates silently racing
       // through a read-merge-write on the same doc.
+      const sessionId = getPlatformActionSessionId(input)
+      const lockContentionMessage = `Could not acquire lock to index platform action session ${sessionId}`
+
       async function upsertWithRetry(timestamp: string) {
         for (let attempt = 0; attempt < 20; attempt++) {
           try {
@@ -154,7 +157,16 @@ describe("upsertPlatformActionSession", () => {
               timestamp,
             })
             return
-          } catch {
+          } catch (err) {
+            // Only lock contention is expected/retryable here - anything
+            // else is a real bug and should fail the test immediately
+            // instead of being masked behind 20 blind retries.
+            if (
+              !(err instanceof Error) ||
+              err.message !== lockContentionMessage
+            ) {
+              throw err
+            }
             await new Promise(resolve => setTimeout(resolve, 30))
           }
         }
