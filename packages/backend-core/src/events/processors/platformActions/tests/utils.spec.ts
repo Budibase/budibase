@@ -44,18 +44,20 @@ describe("platformActions utils", () => {
         startedAt: "2026-08-31T00:00:00.000Z",
       })
 
+      // updatedAt is deliberately absent: db.put() always stamps it with
+      // the real write time, so the builder doesn't set it at all.
       expect(doc).toEqual({
         _id: getPlatformActionSessionId({
           sourceType: "agent_session",
           sourceId: "session-1",
         }),
         actionCount: 1,
-        updatedAt: "2026-08-31T00:00:00.000Z",
         sourceType: "agent_session",
         sourceId: "session-1",
         status: "completed",
         startedAt: "2026-08-31T00:00:00.000Z",
       })
+      expect(doc).not.toHaveProperty("updatedAt")
     })
 
     it("carries through optional asset/triggeredBy fields when provided", () => {

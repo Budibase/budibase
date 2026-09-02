@@ -29,13 +29,15 @@ export interface PlatformActionSessionInput extends ActionSourceContext {
   triggeredByLabel?: string
 }
 
+// updatedAt is intentionally absent here: DatabaseImpl.put() unconditionally
+// stamps it with the real write time on every put(), so any value set here
+// would just be discarded before the doc is ever read back.
 export function buildPlatformActionSession(
   input: PlatformActionSessionInput
-): PlatformActionSessionIndexDoc {
+): Omit<PlatformActionSessionIndexDoc, "updatedAt"> {
   return {
     _id: getPlatformActionSessionId(input),
     actionCount: 1,
-    updatedAt: input.startedAt,
     ...input,
   }
 }

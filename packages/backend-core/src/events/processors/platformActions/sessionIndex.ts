@@ -63,7 +63,8 @@ export async function upsertPlatformActionSession(
           ? latest(existing.completedAt ?? existing.startedAt, input.timestamp)
           : input.timestamp
 
-        const doc: PlatformActionSessionIndexDoc = existing
+        // updatedAt isn't known yet - db.put() below stamps it for real.
+        const doc: Omit<PlatformActionSessionIndexDoc, "updatedAt"> = existing
           ? {
               ...existing,
               status,
