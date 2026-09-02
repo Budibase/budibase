@@ -190,7 +190,7 @@ export async function run({
           sourceType: "agent_session",
           sourceId: sessionId,
           sessionId,
-          requestId,
+          requestId: agentRun.sessionLogIndexer.getRequestIds().at(-1),
         })
 
         return {
@@ -222,7 +222,7 @@ export async function run({
           sourceType: "agent_session",
           sourceId: sessionId,
           sessionId,
-          requestId: sessionLogIndexer.getRequestIds().at(-1),
+          requestId: agentRun?.sessionLogIndexer.getRequestIds().at(-1),
           reason: ActionFailureReason.ERROR,
           errorMessage,
         })
