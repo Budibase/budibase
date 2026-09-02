@@ -39,6 +39,7 @@ import {
   EscalationStepInputs,
   LoopV2Step,
   LoopV2StepInputs,
+  ActionSourceContext,
 } from "@budibase/types"
 import { Job } from "bull"
 import tracer from "dd-trace"
@@ -366,6 +367,16 @@ class Orchestrator {
 
   get appId(): string {
     return this.job.data.event.appId!
+  }
+
+  private get actionSourceContext(): ActionSourceContext & {
+    automationId: string
+  } {
+    return {
+      sourceType: "automation_run",
+      sourceId: `${this.job.id}`,
+      automationId: this.automation._id!,
+    }
   }
 
   isCron(): boolean {
@@ -734,12 +745,16 @@ class Orchestrator {
                   ctx.state[response.inputs.key] = response.outputs.value
                 }
 
-                events.action.automationStepExecuted({ stepId: step.stepId })
+                events.action.automationStepExecuted({
+                  stepId: step.stepId,
+                  ...this.actionSourceContext,
+                })
                 if (response.outputs.success === false) {
                   events.action.automationStepFailed({
                     stepId: step.stepId,
                     reason: ActionFailureReason.ERROR,
                     errorMessage: response.outputs.error as string | undefined,
+                    ...this.actionSourceContext,
                   })
                 }
                 return response
@@ -804,6 +819,7 @@ class Orchestrator {
           events.action.automationStepFailed({
             stepId: step.stepId,
             reason: ActionFailureReason.INCORRECT_TYPE,
+            ...this.actionSourceContext,
           })
           return stepFailure(step, {
             status: AutomationStepStatus.INCORRECT_TYPE,
@@ -834,6 +850,7 @@ class Orchestrator {
             events.action.automationStepFailed({
               stepId: step.stepId,
               reason: ActionFailureReason.MAX_ITERATIONS,
+              ...this.actionSourceContext,
             })
             return stepFailure(
               step,
@@ -853,6 +870,7 @@ class Orchestrator {
             events.action.automationStepFailed({
               stepId: step.stepId,
               reason: ActionFailureReason.FAILURE_CONDITION,
+              ...this.actionSourceContext,
             })
             return stepFailure(
               step,
@@ -994,6 +1012,7 @@ class Orchestrator {
       events.action.automationStepFailed({
         stepId: step.stepId,
         reason: ActionFailureReason.NO_CONDITION_MET,
+        ...this.actionSourceContext,
       })
       return [stepFailure(step, { status: AutomationStatus.NO_CONDITION_MET })]
     })

@@ -628,7 +628,12 @@ describe("Branching automations", () => {
       .test({ fields: {} })
 
     expect(events.action.automationStepFailed).toHaveBeenCalledWith(
-      expect.objectContaining({ reason: ActionFailureReason.NO_CONDITION_MET })
+      expect.objectContaining({
+        reason: ActionFailureReason.NO_CONDITION_MET,
+        sourceType: "automation_run",
+        sourceId: expect.any(String),
+        automationId: expect.any(String),
+      })
     )
   })
 
@@ -641,7 +646,12 @@ describe("Branching automations", () => {
       .test({ fields: {} })
 
     expect(events.action.automationStepFailed).toHaveBeenCalledWith(
-      expect.objectContaining({ reason: ActionFailureReason.ERROR })
+      expect.objectContaining({
+        reason: ActionFailureReason.ERROR,
+        sourceType: "automation_run",
+        sourceId: expect.any(String),
+        automationId: expect.any(String),
+      })
     )
   })
 })

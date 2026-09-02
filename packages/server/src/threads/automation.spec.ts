@@ -429,6 +429,59 @@ describe("automation thread", () => {
     expect(firstChildRunningIndex).toBeGreaterThan(firstBranchEventIndex)
   })
 
+  it("emits automationStepExecuted with source context when a step succeeds", async () => {
+    jest.clearAllMocks()
+
+    const appId = config.getDevWorkspaceId()
+
+    const { id: _ignored, ...serverLogDefinition } =
+      BUILTIN_ACTION_DEFINITIONS.SERVER_LOG as AutomationStep
+    const serverLogStep: AutomationStep = {
+      ...serverLogDefinition,
+      id: "server-log-step",
+      stepId: AutomationActionStepId.SERVER_LOG,
+      inputs: { text: "hello" },
+    }
+
+    const job = {
+      id: "server-log-job",
+      data: {
+        automation: basicAutomation({
+          _id: "automation_server_log",
+          appId,
+          definition: {
+            trigger: {
+              stepId: AutomationTriggerStepId.APP,
+              name: "test",
+              tagline: "test",
+              icon: "test",
+              description: "test",
+              type: AutomationStepType.TRIGGER,
+              inputs: {},
+              id: "trigger",
+              schema: {
+                inputs: { properties: {} },
+                outputs: { properties: {} },
+              },
+            },
+            steps: [serverLogStep],
+          },
+        }),
+        event: { appId },
+      },
+    } as Job<AutomationData>
+
+    await executeInThread(job)
+
+    expect(events.action.automationStepExecuted).toHaveBeenCalledWith({
+      stepId: AutomationActionStepId.SERVER_LOG,
+      sourceType: "automation_run",
+      sourceId: "server-log-job",
+      automationId: "automation_server_log",
+    })
+    expect(events.action.automationStepFailed).not.toHaveBeenCalled()
+  })
+
   it("emits automationStepFailed with ERROR when a step fails", async () => {
     jest.clearAllMocks()
 
@@ -444,8 +497,10 @@ describe("automation thread", () => {
     }
 
     const job = {
+      id: "failing-step-job",
       data: {
         automation: basicAutomation({
+          _id: "automation_failing_step",
           appId,
           definition: {
             trigger: {
@@ -475,6 +530,9 @@ describe("automation thread", () => {
       expect.objectContaining({
         stepId: AutomationActionStepId.EXECUTE_SCRIPT,
         reason: ActionFailureReason.ERROR,
+        sourceType: "automation_run",
+        sourceId: "failing-step-job",
+        automationId: "automation_failing_step",
       })
     )
   })
