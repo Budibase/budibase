@@ -1,21 +1,21 @@
 import type { PlatformActionSessionIndexJob } from "@budibase/types"
 import * as context from "../../../context"
-import * as queue from "../../../queue"
+import { BudibaseQueue, JobQueue } from "../../../queue"
 import { upsertPlatformActionSession } from "./sessionIndex"
 
 const DEFAULT_INDEX_QUEUE_CONCURRENCY = 2
 const DEFAULT_INDEX_QUEUE_BACKOFF_MS = 5000
 
 let platformActionSessionIndexQueue:
-  | queue.BudibaseQueue<PlatformActionSessionIndexJob>
+  | BudibaseQueue<PlatformActionSessionIndexJob>
   | undefined
 let platformActionSessionIndexQueueInitialised = false
 
 function getIndexQueue() {
   if (!platformActionSessionIndexQueue) {
     platformActionSessionIndexQueue =
-      new queue.BudibaseQueue<PlatformActionSessionIndexJob>(
-        queue.JobQueue.PLATFORM_ACTION_SESSION_INDEXING,
+      new BudibaseQueue<PlatformActionSessionIndexJob>(
+        JobQueue.PLATFORM_ACTION_SESSION_INDEXING,
         {
           jobOptions: {
             attempts: 6,
