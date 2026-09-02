@@ -147,4 +147,48 @@ describe("PlatformActionPersistProcessor", () => {
       }
     })
   })
+
+  it("retries the enqueue call when it transiently fails, and eventually succeeds", async () => {
+    await run(async () => {
+      mockEnqueue
+        .mockRejectedValueOnce(new Error("redis blip"))
+        .mockRejectedValueOnce(new Error("redis blip"))
+        .mockResolvedValueOnce(undefined)
+
+      await processor.processEvent(
+        Event.ACTION_AI_AGENT_EXECUTED,
+        identity,
+        { sourceType: "agent_session", sourceId: "session-1" },
+        undefined
+      )
+
+      expect(mockEnqueue).toHaveBeenCalledTimes(3)
+    })
+  })
+
+  it("gives up and logs after exhausting enqueue retries, without throwing", async () => {
+    await run(async () => {
+      mockEnqueue.mockRejectedValue(new Error("redis down"))
+      const errorSpy = jest.spyOn(console, "error").mockImplementation()
+
+      try {
+        await expect(
+          processor.processEvent(
+            Event.ACTION_AI_AGENT_EXECUTED,
+            identity,
+            { sourceType: "agent_session", sourceId: "session-1" },
+            undefined
+          )
+        ).resolves.toBeUndefined()
+
+        expect(mockEnqueue).toHaveBeenCalledTimes(3)
+        expect(errorSpy).toHaveBeenCalledWith(
+          "Failed to enqueue platform action session index job",
+          expect.objectContaining({ sourceType: "agent_session" })
+        )
+      } finally {
+        errorSpy.mockRestore()
+      }
+    })
+  })
 })

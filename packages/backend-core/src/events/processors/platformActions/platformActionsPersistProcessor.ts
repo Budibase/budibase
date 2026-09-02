@@ -4,11 +4,16 @@ import {
   Event,
   Identity,
   PlatformActionEvent,
+  PlatformActionSessionIndexJob,
   SEPARATOR,
 } from "@budibase/types"
 import * as context from "../../../context"
+import { timeout } from "../../../utils"
 import { EventProcessor } from "../types"
 import { enqueuePlatformActionSessionIndex } from "./indexQueue"
+
+const ENQUEUE_MAX_ATTEMPTS = 3
+const ENQUEUE_RETRY_DELAY_MS = 200
 
 function toCompactTimestamp(isoTimestamp: string): string {
   return isoTimestamp.replace(/[-:.]/g, "")
@@ -69,23 +74,34 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
     }
 
     const workspaceId = context.getWorkspaceId()
-    if (workspaceId) {
+    if (!workspaceId) {
+      return
+    }
+
+    const indexJob: PlatformActionSessionIndexJob = {
+      workspaceId,
+      sourceType: doc.sourceType,
+      sourceId: doc.sourceId,
+      eventName: event,
+      outcome: event.endsWith(":failed") ? "failure" : "success",
+      timestamp: isoTimestamp,
+    }
+
+    for (let attempt = 1; attempt <= ENQUEUE_MAX_ATTEMPTS; attempt++) {
       try {
-        await enqueuePlatformActionSessionIndex({
-          workspaceId,
-          sourceType: doc.sourceType,
-          sourceId: doc.sourceId,
-          eventName: event,
-          outcome: event.endsWith(":failed") ? "failure" : "success",
-          timestamp: isoTimestamp,
-        })
+        await enqueuePlatformActionSessionIndex(indexJob)
+        return
       } catch (err) {
-        console.error("Failed to enqueue platform action session index job", {
-          event,
-          sourceType,
-          sourceId,
-          err,
-        })
+        if (attempt === ENQUEUE_MAX_ATTEMPTS) {
+          console.error("Failed to enqueue platform action session index job", {
+            event,
+            sourceType,
+            sourceId,
+            err,
+          })
+          return
+        }
+        await timeout(ENQUEUE_RETRY_DELAY_MS * attempt)
       }
     }
   }
