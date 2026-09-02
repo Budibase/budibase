@@ -127,7 +127,7 @@
   }
 
   const loadLinks = async (provider: string) => {
-    if (linkCache[provider] || loadingProviders.has(provider)) {
+    if (!agentId || linkCache[provider] || loadingProviders.has(provider)) {
       return
     }
     loadingProviders.add(provider)
@@ -135,7 +135,7 @@
     try {
       const links = await API.fetchChatIdentityLinks(
         provider as ChatIdentityLinkProvider,
-        agentId
+        requestedAgentId
       )
       // Drop a response that arrived after the bot changed.
       if (requestedAgentId !== agentId) {

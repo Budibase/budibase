@@ -1,4 +1,9 @@
-import { context, features, isHTTPError } from "@budibase/backend-core"
+import {
+  context,
+  features,
+  HTTPError,
+  isHTTPError,
+} from "@budibase/backend-core"
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
@@ -22,7 +27,9 @@ import {
 import { createTeamsAdapter } from "@chat-adapter/teams"
 import sdk from "../../../sdk"
 import { escalationProcessor } from "../../../escalation/processor"
+import { validateMSTeamsServiceUrl } from "../../../utilities/msTeams"
 import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
+import { createChatLogger } from "./chatLogger"
 import { getTeamsState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
@@ -146,6 +153,24 @@ export const stripTeamsMentions = (
   return withoutMentionEntities.replace(/\s+/g, " ").trim()
 }
 
+const TEAMS_SLASH_COMMANDS = [
+  ChatCommands.UNLINK,
+  ChatCommands.NEW,
+  ChatCommands.LINK,
+] as const
+
+const parseTeamsSlashCommand = (text: string) => {
+  for (const command of TEAMS_SLASH_COMMANDS) {
+    if (!new RegExp(`^(?:/${command}(?:\\s|$)|${command}$)`, "i").test(text)) {
+      continue
+    }
+    return {
+      command,
+      content: text.replace(new RegExp(`^/?${command}\\s*`, "i"), ""),
+    }
+  }
+}
+
 export const parseTeamsCommand = (
   text?: string,
   entities?: MSTeamsActivity["entities"]
@@ -157,36 +182,13 @@ export const parseTeamsCommand = (
   if (!normalized) {
     return { command: ChatCommands.UNSUPPORTED, content: "" }
   }
-  const lower = normalized.toLowerCase()
 
-  if (
-    lower === ChatCommands.NEW ||
-    lower === `/${ChatCommands.NEW}` ||
-    lower.startsWith(`/${ChatCommands.NEW} `)
-  ) {
-    return {
-      command: ChatCommands.NEW,
-      content: normalized.replace(
-        new RegExp(`^/?${ChatCommands.NEW}\\s*`, "i"),
-        ""
-      ),
+  return (
+    parseTeamsSlashCommand(normalized) || {
+      command: ChatCommands.ASK,
+      content: normalized,
     }
-  }
-  if (
-    lower === ChatCommands.LINK ||
-    lower === `/${ChatCommands.LINK}` ||
-    lower.startsWith(`/${ChatCommands.LINK} `)
-  ) {
-    return {
-      command: ChatCommands.LINK,
-      content: normalized.replace(
-        new RegExp(`^/?${ChatCommands.LINK}\\s*`, "i"),
-        ""
-      ),
-    }
-  }
-
-  return { command: ChatCommands.ASK, content: normalized }
+  )
 }
 
 export const splitTeamsMessage = (
@@ -442,6 +444,17 @@ export async function MSTeamsWebhook(
   await runChatWebhook({
     ctx,
     providerName: "Teams",
+    validateBody: body => {
+      if (
+        !body ||
+        typeof body !== "object" ||
+        !("serviceUrl" in body) ||
+        typeof body.serviceUrl !== "string"
+      ) {
+        throw new HTTPError("Missing Microsoft Teams service URL", 400)
+      }
+      validateMSTeamsServiceUrl(body.serviceUrl)
+    },
     createWebhookHandler: async ({ workspaceId, agentId }) => {
       const {
         integration,
@@ -471,7 +484,7 @@ export async function MSTeamsWebhook(
           }),
         },
         state: await getTeamsState(),
-        logger: "silent",
+        logger: createChatLogger(),
         fallbackStreamingPlaceholderText: TEAMS_PROCESSING_MESSAGE,
         streamingUpdateIntervalMs: TEAMS_STREAMING_UPDATE_INTERVAL_MS,
       })
