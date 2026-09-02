@@ -39,11 +39,11 @@ function getIndexQueue() {
   return platformActionSessionIndexQueue
 }
 
-export function initPlatformActionSessionIndexQueue(
+export async function initPlatformActionSessionIndexQueue(
   concurrency = DEFAULT_INDEX_QUEUE_CONCURRENCY
 ): Promise<void> {
   if (platformActionSessionIndexQueueInitialised) {
-    return Promise.resolve()
+    return
   }
 
   platformActionSessionIndexQueueInitialised = true
