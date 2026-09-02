@@ -6,18 +6,19 @@ import {
   type ModelMessage,
   type UIMessage,
 } from "ai"
-import { context, queue, roles, utils } from "@budibase/backend-core"
+import { context, events, queue, roles, utils } from "@budibase/backend-core"
 import {
+  ActionFailureReason,
   Agent,
   AgentChannelProvider,
   AutomationActionStepId,
   ContextUser,
   DocumentType,
-  ESCALATE_TOOL_NAME,
   EscalationContextDoc,
   EscalationNotificationDoc,
   EscalationRecipient,
   EscalationSource,
+  EscalateToolResultStatus,
   PendingToolCall,
   SEPARATOR,
   SuspendedOperationContext,
@@ -616,14 +617,39 @@ export async function resumeOperation({
     unrecoveredToolFailures.add(storedCallFailure)
   }
   let needsInputUpdate = Promise.resolve()
+  let awaitingEscalation = false
+
+  if (doc.requestId) {
+    await events.platformActions
+      .enqueuePlatformActionSessionLifecycle({
+        sourceType: "agent_session",
+        sourceId: ctx.sessionId,
+        signal: "active",
+      })
+      .catch(error => {
+        console.error(
+          "Failed to mark agent session active on escalation resume",
+          {
+            escalationId,
+            agentId: ctx.agentId,
+            error,
+          }
+        )
+      })
+  }
 
   try {
     const result = await run.stream({
       pendingToolCalls,
       unrecoveredToolFailures,
-      onToolCalls: toolNames => {
+      onToolCallCompleted: ({ toolName, status, input, output }) => {
         const requestId = doc.requestId
-        if (requestId && toolNames.includes(ESCALATE_TOOL_NAME)) {
+        if (!requestId) {
+          return
+        }
+        const outputStatus = (output as { status?: string } | undefined)?.status
+        if (outputStatus === EscalateToolResultStatus.PENDING_APPROVAL) {
+          awaitingEscalation = true
           needsInputUpdate = needsInputUpdate.then(() =>
             sdk.ai.agentRequests
               .updateRequestStatus({ requestId, status: "needs_input" })
@@ -634,12 +660,6 @@ export async function resumeOperation({
                 )
               })
           )
-        }
-      },
-      onToolCallCompleted: ({ toolName, status, input, output }) => {
-        const requestId = doc.requestId
-        if (!requestId) {
-          return
         }
         toolCallChain = toolCallChain.then(() =>
           sdk.ai.agentRequests
@@ -691,6 +711,17 @@ export async function resumeOperation({
     // during the drain) so agent-logs reflect the post-approval turn.
     await run.sessionLogIndexer.index()
 
+    if (doc.requestId) {
+      events.action.aiAgentExecuted({
+        agentId: ctx.agentId,
+        sourceType: "agent_session",
+        sourceId: ctx.sessionId,
+        sessionId: ctx.sessionId,
+        requestId: doc.requestId,
+        ...(awaitingEscalation ? { awaitingEscalation: true } : {}),
+      })
+    }
+
     const text = assistantMessage ? messageText(assistantMessage) : ""
     await persistResumeResult(
       escalationId,
@@ -733,6 +764,17 @@ export async function resumeOperation({
   } catch (error) {
     await toolCallChain
     await needsInputUpdate
+    if (doc.requestId) {
+      events.action.aiAgentFailed({
+        agentId: ctx.agentId,
+        sourceType: "agent_session",
+        sourceId: ctx.sessionId,
+        sessionId: ctx.sessionId,
+        requestId: doc.requestId,
+        reason: ActionFailureReason.ERROR,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      })
+    }
     await markEscalationRequestResolved({
       status: "failed",
       error: error instanceof Error ? error.message : String(error),

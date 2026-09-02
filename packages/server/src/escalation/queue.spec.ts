@@ -1,4 +1,4 @@
-import { context } from "@budibase/backend-core"
+import { context, events } from "@budibase/backend-core"
 import {
   Agent,
   DocumentType,
@@ -44,6 +44,11 @@ const prepareAgentChatRunMock = sdk.ai.agents.prepareAgentChatRun as jest.Mock
 const getOrThrowMock = sdk.ai.agents.getOrThrow as jest.Mock
 const recordEscalationResolvedMock = sdk.ai.agentRequests
   .recordEscalationResolved as jest.Mock
+const enqueueLifecycleMock = jest.spyOn(
+  events.platformActions,
+  "enqueuePlatformActionSessionLifecycle"
+)
+const aiAgentExecutedMock = jest.spyOn(events.action, "aiAgentExecuted")
 
 const mockApprovedRun = (text: string) => {
   prepareAgentChatRunMock.mockResolvedValue({
@@ -98,6 +103,8 @@ describe("resumeOperation", () => {
   beforeEach(async () => {
     prepareAgentChatRunMock.mockReset()
     getOrThrowMock.mockReset()
+    enqueueLifecycleMock.mockReset().mockResolvedValue(undefined)
+    aiAgentExecutedMock.mockReset()
     await config.newTenant()
   })
 
@@ -146,6 +153,33 @@ describe("resumeOperation", () => {
 
       const { getRequestId } = prepareAgentChatRunMock.mock.calls[0][0]
       expect(getRequestId()).toEqual(requestId)
+    })
+  })
+
+  it("marks an action-backed request session active and emits its resumed action", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      mockApprovedRun("Approved and booked.")
+
+      await resumeOperation({
+        doc: baseDoc({ requestId, response: { accepted: true } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: baseCtx,
+      })
+
+      expect(enqueueLifecycleMock).toHaveBeenCalledWith({
+        sourceType: "agent_session",
+        sourceId: "session_1",
+        signal: "active",
+      })
+      expect(aiAgentExecutedMock).toHaveBeenCalledWith({
+        agentId: "agent_1",
+        sourceType: "agent_session",
+        sourceId: "session_1",
+        sessionId: "session_1",
+        requestId,
+      })
     })
   })
 
@@ -291,14 +325,19 @@ describe("resumeOperation", () => {
 
   it("does nothing when the escalation has no associated request", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
+      mockApprovedRun("Approved and booked.")
+
       await expect(
         resumeOperation({
-          doc: baseDoc(),
+          doc: baseDoc({ response: { accepted: true } }),
           escalationId: "esc_primary",
-          resolution: "expired",
+          resolution: "resolved",
           ctx: baseCtx,
         })
       ).resolves.toBeUndefined()
+
+      expect(enqueueLifecycleMock).not.toHaveBeenCalled()
+      expect(aiAgentExecutedMock).not.toHaveBeenCalled()
     })
   })
 
