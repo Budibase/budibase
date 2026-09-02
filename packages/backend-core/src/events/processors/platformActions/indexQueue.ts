@@ -40,14 +40,16 @@ function getIndexQueue() {
 
 export function initPlatformActionSessionIndexQueue(
   concurrency = DEFAULT_INDEX_QUEUE_CONCURRENCY
-) {
+): Promise<void> {
   if (platformActionSessionIndexQueueInitialised) {
     return Promise.resolve()
   }
 
+  platformActionSessionIndexQueueInitialised = true
+
+  let processPromise: Promise<void>
   try {
-    platformActionSessionIndexQueueInitialised = true
-    return getIndexQueue().process(concurrency, async job => {
+    processPromise = getIndexQueue().process(concurrency, async job => {
       const { workspaceId, ...indexInput } = job.data
       await context.doInWorkspaceContext(workspaceId, async () => {
         await upsertPlatformActionSession(indexInput)
@@ -57,6 +59,15 @@ export function initPlatformActionSessionIndexQueue(
     platformActionSessionIndexQueueInitialised = false
     throw error
   }
+
+  // Reset the guard if consumer setup fails asynchronously
+  return processPromise.catch(err => {
+    console.error(
+      "Platform action session index queue processor failed to start",
+      err
+    )
+    platformActionSessionIndexQueueInitialised = false
+  })
 }
 
 export async function enqueuePlatformActionSessionIndex(

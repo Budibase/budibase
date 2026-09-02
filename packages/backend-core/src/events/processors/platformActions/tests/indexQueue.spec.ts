@@ -54,3 +54,40 @@ describe("enqueuePlatformActionSessionIndex", () => {
     expect(mockUpsert).toHaveBeenCalledTimes(1)
   })
 })
+
+describe("initPlatformActionSessionIndexQueue", () => {
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  it("resets the initialised guard when process() rejects asynchronously, then stops retrying once it succeeds", async () => {
+    jest.resetModules()
+    const freshQueue = await import("../../../../queue")
+    const processSpy = jest
+      .spyOn(freshQueue.BudibaseQueue.prototype, "process")
+      .mockRejectedValueOnce(new Error("redis unreachable"))
+      .mockImplementationOnce(() => new Promise<void>(() => {}))
+    const errorSpy = jest.spyOn(console, "error").mockImplementation()
+
+    const freshIndexQueue = await import("../indexQueue")
+
+    await freshIndexQueue.initPlatformActionSessionIndexQueue()
+    expect(processSpy).toHaveBeenCalledTimes(1)
+
+    // The guard must have been reset by the failed attempt above - a second
+    // call should try process() again instead of treating the queue as
+    // already (falsely) initialised.
+    freshIndexQueue.initPlatformActionSessionIndexQueue()
+    expect(processSpy).toHaveBeenCalledTimes(2)
+
+    // Once process() is up and running (its returned promise stays
+    // pending), further calls must not attempt to re-register it.
+    await freshIndexQueue.initPlatformActionSessionIndexQueue()
+    expect(processSpy).toHaveBeenCalledTimes(2)
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Platform action session index queue processor failed to start",
+      expect.any(Error)
+    )
+  })
+})
