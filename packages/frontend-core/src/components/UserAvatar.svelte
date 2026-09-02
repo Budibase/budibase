@@ -1,9 +1,8 @@
 <script lang="ts">
   import { Avatar, AbsTooltip, TooltipPosition } from "@budibase/bbui"
   import { helpers } from "@budibase/shared-core"
-  import type { User } from "@budibase/types"
 
-  export let user: User | undefined
+  export let user: helpers.UserDisplayInfo | undefined
   export let size: "XS" | "S" | "M" = "S"
   export let tooltipPosition: TooltipPosition = TooltipPosition.Top
   export let showTooltip: boolean = true

@@ -129,6 +129,10 @@ export const buildMSTeamsManifest = ({
                 title: ChatCommands.LINK,
                 description: "Link your Microsoft Teams user to Budibase.",
               },
+              {
+                title: ChatCommands.UNLINK,
+                description: "Unlink your Microsoft Teams user from Budibase.",
+              },
             ],
           },
         ],
