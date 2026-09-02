@@ -1,4 +1,5 @@
 import {
+  context,
   db,
   db as dbCore,
   Duration,
@@ -309,8 +310,8 @@ async function importProcessor(
     nameForBackup = data.import.nameForBackup,
     createdBy = data.import.createdBy
   const tenantId = tenancy.getTenantIDFromWorkspaceID(appId) as string
-  return tenancy.doInTenant(tenantId, async () => {
-    const devWorkspaceId = dbCore.getDevWorkspaceID(appId)
+  const devWorkspaceId = dbCore.getDevWorkspaceID(appId)
+  return context.doInWorkspaceContext(devWorkspaceId, async () => {
     const tempWorkspaceId = `${devWorkspaceId}_temp_${Date.now()}`
 
     const { rev } = await backups.updateRestoreStatus(
