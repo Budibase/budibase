@@ -5,6 +5,7 @@ import { upsertPlatformActionSession } from "./sessionIndex"
 
 const DEFAULT_INDEX_QUEUE_CONCURRENCY = 2
 const DEFAULT_INDEX_QUEUE_BACKOFF_MS = 5000
+const DEFAULT_INDEX_QUEUE_ATTEMPTS = 6
 
 let platformActionSessionIndexQueue:
   | BudibaseQueue<PlatformActionSessionIndexJob>
@@ -18,7 +19,7 @@ function getIndexQueue() {
         JobQueue.PLATFORM_ACTION_SESSION_INDEXING,
         {
           jobOptions: {
-            attempts: 6,
+            attempts: DEFAULT_INDEX_QUEUE_ATTEMPTS,
             backoff: {
               type: "exponential",
               delay: DEFAULT_INDEX_QUEUE_BACKOFF_MS,
