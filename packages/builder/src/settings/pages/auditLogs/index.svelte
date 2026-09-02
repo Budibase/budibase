@@ -2,7 +2,7 @@
      hot reload will stop working due to the use of window.location. You'll need to reload the pag
      to get it working again.
 -->
-<script>
+<script lang="ts">
   import {
     Layout,
     Table,
@@ -23,7 +23,8 @@
   import { auditLogs } from "@/stores/portal/auditLogs"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import { createPaginationStore } from "@/helpers/pagination"
-  import { onMount, setContext } from "svelte"
+  import { onDestroy, onMount, setContext, untrack } from "svelte"
+  import { derived } from "svelte/store"
   import ViewDetailsRenderer from "./_components/ViewDetailsRenderer.svelte"
   import UserRenderer from "./_components/UserRenderer.svelte"
   import TimeRenderer from "./_components/TimeRenderer.svelte"
@@ -31,12 +32,39 @@
   import { cloneDeep } from "lodash"
   import DateRangePicker from "@/components/common/DateRangePicker.svelte"
   import dayjs from "dayjs"
+  import type { Dayjs } from "dayjs"
+  import type { AuditLogEnriched, Event, StrippedUser } from "@budibase/types"
+  import { AUDIT_LOGS_CONTEXT, type AuditLogsContext } from "./auditLogContext"
+  import { createLatestRequestQueue } from "./auditLogUtils"
+
+  interface Selectable {
+    selected: boolean
+  }
+
+  interface EventOption extends Selectable {
+    id: Event
+    label: string
+  }
+
+  interface UserSearchQuery {
+    page?: string | null
+    search: string
+  }
+
+  interface LogSearchQuery {
+    page?: string | null
+    search: string
+    dateRange: Dayjs[]
+    selectedUsers: string[]
+    selectedApps: string[]
+    selectedEvents: Event[]
+  }
 
   const schema = {
     date: { width: "0.8fr" },
     user: { width: "0.5fr" },
     name: { width: "2fr", displayName: "Event" },
-    app: { width: "1.5fr" },
+    app: { width: "1.5fr", displayName: "Workspace" },
     view: { width: "0.1fr", borderLeft: true, displayName: "" },
   }
 
@@ -59,136 +87,117 @@
     },
   ]
 
-  let userSearchTerm = ""
-  let logSearchTerm = ""
-  let userPageInfo = createPaginationStore()
-  let logsPageInfo = createPaginationStore()
+  let userSearchTerm = $state("")
+  let logSearchTerm = $state("")
+  const userPageInfo = createPaginationStore()
+  const logsPageInfo = createPaginationStore()
+  const userPage = derived(userPageInfo, value => value.page)
+  const logsPage = derived(logsPageInfo, value => value.page)
 
-  let prevUserSearch = undefined
-  let prevLogSearch = undefined
-  let selectedUsers = []
-  let selectedApps = []
-  let selectedEvents = []
-  let selectedLog
-  let sidePanelVisible = false
-  let wideSidePanel = false
-  let timer
-  let dateRange = [dayjs().subtract(30, "days"), dayjs()]
+  let prevUserSearch = ""
+  let previousLogFilters: string | undefined
+  let selectedUsers = $state<string[]>([])
+  let selectedApps = $state<string[]>([])
+  let selectedEvents = $state<Event[]>([])
+  let selectedLog = $state<AuditLogEnriched>()
+  let sidePanelVisible = $state(false)
+  let wideSidePanel = $state(false)
+  let timer: ReturnType<typeof setTimeout> | undefined
+  let dateRange = $state([dayjs().subtract(30, "days"), dayjs()])
+  let usersObj = $state<Record<string, StrippedUser>>({})
 
-  $: fetchUsers(userPage, userSearchTerm)
-  $: fetchLogs({
-    logsPage,
-    logSearchTerm,
-    dateRange,
-    selectedUsers,
-    selectedApps,
-    selectedEvents,
-  })
-  $: userPage = $userPageInfo.page
-  $: logsPage = $logsPageInfo.page
-
-  let usersObj = {}
-  $: usersObj = {
-    ...usersObj,
-    ...$users.data?.reduce((accumulator, user) => {
-      accumulator[user._id] = user
-      return accumulator
-    }, {}),
-  }
-  $: sortedUsers = sort(
-    enrich(Object.values(usersObj), selectedUsers, "_id"),
-    "email"
-  )
-  $: sortedEvents = sort(
-    enrich(parseEventObject($auditLogs.events), selectedEvents, "id"),
-    "id"
-  )
-  $: sortedApps = sort(
-    enrich($workspacesStore.apps, selectedApps, "appId"),
-    "name"
-  )
-
-  const debounce = value => {
+  const debounce = (value: string) => {
     clearTimeout(timer)
     timer = setTimeout(() => {
       logSearchTerm = value
     }, 400)
   }
 
-  const fetchUsers = async (userPage, search) => {
-    if ($userPageInfo.loading) {
-      return
-    }
+  const fetchUsers = async ({ page, search }: UserSearchQuery) => {
     // need to remove the page if they've started searching
     if (search && !prevUserSearch) {
       userPageInfo.reset()
-      userPage = undefined
+      page = undefined
     }
     prevUserSearch = search
     try {
       userPageInfo.loading()
-      await users.search({
-        bookmark: userPage,
+      const response = await users.search({
+        bookmark: page || undefined,
         query: { string: { email: search } },
       })
-      userPageInfo.fetched($users.hasNextPage, $users.nextPage)
+      usersObj = {
+        ...usersObj,
+        ...response.data.reduce<Record<string, StrippedUser>>(
+          (accumulator, user) => {
+            if (user._id) accumulator[user._id] = user
+            return accumulator
+          },
+          {}
+        ),
+      }
+      userPageInfo.fetched(!!response.hasNextPage, response.nextPage || "")
     } catch (error) {
+      userPageInfo.loading(false)
       notifications.error("Error getting user list")
     }
   }
 
   const fetchLogs = async ({
-    logsPage,
-    logSearchTerm,
+    page,
+    search,
     dateRange,
     selectedUsers,
     selectedApps,
     selectedEvents,
-  }) => {
-    if ($logsPageInfo.loading) {
-      return
-    }
-    // need to remove the page if they've started searching
-    if (logSearchTerm && !prevLogSearch) {
-      logsPageInfo.reset()
-      logsPage = undefined
-    }
-    prevLogSearch = logSearchTerm
+  }: LogSearchQuery) => {
     try {
       logsPageInfo.loading()
-      await auditLogs.search({
-        bookmark: logsPage,
-        startDate: dateRange[0] || undefined,
-        endDate: dateRange[1] || undefined,
-        fullSearch: logSearchTerm,
+      const response = await auditLogs.search({
+        bookmark: page ? Number(page) : undefined,
+        startDate: dateRange[0]?.toISOString(),
+        endDate: dateRange[1]?.toISOString(),
+        fullSearch: search,
         userIds: selectedUsers,
         appIds: selectedApps,
         events: selectedEvents,
       })
       logsPageInfo.fetched(
-        $auditLogs.logs?.hasNextPage,
-        $auditLogs.logs?.bookmark
+        !!response?.hasNextPage,
+        response?.bookmark?.toString() || ""
       )
     } catch (error) {
+      logsPageInfo.loading(false)
       notifications.error(`Error getting audit logs - ${error}`)
     }
   }
 
-  const enrich = (list, selected, key) => {
+  const queueUserSearch = createLatestRequestQueue(fetchUsers)
+  const queueLogSearch = createLatestRequestQueue(fetchLogs)
+
+  const enrich = <T extends object>(
+    list: T[],
+    selected: string[],
+    getValue: (item: T) => string | undefined
+  ): (T & Selectable)[] => {
     return list.map(item => {
+      const value = getValue(item)
       return {
         ...item,
         selected:
-          selected.find(x => x === item[key] || x.includes(item[key])) != null,
+          !!value && selected.some(x => x === value || x.includes(value)),
       }
     })
   }
 
-  const sort = (list, key) => {
-    let sortedList = list.slice()
-    sortedList?.sort((a, b) => {
+  const sort = <T extends Selectable>(
+    list: T[],
+    getValue: (item: T) => string
+  ): T[] => {
+    const sortedList = list.slice()
+    sortedList.sort((a, b) => {
       if (a.selected === b.selected) {
-        return a[key] < b[key] ? -1 : 1
+        return getValue(a) < getValue(b) ? -1 : 1
       } else if (a.selected) {
         return -1
       } else if (b.selected) {
@@ -199,65 +208,129 @@
     return sortedList
   }
 
-  const parseEventObject = obj => {
+  const parseEventObject = (obj?: Record<string, string>): EventOption[] => {
     // convert obj which is an object of key value pairs to an array of objects
     // with the key as the id and the value as the name
     if (obj) {
       return Object.entries(obj).map(([id, label]) => {
-        return { id, label }
+        return { id: id as Event, label: label.trim(), selected: false }
       })
     } else {
       return []
     }
   }
 
-  const viewDetails = detail => {
+  const sortedUsers = $derived(
+    sort(
+      enrich(Object.values(usersObj), selectedUsers, user => user._id),
+      user => user.email
+    )
+  )
+  const sortedEvents = $derived(
+    sort(
+      enrich(
+        parseEventObject($auditLogs.events),
+        selectedEvents,
+        event => event.id
+      ),
+      event => event.label.toLowerCase()
+    )
+  )
+  const sortedWorkspaces = $derived(
+    sort(
+      enrich($workspacesStore.apps, selectedApps, app => app.appId),
+      app => app.name.toLocaleLowerCase()
+    )
+  )
+
+  $effect(() => {
+    const page = $userPage
+    const search = userSearchTerm
+    untrack(() => queueUserSearch({ page, search }))
+  })
+
+  $effect(() => {
+    const page = $logsPage
+    const filters = JSON.stringify({
+      search: logSearchTerm,
+      dateRange: dateRange.map(date => date?.toISOString()),
+      selectedUsers,
+      selectedApps,
+      selectedEvents,
+    })
+    const filtersChanged =
+      previousLogFilters !== undefined && previousLogFilters !== filters
+    previousLogFilters = filters
+
+    if (filtersChanged && page) {
+      untrack(() => logsPageInfo.reset())
+      return
+    }
+
+    const query: LogSearchQuery = {
+      page,
+      search: logSearchTerm,
+      dateRange: [...dateRange],
+      selectedUsers: [...selectedUsers],
+      selectedApps: [...selectedApps],
+      selectedEvents: [...selectedEvents],
+    }
+    untrack(() => queueLogSearch(query))
+  })
+
+  const viewDetails = (detail: AuditLogEnriched) => {
     selectedLog = detail
     sidePanelVisible = true
   }
 
   const downloadLogs = async () => {
     try {
-      window.location = auditLogs.getDownloadUrl({
-        startDate: dateRange[0],
-        endDate: dateRange[1],
+      window.location.href = auditLogs.getDownloadUrl({
+        startDate: dateRange[0]?.toISOString(),
+        endDate: dateRange[1]?.toISOString(),
         fullSearch: logSearchTerm,
         userIds: selectedUsers,
         appIds: selectedApps,
         events: selectedEvents,
       })
     } catch (error) {
-      notifications.error(`Error downloading logs: ` + error.message)
+      notifications.error(
+        `Error downloading logs: ${error instanceof Error ? error.message : error}`
+      )
     }
   }
 
-  setContext("auditLogs", {
+  setContext<AuditLogsContext>(AUDIT_LOGS_CONTEXT, {
     viewDetails,
   })
 
-  const copyToClipboard = async value => {
+  const copyToClipboard = async (value: string) => {
     await Helpers.copyToClipboard(value)
     notifications.success("Copied")
   }
 
-  function cleanupMetadata(log) {
-    const cloned = cloneDeep(log)
-    cloned.userId = cloned.user._id
-    if (cloned.app) {
-      cloned.appId = cloned.app.appId
+  const copySelectedMetadata = () => {
+    if (selectedLog) {
+      return copyToClipboard(JSON.stringify(selectedLog.metadata))
     }
-    // remove props that are confused/not returned in download
-    delete cloned._id
-    delete cloned._rev
-    delete cloned.app
-    delete cloned.user
-    return cloned
+  }
+
+  function cleanupMetadata(log: AuditLogEnriched) {
+    const cloned = cloneDeep(log)
+    const { app, user, ...metadata } = cloned
+    return {
+      ...metadata,
+      userId: user._id,
+      ...(app ? { appId: "appId" in app ? app.appId : app._id } : {}),
+    }
   }
 
   onMount(async () => {
     await auditLogs.getEventDefinitions()
     await licensing.init()
   })
+
+  onDestroy(() => clearTimeout(timer))
 </script>
 
 <LockedFeature
@@ -277,7 +350,7 @@
         label="Users"
         autocomplete
         bind:value={selectedUsers}
-        getOptionValue={user => user._id}
+        getOptionValue={user => user._id || ""}
         getOptionLabel={user => user.email}
         options={sortedUsers}
       />
@@ -289,7 +362,7 @@
         label="Workspaces"
         getOptionValue={app => app.instance._id}
         getOptionLabel={app => app.name}
-        options={sortedApps}
+        options={sortedWorkspaces}
         bind:value={selectedApps}
       />
     </div>
@@ -382,10 +455,7 @@
     <Divider />
 
     <div class="side-panel-body">
-      <div
-        on:click={() => copyToClipboard(JSON.stringify(selectedLog.metadata))}
-        class="copy-icon"
-      >
+      <div on:click={copySelectedMetadata} class="copy-icon">
         <Icon name="copy" size="S" />
       </div>
       <CoreTextArea
