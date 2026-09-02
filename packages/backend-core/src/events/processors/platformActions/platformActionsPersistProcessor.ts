@@ -47,10 +47,11 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
       timestamp === undefined
         ? new Date().toISOString()
         : new Date(timestamp).toISOString()
+    const platformActionEventId = `${DocumentType.PLATFORM_ACTION_EVENT}${SEPARATOR}${toCompactTimestamp(
+      isoTimestamp
+    )}${SEPARATOR}${uuidv4()}`
     const doc: PlatformActionEvent = {
-      _id: `${DocumentType.PLATFORM_ACTION_EVENT}${SEPARATOR}${toCompactTimestamp(
-        isoTimestamp
-      )}${SEPARATOR}${uuidv4()}`,
+      _id: platformActionEventId,
       sourceType: sourceType as PlatformActionEvent["sourceType"],
       sourceId,
       eventName: event,
@@ -80,6 +81,7 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
 
     const indexJob: PlatformActionSessionIndexJob = {
       workspaceId,
+      platformActionId: platformActionEventId,
       sourceType: doc.sourceType,
       sourceId: doc.sourceId,
       eventName: event,

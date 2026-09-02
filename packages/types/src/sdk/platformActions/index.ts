@@ -54,6 +54,7 @@ export type PlatformActionOutcome = (typeof PLATFORM_ACTION_OUTCOMES)[number]
 
 export interface PlatformActionSessionIndexJob extends ActionSourceContext {
   workspaceId: string
+  platformActionId: string
   eventName: string
   outcome: PlatformActionOutcome
   timestamp: string

@@ -63,5 +63,5 @@ export async function enqueuePlatformActionSessionIndex(
   job: PlatformActionSessionIndexJob
 ): Promise<void> {
   initPlatformActionSessionIndexQueue()
-  await getIndexQueue().add(job)
+  await getIndexQueue().add(job, { jobId: job.platformActionId })
 }
