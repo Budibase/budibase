@@ -1,5 +1,6 @@
 import { BaseEvent } from "./event"
 import { QueryVerb } from "../../documents"
+import type { ActionSourceContext } from "../platformActions"
 
 export enum ActionFailureReason {
   ERROR = "error",
@@ -9,12 +10,18 @@ export enum ActionFailureReason {
   NO_CONDITION_MET = "no_condition_met",
 }
 
-export interface ActionAutomationStepExecuted extends BaseEvent {
+export interface ActionAutomationStepExecuted
+  extends BaseEvent,
+    ActionSourceContext {
   stepId: string
+  automationId: string
 }
 
-export interface ActionAutomationStepFailed extends BaseEvent {
+export interface ActionAutomationStepFailed
+  extends BaseEvent,
+    ActionSourceContext {
   stepId: string
+  automationId: string
   reason: ActionFailureReason
   errorMessage?: string
 }
@@ -29,12 +36,16 @@ export interface ActionCrudFailed extends BaseEvent {
   errorMessage?: string
 }
 
-export interface ActionAiAgentExecuted extends BaseEvent {
+export interface ActionAiAgentExecuted extends BaseEvent, ActionSourceContext {
   agentId: string
+  sessionId: string
+  requestId?: string
 }
 
-export interface ActionAiAgentFailed extends BaseEvent {
+export interface ActionAiAgentFailed extends BaseEvent, ActionSourceContext {
   agentId: string
+  sessionId: string
+  requestId?: string
   reason: ActionFailureReason
   errorMessage?: string
 }

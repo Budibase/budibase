@@ -28,6 +28,19 @@ import {
   type UIMessageChunk,
 } from "ai"
 import sdk from "../../../sdk"
+
+const buildAgentSessionActionContext = ({
+  sessionId,
+  requestId,
+}: {
+  sessionId: string
+  requestId?: string
+}) => ({
+  sourceType: "agent_session" as const,
+  sourceId: sessionId,
+  sessionId,
+  requestId,
+})
 import { isDevWorkspaceID } from "../../../db/utils"
 import {
   buildAgentMessageUsage,
@@ -555,6 +568,10 @@ export async function webhookChat({
     console.error("Chat webhook stream delivery failed", streamOutcome.reason)
     events.action.aiAgentFailed({
       agentId,
+      ...buildAgentSessionActionContext({
+        sessionId,
+        requestId: trackingHandle?.requestId,
+      }),
       reason: ActionFailureReason.ERROR,
       errorMessage: getErrorMessage(streamOutcome.reason),
     })
@@ -582,6 +599,10 @@ export async function webhookChat({
     })
     events.action.aiAgentFailed({
       agentId,
+      ...buildAgentSessionActionContext({
+        sessionId,
+        requestId: trackingHandle?.requestId,
+      }),
       reason: ActionFailureReason.ERROR,
       errorMessage: getErrorMessage(assistantMessageResult.reason),
     })
@@ -602,6 +623,10 @@ export async function webhookChat({
     })
     events.action.aiAgentFailed({
       agentId,
+      ...buildAgentSessionActionContext({
+        sessionId,
+        requestId: trackingHandle?.requestId,
+      }),
       reason: ActionFailureReason.ERROR,
       errorMessage: getErrorMessage(responseResult.reason),
     })
@@ -615,7 +640,13 @@ export async function webhookChat({
     throw responseResult.reason
   }
 
-  events.action.aiAgentExecuted({ agentId })
+  events.action.aiAgentExecuted({
+    agentId,
+    ...buildAgentSessionActionContext({
+      sessionId,
+      requestId: trackingHandle?.requestId ?? requestId,
+    }),
+  })
   const ragSources = run.getUsedKnowledgeSourcesMetadata()
 
   const finalAssistantMessage =
@@ -787,6 +818,10 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         })
         events.action.aiAgentFailed({
           agentId,
+          ...buildAgentSessionActionContext({
+            sessionId,
+            requestId: trackingHandle?.requestId,
+          }),
           reason: ActionFailureReason.ERROR,
           errorMessage: getErrorMessage(error),
         })
@@ -800,7 +835,15 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       },
       onFinish: async ({ messages }) => {
         await run.sessionLogIndexer.index()
-        events.action.aiAgentExecuted({ agentId })
+        events.action.aiAgentExecuted({
+          agentId,
+          ...buildAgentSessionActionContext({
+            sessionId,
+            requestId:
+              trackingHandle?.requestId ??
+              run.sessionLogIndexer.getRequestIds().at(-1),
+          }),
+        })
 
         await toolCallTracking.flush()
 
