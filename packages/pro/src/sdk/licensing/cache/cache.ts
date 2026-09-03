@@ -6,9 +6,9 @@ import * as Licenses from "../licenses"
 import * as Redis from "./redis"
 import { helpers } from "@budibase/shared-core"
 
-const EXPIRY_SECONDS = Duration.fromHours(1).toSeconds()
-const STALE_GRACE_SECONDS = Duration.fromHours(1).toSeconds()
-const CACHE_TTL_SECONDS = EXPIRY_SECONDS + STALE_GRACE_SECONDS
+const REVALIDATE_AFTER_SECONDS = Duration.fromHours(1).toSeconds()
+const OFFLINE_GRACE_SECONDS = Duration.fromDays(3).toSeconds()
+const CACHE_TTL_SECONDS = REVALIDATE_AFTER_SECONDS + OFFLINE_GRACE_SECONDS
 
 export const refresh = async () => {
   await invalidate()
@@ -28,7 +28,7 @@ const populateAndStoreLicense = async (
     async () => {
       const client = await Redis.getClient()
       const cached = await client.get(tenantId)
-      if (cached && !shouldRefreshLicense(cached)) {
+      if (cached && !shouldRevalidateLicense(cached)) {
         return cached
       }
 
@@ -53,11 +53,9 @@ const populateAndStoreLicense = async (
   return result
 }
 
-const shouldRefreshLicense = (license: CachedLicense) => {
+const shouldRevalidateLicense = (license: CachedLicense) => {
   const refreshedAt = license.refreshedAt ? Date.parse(license.refreshedAt) : 0
-  const ageMs = Date.now() - refreshedAt
-  const isInGracePeriod = ageMs >= EXPIRY_SECONDS * 1000
-  return isInGracePeriod
+  return Date.now() - refreshedAt >= REVALIDATE_AFTER_SECONDS * 1000
 }
 
 let _getCachedLicense = async (): Promise<CachedLicense> => {
@@ -85,8 +83,8 @@ let _getCachedLicense = async (): Promise<CachedLicense> => {
         features: license.features,
         plan: license.plan,
         quotas: license.quotas,
-        expirySeconds: EXPIRY_SECONDS,
-        staleGraceSeconds: STALE_GRACE_SECONDS,
+        revalidateAfterSeconds: REVALIDATE_AFTER_SECONDS,
+        offlineGraceSeconds: OFFLINE_GRACE_SECONDS,
       })
       return license
     }
@@ -99,7 +97,7 @@ let _getCachedLicense = async (): Promise<CachedLicense> => {
       quotas: license.quotas,
     })
 
-    if (shouldRefreshLicense(license)) {
+    if (shouldRevalidateLicense(license)) {
       // Run in the background
       populateAndStoreLicense(tenantId).catch(() => {
         // best-effort refresh
