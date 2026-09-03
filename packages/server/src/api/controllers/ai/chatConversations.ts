@@ -213,6 +213,7 @@ const buildToolCallTrackingHandler = ({
   // before writing the terminal status.
   let chain = Promise.resolve()
   let needsInputUpdate = Promise.resolve()
+  let awaitingEscalation = false
 
   const onToolCallCompleted = ({
     toolName,
@@ -230,6 +231,7 @@ const buildToolCallTrackingHandler = ({
     }
     const outputStatus = (output as { status?: string } | undefined)?.status
     if (outputStatus === EscalateToolResultStatus.PENDING_APPROVAL) {
+      awaitingEscalation = true
       needsInputUpdate = needsInputUpdate.then(() =>
         sdk.ai.agentRequests
           .updateRequestStatus({
@@ -270,6 +272,7 @@ const buildToolCallTrackingHandler = ({
   return {
     onToolCallCompleted,
     flush: () => Promise.all([chain, needsInputUpdate]),
+    isAwaitingEscalation: () => awaitingEscalation,
   }
 }
 
@@ -344,6 +347,8 @@ const finalizeAgentRequestTracking = async ({
         error: updateError,
       })
     })
+
+  return outcome
 }
 
 interface ResolvedChatStreamRequest {
@@ -640,13 +645,6 @@ export async function webhookChat({
     throw responseResult.reason
   }
 
-  events.action.aiAgentExecuted({
-    agentId,
-    ...buildAgentSessionActionContext({
-      sessionId,
-      requestId: trackingHandle?.requestId ?? requestId,
-    }),
-  })
   const ragSources = run.getUsedKnowledgeSourcesMetadata()
 
   const finalAssistantMessage =
@@ -666,13 +664,24 @@ export async function webhookChat({
     (finishReasonResult.status === "fulfilled" &&
       finishReasonResult.value === "tool-calls")
   await toolCallTracking.flush()
-  await finalizeAgentRequestTracking({
+  const finalOutcome = await finalizeAgentRequestTracking({
     trackingHandle,
     agentId,
     sessionId,
     toolCallsIncomplete,
     unrecoveredToolFailures,
     finalResponse: assistantText,
+  })
+  events.action.aiAgentExecuted({
+    agentId,
+    ...buildAgentSessionActionContext({
+      sessionId,
+      requestId: trackingHandle?.requestId ?? requestId,
+    }),
+    ...(toolCallTracking.isAwaitingEscalation()
+      ? { awaitingEscalation: true }
+      : {}),
+    ...(finalOutcome ? { finalStatus: finalOutcome.status } : {}),
   })
 
   return {
@@ -835,6 +844,19 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       },
       onFinish: async ({ messages }) => {
         await run.sessionLogIndexer.index()
+        await toolCallTracking.flush()
+
+        const finalAssistantMessage = [...messages]
+          .reverse()
+          .find(message => message.role === "assistant")
+        const finalOutcome = await finalizeAgentRequestTracking({
+          trackingHandle,
+          agentId,
+          sessionId,
+          toolCallsIncomplete: streamResult.toolCallsIncomplete,
+          unrecoveredToolFailures,
+          finalResponse: getAssistantMessageText(finalAssistantMessage),
+        })
         events.action.aiAgentExecuted({
           agentId,
           ...buildAgentSessionActionContext({
@@ -843,23 +865,11 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
               trackingHandle?.requestId ??
               run.sessionLogIndexer.getRequestIds().at(-1),
           }),
+          ...(toolCallTracking.isAwaitingEscalation()
+            ? { awaitingEscalation: true }
+            : {}),
+          ...(finalOutcome ? { finalStatus: finalOutcome.status } : {}),
         })
-
-        await toolCallTracking.flush()
-
-        const finalAssistantMessage = [...messages]
-          .reverse()
-          .find(message => message.role === "assistant")
-        const finalizeTask = finalizeAgentRequestTracking({
-          trackingHandle,
-          agentId,
-          sessionId,
-          toolCallsIncomplete: streamResult.toolCallsIncomplete,
-          unrecoveredToolFailures,
-          finalResponse: getAssistantMessageText(finalAssistantMessage),
-        })
-
-        await finalizeTask
       },
       consumeSseStream: consumeStream,
       sendReasoning: true,

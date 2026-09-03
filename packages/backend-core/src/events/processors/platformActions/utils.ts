@@ -21,6 +21,8 @@ export function getPlatformActionSessionId({
 export interface PlatformActionSessionInput extends ActionSourceContext {
   status: PlatformActionContainerStatus
   startedAt: string
+  statusUpdatedAt: string
+  actionCount: number
   assetType?: string
   assetId?: string
   assetLabel?: string
@@ -37,7 +39,6 @@ export function buildPlatformActionSession(
 ): Omit<PlatformActionSessionIndexDoc, "updatedAt"> {
   return {
     _id: getPlatformActionSessionId(input),
-    actionCount: 1,
     ...input,
   }
 }
