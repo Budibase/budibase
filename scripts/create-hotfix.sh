@@ -4,16 +4,20 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: scripts/create-hotfix.sh [--version VERSION] [--dry-run]
+Usage: scripts/create-hotfix.sh [--version VERSION] [--dry-run] [--force]
 
 Creates the release base branch and its hotfix branch from the latest cloud
 release tag. VERSION is the base version, for example 3.44.1; it is normally
 detected automatically from the latest vX.Y.Z-cloud[.N] tag.
+
+Use --force to replace existing release and hotfix branches. This deletes the
+matching remote branches and resets matching local branches to the cloud tag.
 EOF
 }
 
 version_override=""
 dry_run=false
+force=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -28,6 +32,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --dry-run)
       dry_run=true
+      shift
+      ;;
+    --force)
+      force=true
       shift
       ;;
     -h|--help)
@@ -141,23 +149,49 @@ echo "Base branch: $base_branch"
 echo "Hotfix branch: $hotfix_branch"
 
 if [[ "$dry_run" == true ]]; then
-  if branch_exists "$base_branch"; then
-    echo "Base branch already exists: $base_branch" >&2
-    exit 1
-  elif [[ $? -eq 2 ]]; then
-    exit 1
-  fi
-  if branch_exists "$hotfix_branch"; then
-    echo "Hotfix branch already exists: $hotfix_branch" >&2
-    exit 1
-  elif [[ $? -eq 2 ]]; then
-    exit 1
-  fi
+  for branch in "$base_branch" "$hotfix_branch"; do
+    if branch_exists "$branch"; then
+      if [[ "$force" == true ]]; then
+        echo "Would replace existing branch: $branch"
+      else
+        echo "Branch already exists: $branch (use --force to replace it)." >&2
+        exit 1
+      fi
+    else
+      branch_status=$?
+      if (( branch_status == 2 )); then
+        exit 1
+      fi
+    fi
+  done
   exit 0
 fi
 
 git fetch --no-tags origin "refs/tags/$cloud_tag"
 cloud_commit=$(git rev-parse --verify 'FETCH_HEAD^{commit}')
+
+if [[ "$force" == true ]]; then
+  current_branch=$(git branch --show-current)
+  if [[ "$current_branch" == "$base_branch" || "$current_branch" == "$hotfix_branch" ]]; then
+    git switch --detach "$cloud_commit"
+  fi
+
+  delete_remote_branch() {
+    local branch="$1"
+    local remote_commit
+
+    if ! remote_commit=$(remote_branch_commit "$branch"); then
+      return 1
+    fi
+    if [[ -n "$remote_commit" ]]; then
+      echo "Deleting remote branch: $branch"
+      git push origin --delete "$branch"
+    fi
+  }
+
+  delete_remote_branch "$base_branch"
+  delete_remote_branch "$hotfix_branch"
+fi
 
 ensure_branch() {
   local branch="$1"
@@ -168,18 +202,27 @@ ensure_branch() {
     return 1
   fi
 
-  if [[ -n "$local_commit" && "$local_commit" != "$cloud_commit" ]]; then
-    echo "Local branch $branch does not point to $cloud_tag." >&2
-    return 1
-  fi
-  if [[ -n "$remote_commit" && "$remote_commit" != "$cloud_commit" ]]; then
-    echo "Remote branch $branch does not point to $cloud_tag." >&2
-    return 1
+  if [[ "$force" == true ]]; then
+    if [[ -n "$local_commit" ]]; then
+      git branch -f "$branch" "$cloud_commit"
+    else
+      git branch "$branch" "$cloud_commit"
+    fi
+  else
+    if [[ -n "$local_commit" && "$local_commit" != "$cloud_commit" ]]; then
+      echo "Local branch $branch does not point to $cloud_tag." >&2
+      return 1
+    fi
+    if [[ -n "$remote_commit" && "$remote_commit" != "$cloud_commit" ]]; then
+      echo "Remote branch $branch does not point to $cloud_tag." >&2
+      return 1
+    fi
+
+    if [[ -z "$local_commit" ]]; then
+      git branch "$branch" "$cloud_commit"
+    fi
   fi
 
-  if [[ -z "$local_commit" ]]; then
-    git branch "$branch" "$cloud_commit"
-  fi
   git push --set-upstream origin "$branch"
 }
 
