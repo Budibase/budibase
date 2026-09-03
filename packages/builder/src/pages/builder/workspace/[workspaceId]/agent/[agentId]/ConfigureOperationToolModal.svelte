@@ -18,7 +18,7 @@
   import { describeConditions } from "./agentConditionFields"
   import type { AgentTool } from "./toolTypes"
 
-  interface Props {
+  export interface Props {
     onSave: (args: {
       tool: AgentTool
       executionPrincipal: ToolExecutionPrincipal

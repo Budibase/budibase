@@ -18,7 +18,7 @@
   import { FilterField } from "@budibase/frontend-core"
   import type { ConditionField } from "./agentConditionFields"
 
-  interface Props {
+  export interface Props {
     onSave: (args: {
       rule: ToolExecutionRule
       index?: number

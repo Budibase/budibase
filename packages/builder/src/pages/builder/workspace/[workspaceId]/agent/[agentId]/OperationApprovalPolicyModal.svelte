@@ -14,7 +14,7 @@
   } from "@budibase/types"
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
 
-  interface Props {
+  export interface Props {
     agentId?: string
     providers?: EscalationNotificationChannel[]
     onSave: (policy: AgentOperationApprovalPolicy) => void | Promise<void>
