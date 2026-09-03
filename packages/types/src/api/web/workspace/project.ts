@@ -76,7 +76,7 @@ export interface ImportProjectRequest {
 }
 
 export interface ProjectImportRequirement {
-  type: "datasource_secrets" | "agent_secrets"
+  type: "datasource_secrets" | "agent_secrets" | "agent_ai_config"
   resourceId: string
   name: string
   reason: string

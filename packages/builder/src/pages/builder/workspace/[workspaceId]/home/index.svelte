@@ -511,7 +511,7 @@
       const names = response.requirements
         .map(requirement => requirement.name)
         .join(", ")
-      notifications.warning(`Some imported resources need secrets: ${names}`)
+      notifications.warning(`Some imported resources need setup: ${names}`)
     }
 
     if (response.unsupportedContent.length) {

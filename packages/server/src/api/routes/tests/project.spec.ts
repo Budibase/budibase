@@ -3094,6 +3094,7 @@ describe("/projects", () => {
         const exportedAgent = JSON.parse(
           files.get(`docs/agent/${agent._id}.json`)!.toString()
         )
+        expect(exportedAgent.aiconfig).toBe("")
         expect(exportedAgent.live).toBe(false)
         expect(exportedAgent.publishedAt).toBeUndefined()
         expect(exportedAgent.slackIntegration).toEqual({
@@ -3699,7 +3700,7 @@ describe("/projects", () => {
           expect(imported.resources.agent).toHaveLength(1)
           expect(imported.resources.workspace_app).toHaveLength(1)
           expect(imported.resources.screen).toHaveLength(1)
-          expect(imported.requirements).toHaveLength(2)
+          expect(imported.requirements).toHaveLength(3)
           expect(imported.requirements).toEqual(
             expect.arrayContaining([
               expect.objectContaining({
@@ -3708,6 +3709,10 @@ describe("/projects", () => {
               }),
               expect.objectContaining({
                 type: "agent_secrets",
+                resourceId: imported.resources.agent?.[0],
+              }),
+              expect.objectContaining({
+                type: "agent_ai_config",
                 resourceId: imported.resources.agent?.[0],
               }),
             ])
@@ -3838,6 +3843,7 @@ describe("/projects", () => {
           expect(importedAgent).toBeDefined()
           expect(importedAgent?.projectIds).toEqual([imported.project._id])
           expect(importedAgent?.live).toBe(false)
+          expect(importedAgent?.aiconfig).toBe("")
           expect(
             importedAgent?.operations?.[0].enabledTools?.map(
               tool => tool.toolName
@@ -4475,6 +4481,7 @@ describe("/projects", () => {
 
       expect(importedDatasource.config?.password).not.toBe("crafted-secret")
       expect(importedAgent?.live).toBe(false)
+      expect(importedAgent?.aiconfig).toBe("")
       expect(importedAgent?.publishedAt).toBeUndefined()
       expect(importedAgent?.slackIntegration).toEqual({
         idleTimeoutMinutes: 20,

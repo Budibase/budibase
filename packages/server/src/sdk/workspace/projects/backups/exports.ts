@@ -269,7 +269,10 @@ async function sanitizeDocumentForExport(
   }
 
   if (type === ResourceType.AGENT) {
-    return sdk.ai.agents.sanitiseAgentForExport(sanitized as Agent)
+    return {
+      ...sdk.ai.agents.sanitiseAgentForExport(sanitized as Agent),
+      aiconfig: "",
+    }
   }
 
   if (!isProjectAssignableResourceType(type)) {
