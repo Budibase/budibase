@@ -6,6 +6,7 @@ import {
   events,
   locks,
   platform,
+  roles,
   tenancy,
   users,
 } from "@budibase/backend-core"
@@ -324,9 +325,17 @@ export const search = async (
 
   const hasWorkspaceId =
     body && Object.prototype.hasOwnProperty.call(body, "workspaceId")
+  const hasGroupFilter = !!body.groupIds?.length
+  const hasWorkspaceRoleFilter = !!body.workspaceRoleId
 
-  if (hasWorkspaceId) {
-    let response = await searchWorkspaceUsers(body)
+  if (hasWorkspaceRoleFilter && !body.workspaceId) {
+    ctx.throw(400, "Workspace role filters require a workspace ID")
+  }
+
+  if (hasWorkspaceId || hasGroupFilter || hasWorkspaceRoleFilter) {
+    let response = hasWorkspaceId
+      ? await searchWorkspaceUsers(body)
+      : await searchGroupUsers(body)
     if (!users.hasBuilderPermissions(ctx.user)) {
       response.data = stripUsers(response.data)
     }
@@ -365,6 +374,70 @@ export const search = async (
 
 const DEFAULT_USER_LIMIT = 8
 const GLOBAL_PERMISSION_USER_PAGE_LIMIT = 1000
+
+const filterAndPaginateUsers = ({
+  userList,
+  body,
+}: {
+  userList: User[]
+  body: SearchUsersRequest
+}): SearchUsersResponse => {
+  const query = body.query
+  const limit = body.limit ?? DEFAULT_USER_LIMIT
+  let filtered = userList
+
+  if (query) {
+    filtered = dataFilters.search(filtered, { query }).rows
+  }
+
+  const getBookmarkValue = (user: User) => {
+    if (query?.string?.email && user.email) {
+      return user.email.toLowerCase()
+    }
+    return user._id
+  }
+
+  filtered.sort((userA, userB) => {
+    if (query?.string?.email) {
+      const emailA = userA.email?.toLowerCase() || ""
+      const emailB = userB.email?.toLowerCase() || ""
+      if (emailA !== emailB) {
+        return emailA.localeCompare(emailB)
+      }
+    }
+    return (userA._id || "").localeCompare(userB._id || "")
+  })
+
+  const bookmark = body.bookmark
+  const pagedUsers = bookmark
+    ? filtered.filter(user => (getBookmarkValue(user) || "") >= bookmark)
+    : filtered
+  const { data, hasNextPage, nextPage } = db.pagination(pagedUsers, limit, {
+    paginate: true,
+    property: "_id",
+    getKey: getBookmarkValue,
+  })
+
+  for (let user of data) {
+    delete user.password
+  }
+
+  return {
+    data,
+    hasNextPage,
+    nextPage: hasNextPage ? nextPage : undefined,
+  }
+}
+
+const searchGroupUsers = async (
+  body: SearchUsersRequest
+): Promise<SearchUsersResponse> => {
+  const groupIds = [...new Set(body.groupIds || [])]
+  const userIds = await proDb.groups.getUserIdsFromGroups(groupIds)
+  const groupUsers = userIds.length ? await userSdk.db.bulkGet(userIds) : []
+
+  return filterAndPaginateUsers({ userList: groupUsers, body })
+}
 
 const getGlobalPermissionUsers = async () => {
   const globalDb = context.getGlobalDB()
@@ -412,8 +485,6 @@ const searchWorkspaceUsers = async (
   }
 
   const prodWorkspaceId = db.getProdWorkspaceID(workspaceId)
-  const limit = body.limit ?? DEFAULT_USER_LIMIT
-  const query = body.query
   const globalDb = context.getGlobalDB()
 
   const [workspaceUsers, globalPermissionUsers, workspaceGroups] =
@@ -443,31 +514,18 @@ const searchWorkspaceUsers = async (
 
   const workspaceGroupIds = workspaceGroups.map(group => group._id!)
   const workspaceGroupIdSet = new Set(workspaceGroupIds)
+  const selectedGroupUserIds = body.groupIds?.length
+    ? await proDb.groups.getUserIdsFromGroups(body.groupIds)
+    : []
 
   let groupUsers: User[] = []
   if (workspaceGroupIds.length) {
-    const usersByGroup = await Promise.all(
-      workspaceGroupIds.map(groupId => proDb.groups.getGroupUsers(groupId))
-    )
-    const groupUserIds = [
-      ...new Set(
-        usersByGroup
-          .flat()
-          .map(user => user._id)
-          .filter(Boolean)
-      ),
-    ] as string[]
+    const groupUserIds =
+      await proDb.groups.getUserIdsFromGroups(workspaceGroupIds)
 
     if (groupUserIds.length) {
       groupUsers = await userSdk.db.bulkGet(groupUserIds)
     }
-  }
-
-  const getBookmarkValue = (user: User) => {
-    if (query?.string?.email && user.email) {
-      return user.email.toLowerCase()
-    }
-    return user._id
   }
 
   const hasWorkspaceAccess = (user: User) => {
@@ -495,41 +553,59 @@ const searchWorkspaceUsers = async (
 
   let filtered = [...dedupedUsers.values()].filter(hasWorkspaceAccess)
 
-  if (query) {
-    filtered = dataFilters.search(filtered, { query }).rows
+  if (body.groupIds?.length) {
+    const selectedGroupUserIdSet = new Set(selectedGroupUserIds)
+    filtered = filtered.filter(user => selectedGroupUserIdSet.has(user._id))
   }
 
-  filtered.sort((userA, userB) => {
-    if (query?.string?.email) {
-      const emailA = userA.email?.toLowerCase() || ""
-      const emailB = userB.email?.toLowerCase() || ""
-      if (emailA !== emailB) {
-        return emailA.localeCompare(emailB)
+  if (body.workspaceRoleId) {
+    const groupRoles = workspaceGroups
+      .map(group => group.roles?.[prodWorkspaceId])
+      .filter((roleId): roleId is string => !!roleId)
+    const rolePriorities = new Map(
+      await context.doInWorkspaceContext(workspaceId, async () =>
+        Promise.all(
+          [...new Set(groupRoles)].map(
+            async roleId => [roleId, await roles.roleToNumber(roleId)] as const
+          )
+        )
+      )
+    )
+    const groupsById = new Map(
+      workspaceGroups.map(group => [group._id!, group] as const)
+    )
+
+    filtered = filtered.filter(user => {
+      if (users.isAdminOrBuilder(user, workspaceId)) {
+        return body.workspaceRoleId === roles.BUILTIN_ROLE_IDS.ADMIN
       }
-    }
-    return (userA._id || "").localeCompare(userB._id || "")
-  })
+      const directRole = user.roles?.[prodWorkspaceId]
+      if (directRole) {
+        return directRole === body.workspaceRoleId
+      }
 
-  const bookmark = body.bookmark
-  const pagedUsers = bookmark
-    ? filtered.filter(user => (getBookmarkValue(user) || "") >= bookmark)
-    : filtered
-  const pageData = pagedUsers.slice(0, limit + 1)
-  const hasNextPage = pageData.length > limit
-  const data = hasNextPage ? pageData.slice(0, limit) : pageData
-  const nextPage = hasNextPage ? getBookmarkValue(pageData[limit]) : undefined
-
-  for (let user of data) {
-    if (user) {
-      delete user.password
-    }
+      let effectiveGroupRole: string | undefined
+      let effectiveGroupRolePriority: number | undefined
+      for (const groupId of user.userGroups || []) {
+        const groupRole = groupsById.get(groupId)?.roles?.[prodWorkspaceId]
+        if (!groupRole) {
+          continue
+        }
+        const priority = rolePriorities.get(groupRole)
+        if (
+          priority != null &&
+          (effectiveGroupRolePriority == null ||
+            priority > effectiveGroupRolePriority)
+        ) {
+          effectiveGroupRole = groupRole
+          effectiveGroupRolePriority = priority
+        }
+      }
+      return effectiveGroupRole === body.workspaceRoleId
+    })
   }
 
-  return {
-    data,
-    hasNextPage,
-    nextPage: hasNextPage ? nextPage : undefined,
-  }
+  return filterAndPaginateUsers({ userList: filtered, body })
 }
 
 // called internally by app server user fetch

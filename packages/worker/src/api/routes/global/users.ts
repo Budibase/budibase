@@ -66,6 +66,23 @@ function buildChangeTenantOwnerEmailValidation() {
   )
 }
 
+function buildSearchValidation() {
+  return auth.joiValidator.body(
+    Joi.object({
+      bookmark: Joi.string().optional(),
+      query: Joi.object().unknown(true).optional(),
+      appId: OPTIONAL_STRING,
+      workspaceId: OPTIONAL_STRING,
+      groupIds: Joi.array().items(Joi.string()).optional().allow(null),
+      workspaceRoleId: OPTIONAL_STRING,
+      limit: Joi.number().integer().min(1).strict().optional(),
+      paginate: Joi.boolean().strict().optional(),
+    })
+      .required()
+      .unknown(false)
+  )
+}
+
 cloudRestrictedRoutes
   .post(
     "/api/global/users/sso",
@@ -128,7 +145,7 @@ adminRoutes
 
 loggedInRoutes
   // search can be used by any user now, to retrieve users for user column
-  .post("/api/global/users/search", controller.search)
+  .post("/api/global/users/search", buildSearchValidation(), controller.search)
   // non-global endpoints
   .get("/api/global/users/invite/:code", controller.checkInvite)
   .post(

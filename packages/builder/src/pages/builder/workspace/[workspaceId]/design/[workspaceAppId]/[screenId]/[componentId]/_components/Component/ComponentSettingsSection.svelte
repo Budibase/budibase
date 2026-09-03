@@ -159,6 +159,7 @@
 
                 // Select settings
                 options: setting.options || [],
+                allowPublic: setting.allowPublic ?? true,
 
                 // Number fields
                 min: setting.min ?? null,

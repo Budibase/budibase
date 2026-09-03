@@ -54,5 +54,5 @@
   {#if label}
     <Label>{label}</Label>
   {/if}
-  <RoleSelect value={roleId} on:change={e => updateRole(e.detail)} autoWidth />
+  <RoleSelect value={roleId} onChange={updateRole} autoWidth />
 {/if}
