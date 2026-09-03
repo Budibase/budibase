@@ -68,6 +68,9 @@ interface PrepareAgentChatRunParams {
   agentId: string
   chat?: ChatConversationRequest
   modelMessages?: ModelMessage[]
+  suspendedModelMessages?: ModelMessage[]
+  conversationAttachmentIds?: string[]
+  conversationId?: string
   latestQuestion?: string
   aiConfigId?: string
   errorLabel: string
@@ -494,6 +497,9 @@ const prepareAgentChatRunInternal = async ({
   agentId,
   chat,
   modelMessages: providedModelMessages,
+  suspendedModelMessages,
+  conversationAttachmentIds,
+  conversationId,
   latestQuestion: providedLatestQuestion,
   aiConfigId,
   sessionId,
@@ -665,6 +671,9 @@ const prepareAgentChatRunInternal = async ({
         channel: chat?.channel,
         userId: user?._id,
         getMessages: () => modelMessages,
+        getSuspendedMessages: () => suspendedModelMessages ?? modelMessages,
+        conversationId: conversationId ?? chat?._id,
+        attachmentIds: conversationAttachmentIds,
         getRequestId: () => getRequestId?.(),
         executionPrincipal: ToolExecutionPrincipal.ADMIN,
         executionContext,
