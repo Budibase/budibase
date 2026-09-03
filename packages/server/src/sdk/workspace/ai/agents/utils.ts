@@ -76,6 +76,7 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
     sourceLabel: tool.sourceLabel,
     sourceIconType: tool.sourceIconType,
     sourceId: tool.sourceId,
+    action: tool.action,
     executionPolicy: tool.executionPolicy,
   }
 }
@@ -265,6 +266,7 @@ export async function buildPromptAndTools(
           toolName: tool.name,
           readableName: tool.readableName,
           sourceId: tool.sourceId,
+          action: tool.action,
           argsKey: resolveToolArgsKey(tool),
           rules: config.executionRules,
           gateContext: escalationGateContext,

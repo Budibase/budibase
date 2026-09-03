@@ -10,6 +10,7 @@ import {
   EscalationSource,
   ResolutionStrategy,
   ToolExecutionRule,
+  ToolAction,
   ToolType,
 } from "@budibase/types"
 import type { ModelMessage } from "ai"
@@ -42,31 +43,29 @@ interface CreateGateParams {
   toolName: string
   readableName?: string
   sourceId?: string
+  action?: ToolAction
   // Key of the args object holding the condition fields e.g "data"
   argsKey?: string
   rules: ToolExecutionRule[]
   gateContext: EscalationGateContext
 }
 
-export const resolveToolAction = (tool: {
-  name: string
-  readableName?: string
-}): string => (tool.readableName ?? tool.name).split(".").pop() ?? ""
-
 export const resolveToolArgsKey = (tool: {
-  name: string
-  readableName?: string
   sourceType: ToolType
+  action?: ToolAction
 }): string | undefined => {
-  const action = resolveToolAction(tool)
   if (
     (tool.sourceType === ToolType.INTERNAL_TABLE ||
       tool.sourceType === ToolType.EXTERNAL_TABLE) &&
-    (action === "create_row" || action === "update_row")
+    (tool.action === ToolAction.CREATE_ROW ||
+      tool.action === ToolAction.UPDATE_ROW)
   ) {
     return "data"
   }
-  if (tool.sourceType === ToolType.AUTOMATION && action === "trigger") {
+  if (
+    tool.sourceType === ToolType.AUTOMATION &&
+    tool.action === ToolAction.TRIGGER
+  ) {
     return "fields"
   }
   return undefined
@@ -110,11 +109,11 @@ const buildConditionRecord = async ({
   input: unknown
   argsKey?: string
   toolName: string
-  action: string
+  action?: ToolAction
   sourceId?: string
 }): Promise<Record<string, unknown> | undefined> => {
   const record = conditionRecord(input, argsKey)
-  if (!record || action !== "update_row" || !sourceId) {
+  if (!record || action !== ToolAction.UPDATE_ROW || !sourceId) {
     return record
   }
   const rowId = (input as Record<string, unknown>).rowId
@@ -173,6 +172,7 @@ export const createEscalationGateRuntime = ({
   toolName,
   readableName,
   sourceId,
+  action,
   argsKey,
   rules,
   gateContext,
@@ -193,7 +193,7 @@ export const createEscalationGateRuntime = ({
       input,
       argsKey,
       toolName,
-      action: resolveToolAction({ name: toolName, readableName }),
+      action,
       sourceId,
     })
     const rule = matchRule(rules, record)

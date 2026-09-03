@@ -17,6 +17,17 @@ export enum ToolType {
   ESCALATION = "ESCALATION",
 }
 
+export enum ToolAction {
+  LIST_ROWS = "list_rows",
+  GET_ROW = "get_row",
+  CREATE_ROW = "create_row",
+  UPDATE_ROW = "update_row",
+  SEARCH_ROWS = "search_rows",
+  TRIGGER = "trigger",
+}
+
+export type RowToolAction = Exclude<ToolAction, ToolAction.TRIGGER>
+
 export enum ToolExecutionPrincipal {
   REQUESTER = "requester",
   ADMIN = "admin",
@@ -35,6 +46,7 @@ export interface ToolMetadata {
   sourceIconType?: string
   // The backing resource: tableId, query _id or automation _id.
   sourceId?: string
+  action?: ToolAction
   executionPolicy: ToolExecutionPolicy
 }
 

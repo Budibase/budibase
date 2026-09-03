@@ -1,6 +1,7 @@
 import {
   PermissionLevel,
   PermissionType,
+  ToolAction,
   ToolExecutionPrincipal,
   ToolType,
   type AgentExecutionContext,
@@ -26,6 +27,7 @@ export interface AiToolDefinition {
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
+  action?: ToolAction
   executionPolicy: ToolExecutionPolicy
   authorization?: ToolAuthorization
   requesterRedactedTool?: Tool

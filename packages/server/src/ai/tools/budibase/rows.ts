@@ -5,7 +5,9 @@ import {
   FieldType,
   SortOrder,
   TableSourceType,
+  ToolAction,
   ToolType,
+  type RowToolAction,
   PermissionLevel,
   PermissionType,
   ToolExecutionPrincipal,
@@ -244,7 +246,7 @@ const sanitizeRowToolResult = (
   return result
 }
 
-const ROW_TOOL: Record<string, RowTool> = {
+const ROW_TOOL: Record<RowToolAction, RowTool> = {
   list_rows: {
     description: "List rows in a given table with optional pagination",
     inputSchema: z.object({
@@ -358,6 +360,14 @@ const ROW_TOOL: Record<string, RowTool> = {
   },
 }
 
+const ROW_TOOL_ACTIONS: RowToolAction[] = [
+  ToolAction.LIST_ROWS,
+  ToolAction.GET_ROW,
+  ToolAction.CREATE_ROW,
+  ToolAction.UPDATE_ROW,
+  ToolAction.SEARCH_ROWS,
+]
+
 const formatActionLabel = (action: string) =>
   action
     .split("_")
@@ -406,31 +416,33 @@ export const createRowTools = ({
   const searchInputSchema = buildSearchInputSchema(schemaSummary)
   const fields = getAgentTableFields(tableSchema)
   const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
-  const truncatedToolNames = Object.fromEntries(
-    Object.keys(ROW_TOOL).map(action => [
+  const truncatedToolNames = new Map(
+    ROW_TOOL_ACTIONS.map(action => [
       action,
       `${sanitizedTableId}_${action}`.substring(0, MAX_TOOL_NAME_LENGTH),
     ])
   )
   const hasToolNameCollision =
-    new Set(Object.values(truncatedToolNames)).size !==
-    Object.keys(truncatedToolNames).length
+    new Set(truncatedToolNames.values()).size !== truncatedToolNames.size
 
-  return Object.entries(ROW_TOOL).map(([action, def]) => {
+  return ROW_TOOL_ACTIONS.map(action => {
+    const def = ROW_TOOL[action]
     const description = `${formatActionLabel(action)} in "${tableName}". ${def.description}`
     const toolName = hasToolNameCollision
       ? buildCollisionSafeToolName(tableId, action)
-      : truncatedToolNames[action]
+      : truncatedToolNames.get(action)!
+    const isWrite =
+      action === ToolAction.CREATE_ROW || action === ToolAction.UPDATE_ROW
     let inputSchema = def.inputSchema
-    if (action === "create_row") {
+    if (action === ToolAction.CREATE_ROW) {
       inputSchema = z.object({ data: dataSchema })
-    } else if (action === "update_row") {
+    } else if (action === ToolAction.UPDATE_ROW) {
       inputSchema = z.object({
         rowId: z.string().describe("The ID of the row to update"),
         rowRev: z.string().describe("The current _rev of the row (if known)"),
         data: dataSchema,
       })
-    } else if (action === "search_rows") {
+    } else if (action === ToolAction.SEARCH_ROWS) {
       inputSchema = searchInputSchema
     }
     const execute = async (input: Parameters<typeof def.execute>[1]) =>
@@ -442,9 +454,7 @@ export const createRowTools = ({
       input: Parameters<typeof def.execute>[1]
     ): Promise<RowToolResult | RedactedWriteResult> => {
       const result = await execute(input)
-      return action === "create_row" || action === "update_row"
-        ? { success: true }
-        : result
+      return isWrite ? { success: true } : result
     }
     return {
       name: toolName,
@@ -454,6 +464,7 @@ export const createRowTools = ({
       sourceType: resolvedSourceType,
       sourceLabel: resolvedSourceLabel,
       sourceIconType,
+      action,
       description,
       executionPolicy: {
         mode: "configurable",
@@ -461,10 +472,7 @@ export const createRowTools = ({
       },
       authorization: {
         permissionType: PermissionType.TABLE,
-        permissionLevel:
-          action === "create_row" || action === "update_row"
-            ? PermissionLevel.WRITE
-            : PermissionLevel.READ,
+        permissionLevel: isWrite ? PermissionLevel.WRITE : PermissionLevel.READ,
         resourceId: tableId,
       },
       tool: tool({

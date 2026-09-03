@@ -1,4 +1,9 @@
-import { AutomationIOType, FieldType, ToolType } from "@budibase/types"
+import {
+  AutomationIOType,
+  FieldType,
+  ToolAction,
+  ToolType,
+} from "@budibase/types"
 import type {
   Automation,
   FieldConstraints,
@@ -70,10 +75,10 @@ const CONDITIONABLE_FIELD_TYPES = new Set<FieldType>([
   FieldType.DATETIME,
 ])
 
-const ROW_MUTATION_ACTIONS = ["create_row", "update_row"]
-
-const toolAction = (tool: AgentTool) =>
-  (tool.readableName ?? tool.runtimeBinding).split(".").pop() ?? ""
+const ROW_MUTATION_ACTIONS: ToolAction[] = [
+  ToolAction.CREATE_ROW,
+  ToolAction.UPDATE_ROW,
+]
 
 const AUTOMATION_FIELD_TYPES: Partial<Record<AutomationIOType, FieldType>> = {
   [AutomationIOType.STRING]: FieldType.STRING,
@@ -88,10 +93,11 @@ const AUTOMATION_FIELD_TYPES: Partial<Record<AutomationIOType, FieldType>> = {
 const isRowMutationTool = (tool: AgentTool) =>
   (tool.sourceType === ToolType.INTERNAL_TABLE ||
     tool.sourceType === ToolType.EXTERNAL_TABLE) &&
-  ROW_MUTATION_ACTIONS.includes(toolAction(tool))
+  !!tool.action &&
+  ROW_MUTATION_ACTIONS.includes(tool.action)
 
 const isAutomationTriggerTool = (tool: AgentTool) =>
-  tool.sourceType === ToolType.AUTOMATION && toolAction(tool) === "trigger"
+  tool.sourceType === ToolType.AUTOMATION && tool.action === ToolAction.TRIGGER
 
 export const getToolConditionFields = ({
   tool,
