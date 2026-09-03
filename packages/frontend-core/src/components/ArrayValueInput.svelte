@@ -110,7 +110,7 @@
       <input
         type="text"
         class="spectrum-Textfield-input array-add-input"
-        placeholder="Type a value and press Enter"
+        placeholder="Enter value"
         bind:value={draft}
         onkeydown={onKeydown}
         onblur={add}
