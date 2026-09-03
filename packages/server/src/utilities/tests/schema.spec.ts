@@ -241,6 +241,14 @@ describe("validate", () => {
         invalidColumns: [],
         schemaValidation: { required: true },
       })
+      expect(
+        validate([{ required: { _id: "us_parsed" } }], schema, [])
+      ).toEqual({
+        allValid: true,
+        errors: {},
+        invalidColumns: [],
+        schemaValidation: { required: true },
+      })
       expect(validate([{ required: "" }], schema, [])).toEqual({
         allValid: false,
         errors: {},

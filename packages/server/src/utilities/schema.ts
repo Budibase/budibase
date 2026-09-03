@@ -257,9 +257,10 @@ function isValidBBReference(
       if (!data) {
         return !isRequired
       }
-      const userId = data.startsWith("us_")
-        ? data
-        : parseJsonExport<{ _id: string }>(data)._id
+      const userId =
+        typeof data === "string" && data.startsWith("us_")
+          ? data
+          : parseJsonExport<{ _id: string }>(data)._id
       return db.isGlobalUserID(userId)
     }
 
