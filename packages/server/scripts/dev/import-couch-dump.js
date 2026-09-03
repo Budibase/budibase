@@ -44,7 +44,11 @@ const path = require("path")
 const BATCH_SIZE = 1000
 
 function parseArgs(argv) {
-  const args = { couchUrl: "http://localhost:4005", user: "budibase", password: "budibase" }
+  const args = {
+    couchUrl: "http://localhost:4005",
+    user: "budibase",
+    password: "budibase",
+  }
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
     switch (arg) {
@@ -115,13 +119,20 @@ async function createDb(couchUrl, authHeaderValue, dbName, dryRun) {
     console.log(`  [dry-run] would create db ${dbName}`)
     return
   }
-  const { status, body } = await couchRequest(couchUrl, authHeaderValue, "PUT", `/${dbName}`)
+  const { status, body } = await couchRequest(
+    couchUrl,
+    authHeaderValue,
+    "PUT",
+    `/${dbName}`
+  )
   if (status === 201) {
     console.log(`  created db ${dbName}`)
   } else if (status === 412) {
     console.log(`  db ${dbName} already exists, skipping create`)
   } else {
-    throw new Error(`failed to create db ${dbName}: ${status} ${JSON.stringify(body)}`)
+    throw new Error(
+      `failed to create db ${dbName}: ${status} ${JSON.stringify(body)}`
+    )
   }
 }
 
@@ -140,10 +151,14 @@ async function bulkLoad(couchUrl, authHeaderValue, dbName, docs, dryRun) {
       { docs: batch, new_edits: false }
     )
     if (status !== 201 && status !== 200) {
-      throw new Error(`bulk_docs failed for ${dbName} batch ${i}: ${status} ${JSON.stringify(body)}`)
+      throw new Error(
+        `bulk_docs failed for ${dbName} batch ${i}: ${status} ${JSON.stringify(body)}`
+      )
     }
     const errors = body.filter(r => r.error)
-    console.log(`  batch ${i}-${i + batch.length}: ok (${errors.length} errors)`)
+    console.log(
+      `  batch ${i}-${i + batch.length}: ok (${errors.length} errors)`
+    )
     if (errors.length) {
       console.log(`  sample errors:`, errors.slice(0, 5))
     }
@@ -154,7 +169,9 @@ async function importFile(filePath, dbName, opts) {
   console.log(`Importing ${path.basename(filePath)} -> ${dbName}`)
   const data = JSON.parse(fs.readFileSync(filePath, "utf8"))
   if (!Array.isArray(data.rows)) {
-    throw new Error(`${filePath} does not look like an _all_docs?include_docs=true dump`)
+    throw new Error(
+      `${filePath} does not look like an _all_docs?include_docs=true dump`
+    )
   }
   const docs = data.rows.map(row => row.doc)
   console.log(`  ${docs.length} docs to load`)
@@ -174,7 +191,9 @@ async function main() {
     await importFile(args.file, args.db, opts)
   } else if (args.dir) {
     if (!args.tenant && !args.keepTenant) {
-      throw new Error("--dir requires --tenant (or pass --keep-tenant to use filenames as-is)")
+      throw new Error(
+        "--dir requires --tenant (or pass --keep-tenant to use filenames as-is)"
+      )
     }
     const files = fs.readdirSync(args.dir).filter(f => f.endsWith(".json"))
     for (const filename of files) {
