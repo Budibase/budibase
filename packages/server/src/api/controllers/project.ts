@@ -8,13 +8,23 @@ import {
   ImportProjectRequest,
   ImportProjectResponse,
   KoaFile,
+  PreviewProjectAssignmentRequest,
+  PreviewProjectAssignmentResponse,
   Project,
   ProjectResponse,
+  UpdateProjectAssignmentRequest,
+  UpdateProjectAssignmentResponse,
   UpdateProjectRequest,
   UpdateProjectResponse,
 } from "@budibase/types"
+import { HTTPError } from "@budibase/backend-core"
 import fsp from "fs/promises"
 import sdk from "../../sdk"
+import {
+  getProjectAssignmentPreview,
+  propagateProjectIdsToDependencyIdsWithWarning,
+  resolveProjectIds,
+} from "../../utilities/projects"
 
 export const toProjectResponse = (project: Project): ProjectResponse => {
   return {
@@ -72,6 +82,96 @@ export async function update(
   ctx.body = {
     project: toProjectResponse(updated),
   }
+}
+
+export async function previewAssignment(
+  ctx: Ctx<PreviewProjectAssignmentRequest, PreviewProjectAssignmentResponse>
+) {
+  const { resourceId } = ctx.request.body
+  const projectIds =
+    (await resolveProjectIds(ctx.request.body.projectIds)) || []
+  await sdk.projects.getProjectAssignableResource(resourceId)
+
+  ctx.body = await getProjectAssignmentPreview({ resourceId, projectIds })
+}
+
+export async function updateAssignment(
+  ctx: Ctx<UpdateProjectAssignmentRequest, UpdateProjectAssignmentResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLock(async () => {
+    const { resourceId } = ctx.params
+    const { dependencyFingerprint, resourceRev, dependencyIds } =
+      ctx.request.body
+    const projectIds =
+      (await resolveProjectIds(ctx.request.body.projectIds)) || []
+    await sdk.projects.getProjectAssignableResource(resourceId)
+
+    const preview = await getProjectAssignmentPreview({
+      resourceId,
+      projectIds,
+    })
+    if (
+      projectIds.length &&
+      preview.dependencyFingerprint !== dependencyFingerprint
+    ) {
+      throw new HTTPError(
+        "Resource dependencies changed. Preview the project assignment again.",
+        409
+      )
+    }
+    const { dependencies } = preview
+
+    let selectedDependencyIds: string[] = []
+    if (dependencyIds.length) {
+      if (!projectIds.length) {
+        throw new HTTPError(
+          "Dependencies cannot be assigned without a project.",
+          400
+        )
+      }
+
+      const dependencyIdsSet = new Set(dependencyIds)
+      const validDependencyIds = new Set(
+        dependencies.map(dependency => dependency.id)
+      )
+      const invalidDependencyId = dependencyIds.find(
+        dependencyId => !validDependencyIds.has(dependencyId)
+      )
+      if (invalidDependencyId) {
+        throw new HTTPError(
+          `Resource '${invalidDependencyId}' is not an assignable dependency.`,
+          400
+        )
+      }
+
+      selectedDependencyIds = dependencies
+        .map(dependency => dependency.id)
+        .filter(dependencyId => dependencyIdsSet.has(dependencyId))
+    }
+
+    const updatedResource =
+      await sdk.projects.updateResourceProjectAssignmentUnlocked({
+        resourceId,
+        resourceRev,
+        projectIds,
+      })
+    const outcome = await propagateProjectIdsToDependencyIdsWithWarning(ctx, {
+      dependencyIds: selectedDependencyIds,
+      projectIds,
+    })
+    const failedIds = new Set(
+      outcome.status === "incomplete" ? outcome.resourceIds : []
+    )
+
+    ctx.body = {
+      resourceId,
+      resourceRev: updatedResource._rev,
+      projectIds,
+      assignedDependencyIds: selectedDependencyIds.filter(
+        dependencyId => !failedIds.has(dependencyId)
+      ),
+    }
+  })
 }
 
 export async function remove(ctx: Ctx<void, void>) {

@@ -6,6 +6,7 @@ import {
   type AnyDocument,
   type Project,
 } from "@budibase/types"
+import { doWithProjectAssignmentsLock } from "./lock"
 import { fetchAssignedProjectDocs, hasProject, removeProjectId } from "./utils"
 
 interface CreateProjectInput {
@@ -186,7 +187,7 @@ async function clearAssignments(projectId: string) {
   return rollbacks
 }
 
-export async function remove(id: string, rev: string) {
+async function removeUnlocked(id: string, rev: string) {
   const db = context.getWorkspaceDB()
   const project = await get(id)
   if (!project) {
@@ -203,4 +204,8 @@ export async function remove(id: string, rev: string) {
     await rollbackAssignments(rollbacks)
     throw err
   }
+}
+
+export async function remove(id: string, rev: string) {
+  return await doWithProjectAssignmentsLock(() => removeUnlocked(id, rev))
 }
