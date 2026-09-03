@@ -331,20 +331,28 @@ const resolveAgentSlackTeamId = async (
   })
 }
 
-export async function listChatIdentityLinks(ctx: UserCtx) {
-  const provider = ctx.query.provider as ChatIdentityLinkProvider | undefined
-  const agentId = ctx.query.agentId as string | undefined
-  const links = await sdk.ai.chatIdentityLinks.listChatIdentityLinks(provider)
+const parseChatIdentityLinkProvider = (
+  value: string | string[] | undefined
+): ChatIdentityLinkProvider | undefined =>
+  Object.values(AgentChannelProvider).find(provider => provider === value)
 
-  if (!provider || !agentId) {
-    ctx.body = links
-    return
+export async function listChatIdentityLinks(ctx: UserCtx) {
+  const provider = parseChatIdentityLinkProvider(ctx.query.provider)
+  const agentId = ctx.query.agentId
+
+  if (!provider) {
+    ctx.throw(400, "Valid provider is required")
+  }
+  if (typeof agentId !== "string" || !agentId) {
+    ctx.throw(400, "agentId is required")
   }
 
   const appId = ctx.appId
   if (!appId) {
     ctx.throw(400, "appId is required")
   }
+
+  const links = await sdk.ai.chatIdentityLinks.listChatIdentityLinks(provider)
 
   // Scope the links to identities the agent's bot can actually reach
   if (provider === AgentChannelProvider.SLACK) {
@@ -367,7 +375,7 @@ export async function listChatIdentityLinks(ctx: UserCtx) {
     return
   }
 
-  ctx.body = links
+  provider satisfies never
 }
 
 export async function listSlackChannels(ctx: UserCtx) {

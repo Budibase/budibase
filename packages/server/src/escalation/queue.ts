@@ -6,7 +6,7 @@ import {
   type ModelMessage,
   type UIMessage,
 } from "ai"
-import { context, features, queue, roles, utils } from "@budibase/backend-core"
+import { context, queue, roles, utils } from "@budibase/backend-core"
 import {
   Agent,
   AgentChannelProvider,
@@ -19,7 +19,6 @@ import {
   EscalationNotificationDoc,
   EscalationRecipient,
   EscalationSource,
-  FeatureFlag,
   PendingToolCall,
   SEPARATOR,
   SuspendedOperationContext,
@@ -286,12 +285,7 @@ const executeApprovedToolCall = async ({
   const { tools, toolSources } = await sdk.ai.agents.buildPromptAndTools(
     agent,
     operation,
-    {
-      executionContext,
-      toolSecurityEnabled: await features.isEnabled(
-        FeatureFlag.AI_AGENT_TOOL_SECURITY
-      ),
-    }
+    { executionContext }
   )
 
   let toolName = pending.toolName

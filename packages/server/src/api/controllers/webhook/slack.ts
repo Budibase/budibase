@@ -21,6 +21,7 @@ import sdk from "../../../sdk"
 import type { IncomingConversationAttachment } from "../../../sdk/workspace/ai/chatConversations"
 import { escalationProcessor } from "../../../escalation/processor"
 import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
+import { createChatLogger } from "./chatLogger"
 import { getSlackState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
@@ -190,6 +191,7 @@ type SlackCommand =
   | typeof ChatCommands.ASK
   | typeof ChatCommands.LINK
   | typeof ChatCommands.NEW
+  | typeof ChatCommands.UNLINK
 
 type SlackInput = {
   target: SlackReplyTarget
@@ -203,7 +205,6 @@ type SlackInput = {
   isDirectMessage: boolean
   teamId?: string
   threadId?: string
-  subscribe?: () => Promise<void>
 }
 
 const createSlackInputHandler = ({
@@ -233,7 +234,6 @@ const createSlackInputHandler = ({
     isDirectMessage,
     teamId,
     threadId,
-    subscribe,
   }: SlackInput) => {
     const displayName = author.fullName || author.userName || externalUserId
 
@@ -255,7 +255,6 @@ const createSlackInputHandler = ({
     }
 
     try {
-      await subscribe?.()
       await handleChatMessage({
         reply: async text => {
           await target.post(text)
@@ -342,7 +341,6 @@ const createSlackMessageHandler = (
       externalUserId: message.author.userId,
       isDirectMessage: isSlackDirectMessage(raw),
       teamId: raw?.team_id || raw?.team,
-      subscribe: () => thread.subscribe(),
     })
   }
 }
@@ -378,16 +376,18 @@ export async function slackWebhook(
         throw new Error("Slack state adapter is required")
       }
 
+      const logger = createChatLogger()
       const chat = new Chat({
         userName: "Budibase",
         adapters: {
           slack: createSlackAdapter({
             botToken: integration.botToken,
             signingSecret: integration.signingSecret,
+            logger: logger.child("slack"),
           }),
         },
         state,
-        logger: "silent",
+        logger,
       })
 
       const handleSlackInput = createSlackInputHandler({
@@ -400,8 +400,8 @@ export async function slackWebhook(
       })
       const handler = createSlackMessageHandler(handleSlackInput)
 
-      chat.onSlashCommand(
-        `/${ChatCommands.LINK}`,
+      const handleSlackSlashCommand =
+        (command: typeof ChatCommands.LINK | typeof ChatCommands.UNLINK) =>
         async (event: SlashCommandEvent) => {
           const raw = event.raw as Record<string, string | undefined>
           const channelId = raw.channel_id
@@ -413,7 +413,7 @@ export async function slackWebhook(
             target: event.channel as SlackReplyTarget,
             privateTarget: event.channel as SlackReplyTarget,
             author: event.user,
-            command: ChatCommands.LINK,
+            command,
             content: event.text,
             channelId,
             externalUserId: event.user.userId,
@@ -424,6 +424,14 @@ export async function slackWebhook(
             teamId: raw.team_id,
           })
         }
+
+      chat.onSlashCommand(
+        `/${ChatCommands.LINK}`,
+        handleSlackSlashCommand(ChatCommands.LINK)
+      )
+      chat.onSlashCommand(
+        `/${ChatCommands.UNLINK}`,
+        handleSlackSlashCommand(ChatCommands.UNLINK)
       )
       chat.onSlashCommand(
         `/${ChatCommands.NEW}`,
@@ -523,8 +531,7 @@ export async function slackWebhook(
       })
 
       chat.onNewMention(handler)
-      chat.onSubscribedMessage(handler)
-      chat.onNewMessage(/.*/, async (thread, message) => {
+      chat.onNewMessage(/./, async (thread, message) => {
         const raw = message.raw as SlackEvent | undefined
         if (!isSlackDirectMessage(raw) || message.isMention) {
           return
