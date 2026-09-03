@@ -13,7 +13,7 @@ interface PrepareChatConversationForSaveParams {
   userId: string
   title?: string
   messages: ChatConversation["messages"]
-  chat: Partial<ChatConversationRequest>
+  chat: Partial<ChatConversation>
   existingChat?: ChatConversation | null
 }
 

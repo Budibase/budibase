@@ -98,7 +98,6 @@ export interface ChatConversationRequest extends Document {
   attachmentContextExpiresAt?: string
   attachmentVectorStoreId?: string
   attachmentDeletingAt?: string
-  pendingAttachmentTurns?: ConversationAttachmentTurn[]
 }
 
 export interface WebhookChatCompleteResult {
@@ -115,6 +114,7 @@ export type DraftChatConversation = Omit<ChatConversationRequest, "agentId"> & {
 
 export interface ChatConversation extends ChatConversationRequest {
   userId: string
+  pendingAttachmentTurns?: ConversationAttachmentTurn[]
 }
 
 export interface ChatIdentityLink extends Document {
