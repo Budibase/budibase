@@ -1,18 +1,29 @@
-import { context, features, ViewName } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  features,
+  ViewName,
+} from "@budibase/backend-core"
 import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseImpl"
-import { structures } from "@budibase/backend-core/tests"
+import { generator, structures } from "@budibase/backend-core/tests"
 import {
   AutomationTriggerStepId,
   DesignDocument,
   FeatureFlag,
   isEmailTrigger,
+  isWebhookTrigger,
+  RestAuthType,
+  SourceName,
+  ToolExecutionPrincipal,
   type Automation,
   type EmailTrigger,
   type EmailTriggerInputs,
   type Project,
   type ProjectPackageDependencyIndex,
+  type Webhook,
 } from "@budibase/types"
 import { Header } from "@budibase/shared-core"
+import { decodeJSBinding, encodeJSBinding } from "@budibase/string-templates"
 import fsp from "fs/promises"
 import { tmpdir } from "os"
 import { join } from "path"
@@ -20,7 +31,10 @@ import { Readable } from "stream"
 import { pipeline } from "stream/promises"
 import * as tar from "tar"
 import { TRIGGER_DEFINITIONS } from "../../../automations"
+import { getAutomationTriggerToolName } from "../../../ai/tools/budibase/automations"
+import { getRowToolNames } from "../../../ai/tools/budibase/rows"
 import sdk from "../../../sdk"
+import { getQueryToolBindingsForResource } from "../../../sdk/workspace/ai/agents/queryToolReferences"
 import * as projects from "../../../sdk/workspace/projects/crud"
 import { buildExternalTableId } from "../../../integrations/utils"
 import { getQueryIndex } from "../../../db/utils"
@@ -98,7 +112,6 @@ describe("/projects", () => {
     const externalTable = basicTable(datasource, {
       _id: buildExternalTableId(datasource._id!, entityKey),
       name: "Updated table",
-      projectIds: [projectId],
     })
     await config.api.datasource.update({
       ...datasource,
@@ -118,7 +131,6 @@ describe("/projects", () => {
     const plusExternalTable = basicTable(datasourcePlus, {
       _id: buildExternalTableId(datasourcePlus._id!, plusEntityKey),
       name: "Updated plus table",
-      projectIds: [projectId],
     })
     await config.api.datasource.update({
       ...datasourcePlus,
@@ -231,7 +243,7 @@ describe("/projects", () => {
       exportedAt: new Date().toISOString(),
       project,
       sourceWorkspace: {
-        id: "app_source",
+        id: "app_dev_source",
       },
       resourcesByType: {
         project: 1,
@@ -421,10 +433,6 @@ describe("/projects", () => {
 
   it("rejects assigning an unknown project id", async () => {
     await withProjectsEnabled(async () => {
-      const datasource = await config.api.datasource.create(
-        basicDatasource().datasource
-      )
-
       await config.api.workspaceApp.create(
         structures.workspaceApps.createRequest({
           name: "Ops app",
@@ -438,26 +446,42 @@ describe("/projects", () => {
           },
         }
       )
+    })
+  })
 
+  it("strips project assignments from external tables", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
       const externalTable = basicTable(datasource, {
         _id: buildExternalTableId(datasource._id!, "TestTable"),
-        projectIds: ["project_missing"],
+        projectIds: [project._id],
+      })
+      const datasourceWithTable = await config.api.datasource.update({
+        ...datasource,
+        entities: {
+          [externalTable.name]: externalTable,
+        },
       })
 
-      await config.api.datasource.update(
-        {
-          ...datasource,
-          entities: {
-            [externalTable.name]: externalTable,
-          },
-        },
-        {
-          status: 404,
-          body: {
-            message: "Project 'project_missing' not found.",
-          },
-        }
-      )
+      expect(
+        datasourceWithTable.entities![externalTable.name].projectIds
+      ).toBeUndefined()
+
+      const savedTable = await config.api.table.save({
+        ...datasourceWithTable.entities![externalTable.name],
+        projectIds: [project._id],
+      })
+      expect(savedTable.projectIds).toBeUndefined()
+
+      const storedDatasource = await config.api.datasource.get(datasource._id!)
+      expect(
+        storedDatasource.entities![externalTable.name].projectIds
+      ).toBeUndefined()
     })
   })
 
@@ -479,7 +503,7 @@ describe("/projects", () => {
     })
   })
 
-  it("clears external datasource and entity assignments when deleting a project", async () => {
+  it("clears external datasource assignments when deleting a project", async () => {
     await withProjectsEnabled(async () => {
       const project = await createAssignedProject()
       const { datasource, entityKey } = await createAssignedExternalDatasource(
@@ -494,7 +518,7 @@ describe("/projects", () => {
     })
   })
 
-  it("clears datasource_plus entity assignments when deleting a project", async () => {
+  it("clears datasource_plus assignments when deleting a project", async () => {
     await withProjectsEnabled(async () => {
       const project = await createAssignedProject()
       const { datasourcePlus, plusEntityKey } =
@@ -585,10 +609,8 @@ describe("/projects", () => {
       expect(fetchedAgent?.projectIds).toEqual(expectedProjectIds)
       expect(fetchedTable.projectIds).toEqual(expectedProjectIds)
       expect(fetchedDatasource.projectIds).toEqual(expectedProjectIds)
-      expect(fetchedDatasource.entities![entityKey].projectIds).toEqual(
-        expectedProjectIds
-      )
-      expect(fetchedQuery.projectIds).toEqual(expectedProjectIds)
+      expect(fetchedDatasource.entities![entityKey].projectIds).toBeUndefined()
+      expect(fetchedQuery.projectIds).toBeUndefined()
     })
   })
 
@@ -845,7 +867,7 @@ describe("/projects", () => {
       })
     })
 
-    it("preserves query assignments", async () => {
+    it("strips query assignments", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
           name: "Operations",
@@ -858,7 +880,7 @@ describe("/projects", () => {
           name: "Ops query updated",
         })
 
-        expect(updatedQuery.projectIds).toEqual([project._id])
+        expect(updatedQuery.projectIds).toBeUndefined()
       })
     })
   })
@@ -1010,6 +1032,13 @@ describe("/projects", () => {
       ...createQueryScreen(datasource._id!, query),
       workspaceAppId: workspaceApp._id,
     })
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const storedScreen = await db.get<
+        typeof screen & { projectIds?: string[] }
+      >(screen._id!)
+      await db.put({ ...storedScreen, projectIds: [project._id] })
+    })
 
     const automation = await config.createAutomation()
     await config.api.automation.update({
@@ -1121,12 +1150,23 @@ describe("/projects", () => {
 
     it("sanitises exported secrets and agent integrations", async () => {
       await withProjectsEnabled(async () => {
-        const { datasource, agent, files } = await createProjectExportFixture()
+        const { datasource, query, agent, screen, files } =
+          await createProjectExportFixture()
 
         const exportedDatasource = JSON.parse(
           files.get(`docs/datasource/${datasource._id}.json`)!.toString()
         )
-        expect(exportedDatasource.config.password).not.toBe("super-secret")
+        expect(exportedDatasource.config.password).not.toContain("super-secret")
+
+        const exportedQuery = JSON.parse(
+          files.get(`docs/query/${query._id}.json`)!.toString()
+        )
+        expect(exportedQuery.projectIds).toBeUndefined()
+
+        const exportedScreen = JSON.parse(
+          files.get(`docs/screen/${screen._id}.json`)!.toString()
+        )
+        expect(exportedScreen.projectIds).toBeUndefined()
 
         const exportedAgent = JSON.parse(
           files.get(`docs/agent/${agent._id}.json`)!.toString()
@@ -1138,6 +1178,44 @@ describe("/projects", () => {
           requireUserLink: true,
           teamId: "T123",
         })
+      })
+    })
+
+    it("preserves pure environment expressions in exported secrets", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Environment bindings",
+        })
+        const password = "{{ env.PASSWORD_PREFIX }}{{ env.PASSWORD_SUFFIX }}"
+        const datasource = await config.api.datasource.create({
+          type: "datasource",
+          name: "Environment datasource",
+          source: SourceName.REST,
+          config: {
+            authConfigs: [
+              {
+                _id: generator.guid(),
+                name: "Environment auth",
+                type: RestAuthType.BASIC,
+                config: {
+                  username: "{{ env.USERNAME }}",
+                  password,
+                },
+              },
+            ],
+          },
+          projectIds: [project._id],
+        })
+
+        const files = await readTarEntries(
+          await config.api.project.export(project._id)
+        )
+        const exportedDatasource = JSON.parse(
+          files.get(`docs/datasource/${datasource._id}.json`)!.toString()
+        )
+        expect(exportedDatasource.config.authConfigs[0].config.password).toBe(
+          password
+        )
       })
     })
 
@@ -1163,24 +1241,31 @@ describe("/projects", () => {
         ).toEqual(
           expect.arrayContaining([
             datasource._id,
-            query._id,
             table._id,
             automation._id,
             agent._id,
             workspaceApp._id,
           ])
         )
+        expect(
+          dependencyIndex.directMembers.map(resource => resource.id)
+        ).not.toContain(query._id)
+        expect(
+          dependencyIndex.resources[datasource._id!]!.dependencies.map(
+            resource => resource.id
+          )
+        ).toContain(query._id)
       })
     })
 
-    it("reports unsupported content for transitive agents", async () => {
+    it("omits unassigned dependencies and reports incomplete content", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
           name: "Operations",
         })
-        const datasource = await config.api.datasource.create(
-          basicDatasource().datasource
-        )
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+        })
         const agent = await config.api.agent.create({
           name: "Referenced agent",
           aiconfig: "default",
@@ -1188,7 +1273,10 @@ describe("/projects", () => {
         })
         await config.api.query.save({
           ...basicQuery(datasource._id!),
-          name: `Uses ${agent._id}`,
+          transformer: `return "{{ ${agent._id}.name }}"`,
+        })
+        await config.api.datasource.update({
+          ...datasource,
           projectIds: [project._id],
         })
 
@@ -1196,13 +1284,64 @@ describe("/projects", () => {
         const files = await readTarEntries(body)
         const manifest = JSON.parse(files.get("manifest.json")!.toString())
 
-        expect(files.has(`docs/agent/${agent._id}.json`)).toBe(true)
+        expect(files.has(`docs/agent/${agent._id}.json`)).toBe(false)
+        const dependencyIndex = JSON.parse(
+          files.get("dependency-index.json")!.toString()
+        ) as ProjectPackageDependencyIndex
+        expect(
+          Object.values(dependencyIndex.resources).flatMap(resource =>
+            resource.dependencies.map(dependency => dependency.id)
+          )
+        ).not.toContain(agent._id)
         expect(manifest.unsupportedContent).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
-              type: "agent_linked_content",
+              type: "excluded_dependency",
               count: 1,
             }),
+          ])
+        )
+      })
+    })
+
+    it("ignores resource ids in ordinary text", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+        })
+        const agent = await config.api.agent.create({
+          name: "Unrelated agent",
+          aiconfig: "default",
+        })
+        await config.api.query.save({
+          ...basicQuery(datasource._id!),
+          name: `Docs for ${agent._id}.json`,
+        })
+        await config.api.datasource.update({
+          ...datasource,
+          projectIds: [project._id],
+        })
+
+        const files = await readTarEntries(
+          await config.api.project.export(project._id)
+        )
+        const manifest = JSON.parse(files.get("manifest.json")!.toString())
+        const dependencyIndex = JSON.parse(
+          files.get("dependency-index.json")!.toString()
+        ) as ProjectPackageDependencyIndex
+
+        expect(files.has(`docs/agent/${agent._id}.json`)).toBe(false)
+        expect(
+          Object.values(dependencyIndex.resources).flatMap(resource =>
+            resource.dependencies.map(dependency => dependency.id)
+          )
+        ).not.toContain(agent._id)
+        expect(manifest.unsupportedContent).not.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ type: "excluded_dependency" }),
           ])
         )
       })
@@ -1264,20 +1403,20 @@ describe("/projects", () => {
     })
   })
 
-  it("exports and remaps assigned external tables through their datasource", async () => {
+  it("exports and remaps external tables through their assigned datasource", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
         name: "External data",
       })
-      const datasource = await config.api.datasource.create(
-        basicDatasource().datasource
-      )
+      const datasource = await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        projectIds: [project._id],
+      })
       const externalTableId = buildExternalTableId(datasource._id!, "TestTable")
       const externalTable = basicTable(datasource, {
         _id: externalTableId,
         name: "TestTable",
         primaryDisplay: `{{ ${externalTableId}.name }}`,
-        projectIds: [project._id],
       })
       await config.api.datasource.update({
         ...datasource,
@@ -1312,15 +1451,64 @@ describe("/projects", () => {
             "TestTable"
           )
 
+          expect(importedDatasource.projectIds).toEqual([imported.project._id])
           expect(importedExternalTable._id).toBe(importedExternalTableId)
-          expect(importedExternalTable.projectIds).toEqual([
-            imported.project._id,
-          ])
+          expect(importedExternalTable.projectIds).toBeUndefined()
           expect(importedExternalTable.primaryDisplay).toBe(
             `{{ ${importedExternalTableId}.name }}`
           )
         }
       )
+    })
+  })
+
+  it("tracks external table agent tools as datasource dependencies", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "External data agent",
+      })
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
+      const externalTableId = buildExternalTableId(datasource._id!, "Orders")
+      await config.api.datasource.update({
+        ...datasource,
+        entities: {
+          Orders: basicTable(datasource, {
+            _id: externalTableId,
+            name: "Orders",
+          }),
+        },
+      })
+      const agent = await config.api.agent.create({
+        name: "External data agent",
+        aiconfig: "default",
+        projectIds: [project._id],
+      })
+      await config.api.agent.createOperation(agent._id!, {
+        id: "operation_1",
+        name: "Create orders",
+        live: false,
+        enabledTools: [
+          {
+            toolName: getRowToolNames(externalTableId).create_row,
+            executionPrincipal: ToolExecutionPrincipal.ADMIN,
+          },
+        ],
+        allowKnowledgeSourceDownload: true,
+      })
+
+      const resourceGraph = await config.api.resource.getResourceDependencies()
+      expect(
+        resourceGraph.body.resources[agent._id!].dependencies.map(
+          dependency => dependency.id
+        )
+      ).toContain(datasource._id)
+      expect(
+        resourceGraph.body.resources[project._id].dependencies.map(
+          dependency => dependency.id
+        )
+      ).not.toContain(datasource._id)
     })
   })
 
@@ -1397,6 +1585,11 @@ describe("/projects", () => {
       const rowAction = await config.api.rowAction.save(table._id!, {
         name: "Approve",
       })
+      const automation = await config.api.automation.get(rowAction.automationId)
+      await config.api.automation.update({
+        ...automation,
+        projectIds: [project._id],
+      })
 
       const body = await config.api.project.export(project._id)
       const destinationWorkspace = await config.api.workspace.create({
@@ -1422,6 +1615,12 @@ describe("/projects", () => {
             imported.resources.automation?.[0]
           )
           expect(importedAction.id).not.toBe(rowAction.id)
+          expect(Object.keys(importedRowActions.actions)).toContain(
+            importedAction.id
+          )
+          expect(Object.keys(importedRowActions.actions)).not.toContain(
+            rowAction.id
+          )
 
           const importedAutomation = await config.api.automation.get(
             imported.resources.automation?.[0]!
@@ -1465,15 +1664,55 @@ describe("/projects", () => {
         url: "/operations-app",
         projectIds: [project._id],
       })
+      const queryScreen = createQueryScreen(datasource._id!, query)
       const screen = await config.api.screen.save({
-        ...createQueryScreen(datasource._id!, query),
+        ...queryScreen,
+        props: {
+          ...queryScreen.props,
+          testBinding: `{{ ${query._id}.rows }}`,
+          testBracketBinding: `{{ [${query._id}].[rows] }}`,
+          testBlockBinding: `{{#if ${query._id}.rows}}{{ ${query._id}.rows }}{{/if}}`,
+          testJavascriptBinding: encodeJSBinding(
+            `return $("${query._id}.rows")`
+          ),
+          ordinaryText: `Docs: ${query._id}.rows`,
+          ordinaryUrl: `https://example.com/${query._id}.rows`,
+          bindingKeyed: {
+            [`{{ ${query._id}.rows }}`]: "binding key",
+          },
+          idKeyed: {
+            [query._id!]: {
+              resourceId: query._id,
+            },
+          },
+        },
         workspaceAppId: workspaceApp._id,
       })
       const automation = await config.createAutomation()
-      await config.api.automation.update({
-        ...automation,
-        projectIds: [project._id],
-      })
+      const { automation: webhookAutomation } =
+        await config.api.automation.update({
+          ...automation,
+          definition: {
+            ...automation.definition,
+            trigger: automationTrigger(TRIGGER_DEFINITIONS.WEBHOOK),
+          },
+        })
+      const { automation: assignedAutomation } =
+        await config.api.automation.update({
+          ...webhookAutomation,
+          projectIds: [project._id],
+        })
+      if (!isWebhookTrigger(assignedAutomation.definition.trigger)) {
+        throw new Error("Expected source automation to use a webhook trigger")
+      }
+      const sourceWebhookId = assignedAutomation.definition.trigger.webhookId
+      const createdToolAutomation = await config.createAutomation()
+      const { automation: toolAutomation } = await config.api.automation.update(
+        {
+          ...createdToolAutomation,
+          projectIds: [project._id],
+        }
+      )
       const agent = await config.api.agent.create({
         name: "Ops agent",
         aiconfig: "default",
@@ -1483,6 +1722,27 @@ describe("/projects", () => {
           signingSecret: "secret-signing-key",
         },
         projectIds: [project._id],
+      })
+      await config.api.agent.createOperation(agent._id!, {
+        id: "operation_1",
+        name: "Use project resources",
+        live: false,
+        enabledTools: [
+          {
+            toolName: getAutomationTriggerToolName(toolAutomation._id!),
+            executionPrincipal: ToolExecutionPrincipal.ADMIN,
+          },
+          {
+            toolName: getRowToolNames(table._id!).create_row,
+            executionPrincipal: ToolExecutionPrincipal.ADMIN,
+          },
+          {
+            toolName: getQueryToolBindingsForResource({ datasource, query })
+              .runtimeBinding,
+            executionPrincipal: ToolExecutionPrincipal.ADMIN,
+          },
+        ],
+        allowKnowledgeSourceDownload: true,
       })
 
       const body = await config.api.project.export(project._id)
@@ -1504,7 +1764,7 @@ describe("/projects", () => {
           expect(imported.resources.datasource).toHaveLength(1)
           expect(imported.resources.query).toHaveLength(1)
           expect(imported.resources.table).toHaveLength(1)
-          expect(imported.resources.automation).toHaveLength(1)
+          expect(imported.resources.automation).toHaveLength(2)
           expect(imported.resources.agent).toHaveLength(1)
           expect(imported.resources.workspace_app).toHaveLength(1)
           expect(imported.resources.screen).toHaveLength(1)
@@ -1546,6 +1806,32 @@ describe("/projects", () => {
           expect(importedScreen!.props._children?.[0].table.datasourceId).toBe(
             imported.resources.datasource?.[0]
           )
+          expect(importedScreen!.props.testBinding).toBe(
+            `{{ ${imported.resources.query?.[0]}.rows }}`
+          )
+          expect(importedScreen!.props.testBracketBinding).toBe(
+            `{{ [${imported.resources.query?.[0]}].[rows] }}`
+          )
+          expect(importedScreen!.props.testBlockBinding).toBe(
+            `{{#if ${imported.resources.query?.[0]}.rows}}{{ ${imported.resources.query?.[0]}.rows }}{{/if}}`
+          )
+          expect(
+            decodeJSBinding(importedScreen!.props.testJavascriptBinding)
+          ).toBe(`return $("${imported.resources.query?.[0]}.rows")`)
+          expect(importedScreen!.props.ordinaryText).toBe(
+            `Docs: ${query._id}.rows`
+          )
+          expect(importedScreen!.props.ordinaryUrl).toBe(
+            `https://example.com/${query._id}.rows`
+          )
+          expect(importedScreen!.props.bindingKeyed).toEqual({
+            [`{{ ${query._id}.rows }}`]: "binding key",
+          })
+          expect(importedScreen!.props.idKeyed).toEqual({
+            [query._id!]: {
+              resourceId: imported.resources.query?.[0],
+            },
+          })
 
           const importedQuery = await config.api.query.get(
             imported.resources.query?.[0]!
@@ -1554,19 +1840,59 @@ describe("/projects", () => {
             imported.resources.datasource?.[0]
           )
           expect(importedQuery.name).toBe(`Lookup ${datasource._id!} records`)
-          expect(importedQuery.projectIds).toEqual([imported.project._id])
+          expect(importedQuery.projectIds).toBeUndefined()
 
           const importedTable = await config.api.table.get(
             imported.resources.table?.[0]!
           )
           expect(importedTable.projectIds).toEqual([imported.project._id])
 
-          const importedAutomation = await config.api.automation.get(
-            imported.resources.automation?.[0]!
+          const importedAutomations = await Promise.all(
+            imported.resources.automation!.map(id =>
+              config.api.automation.get(id)
+            )
           )
+          const importedAutomation = importedAutomations.find(automation =>
+            isWebhookTrigger(automation.definition.trigger)
+          )!
           expect(importedAutomation.projectIds).toEqual([imported.project._id])
           expect(importedAutomation.appId).toBe(destinationWorkspace.appId)
           expect(importedAutomation.disabled).toBe(true)
+          if (!isWebhookTrigger(importedAutomation.definition.trigger)) {
+            throw new Error(
+              "Expected imported automation to use a webhook trigger"
+            )
+          }
+          const importedTrigger = importedAutomation.definition.trigger
+          expect(importedTrigger.webhookId).toBeDefined()
+          expect(importedTrigger.webhookId).not.toBe(sourceWebhookId)
+          expect(importedTrigger.inputs.schemaUrl).toContain(
+            destinationWorkspace.appId
+          )
+          expect(importedTrigger.inputs.triggerUrl).toContain(
+            dbCore.getProdWorkspaceID(destinationWorkspace.appId)
+          )
+          expect(importedTrigger.inputs.schemaUrl).not.toContain(
+            config.getDevWorkspaceId()
+          )
+          const importedWebhook = await config.doInContext(
+            destinationWorkspace.appId,
+            async () =>
+              await context
+                .getWorkspaceDB()
+                .get<Webhook>(importedTrigger.webhookId!)
+          )
+          expect(importedWebhook.action.target).toBe(importedAutomation._id)
+
+          const importedToolAutomation = importedAutomations.find(
+            automation =>
+              automation.definition.trigger.stepId ===
+              AutomationTriggerStepId.APP
+          )!
+          expect(importedToolAutomation).toBeDefined()
+          expect(importedToolAutomation.projectIds).toEqual([
+            imported.project._id,
+          ])
 
           const importedDatasource = await config.api.datasource.get(
             imported.resources.datasource?.[0]!
@@ -1581,6 +1907,18 @@ describe("/projects", () => {
           expect(importedAgent).toBeDefined()
           expect(importedAgent?.projectIds).toEqual([imported.project._id])
           expect(importedAgent?.live).toBe(false)
+          expect(
+            importedAgent?.operations?.[0].enabledTools?.map(
+              tool => tool.toolName
+            )
+          ).toEqual([
+            getAutomationTriggerToolName(importedToolAutomation._id!),
+            getRowToolNames(importedTable._id!).create_row,
+            getQueryToolBindingsForResource({
+              datasource: importedDatasource,
+              query: importedQuery,
+            }).runtimeBinding,
+          ])
 
           const resourceGraph =
             await config.api.resource.getResourceDependencies()
@@ -1593,7 +1931,7 @@ describe("/projects", () => {
               imported.resources.datasource?.[0],
               imported.resources.query?.[0],
               imported.resources.table?.[0],
-              imported.resources.automation?.[0],
+              ...imported.resources.automation!,
               imported.resources.agent?.[0],
               imported.resources.workspace_app?.[0],
               imported.resources.screen?.[0],
@@ -1628,7 +1966,7 @@ describe("/projects", () => {
       })
       const datasource = await config.api.datasource.create({
         ...basicDatasource().datasource,
-        projectIds: [otherProject._id],
+        projectIds: [project._id, otherProject._id],
       })
       const externalTableId = buildExternalTableId(
         datasource._id!,
@@ -1647,7 +1985,6 @@ describe("/projects", () => {
       })
       const query = await config.api.query.save({
         ...basicQuery(datasource._id!),
-        projectIds: [project._id],
       })
 
       const body = await config.api.project.export(project._id)
@@ -1667,8 +2004,8 @@ describe("/projects", () => {
           )
 
           expect(importedQuery._id).not.toBe(query._id)
-          expect(importedQuery.projectIds).toEqual([imported.project._id])
-          expect(importedDatasource.projectIds).toBeUndefined()
+          expect(importedQuery.projectIds).toBeUndefined()
+          expect(importedDatasource.projectIds).toEqual([imported.project._id])
           expect(
             importedDatasource.entities![externalTable.name].projectIds
           ).toBeUndefined()
@@ -1749,6 +2086,36 @@ describe("/projects", () => {
     }
   )
 
+  it("rejects packages with an invalid source project id", async () => {
+    await withProjectsEnabled(async () => {
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({
+          project: { _id: "invalid" },
+        })
+      )
+
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: { message: "Project package project.json is invalid." },
+      })
+    })
+  })
+
+  it("rejects packages with an invalid source workspace id", async () => {
+    await withProjectsEnabled(async () => {
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({
+          manifest: { sourceWorkspace: { id: "invalid" } },
+        })
+      )
+
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: { message: "Project package manifest is invalid." },
+      })
+    })
+  })
+
   it("rejects packages with docs that are not declared in the dependency index", async () => {
     await withProjectsEnabled(async () => {
       const packageBuffer = await createTarPackage(
@@ -1822,6 +2189,87 @@ describe("/projects", () => {
       })
     })
   })
+
+  it.each(["dependency", "direct member"])(
+    "rejects a missing %s resource",
+    async location => {
+      await withProjectsEnabled(async () => {
+        const missing = {
+          id: "au_missing",
+          name: "Missing automation",
+          type: "automation",
+        }
+        const dependencyIndex =
+          location === "dependency"
+            ? {
+                resources: {
+                  project_source: { dependencies: [missing] },
+                },
+              }
+            : { directMembers: [missing] }
+        const packageBuffer = await createTarPackage(
+          createMinimalPackageEntries({ dependencyIndex })
+        )
+
+        await config.api.project.import(packageBuffer, undefined, {
+          status: 400,
+          body: {
+            message:
+              "Project package dependency index references missing docs.",
+          },
+        })
+      })
+    }
+  )
+
+  it.each(["dependency", "direct member"])(
+    "rejects a %s with the wrong resource type",
+    async location => {
+      await withProjectsEnabled(async () => {
+        const tableId = "ta_mistyped"
+        const table = {
+          id: tableId,
+          name: "Mistyped table",
+          type: "table",
+        }
+        const mistyped = { ...table, type: "automation" }
+        const packageBuffer = await createTarPackage(
+          createMinimalPackageEntries({
+            manifest: {
+              resourcesByType: {
+                project: 1,
+                table: 1,
+              },
+            },
+            dependencyIndex: {
+              directMembers: location === "direct member" ? [mistyped] : [],
+              resources: {
+                project_source: {
+                  dependencies: [location === "dependency" ? mistyped : table],
+                },
+                [tableId]: { dependencies: [] },
+              },
+            },
+            docs: {
+              [`docs/table/${tableId}.json`]: {
+                ...basicTable(),
+                _id: tableId,
+                name: "Mistyped table",
+              },
+            },
+          })
+        )
+
+        await config.api.project.import(packageBuffer, undefined, {
+          status: 400,
+          body: {
+            message:
+              "Project package dependency index resource types do not match package docs.",
+          },
+        })
+      })
+    }
+  )
 
   it("rejects packages with docs that are not reachable from the project", async () => {
     await withProjectsEnabled(async () => {
