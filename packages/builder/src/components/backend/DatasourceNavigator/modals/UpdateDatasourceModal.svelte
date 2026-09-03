@@ -3,7 +3,6 @@
   import { datasources, integrations } from "@/stores/builder"
   import { notifications, Input, ModalContent, Modal } from "@budibase/bbui"
   import { integrationForDatasource } from "@/stores/selectors"
-  import ProjectSelect from "@/components/common/ProjectSelect.svelte"
   import type { Datasource, UIInternalDatasource } from "@budibase/types"
 
   type EditableDatasource = (Datasource | UIInternalDatasource) & {
@@ -30,22 +29,15 @@
   let modal: ModalHandle | undefined = $state()
   let name = $state("")
   let originalName = ""
-  let originalProjectIds: string[] = $state([])
-  let projectIds: string[] = $state([])
 
-  const hasChanges = $derived(
-    name !== originalName ||
-      JSON.stringify(projectIds) !== JSON.stringify(originalProjectIds)
-  )
+  const hasChanges = $derived(name !== originalName)
 
   let { datasource, onCancel }: Props = $props()
 
   export const show = () => {
     error = ""
     originalName = datasource?.name || ""
-    originalProjectIds = datasource?.projectIds || []
     name = originalName
-    projectIds = [...originalProjectIds]
     modal?.show()
   }
   export const hide = () => {
@@ -73,9 +65,6 @@
       name,
       entities: getPersistableEntities(datasource),
     }
-    if (JSON.stringify(projectIds) !== JSON.stringify(originalProjectIds)) {
-      updatedDatasource.projectIds = projectIds
-    }
     await datasources.save({
       datasource: updatedDatasource,
       integration: integrationForDatasource(get(integrations), datasource),
@@ -100,6 +89,5 @@
       bind:value={name}
       {error}
     />
-    <ProjectSelect bind:value={projectIds} />
   </ModalContent>
 </Modal>
