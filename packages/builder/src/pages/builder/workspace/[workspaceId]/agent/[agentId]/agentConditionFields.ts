@@ -70,7 +70,10 @@ const CONDITIONABLE_FIELD_TYPES = new Set<FieldType>([
   FieldType.DATETIME,
 ])
 
-const ROW_MUTATION_SUFFIXES = ["_create_row", "_update_row"]
+const ROW_MUTATION_ACTIONS = ["create_row", "update_row"]
+
+const toolAction = (tool: AgentTool) =>
+  (tool.readableName ?? tool.runtimeBinding).split(".").pop() ?? ""
 
 const AUTOMATION_FIELD_TYPES: Partial<Record<AutomationIOType, FieldType>> = {
   [AutomationIOType.STRING]: FieldType.STRING,
@@ -85,11 +88,10 @@ const AUTOMATION_FIELD_TYPES: Partial<Record<AutomationIOType, FieldType>> = {
 const isRowMutationTool = (tool: AgentTool) =>
   (tool.sourceType === ToolType.INTERNAL_TABLE ||
     tool.sourceType === ToolType.EXTERNAL_TABLE) &&
-  ROW_MUTATION_SUFFIXES.some(suffix => tool.runtimeBinding.endsWith(suffix))
+  ROW_MUTATION_ACTIONS.includes(toolAction(tool))
 
 const isAutomationTriggerTool = (tool: AgentTool) =>
-  tool.sourceType === ToolType.AUTOMATION &&
-  tool.runtimeBinding.endsWith("_trigger")
+  tool.sourceType === ToolType.AUTOMATION && toolAction(tool) === "trigger"
 
 export const getToolConditionFields = ({
   tool,

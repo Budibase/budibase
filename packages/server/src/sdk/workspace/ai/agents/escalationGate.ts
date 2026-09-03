@@ -48,21 +48,25 @@ interface CreateGateParams {
   gateContext: EscalationGateContext
 }
 
+export const resolveToolAction = (tool: {
+  name: string
+  readableName?: string
+}): string => (tool.readableName ?? tool.name).split(".").pop() ?? ""
+
 export const resolveToolArgsKey = (tool: {
   name: string
+  readableName?: string
   sourceType: ToolType
 }): string | undefined => {
+  const action = resolveToolAction(tool)
   if (
     (tool.sourceType === ToolType.INTERNAL_TABLE ||
       tool.sourceType === ToolType.EXTERNAL_TABLE) &&
-    (tool.name.endsWith("_create_row") || tool.name.endsWith("_update_row"))
+    (action === "create_row" || action === "update_row")
   ) {
     return "data"
   }
-  if (
-    tool.sourceType === ToolType.AUTOMATION &&
-    tool.name.endsWith("_trigger")
-  ) {
+  if (tool.sourceType === ToolType.AUTOMATION && action === "trigger") {
     return "fields"
   }
   return undefined
@@ -100,15 +104,17 @@ const buildConditionRecord = async ({
   input,
   argsKey,
   toolName,
+  action,
   sourceId,
 }: {
   input: unknown
   argsKey?: string
   toolName: string
+  action: string
   sourceId?: string
 }): Promise<Record<string, unknown> | undefined> => {
   const record = conditionRecord(input, argsKey)
-  if (!record || !toolName.endsWith("_update_row") || !sourceId) {
+  if (!record || action !== "update_row" || !sourceId) {
     return record
   }
   const rowId = (input as Record<string, unknown>).rowId
@@ -187,6 +193,7 @@ export const createEscalationGateRuntime = ({
       input,
       argsKey,
       toolName,
+      action: resolveToolAction({ name: toolName, readableName }),
       sourceId,
     })
     const rule = matchRule(rules, record)
