@@ -12,6 +12,7 @@ detected automatically from the latest vX.Y.Z-cloud[.N] tag.
 
 Use --force to replace existing release and hotfix branches. This deletes the
 matching remote branches and resets matching local branches to the cloud tag.
+Replacement is refused if either target branch is checked out in a worktree.
 EOF
 }
 
@@ -148,6 +149,34 @@ echo "Cloud release tag: $cloud_tag"
 echo "Base branch: $base_branch"
 echo "Hotfix branch: $hotfix_branch"
 
+check_target_worktrees() {
+  local worktree_list current_worktree="" line branch
+
+  if ! worktree_list=$(git worktree list --porcelain); then
+    echo "Unable to inspect git worktrees." >&2
+    return 1
+  fi
+
+  while IFS= read -r line; do
+    case "$line" in
+      worktree\ *)
+        current_worktree="${line#worktree }"
+        ;;
+      branch\ refs/heads/*)
+        branch="${line#branch refs/heads/}"
+        if [[ "$branch" == "$base_branch" || "$branch" == "$hotfix_branch" ]]; then
+          echo "Cannot replace branch $branch: it is checked out in $current_worktree." >&2
+          return 1
+        fi
+        ;;
+    esac
+  done <<< "$worktree_list"
+}
+
+if [[ "$force" == true ]]; then
+  check_target_worktrees
+fi
+
 if [[ "$dry_run" == true ]]; then
   for branch in "$base_branch" "$hotfix_branch"; do
     if branch_exists "$branch"; then
@@ -171,11 +200,6 @@ git fetch --no-tags origin "refs/tags/$cloud_tag"
 cloud_commit=$(git rev-parse --verify 'FETCH_HEAD^{commit}')
 
 if [[ "$force" == true ]]; then
-  current_branch=$(git branch --show-current)
-  if [[ "$current_branch" == "$base_branch" || "$current_branch" == "$hotfix_branch" ]]; then
-    git switch --detach "$cloud_commit"
-  fi
-
   delete_remote_branch() {
     local branch="$1"
     local remote_commit
