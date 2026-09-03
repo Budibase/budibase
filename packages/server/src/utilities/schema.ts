@@ -220,10 +220,16 @@ export function parse(rows: Rows, table: Table): Rows {
         parsedRow[columnName] = parsedValues?.map(u => u._id)
       } else if (columnType === FieldType.BB_REFERENCE_SINGLE) {
         let parsedValue = columnData
-        if (columnData && typeof columnData === "string") {
+        if (
+          columnData &&
+          typeof columnData === "string" &&
+          !columnData.startsWith("us_")
+        ) {
+          // Stored single user values are global IDs; exported values are JSON objects.
           parsedValue = parseJsonExport<{ _id: string }>(columnData)
         }
-        parsedRow[columnName] = parsedValue?._id
+        parsedRow[columnName] =
+          typeof parsedValue === "string" ? parsedValue : parsedValue?._id
       } else if (
         (columnType === FieldType.ATTACHMENTS ||
           columnType === FieldType.ATTACHMENT_SINGLE ||
