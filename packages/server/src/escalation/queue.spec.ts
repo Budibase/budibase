@@ -40,14 +40,26 @@ jest.mock("ai", () => {
   }
 })
 
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    events: {
+      ...actual.events,
+      platformActions: {
+        ...actual.events.platformActions,
+        enqueuePlatformActionSessionLifecycle: jest.fn(),
+      },
+    },
+  }
+})
+
 const prepareAgentChatRunMock = sdk.ai.agents.prepareAgentChatRun as jest.Mock
 const getOrThrowMock = sdk.ai.agents.getOrThrow as jest.Mock
 const recordEscalationResolvedMock = sdk.ai.agentRequests
   .recordEscalationResolved as jest.Mock
-const enqueueLifecycleMock = jest.spyOn(
-  events.platformActions,
-  "enqueuePlatformActionSessionLifecycle"
-)
+const enqueueLifecycleMock = events.platformActions
+  .enqueuePlatformActionSessionLifecycle as jest.Mock
 const aiAgentExecutedMock = jest.spyOn(events.action, "aiAgentExecuted")
 const aiAgentFailedMock = jest.spyOn(events.action, "aiAgentFailed")
 
