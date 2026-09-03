@@ -154,6 +154,9 @@ export async function upsertPlatformActionSession(
   )
 
   if (!lockResponse.executed) {
+    // Another job already holds the lock for this session - let Bull's
+    // retry/backoff pick this update back up instead of dropping it, since
+    // every event must be reflected in actionCount.
     throw new Error(
       `Could not acquire lock to index platform action session ${sessionId}`
     )
