@@ -29,6 +29,7 @@ describe("/api/system/environment", () => {
         baseUrl: "http://localhost:10000",
         offlineMode: false,
         maintenance: [],
+        passwordMinLength: "12",
         passwordPolicy: {
           minLength: 12,
           maxLength: 512,
@@ -47,19 +48,12 @@ describe("/api/system/environment", () => {
           baseUrl: "http://localhost:10000",
           offlineMode: false,
           maintenance: [],
+          passwordMinLength: "12",
           passwordPolicy: {
             minLength: 12,
             maxLength: 512,
           },
         })
-      })
-    })
-
-    it("returns the legacy password minimum length", async () => {
-      await withEnv({ PASSWORD_MIN_LENGTH: "10" }, async () => {
-        const env = await config.api.environment.getEnvironment()
-
-        expect(env.body.passwordMinLength).toBe("10")
       })
     })
   })

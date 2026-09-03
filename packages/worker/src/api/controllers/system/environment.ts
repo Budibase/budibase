@@ -56,7 +56,7 @@ export const fetch = async (ctx: Ctx<void, GetEnvironmentResponse>) => {
     baseUrl: env.PLATFORM_URL,
     isDev: env.isDev() && !env.isTest(),
     maintenance: [],
-    passwordMinLength: env.PASSWORD_MIN_LENGTH,
+    passwordMinLength: security.PASSWORD_POLICY.minLength.toString(),
     passwordPolicy: security.PASSWORD_POLICY,
   }
 
