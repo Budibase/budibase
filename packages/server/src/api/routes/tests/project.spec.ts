@@ -11,11 +11,13 @@ import {
   APIWarningCode,
   DesignDocument,
   FeatureFlag,
+  FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
   isEmailTrigger,
   isWebhookTrigger,
   ResourceType,
+  RelationshipType,
   RestAuthType,
   SourceName,
   ToolExecutionPrincipal,
@@ -1039,7 +1041,7 @@ describe("/projects", () => {
     })
   })
 
-  describe("project dependency assignments", () => {
+  describe("propagates project ids to dependencies on save", () => {
     it("rejects direct assignment waiting for Project deletion", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({ name: "Race" })
@@ -1075,6 +1077,68 @@ describe("/projects", () => {
         expect(
           (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
         ).toBeUndefined()
+      })
+    })
+
+    it("does not propagate after waiting for Project deletion", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({ name: "Race" })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Race app",
+            url: "/race-app",
+            projectIds: [project._id],
+          })
+        )
+        const automation = await config.createAutomation()
+        const gate = pauseNextProjectAssignmentLock()
+
+        try {
+          const deletion = config.api.project.delete(project._id, project._rev)
+          await gate.locked
+          const screenSave = config.api.screen.save(
+            createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+          )
+          await gate.contenderStarted
+          gate.release()
+
+          await Promise.all([deletion, screenSave])
+        } finally {
+          gate.release()
+          gate.restore()
+        }
+
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
+    it("does not build a workspace graph for an unassigned resource save", async () => {
+      await withProjectsEnabled(async () => {
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Unassigned app",
+            url: "/unassigned-app",
+          })
+        )
+        const fetchAutomations = jest.spyOn(sdk.automations, "fetch")
+
+        try {
+          await config.api.workspaceApp.update({
+            _id: workspaceApp._id,
+            _rev: workspaceApp._rev,
+            name: "Still unassigned",
+            url: workspaceApp.url,
+            navigation: workspaceApp.navigation,
+            theme: workspaceApp.theme,
+            customTheme: workspaceApp.customTheme,
+            disabled: workspaceApp.disabled,
+          })
+          expect(fetchAutomations).not.toHaveBeenCalled()
+        } finally {
+          fetchAutomations.mockRestore()
+        }
       })
     })
 
@@ -1500,6 +1564,122 @@ describe("/projects", () => {
       })
     })
 
+    it("keeps a deselected dependency excluded on an unchanged save", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+          })
+        )
+        const automation = await config.createAutomation()
+        const screen = await config.api.screen.save(
+          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+        )
+
+        await config.api.project.updateAssignment(workspaceApp._id!, {
+          resourceRev: workspaceApp._rev!,
+          projectIds: [project._id],
+          dependencyIds: [],
+        })
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toBeUndefined()
+
+        const persistedScreen = (await config.api.screen.list()).find(
+          candidate => candidate._id === screen._id
+        )!
+        const fetchAutomations = jest.spyOn(sdk.automations, "fetch")
+        try {
+          await config.api.screen.save(persistedScreen)
+          expect(fetchAutomations).not.toHaveBeenCalled()
+        } finally {
+          fetchAutomations.mockRestore()
+        }
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
+    it("propagates a dependency when its edge is removed and reintroduced", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+          })
+        )
+        const automation = await config.createAutomation()
+        const screen = await config.api.screen.save(
+          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+        )
+
+        await config.api.project.updateAssignment(workspaceApp._id!, {
+          resourceRev: workspaceApp._rev!,
+          projectIds: [project._id],
+          dependencyIds: [],
+        })
+
+        const screenWithoutAutomation = await config.api.screen.save({
+          ...screen,
+          props: {
+            ...screen.props,
+            _children: [],
+          },
+        })
+        await config.api.screen.save({
+          ...createAutomationButtonScreen(workspaceApp._id!, automation._id!),
+          _id: screenWithoutAutomation._id,
+          _rev: screenWithoutAutomation._rev,
+        })
+
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toEqual([project._id])
+      })
+    })
+
+    it("propagates existing dependencies to a newly added project", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+          })
+        )
+        const automation = await config.createAutomation()
+        await config.api.screen.save(
+          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+        )
+
+        await config.api.workspaceApp.update({
+          _id: workspaceApp._id,
+          _rev: workspaceApp._rev,
+          name: workspaceApp.name,
+          url: workspaceApp.url,
+          navigation: workspaceApp.navigation,
+          theme: workspaceApp.theme,
+          customTheme: workspaceApp.customTheme,
+          disabled: workspaceApp.disabled,
+          projectIds: [project._id],
+        })
+
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toEqual([project._id])
+      })
+    })
+
     it("keeps the root assignment successful when selected dependency writes conflict", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
@@ -1569,6 +1749,146 @@ describe("/projects", () => {
       })
     })
 
+    it("adds the project id to an automation triggered from a screen button", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+            projectIds: [project._id],
+          })
+        )
+        const automation = await config.createAutomation()
+
+        await config.api.screen.save(
+          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+        )
+
+        const updatedAutomation = await config.api.automation.get(
+          automation._id!
+        )
+        expect(updatedAutomation.projectIds).toEqual([project._id])
+      })
+    })
+
+    it("propagates dependencies introduced by a new agent operation", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const automation = await config.createAutomation()
+        const agent = await config.api.agent.create({
+          name: "Ops agent",
+          aiconfig: "default",
+          projectIds: [project._id],
+        })
+
+        await config.api.agent.createOperation(agent._id!, {
+          id: "operation_1",
+          name: "Run operations",
+          live: false,
+          enabledTools: [
+            {
+              toolName: `${automation._id}_trigger`,
+              executionPrincipal: ToolExecutionPrincipal.ADMIN,
+            },
+          ],
+          allowKnowledgeSourceDownload: true,
+        })
+
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toEqual([project._id])
+      })
+    })
+
+    it("propagates newly enabled operation dependencies without restoring exclusions", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const excludedAutomation = await config.createAutomation()
+        const addedAutomation = await config.createAutomation()
+        const agent = await config.api.agent.createWithOperation(
+          {
+            name: "Ops agent",
+            aiconfig: "default",
+          },
+          {
+            id: "operation_1",
+            name: "Run operations",
+            live: false,
+            enabledTools: [
+              {
+                toolName: `${excludedAutomation._id}_trigger`,
+                executionPrincipal: ToolExecutionPrincipal.ADMIN,
+              },
+            ],
+            allowKnowledgeSourceDownload: true,
+          }
+        )
+        await config.api.project.updateAssignment(agent._id!, {
+          resourceRev: agent._rev!,
+          projectIds: [project._id],
+          dependencyIds: [],
+        })
+
+        await config.api.agent.updateOperation(agent._id!, "operation_1", {
+          enabledTools: [
+            {
+              toolName: `${excludedAutomation._id}_trigger`,
+              executionPrincipal: ToolExecutionPrincipal.ADMIN,
+            },
+            {
+              toolName: `${addedAutomation._id}_trigger`,
+              executionPrincipal: ToolExecutionPrincipal.ADMIN,
+            },
+          ],
+        })
+
+        expect(
+          (await config.api.automation.get(excludedAutomation._id!)).projectIds
+        ).toBeUndefined()
+        expect(
+          (await config.api.automation.get(addedAutomation._id!)).projectIds
+        ).toEqual([project._id])
+      })
+    })
+
+    it("propagates from an already-assigned app to newly referenced datasource dependencies added via a screen", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+            projectIds: [project._id],
+          })
+        )
+        const datasource = await config.api.datasource.create(
+          basicDatasource().datasource
+        )
+        const query = await config.api.query.save(basicQuery(datasource._id!))
+
+        await config.api.screen.save({
+          ...createQueryScreen(datasource._id!, query),
+          workspaceAppId: workspaceApp._id,
+        })
+
+        const updatedQuery = await config.api.query.get(query._id!)
+        const updatedDatasource = await config.api.datasource.get(
+          datasource._id!
+        )
+        expect(updatedQuery.projectIds).toBeUndefined()
+        expect(updatedDatasource.projectIds).toEqual([project._id])
+      })
+    })
+
     it("includes a datasource's queries in project dependencies when the datasource is assigned", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
@@ -1593,6 +1913,400 @@ describe("/projects", () => {
             }),
           ])
         )
+      })
+    })
+
+    it("propagates through a newly saved query owned by an assigned datasource", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          projectIds: [project._id],
+        })
+        const table = await config.api.table.save(basicTable())
+
+        await config.api.query.save({
+          ...basicQuery(datasource._id!),
+          transformer: `return "{{ ${table._id}._id }}"`,
+        })
+
+        const updatedTable = await config.api.table.get(table._id!)
+        expect(updatedTable.projectIds).toEqual([project._id])
+      })
+    })
+
+    it("preserves project exclusions and tool bindings when a query moves", async () => {
+      await withProjectsEnabled(async () => {
+        const { project: sharedProject } = await config.api.project.create({
+          name: "Shared project",
+        })
+        const { project: destinationProject } = await config.api.project.create(
+          {
+            name: "Destination project",
+          }
+        )
+        const { project: agentProject } = await config.api.project.create({
+          name: "Agent project",
+        })
+        const { project: excludedAgentProject } =
+          await config.api.project.create({
+            name: "Excluded agent project",
+          })
+        const sourceDatasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          name: "Source datasource",
+          projectIds: [sharedProject._id, agentProject._id],
+        })
+        const destinationDatasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          name: "Destination datasource",
+        })
+        const table = await config.api.table.save(basicTable())
+        const excludedTable = await config.api.table.save(
+          basicTable(undefined, { name: "Excluded table" })
+        )
+        await config.api.query.save({
+          ...basicQuery(destinationDatasource._id!),
+          name: "Excluded query",
+          transformer: `return "{{ ${excludedTable._id}._id }}"`,
+        })
+        await config.api.project.updateAssignment(destinationDatasource._id!, {
+          resourceRev: destinationDatasource._rev!,
+          projectIds: [sharedProject._id, destinationProject._id],
+          dependencyIds: [],
+        })
+        const query = await config.api.query.save({
+          ...basicQuery(sourceDatasource._id!),
+          transformer: `return "{{ ${table._id}._id }}"`,
+        })
+        const existingBindings = getQueryToolBindingsForResource({
+          datasource: sourceDatasource,
+          query,
+        })
+        const agent = await config.api.agent.createWithOperation(
+          {
+            name: "Query agent",
+            projectIds: [sharedProject._id, agentProject._id],
+          },
+          {
+            id: "operation_1",
+            name: "Run query",
+            live: false,
+            promptInstructions: `Use {{ ${existingBindings.readableBinding} }}.`,
+            enabledTools: [
+              {
+                toolName: existingBindings.runtimeBinding,
+                executionPrincipal: ToolExecutionPrincipal.ADMIN,
+              },
+            ],
+            allowKnowledgeSourceDownload: true,
+          }
+        )
+        await config.api.project.updateAssignment(agent._id!, {
+          resourceRev: agent._rev!,
+          projectIds: [
+            sharedProject._id,
+            agentProject._id,
+            excludedAgentProject._id,
+          ],
+          dependencyIds: [],
+        })
+        const persistedTable = await config.api.table.get(table._id!)
+        await config.api.project.updateAssignment(table._id!, {
+          resourceRev: persistedTable._rev!,
+          projectIds: [agentProject._id],
+          dependencyIds: [],
+        })
+
+        const movedQuery = await config.api.query.save({
+          ...query,
+          datasourceId: destinationDatasource._id!,
+        })
+
+        expect(
+          new Set(
+            (
+              await config.api.datasource.get(destinationDatasource._id!)
+            ).projectIds
+          )
+        ).toEqual(
+          new Set([sharedProject._id, destinationProject._id, agentProject._id])
+        )
+        expect(
+          new Set((await config.api.table.get(table._id!)).projectIds)
+        ).toEqual(new Set([destinationProject._id, agentProject._id]))
+        expect(
+          (await config.api.table.get(excludedTable._id!)).projectIds
+        ).toEqual([agentProject._id])
+        expect(
+          (await config.api.datasource.get(destinationDatasource._id!))
+            .projectIds
+        ).not.toContain(excludedAgentProject._id)
+        expect(
+          (await config.api.table.get(table._id!)).projectIds
+        ).not.toContain(excludedAgentProject._id)
+        const updatedBindings = getQueryToolBindingsForResource({
+          datasource: destinationDatasource,
+          query: movedQuery,
+        })
+        const updatedAgent = (await config.api.agent.fetch()).agents.find(
+          candidate => candidate._id === agent._id
+        )!
+        expect(updatedAgent.operations?.[0].promptInstructions).toBe(
+          `Use {{ ${updatedBindings.readableBinding} }}.`
+        )
+        expect(updatedAgent.operations?.[0].enabledTools?.[0].toolName).toBe(
+          updatedBindings.runtimeBinding
+        )
+      })
+    })
+
+    it("propagates imported query dependencies without restoring exclusions", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create({
+          type: "datasource",
+          name: "REST datasource",
+          source: SourceName.REST,
+          config: { url: "https://example.com" },
+        })
+        const excludedTable = await config.api.table.save(
+          basicTable(undefined, { name: "Excluded table" })
+        )
+        const importedTable = await config.api.table.save(
+          basicTable(undefined, { name: "Imported table" })
+        )
+        await config.api.query.save({
+          ...basicQuery(datasource._id!),
+          transformer: `return "{{ ${excludedTable._id}._id }}"`,
+        })
+        await config.api.project.updateAssignment(datasource._id!, {
+          resourceRev: datasource._rev!,
+          projectIds: [project._id],
+          dependencyIds: [],
+        })
+
+        await config.api.query.import({
+          datasource,
+          datasourceId: datasource._id,
+          data: JSON.stringify({
+            openapi: "3.0.0",
+            info: { title: "Imported API", version: "1.0.0" },
+            servers: [{ url: "https://example.com" }],
+            paths: {
+              "/records": {
+                get: {
+                  parameters: [
+                    {
+                      name: "table",
+                      in: "query",
+                      schema: {
+                        type: "string",
+                        default: `{{ ${importedTable._id}._id }}`,
+                      },
+                    },
+                  ],
+                  responses: { "200": { description: "OK" } },
+                },
+              },
+            },
+          }),
+        })
+
+        expect(
+          (await config.api.table.get(importedTable._id!)).projectIds
+        ).toEqual([project._id])
+        expect(
+          (await config.api.table.get(excludedTable._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
+    it("does not restore excluded sibling query dependencies", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create(
+          basicDatasource().datasource
+        )
+        const excludedTable = await config.api.table.save(
+          basicTable(undefined, { name: "Excluded table" })
+        )
+        const includedTable = await config.api.table.save(
+          basicTable(undefined, { name: "Included table" })
+        )
+        await config.api.query.save({
+          ...basicQuery(datasource._id!),
+          transformer: `return "{{ ${excludedTable._id}._id }}"`,
+        })
+
+        await config.api.project.updateAssignment(datasource._id!, {
+          resourceRev: datasource._rev!,
+          projectIds: [project._id],
+          dependencyIds: [],
+        })
+        await config.api.query.save({
+          ...basicQuery(datasource._id!),
+          transformer: `return "{{ ${includedTable._id}._id }}"`,
+        })
+
+        expect(
+          (await config.api.table.get(excludedTable._id!)).projectIds
+        ).toBeUndefined()
+        expect(
+          (await config.api.table.get(includedTable._id!)).projectIds
+        ).toEqual([project._id])
+      })
+    })
+
+    it("propagates reciprocal table dependencies without crossing excluded cycles", async () => {
+      await withProjectsEnabled(async () => {
+        const { project: sourceProject } = await config.api.project.create({
+          name: "Source project",
+        })
+        const { project: targetProject } = await config.api.project.create({
+          name: "Target project",
+        })
+        const sourceSibling = await config.api.table.save(
+          basicTable(undefined, { name: "Source sibling" })
+        )
+        const targetSibling = await config.api.table.save(
+          basicTable(undefined, { name: "Target sibling" })
+        )
+        const sourceDefinition = basicTable(undefined, { name: "Source" })
+        const source = await config.api.table.save({
+          ...sourceDefinition,
+          schema: {
+            ...sourceDefinition.schema,
+            sourceSibling: {
+              type: FieldType.LINK,
+              name: "Source sibling",
+              fieldName: "source",
+              relationshipType: RelationshipType.MANY_TO_MANY,
+              tableId: sourceSibling._id!,
+            },
+          },
+        })
+        const targetDefinition = basicTable(undefined, { name: "Target" })
+        const target = await config.api.table.save({
+          ...targetDefinition,
+          schema: {
+            ...targetDefinition.schema,
+            targetSibling: {
+              type: FieldType.LINK,
+              name: "Target sibling",
+              fieldName: "target",
+              relationshipType: RelationshipType.MANY_TO_MANY,
+              tableId: targetSibling._id!,
+            },
+          },
+        })
+        await config.api.project.updateAssignment(source._id!, {
+          resourceRev: source._rev!,
+          projectIds: [sourceProject._id],
+          dependencyIds: [],
+        })
+        await config.api.project.updateAssignment(target._id!, {
+          resourceRev: target._rev!,
+          projectIds: [targetProject._id, sourceProject._id],
+          dependencyIds: [],
+        })
+
+        const persistedSource = await config.api.table.get(source._id!)
+        await config.api.table.save({
+          ...persistedSource,
+          schema: {
+            ...persistedSource.schema,
+            target: {
+              type: FieldType.LINK,
+              name: "Target",
+              fieldName: "source",
+              relationshipType: RelationshipType.MANY_TO_MANY,
+              tableId: target._id!,
+            },
+          },
+        })
+
+        const updatedSource = await config.api.table.get(source._id!)
+        const updatedTarget = await config.api.table.get(target._id!)
+        const updatedSourceSibling = await config.api.table.get(
+          sourceSibling._id!
+        )
+        const updatedTargetSibling = await config.api.table.get(
+          targetSibling._id!
+        )
+        expect(updatedSource.projectIds).toEqual(
+          expect.arrayContaining([sourceProject._id, targetProject._id])
+        )
+        expect(updatedTarget.projectIds).toEqual(
+          expect.arrayContaining([sourceProject._id, targetProject._id])
+        )
+        expect(updatedSourceSibling.projectIds).toContain(targetProject._id)
+        expect(updatedSourceSibling.projectIds).not.toContain(sourceProject._id)
+        expect(updatedTargetSibling.projectIds).toContain(sourceProject._id)
+        expect(updatedTargetSibling.projectIds).not.toContain(targetProject._id)
+      })
+    })
+
+    it("keeps table saves successful when a new linked table is missing", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const table = await config.api.table.save({
+          ...basicTable(),
+          projectIds: [project._id],
+        })
+        const missingTableId = "ta_missing"
+
+        await config.api.table.save({
+          ...table,
+          schema: {
+            ...table.schema,
+            missing: {
+              type: FieldType.LINK,
+              name: "Missing",
+              fieldName: "source",
+              relationshipType: RelationshipType.MANY_TO_MANY,
+              tableId: missingTableId,
+            },
+          },
+        })
+
+        expect(
+          (await config.api.table.get(table._id!)).schema.missing
+        ).toMatchObject({ tableId: missingTableId })
+      })
+    })
+
+    it("does not propagate resource ids from ordinary text", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          projectIds: [project._id],
+        })
+        const agent = await config.api.agent.create({
+          name: "Unrelated agent",
+          aiconfig: "default",
+        })
+
+        await config.api.query.save({
+          ...basicQuery(datasource._id!),
+          name: `Docs for ${agent._id}.json`,
+        })
+
+        const { agents } = await config.api.agent.fetch()
+        expect(
+          agents.find(candidate => candidate._id === agent._id)?.projectIds
+        ).toBeUndefined()
       })
     })
 
@@ -1639,6 +2353,310 @@ describe("/projects", () => {
         )
       })
     })
+
+    it("propagates existing references when a screen moves to an assigned app", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp: sourceApp } =
+          await config.api.workspaceApp.create(
+            structures.workspaceApps.createRequest({
+              name: "Source app",
+              url: "/source-app",
+            })
+          )
+        const { workspaceApp: destinationApp } =
+          await config.api.workspaceApp.create(
+            structures.workspaceApps.createRequest({
+              name: "Destination app",
+              url: "/destination-app",
+              projectIds: [project._id],
+            })
+          )
+        const automation = await config.createAutomation()
+        const screen = await config.api.screen.save(
+          createAutomationButtonScreen(sourceApp._id!, automation._id!)
+        )
+
+        await config.api.screen.save({
+          ...screen,
+          workspaceAppId: destinationApp._id,
+        })
+
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toEqual([project._id])
+      })
+    })
+
+    it("preserves exclusions when saving a screen with a repaired app id", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const workspaceApp = await config.api.workspaceApp.find(
+          config.getDefaultWorkspaceAppId()
+        )
+        const automation = await config.createAutomation()
+        const screen = await config.api.screen.save(
+          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+        )
+        await config.api.project.updateAssignment(workspaceApp._id!, {
+          resourceRev: workspaceApp._rev!,
+          projectIds: [project._id],
+          dependencyIds: [],
+        })
+
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          await context.getWorkspaceDB().put({
+            ...screen,
+            workspaceAppId: undefined,
+          })
+        })
+        const repairedScreen = (await config.api.screen.list()).find(
+          candidate => candidate._id === screen._id
+        )!
+        await config.api.screen.save(repairedScreen)
+
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
+    it("adds the project id to the generated automation when creating a row action for a project table", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const table = await config.api.table.save({
+          ...basicTable(),
+          projectIds: [project._id],
+        })
+
+        const rowAction = await config.api.rowAction.save(table._id!, {
+          name: "Row action button",
+        })
+
+        const automation = await config.api.automation.get(
+          rowAction.automationId!
+        )
+        expect(automation.projectIds).toEqual([project._id])
+      })
+    })
+
+    it("does not remove a project id from an already propagated datasource when the root app's project id is removed", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+            projectIds: [project._id],
+          })
+        )
+        const datasource = await config.api.datasource.create(
+          basicDatasource().datasource
+        )
+        const query = await config.api.query.save(basicQuery(datasource._id!))
+
+        await config.api.screen.save({
+          ...createQueryScreen(datasource._id!, query),
+          workspaceAppId: workspaceApp._id,
+        })
+
+        await config.api.workspaceApp.update({
+          _id: workspaceApp._id,
+          _rev: workspaceApp._rev,
+          name: workspaceApp.name,
+          url: workspaceApp.url,
+          navigation: workspaceApp.navigation,
+          theme: workspaceApp.theme,
+          customTheme: workspaceApp.customTheme,
+          disabled: workspaceApp.disabled,
+          projectIds: [],
+        })
+
+        const updatedDatasource = await config.api.datasource.get(
+          datasource._id!
+        )
+        expect(updatedDatasource.projectIds).toEqual([project._id])
+      })
+    })
+
+    it("clears propagated assignments when the project is deleted", async () => {
+      await withProjectsEnabled(async () => {
+        const project = await createAssignedProject()
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          projectIds: [project._id],
+        })
+        await config.api.query.save(basicQuery(datasource._id!))
+
+        const propagatedDatasource = await config.api.datasource.get(
+          datasource._id!
+        )
+        expect(propagatedDatasource.projectIds).toEqual([project._id])
+
+        await config.api.project.delete(project._id, project._rev)
+
+        const clearedDatasource = await config.api.datasource.get(
+          datasource._id!
+        )
+        expect(clearedDatasource.projectIds).toBeUndefined()
+      })
+    })
+
+    it("returns an explicit warning when automatic propagation fails", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+            projectIds: [project._id],
+          })
+        )
+        const datasource = await config.api.datasource.create(
+          basicDatasource().datasource
+        )
+        const query = await config.api.query.save(basicQuery(datasource._id!))
+        const bulkDocs = jest
+          .spyOn(DatabaseImpl.prototype, "bulkDocs")
+          .mockImplementation(async docs =>
+            docs.map(doc => ({
+              id: doc._id!,
+              error: "conflict",
+              reason: "mock conflict",
+            }))
+          )
+
+        let savedScreen: Screen
+        try {
+          savedScreen = await config.api.screen.save(
+            {
+              ...createQueryScreen(datasource._id!, query),
+              workspaceAppId: workspaceApp._id,
+            },
+            {
+              status: 200,
+              headers: {
+                [Header.API_WARNING]:
+                  APIWarningCode.PROJECT_DEPENDENCY_ASSIGNMENT_INCOMPLETE,
+              },
+            }
+          )
+        } finally {
+          bulkDocs.mockRestore()
+        }
+
+        const persistedScreen = (await config.api.screen.list()).find(
+          screen => screen._id === savedScreen!._id
+        )
+        expect(persistedScreen).toBeDefined()
+
+        const updatedDatasource = await config.api.datasource.get(
+          datasource._id!
+        )
+        expect(updatedDatasource.projectIds).toBeUndefined()
+
+        const preview = await config.api.project.previewAssignment({
+          resourceId: workspaceApp._id!,
+          projectIds: [project._id],
+        })
+        await config.api.project.updateAssignment(workspaceApp._id!, {
+          resourceRev: workspaceApp._rev!,
+          projectIds: [project._id],
+          dependencyIds: preview.dependencies.map(dependency => dependency.id),
+        })
+        const retriedDatasource = await config.api.datasource.get(
+          datasource._id!
+        )
+        expect(retriedDatasource.projectIds).toEqual([project._id])
+      })
+    })
+
+    it("keeps successful dependency assignments when another dependency write fails", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+            projectIds: [project._id],
+          })
+        )
+        const firstDatasource = await config.api.datasource.create(
+          basicDatasource().datasource
+        )
+        const secondDatasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          name: "Second datasource",
+        })
+        let successfulDependencyId = ""
+        const bulkDocs = jest
+          .spyOn(DatabaseImpl.prototype, "bulkDocs")
+          .mockImplementation(async docs => {
+            const [successful, ...failed] = docs
+            if (!successful?._id) {
+              throw new Error("Expected a dependency assignment update")
+            }
+            const response = await context.getWorkspaceDB().put(successful)
+            successfulDependencyId = successful._id
+            return [
+              { id: successful._id, rev: response.rev },
+              ...failed.map(doc => ({
+                id: doc._id,
+                error: "forbidden",
+                reason: "mock failure",
+              })),
+            ]
+          })
+
+        try {
+          const screen = basicScreen()
+          await config.api.screen.save(
+            {
+              ...screen,
+              props: {
+                ...screen.props,
+                dependencies: [firstDatasource._id, secondDatasource._id],
+              },
+              workspaceAppId: workspaceApp._id,
+            },
+            {
+              status: 200,
+              headers: {
+                [Header.API_WARNING]:
+                  APIWarningCode.PROJECT_DEPENDENCY_ASSIGNMENT_INCOMPLETE,
+              },
+            }
+          )
+        } finally {
+          bulkDocs.mockRestore()
+        }
+
+        const successfulDatasource = await config.api.datasource.get(
+          successfulDependencyId
+        )
+        const failedDatasourceId = [
+          firstDatasource._id!,
+          secondDatasource._id!,
+        ].find(id => id !== successfulDependencyId)!
+        const failedDatasource =
+          await config.api.datasource.get(failedDatasourceId)
+
+        expect(successfulDatasource.projectIds).toEqual([project._id])
+        expect(failedDatasource.projectIds).toBeUndefined()
+      })
+    })
   })
 
   it("restores assignments when project cleanup fails after partial cleanup", async () => {
@@ -1678,34 +2696,158 @@ describe("/projects", () => {
     })
   })
 
-  it("preserves valid project assignments when duplicating resources", async () => {
+  it("preserves project assignments and exclusions when duplicating resources", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
         name: "Operations",
       })
-      const table = await config.api.table.save({
-        ...basicTable(),
-        projectIds: [project._id],
-      })
+      const table = await config.api.table.save(
+        basicTable(undefined, { name: "Source table" })
+      )
       const { workspaceApp } = await config.api.workspaceApp.create({
         name: "Operations app",
         url: "/operations-app",
-        projectIds: [project._id],
       })
-      const agent = await config.api.agent.create({
-        name: "Ops agent",
-        aiconfig: "default",
-        projectIds: [project._id],
+      const appDependency = await config.createAutomation()
+      const appScreen = basicScreen()
+      await config.api.screen.save({
+        ...appScreen,
+        workspaceAppId: workspaceApp._id,
+        props: {
+          ...appScreen.props,
+          dependencies: [appDependency._id],
+        },
       })
+      const agentDependency = await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        name: "Agent dependency",
+      })
+      const agent = await config.api.agent.createWithOperation(
+        { name: "Ops agent" },
+        {
+          id: "operation_1",
+          name: "Use datasource",
+          live: false,
+          promptInstructions: `Use {{ ${agentDependency._id}.rows }}.`,
+          enabledTools: [],
+          allowKnowledgeSourceDownload: true,
+        }
+      )
+      const automationDependency = await config.api.table.save(
+        basicTable(undefined, { name: "Automation dependency" })
+      )
+      const automationDefinition = newAutomation()
+      automationDefinition.definition.steps[0].inputs = {
+        ...automationDefinition.definition.steps[0].inputs,
+        tableId: automationDependency._id!,
+      }
+      const automation = await config.createAutomation(automationDefinition)
+
+      for (const resource of [table, workspaceApp, agent, automation]) {
+        await config.api.project.updateAssignment(resource._id!, {
+          resourceRev: resource._rev!,
+          projectIds: [project._id],
+          dependencyIds: [],
+        })
+      }
 
       const duplicatedTable = await config.api.table.duplicate(table._id!)
       const { workspaceApp: duplicatedWorkspaceApp } =
         await config.api.workspaceApp.duplicate(workspaceApp._id!)
       const duplicatedAgent = await config.api.agent.duplicate(agent._id!)
+      const persistedAutomation = await config.api.automation.get(
+        automation._id!
+      )
+      const { automation: duplicatedAutomation } =
+        await config.api.automation.update({
+          ...persistedAutomation,
+          _id: undefined,
+          _rev: undefined,
+          name: `${persistedAutomation.name} copy`,
+          sourceAutomationId: persistedAutomation._id,
+        })
 
       expect(duplicatedTable.projectIds).toEqual([project._id])
       expect(duplicatedWorkspaceApp.projectIds).toEqual([project._id])
       expect(duplicatedAgent.projectIds).toEqual([project._id])
+      expect(duplicatedAutomation.projectIds).toEqual([project._id])
+      expect(
+        (await config.api.automation.get(appDependency._id!)).projectIds
+      ).toBeUndefined()
+      expect(
+        (await config.api.datasource.get(agentDependency._id!)).projectIds
+      ).toBeUndefined()
+      expect(
+        (await config.api.table.get(automationDependency._id!)).projectIds
+      ).toBeUndefined()
+    })
+  })
+
+  it("restores a duplicated automation without its source", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const dependency = await config.api.table.save(
+        basicTable(undefined, { name: "Automation dependency" })
+      )
+      const definition = newAutomation()
+      definition.definition.steps[0].inputs = {
+        ...definition.definition.steps[0].inputs,
+        tableId: dependency._id!,
+      }
+      const source = await config.createAutomation(definition)
+      await config.api.project.updateAssignment(source._id!, {
+        resourceRev: source._rev!,
+        projectIds: [project._id],
+        dependencyIds: [],
+      })
+      const persistedSource = await config.api.automation.get(source._id!)
+      const { automation: duplicate } = await config.api.automation.update({
+        ...persistedSource,
+        _id: undefined,
+        _rev: undefined,
+        name: `${persistedSource.name} copy`,
+        sourceAutomationId: persistedSource._id,
+      })
+
+      await config.api.automation.delete(duplicate)
+      await config.api.automation.delete(persistedSource)
+      const { automation: restored } = await config.api.automation.update({
+        ...duplicate,
+        _rev: undefined,
+        sourceAutomationId: persistedSource._id,
+      })
+
+      expect(restored._id).toBe(duplicate._id)
+      expect(restored.projectIds).toEqual([project._id])
+      expect(
+        (await config.api.table.get(dependency._id!)).projectIds
+      ).toBeUndefined()
+    })
+  })
+
+  it("propagates dependencies for explicit-id automation creations", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({
+        name: "Operations",
+      })
+      const dependency = await config.api.table.save(
+        basicTable(undefined, { name: "Automation dependency" })
+      )
+      const automation = newAutomation()
+      automation._id = "au_explicit_id"
+      automation.projectIds = [project._id]
+      automation.definition.steps[0].inputs = {
+        ...automation.definition.steps[0].inputs,
+        tableId: dependency._id!,
+      }
+
+      await config.api.automation.post(automation)
+
+      expect((await config.api.table.get(dependency._id!)).projectIds).toEqual([
+        project._id,
+      ])
     })
   })
 
@@ -1713,6 +2855,7 @@ describe("/projects", () => {
     let tableId = ""
     let workspaceAppId = ""
     let agentId = ""
+    let automationId = ""
 
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
@@ -1732,20 +2875,35 @@ describe("/projects", () => {
         aiconfig: "default",
         projectIds: [project._id],
       })
+      const automation = await config.createAutomation({
+        ...newAutomation(),
+        projectIds: [project._id],
+      })
 
       tableId = table._id!
       workspaceAppId = workspaceApp._id!
       agentId = agent._id!
+      automationId = automation._id!
     })
 
     const duplicatedTable = await config.api.table.duplicate(tableId!)
     const { workspaceApp: duplicatedWorkspaceApp } =
       await config.api.workspaceApp.duplicate(workspaceAppId!)
     const duplicatedAgent = await config.api.agent.duplicate(agentId!)
+    const automation = await config.api.automation.get(automationId)
+    const { automation: duplicatedAutomation } =
+      await config.api.automation.update({
+        ...automation,
+        _id: undefined,
+        _rev: undefined,
+        name: `${automation.name} copy`,
+        sourceAutomationId: automationId,
+      })
 
     expect(duplicatedTable.projectIds).toBeUndefined()
     expect(duplicatedWorkspaceApp.projectIds).toBeUndefined()
     expect(duplicatedAgent.projectIds).toBeUndefined()
+    expect(duplicatedAutomation.projectIds).toBeUndefined()
   })
 
   const createProjectExportFixture = async () => {
@@ -2283,7 +3441,10 @@ describe("/projects", () => {
         resourceGraph.body.resources[project._id].dependencies.map(
           dependency => dependency.id
         )
-      ).not.toContain(datasource._id)
+      ).toContain(datasource._id)
+      expect(
+        (await config.api.datasource.get(datasource._id!)).projectIds
+      ).toEqual([project._id])
     })
   })
 
@@ -2359,11 +3520,6 @@ describe("/projects", () => {
       })
       const rowAction = await config.api.rowAction.save(table._id!, {
         name: "Approve",
-      })
-      const automation = await config.api.automation.get(rowAction.automationId)
-      await config.api.automation.update({
-        ...automation,
-        projectIds: [project._id],
       })
 
       const body = await config.api.project.export(project._id)

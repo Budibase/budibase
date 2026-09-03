@@ -6,9 +6,10 @@ import {
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { propagateProjectDependencyChangesWithWarning } from "../../../utilities/projects"
 import { toAgentResponse } from "./agentResponse"
 
-export async function createAgentOperation(
+async function createAgentOperationUnlocked(
   ctx: UserCtx<
     CreateAgentOperationRequest,
     AgentOperationMutationResponse,
@@ -17,6 +18,7 @@ export async function createAgentOperation(
 ) {
   const { agentId } = ctx.params
   const body = ctx.request.body
+  const existing = await sdk.ai.agents.getOrThrow(agentId)
 
   const agent = await sdk.ai.agents.createOperation(agentId, {
     id: body.id,
@@ -28,12 +30,31 @@ export async function createAgentOperation(
     allowKnowledgeSourceDownload: body.allowKnowledgeSourceDownload ?? true,
     escalation: body.escalation,
   })
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: agent._id!,
+    currentProjectIds: agent.projectIds,
+    previousProjectIds: existing.projectIds,
+    previousResource: existing,
+    savedResource: agent,
+  })
 
   ctx.body = toAgentResponse(agent)
   ctx.status = 201
 }
 
-export async function updateAgentOperation(
+export async function createAgentOperation(
+  ctx: UserCtx<
+    CreateAgentOperationRequest,
+    AgentOperationMutationResponse,
+    { agentId: string }
+  >
+) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    createAgentOperationUnlocked(ctx)
+  )
+}
+
+async function updateAgentOperationUnlocked(
   ctx: UserCtx<
     UpdateAgentOperationRequest,
     AgentOperationMutationResponse,
@@ -47,10 +68,30 @@ export async function updateAgentOperation(
     throw new HTTPError("At least one operation field is required", 400)
   }
 
+  const existing = await sdk.ai.agents.getOrThrow(agentId)
   const agent = await sdk.ai.agents.updateOperation(agentId, operationId, body)
+  await propagateProjectDependencyChangesWithWarning(ctx, {
+    rootResourceId: agent._id!,
+    currentProjectIds: agent.projectIds,
+    previousProjectIds: existing.projectIds,
+    previousResource: existing,
+    savedResource: agent,
+  })
 
   ctx.body = toAgentResponse(agent)
   ctx.status = 200
+}
+
+export async function updateAgentOperation(
+  ctx: UserCtx<
+    UpdateAgentOperationRequest,
+    AgentOperationMutationResponse,
+    { agentId: string; operationId: string }
+  >
+) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    updateAgentOperationUnlocked(ctx)
+  )
 }
 
 export async function deleteAgentOperation(

@@ -1,5 +1,6 @@
 import {
   Automation,
+  CreateAutomationRequest,
   CreateAutomationResponse,
   DeleteAutomationResponse,
   FetchAutomationResponse,
@@ -75,7 +76,7 @@ export class AutomationAPI extends TestAPI {
   }
 
   post = async (
-    body: Automation,
+    body: CreateAutomationRequest,
     expectations?: Expectations
   ): Promise<CreateAutomationResponse> => {
     const result = await this._post<CreateAutomationResponse>(
