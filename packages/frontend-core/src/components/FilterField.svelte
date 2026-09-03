@@ -9,6 +9,7 @@
     Button,
     Select,
   } from "@budibase/bbui"
+  import ArrayValueInput from "./ArrayValueInput.svelte"
 
   import FilterUsers from "./FilterUsers.svelte"
   import { FieldType, ArrayOperator } from "@budibase/types"
@@ -82,9 +83,11 @@
     } else {
       return !value
     }
-    return links.every(link =>
-      getSchema(filter)?.constraints?.inclusion?.includes(link)
-    )
+    const inclusion = getSchema(filter)?.constraints?.inclusion
+    if (!inclusion?.length) {
+      return true
+    }
+    return links.every(link => inclusion.includes(link))
   }
 
   const isValidBoolean = value => {
@@ -195,6 +198,12 @@
               value={readableValue}
               on:change={onChange}
             />
+          {:else if filter.type === FieldType.ARRAY && useConditionValueControls && !getFieldOptions(filter.field).length}
+            <ArrayValueInput
+              disabled={filter.noValue}
+              value={Array.isArray(readableValue) ? readableValue : []}
+              onchange={value => onChange({ detail: value })}
+            />
           {:else if filter.type === FieldType.ARRAY || (filter.type === FieldType.OPTIONS && (filter.operator === ArrayOperator.ONE_OF || filter.operator === ArrayOperator.NOT_ONE_OF))}
             <Multiselect
               disabled={filter.noValue}
@@ -295,15 +304,17 @@
     border-bottom-right-radius: 0px;
   }
 
-  .field-wrap.bindings
-    .field
-    :global(.spectrum-InputGroup.spectrum-Datepicker) {
+  .field :global(.spectrum-InputGroup.spectrum-Datepicker) {
     min-width: unset;
-    border-radius: 0px;
   }
 
   .field-wrap.bindings
     .field
+    :global(.spectrum-InputGroup.spectrum-Datepicker) {
+    border-radius: 0px;
+  }
+
+  .field
     :global(
       .spectrum-InputGroup.spectrum-Datepicker
         .spectrum-Textfield-input.spectrum-InputGroup-input

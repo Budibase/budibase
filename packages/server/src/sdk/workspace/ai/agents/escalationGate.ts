@@ -1,4 +1,5 @@
 import { context } from "@budibase/backend-core"
+import { dataFilters } from "@budibase/shared-core"
 import {
   AgentEscalationConfig,
   AgentOperation,
@@ -9,9 +10,11 @@ import {
   EscalationSource,
   ResolutionStrategy,
   ToolExecutionRule,
+  ToolType,
 } from "@budibase/types"
 import type { ModelMessage } from "ai"
 import type { EscalationGateRuntime } from "../../../../ai/tools"
+import sdk from "../../.."
 import { escalationProcessor } from "../../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../../escalation/resolutionStrategies"
 
@@ -39,13 +42,97 @@ interface CreateGateParams {
   toolName: string
   readableName?: string
   sourceId?: string
+  // Key of the args object holding the condition fields e.g "data"
+  argsKey?: string
   rules: ToolExecutionRule[]
   gateContext: EscalationGateContext
 }
 
-// Conditions aren't evaluated until the Phase 3 evaluator exists - until
-// then every rule matches, so first-match = first rule.
-const matchRule = (rules: ToolExecutionRule[]) => rules[0]
+export const resolveToolArgsKey = (tool: {
+  name: string
+  sourceType: ToolType
+}): string | undefined => {
+  if (
+    (tool.sourceType === ToolType.INTERNAL_TABLE ||
+      tool.sourceType === ToolType.EXTERNAL_TABLE) &&
+    (tool.name.endsWith("_create_row") || tool.name.endsWith("_update_row"))
+  ) {
+    return "data"
+  }
+  if (
+    tool.sourceType === ToolType.AUTOMATION &&
+    tool.name.endsWith("_trigger")
+  ) {
+    return "fields"
+  }
+  return undefined
+}
+
+const conditionRecord = (
+  input: unknown,
+  argsKey?: string
+): Record<string, unknown> | undefined => {
+  const root =
+    argsKey && input && typeof input === "object"
+      ? (input as Record<string, unknown>)[argsKey]
+      : input
+  return root && typeof root === "object" && !Array.isArray(root)
+    ? (root as Record<string, unknown>)
+    : undefined
+}
+
+const ruleMatches = (
+  rule: ToolExecutionRule,
+  record: Record<string, unknown> | undefined
+): boolean => {
+  const conditions = rule.conditions ?? []
+  if (!conditions.length) {
+    return true
+  }
+  if (!record) {
+    return true
+  }
+  const query = dataFilters.buildQuery(conditions)
+  return dataFilters.runQuery([record], query).length > 0
+}
+
+const buildConditionRecord = async ({
+  input,
+  argsKey,
+  toolName,
+  sourceId,
+}: {
+  input: unknown
+  argsKey?: string
+  toolName: string
+  sourceId?: string
+}): Promise<Record<string, unknown> | undefined> => {
+  const record = conditionRecord(input, argsKey)
+  if (!record || !toolName.endsWith("_update_row") || !sourceId) {
+    return record
+  }
+  const rowId = (input as Record<string, unknown>).rowId
+  if (typeof rowId !== "string") {
+    return record
+  }
+  try {
+    const existing = await sdk.rows.find(sourceId, rowId)
+    return { ...existing, ...record }
+  } catch (error) {
+    console.warn("escalation gate: could not load row for update conditions", {
+      toolName,
+      rowId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return undefined
+  }
+}
+
+// First matching rule in array order wins.
+const matchRule = (
+  rules: ToolExecutionRule[],
+  record: Record<string, unknown> | undefined
+) => rules.find(rule => ruleMatches(rule, record))
 
 const resolvePolicy = (
   operation: AgentOperation,
@@ -80,6 +167,7 @@ export const createEscalationGateRuntime = ({
   toolName,
   readableName,
   sourceId,
+  argsKey,
   rules,
   gateContext,
 }: CreateGateParams): EscalationGateRuntime => ({
@@ -95,9 +183,22 @@ export const createEscalationGateRuntime = ({
           "must ask again before another attempt can be requested.",
       }
     }
-    const rule = matchRule(rules)
+    const record = await buildConditionRecord({
+      input,
+      argsKey,
+      toolName,
+      sourceId,
+    })
+    const rule = matchRule(rules, record)
+    console.log("escalation gate: rule evaluation", {
+      toolName,
+      ruleCount: rules.length,
+      matchedIndex: rule ? rules.indexOf(rule) : -1,
+      policyId: rule?.policyId,
+      conditions: rule?.conditions,
+    })
     if (!rule) {
-      return unavailableResult(label)
+      return undefined
     }
 
     const policy = resolvePolicy(operation, rule.policyId)

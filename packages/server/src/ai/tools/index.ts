@@ -49,10 +49,12 @@ export interface ToolAuthorizationRequest {
 }
 
 export interface EscalationGateRuntime {
+  // Resolves to the refusal result to return in place of executing, or
+  // undefined when no rule matches and the call should proceed.
   intercept: (
     input: unknown,
     options: { toolCallId: string; messages?: ModelMessage[] }
-  ) => Promise<Record<string, unknown>>
+  ) => Promise<Record<string, unknown> | undefined>
 }
 
 export const resolveToolExecutionPrincipal = (
@@ -121,10 +123,13 @@ const wrapTool = (
       })
     }
     if (gate) {
-      return await gate.intercept(input, {
+      const gateResult = await gate.intercept(input, {
         toolCallId: options?.toolCallId ?? "",
         messages: options?.messages,
       })
+      if (gateResult) {
+        return gateResult
+      }
     }
     try {
       const result = await execute(input, options)

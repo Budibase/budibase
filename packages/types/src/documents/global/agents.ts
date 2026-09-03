@@ -1,5 +1,7 @@
 import { Document } from "../../"
 import type { UIMessage } from "ai"
+import type { ArrayOperator, BasicOperator } from "../../sdk"
+import type { FieldType } from "../workspace/row"
 import {
   EscalationRecipient,
   ResolutionStrategy,
@@ -31,6 +33,8 @@ export interface ToolMetadata {
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
+  // The backing resource: tableId, query _id or automation _id.
+  sourceId?: string
   executionPolicy: ToolExecutionPolicy
 }
 
@@ -139,7 +143,12 @@ export interface AgentOperationApprovalPolicy {
   notifications: AgentEscalationConfig
 }
 
-export interface ToolExecutionCondition {}
+export interface ToolExecutionCondition {
+  field: string
+  operator: BasicOperator | ArrayOperator | "rangeLow" | "rangeHigh"
+  value: any
+  type?: FieldType
+}
 
 export interface ToolExecutionRule {
   conditions?: ToolExecutionCondition[]

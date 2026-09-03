@@ -16,6 +16,8 @@ import {
   ESCALATE_TOOL_NAME,
   EscalationContextDoc,
   EscalationNotificationDoc,
+  EscalationNotificationStatus,
+  EscalationProviderResponse,
   EscalationRecipient,
   EscalationSource,
   FeatureFlag,
@@ -29,6 +31,7 @@ import sdk from "../sdk"
 import { getFullUser } from "../utilities/users"
 import * as slack from "./notifications/slack"
 import * as teams from "./notifications/ms-teams"
+import { ProviderResponseError } from "./notifications/utils"
 import { v4 } from "uuid"
 
 export interface EscalationJob {
@@ -135,7 +138,6 @@ async function processNotify(job: Job<EscalationJob>) {
     // gives independent retry/backoff per channel so a Slack failure doesn't block Teams etc.
     // IF - we do this, then the bulkDocs call would be done first.
     if (doc.recipients?.length) {
-      const sentAt = new Date().toISOString()
       const notifDocs: EscalationNotificationDoc[] = doc.recipients.map(
         (recipient: EscalationRecipient) => ({
           _id: `${DocumentType.ESCALATION_NOTIFICATION}${SEPARATOR}${utils.newid()}`,
@@ -143,29 +145,62 @@ async function processNotify(job: Job<EscalationJob>) {
           appId,
           tenantId: job.data.tenantId,
           recipient,
-          sentAt,
+          status: "pending",
         })
       )
-      await db.bulkDocs(notifDocs)
-
-      const notifResults = await Promise.allSettled(
-        notifDocs.flatMap(notifDoc => [
-          slack.sendSlackNotification({ notifDoc, contextDoc: doc }),
-          teams.sendMSTeamsNotification({ notifDoc, contextDoc: doc }),
-        ])
+      const created = await db.bulkDocs(notifDocs)
+      const revById = Object.fromEntries(
+        created.map(result => [result.id, result.rev])
       )
-      notifResults.forEach((result, i) => {
-        if (result.status === "rejected") {
-          console.error("Escalation notify: notification send failed", {
-            index: i,
-            escalationId,
-            error:
-              result.reason instanceof Error
-                ? result.reason.message
-                : String(result.reason),
-          })
-        }
-      })
+
+      const outcomes = await Promise.all(
+        notifDocs.map(async notifDoc => {
+          const sends = await Promise.allSettled([
+            slack.sendSlackNotification({ notifDoc, contextDoc: doc }),
+            teams.sendMSTeamsNotification({ notifDoc, contextDoc: doc }),
+          ])
+          const rejection = sends.find(
+            (send): send is PromiseRejectedResult => send.status === "rejected"
+          )
+          let status: EscalationNotificationStatus = "failed"
+          let providerResponse: EscalationProviderResponse | undefined
+          if (rejection) {
+            const error =
+              rejection.reason instanceof Error
+                ? rejection.reason.message
+                : String(rejection.reason)
+            console.error("Escalation notify: notification send failed", {
+              escalationId,
+              recipientType: notifDoc.recipient.type,
+              error,
+            })
+            providerResponse =
+              rejection.reason instanceof ProviderResponseError
+                ? {
+                    code: rejection.reason.code,
+                    body: rejection.reason.body.slice(0, 1024),
+                  }
+                : { body: error.slice(0, 1024) }
+          } else if (
+            sends.some(
+              send => send.status === "fulfilled" && send.value === true
+            )
+          ) {
+            status = "sent"
+          }
+          return { notifDoc, status, providerResponse }
+        })
+      )
+
+      await db.bulkDocs(
+        outcomes.map(({ notifDoc, status, providerResponse }) => ({
+          ...notifDoc,
+          _rev: revById[notifDoc._id!],
+          status,
+          ...(providerResponse ? { providerResponse } : {}),
+          sentAt: new Date().toISOString(),
+        }))
+      )
     }
   })
 }

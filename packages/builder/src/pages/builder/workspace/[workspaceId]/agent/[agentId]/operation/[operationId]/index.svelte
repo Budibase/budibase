@@ -4,6 +4,7 @@
     Button,
     Icon,
     Link,
+    Modal,
     notifications,
     ProgressCircle,
   } from "@budibase/bbui"
@@ -30,9 +31,12 @@
   import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
   import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import {
+    automationStore,
     contextMenuStore,
     datasources,
+    queries,
     restTemplates,
+    tables,
     workspaceDeploymentStore,
   } from "@/stores/builder"
   import {
@@ -72,6 +76,9 @@
     type PendingToolInsertion,
   } from "../../toolAutocomplete"
   import { createSaveCoordinator } from "../../operationSaveCoordinator"
+  import { getToolConditionFields } from "../../agentConditionFields"
+  import APIEndpointViewer from "@/components/integration/APIEndpointViewer.svelte"
+  import { isQueryToolType } from "@budibase/shared-core"
   import type { AgentTool } from "../../toolTypes"
   import {
     getWorkspaceHomeUrl,
@@ -111,6 +118,11 @@
   let chainingToolModal = false
   let chainingRuleModal = false
   let policyModalFromRule = false
+  let apiExplorerModal: Modal | undefined = $state()
+  let apiViewer: APIEndpointViewer | undefined = $state()
+  let apiExplorerTarget = $state<
+    { queryId: string; datasourceId?: string } | undefined
+  >()
   let editorToolsDropdown: ToolsDropdown | undefined = $state()
   let toolToRemove: RemovableTool | undefined = $state()
   let restoreToolConfiguration = $state(false)
@@ -715,6 +727,14 @@
         }
       : undefined
 
+  const toolConditionFields = (tool: AgentTool) =>
+    getToolConditionFields({
+      tool,
+      tables: $tables.list,
+      queries: $queries.list,
+      automations: $automationStore.automations,
+    })
+
   const beginRuleEdit = ({
     tool,
     executionPrincipal,
@@ -736,9 +756,45 @@
     configureToolModal?.hide()
     approvalRuleModal?.show({
       policies: approvalPolicies,
+      fields: toolConditionFields(tool),
       rule: index !== undefined ? rules[index] : undefined,
       index,
+      apiExplorer: isQueryToolType(tool.sourceType),
     })
+  }
+
+  const openApiExplorer = () => {
+    const tool = stagedToolConfig?.tool
+    if (!tool?.sourceId) {
+      return
+    }
+    const query = $queries.list.find(
+      candidate => candidate._id === tool.sourceId
+    )
+    apiExplorerTarget = {
+      queryId: tool.sourceId,
+      datasourceId: query?.datasourceId,
+    }
+    apiExplorerModal?.show()
+  }
+
+  const refreshRuleModalFields = () => {
+    if (stagedToolConfig) {
+      approvalRuleModal?.updateFields(
+        toolConditionFields(stagedToolConfig.tool)
+      )
+    }
+  }
+
+  const handleApiExplorerClose = async (): Promise<boolean> => {
+    if (apiViewer) {
+      const ok = await apiViewer.confirmIfDirty()
+      if (!ok) {
+        return false
+      }
+    }
+    refreshRuleModalFields()
+    return true
   }
 
   const reopenToolModal = () => {
@@ -828,8 +884,14 @@
     stagedRule = undefined
     approvalRuleModal?.show({
       policies: approvalPolicies,
+      fields: stagedToolConfig
+        ? toolConditionFields(stagedToolConfig.tool)
+        : [],
       rule: pending?.policyId ? { policyId: pending.policyId } : undefined,
       index: pending?.index,
+      apiExplorer: stagedToolConfig
+        ? isQueryToolType(stagedToolConfig.tool.sourceType)
+        : false,
     })
   }
 
@@ -1310,8 +1372,43 @@
       onSave={handleRuleSave}
       onRemove={handleRuleRemove}
       onCreatePolicy={beginPolicyCreateFromRule}
+      onOpenApiExplorer={openApiExplorer}
       onClose={handleRuleModalClose}
     />
+
+    <Modal
+      bind:this={apiExplorerModal}
+      autoFocus={false}
+      beforeClose={handleApiExplorerClose}
+    >
+      <div
+        class="api-explorer-dialog spectrum-Dialog spectrum-Dialog--extraLarge"
+        style="position: relative;"
+        role="dialog"
+        tabindex="-1"
+        aria-modal="true"
+      >
+        <section class="spectrum-Dialog-content api-explorer-content">
+          <div class="endpoint-viewer-wrap">
+            {#if apiExplorerTarget}
+              <APIEndpointViewer
+                bind:this={apiViewer}
+                datasourceId={apiExplorerTarget.datasourceId}
+                queryId={apiExplorerTarget.queryId}
+                saveAndClose={true}
+                redirectNewQueryOnSave={false}
+                settingsLocked={true}
+                connectionPopoverPortalTarget=".spectrum"
+                on:savedQuery={() => {
+                  refreshRuleModalFields()
+                  apiExplorerModal?.hide()
+                }}
+              />
+            {/if}
+          </div>
+        </section>
+      </div>
+    </Modal>
   {/if}
 
   <WebSearchConfigModal
@@ -1555,6 +1652,30 @@
     background: transparent;
     color: inherit;
     cursor: pointer;
+  }
+
+  .api-explorer-dialog.spectrum-Dialog--extraLarge {
+    width: 1150px;
+    min-height: 720px;
+    height: 720px;
+  }
+
+  .api-explorer-content {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    border-radius: var(--spectrum-global-dimension-size-100);
+    width: 100%;
+    height: 100%;
+  }
+
+  .endpoint-viewer-wrap {
+    --api-viewer-x-padding: 20px;
+    --api-viewer-y-padding: 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .policies-list {
