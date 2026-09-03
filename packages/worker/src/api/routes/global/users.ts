@@ -75,8 +75,8 @@ function buildSearchValidation() {
       workspaceId: OPTIONAL_STRING,
       groupIds: Joi.array().items(Joi.string()).optional().allow(null),
       workspaceRoleId: OPTIONAL_STRING,
-      limit: Joi.number().optional(),
-      paginate: Joi.boolean().optional(),
+      limit: Joi.number().integer().min(1).strict().optional(),
+      paginate: Joi.boolean().strict().optional(),
     })
       .required()
       .unknown(false)

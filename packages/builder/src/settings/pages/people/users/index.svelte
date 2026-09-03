@@ -199,14 +199,16 @@
     if (isWorkspaceOnly && !workspaceId) {
       return
     }
-    const query: Record<string, any> = {}
-    if (isWorkspaceOnly) {
-      query.workspaceId = workspaceId
+    const datasource = {
+      type: "user" as const,
+      workspaceId: isWorkspaceOnly ? workspaceId : undefined,
     }
+    const query: Record<string, any> = {}
     if (email) {
       query.fuzzy = { email }
     }
-    fetch.update({ query })
+    const fetchOptions = { datasource, query }
+    fetch.update(fetchOptions)
   }
   const debouncedUpdateFetch = Utils.debounce(updateFetch, 250)
 

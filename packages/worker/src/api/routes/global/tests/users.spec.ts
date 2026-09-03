@@ -972,6 +972,28 @@ describe("/api/global/users", () => {
   })
 
   describe("POST /api/global/users/search", () => {
+    it.each([0, -1, 1.5])(
+      "should reject an invalid pagination limit of %s",
+      async limit => {
+        await config.api.users.searchUsers(
+          {
+            workspaceId: "app_workspace_filter",
+            limit,
+          },
+          { status: 400 }
+        )
+      }
+    )
+
+    it("should reject string pagination flags", async () => {
+      await config.request
+        .post("/api/global/users/search")
+        .send({ paginate: "false" })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+    })
+
     it("should be able to search by email", async () => {
       const user = await config.createUser()
       const response = await config.api.users.searchUsers({
