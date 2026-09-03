@@ -798,7 +798,15 @@ export async function resumeOperation({
   } catch (error) {
     await toolCallChain
     await needsInputUpdate
-    emitAgentResumeFailure(error)
+    // A failure after the terminal action already fired (e.g. persisting the
+    // resume result, or judging the final outcome) can't emit a second action
+    // without double-counting actionCount - correct the already-materialized
+    // session status instead.
+    if (hasEmittedTerminalAction) {
+      await updatePlatformActionSessionStatus("failed")
+    } else {
+      emitAgentResumeFailure(error)
+    }
     await markEscalationRequestResolved({
       status: "failed",
       error: error instanceof Error ? error.message : String(error),
