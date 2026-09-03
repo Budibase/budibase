@@ -1,5 +1,6 @@
 import {
   BBReferenceFieldSubType,
+  FieldSchema,
   FieldType,
   TableSchema,
 } from "@budibase/types"
@@ -149,12 +150,12 @@ describe("validate", () => {
   it.each([
     [FieldType.NUMBER, "10"],
     [FieldType.DATETIME, "2024-01-02T03:04:05.000Z"],
-  ])("accepts valid %s values", (type, value) => {
+  ] as const)("accepts valid %s values", (type, value) => {
     const schema: TableSchema = {
-      value: {
-        name: "value",
-        type,
-      },
+      value:
+        type === FieldType.NUMBER
+          ? { name: "value", type: FieldType.NUMBER }
+          : { name: "value", type: FieldType.DATETIME },
     }
 
     expect(validate([{ value }], schema, [])).toEqual({
@@ -411,7 +412,8 @@ describe("parse", () => {
       ])
     })
 
-    it.each([
+    type InvalidDateCase = [string, FieldSchema, string, string]
+    const invalidDateCases: InvalidDateCase[] = [
       [
         "dateOnly",
         { name: "dateOnly", type: FieldType.DATETIME, dateOnly: true },
@@ -440,11 +442,16 @@ describe("parse", () => {
         "2024-01-02T03:04:05Z",
         'Invalid format for field "ignoredTimezone": "2024-01-02T03:04:05Z". Datetime fields with ignoreTimezones must be in ISO format, e.g. "YYYY-MM-DDTHH:MM:SS".',
       ],
-    ])("rejects invalid %s values", (name, field, value, message) => {
-      expect(() =>
-        parse([{ [name]: value }], createTable({ [name]: field }))
-      ).toThrow(message)
-    })
+    ]
+
+    it.each(invalidDateCases)(
+      "rejects invalid %s values",
+      (name, field, value, message) => {
+        expect(() =>
+          parse([{ [name]: value }], createTable({ [name]: field }))
+        ).toThrow(message)
+      }
+    )
   })
 
   it("parses JSON fields and legacy single-quoted JSON", () => {
