@@ -23,10 +23,10 @@
   export let bindings = []
   export let allowBindings = false
   export let schemaFields
-  export let panel
-  export let drawerTitle
-  export let toReadable
-  export let toRuntime
+  export let panel = undefined
+  export let drawerTitle = undefined
+  export let toReadable = undefined
+  export let toRuntime = undefined
   export let evaluationContext = {}
   export let bindingValueType = Constants.FilterValueType.BINDING
   export let useConditionValueControls = false
