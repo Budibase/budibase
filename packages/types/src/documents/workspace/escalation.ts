@@ -37,6 +37,8 @@ export enum EscalateToolResultStatus {
 // Built-in resolution strategies.
 export enum ResolutionStrategy {
   FIRST_RESPONSE = "first_response",
+  UNANIMOUS = "unanimous",
+  MAJORITY = "majority",
 }
 
 export interface SuspendedAutomationContext {
@@ -124,9 +126,16 @@ export interface EscalationRecipient {
 }
 
 export interface EscalationRespondResult {
-  status: "recorded" | "closed"
+  status: "recorded" | "already_responded" | "closed"
   // Human-facing message the caller can surface (e.g. the inline card).
   message?: string
+}
+
+export type EscalationNotificationStatus = "pending" | "sent" | "failed"
+
+export interface EscalationProviderResponse {
+  code?: number
+  body?: string
 }
 
 export interface EscalationNotificationDoc extends Document {
@@ -134,7 +143,8 @@ export interface EscalationNotificationDoc extends Document {
   appId: string
   tenantId: string
   recipient: EscalationRecipient
-  sentAt: string
-  response?: EscalationResponse
-  respondedAt?: string
+  status?: EscalationNotificationStatus
+  providerResponse?: EscalationProviderResponse
+  sentAt?: string
+  responses?: EscalationResponse[]
 }

@@ -1,5 +1,7 @@
 import { Document } from "../../"
 import type { UIMessage } from "ai"
+import type { ArrayOperator, BasicOperator } from "../../sdk"
+import type { FieldType } from "../workspace/row"
 import {
   EscalationRecipient,
   ResolutionStrategy,
@@ -14,6 +16,17 @@ export enum ToolType {
   SEARCH = "SEARCH",
   ESCALATION = "ESCALATION",
 }
+
+export enum ToolAction {
+  LIST_ROWS = "list_rows",
+  GET_ROW = "get_row",
+  CREATE_ROW = "create_row",
+  UPDATE_ROW = "update_row",
+  SEARCH_ROWS = "search_rows",
+  TRIGGER = "trigger",
+}
+
+export type RowToolAction = Exclude<ToolAction, ToolAction.TRIGGER>
 
 export enum ToolExecutionPrincipal {
   REQUESTER = "requester",
@@ -31,6 +44,9 @@ export interface ToolMetadata {
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
+  // The backing resource: tableId, query _id or automation _id.
+  sourceId?: string
+  action?: ToolAction
   executionPolicy: ToolExecutionPolicy
 }
 
@@ -139,7 +155,12 @@ export interface AgentOperationApprovalPolicy {
   notifications: AgentEscalationConfig
 }
 
-export interface ToolExecutionCondition {}
+export interface ToolExecutionCondition {
+  field: string
+  operator: BasicOperator | ArrayOperator | "rangeLow" | "rangeHigh"
+  value: any
+  type?: FieldType
+}
 
 export interface ToolExecutionRule {
   conditions?: ToolExecutionCondition[]

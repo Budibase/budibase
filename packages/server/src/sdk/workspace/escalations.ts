@@ -185,18 +185,24 @@ export async function respond(
       `Notification ${notificationDocId} does not belong to escalation ${escalationId}`
     )
   }
+  const responderId = response.user?.userId
+  const existing = notifDoc.responses ?? []
+  if (responderId && existing.some(r => r.user?.userId === responderId)) {
+    return { status: "already_responded" }
+  }
   await db.put({
     ...notifDoc,
-    response,
-    respondedAt: new Date().toISOString(),
+    responses: [
+      ...existing,
+      { ...response, respondedAt: new Date().toISOString() },
+    ],
   })
 
   const notifDocs = await listNotifications(escalationId)
   const totalRecipients = contextDoc.recipients?.length ?? 0
   const responses = notifDocs
-    .filter(doc => doc.respondedAt)
-    .sort((a, b) => (a.respondedAt! < b.respondedAt! ? -1 : 1))
-    .map(doc => doc.response)
+    .flatMap(doc => doc.responses ?? [])
+    .sort((a, b) => (a.respondedAt < b.respondedAt ? -1 : 1))
 
   console.log("Escalation respond: responses so far", {
     escalationId,

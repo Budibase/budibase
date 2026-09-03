@@ -4,6 +4,16 @@ import sdk from "../../sdk"
 
 const DEFAULT_HEADING = "Escalation requires your review"
 
+export class ProviderResponseError extends Error {
+  constructor(
+    readonly code: number,
+    readonly body: string,
+    provider: string
+  ) {
+    super(`${provider} ${code}: ${body}`)
+  }
+}
+
 export const findIntegrationAgent = async (
   appId: string,
   agentId: string | undefined,
