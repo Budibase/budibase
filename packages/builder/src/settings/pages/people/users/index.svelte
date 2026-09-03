@@ -49,7 +49,6 @@
     User as UserDoc,
     UserGroup,
   } from "@budibase/types"
-  import { InternalTable } from "@budibase/types"
   import type { UserInfo } from "@/types"
   import RouteActions from "@/settings/components/RouteActions.svelte"
   import {
@@ -94,12 +93,12 @@
     API,
     datasource: {
       type: "user",
-      tableId: InternalTable.USER_METADATA,
+      workspaceId: isWorkspaceOnly ? initialWorkspaceId : undefined,
     },
     options: {
       paginate: true,
       limit: PAGE_SIZE,
-      query: isWorkspaceOnly ? { workspaceId: initialWorkspaceId } : {},
+      query: {},
     },
   })
 
@@ -545,8 +544,7 @@
   const workspaceReady = $derived(!isWorkspaceOnly || !!currentWorkspaceId)
   const isWorkspaceQueryReady = $derived(
     !isWorkspaceOnly ||
-      ($fetch.query as { workspaceId?: string })?.workspaceId ===
-        currentWorkspaceId
+      fetch.options.datasource.workspaceId === currentWorkspaceId
   )
   const tableLoading = $derived(
     !workspaceReady || !isWorkspaceQueryReady || !$fetch.loaded || !groupsLoaded

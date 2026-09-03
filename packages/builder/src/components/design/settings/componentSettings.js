@@ -39,6 +39,8 @@ import ButtonConditionEditor from "./controls/ButtonConditionEditor.svelte"
 import MultilineDrawerBindableInput from "@/components/common/MultilineDrawerBindableInput.svelte"
 import FilterableSelect from "./controls/FilterableSelect.svelte"
 import TimeControl from "./controls/TimeControl.svelte"
+import RoleSelect from "./controls/RoleSelect.svelte"
+import UserGroupSelect from "./controls/UserGroupSelect.svelte"
 import { setComponentSettingsResolver } from "./componentSettingsRegistry"
 
 const componentMap = {
@@ -46,6 +48,8 @@ const componentMap = {
   "text/multiline": MultilineDrawerBindableInput,
   plainText: Input,
   time: TimeControl,
+  role: RoleSelect,
+  userGroups: UserGroupSelect,
   select: Select,
   radio: RadioGroup,
   dataSource: DataSourceSelect,

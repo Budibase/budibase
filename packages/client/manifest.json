@@ -9126,10 +9126,28 @@
         "defaultValue": true
       },
       {
+        "type": "userGroups",
+        "label": "Groups",
+        "key": "userGroups",
+        "placeholder": "All groups"
+      },
+      {
         "type": "boolean",
         "label": "Workspace users",
         "key": "workspaceUsersOnly",
         "defaultValue": false
+      },
+      {
+        "type": "role",
+        "label": "Workspace role",
+        "key": "workspaceRole",
+        "allowPublic": false,
+        "placeholder": "All roles",
+        "dependsOn": {
+          "setting": "workspaceUsersOnly",
+          "value": true
+        },
+        "resetOn": "workspaceUsersOnly"
       },
       {
         "type": "boolean",
@@ -9248,10 +9266,28 @@
         "defaultValue": true
       },
       {
+        "type": "userGroups",
+        "label": "Groups",
+        "key": "userGroups",
+        "placeholder": "All groups"
+      },
+      {
         "type": "boolean",
         "label": "Workspace users",
         "key": "workspaceUsersOnly",
         "defaultValue": false
+      },
+      {
+        "type": "role",
+        "label": "Workspace role",
+        "key": "workspaceRole",
+        "allowPublic": false,
+        "placeholder": "All roles",
+        "dependsOn": {
+          "setting": "workspaceUsersOnly",
+          "value": true
+        },
+        "resetOn": "workspaceUsersOnly"
       },
       {
         "type": "boolean",
