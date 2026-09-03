@@ -14,5 +14,6 @@ export interface GetEnvironmentResponse {
   baseUrl?: string
   isDev: boolean
   maintenance: { type: string }[]
+  passwordMinLength?: string
   passwordPolicy: PasswordPolicy
 }

@@ -54,5 +54,13 @@ describe("/api/system/environment", () => {
         })
       })
     })
+
+    it("returns the legacy password minimum length", async () => {
+      await withEnv({ PASSWORD_MIN_LENGTH: "10" }, async () => {
+        const env = await config.api.environment.getEnvironment()
+
+        expect(env.body.passwordMinLength).toBe("10")
+      })
+    })
   })
 })
