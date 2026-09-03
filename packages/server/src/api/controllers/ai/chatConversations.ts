@@ -471,6 +471,13 @@ export async function webhookChat({
   }
   const chatId = chat._id ?? docIds.generateChatConversationID()
   const sessionId = `${provider}:${chatId}`
+  const suspendedModelMessages =
+    await sdk.ai.chatConversations.prepareModelMessages(chat.messages)
+  const modelMessages =
+    await sdk.ai.chatConversations.addConversationAttachmentsToModelMessages({
+      messages: suspendedModelMessages,
+      conversation: chat,
+    })
   let trackingHandle: AgentRequestTrackingHandle
   const run = await prepareAgentChatRun({
     agent,
@@ -479,6 +486,9 @@ export async function webhookChat({
     errorLabel: "webhook chat",
     sessionId,
     user,
+    modelMessages,
+    suspendedModelMessages,
+    conversationAttachmentIds: chat.attachments?.map(file => file.id),
     getRequestId: () => trackingHandle?.requestId,
   })
   const title = run.latestQuestion

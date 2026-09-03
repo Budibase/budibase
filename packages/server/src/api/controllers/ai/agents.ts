@@ -339,6 +339,7 @@ export async function createAgent(
     live: body.live,
     _deleted: false,
     createdBy: globalId,
+    allowConversationAttachments: body.allowConversationAttachments,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
   }
@@ -371,6 +372,9 @@ export async function updateAgent(
     iconColor: body.iconColor,
     live: body.live,
     publishedAt: undefined,
+    allowConversationAttachments:
+      body.allowConversationAttachments ??
+      existing.allowConversationAttachments,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
   }
