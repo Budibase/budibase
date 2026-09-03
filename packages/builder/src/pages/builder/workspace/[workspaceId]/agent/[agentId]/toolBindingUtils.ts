@@ -25,14 +25,8 @@ export const normalizeConfiguredOperationTools = ({
   })
 }
 
-export const getDefaultToolExecutionPrincipal = ({
-  tool,
-  toolSecurityEnabled,
-}: {
-  tool: AgentTool
-  toolSecurityEnabled: boolean
-}) => {
-  if (!toolSecurityEnabled || tool.executionPolicy.mode === "admin") {
+export const getDefaultToolExecutionPrincipal = (tool: AgentTool) => {
+  if (tool.executionPolicy.mode === "admin") {
     return ToolExecutionPrincipal.ADMIN
   }
   return tool.executionPolicy.defaultPrincipal

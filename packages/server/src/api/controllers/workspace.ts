@@ -460,7 +460,6 @@ export async function fetchAppPackage(
 
   // Only filter screens if the user is not a builder call
   const isBuilder = users.isBuilder(ctx.user, appId) && !utils.isClient(ctx)
-
   const isDev = isDevWorkspaceID(ctx.params.appId)
   if (!isBuilder) {
     const userRoleId = getUserRoleId(ctx)
@@ -518,8 +517,16 @@ export async function fetchAppPackage(
       : undefined
   }
 
+  const clientApplication = {
+    ...application,
+    snippets: isBuilder ? application.snippets : undefined,
+  }
+
   ctx.body = {
-    application: { ...application, upgradableVersion: envCore.VERSION },
+    application: {
+      ...clientApplication,
+      upgradableVersion: envCore.VERSION,
+    },
     licenseType: license?.plan.type || PlanType.FREE,
     screens,
     layouts,

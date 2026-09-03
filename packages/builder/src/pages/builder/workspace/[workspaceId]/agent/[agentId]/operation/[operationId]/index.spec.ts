@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { writable } from "svelte/store"
 import MockBody from "@/test/mocks/MockBody.svelte"
 import MockComponent from "@/test/mocks/MockComponent.svelte"
+import MockConfigureOperationToolModal from "./MockConfigureOperationToolModal.svelte"
 import MockGenerateInstructionsControl from "./MockGenerateInstructionsControl.svelte"
 import MockOperationCodeEditor from "./MockOperationCodeEditor.svelte"
 import MockToolsDropdown from "./MockToolsDropdown.svelte"
@@ -81,7 +82,7 @@ vi.mock("../../AgentUnpublishedChangesIndicator.svelte", () => ({
   default: MockComponent,
 }))
 vi.mock("../../ConfigureOperationToolModal.svelte", () => ({
-  default: MockComponent,
+  default: MockConfigureOperationToolModal,
 }))
 vi.mock("../../GenerateInstructionsControl.svelte", () => ({
   default: MockGenerateInstructionsControl,
