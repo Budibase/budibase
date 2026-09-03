@@ -5,6 +5,7 @@ import {
   AutomationIOType,
   AutomationStepDefinition,
   AutomationStepType,
+  ToolExecutionPrincipal,
 } from "@budibase/types"
 
 export const definition: AutomationStepDefinition = {
@@ -15,7 +16,9 @@ export const definition: AutomationStepDefinition = {
     "Execute a pre-configured AI agent that can use tools to accomplish tasks",
   stepId: AutomationActionStepId.AGENT,
   internal: true,
-  inputs: {},
+  inputs: {
+    executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+  },
   features: {
     [AutomationFeature.LOOPING]: true,
   },
@@ -31,6 +34,13 @@ export const definition: AutomationStepDefinition = {
           type: AutomationIOType.LONGFORM,
           title: "Prompt",
           description: "The task or question to send to the agent",
+        },
+        executionPrincipal: {
+          type: AutomationIOType.STRING,
+          title: "Run as",
+          description: "Choose which identity the agent uses to access data",
+          enum: Object.values(ToolExecutionPrincipal),
+          pretty: ["Requester", "Admin"],
         },
         useStructuredOutput: {
           type: AutomationIOType.BOOLEAN,

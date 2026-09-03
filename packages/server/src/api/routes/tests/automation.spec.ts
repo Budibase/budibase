@@ -1,4 +1,4 @@
-import { configs, context, events } from "@budibase/backend-core"
+import { configs, context, events, roles } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 import {
   Automation,
@@ -10,6 +10,7 @@ import {
   EmailTriggerInputs,
   FieldType,
   FilterCondition,
+  PermissionLevel,
   RowActionTriggerInputs,
   RowCreatedTriggerInputs,
   RowDeletedTriggerInputs,
@@ -372,6 +373,132 @@ describe("/automations", () => {
   })
 
   describe("test", () => {
+    it("rejects preview role selection by non-builders", async () => {
+      const runner = await createAutomationBuilder(config)
+        .onAppAction()
+        .serverLog({ text: "ran" })
+        .save()
+      await config.api.permission.add({
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        resourceId: runner.automation._id!,
+        level: PermissionLevel.EXECUTE,
+      })
+      const headers = await config.login({
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        userId: "automation-test-user@example.com",
+        builder: false,
+        prodApp: false,
+      })
+
+      await config.withHeaders(headers, async () => {
+        await config.api.automation.test(
+          runner.automation._id!,
+          {
+            fields: {},
+            previewRoleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+          },
+          {
+            status: 403,
+            body: {
+              message: "Only builders or admins can select a preview role",
+            },
+          }
+        )
+      })
+    })
+
+    it("rejects non-string preview roles", async () => {
+      const runner = await createAutomationBuilder(config)
+        .onAppAction()
+        .serverLog({ text: "ran" })
+        .save()
+
+      const response = await config
+        .request!.post(`/api/automations/${runner.automation._id}/test`)
+        .send({ fields: {}, previewRoleId: 123 })
+        .set(config.defaultHeaders())
+        .expect(400)
+
+      expect(response.body).toMatchObject({
+        message: "Preview role must be a string",
+      })
+    })
+
+    it("runs with the selected preview role", async () => {
+      const result = await createAutomationBuilder(config)
+        .onAppAction()
+        .serverLog({ text: "{{ [user].[roleId] }}" })
+        .test({
+          fields: {},
+          previewRoleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        })
+
+      expect(result.steps[0].outputs.message).toEndWith(
+        roles.BUILTIN_ROLE_IDS.BASIC
+      )
+    })
+
+    it("rejects on-demand tests when the preview role cannot execute the automation", async () => {
+      const runner = await createAutomationBuilder(config)
+        .onAppAction()
+        .serverLog({ text: "ran" })
+        .save()
+
+      await config.api.automation.test(
+        runner.automation._id!,
+        {
+          fields: {},
+          previewRoleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+        },
+        {
+          status: 400,
+          body: {
+            message:
+              "The selected role does not have permission to run this automation",
+          },
+        }
+      )
+    })
+
+    it("allows on-demand tests as public when execute permission is public", async () => {
+      const runner = await createAutomationBuilder(config)
+        .onAppAction()
+        .serverLog({ text: "{{ [user].[roleId] }}" })
+        .save()
+
+      await config.api.permission.add({
+        roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+        resourceId: runner.automation._id!,
+        level: PermissionLevel.EXECUTE,
+      })
+
+      const result = await runner.test({
+        fields: {},
+        previewRoleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+      })
+
+      expect(result.steps[0].outputs.message).toEndWith(
+        roles.BUILTIN_ROLE_IDS.PUBLIC
+      )
+    })
+
+    it("does not apply execute permission to non on-demand test runs", async () => {
+      const table = await config.createTable()
+      const result = await createAutomationBuilder(config)
+        .onRowSaved({ tableId: table._id! })
+        .serverLog({ text: "{{ [user].[roleId] }}" })
+        .test({
+          row: { tableId: table._id },
+          id: "ro_test",
+          revision: "1-test",
+          previewRoleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+        })
+
+      expect(result.steps[0].outputs.message).toEndWith(
+        roles.BUILTIN_ROLE_IDS.PUBLIC
+      )
+    })
+
     it("tests the automation successfully", async () => {
       let table = await config.createTable()
       let automation = newAutomation()

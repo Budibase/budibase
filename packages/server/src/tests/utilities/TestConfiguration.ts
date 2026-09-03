@@ -432,7 +432,12 @@ export default class TestConfiguration {
         const user = await this.globalUser({
           _id: userId,
           builder: { global: builder },
-          roles: { [appId]: roleId || roles.BUILTIN_ROLE_IDS.BASIC },
+          // user roles are always keyed by the prod workspace ID, even when
+          // the session is against the dev workspace
+          roles: {
+            [dbCore.getProdWorkspaceID(appId)]:
+              roleId || roles.BUILTIN_ROLE_IDS.BASIC,
+          },
         })
         await sessions.createASession(userId, {
           sessionId: this.sessionIdForUser(userId),
