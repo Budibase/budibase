@@ -205,8 +205,7 @@
     } else {
       datasource = {
         type: dsType,
-        workspaceId:
-          workspaceUsersOnly || hasUserFilters ? workspaceId : undefined,
+        workspaceId: workspaceUsersOnly ? workspaceId : undefined,
         groupIds: userGroups,
         workspaceRoleId: workspaceRole,
       }
