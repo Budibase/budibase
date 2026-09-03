@@ -9129,6 +9129,7 @@
         "type": "userGroups",
         "label": "Groups",
         "key": "userGroups",
+        "license": "business",
         "placeholder": "All groups"
       },
       {
@@ -9269,6 +9270,7 @@
         "type": "userGroups",
         "label": "Groups",
         "key": "userGroups",
+        "license": "business",
         "placeholder": "All groups"
       },
       {
