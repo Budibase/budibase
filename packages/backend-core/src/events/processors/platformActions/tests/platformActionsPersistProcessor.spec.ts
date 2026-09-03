@@ -154,6 +154,28 @@ describe("PlatformActionPersistProcessor", () => {
     })
   })
 
+  it("uses an agent action's final status when its request was judged failed", async () => {
+    await run(async () => {
+      await processor.processEvent(
+        Event.ACTION_AI_AGENT_EXECUTED,
+        identity,
+        {
+          sourceType: "agent_session",
+          sourceId: "session-1",
+          finalStatus: "failed",
+        },
+        undefined
+      )
+
+      expect(mockEnqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          incrementsActionCount: true,
+          signal: "failed",
+        })
+      )
+    })
+  })
+
   it("does not apply an escalation state to a non-agent action", async () => {
     await run(async () => {
       await processor.processEvent(

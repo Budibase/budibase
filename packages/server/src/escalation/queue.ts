@@ -792,6 +792,7 @@ export async function resumeOperation({
       })
       if (judged) {
         await markEscalationRequestResolved(judged)
+        await updatePlatformActionSessionStatus(judged.status)
       }
     }
   } catch (error) {

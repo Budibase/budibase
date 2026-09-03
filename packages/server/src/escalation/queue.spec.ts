@@ -187,6 +187,11 @@ describe("resumeOperation", () => {
         sourceId: "session_1",
         signal: "active",
       })
+      expect(enqueueLifecycleMock).toHaveBeenCalledWith({
+        sourceType: "agent_session",
+        sourceId: "session_1",
+        signal: "completed",
+      })
       expect(aiAgentExecutedMock).toHaveBeenCalledWith({
         agentId: "agent_1",
         sourceType: "agent_session",
