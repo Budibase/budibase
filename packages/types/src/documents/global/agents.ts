@@ -211,6 +211,7 @@ export interface Agent extends Document {
   icon?: string
   iconColor?: string
   createdBy?: string
+  allowConversationAttachments?: boolean
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration
 }

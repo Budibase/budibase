@@ -229,6 +229,7 @@ const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
   return {
     ...agent,
     live: raw.live ?? false,
+    allowConversationAttachments: raw.allowConversationAttachments ?? false,
     operations: migrateOperations(raw),
     slackIntegration: decodeSlackIntegrationSecrets(agent.slackIntegration),
   }
@@ -483,6 +484,7 @@ export async function create(
     goal: request.goal,
     createdAt: now,
     createdBy: request.createdBy,
+    allowConversationAttachments: request.allowConversationAttachments ?? true,
     MSTeamsIntegration: request.MSTeamsIntegration,
     slackIntegration: await withSlackTeamId(request.slackIntegration),
   }
@@ -522,6 +524,7 @@ export async function duplicate(
     live: source.live,
     _deleted: false,
     createdBy,
+    allowConversationAttachments: source.allowConversationAttachments,
     operations: source.operations,
   })
 }

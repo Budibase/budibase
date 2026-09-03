@@ -16,6 +16,7 @@ import {
   FetchAgentKnowledgeSourceOptionsResponse,
   KnowledgeBaseFileStatus,
   AgentKnowledgeSourceSyncRunStatus,
+  AgentKnowledgeConfiguration,
   SharePointKnowledgeSourceSnapshot,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
@@ -79,7 +80,7 @@ interface AgentStoreState {
   >
   knowledgeUploadByOperation: Record<string, OperationKnowledgeUploadState>
   knowledgeLoadingByOperation: Record<string, boolean>
-  knowledgeConfiguration?: FetchAgentKnowledgeIndexResponse["configuration"]
+  knowledgeConfiguration?: AgentKnowledgeConfiguration
 }
 
 const getOperationKnowledgeCacheKey = (agentId: string, operationId: string) =>

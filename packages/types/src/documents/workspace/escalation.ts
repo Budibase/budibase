@@ -61,6 +61,8 @@ export interface SuspendedOperationContext {
   operationId: string
   sessionId: string
   messages: ModelMessage[]
+  conversationId?: string
+  attachmentIds?: string[]
   channel?: ChatConversationChannel
   userId?: string
   requester?: AgentRequester
@@ -77,6 +79,7 @@ export interface EscalationContextDoc extends Document {
   stepId?: string
   operationId?: string
   sessionId?: string
+  conversationId?: string
   appId: string
   tenantId: string
   agentId?: string
