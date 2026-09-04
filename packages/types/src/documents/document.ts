@@ -63,6 +63,8 @@ export enum DocumentType {
   AUTO_COLUMN_STATE = "autocolumn_state",
   ESCALATION_CONTEXT = "escalation_context",
   ESCALATION_NOTIFICATION = "escalation_notification",
+  FUNCTION = "fn",
+  FUNCTION_RUN_LOG = "log_fn",
 }
 
 // these are the core documents that make up the data, design
@@ -85,6 +87,7 @@ export const DocumentTypesToImport: DocumentType[] = [
   DocumentType.MEM_VIEW,
   DocumentType.WORKSPACE_APP,
   DocumentType.WORKSPACE_FAVOURITE,
+  DocumentType.FUNCTION,
   // Deprecated but still copied
   DocumentType.INSTANCE,
   DocumentType.LAYOUT,

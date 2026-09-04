@@ -23,6 +23,7 @@ import * as screens from "./workspace/screens"
 import { default as tables } from "./workspace/tables"
 import * as views from "./workspace/views"
 import * as escalations from "./workspace/escalations"
+import * as functions from "./workspace/functions"
 import * as workspaceApps from "./workspace/workspaceApps"
 import { default as workspaces } from "./workspace/workspaces"
 
@@ -54,6 +55,7 @@ const sdk = {
   dev,
   workspace,
   escalations,
+  functions,
 }
 
 // default export for TS
