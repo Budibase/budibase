@@ -1,4 +1,4 @@
-import { env as coreEnv, db as dbCore } from "@budibase/backend-core"
+import { env as coreEnv, db as dbCore, security } from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
 import { Ctx, GetEnvironmentResponse, MaintenanceType } from "@budibase/types"
 import nodeFetch from "node-fetch"
@@ -56,7 +56,8 @@ export const fetch = async (ctx: Ctx<void, GetEnvironmentResponse>) => {
     baseUrl: env.PLATFORM_URL,
     isDev: env.isDev() && !env.isTest(),
     maintenance: [],
-    passwordMinLength: env.PASSWORD_MIN_LENGTH,
+    passwordMinLength: security.PASSWORD_POLICY.minLength.toString(),
+    passwordPolicy: security.PASSWORD_POLICY,
   }
 
   if (env.SELF_HOSTED) {

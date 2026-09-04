@@ -72,6 +72,7 @@
     "pouchdb-find": "9.0.0",
     "redlock": "4.2.0",
     "rotating-file-stream": "3.1.0",
+    "safe-regex": "2.1.1",
     "sanitize-s3-objectkey": "0.0.1",
     "semver": "^7.5.4",
     "tar-fs": "2.1.4",

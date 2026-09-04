@@ -46,7 +46,7 @@ export const passwordModalTranslations = createTranslationDefinitions(
       fullKey: "passwordModalMinLength",
       name: "Password minimum length copy",
       defaultValue:
-        "Please enter at least 12 characters. We recommend using machine generated or random passwords.",
+        "Please enter at least {minLength} characters. We recommend using machine generated or random passwords.",
     },
     {
       key: "mismatchText",
