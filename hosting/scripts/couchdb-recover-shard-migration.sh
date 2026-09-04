@@ -10,15 +10,6 @@ VERIFY_PASSWORD="${COUCHDB_PASSWORD:-}"
 
 usage() {
   cat <<USAGE
-Recovers CouchDB installations left in a partially-migrated state by the
-budibase/couchdb:v3.3.3-sqs-v2.1.1 image, which moved the root registry
-files (_dbs.couch, _nodes.couch) into \${DATA_DIR}/couch/dbs/ but left the
-shards/, .shards/ and _nodes directories (i.e. the actual per-app database
-files) behind at the top level of \${DATA_DIR}. A later image bootstraps
-_users/_replicator at the new location, which makes \${DATA_DIR}/couch/dbs/shards
-already exist, so the newer image's directory-existence migration guard
-never runs again and every real app database stays orphaned, returning 404s.
-
 This script must be run against the CouchDB data volume while the CouchDB
 container is STOPPED, and the volume should be backed up first, e.g.:
 
