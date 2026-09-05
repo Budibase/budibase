@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Body, Link, ModalContent } from "@budibase/bbui"
+  import { Body, Button, ModalContent } from "@budibase/bbui"
   import type {
     ImportProjectResponse,
     ProjectImportRequirement,
@@ -7,11 +7,10 @@
 
   interface Props {
     response: ImportProjectResponse
-    resourceUrl: (_requirement: ProjectImportRequirement) => string
-    onOpenResource: () => void
+    onOpenResource: (_requirement: ProjectImportRequirement) => void
   }
 
-  let { response, resourceUrl, onOpenResource }: Props = $props()
+  let { response, onOpenResource }: Props = $props()
 
   const resourceRequirements = $derived.by(() => {
     const groups = new Map<string, ProjectImportRequirement[]>()
@@ -42,13 +41,14 @@
           {#each resourceRequirements as requirements (requirements[0].resourceId)}
             {@const resource = requirements[0]}
             <li class="resource-requirements">
-              <Link
-                href={resourceUrl(resource)}
-                on:click={onOpenResource}
+              <Button
+                secondary
+                quiet
+                on:click={() => onOpenResource(resource)}
                 size="S"
               >
                 {resource.name}
-              </Link>
+              </Button>
               {#each requirements as requirement}
                 <Body size="S" color="var(--spectrum-global-color-gray-700)">
                   {requirement.reason}
