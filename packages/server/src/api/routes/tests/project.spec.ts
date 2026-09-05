@@ -17,6 +17,8 @@ import {
   InternalTable,
   isEmailTrigger,
   isWebhookTrigger,
+  OAuth2CredentialsMethod,
+  OAuth2GrantType,
   ResourceType,
   RelationshipType,
   RestAuthType,
@@ -3012,9 +3014,14 @@ describe("/projects", () => {
 
   describe("exports project tarballs", () => {
     it.each([
-      { name: "password", credentials: { password: "mailbox-secret" } },
       {
-        name: "OAuth2",
+        name: "password",
+        includeDatasource: false,
+        credentials: { password: "mailbox-secret" },
+      },
+      {
+        name: "excluded OAuth2 connection",
+        includeDatasource: false,
         credentials: {
           authType: EmailTriggerAuthType.OAUTH2,
           datasourceId: "datasource_source",
@@ -3022,17 +3029,58 @@ describe("/projects", () => {
         },
       },
       {
+        name: "included OAuth2 connection",
+        includeDatasource: true,
+        credentials: {
+          authType: EmailTriggerAuthType.OAUTH2,
+          datasourceId: "datasource_source",
+          authConfigId: "auth_source",
+        },
+      },
+      {
+        name: "missing OAuth2 auth config",
+        includeDatasource: true,
+        credentials: {
+          authType: EmailTriggerAuthType.OAUTH2,
+          datasourceId: "datasource_source",
+          authConfigId: "auth_missing",
+        },
+      },
+      {
         name: "legacy OAuth2",
+        includeDatasource: false,
         credentials: {
           authType: EmailTriggerAuthType.OAUTH2,
           oauth2ConfigId: "oauth2_source",
         },
       },
     ])(
-      "requires fresh email $name credentials after export and import",
-      async ({ credentials }) => {
+      "sanitises email credentials and remaps $name after import",
+      async ({ credentials, includeDatasource }) => {
         await withProjectsEnabled(async () => {
           const project = await createAssignedProject()
+          if (credentials.datasourceId) {
+            const datasource = await config.api.datasource.create({
+              ...basicDatasource().datasource,
+              source: SourceName.REST,
+              projectIds: includeDatasource ? [project._id] : undefined,
+              config: {
+                authConfigs: [
+                  {
+                    _id: "auth_source",
+                    name: "Mailbox authentication",
+                    type: RestAuthType.OAUTH2,
+                    url: "https://example.com/oauth/token",
+                    clientId: "mailbox-client",
+                    clientSecret: "oauth-secret",
+                    method: OAuth2CredentialsMethod.BODY,
+                    grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+                  },
+                ],
+              },
+            })
+            credentials = { ...credentials, datasourceId: datasource._id! }
+          }
           const settings = {
             host: "imap.example.com",
             port: 993,
@@ -3059,7 +3107,16 @@ describe("/projects", () => {
           expect(exported.definition.trigger.inputs).toEqual({
             ...settings,
             authType: credentials.authType,
+            ...(credentials.datasourceId
+              ? {
+                  datasourceId: credentials.datasourceId,
+                  authConfigId: credentials.authConfigId,
+                }
+              : {}),
           })
+          expect(
+            [...files.values()].map(file => file.toString()).join("\n")
+          ).not.toContain("oauth-secret")
           expect(manifest.requiresSecrets).toBe(true)
 
           const entries = Object.fromEntries(
@@ -3083,18 +3140,36 @@ describe("/projects", () => {
           )
 
           expect(importedAutomation.disabled).toBe(true)
+          const importedConnection =
+            includeDatasource && credentials.authConfigId === "auth_source"
           expect(importedAutomation.definition.trigger.inputs).toEqual({
             ...settings,
             authType: credentials.authType,
+            ...(importedConnection
+              ? {
+                  datasourceId: imported.resources.datasource![0],
+                  authConfigId: credentials.authConfigId,
+                }
+              : {}),
           })
-          expect(imported.requirements).toEqual([
-            {
+          const expectedRequirements = []
+          if (!importedConnection) {
+            expectedRequirements.push({
               type: "automation_credentials",
               resourceId: importedAutomation._id,
-              name: automation.name,
-              reason: expect.stringContaining("Reconnect the mailbox"),
-            },
-          ])
+            })
+          }
+          if (includeDatasource) {
+            expectedRequirements.push({
+              type: "datasource_secrets",
+              resourceId: imported.resources.datasource![0],
+            })
+          }
+          expect(
+            imported.requirements
+              .map(({ type, resourceId }) => ({ type, resourceId }))
+              .sort((a, b) => a.type.localeCompare(b.type))
+          ).toEqual(expectedRequirements)
         })
       }
     )
