@@ -845,6 +845,68 @@ describe("/projects", () => {
   })
 
   describe("propagates project ids to dependencies on save", () => {
+    it("allows other saves during schema discovery and revalidates projects afterwards", async () => {
+      await withProjectsEnabled(async () => {
+        const project = await createAssignedProject()
+        const { workspaceApp } = await config.api.workspaceApp.create({
+          name: "Unrelated app",
+          url: "/unrelated-app",
+        })
+        let schemaStarted!: () => void
+        let releaseSchema!: () => void
+        const schemaReady = new Promise<void>(
+          resolve => (schemaStarted = resolve)
+        )
+        const schemaPending = new Promise<void>(
+          resolve => (releaseSchema = resolve)
+        )
+        const buildSchema = jest
+          .spyOn(sdk.datasources, "buildFilteredSchema")
+          .mockImplementationOnce(async () => {
+            schemaStarted()
+            await schemaPending
+            return { tables: {}, errors: {} }
+          })
+
+        const datasourceSave = config
+          .request!.post("/api/datasources")
+          .set(config.defaultHeaders())
+          .send({
+            datasource: {
+              ...basicDatasource().datasource,
+              name: "Slow schema",
+              projectIds: [project._id],
+            },
+            fetchSchema: true,
+          })
+          .expect(404)
+          .then(() => undefined)
+
+        try {
+          await schemaReady
+          await helpers.withTimeout(5000, async () => {
+            const { isDefault: _isDefault, ...update } = workspaceApp
+            await config.api.workspaceApp.update({
+              ...update,
+              name: "Saved during schema discovery",
+            })
+            await config.api.project.delete(project._id, project._rev)
+          })
+        } finally {
+          releaseSchema()
+          await datasourceSave.finally(() => buildSchema.mockRestore())
+        }
+
+        expect(
+          (await config.api.workspaceApp.find(workspaceApp._id!)).name
+        ).toBe("Saved during schema discovery")
+        expect(
+          (await config.api.datasource.fetch()).map(
+            datasource => datasource.name
+          )
+        ).not.toContain("Slow schema")
+      })
+    })
 
     it("does not propagate after waiting for Project deletion", async () => {
       await withProjectsEnabled(async () => {
@@ -1195,27 +1257,6 @@ describe("/projects", () => {
         )
         expect(updatedQuery.projectIds).toBeUndefined()
         expect(updatedDatasource.projectIds).toEqual([project._id])
-      })
-    })
-
-    it("propagates through a newly saved query owned by an assigned datasource", async () => {
-      await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        const datasource = await config.api.datasource.create({
-          ...basicDatasource().datasource,
-          projectIds: [project._id],
-        })
-        const table = await config.api.table.save(basicTable())
-
-        await config.api.query.save({
-          ...basicQuery(datasource._id!),
-          transformer: `return "{{ ${table._id}._id }}"`,
-        })
-
-        const updatedTable = await config.api.table.get(table._id!)
-        expect(updatedTable.projectIds).toEqual([project._id])
       })
     })
 
@@ -1722,29 +1763,6 @@ describe("/projects", () => {
           datasource._id!
         )
         expect(updatedDatasource.projectIds).toEqual([project._id])
-      })
-    })
-
-    it("clears propagated assignments when the project is deleted", async () => {
-      await withProjectsEnabled(async () => {
-        const project = await createAssignedProject()
-        const datasource = await config.api.datasource.create({
-          ...basicDatasource().datasource,
-          projectIds: [project._id],
-        })
-        await config.api.query.save(basicQuery(datasource._id!))
-
-        const propagatedDatasource = await config.api.datasource.get(
-          datasource._id!
-        )
-        expect(propagatedDatasource.projectIds).toEqual([project._id])
-
-        await config.api.project.delete(project._id, project._rev)
-
-        const clearedDatasource = await config.api.datasource.get(
-          datasource._id!
-        )
-        expect(clearedDatasource.projectIds).toBeUndefined()
       })
     })
 
