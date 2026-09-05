@@ -350,44 +350,44 @@ export async function update(
   )
 }
 
-async function saveUnlocked(
+export async function save(
   ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
 ) {
-  const {
-    datasource: datasourceData,
-    fetchSchema,
-    tablesFilter,
-  } = ctx.request.body
-  datasourceData.projectIds = await resolveProjectIds(datasourceData.projectIds)
-  stripDatasourceEntityProjectIds(datasourceData)
-  const persistDatasource = async () => {
-    const restTemplateId = datasourceData.restTemplateId
-    if (isCustomRestTemplateId(restTemplateId)) {
-      const templateExists = await sdk.restTemplates.exists(restTemplateId)
-      if (!templateExists) {
-        throw new HTTPError("Custom REST template not found", 404)
+  const { datasource, errors } = await sdk.datasources.prepareForSave(
+    ctx.request.body
+  )
+
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(async () => {
+    datasource.projectIds = await resolveProjectIds(datasource.projectIds)
+    stripDatasourceEntityProjectIds(datasource)
+    const persistDatasource = async () => {
+      const restTemplateId = datasource.restTemplateId
+      if (isCustomRestTemplateId(restTemplateId)) {
+        const templateExists = await sdk.restTemplates.exists(restTemplateId)
+        if (!templateExists) {
+          throw new HTTPError("Custom REST template not found", 404)
+        }
       }
+
+      return await sdk.datasources.save({ datasource })
     }
 
-    return await sdk.datasources.save(datasourceData, {
-      fetchSchema,
-      tablesFilter,
-    })
-  }
-
-  const restTemplateId = datasourceData.restTemplateId
-  const { datasource, errors } = isCustomRestTemplateId(restTemplateId)
-    ? await sdk.restTemplates.withCustomRestTemplateLock({
+    const restTemplateId = datasource.restTemplateId
+    if (isCustomRestTemplateId(restTemplateId)) {
+      await sdk.restTemplates.withCustomRestTemplateLock({
         resource: restTemplateId,
         task: persistDatasource,
       })
-    : await persistDatasource()
+    } else {
+      await persistDatasource()
+    }
 
-  await propagateProjectDependencyChangesWithWarning(ctx, {
-    rootResourceId: datasource._id!,
-    currentProjectIds: datasource.projectIds,
-    previousProjectIds: [],
-    savedResource: datasource,
+    await propagateProjectDependencyChangesWithWarning(ctx, {
+      rootResourceId: datasource._id!,
+      currentProjectIds: datasource.projectIds,
+      previousProjectIds: [],
+      savedResource: datasource,
+    })
   })
 
   ctx.body = {
@@ -397,14 +397,6 @@ async function saveUnlocked(
     errors,
   }
   builderSocket?.emitDatasourceUpdate(ctx, datasource)
-}
-
-export async function save(
-  ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
-) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
-    saveUnlocked(ctx)
-  )
 }
 
 async function destroyInternalTablesBySourceId(datasourceId: string) {
