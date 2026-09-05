@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import {
   ResourceType,
-  type CreateProjectResponse,
   type FetchProjectsResponse,
   type ImportProjectResponse,
   type ProjectResponse,
@@ -40,12 +39,10 @@ const importBundle = vi.mocked(API.projects.importBundle)
 
 const defer = <T>() => {
   let resolve!: (value: T) => void
-  let reject!: (reason?: unknown) => void
-  const promise = new Promise<T>((res, rej) => {
+  const promise = new Promise<T>(res => {
     resolve = res
-    reject = rej
   })
-  return { promise, resolve, reject }
+  return { promise, resolve }
 }
 
 const project = (
@@ -84,12 +81,13 @@ describe("ProjectsStore", () => {
 
     const ensuredFetch = store.ensureFetched()
 
-    expect(fetchProjects).toHaveBeenCalledTimes(2)
+    const alpha = project("project_alpha", { name: "Alpha" })
+    const zulu = project("project_zulu", { name: "Zulu" })
+    newer.resolve({ projects: [zulu, alpha] })
+    await newerFetch
 
-    newer.resolve({ projects: [project("project_1")] })
-
-    await expect(newerFetch).resolves.toEqual([project("project_1")])
-    await expect(ensuredFetch).resolves.toEqual([project("project_1")])
+    await expect(ensuredFetch).resolves.toEqual([alpha, zulu])
+    expect(getProjects(store)).toEqual([alpha, zulu])
   })
 
   it("does not expose projects from the previous workspace", async () => {
@@ -111,54 +109,6 @@ describe("ProjectsStore", () => {
     secondWorkspace.resolve({ projects: [project("second_project")] })
     await secondFetch
     expect(getProjects(store)).toEqual([project("second_project")])
-  })
-
-  it("sorts fetched projects by name", async () => {
-    const store = new ProjectsStore()
-    const zulu = project("project_zulu", { name: "Zulu" })
-    const alpha = project("project_alpha", { name: "Alpha" })
-
-    fetchProjects.mockResolvedValue({ projects: [zulu, alpha] })
-
-    await expect(store.fetch()).resolves.toEqual([alpha, zulu])
-    expect(getProjects(store)).toEqual([alpha, zulu])
-  })
-
-  it("inserts created projects by name", async () => {
-    const store = new ProjectsStore()
-    const alpha = project("project_alpha", { name: "Alpha" })
-    const bravo = project("project_bravo", { name: "Bravo" })
-    const zulu = project("project_zulu", { name: "Zulu" })
-
-    fetchProjects.mockResolvedValue({ projects: [alpha, zulu] })
-    createProject.mockResolvedValue({ project: bravo })
-
-    await store.fetch()
-    await store.create({ name: bravo.name })
-
-    expect(getProjects(store)).toEqual([alpha, bravo, zulu])
-  })
-
-  it("reorders updated projects after rename", async () => {
-    const store = new ProjectsStore()
-    const alpha = project("project_alpha", { name: "Alpha" })
-    const charlie = project("project_charlie", { name: "Charlie" })
-    const renamed = project("project_charlie", {
-      _rev: "2-rev",
-      name: "Aardvark",
-    })
-
-    fetchProjects.mockResolvedValue({ projects: [alpha, charlie] })
-    updateProject.mockResolvedValue({ project: renamed })
-
-    await store.fetch()
-    await store.updateProject({
-      _id: renamed._id,
-      _rev: charlie._rev,
-      name: renamed.name,
-    })
-
-    expect(getProjects(store)).toEqual([renamed, alpha])
   })
 
   it("returns the import response and allows retry when refresh fails", async () => {
@@ -190,32 +140,35 @@ describe("ProjectsStore", () => {
   it("does not let an in-flight fetch overwrite a created project", async () => {
     const store = new ProjectsStore()
     const fetch = defer<FetchProjectsResponse>()
-    const created = project("created_project")
-    const response: CreateProjectResponse = { project: created }
-
+    const alpha = project("project_alpha", { name: "Alpha" })
+    const zulu = project("project_zulu", { name: "Zulu" })
+    const created = project("project_bravo", { name: "Bravo" })
+    fetchProjects.mockResolvedValueOnce({ projects: [alpha, zulu] })
+    await store.fetch()
     fetchProjects.mockReturnValue(fetch.promise)
-    createProject.mockResolvedValue(response)
+    createProject.mockResolvedValue({ project: created })
 
     const fetchPromise = store.fetch()
-    await store.create({ name: "Created project" })
-    fetch.resolve({ projects: [project("stale_project")] })
+    await store.create({ name: created.name })
+    fetch.resolve({ projects: [alpha, zulu] })
+    await fetchPromise
 
-    await expect(fetchPromise).resolves.toEqual([project("stale_project")])
-    expect(getProjects(store)).toEqual([created])
+    expect(getProjects(store)).toEqual([alpha, created, zulu])
   })
 
   it("does not let an in-flight fetch overwrite an updated project", async () => {
     const store = new ProjectsStore()
     const fetch = defer<FetchProjectsResponse>()
-    const original = project("project_1")
+    const alpha = project("project_alpha", { name: "Alpha" })
+    const original = project("project_charlie", { name: "Charlie" })
     const updated: ProjectResponse = {
       ...original,
       _rev: "2-rev",
-      name: "Updated project",
+      name: "Aardvark",
     }
     const response: UpdateProjectResponse = { project: updated }
 
-    fetchProjects.mockResolvedValueOnce({ projects: [original] })
+    fetchProjects.mockResolvedValueOnce({ projects: [alpha, original] })
     await store.fetch()
     fetchProjects.mockReturnValue(fetch.promise)
     updateProject.mockResolvedValue(response)
@@ -226,40 +179,10 @@ describe("ProjectsStore", () => {
       _rev: original._rev,
       name: updated.name,
     })
-    fetch.resolve({ projects: [original] })
+    fetch.resolve({ projects: [alpha, original] })
 
-    await expect(fetchPromise).resolves.toEqual([original])
-    expect(getProjects(store)).toEqual([updated])
-  })
-
-  it("does not update projects after the workspace changes", async () => {
-    const store = new ProjectsStore()
-    const pendingUpdate = defer<UpdateProjectResponse>()
-    const original = project("project_1")
-    const updated: ProjectResponse = {
-      ...original,
-      _rev: "2-rev",
-      name: "Updated project",
-    }
-    const secondWorkspaceProject = project("workspace_2_project")
-
-    fetchProjects
-      .mockResolvedValueOnce({ projects: [original] })
-      .mockResolvedValueOnce({ projects: [secondWorkspaceProject] })
-    updateProject.mockReturnValue(pendingUpdate.promise)
-
-    await store.fetch("app_workspace_1")
-    const updatePromise = store.updateProject({
-      _id: original._id,
-      _rev: original._rev,
-      name: updated.name,
-    })
-    await store.fetch("app_workspace_2")
-
-    pendingUpdate.resolve({ project: updated })
-
-    await expect(updatePromise).resolves.toEqual(updated)
-    expect(getProjects(store)).toEqual([secondWorkspaceProject])
+    await fetchPromise
+    expect(getProjects(store)).toEqual([updated, alpha])
   })
 
   it("does not let an in-flight fetch re-add a deleted project", async () => {
@@ -277,28 +200,41 @@ describe("ProjectsStore", () => {
     await store.deleteProject(deleted._id, deleted._rev)
     fetch.resolve({ projects: [deleted, retained] })
 
-    await expect(fetchPromise).resolves.toEqual([deleted, retained])
+    await fetchPromise
     expect(getProjects(store)).toEqual([retained])
   })
 
-  it("does not apply a late delete after the workspace changes", async () => {
-    const store = new ProjectsStore()
-    const pendingDelete = defer<void>()
-    const deleted = project("project_1")
-    const secondWorkspaceProject = project("workspace_2_project")
+  it.each(["update", "delete"])(
+    "does not let a late %s discard the next workspace's fetch",
+    async operation => {
+      const store = new ProjectsStore()
+      const pendingMutation = defer<void>()
+      const secondFetch = defer<FetchProjectsResponse>()
+      const original = project("project_1")
+      const secondWorkspaceProject = project("workspace_2_project")
 
-    fetchProjects
-      .mockResolvedValueOnce({ projects: [deleted] })
-      .mockResolvedValueOnce({ projects: [secondWorkspaceProject] })
-    deleteProject.mockReturnValue(pendingDelete.promise)
+      fetchProjects
+        .mockResolvedValueOnce({ projects: [original] })
+        .mockReturnValueOnce(secondFetch.promise)
+      updateProject.mockImplementation(async () => {
+        await pendingMutation.promise
+        return { project: original }
+      })
+      deleteProject.mockReturnValue(pendingMutation.promise)
 
-    await store.fetch("app_workspace_1")
-    const deletePromise = store.deleteProject(deleted._id, deleted._rev)
-    await store.fetch("app_workspace_2")
+      await store.fetch("app_workspace_1")
+      const mutation =
+        operation === "update"
+          ? store.updateProject(original)
+          : store.deleteProject(original._id, original._rev)
+      const workspaceFetch = store.fetch("app_workspace_2")
 
-    pendingDelete.resolve()
+      pendingMutation.resolve()
+      await mutation
+      secondFetch.resolve({ projects: [secondWorkspaceProject] })
+      await workspaceFetch
 
-    await deletePromise
-    expect(getProjects(store)).toEqual([secondWorkspaceProject])
-  })
+      expect(getProjects(store)).toEqual([secondWorkspaceProject])
+    }
+  )
 })
