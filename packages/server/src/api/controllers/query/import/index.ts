@@ -217,19 +217,24 @@ export class RestImporter {
 
   getInfo = () => this.source.getInfo()
 
-  importQueries = async (
-    datasourceId: string,
+  importQueries = async ({
+    datasourceId,
+    selectedEndpointId,
+    staticVariables,
+  }: {
+    datasourceId: string
     selectedEndpointId?: string
-  ): Promise<ImportResult> => {
+    staticVariables?: Record<string, string>
+  }): Promise<ImportResult> => {
     const filterIds = selectedEndpointId
       ? new Set<string>([selectedEndpointId])
       : undefined
-    const staticVariables =
-      await this.getDatasourceStaticVariables(datasourceId)
     // construct the queries
     let queries = this.source.getQueries(datasourceId, {
       filterIds,
-      staticVariables,
+      staticVariables:
+        staticVariables ??
+        (await this.getDatasourceStaticVariables(datasourceId)),
     })
 
     if (filterIds && queries.length === 0) {
