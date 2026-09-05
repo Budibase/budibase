@@ -1,18 +1,12 @@
-import {
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-  within,
-} from "@testing-library/svelte"
+import { fireEvent, render, screen, within } from "@testing-library/svelte"
 import {
   FeatureFlag,
-  type PreviewProjectAssignmentRequest,
   type PreviewProjectAssignmentResponse,
   ResourceType,
 } from "@budibase/types"
 import { tick } from "svelte"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import MockButton from "@/test/mocks/MockButton.svelte"
 import MockBody from "@/test/mocks/MockBody.svelte"
 import MockCheckbox from "@/test/mocks/MockCheckbox.svelte"
 import MockModalContent from "@/test/mocks/MockModalContent.svelte"
@@ -28,6 +22,13 @@ const projectFixtures = vi.hoisted(() => [
     updatedAt: "2026-01-01T00:00:00.000Z",
   },
   {
+    _id: "project_3",
+    _rev: "1-finance",
+    name: "Finance",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  },
+  {
     _id: "project_2",
     _rev: "1-reporting",
     name: "Reporting",
@@ -38,6 +39,8 @@ const projectFixtures = vi.hoisted(() => [
 
 vi.mock("@budibase/bbui", () => ({
   Body: MockBody,
+  Button: MockButton,
+  keepOpen: Symbol("keepOpen"),
   Checkbox: MockCheckbox,
   Icon: MockSlot,
   ModalContent: MockModalContent,
@@ -69,10 +72,36 @@ const resource = {
   typeLabel: "App",
   projectIds: ["project_1"],
 }
-const dependencyFingerprint = "dependency-fingerprint"
+const automation = {
+  id: "automation_1",
+  name: "Notify operations",
+  type: ResourceType.AUTOMATION,
+  projectIdsToAdd: ["project_1"],
+}
+const datasource = {
+  id: "datasource_1",
+  name: "Reporting database",
+  type: ResourceType.DATASOURCE,
+  projectIdsToAdd: ["project_2"],
+}
+const preview: PreviewProjectAssignmentResponse = {
+  resourceRev: "newer-server-rev",
+  resourceProjectIds: ["project_1"],
+  dependencies: [automation, datasource],
+  dependencyFingerprint: "dependency-fingerprint",
+}
 const advancePreviewDebounce = async () => {
   await vi.advanceTimersByTimeAsync(150)
   await tick()
+}
+const toggleReportingProject = async () => {
+  const projectSelect = screen.getByLabelText("Projects")
+  const option = within(projectSelect).getByRole("option", {
+    name: "Reporting",
+  }) as HTMLOptionElement
+  option.selected = !option.selected
+  await fireEvent.change(projectSelect)
+  await advancePreviewDebounce()
 }
 
 describe("AssignProjectModal", () => {
@@ -85,147 +114,150 @@ describe("AssignProjectModal", () => {
     vi.useRealTimers()
   })
 
-  it("selects previewed dependencies by default and submits deselections", async () => {
-    const onPreview = vi.fn().mockResolvedValue({
-      dependencyFingerprint,
-      dependencies: [
-        {
-          id: "automation_1",
-          name: "Notify operations",
-          type: ResourceType.AUTOMATION,
-          projectIdsToAdd: ["project_1"],
-        },
-        {
-          id: "datasource_1",
-          name: "Operations database",
-          type: ResourceType.DATASOURCE,
-          projectIdsToAdd: ["project_1"],
-        },
-      ],
-    })
+  it("selects related resources by default and submits exclusions", async () => {
     const onConfirm = vi.fn()
-
     render(AssignProjectModal, {
-      props: { resource, onPreview, onConfirm },
+      resource,
+      onPreview: vi.fn().mockResolvedValue(preview),
+      onConfirm,
     })
 
     await advancePreviewDebounce()
-    await waitFor(() =>
-      expect(screen.getByText("2 of 2 selected")).toBeTruthy()
-    )
-    expect(
-      screen.getByText(
-        "Include the resources this app uses in the same projects"
-      )
-    ).toBeTruthy()
-    expect(onPreview).toHaveBeenCalledWith({
-      resourceId: "workspace_app_1",
-      projectIds: ["project_1"],
-    })
-    expect(
-      screen
-        .getAllByRole("checkbox")
-        .map(checkbox => checkbox.parentElement?.textContent?.trim())
-    ).toEqual(["Notify operations", "Operations database"])
-
-    await fireEvent.click(screen.getByLabelText("Notify operations"))
-    expect(screen.getByText("1 related resource excluded")).toBeTruthy()
+    await fireEvent.click(screen.getByLabelText(automation.name))
     await fireEvent.click(screen.getByText("Save changes"))
 
+    expect(screen.getByText("1 related resource excluded")).toBeTruthy()
     expect(onConfirm).toHaveBeenCalledWith({
+      resourceRev: resource.revision,
       projectIds: ["project_1"],
-      dependencyIds: ["datasource_1"],
-      dependencyFingerprint,
+      dependencyIds: [datasource.id],
+      dependencyFingerprint: preview.dependencyFingerprint,
     })
   })
 
-  it("blocks saving when the dependency preview fails", async () => {
+  it("retries a failed dependency preview before saving", async () => {
     const onConfirm = vi.fn()
     render(AssignProjectModal, {
-      props: {
-        resource,
-        onPreview: vi.fn().mockRejectedValue(new Error("preview failed")),
-        onConfirm,
-      },
+      resource,
+      onPreview: vi
+        .fn()
+        .mockRejectedValueOnce(new Error("preview failed"))
+        .mockResolvedValue(preview),
+      onConfirm,
     })
 
     await advancePreviewDebounce()
-    await waitFor(() =>
-      expect(
-        screen.getByText(/Related resources couldn't be loaded/)
-      ).toBeTruthy()
-    )
-    expect(screen.getByText("Save changes")).toBeDisabled()
+    await fireEvent.click(screen.getByText("Save changes"))
     expect(onConfirm).not.toHaveBeenCalled()
+    await fireEvent.click(screen.getByText("Retry"))
+    await advancePreviewDebounce()
+    await fireEvent.click(screen.getByText("Save changes"))
+
+    expect(
+      screen.queryByText(/Related resources couldn't be loaded/)
+    ).toBeNull()
+    expect(onConfirm).toHaveBeenCalledWith({
+      resourceRev: resource.revision,
+      projectIds: ["project_1"],
+      dependencyIds: [automation.id, datasource.id],
+      dependencyFingerprint: preview.dependencyFingerprint,
+    })
   })
 
-  it("preserves deselections when dependencies disappear and return", async () => {
-    const automation = {
-      id: "automation_1",
-      name: "Notify operations",
-      type: ResourceType.AUTOMATION,
+  it("refreshes a stale assignment for review, preserving exclusions", async () => {
+    const agent = {
+      id: "agent_1",
+      name: "Support agent",
+      type: ResourceType.AGENT,
       projectIdsToAdd: ["project_1"],
     }
-    const datasource = {
-      id: "datasource_1",
-      name: "Reporting database",
-      type: ResourceType.DATASOURCE,
-      projectIdsToAdd: ["project_2"],
+    const refreshedPreview = {
+      resourceRev: "2-rev",
+      resourceProjectIds: ["project_1", "project_3"],
+      dependencyFingerprint: "updated-fingerprint",
+      dependencies: [agent, automation, datasource],
     }
-    const onPreview = vi.fn(
-      async ({ projectIds }: PreviewProjectAssignmentRequest) => ({
-        dependencyFingerprint,
+    const onConfirm = vi
+      .fn()
+      .mockRejectedValueOnce({ status: 409, message: "Resource has changed" })
+      .mockResolvedValue(undefined)
+    const onPreview = vi.fn().mockResolvedValue(preview)
+    render(AssignProjectModal, { resource, onPreview, onConfirm })
+
+    await advancePreviewDebounce()
+    await fireEvent.click(screen.getByLabelText(automation.name))
+    const projectSelect = screen.getByLabelText("Projects")
+    for (const option of within(projectSelect).getAllByRole("option")) {
+      const projectOption = option as HTMLOptionElement
+      projectOption.selected = projectOption.textContent === "Reporting"
+    }
+    await fireEvent.change(projectSelect)
+    await advancePreviewDebounce()
+    await fireEvent.click(screen.getByText("Save changes"))
+    onPreview.mockResolvedValue(refreshedPreview)
+    await fireEvent.click(screen.getByText("Refresh and review"))
+    await advancePreviewDebounce()
+    await advancePreviewDebounce()
+    await fireEvent.click(screen.getByText("Save changes"))
+
+    expect(screen.getByLabelText(automation.name)).not.toBeChecked()
+    expect(onConfirm).toHaveBeenLastCalledWith({
+      resourceRev: refreshedPreview.resourceRev,
+      projectIds: ["project_3", "project_2"],
+      dependencyIds: [agent.id, datasource.id],
+      dependencyFingerprint: refreshedPreview.dependencyFingerprint,
+    })
+  })
+
+  it("retries a failed save without refreshing the assignment", async () => {
+    const onConfirm = vi
+      .fn()
+      .mockRejectedValueOnce({ status: 503, message: "Please try again" })
+      .mockResolvedValue(undefined)
+    render(AssignProjectModal, {
+      resource,
+      onPreview: vi.fn().mockResolvedValue(preview),
+      onConfirm,
+    })
+
+    await advancePreviewDebounce()
+    await fireEvent.click(screen.getByText("Save changes"))
+    await fireEvent.click(screen.getByText("Save changes"))
+
+    expect(onConfirm).toHaveBeenCalledTimes(2)
+    expect(onConfirm).toHaveBeenLastCalledWith({
+      resourceRev: resource.revision,
+      projectIds: ["project_1"],
+      dependencyIds: [automation.id, datasource.id],
+      dependencyFingerprint: preview.dependencyFingerprint,
+    })
+  })
+
+  it("preserves exclusions when dependencies disappear and return", async () => {
+    const onConfirm = vi.fn()
+    render(AssignProjectModal, {
+      resource,
+      onPreview: vi.fn(async ({ projectIds }) => ({
+        ...preview,
         dependencies: projectIds.includes("project_2")
           ? [datasource]
           : [automation],
-      })
-    )
-    const onConfirm = vi.fn()
-
-    render(AssignProjectModal, {
-      props: {
-        resource,
-        onPreview,
-        onConfirm,
-      },
+      })),
+      onConfirm,
     })
 
     await advancePreviewDebounce()
-    await waitFor(() =>
-      expect(screen.getByText("1 of 1 selected")).toBeTruthy()
-    )
-    await fireEvent.click(screen.getByLabelText("Notify operations"))
-
-    const projectSelect = screen.getByLabelText("Projects")
-    const reportingOption = within(projectSelect).getByRole("option", {
-      name: "Reporting",
-    }) as HTMLOptionElement
-    reportingOption.selected = true
-    await fireEvent.change(projectSelect)
-    await tick()
-
-    expect(screen.queryByText("1 related resource excluded")).toBeNull()
-
-    await advancePreviewDebounce()
-    await waitFor(() =>
-      expect(screen.getByText("1 of 1 selected")).toBeTruthy()
-    )
-    expect(screen.queryByLabelText("Notify operations")).toBeNull()
-    expect(screen.getByLabelText("Reporting database")).toBeChecked()
-
-    reportingOption.selected = false
-    await fireEvent.change(projectSelect)
-    await advancePreviewDebounce()
-    await waitFor(() =>
-      expect(screen.getByText("0 of 1 selected")).toBeTruthy()
-    )
-    expect(screen.getByLabelText("Notify operations")).not.toBeChecked()
-
+    await fireEvent.click(screen.getByLabelText(automation.name))
+    await toggleReportingProject()
+    await toggleReportingProject()
     await fireEvent.click(screen.getByText("Save changes"))
+
+    expect(screen.getByLabelText(automation.name)).not.toBeChecked()
     expect(onConfirm).toHaveBeenCalledWith({
+      resourceRev: resource.revision,
       projectIds: ["project_1"],
       dependencyIds: [],
-      dependencyFingerprint,
+      dependencyFingerprint: preview.dependencyFingerprint,
     })
   })
 
@@ -242,67 +274,30 @@ describe("AssignProjectModal", () => {
         resolveSecond = resolve
       }
     )
-    const onPreview = vi
-      .fn()
-      .mockReturnValueOnce(firstPreview)
-      .mockReturnValueOnce(secondPreview)
     const onConfirm = vi.fn()
-
     render(AssignProjectModal, {
-      props: {
-        resource,
-        onPreview,
-        onConfirm,
-      },
+      resource,
+      onPreview: vi
+        .fn()
+        .mockReturnValueOnce(firstPreview)
+        .mockReturnValueOnce(secondPreview),
+      onConfirm,
     })
 
     await advancePreviewDebounce()
-    await waitFor(() => expect(onPreview).toHaveBeenCalledTimes(1))
-    const projectSelect = screen.getByLabelText("Projects")
-    const reportingOption = within(projectSelect).getByRole("option", {
-      name: "Reporting",
-    }) as HTMLOptionElement
-    reportingOption.selected = true
-    await fireEvent.change(projectSelect)
-    await advancePreviewDebounce()
-    await waitFor(() => expect(onPreview).toHaveBeenCalledTimes(2))
-
-    resolveSecond({
-      dependencyFingerprint,
-      dependencies: [
-        {
-          id: "datasource_latest",
-          name: "Latest dependency",
-          type: ResourceType.DATASOURCE,
-          projectIdsToAdd: ["project_2"],
-        },
-      ],
-    })
-    await waitFor(() =>
-      expect(screen.getByText("Latest dependency")).toBeTruthy()
-    )
-
-    resolveFirst({
-      dependencyFingerprint: "stale-fingerprint",
-      dependencies: [
-        {
-          id: "automation_stale",
-          name: "Stale dependency",
-          type: ResourceType.AUTOMATION,
-          projectIdsToAdd: ["project_1"],
-        },
-      ],
-    })
+    await toggleReportingProject()
+    resolveSecond({ ...preview, dependencies: [datasource] })
     await tick()
-
-    expect(screen.queryByText("Stale dependency")).toBeNull()
-    expect(screen.getByText("Latest dependency")).toBeTruthy()
-
+    resolveFirst({ ...preview, dependencies: [automation] })
+    await tick()
     await fireEvent.click(screen.getByText("Save changes"))
+
+    expect(screen.queryByText(automation.name)).toBeNull()
     expect(onConfirm).toHaveBeenCalledWith({
+      resourceRev: resource.revision,
       projectIds: ["project_1", "project_2"],
-      dependencyIds: ["datasource_latest"],
-      dependencyFingerprint,
+      dependencyIds: [datasource.id],
+      dependencyFingerprint: preview.dependencyFingerprint,
     })
   })
 })
