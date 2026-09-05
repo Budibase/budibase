@@ -950,10 +950,13 @@ describe("/projects", () => {
             url: "/unassigned-app",
           })
         )
-        const analyzeDependencies = jest.spyOn(
-          sdk.resources,
-          "analyzeResourceDependencies"
+        const analyzeDependencies = jest.fn(
+          sdk.resources.analyzeResourceDependencies
         )
+        const resources = jest.replaceProperty(sdk, "resources", {
+          ...sdk.resources,
+          analyzeResourceDependencies: analyzeDependencies,
+        })
 
         try {
           await config.api.workspaceApp.update({
@@ -968,7 +971,7 @@ describe("/projects", () => {
           })
           expect(analyzeDependencies).not.toHaveBeenCalled()
         } finally {
-          analyzeDependencies.mockRestore()
+          resources.restore()
         }
       })
     })
@@ -1035,15 +1038,18 @@ describe("/projects", () => {
         const persistedScreen = (await config.api.screen.list()).find(
           candidate => candidate._id === screen._id
         )!
-        const analyzeDependencies = jest.spyOn(
-          sdk.resources,
-          "analyzeResourceDependencies"
+        const analyzeDependencies = jest.fn(
+          sdk.resources.analyzeResourceDependencies
         )
+        const resources = jest.replaceProperty(sdk, "resources", {
+          ...sdk.resources,
+          analyzeResourceDependencies: analyzeDependencies,
+        })
         try {
           await config.api.screen.save(persistedScreen)
           expect(analyzeDependencies).not.toHaveBeenCalled()
         } finally {
-          analyzeDependencies.mockRestore()
+          resources.restore()
         }
         expect(
           (await config.api.automation.get(automation._id!)).projectIds
