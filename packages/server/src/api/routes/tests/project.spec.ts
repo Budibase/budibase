@@ -2973,9 +2973,11 @@ describe("/projects", () => {
     const exportThenImportUnsanitisedEmailAutomation = async ({
       projectId,
       credentials,
+      beforeExport,
     }: {
       projectId: string
       credentials: Partial<EmailTriggerInputs> & { oauth2ConfigId?: string }
+      beforeExport?: () => Promise<void>
     }) => {
       const sourceAutomation = createAutomationBuilder(config)
         .onEmail({ ...emailSettings, ...credentials })
@@ -2984,6 +2986,7 @@ describe("/projects", () => {
         ...sourceAutomation,
         projectIds: [projectId],
       })
+      await beforeExport?.()
       const files = await readTarEntries(
         await config.api.project.export(projectId)
       )
@@ -3059,6 +3062,16 @@ describe("/projects", () => {
             authType: EmailTriggerAuthType.OAUTH2,
             datasourceId: datasource._id,
             authConfigId: "auth_source",
+          },
+          beforeExport: async () => {
+            const assignedDatasource = await config.api.datasource.get(
+              datasource._id!
+            )
+            await config.api.project.updateAssignment(assignedDatasource._id!, {
+              resourceRev: assignedDatasource._rev!,
+              projectIds: [],
+              dependencyIds: [],
+            })
           },
         })
 
