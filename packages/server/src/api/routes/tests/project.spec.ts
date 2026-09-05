@@ -870,53 +870,12 @@ describe("/projects", () => {
   })
 
   describe("preserves assignments when updates omit project ids", () => {
-    const createAssignedResources = async (projectId: string) => {
-      const { workspaceApp } = await config.api.workspaceApp.create(
-        structures.workspaceApps.createRequest({
-          name: "Ops app",
-          url: "/ops-app",
-          projectIds: [projectId],
-        })
-      )
-      const automation = await config.createAutomation()
-      const { automation: assignedAutomation } =
-        await config.api.automation.update({
-          ...automation,
-          projectIds: [projectId],
-        })
-      const agent = await config.api.agent.create({
-        name: "Ops agent",
-        aiconfig: "default",
-        projectIds: [projectId],
-      })
-      const table = await config.api.table.save({
-        ...basicTable(),
-        projectIds: [projectId],
-      })
-      const datasource = await config.api.datasource.create({
-        ...basicDatasource().datasource,
-        projectIds: [projectId],
-      })
-      const query = await config.api.query.save({
-        ...basicQuery(datasource._id!),
-        projectIds: [projectId],
-      })
-      return {
-        workspaceApp,
-        assignedAutomation,
-        agent,
-        table,
-        datasource,
-        query,
-      }
-    }
-
     it("preserves workspace app assignments", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
           name: "Operations",
         })
-        const { workspaceApp } = await createAssignedResources(project._id)
+        const workspaceApp = await createAssignedWorkspaceApp(project._id)
 
         const updatedWorkspaceApp = await config.doInContext(
           config.getDevWorkspaceId(),
@@ -942,9 +901,12 @@ describe("/projects", () => {
         const { project } = await config.api.project.create({
           name: "Operations",
         })
-        const { assignedAutomation } = await createAssignedResources(
-          project._id
-        )
+        const automation = await config.createAutomation()
+        const { automation: assignedAutomation } =
+          await config.api.automation.update({
+            ...automation,
+            projectIds: [project._id],
+          })
 
         const { projectIds: _automationProjectIds, ...automationUpdate } =
           assignedAutomation
@@ -963,7 +925,11 @@ describe("/projects", () => {
         const { project } = await config.api.project.create({
           name: "Operations",
         })
-        const { agent } = await createAssignedResources(project._id)
+        const agent = await config.api.agent.create({
+          name: "Ops agent",
+          aiconfig: "default",
+          projectIds: [project._id],
+        })
 
         const { projectIds: _agentProjectIds, ...agentUpdate } = agent
         const updatedAgent = await config.api.agent.update({
@@ -980,7 +946,7 @@ describe("/projects", () => {
         const { project } = await config.api.project.create({
           name: "Operations",
         })
-        const { table } = await createAssignedResources(project._id)
+        const table = await createAssignedInternalTable(project._id)
 
         const { projectIds: _tableProjectIds, ...tableUpdate } = table
         const updatedTable = await config.api.table.save({
@@ -997,7 +963,10 @@ describe("/projects", () => {
         const { project } = await config.api.project.create({
           name: "Operations",
         })
-        const { datasource } = await createAssignedResources(project._id)
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          projectIds: [project._id],
+        })
 
         const { projectIds: _datasourceProjectIds, ...datasourceUpdate } =
           datasource
@@ -1015,7 +984,8 @@ describe("/projects", () => {
         const { project } = await config.api.project.create({
           name: "Operations",
         })
-        const { query } = await createAssignedResources(project._id)
+        const datasource = await config.createDatasource()
+        const query = await config.api.query.save(basicQuery(datasource._id))
         await config.doInContext(config.getDevWorkspaceId(), async () => {
           const persistedQuery = await context
             .getWorkspaceDB()
@@ -1148,7 +1118,7 @@ describe("/projects", () => {
         const excluded = await config.api.project.updateAssignment(
           workspaceApp._id!,
           {
-            resourceRev: workspaceApp._rev!,
+            resourceRev: preview.resourceRev,
             projectIds,
             dependencyIds: [],
           }
@@ -1163,12 +1133,16 @@ describe("/projects", () => {
           resourceId: workspaceApp._id!,
           projectIds,
         })
-        expect(repairPreview.dependencies).toEqual(preview.dependencies)
+        expect(repairPreview).toMatchObject({
+          resourceRev: excluded.resourceRev,
+          resourceProjectIds: projectIds,
+          dependencies: preview.dependencies,
+        })
 
         const included = await config.api.project.updateAssignment(
           workspaceApp._id!,
           {
-            resourceRev: excluded.resourceRev,
+            resourceRev: repairPreview.resourceRev,
             projectIds,
             dependencyIds: [automation._id!],
           }
