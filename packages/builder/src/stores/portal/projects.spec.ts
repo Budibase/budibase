@@ -185,36 +185,6 @@ describe("ProjectsStore", () => {
     expect(getProjects(store)).toEqual([updated, alpha])
   })
 
-  it("does not update projects after the workspace changes", async () => {
-    const store = new ProjectsStore()
-    const pendingUpdate = defer<UpdateProjectResponse>()
-    const original = project("project_1")
-    const updated: ProjectResponse = {
-      ...original,
-      _rev: "2-rev",
-      name: "Updated project",
-    }
-    const secondWorkspaceProject = project("workspace_2_project")
-
-    fetchProjects
-      .mockResolvedValueOnce({ projects: [original] })
-      .mockResolvedValueOnce({ projects: [secondWorkspaceProject] })
-    updateProject.mockReturnValue(pendingUpdate.promise)
-
-    await store.fetch("app_workspace_1")
-    const updatePromise = store.updateProject({
-      _id: original._id,
-      _rev: original._rev,
-      name: updated.name,
-    })
-    await store.fetch("app_workspace_2")
-
-    pendingUpdate.resolve({ project: updated })
-
-    await updatePromise
-    expect(getProjects(store)).toEqual([secondWorkspaceProject])
-  })
-
   it("does not let an in-flight fetch re-add a deleted project", async () => {
     const store = new ProjectsStore()
     const fetch = defer<FetchProjectsResponse>()
@@ -234,24 +204,37 @@ describe("ProjectsStore", () => {
     expect(getProjects(store)).toEqual([retained])
   })
 
-  it("does not apply a late delete after the workspace changes", async () => {
-    const store = new ProjectsStore()
-    const pendingDelete = defer<void>()
-    const deleted = project("project_1")
-    const secondWorkspaceProject = project("workspace_2_project")
+  it.each(["update", "delete"])(
+    "does not let a late %s discard the next workspace's fetch",
+    async operation => {
+      const store = new ProjectsStore()
+      const pendingMutation = defer<void>()
+      const secondFetch = defer<FetchProjectsResponse>()
+      const original = project("project_1")
+      const secondWorkspaceProject = project("workspace_2_project")
 
-    fetchProjects
-      .mockResolvedValueOnce({ projects: [deleted] })
-      .mockResolvedValueOnce({ projects: [secondWorkspaceProject] })
-    deleteProject.mockReturnValue(pendingDelete.promise)
+      fetchProjects
+        .mockResolvedValueOnce({ projects: [original] })
+        .mockReturnValueOnce(secondFetch.promise)
+      updateProject.mockImplementation(async () => {
+        await pendingMutation.promise
+        return { project: original }
+      })
+      deleteProject.mockReturnValue(pendingMutation.promise)
 
-    await store.fetch("app_workspace_1")
-    const deletePromise = store.deleteProject(deleted._id, deleted._rev)
-    await store.fetch("app_workspace_2")
+      await store.fetch("app_workspace_1")
+      const mutation =
+        operation === "update"
+          ? store.updateProject(original)
+          : store.deleteProject(original._id, original._rev)
+      const workspaceFetch = store.fetch("app_workspace_2")
 
-    pendingDelete.resolve()
+      pendingMutation.resolve()
+      await mutation
+      secondFetch.resolve({ projects: [secondWorkspaceProject] })
+      await workspaceFetch
 
-    await deletePromise
-    expect(getProjects(store)).toEqual([secondWorkspaceProject])
-  })
+      expect(getProjects(store)).toEqual([secondWorkspaceProject])
+    }
+  )
 })
