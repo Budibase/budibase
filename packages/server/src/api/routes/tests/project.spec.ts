@@ -3095,6 +3095,16 @@ describe("/projects", () => {
             ...sourceAutomation,
             projectIds: [project._id],
           })
+          if (credentials.datasourceId && !includeDatasource) {
+            const datasource = await config.api.datasource.get(
+              credentials.datasourceId
+            )
+            await config.api.project.updateAssignment(datasource._id!, {
+              resourceRev: datasource._rev!,
+              projectIds: [],
+              dependencyIds: [],
+            })
+          }
           const files = await readTarEntries(
             await config.api.project.export(project._id)
           )
