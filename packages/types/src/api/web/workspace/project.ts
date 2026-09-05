@@ -47,6 +47,8 @@ export interface ProjectAssignmentDependency extends UsedResource {
 }
 
 export interface PreviewProjectAssignmentResponse {
+  resourceRev: string
+  resourceProjectIds: string[]
   dependencies: ProjectAssignmentDependency[]
   dependencyFingerprint: string
 }
@@ -76,7 +78,11 @@ export interface ImportProjectRequest {
 }
 
 export interface ProjectImportRequirement {
-  type: "datasource_secrets" | "agent_secrets" | "agent_ai_config"
+  type:
+    | "datasource_secrets"
+    | "agent_secrets"
+    | "agent_ai_config"
+    | "automation_credentials"
   resourceId: string
   name: string
   reason: string

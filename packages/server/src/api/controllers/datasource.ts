@@ -41,11 +41,7 @@ import { getQueryParams, getTableParams } from "../../db/utils"
 import sdk from "../../sdk"
 import { processTable } from "../../sdk/workspace/tables/getters"
 import { invalidateCachedVariable } from "../../threads/utils"
-import {
-  propagateProjectDependencyChangesWithWarning,
-  resolveProjectIds,
-  resolveUpdatedProjectIds,
-} from "../../utilities/projects"
+import { propagateProjectDependencyChangesWithWarning } from "../../utilities/projects"
 import { builderSocket } from "../../websockets"
 
 async function clearOAuth2TokenCaches(datasource: Datasource) {
@@ -255,10 +251,10 @@ async function updateUnlocked(
     ...baseDatasource,
     ...sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource),
   }
-  datasource.projectIds = await resolveUpdatedProjectIds(
-    ctx.request.body.projectIds,
-    baseDatasource.projectIds
-  )
+  datasource.projectIds = await sdk.projects.resolveUpdatedProjectIds({
+    projectIds: ctx.request.body.projectIds,
+    currentProjectIds: baseDatasource.projectIds,
+  })
   stripDatasourceEntityProjectIds(datasource)
 
   // this block is specific to GSheets, if no auth set, set it back
@@ -315,7 +311,8 @@ async function updateUnlocked(
     : await persistDatasource()
   datasource._rev = response.rev
 
-  await propagateProjectDependencyChangesWithWarning(ctx, {
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
     rootResourceId: datasource._id!,
     currentProjectIds: datasource.projectIds,
     previousProjectIds: baseDatasource.projectIds,
@@ -350,44 +347,47 @@ export async function update(
   )
 }
 
-async function saveUnlocked(
+export async function save(
   ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
 ) {
-  const {
-    datasource: datasourceData,
-    fetchSchema,
-    tablesFilter,
-  } = ctx.request.body
-  datasourceData.projectIds = await resolveProjectIds(datasourceData.projectIds)
-  stripDatasourceEntityProjectIds(datasourceData)
-  const persistDatasource = async () => {
-    const restTemplateId = datasourceData.restTemplateId
-    if (isCustomRestTemplateId(restTemplateId)) {
-      const templateExists = await sdk.restTemplates.exists(restTemplateId)
-      if (!templateExists) {
-        throw new HTTPError("Custom REST template not found", 404)
+  const { datasource, errors } = await sdk.datasources.prepareForSave(
+    ctx.request.body
+  )
+
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(async () => {
+    datasource.projectIds = await sdk.projects.resolveProjectIds(
+      datasource.projectIds
+    )
+    stripDatasourceEntityProjectIds(datasource)
+    const persistDatasource = async () => {
+      const restTemplateId = datasource.restTemplateId
+      if (isCustomRestTemplateId(restTemplateId)) {
+        const templateExists = await sdk.restTemplates.exists(restTemplateId)
+        if (!templateExists) {
+          throw new HTTPError("Custom REST template not found", 404)
+        }
       }
+
+      return await sdk.datasources.save({ datasource })
     }
 
-    return await sdk.datasources.save(datasourceData, {
-      fetchSchema,
-      tablesFilter,
-    })
-  }
-
-  const restTemplateId = datasourceData.restTemplateId
-  const { datasource, errors } = isCustomRestTemplateId(restTemplateId)
-    ? await sdk.restTemplates.withCustomRestTemplateLock({
+    const restTemplateId = datasource.restTemplateId
+    if (isCustomRestTemplateId(restTemplateId)) {
+      await sdk.restTemplates.withCustomRestTemplateLock({
         resource: restTemplateId,
         task: persistDatasource,
       })
-    : await persistDatasource()
+    } else {
+      await persistDatasource()
+    }
 
-  await propagateProjectDependencyChangesWithWarning(ctx, {
-    rootResourceId: datasource._id!,
-    currentProjectIds: datasource.projectIds,
-    previousProjectIds: [],
-    savedResource: datasource,
+    await propagateProjectDependencyChangesWithWarning({
+      ctx,
+      rootResourceId: datasource._id!,
+      currentProjectIds: datasource.projectIds,
+      previousProjectIds: [],
+      savedResource: datasource,
+    })
   })
 
   ctx.body = {
@@ -397,14 +397,6 @@ async function saveUnlocked(
     errors,
   }
   builderSocket?.emitDatasourceUpdate(ctx, datasource)
-}
-
-export async function save(
-  ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
-) {
-  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
-    saveUnlocked(ctx)
-  )
 }
 
 async function destroyInternalTablesBySourceId(datasourceId: string) {

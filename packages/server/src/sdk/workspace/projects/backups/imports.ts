@@ -19,6 +19,7 @@ import {
   Datasource,
   DocumentType,
   ImportProjectResponse,
+  isEmailTrigger,
   isWebhookTrigger,
   Project,
   ProjectImportRequirement,
@@ -49,6 +50,7 @@ import {
   generateRowActionsID,
   generateScreenID,
   generateTableID,
+  generateViewID,
 } from "../../../../db/utils"
 import { isExternalTableID } from "../../../../integrations/utils"
 import { getAutomationTriggerToolName } from "../../../../ai/tools/budibase/automations"
@@ -78,8 +80,6 @@ const IMPORT_ORDER: ResourceType[] = [
   ResourceType.WORKSPACE_APP,
   ResourceType.SCREEN,
 ]
-
-const ALLOWED_IMPORT_TYPES = new Set(IMPORT_ORDER)
 
 const isAllowedImportType = (value: unknown): value is ResourceType =>
   typeof value === "string" && IMPORT_ORDER.some(type => type === value)
@@ -119,17 +119,6 @@ const isProjectPackageTarEntryTypeSupported = (type?: string) => {
     PROJECT_PACKAGE_METADATA_ENTRY_TYPES.has(type)
   )
 }
-
-const PREASSIGNED_IMPORT_TYPES: ResourceType[] = [
-  ResourceType.AGENT,
-  ResourceType.DATASOURCE,
-  ResourceType.TABLE,
-  ResourceType.AUTOMATION,
-  ResourceType.ROW_ACTION,
-  ResourceType.WORKSPACE_APP,
-  ResourceType.SCREEN,
-  ResourceType.QUERY,
-]
 
 interface ImportedDoc {
   resourceType: ResourceType
@@ -333,13 +322,10 @@ const getResourceTypeForDocPath = (
   ) {
     throw new HTTPError(`Unsupported Project doc path '${relPath}'.`, 400)
   }
-  if (
-    !resourceType ||
-    !ALLOWED_IMPORT_TYPES.has(resourceType as ResourceType)
-  ) {
+  if (!isAllowedImportType(resourceType)) {
     throw new HTTPError(`Unsupported Project doc path '${relPath}'.`, 400)
   }
-  return resourceType as ResourceType
+  return resourceType
 }
 
 const validateDocMatchesPath = (importedDoc: ImportedDoc) => {
@@ -657,6 +643,10 @@ const sanitizeImportedDoc = async (
   }
 
   if (resourceType === ResourceType.AUTOMATION) {
+    Object.assign(
+      remapped,
+      sdk.automations.utils.sanitiseAutomationForExport(remapped as Automation)
+    )
     remapped.appId = workspaceId
     remapped.disabled = true
   }
@@ -788,8 +778,7 @@ const validateUsedResource = (value: unknown) => {
     isRecord(value) &&
     typeof value.id === "string" &&
     typeof value.name === "string" &&
-    isAllowedImportType(value.type) &&
-    ALLOWED_IMPORT_TYPES.has(value.type)
+    isAllowedImportType(value.type)
   )
 }
 
@@ -947,8 +936,30 @@ const validateDependencyIndex = (
   }
 }
 
-const assignImportedIds = (docs: ImportedDoc[], idMap: Map<string, string>) => {
-  for (const resourceType of PREASSIGNED_IMPORT_TYPES) {
+const assignImportedViewIds = ({
+  table,
+  destinationTableId,
+  idMap,
+}: {
+  table: Table
+  destinationTableId: string
+  idMap: Map<string, string>
+}) => {
+  for (const view of Object.values(table.views || {}).filter(
+    helpers.views.isV2
+  )) {
+    idMap.set(view.id, generateViewID(destinationTableId))
+  }
+}
+
+const assignImportedIds = ({
+  docs,
+  idMap,
+}: {
+  docs: ImportedDoc[]
+  idMap: Map<string, string>
+}) => {
+  for (const resourceType of IMPORT_ORDER) {
     for (const importedDoc of docs.filter(
       doc => doc.resourceType === resourceType
     )) {
@@ -956,6 +967,14 @@ const assignImportedIds = (docs: ImportedDoc[], idMap: Map<string, string>) => {
         importedDoc.doc._id!,
         generateImportedId(resourceType, importedDoc.doc, idMap)
       )
+
+      if (resourceType === ResourceType.TABLE) {
+        assignImportedViewIds({
+          table: importedDoc.doc as Table,
+          destinationTableId: idMap.get(importedDoc.doc._id!)!,
+          idMap,
+        })
+      }
 
       if (resourceType === ResourceType.ROW_ACTION) {
         for (const actionId of Object.keys(
@@ -983,10 +1002,9 @@ const assignImportedIds = (docs: ImportedDoc[], idMap: Map<string, string>) => {
               400
             )
           }
-          idMap.set(
-            entity._id,
-            `${destinationDatasourceId}${entity._id.slice(sourceDatasourceId.length)}`
-          )
+          const destinationTableId = `${destinationDatasourceId}${entity._id.slice(sourceDatasourceId.length)}`
+          idMap.set(entity._id, destinationTableId)
+          assignImportedViewIds({ table: entity, destinationTableId, idMap })
         }
       }
     }
@@ -1279,6 +1297,21 @@ async function extractProjectPackage(
 
 const buildRequirements = (docs: ImportedDoc[]): ProjectImportRequirement[] => {
   return docs.flatMap<ProjectImportRequirement>(importedDoc => {
+    if (
+      importedDoc.resourceType === ResourceType.AUTOMATION &&
+      isEmailTrigger((importedDoc.doc as Automation).definition?.trigger)
+    ) {
+      return [
+        {
+          type: "automation_credentials",
+          resourceId: importedDoc.doc._id!,
+          name: importedDoc.doc.name || "Unknown",
+          reason:
+            "Email trigger credentials are excluded from Project exports. Reconnect the mailbox before enabling this automation.",
+        },
+      ]
+    }
+
     if (importedDoc.resourceType === ResourceType.DATASOURCE) {
       const doc = importedDoc.doc as Datasource
       return [
@@ -1346,7 +1379,7 @@ export async function importProject(
           [extracted.manifest.sourceWorkspace.id, workspaceId],
         ])
 
-        assignImportedIds(extracted.docs, idMap)
+        assignImportedIds({ docs: extracted.docs, idMap })
         const idRemapper = createProjectImportIdRemapper(
           idMap,
           buildImportedToolNameMap(extracted.docs, idMap)

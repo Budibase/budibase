@@ -32,11 +32,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { apiFileReturn } from "../../../utilities/fileSystem"
-import {
-  propagateProjectDependencyChangesWithWarning,
-  resolveProjectIds,
-  resolveUpdatedProjectIds,
-} from "../../../utilities/projects"
+import { propagateProjectDependencyChangesWithWarning } from "../../../utilities/projects"
 import { toAgentResponse } from "./agentResponse"
 
 const SLACK_OAUTH_STATE_TTL_SECONDS = 600
@@ -327,7 +323,7 @@ async function createAgentUnlocked(
   const body = ctx.request.body
   const createdBy = ctx.user?._id!
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
-  const projectIds = await resolveProjectIds(body.projectIds)
+  const projectIds = await sdk.projects.resolveProjectIds(body.projectIds)
 
   const createRequest: Parameters<typeof sdk.ai.agents.create>[number] = {
     name: body.name,
@@ -340,12 +336,14 @@ async function createAgentUnlocked(
     live: body.live,
     _deleted: false,
     createdBy: globalId,
+    allowConversationAttachments: body.allowConversationAttachments,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
-  await propagateProjectDependencyChangesWithWarning(ctx, {
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
     rootResourceId: agent._id!,
     currentProjectIds: agent.projectIds,
     previousProjectIds: [],
@@ -369,10 +367,10 @@ async function updateAgentUnlocked(
 ) {
   const body = ctx.request.body
   const existing = await sdk.ai.agents.getOrThrow(body._id)
-  const projectIds = await resolveUpdatedProjectIds(
-    body.projectIds,
-    existing.projectIds
-  )
+  const projectIds = await sdk.projects.resolveUpdatedProjectIds({
+    projectIds: body.projectIds,
+    currentProjectIds: existing.projectIds,
+  })
 
   const updateRequest: RequiredKeys<UpdateAgentRequest> = {
     _id: body._id,
@@ -386,6 +384,9 @@ async function updateAgentUnlocked(
     iconColor: body.iconColor,
     live: body.live,
     publishedAt: undefined,
+    allowConversationAttachments:
+      body.allowConversationAttachments ??
+      existing.allowConversationAttachments,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
   }
@@ -394,7 +395,8 @@ async function updateAgentUnlocked(
     ...existing,
     ...updateRequest,
   })
-  await propagateProjectDependencyChangesWithWarning(ctx, {
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
     rootResourceId: agent._id!,
     currentProjectIds: agent.projectIds,
     previousProjectIds: existing.projectIds,

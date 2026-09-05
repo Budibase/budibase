@@ -2,9 +2,11 @@ import { context, encryption } from "@budibase/backend-core"
 import {
   Agent,
   AnyDocument,
+  Automation,
   Datasource,
   INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
+  isEmailTrigger,
   KnowledgeBaseFile,
   Project,
   ProjectPackageDependencyIndex,
@@ -26,7 +28,6 @@ import { isExternalTableID } from "../../../../integrations/utils"
 import { collectTransitiveResourceDependencies } from "../../resources"
 import {
   compareResourceIds,
-  compareResourceTypes,
   isDisallowedProjectAssignmentResourceId,
 } from "../../resources/utils"
 import {
@@ -59,14 +60,10 @@ async function tarFilesToTmp(tmpDir: string, files: string[]) {
   return exportFile
 }
 
-function getExportDirectoryName(resourceType: ResourceType) {
-  return resourceType
-}
-
 const sortResources = (resources: UsedResource[]) =>
   [...resources].sort(
     (a, b) =>
-      compareResourceTypes(a.type, b.type) || compareResourceIds(a.id, b.id)
+      compareResourceIds(a.type, b.type) || compareResourceIds(a.id, b.id)
   )
 
 const toTimestamp = (timestamp?: string | number) => {
@@ -275,6 +272,12 @@ async function sanitizeDocumentForExport(
     }
   }
 
+  if (type === ResourceType.AUTOMATION) {
+    return sdk.automations.utils.sanitiseAutomationForExport(
+      sanitized as Automation
+    )
+  }
+
   if (!isProjectAssignableResourceType(type)) {
     delete sanitized.projectIds
   }
@@ -310,12 +313,19 @@ function countManifestResourcesByType(dependencies: UsedResource[]) {
   return resourcesByType
 }
 
-function buildManifest(
-  project: Project,
-  workspaceId: string,
-  dependencies: UsedResource[],
+function buildManifest({
+  project,
+  workspaceId,
+  dependencies,
+  unsupportedContent,
+  requiresEmailCredentials,
+}: {
+  project: Project
+  workspaceId: string
+  dependencies: UsedResource[]
   unsupportedContent: ProjectPackageUnsupportedContent[]
-): ProjectPackageManifest {
+  requiresEmailCredentials: boolean
+}): ProjectPackageManifest {
   const createdAt = getProjectCreatedAt(project)
   const resourcesByType = countManifestResourcesByType(dependencies)
 
@@ -340,7 +350,8 @@ function buildManifest(
     containsAttachments: false,
     requiresSecrets:
       !!resourcesByType[ResourceType.DATASOURCE] ||
-      !!resourcesByType[ResourceType.AGENT],
+      !!resourcesByType[ResourceType.AGENT] ||
+      requiresEmailCredentials,
     unsupportedContent,
   }
 }
@@ -485,12 +496,17 @@ export async function exportProject(
     },
   }
 
-  const manifest = buildManifest(
+  const manifest = buildManifest({
     project,
     workspaceId,
-    projectDependencies,
-    unsupportedContent
-  )
+    dependencies: projectDependencies,
+    unsupportedContent,
+    requiresEmailCredentials: exportedDocs.some(
+      doc =>
+        typeByResourceId.get(doc._id!) === ResourceType.AUTOMATION &&
+        isEmailTrigger((doc as Automation).definition?.trigger)
+    ),
+  })
   const screenWorkspaceAppIdByScreenId = new Map<string, string>()
 
   for (const workspaceAppId of docsToExport.filter(
@@ -529,12 +545,7 @@ export async function exportProject(
           screenWorkspaceAppIdByScreenId
         )
         await writeJsonFile(
-          join(
-            tmpPath,
-            PROJECT_DOCS_DIRECTORY,
-            getExportDirectoryName(type),
-            `${doc._id}.json`
-          ),
+          join(tmpPath, PROJECT_DOCS_DIRECTORY, type, `${doc._id}.json`),
           sanitized
         )
       })

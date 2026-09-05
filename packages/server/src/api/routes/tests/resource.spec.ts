@@ -20,6 +20,7 @@ import {
   ResourceType,
   RowActionResponse,
   Screen,
+  SourceName,
   Table,
   WorkspaceApp,
 } from "@budibase/types"
@@ -171,6 +172,31 @@ describe("/api/resources/usage", () => {
   })
 
   describe("resource usage analysis", () => {
+    it("finds queries referenced by datasource dynamic variables", async () => {
+      const tokenSource = await config.createDatasource()
+      const query = await config.api.query.save(basicQuery(tokenSource._id))
+      const datasource = await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        source: SourceName.REST,
+        config: {
+          url: "https://example.com",
+          dynamicVariables: [
+            { name: "token", queryId: query._id!, value: "token" },
+          ],
+        },
+      })
+
+      const result = await config.api.resource.getResourceDependencies()
+
+      expect(
+        new Set(
+          result.body.resources[datasource._id!].dependencies.map(
+            dependency => dependency.id
+          )
+        )
+      ).toEqual(new Set([tokenSource._id, query._id]))
+    })
+
     it("should detect datasource usage via query screens", async () => {
       const datasource = await config.createDatasource()
       const query = await config.api.query.save(basicQuery(datasource._id))

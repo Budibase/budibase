@@ -15,6 +15,7 @@
   import type { MenuItem } from "@/types"
   import {
     FeatureFlag,
+    type UpdateProjectAssignmentRequest,
     type Datasource,
     type UIInternalDatasource,
   } from "@budibase/types"
@@ -30,10 +31,7 @@
   import UpdateDatasourceModal from "@/components/backend/DatasourceNavigator/modals/UpdateDatasourceModal.svelte"
   import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
   import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
-  import {
-    saveProjectAssignment,
-    type ProjectAssignmentSelection,
-  } from "@/components/projects/assignments"
+  import { saveProjectAssignment } from "@/components/projects/assignments"
   import { featureFlags, projectsStore } from "@/stores/portal"
 
   $goto
@@ -94,19 +92,15 @@
     assignProjectModal?.show()
   }
 
-  const assignProject = async (selection: ProjectAssignmentSelection) => {
+  const assignProject = async (selection: UpdateProjectAssignmentRequest) => {
     if (!assignableDatasource) {
       return keepOpen
     }
 
-    const saved = await saveProjectAssignment({
+    await saveProjectAssignment({
       resourceId: assignableDatasource._id!,
-      resourceRev: assignableDatasource._rev!,
       selection,
     })
-    if (!saved) {
-      return keepOpen
-    }
     assignProjectModal?.hide()
 
     await refreshDataStores()
