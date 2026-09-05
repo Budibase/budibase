@@ -4,8 +4,6 @@ import {
   AnyDocument,
   Automation,
   Datasource,
-  INTERNAL_TABLE_SOURCE_ID,
-  InternalTable,
   isEmailTrigger,
   KnowledgeBaseFile,
   Project,
@@ -24,10 +22,10 @@ import { v4 as uuid } from "uuid"
 import sdk from "../../.."
 import { budibaseTempDir } from "../../../../utilities/budibaseDir"
 import { streamFile } from "../../../../utilities/fileSystem"
-import { isExternalTableID } from "../../../../integrations/utils"
 import { collectTransitiveResourceDependencies } from "../../resources"
 import {
   compareResourceIds,
+  getResourceType,
   isDisallowedProjectAssignmentResourceId,
 } from "../../resources/utils"
 import {
@@ -79,13 +77,6 @@ const getProjectCreatedAt = (project: Project) =>
   toTimestamp(project.updatedAt) ??
   new Date().toISOString()
 
-const isDirectProjectResource = (
-  doc: AnyDocument,
-  prefix: string,
-  projectId: string
-): doc is AnyDocument & { _id: string } =>
-  !!doc._id && doc._id.startsWith(prefix) && hasProject(doc, projectId)
-
 export async function listAssignedAgentFiles(
   assignedAgents: Agent[],
   listFilesForAgent = sdk.ai.rag.listFilesForAgent
@@ -100,50 +91,28 @@ export async function listAssignedAgentFiles(
 async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
   const assignedDocs = await fetchAssignedProjectDocs(projectId)
 
-  const asUsedResource = (
-    doc: { _id?: string; name?: string },
-    type: ResourceType
-  ): UsedResource => ({
-    id: doc._id!,
-    name: doc.name || "Unknown",
-    type,
-  })
+  return sortResources(
+    assignedDocs.flatMap(doc => {
+      if (
+        !doc._id ||
+        !hasProject(doc, projectId) ||
+        isDisallowedProjectAssignmentResourceId(doc._id)
+      ) {
+        return []
+      }
 
-  return sortResources([
-    ...assignedDocs
-      .filter(
-        datasource =>
-          datasource._id !== INTERNAL_TABLE_SOURCE_ID &&
-          !!datasource._id &&
-          datasource._id.startsWith("datasource_") &&
-          typeof datasource.source === "string" &&
-          hasProject(datasource, projectId)
-      )
-      .map(datasource => asUsedResource(datasource, ResourceType.DATASOURCE)),
-    ...assignedDocs
-      .filter(
-        table =>
-          isDirectProjectResource(table, "ta_", projectId) &&
-          table._id !== InternalTable.USER_METADATA &&
-          !isExternalTableID(table._id)
-      )
-      .map(table => asUsedResource(table, ResourceType.TABLE)),
-    ...assignedDocs
-      .filter(automation =>
-        isDirectProjectResource(automation, "au_", projectId)
-      )
-      .map(automation => asUsedResource(automation, ResourceType.AUTOMATION)),
-    ...assignedDocs
-      .filter(agent => isDirectProjectResource(agent, "agent_", projectId))
-      .map(agent => asUsedResource(agent, ResourceType.AGENT)),
-    ...assignedDocs
-      .filter(workspaceApp =>
-        isDirectProjectResource(workspaceApp, "workspace_app_", projectId)
-      )
-      .map(workspaceApp =>
-        asUsedResource(workspaceApp, ResourceType.WORKSPACE_APP)
-      ),
-  ])
+      const type = getResourceType(doc._id)
+      if (
+        !type ||
+        !isProjectAssignableResourceType(type) ||
+        (type === ResourceType.DATASOURCE && typeof doc.source !== "string")
+      ) {
+        return []
+      }
+
+      return [{ id: doc._id, name: doc.name || "Unknown", type }]
+    })
+  )
 }
 
 async function getExcludedDependencies({
@@ -398,16 +367,7 @@ export async function exportProject(
     const graph = await sdk.resources.getResourcesInfo({
       includeDatasourceQueries: true,
     })
-    const projectDependencies = sortResources(
-      Array.from(
-        new Map(
-          (graph[projectId]?.dependencies || []).map(resource => [
-            resource.id,
-            resource,
-          ])
-        ).values()
-      )
-    )
+    const projectDependencies = graph[projectId]?.dependencies || []
     const [agents, workspaceApps, directMembers] = await Promise.all([
       sdk.ai.agents.fetch(),
       sdk.workspaceApps.fetch(),

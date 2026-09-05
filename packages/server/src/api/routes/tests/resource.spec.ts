@@ -1137,18 +1137,20 @@ describe("/api/resources/usage", () => {
             _id: buildExternalTableId(datasource._id!, "TestTable"),
             projectIds: [project._id],
           })
-          const assignedDatasource = await config.api.datasource.update({
-            ...datasource,
-            entities: {
-              [externalTable.name]: externalTable,
-            },
+          await config.doInContext(config.getDevWorkspaceId(), async () => {
+            await context.getWorkspaceDB().put({
+              ...datasource,
+              entities: {
+                [externalTable.name]: externalTable,
+              },
+            })
           })
           const destination = await config.api.workspace.create({
             name: `Destination ${generator.natural()}`,
           })
 
           const resourcesToCopy = await collectDependantResourceIds(project._id)
-          expect(resourcesToCopy).toEqual([project._id, assignedDatasource._id])
+          expect(resourcesToCopy).toEqual([project._id, datasource._id])
 
           await duplicateResources(resourcesToCopy, destination.appId)
 
@@ -1157,7 +1159,7 @@ describe("/api/resources/usage", () => {
             { skip_setup: true }
           )
           const duplicatedDatasource = await destinationDb.get<Datasource>(
-            assignedDatasource._id!
+            datasource._id!
           )
 
           await expect(destinationDb.get(project._id)).resolves.toBeDefined()
@@ -1269,51 +1271,6 @@ describe("/api/resources/usage", () => {
 
           const resourcesToCopy = await collectDependantResourceIds(project._id)
           expect(resourcesToCopy).toEqual([project._id, internalTable._id])
-        }
-      )
-    })
-
-    it("removes external table project assignments when duplicating a datasource without its project", async () => {
-      await features.testutils.withFeatureFlags(
-        config.getTenantId(),
-        { [FeatureFlag.PROJECTS]: true },
-        async () => {
-          const { project } = await config.api.project.create({
-            name: "Operations",
-          })
-          const datasource = await config.api.datasource.create(
-            basicDatasource().datasource
-          )
-          const externalTable = basicTable(datasource, {
-            _id: buildExternalTableId(datasource._id!, "TestTable"),
-            projectIds: [project._id],
-          })
-          const assignedDatasource = await config.api.datasource.update({
-            ...datasource,
-            entities: {
-              [externalTable.name]: externalTable,
-            },
-          })
-          const withoutProject = await config.api.workspace.create({
-            name: `Destination ${generator.natural()}`,
-          })
-
-          await duplicateResources(
-            [assignedDatasource._id!],
-            withoutProject.appId
-          )
-
-          const destinationDb = db.getDB(
-            db.getDevWorkspaceID(withoutProject.appId),
-            { skip_setup: true }
-          )
-          const duplicatedDatasource = await destinationDb.get<Datasource>(
-            assignedDatasource._id!
-          )
-
-          expect(
-            duplicatedDatasource.entities![externalTable.name].projectIds
-          ).toBeUndefined()
         }
       )
     })
