@@ -105,9 +105,12 @@ merge_dir() {
     echo "MOVE: ${entry} -> ${target}"
     if [ "$APPLY" = "1" ]; then
       mkdir -p "$(dirname "$target")"
-      mv "$entry" "$target"
-    fi
-    echo "moved" >> "$STATE_FILE"
+      if ! mv "$entry" "$target"; then
+        echo "FAILED: could not move ${entry} -> ${target}" >&2
+        echo "conflict" >> "$STATE_FILE"
+      else
+        echo "moved" >> "$STATE_FILE"
+      fi
   done
 
   if [ "$APPLY" = "1" ]; then
