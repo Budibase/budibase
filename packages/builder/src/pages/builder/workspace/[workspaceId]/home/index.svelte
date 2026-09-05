@@ -18,6 +18,7 @@
   import HomeResourcePanel from "./_components/HomeResourcePanel.svelte"
   import HomeTable from "./_components/HomeTable.svelte"
   import ImportProjectModal from "./_components/ImportProjectModal.svelte"
+  import ImportProjectResultModal from "./_components/ImportProjectResultModal.svelte"
   import {
     appStore,
     automationStore,
@@ -57,6 +58,8 @@
     type HomeType,
     type ProjectFormPayload,
     type ProjectResponse,
+    type ImportProjectResponse,
+    type ProjectImportRequirement,
     PublishResourceState,
     type Agent,
     type Table,
@@ -116,6 +119,8 @@
   let assignProjectModal: ModalAPI
   let exportProjectModal: ModalAPI
   let importProjectModal: ModalAPI
+  let importProjectResultModal: ModalAPI
+  let importResult: ImportProjectResponse | undefined
   let createProjectModalKey = 0
   let editProjectModalKey = 0
   let assignProjectModalKey = 0
@@ -498,22 +503,26 @@
     }
   }
 
-  const notifyImportFollowUps = (
-    response: Awaited<ReturnType<typeof projectsStore.importProject>>
-  ) => {
-    if (response.requirements.length) {
-      const names = response.requirements
-        .map(requirement => requirement.name)
-        .join(", ")
-      notifications.warning(`Some imported resources need setup: ${names}`)
+  const importedResourceUrl = ({
+    type,
+    resourceId,
+  }: ProjectImportRequirement) => {
+    let route: string
+    if (type === "datasource_secrets") {
+      const datasource = $datasources.list.find(item => item._id === resourceId)
+      route =
+        datasource?.source === SourceName.REST
+          ? `../apis/datasource/${resourceId}`
+          : `../data/datasource/${resourceId}`
+    } else if (type === "automation_credentials") {
+      route = `../automation/${resourceId}`
+    } else {
+      route = `../agent/${resourceId}/config`
     }
-
-    if (response.unsupportedContent.length) {
-      const summary = response.unsupportedContent
-        .map(item => `${item.count} ${item.type}`)
-        .join(", ")
-      notifications.warning(`Some Project content was not imported: ${summary}`)
-    }
+    return withWorkspaceHomeReturn(
+      url(route),
+      `${window.location.pathname}${window.location.search}`
+    )
   }
 
   const handleImportProject = async ({
@@ -529,13 +538,21 @@
       })
       importProjectModal?.hide()
       notifications.success(`Imported project '${response.project.name}'`)
-      notifyImportFollowUps(response)
-
-      const refreshes = await Promise.allSettled([appStore.refresh()])
+      selectedProjectId = response.project._id
+      typeFilter = "all"
+      searchTerm = ""
+      importResult = response
+      const refreshes = await Promise.allSettled([
+        appStore.refresh(),
+        agentsStore.fetchAgents(),
+      ])
       if (refreshes.some(result => result.status === "rejected")) {
         notifications.warning(
           "Project imported, but some resources could not be refreshed. Reload the workspace to see all imported resources."
         )
+      }
+      if (response.requirements.length || response.unsupportedContent.length) {
+        importProjectResultModal?.show()
       }
     } catch (error) {
       console.error(error)
@@ -1179,6 +1196,16 @@
     {#key importProjectModalKey}
       <ImportProjectModal onConfirm={handleImportProject} />
     {/key}
+  </Modal>
+
+  <Modal bind:this={importProjectResultModal}>
+    {#if importResult}
+      <ImportProjectResultModal
+        response={importResult}
+        resourceUrl={importedResourceUrl}
+        onOpenResource={() => importProjectResultModal.hide()}
+      />
+    {/if}
   </Modal>
 {/if}
 
