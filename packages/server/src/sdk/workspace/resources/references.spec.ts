@@ -167,15 +167,15 @@ describe("resource references", () => {
     ).toEqual([])
   })
 
-  it("matches resource ids in structured reference fields", () => {
+  it.each([
+    { queryId: queryResource.id },
+    { props: { dependencies: [queryResource.id] } },
+  ])("matches resource ids in structured reference fields: %j", resource => {
     const target = createSearchTarget(queryResource)
 
     expect(
       findResourceSearchTargets({
-        resource: {
-          queryId: queryResource.id,
-          props: { dependencies: [queryResource.id] },
-        },
+        resource,
         targets: [target],
       })
     ).toEqual([target])
