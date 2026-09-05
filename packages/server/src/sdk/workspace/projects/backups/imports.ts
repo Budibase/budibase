@@ -708,7 +708,8 @@ const sanitizeImportedDoc = async ({
   if (resourceType === ResourceType.AGENT) {
     Object.assign(
       remapped,
-      sdk.ai.agents.sanitiseAgentForExport(remapped as Agent)
+      sdk.ai.agents.sanitiseAgentForExport(remapped as Agent),
+      { aiconfig: "" }
     )
     delete (remapped as Agent).publishedAt
   }
@@ -1390,17 +1391,25 @@ const buildRequirements = ({
 
     if (importedDoc.resourceType === ResourceType.AGENT) {
       const doc = importedDoc.doc as Agent
+      const requirements: ProjectImportRequirement[] = [
+        {
+          type: "agent_ai_config",
+          resourceId: doc._id!,
+          name: doc.name || "Unknown",
+          reason:
+            "AI configuration references are workspace-specific and must be selected after Project import.",
+        },
+      ]
       if (doc.slackIntegration || doc.MSTeamsIntegration) {
-        return [
-          {
-            type: "agent_secrets" as const,
-            resourceId: doc._id!,
-            name: doc.name || "Unknown",
-            reason:
-              "Agent integration secrets are excluded from Project exports and must be reconfigured after import.",
-          },
-        ]
+        requirements.push({
+          type: "agent_secrets",
+          resourceId: doc._id!,
+          name: doc.name || "Unknown",
+          reason:
+            "Agent integration secrets are excluded from Project exports and must be reconfigured after import.",
+        })
       }
+      return requirements
     }
 
     return []
