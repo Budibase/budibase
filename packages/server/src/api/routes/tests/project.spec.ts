@@ -1577,17 +1577,21 @@ describe("/projects", () => {
       await config.doInContext(undefined, async () => {
         const bulkDocs = jest
           .spyOn(DatabaseImpl.prototype, "bulkDocs")
-          .mockImplementationOnce(async docs =>
-            docs.map((doc, index) =>
-              index === 0
-                ? { id: doc._id!, rev: "2-mock" }
-                : {
-                    id: doc._id!,
-                    error: "conflict",
-                    reason: "cleanup failed",
-                  }
-            )
-          )
+          .mockImplementationOnce(async docs => {
+            const results = []
+            for (const doc of docs) {
+              if (doc._id === workspaceApp._id) {
+                results.push(await context.getWorkspaceDB().put(doc))
+              } else {
+                results.push({
+                  id: doc._id!,
+                  error: "conflict",
+                  reason: "cleanup failed",
+                })
+              }
+            }
+            return results
+          })
 
         try {
           await expect(
@@ -1595,6 +1599,32 @@ describe("/projects", () => {
           ).rejects.toThrow("Failed to clear project assignments.")
         } finally {
           bulkDocs.mockRestore()
+        }
+      })
+
+      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+        workspaceApp._id!
+      )
+      expect(fetchedWorkspaceApp.projectIds).toEqual([project._id])
+    })
+  })
+
+  it("restores assignments when deleting the project fails", async () => {
+    await withProjectsEnabled(async () => {
+      const project = await createAssignedProject()
+      const workspaceApp = await createAssignedWorkspaceApp(project._id)
+
+      await config.doInContext(undefined, async () => {
+        const remove = jest
+          .spyOn(DatabaseImpl.prototype, "remove")
+          .mockRejectedValueOnce(new Error("Project deletion failed"))
+
+        try {
+          await expect(
+            projects.remove(project._id, project._rev)
+          ).rejects.toThrow("Project deletion failed")
+        } finally {
+          remove.mockRestore()
         }
       })
 
