@@ -61,7 +61,8 @@ async function createUnlocked(
     name: ctx.request.body.name,
   })
 
-  await propagateProjectDependencyChangesWithWarning(ctx, {
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
     rootResourceId: tableId,
     currentProjectIds: table.projectIds,
     previousProjectIds: table.projectIds,

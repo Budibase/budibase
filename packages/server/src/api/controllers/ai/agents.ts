@@ -32,9 +32,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { apiFileReturn } from "../../../utilities/fileSystem"
-import {
-  propagateProjectDependencyChangesWithWarning,
-} from "../../../utilities/projects"
+import { propagateProjectDependencyChangesWithWarning } from "../../../utilities/projects"
 import { toAgentResponse } from "./agentResponse"
 
 const SLACK_OAUTH_STATE_TTL_SECONDS = 600
@@ -344,7 +342,8 @@ async function createAgentUnlocked(
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
-  await propagateProjectDependencyChangesWithWarning(ctx, {
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
     rootResourceId: agent._id!,
     currentProjectIds: agent.projectIds,
     previousProjectIds: [],
@@ -396,7 +395,8 @@ async function updateAgentUnlocked(
     ...existing,
     ...updateRequest,
   })
-  await propagateProjectDependencyChangesWithWarning(ctx, {
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
     rootResourceId: agent._id!,
     currentProjectIds: agent.projectIds,
     previousProjectIds: existing.projectIds,

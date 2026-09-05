@@ -176,7 +176,8 @@ const _import = async (
           body.selectedEndpointId
         )
         const datasource = await sdk.datasources.get(datasourceId)
-        await propagateCreatedResourceDependenciesWithWarning(ctx, {
+        await propagateCreatedResourceDependenciesWithWarning({
+          ctx,
           rootResourceId: datasourceId,
           projectIds: datasource.projectIds,
           savedResources: result.queries,
@@ -285,7 +286,8 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   query._rev = response.rev
 
   if (!existingQuery || existingQuery.datasourceId === datasource._id) {
-    await propagateProjectDependencyChangesWithWarning(ctx, {
+    await propagateProjectDependencyChangesWithWarning({
+      ctx,
       rootResourceId: datasource._id!,
       currentProjectIds: datasource.projectIds,
       previousProjectIds: datasource.projectIds,
@@ -302,14 +304,16 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
       projectId => !sourceProjectIds.has(projectId)
     )
 
-    await propagateProjectDependencyChangesWithWarning(ctx, {
+    await propagateProjectDependencyChangesWithWarning({
+      ctx,
       rootResourceId: datasource._id!,
       currentProjectIds: sharedProjectIds,
       previousProjectIds: sharedProjectIds,
       previousResource: existingQuery,
       savedResource: query,
     })
-    await propagateProjectDependencyChangesWithWarning(ctx, {
+    await propagateProjectDependencyChangesWithWarning({
+      ctx,
       rootResourceId: datasource._id!,
       currentProjectIds: destinationOnlyProjectIds,
       previousProjectIds: destinationOnlyProjectIds,
@@ -323,7 +327,8 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
         sourceProjectIds.has(projectId) && !destinationProjectIds.has(projectId)
     )
 
-    await propagateProjectDependencyChangesWithWarning(ctx, {
+    await propagateProjectDependencyChangesWithWarning({
+      ctx,
       rootResourceId: datasource._id!,
       currentProjectIds: newAgentProjectIds,
       previousProjectIds: newAgentProjectIds,
@@ -331,7 +336,8 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
       savedResource: query,
     })
 
-    await propagateProjectIdsToDependencySubtreesWithWarning(ctx, {
+    await propagateProjectIdsToDependencySubtreesWithWarning({
+      ctx,
       blockedResourceIds: [query._id!],
       dependencyIds: [datasource._id!],
       projectIds: newAgentProjectIds,

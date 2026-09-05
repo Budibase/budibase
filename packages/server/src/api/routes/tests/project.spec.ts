@@ -950,7 +950,10 @@ describe("/projects", () => {
             url: "/unassigned-app",
           })
         )
-        const fetchAutomations = jest.spyOn(sdk.automations, "fetch")
+        const analyzeDependencies = jest.spyOn(
+          sdk.resources,
+          "analyzeResourceDependencies"
+        )
 
         try {
           await config.api.workspaceApp.update({
@@ -963,9 +966,9 @@ describe("/projects", () => {
             customTheme: workspaceApp.customTheme,
             disabled: workspaceApp.disabled,
           })
-          expect(fetchAutomations).not.toHaveBeenCalled()
+          expect(analyzeDependencies).not.toHaveBeenCalled()
         } finally {
-          fetchAutomations.mockRestore()
+          analyzeDependencies.mockRestore()
         }
       })
     })
@@ -1032,12 +1035,15 @@ describe("/projects", () => {
         const persistedScreen = (await config.api.screen.list()).find(
           candidate => candidate._id === screen._id
         )!
-        const fetchAutomations = jest.spyOn(sdk.automations, "fetch")
+        const analyzeDependencies = jest.spyOn(
+          sdk.resources,
+          "analyzeResourceDependencies"
+        )
         try {
           await config.api.screen.save(persistedScreen)
-          expect(fetchAutomations).not.toHaveBeenCalled()
+          expect(analyzeDependencies).not.toHaveBeenCalled()
         } finally {
-          fetchAutomations.mockRestore()
+          analyzeDependencies.mockRestore()
         }
         expect(
           (await config.api.automation.get(automation._id!)).projectIds

@@ -29,7 +29,8 @@ async function createAgentOperationUnlocked(
     approvalPolicies: body.approvalPolicies,
     allowKnowledgeSourceDownload: body.allowKnowledgeSourceDownload ?? true,
   })
-  await propagateProjectDependencyChangesWithWarning(ctx, {
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
     rootResourceId: agent._id!,
     currentProjectIds: agent.projectIds,
     previousProjectIds: existing.projectIds,
@@ -69,7 +70,8 @@ async function updateAgentOperationUnlocked(
 
   const existing = await sdk.ai.agents.getOrThrow(agentId)
   const agent = await sdk.ai.agents.updateOperation(agentId, operationId, body)
-  await propagateProjectDependencyChangesWithWarning(ctx, {
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
     rootResourceId: agent._id!,
     currentProjectIds: agent.projectIds,
     previousProjectIds: existing.projectIds,
