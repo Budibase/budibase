@@ -268,6 +268,21 @@ describe("backups", () => {
     })
   })
 
+  it("should process restores in the workspace context", async () => {
+    await config.doInTenant(async () => {
+      let restoreWorkspaceId: string | undefined
+      importWorkspaceFn.mockImplementation(() => {
+        restoreWorkspaceId = context.getCurrentContext()?.appId
+      })
+
+      await createRestore()
+
+      expect(restoreWorkspaceId).toEqual(
+        db.getDevWorkspaceID(config.workspaceId)
+      )
+    })
+  })
+
   it("should overwrite existing target object store files during restore", async () => {
     await config.doInTenant(async () => {
       const backup = await createBackup()

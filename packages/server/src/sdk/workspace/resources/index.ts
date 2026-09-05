@@ -4,6 +4,7 @@ import {
   events,
   HTTPError,
   logging,
+  locks,
   objectStore,
   features,
 } from "@budibase/backend-core"
@@ -20,6 +21,8 @@ import {
   FieldType,
   DatabaseQueryOpts,
   FeatureFlag,
+  LockName,
+  LockType,
   Project,
   Row,
   RowAttachment,
@@ -53,11 +56,7 @@ import {
   findResourceSearchTargets,
   type ResourceSearchTarget,
 } from "./references"
-import {
-  compareResourceIds,
-  compareResourceTypes,
-  getResourceType,
-} from "./utils"
+import { compareResourceIds, getResourceType } from "./utils"
 
 export { getResourceType } from "./utils"
 
@@ -347,14 +346,11 @@ async function buildResourceDependencyAnalysis({
     findResourceSearchTargets({ resource, targets: baseSearchTargets })
 
   const findReferencedResources = (resource: AnyDocument) =>
-    Array.from(
-      new Map(
-        findSearchTargets(resource).map(target => [
-          target.id,
-          { id: target.id, name: target.name, type: target.type },
-        ])
-      ).values()
-    )
+    findSearchTargets(resource).map(({ id, name, type }) => ({
+      id,
+      name,
+      type,
+    }))
 
   const searchForUsages = (
     forResource: string,
@@ -379,6 +375,13 @@ async function buildResourceDependencyAnalysis({
         addDependencies(forResource, toAdd)
       }
     }
+  }
+
+  for (const datasource of datasources) {
+    searchForUsages(datasource._id!, {
+      config: datasource.config,
+      entities: datasource.entities,
+    })
   }
 
   // Search in tables
@@ -548,7 +551,7 @@ async function buildResourceDependencyAnalysis({
 
       dependencies[project._id].dependencies.sort(
         (a, b) =>
-          compareResourceTypes(a.type, b.type) || compareResourceIds(a.id, b.id)
+          compareResourceIds(a.type, b.type) || compareResourceIds(a.id, b.id)
       )
     }
   }
@@ -962,13 +965,13 @@ async function duplicateInternalTableRows(
   }
 }
 
-async function duplicateResourcesToWorkspaceUnlocked(
-  resources: string[],
-  toWorkspace: string,
-  options?: {
-    copyRows?: boolean
-  }
-) {
+async function duplicateResourceDocuments({
+  resources,
+  toWorkspace,
+}: {
+  resources: string[]
+  toWorkspace: string
+}) {
   resources = Array.from(new Set(resources).keys())
   const resourceIds = new Set(resources)
   const projectsEnabled = await features.isEnabled(FeatureFlag.PROJECTS)
@@ -1072,7 +1075,25 @@ async function duplicateResourcesToWorkspaceUnlocked(
     )
   }
 
-  if (options?.copyRows ?? true) {
+  return { documentToCopy, docsToInsert, destinationDb, fromWorkspace }
+}
+
+async function duplicateResourcesToWorkspaceUnlocked({
+  resources,
+  toWorkspace,
+  copyRows = true,
+}: {
+  resources: string[]
+  toWorkspace: string
+  copyRows?: boolean
+}) {
+  const { documentToCopy, docsToInsert, destinationDb, fromWorkspace } =
+    await doWithProjectAssignmentsLock(
+      () => duplicateResourceDocuments({ resources, toWorkspace }),
+      toWorkspace
+    )
+
+  if (copyRows) {
     await duplicateInternalTableRows(
       documentToCopy.filter(isTable),
       destinationDb,
@@ -1160,9 +1181,18 @@ export async function duplicateResourcesToWorkspace(
     copyRows?: boolean
   }
 ) {
-  await doWithProjectAssignmentsLock(
+  // Concurrent copies must not race on empty tables while rows are transferred.
+  await locks.doWithLock(
+    {
+      name: LockName.RESOURCE_DUPLICATION,
+      type: LockType.AUTO_EXTEND,
+      resource: db.getProdWorkspaceID(toWorkspace),
+    },
     () =>
-      duplicateResourcesToWorkspaceUnlocked(resources, toWorkspace, options),
-    toWorkspace
+      duplicateResourcesToWorkspaceUnlocked({
+        resources,
+        toWorkspace,
+        copyRows: options?.copyRows,
+      })
   )
 }

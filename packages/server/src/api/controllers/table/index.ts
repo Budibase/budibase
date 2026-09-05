@@ -56,8 +56,6 @@ import { handleDataImport } from "./utils"
 import {
   propagateProjectDependencyChangesWithWarning,
   propagateProjectIdsToDependencySubtreesWithWarning,
-  resolveProjectIds,
-  resolveUpdatedProjectIds,
 } from "../../../utilities/projects"
 import { builderSocket } from "../../../websockets"
 import * as external from "./external"
@@ -198,13 +196,13 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     delete table.projectIds
     delete ctx.request.body.projectIds
   } else if (isCreate) {
-    table.projectIds = await resolveProjectIds(table.projectIds)
+    table.projectIds = await sdk.projects.resolveProjectIds(table.projectIds)
   } else {
     previousTable = await sdk.tables.getTable(table._id!)
-    table.projectIds = await resolveUpdatedProjectIds(
-      table.projectIds,
-      previousTable.projectIds
-    )
+    table.projectIds = await sdk.projects.resolveUpdatedProjectIds({
+      projectIds: table.projectIds,
+      currentProjectIds: previousTable.projectIds,
+    })
     ctx.request.body.projectIds = table.projectIds
   }
 
@@ -245,7 +243,8 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     const reciprocalProjectIds = (linkedTable.projectIds || []).filter(
       projectId => !existingProjectIds.has(projectId)
     )
-    await propagateProjectIdsToDependencySubtreesWithWarning(ctx, {
+    await propagateProjectIdsToDependencySubtreesWithWarning({
+      ctx,
       blockedResourceIds: [linkedTable._id!],
       dependencyIds: [savedTable._id!],
       projectIds: reciprocalProjectIds,
@@ -253,7 +252,8 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   }
 
   if (!isExternalTable(savedTable)) {
-    await propagateProjectDependencyChangesWithWarning(ctx, {
+    await propagateProjectDependencyChangesWithWarning({
+      ctx,
       rootResourceId: savedTable._id!,
       currentProjectIds: savedTable.projectIds,
       previousProjectIds: previousTable?.projectIds || [],

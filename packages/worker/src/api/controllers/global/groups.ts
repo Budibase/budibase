@@ -1,4 +1,4 @@
-import { csv } from "@budibase/backend-core"
+import { csv, users } from "@budibase/backend-core"
 import {
   BulkAddUsersToGroupRequest,
   BulkAddUsersToGroupResponse,
@@ -71,17 +71,22 @@ export async function updateGroupApps(
   ctx: UserCtx<UpdateGroupAppRequest, UpdateGroupAppResponse>
 ) {
   const groupId = ctx.params.groupId
-  const toAdd = ctx.request.body.add,
-    toRemove = ctx.request.body.remove
-  if (
-    (toAdd && !Array.isArray(toAdd)) ||
-    (toRemove && !Array.isArray(toRemove))
-  ) {
-    ctx.throw(
-      400,
-      "Must supply a list of objects, with appId and roleId to add or remove"
-    )
+  const { add, remove } = ctx.request.body
+
+  const toAdd = add?.map(item => ({
+    appId: item.appId.trim(),
+    roleId: item.roleId.trim(),
+  }))
+  const toRemove = remove?.map(item => ({
+    appId: item.appId.trim(),
+  }))
+
+  for (const { appId } of [...(toAdd || []), ...(toRemove || [])]) {
+    if (!ctx.internal && !users.isAdminOrBuilder(ctx.user, appId)) {
+      ctx.throw(403, "Only app builders or admins can update app permissions.")
+    }
   }
+
   ctx.body = await groups.updateGroupApps(groupId, {
     appsToAdd: toAdd,
     appsToRemove: toRemove,
