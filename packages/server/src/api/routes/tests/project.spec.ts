@@ -10,6 +10,7 @@ import {
   AutomationTriggerStepId,
   APIWarningCode,
   DesignDocument,
+  EmailTriggerAuthType,
   FeatureFlag,
   INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
@@ -31,7 +32,7 @@ import {
   type UpdateProjectAssignmentResponse,
   type Webhook,
 } from "@budibase/types"
-import { getQueryToolBindings, Header } from "@budibase/shared-core"
+import { getQueryToolBindings, Header, helpers } from "@budibase/shared-core"
 import { decodeJSBinding, encodeJSBinding } from "@budibase/string-templates"
 import fsp from "fs/promises"
 import { tmpdir } from "os"
@@ -40,6 +41,7 @@ import { Readable } from "stream"
 import { pipeline } from "stream/promises"
 import * as tar from "tar"
 import { TRIGGER_DEFINITIONS } from "../../../automations"
+import { createAutomationBuilder } from "../../../automations/tests/utilities/AutomationTestBuilder"
 import { getAutomationTriggerToolName } from "../../../ai/tools/budibase/automations"
 import { getRowToolNames } from "../../../ai/tools/budibase/rows"
 import sdk from "../../../sdk"
@@ -58,6 +60,7 @@ import {
   basicScreen,
   basicTable,
   createQueryScreen,
+  createViewScreen,
   newAutomation,
 } from "../../../tests/utilities/structures"
 
@@ -1815,6 +1818,94 @@ describe("/projects", () => {
   }
 
   describe("exports project tarballs", () => {
+    it.each([
+      { name: "password", credentials: { password: "mailbox-secret" } },
+      {
+        name: "OAuth2",
+        credentials: {
+          authType: EmailTriggerAuthType.OAUTH2,
+          datasourceId: "datasource_source",
+          authConfigId: "auth_source",
+        },
+      },
+      {
+        name: "legacy OAuth2",
+        credentials: {
+          authType: EmailTriggerAuthType.OAUTH2,
+          oauth2ConfigId: "oauth2_source",
+        },
+      },
+    ])(
+      "requires fresh email $name credentials after export and import",
+      async ({ credentials }) => {
+        await withProjectsEnabled(async () => {
+          const project = await createAssignedProject()
+          const settings = {
+            host: "imap.example.com",
+            port: 993,
+            secure: true,
+            username: "ops@example.com",
+            mailbox: "INBOX",
+          }
+          const sourceAutomation = createAutomationBuilder(config)
+            .onEmail({ ...settings, ...credentials })
+            .build({ disabled: true })
+          const { automation } = await config.api.automation.post({
+            ...sourceAutomation,
+            projectIds: [project._id],
+          })
+          const files = await readTarEntries(
+            await config.api.project.export(project._id)
+          )
+          const automationPath = `docs/automation/${automation._id}.json`
+          const exported: Automation = JSON.parse(
+            files.get(automationPath)!.toString()
+          )
+          const manifest = JSON.parse(files.get("manifest.json")!.toString())
+
+          expect(exported.definition.trigger.inputs).toEqual({
+            ...settings,
+            authType: credentials.authType,
+          })
+          expect(manifest.requiresSecrets).toBe(true)
+
+          const entries = Object.fromEntries(
+            [...files].map(([path, contents]) => [
+              path,
+              JSON.parse(contents.toString()),
+            ])
+          )
+          entries[automationPath] = {
+            ...exported,
+            disabled: false,
+            definition: sourceAutomation.definition,
+          }
+          const imported = await config.api.project.import(
+            await createTarPackage(entries)
+          )
+          const importedAutomation = await config.doInContext(undefined, () =>
+            context
+              .getWorkspaceDB()
+              .get<Automation>(imported.resources.automation![0])
+          )
+
+          expect(importedAutomation.disabled).toBe(true)
+          expect(importedAutomation.definition.trigger.inputs).toEqual({
+            ...settings,
+            authType: credentials.authType,
+          })
+          expect(imported.requirements).toEqual([
+            {
+              type: "automation_credentials",
+              resourceId: importedAutomation._id,
+              name: automation.name,
+              reason: expect.stringContaining("Reconnect the mailbox"),
+            },
+          ])
+        })
+      }
+    )
+
     it("includes expected docs and manifest metadata", async () => {
       await withProjectsEnabled(async () => {
         const {
@@ -2165,6 +2256,10 @@ describe("/projects", () => {
           [externalTable.name]: externalTable,
         },
       })
+      const view = await config.api.viewV2.create({
+        tableId: externalTableId,
+        name: "External view",
+      })
       await config.doInContext(config.getDevWorkspaceId(), async () => {
         const db = context.getWorkspaceDB()
         const storedDatasource = await db.get<Datasource>(datasource._id!)
@@ -2205,6 +2300,13 @@ describe("/projects", () => {
           expect(importedExternalTable.projectIds).toBeUndefined()
           expect(importedExternalTable.primaryDisplay).toBe(
             `{{ ${importedExternalTableId}.name }}`
+          )
+          const importedView = Object.values(
+            importedExternalTable.views!
+          ).filter(helpers.views.isV2)[0]
+          expect(importedView.id).not.toBe(view.id)
+          expect((await config.api.viewV2.get(importedView.id)).tableId).toBe(
+            importedExternalTableId
           )
         }
       )
@@ -2322,69 +2424,108 @@ describe("/projects", () => {
     })
   })
 
-  it("imports row action dependencies with remapped automation references", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-      })
-      const table = await config.api.table.save({
-        ...basicTable(),
-        projectIds: [project._id],
-      })
-      const rowAction = await config.api.rowAction.save(table._id!, {
-        name: "Approve",
-      })
-      const automation = await config.api.automation.get(rowAction.automationId)
-      await config.api.automation.update({
-        ...automation,
-        projectIds: [project._id],
-      })
+  it.each(["source", "another"])(
+    "imports independent views and row actions into the %s workspace",
+    async destination => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const table = await config.api.table.save({
+          ...basicTable(),
+          projectIds: [project._id],
+        })
+        const rowAction = await config.api.rowAction.save(table._id!, {
+          name: "Approve",
+        })
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: "Open orders",
+        })
+        await config.api.rowAction.setViewPermission(
+          table._id!,
+          view.id,
+          rowAction.id
+        )
+        const workspaceApp = await createAssignedWorkspaceApp(project._id)
+        await config.api.screen.save({
+          ...createViewScreen(view),
+          workspaceAppId: workspaceApp._id,
+        })
+        const automation = await config.api.automation.get(
+          rowAction.automationId
+        )
+        await config.api.automation.update({
+          ...automation,
+          projectIds: [project._id],
+        })
 
-      const body = await config.api.project.export(project._id)
-      const destinationWorkspace = await config.api.workspace.create({
-        name: "Imported workspace",
-      })
+        const body = await config.api.project.export(project._id)
+        const destinationWorkspaceId =
+          destination === "source"
+            ? config.getDevWorkspaceId()
+            : (
+                await config.api.workspace.create({
+                  name: "Imported workspace",
+                })
+              ).appId
 
-      await config.withHeaders(
-        { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
-        async () => {
-          const imported = await config.api.project.import(body)
-          expect(imported.resources.table).toHaveLength(1)
-          expect(imported.resources.automation).toHaveLength(1)
-          expect(imported.resources.row_action).toHaveLength(1)
+        await config.withHeaders(
+          { [Header.WORKSPACE_ID]: destinationWorkspaceId },
+          async () => {
+            for (let importIndex = 0; importIndex < 2; importIndex++) {
+              const imported = await config.api.project.import(body)
+              const importedTableId = imported.resources.table![0]
+              const importedTable = await config.api.table.get(importedTableId)
+              const importedView = Object.values(importedTable.views!).filter(
+                helpers.views.isV2
+              )[0]
+              const resolvedView = await config.api.viewV2.get(importedView.id)
+              const screens = await config.api.screen.list()
+              const importedScreen = screens.find(
+                screen => screen._id === imported.resources.screen![0]
+              )!
 
-          const importedRowActions = await config.api.rowAction.find(
-            imported.resources.table?.[0]!
-          )
-          const importedAction = Object.values(importedRowActions.actions)[0]
+              expect(resolvedView.tableId).toBe(importedTableId)
+              expect(importedView.id).not.toBe(view.id)
+              expect(importedScreen.props._children![1].table).toMatchObject({
+                id: importedView.id,
+                tableId: importedTableId,
+              })
 
-          expect(importedAction).toBeDefined()
-          expect(importedAction.tableId).toBe(imported.resources.table?.[0])
-          expect(importedAction.automationId).toBe(
-            imported.resources.automation?.[0]
-          )
-          expect(importedAction.id).not.toBe(rowAction.id)
-          expect(Object.keys(importedRowActions.actions)).toContain(
-            importedAction.id
-          )
-          expect(Object.keys(importedRowActions.actions)).not.toContain(
-            rowAction.id
-          )
+              const importedRowActions = await config.api.rowAction.find(
+                imported.resources.table?.[0]!
+              )
+              const importedAction = Object.values(
+                importedRowActions.actions
+              )[0]
 
-          const importedAutomation = await config.api.automation.get(
-            imported.resources.automation?.[0]!
-          )
-          const triggerInputs = importedAutomation.definition.trigger
-            .inputs as {
-            tableId?: string
-            rowActionId?: string
+              expect(importedAction).toMatchObject({
+                tableId: importedTableId,
+                automationId: imported.resources.automation![0],
+                allowedSources: [importedTableId, importedView.id],
+              })
+              expect(importedAction.id).not.toBe(rowAction.id)
+              expect(Object.keys(importedRowActions.actions)).toEqual([
+                importedAction.id,
+              ])
+
+              const importedAutomation = await config.api.automation.get(
+                imported.resources.automation?.[0]!
+              )
+              const triggerInputs = importedAutomation.definition.trigger
+                .inputs as {
+                tableId?: string
+                rowActionId?: string
+              }
+              expect(triggerInputs.tableId).toBe(imported.resources.table?.[0])
+              expect(triggerInputs.rowActionId).toBe(importedAction.id)
+            }
           }
-          expect(triggerInputs.tableId).toBe(imported.resources.table?.[0])
-          expect(triggerInputs.rowActionId).toBe(importedAction.id)
-        }
-      )
-    })
-  })
+        )
+      })
+    }
+  )
 
   it("imports exported projects additively into another workspace", async () => {
     await withProjectsEnabled(async () => {
@@ -2414,7 +2555,7 @@ describe("/projects", () => {
         projectIds: [project._id],
       })
       const queryScreen = createQueryScreen(datasource._id!, query)
-      const screen = await config.api.screen.save({
+      await config.api.screen.save({
         ...queryScreen,
         props: {
           ...queryScreen.props,
@@ -2698,10 +2839,6 @@ describe("/projects", () => {
           expect(secondImportedApp?.url).toBe("/operations%20app%201")
         }
       )
-
-      expect(screen._id).toBeDefined()
-      expect(table._id).toBeDefined()
-      expect(agent._id).toBeDefined()
     })
   })
 
@@ -3357,17 +3494,13 @@ describe("/projects", () => {
 
       const bulkDocs = jest
         .spyOn(DatabaseImpl.prototype, "bulkDocs")
-        .mockImplementationOnce(async docs =>
-          docs.map((doc, index) =>
-            index === 0
-              ? { id: doc._id!, rev: "1-imported" }
-              : {
-                  id: doc._id!,
-                  error: "conflict",
-                  reason: "import failed",
-                }
-          )
-        )
+        .mockImplementationOnce(async docs => {
+          const saved = await context.getWorkspaceDB().put(docs[0])
+          return [
+            { id: saved.id, rev: saved.rev },
+            { id: docs[1]._id!, error: "conflict", reason: "import failed" },
+          ]
+        })
 
       try {
         await config.api.project.import(packageBuffer, undefined, {
@@ -3384,6 +3517,11 @@ describe("/projects", () => {
 
       const { projects } = await config.api.project.fetch()
       expect(projects).toHaveLength(0)
+      expect(
+        (await config.api.datasource.fetch()).filter(
+          datasource => datasource._id !== INTERNAL_TABLE_SOURCE_ID
+        )
+      ).toHaveLength(0)
     })
   })
 
