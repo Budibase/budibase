@@ -211,6 +211,7 @@ run_verify() {
     echo ""
     echo "These are known to CouchDB's registry but their shard files could not be opened."
     echo "If you have not already, run '$0 migrate --apply' against the stopped data volume, then restart CouchDB and re-run verify."
+    exit 1
   fi
 }
 
