@@ -1,5 +1,7 @@
 export * from "./crud"
 export * from "./assignments"
+export * from "./membership"
+export * from "./dependencies"
 export * from "./backups/exports"
 export * from "./backups/imports"
 export * from "./lock"
