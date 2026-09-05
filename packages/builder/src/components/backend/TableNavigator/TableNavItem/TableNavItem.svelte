@@ -11,21 +11,17 @@
   import { isActive } from "@roxi/routify"
   import EditModal from "./EditModal.svelte"
   import DeleteConfirmationModal from "../../modals/DeleteDataConfirmationModal.svelte"
-  import {
-    Icon,
-    Modal,
-    keepOpen,
-    notifications,
-    type ModalAPI,
-  } from "@budibase/bbui"
+  import { Icon, Modal, notifications, type ModalAPI } from "@budibase/bbui"
   import { DB_TYPE_EXTERNAL } from "@/constants/backend"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
-  import { FeatureFlag, WorkspaceResource, type Table } from "@budibase/types"
-  import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
   import {
-    saveProjectAssignment,
-    type ProjectAssignmentSelection,
-  } from "@/components/projects/assignments"
+    FeatureFlag,
+    WorkspaceResource,
+    type Table,
+    type UpdateProjectAssignmentRequest,
+  } from "@budibase/types"
+  import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
+  import { saveProjectAssignment } from "@/components/projects/assignments"
   import { auth, featureFlags, projectsStore } from "@/stores/portal"
   import { getErrorMessage } from "@/helpers/errors"
   import type { MenuItem } from "@/types"
@@ -78,15 +74,11 @@
     assignProjectModal?.show()
   }
 
-  const assignProject = async (selection: ProjectAssignmentSelection) => {
-    const saved = await saveProjectAssignment({
+  const assignProject = async (selection: UpdateProjectAssignmentRequest) => {
+    await saveProjectAssignment({
       resourceId: tableId,
-      resourceRev: table._rev!,
       selection,
     })
-    if (!saved) {
-      return keepOpen
-    }
 
     assignProjectModal?.hide()
 
