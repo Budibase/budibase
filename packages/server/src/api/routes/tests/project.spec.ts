@@ -1547,6 +1547,27 @@ describe("/projects", () => {
     })
   })
 
+  it("rejects project imports into production workspaces", async () => {
+    await withProjectsEnabled(async () => {
+      const body = await createTarPackage(createMinimalPackageEntries())
+      await config.publish()
+
+      await config.withHeaders(
+        { [Header.WORKSPACE_ID]: config.getProdWorkspaceId() },
+        async () => {
+          await config.api.project.import(body, undefined, {
+            status: 400,
+            body: {
+              message: "Only apps in development support this endpoint",
+            },
+          })
+
+          expect((await config.api.project.fetch()).projects).toEqual([])
+        }
+      )
+    })
+  })
+
   it("imports empty projects without requiring docs", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
