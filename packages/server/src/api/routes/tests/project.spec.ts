@@ -8,25 +8,33 @@ import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseI
 import { generator, structures } from "@budibase/backend-core/tests"
 import {
   AutomationTriggerStepId,
+  APIWarningCode,
   DesignDocument,
   EmailTriggerAuthType,
   FeatureFlag,
   INTERNAL_TABLE_SOURCE_ID,
+  InternalTable,
   isEmailTrigger,
   isWebhookTrigger,
   OAuth2CredentialsMethod,
   OAuth2GrantType,
+  ResourceType,
   RestAuthType,
   SourceName,
   ToolExecutionPrincipal,
+  ToolType,
   type Automation,
+  type Datasource,
   type EmailTrigger,
   type EmailTriggerInputs,
   type Project,
   type ProjectPackageDependencyIndex,
+  type Query,
+  type Screen,
+  type UpdateProjectAssignmentResponse,
   type Webhook,
 } from "@budibase/types"
-import { Header, helpers } from "@budibase/shared-core"
+import { getQueryToolBindings, Header, helpers } from "@budibase/shared-core"
 import { decodeJSBinding, encodeJSBinding } from "@budibase/string-templates"
 import fsp from "fs/promises"
 import { tmpdir } from "os"
@@ -41,6 +49,7 @@ import { getRowToolNames } from "../../../ai/tools/budibase/rows"
 import sdk from "../../../sdk"
 import { getQueryToolBindingsForResource } from "../../../sdk/workspace/ai/agents/queryToolReferences"
 import * as projects from "../../../sdk/workspace/projects/crud"
+import * as projectLock from "../../../sdk/workspace/projects/lock"
 import { buildExternalTableId } from "../../../integrations/utils"
 import { getQueryIndex } from "../../../db/utils"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -67,6 +76,19 @@ jest.mock("@slack/web-api", () => ({
   })),
 }))
 
+jest.mock("../../../sdk/workspace/projects/lock", () => {
+  const actual = jest.requireActual<
+    typeof import("../../../sdk/workspace/projects/lock")
+  >("../../../sdk/workspace/projects/lock")
+  return {
+    ...actual,
+    doWithProjectAssignmentsLock: jest.fn(actual.doWithProjectAssignmentsLock),
+    doWithProjectAssignmentsLockIfEnabled: jest.fn(
+      actual.doWithProjectAssignmentsLockIfEnabled
+    ),
+  }
+})
+
 describe("/projects", () => {
   const config = new TestConfiguration()
   let cleanupAIConfig: undefined | (() => Promise<void>)
@@ -82,6 +104,89 @@ describe("/projects", () => {
       { [FeatureFlag.PROJECTS]: true },
       f
     )
+  }
+
+  const pauseNextProjectAssignmentLock = () => {
+    const doWithProjectAssignmentsLock =
+      projectLock.doWithProjectAssignmentsLock as jest.MockedFunction<
+        typeof projectLock.doWithProjectAssignmentsLock
+      >
+    const doWithProjectAssignmentsLockIfEnabled =
+      projectLock.doWithProjectAssignmentsLockIfEnabled as jest.MockedFunction<
+        typeof projectLock.doWithProjectAssignmentsLockIfEnabled
+      >
+    const originalLockImplementation =
+      doWithProjectAssignmentsLock.getMockImplementation()
+    const originalConditionalLockImplementation =
+      doWithProjectAssignmentsLockIfEnabled.getMockImplementation()
+    if (!originalLockImplementation || !originalConditionalLockImplementation) {
+      throw new Error("Project assignments lock mock is not configured")
+    }
+    let release!: () => void
+    let locked!: () => void
+    let contenderStarted!: () => void
+    let firstCompleted!: () => void
+    const releasePromise = new Promise<void>(resolve => (release = resolve))
+    const lockedPromise = new Promise<void>(resolve => (locked = resolve))
+    const contenderPromise = new Promise<void>(
+      resolve => (contenderStarted = resolve)
+    )
+    const firstCompletedPromise = new Promise<void>(
+      resolve => (firstCompleted = resolve)
+    )
+    let projectLockCalls = 0
+
+    const runWithPausedLock = async <T>({
+      task,
+      fallback,
+    }: {
+      task: () => Promise<T>
+      fallback: () => Promise<T>
+    }): Promise<T> => {
+      projectLockCalls++
+      if (projectLockCalls === 1) {
+        locked()
+        await releasePromise
+        try {
+          return await task()
+        } finally {
+          firstCompleted()
+        }
+      }
+      if (projectLockCalls === 2) {
+        contenderStarted()
+        await firstCompletedPromise
+        return await task()
+      }
+      return await fallback()
+    }
+
+    doWithProjectAssignmentsLock.mockImplementation((task, workspaceId) =>
+      runWithPausedLock({
+        task,
+        fallback: () => originalLockImplementation(task, workspaceId),
+      })
+    )
+    doWithProjectAssignmentsLockIfEnabled.mockImplementation(task =>
+      runWithPausedLock({
+        task,
+        fallback: () => originalConditionalLockImplementation(task),
+      })
+    )
+
+    return {
+      locked: lockedPromise,
+      contenderStarted: contenderPromise,
+      release,
+      restore: () => {
+        doWithProjectAssignmentsLock.mockImplementation(
+          originalLockImplementation
+        )
+        doWithProjectAssignmentsLockIfEnabled.mockImplementation(
+          originalConditionalLockImplementation
+        )
+      },
+    }
   }
 
   const createAssignedProject = async () => {
@@ -244,6 +349,43 @@ describe("/projects", () => {
 
   it("returns 404 when the feature flag is disabled", async () => {
     await config.api.project.fetch({ status: 404 })
+    await config.api.project.previewAssignment(
+      { resourceId: "workspace_app_test", projectIds: [] },
+      { status: 404 }
+    )
+    await config.api.project.updateAssignment(
+      "workspace_app_test",
+      {
+        resourceRev: "1-test",
+        projectIds: [],
+        dependencyIds: [],
+        dependencyFingerprint: "unavailable-while-feature-disabled",
+      },
+      { status: 404 }
+    )
+  })
+
+  it("preserves dormant project assignments on omitted updates when the feature flag is disabled", async () => {
+    const workspaceApp = await withProjectsEnabled(async () => {
+      const project = await createAssignedProject()
+      return await createAssignedWorkspaceApp(project._id)
+    })
+
+    await config.api.workspaceApp.update({
+      _id: workspaceApp._id,
+      _rev: workspaceApp._rev,
+      name: workspaceApp.name,
+      url: workspaceApp.url,
+      navigation: workspaceApp.navigation,
+      theme: workspaceApp.theme,
+      customTheme: workspaceApp.customTheme,
+      disabled: workspaceApp.disabled,
+    })
+
+    const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+      workspaceApp._id!
+    )
+    expect(fetchedWorkspaceApp.projectIds).toEqual(workspaceApp.projectIds)
   })
 
   it("creates, fetches, and updates projects", async () => {
@@ -399,7 +541,7 @@ describe("/projects", () => {
     })
   })
 
-  it("rejects assigning an unknown project id", async () => {
+  it("rejects unknown direct project ids", async () => {
     await withProjectsEnabled(async () => {
       await config.api.workspaceApp.create(
         structures.workspaceApps.createRequest({
@@ -681,53 +823,12 @@ describe("/projects", () => {
   })
 
   describe("preserves assignments when updates omit project ids", () => {
-    const createAssignedResources = async (projectId: string) => {
-      const { workspaceApp } = await config.api.workspaceApp.create(
-        structures.workspaceApps.createRequest({
-          name: "Ops app",
-          url: "/ops-app",
-          projectIds: [projectId],
-        })
-      )
-      const automation = await config.createAutomation()
-      const { automation: assignedAutomation } =
-        await config.api.automation.update({
-          ...automation,
-          projectIds: [projectId],
-        })
-      const agent = await config.api.agent.create({
-        name: "Ops agent",
-        aiconfig: "default",
-        projectIds: [projectId],
-      })
-      const table = await config.api.table.save({
-        ...basicTable(),
-        projectIds: [projectId],
-      })
-      const datasource = await config.api.datasource.create({
-        ...basicDatasource().datasource,
-        projectIds: [projectId],
-      })
-      const query = await config.api.query.save({
-        ...basicQuery(datasource._id!),
-        projectIds: [projectId],
-      })
-      return {
-        workspaceApp,
-        assignedAutomation,
-        agent,
-        table,
-        datasource,
-        query,
-      }
-    }
-
     it("preserves workspace app assignments", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
           name: "Operations",
         })
-        const { workspaceApp } = await createAssignedResources(project._id)
+        const workspaceApp = await createAssignedWorkspaceApp(project._id)
 
         const updatedWorkspaceApp = await config.doInContext(
           config.getDevWorkspaceId(),
@@ -753,9 +854,12 @@ describe("/projects", () => {
         const { project } = await config.api.project.create({
           name: "Operations",
         })
-        const { assignedAutomation } = await createAssignedResources(
-          project._id
-        )
+        const automation = await config.createAutomation()
+        const { automation: assignedAutomation } =
+          await config.api.automation.update({
+            ...automation,
+            projectIds: [project._id],
+          })
 
         const { projectIds: _automationProjectIds, ...automationUpdate } =
           assignedAutomation
@@ -774,7 +878,11 @@ describe("/projects", () => {
         const { project } = await config.api.project.create({
           name: "Operations",
         })
-        const { agent } = await createAssignedResources(project._id)
+        const agent = await config.api.agent.create({
+          name: "Ops agent",
+          aiconfig: "default",
+          projectIds: [project._id],
+        })
 
         const { projectIds: _agentProjectIds, ...agentUpdate } = agent
         const updatedAgent = await config.api.agent.update({
@@ -791,7 +899,7 @@ describe("/projects", () => {
         const { project } = await config.api.project.create({
           name: "Operations",
         })
-        const { table } = await createAssignedResources(project._id)
+        const table = await createAssignedInternalTable(project._id)
 
         const { projectIds: _tableProjectIds, ...tableUpdate } = table
         const updatedTable = await config.api.table.save({
@@ -808,7 +916,10 @@ describe("/projects", () => {
         const { project } = await config.api.project.create({
           name: "Operations",
         })
-        const { datasource } = await createAssignedResources(project._id)
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          projectIds: [project._id],
+        })
 
         const { projectIds: _datasourceProjectIds, ...datasourceUpdate } =
           datasource
@@ -826,15 +937,633 @@ describe("/projects", () => {
         const { project } = await config.api.project.create({
           name: "Operations",
         })
-        const { query } = await createAssignedResources(project._id)
+        const datasource = await config.createDatasource()
+        const query = await config.api.query.save(basicQuery(datasource._id))
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const persistedQuery = await context
+            .getWorkspaceDB()
+            .get<Query>(query._id!)
+          await context.getWorkspaceDB().put({
+            ...persistedQuery,
+            projectIds: [project._id],
+          })
+        })
 
-        const { projectIds: _queryProjectIds, ...queryUpdate } = query
+        const persistedQuery = await config.api.query.get(query._id!)
+
+        const { projectIds: _queryProjectIds, ...queryUpdate } = persistedQuery
         const updatedQuery = await config.api.query.save({
           ...queryUpdate,
           name: "Ops query updated",
         })
 
         expect(updatedQuery.projectIds).toBeUndefined()
+      })
+    })
+  })
+
+  describe("project dependency assignments", () => {
+    it("rejects direct assignment waiting for Project deletion", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({ name: "Race" })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Race app",
+            url: "/race-app",
+          })
+        )
+        const gate = pauseNextProjectAssignmentLock()
+
+        try {
+          const deletion = config.api.project.delete(project._id, project._rev)
+          await gate.locked
+          const assignment = config.api.project.updateAssignment(
+            workspaceApp._id!,
+            {
+              resourceRev: workspaceApp._rev!,
+              projectIds: [project._id],
+              dependencyIds: [],
+            },
+            { status: 404 }
+          )
+          await gate.contenderStarted
+          gate.release()
+
+          await Promise.all([deletion, assignment])
+        } finally {
+          gate.release()
+          gate.restore()
+        }
+
+        expect(
+          (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
+    const createAutomationButtonScreen = (
+      workspaceAppId: string,
+      automationId: string
+    ): Screen => ({
+      props: {
+        _id: "automation-button-root",
+        _component: "@budibase/standard-components/container",
+        _styles: { normal: {}, hover: {}, active: {}, selected: {} },
+        _instanceName: "Root",
+        _children: [
+          {
+            _id: "automation-button",
+            _component: "@budibase/standard-components/button",
+            _styles: { normal: {}, hover: {}, active: {}, selected: {} },
+            _instanceName: "Trigger automation button",
+            _children: [],
+            onClick: [
+              {
+                "##eventHandlerType": "Trigger Automation",
+                parameters: { automationId },
+              },
+            ],
+          },
+        ],
+      },
+      routing: {
+        route: "/automation-button",
+        roleId: "BASIC",
+        homeScreen: false,
+      },
+      name: "automation-button-screen",
+      workspaceAppId,
+    })
+
+    it("previews dependencies and applies only the selected additions", async () => {
+      await withProjectsEnabled(async () => {
+        const { project: firstProject } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { project: secondProject } = await config.api.project.create({
+          name: "Reporting",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+          })
+        )
+        const automation = await config.createAutomation()
+        await config.api.screen.save(
+          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+        )
+        const projectIds = [firstProject._id, secondProject._id]
+
+        const preview = await config.api.project.previewAssignment({
+          resourceId: workspaceApp._id!,
+          projectIds,
+        })
+        expect(preview.dependencies).toEqual([
+          {
+            id: automation._id,
+            name: automation.name,
+            type: ResourceType.AUTOMATION,
+            projectIdsToAdd: projectIds,
+          },
+        ])
+
+        const excluded = await config.api.project.updateAssignment(
+          workspaceApp._id!,
+          {
+            resourceRev: preview.resourceRev,
+            projectIds,
+            dependencyIds: [],
+          }
+        )
+        expect(excluded.projectIds).toEqual(projectIds)
+        expect(excluded.assignedDependencyIds).toEqual([])
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toBeUndefined()
+
+        const repairPreview = await config.api.project.previewAssignment({
+          resourceId: workspaceApp._id!,
+          projectIds,
+        })
+        expect(repairPreview).toMatchObject({
+          resourceRev: excluded.resourceRev,
+          resourceProjectIds: projectIds,
+          dependencies: preview.dependencies,
+        })
+
+        const included = await config.api.project.updateAssignment(
+          workspaceApp._id!,
+          {
+            resourceRev: repairPreview.resourceRev,
+            projectIds,
+            dependencyIds: [automation._id!],
+          }
+        )
+        expect(included.assignedDependencyIds).toEqual([automation._id])
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toEqual(projectIds)
+      })
+    })
+
+    it("rejects an assignment when dependency projects change after preview", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+          })
+        )
+        const automation = await config.createAutomation()
+        await config.api.screen.save(
+          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+        )
+
+        const preview = await config.api.project.previewAssignment({
+          resourceId: workspaceApp._id!,
+          projectIds: [project._id],
+        })
+        expect(preview.dependencies.map(dependency => dependency.id)).toEqual([
+          automation._id,
+        ])
+
+        await config.api.automation.update({
+          ...automation,
+          projectIds: [project._id],
+        })
+
+        await config.api.project.updateAssignment(
+          workspaceApp._id!,
+          {
+            resourceRev: workspaceApp._rev!,
+            projectIds: [project._id],
+            dependencyIds: [automation._id!],
+            dependencyFingerprint: preview.dependencyFingerprint,
+          },
+          { status: 409 }
+        )
+
+        expect(
+          (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
+        ).toBeUndefined()
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toEqual([project._id])
+      })
+    })
+
+    it("rejects an assignment when target projects change after preview", async () => {
+      await withProjectsEnabled(async () => {
+        const { project: previewedProject } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { project: updatedProject } = await config.api.project.create({
+          name: "Reporting",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+          })
+        )
+        const automation = await config.createAutomation()
+        await config.api.screen.save(
+          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+        )
+
+        const preview = await config.api.project.previewAssignment({
+          resourceId: workspaceApp._id!,
+          projectIds: [previewedProject._id],
+        })
+
+        await config.api.project.updateAssignment(
+          workspaceApp._id!,
+          {
+            resourceRev: workspaceApp._rev!,
+            projectIds: [updatedProject._id],
+            dependencyIds: [automation._id!],
+            dependencyFingerprint: preview.dependencyFingerprint,
+          },
+          { status: 409 }
+        )
+
+        expect(
+          (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
+        ).toBeUndefined()
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
+    it("rejects an assignment when dependencies change after preview", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+          })
+        )
+        const existingAutomation = await config.createAutomation()
+        const screen = await config.api.screen.save(
+          createAutomationButtonScreen(
+            workspaceApp._id!,
+            existingAutomation._id!
+          )
+        )
+        const preview = await config.api.project.previewAssignment({
+          resourceId: workspaceApp._id!,
+          projectIds: [project._id],
+        })
+
+        const addedAutomation = await config.createAutomation()
+        const addedButton = createAutomationButtonScreen(
+          workspaceApp._id!,
+          addedAutomation._id!
+        ).props!._children![0]
+        await config.api.screen.save({
+          ...screen,
+          props: {
+            ...screen.props,
+            _children: [
+              ...screen.props!._children!,
+              { ...addedButton, _id: "added-automation-button" },
+            ],
+          },
+        })
+
+        await config.api.project.updateAssignment(
+          workspaceApp._id!,
+          {
+            resourceRev: workspaceApp._rev!,
+            projectIds: [project._id],
+            dependencyIds: [existingAutomation._id!],
+            dependencyFingerprint: preview.dependencyFingerprint,
+          },
+          { status: 409 }
+        )
+
+        expect(
+          (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
+        ).toBeUndefined()
+        expect(
+          (await config.api.automation.get(existingAutomation._id!)).projectIds
+        ).toBeUndefined()
+        expect(
+          (await config.api.automation.get(addedAutomation._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
+    it("rejects dependency selections when clearing root assignments", async () => {
+      await withProjectsEnabled(async () => {
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+          })
+        )
+        const automation = await config.createAutomation()
+        await config.api.screen.save(
+          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+        )
+
+        await config.api.project.updateAssignment(
+          workspaceApp._id!,
+          {
+            resourceRev: workspaceApp._rev!,
+            projectIds: [],
+            dependencyIds: [automation._id!],
+          },
+          { status: 400 }
+        )
+        expect(
+          (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
+    it("rejects stale roots and unrelated dependency selections", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+          })
+        )
+        const unrelatedDatasource = await config.api.datasource.create(
+          basicDatasource().datasource
+        )
+
+        await config.api.project.updateAssignment(
+          workspaceApp._id!,
+          {
+            resourceRev: workspaceApp._rev!,
+            projectIds: [project._id],
+            dependencyIds: [unrelatedDatasource._id!],
+          },
+          { status: 400 }
+        )
+        expect(
+          (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
+        ).toBeUndefined()
+
+        await config.api.project.updateAssignment(
+          workspaceApp._id!,
+          {
+            resourceRev: "stale-revision",
+            projectIds: [project._id],
+            dependencyIds: [],
+          },
+          { status: 409 }
+        )
+        expect(
+          (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
+    it("rejects non-project document ids through the assignment SDK", async () => {
+      await withProjectsEnabled(async () => {
+        const datasource = await config.api.datasource.create(
+          basicDatasource().datasource
+        )
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+          })
+        )
+
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          await expect(
+            sdk.projects.updateResourceProjectAssignment({
+              resourceId: workspaceApp._id!,
+              resourceRev: workspaceApp._rev!,
+              projectIds: [datasource._id!],
+            })
+          ).rejects.toThrow(`Project '${datasource._id}' not found.`)
+        })
+
+        expect(
+          (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
+        ).toBeUndefined()
+      })
+    })
+
+    it("rejects resources that are not direct project members", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create(
+          basicDatasource().datasource
+        )
+        const query = await config.api.query.save(basicQuery(datasource._id!))
+        const externalTableId = buildExternalTableId(
+          datasource._id!,
+          "External table"
+        )
+
+        for (const resourceId of [
+          query._id!,
+          externalTableId,
+          InternalTable.USER_METADATA,
+          INTERNAL_TABLE_SOURCE_ID,
+        ]) {
+          await config.api.project.previewAssignment(
+            { resourceId, projectIds: [project._id] },
+            { status: 400 }
+          )
+        }
+      })
+    })
+
+    it("reports only project memberships a dependency is missing", async () => {
+      await withProjectsEnabled(async () => {
+        const { project: firstProject } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { project: secondProject } = await config.api.project.create({
+          name: "Reporting",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+          })
+        )
+        const automation = await config.createAutomation({
+          ...newAutomation(),
+          projectIds: [firstProject._id],
+        })
+        await config.api.screen.save(
+          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+        )
+
+        const preview = await config.api.project.previewAssignment({
+          resourceId: workspaceApp._id!,
+          projectIds: [firstProject._id, secondProject._id],
+        })
+
+        expect(preview.dependencies).toEqual([
+          {
+            id: automation._id,
+            name: automation.name,
+            type: ResourceType.AUTOMATION,
+            projectIdsToAdd: [secondProject._id],
+          },
+        ])
+      })
+    })
+
+    it("keeps the root assignment successful when selected dependency writes conflict", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+          })
+        )
+        const automation = await config.createAutomation()
+        await config.api.screen.save(
+          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+        )
+        const bulkDocs = jest
+          .spyOn(DatabaseImpl.prototype, "bulkDocs")
+          .mockImplementation(async docs =>
+            docs.map(doc => ({
+              id: doc._id!,
+              error: "conflict",
+              reason: "mock conflict",
+            }))
+          )
+
+        let response: UpdateProjectAssignmentResponse | undefined
+        try {
+          response = await config.api.project.updateAssignment(
+            workspaceApp._id!,
+            {
+              resourceRev: workspaceApp._rev!,
+              projectIds: [project._id],
+              dependencyIds: [automation._id!],
+            },
+            {
+              status: 200,
+              headers: {
+                [Header.API_WARNING]:
+                  APIWarningCode.PROJECT_DEPENDENCY_ASSIGNMENT_INCOMPLETE,
+              },
+            }
+          )
+        } finally {
+          bulkDocs.mockRestore()
+        }
+
+        expect(response!.assignedDependencyIds).toEqual([])
+        expect(
+          (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
+        ).toEqual([project._id])
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toBeUndefined()
+
+        const retried = await config.api.project.updateAssignment(
+          workspaceApp._id!,
+          {
+            resourceRev: response!.resourceRev,
+            projectIds: [project._id],
+            dependencyIds: [automation._id!],
+          }
+        )
+        expect(retried.assignedDependencyIds).toEqual([automation._id])
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toEqual([project._id])
+      })
+    })
+
+    it("includes a datasource's queries in project dependencies when the datasource is assigned", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create({
+          ...basicDatasource().datasource,
+          projectIds: [project._id],
+        })
+        const query = await config.api.query.save(basicQuery(datasource._id!))
+
+        const { body } = await config.api.resource.getResourceDependencies()
+        expect(body.resources[project._id].dependencies).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: datasource._id,
+              type: "datasource",
+            }),
+            expect.objectContaining({
+              id: query._id,
+              type: "query",
+            }),
+          ])
+        )
+      })
+    })
+
+    it("finds datasource dependencies through agent query tools", async () => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const datasource = await config.api.datasource.create(
+          basicDatasource().datasource
+        )
+        const query = await config.api.query.save(basicQuery(datasource._id!))
+        const bindings = getQueryToolBindings({
+          sourceType: ToolType.DATASOURCE_QUERY,
+          sourceLabel: datasource.name,
+          queryName: query.name,
+          queryId: query._id!,
+        })
+        const agent = await config.api.agent.createWithOperation(
+          { name: "Query agent" },
+          {
+            id: "operation_1",
+            name: "Run query",
+            live: false,
+            promptInstructions: `Use {{ ${bindings.readableBinding} }}.`,
+            enabledTools: [
+              {
+                toolName: bindings.runtimeBinding,
+                executionPrincipal: ToolExecutionPrincipal.ADMIN,
+              },
+            ],
+            allowKnowledgeSourceDownload: true,
+          }
+        )
+
+        const preview = await config.api.project.previewAssignment({
+          resourceId: agent._id!,
+          projectIds: [project._id],
+        })
+        expect(preview.dependencies).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ id: datasource._id }),
+          ])
+        )
       })
     })
   })
@@ -848,17 +1577,21 @@ describe("/projects", () => {
       await config.doInContext(undefined, async () => {
         const bulkDocs = jest
           .spyOn(DatabaseImpl.prototype, "bulkDocs")
-          .mockImplementationOnce(async docs =>
-            docs.map((doc, index) =>
-              index === 0
-                ? { id: doc._id!, rev: "2-mock" }
-                : {
-                    id: doc._id!,
-                    error: "conflict",
-                    reason: "cleanup failed",
-                  }
-            )
-          )
+          .mockImplementationOnce(async docs => {
+            const results = []
+            for (const doc of docs) {
+              if (doc._id === workspaceApp._id) {
+                results.push(await context.getWorkspaceDB().put(doc))
+              } else {
+                results.push({
+                  id: doc._id!,
+                  error: "conflict",
+                  reason: "cleanup failed",
+                })
+              }
+            }
+            return results
+          })
 
         try {
           await expect(
@@ -866,6 +1599,32 @@ describe("/projects", () => {
           ).rejects.toThrow("Failed to clear project assignments.")
         } finally {
           bulkDocs.mockRestore()
+        }
+      })
+
+      const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+        workspaceApp._id!
+      )
+      expect(fetchedWorkspaceApp.projectIds).toEqual([project._id])
+    })
+  })
+
+  it("restores assignments when deleting the project fails", async () => {
+    await withProjectsEnabled(async () => {
+      const project = await createAssignedProject()
+      const workspaceApp = await createAssignedWorkspaceApp(project._id)
+
+      await config.doInContext(undefined, async () => {
+        const remove = jest
+          .spyOn(DatabaseImpl.prototype, "remove")
+          .mockRejectedValueOnce(new Error("Project deletion failed"))
+
+        try {
+          await expect(
+            projects.remove(project._id, project._rev)
+          ).rejects.toThrow("Project deletion failed")
+        } finally {
+          remove.mockRestore()
         }
       })
 
@@ -965,13 +1724,22 @@ describe("/projects", () => {
     const datasource = await config.api.datasource.create({
       ...basicDatasource().datasource,
       config: {
-        password: "super-secret",
+        password: "super-secret {{ env.DB_PASSWORD }}",
       },
       projectIds: [project._id],
     })
     const query = await config.api.query.save({
       ...basicQuery(datasource._id!),
       projectIds: [project._id],
+    })
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const persistedQuery = await context
+        .getWorkspaceDB()
+        .get<Query>(query._id!)
+      await context.getWorkspaceDB().put({
+        ...persistedQuery,
+        projectIds: [project._id],
+      })
     })
     const table = await config.api.table.save({
       ...basicTable(),
@@ -1390,9 +2158,10 @@ describe("/projects", () => {
           ...basicQuery(datasource._id!),
           transformer: `return "{{ ${agent._id}.name }}"`,
         })
-        await config.api.datasource.update({
-          ...datasource,
+        await config.api.project.updateAssignment(datasource._id!, {
+          resourceRev: datasource._rev!,
           projectIds: [project._id],
+          dependencyIds: [],
         })
 
         const body = await config.api.project.export(project._id)
@@ -1435,9 +2204,10 @@ describe("/projects", () => {
           ...basicQuery(datasource._id!),
           name: `Docs for ${agent._id}.json`,
         })
-        await config.api.datasource.update({
-          ...datasource,
+        await config.api.project.updateAssignment(datasource._id!, {
+          resourceRev: datasource._rev!,
           projectIds: [project._id],
+          dependencyIds: [],
         })
 
         const files = await readTarEntries(
@@ -1563,6 +2333,14 @@ describe("/projects", () => {
       const view = await config.api.viewV2.create({
         tableId: externalTableId,
         name: "External view",
+      })
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        const db = context.getWorkspaceDB()
+        const storedDatasource = await db.get<Datasource>(datasource._id!)
+        storedDatasource.entities![externalTable.name].projectIds = [
+          project._id,
+        ]
+        await db.put(storedDatasource)
       })
 
       const body = await config.api.project.export(project._id)
