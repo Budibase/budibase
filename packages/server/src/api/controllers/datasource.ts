@@ -41,9 +41,7 @@ import { getQueryParams, getTableParams } from "../../db/utils"
 import sdk from "../../sdk"
 import { processTable } from "../../sdk/workspace/tables/getters"
 import { invalidateCachedVariable } from "../../threads/utils"
-import {
-  propagateProjectDependencyChangesWithWarning,
-} from "../../utilities/projects"
+import { propagateProjectDependencyChangesWithWarning } from "../../utilities/projects"
 import { builderSocket } from "../../websockets"
 
 async function clearOAuth2TokenCaches(datasource: Datasource) {
@@ -311,7 +309,8 @@ async function updateUnlocked(
     : await persistDatasource()
   datasource._rev = response.rev
 
-  await propagateProjectDependencyChangesWithWarning(ctx, {
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
     rootResourceId: datasource._id!,
     currentProjectIds: datasource.projectIds,
     previousProjectIds: baseDatasource.projectIds,
@@ -354,7 +353,9 @@ export async function save(
   )
 
   await sdk.projects.doWithProjectAssignmentsLockIfEnabled(async () => {
-    datasource.projectIds = await sdk.projects.resolveProjectIds(datasource.projectIds)
+    datasource.projectIds = await sdk.projects.resolveProjectIds(
+      datasource.projectIds
+    )
     validateDatasourceEntities(datasource)
     const persistDatasource = async () => {
       const restTemplateId = datasource.restTemplateId
@@ -378,7 +379,8 @@ export async function save(
       await persistDatasource()
     }
 
-    await propagateProjectDependencyChangesWithWarning(ctx, {
+    await propagateProjectDependencyChangesWithWarning({
+      ctx,
       rootResourceId: datasource._id!,
       currentProjectIds: datasource.projectIds,
       previousProjectIds: [],

@@ -242,7 +242,8 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     const reciprocalProjectIds = (linkedTable.projectIds || []).filter(
       projectId => !existingProjectIds.has(projectId)
     )
-    await propagateProjectIdsToDependencySubtreesWithWarning(ctx, {
+    await propagateProjectIdsToDependencySubtreesWithWarning({
+      ctx,
       blockedResourceIds: [linkedTable._id!],
       dependencyIds: [savedTable._id!],
       projectIds: reciprocalProjectIds,
@@ -250,7 +251,8 @@ async function saveUnlocked(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   }
 
   if (!isExternalTable(savedTable)) {
-    await propagateProjectDependencyChangesWithWarning(ctx, {
+    await propagateProjectDependencyChangesWithWarning({
+      ctx,
       rootResourceId: savedTable._id!,
       currentProjectIds: savedTable.projectIds,
       previousProjectIds: previousTable?.projectIds || [],

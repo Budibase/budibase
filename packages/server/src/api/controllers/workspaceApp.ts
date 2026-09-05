@@ -13,9 +13,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { defaultAppNavigator } from "../../constants/definitions"
-import {
-  propagateProjectDependencyChangesWithWarning,
-} from "../../utilities/projects"
+import { propagateProjectDependencyChangesWithWarning } from "../../utilities/projects"
 
 function toWorkspaceAppResponse(
   workspaceApp: WorkspaceApp
@@ -97,7 +95,8 @@ async function createUnlocked(
   }
 
   const workspaceApp = await sdk.workspaceApps.create(newWorkspaceApp)
-  await propagateProjectDependencyChangesWithWarning(ctx, {
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
     rootResourceId: workspaceApp._id!,
     currentProjectIds: workspaceApp.projectIds,
     previousProjectIds: [],
@@ -150,7 +149,8 @@ async function editUnlocked(
       ? { customTheme: body.customTheme }
       : {}),
   })
-  await propagateProjectDependencyChangesWithWarning(ctx, {
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
     rootResourceId: workspaceApp._id!,
     currentProjectIds: workspaceApp.projectIds,
     previousProjectIds: existingWorkspaceApp.projectIds,
