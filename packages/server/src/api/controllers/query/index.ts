@@ -140,8 +140,26 @@ const _import = async (
 
   const importResult = await sdk.projects.doWithProjectAssignmentsLockIfEnabled(
     async () => {
+      const importQueries = async (
+        staticVariables?: Record<string, string>
+      ) => {
+        try {
+          return await importer.importQueries({
+            datasourceId,
+            selectedEndpointId: body.selectedEndpointId,
+            staticVariables,
+          })
+        } catch (error) {
+          if (body.selectedEndpointId && error instanceof Error) {
+            ctx.throw(400, error.message)
+          }
+          throw error
+        }
+      }
+
+      let result
       if (body.datasourceId && body.restTemplateId) {
-        await sdk.restTemplates.withCustomRestTemplateLock({
+        result = await sdk.restTemplates.withCustomRestTemplateLock({
           resource: body.restTemplateId,
           task: async () => {
             const templateExists = await sdk.restTemplates.exists(
@@ -160,35 +178,30 @@ const _import = async (
             }
             importer.prepareDatasourceConfig(datasource)
             datasource.restTemplateId = body.restTemplateId
+            const result = await importQueries(
+              datasource.config?.staticVariables
+            )
             const response = await context
               .getWorkspaceDB()
               .put(sdk.tables.populateExternalTableSchemas(datasource))
             datasource._rev = response.rev
             await events.datasource.updated(datasource)
             builderSocket?.emitDatasourceUpdate(ctx, datasource)
+            return result
           },
         })
+      } else {
+        result = await importQueries()
       }
 
-      try {
-        const result = await importer.importQueries(
-          datasourceId,
-          body.selectedEndpointId
-        )
-        const datasource = await sdk.datasources.get(datasourceId)
-        await propagateCreatedResourceDependenciesWithWarning({
-          ctx,
-          rootResourceId: datasourceId,
-          projectIds: datasource.projectIds,
-          savedResources: result.queries,
-        })
-        return result
-      } catch (error) {
-        if (body.selectedEndpointId && error instanceof Error) {
-          ctx.throw(400, error.message)
-        }
-        throw error
-      }
+      const datasource = await sdk.datasources.get(datasourceId)
+      await propagateCreatedResourceDependenciesWithWarning({
+        ctx,
+        rootResourceId: datasourceId,
+        projectIds: datasource.projectIds,
+        savedResources: result.queries,
+      })
+      return result
     }
   )
 

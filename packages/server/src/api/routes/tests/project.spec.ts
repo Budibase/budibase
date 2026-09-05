@@ -1053,7 +1053,7 @@ describe("/projects", () => {
           .then(() => undefined)
 
         try {
-          await schemaReady
+          await helpers.withTimeout(5000, () => schemaReady)
           await helpers.withTimeout(5000, async () => {
             const { isDefault: _isDefault, ...update } = workspaceApp
             await config.api.workspaceApp.update({

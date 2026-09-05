@@ -26,6 +26,7 @@ import {
   FindDatasourcesResponse,
   RelationshipFieldMetadata,
   RestAuthType,
+  RestTemplateId,
   RowValue,
   SourceName,
   Table,
@@ -228,6 +229,15 @@ const stripDatasourceEntityProjectIds = (datasource: Datasource) => {
   }
 }
 
+const validateCustomRestTemplate = async (restTemplateId?: RestTemplateId) => {
+  if (
+    isCustomRestTemplateId(restTemplateId) &&
+    !(await sdk.restTemplates.exists(restTemplateId))
+  ) {
+    throw new HTTPError("Custom REST template not found", 404)
+  }
+}
+
 async function updateUnlocked(
   ctx: UserCtx<UpdateDatasourceRequest, UpdateDatasourceResponse>
 ) {
@@ -288,13 +298,7 @@ async function updateUnlocked(
   }
   await clearOAuth2TokenCaches(baseDatasource)
   const persistDatasource = async () => {
-    const restTemplateId = datasource.restTemplateId
-    if (isCustomRestTemplateId(restTemplateId)) {
-      const templateExists = await sdk.restTemplates.exists(restTemplateId)
-      if (!templateExists) {
-        throw new HTTPError("Custom REST template not found", 404)
-      }
-    }
+    await validateCustomRestTemplate(datasource.restTemplateId)
 
     const response = await db.put(
       sdk.tables.populateExternalTableSchemas(datasource)
@@ -350,6 +354,7 @@ export async function update(
 export async function save(
   ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
 ) {
+  await validateCustomRestTemplate(ctx.request.body.datasource.restTemplateId)
   const { datasource, errors } = await sdk.datasources.prepareForSave(
     ctx.request.body
   )
@@ -360,14 +365,7 @@ export async function save(
     )
     stripDatasourceEntityProjectIds(datasource)
     const persistDatasource = async () => {
-      const restTemplateId = datasource.restTemplateId
-      if (isCustomRestTemplateId(restTemplateId)) {
-        const templateExists = await sdk.restTemplates.exists(restTemplateId)
-        if (!templateExists) {
-          throw new HTTPError("Custom REST template not found", 404)
-        }
-      }
-
+      await validateCustomRestTemplate(datasource.restTemplateId)
       return await sdk.datasources.save({ datasource })
     }
 
