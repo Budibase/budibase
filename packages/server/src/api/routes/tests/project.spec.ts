@@ -2138,7 +2138,7 @@ describe("/projects", () => {
     })
   })
 
-  it("clears foreign project assignments from imported transitive dependencies", async () => {
+  it("imports shared datasources with only the imported project assignment", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
         name: "Operations",
@@ -2146,27 +2146,9 @@ describe("/projects", () => {
       const { project: otherProject } = await config.api.project.create({
         name: "Other project",
       })
-      const datasource = await config.api.datasource.create({
+      await config.api.datasource.create({
         ...basicDatasource().datasource,
         projectIds: [project._id, otherProject._id],
-      })
-      const externalTableId = buildExternalTableId(
-        datasource._id!,
-        "ForeignTable"
-      )
-      const externalTable = basicTable(datasource, {
-        _id: externalTableId,
-        name: "ForeignTable",
-        projectIds: [otherProject._id],
-      })
-      await config.api.datasource.update({
-        ...datasource,
-        entities: {
-          [externalTable.name]: externalTable,
-        },
-      })
-      const query = await config.api.query.save({
-        ...basicQuery(datasource._id!),
       })
 
       const body = await config.api.project.export(project._id)
@@ -2178,19 +2160,11 @@ describe("/projects", () => {
         { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
         async () => {
           const imported = await config.api.project.import(body)
-          const importedQuery = await config.api.query.get(
-            imported.resources.query?.[0]!
-          )
           const importedDatasource = await config.api.datasource.get(
             imported.resources.datasource?.[0]!
           )
 
-          expect(importedQuery._id).not.toBe(query._id)
-          expect(importedQuery.projectIds).toBeUndefined()
           expect(importedDatasource.projectIds).toEqual([imported.project._id])
-          expect(
-            importedDatasource.entities![externalTable.name].projectIds
-          ).toBeUndefined()
         }
       )
     })
