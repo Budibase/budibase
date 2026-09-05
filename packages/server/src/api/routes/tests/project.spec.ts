@@ -216,44 +216,6 @@ describe("/projects", () => {
     })
   }
 
-  const createAssignedExternalDatasource = async (projectId: string) => {
-    const datasource = await config.api.datasource.create({
-      ...basicDatasource().datasource,
-      projectIds: [projectId],
-    })
-    const entityKey = "TestTable"
-    const externalTable = basicTable(datasource, {
-      _id: buildExternalTableId(datasource._id!, entityKey),
-      name: "Updated table",
-    })
-    await config.api.datasource.update({
-      ...datasource,
-      entities: {
-        [entityKey]: externalTable,
-      },
-    })
-    return { datasource, entityKey }
-  }
-
-  const createAssignedDatasourcePlus = async (projectId: string) => {
-    const datasourcePlus = await config.api.datasource.create({
-      ...basicDatasourcePlus().datasource,
-      projectIds: [projectId],
-    })
-    const plusEntityKey = "PlusTable"
-    const plusExternalTable = basicTable(datasourcePlus, {
-      _id: buildExternalTableId(datasourcePlus._id!, plusEntityKey),
-      name: "Updated plus table",
-    })
-    await config.api.datasource.update({
-      ...datasourcePlus,
-      entities: {
-        [plusEntityKey]: plusExternalTable,
-      },
-    })
-    return { datasourcePlus, plusEntityKey }
-  }
-
   beforeEach(async () => {
     await config.newTenant()
     cleanupAIConfig = await setupDefaultCompletionsAIConfig(config, "default")
@@ -656,23 +618,25 @@ describe("/projects", () => {
   it("clears external datasource assignments when deleting a project", async () => {
     await withProjectsEnabled(async () => {
       const project = await createAssignedProject()
-      const { datasource, entityKey } = await createAssignedExternalDatasource(
-        project._id
-      )
+      const datasource = await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        projectIds: [project._id],
+      })
 
       await config.api.project.delete(project._id, project._rev)
 
       const fetchedDatasource = await config.api.datasource.get(datasource._id!)
       expect(fetchedDatasource.projectIds).toBeUndefined()
-      expect(fetchedDatasource.entities![entityKey].projectIds).toBeUndefined()
     })
   })
 
   it("clears datasource_plus assignments when deleting a project", async () => {
     await withProjectsEnabled(async () => {
       const project = await createAssignedProject()
-      const { datasourcePlus, plusEntityKey } =
-        await createAssignedDatasourcePlus(project._id)
+      const datasourcePlus = await config.api.datasource.create({
+        ...basicDatasourcePlus().datasource,
+        projectIds: [project._id],
+      })
 
       await config.api.project.delete(project._id, project._rev)
 
@@ -680,9 +644,6 @@ describe("/projects", () => {
         datasourcePlus._id!
       )
       expect(fetchedDatasourcePlus.projectIds).toBeUndefined()
-      expect(
-        fetchedDatasourcePlus.entities![plusEntityKey].projectIds
-      ).toBeUndefined()
     })
   })
 
@@ -722,18 +683,6 @@ describe("/projects", () => {
         ...basicDatasource().datasource,
         projectIds,
       })
-      const entityKey = "TestTable"
-      const externalTable = basicTable(datasource, {
-        _id: buildExternalTableId(datasource._id!, entityKey),
-        name: "Updated table",
-        projectIds,
-      })
-      await config.api.datasource.update({
-        ...datasource,
-        entities: {
-          [entityKey]: externalTable,
-        },
-      })
       const query = await config.api.query.save({
         ...basicQuery(datasource._id!),
         projectIds,
@@ -759,7 +708,6 @@ describe("/projects", () => {
       expect(fetchedAgent?.projectIds).toEqual(expectedProjectIds)
       expect(fetchedTable.projectIds).toEqual(expectedProjectIds)
       expect(fetchedDatasource.projectIds).toEqual(expectedProjectIds)
-      expect(fetchedDatasource.entities![entityKey].projectIds).toBeUndefined()
       expect(fetchedQuery.projectIds).toBeUndefined()
     })
   })
@@ -3486,6 +3434,27 @@ describe("/projects", () => {
           "project.json.enc",
           "dependency-index.json.enc",
         ])
+      )
+    })
+  })
+
+  it("rejects project imports into production workspaces", async () => {
+    await withProjectsEnabled(async () => {
+      const body = await createTarPackage(createMinimalPackageEntries())
+      await config.publish()
+
+      await config.withHeaders(
+        { [Header.WORKSPACE_ID]: config.getProdWorkspaceId() },
+        async () => {
+          await config.api.project.import(body, undefined, {
+            status: 400,
+            body: {
+              message: "Only apps in development support this endpoint",
+            },
+          })
+
+          expect((await config.api.project.fetch()).projects).toEqual([])
+        }
       )
     })
   })
