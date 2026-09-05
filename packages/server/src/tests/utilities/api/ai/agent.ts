@@ -1,5 +1,4 @@
 import {
-  Agent,
   AgentFileUploadResponse,
   ConnectAgentSharePointSiteRequest,
   ConnectAgentSharePointSiteResponse,
@@ -24,6 +23,7 @@ import {
   UpdateAgentOperationRequest,
   AgentOperationMutationResponse,
   FetchAgentTestSuiteResponse,
+  FetchAgentsResponse,
   RunAgentTestSuiteRequest,
   RunAgentTestSuiteResponse,
   UpdateAgentTestSuiteRequest,
@@ -32,8 +32,8 @@ import {
 import { AttachedFile, Expectations, TestAPI } from "../base"
 
 export class AgentAPI extends TestAPI {
-  fetch = async (expectations?: Expectations): Promise<{ agents: Agent[] }> => {
-    return await this._get<{ agents: Agent[] }>(`/api/agent`, {
+  fetch = async (expectations?: Expectations): Promise<FetchAgentsResponse> => {
+    return await this._get<FetchAgentsResponse>(`/api/agent`, {
       expectations,
     })
   }

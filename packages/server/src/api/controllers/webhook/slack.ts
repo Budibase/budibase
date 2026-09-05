@@ -18,8 +18,9 @@ import {
   type Thread,
 } from "chat"
 import sdk from "../../../sdk"
+import type { IncomingConversationAttachment } from "../../../sdk/workspace/ai/chatConversations"
 import { escalationProcessor } from "../../../escalation/processor"
-import { handleChatMessage } from "./chatHandler"
+import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
 import { createChatLogger } from "./chatLogger"
 import { getSlackState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
@@ -104,7 +105,9 @@ export const formatSlackAssistantReply = async ({
   result: WebhookChatCompleteResult
   isDirectMessage?: boolean
 }) => {
-  const assistantText = formatSlackMrkdwn(result.assistantText || "")
+  const assistantText =
+    formatSlackMrkdwn(result.assistantText || "").trim() ||
+    NO_ASSISTANT_RESPONSE_MESSAGE
   if (result.allowKnowledgeSourceDownload === false || !isDirectMessage) {
     return assistantText
   }
@@ -187,6 +190,7 @@ type SlackReplyTarget = PrivatePostTarget
 type SlackCommand =
   | typeof ChatCommands.ASK
   | typeof ChatCommands.LINK
+  | typeof ChatCommands.NEW
   | typeof ChatCommands.UNLINK
 
 type SlackInput = {
@@ -195,12 +199,12 @@ type SlackInput = {
   author: Message["author"]
   command: SlackCommand
   content: string
+  attachments?: IncomingConversationAttachment[]
   channelId: string
   externalUserId: string
   isDirectMessage: boolean
   teamId?: string
   threadId?: string
-  subscribe?: () => Promise<void>
 }
 
 const createSlackInputHandler = ({
@@ -209,12 +213,14 @@ const createSlackInputHandler = ({
   channelEnabled,
   idleTimeoutMinutes,
   requireUserLink,
+  allowConversationAttachments,
 }: {
   workspaceId: string
   agentId: string
   channelEnabled: boolean
   idleTimeoutMinutes?: number
   requireUserLink?: boolean
+  allowConversationAttachments: boolean
 }) => {
   return async ({
     target,
@@ -222,12 +228,12 @@ const createSlackInputHandler = ({
     author,
     command,
     content,
+    attachments,
     channelId,
     externalUserId,
     isDirectMessage,
     teamId,
     threadId,
-    subscribe,
   }: SlackInput) => {
     const displayName = author.fullName || author.userName || externalUserId
 
@@ -235,6 +241,7 @@ const createSlackInputHandler = ({
       provider: AgentChannelProvider.SLACK,
       channelId,
       threadId,
+      conversationType: isDirectMessage ? "im" : "channel",
       teamId,
       externalUserId,
       externalUserName: displayName,
@@ -248,7 +255,6 @@ const createSlackInputHandler = ({
     }
 
     try {
-      await subscribe?.()
       await handleChatMessage({
         reply: async text => {
           await target.post(text)
@@ -282,6 +288,8 @@ const createSlackInputHandler = ({
         channelEnabled,
         command,
         content,
+        attachments,
+        allowConversationAttachments,
         user: { externalUserId, displayName },
         channel,
         scope,
@@ -304,7 +312,15 @@ const createSlackMessageHandler = (
   return async (thread: Thread, message: Message) => {
     const raw = message.raw as SlackEvent | undefined
     const content = extractSlackMessageContent(raw?.text || message.text)
-    if (!content) {
+    const attachments: IncomingConversationAttachment[] = (
+      message.attachments || []
+    ).map((attachment, index) => ({
+      providerFileId: raw?.files?.[index]?.id || "",
+      filename: attachment.name || "slack-file",
+      mimetype: attachment.mimeType || "",
+      size: attachment.size,
+    }))
+    if (!content && !attachments.length) {
       await thread.post("Send a message to continue.")
       return
     }
@@ -319,12 +335,12 @@ const createSlackMessageHandler = (
       author: message.author,
       command: ChatCommands.ASK,
       content,
+      attachments,
       channelId: thread.channelId,
       threadId: thread.id || undefined,
       externalUserId: message.author.userId,
       isDirectMessage: isSlackDirectMessage(raw),
       teamId: raw?.team_id || raw?.team,
-      subscribe: () => thread.subscribe(),
     })
   }
 }
@@ -341,12 +357,15 @@ export async function slackWebhook(
         idleTimeoutMinutes,
         channelEnabled,
         requireUserLink,
+        allowConversationAttachments,
       } = await context.doInWorkspaceContext(workspaceId, async () => {
         const agent = await sdk.ai.agents.getOrThrow(agentId)
         return {
           integration: sdk.ai.deployments.slack.validateSlackIntegration(agent),
           idleTimeoutMinutes: agent.slackIntegration?.idleTimeoutMinutes,
           requireUserLink: agent.slackIntegration?.requireUserLink,
+          allowConversationAttachments:
+            agent.allowConversationAttachments !== false,
           channelEnabled:
             !!agent.slackIntegration?.messagingEndpointUrl?.trim(),
         }
@@ -377,6 +396,7 @@ export async function slackWebhook(
         channelEnabled,
         idleTimeoutMinutes,
         requireUserLink,
+        allowConversationAttachments,
       })
       const handler = createSlackMessageHandler(handleSlackInput)
 
@@ -412,6 +432,31 @@ export async function slackWebhook(
       chat.onSlashCommand(
         `/${ChatCommands.UNLINK}`,
         handleSlackSlashCommand(ChatCommands.UNLINK)
+      )
+      chat.onSlashCommand(
+        `/${ChatCommands.NEW}`,
+        async (event: SlashCommandEvent) => {
+          const raw = event.raw as Record<string, string | undefined>
+          const channelId = raw.channel_id
+          if (!channelId || !event.user.userId) {
+            await event.channel.post("Missing Slack command metadata.")
+            return
+          }
+          await handleSlackInput({
+            target: event.channel as SlackReplyTarget,
+            privateTarget: event.channel as SlackReplyTarget,
+            author: event.user,
+            command: ChatCommands.NEW,
+            content: event.text,
+            channelId,
+            externalUserId: event.user.userId,
+            isDirectMessage: isSlackDirectMessage({
+              type: "message",
+              channel: raw.channel_id,
+            }),
+            teamId: raw.team_id,
+          })
+        }
       )
       // TODO: Make these a strict set
       chat.onAction(async (event: ActionEvent) => {
@@ -486,7 +531,6 @@ export async function slackWebhook(
       })
 
       chat.onNewMention(handler)
-      chat.onSubscribedMessage(handler)
       chat.onNewMessage(/./, async (thread, message) => {
         const raw = message.raw as SlackEvent | undefined
         if (!isSlackDirectMessage(raw) || message.isMention) {

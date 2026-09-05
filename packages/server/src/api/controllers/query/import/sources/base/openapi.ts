@@ -4,6 +4,12 @@ import isObject from "lodash/isObject"
 import { OpenAPI } from "openapi-types"
 import { ImportSource } from "."
 
+const parserOptions: SwaggerParser.Options = {
+  resolve: {
+    external: false,
+  },
+}
+
 const isYamlDocument = (loaded: unknown): loaded is OpenAPI.Document => {
   if (isObject(loaded)) {
     return true
@@ -34,32 +40,20 @@ const prepareDocument = (raw: string): string | OpenAPI.Document => {
 
 export abstract class OpenAPISource extends ImportSource {
   parseData = async (data: string): Promise<OpenAPI.Document> => {
-    const baseOptions = {
-      resolve: {
-        external: false,
-      },
-    }
-
     const parsedInput = prepareDocument(data)
-    const document = await SwaggerParser.parse(parsedInput, baseOptions)
+    const document = await SwaggerParser.parse(parsedInput, parserOptions)
     return document
   }
 
   validate = async (document: OpenAPI.Document): Promise<OpenAPI.Document> => {
-    const baseOptions = {
-      resolve: {
-        external: false,
-      },
-    }
-
     try {
-      return await SwaggerParser.validate(document)
+      return await SwaggerParser.validate(document, parserOptions)
     } catch (err) {
       console.log(
         `[OpenAPI Import] Schema validation failed, continuing without validation`
       )
       try {
-        return await SwaggerParser.dereference(document, baseOptions)
+        return await SwaggerParser.dereference(document, parserOptions)
       } catch (dereferenceErr) {
         console.log(
           `[OpenAPI Import] Dereference failed, continuing with parsed document`
