@@ -18,6 +18,7 @@ import {
   AutomationTriggerStepId,
   Datasource,
   DocumentType,
+  EmailTriggerAuthType,
   ImportProjectResponse,
   isEmailTrigger,
   isWebhookTrigger,
@@ -27,10 +28,13 @@ import {
   ProjectPackageManifest,
   Query,
   ResourceType,
+  type RestAuthConfig,
+  RestAuthType,
   RowActionPermissions,
   Table,
   TableRowActions,
   SEPARATOR,
+  SourceName,
   UsedResource,
   VirtualDocumentType,
   WorkspaceApp,
@@ -585,14 +589,52 @@ const sanitizeImportedProjectAssignments = (
   )
 }
 
-const sanitizeImportedDoc = async (
-  doc: AnyDocument,
-  resourceType: ResourceType,
-  remapper: ProjectImportIdRemapper,
-  workspaceId: string,
-  importedProjectId: string,
+const hasImportedEmailConnection = ({
+  automation,
+  datasourcesById,
+}: {
+  automation: Automation
+  datasourcesById: Map<string, Datasource>
+}) => {
+  const trigger = automation.definition?.trigger
+  if (
+    !isEmailTrigger(trigger) ||
+    trigger.inputs?.authType !== EmailTriggerAuthType.OAUTH2
+  ) {
+    return false
+  }
+  const { datasourceId, authConfigId } = trigger.inputs
+  if (!datasourceId || !authConfigId) {
+    return false
+  }
+  const datasource = datasourcesById.get(datasourceId)
+  return !!(
+    datasource &&
+    datasource.source === SourceName.REST &&
+    datasource.config?.authConfigs?.some(
+      (auth: RestAuthConfig) =>
+        auth._id === authConfigId && auth.type === RestAuthType.OAUTH2
+    )
+  )
+}
+
+const sanitizeImportedDoc = async ({
+  doc,
+  resourceType,
+  remapper,
+  workspaceId,
+  importedProjectId,
+  deconflictWorkspaceApp,
+  datasourcesById,
+}: {
+  doc: AnyDocument
+  resourceType: ResourceType
+  remapper: ProjectImportIdRemapper
+  workspaceId: string
+  importedProjectId: string
   deconflictWorkspaceApp: (_workspaceApp: WorkspaceApp) => void
-): Promise<AnyDocument> => {
+  datasourcesById: Map<string, Datasource>
+}): Promise<AnyDocument> => {
   const { idMap } = remapper
   const remapped = remapValue(structuredClone(doc), remapper) as AnyDocument
   delete remapped._rev
@@ -647,6 +689,18 @@ const sanitizeImportedDoc = async (
       remapped,
       sdk.automations.utils.sanitiseAutomationForExport(remapped as Automation)
     )
+    const trigger = (remapped as Automation).definition?.trigger
+    if (
+      isEmailTrigger(trigger) &&
+      trigger.inputs &&
+      !hasImportedEmailConnection({
+        automation: doc as Automation,
+        datasourcesById,
+      })
+    ) {
+      delete trigger.inputs.datasourceId
+      delete trigger.inputs.authConfigId
+    }
     remapped.appId = workspaceId
     remapped.disabled = true
   }
@@ -1294,11 +1348,21 @@ async function extractProjectPackage(
   }
 }
 
-const buildRequirements = (docs: ImportedDoc[]): ProjectImportRequirement[] => {
+const buildRequirements = ({
+  docs,
+  datasourcesById,
+}: {
+  docs: ImportedDoc[]
+  datasourcesById: Map<string, Datasource>
+}): ProjectImportRequirement[] => {
   return docs.flatMap<ProjectImportRequirement>(importedDoc => {
     if (
       importedDoc.resourceType === ResourceType.AUTOMATION &&
-      isEmailTrigger((importedDoc.doc as Automation).definition?.trigger)
+      isEmailTrigger((importedDoc.doc as Automation).definition?.trigger) &&
+      !hasImportedEmailConnection({
+        automation: importedDoc.doc as Automation,
+        datasourcesById,
+      })
     ) {
       return [
         {
@@ -1371,6 +1435,11 @@ export async function importProject(
         ])
 
         assignImportedIds({ docs: extracted.docs, idMap })
+        const datasourcesById = new Map(
+          extracted.docs
+            .filter(doc => doc.resourceType === ResourceType.DATASOURCE)
+            .map(({ doc }) => [doc._id!, doc as Datasource])
+        )
         const idRemapper = createProjectImportIdRemapper(
           idMap,
           buildImportedToolNameMap(extracted.docs, idMap)
@@ -1388,14 +1457,15 @@ export async function importProject(
               .filter(doc => doc.resourceType === resourceType)
               .map(async ({ doc }) => {
                 const newId = idMap.get(doc._id!)
-                const remappedDoc = await sanitizeImportedDoc(
-                  { ...doc, _id: newId },
+                const remappedDoc = await sanitizeImportedDoc({
+                  doc: { ...doc, _id: newId },
                   resourceType,
-                  idRemapper,
+                  remapper: idRemapper,
                   workspaceId,
                   importedProjectId,
-                  deconflictWorkspaceApp
-                )
+                  deconflictWorkspaceApp,
+                  datasourcesById,
+                })
                 return remappedDoc
               })
           )
@@ -1418,13 +1488,14 @@ export async function importProject(
           resources[resourceType] = docsToInsert.map(doc => doc._id!)
         }
 
-        const requirements = buildRequirements(extracted.docs).map(
-          requirement => ({
-            ...requirement,
-            resourceId:
-              idMap.get(requirement.resourceId) || requirement.resourceId,
-          })
-        )
+        const requirements = buildRequirements({
+          docs: extracted.docs,
+          datasourcesById,
+        }).map(requirement => ({
+          ...requirement,
+          resourceId:
+            idMap.get(requirement.resourceId) || requirement.resourceId,
+        }))
 
         const createdAt = getProjectCreatedAt(importedProject)
         return {
