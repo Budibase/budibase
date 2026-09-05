@@ -80,7 +80,9 @@ merge_dir() {
     return 0
   fi
 
-  mkdir -p "$dst"
+  if [ "$APPLY" = "1" ]; then
+    mkdir -p "$dst"
+  fi
 
   local entry rel target
   find "$src" -mindepth 1 -print0 | while IFS= read -r -d '' entry; do
