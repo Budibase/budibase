@@ -126,7 +126,11 @@ merge_root_couch_files() {
     fi
     echo "MOVE: ${f} -> ${target}"
     if [ "$APPLY" = "1" ]; then
-      mv "$f" "$target"
+      mkdir -p "$NEW_DBS_DIR"
+      if ! mv "$f" "$target"; then
+        echo "ERROR: failed to move ${f} -> ${target}" >&2
+        exit 1
+      fi
     fi
     echo "moved" >> "$STATE_FILE"
   done
