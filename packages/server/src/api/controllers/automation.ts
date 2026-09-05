@@ -55,11 +55,7 @@ import sdk from "../../sdk"
 import { isMaskedPassword } from "../../sdk/workspace/automations/utils"
 import { getValidProjectIdsForDuplication } from "../../sdk/workspace/projects/utils"
 import { isQsTrue } from "../../utilities"
-import {
-  propagateProjectDependencyChangesWithWarning,
-  resolveProjectIds,
-  resolveUpdatedProjectIds,
-} from "../../utilities/projects"
+import { propagateProjectDependencyChangesWithWarning } from "../../utilities/projects"
 import { withTestFlag } from "../../utilities/redis"
 import { builderSocket } from "../../websockets"
 
@@ -87,7 +83,7 @@ async function createUnlocked(
       : undefined
   automation.projectIds = sourceAutomation
     ? await getValidProjectIdsForDuplication(sourceAutomation.projectIds)
-    : await resolveProjectIds(automation.projectIds)
+    : await sdk.projects.resolveProjectIds(automation.projectIds)
   automation.appId = ctx.appId
 
   let createdAutomation: Automation
@@ -114,7 +110,8 @@ async function createUnlocked(
 
   // A history restore replays the saved snapshot, including its exclusions.
   if (!restoringDeletedAutomation) {
-    await propagateProjectDependencyChangesWithWarning(ctx, {
+    await propagateProjectDependencyChangesWithWarning({
+      ctx,
       rootResourceId: createdAutomation._id!,
       currentProjectIds: createdAutomation.projectIds,
       previousProjectIds: sourceAutomation?.projectIds,
@@ -144,13 +141,14 @@ async function updateUnlocked(
   }
 
   const existingAutomation = await sdk.automations.get(automation._id)
-  automation.projectIds = await resolveUpdatedProjectIds(
-    automation.projectIds,
-    existingAutomation.projectIds
-  )
+  automation.projectIds = await sdk.projects.resolveUpdatedProjectIds({
+    projectIds: automation.projectIds,
+    currentProjectIds: existingAutomation.projectIds,
+  })
 
   const updatedAutomation = await sdk.automations.update(automation)
-  await propagateProjectDependencyChangesWithWarning(ctx, {
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
     rootResourceId: updatedAutomation._id!,
     currentProjectIds: updatedAutomation.projectIds,
     previousProjectIds: existingAutomation.projectIds,

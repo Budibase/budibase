@@ -13,11 +13,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { defaultAppNavigator } from "../../constants/definitions"
-import {
-  propagateProjectDependencyChangesWithWarning,
-  resolveProjectIds,
-  resolveUpdatedProjectIds,
-} from "../../utilities/projects"
+import { propagateProjectDependencyChangesWithWarning } from "../../utilities/projects"
 
 function toWorkspaceAppResponse(
   workspaceApp: WorkspaceApp
@@ -85,7 +81,7 @@ async function createUnlocked(
   ctx: Ctx<InsertWorkspaceAppRequest, InsertWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
-  const projectIds = await resolveProjectIds(body.projectIds)
+  const projectIds = await sdk.projects.resolveProjectIds(body.projectIds)
   const newWorkspaceApp: WithoutDocMetadata<WorkspaceApp> = {
     name: body.name,
     url: body.url,
@@ -99,7 +95,8 @@ async function createUnlocked(
   }
 
   const workspaceApp = await sdk.workspaceApps.create(newWorkspaceApp)
-  await propagateProjectDependencyChangesWithWarning(ctx, {
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
     rootResourceId: workspaceApp._id!,
     currentProjectIds: workspaceApp.projectIds,
     previousProjectIds: [],
@@ -133,10 +130,10 @@ async function editUnlocked(
     ctx.throw(404)
   }
 
-  const updatedProjectIds = await resolveUpdatedProjectIds(
-    body.projectIds,
-    existingWorkspaceApp.projectIds
-  )
+  const updatedProjectIds = await sdk.projects.resolveUpdatedProjectIds({
+    projectIds: body.projectIds,
+    currentProjectIds: existingWorkspaceApp.projectIds,
+  })
 
   const workspaceApp = await sdk.workspaceApps.update({
     _id: body._id,
@@ -152,7 +149,8 @@ async function editUnlocked(
       ? { customTheme: body.customTheme }
       : {}),
   })
-  await propagateProjectDependencyChangesWithWarning(ctx, {
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
     rootResourceId: workspaceApp._id!,
     currentProjectIds: workspaceApp.projectIds,
     previousProjectIds: existingWorkspaceApp.projectIds,

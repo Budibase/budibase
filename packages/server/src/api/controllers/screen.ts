@@ -65,7 +65,8 @@ async function saveUnlocked(
   // Screens don't carry their own projectIds - resources they reference
   // (e.g. a button that triggers an automation) are attributed to the owning
   // workspace app in the dependency graph, so propagate from there.
-  await propagateProjectDependencyChangesWithWarning(ctx, {
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
     rootResourceId: owningWorkspaceApp._id!,
     currentProjectIds: owningWorkspaceApp.projectIds,
     previousProjectIds: owningWorkspaceApp.projectIds,
