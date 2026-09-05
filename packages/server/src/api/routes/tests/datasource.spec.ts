@@ -569,36 +569,12 @@ describe("/datasources", () => {
       expect(ds.usesEnvironmentVariables).toBe(false)
     })
 
-    it("scrubs secrets containing mixed literals and env var references", async () => {
-      const ds = await config.api.datasource.create({
-        type: "datasource",
-        name: "REST mixed env secret",
-        source: SourceName.REST,
-        config: {
-          authConfigs: [
-            {
-              _id: generator.guid(),
-              name: "Mixed Env Auth",
-              type: RestAuthType.BASIC,
-              config: {
-                username: "user",
-                password: "prefix {{ env.PASSWORD }}",
-              },
-            },
-          ],
-        },
-      })
-
-      expect(ds.usesEnvironmentVariables).toBe(true)
-      expect(ds.config!.authConfigs[0].config.password).toBe(
-        PASSWORD_REPLACEMENT
-      )
-    })
-
     it.each([
+      "prefix {{ env.PASSWORD }}",
       '{{ env.PASSWORD || "fallback-secret" }}',
       '{{ env.PASSWORD||"fallback-secret" }}',
       '{{ "prefix-" + env.PASSWORD }}',
+      "{{ env.PASSWORD }}{{ user.password }}",
     ])("scrubs mixed environment expressions: %s", async password => {
       const ds = await config.api.datasource.create({
         type: "datasource",
@@ -611,7 +587,7 @@ describe("/datasources", () => {
               name: "Environment expression auth",
               type: RestAuthType.BASIC,
               config: {
-                username: "{{ env.USERNAME }}",
+                username: "user",
                 password,
               },
             },
@@ -619,6 +595,7 @@ describe("/datasources", () => {
         },
       })
 
+      expect(ds.usesEnvironmentVariables).toBe(true)
       expect(ds.config!.authConfigs[0].config.password).toBe(
         PASSWORD_REPLACEMENT
       )
@@ -646,31 +623,6 @@ describe("/datasources", () => {
       })
 
       expect(ds.config!.authConfigs[0].config.password).toBe(password)
-    })
-
-    it("scrubs secrets combining env and non-env bindings", async () => {
-      const ds = await config.api.datasource.create({
-        type: "datasource",
-        name: "REST mixed binding secret",
-        source: SourceName.REST,
-        config: {
-          authConfigs: [
-            {
-              _id: generator.guid(),
-              name: "Mixed Binding Auth",
-              type: RestAuthType.BASIC,
-              config: {
-                username: "{{ env.USERNAME }}",
-                password: "{{ env.PASSWORD }}{{ user.password }}",
-              },
-            },
-          ],
-        },
-      })
-
-      expect(ds.config!.authConfigs[0].config.password).toBe(
-        PASSWORD_REPLACEMENT
-      )
     })
 
     it("scrubs sensitive longform fields in get response", async () => {
