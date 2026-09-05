@@ -7,10 +7,7 @@
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
-  import {
-    saveProjectAssignment,
-    type ProjectAssignmentSelection,
-  } from "@/components/projects/assignments"
+  import { saveProjectAssignment } from "@/components/projects/assignments"
   import CreateProjectModal from "./_components/CreateProjectModal.svelte"
   import ExportProjectModal from "./_components/ExportProjectModal.svelte"
   import HomeControls from "./_components/HomeControls.svelte"
@@ -51,6 +48,7 @@
   } from "@budibase/bbui"
   import {
     FeatureFlag,
+    type UpdateProjectAssignmentRequest,
     type UIAutomation,
     type UIWorkspaceApp,
     type HomeRow,
@@ -403,19 +401,15 @@
     }
   }
 
-  const assignProject = async (selection: ProjectAssignmentSelection) => {
+  const assignProject = async (selection: UpdateProjectAssignmentRequest) => {
     if (!projectsEnabled || !selectedRow) {
       return keepOpen
     }
 
-    const saved = await saveProjectAssignment({
+    await saveProjectAssignment({
       resourceId: selectedRow.id,
-      resourceRev: selectedRow.resource._rev!,
       selection,
     })
-    if (!saved) {
-      return keepOpen
-    }
     assignProjectModal?.hide()
 
     try {
@@ -1139,11 +1133,13 @@
 
   <Modal bind:this={assignProjectModal}>
     {#key assignProjectModalKey}
-      <AssignProjectModal
-        resource={selectedProjectResource}
-        onPreview={projectsStore.previewAssignment}
-        onConfirm={assignProject}
-      />
+      {#if selectedProjectResource}
+        <AssignProjectModal
+          resource={selectedProjectResource}
+          onPreview={projectsStore.previewAssignment}
+          onConfirm={assignProject}
+        />
+      {/if}
     {/key}
   </Modal>
 
