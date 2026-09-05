@@ -1042,7 +1042,7 @@ describe("/projects", () => {
         const excluded = await config.api.project.updateAssignment(
           workspaceApp._id!,
           {
-            resourceRev: workspaceApp._rev!,
+            resourceRev: preview.resourceRev,
             projectIds,
             dependencyIds: [],
           }
@@ -1057,12 +1057,16 @@ describe("/projects", () => {
           resourceId: workspaceApp._id!,
           projectIds,
         })
-        expect(repairPreview.dependencies).toEqual(preview.dependencies)
+        expect(repairPreview).toMatchObject({
+          resourceRev: excluded.resourceRev,
+          resourceProjectIds: projectIds,
+          dependencies: preview.dependencies,
+        })
 
         const included = await config.api.project.updateAssignment(
           workspaceApp._id!,
           {
-            resourceRev: excluded.resourceRev,
+            resourceRev: repairPreview.resourceRev,
             projectIds,
             dependencyIds: [automation._id!],
           }
