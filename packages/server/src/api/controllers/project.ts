@@ -90,9 +90,14 @@ export async function previewAssignment(
   const { resourceId } = ctx.request.body
   const projectIds =
     (await resolveProjectIds(ctx.request.body.projectIds)) || []
-  await sdk.projects.getProjectAssignableResource(resourceId)
+  const resource = await sdk.projects.getProjectAssignableResource(resourceId)
 
-  ctx.body = await getProjectAssignmentPreview({ resourceId, projectIds })
+  ctx.body = await getProjectAssignmentPreview({
+    resourceId,
+    resourceRev: resource._rev,
+    resourceProjectIds: resource.projectIds || [],
+    projectIds,
+  })
 }
 
 export async function updateAssignment(
@@ -104,10 +109,12 @@ export async function updateAssignment(
       ctx.request.body
     const projectIds =
       (await resolveProjectIds(ctx.request.body.projectIds)) || []
-    await sdk.projects.getProjectAssignableResource(resourceId)
+    const resource = await sdk.projects.getProjectAssignableResource(resourceId)
 
     const preview = await getProjectAssignmentPreview({
       resourceId,
+      resourceRev: resource._rev,
+      resourceProjectIds: resource.projectIds || [],
       projectIds,
     })
     if (

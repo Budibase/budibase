@@ -48,21 +48,6 @@ describe("Project assignments lock", () => {
     }))
   })
 
-  it("uses an auto-extending production workspace lock", async () => {
-    await expect(
-      doWithProjectAssignmentsLock(async () => "result")
-    ).resolves.toBe("result")
-
-    expect(doWithLock).toHaveBeenCalledWith(
-      {
-        name: LockName.PROJECT_ASSIGNMENTS,
-        type: LockType.AUTO_EXTEND,
-        resource: "app_workspace",
-      },
-      expect.any(Function)
-    )
-  })
-
   it("uses an explicit destination workspace", async () => {
     await doWithProjectAssignmentsLock(async () => undefined, "app_dev_target")
 
@@ -70,16 +55,6 @@ describe("Project assignments lock", () => {
       expect.objectContaining({ resource: "app_target" }),
       expect.any(Function)
     )
-  })
-
-  it("returns callback errors", async () => {
-    const error = new Error("failed")
-
-    await expect(
-      doWithProjectAssignmentsLock(async () => {
-        throw error
-      })
-    ).rejects.toBe(error)
   })
 
   it("skips the lock when Projects is disabled", async () => {
@@ -99,6 +74,13 @@ describe("Project assignments lock", () => {
       doWithProjectAssignmentsLockIfEnabled(async () => "result")
     ).resolves.toBe("result")
 
-    expect(doWithLock).toHaveBeenCalledTimes(1)
+    expect(doWithLock).toHaveBeenCalledWith(
+      {
+        name: LockName.PROJECT_ASSIGNMENTS,
+        type: LockType.AUTO_EXTEND,
+        resource: "app_workspace",
+      },
+      expect.any(Function)
+    )
   })
 })

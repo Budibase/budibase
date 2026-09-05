@@ -56,11 +56,7 @@ import {
   findResourceSearchTargets,
   type ResourceSearchTarget,
 } from "./references"
-import {
-  compareResourceIds,
-  compareResourceTypes,
-  getResourceType,
-} from "./utils"
+import { compareResourceIds, getResourceType } from "./utils"
 
 export { getResourceType } from "./utils"
 
@@ -350,14 +346,11 @@ async function buildResourceDependencyAnalysis({
     findResourceSearchTargets({ resource, targets: baseSearchTargets })
 
   const findReferencedResources = (resource: AnyDocument) =>
-    Array.from(
-      new Map(
-        findSearchTargets(resource).map(target => [
-          target.id,
-          { id: target.id, name: target.name, type: target.type },
-        ])
-      ).values()
-    )
+    findSearchTargets(resource).map(({ id, name, type }) => ({
+      id,
+      name,
+      type,
+    }))
 
   const searchForUsages = (
     forResource: string,
@@ -382,6 +375,13 @@ async function buildResourceDependencyAnalysis({
         addDependencies(forResource, toAdd)
       }
     }
+  }
+
+  for (const datasource of datasources) {
+    searchForUsages(datasource._id!, {
+      config: datasource.config,
+      entities: datasource.entities,
+    })
   }
 
   // Search in tables
@@ -551,7 +551,7 @@ async function buildResourceDependencyAnalysis({
 
       dependencies[project._id].dependencies.sort(
         (a, b) =>
-          compareResourceTypes(a.type, b.type) || compareResourceIds(a.id, b.id)
+          compareResourceIds(a.type, b.type) || compareResourceIds(a.id, b.id)
       )
     }
   }

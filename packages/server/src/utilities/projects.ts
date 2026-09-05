@@ -21,7 +21,6 @@ import {
 } from "../sdk/workspace/resources"
 import {
   compareResourceIds,
-  compareResourceTypes,
   getResourceType,
   isDisallowedProjectAssignmentResourceId,
 } from "../sdk/workspace/resources/utils"
@@ -111,6 +110,8 @@ interface ResponseHeaderContext {
 
 interface ProjectDependencyPreviewInput {
   resourceId: string
+  resourceRev: string
+  resourceProjectIds: string[]
   projectIds: string[]
 }
 
@@ -169,10 +170,16 @@ const isAssignableDependency = (dependency: {
 const createProjectAssignmentPreview = ({
   dependencies,
   projectIds,
+  resourceRev,
+  resourceProjectIds,
 }: {
   dependencies: ProjectAssignmentDependency[]
   projectIds: string[]
+  resourceRev: string
+  resourceProjectIds: string[]
 }): PreviewProjectAssignmentResponse => ({
+  resourceRev,
+  resourceProjectIds,
   dependencies,
   dependencyFingerprint: createHash("sha256")
     .update(
@@ -193,10 +200,17 @@ const createProjectAssignmentPreview = ({
 
 export const getProjectAssignmentPreview = async ({
   resourceId,
+  resourceRev,
+  resourceProjectIds,
   projectIds,
 }: ProjectDependencyPreviewInput): Promise<PreviewProjectAssignmentResponse> => {
   if (!projectIds.length) {
-    return createProjectAssignmentPreview({ dependencies: [], projectIds })
+    return createProjectAssignmentPreview({
+      dependencies: [],
+      projectIds,
+      resourceRev,
+      resourceProjectIds,
+    })
   }
 
   const assignableDependencies =
@@ -205,7 +219,12 @@ export const getProjectAssignmentPreview = async ({
     assignableDependencies.map(dependency => [dependency.id, dependency])
   )
   if (!dependenciesById.size) {
-    return createProjectAssignmentPreview({ dependencies: [], projectIds })
+    return createProjectAssignmentPreview({
+      dependencies: [],
+      projectIds,
+      resourceRev,
+      resourceProjectIds,
+    })
   }
 
   const db = context.getWorkspaceDB()
@@ -225,27 +244,27 @@ export const getProjectAssignmentPreview = async ({
     )
     return projectIdsToAdd.length ? [{ ...dependency, projectIdsToAdd }] : []
   })
-  return createProjectAssignmentPreview({ dependencies, projectIds })
+  return createProjectAssignmentPreview({
+    dependencies,
+    projectIds,
+    resourceRev,
+    resourceProjectIds,
+  })
 }
 
 export const getProjectAssignableDependencies = async (resourceId: string) => {
-  const graph = await sdk.resources.getResourcesInfo({
+  const { graph } = await sdk.resources.analyzeResourceDependencies({
     includeProjects: false,
     includeDatasourceQueries: true,
   })
-  return Array.from(
-    new Map(
-      collectTransitiveResourceDependencies(graph, resourceId)
-        .filter(isAssignableDependency)
-        .filter(dependency => dependency.id !== resourceId)
-        .map(dependency => [dependency.id, dependency])
-    ).values()
-  ).sort(
-    (a, b) =>
-      compareResourceTypes(a.type, b.type) ||
-      compareResourceIds(a.name, b.name) ||
-      compareResourceIds(a.id, b.id)
-  )
+  return collectTransitiveResourceDependencies(graph, resourceId)
+    .filter(isAssignableDependency)
+    .sort(
+      (a, b) =>
+        compareResourceIds(a.type, b.type) ||
+        compareResourceIds(a.name, b.name) ||
+        compareResourceIds(a.id, b.id)
+    )
 }
 
 const withoutRevisionMetadata = (resource: AnyDocument) => {

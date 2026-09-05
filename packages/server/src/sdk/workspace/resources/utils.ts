@@ -24,15 +24,6 @@ export const getResourceType = (id: string): ResourceType | undefined =>
     id.startsWith(idPrefix)
   )?.[0] as ResourceType | undefined
 
-const resourceTypeOrder = new Map(
-  Object.values(ResourceType)
-    .sort()
-    .map((type, index) => [type, index])
-)
-
-export const compareResourceTypes = (a: ResourceType, b: ResourceType) =>
-  resourceTypeOrder.get(a)! - resourceTypeOrder.get(b)!
-
 export const compareResourceIds = (a: string, b: string) =>
   a < b ? -1 : a > b ? 1 : 0
 

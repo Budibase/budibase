@@ -340,6 +340,7 @@ async function createAgentUnlocked(
     live: body.live,
     _deleted: false,
     createdBy: globalId,
+    allowConversationAttachments: body.allowConversationAttachments,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
   }
@@ -386,6 +387,9 @@ async function updateAgentUnlocked(
     iconColor: body.iconColor,
     live: body.live,
     publishedAt: undefined,
+    allowConversationAttachments:
+      body.allowConversationAttachments ??
+      existing.allowConversationAttachments,
     MSTeamsIntegration: body.MSTeamsIntegration,
     slackIntegration: body.slackIntegration,
   }

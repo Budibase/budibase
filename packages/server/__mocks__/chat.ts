@@ -29,8 +29,6 @@ const mockWebhookState: Record<MockProvider, MockPostEphemeralResult> = {
   teams: defaultPostEphemeralResult(),
 }
 const mockChatOptions: ChatOptions[] = []
-const subscribedThreads = new Set<string>()
-let subscribeError: Error | undefined
 
 const toMessageText = (value: unknown) =>
   typeof value === "string" ? value : JSON.stringify(value)
@@ -107,6 +105,13 @@ interface MockSlackEvent {
   ts?: string
   user?: string
   username?: string
+  files?: Array<{
+    id?: string
+    mimetype?: string
+    name?: string
+    size?: number
+    content?: string
+  }>
 }
 
 interface MockTeamsMentionEntity {
@@ -167,12 +172,6 @@ export const resetMockChatState = () => {
   mockWebhookState.slack = defaultPostEphemeralResult()
   mockWebhookState.teams = defaultPostEphemeralResult()
   mockChatOptions.length = 0
-  subscribedThreads.clear()
-  subscribeError = undefined
-}
-
-export const setMockSubscribeError = (error?: Error) => {
-  subscribeError = error
 }
 
 export const setMockPostEphemeralResult = (
@@ -330,12 +329,6 @@ export class Chat {
           id: `slack:${channelId}:${threadTs}`,
           channelId,
           ...createMessageCollector("slack", messages),
-          subscribe: async () => {
-            if (subscribeError) {
-              throw subscribeError
-            }
-            subscribedThreads.add(`slack:${channelId}:${threadTs}`)
-          },
           channel,
         }
         const isMention = isSlackMentionMessage(event)
@@ -343,6 +336,13 @@ export class Chat {
           text: event.text || "",
           raw: event,
           isMention,
+          attachments: (event.files || []).map(file => ({
+            type: file.mimetype?.startsWith("image/") ? "image" : "file",
+            name: file.name,
+            mimeType: file.mimetype,
+            size: file.size,
+            fetchData: async () => Buffer.from(file.content || ""),
+          })),
           author: {
             userId: event.user || "",
             userName: event.username || event.user || "",
@@ -355,11 +355,6 @@ export class Chat {
         } else {
           if (isMention) {
             await invokeHandlers(this.mentionHandlers, thread, message)
-          } else if (
-            event.thread_ts &&
-            subscribedThreads.has(`slack:${channelId}:${threadTs}`)
-          ) {
-            await invokeHandlers(this.subscribedHandlers, thread, message)
           }
           await invokeHandlers(this.newMessageHandlers, thread, message)
         }
@@ -446,6 +441,12 @@ export interface Message {
   text?: string
   raw?: unknown
   isMention?: boolean
+  attachments?: Array<{
+    name?: string
+    mimeType?: string
+    size?: number
+    fetchData?: () => Promise<Buffer>
+  }>
   author: {
     userId: string
     fullName?: string
