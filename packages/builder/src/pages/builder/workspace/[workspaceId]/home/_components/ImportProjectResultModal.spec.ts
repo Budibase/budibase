@@ -2,12 +2,12 @@ import { fireEvent, render, screen } from "@testing-library/svelte"
 import { ResourceType, type ImportProjectResponse } from "@budibase/types"
 import { describe, expect, it, vi } from "vitest"
 import MockBody from "@/test/mocks/MockBody.svelte"
-import MockLink from "@/test/mocks/MockLink.svelte"
+import MockButton from "@/test/mocks/MockButton.svelte"
 import MockModalContent from "@/test/mocks/MockModalContent.svelte"
 
 vi.mock("@budibase/bbui", () => ({
   Body: MockBody,
-  Link: MockLink,
+  Button: MockButton,
   ModalContent: MockModalContent,
 }))
 
@@ -49,20 +49,19 @@ describe("ImportProjectResultModal", () => {
     const onOpenResource = vi.fn()
     render(ImportProjectResultModal, {
       response,
-      resourceUrl: requirement =>
-        `https://example.com/${requirement.resourceId}`,
       onOpenResource,
     })
 
-    const links = screen.getAllByRole("link", { name: "Support agent" })
-    expect(links).toHaveLength(1)
-    expect(links[0]).toHaveAttribute("href", "https://example.com/agent_1")
+    const buttons = screen.getAllByRole("button", { name: "Support agent" })
+    expect(buttons).toHaveLength(1)
     expect(screen.getByText("Reconnect the Slack integration.")).toBeTruthy()
     expect(screen.getByText("Choose an AI model.")).toBeTruthy()
     expect(screen.getByText(response.unsupportedContent[0].reason)).toBeTruthy()
     expect(screen.queryByText(/agent_linked_content/)).toBeNull()
 
-    await fireEvent.click(links[0])
-    expect(onOpenResource).toHaveBeenCalledOnce()
+    await fireEvent.click(buttons[0])
+    expect(onOpenResource).toHaveBeenCalledExactlyOnceWith(
+      response.requirements[0]
+    )
   })
 })

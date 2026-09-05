@@ -37,6 +37,7 @@
     projectsStore,
   } from "@/stores/portal"
   import { getErrorMessage } from "@/helpers/errors"
+  import { bb } from "@/stores/bb"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
     Body,
@@ -418,7 +419,7 @@
     assignProjectModal?.hide()
 
     try {
-      await Promise.all([appStore.refresh(), agentsStore.fetchAgents()])
+      await appStore.refresh()
     } catch (error) {
       console.error(error)
       notifications.warning(
@@ -474,7 +475,7 @@
       notifications.success(`Project '${projectName}' deleted successfully`)
 
       try {
-        await Promise.all([appStore.refresh(), agentsStore.fetchAgents()])
+        await appStore.refresh()
       } catch (error) {
         console.error(error)
         notifications.warning(
@@ -503,25 +504,29 @@
     }
   }
 
-  const importedResourceUrl = ({
+  const openImportedResource = ({
     type,
     resourceId,
   }: ProjectImportRequirement) => {
+    importProjectResultModal.hide()
     let route: string
     if (type === "datasource_secrets") {
       const datasource = $datasources.list.find(item => item._id === resourceId)
-      route =
-        datasource?.source === SourceName.REST
-          ? `../apis/datasource/${resourceId}`
-          : `../data/datasource/${resourceId}`
+      if (datasource?.source === SourceName.REST) {
+        bb.settings(`/connections/api-connections/${resourceId}`)
+        return
+      }
+      route = `../data/datasource/${resourceId}`
     } else if (type === "automation_credentials") {
       route = `../automation/${resourceId}`
     } else {
       route = `../agent/${resourceId}/config`
     }
-    return withWorkspaceHomeReturn(
-      url(route),
-      `${window.location.pathname}${window.location.search}`
+    goto(
+      withWorkspaceHomeReturn(
+        url(route),
+        `${window.location.pathname}${window.location.search}`
+      )
     )
   }
 
@@ -542,11 +547,10 @@
       typeFilter = "all"
       searchTerm = ""
       importResult = response
-      const refreshes = await Promise.allSettled([
-        appStore.refresh(),
-        agentsStore.fetchAgents(),
-      ])
-      if (refreshes.some(result => result.status === "rejected")) {
+      try {
+        await appStore.refresh()
+      } catch (error) {
+        console.error(error)
         notifications.warning(
           "Project imported, but some resources could not be refreshed. Reload the workspace to see all imported resources."
         )
@@ -1202,8 +1206,7 @@
     {#if importResult}
       <ImportProjectResultModal
         response={importResult}
-        resourceUrl={importedResourceUrl}
-        onOpenResource={() => importProjectResultModal.hide()}
+        onOpenResource={openImportedResource}
       />
     {/if}
   </Modal>
