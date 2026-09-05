@@ -47,6 +47,8 @@ export interface ProjectAssignmentDependency extends UsedResource {
 }
 
 export interface PreviewProjectAssignmentResponse {
+  resourceRev: string
+  resourceProjectIds: string[]
   dependencies: ProjectAssignmentDependency[]
   dependencyFingerprint: string
 }
