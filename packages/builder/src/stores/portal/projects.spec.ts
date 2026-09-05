@@ -111,30 +111,32 @@ describe("ProjectsStore", () => {
     expect(getProjects(store)).toEqual([project("second_project")])
   })
 
-  it("returns the import response and allows retry when refresh fails", async () => {
+  it("returns import setup details and adds the project to the current workspace", async () => {
     const store = new ProjectsStore()
+    const existing = project("project_2")
+    fetchProjects.mockResolvedValueOnce({ projects: [existing] })
+    await store.fetch()
     const response: ImportProjectResponse = {
       project: project("project_1"),
       resources: {
         [ResourceType.PROJECT]: ["project_1"],
+        [ResourceType.DATASOURCE]: ["datasource_1"],
       },
       unsupportedContent: [],
-      requirements: [],
+      requirements: [
+        {
+          type: "datasource_secrets",
+          resourceId: "datasource_1",
+          name: "Customer database",
+          reason: "Reconnect the database.",
+        },
+      ],
     }
     const file = new File(["project"], "project.tar.gz")
-    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {})
-
     importBundle.mockResolvedValue(response)
-    fetchProjects.mockRejectedValue(new Error("refresh failed"))
 
     await expect(store.importProject(file)).resolves.toEqual(response)
-    expect(fetchProjects).toHaveBeenCalledTimes(1)
-    expect(consoleWarn).toHaveBeenCalledWith(
-      "Failed to refresh projects after import",
-      expect.any(Error)
-    )
-
-    consoleWarn.mockRestore()
+    expect(getProjects(store)).toEqual([response.project, existing])
   })
 
   it("does not let an in-flight fetch overwrite a created project", async () => {
