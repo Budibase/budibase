@@ -184,8 +184,7 @@ run_verify() {
   fi
 
   local all_dbs
-  all_dbs="$(curl -s "${auth[@]}" "${VERIFY_URL}/_all_dbs")"
-  if [ -z "$all_dbs" ]; then
+  if ! all_dbs="$(curl -fsS "${auth[@]}" "${VERIFY_URL}/_all_dbs")"; then
     echo "Could not reach ${VERIFY_URL}/_all_dbs. Is CouchDB running and are --user/--password correct?" >&2
     exit 1
   fi
