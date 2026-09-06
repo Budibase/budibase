@@ -125,7 +125,7 @@ COPY hosting/single/ssh/sshd_config /etc/
 COPY hosting/single/ssh/ssh_setup.sh /tmp
 
 #  Setup letsencrypt certificate
-RUN apt-get update && apt-get install -y certbot python3-certbot-nginx
+RUN apt-get update && apt-get install -y certbot python3-certbot-nginx && rm -rf /var/lib/apt/lists/*
 COPY hosting/letsencrypt /app/letsencrypt
 RUN chmod +x /app/letsencrypt/certificate-request.sh /app/letsencrypt/certificate-renew.sh
 
