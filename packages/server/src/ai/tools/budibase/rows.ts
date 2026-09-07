@@ -360,13 +360,9 @@ const ROW_TOOL: Record<RowToolAction, RowTool> = {
   },
 }
 
-const ROW_TOOL_ACTIONS: RowToolAction[] = [
-  ToolAction.LIST_ROWS,
-  ToolAction.GET_ROW,
-  ToolAction.CREATE_ROW,
-  ToolAction.UPDATE_ROW,
-  ToolAction.SEARCH_ROWS,
-]
+const ROW_TOOL_ACTIONS = Object.values(ToolAction).filter(
+  (action): action is RowToolAction => action !== ToolAction.TRIGGER
+)
 
 const formatActionLabel = (action: string) =>
   action
