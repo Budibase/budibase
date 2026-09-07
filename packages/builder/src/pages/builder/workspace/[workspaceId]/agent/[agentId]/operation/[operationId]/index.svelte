@@ -15,6 +15,7 @@
     type AgentOperation,
     type AgentOperationApprovalPolicy,
     type EscalationRecipient,
+    type ToolExecutionCondition,
     type ToolExecutionRule,
   } from "@budibase/types"
   import * as routify from "@roxi/routify"
@@ -114,7 +115,14 @@
       }
     | undefined
   >()
-  let stagedRule = $state<{ index?: number; policyId?: string } | undefined>()
+  let stagedRule = $state<
+    | {
+        index?: number
+        policyId?: string
+        conditions?: ToolExecutionCondition[]
+      }
+    | undefined
+  >()
   let chainingToolModal = false
   let chainingRuleModal = false
   let policyModalFromRule = false
@@ -852,11 +860,13 @@
   const beginPolicyCreateFromRule = ({
     index,
     policyId,
+    conditions,
   }: {
     index?: number
     policyId?: string
+    conditions: ToolExecutionCondition[]
   }) => {
-    stagedRule = { index, policyId }
+    stagedRule = { index, policyId, conditions }
     policyModalFromRule = true
     chainingRuleModal = true
     approvalRuleModal?.hide()
@@ -882,7 +892,9 @@
       fields: stagedToolConfig
         ? toolConditionFields(stagedToolConfig.tool)
         : [],
-      rule: pending?.policyId ? { policyId: pending.policyId } : undefined,
+      rule: pending
+        ? { policyId: pending.policyId, conditions: pending.conditions }
+        : undefined,
       index: pending?.index,
       apiExplorer: stagedToolConfig
         ? isQueryToolType(stagedToolConfig.tool.sourceType)

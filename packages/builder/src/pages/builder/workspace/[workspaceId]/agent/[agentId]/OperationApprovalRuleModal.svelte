@@ -24,7 +24,11 @@
       index?: number
     }) => void | Promise<void>
     onRemove?: (index: number) => void
-    onCreatePolicy?: (args: { index?: number; policyId?: string }) => void
+    onCreatePolicy?: (args: {
+      index?: number
+      policyId?: string
+      conditions: ToolExecutionCondition[]
+    }) => void
     onOpenApiExplorer?: () => void
     onClose?: () => void
   }
@@ -51,7 +55,7 @@
   export const show = (options: {
     policies: AgentOperationApprovalPolicy[]
     fields: ConditionField[]
-    rule?: ToolExecutionRule
+    rule?: Partial<ToolExecutionRule>
     index?: number
     apiExplorer?: boolean
   }) => {
@@ -312,7 +316,14 @@
           secondary
           size="S"
           icon="plus-circle"
-          on:click={() => onCreatePolicy?.({ index: editingIndex, policyId })}
+          on:click={() =>
+            onCreatePolicy?.({
+              index: editingIndex,
+              policyId,
+              conditions: conditions.map(
+                ({ noValue: _noValue, ...condition }) => condition
+              ),
+            })}
         >
           Create new policy
         </Button>
