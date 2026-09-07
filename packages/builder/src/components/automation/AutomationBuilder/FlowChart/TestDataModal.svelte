@@ -71,8 +71,7 @@
 
   $: if (automation._id !== previewRoleAutomationId) {
     previewRoleAutomationId = automation._id
-    previewRoleId =
-      automation.testData?.previewRoleId ?? Constants.Roles.ADMIN
+    previewRoleId = automation.testData?.previewRoleId ?? Constants.Roles.ADMIN
     refreshPreviewRoles()
   }
 

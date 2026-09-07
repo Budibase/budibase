@@ -19,13 +19,17 @@ import {
   AutomationActionStepId,
   AutomationIOType,
   AutomationStepType,
+  BlockDefinitionTypes,
+  ToolExecutionPrincipal,
   isBranchStep,
   isLoopV2Step,
   type Automation,
   type BranchStep,
   type AutomationStep,
+  type AgentStep,
   type BlockPath,
 } from "@budibase/types"
+import { automations } from "@budibase/shared-core"
 
 vi.mock("@/stores/builder", () => {
   return {
@@ -42,6 +46,57 @@ interface TestBlockRef extends AutomationBlockRef {
 }
 
 describe("automation store", () => {
+  it("adds the execution principal field to legacy agent steps", () => {
+    const agentDefinition = automations.steps.agent.definition
+    const legacyAgent: AgentStep = {
+      ...structuredClone(agentDefinition),
+      id: "legacy-agent",
+      stepId: AutomationActionStepId.AGENT,
+      inputs: {
+        agentId: "agent-id",
+        prompt: "prompt",
+      },
+    }
+    delete legacyAgent.inputs.executionPrincipal
+    delete legacyAgent.schema.inputs.properties.executionPrincipal
+
+    const automation: Automation = {
+      _id: "automation",
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps: [legacyAgent],
+      },
+    }
+
+    automationStore.update(state => ({
+      ...state,
+      automations: [automation],
+      selectedAutomationId: automation._id!,
+      blockDefinitions: {
+        ...state.blockDefinitions,
+        [BlockDefinitionTypes.ACTION]: {
+          ...state.blockDefinitions.ACTION,
+          [AutomationActionStepId.AGENT]: agentDefinition,
+        },
+      },
+    }))
+
+    const selectedAgent = get(selectedAutomation).data?.definition.steps[0]
+    if (selectedAgent?.stepId !== AutomationActionStepId.AGENT) {
+      throw new Error("Expected an agent step")
+    }
+
+    expect(selectedAgent.inputs.executionPrincipal).toBe(
+      ToolExecutionPrincipal.ADMIN
+    )
+    expect(selectedAgent.schema.inputs.properties.executionPrincipal).toEqual(
+      agentDefinition.schema.inputs.properties.executionPrincipal
+    )
+  })
+
   it("selects new automations in editor mode", () => {
     const existingAutomation: Automation = {
       _id: "existing-automation",

@@ -55,6 +55,7 @@ import {
   AutomationResults,
   AutomationStatus,
   AutomationStep,
+  AgentStep,
   AutomationStepResult,
   AutomationStepInputs,
   AutomationStepType,
@@ -97,6 +98,7 @@ import {
   BlockRef,
   isLoopV2Step,
   type RestTemplateId,
+  ToolExecutionPrincipal,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { derived, get, readable, Readable } from "svelte/store"
@@ -109,6 +111,10 @@ export interface AutomationSaveOptions {
 }
 
 export const MAX_STICKY_NOTES_PER_AUTOMATION = 12
+
+const isAgentStep = (
+  step?: AutomationStep | AutomationTrigger
+): step is AgentStep => step?.stepId === AutomationActionStepId.AGENT
 
 const sameMoveContainer = (
   sourcePath: BlockPath[],
@@ -3188,6 +3194,34 @@ class SelectedAutomationStore extends DerivedBudiStore<
         // Only traverse if we have a valid automation
         if (updatedAuto) {
           automationStore.actions.traverse(blockRefs, updatedAuto)
+
+          const executionPrincipalSchema =
+            $store.blockDefinitions.ACTION[AutomationActionStepId.AGENT]?.schema
+              .inputs.properties.executionPrincipal
+
+          if (executionPrincipalSchema) {
+            Object.values(blockRefs).forEach(blockRef => {
+              const step = automationStore.actions
+                .getPathSteps(blockRef.pathTo, updatedAuto)
+                .at(-1)
+
+              if (isAgentStep(step)) {
+                const properties = step?.schema?.inputs?.properties
+
+                if (!properties || properties.executionPrincipal) {
+                  return
+                }
+
+                properties.executionPrincipal = cloneDeep(
+                  executionPrincipalSchema
+                )
+                step.inputs = {
+                  ...step.inputs,
+                  executionPrincipal: ToolExecutionPrincipal.ADMIN,
+                }
+              }
+            })
+          }
 
           Object.values(blockRefs)
             .filter(blockRef => blockRef.terminating)
