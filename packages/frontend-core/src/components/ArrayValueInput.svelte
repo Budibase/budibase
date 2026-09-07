@@ -24,6 +24,7 @@
   let popover = $state<PopoverAPI>()
   let anchor = $state<HTMLElement>()
   let addInput = $state<HTMLInputElement>()
+  let content = $state<HTMLElement>()
   let draft = $state("")
   let open = $state(false)
 
@@ -63,7 +64,11 @@
   const onClose = () => {
     open = false
     const active = document.activeElement
-    if (!active || active === document.body) {
+    if (
+      !active ||
+      active === document.body ||
+      (content && content.contains(active))
+    ) {
       anchor?.focus()
     }
   }
@@ -142,7 +147,11 @@
   on:close={onClose}
 >
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="array-popover" onkeydown={onPopoverKeydown}>
+  <div
+    bind:this={content}
+    class="array-popover"
+    onkeydown={onPopoverKeydown}
+  >
     {#each value as entry, index}
       <div class="array-entry">
         <span class="array-entry-label">{entry}</span>
