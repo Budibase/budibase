@@ -3217,7 +3217,9 @@ class SelectedAutomationStore extends DerivedBudiStore<
                 )
                 step.inputs = {
                   ...step.inputs,
-                  executionPrincipal: ToolExecutionPrincipal.ADMIN,
+                  executionPrincipal:
+                    step.inputs.executionPrincipal ??
+                    ToolExecutionPrincipal.ADMIN,
                 }
               }
             })
