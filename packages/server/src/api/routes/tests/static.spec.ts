@@ -227,9 +227,9 @@ describe("/static", () => {
         )
       })
 
-      it("should allow non-creator app users to generate a signed upload URL", async () => {
+      it("should deny non-builder app users from generating a signed upload URL", async () => {
         await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
-          const res = await request
+          await request
             .post(`/api/attachments/${datasource._id}/url`)
             .send({
               bucket: "foo",
@@ -237,12 +237,7 @@ describe("/static", () => {
             })
             .set(config.defaultHeaders())
             .expect("Content-Type", /json/)
-            .expect(200)
-
-          expect(res.body.signedUrl).toBeDefined()
-          expect(res.body.publicUrl).toEqual(
-            "https://foo.s3.eu-west-1.amazonaws.com/bar"
-          )
+            .expect(403)
         })
       })
     })
