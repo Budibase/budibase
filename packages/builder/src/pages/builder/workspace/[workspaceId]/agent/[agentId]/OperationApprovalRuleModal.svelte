@@ -157,7 +157,7 @@
     if (typeof value !== "string") {
       return value
     }
-    if (type === FieldType.NUMBER || type === FieldType.BIGINT) {
+    if (type === FieldType.NUMBER) {
       const parsed = parseFloat(value)
       return isNaN(parsed) ? value : parsed
     }
