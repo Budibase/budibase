@@ -20,7 +20,7 @@ import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
 import { isRelationshipColumn } from "../../../db/utils"
 import { isSQL } from "../../../integrations/utils"
-import { sql, SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
+import { HTTPError, sql, SQS_DATASOURCE_INTERNAL } from "@budibase/backend-core"
 import { getTableFromSource } from "../../../api/controllers/row/utils"
 import env from "../../../environment"
 import {
@@ -388,6 +388,18 @@ export function tryExtractingTableAndViewId(tableOrViewId: string) {
   }
 
   return { tableId: tableOrViewId }
+}
+
+export async function assertRowInView(viewId: string, rowId: string) {
+  const result = await sdk.rows.search({
+    tableId: getTableIdFromViewId(viewId),
+    viewId,
+    query: { equal: { _id: rowId } },
+    limit: 1,
+  })
+  if (!result.rows.length) {
+    throw new HTTPError("Row not found", 404)
+  }
 }
 
 export function getSource(tableOrViewId: string) {

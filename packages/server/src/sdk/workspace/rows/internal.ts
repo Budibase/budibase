@@ -10,7 +10,11 @@ import {
   outputProcessing,
 } from "../../../utilities/rowProcessor"
 import { getFullUser } from "../../../utilities/users"
-import { getSource, tryExtractingTableAndViewId } from "./utils"
+import {
+  assertRowInView,
+  getSource,
+  tryExtractingTableAndViewId,
+} from "./utils"
 
 export async function save(
   tableOrViewId: string,
@@ -72,7 +76,10 @@ export async function find(sourceId: string, rowId: string): Promise<Row> {
 }
 
 export async function findRow(sourceId: string, rowId: string) {
-  const { tableId } = tryExtractingTableAndViewId(sourceId)
+  const { tableId, viewId } = tryExtractingTableAndViewId(sourceId)
+  if (viewId) {
+    await assertRowInView(viewId, rowId)
+  }
   const db = context.getWorkspaceDB()
   let row: Row
   // TODO remove special user case in future
