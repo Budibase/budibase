@@ -36,6 +36,13 @@ describe("blacklist", () => {
       expect(await isBlacklisted("169.254.169.254")).toBe(true)
     })
 
+    it("should blacklist IPv6 transition addresses", async () => {
+      expect(await isBlacklisted("::a9fe:a9fe")).toBe(true)
+      expect(await isBlacklisted("2001:0:1234::")).toBe(true)
+      expect(await isBlacklisted("2002:a9fe:a9fe::")).toBe(true)
+      expect(await isBlacklisted("64:ff9b::a9fe:a9fe")).toBe(true)
+    })
+
     it("should allow public IPs by default", async () => {
       expect(await isBlacklisted("8.8.8.8")).toBe(false)
     })
@@ -130,7 +137,7 @@ describe("blacklist", () => {
       expect(await isBlacklisted("https://budibase-ssrf.invalid")).toBe(false)
     })
 
-    it("should use only configured entries when self-hosted override is set", async () => {
+    it("should add configured entries to the default blacklist", async () => {
       restoreEnv = setEnv({
         SELF_HOSTED: true,
         BLACKLIST_IPS: "1.1.1.1",
@@ -138,7 +145,7 @@ describe("blacklist", () => {
       await refreshBlacklist()
 
       expect(await isBlacklisted("1.1.1.1")).toBe(true)
-      expect(await isBlacklisted("192.168.1.1")).toBe(false)
+      expect(await isBlacklisted("192.168.1.1")).toBe(true)
     })
   })
 

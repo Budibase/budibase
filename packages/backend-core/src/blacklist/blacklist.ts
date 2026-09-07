@@ -12,6 +12,11 @@ const DEFAULT_BLACKLIST = [
   "169.254.0.0/16",
   "0.0.0.0/8",
   "::1/128",
+  "::/96",
+  "2001::/32",
+  "2002::/16",
+  "64:ff9b::/96",
+  "64:ff9b:1::/48",
   "fc00::/7",
   "fe80::/10",
 ] as const
@@ -20,7 +25,7 @@ let blackList: net.BlockList | undefined
 const performLookup = promisify(dns.lookup)
 
 function shouldApplyDefaultBlacklist() {
-  return !(env.SELF_HOSTED && env.BLACKLIST_IPS !== undefined)
+  return env.BLACKLIST_IPS !== ""
 }
 
 function getIpVersion(address: string): "ipv4" | "ipv6" {
