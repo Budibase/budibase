@@ -147,11 +147,7 @@
   on:close={onClose}
 >
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div
-    bind:this={content}
-    class="array-popover"
-    onkeydown={onPopoverKeydown}
-  >
+  <div bind:this={content} class="array-popover" onkeydown={onPopoverKeydown}>
     {#each value as entry, index}
       <div class="array-entry">
         <span class="array-entry-label">{entry}</span>
