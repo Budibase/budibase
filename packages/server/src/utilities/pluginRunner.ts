@@ -1,4 +1,4 @@
-import { spawn, type Serializable } from "child_process"
+import { spawn, type ChildProcess, type Serializable } from "child_process"
 import crypto from "crypto"
 import fs from "fs"
 
@@ -17,10 +17,6 @@ interface PluginRunnerResponse {
   requestId: string
   result?: any
   error?: PluginRunnerError
-}
-
-interface PluginDescription {
-  methods: string[]
 }
 
 interface PluginInvocation {
@@ -43,15 +39,17 @@ interface CachedDatasourcePlugin {
 }
 
 const datasourcePluginCache = new Map<string, CachedDatasourcePlugin>()
+const pluginSessions = new WeakMap<object, PluginSession>()
+const SESSION_HELPER_METHODS = new Set([
+  "getBindingIdentifier",
+  "getStringConcat",
+])
 
 const PLUGIN_RUNNER_SOURCE = String.raw`
-const send = response => {
-  if (process.send) {
-    process.send(response, () => process.exit(0))
-  } else {
-    process.exit(1)
-  }
-}
+const send = process.send.bind(process)
+let Integration
+let integration
+let queue = Promise.resolve()
 
 const getMethods = Integration => {
   const methods = new Set()
@@ -67,12 +65,14 @@ const getMethods = Integration => {
   return [...methods]
 }
 
-process.once("message", async request => {
+const handleRequest = async request => {
   try {
-    const plugin = require(request.filename)
-    const Integration = plugin.integration || plugin
-    if (typeof Integration !== "function") {
-      throw new Error("Datasource plugin does not export an integration class")
+    if (!Integration) {
+      const plugin = require(request.filename)
+      Integration = plugin.integration || plugin
+      if (typeof Integration !== "function") {
+        throw new Error("Datasource plugin does not export an integration class")
+      }
     }
 
     if (request.operation === "describe") {
@@ -80,12 +80,14 @@ process.once("message", async request => {
       return
     }
 
-    const integration = new Integration(request.config)
-    if (
-      request.typeCastingSchema &&
-      typeof integration.defineTypeCastingFromSchema === "function"
-    ) {
-      integration.defineTypeCastingFromSchema(request.typeCastingSchema)
+    if (!integration) {
+      integration = new Integration(request.config)
+      if (
+        request.typeCastingSchema &&
+        typeof integration.defineTypeCastingFromSchema === "function"
+      ) {
+        await integration.defineTypeCastingFromSchema(request.typeCastingSchema)
+      }
     }
 
     const method = integration[request.method]
@@ -94,9 +96,6 @@ process.once("message", async request => {
     }
 
     const result = await method.apply(integration, request.args || [])
-    if (typeof integration.end === "function") {
-      await integration.end()
-    }
     send({ requestId: request.requestId, result })
   } catch (error) {
     send({
@@ -107,30 +106,59 @@ process.once("message", async request => {
       },
     })
   }
+}
+process.on("message", request => {
+  queue = queue.then(() => handleRequest(request))
 })
 `
 
 const isPluginRunnerResponse = (
   message: Serializable
 ): message is PluginRunnerResponse => {
-  return (
-    typeof message === "object" && message !== null && "requestId" in message
-  )
+  if (
+    typeof message !== "object" ||
+    message === null ||
+    !("requestId" in message) ||
+    typeof message.requestId !== "string"
+  ) {
+    return false
+  }
+  if ("error" in message && message.error !== undefined) {
+    return (
+      typeof message.error === "object" &&
+      message.error !== null &&
+      "message" in message.error &&
+      typeof message.error.message === "string"
+    )
+  }
+  return true
 }
 
-const runPlugin = <T>(invocation: PluginInvocation): Promise<T> => {
-  const requestId = crypto.randomUUID()
-  const execArgv = [
-    "--permission",
-    `--allow-fs-read=${invocation.filename}`,
-    "--max-old-space-size=128",
-  ]
-  const dropPrivileges = process.getuid?.() === 0
+interface PendingInvocation {
+  resolve: (result: Serializable | undefined) => void
+  reject: (error: Error) => void
+}
 
-  return new Promise((resolve, reject) => {
-    const child = spawn(
+class PluginSession {
+  private child: ChildProcess
+  private pending = new Map<string, PendingInvocation>()
+  private failure?: Error
+  private exited: Promise<void>
+  private timeout: ReturnType<typeof setTimeout>
+  private disposal?: Promise<void>
+
+  constructor(private options: { filename: string; hasEnd?: boolean }) {
+    const { filename } = options
+    const dropPrivileges = process.getuid?.() === 0
+    this.child = spawn(
       process.execPath,
-      [...execArgv, "-e", PLUGIN_RUNNER_SOURCE],
+      [
+        "--permission",
+        "--allow-fs-read=" + filename,
+        "--max-old-space-size=128",
+        "-e",
+        PLUGIN_RUNNER_SOURCE,
+      ],
       {
         cwd: process.platform === "win32" ? undefined : "/tmp",
         env: { NODE_ENV: process.env.NODE_ENV || "production" },
@@ -140,63 +168,117 @@ const runPlugin = <T>(invocation: PluginInvocation): Promise<T> => {
         stdio: ["ignore", "ignore", "ignore", "ipc"],
       }
     )
-
-    let completed = false
-    const finish = (callback: () => void) => {
-      if (completed) {
-        return
-      }
-      completed = true
-      clearTimeout(timeout)
-      callback()
-    }
-
-    const timeout = setTimeout(() => {
-      child.kill("SIGKILL")
-      finish(() =>
-        reject(new Error("Datasource plugin execution exceeded the time limit"))
+    this.exited = new Promise(resolve => {
+      this.child.once("close", () => {
+        this.fail(new Error("Datasource plugin session has closed"))
+        clearTimeout(this.timeout)
+        resolve()
+      })
+    })
+    this.timeout = setTimeout(() => {
+      this.fail(
+        new Error("Datasource plugin execution exceeded the time limit")
       )
+      this.child.kill("SIGKILL")
     }, environment.QUERY_THREAD_TIMEOUT)
 
-    child.once("error", error => finish(() => reject(error)))
-    child.once("exit", code => {
-      if (!completed) {
-        finish(() =>
-          reject(
-            new Error(
-              `Datasource plugin process exited before responding (${code})`
-            )
-          )
-        )
-      }
+    this.child.once("error", error => {
+      this.fail(error)
+      this.child.kill("SIGKILL")
     })
-    child.on("message", message => {
-      if (!isPluginRunnerResponse(message) || message.requestId !== requestId) {
+    this.child.on("message", message => {
+      if (!isPluginRunnerResponse(message)) {
         return
       }
+      const pending = this.pending.get(message.requestId)
+      if (!pending) {
+        return
+      }
+      this.pending.delete(message.requestId)
       if (message.error) {
-        const error = new Error(message.error.message)
-        error.stack = message.error.stack
-        finish(() => reject(error))
+        pending.reject(new Error(message.error.message))
       } else {
-        finish(() => resolve(message.result))
+        pending.resolve(message.result)
       }
     })
+  }
 
-    child.send({ ...invocation, requestId }, error => {
-      if (error) {
-        finish(() => reject(error))
+  private fail(error: Error) {
+    this.failure ||= error
+    for (const pending of this.pending.values()) {
+      pending.reject(this.failure)
+    }
+    this.pending.clear()
+  }
+
+  async invoke(invocation: PluginInvocation) {
+    if (this.failure) {
+      throw this.failure
+    }
+    const requestId = crypto.randomUUID()
+    try {
+      return await new Promise<Serializable | undefined>((resolve, reject) => {
+        this.pending.set(requestId, { resolve, reject })
+        this.child.send(
+          { ...invocation, filename: this.options.filename, requestId },
+          error => {
+            if (error) {
+              this.fail(error)
+            }
+          }
+        )
+      })
+    } catch (error) {
+      await this.close()
+      throw error
+    }
+  }
+
+  async close() {
+    this.fail(new Error("Datasource plugin session has closed"))
+    this.child.kill("SIGKILL")
+    await this.exited
+  }
+
+  dispose() {
+    this.disposal ||= this.end()
+    return this.disposal
+  }
+
+  private async end() {
+    try {
+      if (this.options.hasEnd && !this.failure) {
+        await this.invoke({
+          filename: this.options.filename,
+          operation: "invoke",
+          method: "end",
+        })
       }
-    })
-  })
+    } finally {
+      await this.close()
+    }
+  }
 }
 
 const createDatasourcePlugin = async (filename: string) => {
   filename = fs.realpathSync(filename)
-  const { methods } = await runPlugin<PluginDescription>({
-    filename,
-    operation: "describe",
-  })
+  const discovery = new PluginSession({ filename })
+  let methods: string[]
+  try {
+    const result = await discovery.invoke({ filename, operation: "describe" })
+    if (
+      typeof result !== "object" ||
+      result === null ||
+      !("methods" in result) ||
+      !Array.isArray(result.methods) ||
+      !result.methods.every(method => typeof method === "string")
+    ) {
+      throw new Error("Datasource plugin returned invalid methods")
+    }
+    methods = result.methods
+  } finally {
+    await discovery.close()
+  }
 
   const Integration: IntegrationBaseConstructor = class {
     declare read?: IntegrationBase["read"]
@@ -226,15 +308,37 @@ const createDatasourcePlugin = async (filename: string) => {
     }
 
     Object.defineProperty(Integration.prototype, method, {
-      value(this: DatasourcePluginProxy, ...args: any[]) {
-        return runPlugin({
-          filename,
-          operation: "invoke",
-          config: this.config,
-          method,
-          args,
-          typeCastingSchema: this.typeCastingSchema,
-        })
+      async value(this: DatasourcePluginProxy, ...args: any[]) {
+        let session = pluginSessions.get(this)
+        if (!session) {
+          session = new PluginSession({
+            filename,
+            hasEnd: methods.includes("end"),
+          })
+          pluginSessions.set(this, session)
+        }
+        let result: Serializable | undefined
+        try {
+          result = await session.invoke({
+            filename,
+            operation: "invoke",
+            config: this.config,
+            method,
+            args,
+            typeCastingSchema: this.typeCastingSchema,
+          })
+        } catch (error) {
+          pluginSessions.delete(this)
+          throw error
+        }
+        if (!SESSION_HELPER_METHODS.has(method)) {
+          try {
+            await session.dispose()
+          } finally {
+            pluginSessions.delete(this)
+          }
+        }
+        return result
       },
     })
   }
