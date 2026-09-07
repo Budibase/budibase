@@ -460,6 +460,34 @@ describe("/automations", () => {
       )
     })
 
+    it("rejects basic previews when the automation is restricted to admin", async () => {
+      const runner = await createAutomationBuilder(config)
+        .onAppAction()
+        .serverLog({ text: "ran" })
+        .save()
+
+      await config.api.permission.add({
+        roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
+        resourceId: runner.automation._id!,
+        level: PermissionLevel.EXECUTE,
+      })
+
+      await config.api.automation.test(
+        runner.automation._id!,
+        {
+          fields: {},
+          previewRoleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        },
+        {
+          status: 400,
+          body: {
+            message:
+              "The selected role does not have permission to run this automation",
+          },
+        }
+      )
+    })
+
     it("allows on-demand tests as public when execute permission is public", async () => {
       const runner = await createAutomationBuilder(config)
         .onAppAction()
