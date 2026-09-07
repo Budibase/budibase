@@ -5,6 +5,8 @@ import {
   ESCALATE_TOOL_NAME,
   EscalationContextDoc,
   EscalationNotificationChannel,
+  EscalationNotificationDoc,
+  EscalationRecipient,
   EscalationRaisedAction,
   EscalationSource,
   SEPARATOR,
@@ -12,8 +14,21 @@ import {
 } from "@budibase/types"
 import TestConfiguration from "../tests/utilities/TestConfiguration"
 import sdk from "../sdk"
-import { resumeOperation } from "./queue"
+import { processNotify, resumeOperation } from "./queue"
 import { createEscalateTool } from "../ai/tools/budibase"
+import * as slack from "./notifications/slack"
+import * as teams from "./notifications/ms-teams"
+import { ProviderResponseError } from "./notifications/utils"
+
+jest.mock("./notifications/slack", () => {
+  const actual = jest.requireActual("./notifications/slack")
+  return { ...actual, sendSlackNotification: jest.fn() }
+})
+
+jest.mock("./notifications/ms-teams", () => {
+  const actual = jest.requireActual("./notifications/ms-teams")
+  return { ...actual, sendMSTeamsNotification: jest.fn() }
+})
 
 jest.mock("../sdk/workspace/ai/agents", () => {
   const actual = jest.requireActual("../sdk/workspace/ai/agents")
@@ -430,5 +445,117 @@ describe("resumeOperation", () => {
       // The new escalation is still pending, so the request must not close.
       expect(request.status).toEqual("needs_input")
     })
+  })
+})
+
+describe("processNotify", () => {
+  const config = new TestConfiguration()
+  const sendSlackMock = slack.sendSlackNotification as jest.Mock
+  const sendTeamsMock = teams.sendMSTeamsNotification as jest.Mock
+
+  const seedPending = async (recipient: EscalationRecipient) => {
+    const escalationId = `esc_${Date.now()}`
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      await context.getWorkspaceDB().put({
+        _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`,
+        source: EscalationSource.OPERATION,
+        appId: config.getProdWorkspaceId(),
+        tenantId: config.getTenantId(),
+        delay: 1000,
+        resolution: "pending",
+        recipients: [recipient],
+      })
+    })
+    return escalationId
+  }
+
+  const runNotify = (escalationId: string) =>
+    processNotify({
+      id: `esc_${escalationId}_notify`,
+      data: {
+        phase: "notify",
+        escalationId,
+        appId: config.getProdWorkspaceId(),
+        tenantId: config.getTenantId(),
+      },
+    })
+
+  const getNotification = async (escalationId: string) =>
+    config.doInContext(config.getProdWorkspaceId(), async () => {
+      const [doc] = await sdk.escalations.listNotifications(escalationId)
+      return doc
+    })
+
+  beforeEach(async () => {
+    sendSlackMock.mockReset()
+    sendTeamsMock.mockReset()
+    await config.newTenant()
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  it("records a sent outcome on the notification", async () => {
+    sendSlackMock.mockResolvedValue(true)
+    sendTeamsMock.mockResolvedValue(false)
+    const escalationId = await seedPending({
+      type: EscalationNotificationChannel.SLACK,
+      config: { channelId: "C1" },
+    })
+
+    await runNotify(escalationId)
+
+    const doc = await getNotification(escalationId)
+    expect(doc.status).toEqual("sent")
+    expect(doc.sentAt).toEqual(expect.any(String))
+    expect(doc.providerResponse).toBeUndefined()
+  })
+
+  it("records a failed outcome with the provider response", async () => {
+    sendSlackMock.mockResolvedValue(false)
+    sendTeamsMock.mockRejectedValue(
+      new ProviderResponseError(502, '{"error":"ServiceError"}', "Teams Bot API")
+    )
+    const escalationId = await seedPending({
+      type: EscalationNotificationChannel.MSTEAMS,
+      config: { channelId: "19:abc@thread.tacv2", teamId: "T1" },
+    })
+
+    await runNotify(escalationId)
+
+    const doc = await getNotification(escalationId)
+    expect(doc.status).toEqual("failed")
+    expect(doc.sentAt).toEqual(expect.any(String))
+    expect(doc.providerResponse).toEqual({
+      code: 502,
+      body: '{"error":"ServiceError"}',
+    })
+  })
+
+  it("keeps a response recorded during the send when writing the outcome", async () => {
+    const escalationId = await seedPending({
+      type: EscalationNotificationChannel.SLACK,
+      config: { channelId: "C1" },
+    })
+    sendTeamsMock.mockResolvedValue(false)
+    sendSlackMock.mockImplementation(
+      async ({ notifDoc }: { notifDoc: EscalationNotificationDoc }) => {
+        await sdk.escalations.respond(
+          escalationId,
+          notifDoc._id!,
+          { actionId: "esc_approve", user: { userId: "U1" } },
+          jest.fn()
+        )
+        return true
+      }
+    )
+
+    await runNotify(escalationId)
+
+    const doc = await getNotification(escalationId)
+    expect(doc.status).toEqual("sent")
+    expect(doc.responses).toHaveLength(1)
+    expect(doc.responses?.[0].user.userId).toEqual("U1")
   })
 })

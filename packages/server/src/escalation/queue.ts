@@ -6,7 +6,13 @@ import {
   type ModelMessage,
   type UIMessage,
 } from "ai"
-import { context, queue, roles, utils } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  queue,
+  roles,
+  utils,
+} from "@budibase/backend-core"
 import {
   Agent,
   AgentChannelProvider,
@@ -47,6 +53,33 @@ export interface EscalationJob {
 const DEFAULT_CONCURRENCY = 1
 const DEFAULT_TIMEOUT_MS = 30000
 
+const updateNotificationOutcome = async (
+  notificationDocId: string,
+  outcome: Pick<
+    EscalationNotificationDoc,
+    "status" | "providerResponse" | "sentAt"
+  >,
+  maxRetries = 3
+) => {
+  const db = context.getWorkspaceDB()
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const notifDoc =
+      await db.tryGet<EscalationNotificationDoc>(notificationDocId)
+    if (!notifDoc) {
+      return
+    }
+    try {
+      await db.put({ ...notifDoc, ...outcome })
+      return
+    } catch (err) {
+      if (dbCore.isDocumentConflictError(err) && attempt < maxRetries - 1) {
+        continue
+      }
+      throw err
+    }
+  }
+}
+
 const getDocId = (escalationId: string): string =>
   `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`
 
@@ -78,7 +111,9 @@ export function getQueue() {
   return escalationQueue
 }
 
-async function processNotify(job: Job<EscalationJob>) {
+export async function processNotify(
+  job: Pick<Job<EscalationJob>, "id" | "data">
+) {
   const { escalationId, appId, message } = job.data
 
   console.log("Escalation notify: picked up", {
@@ -148,10 +183,7 @@ async function processNotify(job: Job<EscalationJob>) {
           status: "pending",
         })
       )
-      const created = await db.bulkDocs(notifDocs)
-      const revById = Object.fromEntries(
-        created.map(result => [result.id, result.rev])
-      )
+      await db.bulkDocs(notifDocs)
 
       const outcomes = await Promise.all(
         notifDocs.map(async notifDoc => {
@@ -192,14 +224,14 @@ async function processNotify(job: Job<EscalationJob>) {
         })
       )
 
-      await db.bulkDocs(
-        outcomes.map(({ notifDoc, status, providerResponse }) => ({
-          ...notifDoc,
-          _rev: revById[notifDoc._id!],
-          status,
-          ...(providerResponse ? { providerResponse } : {}),
-          sentAt: new Date().toISOString(),
-        }))
+      await Promise.all(
+        outcomes.map(({ notifDoc, status, providerResponse }) =>
+          updateNotificationOutcome(notifDoc._id!, {
+            status,
+            ...(providerResponse ? { providerResponse } : {}),
+            sentAt: new Date().toISOString(),
+          })
+        )
       )
     }
   })
