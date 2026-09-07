@@ -351,7 +351,11 @@ export class Chat {
         }
 
         if (isSlackDirectMessage(event)) {
-          await invokeHandlers(this.newMessageHandlers, thread, message)
+          if (this.directMessageHandlers.length) {
+            await invokeHandlers(this.directMessageHandlers, thread, message)
+          } else {
+            await invokeHandlers(this.mentionHandlers, thread, message)
+          }
         } else {
           if (isMention) {
             await invokeHandlers(this.mentionHandlers, thread, message)
