@@ -414,6 +414,41 @@ describe("resumeOperation", () => {
     })
   })
 
+  it("keeps the session waiting after an approved turn while another escalation is pending", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      await sdk.ai.agentRequests.updateRequestStatus({
+        requestId,
+        status: "needs_input",
+      })
+      await context.getWorkspaceDB().put(
+        baseDoc({
+          _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
+          requestId,
+        })
+      )
+      mockApprovedRun("Approved and booked.")
+
+      await resumeOperation({
+        doc: baseDoc({ requestId, response: { accepted: true } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: baseCtx,
+      })
+
+      const [request] =
+        await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+      expect(request.status).toBe("needs_input")
+      expect(aiAgentExecutedMock).toHaveBeenCalledTimes(1)
+      expect(aiAgentFailedMock).not.toHaveBeenCalled()
+      expect(enqueueLifecycleMock).toHaveBeenLastCalledWith({
+        sourceType: "agent_session",
+        sourceId: "session_1",
+        signal: "waiting",
+      })
+    })
+  })
+
   it("records escalation_resolved with outcome expired", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!

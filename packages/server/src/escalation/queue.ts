@@ -793,6 +793,14 @@ export async function resumeOperation({
       if (judged) {
         await markEscalationRequestResolved(judged)
         await updatePlatformActionSessionStatus(judged.status)
+      } else {
+        const pendingEscalations = await sdk.escalations.listContextDocs({
+          requestId: doc.requestId,
+          resolution: "pending",
+        })
+        if (pendingEscalations.length > 0) {
+          await updatePlatformActionSessionStatus("waiting")
+        }
       }
     }
   } catch (error) {
