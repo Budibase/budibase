@@ -226,12 +226,14 @@ const buildToolCallTrackingHandler = ({
     input?: unknown
     output?: unknown
   }) => {
-    if (!trackingHandle) {
-      return
-    }
     const outputStatus = (output as { status?: string } | undefined)?.status
     if (outputStatus === EscalateToolResultStatus.PENDING_APPROVAL) {
       awaitingEscalation = true
+    }
+    if (!trackingHandle) {
+      return
+    }
+    if (outputStatus === EscalateToolResultStatus.PENDING_APPROVAL) {
       needsInputUpdate = needsInputUpdate.then(() =>
         sdk.ai.agentRequests
           .updateRequestStatus({
