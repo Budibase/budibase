@@ -306,6 +306,7 @@ describe("sso", () => {
         existingUser = structures.users.user()
         existingUser._id = structures.uuid()
         delete existingUser.password
+        existingUser.roles = {}
 
         details = structures.sso.authDetails(existingUser)
         details.emailVerified = false
@@ -374,6 +375,39 @@ describe("sso", () => {
 
       it("does not link a global admin account", async () => {
         existingUser.admin = { global: true }
+        users.getGlobalUserByEmail.mockResolvedValueOnce(existingUser)
+        const ssoUser = structures.users.ssoUser({ details })
+        mockSaveUser.mockReturnValueOnce(ssoUser)
+
+        await sso.authenticate(details, false, mockDone, mockSaveUser)
+
+        expect(mockSaveUser).toHaveBeenCalledWith(
+          expect.objectContaining({ _id: "us_" + details.userId }),
+          expect.anything()
+        )
+      })
+
+      it.each([
+        {
+          name: "global builder",
+          update: () => {
+            existingUser.builder = { global: true }
+          },
+        },
+        {
+          name: "app builder",
+          update: () => {
+            existingUser.builder = { apps: [structures.uuid()] }
+          },
+        },
+        {
+          name: "user with app roles",
+          update: () => {
+            existingUser.roles = { [structures.uuid()]: "BASIC" }
+          },
+        },
+      ])("does not link a $name account", async ({ update }) => {
+        update()
         users.getGlobalUserByEmail.mockResolvedValueOnce(existingUser)
         const ssoUser = structures.users.ssoUser({ details })
         mockSaveUser.mockReturnValueOnce(ssoUser)

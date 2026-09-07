@@ -157,6 +157,10 @@ function isAccountLinkable(user: User, details: SSOAuthDetails): boolean {
     user.password ||
     user.status === UserStatus.INACTIVE ||
     user.admin?.global ||
+    user.builder?.global ||
+    user.builder?.creator ||
+    user.builder?.apps?.length ||
+    Object.keys(user.roles || {}).length > 0 ||
     user.ssoId
   ) {
     return false
