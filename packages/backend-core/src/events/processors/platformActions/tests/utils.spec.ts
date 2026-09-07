@@ -36,7 +36,7 @@ describe("platformActions utils", () => {
   })
 
   describe("buildPlatformActionSession", () => {
-    it("initialises a fresh session doc with actionCount 1", () => {
+    it("builds a session doc with the provided fields", () => {
       const doc = buildPlatformActionSession({
         sourceType: "agent_session",
         sourceId: "session-1",
