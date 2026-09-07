@@ -515,7 +515,11 @@ describe("processNotify", () => {
   it("records a failed outcome with the provider response", async () => {
     sendSlackMock.mockResolvedValue(false)
     sendTeamsMock.mockRejectedValue(
-      new ProviderResponseError(502, '{"error":"ServiceError"}', "Teams Bot API")
+      new ProviderResponseError(
+        502,
+        '{"error":"ServiceError"}',
+        "Teams Bot API"
+      )
     )
     const escalationId = await seedPending({
       type: EscalationNotificationChannel.MSTEAMS,
