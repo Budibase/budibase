@@ -172,11 +172,18 @@
   }
 
   const conditionsComplete = $derived(
-    conditions.every(
-      condition =>
-        condition.noValue ||
-        (condition.value !== undefined && condition.value !== "")
-    )
+    conditions.every(condition => {
+      if (!fields.some(field => field.name === condition.field)) {
+        return false
+      }
+      if (condition.noValue) {
+        return true
+      }
+      if (Array.isArray(condition.value)) {
+        return condition.value.length > 0
+      }
+      return condition.value !== undefined && condition.value !== ""
+    })
   )
 
   const save = async () => {
