@@ -93,6 +93,7 @@ const environment = {
   APPS_SERVICE: process.env.APPS_SERVICE,
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   LOGGER: process.env.LOGGER,
+  CHAT_SDK_LOGGER: process.env.CHAT_SDK_LOGGER,
   ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
   INTERNAL_ACCOUNT_PORTAL_URL:
     process.env.INTERNAL_ACCOUNT_PORTAL_URL || process.env.ACCOUNT_PORTAL_URL,

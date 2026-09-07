@@ -29,6 +29,24 @@ function buildGroupSaveValidation() {
   )
 }
 
+function buildGroupAppUpdateValidation() {
+  const appId = Joi.string().trim().required()
+
+  return auth.joiValidator.body(
+    Joi.object({
+      add: Joi.array()
+        .items(
+          Joi.object({
+            appId,
+            roleId: Joi.string().trim().required(),
+          })
+        )
+        .optional(),
+      remove: Joi.array().items(Joi.object({ appId })).optional(),
+    }).required()
+  )
+}
+
 router
   .post(
     "/api/global/groups",
@@ -87,6 +105,7 @@ router
     "/api/global/groups/:groupId/apps",
     auth.builderOrAdmin,
     proMiddleware.feature.requireFeature(Feature.USER_GROUPS),
+    buildGroupAppUpdateValidation(),
     controller.updateGroupApps
   )
 

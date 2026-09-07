@@ -29,6 +29,7 @@ import sdk from "../../../sdk"
 import { escalationProcessor } from "../../../escalation/processor"
 import { validateMSTeamsServiceUrl } from "../../../utilities/msTeams"
 import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
+import { createChatLogger } from "./chatLogger"
 import { getTeamsState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
@@ -152,6 +153,24 @@ export const stripTeamsMentions = (
   return withoutMentionEntities.replace(/\s+/g, " ").trim()
 }
 
+const TEAMS_SLASH_COMMANDS = [
+  ChatCommands.UNLINK,
+  ChatCommands.NEW,
+  ChatCommands.LINK,
+] as const
+
+const parseTeamsSlashCommand = (text: string) => {
+  for (const command of TEAMS_SLASH_COMMANDS) {
+    if (!new RegExp(`^(?:/${command}(?:\\s|$)|${command}$)`, "i").test(text)) {
+      continue
+    }
+    return {
+      command,
+      content: text.replace(new RegExp(`^/?${command}\\s*`, "i"), ""),
+    }
+  }
+}
+
 export const parseTeamsCommand = (
   text?: string,
   entities?: MSTeamsActivity["entities"]
@@ -163,36 +182,13 @@ export const parseTeamsCommand = (
   if (!normalized) {
     return { command: ChatCommands.UNSUPPORTED, content: "" }
   }
-  const lower = normalized.toLowerCase()
 
-  if (
-    lower === ChatCommands.NEW ||
-    lower === `/${ChatCommands.NEW}` ||
-    lower.startsWith(`/${ChatCommands.NEW} `)
-  ) {
-    return {
-      command: ChatCommands.NEW,
-      content: normalized.replace(
-        new RegExp(`^/?${ChatCommands.NEW}\\s*`, "i"),
-        ""
-      ),
+  return (
+    parseTeamsSlashCommand(normalized) || {
+      command: ChatCommands.ASK,
+      content: normalized,
     }
-  }
-  if (
-    lower === ChatCommands.LINK ||
-    lower === `/${ChatCommands.LINK}` ||
-    lower.startsWith(`/${ChatCommands.LINK} `)
-  ) {
-    return {
-      command: ChatCommands.LINK,
-      content: normalized.replace(
-        new RegExp(`^/?${ChatCommands.LINK}\\s*`, "i"),
-        ""
-      ),
-    }
-  }
-
-  return { command: ChatCommands.ASK, content: normalized }
+  )
 }
 
 export const splitTeamsMessage = (
@@ -253,12 +249,14 @@ const createTeamsMessageHandler = ({
   channelEnabled,
   idleTimeoutMinutes,
   requireUserLink,
+  allowConversationAttachments,
 }: {
   workspaceId: string
   agentId: string
   channelEnabled: boolean
   idleTimeoutMinutes?: number
   requireUserLink?: boolean
+  allowConversationAttachments: boolean
 }) => {
   return async (thread: Thread, message: Message) => {
     const raw = message.raw as MSTeamsActivity | undefined
@@ -423,6 +421,7 @@ const createTeamsMessageHandler = ({
         channelEnabled,
         command,
         content,
+        allowConversationAttachments,
         user: {
           externalUserId,
           displayName,
@@ -465,6 +464,7 @@ export async function MSTeamsWebhook(
         idleTimeoutMinutes,
         channelEnabled,
         requireUserLink,
+        allowConversationAttachments,
       } = await context.doInWorkspaceContext(workspaceId, async () => {
         const agent = await sdk.ai.agents.getOrThrow(agentId)
         return {
@@ -472,6 +472,8 @@ export async function MSTeamsWebhook(
             sdk.ai.deployments.MSTeams.validateMSTeamsIntegration(agent),
           idleTimeoutMinutes: agent.MSTeamsIntegration?.idleTimeoutMinutes,
           requireUserLink: agent.MSTeamsIntegration?.requireUserLink,
+          allowConversationAttachments:
+            agent.allowConversationAttachments !== false,
           channelEnabled:
             !!agent.MSTeamsIntegration?.messagingEndpointUrl?.trim(),
         }
@@ -488,7 +490,7 @@ export async function MSTeamsWebhook(
           }),
         },
         state: await getTeamsState(),
-        logger: "silent",
+        logger: createChatLogger(),
         fallbackStreamingPlaceholderText: TEAMS_PROCESSING_MESSAGE,
         streamingUpdateIntervalMs: TEAMS_STREAMING_UPDATE_INTERVAL_MS,
       })
@@ -499,6 +501,7 @@ export async function MSTeamsWebhook(
         channelEnabled,
         idleTimeoutMinutes,
         requireUserLink,
+        allowConversationAttachments,
       })
       chat.onAction(async (event: ActionEvent) => {
         if (!event.actionId.startsWith("esc_")) {

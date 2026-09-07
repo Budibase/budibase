@@ -24,24 +24,6 @@ jest.mock("../../..", () => ({
 jest.mock("../../../../ai/tools/budibase", () => ({
   __esModule: true,
   getBudibaseTools: jest.fn(() => []),
-  createTableTools: jest.fn(() => [
-    {
-      name: "list_tables",
-      description: "List configured tables",
-      sourceType: "INTERNAL_TABLE",
-      sourceLabel: "Budibase",
-      executionPolicy: { mode: "admin" },
-      tool: {} as Tool,
-    },
-    {
-      name: "get_table",
-      description: "Get a configured table",
-      sourceType: "INTERNAL_TABLE",
-      sourceLabel: "Budibase",
-      executionPolicy: { mode: "admin" },
-      tool: {} as Tool,
-    },
-  ]),
   createKnowledgeFilesTool: jest.fn((agentId: string, operationId: string) => ({
     name: "list_knowledge_files",
     description: "List knowledge files",
@@ -105,7 +87,6 @@ jest.mock("@budibase/pro", () => ({
 
 import sdk from "../../.."
 import {
-  createTableTools,
   getBudibaseTools,
   createKnowledgeFilesTool,
   createKnowledgeSearchTool,
@@ -192,7 +173,7 @@ describe("buildPromptAndTools", () => {
 
     expect(createKnowledgeFilesTool).not.toHaveBeenCalled()
     expect(Reflect.get(result.tools, "list_knowledge_files")).toBeUndefined()
-    expect(result.systemPrompt).toBe("system prompt")
+    expect(result.systemPrompt).toContain("system prompt")
   })
 
   it("throws when agent id is missing", async () => {
@@ -323,7 +304,6 @@ describe("buildPromptAndTools", () => {
     } satisfies Agent
 
     const result = await buildPromptAndTools(agent, agent.operations[0], {
-      toolSecurityEnabled: true,
       executionContext: {
         tenantId: "tenant_1",
         workspaceId: "app_1",
@@ -412,7 +392,6 @@ describe("buildPromptAndTools", () => {
     } satisfies Agent
 
     const result = await buildPromptAndTools(agent, agent.operations[0], {
-      toolSecurityEnabled: true,
       executionContext: {
         tenantId: "tenant_1",
         workspaceId: "app_1",
@@ -428,99 +407,5 @@ describe("buildPromptAndTools", () => {
     expect(result.tools.ta_employees_create_row).toBe(restrictedTool)
     expect(result.tools.ta_employees_search_rows).toBe(restrictedTool)
     expect(canRequesterReadAgentToolResource).toHaveBeenCalledTimes(1)
-  })
-
-  it("keeps legacy discovery helpers when tool security is disabled", async () => {
-    jest.mocked(getBudibaseTools).mockReturnValue([
-      {
-        name: "ta_expenses_create_row",
-        readableName: "Expenses.create_row",
-        tableId: "ta_expenses",
-        description: "Create an expense",
-        sourceType: ToolType.INTERNAL_TABLE,
-        sourceLabel: "Budibase",
-        executionPolicy: {
-          mode: "configurable",
-          defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
-        },
-        tool: {} as Tool,
-      },
-    ])
-    const agent = {
-      _id: "agent_expenses",
-      name: "Expense Agent",
-      aiconfig: "",
-      operations: [
-        {
-          id: "operation_1",
-          name: "Track expenses",
-          live: true,
-          enabledTools: requesterTools("ta_expenses_create_row"),
-          knowledgeBases: [],
-          allowKnowledgeSourceDownload: false,
-        },
-      ],
-    } satisfies Agent
-
-    const result = await buildPromptAndTools(agent, agent.operations[0], {
-      toolSecurityEnabled: false,
-    })
-
-    expect(createTableTools).toHaveBeenCalledWith(["ta_expenses"])
-    expect(Reflect.get(result.tools, "list_tables")).toBeDefined()
-    expect(Reflect.get(result.tools, "get_table")).toBeDefined()
-  })
-
-  it("feature flags legacy automation discovery helpers", async () => {
-    const triggerTool = {
-      name: "automation_1_trigger",
-      readableName: "Notify finance.trigger",
-      description: "Trigger Notify finance",
-      sourceType: ToolType.AUTOMATION,
-      sourceLabel: "Budibase",
-      executionPolicy: {
-        mode: "configurable" as const,
-        defaultPrincipal: ToolExecutionPrincipal.REQUESTER,
-      },
-      tool: {} as Tool,
-    }
-    const helperTools = ["list_automations", "get_automation"].map(name => ({
-      name,
-      description: name,
-      sourceType: ToolType.AUTOMATION,
-      sourceLabel: "Budibase",
-      executionPolicy: { mode: "admin" as const },
-      tool: {} as Tool,
-    }))
-    jest.mocked(getBudibaseTools).mockReturnValue([triggerTool, ...helperTools])
-    const agent = {
-      _id: "agent_automations",
-      name: "Automation Agent",
-      aiconfig: "",
-      operations: [
-        {
-          id: "operation_1",
-          name: "Notify finance",
-          live: true,
-          enabledTools: requesterTools("automation_1_trigger"),
-          knowledgeBases: [],
-          allowKnowledgeSourceDownload: false,
-        },
-      ],
-    } satisfies Agent
-
-    const legacyResult = await buildPromptAndTools(agent, agent.operations[0], {
-      toolSecurityEnabled: false,
-    })
-    const securedResult = await buildPromptAndTools(
-      agent,
-      agent.operations[0],
-      { toolSecurityEnabled: true }
-    )
-
-    expect(Reflect.get(legacyResult.tools, "list_automations")).toBeDefined()
-    expect(Reflect.get(legacyResult.tools, "get_automation")).toBeDefined()
-    expect(Reflect.get(securedResult.tools, "list_automations")).toBeUndefined()
-    expect(Reflect.get(securedResult.tools, "get_automation")).toBeUndefined()
   })
 })

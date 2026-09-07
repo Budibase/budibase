@@ -968,6 +968,16 @@ describe("/applications", () => {
       const res = await config.api.workspace.getDefinition(workspace.appId)
       expect(res.libraries.length).toEqual(1)
     })
+
+    it("should reject users from another tenant", async () => {
+      await config.newTenant()
+
+      await config.withHeaders({ [Header.WORKSPACE_ID]: workspace.appId }, () =>
+        config.api.workspace.getDefinition(workspace.appId, {
+          status: 401,
+        })
+      )
+    })
   })
 
   describe("fetchAppPackage", () => {
@@ -975,6 +985,16 @@ describe("/applications", () => {
       const res = await config.api.workspace.getAppPackage(workspace.appId)
       expect(res.application).toBeDefined()
       expect(res.application.appId).toEqual(config.getDevWorkspaceId())
+    })
+
+    it("should reject users from another tenant", async () => {
+      await config.newTenant()
+
+      await config.withHeaders({ [Header.WORKSPACE_ID]: workspace.appId }, () =>
+        config.api.workspace.getAppPackage(workspace.appId, {
+          expectations: { status: 401 },
+        })
+      )
     })
 
     it("should retrieve all the screens for builder calls", async () => {
@@ -1012,6 +1032,30 @@ describe("/applications", () => {
       expect(res.screens).toContainEqual(
         expect.objectContaining({ _id: screen2._id })
       )
+    })
+
+    it("should not expose snippets to public calls", async () => {
+      const snippets = [{ name: "PrivateSnippet", code: "return 'secret'" }]
+      await config.api.workspace.update(workspace.appId, {
+        snippets,
+      })
+
+      const builderPackage = await config.api.workspace.getAppPackage(
+        workspace.appId
+      )
+      expect(builderPackage.application.snippets).toEqual(snippets)
+
+      await config.publish()
+
+      const res = await config.withHeaders(
+        { referer: `http://localhost:10000/app${workspace.url}` },
+        () =>
+          config.api.workspace.getAppPackage(config.getProdWorkspaceId(), {
+            publicUser: true,
+          })
+      )
+
+      expect(res.application.snippets).toBeUndefined()
     })
 
     it("should expose recaptcha availability to public app packages", async () => {

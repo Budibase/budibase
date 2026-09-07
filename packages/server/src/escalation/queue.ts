@@ -6,11 +6,12 @@ import {
   type ModelMessage,
   type UIMessage,
 } from "ai"
-import { context, features, queue, roles, utils } from "@budibase/backend-core"
+import { context, queue, roles, utils } from "@budibase/backend-core"
 import {
   Agent,
   AgentChannelProvider,
   AutomationActionStepId,
+  ChatConversation,
   ContextUser,
   DocumentType,
   ESCALATE_TOOL_NAME,
@@ -18,7 +19,6 @@ import {
   EscalationNotificationDoc,
   EscalationRecipient,
   EscalationSource,
-  FeatureFlag,
   PendingToolCall,
   SEPARATOR,
   SuspendedOperationContext,
@@ -285,12 +285,7 @@ const executeApprovedToolCall = async ({
   const { tools, toolSources } = await sdk.ai.agents.buildPromptAndTools(
     agent,
     operation,
-    {
-      executionContext,
-      toolSecurityEnabled: await features.isEnabled(
-        FeatureFlag.AI_AGENT_TOOL_SECURITY
-      ),
-    }
+    { executionContext }
   )
 
   let toolName = pending.toolName
@@ -603,10 +598,29 @@ export async function resumeOperation({
     ]
   }
 
+  const suspendedMessages = messages
+  if (ctx.conversationId && ctx.attachmentIds?.length) {
+    const conversation = await context
+      .getWorkspaceDB()
+      .tryGet<ChatConversation>(ctx.conversationId)
+    if (!conversation) {
+      throw new Error("Escalation resume: conversation attachments unavailable")
+    }
+    messages =
+      await sdk.ai.chatConversations.addConversationAttachmentsToModelMessages({
+        messages: suspendedMessages,
+        conversation,
+        attachmentIds: ctx.attachmentIds,
+      })
+  }
+
   const run = await sdk.ai.agents.prepareAgentChatRun({
     agent,
     agentId: ctx.agentId,
     modelMessages: messages,
+    suspendedModelMessages: suspendedMessages,
+    conversationId: ctx.conversationId,
+    conversationAttachmentIds: ctx.attachmentIds,
     errorLabel: "escalation resume",
     sessionId: ctx.sessionId,
     user,

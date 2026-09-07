@@ -194,8 +194,8 @@ export enum Event {
   PLUGIN_DELETED = "plugin:deleted",
 
   // BACKUP
-  APP_BACKUP_RESTORED = "app:backup:restored",
-  APP_BACKUP_TRIGGERED = "app:backup:triggered",
+  WORKSPACE_BACKUP_RESTORED = "app:backup:restored",
+  WORKSPACE_BACKUP_TRIGGERED = "app:backup:triggered",
 
   // ENVIRONMENT VARIABLE
   ENVIRONMENT_VARIABLE_CREATED = "environment_variable:created",
@@ -319,21 +319,21 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.ORG_LOGO_UPDATED]: `Organisation logo updated`,
   [Event.ORG_PLATFORM_URL_UPDATED]: `Organisation platform URL updated`,
 
-  // APP
-  [Event.WORKSPACE_CREATED]: `App "{{ name }}" created`,
-  [Event.WORKSPACE_UPDATED]: `App "{{ name }}" updated`,
-  [Event.WORKSPACE_DELETED]: `App "{{ name }}" deleted`,
-  [Event.WORKSPACE_DUPLICATED]: `App "{{ name }}" duplicated`,
-  [Event.WORKSPACE_PUBLISHED]: `App "{{ name }}" published`,
-  [Event.WORKSPACE_UNPUBLISHED]: `App "{{ name }}" unpublished`,
-  [Event.WORKSPACE_TEMPLATE_IMPORTED]: `App "{{ name }}" template imported`,
-  [Event.WORKSPACE_FILE_IMPORTED]: `App "{{ name }}" file imported`,
-  [Event.WORKSPACE_APP_VERSION_UPDATED]: `App "{{ name }}" version updated`,
-  [Event.WORKSPACE_APP_VERSION_REVERTED]: `App "{{ name }}" version reverted`,
-  [Event.WORKSPACE_REVERTED]: `App "{{ name }}" reverted`,
-  [Event.WORKSPACE_EXPORTED]: `App "{{ name }}" exported`,
-  [Event.APP_BACKUP_RESTORED]: `App backup "{{ name }}" restored`,
-  [Event.APP_BACKUP_TRIGGERED]: `App backup "{{ name }}" triggered`,
+  // WORKSPACE
+  [Event.WORKSPACE_CREATED]: `Workspace "{{ name }}" created`,
+  [Event.WORKSPACE_UPDATED]: `Workspace "{{ name }}" updated`,
+  [Event.WORKSPACE_DELETED]: `Workspace "{{ name }}" deleted`,
+  [Event.WORKSPACE_DUPLICATED]: `Workspace "{{ name }}" duplicated`,
+  [Event.WORKSPACE_PUBLISHED]: `Workspace "{{ name }}" published`,
+  [Event.WORKSPACE_UNPUBLISHED]: `Workspace "{{ name }}" unpublished`,
+  [Event.WORKSPACE_TEMPLATE_IMPORTED]: `Workspace "{{ name }}" template imported`,
+  [Event.WORKSPACE_FILE_IMPORTED]: `Workspace "{{ name }}" file imported`,
+  [Event.WORKSPACE_APP_VERSION_UPDATED]: `Workspace "{{ name }}" version updated`,
+  [Event.WORKSPACE_APP_VERSION_REVERTED]: `Workspace "{{ name }}" version reverted`,
+  [Event.WORKSPACE_REVERTED]: `Workspace "{{ name }}" reverted`,
+  [Event.WORKSPACE_EXPORTED]: `Workspace "{{ name }}" exported`,
+  [Event.WORKSPACE_BACKUP_RESTORED]: `Workspace backup "{{ name }}" restored`,
+  [Event.WORKSPACE_BACKUP_TRIGGERED]: `Workspace backup "{{ name }}" triggered`,
 
   // DATASOURCE
   [Event.DATASOURCE_CREATED]: `Datasource created`,

@@ -26,8 +26,8 @@ export interface PagedChannels<T> {
 
 export interface ChatLinksEndpoints {
   fetchChatIdentityLinks: (
-    provider?: ChatIdentityLinkProvider,
-    agentId?: string
+    provider: ChatIdentityLinkProvider,
+    agentId: string
   ) => Promise<ChatIdentityLink[]>
   fetchSlackChannels: (
     agentId: string,
@@ -43,12 +43,8 @@ export const buildChatLinksEndpoints = (
   API: BaseAPIClient
 ): ChatLinksEndpoints => ({
   fetchChatIdentityLinks: async (provider, agentId) => {
-    const params = new URLSearchParams({
-      ...(provider ? { provider } : {}),
-      ...(agentId ? { agentId } : {}),
-    }).toString()
-    const query = params ? `?${params}` : ""
-    return await API.get({ url: `/api/chat-links${query}` })
+    const query = new URLSearchParams({ provider, agentId }).toString()
+    return await API.get({ url: `/api/chat-links?${query}` })
   },
   fetchSlackChannels: async (agentId, cursor) => {
     const query = new URLSearchParams({

@@ -1,4 +1,5 @@
 import { skipMigrationRedirect } from "../../middleware/workspaceMigrations"
+import { ensureUserBelongsToWorkspaceTenant } from "../../middleware/ensureUserBelongsToWorkspaceTenant"
 import * as deploymentController from "../controllers/deploy"
 import * as controller from "../controllers/workspace"
 import { builderRoutes, creatorRoutes, publicRoutes } from "./endpointGroups"
@@ -33,7 +34,15 @@ creatorRoutes.post(
 // Client only endpoints
 publicRoutes
   .get("/api/client/applications", controller.fetchClientApps)
-  .get("/api/applications/:appId/definition", controller.fetchAppDefinition)
+  .get(
+    "/api/applications/:appId/definition",
+    ensureUserBelongsToWorkspaceTenant,
+    controller.fetchAppDefinition
+  )
   .get("/api/applications", controller.fetch)
   .get("/api/microfrontend/bootstrap", controller.fetchMicrofrontendBootstrap)
-  .get("/api/applications/:appId/appPackage", controller.fetchAppPackage)
+  .get(
+    "/api/applications/:appId/appPackage",
+    ensureUserBelongsToWorkspaceTenant,
+    controller.fetchAppPackage
+  )

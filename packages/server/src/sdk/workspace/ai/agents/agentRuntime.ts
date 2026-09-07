@@ -68,6 +68,9 @@ interface PrepareAgentChatRunParams {
   agentId: string
   chat?: ChatConversationRequest
   modelMessages?: ModelMessage[]
+  suspendedModelMessages?: ModelMessage[]
+  conversationAttachmentIds?: string[]
+  conversationId?: string
   latestQuestion?: string
   aiConfigId?: string
   errorLabel: string
@@ -405,9 +408,6 @@ export const prepareAgentRunContext = async ({
     operationId,
     llm,
   })
-  const toolSecurityEnabled = await features.isEnabled(
-    FeatureFlag.AI_AGENT_TOOL_SECURITY
-  )
   let executionContext: AgentExecutionContext | undefined
   if (routingDecision.operation && requester) {
     const workspaceId = context.getWorkspaceId()
@@ -433,7 +433,6 @@ export const prepareAgentRunContext = async ({
           ? buildOperationsSummaryPrompt(getLiveOperations(agent))
           : buildPromptOptions?.fallbackPromptInstructions,
       executionContext,
-      toolSecurityEnabled,
     }
   )
 
@@ -498,6 +497,9 @@ const prepareAgentChatRunInternal = async ({
   agentId,
   chat,
   modelMessages: providedModelMessages,
+  suspendedModelMessages,
+  conversationAttachmentIds,
+  conversationId,
   latestQuestion: providedLatestQuestion,
   aiConfigId,
   sessionId,
@@ -669,6 +671,9 @@ const prepareAgentChatRunInternal = async ({
         channel: chat?.channel,
         userId: user?._id,
         getMessages: () => modelMessages,
+        getSuspendedMessages: () => suspendedModelMessages ?? modelMessages,
+        conversationId: conversationId ?? chat?._id,
+        attachmentIds: conversationAttachmentIds,
         getRequestId: () => getRequestId?.(),
         executionPrincipal: ToolExecutionPrincipal.ADMIN,
         executionContext,

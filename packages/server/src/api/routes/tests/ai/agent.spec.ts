@@ -26,6 +26,7 @@ describe("agent duplicate", () => {
         aiconfig: "default",
         description: "Support assistant",
         live: true,
+        allowConversationAttachments: false,
       },
       {
         id: "operation_1",
@@ -51,6 +52,7 @@ describe("agent duplicate", () => {
       created.operations?.[0]?.name
     )
     expect(duplicate.live).toEqual(created.live)
+    expect(duplicate.allowConversationAttachments).toBe(false)
   })
 
   it("persists operation name on create and update", async () => {
@@ -81,6 +83,7 @@ describe("agent duplicate", () => {
     const { agents } = await config.api.agent.fetch()
     const fetched = agents.find(agent => agent._id === created._id)
     expect(fetched?.operations?.[0]?.name).toEqual("Escalation flow")
+    expect(fetched?.allowConversationAttachments).toBe(true)
   })
 
   it("creates, updates, and deletes an operation via dedicated endpoints", async () => {
