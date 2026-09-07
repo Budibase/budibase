@@ -36,7 +36,21 @@
   const onTriggerKeydown = (event: KeyboardEvent) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault()
-      show()
+      if (disabled) {
+        return
+      }
+      if (open) {
+        popover?.hide()
+      } else {
+        popover?.show()
+      }
+    }
+  }
+
+  const onPopoverKeydown = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      event.stopPropagation()
+      popover?.hide()
     }
   }
 
@@ -48,7 +62,10 @@
 
   const onClose = () => {
     open = false
-    anchor?.focus()
+    const active = document.activeElement
+    if (!active || active === document.body) {
+      anchor?.focus()
+    }
   }
 
   const displayValue = $derived(
@@ -124,7 +141,8 @@
   on:open={onOpen}
   on:close={onClose}
 >
-  <div class="array-popover">
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="array-popover" onkeydown={onPopoverKeydown}>
     {#each value as entry, index}
       <div class="array-entry">
         <span class="array-entry-label">{entry}</span>
