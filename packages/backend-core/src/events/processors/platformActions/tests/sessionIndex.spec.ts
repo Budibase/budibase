@@ -144,6 +144,34 @@ describe("upsertPlatformActionSession", () => {
     })
   })
 
+  it.each([
+    ["completed", "failed"],
+    ["failed", "completed"],
+  ] as const)(
+    "keeps failed when %s then %s arrive at the same timestamp",
+    async (firstSignal, secondSignal) => {
+      await run(async () => {
+        const sourceId = generator.guid()
+        const timestamp = "2026-08-31T00:00:00.000Z"
+        const input = {
+          sourceType: "agent_session" as const,
+          sourceId,
+          incrementsActionCount: true,
+          timestamp,
+        }
+
+        await upsertPlatformActionSession({ ...input, signal: firstSignal })
+        await upsertPlatformActionSession({ ...input, signal: secondSignal })
+
+        const doc = await getSessionDoc(sourceId)
+
+        expect(doc.status).toBe("failed")
+        expect(doc.statusUpdatedAt).toBe(timestamp)
+        expect(doc.actionCount).toBe(2)
+      })
+    }
+  )
+
   it("adds statusUpdatedAt when updating a legacy session doc", async () => {
     await run(async () => {
       const sourceId = generator.guid()
