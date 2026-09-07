@@ -1,9 +1,5 @@
 import { roles } from "@budibase/backend-core"
-import {
-  BuiltinPermissionID,
-  PermissionLevel,
-  PermissionType,
-} from "@budibase/types"
+import { PermissionLevel, PermissionType } from "@budibase/types"
 import { canRoleAccessResource } from "."
 
 jest.mock("@budibase/backend-core", () => {
@@ -23,25 +19,26 @@ describe("canRoleAccessResource", () => {
     jest.clearAllMocks()
   })
 
-  it("allows a custom role with the required base permission", async () => {
-    const roleId = "custom_role"
-    const customRole = {
-      ...roles.getBuiltinRoles()[roles.BUILTIN_ROLE_IDS.BASIC],
-      _id: roleId,
-      permissionId: BuiltinPermissionID.WRITE,
-      inherits: undefined,
+  it("denies base access when a resource role is set", async () => {
+    const resourceId = "au_test"
+    const adminRole = {
+      ...roles.getBuiltinRoles()[roles.BUILTIN_ROLE_IDS.ADMIN],
+      permissions: {
+        [resourceId]: [PermissionLevel.EXECUTE],
+      },
     }
+    const basicRole = roles.getBuiltinRoles()[roles.BUILTIN_ROLE_IDS.BASIC]
 
-    jest.mocked(roles.getAllRoles).mockResolvedValue([])
-    jest.mocked(roles.getUserRoleHierarchy).mockResolvedValue([customRole])
+    jest.mocked(roles.getAllRoles).mockResolvedValue([adminRole])
+    jest.mocked(roles.getUserRoleHierarchy).mockResolvedValue([basicRole])
 
     await expect(
       canRoleAccessResource({
-        roleId,
-        resourceId: "au_test",
+        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+        resourceId,
         permissionType: PermissionType.AUTOMATION,
         permissionLevel: PermissionLevel.EXECUTE,
       })
-    ).resolves.toBe(true)
+    ).resolves.toBe(false)
   })
 })

@@ -117,12 +117,9 @@ export async function canRoleAccessResource({
   }
 
   if (allowedRole) {
-    const hasResourceRole = userRoles.some(
+    return userRoles.some(
       role => role._id && roles.roleIDsAreEqual(role._id, allowedRole)
     )
-    if (hasResourceRole) {
-      return true
-    }
   }
 
   return permissions.doesHaveBasePermission(
