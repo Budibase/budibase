@@ -139,8 +139,8 @@
     "xml2js": "0.6.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.22.5",
-    "@babel/preset-env": "7.16.11",
+    "@babel/core": "^8.0.1",
+    "@babel/preset-env": "8.0.2",
     "@types/archiver": "6.0.2",
     "@types/global-agent": "2.1.1",
     "@types/html-to-text": "^9.0.4",
@@ -167,7 +167,7 @@
     "jest-openapi": "0.14.2",
     "nock": "13.5.4",
     "nodemon": "2.0.15",
-    "openapi-typescript": "7.10.1",
+    "openapi-typescript": "7.13.0",
     "rimraf": "3.0.2",
     "supertest": "6.3.3",
     "swagger-jsdoc": "6.1.0",
