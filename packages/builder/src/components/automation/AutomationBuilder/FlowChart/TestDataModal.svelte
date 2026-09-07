@@ -43,8 +43,9 @@
   let trigger: AutomationTrigger = cloneDeep(automation.definition.trigger)
   let schemaProperties: SchemaPropertyEntry[] = []
   let previewRolesLoading = false
+  let previewRoleAutomationId = automation._id
   let previewRoleId =
-    automation.testData?.previewRoleId || Constants.Roles.ADMIN
+    automation.testData?.previewRoleId ?? Constants.Roles.ADMIN
 
   $: automation = requireSelectedAutomation()
 
@@ -66,6 +67,13 @@
     } finally {
       previewRolesLoading = false
     }
+  }
+
+  $: if (automation._id !== previewRoleAutomationId) {
+    previewRoleAutomationId = automation._id
+    previewRoleId =
+      automation.testData?.previewRoleId ?? Constants.Roles.ADMIN
+    refreshPreviewRoles()
   }
 
   const updatePreviewRole = async (event: CustomEvent<string>) => {
