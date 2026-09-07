@@ -197,13 +197,6 @@ export const createEscalationGateRuntime = ({
       sourceId,
     })
     const rule = matchRule(rules, record)
-    console.log("escalation gate: rule evaluation", {
-      toolName,
-      ruleCount: rules.length,
-      matchedIndex: rule ? rules.indexOf(rule) : -1,
-      policyId: rule?.policyId,
-      conditions: rule?.conditions,
-    })
     if (!rule) {
       return undefined
     }
