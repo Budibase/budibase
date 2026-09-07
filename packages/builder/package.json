@@ -13,40 +13,6 @@
     "test:watch": "vitest",
     "check:types": "yarn svelte-check"
   },
-  "jest": {
-    "globals": {
-      "GLOBALS": {
-        "client": "web"
-      }
-    },
-    "testURL": "http://jest-breaks-if-this-does-not-exist",
-    "moduleNameMapper": {
-      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/internals/mocks/fileMock.js",
-      "\\.(css|less|sass|scss)$": "identity-obj-proxy",
-      "components(.*)$": "<rootDir>/src/components$1",
-      "stores(.*)$": "<rootDir>/src/stores$1",
-      "analytics(.*)$": "<rootDir>/src/analytics$1",
-      "constants/backend": "<rootDir>/src/constants/backend/index.js"
-    },
-    "moduleFileExtensions": [
-      "js",
-      "svelte"
-    ],
-    "moduleDirectories": [
-      "node_modules"
-    ],
-    "transform": {
-      "^.+js$": "babel-jest",
-      "^.+.svelte$": "svelte-jester"
-    },
-    "transformIgnorePatterns": [
-      "/node_modules/(?!svelte).+\\.js$",
-      ".*string-templates.*"
-    ],
-    "setupFilesAfterEnv": [
-      "@testing-library/jest-dom/extend-expect"
-    ]
-  },
   "dependencies": {
     "@budibase/bbui": "*",
     "@budibase/frontend-core": "*",
@@ -84,21 +50,16 @@
   },
   "devDependencies": {
     "@types/to-json-schema": "^0.2.4",
-    "@babel/plugin-transform-runtime": "^7.13.10",
-    "@babel/preset-env": "^7.13.12",
     "@budibase/client": "*",
     "@rollup/plugin-replace": "^5.0.3",
-    "@roxi/routify": "2.18.18",
+    "@roxi/routify": "2.18.19",
     "@sveltejs/vite-plugin-svelte": "^6.1.3",
     "@testing-library/jest-dom": "6.4.2",
     "@testing-library/svelte": "^5.2.8",
     "@types/sanitize-html": "^2.13.0",
     "@types/uuid": "8.3.4",
-    "babel-jest": "^29.6.2",
-    "identity-obj-proxy": "^3.0.0",
     "jsdom": "^21.1.1",
     "resize-observer-polyfill": "^1.5.1",
-    "svelte-jester": "^1.3.2",
     "vite": "7.3.5",
     "vite-plugin-static-copy": "^3.1.2",
     "vitest": "^4.1.8"
