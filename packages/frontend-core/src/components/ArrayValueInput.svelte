@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from "svelte"
   import {
     Icon,
     Popover,
@@ -22,7 +23,33 @@
 
   let popover = $state<PopoverAPI>()
   let anchor = $state<HTMLElement>()
+  let addInput = $state<HTMLInputElement>()
   let draft = $state("")
+  let open = $state(false)
+
+  const show = () => {
+    if (!disabled) {
+      popover?.show()
+    }
+  }
+
+  const onTriggerKeydown = (event: KeyboardEvent) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      show()
+    }
+  }
+
+  const onOpen = async () => {
+    open = true
+    await tick()
+    addInput?.focus()
+  }
+
+  const onClose = () => {
+    open = false
+    anchor?.focus()
+  }
 
   const displayValue = $derived(
     value.length ? `(${value.length}) ${value.join(", ")}` : ""
@@ -55,14 +82,17 @@
   }
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
   bind:this={anchor}
   class="spectrum-InputGroup array-input"
   class:is-disabled={disabled}
-  aria-haspopup="true"
-  onclick={() => !disabled && popover?.show()}
+  role="button"
+  tabindex={disabled ? -1 : 0}
+  aria-haspopup="dialog"
+  aria-expanded={open}
+  aria-disabled={disabled}
+  onclick={show}
+  onkeydown={onTriggerKeydown}
 >
   <div class="spectrum-Textfield spectrum-InputGroup-textfield">
     <input
@@ -91,6 +121,8 @@
   align={PopoverAlignment.Left}
   widthMode="fixed-to-anchor"
   resizable={false}
+  on:open={onOpen}
+  on:close={onClose}
 >
   <div class="array-popover">
     {#each value as entry, index}
@@ -108,6 +140,7 @@
     {/each}
     <div class="array-add">
       <input
+        bind:this={addInput}
         type="text"
         class="spectrum-Textfield-input array-add-input"
         placeholder="Enter value"
@@ -143,6 +176,11 @@
   }
   .array-input.is-disabled {
     pointer-events: none;
+  }
+  .array-input:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 1px var(--spectrum-global-color-blue-400);
+    border-radius: 4px;
   }
 
   .array-popover {
