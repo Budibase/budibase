@@ -501,8 +501,8 @@ export async function resumeOperation({
 
     const resumeUserId = ctx.userId ?? "escalation-resume"
 
-    // Linked user check. Retrieve or generate transient. The current user state
-    // determines tool authorization when the operation resumes.
+    // Load the user for tool authorization when resuming.
+    // If loading fails, construct an in-memory user context.
     let user: ContextUser
     try {
       user = await getFullUser(resumeUserId)
