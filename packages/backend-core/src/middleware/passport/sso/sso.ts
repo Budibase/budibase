@@ -69,9 +69,24 @@ export async function authenticate(
   }
 
   let pendingInvite: InviteWithCode | undefined
+  let blockedInvite: InviteWithCode | undefined
   if (!dbUser) {
     const invites = await cache.invite.getExistingInvites([details.email])
-    pendingInvite = invites[0]
+    if (details.emailVerified) {
+      pendingInvite = invites[0]
+    } else if (allowUnverifiedEmailLinking) {
+      pendingInvite = invites.find(invite => !invite.info.admin?.global)
+    }
+    if (!pendingInvite) {
+      blockedInvite = invites[0]
+    }
+  }
+
+  if (blockedInvite) {
+    return authError(
+      done,
+      "Email verification is required to accept this invite."
+    )
   }
 
   const emailLookupWasSkipped =

@@ -24,6 +24,7 @@
   } from "./utils"
 
   const SLACK_LINK_COMMAND = ChatCommands.LINK
+  const SLACK_UNLINK_COMMAND = ChatCommands.UNLINK
   let { agent }: { agent?: Agent } = $props()
 
   let draftAgentId: string | undefined = $state()
@@ -213,7 +214,8 @@
       threads are used as the conversation boundary automatically.
     </Body>
     <Body size="S">
-      Use `/{SLACK_LINK_COMMAND}` to link or refresh your Budibase account.
+      Use `/{SLACK_LINK_COMMAND}` to link or refresh your Budibase account, and
+      `/{SLACK_UNLINK_COMMAND}` to disconnect it.
     </Body>
 
     <CopyInput

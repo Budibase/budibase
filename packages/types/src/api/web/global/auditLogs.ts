@@ -9,14 +9,16 @@ export interface AuditLogSearchParams {
   startDate?: string
   endDate?: string
   fullSearch?: string
-  bookmark?: string
+  bookmark?: number
 }
 
 export interface DownloadAuditLogsRequest extends AuditLogSearchParams {}
 
 export interface SearchAuditLogsRequest
-  extends BasicPaginationRequest,
-    AuditLogSearchParams {}
+  extends Omit<BasicPaginationRequest, "bookmark">,
+    AuditLogSearchParams {
+  bookmark?: number
+}
 
 export enum AuditLogResourceStatus {
   DELETED = "deleted",

@@ -652,6 +652,42 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
     )
   })
 
+  it("does not configure structured output for an empty schema", async () => {
+    await runFor(operationWithoutRecipients, { outputSchema: {} })
+
+    expect(ToolLoopAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ output: undefined })
+    )
+  })
+
+  it("indexes the session log when run preparation fails", async () => {
+    const index = jest.fn().mockResolvedValue(undefined)
+    jest.mocked(createSessionLogIndexer).mockReturnValue({
+      addRequestId: jest.fn(),
+      getRequestIds: jest.fn().mockReturnValue([]),
+      index,
+    })
+    jest
+      .mocked(sdk.ai.llm.createLLM)
+      .mockRejectedValueOnce(new Error("Failed to prepare model"))
+
+    await expect(runFor(operationWithoutRecipients)).rejects.toThrow(
+      "Failed to prepare model"
+    )
+
+    expect(index).toHaveBeenCalledTimes(1)
+  })
+
+  it("configures structured output for a populated schema", async () => {
+    await runFor(operationWithoutRecipients, {
+      outputSchema: { sentiment: "string" },
+    })
+
+    expect(ToolLoopAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ output: expect.anything() })
+    )
+  })
+
   it("passes the chat timezone to the agent system prompt", async () => {
     await runFor(operationWithoutRecipients, {
       chat: {
@@ -663,6 +699,22 @@ describe("prepareAgentChatRun - escalate tool selection", () => {
 
     const { ai } = jest.requireMock("@budibase/pro")
     expect(ai.agentSystemPrompt).toHaveBeenCalledWith(user, "Europe/London")
+  })
+
+  it("uses the non-interactive automation prompt configuration", async () => {
+    await runFor(operationWithoutRecipients, { promptMode: "automation" })
+
+    const { ai } = jest.requireMock("@budibase/pro")
+    expect(ai.agentSystemPrompt).not.toHaveBeenCalled()
+    expect(buildPromptAndTools).toHaveBeenCalledWith(
+      agent,
+      operationWithoutRecipients,
+      expect.objectContaining({
+        includeGoal: true,
+      })
+    )
+    const buildOptions = jest.mocked(buildPromptAndTools).mock.calls.at(-1)?.[2]
+    expect(buildOptions).not.toHaveProperty("baseSystemPrompt")
   })
 
   it("ignores a preview role when the chat is not in preview mode", async () => {

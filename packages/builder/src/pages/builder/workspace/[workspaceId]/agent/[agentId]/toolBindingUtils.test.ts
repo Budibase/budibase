@@ -120,12 +120,9 @@ describe("normalizeConfiguredOperationTools", () => {
   })
 
   it("uses the tool policy default for newly configured tools", () => {
-    expect(
-      getDefaultToolExecutionPrincipal({
-        tool: availableTools[0],
-        toolSecurityEnabled: true,
-      })
-    ).toBe(ToolExecutionPrincipal.REQUESTER)
+    expect(getDefaultToolExecutionPrincipal(availableTools[0])).toBe(
+      ToolExecutionPrincipal.REQUESTER
+    )
   })
 
   it("detects prompt references with optional whitespace", () => {

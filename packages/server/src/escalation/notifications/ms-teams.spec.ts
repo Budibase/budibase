@@ -168,4 +168,31 @@ describe("sendMSTeamsNotification", () => {
     const body = JSON.parse(conversationCall[1].body)
     expect(body.members).toEqual([{ id: USER_RIGHT }])
   })
+
+  it("does not send a bot token to a persisted untrusted service URL", async () => {
+    agent = await createAgent()
+    const { contextDoc, notifDoc, globalUserId } = buildDocs()
+    await config.doInTenant(async () => {
+      await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
+        provider: AgentChannelProvider.MSTEAMS,
+        externalUserId: USER_RIGHT,
+        providerTenantId: TENANT_RIGHT,
+        globalUserId,
+        linkedBy: globalUserId,
+        serviceUrl: "https://example.com/",
+      })
+    })
+
+    await expect(
+      config.doInContext(config.getDevWorkspaceId(), () =>
+        sendMSTeamsNotification({ notifDoc, contextDoc })
+      )
+    ).rejects.toThrow("Invalid Microsoft Teams service URL")
+
+    expect(
+      mockFetch.mock.calls.some(([url]: [string]) =>
+        String(url).startsWith("https://example.com/")
+      )
+    ).toBe(false)
+  })
 })

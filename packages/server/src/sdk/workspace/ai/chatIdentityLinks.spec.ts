@@ -41,4 +41,30 @@ describe("chatIdentityLinks", () => {
       expect(link?.globalUserId).toEqual(config.getUser()._id)
     })
   })
+
+  it("deletes a stored identity link", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
+        provider: AgentChannelProvider.SLACK,
+        externalUserId: "external-user-1",
+        teamId: "team-1",
+        globalUserId: config.getUser()._id!,
+        linkedBy: config.getUser()._id!,
+      })
+
+      const deleted = await sdk.ai.chatIdentityLinks.deleteChatIdentityLink({
+        provider: AgentChannelProvider.SLACK,
+        externalUserId: "external-user-1",
+        teamId: "team-1",
+      })
+      const remaining = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
+        provider: AgentChannelProvider.SLACK,
+        externalUserId: "external-user-1",
+        teamId: "team-1",
+      })
+
+      expect(deleted).toEqual(true)
+      expect(remaining).toBeUndefined()
+    })
+  })
 })

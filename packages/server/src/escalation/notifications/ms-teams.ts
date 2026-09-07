@@ -9,14 +9,14 @@ import {
   EscalationNotificationChannel,
 } from "@budibase/types"
 import sdk from "../../sdk"
+import {
+  DEFAULT_MSTEAMS_SERVICE_URL,
+  validateMSTeamsServiceUrl,
+} from "../../utilities/msTeams"
 import { findIntegrationAgent, getEscalationText } from "./utils"
 
 export const MS_SCOPE_BOT = "https://api.botframework.com/.default"
 export const MS_SCOPE_GRAPH = "https://graph.microsoft.com/.default"
-
-// Commercial Teams service URL — region-specific installs can override via TEAMS_API_URL
-const DEFAULT_SERVICE_URL =
-  process.env.TEAMS_API_URL ?? "https://smba.trafficmanager.net/apis/"
 
 export const getMSTeamsIntegration = async (
   appId: string,
@@ -209,9 +209,11 @@ const teamsPost = async <T = void>(
   conversationId: string,
   body: object
 ): Promise<T> => {
-  const url = `${serviceUrl.replace(/\/$/, "")}/v3/conversations/${encodeURIComponent(conversationId)}/activities`
+  const safeServiceUrl = validateMSTeamsServiceUrl(serviceUrl)
+  const url = `${safeServiceUrl.replace(/\/$/, "")}/v3/conversations/${encodeURIComponent(conversationId)}/activities`
   const resp = await fetch(url, {
     method: "POST",
+    redirect: "error",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -256,7 +258,7 @@ export async function replyToConversation({
     integration.msTenantId,
     MS_SCOPE_BOT
   )
-  const serviceUrl = channel.serviceUrl || DEFAULT_SERVICE_URL
+  const serviceUrl = channel.serviceUrl || DEFAULT_MSTEAMS_SERVICE_URL
 
   const isChannel =
     !!channel.channelId && channel.conversationType !== "personal"
@@ -335,7 +337,12 @@ export async function sendMSTeamsNotification({
   }
 
   if (config.channelId && config.teamId) {
-    await teamsPost(DEFAULT_SERVICE_URL, token, config.channelId, message)
+    await teamsPost(
+      DEFAULT_MSTEAMS_SERVICE_URL,
+      token,
+      config.channelId,
+      message
+    )
     console.log("sendMSTeamsNotification: message sent to channel", {
       escalationId: notifDoc.escalationId,
       channelId: config.channelId,
@@ -387,7 +394,9 @@ export async function sendMSTeamsNotification({
     return
   }
 
-  const dmServiceUrl = linkServiceUrl || DEFAULT_SERVICE_URL
+  const dmServiceUrl = validateMSTeamsServiceUrl(
+    linkServiceUrl || DEFAULT_MSTEAMS_SERVICE_URL
+  )
   const msTenantId = providerTenantId || integration.msTenantId
   const createBody = {
     channelId: "msteams",
@@ -405,6 +414,7 @@ export async function sendMSTeamsNotification({
     `${dmServiceUrl.replace(/\/$/, "")}/v3/conversations`,
     {
       method: "POST",
+      redirect: "error",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -421,7 +431,9 @@ export async function sendMSTeamsNotification({
     id: string
     serviceUrl?: string
   }
-  const postServiceUrl = conversation.serviceUrl || DEFAULT_SERVICE_URL
+  const postServiceUrl = validateMSTeamsServiceUrl(
+    conversation.serviceUrl || DEFAULT_MSTEAMS_SERVICE_URL
+  )
   console.log("sendMSTeamsNotification: conversation created", {
     conversationId: conversation.id,
     serviceUrl: conversation.serviceUrl,
