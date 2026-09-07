@@ -651,9 +651,14 @@
   }
 
   const policyUsageCount = (policyId: string) =>
-    (operation?.enabledTools || []).filter(configured =>
-      configured.executionRules?.some(rule => rule.policyId === policyId)
-    ).length
+    (operation?.enabledTools || []).reduce(
+      (count, configured) =>
+        count +
+        (configured.executionRules ?? []).filter(
+          rule => rule.policyId === policyId
+        ).length,
+      0
+    )
 
   const savePolicy = async (policy: AgentOperationApprovalPolicy) => {
     if (!operation) {
