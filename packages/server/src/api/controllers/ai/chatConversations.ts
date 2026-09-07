@@ -55,6 +55,28 @@ import {
   resolvePreviewSessionId,
 } from "../../../sdk/workspace/ai/agentLogs/shared"
 
+const markAgentSessionActive = async ({
+  agentId,
+  sessionId,
+}: {
+  agentId: string
+  sessionId: string
+}) => {
+  await events.platformActions
+    .enqueuePlatformActionSessionLifecycle({
+      sourceType: "agent_session",
+      sourceId: sessionId,
+      signal: "active",
+    })
+    .catch(error => {
+      console.error("Failed to mark agent session active", {
+        agentId,
+        sessionId,
+        error,
+      })
+    })
+}
+
 const getGlobalUserId = (ctx: UserCtx) => {
   const userId = ctx.user?.globalId || ctx.user?.userId || ctx.user?._id
   if (!userId) {
@@ -523,6 +545,7 @@ export async function webhookChat({
     toolDisplayNames: run.toolDisplayNames,
   })
 
+  await markAgentSessionActive({ agentId, sessionId })
   const result = await run.stream({
     pendingToolCalls,
     unrecoveredToolFailures,
@@ -748,6 +771,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       toolDisplayNames: run.toolDisplayNames,
     })
 
+    await markAgentSessionActive({ agentId, sessionId })
     const result = await run.stream({
       pendingToolCalls,
       unrecoveredToolFailures,
