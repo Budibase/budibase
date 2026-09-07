@@ -90,11 +90,11 @@ adminRoutes
     controller.bulkUpdate
   )
   .delete("/api/global/users/:id", controller.destroy)
+  .get("/api/global/users/invites", controller.getUserInvites)
 
 builderOrAdminRoutes
   .get("/api/global/users", controller.fetch)
   .get("/api/global/users/count/:workspaceId", controller.countByWorkspace)
-  .get("/api/global/users/invites", controller.getUserInvites)
   .get("/api/global/users/:id", controller.find)
   .post(
     "/api/global/users/invite/:code/:role",
