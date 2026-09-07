@@ -794,12 +794,24 @@ export async function resumeOperation({
         await markEscalationRequestResolved(judged)
         await updatePlatformActionSessionStatus(judged.status)
       } else {
-        const pendingEscalations = await sdk.escalations.listContextDocs({
-          requestId: doc.requestId,
-          resolution: "pending",
-        })
-        if (pendingEscalations.length > 0) {
-          await updatePlatformActionSessionStatus("waiting")
+        try {
+          const pendingEscalations = await sdk.escalations.listContextDocs({
+            requestId: doc.requestId,
+            resolution: "pending",
+          })
+          if (pendingEscalations.length > 0) {
+            await updatePlatformActionSessionStatus("waiting")
+          }
+        } catch (error) {
+          console.error(
+            "Failed to check pending escalations for session status",
+            {
+              escalationId,
+              agentId: ctx.agentId,
+              requestId: doc.requestId,
+              error,
+            }
+          )
         }
       }
     }
