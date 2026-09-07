@@ -336,29 +336,31 @@ describe("resumeOperation", () => {
         .spyOn(sdk.ai.agentRequests, "resolveFinalRequestOutcome")
         .mockRejectedValueOnce(new Error("DB unavailable"))
 
-      await expect(
-        resumeOperation({
-          doc: baseDoc({ requestId, response: { accepted: true } }),
-          escalationId: "esc_primary",
-          resolution: "resolved",
-          ctx: baseCtx,
+      try {
+        await expect(
+          resumeOperation({
+            doc: baseDoc({ requestId, response: { accepted: true } }),
+            escalationId: "esc_primary",
+            resolution: "resolved",
+            ctx: baseCtx,
+          })
+        ).rejects.toThrow("DB unavailable")
+
+        // The action was already emitted as completed before the failure -
+        // don't emit a second action (it would double-count actionCount),
+        // correct the materialized session status instead.
+        expect(aiAgentExecutedMock).toHaveBeenCalledWith(
+          expect.objectContaining({ requestId })
+        )
+        expect(aiAgentFailedMock).not.toHaveBeenCalled()
+        expect(enqueueLifecycleMock).toHaveBeenCalledWith({
+          sourceType: "agent_session",
+          sourceId: "session_1",
+          signal: "failed",
         })
-      ).rejects.toThrow("DB unavailable")
-
-      // The action was already emitted as completed before the failure -
-      // don't emit a second action (it would double-count actionCount),
-      // correct the materialized session status instead.
-      expect(aiAgentExecutedMock).toHaveBeenCalledWith(
-        expect.objectContaining({ requestId })
-      )
-      expect(aiAgentFailedMock).not.toHaveBeenCalled()
-      expect(enqueueLifecycleMock).toHaveBeenCalledWith({
-        sourceType: "agent_session",
-        sourceId: "session_1",
-        signal: "failed",
-      })
-
-      resolveFinalRequestOutcomeSpy.mockRestore()
+      } finally {
+        resolveFinalRequestOutcomeSpy.mockRestore()
+      }
     })
   })
 
