@@ -124,13 +124,7 @@ export async function getIntegration(
     const plugins = await sdk.plugins.fetch(PluginType.DATASOURCE)
     for (let plugin of plugins) {
       if (plugin.name === integration) {
-        // need to use commonJS require due to its dynamic runtime nature
-        const retrieved = await getDatasourcePlugin(plugin)
-        if (retrieved.integration) {
-          return retrieved.integration
-        } else {
-          return retrieved
-        }
+        return await getDatasourcePlugin(plugin)
       }
     }
   }
