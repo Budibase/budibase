@@ -10,7 +10,7 @@ export class ProviderResponseError extends Error {
     readonly body: string,
     provider: string
   ) {
-    super(`${provider} ${code}: ${body}`)
+    super(`${provider} ${code}: ${body.slice(0, 200)}`)
   }
 }
 
