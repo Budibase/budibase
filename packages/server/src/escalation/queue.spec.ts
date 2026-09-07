@@ -32,6 +32,10 @@ jest.mock("../sdk/workspace/ai/agentRequests", () => {
   }
 })
 
+jest.mock("../sdk/workspace/escalations", () => ({
+  ...jest.requireActual("../sdk/workspace/escalations"),
+}))
+
 jest.mock("ai", () => {
   const actual = jest.requireActual("ai")
   return {
