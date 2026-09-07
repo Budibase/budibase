@@ -144,6 +144,34 @@ describe("upsertPlatformActionSession", () => {
     })
   })
 
+  it("adds statusUpdatedAt when updating a legacy session doc", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+      const input = { sourceType: "agent_session" as const, sourceId }
+
+      await context.getWorkspaceDB().put({
+        _id: getPlatformActionSessionId(input),
+        ...input,
+        status: "completed",
+        actionCount: 1,
+        startedAt: "2026-08-31T00:00:00.000Z",
+        completedAt: "2026-08-31T00:00:00.000Z",
+      })
+      await upsertPlatformActionSession({
+        ...input,
+        incrementsActionCount: false,
+        signal: "active",
+        timestamp: "2026-08-31T00:05:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.status).toBe("active")
+      expect(doc.statusUpdatedAt).toBe("2026-08-31T00:05:00.000Z")
+      expect(doc.actionCount).toBe(1)
+    })
+  })
+
   it("does not create a session index for a lifecycle signal without an action", async () => {
     await run(async () => {
       const sourceId = generator.guid()
