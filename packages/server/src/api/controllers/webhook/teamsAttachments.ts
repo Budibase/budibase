@@ -9,6 +9,12 @@ import {
   MAX_CONVERSATION_ATTACHMENT_BYTES,
 } from "../../../sdk/workspace/ai/chatConversations/attachments"
 
+export class TeamsFileAccessDeniedError extends HTTPError {
+  constructor() {
+    super("Teams file access denied", 403)
+  }
+}
+
 export const getTeamsAttachments = (activity?: MSTeamsActivity) => {
   if (activity?.conversation?.conversationType !== "personal") {
     return []
@@ -49,6 +55,9 @@ export const getTeamsFileData = async (
       timeout: 30_000,
       size: MAX_CONVERSATION_ATTACHMENT_BYTES,
     })
+    if (response.status === 401 || response.status === 403) {
+      throw new TeamsFileAccessDeniedError()
+    }
     if (!response.ok) {
       throw new HTTPError("Failed to download Teams file", response.status)
     }

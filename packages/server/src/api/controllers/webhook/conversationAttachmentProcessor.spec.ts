@@ -249,6 +249,37 @@ describe("conversation attachment processor", () => {
     ).rejects.toThrow("Invalid Teams file download URL")
   })
 
+  it.each([401, 403])(
+    "explains how to recover from Teams file access denial (%s)",
+    async status => {
+      conversation.channel = {
+        provider: AgentChannelProvider.MSTEAMS,
+        conversationType: "personal",
+        conversationId: "teams_conversation",
+      }
+      conversation.attachments![0] = {
+        ...conversation.attachments![0],
+        provider: AgentChannelProvider.MSTEAMS,
+        encryptedDownloadUrl: encryption.encrypt(
+          "https://example.sharepoint.com/report.txt"
+        ),
+      }
+      nock("https://example.sharepoint.com").get("/report.txt").reply(status)
+
+      await processConversationAttachmentJob({
+        workspaceId: "workspace_1",
+        conversationId: "chat_1",
+        turnId: "turn_1",
+      })
+
+      expect(mockTeamsReply).toHaveBeenCalledWith(
+        expect.objectContaining({
+          text: "I couldn't access report.txt. Ask a Teams admin to reinstall the app, then upload the file again.",
+        })
+      )
+    }
+  )
+
   it("rejects oversized Teams downloads", async () => {
     nock("https://example.sharepoint.com")
       .get("/large.txt")

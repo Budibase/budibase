@@ -51,6 +51,7 @@ export interface ChatConversationAttachment {
 }
 
 export enum ConversationAttachmentErrorCode {
+  TEAMS_FILE_ACCESS_DENIED = "teams_file_access_denied",
   SLACK_MISSING_FILES_READ_SCOPE = "slack_missing_files_read_scope",
 }
 

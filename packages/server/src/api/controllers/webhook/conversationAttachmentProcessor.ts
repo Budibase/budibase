@@ -17,7 +17,10 @@ import { getGlobalUser } from "../../../utilities/global"
 import { webhookChat } from "../ai/chatConversations"
 import { replyToConversation as replyToSlackConversation } from "../../../escalation/notifications/slack"
 import { replyToConversation as replyToTeamsConversation } from "../../../escalation/notifications/ms-teams"
-import { getTeamsFileData } from "./teamsAttachments"
+import {
+  getTeamsFileData,
+  TeamsFileAccessDeniedError,
+} from "./teamsAttachments"
 import { formatSlackAssistantReply } from "./slack"
 import type { ConversationAttachmentIngestionJob } from "../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue"
 
@@ -308,10 +311,12 @@ const processAttachment = async ({
       throw error
     }
     const message = error instanceof Error ? error.message : String(error)
-    const errorCode =
-      error instanceof SlackMissingFilesReadScopeError
-        ? ConversationAttachmentErrorCode.SLACK_MISSING_FILES_READ_SCOPE
-        : undefined
+    let errorCode: ConversationAttachmentErrorCode | undefined
+    if (error instanceof SlackMissingFilesReadScopeError) {
+      errorCode = ConversationAttachmentErrorCode.SLACK_MISSING_FILES_READ_SCOPE
+    } else if (error instanceof TeamsFileAccessDeniedError) {
+      errorCode = ConversationAttachmentErrorCode.TEAMS_FILE_ACCESS_DENIED
+    }
     console.error("Conversation attachment processing failed", {
       conversationId,
       attachmentId,
@@ -355,7 +360,14 @@ const getAttachmentFailureText = (
   const otherFailures = attachments.filter(
     attachment =>
       attachment.errorCode !==
-      ConversationAttachmentErrorCode.SLACK_MISSING_FILES_READ_SCOPE
+        ConversationAttachmentErrorCode.SLACK_MISSING_FILES_READ_SCOPE &&
+      attachment.errorCode !==
+        ConversationAttachmentErrorCode.TEAMS_FILE_ACCESS_DENIED
+  )
+  const teamsAccessDenied = attachments.filter(
+    attachment =>
+      attachment.errorCode ===
+      ConversationAttachmentErrorCode.TEAMS_FILE_ACCESS_DENIED
   )
   const messages: string[] = []
   if (missingFilesReadScope.length) {
@@ -365,6 +377,11 @@ const getAttachmentFailureText = (
         .join(
           ", "
         )} because this Slack app is missing the \`files:read\` permission. Ask a Slack workspace admin to reinstall the app, then upload the file again.`
+    )
+  }
+  if (teamsAccessDenied.length) {
+    messages.push(
+      `I couldn't access ${teamsAccessDenied.map(file => file.filename).join(", ")}. Ask a Teams admin to reinstall the app, then upload the file again.`
     )
   }
   if (otherFailures.length) {
