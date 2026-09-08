@@ -106,6 +106,7 @@ export function createAgentValidator() {
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
+      allowConversationAttachments: Joi.boolean().optional(),
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
     })
@@ -131,6 +132,7 @@ export function updateAgentValidator() {
       updatedAt: OPTIONAL_STRING,
       publishedAt: OPTIONAL_STRING,
       createdBy: OPTIONAL_STRING,
+      allowConversationAttachments: Joi.boolean().optional(),
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
     }).unknown(true)

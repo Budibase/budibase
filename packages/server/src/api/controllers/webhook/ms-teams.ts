@@ -249,12 +249,14 @@ const createTeamsMessageHandler = ({
   channelEnabled,
   idleTimeoutMinutes,
   requireUserLink,
+  allowConversationAttachments,
 }: {
   workspaceId: string
   agentId: string
   channelEnabled: boolean
   idleTimeoutMinutes?: number
   requireUserLink?: boolean
+  allowConversationAttachments: boolean
 }) => {
   return async (thread: Thread, message: Message) => {
     const raw = message.raw as MSTeamsActivity | undefined
@@ -419,6 +421,7 @@ const createTeamsMessageHandler = ({
         channelEnabled,
         command,
         content,
+        allowConversationAttachments,
         user: {
           externalUserId,
           displayName,
@@ -461,6 +464,7 @@ export async function MSTeamsWebhook(
         idleTimeoutMinutes,
         channelEnabled,
         requireUserLink,
+        allowConversationAttachments,
       } = await context.doInWorkspaceContext(workspaceId, async () => {
         const agent = await sdk.ai.agents.getOrThrow(agentId)
         return {
@@ -468,6 +472,8 @@ export async function MSTeamsWebhook(
             sdk.ai.deployments.MSTeams.validateMSTeamsIntegration(agent),
           idleTimeoutMinutes: agent.MSTeamsIntegration?.idleTimeoutMinutes,
           requireUserLink: agent.MSTeamsIntegration?.requireUserLink,
+          allowConversationAttachments:
+            agent.allowConversationAttachments !== false,
           channelEnabled:
             !!agent.MSTeamsIntegration?.messagingEndpointUrl?.trim(),
         }
@@ -495,6 +501,7 @@ export async function MSTeamsWebhook(
         channelEnabled,
         idleTimeoutMinutes,
         requireUserLink,
+        allowConversationAttachments,
       })
       chat.onAction(async (event: ActionEvent) => {
         if (!event.actionId.startsWith("esc_")) {

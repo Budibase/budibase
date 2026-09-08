@@ -70,6 +70,7 @@ const {
       loaded: true,
       cloud: true,
       checklist: { smtp: { checked: true } },
+      passwordPolicy: { minLength: 12, maxLength: 512 },
     }),
     organisationStore: createStore({ isSSOEnforced: false }),
     licensingStore,
@@ -231,6 +232,7 @@ describe("InviteUsersModal", () => {
       loaded: true,
       cloud: true,
       checklist: { smtp: { checked: true } },
+      passwordPolicy: { minLength: 12, maxLength: 512 },
     })
     organisationStore.set({ isSSOEnforced: false })
     licensingStore.set({
