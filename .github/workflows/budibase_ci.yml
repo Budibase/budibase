@@ -41,7 +41,7 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version-file: .nvmrc
 
       - name: Restore hoisted node_modules cache
         id: hoisted-modules-cache-restore
@@ -50,7 +50,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-v2-${{ hashFiles('.nvmrc', 'yarn.lock') }}
 
       - name: Install dependencies
         if: steps.hoisted-modules-cache-restore.outputs.cache-hit != 'true'
@@ -63,7 +63,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-v2-${{ hashFiles('.nvmrc', 'yarn.lock') }}
 
   lint:
     runs-on: ubuntu-24.04
@@ -78,14 +78,14 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version-file: .nvmrc
       - name: Restore hoisted node_modules cache
         uses: actions/cache/restore@v5
         with:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-v2-${{ hashFiles('.nvmrc', 'yarn.lock') }}
           fail-on-cache-miss: true
       - run: yarn lint
 
@@ -101,7 +101,7 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version-file: .nvmrc
 
       - name: Verify LiteLLM versions are synchronized
         run: yarn check:litellm-version
@@ -128,14 +128,14 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version-file: .nvmrc
       - name: Restore hoisted node_modules cache
         uses: actions/cache/restore@v5
         with:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-v2-${{ hashFiles('.nvmrc', 'yarn.lock') }}
           fail-on-cache-miss: true
 
       # Run build all the projects
@@ -163,7 +163,7 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version-file: .nvmrc
 
       - name: Restore hoisted node_modules cache
         uses: actions/cache/restore@v5
@@ -171,7 +171,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-v2-${{ hashFiles('.nvmrc', 'yarn.lock') }}
           fail-on-cache-miss: true
 
       - name: Check missing deps
@@ -212,7 +212,7 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version-file: .nvmrc
       - name: Pull testcontainers images
         run: |
           docker pull testcontainers/ryuk:0.5.1 &
@@ -227,7 +227,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-v2-${{ hashFiles('.nvmrc', 'yarn.lock') }}
           fail-on-cache-miss: true
 
       - name: Test
@@ -265,14 +265,14 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version-file: .nvmrc
       - name: Restore hoisted node_modules cache
         uses: actions/cache/restore@v5
         with:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-v2-${{ hashFiles('.nvmrc', 'yarn.lock') }}
           fail-on-cache-miss: true
 
       - name: Check affected tests
@@ -338,7 +338,7 @@ jobs:
         if: needs.compute-affected-jobs.outputs.run_worker_tests == 'true'
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version-file: .nvmrc
       - name: Restore hoisted node_modules cache
         if: needs.compute-affected-jobs.outputs.run_worker_tests == 'true'
         uses: actions/cache/restore@v5
@@ -346,7 +346,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-v2-${{ hashFiles('.nvmrc', 'yarn.lock') }}
           fail-on-cache-miss: true
       - name: Test worker
         if: needs.compute-affected-jobs.outputs.run_worker_tests == 'true'
@@ -432,7 +432,7 @@ jobs:
         if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version-file: .nvmrc
 
       - name: Restore hoisted node_modules cache
         if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
@@ -441,7 +441,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-v2-${{ hashFiles('.nvmrc', 'yarn.lock') }}
           fail-on-cache-miss: true
 
       - name: Load dotenv
@@ -523,14 +523,14 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version-file: .nvmrc
       - name: Restore hoisted node_modules cache
         uses: actions/cache/restore@v5
         with:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-v2-${{ hashFiles('.nvmrc', 'yarn.lock') }}
           fail-on-cache-miss: true
       - run: yarn install
       - name: Check for yarn.lock changes
@@ -555,14 +555,14 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version-file: .nvmrc
       - name: Restore hoisted node_modules cache
         uses: actions/cache/restore@v5
         with:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-v2-${{ hashFiles('.nvmrc', 'yarn.lock') }}
           fail-on-cache-miss: true
 
       - name: Generate OpenAPI specs
@@ -614,14 +614,14 @@ jobs:
       - name: Use Node.js 22.x
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version-file: .nvmrc
       - name: Restore hoisted node_modules cache
         uses: actions/cache/restore@v5
         with:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-v2-${{ hashFiles('.nvmrc', 'yarn.lock') }}
           fail-on-cache-miss: true
 
       - name: Build client library
