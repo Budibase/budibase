@@ -1,6 +1,6 @@
 import { context, db as dbCore, events } from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
-import { findHBSBlocks, processObjectSync } from "@budibase/string-templates"
+import { findHBSBlocks } from "@budibase/string-templates"
 import {
   BasicRestAuthConfig,
   BearerRestAuthConfig,
@@ -19,7 +19,6 @@ import {
   Row,
   SourceName,
 } from "@budibase/types"
-import { cloneDeep } from "lodash/fp"
 import merge from "lodash/merge"
 import {
   BudibaseInternalDB,
@@ -38,6 +37,10 @@ import { setupCreationAuth as googleSetupCreationAuth } from "../../../integrati
 import sdk from "../../index"
 import { getEnvironmentVariables } from "../../utils"
 import { ensureValidPrimaryDisplay } from "../tables/utils"
+import {
+  enrichDatasourceWithEnvironmentValues,
+  getDatasourceWithEnvVars,
+} from "./enrichment"
 
 const ENV_VAR_PREFIX = "env."
 
@@ -147,32 +150,18 @@ export async function enrichDatasourceWithValues(
   datasource: Datasource,
   variables?: Record<string, string>
 ) {
-  const cloned = cloneDeep(datasource)
-  const env = variables ? variables : await getEnvironmentVariables()
-  //Do not process entities, as we do not want to process formulas
-  const { entities, ...clonedWithoutEntities } = cloned
-  // Do not process static variables, bindings are not permitted in them
-  const staticVariables = clonedWithoutEntities.config?.staticVariables
-  if (clonedWithoutEntities.config) {
-    delete clonedWithoutEntities.config.staticVariables
-  }
-  const processed = processObjectSync(
-    clonedWithoutEntities,
-    { env },
-    { onlyFound: true }
-  ) as Datasource
-  processed.entities = entities
-  if (staticVariables && processed.config) {
-    processed.config.staticVariables = staticVariables
-  }
-  const definition = await getDefinition(processed.source)
+  const result = await enrichDatasourceWithEnvironmentValues(
+    datasource,
+    variables
+  )
+  const definition = await getDefinition(result.datasource.source)
   if (definition) {
-    processed.config = checkDatasourceTypes(definition, processed.config)
+    result.datasource.config = checkDatasourceTypes(
+      definition,
+      result.datasource.config
+    )
   }
-  return {
-    datasource: processed,
-    envVars: env as Record<string, string>,
-  }
+  return result
 }
 
 export async function enrich(datasource: Datasource) {
@@ -196,9 +185,15 @@ export async function get(
 }
 
 export async function getWithEnvVars(datasourceId: string) {
-  const appDb = context.getWorkspaceDB()
-  const datasource = await appDb.get<Datasource>(datasourceId)
-  return enrichDatasourceWithValues(datasource)
+  const result = await getDatasourceWithEnvVars(datasourceId)
+  const definition = await getDefinition(result.datasource.source)
+  if (definition) {
+    result.datasource.config = checkDatasourceTypes(
+      definition,
+      result.datasource.config
+    )
+  }
+  return result
 }
 
 function hasAuthConfigs(datasource: Datasource) {

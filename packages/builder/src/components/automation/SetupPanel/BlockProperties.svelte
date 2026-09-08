@@ -68,6 +68,7 @@
     block?.type === AutomationStepType.ACTION &&
     [
       AutomationActionStepId.EXECUTE_QUERY,
+      AutomationActionStepId.EXECUTE_FUNCTION,
       AutomationActionStepId.API_REQUEST,
       AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
     ].includes(block.stepId)
