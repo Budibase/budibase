@@ -12,6 +12,7 @@ import {
   Agent,
   AgentChannelProvider,
   AutomationActionStepId,
+  ChatConversation,
   ContextUser,
   DocumentType,
   EscalationContextDoc,
@@ -645,10 +646,26 @@ export async function resumeOperation({
       ]
     }
 
-    const run = await sdk.ai.agents.prepareAgentChatRun({
+    const suspendedMessages = messages
+  if (ctx.conversationId && ctx.attachmentIds?.length) {
+    const conversation = await context
+      .getWorkspaceDB()
+      .tryGet<ChatConversation>(ctx.conversationId)
+    if (!conversation) {
+      throw new Error("Escalation resume: conversation attachments unavailable")
+    }
+    messages =
+      await sdk.ai.chatConversations.addConversationAttachmentsToModelMessages({
+        messages: suspendedMessages,
+        conversation,
+        attachmentIds: ctx.attachmentIds,
+      })
+  }const run = await sdk.ai.agents.prepareAgentChatRun({
       agent,
       agentId: ctx.agentId,
-      modelMessages: messages,
+      modelMessages: messages,suspendedModelMessages: suspendedMessages,
+    conversationId: ctx.conversationId,
+    conversationAttachmentIds: ctx.attachmentIds,
       errorLabel: "escalation resume",
       sessionId: ctx.sessionId,
       user,

@@ -13,7 +13,7 @@ interface PrepareChatConversationForSaveParams {
   userId: string
   title?: string
   messages: ChatConversation["messages"]
-  chat: Partial<ChatConversationRequest>
+  chat: Partial<ChatConversation>
   existingChat?: ChatConversation | null
 }
 
@@ -31,6 +31,15 @@ export const prepareChatConversationForSave = ({
   const rev = existingChat?._rev || chat._rev
   const agentId = existingChat?.agentId || chat.agentId
   const channel = chat.channel || existingChat?.channel
+  const attachments = chat.attachments ?? existingChat?.attachments
+  const attachmentContextExpiresAt =
+    chat.attachmentContextExpiresAt ?? existingChat?.attachmentContextExpiresAt
+  const attachmentVectorStoreId =
+    chat.attachmentVectorStoreId ?? existingChat?.attachmentVectorStoreId
+  const attachmentDeletingAt =
+    chat.attachmentDeletingAt ?? existingChat?.attachmentDeletingAt
+  const pendingAttachmentTurns =
+    chat.pendingAttachmentTurns ?? existingChat?.pendingAttachmentTurns
 
   if (!agentId) {
     throw new HTTPError("agentId is required", 400)
@@ -46,6 +55,11 @@ export const prepareChatConversationForSave = ({
     updatedAt,
     ...(createdAt && { createdAt }),
     ...(channel && { channel }),
+    ...(attachments?.length && { attachments }),
+    ...(attachmentContextExpiresAt && { attachmentContextExpiresAt }),
+    ...(attachmentVectorStoreId && { attachmentVectorStoreId }),
+    ...(attachmentDeletingAt && { attachmentDeletingAt }),
+    ...(pendingAttachmentTurns?.length && { pendingAttachmentTurns }),
   }
 }
 
