@@ -7,6 +7,7 @@ const mockIngestFile = jest.fn()
 const mockDeleteVectorStore = jest.fn()
 const mockWebhookChat = jest.fn()
 const mockReply = jest.fn()
+const mockTeamsReply = jest.fn()
 const mockFormatReply = jest.fn()
 
 jest.mock("@budibase/backend-core", () => {
@@ -78,10 +79,16 @@ jest.mock("../../../escalation/notifications/slack", () => ({
   replyToConversation: (args: object) => mockReply(args),
 }))
 
+jest.mock("../../../escalation/notifications/ms-teams", () => ({
+  replyToConversation: (args: object) => mockTeamsReply(args),
+}))
+
 jest.mock("./slack", () => ({
   formatSlackAssistantReply: (args: object) => mockFormatReply(args),
 }))
 
+import nock from "nock"
+import { encryption } from "@budibase/backend-core"
 import {
   AgentChannelProvider,
   type ChatConversation,
@@ -89,6 +96,7 @@ import {
   ConversationAttachmentTurnStatus,
 } from "@budibase/types"
 import { processConversationAttachmentJob } from "./conversationAttachmentProcessor"
+import { getTeamsAttachments, getTeamsFileData } from "./teamsAttachments"
 
 describe("conversation attachment processor", () => {
   let conversation: ChatConversation
@@ -181,6 +189,111 @@ describe("conversation attachment processor", () => {
   afterEach(() => {
     jest.restoreAllMocks()
   })
+
+  it.each([true, false])(
+    "processes Teams personal files with question=%s",
+    async question => {
+      conversation.channel = {
+        provider: AgentChannelProvider.MSTEAMS,
+        conversationType: "personal",
+        conversationId: "teams_conversation",
+      }
+      conversation.attachments![0] = {
+        ...conversation.attachments![0],
+        provider: AgentChannelProvider.MSTEAMS,
+        encryptedDownloadUrl: encryption.encrypt(
+          "https://example.sharepoint.com/report.txt"
+        ),
+        size: 0,
+      }
+      if (!question) {
+        conversation.pendingAttachmentTurns![0].message.parts = [
+          { type: "text", text: "[Attached files: report.txt]" },
+        ]
+      }
+      nock("https://example.sharepoint.com")
+        .get("/report.txt")
+        .reply(200, "content")
+
+      await processConversationAttachmentJob({
+        workspaceId: "workspace_1",
+        conversationId: "chat_1",
+        turnId: "turn_1",
+      })
+
+      expect(conversation.attachments![0]).toEqual(
+        expect.objectContaining({
+          status: ConversationAttachmentStatus.READY,
+          size: 7,
+          encryptedDownloadUrl: undefined,
+        })
+      )
+      expect(mockTeamsReply).toHaveBeenCalledWith(
+        expect.objectContaining({
+          text: question ? "The report says content." : "Ready: report.txt.",
+        })
+      )
+      expect(mockReply).not.toHaveBeenCalled()
+      expect(mockFilesInfo).not.toHaveBeenCalled()
+    }
+  )
+
+  it("rejects Teams download URLs outside SharePoint", async () => {
+    await expect(
+      getTeamsFileData({
+        ...conversation.attachments![0],
+        encryptedDownloadUrl: encryption.encrypt(
+          "https://example.com/report.txt"
+        ),
+      })
+    ).rejects.toThrow("Invalid Teams file download URL")
+  })
+
+  it("rejects oversized Teams downloads", async () => {
+    nock("https://example.sharepoint.com")
+      .get("/large.txt")
+      .reply(200, Buffer.alloc(20 * 1024 * 1024 + 1))
+    await expect(
+      getTeamsFileData({
+        ...conversation.attachments![0],
+        encryptedDownloadUrl: encryption.encrypt(
+          "https://example.sharepoint.com/large.txt"
+        ),
+      })
+    ).rejects.toThrow("exceeds the 20 MB file limit")
+  })
+
+  it.each(["personal", "channel", "groupChat"])(
+    "extracts files only for personal chats: %s",
+    conversationType => {
+      expect(
+        getTeamsAttachments({
+          conversation: { conversationType },
+          attachments: [
+            {
+              contentType: "application/vnd.microsoft.teams.file.download.info",
+              name: "report.txt",
+              content: {
+                uniqueId: "file_1",
+                downloadUrl: "https://example.com/report.txt",
+              },
+            },
+          ],
+        })
+      ).toEqual(
+        conversationType === "personal"
+          ? [
+              {
+                providerFileId: "file_1",
+                filename: "report.txt",
+                mimetype: "text/plain",
+                downloadUrl: "https://example.com/report.txt",
+              },
+            ]
+          : []
+      )
+    }
+  )
 
   it("ingests the file, runs the queued turn, and replies", async () => {
     await processConversationAttachmentJob({

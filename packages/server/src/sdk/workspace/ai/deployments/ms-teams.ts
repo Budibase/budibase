@@ -116,7 +116,7 @@ export const buildMSTeamsManifest = ({
         botId: integration.appId,
         scopes: ["personal", "team", "groupChat"],
         isNotificationOnly: false,
-        supportsFiles: false,
+        supportsFiles: true,
         commandLists: [
           {
             scopes: ["personal", "team", "groupChat"],

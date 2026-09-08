@@ -33,6 +33,7 @@ import { createChatLogger } from "./chatLogger"
 import { getTeamsState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
 import { runChatWebhook } from "./runChatWebhook"
+import { getTeamsAttachments } from "./teamsAttachments"
 import { resolveEscalationWorkspaceId, toAbsoluteUrl } from "./utils"
 
 const TEAMS_FALLBACK_ERROR_MESSAGE =
@@ -262,7 +263,13 @@ const createTeamsMessageHandler = ({
     const raw = message.raw as MSTeamsActivity | undefined
     const messageText = message.text || ""
 
-    const { command, content } = parseTeamsCommand(messageText, raw?.entities)
+    const attachments = getTeamsAttachments(raw)
+    const parsed = parseTeamsCommand(messageText, raw?.entities)
+    const content = parsed.content
+    const command =
+      parsed.command === ChatCommands.UNSUPPORTED && attachments.length
+        ? ChatCommands.ASK
+        : parsed.command
     if (command === ChatCommands.UNSUPPORTED) {
       await thread.post(
         `Send a message to chat, or "${ChatCommands.NEW}" to start a new conversation.`
@@ -422,6 +429,7 @@ const createTeamsMessageHandler = ({
         command,
         content,
         allowConversationAttachments,
+        attachments,
         user: {
           externalUserId,
           displayName,

@@ -692,6 +692,7 @@ export const handleChatMessage = async ({
             attachments: conversationAttachments,
           },
           incoming: incomingAttachments,
+          provider,
         })
       : []
     conversationAttachments = [...conversationAttachments, ...queuedAttachments]

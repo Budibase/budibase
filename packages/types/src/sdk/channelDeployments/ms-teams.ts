@@ -42,6 +42,14 @@ export interface MSTeamsActivity {
   conversation?: MSTeamsConversationAccount
   channelData?: MSTeamsChannelData
   entities?: MSTeamsActivityEntity[]
+  attachments?: {
+    contentType?: string
+    name?: string
+    content?: {
+      downloadUrl?: string
+      uniqueId?: string
+    }
+  }[]
 }
 
 export interface MSTeamsConversationScope {

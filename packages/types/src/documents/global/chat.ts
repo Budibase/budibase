@@ -34,7 +34,8 @@ export interface ChatConversationChannel {
 
 export interface ChatConversationAttachment {
   id: string
-  provider: AgentChannelProvider.SLACK
+  provider: AgentChannelProvider
+  encryptedDownloadUrl?: string
   providerFileId: string
   filename: string
   mimetype: string

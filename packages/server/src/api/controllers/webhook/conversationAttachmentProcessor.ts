@@ -1,6 +1,8 @@
 import { ErrorCode, WebClient, type WebAPIPlatformError } from "@slack/web-api"
 import { context, HTTPError, locks, roles } from "@budibase/backend-core"
 import {
+  AgentChannelProvider,
+  type ChatConversationChannel,
   type ChatConversation,
   type ChatConversationAttachment,
   type ContextUser,
@@ -13,11 +15,26 @@ import {
 import sdk from "../../../sdk"
 import { getGlobalUser } from "../../../utilities/global"
 import { webhookChat } from "../ai/chatConversations"
-import { replyToConversation } from "../../../escalation/notifications/slack"
+import { replyToConversation as replyToSlackConversation } from "../../../escalation/notifications/slack"
+import { replyToConversation as replyToTeamsConversation } from "../../../escalation/notifications/ms-teams"
+import { getTeamsFileData } from "./teamsAttachments"
 import { formatSlackAssistantReply } from "./slack"
 import type { ConversationAttachmentIngestionJob } from "../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue"
 
 const MAX_UPDATE_ATTEMPTS = 5
+
+const replyToConversation = async (params: {
+  appId: string
+  agentId: string
+  channel: ChatConversationChannel
+  text: string
+}) => {
+  const reply =
+    params.channel.provider === AgentChannelProvider.MSTEAMS
+      ? replyToTeamsConversation
+      : replyToSlackConversation
+  await reply(params)
+}
 
 const isConflict = (error: Error) => "status" in error && error.status === 409
 
@@ -247,7 +264,10 @@ const processAttachment = async ({
       (await context
         .getWorkspaceDB()
         .tryGet<ChatConversation>(conversationId)) || conversation
-    const data = await getSlackFileData({ conversation, attachment })
+    const data =
+      attachment.provider === AgentChannelProvider.MSTEAMS
+        ? await getTeamsFileData(attachment)
+        : await getSlackFileData({ conversation, attachment })
     const metadata =
       await sdk.ai.chatConversations.persistConversationAttachment({
         conversationId,
@@ -274,6 +294,8 @@ const processAttachment = async ({
       update: current => ({
         ...current,
         ...metadata,
+        size: data.byteLength,
+        encryptedDownloadUrl: undefined,
         status: ConversationAttachmentStatus.READY,
         ragSourceId: ingested.fileId,
         processedAt: new Date().toISOString(),
@@ -303,6 +325,7 @@ const processAttachment = async ({
       update: current => ({
         ...current,
         status: ConversationAttachmentStatus.FAILED,
+        encryptedDownloadUrl: undefined,
         processedAt: new Date().toISOString(),
         errorCode,
         errorMessage: message,
@@ -423,7 +446,7 @@ const processTurn = async ({
     .filter(part => part.type === "text")
     .map(part => part.text)
     .join("\n")
-    .replace(/\n\n\[Attached files:.*\]$/, "")
+    .replace(/(?:^|\n\n)\[Attached files:.*\]$/, "")
     .trim()
 
   let responseText: string
@@ -448,11 +471,14 @@ const processTurn = async ({
       user: requester,
     })
     messages = result.messages
-    responseText = await formatSlackAssistantReply({
-      agentId: current.agentId,
-      result,
-      isDirectMessage: current.channel?.conversationType === "im",
-    })
+    responseText =
+      current.channel?.provider === AgentChannelProvider.MSTEAMS
+        ? result.assistantText
+        : await formatSlackAssistantReply({
+            agentId: current.agentId,
+            result,
+            isDirectMessage: current.channel?.conversationType === "im",
+          })
     if (failed.length) {
       responseText += `\n\n${getAttachmentFailureText(failed)}`
     }
