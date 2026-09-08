@@ -14,7 +14,7 @@ const config = new TestConfiguration()
 
 const volumePath = path.resolve(__dirname, "docker-volume")
 
-jest.setTimeout(240000)
+jest.setTimeout(90000)
 
 describe("oauth2 utils", () => {
   let keycloakUrl: string

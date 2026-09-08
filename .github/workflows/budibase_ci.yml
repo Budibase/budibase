@@ -492,7 +492,7 @@ jobs:
           DATASOURCE: ${{ matrix.datasource }}
           JEST_SHARD_INDEX: ${{ matrix.shard_index }}
           JEST_SHARD_TOTAL: ${{ matrix.shard_total }}
-          JEST_MAX_WORKERS: 4
+          JEST_MAX_WORKERS: 2
           # DEBUG: testcontainers*
         run: |
           FILTER="./src/tests/filters/datasource-tests.js"
