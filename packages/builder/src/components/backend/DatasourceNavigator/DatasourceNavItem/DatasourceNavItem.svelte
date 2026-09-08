@@ -4,20 +4,18 @@
   import {
     appStore,
     contextMenuStore,
-    datasources,
-    integrations,
     userSelectedResourceMap,
   } from "@/stores/builder"
   import { bb } from "@/stores/bb"
   import { getRestTemplateIdentifier } from "@/stores/builder/datasources"
   import { restTemplates } from "@/stores/builder/restTemplates"
-  import { integrationForDatasource } from "@/stores/selectors"
   import { canCreateDatasourceQuery } from "@/components/backend/DatasourceNavigator/datasourceUtils"
   import { isAssignableDatasource } from "@/helpers/data/datasources"
   import NavItem from "@/components/common/NavItem.svelte"
   import type { MenuItem } from "@/types"
   import {
     FeatureFlag,
+    type UpdateProjectAssignmentRequest,
     type Datasource,
     type UIInternalDatasource,
   } from "@budibase/types"
@@ -33,8 +31,8 @@
   import UpdateDatasourceModal from "@/components/backend/DatasourceNavigator/modals/UpdateDatasourceModal.svelte"
   import DeleteDataConfirmModal from "@/components/backend/modals/DeleteDataConfirmationModal.svelte"
   import AssignProjectModal from "@/components/projects/AssignProjectModal.svelte"
-  import { featureFlags } from "@/stores/portal"
-  import { get } from "svelte/store"
+  import { saveProjectAssignment } from "@/components/projects/assignments"
+  import { featureFlags, projectsStore } from "@/stores/portal"
 
   $goto
   $params
@@ -63,6 +61,7 @@
   let editModal!: ModalRef
   let deleteConfirmationModal!: ModalRef
   let assignProjectModal!: ModalAPI
+  let assignProjectModalKey = 0
 
   $: projectsEnabled = $featureFlags[FeatureFlag.PROJECTS]
   $: assignableDatasource = isAssignableDatasource(datasource)
@@ -70,6 +69,8 @@
     : undefined
   $: canAssignProject = projectsEnabled && !!assignableDatasource
   $: projectAssignmentResource = {
+    id: assignableDatasource?._id || "",
+    revision: assignableDatasource?._rev || "",
     name: assignableDatasource?.name || "Datasource",
     typeLabel: "datasource",
     projectIds: assignableDatasource?.projectIds,
@@ -87,33 +88,20 @@
   }
 
   const openAssignProjectModal = () => {
+    assignProjectModalKey += 1
     assignProjectModal?.show()
   }
 
-  const assignProject = async (projectIds: string[]) => {
+  const assignProject = async (selection: UpdateProjectAssignmentRequest) => {
     if (!assignableDatasource) {
       return keepOpen
     }
 
-    try {
-      await datasources.save({
-        datasource: {
-          ...assignableDatasource,
-          projectIds,
-        },
-        integration: integrationForDatasource(
-          get(integrations),
-          assignableDatasource
-        ),
-        skipConnectionCheck: true,
-      })
-      notifications.success("Projects updated successfully")
-      assignProjectModal?.hide()
-    } catch (error) {
-      console.error(error)
-      notifications.error("Unable to update project")
-      return keepOpen
-    }
+    await saveProjectAssignment({
+      resourceId: assignableDatasource._id!,
+      selection,
+    })
+    assignProjectModal?.hide()
 
     await refreshDataStores()
   }
@@ -214,10 +202,13 @@
   bind:this={deleteConfirmationModal}
 />
 <Modal bind:this={assignProjectModal}>
-  <AssignProjectModal
-    resource={projectAssignmentResource}
-    onConfirm={assignProject}
-  />
+  {#key assignProjectModalKey}
+    <AssignProjectModal
+      resource={projectAssignmentResource}
+      onPreview={projectsStore.previewAssignment}
+      onConfirm={assignProject}
+    />
+  {/key}
 </Modal>
 
 <style>
