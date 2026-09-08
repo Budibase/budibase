@@ -18,6 +18,7 @@
   import HomeResourcePanel from "./_components/HomeResourcePanel.svelte"
   import HomeTable from "./_components/HomeTable.svelte"
   import ImportProjectModal from "./_components/ImportProjectModal.svelte"
+  import ImportProjectResultModal from "./_components/ImportProjectResultModal.svelte"
   import {
     appStore,
     automationStore,
@@ -36,6 +37,7 @@
     projectsStore,
   } from "@/stores/portal"
   import { getErrorMessage } from "@/helpers/errors"
+  import { bb } from "@/stores/bb"
   import { buildLiveUrl } from "@/helpers/urls"
   import {
     Body,
@@ -57,6 +59,8 @@
     type HomeType,
     type ProjectFormPayload,
     type ProjectResponse,
+    type ImportProjectResponse,
+    type ProjectImportRequirement,
     PublishResourceState,
     type Agent,
     type Table,
@@ -116,6 +120,8 @@
   let assignProjectModal: ModalAPI
   let exportProjectModal: ModalAPI
   let importProjectModal: ModalAPI
+  let importProjectResultModal: ModalAPI
+  let importResult: ImportProjectResponse | undefined
   let createProjectModalKey = 0
   let editProjectModalKey = 0
   let assignProjectModalKey = 0
@@ -413,7 +419,7 @@
     assignProjectModal?.hide()
 
     try {
-      await Promise.all([appStore.refresh(), agentsStore.fetchAgents()])
+      await appStore.refresh()
     } catch (error) {
       console.error(error)
       notifications.warning(
@@ -469,7 +475,7 @@
       notifications.success(`Project '${projectName}' deleted successfully`)
 
       try {
-        await Promise.all([appStore.refresh(), agentsStore.fetchAgents()])
+        await appStore.refresh()
       } catch (error) {
         console.error(error)
         notifications.warning(
@@ -498,22 +504,30 @@
     }
   }
 
-  const notifyImportFollowUps = (
-    response: Awaited<ReturnType<typeof projectsStore.importProject>>
-  ) => {
-    if (response.requirements.length) {
-      const names = response.requirements
-        .map(requirement => requirement.name)
-        .join(", ")
-      notifications.warning(`Some imported resources need secrets: ${names}`)
+  const openImportedResource = ({
+    type,
+    resourceId,
+  }: ProjectImportRequirement) => {
+    importProjectResultModal.hide()
+    let route: string
+    if (type === "datasource_secrets") {
+      const datasource = $datasources.list.find(item => item._id === resourceId)
+      if (datasource?.source === SourceName.REST) {
+        bb.settings(`/connections/api-connections/${resourceId}`)
+        return
+      }
+      route = `../data/datasource/${resourceId}`
+    } else if (type === "automation_credentials") {
+      route = `../automation/${resourceId}`
+    } else {
+      route = `../agent/${resourceId}/config`
     }
-
-    if (response.unsupportedContent.length) {
-      const summary = response.unsupportedContent
-        .map(item => `${item.count} ${item.type}`)
-        .join(", ")
-      notifications.warning(`Some Project content was not imported: ${summary}`)
-    }
+    goto(
+      withWorkspaceHomeReturn(
+        url(route),
+        `${window.location.pathname}${window.location.search}`
+      )
+    )
   }
 
   const handleImportProject = async ({
@@ -529,13 +543,20 @@
       })
       importProjectModal?.hide()
       notifications.success(`Imported project '${response.project.name}'`)
-      notifyImportFollowUps(response)
-
-      const refreshes = await Promise.allSettled([appStore.refresh()])
-      if (refreshes.some(result => result.status === "rejected")) {
+      selectedProjectId = response.project._id
+      typeFilter = "all"
+      searchTerm = ""
+      importResult = response
+      try {
+        await appStore.refresh()
+      } catch (error) {
+        console.error(error)
         notifications.warning(
           "Project imported, but some resources could not be refreshed. Reload the workspace to see all imported resources."
         )
+      }
+      if (response.requirements.length || response.unsupportedContent.length) {
+        importProjectResultModal?.show()
       }
     } catch (error) {
       console.error(error)
@@ -1179,6 +1200,15 @@
     {#key importProjectModalKey}
       <ImportProjectModal onConfirm={handleImportProject} />
     {/key}
+  </Modal>
+
+  <Modal bind:this={importProjectResultModal}>
+    {#if importResult}
+      <ImportProjectResultModal
+        response={importResult}
+        onOpenResource={openImportedResource}
+      />
+    {/if}
   </Modal>
 {/if}
 
