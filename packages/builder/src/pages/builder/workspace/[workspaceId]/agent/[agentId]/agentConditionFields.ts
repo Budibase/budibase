@@ -1,5 +1,7 @@
 import {
   AutomationIOType,
+  BasicOperator,
+  ConditionRangeOperator,
   FieldType,
   ToolAction,
   ToolType,
@@ -8,6 +10,7 @@ import type {
   Automation,
   FieldConstraints,
   Query,
+  ToolExecutionOperator,
   Table,
   ToolExecutionCondition,
 } from "@budibase/types"
@@ -19,13 +22,17 @@ const OPERATOR_LABELS: Record<string, string> = Object.fromEntries(
   Object.values(OperatorOptions).map(option => [option.value, option.label])
 )
 
-const OPERATOR_PHRASES: Record<string, (value: string) => string> = {
-  equal: value => `is ${value}`,
-  notEqual: value => `is not ${value}`,
-  empty: () => "is empty",
-  notEmpty: () => "is not empty",
-  rangeLow: value => `is more than or equal to ${value}`,
-  rangeHigh: value => `is less than or equal to ${value}`,
+const OPERATOR_PHRASES: Partial<
+  Record<ToolExecutionOperator, (value: string) => string>
+> = {
+  [BasicOperator.EQUAL]: value => `is ${value}`,
+  [BasicOperator.NOT_EQUAL]: value => `is not ${value}`,
+  [BasicOperator.EMPTY]: () => "is empty",
+  [BasicOperator.NOT_EMPTY]: () => "is not empty",
+  [ConditionRangeOperator.RANGE_LOW]: value =>
+    `is more than or equal to ${value}`,
+  [ConditionRangeOperator.RANGE_HIGH]: value =>
+    `is less than or equal to ${value}`,
 }
 
 const describeValue = (condition: ToolExecutionCondition) => {

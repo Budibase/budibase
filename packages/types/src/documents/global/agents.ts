@@ -155,9 +155,22 @@ export interface AgentOperationApprovalPolicy {
   notifications: AgentEscalationConfig
 }
 
+// TODO: This can go further. These exist all over the place
+// as magic strings. They can stay here until they are
+// refactored
+export enum ConditionRangeOperator {
+  RANGE_LOW = "rangeLow",
+  RANGE_HIGH = "rangeHigh",
+}
+
+export type ToolExecutionOperator =
+  | BasicOperator
+  | ArrayOperator
+  | ConditionRangeOperator
+
 export interface ToolExecutionCondition {
   field: string
-  operator: BasicOperator | ArrayOperator | "rangeLow" | "rangeHigh"
+  operator: ToolExecutionOperator
   value: any
   type?: FieldType
 }

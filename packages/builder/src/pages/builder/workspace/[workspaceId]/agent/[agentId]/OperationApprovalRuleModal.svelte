@@ -12,6 +12,7 @@
   import type {
     AgentOperationApprovalPolicy,
     ToolExecutionCondition,
+    ToolExecutionOperator,
     ToolExecutionRule,
   } from "@budibase/types"
   import { OperatorOptions, dataFilters } from "@budibase/shared-core"
@@ -103,7 +104,7 @@
       {
         field: field.name,
         type: field.type,
-        operator: operators[0]?.value as ToolExecutionCondition["operator"],
+        operator: operators[0]?.value as ToolExecutionOperator,
         value: undefined,
       },
     ]
@@ -128,7 +129,7 @@
     )
     const operator = operatorStillValid
       ? condition.operator
-      : (operators[0]?.value as ToolExecutionCondition["operator"])
+      : (operators[0]?.value as ToolExecutionOperator)
     conditions[index] = {
       ...condition,
       field: field.name,
@@ -141,7 +142,7 @@
 
   const changeConditionOperator = (
     index: number,
-    operator: ToolExecutionCondition["operator"]
+    operator: ToolExecutionOperator
   ) => {
     const noValue = NO_VALUE_OPERATORS.has(operator)
     conditions[index] = {
