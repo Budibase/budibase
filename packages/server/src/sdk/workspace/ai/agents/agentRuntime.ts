@@ -1,4 +1,4 @@
-import { cache, context, features, roles } from "@budibase/backend-core"
+import { cache, context, roles } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import {
@@ -9,7 +9,6 @@ import {
   ChatConversationRequest,
   ContextUser,
   EscalateToolResultStatus,
-  FeatureFlag,
   ToolExecutionPrincipal,
   type AgentExecutionContext,
   type AgentRequester,
@@ -47,10 +46,7 @@ import {
 import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
 import { createEscalateTool } from "../../../../ai/tools/budibase"
-import {
-  createListSessionEscalationsTool,
-  LIST_SESSION_ESCALATIONS_TOOL_NAME,
-} from "../../../../ai/tools/budibase/listSessionEscalations"
+import { LIST_SESSION_ESCALATIONS_TOOL_NAME } from "../../../../ai/tools/budibase/listSessionEscalations"
 import type tracer from "dd-trace"
 import { withLiteLLMSessionId } from "../llm/requestSession"
 
@@ -565,20 +561,16 @@ const prepareAgentChatRunInternal = async ({
     const summary = result.text.match(/^SUMMARY:\s*(.+)$/m)?.[1]?.trim()
     return title && summary ? { title, summary } : undefined
   }
-  const escalationGateContext = (await features.isEnabled(
-    FeatureFlag.AI_TOOL_ESCALATION
-  ))
-    ? {
-        sessionId,
-        channel: chat?.channel,
-        userId: user?._id,
-        requester,
-        getMessages: () => resolvedModelMessages,
-        getRequestId: () => getRequestId?.(),
-        generateCardCopy,
-        executedApproval,
-      }
-    : undefined
+  const escalationGateContext = {
+    sessionId,
+    channel: chat?.channel,
+    userId: user?._id,
+    requester,
+    getMessages: () => resolvedModelMessages,
+    getRequestId: () => getRequestId?.(),
+    generateCardCopy,
+    executedApproval,
+  }
 
   const buildPromptOptions: BuildPromptAndToolsOptions = {
     includeGoal: promptMode === "automation",
@@ -642,13 +634,8 @@ const prepareAgentChatRunInternal = async ({
     tools.report_used_sources = reportUsedSourcesTool
   }
 
-  // The escalate tool exists only in the old mode: stripped when ESCALATION
-  // is off, and when AI_TOOL_ESCALATION is on (gating replaces it outright).
-  if (
-    tools.escalate &&
-    (escalationGateContext ||
-      !(await features.isEnabled(FeatureFlag.ESCALATION)))
-  ) {
+  // Approval gating replaces the dedicated escalation tool.
+  if (tools.escalate) {
     delete tools.escalate
   }
 
@@ -679,12 +666,6 @@ const prepareAgentChatRunInternal = async ({
         executionContext,
       })
     }
-  }
-
-  if (tools.escalate || escalationGateContext) {
-    tools.list_session_escalations = createListSessionEscalationsTool({
-      sessionId,
-    })
   }
 
   const systemPrompt = [baseSystemPrompt, additionalInstructions]

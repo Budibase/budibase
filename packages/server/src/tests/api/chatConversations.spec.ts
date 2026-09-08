@@ -1683,66 +1683,6 @@ describe("Agent chat tool call tracking", () => {
       )
     })
 
-    it("does not record a tool_call action for list_session_escalations", async () => {
-      jest.mocked(streamText).mockImplementation(
-        makeWebhookStreamTextMock({
-          toolResults: [
-            { toolCallId: "c1", toolName: "list_session_escalations" },
-            { toolCallId: "c2", toolName: "book_meeting" },
-          ],
-        })
-      )
-      ;(
-        sdk.ai.agents.getOrThrow as jest.MockedFunction<
-          typeof sdk.ai.agents.getOrThrow
-        >
-      ).mockResolvedValue(buildWebhookTestAgent())
-
-      await features.testutils.withFeatureFlags(
-        config.getTenantId(),
-        { [FeatureFlag.AI_AGENT_ACTIVITY]: true },
-        async () => {
-          await context.doInWorkspaceContext(
-            config.getProdWorkspaceId(),
-            async () => {
-              await webhookChat({
-                chat: {
-                  agentId,
-                  channel: {
-                    provider: AgentChannelProvider.SLACK,
-                    channelId: "C666",
-                    externalUserId: "slack-user-5",
-                  },
-                  messages: [
-                    {
-                      id: "msg-1",
-                      role: "user",
-                      parts: [{ type: "text", text: "book a meeting" }],
-                    },
-                  ],
-                },
-                user: { _id: "user-5" } as any,
-              })
-
-              const requests =
-                await sdk.ai.agentRequests.fetchRequestsByAgent("agent-1")
-              const request = requests.find(r => r.userId === "user-5")
-              expect(
-                (request?.actions ?? []).filter(
-                  action => action.type === "tool_call"
-                )
-              ).toEqual([
-                expect.objectContaining({
-                  toolName: "book_meeting",
-                  status: "success",
-                }),
-              ])
-            }
-          )
-        }
-      )
-    })
-
     it("returns RAG sources reported by the agent", async () => {
       jest.mocked(streamText).mockImplementation(
         makeWebhookStreamTextMock({
