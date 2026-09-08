@@ -8,6 +8,7 @@ import {
   Automation,
   AutomationActionStepId,
   AutomationAttachment,
+  AutomationStatus,
   AutomationStep,
   AutomationStepResult,
   AutomationStepResultOutputs,
@@ -18,6 +19,7 @@ import {
   FieldType,
   LoopStorage,
   LoopV2Step,
+  PlatformActionContainerStatus,
   Row,
 } from "@budibase/types"
 import { cloneDeep, isPlainObject } from "lodash"
@@ -119,6 +121,24 @@ export function getError(err: any) {
     return JSON.stringify(err)
   }
   return typeof err !== "string" ? err.toString() : err
+}
+
+export function inferAutomationRunActionStatus(
+  status: AutomationStatus
+): PlatformActionContainerStatus {
+  switch (status) {
+    case AutomationStatus.SUCCESS:
+    case AutomationStatus.STOPPED:
+      return "completed"
+    case AutomationStatus.ERROR:
+    case AutomationStatus.STOPPED_ERROR:
+    case AutomationStatus.TIMED_OUT:
+      return "failed"
+    case AutomationStatus.SUSPENDED:
+      return "waiting"
+    default:
+      throw new Error(`Unexpected automation run status: ${status}`)
+  }
 }
 
 export function guardAttachment(
