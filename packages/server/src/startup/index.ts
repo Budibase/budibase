@@ -179,6 +179,7 @@ export async function startup(
   queuePromises.push(rag.knowledgeSourceSyncQueue.init())
   queuePromises.push(agentRequests.init())
   queuePromises.push(agentTests.init())
+  queuePromises.push(events.platformActions.init())
   queuePromises.push(sdk.ai.chatConversations.attachmentCleanupQueue.init())
   queuePromises.push(
     sdk.ai.chatConversations.attachmentIngestionQueue.init(

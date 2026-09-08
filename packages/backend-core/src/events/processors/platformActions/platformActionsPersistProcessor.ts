@@ -1,0 +1,134 @@
+import { v4 as uuidv4 } from "uuid"
+import {
+  DocumentType,
+  Event,
+  Identity,
+  PlatformActionEvent,
+  PlatformActionSessionIndexJob,
+  PlatformActionSourceType,
+  SEPARATOR,
+} from "@budibase/types"
+import * as context from "../../../context"
+import { timeout } from "../../../utils"
+import { EventProcessor } from "../types"
+import { enqueuePlatformActionSessionIndex } from "./indexQueue"
+
+const ENQUEUE_MAX_ATTEMPTS = 3
+const ENQUEUE_RETRY_DELAY_MS = 200
+
+function toCompactTimestamp(isoTimestamp: string): string {
+  return isoTimestamp.replace(/[-:.]/g, "")
+}
+
+function isActionSourceContext(
+  properties: Record<string, unknown>
+): properties is Record<string, unknown> & {
+  sourceType: string
+  sourceId: string
+} {
+  return (
+    typeof properties.sourceType === "string" &&
+    typeof properties.sourceId === "string"
+  )
+}
+
+function getSessionSignal(
+  event: Event,
+  properties: Record<string, unknown>
+): PlatformActionSessionIndexJob["signal"] {
+  if (event.endsWith(":failed")) {
+    return "failed"
+  }
+  if (
+    event === Event.ACTION_AI_AGENT_EXECUTED &&
+    (properties.finalStatus === "completed" ||
+      properties.finalStatus === "failed")
+  ) {
+    return properties.finalStatus
+  }
+  if (
+    event === Event.ACTION_AI_AGENT_EXECUTED &&
+    properties.awaitingEscalation === true
+  ) {
+    return "waiting"
+  }
+  return "completed"
+}
+
+export default class PlatformActionPersistProcessor implements EventProcessor {
+  async processEvent(
+    event: Event,
+    _identity: Identity,
+    properties: Record<string, unknown>,
+    timestamp?: string | number
+  ): Promise<void> {
+    if (!event.startsWith("action:") || !isActionSourceContext(properties)) {
+      return
+    }
+
+    const { sourceType, sourceId, ...payload } = properties
+    const isoTimestamp =
+      timestamp === undefined
+        ? new Date().toISOString()
+        : new Date(timestamp).toISOString()
+    const platformActionEventId = `${DocumentType.PLATFORM_ACTION_EVENT}${SEPARATOR}${toCompactTimestamp(
+      isoTimestamp
+    )}${SEPARATOR}${uuidv4()}`
+    const doc: PlatformActionEvent = {
+      _id: platformActionEventId,
+      sourceType: sourceType as PlatformActionSourceType,
+      sourceId,
+      eventName: event,
+      timestamp: isoTimestamp,
+      payload,
+    }
+
+    try {
+      await context.getWorkspaceDB().put(doc)
+    } catch (err) {
+      console.error("Failed to persist platform action event", {
+        event,
+        sourceType,
+        sourceId,
+        err,
+      })
+      // Don't materialize a session update for an event whose detail doc
+      // was never persisted. The list would show a count the timeline
+      // can't back up.
+      return
+    }
+
+    const workspaceId = context.getWorkspaceId()
+    if (!workspaceId) {
+      return
+    }
+
+    const indexJob: PlatformActionSessionIndexJob = {
+      workspaceId,
+      indexId: platformActionEventId,
+      sourceType: doc.sourceType,
+      sourceId: doc.sourceId,
+      incrementsActionCount: true,
+      signal: getSessionSignal(event, properties),
+      timestamp: isoTimestamp,
+    }
+
+    for (let attempt = 1; attempt <= ENQUEUE_MAX_ATTEMPTS; attempt++) {
+      try {
+        await enqueuePlatformActionSessionIndex(indexJob)
+        return
+      } catch (err) {
+        if (attempt === ENQUEUE_MAX_ATTEMPTS) {
+          console.error("Failed to enqueue platform action session index job", {
+            event,
+            sourceType,
+            sourceId,
+            err,
+          })
+          return
+        }
+        await timeout(ENQUEUE_RETRY_DELAY_MS * attempt)
+      }
+    }
+  }
+}
