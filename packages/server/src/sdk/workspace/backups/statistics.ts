@@ -1,4 +1,4 @@
-import { context, db as dbCore } from "@budibase/backend-core"
+import { context, db as dbCore, docIds } from "@budibase/backend-core"
 import { Database } from "@budibase/types"
 import sdk from "../.."
 import {
@@ -53,17 +53,30 @@ export async function calculateScreenCount(appId: string, db?: Database) {
   )
 }
 
+export async function calculateFunctionCount(appId: string, db?: Database) {
+  return runInContext(
+    appId,
+    async (db: Database) => {
+      const functions = await db.allDocs(docIds.getFunctionParams())
+      return functions.rows.length
+    },
+    db
+  )
+}
+
 export async function calculateBackupStats(appId: string) {
   return runInContext(appId, async (db: Database) => {
     const promises = []
     promises.push(calculateDatasourceCount(appId, db))
     promises.push(calculateAutomationCount(appId, db))
     promises.push(calculateScreenCount(appId, db))
+    promises.push(calculateFunctionCount(appId, db))
     const responses = await Promise.all(promises)
     return {
       datasources: responses[0],
       automations: responses[1],
       screens: responses[2],
+      functions: responses[3],
     }
   })
 }
