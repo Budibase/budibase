@@ -406,18 +406,19 @@ export async function getExternalDatasources({
   return fetchExternalDatasources(plus)
 }
 
-export async function save(
-  datasource: Datasource,
-  opts?: { fetchSchema?: boolean; tablesFilter?: string[] }
-): Promise<{ datasource: Datasource; errors: Record<string, string> }> {
+export async function prepareForSave({
+  datasource,
+  fetchSchema = false,
+  tablesFilter = [],
+}: {
+  datasource: Datasource
+  fetchSchema?: boolean
+  tablesFilter?: string[]
+}): Promise<{ datasource: Datasource; errors: Record<string, string> }> {
   // getIntegration throws an error if the integration is not found
   await getIntegration(datasource.source)
 
-  const db = context.getWorkspaceDB()
   const plus = datasource.plus
-
-  const fetchSchema = opts?.fetchSchema || false
-  const tablesFilter = opts?.tablesFilter || []
 
   datasource = addDatasourceFlags({
     _id: generateDatasourceID({ plus }),
@@ -440,13 +441,18 @@ export async function save(
     await preSaveAction[datasource.source](datasource)
   }
 
+  return { datasource, errors }
+}
+
+export async function save({ datasource }: { datasource: Datasource }) {
+  const db = context.getWorkspaceDB()
   const dbResp = await db.put(
     sdk.tables.populateExternalTableSchemas(datasource)
   )
   await events.datasource.created(datasource)
   datasource._rev = dbResp.rev
 
-  return { datasource, errors }
+  return datasource
 }
 
 const preSaveAction: Partial<Record<SourceName, any>> = {

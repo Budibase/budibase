@@ -106,6 +106,7 @@ import { contextMenuStore } from "./contextMenu"
 
 export interface AutomationSaveOptions {
   skipUnpublishedChanges?: boolean
+  sourceAutomationId?: string
 }
 
 export const MAX_STICKY_NOTES_PER_AUTOMATION = 12
@@ -2308,16 +2309,19 @@ const automationActions = (store: AutomationStore) => ({
 
   duplicate: async (automation: Automation) => {
     const { automations } = get(store)
-    const response = await store.actions.save({
-      ...automation,
-      name: getSequentialName(
-        automations.map(x => x.name),
-        automation.name
-      ),
-      _id: undefined,
-      _rev: undefined,
-      disabled: true,
-    })
+    const response = await store.actions.save(
+      {
+        ...automation,
+        name: getSequentialName(
+          automations.map(x => x.name),
+          automation.name
+        ),
+        _id: undefined,
+        _rev: undefined,
+        disabled: true,
+      },
+      { sourceAutomationId: automation._id }
+    )
     return response
   },
 
@@ -2652,7 +2656,10 @@ const automationActions = (store: AutomationStore) => ({
   ),
 
   save: async (automation: Automation, opts: AutomationSaveOptions = {}) => {
-    const response = await API.updateAutomation(automation)
+    const response = await API.updateAutomation({
+      ...automation,
+      sourceAutomationId: opts.sourceAutomationId,
+    })
 
     // Mark automation as having unpublished changes
     if (!opts.skipUnpublishedChanges && response.automation._id) {

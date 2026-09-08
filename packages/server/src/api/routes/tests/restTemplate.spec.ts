@@ -1,5 +1,7 @@
 import { objectStore } from "@budibase/backend-core"
 import { SourceName, type RestTemplate } from "@budibase/types"
+import sdk from "../../../sdk"
+import { basicDatasource } from "../../../tests/utilities/structures"
 import { afterAll as cleanup, getConfig, getRequest } from "./utilities"
 
 jest.mock("@budibase/backend-core", () => {
@@ -165,7 +167,26 @@ describe("/rest-templates", () => {
       source: SourceName.REST,
       config: {},
     })
+    const originalDatasource = await config.doInContext(
+      config.getDevWorkspaceId(),
+      () => sdk.datasources.get(existingDatasource._id!)
+    )
     await request
+      .post("/api/queries/import")
+      .set(config.defaultHeaders())
+      .send({
+        restTemplateId: template.id,
+        datasourceId: existingDatasource._id,
+        selectedEndpointId: "missing::endpoint",
+      })
+      .expect(400)
+    expect(
+      await config.doInContext(config.getDevWorkspaceId(), () =>
+        sdk.datasources.get(existingDatasource._id!)
+      )
+    ).toEqual(originalDatasource)
+
+    const existingImportResponse = await request
       .post("/api/queries/import")
       .set(config.defaultHeaders())
       .send({
@@ -173,6 +194,10 @@ describe("/rest-templates", () => {
         datasourceId: existingDatasource._id,
       })
       .expect(200)
+    expect(existingImportResponse.body.queries[0].parameters).toContainEqual({
+      name: "account",
+      default: "{{ account }}",
+    })
     const taggedDatasource = (await config.api.datasource.fetch()).find(
       datasource => datasource._id === existingDatasource._id
     )
@@ -273,6 +298,28 @@ describe("/rest-templates", () => {
       .delete(`/api/rest-templates/${template.id}`)
       .set(config.defaultHeaders())
       .expect(404)
+  })
+
+  it("rejects missing templates before preparing a datasource", async () => {
+    const prepareDatasource = jest
+      .spyOn(sdk.datasources, "prepareForSave")
+      .mockRejectedValueOnce(new Error("Schema discovery should not run"))
+    try {
+      await request
+        .post("/api/datasources")
+        .set(config.defaultHeaders())
+        .send({
+          datasource: {
+            ...basicDatasource().datasource,
+            restTemplateId: "rest_template_missing",
+          },
+          fetchSchema: true,
+        })
+        .expect(404)
+      expect(prepareDatasource).not.toHaveBeenCalled()
+    } finally {
+      prepareDatasource.mockRestore()
+    }
   })
 
   it("rejects non-OpenAPI uploads", async () => {

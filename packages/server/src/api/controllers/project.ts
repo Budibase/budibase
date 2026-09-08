@@ -20,11 +20,7 @@ import {
 import { HTTPError } from "@budibase/backend-core"
 import fsp from "fs/promises"
 import sdk from "../../sdk"
-import {
-  getProjectAssignmentPreview,
-  propagateProjectIdsToDependencyIdsWithWarning,
-  resolveProjectIds,
-} from "../../utilities/projects"
+import { propagateProjectIdsToDependencyIdsWithWarning } from "../../utilities/projects"
 
 export const toProjectResponse = (project: Project): ProjectResponse => {
   return {
@@ -89,10 +85,10 @@ export async function previewAssignment(
 ) {
   const { resourceId } = ctx.request.body
   const projectIds =
-    (await resolveProjectIds(ctx.request.body.projectIds)) || []
+    (await sdk.projects.resolveProjectIds(ctx.request.body.projectIds)) || []
   const resource = await sdk.projects.getProjectAssignableResource(resourceId)
 
-  ctx.body = await getProjectAssignmentPreview({
+  ctx.body = await sdk.projects.getProjectAssignmentPreview({
     resourceId,
     resourceRev: resource._rev,
     resourceProjectIds: resource.projectIds || [],
@@ -108,10 +104,10 @@ export async function updateAssignment(
     const { dependencyFingerprint, resourceRev, dependencyIds } =
       ctx.request.body
     const projectIds =
-      (await resolveProjectIds(ctx.request.body.projectIds)) || []
+      (await sdk.projects.resolveProjectIds(ctx.request.body.projectIds)) || []
     const resource = await sdk.projects.getProjectAssignableResource(resourceId)
 
-    const preview = await getProjectAssignmentPreview({
+    const preview = await sdk.projects.getProjectAssignmentPreview({
       resourceId,
       resourceRev: resource._rev,
       resourceProjectIds: resource.projectIds || [],
@@ -162,7 +158,8 @@ export async function updateAssignment(
         resourceRev,
         projectIds,
       })
-    const outcome = await propagateProjectIdsToDependencyIdsWithWarning(ctx, {
+    const outcome = await propagateProjectIdsToDependencyIdsWithWarning({
+      ctx,
       dependencyIds: selectedDependencyIds,
       projectIds,
     })
