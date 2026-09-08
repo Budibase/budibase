@@ -4,16 +4,9 @@ import {
   DocumentType,
   prefixed,
   type AnyDocument,
-  type Datasource,
   type Project,
 } from "@budibase/types"
-import { isExternalTableID } from "../../../integrations/utils"
-import {
-  fetchAssignedProjectDocs,
-  getProjectAssignedEntities,
-  hasProject,
-  removeProjectId,
-} from "./utils"
+import { fetchAssignedProjectDocs, hasProject, removeProjectId } from "./utils"
 
 interface CreateProjectInput {
   name: string
@@ -143,63 +136,13 @@ async function clearAssignments(projectId: string) {
   const originals: AnyDocument[] = []
 
   const assignmentUpdates = assignedDocs
-    .filter(
-      doc =>
-        doc._id &&
-        !isExternalTableID(doc._id) &&
-        !doc._id.startsWith(prefixed(DocumentType.DATASOURCE)) &&
-        hasProject(doc, projectId)
-    )
+    .filter(doc => doc._id && hasProject(doc, projectId))
     .map(current => ({
       original: current,
       updated: removeProjectId(current, projectId),
     }))
 
   for (const { original, updated } of assignmentUpdates) {
-    originals.push(original)
-    changedDocs.push(updated)
-  }
-
-  const datasourceCandidates = assignedDocs.filter(datasource => {
-    if (
-      !datasource._id?.startsWith(prefixed(DocumentType.DATASOURCE)) ||
-      typeof datasource.source !== "string"
-    ) {
-      return false
-    }
-
-    return (
-      hasProject(datasource, projectId) ||
-      getProjectAssignedEntities(datasource).some(entity =>
-        hasProject(entity, projectId)
-      )
-    )
-  })
-
-  const datasourceUpdates = await Promise.all(
-    datasourceCandidates.map(async datasource => {
-      const current = await db.get<Datasource>(datasource._id!)
-      const entityKeys = Object.entries(current.entities || {})
-        .filter(([_, entity]) => hasProject(entity, projectId))
-        .map(([key]) => key)
-      const entities = { ...current.entities }
-      for (const key of entityKeys) {
-        const entity = entities[key]
-        if (entity) {
-          entities[key] = removeProjectId(entity, projectId)
-        }
-      }
-      return {
-        original: current,
-        updated: {
-          ...removeProjectId(current, projectId),
-          entities,
-        },
-      }
-    })
-  )
-
-  for (const { original, updated } of datasourceUpdates) {
     originals.push(original)
     changedDocs.push(updated)
   }

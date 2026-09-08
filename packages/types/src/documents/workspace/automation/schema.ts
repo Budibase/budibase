@@ -560,7 +560,7 @@ export function isAppTrigger(
 
 export function isWebhookTrigger(
   step: AutomationStep | AutomationTrigger
-): step is AppActionTrigger {
+): step is WebhookTrigger {
   return step.stepId === AutomationTriggerStepId.WEBHOOK
 }
 
@@ -700,4 +700,6 @@ export type RowUpdatedTrigger =
   AutomationTriggerSchema<AutomationTriggerStepId.ROW_UPDATED>
 
 export type WebhookTrigger =
-  AutomationTriggerSchema<AutomationTriggerStepId.WEBHOOK>
+  AutomationTriggerSchema<AutomationTriggerStepId.WEBHOOK> & {
+    webhookId?: string
+  }

@@ -13,6 +13,7 @@ import {
   UpdateProjectRequest,
   UpdateProjectResponse,
 } from "@budibase/types"
+import fsp from "fs/promises"
 import sdk from "../../sdk"
 
 export const toProjectResponse = (project: Project): ProjectResponse => {
@@ -123,12 +124,18 @@ export async function importBundle(
     ctx.throw(400, "Must supply Project export file to import")
   }
 
-  ctx.body = await sdk.projects.importProject(
-    {
-      path: filePath,
-    },
-    {
-      encryptPassword: ctx.request.body?.encryptPassword || undefined,
-    }
-  )
+  try {
+    ctx.body = await sdk.projects.importProject(
+      {
+        path: filePath,
+      },
+      {
+        encryptPassword: ctx.request.body?.encryptPassword || undefined,
+      }
+    )
+  } finally {
+    await fsp.rm(filePath, { force: true }).catch(error => {
+      console.log("Failed to remove uploaded Project import archive", error)
+    })
+  }
 }
