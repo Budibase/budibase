@@ -53,7 +53,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock', 'package.json', 'packages/*/package.json') }}
 
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'

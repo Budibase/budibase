@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.build.json",
+  "compilerOptions": {
+    "rootDir": "src/",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.spec.js",
+    "**/*.test.ts",
+    "**/*.test.js",
+    "__mocks__",
+    "src/tests"
+  ]
+}

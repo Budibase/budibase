@@ -50,7 +50,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock', 'package.json', 'packages/*/package.json') }}
 
       - name: Install dependencies
         if: steps.hoisted-modules-cache-restore.outputs.cache-hit != 'true'
@@ -63,7 +63,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock', 'package.json', 'packages/*/package.json') }}
 
   lint:
     runs-on: ubuntu-24.04
@@ -85,7 +85,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock', 'package.json', 'packages/*/package.json') }}
           fail-on-cache-miss: true
       - run: yarn lint
 
@@ -135,7 +135,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock', 'package.json', 'packages/*/package.json') }}
           fail-on-cache-miss: true
 
       # Run build all the projects
@@ -171,7 +171,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock', 'package.json', 'packages/*/package.json') }}
           fail-on-cache-miss: true
 
       - name: Check missing deps
@@ -227,7 +227,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock', 'package.json', 'packages/*/package.json') }}
           fail-on-cache-miss: true
 
       - name: Test
@@ -272,7 +272,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock', 'package.json', 'packages/*/package.json') }}
           fail-on-cache-miss: true
 
       - name: Check affected tests
@@ -346,7 +346,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock', 'package.json', 'packages/*/package.json') }}
           fail-on-cache-miss: true
       - name: Test worker
         if: needs.compute-affected-jobs.outputs.run_worker_tests == 'true'
@@ -441,7 +441,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock', 'package.json', 'packages/*/package.json') }}
           fail-on-cache-miss: true
 
       - name: Load dotenv
@@ -530,7 +530,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock', 'package.json', 'packages/*/package.json') }}
           fail-on-cache-miss: true
       - run: yarn install
       - name: Check for yarn.lock changes
@@ -562,7 +562,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock', 'package.json', 'packages/*/package.json') }}
           fail-on-cache-miss: true
 
       - name: Generate OpenAPI specs
@@ -621,7 +621,7 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-node22-hoisted-node-modules-${{ hashFiles('yarn.lock', 'package.json', 'packages/*/package.json') }}
           fail-on-cache-miss: true
 
       - name: Build client library
