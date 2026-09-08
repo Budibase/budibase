@@ -481,6 +481,57 @@ describe("automation thread", () => {
     expect(events.action.automationStepFailed).not.toHaveBeenCalled()
   })
 
+  it("uses an explicit event.runId as sourceId instead of the job id", async () => {
+    jest.clearAllMocks()
+
+    const appId = config.getDevWorkspaceId()
+
+    const { id: _ignored, ...serverLogDefinition } =
+      BUILTIN_ACTION_DEFINITIONS.SERVER_LOG as AutomationStep
+    const serverLogStep: AutomationStep = {
+      ...serverLogDefinition,
+      id: "server-log-step",
+      stepId: AutomationActionStepId.SERVER_LOG,
+      inputs: { text: "hello" },
+    }
+
+    const job = {
+      id: "new-transport-job-id",
+      data: {
+        automation: basicAutomation({
+          _id: "automation_server_log_runid",
+          appId,
+          definition: {
+            trigger: {
+              stepId: AutomationTriggerStepId.APP,
+              name: "test",
+              tagline: "test",
+              icon: "test",
+              description: "test",
+              type: AutomationStepType.TRIGGER,
+              inputs: {},
+              id: "trigger",
+              schema: {
+                inputs: { properties: {} },
+                outputs: { properties: {} },
+              },
+            },
+            steps: [serverLogStep],
+          },
+        }),
+        event: { appId, runId: "original-run-id" },
+      },
+    } as Job<AutomationData>
+
+    await executeInThread(job)
+
+    expect(events.action.automationStepExecuted).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceId: "original-run-id",
+      })
+    )
+  })
+
   it("emits automationStepFailed with ERROR when a step fails", async () => {
     jest.clearAllMocks()
 

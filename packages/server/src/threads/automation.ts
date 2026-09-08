@@ -333,6 +333,7 @@ async function reloadAutomation(job: Job<AutomationData>) {
 
 class Orchestrator {
   private readonly job: AutomationJob
+  private readonly runId: string
   private emitter: ContextEmitter
   private stopped: boolean
   private readonly onProgress?: (event: AutomationTestProgressEvent) => void
@@ -346,6 +347,10 @@ class Orchestrator {
     } = {}
   ) {
     this.job = job
+    // A fresh run has no runId yet. Job id is its first and only execution
+    // identifier. Only a resumed run would carry its original runId forward
+    // explicitly
+    this.runId = job.data.event.runId ?? String(job.id)
     this.stopped = false
     this.onProgress = opts.onProgress
     this.isTestRun = Boolean(opts.isTestRun)
@@ -374,7 +379,7 @@ class Orchestrator {
   } {
     return {
       sourceType: "automation_run",
-      sourceId: `${this.job.id}`,
+      sourceId: this.runId,
       automationId: this.automation._id!,
     }
   }
