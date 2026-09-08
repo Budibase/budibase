@@ -36,12 +36,14 @@ describe("platformActions utils", () => {
   })
 
   describe("buildPlatformActionSession", () => {
-    it("initialises a fresh session doc with actionCount 1", () => {
+    it("builds a session doc with the provided fields", () => {
       const doc = buildPlatformActionSession({
         sourceType: "agent_session",
         sourceId: "session-1",
         status: "completed",
         startedAt: "2026-08-31T00:00:00.000Z",
+        statusUpdatedAt: "2026-08-31T00:00:00.000Z",
+        actionCount: 1,
       })
 
       // updatedAt is deliberately absent: db.put() always stamps it with
@@ -56,6 +58,7 @@ describe("platformActions utils", () => {
         sourceId: "session-1",
         status: "completed",
         startedAt: "2026-08-31T00:00:00.000Z",
+        statusUpdatedAt: "2026-08-31T00:00:00.000Z",
       })
       expect(doc).not.toHaveProperty("updatedAt")
     })
@@ -66,6 +69,8 @@ describe("platformActions utils", () => {
         sourceId: "run-1",
         status: "failed",
         startedAt: "2026-08-31T00:00:00.000Z",
+        statusUpdatedAt: "2026-08-31T00:00:00.000Z",
+        actionCount: 1,
         assetType: "automation",
         assetId: "automation-1",
         assetLabel: "My automation",

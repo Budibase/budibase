@@ -40,6 +40,8 @@ export interface ActionAiAgentExecuted extends BaseEvent, ActionSourceContext {
   agentId: string
   sessionId: string
   requestId?: string
+  awaitingEscalation?: boolean
+  finalStatus?: "completed" | "failed"
 }
 
 export interface ActionAiAgentFailed extends BaseEvent, ActionSourceContext {

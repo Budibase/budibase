@@ -107,11 +107,11 @@ describe("PlatformActionPersistProcessor", () => {
   })
 
   it.each([
-    [Event.ACTION_AI_AGENT_EXECUTED, "success"],
-    [Event.ACTION_AI_AGENT_FAILED, "failure"],
+    [Event.ACTION_AI_AGENT_EXECUTED, "completed"],
+    [Event.ACTION_AI_AGENT_FAILED, "failed"],
   ])(
-    "enqueues a session index job with outcome %s for %s",
-    async (event, outcome) => {
+    "enqueues a session index job with signal %s for %s",
+    async (event, signal) => {
       await run(async () => {
         await processor.processEvent(
           event,
@@ -122,7 +122,8 @@ describe("PlatformActionPersistProcessor", () => {
 
         expect(mockEnqueue).toHaveBeenCalledWith(
           expect.objectContaining({
-            outcome,
+            incrementsActionCount: true,
+            signal,
             sourceType: "agent_session",
             sourceId: "session-1",
           })
@@ -130,6 +131,72 @@ describe("PlatformActionPersistProcessor", () => {
       })
     }
   )
+
+  it("marks an agent action as waiting only when it awaits an escalation", async () => {
+    await run(async () => {
+      await processor.processEvent(
+        Event.ACTION_AI_AGENT_EXECUTED,
+        identity,
+        {
+          sourceType: "agent_session",
+          sourceId: "session-1",
+          awaitingEscalation: true,
+        },
+        undefined
+      )
+
+      expect(mockEnqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          incrementsActionCount: true,
+          signal: "waiting",
+        })
+      )
+    })
+  })
+
+  it("uses an agent action's final status when its request was judged failed", async () => {
+    await run(async () => {
+      await processor.processEvent(
+        Event.ACTION_AI_AGENT_EXECUTED,
+        identity,
+        {
+          sourceType: "agent_session",
+          sourceId: "session-1",
+          finalStatus: "failed",
+        },
+        undefined
+      )
+
+      expect(mockEnqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          incrementsActionCount: true,
+          signal: "failed",
+        })
+      )
+    })
+  })
+
+  it("does not apply an escalation state to a non-agent action", async () => {
+    await run(async () => {
+      await processor.processEvent(
+        Event.ACTION_AUTOMATION_STEP_EXECUTED,
+        identity,
+        {
+          sourceType: "automation_run",
+          sourceId: "run-1",
+          awaitingEscalation: true,
+        },
+        undefined
+      )
+
+      expect(mockEnqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          incrementsActionCount: true,
+          signal: "completed",
+        })
+      )
+    })
+  })
 
   it("does not enqueue a session index job when Layer 1 persistence fails", async () => {
     await run(async () => {

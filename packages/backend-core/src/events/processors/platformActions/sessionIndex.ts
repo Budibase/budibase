@@ -3,7 +3,6 @@ import {
   LockType,
   type ActionSourceContext,
   type PlatformActionContainerStatus,
-  type PlatformActionOutcome,
   type PlatformActionSessionIndexDoc,
 } from "@budibase/types"
 import * as context from "../../../context"
@@ -13,19 +12,52 @@ import { buildPlatformActionSession, getPlatformActionSessionId } from "./utils"
 const LOCK_TTL_MS = 10000
 const MAX_PUT_CONFLICT_ATTEMPTS = 3
 
+const TERMINAL_STATUSES: ReadonlySet<PlatformActionContainerStatus> = new Set([
+  "completed",
+  "failed",
+])
+
+function isTerminalSignal(signal: PlatformActionContainerStatus): boolean {
+  return TERMINAL_STATUSES.has(signal)
+}
+
 export interface UpsertPlatformActionSessionInput extends ActionSourceContext {
-  outcome: PlatformActionOutcome
+  incrementsActionCount: boolean
+  signal: PlatformActionContainerStatus
   timestamp: string
 }
 
 function nextStatus(
   existingStatus: PlatformActionContainerStatus | undefined,
-  outcome: PlatformActionOutcome
-): PlatformActionContainerStatus {
-  if (existingStatus === "failed" || outcome === "failure") {
-    return "failed"
+  existingStatusUpdatedAt: string | undefined,
+  signal: PlatformActionContainerStatus,
+  timestamp: string
+): {
+  status: PlatformActionContainerStatus
+  statusUpdatedAt: string
+  updated: boolean
+} {
+  if (!existingStatus || !existingStatusUpdatedAt) {
+    return { status: signal, statusUpdatedAt: timestamp, updated: true }
   }
-  return "completed"
+
+  if (new Date(timestamp) > new Date(existingStatusUpdatedAt)) {
+    return { status: signal, statusUpdatedAt: timestamp, updated: true }
+  }
+  if (
+    new Date(timestamp).getTime() ===
+      new Date(existingStatusUpdatedAt).getTime() &&
+    signal === "failed" &&
+    existingStatus !== "failed"
+  ) {
+    return { status: signal, statusUpdatedAt: timestamp, updated: true }
+  }
+
+  return {
+    status: existingStatus,
+    statusUpdatedAt: existingStatusUpdatedAt,
+    updated: false,
+  }
 }
 
 function earliest(a: string, b: string): string {
@@ -40,6 +72,7 @@ export async function upsertPlatformActionSession(
   input: UpsertPlatformActionSessionInput
 ): Promise<void> {
   const sessionId = getPlatformActionSessionId(input)
+  const isTerminal = isTerminalSignal(input.signal)
 
   const lockResponse = await locks.doWithLock(
     {
@@ -54,31 +87,57 @@ export async function upsertPlatformActionSession(
       for (let attempt = 0; attempt < MAX_PUT_CONFLICT_ATTEMPTS; attempt++) {
         const existing =
           await db.tryGet<PlatformActionSessionIndexDoc>(sessionId)
-        const status = nextStatus(existing?.status, input.outcome)
-
-        // Prevent out-of-order event timestamps
+        if (!existing && !input.incrementsActionCount) {
+          return
+        }
+        const existingStatusUpdatedAt = existing
+          ? (existing.statusUpdatedAt ??
+            existing.completedAt ??
+            existing.startedAt)
+          : undefined
+        const {
+          status,
+          statusUpdatedAt,
+          updated: updatesStatus,
+        } = nextStatus(
+          existing?.status,
+          existingStatusUpdatedAt,
+          input.signal,
+          input.timestamp
+        )
         const startedAt = existing
           ? earliest(existing.startedAt, input.timestamp)
           : input.timestamp
-        const completedAt = existing
-          ? latest(existing.completedAt ?? existing.startedAt, input.timestamp)
-          : input.timestamp
 
-        // updatedAt isn't known yet - db.put() below stamps it for real.
         const doc: Omit<PlatformActionSessionIndexDoc, "updatedAt"> = existing
           ? {
               ...existing,
               status,
-              actionCount: existing.actionCount + 1,
+              statusUpdatedAt,
               startedAt,
+              ...(input.incrementsActionCount
+                ? { actionCount: existing.actionCount + 1 }
+                : {}),
             }
           : buildPlatformActionSession({
               sourceType: input.sourceType,
               sourceId: input.sourceId,
               status,
               startedAt,
+              statusUpdatedAt,
+              actionCount: input.incrementsActionCount ? 1 : 0,
             })
-        doc.completedAt = completedAt
+
+        if (isTerminal && updatesStatus) {
+          doc.completedAt = existing
+            ? latest(
+                existing.completedAt ?? existing.startedAt,
+                input.timestamp
+              )
+            : input.timestamp
+        } else if (updatesStatus) {
+          delete doc.completedAt
+        }
 
         try {
           await db.put(doc)
