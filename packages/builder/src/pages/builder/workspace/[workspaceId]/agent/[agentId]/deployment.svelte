@@ -2,6 +2,7 @@
   import {
     ActionButton,
     Body,
+    Link,
     Modal,
     ModalContent,
     Toggle,
@@ -42,6 +43,8 @@
   let MSTeamsModal: Modal
   let slackModal: Modal
   let toggling = $state(false)
+  let togglingAttachments = $state(false)
+  let attachmentToggleRenderKey = $state(0)
   let toggleRenderKeys = $state<Record<string, number>>({})
 
   const resetChannelToggle = (channelId: string) => {
@@ -73,6 +76,15 @@
   )
 
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
+
+  const knowledgeSearchConfigured = $derived(
+    $agentsStore.knowledgeConfiguration?.knowledgeSearchConfigured === true
+  )
+
+  const conversationAttachmentsEnabled = $derived(
+    knowledgeSearchConfigured &&
+      currentAgent?.allowConversationAttachments !== false
+  )
 
   const channelMetadata: Record<AgentChannelProvider, ChannelMetadata> = {
     [AgentChannelProvider.MSTEAMS]: {
@@ -176,6 +188,38 @@
       resetChannelToggle(channel.id)
     }
   }
+
+  const onToggleConversationAttachments = async () => {
+    if (!currentAgent?._id || !knowledgeSearchConfigured) {
+      attachmentToggleRenderKey += 1
+      return
+    }
+
+    const enabled = !conversationAttachmentsEnabled
+    togglingAttachments = true
+    try {
+      await agentsStore.updateAgent({
+        ...currentAgent,
+        allowConversationAttachments: enabled,
+      })
+      if (currentAgent.live) {
+        await deploymentStore.publishApp()
+      }
+      notifications.success(
+        enabled ? "File attachments enabled" : "File attachments disabled"
+      )
+    } catch (error) {
+      console.error(error)
+      notifications.error(
+        enabled
+          ? "Failed to enable file attachments"
+          : "Failed to disable file attachments"
+      )
+    } finally {
+      togglingAttachments = false
+      attachmentToggleRenderKey += 1
+    }
+  }
 </script>
 
 <div class="deployment-root">
@@ -193,6 +237,40 @@
         >
       </div>
       <Toggle value={true} disabled={true} />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="agent-node">
+      <div>
+        <Body
+          color="var(--spectrum-global-color-gray-900)"
+          weight="500"
+          size="XS">File attachments</Body
+        >
+        <Body color="var(--spectrum-global-color-gray-700)" size="XS">
+          Allow users to attach files when chatting with this agent in supported
+          messaging channels.
+        </Body>
+        {#if !knowledgeSearchConfigured}
+          <Body color="var(--spectrum-global-color-gray-700)" size="XS">
+            Set <code>GEMINI_API_KEY</code> in the Budibase server environment,
+            then restart Budibase. <Link
+              href="https://aistudio.google.com/app/apikey"
+              target="_blank"
+              rel="noopener noreferrer"
+              size="S">Get a Gemini API key</Link
+            >.
+          </Body>
+        {/if}
+      </div>
+      {#key attachmentToggleRenderKey}
+        <Toggle
+          value={conversationAttachmentsEnabled}
+          disabled={togglingAttachments || !knowledgeSearchConfigured}
+          on:change={onToggleConversationAttachments}
+        />
+      {/key}
     </div>
   </section>
 

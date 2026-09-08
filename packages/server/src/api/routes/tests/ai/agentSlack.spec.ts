@@ -84,6 +84,32 @@ jest.mock("@chat-adapter/state-memory", () => ({
   createMemoryState: jest.fn(() => ({})),
 }))
 
+jest.mock(
+  "../../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue",
+  () => {
+    const actual = jest.requireActual<
+      typeof import("../../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue")
+    >("../../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue")
+    return {
+      ...actual,
+      scheduleConversationAttachmentIngestion: jest.fn(),
+    }
+  }
+)
+
+jest.mock(
+  "../../../../sdk/workspace/ai/chatConversations/attachmentCleanupQueue",
+  () => {
+    const actual = jest.requireActual<
+      typeof import("../../../../sdk/workspace/ai/chatConversations/attachmentCleanupQueue")
+    >("../../../../sdk/workspace/ai/chatConversations/attachmentCleanupQueue")
+    return {
+      ...actual,
+      scheduleConversationAttachmentCleanup: jest.fn(),
+    }
+  }
+)
+
 jest.mock("../../../controllers/ai/chatConversations", () => {
   const actual = jest.requireActual("../../../controllers/ai/chatConversations")
   return {
@@ -113,6 +139,16 @@ jest.mock("../../../../sdk/workspace/ai/rag", () => {
   }
 })
 
+jest.mock("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore", () => {
+  const actual = jest.requireActual<
+    typeof import("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
+  >("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
+  return {
+    ...actual,
+    isGeminiFileSearchConfigured: jest.fn(actual.isGeminiFileSearchConfigured),
+  }
+})
+
 import sdk from "../../../../sdk"
 import {
   context,
@@ -124,12 +160,14 @@ import {
 import { ChatCommands } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
+  ConversationAttachmentStatus,
   DocumentType,
   FeatureFlag,
   type Agent,
   type ChatConversation,
   type SlackAppConfig,
 } from "@budibase/types"
+import * as geminiFileStore from "../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
 import { webhookChat } from "../../../controllers/ai/chatConversations"
@@ -141,6 +179,20 @@ const { resetMockChatState, setMockPostEphemeralResult } = jest.requireActual(
 
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
 const mockedGetFileUrlForAgent = jest.mocked(sdk.ai.rag.getFileUrlForAgent)
+const mockedScheduleAttachmentIngestion = jest.mocked(
+  sdk.ai.chatConversations.attachmentIngestionQueue
+    .scheduleConversationAttachmentIngestion
+)
+const mockedScheduleAttachmentCleanup = jest.mocked(
+  sdk.ai.chatConversations.attachmentCleanupQueue
+    .scheduleConversationAttachmentCleanup
+)
+const mockedIsGeminiFileSearchConfigured = jest.mocked(
+  geminiFileStore.isGeminiFileSearchConfigured
+)
+const actualGeminiFileStore = jest.requireActual<
+  typeof import("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
+>("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
 
 const slackJsonResponse = (body: Record<string, unknown>) =>
   new Response(JSON.stringify(body), {
@@ -208,6 +260,12 @@ describe("agent slack integration provisioning", () => {
     )
     resetWebhookChatMock()
     mockedGetFileUrlForAgent.mockReset()
+    mockedIsGeminiFileSearchConfigured.mockReset()
+    mockedIsGeminiFileSearchConfigured.mockImplementation(
+      actualGeminiFileStore.isGeminiFileSearchConfigured
+    )
+    mockedScheduleAttachmentIngestion.mockReset()
+    mockedScheduleAttachmentCleanup.mockReset()
     resetMockChatState()
   })
 
@@ -462,6 +520,13 @@ describe("agent slack integration provisioning", () => {
       usage_hint: `/${ChatCommands.UNLINK}`,
       should_escape: false,
     })
+    expect(manifest.features.slash_commands).toContainEqual({
+      command: `/${ChatCommands.NEW}`,
+      url: endpointUrl,
+      description: "Start a new conversation with this agent.",
+      usage_hint: `/${ChatCommands.NEW}`,
+      should_escape: false,
+    })
     expect(manifest.settings.event_subscriptions.bot_events).toEqual([
       "app_mention",
       "message.im",
@@ -471,6 +536,7 @@ describe("agent slack integration provisioning", () => {
       "channels:history",
       "chat:write",
       "commands",
+      "files:read",
       "im:history",
       "im:read",
       "im:write",
@@ -845,13 +911,16 @@ describe("agent slack integration provisioning", () => {
     const setupProvisionedSlackAgent = async ({
       requireUserLink,
       allowKnowledgeSourceDownload,
+      allowConversationAttachments,
     }: {
       requireUserLink?: boolean
       allowKnowledgeSourceDownload?: boolean
+      allowConversationAttachments?: boolean
     } = {}) => {
       const agent = await config.api.agent.createWithOperation(
         {
           name: "Slack Incoming Messages Agent",
+          allowConversationAttachments,
           slackIntegration: {
             botToken: "xoxb-token-3",
             signingSecret: "slack-signing-secret-3",
@@ -1326,6 +1395,298 @@ describe("agent slack integration provisioning", () => {
         "I sent you a DM with your Budibase link."
       )
       expect(extractLinkUrl(response.body.messages)).toBeUndefined()
+    })
+
+    it("queues file ingestion and subsequent Slack turns", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      mockedIsGeminiFileSearchConfigured.mockReturnValue(true)
+      await linkExternalUser("user-file")
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      const content = "quarterly revenue is 42"
+
+      const uploadResponse = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "",
+            user: "user-file",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+            files: [
+              {
+                id: "F123",
+                name: "report.txt",
+                mimetype: "text/plain",
+                size: Buffer.byteLength(content),
+                content,
+              },
+            ],
+          },
+        },
+      })
+
+      expect(uploadResponse.body.messages).toContain(
+        "Processing report.txt. I'll reply here when ready."
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+
+      const questionResponse = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "what is the revenue?",
+            user: "user-file",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.200",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(questionResponse.body.messages).toContain(
+        "The conversation files are still processing. I'll reply here when ready."
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+      const conversations = await fetchConversations()
+      expect(conversations).toHaveLength(1)
+      expect(conversations[0]?.attachments).toEqual([
+        expect.objectContaining({
+          providerFileId: "F123",
+          filename: "report.txt",
+          mimetype: "text/plain",
+          size: Buffer.byteLength(content),
+        }),
+      ])
+      expect([
+        ConversationAttachmentStatus.QUEUED,
+        ConversationAttachmentStatus.PROCESSING,
+      ]).toContain(conversations[0]?.attachments?.[0]?.status)
+      expect(conversations[0]?.pendingAttachmentTurns).toHaveLength(2)
+    })
+
+    it("renews attachment expiry and preserves file context before invoking the model", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      await linkExternalUser("user-ready-file")
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+
+      await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "start the conversation",
+            user: "user-ready-file",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      const [conversation] = await fetchConversations()
+      const previousExpiresAt = new Date(Date.now() + 1000).toISOString()
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await context.getWorkspaceDB().put({
+          ...conversation,
+          attachmentContextExpiresAt: previousExpiresAt,
+          attachmentVectorStoreId: "store_1",
+          attachments: [
+            {
+              id: "attachment_1",
+              provider: AgentChannelProvider.SLACK,
+              providerFileId: "F_READY",
+              filename: "report.txt",
+              mimetype: "text/plain",
+              size: 100,
+              status: ConversationAttachmentStatus.READY,
+              ragSourceId: "rag_1",
+              uploadedAt: new Date().toISOString(),
+            },
+          ],
+        })
+      })
+
+      mockedWebhookChat.mockClear()
+      let persistedExpiresAt: string | undefined
+      mockedWebhookChat.mockImplementationOnce(async ({ chat }) => {
+        const persisted = await context
+          .getWorkspaceDB()
+          .tryGet<ChatConversation>(chat._id)
+        persistedExpiresAt = persisted?.attachmentContextExpiresAt
+        return {
+          messages: [
+            ...chat.messages,
+            {
+              id: `assistant-${chat.messages.length + 1}`,
+              role: "assistant",
+              parts: [{ type: "text", text: "Mock assistant response" }],
+            },
+          ],
+          assistantText: "Mock assistant response",
+          title: chat.title || "Mock conversation",
+        }
+      })
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "use the ready file",
+            user: "user-ready-file",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.200",
+            team_id: "T123",
+          },
+        },
+      })
+
+      const [updatedConversation] = await fetchConversations()
+      expect(response.body.messages).toContain("Mock assistant response")
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
+      expect(mockedWebhookChat).toHaveBeenCalledWith(
+        expect.objectContaining({
+          chat: expect.objectContaining({
+            attachmentVectorStoreId: "store_1",
+            attachments: [
+              expect.objectContaining({
+                id: "attachment_1",
+                status: ConversationAttachmentStatus.READY,
+                ragSourceId: "rag_1",
+              }),
+            ],
+          }),
+        })
+      )
+      expect(new Date(persistedExpiresAt!).getTime()).toBeGreaterThan(
+        new Date(previousExpiresAt).getTime()
+      )
+      expect(updatedConversation.attachmentContextExpiresAt).toEqual(
+        persistedExpiresAt
+      )
+      expect(mockedScheduleAttachmentCleanup).toHaveBeenCalledWith({
+        workspaceId: config.getProdWorkspaceId(),
+        conversationId: conversation._id,
+        expiresAt: persistedExpiresAt,
+      })
+    })
+
+    it("rejects file turns when Gemini File Search is not enabled", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      mockedIsGeminiFileSearchConfigured.mockReturnValue(false)
+      await linkExternalUser("user-file-disabled")
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "Summarise this report",
+            user: "user-file-disabled",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.300",
+            team_id: "T123",
+            files: [
+              {
+                id: "F_DISABLED",
+                name: "report.txt",
+                mimetype: "text/plain",
+                size: 7,
+                content: "content",
+              },
+            ],
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain(
+        "I can't process file attachments because Gemini File Search isn't enabled. Please ask your Budibase administrator to enable it."
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+      expect(mockedScheduleAttachmentIngestion).not.toHaveBeenCalled()
+      expect(mockedScheduleAttachmentCleanup).not.toHaveBeenCalled()
+      expect(await fetchConversations()).toHaveLength(0)
+    })
+
+    it("rejects file turns when conversation attachments are disabled", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent({
+        allowConversationAttachments: false,
+      })
+      mockedIsGeminiFileSearchConfigured.mockReturnValue(false)
+      await linkExternalUser("user-file-disabled-by-agent")
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "Summarise this report",
+            user: "user-file-disabled-by-agent",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.350",
+            team_id: "T123",
+            files: [
+              {
+                id: "F_AGENT_DISABLED",
+                name: "report.txt",
+                mimetype: "text/plain",
+                size: 7,
+                content: "content",
+              },
+            ],
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain(
+        "File attachments aren't enabled for this agent."
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+      expect(mockedScheduleAttachmentIngestion).not.toHaveBeenCalled()
+      expect(mockedScheduleAttachmentCleanup).not.toHaveBeenCalled()
+      expect(await fetchConversations()).toHaveLength(0)
+    })
+
+    it("processes text-only turns when conversation attachments are disabled", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent({
+        allowConversationAttachments: false,
+      })
+      await linkExternalUser("user-text-with-files-disabled")
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "hello without a file",
+            user: "user-text-with-files-disabled",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.360",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain("Mock assistant response")
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
     })
 
     it("creates a conversation from an incoming message", async () => {
