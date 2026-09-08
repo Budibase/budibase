@@ -679,10 +679,9 @@ const prepareAgentChatRunInternal = async ({
         executionContext,
       })
     }
+  }
 
-    // Give the model read-only visibility of this session's escalations so it
-    // can tell whether a request has already been raised/approved before
-    // escalating again.
+  if (tools.escalate || escalationGateContext) {
     tools.list_session_escalations = createListSessionEscalationsTool({
       sessionId,
     })

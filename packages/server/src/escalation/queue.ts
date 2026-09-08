@@ -6,7 +6,13 @@ import {
   type ModelMessage,
   type UIMessage,
 } from "ai"
-import { context, queue, roles, utils } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  queue,
+  roles,
+  utils,
+} from "@budibase/backend-core"
 import {
   Agent,
   AgentChannelProvider,
@@ -17,6 +23,8 @@ import {
   ESCALATE_TOOL_NAME,
   EscalationContextDoc,
   EscalationNotificationDoc,
+  EscalationNotificationStatus,
+  EscalationProviderResponse,
   EscalationRecipient,
   EscalationSource,
   PendingToolCall,
@@ -29,6 +37,7 @@ import sdk from "../sdk"
 import { getFullUser } from "../utilities/users"
 import * as slack from "./notifications/slack"
 import * as teams from "./notifications/ms-teams"
+import { ProviderResponseError } from "./notifications/utils"
 import { v4 } from "uuid"
 
 export interface EscalationJob {
@@ -43,6 +52,33 @@ export interface EscalationJob {
 
 const DEFAULT_CONCURRENCY = 1
 const DEFAULT_TIMEOUT_MS = 30000
+
+const updateNotificationOutcome = async (
+  notificationDocId: string,
+  outcome: Pick<
+    EscalationNotificationDoc,
+    "status" | "providerResponse" | "sentAt"
+  >,
+  maxRetries = 3
+) => {
+  const db = context.getWorkspaceDB()
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const notifDoc =
+      await db.tryGet<EscalationNotificationDoc>(notificationDocId)
+    if (!notifDoc) {
+      return
+    }
+    try {
+      await db.put({ ...notifDoc, ...outcome })
+      return
+    } catch (err) {
+      if (dbCore.isDocumentConflictError(err) && attempt < maxRetries - 1) {
+        continue
+      }
+      throw err
+    }
+  }
+}
 
 const getDocId = (escalationId: string): string =>
   `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`
@@ -75,7 +111,9 @@ export function getQueue() {
   return escalationQueue
 }
 
-async function processNotify(job: Job<EscalationJob>) {
+export async function processNotify(
+  job: Pick<Job<EscalationJob>, "id" | "data">
+) {
   const { escalationId, appId, message } = job.data
 
   console.log("Escalation notify: picked up", {
@@ -135,7 +173,6 @@ async function processNotify(job: Job<EscalationJob>) {
     // gives independent retry/backoff per channel so a Slack failure doesn't block Teams etc.
     // IF - we do this, then the bulkDocs call would be done first.
     if (doc.recipients?.length) {
-      const sentAt = new Date().toISOString()
       const notifDocs: EscalationNotificationDoc[] = doc.recipients.map(
         (recipient: EscalationRecipient) => ({
           _id: `${DocumentType.ESCALATION_NOTIFICATION}${SEPARATOR}${utils.newid()}`,
@@ -143,29 +180,59 @@ async function processNotify(job: Job<EscalationJob>) {
           appId,
           tenantId: job.data.tenantId,
           recipient,
-          sentAt,
+          status: "pending",
         })
       )
       await db.bulkDocs(notifDocs)
 
-      const notifResults = await Promise.allSettled(
-        notifDocs.flatMap(notifDoc => [
-          slack.sendSlackNotification({ notifDoc, contextDoc: doc }),
-          teams.sendMSTeamsNotification({ notifDoc, contextDoc: doc }),
-        ])
+      const outcomes = await Promise.all(
+        notifDocs.map(async notifDoc => {
+          const sends = await Promise.allSettled([
+            slack.sendSlackNotification({ notifDoc, contextDoc: doc }),
+            teams.sendMSTeamsNotification({ notifDoc, contextDoc: doc }),
+          ])
+          const rejection = sends.find(
+            (send): send is PromiseRejectedResult => send.status === "rejected"
+          )
+          let status: EscalationNotificationStatus = "failed"
+          let providerResponse: EscalationProviderResponse | undefined
+          if (rejection) {
+            const error =
+              rejection.reason instanceof Error
+                ? rejection.reason.message
+                : String(rejection.reason)
+            console.error("Escalation notify: notification send failed", {
+              escalationId,
+              recipientType: notifDoc.recipient.type,
+              error,
+            })
+            providerResponse =
+              rejection.reason instanceof ProviderResponseError
+                ? {
+                    code: rejection.reason.code,
+                    body: rejection.reason.body.slice(0, 1024),
+                  }
+                : { body: error.slice(0, 1024) }
+          } else if (
+            sends.some(
+              send => send.status === "fulfilled" && send.value === true
+            )
+          ) {
+            status = "sent"
+          }
+          return { notifDoc, status, providerResponse }
+        })
       )
-      notifResults.forEach((result, i) => {
-        if (result.status === "rejected") {
-          console.error("Escalation notify: notification send failed", {
-            index: i,
-            escalationId,
-            error:
-              result.reason instanceof Error
-                ? result.reason.message
-                : String(result.reason),
+
+      await Promise.all(
+        outcomes.map(({ notifDoc, status, providerResponse }) =>
+          updateNotificationOutcome(notifDoc._id!, {
+            status,
+            ...(providerResponse ? { providerResponse } : {}),
+            sentAt: new Date().toISOString(),
           })
-        }
-      })
+        )
+      )
     }
   })
 }

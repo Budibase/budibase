@@ -27,6 +27,7 @@ import {
 } from "../../../../ai/tools"
 import {
   createEscalationGateRuntime,
+  resolveToolArgsKey,
   type EscalationGateContext,
 } from "./escalationGate"
 import sdk from "../../.."
@@ -74,6 +75,8 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
     sourceType: tool.sourceType,
     sourceLabel: tool.sourceLabel,
     sourceIconType: tool.sourceIconType,
+    sourceId: tool.sourceId,
+    action: tool.action,
     executionPolicy: tool.executionPolicy,
   }
 }
@@ -263,6 +266,8 @@ export async function buildPromptAndTools(
           toolName: tool.name,
           readableName: tool.readableName,
           sourceId: tool.sourceId,
+          action: tool.action,
+          argsKey: resolveToolArgsKey(tool),
           rules: config.executionRules,
           gateContext: escalationGateContext,
         })
