@@ -189,10 +189,35 @@ describe("PlatformActionPersistProcessor", () => {
         undefined
       )
 
+      // automation_run step events never assert a container status
+      // themselves (see getSessionSignal) - the orchestrator signals
+      // active/completed/failed explicitly from the run's own outcome, so an
+      // AI_AGENT-specific property like awaitingEscalation has no effect here.
       expect(mockEnqueue).toHaveBeenCalledWith(
         expect.objectContaining({
           incrementsActionCount: true,
-          signal: "completed",
+          signal: undefined,
+        })
+      )
+    })
+  })
+
+  it("does not assert failed for a mid-run automation step failure either", async () => {
+    await run(async () => {
+      await processor.processEvent(
+        Event.ACTION_AUTOMATION_STEP_FAILED,
+        identity,
+        { sourceType: "automation_run", sourceId: "run-1" },
+        undefined
+      )
+
+      // A step failing under continueOnError doesn't clear the runner's
+      // recorded error, but it also doesn't decide the container's status by
+      // itself - only the orchestrator's own terminal signal does.
+      expect(mockEnqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          incrementsActionCount: true,
+          signal: undefined,
         })
       )
     })

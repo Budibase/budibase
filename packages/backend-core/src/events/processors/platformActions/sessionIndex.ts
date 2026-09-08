@@ -17,20 +17,22 @@ const TERMINAL_STATUSES: ReadonlySet<PlatformActionContainerStatus> = new Set([
   "failed",
 ])
 
-function isTerminalSignal(signal: PlatformActionContainerStatus): boolean {
-  return TERMINAL_STATUSES.has(signal)
+function isTerminalSignal(
+  signal: PlatformActionContainerStatus | undefined
+): boolean {
+  return signal != null && TERMINAL_STATUSES.has(signal)
 }
 
 export interface UpsertPlatformActionSessionInput extends ActionSourceContext {
   incrementsActionCount: boolean
-  signal: PlatformActionContainerStatus
+  signal?: PlatformActionContainerStatus
   timestamp: string
 }
 
 function nextStatus(
   existingStatus: PlatformActionContainerStatus | undefined,
   existingStatusUpdatedAt: string | undefined,
-  signal: PlatformActionContainerStatus,
+  signal: PlatformActionContainerStatus | undefined,
   timestamp: string
 ): {
   status: PlatformActionContainerStatus
@@ -38,7 +40,23 @@ function nextStatus(
   updated: boolean
 } {
   if (!existingStatus || !existingStatusUpdatedAt) {
-    return { status: signal, statusUpdatedAt: timestamp, updated: true }
+    // Nothing recorded this session's status yet. A signal-less action (a
+    // step succeeding or failing mid-run isn't the run's terminal state)
+    // still needs a status to be visible at all, default to active, the
+    // same state an explicit start signal would have set.
+    return {
+      status: signal ?? "active",
+      statusUpdatedAt: timestamp,
+      updated: true,
+    }
+  }
+
+  if (!signal) {
+    return {
+      status: existingStatus,
+      statusUpdatedAt: existingStatusUpdatedAt,
+      updated: false,
+    }
   }
 
   if (new Date(timestamp) > new Date(existingStatusUpdatedAt)) {
@@ -88,7 +106,9 @@ export async function upsertPlatformActionSession(
         const existing =
           await db.tryGet<PlatformActionSessionIndexDoc>(sessionId)
         if (!existing && !input.incrementsActionCount) {
-          return
+          throw new Error(
+            `Platform action session ${sessionId} not indexed yet for lifecycle-only signal`
+          )
         }
         const existingStatusUpdatedAt = existing
           ? (existing.statusUpdatedAt ??

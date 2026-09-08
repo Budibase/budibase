@@ -62,6 +62,54 @@ describe("upsertPlatformActionSession", () => {
     })
   })
 
+  it("defaults a signal-less first action to active", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+
+      await upsertPlatformActionSession({
+        sourceType: "agent_session",
+        sourceId,
+        incrementsActionCount: true,
+        signal: undefined,
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.status).toBe("active")
+      expect(doc.actionCount).toBe(1)
+      expect(doc.completedAt).toBeUndefined()
+    })
+  })
+
+  it("leaves the existing status untouched for a signal-less later action", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+
+      await upsertPlatformActionSession({
+        sourceType: "agent_session",
+        sourceId,
+        incrementsActionCount: true,
+        signal: "active",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+
+      // A step succeeding mid-run must not assert "completed" on its own.
+      await upsertPlatformActionSession({
+        sourceType: "agent_session",
+        sourceId,
+        incrementsActionCount: true,
+        signal: undefined,
+        timestamp: "2026-08-31T00:05:00.000Z",
+      })
+
+      const doc = await getSessionDoc(sourceId)
+
+      expect(doc.status).toBe("active")
+      expect(doc.actionCount).toBe(2)
+    })
+  })
+
   it("increments actionCount and refreshes updatedAt/completedAt on later events", async () => {
     await run(async () => {
       const sourceId = generator.guid()
@@ -200,17 +248,23 @@ describe("upsertPlatformActionSession", () => {
     })
   })
 
-  it("does not create a session index for a lifecycle signal without an action", async () => {
+  it("throws for a lifecycle signal with no action indexed yet, without creating an orphan session", async () => {
     await run(async () => {
       const sourceId = generator.guid()
       const input = { sourceType: "agent_session" as const, sourceId }
 
-      await upsertPlatformActionSession({
-        ...input,
-        incrementsActionCount: false,
-        signal: "active",
-        timestamp: "2026-08-31T00:00:00.000Z",
-      })
+      // Bull retries a thrown job instead of silently dropping it - by the
+      // time retries exhaust, the run's first action should have indexed the
+      // session for this signal to apply to. If it never does (no action
+      // ever occurs), the retries are exhausted and no orphan session exists.
+      await expect(
+        upsertPlatformActionSession({
+          ...input,
+          incrementsActionCount: false,
+          signal: "active",
+          timestamp: "2026-08-31T00:00:00.000Z",
+        })
+      ).rejects.toThrow()
 
       const doc = await context
         .getWorkspaceDB()

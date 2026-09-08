@@ -53,6 +53,8 @@ export interface PlatformActionSessionIndexJob extends ActionSourceContext {
   workspaceId: string
   indexId: string
   incrementsActionCount: boolean
-  signal: PlatformActionContainerStatus
+  // Absent for a step-level action that isn't the run's terminal state. It
+  // should record the action without asserting a container status.
+  signal?: PlatformActionContainerStatus
   timestamp: string
 }

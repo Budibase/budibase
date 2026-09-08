@@ -40,6 +40,7 @@ import {
   LoopV2Step,
   LoopV2StepInputs,
   ActionSourceContext,
+  PlatformActionContainerStatus,
 } from "@budibase/types"
 import { Job } from "bull"
 import tracer from "dd-trace"
@@ -384,6 +385,22 @@ class Orchestrator {
     }
   }
 
+  // Signals the run's Actions container status directly. Not a persisted
+  // action, and must not increment actionCount.
+  private async signalRunStatus(
+    signal: PlatformActionContainerStatus
+  ): Promise<void> {
+    const { sourceType, sourceId } = this.actionSourceContext
+    await events.platformActions
+      .enqueuePlatformActionSessionLifecycle({ sourceType, sourceId, signal })
+      .catch(error => {
+        logging.logWarn(
+          `Failed to signal automation run ${signal} - ${this.appId}/${this.automation._id}`,
+          error
+        )
+      })
+  }
+
   isCron(): boolean {
     return this.automation.definition.trigger.stepId === CRON_STEP_ID
   }
@@ -546,6 +563,8 @@ class Orchestrator {
       const timeout =
         this.job.data.event.timeout || env.AUTOMATION_THREAD_TIMEOUT
 
+      await this.signalRunStatus("active")
+
       let stepResults: AutomationStepResult[] = []
 
       try {
@@ -586,6 +605,10 @@ class Orchestrator {
       } else {
         await this.logResult(result)
       }
+
+      await this.signalRunStatus(
+        automationUtils.inferAutomationRunActionStatus(result.status)
+      )
 
       // Return any content pushed to state.
       if (Object.keys(ctx?.state || {}).length > 0) {
