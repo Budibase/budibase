@@ -5,8 +5,12 @@ import {
   FetchProjectsResponse,
   ImportProjectRequest,
   ImportProjectResponse,
+  PreviewProjectAssignmentRequest,
+  PreviewProjectAssignmentResponse,
   UpdateProjectRequest,
   UpdateProjectResponse,
+  UpdateProjectAssignmentRequest,
+  UpdateProjectAssignmentResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -15,6 +19,12 @@ interface ImportProjectParams {
   body?: ImportProjectRequest
   expectations?: Expectations
 }
+
+type TestUpdateProjectAssignmentRequest = Omit<
+  UpdateProjectAssignmentRequest,
+  "dependencyFingerprint"
+> &
+  Partial<Pick<UpdateProjectAssignmentRequest, "dependencyFingerprint">>
 
 export class ProjectAPI extends TestAPI {
   fetch = async (expectations?: Expectations) => {
@@ -90,6 +100,41 @@ export class ProjectAPI extends TestAPI {
       `/api/projects/${project._id}`,
       {
         body: project,
+        expectations,
+      }
+    )
+  }
+
+  previewAssignment = async (
+    request: PreviewProjectAssignmentRequest,
+    expectations?: Expectations
+  ) => {
+    return await this._post<PreviewProjectAssignmentResponse>(
+      "/api/projects/assignments/preview",
+      {
+        body: request,
+        expectations,
+      }
+    )
+  }
+
+  updateAssignment = async (
+    resourceId: string,
+    request: TestUpdateProjectAssignmentRequest,
+    expectations?: Expectations
+  ) => {
+    const dependencyFingerprint =
+      request.dependencyFingerprint ||
+      (
+        await this.previewAssignment({
+          resourceId,
+          projectIds: request.projectIds,
+        })
+      ).dependencyFingerprint
+    return await this._put<UpdateProjectAssignmentResponse>(
+      `/api/projects/assignments/${resourceId}`,
+      {
+        body: { ...request, dependencyFingerprint },
         expectations,
       }
     )
