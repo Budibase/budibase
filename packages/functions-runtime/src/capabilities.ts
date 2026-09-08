@@ -13,16 +13,20 @@ const QUERY_DENIED_MESSAGE = "Function query denied"
 const QUERY_LIMIT_MESSAGE = "Function query limit exceeded"
 const QUERY_FAILED_MESSAGE = "Function query failed"
 
+export interface FunctionAutomationInvocation {
+  readonly type: "automation"
+  readonly automationId: string
+  readonly automationStepId: string
+}
+
+export type FunctionInvocation = FunctionAutomationInvocation
+
 export interface FunctionInvocationScope {
   readonly runId: string
   readonly workspaceId: string
   readonly functionId: string
   readonly sourceHash: string
-  readonly invocation: {
-    readonly type: "automation"
-    readonly automationId: string
-    readonly automationStepId: string
-  }
+  readonly invocation: FunctionInvocation
   readonly executionUser?: Readonly<UserBindings>
   readonly capabilities: Readonly<
     Record<string, Readonly<FunctionQueryCapability>>
@@ -36,11 +40,7 @@ export interface FunctionInvocationScopeInput {
   workspaceId: string
   functionId: string
   sourceHash: string
-  invocation: {
-    type: "automation"
-    automationId: string
-    automationStepId: string
-  }
+  invocation: FunctionInvocation
   executionUser?: UserBindings
   capabilities: FunctionQueryCapability[]
   limits: FunctionRunLimits

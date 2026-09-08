@@ -22,10 +22,12 @@ export {
   FunctionCapabilityService,
 } from "./capabilities"
 export type {
+  FunctionAutomationInvocation,
   FunctionCapabilityExecution,
   FunctionCapabilityLog,
   FunctionCapabilityMeterResult,
   FunctionCapabilityServiceDependencies,
+  FunctionInvocation,
   FunctionInvocationScope,
   FunctionInvocationScopeInput,
 } from "./capabilities"

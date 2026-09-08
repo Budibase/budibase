@@ -1,6 +1,7 @@
 import type {
   FunctionBuildDiagnostic,
   FunctionDocument,
+  FunctionRunSummary,
 } from "../../../documents"
 import type { SourceName } from "../../../sdk"
 
@@ -83,4 +84,14 @@ export interface FunctionQueryCatalogEntry {
 
 export interface FetchFunctionQueryCatalogResponse {
   queries: FunctionQueryCatalogEntry[]
+}
+
+export interface FetchFunctionRunsResponse {
+  runs: FunctionRunSummary[]
+  hasMore: boolean
+  nextBookmark?: string
+}
+
+export interface FetchFunctionRunResponse {
+  run: FunctionRunSummary
 }

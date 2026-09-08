@@ -12,4 +12,7 @@ export type {
 export { functionExecutor, LocalFunctionExecutor } from "./executor"
 export { functionRunSupervisor, LocalFunctionRunSupervisor } from "./supervisor"
 export { functionRunOrchestrator } from "./orchestrator"
-export type { FunctionRunOrchestrationOptions } from "./orchestrator"
+export type {
+  FunctionRunDefinition,
+  FunctionRunOrchestrationOptions,
+} from "./orchestrator"

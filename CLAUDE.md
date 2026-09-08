@@ -30,17 +30,19 @@
 - Functions: Prefer arrow functions, use async/await over Promises
 - Error handling: Use try/catch
 - Types: Use `interface` for objects, `type` for unions/primitives, do NOT cast to any or unknown.
-- Prefer importing and using named domain types directly instead of deriving them
-  through indexed access when a named type already exists. For example, use
-  `RestTemplateId` instead of `TemplateSelectionContext["restTemplateId"]`.
+- Do not use indexed access types in new or refactored code. Prefer importing
+  and using named domain types directly; if no named type exists, use an
+  explicit structural type instead. For example, use `RestTemplateId` instead
+  of `TemplateSelectionContext["restTemplateId"]`.
 - Do not add backwards compatibility paths or broad "handle every scenario" logic unless explicitly instructed to do so for the task.
 - Testing: Jest framework, use describe/it structure, mock external services
   using `nock`.
 - Only comment when it's really necessary to explain an unclear behaviour.
 - Never use console.log in tests, the output will not be visible in STDOUT
   when you run the tests. It is a waste of time.
-- In application code use console.log instead of pino the logging framework.
-  We have made it so that console.log statements are redirected to pino.
+- In application code use console methods instead of pino the logging framework.
+  Use console.error when logging caught errors and console.log for ordinary
+  messages. Console statements are redirected to pino.
 - When you're writing tests, you don't need to assert or do conditional checks
   on intermediate states. Just assert the final outcome
   against, provided there are no type errors.

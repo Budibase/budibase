@@ -101,24 +101,21 @@ describe("Run Function automation action", () => {
       output: { answer: 42 },
     })
     expect(deps.orchestrate).toHaveBeenCalledWith({
-      request: {
-        runId: "run-1",
-        artifact,
-        inputs: { name: "Ada" },
-        limits: expect.any(Object),
-      },
-      capabilityScope: expect.objectContaining({
-        runId: "run-1",
-        workspaceId: fn.appId,
-        functionId: fn._id,
-        sourceHash: artifact.sourceHash,
-        invocation: {
-          type: "automation",
-          automationId: "automation-1",
-          automationStepId: "step-1",
-        },
+      runId: "run-1",
+      workspaceId: fn.appId,
+      definition: {
+        id: fn._id,
+        name: fn.name,
+        artifact: fn.artifact,
         capabilities: fn.capabilities,
-      }),
+      },
+      inputs: { name: "Ada" },
+      invocation: {
+        type: "automation",
+        automationId: "automation-1",
+        automationStepId: "step-1",
+      },
+      executionUser: { _id: "user-1" },
       signal: undefined,
     })
   })
@@ -133,7 +130,7 @@ describe("Run Function automation action", () => {
 
     expect(deps.orchestrate).toHaveBeenCalledWith(
       expect.objectContaining({
-        request: expect.objectContaining({ inputs: { bound: "value" } }),
+        inputs: { bound: "value" },
       })
     )
   })
@@ -148,7 +145,7 @@ describe("Run Function automation action", () => {
 
     expect(deps.orchestrate).toHaveBeenCalledWith(
       expect.objectContaining({
-        request: expect.objectContaining({ inputs: { value: "not-json" } }),
+        inputs: { value: "not-json" },
       })
     )
   })
