@@ -23,7 +23,7 @@ import { EmailUnavailableError, HTTPError } from "../errors"
 import * as platform from "../platform"
 import { validatePassword } from "../security"
 import * as sessions from "../security/sessions"
-import { hash } from "../utils"
+import { compare, hash } from "../utils"
 import * as eventHelpers from "./events"
 import {
   getFirstPlatformUser,
@@ -127,14 +127,38 @@ export class UserDB {
       opts.requirePassword = false
     }
 
+    const passwordChanged = !!password && password !== dbUser?.password
+    let isCurrentPassword = false
+    if (
+      dbUser?.forceResetPassword &&
+      user.forceResetPassword === false &&
+      passwordChanged &&
+      password &&
+      dbUser.password
+    ) {
+      isCurrentPassword = await compare(password, dbUser.password)
+    }
+    if (
+      dbUser?.forceResetPassword &&
+      user.forceResetPassword === false &&
+      (!passwordChanged || isCurrentPassword)
+    ) {
+      throw new HTTPError(
+        "A new password must be supplied when completing a forced reset.",
+        400
+      )
+    }
+
     let hashedPassword
-    if (password && password !== dbUser?.password) {
+    if (passwordChanged) {
       if (await UserDB.isPreventPasswordActions(user, account)) {
         throw new HTTPError("Password change is disabled for this user", 400)
       }
 
       if (!opts.skipPasswordValidation) {
-        const passwordValidation = validatePassword(password)
+        const passwordValidation = validatePassword(password, {
+          enforceRegex: !opts.skipPasswordRegexValidation,
+        })
         if (!passwordValidation.valid) {
           throw new HTTPError(passwordValidation.error, 400)
         }
@@ -423,7 +447,11 @@ export class UserDB {
           usersToSave.push(
             UserDB.buildUser(
               user,
-              { hashPassword: true, requirePassword: !isSSOEnforced },
+              {
+                hashPassword: true,
+                requirePassword: !isSSOEnforced,
+                skipPasswordRegexValidation: user.forceResetPassword === true,
+              },
               tenantId,
               undefined,
               account

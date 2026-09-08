@@ -8,7 +8,7 @@
     FancyForm,
     FancyInput,
   } from "@budibase/bbui"
-  import { BUILDER_URLS } from "@budibase/shared-core"
+  import { BUILDER_URLS, validatePasswordPolicy } from "@budibase/shared-core"
   import { goto as gotoStore, params } from "@roxi/routify"
   import { users, organisation, auth, admin } from "@/stores/portal"
   import Logo from "assets/bb-emblem.svg"
@@ -33,7 +33,7 @@
   let loaded = false
 
   $: company = $organisation.company || "Budibase"
-  $: passwordMinLength = $admin.passwordMinLength ?? 12
+  $: passwordPolicy = $admin.passwordPolicy
 
   async function acceptInvite() {
     form.validate()
@@ -182,10 +182,13 @@
                   function validatePassword() {
                     if (!formData.password) {
                       return "Please enter a password"
-                    } else if (formData.password.length < passwordMinLength) {
-                      return `Please enter at least ${passwordMinLength} characters`
+                    } else {
+                      const result = validatePasswordPolicy({
+                        password: formData.password,
+                        policy: passwordPolicy,
+                      })
+                      return result.valid ? undefined : result.error
                     }
-                    return undefined
                   }
                   fieldError["password"] = validatePassword()
 
