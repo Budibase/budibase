@@ -203,9 +203,7 @@ describe("secured AI tool execution", () => {
         { value: "hello" },
         { toolCallId: "call_1", messages: [], context: undefined }
       )
-    ).rejects.toThrow(
-      '{"code":"VALIDATION_ERROR","field":"supplier"}'
-    )
+    ).rejects.toThrow('{"code":"VALIDATION_ERROR","field":"supplier"}')
     expect(log).toHaveBeenCalledWith(
       "Agent tool execution",
       expect.objectContaining({

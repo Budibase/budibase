@@ -34,6 +34,7 @@ jest.mock("../sdk/workspace/ai/agents", () => {
   const actual = jest.requireActual("../sdk/workspace/ai/agents")
   return {
     ...actual,
+    buildPromptAndTools: jest.fn(),
     getOrThrow: jest.fn(),
     prepareAgentChatRun: jest.fn(),
   }
@@ -57,6 +58,7 @@ jest.mock("ai", () => {
 
 const prepareAgentChatRunMock = sdk.ai.agents.prepareAgentChatRun as jest.Mock
 const getOrThrowMock = sdk.ai.agents.getOrThrow as jest.Mock
+const buildPromptAndToolsMock = sdk.ai.agents.buildPromptAndTools as jest.Mock
 const recordEscalationResolvedMock = sdk.ai.agentRequests
   .recordEscalationResolved as jest.Mock
 
@@ -113,6 +115,7 @@ describe("resumeOperation", () => {
   beforeEach(async () => {
     prepareAgentChatRunMock.mockReset()
     getOrThrowMock.mockReset()
+    buildPromptAndToolsMock.mockReset()
     await config.newTenant()
   })
 
@@ -141,6 +144,57 @@ describe("resumeOperation", () => {
             escalationId: "esc_primary",
             outcome: "approved",
             sessionId: "session_1",
+          }),
+        ])
+      )
+    })
+  })
+
+  it("reports an approved tool failure without asking the model to narrate it", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      getOrThrowMock.mockResolvedValue({
+        _id: "agent_1",
+        operations: [{ id: "op_1" }],
+      } as Agent)
+      buildPromptAndToolsMock.mockResolvedValue({
+        tools: {
+          create_row: {
+            execute: jest.fn().mockRejectedValue({
+              validation: { Department: "can't be blank" },
+            }),
+          },
+        },
+        toolSources: {},
+      })
+
+      await resumeOperation({
+        doc: baseDoc({ requestId, response: { accepted: true } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: {
+          ...baseCtx,
+          pendingToolCall: {
+            toolCallId: "call_1",
+            toolName: "create_row",
+            args: { data: { amount: 46 } },
+          },
+        },
+      })
+
+      expect(prepareAgentChatRunMock).not.toHaveBeenCalled()
+      const [request] =
+        await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+      expect(request.status).toEqual("failed")
+      expect(request.error).toEqual(
+        '{"validation":{"Department":"can\'t be blank"}}'
+      )
+      expect(request.actions).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: "tool_call",
+            toolName: "create_row",
+            status: "error",
           }),
         ])
       )

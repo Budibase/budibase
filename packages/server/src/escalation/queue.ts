@@ -545,7 +545,6 @@ export async function resumeOperation({
   // approval as user input.
   let approvalInstructions: string
   let messages: ModelMessage[]
-  let storedCallFailure: string | undefined
   let executedApproval: { toolName: string } | undefined
   // recordToolCall awaits an LLM summary internally - chain the calls in the
   // background (preserving completion order) and flush the tail (await
@@ -570,9 +569,6 @@ export async function resumeOperation({
       await markEscalationRequestResolved({ status: "failed", error: text })
       return
     }
-    if (executed.failed) {
-      storedCallFailure = executed.toolName
-    }
     if (doc.requestId) {
       const requestId = doc.requestId
       toolCallChain = toolCallChain.then(() =>
@@ -593,6 +589,23 @@ export async function resumeOperation({
             )
           })
       )
+    }
+    if (executed.failed) {
+      await toolCallChain
+      const errorMessage =
+        executed.output &&
+        typeof executed.output === "object" &&
+        "error" in executed.output
+          ? getErrorMessage(executed.output.error)
+          : "Tool execution failed"
+      const text = `The approved action failed: ${errorMessage}`
+      await persistResumeResult(escalationId, textMessage(text))
+      await deliverOperationResult(ctx, text)
+      await markEscalationRequestResolved({
+        status: "failed",
+        error: errorMessage,
+      })
+      return
     }
     approvalInstructions =
       "ESCALATION APPROVAL: The user's request in this conversation was " +
@@ -700,9 +713,6 @@ export async function resumeOperation({
 
   const pendingToolCalls = new Set<string>()
   const unrecoveredToolFailures = new Set<string>()
-  if (storedCallFailure) {
-    unrecoveredToolFailures.add(storedCallFailure)
-  }
   let needsInputUpdate = Promise.resolve()
 
   try {
