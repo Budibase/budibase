@@ -50,6 +50,16 @@
       await deploymentStore.load()
     } catch (error: any) {
       console.error(`Error initialising app: ${error?.message}`)
+
+      // Initialisation can fail because the session was invalidated
+      // elsewhere, e.g. by visiting another cloud tenant. In that case log
+      // out gracefully (preserving a return URL) instead of leaving the
+      // user stuck on a crash page until they refresh.
+      await auth.getSelf()
+      if (!$auth.user) {
+        return auth.logout()
+      }
+
       sideNav.show()
 
       throw error
