@@ -592,6 +592,25 @@ describe("automation thread", () => {
       automationId: "automation_server_log",
     })
     expect(events.action.automationStepFailed).not.toHaveBeenCalled()
+    expect(
+      jest.mocked(events.platformActions.enqueuePlatformActionSessionLifecycle)
+        .mock.calls
+    ).toEqual([
+      [
+        {
+          sourceType: "automation_run",
+          sourceId: "server-log-job",
+          signal: "active",
+        },
+      ],
+      [
+        {
+          sourceType: "automation_run",
+          sourceId: "server-log-job",
+          signal: "completed",
+        },
+      ],
+    ])
   })
 
   it("uses an explicit event.runId as sourceId instead of the job id", async () => {
