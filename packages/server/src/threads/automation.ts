@@ -1183,6 +1183,10 @@ export async function execute(
 
   const automationId = job.data.automation._id
   if (!automationId) {
+    await context.doInWorkspaceContext(workspaceId, () =>
+      signalAutomationRunFailure(job)
+    )
+
     throw new Error("Unable to execute, event doesn't contain automation ID.")
   }
 

@@ -46,7 +46,7 @@ import { Job } from "bull"
 import { BUILTIN_ACTION_DEFINITIONS, TRIGGER_DEFINITIONS } from "../automations"
 import TestConfiguration from "../tests/utilities/TestConfiguration"
 import { basicAutomation } from "../tests/utilities/structures"
-import { executeInThread, removeStalled } from "./automation"
+import { execute, executeInThread, removeStalled } from "./automation"
 import sdk from "../sdk"
 import { automations } from "@budibase/shared-core"
 import { storeLog } from "../automations/logging"
@@ -175,6 +175,42 @@ describe("automation thread", () => {
       })
     )
   })
+
+  it.each([undefined, "original-run"])(
+    "signals a missing automation ID in the workspace context (runId: %s)",
+    async runId => {
+      jest.clearAllMocks()
+      const appId = config.getProdWorkspaceId()
+      const job = {
+        id: "missing-automation-id-job",
+        data: {
+          automation: basicAutomation({ appId, _id: undefined }),
+          event: { appId, runId },
+        },
+      } as Job<AutomationData>
+      const callback = jest.fn()
+      const enqueue = jest.mocked(
+        events.platformActions.enqueuePlatformActionSessionLifecycle
+      )
+      let signalledWorkspaceId: string | undefined
+      enqueue.mockImplementationOnce(async () => {
+        signalledWorkspaceId = context.getWorkspaceId()
+      })
+
+      await expect(execute(job, callback)).rejects.toThrow(
+        "Unable to execute, event doesn't contain automation ID."
+      )
+
+      expect(signalledWorkspaceId).toBe(appId)
+      expect(enqueue).toHaveBeenCalledTimes(1)
+      expect(enqueue).toHaveBeenCalledWith({
+        sourceType: "automation_run",
+        sourceId: runId ?? job.id,
+        signal: "failed",
+      })
+      expect(callback).not.toHaveBeenCalled()
+    }
+  )
 
   it("signals the run failed when preparation fails before execution starts", async () => {
     jest.clearAllMocks()
