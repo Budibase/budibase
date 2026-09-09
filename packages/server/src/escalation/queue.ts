@@ -172,8 +172,10 @@ export async function processNotify(
     // TODO: consider one Bull job per recipient rather than batching all in one job -
     // gives independent retry/backoff per channel so a Slack failure doesn't block Teams etc.
     // IF - we do this, then the bulkDocs call would be done first.
-    if (doc.recipients?.length) {
-      const notifDocs: EscalationNotificationDoc[] = doc.recipients.map(
+    const recipients =
+      doc.recipients ?? doc.policy?.notifications?.recipients ?? []
+    if (recipients.length) {
+      const notifDocs: EscalationNotificationDoc[] = recipients.map(
         (recipient: EscalationRecipient) => ({
           _id: `${DocumentType.ESCALATION_NOTIFICATION}${SEPARATOR}${utils.newid()}`,
           escalationId,

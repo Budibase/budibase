@@ -243,10 +243,13 @@ export const createEscalationGateRuntime = ({
       title,
       summary,
       delay: (notifications.delay ?? DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
-      recipients: notifications.recipients,
       resolutionStrategy: resolutionStrategyBinding(
-        policy.approvalType ?? ResolutionStrategy.FIRST_RESPONSE
+        policy.approvers?.length
+          ? (policy.approvalType ?? ResolutionStrategy.FIRST_RESPONSE)
+          : ResolutionStrategy.FIRST_RESPONSE
       ),
+      rule,
+      policy,
       agentId,
       operationId: operation.id,
       requestId: gateContext.getRequestId(),

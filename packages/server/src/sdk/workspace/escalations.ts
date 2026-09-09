@@ -227,7 +227,11 @@ export async function respond(
   }
 
   const notifDocs = await listNotifications(escalationId)
-  const totalRecipients = contextDoc.recipients?.length ?? 0
+  const totalRecipients =
+    contextDoc.policy?.approvers?.length ||
+    contextDoc.policy?.notifications?.recipients?.length ||
+    contextDoc.recipients?.length ||
+    0
   const responses = notifDocs
     .flatMap(doc => doc.responses ?? [])
     .sort((a, b) => (a.respondedAt < b.respondedAt ? -1 : 1))

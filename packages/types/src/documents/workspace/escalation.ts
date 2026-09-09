@@ -2,7 +2,11 @@ import type { ModelMessage, UIMessage } from "ai"
 import { Document } from "../document"
 import { Automation, AutomationStepResult } from "./automation"
 import { ChatConversationChannel } from "../global"
-import type { AgentRequester } from "../global/agents"
+import type {
+  AgentOperationApprovalPolicy,
+  AgentRequester,
+  ToolExecutionRule,
+} from "../global/agents"
 
 // This does need a degree of flexibility
 // {accepted: boolean} is a given for now, but response text
@@ -97,6 +101,8 @@ export interface EscalationContextDoc extends Document {
   isTest?: boolean
   recipients?: EscalationRecipient[]
   resolutionStrategy?: string
+  rule?: ToolExecutionRule
+  policy?: AgentOperationApprovalPolicy
   // zlib-deflated + base64 JSON of the assistant UI message produced when the
   // operation resumed
   resumeResultCompressed?: string

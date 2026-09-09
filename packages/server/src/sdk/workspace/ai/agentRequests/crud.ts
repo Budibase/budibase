@@ -324,10 +324,12 @@ async function recordEscalationRaised({
     throw new Error(`Escalation context doc not found: ${escalationId}`)
   }
   const recipients = await Promise.all(
-    (doc.recipients ?? []).map(async recipient => ({
-      type: recipient.type,
-      label: await resolveRecipientLabel(recipient),
-    }))
+    (doc.recipients ?? doc.policy?.notifications?.recipients ?? []).map(
+      async recipient => ({
+        type: recipient.type,
+        label: await resolveRecipientLabel(recipient),
+      })
+    )
   )
 
   await appendAction(
