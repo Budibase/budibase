@@ -201,6 +201,53 @@ describe("resumeOperation", () => {
     })
   })
 
+  it("keeps the request open when another escalation is pending after an approved tool failure", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      await sdk.ai.agentRequests.updateRequestStatus({
+        requestId,
+        status: "needs_input",
+      })
+      await context.getWorkspaceDB().put(
+        baseDoc({
+          _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
+          requestId,
+        })
+      )
+      getOrThrowMock.mockResolvedValue({
+        _id: "agent_1",
+        operations: [{ id: "op_1" }],
+      } as Agent)
+      buildPromptAndToolsMock.mockResolvedValue({
+        tools: {
+          create_row: {
+            execute: jest.fn().mockRejectedValue(new Error("DB unavailable")),
+          },
+        },
+        toolSources: {},
+      })
+
+      await resumeOperation({
+        doc: baseDoc({ requestId, response: { accepted: true } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: {
+          ...baseCtx,
+          pendingToolCall: {
+            toolCallId: "call_1",
+            toolName: "create_row",
+            args: { data: { amount: 46 } },
+          },
+        },
+      })
+
+      const [request] =
+        await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+      expect(request.status).toEqual("needs_input")
+      expect(prepareAgentChatRunMock).not.toHaveBeenCalled()
+    })
+  })
+
   it("passes getRequestId resolving to the escalation's request id", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!

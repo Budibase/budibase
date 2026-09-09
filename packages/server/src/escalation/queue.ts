@@ -601,10 +601,18 @@ export async function resumeOperation({
       const text = `The approved action failed: ${errorMessage}`
       await persistResumeResult(escalationId, textMessage(text))
       await deliverOperationResult(ctx, text)
-      await markEscalationRequestResolved({
-        status: "failed",
-        error: errorMessage,
-      })
+      if (doc.requestId) {
+        const stillPending = await sdk.escalations.listContextDocs({
+          requestId: doc.requestId,
+          resolution: "pending",
+        })
+        if (stillPending.length === 0) {
+          await markEscalationRequestResolved({
+            status: "failed",
+            error: errorMessage,
+          })
+        }
+      }
       return
     }
     approvalInstructions =
