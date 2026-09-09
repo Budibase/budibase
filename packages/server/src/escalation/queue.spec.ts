@@ -1,3 +1,4 @@
+import zlib from "zlib"
 import { context } from "@budibase/backend-core"
 import {
   Agent,
@@ -153,6 +154,12 @@ describe("resumeOperation", () => {
   it("reports an approved tool failure without asking the model to narrate it", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!
+      const escalation = baseDoc({
+        requestId,
+        resolution: "resolved",
+        response: { accepted: true },
+      })
+      await context.getWorkspaceDB().put(escalation)
       getOrThrowMock.mockResolvedValue({
         _id: "agent_1",
         operations: [{ id: "op_1" }],
@@ -169,7 +176,7 @@ describe("resumeOperation", () => {
       })
 
       await resumeOperation({
-        doc: baseDoc({ requestId, response: { accepted: true } }),
+        doc: escalation,
         escalationId: "esc_primary",
         resolution: "resolved",
         ctx: {
@@ -189,6 +196,24 @@ describe("resumeOperation", () => {
       expect(request.error).toEqual(
         '{"validation":{"Department":"can\'t be blank"}}'
       )
+      const storedEscalation = await context
+        .getWorkspaceDB()
+        .get<EscalationContextDoc>(escalation._id!)
+      const resumeResult = JSON.parse(
+        zlib
+          .inflateSync(
+            Uint8Array.from(
+              Buffer.from(storedEscalation.resumeResultCompressed!, "base64")
+            )
+          )
+          .toString()
+      )
+      expect(resumeResult.parts).toEqual([
+        {
+          type: "text",
+          text: "Sorry, something went wrong and I couldn't complete that.",
+        },
+      ])
       expect(request.actions).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
