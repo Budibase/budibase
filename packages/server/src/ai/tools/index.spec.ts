@@ -140,6 +140,41 @@ describe("secured AI tool execution", () => {
     expect(execute).not.toHaveBeenCalled()
   })
 
+  it("logs the error message when tool execution fails", async () => {
+    const execute = jest
+      .fn()
+      .mockRejectedValue(new Error("row creation failed"))
+    const authorize = jest.fn().mockResolvedValue(undefined)
+    const log = jest.spyOn(console, "log").mockImplementation()
+    const tools = toToolSet(
+      [definition(execute)],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize,
+          },
+        ],
+      ])
+    )
+
+    await expect(
+      tools.secured_tool.execute?.(
+        { value: "hello" },
+        { toolCallId: "call_1", messages: [], context: undefined }
+      )
+    ).rejects.toThrow("row creation failed")
+    expect(log).toHaveBeenCalledWith(
+      "Agent tool execution",
+      expect.objectContaining({
+        outcome: "error",
+        error: "row creation failed",
+      })
+    )
+  })
+
   it("does not execute a tool without authorization metadata", async () => {
     const execute = jest.fn()
     const authorize = jest.fn()

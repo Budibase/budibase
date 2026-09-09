@@ -1,3 +1,4 @@
+import { getErrorMessage } from "@budibase/backend-core"
 import {
   PermissionLevel,
   PermissionType,
@@ -87,7 +88,8 @@ const getToolFailure = (result: unknown): string | undefined => {
 const logToolExecution = (
   outcome: "success" | "error",
   toolDef: AiToolDefinition,
-  runtime: ToolAuthorizationRuntime
+  runtime: ToolAuthorizationRuntime,
+  error?: unknown
 ) =>
   console.log("Agent tool execution", {
     outcome,
@@ -97,6 +99,7 @@ const logToolExecution = (
     agentId: runtime.executionContext.agentId,
     operationId: runtime.executionContext.operationId,
     conversationId: runtime.executionContext.conversationId,
+    ...(error !== undefined && { error: getErrorMessage(error) }),
   })
 
 const wrapTool = (
@@ -149,7 +152,7 @@ const wrapTool = (
       return authorizedResult
     } catch (error) {
       if (runtime) {
-        logToolExecution("error", toolDef, runtime)
+        logToolExecution("error", toolDef, runtime, error)
       }
       throw error
     }
