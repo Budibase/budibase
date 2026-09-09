@@ -127,6 +127,7 @@
   export let openOnDate: string = "{{ now }}"
   export let calendarType: CalendarView = "dayGridMonth"
   export let showDayNames: boolean = true
+  export let showWeekend: boolean = true
 
   const { styleable, appStore } = getContext("sdk")
   const component = getContext("component")
@@ -414,6 +415,7 @@
       },
     },
     initialDate: openOnDate,
+    weekends: showWeekend,
     events,
     eventClick: handleEventClick,
     // eventTimeFormat to override default meridiem to "short" (AM/PM)
