@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { writable } from "svelte/store"
 import MockBody from "@/test/mocks/MockBody.svelte"
 import MockComponent from "@/test/mocks/MockComponent.svelte"
+import MockModal from "@/test/mocks/MockModal.svelte"
 import MockConfigureOperationToolModal from "./MockConfigureOperationToolModal.svelte"
 import MockGenerateInstructionsControl from "./MockGenerateInstructionsControl.svelte"
 import MockOperationCodeEditor from "./MockOperationCodeEditor.svelte"
@@ -56,6 +57,7 @@ vi.mock("@budibase/bbui", () => ({
   Body: MockBody,
   Helpers: { uuid: vi.fn(() => "test-session-id") },
   Icon: MockComponent,
+  Modal: MockModal,
   notifications: { error: vi.fn() },
 }))
 
@@ -83,6 +85,12 @@ vi.mock("../../AgentUnpublishedChangesIndicator.svelte", () => ({
 }))
 vi.mock("../../ConfigureOperationToolModal.svelte", () => ({
   default: MockConfigureOperationToolModal,
+}))
+vi.mock("../../OperationApprovalPolicyModal.svelte", () => ({
+  default: MockComponent,
+}))
+vi.mock("../../OperationApprovalRuleModal.svelte", () => ({
+  default: MockComponent,
 }))
 vi.mock("../../GenerateInstructionsControl.svelte", () => ({
   default: MockGenerateInstructionsControl,
