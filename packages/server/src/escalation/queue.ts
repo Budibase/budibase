@@ -9,6 +9,7 @@ import {
 import {
   context,
   db as dbCore,
+  getErrorMessage,
   queue,
   roles,
   utils,
@@ -380,7 +381,7 @@ const executeApprovedToolCall = async ({
   } catch (error) {
     failed = true
     output = {
-      error: error instanceof Error ? error.message : String(error),
+      error: getErrorMessage(error),
     }
   }
 

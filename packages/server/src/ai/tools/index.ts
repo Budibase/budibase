@@ -78,11 +78,7 @@ const getToolFailure = (result: unknown): string | undefined => {
     return
   }
 
-  if (error instanceof Error) {
-    return error.message || "Tool execution failed"
-  }
-
-  return String(error)
+  return getErrorMessage(error) || "Tool execution failed"
 }
 
 const logToolExecution = (

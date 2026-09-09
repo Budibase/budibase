@@ -175,6 +175,46 @@ describe("secured AI tool execution", () => {
     )
   })
 
+  it("preserves object-shaped tool failure details", async () => {
+    const execute = jest.fn().mockResolvedValue({
+      error: {
+        code: "VALIDATION_ERROR",
+        field: "supplier",
+      },
+    })
+    const authorize = jest.fn().mockResolvedValue(undefined)
+    const log = jest.spyOn(console, "log").mockImplementation()
+    const tools = toToolSet(
+      [definition(execute)],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize,
+          },
+        ],
+      ])
+    )
+
+    await expect(
+      tools.secured_tool.execute?.(
+        { value: "hello" },
+        { toolCallId: "call_1", messages: [], context: undefined }
+      )
+    ).rejects.toThrow(
+      '{"code":"VALIDATION_ERROR","field":"supplier"}'
+    )
+    expect(log).toHaveBeenCalledWith(
+      "Agent tool execution",
+      expect.objectContaining({
+        outcome: "error",
+        error: '{"code":"VALIDATION_ERROR","field":"supplier"}',
+      })
+    )
+  })
+
   it("does not execute a tool without authorization metadata", async () => {
     const execute = jest.fn()
     const authorize = jest.fn()
