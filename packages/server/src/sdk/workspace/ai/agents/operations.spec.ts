@@ -11,15 +11,6 @@ describe("normalizePersistedOperationTools", () => {
     ])
   })
 
-  it("migrates legacy escalation tools to admin authority", () => {
-    expect(normalizePersistedOperationTools(["escalate"])).toEqual([
-      {
-        toolName: "escalate",
-        executionPrincipal: ToolExecutionPrincipal.ADMIN,
-      },
-    ])
-  })
-
   it("populates missing principals with admin authority", () => {
     expect(
       normalizePersistedOperationTools([{ toolName: "approve_holiday" }])

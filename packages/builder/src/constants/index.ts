@@ -30,7 +30,6 @@ export const ToolBindingPrefix = {
   BUDIBASE: "budibase",
   EXTERNAL: "external",
   SEARCH: "search",
-  ESCALATION: "escalation",
   TOOL: "tool",
 }
 

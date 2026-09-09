@@ -1,5 +1,4 @@
 import type { Agent, LLMResponse } from "@budibase/types"
-import { EscalationNotificationChannel } from "@budibase/types"
 
 const mockRouterStream = jest.fn()
 
@@ -532,19 +531,14 @@ describe("prepareAgentRunContext", () => {
 })
 
 describe("prepareAgentChatRun - approval gating", () => {
-  const recipients = [
-    { type: EscalationNotificationChannel.SLACK, config: { channel: "C1" } },
-  ]
-
-  const operationWithRecipients = {
+  const procurementOperation = {
     id: "operation_1",
     name: "Procurement",
     live: true,
     allowKnowledgeSourceDownload: true,
-    escalation: { recipients, delay: 120 },
   }
 
-  const operationWithoutRecipients = {
+  const supportOperation = {
     id: "operation_2",
     name: "IT support",
     live: true,
@@ -555,7 +549,7 @@ describe("prepareAgentChatRun - approval gating", () => {
     _id: "agent_1",
     name: "Support Agent",
     aiconfig: "config-1",
-    operations: [operationWithRecipients, operationWithoutRecipients],
+    operations: [procurementOperation, supportOperation],
   } satisfies Agent
 
   const llm = {
@@ -600,11 +594,11 @@ describe("prepareAgentChatRun - approval gating", () => {
   }
 
   it("enables per-tool approval gating", async () => {
-    await runFor(operationWithRecipients)
+    await runFor(procurementOperation)
 
     expect(buildPromptAndTools).toHaveBeenCalledWith(
       agent,
-      operationWithRecipients,
+      procurementOperation,
       expect.objectContaining({
         escalationGateContext: expect.objectContaining({
           sessionId: "session_1",
@@ -617,7 +611,7 @@ describe("prepareAgentChatRun - approval gating", () => {
   })
 
   it("does not configure structured output for an empty schema", async () => {
-    await runFor(operationWithoutRecipients, { outputSchema: {} })
+    await runFor(supportOperation, { outputSchema: {} })
 
     expect(ToolLoopAgent).toHaveBeenCalledWith(
       expect.objectContaining({ output: undefined })
@@ -635,7 +629,7 @@ describe("prepareAgentChatRun - approval gating", () => {
       .mocked(sdk.ai.llm.createLLM)
       .mockRejectedValueOnce(new Error("Failed to prepare model"))
 
-    await expect(runFor(operationWithoutRecipients)).rejects.toThrow(
+    await expect(runFor(supportOperation)).rejects.toThrow(
       "Failed to prepare model"
     )
 
@@ -643,7 +637,7 @@ describe("prepareAgentChatRun - approval gating", () => {
   })
 
   it("configures structured output for a populated schema", async () => {
-    await runFor(operationWithoutRecipients, {
+    await runFor(supportOperation, {
       outputSchema: { sentiment: "string" },
     })
 
@@ -653,7 +647,7 @@ describe("prepareAgentChatRun - approval gating", () => {
   })
 
   it("passes the chat timezone to the agent system prompt", async () => {
-    await runFor(operationWithoutRecipients, {
+    await runFor(supportOperation, {
       chat: {
         agentId: "agent_1",
         messages: [],
@@ -666,13 +660,13 @@ describe("prepareAgentChatRun - approval gating", () => {
   })
 
   it("uses the non-interactive automation prompt configuration", async () => {
-    await runFor(operationWithoutRecipients, { promptMode: "automation" })
+    await runFor(supportOperation, { promptMode: "automation" })
 
     const { ai } = jest.requireMock("@budibase/pro")
     expect(ai.agentSystemPrompt).not.toHaveBeenCalled()
     expect(buildPromptAndTools).toHaveBeenCalledWith(
       agent,
-      operationWithoutRecipients,
+      supportOperation,
       expect.objectContaining({
         includeGoal: true,
       })
@@ -682,7 +676,7 @@ describe("prepareAgentChatRun - approval gating", () => {
   })
 
   it("ignores a preview role when the chat is not in preview mode", async () => {
-    await runFor(operationWithoutRecipients, {
+    await runFor(supportOperation, {
       user: { _id: "user_1", roleId: "BASIC" } as ContextUser,
       chat: {
         agentId: "agent_1",
@@ -693,7 +687,7 @@ describe("prepareAgentChatRun - approval gating", () => {
 
     expect(buildPromptAndTools).toHaveBeenCalledWith(
       agent,
-      operationWithoutRecipients,
+      supportOperation,
       expect.objectContaining({
         executionContext: expect.objectContaining({
           requester: {
@@ -705,7 +699,7 @@ describe("prepareAgentChatRun - approval gating", () => {
   })
 
   it("uses the workspace role for a global admin", async () => {
-    await runFor(operationWithoutRecipients, {
+    await runFor(supportOperation, {
       user: {
         _id: "user_1",
         roleId: "BASIC",
@@ -715,7 +709,7 @@ describe("prepareAgentChatRun - approval gating", () => {
 
     expect(buildPromptAndTools).toHaveBeenCalledWith(
       agent,
-      operationWithoutRecipients,
+      supportOperation,
       expect.objectContaining({
         executionContext: expect.objectContaining({
           requester: {
@@ -727,7 +721,7 @@ describe("prepareAgentChatRun - approval gating", () => {
   })
 
   it("uses the workspace role for a builder", async () => {
-    await runFor(operationWithoutRecipients, {
+    await runFor(supportOperation, {
       user: {
         _id: "user_1",
         roleId: "BASIC",
@@ -737,7 +731,7 @@ describe("prepareAgentChatRun - approval gating", () => {
 
     expect(buildPromptAndTools).toHaveBeenCalledWith(
       agent,
-      operationWithoutRecipients,
+      supportOperation,
       expect.objectContaining({
         executionContext: expect.objectContaining({
           requester: {
@@ -749,7 +743,7 @@ describe("prepareAgentChatRun - approval gating", () => {
   })
 
   it("uses public access as a preview role", async () => {
-    await runFor(operationWithoutRecipients, {
+    await runFor(supportOperation, {
       user: { _id: "user_1" } as ContextUser,
       chat: {
         agentId: "agent_1",
@@ -761,7 +755,7 @@ describe("prepareAgentChatRun - approval gating", () => {
 
     expect(buildPromptAndTools).toHaveBeenCalledWith(
       agent,
-      operationWithoutRecipients,
+      supportOperation,
       expect.objectContaining({
         executionContext: expect.objectContaining({
           requester: {
@@ -775,7 +769,7 @@ describe("prepareAgentChatRun - approval gating", () => {
   it("resolves getRequestId lazily via the provided callback", async () => {
     const getRequestId = jest.fn().mockReturnValue("request_1")
 
-    await runFor(operationWithRecipients, { getRequestId })
+    await runFor(procurementOperation, { getRequestId })
 
     const options = jest.mocked(buildPromptAndTools).mock.calls.at(-1)?.[2]
     expect(getRequestId).not.toHaveBeenCalled()
@@ -784,9 +778,9 @@ describe("prepareAgentChatRun - approval gating", () => {
   })
 
   it("carries operationIntent through to the returned AgentChatRun", async () => {
-    const run = await runFor(operationWithRecipients)
+    const run = await runFor(procurementOperation)
 
-    expect(run.selectedOperation).toEqual(operationWithRecipients)
+    expect(run.selectedOperation).toEqual(procurementOperation)
     expect(run.operationIntent).toBe("execute")
   })
 })
