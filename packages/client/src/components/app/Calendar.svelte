@@ -196,11 +196,6 @@
     onClick?.({ title, start, end, row_id })
   }
 
-  const getTranslatedWeekday = (date: Date, format: WeekdayFormat) => {
-    const key = weekdayTranslationKeys[date.getUTCDay()]
-    return formatTranslatedLabel(calendarLabels[key], format)
-  }
-
   const getTranslatedMonth = (date: Date, format: MonthFormat) => {
     const key = monthTranslationKeys[date.getUTCMonth()]
     return formatTranslatedLabel(calendarLabels[key], format)
@@ -214,6 +209,18 @@
     return !label || label === defaultLabel
       ? calendarLabels[translationKey]
       : label
+  }
+
+  const getTranslatedWeekdayByIndex = (
+    dayIndex: number,
+    format: WeekdayFormat
+  ) => {
+    const key = weekdayTranslationKeys[dayIndex]
+    return formatTranslatedLabel(calendarLabels[key], format)
+  }
+
+  const getTranslatedWeekday = (date: Date, format: WeekdayFormat) => {
+    return getTranslatedWeekdayByIndex(date.getUTCDay(), format)
   }
 
   const replaceTranslatedMonths = (
@@ -282,7 +289,7 @@
   const buildDayHeaderContent =
     (weekdayFormat: WeekdayFormat, dateFormat?: CalendarDateFormat) =>
     (arg: DayHeaderContentArg) => {
-      const weekday = getTranslatedWeekday(arg.date, weekdayFormat)
+      const weekday = getTranslatedWeekdayByIndex(arg.dow, weekdayFormat)
       const date = dateFormat
         ? formatTranslatedDate(arg.date, dateFormat)
         : undefined
