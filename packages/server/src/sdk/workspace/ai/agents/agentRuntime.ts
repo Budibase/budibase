@@ -6,7 +6,6 @@ import {
   Agent,
   AgentOperation,
   AgentMessageMetadata,
-  ApprovedToolCall,
   ChatConversationRequest,
   ContextUser,
   ApprovalToolResultStatus,
@@ -70,7 +69,7 @@ interface PrepareAgentChatRunParams {
   getRequestId?: () => string | undefined
   // Set on escalation-resume runs: the approved call that was just executed.
   // Its gate refuses instead of re-escalating - one approval, one attempt.
-  executedApproval?: ApprovedToolCall
+  executedApproval?: { toolName: string }
   outputSchema?: Record<string, any>
   promptMode?: "interactive" | "automation"
 }

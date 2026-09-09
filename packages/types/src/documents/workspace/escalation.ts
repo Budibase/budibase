@@ -48,11 +48,6 @@ export interface PendingToolCall {
   sourceId?: string
 }
 
-export type ApprovedToolCall = Pick<
-  PendingToolCall,
-  "toolName" | "args" | "sourceId"
->
-
 export interface SuspendedOperationContext {
   agentId: string
   operationId: string

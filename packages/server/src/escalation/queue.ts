@@ -633,8 +633,6 @@ export async function resumeOperation({
   let messages = [...ctx.messages, ...executed.messages]
   const executedApproval = {
     toolName: executed.toolName,
-    args: ctx.pendingToolCall.args,
-    sourceId: ctx.pendingToolCall.sourceId,
   }
 
   if (ctx.conversationId && ctx.attachmentIds?.length) {
