@@ -360,6 +360,7 @@ describe("resumeOperation", () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const { requestId } = (await createRequest())!
       const doc = baseDoc({ requestId })
+      await context.getWorkspaceDB().put({ ...doc, resolution: "expired" })
       recordEscalationResolvedMock.mockResolvedValueOnce(undefined)
       listContextDocsMock.mockRejectedValueOnce(
         new Error("temporary database failure")
@@ -374,7 +375,11 @@ describe("resumeOperation", () => {
         })
       ).rejects.toThrow("temporary database failure")
 
-      expect(await sdk.escalations.getResult("esc_primary")).toBeUndefined()
+      const stored = await context
+        .getWorkspaceDB()
+        .get<EscalationContextDoc>(doc._id)
+      expect(stored.resolution).toEqual("expired")
+      expect(stored.resumeResultCompressed).toBeUndefined()
     })
   })
 
