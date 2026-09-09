@@ -609,10 +609,7 @@ export async function resumeOperation({
           ? getErrorMessage(executed.output.error)
           : "Tool execution failed"
       const failureMessage = approvedActionFailureMessage(doc.title)
-      await persistResumeResult(
-        escalationId,
-        textMessage(failureMessage)
-      )
+      await persistResumeResult(escalationId, textMessage(failureMessage))
       await deliverOperationResult(ctx, failureMessage)
       if (doc.requestId) {
         const stillPending = await sdk.escalations.listContextDocs({
