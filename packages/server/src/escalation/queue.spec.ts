@@ -158,6 +158,7 @@ describe("resumeOperation", () => {
         requestId,
         resolution: "resolved",
         response: { accepted: true },
+        title: "Purchase request for 46 euros",
       })
       await context.getWorkspaceDB().put(escalation)
       getOrThrowMock.mockResolvedValue({
@@ -211,7 +212,9 @@ describe("resumeOperation", () => {
       expect(resumeResult.parts).toEqual([
         {
           type: "text",
-          text: "Sorry, something went wrong and I couldn't complete that.",
+          text:
+            "Your purchase request for 46 euros was approved, but I couldn't " +
+            "complete it. Please try again.",
         },
       ])
       expect(request.actions).toEqual(

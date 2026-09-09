@@ -53,8 +53,16 @@ export interface EscalationJob {
 
 const DEFAULT_CONCURRENCY = 1
 const DEFAULT_TIMEOUT_MS = 30000
-const APPROVED_ACTION_FAILURE_MESSAGE =
-  "Sorry, something went wrong and I couldn't complete that."
+const GENERIC_APPROVED_ACTION_FAILURE_MESSAGE =
+  "Your request was approved, but I couldn't complete it. Please try again."
+
+const approvedActionFailureMessage = (title?: string) => {
+  if (!title || title.startsWith("Approval required:")) {
+    return GENERIC_APPROVED_ACTION_FAILURE_MESSAGE
+  }
+  const requestTitle = `${title.charAt(0).toLowerCase()}${title.slice(1)}`
+  return `Your ${requestTitle} was approved, but I couldn't complete it. Please try again.`
+}
 
 const updateNotificationOutcome = async (
   notificationDocId: string,
@@ -600,11 +608,12 @@ export async function resumeOperation({
         "error" in executed.output
           ? getErrorMessage(executed.output.error)
           : "Tool execution failed"
+      const failureMessage = approvedActionFailureMessage(doc.title)
       await persistResumeResult(
         escalationId,
-        textMessage(APPROVED_ACTION_FAILURE_MESSAGE)
+        textMessage(failureMessage)
       )
-      await deliverOperationResult(ctx, APPROVED_ACTION_FAILURE_MESSAGE)
+      await deliverOperationResult(ctx, failureMessage)
       if (doc.requestId) {
         const stillPending = await sdk.escalations.listContextDocs({
           requestId: doc.requestId,
