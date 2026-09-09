@@ -15,6 +15,12 @@ jest.mock("@budibase/backend-core", () => {
         automationStepExecuted: jest.fn(),
         automationStepFailed: jest.fn(),
       },
+      platformActions: {
+        ...actual.events.platformActions,
+        enqueuePlatformActionSessionLifecycle: jest
+          .fn()
+          .mockResolvedValue(undefined),
+      },
     },
   }
 })
@@ -140,6 +146,77 @@ describe("automation thread", () => {
     } finally {
       getBullQueue.mockRestore()
     }
+  })
+
+  it("signals the run failed when a job stalls", async () => {
+    jest.clearAllMocks()
+    const prodAppId = config.getProdWorkspaceId()
+
+    const job = {
+      id: "stalled-job",
+      data: {
+        automation: basicAutomation({
+          _id: "automation_stalled",
+          appId: prodAppId,
+        }),
+        event: { appId: prodAppId },
+      },
+    } as Job<AutomationData>
+
+    await removeStalled(job)
+
+    expect(
+      events.platformActions.enqueuePlatformActionSessionLifecycle
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceType: "automation_run",
+        sourceId: "stalled-job",
+        signal: "failed",
+      })
+    )
+  })
+
+  it("signals the run failed when preparation fails before execution starts", async () => {
+    jest.clearAllMocks()
+    const appId = config.getDevWorkspaceId()
+
+    const job = {
+      id: "prep-failure-job",
+      data: {
+        automation: basicAutomation({
+          _id: "automation_does_not_exist",
+          appId,
+          definition: {
+            trigger: {
+              id: "cron-trigger",
+              type: AutomationStepType.TRIGGER,
+              name: TRIGGER_DEFINITIONS.CRON.name,
+              tagline: TRIGGER_DEFINITIONS.CRON.tagline,
+              description: TRIGGER_DEFINITIONS.CRON.description,
+              icon: TRIGGER_DEFINITIONS.CRON.icon,
+              schema: TRIGGER_DEFINITIONS.CRON.schema,
+              stepId: AutomationTriggerStepId.CRON,
+              event: AutomationEventType.CRON_TRIGGER,
+              inputs: { cron: "* * * * *" },
+            },
+            steps: [],
+          },
+        }),
+        event: { appId },
+      },
+    } as Job<AutomationData>
+
+    await expect(executeInThread(job)).rejects.toThrow()
+
+    expect(
+      events.platformActions.enqueuePlatformActionSessionLifecycle
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceType: "automation_run",
+        sourceId: "prep-failure-job",
+        signal: "failed",
+      })
+    )
   })
 
   it("executes the latest automation definition for cron jobs", async () => {
