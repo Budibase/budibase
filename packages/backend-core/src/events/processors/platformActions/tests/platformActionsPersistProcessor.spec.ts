@@ -190,9 +190,9 @@ describe("PlatformActionPersistProcessor", () => {
       )
 
       // automation_run step events never assert a container status
-      // themselves (see getSessionSignal) - the orchestrator signals
-      // active/completed/failed explicitly from the run's own outcome, so an
-      // AI_AGENT-specific property like awaitingEscalation has no effect here.
+      // themselves. The orchestrator signals active/completed/failed
+      // explicitly from the run's own outcome, so an AI_AGENT-specific
+      // property like awaitingEscalation has no effect here.
       expect(mockEnqueue).toHaveBeenCalledWith(
         expect.objectContaining({
           incrementsActionCount: true,
