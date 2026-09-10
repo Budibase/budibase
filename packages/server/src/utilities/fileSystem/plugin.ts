@@ -5,7 +5,7 @@ import { join } from "path"
 import { objectStore } from "@budibase/backend-core"
 import stream from "stream"
 import { pipeline } from "stream/promises"
-import { loadDatasourcePlugin } from "../pluginRunner"
+import { loadAutomationPlugin, loadDatasourcePlugin } from "../pluginRunner"
 
 const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")
 const AUTOMATION_PATH = join(budibaseTempDir(), "automation")
@@ -83,5 +83,5 @@ export const getDatasourcePlugin = async (plugin: Plugin) => {
 
 export const getAutomationPlugin = async (plugin: Plugin) => {
   const filename = await getPluginFile(AUTOMATION_PATH, plugin)
-  return require(filename)
+  return loadAutomationPlugin({ filename, hash: plugin.hash })
 }

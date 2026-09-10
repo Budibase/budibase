@@ -1,21 +1,38 @@
-const sendResponse = process.send.bind(process)
+const crypto = require("crypto")
 
+const sendMessage = process.send.bind(process)
+
+let plugin
 let IntegrationConstructor
 let integration
 let typeCastingDefined = false
 let requestQueue = Promise.resolve()
+const pendingHostCalls = new Map()
+
+const loadPlugin = filename => {
+  plugin ||= require(filename)
+  return plugin
+}
 
 const loadIntegration = filename => {
   if (IntegrationConstructor) {
     return IntegrationConstructor
   }
 
-  const plugin = require(filename)
+  const plugin = loadPlugin(filename)
   IntegrationConstructor = plugin.integration || plugin
   if (typeof IntegrationConstructor !== "function") {
     throw new Error("Datasource plugin does not export an integration class")
   }
   return IntegrationConstructor
+}
+
+const loadAutomationAction = filename => {
+  const action = loadPlugin(filename).action
+  if (typeof action !== "function") {
+    throw new Error("Automation plugin does not export an action function")
+  }
+  return action
 }
 
 const discoverMethods = instance => {
@@ -110,36 +127,78 @@ const serializeResult = ({ value, seen = new Map() }) => {
   return result
 }
 
+const invokeHost = (method, args) => {
+  const callId = crypto.randomUUID()
+  const call = new Promise((resolve, reject) => {
+    pendingHostCalls.set(callId, { resolve, reject })
+    sendMessage({ type: "hostCall", callId, method, args })
+  })
+  call.catch(() => {})
+  return call
+}
+
+const invokeAutomation = async request => {
+  const action = loadAutomationAction(request.filename)
+  const emitterCalls = []
+  const emitter = {
+    emitRow: (...args) => {
+      const call = invokeHost("emitRow", args)
+      emitterCalls.push(call)
+      return call
+    },
+    emitTable: (...args) => {
+      const call = invokeHost("emitTable", args)
+      emitterCalls.push(call)
+      return call
+    },
+  }
+  const result = await action({ ...request.params, emitter })
+  await Promise.all(emitterCalls)
+  return result
+}
+
 const handleRequest = async request => {
   try {
-    loadIntegration(request.filename)
-
-    if (request.operation === "validate") {
-      sendResponse({ requestId: request.requestId, result: true })
-      return
+    let result
+    switch (request.operation) {
+      case "validateDatasource":
+        loadIntegration(request.filename)
+        result = true
+        break
+      case "describeDatasource": {
+        loadIntegration(request.filename)
+        const integration = await createIntegration(request)
+        result = { methods: discoverMethods(integration) }
+        break
+      }
+      case "invokeDatasource": {
+        loadIntegration(request.filename)
+        const integration = await createIntegration(request)
+        const method = integration[request.method]
+        if (typeof method !== "function") {
+          throw new Error("Datasource plugin method is not available")
+        }
+        result = await method.apply(integration, request.args || [])
+        break
+      }
+      case "describeAutomation":
+        loadAutomationAction(request.filename)
+        result = true
+        break
+      case "invokeAutomation":
+        result = await invokeAutomation(request)
+        break
+      default:
+        throw new Error("Plugin operation is not available")
     }
-
-    const integration = await createIntegration(request)
-    if (request.operation === "describe") {
-      sendResponse({
-        requestId: request.requestId,
-        result: { methods: discoverMethods(integration) },
-      })
-      return
-    }
-
-    const method = integration[request.method]
-    if (typeof method !== "function") {
-      throw new Error("Datasource plugin method is not available")
-    }
-
-    const result = await method.apply(integration, request.args || [])
-    sendResponse({
+    sendMessage({
+      type: "response",
       requestId: request.requestId,
       result: serializeResult({ value: result }),
     })
   } catch (error) {
-    sendResponse({
+    sendMessage({
+      type: "response",
       requestId: request.requestId,
       error: {
         message: error instanceof Error ? error.message : String(error),
@@ -149,7 +208,25 @@ const handleRequest = async request => {
   }
 }
 
-process.on("message", request => {
-  // A plugin instance can be stateful, so requests must run in arrival order.
-  requestQueue = requestQueue.then(() => handleRequest(request))
+const handleHostResponse = response => {
+  const pending = pendingHostCalls.get(response.callId)
+  if (!pending) {
+    return
+  }
+  pendingHostCalls.delete(response.callId)
+  if (response.error) {
+    pending.reject(new Error(response.error.message))
+  } else {
+    pending.resolve(response.result)
+  }
+}
+
+process.on("message", message => {
+  if (message.type === "hostResponse") {
+    handleHostResponse(message)
+    return
+  }
+
+  // A datasource integration can be stateful, so requests run in arrival order.
+  requestQueue = requestQueue.then(() => handleRequest(message))
 })

@@ -3,9 +3,9 @@ import os from "os"
 import path from "path"
 import childProcess from "child_process"
 import { buildSync } from "esbuild"
-import type { DatasourcePlus } from "@budibase/types"
+import type { ContextEmitter, DatasourcePlus } from "@budibase/types"
 
-import { loadDatasourcePlugin } from "../../pluginRunner"
+import { loadAutomationPlugin, loadDatasourcePlugin } from "../../pluginRunner"
 import environment from "../../../environment"
 
 describe("datasource plugin runner", () => {
@@ -434,5 +434,182 @@ module.exports = { integration: Integration }
       )
       expectChildrenStopped()
     })
+  })
+})
+
+describe("automation plugin runner", () => {
+  let directory: string
+  let spawn: jest.SpyInstance<ReturnType<typeof childProcess.spawn>>
+
+  beforeEach(() => {
+    directory = fs.mkdtempSync(path.join(os.tmpdir(), "automation-plugin-"))
+    fs.chmodSync(directory, 0o755)
+    spawn = jest.spyOn(childProcess, "spawn")
+  })
+
+  afterEach(() => {
+    spawn.mockRestore()
+    jest.restoreAllMocks()
+    delete process.env.PLUGIN_RUNNER_SECRET
+    fs.rmSync(directory, { recursive: true, force: true })
+  })
+
+  const load = async (source: string) => {
+    const filename = path.join(directory, "plugin.min.js")
+    fs.writeFileSync(filename, source, { mode: 0o644 })
+    return loadAutomationPlugin({ filename, hash: "test" })
+  }
+
+  const createEmitter = (): ContextEmitter => ({
+    emitRow: jest.fn(),
+    emitTable: jest.fn(),
+  })
+
+  it("runs actions without host process privileges", async () => {
+    const canaryPath = path.join(directory, "canary.txt")
+    process.env.PLUGIN_RUNNER_SECRET = "host-process-secret"
+    const plugin = await load(`
+      const fs = require("fs")
+      const { execSync } = require("child_process")
+
+      let childProcessBlocked = false
+      let fileWriteBlocked = false
+      try {
+        execSync("whoami")
+      } catch (err) {
+        childProcessBlocked = true
+      }
+      try {
+        fs.writeFileSync(${JSON.stringify(canaryPath)}, "unsafe")
+      } catch (err) {
+        fileWriteBlocked = true
+      }
+
+      module.exports = {
+        action: async ({ inputs, appId, context }) => ({
+          appId,
+          childProcessBlocked,
+          context,
+          fileWriteBlocked,
+          hostSecret: process.env.PLUGIN_RUNNER_SECRET,
+          inputs,
+        }),
+      }
+    `)
+
+    const result = await plugin.action({
+      inputs: { value: "input" },
+      appId: "app_1",
+      context: { state: { value: "context" } },
+      emitter: createEmitter(),
+    })
+
+    expect({ canaryExists: fs.existsSync(canaryPath), result }).toEqual({
+      canaryExists: false,
+      result: {
+        appId: "app_1",
+        childProcessBlocked: true,
+        context: { state: { value: "context" } },
+        fileWriteBlocked: true,
+        hostSecret: undefined,
+        inputs: { value: "input" },
+      },
+    })
+    expect(spawn.mock.results.map(result => result.value.signalCode)).toEqual([
+      "SIGKILL",
+      "SIGKILL",
+    ])
+  })
+
+  it("forwards emitter calls to the host and waits for them", async () => {
+    const plugin = await load(`
+      module.exports = {
+        action: async ({ emitter, appId }) => {
+          await emitter.emitRow({
+            eventName: "row:save",
+            appId,
+            row: { _id: "ro_1" },
+            table: { _id: "ta_1" },
+            user: {},
+          })
+          emitter.emitTable("table:save", appId, { _id: "ta_1" })
+          return { success: true }
+        },
+      }
+    `)
+    const emitter = createEmitter()
+
+    const result = await plugin.action({
+      inputs: {},
+      appId: "app_1",
+      context: {},
+      emitter,
+    })
+
+    expect(result).toEqual({ success: true })
+    expect(emitter.emitRow).toHaveBeenCalledWith({
+      eventName: "row:save",
+      appId: "app_1",
+      row: { _id: "ro_1" },
+      table: { _id: "ta_1" },
+      user: {},
+    })
+    expect(emitter.emitTable).toHaveBeenCalledWith("table:save", "app_1", {
+      _id: "ta_1",
+    })
+  })
+
+  it("returns emitter failures to the action", async () => {
+    const plugin = await load(`
+      module.exports = {
+        action: async ({ emitter }) => {
+          emitter.emitTable("table:save", "app_1")
+          return { success: true }
+        },
+      }
+    `)
+    const emitter: ContextEmitter = {
+      emitRow: jest.fn(),
+      emitTable: jest.fn(async () => {
+        throw new Error("emitter failed")
+      }),
+    }
+
+    await expect(
+      plugin.action({ inputs: {}, appId: "app_1", context: {}, emitter })
+    ).rejects.toThrow("emitter failed")
+  })
+
+  it("rejects plugins without an action export", async () => {
+    await expect(load("module.exports = {}")).rejects.toThrow(
+      "Automation plugin does not export an action function"
+    )
+
+    expect(spawn.mock.results.map(result => result.value.signalCode)).toEqual([
+      "SIGKILL",
+    ])
+  })
+
+  it("terminates an action that exceeds the automation timeout", async () => {
+    jest.replaceProperty(environment, "AUTOMATION_THREAD_TIMEOUT", 500)
+    const plugin = await load(`
+      module.exports = {
+        action: async () => { while (true) {} },
+      }
+    `)
+
+    await expect(
+      plugin.action({
+        inputs: {},
+        appId: "app_1",
+        context: {},
+        emitter: createEmitter(),
+      })
+    ).rejects.toThrow("Automation plugin execution exceeded the time limit")
+
+    expect(spawn.mock.results.map(result => result.value.signalCode)).toEqual([
+      "SIGKILL",
+      "SIGKILL",
+    ])
   })
 })
