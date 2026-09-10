@@ -259,7 +259,6 @@ describe("OAuth2 Automation Binding", () => {
   it("should handle 401 Unauthorized and retry mechanism in apiRequest step", async () => {
     await config.withUser(ssoUser, async () => {
       const apiPool = getPool("https://example.com")
-      let firstCall = true
 
       apiPool
         .intercept({
@@ -268,21 +267,26 @@ describe("OAuth2 Automation Binding", () => {
         })
         .reply(({ headers }) => {
           const authHeader = getAuthHeader(headers as any)
-          if (firstCall) {
-            firstCall = false
-            expect(authHeader).toEqual("Bearer test_access_token")
-            return buildReply(401, {
-              success: false,
-              error: "Unauthorized",
-            })
-          }
+          expect(authHeader).toEqual("Bearer test_access_token")
+          return buildReply(401, {
+            success: false,
+            error: "Unauthorized",
+          })
+        })
+
+      apiPool
+        .intercept({
+          path: path => path.startsWith("/protected-endpoint"),
+          method: "POST",
+        })
+        .reply(({ headers }) => {
+          const authHeader = getAuthHeader(headers as any)
           expect(authHeader).toEqual("Bearer test_access_token2")
           return buildReply(200, {
             success: true,
             message: "Request succeeded on retry!",
           })
         })
-        .times(2)
 
       nock("https://www.googleapis.com")
         .post("/oauth2/v4/token")
