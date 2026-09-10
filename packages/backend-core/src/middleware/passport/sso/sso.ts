@@ -7,14 +7,12 @@ import * as events from "../../../events"
 import * as locks from "../../../redis/redlockImpl"
 import {
   InviteWithCode,
-  isSSOUser,
   LockName,
   LockType,
   SaveSSOUserFunction,
   SSOAuthDetails,
   SSOUser,
   User,
-  UserStatus,
 } from "@budibase/types"
 
 // no-op function for user save
@@ -89,12 +87,6 @@ export async function authenticate(
     )
   }
 
-  const emailLookupWasSkipped =
-    !details.emailVerified && !allowUnverifiedEmailLinking
-  if (!dbUser && !pendingInvite && emailLookupWasSkipped) {
-    dbUser = await findLinkableAccountByEmail(details)
-  }
-
   // exit early if there is still no user/invite and auto creation is disabled
   if (!dbUser && !pendingInvite && requireLocalAccount) {
     return authError(
@@ -146,38 +138,6 @@ async function syncAndSaveUser(
     hashPassword: false,
     requirePassword: false,
   })) as SSOUser
-}
-
-// only linkable while no one else could plausibly own it: never claimed
-// with a password, not disabled, no account-portal ssoId, not a global
-// admin, and if already an SSO user, only from the same identity provider
-// that linked it
-function isAccountLinkable(user: User, details: SSOAuthDetails): boolean {
-  if (
-    user.password ||
-    user.status === UserStatus.INACTIVE ||
-    user.admin?.global ||
-    user.ssoId
-  ) {
-    return false
-  }
-  if (isSSOUser(user)) {
-    return (
-      user.provider === details.provider &&
-      user.providerType === details.providerType
-    )
-  }
-  return true
-}
-
-async function findLinkableAccountByEmail(
-  details: SSOAuthDetails
-): Promise<User | undefined> {
-  const user = await users.getGlobalUserByEmail(details.email!)
-  if (user && isAccountLinkable(user, details)) {
-    return user
-  }
-  return undefined
 }
 
 async function claimInviteAndSaveUser(

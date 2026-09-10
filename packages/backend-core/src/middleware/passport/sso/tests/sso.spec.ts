@@ -298,7 +298,7 @@ describe("sso", () => {
       })
     })
 
-    describe("when there is a linkable account for the email (invite already accepted)", () => {
+    describe("when an existing account has the same unverified email", () => {
       let existingUser: User & Partial<SSOUser>
       let details: SSOAuthDetails
 
@@ -306,6 +306,7 @@ describe("sso", () => {
         existingUser = structures.users.user()
         existingUser._id = structures.uuid()
         delete existingUser.password
+        existingUser.roles = {}
 
         details = structures.sso.authDetails(existingUser)
         details.emailVerified = false
@@ -319,24 +320,26 @@ describe("sso", () => {
         })
       })
 
-      it("links an unclaimed account (no password) on first login", async () => {
+      it("does not link an unclaimed account when the email is unverified", async () => {
         users.getGlobalUserByEmail.mockResolvedValueOnce(existingUser)
-        const ssoUser = structures.users.ssoUser({
-          user: existingUser,
-          details,
-        })
+        const ssoUser = structures.users.ssoUser({ details })
         mockSaveUser.mockReturnValueOnce(ssoUser)
 
         await sso.authenticate(details, false, mockDone, mockSaveUser)
 
-        expect(mockSaveUser).toHaveBeenCalledWith(
+        expect(users.getGlobalUserByEmail).not.toHaveBeenCalled()
+        expect(mockSaveUser).not.toHaveBeenCalledWith(
           expect.objectContaining({ _id: existingUser._id }),
+          expect.anything()
+        )
+        expect(mockSaveUser).toHaveBeenCalledWith(
+          expect.objectContaining({ _id: "us_" + details.userId }),
           expect.anything()
         )
         expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
       })
 
-      it("keeps resolving the account on a later login from the same identity provider", async () => {
+      it("does not link an account previously linked to the same identity provider", async () => {
         // simulates the account state after a first successful login: syncUser
         // has already stamped provider/providerType onto the document
         existingUser.provider = details.provider
@@ -351,7 +354,7 @@ describe("sso", () => {
         await sso.authenticate(details, false, mockDone, mockSaveUser)
 
         expect(mockSaveUser).toHaveBeenCalledWith(
-          expect.objectContaining({ _id: existingUser._id }),
+          expect.objectContaining({ _id: "us_" + details.userId }),
           expect.anything()
         )
         expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
@@ -374,6 +377,39 @@ describe("sso", () => {
 
       it("does not link a global admin account", async () => {
         existingUser.admin = { global: true }
+        users.getGlobalUserByEmail.mockResolvedValueOnce(existingUser)
+        const ssoUser = structures.users.ssoUser({ details })
+        mockSaveUser.mockReturnValueOnce(ssoUser)
+
+        await sso.authenticate(details, false, mockDone, mockSaveUser)
+
+        expect(mockSaveUser).toHaveBeenCalledWith(
+          expect.objectContaining({ _id: "us_" + details.userId }),
+          expect.anything()
+        )
+      })
+
+      it.each([
+        {
+          name: "global builder",
+          update: () => {
+            existingUser.builder = { global: true }
+          },
+        },
+        {
+          name: "app builder",
+          update: () => {
+            existingUser.builder = { apps: [structures.uuid()] }
+          },
+        },
+        {
+          name: "user with app roles",
+          update: () => {
+            existingUser.roles = { [structures.uuid()]: "BASIC" }
+          },
+        },
+      ])("does not link a $name account", async ({ update }) => {
+        update()
         users.getGlobalUserByEmail.mockResolvedValueOnce(existingUser)
         const ssoUser = structures.users.ssoUser({ details })
         mockSaveUser.mockReturnValueOnce(ssoUser)
@@ -414,17 +450,16 @@ describe("sso", () => {
         )
       })
 
-      it("reconciles even when a local account would otherwise be required", async () => {
+      it("requires a verified email when a local account is required", async () => {
         users.getGlobalUserByEmail.mockResolvedValueOnce(existingUser)
-        const ssoUser = structures.users.ssoUser({
-          user: existingUser,
-          details,
-        })
-        mockSaveUser.mockReturnValueOnce(ssoUser)
 
         await sso.authenticate(details, true, mockDone, mockSaveUser)
 
-        expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
+        expect(users.getGlobalUserByEmail).not.toHaveBeenCalled()
+        expect(mockSaveUser).not.toHaveBeenCalled()
+        expect(getErrorMessage()).toContain(
+          "Email does not yet exist. You must set up your local budibase account first."
+        )
       })
     })
 
