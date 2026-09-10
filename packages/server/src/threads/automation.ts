@@ -40,6 +40,7 @@ import {
   LoopV2Step,
   LoopV2StepInputs,
   ActionSourceContext,
+  PlatformActionContainerStatus,
 } from "@budibase/types"
 import { Job } from "bull"
 import tracer from "dd-trace"
@@ -313,6 +314,27 @@ function setTriggerOutput(result: AutomationResults, outputs: any) {
   result.steps[0] = result.trigger
 }
 
+function getAutomationRunId(job: Readonly<AutomationJob>): string {
+  return job.data.event.runId ?? String(job.id)
+}
+
+async function signalAutomationRunFailure(
+  job: Readonly<AutomationJob>
+): Promise<void> {
+  await events.platformActions
+    .enqueuePlatformActionSessionLifecycle({
+      sourceType: "automation_run",
+      sourceId: getAutomationRunId(job),
+      signal: "failed",
+    })
+    .catch(error => {
+      logging.logWarn(
+        `Failed to signal automation run failed - ${job.data.event.appId}/${job.data.automation?._id}`,
+        error
+      )
+    })
+}
+
 async function reloadAutomation(job: Job<AutomationData>) {
   const trigger = job.data.automation?.definition?.trigger
   if (!trigger || (!isCronTrigger(trigger) && !isEmailTrigger(trigger))) {
@@ -333,6 +355,7 @@ async function reloadAutomation(job: Job<AutomationData>) {
 
 class Orchestrator {
   private readonly job: AutomationJob
+  private readonly runId: string
   private emitter: ContextEmitter
   private stopped: boolean
   private readonly onProgress?: (event: AutomationTestProgressEvent) => void
@@ -346,6 +369,7 @@ class Orchestrator {
     } = {}
   ) {
     this.job = job
+    this.runId = getAutomationRunId(job)
     this.stopped = false
     this.onProgress = opts.onProgress
     this.isTestRun = Boolean(opts.isTestRun)
@@ -374,9 +398,25 @@ class Orchestrator {
   } {
     return {
       sourceType: "automation_run",
-      sourceId: `${this.job.id}`,
+      sourceId: this.runId,
       automationId: this.automation._id!,
     }
+  }
+
+  // Signals the run's Actions container status directly. Not a persisted
+  // action, and must not increment actionCount.
+  private async signalRunStatus(
+    signal: PlatformActionContainerStatus
+  ): Promise<void> {
+    const { sourceType, sourceId } = this.actionSourceContext
+    await events.platformActions
+      .enqueuePlatformActionSessionLifecycle({ sourceType, sourceId, signal })
+      .catch(error => {
+        logging.logWarn(
+          `Failed to signal automation run ${signal} - ${this.appId}/${this.automation._id}`,
+          error
+        )
+      })
   }
 
   isCron(): boolean {
@@ -541,6 +581,8 @@ class Orchestrator {
       const timeout =
         this.job.data.event.timeout || env.AUTOMATION_THREAD_TIMEOUT
 
+      await this.signalRunStatus("active")
+
       let stepResults: AutomationStepResult[] = []
 
       try {
@@ -581,6 +623,10 @@ class Orchestrator {
       } else {
         await this.logResult(result)
       }
+
+      await this.signalRunStatus(
+        automationUtils.inferAutomationRunActionStatus(result.status)
+      )
 
       // Return any content pushed to state.
       if (Object.keys(ctx?.state || {}).length > 0) {
@@ -1137,6 +1183,10 @@ export async function execute(
 
   const automationId = job.data.automation._id
   if (!automationId) {
+    await context.doInWorkspaceContext(workspaceId, () =>
+      signalAutomationRunFailure(job)
+    )
+
     throw new Error("Unable to execute, event doesn't contain automation ID.")
   }
 
@@ -1166,6 +1216,7 @@ export async function execute(
                 { _logKey: "bull", jobId: job.id },
                 { _logKey: "error", ...getErrorLogDetails(err) }
               )
+              await signalAutomationRunFailure(job)
               callback(err)
             }
           }
@@ -1194,13 +1245,18 @@ export async function executeInThread(
       return await context.doInFeatureFlagOverrideContext(
         job.data.featureFlagOverrides || {},
         async () => {
-          await reloadAutomation(job)
-          await context.ensureSnippetContext()
-          const envVars = await sdkUtils.getEnvironmentVariables()
-          return await context.doInEnvironmentContext(envVars, async () => {
-            const orchestrator = new Orchestrator(job, opts)
-            return orchestrator.execute()
-          })
+          try {
+            await reloadAutomation(job)
+            await context.ensureSnippetContext()
+            const envVars = await sdkUtils.getEnvironmentVariables()
+            return await context.doInEnvironmentContext(envVars, async () => {
+              const orchestrator = new Orchestrator(job, opts)
+              return orchestrator.execute()
+            })
+          } catch (err) {
+            await signalAutomationRunFailure(job)
+            throw err
+          }
         }
       )
     })
@@ -1217,5 +1273,6 @@ export const removeStalled = async (job: Job<AutomationData>) => {
       `Automation job stalled - ${appId}/${job.data.automation._id}`,
       getAutomationLogContext(job)
     )
+    await signalAutomationRunFailure(job)
   })
 }

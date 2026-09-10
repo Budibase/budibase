@@ -36,6 +36,13 @@ function getSessionSignal(
   event: Event,
   properties: Record<string, unknown>
 ): PlatformActionSessionIndexJob["signal"] {
+  if (properties.sourceType === "automation_run") {
+    // A step succeeding or failing mid-run isn't the run's terminal state
+    // (continueOnError can keep the run going past a failure). The
+    // orchestrator signals active/completed/failed explicitly from the run's
+    // own global outcome instead
+    return undefined
+  }
   if (event.endsWith(":failed")) {
     return "failed"
   }
