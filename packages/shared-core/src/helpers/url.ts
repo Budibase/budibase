@@ -114,8 +114,8 @@ export const accountPortalUpgradeUrl = (
   return joinBaseAndPath(accountPortalUrl, ACCOUNT_PORTAL_PATHS.UPGRADE)
 }
 
-export const builderWorkspacesUrl = (builderBaseUrl?: string | null) =>
-  joinBaseAndPath(builderBaseUrl, BUILDER_URLS.WORKSPACES)
+export const builderUrl = (builderBaseUrl?: string | null) =>
+  joinBaseAndPath(builderBaseUrl, BUILDER_URLS.BUILDER)
 
 export const builderSettingsEmailUrl = (builderBaseUrl?: string | null) =>
   joinBaseAndPath(builderBaseUrl, BUILDER_URLS.SETTINGS_EMAIL)
@@ -126,18 +126,18 @@ export const builderSettingsAuthUrl = (builderBaseUrl?: string | null) =>
 export const builderSettingsPeopleUsersUrl = (builderBaseUrl?: string | null) =>
   joinBaseAndPath(builderBaseUrl, BUILDER_URLS.SETTINGS_PEOPLE_USERS)
 
-export const builderAppsUrl = (builderBaseUrl?: string | null) =>
+export const portalUrl = (builderBaseUrl?: string | null) =>
   joinBaseAndPath(builderBaseUrl, BUILDER_URLS.APPS)
 
 export const urlHelpers = {
   accountPortalAccountUrl,
   accountPortalBillingUrl,
   accountPortalUpgradeUrl,
-  builderWorkspacesUrl,
+  builderUrl,
   builderSettingsEmailUrl,
   builderSettingsAuthUrl,
   builderSettingsPeopleUsersUrl,
-  builderAppsUrl,
+  portalUrl,
 }
 
 export default urlHelpers

@@ -64,7 +64,7 @@
             cta
             disabled={loading}
             on:click={() => {
-              goto("../apps")
+              goto("/apps")
             }}
           >
             View app portal

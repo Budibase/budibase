@@ -1,9 +1,10 @@
 export const BUILDER_URLS = {
-  WORKSPACES: "/builder/apps",
+  BUILDER: "/builder",
+  WORKSPACES: "/apps",
   SETTINGS_EMAIL: "/builder/settings/email",
   SETTINGS_AUTH: "/builder/settings/auth",
   SETTINGS_PEOPLE_USERS: "/builder/settings/people/users",
-  APPS: "/builder/apps",
+  APPS: "/apps",
 } as const
 
 export const ACCOUNT_PORTAL_PATHS = {

@@ -45,8 +45,7 @@
     translationOverrides
   )
 
-  const { accountPortalAccountUrl, builderWorkspacesUrl, builderAppsUrl } =
-    helpers
+  const { accountPortalAccountUrl, builderUrl, portalUrl } = helpers
 
   const getText = (user?: User | ContextUser): string => {
     if (!user) {
@@ -63,11 +62,8 @@
     }
   }
 
-  const goToPortal = () => {
-    const builderBaseUrl = $environmentStore.accountPortalUrl
-    const targetUrl = isBuilder
-      ? builderWorkspacesUrl(builderBaseUrl)
-      : builderAppsUrl(builderBaseUrl)
+  const goToPortal = (isBuilder: boolean) => {
+    const targetUrl = isBuilder ? builderUrl() : portalUrl()
     window.location.href = targetUrl
   }
 
@@ -116,8 +112,16 @@
       </MenuItem>
     {/if}
 
-    <MenuItem icon="squares-four" on:click={goToPortal} disabled={embedded}>
-      {userMenuLabels.portal}
+    <MenuItem
+      icon="squares-four"
+      on:click={() => goToPortal(isBuilder)}
+      disabled={embedded}
+    >
+      {#if isBuilder}
+        {userMenuLabels.builder}
+      {:else}
+        {userMenuLabels.portal}
+      {/if}
     </MenuItem>
     <MenuItem
       icon="sign-out"

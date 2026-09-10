@@ -22,6 +22,6 @@ describe("builder workspaces redirect", () => {
   it("redirects legacy workspaces route to apps", () => {
     render(WorkspacesPage)
 
-    expect(mocks.redirect).toHaveBeenCalledWith("./apps")
+    expect(mocks.redirect).toHaveBeenCalledWith("/apps")
   })
 })
