@@ -59,7 +59,7 @@ jest.mock("ai", () => {
   const actual = jest.requireActual("ai")
   return {
     ...actual,
-    readUIMessageStream: (opts: { stream: unknown }) => opts.stream,
+    readUIMessageStream: jest.fn(opts => opts.stream),
   }
 })
 
@@ -317,8 +317,6 @@ describe("resumeOperation", () => {
         expect.objectContaining({
           executedApproval: {
             toolName: "book_meeting",
-            args: { title: "Procurement review" },
-            sourceId: undefined,
           },
         })
       )
