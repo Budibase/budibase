@@ -9,6 +9,7 @@
   } from "@budibase/bbui"
   import {
     ToolExecutionPrincipal,
+    ToolType,
     type AgentOperation,
     type AgentOperationApprovalPolicy,
     type ToolExecutionCondition,
@@ -165,6 +166,7 @@
           availableTool => availableTool.runtimeBinding === config.toolName
         ),
       }))
+      .filter(item => item.tool?.sourceType !== ToolType.ESCALATION)
       .sort((a, b) =>
         (a.tool?.readableBinding || a.config.toolName).localeCompare(
           b.tool?.readableBinding || b.config.toolName
@@ -174,14 +176,19 @@
   let configuredTools = $derived(
     configuredToolList
       .map(item => item.tool)
-      .filter((tool): tool is AgentTool => !!tool)
+      .filter(
+        (tool): tool is AgentTool =>
+          !!tool && tool.sourceType !== ToolType.ESCALATION
+      )
   )
   let promptBindings = $derived(
     toAgentPromptBindings({ tools: configuredTools, webSearchConfigured })
   )
   let availablePromptBindings = $derived(
     toAgentPromptBindings({
-      tools: availableTools,
+      tools: availableTools.filter(
+        tool => tool.sourceType !== ToolType.ESCALATION
+      ),
       webSearchConfigured,
     })
   )
@@ -243,6 +250,9 @@
   let filteredTools = $derived.by(() =>
     availableTools
       .filter(tool => {
+        if (tool.sourceType === ToolType.ESCALATION) {
+          return false
+        }
         if (
           operation?.enabledTools?.some(
             config => config.toolName === tool.runtimeBinding

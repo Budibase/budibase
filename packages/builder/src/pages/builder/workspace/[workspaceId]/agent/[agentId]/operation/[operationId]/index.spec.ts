@@ -1,5 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
-import { ToolExecutionPrincipal, type AgentOperation } from "@budibase/types"
+import {
+  ToolExecutionPrincipal,
+  ToolType,
+  type AgentOperation,
+} from "@budibase/types"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { writable } from "svelte/store"
 import MockBody from "@/test/mocks/MockBody.svelte"
@@ -156,7 +160,17 @@ import OperationPage from "./index.svelte"
 describe("operation page tool autocomplete", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.tool.sourceType = "DATASOURCE_QUERY"
     mocks.updateAgentOperation.mockResolvedValue({ _rev: "2" })
+  })
+
+  it("hides the legacy escalation tool", async () => {
+    mocks.tool.sourceType = ToolType.ESCALATION
+    render(OperationPage)
+
+    await fireEvent.click(screen.getByText("Trigger add tool"))
+
+    expect(screen.queryByText("Select tool")).not.toBeInTheDocument()
   })
 
   it("configures and inserts an autocomplete tool in one update", async () => {
