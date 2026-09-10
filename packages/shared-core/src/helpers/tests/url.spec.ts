@@ -50,7 +50,7 @@ describe("url helpers", () => {
   describe("builder", () => {
     it("normalizes base when joining", () => {
       const url = builderWorkspacesUrl(`${BASE}/`)
-      expect(url).toEqual(`${BASE}/builder/apps`)
+      expect(url).toEqual(`${BASE}/apps`)
     })
   })
 })
