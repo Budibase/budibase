@@ -1,4 +1,5 @@
 export const BUILDER_URLS = {
+  BUILDER: "/builder",
   WORKSPACES: "/apps",
   SETTINGS_EMAIL: "/builder/settings/email",
   SETTINGS_AUTH: "/builder/settings/auth",
