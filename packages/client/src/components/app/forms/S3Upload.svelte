@@ -3,7 +3,8 @@
   import { CoreDropzone, ProgressCircle, Helpers } from "@budibase/bbui"
   import { getContext, onMount, onDestroy } from "svelte"
   import { processStringSync } from "@budibase/string-templates"
-  import { builderStore, screenStore } from "@/stores"
+  import { builderStore } from "@/stores/builder"
+  import { screenStore } from "@/stores/screens"
 
   export let datasourceId
   export let bucket
