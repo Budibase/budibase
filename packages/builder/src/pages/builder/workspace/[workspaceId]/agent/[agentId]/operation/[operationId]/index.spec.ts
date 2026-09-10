@@ -1,9 +1,14 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
-import { ToolExecutionPrincipal, type AgentOperation } from "@budibase/types"
+import {
+  ToolExecutionPrincipal,
+  ToolType,
+  type AgentOperation,
+} from "@budibase/types"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { writable } from "svelte/store"
 import MockBody from "@/test/mocks/MockBody.svelte"
 import MockComponent from "@/test/mocks/MockComponent.svelte"
+import MockModal from "@/test/mocks/MockModal.svelte"
 import MockConfigureOperationToolModal from "./MockConfigureOperationToolModal.svelte"
 import MockGenerateInstructionsControl from "./MockGenerateInstructionsControl.svelte"
 import MockOperationCodeEditor from "./MockOperationCodeEditor.svelte"
@@ -56,6 +61,7 @@ vi.mock("@budibase/bbui", () => ({
   Body: MockBody,
   Helpers: { uuid: vi.fn(() => "test-session-id") },
   Icon: MockComponent,
+  Modal: MockModal,
   notifications: { error: vi.fn() },
 }))
 
@@ -83,6 +89,12 @@ vi.mock("../../AgentUnpublishedChangesIndicator.svelte", () => ({
 }))
 vi.mock("../../ConfigureOperationToolModal.svelte", () => ({
   default: MockConfigureOperationToolModal,
+}))
+vi.mock("../../OperationApprovalPolicyModal.svelte", () => ({
+  default: MockComponent,
+}))
+vi.mock("../../OperationApprovalRuleModal.svelte", () => ({
+  default: MockComponent,
 }))
 vi.mock("../../GenerateInstructionsControl.svelte", () => ({
   default: MockGenerateInstructionsControl,
@@ -148,7 +160,17 @@ import OperationPage from "./index.svelte"
 describe("operation page tool autocomplete", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.tool.sourceType = "DATASOURCE_QUERY"
     mocks.updateAgentOperation.mockResolvedValue({ _rev: "2" })
+  })
+
+  it("hides the legacy escalation tool", async () => {
+    mocks.tool.sourceType = ToolType.ESCALATION
+    render(OperationPage)
+
+    await fireEvent.click(screen.getByText("Trigger add tool"))
+
+    expect(screen.queryByText("Select tool")).not.toBeInTheDocument()
   })
 
   it("configures and inserts an autocomplete tool in one update", async () => {

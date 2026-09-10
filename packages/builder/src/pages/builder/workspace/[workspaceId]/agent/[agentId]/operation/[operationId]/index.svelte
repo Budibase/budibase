@@ -3,18 +3,15 @@
     Body,
     Button,
     Icon,
-    Link,
     Modal,
     notifications,
     ProgressCircle,
   } from "@budibase/bbui"
   import {
-    FeatureFlag,
     ToolExecutionPrincipal,
     ToolType,
     type AgentOperation,
     type AgentOperationApprovalPolicy,
-    type EscalationRecipient,
     type ToolExecutionCondition,
     type ToolExecutionRule,
   } from "@budibase/types"
@@ -29,7 +26,6 @@
     buildSectionHeader,
     hbAutocomplete,
   } from "@/components/common/CodeEditor"
-  import EscalationRecipients from "@/components/common/EscalationRecipients.svelte"
   import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
   import {
     automationStore,
@@ -40,12 +36,7 @@
     tables,
     workspaceDeploymentStore,
   } from "@/stores/builder"
-  import {
-    agentsStore,
-    aiConfigsStore,
-    featureFlags,
-    selectedAgent,
-  } from "@/stores/portal"
+  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
   import { configuredEscalationProviders } from "@/stores/portal/escalations"
   import { bb } from "@/stores/bb"
   import type { BindingCompletion, BindingCompletionOption } from "@/types"
@@ -166,16 +157,6 @@
     })
   )
 
-  let escalationToolHidden = $derived(
-    !$featureFlags[FeatureFlag.ESCALATION] ||
-      $featureFlags[FeatureFlag.AI_TOOL_ESCALATION]
-  )
-  let toolApprovalsEnabled = $derived(
-    $featureFlags[FeatureFlag.AI_TOOL_ESCALATION]
-  )
-  let approvalsTabVisible = $derived(
-    !escalationToolHidden || toolApprovalsEnabled
-  )
   let approvalPolicies = $derived(operation?.approvalPolicies || [])
   let configuredToolList = $derived(
     (operation?.enabledTools || [])
@@ -185,13 +166,7 @@
           availableTool => availableTool.runtimeBinding === config.toolName
         ),
       }))
-      .filter(
-        item =>
-          !(
-            item.tool?.sourceType === ToolType.ESCALATION &&
-            escalationToolHidden
-          )
-      )
+      .filter(item => item.tool?.sourceType !== ToolType.ESCALATION)
       .sort((a, b) =>
         (a.tool?.readableBinding || a.config.toolName).localeCompare(
           b.tool?.readableBinding || b.config.toolName
@@ -203,8 +178,7 @@
       .map(item => item.tool)
       .filter(
         (tool): tool is AgentTool =>
-          !!tool &&
-          !(tool.sourceType === ToolType.ESCALATION && escalationToolHidden)
+          !!tool && tool.sourceType !== ToolType.ESCALATION
       )
   )
   let promptBindings = $derived(
@@ -213,8 +187,7 @@
   let availablePromptBindings = $derived(
     toAgentPromptBindings({
       tools: availableTools.filter(
-        tool =>
-          !(tool.sourceType === ToolType.ESCALATION && escalationToolHidden)
+        tool => tool.sourceType !== ToolType.ESCALATION
       ),
       webSearchConfigured,
     })
@@ -277,14 +250,14 @@
   let filteredTools = $derived.by(() =>
     availableTools
       .filter(tool => {
+        if (tool.sourceType === ToolType.ESCALATION) {
+          return false
+        }
         if (
           operation?.enabledTools?.some(
             config => config.toolName === tool.runtimeBinding
           )
         ) {
-          return false
-        }
-        if (tool.sourceType === ToolType.ESCALATION && escalationToolHidden) {
           return false
         }
         const query = toolSearch.trim().toLowerCase()
@@ -373,7 +346,6 @@
           enabledTools,
           approvalPolicies: snapshot.approvalPolicies,
           allowKnowledgeSourceDownload: snapshot.allowKnowledgeSourceDownload,
-          escalation: snapshot.escalation,
         }
       )
 
@@ -563,19 +535,6 @@
     }
   }
 
-  const updateRecipients = (
-    recipients: { type: string; config: Record<string, unknown> }[]
-  ) => {
-    if (!operation) {
-      return
-    }
-    operation.escalation = {
-      ...(operation.escalation || {}),
-      recipients: recipients as EscalationRecipient[],
-    }
-    saveOperation()
-  }
-
   const confirmRemoveTool = (
     tool: RemovableTool,
     returnToConfiguration = false
@@ -627,11 +586,9 @@
   }
 
   const getToolApprovalCount = (toolName: string) =>
-    $featureFlags[FeatureFlag.AI_TOOL_ESCALATION]
-      ? (operation?.enabledTools?.find(
-          configured => configured.toolName === toolName
-        )?.executionRules?.length ?? 0)
-      : 0
+    operation?.enabledTools?.find(
+      configured => configured.toolName === toolName
+    )?.executionRules?.length ?? 0
 
   const getToolExecutionRules = (toolName: string): ToolExecutionRule[] =>
     operation?.enabledTools?.find(
@@ -722,14 +679,11 @@
     )
   }
 
-  const toolApprovalOptions = (toolName: string) =>
-    toolApprovalsEnabled
-      ? {
-          enabled: true,
-          rules: getToolExecutionRules(toolName),
-          policies: approvalPolicies,
-        }
-      : undefined
+  const toolApprovalOptions = (toolName: string) => ({
+    enabled: true,
+    rules: getToolExecutionRules(toolName),
+    policies: approvalPolicies,
+  })
 
   const toolConditionFields = (tool: AgentTool) =>
     getToolConditionFields({
@@ -1103,12 +1057,10 @@
             class:active={activeTab === "knowledge"}
             onclick={() => (activeTab = "knowledge")}>Knowledge</button
           >
-          {#if approvalsTabVisible}
-            <button
-              class:active={activeTab === "approvals"}
-              onclick={() => (activeTab = "approvals")}>Approvals</button
-            >
-          {/if}
+          <button
+            class:active={activeTab === "approvals"}
+            onclick={() => (activeTab = "approvals")}>Approvals</button
+          >
         </AgentTabList>
 
         <div class="rail-content">
@@ -1215,7 +1167,7 @@
             {/if}
           {:else if activeTab === "knowledge"}
             <Knowledge bind:operation onUpdated={() => saveOperation()} />
-          {:else if toolApprovalsEnabled}
+          {:else}
             <div class="rail-section">
               <OperationRailSectionHeader
                 title="Approvals"
@@ -1262,39 +1214,6 @@
                 {/each}
               </div>
             </div>
-          {:else if !escalationToolHidden}
-            <div class="rail-section approval-panel">
-              <OperationRailSectionHeader
-                title="Approvals"
-                description="Choose who gets notified when this operation escalates for approval."
-              />
-              {#if !escalationProviders.length}
-                <div class="escalation-disabled">
-                  <Body
-                    size="S"
-                    weight="500"
-                    color="var(--spectrum-global-color-gray-900)"
-                  >
-                    Escalation disabled
-                  </Body>
-                  <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-                    There are currently no deployments configured on this agent.
-                    Add one in <Link
-                      on:click={() => $goto("../../deployment")}
-                      quiet>deployments</Link
-                    > to choose who gets notified.
-                  </Body>
-                </div>
-              {:else}
-                <EscalationRecipients
-                  single
-                  recipients={operation.escalation?.recipients || []}
-                  {agentId}
-                  providers={escalationProviders}
-                  onChange={updateRecipients}
-                />
-              {/if}
-            </div>
           {/if}
         </div>
       </aside>
@@ -1334,57 +1253,55 @@
     onClose={closeToolConfiguration}
   />
 
-  {#if toolApprovalsEnabled}
-    <OperationApprovalPolicyModal
-      bind:this={approvalPolicyModal}
-      {agentId}
-      providers={escalationProviders}
-      onSave={handlePolicySave}
-      onClose={handlePolicyModalClose}
-    />
-    <OperationApprovalRuleModal
-      bind:this={approvalRuleModal}
-      onSave={handleRuleSave}
-      onRemove={handleRuleRemove}
-      onCreatePolicy={beginPolicyCreateFromRule}
-      onOpenApiExplorer={openApiExplorer}
-      onClose={handleRuleModalClose}
-    />
+  <OperationApprovalPolicyModal
+    bind:this={approvalPolicyModal}
+    {agentId}
+    providers={escalationProviders}
+    onSave={handlePolicySave}
+    onClose={handlePolicyModalClose}
+  />
+  <OperationApprovalRuleModal
+    bind:this={approvalRuleModal}
+    onSave={handleRuleSave}
+    onRemove={handleRuleRemove}
+    onCreatePolicy={beginPolicyCreateFromRule}
+    onOpenApiExplorer={openApiExplorer}
+    onClose={handleRuleModalClose}
+  />
 
-    <Modal
-      bind:this={apiExplorerModal}
-      autoFocus={false}
-      beforeClose={handleApiExplorerClose}
+  <Modal
+    bind:this={apiExplorerModal}
+    autoFocus={false}
+    beforeClose={handleApiExplorerClose}
+  >
+    <div
+      class="api-explorer-dialog spectrum-Dialog spectrum-Dialog--extraLarge"
+      style="position: relative;"
+      role="dialog"
+      tabindex="-1"
+      aria-modal="true"
     >
-      <div
-        class="api-explorer-dialog spectrum-Dialog spectrum-Dialog--extraLarge"
-        style="position: relative;"
-        role="dialog"
-        tabindex="-1"
-        aria-modal="true"
-      >
-        <section class="spectrum-Dialog-content api-explorer-content">
-          <div class="endpoint-viewer-wrap">
-            {#if apiExplorerTarget}
-              <APIEndpointViewer
-                bind:this={apiViewer}
-                datasourceId={apiExplorerTarget.datasourceId}
-                queryId={apiExplorerTarget.queryId}
-                saveAndClose={true}
-                redirectNewQueryOnSave={false}
-                settingsLocked={true}
-                connectionPopoverPortalTarget=".spectrum"
-                on:savedQuery={() => {
-                  refreshRuleModalFields()
-                  apiExplorerModal?.hide()
-                }}
-              />
-            {/if}
-          </div>
-        </section>
-      </div>
-    </Modal>
-  {/if}
+      <section class="spectrum-Dialog-content api-explorer-content">
+        <div class="endpoint-viewer-wrap">
+          {#if apiExplorerTarget}
+            <APIEndpointViewer
+              bind:this={apiViewer}
+              datasourceId={apiExplorerTarget.datasourceId}
+              queryId={apiExplorerTarget.queryId}
+              saveAndClose={true}
+              redirectNewQueryOnSave={false}
+              settingsLocked={true}
+              connectionPopoverPortalTarget=".spectrum"
+              on:savedQuery={() => {
+                refreshRuleModalFields()
+                apiExplorerModal?.hide()
+              }}
+            />
+          {/if}
+        </div>
+      </section>
+    </div>
+  </Modal>
 
   <WebSearchConfigModal
     bind:this={webSearchConfigModal}
@@ -1499,15 +1416,6 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-  }
-
-  .escalation-disabled {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 12px;
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 6px;
   }
 
   .tools-list {
