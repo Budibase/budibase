@@ -97,6 +97,22 @@ describe("slack webhook helpers", () => {
     ).resolves.toEqual("*Next steps*\nUse *bold* text.")
   })
 
+  it("returns a fallback instead of an empty Slack reply", async () => {
+    const result: WebhookChatCompleteResult = {
+      messages: [],
+      assistantText: " \n ",
+      title: "Mock conversation",
+    }
+
+    await expect(
+      formatSlackAssistantReply({
+        agentId: "agent-1",
+        result,
+        isDirectMessage: false,
+      })
+    ).resolves.toEqual("No response generated.")
+  })
+
   it.each([
     ["<@U123> ask hello", "ask hello"],
     ["hello there", "hello there"],

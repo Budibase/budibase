@@ -125,9 +125,9 @@ export async function sendSlackNotification({
 }: {
   notifDoc: EscalationNotificationDoc
   contextDoc: EscalationContextDoc
-}): Promise<void> {
+}): Promise<boolean> {
   if (notifDoc.recipient.type !== EscalationNotificationChannel.SLACK) {
-    return
+    return false
   }
 
   const config = notifDoc.recipient.config as Record<string, string>
@@ -142,7 +142,7 @@ export async function sendSlackNotification({
       escalationId: contextDoc._id,
       appId: contextDoc.appId,
     })
-    return
+    return false
   }
 
   const { title, summary } = getEscalationText(contextDoc)
@@ -171,14 +171,14 @@ export async function sendSlackNotification({
       escalationId: notifDoc.escalationId,
       channelId: config.channelId,
     })
-    return
+    return true
   }
 
   if (!config.globalUserId) {
     console.warn("sendSlackNotification: no recipient target in config", {
       escalationId: contextDoc._id,
     })
-    return
+    return false
   }
 
   let teamId = integration.teamId
@@ -203,7 +203,7 @@ export async function sendSlackNotification({
         globalUserId: config.globalUserId,
       }
     )
-    return
+    return false
   }
 
   const link = await tenancy.doInTenant(contextDoc.tenantId, () =>
@@ -219,7 +219,7 @@ export async function sendSlackNotification({
       globalUserId: config.globalUserId,
       escalationId: contextDoc._id,
     })
-    return
+    return false
   }
 
   await client.chat.postMessage({
@@ -232,6 +232,7 @@ export async function sendSlackNotification({
     escalationId: notifDoc.escalationId,
     externalUserId: link.externalUserId,
   })
+  return true
 }
 
 // Replies to the requester in their originating conversation on escalation

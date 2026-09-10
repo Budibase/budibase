@@ -61,21 +61,36 @@ type DeprecatedAgent = Omit<
   allowKnowledgeSourceDownload?: boolean
 }
 
+const RETIRED_OPERATION_TOOL_NAMES = new Set(["escalate"])
+
 export const normalizePersistedOperationTools = (
   tools: DeprecatedAgentOperation["enabledTools"] = []
 ): AgentOperationToolConfig[] =>
-  tools.map(tool =>
-    typeof tool === "string"
-      ? {
-          toolName: tool,
-          executionPrincipal: ToolExecutionPrincipal.ADMIN,
-        }
-      : {
-          ...tool,
-          executionPrincipal:
-            tool.executionPrincipal ?? ToolExecutionPrincipal.ADMIN,
-        }
-  )
+  tools
+    .filter(tool => {
+      const toolName = typeof tool === "string" ? tool : tool.toolName
+      return !RETIRED_OPERATION_TOOL_NAMES.has(toolName)
+    })
+    .map(tool =>
+      typeof tool === "string"
+        ? {
+            toolName: tool,
+            executionPrincipal: ToolExecutionPrincipal.ADMIN,
+          }
+        : {
+            ...tool,
+            executionPrincipal:
+              tool.executionPrincipal ?? ToolExecutionPrincipal.ADMIN,
+          }
+    )
+
+const normalizeOperations = (
+  operations: DeprecatedAgentOperation[] | undefined
+): AgentOperation[] | undefined =>
+  operations?.map(operation => ({
+    ...operation,
+    enabledTools: normalizePersistedOperationTools(operation.enabledTools),
+  }))
 
 const SECRET_MASK = "********"
 const SECRET_ENCODING_PREFIX = "bbai_enc::"
@@ -193,10 +208,7 @@ const migrateOperations = (raw: DeprecatedAgent): AgentOperation[] => {
   const legacyAllowKnowledgeSourceDownload = raw.allowKnowledgeSourceDownload
 
   if (Object.prototype.hasOwnProperty.call(raw, "operations")) {
-    return (raw.operations || []).map(operation => ({
-      ...operation,
-      enabledTools: normalizePersistedOperationTools(operation.enabledTools),
-    }))
+    return normalizeOperations(raw.operations) || []
   }
 
   if (
@@ -229,6 +241,7 @@ const withAgentDefaults = (raw: DeprecatedAgent): Agent => {
   return {
     ...agent,
     live: raw.live ?? false,
+    allowConversationAttachments: raw.allowConversationAttachments ?? false,
     operations: migrateOperations(raw),
     slackIntegration: decodeSlackIntegrationSecrets(agent.slackIntegration),
   }
@@ -475,7 +488,7 @@ export async function create(
     description: request.description,
     aiconfig: request.aiconfig || "", // this might be set later, it will be validated on publish/usage
     projectIds: request.projectIds,
-    operations: request.operations,
+    operations: normalizeOperations(request.operations),
     live: request.live ?? false,
     publishedAt: request.live ? now : undefined,
     icon: request.icon,
@@ -483,6 +496,7 @@ export async function create(
     goal: request.goal,
     createdAt: now,
     createdBy: request.createdBy,
+    allowConversationAttachments: request.allowConversationAttachments ?? true,
     MSTeamsIntegration: request.MSTeamsIntegration,
     slackIntegration: await withSlackTeamId(request.slackIntegration),
   }
@@ -522,6 +536,7 @@ export async function duplicate(
     live: source.live,
     _deleted: false,
     createdBy,
+    allowConversationAttachments: source.allowConversationAttachments,
     operations: source.operations,
   })
 }
@@ -557,7 +572,7 @@ export async function update(agent: Agent): Promise<Agent> {
     ...existing,
     ...agent,
     updatedAt: now,
-    operations: incomingOperations,
+    operations: normalizeOperations(incomingOperations),
     MSTeamsIntegration: resolveMSTeamsIntegration({
       existing: existing?.MSTeamsIntegration,
       incoming: agent.MSTeamsIntegration,

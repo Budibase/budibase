@@ -1,5 +1,7 @@
 import { Document } from "../../"
 import type { UIMessage } from "ai"
+import type { ArrayOperator, BasicOperator } from "../../sdk"
+import type { FieldType } from "../workspace/row"
 import {
   EscalationRecipient,
   ResolutionStrategy,
@@ -12,8 +14,18 @@ export enum ToolType {
   REST_QUERY = "REST_QUERY",
   DATASOURCE_QUERY = "DATASOURCE_QUERY",
   SEARCH = "SEARCH",
-  ESCALATION = "ESCALATION",
 }
+
+export enum ToolAction {
+  LIST_ROWS = "list_rows",
+  GET_ROW = "get_row",
+  CREATE_ROW = "create_row",
+  UPDATE_ROW = "update_row",
+  SEARCH_ROWS = "search_rows",
+  TRIGGER = "trigger",
+}
+
+export type RowToolAction = Exclude<ToolAction, ToolAction.TRIGGER>
 
 export enum ToolExecutionPrincipal {
   REQUESTER = "requester",
@@ -31,6 +43,9 @@ export interface ToolMetadata {
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
+  // The backing resource: tableId, query _id or automation _id.
+  sourceId?: string
+  action?: ToolAction
   executionPolicy: ToolExecutionPolicy
 }
 
@@ -139,7 +154,25 @@ export interface AgentOperationApprovalPolicy {
   notifications: AgentEscalationConfig
 }
 
-export interface ToolExecutionCondition {}
+// TODO: This can go further. These exist all over the place
+// as magic strings. They can stay here until they are
+// refactored
+export enum ConditionRangeOperator {
+  RANGE_LOW = "rangeLow",
+  RANGE_HIGH = "rangeHigh",
+}
+
+export type ToolExecutionOperator =
+  | BasicOperator
+  | ArrayOperator
+  | ConditionRangeOperator
+
+export interface ToolExecutionCondition {
+  field: string
+  operator: ToolExecutionOperator
+  value: any
+  type?: FieldType
+}
 
 export interface ToolExecutionRule {
   conditions?: ToolExecutionCondition[]
@@ -175,7 +208,6 @@ export interface AgentOperation {
   knowledgeBases?: string[]
   knowledgeSources?: AgentKnowledgeSource[]
   allowKnowledgeSourceDownload: boolean
-  escalation?: AgentEscalationConfig
 }
 
 export interface Agent extends Document {
@@ -190,6 +222,7 @@ export interface Agent extends Document {
   icon?: string
   iconColor?: string
   createdBy?: string
+  allowConversationAttachments?: boolean
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration
 }

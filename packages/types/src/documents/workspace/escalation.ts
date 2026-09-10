@@ -19,24 +19,18 @@ export enum EscalationSource {
   OPERATION = "operation",
 }
 
-// The registered name of the escalate tool exposed to agent operations.
-export const ESCALATE_TOOL_NAME = "escalate"
-
-// The escalate tool's own result status, returned to the model.
-export enum EscalateToolResultStatus {
-  // A real escalation was raised and is awaiting a human response.
+// The result status returned to the model by an approval gate.
+export enum ApprovalToolResultStatus {
   PENDING_APPROVAL = "pending_approval",
-  // No escalation could be raised (e.g. no reviewers configured). The
-  // model's request was not actually handed to a human.
   UNAVAILABLE = "unavailable",
-  // Resume-only: the escalation was already approved, so calling escalate
-  // again is a no-op rather than a fresh escalation or a failure.
   ALREADY_APPROVED = "already_approved",
 }
 
 // Built-in resolution strategies.
 export enum ResolutionStrategy {
   FIRST_RESPONSE = "first_response",
+  UNANIMOUS = "unanimous",
+  MAJORITY = "majority",
 }
 
 export interface SuspendedAutomationContext {
@@ -66,10 +60,12 @@ export interface SuspendedOperationContext {
   operationId: string
   sessionId: string
   messages: ModelMessage[]
+  conversationId?: string
+  attachmentIds?: string[]
   channel?: ChatConversationChannel
   userId?: string
   requester?: AgentRequester
-  pendingToolCall?: PendingToolCall
+  pendingToolCall: PendingToolCall
 }
 
 export type SuspendedContext =
@@ -82,6 +78,7 @@ export interface EscalationContextDoc extends Document {
   stepId?: string
   operationId?: string
   sessionId?: string
+  conversationId?: string
   appId: string
   tenantId: string
   agentId?: string
@@ -129,9 +126,16 @@ export interface EscalationRecipient {
 }
 
 export interface EscalationRespondResult {
-  status: "recorded" | "closed"
+  status: "recorded" | "already_responded" | "closed"
   // Human-facing message the caller can surface (e.g. the inline card).
   message?: string
+}
+
+export type EscalationNotificationStatus = "pending" | "sent" | "failed"
+
+export interface EscalationProviderResponse {
+  code?: number
+  body?: string
 }
 
 export interface EscalationNotificationDoc extends Document {
@@ -139,7 +143,8 @@ export interface EscalationNotificationDoc extends Document {
   appId: string
   tenantId: string
   recipient: EscalationRecipient
-  sentAt: string
-  response?: EscalationResponse
-  respondedAt?: string
+  status?: EscalationNotificationStatus
+  providerResponse?: EscalationProviderResponse
+  sentAt?: string
+  responses?: EscalationResponse[]
 }

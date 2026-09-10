@@ -10,7 +10,6 @@ import RestLogo from "../logos/Rest.svelte"
 import WebSearchLogo from "../logos/WebSearch.svelte"
 import { DATASOURCE_TAG_ICON_URLS } from "../datasourceIconUrls"
 import {
-  ESCALATION_TAG_ICON_URL,
   REST_TAG_ICON_URL,
   WEB_SEARCH_TAG_ICON_URL,
 } from "../logos/tagIconUrls"
@@ -40,7 +39,6 @@ const getBindingPrefix = (
       : ToolBindingPrefix.EXTERNAL
   }
   if (sourceType === ToolType.SEARCH) return ToolBindingPrefix.SEARCH
-  if (sourceType === ToolType.ESCALATION) return ToolBindingPrefix.ESCALATION
   return ToolBindingPrefix.TOOL
 }
 
@@ -83,9 +81,6 @@ const resolveAgentToolIcons = (
       tagIconUrl: WEB_SEARCH_TAG_ICON_URL,
     }
   }
-  if (sourceType === ToolType.ESCALATION) {
-    return { tagIconUrl: ESCALATION_TAG_ICON_URL }
-  }
   if (sourceType === ToolType.REST_QUERY) {
     const templateIconUrl = options.resolveRestTemplateIcon?.(tool.sourceLabel)
     return templateIconUrl
@@ -122,6 +117,5 @@ export const enrichAgentTool = (
     runtimeBinding: tool.name,
     icon,
     tagIconUrl,
-    fallbackIcon: tool.sourceType === ToolType.ESCALATION ? "User" : undefined,
   }
 }
