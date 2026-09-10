@@ -5,6 +5,7 @@ import {
   AgentOperation,
   AgentOperationApprovalPolicy,
   AgentRequester,
+  ApprovedToolCall,
   ChatConversationChannel,
   ApprovalToolResultStatus,
   EscalationSource,
@@ -14,6 +15,7 @@ import {
   ToolType,
 } from "@budibase/types"
 import type { ModelMessage } from "ai"
+import isEqual from "lodash/isEqual"
 import type { EscalationGateRuntime } from "../../../../ai/tools"
 import { APPROVAL_REQUIRED_TITLE_PREFIX } from "../../../../escalation/constants"
 import sdk from "../../.."
@@ -31,7 +33,7 @@ export interface EscalationGateContext {
   requester?: AgentRequester
   getMessages: () => ModelMessage[]
   getRequestId: () => string | undefined
-  executedApproval?: { toolName: string }
+  executedApproval?: ApprovedToolCall
   generateCardCopy?: (input: {
     label: string
     args: unknown
@@ -181,7 +183,12 @@ export const createEscalationGateRuntime = ({
   intercept: async (input, { toolCallId, messages }) => {
     const label = readableName ?? toolName
     const executed = gateContext.executedApproval
-    if (executed && executed.toolName === toolName) {
+    if (
+      executed &&
+      executed.toolName === toolName &&
+      executed.sourceId === sourceId &&
+      isEqual(executed.args, input)
+    ) {
       return {
         status: ApprovalToolResultStatus.ALREADY_APPROVED,
         note:
