@@ -14,7 +14,6 @@ export enum ToolType {
   REST_QUERY = "REST_QUERY",
   DATASOURCE_QUERY = "DATASOURCE_QUERY",
   SEARCH = "SEARCH",
-  ESCALATION = "ESCALATION",
 }
 
 export enum ToolAction {
@@ -214,7 +213,6 @@ export interface AgentOperation {
   knowledgeBases?: string[]
   knowledgeSources?: AgentKnowledgeSource[]
   allowKnowledgeSourceDownload: boolean
-  escalation?: AgentEscalationConfig
 }
 
 export interface Agent extends Document {
