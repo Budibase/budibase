@@ -451,7 +451,7 @@
         <div class="lock">
           <Label
             size="L"
-            tooltip="When off, a login is only linked to an existing account if the identity provider confirms the email is verified. Only enable this if you fully trust the provider to assert email addresses - otherwise it can allow account takeover."
+            tooltip="Link existing accounts using unverified emails from this provider. Only enable if the provider ensures users own their email addresses."
           >
             Allow unverified email linking
           </Label>
