@@ -6,6 +6,7 @@ on:
     types: [opened,closed,synchronize]
     branches:
       - master
+      - cloud
 
 jobs:
   CLAssistant:
