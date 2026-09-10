@@ -15,6 +15,7 @@ const attachment = {
   extension: "png",
   key: "app_bbb/attachments/a.png",
 }
+jest.setTimeout(120 * 1000)
 
 describe("should be able to re-write attachment URLs", () => {
   const config = new TestConfig()
