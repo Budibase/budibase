@@ -36,6 +36,7 @@ import {
 import { automationQueue } from "../automations"
 import sdk from "../sdk"
 import { getFullUser } from "../utilities/users"
+import { APPROVAL_REQUIRED_TITLE_PREFIX } from "./constants"
 import * as slack from "./notifications/slack"
 import * as teams from "./notifications/ms-teams"
 import { ProviderResponseError } from "./notifications/utils"
@@ -57,7 +58,7 @@ const GENERIC_APPROVED_ACTION_FAILURE_MESSAGE =
   "Your request was approved, but I couldn't complete it. Please try again."
 
 const approvedActionFailureMessage = (title?: string) => {
-  if (!title || title.startsWith("Approval required:")) {
+  if (!title || title.startsWith(APPROVAL_REQUIRED_TITLE_PREFIX)) {
     return GENERIC_APPROVED_ACTION_FAILURE_MESSAGE
   }
   const requestTitle = `${title.charAt(0).toLowerCase()}${title.slice(1)}`
