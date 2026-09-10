@@ -531,13 +531,7 @@ export async function slackWebhook(
       })
 
       chat.onNewMention(handler)
-      chat.onNewMessage(/./, async (thread, message) => {
-        const raw = message.raw as SlackEvent | undefined
-        if (!isSlackDirectMessage(raw) || message.isMention) {
-          return
-        }
-        await handler(thread, message)
-      })
+      chat.onDirectMessage(handler)
 
       return request => chat.webhooks.slack(request)
     },

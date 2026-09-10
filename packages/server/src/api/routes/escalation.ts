@@ -1,12 +1,8 @@
 import { auth } from "@budibase/backend-core"
 import * as controller from "../controllers/escalation"
 import { endpointGroupList } from "./endpointGroups"
-import { escalationEnabled } from "../../middleware/escalationEnabled"
 
-// Gated behind the ESCALATION feature flag (same pattern AI_RAG/AI_TESTS use).
-const escalationRoutes = endpointGroupList
-  .group(auth.builderOrAdmin)
-  .addGroupMiddleware(escalationEnabled)
+const escalationRoutes = endpointGroupList.group(auth.builderOrAdmin)
 
 escalationRoutes
   .get("/api/escalations", controller.fetch)

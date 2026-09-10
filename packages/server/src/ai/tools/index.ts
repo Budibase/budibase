@@ -1,6 +1,8 @@
+import { getErrorMessage } from "@budibase/backend-core"
 import {
   PermissionLevel,
   PermissionType,
+  ToolAction,
   ToolExecutionPrincipal,
   ToolType,
   type AgentExecutionContext,
@@ -26,6 +28,7 @@ export interface AiToolDefinition {
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
+  action?: ToolAction
   executionPolicy: ToolExecutionPolicy
   authorization?: ToolAuthorization
   requesterRedactedTool?: Tool
@@ -49,10 +52,12 @@ export interface ToolAuthorizationRequest {
 }
 
 export interface EscalationGateRuntime {
+  // Resolves to the refusal result to return in place of executing, or
+  // undefined when no rule matches and the call should proceed.
   intercept: (
     input: unknown,
     options: { toolCallId: string; messages?: ModelMessage[] }
-  ) => Promise<Record<string, unknown>>
+  ) => Promise<Record<string, unknown> | undefined>
 }
 
 export const resolveToolExecutionPrincipal = (
@@ -73,17 +78,14 @@ const getToolFailure = (result: unknown): string | undefined => {
     return
   }
 
-  if (error instanceof Error) {
-    return error.message || "Tool execution failed"
-  }
-
-  return String(error)
+  return getErrorMessage(error) || "Tool execution failed"
 }
 
 const logToolExecution = (
   outcome: "success" | "error",
   toolDef: AiToolDefinition,
-  runtime: ToolAuthorizationRuntime
+  runtime: ToolAuthorizationRuntime,
+  error?: unknown
 ) =>
   console.log("Agent tool execution", {
     outcome,
@@ -93,6 +95,7 @@ const logToolExecution = (
     agentId: runtime.executionContext.agentId,
     operationId: runtime.executionContext.operationId,
     conversationId: runtime.executionContext.conversationId,
+    ...(error !== undefined && { error: getErrorMessage(error) }),
   })
 
 const wrapTool = (
@@ -121,10 +124,13 @@ const wrapTool = (
       })
     }
     if (gate) {
-      return await gate.intercept(input, {
+      const gateResult = await gate.intercept(input, {
         toolCallId: options?.toolCallId ?? "",
         messages: options?.messages,
       })
+      if (gateResult) {
+        return gateResult
+      }
     }
     try {
       const result = await execute(input, options)
@@ -142,7 +148,7 @@ const wrapTool = (
       return authorizedResult
     } catch (error) {
       if (runtime) {
-        logToolExecution("error", toolDef, runtime)
+        logToolExecution("error", toolDef, runtime, error)
       }
       throw error
     }

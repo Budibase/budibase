@@ -1,15 +1,19 @@
 import {
   FieldType,
   BBReferenceFieldSubType,
+  DocumentType,
   TableSchema,
   FieldSchema,
   Row,
   Table,
+  prefixed,
 } from "@budibase/types"
 import { ValidColumnNameRegex, helpers, utils } from "@budibase/shared-core"
 import { db, HTTPError, sql } from "@budibase/backend-core"
 
 type Rows = Array<Row>
+
+const GLOBAL_USER_ID_PREFIX = prefixed(DocumentType.USER)
 
 interface SchemaValidation {
   [index: string]: boolean
@@ -220,10 +224,16 @@ export function parse(rows: Rows, table: Table): Rows {
         parsedRow[columnName] = parsedValues?.map(u => u._id)
       } else if (columnType === FieldType.BB_REFERENCE_SINGLE) {
         let parsedValue = columnData
-        if (columnData && typeof columnData === "string") {
+        if (
+          columnData &&
+          typeof columnData === "string" &&
+          !columnData.startsWith(GLOBAL_USER_ID_PREFIX)
+        ) {
+          // Stored single user values are global IDs; exported values are JSON objects.
           parsedValue = parseJsonExport<{ _id: string }>(columnData)
         }
-        parsedRow[columnName] = parsedValue?._id
+        parsedRow[columnName] =
+          typeof parsedValue === "string" ? parsedValue : parsedValue?._id
       } else if (
         (columnType === FieldType.ATTACHMENTS ||
           columnType === FieldType.ATTACHMENT_SINGLE ||
@@ -251,8 +261,11 @@ function isValidBBReference(
       if (!data) {
         return !isRequired
       }
-      const user = parseJsonExport<{ _id: string }>(data)
-      return db.isGlobalUserID(user._id)
+      const userId =
+        typeof data === "string" && data.startsWith(GLOBAL_USER_ID_PREFIX)
+          ? data
+          : parseJsonExport<{ _id: string }>(data)._id
+      return db.isGlobalUserID(userId)
     }
 
     switch (subtype) {

@@ -1,3 +1,4 @@
+import { ToolExecutionPrincipal } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
 
@@ -123,6 +124,28 @@ describe("agent duplicate", () => {
     expect(
       removed.operations?.find(operation => operation.id === "operation_2")
     ).toBeUndefined()
+  })
+
+  it("removes retired escalation tools from operation mutations", async () => {
+    const created = await config.api.agent.create({
+      name: "Retired Tool Agent",
+      aiconfig: "default",
+    })
+
+    const updated = await config.api.agent.createOperation(created._id!, {
+      id: "operation_1",
+      name: "Main operation",
+      live: false,
+      enabledTools: [
+        {
+          toolName: "escalate",
+          executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        },
+      ],
+      allowKnowledgeSourceDownload: true,
+    })
+
+    expect(updated.operations?.[0].enabledTools).toEqual([])
   })
 
   it("rejects creating an operation with a duplicate name for the same agent", async () => {

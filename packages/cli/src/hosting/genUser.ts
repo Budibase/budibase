@@ -8,7 +8,7 @@ import { DockerCompose } from "./types"
 export async function generateUser(password: string | null, silent: boolean) {
   const email = GENERATED_USER_EMAIL
   if (!password) {
-    password = randomString.generate({ length: 6 })
+    password = randomString.generate({ length: 12 })
   }
   updateDockerComposeService((service: DockerCompose) => {
     service.environment["BB_ADMIN_USER_EMAIL"] = email
