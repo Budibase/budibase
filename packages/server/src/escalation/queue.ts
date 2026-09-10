@@ -1,6 +1,7 @@
 import zlib from "zlib"
 import type { Job } from "bull"
 import {
+  ModelMessage,
   readUIMessageStream,
   type JSONValue,
   type UIMessage,
