@@ -53,7 +53,8 @@ const MARKDOWN_ATTRIBUTES = {
   th: ["colspan", "headers", "nowrap", "rowspan", "scope"],
 }
 
-const SAFE_STYLE_VALUE = /^(?![\s\S]*(?:expression|url)\s*\()[\s\S]*$/i
+const SAFE_STYLE_VALUE =
+  /^(?![\s\S]*(?:\\|\/\*|(?:expression|url)\s*\())[\s\S]*$/i
 const MARKDOWN_STYLE_PROPERTIES = [
   "background-color",
   "border",

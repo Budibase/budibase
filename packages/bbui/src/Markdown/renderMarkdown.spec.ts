@@ -30,4 +30,14 @@ describe("renderMarkdown", () => {
       '<div style="color:red"><img src="https://example.com/image.png" /><a>Link</a></div>'
     )
   })
+
+  it("removes unsafe values from allowed style properties", () => {
+    const html = renderMarkdown(
+      '<div style="color:url(https://example.com/x);width:expression(alert(1));padding:4px">Direct</div><div style="color:u\\72l(https://example.com/x);width:e\\78pression(alert(1));font-family:u/**/rl(https://example.com/x);padding:4px">Obfuscated</div>'
+    )
+
+    expect(html).toBe(
+      '<div style="padding:4px">Direct</div><div style="padding:4px">Obfuscated</div>'
+    )
+  })
 })
