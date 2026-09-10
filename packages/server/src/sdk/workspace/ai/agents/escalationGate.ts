@@ -14,6 +14,7 @@ import {
 } from "@budibase/types"
 import type { ModelMessage } from "ai"
 import type { EscalationGateRuntime } from "../../../../ai/tools"
+import { APPROVAL_REQUIRED_TITLE_PREFIX } from "../../../../escalation/constants"
 import sdk from "../../.."
 import { escalationProcessor } from "../../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../../escalation/resolutionStrategies"
@@ -216,7 +217,7 @@ export const createEscalationGateRuntime = ({
       throw new Error("escalation gate: missing workspace context")
     }
 
-    let title = `Approval required: ${label}`
+    let title = `${APPROVAL_REQUIRED_TITLE_PREFIX} ${label}`
     let summary = summariseArgs(label, input)
     try {
       const copy = await gateContext.generateCardCopy?.({

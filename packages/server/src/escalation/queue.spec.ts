@@ -1,3 +1,4 @@
+import zlib from "zlib"
 import { context } from "@budibase/backend-core"
 import {
   Agent,
@@ -34,6 +35,7 @@ jest.mock("../sdk/workspace/ai/agents", () => {
   const actual = jest.requireActual("../sdk/workspace/ai/agents")
   return {
     ...actual,
+    buildPromptAndTools: jest.fn(),
     getOrThrow: jest.fn(),
     prepareAgentChatRun: jest.fn(),
   }
@@ -57,6 +59,7 @@ jest.mock("ai", () => {
 
 const prepareAgentChatRunMock = sdk.ai.agents.prepareAgentChatRun as jest.Mock
 const getOrThrowMock = sdk.ai.agents.getOrThrow as jest.Mock
+const buildPromptAndToolsMock = sdk.ai.agents.buildPromptAndTools as jest.Mock
 const recordEscalationResolvedMock = sdk.ai.agentRequests
   .recordEscalationResolved as jest.Mock
 
@@ -113,6 +116,7 @@ describe("resumeOperation", () => {
   beforeEach(async () => {
     prepareAgentChatRunMock.mockReset()
     getOrThrowMock.mockReset()
+    buildPromptAndToolsMock.mockReset()
     await config.newTenant()
   })
 
@@ -144,6 +148,131 @@ describe("resumeOperation", () => {
           }),
         ])
       )
+    })
+  })
+
+  it("reports an approved tool failure without asking the model to narrate it", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      const escalation = baseDoc({
+        requestId,
+        resolution: "resolved",
+        response: { accepted: true },
+        title: "Purchase request for 46 euros",
+      })
+      await context.getWorkspaceDB().put(escalation)
+      getOrThrowMock.mockResolvedValue({
+        _id: "agent_1",
+        operations: [{ id: "op_1" }],
+      } as Agent)
+      buildPromptAndToolsMock.mockResolvedValue({
+        tools: {
+          create_row: {
+            execute: jest.fn().mockRejectedValue({
+              validation: { Department: "can't be blank" },
+            }),
+          },
+        },
+        toolSources: {},
+      })
+
+      await resumeOperation({
+        doc: escalation,
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: {
+          ...baseCtx,
+          pendingToolCall: {
+            toolCallId: "call_1",
+            toolName: "create_row",
+            args: { data: { amount: 46 } },
+          },
+        },
+      })
+
+      expect(prepareAgentChatRunMock).not.toHaveBeenCalled()
+      const [request] =
+        await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+      expect(request.status).toEqual("failed")
+      expect(request.error).toEqual(
+        '{"validation":{"Department":"can\'t be blank"}}'
+      )
+      const storedEscalation = await context
+        .getWorkspaceDB()
+        .get<EscalationContextDoc>(escalation._id!)
+      const resumeResult = JSON.parse(
+        zlib
+          .inflateSync(
+            Uint8Array.from(
+              Buffer.from(storedEscalation.resumeResultCompressed!, "base64")
+            )
+          )
+          .toString()
+      )
+      expect(resumeResult.parts).toEqual([
+        {
+          type: "text",
+          text:
+            "Your purchase request for 46 euros was approved, but I couldn't " +
+            "complete it. Please try again.",
+        },
+      ])
+      expect(request.actions).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: "tool_call",
+            toolName: "create_row",
+            status: "error",
+          }),
+        ])
+      )
+    })
+  })
+
+  it("keeps the request open when another escalation is pending after an approved tool failure", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      await sdk.ai.agentRequests.updateRequestStatus({
+        requestId,
+        status: "needs_input",
+      })
+      await context.getWorkspaceDB().put(
+        baseDoc({
+          _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
+          requestId,
+        })
+      )
+      getOrThrowMock.mockResolvedValue({
+        _id: "agent_1",
+        operations: [{ id: "op_1" }],
+      } as Agent)
+      buildPromptAndToolsMock.mockResolvedValue({
+        tools: {
+          create_row: {
+            execute: jest.fn().mockRejectedValue(new Error("DB unavailable")),
+          },
+        },
+        toolSources: {},
+      })
+
+      await resumeOperation({
+        doc: baseDoc({ requestId, response: { accepted: true } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: {
+          ...baseCtx,
+          pendingToolCall: {
+            toolCallId: "call_1",
+            toolName: "create_row",
+            args: { data: { amount: 46 } },
+          },
+        },
+      })
+
+      const [request] =
+        await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+      expect(request.status).toEqual("needs_input")
+      expect(prepareAgentChatRunMock).not.toHaveBeenCalled()
     })
   })
 

@@ -9,6 +9,7 @@ import {
 import {
   context,
   db as dbCore,
+  getErrorMessage,
   queue,
   roles,
   utils,
@@ -35,6 +36,7 @@ import {
 import { automationQueue } from "../automations"
 import sdk from "../sdk"
 import { getFullUser } from "../utilities/users"
+import { APPROVAL_REQUIRED_TITLE_PREFIX } from "./constants"
 import * as slack from "./notifications/slack"
 import * as teams from "./notifications/ms-teams"
 import { ProviderResponseError } from "./notifications/utils"
@@ -52,6 +54,16 @@ export interface EscalationJob {
 
 const DEFAULT_CONCURRENCY = 1
 const DEFAULT_TIMEOUT_MS = 30000
+const GENERIC_APPROVED_ACTION_FAILURE_MESSAGE =
+  "Your request was approved, but I couldn't complete it. Please try again."
+
+const approvedActionFailureMessage = (title?: string) => {
+  if (!title || title.startsWith(APPROVAL_REQUIRED_TITLE_PREFIX)) {
+    return GENERIC_APPROVED_ACTION_FAILURE_MESSAGE
+  }
+  const requestTitle = `${title.charAt(0).toLowerCase()}${title.slice(1)}`
+  return `Your ${requestTitle} was approved, but I couldn't complete it. Please try again.`
+}
 
 const updateNotificationOutcome = async (
   notificationDocId: string,
@@ -380,7 +392,7 @@ const executeApprovedToolCall = async ({
   } catch (error) {
     failed = true
     output = {
-      error: error instanceof Error ? error.message : String(error),
+      error: getErrorMessage(error),
     }
   }
 
@@ -544,7 +556,6 @@ export async function resumeOperation({
   // approval as user input.
   let approvalInstructions: string
   let messages: ModelMessage[]
-  let storedCallFailure: string | undefined
   let executedApproval: { toolName: string } | undefined
   // recordToolCall awaits an LLM summary internally - chain the calls in the
   // background (preserving completion order) and flush the tail (await
@@ -569,9 +580,6 @@ export async function resumeOperation({
       await markEscalationRequestResolved({ status: "failed", error: text })
       return
     }
-    if (executed.failed) {
-      storedCallFailure = executed.toolName
-    }
     if (doc.requestId) {
       const requestId = doc.requestId
       toolCallChain = toolCallChain.then(() =>
@@ -592,6 +600,31 @@ export async function resumeOperation({
             )
           })
       )
+    }
+    if (executed.failed) {
+      await toolCallChain
+      const errorMessage =
+        executed.output &&
+        typeof executed.output === "object" &&
+        "error" in executed.output
+          ? getErrorMessage(executed.output.error)
+          : "Tool execution failed"
+      const failureMessage = approvedActionFailureMessage(doc.title)
+      await persistResumeResult(escalationId, textMessage(failureMessage))
+      await deliverOperationResult(ctx, failureMessage)
+      if (doc.requestId) {
+        const stillPending = await sdk.escalations.listContextDocs({
+          requestId: doc.requestId,
+          resolution: "pending",
+        })
+        if (stillPending.length === 0) {
+          await markEscalationRequestResolved({
+            status: "failed",
+            error: errorMessage,
+          })
+        }
+      }
+      return
     }
     approvalInstructions =
       "ESCALATION APPROVAL: The user's request in this conversation was " +
@@ -699,9 +732,6 @@ export async function resumeOperation({
 
   const pendingToolCalls = new Set<string>()
   const unrecoveredToolFailures = new Set<string>()
-  if (storedCallFailure) {
-    unrecoveredToolFailures.add(storedCallFailure)
-  }
   let needsInputUpdate = Promise.resolve()
 
   try {
