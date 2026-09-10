@@ -5,8 +5,9 @@ import {
   AgentOperation,
   AgentOperationApprovalPolicy,
   AgentRequester,
+  ApprovedToolCall,
   ChatConversationChannel,
-  EscalateToolResultStatus,
+  ApprovalToolResultStatus,
   EscalationSource,
   ResolutionStrategy,
   ToolExecutionRule,
@@ -14,7 +15,9 @@ import {
   ToolType,
 } from "@budibase/types"
 import type { ModelMessage } from "ai"
+import isEqual from "lodash/isEqual"
 import type { EscalationGateRuntime } from "../../../../ai/tools"
+import { APPROVAL_REQUIRED_TITLE_PREFIX } from "../../../../escalation/constants"
 import sdk from "../../.."
 import { escalationProcessor } from "../../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../../escalation/resolutionStrategies"
@@ -30,7 +33,7 @@ export interface EscalationGateContext {
   requester?: AgentRequester
   getMessages: () => ModelMessage[]
   getRequestId: () => string | undefined
-  executedApproval?: { toolName: string }
+  executedApproval?: ApprovedToolCall
   generateCardCopy?: (input: {
     label: string
     args: unknown
@@ -159,7 +162,7 @@ const summariseArgs = (label: string, input: unknown) => {
 }
 
 const unavailableResult = (label: string) => ({
-  status: EscalateToolResultStatus.UNAVAILABLE,
+  status: ApprovalToolResultStatus.UNAVAILABLE,
   note:
     `"${label}" requires approval but its approval policy is missing or has ` +
     "no reviewers configured. Tell the user this action cannot be requested " +
@@ -180,9 +183,14 @@ export const createEscalationGateRuntime = ({
   intercept: async (input, { toolCallId, messages }) => {
     const label = readableName ?? toolName
     const executed = gateContext.executedApproval
-    if (executed && executed.toolName === toolName) {
+    if (
+      executed &&
+      executed.toolName === toolName &&
+      executed.sourceId === sourceId &&
+      isEqual(executed.args, input)
+    ) {
       return {
-        status: EscalateToolResultStatus.UNAVAILABLE,
+        status: ApprovalToolResultStatus.ALREADY_APPROVED,
         note:
           `"${label}" was already executed under this conversation's ` +
           "approval - its result is above. Report that outcome. The user " +
@@ -217,7 +225,7 @@ export const createEscalationGateRuntime = ({
       throw new Error("escalation gate: missing workspace context")
     }
 
-    let title = `Approval required: ${label}`
+    let title = `${APPROVAL_REQUIRED_TITLE_PREFIX} ${label}`
     let summary = summariseArgs(label, input)
     try {
       const copy = await gateContext.generateCardCopy?.({
@@ -268,7 +276,7 @@ export const createEscalationGateRuntime = ({
     })
 
     return {
-      status: EscalateToolResultStatus.PENDING_APPROVAL,
+      status: ApprovalToolResultStatus.PENDING_APPROVAL,
       escalationId,
       title,
       summary,
