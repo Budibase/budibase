@@ -16,6 +16,25 @@ import {
 import { Expectations, TestAPI } from "./base"
 
 export class RowAPI extends TestAPI {
+  downloadAttachment = async ({
+    sourceId,
+    rowId,
+    columnName,
+    expectations,
+  }: {
+    sourceId: string
+    rowId: string
+    columnName: string
+    expectations?: Expectations
+  }) => {
+    const response = await this._requestRaw(
+      "get",
+      `/api/${sourceId}/rows/${rowId}/attachment/${columnName}`,
+      { expectations }
+    )
+    return this._checkResponse(response, expectations)
+  }
+
   get = async (
     sourceId: string,
     rowId: string,

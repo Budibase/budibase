@@ -196,8 +196,13 @@ export async function fetchLegacyView(ctx: any) {
 }
 
 export async function fetch(ctx: UserCtx<void, FetchRowsResponse>) {
-  const { tableId } = utils.getSourceId(ctx)
-  ctx.body = await sdk.rows.fetch(tableId)
+  const { tableId, viewId } = utils.getSourceId(ctx)
+  if (viewId) {
+    const result = await sdk.rows.search({ tableId, viewId, query: {} })
+    ctx.body = result.rows
+  } else {
+    ctx.body = await sdk.rows.fetch(tableId)
+  }
 }
 
 export async function find(ctx: UserCtx<void, FindRowResponse>) {
@@ -430,7 +435,10 @@ export async function validate(
 export async function fetchEnrichedRow(
   ctx: UserCtx<void, FetchEnrichedRowResponse>
 ) {
-  const { tableId } = utils.getSourceId(ctx)
+  const { tableId, viewId } = utils.getSourceId(ctx)
+  if (viewId) {
+    await sdk.rows.utils.assertRowInView(viewId, ctx.params.rowId)
+  }
   ctx.body = await pickApi(tableId).fetchEnrichedRow(ctx)
 }
 
@@ -472,9 +480,9 @@ export async function downloadAttachment(
 ) {
   const { columnName } = ctx.params
 
-  const { tableId } = utils.getSourceId(ctx)
+  const { tableId, viewId } = utils.getSourceId(ctx)
   const rowId = ctx.params.rowId
-  const row = await sdk.rows.find(tableId, rowId)
+  const row = await sdk.rows.find(viewId || tableId, rowId)
 
   const table = await sdk.tables.getTable(tableId)
   const columnSchema = table.schema[columnName]
