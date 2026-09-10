@@ -1,7 +1,6 @@
 import { context } from "@budibase/backend-core"
 import { dataFilters } from "@budibase/shared-core"
 import {
-  AgentEscalationConfig,
   AgentOperation,
   AgentOperationApprovalPolicy,
   AgentRequester,
@@ -202,11 +201,11 @@ export const createEscalationGateRuntime = ({
     }
 
     const policy = resolvePolicy(operation, rule.policyId)
-    const notifications: AgentEscalationConfig | undefined =
-      policy?.notifications
-    if (!policy || !notifications?.recipients?.length) {
+    if (!policy?.notifications?.recipients?.length) {
       return unavailableResult(label)
     }
+    const { notifications, ...policySnapshot } = policy
+    const { recipients, delay } = notifications
 
     const frozenMessages = messages?.length
       ? messages
@@ -242,14 +241,15 @@ export const createEscalationGateRuntime = ({
       message: summary,
       title,
       summary,
-      delay: (notifications.delay ?? DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
+      delay: (delay ?? DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
+      recipients,
       resolutionStrategy: resolutionStrategyBinding(
         policy.approvers?.length
           ? (policy.approvalType ?? ResolutionStrategy.FIRST_RESPONSE)
           : ResolutionStrategy.FIRST_RESPONSE
       ),
       rule,
-      policy,
+      policy: policySnapshot,
       agentId,
       operationId: operation.id,
       requestId: gateContext.getRequestId(),
