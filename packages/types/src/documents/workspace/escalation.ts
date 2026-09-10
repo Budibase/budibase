@@ -55,6 +55,11 @@ export interface EscalationReviewContext {
   parameters: string
 }
 
+export type ApprovedToolCall = Pick<
+  PendingToolCall,
+  "toolName" | "args" | "sourceId"
+>
+
 export interface SuspendedOperationContext {
   agentId: string
   operationId: string
