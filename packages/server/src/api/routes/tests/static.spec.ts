@@ -1,11 +1,21 @@
 import { constants, objectStore, roles } from "@budibase/backend-core"
-import { BuiltinPermissionID, Datasource, SourceName } from "@budibase/types"
+import {
+  BuiltinPermissionID,
+  Datasource,
+  Screen,
+  SourceName,
+} from "@budibase/types"
 import fsp from "fs/promises"
 import path from "path"
 import { tmpdir } from "os"
 import { setEnv } from "../../../environment"
 import * as fileSystem from "../../../utilities/fileSystem"
-import { afterAll as _afterAll, getConfig, getRequest } from "./utilities"
+import {
+  afterAll as _afterAll,
+  getConfig,
+  getRequest,
+  structures,
+} from "./utilities"
 
 jest.mock("extract-zip", () => jest.fn())
 
@@ -88,6 +98,8 @@ describe("/static", () => {
   describe("/attachments", () => {
     describe("generateSignedUrls", () => {
       let datasource: Datasource
+      let screen: Screen
+      const componentId = "s3-upload-component"
 
       beforeEach(async () => {
         datasource = await config.createDatasource({
@@ -101,6 +113,18 @@ describe("/static", () => {
             },
           },
         })
+        const screenDefinition = structures.basicScreen()
+        screenDefinition.props._children?.push({
+          _id: componentId,
+          _instanceName: "S3 upload",
+          _styles: {},
+          _component: "@budibase/standard-components/s3upload",
+          datasourceId: datasource._id,
+          bucket: "foo",
+          key: "uploads/{{ fileName }}",
+        })
+        screen = await config.createScreen(screenDefinition)
+        await config.publish()
       })
 
       it("should be able to generate a signed upload URL", async () => {
@@ -108,13 +132,18 @@ describe("/static", () => {
         const key = "bar"
         const res = await request
           .post(`/api/attachments/${datasource._id}/url`)
-          .send({ bucket, key })
+          .send({
+            bucket,
+            key: `uploads/${key}`,
+            componentId,
+            screenId: screen._id,
+          })
           .set(config.defaultHeaders())
           .expect("Content-Type", /json/)
           .expect(200)
 
         expect(res.body.signedUrl).toStartWith(
-          "https://foo.s3.eu-west-1.amazonaws.com/bar?"
+          "https://foo.s3.eu-west-1.amazonaws.com/uploads/bar?"
         )
         expect(res.body.signedUrl).toContain("X-Amz-Algorithm=AWS4-HMAC-SHA256")
         expect(res.body.signedUrl).toContain("X-Amz-Credential=bb")
@@ -124,7 +153,7 @@ describe("/static", () => {
         expect(res.body.signedUrl).toContain("X-Amz-SignedHeaders=host")
 
         expect(res.body.publicUrl).toEqual(
-          `https://${bucket}.s3.eu-west-1.amazonaws.com/${key}`
+          `https://${bucket}.s3.eu-west-1.amazonaws.com/uploads/${key}`
         )
       })
 
@@ -134,6 +163,8 @@ describe("/static", () => {
           .send({
             bucket: "foo",
             key: "bar",
+            componentId,
+            screenId: screen._id,
           })
           .set(config.defaultHeaders())
           .expect("Content-Type", /json/)
@@ -149,6 +180,8 @@ describe("/static", () => {
           .send({
             bucket: "foo",
             key: "bar",
+            componentId,
+            screenId: screen._id,
           })
           .expect("Content-Type", /json/)
           .expect(401)
@@ -166,6 +199,8 @@ describe("/static", () => {
             .send({
               bucket: "foo",
               key: "bar",
+              componentId,
+              screenId: screen._id,
             })
             .set(config.defaultHeaders())
             .expect("Content-Type", /json/)
@@ -179,6 +214,8 @@ describe("/static", () => {
           .send({
             bucket: undefined,
             key: "bar",
+            componentId,
+            screenId: screen._id,
           })
           .set(config.defaultHeaders())
           .expect("Content-Type", /json/)
@@ -191,6 +228,8 @@ describe("/static", () => {
           .post(`/api/attachments/${datasource._id}/url`)
           .send({
             bucket: "foo",
+            componentId,
+            screenId: screen._id,
           })
           .set(config.defaultHeaders())
           .expect("Content-Type", /json/)
@@ -198,46 +237,131 @@ describe("/static", () => {
         expect(res.body.message).toEqual("bucket and key values are required")
       })
 
-      it("should reject buckets that do not match a datasource bucket constraint", async () => {
-        const constrainedDatasource = await config.createDatasource({
+      it("should reject buckets that do not match the S3 upload component", async () => {
+        await request
+          .post(`/api/attachments/${datasource._id}/url`)
+          .send({
+            bucket: "other-bucket",
+            key: "uploads/bar",
+            componentId,
+            screenId: screen._id,
+          })
+          .set(config.defaultHeaders())
+          .expect(403)
+      })
+
+      it("should reject datasources that do not match the S3 upload component", async () => {
+        const otherDatasource = await config.createDatasource({
           datasource: {
             type: "datasource",
-            name: "Constrained Test",
+            name: "Other S3 datasource",
             source: SourceName.S3,
             config: {
               accessKeyId: "bb",
               secretAccessKey: "bb",
-              bucket: "allowed-bucket",
             },
           },
         })
 
-        const res = await request
-          .post(`/api/attachments/${constrainedDatasource._id}/url`)
+        await request
+          .post(`/api/attachments/${otherDatasource._id}/url`)
           .send({
-            bucket: "other-bucket",
-            key: "bar",
+            bucket: "foo",
+            key: "uploads/bar",
+            componentId,
+            screenId: screen._id,
           })
           .set(config.defaultHeaders())
-          .expect("Content-Type", /json/)
-          .expect(400)
-
-        expect(res.body.message).toEqual(
-          "bucket must match the datasource configuration"
-        )
+          .expect(403)
       })
 
-      it("should deny non-builder app users from generating a signed upload URL", async () => {
+      it("should reject keys outside the S3 upload component pattern", async () => {
+        await request
+          .post(`/api/attachments/${datasource._id}/url`)
+          .send({
+            bucket: "foo",
+            key: "other/bar",
+            componentId,
+            screenId: screen._id,
+          })
+          .set(config.defaultHeaders())
+          .expect(403)
+      })
+
+      it("should reject path separators supplied by a dynamic key value", async () => {
+        await request
+          .post(`/api/attachments/${datasource._id}/url`)
+          .send({
+            bucket: "foo",
+            key: "uploads/nested/bar",
+            componentId,
+            screenId: screen._id,
+          })
+          .set(config.defaultHeaders())
+          .expect(403)
+      })
+
+      it("should reject a component that is not configured for the upload", async () => {
+        await request
+          .post(`/api/attachments/${datasource._id}/url`)
+          .send({
+            bucket: "foo",
+            key: "uploads/bar",
+            componentId: "other-component",
+            screenId: screen._id,
+          })
+          .set(config.defaultHeaders())
+          .expect(403)
+      })
+
+      it("should reject components on screens the app user cannot access", async () => {
+        const restrictedScreenDefinition = structures.powerScreen("/restricted")
+        restrictedScreenDefinition.props._children?.push({
+          _id: componentId,
+          _instanceName: "Restricted S3 upload",
+          _styles: {},
+          _component: "@budibase/standard-components/s3upload",
+          datasourceId: datasource._id,
+          bucket: "foo",
+          key: "uploads/{{ fileName }}",
+        })
+        const restrictedScreen = await config.createScreen(
+          restrictedScreenDefinition
+        )
+        await config.publish()
+
         await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
           await request
             .post(`/api/attachments/${datasource._id}/url`)
             .send({
               bucket: "foo",
-              key: "bar",
+              key: "uploads/bar",
+              componentId,
+              screenId: restrictedScreen._id,
+            })
+            .set(config.defaultHeaders())
+            .expect(403)
+        })
+      })
+
+      it("should allow non-creator app users to generate a configured signed upload URL", async () => {
+        await config.loginAsRole(roles.BUILTIN_ROLE_IDS.BASIC, async () => {
+          const res = await request
+            .post(`/api/attachments/${datasource._id}/url`)
+            .send({
+              bucket: "foo",
+              key: "uploads/bar",
+              componentId,
+              screenId: screen._id,
             })
             .set(config.defaultHeaders())
             .expect("Content-Type", /json/)
-            .expect(403)
+            .expect(200)
+
+          expect(res.body.signedUrl).toBeDefined()
+          expect(res.body.publicUrl).toEqual(
+            "https://foo.s3.eu-west-1.amazonaws.com/uploads/bar"
+          )
         })
       })
     })

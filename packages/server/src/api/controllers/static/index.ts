@@ -11,20 +11,23 @@ import {
 } from "@budibase/backend-core"
 import * as pro from "@budibase/pro"
 import { InvalidFileExtensions } from "@budibase/shared-core"
-import { processString } from "@budibase/string-templates"
+import { findHBSBlocks, processString } from "@budibase/string-templates"
 import {
   BudibaseAppProps,
+  Component,
   Ctx,
   DocumentType,
   Feature,
   GetSignedUploadUrlRequest,
   GetSignedUploadUrlResponse,
+  Layout,
   ProcessAttachmentResponse,
   PWAManifest,
   PWAManifestImage,
   ServeAppResponse,
   ServeBuilderPreviewResponse,
   ServeClientLibraryResponse,
+  Screen,
   UserCtx,
   Workspace,
 } from "@budibase/types"
@@ -756,8 +759,116 @@ export const serveServiceWorker = async function (ctx: Ctx) {
   ctx.body = serviceWorkerContent
 }
 
+const findComponent = (
+  component: Component,
+  componentId: string
+): Component | undefined => {
+  if (component._id === componentId) {
+    return component
+  }
+  for (const child of component._children || []) {
+    const match = findComponent(child, componentId)
+    if (match) {
+      return match
+    }
+  }
+}
+
+const getConfiguredValues = (
+  component: Component,
+  setting: string
+): string[] => {
+  const values = [component[setting]]
+  for (const condition of component._conditions || []) {
+    if (
+      !condition.disabled &&
+      condition.action === "update" &&
+      condition.setting === setting
+    ) {
+      values.push(condition.settingValue)
+    }
+  }
+  return values.filter(value => typeof value === "string")
+}
+
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+const matchesConfiguredKey = (template: string, key: string): boolean => {
+  const blocks = findHBSBlocks(template)
+  if (!blocks.length) {
+    return template === key
+  }
+
+  const firstBlockIndex = template.indexOf(blocks[0])
+  if (firstBlockIndex === 0) {
+    return false
+  }
+
+  let cursor = 0
+  let pattern = "^"
+  for (const block of blocks) {
+    const blockIndex = template.indexOf(block, cursor)
+    pattern += escapeRegex(template.slice(cursor, blockIndex))
+    pattern += "[^/]+"
+    cursor = blockIndex + block.length
+  }
+  pattern += `${escapeRegex(template.slice(cursor))}$`
+  return new RegExp(pattern).test(key)
+}
+
+interface S3UploadAuthorization {
+  ctx: UserCtx<GetSignedUploadUrlRequest, GetSignedUploadUrlResponse>
+  datasourceId: string
+  bucket: string
+  componentId: string
+  key: string
+  screenId: string
+}
+
+const authorizeS3Upload = async ({
+  ctx,
+  datasourceId,
+  bucket,
+  componentId,
+  key,
+  screenId,
+}: S3UploadAuthorization): Promise<void> => {
+  const db = context.getWorkspaceDB()
+  const screen = await db.tryGet<Screen>(screenId)
+  const accessibleScreen = screen
+    ? await new roles.AccessController().checkScreenAccess(
+        screen,
+        ctx.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
+      )
+    : undefined
+  if (!accessibleScreen) {
+    ctx.throw(403, "The S3 upload component is not accessible")
+    return
+  }
+
+  let component = findComponent(accessibleScreen.props, componentId)
+  if (!component && accessibleScreen.layoutId) {
+    const layout = await db.tryGet<Layout>(accessibleScreen.layoutId)
+    if (layout?.props) {
+      component = findComponent(layout.props, componentId)
+    }
+  }
+
+  const isConfiguredUpload =
+    component?._component.endsWith("s3upload") &&
+    getConfiguredValues(component, "datasourceId").includes(datasourceId) &&
+    getConfiguredValues(component, "bucket").includes(bucket) &&
+    getConfiguredValues(component, "key").some(template =>
+      matchesConfiguredKey(template, key)
+    )
+  if (!isConfiguredUpload) {
+    ctx.throw(403, "The S3 upload destination is not configured")
+  }
+}
+
 export const getSignedUploadURL = async function (
-  ctx: Ctx<GetSignedUploadUrlRequest, GetSignedUploadUrlResponse>
+  ctx: UserCtx<GetSignedUploadUrlRequest, GetSignedUploadUrlResponse>
 ) {
   // Ensure datasource is valid
   let datasource
@@ -771,19 +882,28 @@ export const getSignedUploadURL = async function (
     ctx.throw(400, "The specified datasource could not be found")
   }
 
+  const { bucket, componentId, key, screenId } = ctx.request.body || {}
+  if (!bucket || !key) {
+    ctx.throw(400, "bucket and key values are required")
+  }
+  if (!componentId || !screenId) {
+    ctx.throw(400, "componentId and screenId values are required")
+  }
+
+  await authorizeS3Upload({
+    ctx,
+    datasourceId: ctx.params.datasourceId,
+    bucket,
+    componentId,
+    key,
+    screenId,
+  })
+
   // Determine type of datasource and generate signed URL
   let signedUrl
   let publicUrl
   const awsRegion = (datasource?.config?.region || "eu-west-1") as string
   if (datasource?.source === "S3") {
-    const { bucket, key } = ctx.request.body || {}
-    if (!bucket || !key) {
-      ctx.throw(400, "bucket and key values are required")
-    }
-    const datasourceBucket = datasource?.config?.bucket
-    if (datasourceBucket && datasourceBucket !== bucket) {
-      ctx.throw(400, "bucket must match the datasource configuration")
-    }
     try {
       let endpoint = datasource?.config?.endpoint
       if (endpoint && !utils.urlHasProtocol(endpoint)) {
