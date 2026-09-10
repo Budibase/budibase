@@ -1,6 +1,6 @@
 import { tmpdir } from "os"
 import {
-  Agent,
+  getGlobalDispatcher,
   MockAgent,
   setGlobalDispatcher,
   fetch as undiciFetch,
@@ -32,6 +32,8 @@ process.env.ENCRYPTION_KEY = "some-key"
 process.env.BBAI_LITELLM_KEY = "sk-test-key"
 process.env.LITELLM_URL = "https://api.openai.com/v1"
 
+const defaultDispatcher = getGlobalDispatcher()
+const defaultFetch = globalThis.fetch
 let agent: MockAgent | null = null
 
 // Don't eagerly install MockAgent - let tests control when they need it
@@ -52,11 +54,13 @@ export function installHttpMocking() {
 }
 
 export async function resetHttpMocking() {
-  if (agent) {
-    await agent.close()
+  if (!agent) {
+    return
   }
-  // restore a real dispatcher so other tests (if any) aren’t polluted
-  setGlobalDispatcher(new Agent())
+
+  await agent.close()
+  setGlobalDispatcher(defaultDispatcher)
+  globalThis.fetch = defaultFetch
   agent = null
 }
 
