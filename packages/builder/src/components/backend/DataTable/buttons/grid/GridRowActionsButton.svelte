@@ -34,13 +34,16 @@
   $: actionCount = isView ? viewRowActions.length : tableRowActions.length
   $: newNameInvalid = newName && tableRowActions.some(x => x.name === newName)
 
-  const rowActionUrl = derived([url, workspaceStore], ([$url, $workspaceStore]) => {
-    return ({ automationId }) => {
-      return $url(
-        `/builder/workspace/${$workspaceStore.appId}/automation/${automationId}`
-      )
+  const rowActionUrl = derived(
+    [url, workspaceStore],
+    ([$url, $workspaceStore]) => {
+      return ({ automationId }) => {
+        return $url(
+          `/builder/workspace/${$workspaceStore.appId}/automation/${automationId}`
+        )
+      }
     }
-  })
+  )
 
   const toggleAction = async (action, enabled) => {
     if (enabled) {

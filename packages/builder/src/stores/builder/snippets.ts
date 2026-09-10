@@ -18,13 +18,17 @@ export class SnippetStore extends BudiStore<Snippet[]> {
       ...get(this).filter(snippet => snippet.name !== updatedSnippet.name),
       updatedSnippet,
     ]
-    const app = await API.saveAppMetadata(get(workspaceStore).appId, { snippets })
+    const app = await API.saveAppMetadata(get(workspaceStore).appId, {
+      snippets,
+    })
     this.syncMetadata(app)
   }
 
   deleteSnippet = async (snippetName: string) => {
     const snippets = get(this).filter(snippet => snippet.name !== snippetName)
-    const app = await API.saveAppMetadata(get(workspaceStore).appId, { snippets })
+    const app = await API.saveAppMetadata(get(workspaceStore).appId, {
+      snippets,
+    })
     this.syncMetadata(app)
   }
 }

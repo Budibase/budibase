@@ -533,7 +533,9 @@
   }
 
   const currentWorkspaceId = $derived(
-    $workspaceStore.appId ? sdk.workspaces.getProdWorkspaceID($workspaceStore.appId) : ""
+    $workspaceStore.appId
+      ? sdk.workspaces.getProdWorkspaceID($workspaceStore.appId)
+      : ""
   )
   const workspaceReady = $derived(!isWorkspaceOnly || !!currentWorkspaceId)
   const isWorkspaceQueryReady = $derived(

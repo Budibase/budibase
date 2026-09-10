@@ -18,7 +18,9 @@ export const getAvailableActions = (getAllActions = false) => {
       if (getAllActions || !action.dependsOnFeature) {
         return true
       }
-      return get(workspaceStore).clientFeatures?.[action.dependsOnFeature] === true
+      return (
+        get(workspaceStore).clientFeatures?.[action.dependsOnFeature] === true
+      )
     })
     .map(action => {
       // Then enrich the actions with real components

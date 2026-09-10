@@ -4,7 +4,8 @@
   import { admin } from "@/stores/portal/admin"
 
   $: isCloud = $admin.cloud
-  $: chainAutomations = $workspaceStore.automations?.chainAutomations ?? !isCloud
+  $: chainAutomations =
+    $workspaceStore.automations?.chainAutomations ?? !isCloud
 
   async function save({ detail }: CustomEvent<boolean>) {
     try {

@@ -1,7 +1,11 @@
 <script lang="ts">
   import { getErrorMessage } from "@/helpers/errors"
   import { buildLiveUrl } from "@/helpers/urls"
-  import { workspaceStore, screenStore, workspaceAppStore } from "@/stores/builder"
+  import {
+    workspaceStore,
+    screenStore,
+    workspaceAppStore,
+  } from "@/stores/builder"
   import * as screenTemplating from "@/templates/screenTemplating"
   import {
     Body,

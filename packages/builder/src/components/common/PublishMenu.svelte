@@ -34,11 +34,13 @@
     return getPluginSvelteMajor(plugin) ?? LEGACY_SVELTE_MAJOR
   }
 
-  $: incompatiblePlugins = ($workspaceStore.usedPlugins || []).filter(plugin => {
-    const major = getPluginSvelteMajor(plugin)
-    const isComponentPlugin = plugin?.schema?.type === PluginType.COMPONENT
-    return major !== CURRENT_SVELTE_MAJOR && isComponentPlugin
-  })
+  $: incompatiblePlugins = ($workspaceStore.usedPlugins || []).filter(
+    plugin => {
+      const major = getPluginSvelteMajor(plugin)
+      const isComponentPlugin = plugin?.schema?.type === PluginType.COMPONENT
+      return major !== CURRENT_SVELTE_MAJOR && isComponentPlugin
+    }
+  )
 
   const hasAcknowledgedSvelte4PluginWarning = (appId?: string) => {
     const key = `bb:publish:svelte4-plugin-warning-ack:${appId}`

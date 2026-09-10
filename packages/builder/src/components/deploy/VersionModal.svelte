@@ -107,8 +107,8 @@
       <Body size="S">
         This workspace is currently using version
         <b>{$workspaceStore.version}</b>, but version
-        <b>{$workspaceStore.upgradableVersion}</b> is available. Updates can contain new
-        features, performance improvements and bug fixes.
+        <b>{$workspaceStore.upgradableVersion}</b> is available. Updates can contain
+        new features, performance improvements and bug fixes.
       </Body>
     {:else}
       <Body size="S">

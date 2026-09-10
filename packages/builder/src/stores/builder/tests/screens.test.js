@@ -2,7 +2,11 @@ import { it, expect, describe, beforeEach, vi } from "vitest"
 import { get, writable } from "svelte/store"
 import { API } from "@/api"
 import { Constants } from "@budibase/frontend-core"
-import { componentStore, workspaceStore, workspaceAppStore } from "@/stores/builder"
+import {
+  componentStore,
+  workspaceStore,
+  workspaceAppStore,
+} from "@/stores/builder"
 import { initialScreenState, ScreenStore } from "@/stores/builder/screens"
 import {
   getScreenFixture,

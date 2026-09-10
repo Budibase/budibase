@@ -1,7 +1,11 @@
 <script lang="ts">
   import CreationPage from "@/components/common/CreationPage.svelte"
   import { AutoScreenTypes } from "@/constants"
-  import { workspaceStore, screenStore, workspaceAppStore } from "@/stores/builder"
+  import {
+    workspaceStore,
+    screenStore,
+    workspaceAppStore,
+  } from "@/stores/builder"
   import { licensing } from "@/stores/portal"
   import {
     Body,

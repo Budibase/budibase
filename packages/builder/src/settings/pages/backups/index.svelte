@@ -111,7 +111,10 @@
     try {
       loading = true
       const backupIds = selectedRows.map(row => row._id)
-      const response = await backups.deleteBackups($workspaceStore.appId, backupIds)
+      const response = await backups.deleteBackups(
+        $workspaceStore.appId,
+        backupIds
+      )
 
       if (response.failureCount > 0) {
         notifications.warning(response.message)

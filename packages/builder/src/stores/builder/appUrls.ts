@@ -11,7 +11,12 @@ export const selectedAppUrls = derived(
     const route = $selectedScreen?.routing.route || ""
     const workspacePrefix = selectedWorkspaceApp ? selectedWorkspaceApp.url : ""
 
-    const previewUrl = buildPreviewUrl($workspaceStore, workspacePrefix, route, true)
+    const previewUrl = buildPreviewUrl(
+      $workspaceStore,
+      workspacePrefix,
+      route,
+      true
+    )
 
     const liveUrl = buildLiveUrl($workspaceStore, workspacePrefix, true)
     return { previewUrl, liveUrl }

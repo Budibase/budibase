@@ -111,7 +111,9 @@ describe("Application Meta Store", () => {
   })
 
   it("Sync type support information to state", async ctx => {
-    ctx.test.workspaceStore.syncClientTypeSupportPresets({ preset: "information" })
+    ctx.test.workspaceStore.syncClientTypeSupportPresets({
+      preset: "information",
+    })
 
     expect(ctx.test.store.typeSupportPresets).toStrictEqual({
       preset: "information",

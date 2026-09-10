@@ -2,7 +2,11 @@
   import { ModalContent, Input, keepOpen } from "@budibase/bbui"
   import sanitizeUrl from "@/helpers/sanitizeUrl"
   import { get } from "svelte/store"
-  import { screenStore, workspaceAppStore, workspaceStore } from "@/stores/builder"
+  import {
+    screenStore,
+    workspaceAppStore,
+    workspaceStore,
+  } from "@/stores/builder"
   import { buildLiveUrl } from "@/helpers/urls"
 
   export let onConfirm: (data: { route: string }) => Promise<void>

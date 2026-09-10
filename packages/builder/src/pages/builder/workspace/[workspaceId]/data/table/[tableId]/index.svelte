@@ -331,7 +331,8 @@
         datasource={gridDatasource}
         canAddRows={!isUsersTable}
         canDeleteRows={!isUsersTable}
-        canEditRows={!isUsersTable || !$workspaceStore.features.disableUserMetadata}
+        canEditRows={!isUsersTable ||
+          !$workspaceStore.features.disableUserMetadata}
         canEditColumns={!isProductionMode &&
           (!isUsersTable || !$workspaceStore.features.disableUserMetadata)}
         canSaveSchema={!isProductionMode}

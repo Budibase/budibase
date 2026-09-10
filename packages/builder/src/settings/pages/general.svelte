@@ -38,7 +38,8 @@
   let deleteModal: DeleteModal
   let cloneResourcesModal: CloneResourcesModal
 
-  $: updateAvailable = $workspaceStore.upgradableVersion !== $workspaceStore.version
+  $: updateAvailable =
+    $workspaceStore.upgradableVersion !== $workspaceStore.version
   $: revertAvailable = $workspaceStore.revertableVersion != null
   $: appRecaptchaEnabled = $recaptchaStore.enabled
   $: hasOnlyOneWorkspace = $workspacesStore.apps.length <= 1
@@ -142,7 +143,8 @@
       <Body size="S">
         The workspace is currently using version
         <strong>{$workspaceStore.version}</strong>
-        but version <strong>{$workspaceStore.upgradableVersion}</strong> is available.
+        but version <strong>{$workspaceStore.upgradableVersion}</strong> is
+        available.
         <br />
         Updates can contain new features, performance improvements and bug fixes.
       </Body>

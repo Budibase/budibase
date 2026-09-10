@@ -1,6 +1,9 @@
 <script lang="ts">
   import { Body, ModalContent, Layout, Link } from "@budibase/bbui"
-  import { workspaceStore, datasources as datasourcesStore } from "@/stores/builder"
+  import {
+    workspaceStore,
+    datasources as datasourcesStore,
+  } from "@/stores/builder"
   import ICONS from "@/components/backend/DatasourceNavigator/icons"
   import { IntegrationNames } from "@/constants"
   import { createEventDispatcher } from "svelte"
