@@ -20,7 +20,7 @@
   import { url, goto } from "@roxi/routify"
   import BBLogo from "assets/BBLogo.svelte"
   import {
-    appStore,
+    workspaceStore,
     workspaceFavouriteStore,
     workspaceAppStore,
     automationStore,
@@ -137,7 +137,7 @@
   let createTableModal: ModalAPI
   let tableName = ""
 
-  $: workspaceId = $appStore.appId
+  $: workspaceId = $workspaceStore.appId
   $: !$pinned && unPin()
 
   // keep sidebar expanded when workspace selector is open
@@ -372,7 +372,7 @@
       return null
     }
 
-    const liveUrl = buildLiveUrl($appStore, workspaceApp.url ?? "", true)
+    const liveUrl = buildLiveUrl($workspaceStore, workspaceApp.url ?? "", true)
 
     return liveUrl || null
   }
@@ -490,7 +490,7 @@
             }}
           />
         {:else}
-          <h1>{$appStore.name}</h1>
+          <h1>{$workspaceStore.name}</h1>
         {/if}
       </div>
       <Icon

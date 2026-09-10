@@ -2,7 +2,7 @@
   import { Multiselect, type LabelPosition } from "@budibase/bbui"
   import { FeatureFlag } from "@budibase/types"
   import { featureFlags, projectsStore } from "@/stores/portal"
-  import { appStore } from "@/stores/builder"
+  import { workspaceStore } from "@/stores/builder"
 
   interface ProjectOption {
     label: string
@@ -27,7 +27,7 @@
   let fetchError: string | undefined = $state()
 
   const projectsEnabled = $derived($featureFlags[FeatureFlag.PROJECTS])
-  const workspaceId = $derived($appStore.appId)
+  const workspaceId = $derived($workspaceStore.appId)
   const options: ProjectOption[] = $derived(
     $projectsStore.map(project => ({
       label: project.name,

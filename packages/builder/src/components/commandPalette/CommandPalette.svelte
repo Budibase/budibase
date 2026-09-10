@@ -13,7 +13,7 @@
     automationStore,
     previewStore,
     sortedScreens,
-    appStore,
+    workspaceStore,
     datasources,
     queries,
     tables,
@@ -67,7 +67,7 @@
       type: "Preview",
       name: "Published App",
       icon: "play",
-      action: () => window.open(`/app${$appStore.url}`),
+      action: () => window.open(`/app${$workspaceStore.url}`),
       requiresApp: true,
     },
     {
@@ -364,7 +364,7 @@
 
   async function deployApp() {
     try {
-      await API.publishAppChanges($appStore.appId)
+      await API.publishAppChanges($workspaceStore.appId)
       notifications.success("App published successfully")
     } catch (error) {
       notifications.error("Error publishing app")

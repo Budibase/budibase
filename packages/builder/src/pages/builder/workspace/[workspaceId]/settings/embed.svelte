@@ -12,12 +12,12 @@
   } from "@budibase/bbui"
   import { AppStatus } from "@/constants"
   import { workspacesStore } from "@/stores/portal"
-  import { appStore, workspaceAppStore } from "@/stores/builder"
+  import { workspaceStore, workspaceAppStore } from "@/stores/builder"
 
   let selectedApp
 
   $: filteredApps = $workspacesStore.apps.filter(
-    app => app.devId == $appStore.appId
+    app => app.devId == $workspaceStore.appId
   )
   $: workspace = filteredApps.length ? filteredApps[0] : {}
   $: workspaceBaseUrl = `${window.origin}/embed${workspace?.url}`

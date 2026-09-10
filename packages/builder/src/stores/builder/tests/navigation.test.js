@@ -5,7 +5,7 @@ import {
   INITIAL_NAVIGATION_STATE,
   NavigationStore,
 } from "@/stores/builder/navigation"
-import { appStore, workspaceAppStore } from "@/stores/builder"
+import { workspaceStore, workspaceAppStore } from "@/stores/builder"
 
 vi.mock("@/api", () => {
   return {
@@ -18,11 +18,11 @@ vi.mock("@/api", () => {
 })
 
 vi.mock("@/stores/builder", async () => {
-  const mockAppStore = writable()
-  const appStore = {
-    subscribe: mockAppStore.subscribe,
-    update: mockAppStore.update,
-    set: mockAppStore.set,
+  const mockWorkspaceStore = writable()
+  const workspaceStore = {
+    subscribe: mockWorkspaceStore.subscribe,
+    update: mockWorkspaceStore.update,
+    set: mockWorkspaceStore.set,
   }
 
   const mockWorkspaceApp = {
@@ -43,7 +43,7 @@ vi.mock("@/stores/builder", async () => {
   }
 
   return {
-    appStore,
+    workspaceStore,
     workspaceAppStore,
   }
 })
@@ -243,7 +243,7 @@ describe("Navigation store", () => {
 
   it("Should save the navigation against the currently loaded builder app", async ctx => {
     // Set a fake appId to resolve
-    appStore.update(state => ({
+    workspaceStore.update(state => ({
       ...state,
       appId: "testing_123",
     }))

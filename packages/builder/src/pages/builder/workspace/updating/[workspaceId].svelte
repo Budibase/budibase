@@ -4,14 +4,14 @@
   import { get } from "svelte/store"
 
   import { API } from "@/api"
-  import { appStore } from "@/stores/builder"
+  import { workspaceStore } from "@/stores/builder"
 
   export let workspaceId: string
 
   // Set appId immediately so API calls have the correct context
   // Only update if it's different to avoid unnecessary re-renders
-  if (get(appStore).appId !== workspaceId) {
-    appStore.update(state => ({ ...state, appId: workspaceId }))
+  if (get(workspaceStore).appId !== workspaceId) {
+    workspaceStore.update(state => ({ ...state, appId: workspaceId }))
   }
 
   $params

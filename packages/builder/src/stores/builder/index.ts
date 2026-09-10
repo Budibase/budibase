@@ -1,7 +1,7 @@
 import { layoutStore } from "./layouts"
 import { workspaceAppStore } from "./workspaceApps"
 import { workspaceFavouriteStore } from "./workspaceFavourites"
-import { appStore } from "./workspace"
+import { workspaceStore } from "./workspace"
 import { componentStore, selectedComponent } from "./components"
 import { navigationStore } from "./navigation"
 import { themeStore } from "./theme"
@@ -54,7 +54,7 @@ export {
   componentTreeNodesStore,
   componentTreeSearchStore,
   layoutStore,
-  appStore,
+  workspaceStore,
   componentStore,
   navigationStore,
   themeStore,
@@ -103,7 +103,7 @@ export {
 }
 
 export const reset = () => {
-  appStore.reset()
+  workspaceStore.reset()
   builderStore.reset()
   screenStore.reset()
   componentStore.reset()
@@ -137,9 +137,9 @@ const resetBuilderHistory = () => {
 export const initialise = async (pkg: FetchAppPackageResponse) => {
   const { application, recaptchaKey } = pkg
   // must be first operation to make sure subsequent requests have correct app ID
-  appStore.syncAppPackage(pkg)
+  workspaceStore.syncAppPackage(pkg)
   await Promise.all([
-    appStore.syncAppRoutes(),
+    workspaceStore.syncAppRoutes(),
     componentStore.refreshDefinitions(application?.appId),
   ])
   builderStore.init(application)

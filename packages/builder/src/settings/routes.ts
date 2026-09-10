@@ -5,7 +5,7 @@ import { UserAvatar } from "@budibase/frontend-core"
 import { Target, type Route } from "@/types/routing"
 import { Pages } from "./pages"
 import { AdminState } from "@/stores/portal/admin"
-import { AppMetaState } from "@/stores/builder/workspace"
+import { WorkspaceMetaState } from "@/stores/builder/workspace"
 import { PortalWorkspacesStore } from "@/stores/portal/workspaces"
 import { StoreApp } from "@/types"
 import { aiConfigsStore } from "@/stores/portal"
@@ -232,11 +232,11 @@ export const orgRoutes = (
 }
 
 export const workspaceRoutes = (
-  appStore: AppMetaState,
+  workspaceStore: WorkspaceMetaState,
   workspacesStore: PortalWorkspacesStore,
   user: GetGlobalSelfResponse
 ): Route[] => {
-  if (!appStore?.appId) {
+  if (!workspaceStore?.appId) {
     return []
   }
   const isCreator = user != null && sdk.users.canCreateApps(user)
@@ -247,7 +247,7 @@ export const workspaceRoutes = (
 
   const backupErrors = getBackupErrors(
     workspacesStore.apps || [],
-    appStore?.appId
+    workspaceStore?.appId
   )
   const backupErrorCount = Object.keys(backupErrors).length
 

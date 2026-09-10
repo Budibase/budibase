@@ -4,7 +4,7 @@
     datasources,
     userSelectedResourceMap,
     contextMenuStore,
-    appStore,
+    workspaceStore,
     workspaceFavouriteStore,
     dataEnvironmentStore,
   } from "@/stores/builder"
@@ -231,7 +231,7 @@
 <div class="nav">
   {#if !isUsersTable}
     <a
-      href={`/builder/workspace/${$appStore.appId}/data/datasource/${datasource?._id}`}
+      href={`/builder/workspace/${$workspaceStore.appId}/data/datasource/${datasource?._id}`}
     >
       <IntegrationIcon
         integrationType={datasource?.source}

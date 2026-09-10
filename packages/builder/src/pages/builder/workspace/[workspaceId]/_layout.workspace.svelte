@@ -6,7 +6,7 @@
     builderStore,
     previewStore,
     deploymentStore,
-    appStore,
+    workspaceStore,
   } from "@/stores/builder"
   import { workspacesStore, admin, aiConfigsStore, auth } from "@/stores/portal"
   import { bb } from "@/stores/bb"
@@ -42,7 +42,7 @@
         await workspacesStore.load()
       } else {
         reset()
-        appStore.update(state => ({ ...state, appId }))
+        workspaceStore.update(state => ({ ...state, appId }))
         const pkg = await API.fetchAppPackage(appId)
 
         await initialise(pkg)

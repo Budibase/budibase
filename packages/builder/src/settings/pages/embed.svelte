@@ -15,18 +15,18 @@
   import { PASSWORD_REPLACEMENT } from "@budibase/types"
   import { AppStatus } from "@/constants"
   import { workspacesStore } from "@/stores/portal/workspaces"
-  import { appStore, workspaceAppStore } from "@/stores/builder"
+  import { workspaceStore, workspaceAppStore } from "@/stores/builder"
   import { licensing } from "@/stores/portal/licensing"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
   import { onMount } from "svelte"
 
   let selectedApp
 
-  $: allowedOrigins = $appStore.embedAllowedOrigins || []
+  $: allowedOrigins = $workspaceStore.embedAllowedOrigins || []
 
   const updateAllowedOrigins = async origins => {
     try {
-      await appStore.updateApp({ embedAllowedOrigins: origins })
+      await workspaceStore.updateApp({ embedAllowedOrigins: origins })
       notifications.success("Allowed domains updated")
     } catch (error) {
       notifications.error("Error updating allowed domains")
@@ -50,7 +50,7 @@
   let originalAlgorithm = "ES256"
 
   onMount(() => {
-    const config = $appStore.embedSSO
+    const config = $workspaceStore.embedSSO
     if (config) {
       ssoEnabled = config.enabled
       ssoAlgorithm = config.algorithm || "ES256"
@@ -95,7 +95,7 @@
         issuer: ssoIssuer || undefined,
         emailClaim: ssoEmailClaim || undefined,
       }
-      await appStore.updateApp({ embedSSO: config })
+      await workspaceStore.updateApp({ embedSSO: config })
       originalAlgorithm = ssoAlgorithm
       if (ssoKey) {
         ssoKeySet = true
@@ -108,7 +108,7 @@
   }
 
   $: filteredApps = $workspacesStore.apps.filter(
-    app => app.devId == $appStore.appId
+    app => app.devId == $workspaceStore.appId
   )
   $: workspace = filteredApps.length ? filteredApps[0] : {}
   $: workspaceBaseUrl = `${window.origin}/embed${workspace?.url}`
