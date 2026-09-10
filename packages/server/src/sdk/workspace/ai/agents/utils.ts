@@ -4,14 +4,13 @@ import {
   ToolMetadata,
   SourceName,
   WebSearchProvider,
-  EscalateToolResultStatus,
+  ApprovalToolResultStatus,
   type AgentExecutionContext,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
 import {
   createKnowledgeFilesTool,
   createKnowledgeSearchTool,
-  createEscalatePlaceholderTool,
   getBudibaseTools,
 } from "../../../../ai/tools/budibase"
 import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
@@ -45,7 +44,6 @@ const HELPER_TOOL_NAMES = new Set([
   "get_automation",
   "list_knowledge_files",
   "search_knowledge",
-  "list_session_escalations",
 ])
 
 const isHelperTool = (tool: Pick<AiToolDefinition, "name">) =>
@@ -141,7 +139,6 @@ export async function getAvailableTools(
     ),
     ...restQueryTools,
     ...datasourceQueryTools,
-    createEscalatePlaceholderTool(),
   ]
   if (webSearchConfig?.apiKey) {
     if (webSearchConfig.provider === WebSearchProvider.EXA) {
@@ -294,10 +291,6 @@ export async function buildPromptAndTools(
   if (options.escalationGateContext) {
     resolvedSystemPrompt += `\n\nYou have no escalation or approval-request capability of your own. Never claim to have escalated, flagged, or referred anything for human review - approvals happen automatically when you use tools that require them. If instructions ask you to escalate a topic, tell the user you cannot escalate it and continue normally.`
   }
-  if (enabledToolNames.has("escalate") && !options.escalationGateContext) {
-    resolvedSystemPrompt += `\n\nBefore calling escalate, call list_session_escalations to check whether this same request is already awaiting approval or has already been approved in this conversation. If an equivalent request is still pending, do not escalate again - tell the user it is already awaiting approval. If it has already been approved, proceed instead of escalating again. Only escalate genuinely new requests.`
-  }
-
   return {
     systemPrompt: resolvedSystemPrompt,
     tools: toToolSet(enabledTools, runtimes, gates),
@@ -375,10 +368,10 @@ export function updateUnrecoveredToolFailures(
 
 // Escalation results can be technically-successful tool-results that aren't a
 // real escalation (status "unavailable" when no reviewers are configured -
-// from the escalate placeholder or a misconfigured gate). Split tool results
+// from a misconfigured gate). Split tool results
 // so callers can treat that case as a failure rather than a genuine success,
 // while every other tool keeps its normal success/failure handling untouched.
-// Keyed on the output status so it covers the escalate tool and gated tools
+// Keyed on the output status so it covers gated tools
 // alike.
 export function groupToolResultsByOutcome(
   toolResults: TypedToolResult<ToolSet>[]
@@ -397,14 +390,14 @@ export function groupToolResultsByOutcome(
     const status = (toolResult.output as { status?: string } | undefined)
       ?.status
 
-    if (status === EscalateToolResultStatus.UNAVAILABLE) {
+    if (status === ApprovalToolResultStatus.UNAVAILABLE) {
       semanticFailureNames.push(toolResult.toolName)
       semanticFailureResults.push(toolResult)
       continue
     }
 
     successResults.push(toolResult)
-    if (status !== EscalateToolResultStatus.ALREADY_APPROVED) {
+    if (status !== ApprovalToolResultStatus.ALREADY_APPROVED) {
       successNames.push(toolResult.toolName)
     }
   }
