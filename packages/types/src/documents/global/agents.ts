@@ -155,6 +155,11 @@ export interface AgentOperationApprovalPolicy {
   notifications: AgentEscalationConfig
 }
 
+export type EscalationPolicySnapshot = Omit<
+  AgentOperationApprovalPolicy,
+  "notifications"
+>
+
 // TODO: This can go further. These exist all over the place
 // as magic strings. They can stay here until they are
 // refactored

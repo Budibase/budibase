@@ -3,8 +3,8 @@ import { Document } from "../document"
 import { Automation, AutomationStepResult } from "./automation"
 import { ChatConversationChannel } from "../global"
 import type {
-  AgentOperationApprovalPolicy,
   AgentRequester,
+  EscalationPolicySnapshot,
   ToolExecutionRule,
 } from "../global/agents"
 
@@ -102,7 +102,8 @@ export interface EscalationContextDoc extends Document {
   recipients?: EscalationRecipient[]
   resolutionStrategy?: string
   rule?: ToolExecutionRule
-  policy?: AgentOperationApprovalPolicy
+  policy?: EscalationPolicySnapshot
+  approvals?: EscalationApproval[]
   // zlib-deflated + base64 JSON of the assistant UI message produced when the
   // operation resumed
   resumeResultCompressed?: string
@@ -129,6 +130,13 @@ export enum EscalationAction {
 export interface EscalationRecipient {
   type: EscalationNotificationChannel
   config: Record<string, any>
+}
+
+export interface EscalationApproval {
+  userId: string
+  actionId: string
+  respondedAt: string
+  notificationDocId?: string
 }
 
 export interface EscalationRespondResult {

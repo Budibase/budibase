@@ -549,10 +549,22 @@ export async function MSTeamsWebhook(
             if (!(await features.isEnabled(FeatureFlag.ESCALATION))) {
               return { status: "closed" as const }
             }
+            const raw = event.raw as
+              | {
+                  channelData?: { tenant?: { id?: string } }
+                  from?: { tenantId?: string }
+                }
+              | undefined
+            const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
+              provider: AgentChannelProvider.MSTEAMS,
+              externalUserId: event.user.userId,
+              providerTenantId:
+                raw?.channelData?.tenant?.id ?? raw?.from?.tenantId,
+            })
             return sdk.escalations.respond(
               escalationId,
               notificationDocId,
-              teamsResponse,
+              { ...teamsResponse, userId: link?.globalUserId },
               (id, response) => escalationProcessor.resolve(id, response)
             )
           })
