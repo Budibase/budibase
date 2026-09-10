@@ -151,6 +151,7 @@ describe("/static", () => {
         expect(res.body.signedUrl).toContain("X-Amz-Signature=")
         expect(res.body.signedUrl).toContain("X-Amz-Expires=900")
         expect(res.body.signedUrl).toContain("X-Amz-SignedHeaders=host")
+        expect(res.body.signedUrl).not.toContain("x-amz-checksum")
 
         expect(res.body.publicUrl).toEqual(
           `https://${bucket}.s3.eu-west-1.amazonaws.com/uploads/${key}`

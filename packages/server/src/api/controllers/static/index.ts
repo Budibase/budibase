@@ -912,6 +912,7 @@ export const getSignedUploadURL = async function (
       const s3 = new S3({
         region: awsRegion,
         endpoint: endpoint,
+        requestChecksumCalculation: "WHEN_REQUIRED",
         credentials: {
           accessKeyId: datasource?.config?.accessKeyId as string,
           secretAccessKey: datasource?.config?.secretAccessKey as string,
