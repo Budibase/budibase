@@ -194,13 +194,13 @@
         ) {
           return {
             type: "redirect",
-            path: canCreateApps ? "./onboarding" : "./apps",
+            path: canCreateApps ? "./onboarding" : "/apps",
           }
         }
 
         // Redirect non-builders to apps unless they're already there
-        if (!isBuilder && !$isActive("./apps")) {
-          return { type: "redirect", path: "./apps" }
+        if (!isBuilder && !$isActive("/apps")) {
+          return { type: "redirect", path: "/apps" }
         }
 
         // Default workspace selection for builders
@@ -211,7 +211,7 @@
           isBuilder &&
           $workspacesStore.apps.length &&
           !isOnWorkspaceRoute &&
-          !$isActive("./apps")
+          !$isActive("/apps")
         ) {
           // Find first editable app to redirect to
           const defaultApp = $enrichedApps.find(app => app.editable)
