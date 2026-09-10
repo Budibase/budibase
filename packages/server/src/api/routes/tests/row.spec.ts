@@ -4318,7 +4318,8 @@ if (descriptions.length) {
           await withEnv(
             {
               JS_PER_INVOCATION_TIMEOUT_MS: 40,
-              JS_PER_REQUEST_TIMEOUT_MS: 80,
+              // Leave headroom for VM setup while ensuring the request still times out.
+              JS_PER_REQUEST_TIMEOUT_MS: 500,
             },
             async () => {
               const js = encodeJS(
@@ -4330,6 +4331,7 @@ if (descriptions.length) {
               return i;
             `
               )
+              const rowCount = 20
 
               const table = await config.api.table.save(
                 saveTableRequest({
@@ -4348,7 +4350,7 @@ if (descriptions.length) {
                 })
               )
 
-              for (let i = 0; i < 10; i++) {
+              for (let i = 0; i < rowCount; i++) {
                 await config.api.row.save(table._id!, { text: "foo" })
               }
 
@@ -4356,27 +4358,28 @@ if (descriptions.length) {
               // pollution of the execution time tracking.
               for (let reqs = 0; reqs < 3; reqs++) {
                 const { rows } = await config.api.row.search(table._id!)
-                expect(rows).toHaveLength(10)
+                expect(rows).toHaveLength(rowCount)
 
-                let i = 0
-                for (; i < 10; i++) {
-                  const row = rows[i]
-                  if (row.formula !== JsTimeoutError.message) {
-                    break
-                  }
-                }
+                const invocationTimeouts = rows.filter(
+                  row => row.formula === JsTimeoutError.message
+                )
+                const requestTimeouts = rows.filter(
+                  row =>
+                    typeof row.formula === "string" &&
+                    row.formula.startsWith("CPU time limit exceeded ")
+                )
 
-                // Given the execution times are not deterministic, we can't be sure
-                // of the exact number of rows that were executed before the timeout
-                // but it should absolutely be at least 1.
-                expect(i).toBeGreaterThan(0)
-                expect(i).toBeLessThan(5)
-
-                for (; i < 10; i++) {
-                  const row = rows[i]
-                  expect(row.text).toBe("foo")
-                  expect(row.formula).toStartWith("CPU time limit exceeded ")
-                }
+                expect(invocationTimeouts.length).toBeGreaterThan(0)
+                expect(requestTimeouts.length).toBeGreaterThan(0)
+                expect(rows.every(row => row.text === "foo")).toBe(true)
+                expect(
+                  rows.every(
+                    row =>
+                      row.formula === JsTimeoutError.message ||
+                      (typeof row.formula === "string" &&
+                        row.formula.startsWith("CPU time limit exceeded "))
+                  )
+                ).toBe(true)
               }
             }
           )

@@ -517,14 +517,9 @@ export async function fetchAppPackage(
       : undefined
   }
 
-  const clientApplication = {
-    ...application,
-    snippets: isBuilder ? application.snippets : undefined,
-  }
-
   ctx.body = {
     application: {
-      ...clientApplication,
+      ...application,
       upgradableVersion: envCore.VERSION,
     },
     licenseType: license?.plan.type || PlanType.FREE,
