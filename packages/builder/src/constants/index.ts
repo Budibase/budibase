@@ -34,6 +34,8 @@ export const ToolBindingPrefix = {
   TOOL: "tool",
 }
 
+export const RETIRED_TOOL_BINDING_NAMESPACES = [ToolBindingPrefix.ESCALATION]
+
 // fields on the user table that cannot be edited
 export const UNEDITABLE_USER_FIELDS = [
   "email",

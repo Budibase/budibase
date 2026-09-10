@@ -472,50 +472,50 @@ describe("incomplete tool call detection", () => {
     it("leaves other tools' failure state untouched", () => {
       const unrecovered = new Set<string>(["send_email"])
 
-      updateUnrecoveredToolFailures(unrecovered, [], ["escalate"])
+      updateUnrecoveredToolFailures(unrecovered, [], ["book_meeting"])
 
       expect(unrecovered.has("send_email")).toBe(true)
-      expect(unrecovered.has("escalate")).toBe(true)
+      expect(unrecovered.has("book_meeting")).toBe(true)
     })
   })
 
   describe("groupToolResultsByOutcome", () => {
-    const escalateResult = (status: string): TypedToolResult<ToolSet> => ({
+    const approvalResult = (status: string): TypedToolResult<ToolSet> => ({
       type: "tool-result",
       toolCallId: "call-1",
-      toolName: "escalate",
+      toolName: "book_meeting",
       input: {},
       output: { status },
     })
 
-    it("treats a real escalation (pending_approval) as a success", () => {
+    it("treats pending approval as a success", () => {
       const { successResults, successNames, semanticFailureNames } =
-        groupToolResultsByOutcome([escalateResult("pending_approval")])
+        groupToolResultsByOutcome([approvalResult("pending_approval")])
 
       expect(successResults).toHaveLength(1)
-      expect(successNames).toEqual(["escalate"])
+      expect(successNames).toEqual(["book_meeting"])
       expect(semanticFailureNames).toEqual([])
     })
 
-    it("treats an unavailable escalation as a semantic failure, not a success", () => {
+    it("treats unavailable approval as a semantic failure", () => {
       const { successResults, successNames, semanticFailureNames } =
-        groupToolResultsByOutcome([escalateResult("unavailable")])
+        groupToolResultsByOutcome([approvalResult("unavailable")])
 
       expect(successResults).toEqual([])
       expect(successNames).toEqual([])
-      expect(semanticFailureNames).toEqual(["escalate"])
+      expect(semanticFailureNames).toEqual(["book_meeting"])
     })
 
     it("treats an already_approved resume result as harmless, not needs_input", () => {
       const { successResults, successNames, semanticFailureNames } =
-        groupToolResultsByOutcome([escalateResult("already_approved")])
+        groupToolResultsByOutcome([approvalResult("already_approved")])
 
       expect(successResults).toHaveLength(1)
       expect(successNames).toEqual([])
       expect(semanticFailureNames).toEqual([])
     })
 
-    it("leaves non-escalate tool results untouched", () => {
+    it("leaves ordinary tool results untouched", () => {
       const toolResult: TypedToolResult<ToolSet> = {
         type: "tool-result",
         toolCallId: "call-2",

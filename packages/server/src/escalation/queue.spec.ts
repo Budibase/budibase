@@ -2,13 +2,12 @@ import zlib from "zlib"
 import { context } from "@budibase/backend-core"
 import {
   Agent,
+  ApprovalToolResultStatus,
   DocumentType,
-  ESCALATE_TOOL_NAME,
   EscalationContextDoc,
   EscalationNotificationChannel,
   EscalationNotificationDoc,
   EscalationRecipient,
-  EscalationRaisedAction,
   EscalationSource,
   SEPARATOR,
   SuspendedOperationContext,
@@ -16,7 +15,6 @@ import {
 import TestConfiguration from "../tests/utilities/TestConfiguration"
 import sdk from "../sdk"
 import { processNotify, resumeOperation } from "./queue"
-import { createEscalateTool } from "../ai/tools/budibase"
 import * as slack from "./notifications/slack"
 import * as teams from "./notifications/ms-teams"
 import { ProviderResponseError } from "./notifications/utils"
@@ -49,19 +47,28 @@ jest.mock("../sdk/workspace/ai/agentRequests", () => {
   }
 })
 
+jest.mock("../sdk/workspace/escalations", () => {
+  const actual = jest.requireActual("../sdk/workspace/escalations")
+  return {
+    ...actual,
+    listContextDocs: jest.fn(actual.listContextDocs),
+  }
+})
+
 jest.mock("ai", () => {
   const actual = jest.requireActual("ai")
   return {
     ...actual,
-    readUIMessageStream: (opts: { stream: unknown }) => opts.stream,
+    readUIMessageStream: jest.fn(opts => opts.stream),
   }
 })
 
 const prepareAgentChatRunMock = sdk.ai.agents.prepareAgentChatRun as jest.Mock
-const getOrThrowMock = sdk.ai.agents.getOrThrow as jest.Mock
 const buildPromptAndToolsMock = sdk.ai.agents.buildPromptAndTools as jest.Mock
+const getOrThrowMock = sdk.ai.agents.getOrThrow as jest.Mock
 const recordEscalationResolvedMock = sdk.ai.agentRequests
   .recordEscalationResolved as jest.Mock
+const listContextDocsMock = sdk.escalations.listContextDocs as jest.Mock
 
 const mockApprovedRun = (text: string) => {
   prepareAgentChatRunMock.mockResolvedValue({
@@ -75,7 +82,6 @@ const mockApprovedRun = (text: string) => {
         })(),
     }),
   })
-  getOrThrowMock.mockResolvedValue({ _id: "agent_1" } as Agent)
 }
 
 describe("resumeOperation", () => {
@@ -111,12 +117,29 @@ describe("resumeOperation", () => {
     operationId: "op_1",
     sessionId: "session_1",
     messages: [],
+    pendingToolCall: {
+      toolCallId: "tool_call_1",
+      toolName: "book_meeting",
+      args: { title: "Procurement review" },
+    },
   }
 
   beforeEach(async () => {
     prepareAgentChatRunMock.mockReset()
-    getOrThrowMock.mockReset()
     buildPromptAndToolsMock.mockReset()
+    buildPromptAndToolsMock.mockResolvedValue({
+      tools: {
+        book_meeting: {
+          execute: jest.fn().mockResolvedValue({ booked: true }),
+        },
+      },
+      toolSources: {},
+    })
+    getOrThrowMock.mockReset()
+    getOrThrowMock.mockResolvedValue({
+      _id: "agent_1",
+      operations: [{ id: "op_1" }],
+    } as Agent)
     await config.newTenant()
   })
 
@@ -290,6 +313,130 @@ describe("resumeOperation", () => {
 
       const { getRequestId } = prepareAgentChatRunMock.mock.calls[0][0]
       expect(getRequestId()).toEqual(requestId)
+      expect(prepareAgentChatRunMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          executedApproval: {
+            toolName: "book_meeting",
+          },
+        })
+      )
+    })
+  })
+
+  it("keeps the request pending when the approved tool has been removed and another approval is in flight", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      await sdk.ai.agentRequests.updateRequestStatus({
+        requestId,
+        status: "needs_input",
+      })
+      buildPromptAndToolsMock.mockResolvedValue({ tools: {}, toolSources: {} })
+      const doc = baseDoc({ requestId, response: { accepted: true } })
+      await context.getWorkspaceDB().put({ ...doc, resolution: "resolved" })
+      await context.getWorkspaceDB().put(
+        baseDoc({
+          _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}esc_other`,
+          requestId,
+        })
+      )
+
+      await resumeOperation({
+        doc,
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: baseCtx,
+      })
+
+      const [request] =
+        await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+      expect(request.status).toEqual("needs_input")
+      expect(prepareAgentChatRunMock).not.toHaveBeenCalled()
+    })
+  })
+
+  it("leaves an expired escalation retryable when checking pending escalations fails", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      const doc = baseDoc({ requestId })
+      await context.getWorkspaceDB().put({ ...doc, resolution: "expired" })
+      recordEscalationResolvedMock.mockResolvedValueOnce(undefined)
+      listContextDocsMock.mockRejectedValueOnce(
+        new Error("temporary database failure")
+      )
+
+      await expect(
+        resumeOperation({
+          doc,
+          escalationId: "esc_primary",
+          resolution: "expired",
+          ctx: baseCtx,
+        })
+      ).rejects.toThrow("temporary database failure")
+
+      const stored = await context
+        .getWorkspaceDB()
+        .get<EscalationContextDoc>(doc._id)
+      expect(stored.resolution).toEqual("expired")
+      expect(stored.resumeResultCompressed).toBeUndefined()
+    })
+  })
+
+  it("tracks a genuinely new approval raised during the resumed turn", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { requestId } = (await createRequest())!
+      await sdk.ai.agentRequests.updateRequestStatus({
+        requestId,
+        status: "needs_input",
+      })
+      prepareAgentChatRunMock.mockResolvedValue({
+        toolDisplayNames: {},
+        sessionLogIndexer: { index: jest.fn().mockResolvedValue(undefined) },
+        stream: jest.fn().mockImplementation(async options => {
+          const nextEscalationId = "esc_next"
+          await context.getWorkspaceDB().put(
+            baseDoc({
+              _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${nextEscalationId}`,
+              requestId,
+            })
+          )
+          options.pendingToolCalls.add("tool_call_2")
+          options.onToolCallCompleted({
+            toolName: "book_meeting",
+            status: "success",
+            input: { title: "A different meeting" },
+            output: {
+              status: ApprovalToolResultStatus.PENDING_APPROVAL,
+              escalationId: nextEscalationId,
+            },
+          })
+          return {
+            finishReason: Promise.resolve("tool-calls"),
+            toUIMessageStream: () =>
+              (async function* () {
+                yield { id: "", role: "assistant", parts: [] }
+              })(),
+          }
+        }),
+      })
+
+      await resumeOperation({
+        doc: baseDoc({ requestId, response: { accepted: true } }),
+        escalationId: "esc_primary",
+        resolution: "resolved",
+        ctx: baseCtx,
+      })
+
+      const [request] =
+        await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
+      expect(request.status).toEqual("needs_input")
+      expect(request.actions).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: "escalation_raised",
+            escalationId: "esc_next",
+          }),
+        ])
+      )
     })
   })
 
@@ -466,113 +613,6 @@ describe("resumeOperation", () => {
       expect(
         (request.actions ?? []).filter(a => a.type === "escalation_resolved")
       ).toEqual([])
-    })
-  })
-
-  it("raises and tracks a second, genuinely new escalation created during the resumed run", async () => {
-    await config.doInContext(config.getProdWorkspaceId(), async () => {
-      const { requestId } = (await createRequest())!
-
-      const secondEscalationInput = {
-        title: "New procurement request",
-        summary: "Buy 500 more pens for the new starters",
-        reason: "Spend exceeds the approved budget",
-      }
-
-      prepareAgentChatRunMock.mockImplementation(async ({ getRequestId }) => ({
-        toolDisplayNames: {},
-        sessionLogIndexer: { index: jest.fn().mockResolvedValue(undefined) },
-        stream: jest
-          .fn()
-          .mockImplementation(async ({ onToolCalls, onToolCallCompleted }) => {
-            const escalateTool = createEscalateTool({
-              agentId: "agent_1",
-              operationId: "op_1",
-              sessionId: "session_1",
-              recipients: [
-                {
-                  type: EscalationNotificationChannel.SLACK,
-                  config: { channelId: "C1" },
-                },
-              ],
-              delayMs: 1000,
-              userId: config.getUser()._id,
-              getMessages: () => [],
-              getRequestId,
-              executionContext: {
-                tenantId: config.getTenantId(),
-                workspaceId: config.getProdWorkspaceId(),
-                agentId: "agent_1",
-                operationId: "op_1",
-                conversationId: "session_1",
-                requester: {
-                  executorRole: "BASIC",
-                },
-              },
-            })
-
-            if (!escalateTool.execute) {
-              throw new Error("escalate tool has no execute function")
-            }
-            const output = await escalateTool.execute(secondEscalationInput, {
-              toolCallId: "tc_second_escalation",
-              messages: [],
-              context: {},
-            })
-
-            onToolCalls?.([ESCALATE_TOOL_NAME])
-            await onToolCallCompleted?.({
-              toolName: ESCALATE_TOOL_NAME,
-              status: "success",
-              input: secondEscalationInput,
-              output,
-            })
-
-            return {
-              finishReason: Promise.resolve("stop"),
-              toUIMessageStream: () =>
-                (async function* () {
-                  yield {
-                    id: "",
-                    role: "assistant",
-                    parts: [
-                      {
-                        type: "text",
-                        text: "Escalated the new request for approval.",
-                      },
-                    ],
-                  }
-                })(),
-            }
-          }),
-      }))
-      getOrThrowMock.mockResolvedValue({ _id: "agent_1" } as Agent)
-
-      await resumeOperation({
-        doc: baseDoc({ requestId, response: { accepted: true } }),
-        escalationId: "esc_primary",
-        resolution: "resolved",
-        ctx: baseCtx,
-      })
-
-      const [request] =
-        await sdk.ai.agentRequests.fetchRequestsByAgent("agent_1")
-
-      const raisedActions = (request.actions ?? []).filter(
-        (a): a is EscalationRaisedAction => a.type === "escalation_raised"
-      )
-      expect(raisedActions).toHaveLength(1)
-      const [raisedAction] = raisedActions
-      expect(raisedAction.escalationId).not.toEqual("esc_primary")
-
-      const newEscalationDoc = await sdk.escalations.getContextDoc(
-        raisedAction.escalationId
-      )
-      expect(newEscalationDoc?.requestId).toEqual(requestId)
-      expect(newEscalationDoc?.resolution).toEqual("pending")
-
-      // The new escalation is still pending, so the request must not close.
-      expect(request.status).toEqual("needs_input")
     })
   })
 })

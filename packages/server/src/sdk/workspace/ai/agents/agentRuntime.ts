@@ -1,4 +1,4 @@
-import { cache, context, features, roles } from "@budibase/backend-core"
+import { cache, context, roles } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import {
@@ -8,9 +8,7 @@ import {
   AgentMessageMetadata,
   ChatConversationRequest,
   ContextUser,
-  EscalateToolResultStatus,
-  FeatureFlag,
-  ToolExecutionPrincipal,
+  ApprovalToolResultStatus,
   type AgentExecutionContext,
   type AgentRequester,
 } from "@budibase/types"
@@ -46,31 +44,14 @@ import {
 } from "./utils"
 import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
-import { createEscalateTool } from "../../../../ai/tools/budibase"
-import {
-  createListSessionEscalationsTool,
-  LIST_SESSION_ESCALATIONS_TOOL_NAME,
-} from "../../../../ai/tools/budibase/listSessionEscalations"
 import type tracer from "dd-trace"
 import { withLiteLLMSessionId } from "../llm/requestSession"
-
-// How long to wait for a human response before the escalation expires, in
-// seconds, when the operation doesn't specify its own delay.
-const DEFAULT_ESCALATION_DELAY_SECONDS = 3600
-
-// Read-only/helper tool calls that shouldn't clutter the request timeline.
-const TIMELINE_HIDDEN_TOOL_NAMES = new Set<string>([
-  LIST_SESSION_ESCALATIONS_TOOL_NAME,
-])
 
 interface PrepareAgentChatRunParams {
   agent: Agent
   agentId: string
   chat?: ChatConversationRequest
   modelMessages?: ModelMessage[]
-  suspendedModelMessages?: ModelMessage[]
-  conversationAttachmentIds?: string[]
-  conversationId?: string
   latestQuestion?: string
   aiConfigId?: string
   errorLabel: string
@@ -82,7 +63,7 @@ interface PrepareAgentChatRunParams {
   // Appended to the system prompt - a trusted channel for run-time directives
   // Puting it in the user input made it suspicious.
   additionalInstructions?: string
-  // Resolves the AgentRequest id tracking this run, for the escalate tool to
+  // Resolves the AgentRequest id tracking this run, for an approval gate to
   // stamp onto the escalation it raises. Read lazily since the caller only
   // knows it after this run's operation is resolved.
   getRequestId?: () => string | undefined
@@ -462,7 +443,7 @@ const hasPendingEscalationResult = (
       typeof output === "object" &&
       output !== null &&
       "status" in output &&
-      output.status === EscalateToolResultStatus.PENDING_APPROVAL &&
+      output.status === ApprovalToolResultStatus.PENDING_APPROVAL &&
       "escalationId" in output &&
       !!output.escalationId
     )
@@ -497,9 +478,6 @@ const prepareAgentChatRunInternal = async ({
   agentId,
   chat,
   modelMessages: providedModelMessages,
-  suspendedModelMessages,
-  conversationAttachmentIds,
-  conversationId,
   latestQuestion: providedLatestQuestion,
   aiConfigId,
   sessionId,
@@ -565,20 +543,16 @@ const prepareAgentChatRunInternal = async ({
     const summary = result.text.match(/^SUMMARY:\s*(.+)$/m)?.[1]?.trim()
     return title && summary ? { title, summary } : undefined
   }
-  const escalationGateContext = (await features.isEnabled(
-    FeatureFlag.AI_TOOL_ESCALATION
-  ))
-    ? {
-        sessionId,
-        channel: chat?.channel,
-        userId: user?._id,
-        requester,
-        getMessages: () => resolvedModelMessages,
-        getRequestId: () => getRequestId?.(),
-        generateCardCopy,
-        executedApproval,
-      }
-    : undefined
+  const escalationGateContext = {
+    sessionId,
+    channel: chat?.channel,
+    userId: user?._id,
+    requester,
+    getMessages: () => resolvedModelMessages,
+    getRequestId: () => getRequestId?.(),
+    generateCardCopy,
+    executedApproval,
+  }
 
   const buildPromptOptions: BuildPromptAndToolsOptions = {
     includeGoal: promptMode === "automation",
@@ -612,7 +586,6 @@ const prepareAgentChatRunInternal = async ({
     operationIntent,
     tools,
     toolDisplayNames,
-    executionContext,
     systemPrompt: baseSystemPrompt,
   } = runContext
   const retrievedKnowledgeSourceById = new Map<
@@ -640,51 +613,6 @@ const prepareAgentChatRunInternal = async ({
   })
   if (tools.search_knowledge) {
     tools.report_used_sources = reportUsedSourcesTool
-  }
-
-  // The escalate tool exists only in the old mode: stripped when ESCALATION
-  // is off, and when AI_TOOL_ESCALATION is on (gating replaces it outright).
-  if (
-    tools.escalate &&
-    (escalationGateContext ||
-      !(await features.isEnabled(FeatureFlag.ESCALATION)))
-  ) {
-    delete tools.escalate
-  }
-
-  if (tools.escalate) {
-    const recipients = selectedOperation?.escalation?.recipients
-    if (selectedOperation && recipients?.length) {
-      // Always the real tool, on resumes too. A resumed run must still be
-      // able to raise a genuinely new escalation.
-      if (!executionContext) {
-        throw new Error("Agent execution context is required")
-      }
-      tools.escalate = createEscalateTool({
-        agentId,
-        operationId: selectedOperation.id,
-        sessionId,
-        recipients,
-        delayMs:
-          (selectedOperation.escalation?.delay ??
-            DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
-        channel: chat?.channel,
-        userId: user?._id,
-        getMessages: () => modelMessages,
-        getSuspendedMessages: () => suspendedModelMessages ?? modelMessages,
-        conversationId: conversationId ?? chat?._id,
-        attachmentIds: conversationAttachmentIds,
-        getRequestId: () => getRequestId?.(),
-        executionPrincipal: ToolExecutionPrincipal.ADMIN,
-        executionContext,
-      })
-    }
-  }
-
-  if (tools.escalate || escalationGateContext) {
-    tools.list_session_escalations = createListSessionEscalationsTool({
-      sessionId,
-    })
   }
 
   const systemPrompt = [baseSystemPrompt, additionalInstructions]
@@ -804,9 +732,6 @@ const prepareAgentChatRunInternal = async ({
               ]
 
               for (const call of completedToolCalls) {
-                if (TIMELINE_HIDDEN_TOOL_NAMES.has(call.toolName)) {
-                  continue
-                }
                 await onToolCallCompleted(call)
               }
             }

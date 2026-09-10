@@ -19,18 +19,10 @@ export enum EscalationSource {
   OPERATION = "operation",
 }
 
-// The registered name of the escalate tool exposed to agent operations.
-export const ESCALATE_TOOL_NAME = "escalate"
-
-// The escalate tool's own result status, returned to the model.
-export enum EscalateToolResultStatus {
-  // A real escalation was raised and is awaiting a human response.
+// The result status returned to the model by an approval gate.
+export enum ApprovalToolResultStatus {
   PENDING_APPROVAL = "pending_approval",
-  // No escalation could be raised (e.g. no reviewers configured). The
-  // model's request was not actually handed to a human.
   UNAVAILABLE = "unavailable",
-  // Resume-only: the escalation was already approved, so calling escalate
-  // again is a no-op rather than a fresh escalation or a failure.
   ALREADY_APPROVED = "already_approved",
 }
 
@@ -66,7 +58,7 @@ export interface SuspendedOperationContext {
   channel?: ChatConversationChannel
   userId?: string
   requester?: AgentRequester
-  pendingToolCall?: PendingToolCall
+  pendingToolCall: PendingToolCall
 }
 
 export type SuspendedContext =

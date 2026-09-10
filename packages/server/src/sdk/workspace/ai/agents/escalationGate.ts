@@ -6,7 +6,7 @@ import {
   AgentOperationApprovalPolicy,
   AgentRequester,
   ChatConversationChannel,
-  EscalateToolResultStatus,
+  ApprovalToolResultStatus,
   EscalationSource,
   ResolutionStrategy,
   ToolExecutionRule,
@@ -160,7 +160,7 @@ const summariseArgs = (label: string, input: unknown) => {
 }
 
 const unavailableResult = (label: string) => ({
-  status: EscalateToolResultStatus.UNAVAILABLE,
+  status: ApprovalToolResultStatus.UNAVAILABLE,
   note:
     `"${label}" requires approval but its approval policy is missing or has ` +
     "no reviewers configured. Tell the user this action cannot be requested " +
@@ -183,7 +183,7 @@ export const createEscalationGateRuntime = ({
     const executed = gateContext.executedApproval
     if (executed && executed.toolName === toolName) {
       return {
-        status: EscalateToolResultStatus.UNAVAILABLE,
+        status: ApprovalToolResultStatus.ALREADY_APPROVED,
         note:
           `"${label}" was already executed under this conversation's ` +
           "approval - its result is above. Report that outcome. The user " +
@@ -269,7 +269,7 @@ export const createEscalationGateRuntime = ({
     })
 
     return {
-      status: EscalateToolResultStatus.PENDING_APPROVAL,
+      status: ApprovalToolResultStatus.PENDING_APPROVAL,
       escalationId,
       title,
       summary,
