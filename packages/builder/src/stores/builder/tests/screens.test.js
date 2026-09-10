@@ -20,7 +20,7 @@ import {
 const COMP_PREFIX = "@budibase/standard-components"
 
 vi.mock("@/stores/builder", async () => {
-  const mockAppStore = writable()
+  const mockWorkspaceStore = writable()
   const mockComponentStore = writable()
   const mockLayoutStore = writable()
 
@@ -32,9 +32,9 @@ vi.mock("@/stores/builder", async () => {
   }
 
   const workspaceStore = {
-    subscribe: mockAppStore.subscribe,
-    update: mockAppStore.update,
-    set: mockAppStore.set,
+    subscribe: mockWorkspaceStore.subscribe,
+    update: mockWorkspaceStore.update,
+    set: mockWorkspaceStore.set,
     refresh: vi.fn(),
     refreshAppNav: vi.fn(),
   }

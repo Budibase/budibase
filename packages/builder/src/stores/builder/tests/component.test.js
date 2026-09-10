@@ -58,12 +58,12 @@ vi.mock("@/stores/preferences", () => {
 })
 
 vi.mock("@/stores/builder", async () => {
-  const mockAppStore = writable()
+  const mockWorkspaceStore = writable()
   const mockScreenComponentsList = writable([])
   const workspaceStore = {
-    subscribe: mockAppStore.subscribe,
-    update: mockAppStore.update,
-    set: mockAppStore.set,
+    subscribe: mockWorkspaceStore.subscribe,
+    update: mockWorkspaceStore.update,
+    set: mockWorkspaceStore.set,
     syncClientFeatures: vi.fn(),
     syncClientTypeSupportPresets: vi.fn(),
   }

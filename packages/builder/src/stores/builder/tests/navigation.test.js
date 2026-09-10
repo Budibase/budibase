@@ -18,11 +18,11 @@ vi.mock("@/api", () => {
 })
 
 vi.mock("@/stores/builder", async () => {
-  const mockAppStore = writable()
+  const mockWorkspaceStore = writable()
   const workspaceStore = {
-    subscribe: mockAppStore.subscribe,
-    update: mockAppStore.update,
-    set: mockAppStore.set,
+    subscribe: mockWorkspaceStore.subscribe,
+    update: mockWorkspaceStore.update,
+    set: mockWorkspaceStore.set,
   }
 
   const mockWorkspaceApp = {
