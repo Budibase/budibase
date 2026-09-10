@@ -33,7 +33,7 @@ import { automations } from "@budibase/shared-core"
 
 vi.mock("@/stores/builder", () => {
   return {
-    appStore: writable({}),
+    workspaceStore: writable({}),
     deploymentStore: writable({}),
     permissions: writable({}),
     tables: writable({ list: [] }),

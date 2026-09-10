@@ -1,6 +1,6 @@
 <script>
   import { Input, Modal, notifications, ModalContent } from "@budibase/bbui"
-  import { appStore, initialise } from "@/stores/builder"
+  import { workspaceStore, initialise } from "@/stores/builder"
   import { API } from "@/api"
 
   export let onComplete = () => {}
@@ -8,7 +8,7 @@
   let revertModal
   let appName
 
-  $: appId = $appStore.appId
+  $: appId = $workspaceStore.appId
 
   const revert = async () => {
     try {
@@ -38,7 +38,7 @@
     title="Revert changes"
     confirmText="Revert"
     onConfirm={revert}
-    disabled={appName !== $appStore.name}
+    disabled={appName !== $workspaceStore.name}
   >
     <span>
       The changes you have made will be deleted and the workspace reverted back

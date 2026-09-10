@@ -16,7 +16,7 @@
     DateAsNumber,
   } from "./lines"
   import subjects from "./subjects"
-  import { appStore } from "@/stores/builder"
+  import { workspaceStore } from "@/stores/builder"
 
   export let tableHref = () => {}
   export let schema
@@ -26,7 +26,7 @@
 
   $: explanationWithPresets = getExplanationWithPresets(
     explanation,
-    $appStore.typeSupportPresets
+    $workspaceStore.typeSupportPresets
   )
   let support
   let messages = []

@@ -12,7 +12,7 @@
   } from "@budibase/bbui"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import { getContext } from "svelte"
-  import { appStore, rowActions } from "@/stores/builder"
+  import { workspaceStore, rowActions } from "@/stores/builder"
   import { goto as gotoStore, url } from "@roxi/routify"
   import { derived } from "svelte/store"
 
@@ -34,10 +34,10 @@
   $: actionCount = isView ? viewRowActions.length : tableRowActions.length
   $: newNameInvalid = newName && tableRowActions.some(x => x.name === newName)
 
-  const rowActionUrl = derived([url, appStore], ([$url, $appStore]) => {
+  const rowActionUrl = derived([url, workspaceStore], ([$url, $workspaceStore]) => {
     return ({ automationId }) => {
       return $url(
-        `/builder/workspace/${$appStore.appId}/automation/${automationId}`
+        `/builder/workspace/${$workspaceStore.appId}/automation/${automationId}`
       )
     }
   })

@@ -1,7 +1,7 @@
 <script lang="ts">
   import CreationPage from "@/components/common/CreationPage.svelte"
   import { AutoScreenTypes } from "@/constants"
-  import { appStore, screenStore, workspaceAppStore } from "@/stores/builder"
+  import { workspaceStore, screenStore, workspaceAppStore } from "@/stores/builder"
   import { licensing } from "@/stores/portal"
   import {
     Body,
@@ -58,7 +58,7 @@
     rootModal.hide()
     if (!workspaceAppId) {
       const workspaceApp = await workspaceAppStore.add({
-        name: $appStore.name,
+        name: $workspaceStore.name,
         url: "/",
       })
       workspaceAppId = workspaceApp._id

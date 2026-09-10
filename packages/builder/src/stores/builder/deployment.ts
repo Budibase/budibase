@@ -5,7 +5,7 @@ import { DeploymentProgressResponse, DeploymentStatus } from "@budibase/types"
 import analytics, { Events, EventSource } from "@/analytics"
 import { workspacesStore } from "@/stores/portal/workspaces"
 import { DerivedBudiStore } from "@/stores/BudiStore"
-import { appStore } from "./workspace"
+import { workspaceStore } from "./workspace"
 import { processStringSync } from "@budibase/string-templates"
 import { selectedAppUrls } from "./appUrls"
 import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
@@ -34,11 +34,11 @@ class DeploymentStore extends DerivedBudiStore<
       store: Writable<DeploymentState>
     ): Readable<DerivedDeploymentState> => {
       return derived(
-        [store, appStore, workspacesStore],
-        ([$store, $appStore, $workspacesStore]) => {
+        [store, workspaceStore, workspacesStore],
+        ([$store, $workspaceStore, $workspacesStore]) => {
           // Determine whether the app is published
           const app = $workspacesStore.apps.find(
-            app => app.devId === $appStore.appId
+            app => app.devId === $workspaceStore.appId
           )
           const deployments = $store.deployments.filter(
             x => x.status === DeploymentStatus.SUCCESS
@@ -95,7 +95,7 @@ class DeploymentStore extends DerivedBudiStore<
   async publishApp(opts?: { seedProductionTables: boolean }) {
     try {
       this.update(state => ({ ...state, isPublishing: true }))
-      await API.publishAppChanges(get(appStore).appId, opts)
+      await API.publishAppChanges(get(workspaceStore).appId, opts)
       await this.completePublish()
     } catch (error: any) {
       analytics.captureException(error)
@@ -131,7 +131,7 @@ class DeploymentStore extends DerivedBudiStore<
       return
     }
     try {
-      await API.unpublishApp(get(appStore).appId)
+      await API.unpublishApp(get(workspaceStore).appId)
       await Promise.all([
         workspaceDeploymentStore.fetch(),
         workspaceAppStore.refresh(),
@@ -148,7 +148,7 @@ class DeploymentStore extends DerivedBudiStore<
   }
 
   viewPublishedApp() {
-    const app = get(appStore)
+    const app = get(workspaceStore)
     const { liveUrl } = get(selectedAppUrls)
     analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
       appId: app.appId,

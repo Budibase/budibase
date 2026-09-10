@@ -11,7 +11,7 @@
     deploymentStore,
     automationStore,
     workspaceAppStore,
-    appStore,
+    workspaceStore,
   } from "@/stores/builder"
   import { agentsStore } from "@/stores/portal"
   import { PluginType, type Plugin } from "@budibase/types"
@@ -34,7 +34,7 @@
     return getPluginSvelteMajor(plugin) ?? LEGACY_SVELTE_MAJOR
   }
 
-  $: incompatiblePlugins = ($appStore.usedPlugins || []).filter(plugin => {
+  $: incompatiblePlugins = ($workspaceStore.usedPlugins || []).filter(plugin => {
     const major = getPluginSvelteMajor(plugin)
     const isComponentPlugin = plugin?.schema?.type === PluginType.COMPONENT
     return major !== CURRENT_SVELTE_MAJOR && isComponentPlugin
@@ -65,11 +65,11 @@
   }
 
   let hasAcknowledgedWarning = hasAcknowledgedSvelte4PluginWarning(
-    $appStore.appId
+    $workspaceStore.appId
   )
 
   $: hasAcknowledgedWarning = hasAcknowledgedSvelte4PluginWarning(
-    $appStore.appId
+    $workspaceStore.appId
   )
 
   const showPluginWarningModal = () => {
@@ -95,7 +95,7 @@
   }
 
   const publishAnyway = async () => {
-    acknowledgeSvelte4PluginWarning($appStore.appId)
+    acknowledgeSvelte4PluginWarning($workspaceStore.appId)
     hasAcknowledgedWarning = true
     actionMenu?.hide?.()
     pluginWarningModal?.hide()

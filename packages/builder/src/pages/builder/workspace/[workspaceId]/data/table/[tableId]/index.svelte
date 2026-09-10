@@ -4,7 +4,7 @@
     datasources,
     tables,
     integrations,
-    appStore,
+    workspaceStore,
     rowActions,
     roles,
     dataEnvironmentStore,
@@ -128,7 +128,7 @@
     missingProductionDefinition = false
     previousTableId = id
   }
-  $: if (!isUsersTable || !$appStore.features.disableUserMetadata) {
+  $: if (!isUsersTable || !$workspaceStore.features.disableUserMetadata) {
     highlightUsersAccessButton = false
   }
   $: hasStaticFormulas = Object.values($tables.selected?.schema || {}).some(
@@ -258,7 +258,7 @@
   }
 
   const handleGridRowClick = () => {
-    if (isUsersTable && $appStore.features.disableUserMetadata) {
+    if (isUsersTable && $workspaceStore.features.disableUserMetadata) {
       highlightUsersAccessButton = true
     }
   }
@@ -331,9 +331,9 @@
         datasource={gridDatasource}
         canAddRows={!isUsersTable}
         canDeleteRows={!isUsersTable}
-        canEditRows={!isUsersTable || !$appStore.features.disableUserMetadata}
+        canEditRows={!isUsersTable || !$workspaceStore.features.disableUserMetadata}
         canEditColumns={!isProductionMode &&
-          (!isUsersTable || !$appStore.features.disableUserMetadata)}
+          (!isUsersTable || !$workspaceStore.features.disableUserMetadata)}
         canSaveSchema={!isProductionMode}
         schemaOverrides={isUsersTable ? userSchemaOverrides : null}
         showAvatars={false}
@@ -350,7 +350,7 @@
         <!-- Controls -->
         <svelte:fragment slot="controls">
           {#if !isProductionMode}
-            {#if isUsersTable && $appStore.features.disableUserMetadata}
+            {#if isUsersTable && $workspaceStore.features.disableUserMetadata}
               <GridUsersTableButton
                 highlighted={highlightUsersAccessButton}
                 on:manage={() => {

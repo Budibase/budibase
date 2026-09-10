@@ -60,7 +60,7 @@ vi.mock("@/stores/builder", async () => {
       showPreview: mocks.showPreview,
     },
     sortedScreens: writable([]),
-    appStore: writable({
+    workspaceStore: writable({
       appId: "app_1",
       url: "/test-app",
     }),

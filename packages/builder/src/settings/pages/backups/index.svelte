@@ -12,7 +12,7 @@
   } from "@budibase/bbui"
   import { backups } from "@/stores/portal/backups"
   import { licensing } from "@/stores/portal/licensing"
-  import { appStore } from "@/stores/builder"
+  import { workspaceStore } from "@/stores/builder"
   import { createPaginationStore } from "@/helpers/pagination"
   import TimeAgoRenderer from "./_components/TimeAgoRenderer.svelte"
   import WorkspaceSizeRenderer from "./_components/WorkspaceSizeRenderer.svelte"
@@ -111,7 +111,7 @@
     try {
       loading = true
       const backupIds = selectedRows.map(row => row._id)
-      const response = await backups.deleteBackups($appStore.appId, backupIds)
+      const response = await backups.deleteBackups($workspaceStore.appId, backupIds)
 
       if (response.failureCount > 0) {
         notifications.warning(response.message)
@@ -142,7 +142,7 @@
     if (endDate) {
       opts.endDate = endDate
     }
-    const response = await backups.searchBackups($appStore.appId, opts)
+    const response = await backups.searchBackups($workspaceStore.appId, opts)
     pageInfo.fetched(response.hasNextPage, response.nextPage)
 
     // flatten so we have an easier structure to use for the table schema
@@ -155,7 +155,7 @@
   async function createManualBackup() {
     try {
       loading = true
-      let response = await backups.createManualBackup($appStore.appId)
+      let response = await backups.createManualBackup($workspaceStore.appId)
       await fetchBackups(filterOpt, page)
       notifications.success(response.message)
     } catch (err) {
@@ -179,11 +179,11 @@
 
   async function handleButtonClick({ detail }) {
     if (detail.type === "backupDelete") {
-      await backups.deleteBackup($appStore.appId, detail.backupId)
+      await backups.deleteBackup($workspaceStore.appId, detail.backupId)
       await fetchBackups(filterOpt, page)
     } else if (detail.type === "backupRestore") {
       await backups.restoreBackup(
-        $appStore.appId,
+        $workspaceStore.appId,
         detail.backupId,
         detail.restoreBackupName
       )

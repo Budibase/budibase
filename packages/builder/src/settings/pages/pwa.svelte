@@ -14,7 +14,7 @@
     Select,
     Helpers,
   } from "@budibase/bbui"
-  import { appStore } from "@/stores/builder"
+  import { workspaceStore } from "@/stores/builder"
   import { licensing } from "@/stores/portal/licensing"
   import { API } from "@/api"
   import LockedFeature from "@/pages/builder/_components/LockedFeature.svelte"
@@ -29,7 +29,7 @@
   let pwaEnabled = $licensing.pwaEnabled
   let uploadingIcons = false
 
-  let pwaConfig = $appStore.pwa || {
+  let pwaConfig = $workspaceStore.pwa || {
     name: "",
     short_name: "",
     description: "",
@@ -98,8 +98,8 @@
         theme_color: getCssVariableValue(pwaConfig.theme_color),
       }
 
-      await API.saveAppMetadata($appStore.appId, { pwa: pwaConfigToSave })
-      appStore.update(state => ({ ...state, pwa: pwaConfigToSave }))
+      await API.saveAppMetadata($workspaceStore.appId, { pwa: pwaConfigToSave })
+      workspaceStore.update(state => ({ ...state, pwa: pwaConfigToSave }))
 
       notifications.success("PWA settings saved successfully")
     } catch (error) {

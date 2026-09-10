@@ -15,7 +15,7 @@
     notifications,
     ButtonGroup,
   } from "@budibase/bbui"
-  import { appStore } from "@/stores/builder"
+  import { workspaceStore } from "@/stores/builder"
   import { type AppScript } from "@budibase/types"
   import { getSequentialName } from "@/helpers/duplicate"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
@@ -45,7 +45,7 @@
   $: enabled = $licensing.customAppScriptsEnabled
 
   const addScript = () => {
-    const name = getSequentialName($appStore.scripts, "Script ", {
+    const name = getSequentialName($workspaceStore.scripts, "Script ", {
       getName: script => script.name,
       numberFirstItem: true,
     })
@@ -66,10 +66,10 @@
     if (!selectedScript) {
       return
     }
-    const newScripts = $appStore.scripts
+    const newScripts = $workspaceStore.scripts
       .filter(script => script.id !== selectedScript!.id)
       .concat([selectedScript])
-    await appStore.updateApp({ scripts: newScripts })
+    await workspaceStore.updateApp({ scripts: newScripts })
     notifications.success("Script saved successfully")
     selectedScript = undefined
   }
@@ -82,10 +82,10 @@
     if (!selectedScript) {
       return
     }
-    const newScripts = $appStore.scripts.filter(
+    const newScripts = $workspaceStore.scripts.filter(
       script => script.id !== selectedScript!.id
     )
-    await appStore.updateApp({ scripts: newScripts })
+    await workspaceStore.updateApp({ scripts: newScripts })
     notifications.success("Script deleted successfully")
     selectedScript = undefined
   }
@@ -181,7 +181,7 @@
       <Table
         on:click={editScript}
         {schema}
-        data={$appStore.scripts}
+        data={$workspaceStore.scripts}
         allowSelectRows={false}
         allowEditColumns={false}
         allowEditRows={false}

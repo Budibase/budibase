@@ -2,7 +2,7 @@ import { API } from "@/api"
 import { Snippet, UpdateWorkspaceResponse } from "@budibase/types"
 import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore"
-import { appStore } from "./workspace"
+import { workspaceStore } from "./workspace"
 
 export class SnippetStore extends BudiStore<Snippet[]> {
   constructor() {
@@ -18,13 +18,13 @@ export class SnippetStore extends BudiStore<Snippet[]> {
       ...get(this).filter(snippet => snippet.name !== updatedSnippet.name),
       updatedSnippet,
     ]
-    const app = await API.saveAppMetadata(get(appStore).appId, { snippets })
+    const app = await API.saveAppMetadata(get(workspaceStore).appId, { snippets })
     this.syncMetadata(app)
   }
 
   deleteSnippet = async (snippetName: string) => {
     const snippets = get(this).filter(snippet => snippet.name !== snippetName)
-    const app = await API.saveAppMetadata(get(appStore).appId, { snippets })
+    const app = await API.saveAppMetadata(get(workspaceStore).appId, { snippets })
     this.syncMetadata(app)
   }
 }

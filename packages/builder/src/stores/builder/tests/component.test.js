@@ -8,7 +8,7 @@ import { DatasourceStore } from "@/stores/builder/datasources"
 import { QueryStore } from "@/stores/builder/queries"
 import { API } from "@/api"
 import {
-  appStore,
+  workspaceStore,
   tables,
   setComponentStore,
   setDatasourcesStore,
@@ -60,7 +60,7 @@ vi.mock("@/stores/preferences", () => {
 vi.mock("@/stores/builder", async () => {
   const mockAppStore = writable()
   const mockScreenComponentsList = writable([])
-  const appStore = {
+  const workspaceStore = {
     subscribe: mockAppStore.subscribe,
     update: mockAppStore.update,
     set: mockAppStore.set,
@@ -74,7 +74,7 @@ vi.mock("@/stores/builder", async () => {
   let queryStore
 
   return {
-    appStore,
+    workspaceStore,
     tables: writable(),
     screenComponentsList: mockScreenComponentsList,
     get datasources() {
@@ -188,7 +188,7 @@ describe("Component store", () => {
     expect(ctx.test.store.components).toStrictEqual(mockAPIResponse)
 
     expect(apiDefRequest).toBeCalled()
-    expect(appStore.syncClientFeatures).toBeCalledWith(clientFeaturesResp)
+    expect(workspaceStore.syncClientFeatures).toBeCalledWith(clientFeaturesResp)
   })
 
   it("Refresh and sync component and plugin definitions", async ctx => {
@@ -212,7 +212,7 @@ describe("Component store", () => {
     expect(ctx.test.store.components).toStrictEqual(mockAPIResponse)
 
     expect(apiDefRequest).toBeCalled()
-    expect(appStore.syncClientFeatures).toBeCalledWith(clientFeaturesResp)
+    expect(workspaceStore.syncClientFeatures).toBeCalledWith(clientFeaturesResp)
 
     expect(ctx.test.store.customComponents).toStrictEqual(
       Object.keys(pluginDefs)
