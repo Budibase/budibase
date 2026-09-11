@@ -31,7 +31,7 @@
 
         var message
         if (status === 502) {
-          message = "Bad gateway. Please try again later."
+          message = "Bad gateway.<br/><br/><span style='font-size: 16px'>If this is a new installation, Budibase may still be starting up. Please wait a few minutes and try again.<br/><br/>If the problem persists, check your docker logs for errors.</span>"
         } else if (status === 503) {
           message = "Service Unavailable. Please try again later."
         } else if (status === 504) {
