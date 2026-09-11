@@ -357,6 +357,8 @@ export const publishWorkspaceInternal = async (
         const devId = dbCore.getDevWorkspaceID(appId)
         const prodId = dbCore.getProdWorkspaceID(appId)
 
+        await sdk.plugins.reconcileUsedPlugins()
+
         if (!(await sdk.workspaces.isWorkspacePublished(prodId))) {
           const allWorkspaceApps = await sdk.workspaceApps.fetch()
           for (const workspaceApp of allWorkspaceApps) {

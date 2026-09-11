@@ -13,6 +13,8 @@ import mappingFile from "./mapping.json"
 import sdk from "../../sdk"
 import { deleteFolderFileSystem } from "../../utilities/fileSystem"
 
+export * from "./usedPlugins"
+
 export async function fetch(type?: PluginType): Promise<Plugin[]> {
   const db = tenancy.getGlobalDB()
   const response = await db.allDocs(
@@ -175,33 +177,39 @@ export const enrichUsedPluginSvelteMajors = async (
     })
 
     const svelteMajorById = new Map<string, number>()
+    const existingPluginIds = new Set<string>()
     for (const row of response?.rows || []) {
-      const svelteMajor = row?.doc?.schema?.metadata?.svelteMajor
-      if (typeof row?.id === "string" && typeof svelteMajor === "number") {
-        svelteMajorById.set(row.id, svelteMajor)
+      if (row?.doc && typeof row?.id === "string") {
+        existingPluginIds.add(row.id)
+        const svelteMajor = row.doc.schema?.metadata?.svelteMajor
+        if (typeof svelteMajor === "number") {
+          svelteMajorById.set(row.id, svelteMajor)
+        }
       }
     }
 
-    return usedPlugins.map(plugin => {
-      const svelteMajor = svelteMajorById.get(plugin._id!)
-      if (typeof svelteMajor !== "number") {
-        return plugin
-      }
+    return usedPlugins
+      .filter(plugin => existingPluginIds.has(plugin._id!))
+      .map(plugin => {
+        const svelteMajor = svelteMajorById.get(plugin._id!)
+        if (typeof svelteMajor !== "number") {
+          return plugin
+        }
 
-      const schema = (plugin.schema || {}) as Plugin["schema"]
-      const metadata = schema?.metadata || {}
+        const schema = (plugin.schema || {}) as Plugin["schema"]
+        const metadata = schema?.metadata || {}
 
-      return {
-        ...plugin,
-        schema: {
-          ...schema,
-          metadata: {
-            ...metadata,
-            svelteMajor,
+        return {
+          ...plugin,
+          schema: {
+            ...schema,
+            metadata: {
+              ...metadata,
+              svelteMajor,
+            },
           },
-        },
-      }
-    })
+        }
+      })
   } catch (err) {
     return usedPlugins
   }

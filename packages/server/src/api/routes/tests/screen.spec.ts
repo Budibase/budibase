@@ -1,12 +1,16 @@
-import { events, roles } from "@budibase/backend-core"
+import { events, roles, tenancy } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import {
   BuiltinPermissionID,
+  Plugin,
+  PluginSource,
+  PluginType,
   Role,
   Screen,
   SourceType,
   UsageInScreensResponse,
 } from "@budibase/types"
+import sdk from "../../../sdk"
 import { basicDatasourcePlus } from "../../../tests/utilities/structures"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
@@ -322,6 +326,147 @@ describe("/screens", () => {
       const usage = await config.api.screen.usage(query._id!)
       expect(usage.sourceType).toEqual(SourceType.QUERY)
       confirmScreen(usage, screen)
+    })
+  })
+
+  describe("used plugins management", () => {
+    const pluginDoc: Plugin = {
+      _id: "plg_custom-component",
+      name: "custom-component",
+      version: "1.0.0",
+      description: "",
+      source: PluginSource.FILE,
+      package: {},
+      hash: "123",
+      schema: {
+        type: PluginType.COMPONENT,
+        metadata: {
+          svelteMajor: 5,
+        },
+      },
+    }
+
+    const createPluginScreen = (route = "/plugin-screen") => {
+      const screen = basicScreen(route)
+      screen.props._children = [
+        {
+          _id: "comp-1",
+          _component: "plugin/custom-component",
+          _instanceName: "CustomComponent",
+          _styles: { normal: {}, custom: {}, selected: {} },
+          _children: [],
+        },
+      ]
+      return screen
+    }
+
+    beforeEach(async () => {
+      await config.doInTenant(async () => {
+        const globalDB = tenancy.getGlobalDB()
+        try {
+          await globalDB.put(pluginDoc)
+        } catch (e) {
+          // Ignore if exists
+        }
+      })
+    })
+
+    it("should add used plugin when screen contains a plugin component", async () => {
+      await config.api.screen.save(createPluginScreen("/plugin-screen"))
+
+      await config.doInContext(config.devWorkspaceId!, async () => {
+        const app = await sdk.workspaces.metadata.get()
+        expect(app.usedPlugins?.length).toEqual(1)
+        expect(app.usedPlugins?.[0].name).toEqual("custom-component")
+      })
+    })
+
+    it("should prune unused plugin when plugin component is removed from screen", async () => {
+      const screen = await config.api.screen.save(
+        createPluginScreen("/plugin-screen")
+      )
+
+      await config.doInContext(config.devWorkspaceId!, async () => {
+        const app = await sdk.workspaces.metadata.get()
+        expect(app.usedPlugins?.length).toEqual(1)
+      })
+
+      screen.props._children = []
+      await config.api.screen.save(screen)
+
+      await config.doInContext(config.devWorkspaceId!, async () => {
+        const app = await sdk.workspaces.metadata.get()
+        expect(app.usedPlugins?.length).toEqual(0)
+      })
+    })
+
+    it("should prune unused plugin when screen containing it is deleted", async () => {
+      const screen = await config.api.screen.save(
+        createPluginScreen("/plugin-screen")
+      )
+
+      await config.doInContext(config.devWorkspaceId!, async () => {
+        const app = await sdk.workspaces.metadata.get()
+        expect(app.usedPlugins?.length).toEqual(1)
+      })
+
+      await config.api.screen.destroy(screen._id!, screen._rev!)
+
+      await config.doInContext(config.devWorkspaceId!, async () => {
+        const app = await sdk.workspaces.metadata.get()
+        expect(app.usedPlugins?.length).toEqual(0)
+      })
+    })
+
+    it("should retain plugin if at least one screen is still using it", async () => {
+      const screen1 = await config.api.screen.save(
+        createPluginScreen("/plugin-screen-1")
+      )
+      const screen2 = await config.api.screen.save(
+        basicScreen("/plugin-screen-2")
+      )
+
+      await config.doInContext(config.devWorkspaceId!, async () => {
+        const app = await sdk.workspaces.metadata.get()
+        expect(app.usedPlugins?.length).toEqual(1)
+      })
+
+      await config.api.screen.destroy(screen2._id!, screen2._rev!)
+
+      await config.doInContext(config.devWorkspaceId!, async () => {
+        const app = await sdk.workspaces.metadata.get()
+        expect(app.usedPlugins?.length).toEqual(1)
+      })
+
+      await config.api.screen.destroy(screen1._id!, screen1._rev!)
+
+      await config.doInContext(config.devWorkspaceId!, async () => {
+        const app = await sdk.workspaces.metadata.get()
+        expect(app.usedPlugins?.length).toEqual(0)
+      })
+    })
+
+    it("should filter out deleted plugins in enrichUsedPluginSvelteMajors", async () => {
+      await config.doInTenant(async () => {
+        const enriched = await sdk.plugins.enrichUsedPluginSvelteMajors([
+          pluginDoc,
+          {
+            _id: "plg_nonexistent",
+            name: "nonexistent",
+            version: "1.0.0",
+            description: "",
+            source: PluginSource.FILE,
+            package: {},
+            hash: "456",
+            schema: {
+              type: PluginType.COMPONENT,
+            },
+          },
+        ])
+
+        expect(enriched.length).toEqual(1)
+        expect(enriched[0]._id).toEqual("plg_custom-component")
+      })
     })
   })
 })
