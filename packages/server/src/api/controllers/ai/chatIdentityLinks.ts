@@ -238,6 +238,8 @@ export async function handoffChatLinkSession(
     throw new HTTPError("Link token is invalid or has expired", 400)
   }
 
+  utils.clearCookie(ctx, CHAT_LINK_RETURN_URL_COOKIE)
+
   ctx.type = "text/html"
   ctx.body = renderLinkConfirmationPage(
     confirmationSession,
