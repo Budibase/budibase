@@ -554,7 +554,7 @@ else
         LITELLM_CONFIG_PATH="${DATA_DIR}/litellm/config.yaml"
     fi
 
-    pm2 start /opt/venv/litellm/bin/litellm \
+    NODE_OPTIONS="" pm2 start /opt/venv/litellm/bin/litellm \
       --name litellm \
       --interpreter /opt/venv/litellm/bin/python \
       --restart-delay 5000 \
