@@ -47,7 +47,7 @@ const operation: AgentOperation = {
 
 describe("createEscalationGateRuntime", () => {
   // No generated card copy, so the notification falls back to summarised args.
-  const buildRuntime = () =>
+  const buildRuntime = (generateCardCopy?: jest.Mock) =>
     createEscalationGateRuntime({
       agentId: "agent_1",
       operation,
@@ -59,6 +59,7 @@ describe("createEscalationGateRuntime", () => {
         requesterLabel: "Adria Navarro (adria@example.com)",
         getMessages: () => [],
         getRequestId: () => "request_1",
+        generateCardCopy,
       },
     })
 
@@ -110,6 +111,24 @@ describe("createEscalationGateRuntime", () => {
     expect(input.summary).not.toContain("do-not-show")
     expect(input.message).not.toContain("do-not-show")
     expect(input.title).not.toContain("do-not-show")
+  })
+
+  it("gives generated copy enough context to identify the request", async () => {
+    const generateCardCopy = jest.fn().mockResolvedValue({
+      title: "Run the release workflow",
+      summary: "Adria Navarro is requesting a release workflow run.",
+    })
+    const runtime = buildRuntime(generateCardCopy)
+    const args = { workflow_id: "test-release.yml" }
+
+    await runtime.intercept(args, { toolCallId: "call_1", messages: [] })
+
+    expect(generateCardCopy).toHaveBeenCalledWith({
+      label: "Trigger workflow",
+      args,
+      operation: "Prepare Cloud release",
+      requestedBy: "Adria Navarro (adria@example.com)",
+    })
   })
 })
 

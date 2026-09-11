@@ -213,14 +213,19 @@ const buildReviewContextBlocks = (reviewContext: EscalationReviewContext) => [
     { tight: false }
   ),
   richLine([
-    { text: "Operation: ", weight: "Bolder" },
+    { text: "Purpose: ", weight: "Bolder" },
     { text: reviewContext.operation },
   ]),
   richLine([
     { text: "Action: ", weight: "Bolder" },
     { text: reviewContext.action },
   ]),
-  richLine([{ text: "Parameters", weight: "Bolder" }], { tight: false }),
+  richLine([{ text: "Complete tool parameters", weight: "Bolder" }], {
+    tight: false,
+  }),
+  richLine([
+    { text: "Review these before approving. Sensitive values are redacted." },
+  ]),
   ...parameterLines(reviewContext.parameters),
 ]
 

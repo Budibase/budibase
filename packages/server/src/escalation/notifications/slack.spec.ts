@@ -175,7 +175,22 @@ describe("sendSlackNotification", () => {
     )
 
     const payload = mockPostMessage.mock.calls[0][0]
+    const actionIndex = payload.blocks.findIndex(
+      (block: { type: string }) => block.type === "actions"
+    )
+    const parametersIndex = payload.blocks.findIndex(
+      (block: { text?: { text: string } }) =>
+        block.text?.text.includes("Complete tool parameters")
+    )
     const rendered = JSON.stringify(payload.blocks)
+    expect(payload.blocks[0]).toEqual(
+      expect.objectContaining({
+        type: "header",
+        text: expect.objectContaining({ text: "Approval required" }),
+      })
+    )
+    expect(actionIndex).toBeGreaterThan(0)
+    expect(actionIndex).toBeLessThan(parametersIndex)
     expect(rendered).toContain("Adria Navarro")
     expect(rendered).toContain("Prepare Cloud release")
     expect(rendered).toContain("release_notes")

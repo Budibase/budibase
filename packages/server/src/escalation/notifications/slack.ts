@@ -11,11 +11,45 @@ import {
   EscalationNotificationChannel,
 } from "@budibase/types"
 import sdk from "../../sdk"
+import { APPROVAL_REQUIRED_TITLE_PREFIX } from "../constants"
 import { chunkText, truncateReviewField } from "../reviewContext"
 import { findIntegrationAgent, getEscalationText } from "./utils"
 
 const escapeMrkdwn = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+
+const displayTitle = (title: string) =>
+  title.startsWith(`${APPROVAL_REQUIRED_TITLE_PREFIX} `)
+    ? title.slice(APPROVAL_REQUIRED_TITLE_PREFIX.length + 1)
+    : title
+
+const actionBlock = ({
+  escalationId,
+  notificationDocId,
+  appId,
+}: {
+  escalationId: string
+  notificationDocId: string
+  appId: string
+}): KnownBlock => ({
+  type: "actions",
+  elements: [
+    {
+      type: "button",
+      text: { type: "plain_text", text: "Approve" },
+      style: "primary",
+      action_id: EscalationAction.APPROVE,
+      value: JSON.stringify({ escalationId, notificationDocId, appId }),
+    },
+    {
+      type: "button",
+      text: { type: "plain_text", text: "Reject" },
+      style: "danger",
+      action_id: EscalationAction.REJECT,
+      value: JSON.stringify({ escalationId, notificationDocId, appId }),
+    },
+  ],
+})
 
 const buildEscalationBlocks = ({
   title,
@@ -32,13 +66,24 @@ const buildEscalationBlocks = ({
   notificationDocId: string
   appId: string
 }) => {
+  const decisionBlock = actionBlock({
+    escalationId,
+    notificationDocId,
+    appId,
+  })
   const blocks: (KnownBlock | Block)[] = [
+    {
+      type: "header",
+      text: { type: "plain_text", text: "Approval required" },
+    },
     {
       type: "section",
       text: {
         type: "mrkdwn",
         text: truncateReviewField(
-          summary ? `*${title}*\n${summary}` : `*${title}*`,
+          summary
+            ? `*${escapeMrkdwn(displayTitle(title))}*\n${escapeMrkdwn(summary)}`
+            : `*${escapeMrkdwn(displayTitle(title))}*`,
           2_900
         ),
       },
@@ -47,12 +92,30 @@ const buildEscalationBlocks = ({
   if (reviewContext) {
     blocks.push({
       type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Requested by*\n${escapeMrkdwn(reviewContext.requestedBy)}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Purpose*\n${escapeMrkdwn(reviewContext.operation)}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Action*\n${escapeMrkdwn(reviewContext.action)}`,
+        },
+      ],
+    })
+    blocks.push(decisionBlock)
+    blocks.push({ type: "divider" })
+    blocks.push({
+      type: "section",
       text: {
         type: "mrkdwn",
         text:
-          `*Requested by:* ${escapeMrkdwn(reviewContext.requestedBy)}\n` +
-          `*Operation:* ${escapeMrkdwn(reviewContext.operation)}\n` +
-          `*Action:* ${escapeMrkdwn(reviewContext.action)}`,
+          "*Complete tool parameters*\n" +
+          "_Review these before approving. Sensitive values are redacted._",
       },
     })
     // Neutralise the fence before chunking - a ``` split across two chunks
@@ -62,35 +125,18 @@ const buildEscalationBlocks = ({
       /```/g,
       "'''"
     )
-    chunkText(parameters).forEach((chunk, index) => {
+    chunkText(parameters).forEach(chunk => {
       blocks.push({
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `${index === 0 ? "*Parameters*\n" : ""}\`\`\`${chunk}\`\`\``,
+          text: `\`\`\`${chunk}\`\`\``,
         },
       })
     })
+  } else {
+    blocks.push(decisionBlock)
   }
-  blocks.push({
-    type: "actions",
-    elements: [
-      {
-        type: "button",
-        text: { type: "plain_text", text: "Approve" },
-        style: "primary",
-        action_id: EscalationAction.APPROVE,
-        value: JSON.stringify({ escalationId, notificationDocId, appId }),
-      },
-      {
-        type: "button",
-        text: { type: "plain_text", text: "Reject" },
-        style: "danger",
-        action_id: EscalationAction.REJECT,
-        value: JSON.stringify({ escalationId, notificationDocId, appId }),
-      },
-    ],
-  })
   return blocks
 }
 

@@ -42,6 +42,8 @@ export interface EscalationGateContext {
   generateCardCopy?: (input: {
     label: string
     args: unknown
+    operation: string
+    requestedBy: string
   }) => Promise<{ title: string; summary: string } | undefined>
 }
 
@@ -227,12 +229,15 @@ export const createEscalationGateRuntime = ({
       throw new Error("escalation gate: missing workspace context")
     }
 
+    const requestedBy = gateContext.requesterLabel ?? "Unknown requester"
     let title = `${APPROVAL_REQUIRED_TITLE_PREFIX} ${label}`
     let summary = summariseArgs(label, input)
     try {
       const copy = await gateContext.generateCardCopy?.({
         label,
         args: input,
+        operation: operation.name,
+        requestedBy,
       })
       if (copy?.title && copy?.summary) {
         title = copy.title
@@ -253,9 +258,7 @@ export const createEscalationGateRuntime = ({
       title,
       summary,
       reviewContext: {
-        requestedBy: truncateReviewField(
-          gateContext.requesterLabel ?? "Unknown requester"
-        ),
+        requestedBy: truncateReviewField(requestedBy),
         operation: truncateReviewField(operation.name),
         action: truncateReviewField(label),
         parameters: formatToolParameters(input),
