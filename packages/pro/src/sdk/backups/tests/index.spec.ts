@@ -8,6 +8,7 @@ import {
 } from "@budibase/types"
 import tk from "timekeeper"
 import { Readable } from "stream"
+import backupMetadata from "../backup"
 import { default as backups } from "../"
 import { DBTestConfiguration, mocks } from "../../../../tests"
 
@@ -174,7 +175,53 @@ describe("backups", () => {
 
   const exportWorkspaceFn = jest.fn(),
     importWorkspaceFn = jest.fn(),
-    statsFn = jest.fn()
+    statsFn = jest.fn(),
+    reconcileLiteLLMModelsFn = jest.fn()
+
+  const expectRestoreToFailWithoutRollingBack = async (
+    backup: WorkspaceBackup
+  ) => {
+    let streamUploadsBeforeReconciliation = 0
+    mockedObjectStore.listAllObjects.mockImplementation((_bucket, prefix) =>
+      (async function* () {
+        if (prefix?.includes("_temp_")) {
+          yield { Key: `${prefix}attachments/restore.txt` }
+        }
+        if (prefix === `${config.workspaceId}/`) {
+          yield { Key: `${prefix}attachments/restore.txt` }
+        }
+      })()
+    )
+    mockedObjectStore.objectExists.mockResolvedValue(true)
+    reconcileLiteLLMModelsFn.mockImplementation(async () => {
+      streamUploadsBeforeReconciliation =
+        mockedObjectStore.streamUpload.mock.calls.length
+      throw new Error("LiteLLM reconciliation failed")
+    })
+
+    const replicateSpy = jest.spyOn(db.Replication.prototype, "replicate")
+    try {
+      const response = await backups.triggerWorkspaceRestore(
+        config.workspaceId,
+        backup._id,
+        "backup restore",
+        USER_ID
+      )
+      await waitForQueue()
+
+      const processedRestore = await backups.getWorkspaceBackup(
+        response!.restoreId
+      )
+      expect(processedRestore.status).toEqual(BackupStatus.FAILED)
+      expect(replicateSpy).toHaveBeenCalledTimes(1)
+      expect(reconcileLiteLLMModelsFn).toHaveBeenCalledTimes(1)
+      expect(mockedObjectStore.streamUpload).toHaveBeenCalledTimes(
+        streamUploadsBeforeReconciliation
+      )
+    } finally {
+      replicateSpy.mockRestore()
+    }
+  }
 
   beforeAll(async () => {
     mocks.licenses.useBackups()
@@ -183,6 +230,7 @@ describe("backups", () => {
         exportWorkspaceFn,
         importWorkspaceFn,
         statsFn,
+        reconcileLiteLLMModels: reconcileLiteLLMModelsFn,
       },
     })
   })
@@ -194,6 +242,7 @@ describe("backups", () => {
     exportWorkspaceFn.mockReset().mockReturnValue("/path")
     importWorkspaceFn.mockReset().mockImplementation()
     statsFn.mockReset().mockImplementation()
+    reconcileLiteLLMModelsFn.mockReset().mockImplementation()
     mockedObjectStore.listAllObjects
       .mockReset()
       .mockImplementation(() => (async function* () {})())
@@ -263,8 +312,10 @@ describe("backups", () => {
         expect.objectContaining({
           objectStoreAppId: tempAppId,
           preserveLiteLLMConfig: true,
+          reconcileLiteLLMModels: false,
         })
       )
+      expect(reconcileLiteLLMModelsFn).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -280,6 +331,31 @@ describe("backups", () => {
       expect(restoreWorkspaceId).toEqual(
         db.getDevWorkspaceID(config.workspaceId)
       )
+    })
+  })
+
+  it("should mark restore as failed when LiteLLM reconciliation fails", async () => {
+    await config.doInTenant(async () => {
+      const backup = await createBackup()
+      await waitForQueue()
+      const trackBackupErrorSpy = jest
+        .spyOn(backupMetadata, "trackBackupError")
+        .mockRejectedValue(new Error("Tracking failed"))
+
+      try {
+        await expectRestoreToFailWithoutRollingBack(backup)
+        expect(trackBackupErrorSpy).toHaveBeenCalledTimes(1)
+      } finally {
+        trackBackupErrorSpy.mockRestore()
+      }
+    })
+  })
+
+  it("should not roll back promoted files when reconciliation fails", async () => {
+    await config.doInTenant(async () => {
+      const backup = await createBackup()
+      await waitForQueue()
+      await expectRestoreToFailWithoutRollingBack(backup)
     })
   })
 

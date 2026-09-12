@@ -24,6 +24,7 @@ export interface ImportWorkspaceOpts {
   importObjStoreContents?: boolean
   objectStoreAppId?: string
   preserveLiteLLMConfig?: boolean
+  reconcileLiteLLMModels?: boolean
 }
 
 export type ExportWorkspaceFn = (
@@ -48,4 +49,5 @@ export interface BackupProcessingOpts {
   exportWorkspaceFn: ExportWorkspaceFn
   importWorkspaceFn: ImportWorkspaceFn
   statsFn: StatsFn
+  reconcileLiteLLMModels: () => Promise<void>
 }
