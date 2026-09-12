@@ -1,20 +1,24 @@
 <script lang="ts">
   import { Select } from "@budibase/bbui"
+  import { Constants } from "@budibase/frontend-core"
   import { roles } from "@/stores/builder"
-  import { createEventDispatcher } from "svelte"
 
   export let value: string
   export let error: string | undefined = undefined
   export let placeholder: string | undefined = undefined
   export let autoWidth: boolean = false
+  export let allowPublic: boolean = true
+  export let onChange: (value: string | undefined) => void = () => {}
 
-  const dispatch = createEventDispatcher<{ change: string | undefined }>()
+  $: roleOptions = allowPublic
+    ? $roles
+    : $roles.filter(role => role._id !== Constants.Roles.PUBLIC)
 </script>
 
 <Select
   bind:value
-  on:change={r => dispatch("change", r.detail)}
-  options={$roles}
+  on:change={r => onChange(r.detail)}
+  options={roleOptions}
   getOptionLabel={role => role.uiMetadata?.displayName}
   getOptionValue={role => role._id}
   getOptionColour={role => role.uiMetadata?.color}

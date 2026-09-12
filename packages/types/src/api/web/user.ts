@@ -108,6 +108,8 @@ export interface SearchUsersRequest {
   query?: SearchFilters
   appId?: string
   workspaceId?: string
+  groupIds?: string[]
+  workspaceRoleId?: string
   limit?: number
   paginate?: boolean
 }

@@ -1,4 +1,5 @@
 import { Checkbox, Select, RadioGroup, Stepper, Input } from "@budibase/bbui"
+import { PlanType } from "@budibase/types"
 import { licensing } from "@/stores/portal"
 import { get } from "svelte/store"
 import DataSourceSelect from "./controls/DataSourceSelect/DataSourceSelect.svelte"
@@ -39,6 +40,8 @@ import ButtonConditionEditor from "./controls/ButtonConditionEditor.svelte"
 import MultilineDrawerBindableInput from "@/components/common/MultilineDrawerBindableInput.svelte"
 import FilterableSelect from "./controls/FilterableSelect.svelte"
 import TimeControl from "./controls/TimeControl.svelte"
+import RoleSelect from "./controls/RoleSelect.svelte"
+import UserGroupSelect from "./controls/UserGroupSelect.svelte"
 import { setComponentSettingsResolver } from "./componentSettingsRegistry"
 
 const componentMap = {
@@ -46,6 +49,8 @@ const componentMap = {
   "text/multiline": MultilineDrawerBindableInput,
   plainText: Input,
   time: TimeControl,
+  role: RoleSelect,
+  userGroups: UserGroupSelect,
   select: Select,
   radio: RadioGroup,
   dataSource: DataSourceSelect,
@@ -123,7 +128,30 @@ export const getComponentForSetting = setting => {
   }
 
   // Check for paywalled settings
-  if (license && get(licensing).isFreePlan) {
+  const isLicensed = () => {
+    const licensingState = get(licensing)
+    const planType = licensingState.license?.plan.type
+    const isEnterpriseLicense =
+      licensingState.isEnterprisePlan ||
+      [PlanType.ENTERPRISE_BASIC, PlanType.ENTERPRISE_BASIC_TRIAL].includes(
+        planType
+      )
+    switch (license) {
+      case "premium":
+        return !licensingState.isFreePlan
+      case "business":
+        return (
+          licensingState.isBusinessPlan ||
+          isEnterpriseLicense ||
+          planType === PlanType.TEAM
+        )
+      case "enterprise":
+        return isEnterpriseLicense
+      default:
+        return false
+    }
+  }
+  if (license && !isLicensed()) {
     return PaywalledSetting
   }
 
