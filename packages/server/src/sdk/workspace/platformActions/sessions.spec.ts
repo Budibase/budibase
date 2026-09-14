@@ -187,4 +187,155 @@ describe("platformActions sessions", () => {
       expect(devSessions.sessions.map(s => s.sourceId)).toEqual(["dev-run"])
     })
   })
+
+  describe("combined sessions (env omitted)", () => {
+    it("merges prod and dev into one correctly ordered list", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        for (const sourceId of ["prod-1", "prod-2", "prod-3"]) {
+          await putSession(context.getProdWorkspaceDB(), {
+            sourceType: "automation_run",
+            sourceId,
+            status: "completed",
+          })
+        }
+        for (const sourceId of ["dev-1", "dev-2", "dev-3"]) {
+          await putSession(context.getDevWorkspaceDB(), {
+            sourceType: "automation_run",
+            sourceId,
+            status: "completed",
+          })
+        }
+
+        const prodOnly = await fetchSessions({ environment: "prod", limit: 10 })
+        const devOnly = await fetchSessions({ environment: "dev", limit: 10 })
+        const expectedOrder = [...prodOnly.sessions, ...devOnly.sessions]
+          .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))
+          .map(s => s.sourceId)
+
+        const combined = await fetchSessions({ limit: 10 })
+
+        expect(combined.sessions.map(s => s.sourceId)).toEqual(expectedOrder)
+        for (const session of combined.sessions) {
+          expect(session.environment).toBe(
+            session.sourceId.startsWith("prod") ? "prod" : "dev"
+          )
+        }
+      })
+    })
+
+    it("paginates forward through the combined list across both environments", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        for (const sourceId of ["prod-1", "prod-2", "prod-3"]) {
+          await putSession(context.getProdWorkspaceDB(), {
+            sourceType: "automation_run",
+            sourceId,
+            status: "completed",
+          })
+        }
+        for (const sourceId of ["dev-1", "dev-2", "dev-3"]) {
+          await putSession(context.getDevWorkspaceDB(), {
+            sourceType: "automation_run",
+            sourceId,
+            status: "completed",
+          })
+        }
+
+        const baseline = await fetchSessions({ limit: 10 })
+        expect(baseline.sessions).toHaveLength(6)
+
+        const forwardPages: SessionsPageResult[] = []
+        let bookmark: string | undefined
+        while (true) {
+          const page = await fetchSessions({ limit: 2, bookmark })
+          forwardPages.push(page)
+          if (!page.pagination.hasNextPage) break
+          bookmark = page.pagination.nextBookmark
+        }
+
+        expect(
+          forwardPages.flatMap(p => p.sessions.map(s => s.sourceId))
+        ).toEqual(baseline.sessions.map(s => s.sourceId))
+        expect(forwardPages[0].pagination.hasPreviousPage).toBe(false)
+        const lastForward = forwardPages[forwardPages.length - 1]
+        expect(lastForward.pagination.hasNextPage).toBe(false)
+      })
+    })
+
+    it("pages backward through the combined list to reconstruct an earlier page", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        for (const sourceId of ["prod-1", "prod-2"]) {
+          await putSession(context.getProdWorkspaceDB(), {
+            sourceType: "automation_run",
+            sourceId,
+            status: "completed",
+          })
+        }
+        for (const sourceId of ["dev-1", "dev-2"]) {
+          await putSession(context.getDevWorkspaceDB(), {
+            sourceType: "automation_run",
+            sourceId,
+            status: "completed",
+          })
+        }
+
+        const firstPage = await fetchSessions({ limit: 2 })
+        expect(firstPage.pagination.hasNextPage).toBe(true)
+        const secondPage = await fetchSessions({
+          limit: 2,
+          bookmark: firstPage.pagination.nextBookmark,
+        })
+
+        const back = await fetchSessions({
+          limit: 2,
+          bookmark: secondPage.pagination.previousBookmark,
+        })
+
+        expect(back.sessions.map(s => s.sourceId)).toEqual(
+          firstPage.sessions.map(s => s.sourceId)
+        )
+        expect(back.pagination.hasPreviousPage).toBe(false)
+        expect(back.pagination.hasNextPage).toBe(true)
+      })
+    })
+
+    it("keeps paginating correctly when every page is drawn from a single environment", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        // "failed" only exists in prod - dev contributes zero candidates on
+        // every page, exercising the carry-over-unchanged bookmark path for
+        // the non-contributing side.
+        for (const sourceId of ["failed-1", "failed-2", "failed-3"]) {
+          await putSession(context.getProdWorkspaceDB(), {
+            sourceType: "automation_run",
+            sourceId,
+            status: "failed",
+          })
+        }
+        await putSession(context.getDevWorkspaceDB(), {
+          sourceType: "automation_run",
+          sourceId: "dev-completed",
+          status: "completed",
+        })
+
+        const baseline = await fetchSessions({ status: "failed", limit: 10 })
+        expect(baseline.sessions).toHaveLength(3)
+
+        const forwardPages: SessionsPageResult[] = []
+        let bookmark: string | undefined
+        while (true) {
+          const page = await fetchSessions({
+            status: "failed",
+            limit: 2,
+            bookmark,
+          })
+          forwardPages.push(page)
+          if (!page.pagination.hasNextPage) break
+          bookmark = page.pagination.nextBookmark
+        }
+
+        expect(
+          forwardPages.flatMap(p => p.sessions.map(s => s.sourceId))
+        ).toEqual(baseline.sessions.map(s => s.sourceId))
+      })
+    })
+  })
 })

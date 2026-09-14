@@ -9,6 +9,7 @@ import {
   encodeSessionBookmark,
   type SessionBookmarkDirection,
 } from "./bookmarks"
+import { fetchCombinedSessions } from "./combinedSessions"
 import { getWorkspaceDbForEnvironment } from "./environment"
 import {
   querySessionsByStatusAndUpdatedAt,
@@ -16,8 +17,12 @@ import {
   type SessionsPage,
 } from "./views"
 
+export type ActionSessionRecord = PlatformActionSessionIndexDoc & {
+  environment: PlatformActionEnvironment
+}
+
 export interface SessionsPageResult {
-  sessions: PlatformActionSessionIndexDoc[]
+  sessions: ActionSessionRecord[]
   pagination: ActionsPagination
 }
 
@@ -54,7 +59,7 @@ function buildPagination(
   }
 }
 
-export async function fetchSessions({
+async function fetchSingleEnvironmentSessions({
   environment,
   status,
   bookmark,
@@ -85,7 +90,29 @@ export async function fetchSessions({
       })
 
   return {
-    sessions: page.items,
+    sessions: page.items.map(session => ({ ...session, environment })),
     pagination: buildPagination(page, direction, !!decoded),
   }
+}
+
+export async function fetchSessions({
+  environment,
+  status,
+  bookmark,
+  limit,
+}: {
+  environment?: PlatformActionEnvironment
+  status?: PlatformActionContainerStatus
+  bookmark?: string
+  limit: number
+}): Promise<SessionsPageResult> {
+  if (environment) {
+    return fetchSingleEnvironmentSessions({
+      environment,
+      status,
+      bookmark,
+      limit,
+    })
+  }
+  return fetchCombinedSessions({ status, bookmark, limit })
 }

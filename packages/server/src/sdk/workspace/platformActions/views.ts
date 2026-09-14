@@ -47,6 +47,11 @@ export const createSessionsByStatusAndUpdatedAtView = async (
 export interface SessionKeysetBookmark {
   key: string
   id: string
+  // Only used by the cross-environment merge, to re-open a boundary row
+  // that a non-contributing side needs to reconsider when reversing
+  // direction. Absent/false keeps the normal exclusive resume behavior every
+  // single-environment caller relies on.
+  inclusive?: boolean
 }
 
 export interface SessionsPage {
@@ -75,6 +80,66 @@ async function fetchKeysetPage(
   return { items: reverseResult ? page.reverse() : page, hasMore }
 }
 
+function buildUpdatedAtParams(
+  bookmark: SessionKeysetBookmark | undefined,
+  descending: boolean
+): DatabaseQueryOpts {
+  const params: DatabaseQueryOpts = { descending }
+  if (bookmark) {
+    params.startkey = bookmark.key
+    params.startkey_docid = bookmark.id
+    if (!bookmark.inclusive) {
+      params.skip = 1
+    }
+  }
+  return params
+}
+
+function buildStatusParams(
+  status: PlatformActionContainerStatus,
+  bookmark: SessionKeysetBookmark | undefined,
+  descending: boolean
+): DatabaseQueryOpts {
+  const params: DatabaseQueryOpts = {
+    descending,
+    endkey: descending ? [status] : [status, {}],
+  }
+  if (bookmark) {
+    params.startkey = [status, bookmark.key]
+    params.startkey_docid = bookmark.id
+    if (!bookmark.inclusive) {
+      params.skip = 1
+    }
+  } else {
+    params.startkey = descending ? [status, {}] : [status]
+  }
+  return params
+}
+
+function resolveViewQuery(
+  status: PlatformActionContainerStatus | undefined,
+  bookmark: SessionKeysetBookmark | undefined,
+  descending: boolean,
+  workspaceDb: Database
+): {
+  viewName: ViewName
+  params: DatabaseQueryOpts
+  createFunc: () => Promise<void>
+} {
+  if (status) {
+    return {
+      viewName: SESSIONS_BY_STATUS_AND_UPDATED_AT_VIEW,
+      params: buildStatusParams(status, bookmark, descending),
+      createFunc: () => createSessionsByStatusAndUpdatedAtView(workspaceDb),
+    }
+  }
+  return {
+    viewName: SESSIONS_BY_UPDATED_AT_VIEW,
+    params: buildUpdatedAtParams(bookmark, descending),
+    createFunc: () => createSessionsByUpdatedAtView(workspaceDb),
+  }
+}
+
 export const querySessionsByUpdatedAt = async ({
   workspaceDb,
   limit,
@@ -86,18 +151,17 @@ export const querySessionsByUpdatedAt = async ({
   bookmark?: SessionKeysetBookmark
   direction: "next" | "prev"
 }): Promise<SessionsPage> => {
-  const descending = direction === "next"
-  const params: DatabaseQueryOpts = { descending }
-  if (bookmark) {
-    params.startkey = bookmark.key
-    params.startkey_docid = bookmark.id
-    params.skip = 1
-  }
+  const { viewName, params, createFunc } = resolveViewQuery(
+    undefined,
+    bookmark,
+    direction === "next",
+    workspaceDb
+  )
   return fetchKeysetPage(
-    SESSIONS_BY_UPDATED_AT_VIEW,
+    viewName,
     params,
     workspaceDb,
-    () => createSessionsByUpdatedAtView(workspaceDb),
+    createFunc,
     limit,
     direction === "prev"
   )
@@ -116,24 +180,48 @@ export const querySessionsByStatusAndUpdatedAt = async ({
   bookmark?: SessionKeysetBookmark
   direction: "next" | "prev"
 }): Promise<SessionsPage> => {
-  const descending = direction === "next"
-  const params: DatabaseQueryOpts = {
-    descending,
-    endkey: descending ? [status] : [status, {}],
-  }
-  if (bookmark) {
-    params.startkey = [status, bookmark.key]
-    params.startkey_docid = bookmark.id
-    params.skip = 1
-  } else {
-    params.startkey = descending ? [status, {}] : [status]
-  }
+  const { viewName, params, createFunc } = resolveViewQuery(
+    status,
+    bookmark,
+    direction === "next",
+    workspaceDb
+  )
   return fetchKeysetPage(
-    SESSIONS_BY_STATUS_AND_UPDATED_AT_VIEW,
+    viewName,
     params,
     workspaceDb,
-    () => createSessionsByStatusAndUpdatedAtView(workspaceDb),
+    createFunc,
     limit,
     direction === "prev"
   )
+}
+
+// Raw, untrimmed/unreversed candidates for the cross-environment merge.
+// Finalizing per source first would scramble cross-source ordering.
+export const querySessionsCandidates = async ({
+  workspaceDb,
+  status,
+  candidateLimit,
+  bookmark,
+  direction,
+}: {
+  workspaceDb: Database
+  status?: PlatformActionContainerStatus
+  candidateLimit: number
+  bookmark?: SessionKeysetBookmark
+  direction: "next" | "prev"
+}): Promise<PlatformActionSessionIndexDoc[]> => {
+  const { viewName, params, createFunc } = resolveViewQuery(
+    status,
+    bookmark,
+    direction === "next",
+    workspaceDb
+  )
+  return (await db.queryView<PlatformActionSessionIndexDoc>(
+    viewName,
+    { ...params, include_docs: true, limit: candidateLimit },
+    workspaceDb,
+    createFunc,
+    { arrayResponse: true }
+  )) as PlatformActionSessionIndexDoc[]
 }
