@@ -1,5 +1,5 @@
 import {
-  AgentOperationApprovalPolicy,
+  EscalationPolicySnapshot,
   EscalationRecipient,
   EscalationResponse,
   EscalationSource,
@@ -36,7 +36,7 @@ export interface CreateOperationEscalationInput extends CreateEscalationBase {
   operationId: string
   requestId?: string
   rule?: ToolExecutionRule
-  policy?: AgentOperationApprovalPolicy
+  policy?: EscalationPolicySnapshot
   context: SuspendedOperationContext
 }
 

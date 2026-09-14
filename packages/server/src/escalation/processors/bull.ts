@@ -31,8 +31,7 @@ export class BullEscalationProcessor implements IEscalationProcessor {
 
     if (
       input.source === EscalationSource.OPERATION &&
-      !input.recipients?.length &&
-      !input.policy?.notifications?.recipients?.length
+      !input.recipients?.length
     ) {
       throw new Error(
         "Cannot create an operation escalation with no recipients"
