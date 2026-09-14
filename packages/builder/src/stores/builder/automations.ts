@@ -14,7 +14,7 @@ import { getNewStepName } from "@/helpers/automations/nameHelpers"
 import { getSequentialName } from "@/helpers/duplicate"
 import { DerivedBudiStore } from "@/stores/BudiStore"
 import {
-  appStore,
+  workspaceStore,
   deploymentStore,
   permissions,
   tables,
@@ -2300,7 +2300,7 @@ const automationActions = (store: AutomationStore) => ({
     const automation: Automation = {
       name,
       type: "automation",
-      appId: get(appStore).appId,
+      appId: get(workspaceStore).appId,
       definition: {
         steps: [],
         trigger,
