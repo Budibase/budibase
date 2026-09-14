@@ -5,8 +5,9 @@
 
   export let API = createAPIClient()
 
+  /** @type {string | string[] | null} */
   export let value = null
-  export let disabled
+  export let disabled = false
   export let multiselect = false
 
   $: fetch = fetchData({
