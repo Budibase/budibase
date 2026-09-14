@@ -1,11 +1,12 @@
-import { API } from "@/api"
 import { banner } from "@budibase/bbui"
+import { DEFAULT_PASSWORD_POLICY } from "@budibase/shared-core"
 import {
   ConfigChecklistResponse,
   GetEnvironmentResponse,
   SystemStatusResponse,
 } from "@budibase/types"
 import { get } from "svelte/store"
+import { API } from "@/api"
 import Analytics from "../../analytics"
 import { BudiStore } from "../BudiStore"
 import { auth } from "./auth"
@@ -26,6 +27,7 @@ export class AdminStore extends BudiStore<AdminState> {
       disableAccountPortal: false,
       offlineMode: false,
       maintenance: [],
+      passwordPolicy: DEFAULT_PASSWORD_POLICY,
     })
   }
 
@@ -56,7 +58,7 @@ export class AdminStore extends BudiStore<AdminState> {
       store.baseUrl = environment.baseUrl
       store.offlineMode = environment.offlineMode
       store.maintenance = environment.maintenance
-      store.passwordMinLength = environment.passwordMinLength
+      store.passwordPolicy = environment.passwordPolicy
 
       return store
     })
