@@ -204,4 +204,24 @@ describe("sendSlackNotification", () => {
     expect(rendered).not.toContain(injectedLink)
     expect(rendered).not.toContain(injectedFence)
   })
+
+  it("keeps escaped parameters within Slack's block limit", async () => {
+    const { contextDoc, notifDoc, globalUserId } = buildDocs()
+    contextDoc.reviewContext = {
+      requestedBy: "Adria Navarro (adria@example.com)",
+      operation: "Prepare Cloud release",
+      action: "Trigger workflow",
+      parameters: "&".repeat(24_000),
+    }
+    await seedLinks(globalUserId)
+    mockAuthTest.mockResolvedValue({ ok: true, team_id: TEAM_RIGHT })
+
+    await config.doInContext(config.getDevWorkspaceId(), () =>
+      sendSlackNotification({ notifDoc, contextDoc })
+    )
+
+    const payload = mockPostMessage.mock.calls[0][0]
+    expect(payload.blocks).toHaveLength(50)
+    expect(JSON.stringify(payload.blocks.at(-1))).toContain("TRUNCATED")
+  })
 })

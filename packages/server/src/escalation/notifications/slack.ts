@@ -18,6 +18,9 @@ import { findIntegrationAgent, getEscalationText } from "./utils"
 const escapeMrkdwn = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 
+const PARAMETER_CHUNK_LENGTH = 2_500
+const MAX_PARAMETER_BLOCKS = 44
+
 const displayTitle = (title: string) =>
   title.startsWith(`${APPROVAL_REQUIRED_TITLE_PREFIX} `)
     ? title.slice(APPROVAL_REQUIRED_TITLE_PREFIX.length + 1)
@@ -121,11 +124,11 @@ const buildEscalationBlocks = ({
     // Neutralise the fence before chunking - a ``` split across two chunks
     // would survive a per-chunk replace and close the block early, letting the
     // rest of the arguments render as mrkdwn.
-    const parameters = escapeMrkdwn(reviewContext.parameters).replace(
-      /```/g,
-      "'''"
+    const parameters = truncateReviewField(
+      escapeMrkdwn(reviewContext.parameters).replace(/```/g, "'''"),
+      MAX_PARAMETER_BLOCKS * PARAMETER_CHUNK_LENGTH
     )
-    chunkText(parameters).forEach(chunk => {
+    chunkText(parameters, PARAMETER_CHUNK_LENGTH).forEach(chunk => {
       blocks.push({
         type: "section",
         text: {
