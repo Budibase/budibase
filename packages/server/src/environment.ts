@@ -181,6 +181,9 @@ const environment = {
   TABLE_GENERATION_TIMEOUT_MS:
     process.env.TABLE_GENERATION_TIMEOUT_MS || "240000",
   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+  KNOWLEDGE_BASE_PROVIDER: process.env.KNOWLEDGE_BASE_PROVIDER,
+  AZURE_OPENAI_ENDPOINT: process.env.AZURE_OPENAI_ENDPOINT,
+  AZURE_OPENAI_API_KEY: process.env.AZURE_OPENAI_API_KEY,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {

@@ -15,7 +15,7 @@
     syncing || (row.kind === "sharepoint_connection" && row.isSyncing)
   )
   const unavailableTooltip =
-    "Set GEMINI_API_KEY on your local environment and restart Budibase."
+    "Configure the selected knowledge provider in the server environment and restart Budibase."
 
   $effect(() => {
     if (renderedRowId === row._id) {

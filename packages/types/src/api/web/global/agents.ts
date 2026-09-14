@@ -12,6 +12,7 @@ export type ChatAgentRequest = ChatConversationRequest
 
 export interface AgentKnowledgeConfiguration {
   knowledgeSearchConfigured: boolean
+  conversationAttachmentsConfigured: boolean
 }
 
 export interface FetchAgentsResponse {

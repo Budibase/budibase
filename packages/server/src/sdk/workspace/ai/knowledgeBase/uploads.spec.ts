@@ -9,6 +9,15 @@ const mockRemoveRagFileIngestionJob = jest.fn()
 const mockCreateGeminiFileStore = jest.fn()
 const mockDeleteGeminiVectorStore = jest.fn()
 const mockSyncKeyVectorStores = jest.fn()
+const mockCreateAzureFileStore = jest.fn()
+const mockDeleteAzureVectorStore = jest.fn()
+
+jest.mock("./azureFileStore", () => ({
+  createAzureFileStore: (...args: object[]) =>
+    mockCreateAzureFileStore(...args),
+  deleteAzureVectorStore: (...args: object[]) =>
+    mockDeleteAzureVectorStore(...args),
+}))
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -271,5 +280,75 @@ describe("resetKnowledgeBaseStore", () => {
     })
     expect(mockSyncKeyVectorStores).not.toHaveBeenCalled()
     expect(mockEnqueueRagFileIngestion).not.toHaveBeenCalled()
+  })
+
+  it("replaces an Azure store and queues retained files for re-ingestion", async () => {
+    const db = { put: jest.fn().mockResolvedValue({ rev: "2-abc" }) }
+    mockGetWorkspaceDB.mockReturnValue(db)
+    mockCreateAzureFileStore.mockResolvedValue("vs_new")
+    mockDeleteAzureVectorStore.mockResolvedValue(undefined)
+    mockListKnowledgeBaseFiles.mockResolvedValue([
+      {
+        _id: "file_1",
+        objectStoreKey: "workspace_1/notes.txt",
+        status: KnowledgeBaseFileStatus.READY,
+        ragSourceId: "azure_file_1",
+      },
+    ])
+
+    await resetKnowledgeBaseStore({
+      _id: "kb_1",
+      name: "Azure docs",
+      type: KnowledgeBaseType.AZURE,
+      config: { vectorStoreId: "vs_old" },
+    })
+
+    expect(db.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _id: "kb_1",
+        type: KnowledgeBaseType.AZURE,
+        config: { vectorStoreId: "vs_new" },
+      })
+    )
+    expect(mockDeleteAzureVectorStore).toHaveBeenCalledWith({
+      vectorStoreId: "vs_old",
+    })
+    expect(mockUpdateKnowledgeBaseFile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _id: "file_1",
+        status: KnowledgeBaseFileStatus.PROCESSING,
+        ragSourceId: undefined,
+      })
+    )
+    expect(mockEnqueueRagFileIngestion).toHaveBeenCalledWith({
+      workspaceId: "workspace_1",
+      knowledgeBaseId: "kb_1",
+      fileId: "file_1",
+      objectStoreKey: "workspace_1/notes.txt",
+    })
+    expect(mockSyncKeyVectorStores).not.toHaveBeenCalled()
+  })
+
+  it("cleans up the replacement Azure store if saving it fails", async () => {
+    mockGetWorkspaceDB.mockReturnValue({
+      put: jest.fn().mockRejectedValue(new Error("Database unavailable")),
+    })
+    mockCreateAzureFileStore.mockResolvedValue("vs_new")
+    mockDeleteAzureVectorStore.mockResolvedValue(undefined)
+
+    await expect(
+      resetKnowledgeBaseStore({
+        _id: "kb_1",
+        name: "Azure docs",
+        type: KnowledgeBaseType.AZURE,
+        config: { vectorStoreId: "vs_old" },
+      })
+    ).rejects.toThrow("Database unavailable")
+    expect(mockDeleteAzureVectorStore).toHaveBeenCalledWith({
+      vectorStoreId: "vs_new",
+    })
+    expect(mockDeleteAzureVectorStore).not.toHaveBeenCalledWith({
+      vectorStoreId: "vs_old",
+    })
   })
 })

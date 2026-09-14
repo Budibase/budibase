@@ -37,6 +37,7 @@ jest.mock("..", () => ({
     update: (...args: any[]) => mockAgentsUpdate(...args),
   },
   knowledgeBase: {
+    getKnowledgeBaseProvider: () => "gemini",
     find: (...args: any[]) => mockKnowledgeBaseFind(...args),
     listKnowledgeBaseFiles: (...args: any[]) =>
       mockKnowledgeBaseListFiles(...args),

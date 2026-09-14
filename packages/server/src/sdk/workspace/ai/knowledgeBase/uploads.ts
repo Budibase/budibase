@@ -6,7 +6,8 @@ import {
   objectStore,
 } from "@budibase/backend-core"
 import {
-  GeminiKnowledgeBase,
+  KnowledgeBase,
+  KnowledgeBaseType,
   KnowledgeBaseFile,
   KnowledgeBaseFileSource,
   KnowledgeBaseFileStatus,
@@ -23,10 +24,7 @@ import {
   updateKnowledgeBaseFile,
 } from "./files"
 import { find as findKnowledgeBase } from "./crud"
-import {
-  createGeminiFileStore,
-  deleteGeminiVectorStore,
-} from "./geminiFileStore"
+import { createKnowledgeStore, deleteKnowledgeStore } from "./provider"
 import { syncKeyVectorStores } from "../configs/litellm"
 
 interface UploadKnowledgeBaseFileInput {
@@ -151,7 +149,7 @@ export const uploadKnowledgeBaseFile = async (
 }
 
 export const resetKnowledgeBaseStore = async (
-  knowledgeBase: GeminiKnowledgeBase
+  knowledgeBase: KnowledgeBase
 ): Promise<void> => {
   const db = context.getWorkspaceDB()
   const workspaceId = context.getOrThrowWorkspaceId()
@@ -160,28 +158,41 @@ export const resetKnowledgeBaseStore = async (
     throw new HTTPError("Knowledge base id not set", 400)
   }
 
-  const newGoogleFileStoreId = await createGeminiFileStore(knowledgeBase.name)
-
-  const updated: GeminiKnowledgeBase = {
-    ...knowledgeBase,
-    config: { googleFileStoreId: newGoogleFileStoreId },
+  const replacement = await createKnowledgeStore({
+    name: knowledgeBase.name,
+    type: knowledgeBase.type,
+  })
+  const updated: KnowledgeBase = { ...knowledgeBase, ...replacement }
+  try {
+    const { rev } = await db.put(updated)
+    updated._rev = rev
+  } catch (error) {
+    await deleteKnowledgeStore(replacement).catch(cleanupError => {
+      console.log(
+        "Failed to clean up replacement knowledge store",
+        cleanupError
+      )
+    })
+    throw error
   }
-  const { rev } = await db.put(updated)
-  updated._rev = rev
 
-  await deleteGeminiVectorStore(knowledgeBase.config.googleFileStoreId).catch(
-    (error: any) => {
-      if (error?.status !== 403 && error?.status !== 404) {
-        console.error("Failed to delete old Gemini vector store", {
-          vectorStoreId: knowledgeBase.config.googleFileStoreId,
-          error,
-        })
-        throw error
-      }
+  await deleteKnowledgeStore(knowledgeBase).catch(error => {
+    if (
+      knowledgeBase.type === KnowledgeBaseType.GEMINI &&
+      error?.status !== 403 &&
+      error?.status !== 404
+    ) {
+      throw error
     }
-  )
-
-  await syncKeyVectorStores()
+    console.log("Failed to delete previous knowledge store", {
+      knowledgeBaseId,
+      store: knowledgeBase.config,
+      error,
+    })
+  })
+  if (knowledgeBase.type === KnowledgeBaseType.GEMINI) {
+    await syncKeyVectorStores()
+  }
 
   const files = await listKnowledgeBaseFiles(knowledgeBaseId)
   for (const file of files) {

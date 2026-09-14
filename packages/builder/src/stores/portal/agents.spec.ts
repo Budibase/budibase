@@ -40,7 +40,10 @@ const resetOperationKnowledgeBaseStore = vi.mocked(
   API.resetOperationKnowledgeBaseStore
 )
 
-const knowledgeConfiguration = { knowledgeSearchConfigured: true }
+const knowledgeConfiguration = {
+  knowledgeSearchConfigured: true,
+  conversationAttachmentsConfigured: true,
+}
 
 const createEmptyState = () => ({
   agents: [] as Agent[],

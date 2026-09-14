@@ -2,17 +2,12 @@ import { context, docIds, HTTPError } from "@budibase/backend-core"
 import {
   CreateKnowledgeBaseRequest,
   DocumentType,
-  GeminiKnowledgeBase,
   KnowledgeBase,
   KnowledgeBaseType,
   UpdateKnowledgeBaseRequest,
 } from "@budibase/types"
-import {
-  createGeminiFileStore,
-  deleteGeminiVectorStore,
-} from "./geminiFileStore"
+import { createKnowledgeStore, deleteKnowledgeStore } from "./provider"
 import { syncKeyVectorStores } from "../configs/litellm"
-import { utils } from "@budibase/shared-core"
 
 const normalizeKnowledgeBaseName = (name: string | undefined) =>
   name?.trim().toLowerCase() || ""
@@ -63,43 +58,29 @@ export async function create(
   const knowledgeBaseType = config.type
   await ensureUniqueName(config.name)
 
-  let newConfig: KnowledgeBase
-  let createdGeminiStoreId: string | undefined
-  switch (knowledgeBaseType) {
-    case KnowledgeBaseType.GEMINI: {
-      const googleFileStoreId = await createGeminiFileStore(config.name.trim())
-      createdGeminiStoreId = googleFileStoreId
-      newConfig = {
-        _id: docIds.generateKnowledgeBaseID(),
-        name: config.name.trim(),
-        type: KnowledgeBaseType.GEMINI,
-        config: {
-          googleFileStoreId,
-        },
-      } satisfies GeminiKnowledgeBase
-      break
-    }
-    default:
-      throw utils.unreachable(knowledgeBaseType)
+  const newConfig: KnowledgeBase = {
+    ...(await createKnowledgeStore({
+      name: config.name.trim(),
+      type: knowledgeBaseType,
+    })),
+    _id: docIds.generateKnowledgeBaseID(),
   }
 
   try {
     const { rev } = await db.put(newConfig)
     newConfig._rev = rev
   } catch (error) {
-    if (createdGeminiStoreId) {
-      await deleteGeminiVectorStore(createdGeminiStoreId).catch(
-        cleanupError => {
-          console.log(
-            "Failed to cleanup Gemini vector store after knowledge base create failure",
-            cleanupError
-          )
-        }
+    await deleteKnowledgeStore(newConfig).catch(cleanupError => {
+      console.log(
+        "Failed to clean up knowledge store after creation failed",
+        cleanupError
       )
-    }
+    })
     throw error
   }
-  await syncKeyVectorStores()
+  if (newConfig.type === KnowledgeBaseType.GEMINI) {
+    await syncKeyVectorStores()
+  }
 
   return newConfig
 }
@@ -117,34 +98,22 @@ export async function update(
     throw new HTTPError("Knowledge base not found", 404)
   }
 
-  let updated: KnowledgeBase
-  const knowledgeBaseType = config.type
-  switch (knowledgeBaseType) {
-    case KnowledgeBaseType.GEMINI: {
-      if (knowledgeBaseType !== existing.type) {
-        throw new HTTPError("Knowledge base type cannot be changed", 400)
-      }
-      updated = {
-        ...existing,
-        ...config,
-        type: KnowledgeBaseType.GEMINI,
-        config: { googleFileStoreId: existing.config.googleFileStoreId },
-      } satisfies GeminiKnowledgeBase
-      break
-    }
-    default:
-      throw utils.unreachable(knowledgeBaseType)
+  if (config.type !== existing.type) {
+    throw new HTTPError("Knowledge base type cannot be changed", 400)
   }
+  const updated: KnowledgeBase = { ...existing, name: config.name }
 
-  if (
-    updated.type === KnowledgeBaseType.GEMINI &&
-    !updated.config.googleFileStoreId
-  ) {
+  const storeId =
+    updated.type === KnowledgeBaseType.AZURE
+      ? updated.config.vectorStoreId
+      : updated.config.googleFileStoreId
+  if (!storeId) {
     throw new HTTPError(
-      "Google knowledge base is missing its file store configuration",
+      "Knowledge base is missing its file store configuration",
       400
     )
   }
+
   await ensureUniqueName(updated.name, updated._id)
   updated.name = updated.name.trim()
 
@@ -158,6 +127,11 @@ export async function remove(id: string) {
   const db = context.getWorkspaceDB()
 
   const existing = await db.get<KnowledgeBase>(id)
+  if (existing.type === KnowledgeBaseType.AZURE) {
+    await deleteKnowledgeStore(existing)
+  }
   await db.remove(existing)
-  await syncKeyVectorStores()
+  if (existing.type === KnowledgeBaseType.GEMINI) {
+    await syncKeyVectorStores()
+  }
 }

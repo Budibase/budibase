@@ -8,3 +8,8 @@ export {
   isGeminiFileSearchConfigured,
 } from "./geminiFileStore"
 export * from "./uploads"
+
+export {
+  getKnowledgeBaseProvider,
+  isKnowledgeSearchConfigured,
+} from "./provider"

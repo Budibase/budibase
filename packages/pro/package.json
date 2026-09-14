@@ -47,7 +47,7 @@
     "test": "jest --runInBand",
     "test:watch": "jest --watch --runInBand",
     "license:update": "node scripts/licenses/updateLicense.js",
-    "license:generate": "yarn run license:update && ts-node -r tsconfig-paths/register ./scripts/licenses/generate.ts",
+    "license:generate": "yarn run license:update && ts-node --project scripts/licenses/tsconfig.json -r tsconfig-paths/register ./scripts/licenses/generate.ts",
     "ai:js:test": "NODE_OPTIONS=\"--no-node-snapshot $NODE_OPTIONS\" ts-node --transpileOnly -r tsconfig-paths/register ./scripts/test-ai-js-gen.ts"
   },
   "nx": {

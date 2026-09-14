@@ -2,6 +2,7 @@ import { Document } from "../.."
 
 export enum KnowledgeBaseType {
   GEMINI = "gemini",
+  AZURE = "azure",
 }
 
 export interface GeminiKnowledgeBase extends Document {
@@ -12,7 +13,15 @@ export interface GeminiKnowledgeBase extends Document {
   }
 }
 
-export type KnowledgeBase = GeminiKnowledgeBase
+export interface AzureKnowledgeBase extends Document {
+  name: string
+  type: KnowledgeBaseType.AZURE
+  config: {
+    vectorStoreId: string
+  }
+}
+
+export type KnowledgeBase = GeminiKnowledgeBase | AzureKnowledgeBase
 
 export enum KnowledgeBaseFileStatus {
   PROCESSING = "processing",

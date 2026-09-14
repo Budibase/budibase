@@ -77,12 +77,13 @@
 
   const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
 
-  const knowledgeSearchConfigured = $derived(
-    $agentsStore.knowledgeConfiguration?.knowledgeSearchConfigured === true
+  const conversationAttachmentsConfigured = $derived(
+    $agentsStore.knowledgeConfiguration?.conversationAttachmentsConfigured ===
+      true
   )
 
   const conversationAttachmentsEnabled = $derived(
-    knowledgeSearchConfigured &&
+    conversationAttachmentsConfigured &&
       currentAgent?.allowConversationAttachments !== false
   )
 
@@ -190,7 +191,7 @@
   }
 
   const onToggleConversationAttachments = async () => {
-    if (!currentAgent?._id || !knowledgeSearchConfigured) {
+    if (!currentAgent?._id || !conversationAttachmentsConfigured) {
       attachmentToggleRenderKey += 1
       return
     }
@@ -252,7 +253,7 @@
           Allow users to attach files when chatting with this agent in supported
           messaging channels.
         </Body>
-        {#if !knowledgeSearchConfigured}
+        {#if !conversationAttachmentsConfigured}
           <Body color="var(--spectrum-global-color-gray-700)" size="XS">
             Set <code>GEMINI_API_KEY</code> in the Budibase server environment,
             then restart Budibase. <Link
@@ -267,7 +268,7 @@
       {#key attachmentToggleRenderKey}
         <Toggle
           value={conversationAttachmentsEnabled}
-          disabled={togglingAttachments || !knowledgeSearchConfigured}
+          disabled={togglingAttachments || !conversationAttachmentsConfigured}
           on:change={onToggleConversationAttachments}
         />
       {/key}

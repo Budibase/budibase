@@ -27,7 +27,7 @@ import sdk from "../../../sdk"
 import { updateOperationKnowledgeSources } from "../../../sdk/workspace/ai/agents/knowledgeConfig"
 import { fetchSharePointSitesByDatasourceAuthConfig } from "../../../sdk/workspace/ai/knowledgeSources/sharepoint"
 
-const GEMINI_UPSTREAM_EVENT = "ai.gemini.upstream_unavailable"
+const KNOWLEDGE_UPSTREAM_EVENT = "ai.knowledge.upstream_unavailable"
 
 const normalizeUpload = (fileInput: any) => {
   if (!fileInput) {
@@ -166,6 +166,8 @@ export async function fetchAgentKnowledgeIndex(
     operations: Object.fromEntries(knowledgeEntries),
     configuration: {
       knowledgeSearchConfigured:
+        sdk.ai.knowledgeBase.isKnowledgeSearchConfigured(),
+      conversationAttachmentsConfigured:
         sdk.ai.knowledgeBase.isGeminiFileSearchConfigured(),
     },
   }
@@ -223,16 +225,15 @@ export async function uploadAgentFile(
     ctx.status = 201
   } catch (error: any) {
     const normalizedMessage = String(error?.message || "").toLowerCase()
-    const isGeminiUpstreamUnavailable =
+    const isKnowledgeUpstreamUnavailable =
       error?.status === 503 ||
       error?.statusCode === 503 ||
       normalizedMessage.includes("upstream unavailable") ||
       normalizedMessage.includes("service unavailable")
 
-    if (isGeminiUpstreamUnavailable) {
-      console.error("[AI_UPSTREAM] Gemini unavailable", {
-        event: GEMINI_UPSTREAM_EVENT,
-        provider: "gemini",
+    if (isKnowledgeUpstreamUnavailable) {
+      console.error("[AI_UPSTREAM] Knowledge provider unavailable", {
+        event: KNOWLEDGE_UPSTREAM_EVENT,
         path: "knowledge_ingest",
         upstreamStatus: error?.status,
         agentId,

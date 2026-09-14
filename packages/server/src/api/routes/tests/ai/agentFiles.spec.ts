@@ -1,7 +1,7 @@
 import nock from "nock"
 import { context } from "@budibase/backend-core"
 import { mocks, utils } from "@budibase/backend-core/tests"
-import type { MockAgent } from "undici"
+import { FormData as UndiciFormData, type MockAgent } from "undici"
 import {
   type Agent,
   type AgentOperation,
@@ -12,7 +12,8 @@ import {
   RestAuthType,
   SharePointScopeMode,
 } from "@budibase/types"
-import environment, { setEnv } from "../../../../environment"
+import environment, { setEnv, withEnv } from "../../../../environment"
+import sdk from "../../../../sdk"
 import { getQueue } from "../../../../sdk/workspace/ai/rag/ragQueue"
 import * as knowledgeSourceSyncQueue from "../../../../sdk/workspace/ai/rag/sources/knowledgeSourceSyncQueue"
 import { installHttpMocking, resetHttpMocking } from "../../../../tests/jestEnv"
@@ -24,7 +25,10 @@ describe("agent files", () => {
   let mockAgent: MockAgent
 
   beforeAll(() => {
-    cleanup = setEnv({ GEMINI_API_KEY: "test-gemini-key" })
+    cleanup = setEnv({
+      GEMINI_API_KEY: "test-gemini-key",
+      KNOWLEDGE_BASE_PROVIDER: "gemini",
+    })
     mockAgent = installHttpMocking()
   })
 
@@ -266,6 +270,137 @@ describe("agent files", () => {
     const refreshed = await config.api.agent.fetch()
     const saved = refreshed.agents.find(agent => agent._id === created._id)
     expect(saved?.operations?.[0]?.knowledgeBases?.length).toBe(1)
+  })
+
+  it("uploads, retrieves and removes Azure knowledge without Gemini credentials", async () => {
+    const originalFormData = globalThis.FormData
+    Object.defineProperty(globalThis, "FormData", {
+      value: UndiciFormData,
+      configurable: true,
+      writable: true,
+    })
+    try {
+      await withEnv(
+        {
+          KNOWLEDGE_BASE_PROVIDER: "azure",
+          GEMINI_API_KEY: "",
+          AZURE_OPENAI_ENDPOINT: "https://example.com",
+          AZURE_OPENAI_API_KEY: "azure-test-key",
+        },
+        async () => {
+          const created = await config.api.agent.createWithOperation(
+            { name: "Azure Support Agent", aiconfig: "default" },
+            { ...operation, live: true }
+          )
+          const operationId = created.operations![0].id
+          const pool = mockAgent.get("https://example.com")
+          pool
+            .intercept({ path: "/openai/v1/vector_stores", method: "POST" })
+            .defaultReplyHeaders({ "content-type": "application/json" })
+            .reply(200, { id: "vs_azure" })
+          pool
+            .intercept({ path: "/openai/v1/files", method: "POST" })
+            .defaultReplyHeaders({ "content-type": "application/json" })
+            .reply(200, { id: "file_azure" })
+          pool
+            .intercept({
+              path: "/openai/v1/vector_stores/vs_azure/files",
+              method: "POST",
+            })
+            .defaultReplyHeaders({ "content-type": "application/json" })
+            .reply(200, { id: "file_azure" })
+          pool
+            .intercept({
+              path: "/openai/v1/vector_stores/vs_azure/files/file_azure",
+              method: "GET",
+            })
+            .defaultReplyHeaders({ "content-type": "application/json" })
+            .reply(200, { id: "file_azure", status: "completed" })
+          pool
+            .intercept({
+              path: "/openai/v1/vector_stores/vs_azure/search",
+              method: "POST",
+            })
+            .defaultReplyHeaders({ "content-type": "application/json" })
+            .reply(200, {
+              data: [
+                {
+                  file_id: "file_azure",
+                  content: [{ type: "text", text: "Hello from Budibase" }],
+                },
+              ],
+            })
+          pool
+            .intercept({
+              path: "/openai/v1/vector_stores/vs_azure/files/file_azure",
+              method: "DELETE",
+            })
+            .defaultReplyHeaders({ "content-type": "application/json" })
+            .reply(200, { deleted: true })
+          pool
+            .intercept({
+              path: "/openai/v1/files/file_azure",
+              method: "DELETE",
+            })
+            .defaultReplyHeaders({ "content-type": "application/json" })
+            .reply(200, { deleted: true })
+
+          const upload = await config.api.agent.uploadFile(
+            created._id!,
+            operationId,
+            { file: fileBuffer, name: "azure-notes.txt" }
+          )
+          await utils.queue.processMessages(getQueue().getBullQueue())
+          const knowledge = await config.api.agent.fetchKnowledge(created._id!)
+          const result = await config.doInContext(
+            config.getDevWorkspaceId(),
+            async () => {
+              const agent = await sdk.ai.agents.getOrThrow(created._id!)
+              return await sdk.ai.rag.retrieveContextForOperation(
+                agent,
+                operationId,
+                "What does the document say?"
+              )
+            }
+          )
+
+          expect(knowledge.configuration).toEqual({
+            knowledgeSearchConfigured: true,
+            conversationAttachmentsConfigured: false,
+          })
+          expect(knowledge.operations[operationId].files).toEqual([
+            expect.objectContaining({
+              filename: "azure-notes.txt",
+              status: KnowledgeBaseFileStatus.READY,
+            }),
+          ])
+          expect(result.text).toContain("Hello from Budibase")
+          expect(result.sources).toEqual([
+            expect.objectContaining({
+              fileId: upload.file._id,
+              filename: "azure-notes.txt",
+              sourceId: "file_azure",
+            }),
+          ])
+
+          await config.api.agent.removeFile(
+            created._id!,
+            operationId,
+            upload.file._id!
+          )
+          expect(
+            (await config.api.agent.fetchFiles(created._id!, operationId)).files
+          ).toEqual([])
+          mockAgent.assertNoPendingInterceptors()
+        }
+      )
+    } finally {
+      Object.defineProperty(globalThis, "FormData", {
+        value: originalFormData,
+        configurable: true,
+        writable: true,
+      })
+    }
   })
 
   it("deletes an uploaded agent file", async () => {

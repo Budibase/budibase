@@ -15,6 +15,7 @@ import { HTTPError, locks, objectStore } from "@budibase/backend-core"
 import { agents as agentsSdk, knowledgeBase as knowledgeBaseSdk } from ".."
 import { RetrievedContextChunk } from "./processors"
 import { GeminiRagProcessor } from "./processors/gemini"
+import { AzureRagProcessor } from "./processors/azure"
 import {
   isTabularKnowledgeFile,
   searchTabularRowsForExactMatches,
@@ -155,7 +156,7 @@ export const ensureKnowledgeBaseForOperation = async (
 
       const created = await knowledgeBaseSdk.create({
         name: getOperationKnowledgeBaseName(agent, operationId),
-        type: KnowledgeBaseType.GEMINI,
+        type: knowledgeBaseSdk.getKnowledgeBaseProvider(),
       })
 
       await agentsSdk.update({
@@ -424,6 +425,7 @@ const assertKnowledgeBaseHasId: (
 function getProcessor(kb: WithRequired<KnowledgeBase, "_id">) {
   const ProcessorClassByType = {
     [KnowledgeBaseType.GEMINI]: GeminiRagProcessor,
+    [KnowledgeBaseType.AZURE]: AzureRagProcessor,
   }
 
   const ProcessorClass = ProcessorClassByType[kb.type]
