@@ -2,7 +2,11 @@ import { it, expect, describe, beforeEach, vi } from "vitest"
 import { get, writable } from "svelte/store"
 import { API } from "@/api"
 import { Constants } from "@budibase/frontend-core"
-import { componentStore, appStore, workspaceAppStore } from "@/stores/builder"
+import {
+  componentStore,
+  workspaceStore,
+  workspaceAppStore,
+} from "@/stores/builder"
 import { initialScreenState, ScreenStore } from "@/stores/builder/screens"
 import {
   getScreenFixture,
@@ -16,7 +20,7 @@ import {
 const COMP_PREFIX = "@budibase/standard-components"
 
 vi.mock("@/stores/builder", async () => {
-  const mockAppStore = writable()
+  const mockWorkspaceStore = writable()
   const mockComponentStore = writable()
   const mockLayoutStore = writable()
 
@@ -27,10 +31,10 @@ vi.mock("@/stores/builder", async () => {
     subscribe: mockComponentStore.subscribe,
   }
 
-  const appStore = {
-    subscribe: mockAppStore.subscribe,
-    update: mockAppStore.update,
-    set: mockAppStore.set,
+  const workspaceStore = {
+    subscribe: mockWorkspaceStore.subscribe,
+    update: mockWorkspaceStore.update,
+    set: mockWorkspaceStore.set,
     refresh: vi.fn(),
     refreshAppNav: vi.fn(),
   }
@@ -45,7 +49,7 @@ vi.mock("@/stores/builder", async () => {
 
   return {
     componentStore,
-    appStore,
+    workspaceStore,
     navigationStore,
     layoutStore: {
       update: mockLayoutStore.update,
@@ -233,7 +237,7 @@ describe("Screens store", () => {
 
     coreScreen.addChild(formOne)
 
-    appStore.set({ features: { componentValidation: false } })
+    workspaceStore.set({ features: { componentValidation: false } })
 
     expect(bb.store.screens.length).toBe(0)
 
@@ -289,7 +293,7 @@ describe("Screens store", () => {
     // Saved the existing screen having modified it.
     await bb.screenStore.save(existingScreens[2].json())
 
-    expect(appStore.refreshAppNav).toHaveBeenCalledOnce()
+    expect(workspaceStore.refreshAppNav).toHaveBeenCalledOnce()
     expect(saveSpy).toHaveBeenCalled()
 
     // On save, the screen is spliced back into the store with the saved content
@@ -453,7 +457,7 @@ describe("Screens store", () => {
     expect(bb.store.screens.length).toBe(2)
 
     // Just confirm that the routes at are being initialised
-    expect(get(appStore).routes).toEqual([])
+    expect(get(workspaceStore).routes).toEqual([])
   })
 
   it("Upon delete, reset selected screen and component ids if the screen was selected", async ({
