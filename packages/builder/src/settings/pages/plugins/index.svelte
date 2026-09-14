@@ -22,7 +22,7 @@
   import RouteActions from "@/settings/components/RouteActions.svelte"
   import UsedInWorkspacesRenderer from "./_components/UsedInWorkspacesRenderer.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import type { StoreApp } from "@/types"
+  import type { StoreWorkspace } from "@/types"
 
   interface PluginTableRow extends Plugin {
     usedInApps: string[]
@@ -85,7 +85,9 @@
     filterOptions.push({ label: "Automation", value: "automation" })
   }
 
-  const buildPluginUsageMap = (apps: StoreApp[]): Map<string, string[]> => {
+  const buildPluginUsageMap = (
+    apps: StoreWorkspace[]
+  ): Map<string, string[]> => {
     const usage = new Map<string, Set<string>>()
     for (const app of apps || []) {
       if (!app?.name || !Array.isArray(app.usedPlugins)) {

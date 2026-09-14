@@ -60,7 +60,7 @@
   import WorkspaceSelect from "@/components/common/WorkspaceSelect.svelte"
   import CreateWorkspaceModal from "../CreateWorkspaceModal.svelte"
   import { buildLiveUrl } from "@/helpers/urls"
-  import { type EnrichedApp } from "@/types"
+  import { type EnrichedWorkspace } from "@/types"
   import CreateAutomationModal from "@/components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "@/components/automation/Shared/CreateWebhookModal.svelte"
   import AgentModal from "@/pages/builder/workspace/[workspaceId]/agent/AgentModal.svelte"
@@ -77,7 +77,7 @@
   $: backupErrors = getBackupErrors($enrichedApps || [], workspaceId)
   $: backupErrorCount = Object.keys(backupErrors).length
 
-  const getBackupErrors = (apps: EnrichedApp[], workspaceId: string) => {
+  const getBackupErrors = (apps: EnrichedWorkspace[], workspaceId: string) => {
     const target = apps.find(app => app.devId === workspaceId)
     return target?.backupErrors || {}
   }

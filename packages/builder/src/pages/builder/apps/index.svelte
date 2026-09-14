@@ -9,7 +9,7 @@
     organisation,
     translations,
   } from "@/stores/portal"
-  import type { EnrichedApp } from "@/types"
+  import type { EnrichedWorkspace } from "@/types"
   import type { PublishedWorkspaceData, User } from "@budibase/types"
   import {
     ActionMenu,
@@ -46,7 +46,7 @@
   $: userApps = $clientAppsStore.apps
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
-  function getUrl(app: EnrichedApp | PublishedWorkspaceData) {
+  function getUrl(app: EnrichedWorkspace | PublishedWorkspaceData) {
     if (app.url) {
       return `/app${app.url}`
     } else {
