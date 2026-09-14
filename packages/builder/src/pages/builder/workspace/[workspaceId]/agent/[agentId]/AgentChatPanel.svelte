@@ -1,6 +1,5 @@
 <script lang="ts">
   import {
-    FeatureFlag,
     type AgentMessageMetadata,
     type DraftChatConversation,
     type WithoutDocMetadata,
@@ -10,7 +9,7 @@
   import { Constants } from "@budibase/frontend-core"
   import { Select } from "@budibase/bbui"
   import { escalationsStore } from "@/stores/portal/escalations"
-  import { auth, featureFlags } from "@/stores/portal"
+  import { auth } from "@/stores/portal"
   import { roles } from "@/stores/builder"
   import { onMount } from "svelte"
   import {
@@ -204,7 +203,7 @@
         onpromptsubmitted={handlePromptSubmitted}
         onEscalationPending={handleEscalationPending}
         escalationState={$escalationsStore.escalations}
-        showInlineApproval={$featureFlags[FeatureFlag.ESCALATION]}
+        showInlineApproval
         onResolve={resolveEscalation}
       />
     {/key}

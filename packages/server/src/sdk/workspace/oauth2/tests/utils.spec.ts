@@ -39,7 +39,7 @@ describe("oauth2 utils", () => {
         .withWaitStrategy(
           Wait.forLogMessage("Listening on: http://0.0.0.0:8080")
         )
-        .withStartupTimeout(60000)
+        .withStartupTimeout(120000)
     )
 
     const port = ports.find(x => x.container === 8080)?.host
@@ -48,7 +48,7 @@ describe("oauth2 utils", () => {
     }
 
     keycloakUrl = `http://127.0.0.1:${port}`
-  })
+  }, 150000)
 
   afterAll(async () => {
     restoreEnv?.()
