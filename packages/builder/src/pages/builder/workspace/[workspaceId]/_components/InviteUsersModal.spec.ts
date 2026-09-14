@@ -17,7 +17,7 @@ vi.mock("svelte", async importOriginal => {
 })
 
 const {
-  appStore,
+  workspaceStore,
   rolesStore,
   groupsStore,
   adminStore,
@@ -60,7 +60,7 @@ const {
   }
 
   return {
-    appStore: createStore({ appId: "app_dev_123" }),
+    workspaceStore: createStore({ appId: "app_dev_123" }),
     rolesStore: {
       ...createStore([] as any[]),
       fetch: vi.fn(),
@@ -169,7 +169,7 @@ vi.mock(
 )
 
 vi.mock("@/stores/builder", () => ({
-  appStore,
+  workspaceStore,
   roles: rolesStore,
 }))
 
@@ -226,7 +226,7 @@ describe("InviteUsersModal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    appStore.set({ appId: "app_dev_123" })
+    workspaceStore.set({ appId: "app_dev_123" })
     groupsStore.set([])
     adminStore.set({
       loaded: true,
