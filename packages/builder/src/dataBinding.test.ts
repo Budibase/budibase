@@ -101,7 +101,7 @@ function createBuilderStores() {
   const queries = createMockStore({ list: [] })
   const roles = createMockStore({ list: [] })
   const screenStore = createMockStore({ screens: [] })
-  const appStore = createMockStore({})
+  const workspaceStore = createMockStore({})
   const layoutStore = createMockStore({})
   const selectedScreen = createMockStore(null)
   const componentStore: MockComponentStore = {
@@ -136,12 +136,12 @@ function createBuilderStores() {
       queries,
       roles,
       screenStore,
-      appStore,
+      workspaceStore,
       layoutStore,
       selectedScreen,
       componentStore,
     },
-    appStore,
+    workspaceStore,
     layoutStore,
     roles,
     screenStore,
@@ -166,7 +166,7 @@ function createPortalStores() {
 vi.mock("@/stores/portal", () => createPortalStores().module)
 
 import {
-  appStore,
+  workspaceStore,
   componentStore,
   layoutStore,
   roles as rolesStore,
@@ -182,7 +182,7 @@ const getTablesStore = () =>
 const getQueriesStore = () =>
   queriesStore as unknown as MockStore<{ list: unknown[] }>
 const getAppStore = () =>
-  appStore as unknown as MockStore<Record<string, unknown>>
+  workspaceStore as unknown as MockStore<Record<string, unknown>>
 const getLayoutStore = () =>
   layoutStore as unknown as MockStore<Record<string, unknown>>
 const getRolesStore = () => rolesStore as unknown as MockStore<unknown[]>
