@@ -676,6 +676,35 @@ describe("prepareAgentChatRun - approval gating", () => {
     expect(buildOptions).not.toHaveProperty("baseSystemPrompt")
   })
 
+  it("attributes requester-principal automations to the real user", async () => {
+    await runFor(supportOperation, {
+      promptMode: "automation",
+      user: {
+        _id: "user_1",
+        firstName: "Adria",
+        lastName: "Navarro",
+        email: "adria@example.com",
+      } as ContextUser,
+    })
+
+    const buildOptions = jest.mocked(buildPromptAndTools).mock.calls.at(-1)?.[2]
+    expect(buildOptions?.escalationGateContext?.requesterLabel).toBe(
+      "Adria Navarro (adria@example.com)"
+    )
+  })
+
+  it("attributes synthetic-principal automations to the agent", async () => {
+    await runFor(supportOperation, {
+      promptMode: "automation",
+      user: { _id: "automation:session_1" } as ContextUser,
+    })
+
+    const buildOptions = jest.mocked(buildPromptAndTools).mock.calls.at(-1)?.[2]
+    expect(buildOptions?.escalationGateContext?.requesterLabel).toBe(
+      `Automation (${agent.name})`
+    )
+  })
+
   it("serializes escalation card context as untrusted data", async () => {
     await runFor(supportOperation)
     jest.mocked(generateText).mockResolvedValue({

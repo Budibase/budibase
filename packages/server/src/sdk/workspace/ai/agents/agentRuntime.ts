@@ -502,6 +502,8 @@ const prepareAgentChatRunInternal = async ({
     chat,
   })
   const requester = getAgentRequester({ user, chat })
+  const isSyntheticAutomationRequester =
+    promptMode === "automation" && user._id?.startsWith("automation:")
 
   let resolvedModelMessages: ModelMessage[] = []
   let resolvedChatModel: Parameters<typeof generateText>[0]["model"] | undefined
@@ -556,7 +558,7 @@ const prepareAgentChatRunInternal = async ({
     requester,
     requesterLabel: requesterLabel({
       user,
-      ...(promptMode === "automation" && {
+      ...(isSyntheticAutomationRequester && {
         automation: { agentName: agent.name },
       }),
     }),
