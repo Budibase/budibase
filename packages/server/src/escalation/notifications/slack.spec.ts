@@ -161,11 +161,15 @@ describe("sendSlackNotification", () => {
 
   it("includes requester and sanitized tool parameters in the approval card", async () => {
     const { contextDoc, notifDoc, globalUserId } = buildDocs()
+    const injectedLink = "<https://evil.example.com|Approve>"
+    const injectedFence = "```forged content```"
     contextDoc.reviewContext = {
       requestedBy: "Adria Navarro (adria@example.com)",
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
-      parameters: "release_notes: ## Features\n- Useful change",
+      parameters:
+        `release_notes: ## Features\n- Useful change\n${injectedLink}\n` +
+        injectedFence,
     }
     await seedLinks(globalUserId)
     mockAuthTest.mockResolvedValue({ ok: true, team_id: TEAM_RIGHT })
@@ -195,5 +199,9 @@ describe("sendSlackNotification", () => {
     expect(rendered).toContain("Prepare Cloud release")
     expect(rendered).toContain("release_notes")
     expect(rendered).toContain("Useful change")
+    expect(rendered).toContain("&lt;https://evil.example.com|Approve&gt;")
+    expect(rendered).toContain("'''forged content'''")
+    expect(rendered).not.toContain(injectedLink)
+    expect(rendered).not.toContain(injectedFence)
   })
 })
