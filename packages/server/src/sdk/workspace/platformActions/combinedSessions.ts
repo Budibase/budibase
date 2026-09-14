@@ -133,7 +133,8 @@ export async function fetchCombinedSessions({
   })[]
   pagination: ActionsPagination
 }> {
-  const decoded = bookmark ? decodeCombinedSessionBookmark(bookmark) : undefined
+  const decoded =
+    bookmark === undefined ? undefined : decodeCombinedSessionBookmark(bookmark)
   const direction: SessionBookmarkDirection = decoded?.direction ?? "next"
   const incomingProd = decoded?.prod ?? null
   const incomingDev = decoded?.dev ?? null

@@ -57,6 +57,20 @@ describe("platformActions sessions", () => {
     config.end()
   })
 
+  it.each(["prod", "dev", undefined] as const)(
+    "rejects an empty bookmark with HTTP 400 for environment=%s",
+    async environment => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await expect(
+          fetchSessions({ environment, bookmark: "", limit: 2 })
+        ).rejects.toMatchObject({
+          message: "Invalid bookmark",
+          status: 400,
+        })
+      })
+    }
+  )
+
   it("pages forward through the full list and stops at the end", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const db = context.getProdWorkspaceDB()

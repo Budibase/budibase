@@ -71,7 +71,8 @@ async function fetchSingleEnvironmentSessions({
   limit: number
 }): Promise<SessionsPageResult> {
   const workspaceDb = getWorkspaceDbForEnvironment(environment)
-  const decoded = bookmark ? decodeSessionBookmark(bookmark) : undefined
+  const decoded =
+    bookmark === undefined ? undefined : decodeSessionBookmark(bookmark)
   const direction = decoded?.direction ?? "next"
 
   const page = status
