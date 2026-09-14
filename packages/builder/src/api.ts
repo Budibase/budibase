@@ -3,7 +3,7 @@ import {
   CookieUtils,
   createAPIClient,
 } from "@budibase/frontend-core"
-import { appStore } from "@/stores/builder"
+import { workspaceStore } from "@/stores/builder"
 import { get } from "svelte/store"
 import { auth, navigation } from "./stores/portal"
 import { sdk, Header, ClientHeader } from "@budibase/shared-core"
@@ -16,7 +16,7 @@ const newClient = (opts?: { production?: boolean }) =>
         /^\/api\/applications\/app_dev_/.test(request.url)
 
       // Attach the workspace ID header from the store.
-      const workspaceId = get(appStore).appId
+      const workspaceId = get(workspaceStore).appId
       if (workspaceId) {
         if (!isWorkspaceDeleteRequest) {
           headers[Header.WORKSPACE_ID] = opts?.production
