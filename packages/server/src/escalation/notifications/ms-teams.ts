@@ -207,20 +207,20 @@ const parameterLines = (parameters: string) => {
 const buildReviewContextBlocks = (reviewContext: EscalationReviewContext) => [
   richLine(
     [
-      { text: "Requested by: ", weight: "Bolder" },
+      { text: "Requested by: ", weight: "bolder" },
       { text: reviewContext.requestedBy },
     ],
     { tight: false }
   ),
   richLine([
-    { text: "Purpose: ", weight: "Bolder" },
+    { text: "Purpose: ", weight: "bolder" },
     { text: reviewContext.operation },
   ]),
   richLine([
-    { text: "Action: ", weight: "Bolder" },
+    { text: "Action: ", weight: "bolder" },
     { text: reviewContext.action },
   ]),
-  richLine([{ text: "Complete tool parameters", weight: "Bolder" }], {
+  richLine([{ text: "Complete tool parameters", weight: "bolder" }], {
     tight: false,
   }),
   richLine([

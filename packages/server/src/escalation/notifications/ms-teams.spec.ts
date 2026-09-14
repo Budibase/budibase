@@ -33,7 +33,7 @@ const USER_RIGHT = "29:user-right"
 interface CardElement {
   type: string
   text?: string
-  inlines?: { text: string }[]
+  inlines?: { text: string; weight?: string }[]
 }
 
 interface TeamsMessage {
@@ -231,6 +231,17 @@ describe("sendMSTeamsNotification", () => {
     expect(rendered).toContain("release_notes")
     expect(rendered).toContain("Useful change")
     expect(rendered).toContain('"fontType":"monospace"')
+    const message: TeamsMessage = JSON.parse(rendered)
+    const textRuns = message.attachments[0].content.body.flatMap(
+      element => element.inlines ?? []
+    )
+    expect(textRuns.filter(run => run.weight)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ text: "Requested by: ", weight: "bolder" }),
+        expect.objectContaining({ text: "Purpose: ", weight: "bolder" }),
+        expect.objectContaining({ text: "Action: ", weight: "bolder" }),
+      ])
+    )
   })
 
   it("renders reviewer context as text so arguments can't inject a link", async () => {
