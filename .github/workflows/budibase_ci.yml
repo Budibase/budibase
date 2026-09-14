@@ -475,7 +475,7 @@ jobs:
           elif [ "${{ matrix.datasource }}" == "none" ]; then
             docker pull ${{ steps.dotenv.outputs.KEYCLOAK_IMAGE }} &
           fi
-          docker pull minio/minio &
+          docker pull quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z &
           docker pull redis &
           docker pull testcontainers/ryuk:0.5.1 &
           docker pull budibase/couchdb:v3.3.3-sqs-v2.1.1 &
