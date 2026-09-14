@@ -43,7 +43,9 @@ export async function resolve(ctx: UserCtx) {
     userId: ctx.user?._id,
     accepted: ctx.request.body?.response?.accepted,
   })
-  await escalationProcessor.resolve(id, ctx.request.body?.response)
+  await sdk.escalations.withEscalationLock(id, () =>
+    escalationProcessor.resolve(id, ctx.request.body?.response)
+  )
   ctx.body = {
     status,
     message:
@@ -53,7 +55,9 @@ export async function resolve(ctx: UserCtx) {
 
 export async function cancel(ctx: UserCtx) {
   const { id } = ctx.params
-  await escalationProcessor.cancel(id)
+  await sdk.escalations.withEscalationLock(id, () =>
+    escalationProcessor.cancel(id)
+  )
   ctx.body = { message: "Escalation cancelled" }
 }
 

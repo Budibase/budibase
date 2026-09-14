@@ -781,35 +781,54 @@ async function processResume(job: Job<EscalationJob>) {
 
   await context.doInContext(appId, async () => {
     const db = context.getWorkspaceDB()
-    const doc = await db.tryGet<EscalationContextDoc>(getDocId(escalationId))
 
+    // Under the escalation lock so a late response can't land between the
+    // read and the resolution write.
+    const doc = await sdk.escalations.withEscalationLock(
+      escalationId,
+      async () => {
+        const doc = await db.tryGet<EscalationContextDoc>(
+          getDocId(escalationId)
+        )
+
+        if (!doc) {
+          console.error(
+            "Escalation resume: context doc not found, discarding",
+            {
+              escalationId,
+              jobId: job.id,
+            }
+          )
+          return
+        }
+
+        if (doc.resolution === "cancelled") {
+          console.log("Escalation resume: escalation cancelled, discarding", {
+            escalationId,
+            jobId: job.id,
+          })
+          return
+        }
+
+        if (doc.resumeResultCompressed) {
+          console.log("Escalation resume: already resumed, discarding", {
+            escalationId,
+            jobId: job.id,
+          })
+          return
+        }
+
+        const resolvedAt = doc.resolvedAt ?? new Date().toISOString()
+        const resolution =
+          doc.resolution === "pending" ? "expired" : doc.resolution
+        await db.put({ ...doc, resolvedAt, resolution, updatedAt: resolvedAt })
+        return { ...doc, resolvedAt, resolution }
+      }
+    )
     if (!doc) {
-      console.error("Escalation resume: context doc not found, discarding", {
-        escalationId,
-        jobId: job.id,
-      })
       return
     }
-
-    if (doc.resolution === "cancelled") {
-      console.log("Escalation resume: escalation cancelled, discarding", {
-        escalationId,
-        jobId: job.id,
-      })
-      return
-    }
-
-    if (doc.resumeResultCompressed) {
-      console.log("Escalation resume: already resumed, discarding", {
-        escalationId,
-        jobId: job.id,
-      })
-      return
-    }
-
-    const resolvedAt = doc.resolvedAt ?? new Date().toISOString()
-    const resolution = doc.resolution === "pending" ? "expired" : doc.resolution
-    await db.put({ ...doc, resolvedAt, resolution, updatedAt: resolvedAt })
+    const { resolvedAt, resolution } = doc
 
     // Without the snapshot there's nothing to resume - mark it resolved (above)
     // and discard rather than crash the job on an empty inflate/parse.
