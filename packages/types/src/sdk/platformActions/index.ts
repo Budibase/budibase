@@ -14,6 +14,11 @@ export interface ActionSourceContext {
   sourceId: string
 }
 
+export const PLATFORM_ACTION_ENVIRONMENTS = ["prod", "dev"] as const
+
+export type PlatformActionEnvironment =
+  (typeof PLATFORM_ACTION_ENVIRONMENTS)[number]
+
 export const PLATFORM_ACTION_CONTAINER_STATUSES = [
   "active",
   "waiting",
