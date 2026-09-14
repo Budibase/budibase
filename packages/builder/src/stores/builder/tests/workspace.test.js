@@ -52,7 +52,7 @@ describe("Application Meta Store", () => {
 
   it("Reset the app metadata to default", ctx => {
     const pkg = generateAppPackage({})
-    ctx.test.workspaceStore.syncAppPackage(pkg)
+    ctx.test.workspaceStore.syncWorkspacePackage(pkg)
 
     expect(ctx.test.store).not.toStrictEqual(INITIAL_WORKSPACE_META_STATE)
 
@@ -86,7 +86,7 @@ describe("Application Meta Store", () => {
       componentLibraries,
     } = app
 
-    ctx.test.workspaceStore.syncAppPackage(pkg)
+    ctx.test.workspaceStore.syncWorkspacePackage(pkg)
 
     expect(ctx.test.store).toStrictEqual({
       ...INITIAL_WORKSPACE_META_STATE,
@@ -136,7 +136,7 @@ describe("Application Meta Store", () => {
       .spyOn(API, "fetchAppRoutes")
       .mockResolvedValue({ routes: fakeRoutes })
 
-    await ctx.test.workspaceStore.syncAppRoutes()
+    await ctx.test.workspaceStore.syncWorkspaceRoutes()
 
     expect(routeSpy).toBeCalled()
 
