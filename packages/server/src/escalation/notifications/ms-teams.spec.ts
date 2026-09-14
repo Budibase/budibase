@@ -230,6 +230,7 @@ describe("sendMSTeamsNotification", () => {
     expect(rendered).toContain("Prepare Cloud release")
     expect(rendered).toContain("release_notes")
     expect(rendered).toContain("Useful change")
+    expect(rendered).toContain('"fontType":"monospace"')
   })
 
   it("renders reviewer context as text so arguments can't inject a link", async () => {

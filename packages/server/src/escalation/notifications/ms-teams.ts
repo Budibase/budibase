@@ -201,7 +201,7 @@ const parameterLines = (parameters: string) => {
   if (omitted > 0) {
     shown.push(`… [TRUNCATED: ${omitted} more lines]`)
   }
-  return shown.map(line => richLine([{ text: line, fontType: "Monospace" }]))
+  return shown.map(line => richLine([{ text: line, fontType: "monospace" }]))
 }
 
 const buildReviewContextBlocks = (reviewContext: EscalationReviewContext) => [
