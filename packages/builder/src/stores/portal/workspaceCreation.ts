@@ -1,22 +1,23 @@
 import { writable } from "svelte/store"
 import type { WorkspaceTemplate } from "../../types/workspace"
 
-export interface AppCreationState {
+export interface WorkspaceCreationState {
   showCreateModal: boolean
   showTemplatesModal: boolean
   showImportModal: boolean
   template: WorkspaceTemplate | null
 }
 
-const initialState: AppCreationState = {
+const initialState: WorkspaceCreationState = {
   showCreateModal: false,
   showTemplatesModal: false,
   showImportModal: false,
   template: null,
 }
 
-function createAppCreationStore() {
-  const { subscribe, set, update } = writable<AppCreationState>(initialState)
+function createWorkspaceCreationStore() {
+  const { subscribe, set, update } =
+    writable<WorkspaceCreationState>(initialState)
 
   return {
     subscribe,
@@ -55,4 +56,4 @@ function createAppCreationStore() {
   }
 }
 
-export const appCreationStore = createAppCreationStore()
+export const appCreationStore = createWorkspaceCreationStore()

@@ -33,7 +33,7 @@ vi.mock("@/stores/builder", async () => {
   }
 })
 
-describe("Application Meta Store", () => {
+describe("Workspace Meta Store", () => {
   beforeEach(async ctx => {
     vi.clearAllMocks()
 
@@ -50,7 +50,7 @@ describe("Application Meta Store", () => {
     expect(ctx.test.store).toStrictEqual(INITIAL_WORKSPACE_META_STATE)
   })
 
-  it("Reset the app metadata to default", ctx => {
+  it("Reset the workspace metadata to default", ctx => {
     const pkg = generateAppPackage({})
     ctx.test.workspaceStore.syncWorkspacePackage(pkg)
 
@@ -61,7 +61,7 @@ describe("Application Meta Store", () => {
     expect(ctx.test.store).toStrictEqual(INITIAL_WORKSPACE_META_STATE)
   })
 
-  it("Sync app metadata from a new app package", async ctx => {
+  it("Sync workspace metadata from a new app package", async ctx => {
     const pkg = generateAppPackage({
       version: "2.5.0",
       revertableVersion: "2.5.6",
@@ -126,7 +126,7 @@ describe("Application Meta Store", () => {
     expect(ctx.test.store.clientFeatures).toStrictEqual(clientFeaturesResp)
   })
 
-  it("Sync app routes from the API", async ctx => {
+  it("Sync workspace routes from the API", async ctx => {
     const coreScreen = getScreenFixture()
     const existingDocId = getScreenDocId()
     coreScreen._json._id = existingDocId
@@ -143,7 +143,7 @@ describe("Application Meta Store", () => {
     expect(ctx.test.store.routes).toStrictEqual(fakeRoutes)
   })
 
-  it("Sync app metadata after socket update", ctx => {
+  it("Sync workspace metadata after socket update", ctx => {
     const fakeMetadata = {
       name: "updated_name",
       url: "/update-url",

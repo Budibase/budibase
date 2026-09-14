@@ -181,8 +181,8 @@ export class WorkspaceMetaStore extends BudiStore<WorkspaceMetaState> {
   }
 
   async updateWorkspace(updates: UpdateWorkspaceRequest) {
-    const app = await API.saveAppMetadata(get(this.store).appId, updates)
-    this.syncWorkspace(app)
+    const workspace = await API.saveAppMetadata(get(this.store).appId, updates)
+    this.syncWorkspace(workspace)
   }
 
   // Returned from socket
