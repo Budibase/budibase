@@ -34,6 +34,18 @@ async function putSession(
   await db.put(doc)
 }
 
+const REAL_TIMER_GLOBALS = [
+  "hrtime",
+  "nextTick",
+  "performance",
+  "queueMicrotask",
+  "requestAnimationFrame",
+  "requestIdleCallback",
+  "setImmediate",
+  "setInterval",
+  "setTimeout",
+] as const
+
 describe("platformActions sessions", () => {
   const config = new TestConfiguration()
 
@@ -335,6 +347,144 @@ describe("platformActions sessions", () => {
         expect(
           forwardPages.flatMap(p => p.sessions.map(s => s.sourceId))
         ).toEqual(baseline.sessions.map(s => s.sourceId))
+      })
+    })
+
+    it("returns an empty page when neither environment has any sessions", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        const combined = await fetchSessions({ limit: 10 })
+
+        expect(combined.sessions).toEqual([])
+        expect(combined.pagination).toEqual({
+          hasNextPage: false,
+          hasPreviousPage: false,
+          nextBookmark: undefined,
+          previousBookmark: undefined,
+        })
+      })
+    })
+
+    it("breaks an exact updatedAt tie between environments by sorting prod before dev", async () => {
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        jest.useFakeTimers({ doNotFake: [...REAL_TIMER_GLOBALS] })
+        jest.setSystemTime(new Date("2026-01-01T00:00:00.000Z"))
+        try {
+          await putSession(context.getDevWorkspaceDB(), {
+            sourceType: "automation_run",
+            sourceId: "dev-tied",
+            status: "completed",
+          })
+          await putSession(context.getProdWorkspaceDB(), {
+            sourceType: "automation_run",
+            sourceId: "prod-tied",
+            status: "completed",
+          })
+        } finally {
+          jest.useRealTimers()
+        }
+
+        const combined = await fetchSessions({ limit: 10 })
+
+        expect(
+          combined.sessions.map(s => ({
+            sourceId: s.sourceId,
+            environment: s.environment,
+          }))
+        ).toEqual([
+          { sourceId: "prod-tied", environment: "prod" },
+          { sourceId: "dev-tied", environment: "dev" },
+        ])
+      })
+    })
+
+    describe("backward reconstruction across a multi-page gap", () => {
+      // db.put() stamps `updatedAt` from the real clock, so display order is
+      // controlled purely by insertion order: inserting oldest-to-newest as
+      // dev-4, prod-2, dev-3, dev-2, dev-1, prod-1 yields the reverse as the
+      // newest-first display order - prod contributes to page 1, sits out
+      // page 2 entirely, then resumes on page 3.
+      let baseline: SessionsPageResult
+      let page1: SessionsPageResult
+      let page2: SessionsPageResult
+      let page3: SessionsPageResult
+
+      beforeEach(async () => {
+        await config.doInContext(config.getProdWorkspaceId(), async () => {
+          for (const [sourceId, db] of [
+            ["dev-4", context.getDevWorkspaceDB()],
+            ["prod-2", context.getProdWorkspaceDB()],
+            ["dev-3", context.getDevWorkspaceDB()],
+            ["dev-2", context.getDevWorkspaceDB()],
+            ["dev-1", context.getDevWorkspaceDB()],
+            ["prod-1", context.getProdWorkspaceDB()],
+          ] as const) {
+            await putSession(db, {
+              sourceType: "automation_run",
+              sourceId,
+              status: "completed",
+            })
+          }
+
+          baseline = await fetchSessions({ limit: 10 })
+          page1 = await fetchSessions({ limit: 2 })
+          page2 = await fetchSessions({
+            limit: 2,
+            bookmark: page1.pagination.nextBookmark,
+          })
+          page3 = await fetchSessions({
+            limit: 2,
+            bookmark: page2.pagination.nextBookmark,
+          })
+        })
+      })
+
+      it("sets up the intended gap: prod skips page 2 and resumes on page 3", () => {
+        expect(baseline.sessions.map(s => s.sourceId).sort()).toEqual(
+          ["dev-1", "dev-2", "dev-3", "dev-4", "prod-1", "prod-2"].sort()
+        )
+        const envPattern = baseline.sessions.map(s => s.environment)
+        expect(envPattern.slice(0, 2)).toContain("prod")
+        expect(envPattern.slice(2, 4)).toEqual(["dev", "dev"])
+        expect(envPattern.slice(4, 6)).toContain("prod")
+        expect(page1.sessions.map(s => s.sourceId)).toEqual(
+          baseline.sessions.slice(0, 2).map(s => s.sourceId)
+        )
+        expect(page2.sessions.map(s => s.sourceId)).toEqual(
+          baseline.sessions.slice(2, 4).map(s => s.sourceId)
+        )
+        expect(page3.sessions.map(s => s.sourceId)).toEqual(
+          baseline.sessions.slice(4, 6).map(s => s.sourceId)
+        )
+        expect(page3.pagination.hasNextPage).toBe(false)
+      })
+
+      it("reconstructs page 2 one hop back from page 3", async () => {
+        await config.doInContext(config.getProdWorkspaceId(), async () => {
+          const reconstructedPage2 = await fetchSessions({
+            limit: 2,
+            bookmark: page3.pagination.previousBookmark,
+          })
+          expect(reconstructedPage2.sessions.map(s => s.sourceId)).toEqual(
+            page2.sessions.map(s => s.sourceId)
+          )
+        })
+      })
+
+      it("reconstructs page 1 two hops back from page 3, past the gap", async () => {
+        await config.doInContext(config.getProdWorkspaceId(), async () => {
+          const reconstructedPage2 = await fetchSessions({
+            limit: 2,
+            bookmark: page3.pagination.previousBookmark,
+          })
+          const reconstructedPage1 = await fetchSessions({
+            limit: 2,
+            bookmark: reconstructedPage2.pagination.previousBookmark,
+          })
+          expect(reconstructedPage1.sessions.map(s => s.sourceId)).toEqual(
+            page1.sessions.map(s => s.sourceId)
+          )
+          expect(reconstructedPage1.pagination.hasPreviousPage).toBe(false)
+        })
       })
     })
   })

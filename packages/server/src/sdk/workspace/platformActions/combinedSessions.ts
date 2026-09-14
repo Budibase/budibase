@@ -29,18 +29,20 @@ function compareDisplayOrder(a: EnvTaggedSession, b: EnvTaggedSession): number {
   return a.session._id! < b.session._id! ? -1 : 1
 }
 
-// Computes the next resume position for one side. A non-contributing side
-// keeps its incoming bookmark, marked `inclusive` on `prev` so that row
-// isn't lost going backward
+// A side with zero fetched candidates hasn't advanced past `incoming`
+// reopen it (`inclusive`) on `prev` so that row isn't lost going backward.
+// A side that fetched candidates but lost them all to the trim has already
+// moved past `incoming`, so carry it forward unchanged instead.
 function resumePosition(
   page: EnvTaggedSession[],
   environment: PlatformActionEnvironment,
   incoming: SessionKeysetBookmark | null,
-  edge: "next" | "prev"
+  edge: "next" | "prev",
+  hadCandidates: boolean
 ): SessionKeysetBookmark | null {
   const items = page.filter(p => p.env === environment)
   if (items.length === 0) {
-    return edge === "prev" && incoming
+    return edge === "prev" && incoming && !hadCandidates
       ? { ...incoming, inclusive: true }
       : incoming
   }
@@ -55,6 +57,8 @@ function buildCombinedPagination({
   hadBookmark,
   incomingProd,
   incomingDev,
+  hadProdCandidates,
+  hadDevCandidates,
 }: {
   page: EnvTaggedSession[]
   hasMore: boolean
@@ -62,6 +66,8 @@ function buildCombinedPagination({
   hadBookmark: boolean
   incomingProd: SessionKeysetBookmark | null
   incomingDev: SessionKeysetBookmark | null
+  hadProdCandidates: boolean
+  hadDevCandidates: boolean
 }): ActionsPagination {
   // Same inference as the single-environment case: a "prev" navigation
   // always has a next page (we came from further-ahead content); a "next"
@@ -75,15 +81,39 @@ function buildCombinedPagination({
     nextBookmark: hasNextPage
       ? encodeCombinedSessionBookmark({
           direction: "next",
-          prod: resumePosition(page, "prod", incomingProd, "next"),
-          dev: resumePosition(page, "dev", incomingDev, "next"),
+          prod: resumePosition(
+            page,
+            "prod",
+            incomingProd,
+            "next",
+            hadProdCandidates
+          ),
+          dev: resumePosition(
+            page,
+            "dev",
+            incomingDev,
+            "next",
+            hadDevCandidates
+          ),
         })
       : undefined,
     previousBookmark: hasPreviousPage
       ? encodeCombinedSessionBookmark({
           direction: "prev",
-          prod: resumePosition(page, "prod", incomingProd, "prev"),
-          dev: resumePosition(page, "dev", incomingDev, "prev"),
+          prod: resumePosition(
+            page,
+            "prod",
+            incomingProd,
+            "prev",
+            hadProdCandidates
+          ),
+          dev: resumePosition(
+            page,
+            "dev",
+            incomingDev,
+            "prev",
+            hadDevCandidates
+          ),
         })
       : undefined,
   }
@@ -163,6 +193,8 @@ export async function fetchCombinedSessions({
       hadBookmark: !!decoded,
       incomingProd,
       incomingDev,
+      hadProdCandidates: prodCandidates.length > 0,
+      hadDevCandidates: devCandidates.length > 0,
     }),
   }
 }
