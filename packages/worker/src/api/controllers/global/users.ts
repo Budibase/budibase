@@ -94,7 +94,10 @@ export const save = async (ctx: UserCtx<UnsavedUser, SaveUserResponse>) => {
       }
     }
 
-    const user = await userSdk.db.save(requestUser, { currentUserId })
+    const user = await userSdk.db.save(requestUser, {
+      currentUserId,
+      skipPasswordRegexValidation: requestUser.forceResetPassword === true,
+    })
 
     ctx.body = {
       _id: user._id!,

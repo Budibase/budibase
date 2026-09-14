@@ -65,7 +65,7 @@ describe("automation thread", () => {
   it("restores feature flag overrides for the automation run", async () => {
     const appId = config.getProdWorkspaceId()
     const featureFlagOverrides = {
-      AI_TOOL_ESCALATION: true,
+      AI_AGENT_ACTIVITY: true,
     }
     const overrideContext = jest.mocked(context.doInFeatureFlagOverrideContext)
     const automation = basicAutomation({ appId })

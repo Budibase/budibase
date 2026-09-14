@@ -1,6 +1,5 @@
 import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
 import { StateEffect } from "@codemirror/state"
-import { ToolBindingPrefix } from "@/constants"
 import {
   Decoration,
   EditorView,
@@ -8,6 +7,7 @@ import {
   ViewUpdate,
   WidgetType,
 } from "@codemirror/view"
+import { RETIRED_TOOL_BINDING_NAMESPACES } from "@/constants"
 
 export const bindingsChanged = StateEffect.define<void>()
 
@@ -69,7 +69,7 @@ const buildHbsTagDecorations = (
   const regex = new RegExp(FIND_ANY_HBS_REGEX)
   const isValidBinding = (binding: string) =>
     !validBindings || validBindings.size === 0 || validBindings.has(binding)
-  const knownNamespaces = new Set<string>([ToolBindingPrefix.ESCALATION])
+  const knownNamespaces = new Set<string>(RETIRED_TOOL_BINDING_NAMESPACES)
   for (const binding of validBindings || []) {
     knownNamespaces.add(binding.split(".")[0])
   }

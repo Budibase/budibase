@@ -14,7 +14,7 @@
     EscalationContextDoc,
     EscalationRespondResult,
   } from "@budibase/types"
-  import { EscalateToolResultStatus } from "@budibase/types"
+  import { ApprovalToolResultStatus } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
   import { tick, untrack } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
@@ -87,7 +87,7 @@
   // Only a genuinely-raised escalation gets the approval card
   const isRaisedEscalation = (output: unknown) =>
     (output as { status?: string } | undefined)?.status ===
-    EscalateToolResultStatus.PENDING_APPROVAL
+    ApprovalToolResultStatus.PENDING_APPROVAL
 
   // The escalate part's input/output are loosely typed by the AI SDK, so the
   // casts live here rather than cluttering the template.
@@ -326,7 +326,7 @@
           | { status?: string; escalationId?: string }
           | undefined
         if (
-          output?.status === EscalateToolResultStatus.PENDING_APPROVAL &&
+          output?.status === ApprovalToolResultStatus.PENDING_APPROVAL &&
           output.escalationId
         ) {
           ids.push(output.escalationId)

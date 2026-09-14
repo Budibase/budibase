@@ -2,7 +2,7 @@
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { findComponent, findComponentPath } from "@/helpers/components"
   import {
-    appStore,
+    workspaceStore,
     builderStore,
     componentStore,
     componentTreeNodesStore,
@@ -49,17 +49,17 @@
   $: selectedComponentId = $componentStore.selectedComponentId
 
   $: previewData = {
-    appId: $appStore.appId,
+    appId: $workspaceStore.appId,
     layout,
     screen,
     selectedComponentId,
-    theme: $appStore.clientFeatures.unifiedThemes
+    theme: $workspaceStore.clientFeatures.unifiedThemes
       ? $themeStore.theme
       : `${ThemeClassPrefix}${$themeStore.theme}`,
     customTheme: $themeStore.customTheme,
     previewDevice: $previewStore.previewDevice,
     previewModalDevice: $previewStore.modalDevice,
-    messagePassing: $appStore.clientFeatures.messagePassing,
+    messagePassing: $workspaceStore.clientFeatures.messagePassing,
     navigation: $navigationStore,
     hiddenComponentIds:
       $componentStore.componentToPaste?._id &&
@@ -67,7 +67,7 @@
         ? [$componentStore.componentToPaste?._id]
         : [],
     isBudibaseEvent: true,
-    usedPlugins: $appStore.usedPlugins,
+    usedPlugins: $workspaceStore.usedPlugins,
     location: {
       protocol: window.location.protocol,
       hostname: window.location.hostname,
@@ -286,7 +286,7 @@
   <iframe
     title="componentPreview"
     bind:this={iframe}
-    src={`/app/${$appStore.appId}/preview`}
+    src={`/app/${$workspaceStore.appId}/preview`}
     class:hidden={loading || error}
   ></iframe>
   <div class="underlay"></div>
