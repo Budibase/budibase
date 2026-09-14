@@ -273,6 +273,63 @@ describe("platformActions sessions", () => {
       })
     })
 
+    it.each([undefined, "completed"] as const)(
+      "paginates timestamp ties in DB order in both directions with status=%s",
+      async status => {
+        await config.doInContext(config.getProdWorkspaceId(), async () => {
+          jest.useFakeTimers({ doNotFake: [...REAL_TIMER_GLOBALS] })
+          jest.setSystemTime(new Date("2026-01-01T00:00:00.000Z"))
+          try {
+            for (const sourceId of ["run-a", "run-b", "run-c"]) {
+              for (const db of [
+                context.getProdWorkspaceDB(),
+                context.getDevWorkspaceDB(),
+              ]) {
+                await putSession(db, {
+                  sourceType: "automation_run",
+                  sourceId,
+                  status: "completed",
+                })
+              }
+            }
+          } finally {
+            jest.useRealTimers()
+          }
+
+          const expectedPages = [
+            ["prod:run-c", "prod:run-b"],
+            ["prod:run-a", "dev:run-c"],
+            ["dev:run-b", "dev:run-a"],
+          ]
+          const pages: SessionsPageResult[] = []
+          let bookmark: string | undefined
+          for (const _expected of expectedPages) {
+            const page = await fetchSessions({ limit: 2, status, bookmark })
+            pages.push(page)
+            bookmark = page.pagination.nextBookmark
+          }
+
+          expect(
+            pages.map(page =>
+              page.sessions.map(s => `${s.environment}:${s.sourceId}`)
+            )
+          ).toEqual(expectedPages)
+          expect(pages[0].pagination.hasPreviousPage).toBe(false)
+          expect(pages[pages.length - 1].pagination.hasNextPage).toBe(false)
+
+          bookmark = pages[pages.length - 1].pagination.previousBookmark
+          for (const expected of expectedPages.slice(0, -1).reverse()) {
+            const page = await fetchSessions({ limit: 2, status, bookmark })
+            expect(
+              page.sessions.map(s => `${s.environment}:${s.sourceId}`)
+            ).toEqual(expected)
+            bookmark = page.pagination.previousBookmark
+          }
+          expect(bookmark).toBeUndefined()
+        })
+      }
+    )
+
     it("pages backward through the combined list to reconstruct an earlier page", async () => {
       await config.doInContext(config.getProdWorkspaceId(), async () => {
         for (const sourceId of ["prod-1", "prod-2"]) {

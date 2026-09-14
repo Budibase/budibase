@@ -18,7 +18,7 @@ interface EnvTaggedSession {
 }
 
 // Descending display order (newest first). Returns -1 or 1, never 0. Ties
-// fall through to `_id`, prod first.
+// put prod first, then use descending `_id` to match the view order.
 function compareDisplayOrder(a: EnvTaggedSession, b: EnvTaggedSession): number {
   if (a.session.updatedAt !== b.session.updatedAt) {
     return a.session.updatedAt < b.session.updatedAt ? 1 : -1
@@ -26,7 +26,7 @@ function compareDisplayOrder(a: EnvTaggedSession, b: EnvTaggedSession): number {
   if (a.env !== b.env) {
     return a.env === "prod" ? -1 : 1
   }
-  return a.session._id! < b.session._id! ? -1 : 1
+  return a.session._id! < b.session._id! ? 1 : -1
 }
 
 // A side with zero fetched candidates hasn't advanced past `incoming`
