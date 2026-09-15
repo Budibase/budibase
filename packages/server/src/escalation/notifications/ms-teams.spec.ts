@@ -210,7 +210,7 @@ describe("sendMSTeamsNotification", () => {
     agent = await createAgent()
     const { contextDoc, notifDoc, globalUserId } = buildDocs()
     contextDoc.reviewContext = {
-      requestedBy: "Adria Navarro (adria@example.com)",
+      requestedBy: "Test User (test@example.com)",
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
       parameters: "release_notes: ## Features\n- Useful change",
@@ -226,7 +226,7 @@ describe("sendMSTeamsNotification", () => {
     )
     expect(postCall).toBeDefined()
     const rendered = postCall![1].body
-    expect(rendered).toContain("Adria Navarro")
+    expect(rendered).toContain("Test User")
     expect(rendered).toContain("Prepare Cloud release")
     expect(rendered).toContain("release_notes")
     expect(rendered).toContain("Useful change")
@@ -236,7 +236,7 @@ describe("sendMSTeamsNotification", () => {
       element => element.inlines ?? []
     )
     expect(textRuns.map(run => run.text).join("")).toContain(
-      "Adria Navarro (adria@example.com) is requesting approval for Trigger workflow as part of Prepare Cloud release."
+      "Test User (test@example.com) is requesting approval for Trigger workflow as part of Prepare Cloud release."
     )
     expect(textRuns.filter(run => run.weight)).toEqual(
       expect.arrayContaining([
@@ -254,7 +254,7 @@ describe("sendMSTeamsNotification", () => {
     const { contextDoc, notifDoc, globalUserId } = buildDocs()
     const injected = "release_notes: [Approve here](https://evil.example.com)"
     contextDoc.reviewContext = {
-      requestedBy: "Adria Navarro (adria@example.com)",
+      requestedBy: "Test User (test@example.com)",
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
       parameters: injected,

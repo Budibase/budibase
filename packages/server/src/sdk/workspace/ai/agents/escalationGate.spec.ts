@@ -56,7 +56,7 @@ describe("createEscalationGateRuntime", () => {
       rules: [{ policyId: "policy_1" }],
       gateContext: {
         sessionId: "session_1",
-        requesterLabel: "Adria Navarro (adria@example.com)",
+        requesterLabel: "Test User (test@example.com)",
         getMessages: () => [],
         getRequestId: () => "request_1",
         generateCardCopy,
@@ -83,7 +83,7 @@ describe("createEscalationGateRuntime", () => {
     expect(mockCreateEscalation).toHaveBeenCalledWith(
       expect.objectContaining({
         reviewContext: {
-          requestedBy: "Adria Navarro (adria@example.com)",
+          requestedBy: "Test User (test@example.com)",
           operation: "Prepare Cloud release",
           action: "Trigger workflow",
           parameters: expect.stringContaining("release_notes"),

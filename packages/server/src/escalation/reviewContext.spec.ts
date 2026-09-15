@@ -13,12 +13,12 @@ describe("escalation review context", () => {
     expect(
       requesterLabel({
         user: user({
-          firstName: "Adria",
-          lastName: "Navarro",
-          email: "adria@example.com",
+          firstName: "Test",
+          lastName: "User",
+          email: "test@example.com",
         }),
       })
-    ).toBe("Adria Navarro (adria@example.com)")
+    ).toBe("Test User (test@example.com)")
     expect(requesterLabel({ user: user({}) })).toBe("us_1")
   })
 

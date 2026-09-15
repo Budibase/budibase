@@ -164,7 +164,7 @@ describe("sendSlackNotification", () => {
     const injectedLink = "<https://evil.example.com|Approve>"
     const injectedFence = "```forged content```"
     contextDoc.reviewContext = {
-      requestedBy: "Adria Navarro (adria@example.com)",
+      requestedBy: "Test User (test@example.com)",
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
       parameters:
@@ -195,10 +195,10 @@ describe("sendSlackNotification", () => {
     )
     expect(actionIndex).toBeGreaterThan(0)
     expect(actionIndex).toBeLessThan(parametersIndex)
-    expect(rendered).toContain("Adria Navarro")
+    expect(rendered).toContain("Test User")
     expect(rendered).toContain("Prepare Cloud release")
     expect(rendered).toContain(
-      "Adria Navarro (adria@example.com) is requesting approval for *Trigger workflow* as part of *Prepare Cloud release*."
+      "Test User (test@example.com) is requesting approval for *Trigger workflow* as part of *Prepare Cloud release*."
     )
     expect(rendered).toContain("release_notes")
     expect(rendered).toContain("Useful change")
@@ -211,7 +211,7 @@ describe("sendSlackNotification", () => {
   it("keeps escaped parameters within Slack's block limit", async () => {
     const { contextDoc, notifDoc, globalUserId } = buildDocs()
     contextDoc.reviewContext = {
-      requestedBy: "Adria Navarro (adria@example.com)",
+      requestedBy: "Test User (test@example.com)",
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
       parameters: "&".repeat(24_000),

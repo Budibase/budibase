@@ -681,15 +681,15 @@ describe("prepareAgentChatRun - approval gating", () => {
       promptMode: "automation",
       user: {
         _id: "user_1",
-        firstName: "Adria",
-        lastName: "Navarro",
-        email: "adria@example.com",
+        firstName: "Test",
+        lastName: "User",
+        email: "test@example.com",
       } as ContextUser,
     })
 
     const buildOptions = jest.mocked(buildPromptAndTools).mock.calls.at(-1)?.[2]
     expect(buildOptions?.escalationGateContext?.requesterLabel).toBe(
-      "Adria Navarro (adria@example.com)"
+      "Test User (test@example.com)"
     )
   })
 
