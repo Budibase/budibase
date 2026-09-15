@@ -3,6 +3,7 @@ import {
   BasicOperator,
   ConditionRangeOperator,
   FieldType,
+  isRelationshipField,
   ToolAction,
   ToolType,
 } from "@budibase/types"
@@ -76,8 +77,7 @@ export interface ReviewField {
   label: string
 }
 
-export const isValidReviewParameterPath = (path: string) =>
-  path.length <= 250 && path.startsWith("/") && !/~(?:[^01]|$)/.test(path)
+export const MAX_REVIEW_PARAMETER_PATHS = 40
 
 export const normalizeReviewParameterPaths = (paths: string[]) => [
   ...new Set(paths.map(path => path.trim()).filter(Boolean)),
@@ -192,10 +192,12 @@ export const getToolReviewFields = ({
 
   if (isRowMutationTool(tool)) {
     const table = tables.find(candidate => candidate._id === tool.sourceId)
-    const fields = Object.keys(table?.schema || {}).map(name => ({
-      path: `/data/${pointerSegment(name)}`,
-      label: name,
-    }))
+    const fields = Object.entries(table?.schema || {})
+      .filter(([, field]) => !isRelationshipField(field))
+      .map(([name]) => ({
+        path: `/data/${pointerSegment(name)}`,
+        label: name,
+      }))
     return tool.action === ToolAction.UPDATE_ROW
       ? [{ path: "/rowId", label: "Row ID" }, ...fields]
       : fields

@@ -2,12 +2,11 @@
   import {
     Body,
     Button,
-    Checkbox,
     Icon,
     Label,
     Modal,
     ModalContent,
-    PillInput,
+    Multiselect,
     Select,
   } from "@budibase/bbui"
   import { FieldType } from "@budibase/types"
@@ -20,7 +19,7 @@
   import { OperatorOptions, dataFilters } from "@budibase/shared-core"
   import { FilterField } from "@budibase/frontend-core"
   import {
-    isValidReviewParameterPath,
+    MAX_REVIEW_PARAMETER_PATHS,
     normalizeReviewParameterPaths,
     type ConditionField,
     type ReviewField,
@@ -63,6 +62,11 @@
 
   let apiExplorerAvailable = $state(false)
 
+  const selectablePaths = (available: ReviewField[], paths: string[]) => {
+    const options = new Set(available.map(field => field.path))
+    return paths.filter(path => options.has(path))
+  }
+
   export const show = (options: {
     policies: AgentOperationApprovalPolicy[]
     fields: ConditionField[]
@@ -85,7 +89,10 @@
           : condition.value,
       noValue: NO_VALUE_OPERATORS.has(condition.operator),
     }))
-    reviewParameterPaths = [...(options.rule?.reviewParameterPaths ?? [])]
+    reviewParameterPaths = selectablePaths(
+      options.reviewFields,
+      options.rule?.reviewParameterPaths ?? []
+    )
     modal?.show()
   }
 
@@ -97,20 +104,12 @@
 
   export const updateReviewFields = (next: ReviewField[]) => {
     reviewFields = next
+    reviewParameterPaths = selectablePaths(next, reviewParameterPaths)
   }
 
-  const reviewPathsValid = $derived(
-    reviewParameterPaths.length <= 40 &&
-      reviewParameterPaths.every(path =>
-        isValidReviewParameterPath(path.trim())
-      )
+  const reviewSelectionValid = $derived(
+    reviewParameterPaths.length <= MAX_REVIEW_PARAMETER_PATHS
   )
-
-  const toggleReviewPath = (path: string) => {
-    reviewParameterPaths = reviewParameterPaths.includes(path)
-      ? reviewParameterPaths.filter(candidate => candidate !== path)
-      : [...reviewParameterPaths, path]
-  }
 
   const operatorsFor = (condition: ConditionDraft) => {
     const field = fields.find(candidate => candidate.name === condition.field)
@@ -257,7 +256,7 @@
     secondaryButtonWarning
     secondaryAction={remove}
     onConfirm={save}
-    disabled={!policyId || !conditionsComplete || !reviewPathsValid}
+    disabled={!policyId || !conditionsComplete || !reviewSelectionValid}
   >
     <div slot="header" class="modal-header">
       <span>
@@ -270,34 +269,6 @@
           Open API explorer
         </Button>
       {/if}
-    </div>
-    <div class="configuration-field">
-      <div class="field-copy">
-        <Label size="M">Shared with reviewers</Label>
-        <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-          No tool parameters are shared by default. Select known fields or add
-          JSON Pointer paths for dynamic input.
-        </Body>
-      </div>
-      {#if reviewFields.length}
-        <div class="review-fields">
-          {#each reviewFields as field}
-            <Checkbox
-              value={reviewParameterPaths.includes(field.path)}
-              text={`${field.label} (${field.path})`}
-              on:change={() => toggleReviewPath(field.path)}
-            />
-          {/each}
-        </div>
-      {/if}
-      <PillInput
-        value={reviewParameterPaths}
-        maxItems={40}
-        placeholder="/field or /nested/field"
-        helpText="Paths use JSON Pointer syntax. Selected values are shown exactly as supplied."
-        error={reviewPathsValid ? undefined : "Enter valid JSON Pointer paths."}
-        on:change={event => (reviewParameterPaths = event.detail)}
-      />
     </div>
     <div class="configuration-field">
       <div class="field-copy">
@@ -401,6 +372,34 @@
         </Button>
       </div>
     </div>
+    <div class="configuration-field">
+      <div class="field-copy">
+        <Label size="M">Shared with reviewers</Label>
+        <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+          No tool parameters are shared by default. Select the fields reviewers
+          need to see.
+        </Body>
+      </div>
+      {#if reviewFields.length}
+        <Multiselect
+          value={reviewParameterPaths}
+          options={reviewFields}
+          placeholder="No fields shared"
+          autocomplete
+          searchPlaceholder="Search fields"
+          getOptionLabel={field => field.label}
+          getOptionValue={field => field.path}
+          error={reviewSelectionValid
+            ? undefined
+            : `Select no more than ${MAX_REVIEW_PARAMETER_PATHS} fields.`}
+          on:change={event => (reviewParameterPaths = event.detail)}
+        />
+      {:else}
+        <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+          This tool has no fields that can be shared with reviewers.
+        </Body>
+      {/if}
+    </div>
   </ModalContent>
 </Modal>
 
@@ -425,12 +424,6 @@
   .conditions-list {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-s);
-  }
-
-  .review-fields {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--spacing-s);
   }
 
