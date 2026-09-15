@@ -105,6 +105,13 @@ interface MockSlackEvent {
   ts?: string
   user?: string
   username?: string
+  files?: Array<{
+    id?: string
+    mimetype?: string
+    name?: string
+    size?: number
+    content?: string
+  }>
 }
 
 interface MockTeamsMentionEntity {
@@ -329,6 +336,13 @@ export class Chat {
           text: event.text || "",
           raw: event,
           isMention,
+          attachments: (event.files || []).map(file => ({
+            type: file.mimetype?.startsWith("image/") ? "image" : "file",
+            name: file.name,
+            mimeType: file.mimetype,
+            size: file.size,
+            fetchData: async () => Buffer.from(file.content || ""),
+          })),
           author: {
             userId: event.user || "",
             userName: event.username || event.user || "",
@@ -337,7 +351,11 @@ export class Chat {
         }
 
         if (isSlackDirectMessage(event)) {
-          await invokeHandlers(this.newMessageHandlers, thread, message)
+          if (this.directMessageHandlers.length) {
+            await invokeHandlers(this.directMessageHandlers, thread, message)
+          } else {
+            await invokeHandlers(this.mentionHandlers, thread, message)
+          }
         } else {
           if (isMention) {
             await invokeHandlers(this.mentionHandlers, thread, message)
@@ -427,6 +445,12 @@ export interface Message {
   text?: string
   raw?: unknown
   isMention?: boolean
+  attachments?: Array<{
+    name?: string
+    mimeType?: string
+    size?: number
+    fetchData?: () => Promise<Buffer>
+  }>
   author: {
     userId: string
     fullName?: string

@@ -16,10 +16,17 @@ import type {
   ChatConversationChannel,
   ChatConversationRequest,
   ContextUser,
+  ConversationAttachmentTurn,
   WebhookChatCompleteResult,
 } from "@budibase/types"
-import { AgentChannelProvider, DocumentType } from "@budibase/types"
+import {
+  AgentChannelProvider,
+  ConversationAttachmentStatus,
+  ConversationAttachmentTurnStatus,
+  DocumentType,
+} from "@budibase/types"
 import sdk from "../../../sdk"
+import type { IncomingConversationAttachment } from "../../../sdk/workspace/ai/chatConversations"
 import { getGlobalUser } from "../../../utilities/global"
 import {
   webhookChat,
@@ -350,6 +357,8 @@ export interface HandleChatMessageParams {
   channelEnabled: boolean
   command: SupportedChatCommand
   content: string
+  attachments?: IncomingConversationAttachment[]
+  allowConversationAttachments: boolean
   user: {
     externalUserId: string
     displayName?: string
@@ -433,6 +442,8 @@ export const handleChatMessage = async ({
   channelEnabled,
   command,
   content,
+  attachments: incomingAttachments = [],
+  allowConversationAttachments,
   user,
   channel,
   scope,
@@ -586,7 +597,34 @@ export const handleChatMessage = async ({
       })
     }
 
-    if (command === ChatCommands.NEW && !content) {
+    if (
+      provider === AgentChannelProvider.SLACK &&
+      command === ChatCommands.NEW
+    ) {
+      const previousChat = await findConversation({
+        db,
+        workspaceId,
+        scope,
+        provider,
+        idleTimeoutMs,
+      })
+      if (previousChat?.attachments?.length) {
+        await db.put({
+          ...previousChat,
+          attachmentContextExpiresAt: new Date(0).toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+        await sdk.ai.chatConversations.attachmentCleanupQueue.cleanupConversationAttachments(
+          previousChat._id!
+        )
+      }
+    }
+
+    if (
+      command === ChatCommands.NEW &&
+      !content &&
+      !incomingAttachments.length
+    ) {
       const chatId = docIds.generateChatConversationID()
       await db.put(
         sdk.ai.chatConversations.prepareChatConversationForSave({
@@ -613,13 +651,13 @@ export const handleChatMessage = async ({
       return
     }
 
-    if (!content) {
+    if (!content && !incomingAttachments.length) {
       const msg = `Please provide a message after "${ChatCommands.ASK}", or just send a normal message.`
       await reply(msg)
       return
     }
 
-    const existingChat =
+    let existingChat =
       command === ChatCommands.NEW
         ? undefined
         : await findConversation({
@@ -630,13 +668,200 @@ export const handleChatMessage = async ({
             idleTimeoutMs,
           })
 
-    const userMessage: ChatConversationRequest["messages"][number] = {
-      id: v4(),
-      role: "user",
-      parts: [{ type: "text", text: content }],
+    if (incomingAttachments.length && !allowConversationAttachments) {
+      await reply("File attachments aren't enabled for this agent.")
+      return
+    }
+
+    if (
+      incomingAttachments.length &&
+      !sdk.ai.knowledgeBase.isGeminiFileSearchConfigured()
+    ) {
+      await reply(
+        "I can't process file attachments because Gemini File Search isn't enabled. Please ask your Budibase administrator to enable it."
+      )
+      return
     }
 
     const chatId = existingChat?._id ?? docIds.generateChatConversationID()
+    let conversationAttachments = existingChat?.attachments || []
+    const queuedAttachments = incomingAttachments.length
+      ? sdk.ai.chatConversations.prepareConversationAttachments({
+          conversation: {
+            _id: chatId,
+            attachments: conversationAttachments,
+          },
+          incoming: incomingAttachments,
+        })
+      : []
+    conversationAttachments = [...conversationAttachments, ...queuedAttachments]
+    const attachmentContextExpiresAt =
+      conversationAttachments.length || incomingAttachments.length
+        ? new Date(Date.now() + idleTimeoutMs).toISOString()
+        : undefined
+
+    if (!content && incomingAttachments.length && !queuedAttachments.length) {
+      await reply("Those files are already available in this conversation.")
+      return
+    }
+
+    const attachmentMarker = queuedAttachments.length
+      ? `\n\n[Attached files: ${queuedAttachments
+          .map(file => file.filename)
+          .join(", ")}]`
+      : ""
+    const userMessage: ChatConversationRequest["messages"][number] = {
+      id: v4(),
+      role: "user",
+      parts: [
+        {
+          type: "text",
+          text: `${content}${attachmentMarker}`.trim(),
+        },
+      ],
+    }
+
+    const hasProcessingAttachments = conversationAttachments.some(
+      attachment =>
+        attachment.status === ConversationAttachmentStatus.QUEUED ||
+        attachment.status === ConversationAttachmentStatus.PROCESSING
+    )
+    const hasPendingAttachmentTurns =
+      existingChat?.pendingAttachmentTurns?.some(
+        turn =>
+          turn.status === ConversationAttachmentTurnStatus.QUEUED ||
+          turn.status === ConversationAttachmentTurnStatus.PROCESSING
+      )
+    if (
+      queuedAttachments.length ||
+      hasProcessingAttachments ||
+      hasPendingAttachmentTurns
+    ) {
+      const now = new Date().toISOString()
+      const turn: ConversationAttachmentTurn = {
+        id: v4(),
+        message: userMessage,
+        attachmentIds: conversationAttachments
+          .filter(
+            attachment =>
+              attachment.status !== ConversationAttachmentStatus.FAILED
+          )
+          .map(attachment => attachment.id),
+        status: ConversationAttachmentTurnStatus.QUEUED,
+        requester: {
+          userId,
+          linked: !!existingLink,
+          displayName: user.displayName,
+        },
+        createdAt: now,
+        updatedAt: now,
+      }
+      let chatToUpdate = existingChat
+      let saved = false
+      for (let attempt = 0; attempt < 5 && !saved; attempt++) {
+        const currentAttachments = chatToUpdate?.attachments || []
+        const mergedAttachments = [
+          ...currentAttachments,
+          ...conversationAttachments.filter(
+            attachment =>
+              !currentAttachments.some(current => current.id === attachment.id)
+          ),
+        ]
+        const currentTurns = chatToUpdate?.pendingAttachmentTurns || []
+        const queuedChat =
+          sdk.ai.chatConversations.prepareChatConversationForSave({
+            chatId,
+            userId,
+            title:
+              chatToUpdate?.title ||
+              sdk.ai.chatConversations.truncateTitle(
+                content || queuedAttachments[0]?.filename || "Document question"
+              ),
+            messages: chatToUpdate?.messages || [],
+            chat: {
+              ...(chatToUpdate || {}),
+              _id: chatId,
+              agentId,
+              messages: chatToUpdate?.messages || [],
+              channel,
+              attachments: mergedAttachments,
+              attachmentContextExpiresAt,
+              pendingAttachmentTurns: [
+                ...currentTurns,
+                ...(currentTurns.some(current => current.id === turn.id)
+                  ? []
+                  : [turn]),
+              ],
+            },
+            existingChat: chatToUpdate,
+          })
+        try {
+          await db.put(queuedChat)
+          saved = true
+        } catch (error) {
+          const isConflict =
+            error instanceof Error && "status" in error && error.status === 409
+          if (!isConflict) {
+            throw error
+          }
+          chatToUpdate = await db.tryGet<ChatConversation>(chatId)
+        }
+      }
+      if (!saved) {
+        throw new HTTPError("Conversation update conflict", 409)
+      }
+      await sdk.ai.chatConversations.attachmentIngestionQueue.scheduleConversationAttachmentIngestion(
+        {
+          workspaceId,
+          conversationId: chatId,
+          turnId: turn.id,
+        }
+      )
+      await sdk.ai.chatConversations.attachmentCleanupQueue.scheduleConversationAttachmentCleanup(
+        {
+          workspaceId,
+          conversationId: chatId,
+          expiresAt: attachmentContextExpiresAt!,
+        }
+      )
+      await cacheConversationId({
+        cacheKey: getCacheKey({ workspaceId, scope }),
+        chatId,
+        idleTimeoutMs,
+      })
+      await reply(
+        queuedAttachments.length
+          ? `Processing ${queuedAttachments
+              .map(file => file.filename)
+              .join(", ")}. I'll reply here when ready.`
+          : "The conversation files are still processing. I'll reply here when ready."
+      )
+      return
+    }
+
+    if (
+      existingChat &&
+      conversationAttachments.length &&
+      attachmentContextExpiresAt
+    ) {
+      try {
+        const renewedChat = {
+          ...existingChat,
+          attachmentContextExpiresAt,
+          updatedAt: new Date().toISOString(),
+        }
+        const { rev } = await db.put(renewedChat)
+        existingChat = { ...renewedChat, _rev: rev }
+      } catch (error) {
+        const message =
+          error instanceof HTTPError
+            ? error.message
+            : "Sorry, something went wrong while processing your request."
+        await reply(message)
+        return
+      }
+    }
+
     const draftChat: ChatConversationRequest = {
       _id: chatId,
       agentId,
@@ -644,6 +869,11 @@ export const handleChatMessage = async ({
         existingChat?.title || sdk.ai.chatConversations.truncateTitle(content),
       messages: [...(existingChat?.messages || []), userMessage],
       channel,
+      ...(conversationAttachments.length && {
+        attachments: conversationAttachments,
+        attachmentContextExpiresAt,
+        attachmentVectorStoreId: existingChat?.attachmentVectorStoreId,
+      }),
     }
 
     let result: Awaited<ReturnType<typeof webhookChat>>
@@ -681,6 +911,15 @@ export const handleChatMessage = async ({
         existingChat,
       })
     )
+    if (conversationAttachments.length && attachmentContextExpiresAt) {
+      await sdk.ai.chatConversations.attachmentCleanupQueue.scheduleConversationAttachmentCleanup(
+        {
+          workspaceId,
+          conversationId: chatId,
+          expiresAt: attachmentContextExpiresAt,
+        }
+      )
+    }
     await cacheConversationId({
       cacheKey: getCacheKey({ workspaceId, scope }),
       chatId,

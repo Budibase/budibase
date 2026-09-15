@@ -87,10 +87,6 @@ const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
     .optional(),
   approvalPolicies: Joi.array().items(APPROVAL_POLICY_SCHEMA).optional(),
   allowKnowledgeSourceDownload: Joi.boolean().optional(),
-  escalation: Joi.object({
-    recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
-    delay: Joi.number().integer().positive().optional(),
-  }).optional(),
 })
 
 export function createAgentValidator() {
@@ -106,6 +102,7 @@ export function createAgentValidator() {
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
+      allowConversationAttachments: Joi.boolean().optional(),
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
     })
@@ -131,6 +128,7 @@ export function updateAgentValidator() {
       updatedAt: OPTIONAL_STRING,
       publishedAt: OPTIONAL_STRING,
       createdBy: OPTIONAL_STRING,
+      allowConversationAttachments: Joi.boolean().optional(),
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
     }).unknown(true)

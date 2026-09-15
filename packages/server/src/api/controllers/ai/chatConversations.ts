@@ -13,8 +13,7 @@ import {
   ChatAgentRequest,
   ChatConversation,
   ChatConversationRequest,
-  ESCALATE_TOOL_NAME,
-  EscalateToolResultStatus,
+  ApprovalToolResultStatus,
   FeatureFlag,
   ContextUser,
   UserCtx,
@@ -156,32 +155,6 @@ const startAgentRequestTracking = async ({
   return trackingHandle
 }
 
-const buildEscalateToolCallHandler =
-  ({
-    trackingHandle,
-    agentId,
-    sessionId,
-  }: {
-    trackingHandle: AgentRequestTrackingHandle
-    agentId: string
-    sessionId: string
-  }) =>
-  (toolNames: string[]) => {
-    if (trackingHandle && toolNames.includes(ESCALATE_TOOL_NAME)) {
-      sdk.ai.agentRequests
-        .updateRequestStatus({
-          requestId: trackingHandle.requestId,
-          status: "needs_input",
-        })
-        .catch(error => {
-          console.error(
-            "Failed to update agent request status to needs_input",
-            { agentId, sessionId, error }
-          )
-        })
-    }
-  }
-
 const buildToolCallTrackingHandler = ({
   trackingHandle,
   agentId,
@@ -215,8 +188,13 @@ const buildToolCallTrackingHandler = ({
     if (!trackingHandle) {
       return
     }
-    const outputStatus = (output as { status?: string } | undefined)?.status
-    if (outputStatus === EscalateToolResultStatus.PENDING_APPROVAL) {
+    const approvalOutput = output as
+      | { status?: string; escalationId?: string }
+      | undefined
+    if (
+      approvalOutput?.status === ApprovalToolResultStatus.PENDING_APPROVAL &&
+      approvalOutput.escalationId
+    ) {
       needsInputUpdate = needsInputUpdate.then(() =>
         sdk.ai.agentRequests
           .updateRequestStatus({
@@ -471,6 +449,13 @@ export async function webhookChat({
   }
   const chatId = chat._id ?? docIds.generateChatConversationID()
   const sessionId = `${provider}:${chatId}`
+  const suspendedModelMessages =
+    await sdk.ai.chatConversations.prepareModelMessages(chat.messages)
+  const modelMessages =
+    await sdk.ai.chatConversations.addConversationAttachmentsToModelMessages({
+      messages: suspendedModelMessages,
+      conversation: chat,
+    })
   let trackingHandle: AgentRequestTrackingHandle
   const run = await prepareAgentChatRun({
     agent,
@@ -479,6 +464,7 @@ export async function webhookChat({
     errorLabel: "webhook chat",
     sessionId,
     user,
+    modelMessages,
     getRequestId: () => trackingHandle?.requestId,
   })
   const title = run.latestQuestion
@@ -506,11 +492,6 @@ export async function webhookChat({
   const result = await run.stream({
     pendingToolCalls,
     unrecoveredToolFailures,
-    onToolCalls: buildEscalateToolCallHandler({
-      trackingHandle,
-      agentId,
-      sessionId,
-    }),
     onToolCallCompleted: toolCallTracking.onToolCallCompleted,
   })
 
@@ -709,11 +690,6 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     const result = await run.stream({
       pendingToolCalls,
       unrecoveredToolFailures,
-      onToolCalls: buildEscalateToolCallHandler({
-        trackingHandle,
-        agentId,
-        sessionId,
-      }),
       onToolCallCompleted: toolCallTracking.onToolCallCompleted,
     })
 

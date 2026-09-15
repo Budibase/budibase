@@ -122,6 +122,7 @@ export async function status() {
       aiconfig: agent.aiconfig,
       goal: agent.goal,
       live: agent.live,
+      allowConversationAttachments: agent.allowConversationAttachments,
       MSTeamsIntegration: agent.MSTeamsIntegration
         ? {
             appId: agent.MSTeamsIntegration.appId,

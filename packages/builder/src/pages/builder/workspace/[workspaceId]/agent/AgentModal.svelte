@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getErrorMessage } from "@/helpers/errors"
-  import { appStore } from "@/stores/builder"
+  import { workspaceStore } from "@/stores/builder"
   import { agentsStore, aiConfigsStore } from "@/stores/portal"
   import {
     Input,
@@ -44,7 +44,7 @@
     }
 
     loading = true
-    const workspaceId = $appStore.appId
+    const workspaceId = $workspaceStore.appId
     try {
       const newAgent = await agentsStore.createAgent({
         name: trimmedName,

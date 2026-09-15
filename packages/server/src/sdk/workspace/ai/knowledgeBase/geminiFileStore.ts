@@ -39,7 +39,7 @@ interface RagSearchContent {
   [key: string]: unknown
 }
 
-interface RagSearchResultItem {
+export interface RagSearchResultItem {
   id?: string | null
   file_id?: string | null
   filename?: string

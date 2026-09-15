@@ -110,6 +110,31 @@ describe("agents crud", () => {
   })
 
   describe("fetch", () => {
+    it("defaults legacy conversation attachments to disabled", async () => {
+      mockDbAllDocs.mockResolvedValue({
+        rows: [
+          {
+            doc: {
+              _id: "agent_legacy",
+              name: "Legacy Agent",
+            },
+          },
+          {
+            doc: {
+              _id: "agent_enabled",
+              name: "Enabled Agent",
+              allowConversationAttachments: true,
+            },
+          },
+        ],
+      })
+
+      const agents = await agentsCrud.fetch()
+
+      expect(agents[0].allowConversationAttachments).toBe(false)
+      expect(agents[1].allowConversationAttachments).toBe(true)
+    })
+
     it("maps legacy query tools without writing the agent", async () => {
       const datasource: Datasource = {
         _id: "datasource_1",

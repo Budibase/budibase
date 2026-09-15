@@ -63,6 +63,9 @@ export class BullEscalationProcessor implements IEscalationProcessor {
             agentId: input.agentId,
             operationId: input.operationId,
             sessionId: input.context.sessionId,
+            ...(input.context.conversationId && {
+              conversationId: input.context.conversationId,
+            }),
             ...((input.requestId ?? existing?.requestId) && {
               requestId: input.requestId ?? existing?.requestId,
             }),

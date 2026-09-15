@@ -10,6 +10,10 @@ import {
 
 export type ChatAgentRequest = ChatConversationRequest
 
+export interface AgentKnowledgeConfiguration {
+  knowledgeSearchConfigured: boolean
+}
+
 export interface FetchAgentsResponse {
   agents: Agent[]
 }
@@ -53,9 +57,7 @@ export interface FetchAgentKnowledgeResponse {
 
 export interface FetchAgentKnowledgeIndexResponse {
   operations: Record<string, FetchAgentKnowledgeResponse>
-  configuration: {
-    knowledgeSearchConfigured: boolean
-  }
+  configuration: AgentKnowledgeConfiguration
 }
 
 export interface KnowledgeSourceEntry {
@@ -196,7 +198,6 @@ export type AgentOperationConfigRequest = Pick<
   | "enabledTools"
   | "approvalPolicies"
   | "allowKnowledgeSourceDownload"
-  | "escalation"
 >
 
 export type CreateAgentOperationRequest = AgentOperationConfigRequest &

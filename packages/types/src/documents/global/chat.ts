@@ -32,6 +32,59 @@ export interface ChatConversationChannel {
   serviceUrl?: string
 }
 
+export interface ChatConversationAttachment {
+  id: string
+  provider: AgentChannelProvider.SLACK
+  providerFileId: string
+  filename: string
+  mimetype: string
+  size: number
+  textLength?: number
+  pageCount?: number
+  status: ConversationAttachmentStatus
+  ragSourceId?: string
+  errorCode?: ConversationAttachmentErrorCode
+  errorMessage?: string
+  processedAt?: string
+  uploadedAt: string
+}
+
+export enum ConversationAttachmentErrorCode {
+  SLACK_MISSING_FILES_READ_SCOPE = "slack_missing_files_read_scope",
+}
+
+export enum ConversationAttachmentStatus {
+  QUEUED = "queued",
+  PROCESSING = "processing",
+  READY = "ready",
+  FAILED = "failed",
+  DELETING = "deleting",
+}
+
+export enum ConversationAttachmentTurnStatus {
+  QUEUED = "queued",
+  PROCESSING = "processing",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  CANCELLED = "cancelled",
+}
+
+export interface ConversationAttachmentTurn {
+  id: string
+  message: UIMessage<AgentMessageMetadata>
+  attachmentIds: string[]
+  status: ConversationAttachmentTurnStatus
+  requester: {
+    userId: string
+    linked: boolean
+    displayName?: string
+  }
+  createdAt: string
+  updatedAt: string
+  errorMessage?: string
+  responseText?: string
+}
+
 export interface ChatConversationRequest extends Document {
   agentId: string
   title?: string
@@ -41,6 +94,10 @@ export interface ChatConversationRequest extends Document {
   previewRoleId?: string
   sessionId?: string
   channel?: ChatConversationChannel
+  attachments?: ChatConversationAttachment[]
+  attachmentContextExpiresAt?: string
+  attachmentVectorStoreId?: string
+  attachmentDeletingAt?: string
 }
 
 export interface WebhookChatCompleteResult {
@@ -57,6 +114,7 @@ export type DraftChatConversation = Omit<ChatConversationRequest, "agentId"> & {
 
 export interface ChatConversation extends ChatConversationRequest {
   userId: string
+  pendingAttachmentTurns?: ConversationAttachmentTurn[]
 }
 
 export interface ChatIdentityLink extends Document {
