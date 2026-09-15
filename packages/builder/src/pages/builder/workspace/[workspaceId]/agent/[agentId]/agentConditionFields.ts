@@ -83,6 +83,20 @@ export const normalizeReviewParameterPaths = (paths: string[]) => [
   ...new Set(paths.map(path => path.trim()).filter(Boolean)),
 ]
 
+export const withSelectedReviewFields = ({
+  fields,
+  selected,
+}: {
+  fields: ReviewField[]
+  selected: string[]
+}): ReviewField[] => {
+  const known = new Set(fields.map(field => field.path))
+  const extras = normalizeReviewParameterPaths(selected)
+    .filter(path => !known.has(path))
+    .map(path => ({ path, label: path }))
+  return extras.length ? [...fields, ...extras] : fields
+}
+
 const pointerSegment = (value: string) =>
   value.replace(/~/g, "~0").replace(/\//g, "~1")
 

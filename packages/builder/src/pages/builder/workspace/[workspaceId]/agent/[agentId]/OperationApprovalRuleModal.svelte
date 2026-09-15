@@ -21,6 +21,7 @@
   import {
     MAX_REVIEW_PARAMETER_PATHS,
     normalizeReviewParameterPaths,
+    withSelectedReviewFields,
     type ConditionField,
     type ReviewField,
   } from "./agentConditionFields"
@@ -62,10 +63,12 @@
 
   let apiExplorerAvailable = $state(false)
 
-  const selectablePaths = (available: ReviewField[], paths: string[]) => {
-    const options = new Set(available.map(field => field.path))
-    return paths.filter(path => options.has(path))
-  }
+  let shareableFields = $derived(
+    withSelectedReviewFields({
+      fields: reviewFields,
+      selected: reviewParameterPaths,
+    })
+  )
 
   export const show = (options: {
     policies: AgentOperationApprovalPolicy[]
@@ -89,8 +92,7 @@
           : condition.value,
       noValue: NO_VALUE_OPERATORS.has(condition.operator),
     }))
-    reviewParameterPaths = selectablePaths(
-      options.reviewFields,
+    reviewParameterPaths = normalizeReviewParameterPaths(
       options.rule?.reviewParameterPaths ?? []
     )
     modal?.show()
@@ -104,7 +106,6 @@
 
   export const updateReviewFields = (next: ReviewField[]) => {
     reviewFields = next
-    reviewParameterPaths = selectablePaths(next, reviewParameterPaths)
   }
 
   const reviewSelectionValid = $derived(
@@ -380,10 +381,10 @@
           need to see.
         </Body>
       </div>
-      {#if reviewFields.length}
+      {#if shareableFields.length}
         <Multiselect
           value={reviewParameterPaths}
-          options={reviewFields}
+          options={shareableFields}
           placeholder="No fields shared"
           autocomplete
           searchPlaceholder="Search fields"

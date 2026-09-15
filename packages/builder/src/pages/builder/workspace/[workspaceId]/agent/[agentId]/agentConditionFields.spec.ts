@@ -9,6 +9,7 @@ import type { Table } from "@budibase/types"
 import {
   getToolReviewFields,
   normalizeReviewParameterPaths,
+  withSelectedReviewFields,
 } from "./agentConditionFields"
 import type { AgentTool } from "./toolTypes"
 
@@ -56,6 +57,18 @@ describe("review parameter paths", () => {
         automations: [],
       })
     ).toEqual([{ path: "/data/name", label: "name" }])
+  })
+
+  it("keeps selected paths that are no longer in the known field list", () => {
+    expect(
+      withSelectedReviewFields({
+        fields: [{ path: "/data/name", label: "name" }],
+        selected: [" /data/name ", "/inputs/release_notes", "/data/name"],
+      })
+    ).toEqual([
+      { path: "/data/name", label: "name" },
+      { path: "/inputs/release_notes", label: "/inputs/release_notes" },
+    ])
   })
 
   it("includes row identity fields for update-row tools", () => {
