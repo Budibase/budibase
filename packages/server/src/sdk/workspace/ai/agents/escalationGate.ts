@@ -51,6 +51,7 @@ interface CreateGateParams {
   operation: AgentOperation
   toolName: string
   readableName?: string
+  sourceLabel?: string
   sourceId?: string
   action?: ToolAction
   // Key of the args object holding the condition fields e.g "data"
@@ -177,6 +178,7 @@ export const createEscalationGateRuntime = ({
   operation,
   toolName,
   readableName,
+  sourceLabel,
   sourceId,
   action,
   argsKey,
@@ -185,6 +187,10 @@ export const createEscalationGateRuntime = ({
 }: CreateGateParams): EscalationGateRuntime => ({
   intercept: async (input, { toolCallId, messages }) => {
     const label = readableName ?? toolName
+    const displayToolName =
+      sourceLabel && readableName && !readableName.startsWith(`${sourceLabel}.`)
+        ? `${sourceLabel}.${readableName}`
+        : label
     const executed = gateContext.executedApproval
     if (
       executed &&
@@ -259,7 +265,7 @@ export const createEscalationGateRuntime = ({
         requestedBy: truncateReviewField(requestedBy),
         operation: truncateReviewField(operation.name),
         action: truncateReviewField(label),
-        toolName: truncateReviewField(toolName),
+        toolName: truncateReviewField(displayToolName),
         parameters: formatToolParameters(input),
       },
       delay: (notifications.delay ?? DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,

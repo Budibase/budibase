@@ -53,6 +53,7 @@ describe("createEscalationGateRuntime", () => {
       operation,
       toolName: "create_workflow_dispatch",
       readableName: "Trigger workflow",
+      sourceLabel: "api.github_release_manager",
       rules: [{ policyId: "policy_1" }],
       gateContext: {
         sessionId: "session_1",
@@ -86,7 +87,7 @@ describe("createEscalationGateRuntime", () => {
           requestedBy: "Test User (test@example.com)",
           operation: "Prepare Cloud release",
           action: "Trigger workflow",
-          toolName: "create_workflow_dispatch",
+          toolName: "api.github_release_manager.Trigger workflow",
           parameters: expect.stringContaining("release_notes"),
         },
         context: expect.objectContaining({
