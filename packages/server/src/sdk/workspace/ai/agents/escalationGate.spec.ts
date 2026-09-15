@@ -86,6 +86,7 @@ describe("createEscalationGateRuntime", () => {
           requestedBy: "Test User (test@example.com)",
           operation: "Prepare Cloud release",
           action: "Trigger workflow",
+          toolName: "create_workflow_dispatch",
           parameters: expect.stringContaining("release_notes"),
         },
         context: expect.objectContaining({

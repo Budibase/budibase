@@ -52,6 +52,7 @@ export interface EscalationReviewContext {
   requestedBy: string
   operation: string
   action: string
+  toolName?: string
   parameters: string
 }
 

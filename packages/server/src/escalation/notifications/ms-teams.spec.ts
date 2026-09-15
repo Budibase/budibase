@@ -213,6 +213,7 @@ describe("sendMSTeamsNotification", () => {
       requestedBy: "Test User (test@example.com)",
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
+      toolName: "create_workflow_dispatch",
       parameters: "release_notes: ## Features\n- Useful change",
     }
     await seedLinks(globalUserId)
@@ -229,6 +230,7 @@ describe("sendMSTeamsNotification", () => {
     expect(rendered).toContain("Test User")
     expect(rendered).toContain("Prepare Cloud release")
     expect(rendered).toContain("release_notes")
+    expect(rendered).toContain("create_workflow_dispatch")
     expect(rendered).toContain("Useful change")
     expect(rendered).toContain('"fontType":"monospace"')
     const message: TeamsMessage = JSON.parse(rendered)

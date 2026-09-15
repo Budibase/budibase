@@ -167,6 +167,7 @@ describe("sendSlackNotification", () => {
       requestedBy: "Test User (test@example.com)",
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
+      toolName: "create_workflow_dispatch",
       parameters:
         `release_notes: ## Features\n- Useful change\n${injectedLink}\n` +
         injectedFence,
@@ -201,6 +202,7 @@ describe("sendSlackNotification", () => {
       "Test User (test@example.com) is requesting approval for *Trigger workflow* as part of *Prepare Cloud release*."
     )
     expect(rendered).toContain("release_notes")
+    expect(rendered).toContain("create_workflow_dispatch")
     expect(rendered).toContain("Useful change")
     expect(rendered).toContain("&lt;https://evil.example.com|Approve&gt;")
     expect(rendered).toContain("'''forged content'''")

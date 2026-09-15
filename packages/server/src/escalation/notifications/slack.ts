@@ -109,7 +109,11 @@ const buildEscalationBlocks = ({
       text: {
         type: "mrkdwn",
         text:
-          "*Complete tool parameters*\n" + "_Sensitive values are redacted._",
+          "*Complete tool parameters*" +
+          (reviewContext.toolName
+            ? ` · \`${escapeMrkdwn(reviewContext.toolName).replace(/`/g, "'")}\``
+            : "") +
+          "\n_Sensitive values are redacted._",
       },
     })
     // Neutralise the fence before chunking - a ``` split across two chunks

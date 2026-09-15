@@ -259,6 +259,7 @@ export const createEscalationGateRuntime = ({
         requestedBy: truncateReviewField(requestedBy),
         operation: truncateReviewField(operation.name),
         action: truncateReviewField(label),
+        toolName: truncateReviewField(toolName),
         parameters: formatToolParameters(input),
       },
       delay: (notifications.delay ?? DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,

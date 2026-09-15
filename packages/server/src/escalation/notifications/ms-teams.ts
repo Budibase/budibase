@@ -218,9 +218,18 @@ const buildReviewContextIntro = (reviewContext: EscalationReviewContext) =>
   )
 
 const buildReviewContextDetails = (reviewContext: EscalationReviewContext) => [
-  richLine([{ text: "Complete tool parameters", weight: "bolder" }], {
-    tight: false,
-  }),
+  richLine(
+    [
+      { text: "Complete tool parameters", weight: "bolder" },
+      ...(reviewContext.toolName
+        ? [
+            { text: " · " },
+            { text: reviewContext.toolName, fontType: "monospace" },
+          ]
+        : []),
+    ],
+    { tight: false }
+  ),
   richLine([{ text: "Sensitive values are redacted." }]),
   ...parameterLines(reviewContext.parameters),
 ]
