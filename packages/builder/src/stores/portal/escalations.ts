@@ -33,6 +33,7 @@ export const configuredEscalationProviders = (
 export interface EscalationEntry extends EscalationResult {
   escalationId: string
   reviewContext?: EscalationReviewContext
+  reviewContextLoaded?: boolean
 }
 
 interface EscalationsState {
@@ -62,33 +63,7 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
       },
     }))
     this.ensurePolling()
-    this.loadContext(escalationId).catch(() => {})
     this.tick().catch(() => {})
-  }
-
-  private async loadContext(escalationId: string) {
-    try {
-      const context = await API.fetchEscalationContext(escalationId)
-      this.update(state => {
-        const current = state.escalations[escalationId]
-        if (!current) {
-          return state
-        }
-        return {
-          escalations: {
-            ...state.escalations,
-            [escalationId]: {
-              ...current,
-              title: context.title,
-              summary: context.summary,
-              reviewContext: context.reviewContext,
-            },
-          },
-        }
-      })
-    } catch (error) {
-      console.warn("Escalation context fetch failed", error)
-    }
   }
 
   async resolve(escalationId: string, response: EscalationResponse) {
@@ -141,21 +116,39 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
     }
     this.inFlight = true
     try {
+      const currentEscalations = get(this.store).escalations
       const results = await Promise.all(
-        ids.map(async escalationId => ({
-          escalationId,
-          result: await API.fetchEscalationResult(escalationId, signal),
-        }))
+        ids.map(async escalationId => {
+          const context = currentEscalations[escalationId].reviewContextLoaded
+            ? undefined
+            : await API.fetchEscalationContext(escalationId, signal)
+                .then(reviewContext => ({
+                  ...reviewContext,
+                  reviewContextLoaded: true,
+                }))
+                .catch(error => {
+                  if (!signal.aborted) {
+                    console.warn("Escalation context fetch failed", error)
+                  }
+                  return undefined
+                })
+          return {
+            escalationId,
+            context,
+            result: await API.fetchEscalationResult(escalationId, signal),
+          }
+        })
       )
       if (signal.aborted) {
         return
       }
       this.update(state => {
         const escalations = { ...state.escalations }
-        for (const { escalationId, result } of results) {
+        for (const { escalationId, context, result } of results) {
           escalations[escalationId] = {
             ...escalations[escalationId],
             escalationId,
+            ...context,
             ...result,
           }
         }
