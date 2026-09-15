@@ -216,6 +216,35 @@ describe("sendSlackNotification", () => {
     expect(rendered).not.toContain(injectedFence)
   })
 
+  it("neutralizes a code fence split across parameter chunks", async () => {
+    const { contextDoc, notifDoc, globalUserId } = buildDocs()
+    contextDoc.reviewContext = {
+      requestedBy: "Test User (test@example.com)",
+      operation: "Prepare Cloud release",
+      action: "Trigger workflow",
+      parameters: `${"x".repeat(2_499)}\`\`\`forged content`,
+    }
+    await seedLinks(globalUserId)
+    mockAuthTest.mockResolvedValue({ ok: true, team_id: TEAM_RIGHT })
+
+    await config.doInContext(config.getDevWorkspaceId(), () =>
+      sendSlackNotification({ notifDoc, contextDoc })
+    )
+
+    const payload = mockPostMessage.mock.calls[0][0]
+    const parameterBlocks = payload.blocks.filter(
+      (block: { text?: { type: string; text: string } }) =>
+        block.text?.type === "mrkdwn" && block.text.text.startsWith("```")
+    )
+    const parameterText = parameterBlocks
+      .map((block: { text: { text: string } }) => block.text.text.slice(3, -3))
+      .join("")
+
+    expect(parameterBlocks).toHaveLength(2)
+    expect(parameterText).toContain("'''forged content")
+    expect(parameterText).not.toContain("```")
+  })
+
   it("keeps escaped parameters within Slack's block limit", async () => {
     const { contextDoc, notifDoc, globalUserId } = buildDocs()
     contextDoc.reviewContext = {
