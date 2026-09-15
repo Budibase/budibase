@@ -11,6 +11,7 @@ import { BudiStore } from "../BudiStore"
 
 const POLL_INTERVAL_MS = 5000
 const MAX_CONSECUTIVE_FAILURES = 3
+const MAX_CONTEXT_ATTEMPTS = 3
 
 // Providers with an enabled deployment on the agent. Enabled = endpoint URL
 // present
@@ -34,6 +35,7 @@ export interface EscalationEntry extends EscalationResult {
   escalationId: string
   reviewContext?: EscalationReviewContext
   reviewContextLoaded?: boolean
+  reviewContextAttempts?: number
 }
 
 interface EscalationsState {
@@ -104,6 +106,40 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
     }, POLL_INTERVAL_MS)
   }
 
+  // The review context never changes once the escalation exists, so it's only
+  // fetched until it lands. Failures are retried a bounded number of times so
+  // a permanent error doesn't refetch and warn on every poll.
+  private async fetchContext({
+    escalationId,
+    entry,
+    signal,
+  }: {
+    escalationId: string
+    entry: EscalationEntry | undefined
+    signal: AbortSignal
+  }): Promise<Partial<EscalationEntry> | undefined> {
+    const attempts = entry?.reviewContextAttempts ?? 0
+    if (entry?.reviewContextLoaded || attempts >= MAX_CONTEXT_ATTEMPTS) {
+      return undefined
+    }
+    try {
+      const details = await API.fetchEscalationContext(escalationId, signal)
+      return { ...details, reviewContextLoaded: true }
+    } catch (error) {
+      if (signal.aborted) {
+        return undefined
+      }
+      const reviewContextAttempts = attempts + 1
+      console.warn("Escalation context fetch failed", {
+        escalationId,
+        attempt: reviewContextAttempts,
+        givingUp: reviewContextAttempts >= MAX_CONTEXT_ATTEMPTS,
+        error,
+      })
+      return { reviewContextAttempts }
+    }
+  }
+
   private async tick() {
     if (this.inFlight) {
       return
@@ -117,25 +153,27 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
     this.inFlight = true
     try {
       const currentEscalations = get(this.store).escalations
-      const results = await Promise.all(
+      // Each escalation resolves to its own outcome so a single failing
+      // request never discards updates fetched alongside it.
+      const outcomes = await Promise.all(
         ids.map(async escalationId => {
-          const context = currentEscalations[escalationId].reviewContextLoaded
-            ? undefined
-            : await API.fetchEscalationContext(escalationId, signal)
-                .then(reviewContext => ({
-                  ...reviewContext,
-                  reviewContextLoaded: true,
-                }))
-                .catch(error => {
-                  if (!signal.aborted) {
-                    console.warn("Escalation context fetch failed", error)
-                  }
-                  return undefined
-                })
-          return {
+          const context = await this.fetchContext({
             escalationId,
-            context,
-            result: await API.fetchEscalationResult(escalationId, signal),
+            entry: currentEscalations[escalationId],
+            signal,
+          })
+          try {
+            const result = await API.fetchEscalationResult(escalationId, signal)
+            return {
+              escalationId,
+              updates: { ...context, ...result },
+              failed: false,
+            }
+          } catch (error) {
+            if (!signal.aborted) {
+              console.warn("Escalation poll failed", { escalationId, error })
+            }
+            return { escalationId, updates: context, failed: true }
           }
         })
       )
@@ -144,25 +182,25 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
       }
       this.update(state => {
         const escalations = { ...state.escalations }
-        for (const { escalationId, context, result } of results) {
+        for (const { escalationId, updates } of outcomes) {
+          if (!updates || !escalations[escalationId]) {
+            continue
+          }
           escalations[escalationId] = {
             ...escalations[escalationId],
+            ...updates,
             escalationId,
-            ...context,
-            ...result,
           }
         }
         return { escalations }
       })
-      this.consecutiveFailures = 0
-    } catch (error) {
-      if (signal.aborted) {
-        return
-      }
-      this.consecutiveFailures++
-      console.warn("Escalation poll failed", error)
-      if (this.consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
-        this.stop()
+      if (outcomes.some(outcome => outcome.failed)) {
+        this.consecutiveFailures++
+        if (this.consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+          this.stop()
+        }
+      } else {
+        this.consecutiveFailures = 0
       }
     } finally {
       this.inFlight = false

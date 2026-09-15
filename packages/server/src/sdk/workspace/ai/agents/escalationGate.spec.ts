@@ -147,6 +147,29 @@ describe("createEscalationGateRuntime", () => {
     expect(JSON.stringify(input.reviewContext)).not.toContain("do-not-show")
   })
 
+  it("omits toolName when it would only repeat the action", async () => {
+    const runtime = createEscalationGateRuntime({
+      agentId: "agent_1",
+      operation,
+      toolName: "ta_1_update_row",
+      readableName: "Update row",
+      displayName: "Update row",
+      rules: [{ policyId: "policy_1" }],
+      gateContext: {
+        sessionId: "session_1",
+        requesterLabel: "Test User (test@example.com)",
+        getMessages: () => [],
+        getRequestId: () => "request_1",
+      },
+    })
+
+    await runtime.intercept({ rowId: "ro_1" }, { toolCallId: "call_1" })
+
+    const [input] = mockCreateEscalation.mock.calls[0]
+    expect(input.reviewContext.action).toBe("Update row")
+    expect(input.reviewContext.toolName).toBeUndefined()
+  })
+
   it("gives generated copy enough context to identify the request", async () => {
     const generateCardCopy = jest.fn().mockResolvedValue({
       title: "Run the release workflow",

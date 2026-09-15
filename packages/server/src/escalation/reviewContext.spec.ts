@@ -2,7 +2,9 @@ import type { ContextUser } from "@budibase/types"
 import {
   chunkText,
   formatToolParameters,
+  hasSharedReviewParameters,
   requesterLabel,
+  stringifyToolParameters,
 } from "./reviewContext"
 
 describe("escalation review context", () => {
@@ -38,6 +40,15 @@ describe("escalation review context", () => {
     expect(
       formatToolParameters({ input: { secret: "do-not-show" } })
     ).toBeUndefined()
+  })
+
+  it("treats missing or empty parameters as not shared", () => {
+    expect(hasSharedReviewParameters(undefined)).toBe(false)
+    expect(hasSharedReviewParameters("")).toBe(false)
+    expect(hasSharedReviewParameters([])).toBe(false)
+    expect(hasSharedReviewParameters([{ path: "/name", value: "Ada" }])).toBe(
+      true
+    )
   })
 
   it("projects nested paths and preserves selected secret-like values", () => {
@@ -99,13 +110,9 @@ describe("escalation review context", () => {
     })
     expect(formatted?.[1].value).toContain("[TRUNCATED:")
     expect(formatted?.[1].value).toContain("[CIRCULAR]")
-    expect(
-      formatted?.reduce(
-        (length, parameter) =>
-          length + parameter.path.length + parameter.value.length,
-        0
-      )
-    ).toBeLessThanOrEqual(24_000)
+    expect(stringifyToolParameters(formatted ?? []).length).toBeLessThanOrEqual(
+      24_000
+    )
   })
 
   it("keeps every selected path within the total budget", () => {
@@ -118,13 +125,9 @@ describe("escalation review context", () => {
 
     const paths = Object.keys(parameters).map(key => `/${key}`)
     const formatted = formatToolParameters({ input: parameters, paths })
-    expect(
-      formatted?.reduce(
-        (length, parameter) =>
-          length + parameter.path.length + parameter.value.length,
-        0
-      )
-    ).toBeLessThanOrEqual(24_000)
+    expect(stringifyToolParameters(formatted ?? []).length).toBeLessThanOrEqual(
+      24_000
+    )
     Object.keys(parameters).forEach(key =>
       expect(formatted).toContainEqual(
         expect.objectContaining({ path: `/${key}` })

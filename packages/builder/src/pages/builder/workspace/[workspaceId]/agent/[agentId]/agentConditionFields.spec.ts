@@ -57,4 +57,19 @@ describe("review parameter paths", () => {
       })
     ).toEqual([{ path: "/data/name", label: "name" }])
   })
+
+  it("includes row identity fields for update-row tools", () => {
+    expect(
+      getToolReviewFields({
+        tool: { ...tool, action: ToolAction.UPDATE_ROW },
+        tables: [table],
+        queries: [],
+        automations: [],
+      })
+    ).toEqual([
+      { path: "/rowId", label: "Row ID" },
+      { path: "/rowRev", label: "Row revision" },
+      { path: "/data/name", label: "name" },
+    ])
+  })
 })

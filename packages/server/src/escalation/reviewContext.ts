@@ -1,4 +1,8 @@
-import type { ContextUser, EscalationReviewParameter } from "@budibase/types"
+import type {
+  ContextUser,
+  EscalationReviewContext,
+  EscalationReviewParameter,
+} from "@budibase/types"
 
 const MAX_DEPTH = 10
 const MAX_STRING_LENGTH = 10_000
@@ -133,6 +137,13 @@ const valueAtPointer = (input: unknown, path: string): unknown => {
   }
   return value
 }
+
+export const hasSharedReviewParameters = (
+  parameters: EscalationReviewContext["parameters"]
+): parameters is string | EscalationReviewParameter[] =>
+  typeof parameters === "string"
+    ? parameters.length > 0
+    : Boolean(parameters?.length)
 
 // Give each selected path a share of the display budget so every configured
 // path remains visible even when an earlier value is very large.

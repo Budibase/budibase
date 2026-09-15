@@ -241,6 +241,8 @@ export const createEscalationGateRuntime = ({
       input,
       paths: rule.reviewParameterPaths,
     })
+    const actionLabel = truncateReviewField(label)
+    const toolDisplay = truncateReviewField(displayName ?? label)
     let title = `${APPROVAL_REQUIRED_TITLE_PREFIX} ${label}`
     let summary = summariseArgs(label, parameters)
     try {
@@ -270,8 +272,8 @@ export const createEscalationGateRuntime = ({
       reviewContext: {
         requestedBy: truncateReviewField(requestedBy),
         operation: truncateReviewField(operation.name),
-        action: truncateReviewField(label),
-        toolName: truncateReviewField(displayName ?? label),
+        action: actionLabel,
+        ...(toolDisplay !== actionLabel && { toolName: toolDisplay }),
         ...(parameters && { parameters }),
       },
       delay: (notifications.delay ?? DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
