@@ -26,7 +26,7 @@
 
   const updateAllowedOrigins = async origins => {
     try {
-      await workspaceStore.updateApp({ embedAllowedOrigins: origins })
+      await workspaceStore.updateWorkspace({ embedAllowedOrigins: origins })
       notifications.success("Allowed domains updated")
     } catch (error) {
       notifications.error("Error updating allowed domains")
@@ -95,7 +95,7 @@
         issuer: ssoIssuer || undefined,
         emailClaim: ssoEmailClaim || undefined,
       }
-      await workspaceStore.updateApp({ embedSSO: config })
+      await workspaceStore.updateWorkspace({ embedSSO: config })
       originalAlgorithm = ssoAlgorithm
       if (ssoKey) {
         ssoKeySet = true

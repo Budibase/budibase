@@ -7,7 +7,7 @@ import { Pages } from "./pages"
 import { AdminState } from "@/stores/portal/admin"
 import { WorkspaceMetaState } from "@/stores/builder/workspace"
 import { PortalWorkspacesStore } from "@/stores/portal/workspaces"
-import { StoreApp } from "@/types"
+import { StoreWorkspace } from "@/types"
 import { aiConfigsStore } from "@/stores/portal"
 import { get } from "svelte/store"
 
@@ -240,8 +240,11 @@ export const workspaceRoutes = (
     return []
   }
   const isCreator = user != null && sdk.users.canCreateApps(user)
-  const getBackupErrors = (apps: StoreApp[], appId: string) => {
-    const target = apps.find(app => app.devId === appId)
+  const getBackupErrors = (
+    workspaces: StoreWorkspace[],
+    workspaceId: string
+  ) => {
+    const target = workspaces.find(workspace => workspace.devId === workspaceId)
     return target?.backupErrors || {}
   }
 
