@@ -9,6 +9,7 @@ import type { Table } from "@budibase/types"
 import {
   getToolReviewFields,
   normalizeReviewParameterPaths,
+  sanitizeReviewParameterPaths,
   withSelectedReviewFields,
 } from "./agentConditionFields"
 import type { AgentTool } from "./toolTypes"
@@ -48,7 +49,7 @@ describe("review parameter paths", () => {
     ).toEqual(["/second", "/first"])
   })
 
-  it("excludes linked fields from the fields shareable with reviewers", () => {
+  it("marks linked fields as blocked from sharing with reviewers", () => {
     expect(
       getToolReviewFields({
         tool,
@@ -56,19 +57,42 @@ describe("review parameter paths", () => {
         queries: [],
         automations: [],
       })
-    ).toEqual([{ path: "/data/name", label: "name" }])
+    ).toEqual([
+      { path: "/data/name", label: "name" },
+      { path: "/data/company", label: "company", blocked: true },
+    ])
   })
 
-  it("keeps selected paths that are no longer in the known field list", () => {
+  it("keeps unknown selected paths but excludes known blocked fields", () => {
     expect(
       withSelectedReviewFields({
-        fields: [{ path: "/data/name", label: "name" }],
-        selected: [" /data/name ", "/inputs/release_notes", "/data/name"],
+        fields: [
+          { path: "/data/name", label: "name" },
+          { path: "/data/company", label: "company", blocked: true },
+        ],
+        selected: [
+          " /data/name ",
+          "/data/company",
+          "/inputs/release_notes",
+          "/data/name",
+        ],
       })
     ).toEqual([
       { path: "/data/name", label: "name" },
       { path: "/inputs/release_notes", label: "/inputs/release_notes" },
     ])
+  })
+
+  it("removes blocked paths while preserving unknown selected paths", () => {
+    expect(
+      sanitizeReviewParameterPaths({
+        fields: [
+          { path: "/data/name", label: "name" },
+          { path: "/data/company", label: "company", blocked: true },
+        ],
+        selected: [" /data/company ", "/legacy/path", "/data/name"],
+      })
+    ).toEqual(["/legacy/path", "/data/name"])
   })
 
   it("includes row identity fields for update-row tools", () => {
@@ -83,6 +107,7 @@ describe("review parameter paths", () => {
       { path: "/rowId", label: "Row ID" },
       { path: "/rowRev", label: "Row revision" },
       { path: "/data/name", label: "name" },
+      { path: "/data/company", label: "company", blocked: true },
     ])
   })
 })
