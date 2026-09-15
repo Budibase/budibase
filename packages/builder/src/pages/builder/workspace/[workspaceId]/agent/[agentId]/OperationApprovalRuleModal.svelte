@@ -21,7 +21,6 @@
   import {
     MAX_REVIEW_PARAMETER_PATHS,
     normalizeReviewParameterPaths,
-    sanitizeReviewParameterPaths,
     withSelectedReviewFields,
     type ConditionField,
     type ReviewField,
@@ -93,10 +92,9 @@
           : condition.value,
       noValue: NO_VALUE_OPERATORS.has(condition.operator),
     }))
-    reviewParameterPaths = sanitizeReviewParameterPaths({
-      fields: reviewFields,
-      selected: options.rule?.reviewParameterPaths ?? [],
-    })
+    reviewParameterPaths = normalizeReviewParameterPaths(
+      options.rule?.reviewParameterPaths ?? []
+    )
     modal?.show()
   }
 
@@ -108,10 +106,7 @@
 
   export const updateReviewFields = (next: ReviewField[]) => {
     reviewFields = next
-    reviewParameterPaths = sanitizeReviewParameterPaths({
-      fields: reviewFields,
-      selected: reviewParameterPaths,
-    })
+    reviewParameterPaths = normalizeReviewParameterPaths(reviewParameterPaths)
   }
 
   const reviewSelectionValid = $derived(
@@ -293,7 +288,7 @@
       {:else}
         {#if conditions.length}
           <div class="conditions-list">
-            {#each conditions as condition, index}
+            {#each conditions as condition, index (index)}
               <div class="condition-row">
                 <Select
                   size="M"

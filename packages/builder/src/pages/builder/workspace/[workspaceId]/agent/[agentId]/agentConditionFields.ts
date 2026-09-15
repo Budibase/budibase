@@ -3,7 +3,6 @@ import {
   BasicOperator,
   ConditionRangeOperator,
   FieldType,
-  isRelationshipField,
   ToolAction,
   ToolType,
 } from "@budibase/types"
@@ -75,7 +74,6 @@ export interface ConditionField {
 export interface ReviewField {
   path: string
   label: string
-  blocked?: boolean
 }
 
 export const MAX_REVIEW_PARAMETER_PATHS = 40
@@ -92,26 +90,10 @@ export const withSelectedReviewFields = ({
   selected: string[]
 }): ReviewField[] => {
   const known = new Set(fields.map(field => field.path))
-  const shareable = fields.filter(field => !field.blocked)
   const extras = normalizeReviewParameterPaths(selected)
     .filter(path => !known.has(path))
     .map(path => ({ path, label: path }))
-  return extras.length ? [...shareable, ...extras] : shareable
-}
-
-export const sanitizeReviewParameterPaths = ({
-  fields,
-  selected,
-}: {
-  fields: ReviewField[]
-  selected: string[]
-}) => {
-  const blocked = new Set(
-    fields.filter(field => field.blocked).map(field => field.path)
-  )
-  return normalizeReviewParameterPaths(selected).filter(
-    path => !blocked.has(path)
-  )
+  return extras.length ? [...fields, ...extras] : fields
 }
 
 const pointerSegment = (value: string) =>
@@ -225,13 +207,11 @@ export const getToolReviewFields = ({
     const table = tables.find(candidate => candidate._id === tool.sourceId)
     const fields = Object.entries(table?.schema || {}).map(([name, field]) => ({
       path: `/data/${pointerSegment(name)}`,
-      label: name,
-      ...(isRelationshipField(field) ? { blocked: true } : {}),
+      label: field.name || name,
     }))
     return tool.action === ToolAction.UPDATE_ROW
       ? [
           { path: "/rowId", label: "Row ID" },
-          { path: "/rowRev", label: "Row revision" },
           ...fields,
         ]
       : fields

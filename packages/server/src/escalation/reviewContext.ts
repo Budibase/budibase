@@ -150,9 +150,11 @@ export const hasSharedReviewParameters = (
 export const formatToolParameters = ({
   input,
   paths,
+  terminalValues,
 }: {
   input: unknown
   paths?: string[]
+  terminalValues?: Record<string, string>
 }): EscalationReviewParameter[] | undefined => {
   const uniquePaths = [
     ...new Set(paths?.map(path => path.trim()).filter(Boolean)),
@@ -163,7 +165,9 @@ export const formatToolParameters = ({
 
   const entries = uniquePaths.map(path => [
     path,
-    prepareForDisplay(valueAtPointer(input, path), new WeakSet()),
+    terminalValues && Object.prototype.hasOwnProperty.call(terminalValues, path)
+      ? terminalValues[path]
+      : prepareForDisplay(valueAtPointer(input, path), new WeakSet()),
   ]) as [string, DisplayValue][]
   const separatorsLength = Math.max(0, entries.length - 1) * 2
   const labelsLength = entries.reduce(

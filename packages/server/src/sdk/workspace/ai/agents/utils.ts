@@ -274,6 +274,7 @@ export async function buildPromptAndTools(
               })
             : tool.readableName,
           sourceId: tool.sourceId,
+          sourceType: tool.sourceType,
           action: tool.action,
           argsKey: resolveToolArgsKey(tool),
           rules: config.executionRules,
