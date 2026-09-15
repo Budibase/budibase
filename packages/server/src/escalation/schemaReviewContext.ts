@@ -100,7 +100,9 @@ const attachmentNames = (value: unknown): string =>
         return identifier(item)
       }
       const attachment = item as Record<string, unknown>
-      return identifier(attachment.name ?? attachment.filename ?? attachment.key)
+      return identifier(
+        attachment.name ?? attachment.filename ?? attachment.key
+      )
     })
     .join(", ")
 

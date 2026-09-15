@@ -11,8 +11,8 @@
     ChatConversation,
     DraftChatConversation,
     AgentMessageMetadata,
+    EscalationContextDoc,
     EscalationReviewContext,
-    EscalationResult,
     EscalationRespondResult,
   } from "@budibase/types"
   import { ApprovalToolResultStatus } from "@budibase/types"
@@ -44,7 +44,10 @@
     // Live resolution per escalationId (from the poll) - drives the card state.
     escalationState?: Record<
       string,
-      EscalationResult & { reviewContext?: EscalationReviewContext }
+      {
+        resolution: EscalationContextDoc["resolution"]
+        reviewContext?: EscalationReviewContext
+      }
     >
     // Dev-only: show the inline Approve/Reject buttons on the escalation card.
     showInlineApproval?: boolean

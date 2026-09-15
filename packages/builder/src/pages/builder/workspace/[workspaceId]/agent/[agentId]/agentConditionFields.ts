@@ -210,10 +210,7 @@ export const getToolReviewFields = ({
       label: field.name || name,
     }))
     return tool.action === ToolAction.UPDATE_ROW
-      ? [
-          { path: "/rowId", label: "Row ID" },
-          ...fields,
-        ]
+      ? [{ path: "/rowId", label: "Row ID" }, ...fields]
       : fields
   }
 
