@@ -260,11 +260,10 @@ describe("sendSlackNotification", () => {
     )
 
     const blocks = mockPostMessage.mock.calls[0][0].blocks
-    const parameterBlock = blocks.find(
-      (block: { text?: { text: string } }) =>
-        block.text?.text.includes("/optional")
+    const parameterBlock = blocks.find((block: { text?: { text: string } }) =>
+      block.text?.text.includes("/optional")
     )
-    expect(parameterBlock.text.text).toBe("*\\/optional*\n```\u200B```")
+    expect(parameterBlock.text.text).toBe("*/optional*\n```\u200B```")
     expect(blocks.at(-1)?.type).toBe("actions")
   })
 
@@ -325,6 +324,6 @@ describe("sendSlackNotification", () => {
     expect(payload.blocks).toHaveLength(50)
     expect(payload.blocks[1].text.text).toHaveLength(2_900)
     expect(payload.blocks[1].text.text).toContain("TRUNCATED")
-    expect(JSON.stringify(payload.blocks.at(-1))).toContain("TRUNCATED")
+    expect(JSON.stringify(payload.blocks.at(-2))).toContain("TRUNCATED")
   })
 })

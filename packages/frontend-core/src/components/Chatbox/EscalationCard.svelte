@@ -250,6 +250,8 @@
     gap: var(--spacing-xs);
   }
   .escalation-card-parameters {
+    box-sizing: content-box;
+    min-height: 12px;
     max-height: 360px;
     margin: 0;
     padding: var(--spacing-s);
@@ -260,7 +262,7 @@
     color: var(--spectrum-global-color-gray-800);
     font-family: monospace;
     font-size: 12px;
-    line-height: 1.5;
+    line-height: 16px;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
