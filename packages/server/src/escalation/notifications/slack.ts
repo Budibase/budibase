@@ -86,7 +86,7 @@ const buildEscalationBlocks = ({
       type: "section",
       text: {
         type: "plain_text",
-        text: titleText,
+        text: truncateReviewField(titleText, 2_900),
       },
     })
     blocks.push({

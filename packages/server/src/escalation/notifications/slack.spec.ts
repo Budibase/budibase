@@ -247,6 +247,7 @@ describe("sendSlackNotification", () => {
 
   it("keeps escaped parameters within Slack's block limit", async () => {
     const { contextDoc, notifDoc, globalUserId } = buildDocs()
+    contextDoc.title = "x".repeat(4_000)
     contextDoc.reviewContext = {
       requestedBy: "Test User (test@example.com)",
       operation: "Prepare Cloud release",
@@ -262,6 +263,8 @@ describe("sendSlackNotification", () => {
 
     const payload = mockPostMessage.mock.calls[0][0]
     expect(payload.blocks).toHaveLength(50)
+    expect(payload.blocks[1].text.text).toHaveLength(2_900)
+    expect(payload.blocks[1].text.text).toContain("TRUNCATED")
     expect(JSON.stringify(payload.blocks.at(-1))).toContain("TRUNCATED")
   })
 })
