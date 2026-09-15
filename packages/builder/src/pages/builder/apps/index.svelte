@@ -46,11 +46,11 @@
   $: userApps = $clientAppsStore.apps
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
-  function getUrl(app: EnrichedWorkspace | PublishedWorkspaceData) {
-    if (app.url) {
-      return `/app${app.url}`
+  function getUrl(workspace: EnrichedWorkspace | PublishedWorkspaceData) {
+    if (workspace.url) {
+      return `/app${workspace.url}`
     } else {
-      return `/${app.prodId}`
+      return `/${workspace.prodId}`
     }
   }
 

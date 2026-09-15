@@ -77,8 +77,11 @@
   $: backupErrors = getBackupErrors($enrichedApps || [], workspaceId)
   $: backupErrorCount = Object.keys(backupErrors).length
 
-  const getBackupErrors = (apps: EnrichedWorkspace[], workspaceId: string) => {
-    const target = apps.find(app => app.devId === workspaceId)
+  const getBackupErrors = (
+    workspaces: EnrichedWorkspace[],
+    workspaceId: string
+  ) => {
+    const target = workspaces.find(workspace => workspace.devId === workspaceId)
     return target?.backupErrors || {}
   }
 

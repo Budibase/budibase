@@ -240,8 +240,11 @@ export const workspaceRoutes = (
     return []
   }
   const isCreator = user != null && sdk.users.canCreateApps(user)
-  const getBackupErrors = (apps: StoreWorkspace[], appId: string) => {
-    const target = apps.find(app => app.devId === appId)
+  const getBackupErrors = (
+    workspaces: StoreWorkspace[],
+    workspaceId: string
+  ) => {
+    const target = workspaces.find(workspace => workspace.devId === workspaceId)
     return target?.backupErrors || {}
   }
 

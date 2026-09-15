@@ -86,29 +86,29 @@
   }
 
   const buildPluginUsageMap = (
-    apps: StoreWorkspace[]
+    workspaces: StoreWorkspace[]
   ): Map<string, string[]> => {
     const usage = new Map<string, Set<string>>()
-    for (const app of apps || []) {
-      if (!app?.name || !Array.isArray(app.usedPlugins)) {
+    for (const workspace of workspaces || []) {
+      if (!workspace?.name || !Array.isArray(workspace.usedPlugins)) {
         continue
       }
-      for (const plugin of app.usedPlugins) {
+      for (const plugin of workspace.usedPlugins) {
         if (!plugin?._id) {
           continue
         }
         if (!usage.has(plugin._id)) {
           usage.set(plugin._id, new Set())
         }
-        usage.get(plugin._id)?.add(app.name)
+        usage.get(plugin._id)?.add(workspace.name)
       }
     }
 
     const usageMap = new Map<string, string[]>()
-    for (const [pluginId, appNames] of usage.entries()) {
+    for (const [pluginId, workspaceNames] of usage.entries()) {
       usageMap.set(
         pluginId,
-        [...appNames].sort((a, b) => a.localeCompare(b))
+        [...workspaceNames].sort((a, b) => a.localeCompare(b))
       )
     }
     return usageMap
