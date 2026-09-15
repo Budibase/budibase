@@ -1,3 +1,5 @@
+import { automations } from "@budibase/shared-core"
+import { ToolExecutionPrincipal } from "@budibase/types"
 import { run } from "../../automations/steps/ai/agent"
 import sdk from "../../sdk"
 
@@ -135,6 +137,92 @@ describe("automation agent step", () => {
         latestQuestion: "Create the row",
         user: expect.objectContaining({ roleId: "ADMIN" }),
         promptMode: "automation",
+      })
+    )
+  })
+
+  it("uses an admin identity when explicitly configured", async () => {
+    await run({
+      inputs: {
+        agentId: "agent-id",
+        prompt: "Create the row",
+        executionPrincipal: ToolExecutionPrincipal.ADMIN,
+      },
+      appId: "test",
+      context: {},
+      emitter,
+    })
+
+    expect(prepareAgentChatRunMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user: expect.objectContaining({ roleId: "ADMIN" }),
+      })
+    )
+  })
+
+  it("uses the triggering user when configured to run as requester", async () => {
+    await run({
+      inputs: {
+        agentId: "agent-id",
+        prompt: "Create the row",
+        executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+      },
+      appId: "test",
+      context: {
+        user: {
+          _id: "user-id",
+          globalId: "global-user-id",
+          userId: "external-user-id",
+          email: "requester@example.com",
+          roleId: "BASIC",
+        },
+      },
+      emitter,
+    })
+
+    expect(prepareAgentChatRunMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user: expect.objectContaining({
+          _id: "user-id",
+          globalId: "global-user-id",
+          userId: "external-user-id",
+          email: "requester@example.com",
+          roleId: "BASIC",
+          tenantId: "tenant-id",
+        }),
+      })
+    )
+  })
+
+  it("fails requester execution when the trigger has no authenticated user", async () => {
+    const result = await run({
+      inputs: {
+        agentId: "agent-id",
+        prompt: "Create the row",
+        executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+      },
+      appId: "test",
+      context: {},
+      emitter,
+    })
+
+    expect(result).toEqual({
+      success: false,
+      response:
+        "Agent step failed: This automation was not triggered by an authenticated user",
+    })
+    expect(prepareAgentChatRunMock).not.toHaveBeenCalled()
+  })
+
+  it("defaults new agent steps to requester execution", () => {
+    const definition = automations.steps.agent.definition
+
+    expect(definition.inputs).toEqual({
+      executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+    })
+    expect(definition.schema.inputs.properties.executionPrincipal).toEqual(
+      expect.objectContaining({
+        enum: [ToolExecutionPrincipal.REQUESTER, ToolExecutionPrincipal.ADMIN],
       })
     )
   })

@@ -15,7 +15,7 @@ vi.mock("@/stores/portal", async () => {
 vi.mock("@/stores/builder", async () => {
   return {
     workspaceAppStore: writable({}),
-    appStore: writable({}),
+    workspaceStore: writable({}),
   }
 })
 

@@ -1,13 +1,7 @@
-import {
-  context,
-  features,
-  HTTPError,
-  isHTTPError,
-} from "@budibase/backend-core"
+import { context, HTTPError, isHTTPError } from "@budibase/backend-core"
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
-  FeatureFlag,
   type ChatConversationChannel,
   type Ctx,
   type MSTeamsActivity,
@@ -546,9 +540,6 @@ export async function MSTeamsWebhook(
           }
 
           const result = await context.doInContext(appId, async () => {
-            if (!(await features.isEnabled(FeatureFlag.ESCALATION))) {
-              return { status: "closed" as const }
-            }
             return sdk.escalations.respond(
               escalationId,
               notificationDocId,
