@@ -2,6 +2,7 @@ import { get } from "svelte/store"
 import { API } from "@/api"
 import {
   type Agent,
+  type EscalationReviewContext,
   type EscalationResponse,
   type EscalationResult,
   EscalationNotificationChannel,
@@ -31,6 +32,7 @@ export const configuredEscalationProviders = (
 
 export interface EscalationEntry extends EscalationResult {
   escalationId: string
+  reviewContext?: EscalationReviewContext
 }
 
 interface EscalationsState {
@@ -60,6 +62,33 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
       },
     }))
     this.ensurePolling()
+    this.loadContext(escalationId).catch(() => {})
+    this.tick().catch(() => {})
+  }
+
+  private async loadContext(escalationId: string) {
+    try {
+      const context = await API.fetchEscalationContext(escalationId)
+      this.update(state => {
+        const current = state.escalations[escalationId]
+        if (!current) {
+          return state
+        }
+        return {
+          escalations: {
+            ...state.escalations,
+            [escalationId]: {
+              ...current,
+              title: context.title,
+              summary: context.summary,
+              reviewContext: context.reviewContext,
+            },
+          },
+        }
+      })
+    } catch (error) {
+      console.warn("Escalation context fetch failed", error)
+    }
   }
 
   async resolve(escalationId: string, response: EscalationResponse) {
@@ -124,7 +153,11 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
       this.update(state => {
         const escalations = { ...state.escalations }
         for (const { escalationId, result } of results) {
-          escalations[escalationId] = { escalationId, ...result }
+          escalations[escalationId] = {
+            ...escalations[escalationId],
+            escalationId,
+            ...result,
+          }
         }
         return { escalations }
       })

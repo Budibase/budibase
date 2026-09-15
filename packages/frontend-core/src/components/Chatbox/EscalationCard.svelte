@@ -1,10 +1,14 @@
 <script lang="ts">
   import { Body, Button, Icon } from "@budibase/bbui"
-  import type { EscalationContextDoc } from "@budibase/types"
+  import type {
+    EscalationContextDoc,
+    EscalationReviewContext,
+  } from "@budibase/types"
 
   interface Props {
     title?: string
     summary?: string
+    reviewContext?: EscalationReviewContext
     // Live resolution from the poll (not the frozen tool output).
     resolution: EscalationContextDoc["resolution"]
     // Message relayed from resolve ("Response recorded." etc.) - set as soon as
@@ -20,6 +24,7 @@
   let {
     title,
     summary,
+    reviewContext,
     resolution,
     statusMessage,
     showApproval = false,
@@ -35,11 +40,23 @@
 <div class="escalation-card" aria-live="polite">
   <div class="escalation-card-header">
     <Icon name={isResolved ? "check-circle" : "clock"} size="M" />
-    <span class="escalation-card-title">{title || "Approval required"}</span>
+    <span class="escalation-card-heading">Approval required</span>
     {#if showApproval && !isResolved}
       <span class="escalation-card-badge">Test mode</span>
     {/if}
   </div>
+
+  {#if title}
+    <div class="escalation-card-title">{title}</div>
+  {/if}
+
+  {#if reviewContext}
+    <Body size="S" color="var(--spectrum-global-color-gray-700)">
+      {reviewContext.requestedBy} is requesting approval for
+      <strong>{reviewContext.action}</strong> as part of
+      <strong>{reviewContext.operation}</strong>.
+    </Body>
+  {/if}
 
   {#if summary}
     <Body size="S" color="var(--spectrum-global-color-gray-700)">
@@ -68,6 +85,20 @@
       Awaiting a human response.
     </Body>
   {/if}
+
+  {#if reviewContext}
+    <div class="escalation-card-divider"></div>
+    <div class="escalation-card-parameters-heading">
+      <span>Complete tool parameters</span>
+      {#if reviewContext.toolName}
+        <code>{reviewContext.toolName}</code>
+      {/if}
+    </div>
+    <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+      Sensitive values are redacted.
+    </Body>
+    <pre class="escalation-card-parameters">{reviewContext.parameters}</pre>
+  {/if}
 </div>
 
 <style>
@@ -89,10 +120,15 @@
     align-items: center;
     gap: var(--spacing-s);
   }
-  .escalation-card-title {
+  .escalation-card-heading,
+  .escalation-card-title,
+  .escalation-card-parameters-heading {
     font-weight: 600;
     font-size: 14px;
     color: var(--spectrum-global-color-gray-900);
+  }
+  .escalation-card-title {
+    margin-top: var(--spacing-xs);
   }
   .escalation-card-badge {
     margin-left: auto;
@@ -109,5 +145,37 @@
     display: flex;
     gap: var(--spacing-s);
     margin-top: var(--spacing-xs);
+  }
+  .escalation-card-divider {
+    height: 1px;
+    margin: var(--spacing-xs) calc(-1 * var(--spacing-m));
+    background: var(--spectrum-global-color-gray-300);
+  }
+  .escalation-card-parameters-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+  .escalation-card-parameters-heading code {
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: var(--spectrum-global-color-gray-200);
+    font-size: 12px;
+    font-weight: 400;
+  }
+  .escalation-card-parameters {
+    max-height: 360px;
+    margin: 0;
+    padding: var(--spacing-s);
+    overflow: auto;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 4px;
+    background: var(--spectrum-global-color-gray-100);
+    color: var(--spectrum-global-color-gray-800);
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
 </style>
