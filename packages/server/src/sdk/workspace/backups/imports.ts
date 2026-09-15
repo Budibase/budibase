@@ -196,6 +196,7 @@ export interface ImportAppOpts {
   importObjStoreContents?: boolean
   objectStoreAppId?: string
   preserveLiteLLMConfig?: boolean
+  reconcileLiteLLMModels?: boolean
 }
 
 async function sanitizeLiteLLMImportData(db: Database) {
@@ -254,6 +255,7 @@ export const importApp: ImportWorkspaceFn = async (
     updateAttachmentColumns: true,
     importObjStoreContents: true,
     preserveLiteLLMConfig: false,
+    reconcileLiteLLMModels: true,
     ...opts,
   }
   const prodAppId = dbCore.getProdWorkspaceID(appId)
@@ -362,7 +364,9 @@ export const importApp: ImportWorkspaceFn = async (
     await sanitizeLiteLLMImportData(db)
   }
 
-  await sdk.ai.configs.reconcileLiteLLMModels()
+  if (importOpts.reconcileLiteLLMModels) {
+    await sdk.ai.configs.reconcileLiteLLMModels()
+  }
 
   // clear up afterward
   if (tmpPath) {
