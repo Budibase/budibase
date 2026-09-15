@@ -19,7 +19,7 @@ const escapeMrkdwn = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 
 const PARAMETER_CHUNK_LENGTH = 2_500
-const MAX_PARAMETER_BLOCKS = 44
+const MAX_PARAMETER_BLOCKS = 43
 
 const displayTitle = (title: string) =>
   title.startsWith(`${APPROVAL_REQUIRED_TITLE_PREFIX} `)
@@ -80,28 +80,35 @@ const buildEscalationBlocks = ({
       text: { type: "plain_text", text: "Approval required" },
     },
   ]
-  const titleText = `*${escapeMrkdwn(displayTitle(title))}*`
+  const titleText = displayTitle(title)
   if (reviewContext) {
     blocks.push({
       type: "section",
       text: {
-        type: "mrkdwn",
+        type: "plain_text",
         text: titleText,
       },
     })
     blocks.push({
       type: "section",
       text: {
-        type: "mrkdwn",
+        type: "plain_text",
         text: truncateReviewField(
-          `${escapeMrkdwn(reviewContext.requestedBy)} is requesting ` +
-            `approval for *${escapeMrkdwn(reviewContext.action)}* as part ` +
-            `of *${escapeMrkdwn(reviewContext.operation)}*.` +
-            (summary ? `\n${escapeMrkdwn(summary)}` : ""),
+          `${reviewContext.requestedBy} is requesting approval for ` +
+            `${reviewContext.action} as part of ${reviewContext.operation}.`,
           2_900
         ),
       },
     })
+    if (summary) {
+      blocks.push({
+        type: "section",
+        text: {
+          type: "plain_text",
+          text: truncateReviewField(summary, 2_900),
+        },
+      })
+    }
     blocks.push(decisionBlock)
     blocks.push({ type: "divider" })
     blocks.push({
@@ -136,9 +143,9 @@ const buildEscalationBlocks = ({
     blocks.push({
       type: "section",
       text: {
-        type: "mrkdwn",
+        type: "plain_text",
         text: truncateReviewField(
-          summary ? `${titleText}\n${escapeMrkdwn(summary)}` : titleText,
+          summary ? `${titleText}\n${summary}` : titleText,
           2_900
         ),
       },

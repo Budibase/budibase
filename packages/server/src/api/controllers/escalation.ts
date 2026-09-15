@@ -22,7 +22,11 @@ export async function findContextDoc(ctx: UserCtx) {
   if (!doc) {
     ctx.throw(404, `Escalation context doc not found: ${id}`)
   }
-  ctx.body = doc
+  ctx.body = {
+    title: doc.title,
+    summary: doc.summary,
+    reviewContext: doc.reviewContext,
+  }
 }
 
 export async function result(ctx: UserCtx) {

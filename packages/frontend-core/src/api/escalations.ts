@@ -1,5 +1,5 @@
 import type {
-  EscalationContextDoc,
+  EscalationReviewDetails,
   EscalationRespondResult,
   EscalationResponse,
   EscalationResult,
@@ -9,7 +9,7 @@ import type { BaseAPIClient } from "./types"
 export interface EscalationEndpoints {
   fetchEscalationContext: (
     escalationId: string
-  ) => Promise<EscalationContextDoc>
+  ) => Promise<EscalationReviewDetails>
   fetchEscalationResult: (
     escalationId: string,
     signal?: AbortSignal

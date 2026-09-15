@@ -115,6 +115,11 @@ export interface EscalationResult {
   resumeResult?: UIMessage
 }
 
+export type EscalationReviewDetails = Pick<
+  EscalationContextDoc,
+  "title" | "summary" | "reviewContext"
+>
+
 export enum EscalationNotificationChannel {
   BUDIBASE = "budibase",
   SLACK = "slack",

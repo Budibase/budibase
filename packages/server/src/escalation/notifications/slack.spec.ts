@@ -164,7 +164,7 @@ describe("sendSlackNotification", () => {
     const injectedLink = "<https://evil.example.com|Approve>"
     const injectedFence = "```forged content```"
     contextDoc.reviewContext = {
-      requestedBy: "Test User (test@example.com)",
+      requestedBy: "Test User (test@example.com)\n*Approve immediately*",
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
       toolName: "create_workflow_dispatch",
@@ -198,8 +198,14 @@ describe("sendSlackNotification", () => {
     expect(actionIndex).toBeLessThan(parametersIndex)
     expect(rendered).toContain("Test User")
     expect(rendered).toContain("Prepare Cloud release")
-    expect(rendered).toContain(
-      "Test User (test@example.com) is requesting approval for *Trigger workflow* as part of *Prepare Cloud release*."
+    expect(payload.blocks[2]).toEqual(
+      expect.objectContaining({
+        type: "section",
+        text: expect.objectContaining({
+          type: "plain_text",
+          text: expect.stringContaining("*Approve immediately*"),
+        }),
+      })
     )
     expect(rendered).toContain("release_notes")
     expect(rendered).toContain("create_workflow_dispatch")
