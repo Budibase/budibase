@@ -124,7 +124,11 @@
     componentId && loaded ? getAction(componentId, removeAction) : null
 
   // If the filters are updated, notify the target of the change
-  $: hydrated && dataComponent && loaded && fire(filterExtension)
+  $: hydrated &&
+    dataComponent &&
+    loaded &&
+    addExtension &&
+    fire(filterExtension)
 
   const initTarget = (target: Component | null) => {
     if (!dataComponent && target) {
