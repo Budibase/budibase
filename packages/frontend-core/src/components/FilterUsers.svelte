@@ -4,6 +4,7 @@
     fetchData,
     fetchUsersById,
     loadTranslationsByGroup,
+    Utils,
   } from "@budibase/frontend-core"
   import { createAPIClient } from "../api"
 
@@ -14,6 +15,7 @@
   export let disabled = false
   export let multiselect = false
 
+  let searchTerm = null
   let selectedCache = {}
   let loadingIds = new Set()
 
@@ -27,6 +29,7 @@
     },
   })
 
+  $: search(searchTerm || "")
   $: selectedIds = !value ? [] : Array.isArray(value) ? value : [value]
   $: pageIds = new Set(($fetch.rows || []).map(user => user._id))
   $: loadMissing(
@@ -42,6 +45,10 @@
 
   $: component = multiselect ? Multiselect : Select
   const pickerLabels = loadTranslationsByGroup("picker")
+
+  const search = Utils.debounce(term => {
+    fetch.update({ query: term ? { string: { email: term } } : {} })
+  }, 250)
 
   const loadMissing = async ids => {
     const wanted = ids.filter(id => !loadingIds.has(id))
@@ -79,5 +86,6 @@
     {disabled}
     searchPlaceholder={pickerLabels.searchPlaceholder}
     popoverAutoWidth
+    bind:searchTerm
   />
 </div>
