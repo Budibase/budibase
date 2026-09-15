@@ -200,7 +200,7 @@ describe("sendSlackNotification", () => {
       })
     )
     expect(actionIndex).toBeGreaterThan(0)
-    expect(actionIndex).toBeLessThan(parametersIndex)
+    expect(actionIndex).toBeGreaterThan(parametersIndex)
     expect(rendered).toContain("Test User")
     expect(rendered).toContain("Prepare Cloud release")
     expect(payload.blocks[2]).toEqual(
@@ -242,6 +242,30 @@ describe("sendSlackNotification", () => {
     expect(rendered).not.toContain("Tool parameters")
     expect(rendered).not.toContain("No tool parameters were shared.")
     expect(rendered).not.toContain("Sensitive values are redacted")
+  })
+
+  it("renders empty shared values without exposing empty markdown fences", async () => {
+    const { contextDoc, notifDoc, globalUserId } = buildDocs()
+    contextDoc.reviewContext = {
+      requestedBy: "Test User (test@example.com)",
+      operation: "Prepare Cloud release",
+      action: "Trigger workflow",
+      parameters: [{ path: "/optional", value: "" }],
+    }
+    await seedLinks(globalUserId)
+    mockAuthTest.mockResolvedValue({ ok: true, team_id: TEAM_RIGHT })
+
+    await config.doInContext(config.getDevWorkspaceId(), () =>
+      sendSlackNotification({ notifDoc, contextDoc })
+    )
+
+    const blocks = mockPostMessage.mock.calls[0][0].blocks
+    const parameterBlock = blocks.find(
+      (block: { text?: { text: string } }) =>
+        block.text?.text.includes("/optional")
+    )
+    expect(parameterBlock.text.text).toBe("*\\/optional*\n```\u200B```")
+    expect(blocks.at(-1)?.type).toBe("actions")
   })
 
   it("neutralizes a code fence split across parameter chunks", async () => {

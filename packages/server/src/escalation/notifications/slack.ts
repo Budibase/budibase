@@ -113,7 +113,6 @@ const buildEscalationBlocks = ({
         },
       })
     }
-    blocks.push(decisionBlock)
     if (hasSharedReviewParameters(reviewContext.parameters)) {
       blocks.push({ type: "divider" })
       blocks.push({
@@ -160,13 +159,14 @@ const buildEscalationBlocks = ({
               type: "mrkdwn",
               text:
                 (chunkIndex === 0 && path ? `*${path}*\n` : "") +
-                `\`\`\`${chunk}\`\`\``,
+                `\`\`\`${chunk || "\u200B"}\`\`\``,
             },
           })
         })
         remainingBlocks -= chunks.length
       })
     }
+    blocks.push(decisionBlock)
   } else {
     blocks.push({
       type: "section",
