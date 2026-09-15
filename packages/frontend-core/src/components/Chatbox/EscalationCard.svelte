@@ -62,6 +62,9 @@
       type="button"
       class="escalation-card-header escalation-card-toggle"
       aria-expanded={expanded}
+      aria-label={expanded
+        ? "Collapse approval details"
+        : "Expand approval details"}
       onclick={toggleDetails}
     >
       <Icon name={isResolved ? "check-circle" : "clock"} size="M" />
