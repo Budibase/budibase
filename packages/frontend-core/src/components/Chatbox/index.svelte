@@ -12,6 +12,7 @@
     DraftChatConversation,
     AgentMessageMetadata,
     EscalationContextDoc,
+    EscalationReviewContext,
     EscalationRespondResult,
   } from "@budibase/types"
   import { ApprovalToolResultStatus } from "@budibase/types"
@@ -43,7 +44,10 @@
     // Live resolution per escalationId (from the poll) - drives the card state.
     escalationState?: Record<
       string,
-      { resolution: EscalationContextDoc["resolution"] }
+      {
+        resolution: EscalationContextDoc["resolution"]
+        reviewContext?: EscalationReviewContext
+      }
     >
     // Dev-only: show the inline Approve/Reject buttons on the escalation card.
     showInlineApproval?: boolean
@@ -101,6 +105,9 @@
       escalationId,
       title: output?.title ?? input?.title,
       summary: output?.summary ?? input?.summary,
+      reviewContext: escalationId
+        ? escalationState?.[escalationId]?.reviewContext
+        : undefined,
       resolution:
         (escalationId && escalationState?.[escalationId]?.resolution) ||
         "pending",
@@ -607,25 +614,7 @@
             {#each message.parts ?? [] as part, partIndex}
               {#if isTextUIPart(part)}
                 <MarkdownViewer value={part.text} />
-              {:else if isToolUIPart(part) && isRaisedEscalation(part.output)}
-                {@const card = escalationCardProps(part)}
-                <EscalationCard
-                  title={card.title}
-                  summary={card.summary}
-                  resolution={card.resolution}
-                  statusMessage={card.escalationId
-                    ? resolveMessages[card.escalationId]
-                    : undefined}
-                  showApproval={showInlineApproval}
-                  resolving={!!card.escalationId &&
-                    !!resolvingEscalations[card.escalationId]}
-                  onApprove={() =>
-                    card.escalationId && handleResolve(card.escalationId, true)}
-                  onReject={() =>
-                    card.escalationId &&
-                    handleResolve(card.escalationId, false)}
-                />
-              {:else if isToolUIPart(part)}
+              {:else if isToolUIPart(part) && !isRaisedEscalation(part.output)}
                 {@const rawToolName = getToolName(part)}
                 {@const displayToolName = formatToolName(
                   rawToolName,
@@ -753,6 +742,28 @@
                 </ul>
               </div>
             {/if}
+            {#each message.parts ?? [] as part}
+              {#if isToolUIPart(part) && isRaisedEscalation(part.output)}
+                {@const card = escalationCardProps(part)}
+                <EscalationCard
+                  title={card.title}
+                  summary={card.summary}
+                  reviewContext={card.reviewContext}
+                  resolution={card.resolution}
+                  statusMessage={card.escalationId
+                    ? resolveMessages[card.escalationId]
+                    : undefined}
+                  showApproval={showInlineApproval}
+                  resolving={!!card.escalationId &&
+                    !!resolvingEscalations[card.escalationId]}
+                  onApprove={() =>
+                    card.escalationId && handleResolve(card.escalationId, true)}
+                  onReject={() =>
+                    card.escalationId &&
+                    handleResolve(card.escalationId, false)}
+                />
+              {/if}
+            {/each}
           </div>
         {/if}
       {/if}

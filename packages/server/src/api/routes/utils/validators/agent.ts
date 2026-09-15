@@ -55,6 +55,14 @@ const ESCALATION_RECIPIENT_SCHEMA = Joi.object({
 const TOOL_EXECUTION_RULE_SCHEMA = Joi.object({
   conditions: Joi.array().items(Joi.object()).optional(),
   policyId: Joi.string().required(),
+  reviewParameterPaths: Joi.array()
+    .items(
+      Joi.string()
+        .max(250)
+        .pattern(/^\/(?:[^~]|~[01])*$/)
+    )
+    .max(40)
+    .optional(),
 })
 
 const APPROVAL_POLICY_SCHEMA = Joi.object({

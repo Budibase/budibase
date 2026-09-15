@@ -71,6 +71,34 @@ export interface ConditionField {
   constraints?: FieldConstraints
 }
 
+export interface ReviewField {
+  path: string
+  label: string
+}
+
+export const MAX_REVIEW_PARAMETER_PATHS = 40
+
+export const normalizeReviewParameterPaths = (paths: string[]) => [
+  ...new Set(paths.map(path => path.trim()).filter(Boolean)),
+]
+
+export const withSelectedReviewFields = ({
+  fields,
+  selected,
+}: {
+  fields: ReviewField[]
+  selected: string[]
+}): ReviewField[] => {
+  const known = new Set(fields.map(field => field.path))
+  const extras = normalizeReviewParameterPaths(selected)
+    .filter(path => !known.has(path))
+    .map(path => ({ path, label: path }))
+  return extras.length ? [...fields, ...extras] : fields
+}
+
+const pointerSegment = (value: string) =>
+  value.replace(/~/g, "~0").replace(/\//g, "~1")
+
 const CONDITIONABLE_FIELD_TYPES = new Set<FieldType>([
   FieldType.STRING,
   FieldType.LONGFORM,
@@ -155,6 +183,56 @@ export const getToolConditionFields = ({
         return type ? [{ name, label: name, type }] : []
       }
     )
+  }
+
+  return []
+}
+
+export const getToolReviewFields = ({
+  tool,
+  tables,
+  queries,
+  automations,
+}: {
+  tool: AgentTool
+  tables: Table[]
+  queries: Query[]
+  automations: Automation[]
+}): ReviewField[] => {
+  if (!tool.sourceId) {
+    return []
+  }
+
+  if (isRowMutationTool(tool)) {
+    const table = tables.find(candidate => candidate._id === tool.sourceId)
+    const fields = Object.entries(table?.schema || {}).map(([name, field]) => ({
+      path: `/data/${pointerSegment(name)}`,
+      label: field.name || name,
+    }))
+    return tool.action === ToolAction.UPDATE_ROW
+      ? [{ path: "/rowId", label: "Row ID" }, ...fields]
+      : fields
+  }
+
+  if (isQueryToolType(tool.sourceType)) {
+    const query = queries.find(candidate => candidate._id === tool.sourceId)
+    return (query?.parameters || []).map(parameter => ({
+      path: `/${pointerSegment(parameter.name)}`,
+      label: parameter.name,
+    }))
+  }
+
+  if (isAutomationTriggerTool(tool)) {
+    const automation = automations.find(
+      candidate => candidate._id === tool.sourceId
+    )
+    const triggerInputs = automation?.definition?.trigger?.inputs as {
+      fields?: Record<string, AutomationIOType>
+    } | null
+    return Object.keys(triggerInputs?.fields || {}).map(name => ({
+      path: `/fields/${pointerSegment(name)}`,
+      label: name,
+    }))
   }
 
   return []

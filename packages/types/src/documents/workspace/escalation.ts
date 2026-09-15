@@ -48,6 +48,19 @@ export interface PendingToolCall {
   sourceId?: string
 }
 
+export interface EscalationReviewContext {
+  requestedBy: string
+  operation: string
+  action: string
+  toolName?: string
+  parameters?: string | EscalationReviewParameter[]
+}
+
+export interface EscalationReviewParameter {
+  path: string
+  value: string
+}
+
 export type ApprovedToolCall = Pick<
   PendingToolCall,
   "toolName" | "args" | "sourceId"
@@ -89,6 +102,7 @@ export interface EscalationContextDoc extends Document {
   // escalation trigger
   title?: string
   summary?: string
+  reviewContext?: EscalationReviewContext
   response?: EscalationResponse
   resolvedAt?: string
   isTest?: boolean
@@ -105,6 +119,11 @@ export interface EscalationResult {
   summary?: string
   resumeResult?: UIMessage
 }
+
+export type EscalationReviewDetails = Pick<
+  EscalationContextDoc,
+  "title" | "summary" | "reviewContext"
+>
 
 export enum EscalationNotificationChannel {
   BUDIBASE = "budibase",

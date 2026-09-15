@@ -7,6 +7,10 @@ import {
   ApprovalToolResultStatus,
   type AgentExecutionContext,
 } from "@budibase/types"
+import {
+  getReadableQueryToolBinding,
+  isQueryToolType,
+} from "@budibase/shared-core"
 import { ai } from "@budibase/pro"
 import {
   createKnowledgeFilesTool,
@@ -262,7 +266,15 @@ export async function buildPromptAndTools(
           operation,
           toolName: tool.name,
           readableName: tool.readableName,
+          displayName: isQueryToolType(tool.sourceType)
+            ? getReadableQueryToolBinding({
+                sourceType: tool.sourceType,
+                sourceLabel: tool.sourceLabel,
+                queryName: tool.readableName,
+              })
+            : tool.readableName,
           sourceId: tool.sourceId,
+          sourceType: tool.sourceType,
           action: tool.action,
           argsKey: resolveToolArgsKey(tool),
           rules: config.executionRules,

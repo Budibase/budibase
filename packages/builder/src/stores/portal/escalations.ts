@@ -2,6 +2,7 @@ import { get } from "svelte/store"
 import { API } from "@/api"
 import {
   type Agent,
+  type EscalationReviewContext,
   type EscalationResponse,
   type EscalationResult,
   EscalationNotificationChannel,
@@ -31,6 +32,7 @@ export const configuredEscalationProviders = (
 
 export interface EscalationEntry extends EscalationResult {
   escalationId: string
+  reviewContext?: EscalationReviewContext
 }
 
 interface EscalationsState {
@@ -60,6 +62,7 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
       },
     }))
     this.ensurePolling()
+    this.fetchContext(escalationId).catch(() => {})
   }
 
   async resolve(escalationId: string, response: EscalationResponse) {
@@ -100,6 +103,40 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
     }, POLL_INTERVAL_MS)
   }
 
+  // The review context exists before the escalation id reaches the client and
+  // never changes, so fetch it once and mark the attempt complete.
+  private async fetchContext(escalationId: string) {
+    const { signal } = this.abortController
+    let details
+    try {
+      details = await API.fetchEscalationContext(escalationId, signal)
+    } catch (error) {
+      if (signal.aborted) {
+        return
+      }
+      console.warn("Escalation context fetch failed", {
+        escalationId,
+        error,
+      })
+      return
+    }
+    if (signal.aborted) {
+      return
+    }
+    this.update(state => {
+      const entry = state.escalations[escalationId]
+      if (!entry) {
+        return state
+      }
+      return {
+        escalations: {
+          ...state.escalations,
+          [escalationId]: { ...entry, ...details },
+        },
+      }
+    })
+  }
+
   private async tick() {
     if (this.inFlight) {
       return
@@ -124,7 +161,15 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
       this.update(state => {
         const escalations = { ...state.escalations }
         for (const { escalationId, result } of results) {
-          escalations[escalationId] = { escalationId, ...result }
+          const entry = escalations[escalationId]
+          if (!entry) {
+            continue
+          }
+          escalations[escalationId] = {
+            ...entry,
+            ...result,
+            escalationId,
+          }
         }
         return { escalations }
       })

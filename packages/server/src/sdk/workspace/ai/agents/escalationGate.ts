@@ -9,6 +9,7 @@ import {
   ChatConversationChannel,
   ApprovalToolResultStatus,
   EscalationSource,
+  type EscalationReviewParameter,
   ResolutionStrategy,
   ToolExecutionRule,
   ToolAction,
@@ -21,6 +22,13 @@ import { APPROVAL_REQUIRED_TITLE_PREFIX } from "../../../../escalation/constants
 import sdk from "../../.."
 import { escalationProcessor } from "../../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../../escalation/resolutionStrategies"
+import {
+  formatToolParameters,
+  stringifyToolParameters,
+  truncateReviewField,
+} from "../../../../escalation/reviewContext"
+import { resolveSchemaReviewValues } from "../../../../escalation/schemaReviewContext"
+import { getFullUser } from "../../../../utilities/users"
 
 export const DEFAULT_ESCALATION_DELAY_SECONDS = 3600
 
@@ -31,12 +39,14 @@ export interface EscalationGateContext {
   channel?: ChatConversationChannel
   userId?: string
   requester?: AgentRequester
+  requesterLabel?: string
   getMessages: () => ModelMessage[]
   getRequestId: () => string | undefined
   executedApproval?: ApprovedToolCall
   generateCardCopy?: (input: {
     label: string
-    args: unknown
+    parameters?: EscalationReviewParameter[]
+    operation: string
   }) => Promise<{ title: string; summary: string } | undefined>
 }
 
@@ -45,7 +55,9 @@ interface CreateGateParams {
   operation: AgentOperation
   toolName: string
   readableName?: string
+  displayName?: string
   sourceId?: string
+  sourceType?: ToolType
   action?: ToolAction
   // Key of the args object holding the condition fields e.g "data"
   argsKey?: string
@@ -148,14 +160,15 @@ const resolvePolicy = (
 ): AgentOperationApprovalPolicy | undefined =>
   operation.approvalPolicies?.find(policy => policy.id === policyId)
 
-const summariseArgs = (label: string, input: unknown) => {
-  let args: string
-  try {
-    args = JSON.stringify(input)
-  } catch {
-    args = String(input)
-  }
-  const summary = `${label}: ${args}`
+// Generated and fallback copy only receive the values explicitly shared with
+// reviewers, never the complete invocation arguments.
+const summariseArgs = (
+  label: string,
+  parameters?: EscalationReviewParameter[]
+) => {
+  const summary = parameters
+    ? `${label}: ${stringifyToolParameters(parameters).replace(/\s+/g, " ")}`
+    : `${label} requires approval.`
   return summary.length > SUMMARY_MAX_LENGTH
     ? `${summary.slice(0, SUMMARY_MAX_LENGTH - 1)}…`
     : summary
@@ -174,7 +187,9 @@ export const createEscalationGateRuntime = ({
   operation,
   toolName,
   readableName,
+  displayName,
   sourceId,
+  sourceType,
   action,
   argsKey,
   rules,
@@ -225,12 +240,47 @@ export const createEscalationGateRuntime = ({
       throw new Error("escalation gate: missing workspace context")
     }
 
+    const requestedBy = gateContext.requesterLabel ?? "Unknown requester"
+    let terminalValues: Record<string, string> | undefined
+    if (
+      sourceId &&
+      (sourceType === ToolType.INTERNAL_TABLE ||
+        sourceType === ToolType.EXTERNAL_TABLE) &&
+      (action === ToolAction.CREATE_ROW || action === ToolAction.UPDATE_ROW)
+    ) {
+      try {
+        const table = await sdk.tables.getTable(sourceId)
+        terminalValues = await resolveSchemaReviewValues({
+          input,
+          paths: rule.reviewParameterPaths,
+          table,
+          resolvers: {
+            getTable: sdk.tables.getTable,
+            getLinkedRow: sdk.rows.find,
+            getUser: getFullUser,
+          },
+        })
+      } catch (error) {
+        console.warn("escalation gate: could not resolve reviewer values", {
+          toolName,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+    const parameters = formatToolParameters({
+      input,
+      paths: rule.reviewParameterPaths,
+      terminalValues,
+    })
+    const actionLabel = truncateReviewField(label)
+    const toolDisplay = truncateReviewField(displayName ?? label)
     let title = `${APPROVAL_REQUIRED_TITLE_PREFIX} ${label}`
-    let summary = summariseArgs(label, input)
+    let summary = summariseArgs(label, parameters)
     try {
       const copy = await gateContext.generateCardCopy?.({
         label,
-        args: input,
+        parameters,
+        operation: operation.name,
       })
       if (copy?.title && copy?.summary) {
         title = copy.title
@@ -250,6 +300,13 @@ export const createEscalationGateRuntime = ({
       message: summary,
       title,
       summary,
+      reviewContext: {
+        requestedBy: truncateReviewField(requestedBy),
+        operation: truncateReviewField(operation.name),
+        action: actionLabel,
+        ...(toolDisplay !== actionLabel && { toolName: toolDisplay }),
+        ...(parameters && { parameters }),
+      },
       delay: (notifications.delay ?? DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
       recipients: notifications.recipients,
       resolutionStrategy: resolutionStrategyBinding(
