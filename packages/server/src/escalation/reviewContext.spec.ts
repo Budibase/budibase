@@ -42,6 +42,15 @@ describe("escalation review context", () => {
     ).toBeUndefined()
   })
 
+  it("displays selected undefined values as empty", () => {
+    expect(
+      formatToolParameters({
+        input: { optional: undefined },
+        paths: ["/optional"],
+      })
+    ).toEqual([{ path: "/optional", value: "" }])
+  })
+
   it("treats missing or empty parameters as not shared", () => {
     expect(hasSharedReviewParameters(undefined)).toBe(false)
     expect(hasSharedReviewParameters("")).toBe(false)

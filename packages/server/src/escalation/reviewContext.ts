@@ -46,7 +46,7 @@ const prepareForDisplay = (
     return value
   }
   if (value === undefined) {
-    return "[UNDEFINED]"
+    return ""
   }
   if (typeof value === "bigint") {
     return value.toString()

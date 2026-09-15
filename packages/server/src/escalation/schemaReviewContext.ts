@@ -16,7 +16,7 @@ const identifier = (value: unknown): string => {
     return "null"
   }
   if (value === undefined) {
-    return "[UNDEFINED]"
+    return ""
   }
   if (typeof value !== "object") {
     return String(value)
@@ -144,6 +144,10 @@ export const resolveSchemaReviewValues = async ({
         return
       }
       const value = (data as Record<string, unknown>)[fieldName]
+      if (value === undefined) {
+        resolved[path] = ""
+        return
+      }
       switch (field.type) {
         case FieldType.LINK:
           resolved[path] = await resolveLink({ value, field, resolvers })

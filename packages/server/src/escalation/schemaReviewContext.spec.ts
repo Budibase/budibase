@@ -103,6 +103,17 @@ describe("schema-aware escalation review values", () => {
     expect(result).toEqual({ "/data/files": "invoice.pdf" })
   })
 
+  it("displays selected undefined field values as empty", async () => {
+    const result = await resolveSchemaReviewValues({
+      input: { data: {} },
+      paths: ["/data/contact"],
+      table,
+      resolvers,
+    })
+
+    expect(result).toEqual({ "/data/contact": "" })
+  })
+
   it("falls back to concise IDs when display resolution fails", async () => {
     const failingResolvers: SchemaValueResolvers = {
       ...resolvers,
