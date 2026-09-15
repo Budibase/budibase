@@ -157,11 +157,14 @@
     gap: var(--spacing-xs);
   }
   .escalation-card-parameters-heading code {
+    min-width: 0;
     padding: 2px 5px;
     border-radius: 4px;
     background: var(--spectrum-global-color-gray-200);
     font-size: 12px;
     font-weight: 400;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
   .escalation-card-parameters {
     max-height: 360px;
