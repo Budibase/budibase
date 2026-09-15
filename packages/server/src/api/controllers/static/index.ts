@@ -540,7 +540,10 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         import("./templates/BudibaseApp.svelte"),
         import("svelte/server"),
       ])
-      const plugins = await objectStore.enrichPluginURLs(appInfo.usedPlugins)
+      const existingPlugins = await sdk.plugins.enrichUsedPluginSvelteMajors(
+        appInfo.usedPlugins
+      )
+      const plugins = await objectStore.enrichPluginURLs(existingPlugins)
       /*
        * Server rendering in svelte sadly does not support type checking, the .render function
        * always will just expect "any" when typing - so it is pointless for us to type the
