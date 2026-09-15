@@ -14,7 +14,10 @@ import {
   DEFAULT_MSTEAMS_SERVICE_URL,
   validateMSTeamsServiceUrl,
 } from "../../utilities/msTeams"
-import { truncateReviewField } from "../reviewContext"
+import {
+  hasSharedReviewParameters,
+  truncateReviewField,
+} from "../reviewContext"
 import {
   findIntegrationAgent,
   getEscalationText,
@@ -253,23 +256,24 @@ const buildReviewContextIntro = (reviewContext: EscalationReviewContext) =>
     { tight: false }
   )
 
-const buildReviewContextDetails = (reviewContext: EscalationReviewContext) => [
-  richLine(
-    [
-      { text: "Tool parameters", weight: "bolder" },
-      ...(reviewContext.toolName
-        ? [
-            { text: " · " },
-            { text: reviewContext.toolName, fontType: "monospace" },
-          ]
-        : []),
-    ],
-    { tight: false }
-  ),
-  ...(reviewContext.parameters
-    ? parameterDetails(reviewContext)
-    : [richLine([{ text: "No tool parameters were shared." }])]),
-]
+const buildReviewContextDetails = (reviewContext: EscalationReviewContext) =>
+  hasSharedReviewParameters(reviewContext.parameters)
+    ? [
+        richLine(
+          [
+            { text: "Tool parameters", weight: "bolder" },
+            ...(reviewContext.toolName
+              ? [
+                  { text: " · " },
+                  { text: reviewContext.toolName, fontType: "monospace" },
+                ]
+              : []),
+          ],
+          { tight: false }
+        ),
+        ...parameterDetails(reviewContext),
+      ]
+    : []
 
 const buildAdaptiveCard = ({
   title,

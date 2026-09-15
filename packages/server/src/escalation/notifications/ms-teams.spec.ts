@@ -258,7 +258,7 @@ describe("sendMSTeamsNotification", () => {
     )
   })
 
-  it("explains when no tool parameters were shared", async () => {
+  it("omits the tool parameters section when none were shared", async () => {
     agent = await createAgent()
     const { contextDoc, notifDoc, globalUserId } = buildDocs()
     contextDoc.reviewContext = {
@@ -266,6 +266,7 @@ describe("sendMSTeamsNotification", () => {
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
       toolName: "create_workflow_dispatch",
+      parameters: [],
     }
     await seedLinks(globalUserId)
 
@@ -276,7 +277,8 @@ describe("sendMSTeamsNotification", () => {
     const postCall = mockFetch.mock.calls.find(([url]) =>
       String(url).endsWith("/v3/conversations/conv_1/activities")
     )
-    expect(postCall![1].body).toContain("No tool parameters were shared.")
+    expect(postCall![1].body).not.toContain("Tool parameters")
+    expect(postCall![1].body).not.toContain("No tool parameters were shared.")
     expect(postCall![1].body).not.toContain("Sensitive values are redacted")
   })
 

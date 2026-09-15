@@ -12,7 +12,11 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { APPROVAL_REQUIRED_TITLE_PREFIX } from "../constants"
-import { chunkText, truncateReviewField } from "../reviewContext"
+import {
+  chunkText,
+  hasSharedReviewParameters,
+  truncateReviewField,
+} from "../reviewContext"
 import { findIntegrationAgent, getEscalationText } from "./utils"
 
 const escapeMrkdwn = (value: string) =>
@@ -110,25 +114,22 @@ const buildEscalationBlocks = ({
       })
     }
     blocks.push(decisionBlock)
-    blocks.push({ type: "divider" })
-    blocks.push({
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text:
-          "*Tool parameters*" +
-          (reviewContext.toolName
-            ? ` · \`${escapeMrkdwn(reviewContext.toolName).replace(/`/g, "'")}\``
-            : "") +
-          (!reviewContext.parameters
-            ? "\n_No tool parameters were shared._"
-            : ""),
-      },
-    })
-    // Neutralise the fence before chunking - a ``` split across two chunks
-    // would survive a per-chunk replace and close the block early, letting the
-    // rest of the arguments render as mrkdwn.
-    if (reviewContext.parameters) {
+    if (hasSharedReviewParameters(reviewContext.parameters)) {
+      blocks.push({ type: "divider" })
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text:
+            "*Tool parameters*" +
+            (reviewContext.toolName
+              ? ` · \`${escapeMrkdwn(reviewContext.toolName).replace(/`/g, "'")}\``
+              : ""),
+        },
+      })
+      // Neutralise the fence before chunking - a ``` split across two chunks
+      // would survive a per-chunk replace and close the block early, letting the
+      // rest of the arguments render as mrkdwn.
       const parameters =
         typeof reviewContext.parameters === "string"
           ? [{ path: "", value: reviewContext.parameters }]

@@ -222,13 +222,14 @@ describe("sendSlackNotification", () => {
     expect(rendered).not.toContain(injectedFence)
   })
 
-  it("explains when no tool parameters were shared", async () => {
+  it("omits the tool parameters section when none were shared", async () => {
     const { contextDoc, notifDoc, globalUserId } = buildDocs()
     contextDoc.reviewContext = {
       requestedBy: "Test User (test@example.com)",
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
       toolName: "create_workflow_dispatch",
+      parameters: [],
     }
     await seedLinks(globalUserId)
     mockAuthTest.mockResolvedValue({ ok: true, team_id: TEAM_RIGHT })
@@ -238,7 +239,8 @@ describe("sendSlackNotification", () => {
     )
 
     const rendered = JSON.stringify(mockPostMessage.mock.calls[0][0].blocks)
-    expect(rendered).toContain("No tool parameters were shared.")
+    expect(rendered).not.toContain("Tool parameters")
+    expect(rendered).not.toContain("No tool parameters were shared.")
     expect(rendered).not.toContain("Sensitive values are redacted")
   })
 
