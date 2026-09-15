@@ -53,7 +53,7 @@ describe("createEscalationGateRuntime", () => {
       operation,
       toolName: "create_workflow_dispatch",
       readableName: "Trigger workflow",
-      sourceLabel: "api.github_release_manager",
+      displayName: "api.github_release_manager.Trigger workflow",
       rules: [{ policyId: "policy_1" }],
       gateContext: {
         sessionId: "session_1",
