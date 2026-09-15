@@ -34,65 +34,101 @@ describe("escalation review context", () => {
     expect(label).toBe("Automation (Release bot)")
   })
 
-  it("keeps parameter names while redacting nested secrets", () => {
-    const formatted = formatToolParameters({
-      owner: "Budibase",
-      inputs: {
-        release_notes: "## Features\n- Useful change",
-        api_token: "do-not-show",
-      },
-    })
-
-    expect(formatted).toContain("owner")
-    expect(formatted).toContain("release_notes")
-    expect(formatted).toContain("Useful change")
-    expect(formatted).toContain("api_token")
-    expect(formatted).toContain("[REDACTED]")
-    expect(formatted).not.toContain("do-not-show")
+  it("shares no parameters without an allowlist", () => {
+    expect(
+      formatToolParameters({ input: { secret: "do-not-show" } })
+    ).toBeUndefined()
   })
 
-  it("renders multi-line values as text rather than escaped JSON", () => {
+  it("projects nested paths and preserves selected secret-like values", () => {
     const formatted = formatToolParameters({
-      workflow_id: "test-release.yml",
-      inputs: {
-        release_notes: "## Features\n- Useful change",
+      input: {
+        owner: "Budibase",
+        inputs: {
+          release_notes: "## Features\n- Useful change",
+          api_token: "explicitly-shared",
+        },
       },
+      paths: ["/owner", "/inputs/release_notes", "/inputs/api_token"],
     })
 
-    expect(formatted).toBe(
-      [
-        "workflow_id: test-release.yml",
-        "",
-        "inputs:",
-        "  release_notes:",
-        "    ## Features",
-        "    - Useful change",
-      ].join("\n")
-    )
+    expect(formatted).toEqual([
+      { path: "/owner", value: "Budibase" },
+      {
+        path: "/inputs/release_notes",
+        value: "## Features\n- Useful change",
+      },
+      { path: "/inputs/api_token", value: "explicitly-shared" },
+    ])
   })
 
-  it("bounds long and circular values without failing", () => {
+  it("supports escaped pointer segments, arrays, missing paths, and deduping", () => {
+    const formatted = formatToolParameters({
+      input: {
+        "a/b": { "~key": [{ value: "found" }] },
+      },
+      paths: [
+        "/a~1b/~0key/0/value",
+        "/missing",
+        "invalid",
+        "/a~1b/~0key/0/value",
+      ],
+    })
+
+    expect(formatted).toEqual([
+      { path: "/a~1b/~0key/0/value", value: "found" },
+      { path: "/missing", value: "[UNAVAILABLE]" },
+      { path: "invalid", value: "[UNAVAILABLE]" },
+    ])
+  })
+
+  it("renders multi-line values and bounds long circular values", () => {
     const circular: Record<string, unknown> = { large: "x".repeat(20_000) }
     circular.self = circular
 
-    const formatted = formatToolParameters(circular)
-    expect(formatted).toContain("[TRUNCATED:")
-    expect(formatted).toContain("[CIRCULAR]")
-    expect(formatted.length).toBeLessThanOrEqual(24_000)
+    const formatted = formatToolParameters({
+      input: {
+        notes: "## Features\n- Useful change",
+        circular,
+      },
+      paths: ["/notes", "/circular"],
+    })
+    expect(formatted?.[0]).toEqual({
+      path: "/notes",
+      value: "## Features\n- Useful change",
+    })
+    expect(formatted?.[1].value).toContain("[TRUNCATED:")
+    expect(formatted?.[1].value).toContain("[CIRCULAR]")
+    expect(
+      formatted?.reduce(
+        (length, parameter) =>
+          length + parameter.path.length + parameter.value.length,
+        0
+      )
+    ).toBeLessThanOrEqual(24_000)
   })
 
-  it("keeps every top-level parameter name within the total budget", () => {
+  it("keeps every selected path within the total budget", () => {
     const parameters = Object.fromEntries(
-      Array.from({ length: 300 }, (_, index) => [
+      Array.from({ length: 40 }, (_, index) => [
         `parameter_${index}`,
         "x".repeat(1_000),
       ])
     )
 
-    const formatted = formatToolParameters(parameters)
-    expect(formatted.length).toBeLessThanOrEqual(24_000)
+    const paths = Object.keys(parameters).map(key => `/${key}`)
+    const formatted = formatToolParameters({ input: parameters, paths })
+    expect(
+      formatted?.reduce(
+        (length, parameter) =>
+          length + parameter.path.length + parameter.value.length,
+        0
+      )
+    ).toBeLessThanOrEqual(24_000)
     Object.keys(parameters).forEach(key =>
-      expect(formatted).toContain(`${key}:`)
+      expect(formatted).toContainEqual(
+        expect.objectContaining({ path: `/${key}` })
+      )
     )
   })
 

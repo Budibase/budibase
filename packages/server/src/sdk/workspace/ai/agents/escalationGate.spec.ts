@@ -47,14 +47,17 @@ const operation: AgentOperation = {
 
 describe("createEscalationGateRuntime", () => {
   // No generated card copy, so the notification falls back to summarised args.
-  const buildRuntime = (generateCardCopy?: jest.Mock) =>
+  const buildRuntime = (
+    generateCardCopy?: jest.Mock,
+    reviewParameterPaths = ["/workflow_id", "/inputs/release_notes"]
+  ) =>
     createEscalationGateRuntime({
       agentId: "agent_1",
       operation,
       toolName: "create_workflow_dispatch",
       readableName: "Trigger workflow",
       displayName: "api.github_release_manager.Trigger workflow",
-      rules: [{ policyId: "policy_1" }],
+      rules: [{ policyId: "policy_1", reviewParameterPaths }],
       gateContext: {
         sessionId: "session_1",
         requesterLabel: "Test User (test@example.com)",
@@ -88,7 +91,13 @@ describe("createEscalationGateRuntime", () => {
           operation: "Prepare Cloud release",
           action: "Trigger workflow",
           toolName: "api.github_release_manager.Trigger workflow",
-          parameters: expect.stringContaining("release_notes"),
+          parameters: [
+            { path: "/workflow_id", value: "test-release.yml" },
+            {
+              path: "/inputs/release_notes",
+              value: "## Features\n- Useful change",
+            },
+          ],
         },
         context: expect.objectContaining({
           pendingToolCall: expect.objectContaining({
@@ -100,8 +109,8 @@ describe("createEscalationGateRuntime", () => {
     )
   })
 
-  it("keeps secrets out of the notification copy when card copy is unavailable", async () => {
-    const runtime = buildRuntime()
+  it("keeps unselected values out of all reviewer-facing copy", async () => {
+    const runtime = buildRuntime(undefined, ["/workflow_id"])
 
     await runtime.intercept(
       { workflow_id: "test-release.yml", api_token: "do-not-show" },
@@ -109,10 +118,33 @@ describe("createEscalationGateRuntime", () => {
     )
 
     const [input] = mockCreateEscalation.mock.calls[0]
-    expect(input.summary).toContain("[REDACTED]")
+    expect(input.summary).toContain("test-release.yml")
     expect(input.summary).not.toContain("do-not-show")
     expect(input.message).not.toContain("do-not-show")
     expect(input.title).not.toContain("do-not-show")
+    expect(JSON.stringify(input.reviewContext.parameters)).not.toContain(
+      "do-not-show"
+    )
+  })
+
+  it("shares no parameters when the matching rule has no allowlist", async () => {
+    const generateCardCopy = jest.fn().mockResolvedValue(undefined)
+    const runtime = buildRuntime(generateCardCopy, [])
+
+    await runtime.intercept(
+      { api_token: "do-not-show" },
+      { toolCallId: "call_1", messages: [] }
+    )
+
+    const [input] = mockCreateEscalation.mock.calls[0]
+    expect(input.reviewContext.parameters).toBeUndefined()
+    expect(input.summary).toBe("Trigger workflow requires approval.")
+    expect(generateCardCopy).toHaveBeenCalledWith({
+      label: "Trigger workflow",
+      operation: "Prepare Cloud release",
+      parameters: undefined,
+    })
+    expect(JSON.stringify(input.reviewContext)).not.toContain("do-not-show")
   })
 
   it("gives generated copy enough context to identify the request", async () => {
@@ -120,14 +152,14 @@ describe("createEscalationGateRuntime", () => {
       title: "Run the release workflow",
       summary: "Runs test-release.yml against the configured release branch.",
     })
-    const runtime = buildRuntime(generateCardCopy)
+    const runtime = buildRuntime(generateCardCopy, ["/workflow_id"])
     const args = { workflow_id: "test-release.yml" }
 
     await runtime.intercept(args, { toolCallId: "call_1", messages: [] })
 
     expect(generateCardCopy).toHaveBeenCalledWith({
       label: "Trigger workflow",
-      args,
+      parameters: [{ path: "/workflow_id", value: "test-release.yml" }],
       operation: "Prepare Cloud release",
     })
   })

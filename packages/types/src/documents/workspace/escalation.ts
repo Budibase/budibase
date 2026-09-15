@@ -53,7 +53,12 @@ export interface EscalationReviewContext {
   operation: string
   action: string
   toolName?: string
-  parameters: string
+  parameters?: string | EscalationReviewParameter[]
+}
+
+export interface EscalationReviewParameter {
+  path: string
+  value: string
 }
 
 export type ApprovedToolCall = Pick<

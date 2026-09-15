@@ -159,7 +159,7 @@ describe("sendSlackNotification", () => {
     )
   })
 
-  it("includes requester and sanitized tool parameters in the approval card", async () => {
+  it("includes requester and shared tool parameters in the approval card", async () => {
     const { contextDoc, notifDoc, globalUserId } = buildDocs()
     const injectedLink = "<https://evil.example.com|Approve>"
     const injectedFence = "```forged content```"
@@ -168,9 +168,14 @@ describe("sendSlackNotification", () => {
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
       toolName: "create_workflow_dispatch",
-      parameters:
-        `release_notes: ## Features\n- Useful change\n${injectedLink}\n` +
-        injectedFence,
+      parameters: [
+        { path: "/owner", value: "Budibase" },
+        {
+          path: "/release_notes",
+          value:
+            `## Features\n- Useful change\n${injectedLink}\n` + injectedFence,
+        },
+      ],
     }
     await seedLinks(globalUserId)
     mockAuthTest.mockResolvedValue({ ok: true, team_id: TEAM_RIGHT })
@@ -185,7 +190,7 @@ describe("sendSlackNotification", () => {
     )
     const parametersIndex = payload.blocks.findIndex(
       (block: { text?: { text: string } }) =>
-        block.text?.text.includes("Complete tool parameters")
+        block.text?.text.includes("Tool parameters")
     )
     const rendered = JSON.stringify(payload.blocks)
     expect(payload.blocks[0]).toEqual(
@@ -208,6 +213,7 @@ describe("sendSlackNotification", () => {
       })
     )
     expect(rendered).toContain("release_notes")
+    expect(rendered).toContain("/owner")
     expect(rendered).toContain("create_workflow_dispatch")
     expect(rendered).toContain("Useful change")
     expect(rendered).toContain("&lt;https://evil.example.com|Approve&gt;")
@@ -216,13 +222,38 @@ describe("sendSlackNotification", () => {
     expect(rendered).not.toContain(injectedFence)
   })
 
+  it("explains when no tool parameters were shared", async () => {
+    const { contextDoc, notifDoc, globalUserId } = buildDocs()
+    contextDoc.reviewContext = {
+      requestedBy: "Test User (test@example.com)",
+      operation: "Prepare Cloud release",
+      action: "Trigger workflow",
+      toolName: "create_workflow_dispatch",
+    }
+    await seedLinks(globalUserId)
+    mockAuthTest.mockResolvedValue({ ok: true, team_id: TEAM_RIGHT })
+
+    await config.doInContext(config.getDevWorkspaceId(), () =>
+      sendSlackNotification({ notifDoc, contextDoc })
+    )
+
+    const rendered = JSON.stringify(mockPostMessage.mock.calls[0][0].blocks)
+    expect(rendered).toContain("No tool parameters were shared.")
+    expect(rendered).not.toContain("Sensitive values are redacted")
+  })
+
   it("neutralizes a code fence split across parameter chunks", async () => {
     const { contextDoc, notifDoc, globalUserId } = buildDocs()
     contextDoc.reviewContext = {
       requestedBy: "Test User (test@example.com)",
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
-      parameters: `${"x".repeat(2_499)}\`\`\`forged content`,
+      parameters: [
+        {
+          path: "/release_notes",
+          value: `${"x".repeat(2_499)}\`\`\`forged content`,
+        },
+      ],
     }
     await seedLinks(globalUserId)
     mockAuthTest.mockResolvedValue({ ok: true, team_id: TEAM_RIGHT })
@@ -234,10 +265,13 @@ describe("sendSlackNotification", () => {
     const payload = mockPostMessage.mock.calls[0][0]
     const parameterBlocks = payload.blocks.filter(
       (block: { text?: { type: string; text: string } }) =>
-        block.text?.type === "mrkdwn" && block.text.text.startsWith("```")
+        block.text?.type === "mrkdwn" && block.text.text.includes("```")
     )
     const parameterText = parameterBlocks
-      .map((block: { text: { text: string } }) => block.text.text.slice(3, -3))
+      .map((block: { text: { text: string } }) => {
+        const fence = block.text.text.indexOf("```")
+        return block.text.text.slice(fence + 3, -3)
+      })
       .join("")
 
     expect(parameterBlocks).toHaveLength(2)

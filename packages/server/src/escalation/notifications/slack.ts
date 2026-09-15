@@ -116,29 +116,56 @@ const buildEscalationBlocks = ({
       text: {
         type: "mrkdwn",
         text:
-          "*Complete tool parameters*" +
+          "*Tool parameters*" +
           (reviewContext.toolName
             ? ` · \`${escapeMrkdwn(reviewContext.toolName).replace(/`/g, "'")}\``
             : "") +
-          "\n_Sensitive values are redacted._",
+          (!reviewContext.parameters
+            ? "\n_No tool parameters were shared._"
+            : ""),
       },
     })
     // Neutralise the fence before chunking - a ``` split across two chunks
     // would survive a per-chunk replace and close the block early, letting the
     // rest of the arguments render as mrkdwn.
-    const parameters = truncateReviewField(
-      escapeMrkdwn(reviewContext.parameters).replace(/```/g, "'''"),
-      MAX_PARAMETER_BLOCKS * PARAMETER_CHUNK_LENGTH
-    )
-    chunkText(parameters, PARAMETER_CHUNK_LENGTH).forEach(chunk => {
-      blocks.push({
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `\`\`\`${chunk}\`\`\``,
-        },
+    if (reviewContext.parameters) {
+      const parameters =
+        typeof reviewContext.parameters === "string"
+          ? [{ path: "", value: reviewContext.parameters }]
+          : reviewContext.parameters.slice(0, MAX_PARAMETER_BLOCKS)
+      let remainingBlocks = MAX_PARAMETER_BLOCKS
+      parameters.forEach((parameter, index) => {
+        const remainingParameters = parameters.length - index
+        const blockBudget = Math.max(
+          1,
+          Math.floor(remainingBlocks / remainingParameters)
+        )
+        const value = truncateReviewField(
+          escapeMrkdwn(parameter.value).replace(/```/g, "'''"),
+          blockBudget * PARAMETER_CHUNK_LENGTH
+        )
+        const chunks = chunkText(value, PARAMETER_CHUNK_LENGTH).slice(
+          0,
+          blockBudget
+        )
+        chunks.forEach((chunk, chunkIndex) => {
+          const path = truncateReviewField(
+            escapeMrkdwn(parameter.path).replace(/`/g, "'"),
+            300
+          )
+          blocks.push({
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text:
+                (chunkIndex === 0 && path ? `*${path}*\n` : "") +
+                `\`\`\`${chunk}\`\`\``,
+            },
+          })
+        })
+        remainingBlocks -= chunks.length
       })
-    })
+    }
   } else {
     blocks.push({
       type: "section",

@@ -89,15 +89,29 @@
   {#if reviewContext}
     <div class="escalation-card-divider"></div>
     <div class="escalation-card-parameters-heading">
-      <span>Complete tool parameters</span>
+      <span>Tool parameters</span>
       {#if reviewContext.toolName}
         <code>{reviewContext.toolName}</code>
       {/if}
     </div>
-    <Body size="XS" color="var(--spectrum-global-color-gray-600)">
-      Sensitive values are redacted.
-    </Body>
-    <pre class="escalation-card-parameters">{reviewContext.parameters}</pre>
+    {#if reviewContext.parameters}
+      {#if typeof reviewContext.parameters === "string"}
+        <pre class="escalation-card-parameters">{reviewContext.parameters}</pre>
+      {:else}
+        <div class="escalation-card-parameters-list">
+          {#each reviewContext.parameters as parameter}
+            <div class="escalation-card-parameter">
+              <code>{parameter.path}</code>
+              <pre class="escalation-card-parameters">{parameter.value}</pre>
+            </div>
+          {/each}
+        </div>
+      {/if}
+    {:else}
+      <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+        No tool parameters were shared.
+      </Body>
+    {/if}
   {/if}
 </div>
 
@@ -165,6 +179,13 @@
     font-weight: 400;
     overflow-wrap: anywhere;
     white-space: normal;
+  }
+
+  .escalation-card-parameters-list,
+  .escalation-card-parameter {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
   }
   .escalation-card-parameters {
     max-height: 360px;

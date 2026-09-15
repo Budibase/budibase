@@ -1,21 +1,19 @@
-import type { ContextUser } from "@budibase/types"
+import type { ContextUser, EscalationReviewParameter } from "@budibase/types"
 
 const MAX_DEPTH = 10
 const MAX_STRING_LENGTH = 10_000
 const MAX_PARAMETERS_LENGTH = 24_000
-const REDACTED = "[REDACTED]"
+const MAX_PARAMETER_PATHS = 40
 const INDENT = "  "
+const UNAVAILABLE = "[UNAVAILABLE]"
 
-type SanitizedValue =
+type DisplayValue =
   | string
   | number
   | boolean
   | null
-  | SanitizedValue[]
-  | { [key: string]: SanitizedValue }
-
-const SENSITIVE_KEY =
-  /password|passwd|secret|token|api[_-]?key|authorization|cookie|credential|private[_-]?key/i
+  | DisplayValue[]
+  | { [key: string]: DisplayValue }
 
 const truncate = (value: string, limit: number) => {
   if (value.length <= limit) {
@@ -28,15 +26,11 @@ const truncate = (value: string, limit: number) => {
   return `${value.slice(0, limit - marker.length)}${marker}`
 }
 
-const sanitize = (
+const prepareForDisplay = (
   value: unknown,
   seen: WeakSet<object>,
-  depth = 0,
-  key = ""
-): SanitizedValue => {
-  if (key && SENSITIVE_KEY.test(key)) {
-    return REDACTED
-  }
+  depth = 0
+): DisplayValue => {
   if (typeof value === "string") {
     return truncate(value, MAX_STRING_LENGTH)
   }
@@ -64,27 +58,22 @@ const sanitize = (
   }
   seen.add(value)
   if (Array.isArray(value)) {
-    return value.map(item => sanitize(item, seen, depth + 1))
+    return value.map(item => prepareForDisplay(item, seen, depth + 1))
   }
-  const entries: [string, SanitizedValue][] = Object.entries(value).map(
+  const entries: [string, DisplayValue][] = Object.entries(value).map(
     ([childKey, childValue]) => [
       childKey,
-      sanitize(childValue, seen, depth + 1, childKey),
+      prepareForDisplay(childValue, seen, depth + 1),
     ]
   )
   return Object.fromEntries(entries)
 }
 
-const isRecord = (
-  value: SanitizedValue
-): value is { [key: string]: SanitizedValue } =>
-  typeof value === "object" && value !== null && !Array.isArray(value)
-
 // Reviewers approve on what they can read, so values are rendered as text
 // rather than escaped JSON - a multi-line argument stays multi-line. The
 // result carries its own separator: a space when the value sits on the key's
 // line, a newline when it needs an indented block beneath it.
-const render = (value: SanitizedValue, indent: string): string => {
+const render = (value: DisplayValue, indent: string): string => {
   if (typeof value === "string") {
     if (!value.includes("\n")) {
       return ` ${value}`
@@ -113,24 +102,61 @@ const render = (value: SanitizedValue, indent: string): string => {
     .join("")
 }
 
-const renderRoot = (value: SanitizedValue) =>
+const renderRoot = (value: DisplayValue) =>
   render(value, "").replace(/^[ \n]/, "")
 
-// Give each top-level input a share of the display budget so every parameter
-// name remains visible even when an earlier value is very large.
-export const formatToolParameters = (input: unknown): string => {
-  const sanitized = sanitize(input, new WeakSet())
-  if (!isRecord(sanitized)) {
-    return truncate(renderRoot(sanitized), MAX_PARAMETERS_LENGTH)
+const decodePointer = (path: string): string[] | undefined => {
+  if (!path.startsWith("/") || /~(?:[^01]|$)/.test(path)) {
+    return undefined
+  }
+  return path
+    .slice(1)
+    .split("/")
+    .map(segment => segment.replace(/~1/g, "/").replace(/~0/g, "~"))
+}
+
+const valueAtPointer = (input: unknown, path: string): unknown => {
+  const segments = decodePointer(path)
+  if (!segments) {
+    return UNAVAILABLE
+  }
+  let value = input
+  for (const segment of segments) {
+    if (
+      (typeof value !== "object" && typeof value !== "function") ||
+      value === null ||
+      !Object.prototype.hasOwnProperty.call(value, segment)
+    ) {
+      return UNAVAILABLE
+    }
+    value = (value as Record<string, unknown>)[segment]
+  }
+  return value
+}
+
+// Give each selected path a share of the display budget so every configured
+// path remains visible even when an earlier value is very large.
+export const formatToolParameters = ({
+  input,
+  paths,
+}: {
+  input: unknown
+  paths?: string[]
+}): EscalationReviewParameter[] | undefined => {
+  const uniquePaths = [
+    ...new Set(paths?.map(path => path.trim()).filter(Boolean)),
+  ].slice(0, MAX_PARAMETER_PATHS)
+  if (!uniquePaths.length) {
+    return undefined
   }
 
-  const entries = Object.entries(sanitized)
-  if (!entries.length) {
-    return "{}"
-  }
+  const entries = uniquePaths.map(path => [
+    path,
+    prepareForDisplay(valueAtPointer(input, path), new WeakSet()),
+  ]) as [string, DisplayValue][]
   const separatorsLength = Math.max(0, entries.length - 1) * 2
   const labelsLength = entries.reduce(
-    (total, [key]) => total + key.length + 2,
+    (total, [path]) => total + path.length + 2,
     0
   )
   const valuesBudget = Math.max(
@@ -139,19 +165,21 @@ export const formatToolParameters = (input: unknown): string => {
   )
 
   let remainingBudget = valuesBudget
-  return truncate(
-    entries
-      .map(([key, value], index) => {
-        const remainingEntries = entries.length - index
-        const valueBudget = Math.floor(remainingBudget / remainingEntries)
-        const formattedValue = truncate(render(value, INDENT), valueBudget)
-        remainingBudget -= formattedValue.length
-        return `${key}:${formattedValue}`
-      })
-      .join("\n\n"),
-    MAX_PARAMETERS_LENGTH
-  )
+  return entries.map(([path, value], index) => {
+    const remainingEntries = entries.length - index
+    const valueBudget = Math.floor(remainingBudget / remainingEntries)
+    const formattedValue = truncate(renderRoot(value), valueBudget)
+    remainingBudget -= formattedValue.length
+    return { path, value: formattedValue }
+  })
 }
+
+export const stringifyToolParameters = (
+  parameters: string | EscalationReviewParameter[]
+) =>
+  typeof parameters === "string"
+    ? parameters
+    : parameters.map(({ path, value }) => `${path}: ${value}`).join("\n\n")
 
 export const truncateReviewField = (value: string, limit = 500): string =>
   truncate(value, limit)

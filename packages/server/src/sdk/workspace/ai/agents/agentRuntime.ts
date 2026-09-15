@@ -12,6 +12,7 @@ import {
   ApprovalToolResultStatus,
   type AgentExecutionContext,
   type AgentRequester,
+  type EscalationReviewParameter,
 } from "@budibase/types"
 import {
   Output,
@@ -47,10 +48,7 @@ import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
 import type tracer from "dd-trace"
 import { withLiteLLMSessionId } from "../llm/requestSession"
-import {
-  formatToolParameters,
-  requesterLabel,
-} from "../../../../escalation/reviewContext"
+import { requesterLabel } from "../../../../escalation/reviewContext"
 
 interface PrepareAgentChatRunParams {
   agent: Agent
@@ -509,11 +507,11 @@ const prepareAgentChatRunInternal = async ({
   let resolvedChatModel: Parameters<typeof generateText>[0]["model"] | undefined
   const generateCardCopy = async ({
     label,
-    args,
+    parameters,
     operation,
   }: {
     label: string
-    args: unknown
+    parameters?: EscalationReviewParameter[]
     operation: string
   }) => {
     if (!resolvedChatModel) {
@@ -538,7 +536,7 @@ const prepareAgentChatRunInternal = async ({
           {
             operation,
             pendingAction: label,
-            arguments: formatToolParameters(args),
+            ...(parameters && { sharedParameters: parameters }),
           },
           null,
           2

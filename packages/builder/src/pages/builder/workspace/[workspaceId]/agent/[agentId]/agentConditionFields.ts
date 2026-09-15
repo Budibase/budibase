@@ -71,6 +71,21 @@ export interface ConditionField {
   constraints?: FieldConstraints
 }
 
+export interface ReviewField {
+  path: string
+  label: string
+}
+
+export const isValidReviewParameterPath = (path: string) =>
+  path.length <= 250 && path.startsWith("/") && !/~(?:[^01]|$)/.test(path)
+
+export const normalizeReviewParameterPaths = (paths: string[]) => [
+  ...new Set(paths.map(path => path.trim()).filter(Boolean)),
+]
+
+const pointerSegment = (value: string) =>
+  value.replace(/~/g, "~0").replace(/\//g, "~1")
+
 const CONDITIONABLE_FIELD_TYPES = new Set<FieldType>([
   FieldType.STRING,
   FieldType.LONGFORM,
@@ -155,6 +170,56 @@ export const getToolConditionFields = ({
         return type ? [{ name, label: name, type }] : []
       }
     )
+  }
+
+  return []
+}
+
+export const getToolReviewFields = ({
+  tool,
+  tables,
+  queries,
+  automations,
+}: {
+  tool: AgentTool
+  tables: Table[]
+  queries: Query[]
+  automations: Automation[]
+}): ReviewField[] => {
+  if (!tool.sourceId) {
+    return []
+  }
+
+  if (isRowMutationTool(tool)) {
+    const table = tables.find(candidate => candidate._id === tool.sourceId)
+    const fields = Object.keys(table?.schema || {}).map(name => ({
+      path: `/data/${pointerSegment(name)}`,
+      label: name,
+    }))
+    return tool.action === ToolAction.UPDATE_ROW
+      ? [{ path: "/rowId", label: "Row ID" }, ...fields]
+      : fields
+  }
+
+  if (isQueryToolType(tool.sourceType)) {
+    const query = queries.find(candidate => candidate._id === tool.sourceId)
+    return (query?.parameters || []).map(parameter => ({
+      path: `/${pointerSegment(parameter.name)}`,
+      label: parameter.name,
+    }))
+  }
+
+  if (isAutomationTriggerTool(tool)) {
+    const automation = automations.find(
+      candidate => candidate._id === tool.sourceId
+    )
+    const triggerInputs = automation?.definition?.trigger?.inputs as {
+      fields?: Record<string, AutomationIOType>
+    } | null
+    return Object.keys(triggerInputs?.fields || {}).map(name => ({
+      path: `/fields/${pointerSegment(name)}`,
+      label: name,
+    }))
   }
 
   return []

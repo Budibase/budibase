@@ -214,7 +214,13 @@ describe("sendMSTeamsNotification", () => {
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
       toolName: "create_workflow_dispatch",
-      parameters: "release_notes: ## Features\n- Useful change",
+      parameters: [
+        { path: "/owner", value: "Budibase" },
+        {
+          path: "/release_notes",
+          value: "## Features\n- Useful change",
+        },
+      ],
     }
     await seedLinks(globalUserId)
 
@@ -230,6 +236,7 @@ describe("sendMSTeamsNotification", () => {
     expect(rendered).toContain("Test User")
     expect(rendered).toContain("Prepare Cloud release")
     expect(rendered).toContain("release_notes")
+    expect(rendered).toContain("/owner")
     expect(rendered).toContain("create_workflow_dispatch")
     expect(rendered).toContain("Useful change")
     expect(rendered).toContain('"fontType":"monospace"')
@@ -251,6 +258,28 @@ describe("sendMSTeamsNotification", () => {
     )
   })
 
+  it("explains when no tool parameters were shared", async () => {
+    agent = await createAgent()
+    const { contextDoc, notifDoc, globalUserId } = buildDocs()
+    contextDoc.reviewContext = {
+      requestedBy: "Test User (test@example.com)",
+      operation: "Prepare Cloud release",
+      action: "Trigger workflow",
+      toolName: "create_workflow_dispatch",
+    }
+    await seedLinks(globalUserId)
+
+    await config.doInContext(config.getDevWorkspaceId(), () =>
+      sendMSTeamsNotification({ notifDoc, contextDoc })
+    )
+
+    const postCall = mockFetch.mock.calls.find(([url]) =>
+      String(url).endsWith("/v3/conversations/conv_1/activities")
+    )
+    expect(postCall![1].body).toContain("No tool parameters were shared.")
+    expect(postCall![1].body).not.toContain("Sensitive values are redacted")
+  })
+
   it("renders reviewer context as text so arguments can't inject a link", async () => {
     agent = await createAgent()
     const { contextDoc, notifDoc, globalUserId } = buildDocs()
@@ -259,7 +288,7 @@ describe("sendMSTeamsNotification", () => {
       requestedBy: "Test User (test@example.com)",
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
-      parameters: injected,
+      parameters: [{ path: "/release_notes", value: injected }],
     }
     await seedLinks(globalUserId)
 

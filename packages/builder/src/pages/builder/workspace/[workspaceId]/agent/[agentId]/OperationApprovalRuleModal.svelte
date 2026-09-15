@@ -2,10 +2,12 @@
   import {
     Body,
     Button,
+    Checkbox,
     Icon,
     Label,
     Modal,
     ModalContent,
+    PillInput,
     Select,
   } from "@budibase/bbui"
   import { FieldType } from "@budibase/types"
@@ -17,7 +19,12 @@
   } from "@budibase/types"
   import { OperatorOptions, dataFilters } from "@budibase/shared-core"
   import { FilterField } from "@budibase/frontend-core"
-  import type { ConditionField } from "./agentConditionFields"
+  import {
+    isValidReviewParameterPath,
+    normalizeReviewParameterPaths,
+    type ConditionField,
+    type ReviewField,
+  } from "./agentConditionFields"
 
   export interface Props {
     onSave: (args: {
@@ -29,6 +36,7 @@
       index?: number
       policyId?: string
       conditions: ToolExecutionCondition[]
+      reviewParameterPaths: string[]
     }) => void
     onOpenApiExplorer?: () => void
     onClose?: () => void
@@ -47,21 +55,25 @@
   let modal: Modal | undefined = $state()
   let policies = $state<AgentOperationApprovalPolicy[]>([])
   let fields = $state<ConditionField[]>([])
+  let reviewFields = $state<ReviewField[]>([])
   let editingIndex = $state<number | undefined>()
   let policyId = $state<string | undefined>()
   let conditions = $state<ConditionDraft[]>([])
+  let reviewParameterPaths = $state<string[]>([])
 
   let apiExplorerAvailable = $state(false)
 
   export const show = (options: {
     policies: AgentOperationApprovalPolicy[]
     fields: ConditionField[]
+    reviewFields: ReviewField[]
     rule?: Partial<ToolExecutionRule>
     index?: number
     apiExplorer?: boolean
   }) => {
     policies = options.policies
     fields = options.fields
+    reviewFields = options.reviewFields
     editingIndex = options.index
     policyId = options.rule?.policyId
     apiExplorerAvailable = options.apiExplorer ?? false
@@ -73,6 +85,7 @@
           : condition.value,
       noValue: NO_VALUE_OPERATORS.has(condition.operator),
     }))
+    reviewParameterPaths = [...(options.rule?.reviewParameterPaths ?? [])]
     modal?.show()
   }
 
@@ -80,6 +93,23 @@
 
   export const updateFields = (next: ConditionField[]) => {
     fields = next
+  }
+
+  export const updateReviewFields = (next: ReviewField[]) => {
+    reviewFields = next
+  }
+
+  const reviewPathsValid = $derived(
+    reviewParameterPaths.length <= 40 &&
+      reviewParameterPaths.every(path =>
+        isValidReviewParameterPath(path.trim())
+      )
+  )
+
+  const toggleReviewPath = (path: string) => {
+    reviewParameterPaths = reviewParameterPaths.includes(path)
+      ? reviewParameterPaths.filter(candidate => candidate !== path)
+      : [...reviewParameterPaths, path]
   }
 
   const operatorsFor = (condition: ConditionDraft) => {
@@ -195,10 +225,15 @@
       ...condition,
       value: coerceValue(condition),
     }))
+    const cleanedReviewPaths =
+      normalizeReviewParameterPaths(reviewParameterPaths)
     await onSave({
       rule: {
         policyId,
         ...(cleaned.length ? { conditions: cleaned } : {}),
+        ...(cleanedReviewPaths.length
+          ? { reviewParameterPaths: cleanedReviewPaths }
+          : {}),
       },
       index: editingIndex,
     })
@@ -222,7 +257,7 @@
     secondaryButtonWarning
     secondaryAction={remove}
     onConfirm={save}
-    disabled={!policyId || !conditionsComplete}
+    disabled={!policyId || !conditionsComplete || !reviewPathsValid}
   >
     <div slot="header" class="modal-header">
       <span>
@@ -235,6 +270,34 @@
           Open API explorer
         </Button>
       {/if}
+    </div>
+    <div class="configuration-field">
+      <div class="field-copy">
+        <Label size="M">Shared with reviewers</Label>
+        <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+          No tool parameters are shared by default. Select known fields or add
+          JSON Pointer paths for dynamic input.
+        </Body>
+      </div>
+      {#if reviewFields.length}
+        <div class="review-fields">
+          {#each reviewFields as field}
+            <Checkbox
+              value={reviewParameterPaths.includes(field.path)}
+              text={`${field.label} (${field.path})`}
+              on:change={() => toggleReviewPath(field.path)}
+            />
+          {/each}
+        </div>
+      {/if}
+      <PillInput
+        value={reviewParameterPaths}
+        maxItems={40}
+        placeholder="/field or /nested/field"
+        helpText="Paths use JSON Pointer syntax. Selected values are shown exactly as supplied."
+        error={reviewPathsValid ? undefined : "Enter valid JSON Pointer paths."}
+        on:change={event => (reviewParameterPaths = event.detail)}
+      />
     </div>
     <div class="configuration-field">
       <div class="field-copy">
@@ -331,6 +394,7 @@
               conditions: conditions.map(
                 ({ noValue: _noValue, ...condition }) => condition
               ),
+              reviewParameterPaths: [...reviewParameterPaths],
             })}
         >
           Create new policy
@@ -361,6 +425,12 @@
   .conditions-list {
     display: flex;
     flex-direction: column;
+    gap: var(--spacing-s);
+  }
+
+  .review-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--spacing-s);
   }
 

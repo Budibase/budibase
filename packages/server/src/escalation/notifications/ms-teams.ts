@@ -192,16 +192,52 @@ const richLine = (inlines: TextRun[], { tight = true } = {}) => ({
   })),
 })
 
-const parameterLines = (parameters: string) => {
-  const lines = truncateReviewField(parameters, MAX_PARAMETER_CHARACTERS).split(
-    "\n"
-  )
-  const shown = lines.slice(0, MAX_PARAMETER_LINES)
+const parameterLines = ({
+  value,
+  lineLimit = MAX_PARAMETER_LINES,
+  characterLimit = MAX_PARAMETER_CHARACTERS,
+}: {
+  value: string
+  lineLimit?: number
+  characterLimit?: number
+}) => {
+  const lines = truncateReviewField(value, characterLimit).split("\n")
+  const shown = lines.slice(0, lineLimit)
   const omitted = lines.length - shown.length
   if (omitted > 0) {
-    shown.push(`… [TRUNCATED: ${omitted} more lines]`)
+    const lastIndex = shown.length - 1
+    shown[lastIndex] =
+      `${shown[lastIndex]} … [TRUNCATED: ${omitted} more lines]`
   }
   return shown.map(line => richLine([{ text: line, fontType: "monospace" }]))
+}
+
+const parameterDetails = (reviewContext: EscalationReviewContext) => {
+  if (typeof reviewContext.parameters === "string") {
+    return parameterLines({ value: reviewContext.parameters })
+  }
+  const parameters = reviewContext.parameters ?? []
+  let remainingLines = MAX_PARAMETER_LINES - parameters.length
+  let remainingCharacters = MAX_PARAMETER_CHARACTERS
+  return parameters.flatMap((parameter, index) => {
+    const remainingParameters = parameters.length - index
+    const lineLimit = Math.max(
+      1,
+      Math.floor(remainingLines / remainingParameters)
+    )
+    const characterLimit = Math.max(
+      1,
+      Math.floor(remainingCharacters / remainingParameters)
+    )
+    const lines = parameterLines({
+      value: parameter.value,
+      lineLimit,
+      characterLimit,
+    })
+    remainingLines -= lines.length
+    remainingCharacters -= Math.min(parameter.value.length, characterLimit)
+    return [richLine([{ text: parameter.path, weight: "bolder" }]), ...lines]
+  })
 }
 
 const buildReviewContextIntro = (reviewContext: EscalationReviewContext) =>
@@ -220,7 +256,7 @@ const buildReviewContextIntro = (reviewContext: EscalationReviewContext) =>
 const buildReviewContextDetails = (reviewContext: EscalationReviewContext) => [
   richLine(
     [
-      { text: "Complete tool parameters", weight: "bolder" },
+      { text: "Tool parameters", weight: "bolder" },
       ...(reviewContext.toolName
         ? [
             { text: " · " },
@@ -230,8 +266,9 @@ const buildReviewContextDetails = (reviewContext: EscalationReviewContext) => [
     ],
     { tight: false }
   ),
-  richLine([{ text: "Sensitive values are redacted." }]),
-  ...parameterLines(reviewContext.parameters),
+  ...(reviewContext.parameters
+    ? parameterDetails(reviewContext)
+    : [richLine([{ text: "No tool parameters were shared." }])]),
 ]
 
 const buildAdaptiveCard = ({
