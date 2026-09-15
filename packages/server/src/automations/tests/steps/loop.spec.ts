@@ -1313,7 +1313,12 @@ describe("Loop Automations", () => {
         .test({ fields: {} })
 
       expect(events.action.automationStepFailed).toHaveBeenCalledWith(
-        expect.objectContaining({ reason: ActionFailureReason.MAX_ITERATIONS })
+        expect.objectContaining({
+          reason: ActionFailureReason.MAX_ITERATIONS,
+          sourceType: "automation_run",
+          sourceId: expect.any(String),
+          automationId: expect.any(String),
+        })
       )
     })
 
@@ -1331,6 +1336,9 @@ describe("Loop Automations", () => {
       expect(events.action.automationStepFailed).toHaveBeenCalledWith(
         expect.objectContaining({
           reason: ActionFailureReason.FAILURE_CONDITION,
+          sourceType: "automation_run",
+          sourceId: expect.any(String),
+          automationId: expect.any(String),
         })
       )
     })
