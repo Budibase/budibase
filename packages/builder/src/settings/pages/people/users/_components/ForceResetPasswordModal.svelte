@@ -1,6 +1,8 @@
 <script lang="ts">
   import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
   import { users } from "@/stores/portal/users"
+  import { admin } from "@/stores/portal/admin"
+  import { generateTemporaryPassword } from "@/helpers/password"
   import type { User } from "@budibase/types"
 
   interface Props {
@@ -10,15 +12,9 @@
 
   let { user, onupdate }: Props = $props()
 
-  const generatePassword = (length: number) => {
-    const array = new Uint8Array(length)
-    crypto.getRandomValues(array)
-    return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
-      .join("")
-      .slice(0, length)
-  }
-
-  const password = generatePassword(12)
+  const password = generateTemporaryPassword({
+    policy: $admin.passwordPolicy,
+  })
 
   async function resetPassword() {
     if (!user) {

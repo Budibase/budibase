@@ -13,7 +13,11 @@ import {
   DEFAULT_MSTEAMS_SERVICE_URL,
   validateMSTeamsServiceUrl,
 } from "../../utilities/msTeams"
-import { findIntegrationAgent, getEscalationText } from "./utils"
+import {
+  findIntegrationAgent,
+  getEscalationText,
+  ProviderResponseError,
+} from "./utils"
 
 export const MS_SCOPE_BOT = "https://api.botframework.com/.default"
 export const MS_SCOPE_GRAPH = "https://graph.microsoft.com/.default"
@@ -72,8 +76,10 @@ export const getOAuthToken = async (
         }
       )
       if (!resp.ok) {
-        throw new Error(
-          `Teams OAuth token request failed (${resp.status}): ${await resp.text()}`
+        throw new ProviderResponseError(
+          resp.status,
+          await resp.text(),
+          "Teams OAuth token request failed"
         )
       }
       const data = (await resp.json()) as {
@@ -221,7 +227,11 @@ const teamsPost = async <T = void>(
     body: JSON.stringify(body),
   })
   if (!resp.ok) {
-    throw new Error(`Teams Bot API ${resp.status}: ${await resp.text()}`)
+    throw new ProviderResponseError(
+      resp.status,
+      await resp.text(),
+      "Teams Bot API"
+    )
   }
   return resp.json()
 }
@@ -290,9 +300,9 @@ export async function sendMSTeamsNotification({
 }: {
   notifDoc: EscalationNotificationDoc
   contextDoc: EscalationContextDoc
-}): Promise<void> {
+}): Promise<boolean> {
   if (notifDoc.recipient.type !== EscalationNotificationChannel.MSTEAMS) {
-    return
+    return false
   }
 
   const config = notifDoc.recipient.config as Record<string, string>
@@ -307,7 +317,7 @@ export async function sendMSTeamsNotification({
       escalationId: contextDoc._id,
       appId: contextDoc.appId,
     })
-    return
+    return false
   }
 
   const token = await getOAuthToken(
@@ -347,7 +357,7 @@ export async function sendMSTeamsNotification({
       escalationId: notifDoc.escalationId,
       channelId: config.channelId,
     })
-    return
+    return true
   }
 
   // User DM — always resolve via identity link to get the Teams-specific externalUserId
@@ -366,7 +376,7 @@ export async function sendMSTeamsNotification({
           globalUserId: config.globalUserId,
         }
       )
-      return
+      return false
     }
     const link = await tenancy.doInTenant(contextDoc.tenantId, () =>
       sdk.ai.chatIdentityLinks.getChatIdentityLinkByGlobalUserId({
@@ -380,7 +390,7 @@ export async function sendMSTeamsNotification({
         globalUserId: config.globalUserId,
         escalationId: contextDoc._id,
       })
-      return
+      return false
     }
     externalUserId = link.externalUserId
     providerTenantId = providerTenantId || link.providerTenantId
@@ -391,7 +401,7 @@ export async function sendMSTeamsNotification({
     console.warn("sendMSTeamsNotification: no recipient target in config", {
       escalationId: contextDoc._id,
     })
-    return
+    return false
   }
 
   const dmServiceUrl = validateMSTeamsServiceUrl(
@@ -423,8 +433,10 @@ export async function sendMSTeamsNotification({
     }
   )
   if (!createResp.ok) {
-    throw new Error(
-      `Teams create conversation failed (${createResp.status}): ${await createResp.text()}`
+    throw new ProviderResponseError(
+      createResp.status,
+      await createResp.text(),
+      "Teams create conversation failed"
     )
   }
   const conversation = (await createResp.json()) as {
@@ -445,4 +457,5 @@ export async function sendMSTeamsNotification({
     escalationId: notifDoc.escalationId,
     externalUserId,
   })
+  return true
 }

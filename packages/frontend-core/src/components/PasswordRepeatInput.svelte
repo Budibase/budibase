@@ -1,18 +1,32 @@
 <script lang="ts">
   import { FancyForm, FancyInput } from "@budibase/bbui"
+  import {
+    DEFAULT_PASSWORD_POLICY,
+    validatePasswordPolicy,
+  } from "@budibase/shared-core"
+  import type { PasswordPolicy } from "@budibase/types"
   import { createValidationStore, requiredValidator } from "../utils/validation"
 
   export let passwordForm: FancyForm | undefined = undefined
   export let password: string
   export let error: string
-  export let minLength = "12"
+  export let policy: PasswordPolicy = DEFAULT_PASSWORD_POLICY
   export let labels: any = {}
 
   const validatePassword = (value: string | undefined) => {
-    if (!value || value.length < parseInt(minLength)) {
+    const result = validatePasswordPolicy({ password: value, policy })
+    if (!result.valid) {
+      if (!value || value.length < policy.minLength) {
+        return (
+          labels?.minLengthText?.replace(
+            "{minLength}",
+            policy.minLength.toString()
+          ) || result.error
+        )
+      }
       return (
-        labels?.minLengthText?.replace("{minLength}", minLength) ||
-        `Please enter at least ${minLength} characters. We recommend using machine generated or random passwords.`
+        result.error ||
+        `Password must contain no more than ${policy.maxLength} characters.`
       )
     }
     return null

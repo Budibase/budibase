@@ -17,7 +17,7 @@
   import { licensing } from "@/stores/portal/licensing"
   import { organisation } from "@/stores/portal/organisation"
   import { admin } from "@/stores/portal/admin"
-  import { appStore } from "@/stores/builder/workspace"
+  import { workspaceStore } from "@/stores/builder/workspace"
   import { onMount } from "svelte"
   import DeleteRowsButton from "@/components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import UpgradeModal from "@/components/common/users/UpgradeModal.svelte"
@@ -51,6 +51,7 @@
   } from "@budibase/types"
   import type { UserInfo } from "@/types"
   import RouteActions from "@/settings/components/RouteActions.svelte"
+  import { generateTemporaryPassword } from "@/helpers/password"
   import {
     assignCreatedUsersToWorkspace,
     assignExistingUsersToWorkspace,
@@ -85,7 +86,7 @@
   const PAGE_SIZE = 8
   const TABLE_MIN_HEIGHT = 36 + 55 * PAGE_SIZE
   const initialWorkspaceId = (() => {
-    const id = get(appStore).appId
+    const id = get(workspaceStore).appId
     return id ? sdk.workspaces.getProdWorkspaceID(id) : ""
   })()
 
@@ -328,7 +329,7 @@
           usersRole === Constants.BudibaseRoles.AppUser
             ? usersAppRole || Constants.Roles.BASIC
             : undefined,
-        password: generatePassword(12),
+        password: generateTemporaryPassword({ policy: $admin.passwordPolicy }),
         forceResetPassword: true,
       }
 
@@ -516,14 +517,6 @@
     }
   }
 
-  const generatePassword = (length: number) => {
-    const array = new Uint8Array(length)
-    window.crypto.getRandomValues(array)
-    return Array.from(array, byte => byte.toString(36).padStart(2, "0"))
-      .join("")
-      .slice(0, length)
-  }
-
   const onRowClick = ({ detail }: { detail: EnrichedUser }) => {
     if (isWorkspaceOnly) {
       selectedWorkspaceUser = {
@@ -541,7 +534,9 @@
   }
 
   const currentWorkspaceId = $derived(
-    $appStore.appId ? sdk.workspaces.getProdWorkspaceID($appStore.appId) : ""
+    $workspaceStore.appId
+      ? sdk.workspaces.getProdWorkspaceID($workspaceStore.appId)
+      : ""
   )
   const workspaceReady = $derived(!isWorkspaceOnly || !!currentWorkspaceId)
   const isWorkspaceQueryReady = $derived(
