@@ -71,23 +71,20 @@ describe("EscalationsStore polling", () => {
     })
   })
 
-  it("stops refetching and warning once context fetches keep failing", async () => {
+  it("does not retry a failed context fetch", async () => {
     fetchEscalationContext.mockRejectedValue(new Error("context unavailable"))
     fetchEscalationResult.mockResolvedValue({ resolution: "pending" })
 
     store.track("escalation_1")
     await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS * 5)
 
-    expect(fetchEscalationContext).toHaveBeenCalledTimes(3)
-    expect(warn).toHaveBeenCalledTimes(3)
+    expect(fetchEscalationContext).toHaveBeenCalledTimes(1)
+    expect(warn).toHaveBeenCalledTimes(1)
     expect(fetchEscalationResult.mock.calls.length).toBeGreaterThan(3)
     expect(get(store.store).escalations.escalation_1).toMatchObject({
       resolution: "pending",
-      reviewContextAttempts: 3,
+      reviewContextLoaded: true,
     })
-    expect(
-      get(store.store).escalations.escalation_1.reviewContextLoaded
-    ).toBeUndefined()
   })
 
   it("commits updates for escalations that succeed when another fails", async () => {

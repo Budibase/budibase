@@ -11,7 +11,6 @@ import { BudiStore } from "../BudiStore"
 
 const POLL_INTERVAL_MS = 5000
 const MAX_CONSECUTIVE_FAILURES = 3
-const MAX_CONTEXT_ATTEMPTS = 3
 
 // Providers with an enabled deployment on the agent. Enabled = endpoint URL
 // present
@@ -35,7 +34,6 @@ export interface EscalationEntry extends EscalationResult {
   escalationId: string
   reviewContext?: EscalationReviewContext
   reviewContextLoaded?: boolean
-  reviewContextAttempts?: number
 }
 
 interface EscalationsState {
@@ -106,9 +104,8 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
     }, POLL_INTERVAL_MS)
   }
 
-  // The review context never changes once the escalation exists, so it's only
-  // fetched until it lands. Failures are retried a bounded number of times so
-  // a permanent error doesn't refetch and warn on every poll.
+  // The review context exists before the escalation id reaches the client and
+  // never changes, so fetch it once and mark the attempt complete.
   private async fetchContext({
     escalationId,
     entry,
@@ -118,8 +115,7 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
     entry: EscalationEntry | undefined
     signal: AbortSignal
   }): Promise<Partial<EscalationEntry> | undefined> {
-    const attempts = entry?.reviewContextAttempts ?? 0
-    if (entry?.reviewContextLoaded || attempts >= MAX_CONTEXT_ATTEMPTS) {
+    if (entry?.reviewContextLoaded) {
       return undefined
     }
     try {
@@ -129,14 +125,11 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
       if (signal.aborted) {
         return undefined
       }
-      const reviewContextAttempts = attempts + 1
       console.warn("Escalation context fetch failed", {
         escalationId,
-        attempt: reviewContextAttempts,
-        givingUp: reviewContextAttempts >= MAX_CONTEXT_ATTEMPTS,
         error,
       })
-      return { reviewContextAttempts }
+      return { reviewContextLoaded: true }
     }
   }
 

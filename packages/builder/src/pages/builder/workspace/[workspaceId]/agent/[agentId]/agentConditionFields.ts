@@ -223,12 +223,11 @@ export const getToolReviewFields = ({
 
   if (isRowMutationTool(tool)) {
     const table = tables.find(candidate => candidate._id === tool.sourceId)
-    const fields = Object.entries(table?.schema || {})
-      .map(([name, field]) => ({
-        path: `/data/${pointerSegment(name)}`,
-        label: name,
-        ...(isRelationshipField(field) ? { blocked: true } : {}),
-      }))
+    const fields = Object.entries(table?.schema || {}).map(([name, field]) => ({
+      path: `/data/${pointerSegment(name)}`,
+      label: name,
+      ...(isRelationshipField(field) ? { blocked: true } : {}),
+    }))
     return tool.action === ToolAction.UPDATE_ROW
       ? [
           { path: "/rowId", label: "Row ID" },
