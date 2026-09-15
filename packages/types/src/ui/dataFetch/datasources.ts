@@ -57,6 +57,9 @@ export interface RelationshipDatasource {
 
 export interface UserDatasource {
   type: "user"
+  workspaceId?: string
+  groupIds?: string[]
+  workspaceRoleId?: string
 }
 
 export interface GroupUserDatasource {
