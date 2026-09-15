@@ -235,11 +235,16 @@ describe("sendMSTeamsNotification", () => {
     const textRuns = message.attachments[0].content.body.flatMap(
       element => element.inlines ?? []
     )
+    expect(textRuns.map(run => run.text).join("")).toContain(
+      "Adria Navarro (adria@example.com) is requesting approval for Trigger workflow as part of Prepare Cloud release."
+    )
     expect(textRuns.filter(run => run.weight)).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ text: "Requested by: ", weight: "bolder" }),
-        expect.objectContaining({ text: "Purpose: ", weight: "bolder" }),
-        expect.objectContaining({ text: "Action: ", weight: "bolder" }),
+        expect.objectContaining({ text: "Trigger workflow", weight: "bolder" }),
+        expect.objectContaining({
+          text: "Prepare Cloud release",
+          weight: "bolder",
+        }),
       ])
     )
   })

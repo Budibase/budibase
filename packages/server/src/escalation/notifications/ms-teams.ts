@@ -204,28 +204,24 @@ const parameterLines = (parameters: string) => {
   return shown.map(line => richLine([{ text: line, fontType: "monospace" }]))
 }
 
-const buildReviewContextBlocks = (reviewContext: EscalationReviewContext) => [
+const buildReviewContextIntro = (reviewContext: EscalationReviewContext) =>
   richLine(
     [
-      { text: "Requested by: ", weight: "bolder" },
       { text: reviewContext.requestedBy },
+      { text: " is requesting approval for " },
+      { text: reviewContext.action, weight: "bolder" },
+      { text: " as part of " },
+      { text: reviewContext.operation, weight: "bolder" },
+      { text: "." },
     ],
     { tight: false }
-  ),
-  richLine([
-    { text: "Purpose: ", weight: "bolder" },
-    { text: reviewContext.operation },
-  ]),
-  richLine([
-    { text: "Action: ", weight: "bolder" },
-    { text: reviewContext.action },
-  ]),
+  )
+
+const buildReviewContextDetails = (reviewContext: EscalationReviewContext) => [
   richLine([{ text: "Complete tool parameters", weight: "bolder" }], {
     tight: false,
   }),
-  richLine([
-    { text: "Review these before approving. Sensitive values are redacted." },
-  ]),
+  richLine([{ text: "Sensitive values are redacted." }]),
   ...parameterLines(reviewContext.parameters),
 ]
 
@@ -256,8 +252,9 @@ const buildAdaptiveCard = ({
         weight: "Bolder",
         wrap: true,
       },
+      ...(reviewContext ? [buildReviewContextIntro(reviewContext)] : []),
       ...(summary ? [{ type: "TextBlock", text: summary, wrap: true }] : []),
-      ...(reviewContext ? buildReviewContextBlocks(reviewContext) : []),
+      ...(reviewContext ? buildReviewContextDetails(reviewContext) : []),
     ],
     actions: [
       {

@@ -79,36 +79,28 @@ const buildEscalationBlocks = ({
       type: "header",
       text: { type: "plain_text", text: "Approval required" },
     },
-    {
+  ]
+  const titleText = `*${escapeMrkdwn(displayTitle(title))}*`
+  if (reviewContext) {
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: titleText,
+      },
+    })
+    blocks.push({
       type: "section",
       text: {
         type: "mrkdwn",
         text: truncateReviewField(
-          summary
-            ? `*${escapeMrkdwn(displayTitle(title))}*\n${escapeMrkdwn(summary)}`
-            : `*${escapeMrkdwn(displayTitle(title))}*`,
+          `${escapeMrkdwn(reviewContext.requestedBy)} is requesting ` +
+            `approval for *${escapeMrkdwn(reviewContext.action)}* as part ` +
+            `of *${escapeMrkdwn(reviewContext.operation)}*.` +
+            (summary ? `\n${escapeMrkdwn(summary)}` : ""),
           2_900
         ),
       },
-    },
-  ]
-  if (reviewContext) {
-    blocks.push({
-      type: "section",
-      fields: [
-        {
-          type: "mrkdwn",
-          text: `*Requested by*\n${escapeMrkdwn(reviewContext.requestedBy)}`,
-        },
-        {
-          type: "mrkdwn",
-          text: `*Purpose*\n${escapeMrkdwn(reviewContext.operation)}`,
-        },
-        {
-          type: "mrkdwn",
-          text: `*Action*\n${escapeMrkdwn(reviewContext.action)}`,
-        },
-      ],
     })
     blocks.push(decisionBlock)
     blocks.push({ type: "divider" })
@@ -117,8 +109,7 @@ const buildEscalationBlocks = ({
       text: {
         type: "mrkdwn",
         text:
-          "*Complete tool parameters*\n" +
-          "_Review these before approving. Sensitive values are redacted._",
+          "*Complete tool parameters*\n" + "_Sensitive values are redacted._",
       },
     })
     // Neutralise the fence before chunking - a ``` split across two chunks
@@ -138,6 +129,16 @@ const buildEscalationBlocks = ({
       })
     })
   } else {
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: truncateReviewField(
+          summary ? `${titleText}\n${escapeMrkdwn(summary)}` : titleText,
+          2_900
+        ),
+      },
+    })
     blocks.push(decisionBlock)
   }
   return blocks

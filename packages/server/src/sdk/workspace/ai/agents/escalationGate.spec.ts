@@ -116,7 +116,7 @@ describe("createEscalationGateRuntime", () => {
   it("gives generated copy enough context to identify the request", async () => {
     const generateCardCopy = jest.fn().mockResolvedValue({
       title: "Run the release workflow",
-      summary: "Adria Navarro is requesting a release workflow run.",
+      summary: "Runs test-release.yml against the configured release branch.",
     })
     const runtime = buildRuntime(generateCardCopy)
     const args = { workflow_id: "test-release.yml" }
@@ -127,7 +127,6 @@ describe("createEscalationGateRuntime", () => {
       label: "Trigger workflow",
       args,
       operation: "Prepare Cloud release",
-      requestedBy: "Adria Navarro (adria@example.com)",
     })
   })
 })

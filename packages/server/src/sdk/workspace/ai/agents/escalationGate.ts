@@ -43,7 +43,6 @@ export interface EscalationGateContext {
     label: string
     args: unknown
     operation: string
-    requestedBy: string
   }) => Promise<{ title: string; summary: string } | undefined>
 }
 
@@ -237,7 +236,6 @@ export const createEscalationGateRuntime = ({
         label,
         args: input,
         operation: operation.name,
-        requestedBy,
       })
       if (copy?.title && copy?.summary) {
         title = copy.title

@@ -197,6 +197,9 @@ describe("sendSlackNotification", () => {
     expect(actionIndex).toBeLessThan(parametersIndex)
     expect(rendered).toContain("Adria Navarro")
     expect(rendered).toContain("Prepare Cloud release")
+    expect(rendered).toContain(
+      "Adria Navarro (adria@example.com) is requesting approval for *Trigger workflow* as part of *Prepare Cloud release*."
+    )
     expect(rendered).toContain("release_notes")
     expect(rendered).toContain("Useful change")
     expect(rendered).toContain("&lt;https://evil.example.com|Approve&gt;")
