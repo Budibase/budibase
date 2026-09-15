@@ -113,7 +113,7 @@ export default async function setup() {
       )
 
     const minio = new GenericContainer(
-      "quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z"
+      "public.ecr.aws/x1w3a5n5/third-party:minio-RELEASE.2025-09-07T16-13-09Z"
     )
       .withName("minio_testcontainer")
       .withExposedPorts(9000)
