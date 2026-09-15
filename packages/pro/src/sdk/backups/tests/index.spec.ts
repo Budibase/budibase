@@ -1,6 +1,16 @@
-import { context, db, objectStore, queue, utils } from "@budibase/backend-core"
+import {
+  context,
+  db,
+  docIds,
+  objectStore,
+  queue,
+  utils,
+} from "@budibase/backend-core"
 import { utils as testUtils } from "@budibase/backend-core/tests"
 import {
+  AIConfigType,
+  type CustomAIProviderConfig,
+  type Database,
   BackupStatus,
   BackupTrigger,
   BackupType,
@@ -334,7 +344,58 @@ describe("backups", () => {
     })
   })
 
-  it("should mark restore as failed when LiteLLM reconciliation fails", async () => {
+  it("should reconcile the restored configuration in the target database after cutover", async () => {
+    // Match replication to the CouchDB backend used by workspace reads.
+    db.init({ inMemory: false })
+    try {
+      await config.doInTenant(async () => {
+        const devWorkspaceId = db.getDevWorkspaceID(config.workspaceId)
+        const aiConfig: CustomAIProviderConfig = {
+          _id: docIds.generateAIConfigID(),
+          name: "Restore test",
+          provider: "openai",
+          model: "gpt-4o-mini",
+          credentialsFields: {},
+          configType: AIConfigType.COMPLETIONS,
+          liteLLMModelId: "live-model",
+        }
+        await db.getDB(devWorkspaceId).put(aiConfig)
+        importWorkspaceFn.mockImplementation(
+          async (_workspaceId: string, importDb: Database) => {
+            await importDb.put({ ...aiConfig, liteLLMModelId: "backup-model" })
+          }
+        )
+        let reconciledWorkspaceId: string | undefined
+        let reconciledModelId: string | undefined
+        reconcileLiteLLMModelsFn.mockImplementation(async () => {
+          reconciledWorkspaceId = context.getWorkspaceId()
+          const targetDb = context.getWorkspaceDB()
+          const restoredConfig = await targetDb.get<CustomAIProviderConfig>(
+            aiConfig._id!
+          )
+          reconciledModelId = restoredConfig.liteLLMModelId
+          await targetDb.put({
+            ...restoredConfig,
+            liteLLMModelId: "repaired-model",
+          })
+        })
+
+        const restore = await createRestore()
+        const persistedConfig = await db
+          .getDB(devWorkspaceId)
+          .get<CustomAIProviderConfig>(aiConfig._id!)
+
+        expect(restore.status).toEqual(BackupStatus.COMPLETE)
+        expect(reconciledWorkspaceId).toEqual(devWorkspaceId)
+        expect(reconciledModelId).toEqual("backup-model")
+        expect(persistedConfig.liteLLMModelId).toEqual("repaired-model")
+      })
+    } finally {
+      db.init({ inMemory: true })
+    }
+  })
+
+  it("should mark restore as failed even when reconciliation error tracking fails", async () => {
     await config.doInTenant(async () => {
       const backup = await createBackup()
       await waitForQueue()
