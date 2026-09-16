@@ -169,7 +169,7 @@ class Replication {
           return true
         }
         // always sync users from dev
-        if (startsWithID(doc._id, USER_METADATA_PREFIX)) {
+        if (doc._id.startsWith(USER_METADATA_PREFIX)) {
           return true
         }
         if (
