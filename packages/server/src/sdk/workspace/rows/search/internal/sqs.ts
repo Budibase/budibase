@@ -51,6 +51,7 @@ import sdk from "../../../../index"
 import {
   mapToUserColumn,
   USER_COLUMN_PREFIX,
+  waitForDefinitionRebuild,
 } from "../../../tables/internal/sqs"
 import AliasTables from "../../sqlAlias"
 import { enrichQueryJson, processRowCountResponse } from "../../utils"
@@ -501,6 +502,10 @@ export async function search(
   }
 
   const enrichedRequest = await enrichQueryJson(request)
+
+  if (!opts?.retrying) {
+    await waitForDefinitionRebuild()
+  }
 
   try {
     const [rows, totalRows] = await Promise.all([
