@@ -1,5 +1,6 @@
 {
   "name": "@budibase/functions-runtime",
+  "private": true,
   "version": "0.0.0",
   "description": "Budibase shared Functions isolate runtime",
   "main": "dist/index.js",
@@ -23,9 +24,6 @@
   },
   "devDependencies": {
     "rimraf": "3.0.2"
-  },
-  "engines": {
-    "node": ">=22.13.0 <23.0.0"
   },
   "nx": {
     "targets": {
