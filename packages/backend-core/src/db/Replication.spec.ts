@@ -285,6 +285,32 @@ describe("Replication", () => {
       const opts = replication.appReplicateOpts(inputOpts)
 
       expect(opts).toBe(inputOpts)
+      expect(opts).not.toHaveProperty("selector")
+    })
+
+    it("should attach a native selector when no custom filter is provided", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({ isCreation: true })
+
+      expect(opts.selector).toBeInstanceOf(Object)
+    })
+
+    it("should not attach a selector when a custom filter is provided", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({
+        isCreation: true,
+        filter: jest.fn(),
+      })
+
+      expect(opts.selector).toBeUndefined()
     })
   })
 
