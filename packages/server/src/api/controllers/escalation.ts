@@ -36,16 +36,19 @@ export async function result(ctx: UserCtx) {
 
 export async function resolve(ctx: UserCtx) {
   const { id } = ctx.params
-  const doc = await sdk.escalations.getContextDoc(id)
-  const status = doc && doc.resolution !== "pending" ? "closed" : "recorded"
   console.log("Escalation resolve: forced via resolve route", {
     escalationId: id,
     userId: ctx.user?._id,
     accepted: ctx.request.body?.response?.accepted,
   })
-  await sdk.escalations.withEscalationLock(id, () =>
-    escalationProcessor.resolve(id, ctx.request.body?.response)
-  )
+  const status = await sdk.escalations.withEscalationLock(id, async () => {
+    const doc = await sdk.escalations.getContextDoc(id)
+    if (doc && doc.resolution !== "pending") {
+      return "closed"
+    }
+    await escalationProcessor.resolve(id, ctx.request.body?.response)
+    return "recorded"
+  })
   ctx.body = {
     status,
     message:
