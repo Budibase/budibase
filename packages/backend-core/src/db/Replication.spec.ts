@@ -1,5 +1,5 @@
 import { DocumentType } from "@budibase/types"
-import { DesignDocuments, USER_METADATA_PREFIX } from "../constants"
+import { DesignDocuments, SEPARATOR, USER_METADATA_PREFIX } from "../constants"
 import Replication from "./Replication"
 
 const mockSourceDb = {
@@ -311,9 +311,132 @@ describe("Replication", () => {
         target: `${DocumentType.WORKSPACE}_target`,
       })
 
-      const opts = replication.appReplicateOpts({ isCreation: true })
+      const opts = replication.appReplicateOpts({ isCreation: false })
 
       expect(opts.selector).toBeInstanceOf(Object)
+      expect(opts.selector).toEqual(
+        expect.objectContaining({
+          $and: expect.arrayContaining([
+            {
+              $nor: [
+                {
+                  _id: {
+                    $regex: `^${DocumentType.SLACK_APP_CONFIG}${SEPARATOR}`,
+                  },
+                },
+              ],
+            },
+            { $nor: [{ _id: DesignDocuments.MIGRATIONS }] },
+            expect.objectContaining({
+              $or: expect.arrayContaining([
+                { _deleted: true },
+                { _id: { $regex: `^${USER_METADATA_PREFIX}` } },
+                expect.objectContaining({
+                  $and: expect.arrayContaining([
+                    {
+                      $nor: [
+                        {
+                          _id: {
+                            $regex: `^${DocumentType.AUTOMATION_LOG}${SEPARATOR}`,
+                          },
+                        },
+                      ],
+                    },
+                    {
+                      $nor: [
+                        {
+                          _id: {
+                            $regex: `^${DocumentType.AGENT_LOG_SESSION}${SEPARATOR}`,
+                          },
+                        },
+                      ],
+                    },
+                    { $nor: [{ _id: DocumentType.WORKSPACE_METADATA }] },
+                    {
+                      $nor: [
+                        {
+                          $or: [
+                            {
+                              _id: {
+                                $regex: `^${DocumentType.ROW}${SEPARATOR}`,
+                              },
+                            },
+                            {
+                              _id: {
+                                $regex: `^${DocumentType.LINK}${SEPARATOR}`,
+                              },
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      $nor: [
+                        {
+                          _id: {
+                            $regex: `^${DocumentType.AUTO_COLUMN_STATE}${SEPARATOR}`,
+                          },
+                        },
+                      ],
+                    },
+                  ]),
+                }),
+              ]),
+            }),
+          ]),
+        })
+      )
+    })
+
+    it("should exclude design documents from the TO_DEV selector", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE}_source`,
+        target: `${DocumentType.WORKSPACE_DEV}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({ isCreation: true })
+
+      expect(opts.selector).toEqual(
+        expect.objectContaining({
+          $and: expect.arrayContaining([
+            { $nor: [{ _id: { $regex: "^_design" } }] },
+          ]),
+        })
+      )
+    })
+
+    it("should allow auto column state in creation selectors", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({ isCreation: true })
+
+      const selectorJSON = JSON.stringify(opts.selector)
+      expect(selectorJSON).not.toContain(
+        `${DocumentType.AUTO_COLUMN_STATE}${SEPARATOR}`
+      )
+    })
+
+    it("should include only selected table data in the selector", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({
+        isCreation: true,
+        tablesToSync: ["ta_orders"],
+      })
+
+      expect(JSON.stringify(opts.selector)).toContain('"ta_orders"')
+      expect(JSON.stringify(opts.selector)).toContain(
+        `"^${DocumentType.ROW}${SEPARATOR}"`
+      )
+      expect(JSON.stringify(opts.selector)).toContain(
+        `"^${DocumentType.LINK}${SEPARATOR}"`
+      )
     })
 
     it("should not attach a selector when a custom filter is provided", () => {
