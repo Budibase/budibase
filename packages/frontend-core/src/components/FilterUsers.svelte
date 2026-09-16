@@ -38,7 +38,9 @@
   $: options = sortSelectedFirst(
     [
       ...($fetch.rows || []),
-      ...Object.values(selectedCache).filter(user => !pageIds.has(user._id)),
+      ...Object.values(selectedCache).filter(
+        user => selectedIds.includes(user._id) && !pageIds.has(user._id)
+      ),
     ],
     selectedIds
   )
