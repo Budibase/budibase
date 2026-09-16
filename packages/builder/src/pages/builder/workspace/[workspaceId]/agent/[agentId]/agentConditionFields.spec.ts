@@ -90,4 +90,32 @@ describe("review parameters", () => {
       { name: "metadata", label: "Metadata" },
     ])
   })
+
+  it.each([
+    [ToolAction.GET_ROW, [{ name: "rowId", label: "Row ID" }]],
+    [
+      ToolAction.LIST_ROWS,
+      [
+        { name: "limit", label: "Limit" },
+        { name: "bookmark", label: "Bookmark" },
+      ],
+    ],
+    [
+      ToolAction.SEARCH_ROWS,
+      [
+        { name: "query", label: "Query" },
+        { name: "sort", label: "Sort" },
+        { name: "limit", label: "Limit" },
+      ],
+    ],
+  ])("makes %s arguments selectable", (action, expected) => {
+    expect(
+      getToolReviewFields({
+        tool: { ...tool, action },
+        tables: [table],
+        queries: [],
+        automations: [],
+      })
+    ).toEqual(expected)
+  })
 })

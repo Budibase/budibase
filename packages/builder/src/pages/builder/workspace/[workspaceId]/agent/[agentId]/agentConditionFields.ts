@@ -116,6 +116,19 @@ const ROW_MUTATION_ACTIONS: ToolAction[] = [
   ToolAction.UPDATE_ROW,
 ]
 
+const ROW_READ_REVIEW_FIELDS: Partial<Record<ToolAction, ReviewField[]>> = {
+  [ToolAction.GET_ROW]: [{ name: "rowId", label: "Row ID" }],
+  [ToolAction.LIST_ROWS]: [
+    { name: "limit", label: "Limit" },
+    { name: "bookmark", label: "Bookmark" },
+  ],
+  [ToolAction.SEARCH_ROWS]: [
+    { name: "query", label: "Query" },
+    { name: "sort", label: "Sort" },
+    { name: "limit", label: "Limit" },
+  ],
+}
+
 const AUTOMATION_FIELD_TYPES: Partial<Record<AutomationIOType, FieldType>> = {
   [AutomationIOType.STRING]: FieldType.STRING,
   [AutomationIOType.NUMBER]: FieldType.NUMBER,
@@ -202,6 +215,17 @@ export const getToolReviewFields = ({
 }): ReviewField[] => {
   if (!tool.sourceId) {
     return []
+  }
+
+  const rowReadFields = tool.action
+    ? ROW_READ_REVIEW_FIELDS[tool.action]
+    : undefined
+  if (
+    rowReadFields &&
+    (tool.sourceType === ToolType.INTERNAL_TABLE ||
+      tool.sourceType === ToolType.EXTERNAL_TABLE)
+  ) {
+    return rowReadFields
   }
 
   if (isRowMutationTool(tool)) {
