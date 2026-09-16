@@ -57,7 +57,6 @@ export async function getResult(
     resolution: doc.resolution,
     title: doc.title,
     summary: doc.summary,
-    reviewContext: doc.reviewContext,
     resumeResult,
   }
 }

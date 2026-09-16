@@ -44,10 +44,7 @@
     // Live resolution per escalationId (from the poll) - drives the card state.
     escalationState?: Record<
       string,
-      {
-        resolution: EscalationContextDoc["resolution"]
-        reviewContext?: EscalationReviewContext
-      }
+      { resolution: EscalationContextDoc["resolution"] }
     >
     // Dev-only: show the inline Approve/Reject buttons on the escalation card.
     showInlineApproval?: boolean
@@ -110,10 +107,7 @@
       escalationId,
       title: output?.title ?? input?.title,
       summary: output?.summary ?? input?.summary,
-      reviewContext:
-        (escalationId
-          ? escalationState?.[escalationId]?.reviewContext
-          : undefined) ?? output?.reviewContext,
+      reviewContext: output?.reviewContext,
       resolution:
         (escalationId && escalationState?.[escalationId]?.resolution) ||
         "pending",

@@ -117,7 +117,6 @@ export interface EscalationResult {
   resolution: EscalationContextDoc["resolution"]
   title?: string
   summary?: string
-  reviewContext?: EscalationReviewContext
   resumeResult?: UIMessage
 }
 
