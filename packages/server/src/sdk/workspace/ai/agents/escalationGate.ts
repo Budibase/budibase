@@ -27,8 +27,6 @@ import {
   stringifyToolParameters,
   truncateReviewField,
 } from "../../../../escalation/reviewContext"
-import { resolveSchemaReviewValues } from "../../../../escalation/schemaReviewContext"
-import { getFullUser } from "../../../../utilities/users"
 
 export const DEFAULT_ESCALATION_DELAY_SECONDS = 3600
 
@@ -57,7 +55,6 @@ interface CreateGateParams {
   readableName?: string
   displayName?: string
   sourceId?: string
-  sourceType?: ToolType
   action?: ToolAction
   // Key of the args object holding the condition fields e.g "data"
   argsKey?: string
@@ -189,7 +186,6 @@ export const createEscalationGateRuntime = ({
   readableName,
   displayName,
   sourceId,
-  sourceType,
   action,
   argsKey,
   rules,
@@ -241,36 +237,9 @@ export const createEscalationGateRuntime = ({
     }
 
     const requestedBy = gateContext.requesterLabel ?? "Unknown requester"
-    let terminalValues: Record<string, string> | undefined
-    if (
-      sourceId &&
-      (sourceType === ToolType.INTERNAL_TABLE ||
-        sourceType === ToolType.EXTERNAL_TABLE) &&
-      (action === ToolAction.CREATE_ROW || action === ToolAction.UPDATE_ROW)
-    ) {
-      try {
-        const table = await sdk.tables.getTable(sourceId)
-        terminalValues = await resolveSchemaReviewValues({
-          input,
-          paths: rule.reviewParameterPaths,
-          table,
-          resolvers: {
-            getTable: sdk.tables.getTable,
-            getLinkedRow: sdk.rows.find,
-            getUser: getFullUser,
-          },
-        })
-      } catch (error) {
-        console.warn("escalation gate: could not resolve reviewer values", {
-          toolName,
-          error: error instanceof Error ? error.message : String(error),
-        })
-      }
-    }
     const parameters = formatToolParameters({
       input,
       paths: rule.reviewParameterPaths,
-      terminalValues,
     })
     const actionLabel = truncateReviewField(label)
     const toolDisplay = truncateReviewField(displayName ?? label)

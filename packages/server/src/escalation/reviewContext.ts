@@ -1,13 +1,8 @@
-import type {
-  ContextUser,
-  EscalationReviewContext,
-  EscalationReviewParameter,
-} from "@budibase/types"
+import type { ContextUser, EscalationReviewParameter } from "@budibase/types"
 
 const MAX_DEPTH = 10
 const MAX_STRING_LENGTH = 10_000
 const MAX_PARAMETERS_LENGTH = 24_000
-const MAX_PARAMETER_PATHS = 40
 const INDENT = "  "
 const UNAVAILABLE = "[UNAVAILABLE]"
 
@@ -138,33 +133,25 @@ const valueAtPointer = (input: unknown, path: string): unknown => {
   return value
 }
 
-export const hasSharedReviewParameters = (
-  parameters: EscalationReviewContext["parameters"]
-): parameters is EscalationReviewParameter[] => Boolean(parameters?.length)
-
 // Give each selected path a share of the display budget so every configured
 // path remains visible even when an earlier value is very large.
 export const formatToolParameters = ({
   input,
   paths,
-  terminalValues,
 }: {
   input: unknown
   paths?: string[]
-  terminalValues?: Record<string, string>
 }): EscalationReviewParameter[] | undefined => {
   const uniquePaths = [
     ...new Set(paths?.map(path => path.trim()).filter(Boolean)),
-  ].slice(0, MAX_PARAMETER_PATHS)
+  ]
   if (!uniquePaths.length) {
     return undefined
   }
 
   const entries = uniquePaths.map(path => [
     path,
-    terminalValues && Object.prototype.hasOwnProperty.call(terminalValues, path)
-      ? terminalValues[path]
-      : prepareForDisplay(valueAtPointer(input, path), new WeakSet()),
+    prepareForDisplay(valueAtPointer(input, path), new WeakSet()),
   ]) as [string, DisplayValue][]
   const separatorsLength = Math.max(0, entries.length - 1) * 2
   const labelsLength = entries.reduce(

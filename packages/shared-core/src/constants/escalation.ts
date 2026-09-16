@@ -1,1 +1,3 @@
 export const APPROVAL_REQUIRED_TITLE_PREFIX = "Approval required:"
+export const MAX_REVIEW_PARAMETER_PATHS = 40
+export const MAX_REVIEW_PARAMETER_PATH_LENGTH = 250

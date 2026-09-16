@@ -14,10 +14,7 @@ import {
   DEFAULT_MSTEAMS_SERVICE_URL,
   validateMSTeamsServiceUrl,
 } from "../../utilities/msTeams"
-import {
-  hasSharedReviewParameters,
-  truncateReviewField,
-} from "../reviewContext"
+import { truncateReviewField } from "../reviewContext"
 import {
   findIntegrationAgent,
   getEscalationText,
@@ -254,7 +251,7 @@ const buildReviewContextIntro = (reviewContext: EscalationReviewContext) =>
   )
 
 const buildReviewContextDetails = (reviewContext: EscalationReviewContext) =>
-  hasSharedReviewParameters(reviewContext.parameters)
+  reviewContext.parameters?.length
     ? [
         richLine(
           [

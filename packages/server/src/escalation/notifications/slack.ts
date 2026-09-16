@@ -12,11 +12,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { APPROVAL_REQUIRED_TITLE_PREFIX } from "../constants"
-import {
-  chunkText,
-  hasSharedReviewParameters,
-  truncateReviewField,
-} from "../reviewContext"
+import { chunkText, truncateReviewField } from "../reviewContext"
 import { findIntegrationAgent, getEscalationText } from "./utils"
 
 const escapeMrkdwn = (value: string) =>
@@ -113,7 +109,7 @@ const buildEscalationBlocks = ({
         },
       })
     }
-    if (hasSharedReviewParameters(reviewContext.parameters)) {
+    if (reviewContext.parameters?.length) {
       blocks.push({ type: "divider" })
       blocks.push({
         type: "section",

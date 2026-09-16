@@ -9,7 +9,7 @@ import {
   SEPARATOR,
 } from "@budibase/types"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import { resolveRecipientLabel, respond } from "./escalations"
+import { getResult, resolveRecipientLabel, respond } from "./escalations"
 import { resolutionStrategyBinding } from "../../escalation/resolutionStrategies"
 
 describe("resolveRecipientLabel", () => {
@@ -102,6 +102,45 @@ describe("resolveRecipientLabel", () => {
       await expect(resolveRecipientLabel(recipient)).resolves.toEqual(
         "operations"
       )
+    })
+  })
+})
+
+describe("getResult", () => {
+  const config = new TestConfiguration()
+
+  beforeEach(async () => {
+    await config.newTenant()
+  })
+
+  afterAll(() => {
+    config.end()
+  })
+
+  it("returns the review context with the polled result", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const escalationId = "esc-review-context"
+      const reviewContext = {
+        requestedBy: "local@example.com",
+        operation: "Release candidate",
+        action: "Trigger release",
+        toolName: "api.release.Trigger release",
+        parameters: [{ path: "/version", value: "3.46.0" }],
+      }
+      await context.getWorkspaceDB().put({
+        _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`,
+        source: EscalationSource.OPERATION,
+        appId: config.getProdWorkspaceId(),
+        tenantId: config.getTenantId(),
+        delay: 0,
+        resolution: "pending",
+        reviewContext,
+      })
+
+      await expect(getResult(escalationId)).resolves.toMatchObject({
+        resolution: "pending",
+        reviewContext,
+      })
     })
   })
 })

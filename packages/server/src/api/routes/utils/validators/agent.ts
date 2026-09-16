@@ -1,5 +1,9 @@
 import { auth } from "@budibase/backend-core"
-import { REVIEWER_TYPES } from "@budibase/shared-core"
+import {
+  MAX_REVIEW_PARAMETER_PATH_LENGTH,
+  MAX_REVIEW_PARAMETER_PATHS,
+  REVIEWER_TYPES,
+} from "@budibase/shared-core"
 import {
   EscalationNotificationChannel,
   ResolutionStrategy,
@@ -58,10 +62,10 @@ const TOOL_EXECUTION_RULE_SCHEMA = Joi.object({
   reviewParameterPaths: Joi.array()
     .items(
       Joi.string()
-        .max(250)
+        .max(MAX_REVIEW_PARAMETER_PATH_LENGTH)
         .pattern(/^\/(?:[^~]|~[01])*$/)
     )
-    .max(40)
+    .max(MAX_REVIEW_PARAMETER_PATHS)
     .optional(),
 })
 

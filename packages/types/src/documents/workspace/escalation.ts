@@ -117,13 +117,9 @@ export interface EscalationResult {
   resolution: EscalationContextDoc["resolution"]
   title?: string
   summary?: string
+  reviewContext?: EscalationReviewContext
   resumeResult?: UIMessage
 }
-
-export type EscalationReviewDetails = Pick<
-  EscalationContextDoc,
-  "title" | "summary" | "reviewContext"
->
 
 export enum EscalationNotificationChannel {
   BUDIBASE = "budibase",

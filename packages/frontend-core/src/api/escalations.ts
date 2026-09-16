@@ -1,5 +1,5 @@
 import type {
-  EscalationReviewDetails,
+  EscalationContextDoc,
   EscalationRespondResult,
   EscalationResponse,
   EscalationResult,
@@ -8,9 +8,8 @@ import type { BaseAPIClient } from "./types"
 
 export interface EscalationEndpoints {
   fetchEscalationContext: (
-    escalationId: string,
-    signal?: AbortSignal
-  ) => Promise<EscalationReviewDetails>
+    escalationId: string
+  ) => Promise<EscalationContextDoc>
   fetchEscalationResult: (
     escalationId: string,
     signal?: AbortSignal
@@ -24,10 +23,9 @@ export interface EscalationEndpoints {
 export const buildEscalationEndpoints = (
   API: BaseAPIClient
 ): EscalationEndpoints => ({
-  fetchEscalationContext: async (escalationId, signal) => {
+  fetchEscalationContext: async escalationId => {
     return await API.get({
       url: `/api/escalations/context/${escalationId}`,
-      signal,
     })
   },
 

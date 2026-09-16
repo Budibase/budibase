@@ -16,10 +16,13 @@
     ToolExecutionOperator,
     ToolExecutionRule,
   } from "@budibase/types"
-  import { OperatorOptions, dataFilters } from "@budibase/shared-core"
-  import { FilterField } from "@budibase/frontend-core"
   import {
     MAX_REVIEW_PARAMETER_PATHS,
+    OperatorOptions,
+    dataFilters,
+  } from "@budibase/shared-core"
+  import { FilterField } from "@budibase/frontend-core"
+  import {
     normalizeReviewParameterPaths,
     withSelectedReviewFields,
     type ConditionField,

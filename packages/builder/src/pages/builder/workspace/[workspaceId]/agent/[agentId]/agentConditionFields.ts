@@ -76,8 +76,6 @@ export interface ReviewField {
   label: string
 }
 
-export const MAX_REVIEW_PARAMETER_PATHS = 40
-
 export const normalizeReviewParameterPaths = (paths: string[]) => [
   ...new Set(paths.map(path => path.trim()).filter(Boolean)),
 ]

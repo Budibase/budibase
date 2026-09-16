@@ -2,7 +2,6 @@ import type { ContextUser } from "@budibase/types"
 import {
   chunkText,
   formatToolParameters,
-  hasSharedReviewParameters,
   requesterLabel,
   stringifyToolParameters,
 } from "./reviewContext"
@@ -49,14 +48,6 @@ describe("escalation review context", () => {
         paths: ["/optional"],
       })
     ).toEqual([{ path: "/optional", value: "" }])
-  })
-
-  it("treats missing or empty parameters as not shared", () => {
-    expect(hasSharedReviewParameters(undefined)).toBe(false)
-    expect(hasSharedReviewParameters([])).toBe(false)
-    expect(hasSharedReviewParameters([{ path: "/name", value: "Ada" }])).toBe(
-      true
-    )
   })
 
   it("projects nested paths and preserves selected secret-like values", () => {
