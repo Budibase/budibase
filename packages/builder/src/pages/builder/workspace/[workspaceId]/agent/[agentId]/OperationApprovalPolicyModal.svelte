@@ -22,7 +22,9 @@
     agentId?: string
     providers?: EscalationNotificationChannel[]
     onSave: (policy: AgentOperationApprovalPolicy) => void | Promise<void>
-    onRemove?: (policy: AgentOperationApprovalPolicy) => boolean
+    onRemove?: (
+      policy: AgentOperationApprovalPolicy
+    ) => boolean | Promise<boolean>
     onClose?: () => void
   }
 
@@ -100,8 +102,8 @@
     await onSave(policy)
   }
 
-  const remove = () => {
-    if (!existing || !onRemove?.(existing)) {
+  const remove = async () => {
+    if (!existing || !(await onRemove?.(existing))) {
       return keepOpen
     }
   }

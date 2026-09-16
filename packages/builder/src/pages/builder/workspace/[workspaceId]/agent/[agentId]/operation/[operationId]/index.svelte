@@ -651,7 +651,7 @@
     await saveOperation()
   }
 
-  const deletePolicy = (policy: AgentOperationApprovalPolicy) => {
+  const deletePolicy = async (policy: AgentOperationApprovalPolicy) => {
     if (!operation) {
       return false
     }
@@ -662,11 +662,15 @@
       )
       return false
     }
-    operation.approvalPolicies = (operation.approvalPolicies || []).filter(
+    const previous = operation.approvalPolicies
+    const approvalPolicies = (previous || []).filter(
       candidate => candidate.id !== policy.id
     )
-    saveOperation()
-    return true
+    const saved = await saveOperation({ approvalPolicies })
+    if (!saved && operation) {
+      operation = { ...operation, approvalPolicies: previous }
+    }
+    return saved
   }
 
   const toolApprovalOptions = (toolName: string) => ({
