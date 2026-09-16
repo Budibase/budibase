@@ -504,6 +504,10 @@ describe("/api/deploy", () => {
       const devId = config.getDevWorkspaceId()
 
       let releaseLock: () => void = () => {}
+      let confirmLockAcquired: () => void = () => {}
+      const lockAcquired = new Promise<void>(resolve => {
+        confirmLockAcquired = resolve
+      })
       const heldLock = config.doInContext(devId, () =>
         locks.doWithLock(
           {
@@ -511,9 +515,14 @@ describe("/api/deploy", () => {
             name: LockName.PUBLISH_WORKSPACE,
             resource: devId,
           },
-          () => new Promise<void>(resolve => (releaseLock = resolve))
+          () =>
+            new Promise<void>(resolve => {
+              releaseLock = resolve
+              confirmLockAcquired()
+            })
         )
       )
+      await lockAcquired
 
       await config.api.workspace.publish(devId, { status: 429 })
 

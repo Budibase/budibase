@@ -1611,6 +1611,10 @@ if (descriptions.length) {
             const devId = config.getDevWorkspaceId()
 
             let releaseLock: () => void = () => {}
+            let confirmLockAcquired: () => void = () => {}
+            const lockAcquired = new Promise<void>(resolve => {
+              confirmLockAcquired = resolve
+            })
             const heldLock = config.doInContext(devId, () =>
               locks.doWithLock(
                 {
@@ -1618,9 +1622,14 @@ if (descriptions.length) {
                   name: LockName.PUBLISH_WORKSPACE,
                   resource: devId,
                 },
-                () => new Promise<void>(resolve => (releaseLock = resolve))
+                () =>
+                  new Promise<void>(resolve => {
+                    releaseLock = resolve
+                    confirmLockAcquired()
+                  })
               )
             )
+            await lockAcquired
 
             await config.api.table.publish(table._id!, undefined, {
               status: 429,
