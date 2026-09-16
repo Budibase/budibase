@@ -357,8 +357,6 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-      # Required to assume ECR_PUBLIC_ROLE_ARN via OIDC for authenticated
-      # Amazon ECR Public pulls. Harmless when that variable is unset.
       id-token: write
     concurrency:
       group: ${{ github.workflow }}-test-server-${{ matrix.datasource }}-${{ matrix.shard_index }}-${{ github.event.pull_request.number || github.ref }}
