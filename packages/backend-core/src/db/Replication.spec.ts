@@ -1,5 +1,5 @@
 import { DocumentType } from "@budibase/types"
-import { DesignDocuments } from "../constants"
+import { DesignDocuments, USER_METADATA_PREFIX } from "../constants"
 import Replication from "./Replication"
 
 const mockSourceDb = {
@@ -133,6 +133,23 @@ describe("Replication", () => {
           {}
         )
       ).toBe(false)
+    })
+
+    it("should always replicate user metadata documents", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      const opts = replication.appReplicateOpts({ isCreation: true })
+
+      expect(
+        (opts.filter as Function)(
+          {
+            _id: `${USER_METADATA_PREFIX}global-user-id`,
+          },
+          {}
+        )
+      ).toBe(true)
     })
 
     it("should filter out automation logs", () => {
