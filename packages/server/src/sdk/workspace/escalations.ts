@@ -288,6 +288,12 @@ const respondUnderLock = async (
     if (!approvers.includes(userId)) {
       return { status: "recorded" }
     }
+    if (
+      response.actionId !== EscalationAction.APPROVE &&
+      response.actionId !== EscalationAction.REJECT
+    ) {
+      return { status: "recorded" }
+    }
     const approved = await appendApproval(escalationId, {
       userId,
       actionId: response.actionId,

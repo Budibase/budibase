@@ -516,6 +516,23 @@ describe("respond with approvers", () => {
     })
   })
 
+  it("ignores an unknown action id from an approver", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const { resolve, statuses, approvals } = await runPresses({
+        escalationId: "esc-bad-action",
+        approvers: users.slice(0, 2),
+        strategy: ResolutionStrategy.UNANIMOUS,
+        presses: [
+          [users[0], "constructor"],
+          [users[1], A],
+        ],
+      })
+      expect(statuses).toEqual(["recorded", "recorded"])
+      expect(approvals).toEqual([`${users[1]}:${A}`])
+      expect(resolve).not.toHaveBeenCalled()
+    })
+  })
+
   it("counts an approver who links after pressing", async () => {
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const escalationId = "esc-link-later"
