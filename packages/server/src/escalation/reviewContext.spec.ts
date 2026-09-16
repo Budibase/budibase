@@ -41,13 +41,16 @@ describe("escalation review context", () => {
     ).toBeUndefined()
   })
 
-  it("displays selected undefined values as empty", () => {
+  it("preserves explicit empty and null values", () => {
     expect(
       formatToolParameters({
-        input: { optional: undefined },
-        names: ["optional"],
+        input: { empty: "", nil: null },
+        names: ["empty", "nil"],
       })
-    ).toEqual([{ name: "optional", value: "" }])
+    ).toEqual([
+      { name: "empty", value: "" },
+      { name: "nil", value: "null" },
+    ])
   })
 
   it("projects direct arguments and preserves selected secret-like values", () => {
@@ -84,7 +87,7 @@ describe("escalation review context", () => {
 
     expect(formatted).toEqual([
       { name: "a/b", value: "found" },
-      { name: "missing", value: "[UNAVAILABLE]" },
+      { name: "missing", value: "Not provided" },
     ])
   })
 

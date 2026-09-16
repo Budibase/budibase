@@ -3,7 +3,7 @@ import type { ContextUser, EscalationReviewParameter } from "@budibase/types"
 const MAX_DEPTH = 10
 const MAX_STRING_LENGTH = 10_000
 const MAX_PARAMETERS_LENGTH = 24_000
-const UNAVAILABLE = "[UNAVAILABLE]"
+const NOT_PROVIDED = "Not provided"
 
 type DisplayValue =
   | string
@@ -82,7 +82,7 @@ const valueAtName = (input: unknown, name: string): unknown =>
   (typeof input === "object" || typeof input === "function") &&
   Object.prototype.hasOwnProperty.call(input, name)
     ? (input as Record<string, unknown>)[name]
-    : UNAVAILABLE
+    : NOT_PROVIDED
 
 // Give each selected parameter a share of the display budget so every
 // configured parameter remains visible even when an earlier value is large.
