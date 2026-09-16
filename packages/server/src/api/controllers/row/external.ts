@@ -149,23 +149,32 @@ export async function bulkDestroy(ctx: UserCtx) {
 export async function fetchEnrichedRow(ctx: UserCtx) {
   const id = ctx.params.rowId
   const source = await utils.getSource(ctx)
-  const { tableId } = utils.getSourceId(ctx)
+  const { tableId, viewId } = utils.getSourceId(ctx)
   const { datasourceId, tableName } = breakExternalTableId(tableId)
   const datasource: Datasource = await sdk.datasources.get(datasourceId)
   if (!datasource || !datasource.entities) {
     ctx.throw(400, "Datasource has not been configured for plus API.")
   }
   const tables = datasource.entities
-  const response = await handleRequest(Operation.READ, source, {
-    id,
-    datasource,
-    includeSqlRelationships: IncludeRelationship.INCLUDE,
-  })
   const table: Table = tables[tableName]
-  const row = response.rows[0]
+  const allowedViewFields = sdk.views.isView(source)
+    ? new Set(Object.keys(helpers.views.basicFields(source)))
+    : undefined
+  const row = viewId
+    ? await sdk.rows.utils.findRowInView(viewId, id)
+    : (
+        await handleRequest(Operation.READ, source, {
+          id,
+          datasource,
+          includeSqlRelationships: IncludeRelationship.INCLUDE,
+        })
+      ).rows[0]
   // this seems like a lot of work, but basically we need to dig deeper for the enrich
   // for a single row, there is probably a better way to do this with some smart multi-layer joins
   for (let [fieldName, field] of Object.entries(table.schema)) {
+    if (allowedViewFields && !allowedViewFields.has(fieldName)) {
+      continue
+    }
     if (
       field.type !== FieldType.LINK ||
       !row[fieldName] ||

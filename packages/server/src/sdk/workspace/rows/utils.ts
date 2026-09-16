@@ -390,16 +390,18 @@ export function tryExtractingTableAndViewId(tableOrViewId: string) {
   return { tableId: tableOrViewId }
 }
 
-export async function assertRowInView(viewId: string, rowId: string) {
+export async function findRowInView(viewId: string, rowId: string) {
   const result = await sdk.rows.search({
     tableId: getTableIdFromViewId(viewId),
     viewId,
     query: { equal: { _id: rowId } },
     limit: 1,
   })
-  if (!result.rows.length) {
+  const row = result.rows.find(row => row._id)
+  if (!row) {
     throw new HTTPError("Row not found", 404)
   }
+  return row
 }
 
 export function getSource(tableOrViewId: string) {

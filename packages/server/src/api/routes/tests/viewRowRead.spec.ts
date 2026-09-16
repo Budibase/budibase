@@ -1,8 +1,18 @@
-import { roles } from "@budibase/backend-core"
+import { context, roles } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
-import { BasicOperator, FieldType, PermissionLevel } from "@budibase/types"
+import {
+  BasicOperator,
+  CalculationType,
+  FieldType,
+  PermissionLevel,
+  ViewV2Type,
+} from "@budibase/types"
 import type { Row, User } from "@budibase/types"
-import { datasourceDescribe } from "../../../integrations/tests/utils"
+import {
+  DatabaseName,
+  datasourceDescribe,
+} from "../../../integrations/tests/utils"
+import sdk from "../../../sdk"
 import { basicTable } from "../../../tests/utilities/structures"
 
 const descriptions = datasourceDescribe({ plus: true })
@@ -10,9 +20,10 @@ const descriptions = datasourceDescribe({ plus: true })
 if (descriptions.length) {
   describe.each(descriptions)(
     "view row read boundaries ($dbName)",
-    ({ config, dsProvider }) => {
+    ({ config, dbName, dsProvider }) => {
       let tableId: string
       let viewId: string
+      let calculationViewId: string
       let visibleRow: Row
       let hiddenRow: Row
       let user: User
@@ -50,6 +61,20 @@ if (descriptions.length) {
           },
         })
         viewId = view.id
+        const calculationView = await config.api.viewV2.create({
+          tableId,
+          name: "Visible row count",
+          type: ViewV2Type.CALCULATION,
+          schema: {
+            total: {
+              visible: true,
+              calculationType: CalculationType.COUNT,
+              field: "name",
+            },
+          },
+          queryUI: view.queryUI,
+        })
+        calculationViewId = calculationView.id
         await config.api.permission.add({
           resourceId: tableId,
           roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
@@ -57,6 +82,11 @@ if (descriptions.length) {
         })
         await config.api.permission.add({
           resourceId: viewId,
+          roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+          level: PermissionLevel.READ,
+        })
+        await config.api.permission.add({
+          resourceId: calculationViewId,
           roleId: roles.BUILTIN_ROLE_IDS.BASIC,
           level: PermissionLevel.READ,
         })
@@ -140,6 +170,14 @@ if (descriptions.length) {
         })
       })
 
+      it("does not treat a calculation result as a matching row", async () => {
+        await asViewUser(async () => {
+          await config.api.row.get(calculationViewId, hiddenRow._id!, {
+            status: 404,
+          })
+        })
+      })
+
       it("rejects direct table reads for the view-only user", async () => {
         await asViewUser(async () => {
           await config.api.row.get(tableId, hiddenRow._id!, { status: 403 })
@@ -172,6 +210,17 @@ if (descriptions.length) {
           })
         })
 
+        it("does not treat a calculation result as an attachment row", async () => {
+          await asViewUser(async () => {
+            await config.api.row.downloadAttachment({
+              sourceId: calculationViewId,
+              rowId: hiddenRow._id!,
+              columnName,
+              expectations: { status: 404, body: { message: "Row not found" } },
+            })
+          })
+        })
+
         it("rejects direct table attachment downloads for the view-only user", async () => {
           await asViewUser(async () => {
             await config.api.row.downloadAttachment({
@@ -183,6 +232,36 @@ if (descriptions.length) {
           })
         })
       })
+
+      if (dbName === DatabaseName.SQS) {
+        it("returns the row version that matched the view", async () => {
+          await asViewUser(async () => {
+            const search = sdk.rows.search
+            const searchSpy = jest
+              .spyOn(sdk.rows, "search")
+              .mockImplementationOnce(async options => {
+                const result = await search(options)
+                const db = context.getWorkspaceDB()
+                const row = await db.get<Row>(visibleRow._id!)
+                await db.put({ ...row, name: "hidden" })
+                return result
+              })
+
+            try {
+              const row = await config.api.row.get(viewId, visibleRow._id!)
+              expect(row).toMatchObject({
+                _id: visibleRow._id,
+                name: "visible",
+              })
+            } finally {
+              searchSpy.mockRestore()
+              const db = context.getWorkspaceDB()
+              const row = await db.get<Row>(visibleRow._id!)
+              await db.put({ ...row, name: "visible" })
+            }
+          })
+        })
+      }
     }
   )
 }

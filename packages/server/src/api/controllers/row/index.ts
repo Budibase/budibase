@@ -435,10 +435,7 @@ export async function validate(
 export async function fetchEnrichedRow(
   ctx: UserCtx<void, FetchEnrichedRowResponse>
 ) {
-  const { tableId, viewId } = utils.getSourceId(ctx)
-  if (viewId) {
-    await sdk.rows.utils.assertRowInView(viewId, ctx.params.rowId)
-  }
+  const { tableId } = utils.getSourceId(ctx)
   ctx.body = await pickApi(tableId).fetchEnrichedRow(ctx)
 }
 

@@ -15,7 +15,7 @@ import {
   inputProcessing,
   outputProcessing,
 } from "../../../utilities/rowProcessor"
-import { assertRowInView, tryExtractingTableAndViewId } from "./utils"
+import { findRowInView, tryExtractingTableAndViewId } from "./utils"
 
 export async function getRow(
   sourceId: string | Table | ViewV2,
@@ -94,7 +94,7 @@ export async function find(tableOrViewId: string, rowId: string): Promise<Row> {
   const { tableId, viewId } = tryExtractingTableAndViewId(tableOrViewId)
 
   if (viewId) {
-    await assertRowInView(viewId, rowId)
+    return findRowInView(viewId, rowId)
   }
 
   let source: Table | ViewV2
