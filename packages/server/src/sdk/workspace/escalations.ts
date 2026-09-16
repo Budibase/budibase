@@ -268,7 +268,11 @@ const respondUnderLock = async (
       )
     }
     const appended = await appendResponse(notificationDocId, response)
-    if (appended === "already_responded") {
+
+    if (
+      appended === "already_responded" &&
+      !contextDoc.policy?.approvers?.length
+    ) {
       return { status: "already_responded" }
     }
   }
@@ -278,7 +282,10 @@ const respondUnderLock = async (
   let responses: EscalationResponse[]
   if (approvers.length) {
     const userId = response.userId
-    if (typeof userId !== "string" || !approvers.includes(userId)) {
+    if (typeof userId !== "string") {
+      return { status: "unlinked" }
+    }
+    if (!approvers.includes(userId)) {
       return { status: "recorded" }
     }
     const approved = await appendApproval(escalationId, {

@@ -21,7 +21,13 @@ import {
 import sdk from "../../../sdk"
 import type { IncomingConversationAttachment } from "../../../sdk/workspace/ai/chatConversations"
 import { escalationProcessor } from "../../../escalation/processor"
-import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
+import {
+  buildLinkPrompt,
+  escalationReplyText,
+  handleChatMessage,
+  NO_ASSISTANT_RESPONSE_MESSAGE,
+  unlinkedResponsePrompt,
+} from "./chatHandler"
 import { createChatLogger } from "./chatLogger"
 import { getSlackState } from "./chatState"
 import { postLinkPromptPrivately, PrivatePostTarget } from "./linkPrompt"
@@ -519,17 +525,38 @@ export async function slackWebhook(
             const raw = event.raw as
               | { team?: { id?: string }; user?: { team_id?: string } }
               | undefined
+            const teamId = raw?.team?.id ?? raw?.user?.team_id
             const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
               provider: AgentChannelProvider.SLACK,
               externalUserId: event.user.userId,
-              teamId: raw?.team?.id ?? raw?.user?.team_id,
+              teamId,
             })
-            return sdk.escalations.respond(
+            const respondResult = await sdk.escalations.respond(
               escalationId,
               notificationDocId,
               { ...slackResponse, userId: link?.globalUserId },
               (id, response) => escalationProcessor.resolve(id, response)
             )
+            if (respondResult.status === "unlinked" && event.thread) {
+              const prompt = await buildLinkPrompt({
+                workspaceId,
+                provider: AgentChannelProvider.SLACK,
+                user: {
+                  externalUserId: event.user.userId,
+                  displayName: event.user.userName,
+                },
+                channel: { teamId },
+                linkedAlready: false,
+                prefix: unlinkedResponsePrompt(AgentChannelProvider.SLACK),
+              })
+              await postLinkPromptPrivately({
+                target: event.thread.channel as PrivatePostTarget,
+                user: event.user,
+                text: prompt.text,
+                linkUrl: prompt.linkUrl,
+              })
+            }
+            return respondResult
           })
         } catch (error) {
           console.error("Escalation action: failed to record response", {
@@ -542,13 +569,10 @@ export async function slackWebhook(
           return
         }
 
-        // TODO: Can these responses be more dynamic/informative
-        await postEscalationReply(
-          event,
-          result.status === "closed"
-            ? "Escalation already closed."
-            : "Response recorded."
-        )
+        if (result.status === "unlinked") {
+          return
+        }
+        await postEscalationReply(event, escalationReplyText(result.status))
       })
 
       chat.onNewMention(handler)

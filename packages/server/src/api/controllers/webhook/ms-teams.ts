@@ -21,8 +21,15 @@ import {
 import { createTeamsAdapter } from "@chat-adapter/teams"
 import sdk from "../../../sdk"
 import { escalationProcessor } from "../../../escalation/processor"
+import { replyToConversation } from "../../../escalation/notifications/ms-teams"
 import { validateMSTeamsServiceUrl } from "../../../utilities/msTeams"
-import { handleChatMessage, NO_ASSISTANT_RESPONSE_MESSAGE } from "./chatHandler"
+import {
+  buildLinkPrompt,
+  escalationReplyText,
+  handleChatMessage,
+  NO_ASSISTANT_RESPONSE_MESSAGE,
+  unlinkedResponsePrompt,
+} from "./chatHandler"
 import { createChatLogger } from "./chatLogger"
 import { getTeamsState } from "./chatState"
 import { postLinkPromptPrivately } from "./linkPrompt"
@@ -544,27 +551,67 @@ export async function MSTeamsWebhook(
               | {
                   channelData?: { tenant?: { id?: string } }
                   from?: { tenantId?: string }
+                  serviceUrl?: string
                 }
               | undefined
+            const tenantId = raw?.channelData?.tenant?.id ?? raw?.from?.tenantId
             const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
               provider: AgentChannelProvider.MSTEAMS,
               externalUserId: event.user.userId,
-              providerTenantId:
-                raw?.channelData?.tenant?.id ?? raw?.from?.tenantId,
+              providerTenantId: tenantId,
             })
-            return sdk.escalations.respond(
+            const respondResult = await sdk.escalations.respond(
               escalationId,
               notificationDocId,
               { ...teamsResponse, userId: link?.globalUserId },
               (id, response) => escalationProcessor.resolve(id, response)
             )
+            if (respondResult.status === "unlinked" && event.thread) {
+              const prompt = await buildLinkPrompt({
+                workspaceId,
+                provider: AgentChannelProvider.MSTEAMS,
+                user: {
+                  externalUserId: event.user.userId,
+                  displayName: event.user.userName,
+                },
+                channel: { tenantId, serviceUrl: raw?.serviceUrl },
+                linkedAlready: false,
+                prefix: unlinkedResponsePrompt(AgentChannelProvider.MSTEAMS),
+              })
+              const delivery = await postLinkPromptPrivately({
+                target: event.thread,
+                user: event.user,
+                text: prompt.text,
+                linkUrl: prompt.linkUrl,
+              })
+              const activity = event.raw as MSTeamsActivity | undefined
+              const note = delivery.usedDirectMessageFallback
+                ? "I sent you a DM with your Budibase link."
+                : delivery.delivered
+                  ? undefined
+                  : "I couldn't send you a private Budibase link. Please message me directly to link your account."
+              if (note) {
+                await replyToConversation({
+                  appId,
+                  agentId,
+                  channel: {
+                    provider: AgentChannelProvider.MSTEAMS,
+                    conversationId: activity?.conversation?.id?.trim(),
+                    conversationType:
+                      activity?.conversation?.conversationType?.trim(),
+                    channelId: activity?.channelData?.channel?.id?.trim(),
+                    externalUserId: event.user.userId,
+                    externalUserName: event.user.fullName,
+                    serviceUrl: raw?.serviceUrl,
+                  },
+                  text: note,
+                })
+              }
+            }
+            return respondResult
           })
-          if (event.thread) {
-            const msg =
-              result.status === "closed"
-                ? "Escalation already closed."
-                : "Response recorded."
-            await event.thread.post(msg)
+          if (event.thread && result.status !== "unlinked") {
+            await event.thread.post(escalationReplyText(result.status))
           }
         } catch (error) {
           console.error("Teams escalation action: failed to record response", {

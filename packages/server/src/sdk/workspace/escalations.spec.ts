@@ -510,9 +510,47 @@ describe("respond with approvers", () => {
         strategy: ResolutionStrategy.UNANIMOUS,
         presses: [[undefined, A]],
       })
-      expect(statuses).toEqual(["recorded"])
+      expect(statuses).toEqual(["unlinked"])
       expect(approvals).toEqual([])
       expect(resolve).not.toHaveBeenCalled()
+    })
+  })
+
+  it("counts an approver who links after pressing", async () => {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const escalationId = "esc-link-later"
+      const notificationDocId = await seed({
+        escalationId,
+        approvers: users.slice(0, 2),
+        strategy: ResolutionStrategy.UNANIMOUS,
+      })
+      const resolve = resolver()
+      const slackUser = { userId: "slack-late" }
+
+      const unlinked = await respond(
+        escalationId,
+        notificationDocId,
+        { actionId: A, user: slackUser },
+        resolve
+      )
+      const linked = await respond(
+        escalationId,
+        notificationDocId,
+        { actionId: A, user: slackUser, userId: users[1] },
+        resolve
+      )
+      await press(escalationId, notificationDocId, users[0], A, resolve)
+
+      expect(unlinked.status).toEqual("unlinked")
+      expect(linked.status).toEqual("recorded")
+      expect(await approvalsOf(escalationId)).toEqual([
+        `${users[1]}:${A}`,
+        `${users[0]}:${A}`,
+      ])
+      expect(resolve).toHaveBeenCalledWith(
+        escalationId,
+        expect.objectContaining({ accepted: true })
+      )
     })
   })
 

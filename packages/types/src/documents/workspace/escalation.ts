@@ -137,7 +137,7 @@ export interface EscalationApproval {
 }
 
 export interface EscalationRespondResult {
-  status: "recorded" | "already_responded" | "closed"
+  status: "recorded" | "already_responded" | "closed" | "unlinked"
   // Human-facing message the caller can surface (e.g. the inline card).
   message?: string
 }

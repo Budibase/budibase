@@ -61,7 +61,10 @@ const majority: ResolutionStrategyFn = () => {
   if (acceptedCount > totalRecipients / 2) {
     return { accepted: true, actionId: actions.approve }
   }
-  if (rejectCount > totalRecipients / 2 || responses.length >= totalRecipients) {
+  if (
+    rejectCount > totalRecipients / 2 ||
+    responses.length >= totalRecipients
+  ) {
     return { accepted: false, actionId: actions.reject }
   }
   return false
