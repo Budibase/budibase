@@ -5,7 +5,7 @@ import {
   Duration,
   utils,
 } from "@budibase/backend-core"
-import { EscalateToolResultStatus } from "@budibase/types"
+import { ApprovalToolResultStatus } from "@budibase/types"
 import type {
   AgentRequest,
   AgentRequestAction,
@@ -385,7 +385,7 @@ export async function recordToolCall({
       | { status?: string; escalationId?: string }
       | undefined
     if (
-      escalationOutput?.status === EscalateToolResultStatus.PENDING_APPROVAL &&
+      escalationOutput?.status === ApprovalToolResultStatus.PENDING_APPROVAL &&
       escalationOutput.escalationId
     ) {
       try {

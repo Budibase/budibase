@@ -6,6 +6,7 @@ import {
   AutomationIOType,
   AutomationStatus,
   AutomationTriggerStepId,
+  ToolAction,
   ToolType,
   PermissionLevel,
   PermissionType,
@@ -178,6 +179,7 @@ const createAutomationTools = (
         readableName: `${automationName}.trigger`,
         sourceId: automation._id,
         sourceType: ToolType.AUTOMATION,
+        action: ToolAction.TRIGGER,
         sourceLabel: "Budibase",
         description,
         executionPolicy: {
