@@ -999,7 +999,9 @@
   }
 
   .tool-part {
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
     margin-top: var(--spacing-l);
     margin-bottom: 0;
   }
@@ -1092,22 +1094,17 @@
   }
 
   .tool-details {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    margin-top: var(--spacing-m);
+    margin-top: var(--spacing-s);
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
-    background: var(--background);
+    background: var(--spectrum-global-color-gray-75);
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 6px;
     padding: var(--spacing-m);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    z-index: 1;
     overflow-x: hidden;
     min-width: 0;
   }
