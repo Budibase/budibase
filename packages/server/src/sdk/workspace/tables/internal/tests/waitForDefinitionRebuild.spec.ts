@@ -18,16 +18,17 @@ describe("waitForDefinitionRebuild", () => {
     mockDoWithLock.mockReset()
   })
 
-  it("resolves when the rebuild lock is free", async () => {
+  it("resolves immediately when the rebuild lock is free", async () => {
     mockDoWithLock.mockResolvedValue({ executed: true, result: undefined })
 
     await expect(
       waitForDefinitionRebuild("workspace_1")
     ).resolves.toBeUndefined()
 
+    expect(mockDoWithLock).toHaveBeenCalledTimes(1)
     expect(mockDoWithLock).toHaveBeenCalledWith(
       expect.objectContaining({
-        type: LockType.DEFAULT,
+        type: LockType.TRY_ONCE,
         name: LockName.SQS_SYNC_DEFINITIONS,
         resource: "workspace_1",
       }),
@@ -35,14 +36,32 @@ describe("waitForDefinitionRebuild", () => {
     )
   })
 
-  it("does not throw when the rebuild lock is currently held", async () => {
-    const lockError = new Error("Unable to acquire lock")
-    lockError.name = "LockError"
-    mockDoWithLock.mockRejectedValue(lockError)
+  it("keeps polling while the rebuild lock is held and returns once it releases", async () => {
+    mockDoWithLock
+      .mockResolvedValueOnce({ executed: false })
+      .mockResolvedValueOnce({ executed: false })
+      .mockResolvedValueOnce({ executed: true, result: undefined })
 
     await expect(
       waitForDefinitionRebuild("workspace_1")
     ).resolves.toBeUndefined()
+
+    expect(mockDoWithLock).toHaveBeenCalledTimes(3)
+  })
+
+  it("gives up and continues anyway once the max wait is exceeded", async () => {
+    jest.useFakeTimers()
+    try {
+      mockDoWithLock.mockResolvedValue({ executed: false })
+
+      const promise = waitForDefinitionRebuild("workspace_1")
+      await jest.advanceTimersByTimeAsync(20000)
+      await expect(promise).resolves.toBeUndefined()
+
+      expect(mockDoWithLock.mock.calls.length).toBeGreaterThan(1)
+    } finally {
+      jest.useRealTimers()
+    }
   })
 
   it("does not throw when the lock check fails for an unrelated reason", async () => {
@@ -51,5 +70,7 @@ describe("waitForDefinitionRebuild", () => {
     await expect(
       waitForDefinitionRebuild("workspace_1")
     ).resolves.toBeUndefined()
+
+    expect(mockDoWithLock).toHaveBeenCalledTimes(1)
   })
 })
