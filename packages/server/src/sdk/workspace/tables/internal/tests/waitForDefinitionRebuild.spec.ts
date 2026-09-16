@@ -43,7 +43,7 @@ describe("waitForDefinitionRebuild", () => {
       .mockResolvedValueOnce({ executed: true, result: undefined })
 
     await expect(
-      waitForDefinitionRebuild("workspace_1")
+      waitForDefinitionRebuild("workspace_2")
     ).resolves.toBeUndefined()
 
     expect(mockDoWithLock).toHaveBeenCalledTimes(3)
@@ -54,7 +54,7 @@ describe("waitForDefinitionRebuild", () => {
     try {
       mockDoWithLock.mockResolvedValue({ executed: false })
 
-      const promise = waitForDefinitionRebuild("workspace_1")
+      const promise = waitForDefinitionRebuild("workspace_3")
       await jest.advanceTimersByTimeAsync(20000)
       await expect(promise).resolves.toBeUndefined()
 
@@ -68,9 +68,28 @@ describe("waitForDefinitionRebuild", () => {
     mockDoWithLock.mockRejectedValue(new Error("ECONNREFUSED"))
 
     await expect(
-      waitForDefinitionRebuild("workspace_1")
+      waitForDefinitionRebuild("workspace_4")
     ).resolves.toBeUndefined()
 
     expect(mockDoWithLock).toHaveBeenCalledTimes(1)
+  })
+
+  it("avoids re-checking redis for a short window after confirming the lock is free", async () => {
+    mockDoWithLock.mockResolvedValue({ executed: true, result: undefined })
+
+    await waitForDefinitionRebuild("workspace_5")
+    await waitForDefinitionRebuild("workspace_5")
+    await waitForDefinitionRebuild("workspace_5")
+
+    expect(mockDoWithLock).toHaveBeenCalledTimes(1)
+  })
+
+  it("re-checks redis for a different workspace even if another one is cached as free", async () => {
+    mockDoWithLock.mockResolvedValue({ executed: true, result: undefined })
+
+    await waitForDefinitionRebuild("workspace_6")
+    await waitForDefinitionRebuild("workspace_7")
+
+    expect(mockDoWithLock).toHaveBeenCalledTimes(2)
   })
 })

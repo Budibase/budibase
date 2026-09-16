@@ -174,13 +174,19 @@ export async function withDefinitionRebuildLock<T>(
       name: LockName.SQS_SYNC_DEFINITIONS,
       resource: workspaceId,
     },
-    fn
+    () => {
+      definitionRebuildConfirmedFreeUntil.delete(workspaceId)
+      return fn()
+    }
   )
   return result
 }
 
 const DEFINITION_REBUILD_MAX_WAIT_MS = 10000
 const DEFINITION_REBUILD_POLL_INTERVAL_MS = 500
+const DEFINITION_REBUILD_CHECK_CACHE_MS = 250
+
+const definitionRebuildConfirmedFreeUntil = new Map<string, number>()
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -189,6 +195,11 @@ function sleep(ms: number) {
 export async function waitForDefinitionRebuild(
   workspaceId: string = context.getOrThrowWorkspaceId()
 ): Promise<void> {
+  const cachedFreeUntil = definitionRebuildConfirmedFreeUntil.get(workspaceId)
+  if (cachedFreeUntil != null && Date.now() < cachedFreeUntil) {
+    return
+  }
+
   const deadline = Date.now() + DEFINITION_REBUILD_MAX_WAIT_MS
   try {
     for (;;) {
@@ -201,7 +212,14 @@ export async function waitForDefinitionRebuild(
         },
         async () => {}
       )
-      if (executed || Date.now() >= deadline) {
+      if (executed) {
+        definitionRebuildConfirmedFreeUntil.set(
+          workspaceId,
+          Date.now() + DEFINITION_REBUILD_CHECK_CACHE_MS
+        )
+        return
+      }
+      if (Date.now() >= deadline) {
         return
       }
       await sleep(DEFINITION_REBUILD_POLL_INTERVAL_MS)

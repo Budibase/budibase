@@ -97,6 +97,10 @@ class DeploymentStore extends DerivedBudiStore<
       this.update(state => ({ ...state, isPublishing: true }))
       await API.publishAppChanges(get(workspaceStore).appId, opts)
       await this.completePublish()
+      this.update(state => ({
+        ...state,
+        publishCount: state.publishCount + 1,
+      }))
     } catch (error: any) {
       if (error?.status === 429) {
         notifications.warning(
@@ -107,14 +111,9 @@ class DeploymentStore extends DerivedBudiStore<
         const message = error?.message ? ` - ${error.message}` : ""
         notifications.error(`Error publishing app${message}`)
       }
+    } finally {
+      this.update(state => ({ ...state, isPublishing: false }))
     }
-    this.update(state => {
-      return {
-        ...state,
-        isPublishing: false,
-        publishCount: state.publishCount + 1,
-      }
-    })
   }
 
   async completePublish() {

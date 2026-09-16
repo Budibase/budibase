@@ -1,10 +1,17 @@
-import { constants, context, db as dbCore } from "@budibase/backend-core"
+import {
+  constants,
+  context,
+  db as dbCore,
+  locks,
+} from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import {
   AgentKnowledgeSourceType,
   Automation,
   FieldType,
   FormulaType,
+  LockName,
+  LockType,
   PublishResourceState,
   Row,
   RelationshipType,
@@ -498,20 +505,27 @@ describe("/api/deploy", () => {
       await config.api.workspace.sync(config.getDevWorkspaceId())
     }
 
-    it("rejects a concurrent publish while one is already in progress", async () => {
-      const results = await Promise.allSettled([
-        config.api.workspace.publish(config.getDevWorkspaceId()),
-        config.api.workspace.publish(config.getDevWorkspaceId()),
-      ])
+    it("rejects a publish while another publish holds the lock", async () => {
+      const devId = config.getDevWorkspaceId()
 
-      const fulfilled = results.filter(r => r.status === "fulfilled")
-      const rejected = results.filter(
-        (r): r is PromiseRejectedResult => r.status === "rejected"
+      let releaseLock: () => void = () => {}
+      const heldLock = config.doInContext(devId, () =>
+        locks.doWithLock(
+          {
+            type: LockType.AUTO_EXTEND,
+            name: LockName.PUBLISH_WORKSPACE,
+            resource: devId,
+          },
+          () => new Promise<void>(resolve => (releaseLock = resolve))
+        )
       )
 
-      expect(fulfilled).toHaveLength(1)
-      expect(rejected).toHaveLength(1)
-      expect(rejected[0].reason.cause.status).toBe(429)
+      await config.api.workspace.publish(devId, { status: 429 })
+
+      releaseLock()
+      await heldLock
+
+      await config.api.workspace.publish(devId)
     })
 
     it("allows a publish immediately after a previous publish finished", async () => {
