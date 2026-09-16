@@ -560,8 +560,8 @@
   })
 </script>
 
-<div class="chat-area" bind:this={chatAreaElement}>
-  <div class="chatbox">
+<div class="chat-area">
+  <div class="chatbox" bind:this={chatAreaElement}>
     {#if !hasMessages && !isRequestPending}
       <div class="empty-state">
         <div class="empty-state-icon">
@@ -819,7 +819,7 @@
     flex: 1 1 0;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    overflow: hidden;
     min-height: 0;
     font-family: var(--chat-font-sans, var(--font-sans));
     --font-serif: var(--chat-font-sans, var(--font-sans));
@@ -835,7 +835,9 @@
     flex-direction: column;
     gap: 24px;
     width: 100%;
-    flex: 1 1 auto;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
     padding: 48px 0 24px 0;
   }
 
@@ -884,14 +886,13 @@
   }
 
   .input-wrapper {
-    position: sticky;
-    bottom: 0;
     width: 100%;
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
     line-height: 1.4;
     gap: 6px;
+    padding-top: 8px;
   }
 
   .input-footer {
