@@ -349,6 +349,9 @@
       return
     }
     const users = await fetchUsersById(API, ids)
+    if (!Object.keys(users).length) {
+      return
+    }
     rowCache.update(state => ({
       ...state,
       ...users,

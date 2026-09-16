@@ -60,7 +60,9 @@
     wanted.forEach(id => loadingIds.add(id))
     const users = await fetchUsersById(API, wanted)
     wanted.forEach(id => loadingIds.delete(id))
-    selectedCache = { ...selectedCache, ...users }
+    if (Object.keys(users).length) {
+      selectedCache = { ...selectedCache, ...users }
+    }
   }
 
   const sortSelectedFirst = (users, ids) => {

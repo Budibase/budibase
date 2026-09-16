@@ -25,13 +25,13 @@ export const fetchUsersById = async (
         users[user._id] = user
       }
     }
+    for (const id of wanted) {
+      if (!users[id]) {
+        users[id] = { _id: id, email: id }
+      }
+    }
   } catch (error) {
     console.error("Failed to load users by id", error)
-  }
-  for (const id of wanted) {
-    if (!users[id]) {
-      users[id] = { _id: id, email: id }
-    }
   }
   return users
 }
