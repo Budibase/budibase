@@ -454,8 +454,14 @@ jobs:
           path: ./packages/server/images-sha.env
 
       - name: Configure AWS credentials for ECR Public
+        # Never for a fork: this job goes on to run test code from the pull
+        # request, which must not be able to reach the role credentials.
         id: aws-credentials
-        if: needs.compute-affected-jobs.outputs.run_server_tests == 'true' && vars.ECR_PUBLIC_ROLE_ARN != ''
+        if: >-
+          needs.compute-affected-jobs.outputs.run_server_tests == 'true'
+          && vars.ECR_PUBLIC_ROLE_ARN != ''
+          && (github.event_name != 'pull_request'
+          || github.event.pull_request.head.repo.full_name == github.repository)
         continue-on-error: true
         uses: aws-actions/configure-aws-credentials@v5
         with:
@@ -468,6 +474,20 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
         with:
           registry-type: public
+
+      - name: Scrub AWS credentials from the job environment
+        # The login leaves a Docker credential behind, so the AWS credentials
+        # are no longer needed. Clearing AWS_REGION also restores the eu-west-1
+        # default the tests expect; every consumer treats empty as unset.
+        if: steps.aws-credentials.conclusion != 'skipped'
+        run: |
+          {
+            echo "AWS_ACCESS_KEY_ID="
+            echo "AWS_SECRET_ACCESS_KEY="
+            echo "AWS_SESSION_TOKEN="
+            echo "AWS_REGION="
+            echo "AWS_DEFAULT_REGION="
+          } >> "$GITHUB_ENV"
 
       - name: Pull testcontainers images
         if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
