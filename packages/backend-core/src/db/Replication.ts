@@ -199,12 +199,15 @@ class Replication {
 
     // Keep this in sync with the filter function above.
     if (!filter) {
-      result.selector = this.buildReplicationSelector({
+      const generatedSelector = this.buildReplicationSelector({
         direction,
         isCreation,
         tableSyncList,
         syncAllTables,
       })
+      result.selector = opts.selector
+        ? { $and: [opts.selector, generatedSelector] }
+        : generatedSelector
     }
 
     return result
