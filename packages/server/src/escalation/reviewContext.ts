@@ -140,10 +140,7 @@ const valueAtPointer = (input: unknown, path: string): unknown => {
 
 export const hasSharedReviewParameters = (
   parameters: EscalationReviewContext["parameters"]
-): parameters is string | EscalationReviewParameter[] =>
-  typeof parameters === "string"
-    ? parameters.length > 0
-    : Boolean(parameters?.length)
+): parameters is EscalationReviewParameter[] => Boolean(parameters?.length)
 
 // Give each selected path a share of the display budget so every configured
 // path remains visible even when an earlier value is very large.
@@ -190,11 +187,8 @@ export const formatToolParameters = ({
 }
 
 export const stringifyToolParameters = (
-  parameters: string | EscalationReviewParameter[]
-) =>
-  typeof parameters === "string"
-    ? parameters
-    : parameters.map(({ path, value }) => `${path}: ${value}`).join("\n\n")
+  parameters: EscalationReviewParameter[]
+) => parameters.map(({ path, value }) => `${path}: ${value}`).join("\n\n")
 
 export const truncateReviewField = (value: string, limit = 500): string =>
   truncate(value, limit)

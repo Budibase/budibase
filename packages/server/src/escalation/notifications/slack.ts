@@ -129,10 +129,7 @@ const buildEscalationBlocks = ({
       // Neutralise the fence before chunking - a ``` split across two chunks
       // would survive a per-chunk replace and close the block early, letting the
       // rest of the arguments render as mrkdwn.
-      const parameters =
-        typeof reviewContext.parameters === "string"
-          ? [{ path: "", value: reviewContext.parameters }]
-          : reviewContext.parameters.slice(0, MAX_PARAMETER_BLOCKS)
+      const parameters = reviewContext.parameters.slice(0, MAX_PARAMETER_BLOCKS)
       let remainingBlocks = MAX_PARAMETER_BLOCKS
       parameters.forEach((parameter, index) => {
         const remainingParameters = parameters.length - index

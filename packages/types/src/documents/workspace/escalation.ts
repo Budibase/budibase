@@ -53,7 +53,7 @@ export interface EscalationReviewContext {
   operation: string
   action: string
   toolName?: string
-  parameters?: string | EscalationReviewParameter[]
+  parameters?: EscalationReviewParameter[]
 }
 
 export interface EscalationReviewParameter {

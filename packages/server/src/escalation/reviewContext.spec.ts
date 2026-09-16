@@ -53,7 +53,6 @@ describe("escalation review context", () => {
 
   it("treats missing or empty parameters as not shared", () => {
     expect(hasSharedReviewParameters(undefined)).toBe(false)
-    expect(hasSharedReviewParameters("")).toBe(false)
     expect(hasSharedReviewParameters([])).toBe(false)
     expect(hasSharedReviewParameters([{ path: "/name", value: "Ada" }])).toBe(
       true

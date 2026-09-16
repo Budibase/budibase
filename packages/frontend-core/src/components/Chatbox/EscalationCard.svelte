@@ -45,11 +45,7 @@
       ? title.slice(APPROVAL_REQUIRED_TITLE_PREFIX.length).trim()
       : title
   )
-  let hasSharedParameters = $derived(
-    typeof reviewContext?.parameters === "string"
-      ? reviewContext.parameters.length > 0
-      : Boolean(reviewContext?.parameters?.length)
-  )
+  let hasSharedParameters = $derived(Boolean(reviewContext?.parameters?.length))
 
   const toggleDetails = () => {
     expanded = !expanded
@@ -126,18 +122,14 @@
           <code>{reviewContext.toolName}</code>
         {/if}
       </div>
-      {#if typeof reviewContext.parameters === "string"}
-        <pre class="escalation-card-parameters">{reviewContext.parameters}</pre>
-      {:else}
-        <div class="escalation-card-parameters-list">
-          {#each reviewContext.parameters as parameter (parameter.path)}
-            <div class="escalation-card-parameter">
-              <code>{parameter.path}</code>
-              <pre class="escalation-card-parameters">{parameter.value}</pre>
-            </div>
-          {/each}
-        </div>
-      {/if}
+      <div class="escalation-card-parameters-list">
+        {#each reviewContext.parameters as parameter (parameter.path)}
+          <div class="escalation-card-parameter">
+            <code>{parameter.path}</code>
+            <pre class="escalation-card-parameters">{parameter.value}</pre>
+          </div>
+        {/each}
+      </div>
     {/if}
   {/if}
 

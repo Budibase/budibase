@@ -311,7 +311,7 @@ describe("sendSlackNotification", () => {
       requestedBy: "Test User (test@example.com)",
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
-      parameters: "&".repeat(24_000),
+      parameters: [{ path: "/content", value: "&".repeat(24_000) }],
     }
     await seedLinks(globalUserId)
     mockAuthTest.mockResolvedValue({ ok: true, team_id: TEAM_RIGHT })

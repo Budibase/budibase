@@ -216,9 +216,6 @@ const parameterLines = ({
 }
 
 const parameterDetails = (reviewContext: EscalationReviewContext) => {
-  if (typeof reviewContext.parameters === "string") {
-    return parameterLines({ value: reviewContext.parameters })
-  }
   const parameters = reviewContext.parameters ?? []
   let remainingLines = MAX_PARAMETER_LINES - parameters.length
   let remainingCharacters = MAX_PARAMETER_CHARACTERS
