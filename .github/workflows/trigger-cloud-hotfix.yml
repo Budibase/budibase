@@ -1,0 +1,45 @@
+name: Trigger Cloud hotfix
+run-name: Trigger Cloud hotfix after PR #${{ github.event.pull_request.number }}
+
+on:
+  pull_request_target:
+    branches:
+      - cloud
+    types:
+      - closed
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    name: Start the Cloud hotfix release
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate release App token
+        id: release-app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: Budibase
+          repositories: budibase-deploys
+          permission-contents: write
+
+      - name: Trigger the Cloud hotfix workflow
+        env:
+          GH_TOKEN: ${{ steps.release-app-token.outputs.token }}
+          MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+          PULL_REQUEST_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          set -euo pipefail
+
+          gh api \
+            --method POST \
+            repos/Budibase/budibase-deploys/dispatches \
+            --field event_type=cloud-pr-merged \
+            --field "client_payload[merge_commit_sha]=$MERGE_COMMIT_SHA" \
+            --field "client_payload[pull_request_number]=$PULL_REQUEST_NUMBER" \
+            --field "client_payload[pull_request_url]=$PULL_REQUEST_URL"
