@@ -98,9 +98,15 @@ class DeploymentStore extends DerivedBudiStore<
       await API.publishAppChanges(get(workspaceStore).appId, opts)
       await this.completePublish()
     } catch (error: any) {
-      analytics.captureException(error)
-      const message = error?.message ? ` - ${error.message}` : ""
-      notifications.error(`Error publishing app${message}`)
+      if (error?.status === 429) {
+        notifications.warning(
+          error.message || "A publish is already in progress"
+        )
+      } else {
+        analytics.captureException(error)
+        const message = error?.message ? ` - ${error.message}` : ""
+        notifications.error(`Error publishing app${message}`)
+      }
     }
     this.update(state => {
       return {

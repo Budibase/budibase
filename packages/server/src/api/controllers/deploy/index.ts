@@ -37,6 +37,11 @@ import {
 } from "../../../db/utils"
 import env from "../../../environment"
 import sdk from "../../../sdk"
+import {
+  checkDebounce,
+  clearDebounce,
+  setDebounce,
+} from "../../../utilities/redis"
 import { builderSocket } from "../../../websockets"
 import { doInMigrationLock } from "../../../workspaceMigrations"
 import Deployment from "./Deployment"
@@ -44,6 +49,8 @@ import { updateAllFormulasInTable } from "../row/staticFormula"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
+const PUBLISH_DEBOUNCE_TTL_SECONDS = 30 * 60
+const getPublishDebounceKey = (appId: string) => `publish_${appId}`
 
 // checks that deployments are in a good state, any pending will be updated
 async function checkAllDeployments(
@@ -435,14 +442,18 @@ export const publishWorkspaceInternal = async (
         await replication.resolveInconsistencies(devTablesIds)
 
         await devDb.compact()
-        await replication.replicate(
-          replication.appReplicateOpts({
-            isCreation: !isPublished,
-            tablesToSync,
-            // don't use checkpoints, this can stop previously ignored data being replicated
-            checkpoint: !seedTables,
-            filter: tableFilter,
-          })
+        await sdk.tables.sqs.withDefinitionRebuildLock(
+          () =>
+            replication!.replicate(
+              replication!.appReplicateOpts({
+                isCreation: !isPublished,
+                tablesToSync,
+                // don't use checkpoints, this can stop previously ignored data being replicated
+                checkpoint: !seedTables,
+                filter: tableFilter,
+              })
+            ),
+          prodId
         )
 
         const updatedProdTables = await applyPendingColumnRenames(prodId)
@@ -581,7 +592,10 @@ export const publishWorkspaceInternal = async (
   }
 
   try {
-    await syncStaticFormulasToProduction(migrationResult.prodWorkspaceId)
+    await sdk.tables.sqs.withDefinitionRebuildLock(
+      () => syncStaticFormulasToProduction(migrationResult.prodWorkspaceId),
+      migrationResult.prodWorkspaceId
+    )
   } catch (error: unknown) {
     const message =
       error instanceof Error
@@ -612,5 +626,17 @@ export const publishWorkspace = async function (
     )
   }
 
-  ctx.body = await publishWorkspaceInternal(ctx)
+  const debounceKey = getPublishDebounceKey(context.getOrThrowWorkspaceId())
+  if (await checkDebounce(debounceKey)) {
+    throw new errors.HTTPError(
+      "A publish for this app is already in progress, please wait for it to finish",
+      429
+    )
+  }
+  await setDebounce(debounceKey, PUBLISH_DEBOUNCE_TTL_SECONDS)
+  try {
+    ctx.body = await publishWorkspaceInternal(ctx)
+  } finally {
+    await clearDebounce(debounceKey)
+  }
 }
