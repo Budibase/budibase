@@ -417,18 +417,17 @@
   let skipAutoScroll = false
 
   const scrollToBottom = async () => {
-    if (skipAutoScroll) {
-      return
-    }
     await tick()
-    if (skipAutoScroll || !chatAreaElement) {
-      return
+    if (chatAreaElement) {
+      chatAreaElement.scrollTop = chatAreaElement.scrollHeight
     }
-    chatAreaElement.scrollTop = chatAreaElement.scrollHeight
   }
 
   $effect(() => {
     if (messages?.length) {
+      if (skipAutoScroll) {
+        return
+      }
       scrollToBottom()
     }
   })
@@ -547,7 +546,12 @@
   $effect(() => {
     if (!chatAreaElement) return
 
-    const obs = new MutationObserver(scrollToBottom)
+    const obs = new MutationObserver(() => {
+      if (skipAutoScroll) {
+        return
+      }
+      scrollToBottom()
+    })
     obs.observe(chatAreaElement, {
       childList: true,
       subtree: true,
