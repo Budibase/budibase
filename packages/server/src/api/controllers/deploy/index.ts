@@ -208,6 +208,13 @@ async function applyPendingColumnRenames(
 
     if (updatedTables.length > 0) {
       const bulkResults = await db.bulkDocs(updatedTables)
+      const failedIndex = bulkResults.findIndex(result => result.error)
+      if (failedIndex !== -1) {
+        const failedResult = bulkResults[failedIndex]
+        throw new Error(
+          `Failed to apply pending column renames for ${updatedTables[failedIndex]._id}: ${failedResult.error}`
+        )
+      }
       for (let i = 0; i < updatedTables.length; i++) {
         updatedTables[i]._rev = bulkResults[i].rev
       }
