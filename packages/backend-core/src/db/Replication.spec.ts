@@ -439,6 +439,30 @@ describe("Replication", () => {
       )
     })
 
+    it("should combine a caller selector with the generated selector", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      const callerSelector = {
+        _id: { $regex: "^ta_orders_" },
+      }
+
+      const opts = replication.appReplicateOpts({
+        isCreation: true,
+        selector: callerSelector,
+      })
+
+      expect(opts.selector).toEqual({
+        $and: [
+          callerSelector,
+          expect.objectContaining({
+            $and: expect.any(Array),
+          }),
+        ],
+      })
+    })
+
     it("should not attach a selector when a custom filter is provided", () => {
       const replication = new Replication({
         source: `${DocumentType.WORKSPACE_DEV}_source`,
