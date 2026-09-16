@@ -549,12 +549,18 @@ export async function slackWebhook(
                 linkedAlready: false,
                 prefix: unlinkedResponsePrompt(AgentChannelProvider.SLACK),
               })
-              await postLinkPromptPrivately({
+              const delivery = await postLinkPromptPrivately({
                 target: event.thread.channel as PrivatePostTarget,
                 user: event.user,
                 text: prompt.text,
                 linkUrl: prompt.linkUrl,
               })
+              if (!delivery.delivered) {
+                await postEscalationReply(
+                  event,
+                  "I couldn't send you a private Budibase link. Please message me directly to link your account."
+                )
+              }
             }
             return respondResult
           })
