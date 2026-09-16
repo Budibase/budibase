@@ -3,16 +3,6 @@
 # Pulls the given images in parallel, retrying each one, and fails if any of
 # them could not be pulled.
 #
-# Pulls fail intermittently in CI. Amazon ECR Public allows a single
-# unauthenticated pull per second per IP address, and GitHub-hosted runners
-# share egress IPs, so a busy matrix run trips that limit.
-#
-# Such a failure used to go unnoticed twice over. The pulls were backgrounded
-# and awaited with `wait $(jobs -p)`, which only reports the exit status of the
-# last PID, so a failed pull left the step green. testcontainers then treated
-# its own failed pull as a success - it resolves as soon as the pull stream
-# ends, without checking the stream for errors - and the run died later in
-# globalSetup with a confusing 404 "No such image" from the Docker daemon.
 
 set -uo pipefail
 
