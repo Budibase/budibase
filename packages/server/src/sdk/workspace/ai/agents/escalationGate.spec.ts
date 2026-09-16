@@ -82,7 +82,7 @@ describe("createEscalationGateRuntime", () => {
   it("persists self-contained reviewer context for the frozen tool call", async () => {
     const runtime = buildRuntime()
 
-    await runtime.intercept(
+    const result = await runtime.intercept(
       {
         workflow_id: "test-release.yml",
         inputs: { release_notes: "## Features\n- Useful change" },
@@ -111,6 +111,23 @@ describe("createEscalationGateRuntime", () => {
             toolName: "create_workflow_dispatch",
           }),
         }),
+      })
+    )
+    expect(result).toEqual(
+      expect.objectContaining({
+        reviewContext: {
+          requestedBy: "Test User (test@example.com)",
+          operation: "Prepare Cloud release",
+          action: "Trigger workflow",
+          toolName: "api.github_release_manager.Trigger workflow",
+          parameters: [
+            { name: "workflow_id", value: "test-release.yml" },
+            {
+              name: "inputs",
+              value: '{\n  "release_notes": "## Features\\n- Useful change"\n}',
+            },
+          ],
+        },
       })
     )
   })

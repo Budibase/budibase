@@ -9,6 +9,7 @@ import {
   ChatConversationChannel,
   ApprovalToolResultStatus,
   EscalationSource,
+  type EscalationReviewContext,
   type EscalationReviewParameter,
   ResolutionStrategy,
   ToolExecutionRule,
@@ -272,6 +273,13 @@ export const createEscalationGateRuntime = ({
       })
     }
 
+    const reviewContext: EscalationReviewContext = {
+      requestedBy: truncateReviewField(requestedBy),
+      operation: truncateReviewField(operation.name),
+      action: actionLabel,
+      ...(toolDisplay !== actionLabel && { toolName: toolDisplay }),
+      ...(parameters && { parameters }),
+    }
     const { escalationId } = await escalationProcessor.create({
       source: EscalationSource.OPERATION,
       appId,
@@ -279,13 +287,7 @@ export const createEscalationGateRuntime = ({
       message: summary,
       title,
       summary,
-      reviewContext: {
-        requestedBy: truncateReviewField(requestedBy),
-        operation: truncateReviewField(operation.name),
-        action: actionLabel,
-        ...(toolDisplay !== actionLabel && { toolName: toolDisplay }),
-        ...(parameters && { parameters }),
-      },
+      reviewContext,
       delay: (notifications.delay ?? DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
       recipients: notifications.recipients,
       resolutionStrategy: resolutionStrategyBinding(
@@ -316,6 +318,7 @@ export const createEscalationGateRuntime = ({
       escalationId,
       title,
       summary,
+      reviewContext,
       note:
         `Approval requested for ${label}. The action is paused until a ` +
         "human responds - do not attempt it again in this turn.",
