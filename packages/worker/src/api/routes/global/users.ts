@@ -91,6 +91,17 @@ adminRoutes
   )
   .delete("/api/global/users/:id", controller.destroy)
   .get("/api/global/users/invites", controller.getUserInvites)
+  .post("/api/global/users/invite", buildInviteValidation(), controller.invite)
+  .post(
+    "/api/global/users/multi/invite",
+    buildInviteMultipleValidation(),
+    controller.inviteMultiple
+  )
+  .post(
+    "/api/global/users/multi/invite/delete",
+    controller.removeMultipleInvites
+  )
+  .post("/api/global/users", users.buildUserSaveValidation(), controller.save)
 
 builderOrAdminRoutes
   .get("/api/global/users", controller.fetch)
@@ -112,19 +123,6 @@ builderOrAdminRoutes
     "/api/global/users/:userId/permission",
     controller.removeUserFromWorkspace
   )
-
-adminRoutes
-  .post("/api/global/users/invite", buildInviteValidation(), controller.invite)
-  .post(
-    "/api/global/users/multi/invite",
-    buildInviteMultipleValidation(),
-    controller.inviteMultiple
-  )
-  .post(
-    "/api/global/users/multi/invite/delete",
-    controller.removeMultipleInvites
-  )
-  .post("/api/global/users", users.buildUserSaveValidation(), controller.save)
 
 loggedInRoutes
   // search can be used by any user now, to retrieve users for user column

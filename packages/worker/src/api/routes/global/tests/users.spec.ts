@@ -47,6 +47,53 @@ describe("/api/global/users", () => {
     return user
   }
 
+  describe("GET /api/global/users/invites", () => {
+    let invite: { code: string; email: string }
+
+    beforeEach(async () => {
+      const email = structures.users.newEmail()
+      const { code } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        email
+      )
+      invite = { code: code!, email }
+    })
+
+    it("allows admins to list invitations", async () => {
+      const response = await config.api.users.getUserInvites()
+
+      expect(response.body).toEqual(
+        expect.arrayContaining([expect.objectContaining(invite)])
+      )
+    })
+
+    it("rejects creators", async () => {
+      const user = await config.createUser({
+        ...structures.users.user(),
+        admin: { global: false },
+        builder: { global: false, creator: true, apps: [] },
+      })
+      await config.createSession(user)
+
+      const response = await config.withUser(user, () =>
+        config.api.users.getUserInvites({ status: 403 })
+      )
+
+      expect(response.body.message).toBe("Admin user only endpoint.")
+    })
+
+    it("rejects basic users", async () => {
+      const user = await config.createUser(structures.users.user())
+      await config.createSession(user)
+
+      const response = await config.withUser(user, () =>
+        config.api.users.getUserInvites({ status: 403 })
+      )
+
+      expect(response.body.message).toBe("Admin user only endpoint.")
+    })
+  })
+
   describe("POST /api/global/users/invite", () => {
     it("should be able to generate an invitation", async () => {
       const email = structures.users.newEmail()

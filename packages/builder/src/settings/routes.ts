@@ -100,7 +100,7 @@ export const orgRoutes = (
     },
     {
       section: "People",
-      access: () => isGlobalBuilder,
+      access: () => isAdmin,
       path: "people",
       icon: "users",
       routes: [
