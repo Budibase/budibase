@@ -8,8 +8,8 @@ export type {
   TerminationHandler,
   UnregisterTermination,
 } from "./runtime"
-export { LocalFunctionRunSupervisor } from "./supervisor"
+export { FunctionRunSupervisor } from "./supervisor"
 export type {
-  LocalFunctionRunSupervisorOptions,
+  FunctionRunSupervisorOptions,
   SuperviseFunctionRunOptions,
 } from "./supervisor"

@@ -1,9 +1,9 @@
-import { LocalFunctionRunSupervisor } from "@budibase/functions-runtime"
+import { FunctionRunSupervisor } from "@budibase/functions-runtime"
 import { functionExecutor } from "./executor"
 
 export { functionExecutor, LocalFunctionExecutor } from "./executor"
-export { LocalFunctionRunSupervisor } from "@budibase/functions-runtime"
+export { FunctionRunSupervisor } from "@budibase/functions-runtime"
 
-export const functionRunSupervisor = new LocalFunctionRunSupervisor({
+export const functionRunSupervisor = new FunctionRunSupervisor({
   executor: functionExecutor,
 })

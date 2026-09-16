@@ -1,11 +1,10 @@
-import { FunctionErrorCode } from "@budibase/types"
 import type {
   FunctionExecutionContext,
   FunctionExecutor,
   FunctionRunRequest,
   FunctionRunResult,
 } from "@budibase/types"
-import { LocalFunctionRunSupervisor } from "./supervisor"
+import { FunctionRunSupervisor } from "./supervisor"
 
 const request: FunctionRunRequest = {
   runId: "run-fixture-1",
@@ -71,13 +70,12 @@ const stoppedResult: FunctionRunResult = {
   },
 }
 
-describe("LocalFunctionRunSupervisor", () => {
+describe("FunctionRunSupervisor", () => {
   it("executes a run without adding cancellation to its context", async () => {
     const runExecutor = executor()
-    const supervisor = new LocalFunctionRunSupervisor({ executor: runExecutor })
+    const supervisor = new FunctionRunSupervisor({ executor: runExecutor })
 
     expect(supervisor.isHealthy()).toBe(true)
-    expect(supervisor.activeRunCount()).toBe(0)
 
     await expect(
       supervisor.execute({
@@ -88,7 +86,6 @@ describe("LocalFunctionRunSupervisor", () => {
 
     expect(runExecutor.execute).toHaveBeenCalledWith(request, context)
     expect(runExecutor.terminate).not.toHaveBeenCalled()
-    expect(supervisor.activeRunCount()).toBe(0)
   })
 
   it("terminates an active run when its containing automation is cancelled", async () => {
@@ -101,7 +98,7 @@ describe("LocalFunctionRunSupervisor", () => {
       finishRun(result)
       return Promise.resolve()
     })
-    const supervisor = new LocalFunctionRunSupervisor({
+    const supervisor = new FunctionRunSupervisor({
       executor: executor({
         execute: jest.fn().mockReturnValue(execution),
         terminate,
@@ -132,7 +129,7 @@ describe("LocalFunctionRunSupervisor", () => {
       finishRun(result)
       return Promise.resolve()
     })
-    const supervisor = new LocalFunctionRunSupervisor({
+    const supervisor = new FunctionRunSupervisor({
       executor: executor({ execute, terminate }),
     })
 
@@ -148,45 +145,10 @@ describe("LocalFunctionRunSupervisor", () => {
     expect(terminate).toHaveBeenCalledTimes(1)
   })
 
-  it("reports active runs and terminates them during shutdown", async () => {
-    let finishRun = (_result: FunctionRunResult) => {}
-    const execution = new Promise<FunctionRunResult>(resolve => {
-      finishRun = resolve
-    })
-    const terminate = jest.fn().mockImplementation(() => {
-      finishRun(result)
-      return Promise.resolve()
-    })
-    const supervisor = new LocalFunctionRunSupervisor({
-      executor: executor({
-        execute: jest.fn().mockReturnValue(execution),
-        terminate,
-      }),
-    })
-
-    const supervisedRun = supervisor.execute({ request, context })
-
-    expect(supervisor.activeRunCount()).toBe(1)
-    await expect(supervisor.shutdown()).resolves.toBeUndefined()
-    await expect(supervisedRun).resolves.toEqual(stoppedResult)
-
-    expect(supervisor.isHealthy()).toBe(false)
-    expect(supervisor.activeRunCount()).toBe(0)
-    expect(terminate).toHaveBeenCalledWith(request.runId)
-    await expect(
-      supervisor.execute({ request, context })
-    ).resolves.toMatchObject({
-      status: "error",
-      error: {
-        code: FunctionErrorCode.FUNCTION_ORCHESTRATOR_INTERRUPTED,
-      },
-    })
-  })
-
   it("reports termination failures", async () => {
     const terminationError = new Error("termination failed")
     const log = jest.spyOn(console, "error").mockImplementation(() => {})
-    const supervisor = new LocalFunctionRunSupervisor({
+    const supervisor = new FunctionRunSupervisor({
       executor: executor({
         terminate: jest.fn().mockRejectedValue(terminationError),
       }),
