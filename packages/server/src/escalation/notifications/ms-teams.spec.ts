@@ -215,9 +215,9 @@ describe("sendMSTeamsNotification", () => {
       action: "Trigger workflow",
       toolName: "create_workflow_dispatch",
       parameters: [
-        { path: "/owner", value: "Budibase" },
+        { name: "owner", value: "Budibase" },
         {
-          path: "/release_notes",
+          name: "release_notes",
           value: "## Features\n- Useful change",
         },
       ],
@@ -236,7 +236,7 @@ describe("sendMSTeamsNotification", () => {
     expect(rendered).toContain("Test User")
     expect(rendered).toContain("Prepare Cloud release")
     expect(rendered).toContain("release_notes")
-    expect(rendered).toContain("/owner")
+    expect(rendered).toContain("owner")
     expect(rendered).toContain("create_workflow_dispatch")
     expect(rendered).toContain("Useful change")
     expect(rendered).toContain('"fontType":"monospace"')
@@ -290,7 +290,7 @@ describe("sendMSTeamsNotification", () => {
       requestedBy: "Test User (test@example.com)",
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
-      parameters: [{ path: "/release_notes", value: injected }],
+      parameters: [{ name: "release_notes", value: injected }],
     }
     await seedLinks(globalUserId)
 

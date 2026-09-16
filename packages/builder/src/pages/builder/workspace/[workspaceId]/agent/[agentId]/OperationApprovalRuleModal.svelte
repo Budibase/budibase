@@ -17,13 +17,13 @@
     ToolExecutionRule,
   } from "@budibase/types"
   import {
-    MAX_REVIEW_PARAMETER_PATHS,
+    MAX_REVIEW_PARAMETERS,
     OperatorOptions,
     dataFilters,
   } from "@budibase/shared-core"
   import { FilterField } from "@budibase/frontend-core"
   import {
-    normalizeReviewParameterPaths,
+    normalizeReviewParameters,
     withSelectedReviewFields,
     type ConditionField,
     type ReviewField,
@@ -39,7 +39,7 @@
       index?: number
       policyId?: string
       conditions: ToolExecutionCondition[]
-      reviewParameterPaths: string[]
+      reviewParameters: string[]
     }) => void
     onOpenApiExplorer?: () => void
     onClose?: () => void
@@ -62,14 +62,14 @@
   let editingIndex = $state<number | undefined>()
   let policyId = $state<string | undefined>()
   let conditions = $state<ConditionDraft[]>([])
-  let reviewParameterPaths = $state<string[]>([])
+  let reviewParameters = $state<string[]>([])
 
   let apiExplorerAvailable = $state(false)
 
   let shareableFields = $derived(
     withSelectedReviewFields({
       fields: reviewFields,
-      selected: reviewParameterPaths,
+      selected: reviewParameters,
     })
   )
 
@@ -95,8 +95,8 @@
           : condition.value,
       noValue: NO_VALUE_OPERATORS.has(condition.operator),
     }))
-    reviewParameterPaths = normalizeReviewParameterPaths(
-      options.rule?.reviewParameterPaths ?? []
+    reviewParameters = normalizeReviewParameters(
+      options.rule?.reviewParameters ?? []
     )
     modal?.show()
   }
@@ -109,11 +109,11 @@
 
   export const updateReviewFields = (next: ReviewField[]) => {
     reviewFields = next
-    reviewParameterPaths = normalizeReviewParameterPaths(reviewParameterPaths)
+    reviewParameters = normalizeReviewParameters(reviewParameters)
   }
 
   const reviewSelectionValid = $derived(
-    reviewParameterPaths.length <= MAX_REVIEW_PARAMETER_PATHS
+    reviewParameters.length <= MAX_REVIEW_PARAMETERS
   )
 
   const operatorsFor = (condition: ConditionDraft) => {
@@ -229,14 +229,13 @@
       ...condition,
       value: coerceValue(condition),
     }))
-    const cleanedReviewPaths =
-      normalizeReviewParameterPaths(reviewParameterPaths)
+    const cleanedReviewParameters = normalizeReviewParameters(reviewParameters)
     await onSave({
       rule: {
         policyId,
         ...(cleaned.length ? { conditions: cleaned } : {}),
-        ...(cleanedReviewPaths.length
-          ? { reviewParameterPaths: cleanedReviewPaths }
+        ...(cleanedReviewParameters.length
+          ? { reviewParameters: cleanedReviewParameters }
           : {}),
       },
       index: editingIndex,
@@ -370,7 +369,7 @@
               conditions: conditions.map(
                 ({ noValue: _noValue, ...condition }) => condition
               ),
-              reviewParameterPaths: [...reviewParameterPaths],
+              reviewParameters: [...reviewParameters],
             })}
         >
           Create new policy
@@ -387,17 +386,17 @@
       </div>
       {#if shareableFields.length}
         <Multiselect
-          value={reviewParameterPaths}
+          value={reviewParameters}
           options={shareableFields}
           placeholder="No fields shared"
           autocomplete
           searchPlaceholder="Search fields"
           getOptionLabel={field => field.label}
-          getOptionValue={field => field.path}
+          getOptionValue={field => field.name}
           error={reviewSelectionValid
             ? undefined
-            : `Select no more than ${MAX_REVIEW_PARAMETER_PATHS} fields.`}
-          on:change={event => (reviewParameterPaths = event.detail)}
+            : `Select no more than ${MAX_REVIEW_PARAMETERS} fields.`}
+          on:change={event => (reviewParameters = event.detail)}
         />
       {:else}
         <Body size="XS" color="var(--spectrum-global-color-gray-600)">

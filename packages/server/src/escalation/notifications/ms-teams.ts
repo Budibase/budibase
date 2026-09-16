@@ -233,7 +233,7 @@ const parameterDetails = (reviewContext: EscalationReviewContext) => {
     })
     remainingLines -= lines.length
     remainingCharacters -= Math.min(parameter.value.length, characterLimit)
-    return [richLine([{ text: parameter.path, weight: "bolder" }]), ...lines]
+    return [richLine([{ text: parameter.name, weight: "bolder" }]), ...lines]
   })
 }
 

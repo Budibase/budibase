@@ -239,7 +239,7 @@ export const createEscalationGateRuntime = ({
     const requestedBy = gateContext.requesterLabel ?? "Unknown requester"
     const parameters = formatToolParameters({
       input,
-      paths: rule.reviewParameterPaths,
+      names: rule.reviewParameters,
     })
     const actionLabel = truncateReviewField(label)
     const toolDisplay = truncateReviewField(displayName ?? label)

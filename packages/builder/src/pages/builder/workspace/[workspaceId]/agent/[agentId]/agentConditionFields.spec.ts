@@ -1,39 +1,10 @@
-import {
-  FieldType,
-  RelationshipType,
-  TableSourceType,
-  ToolAction,
-  ToolType,
-} from "@budibase/types"
-import type { Table } from "@budibase/types"
+import { ToolAction, ToolType } from "@budibase/types"
 import {
   getToolReviewFields,
-  normalizeReviewParameterPaths,
+  normalizeReviewParameters,
   withSelectedReviewFields,
 } from "./agentConditionFields"
 import type { AgentTool } from "./toolTypes"
-
-const table: Table = {
-  _id: "ta_1",
-  name: "Contacts",
-  type: "table",
-  sourceId: "bb_internal",
-  sourceType: TableSourceType.INTERNAL,
-  schema: {
-    name: { name: "Full name", type: FieldType.STRING },
-    company: {
-      name: "Company",
-      type: FieldType.LINK,
-      fieldName: "contacts",
-      tableId: "ta_2",
-      relationshipType: RelationshipType.ONE_TO_MANY,
-    },
-    files: {
-      name: "Supporting files",
-      type: FieldType.ATTACHMENTS,
-    },
-  },
-}
 
 const tool: AgentTool = {
   name: "create_contact",
@@ -45,62 +16,48 @@ const tool: AgentTool = {
   runtimeBinding: "create_contact",
 }
 
-describe("review parameter paths", () => {
-  it("trims paths and removes duplicates without changing their order", () => {
+describe("review parameters", () => {
+  it("trims names and removes duplicates without changing their order", () => {
     expect(
-      normalizeReviewParameterPaths([" /second ", "/first", "/second", ""])
-    ).toEqual(["/second", "/first"])
+      normalizeReviewParameters([" second ", "first", "second", ""])
+    ).toEqual(["second", "first"])
   })
 
-  it("makes linked and complex writable fields selectable", () => {
+  it("shares row data as a direct argument", () => {
     expect(
       getToolReviewFields({
         tool,
-        tables: [table],
         queries: [],
-        automations: [],
       })
-    ).toEqual([
-      { path: "/data/name", label: "Full name" },
-      { path: "/data/company", label: "Company" },
-      { path: "/data/files", label: "Supporting files" },
-    ])
+    ).toEqual([{ name: "data", label: "Data" }])
   })
 
-  it("keeps genuinely unknown selected paths as options", () => {
+  it("keeps genuinely unknown selected names as options", () => {
     expect(
       withSelectedReviewFields({
         fields: [
-          { path: "/data/name", label: "name" },
-          { path: "/data/company", label: "company" },
+          { name: "data", label: "Data" },
+          { name: "rowId", label: "Row ID" },
         ],
-        selected: [
-          " /data/name ",
-          "/data/company",
-          "/inputs/release_notes",
-          "/data/name",
-        ],
+        selected: [" data ", "rowId", "custom", "data"],
       })
     ).toEqual([
-      { path: "/data/name", label: "name" },
-      { path: "/data/company", label: "company" },
-      { path: "/inputs/release_notes", label: "/inputs/release_notes" },
+      { name: "data", label: "Data" },
+      { name: "rowId", label: "Row ID" },
+      { name: "custom", label: "custom" },
     ])
   })
 
-  it("includes row ID but not row revision for update-row tools", () => {
+  it("includes all direct update-row arguments", () => {
     expect(
       getToolReviewFields({
         tool: { ...tool, action: ToolAction.UPDATE_ROW },
-        tables: [table],
         queries: [],
-        automations: [],
       })
     ).toEqual([
-      { path: "/rowId", label: "Row ID" },
-      { path: "/data/name", label: "Full name" },
-      { path: "/data/company", label: "Company" },
-      { path: "/data/files", label: "Supporting files" },
+      { name: "rowId", label: "Row ID" },
+      { name: "rowRev", label: "Row revision" },
+      { name: "data", label: "Data" },
     ])
   })
 })

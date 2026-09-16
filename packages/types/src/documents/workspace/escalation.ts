@@ -57,7 +57,7 @@ export interface EscalationReviewContext {
 }
 
 export interface EscalationReviewParameter {
-  path: string
+  name: string
   value: string
 }
 

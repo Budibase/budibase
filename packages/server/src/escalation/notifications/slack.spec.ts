@@ -169,9 +169,9 @@ describe("sendSlackNotification", () => {
       action: "Trigger workflow",
       toolName: "create_workflow_dispatch",
       parameters: [
-        { path: "/owner", value: "Budibase" },
+        { name: "owner", value: "Budibase" },
         {
-          path: "/release_notes",
+          name: "release_notes",
           value:
             `## Features\n- Useful change\n${injectedLink}\n` + injectedFence,
         },
@@ -213,7 +213,7 @@ describe("sendSlackNotification", () => {
       })
     )
     expect(rendered).toContain("release_notes")
-    expect(rendered).toContain("/owner")
+    expect(rendered).toContain("owner")
     expect(rendered).toContain("create_workflow_dispatch")
     expect(rendered).toContain("Useful change")
     expect(rendered).toContain("&lt;https://evil.example.com|Approve&gt;")
@@ -250,7 +250,7 @@ describe("sendSlackNotification", () => {
       requestedBy: "Test User (test@example.com)",
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
-      parameters: [{ path: "/optional", value: "" }],
+      parameters: [{ name: "optional", value: "" }],
     }
     await seedLinks(globalUserId)
     mockAuthTest.mockResolvedValue({ ok: true, team_id: TEAM_RIGHT })
@@ -261,9 +261,9 @@ describe("sendSlackNotification", () => {
 
     const blocks = mockPostMessage.mock.calls[0][0].blocks
     const parameterBlock = blocks.find((block: { text?: { text: string } }) =>
-      block.text?.text.includes("/optional")
+      block.text?.text.includes("optional")
     )
-    expect(parameterBlock.text.text).toBe("*/optional*\n```\u200B```")
+    expect(parameterBlock.text.text).toBe("*optional*\n```\u200B```")
     expect(blocks.at(-1)?.type).toBe("actions")
   })
 
@@ -275,7 +275,7 @@ describe("sendSlackNotification", () => {
       action: "Trigger workflow",
       parameters: [
         {
-          path: "/release_notes",
+          name: "release_notes",
           value: `${"x".repeat(2_499)}\`\`\`forged content`,
         },
       ],
@@ -311,7 +311,7 @@ describe("sendSlackNotification", () => {
       requestedBy: "Test User (test@example.com)",
       operation: "Prepare Cloud release",
       action: "Trigger workflow",
-      parameters: [{ path: "/content", value: "&".repeat(24_000) }],
+      parameters: [{ name: "content", value: "&".repeat(24_000) }],
     }
     await seedLinks(globalUserId)
     mockAuthTest.mockResolvedValue({ ok: true, team_id: TEAM_RIGHT })

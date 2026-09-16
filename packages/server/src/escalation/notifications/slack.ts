@@ -142,8 +142,8 @@ const buildEscalationBlocks = ({
           blockBudget
         )
         chunks.forEach((chunk, chunkIndex) => {
-          const path = truncateReviewField(
-            escapeMrkdwn(parameter.path).replace(/`/g, "'"),
+          const name = truncateReviewField(
+            escapeMrkdwn(parameter.name).replace(/`/g, "'"),
             300
           )
           blocks.push({
@@ -151,7 +151,7 @@ const buildEscalationBlocks = ({
             text: {
               type: "mrkdwn",
               text:
-                (chunkIndex === 0 && path ? `*${path}*\n` : "") +
+                (chunkIndex === 0 && name ? `*${name}*\n` : "") +
                 `\`\`\`${chunk || "\u200B"}\`\`\``,
             },
           })

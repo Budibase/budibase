@@ -3,7 +3,6 @@ import type { ContextUser, EscalationReviewParameter } from "@budibase/types"
 const MAX_DEPTH = 10
 const MAX_STRING_LENGTH = 10_000
 const MAX_PARAMETERS_LENGTH = 24_000
-const INDENT = "  "
 const UNAVAILABLE = "[UNAVAILABLE]"
 
 type DisplayValue =
@@ -68,94 +67,46 @@ const prepareForDisplay = (
   return Object.fromEntries(entries)
 }
 
-// Reviewers approve on what they can read, so values are rendered as text
-// rather than escaped JSON - a multi-line argument stays multi-line. The
-// result carries its own separator: a space when the value sits on the key's
-// line, a newline when it needs an indented block beneath it.
-const render = (value: DisplayValue, indent: string): string => {
+const render = (value: DisplayValue): string => {
   if (typeof value === "string") {
-    if (!value.includes("\n")) {
-      return ` ${value}`
-    }
-    return `\n${value
-      .split("\n")
-      .map(line => `${indent}${line}`)
-      .join("\n")}`
+    return value
   }
   if (!value || typeof value !== "object") {
-    return ` ${value === null ? "null" : String(value)}`
+    return value === null ? "null" : String(value)
   }
-  const nested = `${indent}${INDENT}`
-  if (Array.isArray(value)) {
-    if (!value.length) {
-      return " []"
-    }
-    return value.map(item => `\n${indent}-${render(item, nested)}`).join("")
-  }
-  const entries = Object.entries(value)
-  if (!entries.length) {
-    return " {}"
-  }
-  return entries
-    .map(([key, child]) => `\n${indent}${key}:${render(child, nested)}`)
-    .join("")
+  return JSON.stringify(value, null, 2)
 }
 
-const renderRoot = (value: DisplayValue) =>
-  render(value, "").replace(/^[ \n]/, "")
+const valueAtName = (input: unknown, name: string): unknown =>
+  input !== null &&
+  (typeof input === "object" || typeof input === "function") &&
+  Object.prototype.hasOwnProperty.call(input, name)
+    ? (input as Record<string, unknown>)[name]
+    : UNAVAILABLE
 
-const decodePointer = (path: string): string[] | undefined => {
-  if (!path.startsWith("/") || /~(?:[^01]|$)/.test(path)) {
-    return undefined
-  }
-  return path
-    .slice(1)
-    .split("/")
-    .map(segment => segment.replace(/~1/g, "/").replace(/~0/g, "~"))
-}
-
-const valueAtPointer = (input: unknown, path: string): unknown => {
-  const segments = decodePointer(path)
-  if (!segments) {
-    return UNAVAILABLE
-  }
-  let value = input
-  for (const segment of segments) {
-    if (
-      (typeof value !== "object" && typeof value !== "function") ||
-      value === null ||
-      !Object.prototype.hasOwnProperty.call(value, segment)
-    ) {
-      return UNAVAILABLE
-    }
-    value = (value as Record<string, unknown>)[segment]
-  }
-  return value
-}
-
-// Give each selected path a share of the display budget so every configured
-// path remains visible even when an earlier value is very large.
+// Give each selected parameter a share of the display budget so every
+// configured parameter remains visible even when an earlier value is large.
 export const formatToolParameters = ({
   input,
-  paths,
+  names,
 }: {
   input: unknown
-  paths?: string[]
+  names?: string[]
 }): EscalationReviewParameter[] | undefined => {
-  const uniquePaths = [
-    ...new Set(paths?.map(path => path.trim()).filter(Boolean)),
+  const uniqueNames = [
+    ...new Set(names?.map(name => name.trim()).filter(Boolean)),
   ]
-  if (!uniquePaths.length) {
+  if (!uniqueNames.length) {
     return undefined
   }
 
-  const entries = uniquePaths.map(path => [
-    path,
-    prepareForDisplay(valueAtPointer(input, path), new WeakSet()),
+  const entries = uniqueNames.map(name => [
+    name,
+    prepareForDisplay(valueAtName(input, name), new WeakSet()),
   ]) as [string, DisplayValue][]
   const separatorsLength = Math.max(0, entries.length - 1) * 2
   const labelsLength = entries.reduce(
-    (total, [path]) => total + path.length + 2,
+    (total, [name]) => total + name.length + 2,
     0
   )
   const valuesBudget = Math.max(
@@ -164,18 +115,18 @@ export const formatToolParameters = ({
   )
 
   let remainingBudget = valuesBudget
-  return entries.map(([path, value], index) => {
+  return entries.map(([name, value], index) => {
     const remainingEntries = entries.length - index
     const valueBudget = Math.floor(remainingBudget / remainingEntries)
-    const formattedValue = truncate(renderRoot(value), valueBudget)
+    const formattedValue = truncate(render(value), valueBudget)
     remainingBudget -= formattedValue.length
-    return { path, value: formattedValue }
+    return { name, value: formattedValue }
   })
 }
 
 export const stringifyToolParameters = (
   parameters: EscalationReviewParameter[]
-) => parameters.map(({ path, value }) => `${path}: ${value}`).join("\n\n")
+) => parameters.map(({ name, value }) => `${name}: ${value}`).join("\n\n")
 
 export const truncateReviewField = (value: string, limit = 500): string =>
   truncate(value, limit)

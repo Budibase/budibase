@@ -123,9 +123,9 @@
         {/if}
       </div>
       <div class="escalation-card-parameters-list">
-        {#each reviewContext.parameters as parameter (parameter.path)}
+        {#each reviewContext.parameters as parameter (parameter.name)}
           <div class="escalation-card-parameter">
-            <code>{parameter.path}</code>
+            <code>{parameter.name}</code>
             <pre class="escalation-card-parameters">{parameter.value}</pre>
           </div>
         {/each}

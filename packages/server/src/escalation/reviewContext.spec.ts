@@ -45,12 +45,12 @@ describe("escalation review context", () => {
     expect(
       formatToolParameters({
         input: { optional: undefined },
-        paths: ["/optional"],
+        names: ["optional"],
       })
-    ).toEqual([{ path: "/optional", value: "" }])
+    ).toEqual([{ name: "optional", value: "" }])
   })
 
-  it("projects nested paths and preserves selected secret-like values", () => {
+  it("projects direct arguments and preserves selected secret-like values", () => {
     const formatted = formatToolParameters({
       input: {
         owner: "Budibase",
@@ -58,37 +58,33 @@ describe("escalation review context", () => {
           release_notes: "## Features\n- Useful change",
           api_token: "explicitly-shared",
         },
+        api_token: "explicitly-shared",
       },
-      paths: ["/owner", "/inputs/release_notes", "/inputs/api_token"],
+      names: ["owner", "inputs", "api_token"],
     })
 
     expect(formatted).toEqual([
-      { path: "/owner", value: "Budibase" },
+      { name: "owner", value: "Budibase" },
       {
-        path: "/inputs/release_notes",
-        value: "## Features\n- Useful change",
+        name: "inputs",
+        value:
+          '{\n  "release_notes": "## Features\\n- Useful change",\n  "api_token": "explicitly-shared"\n}',
       },
-      { path: "/inputs/api_token", value: "explicitly-shared" },
+      { name: "api_token", value: "explicitly-shared" },
     ])
   })
 
-  it("supports escaped pointer segments, arrays, missing paths, and deduping", () => {
+  it("supports unusual direct names, missing arguments, and deduping", () => {
     const formatted = formatToolParameters({
       input: {
-        "a/b": { "~key": [{ value: "found" }] },
+        "a/b": "found",
       },
-      paths: [
-        "/a~1b/~0key/0/value",
-        "/missing",
-        "invalid",
-        "/a~1b/~0key/0/value",
-      ],
+      names: ["a/b", "missing", "a/b"],
     })
 
     expect(formatted).toEqual([
-      { path: "/a~1b/~0key/0/value", value: "found" },
-      { path: "/missing", value: "[UNAVAILABLE]" },
-      { path: "invalid", value: "[UNAVAILABLE]" },
+      { name: "a/b", value: "found" },
+      { name: "missing", value: "[UNAVAILABLE]" },
     ])
   })
 
@@ -101,10 +97,10 @@ describe("escalation review context", () => {
         notes: "## Features\n- Useful change",
         circular,
       },
-      paths: ["/notes", "/circular"],
+      names: ["notes", "circular"],
     })
     expect(formatted?.[0]).toEqual({
-      path: "/notes",
+      name: "notes",
       value: "## Features\n- Useful change",
     })
     expect(formatted?.[1].value).toContain("[TRUNCATED:")
@@ -114,7 +110,7 @@ describe("escalation review context", () => {
     )
   })
 
-  it("keeps every selected path within the total budget", () => {
+  it("keeps every selected parameter within the total budget", () => {
     const parameters = Object.fromEntries(
       Array.from({ length: 40 }, (_, index) => [
         `parameter_${index}`,
@@ -122,15 +118,13 @@ describe("escalation review context", () => {
       ])
     )
 
-    const paths = Object.keys(parameters).map(key => `/${key}`)
-    const formatted = formatToolParameters({ input: parameters, paths })
+    const names = Object.keys(parameters)
+    const formatted = formatToolParameters({ input: parameters, names })
     expect(stringifyToolParameters(formatted ?? []).length).toBeLessThanOrEqual(
       24_000
     )
     Object.keys(parameters).forEach(key =>
-      expect(formatted).toContainEqual(
-        expect.objectContaining({ path: `/${key}` })
-      )
+      expect(formatted).toContainEqual(expect.objectContaining({ name: key }))
     )
   })
 

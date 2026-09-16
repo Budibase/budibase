@@ -177,7 +177,7 @@ export interface ToolExecutionCondition {
 export interface ToolExecutionRule {
   conditions?: ToolExecutionCondition[]
   policyId: string
-  reviewParameterPaths?: string[]
+  reviewParameters?: string[]
 }
 
 export interface AgentOperationToolConfig {

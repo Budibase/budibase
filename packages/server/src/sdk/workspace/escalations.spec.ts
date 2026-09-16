@@ -125,7 +125,7 @@ describe("getResult", () => {
         operation: "Release candidate",
         action: "Trigger release",
         toolName: "api.release.Trigger release",
-        parameters: [{ path: "/version", value: "3.46.0" }],
+        parameters: [{ name: "version", value: "3.46.0" }],
       }
       await context.getWorkspaceDB().put({
         _id: `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`,

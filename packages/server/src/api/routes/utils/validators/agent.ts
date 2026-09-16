@@ -1,7 +1,7 @@
 import { auth } from "@budibase/backend-core"
 import {
-  MAX_REVIEW_PARAMETER_PATH_LENGTH,
-  MAX_REVIEW_PARAMETER_PATHS,
+  MAX_REVIEW_PARAMETER_NAME_LENGTH,
+  MAX_REVIEW_PARAMETERS,
   REVIEWER_TYPES,
 } from "@budibase/shared-core"
 import {
@@ -59,13 +59,9 @@ const ESCALATION_RECIPIENT_SCHEMA = Joi.object({
 const TOOL_EXECUTION_RULE_SCHEMA = Joi.object({
   conditions: Joi.array().items(Joi.object()).optional(),
   policyId: Joi.string().required(),
-  reviewParameterPaths: Joi.array()
-    .items(
-      Joi.string()
-        .max(MAX_REVIEW_PARAMETER_PATH_LENGTH)
-        .pattern(/^\/(?:[^~]|~[01])*$/)
-    )
-    .max(MAX_REVIEW_PARAMETER_PATHS)
+  reviewParameters: Joi.array()
+    .items(Joi.string().trim().min(1).max(MAX_REVIEW_PARAMETER_NAME_LENGTH))
+    .max(MAX_REVIEW_PARAMETERS)
     .optional(),
 })
 

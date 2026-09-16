@@ -113,7 +113,7 @@
         index?: number
         policyId?: string
         conditions?: ToolExecutionCondition[]
-        reviewParameterPaths?: string[]
+        reviewParameters?: string[]
       }
     | undefined
   >()
@@ -690,9 +690,7 @@
   const toolReviewFields = (tool: AgentTool) =>
     getToolReviewFields({
       tool,
-      tables: $tables.list,
       queries: $queries.list,
-      automations: $automationStore.automations,
     })
 
   const beginRuleEdit = ({
@@ -821,14 +819,14 @@
     index,
     policyId,
     conditions,
-    reviewParameterPaths,
+    reviewParameters,
   }: {
     index?: number
     policyId?: string
     conditions: ToolExecutionCondition[]
-    reviewParameterPaths: string[]
+    reviewParameters: string[]
   }) => {
-    stagedRule = { index, policyId, conditions, reviewParameterPaths }
+    stagedRule = { index, policyId, conditions, reviewParameters }
     policyModalFromRule = true
     chainingRuleModal = true
     approvalRuleModal?.hide()
@@ -861,7 +859,7 @@
         ? {
             policyId: pending.policyId,
             conditions: pending.conditions,
-            reviewParameterPaths: pending.reviewParameterPaths,
+            reviewParameters: pending.reviewParameters,
           }
         : undefined,
       index: pending?.index,

@@ -49,7 +49,7 @@ describe("createEscalationGateRuntime", () => {
   // No generated card copy, so the notification falls back to summarised args.
   const buildRuntime = (
     generateCardCopy?: jest.Mock,
-    reviewParameterPaths = ["/workflow_id", "/inputs/release_notes"]
+    reviewParameters = ["workflow_id", "inputs"]
   ) =>
     createEscalationGateRuntime({
       agentId: "agent_1",
@@ -57,7 +57,7 @@ describe("createEscalationGateRuntime", () => {
       toolName: "create_workflow_dispatch",
       readableName: "Trigger workflow",
       displayName: "api.github_release_manager.Trigger workflow",
-      rules: [{ policyId: "policy_1", reviewParameterPaths }],
+      rules: [{ policyId: "policy_1", reviewParameters }],
       gateContext: {
         sessionId: "session_1",
         requesterLabel: "Test User (test@example.com)",
@@ -92,10 +92,10 @@ describe("createEscalationGateRuntime", () => {
           action: "Trigger workflow",
           toolName: "api.github_release_manager.Trigger workflow",
           parameters: [
-            { path: "/workflow_id", value: "test-release.yml" },
+            { name: "workflow_id", value: "test-release.yml" },
             {
-              path: "/inputs/release_notes",
-              value: "## Features\n- Useful change",
+              name: "inputs",
+              value: '{\n  "release_notes": "## Features\\n- Useful change"\n}',
             },
           ],
         },
@@ -110,7 +110,7 @@ describe("createEscalationGateRuntime", () => {
   })
 
   it("keeps unselected values out of all reviewer-facing copy", async () => {
-    const runtime = buildRuntime(undefined, ["/workflow_id"])
+    const runtime = buildRuntime(undefined, ["workflow_id"])
 
     await runtime.intercept(
       { workflow_id: "test-release.yml", api_token: "do-not-show" },
@@ -175,14 +175,14 @@ describe("createEscalationGateRuntime", () => {
       title: "Run the release workflow",
       summary: "Runs test-release.yml against the configured release branch.",
     })
-    const runtime = buildRuntime(generateCardCopy, ["/workflow_id"])
+    const runtime = buildRuntime(generateCardCopy, ["workflow_id"])
     const args = { workflow_id: "test-release.yml" }
 
     await runtime.intercept(args, { toolCallId: "call_1", messages: [] })
 
     expect(generateCardCopy).toHaveBeenCalledWith({
       label: "Trigger workflow",
-      parameters: [{ path: "/workflow_id", value: "test-release.yml" }],
+      parameters: [{ name: "workflow_id", value: "test-release.yml" }],
       operation: "Prepare Cloud release",
     })
   })

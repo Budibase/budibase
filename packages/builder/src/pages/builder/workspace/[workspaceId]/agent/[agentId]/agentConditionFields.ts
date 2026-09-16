@@ -72,12 +72,12 @@ export interface ConditionField {
 }
 
 export interface ReviewField {
-  path: string
+  name: string
   label: string
 }
 
-export const normalizeReviewParameterPaths = (paths: string[]) => [
-  ...new Set(paths.map(path => path.trim()).filter(Boolean)),
+export const normalizeReviewParameters = (names: string[]) => [
+  ...new Set(names.map(name => name.trim()).filter(Boolean)),
 ]
 
 export const withSelectedReviewFields = ({
@@ -87,15 +87,12 @@ export const withSelectedReviewFields = ({
   fields: ReviewField[]
   selected: string[]
 }): ReviewField[] => {
-  const known = new Set(fields.map(field => field.path))
-  const extras = normalizeReviewParameterPaths(selected)
-    .filter(path => !known.has(path))
-    .map(path => ({ path, label: path }))
+  const known = new Set(fields.map(field => field.name))
+  const extras = normalizeReviewParameters(selected)
+    .filter(name => !known.has(name))
+    .map(name => ({ name, label: name }))
   return extras.length ? [...fields, ...extras] : fields
 }
-
-const pointerSegment = (value: string) =>
-  value.replace(/~/g, "~0").replace(/\//g, "~1")
 
 const CONDITIONABLE_FIELD_TYPES = new Set<FieldType>([
   FieldType.STRING,
@@ -188,49 +185,35 @@ export const getToolConditionFields = ({
 
 export const getToolReviewFields = ({
   tool,
-  tables,
   queries,
-  automations,
 }: {
   tool: AgentTool
-  tables: Table[]
   queries: Query[]
-  automations: Automation[]
 }): ReviewField[] => {
   if (!tool.sourceId) {
     return []
   }
 
   if (isRowMutationTool(tool)) {
-    const table = tables.find(candidate => candidate._id === tool.sourceId)
-    const fields = Object.entries(table?.schema || {}).map(([name, field]) => ({
-      path: `/data/${pointerSegment(name)}`,
-      label: field.name || name,
-    }))
     return tool.action === ToolAction.UPDATE_ROW
-      ? [{ path: "/rowId", label: "Row ID" }, ...fields]
-      : fields
+      ? [
+          { name: "rowId", label: "Row ID" },
+          { name: "rowRev", label: "Row revision" },
+          { name: "data", label: "Data" },
+        ]
+      : [{ name: "data", label: "Data" }]
   }
 
   if (isQueryToolType(tool.sourceType)) {
     const query = queries.find(candidate => candidate._id === tool.sourceId)
     return (query?.parameters || []).map(parameter => ({
-      path: `/${pointerSegment(parameter.name)}`,
+      name: parameter.name,
       label: parameter.name,
     }))
   }
 
   if (isAutomationTriggerTool(tool)) {
-    const automation = automations.find(
-      candidate => candidate._id === tool.sourceId
-    )
-    const triggerInputs = automation?.definition?.trigger?.inputs as {
-      fields?: Record<string, AutomationIOType>
-    } | null
-    return Object.keys(triggerInputs?.fields || {}).map(name => ({
-      path: `/fields/${pointerSegment(name)}`,
-      label: name,
-    }))
+    return [{ name: "fields", label: "Fields" }]
   }
 
   return []
