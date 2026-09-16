@@ -203,10 +203,14 @@ async function applyPendingColumnRenames(
         table = await sdk.tables.getTable(table._id!)
       }
 
-      const updatedTable: Table = { ...table, pendingColumnRenames: [] }
-      const putResult = await db.put(updatedTable)
-      const persistedTable: Table = { ...updatedTable, _rev: putResult.rev }
-      updatedTables.push(persistedTable)
+      updatedTables.push({ ...table, pendingColumnRenames: [] })
+    }
+
+    if (updatedTables.length > 0) {
+      const bulkResults = await db.bulkDocs(updatedTables)
+      for (let i = 0; i < updatedTables.length; i++) {
+        updatedTables[i]._rev = bulkResults[i].rev
+      }
     }
 
     return updatedTables
@@ -221,6 +225,7 @@ async function clearPendingColumnRenames(workspaceId: string) {
     const db = context.getWorkspaceDB()
     const tables = await sdk.tables.getAllInternalTables()
 
+    const updatedTables: Table[] = []
     for (const table of tables) {
       if (table._deleted) {
         continue
@@ -228,11 +233,14 @@ async function clearPendingColumnRenames(workspaceId: string) {
       if (!table.pendingColumnRenames?.length) {
         continue
       }
-      const updatedTable: Table = {
+      updatedTables.push({
         ...table,
         pendingColumnRenames: [],
-      }
-      await db.put(updatedTable)
+      })
+    }
+
+    if (updatedTables.length > 0) {
+      await db.bulkDocs(updatedTables)
     }
   })
 }
