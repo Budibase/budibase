@@ -131,14 +131,21 @@ function toUserReference(user: User): UserReferenceInfo {
   }
 }
 
+type BBReferenceValue = string | Pick<UserReferenceInfo, "_id">
+
 export function getBBReferenceIds(
-  value: string | string[] | null | undefined
+  value: BBReferenceValue | BBReferenceValue[] | null | undefined
 ): string[] {
   if (!value) {
     return []
   }
-  const ids = typeof value === "string" ? value.split(",") : value
-  return ids.filter(id => !!id)
+  const values = typeof value === "string" ? value.split(",") : value
+  const references = Array.isArray(values) ? values : [values]
+  return references
+    .map(reference =>
+      typeof reference === "string" ? reference : reference?._id
+    )
+    .filter((id): id is string => typeof id === "string" && !!id)
 }
 
 export async function fetchUserReferences(
@@ -157,7 +164,7 @@ export async function fetchUserReferences(
 }
 
 export function processOutputBBReference(
-  value: string | null | undefined,
+  value: BBReferenceValue | null | undefined,
   subtype: BBReferenceFieldSubType.USER,
   users: UserReferenceMap
 ): UserReferenceInfo | undefined {
@@ -165,16 +172,17 @@ export function processOutputBBReference(
     return undefined
   }
 
+  const id = typeof value === "string" ? value : value._id
   switch (subtype) {
     case BBReferenceFieldSubType.USER:
-      return users[value]
+      return users[id]
     default:
       throw utils.unreachable(subtype)
   }
 }
 
 export function processOutputBBReferences(
-  value: string | string[] | null | undefined,
+  value: BBReferenceValue | BBReferenceValue[] | null | undefined,
   subtype: BBReferenceFieldSubType,
   users: UserReferenceMap
 ): UserReferenceInfo[] | undefined {

@@ -236,6 +236,31 @@ describe("bbReferenceProcessor", () => {
     })
   })
 
+  describe("getBBReferenceIds", () => {
+    it("normalizes expanded user references to their IDs", () => {
+      const [user1, user2] = _.sampleSize(users, 2)
+
+      expect(
+        getBBReferenceIds([
+          user1._id!,
+          {
+            _id: user2._id!,
+          },
+        ])
+      ).toEqual([user1._id, user2._id])
+    })
+
+    it("normalizes a single expanded user reference to its ID", () => {
+      const user = _.sample(users)!
+
+      expect(
+        getBBReferenceIds({
+          _id: user._id!,
+        })
+      ).toEqual([user._id])
+    })
+  })
+
   describe("fetchUserReferences", () => {
     it("fetches all referenced users in a single cache call", async () => {
       const [user1, user2] = _.sampleSize(users, 2)
@@ -262,6 +287,21 @@ describe("bbReferenceProcessor", () => {
   })
 
   describe("processOutputBBReference", () => {
+    it("preserves an already expanded single user reference", async () => {
+      const user = users[0]
+      const references = await config.doInTenant(() =>
+        fetchUserReferences([user._id!])
+      )
+      const expanded = references[user._id!]
+      expect(
+        processOutputBBReference(
+          expanded,
+          BBReferenceFieldSubType.USER,
+          references
+        )
+      ).toEqual(expanded)
+    })
+
     describe("subtype user", () => {
       it("fetches user given a valid string id", async () => {
         const user = _.sample(users)!
