@@ -2,7 +2,6 @@ import { v4 as uuid } from "uuid"
 import { z } from "zod"
 import { JSONLimitError, validateJSONLimits } from "@budibase/functions-runtime"
 import {
-  DEFAULT_FUNCTION_LIMITS,
   FunctionErrorCode,
   type AutomationStepInputBase,
   type ExecuteFunctionStepInputs,
@@ -11,8 +10,10 @@ import {
   type FunctionError,
   type FunctionReadiness,
   type FunctionRunResult,
+  type FunctionRunLimits,
   type JSONValue,
 } from "@budibase/types"
+import env from "../../environment"
 import { areFunctionsEnabled } from "../../middleware/functionsEnabled"
 import {
   get as getFunction,
@@ -23,7 +24,7 @@ import {
   type FunctionRunOrchestrationOptions,
 } from "../functions/orchestrator"
 
-const ERROR_MESSAGES: Record<FunctionErrorCode, string> = {
+const ERROR_MESSAGES = {
   [FunctionErrorCode.FUNCTIONS_DISABLED]: "Functions are disabled",
   [FunctionErrorCode.FUNCTION_COMPILE_ERROR]: "Function compilation failed",
   [FunctionErrorCode.FUNCTION_COMPILE_TIMEOUT]:
@@ -43,7 +44,7 @@ const ERROR_MESSAGES: Record<FunctionErrorCode, string> = {
     "Function inputs must be a JSON-compatible object",
   [FunctionErrorCode.FUNCTION_ORCHESTRATOR_INTERRUPTED]:
     "Function execution was interrupted",
-}
+} satisfies Record<FunctionErrorCode, string>
 
 class FunctionActionError extends Error {
   constructor(readonly code: FunctionErrorCode) {
@@ -95,17 +96,21 @@ const failure = (error: FunctionError): ExecuteFunctionStepOutputs => ({
 const actionFailure = (code: FunctionErrorCode) =>
   failure({ code, message: ERROR_MESSAGES[code] })
 
-const parseInputs = (
+const parseInputs = ({
+  inputs,
+  limits,
+}: {
   inputs: Record<string, JSONValue>
-): Record<string, JSONValue> => {
+  limits: FunctionRunLimits
+}): Record<string, JSONValue> => {
   const parsed = jsonRecordSchema.safeParse(inputs)
   if (!parsed.success) {
     throw new FunctionActionError(FunctionErrorCode.FUNCTION_INPUT_INVALID)
   }
   try {
     validateJSONLimits(parsed.data, {
-      maxBytes: DEFAULT_FUNCTION_LIMITS.run.maxInputBytes,
-      maxDepth: DEFAULT_FUNCTION_LIMITS.run.maxInputDepth,
+      maxBytes: limits.maxInputBytes,
+      maxDepth: limits.maxInputDepth,
     })
   } catch (error) {
     if (error instanceof JSONLimitError) {
@@ -165,7 +170,8 @@ export const executeFunction = async (
         FunctionErrorCode.FUNCTION_CONFIGURATION_ERROR
       )
     }
-    const functionInputs = parseInputs(inputs.inputs)
+    const limits = env.FUNCTIONS_LIMITS.run
+    const functionInputs = parseInputs({ inputs: inputs.inputs, limits })
     const fn = await dependencies.getFunction(inputs.functionId)
     if (!fn) {
       throw new FunctionActionError(FunctionErrorCode.FUNCTION_BUILD_REQUIRED)
@@ -184,7 +190,7 @@ export const executeFunction = async (
         runId,
         artifact: fn.artifact,
         inputs: functionInputs,
-        limits: DEFAULT_FUNCTION_LIMITS.run,
+        limits,
       },
       capabilityScope: {
         runId,
@@ -198,7 +204,7 @@ export const executeFunction = async (
         },
         executionUser: context.user,
         capabilities: fn.capabilities,
-        limits: DEFAULT_FUNCTION_LIMITS.run,
+        limits,
       },
       signal,
     })

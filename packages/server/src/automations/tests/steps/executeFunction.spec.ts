@@ -4,6 +4,7 @@ import {
   type FunctionDocument,
   type FunctionRunResult,
 } from "@budibase/types"
+import env from "../../../environment"
 import {
   executeFunction,
   type ExecuteFunctionDependencies,
@@ -92,6 +93,94 @@ const run = (
   )
 
 describe("Run Function automation action", () => {
+  const originalLimits = env.FUNCTIONS_LIMITS.run
+
+  afterEach(() => {
+    env.FUNCTIONS_LIMITS.run = originalLimits
+  })
+
+  it("uses configured limits for execution and capabilities", async () => {
+    const limits = {
+      ...originalLimits,
+      timeoutMs: 1234,
+      maxQueryCalls: 2,
+    }
+    env.FUNCTIONS_LIMITS.run = limits
+    const deps = dependencies()
+
+    await expect(run(deps)).resolves.toEqual({
+      success: true,
+      status: "success",
+      output: { answer: 42 },
+    })
+    expect(deps.orchestrate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        request: expect.objectContaining({ limits }),
+        capabilityScope: expect.objectContaining({ limits }),
+      })
+    )
+  })
+
+  it("rejects non-JSON input values", async () => {
+    const deps = dependencies()
+
+    await expect(
+      run(deps, {
+        functionId: fn._id,
+        // @ts-expect-error Runtime bindings can contain non-JSON values.
+        inputs: { date: new Date() },
+      })
+    ).resolves.toEqual({
+      success: false,
+      status: "error",
+      error: {
+        code: FunctionErrorCode.FUNCTION_INPUT_INVALID,
+        message: "Function inputs must be a JSON-compatible object",
+      },
+    })
+    expect(deps.orchestrate).not.toHaveBeenCalled()
+  })
+
+  it.each([{ maxInputBytes: 1 }, { maxInputDepth: 1 }])(
+    "rejects inputs exceeding configured limits %j",
+    async overrides => {
+      env.FUNCTIONS_LIMITS.run = { ...originalLimits, ...overrides }
+      const deps = dependencies()
+
+      await expect(
+        run(deps, {
+          functionId: fn._id,
+          inputs: { nested: { value: "hello" } },
+        })
+      ).resolves.toEqual({
+        success: false,
+        status: "error",
+        error: {
+          code: FunctionErrorCode.FUNCTION_INPUT_INVALID,
+          message: "Function inputs must be a JSON-compatible object",
+        },
+      })
+      expect(deps.orchestrate).not.toHaveBeenCalled()
+    }
+  )
+
+  it("returns a stable runtime error when orchestration rejects", async () => {
+    const deps = dependencies({
+      orchestrate: jest
+        .fn()
+        .mockRejectedValue(new Error("Executor unavailable")),
+    })
+
+    await expect(run(deps)).resolves.toEqual({
+      success: false,
+      status: "error",
+      error: {
+        code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+        message: "Function execution failed",
+      },
+    })
+  })
+
   it("executes a ready Function through the run orchestrator", async () => {
     const deps = dependencies()
 

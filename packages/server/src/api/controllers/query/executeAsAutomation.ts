@@ -1,6 +1,5 @@
 import { context, events, HTTPError } from "@budibase/backend-core"
 import { ActionFailureReason } from "@budibase/types"
-import { findHBSBlocks } from "@budibase/string-templates"
 import type {
   ExecuteV2QueryResponse,
   Query,
@@ -12,6 +11,7 @@ import env from "../../../environment"
 import { getDatasourceWithEnvVars } from "../../../sdk/workspace/datasources/enrichment"
 import { Thread, ThreadType } from "../../../threads"
 import { QueryEvent, QueryEventParameters } from "../../../threads/definitions"
+import { enrichParameters } from "./parameters"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
@@ -30,38 +30,6 @@ export interface ExecuteQueryAsAutomationContext {
   user: UserBindings
   body?: ExecuteV2QueryResponse
   throw: (status: number, error: Error) => never
-}
-
-const validateQueryInputs = (parameters: QueryEventParameters) => {
-  for (const [key, value] of Object.entries(parameters)) {
-    if (typeof value !== "string") {
-      continue
-    }
-    if (findHBSBlocks(value).length !== 0) {
-      throw new Error(
-        `Parameter '${key}' input contains a handlebars binding - this is not allowed.`
-      )
-    }
-  }
-}
-
-const enrichParameters = (
-  query: Query,
-  requestParameters: QueryEventParameters = {}
-): QueryEventParameters => {
-  const paramNotSet = (value: unknown) => value === "" || value == undefined
-  validateQueryInputs(requestParameters)
-  for (const parameter of query.parameters) {
-    let value = requestParameters[parameter.name]
-    if (value == null || value === "") {
-      value = parameter.default
-    }
-    if (query.nullDefaultSupport && paramNotSet(value)) {
-      value = null
-    }
-    requestParameters[parameter.name] = value
-  }
-  return requestParameters
 }
 
 type UserWithQuerySensitiveFields = UserBindings & {
@@ -103,7 +71,10 @@ export const executeQueryAsAutomation = async (
       datasource,
       queryVerb: query.queryVerb,
       fields: query.fields,
-      parameters: enrichParameters(query, ctx.request.body.parameters),
+      parameters: enrichParameters({
+        query,
+        requestParameters: ctx.request.body.parameters,
+      }),
       transformer: query.transformer,
       queryId: ctx.params.queryId,
       environmentVariables: envVars,
