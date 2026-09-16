@@ -97,10 +97,6 @@ export async function setDebounce(id: string, seconds: number) {
   await debounceClient.store(id, "debouncing", seconds)
 }
 
-export async function clearDebounce(id: string) {
-  await debounceClient.delete(id)
-}
-
 export async function checkTestFlag(id: string) {
   const flag = await flagClient?.get(id)
   return !!(flag && flag.testing)

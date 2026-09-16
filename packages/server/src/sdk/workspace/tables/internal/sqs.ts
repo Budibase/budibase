@@ -193,11 +193,9 @@ export async function waitForDefinitionRebuild(
       async () => {}
     )
   } catch (err: any) {
-    if (err.name !== "LockError") {
-      throw err
-    }
     console.warn(
-      `Timed out waiting for SQLite definition rebuild on workspace "${workspaceId}", continuing anyway`
+      `Unable to confirm SQLite definition rebuild status for workspace "${workspaceId}", continuing anyway`,
+      err
     )
   }
 }

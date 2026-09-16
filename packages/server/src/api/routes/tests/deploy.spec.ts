@@ -497,6 +497,27 @@ describe("/api/deploy", () => {
       await config.api.workspace.sync(config.getDevWorkspaceId())
     }
 
+    it("rejects a concurrent publish while one is already in progress", async () => {
+      const results = await Promise.allSettled([
+        config.api.workspace.publish(config.getDevWorkspaceId()),
+        config.api.workspace.publish(config.getDevWorkspaceId()),
+      ])
+
+      const fulfilled = results.filter(r => r.status === "fulfilled")
+      const rejected = results.filter(
+        (r): r is PromiseRejectedResult => r.status === "rejected"
+      )
+
+      expect(fulfilled).toHaveLength(1)
+      expect(rejected).toHaveLength(1)
+      expect(rejected[0].reason.cause.status).toBe(429)
+    })
+
+    it("allows a publish immediately after a previous publish finished", async () => {
+      await config.api.workspace.publish(config.getDevWorkspaceId())
+      await config.api.workspace.publish(config.getDevWorkspaceId())
+    })
+
     it("should define the disable value for all workspace apps when publishing for the first time", async () => {
       const { workspaceApp: publishedApp } =
         await config.api.workspaceApp.create({
