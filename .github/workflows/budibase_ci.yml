@@ -460,7 +460,6 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ vars.ECR_PUBLIC_ROLE_ARN }}
-          # ECR Public authentication tokens are only issued from us-east-1.
           aws-region: us-east-1
 
       - name: Log in to Amazon ECR Public
