@@ -4,6 +4,7 @@ import {
   db as dbCore,
   errors,
   events,
+  locks,
 } from "@budibase/backend-core"
 import { backups } from "@budibase/pro"
 import {
@@ -15,6 +16,8 @@ import {
   FieldType,
   FetchDeploymentResponse,
   FormulaType,
+  LockName,
+  LockType,
   PublishStatusResponse,
   PublishTableRequest,
   PublishTableResponse,
@@ -37,11 +40,6 @@ import {
 } from "../../../db/utils"
 import env from "../../../environment"
 import sdk from "../../../sdk"
-import {
-  checkDebounce,
-  clearDebounce,
-  setDebounce,
-} from "../../../utilities/redis"
 import { builderSocket } from "../../../websockets"
 import { doInMigrationLock } from "../../../workspaceMigrations"
 import Deployment from "./Deployment"
@@ -49,8 +47,6 @@ import { updateAllFormulasInTable } from "../row/staticFormula"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
-const PUBLISH_DEBOUNCE_TTL_SECONDS = 30 * 60
-const getPublishDebounceKey = (appId: string) => `publish_${appId}`
 
 // checks that deployments are in a good state, any pending will be updated
 async function checkAllDeployments(
@@ -636,17 +632,20 @@ export const publishWorkspace = async function (
     )
   }
 
-  const debounceKey = getPublishDebounceKey(context.getOrThrowWorkspaceId())
-  if (await checkDebounce(debounceKey)) {
+  const lockResult = await locks.doWithLock(
+    {
+      type: LockType.TRY_ONCE,
+      name: LockName.PUBLISH_WORKSPACE,
+      resource: context.getOrThrowWorkspaceId(),
+      ttl: MAX_PENDING_TIME_MS,
+    },
+    () => publishWorkspaceInternal(ctx)
+  )
+  if (!lockResult.executed) {
     throw new errors.HTTPError(
       "A publish for this app is already in progress, please wait for it to finish",
       429
     )
   }
-  await setDebounce(debounceKey, PUBLISH_DEBOUNCE_TTL_SECONDS)
-  try {
-    ctx.body = await publishWorkspaceInternal(ctx)
-  } finally {
-    await clearDebounce(debounceKey)
-  }
+  ctx.body = lockResult.result
 }
