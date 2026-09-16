@@ -607,25 +607,7 @@
             {#each message.parts ?? [] as part, partIndex}
               {#if isTextUIPart(part)}
                 <MarkdownViewer value={part.text} />
-              {:else if isToolUIPart(part) && isRaisedEscalation(part.output)}
-                {@const card = escalationCardProps(part)}
-                <EscalationCard
-                  title={card.title}
-                  summary={card.summary}
-                  resolution={card.resolution}
-                  statusMessage={card.escalationId
-                    ? resolveMessages[card.escalationId]
-                    : undefined}
-                  showApproval={showInlineApproval}
-                  resolving={!!card.escalationId &&
-                    !!resolvingEscalations[card.escalationId]}
-                  onApprove={() =>
-                    card.escalationId && handleResolve(card.escalationId, true)}
-                  onReject={() =>
-                    card.escalationId &&
-                    handleResolve(card.escalationId, false)}
-                />
-              {:else if isToolUIPart(part)}
+              {:else if isToolUIPart(part) && !isRaisedEscalation(part.output)}
                 {@const rawToolName = getToolName(part)}
                 {@const displayToolName = formatToolName(
                   rawToolName,
@@ -753,6 +735,27 @@
                 </ul>
               </div>
             {/if}
+            {#each message.parts ?? [] as part}
+              {#if isToolUIPart(part) && isRaisedEscalation(part.output)}
+                {@const card = escalationCardProps(part)}
+                <EscalationCard
+                  title={card.title}
+                  summary={card.summary}
+                  resolution={card.resolution}
+                  statusMessage={card.escalationId
+                    ? resolveMessages[card.escalationId]
+                    : undefined}
+                  showApproval={showInlineApproval}
+                  resolving={!!card.escalationId &&
+                    !!resolvingEscalations[card.escalationId]}
+                  onApprove={() =>
+                    card.escalationId && handleResolve(card.escalationId, true)}
+                  onReject={() =>
+                    card.escalationId &&
+                    handleResolve(card.escalationId, false)}
+                />
+              {/if}
+            {/each}
           </div>
         {/if}
       {/if}
