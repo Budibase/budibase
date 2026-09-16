@@ -1,4 +1,10 @@
-import { ToolAction, ToolType } from "@budibase/types"
+import {
+  FieldType,
+  TableSourceType,
+  ToolAction,
+  ToolType,
+} from "@budibase/types"
+import type { Table } from "@budibase/types"
 import {
   getToolReviewFields,
   normalizeReviewParameters,
@@ -16,6 +22,23 @@ const tool: AgentTool = {
   runtimeBinding: "create_contact",
 }
 
+const table: Table = {
+  _id: "ta_1",
+  name: "Contacts",
+  type: "table",
+  sourceId: "bb_internal",
+  sourceType: TableSourceType.INTERNAL,
+  schema: {
+    name: { name: "Full name", type: FieldType.STRING },
+    metadata: { name: "Metadata", type: FieldType.JSON },
+    computed: {
+      name: "Computed",
+      type: FieldType.FORMULA,
+      formula: "{{ name }}",
+    },
+  },
+}
+
 describe("review parameters", () => {
   it("trims names and removes duplicates without changing their order", () => {
     expect(
@@ -23,13 +46,18 @@ describe("review parameters", () => {
     ).toEqual(["second", "first"])
   })
 
-  it("shares row data as a direct argument", () => {
+  it("makes writable row fields selectable by name", () => {
     expect(
       getToolReviewFields({
         tool,
+        tables: [table],
         queries: [],
+        automations: [],
       })
-    ).toEqual([{ name: "data", label: "Data" }])
+    ).toEqual([
+      { name: "name", label: "Full name" },
+      { name: "metadata", label: "Metadata" },
+    ])
   })
 
   it("keeps genuinely unknown selected names as options", () => {
@@ -48,16 +76,18 @@ describe("review parameters", () => {
     ])
   })
 
-  it("includes all direct update-row arguments", () => {
+  it("includes the row ID and writable fields for updates", () => {
     expect(
       getToolReviewFields({
         tool: { ...tool, action: ToolAction.UPDATE_ROW },
+        tables: [table],
         queries: [],
+        automations: [],
       })
     ).toEqual([
       { name: "rowId", label: "Row ID" },
-      { name: "rowRev", label: "Row revision" },
-      { name: "data", label: "Data" },
+      { name: "name", label: "Full name" },
+      { name: "metadata", label: "Metadata" },
     ])
   })
 })

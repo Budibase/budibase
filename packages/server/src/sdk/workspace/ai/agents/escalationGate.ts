@@ -96,6 +96,16 @@ const conditionRecord = (
     : undefined
 }
 
+const reviewRecord = (input: unknown, argsKey?: string) => {
+  const root = conditionRecord(input)
+  const nested = conditionRecord(input, argsKey)
+  if (!argsKey || !root || !nested) {
+    return nested ?? input
+  }
+  const { [argsKey]: _nested, ...directArguments } = root
+  return { ...directArguments, ...nested }
+}
+
 const ruleMatches = (
   rule: ToolExecutionRule,
   record: Record<string, unknown> | undefined
@@ -238,7 +248,7 @@ export const createEscalationGateRuntime = ({
 
     const requestedBy = gateContext.requesterLabel ?? "Unknown requester"
     const parameters = formatToolParameters({
-      input,
+      input: reviewRecord(input, argsKey),
       names: rule.reviewParameters,
     })
     const actionLabel = truncateReviewField(label)

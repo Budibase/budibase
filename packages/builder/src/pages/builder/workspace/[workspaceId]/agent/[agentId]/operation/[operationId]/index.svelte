@@ -690,7 +690,9 @@
   const toolReviewFields = (tool: AgentTool) =>
     getToolReviewFields({
       tool,
+      tables: $tables.list,
       queries: $queries.list,
+      automations: $automationStore.automations,
     })
 
   const beginRuleEdit = ({

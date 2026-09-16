@@ -47,16 +47,22 @@ const operation: AgentOperation = {
 
 describe("createEscalationGateRuntime", () => {
   // No generated card copy, so the notification falls back to summarised args.
-  const buildRuntime = (
-    generateCardCopy?: jest.Mock,
-    reviewParameters = ["workflow_id", "inputs"]
-  ) =>
+  const buildRuntime = ({
+    generateCardCopy,
+    reviewParameters = ["workflow_id", "inputs"],
+    argsKey,
+  }: {
+    generateCardCopy?: jest.Mock
+    reviewParameters?: string[]
+    argsKey?: string
+  } = {}) =>
     createEscalationGateRuntime({
       agentId: "agent_1",
       operation,
       toolName: "create_workflow_dispatch",
       readableName: "Trigger workflow",
       displayName: "api.github_release_manager.Trigger workflow",
+      argsKey,
       rules: [{ policyId: "policy_1", reviewParameters }],
       gateContext: {
         sessionId: "session_1",
@@ -110,7 +116,7 @@ describe("createEscalationGateRuntime", () => {
   })
 
   it("keeps unselected values out of all reviewer-facing copy", async () => {
-    const runtime = buildRuntime(undefined, ["workflow_id"])
+    const runtime = buildRuntime({ reviewParameters: ["workflow_id"] })
 
     await runtime.intercept(
       { workflow_id: "test-release.yml", api_token: "do-not-show" },
@@ -129,7 +135,7 @@ describe("createEscalationGateRuntime", () => {
 
   it("shares no parameters when the matching rule has no allowlist", async () => {
     const generateCardCopy = jest.fn().mockResolvedValue(undefined)
-    const runtime = buildRuntime(generateCardCopy, [])
+    const runtime = buildRuntime({ generateCardCopy, reviewParameters: [] })
 
     await runtime.intercept(
       { api_token: "do-not-show" },
@@ -145,6 +151,29 @@ describe("createEscalationGateRuntime", () => {
       parameters: undefined,
     })
     expect(JSON.stringify(input.reviewContext)).not.toContain("do-not-show")
+  })
+
+  it("shares fields inside a tool argument wrapper by their field names", async () => {
+    const runtime = buildRuntime({
+      reviewParameters: ["rowId", "name", "metadata"],
+      argsKey: "data",
+    })
+
+    await runtime.intercept(
+      {
+        rowId: "ro_1",
+        rowRev: "1-test",
+        data: { name: "Test User", metadata: { tier: "gold" } },
+      },
+      { toolCallId: "call_1", messages: [] }
+    )
+
+    const [input] = mockCreateEscalation.mock.calls[0]
+    expect(input.reviewContext.parameters).toEqual([
+      { name: "rowId", value: "ro_1" },
+      { name: "name", value: "Test User" },
+      { name: "metadata", value: '{\n  "tier": "gold"\n}' },
+    ])
   })
 
   it("omits toolName when it would only repeat the action", async () => {
@@ -175,7 +204,10 @@ describe("createEscalationGateRuntime", () => {
       title: "Run the release workflow",
       summary: "Runs test-release.yml against the configured release branch.",
     })
-    const runtime = buildRuntime(generateCardCopy, ["workflow_id"])
+    const runtime = buildRuntime({
+      generateCardCopy,
+      reviewParameters: ["workflow_id"],
+    })
     const args = { workflow_id: "test-release.yml" }
 
     await runtime.intercept(args, { toolCallId: "call_1", messages: [] })

@@ -3,6 +3,7 @@ import {
   BasicOperator,
   ConditionRangeOperator,
   FieldType,
+  TableSourceType,
   ToolAction,
   ToolType,
 } from "@budibase/types"
@@ -14,7 +15,12 @@ import type {
   Table,
   ToolExecutionCondition,
 } from "@budibase/types"
-import { OperatorOptions, isQueryToolType } from "@budibase/shared-core"
+import {
+  OperatorOptions,
+  PROTECTED_EXTERNAL_COLUMNS,
+  PROTECTED_INTERNAL_COLUMNS,
+  isQueryToolType,
+} from "@budibase/shared-core"
 import { Helpers } from "@budibase/bbui"
 import type { AgentTool } from "./toolTypes"
 
@@ -185,23 +191,39 @@ export const getToolConditionFields = ({
 
 export const getToolReviewFields = ({
   tool,
+  tables,
   queries,
+  automations,
 }: {
   tool: AgentTool
+  tables: Table[]
   queries: Query[]
+  automations: Automation[]
 }): ReviewField[] => {
   if (!tool.sourceId) {
     return []
   }
 
   if (isRowMutationTool(tool)) {
+    const table = tables.find(candidate => candidate._id === tool.sourceId)
+    const protectedColumns = new Set<string>(
+      table?.sourceType === TableSourceType.EXTERNAL
+        ? PROTECTED_EXTERNAL_COLUMNS
+        : PROTECTED_INTERNAL_COLUMNS
+    )
+    const fields = Object.entries(table?.schema || {})
+      .filter(
+        ([name, field]) =>
+          !protectedColumns.has(name) &&
+          field.type !== FieldType.FORMULA &&
+          field.type !== FieldType.AUTO &&
+          field.type !== FieldType.AI &&
+          field.autocolumn !== true
+      )
+      .map(([name, field]) => ({ name, label: field.name || name }))
     return tool.action === ToolAction.UPDATE_ROW
-      ? [
-          { name: "rowId", label: "Row ID" },
-          { name: "rowRev", label: "Row revision" },
-          { name: "data", label: "Data" },
-        ]
-      : [{ name: "data", label: "Data" }]
+      ? [{ name: "rowId", label: "Row ID" }, ...fields]
+      : fields
   }
 
   if (isQueryToolType(tool.sourceType)) {
@@ -213,7 +235,16 @@ export const getToolReviewFields = ({
   }
 
   if (isAutomationTriggerTool(tool)) {
-    return [{ name: "fields", label: "Fields" }]
+    const automation = automations.find(
+      candidate => candidate._id === tool.sourceId
+    )
+    const triggerInputs = automation?.definition?.trigger?.inputs as {
+      fields?: Record<string, AutomationIOType>
+    } | null
+    return Object.keys(triggerInputs?.fields || {}).map(name => ({
+      name,
+      label: name,
+    }))
   }
 
   return []
