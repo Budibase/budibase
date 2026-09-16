@@ -27,6 +27,7 @@
 
   import { API } from "@/api"
   import { IntegrationTypes } from "@/constants/backend"
+  import { getErrorMessage } from "@/helpers/errors"
   import {
     automationStore,
     datasources,
@@ -421,20 +422,6 @@
       "status" in error &&
       error.status === 429
     )
-  }
-
-  const getErrorMessage = (error: unknown) => {
-    if (error instanceof Error) {
-      return error.message
-    }
-    if (
-      typeof error === "object" &&
-      error != null &&
-      "message" in error &&
-      typeof error.message === "string"
-    ) {
-      return error.message
-    }
   }
 
   async function deployApp() {
