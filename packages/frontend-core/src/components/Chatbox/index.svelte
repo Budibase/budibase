@@ -412,11 +412,19 @@
     }
   })
 
+  // Tool/reasoning toggles mutate the chat DOM; the observer below would
+  // otherwise pin the viewport to the bottom as height changes.
+  let skipAutoScroll = false
+
   const scrollToBottom = async () => {
-    await tick()
-    if (chatAreaElement) {
-      chatAreaElement.scrollTop = chatAreaElement.scrollHeight
+    if (skipAutoScroll) {
+      return
     }
+    await tick()
+    if (skipAutoScroll || !chatAreaElement) {
+      return
+    }
+    chatAreaElement.scrollTop = chatAreaElement.scrollHeight
   }
 
   $effect(() => {
@@ -495,8 +503,17 @@
     await sendMessage()
   }
 
-  const toggleTool = (toolId: string) => {
-    expandedTools = { ...expandedTools, [toolId]: !expandedTools[toolId] }
+  const toggleExpanded = (id: string) => {
+    const area = chatAreaElement
+    const previousScrollTop = area?.scrollTop ?? 0
+    skipAutoScroll = true
+    expandedTools = { ...expandedTools, [id]: !expandedTools[id] }
+    tick().then(() => {
+      if (area) {
+        area.scrollTop = previousScrollTop
+      }
+      skipAutoScroll = false
+    })
   }
 
   const formatToolOutput = (output: unknown): string =>
@@ -597,11 +614,7 @@
                 interactive={!!reasoningText}
                 expanded={Boolean(expandedTools[reasoningId])}
                 content={reasoningText}
-                ontoggle={() =>
-                  (expandedTools = {
-                    ...expandedTools,
-                    [reasoningId]: !expandedTools[reasoningId],
-                  })}
+                ontoggle={() => toggleExpanded(reasoningId)}
               />
             {/if}
             {#each message.parts ?? [] as part, partIndex}
@@ -624,7 +637,7 @@
                     class="tool-header"
                     class:tool-header-expanded={expandedTools[toolId]}
                     type="button"
-                    onclick={() => toggleTool(toolId)}
+                    onclick={() => toggleExpanded(toolId)}
                   >
                     <span
                       class="tool-chevron"
