@@ -1,4 +1,5 @@
 import { InviteUsersResponse, OIDCUser, User } from "@budibase/types"
+import type { Database } from "@budibase/types"
 import { randomUUID } from "crypto"
 
 import {
@@ -6,6 +7,7 @@ import {
   cache,
   constants,
   context,
+  db,
   events,
   middleware,
   tenancy,
@@ -51,6 +53,27 @@ describe("/api/global/users", () => {
   }
 
   describe("POST /api/global/users/init", () => {
+    let defaultTenantDB: Database
+    let restoreGlobalDBName: () => void
+
+    beforeEach(() => {
+      const name = context.getGlobalDBName(structures.tenant.id())
+      defaultTenantDB = db.getDB(name)
+      const replacement = jest.replaceProperty(
+        constants.StaticDatabases.GLOBAL,
+        "name",
+        name
+      )
+      restoreGlobalDBName = () => replacement.restore()
+    })
+
+    afterEach(async () => {
+      restoreGlobalDBName()
+      if (await defaultTenantDB.exists()) {
+        await defaultTenantDB.destroy()
+      }
+    })
+
     it("should reject an invalid internal API key without creating a tenant database", async () => {
       await withEnv({ MULTI_TENANCY: "" }, async () => {
         config.selfHosted()
@@ -114,9 +137,6 @@ describe("/api/global/users", () => {
       await withEnv({ MULTI_TENANCY: "" }, async () => {
         config.selfHosted()
         try {
-          await context.doInTenant("default", () =>
-            context.getGlobalDB().destroy()
-          )
           await config.request
             .post("/api/global/users/init")
             .send({
@@ -134,9 +154,6 @@ describe("/api/global/users", () => {
             })
             .expect(403)
         } finally {
-          await context.doInTenant("default", () =>
-            context.getGlobalDB().destroy()
-          )
           config.cloudHosted()
         }
       })
@@ -167,9 +184,6 @@ describe("/api/global/users", () => {
           )
           expect(databaseExists).toBe(false)
         } finally {
-          await context.doInTenant("default", () =>
-            context.getGlobalDB().destroy()
-          )
           config.cloudHosted()
         }
       })
