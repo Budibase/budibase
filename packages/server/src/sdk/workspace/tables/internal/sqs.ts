@@ -1,8 +1,15 @@
-import { context, sql, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
+import {
+  context,
+  locks,
+  sql,
+  SQLITE_DESIGN_DOC_ID,
+} from "@budibase/backend-core"
 import { helpers, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
 import {
   Database,
   FieldType,
+  LockName,
+  LockType,
   PreSaveSQLiteDefinition,
   RelationshipFieldMetadata,
   SQLiteDefinition,
@@ -154,6 +161,44 @@ async function pruneConflicts(db: Database) {
     )
   } catch (err) {
     console.warn("Unable to prune conflicting SQLite definitions", err)
+  }
+}
+
+export async function withDefinitionRebuildLock<T>(
+  fn: () => Promise<T>,
+  workspaceId: string = context.getOrThrowWorkspaceId()
+): Promise<T> {
+  const { result } = await locks.doWithLock(
+    {
+      type: LockType.AUTO_EXTEND,
+      name: LockName.SQS_SYNC_DEFINITIONS,
+      resource: workspaceId,
+    },
+    fn
+  )
+  return result
+}
+
+export async function waitForDefinitionRebuild(
+  workspaceId: string = context.getOrThrowWorkspaceId()
+): Promise<void> {
+  try {
+    await locks.doWithLock(
+      {
+        type: LockType.DEFAULT,
+        name: LockName.SQS_SYNC_DEFINITIONS,
+        resource: workspaceId,
+        ttl: 1000,
+      },
+      async () => {}
+    )
+  } catch (err: any) {
+    if (err.name !== "LockError") {
+      throw err
+    }
+    console.warn(
+      `Timed out waiting for SQLite definition rebuild on workspace "${workspaceId}", continuing anyway`
+    )
   }
 }
 
