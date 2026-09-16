@@ -9,7 +9,25 @@ export type {
   UnregisterTermination,
 } from "./runtime"
 export { FunctionRunSupervisor } from "./supervisor"
+export type { FunctionRunSupervisorOptions } from "./supervisor"
+export { FunctionRunOrchestrator } from "./orchestrator"
 export type {
-  FunctionRunSupervisorOptions,
-  SuperviseFunctionRunOptions,
-} from "./supervisor"
+  FunctionCapabilitySession,
+  FunctionRunOrchestratorDependencies,
+  OrchestrateFunctionRunOptions,
+} from "./orchestrator"
+export {
+  createFunctionInvocationScope,
+  FunctionCapabilityError,
+  FunctionCapabilityService,
+} from "./capabilities"
+export type {
+  FunctionCapabilityExecution,
+  FunctionCapabilityLog,
+  FunctionCapabilityMeterResult,
+  FunctionCapabilityServiceDependencies,
+  FunctionInvocationScope,
+  FunctionInvocationScopeInput,
+} from "./capabilities"
+export { JSONLimitError, validateJSONLimits } from "./jsonLimits"
+export type { JSONLimits } from "./jsonLimits"
