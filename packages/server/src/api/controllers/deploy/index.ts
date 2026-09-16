@@ -240,7 +240,14 @@ async function clearPendingColumnRenames(workspaceId: string) {
     }
 
     if (updatedTables.length > 0) {
-      await db.bulkDocs(updatedTables)
+      const bulkResults = await db.bulkDocs(updatedTables)
+      const failedIndex = bulkResults.findIndex(result => result.error)
+      if (failedIndex !== -1) {
+        const failedResult = bulkResults[failedIndex]
+        throw new Error(
+          `Failed to clear pending column renames for ${updatedTables[failedIndex]._id}: ${failedResult.error}`
+        )
+      }
     }
   })
 }
