@@ -21,7 +21,9 @@ export const fetchUsersById = async (
       limit: wanted.length,
     })
     for (const user of res?.data || []) {
-      users[user._id!] = user
+      if (user?._id) {
+        users[user._id] = user
+      }
     }
   } catch (error) {
     console.error("Failed to load users by id", error)
