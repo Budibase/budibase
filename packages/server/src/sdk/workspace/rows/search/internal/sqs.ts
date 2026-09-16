@@ -51,7 +51,7 @@ import sdk from "../../../../index"
 import {
   mapToUserColumn,
   USER_COLUMN_PREFIX,
-  waitForDefinitionRebuild,
+  withDefinitionRebuildLock,
 } from "../../../tables/internal/sqs"
 import AliasTables from "../../sqlAlias"
 import { enrichQueryJson, processRowCountResponse } from "../../utils"
@@ -329,6 +329,27 @@ function resyncDefinitionsRequired(status: number, message: string) {
   )
 }
 
+async function withSearchDefinitionRebuildLock<T>(
+  fn: () => Promise<T>
+): Promise<T> {
+  let lockAcquired = false
+  try {
+    return await withDefinitionRebuildLock(async () => {
+      lockAcquired = true
+      return fn()
+    })
+  } catch (err: unknown) {
+    if (lockAcquired) {
+      throw err
+    }
+    console.warn(
+      `Unable to acquire SQLite definition rebuild lock for workspace "${context.getWorkspaceId()}", continuing anyway`,
+      err
+    )
+    return fn()
+  }
+}
+
 export async function search(
   options: RowSearchParams,
   source: Table | ViewV2,
@@ -503,19 +524,17 @@ export async function search(
 
   const enrichedRequest = await enrichQueryJson(request)
 
-  if (!opts?.retrying) {
-    await waitForDefinitionRebuild()
-  }
-
   try {
-    const [rows, totalRows] = await Promise.all([
-      runSqlQuery(enrichedRequest, allTables, relationships),
-      options.countRows
-        ? runSqlQuery(enrichedRequest, allTables, relationships, {
-            countTotalRows: true,
-          })
-        : Promise.resolve(undefined),
-    ])
+    const [rows, totalRows] = await withSearchDefinitionRebuildLock(() =>
+      Promise.all([
+        runSqlQuery(enrichedRequest, allTables, relationships),
+        options.countRows
+          ? runSqlQuery(enrichedRequest, allTables, relationships, {
+              countTotalRows: true,
+            })
+          : Promise.resolve(undefined),
+      ])
+    )
 
     // process from the format of tableId.column to expected format also
     // make sure JSON columns corrected

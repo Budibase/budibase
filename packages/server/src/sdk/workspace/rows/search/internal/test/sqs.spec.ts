@@ -1,9 +1,56 @@
+const mockBuildInternalRelationships = jest.fn()
+const mockDoWithLock = jest.fn()
+const mockGetWorkspaceDB = jest.fn()
+const mockGetWorkspaceId = jest.fn(() => "workspace_1")
+const mockOutputProcessing = jest.fn()
+const mockSqlOutputProcessing = jest.fn()
+
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    context: {
+      ...actual.context,
+      getWorkspaceDB: () => mockGetWorkspaceDB(),
+      getWorkspaceId: () => mockGetWorkspaceId(),
+      getOrThrowWorkspaceId: () => mockGetWorkspaceId(),
+    },
+    locks: {
+      ...actual.locks,
+      doWithLock: (...args: unknown[]) => mockDoWithLock(...args),
+    },
+  }
+})
+
+jest.mock("../../../../../../api/controllers/row/utils", () => {
+  const actual = jest.requireActual(
+    "../../../../../../api/controllers/row/utils"
+  )
+  return {
+    ...actual,
+    buildInternalRelationships: (...args: unknown[]) =>
+      mockBuildInternalRelationships(...args),
+    sqlOutputProcessing: (...args: unknown[]) =>
+      mockSqlOutputProcessing(...args),
+  }
+})
+
+jest.mock("../../../../../../utilities/rowProcessor", () => {
+  const actual = jest.requireActual("../../../../../../utilities/rowProcessor")
+  return {
+    ...actual,
+    outputProcessing: (...args: unknown[]) => mockOutputProcessing(...args),
+  }
+})
+
 import { sql } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import {
   AIOperationEnum,
   CalculationType,
   FieldType,
+  LockName,
+  LockType,
   RelationshipType,
   SourceName,
   Table,
@@ -15,7 +62,7 @@ import {
   generateJunctionTableID,
   generateViewID,
 } from "../../../../../../db/utils"
-import { buildInternalFieldList } from "../sqs"
+import { buildInternalFieldList, search } from "../sqs"
 
 import { utils } from "@budibase/shared-core"
 import { cloneDeep } from "lodash"
@@ -629,5 +676,88 @@ describe("buildInternalFieldList", () => {
         `${view.tableId}.tableId`,
       ])
     })
+  })
+})
+
+describe("search", () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it("runs SQL queries while holding the definition rebuild lock", async () => {
+    const table: Table = {
+      ...structures.tableForDatasource({
+        type: "datasource",
+        source: SourceName.POSTGRES,
+      }),
+      name: "contacts",
+      _id: "ta_contacts",
+      primary: ["_id"],
+      schema: {
+        name: {
+          name: "name",
+          type: FieldType.STRING,
+        },
+      },
+    }
+
+    jest
+      .spyOn(sdk.tables, "getAllInternalTables")
+      .mockImplementation(async () => [cloneDeep(table)])
+
+    mockBuildInternalRelationships.mockReturnValue([])
+    mockSqlOutputProcessing.mockImplementation(async rows => rows)
+    mockOutputProcessing.mockImplementation(async (_source, rows) => rows)
+
+    let insideLock = false
+    const sqlCallsInsideLock: boolean[] = []
+    const sqlMock = jest.fn(async () => {
+      sqlCallsInsideLock.push(insideLock)
+      return [
+        {
+          _id: "row_1",
+          data_name: "Alice",
+        },
+      ]
+    })
+    mockGetWorkspaceDB.mockReturnValue({ sql: sqlMock })
+
+    mockDoWithLock.mockImplementation(
+      async (
+        opts: unknown,
+        fn: () => Promise<unknown>
+      ): Promise<{ executed: true; result: unknown }> => {
+        expect(opts).toEqual(
+          expect.objectContaining({
+            type: LockType.AUTO_EXTEND,
+            name: LockName.SQS_SYNC_DEFINITIONS,
+            resource: "workspace_1",
+          })
+        )
+        insideLock = true
+        try {
+          const result = await fn()
+          return { executed: true, result }
+        } finally {
+          insideLock = false
+        }
+      }
+    )
+
+    const response = await search(
+      {
+        tableId: table._id!,
+        query: {},
+      },
+      table
+    )
+
+    expect(response.rows).toEqual([
+      {
+        _id: "row_1",
+        name: "Alice",
+      },
+    ])
+    expect(sqlCallsInsideLock).toEqual([true])
   })
 })
