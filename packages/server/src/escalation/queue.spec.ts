@@ -733,4 +733,33 @@ describe("processNotify", () => {
     expect(doc.responses).toHaveLength(1)
     expect(doc.responses?.[0].user.userId).toEqual("U1")
   })
+
+  it("serialises a press that lands while the outcome is being written", async () => {
+    const escalationId = await seedPending({
+      type: EscalationNotificationChannel.SLACK,
+      config: { channelId: "C1" },
+    })
+    sendTeamsMock.mockResolvedValue(false)
+    let press: Promise<unknown> | undefined
+    sendSlackMock.mockImplementation(
+      async ({ notifDoc }: { notifDoc: EscalationNotificationDoc }) => {
+        press = config.doInContext(config.getProdWorkspaceId(), () =>
+          sdk.escalations.respond(
+            escalationId,
+            notifDoc._id!,
+            { actionId: "esc_approve", user: { userId: "U1" } },
+            jest.fn()
+          )
+        )
+        return true
+      }
+    )
+
+    await runNotify(escalationId)
+    await press
+
+    const doc = await getNotification(escalationId)
+    expect(doc.status).toEqual("sent")
+    expect(doc.responses).toHaveLength(1)
+  })
 })

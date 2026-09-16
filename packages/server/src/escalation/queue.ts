@@ -8,7 +8,6 @@ import {
 } from "ai"
 import {
   context,
-  db as dbCore,
   getErrorMessage,
   queue,
   roles,
@@ -69,26 +68,14 @@ const updateNotificationOutcome = async (
   outcome: Pick<
     EscalationNotificationDoc,
     "status" | "providerResponse" | "sentAt"
-  >,
-  maxRetries = 3
+  >
 ) => {
   const db = context.getWorkspaceDB()
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    const notifDoc =
-      await db.tryGet<EscalationNotificationDoc>(notificationDocId)
-    if (!notifDoc) {
-      return
-    }
-    try {
-      await db.put({ ...notifDoc, ...outcome })
-      return
-    } catch (err) {
-      if (dbCore.isDocumentConflictError(err) && attempt < maxRetries - 1) {
-        continue
-      }
-      throw err
-    }
+  const notifDoc = await db.tryGet<EscalationNotificationDoc>(notificationDocId)
+  if (!notifDoc) {
+    return
   }
+  await db.put({ ...notifDoc, ...outcome })
 }
 
 const getDocId = (escalationId: string): string =>
@@ -235,13 +222,17 @@ export async function processNotify(
         })
       )
 
-      await Promise.all(
-        outcomes.map(({ notifDoc, status, providerResponse }) =>
-          updateNotificationOutcome(notifDoc._id!, {
-            status,
-            ...(providerResponse ? { providerResponse } : {}),
-            sentAt: new Date().toISOString(),
-          })
+      // Under the escalation lock so a press landing on the notification doc
+      // can't race the outcome write
+      await sdk.escalations.withEscalationLock(escalationId, () =>
+        Promise.all(
+          outcomes.map(({ notifDoc, status, providerResponse }) =>
+            updateNotificationOutcome(notifDoc._id!, {
+              status,
+              ...(providerResponse ? { providerResponse } : {}),
+              sentAt: new Date().toISOString(),
+            })
+          )
         )
       )
     }
