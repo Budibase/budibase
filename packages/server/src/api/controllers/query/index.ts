@@ -512,7 +512,9 @@ async function execute(
       type: query.queryVerb,
       reason: ActionFailureReason.ERROR,
     })
-    ctx.throw(400, err)
+    const status =
+      opts.isAutomation && err instanceof HTTPError ? err.status : 400
+    ctx.throw(status, err)
   }
 }
 

@@ -4,7 +4,7 @@ import {
   type FunctionDocument,
   type FunctionRunResult,
 } from "@budibase/types"
-import env from "../../../environment"
+import env, { withEnv } from "../../../environment"
 import {
   executeFunction,
   type ExecuteFunctionDependencies,
@@ -93,31 +93,29 @@ const run = (
   )
 
 describe("Run Function automation action", () => {
-  const originalLimits = env.FUNCTIONS_LIMITS.run
-
-  afterEach(() => {
-    env.FUNCTIONS_LIMITS.run = originalLimits
-  })
-
   it("uses configured limits for execution and capabilities", async () => {
     const limits = {
-      ...originalLimits,
+      ...env.FUNCTIONS_LIMITS.run,
       timeoutMs: 1234,
       maxQueryCalls: 2,
     }
-    env.FUNCTIONS_LIMITS.run = limits
     const deps = dependencies()
 
-    await expect(run(deps)).resolves.toEqual({
-      success: true,
-      status: "success",
-      output: { answer: 42 },
-    })
-    expect(deps.orchestrate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        request: expect.objectContaining({ limits }),
-        capabilityScope: expect.objectContaining({ limits }),
-      })
+    await withEnv(
+      { FUNCTIONS_LIMITS: { ...env.FUNCTIONS_LIMITS, run: limits } },
+      async () => {
+        await expect(run(deps)).resolves.toEqual({
+          success: true,
+          status: "success",
+          output: { answer: 42 },
+        })
+        expect(deps.orchestrate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            request: expect.objectContaining({ limits }),
+            capabilityScope: expect.objectContaining({ limits }),
+          })
+        )
+      }
     )
   })
 
@@ -144,23 +142,32 @@ describe("Run Function automation action", () => {
   it.each([{ maxInputBytes: 1 }, { maxInputDepth: 1 }])(
     "rejects inputs exceeding configured limits %j",
     async overrides => {
-      env.FUNCTIONS_LIMITS.run = { ...originalLimits, ...overrides }
       const deps = dependencies()
 
-      await expect(
-        run(deps, {
-          functionId: fn._id,
-          inputs: { nested: { value: "hello" } },
-        })
-      ).resolves.toEqual({
-        success: false,
-        status: "error",
-        error: {
-          code: FunctionErrorCode.FUNCTION_INPUT_INVALID,
-          message: "Function inputs must be a JSON-compatible object",
+      await withEnv(
+        {
+          FUNCTIONS_LIMITS: {
+            ...env.FUNCTIONS_LIMITS,
+            run: { ...env.FUNCTIONS_LIMITS.run, ...overrides },
+          },
         },
-      })
-      expect(deps.orchestrate).not.toHaveBeenCalled()
+        async () => {
+          await expect(
+            run(deps, {
+              functionId: fn._id,
+              inputs: { nested: { value: "hello" } },
+            })
+          ).resolves.toEqual({
+            success: false,
+            status: "error",
+            error: {
+              code: FunctionErrorCode.FUNCTION_INPUT_INVALID,
+              message: "Function inputs must be a JSON-compatible object",
+            },
+          })
+          expect(deps.orchestrate).not.toHaveBeenCalled()
+        }
+      )
     }
   )
 
