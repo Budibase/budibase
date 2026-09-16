@@ -13,6 +13,15 @@ fi
 
 ATTEMPTS=${PULL_ATTEMPTS:-5}
 
+# Bash arithmetic treats a non-numeric value as 0, which would skip the retry
+# loop entirely and report a pull failure for an image never pulled.
+if [[ ! $ATTEMPTS =~ ^[0-9]+$ ]] || ((10#$ATTEMPTS < 1)); then
+  echo "::error::PULL_ATTEMPTS must be a positive integer, got '$ATTEMPTS'" >&2
+  exit 1
+fi
+
+ATTEMPTS=$((10#$ATTEMPTS))
+
 pull_with_retry() {
   local image=$1
   local delay=2
