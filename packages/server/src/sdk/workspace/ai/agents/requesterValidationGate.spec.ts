@@ -1,22 +1,21 @@
 import { ToolValidationResultStatus } from "@budibase/types"
+import { tool } from "ai"
+import { z } from "zod"
 import {
-  createRequesterValidationContext,
+  createRequesterValidationResolutionTool,
   createRequesterValidationRuntime,
-  getRequesterConfirmedToolCalls,
+  getPendingRequesterToolCalls,
 } from "./requesterValidationGate"
 
-const createRuntime = (
-  confirmedCalls: Parameters<typeof createRequesterValidationContext>[0] = []
-) =>
+const createRuntime = () =>
   createRequesterValidationRuntime({
     toolName: "create_row",
     readableName: "Create row",
     sourceId: "table_1",
-    validationContext: createRequesterValidationContext(confirmedCalls),
   })
 
 describe("requester validation gate", () => {
-  it("pauses an unconfirmed write and returns all proposed arguments", async () => {
+  it("pauses a write and returns all frozen arguments", async () => {
     const args = { name: "Ada", active: true }
 
     await expect(
@@ -25,101 +24,113 @@ describe("requester validation gate", () => {
       expect.objectContaining({
         status: ToolValidationResultStatus.PENDING,
         toolName: "create_row",
+        sourceId: "table_1",
         arguments: args,
+        validationToolCallId: "call_1",
       })
     )
   })
 
-  it("reads naturally confirmed calls from the previous assistant turn", () => {
+  it("reads frozen calls from the previous assistant turn", () => {
     const args = { name: "Ada", active: true }
 
     expect(
-      getRequesterConfirmedToolCalls({
-        latestQuestion: "Yes, please!",
-        chat: {
-          _id: "chat_1",
-          agentId: "agent_1",
-          messages: [
-            {
-              id: "assistant_1",
-              role: "assistant",
-              parts: [
-                {
-                  type: "tool-create_row",
-                  toolCallId: "call_1",
-                  state: "output-available",
-                  input: args,
-                  output: {
-                    status: ToolValidationResultStatus.PENDING,
-                    sourceId: "table_1",
-                  },
+      getPendingRequesterToolCalls({
+        _id: "chat_1",
+        agentId: "agent_1",
+        messages: [
+          {
+            id: "assistant_1",
+            role: "assistant",
+            parts: [
+              {
+                type: "tool-create_row",
+                toolCallId: "call_1",
+                state: "output-available",
+                input: args,
+                output: {
+                  status: ToolValidationResultStatus.PENDING,
+                  sourceId: "table_1",
                 },
-              ],
-            },
-            {
-              id: "user_1",
-              role: "user",
-              parts: [{ type: "text", text: "Yes, please!" }],
-            },
-          ],
-        },
+              },
+            ],
+          },
+          {
+            id: "user_1",
+            role: "user",
+            parts: [{ type: "text", text: "Please proceed with that" }],
+          },
+        ],
       })
-    ).toEqual([{ toolName: "create_row", sourceId: "table_1", args }])
+    ).toEqual([
+      {
+        toolCallId: "call_1",
+        toolName: "create_row",
+        sourceId: "table_1",
+        args,
+      },
+    ])
   })
 
-  it("does not treat a changed request as confirmation", () => {
+  it("does not offer calls that are not from the preceding assistant turn", () => {
     expect(
-      getRequesterConfirmedToolCalls({
-        latestQuestion: "Yes, but use Grace instead",
-        chat: {
-          _id: "chat_1",
-          agentId: "agent_1",
-          messages: [],
-        },
+      getPendingRequesterToolCalls({
+        _id: "chat_1",
+        agentId: "agent_1",
+        messages: [
+          {
+            id: "assistant_1",
+            role: "assistant",
+            parts: [{ type: "text", text: "Anything else?" }],
+          },
+          {
+            id: "user_1",
+            role: "user",
+            parts: [{ type: "text", text: "Yes" }],
+          },
+        ],
       })
     ).toEqual([])
   })
 
-  it("allows the exact call after the requester confirms it", async () => {
-    const args = { name: "Ada", active: true }
-    const runtime = createRuntime([
-      { toolName: "create_row", sourceId: "table_1", args },
-    ])
-
-    await expect(
-      runtime.intercept(args, { toolCallId: "call_1" })
-    ).resolves.toBeUndefined()
-  })
-
-  it("pauses again when the arguments change", async () => {
-    const runtime = createRuntime([
-      {
-        toolName: "create_row",
-        sourceId: "table_1",
-        args: { name: "Ada" },
+  it("executes the frozen call directly and only once", async () => {
+    const execute = jest.fn().mockResolvedValue({ success: true })
+    const resolver = createRequesterValidationResolutionTool({
+      pendingCalls: [
+        {
+          toolCallId: "call_1",
+          toolName: "create_row",
+          sourceId: "table_1",
+          args: { name: "Ada" },
+        },
+      ],
+      executableTools: {
+        create_row: tool({
+          description: "Create row",
+          inputSchema: z.object({ name: z.string() }),
+          execute,
+        }),
       },
-    ])
+    })
 
     await expect(
-      runtime.intercept({ name: "Grace" }, { toolCallId: "call_1" })
-    ).resolves.toEqual(
-      expect.objectContaining({ status: ToolValidationResultStatus.PENDING })
+      resolver.execute?.(
+        { actionId: "call_1" },
+        { toolCallId: "confirmation_1", messages: [], context: {} }
+      )
+    ).resolves.toEqual({ success: true })
+    expect(execute).toHaveBeenCalledWith(
+      { name: "Ada" },
+      expect.objectContaining({ toolCallId: "call_1" })
     )
-  })
-
-  it("consumes each confirmation only once", async () => {
-    const args = { name: "Ada" }
-    const runtime = createRuntime([
-      { toolName: "create_row", sourceId: "table_1", args },
-    ])
-
     await expect(
-      runtime.intercept(args, { toolCallId: "call_1" })
-    ).resolves.toBeUndefined()
-    await expect(
-      runtime.intercept(args, { toolCallId: "call_2" })
-    ).resolves.toEqual(
-      expect.objectContaining({ status: ToolValidationResultStatus.PENDING })
-    )
+      resolver.execute?.(
+        { actionId: "call_1" },
+        { toolCallId: "confirmation_2", messages: [], context: {} }
+      )
+    ).resolves.toEqual({
+      error: "That proposed action is no longer available",
+    })
+    expect(execute).toHaveBeenCalledTimes(1)
   })
 })

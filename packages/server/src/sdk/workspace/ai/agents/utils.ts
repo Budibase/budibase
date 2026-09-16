@@ -32,6 +32,8 @@ import {
   type EscalationGateContext,
 } from "./escalationGate"
 import {
+  REQUESTER_VALIDATION_TOOL_NAME,
+  createRequesterValidationResolutionTool,
   createRequesterValidationRuntime,
   type RequesterValidationContext,
 } from "./requesterValidationGate"
@@ -295,7 +297,6 @@ export async function buildPromptAndTools(
           toolName: tool.name,
           readableName: tool.readableName,
           sourceId: tool.sourceId,
-          validationContext: options.requesterValidationContext,
         })
       )
     }
@@ -320,13 +321,29 @@ export async function buildPromptAndTools(
   if (options.escalationGateContext) {
     resolvedSystemPrompt += `\n\nYou have no escalation or approval-request capability of your own. Never claim to have escalated, flagged, or referred anything for human review - approvals happen automatically when you use tools that require them. If instructions ask you to escalate a topic, tell the user you cannot escalate it and continue normally.`
   }
+  const tools = toToolSet(enabledTools, runtimes, gates, validations)
+  const pendingValidations = options.requesterValidationContext?.pendingCalls
   if (options.requesterValidationContext) {
-    resolvedSystemPrompt += `\n\nWrite and execute tools have a requester validation planning step. When a tool returns pending_validation, it has not run: clearly show every proposed argument exactly as returned, using friendly field labels where possible, and ask naturally whether the user wants you to go ahead. Never use approval codes or claim the action ran. On a later, unambiguous confirmation from the requester, call the same tool once with exactly the same arguments. If the requester rejects the action or changes any parameter, do not retry the old call; propose the revised call, which must be validated separately.`
+    resolvedSystemPrompt += `\n\nWrite and execute tools have a requester validation planning step. When a tool returns pending_validation, it has not run: clearly show every proposed argument exactly as returned, using friendly field labels where possible, and ask naturally whether the user wants you to go ahead. Never use approval codes or claim the action ran. If the requester rejects the action or changes any parameter, do not execute the old call; propose the revised call, which must be validated separately.`
+  }
+  if (pendingValidations?.length) {
+    const executableTools = toToolSet(enabledTools, runtimes, gates)
+    tools[REQUESTER_VALIDATION_TOOL_NAME] =
+      createRequesterValidationResolutionTool({
+        pendingCalls: pendingValidations,
+        executableTools,
+      })
+    resolvedSystemPrompt += `\n\nThe immediately preceding assistant turn contains one or more pending requester validations. Interpret the user's latest reply conversationally. Only when they clearly confirm a proposed action, call ${REQUESTER_VALIDATION_TOOL_NAME} with that action's internal ID; this executes the frozen arguments, so never recreate them. If they reject it, respond without calling a tool. If they request any change, call the original write tool with the revised arguments so the new proposal is shown for validation. Do not reveal internal action IDs.`
   }
   return {
     systemPrompt: resolvedSystemPrompt,
-    tools: toToolSet(enabledTools, runtimes, gates, validations),
-    toolDisplayNames: getToolDisplayNames(enabledTools),
+    tools,
+    toolDisplayNames: {
+      ...getToolDisplayNames(enabledTools),
+      ...(pendingValidations?.length
+        ? { [REQUESTER_VALIDATION_TOOL_NAME]: "Confirm action" }
+        : {}),
+    },
     toolSources: Object.fromEntries(
       enabledTools.map(tool => [tool.name, tool.sourceId])
     ),

@@ -48,10 +48,7 @@ import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
 import type tracer from "dd-trace"
 import { withLiteLLMSessionId } from "../llm/requestSession"
-import {
-  createRequesterValidationContext,
-  getRequesterConfirmedToolCalls,
-} from "./requesterValidationGate"
+import { getPendingRequesterToolCalls } from "./requesterValidationGate"
 
 interface PrepareAgentChatRunParams {
   agent: Agent
@@ -564,10 +561,9 @@ const prepareAgentChatRunInternal = async ({
     escalationGateContext,
   }
   if (promptMode === "interactive") {
-    buildPromptOptions.requesterValidationContext =
-      createRequesterValidationContext(
-        getRequesterConfirmedToolCalls({ chat, latestQuestion })
-      )
+    buildPromptOptions.requesterValidationContext = {
+      pendingCalls: getPendingRequesterToolCalls(chat),
+    }
     buildPromptOptions.baseSystemPrompt = ai.agentSystemPrompt(
       user,
       chat?.timezone
