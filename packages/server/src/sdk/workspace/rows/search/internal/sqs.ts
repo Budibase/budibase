@@ -1,7 +1,6 @@
 import {
   context,
   HTTPError,
-  locks,
   sql,
   SQLITE_DESIGN_DOC_ID,
   SQS_DATASOURCE_INTERNAL,
@@ -21,8 +20,6 @@ import {
   isDynamicFormula,
   isLogicalSearchOperator,
   isStaticFormula,
-  LockName,
-  LockType,
   Operation,
   QueryJson,
   RelationshipFieldMetadata,
@@ -590,13 +587,9 @@ export async function search(
       throw new HTTPError("Search is temporarily unavailable", 503)
     }
     if (!opts?.retrying && resyncDefinitionsRequired(err.status, msg)) {
-      await locks.doWithLock(
-        {
-          type: LockType.AUTO_EXTEND,
-          name: LockName.SQS_SYNC_DEFINITIONS,
-          resource: context.getWorkspaceId(),
-        },
-        sdk.tables.sqs.syncDefinition
+      await withDefinitionRebuildLock(
+        sdk.tables.sqs.syncDefinition,
+        context.getWorkspaceId()
       )
       return search(options, source, { retrying: true })
     }

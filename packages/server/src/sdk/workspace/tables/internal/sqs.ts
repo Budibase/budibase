@@ -174,62 +174,9 @@ export async function withDefinitionRebuildLock<T>(
       name: LockName.SQS_SYNC_DEFINITIONS,
       resource: workspaceId,
     },
-    () => {
-      definitionRebuildConfirmedFreeUntil.delete(workspaceId)
-      return fn()
-    }
+    fn
   )
   return result
-}
-
-const DEFINITION_REBUILD_MAX_WAIT_MS = 10000
-const DEFINITION_REBUILD_POLL_INTERVAL_MS = 500
-const DEFINITION_REBUILD_CHECK_CACHE_MS = 250
-
-const definitionRebuildConfirmedFreeUntil = new Map<string, number>()
-
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-export async function waitForDefinitionRebuild(
-  workspaceId: string = context.getOrThrowWorkspaceId()
-): Promise<void> {
-  const cachedFreeUntil = definitionRebuildConfirmedFreeUntil.get(workspaceId)
-  if (cachedFreeUntil != null && Date.now() < cachedFreeUntil) {
-    return
-  }
-
-  const deadline = Date.now() + DEFINITION_REBUILD_MAX_WAIT_MS
-  try {
-    for (;;) {
-      const { executed } = await locks.doWithLock(
-        {
-          type: LockType.TRY_ONCE,
-          name: LockName.SQS_SYNC_DEFINITIONS,
-          resource: workspaceId,
-          ttl: 1000,
-        },
-        async () => {}
-      )
-      if (executed) {
-        definitionRebuildConfirmedFreeUntil.set(
-          workspaceId,
-          Date.now() + DEFINITION_REBUILD_CHECK_CACHE_MS
-        )
-        return
-      }
-      if (Date.now() >= deadline) {
-        return
-      }
-      await sleep(DEFINITION_REBUILD_POLL_INTERVAL_MS)
-    }
-  } catch (err: any) {
-    console.warn(
-      `Unable to confirm SQLite definition rebuild status for workspace "${workspaceId}", continuing anyway`,
-      err
-    )
-  }
 }
 
 export async function syncDefinition(
