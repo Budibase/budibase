@@ -4,9 +4,12 @@ import { randomUUID } from "crypto"
 import {
   accounts as _accounts,
   cache,
+  constants,
+  context,
   events,
   middleware,
   tenancy,
+  utils,
   withEnv,
 } from "@budibase/backend-core"
 import { mocks as featureMocks } from "@budibase/backend-core/tests"
@@ -46,6 +49,132 @@ describe("/api/global/users", () => {
     await config.login(user)
     return user
   }
+
+  describe("POST /api/global/users/init", () => {
+    it("should reject an invalid internal API key without creating a tenant database", async () => {
+      await withEnv({ MULTI_TENANCY: "" }, async () => {
+        config.selfHosted()
+        try {
+          const tenantId = structures.tenant.id()
+          await config.request
+            .post("/api/global/users/init")
+            .set(constants.Header.API_KEY, "invalid-internal-api-key")
+            .send({
+              tenantId,
+              email: structures.email(),
+              password: "password123!",
+            })
+            .expect(403)
+
+          const databaseExists = await context.doInTenant(tenantId, () =>
+            context.getGlobalDB().exists()
+          )
+          expect(databaseExists).toBe(false)
+        } finally {
+          config.cloudHosted()
+        }
+      })
+    })
+
+    it.each(["password", "sso"])(
+      "should allow tenant creation with a valid internal API key for a %s user",
+      async authType => {
+        const tenantId = structures.tenant.id()
+        const email = structures.email()
+        const password = await utils.hash("password123!")
+        const isPassword = authType === "password"
+        const query = isPassword
+          ? "hashPassword=false"
+          : "requirePassword=false"
+
+        const response = await config.request
+          .post(`/api/global/users/init?${query}`)
+          .set(config.internalAPIHeaders())
+          .send({
+            tenantId,
+            email,
+            ...(isPassword ? { password } : { ssoId: "portal-sso-user" }),
+          })
+          .expect(200)
+
+        const user = await context.doInTenant(tenantId, () =>
+          context.getGlobalDB().get<User>(response.body._id)
+        )
+        expect(user).toMatchObject({
+          email,
+          tenantId,
+          admin: { global: true },
+          builder: { global: true },
+          ...(isPassword ? { password } : { ssoId: "portal-sso-user" }),
+        })
+      }
+    )
+
+    it("should allow public single-tenant bootstrap and reject subsequent initialization", async () => {
+      await withEnv({ MULTI_TENANCY: "" }, async () => {
+        config.selfHosted()
+        try {
+          await context.doInTenant("default", () =>
+            context.getGlobalDB().destroy()
+          )
+          await config.request
+            .post("/api/global/users/init")
+            .send({
+              tenantId: "default",
+              email: structures.email(),
+              password: "password123!",
+            })
+            .expect(200)
+          await config.request
+            .post("/api/global/users/init")
+            .send({
+              tenantId: "default",
+              email: structures.email(),
+              password: "password123!",
+            })
+            .expect(403)
+        } finally {
+          await context.doInTenant("default", () =>
+            context.getGlobalDB().destroy()
+          )
+          config.cloudHosted()
+        }
+      })
+    })
+
+    it("should reject an unauthenticated init request for a different tenant on a single-tenant deployment", async () => {
+      await withEnv({ MULTI_TENANCY: "" }, async () => {
+        config.selfHosted()
+        try {
+          const tenantId = structures.tenant.id()
+          await context.doInTenant("default", () =>
+            userSdk.db.createAdminUser(structures.email(), "default", {
+              password: "password123!",
+            })
+          )
+
+          const response = await config.request
+            .post("/api/global/users/init")
+            .send({
+              email: structures.email(),
+              password: "password123!",
+              tenantId,
+            })
+
+          expect(response.status).toBe(403)
+          const databaseExists = await context.doInTenant(tenantId, () =>
+            context.getGlobalDB().exists()
+          )
+          expect(databaseExists).toBe(false)
+        } finally {
+          await context.doInTenant("default", () =>
+            context.getGlobalDB().destroy()
+          )
+          config.cloudHosted()
+        }
+      })
+    })
+  })
 
   describe("POST /api/global/users/invite", () => {
     it("should be able to generate an invitation", async () => {
