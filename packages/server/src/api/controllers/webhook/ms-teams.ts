@@ -591,27 +591,45 @@ export async function MSTeamsWebhook(
                   ? undefined
                   : "I couldn't send you a private Budibase link. Please message me directly to link your account."
               if (note) {
-                await replyToConversation({
-                  appId,
-                  agentId,
-                  channel: {
-                    provider: AgentChannelProvider.MSTEAMS,
-                    conversationId: activity?.conversation?.id?.trim(),
-                    conversationType:
-                      activity?.conversation?.conversationType?.trim(),
-                    channelId: activity?.channelData?.channel?.id?.trim(),
-                    externalUserId: event.user.userId,
-                    externalUserName: event.user.fullName,
-                    serviceUrl: raw?.serviceUrl,
-                  },
-                  text: note,
-                })
+                try {
+                  await replyToConversation({
+                    appId,
+                    agentId,
+                    channel: {
+                      provider: AgentChannelProvider.MSTEAMS,
+                      conversationId: activity?.conversation?.id?.trim(),
+                      conversationType:
+                        activity?.conversation?.conversationType?.trim(),
+                      channelId: activity?.channelData?.channel?.id?.trim(),
+                      externalUserId: event.user.userId,
+                      externalUserName: event.user.fullName,
+                      serviceUrl: raw?.serviceUrl,
+                    },
+                    text: note,
+                  })
+                } catch (error) {
+                  console.warn(
+                    "Teams escalation action: failed to post reply",
+                    {
+                      escalationId,
+                      message:
+                        error instanceof Error ? error.message : String(error),
+                    }
+                  )
+                }
               }
             }
             return respondResult
           })
           if (event.thread && result.status !== "unlinked") {
-            await event.thread.post(escalationReplyText(result.status))
+            try {
+              await event.thread.post(escalationReplyText(result.status))
+            } catch (error) {
+              console.warn("Teams escalation action: failed to post reply", {
+                escalationId,
+                message: error instanceof Error ? error.message : String(error),
+              })
+            }
           }
         } catch (error) {
           console.error("Teams escalation action: failed to record response", {
