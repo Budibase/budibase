@@ -454,14 +454,6 @@ jobs:
           path: ./packages/server/images-sha.env
 
       - name: Configure AWS credentials for ECR Public
-        # Anonymous ECR Public pulls are capped at one per second per IP address.
-        # A wide matrix running on shared GitHub runner egress IPs trips that
-        # limit, so authenticate when we can to get a much higher allowance.
-        #
-        # Best effort on purpose: pull requests from forks cannot assume the
-        # role, and anonymous pulls still succeed thanks to the retries in
-        # scripts/pull-images.sh. Set the ECR_PUBLIC_ROLE_ARN repository
-        # variable to turn this on.
         id: aws-credentials
         if: needs.compute-affected-jobs.outputs.run_server_tests == 'true' && vars.ECR_PUBLIC_ROLE_ARN != ''
         continue-on-error: true
