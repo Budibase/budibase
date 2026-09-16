@@ -215,11 +215,10 @@ jobs:
           node-version-file: .nvmrc
       - name: Pull testcontainers images
         run: |
-          docker pull testcontainers/ryuk:0.5.1 &
-          docker pull budibase/couchdb:v3.3.3-sqs-v2.1.1 &
-          docker pull redis &
-
-          wait $(jobs -p)
+          ./scripts/pull-images.sh \
+            testcontainers/ryuk:0.5.1 \
+            budibase/couchdb:v3.3.3-sqs-v2.1.1 \
+            redis
 
       - name: Restore hoisted node_modules cache
         uses: actions/cache/restore@v5
@@ -356,6 +355,11 @@ jobs:
 
   test-server:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      # Required to assume ECR_PUBLIC_ROLE_ARN via OIDC for authenticated
+      # Amazon ECR Public pulls. Harmless when that variable is unset.
+      id-token: write
     concurrency:
       group: ${{ github.workflow }}-test-server-${{ matrix.datasource }}-${{ matrix.shard_index }}-${{ github.event.pull_request.number || github.ref }}
       cancel-in-progress: true
@@ -451,36 +455,55 @@ jobs:
         with:
           path: ./packages/server/images-sha.env
 
+      - name: Configure AWS credentials for ECR Public
+        # Anonymous ECR Public pulls are capped at one per second per IP address.
+        # A wide matrix running on shared GitHub runner egress IPs trips that
+        # limit, so authenticate when we can to get a much higher allowance.
+        #
+        # Best effort on purpose: pull requests from forks cannot assume the
+        # role, and anonymous pulls still succeed thanks to the retries in
+        # scripts/pull-images.sh. Set the ECR_PUBLIC_ROLE_ARN repository
+        # variable to turn this on.
+        id: aws-credentials
+        if: needs.compute-affected-jobs.outputs.run_server_tests == 'true' && vars.ECR_PUBLIC_ROLE_ARN != ''
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.ECR_PUBLIC_ROLE_ARN }}
+          # ECR Public authentication tokens are only issued from us-east-1.
+          aws-region: us-east-1
+
+      - name: Log in to Amazon ECR Public
+        if: steps.aws-credentials.outcome == 'success'
+        continue-on-error: true
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
       - name: Pull testcontainers images
         if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
         run: |
-          if [ "${{ matrix.datasource }}" == "mssql" ]; then
-            docker pull mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }}
-          elif [ "${{ matrix.datasource }}" == "mysql" ]; then
-            docker pull mysql@${{ steps.dotenv.outputs.MYSQL_SHA }}
-          elif [ "${{ matrix.datasource }}" == "postgres" ]; then
-            docker pull postgres@${{ steps.dotenv.outputs.POSTGRES_SHA }}
-          elif [ "${{ matrix.datasource }}" == "mongodb" ]; then
-            docker pull mongo@${{ steps.dotenv.outputs.MONGODB_SHA }}
-          elif [ "${{ matrix.datasource }}" == "mariadb" ]; then
-            docker pull mariadb@${{ steps.dotenv.outputs.MARIADB_SHA }}
-          elif [ "${{ matrix.datasource }}" == "oracle" ]; then
-            docker pull budibase/oracle-database:23.2-slim-faststart
-          elif [ "${{ matrix.datasource }}" == "postgres_legacy" ]; then
-            docker pull postgres:9.5.25
-          elif [ "${{ matrix.datasource }}" == "elasticsearch" ]; then
-            docker pull elasticsearch@${{ steps.dotenv.outputs.ELASTICSEARCH_SHA }}
-          elif [ "${{ matrix.datasource }}" == "dynamodb" ]; then
-            docker pull amazon/dynamodb-local@${{ steps.dotenv.outputs.DYNAMODB_SHA }}
-          elif [ "${{ matrix.datasource }}" == "none" ]; then
-            docker pull ${{ steps.dotenv.outputs.KEYCLOAK_IMAGE }} &
-          fi
-          docker pull public.ecr.aws/x1w3a5n5/third-party:minio-RELEASE.2025-09-07T16-13-09Z &
-          docker pull redis &
-          docker pull testcontainers/ryuk:0.5.1 &
-          docker pull budibase/couchdb:v3.3.3-sqs-v2.1.1 &
+          IMAGES=(
+            public.ecr.aws/x1w3a5n5/third-party:minio-RELEASE.2025-09-07T16-13-09Z
+            redis
+            testcontainers/ryuk:0.5.1
+            budibase/couchdb:v3.3.3-sqs-v2.1.1
+          )
 
-          wait $(jobs -p)
+          case "${{ matrix.datasource }}" in
+            mssql) IMAGES+=("mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }}") ;;
+            mysql) IMAGES+=("mysql@${{ steps.dotenv.outputs.MYSQL_SHA }}") ;;
+            postgres) IMAGES+=("postgres@${{ steps.dotenv.outputs.POSTGRES_SHA }}") ;;
+            mongodb) IMAGES+=("mongo@${{ steps.dotenv.outputs.MONGODB_SHA }}") ;;
+            mariadb) IMAGES+=("mariadb@${{ steps.dotenv.outputs.MARIADB_SHA }}") ;;
+            oracle) IMAGES+=("budibase/oracle-database:23.2-slim-faststart") ;;
+            postgres_legacy) IMAGES+=("postgres:9.5.25") ;;
+            elasticsearch) IMAGES+=("elasticsearch@${{ steps.dotenv.outputs.ELASTICSEARCH_SHA }}") ;;
+            dynamodb) IMAGES+=("amazon/dynamodb-local@${{ steps.dotenv.outputs.DYNAMODB_SHA }}") ;;
+            none) IMAGES+=("${{ steps.dotenv.outputs.KEYCLOAK_IMAGE }}") ;;
+          esac
+
+          ./scripts/pull-images.sh "${IMAGES[@]}"
 
       - name: Build client library - necessary for component tests
         if: needs.compute-affected-jobs.outputs.run_server_tests == 'true' && matrix.datasource == 'none'
