@@ -10,7 +10,6 @@
     "**/*.spec.js",
     "**/*.test.ts",
     "**/*.test.js",
-    "__mocks__",
-    "src/tests"
+    "__mocks__"
   ]
 }
