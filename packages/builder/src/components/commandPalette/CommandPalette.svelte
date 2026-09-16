@@ -367,7 +367,13 @@
       await API.publishAppChanges($workspaceStore.appId)
       notifications.success("App published successfully")
     } catch (error) {
-      notifications.error("Error publishing app")
+      if (error?.status === 429) {
+        notifications.warning(
+          error.message || "A publish is already in progress"
+        )
+      } else {
+        notifications.error("Error publishing app")
+      }
     }
   }
 
