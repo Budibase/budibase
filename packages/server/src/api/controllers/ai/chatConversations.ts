@@ -14,6 +14,7 @@ import {
   ChatConversation,
   ChatConversationRequest,
   ApprovalToolResultStatus,
+  ToolValidationResultStatus,
   FeatureFlag,
   ContextUser,
   UserCtx,
@@ -192,8 +193,9 @@ const buildToolCallTrackingHandler = ({
       | { status?: string; escalationId?: string }
       | undefined
     if (
-      approvalOutput?.status === ApprovalToolResultStatus.PENDING_APPROVAL &&
-      approvalOutput.escalationId
+      approvalOutput?.status === ToolValidationResultStatus.PENDING ||
+      (approvalOutput?.status === ApprovalToolResultStatus.PENDING_APPROVAL &&
+        approvalOutput.escalationId)
     ) {
       needsInputUpdate = needsInputUpdate.then(() =>
         sdk.ai.agentRequests

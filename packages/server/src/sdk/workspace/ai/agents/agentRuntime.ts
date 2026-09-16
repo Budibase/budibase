@@ -10,6 +10,7 @@ import {
   ChatConversationRequest,
   ContextUser,
   ApprovalToolResultStatus,
+  ToolValidationResultStatus,
   type AgentExecutionContext,
   type AgentRequester,
 } from "@budibase/types"
@@ -47,6 +48,10 @@ import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
 import type tracer from "dd-trace"
 import { withLiteLLMSessionId } from "../llm/requestSession"
+import {
+  createRequesterValidationContext,
+  getRequesterConfirmedToolCalls,
+} from "./requesterValidationGate"
 
 interface PrepareAgentChatRunParams {
   agent: Agent
@@ -431,11 +436,9 @@ export const prepareAgentRunContext = async ({
   }
 }
 
-// A pending escalation suspends the turn - once one exists, later steps run
-// with no tools so the model can wrap up in text but cannot act before a
-// human responds. Keyed on pending status plus escalationId so it covers the
-// escalate tool and gate refusals without tripping on lookalike statuses.
-const hasPendingEscalationResult = (
+// A pending approval or requester validation suspends the turn so the model
+// can explain the pending action but cannot perform another tool call.
+const hasPendingActionResult = (
   toolResults: Array<StepResult<ToolSet>["toolResults"][number]>
 ) =>
   toolResults.some(result => {
@@ -444,14 +447,15 @@ const hasPendingEscalationResult = (
       typeof output === "object" &&
       output !== null &&
       "status" in output &&
-      output.status === ApprovalToolResultStatus.PENDING_APPROVAL &&
-      "escalationId" in output &&
-      !!output.escalationId
+      (output.status === ToolValidationResultStatus.PENDING ||
+        (output.status === ApprovalToolResultStatus.PENDING_APPROVAL &&
+          "escalationId" in output &&
+          !!output.escalationId))
     )
   })
 
-const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
-  steps.some(step => hasPendingEscalationResult(step.toolResults))
+const hasPendingAction = (steps: Array<StepResult<ToolSet>>) =>
+  steps.some(step => hasPendingActionResult(step.toolResults))
 
 const getAgentRequester = ({
   user,
@@ -560,6 +564,10 @@ const prepareAgentChatRunInternal = async ({
     escalationGateContext,
   }
   if (promptMode === "interactive") {
+    buildPromptOptions.requesterValidationContext =
+      createRequesterValidationContext(
+        getRequesterConfirmedToolCalls({ chat, latestQuestion })
+      )
     buildPromptOptions.baseSystemPrompt = ai.agentSystemPrompt(
       user,
       chat?.timezone
@@ -645,7 +653,7 @@ const prepareAgentChatRunInternal = async ({
     stopWhen: stepCountIs(30),
     // Anthropic rejects those without a tools param.
     prepareStep: ({ steps }) =>
-      hasPendingEscalation(steps) ? { toolChoice: "none" as const } : undefined,
+      hasPendingAction(steps) ? { toolChoice: "none" as const } : undefined,
     providerOptions: llm.providerOptions?.(hasTools),
     output,
   })
@@ -693,7 +701,7 @@ const prepareAgentChatRunInternal = async ({
               semanticFailureNames,
               semanticFailureResults,
             } = groupToolResultsByOutcome(toolResults)
-            suspended ||= hasPendingEscalationResult(toolResults)
+            suspended ||= hasPendingActionResult(toolResults)
             const erroredParts = content.filter(
               (
                 part

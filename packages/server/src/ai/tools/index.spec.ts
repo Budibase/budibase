@@ -140,6 +140,78 @@ describe("secured AI tool execution", () => {
     expect(execute).not.toHaveBeenCalled()
   })
 
+  it("pauses after authorization when requester confirmation is required", async () => {
+    const execute = jest.fn()
+    const authorize = jest.fn().mockResolvedValue(undefined)
+    const intercept = jest.fn().mockResolvedValue({
+      status: "pending_validation",
+    })
+    const approvalIntercept = jest.fn()
+    const tools = toToolSet(
+      [definition(execute)],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize,
+          },
+        ],
+      ]),
+      new Map([["secured_tool", { intercept: approvalIntercept }]]),
+      new Map([["secured_tool", { intercept }]])
+    )
+
+    await expect(
+      tools.secured_tool.execute?.(
+        { value: "hello" },
+        { toolCallId: "call_1", messages: [], context: undefined }
+      )
+    ).resolves.toEqual({
+      status: "pending_validation",
+    })
+    expect(authorize).toHaveBeenCalledTimes(1)
+    expect(intercept).toHaveBeenCalledWith(
+      { value: "hello" },
+      expect.objectContaining({ toolCallId: "call_1" })
+    )
+    expect(approvalIntercept).not.toHaveBeenCalled()
+    expect(execute).not.toHaveBeenCalled()
+  })
+
+  it("continues to approval and execution after requester validation", async () => {
+    const execute = jest.fn().mockResolvedValue({ success: true })
+    const authorize = jest.fn().mockResolvedValue(undefined)
+    const validate = jest.fn().mockResolvedValue(undefined)
+    const approve = jest.fn().mockResolvedValue(undefined)
+    const tools = toToolSet(
+      [definition(execute)],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize,
+          },
+        ],
+      ]),
+      new Map([["secured_tool", { intercept: approve }]]),
+      new Map([["secured_tool", { intercept: validate }]])
+    )
+
+    await expect(
+      tools.secured_tool.execute?.(
+        { value: "hello" },
+        { toolCallId: "call_1", messages: [], context: undefined }
+      )
+    ).resolves.toEqual({ success: true })
+    expect(validate).toHaveBeenCalledTimes(1)
+    expect(approve).toHaveBeenCalledTimes(1)
+    expect(execute).toHaveBeenCalledTimes(1)
+  })
+
   it("logs the error message when tool execution fails", async () => {
     const execute = jest
       .fn()

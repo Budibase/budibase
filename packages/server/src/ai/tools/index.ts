@@ -51,12 +51,26 @@ export interface ToolAuthorizationRequest {
   principal: ToolExecutionPrincipal
 }
 
+export interface ToolInterceptionOptions {
+  toolCallId: string
+  messages?: ModelMessage[]
+}
+
 export interface EscalationGateRuntime {
   // Resolves to the refusal result to return in place of executing, or
   // undefined when no rule matches and the call should proceed.
   intercept: (
     input: unknown,
-    options: { toolCallId: string; messages?: ModelMessage[] }
+    options: ToolInterceptionOptions
+  ) => Promise<Record<string, unknown> | undefined>
+}
+
+export interface RequesterValidationRuntime {
+  // Resolves to the validation preview to return instead of executing, or
+  // undefined when this exact call was confirmed and may proceed.
+  intercept: (
+    input: unknown,
+    options: ToolInterceptionOptions
   ) => Promise<Record<string, unknown> | undefined>
 }
 
@@ -101,7 +115,8 @@ const logToolExecution = (
 const wrapTool = (
   toolDef: AiToolDefinition,
   runtime?: ToolAuthorizationRuntime,
-  gate?: EscalationGateRuntime
+  gate?: EscalationGateRuntime,
+  validation?: RequesterValidationRuntime
 ): Tool => {
   const execute = toolDef.tool.execute
   if (!execute) {
@@ -122,6 +137,15 @@ const wrapTool = (
         executionContext: runtime.executionContext,
         principal: runtime.principal,
       })
+    }
+    if (validation) {
+      const validationResult = await validation.intercept(input, {
+        toolCallId: options?.toolCallId ?? "",
+        messages: options?.messages,
+      })
+      if (validationResult) {
+        return validationResult
+      }
     }
     if (gate) {
       const gateResult = await gate.intercept(input, {
@@ -163,12 +187,18 @@ const wrapTool = (
 export const toToolSet = (
   tools: AiToolDefinition[],
   runtimes: Map<string, ToolAuthorizationRuntime> = new Map(),
-  gates: Map<string, EscalationGateRuntime> = new Map()
+  gates: Map<string, EscalationGateRuntime> = new Map(),
+  validations: Map<string, RequesterValidationRuntime> = new Map()
 ): ToolSet => {
   return Object.fromEntries(
     tools.map(toolDef => [
       toolDef.name,
-      wrapTool(toolDef, runtimes.get(toolDef.name), gates.get(toolDef.name)),
+      wrapTool(
+        toolDef,
+        runtimes.get(toolDef.name),
+        gates.get(toolDef.name),
+        validations.get(toolDef.name)
+      ),
     ])
   )
 }

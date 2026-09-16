@@ -5,6 +5,7 @@ import {
   SourceName,
   WebSearchProvider,
   ApprovalToolResultStatus,
+  PermissionLevel,
   type AgentExecutionContext,
 } from "@budibase/types"
 import { ai } from "@budibase/pro"
@@ -22,6 +23,7 @@ import {
   toToolSet,
   type AiToolDefinition,
   type EscalationGateRuntime,
+  type RequesterValidationRuntime,
   type ToolAuthorizationRuntime,
 } from "../../../../ai/tools"
 import {
@@ -29,6 +31,10 @@ import {
   resolveToolArgsKey,
   type EscalationGateContext,
 } from "./escalationGate"
+import {
+  createRequesterValidationRuntime,
+  type RequesterValidationContext,
+} from "./requesterValidationGate"
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 import { HTTPError } from "@budibase/backend-core"
@@ -164,6 +170,7 @@ export interface BuildPromptAndToolsOptions {
   fallbackPromptInstructions?: string
   executionContext?: AgentExecutionContext
   escalationGateContext?: EscalationGateContext
+  requesterValidationContext?: RequesterValidationContext
 }
 
 export async function buildPromptAndTools(
@@ -272,6 +279,28 @@ export async function buildPromptAndTools(
     }
   }
 
+  const validations = new Map<string, RequesterValidationRuntime>()
+  if (operation && options.requesterValidationContext) {
+    for (const tool of enabledTools) {
+      const permission = tool.authorization?.permissionLevel
+      if (!permission) {
+        throw new Error(`Tool ${tool.name} has no authorization metadata`)
+      }
+      if (permission === PermissionLevel.READ) {
+        continue
+      }
+      validations.set(
+        tool.name,
+        createRequesterValidationRuntime({
+          toolName: tool.name,
+          readableName: tool.readableName,
+          sourceId: tool.sourceId,
+          validationContext: options.requesterValidationContext,
+        })
+      )
+    }
+  }
+
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
@@ -291,9 +320,12 @@ export async function buildPromptAndTools(
   if (options.escalationGateContext) {
     resolvedSystemPrompt += `\n\nYou have no escalation or approval-request capability of your own. Never claim to have escalated, flagged, or referred anything for human review - approvals happen automatically when you use tools that require them. If instructions ask you to escalate a topic, tell the user you cannot escalate it and continue normally.`
   }
+  if (options.requesterValidationContext) {
+    resolvedSystemPrompt += `\n\nWrite and execute tools have a requester validation planning step. When a tool returns pending_validation, it has not run: clearly show every proposed argument exactly as returned, using friendly field labels where possible, and ask naturally whether the user wants you to go ahead. Never use approval codes or claim the action ran. On a later, unambiguous confirmation from the requester, call the same tool once with exactly the same arguments. If the requester rejects the action or changes any parameter, do not retry the old call; propose the revised call, which must be validated separately.`
+  }
   return {
     systemPrompt: resolvedSystemPrompt,
-    tools: toToolSet(enabledTools, runtimes, gates),
+    tools: toToolSet(enabledTools, runtimes, gates, validations),
     toolDisplayNames: getToolDisplayNames(enabledTools),
     toolSources: Object.fromEntries(
       enabledTools.map(tool => [tool.name, tool.sourceId])
