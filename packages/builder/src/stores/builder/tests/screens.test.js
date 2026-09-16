@@ -36,7 +36,7 @@ vi.mock("@/stores/builder", async () => {
     update: mockWorkspaceStore.update,
     set: mockWorkspaceStore.set,
     refresh: vi.fn(),
-    refreshAppNav: vi.fn(),
+    refreshWorkspaceAppNavigation: vi.fn(),
   }
 
   const navigationStore = {
@@ -293,7 +293,7 @@ describe("Screens store", () => {
     // Saved the existing screen having modified it.
     await bb.screenStore.save(existingScreens[2].json())
 
-    expect(workspaceStore.refreshAppNav).toHaveBeenCalledOnce()
+    expect(workspaceStore.refreshWorkspaceAppNavigation).toHaveBeenCalledOnce()
     expect(saveSpy).toHaveBeenCalled()
 
     // On save, the screen is spliced back into the store with the saved content

@@ -114,7 +114,7 @@ export class WorkspaceMetaStore extends BudiStore<WorkspaceMetaState> {
     this.store.set({ ...INITIAL_WORKSPACE_META_STATE })
   }
 
-  syncApp(workspace: Workspace) {
+  syncWorkspace(workspace: Workspace) {
     this.update(state => ({
       ...state,
       name: workspace.name,
@@ -141,7 +141,7 @@ export class WorkspaceMetaStore extends BudiStore<WorkspaceMetaState> {
     }))
   }
 
-  syncAppPackage(pkg: {
+  syncWorkspacePackage(pkg: {
     application: Workspace
     clientLibPath: string
     hasLock: boolean
@@ -152,7 +152,7 @@ export class WorkspaceMetaStore extends BudiStore<WorkspaceMetaState> {
       hasLock,
       clientLibPath,
     }))
-    this.syncApp(application)
+    this.syncWorkspace(application)
   }
 
   syncClientFeatures(features: Partial<ClientFeatures>) {
@@ -172,7 +172,7 @@ export class WorkspaceMetaStore extends BudiStore<WorkspaceMetaState> {
     }))
   }
 
-  async syncAppRoutes() {
+  async syncWorkspaceRoutes() {
     const resp = await API.fetchAppRoutes()
     this.update(state => ({
       ...state,
@@ -180,9 +180,9 @@ export class WorkspaceMetaStore extends BudiStore<WorkspaceMetaState> {
     }))
   }
 
-  async updateApp(updates: UpdateWorkspaceRequest) {
-    const app = await API.saveAppMetadata(get(this.store).appId, updates)
-    this.syncApp(app)
+  async updateWorkspace(updates: UpdateWorkspaceRequest) {
+    const workspace = await API.saveAppMetadata(get(this.store).appId, updates)
+    this.syncWorkspace(workspace)
   }
 
   // Returned from socket
@@ -214,7 +214,7 @@ export class WorkspaceMetaStore extends BudiStore<WorkspaceMetaState> {
     await initialise(appPackage)
   }
 
-  async refreshAppNav() {
+  async refreshWorkspaceAppNavigation() {
     const { selectedWorkspaceApp } = get(workspaceAppStore)
     if (!selectedWorkspaceApp) {
       return

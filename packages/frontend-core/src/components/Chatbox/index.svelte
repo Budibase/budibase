@@ -111,8 +111,9 @@
       title: output?.title ?? input?.title,
       summary: output?.summary ?? input?.summary,
       reviewContext:
-        (escalationId && escalationState?.[escalationId]?.reviewContext) ??
-        output?.reviewContext,
+        (escalationId
+          ? escalationState?.[escalationId]?.reviewContext
+          : undefined) ?? output?.reviewContext,
       resolution:
         (escalationId && escalationState?.[escalationId]?.resolution) ||
         "pending",
@@ -424,6 +425,10 @@
     }
   })
 
+  // Tool/reasoning toggles mutate the chat DOM; the observer below would
+  // otherwise pin the viewport to the bottom as height changes.
+  let skipAutoScroll = false
+
   const scrollToBottom = async () => {
     await tick()
     if (chatAreaElement) {
@@ -433,6 +438,9 @@
 
   $effect(() => {
     if (messages?.length) {
+      if (skipAutoScroll) {
+        return
+      }
       scrollToBottom()
     }
   })
@@ -507,8 +515,17 @@
     await sendMessage()
   }
 
-  const toggleTool = (toolId: string) => {
-    expandedTools = { ...expandedTools, [toolId]: !expandedTools[toolId] }
+  const toggleExpanded = (id: string) => {
+    const area = chatAreaElement
+    const previousScrollTop = area?.scrollTop ?? 0
+    skipAutoScroll = true
+    expandedTools = { ...expandedTools, [id]: !expandedTools[id] }
+    tick().then(() => {
+      if (area) {
+        area.scrollTop = previousScrollTop
+      }
+      skipAutoScroll = false
+    })
   }
 
   const formatToolOutput = (output: unknown): string =>
@@ -542,7 +559,12 @@
   $effect(() => {
     if (!chatAreaElement) return
 
-    const obs = new MutationObserver(scrollToBottom)
+    const obs = new MutationObserver(() => {
+      if (skipAutoScroll) {
+        return
+      }
+      scrollToBottom()
+    })
     obs.observe(chatAreaElement, {
       childList: true,
       subtree: true,
@@ -555,8 +577,8 @@
   })
 </script>
 
-<div class="chat-area" bind:this={chatAreaElement}>
-  <div class="chatbox">
+<div class="chat-area">
+  <div class="chatbox" bind:this={chatAreaElement}>
     {#if !hasMessages && !isRequestPending}
       <div class="empty-state">
         <div class="empty-state-icon">
@@ -609,11 +631,7 @@
                 interactive={!!reasoningText}
                 expanded={Boolean(expandedTools[reasoningId])}
                 content={reasoningText}
-                ontoggle={() =>
-                  (expandedTools = {
-                    ...expandedTools,
-                    [reasoningId]: !expandedTools[reasoningId],
-                  })}
+                ontoggle={() => toggleExpanded(reasoningId)}
               />
             {/if}
             {#each message.parts ?? [] as part, partIndex}
@@ -636,7 +654,7 @@
                     class="tool-header"
                     class:tool-header-expanded={expandedTools[toolId]}
                     type="button"
-                    onclick={() => toggleTool(toolId)}
+                    onclick={() => toggleExpanded(toolId)}
                   >
                     <span
                       class="tool-chevron"
@@ -819,7 +837,7 @@
     flex: 1 1 0;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    overflow: hidden;
     min-height: 0;
     font-family: var(--chat-font-sans, var(--font-sans));
     --font-serif: var(--chat-font-sans, var(--font-sans));
@@ -835,7 +853,9 @@
     flex-direction: column;
     gap: 24px;
     width: 100%;
-    flex: 1 1 auto;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
     padding: 48px 0 24px 0;
   }
 
@@ -884,14 +904,13 @@
   }
 
   .input-wrapper {
-    position: sticky;
-    bottom: 0;
     width: 100%;
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
     line-height: 1.4;
     gap: 6px;
+    padding-top: 8px;
   }
 
   .input-footer {
@@ -999,7 +1018,9 @@
   }
 
   .tool-part {
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
     margin-top: var(--spacing-l);
     margin-bottom: 0;
   }
@@ -1092,22 +1113,17 @@
   }
 
   .tool-details {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    margin-top: var(--spacing-m);
+    margin-top: var(--spacing-s);
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
-    background: var(--background);
+    background: var(--spectrum-global-color-gray-75);
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 6px;
     padding: var(--spacing-m);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    z-index: 1;
     overflow-x: hidden;
     min-width: 0;
   }

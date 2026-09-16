@@ -69,7 +69,7 @@
     const newScripts = $workspaceStore.scripts
       .filter(script => script.id !== selectedScript!.id)
       .concat([selectedScript])
-    await workspaceStore.updateApp({ scripts: newScripts })
+    await workspaceStore.updateWorkspace({ scripts: newScripts })
     notifications.success("Script saved successfully")
     selectedScript = undefined
   }
@@ -85,7 +85,7 @@
     const newScripts = $workspaceStore.scripts.filter(
       script => script.id !== selectedScript!.id
     )
-    await workspaceStore.updateApp({ scripts: newScripts })
+    await workspaceStore.updateWorkspace({ scripts: newScripts })
     notifications.success("Script deleted successfully")
     selectedScript = undefined
   }
