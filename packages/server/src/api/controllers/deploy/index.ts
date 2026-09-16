@@ -623,6 +623,25 @@ export const publishWorkspaceInternal = async (
   return deployment
 }
 
+export async function withPublishLock<T>(fn: () => Promise<T>): Promise<T> {
+  const lockResult = await locks.doWithLock(
+    {
+      type: LockType.TRY_ONCE,
+      name: LockName.PUBLISH_WORKSPACE,
+      resource: dbCore.getDevWorkspaceID(context.getOrThrowWorkspaceId()),
+      ttl: MAX_PENDING_TIME_MS,
+    },
+    fn
+  )
+  if (!lockResult.executed) {
+    throw new errors.HTTPError(
+      "A publish for this app is already in progress, please wait for it to finish",
+      429
+    )
+  }
+  return lockResult.result
+}
+
 export const publishWorkspace = async function (
   ctx: UserCtx<PublishWorkspaceRequest, PublishWorkspaceResponse>
 ) {
@@ -632,20 +651,5 @@ export const publishWorkspace = async function (
     )
   }
 
-  const lockResult = await locks.doWithLock(
-    {
-      type: LockType.TRY_ONCE,
-      name: LockName.PUBLISH_WORKSPACE,
-      resource: context.getOrThrowWorkspaceId(),
-      ttl: MAX_PENDING_TIME_MS,
-    },
-    () => publishWorkspaceInternal(ctx)
-  )
-  if (!lockResult.executed) {
-    throw new errors.HTTPError(
-      "A publish for this app is already in progress, please wait for it to finish",
-      429
-    )
-  }
-  ctx.body = lockResult.result
+  ctx.body = await withPublishLock(() => publishWorkspaceInternal(ctx))
 }
