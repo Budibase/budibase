@@ -8,34 +8,39 @@
     notifications,
     Context,
   } from "@budibase/bbui"
+  import type { CreateEnvironmentVariableRequest } from "@budibase/types"
   import { environment } from "@/stores/portal"
+  import type { EnvVar } from "@/stores/portal/environment"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { getContext } from "svelte"
 
+  interface Props {
+    save: (data: CreateEnvironmentVariableRequest) => void | Promise<void>
+    row?: EnvVar
+  }
+
+  let { save, row }: Props = $props()
   const modalContext = getContext(Context.Modal)
 
-  export let save: any
-  export let row: { name: string } | undefined = undefined
-
-  let deleteDialog: ConfirmDialog
-  let name = row?.name || ""
-  let productionValue: string
-  let developmentValue: string
-  let useProductionValue = true
-  let submitted = false
+  let deleteDialog = $state<ConfirmDialog>()
+  let name = $state(row?.name || "")
+  let productionValue = $state("")
+  let developmentValue = $state("")
+  let useProductionValue = $state(true)
+  let submitted = $state(false)
 
   const HasSpacesRegex = /[\\"\s]/
 
-  $: invalidName = HasSpacesRegex.test(name)
-  $: disabled = invalidName || !productionValue
+  const invalidName = $derived(HasSpacesRegex.test(name))
+  const disabled = $derived(invalidName || !productionValue)
 
   const deleteVariable = async (name: string) => {
     try {
       await environment.deleteVariable(name)
       modalContext.hide()
       notifications.success("Environment variable deleted")
-    } catch (err: any) {
-      notifications.error(err.message)
+    } catch (err) {
+      notifications.error(err instanceof Error ? err.message : `${err}`)
     }
   }
 
@@ -48,8 +53,10 @@
         development: developmentValue,
       })
       notifications.success("Environment variable saved")
-    } catch (err: any) {
-      notifications.error(`Error saving environment variable - ${err.message}`)
+    } catch (err) {
+      notifications.error(
+        `Error saving environment variable - ${err instanceof Error ? err.message : err}`
+      )
     }
   }
 </script>
@@ -98,7 +105,7 @@
 
   <div class="footer" slot="footer">
     {#if row}
-      <Button on:click={deleteDialog.show} warning>Delete</Button>
+      <Button on:click={() => deleteDialog?.show()} warning>Delete</Button>
     {/if}
   </div>
 </ModalContent>

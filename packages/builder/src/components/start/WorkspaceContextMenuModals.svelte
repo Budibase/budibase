@@ -4,9 +4,9 @@
   import { licensing } from "@/stores/portal"
   import DuplicateWorkspaceModal from "./DuplicateWorkspaceModal.svelte"
   import ExportWorkspaceModal from "./ExportWorkspaceModal.svelte"
-  import type { EnrichedApp } from "@/types"
+  import type { EnrichedWorkspace } from "@/types"
 
-  export let app: EnrichedApp
+  export let app: EnrichedWorkspace
 
   let exportPublishedVersion = false
 
