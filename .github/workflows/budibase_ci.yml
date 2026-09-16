@@ -491,6 +491,18 @@ jobs:
 
       - name: Pull testcontainers images
         if: needs.compute-affected-jobs.outputs.run_server_tests == 'true'
+        # These values reach the shell through the environment rather than
+        # ${{ }}, which pastes them into the script before bash parses it.
+        env:
+          DATASOURCE: ${{ matrix.datasource }}
+          MSSQL_SHA: ${{ steps.dotenv.outputs.MSSQL_SHA }}
+          MYSQL_SHA: ${{ steps.dotenv.outputs.MYSQL_SHA }}
+          POSTGRES_SHA: ${{ steps.dotenv.outputs.POSTGRES_SHA }}
+          MONGODB_SHA: ${{ steps.dotenv.outputs.MONGODB_SHA }}
+          MARIADB_SHA: ${{ steps.dotenv.outputs.MARIADB_SHA }}
+          ELASTICSEARCH_SHA: ${{ steps.dotenv.outputs.ELASTICSEARCH_SHA }}
+          DYNAMODB_SHA: ${{ steps.dotenv.outputs.DYNAMODB_SHA }}
+          KEYCLOAK_IMAGE: ${{ steps.dotenv.outputs.KEYCLOAK_IMAGE }}
         run: |
           IMAGES=(
             public.ecr.aws/x1w3a5n5/third-party:minio-RELEASE.2025-09-07T16-13-09Z
@@ -499,17 +511,17 @@ jobs:
             budibase/couchdb:v3.3.3-sqs-v2.1.1
           )
 
-          case "${{ matrix.datasource }}" in
-            mssql) IMAGES+=("mcr.microsoft.com/mssql/server@${{ steps.dotenv.outputs.MSSQL_SHA }}") ;;
-            mysql) IMAGES+=("mysql@${{ steps.dotenv.outputs.MYSQL_SHA }}") ;;
-            postgres) IMAGES+=("postgres@${{ steps.dotenv.outputs.POSTGRES_SHA }}") ;;
-            mongodb) IMAGES+=("mongo@${{ steps.dotenv.outputs.MONGODB_SHA }}") ;;
-            mariadb) IMAGES+=("mariadb@${{ steps.dotenv.outputs.MARIADB_SHA }}") ;;
+          case "$DATASOURCE" in
+            mssql) IMAGES+=("mcr.microsoft.com/mssql/server@$MSSQL_SHA") ;;
+            mysql) IMAGES+=("mysql@$MYSQL_SHA") ;;
+            postgres) IMAGES+=("postgres@$POSTGRES_SHA") ;;
+            mongodb) IMAGES+=("mongo@$MONGODB_SHA") ;;
+            mariadb) IMAGES+=("mariadb@$MARIADB_SHA") ;;
             oracle) IMAGES+=("budibase/oracle-database:23.2-slim-faststart") ;;
             postgres_legacy) IMAGES+=("postgres:9.5.25") ;;
-            elasticsearch) IMAGES+=("elasticsearch@${{ steps.dotenv.outputs.ELASTICSEARCH_SHA }}") ;;
-            dynamodb) IMAGES+=("amazon/dynamodb-local@${{ steps.dotenv.outputs.DYNAMODB_SHA }}") ;;
-            none) IMAGES+=("${{ steps.dotenv.outputs.KEYCLOAK_IMAGE }}") ;;
+            elasticsearch) IMAGES+=("elasticsearch@$ELASTICSEARCH_SHA") ;;
+            dynamodb) IMAGES+=("amazon/dynamodb-local@$DYNAMODB_SHA") ;;
+            none) IMAGES+=("$KEYCLOAK_IMAGE") ;;
           esac
 
           ./scripts/pull-images.sh "${IMAGES[@]}"
