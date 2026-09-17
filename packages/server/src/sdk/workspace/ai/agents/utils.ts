@@ -324,7 +324,7 @@ export async function buildPromptAndTools(
   const tools = toToolSet(enabledTools, runtimes, gates, validations)
   const pendingValidations = options.requesterValidationContext?.pendingCalls
   if (options.requesterValidationContext) {
-    resolvedSystemPrompt += `\n\nWrite and execute tools have a requester validation planning step. When a tool returns pending_validation, it has not run: clearly show every proposed argument exactly as returned, using friendly field labels where possible, and ask naturally whether the user wants you to go ahead. Never use approval codes or claim the action ran. If the requester rejects the action or changes any parameter, do not execute the old call; propose the revised call, which must be validated separately.`
+    resolvedSystemPrompt += `\n\nWrite and execute tools have a requester validation planning step. When a tool returns pending_validation, it has not run. Begin the response with "Please confirm the following details before I [perform the action]:" using a specific description of the action. Then show every proposed argument exactly as returned, with friendly field labels and appropriate formatting, and finish with "Should I go ahead?" Do not say you have prepared, completed, registered, submitted, or are ready to perform the action, because that can imply it already happened. Never use approval codes or claim the action ran. If the requester rejects the action or changes any parameter, do not execute the old call; propose the revised call, which must be validated separately.`
   }
   if (pendingValidations?.length) {
     const executableTools = toToolSet(enabledTools, runtimes, gates)

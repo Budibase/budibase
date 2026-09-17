@@ -14,7 +14,10 @@
     EscalationContextDoc,
     EscalationRespondResult,
   } from "@budibase/types"
-  import { ApprovalToolResultStatus } from "@budibase/types"
+  import {
+    ApprovalToolResultStatus,
+    ToolValidationResultStatus,
+  } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
   import { tick, untrack } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
@@ -88,6 +91,10 @@
   const isRaisedEscalation = (output: unknown) =>
     (output as { status?: string } | undefined)?.status ===
     ApprovalToolResultStatus.PENDING_APPROVAL
+
+  const isPendingRequesterValidation = (output: unknown) =>
+    (output as { status?: string } | undefined)?.status ===
+    ToolValidationResultStatus.PENDING
 
   // The escalate part's input/output are loosely typed by the AI SDK, so the
   // casts live here rather than cluttering the template.
@@ -636,6 +643,9 @@
                   part.state === "input-available"}
                 {@const isSuccess = part.state === "output-available"}
                 {@const isError = part.state === "output-error"}
+                {@const isPendingValidation = isPendingRequesterValidation(
+                  part.output
+                )}
                 <div class="tool-part" class:tool-running={isRunning}>
                   <button
                     class="tool-header"
@@ -666,7 +676,11 @@
                         />
                       </span>
                     </span>
-                    <span class="tool-call-label">Tool call</span>
+                    <span class="tool-call-label"
+                      >{isPendingValidation
+                        ? "Needs confirmation"
+                        : "Tool call"}</span
+                    >
                     <div class="tool-name-wrapper">
                       <span class="tool-name-primary"
                         >{displayToolName.primary}</span
@@ -681,6 +695,12 @@
                             name="x"
                             size="S"
                             color="var(--spectrum-global-color-red-600)"
+                          />
+                        {:else if isPendingValidation}
+                          <Icon
+                            name="clock"
+                            size="S"
+                            color="var(--spectrum-global-color-gray-600)"
                           />
                         {:else if isSuccess}
                           <Icon
@@ -702,7 +722,14 @@
                             )}</pre>
                         </div>
                       {/if}
-                      {#if isSuccess && part.output}
+                      {#if isPendingValidation}
+                        <div class="tool-section">
+                          <div class="tool-section-label">Status</div>
+                          <div class="tool-section-content">
+                            Waiting for your confirmation
+                          </div>
+                        </div>
+                      {:else if isSuccess && part.output}
                         <div class="tool-section">
                           <div class="tool-section-label">Output</div>
                           <pre class="tool-section-content">{formatToolOutput(

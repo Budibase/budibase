@@ -74,9 +74,10 @@ export const createRequesterValidationRuntime = ({
     arguments: input,
     validationToolCallId: toolCallId,
     note:
-      "The action has not run. Show the user every proposed argument and " +
-      "ask naturally whether they want you to go ahead. Do not use an " +
-      "approval code or imply that the action already ran.",
+      'The action has not run. Say "Please confirm the following details ' +
+      'before I [perform the action]", show every proposed argument, then ' +
+      'ask "Should I go ahead?" Do not say the action is prepared, ready, ' +
+      "or completed. Do not expose an approval code.",
   }),
 })
 
