@@ -1,7 +1,6 @@
 import {
   Plugin,
   PluginType,
-  RowValue,
   Screen,
   ScreenProps,
   Workspace,
@@ -191,87 +190,76 @@ export const filterExistingUsedPlugins = async (
 
   try {
     const globalDB = tenancy.getGlobalDB()
-    const response = await globalDB.allDocs<RowValue>({
+    const response = await globalDB.allDocs<Plugin>({
       keys: pluginIds,
-      include_docs: false,
+      include_docs: true,
     })
 
-    const existingPluginIds = new Set<string>()
+    const existingPluginDocs = new Map<string, Plugin>()
     for (const row of response?.rows || []) {
-      if (row?.id && !row.error && !row.value?.deleted) {
-        existingPluginIds.add(row.id)
+      if (row?.id && !row.error && !row.doc?._deleted && row.doc) {
+        existingPluginDocs.set(row.id, row.doc)
       }
     }
 
-    return usedPlugins.filter(
-      plugin =>
-        typeof plugin._id === "string" && existingPluginIds.has(plugin._id)
-    )
+    return usedPlugins
+      .filter(
+        plugin =>
+          typeof plugin._id === "string" && existingPluginDocs.has(plugin._id)
+      )
+      .map(plugin => {
+        const doc = existingPluginDocs.get(plugin._id!)
+        return {
+          ...plugin,
+          schema: doc?.schema || plugin.schema,
+        }
+      })
   } catch {
     return usedPlugins
   }
 }
 
 export const enrichUsedPluginsWithSvelteMajor = async (
-  usedPlugins?: Plugin[]
+  usedPlugins?: Plugin[],
+  pluginDocs?: Plugin[]
 ): Promise<Plugin[]> => {
   if (!usedPlugins?.length) {
     return []
   }
 
-  const pluginIds = usedPlugins
-    .map(plugin => plugin?._id)
-    .filter((id): id is string => typeof id === "string" && id.length > 0)
-
-  if (!pluginIds.length) {
-    return usedPlugins
-  }
-
-  try {
-    const globalDB = tenancy.getGlobalDB()
-    const response = await globalDB.allDocs<Plugin>({
-      include_docs: true,
-      keys: pluginIds,
-    })
-
-    const svelteMajorById = new Map<string, number>()
-    for (const row of response?.rows || []) {
-      if (row?.doc && typeof row?.id === "string") {
-        const svelteMajor = row.doc.schema?.metadata?.svelteMajor
-        if (typeof svelteMajor === "number") {
-          svelteMajorById.set(row.id, svelteMajor)
-        }
+  const svelteMajorById = new Map<string, number>()
+  if (pluginDocs?.length) {
+    for (const doc of pluginDocs) {
+      const svelteMajor = doc?.schema?.metadata?.svelteMajor
+      if (typeof doc?._id === "string" && typeof svelteMajor === "number") {
+        svelteMajorById.set(doc._id, svelteMajor)
       }
     }
-
-    return usedPlugins.map(plugin => {
-      const svelteMajor = svelteMajorById.get(plugin._id!)
-      if (typeof svelteMajor !== "number") {
-        return plugin
-      }
-
-      const schema = (plugin.schema || {}) as Plugin["schema"]
-      const metadata = schema?.metadata || {}
-
-      return {
-        ...plugin,
-        schema: {
-          ...schema,
-          metadata: {
-            ...metadata,
-            svelteMajor,
-          },
-        },
-      }
-    })
-  } catch {
-    return usedPlugins
   }
+
+  return usedPlugins.map(plugin => {
+    const svelteMajor =
+      (typeof plugin?._id === "string"
+        ? svelteMajorById.get(plugin._id)
+        : undefined) ?? plugin?.schema?.metadata?.svelteMajor
+
+    if (typeof svelteMajor !== "number") {
+      return plugin
+    }
+
+    const schema = (plugin.schema || {}) as Plugin["schema"]
+    const metadata = schema?.metadata || {}
+
+    return {
+      ...plugin,
+      schema: {
+        ...schema,
+        metadata: {
+          ...metadata,
+          svelteMajor,
+        },
+      },
+    }
+  })
 }
 
-export const enrichUsedPluginSvelteMajors = async (
-  usedPlugins?: Plugin[]
-): Promise<Plugin[]> => {
-  const existingPlugins = await filterExistingUsedPlugins(usedPlugins)
-  return enrichUsedPluginsWithSvelteMajor(existingPlugins)
-}

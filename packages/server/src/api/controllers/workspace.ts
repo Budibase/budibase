@@ -441,14 +441,14 @@ export async function fetchAppPackage(
     await resolveGlobalTranslationOverrides(application)
   application.translationOverrides = translationOverrides
 
-  // Enrich plugin URLs
-  application.usedPlugins = await objectStore.enrichPluginURLs(
+  // Filter existing used plugins and ensure they include schema metadata (e.g. schema.metadata.svelteMajor)
+  const existingPlugins = await sdk.plugins.filterExistingUsedPlugins(
     application.usedPlugins
   )
-
-  // Ensure used plugins include schema metadata (e.g. schema.metadata.svelteMajor)
-  application.usedPlugins = await sdk.plugins.enrichUsedPluginSvelteMajors(
-    application.usedPlugins
+  const enrichedPlugins =
+    await sdk.plugins.enrichUsedPluginsWithSvelteMajor(existingPlugins)
+  application.usedPlugins = await objectStore.enrichPluginURLs(
+    enrichedPlugins
   )
 
   // Enrich PWA icon URLs if they exist

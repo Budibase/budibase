@@ -1,5 +1,6 @@
 import {
   Plugin,
+  PluginSource,
   PluginType,
   Screen,
   ScreenProps,
@@ -12,7 +13,6 @@ import {
   reconcileWorkspaceUsedPlugins,
   filterExistingUsedPlugins,
   enrichUsedPluginsWithSvelteMajor,
-  enrichUsedPluginSvelteMajors,
 } from "./usedPlugins"
 import { cache, context, db as dbCore, tenancy } from "@budibase/backend-core"
 import { DocumentType } from "../../db/utils"
@@ -383,12 +383,21 @@ describe("usedPlugins", () => {
       expect(await filterExistingUsedPlugins(undefined)).toEqual([])
     })
 
-    it("filters out missing or deleted plugins", async () => {
+    it("filters out missing or deleted plugins and attaches schema", async () => {
       const globalDB = {
         allDocs: jest.fn().mockResolvedValue({
           rows: [
             {
               id: "plugin_valid",
+              doc: {
+                _id: "plugin_valid",
+                name: "valid-plugin",
+                schema: {
+                  metadata: {
+                    svelteMajor: 5,
+                  },
+                },
+              },
             },
             {
               id: "plugin_missing",
@@ -416,6 +425,11 @@ describe("usedPlugins", () => {
 
       expect(result).toHaveLength(1)
       expect(result[0]._id).toBe("plugin_valid")
+      expect(result[0].schema?.metadata?.svelteMajor).toBe(5)
+      expect(globalDB.allDocs).toHaveBeenCalledWith({
+        keys: ["plugin_valid", "plugin_missing"],
+        include_docs: true,
+      })
     })
   })
 
@@ -425,32 +439,17 @@ describe("usedPlugins", () => {
       expect(await enrichUsedPluginsWithSvelteMajor(undefined)).toEqual([])
     })
 
-    it("enriches existing plugins with svelteMajor", async () => {
-      const globalDB = {
-        allDocs: jest.fn().mockResolvedValue({
-          rows: [
-            {
-              id: "plugin_valid",
-              doc: {
-                _id: "plugin_valid",
-                name: "valid-plugin",
-                schema: {
-                  metadata: {
-                    svelteMajor: 5,
-                  },
-                },
-              },
-            },
-          ],
-        }),
-      }
-      ;(tenancy.getGlobalDB as jest.Mock).mockReturnValue(globalDB)
-
+    it("enriches existing plugins with svelteMajor without querying database", async () => {
       const usedPlugins: Plugin[] = [
         {
           _id: "plugin_valid",
           name: "valid-plugin",
           version: "1.0.0",
+          schema: {
+            metadata: {
+              svelteMajor: 5,
+            },
+          } as any,
         } as Plugin,
       ]
 
@@ -459,59 +458,44 @@ describe("usedPlugins", () => {
       expect(result).toHaveLength(1)
       expect(result[0]._id).toBe("plugin_valid")
       expect(result[0].schema?.metadata?.svelteMajor).toBe(5)
+      expect(tenancy.getGlobalDB).not.toHaveBeenCalled()
     })
-  })
 
-  describe("enrichUsedPluginSvelteMajors", () => {
-    it("filters out missing plugins and enriches surviving plugins", async () => {
-      const globalDB = {
-        allDocs: jest
-          .fn()
-          .mockImplementation(
-            ({ include_docs }: { include_docs?: boolean } = {}) => {
-              if (!include_docs) {
-                return Promise.resolve({
-                  rows: [
-                    { id: "plugin_valid" },
-                    { id: "plugin_deleted", error: "not_found" },
-                  ],
-                })
-              }
-              return Promise.resolve({
-                rows: [
-                  {
-                    id: "plugin_valid",
-                    doc: {
-                      _id: "plugin_valid",
-                      name: "valid-plugin",
-                      schema: { metadata: { svelteMajor: 5 } },
-                    },
-                  },
-                ],
-              })
-            }
-          ),
-      }
-      ;(tenancy.getGlobalDB as jest.Mock).mockReturnValue(globalDB)
-
+    it("supports optional pluginDocs to enrich svelteMajor", async () => {
       const usedPlugins: Plugin[] = [
         {
           _id: "plugin_valid",
           name: "valid-plugin",
           version: "1.0.0",
         } as Plugin,
+      ]
+      const pluginDocs: Plugin[] = [
         {
-          _id: "plugin_deleted",
-          name: "deleted-plugin",
+          _id: "plugin_valid",
+          name: "valid-plugin",
           version: "1.0.0",
-        } as Plugin,
+          description: "",
+          source: PluginSource.FILE,
+          package: {},
+          hash: "123",
+          schema: {
+            type: PluginType.COMPONENT,
+            metadata: {
+              svelteMajor: 5,
+            },
+          },
+        },
       ]
 
-      const result = await enrichUsedPluginSvelteMajors(usedPlugins)
+      const result = await enrichUsedPluginsWithSvelteMajor(
+        usedPlugins,
+        pluginDocs
+      )
 
       expect(result).toHaveLength(1)
       expect(result[0]._id).toBe("plugin_valid")
       expect(result[0].schema?.metadata?.svelteMajor).toBe(5)
+      expect(tenancy.getGlobalDB).not.toHaveBeenCalled()
     })
   })
 })
