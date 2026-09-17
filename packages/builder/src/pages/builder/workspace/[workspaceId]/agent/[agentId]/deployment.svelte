@@ -175,7 +175,9 @@
       }
 
       if (channelUpdated && currentAgent.live) {
-        await deploymentStore.publishApp()
+        if (!(await deploymentStore.publishApp())) {
+          return
+        }
       }
     } catch (e) {
       notifications.error(
@@ -203,7 +205,9 @@
         allowConversationAttachments: enabled,
       })
       if (currentAgent.live) {
-        await deploymentStore.publishApp()
+        if (!(await deploymentStore.publishApp())) {
+          return
+        }
       }
       notifications.success(
         enabled ? "File attachments enabled" : "File attachments disabled"

@@ -92,8 +92,9 @@
     if ($deploymentStore.isPublishing) {
       return
     }
-    await deploymentStore.publishApp()
-    publishSuccessPopover?.show()
+    if (await deploymentStore.publishApp()) {
+      publishSuccessPopover?.show()
+    }
   }
 
   const publishAnyway = async () => {

@@ -93,7 +93,7 @@ class DeploymentStore extends DerivedBudiStore<
     }
   }
 
-  async publishApp(opts?: { seedProductionTables: boolean }) {
+  async publishApp(opts?: { seedProductionTables: boolean }): Promise<boolean> {
     try {
       this.update(state => ({ ...state, isPublishing: true }))
       await API.publishAppChanges(get(workspaceStore).appId, opts)
@@ -102,17 +102,18 @@ class DeploymentStore extends DerivedBudiStore<
         ...state,
         publishCount: state.publishCount + 1,
       }))
+      return true
     } catch (error: any) {
       if (error?.status === 429) {
         notifications.warning(
           getErrorMessage(error) || "A publish is already in progress"
         )
-        throw error
       } else {
         analytics.captureException(error)
         const message = error?.message ? ` - ${error.message}` : ""
         notifications.error(`Error publishing app${message}`)
       }
+      return false
     } finally {
       this.update(state => ({ ...state, isPublishing: false }))
     }

@@ -109,7 +109,10 @@
       })
       provisionResult = await agentsStore.provisionSlackChannel(agent._id)
       if (agent.live) {
-        await deploymentStore.publishApp()
+        const published = await deploymentStore.publishApp()
+        if (!published) {
+          return false
+        }
       }
       if (showNotification) {
         notifications.success("Slack channel settings saved")
