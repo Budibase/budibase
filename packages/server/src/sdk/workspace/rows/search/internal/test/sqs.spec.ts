@@ -717,8 +717,13 @@ describe("search", () => {
 
     let insideLock = false
     const sqlCallsInsideLock: boolean[] = []
-    const sqlMock = jest.fn(async () => {
+    const sqlQueries: string[] = []
+    const sqlMock = jest.fn(async (query: string) => {
       sqlCallsInsideLock.push(insideLock)
+      sqlQueries.push(query)
+      if (query.toLowerCase().includes("count")) {
+        return [{ [sql.COUNT_FIELD_NAME]: 1 }]
+      }
       return [
         {
           _id: "row_1",
@@ -754,6 +759,7 @@ describe("search", () => {
       {
         tableId: table._id!,
         query: {},
+        countRows: true,
       },
       table
     )
@@ -764,7 +770,11 @@ describe("search", () => {
         name: "Alice",
       },
     ])
-    expect(sqlCallsInsideLock).toEqual([false])
+    expect(response.totalRows).toBe(1)
+    expect(sqlCallsInsideLock).toEqual([false, false])
+    expect(
+      sqlQueries.filter(query => query.toLowerCase().includes("count"))
+    ).toHaveLength(1)
   })
 
   it("resyncs stale definitions while holding the rebuild lock", async () => {

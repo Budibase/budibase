@@ -266,12 +266,13 @@ async function runSqlQuery(
   relationships: RelationshipsJson[],
   opts?: { countTotalRows?: boolean }
 ) {
+  const queryJson = opts?.countTotalRows ? cloneDeep(json) : json
   const relationshipJunctionTableIds = relationships.map(rel => rel.through!)
   const alias = new AliasTables(
     tables.map(table => table._id!).concat(relationshipJunctionTableIds)
   )
   if (opts?.countTotalRows) {
-    json.operation = Operation.COUNT
+    queryJson.operation = Operation.COUNT
   }
   const processSQLQuery = async (json: EnrichedQueryJson) => {
     const query = builder._query(json, {
@@ -304,11 +305,11 @@ async function runSqlQuery(
       return await db.sql<Row>(sql, bindings)
     })
   }
-  const response = await alias.queryWithAliasing(json, processSQLQuery)
+  const response = await alias.queryWithAliasing(queryJson, processSQLQuery)
   if (opts?.countTotalRows) {
     return processRowCountResponse(response)
   } else if (Array.isArray(response)) {
-    return reverseUserColumnMapping(response, json.table)
+    return reverseUserColumnMapping(response, queryJson.table)
   }
   return response
 }
