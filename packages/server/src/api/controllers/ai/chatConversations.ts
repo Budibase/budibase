@@ -27,6 +27,19 @@ import {
   type UIMessageChunk,
 } from "ai"
 import sdk from "../../../sdk"
+
+const buildAgentSessionActionContext = ({
+  sessionId,
+  requestId,
+}: {
+  sessionId: string
+  requestId?: string
+}) => ({
+  sourceType: "agent_session" as const,
+  sourceId: sessionId,
+  sessionId,
+  requestId,
+})
 import { isDevWorkspaceID } from "../../../db/utils"
 import {
   buildAgentMessageUsage,
@@ -40,6 +53,28 @@ import {
   determineTrigger,
   resolvePreviewSessionId,
 } from "../../../sdk/workspace/ai/agentLogs/shared"
+
+const markAgentSessionActive = async ({
+  agentId,
+  sessionId,
+}: {
+  agentId: string
+  sessionId: string
+}) => {
+  await events.platformActions
+    .enqueuePlatformActionSessionLifecycle({
+      sourceType: "agent_session",
+      sourceId: sessionId,
+      signal: "active",
+    })
+    .catch(error => {
+      console.error("Failed to mark agent session active", {
+        agentId,
+        sessionId,
+        error,
+      })
+    })
+}
 
 const getGlobalUserId = (ctx: UserCtx) => {
   const userId = ctx.user?.globalId || ctx.user?.userId || ctx.user?._id
@@ -173,6 +208,7 @@ const buildToolCallTrackingHandler = ({
   // before writing the terminal status.
   let chain = Promise.resolve()
   let needsInputUpdate = Promise.resolve()
+  let awaitingEscalation = false
 
   const onToolCallCompleted = ({
     toolName,
@@ -185,16 +221,19 @@ const buildToolCallTrackingHandler = ({
     input?: unknown
     output?: unknown
   }) => {
-    if (!trackingHandle) {
-      return
-    }
     const approvalOutput = output as
       | { status?: string; escalationId?: string }
       | undefined
-    if (
+    const pendingApproval =
       approvalOutput?.status === ApprovalToolResultStatus.PENDING_APPROVAL &&
-      approvalOutput.escalationId
-    ) {
+      !!approvalOutput.escalationId
+    if (pendingApproval) {
+      awaitingEscalation = true
+    }
+    if (!trackingHandle) {
+      return
+    }
+    if (pendingApproval) {
       needsInputUpdate = needsInputUpdate.then(() =>
         sdk.ai.agentRequests
           .updateRequestStatus({
@@ -235,6 +274,7 @@ const buildToolCallTrackingHandler = ({
   return {
     onToolCallCompleted,
     flush: () => Promise.all([chain, needsInputUpdate]),
+    isAwaitingEscalation: () => awaitingEscalation,
   }
 }
 
@@ -309,6 +349,8 @@ const finalizeAgentRequestTracking = async ({
         error: updateError,
       })
     })
+
+  return outcome
 }
 
 interface ResolvedChatStreamRequest {
@@ -489,6 +531,7 @@ export async function webhookChat({
     toolDisplayNames: run.toolDisplayNames,
   })
 
+  await markAgentSessionActive({ agentId, sessionId })
   const result = await run.stream({
     pendingToolCalls,
     unrecoveredToolFailures,
@@ -536,6 +579,10 @@ export async function webhookChat({
     console.error("Chat webhook stream delivery failed", streamOutcome.reason)
     events.action.aiAgentFailed({
       agentId,
+      ...buildAgentSessionActionContext({
+        sessionId,
+        requestId: trackingHandle?.requestId,
+      }),
       reason: ActionFailureReason.ERROR,
       errorMessage: getErrorMessage(streamOutcome.reason),
     })
@@ -563,6 +610,10 @@ export async function webhookChat({
     })
     events.action.aiAgentFailed({
       agentId,
+      ...buildAgentSessionActionContext({
+        sessionId,
+        requestId: trackingHandle?.requestId,
+      }),
       reason: ActionFailureReason.ERROR,
       errorMessage: getErrorMessage(assistantMessageResult.reason),
     })
@@ -583,6 +634,10 @@ export async function webhookChat({
     })
     events.action.aiAgentFailed({
       agentId,
+      ...buildAgentSessionActionContext({
+        sessionId,
+        requestId: trackingHandle?.requestId,
+      }),
       reason: ActionFailureReason.ERROR,
       errorMessage: getErrorMessage(responseResult.reason),
     })
@@ -596,7 +651,6 @@ export async function webhookChat({
     throw responseResult.reason
   }
 
-  events.action.aiAgentExecuted({ agentId })
   const ragSources = run.getUsedKnowledgeSourcesMetadata()
 
   const finalAssistantMessage =
@@ -616,13 +670,24 @@ export async function webhookChat({
     (finishReasonResult.status === "fulfilled" &&
       finishReasonResult.value === "tool-calls")
   await toolCallTracking.flush()
-  await finalizeAgentRequestTracking({
+  const finalOutcome = await finalizeAgentRequestTracking({
     trackingHandle,
     agentId,
     sessionId,
     toolCallsIncomplete,
     unrecoveredToolFailures,
     finalResponse: assistantText,
+  })
+  events.action.aiAgentExecuted({
+    agentId,
+    ...buildAgentSessionActionContext({
+      sessionId,
+      requestId: trackingHandle?.requestId ?? requestId,
+    }),
+    ...(toolCallTracking.isAwaitingEscalation()
+      ? { awaitingEscalation: true }
+      : {}),
+    ...(finalOutcome ? { finalStatus: finalOutcome.status } : {}),
   })
 
   return {
@@ -687,6 +752,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       toolDisplayNames: run.toolDisplayNames,
     })
 
+    await markAgentSessionActive({ agentId, sessionId })
     const result = await run.stream({
       pendingToolCalls,
       unrecoveredToolFailures,
@@ -763,6 +829,10 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
         })
         events.action.aiAgentFailed({
           agentId,
+          ...buildAgentSessionActionContext({
+            sessionId,
+            requestId: trackingHandle?.requestId,
+          }),
           reason: ActionFailureReason.ERROR,
           errorMessage: getErrorMessage(error),
         })
@@ -776,14 +846,12 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
       },
       onFinish: async ({ messages }) => {
         await run.sessionLogIndexer.index()
-        events.action.aiAgentExecuted({ agentId })
-
         await toolCallTracking.flush()
 
         const finalAssistantMessage = [...messages]
           .reverse()
           .find(message => message.role === "assistant")
-        const finalizeTask = finalizeAgentRequestTracking({
+        const finalOutcome = await finalizeAgentRequestTracking({
           trackingHandle,
           agentId,
           sessionId,
@@ -791,8 +859,19 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           unrecoveredToolFailures,
           finalResponse: getAssistantMessageText(finalAssistantMessage),
         })
-
-        await finalizeTask
+        events.action.aiAgentExecuted({
+          agentId,
+          ...buildAgentSessionActionContext({
+            sessionId,
+            requestId:
+              trackingHandle?.requestId ??
+              run.sessionLogIndexer.getRequestIds().at(-1),
+          }),
+          ...(toolCallTracking.isAwaitingEscalation()
+            ? { awaitingEscalation: true }
+            : {}),
+          ...(finalOutcome ? { finalStatus: finalOutcome.status } : {}),
+        })
       },
       consumeSseStream: consumeStream,
       sendReasoning: true,
