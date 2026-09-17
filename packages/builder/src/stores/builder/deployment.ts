@@ -14,6 +14,8 @@ import { automationStore } from "./automations"
 import { workspaceAppStore } from "./workspaceApps"
 import { agentsStore } from "@/stores/portal/agents"
 
+const DEPLOYMENT_PAGE_SIZE = 20
+
 interface DeploymentState {
   deployments: DeploymentProgressResponse[]
   isPublishing: boolean
@@ -83,10 +85,12 @@ class DeploymentStore extends DerivedBudiStore<
 
   async load() {
     try {
-      const deployments = await API.getAppDeployments()
+      const { data } = await API.getAppDeployments({
+        limit: DEPLOYMENT_PAGE_SIZE,
+      })
       this.update(state => ({
         ...state,
-        deployments,
+        deployments: data,
       }))
     } catch (err) {
       notifications.error("Error fetching deployments")

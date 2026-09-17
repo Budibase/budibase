@@ -3,6 +3,9 @@ import { structures } from "@budibase/backend-core/tests"
 import {
   AgentKnowledgeSourceType,
   Automation,
+  DeploymentDoc,
+  DeploymentHistoryEntry,
+  DeploymentStatus,
   FieldType,
   FormulaType,
   LockName,
@@ -22,6 +25,8 @@ import { createAutomationBuilder } from "../../../automations/tests/utilities/Au
 import { getRowParams } from "../../../db/utils"
 import { basicTable } from "../../../tests/utilities/structures"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
+import sdk from "../../../sdk"
+import { MAX_DEPLOYMENT_HISTORY } from "../../controllers/deploy"
 import * as setup from "./utilities"
 
 describe("/api/deploy", () => {
@@ -987,6 +992,168 @@ describe("/api/deploy", () => {
         expect(prodTable.schema.description).toBeUndefined()
         expect(prodTable.pendingColumnRenames || []).toHaveLength(0)
       }
+    })
+  })
+})
+
+describe("deployment history", () => {
+  let config = setup.getConfig()
+
+  afterAll(() => {
+    setup.afterAll()
+  })
+
+  beforeAll(async () => {
+    await config.init()
+  })
+
+  beforeEach(async () => {
+    await config.newTenant()
+  })
+
+  const getDeploymentDoc = async () =>
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      return await db.tryGet<DeploymentDoc>("deployments")
+    })
+
+  const writeHistory = async (
+    history: Record<string, DeploymentHistoryEntry>
+  ) =>
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      const db = context.getWorkspaceDB()
+      const existing = await db.tryGet<DeploymentDoc>("deployments")
+      await db.put({ ...existing, _id: "deployments", history })
+    })
+
+  const seedHistory = async (count: number) => {
+    const history: Record<string, DeploymentHistoryEntry> = {}
+    for (let i = 0; i < count; i++) {
+      const _id = `seeded-${i.toString().padStart(4, "0")}`
+      history[_id] = {
+        _id,
+        appId: config.getDevWorkspaceId(),
+        status: DeploymentStatus.SUCCESS,
+        // oldest first, all in the past so a real publish always wins
+        updatedAt: 1000 + i,
+      }
+    }
+    await writeHistory(history)
+  }
+
+  it("bounds the stored history when publishing", async () => {
+    await seedHistory(MAX_DEPLOYMENT_HISTORY + 25)
+
+    await config.api.workspace.publish(config.getDevWorkspaceId())
+
+    const doc = await getDeploymentDoc()
+    const history = Object.values(doc!.history!)
+    expect(history.length).toBe(MAX_DEPLOYMENT_HISTORY)
+
+    const successful = history.filter(
+      entry => !entry._id.startsWith("seeded-") && entry.status === "SUCCESS"
+    )
+    expect(successful.length).toBe(1)
+    expect(history.some(entry => entry._id === "seeded-0000")).toBe(false)
+    expect(
+      history.some(
+        entry => entry._id === `seeded-${String(MAX_DEPLOYMENT_HISTORY + 24)}`
+      )
+    ).toBe(false)
+  })
+
+  it("truncates long error messages", async () => {
+    const message = "x".repeat(5000)
+    jest
+      .spyOn(sdk.workspaces, "isWorkspacePublished")
+      .mockRejectedValueOnce(new Error(message))
+
+    await config.api.workspace.publish(config.getDevWorkspaceId(), {
+      status: 500,
+    })
+
+    const doc = await getDeploymentDoc()
+    const failure = Object.values(doc!.history!).find(
+      entry => entry.status === DeploymentStatus.FAILURE
+    )
+    expect(failure!.err!.length).toBe(1000)
+  })
+
+  describe("GET /api/deployments", () => {
+    it("returns an empty page when there is no history", async () => {
+      await writeHistory({})
+      const res = await config.api.deploy.fetchDeployments()
+      expect(res).toEqual({
+        data: [],
+        page: 1,
+        limit: 20,
+        totalRows: 0,
+        hasNextPage: false,
+      })
+    })
+
+    it("returns deployments newest first, one page at a time", async () => {
+      await seedHistory(30)
+
+      const first = await config.api.deploy.fetchDeployments({ limit: 10 })
+      expect(first.data.length).toBe(10)
+      expect(first.totalRows).toBe(30)
+      expect(first.hasNextPage).toBe(true)
+      expect(first.data[0]._id).toBe("seeded-0029")
+      expect(first.data[9]._id).toBe("seeded-0020")
+
+      const second = await config.api.deploy.fetchDeployments({
+        page: 2,
+        limit: 10,
+      })
+      expect(second.data[0]._id).toBe("seeded-0019")
+      expect(second.hasNextPage).toBe(true)
+
+      const third = await config.api.deploy.fetchDeployments({
+        page: 3,
+        limit: 10,
+      })
+      expect(third.data[9]._id).toBe("seeded-0000")
+      expect(third.hasNextPage).toBe(false)
+    })
+
+    it("returns an empty page past the end of the history", async () => {
+      await seedHistory(5)
+      const res = await config.api.deploy.fetchDeployments({
+        page: 4,
+        limit: 2,
+      })
+      expect(res.data).toEqual([])
+      expect(res.totalRows).toBe(5)
+      expect(res.hasNextPage).toBe(false)
+    })
+
+    it("marks stuck pending deployments as failed", async () => {
+      await writeHistory({
+        stuck: {
+          _id: "stuck",
+          appId: config.getDevWorkspaceId(),
+          status: DeploymentStatus.PENDING,
+          updatedAt: Date.now() - 60 * 60 * 1000,
+        },
+      })
+
+      const res = await config.api.deploy.fetchDeployments()
+      expect(res.data[0]).toEqual(
+        expect.objectContaining({
+          _id: "stuck",
+          status: DeploymentStatus.FAILURE,
+          err: "Timed out",
+        })
+      )
+    })
+
+    it.each([
+      ["page", { page: 0 }],
+      ["limit", { limit: 0 }],
+      ["limit", { limit: 101 }],
+    ])("rejects an invalid %s query", async (_name, opts) => {
+      await config.api.deploy.fetchDeployments(opts, { status: 400 })
     })
   })
 })

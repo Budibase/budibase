@@ -4,19 +4,19 @@ export enum DeploymentStatus {
   FAILURE = "FAILURE",
 }
 
+export interface DeploymentHistoryEntry {
+  _id: string
+  appId: string
+  status?: DeploymentStatus
+  err?: string
+  updatedAt: number
+}
+
 export interface DeploymentDoc {
   _id: string
-  verification: any
+  verification?: any
   status?: DeploymentStatus
-  history?: Record<
-    string,
-    {
-      _id: string
-      appId: string
-      status?: DeploymentStatus
-      updatedAt: number
-    }
-  >
+  history?: Record<string, DeploymentHistoryEntry>
   err?: any
   appUrl?: string
 }

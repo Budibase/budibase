@@ -1,4 +1,4 @@
-import { DeploymentDoc, DeploymentStatus } from "../../../documents"
+import { DeploymentDoc, DeploymentHistoryEntry } from "../../../documents"
 
 export interface PublishWorkspaceRequest {
   automationIds?: string[]
@@ -29,11 +29,17 @@ export interface PublishStatusResponse {
   agents: Record<string, PublishStatusResource>
 }
 
-export interface DeploymentProgressResponse {
-  _id: string
-  appId: string
-  status?: DeploymentStatus
-  updatedAt: number
+export interface DeploymentProgressResponse extends DeploymentHistoryEntry {}
+
+export interface FetchDeploymentRequest {
+  page?: string
+  limit?: string
 }
 
-export type FetchDeploymentResponse = DeploymentProgressResponse[]
+export interface FetchDeploymentResponse {
+  data: DeploymentProgressResponse[]
+  page: number
+  limit: number
+  totalRows: number
+  hasNextPage: boolean
+}

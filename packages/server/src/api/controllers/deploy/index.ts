@@ -11,9 +11,11 @@ import {
   Automation,
   BackupTrigger,
   DeploymentDoc,
+  DeploymentHistoryEntry,
   DeploymentProgressResponse,
   DeploymentStatus,
   FieldType,
+  FetchDeploymentRequest,
   FetchDeploymentResponse,
   FormulaType,
   LockName,
@@ -48,13 +50,38 @@ import { updateAllFormulasInTable } from "../row/staticFormula"
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
 
+// the deployment doc is a single document rewritten in full on every publish -
+// these bounds stop it growing without limit, which slows every publish down
+// and eventually breaches CouchDB's max_document_size
+export const MAX_DEPLOYMENT_HISTORY = 50
+const MAX_DEPLOYMENT_ERROR_LENGTH = 1000
+
+const DEFAULT_PAGE_SIZE = 20
+const MAX_PAGE_SIZE = 100
+
+const byMostRecent = (a: DeploymentHistoryEntry, b: DeploymentHistoryEntry) =>
+  (b.updatedAt ?? 0) - (a.updatedAt ?? 0)
+
+// keeps only the most recent deployments, the entry being written always
+// carries the newest updatedAt so it is never the one dropped
+function boundHistory(
+  history: Record<string, DeploymentHistoryEntry>
+): Record<string, DeploymentHistoryEntry> {
+  const entries = Object.values(history)
+  if (entries.length <= MAX_DEPLOYMENT_HISTORY) {
+    return history
+  }
+  const retained = entries.sort(byMostRecent).slice(0, MAX_DEPLOYMENT_HISTORY)
+  return Object.fromEntries(retained.map(entry => [entry._id, entry]))
+}
+
 // checks that deployments are in a good state, any pending will be updated
-async function checkAllDeployments(
-  deployments: any
-): Promise<{ updated: boolean; deployments: DeploymentDoc }> {
+function checkAllDeployments(deployments: DeploymentDoc): {
+  updated: boolean
+  deployments: DeploymentDoc
+} {
   let updated = false
-  let deployment: any
-  for (deployment of Object.values(deployments.history)) {
+  for (const deployment of Object.values(deployments.history ?? {})) {
     // check that no deployments have crashed etc and are now stuck
     if (
       deployment.status === DeploymentStatus.PENDING &&
@@ -69,31 +96,33 @@ async function checkAllDeployments(
 }
 
 async function storeDeploymentHistory(deployment: Deployment) {
-  const deploymentJSON = deployment.getJSON()
+  const deploymentJSON: Omit<DeploymentHistoryEntry, "updatedAt"> =
+    deployment.getJSON()
   const db = context.getWorkspaceDB()
 
-  let deploymentDoc
-  try {
-    // theres only one deployment doc per app database
-    deploymentDoc = await db.get<any>(DocumentType.DEPLOYMENTS)
-  } catch (err) {
-    deploymentDoc = { _id: DocumentType.DEPLOYMENTS, history: {} }
-  }
+  // theres only one deployment doc per app database
+  const deploymentDoc: DeploymentDoc = (await db.tryGet<DeploymentDoc>(
+    DocumentType.DEPLOYMENTS
+  )) ?? { _id: DocumentType.DEPLOYMENTS, history: {} }
 
   const deploymentId = deploymentJSON._id
+  const history = deploymentDoc.history ?? {}
 
-  // first time deployment
-  if (!deploymentDoc.history[deploymentId])
-    deploymentDoc.history[deploymentId] = {}
-
-  deploymentDoc.history[deploymentId] = {
-    ...deploymentDoc.history[deploymentId],
+  const entry: DeploymentHistoryEntry = {
+    ...history[deploymentId],
     ...deploymentJSON,
     updatedAt: Date.now(),
   }
+  if (entry.err) {
+    entry.err = entry.err.substring(0, MAX_DEPLOYMENT_ERROR_LENGTH)
+  }
+  history[deploymentId] = entry
+
+  const bounded = boundHistory(history)
+  deploymentDoc.history = bounded
 
   await db.put(deploymentDoc)
-  deployment.fromJSON(deploymentDoc.history[deploymentId])
+  deployment.fromJSON(bounded[deploymentId])
   return deployment
 }
 
@@ -288,21 +317,53 @@ async function syncStaticFormulasToProduction(prodWorkspaceId: string) {
   })
 }
 
+function parsePositiveIntQuery(value: string | undefined, name: string) {
+  const normalized = value?.trim()
+  if (!normalized) {
+    return undefined
+  }
+  if (!/^\d+$/.test(normalized)) {
+    throw new errors.HTTPError(`Invalid ${name} query`, 400)
+  }
+  const parsed = Number.parseInt(normalized, 10)
+  if (parsed < 1) {
+    throw new errors.HTTPError(`${name} query must be greater than 0`, 400)
+  }
+  return parsed
+}
+
 export async function fetchDeployments(
   ctx: UserCtx<void, FetchDeploymentResponse>
 ) {
-  try {
-    const db = context.getWorkspaceDB()
-    const deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
-    const { updated, deployments } = await checkAllDeployments(deploymentDoc)
+  const query = ctx.query as FetchDeploymentRequest
+  const page = parsePositiveIntQuery(query.page, "page") ?? 1
+  const limit = parsePositiveIntQuery(query.limit, "limit") ?? DEFAULT_PAGE_SIZE
+  if (limit > MAX_PAGE_SIZE) {
+    throw new errors.HTTPError(
+      `limit query cannot exceed ${MAX_PAGE_SIZE}`,
+      400
+    )
+  }
+
+  const db = context.getWorkspaceDB()
+  const deploymentDoc = await db.tryGet<DeploymentDoc>(DocumentType.DEPLOYMENTS)
+
+  let history: DeploymentHistoryEntry[] = []
+  if (deploymentDoc) {
+    const { updated, deployments } = checkAllDeployments(deploymentDoc)
     if (updated) {
       await db.put(deployments)
     }
-    ctx.body = deployments.history
-      ? Object.values(deployments.history).reverse()
-      : []
-  } catch (err) {
-    ctx.body = []
+    history = Object.values(deployments.history ?? {}).sort(byMostRecent)
+  }
+
+  const offset = (page - 1) * limit
+  ctx.body = {
+    data: history.slice(offset, offset + limit),
+    page,
+    limit,
+    totalRows: history.length,
+    hasNextPage: offset + limit < history.length,
   }
 }
 
