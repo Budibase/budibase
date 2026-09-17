@@ -7,6 +7,7 @@ import {
   FormulaType,
   PublishResourceState,
   Row,
+  RelationshipType,
   SharePointScopeMode,
   SharePointScopeTargetType,
   Table,
@@ -889,6 +890,64 @@ describe("/api/deploy", () => {
       const devTable = await db.get<Table>(renamedTwice._id!)
       const devRevNum = parseInt(devTable._rev!.split("-")[0])
       expect(devRevNum).toBeGreaterThanOrEqual(prodRevNum!)
+    })
+  })
+
+  it("applies pending renames when related tables are rewritten during the rename loop", async () => {
+    const created: Table[] = []
+    for (let i = 0; i < 3; i++) {
+      created.push(
+        await config.api.table.save(
+          basicTable(undefined, { name: `Table${i}` })
+        )
+      )
+    }
+    const [target, ...writers] = created.sort((a, b) =>
+      a._id!.localeCompare(b._id!)
+    )
+
+    for (const [index, writer] of writers.entries()) {
+      const latest = await config.api.table.get(writer._id!)
+      await config.api.table.save({
+        ...latest,
+        schema: {
+          ...latest.schema,
+          [`rel${index}`]: {
+            type: FieldType.LINK,
+            name: `rel${index}`,
+            fieldName: `back${index}`,
+            tableId: target._id!,
+            relationshipType: RelationshipType.MANY_TO_MANY,
+          },
+        },
+      })
+    }
+
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    for (const table of [target, ...writers]) {
+      const latest = await config.api.table.get(table._id!)
+      const schema = {
+        ...latest.schema,
+        details: { ...latest.schema.description, name: "details" },
+      }
+      delete (schema as any).description
+      await config.api.table.save({
+        ...latest,
+        schema,
+        _rename: { old: "description", updated: "details" },
+      })
+    }
+
+    await config.api.workspace.publish(config.devWorkspace!.appId)
+
+    await config.withProdApp(async () => {
+      for (const table of [target, ...writers]) {
+        const prodTable = await config.api.table.get(table._id!)
+        expect(prodTable.schema.details).toBeDefined()
+        expect(prodTable.schema.description).toBeUndefined()
+        expect(prodTable.pendingColumnRenames || []).toHaveLength(0)
+      }
     })
   })
 })

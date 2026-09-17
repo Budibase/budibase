@@ -169,16 +169,15 @@ async function applyPendingColumnRenames(
   return await context.doInWorkspaceContext(workspaceId, async () => {
     const db = context.getWorkspaceDB()
     const tables = await sdk.tables.getAllInternalTables()
-    const updatedTables: Table[] = []
+    const renamedTableIds = new Set<string>()
 
-    for (let table of tables) {
-      if (table._deleted) {
+    for (const listedTable of tables) {
+      if (listedTable._deleted || !listedTable.pendingColumnRenames?.length) {
         continue
       }
-      const pendingColumnRenames = table.pendingColumnRenames
-      if (!pendingColumnRenames?.length) {
-        continue
-      }
+
+      let table = await sdk.tables.getTable(listedTable._id!)
+      const pendingColumnRenames = table.pendingColumnRenames ?? []
 
       for (const rename of pendingColumnRenames) {
         const tableToUpdate: Table = {
@@ -203,21 +202,30 @@ async function applyPendingColumnRenames(
         table = await sdk.tables.getTable(table._id!)
       }
 
-      updatedTables.push({ ...table, pendingColumnRenames: [] })
+      renamedTableIds.add(table._id!)
     }
 
-    if (updatedTables.length > 0) {
-      const bulkResults = await db.bulkDocs(updatedTables)
-      const failedIndex = bulkResults.findIndex(result => result.error)
-      if (failedIndex !== -1) {
-        const failedResult = bulkResults[failedIndex]
-        throw new Error(
-          `Failed to apply pending column renames for ${updatedTables[failedIndex]._id}: ${failedResult.error}`
-        )
-      }
-      for (let i = 0; i < updatedTables.length; i++) {
-        updatedTables[i]._rev = bulkResults[i].rev
-      }
+    if (renamedTableIds.size === 0) {
+      return []
+    }
+
+    // Tables processed early in the loop can have been rewritten by later ones,
+    // so read the current revisions back before clearing the pending renames.
+    const latestTables = await sdk.tables.getAllInternalTables()
+    const updatedTables = latestTables
+      .filter(table => !table._deleted && renamedTableIds.has(table._id!))
+      .map(table => ({ ...table, pendingColumnRenames: [] }))
+
+    const bulkResults = await db.bulkDocs(updatedTables)
+    const failedIndex = bulkResults.findIndex(result => result.error)
+    if (failedIndex !== -1) {
+      const failedResult = bulkResults[failedIndex]
+      throw new Error(
+        `Failed to apply pending column renames for ${updatedTables[failedIndex]._id}: ${failedResult.error}`
+      )
+    }
+    for (let i = 0; i < updatedTables.length; i++) {
+      updatedTables[i]._rev = bulkResults[i].rev
     }
 
     return updatedTables
@@ -481,7 +489,7 @@ export const publishWorkspaceInternal = async (
                 await devDb.put(docForPut)
               } catch (err) {
                 console.warn(
-                  `Failed to update development table with production table 
+                  `Failed to update development table with production table
                   revision when applying column renames for table ${prodTable._id}: ${err}`
                 )
               }
