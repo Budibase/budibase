@@ -237,19 +237,21 @@ export async function syncDefinition(
 }
 
 export async function addTable(table: Table) {
-  const db = context.getWorkspaceDB()
-  let definition: PreSaveSQLiteDefinition | SQLiteDefinition
-  try {
-    definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
-  } catch (err) {
-    definition = await buildBaseDefinition()
-  }
-  definition.sql.tables = {
-    ...definition.sql.tables,
-    ...getStaticSqsTables(),
-    ...mapTable(table),
-  }
-  await db.put(definition)
+  await withDefinitionRebuildLock(async () => {
+    const db = context.getWorkspaceDB()
+    let definition: PreSaveSQLiteDefinition | SQLiteDefinition
+    try {
+      definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
+    } catch (err) {
+      definition = await buildBaseDefinition()
+    }
+    definition.sql.tables = {
+      ...definition.sql.tables,
+      ...getStaticSqsTables(),
+      ...mapTable(table),
+    }
+    await db.put(definition)
+  })
 }
 
 export async function removeTable(table: Table) {

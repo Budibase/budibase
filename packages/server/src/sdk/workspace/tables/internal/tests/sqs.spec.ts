@@ -1,5 +1,23 @@
-import { db as dbCore, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
-import { SQLiteDefinition } from "@budibase/types"
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    locks: {
+      ...actual.locks,
+      doWithLock: jest.fn(async (_opts, task) => ({
+        executed: true,
+        result: await task(),
+      })),
+    },
+  }
+})
+
+import {
+  db as dbCore,
+  locks,
+  SQLITE_DESIGN_DOC_ID,
+} from "@budibase/backend-core"
+import { LockName, LockType, SQLiteDefinition } from "@budibase/types"
 import * as setup from "../../../../../api/routes/tests/utilities"
 import sdk from "../../../../../sdk"
 import { basicTable } from "../../../../../tests/utilities/structures"
@@ -59,5 +77,24 @@ describe("sqs definition conflicts", () => {
 
     const definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
     expect(definition.sql.tables[table._id!]).toBeDefined()
+  })
+
+  it("updates definitions under the rebuild lock", async () => {
+    const table = basicTable()
+    const doWithLock = locks.doWithLock as jest.Mock
+    doWithLock.mockClear()
+
+    await config.doInContext(config.getDevWorkspaceId(), () =>
+      sdk.tables.sqs.addTable(table)
+    )
+
+    expect(doWithLock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: LockType.AUTO_EXTEND,
+        name: LockName.SQS_SYNC_DEFINITIONS,
+        resource: config.getDevWorkspaceId(),
+      }),
+      expect.any(Function)
+    )
   })
 })

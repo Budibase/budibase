@@ -460,7 +460,10 @@ export const publishWorkspaceInternal = async (
           prodId
         )
 
-        const updatedProdTables = await applyPendingColumnRenames(prodId)
+        const updatedProdTables = await sdk.tables.sqs.withDefinitionRebuildLock(
+          () => applyPendingColumnRenames(prodId),
+          prodId
+        )
 
         // Keep development revs aligned with production after renaming, so the
         // next publish doesn't see production ahead and delete / tombstone the doc.
