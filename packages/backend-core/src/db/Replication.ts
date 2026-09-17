@@ -1,6 +1,6 @@
 import { Document, DocumentType } from "@budibase/types"
 import PouchDB from "pouchdb"
-import { DesignDocuments, SEPARATOR, USER_METADATA_PREFIX } from "../constants"
+import { DesignDocuments, SEPARATOR } from "../constants"
 import { closePouchDB, getPouchDB } from "./couch"
 import { tracer } from "dd-trace"
 
@@ -168,10 +168,6 @@ class Replication {
         if (doc._deleted) {
           return true
         }
-        // always sync users from dev
-        if (doc._id.startsWith(USER_METADATA_PREFIX)) {
-          return true
-        }
         if (
           direction === ReplicationDirection.TO_PRODUCTION &&
           !isCreation &&
@@ -229,7 +225,7 @@ class Replication {
       $nor: [selector],
     })
 
-    // Evaluated ahead of the _deleted/user-metadata short-circuits below
+    // Evaluated ahead of the deleted-document short circuit below
     const unconditional: PouchDB.Find.Selector[] = [
       not(startsWith(DocumentType.SLACK_APP_CONFIG + SEPARATOR)),
     ]
@@ -278,7 +274,6 @@ class Replication {
         {
           $or: [
             { _deleted: true },
-            startsWith(USER_METADATA_PREFIX),
             { $and: fallback },
           ],
         },

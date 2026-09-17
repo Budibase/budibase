@@ -135,21 +135,27 @@ describe("Replication", () => {
       ).toBe(false)
     })
 
-    it("should always replicate user metadata documents", () => {
+    it("should only replicate user metadata when its table is selected", () => {
       const replication = new Replication({
         source: `${DocumentType.WORKSPACE_DEV}_source`,
         target: `${DocumentType.WORKSPACE}_target`,
       })
-      const opts = replication.appReplicateOpts({ isCreation: true })
+      const userMetadataDoc = {
+        _id: `${USER_METADATA_PREFIX}global-user-id`,
+      }
 
-      expect(
-        (opts.filter as Function)(
-          {
-            _id: `${USER_METADATA_PREFIX}global-user-id`,
-          },
-          {}
-        )
-      ).toBe(true)
+      const opts = replication.appReplicateOpts({ isCreation: false })
+
+      expect((opts.filter as Function)(userMetadataDoc, {})).toBe(false)
+
+      const selectedTableOpts = replication.appReplicateOpts({
+        isCreation: false,
+        tablesToSync: ["ta_users"],
+      })
+
+      expect((selectedTableOpts.filter as Function)(userMetadataDoc, {})).toBe(
+        true
+      )
     })
 
     it("should filter out automation logs", () => {
@@ -330,7 +336,6 @@ describe("Replication", () => {
             expect.objectContaining({
               $or: expect.arrayContaining([
                 { _deleted: true },
-                { _id: { $regex: `^${USER_METADATA_PREFIX}` } },
                 expect.objectContaining({
                   $and: expect.arrayContaining([
                     {
