@@ -447,9 +447,7 @@ export async function fetchAppPackage(
   )
   const enrichedPlugins =
     await sdk.plugins.enrichUsedPluginsWithSvelteMajor(existingPlugins)
-  application.usedPlugins = await objectStore.enrichPluginURLs(
-    enrichedPlugins
-  )
+  application.usedPlugins = await objectStore.enrichPluginURLs(enrichedPlugins)
 
   // Enrich PWA icon URLs if they exist
   if (application.pwa?.icons && application.pwa.icons.length > 0) {
