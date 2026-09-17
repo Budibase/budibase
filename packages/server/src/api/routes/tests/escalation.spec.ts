@@ -59,17 +59,21 @@ describe("/api/escalations", () => {
       await seedPending(escalationId)
 
       let releaseLock: () => void = () => {}
+      let lockAcquired: () => void = () => {}
       const held = new Promise<void>(resolve => (releaseLock = resolve))
+      const acquired = new Promise<void>(resolve => (lockAcquired = resolve))
       const holding = config.doInContext(config.getDevWorkspaceId(), () =>
-        sdk.escalations.withEscalationLock(escalationId, () => held)
+        sdk.escalations.withEscalationLock(escalationId, () => {
+          lockAcquired()
+          return held
+        })
       )
+      await acquired
 
       const request = config.api.escalation.resolve(escalationId, {
         accepted: true,
         actionId: EscalationAction.APPROVE,
       })
-      // Let the request reach the lock before the escalation is closed
-      await new Promise(resolve => setTimeout(resolve, 300))
       await config.doInContext(config.getDevWorkspaceId(), () =>
         escalationProcessor.cancel(escalationId)
       )
