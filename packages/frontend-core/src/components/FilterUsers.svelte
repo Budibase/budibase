@@ -16,6 +16,7 @@
   export let multiselect = false
 
   let searchTerm = null
+  let appliedTerm = ""
   let selectedCache = {}
   let loadingIds = new Set()
 
@@ -49,6 +50,10 @@
   const pickerLabels = loadTranslationsByGroup("picker")
 
   const search = Utils.debounce(term => {
+    if (term === appliedTerm) {
+      return
+    }
+    appliedTerm = term
     fetch.update({ query: term ? { string: { email: term } } : {} })
   }, 250)
 
