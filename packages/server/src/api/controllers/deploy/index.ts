@@ -15,7 +15,6 @@ import {
   DeploymentProgressResponse,
   DeploymentStatus,
   FieldType,
-  FetchDeploymentRequest,
   FetchDeploymentResponse,
   FormulaType,
   LockName,
@@ -317,7 +316,14 @@ async function syncStaticFormulasToProduction(prodWorkspaceId: string) {
   })
 }
 
-function parsePositiveIntQuery(value: string | undefined, name: string) {
+function parsePositiveIntQuery(
+  value: string | string[] | undefined,
+  name: string
+) {
+  // koa parses a repeated key into an array, which is never a valid page/limit
+  if (Array.isArray(value)) {
+    throw new errors.HTTPError(`${name} query must be provided once`, 400)
+  }
   const normalized = value?.trim()
   if (!normalized) {
     return undefined
@@ -335,9 +341,9 @@ function parsePositiveIntQuery(value: string | undefined, name: string) {
 export async function fetchDeployments(
   ctx: UserCtx<void, FetchDeploymentResponse>
 ) {
-  const query = ctx.query as FetchDeploymentRequest
-  const page = parsePositiveIntQuery(query.page, "page") ?? 1
-  const limit = parsePositiveIntQuery(query.limit, "limit") ?? DEFAULT_PAGE_SIZE
+  const page = parsePositiveIntQuery(ctx.query.page, "page") ?? 1
+  const limit =
+    parsePositiveIntQuery(ctx.query.limit, "limit") ?? DEFAULT_PAGE_SIZE
   if (limit > MAX_PAGE_SIZE) {
     throw new errors.HTTPError(
       `limit query cannot exceed ${MAX_PAGE_SIZE}`,

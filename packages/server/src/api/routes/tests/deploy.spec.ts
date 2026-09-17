@@ -1140,6 +1140,16 @@ describe("/api/deploy", () => {
       ])("rejects an invalid %s query", async (_name, opts) => {
         await config.api.deploy.fetchDeployments(opts, { status: 400 })
       })
+
+      it.each([
+        ["page", "page=1&page=2"],
+        ["limit", "limit=10&limit=20"],
+      ])("rejects a repeated %s query", async (name, query) => {
+        await config.api.deploy.fetchDeploymentsRawQuery(query, {
+          status: 400,
+          body: { message: `${name} query must be provided once` },
+        })
+      })
     })
   })
 })

@@ -144,10 +144,10 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
    */
   getAppDeployments: async opts => {
     const params = new URLSearchParams()
-    if (opts?.page) {
+    if (opts?.page !== undefined) {
       params.set("page", String(opts.page))
     }
-    if (opts?.limit) {
+    if (opts?.limit !== undefined) {
       params.set("limit", String(opts.limit))
     }
     const query = params.toString()

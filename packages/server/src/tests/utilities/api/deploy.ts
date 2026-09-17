@@ -20,4 +20,15 @@ export class DeployAPI extends TestAPI {
       expectations,
     })
   }
+
+  // lets a test send a raw query string, e.g. a key repeated more than once
+  fetchDeploymentsRawQuery = async (
+    query: string,
+    expectations?: Expectations
+  ) => {
+    return await this._get<FetchDeploymentResponse>(
+      `/api/deployments?${query}`,
+      { expectations }
+    )
+  }
 }
