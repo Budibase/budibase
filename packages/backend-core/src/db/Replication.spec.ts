@@ -51,10 +51,7 @@ describe("Replication", () => {
 
       await replication.replicate(opts)
 
-      expect(mockSourceDb.replicate.to).toHaveBeenCalledWith(
-        mockTargetDb,
-        opts
-      )
+      expect(mockSourceDb.replicate.to).toHaveBeenCalledWith(mockTargetDb, opts)
       expect(opts.filter).toBe(filter)
     })
   })
