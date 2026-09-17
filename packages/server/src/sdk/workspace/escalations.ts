@@ -1,5 +1,5 @@
 import zlib from "zlib"
-import { context } from "@budibase/backend-core"
+import { context, db as dbCore } from "@budibase/backend-core"
 import type { UIMessage } from "ai"
 import {
   DocumentType,
@@ -150,6 +150,42 @@ export async function listNotifications(
 // runs the resolution strategy, and triggers resolve if the strategy returns truthy.
 // NOTE: as notification channels grow, a dedicated notification processor may be
 // a better home for this responsibility than the escalation processor.
+const appendResponse = async (
+  notificationDocId: string,
+  response: EscalationResponse,
+  maxRetries = 3
+): Promise<"recorded" | "already_responded"> => {
+  const db = context.getWorkspaceDB()
+  const responderId = response.user?.userId
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const notifDoc =
+      await db.tryGet<EscalationNotificationDoc>(notificationDocId)
+    if (!notifDoc) {
+      throw new Error(`Notification doc ${notificationDocId} not found`)
+    }
+    const existing = notifDoc.responses ?? []
+    if (responderId && existing.some(r => r.user?.userId === responderId)) {
+      return "already_responded"
+    }
+    try {
+      await db.put({
+        ...notifDoc,
+        responses: [
+          ...existing,
+          { ...response, respondedAt: new Date().toISOString() },
+        ],
+      })
+      return "recorded"
+    } catch (err) {
+      if (dbCore.isDocumentConflictError(err) && attempt < maxRetries - 1) {
+        continue
+      }
+      throw err
+    }
+  }
+  throw new Error(`Notification ${notificationDocId} could not be updated`)
+}
+
 export async function respond(
   escalationId: string,
   notificationDocId: string,
@@ -185,18 +221,16 @@ export async function respond(
       `Notification ${notificationDocId} does not belong to escalation ${escalationId}`
     )
   }
-  await db.put({
-    ...notifDoc,
-    response,
-    respondedAt: new Date().toISOString(),
-  })
+  const appended = await appendResponse(notificationDocId, response)
+  if (appended === "already_responded") {
+    return { status: "already_responded" }
+  }
 
   const notifDocs = await listNotifications(escalationId)
   const totalRecipients = contextDoc.recipients?.length ?? 0
   const responses = notifDocs
-    .filter(doc => doc.respondedAt)
-    .sort((a, b) => (a.respondedAt! < b.respondedAt! ? -1 : 1))
-    .map(doc => doc.response)
+    .flatMap(doc => doc.responses ?? [])
+    .sort((a, b) => (a.respondedAt < b.respondedAt ? -1 : 1))
 
   console.log("Escalation respond: responses so far", {
     escalationId,

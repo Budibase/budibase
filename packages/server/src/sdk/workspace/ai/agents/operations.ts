@@ -10,7 +10,6 @@ export type AgentOperationConfig = Pick<
   | "enabledTools"
   | "approvalPolicies"
   | "allowKnowledgeSourceDownload"
-  | "escalation"
 >
 
 export type CreateAgentOperationInput = AgentOperationConfig &
@@ -38,7 +37,6 @@ const mergeOperationConfig = (
   id: existing.id,
   knowledgeBases: existing.knowledgeBases,
   knowledgeSources: existing.knowledgeSources,
-  escalation: incoming.escalation ?? existing.escalation,
 })
 
 const assertUniqueOperationName = (

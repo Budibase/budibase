@@ -2,7 +2,7 @@
   import { ActionButton, List, ListItem, Button } from "@budibase/bbui"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
   import { TriggerStepID } from "@/constants/backend/automations"
-  import { automationStore, appStore } from "@/stores/builder"
+  import { automationStore, workspaceStore } from "@/stores/builder"
   import { createEventDispatcher, getContext } from "svelte"
 
   const dispatch = createEventDispatcher()
@@ -61,7 +61,7 @@
             ? "var(--spectrum-global-color-gray-600)"
             : "var(--spectrum-global-color-green-600)"}
           title={automation.name}
-          url={`/builder/workspace/${$appStore.appId}/automation/${automation._id}`}
+          url={`/builder/workspace/${$workspaceStore.appId}/automation/${automation._id}`}
           showArrow
         />
       {/each}
