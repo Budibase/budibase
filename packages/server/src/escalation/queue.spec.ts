@@ -765,9 +765,12 @@ describe("processNotify", () => {
         })
       )
 
-    await runNotify(escalationId)
-    await press
-    lockSpy.mockRestore()
+    try {
+      await runNotify(escalationId)
+      await press
+    } finally {
+      lockSpy.mockRestore()
+    }
 
     const doc = await getNotification(escalationId)
     expect(doc.status).toEqual("sent")

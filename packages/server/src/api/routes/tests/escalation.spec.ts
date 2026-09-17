@@ -89,13 +89,16 @@ describe("/api/escalations", () => {
         accepted: true,
         actionId: EscalationAction.APPROVE,
       })
-      await reachedLock
-      await config.doInContext(config.getDevWorkspaceId(), () =>
-        escalationProcessor.cancel(escalationId)
-      )
-      releaseLock()
+      try {
+        await reachedLock
+        await config.doInContext(config.getDevWorkspaceId(), () =>
+          escalationProcessor.cancel(escalationId)
+        )
+      } finally {
+        releaseLock()
+        lockSpy.mockRestore()
+      }
       await holding
-      lockSpy.mockRestore()
 
       const result = await request
       expect(result.status).toEqual("closed")
