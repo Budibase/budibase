@@ -1,9 +1,15 @@
-import { PublishStatusResponse } from "@budibase/types"
+import { FetchDeploymentResponse, PublishStatusResponse } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
 export class DeployAPI extends TestAPI {
   publishStatus = async (expectations?: Expectations) => {
     return await this._get<PublishStatusResponse>("/api/deploy/status", {
+      expectations,
+    })
+  }
+
+  fetchDeployments = async (expectations?: Expectations) => {
+    return await this._get<FetchDeploymentResponse>("/api/deployments", {
       expectations,
     })
   }

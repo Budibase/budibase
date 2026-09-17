@@ -1,6 +1,6 @@
 import { Document, DocumentType } from "@budibase/types"
 import PouchDB from "pouchdb"
-import { DesignDocuments, SEPARATOR, USER_METADATA_PREFIX } from "../constants"
+import { DesignDocuments, SEPARATOR } from "../constants"
 import { closePouchDB, getPouchDB } from "./couch"
 import { tracer } from "dd-trace"
 
@@ -148,7 +148,7 @@ class Replication {
       startsWithID(_id, DocumentType.ROW) ||
       startsWithID(_id, DocumentType.LINK)
 
-    return {
+    const result: PouchDB.Replication.ReplicateOptions = {
       ...opts,
       filter: (doc: DocumentWithID, params: any) => {
         if (!isCreation && doc._id === DesignDocuments.MIGRATIONS) {
@@ -163,10 +163,6 @@ class Replication {
         }
         // always replicate deleted documents
         if (doc._deleted) {
-          return true
-        }
-        // always sync users from dev
-        if (startsWithID(doc._id, USER_METADATA_PREFIX)) {
           return true
         }
         if (
@@ -192,6 +188,90 @@ class Replication {
         }
         return filter ? filter(doc, params) : true
       },
+    }
+
+    // Keep this in sync with the filter function above.
+    if (!filter) {
+      const generatedSelector = this.buildReplicationSelector({
+        direction,
+        isCreation,
+        tableSyncList,
+        syncAllTables,
+      })
+      result.selector = opts.selector
+        ? { $and: [opts.selector, generatedSelector] }
+        : generatedSelector
+    }
+
+    return result
+  }
+
+  private buildReplicationSelector(opts: {
+    direction: ReplicationDirection | undefined
+    isCreation?: boolean
+    tableSyncList?: string[]
+    syncAllTables: boolean
+  }): PouchDB.Find.Selector {
+    const { direction, isCreation, tableSyncList, syncAllTables } = opts
+    const toDev = direction === ReplicationDirection.TO_DEV
+    const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    const startsWith = (prefix: string): PouchDB.Find.Selector => ({
+      _id: { $regex: `^${escapeRegExp(prefix)}` },
+    })
+    const not = (selector: PouchDB.Find.Selector): PouchDB.Find.Selector => ({
+      $nor: [selector],
+    })
+
+    // Evaluated ahead of the deleted-document short circuit below
+    const unconditional: PouchDB.Find.Selector[] = [
+      not(startsWith(DocumentType.SLACK_APP_CONFIG + SEPARATOR)),
+    ]
+    if (!isCreation) {
+      unconditional.push(not({ _id: DesignDocuments.MIGRATIONS }))
+    }
+    if (toDev) {
+      unconditional.push(not(startsWith("_design")))
+    }
+
+    // Only relevant once we're past the deleted/user-metadata short-circuits.
+    const fallback: PouchDB.Find.Selector[] = [
+      not(startsWith(DocumentType.AUTOMATION_LOG + SEPARATOR)),
+      not(startsWith(DocumentType.AGENT_LOG_SESSION + SEPARATOR)),
+      not({ _id: DocumentType.WORKSPACE_METADATA }),
+    ]
+    if (direction === ReplicationDirection.TO_PRODUCTION && !isCreation) {
+      fallback.push(not(startsWith(DocumentType.AUTO_COLUMN_STATE + SEPARATOR)))
+    }
+    if (!syncAllTables) {
+      const isNotData = not({
+        $or: [
+          startsWith(DocumentType.ROW + SEPARATOR),
+          startsWith(DocumentType.LINK + SEPARATOR),
+        ],
+      })
+      fallback.push(
+        tableSyncList?.length
+          ? {
+              $or: [
+                isNotData,
+                {
+                  $or: tableSyncList.map(id => ({
+                    _id: { $regex: escapeRegExp(id) },
+                  })),
+                },
+              ],
+            }
+          : isNotData
+      )
+    }
+
+    return {
+      $and: [
+        ...unconditional,
+        {
+          $or: [{ _deleted: true }, { $and: fallback }],
+        },
+      ],
     }
   }
 
