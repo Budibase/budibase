@@ -349,9 +349,6 @@
           lastSavedInstructions = snapshot.promptInstructions || ""
         }
       }
-
-      await workspaceDeploymentStore.fetch()
-      return true
     } catch (error) {
       console.error(error)
       notifications.error("Failed to save operation")
@@ -359,6 +356,12 @@
     } finally {
       saving = false
     }
+    try {
+      await workspaceDeploymentStore.fetch()
+    } catch (error) {
+      console.error(error)
+    }
+    return true
   }
 
   const operationSaveCoordinator = createSaveCoordinator(persistOperation)
