@@ -1,4 +1,10 @@
-import { InviteUsersResponse, OIDCUser, User } from "@budibase/types"
+import {
+  DocumentType,
+  InviteUsersResponse,
+  OIDCUser,
+  prefixed,
+  User,
+} from "@budibase/types"
 import { randomUUID } from "crypto"
 
 import {
@@ -1348,7 +1354,15 @@ describe("/api/global/users", () => {
         config.createUser(),
       ])
       const response = await config.api.users.searchUsers({
-        query: { oneOf: { _id: [user._id, "us_does_not_exist", user2._id] } },
+        query: {
+          oneOf: {
+            _id: [
+              user._id,
+              `${prefixed(DocumentType.USER)}does_not_exist`,
+              user2._id,
+            ],
+          },
+        },
       })
       expect(response.body.data.map((user: User) => user._id)).toEqual([
         user._id,
@@ -1367,7 +1381,11 @@ describe("/api/global/users", () => {
       await config.login(basicUser)
       const response = await config.withUser(basicUser, () =>
         config.api.users.searchUsers({
-          query: { oneOf: { _id: [user._id, "us_does_not_exist"] } },
+          query: {
+            oneOf: {
+              _id: [user._id, `${prefixed(DocumentType.USER)}does_not_exist`],
+            },
+          },
         })
       )
       expect(response.body.data.map((user: User) => user._id)).toEqual([
