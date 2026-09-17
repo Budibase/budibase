@@ -106,10 +106,13 @@ describe("sqs definition conflicts", () => {
       config.getDevWorkspaceId(),
     ]
 
-    await sdk.tables.sqs.withDefinitionRebuildLocks(workspaceIds, async () => {})
+    await sdk.tables.sqs.withDefinitionRebuildLocks(
+      workspaceIds,
+      async () => {}
+    )
 
-    expect(
-      doWithLock.mock.calls.map(([opts]) => opts.resource)
-    ).toEqual([...workspaceIds].sort())
+    expect(doWithLock.mock.calls.map(([opts]) => opts.resource)).toEqual(
+      [...workspaceIds].sort()
+    )
   })
 })
