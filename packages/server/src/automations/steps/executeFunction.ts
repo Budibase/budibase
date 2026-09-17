@@ -186,26 +186,22 @@ export const executeFunction = async (
 
     const runId = dependencies.createRunId()
     const result = await dependencies.orchestrate({
-      request: {
-        runId,
+      runId,
+      workspaceId: appId,
+      definition: {
+        id: fn._id,
+        name: fn.name,
         artifact: fn.artifact,
-        inputs: functionInputs,
-        limits,
-      },
-      capabilityScope: {
-        runId,
-        workspaceId: appId,
-        functionId: fn._id,
-        sourceHash: fn.artifact.sourceHash,
-        invocation: {
-          type: "automation",
-          automationId,
-          automationStepId: stepId,
-        },
-        executionUser: context.user,
         capabilities: fn.capabilities,
-        limits,
       },
+      inputs: functionInputs,
+      limits,
+      invocation: {
+        type: "automation",
+        automationId,
+        automationStepId: stepId,
+      },
+      executionUser: context.user,
       signal,
     })
     if (result.runId !== runId) {
