@@ -25,6 +25,40 @@ jest.mock("./couch", () => ({
 }))
 
 describe("Replication", () => {
+  describe("replicate", () => {
+    it("preserves custom filters when a selector is provided", async () => {
+      const complete = {}
+      const on = jest.fn()
+      on.mockImplementation(
+        (event: string, callback: (info: object) => void) => {
+          if (event === "complete") {
+            callback(complete)
+          }
+          return { on }
+        }
+      )
+      mockSourceDb.replicate.to.mockReturnValue({ on })
+
+      const replication = new Replication({
+        source: mockSourceDb.name,
+        target: mockTargetDb.name,
+      })
+      const filter = jest.fn()
+      const opts = {
+        selector: { _id: "keep" },
+        filter,
+      }
+
+      await replication.replicate(opts)
+
+      expect(mockSourceDb.replicate.to).toHaveBeenCalledWith(
+        mockTargetDb,
+        opts
+      )
+      expect(opts.filter).toBe(filter)
+    })
+  })
+
   describe("appReplicateOpts", () => {
     it("should skip migrations document when not a creation", () => {
       const replication = new Replication({

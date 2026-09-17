@@ -39,9 +39,6 @@ class Replication {
   }
 
   replicate(opts: PouchDB.Replication.ReplicateOptions = {}) {
-    if (opts.selector && opts.filter) {
-      delete opts.filter
-    }
     return new Promise<PouchDB.Replication.ReplicationResult<{}>>(resolve => {
       this.source.replicate
         .to(this.target, opts)
