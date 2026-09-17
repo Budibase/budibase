@@ -7,12 +7,14 @@ import {
 } from "@budibase/types"
 import {
   findPluginsInProps,
-  areUsedPluginsEqual,
+  areUsedPluginReferencesEqual,
   addUsedPluginsForScreen,
   reconcileWorkspaceUsedPlugins,
+  filterExistingUsedPlugins,
+  enrichUsedPluginsWithSvelteMajor,
   enrichUsedPluginSvelteMajors,
 } from "./usedPlugins"
-import { cache, context, tenancy } from "@budibase/backend-core"
+import { cache, context, db as dbCore, tenancy } from "@budibase/backend-core"
 import { DocumentType } from "../../db/utils"
 
 jest.mock("@budibase/backend-core", () => {
@@ -88,7 +90,7 @@ describe("usedPlugins", () => {
     })
   })
 
-  describe("areUsedPluginsEqual", () => {
+  describe("areUsedPluginReferencesEqual", () => {
     const pluginA: Plugin = {
       _id: "plugin_a",
       name: "Plugin A",
@@ -105,30 +107,45 @@ describe("usedPlugins", () => {
       jsUrl: "/api/assets/plugins/plugin_b/index.js",
     } as Plugin
 
-    it("returns true for identical arrays", () => {
-      expect(areUsedPluginsEqual([pluginA, pluginB], [pluginA, pluginB])).toBe(
-        true
-      )
+    it("returns true for arrays with equivalent plugin values", () => {
+      expect(
+        areUsedPluginReferencesEqual(
+          [pluginA, pluginB],
+          [{ ...pluginA }, { ...pluginB }]
+        )
+      ).toBe(true)
     })
 
     it("returns true regardless of order", () => {
-      expect(areUsedPluginsEqual([pluginA, pluginB], [pluginB, pluginA])).toBe(
-        true
-      )
+      expect(
+        areUsedPluginReferencesEqual(
+          [pluginA, pluginB],
+          [{ ...pluginB }, { ...pluginA }]
+        )
+      ).toBe(true)
     })
 
     it("returns false if length is different", () => {
-      expect(areUsedPluginsEqual([pluginA], [pluginA, pluginB])).toBe(false)
-    })
-
-    it("returns false if version changes", () => {
-      const pluginAUpdated = { ...pluginA, version: "1.0.1" }
-      expect(areUsedPluginsEqual([pluginA], [pluginAUpdated])).toBe(false)
+      expect(areUsedPluginReferencesEqual([pluginA], [pluginA, pluginB])).toBe(
+        false
+      )
     })
 
     it("returns false if hash changes", () => {
       const pluginAUpdated = { ...pluginA, hash: "hash_999" }
-      expect(areUsedPluginsEqual([pluginA], [pluginAUpdated])).toBe(false)
+      expect(areUsedPluginReferencesEqual([pluginA], [pluginAUpdated])).toBe(
+        false
+      )
+    })
+
+    it("returns false if jsUrl changes", () => {
+      const pluginAUpdated = {
+        ...pluginA,
+        jsUrl: "/api/assets/plugins/plugin_a/v2.js",
+      }
+      expect(areUsedPluginReferencesEqual([pluginA], [pluginAUpdated])).toBe(
+        false
+      )
     })
   })
 
@@ -140,6 +157,8 @@ describe("usedPlugins", () => {
       } as any
       const result = await addUsedPluginsForScreen(props, "ws_1")
       expect(result).toBe(false)
+      expect(context.doInWorkspaceContext).not.toHaveBeenCalled()
+      expect(tenancy.getGlobalDB).not.toHaveBeenCalled()
       expect(context.getWorkspaceDB).not.toHaveBeenCalled()
     })
 
@@ -149,12 +168,14 @@ describe("usedPlugins", () => {
         _component: "plugin/custom-table",
       } as any
 
+      const customTableId = dbCore.generatePluginID("custom-table")
+
       const globalDB = {
         allDocs: jest.fn().mockResolvedValue({
           rows: [
             {
               doc: {
-                _id: "plugin_tbl",
+                _id: customTableId,
                 name: "custom-table",
                 version: "1.0.0",
                 hash: "hash_tbl",
@@ -181,11 +202,15 @@ describe("usedPlugins", () => {
       const result = await addUsedPluginsForScreen(props, "ws_1")
 
       expect(result).toBe(true)
+      expect(globalDB.allDocs).toHaveBeenCalledWith({
+        keys: [customTableId],
+        include_docs: true,
+      })
       expect(workspaceDB.put).toHaveBeenCalledWith(
         expect.objectContaining({
           usedPlugins: [
             expect.objectContaining({
-              _id: "plugin_tbl",
+              _id: customTableId,
               name: "custom-table",
             }),
           ],
@@ -199,21 +224,38 @@ describe("usedPlugins", () => {
 
   describe("reconcileWorkspaceUsedPlugins", () => {
     it("prunes unused plugins and invalidates metadata cache", async () => {
+      const activePluginId = dbCore.generatePluginID("active-plugin")
+      const unusedPluginId = dbCore.generatePluginID("unused-plugin")
+
+      const globalPlugins = [
+        {
+          _id: activePluginId,
+          name: "active-plugin",
+          version: "1.0.0",
+          hash: "hash_active",
+          jsUrl: "/api/assets/plugins/plugin_active/index.js",
+          schema: { type: PluginType.COMPONENT },
+        },
+        {
+          _id: unusedPluginId,
+          name: "unused-plugin",
+          version: "1.0.0",
+          hash: "hash_unused",
+          jsUrl: "/api/assets/plugins/plugin_unused/index.js",
+          schema: { type: PluginType.COMPONENT },
+        },
+      ]
       const globalDB = {
-        allDocs: jest.fn().mockResolvedValue({
-          rows: [
-            {
-              doc: {
-                _id: "plugin_active",
-                name: "active-plugin",
-                version: "1.0.0",
-                hash: "hash_active",
-                jsUrl: "/api/assets/plugins/plugin_active/index.js",
-                schema: { type: PluginType.COMPONENT },
-              },
-            },
-          ],
-        }),
+        allDocs: jest
+          .fn()
+          .mockImplementation(({ keys }: { keys?: string[] } = {}) => {
+            const rows = keys
+              ? globalPlugins
+                  .filter(p => keys.includes(p._id))
+                  .map(p => ({ id: p._id, doc: p }))
+              : globalPlugins.map(p => ({ id: p._id, doc: p }))
+            return Promise.resolve({ rows })
+          }),
       }
       ;(tenancy.getGlobalDB as jest.Mock).mockReturnValue(globalDB)
 
@@ -231,18 +273,18 @@ describe("usedPlugins", () => {
         _id: DocumentType.WORKSPACE_METADATA,
         usedPlugins: [
           {
-            _id: "plugin_active",
+            _id: activePluginId,
             name: "active-plugin",
             version: "1.0.0",
             hash: "hash_active",
             jsUrl: "/api/assets/plugins/plugin_active/index.js",
           } as Plugin,
           {
-            _id: "plugin_deleted",
-            name: "deleted-plugin",
+            _id: unusedPluginId,
+            name: "unused-plugin",
             version: "1.0.0",
-            hash: "hash_deleted",
-            jsUrl: "/api/assets/plugins/plugin_deleted/index.js",
+            hash: "hash_unused",
+            jsUrl: "/api/assets/plugins/plugin_unused/index.js",
           } as Plugin,
         ],
       } as any
@@ -263,7 +305,7 @@ describe("usedPlugins", () => {
         expect.objectContaining({
           usedPlugins: [
             expect.objectContaining({
-              _id: "plugin_active",
+              _id: activePluginId,
               name: "active-plugin",
             }),
           ],
@@ -275,12 +317,14 @@ describe("usedPlugins", () => {
     })
 
     it("returns false and does not write if usedPlugins is already up to date", async () => {
+      const activePluginId = dbCore.generatePluginID("active-plugin")
+
       const globalDB = {
         allDocs: jest.fn().mockResolvedValue({
           rows: [
             {
               doc: {
-                _id: "plugin_active",
+                _id: activePluginId,
                 name: "active-plugin",
                 version: "1.0.0",
                 hash: "hash_active",
@@ -307,7 +351,7 @@ describe("usedPlugins", () => {
         _id: DocumentType.WORKSPACE_METADATA,
         usedPlugins: [
           {
-            _id: "plugin_active",
+            _id: activePluginId,
             name: "active-plugin",
             version: "1.0.0",
             hash: "hash_active",
@@ -333,13 +377,55 @@ describe("usedPlugins", () => {
     })
   })
 
-  describe("enrichUsedPluginSvelteMajors", () => {
+  describe("filterExistingUsedPlugins", () => {
     it("returns empty array for empty input", async () => {
-      expect(await enrichUsedPluginSvelteMajors([])).toEqual([])
-      expect(await enrichUsedPluginSvelteMajors(undefined)).toEqual([])
+      expect(await filterExistingUsedPlugins([])).toEqual([])
+      expect(await filterExistingUsedPlugins(undefined)).toEqual([])
     })
 
-    it("filters out missing or deleted plugins and enriches existing ones", async () => {
+    it("filters out missing or deleted plugins", async () => {
+      const globalDB = {
+        allDocs: jest.fn().mockResolvedValue({
+          rows: [
+            {
+              id: "plugin_valid",
+            },
+            {
+              id: "plugin_missing",
+              error: "not_found",
+            },
+          ],
+        }),
+      }
+      ;(tenancy.getGlobalDB as jest.Mock).mockReturnValue(globalDB)
+
+      const usedPlugins: Plugin[] = [
+        {
+          _id: "plugin_valid",
+          name: "valid-plugin",
+          version: "1.0.0",
+        } as Plugin,
+        {
+          _id: "plugin_missing",
+          name: "missing-plugin",
+          version: "1.0.0",
+        } as Plugin,
+      ]
+
+      const result = await filterExistingUsedPlugins(usedPlugins)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]._id).toBe("plugin_valid")
+    })
+  })
+
+  describe("enrichUsedPluginsWithSvelteMajor", () => {
+    it("returns empty array for empty input", async () => {
+      expect(await enrichUsedPluginsWithSvelteMajor([])).toEqual([])
+      expect(await enrichUsedPluginsWithSvelteMajor(undefined)).toEqual([])
+    })
+
+    it("enriches existing plugins with svelteMajor", async () => {
       const globalDB = {
         allDocs: jest.fn().mockResolvedValue({
           rows: [
@@ -355,12 +441,56 @@ describe("usedPlugins", () => {
                 },
               },
             },
-            {
-              id: "plugin_deleted",
-              error: "not_found",
-            },
           ],
         }),
+      }
+      ;(tenancy.getGlobalDB as jest.Mock).mockReturnValue(globalDB)
+
+      const usedPlugins: Plugin[] = [
+        {
+          _id: "plugin_valid",
+          name: "valid-plugin",
+          version: "1.0.0",
+        } as Plugin,
+      ]
+
+      const result = await enrichUsedPluginsWithSvelteMajor(usedPlugins)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]._id).toBe("plugin_valid")
+      expect(result[0].schema?.metadata?.svelteMajor).toBe(5)
+    })
+  })
+
+  describe("enrichUsedPluginSvelteMajors", () => {
+    it("filters out missing plugins and enriches surviving plugins", async () => {
+      const globalDB = {
+        allDocs: jest
+          .fn()
+          .mockImplementation(
+            ({ include_docs }: { include_docs?: boolean } = {}) => {
+              if (!include_docs) {
+                return Promise.resolve({
+                  rows: [
+                    { id: "plugin_valid" },
+                    { id: "plugin_deleted", error: "not_found" },
+                  ],
+                })
+              }
+              return Promise.resolve({
+                rows: [
+                  {
+                    id: "plugin_valid",
+                    doc: {
+                      _id: "plugin_valid",
+                      name: "valid-plugin",
+                      schema: { metadata: { svelteMajor: 5 } },
+                    },
+                  },
+                ],
+              })
+            }
+          ),
       }
       ;(tenancy.getGlobalDB as jest.Mock).mockReturnValue(globalDB)
 

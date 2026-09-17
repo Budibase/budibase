@@ -41,7 +41,7 @@ export async function save(
     ? await sdk.screens.create(screen)
     : await sdk.screens.update(screen)
 
-  const pluginAdded = await sdk.plugins.usedPlugins.addUsedPluginsForScreen(
+  const pluginAdded = await sdk.plugins.addUsedPluginsForScreen(
     screen.props,
     ctx.appId
   )

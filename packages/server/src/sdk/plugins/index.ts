@@ -152,6 +152,4 @@ export async function processUploaded(plugin: KoaFile, source: PluginSource) {
   }
 }
 
-export { enrichUsedPluginSvelteMajors } from "./usedPlugins"
-export * as usedPlugins from "./usedPlugins"
 export * from "./usedPlugins"

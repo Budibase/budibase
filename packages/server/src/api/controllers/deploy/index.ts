@@ -468,7 +468,7 @@ export const publishWorkspaceInternal = async (
         }
 
         await clearPendingColumnRenames(devId)
-        await sdk.plugins.usedPlugins.reconcileWorkspaceUsedPlugins(devId)
+        await sdk.plugins.reconcileWorkspaceUsedPlugins(devId)
 
         const db = context.getProdWorkspaceDB()
         const appDoc = await sdk.workspaces.metadata.tryGet({
@@ -537,6 +537,7 @@ export const publishWorkspaceInternal = async (
         }
         delete appDoc.automationErrors
         await db.put(appDoc)
+        await sdk.plugins.reconcileWorkspaceUsedPlugins(prodId)
         await cache.workspace.invalidateWorkspaceMetadata(prodId)
         await initDeployedApp(prodId)
 

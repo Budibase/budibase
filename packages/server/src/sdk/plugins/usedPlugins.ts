@@ -1,6 +1,7 @@
 import {
   Plugin,
   PluginType,
+  RowValue,
   Screen,
   ScreenProps,
   Workspace,
@@ -29,60 +30,49 @@ export function findPluginsInProps(
   return foundPlugins
 }
 
-export function areUsedPluginsEqual(
+export function areUsedPluginReferencesEqual(
   current: Plugin[] = [],
   next: Plugin[] = []
 ): boolean {
   if (current.length !== next.length) {
     return false
   }
-
-  const currentSorted = [...current].sort((a, b) =>
-    (a._id || "").localeCompare(b._id || "")
-  )
-  const nextSorted = [...next].sort((a, b) =>
-    (a._id || "").localeCompare(b._id || "")
-  )
-
-  for (let i = 0; i < currentSorted.length; i++) {
-    const a = currentSorted[i]
-    const b = nextSorted[i]
-    if (
-      a._id !== b._id ||
-      a.name !== b.name ||
-      a.version !== b.version ||
-      a.hash !== b.hash ||
-      a.jsUrl !== b.jsUrl
-    ) {
-      return false
-    }
-  }
-
-  return true
+  const nextById = new Map(next.map(plugin => [plugin._id, plugin]))
+  return current.every(plugin => {
+    const nextPlugin = nextById.get(plugin._id)
+    return Boolean(
+      nextPlugin &&
+        nextPlugin.hash === plugin.hash &&
+        nextPlugin.jsUrl === plugin.jsUrl
+    )
+  })
 }
 
 export async function addUsedPluginsForScreen(
   props: ScreenProps,
   workspaceId: string
 ): Promise<boolean> {
-  const pluginNames = Array.from(findPluginsInProps(props))
-  if (!pluginNames.length) {
+  const pluginComponentIds = findPluginsInProps(props)
+  if (!pluginComponentIds.size) {
     return false
   }
 
+  const pluginIds = Array.from(pluginComponentIds, componentId => {
+    const pluginName = componentId.slice("plugin/".length)
+    return dbCore.generatePluginID(pluginName)
+  })
+
   return context.doInWorkspaceContext(workspaceId, async () => {
     const globalDB = tenancy.getGlobalDB()
-    const pluginsResponse = await globalDB.allDocs(
-      dbCore.getPluginParams(null, {
-        include_docs: true,
-      })
-    )
+    const pluginsResponse = await globalDB.allDocs<Plugin>({
+      keys: pluginIds,
+      include_docs: true,
+    })
     const requiredPlugins = pluginsResponse.rows
-      .map((row: any) => row.doc)
+      .map(row => row.doc)
       .filter(
-        (plugin: Plugin) =>
-          plugin?.schema?.type === PluginType.COMPONENT &&
-          pluginNames.includes(`plugin/${plugin.name}`)
+        (plugin?: Plugin): plugin is Plugin =>
+          plugin?.schema?.type === PluginType.COMPONENT
       )
 
     const db = context.getWorkspaceDB()
@@ -90,8 +80,8 @@ export async function addUsedPluginsForScreen(
     const usedPlugins = application.usedPlugins || []
     let pluginAdded = false
 
-    requiredPlugins.forEach((plugin: Plugin) => {
-      const existing = usedPlugins.find((x: Plugin) => x._id === plugin._id)
+    requiredPlugins.forEach(plugin => {
+      const existing = usedPlugins.find(x => x._id === plugin._id)
       if (!existing) {
         pluginAdded = true
         usedPlugins.push({
@@ -132,34 +122,37 @@ export async function reconcileWorkspaceUsedPlugins(
       getScreenParams(null, { include_docs: true })
     )
     const screens = screensResponse.rows.map(row => row.doc!).filter(Boolean)
-    const usedPluginNames = new Set<string>()
+    const usedPluginComponentIds = new Set<string>()
 
     for (const screen of screens) {
-      findPluginsInProps(screen.props, usedPluginNames)
+      findPluginsInProps(screen.props, usedPluginComponentIds)
     }
 
     const application = await db.get<Workspace>(DocumentType.WORKSPACE_METADATA)
     const currentUsedPlugins: Plugin[] = application.usedPlugins || []
 
     let nextUsedPlugins: Plugin[] = []
-    if (usedPluginNames.size > 0) {
+    if (usedPluginComponentIds.size > 0) {
+      const pluginIds = Array.from(usedPluginComponentIds, componentId => {
+        const pluginName = componentId.slice("plugin/".length)
+        return dbCore.generatePluginID(pluginName)
+      })
+
       const globalDB = tenancy.getGlobalDB()
-      const pluginsResponse = await globalDB.allDocs(
-        dbCore.getPluginParams(null, {
-          include_docs: true,
-        })
-      )
+      const pluginsResponse = await globalDB.allDocs<Plugin>({
+        keys: pluginIds,
+        include_docs: true,
+      })
 
       const globalPlugins = pluginsResponse.rows
-        .map((row: any) => row.doc)
+        .map(row => row.doc)
         .filter(
-          (plugin: Plugin) =>
-            plugin?.schema?.type === PluginType.COMPONENT &&
-            usedPluginNames.has(`plugin/${plugin.name}`)
+          (plugin?: Plugin): plugin is Plugin =>
+            plugin?.schema?.type === PluginType.COMPONENT
         )
 
       nextUsedPlugins = globalPlugins.map(
-        (plugin: Plugin) =>
+        plugin =>
           ({
             _id: plugin._id,
             name: plugin.name,
@@ -170,7 +163,7 @@ export async function reconcileWorkspaceUsedPlugins(
       )
     }
 
-    if (!areUsedPluginsEqual(currentUsedPlugins, nextUsedPlugins)) {
+    if (!areUsedPluginReferencesEqual(currentUsedPlugins, nextUsedPlugins)) {
       application.usedPlugins = nextUsedPlugins
       await db.put(application)
       await cache.workspace.invalidateWorkspaceMetadata(workspaceId)
@@ -181,7 +174,45 @@ export async function reconcileWorkspaceUsedPlugins(
   })
 }
 
-export const enrichUsedPluginSvelteMajors = async (
+export const filterExistingUsedPlugins = async (
+  usedPlugins?: Plugin[]
+): Promise<Plugin[]> => {
+  if (!usedPlugins?.length) {
+    return []
+  }
+
+  const pluginIds = usedPlugins
+    .map(plugin => plugin?._id)
+    .filter((id): id is string => typeof id === "string" && id.length > 0)
+
+  if (!pluginIds.length) {
+    return usedPlugins
+  }
+
+  try {
+    const globalDB = tenancy.getGlobalDB()
+    const response = await globalDB.allDocs<RowValue>({
+      keys: pluginIds,
+      include_docs: false,
+    })
+
+    const existingPluginIds = new Set<string>()
+    for (const row of response?.rows || []) {
+      if (row?.id && !row.error && !row.value?.deleted) {
+        existingPluginIds.add(row.id)
+      }
+    }
+
+    return usedPlugins.filter(
+      plugin =>
+        typeof plugin._id === "string" && existingPluginIds.has(plugin._id)
+    )
+  } catch {
+    return usedPlugins
+  }
+}
+
+export const enrichUsedPluginsWithSvelteMajor = async (
   usedPlugins?: Plugin[]
 ): Promise<Plugin[]> => {
   if (!usedPlugins?.length) {
@@ -204,10 +235,8 @@ export const enrichUsedPluginSvelteMajors = async (
     })
 
     const svelteMajorById = new Map<string, number>()
-    const existingPluginIds = new Set<string>()
     for (const row of response?.rows || []) {
       if (row?.doc && typeof row?.id === "string") {
-        existingPluginIds.add(row.id)
         const svelteMajor = row.doc.schema?.metadata?.svelteMajor
         if (typeof svelteMajor === "number") {
           svelteMajorById.set(row.id, svelteMajor)
@@ -215,29 +244,34 @@ export const enrichUsedPluginSvelteMajors = async (
       }
     }
 
-    return usedPlugins
-      .filter(plugin => existingPluginIds.has(plugin._id!))
-      .map(plugin => {
-        const svelteMajor = svelteMajorById.get(plugin._id!)
-        if (typeof svelteMajor !== "number") {
-          return plugin
-        }
+    return usedPlugins.map(plugin => {
+      const svelteMajor = svelteMajorById.get(plugin._id!)
+      if (typeof svelteMajor !== "number") {
+        return plugin
+      }
 
-        const schema = (plugin.schema || {}) as Plugin["schema"]
-        const metadata = schema?.metadata || {}
+      const schema = (plugin.schema || {}) as Plugin["schema"]
+      const metadata = schema?.metadata || {}
 
-        return {
-          ...plugin,
-          schema: {
-            ...schema,
-            metadata: {
-              ...metadata,
-              svelteMajor,
-            },
+      return {
+        ...plugin,
+        schema: {
+          ...schema,
+          metadata: {
+            ...metadata,
+            svelteMajor,
           },
-        }
-      })
-  } catch (err) {
+        },
+      }
+    })
+  } catch {
     return usedPlugins
   }
+}
+
+export const enrichUsedPluginSvelteMajors = async (
+  usedPlugins?: Plugin[]
+): Promise<Plugin[]> => {
+  const existingPlugins = await filterExistingUsedPlugins(usedPlugins)
+  return enrichUsedPluginsWithSvelteMajor(existingPlugins)
 }

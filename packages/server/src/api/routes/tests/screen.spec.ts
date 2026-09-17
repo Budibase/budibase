@@ -432,7 +432,7 @@ describe("/screens", () => {
         createPluginScreen("/plugin-screen-1")
       )
       const screen2 = await config.api.screen.save(
-        basicScreen("/plugin-screen-2")
+        createPluginScreen("/plugin-screen-2")
       )
 
       await config.publish()
@@ -459,9 +459,9 @@ describe("/screens", () => {
       })
     })
 
-    it("should filter out deleted plugins in enrichUsedPluginSvelteMajors", async () => {
+    it("should filter out missing plugin references in filterExistingUsedPlugins", async () => {
       await config.doInTenant(async () => {
-        const enriched = await sdk.plugins.enrichUsedPluginSvelteMajors([
+        const filtered = await sdk.plugins.filterExistingUsedPlugins([
           pluginDoc,
           {
             _id: "plg_nonexistent",
@@ -477,8 +477,8 @@ describe("/screens", () => {
           },
         ])
 
-        expect(enriched.length).toEqual(1)
-        expect(enriched[0]._id).toEqual("plg_custom-component")
+        expect(filtered.length).toEqual(1)
+        expect(filtered[0]._id).toEqual("plg_custom-component")
       })
     })
   })
