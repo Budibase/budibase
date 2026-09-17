@@ -48,12 +48,11 @@ class DeploymentStore extends DerivedBudiStore<
           const deployments = $store.deployments.filter(
             x => x.status === DeploymentStatus.SUCCESS
           )
-          const isPublished =
-            app?.status === "published" && !!deployments.length
+          const isPublished = app?.status === "published"
 
           // Generate last published string
           let lastPublished = undefined
-          if (isPublished) {
+          if (isPublished && deployments.length > 0) {
             lastPublished = processStringSync(
               `Your apps and automations were last published {{ duration time 'millisecond' }} ago`,
               {
