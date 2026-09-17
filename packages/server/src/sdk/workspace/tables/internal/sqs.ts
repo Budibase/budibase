@@ -179,6 +179,23 @@ export async function withDefinitionRebuildLock<T>(
   return result
 }
 
+export async function withDefinitionRebuildLocks<T>(
+  workspaceIds: string[],
+  fn: () => Promise<T>
+): Promise<T> {
+  const lockIds = [...new Set(workspaceIds)].sort()
+  const runWithLock = (index: number): Promise<T> => {
+    if (index === lockIds.length) {
+      return fn()
+    }
+    return withDefinitionRebuildLock(
+      () => runWithLock(index + 1),
+      lockIds[index]
+    )
+  }
+  return runWithLock(0)
+}
+
 const DEFINITION_REBUILD_MAX_WAIT_MS = 10000
 const DEFINITION_REBUILD_POLL_INTERVAL_MS = 500
 

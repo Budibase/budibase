@@ -446,7 +446,8 @@ export const publishWorkspaceInternal = async (
         await replication.resolveInconsistencies(devTablesIds)
 
         await devDb.compact()
-        await sdk.tables.sqs.withDefinitionRebuildLock(
+        await sdk.tables.sqs.withDefinitionRebuildLocks(
+          [devId, prodId],
           () =>
             replication!.replicate(
               replication!.appReplicateOpts({
@@ -457,7 +458,6 @@ export const publishWorkspaceInternal = async (
                 filter: tableFilter,
               })
             ),
-          prodId
         )
 
         const updatedProdTables =

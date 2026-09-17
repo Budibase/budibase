@@ -97,4 +97,19 @@ describe("sqs definition conflicts", () => {
       expect.any(Function)
     )
   })
+
+  it("acquires multiple definition locks in a stable order", async () => {
+    const doWithLock = locks.doWithLock as jest.Mock
+    doWithLock.mockClear()
+    const workspaceIds = [
+      config.getProdWorkspaceId(),
+      config.getDevWorkspaceId(),
+    ]
+
+    await sdk.tables.sqs.withDefinitionRebuildLocks(workspaceIds, async () => {})
+
+    expect(
+      doWithLock.mock.calls.map(([opts]) => opts.resource)
+    ).toEqual([...workspaceIds].sort())
+  })
 })
