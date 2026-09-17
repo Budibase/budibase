@@ -1,7 +1,11 @@
 import { type Writable, get, type Readable, derived } from "svelte/store"
 import { API } from "@/api"
 import { notifications } from "@budibase/bbui"
-import { DeploymentProgressResponse, DeploymentStatus } from "@budibase/types"
+import {
+  DeploymentProgressResponse,
+  DeploymentStatus,
+  MAX_DEPLOYMENT_HISTORY,
+} from "@budibase/types"
 import analytics, { Events, EventSource } from "@/analytics"
 import { workspacesStore } from "@/stores/portal/workspaces"
 import { DerivedBudiStore } from "@/stores/BudiStore"
@@ -13,8 +17,6 @@ import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
 import { automationStore } from "./automations"
 import { workspaceAppStore } from "./workspaceApps"
 import { agentsStore } from "@/stores/portal/agents"
-
-const DEPLOYMENT_PAGE_SIZE = 20
 
 interface DeploymentState {
   deployments: DeploymentProgressResponse[]
@@ -85,8 +87,10 @@ class DeploymentStore extends DerivedBudiStore<
 
   async load() {
     try {
+      // isPublished needs to see any successful deployment, so read the whole
+      // bounded history - a later page cannot hold one the server has kept
       const { data } = await API.getAppDeployments({
-        limit: DEPLOYMENT_PAGE_SIZE,
+        limit: MAX_DEPLOYMENT_HISTORY,
       })
       this.update(state => ({
         ...state,

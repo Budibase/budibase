@@ -20,6 +20,7 @@ import {
   FormulaType,
   LockName,
   LockType,
+  MAX_DEPLOYMENT_HISTORY,
   PublishStatusResponse,
   PublishTableRequest,
   PublishTableResponse,
@@ -51,9 +52,8 @@ import { updateAllFormulasInTable } from "../row/staticFormula"
 const MAX_PENDING_TIME_MS = 30 * 60000
 
 // the deployment doc is a single document rewritten in full on every publish -
-// these bounds stop it growing without limit, which slows every publish down
-// and eventually breaches CouchDB's max_document_size
-export const MAX_DEPLOYMENT_HISTORY = 50
+// MAX_DEPLOYMENT_HISTORY and this bound stop it growing without limit, which
+// slows every publish down and eventually breaches CouchDB's max_document_size
 const MAX_DEPLOYMENT_ERROR_LENGTH = 1000
 
 const DEFAULT_PAGE_SIZE = 20
