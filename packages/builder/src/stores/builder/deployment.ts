@@ -1,10 +1,7 @@
 import { type Writable, get, type Readable, derived } from "svelte/store"
 import { API } from "@/api"
 import { notifications } from "@budibase/bbui"
-import {
-  DeploymentProgressResponse,
-  DeploymentStatus,
-} from "@budibase/types"
+import { DeploymentProgressResponse, DeploymentStatus } from "@budibase/types"
 import analytics, { Events, EventSource } from "@/analytics"
 import { workspacesStore } from "@/stores/portal/workspaces"
 import { DerivedBudiStore } from "@/stores/BudiStore"
