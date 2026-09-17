@@ -123,8 +123,9 @@ jobs:
                 --repo Budibase/budibase \
                 --required \
                 --json name \
-                --jq 'length' 2>/dev/null || echo 0
+                --jq 'length' 2>/dev/null || true
             )
+            required_check_count=${required_check_count:-0}
 
             if (( required_check_count > 0 )); then
               checks_detected=true
