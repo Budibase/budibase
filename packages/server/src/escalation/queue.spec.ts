@@ -740,23 +740,34 @@ describe("processNotify", () => {
       config: { channelId: "C1" },
     })
     sendTeamsMock.mockResolvedValue(false)
-    let press: Promise<unknown> | undefined
+    let notifDoc: EscalationNotificationDoc | undefined
     sendSlackMock.mockImplementation(
-      async ({ notifDoc }: { notifDoc: EscalationNotificationDoc }) => {
-        press = config.doInContext(config.getProdWorkspaceId(), () =>
-          sdk.escalations.respond(
-            escalationId,
-            notifDoc._id!,
-            { actionId: "esc_approve", user: { userId: "U1" } },
-            jest.fn()
-          )
-        )
+      async ({ notifDoc: sent }: { notifDoc: EscalationNotificationDoc }) => {
+        notifDoc = sent
         return true
       }
     )
+    let press: Promise<unknown> | undefined
+    const withLock = sdk.escalations.withEscalationLock
+    const lockSpy = jest
+      .spyOn(sdk.escalations, "withEscalationLock")
+      .mockImplementationOnce((id, task) =>
+        withLock(id, async () => {
+          press = config.doInContext(config.getProdWorkspaceId(), () =>
+            sdk.escalations.respond(
+              escalationId,
+              notifDoc!._id!,
+              { actionId: "esc_approve", user: { userId: "U1" } },
+              jest.fn()
+            )
+          )
+          return task()
+        })
+      )
 
     await runNotify(escalationId)
     await press
+    lockSpy.mockRestore()
 
     const doc = await getNotification(escalationId)
     expect(doc.status).toEqual("sent")
