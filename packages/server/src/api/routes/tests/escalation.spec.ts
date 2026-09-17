@@ -10,6 +10,10 @@ import { escalationProcessor } from "../../../escalation/processor"
 import sdk from "../../../sdk"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 
+jest.mock("../../../sdk/workspace/escalations", () => ({
+  ...jest.requireActual("../../../sdk/workspace/escalations"),
+}))
+
 describe("/api/escalations", () => {
   const config = new TestConfiguration()
 
@@ -70,15 +74,28 @@ describe("/api/escalations", () => {
       )
       await acquired
 
+      let requestReachedLock: () => void = () => {}
+      const reachedLock = new Promise<void>(
+        resolve => (requestReachedLock = resolve)
+      )
+      const withLock = sdk.escalations.withEscalationLock
+      const lockSpy = jest
+        .spyOn(sdk.escalations, "withEscalationLock")
+        .mockImplementationOnce((id, task) => {
+          requestReachedLock()
+          return withLock(id, task)
+        })
       const request = config.api.escalation.resolve(escalationId, {
         accepted: true,
         actionId: EscalationAction.APPROVE,
       })
+      await reachedLock
       await config.doInContext(config.getDevWorkspaceId(), () =>
         escalationProcessor.cancel(escalationId)
       )
       releaseLock()
       await holding
+      lockSpy.mockRestore()
 
       const result = await request
       expect(result.status).toEqual("closed")
