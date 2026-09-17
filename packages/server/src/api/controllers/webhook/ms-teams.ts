@@ -609,7 +609,7 @@ export async function MSTeamsWebhook(
                   })
                 } catch (error) {
                   console.warn(
-                    "Teams escalation action: failed to post reply",
+                    "Teams escalation action: failed to post link note",
                     {
                       escalationId,
                       message:
@@ -625,7 +625,7 @@ export async function MSTeamsWebhook(
             try {
               await event.thread.post(escalationReplyText(result.status))
             } catch (error) {
-              console.warn("Teams escalation action: failed to post reply", {
+              console.warn("Teams escalation action: failed to post status", {
                 escalationId,
                 message: error instanceof Error ? error.message : String(error),
               })
