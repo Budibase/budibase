@@ -253,8 +253,11 @@ export async function syncDefinition(
   await pruneConflicts(db)
 }
 
-export async function addTable(table: Table) {
-  await withDefinitionRebuildLock(async () => {
+export async function addTable(
+  table: Table,
+  opts?: { skipDefinitionRebuildLock?: boolean }
+) {
+  const addTableToDefinition = async () => {
     const db = context.getWorkspaceDB()
     let definition: PreSaveSQLiteDefinition | SQLiteDefinition
     try {
@@ -268,7 +271,13 @@ export async function addTable(table: Table) {
       ...mapTable(table),
     }
     await db.put(definition)
-  })
+  }
+
+  if (opts?.skipDefinitionRebuildLock) {
+    await addTableToDefinition()
+  } else {
+    await withDefinitionRebuildLock(addTableToDefinition)
+  }
 }
 
 export async function removeTable(table: Table) {

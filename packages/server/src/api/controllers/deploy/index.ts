@@ -201,7 +201,9 @@ async function applyPendingColumnRenames(
           delete tableToUpdate.schema[rename.old]
         }
 
-        await sdk.tables.update(tableToUpdate, rename)
+        await sdk.tables.update(tableToUpdate, rename, {
+          skipDefinitionRebuildLock: true,
+        })
         table = await sdk.tables.getTable(table._id!)
       }
 
