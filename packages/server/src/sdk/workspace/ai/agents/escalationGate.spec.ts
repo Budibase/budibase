@@ -202,6 +202,23 @@ describe("policy snapshot", () => {
     expect(createInput().policy).not.toHaveProperty("notifications")
   })
 
+  it("drops duplicate approvers from the frozen policy", async () => {
+    const policy: AgentOperationApprovalPolicy = {
+      id: "policy_1",
+      name: "Manager approval",
+      approvers: ["us_1", "us_2", "us_1"],
+      approvalType: ResolutionStrategy.UNANIMOUS,
+      notifications: { recipients },
+    }
+
+    await gateFor(policy).intercept(
+      { title: "Planning" },
+      { toolCallId: "call_1" }
+    )
+
+    expect(createInput().policy?.approvers).toEqual(["us_1", "us_2"])
+  })
+
   it.each([
     [
       "unanimous with approvers",

@@ -213,6 +213,9 @@ export const createEscalationGateRuntime = ({
       return unavailableResult(label)
     }
     const { notifications, ...policySnapshot } = policy
+    if (policySnapshot.approvers) {
+      policySnapshot.approvers = Array.from(new Set(policySnapshot.approvers))
+    }
     const { recipients, delay } = notifications
 
     const frozenMessages = messages?.length
