@@ -7,6 +7,7 @@ import { workspacesStore } from "@/stores/portal/workspaces"
 import { DerivedBudiStore } from "@/stores/BudiStore"
 import { workspaceStore } from "./workspace"
 import { processStringSync } from "@budibase/string-templates"
+import { getErrorMessage } from "@/helpers/errors"
 import { selectedAppUrls } from "./appUrls"
 import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
 import { automationStore } from "./automations"
@@ -104,8 +105,9 @@ class DeploymentStore extends DerivedBudiStore<
     } catch (error: any) {
       if (error?.status === 429) {
         notifications.warning(
-          error.message || "A publish is already in progress"
+          getErrorMessage(error) || "A publish is already in progress"
         )
+        throw error
       } else {
         analytics.captureException(error)
         const message = error?.message ? ` - ${error.message}` : ""
