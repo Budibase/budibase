@@ -721,7 +721,7 @@ describe("search", () => {
     const sqlMock = jest.fn(async (query: string) => {
       sqlCallsInsideLock.push(insideLock)
       sqlQueries.push(query)
-      if (query.toLowerCase().includes("count")) {
+      if (query.toLowerCase().includes("count(")) {
         return [{ [sql.COUNT_FIELD_NAME]: 1 }]
       }
       return [
@@ -773,7 +773,7 @@ describe("search", () => {
     expect(response.totalRows).toBe(1)
     expect(sqlCallsInsideLock).toEqual([false, false])
     expect(
-      sqlQueries.filter(query => query.toLowerCase().includes("count"))
+      sqlQueries.filter(query => query.toLowerCase().includes("count("))
     ).toHaveLength(1)
   })
 

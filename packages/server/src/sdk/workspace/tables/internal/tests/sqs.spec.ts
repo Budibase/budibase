@@ -81,8 +81,24 @@ describe("sqs definition conflicts", () => {
 
   it("updates definitions under the rebuild lock", async () => {
     const table = basicTable()
+    const db = dbCore.getDB(config.getDevWorkspaceId())
     const doWithLock = locks.doWithLock as jest.Mock
+    const originalPut = db.put.bind(db)
+    let lockHeld = false
+
     doWithLock.mockClear()
+    doWithLock.mockImplementation(async (_opts, task) => {
+      lockHeld = true
+      try {
+        return { executed: true, result: await task() }
+      } finally {
+        lockHeld = false
+      }
+    })
+    jest.spyOn(db, "put").mockImplementation(async (...args) => {
+      expect(lockHeld).toBe(true)
+      return originalPut(...args)
+    })
 
     await config.doInContext(config.getDevWorkspaceId(), () =>
       sdk.tables.sqs.addTable(table)
