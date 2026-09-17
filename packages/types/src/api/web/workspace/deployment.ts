@@ -31,15 +31,4 @@ export interface PublishStatusResponse {
 
 export interface DeploymentProgressResponse extends DeploymentHistoryEntry {}
 
-export interface FetchDeploymentRequest {
-  page?: string
-  limit?: string
-}
-
-export interface FetchDeploymentResponse {
-  data: DeploymentProgressResponse[]
-  page: number
-  limit: number
-  totalRows: number
-  hasNextPage: boolean
-}
+export type FetchDeploymentResponse = DeploymentProgressResponse[]

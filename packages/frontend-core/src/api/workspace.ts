@@ -45,10 +45,7 @@ export interface AppEndpoints {
     workspaceId: string
   ) => Promise<RevertAppClientResponse>
   releaseAppLock: (workspaceId: string) => Promise<ClearDevLockResponse>
-  getAppDeployments: (opts?: {
-    page?: number
-    limit?: number
-  }) => Promise<FetchDeploymentResponse>
+  getAppDeployments: () => Promise<FetchDeploymentResponse>
   createApp: (
     workspace: CreateWorkspaceRequest | FormData
   ) => Promise<CreateWorkspaceResponse>
@@ -142,17 +139,9 @@ export const buildAppEndpoints = (API: BaseAPIClient): AppEndpoints => ({
   /**
    * Gets a list of workspace deployments.
    */
-  getAppDeployments: async opts => {
-    const params = new URLSearchParams()
-    if (opts?.page !== undefined) {
-      params.set("page", String(opts.page))
-    }
-    if (opts?.limit !== undefined) {
-      params.set("limit", String(opts.limit))
-    }
-    const query = params.toString()
+  getAppDeployments: async () => {
     return await API.get({
-      url: `/api/deployments${query ? `?${query}` : ""}`,
+      url: "/api/deployments",
     })
   },
 

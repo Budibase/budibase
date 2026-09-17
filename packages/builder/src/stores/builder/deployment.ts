@@ -4,7 +4,6 @@ import { notifications } from "@budibase/bbui"
 import {
   DeploymentProgressResponse,
   DeploymentStatus,
-  MAX_DEPLOYMENT_HISTORY,
 } from "@budibase/types"
 import analytics, { Events, EventSource } from "@/analytics"
 import { workspacesStore } from "@/stores/portal/workspaces"
@@ -86,14 +85,10 @@ class DeploymentStore extends DerivedBudiStore<
 
   async load() {
     try {
-      // isPublished needs to see any successful deployment, so read the whole
-      // bounded history - a later page cannot hold one the server has kept
-      const { data } = await API.getAppDeployments({
-        limit: MAX_DEPLOYMENT_HISTORY,
-      })
+      const deployments = await API.getAppDeployments()
       this.update(state => ({
         ...state,
-        deployments: data,
+        deployments,
       }))
     } catch (err) {
       notifications.error("Error fetching deployments")

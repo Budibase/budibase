@@ -1090,52 +1090,19 @@ describe("/api/deploy", () => {
     })
 
     describe("GET /api/deployments", () => {
-      it("returns an empty page when there is no history", async () => {
+      it("returns an empty array when there is no history", async () => {
         await writeHistory({})
         const res = await config.api.deploy.fetchDeployments()
-        expect(res).toEqual({
-          data: [],
-          page: 1,
-          limit: 20,
-          totalRows: 0,
-          hasNextPage: false,
-        })
+        expect(res).toEqual([])
       })
 
-      it("returns deployments newest first, one page at a time", async () => {
+      it("returns deployments newest first", async () => {
         await seedHistory(30)
 
-        const first = await config.api.deploy.fetchDeployments({ limit: 10 })
-        expect(first.data.length).toBe(10)
-        expect(first.totalRows).toBe(30)
-        expect(first.hasNextPage).toBe(true)
-        expect(first.data[0]._id).toBe("seeded-0029")
-        expect(first.data[9]._id).toBe("seeded-0020")
-
-        const second = await config.api.deploy.fetchDeployments({
-          page: 2,
-          limit: 10,
-        })
-        expect(second.data[0]._id).toBe("seeded-0019")
-        expect(second.hasNextPage).toBe(true)
-
-        const third = await config.api.deploy.fetchDeployments({
-          page: 3,
-          limit: 10,
-        })
-        expect(third.data[9]._id).toBe("seeded-0000")
-        expect(third.hasNextPage).toBe(false)
-      })
-
-      it("returns an empty page past the end of the history", async () => {
-        await seedHistory(5)
-        const res = await config.api.deploy.fetchDeployments({
-          page: 4,
-          limit: 2,
-        })
-        expect(res.data).toEqual([])
-        expect(res.totalRows).toBe(5)
-        expect(res.hasNextPage).toBe(false)
+        const deployments = await config.api.deploy.fetchDeployments()
+        expect(deployments).toHaveLength(30)
+        expect(deployments[0]._id).toBe("seeded-0029")
+        expect(deployments[29]._id).toBe("seeded-0000")
       })
 
       it("marks stuck pending deployments as failed", async () => {
@@ -1149,31 +1116,13 @@ describe("/api/deploy", () => {
         })
 
         const res = await config.api.deploy.fetchDeployments()
-        expect(res.data[0]).toEqual(
+        expect(res[0]).toEqual(
           expect.objectContaining({
             _id: "stuck",
             status: DeploymentStatus.FAILURE,
             err: "Timed out",
           })
         )
-      })
-
-      it.each([
-        ["page", { page: 0 }],
-        ["limit", { limit: 0 }],
-        ["limit", { limit: 101 }],
-      ])("rejects an invalid %s query", async (_name, opts) => {
-        await config.api.deploy.fetchDeployments(opts, { status: 400 })
-      })
-
-      it.each([
-        ["page", "page=1&page=2"],
-        ["limit", "limit=10&limit=20"],
-      ])("rejects a repeated %s query", async (name, query) => {
-        await config.api.deploy.fetchDeploymentsRawQuery(query, {
-          status: 400,
-          body: { message: `${name} query must be provided once` },
-        })
       })
     })
   })

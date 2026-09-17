@@ -55,9 +55,6 @@ const MAX_PENDING_TIME_MS = 30 * 60000
 // slows every publish down and eventually breaches CouchDB's max_document_size
 const MAX_DEPLOYMENT_ERROR_LENGTH = 1000
 
-const DEFAULT_PAGE_SIZE = 20
-const MAX_PAGE_SIZE = 100
-
 const byMostRecent = (a: DeploymentHistoryEntry, b: DeploymentHistoryEntry) =>
   (b.updatedAt ?? 0) - (a.updatedAt ?? 0)
 
@@ -323,41 +320,9 @@ async function syncStaticFormulasToProduction(prodWorkspaceId: string) {
   })
 }
 
-function parsePositiveIntQuery(
-  value: string | string[] | undefined,
-  name: string
-) {
-  // koa parses a repeated key into an array, which is never a valid page/limit
-  if (Array.isArray(value)) {
-    throw new errors.HTTPError(`${name} query must be provided once`, 400)
-  }
-  const normalized = value?.trim()
-  if (!normalized) {
-    return undefined
-  }
-  if (!/^\d+$/.test(normalized)) {
-    throw new errors.HTTPError(`Invalid ${name} query`, 400)
-  }
-  const parsed = Number.parseInt(normalized, 10)
-  if (parsed < 1) {
-    throw new errors.HTTPError(`${name} query must be greater than 0`, 400)
-  }
-  return parsed
-}
-
 export async function fetchDeployments(
   ctx: UserCtx<void, FetchDeploymentResponse>
 ) {
-  const page = parsePositiveIntQuery(ctx.query.page, "page") ?? 1
-  const limit =
-    parsePositiveIntQuery(ctx.query.limit, "limit") ?? DEFAULT_PAGE_SIZE
-  if (limit > MAX_PAGE_SIZE) {
-    throw new errors.HTTPError(
-      `limit query cannot exceed ${MAX_PAGE_SIZE}`,
-      400
-    )
-  }
-
   const db = context.getWorkspaceDB()
   const deploymentDoc = await db.tryGet<DeploymentDoc>(DocumentType.DEPLOYMENTS)
 
@@ -370,14 +335,7 @@ export async function fetchDeployments(
     history = Object.values(deployments.history ?? {}).sort(byMostRecent)
   }
 
-  const offset = (page - 1) * limit
-  ctx.body = {
-    data: history.slice(offset, offset + limit),
-    page,
-    limit,
-    totalRows: history.length,
-    hasNextPage: offset + limit < history.length,
-  }
+  ctx.body = history
 }
 
 export async function deploymentProgress(
