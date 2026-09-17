@@ -140,6 +140,37 @@ describe("secured AI tool execution", () => {
     expect(execute).not.toHaveBeenCalled()
   })
 
+  it("validates input before authorization and requester validation", async () => {
+    const execute = jest.fn()
+    const authorize = jest.fn()
+    const intercept = jest.fn()
+    const tools = toToolSet(
+      [definition(execute)],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize,
+          },
+        ],
+      ]),
+      new Map(),
+      new Map([["secured_tool", { intercept }]])
+    )
+
+    await expect(
+      tools.secured_tool.execute?.(
+        {},
+        { toolCallId: "call_1", messages: [], context: undefined }
+      )
+    ).rejects.toThrow()
+    expect(authorize).not.toHaveBeenCalled()
+    expect(intercept).not.toHaveBeenCalled()
+    expect(execute).not.toHaveBeenCalled()
+  })
+
   it("pauses after authorization when requester confirmation is required", async () => {
     const execute = jest.fn()
     const authorize = jest.fn().mockResolvedValue(undefined)

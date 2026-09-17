@@ -1,3 +1,5 @@
+import { validateTypes } from "@ai-sdk/provider-utils"
+import { type ModelMessage, type Tool, type ToolSet } from "ai"
 import { getErrorMessage } from "@budibase/backend-core"
 import {
   PermissionLevel,
@@ -9,7 +11,6 @@ import {
   type AgentOperationToolConfig,
   type ToolExecutionPolicy,
 } from "@budibase/types"
-import { type ModelMessage, type Tool, type ToolSet } from "ai"
 
 export interface ToolAuthorization {
   permissionType: PermissionType
@@ -127,19 +128,23 @@ const wrapTool = (
     input,
     options
   ) => {
+    const validatedInput = await validateTypes({
+      value: input,
+      schema: toolDef.tool.inputSchema,
+    })
     if (runtime) {
       if (!toolDef.authorization) {
         throw new Error("Tool is not available in this security context")
       }
       await runtime.authorize({
         authorization: toolDef.authorization,
-        input,
+        input: validatedInput,
         executionContext: runtime.executionContext,
         principal: runtime.principal,
       })
     }
     if (validation) {
-      const validationResult = await validation.intercept(input, {
+      const validationResult = await validation.intercept(validatedInput, {
         toolCallId: options?.toolCallId ?? "",
         messages: options?.messages,
       })
@@ -148,7 +153,7 @@ const wrapTool = (
       }
     }
     if (gate) {
-      const gateResult = await gate.intercept(input, {
+      const gateResult = await gate.intercept(validatedInput, {
         toolCallId: options?.toolCallId ?? "",
         messages: options?.messages,
       })
@@ -157,7 +162,7 @@ const wrapTool = (
       }
     }
     try {
-      const result = await execute(input, options)
+      const result = await execute(validatedInput, options)
       const failureMessage = getToolFailure(result)
       if (failureMessage) {
         throw new Error(failureMessage)

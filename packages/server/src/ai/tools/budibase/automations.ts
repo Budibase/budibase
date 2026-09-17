@@ -21,9 +21,56 @@ const TRIGGER_AUTOMATION_BASE_DESCRIPTION =
   "Trigger this automation (APP triggers only). Returns all step outputs."
 
 const DEFAULT_FIELDS_DESCRIPTION =
-  "Fields map: key/value pairs. Values must be string, number, boolean, or array (no nested objects)."
+  "Fields map matching the automation trigger schema."
 
-type AutomationFieldValue = string | number | boolean | unknown[]
+const getAutomationFieldSchema = (type: AutomationIOType): z.ZodTypeAny => {
+  switch (type) {
+    case AutomationIOType.NUMBER:
+      return z.number()
+    case AutomationIOType.BOOLEAN:
+      return z.boolean()
+    case AutomationIOType.ARRAY:
+    case AutomationIOType.ATTACHMENT:
+      return z.array(z.unknown())
+    case AutomationIOType.OBJECT:
+    case AutomationIOType.JSON:
+      return z.record(z.string(), z.unknown())
+    default:
+      return z.string()
+  }
+}
+
+interface AutomationFieldsSource {
+  definition?: {
+    trigger?: {
+      inputs?: object | null | void
+    }
+  }
+}
+
+export const buildAutomationFieldsSchema = (
+  automation: AutomationFieldsSource
+) => {
+  const triggerInputs = automation.definition?.trigger?.inputs
+  const fields =
+    triggerInputs && "fields" in triggerInputs
+      ? (triggerInputs.fields as Record<string, AutomationIOType> | undefined)
+      : undefined
+  if (!fields || Object.keys(fields).length === 0) {
+    return z.record(z.string(), z.never())
+  }
+
+  return z
+    .object(
+      Object.fromEntries(
+        Object.entries(fields).map(([name, type]) => [
+          name,
+          getAutomationFieldSchema(type).optional(),
+        ])
+      )
+    )
+    .strict()
+}
 
 const getAutomationFieldsSummary = (automation: Automation) => {
   const triggerInputs = automation.definition?.trigger?.inputs as {
@@ -44,7 +91,7 @@ const triggerAutomationById = async ({
   fields,
 }: {
   automationId: string
-  fields?: Record<string, AutomationFieldValue> | null
+  fields?: Record<string, unknown> | null
 }) => {
   const resolvedFields = fields ?? {}
 
@@ -173,6 +220,7 @@ const createAutomationTools = (
       const description = fieldsSummary
         ? `Trigger "${automationName}" automation. ${TRIGGER_AUTOMATION_BASE_DESCRIPTION} Fields: ${fieldsSummary}.`
         : `Trigger "${automationName}" automation. ${TRIGGER_AUTOMATION_BASE_DESCRIPTION}`
+      const fieldsSchema = buildAutomationFieldsSchema(automation)
 
       return {
         name: toolName,
@@ -194,18 +242,7 @@ const createAutomationTools = (
         tool: tool({
           description,
           inputSchema: z.object({
-            fields: z
-              .record(
-                z.string(),
-                z.union([
-                  z.string(),
-                  z.number(),
-                  z.boolean(),
-                  z.array(z.unknown()),
-                ])
-              )
-              .nullish()
-              .describe(fieldsDescription),
+            fields: fieldsSchema.nullish().describe(fieldsDescription),
           }),
           execute: async input => {
             const { fields } = input
