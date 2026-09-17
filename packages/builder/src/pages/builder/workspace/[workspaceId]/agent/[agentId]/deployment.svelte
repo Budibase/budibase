@@ -14,7 +14,7 @@
     DEPLOYMENT_ID_TO_PROVIDER,
     type Agent,
   } from "@budibase/types"
-  import { selectedAgent, agentsStore } from "@/stores/portal"
+  import { admin, selectedAgent, agentsStore } from "@/stores/portal"
   import { deploymentStore } from "@/stores/builder"
   import MicrosoftTeamsConfig from "./DeploymentChannels/MicrosoftTeamsConfig.svelte"
   import SlackConfig from "./DeploymentChannels/SlackConfig.svelte"
@@ -252,7 +252,13 @@
           Allow users to attach files when chatting with this agent in supported
           messaging channels.
         </Body>
-        {#if !knowledgeSearchConfigured}
+        {#if $admin.cloud}
+          <Body color="var(--spectrum-global-color-gray-700)" size="XS">
+            {knowledgeSearchConfigured
+              ? "Powered by Budibase AI"
+              : "File search is currently unavailable"}
+          </Body>
+        {:else if !knowledgeSearchConfigured}
           <Body color="var(--spectrum-global-color-gray-700)" size="XS">
             Set <code>GEMINI_API_KEY</code> in the Budibase server environment,
             then restart Budibase. <Link

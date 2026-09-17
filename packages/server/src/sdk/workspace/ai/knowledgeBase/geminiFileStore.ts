@@ -1,4 +1,4 @@
-import { HTTPError } from "@budibase/backend-core"
+import { env, HTTPError } from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
 import fetch from "node-fetch"
 import environment from "../../../../environment"
@@ -73,7 +73,9 @@ export const getGeminiApiKey = () => {
   const key = environment.GEMINI_API_KEY?.trim()
   if (!key) {
     throw new HTTPError(
-      "Gemini File Search failed. Set GEMINI_API_KEY on your local environment",
+      env.SELF_HOSTED
+        ? "File search is currently unavailable. Set GEMINI_API_KEY in the Budibase server environment and restart Budibase."
+        : "File search is currently unavailable",
       400
     )
   }
