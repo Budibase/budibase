@@ -272,10 +272,7 @@ class Replication {
       $and: [
         ...unconditional,
         {
-          $or: [
-            { _deleted: true },
-            { $and: fallback },
-          ],
+          $or: [{ _deleted: true }, { $and: fallback }],
         },
       ],
     }
