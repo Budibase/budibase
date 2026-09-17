@@ -662,12 +662,13 @@
       )
       return false
     }
+    const forOperationId = operation.id
     const previous = operation.approvalPolicies
     const approvalPolicies = (previous || []).filter(
       candidate => candidate.id !== policy.id
     )
     const saved = await saveOperation({ approvalPolicies })
-    if (!saved && operation) {
+    if (!saved && operation?.id === forOperationId) {
       operation = { ...operation, approvalPolicies: previous }
     }
     return saved
