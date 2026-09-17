@@ -690,7 +690,7 @@ describe("search", () => {
     jest.clearAllMocks()
   })
 
-  it("runs SQL queries while holding the definition rebuild lock", async () => {
+  it("runs SQL queries after checking for definition rebuilds", async () => {
     const table: Table = {
       ...structures.tableForDatasource({
         type: "datasource",
@@ -764,7 +764,7 @@ describe("search", () => {
         name: "Alice",
       },
     ])
-    expect(sqlCallsInsideLock).toEqual([true])
+    expect(sqlCallsInsideLock).toEqual([false])
   })
 
   it("resyncs stale definitions while holding the rebuild lock", async () => {
