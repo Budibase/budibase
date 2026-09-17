@@ -1047,6 +1047,31 @@ describe("/api/deploy", () => {
       ).toBe(false)
     })
 
+    it("keeps the deployment being written when stored entries are newer", async () => {
+      // a clock-skewed peer can leave entries dated ahead of this node's now
+      const future = Date.now() + 60 * 60 * 1000
+      const history: Record<string, DeploymentHistoryEntry> = {}
+      for (let i = 0; i < MAX_DEPLOYMENT_HISTORY + 10; i++) {
+        const _id = `future-${i.toString().padStart(4, "0")}`
+        history[_id] = {
+          _id,
+          appId: config.getDevWorkspaceId(),
+          status: DeploymentStatus.SUCCESS,
+          updatedAt: future + i,
+        }
+      }
+      await writeHistory(history)
+
+      await config.api.workspace.publish(config.getDevWorkspaceId())
+
+      const doc = await getDeploymentDoc()
+      const entries = Object.values(doc!.history!)
+      expect(entries.length).toBe(MAX_DEPLOYMENT_HISTORY)
+      const written = entries.filter(entry => !entry._id.startsWith("future-"))
+      expect(written).toHaveLength(1)
+      expect(written[0].status).toBe(DeploymentStatus.SUCCESS)
+    })
+
     it("truncates long error messages", async () => {
       const message = "x".repeat(5000)
       jest

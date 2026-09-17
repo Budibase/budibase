@@ -61,17 +61,24 @@ const MAX_PAGE_SIZE = 100
 const byMostRecent = (a: DeploymentHistoryEntry, b: DeploymentHistoryEntry) =>
   (b.updatedAt ?? 0) - (a.updatedAt ?? 0)
 
-// keeps only the most recent deployments, the entry being written always
-// carries the newest updatedAt so it is never the one dropped
+// keeps only the most recent deployments, never evicting the one being written -
+// a node with a skewed clock can leave stored entries dated ahead of our own
+// Date.now(), so recency alone is not enough to guarantee it survives
 function boundHistory(
-  history: Record<string, DeploymentHistoryEntry>
+  history: Record<string, DeploymentHistoryEntry>,
+  writtenId: string
 ): Record<string, DeploymentHistoryEntry> {
   const entries = Object.values(history)
   if (entries.length <= MAX_DEPLOYMENT_HISTORY) {
     return history
   }
-  const retained = entries.sort(byMostRecent).slice(0, MAX_DEPLOYMENT_HISTORY)
-  return Object.fromEntries(retained.map(entry => [entry._id, entry]))
+  const retained = entries
+    .filter(entry => entry._id !== writtenId)
+    .sort(byMostRecent)
+    .slice(0, MAX_DEPLOYMENT_HISTORY - 1)
+  return Object.fromEntries(
+    [history[writtenId], ...retained].map(entry => [entry._id, entry])
+  )
 }
 
 // checks that deployments are in a good state, any pending will be updated
@@ -117,7 +124,7 @@ async function storeDeploymentHistory(deployment: Deployment) {
   }
   history[deploymentId] = entry
 
-  const bounded = boundHistory(history)
+  const bounded = boundHistory(history, deploymentId)
   deploymentDoc.history = bounded
 
   await db.put(deploymentDoc)
