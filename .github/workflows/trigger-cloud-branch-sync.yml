@@ -58,3 +58,28 @@ jobs:
             --field "client_payload[source_repository]=$SOURCE_REPOSITORY" \
             --field "client_payload[source_ref]=$SOURCE_REF" \
             --field "client_payload[source_sha]=$SOURCE_SHA"
+
+      - name: Notify when synchronization could not be started
+        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.RELEASE_SLACK_WEBHOOK_URL }}
+          SOURCE_REF: ${{ github.ref_name }}
+          SOURCE_REPOSITORY: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$SLACK_WEBHOOK_URL" ]]; then
+            echo "::warning::RELEASE_SLACK_WEBHOOK_URL is not configured; skipping the synchronization alert."
+            exit 0
+          fi
+
+          workflow_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          message=":warning: Cloud branch synchronization could not be started for \`$SOURCE_REPOSITORY:$SOURCE_REF\` at \`$SOURCE_SHA\`. <$workflow_url|Open the workflow run>"
+          payload=$(jq --null-input --arg text "$message" '{text: $text}')
+
+          curl --fail-with-body \
+            --request POST \
+            --header 'Content-type: application/json' \
+            --data "$payload" \
+            "$SLACK_WEBHOOK_URL"
