@@ -148,15 +148,16 @@
     try {
       const provider = DEPLOYMENT_ID_TO_PROVIDER[channel.id]
       let channelUpdated = false
+      let channelNotification = ""
       if (provider === AgentChannelProvider.MSTEAMS) {
         if (isChannelEnabled) {
           await agentsStore.toggleMSTeamsDeployment(currentAgent._id, false)
           channelUpdated = true
-          notifications.success("Microsoft Teams channel disabled")
+          channelNotification = "Microsoft Teams channel disabled"
         } else if (MSTeamsConfigured) {
           await agentsStore.toggleMSTeamsDeployment(currentAgent._id, true)
           channelUpdated = true
-          notifications.success("Microsoft Teams channel enabled")
+          channelNotification = "Microsoft Teams channel enabled"
         } else {
           MSTeamsModal?.show()
         }
@@ -164,11 +165,11 @@
         if (isChannelEnabled) {
           await agentsStore.toggleSlackDeployment(currentAgent._id, false)
           channelUpdated = true
-          notifications.success("Slack channel disabled")
+          channelNotification = "Slack channel disabled"
         } else if (slackConfigured) {
           await agentsStore.toggleSlackDeployment(currentAgent._id, true)
           channelUpdated = true
-          notifications.success("Slack channel enabled")
+          channelNotification = "Slack channel enabled"
         } else {
           slackModal?.show()
         }
@@ -178,6 +179,9 @@
         if (!(await deploymentStore.publishApp())) {
           return
         }
+      }
+      if (channelUpdated) {
+        notifications.success(channelNotification)
       }
     } catch (e) {
       notifications.error(
