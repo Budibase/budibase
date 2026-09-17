@@ -119,10 +119,13 @@
   }
 
   const handleFieldChange = (e: CustomEvent<string[]>) => {
+    const newFields = e.detail || []
     parameters = {
       ...parameters,
-      fields: e.detail || [],
-      fieldValues,
+      fields: newFields,
+      fieldValues: Object.fromEntries(
+        Object.entries(fieldValues).filter(([key]) => newFields.includes(key))
+      ),
     }
   }
 
