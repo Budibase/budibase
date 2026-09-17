@@ -25,7 +25,7 @@ export class FunctionAPI extends TestAPI {
     if (query.bookmark) {
       params.set("bookmark", query.bookmark)
     }
-    if (query.limit) {
+    if (query.limit !== undefined) {
       params.set("limit", `${query.limit}`)
     }
     const queryString = params.size ? `?${params}` : ""

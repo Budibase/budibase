@@ -6,7 +6,6 @@ import {
 } from "@budibase/backend-core"
 import { automations } from "@budibase/pro"
 import {
-  DEFAULT_FUNCTION_LIMITS,
   DocumentType,
   FunctionErrorCode,
   SEPARATOR,
@@ -15,6 +14,7 @@ import {
   type FunctionRunSummary,
 } from "@budibase/types"
 import { z } from "zod"
+import env from "../../../environment"
 
 const DEFAULT_PAGE_SIZE = 20
 const MAX_PAGE_SIZE = 100
@@ -147,7 +147,7 @@ const sanitizeError = (
     code: safeCode,
     message: ERROR_MESSAGES[safeCode].slice(
       0,
-      DEFAULT_FUNCTION_LIMITS.service.maxRunSummaryErrorMessageLength
+      env.FUNCTIONS_LIMITS.service.maxRunSummaryErrorMessageLength
     ),
   }
 }
@@ -259,7 +259,7 @@ export const finalizeRunSummary = async (
 
 export const reconcileRunning = async (database: WorkspaceDatabase) => {
   const cutoff =
-    Date.now() - DEFAULT_FUNCTION_LIMITS.run.timeoutMs - ORPHAN_GRACE_MS
+    Date.now() - env.FUNCTIONS_LIMITS.run.timeoutMs - ORPHAN_GRACE_MS
   const running = await queryRunView({
     database,
     viewName: dbCore.ViewName.RUNNING_FUNCTION_RUNS_BY_STARTED_AT,

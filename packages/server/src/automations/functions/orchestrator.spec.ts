@@ -7,6 +7,7 @@ import {
   type FunctionRunSummary,
 } from "@budibase/types"
 import {
+  createFunctionInvocationScope,
   FunctionRunOrchestrator,
   type FunctionInvocationScopeInput,
 } from "@budibase/functions-runtime"
@@ -16,6 +17,16 @@ import {
 } from "../../sdk/workspace/functions/history"
 import { functionRunSupervisor } from "./supervisor"
 import { functionRunOrchestrator } from "./orchestrator"
+
+jest.mock("@budibase/functions-runtime", () => {
+  const actual = jest.requireActual("@budibase/functions-runtime")
+  return {
+    ...actual,
+    createFunctionInvocationScope: jest.fn(
+      actual.createFunctionInvocationScope
+    ),
+  }
+})
 
 jest.mock("../../sdk/workspace/functions/history", () => ({
   createRunSummary: jest.fn(),
@@ -92,6 +103,9 @@ const summary: FunctionRunSummary = {
 }
 
 const execute = jest.mocked(functionRunSupervisor.execute)
+const mockedCreateFunctionInvocationScope = jest.mocked(
+  createFunctionInvocationScope
+)
 const mockedCreateRunSummary = jest.mocked(createRunSummary)
 const mockedFinalizeRunSummary = jest.mocked(finalizeRunSummary)
 const consoleError = jest.spyOn(console, "error").mockImplementation()
@@ -141,6 +155,9 @@ describe("server FunctionRunOrchestrator", () => {
       context: expect.any(Object),
       signal: undefined,
     })
+    expect(mockedCreateFunctionInvocationScope).toHaveBeenCalledWith(
+      expect.objectContaining({ limits: request.limits })
+    )
   })
 
   it("finalizes an error summary when execution fails", async () => {
@@ -170,6 +187,23 @@ describe("server FunctionRunOrchestrator", () => {
     execute.mockResolvedValue(result)
 
     await expect(run()).resolves.toEqual(result)
+
+    expect(mockedFinalizeRunSummary).toHaveBeenCalledWith(request.runId, result)
+  })
+
+  it("finalizes an error summary when execution returns a different run ID", async () => {
+    const mismatchedResult = {
+      ...result,
+      runId: "run-2",
+    }
+    execute.mockResolvedValue(mismatchedResult)
+
+    await expect(run()).resolves.toEqual(mismatchedResult)
+
+    expect(mockedFinalizeRunSummary).toHaveBeenCalledWith(request.runId, {
+      status: "error",
+      code: FunctionErrorCode.FUNCTION_RUNTIME_ERROR,
+    })
   })
 })
 

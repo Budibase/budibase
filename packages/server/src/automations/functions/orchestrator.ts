@@ -150,7 +150,9 @@ export const functionRunOrchestrator = {
         capabilityScope,
         signal,
       })
-      summaryResult = result
+      if (result.runId === runId) {
+        summaryResult = result
+      }
       return result
     } finally {
       if (summaryCreated) {

@@ -854,7 +854,7 @@ export default async function (): Promise<FunctionResult> {
             invocation: {
               type: "automation",
               automationId: "automation-1",
-              stepId: "step-1",
+              automationStepId: "step-1",
             },
             startedAt,
             finishedAt: startedAt,
@@ -891,6 +891,18 @@ export default async function (): Promise<FunctionResult> {
         "development",
         "published",
       ])
+      expect(firstPage.runs.map(run => run.invocation)).toEqual([
+        {
+          type: "automation",
+          automationId: "automation-1",
+          automationStepId: "step-1",
+        },
+        {
+          type: "automation",
+          automationId: "automation-1",
+          automationStepId: "step-1",
+        },
+      ])
       expect(firstPage.hasMore).toBe(true)
       expect(JSON.stringify(firstPage)).not.toContain("sensitivePayload")
 
@@ -906,6 +918,17 @@ export default async function (): Promise<FunctionResult> {
       ).resolves.toMatchObject({
         run: { runId: "middle", environment: "published" },
       })
+
+      await config.api.function.fetchRuns(
+        created._id,
+        { limit: 0 },
+        {
+          status: 400,
+          body: {
+            message: "Function run history limit must be between 1 and 100.",
+          },
+        }
+      )
     })
   })
 
@@ -927,7 +950,7 @@ export default async function (): Promise<FunctionResult> {
           invocation: {
             type: "automation" as const,
             automationId: "automation-1",
-            stepId: "step-1",
+            automationStepId: "step-1",
           },
           queryCount: 0,
         }
