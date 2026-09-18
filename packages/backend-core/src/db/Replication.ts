@@ -137,9 +137,7 @@ class Replication {
     } = {}
   ): PouchDB.Replication.ReplicateOptions {
     if (typeof opts.filter === "string") {
-      if (opts.batch_size === undefined) {
-        opts.batch_size = DEFAULT_REPLICATION_BATCH_SIZE
-      }
+      opts.batch_size = opts.batch_size ?? DEFAULT_REPLICATION_BATCH_SIZE
       return opts
     }
 
