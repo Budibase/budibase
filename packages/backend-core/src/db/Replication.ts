@@ -170,8 +170,8 @@ class Replication {
       startsWithID(_id, DocumentType.LINK)
 
     const result: PouchDB.Replication.ReplicateOptions = {
-      batch_size: DEFAULT_REPLICATION_BATCH_SIZE,
       ...opts,
+      batch_size: opts.batch_size ?? DEFAULT_REPLICATION_BATCH_SIZE,
       filter: (doc: DocumentWithID, params: any) => {
         if (!isCreation && doc._id === DesignDocuments.MIGRATIONS) {
           return false
