@@ -149,7 +149,7 @@
 
   // Convert our options map into an array for display
   $: updateOptions(optionsMap)
-  $: !open && sortOptions()
+  $: sortOptions(selectedIDs)
 
   // Search for new options when search term changes
   $: debouncedSearchOptions(searchTerm || "", primaryDisplayField)
@@ -366,18 +366,18 @@
     // Only override options if the quantity of options changes
     if (newOptions.length !== options.length) {
       options = newOptions
-      sortOptions()
+      sortOptions(selectedIDs)
     }
   }
 
   // Sorts the options list by selected state, then by primary display
-  const sortOptions = () => {
+  const sortOptions = (ids: string[]) => {
     // Create a quick lookup map so we can test whether options are selected
-    const selectedMap: Record<string, boolean> = selectedIDs.reduce(
+    const selectedMap: Record<string, boolean> = ids.reduce(
       (map, id) => ({ ...map, [id]: true }),
       {}
     )
-    options.sort((a, b) => {
+    options = [...options].sort((a, b) => {
       const aSelected = !!selectedMap[a._id]
       const bSelected = !!selectedMap[b._id]
       if (aSelected === bSelected) {
