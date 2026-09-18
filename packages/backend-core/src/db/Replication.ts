@@ -6,6 +6,8 @@ import { tracer } from "dd-trace"
 
 const _PouchDB = PouchDB // Keep Prettier from removing import
 
+const DEFAULT_REPLICATION_BATCH_SIZE = 1000
+
 enum ReplicationDirection {
   TO_PRODUCTION = "toProduction",
   TO_DEV = "toDev",
@@ -39,19 +41,35 @@ class Replication {
   }
 
   replicate(opts: PouchDB.Replication.ReplicateOptions = {}) {
-    return new Promise<PouchDB.Replication.ReplicationResult<{}>>(resolve => {
-      this.source.replicate
-        .to(this.target, opts)
-        .on("denied", function (err) {
-          // a document failed to replicate (e.g. due to permissions)
-          throw new Error(`Denied: Document failed to replicate ${err}`)
-        })
-        .on("complete", function (info) {
-          return resolve(info)
-        })
-        .on("error", function (err) {
-          throw err
-        })
+    return tracer.trace("db.replicate", async span => {
+      span?.addTags({
+        source: this.source.name,
+        target: this.target.name,
+        batch_size: opts.batch_size,
+        batches_limit: opts.batches_limit,
+        checkpoint: opts.checkpoint,
+      })
+      return new Promise<PouchDB.Replication.ReplicationResult<{}>>(
+        (resolve, reject) => {
+          this.source.replicate
+            .to(this.target, opts)
+            .on("denied", function (err) {
+              // a document failed to replicate (e.g. due to permissions)
+              reject(new Error(`Denied: Document failed to replicate ${err}`))
+            })
+            .on("complete", function (info) {
+              span?.addTags({
+                docs_read: info.docs_read,
+                docs_written: info.docs_written,
+                doc_write_failures: info.doc_write_failures,
+              })
+              return resolve(info)
+            })
+            .on("error", function (err) {
+              reject(err)
+            })
+        }
+      )
     })
   }
 
@@ -119,6 +137,9 @@ class Replication {
     } = {}
   ): PouchDB.Replication.ReplicateOptions {
     if (typeof opts.filter === "string") {
+      if (opts.batch_size === undefined) {
+        opts.batch_size = DEFAULT_REPLICATION_BATCH_SIZE
+      }
       return opts
     }
 
@@ -149,6 +170,7 @@ class Replication {
       startsWithID(_id, DocumentType.LINK)
 
     const result: PouchDB.Replication.ReplicateOptions = {
+      batch_size: DEFAULT_REPLICATION_BATCH_SIZE,
       ...opts,
       filter: (doc: DocumentWithID, params: any) => {
         if (!isCreation && doc._id === DesignDocuments.MIGRATIONS) {
