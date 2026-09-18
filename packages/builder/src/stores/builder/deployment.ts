@@ -94,6 +94,7 @@ class DeploymentStore extends DerivedBudiStore<
 
   async publishApp(opts?: { seedProductionTables: boolean }): Promise<boolean> {
     if (get(this.store.store).isPublishing) {
+      notifications.warning("A publish is already in progress")
       return false
     }
     try {
