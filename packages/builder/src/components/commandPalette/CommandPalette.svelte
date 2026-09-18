@@ -25,12 +25,11 @@
     type ViewV2,
   } from "@budibase/types"
 
-  import { API } from "@/api"
   import { IntegrationTypes } from "@/constants/backend"
-  import { getErrorMessage } from "@/helpers/errors"
   import {
     automationStore,
     datasources,
+    deploymentStore,
     queries,
     tables,
     previewStore,
@@ -415,27 +414,9 @@
     }
   }
 
-  const isRateLimitedError = (error: unknown) => {
-    return (
-      typeof error === "object" &&
-      error != null &&
-      "status" in error &&
-      error.status === 429
-    )
-  }
-
   async function deployApp() {
-    try {
-      await API.publishAppChanges($workspaceStore.appId)
+    if (await deploymentStore.publishApp()) {
       notifications.success("App published successfully")
-    } catch (error) {
-      if (isRateLimitedError(error)) {
-        notifications.warning(
-          getErrorMessage(error) || "A publish is already in progress"
-        )
-      } else {
-        notifications.error("Error publishing app")
-      }
     }
   }
 

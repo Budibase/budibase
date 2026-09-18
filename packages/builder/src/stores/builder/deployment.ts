@@ -93,6 +93,9 @@ class DeploymentStore extends DerivedBudiStore<
   }
 
   async publishApp(opts?: { seedProductionTables: boolean }): Promise<boolean> {
+    if (get(this.store.store).isPublishing) {
+      return false
+    }
     try {
       this.update(state => ({ ...state, isPublishing: true }))
       await API.publishAppChanges(get(workspaceStore).appId, opts)
