@@ -325,7 +325,7 @@ describe("Replication", () => {
       expect(result).toBe(false)
     })
 
-    it("should return opts unchanged when filter is string", () => {
+    it("should return opts unchanged other than a default batch_size when filter is string", () => {
       const replication = new Replication({
         source: `${DocumentType.WORKSPACE_DEV}_source`,
         target: `${DocumentType.WORKSPACE}_target`,
@@ -340,6 +340,24 @@ describe("Replication", () => {
 
       expect(opts).toBe(inputOpts)
       expect(opts).not.toHaveProperty("selector")
+      expect(opts.batch_size).toBe(1000)
+    })
+
+    it("should not override a caller-provided batch_size when filter is string", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const inputOpts = {
+        filter: "design/myfilter",
+        isCreation: true,
+        batch_size: 42,
+      }
+
+      const opts = replication.appReplicateOpts(inputOpts)
+
+      expect(opts.batch_size).toBe(42)
     })
 
     it("should attach a native selector when no custom filter is provided", () => {
@@ -511,6 +529,31 @@ describe("Replication", () => {
       })
 
       expect(opts.selector).toBeUndefined()
+    })
+
+    it("should default batch_size to 1000", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({ isCreation: true })
+
+      expect(opts.batch_size).toBe(1000)
+    })
+
+    it("should not override a caller-provided batch_size", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({
+        isCreation: true,
+        batch_size: 42,
+      })
+
+      expect(opts.batch_size).toBe(42)
     })
   })
 

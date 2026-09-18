@@ -6,6 +6,7 @@
     PopoverAlignment,
     Modal,
     ModalContent,
+    ProgressCircle,
   } from "@budibase/bbui"
   import {
     deploymentStore,
@@ -80,6 +81,9 @@
   }
 
   const publish = async () => {
+    if ($deploymentStore.isPublishing) {
+      return
+    }
     if (incompatiblePlugins.length && !hasAcknowledgedWarning) {
       showPluginWarningModal()
       return
@@ -89,9 +93,6 @@
   }
 
   const publishWithoutChecks = async () => {
-    if ($deploymentStore.isPublishing) {
-      return
-    }
     if (await deploymentStore.publishApp()) {
       publishSuccessPopover?.show()
     }
@@ -110,12 +111,17 @@
   class="publish-menu"
   class:disabled={$deploymentStore.isPublishing}
   role="button"
-  tabindex="0"
+  tabindex={$deploymentStore.isPublishing ? -1 : 0}
+  aria-disabled={$deploymentStore.isPublishing}
   bind:this={publishPopoverAnchor}
   on:click={publish}
   on:keydown={e => e.key === "Enter" && publish()}
 >
-  <Icon size="M" name="arrow-circle-up" weight="fill" />
+  {#if $deploymentStore.isPublishing}
+    <ProgressCircle size="S" overBackground />
+  {:else}
+    <Icon size="M" name="arrow-circle-up" weight="fill" />
+  {/if}
   <span>Publish</span>
 </div>
 
@@ -199,6 +205,7 @@
     color: var(--spectrum-global-color-gray-600);
     cursor: default;
     opacity: 0.8;
+    pointer-events: none;
   }
   .publish-menu span {
     display: flex;
