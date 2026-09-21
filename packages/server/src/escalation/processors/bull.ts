@@ -80,7 +80,7 @@ export class BullEscalationProcessor implements IEscalationProcessor {
       appId: input.appId,
       tenantId: input.tenantId,
       contextCompressed,
-      delay: input.delay,
+      ...(input.duration !== undefined && { duration: input.duration }),
       resolution: "pending",
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
@@ -107,10 +107,7 @@ export class BullEscalationProcessor implements IEscalationProcessor {
 
     await addEscalationJob(job, 0, getNotifyJobId(escalationId))
 
-    const expiresAt = new Date(
-      new Date(now).getTime() + input.delay
-    ).toISOString()
-    return { escalationId, expiresAt }
+    return { escalationId }
   }
 
   async resolve(

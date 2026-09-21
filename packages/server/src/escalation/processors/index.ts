@@ -12,7 +12,7 @@ interface CreateEscalationBase {
   appId: string
   tenantId: string
   message: string
-  delay: number
+  duration?: number
   // Allow an explicit ID to be provided (e.g. for idempotent test runs)
   escalationId?: string
   recipients?: EscalationRecipient[]
@@ -46,7 +46,6 @@ export type CreateEscalationInput =
 
 export interface CreateEscalationResult {
   escalationId: string
-  expiresAt: string
 }
 
 // Useful to have calculated values like expiresAt in the queue

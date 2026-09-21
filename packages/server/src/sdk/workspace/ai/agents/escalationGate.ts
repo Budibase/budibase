@@ -1,12 +1,18 @@
 import { context } from "@budibase/backend-core"
-import { dataFilters } from "@budibase/shared-core"
+import { constants as proConstants, licensing } from "@budibase/pro"
+import {
+  dataFilters,
+  DEFAULT_ESCALATION_DURATION_SECONDS,
+} from "@budibase/shared-core"
 import {
   AgentOperation,
   AgentOperationApprovalPolicy,
   AgentRequester,
+  ApprovalPolicyExpiry,
   ApprovedToolCall,
   ChatConversationChannel,
   ApprovalToolResultStatus,
+  ConstantQuotaName,
   EscalationSource,
   ResolutionStrategy,
   ToolExecutionRule,
@@ -21,9 +27,26 @@ import sdk from "../../.."
 import { escalationProcessor } from "../../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../../escalation/resolutionStrategies"
 
-export const DEFAULT_ESCALATION_DELAY_SECONDS = 3600
-
 const SUMMARY_MAX_LENGTH = 300
+const DAY_MS = 24 * 60 * 60 * 1000
+
+export const escalationDurationMs = async (
+  expiry: ApprovalPolicyExpiry | undefined
+): Promise<number | undefined> => {
+  const license = await licensing.cache.getCachedLicense()
+  const ceilingDays =
+    license.quotas?.constant?.[ConstantQuotaName.ESCALATION_DURATION_DAYS]
+      ?.value
+  const unlimited =
+    !ceilingDays || ceilingDays === proConstants.licenses.UNLIMITED
+  const requested =
+    (expiry?.duration ?? DEFAULT_ESCALATION_DURATION_SECONDS) * 1000
+  if (unlimited) {
+    return expiry?.never ? undefined : requested
+  }
+  const ceiling = ceilingDays * DAY_MS
+  return expiry?.never ? ceiling : Math.min(requested, ceiling)
+}
 
 export interface EscalationGateContext {
   sessionId: string
@@ -216,7 +239,7 @@ export const createEscalationGateRuntime = ({
     if (policySnapshot.approvers) {
       policySnapshot.approvers = Array.from(new Set(policySnapshot.approvers))
     }
-    const { recipients, delay } = notifications
+    const { recipients } = notifications
 
     const frozenMessages = messages?.length
       ? messages
@@ -245,6 +268,8 @@ export const createEscalationGateRuntime = ({
       })
     }
 
+    const duration = await escalationDurationMs(policy.expiry)
+
     const { escalationId } = await escalationProcessor.create({
       source: EscalationSource.OPERATION,
       appId,
@@ -252,7 +277,7 @@ export const createEscalationGateRuntime = ({
       message: summary,
       title,
       summary,
-      delay: (delay ?? DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
+      ...(duration !== undefined && { duration }),
       recipients,
       resolutionStrategy: resolutionStrategyBinding(
         policy.approvers?.length
