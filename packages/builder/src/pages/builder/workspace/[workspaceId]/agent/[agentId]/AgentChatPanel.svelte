@@ -7,8 +7,7 @@
   import type { UIMessage } from "ai"
   import { Chatbox } from "@budibase/frontend-core/src/components"
   import { Constants } from "@budibase/frontend-core"
-  import { notifications, Select } from "@budibase/bbui"
-  import { API } from "@/api"
+  import { Select } from "@budibase/bbui"
   import { escalationsStore } from "@/stores/portal/escalations"
   import { auth } from "@/stores/portal"
   import { roles } from "@/stores/builder"
@@ -17,6 +16,11 @@
     loadPromptHistory,
     savePromptHistory,
   } from "@/utils/chatPreviewPromptHistory"
+  import {
+    clearChatPreviewSession,
+    loadChatPreviewSession,
+    saveChatPreviewSession,
+  } from "@/utils/chatPreviewSession"
 
   type DraftChat = WithoutDocMetadata<DraftChatConversation>
 
@@ -40,6 +44,14 @@
   let previewRoleId = $state(Constants.Roles.ADMIN)
   let previewRolesLoading = $state(false)
 
+  const sessionKey = $derived.by(() => {
+    const userId = $auth.user?._id
+    if (!userId || !workspaceId || !agentId) {
+      return undefined
+    }
+    return { tenantId: $auth.tenantId, userId, workspaceId, agentId }
+  })
+
   const refreshPreviewRoles = async () => {
     if (previewRolesLoading) {
       return
@@ -54,7 +66,8 @@
 
   onMount(refreshPreviewRoles)
 
-  // Preview is not persisted, so escalation polling lives here, not in Chatbox.
+  // The preview conversation is not persisted server side, so escalation
+  // polling lives here, not in Chatbox.
   let chatbox = $state<
     | { appendAssistantMessage: (m: UIMessage<AgentMessageMetadata>) => void }
     | undefined
@@ -88,34 +101,37 @@
   const resolveEscalation = (escalationId: string, accepted: boolean) =>
     escalationsStore.resolve(escalationId, { accepted })
 
-  const resetChat = (nextAgentId?: string) => {
+  const resetChat = ({
+    agentId: nextAgentId,
+    messages = [],
+    roleId = Constants.Roles.ADMIN,
+  }: {
+    agentId?: string
+    messages?: UIMessage<AgentMessageMetadata>[]
+    roleId?: string
+  }) => {
     escalationsStore.reset()
     delivered.clear()
     chat = {
       ...INITIAL_CHAT,
       agentId: nextAgentId || "",
+      messages,
     }
+    previewRoleId = roleId
+    // The preview conversation has no _id, so Chatbox only picks stored
+    // messages up when it remounts.
     refreshKey += 1
   }
 
-  const refreshChat = async () => {
-    if (!agentId) {
-      resetChat(agentId)
-      return
+  const clearChat = () => {
+    if (sessionKey) {
+      clearChatPreviewSession(sessionKey)
     }
-
-    try {
-      await API.deleteAgentPreviewConversation(agentId)
-      resetChat(agentId)
-    } catch (error) {
-      console.error(error)
-      notifications.error("Failed to clear chat preview")
-    }
+    resetChat({ agentId, roleId: previewRoleId })
   }
 
   const selectPreviewRole = (roleId: string) => {
-    previewRoleId = roleId
-    resetChat(agentId)
+    resetChat({ agentId, roleId })
   }
 
   const previewRoleOptions = $derived(
@@ -142,46 +158,46 @@
   }
 
   $effect(() => {
-    if (!workspaceId) {
-      return
-    }
-
-    const tenantId = $auth.tenantId
-    const userId = $auth.user?._id
-
-    if (!userId || !agentId) {
+    const key = sessionKey
+    if (!key) {
       if (lastKey !== undefined) {
         lastKey = undefined
         promptHistory = []
-        resetChat(agentId)
+        resetChat({ agentId })
       }
       return
     }
 
-    const nextKey = JSON.stringify([tenantId, userId, workspaceId, agentId])
+    const nextKey = JSON.stringify(key)
     if (nextKey === lastKey) {
       return
     }
 
     lastKey = nextKey
-    promptHistory = loadPromptHistory({
-      tenantId,
-      userId,
-      workspaceId,
-      agentId,
+    promptHistory = loadPromptHistory(key)
+    const storedSession = loadChatPreviewSession(key)
+    resetChat({
+      agentId: key.agentId,
+      messages: storedSession?.messages,
+      roleId: storedSession?.previewRoleId,
     })
-    resetChat(agentId)
-    API.fetchAgentPreviewConversation(agentId)
-      .then(conversation => {
-        if (lastKey === nextKey && conversation) {
-          chat = conversation
-          previewRoleId = conversation.previewRoleId || Constants.Roles.ADMIN
-        }
-      })
-      .catch(error => {
-        console.error(error)
-        notifications.error("Failed to load chat preview")
-      })
+  })
+
+  // Mirror the preview conversation into sessionStorage so it survives reloads.
+  // The tuple check keeps a conversation from being written under a newly
+  // selected agent, workspace or user before its own session has loaded.
+  $effect(() => {
+    const messages = chat.messages
+    const roleId = previewRoleId
+    const key = sessionKey
+    if (!key || JSON.stringify(key) !== lastKey) {
+      return
+    }
+
+    saveChatPreviewSession({
+      ...key,
+      session: { messages, previewRoleId: roleId },
+    })
   })
 
   // Stop escalation polling when the panel unmounts.
@@ -210,7 +226,7 @@
           on:change={event => selectPreviewRole(event.detail)}
         />
       </label>
-      <button class="chat-preview-refresh" type="button" onclick={refreshChat}>
+      <button class="chat-preview-refresh" type="button" onclick={clearChat}>
         Clear chat
       </button>
     </div>

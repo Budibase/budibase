@@ -8,7 +8,6 @@ import {
   prepareModelMessages,
   truncateTitle,
 } from "./helpers"
-import { ensureUniqueMessageIds } from "./messages"
 
 const stringOutputFromFirstToolPart = (
   messages: ChatConversation["messages"]
@@ -121,59 +120,6 @@ describe("prepareChatConversationForSave", () => {
     expect(result.title).toBe("Chat title")
   })
 
-  it("assigns unique ids to blank or duplicate messages", () => {
-    const messages = [
-      userMessage,
-      {
-        id: "",
-        role: "assistant" as const,
-        parts: [{ type: "text" as const, text: "first reply" }],
-      },
-      {
-        id: "m1",
-        role: "user" as const,
-        parts: [{ type: "text" as const, text: "again" }],
-      },
-      {
-        id: "",
-        role: "assistant" as const,
-        parts: [{ type: "text" as const, text: "second reply" }],
-      },
-    ] as ChatConversation["messages"]
-
-    const result = prepareChatConversationForSave({
-      chatId: "chat_1",
-      userId: "user_1",
-      messages,
-      chat: { agentId: "agent_1" },
-    })
-
-    const ids = result.messages.map(message => message.id)
-    expect(ids[0]).toBe("m1")
-    expect(ids.every(Boolean)).toBe(true)
-    expect(new Set(ids).size).toBe(ids.length)
-  })
-
-  it("retains transient preview metadata", () => {
-    const result = prepareChatConversationForSave({
-      chatId: "chatconvo_preview",
-      userId: "user-1",
-      messages: [],
-      chat: {
-        agentId: "agent-1",
-        transient: true,
-        previewRoleId: "role-1",
-      },
-    })
-
-    expect(result).toEqual(
-      expect.objectContaining({
-        transient: true,
-        previewRoleId: "role-1",
-      })
-    )
-  })
-
   it("throws when agentId cannot be resolved", () => {
     const messages = [userMessage] as ChatConversation["messages"]
 
@@ -185,34 +131,6 @@ describe("prepareChatConversationForSave", () => {
         chat: {},
       })
     ).toThrow(HTTPError)
-  })
-})
-
-describe("ensureUniqueMessageIds", () => {
-  it("keeps unique ids and replaces blank or duplicate ones", () => {
-    let nextId = 0
-    const result = ensureUniqueMessageIds(
-      [
-        {
-          id: "keep",
-          role: "user",
-          parts: [{ type: "text", text: "first" }],
-        },
-        {
-          id: "",
-          role: "assistant",
-          parts: [{ type: "text", text: "blank" }],
-        },
-        {
-          id: "keep",
-          role: "user",
-          parts: [{ type: "text", text: "duplicate" }],
-        },
-      ] as ChatConversation["messages"],
-      () => `id-${nextId++}`
-    )
-
-    expect(result.map(message => message.id)).toEqual(["keep", "id-0", "id-1"])
   })
 })
 

@@ -1,6 +1,5 @@
 import { ChatConversation } from "@budibase/types"
 import { isToolUIPart } from "ai"
-import { v4 } from "uuid"
 
 const MAX_PERSISTED_TOOL_TEXT_LENGTH = 8_000
 
@@ -31,26 +30,6 @@ const truncatePersistedToolValue = (value: unknown) => {
   } catch (error) {
     return value
   }
-}
-
-export const ensureUniqueMessageIds = (
-  messages: ChatConversation["messages"],
-  generateId: () => string = v4
-): ChatConversation["messages"] => {
-  const seen = new Set<string>()
-  return messages.map(message => {
-    if (message.id && !seen.has(message.id)) {
-      seen.add(message.id)
-      return message
-    }
-
-    let id = generateId()
-    while (!id || seen.has(id)) {
-      id = generateId()
-    }
-    seen.add(id)
-    return { ...message, id }
-  })
 }
 
 export const truncateToolPartsForSave = (

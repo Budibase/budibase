@@ -25,7 +25,6 @@
   import ContextUsage from "./ContextUsage.svelte"
   import EscalationCard from "./EscalationCard.svelte"
   import { navigatePromptHistory } from "./promptHistory"
-  import { ensureUniqueMessageIds } from "./messageIds"
   import {
     DefaultChatTransport,
     isTextUIPart,
@@ -275,8 +274,7 @@
   let resolvedConversationId = $state<string | undefined>()
 
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
-    generateId: Helpers.uuid,
-    messages: ensureUniqueMessageIds(chat?.messages || [], Helpers.uuid),
+    messages: chat?.messages || [],
     transport: new DefaultChatTransport({
       headers: () => ({ [Header.WORKSPACE_ID]: workspaceId }),
       prepareSendMessagesRequest: ({ messages }) => {
@@ -288,7 +286,6 @@
             _id: resolvedConversationId || chat?._id,
             agentId,
             isPreview: true,
-            transient: true,
             previewRoleId,
             sessionId: stableSessionId,
             title: chat?.title,
@@ -359,10 +356,8 @@
   export function appendAssistantMessage(
     message: UIMessage<AgentMessageMetadata>
   ) {
-    chatInstance.messages = ensureUniqueMessageIds(
-      [...chatInstance.messages, message],
-      Helpers.uuid
-    )
+    chatInstance.messages = [...chatInstance.messages, message]
+    chat = { ...chat, messages: chatInstance.messages }
   }
 
   let lastAssistantUsage = $derived(
@@ -390,10 +385,7 @@
       if (!isPreparingResponse) {
         resetPendingResponse()
       }
-      chatInstance.messages = ensureUniqueMessageIds(
-        chat?.messages || [],
-        Helpers.uuid
-      )
+      chatInstance.messages = chat?.messages || []
       expandedTools = {}
       reasoningTextByMessageId = {}
     }
