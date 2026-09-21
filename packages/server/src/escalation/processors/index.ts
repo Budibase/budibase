@@ -1,6 +1,7 @@
 import {
   EscalationPolicySnapshot,
   EscalationRecipient,
+  EscalationReviewContext,
   EscalationResponse,
   EscalationSource,
   SuspendedAutomationContext,
@@ -20,6 +21,7 @@ interface CreateEscalationBase {
   // Human-facing heading + detail rendered in the notification.
   title?: string
   summary?: string
+  reviewContext?: EscalationReviewContext
 }
 
 export interface CreateAutomationEscalationInput extends CreateEscalationBase {
