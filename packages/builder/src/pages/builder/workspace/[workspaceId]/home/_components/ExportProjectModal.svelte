@@ -1,10 +1,16 @@
 <script lang="ts">
-  import { Body, Input, ModalContent, Select, Toggle } from "@budibase/bbui"
-  import type { ProjectResponse } from "@budibase/types"
+  import {
+    Body,
+    InlineAlert,
+    Input,
+    ModalContent,
+    Select,
+    Toggle,
+  } from "@budibase/bbui"
+  import type { ExportProjectRequest, ProjectResponse } from "@budibase/types"
 
-  interface ConfirmPayload {
+  interface ConfirmPayload extends ExportProjectRequest {
     id: string
-    encryptPassword?: string
   }
 
   interface Props {
@@ -22,6 +28,7 @@
   }: Props = $props()
 
   let projectId = $state("")
+  let includeRows = $state(false)
   let encrypted = $state(false)
   let encryptPassword = $state("")
   let projectIsEmpty = $derived(
@@ -66,12 +73,12 @@
   onConfirm={() =>
     onConfirm({
       id: projectId,
+      includeRows,
       encryptPassword: encrypted ? encryptPassword.trim() : undefined,
     })}
 >
   <Body size="S">
-    Export a portable Project package for use in another workspace. Rows and
-    attachments are not included yet.
+    Export a portable Project package for use in another workspace.
   </Body>
 
   <Select
@@ -83,6 +90,12 @@
     getOptionColour={project => project.color}
   />
 
+  <Toggle text="Include rows and attachments" bind:value={includeRows} />
+  <Body size="S">
+    Includes all rows from included Budibase DB tables, including shared tables,
+    and their referenced attachments.
+  </Body>
+
   <Toggle text="Encrypt export" bind:value={encrypted} />
 
   {#if encrypted}
@@ -93,5 +106,8 @@
       autocomplete="new-password"
       bind:value={encryptPassword}
     />
+    {#if includeRows}
+      <InlineAlert header="Attachments are not encrypted in the export." />
+    {/if}
   {/if}
 </ModalContent>
