@@ -26,7 +26,6 @@ import {
   type AgentOperationApprovalPolicy,
   type ApprovalPolicyExpiry,
 } from "@budibase/types"
-import { DEFAULT_ESCALATION_DURATION_SECONDS } from "@budibase/shared-core"
 import { cloneDeep } from "lodash"
 import { escalationProcessor } from "../../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../../escalation/resolutionStrategies"
@@ -389,7 +388,6 @@ describe("policy snapshot", () => {
           approvalType: ResolutionStrategy.UNANIMOUS,
         },
         recipients,
-        duration: DEFAULT_ESCALATION_DURATION_SECONDS * 1000,
       })
     )
     expect(createInput().policy).not.toHaveProperty("notifications")
@@ -477,16 +475,14 @@ describe("policy snapshot", () => {
     expect(escalationProcessor.create).not.toHaveBeenCalled()
   })
 
-  it("defaults the duration when the policy sets none", async () => {
+  it("never expires when the policy sets no duration", async () => {
     await gateFor({
       id: "policy_1",
       name: "Manager approval",
       notifications: { recipients },
     }).intercept({ title: "Planning" }, { toolCallId: "call_1" })
 
-    expect(createInput().duration).toEqual(
-      DEFAULT_ESCALATION_DURATION_SECONDS * 1000
-    )
+    expect(createInput()).not.toHaveProperty("duration")
   })
 
   it("carries the frozen tool call exactly as invoked", async () => {
@@ -529,7 +525,7 @@ describe("policy snapshot", () => {
     })
 
     it("schedules no expiry for never on an unlimited plan", async () => {
-      await gateFor(policyWith({ never: true })).intercept(
+      await gateFor(policyWith({})).intercept(
         { title: "Planning" },
         { toolCallId: "call_1" }
       )
@@ -551,7 +547,7 @@ describe("policy snapshot", () => {
     it("turns never into the ceiling on a capped plan", async () => {
       mocks.licenses.setEscalationDurationQuota(7)
 
-      await gateFor(policyWith({ never: true })).intercept(
+      await gateFor(policyWith({})).intercept(
         { title: "Planning" },
         { toolCallId: "call_1" }
       )

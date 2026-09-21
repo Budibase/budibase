@@ -75,7 +75,6 @@ const APPROVAL_POLICY_SCHEMA = Joi.object({
   approvers: Joi.array().items(Joi.string()).optional(),
   expiry: Joi.object({
     duration: Joi.number().integer().positive().optional(),
-    never: Joi.boolean().optional(),
     outcome: Joi.string()
       .valid(...Object.values(EscalationAction))
       .optional(),

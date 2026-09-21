@@ -1,9 +1,6 @@
 import { context } from "@budibase/backend-core"
 import { constants as proConstants, licensing } from "@budibase/pro"
-import {
-  dataFilters,
-  DEFAULT_ESCALATION_DURATION_SECONDS,
-} from "@budibase/shared-core"
+import { dataFilters } from "@budibase/shared-core"
 import {
   AgentOperation,
   AgentOperationApprovalPolicy,
@@ -47,12 +44,12 @@ export const escalationDurationMs = async (
   const unlimited =
     !ceilingDays || ceilingDays === proConstants.licenses.UNLIMITED
   const requested =
-    (expiry?.duration ?? DEFAULT_ESCALATION_DURATION_SECONDS) * 1000
+    expiry?.duration === undefined ? undefined : expiry.duration * 1000
   if (unlimited) {
-    return expiry?.never ? undefined : requested
+    return requested
   }
   const ceiling = ceilingDays * DAY_MS
-  return expiry?.never ? ceiling : Math.min(requested, ceiling)
+  return requested === undefined ? ceiling : Math.min(requested, ceiling)
 }
 
 export interface EscalationGateContext {

@@ -12,7 +12,10 @@
     Select,
   } from "@budibase/bbui"
   import { FilterUsers } from "@budibase/frontend-core"
-  import { ESCALATION_DURATION_PRESETS } from "@budibase/shared-core"
+  import {
+    DEFAULT_ESCALATION_DURATION_SECONDS,
+    ESCALATION_DURATION_PRESETS,
+  } from "@budibase/shared-core"
   import { EscalationAction, ResolutionStrategy } from "@budibase/types"
   import type {
     AgentOperationApprovalPolicy,
@@ -95,7 +98,7 @@
   let recipients = $state<EscalationRecipient[]>([])
   let approvers = $state<string[]>([])
   let approvalType = $state<ApprovalTypeValue>(ANY)
-  let expiry = $state<ExpiryValue>(ESCALATION_DURATION_PRESETS.ONE_DAY)
+  let expiry = $state<ExpiryValue>(DEFAULT_ESCALATION_DURATION_SECONDS)
   let customValue = $state<number | undefined>()
   let customUnit = $state(DAY_SECONDS)
   let outcome = $state<OutcomeValue>(EXPIRE)
@@ -135,12 +138,14 @@
   }
 
   const deriveExpiry = (policy?: AgentOperationApprovalPolicy): ExpiryValue => {
+    if (!policy) {
+      return DEFAULT_ESCALATION_DURATION_SECONDS
+    }
     const largest = allowedPresets[allowedPresets.length - 1].value
-    if (policy?.expiry?.never) {
+    const duration = policy.expiry?.duration
+    if (duration === undefined) {
       return unlimited ? NEVER : largest
     }
-    const duration =
-      policy?.expiry?.duration ?? ESCALATION_DURATION_PRESETS.ONE_DAY
     if (allowedPresets.some(preset => preset.value === duration)) {
       return duration
     }
@@ -172,10 +177,10 @@
   const storedExpiry = (
     policy?: AgentOperationApprovalPolicy
   ): ExpiryValue | undefined => {
-    if (policy?.expiry?.never) {
-      return NEVER
+    if (!policy) {
+      return undefined
     }
-    return policy?.expiry?.duration
+    return policy.expiry?.duration ?? NEVER
   }
 
   export const show = (policy?: AgentOperationApprovalPolicy) => {
@@ -230,7 +235,7 @@
       policy.approvalType = approvalType
     }
     if (expiry === NEVER) {
-      policy.expiry = { never: true }
+      policy.expiry = {}
     } else {
       const duration =
         expiry === CUSTOM ? (customValue ?? 0) * customUnit : expiry

@@ -147,7 +147,6 @@ export interface AgentEscalationConfig {
 
 export interface ApprovalPolicyExpiry {
   duration?: number
-  never?: boolean
   outcome?: EscalationAction
 }
 
