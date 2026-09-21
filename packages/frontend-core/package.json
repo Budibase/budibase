@@ -17,6 +17,7 @@
     "@budibase/types": "*",
     "ai": "^7.0.77",
     "dayjs": "^1.10.8",
+    "highlight.js": "^11.11.1",
     "lodash": "4.18.1",
     "socket.io-client": "^4.7.5"
   },
