@@ -1563,6 +1563,36 @@ describe("/api/resources/usage", () => {
       })
     })
 
+    it("clears email credentials from duplicated automations", async () => {
+      const destination = await config.api.workspace.create({
+        name: "Destination",
+      })
+      const settings = {
+        host: "imap.example.com",
+        port: 993,
+        secure: true,
+        username: "ops@example.com",
+        mailbox: "INBOX",
+      }
+      const { automation } = await createAutomationBuilder(config)
+        .onEmail({ ...settings, password: "mailbox-secret" })
+        .save({ disabled: true })
+
+      await duplicateResources([automation._id!], destination.appId)
+
+      const destinationDb = db.getDB(db.getDevWorkspaceID(destination.appId), {
+        skip_setup: true,
+      })
+      const copied = await destinationDb.get<Automation>(automation._id!)
+      expect(copied.definition.trigger.inputs).toEqual(settings)
+      expect(copied.disabled).toBe(true)
+      const sourceDb = db.getDB(config.getDevWorkspaceId(), {
+        skip_setup: true,
+      })
+      const source = await sourceDb.get<Automation>(automation._id!)
+      expect(source.definition.trigger.inputs.password).toBe("mailbox-secret")
+    })
+
     it("sanitises duplicated agents in the destination workspace", async () => {
       const newWorkspace = await config.api.workspace.create({
         name: `Destination ${generator.natural()}`,

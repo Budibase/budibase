@@ -1037,8 +1037,15 @@ async function duplicateResourcesToWorkspaceUnlocked(
   if (docsToInsert.length) {
     await destinationDb.bulkDocs(
       docsToInsert.map<AnyDocument>(doc => {
+        let sanitizedResource: AnyDocument = doc
+        if (isAgent(doc)) {
+          sanitizedResource = sdk.ai.agents.sanitiseAgentForExport(doc)
+        } else if (isAutomation(doc)) {
+          sanitizedResource =
+            sdk.automations.utils.sanitiseAutomationForExport(doc)
+        }
         let sanitizedDoc = sanitizeProjectAssignment({
-          ...(isAgent(doc) ? sdk.ai.agents.sanitiseAgentForExport(doc) : doc),
+          ...sanitizedResource,
           fromWorkspace,
         })
         delete sanitizedDoc._rev

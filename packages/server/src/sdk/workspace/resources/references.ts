@@ -1,4 +1,4 @@
-import { decodeJSBinding, findHBSBlocks } from "@budibase/string-templates"
+import { decodeJSBinding, FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
 import type { AnyDocument, UsedResource } from "@budibase/types"
 
 export interface ResourceSearchTarget extends UsedResource {
@@ -8,6 +8,9 @@ export interface ResourceSearchTarget extends UsedResource {
   matchInEnabledTools?: boolean
   matchExactly?: boolean
 }
+
+export const findResourceBindingBlocks = (value: string) =>
+  value.match(new RegExp(FIND_ANY_HBS_REGEX, "gs")) || []
 
 const STRUCTURED_REFERENCE_PROPERTIES = new Set(["_id", "dependencies", "id"])
 
@@ -22,8 +25,10 @@ const matchesExactBinding = ({
   block: string
   target: ResourceSearchTarget
 }) =>
-  block.includes(`${target.idToSearch}.`) ||
-  block.includes(`[${target.idToSearch}]`)
+  getReadableBindingMatchIndexes({ block, target }).some(index => {
+    const next = block[index + target.idToSearch.length]
+    return next === "." || (block[index - 1] === "[" && next === "]")
+  })
 
 const getReadableBindingMatchIndexes = ({
   block,
@@ -118,7 +123,7 @@ export const findResourceSearchTargets = ({
     property?: string
     isObjectKey?: boolean
   }) => {
-    const blocks = findHBSBlocks(value).map(getSearchableBinding)
+    const blocks = findResourceBindingBlocks(value).map(getSearchableBinding)
     const bindingMatches = getBindingMatches({ blocks, targets })
     for (const target of targets) {
       const exactMatch =
