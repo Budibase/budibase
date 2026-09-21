@@ -104,7 +104,12 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     const response = await API.projects.importBundle(file, body)
     if (this.workspaceId === workspaceId) {
       this.invalidateFetch()
-      this.update(state => sortProjectsByName([...state, response.project]))
+      this.update(state =>
+        sortProjectsByName([
+          ...state.filter(project => project._id !== response.project._id),
+          response.project,
+        ])
+      )
     }
     return response
   }
