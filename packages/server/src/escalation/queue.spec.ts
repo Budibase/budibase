@@ -588,7 +588,7 @@ describe("resumeOperation", () => {
           }),
         ])
       )
-      expect(request.status).not.toEqual("failed")
+      expect(request.status).toEqual("completed")
     })
   })
 
