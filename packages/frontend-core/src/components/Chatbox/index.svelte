@@ -12,6 +12,7 @@
     DraftChatConversation,
     AgentMessageMetadata,
     EscalationContextDoc,
+    EscalationReviewContext,
     EscalationRespondResult,
   } from "@budibase/types"
   import { ApprovalToolResultStatus } from "@budibase/types"
@@ -93,7 +94,12 @@
   // casts live here rather than cluttering the template.
   const escalationCardProps = (part: { input?: unknown; output?: unknown }) => {
     const output = part.output as
-      | { escalationId?: string; title?: string; summary?: string }
+      | {
+          escalationId?: string
+          title?: string
+          summary?: string
+          reviewContext?: EscalationReviewContext
+        }
       | undefined
     const input = part.input as { title?: string; summary?: string } | undefined
     const escalationId = output?.escalationId
@@ -101,6 +107,7 @@
       escalationId,
       title: output?.title ?? input?.title,
       summary: output?.summary ?? input?.summary,
+      reviewContext: output?.reviewContext,
       resolution:
         (escalationId && escalationState?.[escalationId]?.resolution) ||
         "pending",
@@ -758,6 +765,7 @@
                 <EscalationCard
                   title={card.title}
                   summary={card.summary}
+                  reviewContext={card.reviewContext}
                   resolution={card.resolution}
                   statusMessage={card.escalationId
                     ? resolveMessages[card.escalationId]

@@ -6,6 +6,7 @@
     Label,
     Modal,
     ModalContent,
+    Multiselect,
     Select,
   } from "@budibase/bbui"
   import { FieldType } from "@budibase/types"
@@ -15,9 +16,18 @@
     ToolExecutionOperator,
     ToolExecutionRule,
   } from "@budibase/types"
-  import { OperatorOptions, dataFilters } from "@budibase/shared-core"
+  import {
+    MAX_REVIEW_PARAMETERS,
+    OperatorOptions,
+    dataFilters,
+  } from "@budibase/shared-core"
   import { FilterField } from "@budibase/frontend-core"
-  import type { ConditionField } from "./agentConditionFields"
+  import {
+    normalizeReviewParameters,
+    withSelectedReviewFields,
+    type ConditionField,
+    type ReviewField,
+  } from "./agentConditionFields"
 
   export interface Props {
     onSave: (args: {
@@ -29,6 +39,7 @@
       index?: number
       policyId?: string
       conditions: ToolExecutionCondition[]
+      reviewParameters: string[]
     }) => void
     onOpenApiExplorer?: () => void
     onClose?: () => void
@@ -47,21 +58,32 @@
   let modal: Modal | undefined = $state()
   let policies = $state<AgentOperationApprovalPolicy[]>([])
   let fields = $state<ConditionField[]>([])
+  let reviewFields = $state<ReviewField[]>([])
   let editingIndex = $state<number | undefined>()
   let policyId = $state<string | undefined>()
   let conditions = $state<ConditionDraft[]>([])
+  let reviewParameters = $state<string[]>([])
 
   let apiExplorerAvailable = $state(false)
+
+  let shareableFields = $derived(
+    withSelectedReviewFields({
+      fields: reviewFields,
+      selected: reviewParameters,
+    })
+  )
 
   export const show = (options: {
     policies: AgentOperationApprovalPolicy[]
     fields: ConditionField[]
+    reviewFields: ReviewField[]
     rule?: Partial<ToolExecutionRule>
     index?: number
     apiExplorer?: boolean
   }) => {
     policies = options.policies
     fields = options.fields
+    reviewFields = options.reviewFields
     editingIndex = options.index
     policyId = options.rule?.policyId
     apiExplorerAvailable = options.apiExplorer ?? false
@@ -73,6 +95,9 @@
           : condition.value,
       noValue: NO_VALUE_OPERATORS.has(condition.operator),
     }))
+    reviewParameters = normalizeReviewParameters(
+      options.rule?.reviewParameters ?? []
+    )
     modal?.show()
   }
 
@@ -81,6 +106,15 @@
   export const updateFields = (next: ConditionField[]) => {
     fields = next
   }
+
+  export const updateReviewFields = (next: ReviewField[]) => {
+    reviewFields = next
+    reviewParameters = normalizeReviewParameters(reviewParameters)
+  }
+
+  const reviewSelectionValid = $derived(
+    reviewParameters.length <= MAX_REVIEW_PARAMETERS
+  )
 
   const operatorsFor = (condition: ConditionDraft) => {
     const field = fields.find(candidate => candidate.name === condition.field)
@@ -195,10 +229,14 @@
       ...condition,
       value: coerceValue(condition),
     }))
+    const cleanedReviewParameters = normalizeReviewParameters(reviewParameters)
     await onSave({
       rule: {
         policyId,
         ...(cleaned.length ? { conditions: cleaned } : {}),
+        ...(cleanedReviewParameters.length
+          ? { reviewParameters: cleanedReviewParameters }
+          : {}),
       },
       index: editingIndex,
     })
@@ -222,7 +260,7 @@
     secondaryButtonWarning
     secondaryAction={remove}
     onConfirm={save}
-    disabled={!policyId || !conditionsComplete}
+    disabled={!policyId || !conditionsComplete || !reviewSelectionValid}
   >
     <div slot="header" class="modal-header">
       <span>
@@ -252,7 +290,7 @@
       {:else}
         {#if conditions.length}
           <div class="conditions-list">
-            {#each conditions as condition, index}
+            {#each conditions as condition, index (index)}
               <div class="condition-row">
                 <Select
                   size="M"
@@ -331,11 +369,40 @@
               conditions: conditions.map(
                 ({ noValue: _noValue, ...condition }) => condition
               ),
+              reviewParameters: [...reviewParameters],
             })}
         >
           Create new policy
         </Button>
       </div>
+    </div>
+    <div class="configuration-field">
+      <div class="field-copy">
+        <Label size="M">Shared with reviewers</Label>
+        <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+          No tool parameters are shared by default. Select the fields reviewers
+          need to see.
+        </Body>
+      </div>
+      {#if shareableFields.length}
+        <Multiselect
+          value={reviewParameters}
+          options={shareableFields}
+          placeholder="No fields shared"
+          autocomplete
+          searchPlaceholder="Search fields"
+          getOptionLabel={field => field.label}
+          getOptionValue={field => field.name}
+          error={reviewSelectionValid
+            ? undefined
+            : `Select no more than ${MAX_REVIEW_PARAMETERS} fields.`}
+          on:change={event => (reviewParameters = event.detail)}
+        />
+      {:else}
+        <Body size="XS" color="var(--spectrum-global-color-gray-600)">
+          This tool has no fields that can be shared with reviewers.
+        </Body>
+      {/if}
     </div>
   </ModalContent>
 </Modal>
