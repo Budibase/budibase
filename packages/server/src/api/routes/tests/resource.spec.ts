@@ -1590,7 +1590,9 @@ describe("/api/resources/usage", () => {
         skip_setup: true,
       })
       const source = await sourceDb.get<Automation>(automation._id!)
-      expect(source.definition.trigger.inputs.password).toBe("mailbox-secret")
+      expect(source.definition.trigger.inputs).toMatchObject({
+        password: "mailbox-secret",
+      })
     })
 
     it("sanitises duplicated agents in the destination workspace", async () => {
