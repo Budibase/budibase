@@ -81,6 +81,14 @@ const CONTENT_TYPE_MAP: any = {
   gz: "application/gzip",
   svg: "image/svg+xml",
   form: "multipart/form-data",
+  pdf: "application/pdf",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  webp: "image/webp",
+  csv: "text/csv",
+  zip: "application/zip",
 }
 
 const STRING_CONTENT_TYPES = [
