@@ -60,7 +60,9 @@ describe("ImportProjectResultModal", () => {
     expect(screen.getByText(response.unsupportedContent[0].reason)).toBeTruthy()
     expect(screen.queryByText(/agent_linked_content/)).toBeNull()
     expect(
-      screen.getByText("Rows: 3 · Relationships: 1 · Attachments: 1")
+      screen.getByText(
+        "Tables: 2 · Rows: 3 · Relationships: 1 · Attachments: 1"
+      )
     ).toBeTruthy()
 
     await fireEvent.click(buttons[0])
