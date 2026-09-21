@@ -25,6 +25,7 @@
   import ContextUsage from "./ContextUsage.svelte"
   import EscalationCard from "./EscalationCard.svelte"
   import { navigatePromptHistory } from "./promptHistory"
+  import { ensureUniqueMessageIds } from "./messageIds"
   import {
     DefaultChatTransport,
     isTextUIPart,
@@ -274,6 +275,8 @@
   let resolvedConversationId = $state<string | undefined>()
 
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
+    generateId: Helpers.uuid,
+    messages: ensureUniqueMessageIds(chat?.messages || [], Helpers.uuid),
     transport: new DefaultChatTransport({
       headers: () => ({ [Header.WORKSPACE_ID]: workspaceId }),
       prepareSendMessagesRequest: ({ messages }) => {
@@ -285,6 +288,7 @@
             _id: resolvedConversationId || chat?._id,
             agentId,
             isPreview: true,
+            transient: true,
             previewRoleId,
             sessionId: stableSessionId,
             title: chat?.title,
@@ -293,7 +297,6 @@
         }
       },
     }),
-    messages: chat?.messages || [],
     onFinish: async () => {
       isPreparingResponse = false
       chat = { ...chat, messages: chatInstance.messages }
@@ -356,7 +359,10 @@
   export function appendAssistantMessage(
     message: UIMessage<AgentMessageMetadata>
   ) {
-    chatInstance.messages = [...chatInstance.messages, message]
+    chatInstance.messages = ensureUniqueMessageIds(
+      [...chatInstance.messages, message],
+      Helpers.uuid
+    )
   }
 
   let lastAssistantUsage = $derived(
@@ -384,7 +390,10 @@
       if (!isPreparingResponse) {
         resetPendingResponse()
       }
-      chatInstance.messages = chat?.messages || []
+      chatInstance.messages = ensureUniqueMessageIds(
+        chat?.messages || [],
+        Helpers.uuid
+      )
       expandedTools = {}
       reasoningTextByMessageId = {}
     }

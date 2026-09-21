@@ -1,5 +1,6 @@
 import {
   AgentFileUploadResponse,
+  ChatConversation,
   ConnectAgentSharePointSiteRequest,
   ConnectAgentSharePointSiteResponse,
   CreateAgentRequest,
@@ -34,6 +35,10 @@ import {
 import { BaseAPIClient } from "./types"
 
 export interface AgentEndpoints {
+  fetchAgentPreviewConversation: (
+    agentId: string
+  ) => Promise<ChatConversation | undefined>
+  deleteAgentPreviewConversation: (agentId: string) => Promise<void>
   fetchTools: () => Promise<ToolMetadata[]>
   fetchAgents: () => Promise<FetchAgentsResponse>
   fetchAgentKnowledge: (
@@ -135,6 +140,16 @@ export interface AgentEndpoints {
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
+  fetchAgentPreviewConversation: async (agentId: string) => {
+    return await API.get<ChatConversation | undefined>({
+      url: `/api/agents/${agentId}/conversations/transient`,
+    })
+  },
+  deleteAgentPreviewConversation: async (agentId: string) => {
+    await API.delete({
+      url: `/api/agents/${agentId}/conversations/transient`,
+    })
+  },
   fetchTools: async () => {
     return await API.get({
       url: "/api/agent/tools",

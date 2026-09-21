@@ -552,6 +552,56 @@ describe("chat conversation preview stream", () => {
     )
   })
 
+  it("persists only the latest transient preview and deletes it", async () => {
+    setupMocks()
+    const headers = await config.defaultHeaders()
+    const request = config.getRequest()!
+    const transientPath = `/api/agents/${agentId}/conversations/transient`
+
+    const sendPreview = (text: string) =>
+      request
+        .post(agentPreviewStreamPath(agentId))
+        .set(headers)
+        .send({
+          agentId,
+          isPreview: true,
+          transient: true,
+          messages: [
+            {
+              id: `message-${text}`,
+              role: "user",
+              parts: [{ type: "text", text }],
+            },
+          ],
+        })
+
+    expect((await sendPreview("first")).status).toBe(200)
+    const firstConversation = await request.get(transientPath).set(headers)
+    expect(firstConversation.status).toBe(200)
+    expect((await sendPreview("second")).status).toBe(200)
+
+    const getResponse = await request.get(transientPath).set(headers)
+    expect(getResponse.status).toBe(200)
+    expect(getResponse.body).toMatchObject({
+      agentId,
+      transient: true,
+      title: "second",
+    })
+    expect(getResponse.body._id).toBe(firstConversation.body._id)
+    const persistedIds = (getResponse.body.messages as { id?: string }[]).map(
+      message => message.id
+    )
+    expect(persistedIds.every(Boolean)).toBe(true)
+    expect(new Set(persistedIds).size).toBe(persistedIds.length)
+
+    const deleteResponse = await request.delete(transientPath).set(headers)
+    expect(deleteResponse.status).toBe(200)
+    expect(deleteResponse.body).toEqual({ deleted: true })
+
+    const clearedResponse = await request.get(transientPath).set(headers)
+    expect(clearedResponse.status).toBe(204)
+  })
+
   it("rejects stream without preview mode", async () => {
     setupMocks()
     const headers = await config.defaultHeaders()

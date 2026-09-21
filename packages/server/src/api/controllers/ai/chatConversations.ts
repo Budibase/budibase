@@ -14,6 +14,7 @@ import {
   ChatConversation,
   ChatConversationRequest,
   ApprovalToolResultStatus,
+  DocumentType,
   FeatureFlag,
   ContextUser,
   UserCtx,
@@ -47,6 +48,41 @@ const getGlobalUserId = (ctx: UserCtx) => {
     throw new HTTPError("userId is required", 400)
   }
   return userId as string
+}
+
+const getTransientConversationId = (userId: string, agentId: string) =>
+  `${DocumentType.CHAT_CONVERSATION}_preview_${encodeURIComponent(userId)}_${encodeURIComponent(agentId)}`
+
+export async function getTransientAgentConversation(ctx: UserCtx) {
+  const agentId = ctx.params.agentId
+  const userId = getGlobalUserId(ctx)
+  const conversationId = getTransientConversationId(userId, agentId)
+  const conversation = await context
+    .getWorkspaceDB()
+    .tryGet<ChatConversation>(conversationId)
+
+  if (!conversation?.transient || conversation.agentId !== agentId) {
+    ctx.status = 204
+    return
+  }
+
+  ctx.body = conversation
+}
+
+export async function deleteTransientAgentConversation(ctx: UserCtx) {
+  const agentId = ctx.params.agentId
+  const userId = getGlobalUserId(ctx)
+  const db = context.getWorkspaceDB()
+  const conversationId = getTransientConversationId(userId, agentId)
+  const conversation = await db.tryGet<ChatConversation>(conversationId)
+
+  if (!conversation?.transient || conversation.agentId !== agentId) {
+    ctx.body = { deleted: false }
+    return
+  }
+
+  await db.remove(conversation)
+  ctx.body = { deleted: true }
 }
 
 const getRecentChatContext = (
@@ -637,6 +673,7 @@ export async function webhookChat({
 }
 
 export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
+  const db = context.getWorkspaceDB()
   const { agentId, chat, userId, user } = await resolveChatStreamRequest(ctx)
 
   ctx.status = 200
@@ -654,7 +691,9 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
   let sessionId = ""
 
   try {
-    const chatId = chat._id ?? docIds.generateChatConversationID()
+    const chatId = chat.transient
+      ? getTransientConversationId(userId, agentId)
+      : (chat._id ?? docIds.generateChatConversationID())
     sessionId = resolvePreviewSessionId({
       sessionId: chat.sessionId,
       fallbackId: chatId,
@@ -710,6 +749,7 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
     }
     result.pipeUIMessageStreamToResponse(ctx.res, {
       originalMessages: chat.messages,
+      generateMessageId: v4,
       messageMetadata: ({ part }) => {
         if (part.type === "start") {
           return {
@@ -791,6 +831,22 @@ export async function agentChatStream(ctx: UserCtx<ChatAgentRequest, void>) {
           unrecoveredToolFailures,
           finalResponse: getAssistantMessageText(finalAssistantMessage),
         })
+
+        if (chat.transient) {
+          const existingChat = await db.tryGet<ChatConversation>(chatId)
+          const chatToSave =
+            sdk.ai.chatConversations.prepareChatConversationForSave({
+              chatId,
+              userId,
+              title: run.latestQuestion
+                ? truncateTitle(run.latestQuestion)
+                : chat.title,
+              messages,
+              chat,
+              existingChat,
+            })
+          await db.put(chatToSave)
+        }
 
         await finalizeTask
       },

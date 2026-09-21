@@ -26,3 +26,12 @@ builderAdminRoutes.post(
   "/api/agents/:agentId/conversations/:chatConversationId/stream",
   ai.agentChatStream
 )
+builderAdminRoutes
+  .get(
+    "/api/agents/:agentId/conversations/transient",
+    ai.getTransientAgentConversation
+  )
+  .delete(
+    "/api/agents/:agentId/conversations/transient",
+    ai.deleteTransientAgentConversation
+  )

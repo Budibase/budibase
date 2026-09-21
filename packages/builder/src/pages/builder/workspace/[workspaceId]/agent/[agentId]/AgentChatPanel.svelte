@@ -7,7 +7,8 @@
   import type { UIMessage } from "ai"
   import { Chatbox } from "@budibase/frontend-core/src/components"
   import { Constants } from "@budibase/frontend-core"
-  import { Select } from "@budibase/bbui"
+  import { notifications, Select } from "@budibase/bbui"
+  import { API } from "@/api"
   import { escalationsStore } from "@/stores/portal/escalations"
   import { auth } from "@/stores/portal"
   import { roles } from "@/stores/builder"
@@ -97,8 +98,19 @@
     refreshKey += 1
   }
 
-  const refreshChat = () => {
-    resetChat(agentId)
+  const refreshChat = async () => {
+    if (!agentId) {
+      resetChat(agentId)
+      return
+    }
+
+    try {
+      await API.deleteAgentPreviewConversation(agentId)
+      resetChat(agentId)
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to clear chat preview")
+    }
   }
 
   const selectPreviewRole = (roleId: string) => {
@@ -159,6 +171,17 @@
       agentId,
     })
     resetChat(agentId)
+    API.fetchAgentPreviewConversation(agentId)
+      .then(conversation => {
+        if (lastKey === nextKey && conversation) {
+          chat = conversation
+          previewRoleId = conversation.previewRoleId || Constants.Roles.ADMIN
+        }
+      })
+      .catch(error => {
+        console.error(error)
+        notifications.error("Failed to load chat preview")
+      })
   })
 
   // Stop escalation polling when the panel unmounts.

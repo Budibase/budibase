@@ -6,7 +6,7 @@ import {
   type ModelMessage,
   pruneMessages,
 } from "ai"
-import { truncateToolPartsForSave } from "./messages"
+import { ensureUniqueMessageIds, truncateToolPartsForSave } from "./messages"
 
 interface PrepareChatConversationForSaveParams {
   chatId: string
@@ -40,6 +40,8 @@ export const prepareChatConversationForSave = ({
     chat.attachmentDeletingAt ?? existingChat?.attachmentDeletingAt
   const pendingAttachmentTurns =
     chat.pendingAttachmentTurns ?? existingChat?.pendingAttachmentTurns
+  const transient = chat.transient ?? existingChat?.transient
+  const previewRoleId = chat.previewRoleId ?? existingChat?.previewRoleId
 
   if (!agentId) {
     throw new HTTPError("agentId is required", 400)
@@ -51,7 +53,9 @@ export const prepareChatConversationForSave = ({
     agentId,
     userId,
     title: title ?? chat.title,
-    messages: truncateToolPartsForSave(messages),
+    messages: ensureUniqueMessageIds(truncateToolPartsForSave(messages)),
+    ...(transient && { transient }),
+    ...(transient && previewRoleId && { previewRoleId }),
     updatedAt,
     ...(createdAt && { createdAt }),
     ...(channel && { channel }),
