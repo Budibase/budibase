@@ -14,6 +14,32 @@ const queryResource = {
 }
 
 describe("resource references", () => {
+  it.each([
+    "{{ query_orders.rows }}",
+    "{{ [query_orders].[rows] }}",
+    "{{\n query_orders.rows\n }}",
+  ])("matches exact resource bindings: %s", binding => {
+    const target = createSearchTarget(queryResource)
+    expect(
+      findResourceSearchTargets({
+        resource: { binding },
+        targets: [target],
+      })
+    ).toEqual([target])
+  })
+
+  it.each([
+    "{{ prefix_query_orders.rows }}",
+    "{{ [prefix_query_orders].[rows] }}",
+  ])("does not match another identifier's suffix: %s", binding => {
+    expect(
+      findResourceSearchTargets({
+        resource: { binding },
+        targets: [createSearchTarget(queryResource)],
+      })
+    ).toEqual([])
+  })
+
   it("finds structured agent operation tool references", () => {
     const target = createToolSearchTarget({
       resource: queryResource,

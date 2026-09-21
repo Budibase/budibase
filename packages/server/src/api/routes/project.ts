@@ -18,6 +18,7 @@ builderRoutes
   .get("/api/projects", projectsEnabled, controller.fetch)
   .post(
     "/api/projects/import",
+    controller.cleanupImportFiles,
     projectsEnabled,
     appInfoMiddleware({ appType: AppType.DEV }),
     middleware.joiValidator.body(
