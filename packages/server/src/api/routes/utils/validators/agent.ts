@@ -1,6 +1,7 @@
 import { auth } from "@budibase/backend-core"
 import { REVIEWER_TYPES } from "@budibase/shared-core"
 import {
+  EscalationAction,
   EscalationNotificationChannel,
   ResolutionStrategy,
 } from "@budibase/types"
@@ -64,9 +65,15 @@ const APPROVAL_POLICY_SCHEMA = Joi.object({
     .valid(...Object.values(ResolutionStrategy))
     .optional(),
   approvers: Joi.array().items(Joi.string()).optional(),
+  expiry: Joi.object({
+    duration: Joi.number().integer().positive().optional(),
+    never: Joi.boolean().optional(),
+    outcome: Joi.string()
+      .valid(...Object.values(EscalationAction))
+      .optional(),
+  }).optional(),
   notifications: Joi.object({
     recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
-    delay: Joi.number().integer().positive().optional(),
   }).required(),
 })
 

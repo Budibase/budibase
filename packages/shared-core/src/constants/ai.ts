@@ -66,3 +66,14 @@ export const OperationFields: OperationFieldsType = {
     columns: OperationFieldTypeEnum.MULTI_COLUMN,
   },
 }
+
+export const ESCALATION_DURATION_PRESETS = {
+  ONE_DAY: 86400,
+  THREE_DAYS: 259200,
+  ONE_WEEK: 604800,
+  THIRTY_DAYS: 2592000,
+  NINETY_DAYS: 7776000,
+} as const
+
+export const DEFAULT_ESCALATION_DURATION_SECONDS =
+  ESCALATION_DURATION_PRESETS.ONE_DAY

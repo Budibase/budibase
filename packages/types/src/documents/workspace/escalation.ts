@@ -87,7 +87,7 @@ export interface EscalationContextDoc extends Document {
   requestId?: string
   // zlib-deflated + base64 JSON of the SuspendedContext
   contextCompressed?: string
-  delay: number
+  duration?: number
   resolution: "pending" | "resolved" | "expired" | "cancelled"
   // Human-facing heading + detail shown in the notification. Populated by the
   // escalation trigger
