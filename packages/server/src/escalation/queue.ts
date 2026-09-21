@@ -779,7 +779,9 @@ export async function resumeOperation({
   }
 }
 
-export async function processResume(job: Job<EscalationJob>) {
+export async function processResume(
+  job: Pick<Job<EscalationJob>, "id" | "data">
+) {
   const { escalationId, appId } = job.data
 
   await context.doInContext(appId, async () => {

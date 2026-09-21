@@ -15,7 +15,12 @@ import {
 } from "@budibase/types"
 import TestConfiguration from "../tests/utilities/TestConfiguration"
 import sdk from "../sdk"
-import { getQueue, processNotify, processResume, resumeOperation } from "./queue"
+import {
+  getQueue,
+  processNotify,
+  processResume,
+  resumeOperation,
+} from "./queue"
 import * as slack from "./notifications/slack"
 import * as teams from "./notifications/ms-teams"
 import { ProviderResponseError } from "./notifications/utils"
@@ -855,9 +860,7 @@ describe("processNotify", () => {
 describe("expiry", () => {
   const config = new TestConfiguration()
 
-  const seedPending = async (
-    overrides: Partial<EscalationContextDoc> = {}
-  ) => {
+  const seedPending = async (overrides: Partial<EscalationContextDoc> = {}) => {
     const escalationId = `esc_${Date.now()}`
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       await context.getWorkspaceDB().put({
@@ -910,7 +913,7 @@ describe("expiry", () => {
       data: { phase: "notify", ...jobData(escalationId) },
     })
 
-    const jobs = await getQueue().getBullQueue().getJobs()
+    const jobs = await getQueue().getBullQueue().getJobs(["delayed", "waiting"])
     expect(
       jobs.some(job => job.opts?.jobId === `esc_${escalationId}_resume`)
     ).toBe(false)
