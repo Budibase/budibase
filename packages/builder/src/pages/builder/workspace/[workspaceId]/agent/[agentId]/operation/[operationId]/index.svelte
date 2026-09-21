@@ -8,6 +8,7 @@
     ProgressCircle,
   } from "@budibase/bbui"
   import {
+    EscalationNotificationChannel,
     ResolutionStrategy,
     ToolExecutionPrincipal,
     type AgentOperation,
@@ -619,10 +620,23 @@
     [ResolutionStrategy.MAJORITY]: "Majority",
   }
 
+  const PROVIDER_LABELS: Record<EscalationNotificationChannel, string> = {
+    [EscalationNotificationChannel.BUDIBASE]: "Budibase",
+    [EscalationNotificationChannel.SLACK]: "Slack",
+    [EscalationNotificationChannel.MSTEAMS]: "Teams",
+  }
+
   const policyApprovalSummary = (policy: AgentOperationApprovalPolicy) => {
     const count = policy.approvers?.length ?? 0
     if (!count) {
-      return undefined
+      const recipient = policy.notifications?.recipients?.[0]
+      if (!recipient) {
+        return undefined
+      }
+      const target = recipient.config?.channelName
+        ? `#${recipient.config.channelName}`
+        : recipient.config?.channelId || "DM"
+      return `Anyone · ${PROVIDER_LABELS[recipient.type]} · ${target}`
     }
     const type =
       APPROVAL_TYPE_LABELS[
