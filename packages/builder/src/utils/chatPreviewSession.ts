@@ -27,9 +27,7 @@ export const getChatPreviewSessionKey = ({
 }: ChatPreviewSessionKey) =>
   `${STORAGE_PREFIX}:${tenantId}:${userId}:${workspaceId}:${agentId}`
 
-const isChatPreviewSession = (
-  value: unknown
-): value is ChatPreviewSession => {
+const isChatPreviewSession = (value: unknown): value is ChatPreviewSession => {
   if (!value || typeof value !== "object") {
     return false
   }
