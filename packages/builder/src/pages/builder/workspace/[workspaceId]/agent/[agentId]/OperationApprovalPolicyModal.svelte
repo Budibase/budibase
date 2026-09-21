@@ -345,7 +345,10 @@
         value={expiry}
         getOptionLabel={option => option.label}
         getOptionValue={option => option.value}
-        on:change={event => (expiry = event.detail)}
+        on:change={event => {
+          expiry = event.detail
+          cappedFrom = undefined
+        }}
       />
       {#if expiry === CUSTOM}
         <div class="custom-duration">
