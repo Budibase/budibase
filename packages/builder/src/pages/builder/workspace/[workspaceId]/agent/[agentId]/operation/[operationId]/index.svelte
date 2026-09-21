@@ -636,7 +636,8 @@
       const target = recipient.config?.channelName
         ? `#${recipient.config.channelName}`
         : recipient.config?.channelId || "DM"
-      return `Anyone · ${PROVIDER_LABELS[recipient.type]} · ${target}`
+      const provider = PROVIDER_LABELS[recipient.type] ?? recipient.type
+      return `Anyone · ${provider} · ${target}`
     }
     const type =
       APPROVAL_TYPE_LABELS[
