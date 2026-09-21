@@ -43,4 +43,3 @@ export const getBudibaseTools = (
 export default getBudibaseTools
 export { createTableTools } from "./tables"
 export { createKnowledgeFilesTool, createKnowledgeSearchTool }
-export { createEscalatePlaceholderTool, createEscalateTool } from "./escalate"

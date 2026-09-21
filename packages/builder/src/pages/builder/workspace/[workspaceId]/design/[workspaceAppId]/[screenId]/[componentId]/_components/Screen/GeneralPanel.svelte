@@ -10,7 +10,7 @@
   } from "@budibase/bbui"
   import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
   import RoleSelect from "@/components/design/settings/controls/RoleSelect.svelte"
-  import { selectedScreen, screenStore, appStore } from "@/stores/builder"
+  import { selectedScreen, screenStore, workspaceStore } from "@/stores/builder"
   import sanitizeUrl from "@/helpers/sanitizeUrl"
   import ButtonActionEditor from "@/components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
   import { getBindableProperties } from "@/dataBinding"
@@ -102,7 +102,7 @@
         props: {
           text: "Set as home screen",
         },
-        onChange: () => appStore.refresh(),
+        onChange: () => workspaceStore.refresh(),
       },
       {
         key: "routing.route",

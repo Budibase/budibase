@@ -7,7 +7,7 @@
   import ExportWorkspaceModal from "@/components/start/ExportWorkspaceModal.svelte"
   import ImportWorkspaceModal from "@/components/start/ImportWorkspaceModal.svelte"
   import {
-    appStore,
+    workspaceStore,
     deploymentStore,
     isOnlyUser,
     recaptchaStore,
@@ -38,13 +38,14 @@
   let deleteModal: DeleteModal
   let cloneResourcesModal: CloneResourcesModal
 
-  $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
-  $: revertAvailable = $appStore.revertableVersion != null
+  $: updateAvailable =
+    $workspaceStore.upgradableVersion !== $workspaceStore.version
+  $: revertAvailable = $workspaceStore.revertableVersion != null
   $: appRecaptchaEnabled = $recaptchaStore.enabled
   $: hasOnlyOneWorkspace = $workspacesStore.apps.length <= 1
   $: disableDeleteWorkspace = !$isOnlyUser || hasOnlyOneWorkspace
   $: suppressErrorNotifications =
-    !!$appStore.features?.suppressErrorNotifications
+    !!$workspaceStore.features?.suppressErrorNotifications
   $: deleteWorkspaceTooltip = hasOnlyOneWorkspace
     ? "At least one workspace is required."
     : !$isOnlyUser
@@ -69,7 +70,7 @@
   const updateSuppressErrorNotifications = async () => {
     try {
       const newState = !suppressErrorNotifications
-      await appStore.updateApp({
+      await workspaceStore.updateApp({
         features: {
           suppressErrorNotifications: newState,
         },
@@ -141,8 +142,9 @@
     {:else if updateAvailable}
       <Body size="S">
         The workspace is currently using version
-        <strong>{$appStore.version}</strong>
-        but version <strong>{$appStore.upgradableVersion}</strong> is available.
+        <strong>{$workspaceStore.version}</strong>
+        but version <strong>{$workspaceStore.upgradableVersion}</strong> is
+        available.
         <br />
         Updates can contain new features, performance improvements and bug fixes.
       </Body>
@@ -180,7 +182,7 @@
     {:else}
       <Body size="S">
         The workspace is currently using version
-        <strong>{$appStore.version}</strong>.
+        <strong>{$workspaceStore.version}</strong>.
         <br />
         You're running the latest!
       </Body>
@@ -301,13 +303,13 @@
 
 <Modal bind:this={exportModal}>
   <ExportWorkspaceModal
-    appId={$appStore.appId}
+    appId={$workspaceStore.appId}
     published={exportPublishedVersion}
   />
 </Modal>
 
 <Modal bind:this={importModal}>
-  <ImportWorkspaceModal app={$appStore} />
+  <ImportWorkspaceModal app={$workspaceStore} />
 </Modal>
 
 <ConfirmDialog
@@ -317,7 +319,7 @@
   onOk={deploymentStore.unpublishApp}
 >
   Are you sure you want to unpublish the workspace
-  <b>{$appStore.name}</b>?
+  <b>{$workspaceStore.name}</b>?
 
   <p>This will make all apps and automations in this workspace unavailable</p>
 </ConfirmDialog>
@@ -326,8 +328,8 @@
 
 <DeleteModal
   bind:this={deleteModal}
-  appId={$appStore.appId}
-  appName={$appStore.name}
+  appId={$workspaceStore.appId}
+  appName={$workspaceStore.name}
 />
 
 <style>

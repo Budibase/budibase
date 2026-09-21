@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1
 ARG BASEIMG=budibase/database:2.1.0
+FROM public.ecr.aws/x1w3a5n5/third-party:minio-RELEASE.2025-09-07T16-13-09Z AS minio
+
 FROM node:22-slim AS build
 
 # Install node-gyp dependencies
@@ -102,6 +104,7 @@ RUN mkdir -p /var/log/nginx && \
 
 # Setup minio
 WORKDIR /minio
+COPY --from=minio /usr/bin/minio ./minio
 
 COPY scripts/install-minio.sh ./install.sh
 RUN chmod +x install.sh && ./install.sh

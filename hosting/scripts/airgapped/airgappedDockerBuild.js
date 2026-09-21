@@ -8,7 +8,7 @@ let IMAGES = {
 	worker: "budibase/worker",
 	apps: "budibase/apps",
 	proxy: "budibase/proxy",
-	minio: "minio/minio",
+	minio: "quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z",
 	couch: "ibmcom/couchdb3",
 	curl: "curlimages/curl",
 	redis: "redis",

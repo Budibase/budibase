@@ -240,6 +240,8 @@ const environment = {
   SERVICE_TYPE: "unknown",
   PASSWORD_MIN_LENGTH: process.env.PASSWORD_MIN_LENGTH,
   PASSWORD_MAX_LENGTH: process.env.PASSWORD_MAX_LENGTH,
+  PASSWORD_REGEX: process.env.PASSWORD_REGEX,
+  PASSWORD_REGEX_ERROR_MESSAGE: process.env.PASSWORD_REGEX_ERROR_MESSAGE,
   /**
    * Enable to allow an admin user to login using a password.
    * This can be useful to prevent lockout when configuring SSO.

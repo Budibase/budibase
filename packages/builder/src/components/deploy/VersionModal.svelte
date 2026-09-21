@@ -1,5 +1,5 @@
 <script>
-  import { appStore, initialise } from "@/stores/builder"
+  import { workspaceStore, initialise } from "@/stores/builder"
   import {
     Body,
     Button,
@@ -28,13 +28,13 @@
 
   let updateModal
 
-  $: appId = $appStore.appId
+  $: appId = $workspaceStore.appId
   $: updateAvailable =
-    ($appStore.upgradableVersion &&
-      $appStore.version &&
-      $appStore.upgradableVersion !== $appStore.version) ||
+    ($workspaceStore.upgradableVersion &&
+      $workspaceStore.version &&
+      $workspaceStore.upgradableVersion !== $workspaceStore.version) ||
     $admin.isDev
-  $: revertAvailable = $appStore.revertableVersion != null
+  $: revertAvailable = $workspaceStore.revertableVersion != null
 
   const refreshAppPackage = async () => {
     try {
@@ -52,7 +52,7 @@
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-        `App updated successfully to version ${$appStore.upgradableVersion}`
+        `App updated successfully to version ${$workspaceStore.upgradableVersion}`
       )
       onComplete()
     } catch (err) {
@@ -70,7 +70,7 @@
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-        `Workspace reverted successfully to version ${$appStore.revertableVersion}`
+        `Workspace reverted successfully to version ${$workspaceStore.revertableVersion}`
       )
     } catch (err) {
       notifications.error(err?.message || err || "Error reverting app")
@@ -106,14 +106,14 @@
     {#if updateAvailable}
       <Body size="S">
         This workspace is currently using version
-        <b>{$appStore.version}</b>, but version
-        <b>{$appStore.upgradableVersion}</b> is available. Updates can contain new
-        features, performance improvements and bug fixes.
+        <b>{$workspaceStore.version}</b>, but version
+        <b>{$workspaceStore.upgradableVersion}</b> is available. Updates can contain
+        new features, performance improvements and bug fixes.
       </Body>
     {:else}
       <Body size="S">
         This workspace is currently using version
-        <b>{$appStore.version}</b> which is the latest version available.
+        <b>{$workspaceStore.version}</b> which is the latest version available.
       </Body>
     {/if}
     <Body size="S">
@@ -125,7 +125,7 @@
     {#if revertAvailable}
       <Body size="S">
         You can revert this workspace to client version
-        <b>{$appStore.revertableVersion}</b>
+        <b>{$workspaceStore.revertableVersion}</b>
         if you're experiencing issues with the current version.
       </Body>
     {/if}

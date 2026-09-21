@@ -10144,6 +10144,12 @@
         "defaultValue": true
       },
       {
+        "type": "boolean",
+        "label": "Show weekend",
+        "key": "showWeekend",
+        "defaultValue": true
+      },
+      {
         "section": true,
         "name": "Title",
         "dependsOn": "showTitleDate",

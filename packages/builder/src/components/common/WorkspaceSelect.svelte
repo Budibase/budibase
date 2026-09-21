@@ -6,7 +6,7 @@
   import { processStringSync } from "@budibase/string-templates"
   import WorkspaceContextMenuModals from "@/components/start/WorkspaceContextMenuModals.svelte"
   import getWorkspaceContextMenuItems from "@/components/start/getWorkspaceContextMenuItems"
-  import { appStore } from "@/stores/builder"
+  import { workspaceStore } from "@/stores/builder"
   import { contextMenuStore } from "@/stores/builder/contextMenu"
   import { bb } from "@/stores/bb"
   import { enrichedApps, auth, licensing } from "@/stores/portal"
@@ -48,7 +48,7 @@
     | undefined
 
   $: apps = $enrichedApps
-  $: appId = $appStore.appId
+  $: appId = $workspaceStore.appId
   $: currentSort = $sortBy
   $: canManageWorkspaceCreation =
     !!$auth.user && sdk.users.canCreateApps($auth.user)
@@ -237,11 +237,11 @@
         role="button"
         tabindex="0"
         class="workspace-menu-text"
-        title={$appStore.name}
+        title={$workspaceStore.name}
         aria-haspopup="menu"
         aria-expanded={open}
       >
-        <span>{$appStore.name}</span>
+        <span>{$workspaceStore.name}</span>
         <Icon size="M" name={!open ? "caret-down" : "caret-up"} />
       </div>
     </div>

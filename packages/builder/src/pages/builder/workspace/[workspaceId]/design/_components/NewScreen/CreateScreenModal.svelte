@@ -10,7 +10,7 @@
     screenStore,
     permissions as permissionsStore,
     datasources,
-    appStore,
+    workspaceStore,
     workspaceAppStore,
   } from "@/stores/builder"
   import { goto as gotoStore } from "@roxi/routify"
@@ -105,7 +105,7 @@
   const ensureWorkspaceApp = async () => {
     if (!workspaceAppId) {
       const workspaceApp = await workspaceAppStore.add({
-        name: $appStore.name,
+        name: $workspaceStore.name,
         url: "/",
       })
       workspaceAppId = workspaceApp._id
@@ -204,11 +204,11 @@
       // Focus on the main component for the screen type
       const mainComponent = screen.props?._children?.[0]._id
       goto(
-        `/builder/workspace/${$appStore.appId}/design/${workspaceAppId}/${screen._id}/${mainComponent}`
+        `/builder/workspace/${$workspaceStore.appId}/design/${workspaceAppId}/${screen._id}/${mainComponent}`
       )
     } else {
       goto(
-        `/builder/workspace/${$appStore.appId}/design/${workspaceAppId}/${screen._id}`
+        `/builder/workspace/${$workspaceStore.appId}/design/${workspaceAppId}/${screen._id}`
       )
     }
 

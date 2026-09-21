@@ -32,7 +32,7 @@ interface TypeSupportPresets {
   [key: string]: any
 }
 
-export interface AppMetaState {
+export interface WorkspaceMetaState {
   appId: string
   name: string
   url: string
@@ -58,7 +58,7 @@ export interface AppMetaState {
   embedSSO?: EmbedSSOConfig
 }
 
-export const INITIAL_APP_META_STATE: AppMetaState = {
+export const INITIAL_WORKSPACE_META_STATE: WorkspaceMetaState = {
   appId: "",
   name: "",
   url: "",
@@ -105,13 +105,13 @@ export const INITIAL_APP_META_STATE: AppMetaState = {
   embedAllowedOrigins: [],
 }
 
-export class AppMetaStore extends BudiStore<AppMetaState> {
+export class WorkspaceMetaStore extends BudiStore<WorkspaceMetaState> {
   constructor() {
-    super(INITIAL_APP_META_STATE)
+    super(INITIAL_WORKSPACE_META_STATE)
   }
 
   reset() {
-    this.store.set({ ...INITIAL_APP_META_STATE })
+    this.store.set({ ...INITIAL_WORKSPACE_META_STATE })
   }
 
   syncApp(workspace: Workspace) {
@@ -128,7 +128,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
       usedPlugins: workspace.usedPlugins || [],
       icon: workspace.icon,
       features: {
-        ...INITIAL_APP_META_STATE.features,
+        ...INITIAL_WORKSPACE_META_STATE.features,
         ...workspace.features,
       },
       initialised: true,
@@ -159,7 +159,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     this.update(state => ({
       ...state,
       clientFeatures: {
-        ...INITIAL_APP_META_STATE.clientFeatures,
+        ...INITIAL_WORKSPACE_META_STATE.clientFeatures,
         ...features,
       },
     }))
@@ -227,4 +227,4 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
   }
 }
 
-export const appStore = new AppMetaStore()
+export const workspaceStore = new WorkspaceMetaStore()

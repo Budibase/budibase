@@ -6,7 +6,7 @@
     PopoverAlignment,
   } from "@budibase/bbui"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
-  import { appStore, workspaceAppStore } from "@/stores/builder"
+  import { workspaceStore, workspaceAppStore } from "@/stores/builder"
   import type { ScreenUsage, AutomationUsage } from "@budibase/types"
 
   interface Props {
@@ -81,7 +81,7 @@
           {#each appScreens as screen}
             <ListItem
               title={screen.url}
-              url={`/builder/workspace/${$appStore.appId}/design/${screen._id}`}
+              url={`/builder/workspace/${$workspaceStore.appId}/design/${screen._id}`}
               showArrow
             />
           {/each}
@@ -98,7 +98,7 @@
               ? "var(--spectrum-global-color-gray-600)"
               : "var(--spectrum-global-color-green-600)"}
             title={automation.name}
-            url={`/builder/workspace/${$appStore.appId}/automation/${automation._id}`}
+            url={`/builder/workspace/${$workspaceStore.appId}/automation/${automation._id}`}
             showArrow
           />
         {/each}

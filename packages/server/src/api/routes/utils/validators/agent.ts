@@ -87,10 +87,6 @@ const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
     .optional(),
   approvalPolicies: Joi.array().items(APPROVAL_POLICY_SCHEMA).optional(),
   allowKnowledgeSourceDownload: Joi.boolean().optional(),
-  escalation: Joi.object({
-    recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
-    delay: Joi.number().integer().positive().optional(),
-  }).optional(),
 })
 
 export function createAgentValidator() {

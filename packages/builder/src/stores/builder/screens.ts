@@ -4,7 +4,7 @@ import { Helpers } from "@budibase/bbui"
 import { RoleUtils, Utils } from "@budibase/frontend-core"
 import { findAllMatchingComponents } from "@/helpers/components"
 import {
-  appStore,
+  workspaceStore,
   componentStore,
   layoutStore,
   previewStore,
@@ -239,7 +239,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
    */
   async saveScreen(screenRequest: SaveScreenRequest) {
     const { navigationLinkLabel, ...screen } = screenRequest
-    const appState = get(appStore)
+    const appState = get(workspaceStore)
 
     // Validate screen structure if the app supports it
     if (appState.features?.componentValidation) {
@@ -277,10 +277,10 @@ export class ScreenStore extends BudiStore<ScreenState> {
     })
 
     if (savedScreen.pluginAdded) {
-      await appStore.refresh()
+      await workspaceStore.refresh()
     }
 
-    await appStore.refreshAppNav()
+    await workspaceStore.refreshAppNav()
 
     return savedScreen
   }
@@ -404,7 +404,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
       })
     await Promise.all(promises)
 
-    await appStore.refreshAppNav()
+    await workspaceStore.refreshAppNav()
     await workspaceAppStore.refresh()
     const deletedIds = screensToDelete.map(screen => screen._id)
     const routesResponse = await API.fetchAppRoutes()
@@ -427,7 +427,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
       }
 
       // Update routing
-      appStore.update(state => ({
+      workspaceStore.update(state => ({
         ...state,
         routes: routesResponse.routes,
       }))
