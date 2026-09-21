@@ -1,17 +1,23 @@
+import { mocks } from "@budibase/backend-core/tests"
+import { licensing } from "@budibase/pro"
 import {
   ApprovalToolResultStatus,
+  ConstantQuotaName,
   EscalationNotificationChannel,
   EscalationSource,
   ResolutionStrategy,
   type AgentOperation,
   type AgentOperationApprovalPolicy,
+  type ApprovalPolicyExpiry,
 } from "@budibase/types"
+import { DEFAULT_ESCALATION_DURATION_SECONDS } from "@budibase/shared-core"
+import { cloneDeep } from "lodash"
 import { escalationProcessor } from "../../../../escalation/processor"
 import { resolutionStrategyBinding } from "../../../../escalation/resolutionStrategies"
-import {
-  createEscalationGateRuntime,
-  DEFAULT_ESCALATION_DELAY_SECONDS,
-} from "./escalationGate"
+import { initProMocks } from "../../../../tests/utilities/mocks/pro"
+import { createEscalationGateRuntime } from "./escalationGate"
+
+initProMocks()
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
@@ -69,7 +75,6 @@ describe("approved tool call identity", () => {
   beforeEach(() => {
     jest.spyOn(escalationProcessor, "create").mockResolvedValue({
       escalationId: "escalation_1",
-      expiresAt: "2026-09-10T12:00:00.000Z",
     })
   })
 
@@ -162,7 +167,6 @@ describe("policy snapshot", () => {
   beforeEach(() => {
     jest.spyOn(escalationProcessor, "create").mockResolvedValue({
       escalationId: "escalation_1",
-      expiresAt: "2026-09-10T12:00:00.000Z",
     })
   })
 
@@ -176,7 +180,7 @@ describe("policy snapshot", () => {
       name: "Manager approval",
       approvers: ["us_1", "us_2"],
       approvalType: ResolutionStrategy.UNANIMOUS,
-      notifications: { recipients, delay: 60 },
+      notifications: { recipients },
     }
 
     await gateFor(policy).intercept(
@@ -196,7 +200,7 @@ describe("policy snapshot", () => {
           approvalType: ResolutionStrategy.UNANIMOUS,
         },
         recipients,
-        delay: 60_000,
+        duration: DEFAULT_ESCALATION_DURATION_SECONDS * 1000,
       })
     )
     expect(createInput().policy).not.toHaveProperty("notifications")
@@ -284,14 +288,16 @@ describe("policy snapshot", () => {
     expect(escalationProcessor.create).not.toHaveBeenCalled()
   })
 
-  it("defaults the delay when the policy sets none", async () => {
+  it("defaults the duration when the policy sets none", async () => {
     await gateFor({
       id: "policy_1",
       name: "Manager approval",
       notifications: { recipients },
     }).intercept({ title: "Planning" }, { toolCallId: "call_1" })
 
-    expect(createInput().delay).toEqual(DEFAULT_ESCALATION_DELAY_SECONDS * 1000)
+    expect(createInput().duration).toEqual(
+      DEFAULT_ESCALATION_DURATION_SECONDS * 1000
+    )
   })
 
   it("carries the frozen tool call exactly as invoked", async () => {
@@ -308,6 +314,87 @@ describe("policy snapshot", () => {
       toolName: "book_meeting",
       args,
       sourceId: "automation_1",
+    })
+  })
+
+  describe("licence cap", () => {
+    const DAY_MS = 24 * 60 * 60 * 1000
+    const policyWith = (expiry: ApprovalPolicyExpiry) => ({
+      id: "policy_1",
+      name: "Manager approval",
+      expiry,
+      notifications: { recipients },
+    })
+
+    afterEach(() => {
+      mocks.licenses.useUnlimited()
+    })
+
+    it("passes the policy duration through on an unlimited plan", async () => {
+      await gateFor(policyWith({ duration: 90 * 24 * 60 * 60 })).intercept(
+        { title: "Planning" },
+        { toolCallId: "call_1" }
+      )
+
+      expect(createInput().duration).toEqual(90 * DAY_MS)
+    })
+
+    it("schedules no expiry for never on an unlimited plan", async () => {
+      await gateFor(policyWith({ never: true })).intercept(
+        { title: "Planning" },
+        { toolCallId: "call_1" }
+      )
+
+      expect(createInput()).not.toHaveProperty("duration")
+    })
+
+    it("caps a duration above the plan ceiling", async () => {
+      mocks.licenses.setEscalationDurationQuota(7)
+
+      await gateFor(policyWith({ duration: 90 * 24 * 60 * 60 })).intercept(
+        { title: "Planning" },
+        { toolCallId: "call_1" }
+      )
+
+      expect(createInput().duration).toEqual(7 * DAY_MS)
+    })
+
+    it("turns never into the ceiling on a capped plan", async () => {
+      mocks.licenses.setEscalationDurationQuota(7)
+
+      await gateFor(policyWith({ never: true })).intercept(
+        { title: "Planning" },
+        { toolCallId: "call_1" }
+      )
+
+      expect(createInput().duration).toEqual(7 * DAY_MS)
+    })
+
+    it("leaves a duration below the ceiling alone", async () => {
+      mocks.licenses.setEscalationDurationQuota(7)
+
+      await gateFor(policyWith({ duration: 3 * 24 * 60 * 60 })).intercept(
+        { title: "Planning" },
+        { toolCallId: "call_1" }
+      )
+
+      expect(createInput().duration).toEqual(3 * DAY_MS)
+    })
+
+    it("treats a missing quota as unlimited", async () => {
+      const license = cloneDeep(await licensing.cache.getCachedLicense())
+      Reflect.deleteProperty(
+        license.quotas.constant,
+        ConstantQuotaName.ESCALATION_DURATION_DAYS
+      )
+      mocks.licenses.useLicense(license)
+
+      await gateFor(policyWith({ duration: 90 * 24 * 60 * 60 })).intercept(
+        { title: "Planning" },
+        { toolCallId: "call_1" }
+      )
+
+      expect(createInput().duration).toEqual(90 * DAY_MS)
     })
   })
 })

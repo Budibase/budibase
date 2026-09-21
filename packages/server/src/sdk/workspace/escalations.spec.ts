@@ -126,7 +126,7 @@ describe("respond", () => {
       source: EscalationSource.OPERATION,
       appId: config.getProdWorkspaceId(),
       tenantId: config.getTenantId(),
-      delay: 0,
+      duration: 0,
       resolution: "pending",
       resolutionStrategy: resolutionStrategyBinding(
         ResolutionStrategy.FIRST_RESPONSE
@@ -191,7 +191,7 @@ describe("respond", () => {
         source: EscalationSource.OPERATION,
         appId: config.getProdWorkspaceId(),
         tenantId: config.getTenantId(),
-        delay: 0,
+        duration: 0,
         resolution: "pending",
       })
       const notificationDocId = `${DocumentType.ESCALATION_NOTIFICATION}${SEPARATOR}notif-1`
@@ -250,7 +250,7 @@ describe("respond with approvers", () => {
       source: EscalationSource.OPERATION,
       appId: config.getProdWorkspaceId(),
       tenantId: config.getTenantId(),
-      delay: 0,
+      duration: 0,
       resolution: "pending",
       recipients: [{ type: EscalationNotificationChannel.SLACK, config: {} }],
       resolutionStrategy: resolutionStrategyBinding(
