@@ -350,18 +350,13 @@ describe("policy snapshot", () => {
       },
     })
 
-  const createInput = () =>
-    (escalationProcessor.create as jest.Mock).mock.calls[0][0]
+  const createInput = () => mockCreateEscalation.mock.calls[0][0]
 
   beforeEach(() => {
-    jest.spyOn(escalationProcessor, "create").mockResolvedValue({
+    mockCreateEscalation.mockReset().mockResolvedValue({
       escalationId: "escalation_1",
       expiresAt: "2026-09-10T12:00:00.000Z",
     })
-  })
-
-  afterEach(() => {
-    jest.restoreAllMocks()
   })
 
   it("freezes the matched rule and the policy without its delivery fields", async () => {
