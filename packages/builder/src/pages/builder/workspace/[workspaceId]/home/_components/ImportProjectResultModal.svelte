@@ -35,7 +35,8 @@
 
   {#if response.dataImport}
     <Body size="S">
-      Rows: {response.dataImport.rows.toLocaleString()} · Relationships:
+      Tables: {response.dataImport.tables.toLocaleString()} · Rows: {response.dataImport.rows.toLocaleString()}
+      · Relationships:
       {response.dataImport.relationships.toLocaleString()} · Attachments:
       {response.dataImport.attachments.toLocaleString()}
     </Body>

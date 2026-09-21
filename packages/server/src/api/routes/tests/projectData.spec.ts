@@ -44,6 +44,17 @@ describe("Project data export and import", () => {
 
   afterAll(() => config.end())
 
+  it("rejects a string data-export toggle", async () => {
+    await withProjectsEnabled(async () => {
+      const { project } = await config.api.project.create({ name: "Tasks" })
+      await config
+        .request!.post(`/api/projects/${project._id}/export`)
+        .set(config.defaultHeaders())
+        .send({ includeRows: "false" })
+        .expect(400)
+    })
+  })
+
   const createDataProject = async () => {
     const { project } = await config.api.project.create({ name: "Tasks" })
     const { project: sharedProject } = await config.api.project.create({

@@ -63,7 +63,7 @@ builderRoutes
     middleware.joiValidator.body(
       Joi.object({
         encryptPassword: Joi.string().max(1024).optional().allow(""),
-        includeRows: Joi.boolean().optional(),
+        includeRows: Joi.boolean().strict().optional(),
       }),
       {
         allowUnknown: false,

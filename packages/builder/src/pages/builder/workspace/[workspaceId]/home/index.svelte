@@ -552,7 +552,7 @@
       if (
         response.requirements.length ||
         response.unsupportedContent.length ||
-        response.dataImport?.rows
+        response.dataImport
       ) {
         importProjectResultModal?.show()
       }
