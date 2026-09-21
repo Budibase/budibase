@@ -241,7 +241,7 @@ async function generateAttachmentRow(attachment: AutomationAttachment) {
     extension: string,
     content: objectStore.StreamTypes
   ) {
-    const fileName = `${uuid.v4()}${extension}`
+    const fileName = extension ? `${uuid.v4()}.${extension}` : uuid.v4()
     const s3Key = `${prodAppId}/attachments/${fileName}`
 
     await objectStore.streamUpload({
