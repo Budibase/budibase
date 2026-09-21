@@ -24,6 +24,7 @@ describe("ImportProjectResultModal", () => {
         updatedAt: "2026-01-01T00:00:00.000Z",
       },
       resources: { [ResourceType.AGENT]: ["agent_1"] },
+      dataImport: { tables: 2, rows: 3, relationships: 1, attachments: 1 },
       requirements: [
         {
           type: "agent_secrets",
@@ -58,6 +59,9 @@ describe("ImportProjectResultModal", () => {
     expect(screen.getByText("Choose an AI model.")).toBeTruthy()
     expect(screen.getByText(response.unsupportedContent[0].reason)).toBeTruthy()
     expect(screen.queryByText(/agent_linked_content/)).toBeNull()
+    expect(
+      screen.getByText("Rows: 3 · Relationships: 1 · Attachments: 1")
+    ).toBeTruthy()
 
     await fireEvent.click(buttons[0])
     expect(onOpenResource).toHaveBeenCalledExactlyOnceWith(

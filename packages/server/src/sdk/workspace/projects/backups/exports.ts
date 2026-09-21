@@ -4,6 +4,8 @@ import {
   AnyDocument,
   Automation,
   Datasource,
+  ExportProjectRequest,
+  Table,
   isEmailTrigger,
   KnowledgeBaseFile,
   Project,
@@ -30,6 +32,7 @@ import {
 } from "../../resources/utils"
 import {
   MAX_PROJECT_ARCHIVE_SIZE_BYTES,
+  PROJECT_DATA_FILE,
   PROJECT_ATTACHMENTS_DIRECTORY,
   PROJECT_DEPENDENCY_INDEX_FILE,
   PROJECT_DOCS_DIRECTORY,
@@ -37,6 +40,7 @@ import {
   PROJECT_FILE,
   PROJECT_MANIFEST_FILE,
 } from "./constants"
+import { exportProjectData } from "./data"
 import { readProjectPackageFiles } from "./files"
 import { doWithProjectAssignmentsLock } from "../lock"
 import {
@@ -351,9 +355,7 @@ async function encryptDirectory(dirPath: string, password: string) {
 
 export async function exportProject(
   projectId: string,
-  opts?: {
-    encryptPassword?: string
-  }
+  opts?: ExportProjectRequest
 ) {
   const workspaceId = context.getWorkspaceId()
   if (!workspaceId) {
@@ -483,6 +485,21 @@ export async function exportProject(
 
   const tmpPath = await fsp.mkdtemp(join(budibaseTempDir(), "project-export-"))
   try {
+    if (opts?.includeRows) {
+      const { data, unsupportedContent: omittedData } = await exportProjectData(
+        {
+          workspaceId,
+          tables: exportedDocs.filter(
+            doc => typeByResourceId.get(doc._id!) === ResourceType.TABLE
+          ) as Table[],
+          dirPath: tmpPath,
+        }
+      )
+      manifest.containsRows = data.rows.length > 0
+      manifest.containsAttachments = data.attachments.length > 0
+      manifest.unsupportedContent.push(...omittedData)
+      await writeJsonFile(join(tmpPath, PROJECT_DATA_FILE), data)
+    }
     await writeJsonFile(join(tmpPath, PROJECT_MANIFEST_FILE), manifest)
     await writeJsonFile(
       join(tmpPath, PROJECT_FILE),
@@ -539,12 +556,13 @@ export async function exportProject(
 export async function streamExportProject({
   projectId,
   encryptPassword,
-}: {
+  includeRows,
+}: ExportProjectRequest & {
   projectId: string
-  encryptPassword?: string
 }) {
   const tarPath = await exportProject(projectId, {
     encryptPassword,
+    includeRows,
   })
   const stream = streamFile(tarPath)
   const cleanup = () => {

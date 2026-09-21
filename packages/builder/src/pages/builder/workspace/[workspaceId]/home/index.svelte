@@ -61,6 +61,7 @@
     type ProjectResponse,
     type ImportProjectResponse,
     type ProjectImportRequirement,
+    type ExportProjectRequest,
     PublishResourceState,
     type Agent,
     type Table,
@@ -490,12 +491,10 @@
   const handleExportProject = async ({
     id,
     encryptPassword,
-  }: {
-    id: string
-    encryptPassword?: string
-  }) => {
+    includeRows,
+  }: ExportProjectRequest & { id: string }) => {
     try {
-      await projectsStore.exportProject(id, { encryptPassword })
+      await projectsStore.exportProject({ id, encryptPassword, includeRows })
       exportProjectModal?.hide()
     } catch (error) {
       console.error(error)
@@ -555,7 +554,11 @@
           "Project imported, but some resources could not be refreshed. Reload the workspace to see all imported resources."
         )
       }
-      if (response.requirements.length || response.unsupportedContent.length) {
+      if (
+        response.requirements.length ||
+        response.unsupportedContent.length ||
+        response.dataImport?.rows
+      ) {
         importProjectResultModal?.show()
       }
     } catch (error) {

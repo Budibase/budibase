@@ -2,6 +2,7 @@ import { API } from "@/api"
 import { downloadStream } from "@budibase/frontend-core"
 import type {
   CreateProjectRequest,
+  ExportProjectRequest,
   ImportProjectRequest,
   ImportProjectResponse,
   PreviewProjectAssignmentRequest,
@@ -86,12 +87,10 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     return response.project
   }
 
-  exportProject = async (
-    id: string,
-    body?: {
-      encryptPassword?: string
-    }
-  ) => {
+  exportProject = async ({
+    id,
+    ...body
+  }: ExportProjectRequest & { id: string }) => {
     const response = await API.projects.exportBundle(id, body)
     await downloadStream(response)
   }
