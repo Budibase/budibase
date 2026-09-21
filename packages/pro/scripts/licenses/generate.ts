@@ -6,7 +6,7 @@ import { join } from "path"
 
 const privateKeyPath = join(
   process.cwd(),
-  "../../../../account-portal/packages/server/offline-keys/private_key.pem"
+  "../../../account-portal/packages/server/offline-keys/private_key.pem"
 )
 const PRIVATE_KEY = fs.readFileSync(privateKeyPath)
 
