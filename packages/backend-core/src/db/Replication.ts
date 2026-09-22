@@ -1,10 +1,12 @@
 import { Document, DocumentType } from "@budibase/types"
 import PouchDB from "pouchdb"
-import { DesignDocuments, SEPARATOR, USER_METADATA_PREFIX } from "../constants"
+import { DesignDocuments, SEPARATOR } from "../constants"
 import { closePouchDB, getPouchDB } from "./couch"
 import { tracer } from "dd-trace"
 
 const _PouchDB = PouchDB // Keep Prettier from removing import
+
+const DEFAULT_REPLICATION_BATCH_SIZE = 1000
 
 enum ReplicationDirection {
   TO_PRODUCTION = "toProduction",
@@ -39,19 +41,35 @@ class Replication {
   }
 
   replicate(opts: PouchDB.Replication.ReplicateOptions = {}) {
-    return new Promise<PouchDB.Replication.ReplicationResult<{}>>(resolve => {
-      this.source.replicate
-        .to(this.target, opts)
-        .on("denied", function (err) {
-          // a document failed to replicate (e.g. due to permissions)
-          throw new Error(`Denied: Document failed to replicate ${err}`)
-        })
-        .on("complete", function (info) {
-          return resolve(info)
-        })
-        .on("error", function (err) {
-          throw err
-        })
+    return tracer.trace("db.replicate", async span => {
+      span?.addTags({
+        source: this.source.name,
+        target: this.target.name,
+        batch_size: opts.batch_size,
+        batches_limit: opts.batches_limit,
+        checkpoint: opts.checkpoint,
+      })
+      return new Promise<PouchDB.Replication.ReplicationResult<{}>>(
+        (resolve, reject) => {
+          this.source.replicate
+            .to(this.target, opts)
+            .on("denied", function (err) {
+              // a document failed to replicate (e.g. due to permissions)
+              reject(new Error(`Denied: Document failed to replicate ${err}`))
+            })
+            .on("complete", function (info) {
+              span?.addTags({
+                docs_read: info.docs_read,
+                docs_written: info.docs_written,
+                doc_write_failures: info.doc_write_failures,
+              })
+              return resolve(info)
+            })
+            .on("error", function (err) {
+              reject(err)
+            })
+        }
+      )
     })
   }
 
@@ -119,6 +137,7 @@ class Replication {
     } = {}
   ): PouchDB.Replication.ReplicateOptions {
     if (typeof opts.filter === "string") {
+      opts.batch_size = opts.batch_size ?? DEFAULT_REPLICATION_BATCH_SIZE
       return opts
     }
 
@@ -148,8 +167,9 @@ class Replication {
       startsWithID(_id, DocumentType.ROW) ||
       startsWithID(_id, DocumentType.LINK)
 
-    return {
+    const result: PouchDB.Replication.ReplicateOptions = {
       ...opts,
+      batch_size: opts.batch_size ?? DEFAULT_REPLICATION_BATCH_SIZE,
       filter: (doc: DocumentWithID, params: any) => {
         if (!isCreation && doc._id === DesignDocuments.MIGRATIONS) {
           return false
@@ -163,10 +183,6 @@ class Replication {
         }
         // always replicate deleted documents
         if (doc._deleted) {
-          return true
-        }
-        // always sync users from dev
-        if (startsWithID(doc._id, USER_METADATA_PREFIX)) {
           return true
         }
         if (
@@ -192,6 +208,90 @@ class Replication {
         }
         return filter ? filter(doc, params) : true
       },
+    }
+
+    // Keep this in sync with the filter function above.
+    if (!filter) {
+      const generatedSelector = this.buildReplicationSelector({
+        direction,
+        isCreation,
+        tableSyncList,
+        syncAllTables,
+      })
+      result.selector = opts.selector
+        ? { $and: [opts.selector, generatedSelector] }
+        : generatedSelector
+    }
+
+    return result
+  }
+
+  private buildReplicationSelector(opts: {
+    direction: ReplicationDirection | undefined
+    isCreation?: boolean
+    tableSyncList?: string[]
+    syncAllTables: boolean
+  }): PouchDB.Find.Selector {
+    const { direction, isCreation, tableSyncList, syncAllTables } = opts
+    const toDev = direction === ReplicationDirection.TO_DEV
+    const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    const startsWith = (prefix: string): PouchDB.Find.Selector => ({
+      _id: { $regex: `^${escapeRegExp(prefix)}` },
+    })
+    const not = (selector: PouchDB.Find.Selector): PouchDB.Find.Selector => ({
+      $nor: [selector],
+    })
+
+    // Evaluated ahead of the deleted-document short circuit below
+    const unconditional: PouchDB.Find.Selector[] = [
+      not(startsWith(DocumentType.SLACK_APP_CONFIG + SEPARATOR)),
+    ]
+    if (!isCreation) {
+      unconditional.push(not({ _id: DesignDocuments.MIGRATIONS }))
+    }
+    if (toDev) {
+      unconditional.push(not(startsWith("_design")))
+    }
+
+    // Only relevant once we're past the deleted/user-metadata short-circuits.
+    const fallback: PouchDB.Find.Selector[] = [
+      not(startsWith(DocumentType.AUTOMATION_LOG + SEPARATOR)),
+      not(startsWith(DocumentType.AGENT_LOG_SESSION + SEPARATOR)),
+      not({ _id: DocumentType.WORKSPACE_METADATA }),
+    ]
+    if (direction === ReplicationDirection.TO_PRODUCTION && !isCreation) {
+      fallback.push(not(startsWith(DocumentType.AUTO_COLUMN_STATE + SEPARATOR)))
+    }
+    if (!syncAllTables) {
+      const isNotData = not({
+        $or: [
+          startsWith(DocumentType.ROW + SEPARATOR),
+          startsWith(DocumentType.LINK + SEPARATOR),
+        ],
+      })
+      fallback.push(
+        tableSyncList?.length
+          ? {
+              $or: [
+                isNotData,
+                {
+                  $or: tableSyncList.map(id => ({
+                    _id: { $regex: escapeRegExp(id) },
+                  })),
+                },
+              ],
+            }
+          : isNotData
+      )
+    }
+
+    return {
+      $and: [
+        ...unconditional,
+        {
+          $or: [{ _deleted: true }, { $and: fallback }],
+        },
+      ],
     }
   }
 

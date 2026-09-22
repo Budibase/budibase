@@ -5,8 +5,9 @@ import { DeploymentProgressResponse, DeploymentStatus } from "@budibase/types"
 import analytics, { Events, EventSource } from "@/analytics"
 import { workspacesStore } from "@/stores/portal/workspaces"
 import { DerivedBudiStore } from "@/stores/BudiStore"
-import { appStore } from "./workspace"
+import { workspaceStore } from "./workspace"
 import { processStringSync } from "@budibase/string-templates"
+import { getErrorMessage } from "@/helpers/errors"
 import { selectedAppUrls } from "./appUrls"
 import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
 import { automationStore } from "./automations"
@@ -34,21 +35,20 @@ class DeploymentStore extends DerivedBudiStore<
       store: Writable<DeploymentState>
     ): Readable<DerivedDeploymentState> => {
       return derived(
-        [store, appStore, workspacesStore],
-        ([$store, $appStore, $workspacesStore]) => {
+        [store, workspaceStore, workspacesStore],
+        ([$store, $workspaceStore, $workspacesStore]) => {
           // Determine whether the app is published
           const app = $workspacesStore.apps.find(
-            app => app.devId === $appStore.appId
+            app => app.devId === $workspaceStore.appId
           )
           const deployments = $store.deployments.filter(
             x => x.status === DeploymentStatus.SUCCESS
           )
-          const isPublished =
-            app?.status === "published" && !!deployments.length
+          const isPublished = app?.status === "published"
 
           // Generate last published string
           let lastPublished = undefined
-          if (isPublished) {
+          if (isPublished && deployments.length > 0) {
             lastPublished = processStringSync(
               `Your apps and automations were last published {{ duration time 'millisecond' }} ago`,
               {
@@ -92,23 +92,34 @@ class DeploymentStore extends DerivedBudiStore<
     }
   }
 
-  async publishApp(opts?: { seedProductionTables: boolean }) {
+  async publishApp(opts?: { seedProductionTables: boolean }): Promise<boolean> {
+    if (get(this.store.store).isPublishing) {
+      notifications.warning("A publish is already in progress")
+      return false
+    }
     try {
       this.update(state => ({ ...state, isPublishing: true }))
-      await API.publishAppChanges(get(appStore).appId, opts)
+      await API.publishAppChanges(get(workspaceStore).appId, opts)
       await this.completePublish()
-    } catch (error: any) {
-      analytics.captureException(error)
-      const message = error?.message ? ` - ${error.message}` : ""
-      notifications.error(`Error publishing app${message}`)
-    }
-    this.update(state => {
-      return {
+      this.update(state => ({
         ...state,
-        isPublishing: false,
         publishCount: state.publishCount + 1,
+      }))
+      return true
+    } catch (error: any) {
+      if (error?.status === 429) {
+        notifications.warning(
+          getErrorMessage(error) || "A publish is already in progress"
+        )
+      } else {
+        analytics.captureException(error)
+        const message = error?.message ? ` - ${error.message}` : ""
+        notifications.error(`Error publishing app${message}`)
       }
-    })
+      return false
+    } finally {
+      this.update(state => ({ ...state, isPublishing: false }))
+    }
   }
 
   async completePublish() {
@@ -131,7 +142,7 @@ class DeploymentStore extends DerivedBudiStore<
       return
     }
     try {
-      await API.unpublishApp(get(appStore).appId)
+      await API.unpublishApp(get(workspaceStore).appId)
       await Promise.all([
         workspaceDeploymentStore.fetch(),
         workspaceAppStore.refresh(),
@@ -148,7 +159,7 @@ class DeploymentStore extends DerivedBudiStore<
   }
 
   viewPublishedApp() {
-    const app = get(appStore)
+    const app = get(workspaceStore)
     const { liveUrl } = get(selectedAppUrls)
     analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
       appId: app.appId,

@@ -30,11 +30,10 @@ export const ToolBindingPrefix = {
   BUDIBASE: "budibase",
   EXTERNAL: "external",
   SEARCH: "search",
-  ESCALATION: "escalation",
   TOOL: "tool",
 }
 
-export const RETIRED_TOOL_BINDING_NAMESPACES = [ToolBindingPrefix.ESCALATION]
+export const RETIRED_TOOL_BINDING_NAMESPACES = ["escalation"]
 
 // fields on the user table that cannot be edited
 export const UNEDITABLE_USER_FIELDS = [

@@ -317,6 +317,8 @@ describe("resumeOperation", () => {
         expect.objectContaining({
           executedApproval: {
             toolName: "book_meeting",
+            args: { title: "Procurement review" },
+            sourceId: undefined,
           },
         })
       )

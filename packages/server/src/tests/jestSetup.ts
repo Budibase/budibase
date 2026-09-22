@@ -1,4 +1,5 @@
 import env from "../environment"
+import { resetHttpMocking } from "./jestEnv"
 import * as matchers from "jest-extended"
 import { env as coreEnv, timers } from "@budibase/backend-core"
 import { testContainerUtils } from "@budibase/backend-core/tests"
@@ -25,4 +26,5 @@ testContainerUtils.setupEnv(env, coreEnv)
 
 afterAll(async () => {
   timers.cleanup()
+  await resetHttpMocking()
 })

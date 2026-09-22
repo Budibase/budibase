@@ -67,7 +67,10 @@
     type PendingToolInsertion,
   } from "../../toolAutocomplete"
   import { createSaveCoordinator } from "../../operationSaveCoordinator"
-  import { getToolConditionFields } from "../../agentConditionFields"
+  import {
+    getToolConditionFields,
+    getToolReviewFields,
+  } from "../../agentConditionFields"
   import APIEndpointViewer from "@/components/integration/APIEndpointViewer.svelte"
   import { isQueryToolType } from "@budibase/shared-core"
   import type { AgentTool } from "../../toolTypes"
@@ -110,6 +113,7 @@
         index?: number
         policyId?: string
         conditions?: ToolExecutionCondition[]
+        reviewParameters?: string[]
       }
     | undefined
   >()
@@ -683,6 +687,14 @@
       automations: $automationStore.automations,
     })
 
+  const toolReviewFields = (tool: AgentTool) =>
+    getToolReviewFields({
+      tool,
+      tables: $tables.list,
+      queries: $queries.list,
+      automations: $automationStore.automations,
+    })
+
   const beginRuleEdit = ({
     tool,
     executionPrincipal,
@@ -705,6 +717,7 @@
     approvalRuleModal?.show({
       policies: approvalPolicies,
       fields: toolConditionFields(tool),
+      reviewFields: toolReviewFields(tool),
       rule: index !== undefined ? rules[index] : undefined,
       index,
       apiExplorer: isQueryToolType(tool.sourceType),
@@ -730,6 +743,9 @@
     if (stagedToolConfig) {
       approvalRuleModal?.updateFields(
         toolConditionFields(stagedToolConfig.tool)
+      )
+      approvalRuleModal?.updateReviewFields(
+        toolReviewFields(stagedToolConfig.tool)
       )
     }
   }
@@ -805,12 +821,14 @@
     index,
     policyId,
     conditions,
+    reviewParameters,
   }: {
     index?: number
     policyId?: string
     conditions: ToolExecutionCondition[]
+    reviewParameters: string[]
   }) => {
-    stagedRule = { index, policyId, conditions }
+    stagedRule = { index, policyId, conditions, reviewParameters }
     policyModalFromRule = true
     chainingRuleModal = true
     approvalRuleModal?.hide()
@@ -836,8 +854,15 @@
       fields: stagedToolConfig
         ? toolConditionFields(stagedToolConfig.tool)
         : [],
+      reviewFields: stagedToolConfig
+        ? toolReviewFields(stagedToolConfig.tool)
+        : [],
       rule: pending
-        ? { policyId: pending.policyId, conditions: pending.conditions }
+        ? {
+            policyId: pending.policyId,
+            conditions: pending.conditions,
+            reviewParameters: pending.reviewParameters,
+          }
         : undefined,
       index: pending?.index,
       apiExplorer: stagedToolConfig

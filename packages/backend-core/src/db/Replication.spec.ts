@@ -1,5 +1,5 @@
 import { DocumentType } from "@budibase/types"
-import { DesignDocuments } from "../constants"
+import { DesignDocuments, SEPARATOR, USER_METADATA_PREFIX } from "../constants"
 import Replication from "./Replication"
 
 const mockSourceDb = {
@@ -25,6 +25,37 @@ jest.mock("./couch", () => ({
 }))
 
 describe("Replication", () => {
+  describe("replicate", () => {
+    it("preserves custom filters when a selector is provided", async () => {
+      const complete = {}
+      const on = jest.fn()
+      on.mockImplementation(
+        (event: string, callback: (info: object) => void) => {
+          if (event === "complete") {
+            callback(complete)
+          }
+          return { on }
+        }
+      )
+      mockSourceDb.replicate.to.mockReturnValue({ on })
+
+      const replication = new Replication({
+        source: mockSourceDb.name,
+        target: mockTargetDb.name,
+      })
+      const filter = jest.fn()
+      const opts = {
+        selector: { _id: "keep" },
+        filter,
+      }
+
+      await replication.replicate(opts)
+
+      expect(mockSourceDb.replicate.to).toHaveBeenCalledWith(mockTargetDb, opts)
+      expect(opts.filter).toBe(filter)
+    })
+  })
+
   describe("appReplicateOpts", () => {
     it("should skip migrations document when not a creation", () => {
       const replication = new Replication({
@@ -133,6 +164,29 @@ describe("Replication", () => {
           {}
         )
       ).toBe(false)
+    })
+
+    it("should only replicate user metadata when its table is selected", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      const userMetadataDoc = {
+        _id: `${USER_METADATA_PREFIX}global-user-id`,
+      }
+
+      const opts = replication.appReplicateOpts({ isCreation: false })
+
+      expect((opts.filter as Function)(userMetadataDoc, {})).toBe(false)
+
+      const selectedTableOpts = replication.appReplicateOpts({
+        isCreation: false,
+        tablesToSync: ["ta_users"],
+      })
+
+      expect((selectedTableOpts.filter as Function)(userMetadataDoc, {})).toBe(
+        true
+      )
     })
 
     it("should filter out automation logs", () => {
@@ -271,7 +325,7 @@ describe("Replication", () => {
       expect(result).toBe(false)
     })
 
-    it("should return opts unchanged when filter is string", () => {
+    it("should return opts unchanged other than a default batch_size when filter is string", () => {
       const replication = new Replication({
         source: `${DocumentType.WORKSPACE_DEV}_source`,
         target: `${DocumentType.WORKSPACE}_target`,
@@ -285,6 +339,221 @@ describe("Replication", () => {
       const opts = replication.appReplicateOpts(inputOpts)
 
       expect(opts).toBe(inputOpts)
+      expect(opts).not.toHaveProperty("selector")
+      expect(opts.batch_size).toBe(1000)
+    })
+
+    it("should not override a caller-provided batch_size when filter is string", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const inputOpts = {
+        filter: "design/myfilter",
+        isCreation: true,
+        batch_size: 42,
+      }
+
+      const opts = replication.appReplicateOpts(inputOpts)
+
+      expect(opts.batch_size).toBe(42)
+    })
+
+    it("should attach a native selector when no custom filter is provided", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({ isCreation: false })
+
+      expect(opts.selector).toBeInstanceOf(Object)
+      expect(opts.selector).toEqual(
+        expect.objectContaining({
+          $and: expect.arrayContaining([
+            {
+              $nor: [
+                {
+                  _id: {
+                    $regex: `^${DocumentType.SLACK_APP_CONFIG}${SEPARATOR}`,
+                  },
+                },
+              ],
+            },
+            { $nor: [{ _id: DesignDocuments.MIGRATIONS }] },
+            expect.objectContaining({
+              $or: expect.arrayContaining([
+                { _deleted: true },
+                expect.objectContaining({
+                  $and: expect.arrayContaining([
+                    {
+                      $nor: [
+                        {
+                          _id: {
+                            $regex: `^${DocumentType.AUTOMATION_LOG}${SEPARATOR}`,
+                          },
+                        },
+                      ],
+                    },
+                    {
+                      $nor: [
+                        {
+                          _id: {
+                            $regex: `^${DocumentType.AGENT_LOG_SESSION}${SEPARATOR}`,
+                          },
+                        },
+                      ],
+                    },
+                    { $nor: [{ _id: DocumentType.WORKSPACE_METADATA }] },
+                    {
+                      $nor: [
+                        {
+                          $or: [
+                            {
+                              _id: {
+                                $regex: `^${DocumentType.ROW}${SEPARATOR}`,
+                              },
+                            },
+                            {
+                              _id: {
+                                $regex: `^${DocumentType.LINK}${SEPARATOR}`,
+                              },
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      $nor: [
+                        {
+                          _id: {
+                            $regex: `^${DocumentType.AUTO_COLUMN_STATE}${SEPARATOR}`,
+                          },
+                        },
+                      ],
+                    },
+                  ]),
+                }),
+              ]),
+            }),
+          ]),
+        })
+      )
+    })
+
+    it("should exclude design documents from the TO_DEV selector", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE}_source`,
+        target: `${DocumentType.WORKSPACE_DEV}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({ isCreation: true })
+
+      expect(opts.selector).toEqual(
+        expect.objectContaining({
+          $and: expect.arrayContaining([
+            { $nor: [{ _id: { $regex: "^_design" } }] },
+          ]),
+        })
+      )
+    })
+
+    it("should allow auto column state in creation selectors", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({ isCreation: true })
+
+      const selectorJSON = JSON.stringify(opts.selector)
+      expect(selectorJSON).not.toContain(
+        `${DocumentType.AUTO_COLUMN_STATE}${SEPARATOR}`
+      )
+    })
+
+    it("should include only selected table data in the selector", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({
+        isCreation: true,
+        tablesToSync: ["ta_orders"],
+      })
+
+      expect(JSON.stringify(opts.selector)).toContain('"ta_orders"')
+      expect(JSON.stringify(opts.selector)).toContain(
+        `"^${DocumentType.ROW}${SEPARATOR}"`
+      )
+      expect(JSON.stringify(opts.selector)).toContain(
+        `"^${DocumentType.LINK}${SEPARATOR}"`
+      )
+    })
+
+    it("should combine a caller selector with the generated selector", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      const callerSelector = {
+        _id: { $regex: "^ta_orders_" },
+      }
+
+      const opts = replication.appReplicateOpts({
+        isCreation: true,
+        selector: callerSelector,
+      })
+
+      expect(opts.selector).toEqual({
+        $and: [
+          callerSelector,
+          expect.objectContaining({
+            $and: expect.any(Array),
+          }),
+        ],
+      })
+    })
+
+    it("should not attach a selector when a custom filter is provided", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({
+        isCreation: true,
+        filter: jest.fn(),
+      })
+
+      expect(opts.selector).toBeUndefined()
+    })
+
+    it("should default batch_size to 1000", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({ isCreation: true })
+
+      expect(opts.batch_size).toBe(1000)
+    })
+
+    it("should not override a caller-provided batch_size", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({
+        isCreation: true,
+        batch_size: 42,
+      })
+
+      expect(opts.batch_size).toBe(42)
     })
   })
 

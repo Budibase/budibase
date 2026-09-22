@@ -1,40 +1,79 @@
-<script>
+<script lang="ts">
+  import { getContext } from "svelte"
+  import { goto, isActive, params } from "@roxi/routify"
   import {
     Context,
-    Icon,
-    Input,
-    ModalContent,
     Detail,
+    Input,
+    Icon,
+    ModalContent,
     notifications,
+    type ModalAPI,
   } from "@budibase/bbui"
-  import { API } from "@/api"
-  import { goto, params, isActive } from "@roxi/routify"
+  import { BUILDER_URLS, ThemeOptions } from "@budibase/shared-core"
+  import {
+    FeatureFlag,
+    type Datasource,
+    type FeatureFlags,
+    type Query,
+    type Screen,
+    type Table,
+    type Theme,
+    type UIAutomation,
+    type UIInternalDatasource,
+    type View,
+    type ViewV2,
+  } from "@budibase/types"
+
+  import { IntegrationTypes } from "@/constants/backend"
   import {
     automationStore,
-    previewStore,
-    sortedScreens,
-    appStore,
     datasources,
+    deploymentStore,
     queries,
     tables,
+    previewStore,
+    sortedScreens,
+    workspaceStore,
     views,
     viewsV2,
   } from "@/stores/builder"
-  import { themeStore, featureFlags } from "@/stores/portal"
+  import { featureFlags, themeStore } from "@/stores/portal"
   import { bb } from "@/stores/bb"
-  import { getContext } from "svelte"
-  import { ThemeOptions, BUILDER_URLS } from "@budibase/shared-core"
-  import { FeatureFlag } from "@budibase/types"
-  import { IntegrationTypes } from "@/constants/backend"
+
+  interface Command {
+    type: string
+    name: string
+    description?: string
+    icon: string
+    action: () => void | Promise<void>
+    requiresApp?: boolean
+    codeName?: string
+  }
+
+  interface EnrichedCommand extends Command {
+    searchValue: string
+  }
+
+  interface SearchResult extends EnrichedCommand {
+    idx: number
+  }
+
+  type Category = [string, SearchResult[]]
+  type CommandDatasource = Datasource | UIInternalDatasource
 
   $goto
   $isActive
   $params
 
-  const modalContext = getContext(Context.Modal)
+  const modalContext = getContext<ModalAPI>(Context.Modal)
 
-  let search
-  let selected = null
+  let search = ""
+  let selected: number | null = null
+  let commands: Command[] = []
+  let enrichedCommands: EnrichedCommand[] = []
+  let results: SearchResult[] = []
+  let categories: Category[] = []
 
   $: inApp = $isActive("/builder/workspace/:workspaceId")
   $: commands = [
@@ -67,7 +106,7 @@
       type: "Preview",
       name: "Published App",
       icon: "play",
-      action: () => window.open(`/app${$appStore.url}`),
+      action: () => window.open(`/app${$workspaceStore.url}`),
       requiresApp: true,
     },
     {
@@ -98,12 +137,14 @@
     ...themeCommands(),
     ...featureFlagCommands($featureFlags),
   ]
-  $: enrichedCommands = commands.map(cmd => ({
-    ...cmd,
-    searchValue: `${cmd.type} ${cmd.name} ${cmd.codeName || ""}`
-      .toLowerCase()
-      .replace(/_/g, " "),
-  }))
+  $: enrichedCommands = commands.map(
+    (cmd): EnrichedCommand => ({
+      ...cmd,
+      searchValue: `${cmd.type} ${cmd.name} ${cmd.codeName || ""}`
+        .toLowerCase()
+        .replace(/_/g, " "),
+    })
+  )
   $: results = filterResults(enrichedCommands, search, inApp)
   $: categories = groupResults(results)
 
@@ -148,10 +189,12 @@
     }))
   }
 
-  const datasourceCommands = datasourceList => {
+  const datasourceCommands = (
+    datasourceList: CommandDatasource[]
+  ): Command[] => {
     return datasourceList.map(datasource => ({
       type: "Datasource",
-      name: datasource.name,
+      name: datasource.name || "",
       icon:
         datasource.source === IntegrationTypes.REST
           ? "globe-simple"
@@ -170,8 +213,8 @@
     }))
   }
 
-  const tableCommands = tables => {
-    return tables.map(table => ({
+  const tableCommands = (tableList: Table[]): Command[] => {
+    return tableList.map(table => ({
       type: "Table",
       name: table.name,
       icon: "table",
@@ -184,10 +227,10 @@
     }))
   }
 
-  const viewCommands = views => {
-    return views.map(view => ({
+  const viewCommands = (viewList: View[]): Command[] => {
+    return viewList.map(view => ({
       type: "View",
-      name: view.name,
+      name: view.name || "",
       icon: "minus",
       action: () => {
         $goto(`/builder/workspace/:workspaceId/data/view/:name`, {
@@ -199,8 +242,8 @@
     }))
   }
 
-  const viewV2Commands = views => {
-    return views.map(view => ({
+  const viewV2Commands = (viewList: ViewV2[]): Command[] => {
+    return viewList.map(view => ({
       type: "View",
       name: view.name,
       icon: "minus",
@@ -215,11 +258,11 @@
     }))
   }
 
-  const queryCommands = queries => {
+  const queryCommands = (queryList: Query[]): Command[] => {
     const datasourceLookup = new Map(
       ($datasources.list || []).map(datasource => [datasource._id, datasource])
     )
-    return queries.map(query => {
+    return queryList.map(query => {
       const datasource = datasourceLookup.get(query.datasourceId)
       const isRest = datasource?.source === IntegrationTypes.REST
       return {
@@ -241,7 +284,7 @@
     })
   }
 
-  const screenCommands = screens => {
+  const screenCommands = (screens: Screen[]): Command[] => {
     return screens.map(screen => ({
       type: "Screen",
       name: screen.routing.route,
@@ -256,7 +299,7 @@
     }))
   }
 
-  const automationCommands = automations => {
+  const automationCommands = (automations: UIAutomation[]): Command[] => {
     return automations.map(automation => ({
       type: "Automation",
       name: automation.name,
@@ -270,37 +313,46 @@
     }))
   }
 
-  const themeCommands = () => {
-    return ThemeOptions.map(themeMeta => ({
-      type: "Change Builder Theme",
-      name: themeMeta.name,
-      icon: "palette",
-      action: () =>
-        themeStore.update(state => {
-          state.theme = themeMeta.id
-          return state
-        }),
-    }))
+  const themeCommands = (): Command[] => {
+    return ThemeOptions.map(themeMeta => {
+      const theme = themeMeta.id as Theme
+      return {
+        type: "Change Builder Theme",
+        name: themeMeta.name,
+        icon: "palette",
+        action: () =>
+          themeStore.update(state => {
+            state.theme = theme
+            return state
+          }),
+      }
+    })
   }
 
-  const featureFlagCommands = flags => {
+  const featureFlagCommands = (flags: FeatureFlags): Command[] => {
     if (!flags.FEATURE_FLAG_OVERRIDES) {
       return []
     }
     return Object.entries(flags)
       .filter(([flag]) => flag !== FeatureFlag.FEATURE_FLAG_OVERRIDES)
-      .map(([flag, value]) => ({
-        type: "Feature Flag",
-        name: value ? "Disable" : "Enable",
-        codeName: flag,
-        icon: "flag",
-        action: () => {
-          featureFlags.setFlag(flag, !value)
-        },
-      }))
+      .map(([flag, value]) => {
+        return {
+          type: "Feature Flag",
+          name: value ? "Disable" : "Enable",
+          codeName: flag,
+          icon: "flag",
+          action: () => {
+            featureFlags.setFlag(flag as FeatureFlag, !value)
+          },
+        }
+      })
   }
 
-  const filterResults = (commands, search, inApp) => {
+  const filterResults = (
+    commands: EnrichedCommand[],
+    search: string,
+    inApp: boolean
+  ): SearchResult[] => {
     if (search) {
       selected = 0
       search = search.toLowerCase().replace(/_/g, " ")
@@ -322,8 +374,8 @@
       }))
   }
 
-  const groupResults = results => {
-    let categories = {}
+  const groupResults = (results: SearchResult[]): Category[] => {
+    let categories: Record<string, SearchResult[]> = {}
     results?.forEach(result => {
       if (!categories[result.type]) {
         categories[result.type] = []
@@ -333,7 +385,7 @@
     return Object.entries(categories)
   }
 
-  const onKeyDown = e => {
+  const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === "ArrowDown") {
       e.preventDefault()
       if (selected === null) {
@@ -363,15 +415,12 @@
   }
 
   async function deployApp() {
-    try {
-      await API.publishAppChanges($appStore.appId)
+    if (await deploymentStore.publishApp()) {
       notifications.success("App published successfully")
-    } catch (error) {
-      notifications.error("Error publishing app")
     }
   }
 
-  const runAction = command => {
+  const runAction = (command: Command | undefined) => {
     if (!command) {
       return
     }

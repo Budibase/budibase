@@ -111,7 +111,10 @@
       })
       provisionResult = await agentsStore.provisionMSTeamsChannel(agent._id)
       if (agent.live) {
-        await deploymentStore.publishApp()
+        const published = await deploymentStore.publishApp()
+        if (!published) {
+          return false
+        }
       }
       notifications.success("Microsoft Teams channel settings saved")
       return true

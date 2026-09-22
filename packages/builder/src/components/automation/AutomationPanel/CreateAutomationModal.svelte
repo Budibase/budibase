@@ -1,7 +1,7 @@
 <script>
   import { getErrorMessage } from "@/helpers/errors"
   import { goto as gotoStore } from "@roxi/routify"
-  import { appStore, automationStore } from "@/stores/builder"
+  import { workspaceStore, automationStore } from "@/stores/builder"
   import {
     notifications,
     Input,
@@ -31,7 +31,7 @@
 
   async function createAutomation() {
     try {
-      const workspaceId = $appStore.appId
+      const workspaceId = $workspaceStore.appId
       const trigger = automationStore.actions.constructBlock(
         "TRIGGER",
         triggerVal.stepId,

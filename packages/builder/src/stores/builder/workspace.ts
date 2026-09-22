@@ -32,7 +32,7 @@ interface TypeSupportPresets {
   [key: string]: any
 }
 
-export interface AppMetaState {
+export interface WorkspaceMetaState {
   appId: string
   name: string
   url: string
@@ -58,7 +58,7 @@ export interface AppMetaState {
   embedSSO?: EmbedSSOConfig
 }
 
-export const INITIAL_APP_META_STATE: AppMetaState = {
+export const INITIAL_WORKSPACE_META_STATE: WorkspaceMetaState = {
   appId: "",
   name: "",
   url: "",
@@ -105,16 +105,16 @@ export const INITIAL_APP_META_STATE: AppMetaState = {
   embedAllowedOrigins: [],
 }
 
-export class AppMetaStore extends BudiStore<AppMetaState> {
+export class WorkspaceMetaStore extends BudiStore<WorkspaceMetaState> {
   constructor() {
-    super(INITIAL_APP_META_STATE)
+    super(INITIAL_WORKSPACE_META_STATE)
   }
 
   reset() {
-    this.store.set({ ...INITIAL_APP_META_STATE })
+    this.store.set({ ...INITIAL_WORKSPACE_META_STATE })
   }
 
-  syncApp(workspace: Workspace) {
+  syncWorkspace(workspace: Workspace) {
     this.update(state => ({
       ...state,
       name: workspace.name,
@@ -128,7 +128,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
       usedPlugins: workspace.usedPlugins || [],
       icon: workspace.icon,
       features: {
-        ...INITIAL_APP_META_STATE.features,
+        ...INITIAL_WORKSPACE_META_STATE.features,
         ...workspace.features,
       },
       initialised: true,
@@ -141,7 +141,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     }))
   }
 
-  syncAppPackage(pkg: {
+  syncWorkspacePackage(pkg: {
     application: Workspace
     clientLibPath: string
     hasLock: boolean
@@ -152,14 +152,14 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
       hasLock,
       clientLibPath,
     }))
-    this.syncApp(application)
+    this.syncWorkspace(application)
   }
 
   syncClientFeatures(features: Partial<ClientFeatures>) {
     this.update(state => ({
       ...state,
       clientFeatures: {
-        ...INITIAL_APP_META_STATE.clientFeatures,
+        ...INITIAL_WORKSPACE_META_STATE.clientFeatures,
         ...features,
       },
     }))
@@ -172,7 +172,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     }))
   }
 
-  async syncAppRoutes() {
+  async syncWorkspaceRoutes() {
     const resp = await API.fetchAppRoutes()
     this.update(state => ({
       ...state,
@@ -180,9 +180,9 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     }))
   }
 
-  async updateApp(updates: UpdateWorkspaceRequest) {
-    const app = await API.saveAppMetadata(get(this.store).appId, updates)
-    this.syncApp(app)
+  async updateWorkspace(updates: UpdateWorkspaceRequest) {
+    const workspace = await API.saveAppMetadata(get(this.store).appId, updates)
+    this.syncWorkspace(workspace)
   }
 
   // Returned from socket
@@ -214,7 +214,7 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
     await initialise(appPackage)
   }
 
-  async refreshAppNav() {
+  async refreshWorkspaceAppNavigation() {
     const { selectedWorkspaceApp } = get(workspaceAppStore)
     if (!selectedWorkspaceApp) {
       return
@@ -227,4 +227,4 @@ export class AppMetaStore extends BudiStore<AppMetaState> {
   }
 }
 
-export const appStore = new AppMetaStore()
+export const workspaceStore = new WorkspaceMetaStore()
