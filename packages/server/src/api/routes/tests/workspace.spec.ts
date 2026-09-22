@@ -1,5 +1,5 @@
 import { DEFAULT_TABLES } from "../../../db/defaultData/datasource_bb_default"
-import { USERS_TABLE_SCHEMA } from "../../../constants"
+import { ObjectStoreBuckets, USERS_TABLE_SCHEMA } from "../../../constants"
 import { setEnv, withEnv } from "../../../environment"
 
 import {
@@ -1990,6 +1990,10 @@ describe("/applications", () => {
     })
 
     it("should delete the shared Actions database when the workspace is fully deleted", async () => {
+      await objectStore.createBucketIfNotExists(
+        objectStore.ObjectStore(),
+        ObjectStoreBuckets.APPS
+      )
       const actionsDbName = events.platformActions.getActionsDbName(
         config.getProdWorkspaceId()
       )
