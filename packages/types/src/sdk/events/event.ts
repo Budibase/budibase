@@ -55,6 +55,7 @@ export enum Event {
   AUTH_SSO_ACTIVATED = "auth:sso:activated",
   AUTH_SSO_DEACTIVATED = "auth:sso:deactivated",
   AUTH_LOGIN = "auth:login",
+  AUTH_LOGIN_FAILED = "auth:login:failed",
   AUTH_LOGOUT = "auth:logout",
 
   // ORG
@@ -312,6 +313,7 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.AUTH_SSO_ACTIVATED]: `SSO configuration activated`,
   [Event.AUTH_SSO_DEACTIVATED]: `SSO configuration deactivated`,
   [Event.AUTH_LOGIN]: `User "{{ email }}" logged in`,
+  [Event.AUTH_LOGIN_FAILED]: `Login failed for "{{ email }}"`,
   [Event.AUTH_LOGOUT]: `User "{{ email }}" logged out`,
 
   // ORG

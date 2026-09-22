@@ -127,6 +127,7 @@ export const login = async (
     async (err: any, user: User, info: any) => {
       if (err || !user) {
         await onFailed(email)
+        await events.auth.loginFailed("local", email)
         if (await isLocked(email)) {
           return handleLockoutResponse(ctx, email)
         }

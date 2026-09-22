@@ -2,6 +2,7 @@ import { publishEvent } from "../events"
 import {
   Event,
   LoginEvent,
+  LoginFailedEvent,
   LoginSource,
   LogoutEvent,
   SSOActivatedEvent,
@@ -22,6 +23,16 @@ async function login(source: LoginSource, email: string) {
     },
   }
   await publishEvent(Event.AUTH_LOGIN, properties)
+}
+
+async function loginFailed(source: LoginSource, email: string) {
+  const properties: LoginFailedEvent = {
+    source,
+    audited: {
+      email,
+    },
+  }
+  await publishEvent(Event.AUTH_LOGIN_FAILED, properties)
 }
 
 async function logout(email?: string) {
@@ -65,6 +76,7 @@ async function SSODeactivated(type: SSOType) {
 
 export default {
   login,
+  loginFailed,
   logout,
   SSOCreated,
   SSOUpdated,

@@ -17,6 +17,13 @@ export interface LoginEvent extends BaseEvent {
   }
 }
 
+export interface LoginFailedEvent extends BaseEvent {
+  source: LoginSource
+  audited: {
+    email: string
+  }
+}
+
 export interface LogoutEvent extends BaseEvent {
   userId: string
   audited: {
