@@ -46,10 +46,9 @@
   let initPromise = $state<Promise<void>>(Promise.resolve())
   let loaded = $state(false)
   let commandPaletteModal = $state<Modal>()
-  let settingsModal = $state<SettingsModal>()
   let accountLockedModal = $state<AccountLockedModal>()
   let hasAuthenticated = $state(false)
-  let lastExecutedAction = $state<string | null>(null)
+  let lastExecutedAction: string | null = null
 
   let multiTenancyEnabled = $derived($admin.multiTenancy)
   let hasAdminUser = $derived($admin?.checklist?.adminUser?.checked)
@@ -347,7 +346,7 @@
 />
 
 <!-- Global settings modal -->
-<SettingsModal bind:this={settingsModal} on:hide={() => bb.hideSettings()} />
+<SettingsModal on:hide={() => bb.hideSettings()} />
 
 <!-- Portal branding overrides -->
 <Branding />
