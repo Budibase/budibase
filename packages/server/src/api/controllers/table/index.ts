@@ -46,7 +46,7 @@ import {
 } from "../../../integrations/utils"
 import sdk from "../../../sdk"
 import { processTable } from "../../../sdk/workspace/tables/getters"
-import { publishWorkspaceInternal } from "../deploy"
+import { publishWorkspaceInternal, withPublishLock } from "../deploy"
 import {
   isRows,
   isSchema,
@@ -336,6 +336,12 @@ export async function duplicate(ctx: UserCtx<void, SaveTableResponse>) {
 }
 
 export async function publish(
+  ctx: UserCtx<PublishTableRequest, PublishTableResponse>
+) {
+  await withPublishLock(() => publishTableInternal(ctx))
+}
+
+async function publishTableInternal(
   ctx: UserCtx<PublishTableRequest, PublishTableResponse>
 ) {
   const tableId = ctx.params.tableId as string

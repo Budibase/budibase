@@ -48,6 +48,19 @@ export interface PendingToolCall {
   sourceId?: string
 }
 
+export interface EscalationReviewContext {
+  requestedBy: string
+  operation: string
+  action: string
+  toolName?: string
+  parameters?: EscalationReviewParameter[]
+}
+
+export interface EscalationReviewParameter {
+  name: string
+  value: string
+}
+
 export type ApprovedToolCall = Pick<
   PendingToolCall,
   "toolName" | "args" | "sourceId"
@@ -89,6 +102,7 @@ export interface EscalationContextDoc extends Document {
   // escalation trigger
   title?: string
   summary?: string
+  reviewContext?: EscalationReviewContext
   response?: EscalationResponse
   resolvedAt?: string
   isTest?: boolean

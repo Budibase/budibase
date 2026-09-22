@@ -972,6 +972,28 @@ describe("/api/global/users", () => {
   })
 
   describe("POST /api/global/users/search", () => {
+    it.each([0, -1, 1.5])(
+      "should reject an invalid pagination limit of %s",
+      async limit => {
+        await config.api.users.searchUsers(
+          {
+            workspaceId: "app_workspace_filter",
+            limit,
+          },
+          { status: 400 }
+        )
+      }
+    )
+
+    it("should reject string pagination flags", async () => {
+      await config.request
+        .post("/api/global/users/search")
+        .send({ paginate: "false" })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+    })
+
     it("should be able to search by email", async () => {
       const user = await config.createUser()
       const response = await config.api.users.searchUsers({
@@ -1048,6 +1070,181 @@ describe("/api/global/users", () => {
 
       expect(response.body.data.length).toBe(1)
       expect(response.body.data[0].email).toBe(email)
+    })
+
+    it("should filter users by any selected group", async () => {
+      featureMocks.licenses.useUnlimited()
+      const [firstGroup, secondGroup, otherGroup] = await Promise.all(
+        Array.from({ length: 3 }).map(() =>
+          config.doInTenant(() =>
+            proSdk.groups.save(structures.groups.UserGroup())
+          )
+        )
+      )
+      const [firstUser, secondUser, otherUser] = await Promise.all([
+        config.createUser({ userGroups: [firstGroup.id] }),
+        config.createUser({ userGroups: [secondGroup.id] }),
+        config.createUser({ userGroups: [otherGroup.id] }),
+      ])
+
+      const response = await config.api.users.searchUsers({
+        groupIds: [firstGroup.id, secondGroup.id],
+        query: {
+          oneOf: { _id: [firstUser._id, secondUser._id, otherUser._id] },
+        },
+      })
+
+      expect(response.body.data.map((user: User) => user._id)).toEqual(
+        expect.arrayContaining([firstUser._id, secondUser._id])
+      )
+      expect(response.body.data).toHaveLength(2)
+    })
+
+    it("should apply the selected group filter to workspace users", async () => {
+      const workspaceId = "app_workspace_group_filter"
+      featureMocks.licenses.useUnlimited()
+      const [selectedGroup, otherGroup] = await Promise.all([
+        config.doInTenant(() =>
+          proSdk.groups.save(structures.groups.UserGroup())
+        ),
+        config.doInTenant(() =>
+          proSdk.groups.save(structures.groups.UserGroup())
+        ),
+      ])
+      const [selectedUser, otherUser] = await Promise.all([
+        config.createUser({
+          roles: { [workspaceId]: "BASIC" },
+          userGroups: [selectedGroup.id],
+        }),
+        config.createUser({
+          roles: { [workspaceId]: "BASIC" },
+          userGroups: [otherGroup.id],
+        }),
+      ])
+
+      const response = await config.api.users.searchUsers({
+        workspaceId,
+        groupIds: [selectedGroup.id],
+        query: { oneOf: { _id: [selectedUser._id, otherUser._id] } },
+      })
+
+      expect(response.body.data.map((user: User) => user._id)).toEqual([
+        selectedUser._id,
+      ])
+    })
+
+    it("should filter users by their direct workspace role", async () => {
+      const workspaceId = "app_workspace_role_filter"
+      const [basicUser, powerUser] = await Promise.all([
+        config.createUser({ roles: { [workspaceId]: "BASIC" } }),
+        config.createUser({ roles: { [workspaceId]: "POWER" } }),
+      ])
+
+      const response = await config.api.users.searchUsers({
+        workspaceId,
+        workspaceRoleId: "BASIC",
+        query: { oneOf: { _id: [basicUser._id, powerUser._id] } },
+      })
+
+      expect(response.body.data.map((user: User) => user._id)).toEqual([
+        basicUser._id,
+      ])
+    })
+
+    it("should filter users by their group workspace role", async () => {
+      const workspaceId = "app_workspace_group_role_filter"
+      const email = structures.users.newEmail()
+      featureMocks.licenses.useUnlimited()
+      const group = await config.doInTenant(() =>
+        proSdk.groups.save({
+          ...structures.groups.UserGroup(),
+          roles: { [workspaceId]: "BASIC" },
+        })
+      )
+      await config.createUser({ email, userGroups: [group.id] })
+
+      const response = await config.api.users.searchUsers({
+        workspaceId,
+        workspaceRoleId: "BASIC",
+        query: { string: { email } },
+      })
+
+      expect(response.body.data.map((user: User) => user.email)).toEqual([
+        email,
+      ])
+    })
+
+    it("should combine group and workspace role filters", async () => {
+      const workspaceId = "app_workspace_combined_user_filter"
+      featureMocks.licenses.useUnlimited()
+      const [selectedGroup, otherGroup] = await Promise.all([
+        config.doInTenant(() =>
+          proSdk.groups.save(structures.groups.UserGroup())
+        ),
+        config.doInTenant(() =>
+          proSdk.groups.save(structures.groups.UserGroup())
+        ),
+      ])
+      const [selectedUser, otherUser] = await Promise.all([
+        config.createUser({
+          roles: { [workspaceId]: "BASIC" },
+          userGroups: [selectedGroup.id],
+        }),
+        config.createUser({
+          roles: { [workspaceId]: "BASIC" },
+          userGroups: [otherGroup.id],
+        }),
+      ])
+
+      const response = await config.api.users.searchUsers({
+        workspaceId,
+        workspaceRoleId: "BASIC",
+        groupIds: [selectedGroup.id],
+        query: { oneOf: { _id: [selectedUser._id, otherUser._id] } },
+      })
+
+      expect(response.body.data.map((user: User) => user._id)).toEqual([
+        selectedUser._id,
+      ])
+    })
+
+    it("should require a workspace ID when filtering by workspace role", async () => {
+      await config.api.users.searchUsers(
+        { workspaceRoleId: "BASIC" },
+        { status: 400 }
+      )
+    })
+
+    it("should reject invalid group filters", async () => {
+      await config.request
+        .post("/api/global/users/search")
+        .send({ groupIds: "group_id" })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+
+      await config.request
+        .post("/api/global/users/search")
+        .send({ groupIds: [123] })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+
+      await config.request
+        .post("/api/global/users/search")
+        .send({ groupIds: [""] })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+    })
+
+    it("should reject invalid workspace role filters", async () => {
+      await config.request
+        .post("/api/global/users/search")
+        .send({ workspaceRoleId: 123 })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
     })
 
     it("should include global admins in workspace search", async () => {
