@@ -55,11 +55,13 @@
   export let defaultRows: Row[] | undefined = []
 
   const sdk = (getContext("sdk") as any) ?? {}
-  const { API } = sdk
+  const { API, appStore } = sdk
 
   const pickerLabels = loadTranslationsByGroup("picker")
   // Limit datasourceType "user" to app users only
   export let workspaceUsersOnly: boolean | undefined = false
+  export let userGroups: string[] | undefined = undefined
+  export let workspaceRole: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
 
@@ -81,10 +83,14 @@
   let lastFilterKey: string | undefined = undefined
 
   // Reset the available options when our base filter changes
-  $: filter, workspaceUsersOnly, (optionsMap = {})
+  $: filter, workspaceUsersOnly, userGroups, workspaceRole, (optionsMap = {})
 
   // Clear the current selection when the base filter changes
-  $: clearSelectionOnFilterChange(migratedFilter)
+  $: clearSelectionOnFilterChange({
+    filter: migratedFilter,
+    userGroups,
+    workspaceRole,
+  })
 
   // Determine if we can select multiple rows or not
   $: multiselect =
@@ -101,13 +107,16 @@
   $: linkedTableId = tableId ?? fieldSchema?.tableId
   $: writable = !disabled && !readonly
   $: migratedFilter = migrateFilter(filter)
-  $: fetch = createFetch(
+  $: fetch = createFetch({
     writable,
-    datasourceType,
-    migratedFilter,
+    dsType: datasourceType,
+    filter: migratedFilter,
     linkedTableId,
-    workspaceUsersOnly
-  )
+    workspaceUsersOnly,
+    workspaceId: $appStore?.appId,
+    userGroups,
+    workspaceRole,
+  })
 
   // Attempt to determine the primary display field to use
   $: tableDefinition = $fetch?.definition
@@ -162,23 +171,45 @@
   }
 
   // Where applicable, creates the fetch instance to load row options
-  const createFetch = (
-    writable: boolean,
-    dsType: typeof datasourceType,
-    filter: UISearchFilter | undefined,
-    linkedTableId?: string,
+  const createFetch = ({
+    writable,
+    dsType,
+    filter,
+    linkedTableId,
+    workspaceUsersOnly,
+    workspaceId,
+    userGroups,
+    workspaceRole,
+  }: {
+    writable: boolean
+    dsType: typeof datasourceType
+    filter: UISearchFilter | undefined
+    linkedTableId?: string
     workspaceUsersOnly?: boolean
-  ) => {
-    const datasource: DataFetchDatasource =
-      dsType === "table"
-        ? {
-            type: dsType,
-            tableId: linkedTableId!,
-          }
-        : {
-            type: workspaceUsersOnly ? "table" : dsType,
-            tableId: InternalTable.USER_METADATA,
-          }
+    workspaceId?: string
+    userGroups?: string[]
+    workspaceRole?: string
+  }) => {
+    let datasource: DataFetchDatasource
+    const hasUserFilters = !!userGroups?.length || !!workspaceRole
+    if (dsType === "table") {
+      datasource = {
+        type: dsType,
+        tableId: linkedTableId!,
+      }
+    } else if (workspaceUsersOnly && !hasUserFilters) {
+      datasource = {
+        type: "table",
+        tableId: InternalTable.USER_METADATA,
+      }
+    } else {
+      datasource = {
+        type: dsType,
+        workspaceId: workspaceUsersOnly ? workspaceId : undefined,
+        groupIds: userGroups,
+        workspaceRoleId: workspaceRole,
+      }
+    }
     return fetchData({
       API,
       datasource,
@@ -386,8 +417,12 @@
   }
 
   // Clears the current selection when the base filter changes
-  const clearSelectionOnFilterChange = (filter: UISearchFilter | undefined) => {
-    const key = filter ? JSON.stringify(filter) : ""
+  const clearSelectionOnFilterChange = (filters: {
+    filter: UISearchFilter | undefined
+    userGroups: string[] | undefined
+    workspaceRole: string | undefined
+  }) => {
+    const key = JSON.stringify(filters)
     const previous = lastFilterKey
     lastFilterKey = key
     // Pre-existing values are preserved.

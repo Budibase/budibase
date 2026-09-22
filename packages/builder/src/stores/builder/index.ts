@@ -137,9 +137,9 @@ const resetBuilderHistory = () => {
 export const initialise = async (pkg: FetchAppPackageResponse) => {
   const { application, recaptchaKey } = pkg
   // must be first operation to make sure subsequent requests have correct app ID
-  workspaceStore.syncAppPackage(pkg)
+  workspaceStore.syncWorkspacePackage(pkg)
   await Promise.all([
-    workspaceStore.syncAppRoutes(),
+    workspaceStore.syncWorkspaceRoutes(),
     componentStore.refreshDefinitions(application?.appId),
   ])
   builderStore.init(application)

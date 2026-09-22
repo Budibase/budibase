@@ -70,7 +70,7 @@
   const updateSuppressErrorNotifications = async () => {
     try {
       const newState = !suppressErrorNotifications
-      await workspaceStore.updateApp({
+      await workspaceStore.updateWorkspace({
         features: {
           suppressErrorNotifications: newState,
         },

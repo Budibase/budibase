@@ -9,7 +9,7 @@
 
   async function save({ detail }: CustomEvent<boolean>) {
     try {
-      await workspaceStore.updateApp({
+      await workspaceStore.updateWorkspace({
         automations: {
           chainAutomations: detail,
         },

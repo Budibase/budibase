@@ -7,6 +7,7 @@ import { workspacesStore } from "@/stores/portal/workspaces"
 import { DerivedBudiStore } from "@/stores/BudiStore"
 import { workspaceStore } from "./workspace"
 import { processStringSync } from "@budibase/string-templates"
+import { getErrorMessage } from "@/helpers/errors"
 import { selectedAppUrls } from "./appUrls"
 import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
 import { automationStore } from "./automations"
@@ -43,12 +44,11 @@ class DeploymentStore extends DerivedBudiStore<
           const deployments = $store.deployments.filter(
             x => x.status === DeploymentStatus.SUCCESS
           )
-          const isPublished =
-            app?.status === "published" && !!deployments.length
+          const isPublished = app?.status === "published"
 
           // Generate last published string
           let lastPublished = undefined
-          if (isPublished) {
+          if (isPublished && deployments.length > 0) {
             lastPublished = processStringSync(
               `Your apps and automations were last published {{ duration time 'millisecond' }} ago`,
               {
@@ -92,23 +92,34 @@ class DeploymentStore extends DerivedBudiStore<
     }
   }
 
-  async publishApp(opts?: { seedProductionTables: boolean }) {
+  async publishApp(opts?: { seedProductionTables: boolean }): Promise<boolean> {
+    if (get(this.store.store).isPublishing) {
+      notifications.warning("A publish is already in progress")
+      return false
+    }
     try {
       this.update(state => ({ ...state, isPublishing: true }))
       await API.publishAppChanges(get(workspaceStore).appId, opts)
       await this.completePublish()
-    } catch (error: any) {
-      analytics.captureException(error)
-      const message = error?.message ? ` - ${error.message}` : ""
-      notifications.error(`Error publishing app${message}`)
-    }
-    this.update(state => {
-      return {
+      this.update(state => ({
         ...state,
-        isPublishing: false,
         publishCount: state.publishCount + 1,
+      }))
+      return true
+    } catch (error: any) {
+      if (error?.status === 429) {
+        notifications.warning(
+          getErrorMessage(error) || "A publish is already in progress"
+        )
+      } else {
+        analytics.captureException(error)
+        const message = error?.message ? ` - ${error.message}` : ""
+        notifications.error(`Error publishing app${message}`)
       }
-    })
+      return false
+    } finally {
+      this.update(state => ({ ...state, isPublishing: false }))
+    }
   }
 
   async completePublish() {

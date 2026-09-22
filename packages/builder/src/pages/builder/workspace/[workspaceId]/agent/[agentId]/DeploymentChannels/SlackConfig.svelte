@@ -90,7 +90,10 @@
     loadSlackAppConfig()
   })
 
-  const provisionSlackChannel = async (showNotification = true) => {
+  const provisionSlackChannel = async (
+    showNotification = true,
+    continueOnPublishFailure = false
+  ) => {
     if (!agent?._id || provisioning) {
       return false
     }
@@ -109,7 +112,10 @@
       })
       provisionResult = await agentsStore.provisionSlackChannel(agent._id)
       if (agent.live) {
-        await deploymentStore.publishApp()
+        const published = await deploymentStore.publishApp()
+        if (!published && !continueOnPublishFailure) {
+          return false
+        }
       }
       if (showNotification) {
         notifications.success("Slack channel settings saved")
@@ -135,7 +141,7 @@
 
     copyingManifest = true
     try {
-      const saved = await provisionSlackChannel(false)
+      const saved = await provisionSlackChannel(false, true)
       if (!saved) {
         return
       }

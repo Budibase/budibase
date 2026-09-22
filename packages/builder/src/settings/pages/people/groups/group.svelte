@@ -29,14 +29,14 @@
   import { sdk } from "@budibase/shared-core"
   import { Constants } from "@budibase/frontend-core"
   import { bb } from "@/stores/bb"
-  import type { StoreApp } from "@/types"
+  import type { StoreWorkspace } from "@/types"
   import type { UserGroup } from "@budibase/types"
 
   export interface Props {
     groupId: string
   }
 
-  interface WorkspaceRow extends StoreApp {
+  interface WorkspaceRow extends StoreWorkspace {
     prodAppId: string
     role?: string
     readonly: boolean

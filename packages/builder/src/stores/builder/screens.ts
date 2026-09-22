@@ -280,7 +280,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
       await workspaceStore.refresh()
     }
 
-    await workspaceStore.refreshAppNav()
+    await workspaceStore.refreshWorkspaceAppNavigation()
 
     return savedScreen
   }
@@ -404,7 +404,7 @@ export class ScreenStore extends BudiStore<ScreenState> {
       })
     await Promise.all(promises)
 
-    await workspaceStore.refreshAppNav()
+    await workspaceStore.refreshWorkspaceAppNavigation()
     await workspaceAppStore.refresh()
     const deletedIds = screensToDelete.map(screen => screen._id)
     const routesResponse = await API.fetchAppRoutes()

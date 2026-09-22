@@ -11,10 +11,10 @@
   import { API } from "@/api"
   import { groups } from "@/stores/portal/groups"
   import { Constants } from "@budibase/frontend-core"
-  import type { StoreApp } from "@/types"
+  import type { StoreWorkspace } from "@/types"
   import type { Role } from "@budibase/types"
 
-  interface Workspace extends StoreApp {
+  interface Workspace extends StoreWorkspace {
     prodAppId: string
     role?: string
   }

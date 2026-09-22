@@ -45,8 +45,7 @@
     translationOverrides
   )
 
-  const { accountPortalAccountUrl, builderWorkspacesUrl, builderAppsUrl } =
-    helpers
+  const { accountPortalAccountUrl, builderAppsUrl } = helpers
 
   const getText = (user?: User | ContextUser): string => {
     if (!user) {
@@ -64,10 +63,7 @@
   }
 
   const goToPortal = () => {
-    const builderBaseUrl = $environmentStore.accountPortalUrl
-    const targetUrl = isBuilder
-      ? builderWorkspacesUrl(builderBaseUrl)
-      : builderAppsUrl(builderBaseUrl)
+    const targetUrl = isBuilder ? "/builder" : builderAppsUrl()
     window.location.href = targetUrl
   }
 

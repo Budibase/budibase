@@ -1,8 +1,15 @@
-import { context, sql, SQLITE_DESIGN_DOC_ID } from "@budibase/backend-core"
+import {
+  context,
+  locks,
+  sql,
+  SQLITE_DESIGN_DOC_ID,
+} from "@budibase/backend-core"
 import { helpers, PROTECTED_INTERNAL_COLUMNS } from "@budibase/shared-core"
 import {
   Database,
   FieldType,
+  LockName,
+  LockType,
   PreSaveSQLiteDefinition,
   RelationshipFieldMetadata,
   SQLiteDefinition,
@@ -157,6 +164,73 @@ async function pruneConflicts(db: Database) {
   }
 }
 
+export async function withDefinitionRebuildLock<T>(
+  fn: () => Promise<T>,
+  workspaceId: string = context.getOrThrowWorkspaceId()
+): Promise<T> {
+  const { result } = await locks.doWithLock(
+    {
+      type: LockType.AUTO_EXTEND,
+      name: LockName.SQS_SYNC_DEFINITIONS,
+      resource: workspaceId,
+    },
+    fn
+  )
+  return result
+}
+
+export async function withDefinitionRebuildLocks<T>(
+  workspaceIds: string[],
+  fn: () => Promise<T>
+): Promise<T> {
+  const lockIds = [...new Set(workspaceIds)].sort()
+  const runWithLock = (index: number): Promise<T> => {
+    if (index === lockIds.length) {
+      return fn()
+    }
+    return withDefinitionRebuildLock(
+      () => runWithLock(index + 1),
+      lockIds[index]
+    )
+  }
+  return runWithLock(0)
+}
+
+const DEFINITION_REBUILD_MAX_WAIT_MS = 10000
+const DEFINITION_REBUILD_POLL_INTERVAL_MS = 500
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+export async function waitForDefinitionRebuild(
+  workspaceId: string = context.getOrThrowWorkspaceId()
+): Promise<void> {
+  const deadline = Date.now() + DEFINITION_REBUILD_MAX_WAIT_MS
+  try {
+    for (;;) {
+      const { executed } = await locks.doWithLock(
+        {
+          type: LockType.TRY_ONCE,
+          name: LockName.SQS_SYNC_DEFINITIONS,
+          resource: workspaceId,
+          ttl: 1000,
+        },
+        async () => {}
+      )
+      if (executed || Date.now() >= deadline) {
+        return
+      }
+      await sleep(DEFINITION_REBUILD_POLL_INTERVAL_MS)
+    }
+  } catch (err) {
+    console.warn(
+      `Unable to confirm SQLite definition rebuild status for workspace "${workspaceId}", continuing anyway`,
+      err
+    )
+  }
+}
+
 export async function syncDefinition(
   db = context.getWorkspaceDB()
 ): Promise<void> {
@@ -179,20 +253,31 @@ export async function syncDefinition(
   await pruneConflicts(db)
 }
 
-export async function addTable(table: Table) {
-  const db = context.getWorkspaceDB()
-  let definition: PreSaveSQLiteDefinition | SQLiteDefinition
-  try {
-    definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
-  } catch (err) {
-    definition = await buildBaseDefinition()
+export async function addTable(
+  table: Table,
+  opts?: { skipDefinitionRebuildLock?: boolean }
+) {
+  const addTableToDefinition = async () => {
+    const db = context.getWorkspaceDB()
+    let definition: PreSaveSQLiteDefinition | SQLiteDefinition
+    try {
+      definition = await db.get<SQLiteDefinition>(SQLITE_DESIGN_DOC_ID)
+    } catch (err) {
+      definition = await buildBaseDefinition()
+    }
+    definition.sql.tables = {
+      ...definition.sql.tables,
+      ...getStaticSqsTables(),
+      ...mapTable(table),
+    }
+    await db.put(definition)
   }
-  definition.sql.tables = {
-    ...definition.sql.tables,
-    ...getStaticSqsTables(),
-    ...mapTable(table),
+
+  if (opts?.skipDefinitionRebuildLock) {
+    await addTableToDefinition()
+  } else {
+    await withDefinitionRebuildLock(addTableToDefinition)
   }
-  await db.put(definition)
 }
 
 export async function removeTable(table: Table) {
