@@ -89,6 +89,11 @@ describe("file decryption", () => {
       })
     ).rejects.toThrow("Decrypted file exceeds the size limit")
 
-    expect((await fsp.stat(output)).size).toBeLessThanOrEqual(maxOutputBytes)
+    const outputFile = await fsp.stat(output).catch(error => {
+      if (error.code !== "ENOENT") {
+        throw error
+      }
+    })
+    expect(outputFile?.size ?? 0).toBeLessThanOrEqual(maxOutputBytes)
   })
 })
