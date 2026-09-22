@@ -48,6 +48,16 @@ describe("Project assignments lock", () => {
     }))
   })
 
+  it("rejects assignments without a workspace", async () => {
+    getWorkspaceId.mockReturnValue(undefined)
+
+    await expect(
+      doWithProjectAssignmentsLock(async () => undefined)
+    ).rejects.toThrow(
+      "Could not determine workspace for Project assignments lock"
+    )
+  })
+
   it("uses an explicit destination workspace", async () => {
     await doWithProjectAssignmentsLock(async () => undefined, "app_dev_target")
 
