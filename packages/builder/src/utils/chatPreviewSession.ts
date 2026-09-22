@@ -78,13 +78,28 @@ export const saveChatPreviewSession = ({
     return
   }
 
-  try {
-    sessionStorage.setItem(
-      getChatPreviewSessionKey(key),
-      JSON.stringify(session)
-    )
-  } catch (_error) {
-    // Keep the in-memory conversation when browser storage is unavailable.
+  const storageKey = getChatPreviewSessionKey(key)
+  const persisted: ChatPreviewSession = {
+    previewRoleId: session.previewRoleId,
+    messages: [...session.messages],
+  }
+
+  while (true) {
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify(persisted))
+      return
+    } catch (_error) {
+      if (persisted.messages.length === 0) {
+        try {
+          sessionStorage.removeItem(storageKey)
+        } catch (_clearError) {
+          // Keep the in-memory conversation when browser storage is unavailable.
+        }
+        return
+      }
+
+      persisted.messages = persisted.messages.slice(1)
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import {
   clearChatPreviewSession,
   getChatPreviewSessionKey,
@@ -13,21 +13,22 @@ const key = {
   agentId: "agent-1",
 }
 
+const message = (id: string) => ({
+  id,
+  role: "user" as const,
+  parts: [{ type: "text" as const, text: id }],
+})
+
 describe("chat preview session", () => {
   beforeEach(() => {
     sessionStorage.clear()
+    vi.restoreAllMocks()
   })
 
   it("stores and loads a preview per tenant, user, workspace and agent", () => {
     const session = {
       previewRoleId: "role-1",
-      messages: [
-        {
-          id: "message-1",
-          role: "user" as const,
-          parts: [{ type: "text" as const, text: "Hello" }],
-        },
-      ],
+      messages: [message("message-1")],
     }
 
     saveChatPreviewSession({ ...key, session })
@@ -60,6 +61,58 @@ describe("chat preview session", () => {
         ],
       })
     )
+
+    expect(loadChatPreviewSession(key)).toBeUndefined()
+  })
+
+  it("drops oldest cached messages when storage quota is exceeded", () => {
+    const originalSetItem = sessionStorage.setItem.bind(sessionStorage)
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation((name, value) => {
+      if (String(value).includes("message-1")) {
+        throw new DOMException(
+          "The quota has been exceeded.",
+          "QuotaExceededError"
+        )
+      }
+      originalSetItem(name, value)
+    })
+
+    saveChatPreviewSession({
+      ...key,
+      session: {
+        previewRoleId: "role-1",
+        messages: [message("message-1"), message("message-2")],
+      },
+    })
+
+    expect(loadChatPreviewSession(key)?.messages.map(item => item.id)).toEqual([
+      "message-2",
+    ])
+  })
+
+  it("clears a stale cache when even an empty session cannot be stored", () => {
+    saveChatPreviewSession({
+      ...key,
+      session: {
+        previewRoleId: "role-1",
+        messages: [message("stale")],
+      },
+    })
+
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException(
+        "The quota has been exceeded.",
+        "QuotaExceededError"
+      )
+    })
+
+    saveChatPreviewSession({
+      ...key,
+      session: {
+        previewRoleId: "role-1",
+        messages: [message("too-large")],
+      },
+    })
 
     expect(loadChatPreviewSession(key)).toBeUndefined()
   })
