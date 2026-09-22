@@ -4,17 +4,22 @@ import {
   db as dbCore,
   errors,
   events,
+  locks,
 } from "@budibase/backend-core"
 import { backups } from "@budibase/pro"
 import {
   Automation,
   BackupTrigger,
   DeploymentDoc,
+  DeploymentHistoryEntry,
   DeploymentProgressResponse,
   DeploymentStatus,
   FieldType,
   FetchDeploymentResponse,
   FormulaType,
+  LockName,
+  LockType,
+  MAX_DEPLOYMENT_HISTORY,
   PublishStatusResponse,
   PublishTableRequest,
   PublishTableResponse,
@@ -45,13 +50,41 @@ import { updateAllFormulasInTable } from "../row/staticFormula"
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
 
+// the deployment doc is a single document rewritten in full on every publish -
+// MAX_DEPLOYMENT_HISTORY and this bound stop it growing without limit, which
+// slows every publish down and eventually breaches CouchDB's max_document_size
+const MAX_DEPLOYMENT_ERROR_LENGTH = 1000
+
+const byMostRecent = (a: DeploymentHistoryEntry, b: DeploymentHistoryEntry) =>
+  (b.updatedAt ?? 0) - (a.updatedAt ?? 0)
+
+// keeps only the most recent deployments, never evicting the one being written -
+// a node with a skewed clock can leave stored entries dated ahead of our own
+// Date.now(), so recency alone is not enough to guarantee it survives
+function boundHistory(
+  history: Record<string, DeploymentHistoryEntry>,
+  writtenId: string
+): Record<string, DeploymentHistoryEntry> {
+  const entries = Object.values(history)
+  if (entries.length <= MAX_DEPLOYMENT_HISTORY) {
+    return history
+  }
+  const retained = entries
+    .filter(entry => entry._id !== writtenId)
+    .sort(byMostRecent)
+    .slice(0, MAX_DEPLOYMENT_HISTORY - 1)
+  return Object.fromEntries(
+    [history[writtenId], ...retained].map(entry => [entry._id, entry])
+  )
+}
+
 // checks that deployments are in a good state, any pending will be updated
-async function checkAllDeployments(
-  deployments: any
-): Promise<{ updated: boolean; deployments: DeploymentDoc }> {
+function checkAllDeployments(deployments: DeploymentDoc): {
+  updated: boolean
+  deployments: DeploymentDoc
+} {
   let updated = false
-  let deployment: any
-  for (deployment of Object.values(deployments.history)) {
+  for (const deployment of Object.values(deployments.history ?? {})) {
     // check that no deployments have crashed etc and are now stuck
     if (
       deployment.status === DeploymentStatus.PENDING &&
@@ -66,31 +99,33 @@ async function checkAllDeployments(
 }
 
 async function storeDeploymentHistory(deployment: Deployment) {
-  const deploymentJSON = deployment.getJSON()
+  const deploymentJSON: Omit<DeploymentHistoryEntry, "updatedAt"> =
+    deployment.getJSON()
   const db = context.getWorkspaceDB()
 
-  let deploymentDoc
-  try {
-    // theres only one deployment doc per app database
-    deploymentDoc = await db.get<any>(DocumentType.DEPLOYMENTS)
-  } catch (err) {
-    deploymentDoc = { _id: DocumentType.DEPLOYMENTS, history: {} }
-  }
+  // theres only one deployment doc per app database
+  const deploymentDoc: DeploymentDoc = (await db.tryGet<DeploymentDoc>(
+    DocumentType.DEPLOYMENTS
+  )) ?? { _id: DocumentType.DEPLOYMENTS, history: {} }
 
   const deploymentId = deploymentJSON._id
+  const history = deploymentDoc.history ?? {}
 
-  // first time deployment
-  if (!deploymentDoc.history[deploymentId])
-    deploymentDoc.history[deploymentId] = {}
-
-  deploymentDoc.history[deploymentId] = {
-    ...deploymentDoc.history[deploymentId],
+  const entry: DeploymentHistoryEntry = {
+    ...history[deploymentId],
     ...deploymentJSON,
     updatedAt: Date.now(),
   }
+  if (entry.err) {
+    entry.err = entry.err.substring(0, MAX_DEPLOYMENT_ERROR_LENGTH)
+  }
+  history[deploymentId] = entry
+
+  const bounded = boundHistory(history, deploymentId)
+  deploymentDoc.history = bounded
 
   await db.put(deploymentDoc)
-  deployment.fromJSON(deploymentDoc.history[deploymentId])
+  deployment.fromJSON(bounded[deploymentId])
   return deployment
 }
 
@@ -169,16 +204,15 @@ async function applyPendingColumnRenames(
   return await context.doInWorkspaceContext(workspaceId, async () => {
     const db = context.getWorkspaceDB()
     const tables = await sdk.tables.getAllInternalTables()
-    const updatedTables: Table[] = []
+    const renamedTableIds = new Set<string>()
 
-    for (let table of tables) {
-      if (table._deleted) {
+    for (const listedTable of tables) {
+      if (listedTable._deleted || !listedTable.pendingColumnRenames?.length) {
         continue
       }
-      const pendingColumnRenames = table.pendingColumnRenames
-      if (!pendingColumnRenames?.length) {
-        continue
-      }
+
+      let table = await sdk.tables.getTable(listedTable._id!)
+      const pendingColumnRenames = table.pendingColumnRenames ?? []
 
       for (const rename of pendingColumnRenames) {
         const tableToUpdate: Table = {
@@ -199,14 +233,36 @@ async function applyPendingColumnRenames(
           delete tableToUpdate.schema[rename.old]
         }
 
-        await sdk.tables.update(tableToUpdate, rename)
+        await sdk.tables.update(tableToUpdate, rename, {
+          skipDefinitionRebuildLock: true,
+        })
         table = await sdk.tables.getTable(table._id!)
       }
 
-      const updatedTable: Table = { ...table, pendingColumnRenames: [] }
-      const putResult = await db.put(updatedTable)
-      const persistedTable: Table = { ...updatedTable, _rev: putResult.rev }
-      updatedTables.push(persistedTable)
+      renamedTableIds.add(table._id!)
+    }
+
+    if (renamedTableIds.size === 0) {
+      return []
+    }
+
+    // Tables processed early in the loop can have been rewritten by later ones,
+    // so read the current revisions back before clearing the pending renames.
+    const latestTables = await sdk.tables.getAllInternalTables()
+    const updatedTables = latestTables
+      .filter(table => !table._deleted && renamedTableIds.has(table._id!))
+      .map(table => ({ ...table, pendingColumnRenames: [] }))
+
+    const bulkResults = await db.bulkDocs(updatedTables)
+    const failedIndex = bulkResults.findIndex(result => result.error)
+    if (failedIndex !== -1) {
+      const failedResult = bulkResults[failedIndex]
+      throw new Error(
+        `Failed to apply pending column renames for ${updatedTables[failedIndex]._id}: ${failedResult.error}`
+      )
+    }
+    for (let i = 0; i < updatedTables.length; i++) {
+      updatedTables[i]._rev = bulkResults[i].rev
     }
 
     return updatedTables
@@ -221,6 +277,7 @@ async function clearPendingColumnRenames(workspaceId: string) {
     const db = context.getWorkspaceDB()
     const tables = await sdk.tables.getAllInternalTables()
 
+    const updatedTables: Table[] = []
     for (const table of tables) {
       if (table._deleted) {
         continue
@@ -228,11 +285,21 @@ async function clearPendingColumnRenames(workspaceId: string) {
       if (!table.pendingColumnRenames?.length) {
         continue
       }
-      const updatedTable: Table = {
+      updatedTables.push({
         ...table,
         pendingColumnRenames: [],
+      })
+    }
+
+    if (updatedTables.length > 0) {
+      const bulkResults = await db.bulkDocs(updatedTables)
+      const failedIndex = bulkResults.findIndex(result => result.error)
+      if (failedIndex !== -1) {
+        const failedResult = bulkResults[failedIndex]
+        throw new Error(
+          `Failed to clear pending column renames for ${updatedTables[failedIndex]._id}: ${failedResult.error}`
+        )
       }
-      await db.put(updatedTable)
     }
   })
 }
@@ -256,19 +323,19 @@ async function syncStaticFormulasToProduction(prodWorkspaceId: string) {
 export async function fetchDeployments(
   ctx: UserCtx<void, FetchDeploymentResponse>
 ) {
-  try {
-    const db = context.getWorkspaceDB()
-    const deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
-    const { updated, deployments } = await checkAllDeployments(deploymentDoc)
+  const db = context.getWorkspaceDB()
+  const deploymentDoc = await db.tryGet<DeploymentDoc>(DocumentType.DEPLOYMENTS)
+
+  let history: DeploymentHistoryEntry[] = []
+  if (deploymentDoc) {
+    const { updated, deployments } = checkAllDeployments(deploymentDoc)
     if (updated) {
       await db.put(deployments)
     }
-    ctx.body = deployments.history
-      ? Object.values(deployments.history).reverse()
-      : []
-  } catch (err) {
-    ctx.body = []
+    history = Object.values(deployments.history ?? {}).sort(byMostRecent)
   }
+
+  ctx.body = history
 }
 
 export async function deploymentProgress(
@@ -413,17 +480,23 @@ export const publishWorkspaceInternal = async (
         await replication.resolveInconsistencies(devTablesIds)
 
         await devDb.compact()
-        await replication.replicate(
-          replication.appReplicateOpts({
-            isCreation: !isPublished,
-            tablesToSync,
-            // don't use checkpoints, this can stop previously ignored data being replicated
-            checkpoint: !seedTables,
-            filter: tableFilter,
-          })
+        await sdk.tables.sqs.withDefinitionRebuildLocks([devId, prodId], () =>
+          replication!.replicate(
+            replication!.appReplicateOpts({
+              isCreation: !isPublished,
+              tablesToSync,
+              // don't use checkpoints, this can stop previously ignored data being replicated
+              checkpoint: !seedTables,
+              filter: tableFilter,
+            })
+          )
         )
 
-        const updatedProdTables = await applyPendingColumnRenames(prodId)
+        const updatedProdTables =
+          await sdk.tables.sqs.withDefinitionRebuildLock(
+            () => applyPendingColumnRenames(prodId),
+            prodId
+          )
 
         // Keep development revs aligned with production after renaming, so the
         // next publish doesn't see production ahead and delete / tombstone the doc.
@@ -459,7 +532,7 @@ export const publishWorkspaceInternal = async (
                 await devDb.put(docForPut)
               } catch (err) {
                 console.warn(
-                  `Failed to update development table with production table 
+                  `Failed to update development table with production table
                   revision when applying column renames for table ${prodTable._id}: ${err}`
                 )
               }
@@ -468,6 +541,7 @@ export const publishWorkspaceInternal = async (
         }
 
         await clearPendingColumnRenames(devId)
+        await sdk.plugins.reconcileWorkspaceUsedPlugins(devId)
 
         const db = context.getProdWorkspaceDB()
         const appDoc = await sdk.workspaces.metadata.tryGet({
@@ -536,6 +610,7 @@ export const publishWorkspaceInternal = async (
         }
         delete appDoc.automationErrors
         await db.put(appDoc)
+        await sdk.plugins.reconcileWorkspaceUsedPlugins(prodId)
         await cache.workspace.invalidateWorkspaceMetadata(prodId)
         await initDeployedApp(prodId)
 
@@ -559,7 +634,10 @@ export const publishWorkspaceInternal = async (
   }
 
   try {
-    await syncStaticFormulasToProduction(migrationResult.prodWorkspaceId)
+    await sdk.tables.sqs.withDefinitionRebuildLock(
+      () => syncStaticFormulasToProduction(migrationResult.prodWorkspaceId),
+      migrationResult.prodWorkspaceId
+    )
   } catch (error: unknown) {
     const message =
       error instanceof Error
@@ -581,6 +659,25 @@ export const publishWorkspaceInternal = async (
   return deployment
 }
 
+export async function withPublishLock<T>(fn: () => Promise<T>): Promise<T> {
+  const lockResult = await locks.doWithLock(
+    {
+      type: LockType.TRY_ONCE,
+      name: LockName.PUBLISH_WORKSPACE,
+      resource: dbCore.getDevWorkspaceID(context.getOrThrowWorkspaceId()),
+      ttl: MAX_PENDING_TIME_MS,
+    },
+    fn
+  )
+  if (!lockResult.executed) {
+    throw new errors.HTTPError(
+      "A publish for this app is already in progress, please wait for it to finish",
+      429
+    )
+  }
+  return lockResult.result
+}
+
 export const publishWorkspace = async function (
   ctx: UserCtx<PublishWorkspaceRequest, PublishWorkspaceResponse>
 ) {
@@ -590,5 +687,5 @@ export const publishWorkspace = async function (
     )
   }
 
-  ctx.body = await publishWorkspaceInternal(ctx)
+  ctx.body = await withPublishLock(() => publishWorkspaceInternal(ctx))
 }
