@@ -938,7 +938,17 @@
       projectsEnabled,
     })
 
-    await agentsStore.fetchAgents()
+    await Promise.all([
+      agentsStore.fetchAgents(),
+      ...(projectsEnabled
+        ? [
+            tables.fetch(),
+            datasources.fetch(),
+            automationStore.actions.fetch(),
+            workspaceAppStore.fetch(),
+          ]
+        : []),
+    ])
   })
 </script>
 
