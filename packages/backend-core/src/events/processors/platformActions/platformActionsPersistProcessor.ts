@@ -11,6 +11,7 @@ import {
 import * as context from "../../../context"
 import { timeout } from "../../../utils"
 import { EventProcessor } from "../types"
+import { getActionsDB } from "./db"
 import { getPlatformActionEnvironment } from "./utils"
 import { enqueuePlatformActionSessionIndex } from "./indexQueue"
 
@@ -99,7 +100,7 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
     }
 
     try {
-      await context.getWorkspaceDB().put(doc)
+      await getActionsDB().put(doc)
     } catch (err) {
       console.error("Failed to persist platform action event", {
         event,

@@ -1158,6 +1158,13 @@ async function destroyWorkspace(ctx: UserCtx) {
   await quotas.removeApp()
   await events.app.deleted(app)
 
+  // Actions are shared by both environments in one dedicated database - only
+  // destroy it here, on full workspace deletion
+  const actionsDbName = events.platformActions.getActionsDbName(prodWorkspaceId)
+  if (await dbCore.dbExists(actionsDbName)) {
+    await dbCore.getDB(actionsDbName, { skip_setup: true }).destroy()
+  }
+
   await deleteAppFiles(prodWorkspaceId)
 
   await removeWorkspaceFromUserRoles(ctx, ctx.params.appId)

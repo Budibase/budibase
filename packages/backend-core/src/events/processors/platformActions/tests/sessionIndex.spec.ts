@@ -7,6 +7,7 @@ import { generator, mocks, structures } from "../../../../../tests"
 import * as context from "../../../../context"
 import * as db from "../../../../db"
 import * as locks from "../../../../redis/redlockImpl"
+import { getActionsDB } from "../db"
 import { upsertPlatformActionSession } from "../sessionIndex"
 import { getPlatformActionSessionId } from "../utils"
 
@@ -19,7 +20,7 @@ async function getSessionDoc(
   sourceId: string,
   environment: PlatformActionEnvironment = "prod"
 ) {
-  return context.getWorkspaceDB().get<PlatformActionSessionIndexDoc>(
+  return getActionsDB().get<PlatformActionSessionIndexDoc>(
     getPlatformActionSessionId({
       environment,
       sourceType: "agent_session",
@@ -255,7 +256,7 @@ describe("upsertPlatformActionSession", () => {
         environment: "prod" as const,
       }
 
-      await context.getWorkspaceDB().put({
+      await getActionsDB().put({
         _id: getPlatformActionSessionId(input),
         ...input,
         status: "completed",
@@ -300,11 +301,9 @@ describe("upsertPlatformActionSession", () => {
         })
       ).rejects.toThrow()
 
-      const doc = await context
-        .getWorkspaceDB()
-        .tryGet<PlatformActionSessionIndexDoc>(
-          getPlatformActionSessionId(input)
-        )
+      const doc = await getActionsDB().tryGet<PlatformActionSessionIndexDoc>(
+        getPlatformActionSessionId(input)
+      )
 
       expect(doc).toBeUndefined()
     })

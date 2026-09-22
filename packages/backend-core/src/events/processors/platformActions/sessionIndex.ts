@@ -6,8 +6,8 @@ import {
   type PlatformActionEnvironment,
   type PlatformActionSessionIndexDoc,
 } from "@budibase/types"
-import * as context from "../../../context"
 import * as locks from "../../../redis/redlockImpl"
+import { getActionsDB } from "./db"
 import { buildPlatformActionSession, getPlatformActionSessionId } from "./utils"
 
 const LOCK_TTL_MS = 10000
@@ -102,7 +102,7 @@ export async function upsertPlatformActionSession(
       ttl: LOCK_TTL_MS,
     },
     async () => {
-      const db = context.getWorkspaceDB()
+      const db = getActionsDB()
 
       for (let attempt = 0; attempt < MAX_PUT_CONFLICT_ATTEMPTS; attempt++) {
         const existing =

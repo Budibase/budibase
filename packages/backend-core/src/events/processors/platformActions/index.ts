@@ -3,3 +3,4 @@ export {
   enqueuePlatformActionSessionLifecycle,
   initPlatformActionSessionIndexQueue as init,
 } from "./indexQueue"
+export { getActionsDbName } from "./db"

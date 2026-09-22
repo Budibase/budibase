@@ -1988,6 +1988,33 @@ describe("/applications", () => {
 
       expect(events.app.deleted).not.toHaveBeenCalled()
     })
+
+    it("should delete the shared Actions database when the workspace is fully deleted", async () => {
+      const actionsDbName = events.platformActions.getActionsDbName(
+        config.getProdWorkspaceId()
+      )
+      await db.getDB(actionsDbName).put({ _id: "test_doc" })
+      expect(await db.dbExists(actionsDbName)).toBe(true)
+
+      nock("http://localhost:10000")
+        .delete(`/api/global/roles/${workspace.appId}`)
+        .reply(200, {})
+
+      await config.api.workspace.delete(workspace.appId)
+
+      expect(await db.dbExists(actionsDbName)).toBe(false)
+    })
+
+    it("should not delete the shared Actions database on unpublish", async () => {
+      const actionsDbName = events.platformActions.getActionsDbName(
+        config.getProdWorkspaceId()
+      )
+      await db.getDB(actionsDbName).put({ _id: "test_doc" })
+
+      await config.api.workspace.unpublish(config.getDevWorkspaceId())
+
+      expect(await db.dbExists(actionsDbName)).toBe(true)
+    })
   })
 
   describe("POST /api/applications/:appId/duplicate", () => {

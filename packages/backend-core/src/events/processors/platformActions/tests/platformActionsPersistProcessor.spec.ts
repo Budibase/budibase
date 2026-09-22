@@ -2,6 +2,7 @@ import { Event, PlatformActionEvent, type Identity } from "@budibase/types"
 import { structures } from "../../../../../tests"
 import * as context from "../../../../context"
 import * as db from "../../../../db"
+import { getActionsDB } from "../db"
 
 jest.mock("../indexQueue")
 import { enqueuePlatformActionSessionIndex } from "../indexQueue"
@@ -38,9 +39,7 @@ describe("PlatformActionPersistProcessor", () => {
         undefined
       )
 
-      const { rows } = await context
-        .getWorkspaceDB()
-        .allDocs({ include_docs: false })
+      const { rows } = await getActionsDB().allDocs({ include_docs: false })
       expect(rows).toHaveLength(0)
       expect(mockEnqueue).not.toHaveBeenCalled()
     })
@@ -55,9 +54,7 @@ describe("PlatformActionPersistProcessor", () => {
         undefined
       )
 
-      const { rows } = await context
-        .getWorkspaceDB()
-        .allDocs({ include_docs: false })
+      const { rows } = await getActionsDB().allDocs({ include_docs: false })
       expect(rows).toHaveLength(0)
       expect(mockEnqueue).not.toHaveBeenCalled()
     })
@@ -89,9 +86,9 @@ describe("PlatformActionPersistProcessor", () => {
         "2026-08-31T14:10:15.959Z"
       )
 
-      const { rows } = await context
-        .getWorkspaceDB()
-        .allDocs<PlatformActionEvent>({ include_docs: true })
+      const { rows } = await getActionsDB().allDocs<PlatformActionEvent>({
+        include_docs: true,
+      })
 
       expect(rows).toHaveLength(1)
       const doc = rows[0].doc!
@@ -119,9 +116,9 @@ describe("PlatformActionPersistProcessor", () => {
         undefined
       )
 
-      const { rows } = await context
-        .getWorkspaceDB()
-        .allDocs<PlatformActionEvent>({ include_docs: true })
+      const { rows } = await getActionsDB().allDocs<PlatformActionEvent>({
+        include_docs: true,
+      })
 
       expect(rows[0].doc!.environment).toBe("dev")
       expect(mockEnqueue).toHaveBeenCalledWith(
