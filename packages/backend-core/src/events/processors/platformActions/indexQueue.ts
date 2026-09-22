@@ -42,6 +42,7 @@ function getIndexQueue() {
           },
           jobTags: data => ({
             workspaceId: data.workspaceId,
+            environment: data.environment,
             sourceType: data.sourceType,
             sourceId: data.sourceId,
           }),

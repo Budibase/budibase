@@ -23,17 +23,19 @@ describe("platformActions utils", () => {
   })
 
   describe("getPlatformActionSessionId", () => {
-    it("builds a deterministic id from sourceType and sourceId", () => {
+    it("builds a deterministic id from environment, sourceType and sourceId", () => {
       const id = getPlatformActionSessionId({
+        environment: "prod",
         sourceType: "agent_session",
         sourceId: "session-1",
       })
 
-      expect(id).toBe("platform_action_session_agent_session_session-1")
+      expect(id).toBe("platform_action_session_prod_agent_session_session-1")
     })
 
     it("is stable for the same source across calls", () => {
       const input = {
+        environment: "prod" as const,
         sourceType: "automation_run" as const,
         sourceId: "run-1",
       }
@@ -45,11 +47,27 @@ describe("platformActions utils", () => {
 
     it("percent-encodes characters that would otherwise break the id shape", () => {
       const id = getPlatformActionSessionId({
+        environment: "prod",
         sourceType: "agent_session",
         sourceId: "a/b c",
       })
 
-      expect(id).toBe("platform_action_session_agent_session_a%2Fb%20c")
+      expect(id).toBe("platform_action_session_prod_agent_session_a%2Fb%20c")
+    })
+
+    it("keeps prod and dev sessions for the same source separate", () => {
+      const prodId = getPlatformActionSessionId({
+        environment: "prod",
+        sourceType: "agent_session",
+        sourceId: "session-1",
+      })
+      const devId = getPlatformActionSessionId({
+        environment: "dev",
+        sourceType: "agent_session",
+        sourceId: "session-1",
+      })
+
+      expect(prodId).not.toBe(devId)
     })
   })
 
@@ -69,6 +87,7 @@ describe("platformActions utils", () => {
       // the real write time, so the builder doesn't set it at all.
       expect(doc).toEqual({
         _id: getPlatformActionSessionId({
+          environment: "prod",
           sourceType: "agent_session",
           sourceId: "session-1",
         }),

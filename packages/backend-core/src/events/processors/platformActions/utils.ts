@@ -18,10 +18,13 @@ export function getPlatformActionEnvironment(
 }
 
 export function getPlatformActionSessionId({
+  environment,
   sourceType,
   sourceId,
-}: ActionSourceContext): string {
-  return `${DocumentType.PLATFORM_ACTION_SESSION}${SEPARATOR}${encodeKeyPart(
+}: ActionSourceContext & {
+  environment: PlatformActionEnvironment
+}): string {
+  return `${DocumentType.PLATFORM_ACTION_SESSION}${SEPARATOR}${environment}${SEPARATOR}${encodeKeyPart(
     sourceType
   )}${SEPARATOR}${encodeKeyPart(sourceId)}`
 }

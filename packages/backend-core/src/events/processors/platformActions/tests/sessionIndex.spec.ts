@@ -1,5 +1,8 @@
 import { LockName, LockType } from "@budibase/types"
-import type { PlatformActionSessionIndexDoc } from "@budibase/types"
+import type {
+  PlatformActionEnvironment,
+  PlatformActionSessionIndexDoc,
+} from "@budibase/types"
 import { generator, mocks, structures } from "../../../../../tests"
 import * as context from "../../../../context"
 import * as db from "../../../../db"
@@ -12,12 +15,17 @@ async function run<T>(task: () => Promise<T>): Promise<T> {
   return await context.doInWorkspaceContext(workspaceId, task)
 }
 
-async function getSessionDoc(sourceId: string) {
-  return context
-    .getWorkspaceDB()
-    .get<PlatformActionSessionIndexDoc>(
-      getPlatformActionSessionId({ sourceType: "agent_session", sourceId })
-    )
+async function getSessionDoc(
+  sourceId: string,
+  environment: PlatformActionEnvironment = "prod"
+) {
+  return context.getWorkspaceDB().get<PlatformActionSessionIndexDoc>(
+    getPlatformActionSessionId({
+      environment,
+      sourceType: "agent_session",
+      sourceId,
+    })
+  )
 }
 
 describe("upsertPlatformActionSession", () => {
@@ -453,6 +461,37 @@ describe("upsertPlatformActionSession", () => {
       ).rejects.toThrow(
         `Could not acquire lock to index platform action session ${sessionId}`
       )
+    })
+  })
+
+  it("keeps prod and dev sessions independent for the same sourceType/sourceId", async () => {
+    await run(async () => {
+      const sourceId = generator.guid()
+
+      await upsertPlatformActionSession({
+        sourceType: "agent_session",
+        sourceId,
+        environment: "prod",
+        incrementsActionCount: true,
+        signal: "completed",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+      await upsertPlatformActionSession({
+        sourceType: "agent_session",
+        sourceId,
+        environment: "dev",
+        incrementsActionCount: true,
+        signal: "failed",
+        timestamp: "2026-08-31T00:00:00.000Z",
+      })
+
+      const prodDoc = await getSessionDoc(sourceId, "prod")
+      const devDoc = await getSessionDoc(sourceId, "dev")
+
+      expect(prodDoc.status).toBe("completed")
+      expect(prodDoc.actionCount).toBe(1)
+      expect(devDoc.status).toBe("failed")
+      expect(devDoc.actionCount).toBe(1)
     })
   })
 })
