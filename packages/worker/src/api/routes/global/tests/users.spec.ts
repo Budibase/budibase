@@ -1,4 +1,10 @@
-import { InviteUsersResponse, OIDCUser, User } from "@budibase/types"
+import {
+  DocumentType,
+  InviteUsersResponse,
+  OIDCUser,
+  prefixed,
+  User,
+} from "@budibase/types"
 import { randomUUID } from "crypto"
 
 import {
@@ -1340,6 +1346,51 @@ describe("/api/global/users", () => {
       expect(
         response.body.data.find((user: User) => user._id === user3._id)
       ).toBeUndefined()
+    })
+
+    it("should skip ids that no longer exist when searching by oneOf _id", async () => {
+      const [user, user2] = await Promise.all([
+        config.createUser(),
+        config.createUser(),
+      ])
+      const response = await config.api.users.searchUsers({
+        query: {
+          oneOf: {
+            _id: [
+              user._id,
+              `${prefixed(DocumentType.USER)}does_not_exist`,
+              user2._id,
+            ],
+          },
+        },
+      })
+      expect(response.body.data.map((user: User) => user._id)).toEqual([
+        user._id,
+        user2._id,
+      ])
+    })
+
+    it("should skip ids that no longer exist for a non-builder", async () => {
+      const [user, basicUser] = await Promise.all([
+        config.createUser(),
+        config.createUser({
+          builder: { global: false },
+          admin: { global: false },
+        }),
+      ])
+      await config.login(basicUser)
+      const response = await config.withUser(basicUser, () =>
+        config.api.users.searchUsers({
+          query: {
+            oneOf: {
+              _id: [user._id, `${prefixed(DocumentType.USER)}does_not_exist`],
+            },
+          },
+        })
+      )
+      expect(response.body.data.map((user: User) => user._id)).toEqual([
+        user._id,
+      ])
     })
 
     it("should be able to search by _id with numeric prefixing", async () => {
