@@ -82,7 +82,8 @@
     />
     <Toggle
       text="Encrypted"
-      bind:value={manualEncrypted}
+      value={encrypted}
+      on:change={event => (manualEncrypted = event.detail)}
       disabled={!!file?.name?.endsWith(".enc.tar.gz")}
     />
     {#if encrypted}
