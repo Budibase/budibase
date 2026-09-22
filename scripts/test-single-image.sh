@@ -29,9 +29,13 @@ else
         arm64 | aarch64) arch="arm64" ;;
         *) arch="amd64" ;;
     esac
+    # This release does not publish a native Darwin ARM64 binary.
+    if [[ "${os}" == "darwin" && "${arch}" == "arm64" ]]; then
+        arch="amd64"
+    fi
     CST="$(mktemp -d)/container-structure-test"
     echo "Downloading container-structure-test ${CST_VERSION} (${os}-${arch})..."
-    curl -sSLo "${CST}" \
+    curl -fsSLo "${CST}" \
         "https://storage.googleapis.com/container-structure-test/${CST_VERSION}/container-structure-test-${os}-${arch}"
     chmod +x "${CST}"
 fi
