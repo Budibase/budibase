@@ -16953,6 +16953,11 @@ node-source-walk@^5.0.0, node-source-walk@^5.0.1:
   dependencies:
     "@babel/parser" "^7.21.4"
 
+nodemailer@10.0.10:
+  version "10.0.10"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-10.0.10.tgz#a5ac2828272903740cb04ce17d1a4468e2e06cb3"
+  integrity sha512-He9XskOFms62SyAKkLu8CcGcYHAo+BSHSsORI8s4PJH8qZgZY4L4lDfvyN0twvmbpyG+eGrxpyBlskj9d9rJ8A==
+
 nodemailer@9.0.1:
   version "9.0.1"
   resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-9.0.1.tgz#871c04d8423fc0c790289f4a8f6f71f1b3563e8c"
@@ -16962,11 +16967,6 @@ nodemailer@9.0.5:
   version "9.0.5"
   resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-9.0.5.tgz#edf488e2d25b1688614922d7e733f551114099fc"
   integrity sha512-wvjiKvjczmsN7U/8006JOdXubgBk2XFAbioDMbT+sM7cPs0QrhJTa6KBRX7P5REGGkDcLUz/EarWidb8G8C1jQ==
-
-nodemailer@9.1.1:
-  version "9.1.1"
-  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-9.1.1.tgz#fb991992723657f34dbe1d829139aa66be008e96"
-  integrity sha512-izw9mVKFix6YSnC9eLgV6g1opl9DUlRio9ZNcq+Wu9Ujn2UwF+8Nl0B8nz22kEC+CTZCvinkxwJ0DeFbb6NwcQ==
 
 nodemon@2.0.15:
   version "2.0.15"
