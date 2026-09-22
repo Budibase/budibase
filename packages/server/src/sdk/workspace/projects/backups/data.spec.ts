@@ -154,6 +154,36 @@ describe("Project package data", () => {
     })
   })
 
+  it("rejects user references without an importing user", () => {
+    const { data, tables } = fixture()
+
+    expect(() =>
+      prepareProjectData({
+        data: validate({ data, tables }),
+        tables,
+        idMap: new Map([
+          ["ta_source", "ta_destination"],
+          ["ta_related", "ta_other"],
+        ]),
+        workspaceId: "app_dev_destination",
+      })
+    ).toThrow("requires an importing user for its user references")
+  })
+
+  it("rejects rows without a destination table mapping", () => {
+    const { data, tables } = fixture()
+
+    expect(() =>
+      prepareProjectData({
+        data: validate({ data, tables }),
+        tables,
+        idMap: new Map(),
+        workspaceId: "app_dev_destination",
+        userId: "us_importer",
+      })
+    ).toThrow("could not map an imported table")
+  })
+
   it("allocates independent rows and attachments on repeated imports into the source workspace", () => {
     const { data, tables } = fixture()
     const prepare = () =>
