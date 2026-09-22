@@ -1,9 +1,27 @@
+import { structures } from "../../../../../tests"
+import * as db from "../../../../db"
 import {
   buildPlatformActionSession,
+  getPlatformActionEnvironment,
   getPlatformActionSessionId,
 } from "../utils"
 
 describe("platformActions utils", () => {
+  describe("getPlatformActionEnvironment", () => {
+    it("returns prod for a prod workspace ID", () => {
+      const workspaceId = db.generateWorkspaceID(structures.tenant.id())
+
+      expect(getPlatformActionEnvironment(workspaceId)).toBe("prod")
+    })
+
+    it("returns dev for a dev workspace ID", () => {
+      const prodWorkspaceId = db.generateWorkspaceID(structures.tenant.id())
+      const devWorkspaceId = db.getDevWorkspaceID(prodWorkspaceId)
+
+      expect(getPlatformActionEnvironment(devWorkspaceId)).toBe("dev")
+    })
+  })
+
   describe("getPlatformActionSessionId", () => {
     it("builds a deterministic id from sourceType and sourceId", () => {
       const id = getPlatformActionSessionId({
@@ -40,6 +58,7 @@ describe("platformActions utils", () => {
       const doc = buildPlatformActionSession({
         sourceType: "agent_session",
         sourceId: "session-1",
+        environment: "prod",
         status: "completed",
         startedAt: "2026-08-31T00:00:00.000Z",
         statusUpdatedAt: "2026-08-31T00:00:00.000Z",
@@ -56,6 +75,7 @@ describe("platformActions utils", () => {
         actionCount: 1,
         sourceType: "agent_session",
         sourceId: "session-1",
+        environment: "prod",
         status: "completed",
         startedAt: "2026-08-31T00:00:00.000Z",
         statusUpdatedAt: "2026-08-31T00:00:00.000Z",
@@ -67,6 +87,7 @@ describe("platformActions utils", () => {
       const doc = buildPlatformActionSession({
         sourceType: "automation_run",
         sourceId: "run-1",
+        environment: "prod",
         status: "failed",
         startedAt: "2026-08-31T00:00:00.000Z",
         statusUpdatedAt: "2026-08-31T00:00:00.000Z",

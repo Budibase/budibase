@@ -28,6 +28,7 @@ describe("upsertPlatformActionSession", () => {
       await upsertPlatformActionSession({
         sourceType: "agent_session",
         sourceId,
+        environment: "prod",
         incrementsActionCount: true,
         signal: "completed",
         timestamp: "2026-08-31T00:00:00.000Z",
@@ -51,6 +52,7 @@ describe("upsertPlatformActionSession", () => {
       await upsertPlatformActionSession({
         sourceType: "agent_session",
         sourceId,
+        environment: "prod",
         incrementsActionCount: true,
         signal: "failed",
         timestamp: "2026-08-31T00:00:00.000Z",
@@ -69,6 +71,7 @@ describe("upsertPlatformActionSession", () => {
       await upsertPlatformActionSession({
         sourceType: "agent_session",
         sourceId,
+        environment: "prod",
         incrementsActionCount: true,
         signal: undefined,
         timestamp: "2026-08-31T00:00:00.000Z",
@@ -89,6 +92,7 @@ describe("upsertPlatformActionSession", () => {
       await upsertPlatformActionSession({
         sourceType: "agent_session",
         sourceId,
+        environment: "prod",
         incrementsActionCount: true,
         signal: "active",
         timestamp: "2026-08-31T00:00:00.000Z",
@@ -98,6 +102,7 @@ describe("upsertPlatformActionSession", () => {
       await upsertPlatformActionSession({
         sourceType: "agent_session",
         sourceId,
+        environment: "prod",
         incrementsActionCount: true,
         signal: undefined,
         timestamp: "2026-08-31T00:05:00.000Z",
@@ -113,7 +118,11 @@ describe("upsertPlatformActionSession", () => {
   it("increments actionCount and refreshes updatedAt/completedAt on later events", async () => {
     await run(async () => {
       const sourceId = generator.guid()
-      const input = { sourceType: "agent_session" as const, sourceId }
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
 
       await upsertPlatformActionSession({
         ...input,
@@ -140,7 +149,11 @@ describe("upsertPlatformActionSession", () => {
   it("keeps startedAt/completedAt chronologically correct when events are processed out of order", async () => {
     await run(async () => {
       const sourceId = generator.guid()
-      const input = { sourceType: "agent_session" as const, sourceId }
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
 
       // Simulates a later event's job winning the lock/processing race and
       // being indexed before an earlier event's job (e.g. after a lock
@@ -169,7 +182,11 @@ describe("upsertPlatformActionSession", () => {
   it("uses the latest signal to update the session status", async () => {
     await run(async () => {
       const sourceId = generator.guid()
-      const input = { sourceType: "agent_session" as const, sourceId }
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
 
       await upsertPlatformActionSession({
         ...input,
@@ -204,6 +221,7 @@ describe("upsertPlatformActionSession", () => {
         const input = {
           sourceType: "agent_session" as const,
           sourceId,
+          environment: "prod" as const,
           incrementsActionCount: true,
           timestamp,
         }
@@ -223,7 +241,11 @@ describe("upsertPlatformActionSession", () => {
   it("adds statusUpdatedAt when updating a legacy session doc", async () => {
     await run(async () => {
       const sourceId = generator.guid()
-      const input = { sourceType: "agent_session" as const, sourceId }
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
 
       await context.getWorkspaceDB().put({
         _id: getPlatformActionSessionId(input),
@@ -251,7 +273,11 @@ describe("upsertPlatformActionSession", () => {
   it("throws for a lifecycle signal with no action indexed yet, without creating an orphan session", async () => {
     await run(async () => {
       const sourceId = generator.guid()
-      const input = { sourceType: "agent_session" as const, sourceId }
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
 
       // Bull retries a thrown job instead of silently dropping it - by the
       // time retries exhaust, the run's first action should have indexed the
@@ -279,7 +305,11 @@ describe("upsertPlatformActionSession", () => {
   it("reopens an existing session without incrementing actionCount", async () => {
     await run(async () => {
       const sourceId = generator.guid()
-      const input = { sourceType: "agent_session" as const, sourceId }
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
 
       await upsertPlatformActionSession({
         ...input,
@@ -306,7 +336,11 @@ describe("upsertPlatformActionSession", () => {
   it("ignores a lifecycle signal older than the current status", async () => {
     await run(async () => {
       const sourceId = generator.guid()
-      const input = { sourceType: "agent_session" as const, sourceId }
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
 
       await upsertPlatformActionSession({
         ...input,
@@ -332,7 +366,11 @@ describe("upsertPlatformActionSession", () => {
   it("does not lose increments when events for the same session arrive concurrently", async () => {
     await run(async () => {
       const sourceId = generator.guid()
-      const input = { sourceType: "agent_session" as const, sourceId }
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
       const eventCount = 5
 
       // The session lock is TRY_ONCE (no internal retry), relying on the
@@ -390,7 +428,11 @@ describe("upsertPlatformActionSession", () => {
   it("throws instead of racing an update when the session lock is already held", async () => {
     await run(async () => {
       const sourceId = generator.guid()
-      const input = { sourceType: "agent_session" as const, sourceId }
+      const input = {
+        sourceType: "agent_session" as const,
+        sourceId,
+        environment: "prod" as const,
+      }
       const sessionId = getPlatformActionSessionId(input)
 
       await expect(

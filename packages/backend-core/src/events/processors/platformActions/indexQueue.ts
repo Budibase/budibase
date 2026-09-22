@@ -7,6 +7,7 @@ import type {
 import * as context from "../../../context"
 import { BudibaseQueue, JobQueue } from "../../../queue"
 import { upsertPlatformActionSession } from "./sessionIndex"
+import { getPlatformActionEnvironment } from "./utils"
 
 const DEFAULT_INDEX_QUEUE_CONCURRENCY = 2
 const DEFAULT_INDEX_QUEUE_BACKOFF_MS = 5000
@@ -104,6 +105,7 @@ export async function enqueuePlatformActionSessionLifecycle({
 
   await enqueuePlatformActionSessionIndex({
     workspaceId,
+    environment: getPlatformActionEnvironment(workspaceId),
     indexId: lifecycleId,
     sourceType,
     sourceId,

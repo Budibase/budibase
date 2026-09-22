@@ -3,6 +3,7 @@ import {
   LockType,
   type ActionSourceContext,
   type PlatformActionContainerStatus,
+  type PlatformActionEnvironment,
   type PlatformActionSessionIndexDoc,
 } from "@budibase/types"
 import * as context from "../../../context"
@@ -24,6 +25,7 @@ function isTerminalSignal(
 }
 
 export interface UpsertPlatformActionSessionInput extends ActionSourceContext {
+  environment: PlatformActionEnvironment
   incrementsActionCount: boolean
   signal?: PlatformActionContainerStatus
   timestamp: string
@@ -142,6 +144,7 @@ export async function upsertPlatformActionSession(
           : buildPlatformActionSession({
               sourceType: input.sourceType,
               sourceId: input.sourceId,
+              environment: input.environment,
               status,
               startedAt,
               statusUpdatedAt,

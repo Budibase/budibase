@@ -2,11 +2,19 @@ import { DocumentType, SEPARATOR } from "@budibase/types"
 import type {
   ActionSourceContext,
   PlatformActionContainerStatus,
+  PlatformActionEnvironment,
   PlatformActionSessionIndexDoc,
 } from "@budibase/types"
+import { isDevWorkspaceID } from "../../../docIds/conversions"
 
 function encodeKeyPart(value: string): string {
   return encodeURIComponent(value)
+}
+
+export function getPlatformActionEnvironment(
+  workspaceId: string
+): PlatformActionEnvironment {
+  return isDevWorkspaceID(workspaceId) ? "dev" : "prod"
 }
 
 export function getPlatformActionSessionId({
@@ -19,6 +27,7 @@ export function getPlatformActionSessionId({
 }
 
 export interface PlatformActionSessionInput extends ActionSourceContext {
+  environment: PlatformActionEnvironment
   status: PlatformActionContainerStatus
   startedAt: string
   statusUpdatedAt: string
