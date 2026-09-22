@@ -4,6 +4,7 @@ import fetch from "node-fetch"
 import environment from "../../../../environment"
 import { getKeySettings } from "../configs/litellm"
 import { getLiteLLMSessionId } from "../llm/requestSession"
+import { GeminiRateLimitError, getGeminiRetryAt } from "../rag/geminiRateLimit"
 
 interface CreateVectorStoreResponse {
   id?: string
@@ -223,6 +224,13 @@ export async function ingestGeminiFile({
     }),
   })
 
+  if (response.status === 429) {
+    throw new GeminiRateLimitError({
+      message: (await response.text()) || "Gemini ingestion is rate limited",
+      retryAt: getGeminiRetryAt(response.headers.get("Retry-After")),
+    })
+  }
+
   await handleNotOkResponse({
     response,
     fallbackMessage: "Failed to ingest file into Gemini store",
@@ -230,6 +238,16 @@ export async function ingestGeminiFile({
 
   const payload = (await response.json()) as RagIngestResponse
   if (payload.status === "failed" && payload.error) {
+    if (
+      /\b429\s+(?:Too Many Requests|RESOURCE_EXHAUSTED)\b|["']code["']\s*:\s*429\b/i.test(
+        payload.error
+      )
+    ) {
+      throw new GeminiRateLimitError({
+        message: payload.error,
+        retryAt: getGeminiRetryAt(response.headers.get("Retry-After")),
+      })
+    }
     console.error("Gemini ingest failed", { error: payload.error })
     if (payload.error.includes("fileSearchStores")) {
       if (payload.error.includes("403")) {
