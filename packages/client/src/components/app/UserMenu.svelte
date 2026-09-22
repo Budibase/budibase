@@ -63,10 +63,7 @@
   }
 
   const goToPortal = (isBuilder: boolean) => {
-    const accountPortalUrl = $environmentStore.accountPortalUrl
-    const targetUrl = isBuilder
-      ? builderUrl(accountPortalUrl)
-      : portalUrl(accountPortalUrl)
+    const targetUrl = isBuilder ? builderUrl() : portalUrl()
     window.location.href = targetUrl
   }
 
