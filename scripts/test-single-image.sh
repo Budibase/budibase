@@ -4,12 +4,17 @@
 set -eo pipefail
 cd "$(dirname "$0")/.."
 
-IMAGE="${IMAGE:-budibase:latest}"
 CONFIG="hosting/single/structure-test.yaml"
 CST_VERSION="${CST_VERSION:-v1.16.0}"
 
+if [[ -z "${IMAGE:-}" ]]; then
+    IMAGE="budibase:latest"
+    echo "Building local ${IMAGE} before running structure tests..."
+    ./scripts/build-single-image.sh
+fi
+
 if ! docker image inspect "${IMAGE}" >/dev/null 2>&1; then
-    echo "Image ${IMAGE} not found. Build it with 'yarn build:docker:single', or set IMAGE."
+    echo "Image ${IMAGE} not found."
     exit 1
 fi
 

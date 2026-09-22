@@ -45,8 +45,5 @@ jobs:
         if: steps.hoisted-modules-cache-restore.outputs.cache-hit != 'true'
         run: yarn --frozen-lockfile
 
-      - name: Build the single image
-        run: yarn build:docker:single
-
-      - name: Run container structure tests
+      - name: Build and test the single image
         run: yarn test:docker:single
