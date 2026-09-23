@@ -408,7 +408,7 @@ describe("Project data export and import", () => {
     })
   })
 
-  it("checks the total row quota across tables before importing any resources or attachments", async () => {
+  it("rejects imports exceeding the total row quota without changing the destination", async () => {
     await withProjectsEnabled(async () => {
       const source = await createDataProject()
       const archive = await config.api.project.export(source.project._id, {
