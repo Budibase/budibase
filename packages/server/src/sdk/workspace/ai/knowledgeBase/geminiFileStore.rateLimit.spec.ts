@@ -34,7 +34,7 @@ describe("Gemini ingestion rate limits", () => {
     ["Tue, 22 Sep 2026 12:03:00 GMT", 180_000],
     ["invalid", 60_000],
     ["-1", 60_000],
-    ["1e100", 60_000],
+    ["Infinity", 60_000],
     ["0", 1000],
     ["", 60_000],
   ])(

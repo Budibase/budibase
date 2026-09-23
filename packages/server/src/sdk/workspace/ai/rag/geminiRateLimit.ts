@@ -20,19 +20,19 @@ export class GeminiRateLimitError extends HTTPError {
 
 export const getGeminiRetryAt = (retryAfter: string | null): number => {
   const now = Date.now()
-  let delayMs = DEFAULT_COOLDOWN_MS
-  if (retryAfter?.trim()) {
-    const seconds = Number(retryAfter)
-    const parsedDelay = Number.isNaN(seconds)
-      ? Date.parse(retryAfter) - now
-      : seconds * 1000
-    if (
-      Number.isSafeInteger(now + Math.ceil(parsedDelay)) &&
-      parsedDelay >= 0
-    ) {
-      delayMs = parsedDelay
-    }
+  if (!retryAfter?.trim()) {
+    return now + DEFAULT_COOLDOWN_MS
   }
+
+  const seconds = Number(retryAfter)
+  const delayMs = Number.isNaN(seconds)
+    ? Date.parse(retryAfter) - now
+    : seconds * 1000
+
+  if (!Number.isFinite(delayMs) || delayMs < 0) {
+    return now + DEFAULT_COOLDOWN_MS
+  }
+
   return now + Math.max(1000, Math.ceil(delayMs))
 }
 
