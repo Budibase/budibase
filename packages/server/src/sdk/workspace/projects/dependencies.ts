@@ -367,7 +367,7 @@ export const propagateProjectIdsToDependencySubtrees = async ({
     if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
       return completePropagation()
     }
-    const { graph } = await sdk.resources.analyzeResourceDependencies({
+    const { graph } = await sdk.resources.analyseResourceDependencies({
       includeProjects: false,
       includeDatasourceQueries: true,
     })
@@ -398,7 +398,7 @@ export const propagateCreatedResourceDependencies = async ({
     if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
       return completePropagation()
     }
-    const analysis = await sdk.resources.analyzeResourceDependencies({
+    const analysis = await sdk.resources.analyseResourceDependencies({
       includeProjects: false,
       includeDatasourceQueries: true,
     })
@@ -464,7 +464,7 @@ export const propagateProjectDependencyChanges = async ({
 
   let analysis: ResourceDependencyAnalysis
   try {
-    analysis = await sdk.resources.analyzeResourceDependencies({
+    analysis = await sdk.resources.analyseResourceDependencies({
       includeProjects: false,
       includeDatasourceQueries: true,
     })
