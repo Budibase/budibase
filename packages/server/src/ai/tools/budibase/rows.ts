@@ -167,6 +167,32 @@ const buildDataFieldDescription = (schemaSummary: string) =>
     ? `${DATA_FIELD_DESCRIPTION} Available fields: ${schemaSummary}.`
     : DATA_FIELD_DESCRIPTION
 
+const normalizeWrappedFieldNames = (
+  value: unknown,
+  fieldNames: ReadonlySet<string>
+) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return value
+  }
+
+  const input: Record<string, unknown> = Object.fromEntries(
+    Object.entries(value)
+  )
+  const normalized = { ...input }
+  for (const [name, fieldValue] of Object.entries(input)) {
+    if (!name.startsWith("`") || !name.endsWith("`")) {
+      continue
+    }
+    const unwrapped = name.slice(1, -1)
+    if (!fieldNames.has(unwrapped) || Object.hasOwn(input, unwrapped)) {
+      continue
+    }
+    delete normalized[name]
+    normalized[unwrapped] = fieldValue
+  }
+  return normalized
+}
+
 export const buildRowDataSchema = (
   fields: TableSchemaField[],
   schemaSummary: string,
@@ -252,10 +278,16 @@ export const buildRowDataSchema = (
     )
   }
 
-  return z
+  const dataSchema = z
     .object(shape)
     .strict()
     .describe(buildDataFieldDescription(schemaSummary))
+
+  const fieldNames = new Set(fields.map(field => field.name))
+  return z.preprocess(
+    value => normalizeWrappedFieldNames(value, fieldNames),
+    dataSchema
+  )
 }
 
 const buildSearchQueryDescription = (schemaSummary: string) =>

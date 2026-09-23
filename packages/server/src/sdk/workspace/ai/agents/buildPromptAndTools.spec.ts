@@ -452,9 +452,6 @@ describe("buildPromptAndTools", () => {
         }),
       ])
     )
-    expect(result.mutatingToolNames).toEqual(
-      new Set(["ta_employees_create_row"])
-    )
     expect(canRequesterReadAgentToolResource).toHaveBeenCalledTimes(1)
   })
 })

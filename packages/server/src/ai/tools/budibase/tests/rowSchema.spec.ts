@@ -1,3 +1,4 @@
+import { asSchema } from "@ai-sdk/provider-utils"
 import { FieldType, type TableSchema } from "@budibase/types"
 import { buildRowDataSchema } from "../rows"
 
@@ -56,6 +57,46 @@ describe("row tool data schema", () => {
         Cost: 20,
         "Expense Tags": "Food",
         Unknown: "value",
+      }).success
+    ).toBe(false)
+  })
+
+  it("canonicalizes backtick-wrapped field names", () => {
+    const schema = buildRowDataSchema(fields, "", true)
+
+    expect(
+      schema.parse({ Cost: 20, "`Expense Tags`": "Food" })
+    ).toEqual({ Cost: 20, "Expense Tags": "Food" })
+  })
+
+  it("only advertises canonical field names to the model", () => {
+    const schema = buildRowDataSchema(fields, "", true)
+    const jsonSchema = asSchema(schema).jsonSchema
+
+    expect(jsonSchema).toEqual(
+      expect.objectContaining({
+        properties: expect.objectContaining({
+          "Expense Tags": expect.any(Object),
+        }),
+      })
+    )
+    expect(jsonSchema).not.toEqual(
+      expect.objectContaining({
+        properties: expect.objectContaining({
+          "`Expense Tags`": expect.any(Object),
+        }),
+      })
+    )
+  })
+
+  it("rejects a wrapped field when the canonical field is also present", () => {
+    const schema = buildRowDataSchema(fields, "", true)
+
+    expect(
+      schema.safeParse({
+        Cost: 20,
+        "Expense Tags": "Food",
+        "`Expense Tags`": "Office",
       }).success
     ).toBe(false)
   })

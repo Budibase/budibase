@@ -11,7 +11,6 @@ import {
   type AgentOperationToolConfig,
   type ToolExecutionPolicy,
 } from "@budibase/types"
-import { normalizeToolInputForSchema } from "./inputValidation"
 
 export interface ToolAuthorization {
   permissionType: PermissionType
@@ -135,9 +134,8 @@ const wrapTool = (
       const schema =
         toolDef.authoritativeInputSchema ?? toolDef.tool.inputSchema
       try {
-        const normalized = await normalizeToolInputForSchema(input, schema)
         validatedInput = await validateTypes({
-          value: normalized.value,
+          value: input,
           schema,
         })
       } catch (error) {

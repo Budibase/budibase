@@ -3,7 +3,6 @@ import {
   AgentOperation,
   ToolMetadata,
   ToolType,
-  PermissionLevel,
   SourceName,
   WebSearchProvider,
   ApprovalToolResultStatus,
@@ -197,7 +196,6 @@ export async function buildPromptAndTools(
   tools: ToolSet
   toolDisplayNames: Record<string, string>
   toolSources: Record<string, string | undefined>
-  mutatingToolNames: Set<string>
 }> {
   const {
     baseSystemPrompt,
@@ -327,15 +325,6 @@ export async function buildPromptAndTools(
     toolDisplayNames: getToolDisplayNames(enabledTools),
     toolSources: Object.fromEntries(
       enabledTools.map(tool => [tool.name, tool.sourceId])
-    ),
-    mutatingToolNames: new Set(
-      enabledTools
-        .filter(
-          tool =>
-            tool.authorization?.permissionLevel === PermissionLevel.WRITE ||
-            tool.authorization?.permissionLevel === PermissionLevel.EXECUTE
-        )
-        .map(tool => tool.name)
     ),
   }
 }

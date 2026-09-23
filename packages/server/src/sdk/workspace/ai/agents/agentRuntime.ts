@@ -44,7 +44,6 @@ import {
   getLiveOperations,
   type BuildPromptAndToolsOptions,
 } from "./utils"
-import { createToolCallRetryGuard } from "./toolCallRepair"
 import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
 import type tracer from "dd-trace"
@@ -347,7 +346,6 @@ export interface AgentRunContext {
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
-  mutatingToolNames: Set<string>
   executionContext?: AgentExecutionContext
 }
 
@@ -597,7 +595,6 @@ const prepareAgentChatRunInternal = async ({
     operationIntent,
     tools,
     toolDisplayNames,
-    mutatingToolNames,
     systemPrompt: baseSystemPrompt,
   } = runContext
   const retrievedKnowledgeSourceById = new Map<
@@ -643,7 +640,6 @@ const prepareAgentChatRunInternal = async ({
         })
       : undefined
   let suspended = false
-  const toolCallRetryGuard = createToolCallRetryGuard(mutatingToolNames)
   const agentRunner = new ToolLoopAgent({
     model: wrapLanguageModel({
       model: llm.chat,
@@ -654,13 +650,10 @@ const prepareAgentChatRunInternal = async ({
     instructions: systemPrompt || undefined,
     tools: hasTools ? tools : undefined,
     ...(hasTools ? { toolChoice: "auto" as const } : {}),
-    repairToolCall: toolCallRetryGuard.repairToolCall,
     stopWhen: stepCountIs(30),
     // Anthropic rejects those without a tools param.
     prepareStep: ({ steps }) =>
-      hasPendingEscalation(steps) || toolCallRetryGuard.shouldDisableTools()
-        ? { toolChoice: "none" as const }
-        : undefined,
+      hasPendingEscalation(steps) ? { toolChoice: "none" as const } : undefined,
     providerOptions: llm.providerOptions?.(hasTools),
     output,
   })
