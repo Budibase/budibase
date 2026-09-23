@@ -448,7 +448,6 @@ describe("buildPromptAndTools", () => {
         expect.objectContaining({
           name: "ta_employees_create_row",
           authoritativeInputSchema,
-          sanitizeAuthoritativeValidationErrors: true,
         }),
       ])
     )

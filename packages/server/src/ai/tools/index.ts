@@ -33,7 +33,6 @@ export interface AiToolDefinition {
   executionPolicy: ToolExecutionPolicy
   authorization?: ToolAuthorization
   authoritativeInputSchema?: Tool["inputSchema"]
-  sanitizeAuthoritativeValidationErrors?: boolean
   requesterRedactedTool?: Tool
   filterResult?: (
     result: unknown,
@@ -129,6 +128,8 @@ const wrapTool = (
     const isMutating =
       toolDef.authorization?.permissionLevel === PermissionLevel.WRITE ||
       toolDef.authorization?.permissionLevel === PermissionLevel.EXECUTE
+    const isRequesterRedacted =
+      toolDef.requesterRedactedTool === toolDef.tool
     let validatedInput = input
     if (isMutating) {
       const schema =
@@ -139,7 +140,7 @@ const wrapTool = (
           schema,
         })
       } catch (error) {
-        if (toolDef.sanitizeAuthoritativeValidationErrors) {
+        if (isRequesterRedacted) {
           throw new Error("Tool input is invalid")
         }
         throw error

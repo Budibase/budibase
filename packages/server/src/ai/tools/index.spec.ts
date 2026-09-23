@@ -256,7 +256,13 @@ describe("secured AI tool execution", () => {
     toolDefinition.authoritativeInputSchema = z.object({
       hiddenField: z.enum(["hidden-option"]),
     })
-    toolDefinition.sanitizeAuthoritativeValidationErrors = true
+    const redactedTool = tool({
+      description: "A redacted tool",
+      inputSchema: z.record(z.string(), z.unknown()),
+      execute,
+    })
+    toolDefinition.tool = redactedTool
+    toolDefinition.requesterRedactedTool = redactedTool
     const tools = toToolSet(
       [toolDefinition],
       new Map([
