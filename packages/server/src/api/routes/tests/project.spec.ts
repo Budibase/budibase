@@ -3714,11 +3714,6 @@ describe("/projects", () => {
         ...createViewScreen(view),
         workspaceAppId: workspaceApp._id,
       })
-      const automation = await config.api.automation.get(rowAction.automationId)
-      await config.api.automation.update({
-        ...automation,
-        projectIds: [project._id],
-      })
 
       return {
         packageBuffer: await config.api.project.export(project._id),

@@ -30,6 +30,7 @@ export async function fetch(ctx: UserCtx<void, FetchScreenResponse>) {
 async function saveUnlocked(
   ctx: UserCtx<SaveScreenRequest, SaveScreenResponse>
 ) {
+  const db = context.getWorkspaceDB()
   const { navigationLinkLabel, ...screen } = ctx.request.body
 
   const owningWorkspaceApp = await sdk.workspaceApps.get(screen.workspaceAppId)
