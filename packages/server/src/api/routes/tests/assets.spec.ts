@@ -32,3 +32,10 @@ describe("/builder/*file", () => {
     expect(res.text).toContain("<html")
   })
 })
+
+describe("/apps", () => {
+  it("serves the builder entrypoint", async () => {
+    const res = await config.api.assets.getAppPortal()
+    expect(res.text).toContain("<html")
+  })
+})
