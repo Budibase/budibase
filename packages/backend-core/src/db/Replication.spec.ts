@@ -309,18 +309,24 @@ describe("Replication", () => {
         id: "deleted_doc",
         deleted: true,
         changes: [{ rev: "2-deleted" }],
-        doc: { _id: "deleted_doc", _rev: "2-deleted", _deleted: true },
+      }
+      const liveChange = {
+        id: "deleted_doc",
+        deleted: false,
+        changes: [{ rev: "1-live" }],
       }
       mockSourceDb.changes.mockImplementation(
         async (options: { doc_ids?: string[] }) =>
           options.doc_ids
-            ? { results: [tombstone] }
+            ? { results: [liveChange, tombstone] }
             : { last_seq: "seq-2", results: [tombstone] }
       )
       mockTargetDb.allDocs.mockResolvedValue({
         rows: [{ id: "deleted_doc", value: { rev: "1-live" } }],
       })
-      mockTargetDb.changes.mockResolvedValue({ results: [tombstone] })
+      mockTargetDb.changes.mockResolvedValue({
+        results: [liveChange, tombstone],
+      })
 
       await replication.replicateApp()
 

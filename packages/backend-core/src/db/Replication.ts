@@ -156,13 +156,13 @@ class Replication {
             .filter(change => change.deleted)
             .filter(change => {
               const revs = change.changes?.map(({ rev }) => rev) ?? []
-              const rev = (change.doc as DocumentWithID | undefined)?._rev
-              if (!rev || revs.length !== 1 || revs[0] !== rev) {
+              if (revs.length !== 1) {
                 return false
               }
               const doc = {
                 ...(change.doc as DocumentWithID | undefined),
                 _id: change.id,
+                _rev: revs[0],
                 _deleted: true,
               }
               return tombstoneFilter(doc, {})
@@ -175,7 +175,7 @@ class Replication {
         if (!deletedIds.includes(change.id)) {
           continue
         }
-        const rev = (change.doc as DocumentWithID | undefined)?._rev
+        const rev = change.changes?.[0]?.rev
         if (rev) {
           tombstonesToClean.set(change.id, { id: change.id, rev })
         }
@@ -270,13 +270,14 @@ class Replication {
         style: "all_docs",
       }),
     ])
-    const sourceChange = sourceChanges.results[0]
-    const targetChange = targetChanges.results[0]
+    const latestChange = (results: typeof sourceChanges.results) =>
+      [...results].reverse().find(change => change.id === id)
+    const sourceChange = latestChange(sourceChanges.results)
+    const targetChange = latestChange(targetChanges.results)
     const hasOnlyTombstoneRevision = (change: typeof sourceChange) =>
       !!change?.deleted &&
       change.changes?.length === 1 &&
-      change.changes[0].rev === rev &&
-      (change.doc as DocumentWithID | undefined)?._rev === rev
+      change.changes[0].rev === rev
 
     if (!hasOnlyTombstoneRevision(sourceChange)) {
       return false

@@ -19,6 +19,7 @@ import {
   DocumentType,
   Feature,
   PermissionLevel,
+  RowValue,
   Screen,
   SEPARATOR,
   Theme,
@@ -1671,6 +1672,14 @@ describe("/applications", () => {
       await config.publish()
 
       await config.api.row.delete(table._id!, { _id: row._id! })
+      const devDb = db.getDB(config.getDevWorkspaceId())
+      const prodDb = db.getDB(config.getProdWorkspaceId())
+      const deletedRow = await devDb.allDocs<RowValue>({
+        keys: [row._id!],
+      })
+      const deletedRev = deletedRow.rows[0].value.rev
+      expect(deletedRow.rows[0].value.deleted).toBe(true)
+
       await config.publish()
 
       await config.withProdApp(async () => {
@@ -1678,8 +1687,8 @@ describe("/applications", () => {
       })
 
       const [devRow, prodRow] = await Promise.all([
-        db.getDB(config.getDevWorkspaceId()).allDocs({ keys: [row._id!] }),
-        db.getDB(config.getProdWorkspaceId()).allDocs({ keys: [row._id!] }),
+        devDb.allDocs({ keys: [row._id!] }),
+        prodDb.allDocs({ keys: [row._id!] }),
       ])
       expect(devRow.rows[0]).toEqual(
         expect.objectContaining({ error: "not_found" })
@@ -1687,6 +1696,17 @@ describe("/applications", () => {
       expect(prodRow.rows[0]).toEqual(
         expect.objectContaining({ error: "not_found" })
       )
+
+      const [devRevisionDiff, prodRevisionDiff] = await Promise.all([
+        db.getPouchDB(config.getDevWorkspaceId()).revsDiff({
+          [row._id!]: [deletedRev],
+        }),
+        db.getPouchDB(config.getProdWorkspaceId()).revsDiff({
+          [row._id!]: [deletedRev],
+        }),
+      ])
+      expect(devRevisionDiff[row._id!]?.missing).toContain(deletedRev)
+      expect(prodRevisionDiff[row._id!]?.missing).toContain(deletedRev)
     })
 
     // API to publish filtered resources currently disabled, skip test while not needed
