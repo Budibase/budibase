@@ -1,6 +1,5 @@
 import { render, waitFor } from "@testing-library/svelte"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { tick } from "svelte"
 import { writable } from "svelte/store"
 import MockSlot from "@/test/mocks/MockSlot.svelte"
 import { automationWithSteps, serverLogStep } from "@/test/automationFixtures"
@@ -12,7 +11,7 @@ const mocks = vi.hoisted(() => {
   type MockNode = {
     id: string
     type: string
-    data: { block: unknown }
+    data: Record<string, unknown>
     position: { x: number; y: number }
     width: number
     height: number
@@ -82,7 +81,18 @@ Object.assign(mocks.automationStore, {
     closeActionPanel: vi.fn(),
     closeLogPanel: vi.fn(),
     closeLogsPanel: vi.fn(),
-    getBlockByRef: vi.fn(),
+    getBlockByRef: vi.fn((_automation, ref) => {
+      if (!ref?.pathTo) {
+        return undefined
+      }
+      return {
+        id: "branch",
+        stepId: "BRANCH",
+        inputs: {
+          branches: [{ id: "branch-1", name: "Branch 1" }],
+        },
+      }
+    }),
     getLogs: vi.fn(() => Promise.resolve({ data: [] })),
     getToolbarFlowEndInsertion: vi.fn(),
     initAppSelf: vi.fn(),
@@ -170,7 +180,7 @@ vi.mock("../AutomationStepHelpers", () => ({
       newNodes: Array<{
         id: string
         type: string
-        data: { block: unknown }
+        data: Record<string, unknown>
         position: { x: number; y: number }
         width: number
         height: number
@@ -245,6 +255,33 @@ describe("FlowChart", () => {
           position: { x: 600, y: 0 },
           width: 200,
           height: 120,
+        },
+        {
+          id: "branch-branch-0-branch-1",
+          type: "branch-node",
+          data: {
+            block: {
+              id: "branch",
+              stepId: "BRANCH",
+              inputs: { branches: [{ id: "branch-1", name: "Branch 1" }] },
+            },
+            branch: { id: "branch-1", name: "Branch 1" },
+            branchIdx: 0,
+            layout: { width: 200, height: 120 },
+          },
+          position: { x: 0, y: 240 },
+          width: 200,
+          height: 120,
+        },
+        {
+          id: "anchor-branch-branch-0-branch-1",
+          type: "anchor-node",
+          data: {
+            layout: { width: 320, height: 1 },
+          },
+          position: { x: 600, y: 240 },
+          width: 320,
+          height: 1,
         }
       )
       return { nodes: deps.newNodes, edges: deps.newEdges }
@@ -262,6 +299,7 @@ describe("FlowChart", () => {
       blockRefs: {
         trigger: { pathTo: [{ stepIdx: 0, id: "trigger" }] },
         "step-1": { pathTo: [{ stepIdx: 1, id: "step-1" }] },
+        branch: { pathTo: [{ stepIdx: 2, id: "branch" }] },
       },
     })
     mocks.automationStore.set({
@@ -336,8 +374,12 @@ describe("FlowChart", () => {
       selectedNodeId: "step-1",
     }))
 
-    await tick()
-    expect(mocks.setViewport).not.toHaveBeenCalled()
+    await waitFor(() => {
+      expect(mocks.setViewport).toHaveBeenCalledWith(
+        { x: -304, y: 240, zoom: 1 },
+        { duration: 180 }
+      )
+    })
   })
 
   it("moves the canvas left when opening the add-step panel would hide the target on the right", async () => {
@@ -372,6 +414,47 @@ describe("FlowChart", () => {
     await waitFor(() => {
       expect(mocks.setViewport).toHaveBeenCalledWith(
         { x: -304, y: 240, zoom: 1 },
+        { duration: 180 }
+      )
+    })
+  })
+
+  it("moves the canvas left enough to keep a branch add-step target clear of the side panel without reserving invisible anchor width", async () => {
+    const automation = {
+      ...automationWithSteps([serverLogStep("step-1")]),
+      _id: "automation-1",
+      publishStatus: {
+        published: false,
+        name: "Automation",
+        state: PublishResourceState.DISABLED,
+      },
+    }
+
+    render(FlowChart, {
+      props: { automation },
+    })
+
+    await waitFor(() => {
+      expect(mocks.setViewport).toHaveBeenCalledWith(
+        { x: 100, y: 240, zoom: 1 },
+        { duration: 0 }
+      )
+    })
+    mocks.setViewport.mockClear()
+    mocks.viewport = { x: 300, y: 240, zoom: 1 }
+
+    mocks.automationStore.update(state => ({
+      ...state,
+      actionPanelBlock: {
+        branchNode: true,
+        branchStepId: "branch",
+        branchIdx: 0,
+      },
+    }))
+
+    await waitFor(() => {
+      expect(mocks.setViewport).toHaveBeenCalledWith(
+        { x: -104, y: 240, zoom: 1 },
         { duration: 180 }
       )
     })

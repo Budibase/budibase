@@ -51,9 +51,26 @@ const getArgs = () => {
   }
 }
 
-const getLatestReleaseTag = () =>
-  process.env.TAG ||
-  run("gh", ["release", "view", "--json", "tagName", "-q", ".tagName"])
+const getLatestCloudReleaseTag = () => {
+  if (process.env.TAG) {
+    return process.env.TAG
+  }
+
+  run("git", ["fetch", "origin", "--tags"])
+
+  const tags = run("git", [
+    "tag",
+    "--list",
+    "v*-cloud*",
+    "--sort=-version:refname",
+  ]).split("\n")
+
+  if (!tags.length || !tags[0]) {
+    throw new Error("No Cloud release tags found")
+  }
+
+  return tags[0]
+}
 
 const getReleaseCommitDate = tag =>
   run("git", ["log", "-1", "--format=%aI", tag])
@@ -109,7 +126,7 @@ const pad = (value, length) => value.padEnd(length, " ")
 
 const formatTable = pullRequests => {
   if (!pullRequests.length) {
-    return "No merged PRs pending release."
+    return "No merged PRs pending Cloud release."
   }
 
   const rows = pullRequests.map(pr => ({
@@ -156,7 +173,7 @@ const formatTable = pullRequests => {
 }
 
 const buildText = ({ tag, releaseCommitDate, pullRequests }) => {
-  const title = `Pending releases since ${tag}`
+  const title = `Pending Cloud releases since ${tag}`
   const context = `${pullRequests.length} merged PR${
     pullRequests.length === 1 ? "" : "s"
   } after ${formatDateTime(releaseCommitDate)}`
@@ -209,7 +226,7 @@ const postToSlack = async ({ tag, releaseCommitDate, pullRequests }) => {
 
 const main = async () => {
   const { dryRun } = getArgs()
-  const tag = getLatestReleaseTag()
+  const tag = getLatestCloudReleaseTag()
   const releaseCommitDate = getReleaseCommitDate(tag)
   const pullRequests = getPendingPullRequests(releaseCommitDate)
   const text = buildText({ tag, releaseCommitDate, pullRequests })

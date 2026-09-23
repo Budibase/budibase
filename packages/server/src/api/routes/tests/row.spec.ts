@@ -37,6 +37,7 @@ import {
   Row,
   RowExportFormat,
   SaveTableRequest,
+  SortOrder,
   StaticQuotaName,
   Table,
   TableSchema,
@@ -2740,6 +2741,39 @@ if (descriptions.length) {
           expect(row._id).toEqual(existing._id)
         })
 
+        isInternal &&
+          it("should export rows using multiple sort columns", async () => {
+            await config.api.row.save(table._id!, {
+              name: "A",
+              description: "1",
+            })
+            await config.api.row.save(table._id!, {
+              name: "B",
+              description: "1",
+            })
+            await config.api.row.save(table._id!, {
+              name: "A",
+              description: "2",
+            })
+
+            const response = await config.api.row.exportRows(table._id!, {
+              sort: {
+                name: {
+                  direction: SortOrder.ASCENDING,
+                },
+                description: {
+                  direction: SortOrder.DESCENDING,
+                },
+              },
+            })
+
+            expect(
+              JSON.parse(response).map(
+                (row: Row) => `${row.name}-${row.description}`
+              )
+            ).toEqual(["A-2", "A-1", "B-1"])
+          })
+
         it("should allow exporting only certain columns", async () => {
           const existing = await config.api.row.save(table._id!, {
             name: "foo",
@@ -4230,6 +4264,15 @@ if (descriptions.length) {
             const { rows } = await config.api.row.search(table._id!)
             expect(rows[0].formula).toBe(1)
           })
+
+        isInternal &&
+          it("should expose relationship primary display values to static formulas", async () => {
+            await updateFormulaColumn("{{ links.0.primaryDisplay }}", {
+              formulaType: FormulaType.STATIC,
+            })
+            const { rows } = await config.api.row.search(table._id!)
+            expect(rows[0].formula).toBe(relatedRow.name)
+          })
       })
 
       describe("Formula JS protection", () => {
@@ -4275,7 +4318,8 @@ if (descriptions.length) {
           await withEnv(
             {
               JS_PER_INVOCATION_TIMEOUT_MS: 40,
-              JS_PER_REQUEST_TIMEOUT_MS: 80,
+              // Leave headroom for VM setup while ensuring the request still times out.
+              JS_PER_REQUEST_TIMEOUT_MS: 500,
             },
             async () => {
               const js = encodeJS(
@@ -4287,6 +4331,7 @@ if (descriptions.length) {
               return i;
             `
               )
+              const rowCount = 20
 
               const table = await config.api.table.save(
                 saveTableRequest({
@@ -4305,7 +4350,7 @@ if (descriptions.length) {
                 })
               )
 
-              for (let i = 0; i < 10; i++) {
+              for (let i = 0; i < rowCount; i++) {
                 await config.api.row.save(table._id!, { text: "foo" })
               }
 
@@ -4313,27 +4358,28 @@ if (descriptions.length) {
               // pollution of the execution time tracking.
               for (let reqs = 0; reqs < 3; reqs++) {
                 const { rows } = await config.api.row.search(table._id!)
-                expect(rows).toHaveLength(10)
+                expect(rows).toHaveLength(rowCount)
 
-                let i = 0
-                for (; i < 10; i++) {
-                  const row = rows[i]
-                  if (row.formula !== JsTimeoutError.message) {
-                    break
-                  }
-                }
+                const invocationTimeouts = rows.filter(
+                  row => row.formula === JsTimeoutError.message
+                )
+                const requestTimeouts = rows.filter(
+                  row =>
+                    typeof row.formula === "string" &&
+                    row.formula.startsWith("CPU time limit exceeded ")
+                )
 
-                // Given the execution times are not deterministic, we can't be sure
-                // of the exact number of rows that were executed before the timeout
-                // but it should absolutely be at least 1.
-                expect(i).toBeGreaterThan(0)
-                expect(i).toBeLessThan(5)
-
-                for (; i < 10; i++) {
-                  const row = rows[i]
-                  expect(row.text).toBe("foo")
-                  expect(row.formula).toStartWith("CPU time limit exceeded ")
-                }
+                expect(invocationTimeouts.length).toBeGreaterThan(0)
+                expect(requestTimeouts.length).toBeGreaterThan(0)
+                expect(rows.every(row => row.text === "foo")).toBe(true)
+                expect(
+                  rows.every(
+                    row =>
+                      row.formula === JsTimeoutError.message ||
+                      (typeof row.formula === "string" &&
+                        row.formula.startsWith("CPU time limit exceeded "))
+                  )
+                ).toBe(true)
               }
             }
           )

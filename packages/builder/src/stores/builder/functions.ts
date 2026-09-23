@@ -1,4 +1,4 @@
-import { API, productionAPI } from "@/api"
+import { API } from "@/api"
 import { duplicateName } from "@/helpers/duplicate"
 import { getErrorMessage } from "@/helpers/errors"
 import { BudiStore } from "@/stores/BudiStore"
@@ -6,6 +6,8 @@ import type {
   CreateFunctionRequest,
   FunctionQueryCapabilityInput,
   FunctionResponse,
+  FunctionSummary,
+  PublishStatusResource,
   UpdateFunctionRequest,
 } from "@budibase/types"
 import { get } from "svelte/store"
@@ -15,20 +17,20 @@ export type FunctionDeploymentState =
   | "published"
   | "unpublished_changes"
 
-export interface UIFunction extends FunctionResponse {
+export interface UIFunction extends FunctionSummary {
   deploymentState: FunctionDeploymentState
 }
 
 interface FunctionStoreState {
-  functions: FunctionResponse[]
-  publishedFunctions: FunctionResponse[]
+  functions: FunctionSummary[]
+  deployment: Record<string, PublishStatusResource>
   loading: boolean
   error?: string
 }
 
 const initialState: FunctionStoreState = {
   functions: [],
-  publishedFunctions: [],
+  deployment: {},
   loading: false,
 }
 
@@ -52,18 +54,14 @@ const toUpdateRequest = (
 })
 
 const getDeploymentState = (
-  fn: FunctionResponse,
-  publishedFunctions: FunctionResponse[]
+  fn: FunctionSummary,
+  deployment: Record<string, PublishStatusResource>
 ): FunctionDeploymentState => {
-  const published = publishedFunctions.find(
-    candidate => candidate._id === fn._id
-  )
-  if (!published) {
+  const published = deployment[fn._id]
+  if (!published?.published) {
     return "not_deployed"
   }
-  return published.updatedAt === fn.updatedAt
-    ? "published"
-    : "unpublished_changes"
+  return !published.unpublishedChanges ? "published" : "unpublished_changes"
 }
 
 export class FunctionStore extends BudiStore<FunctionStoreState> {
@@ -78,7 +76,7 @@ export class FunctionStore extends BudiStore<FunctionStoreState> {
   getList(state: FunctionStoreState): UIFunction[] {
     return state.functions.map(fn => ({
       ...fn,
-      deploymentState: getDeploymentState(fn, state.publishedFunctions),
+      deploymentState: getDeploymentState(fn, state.deployment),
     }))
   }
 
@@ -87,12 +85,12 @@ export class FunctionStore extends BudiStore<FunctionStoreState> {
     try {
       const [development, published] = await Promise.all([
         API.getFunctions(),
-        productionAPI.getFunctions(),
+        API.deployment.getPublishStatus(),
       ])
       this.update(state => ({
         ...state,
         functions: development.functions,
-        publishedFunctions: published.functions,
+        deployment: published.functions,
         loading: false,
       }))
     } catch (error) {
@@ -103,7 +101,7 @@ export class FunctionStore extends BudiStore<FunctionStoreState> {
 
   async fetchOne(functionId: string) {
     const response = await API.getFunction(functionId)
-    this.upsert(response.function)
+    this.upsert(response.function, false)
     return response.function
   }
 
@@ -119,11 +117,16 @@ export class FunctionStore extends BudiStore<FunctionStoreState> {
     return response.function
   }
 
-  async rename(fn: FunctionResponse, name: string) {
-    return await this.save(fn, toUpdateRequest(fn, name))
+  async rename(fn: FunctionSummary, name: string) {
+    const draft = await this.fetchOne(fn._id)
+    return await this.save(draft, {
+      ...toUpdateRequest(draft, name),
+      _rev: fn._rev!,
+    })
   }
 
-  async duplicate(fn: FunctionResponse) {
+  async duplicate(summary: FunctionSummary) {
+    const fn = await this.fetchOne(summary._id)
     const existingNames = get(this.store).functions.map(item => item.name)
     return await this.create({
       name: duplicateName(fn.name, existingNames),
@@ -132,7 +135,7 @@ export class FunctionStore extends BudiStore<FunctionStoreState> {
     })
   }
 
-  async delete(fn: FunctionResponse) {
+  async delete(fn: FunctionSummary) {
     if (!fn._rev) {
       throw new Error("Function revision is missing")
     }
@@ -147,19 +150,35 @@ export class FunctionStore extends BudiStore<FunctionStoreState> {
     this.set(initialState)
   }
 
-  private upsert(fn: FunctionResponse) {
+  private upsert(fn: FunctionResponse, changed = true) {
     this.update(state => {
       const existingIndex = state.functions.findIndex(
         item => item._id === fn._id
       )
       const functions = [...state.functions]
       if (existingIndex === -1) {
-        functions.push(fn)
+        functions.push({ ...fn, linkedQueryCount: fn.capabilities.length })
       } else {
-        functions[existingIndex] = fn
+        functions[existingIndex] = {
+          ...fn,
+          linkedQueryCount: fn.capabilities.length,
+        }
       }
       functions.sort((a, b) => a.name.localeCompare(b.name))
-      return { ...state, functions }
+      return {
+        ...state,
+        functions,
+        deployment:
+          changed && state.deployment[fn._id]
+            ? {
+                ...state.deployment,
+                [fn._id]: {
+                  ...state.deployment[fn._id],
+                  unpublishedChanges: true,
+                },
+              }
+            : state.deployment,
+      }
     })
   }
 }

@@ -236,6 +236,10 @@ export const createActions = (context: StoreContext): RowActionStore => {
     await tick()
     const $allFilters = get(allFilters)
     const $sort = get(sort)
+    const sorts = $sort.map(sortEntry => ({
+      field: sortEntry.column,
+      order: sortEntry.order,
+    }))
 
     // Create new fetch model
     const newFetch = fetchData({
@@ -243,8 +247,7 @@ export const createActions = (context: StoreContext): RowActionStore => {
       datasource: $datasource,
       options: {
         filter: $allFilters,
-        sortColumn: $sort.column,
-        sortOrder: $sort.order,
+        sorts,
         limit: RowPageSize,
         paginate: true,
 

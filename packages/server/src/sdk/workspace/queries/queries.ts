@@ -12,6 +12,11 @@ export interface EnrichContextOpts {
   escapeNewlines?: boolean
 }
 
+export interface FetchOptions {
+  enrich: boolean
+  datasourceId?: string
+}
+
 const DEFAULT_ENRICH_CONTEXT_OPTS: Required<EnrichContextOpts> = {
   escapeNewlines: true,
 }
@@ -154,11 +159,11 @@ export async function find(queryId: string) {
   return updateSchema(query)
 }
 
-export async function fetch(opts: { enrich: boolean } = { enrich: true }) {
+export async function fetch(opts: FetchOptions = { enrich: true }) {
   const db = context.getWorkspaceDB()
 
   const body = await db.allDocs(
-    getQueryParams(null, {
+    getQueryParams(opts.datasourceId, {
       include_docs: true,
     })
   )

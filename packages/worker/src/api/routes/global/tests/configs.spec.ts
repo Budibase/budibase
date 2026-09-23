@@ -1,9 +1,11 @@
 jest.mock("nodemailer")
+import nodemailer from "nodemailer"
 import { configs, events } from "@budibase/backend-core"
 import {
   Config,
   ConfigType,
   GetPublicSettingsResponse,
+  PASSWORD_REPLACEMENT,
   PKCEMethod,
   SCIMConfig,
   TranslationsConfig,
@@ -268,11 +270,64 @@ describe("configs", () => {
         it("should not overwrite secret when updating SMTP config", async () => {
           await saveConfig(smtp({ auth: { user: "jeff", pass: "spooky" } }))
           const conf = await config.api.configs.getConfig(ConfigType.SMTP)
+
+          const verifiedPasswords: Array<string | undefined> = []
+          const createTransportMock = nodemailer.createTransport as jest.Mock
+          createTransportMock.mockImplementationOnce(options => {
+            verifiedPasswords.push(options.auth?.pass)
+            return {
+              sendMail: jest.fn(),
+              verify: jest.fn(),
+            }
+          })
+
           await saveConfig(conf)
+
+          expect(verifiedPasswords).toEqual(["spooky"])
           await config.doInTenant(async () => {
             const rawConf = await configs.getSMTPConfig()
             expect(rawConf!.auth!.pass).toEqual("spooky")
           })
+        })
+
+        it("should verify and save a new SMTP password", async () => {
+          await saveConfig(smtp({ auth: { user: "jeff", pass: "spooky" } }))
+          const conf = await config.api.configs.getConfig(ConfigType.SMTP)
+          conf.config.auth!.pass = "new-secret"
+
+          const verifiedPasswords: Array<string | undefined> = []
+          const createTransportMock = nodemailer.createTransport as jest.Mock
+          createTransportMock.mockImplementationOnce(options => {
+            verifiedPasswords.push(options.auth?.pass)
+            return {
+              sendMail: jest.fn(),
+              verify: jest.fn(),
+            }
+          })
+
+          await saveConfig(conf)
+
+          expect(verifiedPasswords).toEqual(["new-secret"])
+          await config.doInTenant(async () => {
+            const rawConf = await configs.getSMTPConfig()
+            expect(rawConf!.auth!.pass).toEqual("new-secret")
+          })
+        })
+
+        it("should reject a replacement password without an existing secret", async () => {
+          jest.clearAllMocks()
+
+          await config.api.configs.saveConfig(
+            smtp({
+              auth: { user: "jeff", pass: PASSWORD_REPLACEMENT },
+            }),
+            {
+              status: 400,
+              body: { message: "SMTP password is required" },
+            }
+          )
+
+          expect(nodemailer.createTransport).not.toHaveBeenCalled()
         })
       })
 

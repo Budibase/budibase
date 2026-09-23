@@ -1,4 +1,8 @@
-import type { FunctionDocument } from "../../../documents"
+import type {
+  FunctionBuildDiagnostic,
+  FunctionDocument,
+  FunctionRunSummary,
+} from "../../../documents"
 import type { SourceName } from "../../../sdk"
 
 export type FunctionReadiness = "ready" | "build_required" | "build_failed"
@@ -25,8 +29,16 @@ export interface FunctionResponse extends FunctionDocument {
   readiness: FunctionReadiness
 }
 
+export interface FunctionSummary
+  extends Pick<
+    FunctionResponse,
+    "_id" | "_rev" | "name" | "appId" | "createdAt" | "updatedAt" | "readiness"
+  > {
+  linkedQueryCount: number
+}
+
 export interface FetchFunctionsResponse {
-  functions: FunctionResponse[]
+  functions: FunctionSummary[]
 }
 
 export interface CreateFunctionResponse {
@@ -39,6 +51,22 @@ export interface FetchFunctionResponse {
 
 export interface UpdateFunctionResponse {
   function: FunctionResponse
+}
+
+export interface CompileFunctionRequest extends FunctionDraftRequest {
+  functionId?: string
+}
+
+export interface CompileFunctionResponse {
+  diagnostics: FunctionBuildDiagnostic[]
+}
+
+export interface BuildFunctionRequest {
+  _rev: string
+}
+
+export interface BuildFunctionResponse {
+  function: FunctionSummary
 }
 
 export type FunctionQueryKind = "data" | "api"
@@ -59,4 +87,14 @@ export interface FunctionQueryCatalogEntry {
 
 export interface FetchFunctionQueryCatalogResponse {
   queries: FunctionQueryCatalogEntry[]
+}
+
+export interface FetchFunctionRunsResponse {
+  runs: FunctionRunSummary[]
+  hasMore: boolean
+  nextBookmark?: string
+}
+
+export interface FetchFunctionRunResponse {
+  run: FunctionRunSummary
 }

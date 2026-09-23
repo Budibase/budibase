@@ -48,12 +48,16 @@ const defer = <T>() => {
   return { promise, resolve, reject }
 }
 
-const project = (id: string): ProjectResponse => ({
+const project = (
+  id: string,
+  overrides: Partial<ProjectResponse> = {}
+): ProjectResponse => ({
   _id: id,
   _rev: "1-rev",
   name: id,
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
+  ...overrides,
 })
 
 const getProjects = (store: ProjectsStore) => get(store.store)
@@ -107,6 +111,54 @@ describe("ProjectsStore", () => {
     secondWorkspace.resolve({ projects: [project("second_project")] })
     await secondFetch
     expect(getProjects(store)).toEqual([project("second_project")])
+  })
+
+  it("sorts fetched projects by name", async () => {
+    const store = new ProjectsStore()
+    const zulu = project("project_zulu", { name: "Zulu" })
+    const alpha = project("project_alpha", { name: "Alpha" })
+
+    fetchProjects.mockResolvedValue({ projects: [zulu, alpha] })
+
+    await expect(store.fetch()).resolves.toEqual([alpha, zulu])
+    expect(getProjects(store)).toEqual([alpha, zulu])
+  })
+
+  it("inserts created projects by name", async () => {
+    const store = new ProjectsStore()
+    const alpha = project("project_alpha", { name: "Alpha" })
+    const bravo = project("project_bravo", { name: "Bravo" })
+    const zulu = project("project_zulu", { name: "Zulu" })
+
+    fetchProjects.mockResolvedValue({ projects: [alpha, zulu] })
+    createProject.mockResolvedValue({ project: bravo })
+
+    await store.fetch()
+    await store.create({ name: bravo.name })
+
+    expect(getProjects(store)).toEqual([alpha, bravo, zulu])
+  })
+
+  it("reorders updated projects after rename", async () => {
+    const store = new ProjectsStore()
+    const alpha = project("project_alpha", { name: "Alpha" })
+    const charlie = project("project_charlie", { name: "Charlie" })
+    const renamed = project("project_charlie", {
+      _rev: "2-rev",
+      name: "Aardvark",
+    })
+
+    fetchProjects.mockResolvedValue({ projects: [alpha, charlie] })
+    updateProject.mockResolvedValue({ project: renamed })
+
+    await store.fetch()
+    await store.updateProject({
+      _id: renamed._id,
+      _rev: charlie._rev,
+      name: renamed.name,
+    })
+
+    expect(getProjects(store)).toEqual([renamed, alpha])
   })
 
   it("returns the import response and allows retry when refresh fails", async () => {

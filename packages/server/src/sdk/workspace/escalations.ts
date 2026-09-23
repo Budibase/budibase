@@ -1,8 +1,12 @@
 import zlib from "zlib"
-import { context } from "@budibase/backend-core"
+import { context, Duration, locks } from "@budibase/backend-core"
 import type { UIMessage } from "ai"
 import {
   DocumentType,
+  LockName,
+  LockType,
+  EscalationAction,
+  EscalationApproval,
   EscalationContextDoc,
   EscalationNotificationDoc,
   EscalationRecipient,
@@ -24,6 +28,27 @@ import { getFullUser } from "../../utilities/users"
 
 const getDocId = (escalationId: string): string =>
   `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`
+
+const ESCALATION_LOCK_TTL_MS = Duration.fromSeconds(10).toMs()
+
+// Serialises every writer to one escalation - responses, resolve, cancel and
+// the resume job - so approvals land in arrival order and never race the
+// resolution or resume writes.
+export const withEscalationLock = async <T>(
+  escalationId: string,
+  task: () => Promise<T>
+): Promise<T> => {
+  const { result } = await locks.doWithLock(
+    {
+      name: LockName.ESCALATION,
+      resource: escalationId,
+      type: LockType.DEFAULT,
+      ttl: ESCALATION_LOCK_TTL_MS,
+    },
+    task
+  )
+  return result
+}
 
 export async function getContextDoc(
   escalationId: string
@@ -61,7 +86,7 @@ export async function getResult(
 }
 
 // Human-readable label for a recipient. The channel's or the person's real
-// name, never the provider (Slack/Discord/...). A globalUserId recipient is
+// name, never the provider (Slack/Teams/...). A globalUserId recipient is
 // always a real Budibase user (the builder's recipient picker only offers
 // users with an existing chat identity link), so the profile name is always
 // resolvable
@@ -149,12 +174,68 @@ export async function listNotifications(
 // runs the resolution strategy, and triggers resolve if the strategy returns truthy.
 // NOTE: as notification channels grow, a dedicated notification processor may be
 // a better home for this responsibility than the escalation processor.
+const appendResponse = async (
+  notificationDocId: string,
+  response: EscalationResponse
+): Promise<"recorded" | "already_responded"> => {
+  const db = context.getWorkspaceDB()
+  const responderId = response.user?.userId
+  const notifDoc = await db.tryGet<EscalationNotificationDoc>(notificationDocId)
+  if (!notifDoc) {
+    throw new Error(`Notification doc ${notificationDocId} not found`)
+  }
+  const existing = notifDoc.responses ?? []
+  if (responderId && existing.some(r => r.user?.userId === responderId)) {
+    return "already_responded"
+  }
+  await db.put({
+    ...notifDoc,
+    responses: [
+      ...existing,
+      { ...response, respondedAt: new Date().toISOString() },
+    ],
+  })
+  return "recorded"
+}
+
+const appendApproval = async (
+  escalationId: string,
+  approval: EscalationApproval
+): Promise<
+  | { status: "recorded"; approvals: EscalationApproval[] }
+  | { status: "already_responded" }
+> => {
+  const db = context.getWorkspaceDB()
+  const doc = await db.tryGet<EscalationContextDoc>(getDocId(escalationId))
+  if (!doc) {
+    throw new Error(`Escalation ${escalationId} not found`)
+  }
+  const existing = doc.approvals ?? []
+  if (existing.some(a => a.userId === approval.userId)) {
+    return { status: "already_responded" }
+  }
+  const approvals = [...existing, approval]
+  await db.put({ ...doc, approvals })
+  return { status: "recorded", approvals }
+}
+
 export async function respond(
   escalationId: string,
-  notificationDocId: string,
+  notificationDocId: string | undefined,
   response: EscalationResponse,
   resolve: (escalationId: string, response: EscalationResponse) => Promise<void>
 ): Promise<EscalationRespondResult> {
+  return await withEscalationLock(escalationId, () =>
+    respondUnderLock(escalationId, notificationDocId, response, resolve)
+  )
+}
+
+const respondUnderLock = async (
+  escalationId: string,
+  notificationDocId: string | undefined,
+  response: EscalationResponse,
+  resolve: (escalationId: string, response: EscalationResponse) => Promise<void>
+): Promise<EscalationRespondResult> => {
   const db = context.getWorkspaceDB()
 
   const contextDoc = await getContextDoc(escalationId)
@@ -165,36 +246,70 @@ export async function respond(
     return { status: "closed" }
   }
 
-  const notifDoc = await db.tryGet<EscalationNotificationDoc>(notificationDocId)
-  if (!notifDoc) {
-    throw new Error(`Notification doc ${notificationDocId} not found`)
-  }
-  // Ensure the notification actually belongs to this escalation - stops a forged
-  // payload pairing a valid notificationDocId with a different escalationId.
-  if (notifDoc.escalationId !== escalationId) {
-    console.warn(
-      "Escalation respond: notification does not belong to escalation (possible forged payload)",
-      {
-        escalationId,
-        notificationDocId,
-        notifEscalationId: notifDoc.escalationId,
-      }
-    )
-    throw new Error(
-      `Notification ${notificationDocId} does not belong to escalation ${escalationId}`
-    )
-  }
-  await db.put({
-    ...notifDoc,
-    response,
-    respondedAt: new Date().toISOString(),
-  })
+  if (notificationDocId) {
+    const notifDoc =
+      await db.tryGet<EscalationNotificationDoc>(notificationDocId)
+    if (!notifDoc) {
+      throw new Error(`Notification doc ${notificationDocId} not found`)
+    }
+    // Ensure the notification actually belongs to this escalation - stops a forged
+    // payload pairing a valid notificationDocId with a different escalationId.
+    if (notifDoc.escalationId !== escalationId) {
+      console.warn(
+        "Escalation respond: notification does not belong to escalation (possible forged payload)",
+        {
+          escalationId,
+          notificationDocId,
+          notifEscalationId: notifDoc.escalationId,
+        }
+      )
+      throw new Error(
+        `Notification ${notificationDocId} does not belong to escalation ${escalationId}`
+      )
+    }
+    const appended = await appendResponse(notificationDocId, response)
 
-  const notifDocs = await listNotifications(escalationId)
-  const totalRecipients = contextDoc.recipients?.length ?? 0
-  const responses = notifDocs
-    .filter(doc => doc.respondedAt)
-    .map(doc => doc.response)
+    if (
+      appended === "already_responded" &&
+      !contextDoc.policy?.approvers?.length
+    ) {
+      return { status: "already_responded" }
+    }
+  }
+
+  const approvers = contextDoc.policy?.approvers ?? []
+  const totalRecipients = approvers.length || contextDoc.recipients?.length || 0
+  let responses: EscalationResponse[]
+  if (approvers.length) {
+    const userId = response.userId
+    if (typeof userId !== "string") {
+      return { status: "unlinked" }
+    }
+    if (!approvers.includes(userId)) {
+      return { status: "recorded" }
+    }
+    if (
+      response.actionId !== EscalationAction.APPROVE &&
+      response.actionId !== EscalationAction.REJECT
+    ) {
+      return { status: "recorded" }
+    }
+    const approved = await appendApproval(escalationId, {
+      userId,
+      actionId: response.actionId,
+      respondedAt: new Date().toISOString(),
+      ...(notificationDocId ? { notificationDocId } : {}),
+    })
+    if (approved.status === "already_responded") {
+      return { status: "already_responded" }
+    }
+    responses = approved.approvals
+  } else {
+    const notifDocs = await listNotifications(escalationId)
+    responses = notifDocs
+      .flatMap(doc => doc.responses ?? [])
+      .sort((a, b) => (a.respondedAt < b.respondedAt ? -1 : 1))
+  }
 
   console.log("Escalation respond: responses so far", {
     escalationId,
@@ -211,7 +326,11 @@ export async function respond(
     ? decodeJSBinding(contextDoc.resolutionStrategy!)!
     : contextDoc.resolutionStrategy!
   const vm = new IsolatedVM().withSnippets(RESOLUTION_STRATEGY_SNIPPETS)
-  const result = vm.withContext({ responses, totalRecipients }, () =>
+  const actions = {
+    approve: EscalationAction.APPROVE,
+    reject: EscalationAction.REJECT,
+  }
+  const result = vm.withContext({ responses, totalRecipients, actions }, () =>
     vm.execute(iifeWrapper(rawCode))
   )
 

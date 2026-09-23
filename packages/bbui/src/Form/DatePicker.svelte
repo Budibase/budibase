@@ -13,6 +13,7 @@
   export let error = undefined
   export let enableTime = true
   export let timeOnly = false
+  export let setTimeTo: string | undefined = undefined
   export let placeholder: string | null = null
   export let appendTo = undefined
   export let ignoreTimezones = false
@@ -36,6 +37,7 @@
     {placeholder}
     {enableTime}
     {timeOnly}
+    {setTimeTo}
     {appendTo}
     {ignoreTimezones}
     {calendarLabels}

@@ -51,7 +51,7 @@ export class QueryAPI extends TestAPI {
     return await this._get<Query>(`/api/queries/${queryId}`, {
       expectations,
       headers: {
-        [constants.Header.APP_ID]: this.config.getProdWorkspaceId(),
+        [constants.Header.WORKSPACE_ID]: this.config.getProdWorkspaceId(),
       },
     })
   }

@@ -3,7 +3,7 @@ import type { FunctionQueryCapability } from "@budibase/types"
 
 const property = (value: string) => JSON.stringify(value)
 
-const renderParameters = (parameterNames: string[]) => {
+const renderParameters = (parameterNames: readonly string[]) => {
   if (!parameterNames.length) {
     return "()"
   }

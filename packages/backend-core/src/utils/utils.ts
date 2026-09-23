@@ -22,7 +22,6 @@ import { getSessionExpiryDate } from "./session"
 
 const WORKSPACE_PREFIX = DocumentType.WORKSPACE + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
-const PROD_CHAT_PREFIX = "/app-chat/"
 
 async function resolveAppUrl(ctx: Ctx) {
   const pathParts = ctx.path.split("/")
@@ -59,10 +58,7 @@ export function isServingApp(ctx: Ctx) {
     return true
   }
   // prod workspace
-  return (
-    ctx.path.startsWith(PROD_APP_PREFIX) ||
-    ctx.path.startsWith(PROD_CHAT_PREFIX)
-  )
+  return ctx.path.startsWith(PROD_APP_PREFIX)
 }
 
 export function isServingBuilder(ctx: Ctx): boolean {
@@ -120,7 +116,7 @@ export async function getWorkspaceIdFromCtx(ctx: Ctx) {
   }
 
   // look in headers
-  checkPossibleValues(ctx.request.headers[Header.APP_ID])
+  checkPossibleValues(ctx.request.headers[Header.WORKSPACE_ID])
 
   // look in body
   setWorkspaceIdIfValid(ctx.request.body?.appId)
@@ -137,9 +133,7 @@ export async function getWorkspaceIdFromCtx(ctx: Ctx) {
   // to ensure we don't load all apps excessively
   const isBuilderPreview = isBuilderPreviewUrl(ctx.path)
   const isViewingProdApp =
-    (ctx.path.startsWith(PROD_APP_PREFIX) ||
-      ctx.path.startsWith(PROD_CHAT_PREFIX)) &&
-    !isBuilderPreview
+    ctx.path.startsWith(PROD_APP_PREFIX) && !isBuilderPreview
   if (isViewingProdApp) {
     setWorkspaceIdIfValid(await resolveAppUrl(ctx))
   }

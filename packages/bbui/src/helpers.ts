@@ -119,11 +119,28 @@ export const copyToClipboard = (value: any): Promise<void> => {
   })
 }
 
+export const parseTime = (
+  value: string | undefined
+): { hour: number; minute: number; second: number } | null => {
+  const match = /^(\d{2}):(\d{2}):(\d{2})$/.exec(value || "")
+  if (!match) {
+    return null
+  }
+  const [, hourValue, minuteValue, secondValue] = match
+  const hour = Number(hourValue)
+  const minute = Number(minuteValue)
+  const second = Number(secondValue)
+  if (hour > 23 || minute > 59 || second > 59) {
+    return null
+  }
+  return { hour, minute, second }
+}
+
 // Parse a date value. This is usually an ISO string, but can be a
 // bunch of different formats and shapes depending on schema flags.
 export const parseDate = (
   value: string | dayjs.Dayjs | null,
-  { enableTime = true }
+  { enableTime = true, setTimeTo }: { enableTime?: boolean; setTimeTo?: string }
 ): dayjs.Dayjs | null => {
   // If empty then invalid
   if (!value) {
@@ -138,7 +155,7 @@ export const parseDate = (
     }
 
     // If date only, check for cases where we received a UTC string
-    else if (!enableTime && value.endsWith("Z")) {
+    else if (!enableTime && !parseTime(setTimeTo) && value.endsWith("Z")) {
       value = value.split("Z")[0]
     }
   }
@@ -159,16 +176,36 @@ export const parseDate = (
 // schema flags
 export const stringifyDate = (
   value: null | dayjs.Dayjs,
-  { enableTime = true, timeOnly = false, ignoreTimezones = false } = {}
+  {
+    enableTime = true,
+    timeOnly = false,
+    ignoreTimezones = false,
+    setTimeTo,
+  }: {
+    enableTime?: boolean
+    timeOnly?: boolean
+    ignoreTimezones?: boolean
+    setTimeTo?: string
+  } = {}
 ): string | null => {
   if (!value) {
     return null
   }
 
+  const configuredTime = !enableTime && !timeOnly ? parseTime(setTimeTo) : null
+  if (configuredTime) {
+    value = value
+      .hour(configuredTime.hour)
+      .minute(configuredTime.minute)
+      .second(configuredTime.second)
+      .millisecond(0)
+  }
+  const serializeTime = enableTime || !!configuredTime
+
   // Time only fields always ignore timezones, otherwise they make no sense.
   // For non-timezone-aware fields, create an ISO 8601 timestamp of the exact
   // time picked, without timezone
-  const offsetForTimezone = (enableTime && ignoreTimezones) || timeOnly
+  const offsetForTimezone = (serializeTime && ignoreTimezones) || timeOnly
   if (offsetForTimezone) {
     // Ensure we use the correct offset for the date
     const referenceDate = value.toDate()
@@ -183,7 +220,7 @@ export const stringifyDate = (
 
   // For date-only fields, construct a manual timestamp string without a time
   // or time zone
-  else if (!enableTime) {
+  else if (!serializeTime) {
     const year = value.year()
     const month = `${value.month() + 1}`.padStart(2, "0")
     const day = `${value.date()}`.padStart(2, "0")

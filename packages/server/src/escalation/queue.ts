@@ -1,27 +1,43 @@
 import zlib from "zlib"
 import type { Job } from "bull"
-import { readUIMessageStream, type ModelMessage, type UIMessage } from "ai"
-import { context, queue, utils } from "@budibase/backend-core"
 import {
+  ModelMessage,
+  readUIMessageStream,
+  type JSONValue,
+  type UIMessage,
+} from "ai"
+import {
+  context,
+  getErrorMessage,
+  queue,
+  roles,
+  utils,
+} from "@budibase/backend-core"
+import {
+  Agent,
   AgentChannelProvider,
   AutomationActionStepId,
+  ChatConversation,
   ContextUser,
   DocumentType,
-  ESCALATE_TOOL_NAME,
   EscalationContextDoc,
   EscalationNotificationDoc,
+  EscalationNotificationStatus,
+  EscalationProviderResponse,
   EscalationRecipient,
   EscalationSource,
+  PendingToolCall,
   SEPARATOR,
   SuspendedOperationContext,
+  type AgentExecutionContext,
 } from "@budibase/types"
 import { automationQueue } from "../automations"
 import sdk from "../sdk"
 import { getFullUser } from "../utilities/users"
+import { APPROVAL_REQUIRED_TITLE_PREFIX } from "./constants"
 import * as slack from "./notifications/slack"
-import * as discord from "./notifications/discord"
-import * as telegram from "./notifications/telegram"
 import * as teams from "./notifications/ms-teams"
+import { ProviderResponseError } from "./notifications/utils"
 import { v4 } from "uuid"
 
 export interface EscalationJob {
@@ -36,6 +52,31 @@ export interface EscalationJob {
 
 const DEFAULT_CONCURRENCY = 1
 const DEFAULT_TIMEOUT_MS = 30000
+const GENERIC_APPROVED_ACTION_FAILURE_MESSAGE =
+  "Your request was approved, but I couldn't complete it. Please try again."
+
+const approvedActionFailureMessage = (title?: string) => {
+  if (!title || title.startsWith(APPROVAL_REQUIRED_TITLE_PREFIX)) {
+    return GENERIC_APPROVED_ACTION_FAILURE_MESSAGE
+  }
+  const requestTitle = `${title.charAt(0).toLowerCase()}${title.slice(1)}`
+  return `Your ${requestTitle} was approved, but I couldn't complete it. Please try again.`
+}
+
+const updateNotificationOutcome = async (
+  notificationDocId: string,
+  outcome: Pick<
+    EscalationNotificationDoc,
+    "status" | "providerResponse" | "sentAt"
+  >
+) => {
+  const db = context.getWorkspaceDB()
+  const notifDoc = await db.tryGet<EscalationNotificationDoc>(notificationDocId)
+  if (!notifDoc) {
+    return
+  }
+  await db.put({ ...notifDoc, ...outcome })
+}
 
 const getDocId = (escalationId: string): string =>
   `${DocumentType.ESCALATION_CONTEXT}${SEPARATOR}${escalationId}`
@@ -68,7 +109,9 @@ export function getQueue() {
   return escalationQueue
 }
 
-async function processNotify(job: Job<EscalationJob>) {
+export async function processNotify(
+  job: Pick<Job<EscalationJob>, "id" | "data">
+) {
   const { escalationId, appId, message } = job.data
 
   console.log("Escalation notify: picked up", {
@@ -90,48 +133,19 @@ async function processNotify(job: Job<EscalationJob>) {
       return
     }
 
-    const resumeJobId = `esc_${escalationId}_resume`
-
-    // TODO: consider one Bull job per recipient rather than batching all in one job -
-    // gives independent retry/backoff per channel so a Slack failure doesn't block Teams etc.
-    // IF - we do this, then the bulkDocs call would be done first.
-    if (doc.recipients?.length) {
-      const sentAt = new Date().toISOString()
-      const notifDocs: EscalationNotificationDoc[] = doc.recipients.map(
-        (recipient: EscalationRecipient) => ({
-          _id: `${DocumentType.ESCALATION_NOTIFICATION}${SEPARATOR}${utils.newid()}`,
+    if (doc.resolution !== "pending") {
+      console.log(
+        "Escalation notify: escalation already resolved, discarding",
+        {
           escalationId,
-          appId,
-          tenantId: job.data.tenantId,
-          recipient,
-          sentAt,
-        })
-      )
-      await db.bulkDocs(notifDocs)
-
-      const notifResults = await Promise.allSettled(
-        notifDocs.flatMap(notifDoc => [
-          slack.sendSlackNotification({ notifDoc, contextDoc: doc }),
-          discord.sendDiscordNotification({ notifDoc, contextDoc: doc }),
-          telegram.sendTelegramNotification({ notifDoc, contextDoc: doc }),
-          teams.sendMSTeamsNotification({ notifDoc, contextDoc: doc }),
-        ])
-      )
-      notifResults.forEach((result, i) => {
-        if (result.status === "rejected") {
-          console.error("Escalation notify: notification send failed", {
-            index: i,
-            escalationId,
-            error:
-              result.reason instanceof Error
-                ? result.reason.message
-                : String(result.reason),
-          })
+          resolution: doc.resolution,
+          jobId: job.id,
         }
-      })
+      )
+      return
     }
 
-    await db.put({ ...doc, updatedAt: new Date().toISOString() })
+    const resumeJobId = `esc_${escalationId}_resume`
 
     const resumeJob: EscalationJob = {
       phase: "waiting",
@@ -142,7 +156,6 @@ async function processNotify(job: Job<EscalationJob>) {
       expiresAt: new Date(Date.now() + doc.delay).toISOString(),
       isTest: job.data.isTest,
     }
-
     await addEscalationJob(resumeJob, doc.delay, resumeJobId)
 
     console.log("Escalation notify: resume job enqueued", {
@@ -151,8 +164,78 @@ async function processNotify(job: Job<EscalationJob>) {
       message,
       resumeJobId,
       delayMs: doc.delay,
-      expiresAt: new Date(Date.now() + doc.delay).toISOString(),
+      expiresAt: resumeJob.expiresAt,
     })
+
+    // TODO: consider one Bull job per recipient rather than batching all in one job -
+    // gives independent retry/backoff per channel so a Slack failure doesn't block Teams etc.
+    // IF - we do this, then the bulkDocs call would be done first.
+    if (doc.recipients?.length) {
+      const notifDocs: EscalationNotificationDoc[] = doc.recipients.map(
+        (recipient: EscalationRecipient) => ({
+          _id: `${DocumentType.ESCALATION_NOTIFICATION}${SEPARATOR}${utils.newid()}`,
+          escalationId,
+          appId,
+          tenantId: job.data.tenantId,
+          recipient,
+          status: "pending",
+        })
+      )
+      await db.bulkDocs(notifDocs)
+
+      const outcomes = await Promise.all(
+        notifDocs.map(async notifDoc => {
+          const sends = await Promise.allSettled([
+            slack.sendSlackNotification({ notifDoc, contextDoc: doc }),
+            teams.sendMSTeamsNotification({ notifDoc, contextDoc: doc }),
+          ])
+          const rejection = sends.find(
+            (send): send is PromiseRejectedResult => send.status === "rejected"
+          )
+          let status: EscalationNotificationStatus = "failed"
+          let providerResponse: EscalationProviderResponse | undefined
+          if (rejection) {
+            const error =
+              rejection.reason instanceof Error
+                ? rejection.reason.message
+                : String(rejection.reason)
+            console.error("Escalation notify: notification send failed", {
+              escalationId,
+              recipientType: notifDoc.recipient.type,
+              error,
+            })
+            providerResponse =
+              rejection.reason instanceof ProviderResponseError
+                ? {
+                    code: rejection.reason.code,
+                    body: rejection.reason.body.slice(0, 1024),
+                  }
+                : { body: error.slice(0, 1024) }
+          } else if (
+            sends.some(
+              send => send.status === "fulfilled" && send.value === true
+            )
+          ) {
+            status = "sent"
+          }
+          return { notifDoc, status, providerResponse }
+        })
+      )
+
+      // Under the escalation lock so a press landing on the notification doc
+      // can't race the outcome write
+      await sdk.escalations.withEscalationLock(escalationId, () =>
+        Promise.all(
+          outcomes.map(({ notifDoc, status, providerResponse }) =>
+            updateNotificationOutcome(notifDoc._id!, {
+              status,
+              ...(providerResponse ? { providerResponse } : {}),
+              sentAt: new Date().toISOString(),
+            })
+          )
+        )
+      )
+    }
   })
 }
 
@@ -185,12 +268,6 @@ async function deliverOperationResult(
         break
       case AgentChannelProvider.SLACK:
         await slack.replyToConversation(reply)
-        break
-      case AgentChannelProvider.DISCORD:
-        await discord.replyToConversation(reply)
-        break
-      case AgentChannelProvider.TELEGRAM:
-        await telegram.replyToConversation(reply)
         break
       default:
         console.log(
@@ -230,6 +307,114 @@ async function persistResumeResult(escalationId: string, message: UIMessage) {
       .toString("base64"),
     updatedAt: new Date().toISOString(),
   })
+}
+
+// Executes the frozen tool call from a gate-raised escalation, exactly as the
+// approver saw it - the model never re-derives the call. Returns the
+// assistant/tool message pair to append to the suspended conversation, or
+// undefined when the tool can no longer be resolved.
+const executeApprovedToolCall = async ({
+  agent,
+  ctx,
+  appId,
+  user,
+  pending,
+}: {
+  agent: Agent
+  ctx: SuspendedOperationContext
+  appId: string
+  user: ContextUser
+  pending: PendingToolCall
+}): Promise<
+  | {
+      messages: ModelMessage[]
+      toolName: string
+      output: unknown
+      failed: boolean
+    }
+  | undefined
+> => {
+  const operation = agent.operations?.find(
+    operation => operation.id === ctx.operationId
+  )
+  const requesterId = user._id ?? user.userId
+  if (!operation || !requesterId) {
+    return undefined
+  }
+  const executorRole = user.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
+
+  const executionContext: AgentExecutionContext = {
+    tenantId: context.getTenantId(),
+    workspaceId: appId,
+    agentId: ctx.agentId,
+    operationId: ctx.operationId,
+    conversationId: ctx.sessionId,
+    requester: ctx.requester ?? { executorRole },
+  }
+  const { tools, toolSources } = await sdk.ai.agents.buildPromptAndTools(
+    agent,
+    operation,
+    { executionContext }
+  )
+
+  let toolName = pending.toolName
+  if (!tools[toolName] && pending.sourceId) {
+    const candidates = Object.entries(toolSources).filter(
+      ([, sourceId]) => sourceId === pending.sourceId
+    )
+    if (candidates.length === 1) {
+      toolName = candidates[0][0]
+    }
+  }
+  const tool = tools[toolName]
+  if (!tool?.execute) {
+    return undefined
+  }
+
+  let output: unknown
+  let failed = false
+  try {
+    output = await tool.execute(pending.args, {
+      toolCallId: pending.toolCallId,
+      messages: [],
+      context: undefined,
+    })
+  } catch (error) {
+    failed = true
+    output = {
+      error: getErrorMessage(error),
+    }
+  }
+
+  return {
+    toolName,
+    output,
+    failed,
+    messages: [
+      {
+        role: "assistant",
+        content: [
+          {
+            type: "tool-call",
+            toolCallId: pending.toolCallId,
+            toolName,
+            input: pending.args,
+          },
+        ],
+      },
+      {
+        role: "tool",
+        content: [
+          {
+            type: "tool-result",
+            toolCallId: pending.toolCallId,
+            toolName,
+            output: { type: "json", value: (output ?? null) as JSONValue },
+          },
+        ],
+      },
+    ],
+  }
 }
 
 export async function resumeOperation({
@@ -292,11 +477,24 @@ export async function resumeOperation({
       })
   }
 
+  const hasPendingEscalations = async () => {
+    if (!doc.requestId) {
+      return false
+    }
+    const pending = await sdk.escalations.listContextDocs({
+      requestId: doc.requestId,
+      resolution: "pending",
+    })
+    return pending.length > 0
+  }
+
   if (outcome !== "approved") {
     const text =
       outcome === "expired"
         ? "This request timed out without a response."
         : "This request was rejected."
+    const hasPending =
+      outcome === "expired" ? await hasPendingEscalations() : false
     await persistResumeResult(escalationId, textMessage(text))
     await deliverOperationResult(ctx, text)
     if (doc.requestId) {
@@ -304,11 +502,7 @@ export async function resumeOperation({
         // Expiring without any response means this ask never got resolved,
         // not a judgment call. Still not final, though, while other
         // escalations on the same request await a human.
-        const stillPending = await sdk.escalations.listContextDocs({
-          requestId: doc.requestId,
-          resolution: "pending",
-        })
-        if (stillPending.length === 0) {
+        if (!hasPending) {
           await markEscalationRequestResolved({
             status: "failed",
             error: "Escalation expired without a response",
@@ -336,81 +530,119 @@ export async function resumeOperation({
 
   const agent = await sdk.ai.agents.getOrThrow(ctx.agentId)
 
-  // System prompt, not a user message, so the model doesn't distrust the
-  // approval as user input.
-  const approvalInstructions =
-    "ESCALATION APPROVAL: The user's request in this conversation has been " +
-    "reviewed and APPROVED by an authorised human reviewer. This specific " +
-    "request is already approved - do not escalate or ask for approval again " +
-    "for it. Begin your reply by briefly confirming the request was approved, " +
-    "then CARRY OUT the user's original request: take the action they asked " +
-    "for using your available tools. Actually attempt it. If you cannot " +
-    "complete it because a required tool or capability is missing, say " +
-    "specifically what is missing and that the request could not be " +
-    "completed - never imply it was done when it was not. If doing so " +
-    "surfaces a genuinely new request that needs its own human sign-off, you " +
-    "may escalate that separately."
-
   const resumeUserId = ctx.userId ?? "escalation-resume"
 
-  // Linked user check. Retrieve or generate transient.
+  // Linked user check. Retrieve or generate transient. The current user state
+  // determines tool authorization when the operation resumes.
   let user: ContextUser
   try {
     user = await getFullUser(resumeUserId)
   } catch {
+    const roleId = resumeUserId.startsWith("automation:")
+      ? ctx.requester?.executorRole
+      : undefined
     user = {
       _id: resumeUserId,
       globalId: resumeUserId,
       userId: resumeUserId,
       tenantId: context.getTenantId(),
-      // Synthetic address for an unlinked transient resume user (no real
-      // identity); revisit when user rehydration lands (see TODO below).
       email: `${encodeURIComponent(resumeUserId)}@escalation.budibase.local`,
+      roleId,
     }
   }
 
-  // Add in messages to confirm that the request is approved.
-  const escalateCallId = `esc_call_${escalationId}`
-  const messages: ModelMessage[] = [
-    ...ctx.messages,
-    {
-      role: "assistant",
-      content: [
-        {
-          type: "tool-call",
-          toolCallId: escalateCallId,
-          toolName: "escalate",
-          input: {
-            title: doc.title ?? "Escalation",
-            summary: doc.summary ?? "",
-            reason: "Human approval required",
-          },
-        },
-      ],
-    },
-    {
-      role: "tool",
-      content: [
-        {
-          type: "tool-result",
-          toolCallId: escalateCallId,
-          toolName: "escalate",
-          output: {
-            type: "json",
-            value: {
-              status: "approved",
-              decision: "approved",
-              note:
-                "An authorised human reviewer approved this request. Proceed " +
-                "to fulfil it and confirm to the user. Do not escalate this " +
-                "same request again - a genuinely new, different request " +
-                "can still be escalated separately.",
-            },
-          },
-        },
-      ],
-    },
-  ]
+  // recordToolCall awaits an LLM summary internally - chain the calls in the
+  // background (preserving completion order) and flush the tail (await
+  // toolCallChain below) before writing the terminal status.
+  let toolCallChain = Promise.resolve()
+
+  const executed = await executeApprovedToolCall({
+    agent,
+    ctx,
+    appId: doc.appId,
+    user,
+    pending: ctx.pendingToolCall,
+  })
+  if (!executed) {
+    const text = `This request was approved, but the "${ctx.pendingToolCall.toolName}" action is no longer available so it could not be carried out.`
+    const hasPending = await hasPendingEscalations()
+    await persistResumeResult(escalationId, textMessage(text))
+    await deliverOperationResult(ctx, text)
+    if (!hasPending) {
+      await markEscalationRequestResolved({ status: "failed", error: text })
+    }
+    return
+  }
+  if (doc.requestId) {
+    const requestId = doc.requestId
+    toolCallChain = toolCallChain.then(() =>
+      sdk.ai.agentRequests
+        .recordToolCall({
+          requestId,
+          agentId: ctx.agentId,
+          sessionId: ctx.sessionId,
+          toolName: executed.toolName,
+          status: executed.failed ? "error" : "success",
+          input: ctx.pendingToolCall.args,
+          output: executed.output,
+        })
+        .catch(error => {
+          console.error(
+            "Failed to record approved tool call on escalation resume",
+            { escalationId, agentId: ctx.agentId, error }
+          )
+        })
+    )
+  }
+  if (executed.failed) {
+    await toolCallChain
+    const errorMessage =
+      executed.output &&
+      typeof executed.output === "object" &&
+      "error" in executed.output
+        ? getErrorMessage(executed.output.error)
+        : "Tool execution failed"
+    const failureMessage = approvedActionFailureMessage(doc.title)
+    await persistResumeResult(escalationId, textMessage(failureMessage))
+    await deliverOperationResult(ctx, failureMessage)
+    const hasPending = await hasPendingEscalations()
+    if (!hasPending) {
+      await markEscalationRequestResolved({
+        status: "failed",
+        error: errorMessage,
+      })
+    }
+    return
+  }
+  const approvalInstructions =
+    "ESCALATION APPROVAL: The user's request in this conversation was " +
+    "APPROVED by an authorised human reviewer and the approved action has " +
+    "already been executed - its tool result is included in this " +
+    "conversation. Do not run that tool again for this request and do not " +
+    "escalate it again. Report the outcome truthfully: if the result shows " +
+    "an error, say the action failed and why - never imply it succeeded. " +
+    "A genuinely new, different request may still be escalated separately."
+  let messages = [...ctx.messages, ...executed.messages]
+  const executedApproval = {
+    toolName: executed.toolName,
+    args: ctx.pendingToolCall.args,
+    sourceId: ctx.pendingToolCall.sourceId,
+  }
+
+  if (ctx.conversationId && ctx.attachmentIds?.length) {
+    const conversation = await context
+      .getWorkspaceDB()
+      .tryGet<ChatConversation>(ctx.conversationId)
+    if (!conversation) {
+      throw new Error("Escalation resume: conversation attachments unavailable")
+    }
+    messages =
+      await sdk.ai.chatConversations.addConversationAttachmentsToModelMessages({
+        messages,
+        conversation,
+        attachmentIds: ctx.attachmentIds,
+      })
+  }
 
   const run = await sdk.ai.agents.prepareAgentChatRun({
     agent,
@@ -422,34 +654,16 @@ export async function resumeOperation({
     operationId: ctx.operationId,
     additionalInstructions: approvalInstructions,
     getRequestId: () => doc.requestId,
+    executedApproval,
   })
 
   const pendingToolCalls = new Set<string>()
   const unrecoveredToolFailures = new Set<string>()
-  // recordToolCall awaits an LLM summary internally, and the runtime awaits
-  // onToolCallCompleted between steps. Returning its promise would stall
-  // every step on that summary. Instead, chain the calls in the background
-  // (preserving completion order) and flush the tail (await toolCallChain
-  // below) before writing the terminal status.
-  let toolCallChain = Promise.resolve()
 
   try {
     const result = await run.stream({
       pendingToolCalls,
       unrecoveredToolFailures,
-      onToolCalls: toolNames => {
-        const requestId = doc.requestId
-        if (requestId && toolNames.includes(ESCALATE_TOOL_NAME)) {
-          sdk.ai.agentRequests
-            .updateRequestStatus({ requestId, status: "needs_input" })
-            .catch(error => {
-              console.error(
-                "Failed to update agent request status to needs_input",
-                { escalationId, agentId: ctx.agentId, error }
-              )
-            })
-        }
-      },
       onToolCallCompleted: ({ toolName, status, input, output }) => {
         const requestId = doc.requestId
         if (!requestId) {
@@ -477,7 +691,7 @@ export async function resumeOperation({
       },
     })
 
-    // Drain the stream (this runs the approved action) and capture the full
+    // Drain the stream and capture the full
     // assistant turn. Attach toolDisplayNames, as the live chat path does, so tool
     // parts render friendly names not raw ids.
     const sharedMetadata =
@@ -558,19 +772,54 @@ async function processResume(job: Job<EscalationJob>) {
 
   await context.doInContext(appId, async () => {
     const db = context.getWorkspaceDB()
-    const doc = await db.tryGet<EscalationContextDoc>(getDocId(escalationId))
 
+    // Under the escalation lock so a late response can't land between the
+    // read and the resolution write.
+    const doc = await sdk.escalations.withEscalationLock(
+      escalationId,
+      async () => {
+        const doc = await db.tryGet<EscalationContextDoc>(
+          getDocId(escalationId)
+        )
+
+        if (!doc) {
+          console.error(
+            "Escalation resume: context doc not found, discarding",
+            {
+              escalationId,
+              jobId: job.id,
+            }
+          )
+          return
+        }
+
+        if (doc.resolution === "cancelled") {
+          console.log("Escalation resume: escalation cancelled, discarding", {
+            escalationId,
+            jobId: job.id,
+          })
+          return
+        }
+
+        if (doc.resumeResultCompressed) {
+          console.log("Escalation resume: already resumed, discarding", {
+            escalationId,
+            jobId: job.id,
+          })
+          return
+        }
+
+        const resolvedAt = doc.resolvedAt ?? new Date().toISOString()
+        const resolution =
+          doc.resolution === "pending" ? "expired" : doc.resolution
+        await db.put({ ...doc, resolvedAt, resolution, updatedAt: resolvedAt })
+        return { ...doc, resolvedAt, resolution }
+      }
+    )
     if (!doc) {
-      console.error("Escalation resume: context doc not found, discarding", {
-        escalationId,
-        jobId: job.id,
-      })
       return
     }
-
-    const resolvedAt = doc.resolvedAt ?? new Date().toISOString()
-    const resolution = doc.resolution === "pending" ? "expired" : doc.resolution
-    await db.put({ ...doc, resolvedAt, resolution, updatedAt: resolvedAt })
+    const { resolvedAt, resolution } = doc
 
     // Without the snapshot there's nothing to resume - mark it resolved (above)
     // and discard rather than crash the job on an empty inflate/parse.

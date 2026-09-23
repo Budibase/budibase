@@ -1,14 +1,18 @@
-<script>
+<script lang="ts">
   import { Icon } from "@budibase/bbui"
 
-  export let value
+  interface Props {
+    value?: { readonly length: number } | null
+  }
+
+  let { value }: Props = $props()
 </script>
 
 <div class="align">
   <div class="spacing">
     <Icon name="user" />
   </div>
-  {parseInt(value?.length) || 0}
+  {value?.length || 0}
 </div>
 
 <style>

@@ -183,6 +183,15 @@ export function isStaticFormula(
   )
 }
 
+export function isDynamicFormula(
+  schema: FieldSchema
+): schema is FormulaFieldMetadata {
+  return (
+    schema.type === FieldType.FORMULA &&
+    schema.formulaType !== FormulaType.STATIC
+  )
+}
+
 export function canGroupBySchema(schema: FieldSchema) {
   return canGroupBy(schema.type) || isStaticFormula(schema)
 }

@@ -14,7 +14,7 @@
   export let focused = false
   export let readonly = false
   export let api
-  export let startDayOfWeek = "Monday"
+  export let startDayOfWeek
 
   let isOpen
   let anchor

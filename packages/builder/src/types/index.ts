@@ -1,4 +1,4 @@
-export * from "./app"
+export * from "./workspace"
 export * from "./automations"
 export * from "./bindings"
 export * from "./contextMenu"

@@ -1,0 +1,478 @@
+<script lang="ts">
+  import {
+    ActionButton,
+    Body,
+    Link,
+    Modal,
+    ModalContent,
+    Toggle,
+    notifications,
+  } from "@budibase/bbui"
+  import {
+    AgentChannelProvider,
+    DEPLOYMENT_CHANNEL_IDS,
+    DEPLOYMENT_ID_TO_PROVIDER,
+    type Agent,
+  } from "@budibase/types"
+  import { selectedAgent, agentsStore } from "@/stores/portal"
+  import { deploymentStore } from "@/stores/builder"
+  import MicrosoftTeamsConfig from "./DeploymentChannels/MicrosoftTeamsConfig.svelte"
+  import SlackConfig from "./DeploymentChannels/SlackConfig.svelte"
+  import MSTeamsLogo from "assets/rest-template-icons/microsoft-teams.svg"
+  import SlackLogo from "assets/slack.svg"
+
+  const AI_CONFIG_REQUIRED_MESSAGE =
+    "Select an AI model in Agent config before enabling this channel."
+
+  interface ChannelMetadata {
+    name: string
+    logo: string
+    details: string
+  }
+
+  interface DeploymentRow {
+    id: string
+    name: string
+    logo: string
+    status: "Enabled" | "Disabled"
+    details: string
+    configurable?: boolean
+  }
+
+  let currentAgent: Agent | undefined = $derived($selectedAgent)
+  let MSTeamsModal: Modal
+  let slackModal: Modal
+  let toggling = $state(false)
+  let togglingAttachments = $state(false)
+  let attachmentToggleRenderKey = $state(0)
+  let toggleRenderKeys = $state<Record<string, number>>({})
+
+  const resetChannelToggle = (channelId: string) => {
+    toggleRenderKeys[channelId] = (toggleRenderKeys[channelId] || 0) + 1
+  }
+
+  const MSTeamsConfigured = $derived.by(() => {
+    const integration = currentAgent?.MSTeamsIntegration
+    return !!(
+      integration?.appId?.trim() &&
+      integration?.appPassword?.trim() &&
+      integration?.tenantId?.trim()
+    )
+  })
+
+  const slackConfigured = $derived.by(() => {
+    const integration = currentAgent?.slackIntegration
+    return !!(
+      integration?.botToken?.trim() && integration?.signingSecret?.trim()
+    )
+  })
+
+  const MSTeamsEnabled = $derived(
+    !!currentAgent?.MSTeamsIntegration?.messagingEndpointUrl?.trim()
+  )
+
+  const slackEnabled = $derived(
+    !!currentAgent?.slackIntegration?.messagingEndpointUrl?.trim()
+  )
+
+  const hasAiConfig = $derived.by(() => !!currentAgent?.aiconfig?.trim())
+
+  const knowledgeSearchConfigured = $derived(
+    $agentsStore.knowledgeConfiguration?.knowledgeSearchConfigured === true
+  )
+
+  const conversationAttachmentsEnabled = $derived(
+    knowledgeSearchConfigured &&
+      currentAgent?.allowConversationAttachments !== false
+  )
+
+  const channelMetadata: Record<AgentChannelProvider, ChannelMetadata> = {
+    [AgentChannelProvider.MSTEAMS]: {
+      name: "Microsoft Teams",
+      logo: MSTeamsLogo,
+      details:
+        "Configure this agent for Microsoft Teams personal, group, and team chats",
+    },
+    [AgentChannelProvider.SLACK]: {
+      name: "Slack",
+      logo: SlackLogo,
+      details:
+        "Allow this agent to respond in Slack channels, threads, and DMs",
+    },
+  }
+
+  const channelStatus = $derived.by(
+    () =>
+      ({
+        [AgentChannelProvider.MSTEAMS]: MSTeamsEnabled ? "Enabled" : "Disabled",
+        [AgentChannelProvider.SLACK]: slackEnabled ? "Enabled" : "Disabled",
+      }) as const
+  )
+
+  const channels = $derived.by<DeploymentRow[]>(() =>
+    ([AgentChannelProvider.MSTEAMS, AgentChannelProvider.SLACK] as const).map(
+      provider => ({
+        id: DEPLOYMENT_CHANNEL_IDS[provider],
+        name: channelMetadata[provider].name,
+        logo: channelMetadata[provider].logo,
+        status: channelStatus[provider],
+        details: channelMetadata[provider].details,
+        configurable: true,
+      })
+    )
+  )
+
+  const onConfigureChannel = (channel: DeploymentRow) => {
+    const provider = DEPLOYMENT_ID_TO_PROVIDER[channel.id]
+    if (provider === AgentChannelProvider.MSTEAMS) {
+      MSTeamsModal?.show()
+      return
+    }
+    if (provider === AgentChannelProvider.SLACK) {
+      slackModal?.show()
+      return
+    }
+  }
+
+  const onToggleChannel = async (channel: DeploymentRow) => {
+    if (!currentAgent?._id) {
+      return
+    }
+    const isChannelEnabled = channel.status === "Enabled"
+    if (!isChannelEnabled && !hasAiConfig) {
+      notifications.error(AI_CONFIG_REQUIRED_MESSAGE)
+      resetChannelToggle(channel.id)
+      return
+    }
+    toggling = true
+    try {
+      const provider = DEPLOYMENT_ID_TO_PROVIDER[channel.id]
+      let channelUpdated = false
+      let channelNotification = ""
+      if (provider === AgentChannelProvider.MSTEAMS) {
+        if (isChannelEnabled) {
+          await agentsStore.toggleMSTeamsDeployment(currentAgent._id, false)
+          channelUpdated = true
+          channelNotification = "Microsoft Teams channel disabled"
+        } else if (MSTeamsConfigured) {
+          await agentsStore.toggleMSTeamsDeployment(currentAgent._id, true)
+          channelUpdated = true
+          channelNotification = "Microsoft Teams channel enabled"
+        } else {
+          MSTeamsModal?.show()
+        }
+      } else if (provider === AgentChannelProvider.SLACK) {
+        if (isChannelEnabled) {
+          await agentsStore.toggleSlackDeployment(currentAgent._id, false)
+          channelUpdated = true
+          channelNotification = "Slack channel disabled"
+        } else if (slackConfigured) {
+          await agentsStore.toggleSlackDeployment(currentAgent._id, true)
+          channelUpdated = true
+          channelNotification = "Slack channel enabled"
+        } else {
+          slackModal?.show()
+        }
+      }
+
+      if (channelUpdated && currentAgent.live) {
+        if (!(await deploymentStore.publishApp())) {
+          return
+        }
+      }
+      if (channelUpdated) {
+        notifications.success(channelNotification)
+      }
+    } catch (e) {
+      notifications.error(
+        isChannelEnabled
+          ? `Failed to disable ${channel.name} channel`
+          : `Failed to enable ${channel.name} channel`
+      )
+    } finally {
+      toggling = false
+      resetChannelToggle(channel.id)
+    }
+  }
+
+  const onToggleConversationAttachments = async () => {
+    if (!currentAgent?._id || !knowledgeSearchConfigured) {
+      attachmentToggleRenderKey += 1
+      return
+    }
+
+    const enabled = !conversationAttachmentsEnabled
+    togglingAttachments = true
+    try {
+      await agentsStore.updateAgent({
+        ...currentAgent,
+        allowConversationAttachments: enabled,
+      })
+      if (currentAgent.live) {
+        if (!(await deploymentStore.publishApp())) {
+          return
+        }
+      }
+      notifications.success(
+        enabled ? "File attachments enabled" : "File attachments disabled"
+      )
+    } catch (error) {
+      console.error(error)
+      notifications.error(
+        enabled
+          ? "Failed to enable file attachments"
+          : "Failed to disable file attachments"
+      )
+    } finally {
+      togglingAttachments = false
+      attachmentToggleRenderKey += 1
+    }
+  }
+</script>
+
+<div class="deployment-root">
+  <section class="section">
+    <div class="agent-node">
+      <div>
+        <Body
+          color="var(--spectrum-global-color-gray-900)"
+          weight="500"
+          size="XS">Agent in automations</Body
+        >
+        <Body color="var(--spectrum-global-color-gray-700)" size="XS"
+          >This agent can be triggered from within Budibase Automations via the
+          Agent node</Body
+        >
+      </div>
+      <Toggle value={true} disabled={true} />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="agent-node">
+      <div>
+        <Body
+          color="var(--spectrum-global-color-gray-900)"
+          weight="500"
+          size="XS">File attachments</Body
+        >
+        <Body color="var(--spectrum-global-color-gray-700)" size="XS">
+          Allow users to attach files when chatting with this agent in supported
+          messaging channels.
+        </Body>
+        {#if !knowledgeSearchConfigured}
+          <Body color="var(--spectrum-global-color-gray-700)" size="XS">
+            Set <code>GEMINI_API_KEY</code> in the Budibase server environment,
+            then restart Budibase. <Link
+              href="https://aistudio.google.com/app/apikey"
+              target="_blank"
+              rel="noopener noreferrer"
+              size="S">Get a Gemini API key</Link
+            >.
+          </Body>
+        {/if}
+      </div>
+      {#key attachmentToggleRenderKey}
+        <Toggle
+          value={conversationAttachmentsEnabled}
+          disabled={togglingAttachments || !knowledgeSearchConfigured}
+          on:change={onToggleConversationAttachments}
+        />
+      {/key}
+    </div>
+  </section>
+
+  <section class="section">
+    <div>
+      <Body color="var(--spectrum-global-color-gray-900)" weight="500" size="XS"
+        >Messaging channels</Body
+      >
+    </div>
+    <div>
+      <Body color="var(--spectrum-global-color-gray-700)" size="XS"
+        >Deploy your agent to the following messaging channels.</Body
+      >
+    </div>
+    <div class="integration-list">
+      {#each channels as channel (channel.id)}
+        <div class="integration-row">
+          <div class="channel-main">
+            <img
+              alt={channel.name}
+              width="22px"
+              height="22px"
+              src={channel.logo}
+            />
+            <div class="channel-details">
+              <Body color="var(--spectrum-global-color-gray-900)" size="XS"
+                >{channel.name}</Body
+              >
+              <Body color="var(--spectrum-global-color-gray-700)" size="XS"
+                >{channel.details}</Body
+              >
+            </div>
+          </div>
+          <div class="row-action">
+            <ActionButton
+              size="S"
+              icon="gear"
+              accentColor="Blue"
+              on:click={() => onConfigureChannel(channel)}>Manage</ActionButton
+            >
+            {#key `${channel.id}-${toggleRenderKeys[channel.id] || 0}`}
+              <Toggle
+                value={channel.status === "Enabled"}
+                disabled={toggling}
+                on:change={() => onToggleChannel(channel)}
+              />
+            {/key}
+          </div>
+        </div>
+      {/each}
+    </div>
+  </section>
+</div>
+
+<Modal bind:this={MSTeamsModal}>
+  <ModalContent
+    size="L"
+    showCloseIcon
+    showConfirmButton={false}
+    showCancelButton={false}
+  >
+    <svelte:fragment slot="header">
+      <div class="modal-header">
+        <img
+          alt="Microsoft Teams"
+          width="24px"
+          height="24px"
+          src={MSTeamsLogo}
+          class="modal-header-logo"
+        />
+        <div class="modal-header-copy">
+          <Body color="var(--spectrum-global-color-gray-900)" weight="500"
+            >Microsoft Teams</Body
+          >
+        </div>
+      </div>
+    </svelte:fragment>
+    <MicrosoftTeamsConfig agent={currentAgent} />
+  </ModalContent>
+</Modal>
+
+<Modal bind:this={slackModal}>
+  <ModalContent
+    size="L"
+    showCloseIcon
+    showConfirmButton={false}
+    showCancelButton={false}
+  >
+    <svelte:fragment slot="header">
+      <div class="modal-header">
+        <img
+          alt="Slack"
+          width="24px"
+          height="24px"
+          src={SlackLogo}
+          class="modal-header-logo"
+        />
+        <div class="modal-header-copy">
+          <Body color="var(--spectrum-global-color-gray-900)" weight="500"
+            >Slack</Body
+          >
+        </div>
+      </div>
+    </svelte:fragment>
+    <SlackConfig agent={currentAgent} />
+  </ModalContent>
+</Modal>
+
+<style>
+  .deployment-root {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+    min-height: 0;
+  }
+
+  .section {
+    display: flex;
+    gap: var(--spacing-xs);
+  }
+
+  .integration-list {
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--background);
+    margin-top: var(--spacing-m);
+  }
+
+  .integration-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--spacing-m);
+    padding: var(--spacing-s) var(--spacing-s);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+    min-height: 40px;
+  }
+
+  .integration-row:last-child {
+    border-bottom: none;
+  }
+
+  .channel-main {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    min-width: 0;
+  }
+
+  .channel-main :global(.spectrum-Icon) {
+    color: var(--spectrum-global-color-gray-700);
+  }
+
+  .channel-details {
+    display: flex;
+    flex-direction: column;
+    margin-left: var(--spacing-m);
+  }
+
+  .row-action {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    min-width: 110px;
+    gap: 10px;
+    margin-left: 0px;
+  }
+
+  .agent-node {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .agent-node > :first-child {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+
+  .modal-header-logo {
+    flex-shrink: 0;
+  }
+
+  .modal-header-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+</style>

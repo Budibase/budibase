@@ -15,6 +15,9 @@ ENV POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
 ENV ACCOUNT_PORTAL_URL=https://account.budibase.app
 ENV TOP_LEVEL_PATH=/
 
+# pull latest Alpine security patches
+RUN apk update && apk upgrade --no-cache
+
 # handle node-gyp and install postgres client for pg_dump utils
 RUN apk add --no-cache \
     g++ \

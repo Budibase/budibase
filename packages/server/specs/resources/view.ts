@@ -154,6 +154,28 @@ const viewQuerySchema = {
   },
 }
 
+const viewSortSchema = {
+  type: "object",
+  required: ["field"],
+  properties: {
+    field: {
+      type: "string",
+      description: "The field from the table/view schema to sort on.",
+    },
+    order: {
+      type: "string",
+      description: "The order in which to sort.",
+      enum: Object.values(SortOrder),
+    },
+    type: {
+      type: "string",
+      description:
+        "The type of sort to perform (by number, or by alphabetically).",
+      enum: Object.values(SortType),
+    },
+  },
+}
+
 const viewSchema = {
   description: "The view to be created/updated.",
   type: "object",
@@ -179,25 +201,13 @@ const viewSchema = {
     },
     query: viewQuerySchema,
     sort: {
-      type: "object",
-      required: ["field"],
-      properties: {
-        field: {
-          type: "string",
-          description: "The field from the table/view schema to sort on.",
+      oneOf: [
+        viewSortSchema,
+        {
+          type: "array",
+          items: viewSortSchema,
         },
-        order: {
-          type: "string",
-          description: "The order in which to sort.",
-          enum: Object.values(SortOrder),
-        },
-        type: {
-          type: "string",
-          description:
-            "The type of sort to perform (by number, or by alphabetically).",
-          enum: Object.values(SortType),
-        },
-      },
+      ],
     },
     schema: {
       type: "object",

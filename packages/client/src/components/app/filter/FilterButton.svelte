@@ -44,7 +44,7 @@
     : undefined
 
   $: truncate = filterOp?.value !== RangeOperator.RANGE
-  $: filterDisplay = displayText(filter, fieldSchema)
+  $: filterDisplay = displayText(filter, fieldSchema, $rowCache)
 
   const parseDateDisplay = (
     filter: SearchFilter | undefined,
@@ -89,7 +89,8 @@
    */
   const displayText = (
     filter: SearchFilter | undefined,
-    fieldSchema: FieldSchema | undefined
+    fieldSchema: FieldSchema | undefined,
+    users: Record<string, any>
   ) => {
     filterMeta = undefined
     filterTitle = undefined
@@ -122,7 +123,7 @@
 
       // Process as single if the operator requires it
       if (!isArrayOperator(filter.operator)) {
-        const userRow = $rowCache?.[filter.value]
+        const userRow = users?.[filter.value]
         userDisplay = userRow?.email ?? filter.value
       } else {
         const filterVals = Array.isArray(filter.value)
@@ -131,7 +132,7 @@
 
         // Email is currently the default display field for users.
         userDisplay = parseMultiDisplay(
-          filterVals.map((val: string) => $rowCache?.[val]?.email ?? val)
+          filterVals.map((val: string) => users?.[val]?.email ?? val)
         )
       }
 
@@ -200,10 +201,13 @@
     color: var(--grey-6);
   }
 
+  /* Symmetric vertical padding; Spectrum's asymmetric default shifts the label 1px up. */
   .spectrum-Button {
     position: relative;
     display: flex;
     gap: var(--spacing-xs);
+    padding-top: var(--spectrum-button-padding-y);
+    padding-bottom: var(--spectrum-button-padding-y);
   }
 
   .spectrum-Button--sizeM,

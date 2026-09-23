@@ -1,49 +1,27 @@
-<script>
+<script lang="ts">
   import { Body, ModalContent, Table } from "@budibase/bbui"
-  import { onMount } from "svelte"
+  import type { InviteUsersResponse } from "@budibase/types"
   import InviteResponseRenderer from "./InviteResponseRenderer.svelte"
 
-  export let inviteUsersResponse
-
-  let hasSuccess
-  let hasFailure
-  let title
-  let failureMessage
-
-  let unsuccessfulUsers
-
-  const setTitle = () => {
-    if (hasSuccess) {
-      title = "Users invited!"
-    } else if (hasFailure) {
-      title = "Oops!"
-    }
+  interface Props {
+    inviteUsersResponse: InviteUsersResponse
   }
 
-  const setFailureMessage = () => {
-    if (hasSuccess) {
-      failureMessage = "However there was a problem inviting some users."
-    } else {
-      failureMessage = "There was a problem inviting users."
-    }
-  }
-
-  const setUsers = () => {
-    unsuccessfulUsers = inviteUsersResponse.unsuccessful.map(user => {
-      return {
-        email: user.email,
-        reason: user.reason,
-      }
-    })
-  }
-
-  onMount(() => {
-    hasSuccess = inviteUsersResponse.successful.length
-    hasFailure = inviteUsersResponse.unsuccessful.length
-    setTitle()
-    setFailureMessage()
-    setUsers()
-  })
+  let { inviteUsersResponse }: Props = $props()
+  const hasSuccess = $derived(inviteUsersResponse.successful.length)
+  const hasFailure = $derived(inviteUsersResponse.unsuccessful.length)
+  const title = $derived(hasSuccess ? "Users invited!" : "Oops!")
+  const failureMessage = $derived(
+    hasSuccess
+      ? "However there was a problem inviting some users."
+      : "There was a problem inviting users."
+  )
+  const unsuccessfulUsers = $derived(
+    inviteUsersResponse.unsuccessful.map(user => ({
+      email: user.email,
+      reason: user.reason,
+    }))
+  )
 
   const failedSchema = {
     email: {},

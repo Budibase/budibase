@@ -7,6 +7,7 @@ import {
   SecurityScheme,
 } from "../../../documents"
 import { OpenAPIServer } from "../../../ui/rest"
+import type { CustomRestTemplateId } from "../../../ui/rest"
 
 export type FetchQueriesResponse = Query[]
 
@@ -17,6 +18,7 @@ export interface ImportRestQueryRequest {
   datasourceId?: string
   data?: string
   url?: string
+  restTemplateId?: CustomRestTemplateId
   datasource: Datasource
   selectedEndpointId?: string
 }
@@ -24,6 +26,7 @@ export interface ImportRestQueryRequest {
 export interface ImportRestQueryInfoRequest {
   data?: string
   url?: string
+  restTemplateId?: CustomRestTemplateId
 }
 
 export interface ImportRestQueryInfoResponse {

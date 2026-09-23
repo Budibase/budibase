@@ -6,7 +6,7 @@
     PopoverAlignment,
   } from "@budibase/bbui"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
-  import { appStore, workspaceAppStore } from "@/stores/builder"
+  import { workspaceStore, workspaceAppStore } from "@/stores/builder"
   import type { ScreenUsage } from "@budibase/types"
 
   export let screens: ScreenUsage[] = []
@@ -65,7 +65,7 @@
         {#each appScreens as screen}
           <ListItem
             title={screen.url}
-            url={`/builder/workspace/${$appStore.appId}/design/${screen._id}`}
+            url={`/builder/workspace/${$workspaceStore.appId}/design/${screen._id}`}
             showArrow
           />
         {/each}

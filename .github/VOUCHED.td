@@ -12,13 +12,19 @@
 # Maintainers can vouch for new contributors by commenting "vouch" on a
 # PR by the author. Maintainers can denounce users by commenting
 # "denounce" or "denounce @username" on a PR.
+-adarshj173
+-albertoblue87-netizen
 andz200zx
 aptkingston
+-chetanyarathi
 mike12345567
 mitchellh
 mohagan9
+mukulburol
 pclmnt
 samwho
 shogunpurple
 stropdasman
+-superezzdev
+-yoo-minho
 -zzhzhangzhihao

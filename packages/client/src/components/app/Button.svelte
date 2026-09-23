@@ -107,6 +107,11 @@
   .spectrum-Button--overBackground:hover {
     color: #555;
   }
+  /* Symmetric vertical padding; Spectrum's asymmetric default shifts the label 1px up. */
+  .spectrum-Button {
+    padding-top: var(--spectrum-button-padding-y);
+    padding-bottom: var(--spectrum-button-padding-y);
+  }
   .spectrum-Button::after {
     display: none;
   }

@@ -1,7 +1,7 @@
 import { layoutStore } from "./layouts"
 import { workspaceAppStore } from "./workspaceApps"
 import { workspaceFavouriteStore } from "./workspaceFavourites"
-import { appStore } from "./app"
+import { workspaceStore } from "./workspace"
 import { componentStore, selectedComponent } from "./components"
 import { navigationStore } from "./navigation"
 import { themeStore } from "./theme"
@@ -40,6 +40,7 @@ import { queries } from "./queries"
 import { flags } from "./flags"
 import { rowActions } from "./rowActions"
 import componentTreeNodesStore from "./componentTreeNodes"
+import { componentTreeSearchStore } from "./componentTreeSearch"
 import { oauth2 } from "./oauth2"
 import { recaptchaStore } from "./recaptcha"
 import { dataEnvironmentStore, dataAPI } from "./dataEnvironment"
@@ -52,8 +53,9 @@ import { agentsStore } from "../portal"
 import { restTemplates } from "./restTemplates"
 export {
   componentTreeNodesStore,
+  componentTreeSearchStore,
   layoutStore,
-  appStore,
+  workspaceStore,
   componentStore,
   navigationStore,
   themeStore,
@@ -103,7 +105,7 @@ export {
 }
 
 export const reset = () => {
-  appStore.reset()
+  workspaceStore.reset()
   builderStore.reset()
   screenStore.reset()
   componentStore.reset()
@@ -121,6 +123,7 @@ const refreshBuilderData = async () => {
     datasources.init(),
     integrations.init(),
     queries.init(),
+    restTemplates.fetchCustom(),
     tables.init(),
     roles.fetch(),
     flags.fetch(),
@@ -137,9 +140,9 @@ const resetBuilderHistory = () => {
 export const initialise = async (pkg: FetchAppPackageResponse) => {
   const { application, recaptchaKey } = pkg
   // must be first operation to make sure subsequent requests have correct app ID
-  appStore.syncAppPackage(pkg)
+  workspaceStore.syncWorkspacePackage(pkg)
   await Promise.all([
-    appStore.syncAppRoutes(),
+    workspaceStore.syncWorkspaceRoutes(),
     componentStore.refreshDefinitions(application?.appId),
   ])
   builderStore.init(application)

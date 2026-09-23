@@ -30,7 +30,7 @@ export const definition: AutomationStepDefinition = {
           type: AutomationIOType.STRING,
           title: "Send From",
           tooltip:
-            "To include a display name, use the format: Display Name <email@example.com>",
+            "Optional. Overrides the default from email address in SMTP settings. Your SMTP provider must authorize the address and may replace it with the authenticated sender. To include a display name, use the format: Display Name <email@example.com>",
         },
         replyTo: {
           type: AutomationIOType.STRING,
@@ -84,7 +84,7 @@ export const definition: AutomationStepDefinition = {
           title: "Attachments",
         },
       },
-      required: ["to", "from", "subject", "contents"],
+      required: ["to", "subject", "contents"],
     },
     outputs: {
       properties: {

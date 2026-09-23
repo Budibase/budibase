@@ -134,43 +134,38 @@ describe("analyzeAgentRequestLink", () => {
         headers: {
           "x-litellm-tags": "bb-agent-request-analyser",
         },
-        messages: expect.arrayContaining([
-          expect.objectContaining({
-            role: "user",
-            content: JSON.stringify({
-              currentSessionId: "session_2",
-              latestPrompt: "summarise it in 50 words",
-              recentChatContext: [
+        prompt: JSON.stringify({
+          currentSessionId: "session_2",
+          latestPrompt: "summarise it in 50 words",
+          recentChatContext: [
+            {
+              role: "user",
+              content: "Show me the holidays company policy",
+            },
+            {
+              role: "assistant",
+              content: "Here is the policy summary.",
+            },
+          ],
+          candidateRequests: [
+            {
+              requestId: "agentrequest_thread_1",
+              title: undefined,
+              status: "completed",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+              recentEntries: [
                 {
-                  role: "user",
-                  content: "Show me the holidays company policy",
-                },
-                {
-                  role: "assistant",
-                  content: "Here is the policy summary.",
-                },
-              ],
-              candidateRequests: [
-                {
-                  requestId: "agentrequest_thread_1",
-                  title: undefined,
-                  status: "completed",
+                  sessionId: "session_1",
+                  source: "Chat",
+                  operationNames: ["Support"],
+                  createdAt: "2026-01-01T00:00:00.000Z",
                   updatedAt: "2026-01-01T00:00:00.000Z",
-                  recentEntries: [
-                    {
-                      sessionId: "session_1",
-                      source: "Chat",
-                      operationNames: ["Support"],
-                      createdAt: "2026-01-01T00:00:00.000Z",
-                      updatedAt: "2026-01-01T00:00:00.000Z",
-                      status: "completed",
-                    },
-                  ],
+                  status: "completed",
                 },
               ],
-            }),
-          }),
-        ]),
+            },
+          ],
+        }),
       })
     )
   })
@@ -259,25 +254,17 @@ describe("generateAgentRequestTitle", () => {
         headers: {
           "x-litellm-tags": "bb-agent-request-title",
         },
-        messages: expect.arrayContaining([
-          expect.objectContaining({
-            role: "system",
-            content: expect.stringContaining(
-              "Base it primarily on the user's actual ask"
-            ),
-          }),
-          expect.objectContaining({
-            role: "user",
-            content: JSON.stringify({
-              operation: {
-                name: "Personalized Laptop Recommendation Search",
-                prompt:
-                  "Help the user choose a suitable laptop based on their needs.",
-              },
-              latestPrompt: "I need a new laptop",
-            }),
-          }),
-        ]),
+        instructions: expect.stringContaining(
+          "Base it primarily on the user's actual ask"
+        ),
+        prompt: JSON.stringify({
+          operation: {
+            name: "Personalized Laptop Recommendation Search",
+            prompt:
+              "Help the user choose a suitable laptop based on their needs.",
+          },
+          latestPrompt: "I need a new laptop",
+        }),
       })
     )
   })
@@ -318,12 +305,7 @@ describe("generateInteractionSummary", () => {
         headers: {
           "x-litellm-tags": "bb-agent-request-interaction-summary",
         },
-        messages: expect.arrayContaining([
-          expect.objectContaining({
-            role: "user",
-            content: "I can't connect to the VPN from home",
-          }),
-        ]),
+        prompt: "I can't connect to the VPN from home",
       })
     )
   })
@@ -406,35 +388,29 @@ describe("generateRequestOutcome", () => {
         headers: {
           "x-litellm-tags": "bb-agent-request-outcome",
         },
-        messages: expect.arrayContaining([
-          expect.objectContaining({
-            role: "user",
-            content: JSON.stringify({
-              title: "Book a meeting",
-              toolCallsIncomplete: false,
-              timeline: [
-                {
-                  type: "user_message",
-                  summary: "User asked to book a meeting",
-                },
-                {
-                  type: "tool_call",
-                  tool: "book_meeting",
-                  status: "error",
-                  summary: "Failed to book the meeting",
-                },
-                {
-                  type: "tool_call",
-                  tool: "send_email",
-                  status: "success",
-                  summary: "Emailed the organizer directly instead",
-                },
-              ],
-              finalResponse:
-                "I've emailed the organizer to set up the meeting.",
-            }),
-          }),
-        ]),
+        prompt: JSON.stringify({
+          title: "Book a meeting",
+          toolCallsIncomplete: false,
+          timeline: [
+            {
+              type: "user_message",
+              summary: "User asked to book a meeting",
+            },
+            {
+              type: "tool_call",
+              tool: "book_meeting",
+              status: "error",
+              summary: "Failed to book the meeting",
+            },
+            {
+              type: "tool_call",
+              tool: "send_email",
+              status: "success",
+              summary: "Emailed the organizer directly instead",
+            },
+          ],
+          finalResponse: "I've emailed the organizer to set up the meeting.",
+        }),
       })
     )
   })

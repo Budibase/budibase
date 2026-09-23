@@ -9,17 +9,23 @@ import {
   UserGroup,
   UserRoleInfo,
 } from "@budibase/types"
-import { getProdAppID } from "./applications"
+import { getProdWorkspaceID } from "./workspaces"
 
-// checks if a user is specifically a builder, given an app ID
-// TODO: check its usages, as appId checks are not actually checked for global builders
-export function isBuilder(user?: UserBuilderInfo, appId?: string): boolean {
+// Checks whether a user is specifically a builder for a workspace.
+// Global builders do not require a workspace-specific permission.
+export function isBuilder(
+  user?: UserBuilderInfo,
+  workspaceId?: string
+): boolean {
   if (!user) {
     return false
   }
   if (user.builder?.global) {
     return true
-  } else if (appId && user.builder?.apps?.includes(getProdAppID(appId))) {
+  } else if (
+    workspaceId &&
+    user.builder?.apps?.includes(getProdWorkspaceID(workspaceId))
+  ) {
     return true
   }
   return false
@@ -47,7 +53,7 @@ export function isAdmin(user?: UserAdminInfo): boolean {
 
 export function isAdminOrWorkspaceBuilder(
   user: UserBuilderInfo & UserAdminInfo,
-  appId: string
+  workspaceId: string
 ): boolean {
   if (!user) {
     return false
@@ -57,7 +63,10 @@ export function isAdminOrWorkspaceBuilder(
     return true
   }
 
-  if (appId && user.builder?.apps?.includes(getProdAppID(appId))) {
+  if (
+    workspaceId &&
+    user.builder?.apps?.includes(getProdWorkspaceID(workspaceId))
+  ) {
     return true
   }
 
@@ -66,9 +75,9 @@ export function isAdminOrWorkspaceBuilder(
 
 export function isAdminOrBuilder(
   user: UserBuilderInfo & UserAdminInfo,
-  appId?: string
+  workspaceId?: string
 ): boolean {
-  return isBuilder(user, appId) || isAdmin(user)
+  return isBuilder(user, workspaceId) || isAdmin(user)
 }
 
 export function isAdminOrGlobalBuilder(
@@ -77,14 +86,14 @@ export function isAdminOrGlobalBuilder(
   return isGlobalBuilder(user) || isAdmin(user)
 }
 
-// check if they are a builder within an app (not necessarily a global builder)
+// Checks whether they can build within a workspace without being a global builder.
 export function hasAppBuilderPermissions(user?: UserBuilderInfo): boolean {
   if (!user) {
     return false
   }
-  const appLength = user.builder?.apps?.length
+  const workspaceCount = user.builder?.apps?.length
   const isGlobalBuilder = !!user.builder?.global
-  return !isGlobalBuilder && appLength != null && appLength > 0
+  return !isGlobalBuilder && workspaceCount != null && workspaceCount > 0
 }
 
 function hasAppCreatorPermissions(user?: Partial<UserRoleInfo>): boolean {
@@ -94,7 +103,7 @@ function hasAppCreatorPermissions(user?: Partial<UserRoleInfo>): boolean {
   return !!Object.values(user.roles ?? {}).find(x => x === "CREATOR")
 }
 
-// checks if a user is capable of building any app
+// Checks whether a user can build any workspace.
 export function hasBuilderPermissions(user?: UserBuilderInfo): boolean {
   if (!user) {
     return false
@@ -159,22 +168,24 @@ function getUserGroups(userId: string | undefined, groups?: UserGroup[]) {
 }
 
 export function getUserAppGroups(
-  appId: string,
+  workspaceId: string,
   userId: string,
   groups?: UserGroup[]
 ) {
-  const prodAppId = getProdAppID(appId)
+  const prodWorkspaceId = getProdWorkspaceID(workspaceId)
   const userGroups = getUserGroups(userId, groups)
   return userGroups.filter(group =>
-    Object.keys(group.roles || {}).find(app => app === prodAppId)
+    Object.keys(group.roles || {}).find(
+      workspaceId => workspaceId === prodWorkspaceId
+    )
   )
 }
 
 export function userAppAccessList(user: User, groups?: UserGroup[]) {
   const userGroups = getUserGroups(user._id, groups)
-  const userGroupApps = userGroups.flatMap(userGroup =>
+  const userGroupWorkspaces = userGroups.flatMap(userGroup =>
     Object.keys(userGroup.roles || {})
   )
-  const fullList = [...Object.keys(user?.roles || {}), ...userGroupApps]
+  const fullList = [...Object.keys(user?.roles || {}), ...userGroupWorkspaces]
   return [...new Set(fullList)]
 }

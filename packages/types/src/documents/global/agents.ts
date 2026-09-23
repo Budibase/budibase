@@ -1,6 +1,11 @@
 import { Document } from "../../"
 import type { UIMessage } from "ai"
-import { EscalationRecipient } from "../workspace/escalation"
+import type { ArrayOperator, BasicOperator } from "../../sdk"
+import type { FieldType } from "../workspace/row"
+import {
+  EscalationRecipient,
+  ResolutionStrategy,
+} from "../workspace/escalation"
 
 export enum ToolType {
   INTERNAL_TABLE = "INTERNAL_TABLE",
@@ -9,8 +14,27 @@ export enum ToolType {
   REST_QUERY = "REST_QUERY",
   DATASOURCE_QUERY = "DATASOURCE_QUERY",
   SEARCH = "SEARCH",
-  ESCALATION = "ESCALATION",
 }
+
+export enum ToolAction {
+  LIST_ROWS = "list_rows",
+  GET_ROW = "get_row",
+  CREATE_ROW = "create_row",
+  UPDATE_ROW = "update_row",
+  SEARCH_ROWS = "search_rows",
+  TRIGGER = "trigger",
+}
+
+export type RowToolAction = Exclude<ToolAction, ToolAction.TRIGGER>
+
+export enum ToolExecutionPrincipal {
+  REQUESTER = "requester",
+  ADMIN = "admin",
+}
+
+export type ToolExecutionPolicy =
+  | { mode: "admin" }
+  | { mode: "configurable"; defaultPrincipal: ToolExecutionPrincipal }
 
 export interface ToolMetadata {
   name: string
@@ -19,20 +43,15 @@ export interface ToolMetadata {
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
+  // The backing resource: tableId, query _id or automation _id.
+  sourceId?: string
+  action?: ToolAction
+  executionPolicy: ToolExecutionPolicy
 }
 
 interface ChatAgentIntegration {
-  chatAppId?: string
   idleTimeoutMinutes?: number
   requireUserLink?: boolean
-}
-
-export interface DiscordAgentIntegration extends ChatAgentIntegration {
-  applicationId?: string
-  publicKey?: string
-  botToken?: string
-  guildId?: string
-  interactionsEndpointUrl?: string
 }
 
 export interface MSTeamsAgentIntegration extends ChatAgentIntegration {
@@ -41,28 +60,68 @@ export interface MSTeamsAgentIntegration extends ChatAgentIntegration {
   tenantId?: string
   teamId?: string
   messagingEndpointUrl?: string
+  appPackageVersion?: string
 }
 
 export interface SlackAgentIntegration extends ChatAgentIntegration {
+  appId?: string
+  clientId?: string
+  clientSecret?: string
   botToken?: string
+  botUserId?: string
   signingSecret?: string
+  teamName?: string
   messagingEndpointUrl?: string
-}
-
-export interface TelegramAgentIntegration extends ChatAgentIntegration {
-  botToken?: string
-  webhookSecretToken?: string
-  botUserName?: string
-  messagingEndpointUrl?: string
+  // Bots Slack workspace - derived via auth.test when the token is saved
+  // Need this to filter the user picker
+  teamId?: string
 }
 
 export enum AgentKnowledgeSourceType {
   SHAREPOINT = "sharepoint",
 }
 
-export interface AgentKnowledgeSourceFilterConfig {
-  patterns?: string[]
+export enum SharePointScopeMode {
+  ALL = "all",
+  SELECTED = "selected",
 }
+
+export enum SharePointScopeTargetType {
+  DRIVE = "drive",
+  FOLDER = "folder",
+  FILE = "file",
+  LIST = "list",
+}
+
+interface SharePointDriveScopeTarget {
+  type: SharePointScopeTargetType.DRIVE
+  driveId: string
+}
+
+interface SharePointDriveItemScopeTarget {
+  type: SharePointScopeTargetType.FOLDER | SharePointScopeTargetType.FILE
+  driveId: string
+  itemId: string
+}
+
+interface SharePointListScopeTarget {
+  type: SharePointScopeTargetType.LIST
+  listId: string
+}
+
+export type SharePointScopeTarget =
+  | SharePointDriveScopeTarget
+  | SharePointDriveItemScopeTarget
+  | SharePointListScopeTarget
+
+export type AgentSharePointKnowledgeSourceScope =
+  | {
+      mode: SharePointScopeMode.ALL
+    }
+  | {
+      mode: SharePointScopeMode.SELECTED
+      targets: SharePointScopeTarget[]
+    }
 
 export interface AgentSharePointKnowledgeSource {
   id: string
@@ -75,7 +134,7 @@ export interface AgentSharePointKnowledgeSource {
       name?: string
       webUrl?: string
     }
-    filters?: AgentKnowledgeSourceFilterConfig
+    scope?: AgentSharePointKnowledgeSourceScope
   }
 }
 
@@ -87,16 +146,74 @@ export interface AgentEscalationConfig {
   delay?: number
 }
 
+export interface AgentOperationApprovalPolicy {
+  id: string
+  name: string
+  approvalType?: ResolutionStrategy
+  approvers?: string[]
+  notifications: AgentEscalationConfig
+}
+
+export type EscalationPolicySnapshot = Omit<
+  AgentOperationApprovalPolicy,
+  "notifications"
+>
+
+// TODO: This can go further. These exist all over the place
+// as magic strings. They can stay here until they are
+// refactored
+export enum ConditionRangeOperator {
+  RANGE_LOW = "rangeLow",
+  RANGE_HIGH = "rangeHigh",
+}
+
+export type ToolExecutionOperator =
+  | BasicOperator
+  | ArrayOperator
+  | ConditionRangeOperator
+
+export interface ToolExecutionCondition {
+  field: string
+  operator: ToolExecutionOperator
+  value: any
+  type?: FieldType
+}
+
+export interface ToolExecutionRule {
+  conditions?: ToolExecutionCondition[]
+  policyId: string
+  reviewParameters?: string[]
+}
+
+export interface AgentOperationToolConfig {
+  toolName: string
+  executionPrincipal: ToolExecutionPrincipal
+  executionRules?: ToolExecutionRule[]
+}
+
+export interface AgentRequester {
+  executorRole: string
+}
+
+export interface AgentExecutionContext {
+  tenantId: string
+  workspaceId: string
+  agentId: string
+  operationId: string
+  conversationId: string
+  requester: AgentRequester
+}
+
 export interface AgentOperation {
   id: string
   name: string
   live: boolean
   promptInstructions?: string
-  enabledTools?: string[]
+  enabledTools?: AgentOperationToolConfig[]
+  approvalPolicies?: AgentOperationApprovalPolicy[]
   knowledgeBases?: string[]
   knowledgeSources?: AgentKnowledgeSource[]
   allowKnowledgeSourceDownload: boolean
-  escalation?: AgentEscalationConfig
 }
 
 export interface Agent extends Document {
@@ -111,10 +228,9 @@ export interface Agent extends Document {
   icon?: string
   iconColor?: string
   createdBy?: string
-  discordIntegration?: DiscordAgentIntegration
+  allowConversationAttachments?: boolean
   MSTeamsIntegration?: MSTeamsAgentIntegration
   slackIntegration?: SlackAgentIntegration
-  telegramIntegration?: TelegramAgentIntegration
 }
 
 export interface AgentMessageRagSource {

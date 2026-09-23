@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { UIEvent } from "@budibase/types"
+  import type { UIEvent } from "../types"
   import { createEventDispatcher, onMount } from "svelte"
   import { fade } from "svelte/transition"
   import FancyField from "./FancyField.svelte"
@@ -10,7 +10,7 @@
   export let type: string = "text"
   export let disabled: boolean = false
   export let error: string | null = null
-  export let validate: ((_value: string | undefined) => string | null) | null =
+  export let validate: ((value: string | undefined) => string | null) | null =
     null
   export let suffix: string | null = null
   export let validateOn: "change" | "blur" = "change"
