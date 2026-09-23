@@ -95,6 +95,7 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
       return
     }
     this.consecutiveFailures = 0
+    this.tick().catch(() => {})
     this.interval = setInterval(() => {
       this.tick().catch(() => {})
     }, POLL_INTERVAL_MS)
