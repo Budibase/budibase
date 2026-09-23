@@ -1665,6 +1665,30 @@ describe("/applications", () => {
       expect(prodRows[0]._id).toEqual(devRow._id)
     })
 
+    it("propagates row deletions and purges their tombstones after publish", async () => {
+      const table = await config.api.table.save(basicTable())
+      const row = await config.api.row.save(table._id!, { name: "Delete me" })
+      await config.publish()
+
+      await config.api.row.delete(table._id!, { _id: row._id! })
+      await config.publish()
+
+      await config.withProdApp(async () => {
+        expect(await config.api.row.fetch(table._id!)).toHaveLength(0)
+      })
+
+      const [devRow, prodRow] = await Promise.all([
+        db.getDB(config.getDevWorkspaceId()).allDocs({ keys: [row._id!] }),
+        db.getDB(config.getProdWorkspaceId()).allDocs({ keys: [row._id!] }),
+      ])
+      expect(devRow.rows[0]).toEqual(
+        expect.objectContaining({ error: "not_found" })
+      )
+      expect(prodRow.rows[0]).toEqual(
+        expect.objectContaining({ error: "not_found" })
+      )
+    })
+
     // API to publish filtered resources currently disabled, skip test while not needed
     it.skip("should publish app with filtered resources, filtering by automation", async () => {
       // create data resources

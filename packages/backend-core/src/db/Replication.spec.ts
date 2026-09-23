@@ -2,6 +2,12 @@ import { DocumentType } from "@budibase/types"
 import { DesignDocuments, SEPARATOR, USER_METADATA_PREFIX } from "../constants"
 import Replication from "./Replication"
 
+const mockDirectCouchCall = jest.fn()
+
+jest.mock("./couch/utils", () => ({
+  directCouchCall: (...args: unknown[]) => mockDirectCouchCall(...args),
+}))
+
 const mockSourceDb = {
   replicate: {
     to: jest.fn(),
@@ -19,6 +25,7 @@ const mockTargetDb = {
   put: jest.fn(),
   remove: jest.fn(),
   allDocs: jest.fn(),
+  changes: jest.fn(),
 }
 
 jest.mock("./couch", () => ({
@@ -35,6 +42,18 @@ describe("Replication", () => {
       jest.clearAllMocks()
       mockSourceDb.changes = jest.fn()
       mockTargetDb.allDocs = jest.fn()
+      mockTargetDb.changes = jest.fn()
+      mockDirectCouchCall.mockImplementation(
+        async (
+          _path: string,
+          _method: string,
+          body: Record<string, string[]>
+        ) => ({
+          ok: true,
+          status: 200,
+          json: async () => ({ purged: body }),
+        })
+      )
     })
 
     it("replicates only new deletions for documents still live in production", async () => {
@@ -44,14 +63,42 @@ describe("Replication", () => {
       })
       jest.spyOn(replication, "replicate").mockResolvedValue({} as any)
       mockTargetDb.get.mockRejectedValue({ status: 404 })
-      mockSourceDb.changes.mockResolvedValue({
-        last_seq: "seq-2",
-        results: [
-          { id: "active_doc", deleted: true },
-          { id: "absent_doc", deleted: true },
-          { id: "live_doc", deleted: false },
-        ],
-      })
+      const deletedChanges = [
+        {
+          id: "active_doc",
+          deleted: true,
+          changes: [{ rev: "2-active" }],
+          doc: { _id: "active_doc", _rev: "2-active", _deleted: true },
+        },
+        {
+          id: "absent_doc",
+          deleted: true,
+          changes: [{ rev: "2-absent" }],
+          doc: { _id: "absent_doc", _rev: "2-absent", _deleted: true },
+        },
+      ]
+      mockSourceDb.changes.mockImplementation(
+        async (options: { doc_ids?: string[] }) =>
+          options.doc_ids
+            ? {
+                results: deletedChanges.filter(change =>
+                  options.doc_ids?.includes(change.id)
+                ),
+              }
+            : {
+                last_seq: "seq-2",
+                results: [
+                  ...deletedChanges,
+                  { id: "live_doc", deleted: false },
+                ],
+              }
+      )
+      mockTargetDb.changes.mockImplementation(
+        async (options: { doc_ids?: string[] }) => ({
+          results:
+            options.doc_ids?.[0] === "active_doc" ? [deletedChanges[0]] : [],
+        })
+      )
       mockTargetDb.allDocs.mockResolvedValue({
         rows: [
           { id: "active_doc", value: { rev: "2-a" } },
@@ -66,9 +113,21 @@ describe("Replication", () => {
       if (!replicationOptions) {
         throw new Error("Expected replication options")
       }
-      expect(JSON.stringify(replicationOptions.selector)).toContain(
-        '"$in":["active_doc"]'
+      expect(replicationOptions.selector).toEqual(
+        expect.objectContaining({
+          $and: expect.arrayContaining([
+            expect.objectContaining({
+              $and: expect.arrayContaining([{ _id: { $in: ["active_doc"] } }]),
+            }),
+          ]),
+        })
       )
+      expect(mockSourceDb.changes).toHaveBeenCalledWith({
+        since: 0,
+        limit: 500,
+        include_docs: true,
+        style: "all_docs",
+      })
       expect(mockTargetDb.put).toHaveBeenCalledWith({
         _id: "_local/budibase-publish-tombstones",
         lastSequence: "seq-2",
@@ -88,6 +147,231 @@ describe("Replication", () => {
       })
 
       await expect(replication.replicateApp()).rejects.toThrow("fail")
+      expect(mockTargetDb.put).not.toHaveBeenCalled()
+    })
+
+    it("resumes tombstone detection from the saved sequence", async () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      jest.spyOn(replication, "replicate").mockResolvedValue({} as any)
+      mockTargetDb.get.mockResolvedValue({
+        _id: "_local/budibase-publish-tombstones",
+        _rev: "0-1",
+        lastSequence: "seq-1",
+      })
+      mockSourceDb.changes.mockResolvedValue({ last_seq: "seq-2", results: [] })
+
+      await replication.replicateApp()
+
+      expect(mockSourceDb.changes).toHaveBeenCalledWith({
+        since: "seq-1",
+        limit: 500,
+        include_docs: true,
+        style: "all_docs",
+      })
+    })
+
+    it("paginates the tombstone change scan", async () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      jest.spyOn(replication, "replicate").mockResolvedValue({} as any)
+      mockTargetDb.get.mockRejectedValue({ status: 404 })
+      mockSourceDb.changes
+        .mockResolvedValueOnce({
+          last_seq: "seq-1",
+          results: Array.from({ length: 500 }, (_, index) => ({
+            id: `doc-${index}`,
+            deleted: false,
+          })),
+        })
+        .mockResolvedValueOnce({ last_seq: "seq-2", results: [] })
+
+      await replication.replicateApp()
+
+      expect(mockSourceDb.changes).toHaveBeenNthCalledWith(2, {
+        since: "seq-1",
+        limit: 500,
+        include_docs: true,
+        style: "all_docs",
+      })
+      expect(mockTargetDb.put).toHaveBeenCalledWith({
+        _id: "_local/budibase-publish-tombstones",
+        lastSequence: "seq-2",
+      })
+    })
+
+    it("chunks target lookups and tombstone selectors", async () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      jest.spyOn(replication, "replicate").mockResolvedValue({} as any)
+      mockTargetDb.get.mockRejectedValue({ status: 404 })
+      const changes = Array.from({ length: 401 }, (_, index) => ({
+        id: `doc-${index}`,
+        deleted: true,
+        changes: [{ rev: `2-${index}` }],
+        doc: { _id: `doc-${index}`, _rev: `2-${index}`, _deleted: true },
+      }))
+      mockSourceDb.changes.mockResolvedValue({
+        last_seq: "seq-1",
+        results: changes,
+      })
+      mockTargetDb.allDocs.mockImplementation(({ keys }: { keys: string[] }) =>
+        Promise.resolve({
+          rows: keys.map(id => ({ id, value: { rev: "1-a" } })),
+        })
+      )
+      mockTargetDb.changes.mockImplementation(
+        async (options: { doc_ids?: string[] }) => ({
+          results: changes.filter(change =>
+            options.doc_ids?.includes(change.id)
+          ),
+        })
+      )
+
+      await replication.replicateApp()
+
+      expect(mockTargetDb.allDocs).toHaveBeenCalledTimes(3)
+      for (const [options] of mockTargetDb.allDocs.mock.calls) {
+        expect(options.keys.length).toBeLessThanOrEqual(200)
+      }
+      const tombstoneSelectors = jest
+        .mocked(replication.replicate)
+        .mock.calls.slice(0, 3)
+        .map(([options]) => JSON.stringify(options?.selector))
+      expect(tombstoneSelectors).toHaveLength(3)
+      for (const selector of tombstoneSelectors) {
+        expect(selector.length).toBeLessThan(20_000)
+      }
+    })
+
+    it("does not advance the tombstone cursor when CouchDB reports write failures", async () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      jest
+        .spyOn(replication, "replicate")
+        .mockResolvedValue({ doc_write_failures: 1 } as any)
+      mockTargetDb.get.mockRejectedValue({ status: 404 })
+      mockSourceDb.changes.mockResolvedValue({
+        last_seq: 12,
+        results: [
+          {
+            id: "deleted_doc",
+            deleted: true,
+            changes: [{ rev: "2-deleted" }],
+            doc: {
+              _id: "deleted_doc",
+              _rev: "2-deleted",
+              _deleted: true,
+            },
+          },
+        ],
+      })
+      mockTargetDb.allDocs.mockResolvedValue({
+        rows: [{ id: "deleted_doc", value: { rev: "1-live" } }],
+      })
+
+      await replication.replicateApp()
+
+      expect(mockTargetDb.put).not.toHaveBeenCalled()
+      expect(mockDirectCouchCall).not.toHaveBeenCalled()
+    })
+
+    it("does not advance the global cursor during a scoped publish", async () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      jest.spyOn(replication, "replicate").mockResolvedValue({} as any)
+      mockTargetDb.get.mockRejectedValue({ status: 404 })
+      mockSourceDb.changes.mockResolvedValue({ last_seq: "seq-2", results: [] })
+
+      await replication.replicateApp({ tablesToSync: ["orders"] })
+
+      expect(mockTargetDb.put).not.toHaveBeenCalled()
+    })
+
+    it("purges a confirmed tombstone from production and dev after publish", async () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      jest.spyOn(replication, "replicate").mockResolvedValue({} as any)
+      mockTargetDb.get.mockRejectedValue({ status: 404 })
+      const tombstone = {
+        id: "deleted_doc",
+        deleted: true,
+        changes: [{ rev: "2-deleted" }],
+        doc: { _id: "deleted_doc", _rev: "2-deleted", _deleted: true },
+      }
+      mockSourceDb.changes.mockImplementation(
+        async (options: { doc_ids?: string[] }) =>
+          options.doc_ids
+            ? { results: [tombstone] }
+            : { last_seq: "seq-2", results: [tombstone] }
+      )
+      mockTargetDb.allDocs.mockResolvedValue({
+        rows: [{ id: "deleted_doc", value: { rev: "1-live" } }],
+      })
+      mockTargetDb.changes.mockResolvedValue({ results: [tombstone] })
+
+      await replication.replicateApp()
+
+      expect(mockDirectCouchCall).toHaveBeenNthCalledWith(
+        1,
+        `${DocumentType.WORKSPACE}_target/_purge`,
+        "POST",
+        { deleted_doc: ["2-deleted"] }
+      )
+      expect(mockDirectCouchCall).toHaveBeenNthCalledWith(
+        2,
+        `${DocumentType.WORKSPACE_DEV}_source/_purge`,
+        "POST",
+        { deleted_doc: ["2-deleted"] }
+      )
+    })
+
+    it("does not purge tombstones with conflicting leaf revisions", async () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      jest.spyOn(replication, "replicate").mockResolvedValue({} as any)
+      mockTargetDb.get.mockRejectedValue({ status: 404 })
+      const tombstone = {
+        id: "deleted_doc",
+        deleted: true,
+        changes: [{ rev: "2-deleted" }],
+        doc: { _id: "deleted_doc", _rev: "2-deleted", _deleted: true },
+      }
+      mockSourceDb.changes.mockImplementation(
+        async (options: { doc_ids?: string[] }) =>
+          options.doc_ids
+            ? { results: [tombstone] }
+            : { last_seq: "seq-2", results: [tombstone] }
+      )
+      mockTargetDb.allDocs.mockResolvedValue({
+        rows: [{ id: "deleted_doc", value: { rev: "1-live" } }],
+      })
+      mockTargetDb.changes.mockResolvedValue({
+        results: [
+          {
+            ...tombstone,
+            changes: [{ rev: "2-deleted" }, { rev: "2-live-conflict" }],
+          },
+        ],
+      })
+
+      await replication.replicateApp()
+
+      expect(mockDirectCouchCall).not.toHaveBeenCalled()
       expect(mockTargetDb.put).not.toHaveBeenCalled()
     })
   })
@@ -189,9 +473,7 @@ describe("Replication", () => {
       }
 
       expect((opts.filter as Function)(deletedDoc, {})).toBe(false)
-      expect(JSON.stringify(opts.selector)).toContain(
-        '{"$nor":[{"_deleted":true}]}'
-      )
+      expect(JSON.stringify(opts.selector)).not.toContain('"_deleted"')
     })
 
     it("should allow confirmed production tombstones through the selector and filter", () => {
@@ -220,6 +502,15 @@ describe("Replication", () => {
       expect(
         (opts.filter as Function)({ _id: "some_doc", _deleted: true }, {})
       ).toBe(true)
+      expect(opts.selector).toEqual(
+        expect.objectContaining({
+          $and: expect.arrayContaining([
+            expect.objectContaining({
+              $or: expect.arrayContaining([{ _deleted: true }]),
+            }),
+          ]),
+        })
+      )
     })
 
     it.each([
@@ -487,11 +778,10 @@ describe("Replication", () => {
       expect(selectorJSON).toContain(DocumentType.AGENT_LOG_SESSION)
       expect(selectorJSON).toContain(DocumentType.WORKSPACE_METADATA)
       expect(selectorJSON).toContain(DocumentType.AUTO_COLUMN_STATE)
-      expect(selectorJSON).toContain('"_deleted":true')
-      expect(selectorJSON).not.toContain('{"$or":[{"_deleted":true}')
+      expect(selectorJSON).not.toContain('"_deleted"')
     })
 
-    it("should exclude tombstones from the production selector", () => {
+    it("should leave tombstone filtering to the replication filter", () => {
       const replication = new Replication({
         source: `${DocumentType.WORKSPACE_DEV}_source`,
         target: `${DocumentType.WORKSPACE}_target`,
@@ -499,10 +789,7 @@ describe("Replication", () => {
 
       const opts = replication.appReplicateOpts({ isCreation: false })
 
-      const selectorJSON = JSON.stringify(opts.selector)
-
-      expect(selectorJSON).toContain('{"$nor":[{"_deleted":true}]}')
-      expect(selectorJSON).not.toContain('"_rev":{"$exists":true}')
+      expect(JSON.stringify(opts.selector)).not.toContain('"_deleted"')
     })
 
     it("should exclude design documents from the TO_DEV selector", () => {
@@ -556,6 +843,77 @@ describe("Replication", () => {
       )
     })
 
+    it("should apply publish scope and type exclusions to confirmed tombstones", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      const filter = jest.fn().mockReturnValue(true)
+      const opts = replication.appReplicateOpts({
+        isCreation: false,
+        tablesToSync: ["orders"],
+        tombstoneIds: [
+          `${DocumentType.ROW}${SEPARATOR}orders${SEPARATOR}row1`,
+          `${DocumentType.ROW}${SEPARATOR}customers${SEPARATOR}row1`,
+          `${DocumentType.AUTOMATION_LOG}${SEPARATOR}log1`,
+        ],
+        filter,
+      })
+      const appFilter = opts.filter as Function
+
+      expect(
+        appFilter(
+          {
+            _id: `${DocumentType.ROW}${SEPARATOR}orders${SEPARATOR}row1`,
+            _deleted: true,
+          },
+          {}
+        )
+      ).toBe(true)
+      expect(
+        appFilter(
+          {
+            _id: `${DocumentType.ROW}${SEPARATOR}customers${SEPARATOR}row1`,
+            _deleted: true,
+          },
+          {}
+        )
+      ).toBe(false)
+      expect(
+        appFilter(
+          {
+            _id: `${DocumentType.AUTOMATION_LOG}${SEPARATOR}log1`,
+            _deleted: true,
+          },
+          {}
+        )
+      ).toBe(false)
+      expect(filter).toHaveBeenCalledTimes(1)
+
+      const selector = JSON.stringify(opts.selector)
+      expect(selector).toContain('"$in":["' + DocumentType.ROW)
+      expect(selector).toContain(DocumentType.AUTOMATION_LOG)
+      expect(selector).toContain('"orders"')
+    })
+
+    it("should allow custom-filter-scoped row tombstones in the Mango selector", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      const rowId = `${DocumentType.ROW}${SEPARATOR}orders${SEPARATOR}row1`
+      const opts = replication.appReplicateOpts({
+        tombstoneIds: [rowId],
+        tombstonesOnly: true,
+        filter: doc => doc._id === rowId,
+      })
+      const selector = opts.selector as { $and: object[] }
+
+      expect(selector.$and[2]).toEqual({
+        $and: expect.arrayContaining([{ _id: { $in: [rowId] } }]),
+      })
+    })
+
     it("should combine a caller selector with the generated selector", () => {
       const replication = new Replication({
         source: `${DocumentType.WORKSPACE_DEV}_source`,
@@ -591,15 +949,7 @@ describe("Replication", () => {
         filter: jest.fn(),
       })
 
-      expect(opts.selector).toEqual(
-        expect.objectContaining({
-          $and: expect.arrayContaining([
-            expect.objectContaining({
-              $and: expect.arrayContaining([{ $nor: [{ _deleted: true }] }]),
-            }),
-          ]),
-        })
-      )
+      expect(JSON.stringify(opts.selector)).not.toContain('"_deleted"')
     })
 
     it("should not attach a selector when a custom filter is provided to dev", () => {
