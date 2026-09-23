@@ -14,8 +14,12 @@
   import FunctionNameModal from "./FunctionNameModal.svelte"
   import { canManageFunctions } from "./permissions"
 
-  const DEFAULT_SOURCE = `import type { FunctionResult } from "@budibase/functions"
+  const DEFAULT_SOURCE = `import { queries, type FunctionResult } from "@budibase/functions"
 
+/*
+ * Link saved queries below before calling them with
+ * await queries.datasourceAlias.queryAlias().
+ */
 export default async function (): Promise<FunctionResult> {
   return { output: {} }
 }`
