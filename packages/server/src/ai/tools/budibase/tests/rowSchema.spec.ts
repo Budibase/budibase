@@ -64,9 +64,10 @@ describe("row tool data schema", () => {
   it("canonicalizes backtick-wrapped field names", () => {
     const schema = buildRowDataSchema(fields, "", true)
 
-    expect(
-      schema.parse({ Cost: 20, "`Expense Tags`": "Food" })
-    ).toEqual({ Cost: 20, "Expense Tags": "Food" })
+    expect(schema.parse({ Cost: 20, "`Expense Tags`": "Food" })).toEqual({
+      Cost: 20,
+      "Expense Tags": "Food",
+    })
   })
 
   it("only advertises canonical field names to the model", () => {
