@@ -17,6 +17,7 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
+import { SourceName } from "@budibase/types"
 import { getQueryCatalog } from "./queryCatalog"
 
 describe("getQueryCatalog", () => {
@@ -84,5 +85,38 @@ describe("getQueryCatalog", () => {
     expect(entries.map(entry => entry.queryId)).toEqual(["query_2", "query_1"])
     expect(mockDbTryGet).toHaveBeenCalledTimes(1)
     expect(mockDbTryGet).toHaveBeenCalledWith("datasource_1")
+  })
+
+  it("includes saved MongoDB aggregate queries", async () => {
+    mockDbAllDocs.mockResolvedValue({
+      rows: [
+        {
+          doc: {
+            _id: "query_mongo",
+            datasourceId: "datasource_mongo",
+            name: "Read query",
+            parameters: [],
+            queryVerb: "aggregate",
+          },
+        },
+      ],
+    })
+    mockDbTryGet.mockResolvedValue({
+      _id: "datasource_mongo",
+      name: "MongoDB",
+      source: SourceName.MONGODB,
+    })
+
+    await expect(getQueryCatalog()).resolves.toEqual([
+      {
+        queryId: "query_mongo",
+        queryName: "Read query",
+        datasourceId: "datasource_mongo",
+        datasourceName: "MongoDB",
+        source: SourceName.MONGODB,
+        kind: "data",
+        parameters: [],
+      },
+    ])
   })
 })
