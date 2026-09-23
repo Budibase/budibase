@@ -1,4 +1,5 @@
-import { HTTPError, redis } from "@budibase/backend-core"
+import { HTTPError, locks, redis } from "@budibase/backend-core"
+import { LockName, LockType } from "@budibase/types"
 
 const DEFAULT_COOLDOWN_MS = 60_000
 const COOLDOWN_KEY = "gemini:rag:cooldown"
@@ -50,17 +51,23 @@ export const extendGeminiIngestionCooldown = async ({
   retryAt: number
 }): Promise<number> => {
   const client = await redis.clients.getCacheClient()
-  const key = `${client.db}${redis.utils.SEPARATOR}${COOLDOWN_KEY}`
-  const deadline = await client.client.eval(
-    `
-    local deadline = math.max(tonumber(redis.call("GET", KEYS[1])) or 0, tonumber(ARGV[1]))
-    redis.call("PSETEX", KEYS[1], math.max(1, deadline - tonumber(ARGV[2])), deadline)
-    return deadline
-    `,
-    1,
-    key,
-    retryAt,
-    Date.now()
+  const { result } = await locks.doWithLock(
+    {
+      name: LockName.GEMINI_INGESTION_COOLDOWN,
+      type: LockType.DEFAULT,
+      systemLock: true,
+      ttl: 10_000,
+    },
+    async () => {
+      const existing = await client.get<number>(COOLDOWN_KEY)
+      const deadline = Math.max(existing ?? 0, retryAt)
+      const expirySeconds = Math.max(
+        1,
+        Math.ceil((deadline - Date.now()) / 1000)
+      )
+      await client.store(COOLDOWN_KEY, deadline, expirySeconds)
+      return deadline
+    }
   )
-  return Number(deadline)
+  return result
 }
