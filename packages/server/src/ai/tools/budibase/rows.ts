@@ -19,6 +19,7 @@ import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
   helpers,
+  utils,
 } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
@@ -191,7 +192,8 @@ export const buildRowDataSchema = (
           ? z.array(optionSchema)
           : optionSchema
     } else {
-      switch (field.schema.type) {
+      const { type } = field.schema
+      switch (type) {
         case FieldType.STRING:
         case FieldType.LONGFORM:
         case FieldType.OPTIONS:
@@ -218,7 +220,10 @@ export const buildRowDataSchema = (
         case FieldType.JSON:
           fieldSchema = z.record(z.string(), z.any())
           break
-        default:
+        case FieldType.AUTO:
+        case FieldType.AI:
+        case FieldType.FORMULA:
+        case FieldType.INTERNAL:
           fieldSchema = z.union([
             z.string(),
             z.number(),
@@ -226,6 +231,9 @@ export const buildRowDataSchema = (
             z.array(z.any()),
             z.record(z.string(), z.any()),
           ])
+          break
+        default:
+          throw utils.unreachable(type)
       }
     }
 
