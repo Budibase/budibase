@@ -14,7 +14,7 @@ import { getNewStepName } from "@/helpers/automations/nameHelpers"
 import { getSequentialName } from "@/helpers/duplicate"
 import { DerivedBudiStore } from "@/stores/BudiStore"
 import {
-  appStore,
+  workspaceStore,
   deploymentStore,
   permissions,
   tables,
@@ -41,7 +41,7 @@ import {
   isTestAutomationResponse,
 } from "@budibase/types"
 
-import { notifications } from "@budibase/bbui"
+import { generateId, notifications } from "@budibase/bbui"
 import { QueryUtils, Utils } from "@budibase/frontend-core"
 import { sdk } from "@budibase/shared-core"
 import { makePropSafe } from "@budibase/string-templates"
@@ -55,6 +55,7 @@ import {
   AutomationResults,
   AutomationStatus,
   AutomationStep,
+  AgentStep,
   AutomationStepResult,
   AutomationStepInputs,
   AutomationStepType,
@@ -97,9 +98,9 @@ import {
   BlockRef,
   isLoopV2Step,
   type RestTemplateId,
+  ToolExecutionPrincipal,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
-import { generate } from "shortid"
 import { derived, get, readable, Readable } from "svelte/store"
 import { EnvVar } from "../portal/environment"
 import { rowActions } from "./rowActions"
@@ -110,6 +111,10 @@ export interface AutomationSaveOptions {
 }
 
 export const MAX_STICKY_NOTES_PER_AUTOMATION = 12
+
+const isAgentStep = (
+  step?: AutomationStep | AutomationTrigger
+): step is AgentStep => step?.stepId === AutomationActionStepId.AGENT
 
 const sameMoveContainer = (
   sourcePath: BlockPath[],
@@ -141,8 +146,9 @@ export const isNoOpBlockMove = (
   }
 
   const isOwnDragzone = pathSource.id === pathEnd.id
-  const isFirstBranchStep =
+  const isOwnBranchNode =
     pathEnd.branchStepId &&
+    pathEnd.id === pathEnd.branchStepId &&
     pathEnd.branchStepId === pathSource.branchStepId &&
     pathEnd.branchIdx === pathSource.branchIdx &&
     pathSource.stepIdx === 0
@@ -150,7 +156,7 @@ export const isNoOpBlockMove = (
     sameMoveContainer(sourcePath, destPath) &&
     pathEnd.stepIdx === pathSource.stepIdx - 1
 
-  return Boolean(isOwnDragzone || isFirstBranchStep || isPreviousSibling)
+  return Boolean(isOwnDragzone || isOwnBranchNode || isPreviousSibling)
 }
 
 const initialAutomationState: AutomationStoreState = {
@@ -1641,7 +1647,7 @@ const automationActions = (store: AutomationStore) => ({
       inputs: blockDefinition.inputs || {},
       stepId,
       type,
-      id: generate(),
+      id: generateId(),
     }
     const newName = getNewStepName(get(selectedAutomation)?.data, newStep)
     newStep.name = newName
@@ -1870,7 +1876,7 @@ const automationActions = (store: AutomationStore) => ({
     const createBranch = (name: string): Branch => ({
       name,
       ...store.actions.generateDefaultConditions(),
-      id: generate(),
+      id: generateId(),
     })
 
     // Traverse the path and resolve the array (container) that holds the
@@ -2294,7 +2300,7 @@ const automationActions = (store: AutomationStore) => ({
     const automation: Automation = {
       name,
       type: "automation",
-      appId: get(appStore).appId,
+      appId: get(workspaceStore).appId,
       definition: {
         steps: [],
         trigger,
@@ -2341,7 +2347,9 @@ const automationActions = (store: AutomationStore) => ({
         const response = await API.updateAutomation(updatedAutomation)
         store.actions.replace(response.automation._id!, response.automation)
         store.actions.select(response.automation._id!)
-        await deploymentStore.publishApp()
+        if (!(await deploymentStore.publishApp())) {
+          return
+        }
       } else {
         await store.actions.save(updatedAutomation)
       }
@@ -2685,7 +2693,7 @@ const automationActions = (store: AutomationStore) => ({
     }
 
     const newNote = {
-      id: generate(),
+      id: generateId(),
       title: "Note",
       text: "",
       x: position?.x ?? 100 + notes.length * 30,
@@ -3188,6 +3196,36 @@ class SelectedAutomationStore extends DerivedBudiStore<
         // Only traverse if we have a valid automation
         if (updatedAuto) {
           automationStore.actions.traverse(blockRefs, updatedAuto)
+
+          const executionPrincipalSchema =
+            $store.blockDefinitions.ACTION[AutomationActionStepId.AGENT]?.schema
+              .inputs.properties.executionPrincipal
+
+          if (executionPrincipalSchema) {
+            Object.values(blockRefs).forEach(blockRef => {
+              const step = automationStore.actions
+                .getPathSteps(blockRef.pathTo, updatedAuto)
+                .at(-1)
+
+              if (isAgentStep(step)) {
+                const properties = step?.schema?.inputs?.properties
+
+                if (!properties || properties.executionPrincipal) {
+                  return
+                }
+
+                properties.executionPrincipal = cloneDeep(
+                  executionPrincipalSchema
+                )
+                step.inputs = {
+                  ...step.inputs,
+                  executionPrincipal:
+                    step.inputs?.executionPrincipal ??
+                    ToolExecutionPrincipal.ADMIN,
+                }
+              }
+            })
+          }
 
           Object.values(blockRefs)
             .filter(blockRef => blockRef.terminating)

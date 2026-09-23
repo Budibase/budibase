@@ -648,18 +648,7 @@ export class GoogleSheetsIntegration implements DatasourcePlus {
       }
 
       if (query.sort) {
-        if (Object.keys(query.sort).length !== 1) {
-          console.warn("Googlesheets does not support multiple sorting", {
-            sortInfo: query.sort,
-          })
-        }
-        const [sortField, sortInfo] = Object.entries(query.sort)[0]
-        response = dataFilters.sort(
-          response,
-          sortField,
-          sortInfo.direction,
-          sortInfo.type
-        )
+        response = dataFilters.multiSort(response, query.sort)
       }
 
       span.addTags({

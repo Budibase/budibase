@@ -6,12 +6,13 @@
     PopoverAlignment,
     Modal,
     ModalContent,
+    ProgressCircle,
   } from "@budibase/bbui"
   import {
     deploymentStore,
     automationStore,
     workspaceAppStore,
-    appStore,
+    workspaceStore,
   } from "@/stores/builder"
   import { agentsStore } from "@/stores/portal"
   import { PluginType, type Plugin } from "@budibase/types"
@@ -34,11 +35,13 @@
     return getPluginSvelteMajor(plugin) ?? LEGACY_SVELTE_MAJOR
   }
 
-  $: incompatiblePlugins = ($appStore.usedPlugins || []).filter(plugin => {
-    const major = getPluginSvelteMajor(plugin)
-    const isComponentPlugin = plugin?.schema?.type === PluginType.COMPONENT
-    return major !== CURRENT_SVELTE_MAJOR && isComponentPlugin
-  })
+  $: incompatiblePlugins = ($workspaceStore.usedPlugins || []).filter(
+    plugin => {
+      const major = getPluginSvelteMajor(plugin)
+      const isComponentPlugin = plugin?.schema?.type === PluginType.COMPONENT
+      return major !== CURRENT_SVELTE_MAJOR && isComponentPlugin
+    }
+  )
 
   const hasAcknowledgedSvelte4PluginWarning = (appId?: string) => {
     const key = `bb:publish:svelte4-plugin-warning-ack:${appId}`
@@ -65,11 +68,11 @@
   }
 
   let hasAcknowledgedWarning = hasAcknowledgedSvelte4PluginWarning(
-    $appStore.appId
+    $workspaceStore.appId
   )
 
   $: hasAcknowledgedWarning = hasAcknowledgedSvelte4PluginWarning(
-    $appStore.appId
+    $workspaceStore.appId
   )
 
   const showPluginWarningModal = () => {
@@ -78,6 +81,9 @@
   }
 
   const publish = async () => {
+    if ($deploymentStore.isPublishing) {
+      return
+    }
     if (incompatiblePlugins.length && !hasAcknowledgedWarning) {
       showPluginWarningModal()
       return
@@ -87,15 +93,13 @@
   }
 
   const publishWithoutChecks = async () => {
-    if ($deploymentStore.isPublishing) {
-      return
+    if (await deploymentStore.publishApp()) {
+      publishSuccessPopover?.show()
     }
-    await deploymentStore.publishApp()
-    publishSuccessPopover?.show()
   }
 
   const publishAnyway = async () => {
-    acknowledgeSvelte4PluginWarning($appStore.appId)
+    acknowledgeSvelte4PluginWarning($workspaceStore.appId)
     hasAcknowledgedWarning = true
     actionMenu?.hide?.()
     pluginWarningModal?.hide()
@@ -107,12 +111,17 @@
   class="publish-menu"
   class:disabled={$deploymentStore.isPublishing}
   role="button"
-  tabindex="0"
+  tabindex={$deploymentStore.isPublishing ? -1 : 0}
+  aria-disabled={$deploymentStore.isPublishing}
   bind:this={publishPopoverAnchor}
   on:click={publish}
   on:keydown={e => e.key === "Enter" && publish()}
 >
-  <Icon size="M" name="arrow-circle-up" weight="fill" />
+  {#if $deploymentStore.isPublishing}
+    <ProgressCircle size="S" overBackground />
+  {:else}
+    <Icon size="M" name="arrow-circle-up" weight="fill" />
+  {/if}
   <span>Publish</span>
 </div>
 
@@ -196,6 +205,7 @@
     color: var(--spectrum-global-color-gray-600);
     cursor: default;
     opacity: 0.8;
+    pointer-events: none;
   }
   .publish-menu span {
     display: flex;

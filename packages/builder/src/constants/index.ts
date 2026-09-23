@@ -26,6 +26,15 @@ export const IntegrationNames = {
   GOOGLE_SHEETS: "Google Sheets",
 }
 
+export const ToolBindingPrefix = {
+  BUDIBASE: "budibase",
+  EXTERNAL: "external",
+  SEARCH: "search",
+  TOOL: "tool",
+}
+
+export const RETIRED_TOOL_BINDING_NAMESPACES = ["escalation"]
+
 // fields on the user table that cannot be edited
 export const UNEDITABLE_USER_FIELDS = [
   "email",

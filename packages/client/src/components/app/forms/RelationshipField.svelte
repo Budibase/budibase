@@ -38,7 +38,7 @@
   export let validation: UIFieldValidationRule[] | undefined = undefined
   export let autocomplete: boolean = true
   export let defaultValue: ValueType | undefined = undefined
-  export let onChange: (_props: { value: ValueType; label?: string }) => void
+  export let onChange: (props: { value: ValueType; label?: string }) => void
   export let filter: UISearchFilter | LegacyFilter[] | undefined = undefined
   export let datasourceType: "table" | "user" = "table"
   export let primaryDisplay: string | undefined = undefined
@@ -55,11 +55,13 @@
   export let defaultRows: Row[] | undefined = []
 
   const sdk = (getContext("sdk") as any) ?? {}
-  const { API } = sdk
+  const { API, appStore } = sdk
 
   const pickerLabels = loadTranslationsByGroup("picker")
   // Limit datasourceType "user" to app users only
   export let workspaceUsersOnly: boolean | undefined = false
+  export let userGroups: string[] | undefined = undefined
+  export let workspaceRole: string | undefined = undefined
 
   const dispatch = createEventDispatcher()
 
@@ -81,10 +83,14 @@
   let lastFilterKey: string | undefined = undefined
 
   // Reset the available options when our base filter changes
-  $: filter, workspaceUsersOnly, (optionsMap = {})
+  $: filter, workspaceUsersOnly, userGroups, workspaceRole, (optionsMap = {})
 
   // Clear the current selection when the base filter changes
-  $: clearSelectionOnFilterChange(migratedFilter)
+  $: clearSelectionOnFilterChange({
+    filter: migratedFilter,
+    userGroups,
+    workspaceRole,
+  })
 
   // Determine if we can select multiple rows or not
   $: multiselect =
@@ -101,13 +107,16 @@
   $: linkedTableId = tableId ?? fieldSchema?.tableId
   $: writable = !disabled && !readonly
   $: migratedFilter = migrateFilter(filter)
-  $: fetch = createFetch(
+  $: fetch = createFetch({
     writable,
-    datasourceType,
-    migratedFilter,
+    dsType: datasourceType,
+    filter: migratedFilter,
     linkedTableId,
-    workspaceUsersOnly
-  )
+    workspaceUsersOnly,
+    workspaceId: $appStore?.appId,
+    userGroups,
+    workspaceRole,
+  })
 
   // Attempt to determine the primary display field to use
   $: tableDefinition = $fetch?.definition
@@ -140,7 +149,7 @@
 
   // Convert our options map into an array for display
   $: updateOptions(optionsMap)
-  $: !open && sortOptions()
+  $: sortOptions(selectedIDs)
 
   // Search for new options when search term changes
   $: debouncedSearchOptions(searchTerm || "", primaryDisplayField)
@@ -162,23 +171,45 @@
   }
 
   // Where applicable, creates the fetch instance to load row options
-  const createFetch = (
-    writable: boolean,
-    dsType: typeof datasourceType,
-    filter: UISearchFilter | undefined,
-    linkedTableId?: string,
+  const createFetch = ({
+    writable,
+    dsType,
+    filter,
+    linkedTableId,
+    workspaceUsersOnly,
+    workspaceId,
+    userGroups,
+    workspaceRole,
+  }: {
+    writable: boolean
+    dsType: typeof datasourceType
+    filter: UISearchFilter | undefined
+    linkedTableId?: string
     workspaceUsersOnly?: boolean
-  ) => {
-    const datasource: DataFetchDatasource =
-      dsType === "table"
-        ? {
-            type: dsType,
-            tableId: linkedTableId!,
-          }
-        : {
-            type: workspaceUsersOnly ? "table" : dsType,
-            tableId: InternalTable.USER_METADATA,
-          }
+    workspaceId?: string
+    userGroups?: string[]
+    workspaceRole?: string
+  }) => {
+    let datasource: DataFetchDatasource
+    const hasUserFilters = !!userGroups?.length || !!workspaceRole
+    if (dsType === "table") {
+      datasource = {
+        type: dsType,
+        tableId: linkedTableId!,
+      }
+    } else if (workspaceUsersOnly && !hasUserFilters) {
+      datasource = {
+        type: "table",
+        tableId: InternalTable.USER_METADATA,
+      }
+    } else {
+      datasource = {
+        type: dsType,
+        workspaceId: workspaceUsersOnly ? workspaceId : undefined,
+        groupIds: userGroups,
+        workspaceRoleId: workspaceRole,
+      }
+    }
     return fetchData({
       API,
       datasource,
@@ -335,18 +366,18 @@
     // Only override options if the quantity of options changes
     if (newOptions.length !== options.length) {
       options = newOptions
-      sortOptions()
+      sortOptions(selectedIDs)
     }
   }
 
   // Sorts the options list by selected state, then by primary display
-  const sortOptions = () => {
+  const sortOptions = (ids: string[]) => {
     // Create a quick lookup map so we can test whether options are selected
-    const selectedMap: Record<string, boolean> = selectedIDs.reduce(
+    const selectedMap: Record<string, boolean> = ids.reduce(
       (map, id) => ({ ...map, [id]: true }),
       {}
     )
-    options.sort((a, b) => {
+    options = [...options].sort((a, b) => {
       const aSelected = !!selectedMap[a._id]
       const bSelected = !!selectedMap[b._id]
       if (aSelected === bSelected) {
@@ -386,8 +417,12 @@
   }
 
   // Clears the current selection when the base filter changes
-  const clearSelectionOnFilterChange = (filter: UISearchFilter | undefined) => {
-    const key = filter ? JSON.stringify(filter) : ""
+  const clearSelectionOnFilterChange = (filters: {
+    filter: UISearchFilter | undefined
+    userGroups: string[] | undefined
+    workspaceRole: string | undefined
+  }) => {
+    const key = JSON.stringify(filters)
     const previous = lastFilterKey
     lastFilterKey = key
     // Pre-existing values are preserved.

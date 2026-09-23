@@ -1,10 +1,5 @@
 import type { JSONValue } from "../core"
 
-export const FUNCTION_RUNNER_PROTOCOL_VERSION = 1 as const
-
-export type FunctionRunnerProtocolVersion =
-  typeof FUNCTION_RUNNER_PROTOCOL_VERSION
-
 export enum FunctionErrorCode {
   FUNCTIONS_DISABLED = "FUNCTIONS_DISABLED",
   FUNCTION_COMPILE_ERROR = "FUNCTION_COMPILE_ERROR",
@@ -17,10 +12,10 @@ export enum FunctionErrorCode {
   FUNCTION_QUERY_DENIED = "FUNCTION_QUERY_DENIED",
   FUNCTION_QUERY_LIMIT = "FUNCTION_QUERY_LIMIT",
   FUNCTION_OUTPUT_INVALID = "FUNCTION_OUTPUT_INVALID",
-  FUNCTION_RUNNER_BUSY = "FUNCTION_RUNNER_BUSY",
-  FUNCTION_RUNNER_UNAVAILABLE = "FUNCTION_RUNNER_UNAVAILABLE",
+  FUNCTION_EXECUTOR_BUSY = "FUNCTION_EXECUTOR_BUSY",
+  FUNCTION_CONFIGURATION_ERROR = "FUNCTION_CONFIGURATION_ERROR",
+  FUNCTION_INPUT_INVALID = "FUNCTION_INPUT_INVALID",
   FUNCTION_ORCHESTRATOR_INTERRUPTED = "FUNCTION_ORCHESTRATOR_INTERRUPTED",
-  FUNCTION_PROTOCOL_ERROR = "FUNCTION_PROTOCOL_ERROR",
 }
 
 export interface FunctionError {
@@ -64,6 +59,12 @@ export interface FunctionLimits {
   service: FunctionServiceLimits
 }
 
+export interface FunctionLimitsOverrides {
+  compile?: Partial<FunctionCompileLimits>
+  run?: Partial<FunctionRunLimits>
+  service?: Partial<FunctionServiceLimits>
+}
+
 export const DEFAULT_FUNCTION_LIMITS: FunctionLimits = {
   compile: {
     maxSourceBytes: 256 * 1024,
@@ -92,9 +93,26 @@ export const DEFAULT_FUNCTION_LIMITS: FunctionLimits = {
   },
 }
 
+export const getFunctionLimits = (
+  overrides: FunctionLimitsOverrides = {}
+): FunctionLimits => ({
+  compile: {
+    ...DEFAULT_FUNCTION_LIMITS.compile,
+    ...overrides.compile,
+  },
+  run: {
+    ...DEFAULT_FUNCTION_LIMITS.run,
+    ...overrides.run,
+  },
+  service: {
+    ...DEFAULT_FUNCTION_LIMITS.service,
+    ...overrides.service,
+  },
+})
+
 export interface FunctionArtifact {
-  runnerProtocolVersion: FunctionRunnerProtocolVersion
   compiledJavaScript: string
+  capabilityIds: string[]
   sourceMap?: string
   sourceHash: string
   declarationsHash: string
@@ -118,17 +136,14 @@ export interface FunctionRunMetrics {
   logBytes: number
 }
 
-export interface FunctionRunRequestV1 {
-  runnerProtocolVersion: FunctionRunnerProtocolVersion
+export interface FunctionRunRequest {
   runId: string
   artifact: FunctionArtifact
   inputs: Record<string, JSONValue>
-  grantToken: string
   limits: FunctionRunLimits
 }
 
-export interface FunctionRunResultV1 {
-  runnerProtocolVersion: FunctionRunnerProtocolVersion
+export interface FunctionRunResult {
   runId: string
   status: FunctionRunStatus
   output?: Record<string, JSONValue>
@@ -139,11 +154,34 @@ export interface FunctionRunResultV1 {
 
 export interface FunctionExecutorHealth {
   healthy: boolean
-  runnerProtocolVersion?: FunctionRunnerProtocolVersion
+}
+
+export interface FunctionCapabilityRequest {
+  runId: string
+  capabilityId: string
+  parameters: Record<string, JSONValue>
+  signal: AbortSignal
+}
+
+export type FunctionCapabilityHandler = (
+  request: FunctionCapabilityRequest
+) => Promise<JSONValue>
+
+export interface FunctionExecutionContext {
+  invokeCapability: FunctionCapabilityHandler
+}
+
+export interface FunctionRunExecutionOptions {
+  request: FunctionRunRequest
+  context: FunctionExecutionContext
+  signal?: AbortSignal
 }
 
 export interface FunctionExecutor {
   health: () => Promise<FunctionExecutorHealth>
-  execute: (request: FunctionRunRequestV1) => Promise<FunctionRunResultV1>
+  execute: (
+    request: FunctionRunRequest,
+    context: FunctionExecutionContext
+  ) => Promise<FunctionRunResult>
   terminate: (runId: string) => Promise<void>
 }

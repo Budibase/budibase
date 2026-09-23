@@ -9,9 +9,9 @@
     DrawerContent,
     ActionButton,
     Search,
+    generateId,
   } from "@budibase/bbui"
   import { getAvailableActions } from "./index"
-  import { generate } from "shortid"
   import {
     getEventContextBindings,
     getActionBindings,
@@ -23,7 +23,7 @@
   const flipDurationMs = 150
   const EVENT_TYPE_KEY = "##eventHandlerType"
   const actionTypes = getAvailableActions()
-  const zoneType = generate()
+  const zoneType = generateId()
 
   export let key
   export let actions
@@ -92,7 +92,7 @@
     if (actions) {
       actions.forEach(action => {
         if (!action.id) {
-          action.id = generate()
+          action.id = generateId()
         }
       })
     }
@@ -139,7 +139,7 @@
     const newAction = {
       parameters: {},
       [EVENT_TYPE_KEY]: actionType.name,
-      id: generate(),
+      id: generateId(),
     }
     if (!actions) {
       actions = []

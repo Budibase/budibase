@@ -11,7 +11,11 @@ import type { UserCtx, User } from "@budibase/types"
 import type { Next } from "koa"
 import { sdk } from "@budibase/pro"
 import { isEqual, cloneDeep } from "lodash"
-import { validateGlobalRoleUpdate } from "./globalRoleValidation"
+import {
+  validateBuilderAppUpdate,
+  validateGlobalRoleUpdate,
+  validateRolesUpdate,
+} from "./globalRoleValidation"
 
 function rolesRemoved(base: User, ctx: UserCtx) {
   return (
@@ -27,12 +31,26 @@ const NO_ROLES_MSG =
 async function createUpdateResponse(ctx: UserCtx, user?: User) {
   const base = cloneDeep(ctx.request.body)
   ctx = await sdk.publicApi.users.roleCheck(ctx, user)
+  const requestedApps = ctx.request.body.builder?.apps
   validateGlobalRoleUpdate(ctx, {
     admin: !!ctx.request.body.admin?.global !== !!user?.admin?.global,
     builder: !!ctx.request.body.builder?.global !== !!user?.builder?.global,
   })
+  validateBuilderAppUpdate({
+    ctx,
+    requestedApps,
+    currentBuilder: user?.builder,
+  })
+  validateRolesUpdate({
+    ctx,
+    requestedRoles: ctx.request.body.roles,
+    currentRoles: user?.roles,
+  })
   // check the ctx before any updates to it
   const removed = rolesRemoved(base, ctx)
+  if (user && ctx.request.body.roles === undefined) {
+    ctx.request.body.roles = user.roles || {}
+  }
   ctx = publicApiUserFix(ctx)
   const response = await saveGlobalUser(ctx)
   ctx.body = await getUser(ctx, response._id)

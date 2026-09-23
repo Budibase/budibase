@@ -1,18 +1,21 @@
 import {
   Agent,
   AgentOperation,
-  ToolType,
   ToolMetadata,
+  ToolType,
   SourceName,
   WebSearchProvider,
-  ESCALATE_TOOL_NAME,
-  EscalateToolResultStatus,
+  ApprovalToolResultStatus,
+  type AgentExecutionContext,
 } from "@budibase/types"
+import {
+  getReadableQueryToolBinding,
+  isQueryToolType,
+} from "@budibase/shared-core"
 import { ai } from "@budibase/pro"
 import {
   createKnowledgeFilesTool,
   createKnowledgeSearchTool,
-  createEscalatePlaceholderTool,
   getBudibaseTools,
 } from "../../../../ai/tools/budibase"
 import type { ToolSet, UIMessage, TypedToolCall, TypedToolResult } from "ai"
@@ -20,12 +23,24 @@ import { isToolUIPart, getToolName } from "ai"
 import {
   createRestQueryTool,
   createDatasourceQueryTool,
+  resolveToolExecutionPrincipal,
   toToolSet,
   type AiToolDefinition,
+  type EscalationGateRuntime,
+  type ToolAuthorizationRuntime,
 } from "../../../../ai/tools"
+import {
+  createEscalationGateRuntime,
+  resolveToolArgsKey,
+  type EscalationGateContext,
+} from "./escalationGate"
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 import { HTTPError } from "@budibase/backend-core"
+import {
+  authorizeAgentToolCall,
+  canRequesterReadAgentToolResource,
+} from "../../../../ai/tools/authorization"
 
 const HELPER_TOOL_NAMES = new Set([
   "list_tables",
@@ -34,7 +49,6 @@ const HELPER_TOOL_NAMES = new Set([
   "get_automation",
   "list_knowledge_files",
   "search_knowledge",
-  "list_session_escalations",
 ])
 
 const isHelperTool = (tool: Pick<AiToolDefinition, "name">) =>
@@ -56,6 +70,22 @@ export function getToolDisplayNames(
   )
 }
 
+export const getEscalationToolDisplayName = (
+  tool: Pick<AiToolDefinition, "readableName" | "sourceLabel" | "sourceType">
+) => {
+  if (!isQueryToolType(tool.sourceType)) {
+    return tool.readableName
+  }
+  const readableBinding = getReadableQueryToolBinding({
+    sourceType: tool.sourceType,
+    sourceLabel: tool.sourceLabel,
+    queryName: tool.readableName,
+  })
+  return tool.sourceType === ToolType.REST_QUERY
+    ? readableBinding.replace(/^api\.api\./, "api.")
+    : readableBinding
+}
+
 export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
   return {
     name: tool.name,
@@ -64,6 +94,9 @@ export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
     sourceType: tool.sourceType,
     sourceLabel: tool.sourceLabel,
     sourceIconType: tool.sourceIconType,
+    sourceId: tool.sourceId,
+    action: tool.action,
+    executionPolicy: tool.executionPolicy,
   }
 }
 
@@ -127,7 +160,6 @@ export async function getAvailableTools(
     ),
     ...restQueryTools,
     ...datasourceQueryTools,
-    createEscalatePlaceholderTool(),
   ]
   if (webSearchConfig?.apiKey) {
     if (webSearchConfig.provider === WebSearchProvider.EXA) {
@@ -151,6 +183,8 @@ export interface BuildPromptAndToolsOptions {
   baseSystemPrompt?: string
   includeGoal?: boolean
   fallbackPromptInstructions?: string
+  executionContext?: AgentExecutionContext
+  escalationGateContext?: EscalationGateContext
 }
 
 export async function buildPromptAndTools(
@@ -161,6 +195,7 @@ export async function buildPromptAndTools(
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
+  toolSources: Record<string, string | undefined>
 }> {
   const {
     baseSystemPrompt,
@@ -174,13 +209,35 @@ export async function buildPromptAndTools(
   const hasKnowledgeBases = operation?.knowledgeBases?.some(Boolean) ?? false
 
   const allTools = await getAvailableTools(agent.aiconfig)
-  const enabledToolNames = new Set(operation?.enabledTools || [])
-  const enabledTools = addHelperTools(
-    allTools.filter(
-      tool => enabledToolNames.has(tool.name) && !isHelperTool(tool)
-    ),
-    allTools
+  const toolConfigs = operation?.enabledTools || []
+  const enabledToolNames = new Set(toolConfigs.map(config => config.toolName))
+  const configuredTools = allTools.filter(
+    tool => enabledToolNames.has(tool.name) && !isHelperTool(tool)
   )
+  let enabledTools = configuredTools
+
+  if (options.executionContext) {
+    const executionContext = options.executionContext
+    const visibilityByTable = new Map<string, Promise<boolean>>()
+    enabledTools = await Promise.all(
+      enabledTools.map(async tool => {
+        if (!tool.tableId || !tool.requesterRedactedTool) {
+          return tool
+        }
+        let visibility = visibilityByTable.get(tool.tableId)
+        if (!visibility) {
+          visibility = canRequesterReadAgentToolResource({
+            resourceId: tool.tableId,
+            executionContext,
+          })
+          visibilityByTable.set(tool.tableId, visibility)
+        }
+        return (await visibility)
+          ? tool
+          : { ...tool, tool: tool.requesterRedactedTool }
+      })
+    )
+  }
 
   if (
     operation &&
@@ -197,6 +254,46 @@ export async function buildPromptAndTools(
     enabledTools.push(createKnowledgeSearchTool(agentId, operation.id))
   }
 
+  const runtimes = new Map<string, ToolAuthorizationRuntime>()
+  if (operation && options.executionContext) {
+    const { executionContext } = options
+    for (const tool of enabledTools) {
+      const config = toolConfigs.find(config => config.toolName === tool.name)
+      const principal = resolveToolExecutionPrincipal(tool, config)
+      runtimes.set(tool.name, {
+        executionContext,
+        principal,
+        authorize: authorizeAgentToolCall,
+      })
+    }
+  }
+
+  const gates = new Map<string, EscalationGateRuntime>()
+  if (operation && options.escalationGateContext) {
+    const { escalationGateContext } = options
+    for (const tool of enabledTools) {
+      const config = toolConfigs.find(config => config.toolName === tool.name)
+      if (!config?.executionRules?.length) {
+        continue
+      }
+      gates.set(
+        tool.name,
+        createEscalationGateRuntime({
+          agentId,
+          operation,
+          toolName: tool.name,
+          readableName: tool.readableName,
+          displayName: getEscalationToolDisplayName(tool),
+          sourceId: tool.sourceId,
+          action: tool.action,
+          argsKey: resolveToolArgsKey(tool),
+          rules: config.executionRules,
+          gateContext: escalationGateContext,
+        })
+      )
+    }
+  }
+
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
@@ -209,60 +306,21 @@ export async function buildPromptAndTools(
   })
 
   let resolvedSystemPrompt = systemPrompt
+  resolvedSystemPrompt += `\n\nA configured tool may still be unavailable to the requesting user. If a tool call fails because it is unavailable in the security context, do not substitute a different tool or resource and do not claim the action succeeded. Tell the user that they do not have permission to perform the requested action.`
   if (hasKnowledgeBases) {
     resolvedSystemPrompt += `\n\nWhen users ask about attached files (for example size, type, upload status, processing errors, or file counts), call list_knowledge_files with a filename when possible. Do not guess file metadata. If list_knowledge_files returns ambiguous results, ask a clarification question before answering. If it returns no matches, say that you couldn't find a matching file.\n\nFor any non-trivial user question, call search_knowledge before answering. Do not say the answer is unavailable, unknown, or unsupported until after you have searched knowledge. If search_knowledge returns no relevant context, say that you couldn't find supporting knowledge.\n\nIf you used search_knowledge context in your final answer, call report_used_sources immediately before your final response and pass only sourceIds that directly support the final answer. Do not include sources that were merely searched/consulted. If your conclusion is that the answer is not found in the documents, call report_used_sources with an empty sourceIds list.`
   }
-  if (enabledToolNames.has("escalate")) {
-    resolvedSystemPrompt += `\n\nBefore calling escalate, call list_session_escalations to check whether this same request is already awaiting approval or has already been approved in this conversation. If an equivalent request is still pending, do not escalate again - tell the user it is already awaiting approval. If it has already been approved, proceed instead of escalating again. Only escalate genuinely new requests.`
+  if (options.escalationGateContext) {
+    resolvedSystemPrompt += `\n\nYou have no escalation or approval-request capability of your own. Never claim to have escalated, flagged, or referred anything for human review - approvals happen automatically when you use tools that require them. If instructions ask you to escalate a topic, tell the user you cannot escalate it and continue normally.`
   }
-
   return {
     systemPrompt: resolvedSystemPrompt,
-    tools: toToolSet(enabledTools),
+    tools: toToolSet(enabledTools, runtimes, gates),
     toolDisplayNames: getToolDisplayNames(enabledTools),
+    toolSources: Object.fromEntries(
+      enabledTools.map(tool => [tool.name, tool.sourceId])
+    ),
   }
-}
-
-/*
-We want to add these tools for automations / tables if user has added related tools.
-This abstracts the decision of what tools to add away from the user.
-*/
-function addHelperTools(
-  enabledTools: AiToolDefinition[],
-  allTools: AiToolDefinition[]
-) {
-  const seenTools = new Set(enabledTools.map(tool => tool.name))
-  const toolByName = new Map(allTools.map(tool => [tool.name, tool]))
-
-  if (
-    enabledTools.some(
-      tool =>
-        tool.sourceType === ToolType.EXTERNAL_TABLE ||
-        tool.sourceType === ToolType.INTERNAL_TABLE
-    )
-  ) {
-    for (const toolName of ["get_table", "list_tables"]) {
-      if (seenTools.has(toolName)) continue
-      let tool = toolByName.get(toolName)
-      if (tool) {
-        enabledTools.push(tool)
-        seenTools.add(tool.name)
-      }
-    }
-  }
-
-  if (enabledTools.some(tool => tool.sourceType === ToolType.AUTOMATION)) {
-    for (const toolName of ["get_automation", "list_automations"]) {
-      if (seenTools.has(toolName)) continue
-      let tool = toolByName.get(toolName)
-      if (tool) {
-        enabledTools.push(tool)
-        seenTools.add(tool.name)
-      }
-    }
-  }
-
-  return enabledTools
 }
 
 export interface IncompleteToolCall {
@@ -330,11 +388,13 @@ export function updateUnrecoveredToolFailures(
   }
 }
 
-// escalate can return a technically-successful tool-result that isn't a real
-// escalation (e.g. the "no reviewers configured" placeholder responds with
-// status "unavailable" instead of throwing). Split tool results so callers
-// can treat that case as a failure rather than a genuine success, while every
-// other tool keeps its normal success/failure handling untouched.
+// Escalation results can be technically-successful tool-results that aren't a
+// real escalation (status "unavailable" when no reviewers are configured -
+// from a misconfigured gate). Split tool results
+// so callers can treat that case as a failure rather than a genuine success,
+// while every other tool keeps its normal success/failure handling untouched.
+// Keyed on the output status so it covers gated tools
+// alike.
 export function groupToolResultsByOutcome(
   toolResults: TypedToolResult<ToolSet>[]
 ): {
@@ -349,23 +409,17 @@ export function groupToolResultsByOutcome(
   const semanticFailureResults: TypedToolResult<ToolSet>[] = []
 
   for (const toolResult of toolResults) {
-    if (toolResult.toolName !== ESCALATE_TOOL_NAME) {
-      successResults.push(toolResult)
-      successNames.push(toolResult.toolName)
-      continue
-    }
-
     const status = (toolResult.output as { status?: string } | undefined)
       ?.status
 
-    if (status === EscalateToolResultStatus.UNAVAILABLE) {
+    if (status === ApprovalToolResultStatus.UNAVAILABLE) {
       semanticFailureNames.push(toolResult.toolName)
       semanticFailureResults.push(toolResult)
       continue
     }
 
     successResults.push(toolResult)
-    if (status === EscalateToolResultStatus.PENDING_APPROVAL) {
+    if (status !== ApprovalToolResultStatus.ALREADY_APPROVED) {
       successNames.push(toolResult.toolName)
     }
   }

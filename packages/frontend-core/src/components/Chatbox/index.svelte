@@ -12,9 +12,10 @@
     DraftChatConversation,
     AgentMessageMetadata,
     EscalationContextDoc,
+    EscalationReviewContext,
     EscalationRespondResult,
   } from "@budibase/types"
-  import { ESCALATE_TOOL_NAME, EscalateToolResultStatus } from "@budibase/types"
+  import { ApprovalToolResultStatus } from "@budibase/types"
   import { Header } from "@budibase/shared-core"
   import { tick, untrack } from "svelte"
   import { createAPIClient } from "@budibase/frontend-core"
@@ -23,6 +24,7 @@
   import ReasoningStatus from "./ReasoningStatus.svelte"
   import ContextUsage from "./ContextUsage.svelte"
   import EscalationCard from "./EscalationCard.svelte"
+  import { navigatePromptHistory } from "./promptHistory"
   import {
     DefaultChatTransport,
     isTextUIPart,
@@ -36,15 +38,9 @@
   interface Props {
     workspaceId: string
     chat: ChatConversationLike
-    persistConversation?: boolean
-    conversationStarters?: { prompt: string }[]
-    initialPrompt?: string
-    onchatsaved?: (_event: {
-      detail: { chatId?: string; chat: ChatConversationLike }
-    }) => void
     // Fired when an escalation parks; the consumer polls the outcome and
     // injects it via appendAssistantMessage.
-    onEscalationPending?: (_detail: { escalationId: string }) => void
+    onEscalationPending?: (detail: { escalationId: string }) => void
     // Live resolution per escalationId (from the poll) - drives the card state.
     escalationState?: Record<
       string,
@@ -53,28 +49,24 @@
     // Dev-only: show the inline Approve/Reject buttons on the escalation card.
     showInlineApproval?: boolean
     onResolve?: (
-      _escalationId: string,
-      _accepted: boolean
+      escalationId: string,
+      accepted: boolean
     ) => Promise<EscalationRespondResult | undefined>
-    isAgentPreviewChat?: boolean
-    readOnly?: boolean
-    readOnlyReason?: "disabled" | "deleted" | "offline"
+    previewRoleId?: string
+    promptHistory?: string[]
+    onpromptsubmitted?: (prompt: string) => void
   }
 
   let {
     workspaceId,
     chat = $bindable(),
-    persistConversation = true,
-    conversationStarters = [],
-    initialPrompt = "",
-    onchatsaved,
     onEscalationPending,
     escalationState,
     showInlineApproval = false,
     onResolve,
-    isAgentPreviewChat = false,
-    readOnly = false,
-    readOnlyReason,
+    previewRoleId,
+    promptHistory = [],
+    onpromptsubmitted,
   }: Props = $props()
 
   // Per-escalation in-flight flag + the message relayed from resolve, so the
@@ -93,16 +85,29 @@
     }
   }
 
+  // Only a genuinely-raised escalation gets the approval card
+  const isRaisedEscalation = (output: unknown) =>
+    (output as { status?: string } | undefined)?.status ===
+    ApprovalToolResultStatus.PENDING_APPROVAL
+
   // The escalate part's input/output are loosely typed by the AI SDK, so the
   // casts live here rather than cluttering the template.
   const escalationCardProps = (part: { input?: unknown; output?: unknown }) => {
-    const output = part.output as { escalationId?: string } | undefined
+    const output = part.output as
+      | {
+          escalationId?: string
+          title?: string
+          summary?: string
+          reviewContext?: EscalationReviewContext
+        }
+      | undefined
     const input = part.input as { title?: string; summary?: string } | undefined
     const escalationId = output?.escalationId
     return {
       escalationId,
-      title: input?.title,
-      summary: input?.summary,
+      title: output?.title ?? input?.title,
+      summary: output?.summary ?? input?.summary,
+      reviewContext: output?.reviewContext,
       resolution:
         (escalationId && escalationState?.[escalationId]?.resolution) ||
         "pending",
@@ -113,14 +118,13 @@
     createAPIClient({
       attachHeaders: headers => {
         if (workspaceId) {
-          headers[Header.APP_ID] = workspaceId
+          headers[Header.WORKSPACE_ID] = workspaceId
         }
       },
     })
   )
 
-  const createStableSessionId = () =>
-    isAgentPreviewChat ? `chat-preview:${Helpers.uuid()}` : Helpers.uuid()
+  const createStableSessionId = () => `chat-preview:${Helpers.uuid()}`
 
   let stableSessionId = $state(createStableSessionId())
   let chatAreaElement = $state<HTMLDivElement>()
@@ -128,7 +132,7 @@
   let expandedTools = $state<Record<string, boolean>>({})
   let reasoningTextByMessageId = $state<Record<string, string>>({})
   let inputValue = $state("")
-  let lastInitialPrompt = $state("")
+  let promptHistoryIndex = $state<number | undefined>()
   let isPreparingResponse = $state(false)
   const resetPendingResponse = () => {
     isPreparingResponse = false
@@ -152,27 +156,15 @@
 
     try {
       const resolvedUrl =
-        !isAgentPreviewChat &&
-        chat?.chatAppId &&
-        chat?.agentId &&
-        selectedOperationId
+        chat?.agentId && selectedOperationId
           ? (
-              await API.fetchChatAppAgentFileUrl(
-                chat.chatAppId,
+              await API.fetchOperationFileUrl(
                 chat.agentId,
-                source.fileId,
-                selectedOperationId
+                selectedOperationId,
+                source.fileId
               )
             ).url
-          : isAgentPreviewChat && chat?.agentId && selectedOperationId
-            ? (
-                await API.fetchOperationFileUrl(
-                  chat.agentId,
-                  selectedOperationId,
-                  source.fileId
-                )
-              ).url
-            : undefined
+          : undefined
       if (!resolvedUrl) {
         notifications.error("Could not resolve source file URL")
         return
@@ -279,47 +271,39 @@
     return displayName
   }
 
-  const PREVIEW_CHAT_APP_ID = "agent-preview"
-
-  let resolvedChatAppId = $state<string | undefined>()
   let resolvedConversationId = $state<string | undefined>()
 
-  const applyConversationStarter = async (starterPrompt: string) => {
-    if (isBusy) {
-      return
+  // The consumer must get plain objects, otherwise reading them keeps
+  // subscribing to the live chat state and every streamed token counts as a
+  // change. $state.snapshot cannot type UIMessage, hence the manual clone.
+  const snapshotMessages = (
+    nextMessages: UIMessage<AgentMessageMetadata>[]
+  ): UIMessage<AgentMessageMetadata>[] =>
+    nextMessages.map(message => JSON.parse(JSON.stringify(message)))
+
+  const publishChatMessages = (
+    nextMessages: UIMessage<AgentMessageMetadata>[] = chatInstance.messages
+  ) => {
+    chat = {
+      ...chat,
+      messages: snapshotMessages(nextMessages),
     }
-    inputValue = starterPrompt
-    await sendMessage()
   }
 
-  $effect(() => {
-    if (!initialPrompt) {
-      lastInitialPrompt = ""
-      return
-    }
-
-    if (initialPrompt === lastInitialPrompt) {
-      return
-    }
-
-    lastInitialPrompt = initialPrompt
-    applyConversationStarter(initialPrompt)
-  })
-
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
+    messages: chat?.messages || [],
     transport: new DefaultChatTransport({
-      headers: () => ({ [Header.APP_ID]: workspaceId }),
+      headers: () => ({ [Header.WORKSPACE_ID]: workspaceId }),
       prepareSendMessagesRequest: ({ messages }) => {
-        const chatAppId = resolvedChatAppId || chat?.chatAppId
         const conversationId = resolvedConversationId || chat?._id || "new"
+        const agentId = chat?.agentId
         return {
-          api: `/api/chatapps/${chatAppId}/conversations/${conversationId}/stream`,
+          api: `/api/agents/${agentId}/conversations/${conversationId}/stream`,
           body: {
             _id: resolvedConversationId || chat?._id,
-            chatAppId,
-            agentId: chat?.agentId,
-            transient: !persistConversation,
-            isPreview: isAgentPreviewChat,
+            agentId,
+            isPreview: true,
+            previewRoleId,
             sessionId: stableSessionId,
             title: chat?.title,
             messages,
@@ -327,37 +311,13 @@
         }
       },
     }),
-    messages: chat?.messages || [],
     onFinish: async () => {
       isPreparingResponse = false
-
-      if (persistConversation && !chat._id && chat.chatAppId) {
-        try {
-          const history = await API.fetchChatHistory(
-            chat.chatAppId,
-            chat.agentId
-          )
-          const msgs = chatInstance.messages
-          const lastMessageId = msgs[msgs.length - 1]?.id
-          const savedConversation =
-            history?.find(convo =>
-              convo.messages.some(message => message.id === lastMessageId)
-            ) || history?.[0]
-
-          if (savedConversation) {
-            chat = { ...chat, ...savedConversation }
-            resolvedConversationId = savedConversation._id
-          }
-        } catch (historyError) {
-          console.error(historyError)
-        }
-      }
-
-      chat = { ...chat, messages: chatInstance.messages }
-      onchatsaved?.({ detail: { chatId: chat._id, chat } })
+      publishChatMessages()
     },
     onError: error => {
       resetPendingResponse()
+      publishChatMessages()
 
       console.error(error)
       let message = error.message || "Failed to send message"
@@ -384,18 +344,14 @@
     const ids: string[] = []
     for (const message of messages) {
       for (const part of message.parts ?? []) {
-        if (
-          !isToolUIPart(part) ||
-          getToolName(part) !== ESCALATE_TOOL_NAME ||
-          part.state !== "output-available"
-        ) {
+        if (!isToolUIPart(part) || part.state !== "output-available") {
           continue
         }
         const output = part.output as
           | { status?: string; escalationId?: string }
           | undefined
         if (
-          output?.status === EscalateToolResultStatus.PENDING_APPROVAL &&
+          output?.status === ApprovalToolResultStatus.PENDING_APPROVAL &&
           output.escalationId
         ) {
           ids.push(output.escalationId)
@@ -419,6 +375,7 @@
     message: UIMessage<AgentMessageMetadata>
   ) {
     chatInstance.messages = [...chatInstance.messages, message]
+    publishChatMessages()
   }
 
   let lastAssistantUsage = $derived(
@@ -437,20 +394,6 @@
   )
   let canStart = $derived(inputValue.trim().length > 0)
   let hasMessages = $derived(messages.length > 0)
-  let showConversationStarters = $derived(
-    !isRequestPending &&
-      !hasMessages &&
-      conversationStarters.length > 0 &&
-      !isAgentPreviewChat &&
-      !readOnly
-  )
-  let readOnlyMessage = $derived(
-    readOnlyReason === "deleted"
-      ? "This agent was deleted. Select another agent to resume chatting."
-      : readOnlyReason === "offline"
-        ? "This agent is no longer live. Make it live in Settings to resume chatting."
-        : "This agent is disabled. Enable it in Settings to resume chatting."
-  )
 
   let lastChatId = $state<string | undefined>(chat?._id)
   $effect(() => {
@@ -495,6 +438,10 @@
     }
   })
 
+  // Tool/reasoning toggles mutate the chat DOM; the observer below would
+  // otherwise pin the viewport to the bottom as height changes.
+  let skipAutoScroll = false
+
   const scrollToBottom = async () => {
     await tick()
     if (chatAreaElement) {
@@ -504,54 +451,26 @@
 
   $effect(() => {
     if (messages?.length) {
+      if (skipAutoScroll) {
+        return
+      }
       scrollToBottom()
     }
   })
 
-  const ensureChatApp = async (): Promise<string | undefined> => {
-    if (chat?.chatAppId) {
-      resolvedChatAppId = chat.chatAppId
-      return chat.chatAppId
-    }
-
-    if (isAgentPreviewChat) {
-      resolvedChatAppId = PREVIEW_CHAT_APP_ID
-      if (chat) {
-        chat = { ...chat, chatAppId: PREVIEW_CHAT_APP_ID }
-      }
-      return PREVIEW_CHAT_APP_ID
-    }
-
-    try {
-      const chatApp = await API.fetchChatApp(workspaceId)
-      if (chatApp?._id) {
-        const baseChat = chat || {
-          title: "",
-          messages: [],
-          chatAppId: "",
-          agentId: "",
-        }
-        const fallbackAgentId =
-          chatApp.agents?.find(agent => agent.isEnabled && agent.isDefault)
-            ?.agentId || chatApp.agents?.find(agent => agent.isEnabled)?.agentId
-        chat = {
-          ...baseChat,
-          chatAppId: chatApp._id,
-          ...(fallbackAgentId && !baseChat.agentId
-            ? { agentId: fallbackAgentId }
-            : {}),
-        }
-        resolvedChatAppId = chatApp._id
-        return chatApp._id
-      }
-    } catch (err) {
-      console.error(err)
-    }
-    return undefined
-  }
-
   const handleKeyDown = async (event: KeyboardEvent) => {
-    if (readOnly) {
+    const navigationState = navigatePromptHistory({
+      key: event.key,
+      history: promptHistory,
+      inputValue,
+      index: promptHistoryIndex,
+    })
+    if (navigationState) {
+      event.preventDefault()
+      inputValue = navigationState.inputValue
+      promptHistoryIndex = navigationState.index
+      await tick()
+      textareaElement?.setSelectionRange(inputValue.length, inputValue.length)
       return
     }
 
@@ -562,10 +481,6 @@
   }
 
   const sendMessage = async () => {
-    if (readOnly) {
-      return
-    }
-
     const text = inputValue.trim()
     if (!text) {
       return
@@ -581,55 +496,38 @@
 
     isPreparingResponse = true
 
-    const chatAppIdFromEnsure = await ensureChatApp()
-
     if (!chat) {
-      chat = { title: "", messages: [], chatAppId: "", agentId: "" }
+      chat = {
+        title: "",
+        messages: [],
+        agentId: "",
+      }
     }
 
-    const chatAppId = chat.chatAppId || chatAppIdFromEnsure
     const agentId = chat.agentId
-
-    if (!chatAppId) {
-      failToStartResponse("Chat app could not be created")
-      return
-    }
 
     if (!agentId) {
       failToStartResponse("Agent is required to start a chat")
       return
     }
 
-    resolvedChatAppId = chatAppId
-
-    if (isAgentPreviewChat) {
-      resolvedConversationId = chat._id
-    } else if (
-      persistConversation &&
-      !chat._id &&
-      (!chat.messages || chat.messages.length === 0)
-    ) {
-      try {
-        const newChat = await API.createChatConversation(
-          { chatAppId, agentId, title: chat.title },
-          workspaceId
-        )
-        chat = { ...chat, ...newChat, chatAppId }
-        resolvedConversationId = newChat._id
-      } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "Could not start a new chat conversation"
-        failToStartResponse(errorMessage, err)
-        return
-      }
-    } else if (chat._id) {
-      resolvedConversationId = chat._id
-    }
+    resolvedConversationId = chat._id
 
     inputValue = ""
-    chatInstance.sendMessage({ text })
+    promptHistoryIndex = undefined
+    onpromptsubmitted?.(text)
+
+    const userMessage: UIMessage<AgentMessageMetadata> = {
+      id: Helpers.uuid(),
+      role: "user",
+      parts: [{ type: "text", text }],
+    }
+    publishChatMessages([...(chat.messages ?? []), userMessage])
+    chatInstance.sendMessage({
+      id: userMessage.id,
+      role: "user",
+      parts: userMessage.parts,
+    })
     isPreparingResponse = false
   }
 
@@ -641,8 +539,17 @@
     await sendMessage()
   }
 
-  const toggleTool = (toolId: string) => {
-    expandedTools = { ...expandedTools, [toolId]: !expandedTools[toolId] }
+  const toggleExpanded = (id: string) => {
+    const area = chatAreaElement
+    const previousScrollTop = area?.scrollTop ?? 0
+    skipAutoScroll = true
+    expandedTools = { ...expandedTools, [id]: !expandedTools[id] }
+    tick().then(() => {
+      if (area) {
+        area.scrollTop = previousScrollTop
+      }
+      skipAutoScroll = false
+    })
   }
 
   const formatToolOutput = (output: unknown): string =>
@@ -656,8 +563,6 @@
       .map(p => p.text)
       .join("") || "[Empty message]"
 
-  let mounted = $state(false)
-
   $effect(() => {
     const currentChatId = chat?._id
     if (currentChatId) {
@@ -666,14 +571,7 @@
   })
 
   $effect(() => {
-    if (!mounted) {
-      mounted = true
-      ensureChatApp()
-    }
-  })
-
-  $effect(() => {
-    if (readOnly || isRequestPending) {
+    if (isRequestPending) {
       return
     }
 
@@ -685,7 +583,12 @@
   $effect(() => {
     if (!chatAreaElement) return
 
-    const obs = new MutationObserver(scrollToBottom)
+    const obs = new MutationObserver(() => {
+      if (skipAutoScroll) {
+        return
+      }
+      scrollToBottom()
+    })
     obs.observe(chatAreaElement, {
       childList: true,
       subtree: true,
@@ -698,24 +601,9 @@
   })
 </script>
 
-<div class="chat-area" bind:this={chatAreaElement}>
-  <div class="chatbox">
-    {#if showConversationStarters}
-      <div class="starter-section">
-        <div class="starter-title">Conversation starters</div>
-        <div class="starter-grid">
-          {#each conversationStarters as starter, index (index)}
-            <button
-              type="button"
-              class="starter-card"
-              onclick={() => applyConversationStarter(starter.prompt)}
-            >
-              {starter.prompt}
-            </button>
-          {/each}
-        </div>
-      </div>
-    {:else if !hasMessages && !isRequestPending}
+<div class="chat-area">
+  <div class="chatbox" bind:this={chatAreaElement}>
+    {#if !hasMessages && !isRequestPending}
       <div class="empty-state">
         <div class="empty-state-icon">
           <Icon
@@ -767,35 +655,13 @@
                 interactive={!!reasoningText}
                 expanded={Boolean(expandedTools[reasoningId])}
                 content={reasoningText}
-                ontoggle={() =>
-                  (expandedTools = {
-                    ...expandedTools,
-                    [reasoningId]: !expandedTools[reasoningId],
-                  })}
+                ontoggle={() => toggleExpanded(reasoningId)}
               />
             {/if}
             {#each message.parts ?? [] as part, partIndex}
               {#if isTextUIPart(part)}
                 <MarkdownViewer value={part.text} />
-              {:else if isToolUIPart(part) && getToolName(part) === ESCALATE_TOOL_NAME}
-                {@const card = escalationCardProps(part)}
-                <EscalationCard
-                  title={card.title}
-                  summary={card.summary}
-                  resolution={card.resolution}
-                  statusMessage={card.escalationId
-                    ? resolveMessages[card.escalationId]
-                    : undefined}
-                  showApproval={showInlineApproval}
-                  resolving={!!card.escalationId &&
-                    !!resolvingEscalations[card.escalationId]}
-                  onApprove={() =>
-                    card.escalationId && handleResolve(card.escalationId, true)}
-                  onReject={() =>
-                    card.escalationId &&
-                    handleResolve(card.escalationId, false)}
-                />
-              {:else if isToolUIPart(part)}
+              {:else if isToolUIPart(part) && !isRaisedEscalation(part.output)}
                 {@const rawToolName = getToolName(part)}
                 {@const displayToolName = formatToolName(
                   rawToolName,
@@ -812,7 +678,7 @@
                     class="tool-header"
                     class:tool-header-expanded={expandedTools[toolId]}
                     type="button"
-                    onclick={() => toggleTool(toolId)}
+                    onclick={() => toggleExpanded(toolId)}
                   >
                     <span
                       class="tool-chevron"
@@ -923,6 +789,28 @@
                 </ul>
               </div>
             {/if}
+            {#each message.parts ?? [] as part}
+              {#if isToolUIPart(part) && isRaisedEscalation(part.output)}
+                {@const card = escalationCardProps(part)}
+                <EscalationCard
+                  title={card.title}
+                  summary={card.summary}
+                  reviewContext={card.reviewContext}
+                  resolution={card.resolution}
+                  statusMessage={card.escalationId
+                    ? resolveMessages[card.escalationId]
+                    : undefined}
+                  showApproval={showInlineApproval}
+                  resolving={!!card.escalationId &&
+                    !!resolvingEscalations[card.escalationId]}
+                  onApprove={() =>
+                    card.escalationId && handleResolve(card.escalationId, true)}
+                  onReject={() =>
+                    card.escalationId &&
+                    handleResolve(card.escalationId, false)}
+                />
+              {/if}
+            {/each}
           </div>
         {/if}
       {/if}
@@ -934,47 +822,38 @@
     {/if}
   </div>
 
-  {#if readOnly}
-    <div class="input-wrapper">
-      <div class="read-only-notice">
-        <Body size="S" color="var(--spectrum-global-color-gray-700)">
-          {readOnlyMessage}
-        </Body>
-      </div>
+  <div class="input-wrapper">
+    <div class="input-container">
+      <textarea
+        bind:value={inputValue}
+        bind:this={textareaElement}
+        class="input spectrum-Textfield-input"
+        onkeydown={handleKeyDown}
+        oninput={() => (promptHistoryIndex = undefined)}
+        placeholder="Ask..."
+        disabled={isRequestPending}
+      ></textarea>
+      <button
+        type="button"
+        class="prompt-action"
+        class:running={isRequestPending}
+        onclick={handlePromptAction}
+        aria-label={isBusy ? "Pause response" : "Start response"}
+        disabled={isPreparingResponse || (!isBusy && !canStart)}
+      >
+        {#if isBusy}
+          <Icon name="stop" size="M" weight="fill" color="#ffffff" />
+        {:else if isPreparingResponse}
+          <ProgressCircle size="S" />
+        {:else}
+          <Icon name="arrow-up" size="M" weight="bold" color="#111111" />
+        {/if}
+      </button>
     </div>
-  {:else}
-    <div class="input-wrapper">
-      <div class="input-container">
-        <textarea
-          bind:value={inputValue}
-          bind:this={textareaElement}
-          class="input spectrum-Textfield-input"
-          onkeydown={handleKeyDown}
-          placeholder="Ask..."
-          disabled={isRequestPending}
-        ></textarea>
-        <button
-          type="button"
-          class="prompt-action"
-          class:running={isRequestPending}
-          onclick={handlePromptAction}
-          aria-label={isBusy ? "Pause response" : "Start response"}
-          disabled={isPreparingResponse || (!isBusy && !canStart)}
-        >
-          {#if isBusy}
-            <Icon name="stop" size="M" weight="fill" color="#ffffff" />
-          {:else if isPreparingResponse}
-            <ProgressCircle size="S" />
-          {:else}
-            <Icon name="arrow-up" size="M" weight="bold" color="#111111" />
-          {/if}
-        </button>
-      </div>
-      <div class="input-footer">
-        <ContextUsage usage={lastAssistantUsage} />
-      </div>
+    <div class="input-footer">
+      <ContextUsage usage={lastAssistantUsage} />
     </div>
-  {/if}
+  </div>
 </div>
 
 <style>
@@ -982,7 +861,7 @@
     flex: 1 1 0;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    overflow: hidden;
     min-height: 0;
     font-family: var(--chat-font-sans, var(--font-sans));
     --font-serif: var(--chat-font-sans, var(--font-sans));
@@ -998,7 +877,9 @@
     flex-direction: column;
     gap: 24px;
     width: 100%;
-    flex: 1 1 auto;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
     padding: 48px 0 24px 0;
   }
 
@@ -1016,50 +897,6 @@
   .empty-state-icon {
     --size: 24px;
   }
-  .starter-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-xl);
-    margin: auto 0;
-  }
-
-  .starter-title {
-    font-size: 14px;
-    letter-spacing: 0;
-    color: var(--spectrum-global-color-gray-700);
-    text-align: center;
-  }
-
-  .starter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: var(--spacing-m);
-    width: min(520px, 100%);
-    margin: 0 auto;
-  }
-
-  .starter-card {
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 12px;
-    padding: var(--spacing-m);
-    background: var(--spectrum-global-color-gray-50);
-    color: var(--spectrum-global-color-gray-800);
-    font: inherit;
-    font-size: 14px;
-    line-height: 1.4;
-    text-align: center;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .starter-card:hover {
-    border-color: var(--spectrum-global-color-gray-300);
-    background: var(--spectrum-global-color-gray-100);
-  }
-
   .message {
     display: flex;
     flex-direction: column;
@@ -1091,28 +928,19 @@
   }
 
   .input-wrapper {
-    position: sticky;
-    bottom: 0;
     width: 100%;
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
     line-height: 1.4;
     gap: 6px;
+    padding-top: 8px;
   }
 
   .input-footer {
     display: flex;
     justify-content: flex-end;
     padding: 0 4px;
-  }
-
-  .read-only-notice {
-    border: 1px solid var(--spectrum-global-color-gray-200);
-    border-radius: 10px;
-    padding: var(--spacing-m);
-    background-color: var(--spectrum-global-color-gray-50);
-    text-align: center;
   }
 
   .input-container {
@@ -1214,7 +1042,9 @@
   }
 
   .tool-part {
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
     margin-top: var(--spacing-l);
     margin-bottom: 0;
   }
@@ -1307,22 +1137,17 @@
   }
 
   .tool-details {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    margin-top: var(--spacing-m);
+    margin-top: var(--spacing-s);
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
-    background: var(--background);
+    background: var(--spectrum-global-color-gray-75);
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 6px;
     padding: var(--spacing-m);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    z-index: 1;
     overflow-x: hidden;
     min-width: 0;
   }

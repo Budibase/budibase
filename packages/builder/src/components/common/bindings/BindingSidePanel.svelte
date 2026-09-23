@@ -21,9 +21,9 @@
   import SnippetDrawer from "./SnippetDrawer.svelte"
   import UpgradeButton from "@/pages/builder/_components/UpgradeButton.svelte"
 
-  export let addHelper: (_helper: Helper, _js?: boolean) => void = () => {}
-  export let addBinding: (_binding: EnrichedBinding) => void = () => {}
-  export let addSnippet: (_snippet: Snippet) => void = () => {}
+  export let addHelper: (helper: Helper, js?: boolean) => void = () => {}
+  export let addBinding: (binding: EnrichedBinding) => void = () => {}
+  export let addSnippet: (snippet: Snippet) => void = () => {}
   export let bindings: EnrichedBinding[] | undefined
   export let snippets: Snippet[] | null = null
   export let mode: BindingMode | undefined = BindingMode.Text

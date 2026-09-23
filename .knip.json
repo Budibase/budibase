@@ -3,9 +3,6 @@
     "packages/server": {
       "ignoreDependencies": ["bcrypt", "pouchdb"]
     },
-    "packages/upgrade-tests": {
-      "entry": ["src/cli/index.ts"]
-    },
     "packages/worker": {
       "ignoreDependencies": ["bcrypt", "bull", "knex", "pouchdb"]
     }

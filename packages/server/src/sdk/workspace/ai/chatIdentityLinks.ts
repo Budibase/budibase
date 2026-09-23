@@ -130,10 +130,7 @@ export const buildChatIdentityProviderRedirectUrl = ({
   if (provider === AgentChannelProvider.MSTEAMS) {
     return "https://teams.microsoft.com"
   }
-  if (provider === AgentChannelProvider.TELEGRAM) {
-    return "https://web.telegram.org"
-  }
-  return "https://discord.com/channels/@me"
+  throw provider satisfies never
 }
 
 export const createChatIdentityLinkSession = async ({
@@ -142,7 +139,6 @@ export const createChatIdentityLinkSession = async ({
   externalUserId,
   externalUserName,
   teamId,
-  guildId,
   providerTenantId,
   serviceUrl,
 }: CreateChatIdentityLinkSessionInput) => {
@@ -159,7 +155,6 @@ export const createChatIdentityLinkSession = async ({
     externalUserId,
     externalUserName,
     teamId,
-    guildId,
     providerTenantId,
     serviceUrl,
     createdAt: now.toISOString(),
@@ -224,12 +219,32 @@ export const getChatIdentityLink = async ({
   return await db.tryGet<ChatIdentityLink>(linkId)
 }
 
+export const deleteChatIdentityLink = async ({
+  provider,
+  externalUserId,
+  teamId,
+  providerTenantId,
+}: ChatIdentityLinkLookupInput): Promise<boolean> => {
+  const existing = await getChatIdentityLink({
+    provider,
+    externalUserId,
+    teamId,
+    providerTenantId,
+  })
+  if (!existing?._id || !existing._rev) {
+    return false
+  }
+
+  const db = tenancy.getGlobalDB()
+  await db.remove(existing._id, existing._rev)
+  return true
+}
+
 export const upsertChatIdentityLink = async ({
   provider,
   externalUserId,
   externalUserName,
   teamId,
-  guildId,
   providerTenantId,
   serviceUrl,
   globalUserId,
@@ -259,7 +274,6 @@ export const upsertChatIdentityLink = async ({
     linkedBy,
     externalUserName: externalUserName || existing?.externalUserName,
     teamId: teamId || existing?.teamId,
-    guildId: guildId || existing?.guildId,
     providerTenantId: providerTenantId || existing?.providerTenantId,
     serviceUrl: serviceUrl || existing?.serviceUrl,
     createdAt: existing?.createdAt || now,
@@ -273,15 +287,32 @@ export const upsertChatIdentityLink = async ({
   }
 }
 
+// A user can hold one link per provider scope (Slack workspace / Teams tenant).
+// When a scope is supplied, match it so the DM targets the workspace the bot
+// actually lives in
 export const getChatIdentityLinkByGlobalUserId = async ({
   globalUserId,
   provider,
+  teamId,
+  providerTenantId,
 }: {
   globalUserId: string
   provider: ChatIdentityLinkProvider
+  teamId?: string
+  providerTenantId?: string
 }): Promise<ChatIdentityLink | undefined> => {
   const links = await listChatIdentityLinks(provider)
-  return links.find(l => l.globalUserId === globalUserId)
+  const scope = getProviderScopeKey({ provider, teamId, providerTenantId })
+  return links.find(
+    l =>
+      l.globalUserId === globalUserId &&
+      (scope === undefined ||
+        getProviderScopeKey({
+          provider,
+          teamId: l.teamId,
+          providerTenantId: l.providerTenantId,
+        }) === scope)
+  )
 }
 
 export const listChatIdentityLinks = async (

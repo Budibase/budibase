@@ -1,7 +1,5 @@
-import crypto from "crypto"
-
 type AnyFn = (...args: any[]) => any
-type MockProvider = "slack" | "teams" | "telegram" | "discord"
+type MockProvider = "slack" | "teams"
 type MockPostEphemeralResult = { usedFallback: boolean }
 
 interface MockCardElement {
@@ -29,8 +27,6 @@ const defaultPostEphemeralResult = (): MockPostEphemeralResult => ({
 const mockWebhookState: Record<MockProvider, MockPostEphemeralResult> = {
   slack: defaultPostEphemeralResult(),
   teams: defaultPostEphemeralResult(),
-  telegram: defaultPostEphemeralResult(),
-  discord: defaultPostEphemeralResult(),
 }
 const mockChatOptions: ChatOptions[] = []
 
@@ -109,6 +105,13 @@ interface MockSlackEvent {
   ts?: string
   user?: string
   username?: string
+  files?: Array<{
+    id?: string
+    mimetype?: string
+    name?: string
+    size?: number
+    content?: string
+  }>
 }
 
 interface MockTeamsMentionEntity {
@@ -168,8 +171,6 @@ const invokeHandlers = async (
 export const resetMockChatState = () => {
   mockWebhookState.slack = defaultPostEphemeralResult()
   mockWebhookState.teams = defaultPostEphemeralResult()
-  mockWebhookState.telegram = defaultPostEphemeralResult()
-  mockWebhookState.discord = defaultPostEphemeralResult()
   mockChatOptions.length = 0
 }
 
@@ -201,120 +202,14 @@ export class Chat {
   adapters: Record<string, unknown>
 
   webhooks: {
-    discord: (request: Request) => Promise<Response>
     teams: (request: Request) => Promise<Response>
     slack: (request: Request) => Promise<Response>
-    telegram: (request: Request) => Promise<Response>
   }
 
   constructor(_options: ChatOptions) {
     mockChatOptions.push(_options)
     this.adapters = _options.adapters || {}
-    const discordPublicKey = String(
-      (_options.adapters?.discord as { publicKey?: string } | undefined)
-        ?.publicKey || ""
-    )
     this.webhooks = {
-      discord: async request => {
-        const rawBody = await request.text()
-        const signature = request.headers.get("x-signature-ed25519")
-        const timestamp = request.headers.get("x-signature-timestamp")
-
-        if (!signature || !timestamp) {
-          return new Response(
-            JSON.stringify({ error: "Missing Discord signature headers" }),
-            {
-              status: 401,
-              headers: { "content-type": "application/json" },
-            }
-          )
-        }
-
-        const signedPayload = new Uint8Array(
-          Buffer.from(`${timestamp}${rawBody}`, "utf8")
-        )
-        const keyPrefix = new Uint8Array(
-          Buffer.from("302a300506032b6570032100", "hex")
-        )
-        const publicKeyBytes = new Uint8Array(
-          Buffer.from(discordPublicKey, "hex")
-        )
-        const key = new Uint8Array(keyPrefix.length + publicKeyBytes.length)
-        key.set(keyPrefix, 0)
-        key.set(publicKeyBytes, keyPrefix.length)
-        const verified = crypto.verify(
-          null,
-          signedPayload,
-          { key: Buffer.from(key), format: "der", type: "spki" },
-          new Uint8Array(Buffer.from(signature, "hex"))
-        )
-        if (!verified) {
-          return new Response(
-            JSON.stringify({ error: "Invalid Discord signature" }),
-            {
-              status: 401,
-              headers: { "content-type": "application/json" },
-            }
-          )
-        }
-
-        let parsed: Record<string, unknown> | undefined
-        try {
-          parsed = JSON.parse(rawBody) as Record<string, unknown>
-        } catch {
-          parsed = undefined
-        }
-
-        if (parsed?.type === 1) {
-          return new Response(JSON.stringify({ type: 1 }), {
-            status: 200,
-            headers: { "content-type": "application/json" },
-          })
-        }
-
-        if (parsed?.type === 2) {
-          const data = parsed.data as
-            | {
-                name?: string
-                options?: Array<{ value?: string | number | boolean }>
-              }
-            | undefined
-          const command = data?.name ? `/${data.name}` : ""
-          const slashHandler = this.slashHandlers.get(command)
-          if (!slashHandler) {
-            return new Response(JSON.stringify({ messages: [] }), {
-              status: 200,
-              headers: { "content-type": "application/json" },
-            })
-          }
-
-          const messages: string[] = []
-          const rawUser =
-            ((parsed.member as { user?: { id?: string; username?: string } })
-              ?.user as { id?: string; username?: string } | undefined) ||
-            (parsed.user as { id?: string; username?: string } | undefined) ||
-            {}
-          const text = String(data?.options?.[0]?.value || "")
-          await slashHandler({
-            command,
-            text,
-            raw: parsed,
-            user: {
-              userId: rawUser.id || "",
-              userName: rawUser.username || rawUser.id || "",
-              fullName: rawUser.username || rawUser.id || "",
-            },
-            channel: createMessageCollector("discord", messages),
-          })
-
-          return new Response(JSON.stringify({ messages }), {
-            status: 200,
-            headers: { "content-type": "application/json" },
-          })
-        }
-
-        return new Response("", { status: 200 })
-      },
       teams: async request => {
         const auth = request.headers.get("authorization")
         if (!auth) {
@@ -434,7 +329,6 @@ export class Chat {
           id: `slack:${channelId}:${threadTs}`,
           channelId,
           ...createMessageCollector("slack", messages),
-          subscribe: async () => {},
           channel,
         }
         const isMention = isSlackMentionMessage(event)
@@ -442,6 +336,13 @@ export class Chat {
           text: event.text || "",
           raw: event,
           isMention,
+          attachments: (event.files || []).map(file => ({
+            type: file.mimetype?.startsWith("image/") ? "image" : "file",
+            name: file.name,
+            mimeType: file.mimetype,
+            size: file.size,
+            fetchData: async () => Buffer.from(file.content || ""),
+          })),
           author: {
             userId: event.user || "",
             userName: event.username || event.user || "",
@@ -450,106 +351,16 @@ export class Chat {
         }
 
         if (isSlackDirectMessage(event)) {
-          await invokeHandlers(this.newMessageHandlers, thread, message)
-        } else {
-          if (isMention) {
+          if (this.directMessageHandlers.length) {
+            await invokeHandlers(this.directMessageHandlers, thread, message)
+          } else {
             await invokeHandlers(this.mentionHandlers, thread, message)
-          } else if (event.thread_ts) {
-            await invokeHandlers(this.subscribedHandlers, thread, message)
-          }
-          await invokeHandlers(this.newMessageHandlers, thread, message)
-        }
-
-        return new Response(JSON.stringify({ messages }), {
-          status: 200,
-          headers: { "content-type": "application/json" },
-        })
-      },
-      telegram: async request => {
-        const adapter = this.adapters?.telegram as
-          | { secretToken?: string }
-          | undefined
-        const secret = adapter?.secretToken
-        if (secret) {
-          const header = request.headers.get("x-telegram-bot-api-secret-token")
-          if (header !== secret) {
-            return new Response("Invalid secret token", { status: 401 })
-          }
-        }
-
-        const body = (await request.json()) as {
-          message?: {
-            message_id: number
-            text?: string
-            date?: number
-            message_thread_id?: number
-            chat: { id: number; type: string }
-            from?: {
-              id: number
-              username?: string
-              first_name?: string
-              last_name?: string
-            }
-            entities?: { type: string }[]
-          }
-        }
-        const msg = body.message
-        if (!msg || typeof msg.text !== "string") {
-          return new Response(JSON.stringify({ messages: [] }), {
-            status: 200,
-            headers: { "content-type": "application/json" },
-          })
-        }
-
-        const messages: string[] = []
-        const collector = createMessageCollector("telegram", messages)
-        const chatId = String(msg.chat.id)
-        const threadPart =
-          msg.message_thread_id != null ? String(msg.message_thread_id) : ""
-        const thread = {
-          id: `telegram:${chatId}:${threadPart}`,
-          channelId: chatId,
-          ...collector,
-          subscribe: async () => {},
-          channel: {
-            id: `telegram:${chatId}`,
-            ...collector,
-          },
-        }
-
-        const isMention = !!msg.entities?.some(
-          entity => entity.type === "mention" || entity.type === "text_mention"
-        )
-
-        const message = {
-          text: msg.text,
-          raw: msg,
-          isMention,
-          author: {
-            userId: msg.from ? String(msg.from.id) : "",
-            userName: msg.from?.username || "",
-            fullName:
-              [msg.from?.first_name, msg.from?.last_name]
-                .filter(Boolean)
-                .join(" ") ||
-              msg.from?.username ||
-              "",
-          },
-        }
-
-        const chatType = msg.chat.type
-        if (chatType === "private") {
-          if (!isMention) {
-            await invokeHandlers(this.newMessageHandlers, thread, message)
           }
         } else {
           if (isMention) {
             await invokeHandlers(this.mentionHandlers, thread, message)
-            await invokeHandlers(this.subscribedHandlers, thread, message)
           }
-          if (msg.text.trim().startsWith("/")) {
-            await invokeHandlers(this.newMessageHandlers, thread, message)
-          }
+          await invokeHandlers(this.newMessageHandlers, thread, message)
         }
 
         return new Response(JSON.stringify({ messages }), {
@@ -634,6 +445,12 @@ export interface Message {
   text?: string
   raw?: unknown
   isMention?: boolean
+  attachments?: Array<{
+    name?: string
+    mimeType?: string
+    size?: number
+    fetchData?: () => Promise<Buffer>
+  }>
   author: {
     userId: string
     fullName?: string

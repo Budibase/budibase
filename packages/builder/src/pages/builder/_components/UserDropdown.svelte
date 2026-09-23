@@ -82,7 +82,7 @@
 <Modal bind:this={updatePasswordModal}>
   <ChangePasswordModal
     {API}
-    passwordMinLength={$admin.passwordMinLength}
+    passwordPolicy={$admin.passwordPolicy}
     on:save={() => auth.getSelf()}
   />
 </Modal>

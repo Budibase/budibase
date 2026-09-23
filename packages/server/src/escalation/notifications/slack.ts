@@ -1,75 +1,204 @@
+import type { Block, KnownBlock } from "@slack/types"
 import { WebClient } from "@slack/web-api"
 import { createSlackAdapter } from "@chat-adapter/slack"
-import { context, tenancy } from "@budibase/backend-core"
+import { tenancy } from "@budibase/backend-core"
 import {
   AgentChannelProvider,
   type ChatConversationChannel,
   type EscalationContextDoc,
   type EscalationNotificationDoc,
+  EscalationAction,
   EscalationNotificationChannel,
 } from "@budibase/types"
 import sdk from "../../sdk"
-import { getEscalationText } from "./utils"
+import { APPROVAL_REQUIRED_TITLE_PREFIX } from "../constants"
+import { chunkText, truncateReviewField } from "../reviewContext"
+import { findIntegrationAgent, getEscalationText } from "./utils"
+
+const escapeMrkdwn = (value: string) =>
+  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+
+const PARAMETER_CHUNK_LENGTH = 2_500
+const MAX_PARAMETER_BLOCKS = 43
+
+const displayTitle = (title: string) =>
+  title.startsWith(`${APPROVAL_REQUIRED_TITLE_PREFIX} `)
+    ? title.slice(APPROVAL_REQUIRED_TITLE_PREFIX.length + 1)
+    : title
+
+const actionBlock = ({
+  escalationId,
+  notificationDocId,
+  appId,
+}: {
+  escalationId: string
+  notificationDocId: string
+  appId: string
+}): KnownBlock => ({
+  type: "actions",
+  elements: [
+    {
+      type: "button",
+      text: { type: "plain_text", text: "Approve" },
+      style: "primary",
+      action_id: EscalationAction.APPROVE,
+      value: JSON.stringify({ escalationId, notificationDocId, appId }),
+    },
+    {
+      type: "button",
+      text: { type: "plain_text", text: "Reject" },
+      style: "danger",
+      action_id: EscalationAction.REJECT,
+      value: JSON.stringify({ escalationId, notificationDocId, appId }),
+    },
+  ],
+})
 
 const buildEscalationBlocks = ({
   title,
   summary,
+  reviewContext,
   escalationId,
   notificationDocId,
   appId,
 }: {
   title: string
   summary?: string
+  reviewContext?: EscalationContextDoc["reviewContext"]
   escalationId: string
   notificationDocId: string
   appId: string
-}) => [
-  {
-    type: "section",
-    text: {
-      type: "mrkdwn",
-      text: summary ? `*${title}*\n${summary}` : `*${title}*`,
+}) => {
+  const decisionBlock = actionBlock({
+    escalationId,
+    notificationDocId,
+    appId,
+  })
+  const blocks: (KnownBlock | Block)[] = [
+    {
+      type: "header",
+      text: { type: "plain_text", text: "Approval required" },
     },
-  },
-  {
-    type: "actions",
-    elements: [
-      {
-        type: "button",
-        text: { type: "plain_text", text: "Approve" },
-        style: "primary",
-        action_id: "esc_approve",
-        value: JSON.stringify({ escalationId, notificationDocId, appId }),
+  ]
+  const titleText = displayTitle(title)
+  if (reviewContext) {
+    blocks.push({
+      type: "section",
+      text: {
+        type: "plain_text",
+        text: truncateReviewField(titleText, 2_900),
       },
-      {
-        type: "button",
-        text: { type: "plain_text", text: "Reject" },
-        style: "danger",
-        action_id: "esc_reject",
-        value: JSON.stringify({ escalationId, notificationDocId, appId }),
+    })
+    blocks.push({
+      type: "section",
+      text: {
+        type: "plain_text",
+        text: truncateReviewField(
+          `${reviewContext.requestedBy} is requesting approval for ` +
+            `${reviewContext.action} as part of ${reviewContext.operation}.`,
+          2_900
+        ),
       },
-    ],
-  },
-]
+    })
+    if (summary) {
+      blocks.push({
+        type: "section",
+        text: {
+          type: "plain_text",
+          text: truncateReviewField(summary, 2_900),
+        },
+      })
+    }
+    if (reviewContext.parameters?.length) {
+      blocks.push({ type: "divider" })
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text:
+            "*Tool parameters*" +
+            (reviewContext.toolName
+              ? ` · \`${escapeMrkdwn(reviewContext.toolName).replace(/`/g, "'")}\``
+              : ""),
+        },
+      })
+      // Neutralise the fence before chunking - a ``` split across two chunks
+      // would survive a per-chunk replace and close the block early, letting the
+      // rest of the arguments render as mrkdwn.
+      const parameters = reviewContext.parameters.slice(0, MAX_PARAMETER_BLOCKS)
+      let remainingBlocks = MAX_PARAMETER_BLOCKS
+      parameters.forEach((parameter, index) => {
+        const remainingParameters = parameters.length - index
+        const blockBudget = Math.max(
+          1,
+          Math.floor(remainingBlocks / remainingParameters)
+        )
+        const value = truncateReviewField(
+          escapeMrkdwn(parameter.value).replace(/```/g, "'''"),
+          blockBudget * PARAMETER_CHUNK_LENGTH
+        )
+        const chunks = chunkText(value, PARAMETER_CHUNK_LENGTH).slice(
+          0,
+          blockBudget
+        )
+        chunks.forEach((chunk, chunkIndex) => {
+          const name = truncateReviewField(
+            escapeMrkdwn(parameter.name).replace(/`/g, "'"),
+            300
+          )
+          blocks.push({
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text:
+                (chunkIndex === 0 && name ? `*${name}*\n` : "") +
+                `\`\`\`${chunk || "\u200B"}\`\`\``,
+            },
+          })
+        })
+        remainingBlocks -= chunks.length
+      })
+    }
+    blocks.push(decisionBlock)
+  } else {
+    blocks.push({
+      type: "section",
+      text: {
+        type: "plain_text",
+        text: truncateReviewField(
+          summary ? `${titleText}\n${summary}` : titleText,
+          2_900
+        ),
+      },
+    })
+    blocks.push(decisionBlock)
+  }
+  return blocks
+}
 
 const getSlackIntegration = async (
   appId: string,
-  agentId?: string
-): Promise<{ botToken: string; signingSecret: string } | undefined> => {
-  return await context.doInWorkspaceContext(appId, async () => {
-    const agents = await sdk.ai.agents.fetch()
-    const agent = agentId
-      ? agents.find(a => a._id === agentId && a.slackIntegration?.botToken)
-      : agents.find(a => a.slackIntegration?.botToken)
-    if (!agent?.slackIntegration?.botToken) {
-      return undefined
-    }
-    const integration = sdk.ai.deployments.slack.validateSlackIntegration(agent)
-    return {
-      botToken: integration.botToken,
-      signingSecret: integration.signingSecret,
-    }
-  })
+  agentId?: string,
+  { requireDeployment = false } = {}
+): Promise<
+  { botToken: string; signingSecret: string; teamId?: string } | undefined
+> => {
+  const agent = await findIntegrationAgent(
+    appId,
+    agentId,
+    a =>
+      !!a.slackIntegration?.botToken &&
+      (!requireDeployment || !!a.slackIntegration?.messagingEndpointUrl?.trim())
+  )
+  if (!agent) {
+    return undefined
+  }
+  const integration = sdk.ai.deployments.slack.validateSlackIntegration(agent)
+  return {
+    botToken: integration.botToken,
+    signingSecret: integration.signingSecret,
+    teamId: agent.slackIntegration?.teamId,
+  }
 }
 
 export async function sendSlackNotification({
@@ -78,34 +207,41 @@ export async function sendSlackNotification({
 }: {
   notifDoc: EscalationNotificationDoc
   contextDoc: EscalationContextDoc
-}): Promise<void> {
+}): Promise<boolean> {
   if (notifDoc.recipient.type !== EscalationNotificationChannel.SLACK) {
-    return
+    return false
   }
 
   const config = notifDoc.recipient.config as Record<string, string>
 
   const integration = await getSlackIntegration(
     contextDoc.appId,
-    contextDoc.agentId
+    contextDoc.agentId,
+    { requireDeployment: true }
   )
   if (!integration) {
     console.warn("sendSlackNotification: no Slack-enabled agent found", {
       escalationId: contextDoc._id,
       appId: contextDoc.appId,
     })
-    return
+    return false
   }
 
   const { title, summary } = getEscalationText(contextDoc)
   const blocks = buildEscalationBlocks({
     title,
     summary,
+    reviewContext: contextDoc.reviewContext,
     escalationId: notifDoc.escalationId,
     notificationDocId: notifDoc._id!,
     appId: contextDoc.appId,
   })
-  const client = new WebClient(integration.botToken)
+
+  // Fail quickly without retrying
+  const client = new WebClient(integration.botToken, {
+    retryConfig: { retries: 0 },
+    timeout: 5000,
+  })
 
   if (config.channelId) {
     await client.chat.postMessage({
@@ -117,20 +253,46 @@ export async function sendSlackNotification({
       escalationId: notifDoc.escalationId,
       channelId: config.channelId,
     })
-    return
+    return true
   }
 
   if (!config.globalUserId) {
     console.warn("sendSlackNotification: no recipient target in config", {
       escalationId: contextDoc._id,
     })
-    return
+    return false
+  }
+
+  let teamId = integration.teamId
+  if (!teamId) {
+    try {
+      teamId = (await client.auth.test()).team_id
+    } catch (err) {
+      console.warn("sendSlackNotification: auth.test failed", {
+        escalationId: contextDoc._id,
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
+  }
+
+  // Fail closed: An unscoped match could DM a same-named user in a different
+  // Slack workspace.
+  if (!teamId) {
+    console.warn(
+      "sendSlackNotification: could not resolve Slack workspace, skipping",
+      {
+        escalationId: contextDoc._id,
+        globalUserId: config.globalUserId,
+      }
+    )
+    return false
   }
 
   const link = await tenancy.doInTenant(contextDoc.tenantId, () =>
     sdk.ai.chatIdentityLinks.getChatIdentityLinkByGlobalUserId({
       globalUserId: config.globalUserId,
       provider: AgentChannelProvider.SLACK,
+      teamId,
     })
   )
 
@@ -139,7 +301,7 @@ export async function sendSlackNotification({
       globalUserId: config.globalUserId,
       escalationId: contextDoc._id,
     })
-    return
+    return false
   }
 
   await client.chat.postMessage({
@@ -152,6 +314,7 @@ export async function sendSlackNotification({
     escalationId: notifDoc.escalationId,
     externalUserId: link.externalUserId,
   })
+  return true
 }
 
 // Replies to the requester in their originating conversation on escalation

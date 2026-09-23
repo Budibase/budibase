@@ -1,7 +1,13 @@
 import type {
+  BuildFunctionRequest,
+  BuildFunctionResponse,
+  CompileFunctionRequest,
+  CompileFunctionResponse,
   CreateFunctionRequest,
   CreateFunctionResponse,
   FetchFunctionResponse,
+  FetchFunctionRunResponse,
+  FetchFunctionRunsResponse,
   FetchFunctionQueryCatalogResponse,
   FetchFunctionsResponse,
   UpdateFunctionRequest,
@@ -10,6 +16,56 @@ import type {
 import { type Expectations, TestAPI } from "./base"
 
 export class FunctionAPI extends TestAPI {
+  fetchRuns = async (
+    id: string,
+    query: { bookmark?: string; limit?: number } = {},
+    expectations?: Expectations
+  ) => {
+    const params = new URLSearchParams()
+    if (query.bookmark) {
+      params.set("bookmark", query.bookmark)
+    }
+    if (query.limit !== undefined) {
+      params.set("limit", `${query.limit}`)
+    }
+    const queryString = params.size ? `?${params}` : ""
+    return await this._get<FetchFunctionRunsResponse>(
+      `/api/functions/${id}/runs${queryString}`,
+      { expectations }
+    )
+  }
+
+  findRun = async (id: string, runId: string, expectations?: Expectations) => {
+    return await this._get<FetchFunctionRunResponse>(
+      `/api/functions/${id}/runs/${runId}`,
+      { expectations }
+    )
+  }
+
+  compile = async (
+    body: CompileFunctionRequest,
+    expectations?: Expectations
+  ) => {
+    return await this._post<CompileFunctionResponse>("/api/functions/compile", {
+      body,
+      expectations,
+    })
+  }
+
+  build = async (
+    id: string,
+    body: BuildFunctionRequest,
+    expectations?: Expectations
+  ) => {
+    return await this._post<BuildFunctionResponse>(
+      `/api/functions/${id}/build`,
+      {
+        body,
+        expectations,
+      }
+    )
+  }
+
   queryCatalog = async (expectations?: Expectations) => {
     return await this._get<FetchFunctionQueryCatalogResponse>(
       "/api/functions/query-catalog",

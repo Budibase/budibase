@@ -1,10 +1,7 @@
 import {
-  agentChatUrl,
-  appAgentUrl,
-  appChatUrl,
   accountPortalBillingUrl,
   accountPortalUpgradeUrl,
-  builderWorkspacesUrl,
+  builderUrl,
   applyBaseUrl,
 } from "../url"
 
@@ -52,25 +49,8 @@ describe("url helpers", () => {
 
   describe("builder", () => {
     it("normalizes base when joining", () => {
-      const url = builderWorkspacesUrl(`${BASE}/`)
-      expect(url).toEqual(`${BASE}/builder/apps`)
-    })
-  })
-
-  describe("chat", () => {
-    it("builds app chat url", () => {
-      const url = appChatUrl("/my-app")
-      expect(url).toEqual("/app-chat/my-app")
-    })
-
-    it("builds app agent url with encoded agent id", () => {
-      const url = appAgentUrl("my-app", "agent 123")
-      expect(url).toEqual("/my-app/agent/agent%20123")
-    })
-
-    it("builds agent chat url with encoded agent id", () => {
-      const url = agentChatUrl("my-app", "agent 123")
-      expect(url).toEqual("/app-chat/my-app/agent/agent%20123")
+      const url = builderUrl(`${BASE}/`)
+      expect(url).toEqual(`${BASE}/builder`)
     })
   })
 })

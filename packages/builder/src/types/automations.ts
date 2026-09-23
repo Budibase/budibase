@@ -63,6 +63,7 @@ export enum SchemaFieldTypes {
   CATEGORIES = "categories",
   AGENT = "agent",
   OUTPUT_SCHEMA = "output_schema",
+  FUNCTION_INPUTS = "function_inputs",
 }
 
 export type KeyValuePair = {
@@ -160,13 +161,24 @@ export interface BranchFlowContext {
   branchStepId: string
 }
 
+export type LoopFlowContext = AutomationBlockContext & {
+  insertIntoLoopV2: true
+  loopStepId: string
+  loopChildInsertIndex?: number
+  branchStepId?: string
+  branchIdx?: number
+}
+
 export interface SelectedBranchNode {
   nodeId: string
   stepId: string
   branchIdx: number
 }
 
-export type FlowBlockContext = AutomationBlockContext | BranchFlowContext
+export type FlowBlockContext =
+  | AutomationBlockContext
+  | BranchFlowContext
+  | LoopFlowContext
 
 export type AutomationBlockRef = BlockRef & {
   stepId?: string
@@ -242,6 +254,7 @@ export const customTypeToSchema: Record<string, SchemaFieldTypes> = {
   [AutomationCustomIOType.QUERY_PARAMS]: SchemaFieldTypes.QUERY_PARAMS,
   [AutomationCustomIOType.CATEGORIES]: SchemaFieldTypes.CATEGORIES,
   [AutomationCustomIOType.OUTPUT_SCHEMA]: SchemaFieldTypes.OUTPUT_SCHEMA,
+  [AutomationCustomIOType.FUNCTION_INPUTS]: SchemaFieldTypes.FUNCTION_INPUTS,
   ["fields"]: SchemaFieldTypes.FIELDS,
 }
 
@@ -385,6 +398,8 @@ export interface LoopEdgeData extends BaseEdgeData {
   insertIntoLoopV2?: boolean
   loopStepId: string
   loopChildInsertIndex: number
+  branchStepId?: string
+  branchIdx?: number
 }
 
 export type EdgeData = BaseEdgeData | BranchEdgeData | LoopEdgeData

@@ -1,14 +1,23 @@
-<script>
+<script lang="ts">
   import { ActionButton, ProgressCircle } from "@budibase/bbui"
   import { getContext } from "svelte"
 
-  export let value
-  export let row
+  interface Props {
+    value: string
+    row?: { __skeleton?: boolean }
+  }
 
-  const groupAppsContext = getContext("groupApps")
-  let removing = false
+  interface GroupAppsContext {
+    removeApp: (workspaceId: string) => Promise<void>
+    getReadonly?: () => boolean
+  }
 
-  const onClick = async e => {
+  let { value, row }: Props = $props()
+
+  const groupAppsContext = getContext<GroupAppsContext>("groupApps")
+  let removing = $state(false)
+
+  const onClick = async (e: MouseEvent) => {
     e.stopPropagation()
     if (removing) {
       return

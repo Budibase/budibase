@@ -45,6 +45,7 @@ export type QuotaName = StaticQuotaName | MonthlyQuotaName | ConstantQuotaName
 export const isStaticQuota = (
   quotaType: QuotaType,
   usageType: QuotaUsageType,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   name: QuotaName
 ): name is StaticQuotaName => {
   return quotaType === QuotaType.USAGE && usageType === QuotaUsageType.STATIC
@@ -53,6 +54,7 @@ export const isStaticQuota = (
 export const isMonthlyQuota = (
   quotaType: QuotaType,
   usageType: QuotaUsageType,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   name: QuotaName
 ): name is MonthlyQuotaName => {
   return quotaType === QuotaType.USAGE && usageType === QuotaUsageType.MONTHLY
@@ -60,6 +62,7 @@ export const isMonthlyQuota = (
 
 export const isConstantQuota = (
   quotaType: QuotaType,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   name: QuotaName
 ): name is ConstantQuotaName => {
   return quotaType === QuotaType.CONSTANT

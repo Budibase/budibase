@@ -27,15 +27,6 @@ interface WorkspaceConnectionTestState {
   selectedConnectionId: string | null
 }
 
-if (!Element.prototype.animate) {
-  Element.prototype.animate = () =>
-    Object.assign(Object.create(null), {
-      onfinish: null,
-      cancel: () => {},
-      finished: Promise.resolve(),
-    }) as Animation
-}
-
 const testState = vi.hoisted(() => {
   const createStore = <T>(initial: T) => {
     let value = initial

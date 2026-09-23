@@ -1,4 +1,4 @@
-import { generateText, type ModelMessage } from "ai"
+import { generateText } from "ai"
 import { GenerateJsRequest, GenerateJsResponse, UserCtx } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 import { ai } from "@budibase/pro"
@@ -21,15 +21,11 @@ export async function generateJs(
   if (typeof systemMessage !== "string") {
     throw new Error("AI system message must be a string")
   }
-  const messages: ModelMessage[] = [
-    { role: "system", content: systemMessage },
-    { role: "user", content: prompt },
-  ]
-
   const { chat, providerOptions } = await sdk.ai.llm.getDefaultLLMOrThrow()
   const result = await generateText({
     model: chat,
-    messages,
+    instructions: systemMessage,
+    prompt,
     providerOptions: providerOptions?.(false),
   })
 

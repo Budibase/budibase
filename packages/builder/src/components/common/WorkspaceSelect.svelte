@@ -4,15 +4,15 @@
   import { ActionMenu, MenuItem, Icon, StatusLight } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import { processStringSync } from "@budibase/string-templates"
-  import AppContextMenuModals from "@/components/start/AppContextMenuModals.svelte"
-  import getAppContextMenuItems from "@/components/start/getAppContextMenuItems"
-  import { appStore } from "@/stores/builder"
+  import WorkspaceContextMenuModals from "@/components/start/WorkspaceContextMenuModals.svelte"
+  import getWorkspaceContextMenuItems from "@/components/start/getWorkspaceContextMenuItems"
+  import { workspaceStore } from "@/stores/builder"
   import { contextMenuStore } from "@/stores/builder/contextMenu"
   import { bb } from "@/stores/bb"
   import { enrichedApps, auth, licensing } from "@/stores/portal"
-  import { appsStore, sortBy } from "@/stores/portal/apps"
+  import { workspacesStore, sortBy } from "@/stores/portal/workspaces"
   import WorkspaceSortMenu from "./WorkspaceSortMenu.svelte"
-  import type { EnrichedApp } from "@/types"
+  import type { EnrichedWorkspace } from "@/types"
 
   // Manually subscribe - https://github.com/roxiness/routify/issues/563
   $goto
@@ -37,8 +37,8 @@
   let filterInput: HTMLInputElement | null = null
   let activeIndex = -1
   let itemEls: (HTMLElement | null)[] = []
-  let selectedWorkspaceForMenu: EnrichedApp | null = null
-  let appContextMenuModals:
+  let selectedWorkspaceForMenu: EnrichedWorkspace | null = null
+  let workspaceContextMenuModals:
     | {
         showDuplicateModal: () => void
         showExportDevModal: () => void
@@ -48,7 +48,7 @@
     | undefined
 
   $: apps = $enrichedApps
-  $: appId = $appStore.appId
+  $: appId = $workspaceStore.appId
   $: currentSort = $sortBy
   $: canManageWorkspaceCreation =
     !!$auth.user && sdk.users.canCreateApps($auth.user)
@@ -65,7 +65,7 @@
     itemEls[activeIndex]?.scrollIntoView({ block: "nearest" })
   }
 
-  const navigateToWorkspace = (ws: EnrichedApp) => {
+  const navigateToWorkspace = (ws: EnrichedWorkspace) => {
     contextMenuStore.close()
     const wsUrl = getWorkspaceUrl(ws)
     if (!ws.editable) {
@@ -97,14 +97,14 @@
     }
   }
 
-  const getWorkspaceUrl = (app: EnrichedApp) => {
+  const getWorkspaceUrl = (app: EnrichedWorkspace) => {
     return app.editable
       ? `/builder/workspace/${app.devId}/home`
       : `/app${app.url}`
   }
 
   const openWorkspaceContextMenu = (
-    ws: EnrichedApp,
+    ws: EnrichedWorkspace,
     position: { x: number; y: number }
   ) => {
     if (!ws.editable) {
@@ -112,12 +112,12 @@
     }
     selectedWorkspaceForMenu = ws
 
-    const items = getAppContextMenuItems({
+    const items = getWorkspaceContextMenuItems({
       app: ws,
-      onDuplicate: () => appContextMenuModals?.showDuplicateModal(),
-      onExportDev: () => appContextMenuModals?.showExportDevModal(),
-      onExportProd: () => appContextMenuModals?.showExportProdModal(),
-      onDelete: () => appContextMenuModals?.showDeleteModal(),
+      onDuplicate: () => workspaceContextMenuModals?.showDuplicateModal(),
+      onExportDev: () => workspaceContextMenuModals?.showExportDevModal(),
+      onExportProd: () => workspaceContextMenuModals?.showExportProdModal(),
+      onDelete: () => workspaceContextMenuModals?.showDeleteModal(),
     })
 
     contextMenuStore.open(`workspace-select-${ws.appId}`, items, {
@@ -128,7 +128,7 @@
 
   const openWorkspaceContextMenuFromMouse = (
     e: MouseEvent,
-    ws: EnrichedApp
+    ws: EnrichedWorkspace
   ) => {
     if (!ws.editable) {
       return
@@ -143,7 +143,7 @@
 
   const onWorkspaceItemKeydown = (
     e: KeyboardEvent,
-    ws: EnrichedApp,
+    ws: EnrichedWorkspace,
     itemEl: HTMLElement | null
   ) => {
     const isContextMenuKey = e.key === "ContextMenu"
@@ -181,7 +181,7 @@
     } catch (error) {
       console.error("Failed to save sort preference", error)
     }
-    await appsStore.updateSort(key)
+    await workspacesStore.updateSort(key)
     setTimeout(() => filterInput?.focus(), 0)
   }
 
@@ -204,11 +204,11 @@
     })
   }
 
-  const getStatus = (app: EnrichedApp) => {
+  const getStatus = (app: EnrichedWorkspace) => {
     return app.prodId ? "Published" : "Unpublished"
   }
 
-  const getTitleText = (app: EnrichedApp) => {
+  const getTitleText = (app: EnrichedWorkspace) => {
     return `${app.name}\n${getStatus(app)}\n${formatLastEdited(app.updatedAt)}`
   }
 
@@ -216,7 +216,7 @@
     try {
       const saved = localStorage.getItem(SORT_STORAGE_KEY)
       if (saved && saved !== currentSort) {
-        appsStore.updateSort(saved)
+        workspacesStore.updateSort(saved)
       }
     } catch (error) {
       console.error("Failed to load sort preference", error)
@@ -237,11 +237,11 @@
         role="button"
         tabindex="0"
         class="workspace-menu-text"
-        title={$appStore.name}
+        title={$workspaceStore.name}
         aria-haspopup="menu"
         aria-expanded={open}
       >
-        <span>{$appStore.name}</span>
+        <span>{$workspaceStore.name}</span>
         <Icon size="M" name={!open ? "caret-down" : "caret-up"} />
       </div>
     </div>
@@ -357,9 +357,9 @@
 </ActionMenu>
 
 {#if selectedWorkspaceForMenu}
-  <AppContextMenuModals
+  <WorkspaceContextMenuModals
     app={selectedWorkspaceForMenu}
-    bind:this={appContextMenuModals}
+    bind:this={workspaceContextMenuModals}
   />
 {/if}
 

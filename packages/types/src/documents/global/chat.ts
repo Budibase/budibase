@@ -2,55 +2,27 @@ import { AgentMessageMetadata, Document } from "../../"
 import type { UIMessage } from "ai"
 
 export enum AgentChannelProvider {
-  DISCORD = "discord",
   MSTEAMS = "msteams",
   SLACK = "slack",
-  TELEGRAM = "telegram",
 }
 
 export type ChatIdentityLinkProvider = AgentChannelProvider
 
 /** Maps provider to deployment UI channel id (e.g. MSTeams for display) */
 export const DEPLOYMENT_CHANNEL_IDS: Record<AgentChannelProvider, string> = {
-  [AgentChannelProvider.DISCORD]: "discord",
   [AgentChannelProvider.MSTEAMS]: "MSTeams",
   [AgentChannelProvider.SLACK]: "slack",
-  [AgentChannelProvider.TELEGRAM]: "telegram",
 }
 
 export const DEPLOYMENT_ID_TO_PROVIDER: Record<string, AgentChannelProvider> = {
-  discord: AgentChannelProvider.DISCORD,
   MSTeams: AgentChannelProvider.MSTEAMS,
   slack: AgentChannelProvider.SLACK,
-  telegram: AgentChannelProvider.TELEGRAM,
-}
-
-export interface ConversationStarter {
-  prompt: string
-}
-
-export interface ChatAppAgent {
-  agentId: string
-  isEnabled: boolean
-  isDefault: boolean
-  roleId?: string
-  conversationStarters?: ConversationStarter[]
-}
-
-export interface ChatApp extends Document {
-  title?: string
-  greeting?: string
-  description?: string
-  agents: ChatAppAgent[]
-  live?: boolean
-  settings?: Record<string, any>
 }
 
 export interface ChatConversationChannel {
   provider: AgentChannelProvider
   conversationId?: string
   conversationType?: string
-  guildId?: string
   teamId?: string
   tenantId?: string
   channelId?: string
@@ -60,15 +32,72 @@ export interface ChatConversationChannel {
   serviceUrl?: string
 }
 
+export interface ChatConversationAttachment {
+  id: string
+  provider: AgentChannelProvider.SLACK
+  providerFileId: string
+  filename: string
+  mimetype: string
+  size: number
+  textLength?: number
+  pageCount?: number
+  status: ConversationAttachmentStatus
+  ragSourceId?: string
+  errorCode?: ConversationAttachmentErrorCode
+  errorMessage?: string
+  processedAt?: string
+  uploadedAt: string
+}
+
+export enum ConversationAttachmentErrorCode {
+  SLACK_MISSING_FILES_READ_SCOPE = "slack_missing_files_read_scope",
+}
+
+export enum ConversationAttachmentStatus {
+  QUEUED = "queued",
+  PROCESSING = "processing",
+  READY = "ready",
+  FAILED = "failed",
+  DELETING = "deleting",
+}
+
+export enum ConversationAttachmentTurnStatus {
+  QUEUED = "queued",
+  PROCESSING = "processing",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  CANCELLED = "cancelled",
+}
+
+export interface ConversationAttachmentTurn {
+  id: string
+  message: UIMessage<AgentMessageMetadata>
+  attachmentIds: string[]
+  status: ConversationAttachmentTurnStatus
+  requester: {
+    userId: string
+    linked: boolean
+    displayName?: string
+  }
+  createdAt: string
+  updatedAt: string
+  errorMessage?: string
+  responseText?: string
+}
+
 export interface ChatConversationRequest extends Document {
-  chatAppId: string
   agentId: string
   title?: string
   messages: UIMessage<AgentMessageMetadata>[]
-  transient?: boolean
+  timezone?: string
   isPreview?: boolean
+  previewRoleId?: string
   sessionId?: string
   channel?: ChatConversationChannel
+  attachments?: ChatConversationAttachment[]
+  attachmentContextExpiresAt?: string
+  attachmentVectorStoreId?: string
+  attachmentDeletingAt?: string
 }
 
 export interface WebhookChatCompleteResult {
@@ -79,17 +108,13 @@ export interface WebhookChatCompleteResult {
   title?: string
 }
 
-export type CreateChatConversationRequest = Pick<
-  ChatConversationRequest,
-  "chatAppId" | "agentId" | "title"
->
-
 export type DraftChatConversation = Omit<ChatConversationRequest, "agentId"> & {
   agentId?: string
 }
 
 export interface ChatConversation extends ChatConversationRequest {
   userId: string
+  pendingAttachmentTurns?: ConversationAttachmentTurn[]
 }
 
 export interface ChatIdentityLink extends Document {
@@ -101,7 +126,6 @@ export interface ChatIdentityLink extends Document {
   linkedBy?: string
   externalUserName?: string
   teamId?: string
-  guildId?: string
   providerTenantId?: string
   serviceUrl?: string
 }

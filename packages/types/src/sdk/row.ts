@@ -1,5 +1,5 @@
 import { SortOrder, SortType } from "../api"
-import { SearchFilters } from "./search"
+import { SearchFilters, SortJson } from "./search"
 import { CalculationType, Row } from "../documents"
 import { WithRequired } from "../shared"
 
@@ -37,7 +37,7 @@ export interface SearchParams {
   paginate?: boolean
   bookmark?: string | number
   limit?: number
-  sort?: string
+  sort?: string | SortJson
   sortOrder?: SortOrder
   sortType?: SortType
   version?: string

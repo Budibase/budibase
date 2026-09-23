@@ -16,7 +16,7 @@
   export let disabled = false
   export let readonly = false
   export let validation: UIFieldValidationRule[] | undefined
-  export let onChange: ((_event: { value: number }) => void) | undefined
+  export let onChange: ((event: { value: number }) => void) | undefined
   export let span = 6
   export let helpText: string | undefined = undefined
   export let iconLeft: string | undefined

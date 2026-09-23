@@ -21,14 +21,14 @@ describe("link prompt helpers", () => {
         post: jest.fn(),
         postEphemeral,
       },
-      user: "telegram-user",
+      user: "slack-user",
       text: "Link your account to continue.",
       linkUrl: "https://example.com/handoff",
       renderMode: "plainText",
     })
 
     expect(postEphemeral).toHaveBeenCalledWith(
-      "telegram-user",
+      "slack-user",
       "Link your account to continue.\nhttps://example.com/handoff",
       {
         fallbackToDM: true,

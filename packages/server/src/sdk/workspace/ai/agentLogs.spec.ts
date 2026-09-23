@@ -37,7 +37,7 @@ function createSessionDoc(
     _id: getSessionDocId(overrides.agentId, overrides.sessionId),
     tableId: AGENT_LOG_SESSION_TABLE_ID,
     type: "agent_log_session",
-    trigger: "Chat",
+    trigger: "Slack",
     isPreview: false,
     firstInput: "",
     requestIds: JSON.stringify([]),
@@ -269,7 +269,7 @@ describe("agentLogs", () => {
     await withWorkspace(async () => {
       await addSessionLog({
         agentId: "agent-1",
-        sessionId: "chatconvo_1",
+        sessionId: "slack:chatconvo_1",
         requestIds: ["req-1"],
         firstInput: "Hello",
         startedAt: "2026-03-08T09:00:00.000Z",
@@ -277,7 +277,7 @@ describe("agentLogs", () => {
       })
       await addSessionLog({
         agentId: "agent-1",
-        sessionId: "chatconvo_1",
+        sessionId: "slack:chatconvo_1",
         requestIds: ["req-1"],
         firstInput: "Hello",
         startedAt: "2026-03-08T09:00:00.000Z",
@@ -285,19 +285,62 @@ describe("agentLogs", () => {
       })
     })
 
-    const sessionDoc = await getSessionDoc("agent-1", "chatconvo_1")
+    const sessionDoc = await getSessionDoc("agent-1", "slack:chatconvo_1")
 
     expect(sessionDoc).toEqual(
       expect.objectContaining({
-        sessionId: "chatconvo_1",
+        sessionId: "slack:chatconvo_1",
         operations: 1,
-        trigger: "Chat",
+        trigger: "Slack",
         requestIds: JSON.stringify(["req-1"]),
       })
     )
     expect(summaryScope.isDone()).toBe(true)
     expect(summaryQuery?.start_date).toBe("2026-03-08 00:00:00")
     expect(summaryQuery?.end_date).toBe("2026-03-08 23:59:59")
+  })
+
+  it("indexes failure-only sessions without a captured request id", async () => {
+    jest.useRealTimers()
+    const sessionId = "chat-preview:failed-session"
+    const sessionScope = mockLiteLLMSessionRows([
+      {
+        request_id: "req-failed",
+        session_id: sessionId,
+        startTime: "2026-03-08T10:00:00.000Z",
+        endTime: "2026-03-08T10:00:10.000Z",
+        end_user: "bb-agent:agent-1",
+        status: "failure",
+      },
+    ])
+    const summaryScope = mockLiteLLMSummary([
+      {
+        ...buildLiteLLMSummaryRow({ requestId: "req-failed" }),
+        status: "failure",
+      },
+    ])
+
+    await withWorkspace(async () => {
+      await addSessionLog({
+        agentId: "agent-1",
+        sessionId,
+        requestIds: [],
+        firstInput: "Run release candidate",
+        startedAt: "2026-03-08T10:00:00.000Z",
+        completedAt: "2026-03-08T10:00:10.000Z",
+      })
+    })
+
+    expect(await getSessionDoc("agent-1", sessionId)).toEqual(
+      expect.objectContaining({
+        sessionId,
+        operations: 1,
+        status: "error",
+        requestIds: JSON.stringify(["req-failed"]),
+      })
+    )
+    expect(sessionScope.isDone()).toBe(true)
+    expect(summaryScope.isDone()).toBe(true)
   })
 
   it("returns session detail entries in chronological order", async () => {

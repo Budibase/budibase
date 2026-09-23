@@ -61,7 +61,7 @@ describe("/static", () => {
 
     it("should serve the app by url", async () => {
       const headers = config.defaultHeaders()
-      delete headers[constants.Header.APP_ID]
+      delete headers[constants.Header.WORKSPACE_ID]
       const workspaceId = config.getProdWorkspaceId()
 
       const res = await request
@@ -71,23 +71,6 @@ describe("/static", () => {
 
       expect(res.body.appId).toBe(workspaceId)
       expect(res.body.clientLibPath).toContain(
-        `/api/assets/${workspaceId}/client?`
-      )
-    })
-
-    it("should serve app-chat with the global client library path", async () => {
-      const headers = config.defaultHeaders()
-      delete headers[constants.Header.APP_ID]
-      const workspaceId = config.getProdWorkspaceId()
-
-      const res = await request
-        .get(`/app-chat${config.getProdWorkspace().url}`)
-        .set(headers)
-        .expect(200)
-
-      expect(res.body.appId).toBe(workspaceId)
-      expect(res.body.clientLibPath).toContain("/api/assets/global/client?")
-      expect(res.body.clientLibPath).not.toContain(
         `/api/assets/${workspaceId}/client?`
       )
     })
@@ -285,7 +268,7 @@ describe("/static", () => {
   describe("/api/assets/:appId/client", () => {
     it("should serve the global client library without an app ID header", async () => {
       const headers = config.defaultHeaders()
-      delete headers[constants.Header.APP_ID]
+      delete headers[constants.Header.WORKSPACE_ID]
       const shouldServeLocallyMock =
         fileSystem.shouldServeLocally as jest.MockedFunction<
           typeof fileSystem.shouldServeLocally
@@ -639,6 +622,33 @@ describe("/static", () => {
         } finally {
           await fsp.rm(sensitiveDir, { recursive: true, force: true })
         }
+      })
+
+      it("rejects a zip entry that is a symlink", async () => {
+        const symlinkExternalAttr = (0o120777 << 16) >>> 0
+
+        mockedExtract.mockImplementation(
+          async (_zipPath: string, opts: any) => {
+            await fsp.mkdir(opts.dir, { recursive: true })
+            opts.onEntry?.(
+              {
+                fileName: "payload.txt",
+                uncompressedSize: 10,
+                externalFileAttributes: symlinkExternalAttr,
+              },
+              {}
+            )
+          }
+        )
+
+        const res = await request
+          .post("/api/pwa/process-zip")
+          .attach("file", Buffer.from("fake-zip"), "icons.zip")
+          .set(config.defaultHeaders())
+
+        expect(res.status).toEqual(400)
+        expect(res.body.message).toEqual("Invalid zip")
+        expect(mockedUpload).not.toHaveBeenCalled()
       })
     })
 

@@ -6,7 +6,7 @@
   import { onMount } from "svelte"
   import Spinner from "@/components/common/Spinner.svelte"
   import BBLogo from "assets/BBLogo.svelte"
-  import { appsStore, auth } from "@/stores/portal"
+  import { workspacesStore, auth } from "@/stores/portal"
   import { sdk } from "@budibase/shared-core"
 
   $: goto = $gotoStore
@@ -16,7 +16,7 @@
   let onboardingForbidden = false
 
   const goToApps = () => {
-    goto("../apps")
+    goto("/apps")
   }
 
   const createDefaultWorkspace = async () => {
@@ -36,7 +36,7 @@
       }
 
       // Ensure the apps are reloaded.
-      await appsStore.load()
+      await workspacesStore.load()
 
       if (!sdk.users.isBuilder($auth.user, createdWorkspace?.appId)) {
         goToApps()

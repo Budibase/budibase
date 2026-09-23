@@ -13,7 +13,7 @@
   import { type SchemaConfigProps } from "@/types/automations"
   import { writable } from "svelte/store"
   import { getCustomStepLayout } from "./layouts"
-  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[workspaceId]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import AutomationSchemaLayout from "./AutomationSchemaLayout.svelte"
   import AutomationCustomLayout from "./AutomationCustomLayout.svelte"
 

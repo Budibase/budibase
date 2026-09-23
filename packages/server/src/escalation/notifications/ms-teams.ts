@@ -1,32 +1,43 @@
 import fetch from "node-fetch"
-import { cache, tenancy } from "@budibase/backend-core"
+import { cache, HTTPError, tenancy } from "@budibase/backend-core"
 import {
   AgentChannelProvider,
   type ChatConversationChannel,
   type EscalationContextDoc,
   type EscalationNotificationDoc,
+  type EscalationReviewContext,
+  EscalationAction,
   EscalationNotificationChannel,
 } from "@budibase/types"
 import sdk from "../../sdk"
-import { findIntegrationAgent, getEscalationText } from "./utils"
+import {
+  DEFAULT_MSTEAMS_SERVICE_URL,
+  validateMSTeamsServiceUrl,
+} from "../../utilities/msTeams"
+import { truncateReviewField } from "../reviewContext"
+import {
+  findIntegrationAgent,
+  getEscalationText,
+  ProviderResponseError,
+} from "./utils"
 
 export const MS_SCOPE_BOT = "https://api.botframework.com/.default"
 export const MS_SCOPE_GRAPH = "https://graph.microsoft.com/.default"
 
-// Commercial Teams service URL — region-specific installs can override via TEAMS_API_URL
-const DEFAULT_SERVICE_URL =
-  process.env.TEAMS_API_URL ?? "https://smba.trafficmanager.net/apis/"
-
 export const getMSTeamsIntegration = async (
   appId: string,
-  agentId?: string
+  agentId?: string,
+  { requireDeployment = false } = {}
 ): Promise<
   { msClientId: string; appPassword: string; msTenantId: string } | undefined
 > => {
   const agent = await findIntegrationAgent(
     appId,
     agentId,
-    a => !!(a.MSTeamsIntegration?.appId && a.MSTeamsIntegration?.appPassword)
+    a =>
+      !!(a.MSTeamsIntegration?.appId && a.MSTeamsIntegration?.appPassword) &&
+      (!requireDeployment ||
+        !!a.MSTeamsIntegration?.messagingEndpointUrl?.trim())
   )
   if (
     !agent?.MSTeamsIntegration?.appId ||
@@ -67,8 +78,10 @@ export const getOAuthToken = async (
         }
       )
       if (!resp.ok) {
-        throw new Error(
-          `Teams OAuth token request failed (${resp.status}): ${await resp.text()}`
+        throw new ProviderResponseError(
+          resp.status,
+          await resp.text(),
+          "Teams OAuth token request failed"
         )
       }
       const data = (await resp.json()) as {
@@ -92,17 +105,43 @@ const graphGet = async <T>(url: string, token: string): Promise<T> => {
   return (await resp.json()) as T
 }
 
-// Lists channels across every team the app can see, using a Graph token (a
+// Opaque base64url Graph nextLink. Validate origin + exact pathname so the
+// Graph token can only ever be sent to the teams collection.
+const decodeTeamsCursor = (cursor: string): string => {
+  const decoded = Buffer.from(cursor, "base64url").toString()
+  let url: URL
+  try {
+    url = new URL(decoded)
+  } catch {
+    throw new HTTPError("Invalid cursor", 400)
+  }
+  if (
+    url.origin !== "https://graph.microsoft.com" ||
+    url.pathname !== "/v1.0/teams"
+  ) {
+    throw new HTTPError("Invalid cursor", 400)
+  }
+  return url.toString()
+}
+
+// Lists channels for one page of teams the app can see, using a Graph token (a
 // separate scope from the bot credentials). Requires Team.ReadBasic.All and
 // Channel.ReadBasic.All application permissions consented in Azure.
 export const listTeamsChannels = async (
-  graphToken: string
-): Promise<
-  { id: string; name: string; teamId: string; teamName: string }[]
-> => {
-  const { value: teams } = await graphGet<{
+  graphToken: string,
+  cursor?: string
+): Promise<{
+  channels: { id: string; name: string; teamId: string; teamName: string }[]
+  hasNext: boolean
+  cursor?: string
+}> => {
+  const url = cursor
+    ? decodeTeamsCursor(cursor)
+    : `${GRAPH_BASE}/teams?$select=id,displayName&$top=100`
+  const { value: teams, "@odata.nextLink": nextLink } = await graphGet<{
     value: { id: string; displayName: string }[]
-  }>(`${GRAPH_BASE}/teams?$select=id,displayName&$top=100`, graphToken)
+    "@odata.nextLink"?: string
+  }>(url, graphToken)
 
   const channelsByTeam = await Promise.all(
     teams.map(async team => {
@@ -121,18 +160,126 @@ export const listTeamsChannels = async (
     })
   )
 
-  return channelsByTeam.flat()
+  return {
+    channels: channelsByTeam.flat(),
+    hasNext: !!nextLink,
+    cursor: nextLink ? Buffer.from(nextLink).toString("base64url") : undefined,
+  }
 }
+
+// Teams renders TextBlock text as markdown, and tool arguments are model
+// controlled, so the reviewer context goes into RichTextBlocks instead - a
+// TextRun takes no markdown, which stops a crafted argument drawing its own
+// link beside the approve action. Runs also ignore newlines, so each line is
+// its own block.
+const MAX_PARAMETER_CHARACTERS = 6_000
+const MAX_PARAMETER_LINES = 100
+
+interface TextRun {
+  text: string
+  weight?: string
+  fontType?: string
+}
+
+const richLine = (inlines: TextRun[], { tight = true } = {}) => ({
+  type: "RichTextBlock",
+  ...(tight && { spacing: "none" }),
+  // A run with no text is dropped, so blank lines need a space to survive.
+  inlines: inlines.map(inline => ({
+    type: "TextRun",
+    ...inline,
+    text: inline.text || " ",
+  })),
+})
+
+const parameterLines = ({
+  value,
+  lineLimit = MAX_PARAMETER_LINES,
+  characterLimit = MAX_PARAMETER_CHARACTERS,
+}: {
+  value: string
+  lineLimit?: number
+  characterLimit?: number
+}) => {
+  const lines = truncateReviewField(value, characterLimit).split("\n")
+  const shown = lines.slice(0, lineLimit)
+  const omitted = lines.length - shown.length
+  if (omitted > 0) {
+    const lastIndex = shown.length - 1
+    shown[lastIndex] =
+      `${shown[lastIndex]} … [TRUNCATED: ${omitted} more lines]`
+  }
+  return shown.map(line => richLine([{ text: line, fontType: "monospace" }]))
+}
+
+const parameterDetails = (reviewContext: EscalationReviewContext) => {
+  const parameters = reviewContext.parameters ?? []
+  let remainingLines = MAX_PARAMETER_LINES - parameters.length
+  let remainingCharacters = MAX_PARAMETER_CHARACTERS
+  return parameters.flatMap((parameter, index) => {
+    const remainingParameters = parameters.length - index
+    const lineLimit = Math.max(
+      1,
+      Math.floor(remainingLines / remainingParameters)
+    )
+    const characterLimit = Math.max(
+      1,
+      Math.floor(remainingCharacters / remainingParameters)
+    )
+    const lines = parameterLines({
+      value: parameter.value,
+      lineLimit,
+      characterLimit,
+    })
+    remainingLines -= lines.length
+    remainingCharacters -= Math.min(parameter.value.length, characterLimit)
+    return [richLine([{ text: parameter.name, weight: "bolder" }]), ...lines]
+  })
+}
+
+const buildReviewContextIntro = (reviewContext: EscalationReviewContext) =>
+  richLine(
+    [
+      { text: reviewContext.requestedBy },
+      { text: " is requesting approval for " },
+      { text: reviewContext.action, weight: "bolder" },
+      { text: " as part of " },
+      { text: reviewContext.operation, weight: "bolder" },
+      { text: "." },
+    ],
+    { tight: false }
+  )
+
+const buildReviewContextDetails = (reviewContext: EscalationReviewContext) =>
+  reviewContext.parameters?.length
+    ? [
+        richLine(
+          [
+            { text: "Tool parameters", weight: "bolder" },
+            ...(reviewContext.toolName
+              ? [
+                  { text: " · " },
+                  { text: reviewContext.toolName, fontType: "monospace" },
+                ]
+              : []),
+          ],
+          { tight: false }
+        ),
+        ...parameterDetails(reviewContext),
+      ]
+    : []
 
 const buildAdaptiveCard = ({
   title,
   summary,
+  reviewContext,
   escalationId,
   notificationDocId,
   appId,
 }: {
   title: string
   summary?: string
+  reviewContext?: EscalationReviewContext
   escalationId: string
   notificationDocId: string
   appId: string
@@ -149,20 +296,22 @@ const buildAdaptiveCard = ({
         weight: "Bolder",
         wrap: true,
       },
+      ...(reviewContext ? [buildReviewContextIntro(reviewContext)] : []),
       ...(summary ? [{ type: "TextBlock", text: summary, wrap: true }] : []),
+      ...(reviewContext ? buildReviewContextDetails(reviewContext) : []),
     ],
     actions: [
       {
         type: "Action.Submit",
         title: "Approve",
         style: "positive",
-        data: { actionId: "esc_approve", value },
+        data: { actionId: EscalationAction.APPROVE, value },
       },
       {
         type: "Action.Submit",
         title: "Reject",
         style: "destructive",
-        data: { actionId: "esc_reject", value },
+        data: { actionId: EscalationAction.REJECT, value },
       },
     ],
   }
@@ -174,9 +323,11 @@ const teamsPost = async <T = void>(
   conversationId: string,
   body: object
 ): Promise<T> => {
-  const url = `${serviceUrl.replace(/\/$/, "")}/v3/conversations/${encodeURIComponent(conversationId)}/activities`
+  const safeServiceUrl = validateMSTeamsServiceUrl(serviceUrl)
+  const url = `${safeServiceUrl.replace(/\/$/, "")}/v3/conversations/${encodeURIComponent(conversationId)}/activities`
   const resp = await fetch(url, {
     method: "POST",
+    redirect: "error",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -184,7 +335,11 @@ const teamsPost = async <T = void>(
     body: JSON.stringify(body),
   })
   if (!resp.ok) {
-    throw new Error(`Teams Bot API ${resp.status}: ${await resp.text()}`)
+    throw new ProviderResponseError(
+      resp.status,
+      await resp.text(),
+      "Teams Bot API"
+    )
   }
   return resp.json()
 }
@@ -221,7 +376,7 @@ export async function replyToConversation({
     integration.msTenantId,
     MS_SCOPE_BOT
   )
-  const serviceUrl = channel.serviceUrl || DEFAULT_SERVICE_URL
+  const serviceUrl = channel.serviceUrl || DEFAULT_MSTEAMS_SERVICE_URL
 
   const isChannel =
     !!channel.channelId && channel.conversationType !== "personal"
@@ -253,23 +408,24 @@ export async function sendMSTeamsNotification({
 }: {
   notifDoc: EscalationNotificationDoc
   contextDoc: EscalationContextDoc
-}): Promise<void> {
+}): Promise<boolean> {
   if (notifDoc.recipient.type !== EscalationNotificationChannel.MSTEAMS) {
-    return
+    return false
   }
 
   const config = notifDoc.recipient.config as Record<string, string>
 
   const integration = await getMSTeamsIntegration(
     contextDoc.appId,
-    contextDoc.agentId
+    contextDoc.agentId,
+    { requireDeployment: true }
   )
   if (!integration) {
     console.warn("sendMSTeamsNotification: no Teams-enabled agent found", {
       escalationId: contextDoc._id,
       appId: contextDoc.appId,
     })
-    return
+    return false
   }
 
   const token = await getOAuthToken(
@@ -283,6 +439,7 @@ export async function sendMSTeamsNotification({
   const card = buildAdaptiveCard({
     title,
     summary,
+    reviewContext: contextDoc.reviewContext,
     escalationId: notifDoc.escalationId,
     notificationDocId: notifDoc._id!,
     appId: contextDoc.appId,
@@ -299,12 +456,17 @@ export async function sendMSTeamsNotification({
   }
 
   if (config.channelId && config.teamId) {
-    await teamsPost(DEFAULT_SERVICE_URL, token, config.channelId, message)
+    await teamsPost(
+      DEFAULT_MSTEAMS_SERVICE_URL,
+      token,
+      config.channelId,
+      message
+    )
     console.log("sendMSTeamsNotification: message sent to channel", {
       escalationId: notifDoc.escalationId,
       channelId: config.channelId,
     })
-    return
+    return true
   }
 
   // User DM — always resolve via identity link to get the Teams-specific externalUserId
@@ -313,10 +475,23 @@ export async function sendMSTeamsNotification({
   let linkServiceUrl: string | undefined
 
   if (config.globalUserId) {
+    const tenantScope = providerTenantId || integration.msTenantId
+    // Fail closed. Must discern scope in order to discern intended recipient
+    if (!tenantScope) {
+      console.warn(
+        "sendMSTeamsNotification: could not resolve Teams tenant, skipping",
+        {
+          escalationId: contextDoc._id,
+          globalUserId: config.globalUserId,
+        }
+      )
+      return false
+    }
     const link = await tenancy.doInTenant(contextDoc.tenantId, () =>
       sdk.ai.chatIdentityLinks.getChatIdentityLinkByGlobalUserId({
         globalUserId: config.globalUserId,
         provider: AgentChannelProvider.MSTEAMS,
+        providerTenantId: tenantScope,
       })
     )
     if (!link) {
@@ -324,7 +499,7 @@ export async function sendMSTeamsNotification({
         globalUserId: config.globalUserId,
         escalationId: contextDoc._id,
       })
-      return
+      return false
     }
     externalUserId = link.externalUserId
     providerTenantId = providerTenantId || link.providerTenantId
@@ -335,10 +510,12 @@ export async function sendMSTeamsNotification({
     console.warn("sendMSTeamsNotification: no recipient target in config", {
       escalationId: contextDoc._id,
     })
-    return
+    return false
   }
 
-  const dmServiceUrl = linkServiceUrl || DEFAULT_SERVICE_URL
+  const dmServiceUrl = validateMSTeamsServiceUrl(
+    linkServiceUrl || DEFAULT_MSTEAMS_SERVICE_URL
+  )
   const msTenantId = providerTenantId || integration.msTenantId
   const createBody = {
     channelId: "msteams",
@@ -356,6 +533,7 @@ export async function sendMSTeamsNotification({
     `${dmServiceUrl.replace(/\/$/, "")}/v3/conversations`,
     {
       method: "POST",
+      redirect: "error",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -364,15 +542,19 @@ export async function sendMSTeamsNotification({
     }
   )
   if (!createResp.ok) {
-    throw new Error(
-      `Teams create conversation failed (${createResp.status}): ${await createResp.text()}`
+    throw new ProviderResponseError(
+      createResp.status,
+      await createResp.text(),
+      "Teams create conversation failed"
     )
   }
   const conversation = (await createResp.json()) as {
     id: string
     serviceUrl?: string
   }
-  const postServiceUrl = conversation.serviceUrl || DEFAULT_SERVICE_URL
+  const postServiceUrl = validateMSTeamsServiceUrl(
+    conversation.serviceUrl || DEFAULT_MSTEAMS_SERVICE_URL
+  )
   console.log("sendMSTeamsNotification: conversation created", {
     conversationId: conversation.id,
     serviceUrl: conversation.serviceUrl,
@@ -384,4 +566,5 @@ export async function sendMSTeamsNotification({
     escalationId: notifDoc.escalationId,
     externalUserId,
   })
+  return true
 }

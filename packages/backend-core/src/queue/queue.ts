@@ -178,7 +178,7 @@ export class BudibaseQueue<T> {
             toSpanId: () => parentContext.spanId,
             toTraceparent: () => "",
           }
-          span.addLink(parent)
+          span.addLink({ context: parent })
         }
         span.addTags({ "queue.name": this.jobQueue, ...jobTags(job) })
         if (this.opts.jobTags) {

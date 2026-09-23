@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { goto } from "@roxi/routify"
   import {
     ActionMenu,
@@ -18,11 +18,11 @@
     Table,
     ProgressCircle,
   } from "@budibase/bbui"
-  import { onMount, setContext, getContext } from "svelte"
+  import { onMount, setContext } from "svelte"
   import { users } from "@/stores/portal/users"
   import { auth } from "@/stores/portal/auth"
   import { groups } from "@/stores/portal/groups"
-  import { appsStore } from "@/stores/portal/apps"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { licensing } from "@/stores/portal/licensing"
   import { roles } from "@/stores/builder"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
@@ -32,40 +32,22 @@
   import { Constants, UserAvatar } from "@budibase/frontend-core"
   import RemoveGroupTableRenderer from "./_components/RemoveGroupTableRenderer.svelte"
   import GroupNameTableRenderer from "../groups/_components/GroupNameTableRenderer.svelte"
-  import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
-  import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
+  import WorkspaceNameTableRenderer from "./_components/WorkspaceNameTableRenderer.svelte"
+  import WorkspaceRoleTableRenderer from "./_components/WorkspaceRoleTableRenderer.svelte"
   import { sdk } from "@budibase/shared-core"
   import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
   import { bb } from "@/stores/bb"
+  import type { User, UserGroup } from "@budibase/types"
 
   $goto
 
-  export let userId
+  export interface Props {
+    userId: string
+  }
 
-  const routing = getContext("routing")
+  let { userId }: Props = $props()
 
   // Override
-  $: params = $routing?.params
-  $: userId = params.userId
-  $: if (params.userId && userId !== params.userId) {
-    userId = params.userId
-  }
-
-  $: groupSchema = {
-    name: {
-      width: "1fr",
-    },
-    ...(!isAdmin
-      ? {}
-      : // Add
-        {
-          _id: {
-            displayName: "",
-            width: "auto",
-            borderLeft: true,
-          },
-        }),
-  }
   const appSchema = {
     name: {
       width: "2fr",
@@ -88,53 +70,38 @@
   const customAppTableRenderers = [
     {
       column: "name",
-      component: AppNameTableRenderer,
+      component: WorkspaceNameTableRenderer,
     },
     {
       column: "role",
-      component: AppRoleTableRenderer,
+      component: WorkspaceRoleTableRenderer,
     },
   ]
 
-  let deleteModal
-  let resetPasswordModal
-  let popoverAnchor
-  let searchTerm = ""
-  let popover
-  let user, tenantOwner
-  let loaded = false
-  let userFieldsToUpdate = {}
-  let roleUpdateTarget
-  let saving = false
+  let deleteModal = $state<Modal>()
+  let resetPasswordModal = $state<Modal>()
+  let popoverAnchor = $state<HTMLDivElement>()
+  let searchTerm = $state("")
+  let popover = $state<Popover>()
+  let user = $state<(User & { provider?: string }) | undefined>()
+  let tenantOwner = $state<
+    Awaited<ReturnType<typeof users.getAccountHolder>> | undefined
+  >()
+  let loaded = $state(false)
+  let userFieldsToUpdate = $state<Partial<User>>({})
+  let roleUpdateTarget = $state<string | undefined>()
+  let saving = $state(false)
 
-  $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
-
-  $: isSSO = !!user?.provider
-  $: isAdmin = sdk.users.isAdmin($auth.user)
-  $: isScim = user?.scimInfo?.isSync
-  $: readonly = !isAdmin || isScim
-  $: privileged = sdk.users.isAdminOrGlobalBuilder(user)
-  $: nameLabel = getNameLabel(user)
-  $: filteredGroups = getFilteredGroups(internalGroups, searchTerm)
-  $: availableApps = user
-    ? getApps(user, sdk.users.userAppAccessList(user, $groups || []))
-    : []
-  $: userGroups = $groups.filter(x => {
-    return x.users?.find(y => {
-      return y._id === userId
-    })
-  })
-  $: globalRole = users.getUserRole(user)
-  $: isTenantOwner = tenantOwner?.email && tenantOwner.email === user?.email
-
-  const getApps = (user, appIds) => {
-    let availableApps = $appsStore.apps
+  const getApps = (user: User, appIds: string[]) => {
+    let availableApps = $workspacesStore.apps
       .slice()
       .filter(app =>
-        appIds.find(id => id === appsStore.getProdAppID(app.devId))
+        appIds.find(
+          id => id === workspacesStore.getProdWorkspaceID(app.devId || "")
+        )
       )
     return availableApps.map(app => {
-      const prodAppId = appsStore.getProdAppID(app.devId)
+      const prodAppId = workspacesStore.getProdWorkspaceID(app.devId || "")
       return {
         name: app.name,
         devId: app.devId,
@@ -144,7 +111,7 @@
     })
   }
 
-  const getFilteredGroups = (groups, search) => {
+  const getFilteredGroups = (groups: UserGroup[], search: string) => {
     if (!search) {
       return groups
     }
@@ -152,7 +119,7 @@
     return groups.filter(group => group.name?.toLowerCase().includes(search))
   }
 
-  const getRole = (prodAppId, user) => {
+  const getRole = (prodAppId: string, user: User) => {
     if (privileged) {
       return Constants.Roles.ADMIN
     }
@@ -167,18 +134,19 @@
 
     // check if access via group for creator
     const foundGroup = $groups?.find(
-      group => group.roles?.[prodAppId] || group.builder?.apps[prodAppId]
+      group =>
+        group.roles?.[prodAppId] || group.builder?.apps.includes(prodAppId)
     )
-    if (foundGroup.builder?.apps[prodAppId]) {
+    if (foundGroup?.builder?.apps.includes(prodAppId)) {
       return Constants.Roles.CREATOR
     }
     // can't tell how groups will control role
-    if (foundGroup.roles[prodAppId]) {
+    if (foundGroup?.roles?.[prodAppId]) {
       return Constants.Roles.GROUP
     }
   }
 
-  const getNameLabel = user => {
+  const getNameLabel = (user: User | undefined) => {
     const { firstName, lastName, email } = user || {}
     if (!firstName && !lastName) {
       return email || ""
@@ -195,6 +163,45 @@
     return label
   }
 
+  const internalGroups = $derived(
+    $groups?.filter(group => !group?.scimInfo?.isSync)
+  )
+  const isSSO = $derived(!!user?.provider)
+  const isAdmin = $derived(sdk.users.isAdmin($auth.user))
+  const isScim = $derived(user?.scimInfo?.isSync)
+  const readonly = $derived(!isAdmin || isScim)
+  const privileged = $derived(
+    user ? sdk.users.isAdminOrGlobalBuilder(user) : false
+  )
+  const nameLabel = $derived(getNameLabel(user))
+  const filteredGroups = $derived(
+    getFilteredGroups(internalGroups || [], searchTerm)
+  )
+  const availableApps = $derived(
+    user ? getApps(user, sdk.users.userAppAccessList(user, $groups || [])) : []
+  )
+  const userGroups = $derived(
+    $groups.filter(group => group.users?.find(member => member._id === userId))
+  )
+  const globalRole = $derived(users.getUserRole(user))
+  const isTenantOwner = $derived(
+    !!tenantOwner?.email && tenantOwner.email === user?.email
+  )
+  const groupSchema = $derived({
+    name: {
+      width: "1fr",
+    },
+    ...(!isAdmin
+      ? {}
+      : {
+          _id: {
+            displayName: "",
+            width: "auto",
+            borderLeft: true,
+          },
+        }),
+  })
+
   async function saveUser() {
     if (saving || Object.keys(userFieldsToUpdate).length === 0) {
       return
@@ -206,6 +213,9 @@
         globalRole === Constants.BudibaseRoles.Admin &&
         roleUpdateTarget &&
         roleUpdateTarget !== Constants.BudibaseRoles.Admin
+      if (!user) {
+        return
+      }
       await users.save({
         ...user,
         ...userFieldsToUpdate,
@@ -221,16 +231,16 @@
     }
   }
 
-  async function updateUserFirstName(evt) {
-    userFieldsToUpdate.firstName = evt.target.value
+  async function updateUserFirstName(evt: Event) {
+    userFieldsToUpdate.firstName = (evt.target as HTMLInputElement).value
   }
 
-  async function updateUserLastName(evt) {
-    userFieldsToUpdate.lastName = evt.target.value
+  async function updateUserLastName(evt: Event) {
+    userFieldsToUpdate.lastName = (evt.target as HTMLInputElement).value
   }
 
-  async function updateUserRole({ detail }) {
-    let flags = {}
+  async function updateUserRole({ detail }: CustomEvent<string>) {
+    let flags: Partial<User> = {}
     if (detail === Constants.BudibaseRoles.Developer) {
       flags = { admin: { global: false }, builder: { global: true } }
     } else if (detail === Constants.BudibaseRoles.Admin) {
@@ -259,19 +269,19 @@
       notifications.error("Need a valid userId buddy")
       return
     }
-    user = await users.get(userId)
+    user = (await users.get(userId)) ?? undefined
     if (!user?._id) {
       bb.settings("/people/users")
     }
     tenantOwner = await users.getAccountHolder()
   }
 
-  const addGroup = async groupId => {
+  const addGroup = async (groupId: string) => {
     await groups.addUser(groupId, userId)
     await fetchUser()
   }
 
-  const removeGroup = async groupId => {
+  const removeGroup = async (groupId: string) => {
     await groups.removeUser(groupId, userId)
     await fetchUser()
   }
@@ -279,6 +289,17 @@
   setContext("groups", {
     removeGroup,
   })
+
+  const getPickerGroups = (
+    groups: UserGroup[]
+  ): Array<
+    Record<string, object | string | number | boolean | undefined> & {
+      _id: string
+    }
+  > =>
+    groups
+      .filter((group): group is UserGroup & { _id: string } => !!group._id)
+      .map(group => ({ ...group }))
 
   onMount(async () => {
     try {
@@ -310,14 +331,14 @@
             </span>
             {#if !isSSO}
               <MenuItem
-                on:click={resetPasswordModal.show}
+                on:click={() => resetPasswordModal?.show()}
                 icon="arrow-clockwise"
               >
                 Force password reset
               </MenuItem>
             {/if}
             {#if !isTenantOwner}
-              <MenuItem on:click={deleteModal.show} icon="trash">
+              <MenuItem on:click={() => deleteModal?.show()} icon="trash">
                 Delete
               </MenuItem>
             {/if}
@@ -354,12 +375,12 @@
           />
         </div>
         <!-- don't let a user remove the privileges that let them be here -->
-        {#if userId !== $auth.user._id}
+        {#if userId !== $auth.user?._id}
           <!-- Disabled if it's not admin, enabled for SCIM integration   -->
           <div class="field">
             <Label size="L">Role</Label>
             <Select
-              placeholder={null}
+              placeholder={false}
               disabled={!sdk.users.isAdmin($auth.user) || isTenantOwner}
               value={isTenantOwner ? "owner" : globalRole}
               options={isTenantOwner
@@ -394,14 +415,16 @@
           <Heading size="XS">Groups</Heading>
           {#if internalGroups?.length && isAdmin}
             <div bind:this={popoverAnchor}>
-              <Button on:click={popover.show()} secondary>Add to group</Button>
+              <Button on:click={() => popover?.show()} secondary>
+                Add to group
+              </Button>
             </div>
             <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
               <UserGroupPicker
                 labelKey="name"
                 bind:searchTerm
-                list={filteredGroups}
-                selected={user.userGroups}
+                list={getPickerGroups(filteredGroups)}
+                selected={user?.userGroups}
                 on:select={e => addGroup(e.detail)}
                 on:deselect={e => removeGroup(e.detail)}
                 iconComponent={GroupIcon}
@@ -459,7 +482,7 @@
   <DeleteUserModal {user} />
 </Modal>
 <Modal bind:this={resetPasswordModal}>
-  <ForceResetPasswordModal {user} on:update={fetchUser} />
+  <ForceResetPasswordModal {user} onupdate={fetchUser} />
 </Modal>
 
 <style>

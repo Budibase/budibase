@@ -11,6 +11,14 @@ export interface BindingCompletionOption extends Completion {
   icon?: string
 }
 
+export interface EditorRangeReplacement {
+  from?: number
+  to?: number
+  insert: string
+  selection?: { anchor: number }
+  preserveSelection?: boolean
+}
+
 export type CodeValidator = Record<
   string,
   {

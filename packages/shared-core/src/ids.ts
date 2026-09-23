@@ -1,4 +1,5 @@
 import { SEPARATOR, DocumentType, VirtualDocumentType } from "@budibase/types"
+import type { CustomRestTemplateId } from "@budibase/types"
 
 // Because DocumentTypes can overlap, we need to make sure that we search
 // longest first to ensure we get the correct type.
@@ -60,6 +61,12 @@ export const isDatasourceOrDatasourcePlusId = idCheckFor(
 )
 
 export const isQueryId = idCheckFor(DocumentType.QUERY)
+
+export const isCustomRestTemplateId = (
+  restTemplateId: string | undefined
+): restTemplateId is CustomRestTemplateId =>
+  restTemplateId?.startsWith(`${DocumentType.REST_TEMPLATE}${SEPARATOR}`) ??
+  false
 
 export function getTableIdFromViewId(viewId: string) {
   if (!isViewId(viewId)) {

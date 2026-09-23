@@ -66,6 +66,7 @@ const SELF_FEATURES: PlanFeatures = {
     Feature.WORKSPACE_BACKUPS,
     Feature.ENVIRONMENT_VARIABLES,
     Feature.ENFORCEABLE_SSO,
+    Feature.EMBED_AUTH,
     Feature.AUDIT_LOGS,
     Feature.BRANDING,
     Feature.SYNC_AUTOMATIONS,

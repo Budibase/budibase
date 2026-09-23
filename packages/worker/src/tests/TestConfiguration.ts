@@ -264,7 +264,7 @@ class TestConfiguration {
       [constants.Header.CSRF_TOKEN]: CSRF_TOKEN,
     }
     if (this.appId) {
-      headers[constants.Header.APP_ID] = this.appId
+      headers[constants.Header.WORKSPACE_ID] = this.appId
     }
     return headers
   }

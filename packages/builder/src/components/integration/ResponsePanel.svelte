@@ -1,14 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte"
-  import {
-    Layout,
-    Tabs,
-    Tab,
-    Label,
-    Body,
-    Select,
-    CoreTextArea,
-  } from "@budibase/bbui"
+  import { Layout, Tabs, Tab, Body, Select, CoreTextArea } from "@budibase/bbui"
   import type {
     Datasource,
     PreviewQueryResponse,
@@ -17,6 +9,7 @@
   } from "@budibase/types"
   import { shouldShowVariables, keyValueArrayToRecord } from "./query"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
+  import QueryStats from "./QueryStats.svelte"
   import { SchemaTypeOptionsExpanded } from "@/constants/backend"
   import DynamicVariableModal from "./DynamicVariableModal.svelte"
   import CodeEditor from "../common/CodeEditor/CodeEditor.svelte"
@@ -124,25 +117,7 @@
     {#if !response && (!schema || Object.keys(schema).length === 0)}
       <div class="placeholder">-</div>
     {:else}
-      {#if response}
-        <div class="stats" class:compact={!fullscreen}>
-          <Label size="L">
-            Status: <span class={responseSuccess ? "green" : "red"}
-              >{response?.info.code}</span
-            >
-          </Label>
-          <Label size="L">
-            Time: <span class={responseSuccess ? "green" : "red"}
-              >{response?.info.time}</span
-            >
-          </Label>
-          <Label size="L">
-            Size: <span class={responseSuccess ? "green" : "red"}
-              >{response?.info.size}</span
-            >
-          </Label>
-        </div>
-      {/if}
+      <QueryStats info={response?.info} />
       {#if !fullscreen}
         <Select
           quiet
@@ -273,16 +248,6 @@
     padding: var(--spacing-xl);
     text-align: center;
     color: var(--spectrum-global-color-gray-600);
-  }
-  .stats {
-    display: flex;
-    gap: var(--spacing-m);
-  }
-  .green {
-    color: var(--spectrum-global-color-green-600);
-  }
-  .red {
-    color: var(--spectrum-global-color-red-600);
   }
   .embed :global(.cm-editor) {
     border: 1px solid var(--spectrum-global-color-gray-400);
