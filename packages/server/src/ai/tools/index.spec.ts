@@ -169,6 +169,48 @@ describe("secured AI tool execution", () => {
     expect(execute).not.toHaveBeenCalled()
   })
 
+  it("does not apply authoritative mutating validation to read tools", async () => {
+    const execute = jest.fn().mockResolvedValue({ success: true })
+    const authorize = jest.fn().mockResolvedValue(undefined)
+    const intercept = jest.fn().mockResolvedValue(undefined)
+    const toolDefinition = definition(execute)
+    toolDefinition.authoritativeInputSchema = z.object({
+      requiredOnlyForWrites: z.string(),
+    })
+    const tools = toToolSet(
+      [toolDefinition],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize,
+          },
+        ],
+      ]),
+      new Map([["secured_tool", { intercept }]])
+    )
+    const input = { value: "hello" }
+
+    await expect(
+      tools.secured_tool.execute?.(input, {
+        toolCallId: "call_1",
+        messages: [],
+        context: undefined,
+      })
+    ).resolves.toEqual({ success: true })
+    expect(authorize).toHaveBeenCalledTimes(1)
+    expect(intercept).toHaveBeenCalledWith(
+      input,
+      expect.objectContaining({ toolCallId: "call_1" })
+    )
+    expect(execute).toHaveBeenCalledWith(
+      input,
+      expect.objectContaining({ toolCallId: "call_1" })
+    )
+  })
+
   it("rejects invalid mutating input before escalation", async () => {
     const execute = jest.fn()
     const authorize = jest.fn().mockResolvedValue(undefined)

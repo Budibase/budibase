@@ -20,6 +20,13 @@ describe("write tool schemas", () => {
       expect(schema.safeParse({ unknown: "value" }).success).toBe(false)
       expect(schema.safeParse({ accountId: 42 }).success).toBe(false)
     })
+
+    it("supports legacy queries without parameter metadata", () => {
+      const legacySchema = buildParametersSchema({})
+
+      expect(legacySchema.safeParse({}).success).toBe(true)
+      expect(legacySchema.safeParse({ unknown: "value" }).success).toBe(false)
+    })
   })
 
   describe("automations", () => {
@@ -53,6 +60,13 @@ describe("write tool schemas", () => {
     it("keeps trigger fields optional and rejects undeclared fields", () => {
       expect(schema.safeParse({}).success).toBe(true)
       expect(schema.safeParse({ unknown: "value" }).success).toBe(false)
+    })
+
+    it("supports automations without trigger field metadata", () => {
+      const legacySchema = buildAutomationFieldsSchema({})
+
+      expect(legacySchema.safeParse({}).success).toBe(true)
+      expect(legacySchema.safeParse({ unknown: "value" }).success).toBe(false)
     })
   })
 })
