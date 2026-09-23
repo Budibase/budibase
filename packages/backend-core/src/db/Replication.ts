@@ -14,6 +14,29 @@ enum ReplicationDirection {
 }
 
 type DocumentWithID = Omit<Document, "_id"> & { _id: string }
+type ChangeSequence = number | string
+
+interface TombstoneCheckpoint extends PouchDB.Core.IdMeta {
+  lastSequence: ChangeSequence
+  _rev?: PouchDB.Core.RevisionId
+}
+
+type AppReplicationOptions = PouchDB.Replication.ReplicateOptions & {
+  isCreation?: boolean
+  tablesToSync?: string[] | "all"
+  tombstoneIds?: string[]
+}
+
+const TOMBSTONE_CHECKPOINT_ID = "_local/budibase-publish-tombstones"
+
+function isNotFoundError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    error.status === 404
+  )
+}
 
 class Replication {
   source: PouchDB.Database
@@ -71,6 +94,86 @@ class Replication {
         }
       )
     })
+  }
+
+  async replicateApp(opts: AppReplicationOptions = {}) {
+    if (this.direction !== ReplicationDirection.TO_PRODUCTION) {
+      return this.replicate(this.appReplicateOpts(opts))
+    }
+
+    if (typeof opts.filter === "string") {
+      throw new Error(
+        "Named CouchDB filters cannot be used when replicating to production"
+      )
+    }
+
+    const { tombstoneIds, lastSequence } =
+      await this.getProductionTombstonesToReplicate()
+    const result = await this.replicate(
+      this.appReplicateOpts({ ...opts, tombstoneIds })
+    )
+    await this.saveTombstoneCheckpoint(lastSequence)
+    return result
+  }
+
+  private async getProductionTombstonesToReplicate() {
+    let lastSequence: ChangeSequence = 0
+    try {
+      const checkpoint = await this.target.get<TombstoneCheckpoint>(
+        TOMBSTONE_CHECKPOINT_ID
+      )
+      lastSequence = checkpoint.lastSequence
+    } catch (error) {
+      if (!isNotFoundError(error)) {
+        throw error
+      }
+    }
+
+    const changes = await this.source.changes<Document>({
+      since: lastSequence,
+      include_docs: true,
+      style: "all_docs",
+    })
+    const deletedIds = Array.from(
+      new Set(
+        changes.results
+          .filter(change => change.deleted)
+          .map(change => change.id)
+      )
+    )
+
+    if (deletedIds.length === 0) {
+      return { tombstoneIds: [], lastSequence: changes.last_seq }
+    }
+
+    const targetDocs = await this.target.allDocs({ keys: deletedIds })
+    const tombstoneIds = targetDocs.rows.flatMap(row => {
+      if ("error" in row || row.value.deleted) {
+        return []
+      }
+      return [row.id]
+    })
+
+    return { tombstoneIds, lastSequence: changes.last_seq }
+  }
+
+  private async saveTombstoneCheckpoint(lastSequence: ChangeSequence) {
+    let checkpoint: TombstoneCheckpoint = {
+      _id: TOMBSTONE_CHECKPOINT_ID,
+      lastSequence,
+    }
+    try {
+      const existing = await this.target.get<TombstoneCheckpoint>(
+        TOMBSTONE_CHECKPOINT_ID
+      )
+      checkpoint = { ...checkpoint, _rev: existing._rev }
+    } catch (error) {
+      if (!isNotFoundError(error)) {
+        throw error
+      }
+    }
+
+    await this.target.put(checkpoint)
   }
 
   // If the target rev went ahead the source rev, replication will cause conflicts and the document will not update in the target.
@@ -131,18 +234,22 @@ class Replication {
   }
 
   appReplicateOpts(
-    opts: PouchDB.Replication.ReplicateOptions & {
-      isCreation?: boolean
-      tablesToSync?: string[] | "all"
-    } = {}
+    opts: AppReplicationOptions = {}
   ): PouchDB.Replication.ReplicateOptions {
+    const direction = this.direction
+    const tombstoneIds = new Set(opts.tombstoneIds ?? [])
+    delete opts.tombstoneIds
     if (typeof opts.filter === "string") {
+      if (direction === ReplicationDirection.TO_PRODUCTION) {
+        throw new Error(
+          "Named CouchDB filters cannot be used when replicating to production"
+        )
+      }
       opts.batch_size = opts.batch_size ?? DEFAULT_REPLICATION_BATCH_SIZE
       return opts
     }
 
     const filter = opts.filter
-    const direction = this.direction
     const toDev = direction === ReplicationDirection.TO_DEV
     delete opts.filter
 
@@ -182,7 +289,10 @@ class Replication {
           return false
         }
         if (doc._deleted) {
-          return direction !== ReplicationDirection.TO_PRODUCTION
+          return (
+            direction !== ReplicationDirection.TO_PRODUCTION ||
+            tombstoneIds.has(doc._id)
+          )
         }
         if (
           direction === ReplicationDirection.TO_PRODUCTION &&
@@ -209,13 +319,13 @@ class Replication {
       },
     }
 
-    // Keep this in sync with the filter function above.
-    if (!filter) {
+    if (!filter || direction === ReplicationDirection.TO_PRODUCTION) {
       const generatedSelector = this.buildReplicationSelector({
         direction,
         isCreation,
         tableSyncList,
         syncAllTables,
+        tombstoneIds: Array.from(tombstoneIds),
       })
       result.selector = opts.selector
         ? { $and: [opts.selector, generatedSelector] }
@@ -230,8 +340,15 @@ class Replication {
     isCreation?: boolean
     tableSyncList?: string[]
     syncAllTables: boolean
+    tombstoneIds: string[]
   }): PouchDB.Find.Selector {
-    const { direction, isCreation, tableSyncList, syncAllTables } = opts
+    const {
+      direction,
+      isCreation,
+      tableSyncList,
+      syncAllTables,
+      tombstoneIds,
+    } = opts
     const toDev = direction === ReplicationDirection.TO_DEV
     const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     const startsWith = (prefix: string): PouchDB.Find.Selector => ({
@@ -241,7 +358,6 @@ class Replication {
       $nor: [selector],
     })
 
-    // Evaluated ahead of the deleted-document short circuit below
     const unconditional: PouchDB.Find.Selector[] = [
       not(startsWith(DocumentType.SLACK_APP_CONFIG + SEPARATOR)),
     ]
@@ -252,7 +368,6 @@ class Replication {
       unconditional.push(not(startsWith("_design")))
     }
 
-    // Only relevant once we're past the deleted/user-metadata short-circuits.
     const fallback: PouchDB.Find.Selector[] = [
       not(startsWith(DocumentType.AUTOMATION_LOG + SEPARATOR)),
       not(startsWith(DocumentType.AGENT_LOG_SESSION + SEPARATOR)),
@@ -284,10 +399,20 @@ class Replication {
       )
     }
 
-    const documents =
-      direction === ReplicationDirection.TO_PRODUCTION
-        ? { $and: [{ $nor: [{ _deleted: true }] }, ...fallback] }
-        : { $or: [{ _deleted: true }, { $and: fallback }] }
+    let documents: PouchDB.Find.Selector
+    if (direction === ReplicationDirection.TO_PRODUCTION) {
+      const liveDocuments = { $and: [not({ _deleted: true }), ...fallback] }
+      const allowedTombstones = tombstoneIds.length
+        ? {
+            $and: [{ _deleted: true }, { _id: { $in: tombstoneIds } }],
+          }
+        : undefined
+      documents = allowedTombstones
+        ? { $or: [liveDocuments, allowedTombstones] }
+        : liveDocuments
+    } else {
+      documents = { $or: [{ _deleted: true }, { $and: fallback }] }
+    }
 
     return { $and: [...unconditional, documents] }
   }
