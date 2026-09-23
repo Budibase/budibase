@@ -13,12 +13,8 @@ import {
   FetchAgentsResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
-  ProvisionAgentTelegramChannelRequest,
-  ProvisionAgentTelegramChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
-  SyncAgentDiscordCommandsRequest,
-  SyncAgentDiscordCommandsResponse,
   SyncAgentKnowledgeSourcesRequest,
   SyncAgentKnowledgeSourcesResponse,
   ToggleAgentDeploymentRequest,
@@ -31,12 +27,14 @@ import {
   CreateAgentOperationRequest,
   UpdateAgentOperationRequest,
   AgentOperationMutationResponse,
+  CreateAgentSlackAppRequest,
+  CreateAgentSlackAppResponse,
 } from "@budibase/types"
 
 import { BaseAPIClient } from "./types"
 
 export interface AgentEndpoints {
-  fetchTools: (aiconfigId?: string) => Promise<ToolMetadata[]>
+  fetchTools: () => Promise<ToolMetadata[]>
   fetchAgents: () => Promise<FetchAgentsResponse>
   fetchAgentKnowledge: (
     agentId: string
@@ -58,35 +56,25 @@ export interface AgentEndpoints {
   ) => Promise<AgentOperationMutationResponse>
   duplicateAgent: (agentId: string) => Promise<DuplicateAgentResponse>
   deleteAgent: (agentId: string) => Promise<{ deleted: true }>
-  syncAgentDiscordCommands: (
-    agentId: string,
-    body?: SyncAgentDiscordCommandsRequest
-  ) => Promise<SyncAgentDiscordCommandsResponse>
   provisionAgentMSTeamsChannel: (
     agentId: string,
     body?: ProvisionAgentMSTeamsChannelRequest
   ) => Promise<ProvisionAgentMSTeamsChannelResponse>
+  downloadAgentMSTeamsPackage: (agentId: string) => Promise<Response>
   provisionAgentSlackChannel: (
     agentId: string,
     body?: ProvisionAgentSlackChannelRequest
   ) => Promise<ProvisionAgentSlackChannelResponse>
-  provisionAgentTelegramChannel: (
+  downloadAgentSlackManifest: (agentId: string) => Promise<string>
+  createAgentSlackApp: (
     agentId: string,
-    body?: ProvisionAgentTelegramChannelRequest
-  ) => Promise<ProvisionAgentTelegramChannelResponse>
-  toggleAgentDiscordDeployment: (
-    agentId: string,
-    enabled: boolean
-  ) => Promise<ToggleAgentDeploymentResponse>
+    body?: CreateAgentSlackAppRequest
+  ) => Promise<CreateAgentSlackAppResponse>
   toggleAgentMSTeamsDeployment: (
     agentId: string,
     enabled: boolean
   ) => Promise<ToggleAgentDeploymentResponse>
   toggleAgentSlackDeployment: (
-    agentId: string,
-    enabled: boolean
-  ) => Promise<ToggleAgentDeploymentResponse>
-  toggleAgentTelegramDeployment: (
     agentId: string,
     enabled: boolean
   ) => Promise<ToggleAgentDeploymentResponse>
@@ -109,10 +97,15 @@ export interface AgentEndpoints {
     datasourceId: string,
     authConfigId: string
   ) => Promise<FetchAgentKnowledgeSourceOptionsResponse>
-  fetchOperationKnowledgeSourceAllEntries: (
+  fetchOperationKnowledgeSourceEntries: (
     agentId: string,
     operationId: string,
-    siteId: string
+    siteId: string,
+    options?: {
+      driveId?: string
+      parentItemId?: string
+      parentPath?: string
+    }
   ) => Promise<FetchAgentKnowledgeSourceEntriesResponse>
   connectOperationSharePointSite: (
     agentId: string,
@@ -142,12 +135,9 @@ export interface AgentEndpoints {
 }
 
 export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
-  fetchTools: async (aiconfigId?: string) => {
-    const query = aiconfigId
-      ? `?aiconfigId=${encodeURIComponent(aiconfigId)}`
-      : ""
+  fetchTools: async () => {
     return await API.get({
-      url: `/api/agent/tools${query}`,
+      url: "/api/agent/tools",
     })
   },
   fetchAgents: async () => {
@@ -208,16 +198,6 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  syncAgentDiscordCommands: async (agentId: string, body) => {
-    return await API.post<
-      SyncAgentDiscordCommandsRequest | undefined,
-      SyncAgentDiscordCommandsResponse
-    >({
-      url: `/api/agent/${agentId}/discord/sync`,
-      body,
-    })
-  },
-
   provisionAgentMSTeamsChannel: async (agentId: string, body) => {
     return await API.post<
       ProvisionAgentMSTeamsChannelRequest | undefined,
@@ -225,6 +205,13 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     >({
       url: `/api/agent/${agentId}/ms-teams/provision`,
       body,
+    })
+  },
+
+  downloadAgentMSTeamsPackage: async (agentId: string) => {
+    return await API.get<Response>({
+      url: `/api/agent/${agentId}/ms-teams/package`,
+      parseResponse: response => response,
     })
   },
 
@@ -238,23 +225,20 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  provisionAgentTelegramChannel: async (agentId: string, body) => {
-    return await API.post<
-      ProvisionAgentTelegramChannelRequest | undefined,
-      ProvisionAgentTelegramChannelResponse
-    >({
-      url: `/api/agent/${agentId}/telegram/provision`,
-      body,
+  downloadAgentSlackManifest: async (agentId: string) => {
+    return await API.get<string>({
+      url: `/api/agent/${agentId}/slack/manifest`,
+      parseResponse: async response => await response.text(),
     })
   },
 
-  toggleAgentDiscordDeployment: async (agentId: string, enabled: boolean) => {
+  createAgentSlackApp: async (agentId: string, body) => {
     return await API.post<
-      ToggleAgentDeploymentRequest,
-      ToggleAgentDeploymentResponse
+      CreateAgentSlackAppRequest | undefined,
+      CreateAgentSlackAppResponse
     >({
-      url: `/api/agent/${agentId}/discord/toggle`,
-      body: { enabled },
+      url: `/api/agent/${agentId}/slack/app/create`,
+      body,
     })
   },
 
@@ -274,16 +258,6 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
       ToggleAgentDeploymentResponse
     >({
       url: `/api/agent/${agentId}/slack/toggle`,
-      body: { enabled },
-    })
-  },
-
-  toggleAgentTelegramDeployment: async (agentId: string, enabled: boolean) => {
-    return await API.post<
-      ToggleAgentDeploymentRequest,
-      ToggleAgentDeploymentResponse
-    >({
-      url: `/api/agent/${agentId}/telegram/toggle`,
       body: { enabled },
     })
   },
@@ -331,14 +305,24 @@ export const buildAgentEndpoints = (API: BaseAPIClient): AgentEndpoints => ({
     })
   },
 
-  fetchOperationKnowledgeSourceAllEntries: async (
+  fetchOperationKnowledgeSourceEntries: async (
     agentId: string,
     operationId: string,
-    siteId: string
+    siteId: string,
+    options
   ) => {
     const query = new URLSearchParams({ siteId })
+    if (options?.driveId) {
+      query.set("driveId", options.driveId)
+    }
+    if (options?.parentItemId) {
+      query.set("parentItemId", options.parentItemId)
+    }
+    if (options?.parentPath) {
+      query.set("parentPath", options.parentPath)
+    }
     return await API.get<FetchAgentKnowledgeSourceEntriesResponse>({
-      url: `/api/agent/${agentId}/operations/${operationId}/knowledge-sources/sharepoint/entries/all?${query.toString()}`,
+      url: `/api/agent/${agentId}/operations/${operationId}/knowledge-sources/sharepoint/entries?${query.toString()}`,
     })
   },
 

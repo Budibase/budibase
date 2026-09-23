@@ -15,7 +15,7 @@ describe("utils", () => {
       const ctx = structures.koa.newContext()
       const expected = db.generateWorkspaceID()
       ctx.request.headers = {
-        [Header.APP_ID]: expected,
+        [Header.WORKSPACE_ID]: expected,
       }
 
       const actual = await utils.getWorkspaceIdFromCtx(ctx)
@@ -67,29 +67,6 @@ describe("utils", () => {
       })
     })
 
-    it("gets workspaceId from chat url", async () => {
-      await config.doInTenant(async () => {
-        const url = "http://example.com"
-        env._set("PLATFORM_URL", url)
-
-        const ctx = structures.koa.newContext()
-        ctx.host = `${config.tenantId}.example.com`
-
-        const expected = db.generateWorkspaceID(config.tenantId)
-        const app = structures.apps.app(expected)
-
-        const appUrl = newid()
-        app.url = `/${appUrl}`
-        ctx.path = `/app-chat/${appUrl}`
-
-        const database = db.getDB(expected)
-        await database.put(app)
-
-        const actual = await utils.getWorkspaceIdFromCtx(ctx)
-        expect(actual).toBe(expected)
-      })
-    })
-
     it("gets workspaceId from query params", async () => {
       const ctx = structures.koa.newContext()
       const expected = db.generateWorkspaceID()
@@ -126,7 +103,7 @@ describe("utils", () => {
       const appId2 = db.generateWorkspaceID()
 
       ctx.request.headers = {
-        [Header.APP_ID]: appId1,
+        [Header.WORKSPACE_ID]: appId1,
       }
       ctx.request.body = {
         appId: appId2,
@@ -144,7 +121,7 @@ describe("utils", () => {
       const appId2 = db.generateWorkspaceID()
 
       ctx.request.headers = {
-        [Header.APP_ID]: appId1,
+        [Header.WORKSPACE_ID]: appId1,
       }
       ctx.path = `/apps/${appId2}`
 
@@ -158,7 +135,7 @@ describe("utils", () => {
       const expected = db.generateWorkspaceID()
 
       ctx.request.headers = {
-        [Header.APP_ID]: expected,
+        [Header.WORKSPACE_ID]: expected,
       }
       ctx.request.body = {
         appId: expected,
@@ -175,7 +152,7 @@ describe("utils", () => {
       const invalidAppId = "invalid_app_id"
 
       ctx.request.headers = {
-        [Header.APP_ID]: invalidAppId,
+        [Header.WORKSPACE_ID]: invalidAppId,
       }
       ctx.request.body = {
         appId: validAppId,
@@ -189,7 +166,7 @@ describe("utils", () => {
       const ctx = structures.koa.newContext()
 
       ctx.request.headers = {
-        [Header.APP_ID]: "invalid_id",
+        [Header.WORKSPACE_ID]: "invalid_id",
       }
       ctx.request.body = {
         appId: "also_invalid",
@@ -235,11 +212,8 @@ describe("utils", () => {
       ctx = structures.koa.newContext()
     })
 
-    it("returns true for published app and chat routes", async () => {
+    it("returns true for published app routes", async () => {
       ctx.path = "/app/test-app"
-      expectResult(true)
-
-      ctx.path = "/app-chat/test-app"
       expectResult(true)
     })
 

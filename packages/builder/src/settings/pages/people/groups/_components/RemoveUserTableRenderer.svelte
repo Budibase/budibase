@@ -1,16 +1,24 @@
-<script>
+<script lang="ts">
   import { ActionButton, ProgressCircle } from "@budibase/bbui"
   import { getContext } from "svelte"
   import { auth } from "@/stores/portal/auth"
   import { sdk } from "@budibase/shared-core"
 
-  export let value
-  export let row
+  interface Props {
+    value: string
+    row?: { __skeleton?: boolean }
+  }
 
-  const userContext = getContext("users")
-  let removing = false
+  interface UserContext {
+    removeUser: (userId: string) => Promise<void>
+  }
 
-  const onClick = async e => {
+  let { value, row }: Props = $props()
+
+  const userContext = getContext<UserContext>("users")
+  let removing = $state(false)
+
+  const onClick = async (e: MouseEvent) => {
     e.stopPropagation()
     if (removing) {
       return

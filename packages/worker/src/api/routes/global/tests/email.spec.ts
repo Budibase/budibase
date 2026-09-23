@@ -3,7 +3,7 @@ import { TestConfiguration } from "../../../../tests"
 import {
   captureEmail,
   deleteAllEmail,
-  getAttachments,
+  getUnusedPort,
   Mailserver,
   startMailserver,
   stopMailserver,
@@ -14,10 +14,12 @@ import * as cheerio from "cheerio"
 describe("/api/global/email", () => {
   const config = new TestConfiguration()
   let mailserver: Mailserver
+  let smtpPort: number
 
   beforeAll(async () => {
     await config.beforeAll()
-    mailserver = await startMailserver(config)
+    smtpPort = await getUnusedPort()
+    mailserver = await startMailserver(config, { smtp: smtpPort })
   })
 
   afterAll(async () => {
@@ -122,7 +124,9 @@ describe("/api/global/email", () => {
     )
     expect(email.html).not.toContain("Invalid binding")
 
-    const attachments = await getAttachments(mailserver, email)
+    const attachments = email.attachments
+      .filter(attachment => attachment.contentDisposition === "attachment")
+      .map(attachment => attachment.content.toString())
     expect(attachments).toEqual(["test data"])
   })
 
@@ -195,6 +199,35 @@ describe("/api/global/email", () => {
     expect(email.from).toEqual([{ address: "from@example.com", name: "" }])
   })
 
+  it("uses the configured from address when one is not provided", async () => {
+    await config.saveSmtpConfig({
+      host: "127.0.0.1",
+      port: smtpPort,
+      secure: false,
+      from: "newfrom@example.com",
+    })
+
+    try {
+      const email = await captureEmail(mailserver, async () => {
+        await config.api.emails.sendEmail({
+          email: "to@example.com",
+          subject: "Test",
+          purpose: EmailTemplatePurpose.CUSTOM,
+          contents: "Hello, world!",
+        })
+      })
+
+      expect(email.from).toEqual([{ address: "newfrom@example.com", name: "" }])
+    } finally {
+      await config.saveSmtpConfig({
+        host: "127.0.0.1",
+        port: smtpPort,
+        secure: false,
+        from: "test@example.com",
+      })
+    }
+  })
+
   it("can send a calendar invite", async () => {
     const startTime = new Date()
     const endTime = new Date()
@@ -215,15 +248,9 @@ describe("/api/global/email", () => {
       })
     })
 
-    expect(email.alternatives).toEqual([
-      {
-        charset: "utf-8",
-        contentType: "text/calendar",
-        method: "REQUEST",
-        transferEncoding: "7bit",
-        content: expect.any(String),
-      },
-    ])
+    const calendarContent = email.attachments
+      .find(attachment => attachment.contentType === "text/calendar")
+      ?.content.toString()
 
     // Reference iCal invite:
     //   BEGIN:VCALENDAR
@@ -242,30 +269,22 @@ describe("/api/global/email", () => {
     //   URL;VALUE=URI:http://example.com
     //   END:VEVENT
     //   END:VCALENDAR
-    expect(email.alternatives[0].content).toContain("BEGIN:VCALENDAR")
-    expect(email.alternatives[0].content).toContain("BEGIN:VEVENT")
-    expect(email.alternatives[0].content).toContain("UID:")
-    expect(email.alternatives[0].content).toContain("SEQUENCE:0")
-    expect(email.alternatives[0].content).toContain("SUMMARY:Summary")
-    expect(email.alternatives[0].content).toContain("LOCATION:Location")
-    expect(email.alternatives[0].content).toContain(
-      "URL;VALUE=URI:http://example.com"
-    )
-    expect(email.alternatives[0].content).toContain("END:VEVENT")
-    expect(email.alternatives[0].content).toContain("END:VCALENDAR")
+    expect(calendarContent).toContain("BEGIN:VCALENDAR")
+    expect(calendarContent).toContain("BEGIN:VEVENT")
+    expect(calendarContent).toContain("UID:")
+    expect(calendarContent).toContain("SEQUENCE:0")
+    expect(calendarContent).toContain("SUMMARY:Summary")
+    expect(calendarContent).toContain("LOCATION:Location")
+    expect(calendarContent).toContain("URL;VALUE=URI:http://example.com")
+    expect(calendarContent).toContain("END:VEVENT")
+    expect(calendarContent).toContain("END:VCALENDAR")
 
     const formatDate = (date: Date) =>
       date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"
 
-    expect(email.alternatives[0].content).toContain(
-      `DTSTAMP:${formatDate(startTime)}`
-    )
-    expect(email.alternatives[0].content).toContain(
-      `DTSTART:${formatDate(startTime)}`
-    )
-    expect(email.alternatives[0].content).toContain(
-      `DTEND:${formatDate(endTime)}`
-    )
+    expect(calendarContent).toContain(`DTSTAMP:${formatDate(startTime)}`)
+    expect(calendarContent).toContain(`DTSTART:${formatDate(startTime)}`)
+    expect(calendarContent).toContain(`DTEND:${formatDate(endTime)}`)
   })
 
   it("Should parse valid markdown content from automation steps into valid HTML.", async () => {

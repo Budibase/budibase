@@ -1,0 +1,356 @@
+<script>
+  import {
+    Button,
+    Body,
+    Icon,
+    Toggle,
+    DrawerContent,
+    Layout,
+    Select,
+    generateId,
+  } from "@budibase/bbui"
+  import { flip } from "svelte/animate"
+  import { dndzone } from "svelte-dnd-action"
+  import DrawerBindableInput from "@/components/common/bindings/DrawerBindableInput.svelte"
+  import ConditionValueControl from "@/components/common/ConditionValueControl.svelte"
+  import { Constants, QueryUtils } from "@budibase/frontend-core"
+  import { selectedComponent, componentStore } from "@/stores/builder"
+  import { getComponentForSetting } from "@/components/design/settings/componentSettingsRegistry"
+  import PropertyControl from "@/components/design/settings/controls/PropertyControl.svelte"
+
+  export let conditions = []
+  export let bindings = []
+  export let componentBindings = []
+  export let actionOptions = null
+
+  const flipDurationMs = 150
+  const zoneType = generateId()
+  const defaultActionOptions = [
+    {
+      label: "Hide component",
+      value: "hide",
+    },
+    {
+      label: "Show component",
+      value: "show",
+    },
+    {
+      label: "Update setting",
+      value: "update",
+    },
+  ]
+  let dragDisabled = true
+
+  $: finalActionOptions = actionOptions ?? defaultActionOptions
+
+  $: settings = componentStore
+    .getComponentSettings($selectedComponent?._component)
+    ?.concat({
+      label: "Custom CSS",
+      key: "_css",
+      type: "text",
+    })
+  $: settingOptions = settings
+    .filter(setting => setting.supportsConditions !== false)
+    .map(setting => ({
+      label: makeLabel(setting),
+      value: setting.key,
+    }))
+  $: conditions.forEach(link => {
+    if (!link.id) {
+      link.id = generateId()
+    }
+    if (link.valueType === "Binding") {
+      link.valueType = "string"
+    }
+    normaliseBooleanReferenceValue(link)
+  })
+
+  const normaliseBooleanReferenceValue = condition => {
+    if (condition.valueType === "boolean") {
+      if (condition.referenceValue === "True") {
+        condition.referenceValue = "true"
+      } else if (condition.referenceValue === "False") {
+        condition.referenceValue = "false"
+      }
+    }
+  }
+
+  const makeLabel = setting => {
+    const { section, label } = setting
+    if (section) {
+      return label ? `${section} - ${label}` : section
+    } else {
+      return label
+    }
+  }
+
+  const getSettingDefinition = key => {
+    return settings.find(setting => setting.key === key)
+  }
+
+  const addCondition = () => {
+    conditions = [
+      ...conditions,
+      {
+        valueType: "string",
+        id: generateId(),
+        action: "hide",
+        operator: Constants.OperatorOptions.Equals.value,
+      },
+    ]
+  }
+
+  const removeCondition = id => {
+    conditions = conditions.filter(link => link.id !== id)
+  }
+
+  const duplicateCondition = id => {
+    const condition = conditions.find(link => link.id === id)
+    const duplicate = { ...condition, id: generateId() }
+    conditions = [...conditions, duplicate]
+  }
+
+  const toggleCondition = (id, enabled) => {
+    conditions = conditions.map(condition =>
+      condition.id === id ? { ...condition, disabled: !enabled } : condition
+    )
+  }
+
+  const handleFinalize = e => {
+    updateConditions(e)
+    dragDisabled = true
+  }
+
+  const updateConditions = e => {
+    conditions = e.detail.items
+  }
+
+  const getOperatorOptions = condition => {
+    return QueryUtils.getValidOperatorsForType({
+      type: getEffectiveValueType(condition),
+    })
+  }
+
+  const getEffectiveValueType = condition => {
+    return condition.valueType === "Binding" ? "string" : condition.valueType
+  }
+
+  const onOperatorChange = (condition, newOperator) => {
+    const noValueOptions = [
+      Constants.OperatorOptions.Empty.value,
+      Constants.OperatorOptions.NotEmpty.value,
+    ]
+    condition.noValue = noValueOptions.includes(newOperator)
+    if (
+      condition.noValue ||
+      newOperator === "oneOf" ||
+      newOperator === "notOneOf"
+    ) {
+      condition.referenceValue = null
+      condition.valueType = "string"
+    }
+  }
+
+  const onValueTypeChange = (condition, newType) => {
+    condition.referenceValue = null
+    if (newType === "boolean") {
+      condition.referenceValue = "true"
+    }
+
+    // Ensure a valid operator is set
+    const validOperators = QueryUtils.getValidOperatorsForType({
+      type: newType,
+    }).map(x => x.value)
+    if (!validOperators.includes(condition.operator)) {
+      condition.operator =
+        validOperators[0] ?? Constants.OperatorOptions.Equals.value
+      onOperatorChange(condition, condition.operator)
+    }
+  }
+
+  const onSettingChange = (e, condition) => {
+    const setting = settings.find(x => x.key === e.detail)
+    if (setting?.defaultValue != null) {
+      condition.settingValue = setting.defaultValue
+    } else {
+      delete condition.settingValue
+    }
+  }
+</script>
+
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<DrawerContent>
+  <div class="container">
+    <Layout noPadding>
+      {#if conditions?.length}
+        <div
+          class="conditions"
+          use:dndzone={{
+            items: conditions,
+            flipDurationMs,
+            dropTargetStyle: { outline: "none" },
+            dragDisabled,
+            type: zoneType,
+            dropFromOthersDisabled: true,
+          }}
+          on:finalize={handleFinalize}
+          on:consider={updateConditions}
+        >
+          {#each conditions as condition (condition.id)}
+            {@const definition = getSettingDefinition(condition.setting)}
+            <div
+              class="condition"
+              class:update={condition.action === "update"}
+              animate:flip={{ duration: flipDurationMs }}
+            >
+              <div
+                class="handle"
+                aria-label="drag-handle"
+                style={dragDisabled ? "cursor: grab" : "cursor: grabbing"}
+                on:mousedown={() => (dragDisabled = false)}
+              >
+                <Icon
+                  name="dots-six-vertical"
+                  size="L"
+                  color="var(--spectrum-global-color-gray-600)"
+                  hoverable="true"
+                  hovercolor="var(--spectrum-global-color-gray-800)"
+                />
+              </div>
+              <Select
+                placeholder={false}
+                options={finalActionOptions}
+                bind:value={condition.action}
+                popoverAutoWidth
+              />
+              {#if condition.action === "update"}
+                <Select
+                  options={settingOptions}
+                  bind:value={condition.setting}
+                  on:change={e => onSettingChange(e, condition)}
+                  popoverAutoWidth
+                />
+                <div>TO</div>
+                {#if definition}
+                  <PropertyControl
+                    type={definition.type}
+                    control={getComponentForSetting(definition)}
+                    key={definition.key}
+                    value={condition.settingValue}
+                    componentInstance={$selectedComponent}
+                    onChange={val => (condition.settingValue = val)}
+                    props={{
+                      options: definition.options,
+                      placeholder: definition.placeholder,
+                    }}
+                    nested={definition.nested}
+                    contextAccess={definition.contextAccess}
+                    {bindings}
+                    {componentBindings}
+                  />
+                {:else}
+                  <Select disabled placeholder=" " />
+                {/if}
+              {/if}
+              <div>IF</div>
+              <DrawerBindableInput
+                {bindings}
+                placeholder="Value"
+                value={condition.newValue}
+                on:change={e => (condition.newValue = e.detail)}
+              />
+              <Select
+                placeholder={false}
+                options={getOperatorOptions(condition)}
+                bind:value={condition.operator}
+                on:change={e => onOperatorChange(condition, e.detail)}
+                popoverAutoWidth
+              />
+              <ConditionValueControl
+                disabled={condition.noValue}
+                typeSelectDisabled={condition.noValue ||
+                  condition.operator === "oneOf" ||
+                  condition.operator === "notOneOf"}
+                {bindings}
+                valueType={condition.valueType}
+                value={condition.referenceValue}
+                on:change={e => {
+                  if ("valueType" in e.detail) {
+                    condition.valueType = e.detail.valueType
+                    onValueTypeChange(condition, e.detail.valueType)
+                  }
+                  if ("value" in e.detail) {
+                    condition.referenceValue = e.detail.value
+                  }
+                }}
+              />
+              <Toggle
+                text=""
+                noMargin
+                value={!condition.disabled}
+                on:change={e => toggleCondition(condition.id, e.detail)}
+              />
+              <Icon
+                name="copy"
+                hoverable
+                size="S"
+                on:click={() => duplicateCondition(condition.id)}
+              />
+              <Icon
+                name="x"
+                hoverable
+                size="S"
+                on:click={() => removeCondition(condition.id)}
+              />
+            </div>
+          {/each}
+        </div>
+      {:else}
+        <Body size="S">Add your first condition to get started.</Body>
+      {/if}
+      <div>
+        <Button secondary icon="plus" on:click={addCondition}>
+          Add condition
+        </Button>
+      </div>
+    </Layout>
+  </div>
+</DrawerContent>
+
+<style>
+  .container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .conditions {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-m);
+  }
+  .condition {
+    gap: var(--spacing-l);
+    display: grid;
+    align-items: center;
+    grid-template-columns:
+      auto 150px auto minmax(140px, 1fr) 120px 100px minmax(140px, 1fr)
+      auto auto auto;
+    border-radius: var(--border-radius-s);
+    transition: background-color ease-in-out 130ms;
+  }
+  .condition.update {
+    grid-template-columns:
+      auto 150px minmax(140px, 1fr) auto minmax(140px, 1fr) auto
+      minmax(140px, 1fr) 120px 100px minmax(140px, 1fr) auto auto auto;
+  }
+  .condition:hover {
+    background-color: var(--spectrum-global-color-gray-100);
+  }
+  .handle {
+    display: grid;
+    place-items: center;
+  }
+</style>

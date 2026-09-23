@@ -1,15 +1,72 @@
-import { ToolType } from "@budibase/types"
-import { type Tool, type ToolSet } from "ai"
+import { getErrorMessage } from "@budibase/backend-core"
+import {
+  PermissionLevel,
+  PermissionType,
+  ToolAction,
+  ToolExecutionPrincipal,
+  ToolType,
+  type AgentExecutionContext,
+  type AgentOperationToolConfig,
+  type ToolExecutionPolicy,
+} from "@budibase/types"
+import { type ModelMessage, type Tool, type ToolSet } from "ai"
+
+export interface ToolAuthorization {
+  permissionType: PermissionType
+  permissionLevel: PermissionLevel
+  resourceId?: string
+  resolveResourceId?: (input: unknown) => string | undefined
+}
 
 export interface AiToolDefinition {
   name: string
   readableName?: string
+  tableId?: string
+  sourceId?: string
   description: string
   tool: Tool
   sourceType: ToolType
   sourceLabel?: string
   sourceIconType?: string
+  action?: ToolAction
+  executionPolicy: ToolExecutionPolicy
+  authorization?: ToolAuthorization
+  requesterRedactedTool?: Tool
+  filterResult?: (
+    result: unknown,
+    runtime: ToolAuthorizationRuntime
+  ) => Promise<unknown>
 }
+
+export interface ToolAuthorizationRuntime {
+  executionContext: AgentExecutionContext
+  principal: ToolExecutionPrincipal
+  authorize: (params: ToolAuthorizationRequest) => Promise<void>
+}
+
+export interface ToolAuthorizationRequest {
+  authorization: ToolAuthorization
+  input: unknown
+  executionContext: AgentExecutionContext
+  principal: ToolExecutionPrincipal
+}
+
+export interface EscalationGateRuntime {
+  // Resolves to the refusal result to return in place of executing, or
+  // undefined when no rule matches and the call should proceed.
+  intercept: (
+    input: unknown,
+    options: { toolCallId: string; messages?: ModelMessage[] }
+  ) => Promise<Record<string, unknown> | undefined>
+}
+
+export const resolveToolExecutionPrincipal = (
+  tool: AiToolDefinition,
+  config?: AgentOperationToolConfig
+) =>
+  tool.executionPolicy.mode === "admin"
+    ? ToolExecutionPrincipal.ADMIN
+    : (config?.executionPrincipal ?? tool.executionPolicy.defaultPrincipal)
 
 const getToolFailure = (result: unknown): string | undefined => {
   if (!result || typeof result !== "object" || !("error" in result)) {
@@ -21,26 +78,80 @@ const getToolFailure = (result: unknown): string | undefined => {
     return
   }
 
-  if (error instanceof Error) {
-    return error.message || "Tool execution failed"
-  }
-
-  return String(error)
+  return getErrorMessage(error) || "Tool execution failed"
 }
 
-const wrapTool = (toolDef: AiToolDefinition): Tool => {
+const logToolExecution = (
+  outcome: "success" | "error",
+  toolDef: AiToolDefinition,
+  runtime: ToolAuthorizationRuntime,
+  error?: unknown
+) =>
+  console.log("Agent tool execution", {
+    outcome,
+    toolName: toolDef.name,
+    requesterRole: runtime.executionContext.requester.executorRole,
+    effectivePrincipal: runtime.principal,
+    agentId: runtime.executionContext.agentId,
+    operationId: runtime.executionContext.operationId,
+    conversationId: runtime.executionContext.conversationId,
+    ...(error !== undefined && { error: getErrorMessage(error) }),
+  })
+
+const wrapTool = (
+  toolDef: AiToolDefinition,
+  runtime?: ToolAuthorizationRuntime,
+  gate?: EscalationGateRuntime
+): Tool => {
   const execute = toolDef.tool.execute
   if (!execute) {
     return toolDef.tool
   }
 
-  const wrappedExecute: NonNullable<Tool["execute"]> = async (...args) => {
-    const result = await execute(...args)
-    const failureMessage = getToolFailure(result)
-    if (failureMessage) {
-      throw new Error(failureMessage)
+  const wrappedExecute: NonNullable<Tool["execute"]> = async (
+    input,
+    options
+  ) => {
+    if (runtime) {
+      if (!toolDef.authorization) {
+        throw new Error("Tool is not available in this security context")
+      }
+      await runtime.authorize({
+        authorization: toolDef.authorization,
+        input,
+        executionContext: runtime.executionContext,
+        principal: runtime.principal,
+      })
     }
-    return result
+    if (gate) {
+      const gateResult = await gate.intercept(input, {
+        toolCallId: options?.toolCallId ?? "",
+        messages: options?.messages,
+      })
+      if (gateResult) {
+        return gateResult
+      }
+    }
+    try {
+      const result = await execute(input, options)
+      const failureMessage = getToolFailure(result)
+      if (failureMessage) {
+        throw new Error(failureMessage)
+      }
+      const authorizedResult =
+        runtime && toolDef.filterResult
+          ? await toolDef.filterResult(result, runtime)
+          : result
+      if (runtime) {
+        logToolExecution("success", toolDef, runtime)
+      }
+      return authorizedResult
+    } catch (error) {
+      if (runtime) {
+        logToolExecution("error", toolDef, runtime, error)
+      }
+      throw error
+    }
   }
 
   return {
@@ -49,9 +160,16 @@ const wrapTool = (toolDef: AiToolDefinition): Tool => {
   }
 }
 
-export const toToolSet = (tools: AiToolDefinition[]): ToolSet => {
+export const toToolSet = (
+  tools: AiToolDefinition[],
+  runtimes: Map<string, ToolAuthorizationRuntime> = new Map(),
+  gates: Map<string, EscalationGateRuntime> = new Map()
+): ToolSet => {
   return Object.fromEntries(
-    tools.map(toolDef => [toolDef.name, wrapTool(toolDef)])
+    tools.map(toolDef => [
+      toolDef.name,
+      wrapTool(toolDef, runtimes.get(toolDef.name), gates.get(toolDef.name)),
+    ])
   )
 }
 

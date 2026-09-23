@@ -1,0 +1,302 @@
+schemaVersion: 2.0.0
+
+# Structure tests for the single image, run with container-structure-test:
+#   yarn test:docker:single
+
+commandTests:
+  - name: "runner script parses"
+    command: "bash"
+    args: ["-n", "/runner.sh"]
+    exitCode: 0
+
+  - name: "healthcheck script parses"
+    command: "bash"
+    args: ["-n", "/healthcheck.sh"]
+    exitCode: 0
+
+  - name: "couchdb runner script parses"
+    command: "bash"
+    args: ["-n", "/bbcouch-runner.sh"]
+    exitCode: 0
+
+  - name: "node"
+    command: "node"
+    args: ["--version"]
+    expectedOutput: ["^v22\\."]
+
+  # pm2 prints a banner before the version, so match the version on its own line.
+  - name: "pm2 supervises the services"
+    command: "pm2"
+    args: ["--version"]
+    expectedOutput: ["(?m)^\\d+\\.\\d+\\.\\d+$"]
+
+  - name: "redis-server"
+    command: "redis-server"
+    args: ["--version"]
+    expectedOutput: ["Redis server v=\\d+"]
+
+  - name: "redis-cli is used by the healthcheck"
+    command: "redis-cli"
+    args: ["--version"]
+    expectedOutput: ["redis-cli \\d+"]
+
+  - name: "nginx"
+    command: "nginx"
+    args: ["-v"]
+    expectedError: ["nginx version: nginx/\\d+"]
+
+  - name: "minio"
+    command: "/minio/minio"
+    args: ["--version"]
+    expectedOutput: ["minio version"]
+
+  - name: "postgres server for the internal LiteLLM database"
+    command: "/usr/lib/postgresql/15/bin/postgres"
+    args: ["--version"]
+    expectedOutput: ["postgres \\(PostgreSQL\\) 15\\."]
+
+  - name: "initdb creates the LiteLLM cluster"
+    command: "/usr/lib/postgresql/15/bin/initdb"
+    args: ["--version"]
+    expectedOutput: ["initdb \\(PostgreSQL\\) 15\\."]
+
+  # runner.sh locates the postgres binaries through pg_config rather than PATH.
+  - name: "pg_config reports the postgres bindir"
+    command: "pg_config"
+    args: ["--bindir"]
+    expectedOutput: ["^/usr/lib/postgresql/15/bin"]
+
+  - name: "psql provisions the LiteLLM role and database"
+    command: "psql"
+    args: ["--version"]
+    expectedOutput: ["psql \\(PostgreSQL\\) 15\\."]
+
+  - name: "pg_isready gates the LiteLLM startup wait"
+    command: "pg_isready"
+    args: ["--version"]
+    expectedOutput: ["pg_isready \\(PostgreSQL\\) 15\\."]
+
+  - name: "pg_dump is available for backups"
+    command: "pg_dump"
+    args: ["--version"]
+    expectedOutput: ["pg_dump \\(PostgreSQL\\) 15\\."]
+
+  - name: "litellm runs from its own virtualenv"
+    command: "/opt/venv/litellm/bin/python"
+    args: ["--version"]
+    expectedOutput: ["^Python 3\\."]
+
+  - name: "envsubst renders the nginx template"
+    command: "envsubst"
+    args: ["--version"]
+    expectedOutput: ["envsubst \\(GNU gettext"]
+
+  - name: "curl backs the healthcheck probes"
+    command: "curl"
+    args: ["--version"]
+    expectedOutput: ["^curl \\d+"]
+
+  - name: "certbot issues the CUSTOM_DOMAIN certificate"
+    command: "certbot"
+    args: ["--version"]
+    expectedOutput: ["certbot \\d+"]
+
+  - name: "jq rewrites package versions"
+    command: "jq"
+    args: ["--version"]
+    expectedOutput: ["^jq-"]
+
+  - name: "postgres user exists for the LiteLLM cluster"
+    command: "id"
+    args: ["postgres"]
+    expectedOutput: ["uid=\\d+\\(postgres\\).*gid=\\d+\\(postgres\\)"]
+
+  - name: "couchdb user owns the couch data directory"
+    command: "id"
+    args: ["couchdb"]
+    expectedOutput: ["uid=\\d+\\(couchdb\\)"]
+
+fileExistenceTests:
+  - name: "runner"
+    path: "/runner.sh"
+    shouldExist: true
+    isExecutableBy: "owner"
+
+  - name: "healthcheck"
+    path: "/healthcheck.sh"
+    shouldExist: true
+    isExecutableBy: "owner"
+
+  - name: "couchdb runner from the base image"
+    path: "/bbcouch-runner.sh"
+    shouldExist: true
+    isExecutableBy: "owner"
+
+  - name: "redis runner is not a separate script"
+    path: "/redis-runner.sh"
+    shouldExist: false
+
+  - name: "litellm db runner is not a separate script"
+    path: "/litellm-db-runner.sh"
+    shouldExist: false
+
+  - name: "nginx config"
+    path: "/etc/nginx/nginx.conf"
+    shouldExist: true
+
+  - name: "nginx default site"
+    path: "/etc/nginx/sites-enabled/default"
+    shouldExist: true
+
+  - name: "redis config"
+    path: "/etc/redis/redis.conf"
+    shouldExist: true
+
+  - name: "litellm config"
+    path: "/litellm/config.yaml"
+    shouldExist: true
+
+  - name: "couchdb config"
+    path: "/opt/couchdb/etc/local.ini"
+    shouldExist: true
+
+  - name: "clouseau config"
+    path: "/opt/clouseau/clouseau.ini"
+    shouldExist: true
+
+  - name: "sshd config for the Azure App Service build"
+    path: "/etc/sshd_config"
+    shouldExist: true
+
+  - name: "server bundle"
+    path: "/app/package.json"
+    shouldExist: true
+
+  - name: "server pm2 config"
+    path: "/app/pm2.config.js"
+    shouldExist: true
+
+  - name: "worker bundle"
+    path: "/worker/package.json"
+    shouldExist: true
+
+  - name: "worker pm2 config"
+    path: "/worker/pm2.config.js"
+    shouldExist: true
+
+  - name: "production dependencies"
+    path: "/node_modules"
+    shouldExist: true
+
+  - name: "minio binary"
+    path: "/minio/minio"
+    shouldExist: true
+    isExecutableBy: "owner"
+
+  - name: "sqs binary"
+    path: "/opt/sqs/sqs"
+    shouldExist: true
+    isExecutableBy: "owner"
+
+  - name: "certificate request script"
+    path: "/app/letsencrypt/certificate-request.sh"
+    shouldExist: true
+    isExecutableBy: "owner"
+
+  - name: "certificate renewal script"
+    path: "/app/letsencrypt/certificate-renew.sh"
+    shouldExist: true
+    isExecutableBy: "owner"
+
+  - name: "data directory"
+    path: "/data"
+    shouldExist: true
+
+fileContentTests:
+  - name: "redis config persists under DATA_DIR"
+    path: "/etc/redis/redis.conf"
+    expectedContents:
+      - 'dir "DATA_DIR/redis"'
+      - "appendonly yes"
+      - "appendfsync everysec"
+
+  - name: "couchdb config points at DATA_DIR"
+    path: "/opt/couchdb/etc/local.ini"
+    expectedContents:
+      - "database_dir = DATA_DIR/couch/dbs"
+      - "view_index_dir = DATA_DIR/couch/views"
+
+  - name: "clouseau config points at DATA_DIR"
+    path: "/opt/clouseau/clouseau.ini"
+    expectedContents:
+      - "dir=DATA_DIR/search"
+
+  # runner.sh renders exactly these two variables with envsubst.
+  - name: "nginx config keeps its rate limit placeholders"
+    path: "/etc/nginx/nginx.conf"
+    expectedContents:
+      - '\$\{PROXY_RATE_LIMIT_API_PER_SECOND\}'
+      - '\$\{PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND\}'
+
+  - name: "litellm stores models in the database"
+    path: "/litellm/config.yaml"
+    expectedContents:
+      - "store_model_in_db: true"
+
+  - name: "runner dispatches its own services"
+    path: "/runner.sh"
+    expectedContents:
+      - "pm2 start ./runner.sh --name redis-server"
+      - "pm2 start ./runner.sh --name litellm-postgres"
+      - "start_redis_server\\(\\)"
+      - "start_litellm_postgres\\(\\)"
+    excludedContents:
+      - "\\./redis-runner\\.sh"
+      - "\\./litellm-db-runner\\.sh"
+
+  - name: "runner exports the redis config and grants the ACL user access"
+    path: "/runner.sh"
+    expectedContents:
+      - "export REDIS_CONFIG"
+      - '"--user" "\$\{REDIS_USERNAME\}" "on" ">\$\{REDIS_PASSWORD\}"'
+
+  - name: "runner keeps a usable LiteLLM data directory"
+    path: "/runner.sh"
+    expectedContents:
+      - "LITELLM_PGDATA_FALLBACK"
+      - "LITELLM_DB_READY_TIMEOUT_SECONDS"
+
+  - name: "healthcheck treats LiteLLM as optional"
+    path: "/healthcheck.sh"
+    expectedContents:
+      - "WARNING: LiteLLM is not running"
+      - "WARNING: LiteLLM Postgres is down"
+    excludedContents:
+      - "ERROR: LiteLLM"
+
+  - name: "server is versioned"
+    path: "/app/package.json"
+    expectedContents:
+      - '"version": "\d+\.\d+\.\d+'
+
+metadataTest:
+  envVars:
+    - key: "NODE_ENV"
+      value: "production"
+    # isolated-vm needs this on Node 20+
+    - key: "NODE_OPTIONS"
+      value: "--no-node-snapshot"
+    - key: "TARGETBUILD"
+      value: "single"
+    - key: "BUDIBASE_VERSION"
+      value: "^\\d+\\.\\d+\\.\\d+"
+      isRegex: true
+    # litellm and its prisma client are only on PATH through the virtualenv
+    - key: "PATH"
+      value: "^/opt/venv/litellm/bin:"
+      isRegex: true
+  entrypoint: ["tini", "--", "/docker-entrypoint.sh"]
+  cmd: ["./runner.sh"]
+  workdir: "/"
+  exposedPorts: ["80", "443", "4000", "2222"]
+  volumes: ["/data"]

@@ -51,7 +51,9 @@ export async function bulkGetGlobalUsersById(
       keys: userIds,
       include_docs: true,
     })
-  ).rows.map(row => row.doc) as User[]
+  ).rows
+    .filter(row => row.doc)
+    .map(row => row.doc) as User[]
   if (opts?.cleanup) {
     users = removeUserPassword(users) as User[]
   }

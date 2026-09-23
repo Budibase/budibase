@@ -69,11 +69,6 @@ const joinBaseAndPath = (base?: string | null, path?: string) => {
   return `${sanitizedBase}${sanitizedPath}`
 }
 
-const trimTrailingSlash = (path: string) => path.replace(/\/+$/, "")
-
-const normalizeAppUrl = (appUrl: string) =>
-  trimTrailingSlash(normalizePath(appUrl))
-
 export const accountPortalAccountUrl = (accountPortalUrl?: string | null) =>
   joinBaseAndPath(accountPortalUrl, ACCOUNT_PORTAL_PATHS.ACCOUNT)
 
@@ -119,8 +114,8 @@ export const accountPortalUpgradeUrl = (
   return joinBaseAndPath(accountPortalUrl, ACCOUNT_PORTAL_PATHS.UPGRADE)
 }
 
-export const builderWorkspacesUrl = (builderBaseUrl?: string | null) =>
-  joinBaseAndPath(builderBaseUrl, BUILDER_URLS.WORKSPACES)
+export const builderUrl = (builderBaseUrl?: string | null) =>
+  joinBaseAndPath(builderBaseUrl, BUILDER_URLS.BUILDER)
 
 export const builderSettingsEmailUrl = (builderBaseUrl?: string | null) =>
   joinBaseAndPath(builderBaseUrl, BUILDER_URLS.SETTINGS_EMAIL)
@@ -131,30 +126,18 @@ export const builderSettingsAuthUrl = (builderBaseUrl?: string | null) =>
 export const builderSettingsPeopleUsersUrl = (builderBaseUrl?: string | null) =>
   joinBaseAndPath(builderBaseUrl, BUILDER_URLS.SETTINGS_PEOPLE_USERS)
 
-export const builderAppsUrl = (builderBaseUrl?: string | null) =>
+export const portalUrl = (builderBaseUrl?: string | null) =>
   joinBaseAndPath(builderBaseUrl, BUILDER_URLS.APPS)
-
-export const appChatUrl = (appUrl: string) =>
-  `/app-chat${normalizeAppUrl(appUrl)}`
-
-export const appAgentUrl = (appUrl: string, agentId: string) =>
-  `${normalizeAppUrl(appUrl)}/agent/${encodeURIComponent(agentId)}`
-
-export const agentChatUrl = (appUrl: string, agentId: string) =>
-  appChatUrl(appAgentUrl(appUrl, agentId))
 
 export const urlHelpers = {
   accountPortalAccountUrl,
   accountPortalBillingUrl,
   accountPortalUpgradeUrl,
-  builderWorkspacesUrl,
+  builderUrl,
   builderSettingsEmailUrl,
   builderSettingsAuthUrl,
   builderSettingsPeopleUsersUrl,
-  builderAppsUrl,
-  appChatUrl,
-  appAgentUrl,
-  agentChatUrl,
+  portalUrl,
 }
 
 export default urlHelpers

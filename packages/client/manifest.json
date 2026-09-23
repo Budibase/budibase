@@ -4950,6 +4950,16 @@
         "defaultValue": false
       },
       {
+        "type": "time",
+        "label": "Set time to",
+        "key": "setTimeTo",
+        "defaultValue": "",
+        "dependsOn": [
+          { "setting": "enableTime", "value": false },
+          { "setting": "timeOnly", "value": false }
+        ]
+      },
+      {
         "type": "boolean",
         "label": "Ignore time zones",
         "key": "ignoreTimezones",
@@ -9116,10 +9126,29 @@
         "defaultValue": true
       },
       {
+        "type": "userGroups",
+        "label": "Groups",
+        "key": "userGroups",
+        "license": "business",
+        "placeholder": "All groups"
+      },
+      {
         "type": "boolean",
         "label": "Workspace users",
         "key": "workspaceUsersOnly",
         "defaultValue": false
+      },
+      {
+        "type": "role",
+        "label": "Workspace role",
+        "key": "workspaceRole",
+        "allowPublic": false,
+        "placeholder": "All roles",
+        "dependsOn": {
+          "setting": "workspaceUsersOnly",
+          "value": true
+        },
+        "resetOn": "workspaceUsersOnly"
       },
       {
         "type": "boolean",
@@ -9238,10 +9267,29 @@
         "defaultValue": true
       },
       {
+        "type": "userGroups",
+        "label": "Groups",
+        "key": "userGroups",
+        "license": "business",
+        "placeholder": "All groups"
+      },
+      {
         "type": "boolean",
         "label": "Workspace users",
         "key": "workspaceUsersOnly",
         "defaultValue": false
+      },
+      {
+        "type": "role",
+        "label": "Workspace role",
+        "key": "workspaceRole",
+        "allowPublic": false,
+        "placeholder": "All roles",
+        "dependsOn": {
+          "setting": "workspaceUsersOnly",
+          "value": true
+        },
+        "resetOn": "workspaceUsersOnly"
       },
       {
         "type": "boolean",
@@ -9411,6 +9459,22 @@
         "label": "Button text",
         "key": "buttonText",
         "defaultValue": "Download PDF"
+      },
+      {
+        "type": "select",
+        "label": "Page orientation",
+        "key": "orientation",
+        "options": [
+          {
+            "label": "Portrait",
+            "value": "portrait"
+          },
+          {
+            "label": "Landscape",
+            "value": "landscape"
+          }
+        ],
+        "defaultValue": "portrait"
       }
     ]
   },
@@ -9620,42 +9684,6 @@
         }
       ]
     }
-  },
-  "chatbox": {
-    "name": "Chatbox",
-    "description": "Embed the Budibase chat experience inside your app.",
-    "icon": "chat",
-    "new": true,
-    "showSettingsBar": true,
-    "size": {
-      "width": 640,
-      "height": 420
-    },
-    "grid": {
-      "hAlign": "stretch",
-      "vAlign": "stretch"
-    },
-    "styles": ["padding", "background", "border"],
-    "settings": [
-      {
-        "type": "text",
-        "label": "Intro text",
-        "key": "intro",
-        "defaultValue": "Ask our assistant anything about this app."
-      },
-      {
-        "type": "text",
-        "label": "Input placeholder",
-        "key": "placeholder",
-        "defaultValue": "Ask Budibase..."
-      },
-      {
-        "type": "text",
-        "label": "Send button label",
-        "key": "sendButtonLabel",
-        "defaultValue": "Send"
-      }
-    ]
   },
   "slider": {
     "name": "Slider Field",
@@ -10151,6 +10179,12 @@
         "type": "boolean",
         "label": "Show day names",
         "key": "showDayNames",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Show weekend",
+        "key": "showWeekend",
         "defaultValue": true
       },
       {

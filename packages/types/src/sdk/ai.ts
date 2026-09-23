@@ -1,4 +1,4 @@
-import type { LanguageModelV3 } from "@ai-sdk/provider"
+import type { LanguageModelV4 } from "@ai-sdk/provider"
 import { ProviderOptions } from "@ai-sdk/provider-utils"
 import { Readable } from "stream"
 
@@ -104,7 +104,7 @@ export interface LLMConfigOptions {
 }
 
 export interface LLMResponse {
-  chat: LanguageModelV3
+  chat: LanguageModelV4
   providerOptions?: (hasTools: boolean) => LLMProviderOptions | undefined
   uploadFile: (
     stream: Readable,

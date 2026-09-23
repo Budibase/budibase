@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       script: "./dist/index.js",
-      instances: "max",
+      instances: process.env.CLUSTER_INSTANCES || "max",
       exec_mode: "cluster",
     },
   ],

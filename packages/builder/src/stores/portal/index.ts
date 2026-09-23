@@ -3,7 +3,7 @@ import { writable } from "svelte/store"
 export { organisation } from "./organisation"
 export { users } from "./users"
 export { admin } from "./admin"
-export { appsStore, enrichedApps, sortBy } from "./apps"
+export { workspacesStore, enrichedApps, sortBy } from "./workspaces"
 export { email } from "./email"
 export { auth } from "./auth"
 export { oidc } from "./oidc"
@@ -28,16 +28,8 @@ export type {
   OperationKnowledgeUploadState,
 } from "./agents"
 export { knowledgeConnectionsStore } from "./knowledgeConnections"
-export {
-  chatAppsStore,
-  currentChatApp,
-  currentConversations,
-  selectedChatAgent,
-} from "./chatApps"
 export { clientAppsStore } from "./clientApps"
-export { clientChatAppsStore } from "./clientChatApps"
 export { bannerStore } from "./banners"
-export { appCreationStore } from "./appCreation"
 export { aiConfigsStore } from "./aiConfigs"
 export { translations } from "./translations"
 export { aiStore } from "./ai"

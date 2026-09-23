@@ -1,0 +1,1655 @@
+<script lang="ts">
+  import {
+    Body,
+    Button,
+    Icon,
+    Modal,
+    notifications,
+    ProgressCircle,
+  } from "@budibase/bbui"
+  import {
+    ResolutionStrategy,
+    ToolExecutionPrincipal,
+    type AgentOperation,
+    type AgentOperationApprovalPolicy,
+    type ToolExecutionCondition,
+    type ToolExecutionRule,
+  } from "@budibase/types"
+  import * as routify from "@roxi/routify"
+  import type { EditorView } from "@codemirror/view"
+  import TopBar from "@/components/common/TopBar.svelte"
+  import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import CodeEditor from "@/components/common/CodeEditor/CodeEditor.svelte"
+  import {
+    EditorModes,
+    bindingsToCompletions,
+    buildSectionHeader,
+    hbAutocomplete,
+  } from "@/components/common/CodeEditor"
+  import LiveToggleButton from "@/components/common/LiveToggleButton.svelte"
+  import {
+    automationStore,
+    contextMenuStore,
+    datasources,
+    queries,
+    restTemplates,
+    tables,
+    workspaceDeploymentStore,
+  } from "@/stores/builder"
+  import { agentsStore, aiConfigsStore, selectedAgent } from "@/stores/portal"
+  import { configuredEscalationProviders } from "@/stores/portal/escalations"
+  import { bb } from "@/stores/bb"
+  import type { BindingCompletion, BindingCompletionOption } from "@/types"
+  import AgentTabList from "../../AgentTabList.svelte"
+  import AgentUnpublishedChangesIndicator from "../../AgentUnpublishedChangesIndicator.svelte"
+  import ConfigureOperationToolModal from "../../ConfigureOperationToolModal.svelte"
+  import OperationApprovalPolicyModal from "../../OperationApprovalPolicyModal.svelte"
+  import OperationApprovalRuleModal from "../../OperationApprovalRuleModal.svelte"
+  import GenerateInstructionsControl from "../../GenerateInstructionsControl.svelte"
+  import Knowledge from "../../knowledge/index.svelte"
+  import OperationRailSectionHeader from "../../OperationRailSectionHeader.svelte"
+  import ToolIcon from "../../ToolIcon.svelte"
+  import ToolsDropdown from "../../ToolsDropdown.svelte"
+  import WebSearchConfigModal from "../../WebSearchConfigModal.svelte"
+  import {
+    buildBindingIcons,
+    getAgentWebSearchConfig,
+    isWebSearchConfigured,
+    resolveAvailableAgentTools,
+    toAgentPromptBindings,
+  } from "../../agentAvailableTools"
+  import {
+    getDefaultToolExecutionPrincipal,
+    isToolReferenced,
+    normalizeConfiguredOperationTools,
+  } from "../../toolBindingUtils"
+  import {
+    getPendingToolInsertion,
+    type PendingToolInsertion,
+  } from "../../toolAutocomplete"
+  import { createSaveCoordinator } from "../../operationSaveCoordinator"
+  import {
+    getToolConditionFields,
+    getToolReviewFields,
+  } from "../../agentConditionFields"
+  import APIEndpointViewer from "@/components/integration/APIEndpointViewer.svelte"
+  import { isQueryToolType } from "@budibase/shared-core"
+  import type { AgentTool } from "../../toolTypes"
+  import {
+    getWorkspaceHomeUrl,
+    withWorkspaceHomeReturn,
+  } from "@/helpers/workspaceHomeNavigation"
+
+  const { goto, params } = routify
+
+  $goto
+
+  type RailTab = "tools" | "knowledge" | "approvals"
+  type RemovableTool = Pick<AgentTool, "readableBinding" | "runtimeBinding">
+
+  let togglingLive = $state(false)
+  let saving = $state(false)
+  let operation = $state<AgentOperation | undefined>()
+  let lastSavedInstructions = $state("")
+  let syncedAgentRev: string | undefined = $state()
+  let toolSearch = $state("")
+  let activeTab = $state<RailTab>("tools")
+  let instructionsEditor: CodeEditor | undefined = $state()
+  let webSearchConfigModal: WebSearchConfigModal | undefined = $state()
+  let removeToolDialog: ConfirmDialog | undefined = $state()
+  let configureToolModal: ConfigureOperationToolModal | undefined = $state()
+  let approvalPolicyModal: OperationApprovalPolicyModal | undefined = $state()
+  let approvalRuleModal: OperationApprovalRuleModal | undefined = $state()
+  let stagedToolConfig = $state<
+    | {
+        tool: AgentTool
+        executionPrincipal: ToolExecutionPrincipal
+        adding: boolean
+        rules: ToolExecutionRule[]
+      }
+    | undefined
+  >()
+  let stagedRule = $state<
+    | {
+        index?: number
+        policyId?: string
+        conditions?: ToolExecutionCondition[]
+        reviewParameters?: string[]
+      }
+    | undefined
+  >()
+  let chainingToolModal = false
+  let chainingRuleModal = false
+  let policyModalFromRule = false
+  let apiExplorerModal: Modal | undefined = $state()
+  let apiViewer: APIEndpointViewer | undefined = $state()
+  let apiExplorerTarget = $state<
+    { queryId: string; datasourceId?: string } | undefined
+  >()
+  let editorToolsDropdown: ToolsDropdown | undefined = $state()
+  let toolToRemove: RemovableTool | undefined = $state()
+  let restoreToolConfiguration = $state(false)
+  let addingTool: AgentTool | undefined = $state()
+  let pendingToolInsertion: PendingToolInsertion | undefined = $state()
+
+  let previousToolsLoaded = false
+
+  let agent = $derived($selectedAgent)
+  let homeUrl = $derived(getWorkspaceHomeUrl($params.workspaceId))
+  let agentId = $derived($params.agentId || agent?._id)
+  let escalationProviders = $derived(configuredEscalationProviders(agent))
+  let operationId = $derived($params.operationId)
+  let storeOperation = $derived(
+    agent?.operations?.find(item => item.id === operationId)
+  )
+  let operationName = $derived(
+    storeOperation?.name?.trim() || "Untitled operation"
+  )
+  let toolsLoaded = $derived($agentsStore.toolsLoaded)
+  let toolsLoadFailed = $derived($agentsStore.toolsLoadFailed)
+  let webSearchConfig = $derived(
+    getAgentWebSearchConfig($aiConfigsStore.customConfigs, agent?.aiconfig)
+  )
+  let webSearchConfigured = $derived(isWebSearchConfigured(webSearchConfig))
+
+  let availableTools = $derived.by(() =>
+    resolveAvailableAgentTools({
+      storeTools: $agentsStore.tools || [],
+      datasourceList: $datasources.list,
+      getRestTemplateIcon: identifier => restTemplates.get(identifier)?.icon,
+      webSearchConfig,
+    })
+  )
+
+  let approvalPolicies = $derived(operation?.approvalPolicies || [])
+  let configuredToolList = $derived(
+    (operation?.enabledTools || [])
+      .map(config => ({
+        config,
+        tool: availableTools.find(
+          availableTool => availableTool.runtimeBinding === config.toolName
+        ),
+      }))
+      .sort((a, b) =>
+        (a.tool?.readableBinding || a.config.toolName).localeCompare(
+          b.tool?.readableBinding || b.config.toolName
+        )
+      )
+  )
+  let configuredTools = $derived(
+    configuredToolList
+      .map(item => item.tool)
+      .filter((tool): tool is AgentTool => !!tool)
+  )
+  let promptBindings = $derived(
+    toAgentPromptBindings({ tools: configuredTools, webSearchConfigured })
+  )
+  let availablePromptBindings = $derived(
+    toAgentPromptBindings({
+      tools: availableTools,
+      webSearchConfigured,
+    })
+  )
+  let availableBindingIcons = $derived(
+    buildBindingIcons(availablePromptBindings)
+  )
+  let bindingIcons = $derived(buildBindingIcons(promptBindings))
+  let toolToRemoveIsAvailable = $derived(
+    !!toolToRemove &&
+      availableTools.some(
+        tool => tool.runtimeBinding === toolToRemove?.runtimeBinding
+      )
+  )
+  let toolToRemoveIsReferenced = $derived(
+    toolToRemoveIsAvailable &&
+      isToolReferenced({
+        prompt: operation?.promptInstructions,
+        tool: toolToRemove!,
+      })
+  )
+
+  const addToolCompletion: BindingCompletionOption = {
+    label: "Add tool",
+    detail: "Configure a new tool",
+    type: "keyword",
+    section: buildSectionHeader(null, "Actions", "", Number.MAX_SAFE_INTEGER),
+    boost: -100,
+    apply: (
+      view: EditorView,
+      _completion: BindingCompletionOption,
+      from: number,
+      to: number
+    ) => {
+      pendingToolInsertion = getPendingToolInsertion({
+        text: view.state.doc.toString(),
+        from,
+        to,
+      })
+      editorToolsDropdown?.show()
+    },
+  }
+  const operationAutocomplete: BindingCompletion = context => {
+    const result = hbAutocomplete([
+      ...bindingsToCompletions(promptBindings, EditorModes.Handlebars),
+      addToolCompletion,
+    ])(context)
+    if (!result) {
+      return null
+    }
+    return {
+      ...result,
+      options: [
+        ...result.options.filter(option => option !== addToolCompletion),
+        addToolCompletion,
+      ],
+    }
+  }
+  const completions = [operationAutocomplete]
+  let filteredTools = $derived.by(() =>
+    availableTools
+      .filter(tool => {
+        if (
+          operation?.enabledTools?.some(
+            config => config.toolName === tool.runtimeBinding
+          )
+        ) {
+          return false
+        }
+        const query = toolSearch.trim().toLowerCase()
+        return (
+          !query ||
+          `${tool.sourceLabel || ""} ${tool.readableName || tool.name}`
+            .toLowerCase()
+            .includes(query)
+        )
+      })
+      .sort((a, b) =>
+        (a.readableName || a.name).localeCompare(b.readableName || b.name)
+      )
+  )
+  let toolSections = $derived.by(() =>
+    filteredTools.reduce(
+      (sections, tool) => {
+        const section = tool.sourceLabel || "Tools"
+        sections[section] ||= []
+        sections[section].push(tool)
+        return sections
+      },
+      {} as Record<string, AgentTool[]>
+    )
+  )
+
+  const close = () => $goto(withWorkspaceHomeReturn("../../config"))
+
+  const hasUnsavedInstructions = () =>
+    operation && (operation.promptInstructions || "") !== lastSavedInstructions
+
+  $effect(() => {
+    if (!agent?._id || !operationId) {
+      operation = undefined
+      lastSavedInstructions = ""
+      syncedAgentRev = undefined
+      return
+    }
+
+    const selected = agent.operations?.find(item => item.id === operationId)
+    if (!selected) {
+      close()
+      return
+    }
+
+    if (operation?.id !== operationId) {
+      operation = { ...selected }
+      lastSavedInstructions = operation.promptInstructions || ""
+      syncedAgentRev = agent._rev
+      return
+    }
+
+    if (
+      agent._rev !== syncedAgentRev &&
+      !saving &&
+      !togglingLive &&
+      !hasUnsavedInstructions()
+    ) {
+      operation = { ...selected }
+      lastSavedInstructions = operation.promptInstructions || ""
+      syncedAgentRev = agent._rev
+    }
+  })
+
+  const persistOperation = async (): Promise<boolean> => {
+    if (!agentId || !operation || !toolsLoaded) {
+      return false
+    }
+
+    const forOperationId = operation.id
+    const snapshot = { ...operation }
+
+    const enabledTools = normalizeConfiguredOperationTools({
+      operation: snapshot,
+      availableTools,
+    })
+    saving = true
+    try {
+      const updated = await agentsStore.updateAgentOperation(
+        agentId,
+        forOperationId,
+        {
+          name: snapshot.name,
+          live: snapshot.live,
+          promptInstructions: snapshot.promptInstructions,
+          enabledTools,
+          approvalPolicies: snapshot.approvalPolicies,
+          allowKnowledgeSourceDownload: snapshot.allowKnowledgeSourceDownload,
+        }
+      )
+
+      if (operationId === forOperationId && operation) {
+        syncedAgentRev = updated._rev
+        if (
+          (operation.promptInstructions || "") ===
+          (snapshot.promptInstructions || "")
+        ) {
+          lastSavedInstructions = snapshot.promptInstructions || ""
+        }
+      }
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to save operation")
+      return false
+    } finally {
+      saving = false
+    }
+    try {
+      await workspaceDeploymentStore.fetch()
+    } catch (error) {
+      console.error(error)
+    }
+    return true
+  }
+
+  const operationSaveCoordinator = createSaveCoordinator(persistOperation)
+
+  const saveOperation = async (
+    updates: Partial<AgentOperation> = {}
+  ): Promise<boolean> => {
+    if (!agentId || !operation) {
+      return false
+    }
+    if (Object.keys(updates).length > 0) {
+      operation = { ...operation, ...updates }
+    }
+
+    if (!toolsLoaded) {
+      return false
+    }
+
+    return operationSaveCoordinator.save()
+  }
+
+  $effect(() => {
+    const justLoaded = toolsLoaded && !previousToolsLoaded
+    previousToolsLoaded = toolsLoaded
+
+    if (
+      justLoaded &&
+      operation &&
+      hasUnsavedInstructions() &&
+      !saving &&
+      !togglingLive
+    ) {
+      saveOperation()
+    }
+  })
+
+  const updateInstructions = (instructions: string) => {
+    if (!operation) {
+      return
+    }
+    operation.promptInstructions = instructions
+  }
+
+  const applyGeneratedInstructions = (instructions: string) => {
+    if (!operation) {
+      return
+    }
+    const configuredToolNames = new Set(
+      (operation.enabledTools || []).map(config => config.toolName)
+    )
+    const generatedToolConfigs = availableTools
+      .filter(
+        tool =>
+          tool.runtimeBinding &&
+          !configuredToolNames.has(tool.runtimeBinding) &&
+          isToolReferenced({ prompt: instructions, tool })
+      )
+      .map(tool => ({
+        toolName: tool.runtimeBinding,
+        executionPrincipal: getDefaultToolExecutionPrincipal(tool),
+      }))
+
+    saveOperation({
+      promptInstructions: instructions,
+      enabledTools: [
+        ...(operation.enabledTools || []),
+        ...generatedToolConfigs,
+      ],
+    })
+  }
+
+  const insertToolBinding = (
+    tool: AgentTool,
+    position?: PendingToolInsertion
+  ): string | undefined => {
+    if (!tool.readableBinding || !instructionsEditor) {
+      return
+    }
+    const binding = `{{ ${tool.readableBinding} }}`
+    return instructionsEditor.replaceRange({
+      from: position?.from,
+      to: position?.to,
+      insert: binding,
+    })
+  }
+
+  const cancelPendingToolInsertion = (position?: PendingToolInsertion) => {
+    if (!operation || !position?.removeOnCancel || !instructionsEditor) {
+      return
+    }
+    const nextInstructions = instructionsEditor.replaceRange({
+      from: position.from,
+      to: position.to,
+      insert: "",
+    })
+    saveOperation({ promptInstructions: nextInstructions })
+  }
+
+  const removeTool = (tool: RemovableTool) => {
+    if (!operation) {
+      return
+    }
+    saveOperation({
+      enabledTools: (operation.enabledTools || []).filter(
+        config => config.toolName !== tool.runtimeBinding
+      ),
+    })
+  }
+
+  const getToolPrincipal = (toolName: string) =>
+    operation?.enabledTools?.find(tool => tool.toolName === toolName)
+      ?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
+
+  const getEffectiveToolPrincipal = (tool: AgentTool) =>
+    tool.executionPolicy.mode === "admin"
+      ? ToolExecutionPrincipal.ADMIN
+      : getToolPrincipal(tool.runtimeBinding)
+
+  const setToolPrincipal = ({
+    toolName,
+    executionPrincipal,
+  }: {
+    toolName: string
+    executionPrincipal: ToolExecutionPrincipal
+  }) => {
+    if (!operation) {
+      return
+    }
+    operation.enabledTools = (operation.enabledTools || []).map(config => ({
+      ...config,
+      executionPrincipal:
+        config.toolName === toolName
+          ? executionPrincipal
+          : config.executionPrincipal,
+    }))
+  }
+
+  const toggleOperationLive = async () => {
+    if (!operation || togglingLive || !agentId) {
+      return
+    }
+
+    const nextLive = operation.live !== true
+
+    togglingLive = true
+    try {
+      const updated = await agentsStore.updateAgentOperation(
+        agentId,
+        operation.id,
+        { live: nextLive }
+      )
+      const storeOperation = updated.operations?.find(
+        item => item.id === operation?.id
+      )
+      if (storeOperation && operationId === operation.id) {
+        operation = { ...operation, live: storeOperation.live }
+        syncedAgentRev = updated._rev
+      }
+      await workspaceDeploymentStore.fetch()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Failed to update operation")
+    } finally {
+      togglingLive = false
+    }
+  }
+
+  const confirmRemoveTool = (
+    tool: RemovableTool,
+    returnToConfiguration = false
+  ) => {
+    restoreToolConfiguration = returnToConfiguration
+    toolToRemove = tool
+    removeToolDialog?.show()
+  }
+
+  const handleRemoveToolConfirm = () => {
+    if (!toolToRemove) {
+      return
+    }
+    removeTool(toolToRemove)
+    toolToRemove = undefined
+    restoreToolConfiguration = false
+  }
+
+  const handleRemoveToolClose = () => {
+    const tool = toolToRemove
+    const shouldRestore = restoreToolConfiguration
+    toolToRemove = undefined
+    restoreToolConfiguration = false
+    if (tool && shouldRestore) {
+      const availableTool = availableTools.find(
+        item => item.runtimeBinding === tool.runtimeBinding
+      )
+      if (availableTool) {
+        configureTool(availableTool)
+      }
+    }
+  }
+
+  const openToolMenu = (event: MouseEvent, tool: RemovableTool) => {
+    event.preventDefault()
+    event.stopPropagation()
+    contextMenuStore.open(
+      "agent-operation-tool",
+      [
+        {
+          icon: "trash",
+          name: "Remove tool",
+          visible: true,
+          callback: () => confirmRemoveTool(tool),
+        },
+      ],
+      { x: event.clientX, y: event.clientY }
+    )
+  }
+
+  const getToolApprovalCount = (toolName: string) =>
+    operation?.enabledTools?.find(
+      configured => configured.toolName === toolName
+    )?.executionRules?.length ?? 0
+
+  const getToolExecutionRules = (toolName: string): ToolExecutionRule[] =>
+    operation?.enabledTools?.find(
+      configured => configured.toolName === toolName
+    )?.executionRules ?? []
+
+  const applyExecutionRules = (
+    toolName: string,
+    rules: ToolExecutionRule[] | undefined
+  ) => {
+    if (!operation || rules === undefined) {
+      return
+    }
+    const entry = operation.enabledTools?.find(
+      configured => configured.toolName === toolName
+    )
+    if (!entry) {
+      return
+    }
+    if (rules.length) {
+      entry.executionRules = rules
+    } else {
+      delete entry.executionRules
+    }
+  }
+
+  const APPROVAL_TYPE_LABELS: Record<ResolutionStrategy, string> = {
+    [ResolutionStrategy.FIRST_RESPONSE]: "Any approver",
+    [ResolutionStrategy.UNANIMOUS]: "Unanimous",
+    [ResolutionStrategy.MAJORITY]: "Majority",
+  }
+
+  const policyApprovalSummary = (policy: AgentOperationApprovalPolicy) => {
+    const count = policy.approvers?.length ?? 0
+    if (!count) {
+      return undefined
+    }
+    const type =
+      APPROVAL_TYPE_LABELS[
+        policy.approvalType ?? ResolutionStrategy.FIRST_RESPONSE
+      ]
+    return `${type} · ${count} ${count === 1 ? "approver" : "approvers"}`
+  }
+
+  const policyUsageCount = (policyId: string) =>
+    (operation?.enabledTools || []).reduce(
+      (count, configured) =>
+        count +
+        (configured.executionRules ?? []).filter(
+          rule => rule.policyId === policyId
+        ).length,
+      0
+    )
+
+  const savePolicy = async (policy: AgentOperationApprovalPolicy) => {
+    if (!operation) {
+      return
+    }
+    const existingIndex = (operation.approvalPolicies || []).findIndex(
+      candidate => candidate.id === policy.id
+    )
+    const policies = [...(operation.approvalPolicies || [])]
+    if (existingIndex === -1) {
+      policies.push(policy)
+    } else {
+      policies[existingIndex] = policy
+    }
+    operation.approvalPolicies = policies
+    await saveOperation()
+  }
+
+  const deletePolicy = async (policy: AgentOperationApprovalPolicy) => {
+    if (!operation) {
+      return false
+    }
+    const usage = policyUsageCount(policy.id)
+    if (usage) {
+      notifications.error(
+        `"${policy.name}" is used by ${usage} tool ${usage === 1 ? "rule" : "rules"} and cannot be deleted`
+      )
+      return false
+    }
+    const forOperationId = operation.id
+    const previous = operation.approvalPolicies
+    const approvalPolicies = (previous || []).filter(
+      candidate => candidate.id !== policy.id
+    )
+    const saved = await saveOperation({ approvalPolicies })
+    if (!saved && operation?.id === forOperationId) {
+      operation = { ...operation, approvalPolicies: previous }
+    }
+    return saved
+  }
+
+  const toolApprovalOptions = (toolName: string) => ({
+    enabled: true,
+    rules: getToolExecutionRules(toolName),
+    policies: approvalPolicies,
+  })
+
+  const toolConditionFields = (tool: AgentTool) =>
+    getToolConditionFields({
+      tool,
+      tables: $tables.list,
+      queries: $queries.list,
+      automations: $automationStore.automations,
+    })
+
+  const toolReviewFields = (tool: AgentTool) =>
+    getToolReviewFields({
+      tool,
+      tables: $tables.list,
+      queries: $queries.list,
+      automations: $automationStore.automations,
+    })
+
+  const beginRuleEdit = ({
+    tool,
+    executionPrincipal,
+    rules,
+    index,
+  }: {
+    tool: AgentTool
+    executionPrincipal: ToolExecutionPrincipal
+    rules: ToolExecutionRule[]
+    index?: number
+  }) => {
+    stagedToolConfig = {
+      tool,
+      executionPrincipal,
+      adding: !!addingTool,
+      rules: [...rules],
+    }
+    chainingToolModal = true
+    configureToolModal?.hide()
+    approvalRuleModal?.show({
+      policies: approvalPolicies,
+      fields: toolConditionFields(tool),
+      reviewFields: toolReviewFields(tool),
+      rule: index !== undefined ? rules[index] : undefined,
+      index,
+      apiExplorer: isQueryToolType(tool.sourceType),
+    })
+  }
+
+  const openApiExplorer = () => {
+    const tool = stagedToolConfig?.tool
+    if (!tool?.sourceId) {
+      return
+    }
+    const query = $queries.list.find(
+      candidate => candidate._id === tool.sourceId
+    )
+    apiExplorerTarget = {
+      queryId: tool.sourceId,
+      datasourceId: query?.datasourceId,
+    }
+    apiExplorerModal?.show()
+  }
+
+  const refreshRuleModalFields = () => {
+    if (stagedToolConfig) {
+      approvalRuleModal?.updateFields(
+        toolConditionFields(stagedToolConfig.tool)
+      )
+      approvalRuleModal?.updateReviewFields(
+        toolReviewFields(stagedToolConfig.tool)
+      )
+    }
+  }
+
+  const handleApiExplorerClose = async (): Promise<boolean> => {
+    if (apiViewer) {
+      const ok = await apiViewer.confirmIfDirty()
+      if (!ok) {
+        return false
+      }
+    }
+    refreshRuleModalFields()
+    return true
+  }
+
+  const reopenToolModal = () => {
+    const staged = stagedToolConfig
+    if (!staged) {
+      return
+    }
+    stagedToolConfig = undefined
+    configureToolModal?.show(
+      staged.tool,
+      staged.executionPrincipal,
+      staged.tool.executionPolicy.mode === "configurable",
+      staged.adding,
+      {
+        enabled: true,
+        rules: staged.rules,
+        policies: approvalPolicies,
+      }
+    )
+  }
+
+  const handleRuleSave = ({
+    rule,
+    index,
+  }: {
+    rule: ToolExecutionRule
+    index?: number
+  }) => {
+    if (!stagedToolConfig) {
+      return
+    }
+    const rules = [...stagedToolConfig.rules]
+    if (index !== undefined) {
+      rules[index] = rule
+    } else {
+      rules.push(rule)
+    }
+    stagedToolConfig = { ...stagedToolConfig, rules }
+  }
+
+  const handleRuleRemove = (index: number) => {
+    if (!stagedToolConfig) {
+      return
+    }
+    stagedToolConfig = {
+      ...stagedToolConfig,
+      rules: stagedToolConfig.rules.filter((_, i) => i !== index),
+    }
+  }
+
+  const handleRuleModalClose = () => {
+    if (chainingRuleModal) {
+      chainingRuleModal = false
+      return
+    }
+    reopenToolModal()
+  }
+
+  const beginPolicyCreateFromRule = ({
+    index,
+    policyId,
+    conditions,
+    reviewParameters,
+  }: {
+    index?: number
+    policyId?: string
+    conditions: ToolExecutionCondition[]
+    reviewParameters: string[]
+  }) => {
+    stagedRule = { index, policyId, conditions, reviewParameters }
+    policyModalFromRule = true
+    chainingRuleModal = true
+    approvalRuleModal?.hide()
+    approvalPolicyModal?.show()
+  }
+
+  const handlePolicySave = async (policy: AgentOperationApprovalPolicy) => {
+    await savePolicy(policy)
+    if (policyModalFromRule && stagedRule) {
+      stagedRule = { ...stagedRule, policyId: policy.id }
+    }
+  }
+
+  const handlePolicyModalClose = () => {
+    if (!policyModalFromRule) {
+      return
+    }
+    policyModalFromRule = false
+    const pending = stagedRule
+    stagedRule = undefined
+    approvalRuleModal?.show({
+      policies: approvalPolicies,
+      fields: stagedToolConfig
+        ? toolConditionFields(stagedToolConfig.tool)
+        : [],
+      reviewFields: stagedToolConfig
+        ? toolReviewFields(stagedToolConfig.tool)
+        : [],
+      rule: pending
+        ? {
+            policyId: pending.policyId,
+            conditions: pending.conditions,
+            reviewParameters: pending.reviewParameters,
+          }
+        : undefined,
+      index: pending?.index,
+      apiExplorer: stagedToolConfig
+        ? isQueryToolType(stagedToolConfig.tool.sourceType)
+        : false,
+    })
+  }
+
+  const configureTool = (tool: AgentTool) => {
+    addingTool = undefined
+    configureToolModal?.show(
+      tool,
+      getEffectiveToolPrincipal(tool),
+      tool.executionPolicy.mode === "configurable",
+      false,
+      toolApprovalOptions(tool.runtimeBinding)
+    )
+  }
+
+  const beginAddingTool = (
+    tool: AgentTool,
+    insertPosition?: PendingToolInsertion
+  ) => {
+    addingTool = tool
+    pendingToolInsertion = insertPosition
+    const executionPrincipal = getDefaultToolExecutionPrincipal(tool)
+    configureToolModal?.show(
+      tool,
+      executionPrincipal,
+      tool.executionPolicy.mode === "configurable",
+      true,
+      toolApprovalOptions(tool.runtimeBinding)
+    )
+  }
+
+  const saveToolConfiguration = async ({
+    tool,
+    executionPrincipal,
+    executionRules,
+  }: {
+    tool: AgentTool
+    executionPrincipal: ToolExecutionPrincipal
+    executionRules?: ToolExecutionRule[]
+  }) => {
+    if (addingTool?.runtimeBinding !== tool.runtimeBinding || !operation) {
+      setToolPrincipal({
+        toolName: tool.runtimeBinding,
+        executionPrincipal,
+      })
+      applyExecutionRules(tool.runtimeBinding, executionRules)
+      await saveOperation()
+      return
+    }
+
+    const insertPosition = pendingToolInsertion
+    addingTool = undefined
+    pendingToolInsertion = undefined
+    const existingConfig = operation.enabledTools?.find(
+      config => config.toolName === tool.runtimeBinding
+    )
+    operation.enabledTools = [
+      ...(operation.enabledTools || []).filter(
+        config => config.toolName !== tool.runtimeBinding
+      ),
+      {
+        ...existingConfig,
+        toolName: tool.runtimeBinding,
+        executionPrincipal,
+      },
+    ]
+    applyExecutionRules(tool.runtimeBinding, executionRules)
+    const updates: Partial<AgentOperation> = {}
+    if (insertPosition) {
+      const nextInstructions = insertToolBinding(tool, insertPosition)
+      if (nextInstructions !== undefined) {
+        updates.promptInstructions = nextInstructions
+      }
+    }
+    await saveOperation(updates)
+  }
+
+  const selectEditorTool = (tool: AgentTool) => {
+    beginAddingTool(tool, pendingToolInsertion)
+  }
+
+  const cancelAutocompleteToolAddition = () => {
+    if (addingTool) {
+      return
+    }
+    const position = pendingToolInsertion
+    pendingToolInsertion = undefined
+    cancelPendingToolInsertion(position)
+  }
+
+  const closeToolConfiguration = () => {
+    if (chainingToolModal) {
+      chainingToolModal = false
+      return
+    }
+    const insertPosition = pendingToolInsertion
+    addingTool = undefined
+    pendingToolInsertion = undefined
+    cancelPendingToolInsertion(insertPosition)
+  }
+
+  const retryLoadTools = () => agentsStore.fetchTools()
+</script>
+
+{#snippet toolsLoadStatus()}
+  {#if toolsLoadFailed}
+    <div class="loading-state">
+      <Body size="XS">Failed to load tools</Body>
+      <Button secondary size="S" on:click={retryLoadTools}>Retry</Button>
+    </div>
+  {:else}
+    <div class="loading-state">
+      <ProgressCircle size="S" />
+      <Body size="XS">Loading tools...</Body>
+    </div>
+  {/if}
+{/snippet}
+
+{#if operation && agentId}
+  <div class="operation-page">
+    <TopBar
+      icon="Effect"
+      breadcrumbs={[
+        { text: "Agents", url: homeUrl, tag: "Beta" },
+        {
+          text: agent?.name || "Agent",
+          url: withWorkspaceHomeReturn("../../config"),
+        },
+        { text: operationName },
+      ]}
+    />
+
+    <div class="operation-content">
+      <main class="instructions-pane">
+        <div class="instructions-header">
+          <Body size="S" weight="500">Operation instructions</Body>
+          <div class="instructions-actions">
+            <AgentUnpublishedChangesIndicator />
+            <GenerateInstructionsControl
+              triggerLabel="Help write instructions"
+              promptBindings={availablePromptBindings}
+              bindingIcons={availableBindingIcons}
+              onApplyInstructions={applyGeneratedInstructions}
+            />
+            <LiveToggleButton
+              live={operation.live === true}
+              size="S"
+              disabled={togglingLive || !toolsLoaded}
+              on:click={toggleOperationLive}
+            />
+          </div>
+        </div>
+
+        <div class="editor-shell">
+          <div class="editor-body">
+            {#if toolsLoaded}
+              <CodeEditor
+                bind:this={instructionsEditor}
+                value={operation.promptInstructions || ""}
+                bindings={promptBindings}
+                {bindingIcons}
+                {completions}
+                mode={EditorModes.Handlebars}
+                renderBindingsAsTags
+                renderMarkdownDecorations
+                on:change={event => updateInstructions(event.detail || "")}
+                on:blur={() => saveOperation()}
+              />
+            {:else}
+              {@render toolsLoadStatus()}
+            {/if}
+          </div>
+          {#if toolsLoaded}
+            <div class="editor-footer">
+              <span
+                >Use <code>{`{{`}</code> to add tools to your instructions.</span
+              >
+              <div class="tools-popover-container">
+                <ToolsDropdown
+                  bind:this={editorToolsDropdown}
+                  {filteredTools}
+                  {toolSections}
+                  bind:toolSearch
+                  webSearchEnabled={webSearchConfigured}
+                  onToolClick={selectEditorTool}
+                  onClose={cancelAutocompleteToolAddition}
+                  onAddApiConnection={() => bb.settings("/connections/apis")}
+                  onConfigureWebSearch={() => webSearchConfigModal?.show()}
+                />
+              </div>
+            </div>
+          {/if}
+        </div>
+      </main>
+
+      <aside class="settings-rail">
+        <AgentTabList ariaLabel="Operation settings" bordered>
+          <button
+            class:active={activeTab === "tools"}
+            onclick={() => (activeTab = "tools")}>Tools</button
+          >
+          <button
+            class:active={activeTab === "knowledge"}
+            onclick={() => (activeTab = "knowledge")}>Knowledge</button
+          >
+          <button
+            class:active={activeTab === "approvals"}
+            onclick={() => (activeTab = "approvals")}>Approvals</button
+          >
+        </AgentTabList>
+
+        <div class="rail-content">
+          {#if activeTab === "tools"}
+            {#if !toolsLoaded}
+              {@render toolsLoadStatus()}
+            {:else}
+              <div class="rail-section">
+                <OperationRailSectionHeader
+                  title="Tools"
+                  description="Give the operation access to the tools it needs to complete requests and take action."
+                >
+                  {#snippet actions()}
+                    <div class="tools-popover-container">
+                      <ToolsDropdown
+                        {filteredTools}
+                        {toolSections}
+                        bind:toolSearch
+                        webSearchEnabled={webSearchConfigured}
+                        onToolClick={tool => beginAddingTool(tool)}
+                        onAddApiConnection={() =>
+                          bb.settings("/connections/apis")}
+                        onConfigureWebSearch={() =>
+                          webSearchConfigModal?.show()}
+                      />
+                    </div>
+                  {/snippet}
+                </OperationRailSectionHeader>
+                <div class="tools-list" role="list">
+                  {#each configuredToolList as item (item.config.toolName)}
+                    {@const tool = item.tool}
+                    <div role="listitem">
+                      <div class="tool-row" class:tool-row--with-run-as={tool}>
+                        {#if !tool}
+                          <div class="tool-row-activation">
+                            <div class="tool-name">
+                              <span class="tool-icon">
+                                <Icon name="Wrench" size="XS" />
+                              </span>
+                              <span>{item.config.toolName}</span>
+                              <span class="tool-unavailable">Unavailable</span>
+                            </div>
+                          </div>
+                        {:else}
+                          <button
+                            class="tool-row-activation"
+                            aria-label={`Configure ${tool.readableBinding}`}
+                            onclick={() => configureTool(tool)}
+                          >
+                            <div class="tool-name">
+                              <span class="tool-icon">
+                                <ToolIcon
+                                  icon={tool.icon}
+                                  size="S"
+                                  fallbackIcon="Wrench"
+                                />
+                              </span>
+                              <span>{tool.readableBinding}</span>
+                            </div>
+                            <div class="tool-row-summary">
+                              <span class="tool-row-run-as">
+                                Run as {getEffectiveToolPrincipal(tool) ===
+                                ToolExecutionPrincipal.ADMIN
+                                  ? "Admin"
+                                  : "Requester"}
+                              </span>
+                              {#if getToolApprovalCount(tool.runtimeBinding)}
+                                <span class="tool-row-approvals">
+                                  <Icon name="shield-check" size="XS" />
+                                  {getToolApprovalCount(tool.runtimeBinding)}
+                                  {getToolApprovalCount(tool.runtimeBinding) ===
+                                  1
+                                    ? "approval"
+                                    : "approvals"}
+                                </span>
+                              {/if}
+                            </div>
+                          </button>
+                        {/if}
+                        {#if !tool}
+                          <button
+                            class="tool-actions"
+                            aria-label={`Actions for ${item.config.toolName}`}
+                            onclick={event =>
+                              openToolMenu(event, {
+                                readableBinding: item.config.toolName,
+                                runtimeBinding: item.config.toolName,
+                              })}
+                          >
+                            <Icon name="dots-three" size="XS" />
+                          </button>
+                        {/if}
+                      </div>
+                    </div>
+                  {:else}
+                    <Body
+                      size="XS"
+                      color="var(--spectrum-global-color-gray-700)"
+                      >No tools are configured for this operation.</Body
+                    >
+                  {/each}
+                </div>
+              </div>
+            {/if}
+          {:else if activeTab === "knowledge"}
+            <Knowledge bind:operation onUpdated={() => saveOperation()} />
+          {:else}
+            <div class="rail-section">
+              <OperationRailSectionHeader
+                title="Approvals"
+                description="Reusable approval policies deciding who reviews this operation's gated actions."
+              >
+                {#snippet actions()}
+                  <Button
+                    secondary
+                    size="S"
+                    icon="plus-circle"
+                    on:click={() => approvalPolicyModal?.show()}
+                  >
+                    Add approval policy
+                  </Button>
+                {/snippet}
+              </OperationRailSectionHeader>
+              <div class="policies-list" role="list">
+                {#each approvalPolicies as policy (policy.id)}
+                  <div role="listitem" class="policy-row">
+                    <button
+                      class="policy-row-activation"
+                      aria-label={`Edit ${policy.name}`}
+                      onclick={() => approvalPolicyModal?.show(policy)}
+                    >
+                      <span class="policy-name">{policy.name}</span>
+                      <div class="policy-row-summary">
+                        {#if policyApprovalSummary(policy)}
+                          <span class="policy-usage">
+                            {policyApprovalSummary(policy)}
+                          </span>
+                        {/if}
+                        <span class="policy-usage policy-rules">
+                          {policyUsageCount(policy.id)}
+                          {policyUsageCount(policy.id) === 1 ? "rule" : "rules"}
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+                {:else}
+                  <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+                    No approval policies yet. Create one here, or add an
+                    approval rule to a tool.
+                  </Body>
+                {/each}
+              </div>
+            </div>
+          {/if}
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <ConfirmDialog
+    bind:this={removeToolDialog}
+    title={toolToRemoveIsReferenced
+      ? "Tool is used in instructions"
+      : "Remove tool?"}
+    okText="Remove"
+    warning={true}
+    onOk={handleRemoveToolConfirm}
+    onClose={handleRemoveToolClose}
+  >
+    {#if toolToRemove?.readableBinding}
+      {#if !toolToRemoveIsAvailable}
+        Remove <b>{toolToRemove.readableBinding}</b> from this operation? If it is
+        referenced in the instructions, those references will remain and won't resolve
+        until the tool is reconfigured.
+      {:else if toolToRemoveIsReferenced}
+        <b>{toolToRemove.readableBinding}</b> is referenced in the instructions.
+        Removing the tool will leave those references in place, and they won't resolve
+        until the tool is reconfigured.
+      {:else}
+        Remove <b>{toolToRemove.readableBinding}</b> from this operation?
+      {/if}
+    {/if}
+  </ConfirmDialog>
+
+  <ConfigureOperationToolModal
+    bind:this={configureToolModal}
+    onSave={saveToolConfiguration}
+    onRemove={tool => confirmRemoveTool(tool, true)}
+    onEditRule={beginRuleEdit}
+    onClose={closeToolConfiguration}
+  />
+
+  <OperationApprovalPolicyModal
+    bind:this={approvalPolicyModal}
+    {agentId}
+    providers={escalationProviders}
+    onSave={handlePolicySave}
+    onRemove={deletePolicy}
+    onClose={handlePolicyModalClose}
+  />
+  <OperationApprovalRuleModal
+    bind:this={approvalRuleModal}
+    onSave={handleRuleSave}
+    onRemove={handleRuleRemove}
+    onCreatePolicy={beginPolicyCreateFromRule}
+    onOpenApiExplorer={openApiExplorer}
+    onClose={handleRuleModalClose}
+  />
+
+  <Modal
+    bind:this={apiExplorerModal}
+    autoFocus={false}
+    beforeClose={handleApiExplorerClose}
+  >
+    <div
+      class="api-explorer-dialog spectrum-Dialog spectrum-Dialog--extraLarge"
+      style="position: relative;"
+      role="dialog"
+      tabindex="-1"
+      aria-modal="true"
+    >
+      <section class="spectrum-Dialog-content api-explorer-content">
+        <div class="endpoint-viewer-wrap">
+          {#if apiExplorerTarget}
+            <APIEndpointViewer
+              bind:this={apiViewer}
+              datasourceId={apiExplorerTarget.datasourceId}
+              queryId={apiExplorerTarget.queryId}
+              saveAndClose={true}
+              redirectNewQueryOnSave={false}
+              settingsLocked={true}
+              connectionPopoverPortalTarget=".spectrum"
+              on:savedQuery={() => {
+                refreshRuleModalFields()
+                apiExplorerModal?.hide()
+              }}
+            />
+          {/if}
+        </div>
+      </section>
+    </div>
+  </Modal>
+
+  <WebSearchConfigModal
+    bind:this={webSearchConfigModal}
+    aiconfigId={agent?.aiconfig}
+  />
+{/if}
+
+<style>
+  .operation-page {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    flex-direction: column;
+    background: var(--background);
+  }
+
+  .operation-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .instructions-pane {
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 12px 12px;
+  }
+
+  .instructions-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+  }
+
+  .instructions-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+
+  .editor-shell {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 6px;
+    background: var(--spectrum-global-color-gray-100);
+  }
+
+  .editor-body {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: auto;
+  }
+
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-s);
+    padding: 24px 0;
+    min-height: 100%;
+  }
+
+  .editor-body :global(.cm-editor) {
+    min-height: 100%;
+    height: 100%;
+    background: var(--spectrum-global-color-gray-100) !important;
+  }
+
+  .editor-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+    padding: 8px 12px;
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+    font-size: 12px;
+  }
+
+  .editor-footer code {
+    padding: 2px 5px;
+    border-radius: 3px;
+    background: var(--spectrum-global-color-gray-200);
+  }
+
+  .settings-rail {
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    background: var(--background);
+    border-left: 1px solid var(--spectrum-global-color-gray-200);
+  }
+
+  .rail-content {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: auto;
+    padding: 20px 12px;
+  }
+
+  .rail-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .tools-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .tool-row {
+    display: flex;
+    box-sizing: border-box;
+    min-height: 34px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 12px;
+    border-radius: 4px;
+    background: var(--background-alt);
+    width: 100%;
+    color: inherit;
+    text-align: left;
+  }
+
+  .tool-row--with-run-as {
+    min-height: 50px;
+    padding: 8px 12px;
+  }
+
+  .tool-row-activation {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+  }
+
+  button.tool-row-activation {
+    cursor: pointer;
+  }
+
+  .tool-row--with-run-as .tool-row-activation {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .tool-name {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    line-height: 17px;
+  }
+
+  .tool-icon {
+    display: flex;
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .tool-icon :global(img),
+  .tool-icon :global(svg) {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  .tool-name span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tool-name .tool-unavailable {
+    flex: 0 0 auto;
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 11px;
+  }
+
+  .tool-row-summary {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .tool-row-run-as {
+    padding-left: 21px;
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 11px;
+    line-height: 15px;
+  }
+
+  .tool-row-approvals {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 11px;
+    line-height: 15px;
+  }
+
+  .tool-actions {
+    display: flex;
+    padding: 4px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .api-explorer-dialog.spectrum-Dialog--extraLarge {
+    width: 1150px;
+    min-height: 720px;
+    height: 720px;
+  }
+
+  .api-explorer-content {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    border-radius: var(--spectrum-global-dimension-size-100);
+    width: 100%;
+    height: 100%;
+  }
+
+  .endpoint-viewer-wrap {
+    --api-viewer-x-padding: 20px;
+    --api-viewer-y-padding: 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .policies-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .policy-row {
+    display: flex;
+    box-sizing: border-box;
+    min-height: 50px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    background: var(--background-alt);
+    width: 100%;
+  }
+
+  .policy-row-activation {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .policy-name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    line-height: 17px;
+  }
+
+  .policy-row-summary {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    width: 100%;
+  }
+
+  .policy-usage {
+    flex: 0 0 auto;
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 11px;
+    line-height: 15px;
+  }
+
+  .policy-rules {
+    margin-left: auto;
+  }
+
+  @media (max-width: 900px) {
+    .operation-content {
+      grid-template-columns: minmax(0, 1fr) 300px;
+    }
+  }
+</style>

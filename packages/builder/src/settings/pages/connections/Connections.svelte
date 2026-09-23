@@ -1,86 +1,69 @@
 <script lang="ts">
   import { onMount } from "svelte"
+  import { Button, Layout, Table } from "@budibase/bbui"
   import { bb } from "@/stores/bb"
-  import { Layout, Table, Button, CollapsibleSearch } from "@budibase/bbui"
-  import RouteActions from "@/settings/components/RouteActions.svelte"
   import { oauth2 } from "@/stores/builder/oauth2"
   import { workspaceConnections } from "@/stores/builder/workspaceConnection"
+  import RouteActions from "@/settings/components/RouteActions.svelte"
   import EditConnectionRenderer from "./_components/EditConnectionRenderer.svelte"
   import IconRenderer from "./_components/IconRenderer.svelte"
   import TypeRenderer from "./_components/TypeRenderer.svelte"
 
   const customRenderers = [
-    { column: "edit", component: EditConnectionRenderer },
     { column: "icon", component: IconRenderer },
     { column: "type", component: TypeRenderer },
+    { column: "edit", component: EditConnectionRenderer },
   ]
   const schema = {
-    icon: { width: "auto", displayName: "" },
-    name: {
-      sortable: true,
-      color: "var(--spectrum-global-color-gray-900)",
-    },
-    type: {
-      sortable: true,
-    },
-    edit: {
-      width: "auto",
-      displayName: "",
-    },
+    icon: { width: "40px" },
+    name: { width: "1fr" },
+    type: { width: "200px" },
+    edit: { width: "100px", align: "Right" },
   }
-
-  let searchValue = ""
-
-  $: loading = $workspaceConnections.loading
-  $: allConnections = $workspaceConnections.list
-  $: filteredConnections = searchValue
-    ? allConnections.filter(c =>
-        c.name?.toLowerCase().includes(searchValue.toLowerCase())
-      )
-    : allConnections
 
   onMount(async () => {
     await oauth2.fetch()
   })
 </script>
 
-<Layout noPadding>
-  <Layout gap="XS" noPadding>
-    <RouteActions>
-      <div class="header-buttons">
-        <CollapsibleSearch
-          placeholder="Search"
-          value={searchValue}
-          on:change={event => (searchValue = event.detail)}
-        />
-        <Button
-          size="M"
-          on:click={() => bb.settings("/connections/apis/create")}
-          cta
-        >
-          Add connection
-        </Button>
-      </div>
-    </RouteActions>
-    <div class="setting-spacing">
-      <Table
-        compact
-        hideHeader
-        rounded
-        data={filteredConnections}
-        {loading}
-        {schema}
-        {customRenderers}
-        allowEditRows={false}
-        allowEditColumns={false}
-      />
-    </div>
-  </Layout>
+<Layout noPadding gap="XS">
+  <RouteActions>
+    <Button
+      size="M"
+      cta
+      on:click={() => bb.settings("/connections/api-connections/new")}
+    >
+      Create a custom connection
+    </Button>
+  </RouteActions>
+
+  <section class="connections-list-section">
+    <div class="section-title">Your connections</div>
+
+    <Table
+      compact
+      data={$workspaceConnections.list}
+      {schema}
+      {customRenderers}
+      hideHeader
+      rounded
+      allowClickRows={false}
+      allowEditRows={false}
+    />
+  </section>
 </Layout>
 
 <style>
-  .header-buttons {
+  .connections-list-section {
     display: flex;
-    gap: var(--spacing-m);
+    min-width: 0;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-l);
+  }
+
+  .section-title {
+    color: var(--grey-7, #a2a2a2);
+    font-size: 13px;
   }
 </style>

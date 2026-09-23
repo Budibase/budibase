@@ -14,15 +14,15 @@
   import { onMount } from "svelte"
   import type { Plugin } from "@budibase/types"
   import { admin } from "@/stores/portal/admin"
-  import { appsStore } from "@/stores/portal/apps"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { plugins } from "@/stores/portal/plugins"
   import AddPluginModal from "./_components/AddPluginModal.svelte"
   import PluginNameRenderer from "./_components/PluginNameRenderer.svelte"
   import EditPluginRenderer from "./_components/EditPluginRenderer.svelte"
   import RouteActions from "@/settings/components/RouteActions.svelte"
-  import UsedInAppsRenderer from "./_components/UsedInAppsRenderer.svelte"
+  import UsedInWorkspacesRenderer from "./_components/UsedInWorkspacesRenderer.svelte"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import type { StoreApp } from "@/types"
+  import type { StoreWorkspace } from "@/types"
 
   interface PluginTableRow extends Plugin {
     usedInApps: string[]
@@ -62,7 +62,7 @@
   }
   const customRenderers = [
     { column: "name", component: PluginNameRenderer },
-    { column: "usedInAppsLabel", component: UsedInAppsRenderer },
+    { column: "usedInAppsLabel", component: UsedInWorkspacesRenderer },
     { column: "edit", component: EditPluginRenderer },
   ]
 
@@ -85,34 +85,36 @@
     filterOptions.push({ label: "Automation", value: "automation" })
   }
 
-  const buildPluginUsageMap = (apps: StoreApp[]): Map<string, string[]> => {
+  const buildPluginUsageMap = (
+    workspaces: StoreWorkspace[]
+  ): Map<string, string[]> => {
     const usage = new Map<string, Set<string>>()
-    for (const app of apps || []) {
-      if (!app?.name || !Array.isArray(app.usedPlugins)) {
+    for (const workspace of workspaces || []) {
+      if (!workspace?.name || !Array.isArray(workspace.usedPlugins)) {
         continue
       }
-      for (const plugin of app.usedPlugins) {
+      for (const plugin of workspace.usedPlugins) {
         if (!plugin?._id) {
           continue
         }
         if (!usage.has(plugin._id)) {
           usage.set(plugin._id, new Set())
         }
-        usage.get(plugin._id)?.add(app.name)
+        usage.get(plugin._id)?.add(workspace.name)
       }
     }
 
     const usageMap = new Map<string, string[]>()
-    for (const [pluginId, appNames] of usage.entries()) {
+    for (const [pluginId, workspaceNames] of usage.entries()) {
       usageMap.set(
         pluginId,
-        [...appNames].sort((a, b) => a.localeCompare(b))
+        [...workspaceNames].sort((a, b) => a.localeCompare(b))
       )
     }
     return usageMap
   }
 
-  $: pluginUsageById = buildPluginUsageMap($appsStore.apps)
+  $: pluginUsageById = buildPluginUsageMap($workspacesStore.apps)
 
   $: enrichedPlugins = ($plugins || []).map(plugin => {
     const usedInApps = plugin._id ? pluginUsageById.get(plugin._id) || [] : []
@@ -137,7 +139,7 @@
     })
 
   onMount(async () => {
-    await Promise.all([plugins.load(), appsStore.load()])
+    await Promise.all([plugins.load(), workspacesStore.load()])
     try {
       await plugins.checkUpdates()
     } catch (err: any) {

@@ -1,9 +1,12 @@
 import {
+  EscalationPolicySnapshot,
   EscalationRecipient,
+  EscalationReviewContext,
   EscalationResponse,
   EscalationSource,
   SuspendedAutomationContext,
   SuspendedOperationContext,
+  ToolExecutionRule,
 } from "@budibase/types"
 
 interface CreateEscalationBase {
@@ -18,6 +21,7 @@ interface CreateEscalationBase {
   // Human-facing heading + detail rendered in the notification.
   title?: string
   summary?: string
+  reviewContext?: EscalationReviewContext
 }
 
 export interface CreateAutomationEscalationInput extends CreateEscalationBase {
@@ -33,6 +37,8 @@ export interface CreateOperationEscalationInput extends CreateEscalationBase {
   agentId: string
   operationId: string
   requestId?: string
+  rule?: ToolExecutionRule
+  policy?: EscalationPolicySnapshot
   context: SuspendedOperationContext
 }
 

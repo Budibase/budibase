@@ -2,11 +2,14 @@ import { context } from "@budibase/backend-core"
 import {
   Agent,
   AgentOperation,
+  AgentSharePointKnowledgeSourceScope,
   Automation,
+  FunctionDocument,
   KnowledgeBaseFile,
   PublishResourceState,
   PublishStatusResource,
   Screen,
+  SharePointScopeMode,
   Table,
   Workspace,
   WorkspaceApp,
@@ -36,6 +39,7 @@ export async function status() {
     workspaceApps: WorkspaceApp[]
     screens: Screen[]
     tables: Table[]
+    functions: FunctionDocument[]
   }
   const developmentState: State = {
     agents: [],
@@ -44,6 +48,7 @@ export async function status() {
     workspaceApps: [],
     screens: [],
     tables: [],
+    functions: [],
   }
   const productionState: State = {
     agents: [],
@@ -52,9 +57,27 @@ export async function status() {
     workspaceApps: [],
     screens: [],
     tables: [],
+    functions: [],
   }
 
-  const normalizeArray = <T>(items: T[]) => [...items].sort()
+  const toComparableSharePointScope = (
+    scope?: AgentSharePointKnowledgeSourceScope
+  ) => {
+    if (!scope || scope.mode === SharePointScopeMode.ALL) {
+      return scope
+    }
+    const targets = scope.targets.map(target =>
+      Object.fromEntries(
+        Object.entries(target).sort(([a], [b]) => a.localeCompare(b))
+      )
+    )
+    return {
+      mode: scope.mode,
+      targets: targets.sort((a, b) =>
+        JSON.stringify(a).localeCompare(JSON.stringify(b))
+      ),
+    }
+  }
 
   const toComparableKnowledgeSource = (
     source: NonNullable<AgentOperation["knowledgeSources"]>[number]
@@ -69,11 +92,7 @@ export async function status() {
             webUrl: source.config.site.webUrl,
           }
         : undefined,
-      filters: source.config.filters
-        ? {
-            patterns: normalizeArray(source.config.filters.patterns || []),
-          }
-        : undefined,
+      scope: toComparableSharePointScope(source.config.scope),
     },
   })
 
@@ -107,26 +126,13 @@ export async function status() {
       aiconfig: agent.aiconfig,
       goal: agent.goal,
       live: agent.live,
-      discordIntegration: agent.discordIntegration
-        ? {
-            applicationId: agent.discordIntegration.applicationId,
-            publicKey: agent.discordIntegration.publicKey,
-            botToken: agent.discordIntegration.botToken,
-            guildId: agent.discordIntegration.guildId,
-            interactionsEndpointUrl:
-              agent.discordIntegration.interactionsEndpointUrl,
-            chatAppId: agent.discordIntegration.chatAppId,
-            idleTimeoutMinutes: agent.discordIntegration.idleTimeoutMinutes,
-            requireUserLink: agent.discordIntegration.requireUserLink,
-          }
-        : undefined,
+      allowConversationAttachments: agent.allowConversationAttachments,
       MSTeamsIntegration: agent.MSTeamsIntegration
         ? {
             appId: agent.MSTeamsIntegration.appId,
             appPassword: agent.MSTeamsIntegration.appPassword,
             tenantId: agent.MSTeamsIntegration.tenantId,
             messagingEndpointUrl: agent.MSTeamsIntegration.messagingEndpointUrl,
-            chatAppId: agent.MSTeamsIntegration.chatAppId,
             idleTimeoutMinutes: agent.MSTeamsIntegration.idleTimeoutMinutes,
             requireUserLink: agent.MSTeamsIntegration.requireUserLink,
           }
@@ -136,7 +142,6 @@ export async function status() {
             botToken: agent.slackIntegration.botToken,
             signingSecret: agent.slackIntegration.signingSecret,
             messagingEndpointUrl: agent.slackIntegration.messagingEndpointUrl,
-            chatAppId: agent.slackIntegration.chatAppId,
             idleTimeoutMinutes: agent.slackIntegration.idleTimeoutMinutes,
             requireUserLink: agent.slackIntegration.requireUserLink,
           }
@@ -159,13 +164,14 @@ export async function status() {
     JSON.stringify(normalizeAgentPayload(agent, files))
 
   const updateState = async (state: State) => {
-    const [automations, workspaceApps, screens, tables, agents] =
+    const [automations, workspaceApps, screens, tables, agents, functions] =
       await Promise.all([
         sdk.automations.fetch(),
         sdk.workspaceApps.fetch(),
         sdk.screens.fetch(),
         sdk.tables.getAllInternalTables(),
         sdk.ai.agents.fetch(),
+        sdk.functions.fetch(),
       ])
 
     const filesByAgentEntries = await Promise.all(
@@ -187,6 +193,7 @@ export async function status() {
     state.workspaceApps = workspaceApps
     state.screens = screens
     state.tables = tables
+    state.functions = functions
   }
 
   await context.doInWorkspaceContext(context.getDevWorkspaceId(), async () =>
@@ -210,6 +217,7 @@ export async function status() {
   )
   const prodTableIds = new Set(productionState.tables.map(t => t._id))
   const prodAgentIds = new Set(productionState.agents.map(a => a._id))
+  const prodFunctionIds = new Set(productionState.functions.map(fn => fn._id))
 
   const processResource = (
     map: Record<string, PublishStatusResource>,
@@ -309,5 +317,10 @@ export async function status() {
     }
   }
 
-  return { automations, workspaceApps, tables, agents }
+  const functions: Record<string, PublishStatusResource> = {}
+  for (const fn of developmentState.functions) {
+    processResource(functions, prodFunctionIds, fn)
+  }
+
+  return { automations, workspaceApps, tables, agents, functions }
 }

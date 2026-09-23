@@ -192,6 +192,8 @@ const renderBranchCluster = (args: BranchClusterArgs) => {
           block: prevBlock,
           loopStepId: loopContext!.loopStepId,
           loopChildInsertIndex: loopContext!.loopChildInsertIndex,
+          branchStepId: baseId,
+          branchIdx: bIdx,
           ...(prevPath ? { pathTo: prevPath as BlockPath[] } : {}),
         })
         prevId = child.id
@@ -212,6 +214,8 @@ const renderBranchCluster = (args: BranchClusterArgs) => {
         block: prevBlock,
         loopStepId: loopContext!.loopStepId,
         loopChildInsertIndex: loopContext!.loopChildInsertIndex,
+        branchStepId: baseId,
+        branchIdx: bIdx,
         ...(anchorSourcePath
           ? { pathTo: anchorSourcePath as BlockPath[] }
           : {}),

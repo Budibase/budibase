@@ -5,7 +5,7 @@
   import { createEventDispatcher } from "svelte"
   import BBAI from "assets/bb-ai.svg"
 
-  export let onSubmit: (_prompt: string) => Promise<void>
+  export let onSubmit: (prompt: string) => Promise<void>
   export let placeholder: string = ""
   export let expanded: boolean = false
   export let expandedOnly: boolean = false

@@ -8,18 +8,107 @@ interface MockWebhookChatPayload {
 interface ChatMockModule {
   resetMockChatState: () => void
   setMockPostEphemeralResult: (
-    provider: "slack" | "teams" | "telegram",
+    provider: "slack" | "teams",
     result: { usedFallback: boolean }
   ) => void
+}
+
+interface SlackManifest {
+  display_information: {
+    name: string
+    description: string
+  }
+  features: {
+    app_home: {
+      home_tab_enabled: boolean
+      messages_tab_enabled: boolean
+      messages_tab_read_only_enabled: boolean
+    }
+    bot_user: {
+      display_name: string
+      always_online: boolean
+    }
+    slash_commands: Array<{
+      command: string
+      url: string
+      description: string
+      usage_hint: string
+      should_escape: boolean
+    }>
+  }
+  oauth_config: {
+    scopes: {
+      bot: string[]
+    }
+  }
+  settings: {
+    event_subscriptions: {
+      request_url: string
+      bot_events: string[]
+    }
+    interactivity: {
+      is_enabled: boolean
+      request_url: string
+    }
+    org_deploy_enabled: boolean
+    socket_mode_enabled: boolean
+    token_rotation_enabled: boolean
+  }
 }
 
 jest.mock("@chat-adapter/slack", () => ({
   createSlackAdapter: jest.fn(() => ({})),
 }))
 
+// Agent create/update resolves the Slack workspace via auth.test - without
+// this mock the real client retries against the nock net-connect block until
+// the test times out.
+jest.mock("@slack/web-api", () => ({
+  WebClient: jest.fn((token: string) => {
+    let teamId = "T123"
+    if (token === "xoxb-oauth-bot-token") {
+      teamId = "T_SLACK"
+    }
+    if (token === "xoxb-live-oauth-bot-token") {
+      teamId = "T_LIVE_SLACK"
+    }
+    return {
+      auth: {
+        test: jest.fn().mockResolvedValue({ ok: true, team_id: teamId }),
+      },
+    }
+  }),
+}))
+
 jest.mock("@chat-adapter/state-memory", () => ({
   createMemoryState: jest.fn(() => ({})),
 }))
+
+jest.mock(
+  "../../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue",
+  () => {
+    const actual = jest.requireActual<
+      typeof import("../../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue")
+    >("../../../../sdk/workspace/ai/chatConversations/attachmentIngestionQueue")
+    return {
+      ...actual,
+      scheduleConversationAttachmentIngestion: jest.fn(),
+    }
+  }
+)
+
+jest.mock(
+  "../../../../sdk/workspace/ai/chatConversations/attachmentCleanupQueue",
+  () => {
+    const actual = jest.requireActual<
+      typeof import("../../../../sdk/workspace/ai/chatConversations/attachmentCleanupQueue")
+    >("../../../../sdk/workspace/ai/chatConversations/attachmentCleanupQueue")
+    return {
+      ...actual,
+      scheduleConversationAttachmentCleanup: jest.fn(),
+    }
+  }
+)
 
 jest.mock("../../../controllers/ai/chatConversations", () => {
   const actual = jest.requireActual("../../../controllers/ai/chatConversations")
@@ -50,15 +139,28 @@ jest.mock("../../../../sdk/workspace/ai/rag", () => {
   }
 })
 
+jest.mock("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore", () => {
+  const actual = jest.requireActual<
+    typeof import("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
+  >("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
+  return {
+    ...actual,
+    isGeminiFileSearchConfigured: jest.fn(actual.isGeminiFileSearchConfigured),
+  }
+})
+
 import sdk from "../../../../sdk"
-import { context, db, docIds, encryption, roles } from "@budibase/backend-core"
+import { context, db, docIds, encryption } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
+  ConversationAttachmentStatus,
   DocumentType,
   type Agent,
   type ChatConversation,
+  type SlackAppConfig,
 } from "@budibase/types"
+import * as geminiFileStore from "../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
 import { webhookChat } from "../../../controllers/ai/chatConversations"
@@ -70,6 +172,28 @@ const { resetMockChatState, setMockPostEphemeralResult } = jest.requireActual(
 
 const mockedWebhookChat = webhookChat as jest.MockedFunction<typeof webhookChat>
 const mockedGetFileUrlForAgent = jest.mocked(sdk.ai.rag.getFileUrlForAgent)
+const mockedScheduleAttachmentIngestion = jest.mocked(
+  sdk.ai.chatConversations.attachmentIngestionQueue
+    .scheduleConversationAttachmentIngestion
+)
+const mockedScheduleAttachmentCleanup = jest.mocked(
+  sdk.ai.chatConversations.attachmentCleanupQueue
+    .scheduleConversationAttachmentCleanup
+)
+const mockedIsGeminiFileSearchConfigured = jest.mocked(
+  geminiFileStore.isGeminiFileSearchConfigured
+)
+const actualGeminiFileStore = jest.requireActual<
+  typeof import("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
+>("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore")
+
+const slackJsonResponse = (body: Record<string, unknown>) =>
+  new Response(JSON.stringify(body), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
 
 const resetWebhookChatMock = () => {
   mockedWebhookChat.mockReset()
@@ -121,11 +245,6 @@ describe("agent slack integration provisioning", () => {
     return result
   }
 
-  const getPersistedChatApp = async () =>
-    await config.doInContext(config.getDevWorkspaceId(), async () => {
-      return await sdk.ai.chatApps.getSingle()
-    })
-
   beforeEach(async () => {
     await config.newTenant()
     cleanupAIConfig = await setupDefaultCompletionsAIConfig(
@@ -134,16 +253,104 @@ describe("agent slack integration provisioning", () => {
     )
     resetWebhookChatMock()
     mockedGetFileUrlForAgent.mockReset()
+    mockedIsGeminiFileSearchConfigured.mockReset()
+    mockedIsGeminiFileSearchConfigured.mockImplementation(
+      actualGeminiFileStore.isGeminiFileSearchConfigured
+    )
+    mockedScheduleAttachmentIngestion.mockReset()
+    mockedScheduleAttachmentCleanup.mockReset()
     resetMockChatState()
   })
 
   afterEach(async () => {
+    if (jest.isMockFunction(global.fetch)) {
+      jest.mocked(global.fetch).mockRestore()
+    }
     await cleanupAIConfig?.()
     cleanupAIConfig = undefined
   })
 
   afterAll(() => {
     config.end()
+  })
+
+  describe("GET /api/chat-links", () => {
+    it.each([
+      ["without query parameters", {}],
+      ["without an agentId", { provider: AgentChannelProvider.SLACK }],
+      ["without a provider", { agentId: "agent-1" }],
+      [
+        "with an unsupported provider",
+        { provider: "discord", agentId: "agent-1" },
+      ],
+    ])("rejects requests %s", async (_description, query) => {
+      await config
+        .getRequest()!
+        .get("/api/chat-links")
+        .set(await config.defaultHeaders())
+        .query(query)
+        .expect(400)
+    })
+
+    it("returns only links in the agent's Slack workspace", async () => {
+      const agent = await config.api.agent.create({
+        name: "Slack Agent",
+        slackIntegration: {
+          botToken: "xoxb-token-1",
+          signingSecret: "slack-signing-secret",
+        },
+      })
+      const otherUser = await config.createUser()
+
+      await config.doInTenant(async () => {
+        await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
+          provider: AgentChannelProvider.SLACK,
+          externalUserId: "reachable-user",
+          teamId: "T123",
+          globalUserId: config.getUser()._id!,
+        })
+        await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
+          provider: AgentChannelProvider.SLACK,
+          externalUserId: "other-workspace-user",
+          teamId: "T_OTHER",
+          globalUserId: otherUser._id!,
+        })
+      })
+
+      const response = await config
+        .getRequest()!
+        .get("/api/chat-links")
+        .set(await config.defaultHeaders())
+        .query({ provider: AgentChannelProvider.SLACK, agentId: agent._id })
+        .expect(200)
+
+      expect(response.body).toEqual([
+        expect.objectContaining({ externalUserId: "reachable-user" }),
+      ])
+    })
+
+    it("returns no links for an unknown agent", async () => {
+      await config.doInTenant(async () => {
+        await sdk.ai.chatIdentityLinks.upsertChatIdentityLink({
+          provider: AgentChannelProvider.SLACK,
+          externalUserId: "linked-user",
+          teamId: "T123",
+          globalUserId: config.getUser()._id!,
+        })
+      })
+
+      const response = await config
+        .getRequest()!
+        .get("/api/chat-links")
+        .set(await config.defaultHeaders())
+        .query({
+          provider: AgentChannelProvider.SLACK,
+          agentId: "agent_from_another_workspace",
+        })
+        .expect(200)
+
+      expect(response.body).toEqual([])
+    })
   })
 
   it("provisions slack channel for an agent", async () => {
@@ -158,27 +365,17 @@ describe("agent slack integration provisioning", () => {
     const result = await config.api.agent.provisionSlackChannel(agent._id!)
 
     expect(result.success).toBe(true)
-    expect(result.chatAppId).toBeTruthy()
     expect(result.messagingEndpointUrl).toContain("/api/webhooks/slack/")
     expect(result.messagingEndpointUrl).toContain(
       `/${config.getProdWorkspaceId()}/`
     )
-    expect(result.messagingEndpointUrl).toContain(`/${result.chatAppId}/`)
     expect(result.messagingEndpointUrl).toContain(`/${agent._id}`)
 
     const { agents } = await config.api.agent.fetch()
     const updated = agents.find(candidate => candidate._id === agent._id)
-    expect(updated?.slackIntegration?.chatAppId).toEqual(result.chatAppId)
     expect(updated?.slackIntegration?.messagingEndpointUrl).toEqual(
       result.messagingEndpointUrl
     )
-
-    const chatApp = await getPersistedChatApp()
-    expect(chatApp?.agents).toContainEqual({
-      agentId: agent._id,
-      isEnabled: false,
-      isDefault: false,
-    })
   })
 
   it("obfuscates slack secrets in responses and preserves them on update", async () => {
@@ -218,6 +415,31 @@ describe("agent slack integration provisioning", () => {
     ).toBeTrue()
   })
 
+  it("ignores a client-supplied teamId while the bot token is unchanged", async () => {
+    const created = await config.api.agent.create({
+      name: "Slack TeamId Agent",
+      slackIntegration: {
+        botToken: "xoxb-token-teamid",
+        signingSecret: "slack-signing-secret-teamid",
+      },
+    })
+
+    let persisted = await getPersistedAgent(created._id)
+    expect(persisted.slackIntegration?.teamId).toEqual("T123")
+
+    const { agents } = await config.api.agent.fetch()
+    const fetched = agents.find(a => a._id === created._id)!
+
+    // Same (masked) token, but forge a different workspace id.
+    await config.api.agent.update({
+      ...fetched,
+      slackIntegration: { ...fetched.slackIntegration!, teamId: "T999" },
+    })
+
+    persisted = await getPersistedAgent(created._id)
+    expect(persisted.slackIntegration?.teamId).toEqual("T123")
+  })
+
   it("returns a validation error when slack settings are missing", async () => {
     const agent = await config.api.agent.create({
       name: "No Slack Settings",
@@ -226,6 +448,422 @@ describe("agent slack integration provisioning", () => {
     await config.api.agent.provisionSlackChannel(agent._id!, undefined, {
       status: 400,
     })
+  })
+
+  it("downloads a Slack app manifest for an agent", async () => {
+    const agent = await config.api.agent.create({
+      name: "Slack Manifest Agent",
+      description: "Answers questions in Slack.",
+      slackIntegration: {
+        botToken: "xoxb-token-manifest",
+        signingSecret: "slack-signing-secret-manifest",
+      },
+    })
+
+    const manifestText = await config.api.agent.downloadSlackManifest(
+      agent._id!,
+      {
+        headers: {
+          "Content-Disposition":
+            /budibase-slack-slack-manifest-agent-manifest\.json/,
+        },
+      }
+    )
+    const manifest = JSON.parse(manifestText) as SlackManifest
+    const endpointUrl = manifest.settings.event_subscriptions.request_url
+
+    expect(manifest.display_information).toEqual({
+      name: "Slack Manifest Agent",
+      description: "Answers questions in Slack.",
+    })
+    expect(manifest.features.app_home).toEqual({
+      home_tab_enabled: false,
+      messages_tab_enabled: true,
+      messages_tab_read_only_enabled: false,
+    })
+    expect(manifest.features.bot_user.always_online).toBe(true)
+    expect(endpointUrl).toContain("/api/webhooks/slack/")
+    expect(endpointUrl).toContain(`/${config.getProdWorkspaceId()}/`)
+    expect(endpointUrl).toContain(`/${agent._id}`)
+    expect(manifest.settings.interactivity.request_url).toEqual(endpointUrl)
+    expect(manifest.features.slash_commands).toContainEqual({
+      command: `/${ChatCommands.LINK}`,
+      url: endpointUrl,
+      description: "Link your Slack user to your Budibase account.",
+      usage_hint: `/${ChatCommands.LINK}`,
+      should_escape: false,
+    })
+    expect(manifest.features.slash_commands).toContainEqual({
+      command: `/${ChatCommands.UNLINK}`,
+      url: endpointUrl,
+      description: "Unlink your Slack user from your Budibase account.",
+      usage_hint: `/${ChatCommands.UNLINK}`,
+      should_escape: false,
+    })
+    expect(manifest.features.slash_commands).toContainEqual({
+      command: `/${ChatCommands.NEW}`,
+      url: endpointUrl,
+      description: "Start a new conversation with this agent.",
+      usage_hint: `/${ChatCommands.NEW}`,
+      should_escape: false,
+    })
+    expect(manifest.settings.event_subscriptions.bot_events).toEqual([
+      "app_mention",
+      "message.im",
+    ])
+    expect(manifest.oauth_config.scopes.bot).toEqual([
+      "app_mentions:read",
+      "channels:history",
+      "chat:write",
+      "commands",
+      "files:read",
+      "im:history",
+      "im:read",
+      "im:write",
+      "users:read",
+    ])
+    expect(manifestText).not.toContain("xoxb-token-manifest")
+    expect(manifestText).not.toContain("slack-signing-secret-manifest")
+
+    const { agents } = await config.api.agent.fetch()
+    const updated = agents.find(candidate => candidate._id === agent._id)
+    expect(updated?.slackIntegration?.messagingEndpointUrl).toEqual(endpointUrl)
+  })
+
+  it("downloads a Slack app manifest without Slack credentials", async () => {
+    const agent = await config.api.agent.create({
+      name: "No Slack Manifest Settings",
+    })
+
+    const manifestText = await config.api.agent.downloadSlackManifest(
+      agent._id!
+    )
+    const manifest = JSON.parse(manifestText) as SlackManifest
+    const endpointUrl = manifest.settings.event_subscriptions.request_url
+
+    expect(endpointUrl).toContain("/api/webhooks/slack/")
+    expect(endpointUrl).toContain(`/${config.getProdWorkspaceId()}/`)
+    expect(endpointUrl).toContain(`/${agent._id}`)
+    expect(manifest.settings.interactivity.request_url).toEqual(endpointUrl)
+
+    const persisted = await getPersistedAgent(agent._id)
+    expect(persisted.slackIntegration?.messagingEndpointUrl).toEqual(
+      endpointUrl
+    )
+  })
+
+  it("creates a Slack app from the generated manifest", async () => {
+    const agent = await config.api.agent.create({
+      name: "Slack Created App",
+      description: "Created through Slack API.",
+    })
+    jest.spyOn(global, "fetch").mockImplementation(async (url, init) => {
+      if (String(url).endsWith("/tooling.tokens.rotate")) {
+        expect(
+          (init?.headers as Record<string, string>)["Content-Type"]
+        ).toEqual("application/x-www-form-urlencoded")
+        expect((init?.body as URLSearchParams).get("refresh_token")).toEqual(
+          "xoxe-refresh-token"
+        )
+        return slackJsonResponse({
+          ok: true,
+          token: "xoxe-rotated-config-token",
+          refresh_token: "xoxe-rotated-refresh-token",
+          exp: Math.floor(Date.now() / 1000) + 43200,
+        })
+      }
+
+      const body = JSON.parse(String(init?.body))
+      const manifest = JSON.parse(body.manifest)
+      expect((init?.headers as Record<string, string>).Authorization).toEqual(
+        "Bearer xoxe-rotated-config-token"
+      )
+      expect(body.token).toBeUndefined()
+      expect(manifest.oauth_config.redirect_urls[0]).toContain(
+        "/api/agent/slack/oauth/callback"
+      )
+      expect(manifest.settings.event_subscriptions.request_url).toContain(
+        "/api/webhooks/slack/"
+      )
+      return slackJsonResponse({
+        ok: true,
+        app_id: "A_SLACK_APP",
+        credentials: {
+          client_id: "slack-client-id",
+          client_secret: "slack-client-secret",
+          signing_secret: "slack-signing-secret-created",
+        },
+        oauth_authorize_url:
+          "https://slack.com/oauth/v2/authorize?client_id=slack-client-id&scope=commands,chat:write",
+      })
+    })
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      await sdk.ai.slackAppConfig.save(
+        "xoxe-config-token",
+        "xoxe-refresh-token"
+      )
+    })
+
+    const result = await config.api.agent.createSlackApp(agent._id!)
+
+    expect(result.success).toBe(true)
+    expect(result.appId).toEqual("A_SLACK_APP")
+    expect(result.oauthAuthorizeUrl).toContain("state=")
+    expect(result.oauthAuthorizeUrl).toContain("redirect_uri=")
+    expect(result.messagingEndpointUrl).toContain("/api/webhooks/slack/")
+
+    const persisted = await getPersistedAgent(agent._id)
+    expect(persisted.slackIntegration?.appId).toEqual("A_SLACK_APP")
+    expect(persisted.slackIntegration?.clientId).toEqual("slack-client-id")
+    expect(
+      secretMatch(
+        "slack-client-secret",
+        persisted.slackIntegration!.clientSecret!
+      )
+    ).toBeTrue()
+    expect(
+      secretMatch(
+        "slack-signing-secret-created",
+        persisted.slackIntegration!.signingSecret!
+      )
+    ).toBeTrue()
+    expect(persisted.slackIntegration?.botToken).toBeUndefined()
+  })
+
+  it("requires a workspace Slack app configuration token when creating a Slack app", async () => {
+    const agent = await config.api.agent.create({
+      name: "Slack Missing Config App",
+    })
+
+    await config.api.agent.createSlackApp(agent._id!, undefined, {
+      status: 400,
+    })
+  })
+
+  it("rotates Slack app configuration tokens before using an expiring token", async () => {
+    let rotations = 0
+    jest.spyOn(global, "fetch").mockImplementation(async (url, init) => {
+      expect(String(url)).toContain("/tooling.tokens.rotate")
+      expect((init?.headers as Record<string, string>)["Content-Type"]).toEqual(
+        "application/x-www-form-urlencoded"
+      )
+      rotations += 1
+      expect((init?.body as URLSearchParams).get("refresh_token")).toEqual(
+        rotations === 1 ? "xoxe-refresh-token" : "xoxe-rotated-refresh-token-1"
+      )
+      return slackJsonResponse({
+        ok: true,
+        token: `xoxe-rotated-config-token-${rotations}`,
+        refresh_token: `xoxe-rotated-refresh-token-${rotations}`,
+        exp: Math.floor(Date.now() / 1000) + (rotations === 1 ? 60 : 43200),
+      })
+    })
+
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      await sdk.ai.slackAppConfig.save(
+        "xoxe-config-token",
+        "xoxe-refresh-token"
+      )
+
+      const token = await sdk.ai.slackAppConfig.fetchConfigToken()
+
+      expect(token).toEqual("xoxe-rotated-config-token-2")
+      const persisted = (await sdk.ai.slackAppConfig.fetch()) as SlackAppConfig
+      expect(
+        secretMatch("xoxe-rotated-config-token-2", persisted.configToken)
+      ).toBeTrue()
+      expect(
+        secretMatch("xoxe-rotated-refresh-token-2", persisted.refreshToken!)
+      ).toBeTrue()
+      expect(rotations).toEqual(2)
+    })
+  })
+
+  it("completes Slack OAuth and stores the bot token", async () => {
+    const agent = await config.api.agent.create({
+      name: "Slack OAuth App",
+    })
+    jest.spyOn(global, "fetch").mockImplementation(async (url, init) => {
+      if (String(url).endsWith("/tooling.tokens.rotate")) {
+        expect(
+          (init?.headers as Record<string, string>)["Content-Type"]
+        ).toEqual("application/x-www-form-urlencoded")
+        expect((init?.body as URLSearchParams).get("refresh_token")).toEqual(
+          "xoxe-refresh-token"
+        )
+        return slackJsonResponse({
+          ok: true,
+          token: "xoxe-rotated-oauth-config-token",
+          refresh_token: "xoxe-rotated-oauth-refresh-token",
+          exp: Math.floor(Date.now() / 1000) + 43200,
+        })
+      }
+
+      if (String(url).endsWith("/apps.manifest.create")) {
+        return slackJsonResponse({
+          ok: true,
+          app_id: "A_SLACK_OAUTH_APP",
+          credentials: {
+            client_id: "slack-oauth-client-id",
+            client_secret: "slack-oauth-client-secret",
+            signing_secret: "slack-oauth-signing-secret",
+          },
+          oauth_authorize_url:
+            "https://slack.com/oauth/v2/authorize?client_id=slack-oauth-client-id&scope=commands,chat:write",
+        })
+      }
+
+      expect(String(url)).toContain("/oauth.v2.access")
+      const body = init?.body as URLSearchParams
+      expect(body.get("code")).toEqual("slack-oauth-code")
+      expect(body.get("client_id")).toEqual("slack-oauth-client-id")
+      return slackJsonResponse({
+        ok: true,
+        access_token: "xoxb-oauth-bot-token",
+        bot_user_id: "U_BOT",
+        app_id: "A_SLACK_OAUTH_APP",
+        team: {
+          id: "T_SLACK",
+          name: "Slack Team",
+        },
+      })
+    })
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      await sdk.ai.slackAppConfig.save(
+        "xoxe-config-token",
+        "xoxe-refresh-token"
+      )
+    })
+    const created = await config.api.agent.createSlackApp(agent._id!)
+    const state = new URL(created.oauthAuthorizeUrl).searchParams.get("state")
+    expect(state).toBeTruthy()
+
+    await config
+      .getRequest()!
+      .get(
+        `/api/agent/slack/oauth/callback?code=slack-oauth-code&state=${state}`
+      )
+      .expect(302)
+
+    const persisted = await getPersistedAgent(agent._id)
+    expect(
+      secretMatch("xoxb-oauth-bot-token", persisted.slackIntegration!.botToken!)
+    ).toBeTrue()
+    expect(persisted.slackIntegration?.botUserId).toEqual("U_BOT")
+    expect(persisted.slackIntegration?.teamId).toEqual("T_SLACK")
+    expect(persisted.slackIntegration?.teamName).toEqual("Slack Team")
+  })
+
+  it("publishes Slack OAuth credentials for live agents", async () => {
+    const agent = await config.api.agent.createWithOperation(
+      {
+        name: "Live Slack OAuth App",
+        aiconfig: "test-config",
+      },
+      {
+        id: "operation_1",
+        name: "Live Slack OAuth operation",
+        live: true,
+        enabledTools: [],
+        allowKnowledgeSourceDownload: true,
+      }
+    )
+    const liveAgent = await config.api.agent.update({
+      ...agent,
+      live: true,
+    })
+    await config.publish()
+
+    let manifestEndpointUrl: string | undefined
+    jest.spyOn(global, "fetch").mockImplementation(async (url, init) => {
+      if (String(url).endsWith("/tooling.tokens.rotate")) {
+        return slackJsonResponse({
+          ok: true,
+          token: "xoxe-rotated-live-oauth-config-token",
+          refresh_token: "xoxe-rotated-live-oauth-refresh-token",
+          exp: Math.floor(Date.now() / 1000) + 43200,
+        })
+      }
+
+      if (String(url).endsWith("/apps.manifest.create")) {
+        const body = JSON.parse(String(init?.body))
+        const manifest = JSON.parse(body.manifest) as SlackManifest
+        manifestEndpointUrl = manifest.settings.event_subscriptions.request_url
+        return slackJsonResponse({
+          ok: true,
+          app_id: "A_LIVE_SLACK_OAUTH_APP",
+          credentials: {
+            client_id: "live-slack-oauth-client-id",
+            client_secret: "live-slack-oauth-client-secret",
+            signing_secret: "live-slack-oauth-signing-secret",
+          },
+          oauth_authorize_url:
+            "https://slack.com/oauth/v2/authorize?client_id=live-slack-oauth-client-id&scope=commands,chat:write",
+        })
+      }
+
+      expect(String(url)).toContain("/oauth.v2.access")
+      const body = init?.body as URLSearchParams
+      expect(body.get("code")).toEqual("live-slack-oauth-code")
+      expect(body.get("client_id")).toEqual("live-slack-oauth-client-id")
+      return slackJsonResponse({
+        ok: true,
+        access_token: "xoxb-live-oauth-bot-token",
+        bot_user_id: "U_LIVE_BOT",
+        app_id: "A_LIVE_SLACK_OAUTH_APP",
+        team: {
+          id: "T_LIVE_SLACK",
+          name: "Live Slack Team",
+        },
+      })
+    })
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      await sdk.ai.slackAppConfig.save(
+        "xoxe-config-token",
+        "xoxe-refresh-token"
+      )
+    })
+
+    const created = await config.api.agent.createSlackApp(liveAgent._id!)
+    expect(manifestEndpointUrl).toEqual(created.messagingEndpointUrl)
+    expect(created.messagingEndpointUrl).toContain(
+      `/${config.getProdWorkspaceId()}/`
+    )
+    expect(created.messagingEndpointUrl).toContain(`/${liveAgent._id}`)
+
+    const state = new URL(created.oauthAuthorizeUrl).searchParams.get("state")
+    expect(state).toBeTruthy()
+
+    await config
+      .getRequest()!
+      .get(
+        `/api/agent/slack/oauth/callback?code=live-slack-oauth-code&state=${state}`
+      )
+      .expect(302)
+
+    const prodPersisted = await db.doWithDB(
+      config.getProdWorkspaceId(),
+      workspaceDb => workspaceDb.get<Agent>(liveAgent._id!)
+    )
+    expect(
+      secretMatch(
+        "xoxb-live-oauth-bot-token",
+        prodPersisted.slackIntegration!.botToken!
+      )
+    ).toBeTrue()
+    expect(
+      secretMatch(
+        "live-slack-oauth-signing-secret",
+        prodPersisted.slackIntegration!.signingSecret!
+      )
+    ).toBeTrue()
+    expect(prodPersisted.slackIntegration?.botUserId).toEqual("U_LIVE_BOT")
+    expect(prodPersisted.slackIntegration?.teamId).toEqual("T_LIVE_SLACK")
+    expect(prodPersisted.slackIntegration?.teamName).toEqual("Live Slack Team")
+    expect(prodPersisted.slackIntegration?.messagingEndpointUrl).toEqual(
+      created.messagingEndpointUrl
+    )
   })
 
   describe("slack webhook incoming messages", () => {
@@ -252,16 +890,17 @@ describe("agent slack integration provisioning", () => {
 
     const setupProvisionedSlackAgent = async ({
       requireUserLink,
-      roleId,
       allowKnowledgeSourceDownload,
+      allowConversationAttachments,
     }: {
       requireUserLink?: boolean
-      roleId?: string
       allowKnowledgeSourceDownload?: boolean
+      allowConversationAttachments?: boolean
     } = {}) => {
       const agent = await config.api.agent.createWithOperation(
         {
           name: "Slack Incoming Messages Agent",
+          allowConversationAttachments,
           slackIntegration: {
             botToken: "xoxb-token-3",
             signingSecret: "slack-signing-secret-3",
@@ -276,23 +915,7 @@ describe("agent slack integration provisioning", () => {
           allowKnowledgeSourceDownload: allowKnowledgeSourceDownload ?? true,
         }
       )
-      const channel = await config.api.agent.provisionSlackChannel(agent._id!)
-      if (roleId) {
-        await config.doInContext(config.getDevWorkspaceId(), async () => {
-          const chatApp = await sdk.ai.chatApps.getSingle()
-          if (!chatApp) {
-            throw new Error("Chat app not found")
-          }
-          await sdk.ai.chatApps.update({
-            ...chatApp,
-            agents: chatApp.agents.map(chatAgent =>
-              chatAgent.agentId === agent._id
-                ? { ...chatAgent, roleId }
-                : chatAgent
-            ),
-          })
-        })
-      }
+      await config.api.agent.provisionSlackChannel(agent._id!)
       await config.publish()
       const linkExternalUser = async (
         externalUserId: string,
@@ -308,14 +931,14 @@ describe("agent slack integration provisioning", () => {
           })
         })
       }
-      return { agent, chatAppId: channel.chatAppId, linkExternalUser }
+      return { agent, linkExternalUser }
     }
 
     const getLinkPath = (linkUrl: string) => new URL(linkUrl).pathname
 
     it(`returns a private link prompt for the /${ChatCommands.LINK} slash command`, async () => {
-      const { agent, chatAppId } = await setupProvisionedSlackAgent()
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
 
       const response = await postSlackMessage({
         path,
@@ -334,10 +957,28 @@ describe("agent slack integration provisioning", () => {
       expect(linkUrl).toContain("/handoff")
     })
 
+    it("still serves legacy webhook URLs containing the removed chat app segment", async () => {
+      const { agent } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/chatapp_legacy/${agent._id}`
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          command: `/${ChatCommands.LINK}`,
+          text: "",
+          channel_id: "D123",
+          user_id: "user-1",
+          user_name: "Slack User",
+          team_id: "T123",
+        },
+      })
+
+      expect(extractLinkUrl(response.body.messages)).toContain("/handoff")
+    })
+
     it(`shows already-linked guidance when /${ChatCommands.LINK} is run for an existing mapping`, async () => {
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedSlackAgent()
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       const response = await postSlackMessage({
@@ -354,6 +995,53 @@ describe("agent slack integration provisioning", () => {
 
       expect(response.body.messages.join(" ")).toContain("already linked")
       expect(extractLinkUrl(response.body.messages)).toBeTruthy()
+    })
+
+    it(`unlinks an existing mapping when /${ChatCommands.UNLINK} is run`, async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      await linkExternalUser("user-1")
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          command: `/${ChatCommands.UNLINK}`,
+          text: "",
+          channel_id: "D123",
+          user_id: "user-1",
+          user_name: "Slack User",
+          team_id: "T123",
+        },
+      })
+
+      expect(response.body.messages.join(" ")).toContain("unlinked")
+      await config.doInTenant(async () => {
+        const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
+          provider: AgentChannelProvider.SLACK,
+          externalUserId: "user-1",
+          teamId: "T123",
+        })
+        expect(link).toBeUndefined()
+      })
+    })
+
+    it(`tells unlinked users they are not linked when /${ChatCommands.UNLINK} is run`, async () => {
+      const { agent } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          command: `/${ChatCommands.UNLINK}`,
+          text: "",
+          channel_id: "D123",
+          user_id: "user-1",
+          user_name: "Slack User",
+          team_id: "T123",
+        },
+      })
+
+      expect(response.body.messages.join(" ")).toContain("not linked")
     })
 
     it("stores Slack links separately for the same external user in different teams", async () => {
@@ -392,8 +1080,8 @@ describe("agent slack integration provisioning", () => {
     })
 
     it("completes link tokens for authenticated users and consumes the token once", async () => {
-      const { agent, chatAppId } = await setupProvisionedSlackAgent()
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
 
       const linkResponse = await postSlackMessage({
         path,
@@ -504,10 +1192,10 @@ describe("agent slack integration provisioning", () => {
     })
 
     it("rejects confirmation tokens prepared by a different authenticated user", async () => {
-      const { agent, chatAppId } = await setupProvisionedSlackAgent()
+      const { agent } = await setupProvisionedSlackAgent()
       const otherUser = await config.createUser()
 
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       const linkResponse = await postSlackMessage({
         path,
         body: {
@@ -556,8 +1244,8 @@ describe("agent slack integration provisioning", () => {
     })
 
     it("blocks unlinked users and guides them to link first", async () => {
-      const { agent, chatAppId } = await setupProvisionedSlackAgent()
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
 
       const response = await postSlackMessage({
         path,
@@ -583,10 +1271,10 @@ describe("agent slack integration provisioning", () => {
     })
 
     it("allows optional-link unlinked users and reuses their synthetic conversation", async () => {
-      const { agent, chatAppId } = await setupProvisionedSlackAgent({
+      const { agent } = await setupProvisionedSlackAgent({
         requireUserLink: false,
       })
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
 
       await postSlackMessage({
         path,
@@ -637,41 +1325,11 @@ describe("agent slack integration provisioning", () => {
       })
     })
 
-    it("blocks optional-link unlinked users when the agent requires a higher role", async () => {
-      const { agent, chatAppId } = await setupProvisionedSlackAgent({
-        requireUserLink: false,
-        roleId: roles.BUILTIN_ROLE_IDS.BASIC,
-      })
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
-
-      const response = await postSlackMessage({
-        path,
-        body: {
-          type: "event_callback",
-          event: {
-            type: "message",
-            text: "hello slack",
-            user: "user-unlinked",
-            channel: "D123",
-            channel_type: "im",
-            ts: "1700000000.100",
-            team_id: "T123",
-          },
-        },
-      })
-
-      expect(mockedWebhookChat).not.toHaveBeenCalled()
-      expect(response.body.messages).toContain(
-        "This agent is not available to unlinked users."
-      )
-    })
-
     it("uses the linked Budibase user when linking is optional", async () => {
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedSlackAgent({
-          requireUserLink: false,
-        })
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent({
+        requireUserLink: false,
+      })
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       await postSlackMessage({
@@ -698,8 +1356,8 @@ describe("agent slack integration provisioning", () => {
     it("acknowledges when the link prompt falls back to a DM", async () => {
       setMockPostEphemeralResult("slack", { usedFallback: true })
 
-      const { agent, chatAppId } = await setupProvisionedSlackAgent()
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
 
       const response = await postSlackMessage({
         path,
@@ -719,10 +1377,301 @@ describe("agent slack integration provisioning", () => {
       expect(extractLinkUrl(response.body.messages)).toBeUndefined()
     })
 
+    it("queues file ingestion and subsequent Slack turns", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      mockedIsGeminiFileSearchConfigured.mockReturnValue(true)
+      await linkExternalUser("user-file")
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      const content = "quarterly revenue is 42"
+
+      const uploadResponse = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "",
+            user: "user-file",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+            files: [
+              {
+                id: "F123",
+                name: "report.txt",
+                mimetype: "text/plain",
+                size: Buffer.byteLength(content),
+                content,
+              },
+            ],
+          },
+        },
+      })
+
+      expect(uploadResponse.body.messages).toContain(
+        "Processing report.txt. I'll reply here when ready."
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+
+      const questionResponse = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "what is the revenue?",
+            user: "user-file",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.200",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(questionResponse.body.messages).toContain(
+        "The conversation files are still processing. I'll reply here when ready."
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+      const conversations = await fetchConversations()
+      expect(conversations).toHaveLength(1)
+      expect(conversations[0]?.attachments).toEqual([
+        expect.objectContaining({
+          providerFileId: "F123",
+          filename: "report.txt",
+          mimetype: "text/plain",
+          size: Buffer.byteLength(content),
+        }),
+      ])
+      expect([
+        ConversationAttachmentStatus.QUEUED,
+        ConversationAttachmentStatus.PROCESSING,
+      ]).toContain(conversations[0]?.attachments?.[0]?.status)
+      expect(conversations[0]?.pendingAttachmentTurns).toHaveLength(2)
+    })
+
+    it("renews attachment expiry and preserves file context before invoking the model", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      await linkExternalUser("user-ready-file")
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+
+      await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "start the conversation",
+            user: "user-ready-file",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      const [conversation] = await fetchConversations()
+      const previousExpiresAt = new Date(Date.now() + 1000).toISOString()
+      await config.doInContext(config.getProdWorkspaceId(), async () => {
+        await context.getWorkspaceDB().put({
+          ...conversation,
+          attachmentContextExpiresAt: previousExpiresAt,
+          attachmentVectorStoreId: "store_1",
+          attachments: [
+            {
+              id: "attachment_1",
+              provider: AgentChannelProvider.SLACK,
+              providerFileId: "F_READY",
+              filename: "report.txt",
+              mimetype: "text/plain",
+              size: 100,
+              status: ConversationAttachmentStatus.READY,
+              ragSourceId: "rag_1",
+              uploadedAt: new Date().toISOString(),
+            },
+          ],
+        })
+      })
+
+      mockedWebhookChat.mockClear()
+      let persistedExpiresAt: string | undefined
+      mockedWebhookChat.mockImplementationOnce(async ({ chat }) => {
+        const persisted = await context
+          .getWorkspaceDB()
+          .tryGet<ChatConversation>(chat._id)
+        persistedExpiresAt = persisted?.attachmentContextExpiresAt
+        return {
+          messages: [
+            ...chat.messages,
+            {
+              id: `assistant-${chat.messages.length + 1}`,
+              role: "assistant",
+              parts: [{ type: "text", text: "Mock assistant response" }],
+            },
+          ],
+          assistantText: "Mock assistant response",
+          title: chat.title || "Mock conversation",
+        }
+      })
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "use the ready file",
+            user: "user-ready-file",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.200",
+            team_id: "T123",
+          },
+        },
+      })
+
+      const [updatedConversation] = await fetchConversations()
+      expect(response.body.messages).toContain("Mock assistant response")
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
+      expect(mockedWebhookChat).toHaveBeenCalledWith(
+        expect.objectContaining({
+          chat: expect.objectContaining({
+            attachmentVectorStoreId: "store_1",
+            attachments: [
+              expect.objectContaining({
+                id: "attachment_1",
+                status: ConversationAttachmentStatus.READY,
+                ragSourceId: "rag_1",
+              }),
+            ],
+          }),
+        })
+      )
+      expect(new Date(persistedExpiresAt!).getTime()).toBeGreaterThan(
+        new Date(previousExpiresAt).getTime()
+      )
+      expect(updatedConversation.attachmentContextExpiresAt).toEqual(
+        persistedExpiresAt
+      )
+      expect(mockedScheduleAttachmentCleanup).toHaveBeenCalledWith({
+        workspaceId: config.getProdWorkspaceId(),
+        conversationId: conversation._id,
+        expiresAt: persistedExpiresAt,
+      })
+    })
+
+    it("rejects file turns when Gemini File Search is not enabled", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      mockedIsGeminiFileSearchConfigured.mockReturnValue(false)
+      await linkExternalUser("user-file-disabled")
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "Summarise this report",
+            user: "user-file-disabled",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.300",
+            team_id: "T123",
+            files: [
+              {
+                id: "F_DISABLED",
+                name: "report.txt",
+                mimetype: "text/plain",
+                size: 7,
+                content: "content",
+              },
+            ],
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain(
+        "I can't process file attachments because Gemini File Search isn't enabled. Please ask your Budibase administrator to enable it."
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+      expect(mockedScheduleAttachmentIngestion).not.toHaveBeenCalled()
+      expect(mockedScheduleAttachmentCleanup).not.toHaveBeenCalled()
+      expect(await fetchConversations()).toHaveLength(0)
+    })
+
+    it("rejects file turns when conversation attachments are disabled", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent({
+        allowConversationAttachments: false,
+      })
+      mockedIsGeminiFileSearchConfigured.mockReturnValue(false)
+      await linkExternalUser("user-file-disabled-by-agent")
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "Summarise this report",
+            user: "user-file-disabled-by-agent",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.350",
+            team_id: "T123",
+            files: [
+              {
+                id: "F_AGENT_DISABLED",
+                name: "report.txt",
+                mimetype: "text/plain",
+                size: 7,
+                content: "content",
+              },
+            ],
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain(
+        "File attachments aren't enabled for this agent."
+      )
+      expect(mockedWebhookChat).not.toHaveBeenCalled()
+      expect(mockedScheduleAttachmentIngestion).not.toHaveBeenCalled()
+      expect(mockedScheduleAttachmentCleanup).not.toHaveBeenCalled()
+      expect(await fetchConversations()).toHaveLength(0)
+    })
+
+    it("processes text-only turns when conversation attachments are disabled", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent({
+        allowConversationAttachments: false,
+      })
+      await linkExternalUser("user-text-with-files-disabled")
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+
+      const response = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "hello without a file",
+            user: "user-text-with-files-disabled",
+            channel: "D123",
+            channel_type: "im",
+            ts: "1700000000.360",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(response.body.messages).toContain("Mock assistant response")
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(1)
+    })
+
     it("creates a conversation from an incoming message", async () => {
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedSlackAgent()
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       const response = await postSlackMessage({
@@ -777,9 +1726,8 @@ describe("agent slack integration provisioning", () => {
         title: "Mock conversation",
       })
 
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedSlackAgent()
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       const response = await postSlackMessage({
@@ -826,9 +1774,8 @@ describe("agent slack integration provisioning", () => {
         title: "Mock conversation",
       })
 
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedSlackAgent()
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       const response = await postSlackMessage({
@@ -879,9 +1826,8 @@ describe("agent slack integration provisioning", () => {
         title: "Mock conversation",
       })
 
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedSlackAgent()
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       const response = await postSlackMessage({
@@ -906,6 +1852,116 @@ describe("agent slack integration provisioning", () => {
       expect(mockedGetFileUrlForAgent).not.toHaveBeenCalled()
     })
 
+    it("requires every participant to mention the agent in a channel thread", async () => {
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+      await linkExternalUser("user-1")
+      await linkExternalUser("user-2")
+
+      await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "<@U123> first question",
+            user: "user-1",
+            channel: "C123",
+            channel_type: "channel",
+            ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      const untaggedFollowUp = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "follow-up question",
+            user: "user-1",
+            channel: "C123",
+            channel_type: "channel",
+            ts: "1700000000.200",
+            thread_ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      const untaggedOtherParticipant = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "unrelated discussion",
+            user: "user-2",
+            channel: "C123",
+            channel_type: "channel",
+            ts: "1700000000.300",
+            thread_ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      const taggedFollowUp = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "<@U123> tagged follow-up question",
+            user: "user-1",
+            channel: "C123",
+            channel_type: "channel",
+            ts: "1700000000.400",
+            thread_ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      const taggedOtherParticipant = await postSlackMessage({
+        path,
+        body: {
+          type: "event_callback",
+          event: {
+            type: "message",
+            text: "<@U123> separate question",
+            user: "user-2",
+            channel: "C123",
+            channel_type: "channel",
+            ts: "1700000000.500",
+            thread_ts: "1700000000.100",
+            team_id: "T123",
+          },
+        },
+      })
+
+      expect(untaggedFollowUp.body.messages).toEqual([])
+      expect(untaggedOtherParticipant.body.messages).toEqual([])
+      expect(taggedFollowUp.body.messages).toContain("Mock assistant response")
+      expect(taggedOtherParticipant.body.messages).toContain(
+        "Mock assistant response"
+      )
+      expect(mockedWebhookChat).toHaveBeenCalledTimes(3)
+
+      const conversations = await fetchConversations()
+      expect(conversations).toHaveLength(2)
+      const user1Conversation = conversations.find(
+        conversation => conversation.channel?.externalUserId === "user-1"
+      )
+      const user2Conversation = conversations.find(
+        conversation => conversation.channel?.externalUserId === "user-2"
+      )
+      expect(user1Conversation?.messages).toHaveLength(4)
+      expect(user2Conversation?.messages).toHaveLength(2)
+    })
+
     it("does not append RAG source links when downloads are disabled", async () => {
       mockedWebhookChat.mockResolvedValueOnce({
         messages: [
@@ -927,11 +1983,10 @@ describe("agent slack integration provisioning", () => {
         title: "Mock conversation",
       })
 
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedSlackAgent({
-          allowKnowledgeSourceDownload: false,
-        })
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent({
+        allowKnowledgeSourceDownload: false,
+      })
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       const response = await postSlackMessage({
@@ -975,9 +2030,8 @@ describe("agent slack integration provisioning", () => {
         title: "Mock conversation",
       })
 
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedSlackAgent()
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       const response = await postSlackMessage({
@@ -1003,9 +2057,8 @@ describe("agent slack integration provisioning", () => {
     })
 
     it("reuses the existing conversation for subsequent messages in the same scope", async () => {
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedSlackAgent()
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       await postSlackMessage({
@@ -1054,9 +2107,8 @@ describe("agent slack integration provisioning", () => {
     })
 
     it("creates a separate conversation for a different thread", async () => {
-      const { agent, chatAppId, linkExternalUser } =
-        await setupProvisionedSlackAgent()
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${chatAppId}/${agent._id}`
+      const { agent, linkExternalUser } = await setupProvisionedSlackAgent()
+      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
       await linkExternalUser("user-1")
 
       await postSlackMessage({

@@ -4,7 +4,6 @@ import { defineConfig, loadEnv } from "vite"
 import { viteStaticCopy } from "vite-plugin-static-copy"
 import path from "path"
 import { fileURLToPath } from "url"
-import typescript from "@rollup/plugin-typescript"
 
 const ignoredWarnings = [
   "unused-export-let",
@@ -87,7 +86,6 @@ export default defineConfig(({ mode }) => {
       sourcemap: !isProduction,
     },
     plugins: [
-      typescript({ outDir: "../server/builder/dist" }),
       svelte({
         // Ensure this package's Svelte config is used
         configFile: path.resolve(__dirname, "svelte.config.mjs"),

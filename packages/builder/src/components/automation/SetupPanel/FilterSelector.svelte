@@ -11,7 +11,7 @@
     BaseIOStructure,
     UISearchFilter,
   } from "@budibase/types"
-  import { AutomationCustomIOType } from "@budibase/types"
+  import { AutomationCustomIOType, AutomationStepType } from "@budibase/types"
   import { utils } from "@budibase/shared-core"
   import { QueryUtils, Utils, search } from "@budibase/frontend-core"
   import { cloneDeep } from "lodash"
@@ -50,7 +50,7 @@
   $: schemaFields = search.getFields(
     $tables.list,
     Object.values(schema || {}),
-    { allowLinks: false }
+    { allowLinks: block?.type !== AutomationStepType.TRIGGER }
   )
 
   const lookForFilters = (

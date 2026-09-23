@@ -37,6 +37,18 @@ vi.mock("@/stores/builder/queries", () => {
   }
 })
 
+vi.mock("@/stores/portal/agents", () => ({
+  agentsStore: {
+    fetchAgents: vi.fn(),
+  },
+}))
+
+vi.mock("@/stores/builder/workspaceDeployment", () => ({
+  workspaceDeploymentStore: {
+    fetch: vi.fn(),
+  },
+}))
+
 vi.mock("@/stores/builder/restTemplates", () => {
   const templates: Record<string, { id: string; name: string; icon: string }> =
     {
@@ -71,11 +83,16 @@ vi.mock("@/stores/builder/restTemplates", () => {
 import { API } from "@/api"
 import { tables } from "@/stores/builder/tables"
 import { removeDatasourceQueries } from "@/stores/builder/queries"
+import { workspaceDeploymentStore } from "@/stores/builder/workspaceDeployment"
+import { agentsStore } from "@/stores/portal/agents"
 import { DatasourceStore } from "../datasources"
 
 const createDatasourceMock = vi.mocked(API.createDatasource)
 const validateDatasourceMock = vi.mocked(API.validateDatasource)
 const deleteDatasourceMock = vi.mocked(API.deleteDatasource)
+const updateDatasourceMock = vi.mocked(API.updateDatasource)
+const refreshAgentsMock = vi.mocked(agentsStore.fetchAgents)
+const refreshDeploymentMock = vi.mocked(workspaceDeploymentStore.fetch)
 const removeDatasourceTablesMock = vi.mocked(
   (tables as any).removeDatasourceTables
 )
@@ -214,6 +231,43 @@ describe("DatasourceStore", () => {
       expect(state.rawList).toHaveLength(2)
       expect(state.rawList[0]._id).toBe("ds1")
       expect(state.rawList[1]._id).toBe("ds2")
+    })
+  })
+
+  describe("save", () => {
+    it("refreshes agents and deployment state after renaming a datasource", async () => {
+      const datasource = makeDatasource({ name: "Old API" })
+      const renamedDatasource = { ...datasource, name: "New API" }
+      setRawList([datasource])
+      updateDatasourceMock.mockResolvedValue({
+        datasource: renamedDatasource,
+      })
+      refreshAgentsMock.mockResolvedValue([])
+      refreshDeploymentMock.mockResolvedValue()
+
+      await store.save({
+        integration: makeIntegration(),
+        datasource: renamedDatasource,
+        skipConnectionCheck: true,
+      })
+
+      expect(refreshAgentsMock).toHaveBeenCalledOnce()
+      expect(refreshDeploymentMock).toHaveBeenCalledOnce()
+    })
+
+    it("does not refresh agents when the datasource name is unchanged", async () => {
+      const datasource = makeDatasource()
+      setRawList([datasource])
+      updateDatasourceMock.mockResolvedValue({ datasource })
+
+      await store.save({
+        integration: makeIntegration(),
+        datasource,
+        skipConnectionCheck: true,
+      })
+
+      expect(refreshAgentsMock).not.toHaveBeenCalled()
+      expect(refreshDeploymentMock).not.toHaveBeenCalled()
     })
   })
 

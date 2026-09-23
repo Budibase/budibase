@@ -73,13 +73,11 @@ export async function chatCompletion(
     ctx.throw(500, "Budibase AI endpoints are not available in self-host")
   }
 
-  const messages = sdk.ai.llm.toModelMessages(ctx.request.body.messages)
-
   const { chat, providerOptions } =
     await sdk.ai.llm.bbai.createBBAIClient(BBAI_DEFAULT_MODEL)
   const result = await generateText({
     model: chat,
-    messages: messages,
+    ...sdk.ai.llm.toPrompt(ctx.request.body.messages),
     providerOptions: providerOptions?.(false),
   })
 

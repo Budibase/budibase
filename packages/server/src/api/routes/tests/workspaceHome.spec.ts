@@ -92,8 +92,10 @@ describe("/workspace/home/metrics", () => {
 
   it("returns 400 if workspace context is missing", async () => {
     const headers = config.defaultHeaders()
-    const { [Header.APP_ID]: _workspaceId, ...headersWithoutWorkspaceId } =
-      headers
+    const {
+      [Header.WORKSPACE_ID]: _workspaceId,
+      ...headersWithoutWorkspaceId
+    } = headers
 
     await request
       .get("/api/workspace/home/metrics")

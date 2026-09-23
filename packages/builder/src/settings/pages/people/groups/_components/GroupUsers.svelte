@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import EditUserPicker from "./EditUserPicker.svelte"
   import BulkAddUsersModal from "./BulkAddUsersModal.svelte"
 
@@ -20,34 +20,47 @@
   import RemoveUserTableRenderer from "../_components/RemoveUserTableRenderer.svelte"
   import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
 
-  export let groupId
-  export let readonly
-  export let isScimGroup
+  interface Props {
+    groupId: string
+    readonly: boolean
+    isScimGroup?: boolean
+  }
+
+  interface UserRow {
+    _id: string
+    __skeleton?: boolean
+  }
+
+  let { groupId, readonly, isScimGroup }: Props = $props()
 
   const PAGE_SIZE = 5
-  let emailSearchInput
-  let emailSearch
-  let fetchGroupUsers
-  let bulkAddModal
-  const debouncedUpdateEmailSearch = Utils.debounce(value => {
+  let emailSearchInput = $state("")
+  let emailSearch = $state<string | undefined>()
+  let bulkAddModal = $state<Modal>()
+  const debouncedUpdateEmailSearch = Utils.debounce((value?: string) => {
     emailSearch = value || undefined
   }, 200)
-  $: debouncedUpdateEmailSearch(emailSearchInput)
-  $: fetchGroupUsers = fetchData({
-    API,
-    datasource: {
-      type: "groupUser",
-    },
-    options: {
-      limit: PAGE_SIZE,
-      query: {
-        groupId,
-        emailSearch,
+  const fetchGroupUsers = $derived(
+    fetchData({
+      API,
+      datasource: {
+        type: "groupUser",
       },
-    },
+      options: {
+        limit: PAGE_SIZE,
+        query: {
+          groupId,
+          emailSearch,
+        },
+      },
+    })
+  )
+
+  $effect(() => {
+    debouncedUpdateEmailSearch(emailSearchInput)
   })
 
-  $: userSchema = {
+  const userSchema = $derived({
     email: {
       width: "1fr",
     },
@@ -60,23 +73,26 @@
             borderLeft: true,
           },
         }),
-  }
+  })
   const customUserTableRenderers = [
     {
       column: "_id",
       component: RemoveUserTableRenderer,
     },
   ]
-  $: loadingRows = [...Array(PAGE_SIZE)].map((_, index) => ({
-    _id: `loading-${index}`,
-    __skeleton: true,
-    __selectable: false,
-  }))
-  $: loadedRows = $fetchGroupUsers?.rows || []
-  $: hasPagination =
+  const loadingRows = $derived(
+    [...Array(PAGE_SIZE)].map((_, index) => ({
+      _id: `loading-${index}`,
+      __skeleton: true,
+      __selectable: false,
+    }))
+  )
+  const loadedRows = $derived($fetchGroupUsers.rows || [])
+  const hasPagination = $derived(
     $fetchGroupUsers.hasPrevPage || $fetchGroupUsers.hasNextPage
-  $: showPagination = hasPagination
-  $: fillerRows =
+  )
+  const showPagination = $derived(hasPagination)
+  const fillerRows = $derived(
     hasPagination && loadedRows.length < PAGE_SIZE
       ? [...Array(PAGE_SIZE - loadedRows.length)].map((_, index) => ({
           _id: `filler-${index}`,
@@ -84,11 +100,12 @@
           __selectable: false,
         }))
       : []
-  $: tableRows = $fetchGroupUsers.loading
-    ? loadingRows
-    : [...loadedRows, ...fillerRows]
+  )
+  const tableRows = $derived(
+    $fetchGroupUsers.loading ? loadingRows : [...loadedRows, ...fillerRows]
+  )
 
-  const removeUser = async id => {
+  const removeUser = async (id: string) => {
     await groups.removeUser(groupId, id)
     fetchGroupUsers.refresh()
   }
@@ -107,7 +124,7 @@
         {groupId}
         onUsersUpdated={fetchGroupUsers.getInitialData}
       />
-      <Button secondary on:click={() => bulkAddModal.show()}>
+      <Button secondary on:click={() => bulkAddModal?.show()}>
         Bulk assign
       </Button>
     </div>
@@ -134,10 +151,11 @@
   customPlaceholder
   customRenderers={customUserTableRenderers}
   on:click={e => {
-    if (e.detail?.__skeleton) {
+    const row = e.detail as UserRow
+    if (row?.__skeleton) {
       return
     }
-    bb.settings(`/people/users/${e.detail._id}`)
+    bb.settings(`/people/users/${row._id}`)
   }}
 >
   <div class="placeholder" slot="placeholder">
@@ -159,8 +177,12 @@
       hasNextPage={$fetchGroupUsers.loading
         ? false
         : $fetchGroupUsers.hasNextPage}
-      goToPrevPage={$fetchGroupUsers.loading ? null : fetchGroupUsers.prevPage}
-      goToNextPage={$fetchGroupUsers.loading ? null : fetchGroupUsers.nextPage}
+      goToPrevPage={() => {
+        if (!$fetchGroupUsers.loading) return fetchGroupUsers.prevPage()
+      }}
+      goToNextPage={() => {
+        if (!$fetchGroupUsers.loading) return fetchGroupUsers.nextPage()
+      }}
     />
   </div>
 {/if}

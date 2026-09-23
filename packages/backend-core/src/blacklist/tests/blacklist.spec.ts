@@ -25,6 +25,13 @@ describe("blacklist", () => {
       expect(await isBlacklisted("172.16.0.1")).toBe(true)
     })
 
+    it("should blacklist shared address space", async () => {
+      expect(await isBlacklisted("100.64.0.1")).toBe(true)
+      expect(await isBlacklisted("100.127.255.254")).toBe(true)
+      expect(await isBlacklisted("100.63.255.255")).toBe(false)
+      expect(await isBlacklisted("100.128.0.0")).toBe(false)
+    })
+
     it("should blacklist link-local addresses", async () => {
       expect(await isBlacklisted("169.254.169.254")).toBe(true)
     })

@@ -1,8 +1,6 @@
 #!/bin/bash
 cd "$(dirname "$0")/.."
 
-version=$(./scripts/getCurrentVersion.sh)
-
 docker run -d \
   --name budibase-single \
   -p 80:80 \
@@ -18,7 +16,7 @@ docker run -d \
   -e DEPLOYMENT_ENVIRONMENT="docker" \
   -e SELF_HOSTED="1" \
   -e NODE_ENV="production" \
-  -e BUDIBASE_VERSION=$version \
+  -e BUDIBASE_VERSION=0.0.0+local \
   budibase:latest
 
 echo "Budibase single image is running. Access it at http://localhost:80"

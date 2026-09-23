@@ -1,26 +1,17 @@
 import * as ai from "../controllers/ai"
-import { permissions } from "@budibase/backend-core"
-import { authorizedMiddleware as authorized } from "../../middleware/authorized"
+import { auth } from "@budibase/backend-core"
 import {
   builderAdminRoutes,
   endpointGroupList,
   publicRoutes,
 } from "./endpointGroups"
 
-const userRoutes = endpointGroupList.group({
-  middleware: authorized(
-    permissions.PermissionType.WORKSPACE,
-    permissions.PermissionLevel.READ
-  ),
-  first: false,
-})
+const escalationSupportRoutes = endpointGroupList.group(auth.builderOrAdmin)
 
-builderAdminRoutes
+escalationSupportRoutes
   .get("/api/chat-links", ai.listChatIdentityLinks)
   .get("/api/slack-channels", ai.listSlackChannels)
   .get("/api/teams-channels", ai.listMSTeamsChannels)
-  .put("/api/chatapps/:chatAppId", ai.updateChatApp)
-  .post("/api/chatapps/:chatAppId/agent", ai.setChatAppAgent)
 
 publicRoutes.get(
   "/api/chat-links/:instance/:token/handoff",
@@ -31,25 +22,7 @@ publicRoutes.post(
   ai.confirmChatLinkSession
 )
 
-userRoutes
-  .get("/api/chatapps", ai.fetchChatApp)
-  .get("/api/chatapps/:chatAppId", ai.fetchChatAppById)
-  .get("/api/chatapps/:chatAppId/agents", ai.fetchChatAppAgents)
-  .get(
-    "/api/chatapps/:chatAppId/agents/:agentId/operations/:operationId/files/:fileId/url",
-    ai.fetchChatAppAgentFileUrl
-  )
-  .get("/api/chatapps/:chatAppId/conversations", ai.fetchChatHistory)
-  .get(
-    "/api/chatapps/:chatAppId/conversations/:chatConversationId",
-    ai.fetchChatConversation
-  )
-  .post("/api/chatapps/:chatAppId/conversations", ai.createChatConversation)
-  .delete(
-    "/api/chatapps/:chatAppId/conversations/:chatConversationId",
-    ai.removeChatConversation
-  )
-  .post(
-    "/api/chatapps/:chatAppId/conversations/:chatConversationId/stream",
-    ai.agentChatStream
-  )
+builderAdminRoutes.post(
+  "/api/agents/:agentId/conversations/:chatConversationId/stream",
+  ai.agentChatStream
+)

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     ActionMenu,
     Heading,
@@ -14,12 +14,12 @@
   } from "@budibase/bbui"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import { roles } from "@/stores/builder"
-  import { appsStore } from "@/stores/portal/apps"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { auth } from "@/stores/portal/auth"
   import { groups } from "@/stores/portal/groups"
-  import { onMount, setContext, getContext } from "svelte"
-  import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
-  import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
+  import { onMount, setContext, untrack } from "svelte"
+  import WorkspaceNameTableRenderer from "../users/_components/WorkspaceNameTableRenderer.svelte"
+  import WorkspaceRoleTableRenderer from "../users/_components/WorkspaceRoleTableRenderer.svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import GroupIcon from "./_components/GroupIcon.svelte"
   import GroupUsers from "./_components/GroupUsers.svelte"
@@ -29,34 +29,39 @@
   import { sdk } from "@budibase/shared-core"
   import { Constants } from "@budibase/frontend-core"
   import { bb } from "@/stores/bb"
+  import type { StoreWorkspace } from "@/types"
+  import type { UserGroup } from "@budibase/types"
 
-  export let groupId
-
-  const routing = getContext("routing")
-
-  // Override
-  $: params = $routing?.params
-  $: if (params.groupId && groupId !== params.groupId) {
-    // Will set, but not clear.
-    groupId = params.groupId
+  export interface Props {
+    groupId: string
   }
 
-  let loaded = false
-  let editModal, deleteModal, editWorkspaceRoleModal
-  let selectedWorkspace
-  let editWorkspaceRoleModalToken = 0
-  let workspaceSearch
-  let workspacePageNumber = 0
-  let previousWorkspaceSearch
-  let defaultUpdating = false
+  interface WorkspaceRow extends StoreWorkspace {
+    prodAppId: string
+    role?: string
+    readonly: boolean
+    __skeleton?: boolean
+  }
+
+  let { groupId }: Props = $props()
+
+  let loaded = $state(false)
+  let editModal = $state<Modal>()
+  let deleteModal = $state<ConfirmDialog>()
+  let editWorkspaceRoleModal = $state<Modal>()
+  let selectedWorkspace = $state<WorkspaceRow>()
+  let editWorkspaceRoleModalToken = $state(0)
+  let workspaceSearch = $state("")
+  let workspacePageNumber = $state(0)
+  let defaultUpdating = $state(false)
   const WORKSPACE_PAGE_SIZE = 3
 
-  $: group = $groups.find(x => x._id === groupId)
-  $: isScimGroup = group?.scimInfo?.isSync
-  $: isAdmin = sdk.users.isAdmin($auth.user)
-  $: groupReadonly = !isAdmin || isScimGroup
-  $: workspaceReadonly = !isAdmin
-  $: appSchema = {
+  const group = $derived($groups.find(x => x._id === groupId))
+  const isScimGroup = $derived(!!group?.scimInfo?.isSync)
+  const isAdmin = $derived(sdk.users.isAdmin($auth.user))
+  const groupReadonly = $derived(!isAdmin || isScimGroup)
+  const workspaceReadonly = $derived(!isAdmin)
+  const appSchema = $derived({
     name: {
       width: "1fr",
     },
@@ -72,80 +77,111 @@
             borderLeft: true,
           },
         }),
-  }
+  })
   const customAppTableRenderers = [
     {
       column: "name",
-      component: AppNameTableRenderer,
+      component: WorkspaceNameTableRenderer,
     },
     {
       column: "role",
-      component: AppRoleTableRenderer,
+      component: WorkspaceRoleTableRenderer,
     },
     {
       column: "prodAppId",
       component: RemoveWorkspaceTableRenderer,
     },
   ]
-  $: groupApps = $appsStore.apps
-    .filter(app => {
-      const prodAppId = appsStore.getProdAppID(app.devId)
-      return groups.getGroupAppIds(group).includes(prodAppId)
-    })
-    .map(app => {
-      const prodAppId = appsStore.getProdAppID(app.devId)
-      return {
-        ...app,
-        _id: prodAppId,
-        prodAppId,
-        readonly: workspaceReadonly,
-        role: group?.builder?.apps.includes(prodAppId)
-          ? Constants.Roles.CREATOR
-          : group?.roles?.[prodAppId],
-      }
-    })
-  $: filteredGroupApps = workspaceSearch
-    ? groupApps.filter(app =>
-        app.name?.toLowerCase().includes(workspaceSearch.toLowerCase())
-      )
-    : groupApps
-  $: showWorkspacePagination = filteredGroupApps.length > WORKSPACE_PAGE_SIZE
-  $: workspacePageCount = Math.max(
-    1,
-    Math.ceil(filteredGroupApps.length / WORKSPACE_PAGE_SIZE)
+  const groupApps = $derived(
+    $workspacesStore.apps
+      .filter(app => {
+        const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
+          app.devId || ""
+        )
+        return (
+          !!prodWorkspaceId &&
+          !!group &&
+          groups.getGroupAppIds(group).includes(prodWorkspaceId)
+        )
+      })
+      .map(app => {
+        const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
+          app.devId || ""
+        )
+        if (!prodWorkspaceId) {
+          return undefined
+        }
+        return {
+          ...app,
+          _id: prodWorkspaceId,
+          prodAppId: prodWorkspaceId,
+          readonly: workspaceReadonly,
+          role: group?.builder?.apps?.includes(prodWorkspaceId)
+            ? Constants.Roles.CREATOR
+            : group?.roles?.[prodWorkspaceId],
+        }
+      })
+      .filter(app => app !== undefined)
   )
-  $: if (workspaceSearch !== previousWorkspaceSearch) {
-    workspacePageNumber = 0
-    previousWorkspaceSearch = workspaceSearch
-  }
-  $: if (workspacePageNumber > workspacePageCount - 1) {
-    workspacePageNumber = Math.max(workspacePageCount - 1, 0)
-  }
-  $: workspacePageRows = filteredGroupApps.slice(
-    workspacePageNumber * WORKSPACE_PAGE_SIZE,
-    (workspacePageNumber + 1) * WORKSPACE_PAGE_SIZE
+  const filteredGroupApps = $derived(
+    workspaceSearch
+      ? groupApps.filter(app =>
+          app.name?.toLowerCase().includes(workspaceSearch.toLowerCase())
+        )
+      : groupApps
   )
-  $: workspaceFillerRows =
+  const showWorkspacePagination = $derived(
+    filteredGroupApps.length > WORKSPACE_PAGE_SIZE
+  )
+  const workspacePageCount = $derived(
+    Math.max(1, Math.ceil(filteredGroupApps.length / WORKSPACE_PAGE_SIZE))
+  )
+  const workspacePageRows = $derived(
+    filteredGroupApps.slice(
+      workspacePageNumber * WORKSPACE_PAGE_SIZE,
+      (workspacePageNumber + 1) * WORKSPACE_PAGE_SIZE
+    )
+  )
+  const workspaceFillerRows = $derived(
     showWorkspacePagination && workspacePageRows.length < WORKSPACE_PAGE_SIZE
       ? [...Array(WORKSPACE_PAGE_SIZE - workspacePageRows.length)].map(
           (_, index) => ({
             _id: `workspace-filler-${workspacePageNumber}-${index}`,
-            __skeleton: true,
+            __skeleton: true as const,
             __selectable: false,
           })
         )
       : []
-  $: paginatedGroupApps = [...workspacePageRows, ...workspaceFillerRows]
+  )
+  const paginatedGroupApps = $derived([
+    ...workspacePageRows,
+    ...workspaceFillerRows,
+  ])
 
-  // Need to ensure the redirect isn't retriggered
-  $: {
+  $effect(() => {
+    workspaceSearch
+    untrack(() => {
+      workspacePageNumber = 0
+    })
+  })
+
+  $effect(() => {
+    if (workspacePageNumber > workspacePageCount - 1) {
+      workspacePageNumber = Math.max(workspacePageCount - 1, 0)
+    }
+  })
+
+  $effect(() => {
     if (loaded && !group?._id && groupId) {
       bb.settings("/people/groups")
     }
-  }
+  })
 
   async function deleteGroup() {
     try {
+      if (!group) {
+        return
+      }
       await groups.delete(group)
       notifications.success("User group deleted successfully")
       bb.settings("/people/groups")
@@ -154,11 +190,11 @@
     }
   }
 
-  async function saveGroup(group) {
+  async function saveGroup(group: UserGroup) {
     try {
       await groups.save(group)
     } catch (error) {
-      if (error.message) {
+      if (error instanceof Error) {
         notifications.error(error.message)
       } else {
         notifications.error(`Failed to save user group`)
@@ -166,7 +202,7 @@
     }
   }
 
-  async function updateDefaultStatus(isDefault) {
+  async function updateDefaultStatus(isDefault: boolean) {
     if (!group?._id || group?.isDefault === isDefault || defaultUpdating) {
       return
     }
@@ -177,13 +213,17 @@
         isDefault ? "Default group updated" : "Default group removed"
       )
     } catch (error) {
-      notifications.error(error?.message || "Failed to update default group")
+      notifications.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update default group"
+      )
     } finally {
       defaultUpdating = false
     }
   }
 
-  const removeApp = async app => {
+  const removeApp = async (app: string) => {
     try {
       await groups.removeApp(groupId, app)
     } catch (error) {
@@ -191,7 +231,9 @@
     }
   }
 
-  const openWorkspaceRoleModal = workspace => {
+  const openWorkspaceRoleModal = (
+    workspace: WorkspaceRow | { __skeleton: true }
+  ) => {
     if (workspaceReadonly || workspace?.__skeleton) {
       return
     }
@@ -223,7 +265,7 @@
       <div class="header-actions">
         <div
           class="default-toggle"
-          title={isScimGroup && "Group synced from your AD"}
+          title={isScimGroup ? "Group synced from your AD" : undefined}
         >
           <Toggle
             value={!!group?.isDefault}
@@ -238,15 +280,15 @@
           </span>
           <MenuItem
             icon="pencil"
-            on:click={() => editModal.show()}
+            on:click={() => editModal?.show()}
             disabled={!isAdmin}
           >
             Edit
           </MenuItem>
-          <div title={isScimGroup && "Group synced from your AD"}>
+          <div title={isScimGroup ? "Group synced from your AD" : undefined}>
             <MenuItem
               icon="trash"
-              on:click={() => deleteModal.show()}
+              on:click={() => deleteModal?.show()}
               disabled={groupReadonly}
             >
               Delete
@@ -277,7 +319,7 @@
         customPlaceholder
         allowEditRows={false}
         customRenderers={customAppTableRenderers}
-        on:click={e => openWorkspaceRoleModal(e.detail)}
+        on:click={e => openWorkspaceRoleModal(e.detail as WorkspaceRow)}
         allowEditColumns={false}
       >
         <div class="placeholder" slot="placeholder">
@@ -311,7 +353,9 @@
 {/if}
 
 <Modal bind:this={editModal}>
-  <CreateEditGroupModal {group} {saveGroup} />
+  {#if group}
+    <CreateEditGroupModal {group} {saveGroup} />
+  {/if}
 </Modal>
 
 <Modal bind:this={editWorkspaceRoleModal} closeOnOutsideClick={false}>

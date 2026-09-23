@@ -18,7 +18,7 @@
   let latestValue: string | null
   interface EditorInstance extends EasyMDE {
     togglePreview: () => void
-    value: (_value?: string) => string
+    value: (value?: string) => string
   }
   let mde: EditorInstance | null = null
   let blurBoundTo: EditorInstance | null = null

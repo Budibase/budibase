@@ -2,11 +2,11 @@ import type { FunctionArtifact, FunctionErrorCode } from "../../sdk/functions"
 import type { Document } from "../document"
 
 export interface FunctionQueryCapability {
-  capabilityId: string
-  queryId: string
-  datasourceAlias: string
-  queryAlias: string
-  parameterNames: string[]
+  readonly capabilityId: string
+  readonly queryId: string
+  readonly datasourceAlias: string
+  readonly queryAlias: string
+  readonly parameterNames: readonly string[]
 }
 
 export interface FunctionBuildDiagnostic {
@@ -28,6 +28,7 @@ export interface FunctionDocument extends Document {
   _id: string
   name: string
   appId: string
+  projectIds?: string[]
   source: string
   capabilities: FunctionQueryCapability[]
   artifact?: FunctionArtifact
@@ -55,7 +56,7 @@ export interface FunctionRunSummary extends Document {
   invocation: {
     type: "automation"
     automationId: string
-    stepId: string
+    automationStepId: string
   }
   startedAt: string
   finishedAt?: string

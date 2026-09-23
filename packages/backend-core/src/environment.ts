@@ -93,21 +93,14 @@ function getPackageJsonFields(): {
     return parsedContent
   }
 
-  let localVersion: string | undefined
-  if (isDev() && !isTest()) {
-    try {
-      const lerna = getParentFile("lerna.json")
-      localVersion = `${lerna.version}+local`
-    } catch {
-      //
-    }
-  }
-
   try {
     const parsedContent = getParentFile("package.json")
     return {
       VERSION:
-        localVersion || process.env.BUDIBASE_VERSION || parsedContent.version,
+        process.env.BUDIBASE_VERSION ||
+        (isDev() && !isTest()
+          ? `${parsedContent.version}+local`
+          : parsedContent.version),
       SERVICE_NAME: parsedContent.name,
     }
   } catch {
@@ -247,6 +240,8 @@ const environment = {
   SERVICE_TYPE: "unknown",
   PASSWORD_MIN_LENGTH: process.env.PASSWORD_MIN_LENGTH,
   PASSWORD_MAX_LENGTH: process.env.PASSWORD_MAX_LENGTH,
+  PASSWORD_REGEX: process.env.PASSWORD_REGEX,
+  PASSWORD_REGEX_ERROR_MESSAGE: process.env.PASSWORD_REGEX_ERROR_MESSAGE,
   /**
    * Enable to allow an admin user to login using a password.
    * This can be useful to prevent lockout when configuring SSO.

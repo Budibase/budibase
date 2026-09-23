@@ -2,82 +2,63 @@
   import { Body, ModalContent, Table, Icon } from "@budibase/bbui"
   import PasswordCopyTableRenderer from "./PasswordCopyTableRenderer.svelte"
   import { parseToCsv } from "@/helpers/data/utils"
-  import { onMount } from "svelte"
   import InviteResponseRenderer from "./InviteResponseRenderer.svelte"
   import type { BulkUserCreated } from "@budibase/types"
 
-  export let userData: { email: string; password: string }[]
-  export let createUsersResponse: BulkUserCreated
-  export let addedToWorkspaceEmails: string[] = []
+  interface Props {
+    userData: { email: string; password: string }[]
+    createUsersResponse: BulkUserCreated
+    addedToWorkspaceEmails?: string[]
+  }
+
+  let {
+    userData,
+    createUsersResponse,
+    addedToWorkspaceEmails = [],
+  }: Props = $props()
   const MAX_VISIBLE_PASSWORD_ROWS = 10
   const MAX_VISIBLE_FAILURE_ROWS = 10
 
-  let hasSuccess: boolean
-  let hasFailure: boolean
-  let title: string
-  let failureMessage: string
-  let shouldShowPasswordsTable: boolean
-  let shouldShowFailuresTable: boolean
-
-  let userDataIndex: Record<string, { password: string }>
-  let successfulUsers: { email: string; password: string }[]
-  let unsuccessfulUsers: { email: string; reason: string }[]
-  let addedToWorkspaceUsers: { email: string }[] = []
-
-  const setTitle = () => {
-    if (hasSuccess) {
-      title = "Users created!"
-    } else if (hasFailure) {
-      title = "Oops!"
-    }
-  }
-
-  const setFailureMessage = () => {
+  const hasSuccess = $derived(createUsersResponse.successful.length > 0)
+  const hasFailure = $derived(createUsersResponse.unsuccessful.length > 0)
+  const title = $derived(hasSuccess ? "Users created!" : "Oops!")
+  const shouldShowPasswordsTable = $derived(
+    createUsersResponse.successful.length <= MAX_VISIBLE_PASSWORD_ROWS
+  )
+  const shouldShowFailuresTable = $derived(
+    createUsersResponse.unsuccessful.length <= MAX_VISIBLE_FAILURE_ROWS
+  )
+  const failureMessage = $derived.by(() => {
     const failureCount = createUsersResponse.unsuccessful.length
     const includeFailureCount = failureCount > MAX_VISIBLE_FAILURE_ROWS
     const countSuffix = includeFailureCount ? ` (${failureCount}).` : "."
 
     if (hasSuccess) {
-      failureMessage = `However there was a problem creating some users${countSuffix}`
-    } else {
-      failureMessage = `There was a problem creating some users${countSuffix}`
+      return `However there was a problem creating some users${countSuffix}`
     }
-  }
-
-  const setUsers = () => {
-    userDataIndex = userData.reduce<typeof userDataIndex>((prev, current) => {
+    return `There was a problem creating some users${countSuffix}`
+  })
+  const userDataIndex = $derived(
+    userData.reduce<Record<string, { password: string }>>((prev, current) => {
       prev[current.email] = current
       return prev
     }, {})
-
-    successfulUsers = createUsersResponse.successful.map(user => {
-      return {
-        email: user.email,
-        password: userDataIndex[user.email].password,
-      }
-    })
-
-    unsuccessfulUsers = createUsersResponse.unsuccessful.map(user => {
-      return {
-        email: user.email,
-        reason: user.reason,
-      }
-    })
-
-    addedToWorkspaceUsers = addedToWorkspaceEmails.map(email => ({ email }))
-  }
-
-  onMount(() => {
-    hasSuccess = createUsersResponse.successful.length > 0
-    hasFailure = createUsersResponse.unsuccessful.length > 0
-    shouldShowPasswordsTable =
-      createUsersResponse.successful.length <= MAX_VISIBLE_PASSWORD_ROWS
-    shouldShowFailuresTable =
-      createUsersResponse.unsuccessful.length <= MAX_VISIBLE_FAILURE_ROWS
-    setTitle()
-    setFailureMessage()
-    setUsers()
-  })
+  )
+  const successfulUsers = $derived(
+    createUsersResponse.successful.map(user => ({
+      email: user.email,
+      password: userDataIndex[user.email].password,
+    }))
+  )
+  const unsuccessfulUsers = $derived(
+    createUsersResponse.unsuccessful.map(user => ({
+      email: user.email,
+      reason: user.reason,
+    }))
+  )
+  const addedToWorkspaceUsers = $derived(
+    addedToWorkspaceEmails.map(email => ({ email }))
+  )
 
   const successSchema = {
     email: {},

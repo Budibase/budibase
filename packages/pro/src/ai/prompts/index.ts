@@ -399,11 +399,58 @@ function getAgentPromptUserContext(user: ContextUser) {
   }
 }
 
-export function agentSystemPrompt(user: ContextUser) {
-  const date = new Date().toISOString()
+const formatCurrentDate = (timezone?: string) => {
+  const now = new Date()
+  if (!timezone) {
+    return { date: now.toISOString() }
+  }
+
+  try {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+      timeZoneName: "longOffset",
+    }).formatToParts(now)
+    const getPart = (type: Intl.DateTimeFormatPartTypes) =>
+      parts.find(part => part.type === type)?.value
+    const timeZoneName = getPart("timeZoneName")
+    const offset = timeZoneName === "GMT" ? "+00:00" : timeZoneName?.slice(3)
+    const dateParts = {
+      year: getPart("year"),
+      month: getPart("month"),
+      day: getPart("day"),
+      hour: getPart("hour"),
+      minute: getPart("minute"),
+      second: getPart("second"),
+    }
+
+    if (Object.values(dateParts).some(part => !part) || !offset) {
+      return { date: now.toISOString() }
+    }
+
+    return {
+      date: `${dateParts.year}-${dateParts.month}-${dateParts.day}T${dateParts.hour}:${dateParts.minute}:${dateParts.second}${offset}`,
+      timezone,
+    }
+  } catch {
+    return { date: now.toISOString() }
+  }
+}
+
+export function agentSystemPrompt(user: ContextUser, timezone?: string) {
+  const dateContext = formatCurrentDate(timezone)
+  const timezoneInstruction = dateContext.timezone
+    ? `\n  - The user's timezone is ${dateContext.timezone}. When presenting dates or times to the user, express them in this timezone. Tool values may be in UTC; keep tool inputs and stored values unchanged.`
+    : ""
   const userContext = getAgentPromptUserContext(user)
   return `You are a helpful support agent who uses workflows to resolve user issues efficiently.
-  - The current date is: ${date}
+  - The current date is: ${dateContext.date}${timezoneInstruction}
   - When receiving truncated or paginated results, automatically make follow-up requests to retrieve all pages
   - When a tool call fails, show the detailed error status and message in the UI to provide the user further information as to how to debug.
   - When specifying a "limit" for a certain tool call related to the number of records, use the smallest limit that is likely to answer the user's question correctly. Prefer targeted follow-up requests over fetching large result sets by default.

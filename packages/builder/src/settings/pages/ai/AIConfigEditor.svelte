@@ -25,9 +25,7 @@
     disableProviderOnEdit?: boolean
     setDefaultOnFirstCreate?: boolean
     useRouteProviderOnEdit?: boolean
-    onCreate?:
-      | ((_created: AIConfigResponse) => void | Promise<void>)
-      | undefined
+    onCreate?: ((created: AIConfigResponse) => void | Promise<void>) | undefined
     deleteBlockedMessage?: string | undefined
   }
 

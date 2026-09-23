@@ -26,7 +26,7 @@
   export let variant: ColourVariant = "Primary"
 
   export let validation: UIFieldValidationRule[] | undefined
-  export let onChange: (_event: { value: number }) => void
+  export let onChange: (event: { value: number }) => void
 
   let hoverRating: number | null = null
   let fieldState: FieldState

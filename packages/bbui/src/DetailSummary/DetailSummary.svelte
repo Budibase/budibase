@@ -1,12 +1,12 @@
-<script>
+<script lang="ts">
   import Icon from "../Icon/Icon.svelte"
 
-  export let name
-  export let initiallyShow = false
-  export let collapsible = true
-  export let padded = true
+  export let name: string | undefined = undefined
+  export let initiallyShow: boolean = false
+  export let collapsible: boolean = true
+  export let padded: boolean = true
 
-  let show = initiallyShow
+  let show: boolean = initiallyShow
 
   const onHeaderClick = () => {
     if (!collapsible) {

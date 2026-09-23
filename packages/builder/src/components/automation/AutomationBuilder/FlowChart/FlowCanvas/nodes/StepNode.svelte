@@ -21,7 +21,7 @@
   export let viewMode: ViewMode.EDITOR | ViewMode.LOGS = ViewMode.EDITOR
   export let selectedLogStepId: string | null = null
   export let onStepSelect: (
-    _data: AutomationStepResult | AutomationTriggerResult
+    data: AutomationStepResult | AutomationTriggerResult
   ) => void = () => {}
   const memoEnvVariables = memo($environment.variables)
 

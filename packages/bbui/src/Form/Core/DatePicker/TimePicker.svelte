@@ -4,14 +4,15 @@
   import NumberInput from "./NumberInput.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let value: Dayjs | undefined
+  export let value: Dayjs | null | undefined
   export let disableClearing = false
   export let disabled = false
   export let readonly = false
+  export let showSeconds = false
 
   const dispatch = createEventDispatcher<{ change: Dayjs | undefined }>()
 
-  $: displayValue = value?.format("HH:mm")
+  $: displayValue = value?.format(showSeconds ? "HH:mm:ss" : "HH:mm")
 
   const handleChange = async (e: Event) => {
     if (disabled || readonly) {
@@ -28,10 +29,12 @@
       return
     }
 
-    const [hour, minute] = target.value.split(":").map(x => parseInt(x))
+    const [hour, minute, second = 0] = target.value
+      .split(":")
+      .map(x => parseInt(x))
     dispatch(
       "change",
-      (value || dayjs()).hour(hour).minute(minute).second(0).millisecond(0)
+      (value || dayjs()).hour(hour).minute(minute).second(second).millisecond(0)
     )
   }
 </script>
@@ -43,6 +46,7 @@
     value={displayValue}
     {disabled}
     {readonly}
+    step={showSeconds ? 1 : undefined}
     on:input={handleChange}
     on:change={handleChange}
   />

@@ -79,7 +79,7 @@ export class WorkspaceAPI extends TestAPI {
         // While the publish endpoint does take an :appId parameter, it doesn't
         // use it. It uses the appId from the context.
         headers: {
-          [constants.Header.APP_ID]: appId,
+          [constants.Header.WORKSPACE_ID]: appId,
         },
         body,
         expectations,
@@ -116,7 +116,7 @@ export class WorkspaceAPI extends TestAPI {
       // While the get endpoint does take an :appId parameter, it doesn't use
       // it. It uses the appId from the context.
       headers: {
-        [constants.Header.APP_ID]: appId,
+        [constants.Header.WORKSPACE_ID]: appId,
       },
       expectations,
     })
@@ -129,7 +129,7 @@ export class WorkspaceAPI extends TestAPI {
   ): Promise<DuplicateWorkspaceResponse> => {
     let headers = {
       ...this.config.defaultHeaders(),
-      [constants.Header.APP_ID]: workspaceId,
+      [constants.Header.WORKSPACE_ID]: workspaceId,
     }
     return this._post(`/api/applications/${workspaceId}/duplicate`, {
       headers,
@@ -193,7 +193,7 @@ export class WorkspaceAPI extends TestAPI {
       // While the updateClient endpoint does take an :appId parameter, it doesn't
       // use it. It uses the appId from the context.
       headers: {
-        [constants.Header.APP_ID]: appId,
+        [constants.Header.WORKSPACE_ID]: appId,
       },
       expectations,
     })
@@ -204,7 +204,7 @@ export class WorkspaceAPI extends TestAPI {
       // While the revertClient endpoint does take an :appId parameter, it doesn't
       // use it. It uses the appId from the context.
       headers: {
-        [constants.Header.APP_ID]: appId,
+        [constants.Header.WORKSPACE_ID]: appId,
       },
     })
   }

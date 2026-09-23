@@ -1,7 +1,11 @@
-<script>
+<script lang="ts">
   import { InternalRenderer } from "@budibase/bbui"
 
-  export let value
+  interface Props {
+    value: string
+  }
+
+  let { value }: Props = $props()
 </script>
 
 <div style="display: flex; ">

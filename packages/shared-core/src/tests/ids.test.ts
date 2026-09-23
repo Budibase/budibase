@@ -2,6 +2,7 @@ import { DocumentType, VirtualDocumentType } from "@budibase/types"
 import {
   getTableIdFromViewId,
   isDatasourceOrDatasourcePlusId,
+  isCustomRestTemplateId,
   isQueryId,
   isTableId,
   isTableIdOrExternalTableId,
@@ -62,6 +63,19 @@ describe("ids", () => {
       const found = oneOfEachId.filter(isQueryId)
       expect(found.length).toBe(1)
       expect(found[0].startsWith(`${DocumentType.QUERY}_`)).toBe(true)
+    })
+  })
+
+  describe("isCustomRestTemplateId", () => {
+    it("should return true for custom REST template IDs", () => {
+      expect(isCustomRestTemplateId("rest_template_abc123")).toBe(true)
+      expect(isCustomRestTemplateId("rest_template_ABC123")).toBe(true)
+      expect(isCustomRestTemplateId("rest_template_")).toBe(true)
+    })
+
+    it("should return false for non-custom REST template IDs", () => {
+      expect(isCustomRestTemplateId("activecampaign")).toBe(false)
+      expect(isCustomRestTemplateId(undefined)).toBe(false)
     })
   })
 

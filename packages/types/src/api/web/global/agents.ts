@@ -1,26 +1,18 @@
 import { Optional } from "../../../shared"
 import {
   Agent,
+  AgentSharePointKnowledgeSourceScope,
   AgentKnowledgeSourceSyncRunStatus,
   AgentOperation,
-  ChatApp,
-  ChatConversation,
   ChatConversationRequest,
-  CreateChatConversationRequest,
   KnowledgeBaseFile,
 } from "../../../documents"
 
 export type ChatAgentRequest = ChatConversationRequest
 
-export type FetchAgentHistoryResponse = ChatConversation[]
-
-export type { CreateChatConversationRequest }
-
-export type CreateChatAppRequest = Omit<
-  ChatApp,
-  "_id" | "_rev" | "createdAt" | "updatedAt"
->
-export type UpdateChatAppRequest = Omit<ChatApp, "createdAt" | "updatedAt">
+export interface AgentKnowledgeConfiguration {
+  knowledgeSearchConfigured: boolean
+}
 
 export interface FetchAgentsResponse {
   agents: Agent[]
@@ -65,13 +57,18 @@ export interface FetchAgentKnowledgeResponse {
 
 export interface FetchAgentKnowledgeIndexResponse {
   operations: Record<string, FetchAgentKnowledgeResponse>
+  configuration: AgentKnowledgeConfiguration
 }
 
 export interface KnowledgeSourceEntry {
   id: string
   name: string
   path: string
-  type: "folder" | "file" | "list"
+  type: "drive" | "folder" | "file" | "list"
+  driveId?: string
+  itemId?: string
+  listId?: string
+  hasChildren?: boolean
   webUrl?: string
 }
 
@@ -104,14 +101,14 @@ export interface ConnectAgentSharePointSiteRequest {
   site: KnowledgeSourceOption
   datasourceId: string
   authConfigId: string
-  filters?: string[]
+  scope: AgentSharePointKnowledgeSourceScope
 }
 
 export type ConnectAgentSharePointSiteResponse =
   FetchAgentKnowledgeSourceOptionsResponse
 
 export interface UpdateAgentSharePointSiteRequest {
-  filters?: string[]
+  scope: AgentSharePointKnowledgeSourceScope
 }
 
 export type UpdateAgentSharePointSiteResponse =
@@ -123,51 +120,43 @@ export interface DisconnectAgentSharePointSiteResponse {
   siteId: string
 }
 
-export interface FetchChatAppAgentsResponse {
-  agents: Pick<Agent, "_id" | "name" | "icon" | "iconColor" | "live">[]
-}
-
-interface ConfigureAgentDeploymentChannelRequest {
-  chatAppId?: string
-}
-
 interface ConfigureAgentDeploymentChannelResponse {
   success: boolean
-  chatAppId: string
 }
 
-export type SyncAgentDiscordCommandsRequest =
-  ConfigureAgentDeploymentChannelRequest
-
-export interface SyncAgentDiscordCommandsResponse
-  extends ConfigureAgentDeploymentChannelResponse {
-  interactionsEndpointUrl: string
-  inviteUrl: string
-}
-
-export type ProvisionAgentMSTeamsChannelRequest =
-  ConfigureAgentDeploymentChannelRequest
+export type ProvisionAgentMSTeamsChannelRequest = Record<string, never>
 
 export interface ProvisionAgentMSTeamsChannelResponse
   extends ConfigureAgentDeploymentChannelResponse {
   messagingEndpointUrl: string
 }
 
-export type ProvisionAgentSlackChannelRequest =
-  ConfigureAgentDeploymentChannelRequest
+export type ProvisionAgentSlackChannelRequest = Record<string, never>
 
 export interface ProvisionAgentSlackChannelResponse
   extends ConfigureAgentDeploymentChannelResponse {
   messagingEndpointUrl: string
 }
 
-export type ProvisionAgentTelegramChannelRequest =
-  ConfigureAgentDeploymentChannelRequest
+export type CreateAgentSlackAppRequest = Record<string, never>
 
-export interface ProvisionAgentTelegramChannelResponse
+export interface CreateAgentSlackAppResponse
   extends ConfigureAgentDeploymentChannelResponse {
+  appId: string
+  oauthAuthorizeUrl: string
   messagingEndpointUrl: string
-  warning?: string
+}
+
+export interface SlackAppConfigResponse {
+  configured: boolean
+  updatedAt?: string
+  expiresAt?: string
+  needsReconfiguration?: boolean
+}
+
+export interface SaveSlackAppConfigRequest {
+  configToken: string
+  refreshToken: string
 }
 
 export interface ToggleAgentDeploymentRequest {
@@ -207,8 +196,8 @@ export type AgentOperationConfigRequest = Pick<
   | "live"
   | "promptInstructions"
   | "enabledTools"
+  | "approvalPolicies"
   | "allowKnowledgeSourceDownload"
-  | "escalation"
 >
 
 export type CreateAgentOperationRequest = AgentOperationConfigRequest &

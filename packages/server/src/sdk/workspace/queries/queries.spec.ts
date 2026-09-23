@@ -1,10 +1,54 @@
-import { enrichContext } from "./queries"
+const mockDbAllDocs = jest.fn().mockResolvedValue({ rows: [] })
+const mockGetWorkspaceDB = jest.fn(() => ({
+  allDocs: (...args: unknown[]) => mockDbAllDocs(...args),
+}))
+
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    context: {
+      ...actual.context,
+      getWorkspaceDB: (...args: Parameters<typeof mockGetWorkspaceDB>) =>
+        mockGetWorkspaceDB(...args),
+    },
+  }
+})
+
+import { enrichContext, fetch } from "./queries"
 
 jest.mock("../../utils", () => ({
   getEnvironmentVariables: jest.fn(() => ({})),
 }))
 
 describe("queries SDK", () => {
+  describe("fetch", () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+      mockDbAllDocs.mockResolvedValue({ rows: [] })
+    })
+
+    it("scopes queries to a datasource", async () => {
+      await fetch({ enrich: false, datasourceId: "datasource_1" })
+
+      expect(mockDbAllDocs).toHaveBeenCalledWith({
+        startkey: "query_datasource_1_",
+        endkey: "query_datasource_1_\ufff0",
+        include_docs: true,
+      })
+    })
+
+    it("fetches all workspace queries when no datasource is provided", async () => {
+      await fetch({ enrich: false })
+
+      expect(mockDbAllDocs).toHaveBeenCalledWith({
+        startkey: "query_",
+        endkey: "query_\ufff0",
+        include_docs: true,
+      })
+    })
+  })
+
   describe("enrichContext", () => {
     it.each([
       ["false", false],
@@ -114,6 +158,62 @@ describe("queries SDK", () => {
           options: {},
         },
       })
+    })
+
+    it("keeps quoted JSON parameters safe in multi-object MongoDB templates", async () => {
+      const injected = 'x","name":{"$exists":true},"$comment":"esc'
+      const result = await enrichContext(
+        {
+          json: '{"name":"{{ name }}"} {"$set":{"touched":true}}',
+        },
+        {
+          name: injected,
+        }
+      )
+
+      expect(result.json).toEqual(
+        `${JSON.stringify({ name: injected })} ${JSON.stringify({
+          $set: { touched: true },
+        })}`
+      )
+    })
+
+    it("keeps dynamic keys safe in multi-object MongoDB templates", async () => {
+      const injectedKey = 'name":{"$exists":true},"$comment'
+      const result = await enrichContext(
+        {
+          json: '{"{{ key }}":"fixed"} {"$set":{"touched":true}}',
+        },
+        {
+          key: injectedKey,
+        }
+      )
+
+      expect(result.json).toEqual(
+        `${JSON.stringify({ [injectedKey]: "fixed" })} ${JSON.stringify({
+          $set: { touched: true },
+        })}`
+      )
+    })
+
+    it("keeps triple-brace JSON parameters safe in multi-object MongoDB templates", async () => {
+      const injected = 'x","name":{"$exists":true},"$comment":"esc'
+      const result = await enrichContext(
+        {
+          json: '{"criteria": {{{ extra }}}, "name":"{{ name }}"} {"$set":{"touched":true}} {}',
+        },
+        {
+          extra: '{"active":true}',
+          name: injected,
+        }
+      )
+
+      expect(result.json).toEqual(
+        `${JSON.stringify({
+          criteria: { active: true },
+          name: injected,
+        })} ${JSON.stringify({ $set: { touched: true } })} {}`
+      )
     })
 
     it("falls back to requestBody when json is blank", async () => {
