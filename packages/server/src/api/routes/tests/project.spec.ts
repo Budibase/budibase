@@ -1215,7 +1215,7 @@ describe("/projects", () => {
       })
     })
 
-    it("rejects dependency selections when clearing root assignments", async () => {
+    it("rejects dependency selections without a selected project", async () => {
       await withProjectsEnabled(async () => {
         const { workspaceApp } = await config.api.workspaceApp.create(
           structures.workspaceApps.createRequest({
@@ -1314,7 +1314,7 @@ describe("/projects", () => {
       })
     })
 
-    it("rejects resources that are not direct project members", async () => {
+    it("rejects resources that cannot be assigned directly to projects", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
           name: "Operations",
