@@ -56,4 +56,40 @@ describe("tool input normalization", () => {
       },
     })
   })
+
+  it("normalizes root keys and keys inside tuple items", async () => {
+    const tupleSchema = z.tuple([
+      z.object({ Name: z.string() }),
+      z.object({ Category: z.string() }),
+    ])
+    const nestedSchema = z.object({ Items: tupleSchema })
+
+    await expect(
+      normalizeToolInputForSchema(
+        {
+          "`Items`": [{ "`Name`": "Breakfast" }, { "`Category`": "Food" }],
+        },
+        nestedSchema
+      )
+    ).resolves.toEqual({
+      changed: true,
+      value: {
+        Items: [{ Name: "Breakfast" }, { Category: "Food" }],
+      },
+    })
+  })
+
+  it("normalizes fields whose names exist on the object prototype", async () => {
+    const inheritedNameSchema = z.object({ constructor: z.string() })
+
+    await expect(
+      normalizeToolInputForSchema(
+        { "`constructor`": "value" },
+        inheritedNameSchema
+      )
+    ).resolves.toEqual({
+      changed: true,
+      value: { constructor: "value" },
+    })
+  })
 })

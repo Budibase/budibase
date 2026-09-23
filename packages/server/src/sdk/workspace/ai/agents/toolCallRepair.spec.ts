@@ -1,4 +1,5 @@
-import { InvalidToolInputError } from "ai"
+import { InvalidToolInputError, tool } from "ai"
+import { z } from "zod"
 import { createToolCallRetryGuard } from "./toolCallRepair"
 
 describe("tool call repair", () => {
@@ -13,7 +14,16 @@ describe("tool call repair", () => {
         instructions: undefined,
         system: undefined,
         messages: [],
-        tools: {},
+        tools: {
+          create_expense: tool({
+            inputSchema: z.object({
+              data: z.object({
+                "Expense Tags": z.array(z.string()),
+                Cost: z.number(),
+              }),
+            }),
+          }),
+        },
         toolCall: {
           type: "tool-call",
           toolCallId: "call_1",
@@ -133,5 +143,84 @@ describe("tool call repair", () => {
       })
     ).resolves.toBeNull()
     expect(retryGuard.shouldDisableTools()).toBe(false)
+  })
+
+  it("counts repeated malformed JSON write calls", async () => {
+    const retryGuard = createToolCallRetryGuard(new Set(["create_expense"]))
+    const input = '{"data":'
+    const options = {
+      instructions: undefined,
+      system: undefined,
+      messages: [],
+      tools: {},
+      toolCall: {
+        type: "tool-call" as const,
+        toolCallId: "call_1",
+        toolName: "create_expense",
+        input,
+      },
+      inputSchema: jest.fn(),
+      error: new InvalidToolInputError({
+        toolInput: input,
+        toolName: "create_expense",
+        cause: new Error("invalid JSON"),
+      }),
+    }
+
+    await retryGuard.repairToolCall(options)
+    expect(retryGuard.shouldDisableTools()).toBe(false)
+    await retryGuard.repairToolCall(options)
+    expect(retryGuard.shouldDisableTools()).toBe(true)
+    expect(options.inputSchema).not.toHaveBeenCalled()
+  })
+
+  it("counts normalized calls that remain schema-invalid", async () => {
+    const retryGuard = createToolCallRetryGuard(new Set(["create_expense"]))
+    const input = JSON.stringify({ data: { "`Expense Tags`": ["Food"] } })
+    const tools = {
+      create_expense: tool({
+        inputSchema: z.object({
+          data: z.object({
+            "Expense Tags": z.array(z.string()),
+            Cost: z.number(),
+          }),
+        }),
+      }),
+    }
+    const options = {
+      instructions: undefined,
+      system: undefined,
+      messages: [],
+      tools,
+      toolCall: {
+        type: "tool-call" as const,
+        toolCallId: "call_1",
+        toolName: "create_expense",
+        input,
+      },
+      inputSchema: async () => ({
+        type: "object" as const,
+        properties: {
+          data: {
+            type: "object" as const,
+            properties: {
+              "Expense Tags": { type: "array" as const },
+              Cost: { type: "number" as const },
+            },
+            required: ["Expense Tags", "Cost"],
+          },
+        },
+      }),
+      error: new InvalidToolInputError({
+        toolInput: input,
+        toolName: "create_expense",
+        cause: new Error("Cost is required"),
+      }),
+    }
+
+    await retryGuard.repairToolCall(options)
+    expect(retryGuard.shouldDisableTools()).toBe(false)
+    await retryGuard.repairToolCall(options)
+    expect(retryGuard.shouldDisableTools()).toBe(true)
   })
 })

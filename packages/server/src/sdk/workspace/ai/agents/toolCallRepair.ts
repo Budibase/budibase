@@ -3,6 +3,7 @@ import {
   type ToolCallRepairFunction,
   type ToolSet,
 } from "ai"
+import { safeValidateTypes } from "@ai-sdk/provider-utils"
 import { normalizeToolInputKeys } from "../../../../ai/tools/inputValidation"
 
 const stableValue = (value: unknown): unknown => {
@@ -30,8 +31,17 @@ export const createToolCallRetryGuard = (
   const failureCounts = new Map<string, number>()
   let disableTools = false
 
+  const recordFailure = (signature: string) => {
+    const failureCount = (failureCounts.get(signature) ?? 0) + 1
+    failureCounts.set(signature, failureCount)
+    if (failureCount >= 2) {
+      disableTools = true
+    }
+  }
+
   const repairToolCall: ToolCallRepairFunction<ToolSet> = async ({
     toolCall,
+    tools,
     inputSchema,
     error,
   }) => {
@@ -46,28 +56,41 @@ export const createToolCallRetryGuard = (
     try {
       input = JSON.parse(toolCall.input)
     } catch {
+      recordFailure(`${toolCall.toolName}:raw:${toolCall.input}`)
       return null
     }
 
+    const signature = `${toolCall.toolName}:${JSON.stringify(
+      stableValue(input)
+    )}`
     const normalized = normalizeToolInputKeys(
       input,
       await inputSchema({ toolName: toolCall.toolName })
     )
     if (normalized.changed) {
+      const normalizedSignature = `${toolCall.toolName}:${JSON.stringify(
+        stableValue(normalized.value)
+      )}`
+      const tool = tools[toolCall.toolName]
+      if (tool) {
+        const validation = await safeValidateTypes({
+          value: normalized.value,
+          schema: tool.inputSchema,
+        })
+        if (!validation.success) {
+          recordFailure(normalizedSignature)
+        } else {
+          failureCounts.delete(signature)
+          failureCounts.delete(normalizedSignature)
+        }
+      }
       return {
         ...toolCall,
         input: JSON.stringify(normalized.value),
       }
     }
 
-    const signature = `${toolCall.toolName}:${JSON.stringify(
-      stableValue(input)
-    )}`
-    const failureCount = (failureCounts.get(signature) ?? 0) + 1
-    failureCounts.set(signature, failureCount)
-    if (failureCount >= 2) {
-      disableTools = true
-    }
+    recordFailure(signature)
 
     return null
   }

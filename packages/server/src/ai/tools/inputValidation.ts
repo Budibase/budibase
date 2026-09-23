@@ -23,10 +23,12 @@ const normalizeValue = (
   schema?: JSONSchema7
 ): NormalizedInput => {
   if (Array.isArray(value)) {
-    const itemSchema = Array.isArray(schema?.items)
-      ? undefined
-      : asJsonSchema(schema?.items)
-    const normalizedItems = value.map(item => normalizeValue(item, itemSchema))
+    const normalizedItems = value.map((item, index) => {
+      const itemDefinition = Array.isArray(schema?.items)
+        ? (schema.items[index] ?? schema.additionalItems)
+        : schema?.items
+      return normalizeValue(item, asJsonSchema(itemDefinition))
+    })
     return {
       changed: normalizedItems.some(item => item.changed),
       value: normalizedItems.map(item => item.value),
@@ -42,7 +44,9 @@ const normalizeValue = (
     Object.entries(value).map(([key, child]) => {
       const unwrapped = unwrapBackticks(key)
       const canonicalKey =
-        unwrapped !== key && unwrapped in properties && !(unwrapped in value)
+        unwrapped !== key &&
+        Object.hasOwn(properties, unwrapped) &&
+        !Object.hasOwn(value, unwrapped)
           ? unwrapped
           : key
       if (canonicalKey !== key) {
