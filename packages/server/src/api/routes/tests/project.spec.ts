@@ -1,6 +1,7 @@
 import {
   context,
   db as dbCore,
+  encryption,
   features,
   ViewName,
 } from "@budibase/backend-core"

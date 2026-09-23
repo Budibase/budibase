@@ -64,6 +64,10 @@ import { getResourceType } from "../../resources/utils"
 import { getAppUrl } from "../../workspaces/utils"
 import { doWithProjectAssignmentsLock } from "../lock"
 import {
+  PROJECT_ATTACHMENTS_DIRECTORY,
+  MAX_PROJECT_ARCHIVE_SIZE_BYTES,
+  MAX_PROJECT_EXTRACTED_SIZE_BYTES,
+  MAX_PROJECT_PACKAGE_FILES,
   PROJECT_DEPENDENCY_INDEX_FILE,
   PROJECT_DOCS_DIRECTORY,
   PROJECT_EXPORT_FORMAT_VERSION,
@@ -71,6 +75,12 @@ import {
   PROJECT_MANIFEST_FILE,
 } from "./constants"
 import { getProjectIds, isProjectAssignableResourceType } from "../utils"
+
+import {
+  readProjectPackageFiles,
+  isSafeArchivePath,
+  MAX_PROJECT_PATH_SEGMENTS,
+} from "./files"
 
 const IMPORT_ORDER: ResourceType[] = [
   ResourceType.AGENT,
@@ -86,11 +96,7 @@ const IMPORT_ORDER: ResourceType[] = [
 const isAllowedImportType = (value: unknown): value is ResourceType =>
   typeof value === "string" && IMPORT_ORDER.some(type => type === value)
 
-const MAX_ARCHIVE_SIZE_BYTES = 50 * 1024 * 1024
-const MAX_EXTRACTED_SIZE_BYTES = 100 * 1024 * 1024
-const MAX_PACKAGE_FILES = 2000
 const MAX_PACKAGE_DOCS = 1000
-const MAX_PATH_SEGMENTS = 4
 const MAX_ENCRYPT_PASSWORD_LENGTH = 1024
 type PipelineDestination = Parameters<typeof pipeline>[1]
 
@@ -175,60 +181,6 @@ const getProjectCreatedAt = (project: Project) =>
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value)
 
-const isSafeArchivePath = (path: string) => {
-  const segments = path.split(/[\\/]/)
-  return (
-    !path.startsWith("/") &&
-    !path.startsWith("\\") &&
-    !/^[A-Za-z]:/.test(path) &&
-    segments.every(segment => segment !== ".." && segment !== ".")
-  )
-}
-
-const readDirectoryRecursively = async (
-  dirPath: string,
-  rootPath = dirPath,
-  totals = { files: 0, bytes: 0 }
-): Promise<string[]> => {
-  const entries = await fsp.readdir(dirPath, { withFileTypes: true })
-  const files: string[] = []
-
-  for (const entry of entries) {
-    const fullPath = join(dirPath, entry.name)
-    const relPath = relative(rootPath, fullPath)
-    if (!isSafeArchivePath(relPath)) {
-      throw new HTTPError("Project package contains unsafe paths.", 400)
-    }
-    if (relPath.split(/[\\/]/).length > MAX_PATH_SEGMENTS) {
-      throw new HTTPError(
-        "Project package contains paths that are too deep.",
-        400
-      )
-    }
-    if (entry.isSymbolicLink()) {
-      throw new HTTPError("Project package contains unsupported links.", 400)
-    }
-    if (entry.isDirectory()) {
-      files.push(
-        ...(await readDirectoryRecursively(fullPath, rootPath, totals))
-      )
-    } else {
-      const stats = await fsp.stat(fullPath)
-      totals.files += 1
-      totals.bytes += stats.size
-      if (totals.files > MAX_PACKAGE_FILES) {
-        throw new HTTPError("Project package contains too many files.", 400)
-      }
-      if (totals.bytes > MAX_EXTRACTED_SIZE_BYTES) {
-        throw new HTTPError("Project package is too large.", 400)
-      }
-      files.push(fullPath)
-    }
-  }
-
-  return files
-}
-
 const validateProjectPackageBeforeExtraction = async (file: {
   path: string
 }) => {
@@ -264,7 +216,8 @@ const validateProjectPackageBeforeExtraction = async (file: {
         return
       }
       if (
-        entry.path.split(/[\\/]/).filter(Boolean).length > MAX_PATH_SEGMENTS
+        entry.path.split(/[\\/]/).filter(Boolean).length >
+        MAX_PROJECT_PATH_SEGMENTS
       ) {
         fail(
           new HTTPError(
@@ -287,11 +240,11 @@ const validateProjectPackageBeforeExtraction = async (file: {
       if (!entry.type || PROJECT_PACKAGE_FILE_ENTRY_TYPES.has(entry.type)) {
         totals.files += 1
         totals.bytes += entry.size || 0
-        if (totals.files > MAX_PACKAGE_FILES) {
+        if (totals.files > MAX_PROJECT_PACKAGE_FILES) {
           fail(new HTTPError("Project package contains too many files.", 400))
           return
         }
-        if (totals.bytes > MAX_EXTRACTED_SIZE_BYTES) {
+        if (totals.bytes > MAX_PROJECT_EXTRACTED_SIZE_BYTES) {
           fail(new HTTPError("Project package is too large.", 400))
           return
         }
@@ -1219,7 +1172,7 @@ async function extractProjectPackage(
   encryptPassword?: string
 ): Promise<ExtractedProjectPackage> {
   const fileStats = await fsp.stat(file.path)
-  if (fileStats.size > MAX_ARCHIVE_SIZE_BYTES) {
+  if (fileStats.size > MAX_PROJECT_ARCHIVE_SIZE_BYTES) {
     throw new HTTPError("Project package is too large.", 400)
   }
   if (encryptPassword && encryptPassword.length > MAX_ENCRYPT_PASSWORD_LENGTH) {
@@ -1253,7 +1206,7 @@ async function extractProjectPackage(
       }
     }
 
-    const packageFiles = await readDirectoryRecursively(tmpPath)
+    const packageFiles = await readProjectPackageFiles({ dirPath: tmpPath })
     const rootEntries = await fsp.readdir(tmpPath)
     if (rootEntries.some(entry => entry.endsWith(".enc")) && !encryptPassword) {
       throw new HTTPError(

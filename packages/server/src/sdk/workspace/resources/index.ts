@@ -132,7 +132,9 @@ export function collectProjectResourceDependencies(
       return []
     }
     if (
-      isProjectAssignableResourceType(dependency.type) &&
+      (isProjectAssignableResourceType(dependency.type) ||
+        dependency.type === ResourceType.QUERY ||
+        dependency.type === ResourceType.ROW_ACTION) &&
       !projectIdsByResourceId.get(dependency.id)?.includes(projectId)
     ) {
       return []
@@ -483,6 +485,32 @@ async function buildResourceDependencyAnalysis({
         resource._id ? [[resource._id, getProjectIds(resource)]] : []
       )
     )
+
+    // Queries and row actions travel with their owning datasource or table.
+    for (const datasource of datasources) {
+      if (datasource._id === INTERNAL_TABLE_SOURCE_ID) {
+        continue
+      }
+      for (const table of Object.values(datasource.entities || {})) {
+        if (table._id) {
+          projectIdsByResourceId.set(table._id, getProjectIds(datasource))
+        }
+      }
+    }
+    for (const query of queries) {
+      projectIdsByResourceId.set(
+        query._id!,
+        projectIdsByResourceId.get(query.datasourceId) || []
+      )
+    }
+    for (const rowAction of rowActions) {
+      projectIdsByResourceId.set(
+        rowAction._id,
+        projectIdsByResourceId.get(
+          extractTableIdFromRowActionsID(rowAction._id)
+        ) || []
+      )
+    }
 
     // Projects include direct members plus each member's transitive dependencies.
     for (const project of projects.filter(

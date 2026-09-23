@@ -1,4 +1,4 @@
-import { context, encryption } from "@budibase/backend-core"
+import { context, encryption, HTTPError } from "@budibase/backend-core"
 import {
   Agent,
   AnyDocument,
@@ -29,6 +29,7 @@ import {
   isDisallowedProjectAssignmentResourceId,
 } from "../../resources/utils"
 import {
+  MAX_PROJECT_ARCHIVE_SIZE_BYTES,
   PROJECT_ATTACHMENTS_DIRECTORY,
   PROJECT_DEPENDENCY_INDEX_FILE,
   PROJECT_DOCS_DIRECTORY,
@@ -36,6 +37,7 @@ import {
   PROJECT_FILE,
   PROJECT_MANIFEST_FILE,
 } from "./constants"
+import { readProjectPackageFiles } from "./files"
 import { doWithProjectAssignmentsLock } from "../lock"
 import {
   fetchAssignedProjectDocs,
@@ -514,11 +516,18 @@ export async function exportProject(
       throw writeFailure.reason
     }
 
+    await readProjectPackageFiles({ dirPath: tmpPath })
+
     if (opts?.encryptPassword) {
       await encryptDirectory(tmpPath, opts.encryptPassword)
     }
 
-    return await tarFilesToTmp(tmpPath, await fsp.readdir(tmpPath))
+    const tarPath = await tarFilesToTmp(tmpPath, await fsp.readdir(tmpPath))
+    if ((await fsp.stat(tarPath)).size > MAX_PROJECT_ARCHIVE_SIZE_BYTES) {
+      await fsp.rm(tarPath, { force: true })
+      throw new HTTPError("Project package is too large.", 400)
+    }
+    return tarPath
   } finally {
     await fsp.rm(tmpPath, { recursive: true, force: true })
   }
