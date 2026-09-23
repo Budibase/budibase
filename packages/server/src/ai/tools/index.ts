@@ -34,6 +34,7 @@ export interface AiToolDefinition {
   executionPolicy: ToolExecutionPolicy
   authorization?: ToolAuthorization
   authoritativeInputSchema?: Tool["inputSchema"]
+  sanitizeAuthoritativeValidationErrors?: boolean
   requesterRedactedTool?: Tool
   filterResult?: (
     result: unknown,
@@ -133,11 +134,18 @@ const wrapTool = (
     if (isMutating) {
       const schema =
         toolDef.authoritativeInputSchema ?? toolDef.tool.inputSchema
-      const normalized = await normalizeToolInputForSchema(input, schema)
-      validatedInput = await validateTypes({
-        value: normalized.value,
-        schema,
-      })
+      try {
+        const normalized = await normalizeToolInputForSchema(input, schema)
+        validatedInput = await validateTypes({
+          value: normalized.value,
+          schema,
+        })
+      } catch (error) {
+        if (toolDef.sanitizeAuthoritativeValidationErrors) {
+          throw new Error("Tool input is invalid")
+        }
+        throw error
+      }
     }
     if (gate) {
       const gateResult = await gate.intercept(validatedInput, {

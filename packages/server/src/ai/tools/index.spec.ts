@@ -205,6 +205,42 @@ describe("secured AI tool execution", () => {
     expect(execute).not.toHaveBeenCalled()
   })
 
+  it("sanitizes authoritative validation errors for redacted tools", async () => {
+    const execute = jest.fn()
+    const authorize = jest.fn().mockResolvedValue(undefined)
+    const intercept = jest.fn()
+    const toolDefinition = definition(execute)
+    toolDefinition.authorization!.permissionLevel = PermissionLevel.WRITE
+    toolDefinition.authoritativeInputSchema = z.object({
+      hiddenField: z.enum(["hidden-option"]),
+    })
+    toolDefinition.sanitizeAuthoritativeValidationErrors = true
+    const tools = toToolSet(
+      [toolDefinition],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize,
+          },
+        ],
+      ]),
+      new Map([["secured_tool", { intercept }]])
+    )
+
+    await expect(
+      tools.secured_tool.execute?.(
+        {},
+        { toolCallId: "call_1", messages: [], context: undefined }
+      )
+    ).rejects.toEqual(new Error("Tool input is invalid"))
+    expect(authorize).toHaveBeenCalledTimes(1)
+    expect(intercept).not.toHaveBeenCalled()
+    expect(execute).not.toHaveBeenCalled()
+  })
+
   it("passes canonical mutating input to escalation and execution", async () => {
     const execute = jest.fn().mockResolvedValue({ success: true })
     const authorize = jest.fn().mockResolvedValue(undefined)

@@ -240,6 +240,7 @@ export async function buildPromptAndTools(
               ...tool,
               authoritativeInputSchema:
                 tool.authoritativeInputSchema ?? tool.tool.inputSchema,
+              sanitizeAuthoritativeValidationErrors: true,
               tool: tool.requesterRedactedTool,
             }
       })

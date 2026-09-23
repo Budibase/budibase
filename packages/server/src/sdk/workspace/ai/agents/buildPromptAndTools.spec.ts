@@ -7,6 +7,7 @@ import {
 } from "@budibase/types"
 import type { Tool } from "ai"
 import { z } from "zod"
+import { toToolSet, type AiToolDefinition } from "../../../../ai/tools"
 import { requesterTools } from "../tests/utils"
 
 jest.mock("../../..", () => ({
@@ -70,16 +71,9 @@ jest.mock("../../../../ai/tools", () => ({
     (_tool, config) =>
       config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
   ),
-  toToolSet: (tools: any[]) =>
-    Object.fromEntries(
-      tools.map(t => [
-        t.name,
-        {
-          ...t.tool,
-          authoritativeInputSchema: t.authoritativeInputSchema,
-        },
-      ])
-    ),
+  toToolSet: jest.fn((tools: AiToolDefinition[]) =>
+    Object.fromEntries(tools.map(t => [t.name, t.tool]))
+  ),
 }))
 
 jest.mock("../../../../ai/tools/authorization", () => ({
@@ -106,7 +100,6 @@ import {
   authorizeAgentToolCall,
   canRequesterReadAgentToolResource,
 } from "../../../../ai/tools/authorization"
-
 describe("getEscalationToolDisplayName", () => {
   it.each([undefined, "API", "api"])(
     "omits a redundant REST source label (%s)",
@@ -448,12 +441,17 @@ describe("buildPromptAndTools", () => {
     expect(result.tools.ta_employees_search_rows).toEqual(
       expect.objectContaining(restrictedTool)
     )
-    expect(
-      Reflect.get(
-        result.tools.ta_employees_create_row,
-        "authoritativeInputSchema"
-      )
-    ).toBe(authoritativeInputSchema)
+    const calls = jest.mocked(toToolSet).mock.calls
+    const toolDefinitions = calls[calls.length - 1][0]
+    expect(toolDefinitions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "ta_employees_create_row",
+          authoritativeInputSchema,
+          sanitizeAuthoritativeValidationErrors: true,
+        }),
+      ])
+    )
     expect(result.mutatingToolNames).toEqual(
       new Set(["ta_employees_create_row"])
     )
