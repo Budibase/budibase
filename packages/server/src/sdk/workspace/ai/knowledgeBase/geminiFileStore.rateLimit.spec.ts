@@ -60,22 +60,7 @@ describe("Gemini ingestion rate limits", () => {
   })
 
   it.each([
-    "Client error '429 Too Many Requests' for url 'https://example.com/upload'",
-    "429 RESOURCE_EXHAUSTED: Too many uploads",
-    '{"error":{"code":429,"message":"Too many uploads"}}',
-  ])("recognizes a wrapped upstream rate limit: %s", async error => {
-    nock("https://example.com")
-      .post("/v1/rag/ingest")
-      .reply(200, { status: "failed", error }, { "Retry-After": "90" })
-
-    await expect(ingest()).rejects.toMatchObject({
-      status: 429,
-      message: error,
-      retryAt: now + 90_000,
-    })
-  })
-
-  it.each([
+    "429 Too Many Requests",
     "Ingestion timed out",
     "Failed to upload document 429",
     "Storage quota exhausted",

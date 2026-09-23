@@ -238,16 +238,6 @@ export async function ingestGeminiFile({
 
   const payload = (await response.json()) as RagIngestResponse
   if (payload.status === "failed" && payload.error) {
-    if (
-      /\b429\s+(?:Too Many Requests|RESOURCE_EXHAUSTED)\b|["']code["']\s*:\s*429\b/i.test(
-        payload.error
-      )
-    ) {
-      throw new GeminiRateLimitError({
-        message: payload.error,
-        retryAt: getGeminiRetryAt(response.headers.get("Retry-After")),
-      })
-    }
     console.error("Gemini ingest failed", { error: payload.error })
     if (payload.error.includes("fileSearchStores")) {
       if (payload.error.includes("403")) {
