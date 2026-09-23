@@ -29,6 +29,7 @@ export enum LockName {
   GEMINI_INGESTION_COOLDOWN = "gemini_ingestion_cooldown",
   CUSTOM_REST_TEMPLATES = "custom_rest_templates",
   CONVERSATION_ATTACHMENT = "conversation_attachment",
+  ESCALATION = "escalation",
 }
 
 export type LockOptions = {
