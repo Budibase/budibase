@@ -357,11 +357,13 @@ const queryFunctionRuns = async ({
   database,
   functionId,
   cursor,
+  retentionDate,
   limit,
 }: {
   database: WorkspaceDatabase
   functionId: string
   cursor?: z.infer<typeof runCursorSchema>
+  retentionDate: string
   limit: number
 }) =>
   queryRunView({
@@ -372,10 +374,19 @@ const queryFunctionRuns = async ({
       include_docs: true,
       descending: true,
       startkey: [functionId, cursor?.startedAt || {}, cursor?.runId || {}],
-      endkey: [functionId],
+      endkey: [functionId, retentionDate],
       limit: limit + 2,
     },
   })
+
+const prepareHistoryRead = async () => {
+  const retentionDate = await automations.logs.oldestLogDate()
+  const databases = [context.getDevWorkspaceDB(), context.getProdWorkspaceDB()]
+  await Promise.all(
+    databases.map(database => clearOldHistory(database, retentionDate))
+  )
+  return { databases, retentionDate }
+}
 
 export const listRunHistory = async ({
   functionId,
@@ -387,13 +398,21 @@ export const listRunHistory = async ({
   requestedLimit?: number
 }) => {
   const limit = Math.min(Math.max(1, requestedLimit), MAX_PAGE_SIZE)
-  const databases = [context.getDevWorkspaceDB(), context.getProdWorkspaceDB()]
-  await Promise.all(databases.map(database => clearOldHistory(database)))
+  const { databases, retentionDate } = await prepareHistoryRead()
   const cursor = bookmark ? decodeCursor(bookmark) : undefined
+  if (cursor && cursor.startedAt < retentionDate) {
+    return { runs: [], hasMore: false }
+  }
   const runs = (
     await Promise.all(
       databases.map(database =>
-        queryFunctionRuns({ database, functionId, cursor, limit })
+        queryFunctionRuns({
+          database,
+          functionId,
+          cursor,
+          retentionDate,
+          limit,
+        })
       )
     )
   )
@@ -423,11 +442,12 @@ export const getRunHistory = async ({
   runId: string
 }): Promise<FunctionRunSummary | undefined> => {
   const id = docIds.generateFunctionRunLogID(runId)
-  const databases = [context.getDevWorkspaceDB(), context.getProdWorkspaceDB()]
-  await Promise.all(databases.map(database => clearOldHistory(database)))
+  const { databases, retentionDate } = await prepareHistoryRead()
   const summaries = await Promise.all(
     databases.map(database => database.tryGet<FunctionRunSummary>(id))
   )
-  const summary = summaries.find(item => item?.functionId === functionId)
+  const summary = summaries.find(
+    item => item?.functionId === functionId && item.startedAt >= retentionDate
+  )
   return summary ? sanitizeSummary(summary) : undefined
 }

@@ -2,10 +2,28 @@ const mockDbTryGet = jest.fn()
 const mockDbPut = jest.fn()
 const mockDbBulkDocs = jest.fn()
 const mockQueryViewRaw = jest.fn()
+const mockOldestLogDate = jest.fn()
 const mockGetWorkspaceDB = jest.fn(() => ({
   tryGet: mockDbTryGet,
   put: mockDbPut,
   bulkDocs: mockDbBulkDocs,
+}))
+const mockGetDevWorkspaceDB = jest.fn(() => ({
+  name: "development",
+  tryGet: mockDbTryGet,
+}))
+const mockGetProdWorkspaceDB = jest.fn(() => ({
+  name: "published",
+  tryGet: mockDbTryGet,
+}))
+
+jest.mock("@budibase/pro", () => ({
+  automations: {
+    logs: {
+      oldestLogDate: (...args: Parameters<typeof mockOldestLogDate>) =>
+        mockOldestLogDate(...args),
+    },
+  },
 }))
 
 jest.mock("@budibase/backend-core", () => {
@@ -16,6 +34,11 @@ jest.mock("@budibase/backend-core", () => {
       ...actual.context,
       getWorkspaceDB: (...args: Parameters<typeof mockGetWorkspaceDB>) =>
         mockGetWorkspaceDB(...args),
+      getDevWorkspaceDB: (...args: Parameters<typeof mockGetDevWorkspaceDB>) =>
+        mockGetDevWorkspaceDB(...args),
+      getProdWorkspaceDB: (
+        ...args: Parameters<typeof mockGetProdWorkspaceDB>
+      ) => mockGetProdWorkspaceDB(...args),
     },
     db: {
       ...actual.db,
@@ -25,10 +48,15 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
-import { context } from "@budibase/backend-core"
+import { context, db as dbCore } from "@budibase/backend-core"
 import { FunctionErrorCode, type FunctionRunSummary } from "@budibase/types"
 import env, { withEnv } from "../../../environment"
-import { finalizeRunSummary, reconcileRunning } from "./history"
+import {
+  finalizeRunSummary,
+  getRunHistory,
+  listRunHistory,
+  reconcileRunning,
+} from "./history"
 
 const runningSummary: FunctionRunSummary = {
   _id: "function_run_log_test-run",
@@ -51,6 +79,8 @@ describe("Function run history", () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockDbPut.mockImplementation(async document => ({ doc: document }))
+    mockOldestLogDate.mockResolvedValue("2026-01-02T00:00:00.000Z")
+    mockQueryViewRaw.mockResolvedValue({ rows: [] })
   })
 
   afterEach(() => {
@@ -115,5 +145,32 @@ describe("Function run history", () => {
         )
       }
     )
+  })
+
+  it("bounds list queries by retention even when cleanup finds no expired runs", async () => {
+    const result = await listRunHistory({ functionId: "function-1" })
+
+    expect(result).toEqual({ runs: [], hasMore: false })
+    expect(mockOldestLogDate).toHaveBeenCalledTimes(1)
+    expect(mockQueryViewRaw).toHaveBeenCalledWith(
+      dbCore.ViewName.FUNCTION_RUNS_BY_FUNCTION,
+      expect.objectContaining({
+        endkey: ["function-1", "2026-01-02T00:00:00.000Z"],
+      }),
+      expect.anything(),
+      expect.any(Function)
+    )
+  })
+
+  it("hides expired detail records that remain after cleanup", async () => {
+    mockDbTryGet.mockResolvedValue(runningSummary)
+
+    const result = await getRunHistory({
+      functionId: "function-1",
+      runId: "test-run",
+    })
+
+    expect(result).toBeUndefined()
+    expect(mockOldestLogDate).toHaveBeenCalledTimes(1)
   })
 })
