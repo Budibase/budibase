@@ -5,32 +5,70 @@ import {
 } from "ai"
 import { normalizeToolInputKeys } from "../../../../ai/tools/inputValidation"
 
-export const repairToolCall: ToolCallRepairFunction<ToolSet> = async ({
-  toolCall,
-  inputSchema,
-  error,
-}) => {
-  if (!InvalidToolInputError.isInstance(error)) {
-    return null
+const stableValue = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map(stableValue)
   }
-
-  let input: unknown
-  try {
-    input = JSON.parse(toolCall.input)
-  } catch {
-    return null
+  if (!value || typeof value !== "object") {
+    return value
   }
-
-  const normalized = normalizeToolInputKeys(
-    input,
-    await inputSchema({ toolName: toolCall.toolName })
+  return Object.fromEntries(
+    Object.entries(value)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, child]) => [key, stableValue(child)])
   )
-  if (!normalized.changed) {
+}
+
+export interface ToolCallRetryGuard {
+  repairToolCall: ToolCallRepairFunction<ToolSet>
+  shouldDisableTools: () => boolean
+}
+
+export const createToolCallRetryGuard = (): ToolCallRetryGuard => {
+  const failureCounts = new Map<string, number>()
+  let disableTools = false
+
+  const repairToolCall: ToolCallRepairFunction<ToolSet> = async ({
+    toolCall,
+    inputSchema,
+    error,
+  }) => {
+    if (!InvalidToolInputError.isInstance(error)) {
+      return null
+    }
+
+    let input: unknown
+    try {
+      input = JSON.parse(toolCall.input)
+    } catch {
+      return null
+    }
+
+    const normalized = normalizeToolInputKeys(
+      input,
+      await inputSchema({ toolName: toolCall.toolName })
+    )
+    if (normalized.changed) {
+      return {
+        ...toolCall,
+        input: JSON.stringify(normalized.value),
+      }
+    }
+
+    const signature = `${toolCall.toolName}:${JSON.stringify(
+      stableValue(input)
+    )}`
+    const failureCount = (failureCounts.get(signature) ?? 0) + 1
+    failureCounts.set(signature, failureCount)
+    if (failureCount >= 2) {
+      disableTools = true
+    }
+
     return null
   }
 
   return {
-    ...toolCall,
-    input: JSON.stringify(normalized.value),
+    repairToolCall,
+    shouldDisableTools: () => disableTools,
   }
 }
