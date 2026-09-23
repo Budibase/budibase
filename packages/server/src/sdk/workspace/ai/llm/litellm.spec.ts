@@ -45,6 +45,68 @@ describe("createLiteLLMOpenAI", () => {
     nock.cleanAll()
   })
 
+  it("uses the session id as the LiteLLM trace id", async () => {
+    const sessionId = "chat-preview:session-id"
+    let requestBody: object | undefined
+    const getKeySettingsMock = getKeySettings as jest.MockedFunction<
+      typeof getKeySettings
+    >
+    const fetchModelMaxInputTokensMock =
+      fetchModelMaxInputTokens as jest.MockedFunction<
+        typeof fetchModelMaxInputTokens
+      >
+
+    getKeySettingsMock.mockResolvedValue({
+      keyId: "key-id",
+      secretKey: "secret-key",
+      teamId: "team-id",
+    })
+    fetchModelMaxInputTokensMock.mockResolvedValue(undefined)
+    mockChatGPTResponse("hello", {
+      baseUrl: "http://litellm.local",
+      onRequest: body => {
+        requestBody = body
+      },
+    })
+
+    const aiConfig: CustomAIProviderConfig = {
+      _id: "config-1",
+      name: "OpenAI",
+      provider: "openai",
+      model: "gpt-5-mini",
+      configType: AIConfigType.COMPLETIONS,
+      updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      liteLLMModelId: "litellm-model-id",
+      credentialsFields: {},
+    }
+
+    await serverWithEnv(
+      {
+        LITELLM_URL: "http://litellm.local/v1",
+      },
+      async () => {
+        const llm = await createLiteLLMOpenAI(aiConfig, sessionId)
+        await llm.chat.doGenerate({
+          prompt: [
+            {
+              role: "user",
+              content: [{ type: "text", text: "hello" }],
+            },
+          ],
+        })
+      }
+    )
+
+    expect(requestBody).toMatchObject({
+      litellm_session_id: sessionId,
+      litellm_trace_id: sessionId,
+      metadata: {
+        session_id: sessionId,
+      },
+    })
+  })
+
   it("syncs quota usage after BBAI responses in self host", async () => {
     const setBudibaseAICreditsMock =
       quotas.setBudibaseAICredits as jest.MockedFunction<

@@ -25,7 +25,7 @@
       defaultValue: T
       disabled: boolean
       readonly: boolean
-      validator: ((_value: T) => string | null) | null
+      validator: ((value: T) => string | null) | null
       error: string | null | undefined
       lastUpdate: number
     }
@@ -111,7 +111,7 @@
   // extracted values from the field array
   const deriveFieldProperty = (
     fieldStores: Readable<FieldInfo>[],
-    getProp: (_field: FieldInfo) => any
+    getProp: (field: FieldInfo) => any
   ) => {
     return derived(fieldStores, fieldValues => {
       return fieldValues.reduce(

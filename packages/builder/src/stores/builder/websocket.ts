@@ -2,7 +2,7 @@ import { createWebsocket } from "@budibase/frontend-core"
 import {
   automationStore,
   userStore,
-  appStore,
+  workspaceStore,
   themeStore,
   navigationStore,
   deploymentStore,
@@ -14,7 +14,7 @@ import {
   workspaceDeploymentStore,
 } from "@/stores/builder"
 import { get } from "svelte/store"
-import { auth, appsStore } from "@/stores/portal"
+import { auth, workspacesStore } from "@/stores/portal"
 import { screenStore } from "./screens"
 import { SocketEvent, BuilderSocketEvent, helpers } from "@budibase/shared-core"
 import { notifications } from "@budibase/bbui"
@@ -63,7 +63,7 @@ export const createBuilderWebsocket = (appId: string) => {
     BuilderSocketEvent.LockTransfer,
     ({ userId }: { userId: string }) => {
       if (userId === get(auth)?.user?._id) {
-        appStore.update(state => ({
+        workspaceStore.update(state => ({
           ...state,
           hasLock: true,
         }))
@@ -112,7 +112,7 @@ export const createBuilderWebsocket = (appId: string) => {
   socket.onOther(
     BuilderSocketEvent.AppMetadataChange,
     ({ metadata }: { metadata: any }) => {
-      appStore.syncMetadata(metadata)
+      workspaceStore.syncMetadata(metadata)
       themeStore.syncMetadata(metadata)
       navigationStore.syncMetadata(metadata)
       snippets.syncMetadata(metadata)
@@ -121,7 +121,7 @@ export const createBuilderWebsocket = (appId: string) => {
   socket.onOther(
     BuilderSocketEvent.AppPublishChange,
     async ({ user, published }: { user: UIUser; published: boolean }) => {
-      await appsStore.load()
+      await workspacesStore.load()
       if (published) {
         await Promise.all([
           deploymentStore.load(),

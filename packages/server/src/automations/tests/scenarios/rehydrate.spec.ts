@@ -1,5 +1,5 @@
 import "@budibase/backend-core/tests"
-import { GenericContainer, StartedTestContainer } from "testcontainers"
+import { GenericContainer, StartedTestContainer, Wait } from "testcontainers"
 
 jest.setTimeout(60_000)
 
@@ -40,7 +40,10 @@ describe("rehydrateScheduledTriggers (integration)", () => {
   }
 
   beforeAll(async () => {
-    redis = await new GenericContainer("redis").withExposedPorts(6379).start()
+    redis = await new GenericContainer("redis")
+      .withExposedPorts(6379)
+      .withWaitStrategy(Wait.forListeningPorts())
+      .start()
 
     process.env.BULL_TEST_REDIS_PORT = `${redis.getMappedPort(6379)}`
     delete process.env.FORKED_PROCESS

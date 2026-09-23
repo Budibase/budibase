@@ -5,7 +5,6 @@ import {
   BadRequestError,
   configs,
   context,
-  env as envCore,
   objectStore,
   roles,
   utils,
@@ -83,15 +82,28 @@ const MAX_PWA_ZIP_FILE_COUNT = 100
 const MAX_PWA_ZIP_ENTRY_SIZE = 10 * 1024 * 1024 // 10MB per file
 const MAX_PWA_ZIP_TOTAL_SIZE = 50 * 1024 * 1024 // 50MB uncompressed total
 const MAX_PWA_ZIP_DEPTH = 10
+// used in attribute checks for security remediation, see
+// https://github.com/Budibase/budibase/pull/19564
+const ZIP_FILE_TYPE_MASK = 0o170000
+const ZIP_SYMLINK_FILE_TYPE = 0o120000
 
 const validatePWAZipEntries = () => {
   let fileCount = 0
   let totalUncompressedSize = 0
 
-  return (entry: { fileName: string; uncompressedSize: number }) => {
+  return (entry: {
+    fileName: string
+    uncompressedSize: number
+    externalFileAttributes: number
+  }) => {
     // extract-zip skips these itself, so don't count them against the limits.
     if (entry.fileName.startsWith("__MACOSX/")) {
       return
+    }
+
+    const fileType = (entry.externalFileAttributes >>> 16) & ZIP_FILE_TYPE_MASK
+    if (fileType === ZIP_SYMLINK_FILE_TYPE) {
+      throw new BadRequestError(`Invalid zip`)
     }
 
     const depth =
@@ -467,9 +479,6 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
 
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
-  const normalizedPath = ctx.path.replace(/\/$/, "")
-  const isChatRoute =
-    normalizedPath === "/app-chat" || normalizedPath.startsWith("/app-chat/")
   const [fullyMigrated, settingsConfig, recaptchaConfig] = await Promise.all([
     isWorkspaceFullyMigrated(workspaceId),
     configs.getSettingsConfigDoc(),
@@ -511,12 +520,8 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         }
       }
     }
-    const clientVersion = isChatRoute ? envCore.VERSION : appInfo.version
-    const clientCacheKey = await objectStore.getClientCacheKey(clientVersion)
-    const clientAssetScopeId = isChatRoute
-      ? GLOBAL_CLIENT_ASSET_ID
-      : workspaceId
-    const clientLibPath = `/api/assets/${clientAssetScopeId}/client?${clientCacheKey}`
+    const clientCacheKey = await objectStore.getClientCacheKey(appInfo.version)
+    const clientLibPath = `/api/assets/${workspaceId}/client?${clientCacheKey}`
     const hideDevTools = !!ctx.params.appUrl
     const sideNav = workspaceApp?.navigation.navigation === "Left"
     const hideFooter =
@@ -535,17 +540,20 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
         import("./templates/BudibaseApp.svelte"),
         import("svelte/server"),
       ])
-      const plugins = await objectStore.enrichPluginURLs(appInfo.usedPlugins)
+      const existingPlugins = await sdk.plugins.filterExistingUsedPlugins(
+        appInfo.usedPlugins
+      )
+      const enrichedPlugins =
+        await sdk.plugins.enrichUsedPluginsWithSvelteMajor(existingPlugins)
+      const plugins = await objectStore.enrichPluginURLs(enrichedPlugins)
       /*
        * Server rendering in svelte sadly does not support type checking, the .render function
        * always will just expect "any" when typing - so it is pointless for us to type the
        * BudibaseApp.svelte file as we can never detect if the types are correct. To get around this
        * I've created a type which expects what the app will expect to receive.
        */
-      const appName = isChatRoute
-        ? "Chat"
-        : workspaceApp?.name || `${appInfo.name}`
-      const appTitle = isChatRoute ? "Chat" : branding?.platformTitle || appName
+      const appName = workspaceApp?.name || `${appInfo.name}`
+      const appTitle = branding?.platformTitle || appName
       const nonce = ctx.state.nonce || ""
       let props: BudibaseAppProps = {
         title: appTitle,
@@ -557,9 +565,7 @@ export const serveApp = async function (ctx: UserCtx<void, ServeAppResponse>) {
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
-        metaTitle: isChatRoute
-          ? "Chat"
-          : branding?.metaTitle || `${appName} - built with Budibase`,
+        metaTitle: branding?.metaTitle || `${appName} - built with Budibase`,
         clientCacheKey,
         clientLibPath,
         usedPlugins: plugins,

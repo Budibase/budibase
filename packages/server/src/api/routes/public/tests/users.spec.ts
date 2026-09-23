@@ -51,6 +51,23 @@ describe("public users API", () => {
       expect(newUser._id).toBeDefined()
     })
 
+    it("rejects malformed builder app assignments", async () => {
+      const apiKey = await config.generateApiKey(globalUser._id)
+      const response = await config
+        .request!.post("/api/public/v1/users")
+        .set(
+          config.defaultHeaders({
+            "x-budibase-api-key": apiKey,
+          })
+        )
+        .send({
+          email: generator.email({ domain: "example.com" }),
+          builder: { apps: {} },
+        })
+
+      expect(response.status).toBe(400)
+    })
+
     describe("role creation on free tier", () => {
       it("should not allow 'roles' to be updated", async () => {
         const newUser = await config.api.public.user.create({
@@ -151,6 +168,47 @@ describe("public users API", () => {
           )
         )
       })
+
+      it("allows app builders to create users with roles for their workspace", async () => {
+        const workspaceId = config.getProdWorkspaceId()
+        const appBuilderUser = await config.globalUser({
+          builder: {
+            apps: [workspaceId],
+          },
+          admin: { global: false },
+        })
+        nock.cleanAll()
+        mockWorkerUserAPI(globalUser, appBuilderUser)
+
+        const newUser = await config.withUser(appBuilderUser, () =>
+          config.api.public.user.create({
+            email: generator.email({ domain: "example.com" }),
+            roles: { [workspaceId]: "ADMIN" },
+          })
+        )
+        expect(newUser.roles[workspaceId]).toBe("ADMIN")
+      })
+
+      it("rejects app builders creating users with roles for other workspaces", async () => {
+        const appBuilderUser = await config.globalUser({
+          builder: {
+            apps: [config.getProdWorkspaceId()],
+          },
+          admin: { global: false },
+        })
+        nock.cleanAll()
+        mockWorkerUserAPI(globalUser, appBuilderUser)
+
+        await config.withUser(appBuilderUser, () =>
+          config.api.public.user.create(
+            {
+              email: generator.email({ domain: "example.com" }),
+              roles: { app_unrelated: "ADMIN" },
+            },
+            { status: 403 }
+          )
+        )
+      })
     })
   })
 
@@ -237,6 +295,55 @@ describe("public users API", () => {
           {
             ...user,
             builder: { global: true },
+          },
+          { status: 403 }
+        )
+      )
+    })
+
+    it("allows app builders to update roles for their workspace", async () => {
+      const workspaceId = config.getProdWorkspaceId()
+      const appBuilderUser = await config.globalUser({
+        builder: {
+          apps: [workspaceId],
+        },
+        admin: { global: false },
+      })
+      nock.cleanAll()
+      mockWorkerUserAPI(globalUser, appBuilderUser)
+      const user = await config.api.public.user.create({
+        email: generator.email({ domain: "example.com" }),
+        roles: {},
+      })
+
+      const updatedUser = await config.withUser(appBuilderUser, () =>
+        config.api.public.user.update({
+          ...user,
+          roles: { [workspaceId]: "ADMIN" },
+        })
+      )
+      expect(updatedUser.roles[workspaceId]).toBe("ADMIN")
+    })
+
+    it("rejects app builders updating roles for other workspaces", async () => {
+      const appBuilderUser = await config.globalUser({
+        builder: {
+          apps: [config.getProdWorkspaceId()],
+        },
+        admin: { global: false },
+      })
+      nock.cleanAll()
+      mockWorkerUserAPI(globalUser, appBuilderUser)
+      const user = await config.api.public.user.create({
+        email: generator.email({ domain: "example.com" }),
+        roles: {},
+      })
+
+      await config.withUser(appBuilderUser, () =>
+        config.api.public.user.update(
+          {
+            ...user,
+            roles: { app_unrelated: "ADMIN" },
           },
           { status: 403 }
         )

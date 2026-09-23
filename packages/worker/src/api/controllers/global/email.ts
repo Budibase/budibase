@@ -46,6 +46,8 @@ export async function sendEmail(
   })
   ctx.body = {
     ...response,
+    pending: response.pending ?? [],
+    response: response.response ?? "",
     message: `Email sent to ${email}.`,
   }
 }

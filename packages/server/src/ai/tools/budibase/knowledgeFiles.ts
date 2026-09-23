@@ -1,5 +1,7 @@
 import {
   KnowledgeBaseFileStatus,
+  PermissionLevel,
+  PermissionType,
   ToolType,
   type KnowledgeBaseFile,
 } from "@budibase/types"
@@ -198,6 +200,13 @@ export const createKnowledgeFilesTool = (
   sourceLabel: "Budibase",
   description:
     "List knowledge files attached to this agent, including metadata like size, status, and upload time",
+  executionPolicy: {
+    mode: "admin",
+  },
+  authorization: {
+    permissionType: PermissionType.WORKSPACE,
+    permissionLevel: PermissionLevel.READ,
+  },
   tool: tool({
     description:
       "List knowledge files attached to this agent. Use filename to answer questions like 'what size is policy' even without file extensions.",
@@ -289,6 +298,13 @@ export const createKnowledgeSearchTool = (
   sourceLabel: "Budibase",
   description:
     "Search the agent knowledge files and return relevant context snippets with source metadata",
+  executionPolicy: {
+    mode: "admin",
+  },
+  authorization: {
+    permissionType: PermissionType.WORKSPACE,
+    permissionLevel: PermissionLevel.READ,
+  },
   tool: tool({
     description:
       "Search attached knowledge files for answer context. Use for factual questions grounded in uploaded docs.",

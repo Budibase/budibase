@@ -10,7 +10,7 @@
     context?: Map<any, any>
     $$slots?: Record<string, any>
     $$scope?: any
-  }) => { $set?: (_p: any) => void; $destroy?: () => void }
+  }) => { $set?: (p: any) => void; $destroy?: () => void }
 
   let container: HTMLElement
   let instance: any

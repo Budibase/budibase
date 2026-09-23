@@ -42,6 +42,13 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
+  getConflicts(id: string): Promise<string[]> {
+    return tracer.trace("db.getConflicts", span => {
+      span.addTags({ db_name: this.name, doc_id: id })
+      return this.db.getConflicts(id)
+    })
+  }
+
   tryGet<T extends Document>(id?: string | undefined): Promise<T | undefined> {
     return tracer.trace("db.tryGet", async span => {
       span.addTags({ db_name: this.name, doc_id: id })

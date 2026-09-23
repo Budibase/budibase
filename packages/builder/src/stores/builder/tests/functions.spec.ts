@@ -1,27 +1,28 @@
-import { API, productionAPI } from "@/api"
+import { API } from "@/api"
 import { FunctionStore } from "@/stores/builder/functions"
-import type { FunctionResponse } from "@budibase/types"
-import { SourceName } from "@budibase/types"
+import type { FunctionResponse, FunctionSummary } from "@budibase/types"
+import { SourceName, PublishResourceState } from "@budibase/types"
 import { get } from "svelte/store"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 vi.mock("@/api", () => ({
   API: {
+    deployment: { getPublishStatus: vi.fn() },
     getFunctions: vi.fn(),
     getFunctionQueryCatalog: vi.fn(),
     getFunction: vi.fn(),
+    compileFunction: vi.fn(),
+    buildFunction: vi.fn(),
     createFunction: vi.fn(),
     updateFunction: vi.fn(),
     deleteFunction: vi.fn(),
-  },
-  productionAPI: {
-    getFunctions: vi.fn(),
   },
 }))
 
 const makeFunction = (
   overrides: Partial<FunctionResponse> = {}
-): FunctionResponse => ({
+): FunctionResponse & FunctionSummary => ({
+  linkedQueryCount: 1,
   _id: "fn_one",
   _rev: "1-one",
   appId: "app_dev_test",
@@ -40,7 +41,7 @@ const makeFunction = (
   createdAt: "2026-07-23T12:00:00.000Z",
   updatedAt: "2026-07-23T12:00:00.000Z",
   artifact: {
-    runnerProtocolVersion: 1,
+    capabilityIds: ["cap_one"],
     compiledJavaScript: "compiled",
     sourceHash: "source-hash",
     declarationsHash: "declarations-hash",
@@ -54,16 +55,34 @@ describe("FunctionStore", () => {
 
   beforeEach(() => {
     store = new FunctionStore()
-    vi.clearAllMocks()
+    vi.resetAllMocks()
+    vi.mocked(API.getFunction).mockResolvedValue({ function: makeFunction() })
     vi.mocked(API.getFunctions).mockResolvedValue({ functions: [] })
-    vi.mocked(productionAPI.getFunctions).mockResolvedValue({ functions: [] })
+    vi.mocked(API.deployment.getPublishStatus).mockResolvedValue({
+      automations: {},
+      workspaceApps: {},
+      tables: {},
+      agents: {},
+      functions: {},
+    })
   })
 
   it("loads Functions and derives published deployment state", async () => {
     const fn = makeFunction()
     vi.mocked(API.getFunctions).mockResolvedValue({ functions: [fn] })
-    vi.mocked(productionAPI.getFunctions).mockResolvedValue({
-      functions: [makeFunction({ appId: "app_test" })],
+    vi.mocked(API.deployment.getPublishStatus).mockResolvedValue({
+      automations: {},
+      workspaceApps: {},
+      tables: {},
+      agents: {},
+      functions: {
+        fn_one: {
+          name: fn.name,
+          published: true,
+          unpublishedChanges: false,
+          state: PublishResourceState.PUBLISHED,
+        },
+      },
     })
 
     await store.fetch()
@@ -83,14 +102,19 @@ describe("FunctionStore", () => {
     vi.mocked(API.getFunctions).mockResolvedValue({
       functions: [changed, newFunction],
     })
-    vi.mocked(productionAPI.getFunctions).mockResolvedValue({
-      functions: [
-        makeFunction({
-          _id: "fn_changed",
-          appId: "app_test",
-          updatedAt: "2026-07-22T12:00:00.000Z",
-        }),
-      ],
+    vi.mocked(API.deployment.getPublishStatus).mockResolvedValue({
+      automations: {},
+      workspaceApps: {},
+      tables: {},
+      agents: {},
+      functions: {
+        fn_changed: {
+          name: changed.name,
+          published: true,
+          unpublishedChanges: true,
+          state: PublishResourceState.PUBLISHED,
+        },
+      },
     })
 
     await store.fetch()

@@ -8,10 +8,10 @@
     Label,
     Body,
     Input,
+    generateId,
   } from "@budibase/bbui"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
-  import { generate } from "shortid"
   import type { TableSchema } from "@budibase/types"
   import CellEditor from "./CellEditor.svelte"
   import type { ColumnConfig } from "./types"
@@ -32,7 +32,7 @@
   $: unselectedColumns = getUnselectedColumns(options, columns)
   $: columns.forEach(column => {
     if (!column.id) {
-      column.id = generate()
+      column.id = generateId()
     }
   })
 

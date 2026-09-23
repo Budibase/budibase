@@ -54,6 +54,7 @@ describe("AI Tools - Automations", () => {
     return (await toolDef.tool.execute(input, {
       toolCallId: "test-tool-call",
       messages: [],
+      context: undefined,
     })) as T
   }
 

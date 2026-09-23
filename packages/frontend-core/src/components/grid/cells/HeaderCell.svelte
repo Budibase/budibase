@@ -54,7 +54,8 @@
   let searchValue
   let input
 
-  $: sortedBy = column.name === $sort.column
+  $: columnSort = $sort.find(sortEntry => sortEntry.column === column.name)
+  $: sortedBy = !!columnSort
   $: canMoveLeft = orderable && idx > 0
   $: canMoveRight = orderable && idx < $scrollableColumns.length - 1
   $: sortingLabels = getSortingLabels(column)
@@ -150,18 +151,22 @@
   }
 
   const sortAscending = () => {
-    sort.set({
-      column: column.name,
-      order: SortOrder.ASCENDING,
-    })
+    sort.set([
+      {
+        column: column.name,
+        order: SortOrder.ASCENDING,
+      },
+    ])
     open = false
   }
 
   const sortDescending = () => {
-    sort.set({
-      column: column.name,
-      order: SortOrder.DESCENDING,
-    })
+    sort.set([
+      {
+        column: column.name,
+        order: SortOrder.DESCENDING,
+      },
+    ])
     open = false
   }
 
@@ -341,7 +346,7 @@
           <Icon
             hoverable
             size="S"
-            name={$sort.order === SortOrder.DESCENDING
+            name={columnSort?.order === SortOrder.DESCENDING
               ? "sort-descending"
               : "sort-ascending"}
           />
@@ -389,8 +394,7 @@
           icon="sort-ascending"
           on:click={sortAscending}
           disabled={!canBeSortColumn(column.schema) ||
-            (column.name === $sort.column &&
-              $sort.order === SortOrder.ASCENDING)}
+            columnSort?.order === SortOrder.ASCENDING}
         >
           Sort {sortingLabels.ascending}
         </MenuItem>
@@ -398,8 +402,7 @@
           icon="sort-descending"
           on:click={sortDescending}
           disabled={!canBeSortColumn(column.schema) ||
-            (column.name === $sort.column &&
-              $sort.order === SortOrder.DESCENDING)}
+            columnSort?.order === SortOrder.DESCENDING}
         >
           Sort {sortingLabels.descending}
         </MenuItem>

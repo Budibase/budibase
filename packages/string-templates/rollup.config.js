@@ -4,7 +4,7 @@ import json from "@rollup/plugin-json"
 import typescript from "@rollup/plugin-typescript"
 import polyfillNode from "rollup-plugin-polyfill-node"
 import inject from "@rollup/plugin-inject"
-import { terser } from "rollup-plugin-terser"
+import terser from "@rollup/plugin-terser"
 
 const production = !process.env.ROLLUP_WATCH
 
@@ -23,7 +23,8 @@ const config = (input, outputFile, format) => ({
   },
   plugins: [
     typescript({
-      moduleResolution: "node",
+      moduleResolution: "bundler",
+      sourceMap: !production,
     }),
     polyfillNode(),
     resolve({

@@ -1,6 +1,6 @@
 import { AIEndpoints } from "./ai"
 import { AnalyticsEndpoints } from "./analytics"
-import { AppEndpoints } from "./app"
+import { AppEndpoints } from "./workspace"
 import { AttachmentEndpoints } from "./attachments"
 import { AuditLogEndpoints } from "./auditLogs"
 import { AuthEndpoints } from "./auth"
@@ -40,12 +40,12 @@ import { AgentEndpoints } from "./agents"
 import { AgentTestEndpoints } from "./agentTests"
 import { AgentLogEndpoints } from "./agentLogs"
 import { AgentRequestEndpoints } from "./agentRequests"
-import { ChatAppEndpoints } from "./chatApps"
 import { ChatLinksEndpoints } from "./chatLinks"
 import { EscalationEndpoints } from "./escalations"
 import { NavigationEndpoints } from "./navigation"
 import { WorkspaceAppEndpoints } from "./workspaceApps"
 import { ResourceEndpoints } from "./resource"
+import { RestTemplateEndpoints } from "./restTemplates"
 import { DeploymentEndpoints } from "./deploy"
 import { WorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { WorkspaceHomeEndpoints } from "./workspaceHome"
@@ -80,6 +80,7 @@ export type APICallConfig<RequestT, ResponseT> = {
   suppressErrors: boolean
   cache: boolean
   body?: RequestT
+  signal?: AbortSignal
   parseResponse?: (response: Response) => Promise<ResponseT> | ResponseT
 }
 
@@ -128,7 +129,6 @@ export type APIClient = BaseAPIClient &
   AgentTestEndpoints &
   AgentLogEndpoints &
   AgentRequestEndpoints &
-  ChatAppEndpoints &
   ChatLinksEndpoints &
   EscalationEndpoints &
   AnalyticsEndpoints &
@@ -161,6 +161,7 @@ export type APIClient = BaseAPIClient &
   SelfEndpoints &
   TableEndpoints &
   TemplateEndpoints &
+  RestTemplateEndpoints &
   UserEndpoints &
   FeatureFlagEndpoints &
   ViewEndpoints & {

@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { UserAvatar } from "@budibase/frontend-core"
   import { TooltipPosition, Avatar } from "@budibase/bbui"
   import type { UIUser } from "@budibase/types"
+  import UserAvatar from "./UserAvatar.svelte"
 
   type OrderType = "ltr" | "rtl"
 

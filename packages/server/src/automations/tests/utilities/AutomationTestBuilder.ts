@@ -112,6 +112,7 @@ class BranchStepBuilder<TStep extends AutomationTriggerStepId> {
   deleteRow = this.step(AutomationActionStepId.DELETE_ROW)
   sendSmtpEmail = this.step(AutomationActionStepId.SEND_EMAIL_SMTP)
   executeQuery = this.step(AutomationActionStepId.EXECUTE_QUERY)
+  executeFunction = this.step(AutomationActionStepId.EXECUTE_FUNCTION)
   apiRequest = this.step(AutomationActionStepId.API_REQUEST)
   queryRows = this.step(AutomationActionStepId.QUERY_ROWS)
   getRow = this.step(AutomationActionStepId.GET_ROW)
@@ -307,7 +308,7 @@ class AutomationRunner<TStep extends AutomationTriggerStepId> {
           throw new Error(
             `Automation with ID ${
               this.automation._id
-            } not found in app ${this.config.getDevWorkspaceId()}. You may have forgotten to call config.api.workspace.publish().`,
+            } not found in workspace ${this.config.getDevWorkspaceId()}. You may have forgotten to call config.api.workspace.publish().`,
             { cause: e }
           )
         } else {

@@ -5,9 +5,9 @@ import { UserAvatar } from "@budibase/frontend-core"
 import { Target, type Route } from "@/types/routing"
 import { Pages } from "./pages"
 import { AdminState } from "@/stores/portal/admin"
-import { AppMetaState } from "@/stores/builder/app"
-import { PortalAppsStore } from "@/stores/portal/apps"
-import { StoreApp } from "@/types"
+import { WorkspaceMetaState } from "@/stores/builder/workspace"
+import { PortalWorkspacesStore } from "@/stores/portal/workspaces"
+import { StoreWorkspace } from "@/types"
 import { aiConfigsStore } from "@/stores/portal"
 import { get } from "svelte/store"
 
@@ -232,20 +232,26 @@ export const orgRoutes = (
 }
 
 export const workspaceRoutes = (
-  appStore: AppMetaState,
-  appsStore: PortalAppsStore,
+  workspaceStore: WorkspaceMetaState,
+  workspacesStore: PortalWorkspacesStore,
   user: GetGlobalSelfResponse
 ): Route[] => {
-  if (!appStore?.appId) {
+  if (!workspaceStore?.appId) {
     return []
   }
   const isCreator = user != null && sdk.users.canCreateApps(user)
-  const getBackupErrors = (apps: StoreApp[], appId: string) => {
-    const target = apps.find(app => app.devId === appId)
+  const getBackupErrors = (
+    workspaces: StoreWorkspace[],
+    workspaceId: string
+  ) => {
+    const target = workspaces.find(workspace => workspace.devId === workspaceId)
     return target?.backupErrors || {}
   }
 
-  const backupErrors = getBackupErrors(appsStore.apps || [], appStore?.appId)
+  const backupErrors = getBackupErrors(
+    workspacesStore.apps || [],
+    workspaceStore?.appId
+  )
   const backupErrorCount = Object.keys(backupErrors).length
 
   return [
@@ -266,20 +272,25 @@ export const workspaceRoutes = (
           path: "oauth2",
           component: Pages.get("oauth2"),
         },
+        {
+          title: "Automations",
+          path: "automations",
+          component: Pages.get("automations"),
+        },
       ],
     },
     {
-      section: "Connections",
-      title: "Connections",
+      section: "APIs",
+      title: "APIs",
       access: () => isCreator,
       path: "connections",
       icon: "cube",
-      new: true,
       routes: [
         {
           path: "apis",
-          title: "APIs",
-          component: Pages.get("connections"),
+          title: "API Specs",
+          new: true,
+          component: Pages.get("create_connection"),
           routes: [
             {
               title: "Create",
@@ -308,8 +319,34 @@ export const workspaceRoutes = (
           ],
         },
         {
+          path: "api-connections",
+          title: "Connections",
+          component: Pages.get("connections"),
+          routes: [
+            {
+              title: "New connection",
+              path: "new",
+              component: Pages.get("connection"),
+              skipNav: true,
+            },
+            {
+              title: "Connection",
+              path: ":id",
+              component: Pages.get("connection"),
+              skipNav: true,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      section: "AI models",
+      access: () => isCreator,
+      path: "connections",
+      icon: "brain",
+      routes: [
+        {
           path: AIConfigType.COMPLETIONS,
-          title: "AI models",
           component: Pages.get("ai_configs"),
           routes: [
             {
@@ -332,13 +369,17 @@ export const workspaceRoutes = (
       ],
     },
     {
-      section: "Automations",
-      icon: "lightning-a",
-      path: "automations",
+      section: "Agent channels",
+      access: () => isCreator,
+      path: "channels",
+      icon: "chat-teardrop-text",
+      new: true,
+      showNav: true,
       routes: [
         {
-          path: "logs",
-          component: Pages.get("automations"),
+          path: "slack",
+          title: "Slack",
+          component: Pages.get("slack_app_config"),
         },
       ],
     },

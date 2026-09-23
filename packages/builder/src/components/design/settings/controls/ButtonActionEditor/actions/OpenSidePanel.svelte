@@ -1,7 +1,7 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
   import { selectedScreen } from "@/stores/builder"
-  import InfoDisplay from "@/pages/builder/workspace/[application]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
+  import InfoDisplay from "@/pages/builder/workspace/[workspaceId]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import {
     findAllMatchingComponents,
     findComponent,

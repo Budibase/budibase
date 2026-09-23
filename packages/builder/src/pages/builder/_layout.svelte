@@ -1,11 +1,11 @@
-<script>
+<script lang="ts">
   import { isActive, redirect, goto } from "@roxi/routify"
   import {
     admin,
     auth,
     licensing,
     navigation,
-    appsStore,
+    workspacesStore,
     organisation,
     groups,
     enrichedApps,
@@ -18,8 +18,8 @@
     Constants,
     popNumSessionsInvalidated,
     invalidationMessage,
-    derivedMemo,
   } from "@budibase/frontend-core"
+  import { PingSource } from "@budibase/types"
   import { API } from "@/api"
   import Branding from "./Branding.svelte"
   import ContextMenu from "@/components/ContextMenu.svelte"
@@ -34,44 +34,53 @@
   } from "@budibase/bbui"
   import SettingsModal from "@/components/settings/SettingsModal.svelte"
   import AccountLockedModal from "@/components/portal/licensing/AccountLockedModal.svelte"
-  import { writable } from "svelte/store"
 
   $isActive
   $redirect
 
-  let initPromise
-  let loaded = writable(false)
-  let commandPaletteModal
-  let settingsModal
-  let accountLockedModal
-  let hasAuthenticated = false
-  let lastExecutedAction = null
+  type NavigationAction =
+    | { type: "setReturnUrl"; url: string }
+    | { type: "redirect"; path: string }
+    | { type: "returnUrl"; url: string }
 
-  $: multiTenancyEnabled = $admin.multiTenancy
-  $: hasAdminUser = $admin?.checklist?.adminUser?.checked
-  $: cloud = $admin?.cloud
-  $: user = $auth.user
-  $: canCreateApps = sdk.users.canCreateApps(user)
-  $: isOwner = $auth.accountPortalAccess && $admin.cloud
-  $: useAccountPortal = cloud && !$admin.disableAccountPortal
-  $: isBuilder = sdk.users.hasBuilderPermissions(user)
+  let initPromise = $state<Promise<void>>(Promise.resolve())
+  let loaded = $state(false)
+  let commandPaletteModal = $state<Modal>()
+  let accountLockedModal = $state<AccountLockedModal>()
+  let hasAuthenticated = $state(false)
+  let lastExecutedAction: string | null = null
+
+  let multiTenancyEnabled = $derived($admin.multiTenancy)
+  let hasAdminUser = $derived($admin?.checklist?.adminUser?.checked)
+  let cloud = $derived($admin?.cloud)
+  let user = $derived($auth.user)
+  let canCreateApps = $derived(user ? sdk.users.canCreateApps(user) : false)
+  let isOwner = $derived($auth.accountPortalAccess && $admin.cloud)
+  let useAccountPortal = $derived(cloud && !$admin.disableAccountPortal)
+  let isBuilder = $derived(sdk.users.hasBuilderPermissions(user))
+
   // Re-run initBuilder when user logs in
-  $: {
+  $effect(() => {
     const isAuthenticated = !!$auth.user
     if (isAuthenticated && !hasAuthenticated) {
       initPromise = initBuilder()
     }
     hasAuthenticated = isAuthenticated
-  }
+  })
 
-  $: lockAction =
+  let lockAction = $derived(
     $licensing?.errUserLimit || $auth?.user?.lockedBy
-      ? accountLockedModal.show
+      ? accountLockedModal?.show
       : null
+  )
 
-  $: updateBannerVisibility($auth.user, isOwner)
+  $effect(() => {
+    updateBannerVisibility()
+  })
 
-  $: processNavAction($navigationAction)
+  $effect(() => {
+    processNavAction(navigationAction)
+  })
 
   navigation.init($redirect)
 
@@ -80,14 +89,14 @@
   }
 
   // Determine if the user is on a trial and show the banner.
-  const updateBannerVisibility = (user, isOwner) => {
-    if (!user && $licensing.showTrialBanner) {
+  const updateBannerVisibility = () => {
+    if (!$auth.user && $licensing.showTrialBanner) {
       licensing.update(store => {
         store.showTrialBanner = false
         return store
       })
     } else if (
-      user &&
+      $auth.user &&
       !$licensing.showTrialBanner &&
       $licensing.isTrialPlan &&
       isOwner
@@ -100,7 +109,7 @@
   }
 
   // Handle navigation actions from derived store
-  const processNavAction = action => {
+  const processNavAction = (action: NavigationAction | null) => {
     // Reset last executed action when there's no action to process
     if (!action) {
       lastExecutedAction = null
@@ -136,105 +145,102 @@
     }
   }
 
-  const navigationAction = derivedMemo(
-    [admin, auth, enrichedApps, isActive, appsStore, loaded],
-    ([$admin, $auth, $enrichedApps, $isActive, $appsStore, $loaded]) => {
-      // Only run remaining logic when fully loaded
-      if (!$loaded || !$admin.loaded || !$auth.loaded) {
-        return null
-      }
-
-      // Set the return url on logout
-      if (
-        !$auth.user &&
-        !CookieUtils.getCookie(Constants.Cookies.ReturnUrl) &&
-        !$auth.postLogout &&
-        !isOnPreLoginPage()
-      ) {
-        return { type: "setReturnUrl", url: window.location.pathname }
-      }
-
-      // if tenant is not set go to it
-      if (!useAccountPortal && multiTenancyEnabled && !$auth.tenantSet) {
-        return { type: "redirect", path: "./auth/org" }
-      }
-
-      // Force creation of an admin user if one doesn't exist
-      if (!useAccountPortal && !hasAdminUser) {
-        return { type: "redirect", path: "./admin" }
-      }
-
-      // Redirect to log in at any time if the user isn't authenticated
-      if (!$auth.user && !isOnPreLoginPage()) {
-        return { type: "redirect", path: "./auth" }
-      }
-
-      // Check if password reset required for user
-      if ($auth.user?.forceResetPassword) {
-        return { type: "redirect", path: "./auth/reset" }
-      }
-
-      // Authenticated user navigation
-      if ($auth.user) {
-        const returnUrl = CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
-
-        // Return to saved URL first - skip onboarding check if user has a return URL
-        if (returnUrl) {
-          return { type: "returnUrl", url: returnUrl }
-        }
-
-        // Review if builder users have workspaces. If not, redirect them to onboarding
-        const hasEditableWorkspaces = $enrichedApps.some(app => app.editable)
-        if (
-          isBuilder &&
-          ($appsStore.apps.length === 0 || !hasEditableWorkspaces) &&
-          !$isActive("./apps") &&
-          !$isActive("./onboarding") &&
-          !$isActive("./get-started")
-        ) {
-          return {
-            type: "redirect",
-            path: canCreateApps ? "./onboarding" : "./apps",
-          }
-        }
-
-        // Redirect non-builders to apps unless they're already there
-        if (!isBuilder && !$isActive("./apps")) {
-          return { type: "redirect", path: "./apps" }
-        }
-
-        // Default workspace selection for builders
-        const isOnWorkspaceRoute =
-          $isActive("./workspace/:application") ||
-          $isActive("./workspace/updating/:application")
-        if (
-          isBuilder &&
-          $appsStore.apps.length &&
-          !isOnWorkspaceRoute &&
-          !$isActive("./apps")
-        ) {
-          // Find first editable app to redirect to
-          const defaultApp = $enrichedApps.find(app => app.editable)
-          // Only redirect if enriched apps are loaded and app is editable
-          if (defaultApp?.devId) {
-            return {
-              type: "redirect",
-              path: `./workspace/${defaultApp.devId}/home`,
-            }
-          }
-        }
-      }
-
+  let navigationAction = $derived.by((): NavigationAction | null => {
+    // Only run remaining logic when fully loaded
+    if (!loaded || !$admin.loaded || !$auth.loaded) {
       return null
     }
-  )
+
+    // Set the return url on logout
+    if (
+      !$auth.user &&
+      !CookieUtils.getCookie(Constants.Cookies.ReturnUrl) &&
+      !$auth.postLogout &&
+      !isOnPreLoginPage()
+    ) {
+      return { type: "setReturnUrl", url: window.location.pathname }
+    }
+
+    // if tenant is not set go to it
+    if (!useAccountPortal && multiTenancyEnabled && !$auth.tenantSet) {
+      return { type: "redirect", path: "./auth/org" }
+    }
+
+    // Force creation of an admin user if one doesn't exist
+    if (!useAccountPortal && !hasAdminUser) {
+      return { type: "redirect", path: "./admin" }
+    }
+
+    // Redirect to log in at any time if the user isn't authenticated
+    if (!$auth.user && !isOnPreLoginPage()) {
+      return { type: "redirect", path: "./auth" }
+    }
+
+    // Check if password reset required for user
+    if ($auth.user?.forceResetPassword) {
+      return { type: "redirect", path: "./auth/reset" }
+    }
+
+    // Authenticated user navigation
+    if ($auth.user) {
+      const returnUrl = CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
+
+      // Return to saved URL first - skip onboarding check if user has a return URL
+      if (returnUrl) {
+        return { type: "returnUrl", url: returnUrl }
+      }
+
+      // Review if builder users have workspaces. If not, redirect them to onboarding
+      const hasEditableWorkspaces = $enrichedApps.some(app => app.editable)
+      if (
+        isBuilder &&
+        ($workspacesStore.apps.length === 0 || !hasEditableWorkspaces) &&
+        !$isActive("./apps") &&
+        !$isActive("./onboarding") &&
+        !$isActive("./get-started")
+      ) {
+        return {
+          type: "redirect",
+          path: canCreateApps ? "./onboarding" : "/apps",
+        }
+      }
+
+      // Redirect non-builders to apps unless they're already there
+      if (!isBuilder && !$isActive("./apps")) {
+        return { type: "redirect", path: "/apps" }
+      }
+
+      // Default workspace selection for builders
+      const isOnWorkspaceRoute =
+        $isActive("./workspace/:workspaceId") ||
+        $isActive("./workspace/updating/:workspaceId")
+      if (
+        isBuilder &&
+        $workspacesStore.apps.length &&
+        !isOnWorkspaceRoute &&
+        !$isActive("./apps")
+      ) {
+        // Find first editable app to redirect to
+        const defaultApp = $enrichedApps.find(app => app.editable)
+        // Only redirect if enriched apps are loaded and app is editable
+        if (defaultApp?.devId) {
+          return {
+            type: "redirect",
+            path: `./workspace/${defaultApp.devId}/home`,
+          }
+        }
+      }
+    }
+
+    return null
+  })
 
   async function analyticsPing() {
-    await API.analyticsPing({ source: "builder" })
+    await API.analyticsPing({ source: PingSource.BUILDER })
   }
 
   async function initBuilder() {
-    loaded.set(false)
+    loaded = false
     try {
       await auth.getSelf()
       await admin.init()
@@ -247,7 +253,7 @@
         // We need to load apps to know if we need to show onboarding fullscreen
         await Promise.all([
           licensing.init(),
-          appsStore.load(),
+          workspacesStore.load(),
           organisation.init(),
           groups.init(),
         ])
@@ -271,26 +277,29 @@
       throw error
     }
 
-    loaded.set(true)
+    loaded = true
 
     const invalidated = popNumSessionsInvalidated()
     if (invalidated > 0) {
-      notifications.info(invalidationMessage(invalidated), {
-        duration: 5000,
+      notifications.send(invalidationMessage(invalidated), {
+        type: "info",
+        icon: "info",
+        dismissTimeout: 5000,
       })
     }
     try {
       await analyticsPing()
-    } catch (e) {
-      console.error("Analytics ping failed", e?.message)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      console.error("Analytics ping failed", message)
     }
   }
 
   // Event handler for the command palette
-  const handleKeyDown = e => {
-    if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault()
-      commandPaletteModal.toggle()
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "k" && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault()
+      commandPaletteModal?.toggle()
     }
   }
 
@@ -337,13 +346,13 @@
 />
 
 <!-- Global settings modal -->
-<SettingsModal bind:this={settingsModal} on:hide={() => bb.hideSettings()} />
+<SettingsModal on:hide={() => bb.hideSettings()} />
 
 <!-- Portal branding overrides -->
 <Branding />
 <ContextMenu />
 
-<svelte:window on:keydown={handleKeyDown} />
+<svelte:window onkeydown={handleKeyDown} />
 <Modal bind:this={commandPaletteModal} zIndex={999999}>
   <CommandPalette />
 </Modal>
@@ -351,7 +360,7 @@
 {#await initPromise}
   <div class="loading"></div>
 {:then _}
-  {#if $loaded || $admin.maintenance.length}
+  {#if loaded || $admin.maintenance.length}
     <div class="content">
       <slot />
     </div>

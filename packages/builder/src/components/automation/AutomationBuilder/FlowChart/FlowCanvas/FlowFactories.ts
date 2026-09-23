@@ -171,6 +171,8 @@ export const edgeLoopAddItem = (
     block: FlowBlockContext
     loopStepId: string
     loopChildInsertIndex: number
+    branchStepId?: string
+    branchIdx?: number
     pathTo?: BlockPath[]
   }
 ): FlowEdge => {
@@ -179,6 +181,8 @@ export const edgeLoopAddItem = (
     loopStepId: ctx.loopStepId,
     loopChildInsertIndex: ctx.loopChildInsertIndex,
     insertIntoLoopV2: true,
+    ...(ctx.branchStepId ? { branchStepId: ctx.branchStepId } : {}),
+    ...(typeof ctx.branchIdx === "number" ? { branchIdx: ctx.branchIdx } : {}),
     ...(ctx.pathTo ? { pathTo: ctx.pathTo } : {}),
   }
   return {

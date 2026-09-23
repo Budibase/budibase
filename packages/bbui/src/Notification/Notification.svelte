@@ -9,7 +9,7 @@
   export let message: string = ""
   export let dismissable: boolean = false
   export let actionMessage: string | null = null
-  export let action: ((_dismiss: () => void) => void) | null = null
+  export let action: ((dismiss: () => void) => void) | null = null
   export let wide: boolean = false
 
   const dispatch = createEventDispatcher<{ dismiss: void }>()

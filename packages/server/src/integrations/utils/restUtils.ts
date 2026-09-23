@@ -1,5 +1,110 @@
-import type { Headers as UndiciHeaders } from "undici"
+import type {
+  Headers as UndiciHeaders,
+  FormData as UndiciFormData,
+} from "undici"
 import type { Headers as NodeFetchHeaders } from "node-fetch"
+import { JSONValue, RestAuthType, SecretTag } from "@budibase/types"
+import { findHBSBlocks } from "@budibase/string-templates"
+
+// Sensitive Header
+const SENSITIVE_HEADERS = [
+  "authorization",
+  "proxy-authorization",
+  "cookie",
+  "x-api-key",
+  "api-key",
+]
+
+export function tagForAuthType(authType?: string): string {
+  switch (authType) {
+    case RestAuthType.BASIC:
+      return SecretTag.BASIC
+    case RestAuthType.BEARER:
+      return SecretTag.BEARER
+    case RestAuthType.OAUTH2:
+      return SecretTag.OAUTH2
+    default:
+      return SecretTag.GENERIC
+  }
+}
+
+// Retains an auth scheme prefix such as "Bearer" - it aids debugging and is
+// not itself sensitive - while replacing the credential which follows it.
+function redactValue(value: string, tag: string): string {
+  const [scheme, ...rest] = value.split(" ")
+  if (rest.length && /^(basic|bearer)$/i.test(scheme)) {
+    return `${scheme} ${tag}`
+  }
+  return tag
+}
+
+export function normaliseHeaders(headers: unknown): Record<string, string> {
+  if (!headers) {
+    return {}
+  }
+  if (typeof (headers as UndiciHeaders).entries === "function") {
+    return Object.fromEntries((headers as UndiciHeaders).entries())
+  }
+  return { ...(headers as Record<string, string>) }
+}
+
+export function sanitiseHeaders({
+  headers,
+  authHeaderKeys = [],
+  authType,
+}: {
+  headers: unknown
+  authHeaderKeys?: string[]
+  authType?: string
+}): Record<string, string> {
+  const authKeys = new Set(authHeaderKeys.map(key => key.toLowerCase()))
+  const sanitised: Record<string, string> = {}
+  for (const [key, rawValue] of Object.entries(normaliseHeaders(headers))) {
+    const value = String(rawValue)
+    const lowerKey = key.toLowerCase()
+    let tag: string | undefined
+    if (authKeys.has(lowerKey)) {
+      tag = tagForAuthType(authType)
+    } else if (SENSITIVE_HEADERS.includes(lowerKey)) {
+      tag = SecretTag.GENERIC
+    }
+    const symbolic = findHBSBlocks(value).length > 0
+    sanitised[key] = tag && !symbolic ? redactValue(value, tag) : value
+  }
+  return sanitised
+}
+
+// For serialised JSON
+function parseIfJson(value: string): JSONValue {
+  try {
+    const parsed = JSON.parse(value)
+    if (parsed && typeof parsed === "object") {
+      return parsed as JSONValue
+    }
+  } catch {
+    // not JSON, show it as it was sent
+  }
+  return value
+}
+
+export function sanitiseBody(body: unknown): JSONValue | undefined {
+  if (body == null) {
+    return undefined
+  }
+  if (typeof body === "string") {
+    return parseIfJson(body)
+  }
+  // URLSearchParams and FormData bodies both expose entries()
+  if (typeof (body as URLSearchParams).entries === "function") {
+    const output: Record<string, JSONValue> = {}
+    const iterable = body as URLSearchParams | UndiciFormData
+    for (const [key, value] of iterable.entries()) {
+      output[key] = typeof value === "string" ? value : `<file: ${key}>`
+    }
+    return output
+  }
+  return undefined
+}
 
 export function getAttachmentHeaders(
   headers: UndiciHeaders | NodeFetchHeaders,

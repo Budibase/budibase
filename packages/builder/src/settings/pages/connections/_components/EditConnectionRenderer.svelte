@@ -9,7 +9,7 @@
 <ActionButton
   size="S"
   on:click={() => {
-    bb.settings(`/connections/apis/${row.sourceId}`)
+    bb.settings(`/connections/api-connections/${row.sourceId}`)
   }}
 >
   Edit

@@ -4,7 +4,7 @@ import {
   FieldSchema,
   FieldType,
   RelationSchemaField,
-  SortOrder,
+  SortField,
   Table,
   UIRow,
   UISearchFilter,
@@ -15,10 +15,7 @@ export interface UITable extends Table {
   id: string
   tableId: string
   primaryDisplay?: string
-  sort?: {
-    field: string
-    order: SortOrder
-  }
+  sort?: SortField | SortField[]
   queryUI: UISearchFilter
   schema: Record<string, UIFieldSchema>
 }

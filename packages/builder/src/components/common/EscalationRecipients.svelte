@@ -1,12 +1,14 @@
 <script lang="ts">
   import {
     type ChatIdentityLink,
+    type ChatIdentityLinkProvider,
     EscalationNotificationChannel,
   } from "@budibase/types"
   import { API } from "@/api"
   import type {
     SlackChannel,
     MSTeamsChannel,
+    PagedChannels,
   } from "@budibase/frontend-core/src/api/chatLinks"
   import {
     ActionButton,
@@ -20,30 +22,11 @@
 
   type Recipient = { type: string; config: Record<string, any> }
 
-  export let recipients: Recipient[] = []
-  export let agentId: string | undefined = undefined
-  export let onChange: (recipients: Recipient[]) => void = () => {}
-  // Single mode: cap at one recipient (still stored as an array). Once chosen,
-  // the add button is replaced by a clear-recipient affordance.
-  export let single: boolean = false
-
-  const PROVIDER_OPTIONS = [
-    { value: EscalationNotificationChannel.SLACK, label: "Slack" },
-    { value: EscalationNotificationChannel.DISCORD, label: "Discord" },
-    { value: EscalationNotificationChannel.MSTEAMS, label: "Teams" },
-    { value: EscalationNotificationChannel.TELEGRAM, label: "Telegram" },
-  ]
-
-  const PROVIDER_LABELS: Record<string, string> = Object.fromEntries(
-    PROVIDER_OPTIONS.map(o => [o.value, o.label])
-  )
-
   interface PendingRecipient {
-    provider: EscalationNotificationChannel | ""
+    provider: EscalationNotificationChannel | undefined
     targetType: "user" | "channel"
     userId: string
     channelId: string
-    discordChannelId: string
     teamsInputMode: "lookup" | "url" | "manual"
     teamsUrl: string
     teamsChannelId: string
@@ -51,12 +34,42 @@
     teamsChannelName: string
   }
 
+  interface ChannelPager<T> {
+    label: string
+    channels: T[]
+    hasNext: boolean
+    cursor?: string
+    loading: boolean
+    loadedFor?: string
+  }
+
+  type ChannelMap = { slack: SlackChannel; teams: MSTeamsChannel }
+  type PagerKey = keyof ChannelMap
+  type PagerState = { [K in PagerKey]: ChannelPager<ChannelMap[K]> }
+
+  export let recipients: Recipient[] = []
+  export let agentId: string | undefined = undefined
+  export let onChange: (recipients: Recipient[]) => void = () => {}
+  // Single mode: cap at one recipient (still stored as an array). Once chosen,
+  // the add button is replaced by a clear-recipient affordance.
+  export let single: boolean = false
+  // Optional allowlist of providers to offer; undefined shows all.
+  export let providers: EscalationNotificationChannel[] | undefined = undefined
+
+  const PROVIDER_OPTIONS = [
+    { value: EscalationNotificationChannel.SLACK, label: "Slack" },
+    { value: EscalationNotificationChannel.MSTEAMS, label: "Teams" },
+  ]
+
+  const PROVIDER_LABELS: Record<string, string> = Object.fromEntries(
+    PROVIDER_OPTIONS.map(o => [o.value, o.label])
+  )
+
   const DEFAULT_PENDING: PendingRecipient = {
-    provider: "",
+    provider: undefined,
     targetType: "user",
     userId: "",
     channelId: "",
-    discordChannelId: "",
     teamsInputMode: "lookup",
     teamsUrl: "",
     teamsChannelId: "",
@@ -64,9 +77,31 @@
     teamsChannelName: "",
   }
 
-  let identityLinks: ChatIdentityLink[] = []
-  let slackChannels: SlackChannel[] = []
-  let teamsChannels: MSTeamsChannel[] = []
+  const loadingProviders = new Set<string>()
+
+  const emptyPager = <T,>(label: string): ChannelPager<T> => ({
+    label,
+    channels: [],
+    hasNext: false,
+    loading: false,
+  })
+
+  const CHANNEL_FETCHERS: {
+    [K in PagerKey]: (
+      _agentId: string,
+      _cursor?: string
+    ) => Promise<PagedChannels<ChannelMap[K]>>
+  } = {
+    slack: API.fetchSlackChannels,
+    teams: API.fetchMSTeamsChannels,
+  }
+
+  let linkCache: Record<string, ChatIdentityLink[]> = {}
+  let loadedAgentId: string | undefined = undefined
+  let pagers: PagerState = {
+    slack: emptyPager("Slack"),
+    teams: emptyPager("Teams"),
+  }
 
   let isAdding = false
   let pending: PendingRecipient = { ...DEFAULT_PENDING }
@@ -75,7 +110,7 @@
   const resetPending = (keepProvider = false) => {
     pending = {
       ...DEFAULT_PENDING,
-      provider: keepProvider ? pending.provider : "",
+      provider: keepProvider ? pending.provider : undefined,
     }
   }
 
@@ -91,52 +126,130 @@
     }
   }
 
-  $: recipientLabels = recipients.map(r => getRecipientLabel(r, identityLinks))
-
-  $: {
-    API.fetchChatIdentityLinks().then((links: ChatIdentityLink[]) => {
-      identityLinks = links
-    })
+  const loadLinks = async (provider: string) => {
+    if (!agentId || linkCache[provider] || loadingProviders.has(provider)) {
+      return
+    }
+    loadingProviders.add(provider)
+    const requestedAgentId = agentId
+    try {
+      const links = await API.fetchChatIdentityLinks(
+        provider as ChatIdentityLinkProvider,
+        requestedAgentId
+      )
+      // Drop a response that arrived after the bot changed.
+      if (requestedAgentId !== agentId) {
+        return
+      }
+      linkCache = { ...linkCache, [provider]: links }
+    } catch (error) {
+      console.error("Failed to load chat identity links", error)
+    } finally {
+      loadingProviders.delete(provider)
+    }
   }
 
-  // Dedupe by globalUserId - a user linked in multiple workspaces/tenants has
-  // several links for one provider, and the picker keys options by globalUserId.
-  $: filteredIdentityLinks = identityLinks
-    .filter(l => (l.provider as string) === (pending.provider as string))
-    .filter(
-      (l, i, arr) => arr.findIndex(x => x.globalUserId === l.globalUserId) === i
-    )
+  $: providerOptions = providers
+    ? PROVIDER_OPTIONS.filter(o => providers!.includes(o.value))
+    : PROVIDER_OPTIONS
+
+  // Refresh links on agent change. An automation concern
+  $: if (agentId !== loadedAgentId) {
+    loadedAgentId = agentId
+    linkCache = {}
+    loadingProviders.clear()
+    if (pending.provider) {
+      loadLinks(pending.provider)
+    }
+    recipients
+      .filter(r => r.config?.globalUserId)
+      .forEach(r => loadLinks(r.type))
+  }
+
+  $: if (pending.provider) {
+    loadLinks(pending.provider)
+  }
+
+  $: recipients
+    .filter(r => r.config?.globalUserId)
+    .forEach(r => loadLinks(r.type))
+
+  $: recipientLabels = recipients.map(r => getRecipientLabel(r, linkCache))
+
+  $: filteredIdentityLinks = (
+    pending.provider ? linkCache[pending.provider] || [] : []
+  ).filter(
+    (l, i, arr) => arr.findIndex(x => x.globalUserId === l.globalUserId) === i
+  )
+
+  $: linksLoaded = !!pending.provider && pending.provider in linkCache
 
   $: supportsChannel =
     pending.provider === EscalationNotificationChannel.SLACK ||
-    pending.provider === EscalationNotificationChannel.DISCORD ||
     pending.provider === EscalationNotificationChannel.MSTEAMS
+
+  // Appends the next provider page onto the pager; the caller reassigns the
+  // returned pager so Svelte picks up the change.
+  const loadChannelPage = async <T,>(
+    pager: ChannelPager<T>,
+    fetchPage: (_agentId: string, _cursor?: string) => Promise<PagedChannels<T>>
+  ): Promise<ChannelPager<T>> => {
+    if (!agentId || pager.loading) {
+      return pager
+    }
+    pager.loading = true
+    try {
+      const page = await fetchPage(agentId, pager.cursor)
+      return {
+        ...pager,
+        loading: false,
+        channels: [...pager.channels, ...page.channels],
+        hasNext: page.hasNext,
+        cursor: page.cursor,
+      }
+    } catch {
+      notifications.error(
+        `Couldn't load ${pager.label} channels — check the bot's credentials and permissions`
+      )
+      return { ...pager, loading: false, hasNext: false }
+    }
+  }
+
+  const loadPage = async <K extends PagerKey>(key: K) => {
+    const next = await loadChannelPage(pagers[key], CHANNEL_FETCHERS[key])
+    pagers = Object.assign({}, pagers, { [key]: next })
+  }
+
+  const loadMoreChannels = (key: PagerKey) => {
+    if (pagers[key].hasNext) {
+      loadPage(key)
+    }
+  }
+
+  const initChannels = (key: PagerKey) => {
+    pagers = Object.assign({}, pagers, {
+      [key]: { ...emptyPager(pagers[key].label), loadedFor: agentId },
+    })
+    loadPage(key)
+  }
 
   $: if (
     pending.provider === EscalationNotificationChannel.SLACK &&
     pending.targetType === "channel" &&
-    agentId
+    agentId &&
+    pagers.slack.loadedFor !== agentId
   ) {
-    API.fetchSlackChannels(agentId).then((channels: SlackChannel[]) => {
-      slackChannels = channels
-    })
+    initChannels("slack")
   }
 
   $: if (
     pending.provider === EscalationNotificationChannel.MSTEAMS &&
     pending.targetType === "channel" &&
     pending.teamsInputMode === "lookup" &&
-    agentId
+    agentId &&
+    pagers.teams.loadedFor !== agentId
   ) {
-    API.fetchMSTeamsChannels(agentId)
-      .then((channels: MSTeamsChannel[]) => {
-        teamsChannels = channels
-      })
-      .catch(() =>
-        notifications.error(
-          "Couldn't load Teams channels — check the bot's Graph permissions"
-        )
-      )
+    initChannels("teams")
   }
 
   $: canAdd = (() => {
@@ -144,8 +257,6 @@
     if (pending.targetType === "user") return !!pending.userId
     if (pending.provider === EscalationNotificationChannel.SLACK)
       return !!pending.channelId
-    if (pending.provider === EscalationNotificationChannel.DISCORD)
-      return !!pending.discordChannelId
     if (pending.provider === EscalationNotificationChannel.MSTEAMS) {
       if (pending.teamsInputMode === "url")
         return !!parseTeamsChannelUrl(pending.teamsUrl)
@@ -176,53 +287,51 @@
 
   const getRecipientLabel = (
     r: Recipient,
-    links: ChatIdentityLink[]
+    cache: Record<string, ChatIdentityLink[]>
   ): string => {
     if (r.config?.channelName) return `#${r.config.channelName}`
     if (r.config?.channelId) return r.config.channelId
+    const links = cache[r.type]
+    if (!links) {
+      return r.config?.globalUserId || "Unknown"
+    }
     const link = links.find(l => l.globalUserId === r.config?.globalUserId)
     return (
       link?.externalUserName ||
       link?.externalUserId ||
-      r.config?.globalUserId ||
-      "Unknown"
+      "Not linked in this workspace"
     )
   }
 
   const addRecipient = () => {
-    if (!canAdd) return
+    const provider = pending.provider
+    if (!canAdd || !provider) return
 
     let recipient: Recipient | undefined
 
     if (pending.targetType === "user") {
-      const link = identityLinks.find(
-        l =>
-          l.globalUserId === pending.userId &&
-          (l.provider as string) === (pending.provider as string)
+      const link = filteredIdentityLinks.find(
+        l => l.globalUserId === pending.userId
       )
       if (!link) return
       recipient = {
-        type: pending.provider,
+        type: provider,
         config: {
           globalUserId: link.globalUserId,
           externalUserId: link.externalUserId,
           ...(link.teamId && { teamId: link.teamId }),
-          ...(link.guildId && { guildId: link.guildId }),
         },
       }
-    } else if (pending.provider === EscalationNotificationChannel.SLACK) {
-      const channel = slackChannels.find(c => c.id === pending.channelId)
+    } else if (provider === EscalationNotificationChannel.SLACK) {
+      const channel = pagers.slack.channels.find(
+        c => c.id === pending.channelId
+      )
       if (!channel) return
       recipient = {
         type: EscalationNotificationChannel.SLACK,
         config: { channelId: channel.id, channelName: channel.name },
       }
-    } else if (pending.provider === EscalationNotificationChannel.DISCORD) {
-      recipient = {
-        type: EscalationNotificationChannel.DISCORD,
-        config: { channelId: pending.discordChannelId },
-      }
-    } else if (pending.provider === EscalationNotificationChannel.MSTEAMS) {
+    } else if (provider === EscalationNotificationChannel.MSTEAMS) {
       if (pending.teamsInputMode === "url") {
         const parsed = parseTeamsChannelUrl(pending.teamsUrl)
         if (!parsed) return
@@ -283,13 +392,13 @@
   {#if isAdding}
     <div class="add-flow">
       <Select
-        options={PROVIDER_OPTIONS}
+        options={providerOptions}
         value={pending.provider}
         placeholder="Provider..."
         getOptionLabel={o => o.label}
         getOptionValue={o => o.value}
         on:change={e => {
-          pending = { ...DEFAULT_PENDING, provider: e.detail || "" }
+          pending = { ...DEFAULT_PENDING, provider: e.detail }
         }}
       />
 
@@ -318,28 +427,27 @@
         {/if}
 
         {#if pending.targetType === "user"}
-          <Select
-            options={filteredIdentityLinks}
-            value={pending.userId}
-            placeholder="Select user..."
-            getOptionLabel={l => l.externalUserName || l.externalUserId}
-            getOptionValue={l => l.globalUserId}
-            on:change={e => (pending.userId = e.detail ?? "")}
-          />
+          {#if linksLoaded && !filteredIdentityLinks.length}
+            <div class="no-links">No linked users in this bot's workspace</div>
+          {:else}
+            <Select
+              options={filteredIdentityLinks}
+              value={pending.userId}
+              placeholder="Select user..."
+              getOptionLabel={l => l.externalUserName || l.externalUserId}
+              getOptionValue={l => l.globalUserId}
+              on:change={e => (pending.userId = e.detail ?? "")}
+            />
+          {/if}
         {:else if pending.provider === EscalationNotificationChannel.SLACK}
           <Select
-            options={slackChannels}
+            options={pagers.slack.channels}
             value={pending.channelId}
             placeholder="Select channel..."
             getOptionLabel={c => `#${c.name}`}
             getOptionValue={c => c.id}
             on:change={e => (pending.channelId = e.detail ?? "")}
-          />
-        {:else if pending.provider === EscalationNotificationChannel.DISCORD}
-          <Input
-            value={pending.discordChannelId}
-            placeholder="Discord channel ID..."
-            on:change={e => (pending.discordChannelId = e.detail)}
+            on:loadMore={() => loadMoreChannels("slack")}
           />
         {:else if pending.provider === EscalationNotificationChannel.MSTEAMS}
           <div class="target-type">
@@ -364,13 +472,15 @@
           </div>
           {#if pending.teamsInputMode === "lookup"}
             <Select
-              options={teamsChannels}
+              options={pagers.teams.channels}
               value={pending.teamsChannelId}
               placeholder="Select channel..."
               getOptionLabel={c => `${c.teamName} / ${c.name}`}
               getOptionValue={c => c.id}
               on:change={e => {
-                const channel = teamsChannels.find(c => c.id === e.detail)
+                const channel = pagers.teams.channels.find(
+                  c => c.id === e.detail
+                )
                 pending = {
                   ...pending,
                   teamsChannelId: channel?.id ?? "",
@@ -378,6 +488,7 @@
                   teamsChannelName: channel?.name ?? "",
                 }
               }}
+              on:loadMore={() => loadMoreChannels("teams")}
             />
           {:else if pending.teamsInputMode === "url"}
             <Input
@@ -421,6 +532,11 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
+  }
+
+  .no-links {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: var(--font-size-s);
   }
 
   .recipients :global(.spectrum-Tags-item) {

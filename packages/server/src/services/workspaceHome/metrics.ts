@@ -1,6 +1,6 @@
 import { cache, context, users } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
-import { type GetWorkspaceHomeMetricsResponse } from "@budibase/types"
+import { type GetTenantMetricsResponse } from "@budibase/types"
 
 import { getQuotaMonthWindow } from "../../utilities/quotaMonthWindow"
 
@@ -11,7 +11,7 @@ const METRICS_CACHE_KEY_PREFIX = "workspaceHome:metrics:v3"
 const BUDIBASE_AI_TOKENS_PER_CREDIT = 1000
 
 interface WorkspaceMetricsCacheEnvelope {
-  value: GetWorkspaceHomeMetricsResponse
+  value: GetTenantMetricsResponse
   expiresAt: number
 }
 
@@ -22,7 +22,7 @@ const convertBudibaseAIUsageToCredits = (usage = 0) => {
   return Math.floor(usage / BUDIBASE_AI_TOKENS_PER_CREDIT)
 }
 
-const getDefaultMetrics = (): GetWorkspaceHomeMetricsResponse => {
+const getDefaultMetrics = (): GetTenantMetricsResponse => {
   const { periodStart, periodEnd } = getQuotaMonthWindow()
   return {
     totalUsers: 0,
@@ -49,7 +49,7 @@ const storeCachedMetrics = async (
 }
 
 const computeWorkspaceHomeMetrics =
-  async (): Promise<GetWorkspaceHomeMetricsResponse> => {
+  async (): Promise<GetTenantMetricsResponse> => {
     const { periodStart, periodEnd } = getQuotaMonthWindow()
 
     const usersPromise = users.getUserCount()
@@ -78,7 +78,7 @@ const computeWorkspaceHomeMetrics =
   }
 
 export const getWorkspaceHomeMetrics =
-  async (): Promise<GetWorkspaceHomeMetricsResponse> => {
+  async (): Promise<GetTenantMetricsResponse> => {
     const cacheKey = buildWorkspaceMetricsCacheKey(context.getTenantId())
 
     const envelope = await getCachedMetrics(cacheKey)

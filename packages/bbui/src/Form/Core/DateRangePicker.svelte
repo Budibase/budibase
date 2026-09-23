@@ -39,7 +39,7 @@
     }
   }
 
-  const onChangeFrom = (utc: string) => {
+  const onChangeFrom = (utc: string | null) => {
     // Preserve the time if its editable
     const fromDate = utc
       ? enableTime
@@ -55,7 +55,7 @@
     dispatch("change", [fromDate, toDate])
   }
 
-  const onChangeTo = (utc: string) => {
+  const onChangeTo = (utc: string | null) => {
     // Preserve the time if its editable
     const toDate = utc
       ? enableTime

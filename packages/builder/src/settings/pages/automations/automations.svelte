@@ -1,16 +1,15 @@
-<script>
+<script lang="ts">
   import { Layout, Body, Heading, Toggle, notifications } from "@budibase/bbui"
-  import { appStore } from "@/stores/builder"
+  import { workspaceStore } from "@/stores/builder"
   import { admin } from "@/stores/portal/admin"
-  import { appsStore } from "@/stores/portal/apps"
 
-  $: app = $appsStore.apps.find(app => $appStore.appId?.includes(app.appId))
   $: isCloud = $admin.cloud
-  $: chainAutomations = app?.automations?.chainAutomations ?? !isCloud
+  $: chainAutomations =
+    $workspaceStore.automations?.chainAutomations ?? !isCloud
 
-  async function save({ detail }) {
+  async function save({ detail }: CustomEvent<boolean>) {
     try {
-      await appsStore.save($appStore.appId, {
+      await workspaceStore.updateWorkspace({
         automations: {
           chainAutomations: detail,
         },

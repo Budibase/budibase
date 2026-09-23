@@ -1,30 +1,49 @@
-<script>
+<script lang="ts">
   import { Button, Modal } from "@budibase/bbui"
-  import { appsStore } from "@/stores/portal/apps"
+  import { workspacesStore } from "@/stores/portal/workspaces"
   import { groups } from "@/stores/portal/groups"
-  import AppAddModal from "./AppAddModal.svelte"
+  import WorkspaceAddModal from "./WorkspaceAddModal.svelte"
 
-  export let groupId
+  interface Props {
+    groupId: string
+  }
 
-  let assignWorkspaceModal
-  let appAddModal
+  let { groupId }: Props = $props()
 
-  $: group = $groups.find(x => x._id === groupId)
-  $: assignedWorkspaceIds = groups.getGroupAppIds(group)
-  $: availableWorkspaceIds = Object.keys(
-    $appsStore.apps.reduce((acc, app) => {
-      const prodAppId = appsStore.getProdAppID(app.devId)
-      if (assignedWorkspaceIds.includes(prodAppId) || acc[prodAppId]) {
-        return acc
-      }
-      acc[prodAppId] = true
-      return acc
-    }, {})
+  let assignWorkspaceModal = $state<Modal>()
+  let workspaceAddModal = $state<WorkspaceAddModal>()
+
+  const group = $derived($groups.find(x => x._id === groupId))
+  const assignedWorkspaceIds = $derived(
+    group ? groups.getGroupAppIds(group) : []
   )
-  $: canAssignWorkspace = availableWorkspaceIds.length > 0
+  const availableWorkspaceIds = $derived(
+    Object.keys(
+      $workspacesStore.apps.reduce<Record<string, boolean>>(
+        (acc, workspace) => {
+          const prodWorkspaceId = workspacesStore.getProdWorkspaceID(
+            workspace.devId || ""
+          )
+          if (!prodWorkspaceId) {
+            return acc
+          }
+          if (
+            assignedWorkspaceIds.includes(prodWorkspaceId) ||
+            acc[prodWorkspaceId]
+          ) {
+            return acc
+          }
+          acc[prodWorkspaceId] = true
+          return acc
+        },
+        {}
+      )
+    )
+  )
+  const canAssignWorkspace = $derived(availableWorkspaceIds.length > 0)
 
   const openAssignWorkspaceModal = () => {
-    appAddModal?.reset()
+    workspaceAddModal?.reset()
     assignWorkspaceModal?.show()
   }
 </script>
@@ -34,5 +53,5 @@
 {/if}
 
 <Modal bind:this={assignWorkspaceModal} closeOnOutsideClick={false}>
-  <AppAddModal bind:this={appAddModal} {groupId} />
+  <WorkspaceAddModal bind:this={workspaceAddModal} {groupId} />
 </Modal>

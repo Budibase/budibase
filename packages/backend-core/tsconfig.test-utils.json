@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.build.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "sourceMap": true,
+    "types": ["node", "jest"]
+  },
+  "include": ["tests/**/*.js", "tests/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

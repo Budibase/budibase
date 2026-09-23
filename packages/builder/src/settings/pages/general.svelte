@@ -1,18 +1,18 @@
 <script lang="ts">
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import UpdateAppForm from "@/components/common/UpdateAppForm.svelte"
+  import UpdateWorkspaceForm from "@/components/common/UpdateWorkspaceForm.svelte"
   import DeleteModal from "@/components/deploy/DeleteModal.svelte"
   import RevertModal from "@/components/deploy/RevertModal.svelte"
   import VersionModal from "@/components/deploy/VersionModal.svelte"
-  import ExportAppModal from "@/components/start/ExportAppModal.svelte"
-  import ImportAppModal from "@/components/start/ImportAppModal.svelte"
+  import ExportWorkspaceModal from "@/components/start/ExportWorkspaceModal.svelte"
+  import ImportWorkspaceModal from "@/components/start/ImportWorkspaceModal.svelte"
   import {
-    appStore,
+    workspaceStore,
     deploymentStore,
     isOnlyUser,
     recaptchaStore,
   } from "@/stores/builder"
-  import { appsStore, featureFlags } from "@/stores/portal"
+  import { workspacesStore, featureFlags } from "@/stores/portal"
   import { admin } from "@/stores/portal/admin"
   import { licensing } from "@/stores/portal/licensing"
   import {
@@ -38,13 +38,14 @@
   let deleteModal: DeleteModal
   let cloneResourcesModal: CloneResourcesModal
 
-  $: updateAvailable = $appStore.upgradableVersion !== $appStore.version
-  $: revertAvailable = $appStore.revertableVersion != null
+  $: updateAvailable =
+    $workspaceStore.upgradableVersion !== $workspaceStore.version
+  $: revertAvailable = $workspaceStore.revertableVersion != null
   $: appRecaptchaEnabled = $recaptchaStore.enabled
-  $: hasOnlyOneWorkspace = $appsStore.apps.length <= 1
+  $: hasOnlyOneWorkspace = $workspacesStore.apps.length <= 1
   $: disableDeleteWorkspace = !$isOnlyUser || hasOnlyOneWorkspace
   $: suppressErrorNotifications =
-    !!$appStore.features?.suppressErrorNotifications
+    !!$workspaceStore.features?.suppressErrorNotifications
   $: deleteWorkspaceTooltip = hasOnlyOneWorkspace
     ? "At least one workspace is required."
     : !$isOnlyUser
@@ -69,7 +70,7 @@
   const updateSuppressErrorNotifications = async () => {
     try {
       const newState = !suppressErrorNotifications
-      await appStore.updateApp({
+      await workspaceStore.updateWorkspace({
         features: {
           suppressErrorNotifications: newState,
         },
@@ -87,7 +88,7 @@
 
 <Layout noPadding>
   <Heading size="S">Workspace info</Heading>
-  <UpdateAppForm />
+  <UpdateWorkspaceForm />
   {#if $deploymentStore.isPublished}
     <Divider noMargin />
     <Heading size="S">Deployment</Heading>
@@ -141,8 +142,9 @@
     {:else if updateAvailable}
       <Body size="S">
         The workspace is currently using version
-        <strong>{$appStore.version}</strong>
-        but version <strong>{$appStore.upgradableVersion}</strong> is available.
+        <strong>{$workspaceStore.version}</strong>
+        but version <strong>{$workspaceStore.upgradableVersion}</strong> is
+        available.
         <br />
         Updates can contain new features, performance improvements and bug fixes.
       </Body>
@@ -180,7 +182,7 @@
     {:else}
       <Body size="S">
         The workspace is currently using version
-        <strong>{$appStore.version}</strong>.
+        <strong>{$workspaceStore.version}</strong>.
         <br />
         You're running the latest!
       </Body>
@@ -300,11 +302,14 @@
 <VersionModal bind:this={versionModal} hideIcon={true} />
 
 <Modal bind:this={exportModal}>
-  <ExportAppModal appId={$appStore.appId} published={exportPublishedVersion} />
+  <ExportWorkspaceModal
+    appId={$workspaceStore.appId}
+    published={exportPublishedVersion}
+  />
 </Modal>
 
 <Modal bind:this={importModal}>
-  <ImportAppModal app={$appStore} />
+  <ImportWorkspaceModal app={$workspaceStore} />
 </Modal>
 
 <ConfirmDialog
@@ -314,7 +319,7 @@
   onOk={deploymentStore.unpublishApp}
 >
   Are you sure you want to unpublish the workspace
-  <b>{$appStore.name}</b>?
+  <b>{$workspaceStore.name}</b>?
 
   <p>This will make all apps and automations in this workspace unavailable</p>
 </ConfirmDialog>
@@ -323,8 +328,8 @@
 
 <DeleteModal
   bind:this={deleteModal}
-  appId={$appStore.appId}
-  appName={$appStore.name}
+  appId={$workspaceStore.appId}
+  appName={$workspaceStore.name}
 />
 
 <style>

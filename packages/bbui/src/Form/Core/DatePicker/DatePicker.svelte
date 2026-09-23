@@ -1,3 +1,10 @@
+<script lang="ts" module>
+  export interface DatePickerApi {
+    open: () => void
+    close: () => void
+  }
+</script>
+
 <script lang="ts" generics="V">
   import "@spectrum-css/calendar/dist/index-vars.css"
   import "@spectrum-css/inputgroup/dist/index-vars.css"
@@ -12,18 +19,19 @@
   import { getLocaleStartDayOfWeek, type Weekday } from "./utils"
   import { resolveTranslationGroup } from "@budibase/shared-core"
 
-  export let id = null
+  export let id: string | null = null
   export let disabled = false
   export let readonly = false
-  export let error = null
+  export let error: string | false | null | undefined = null
   export let enableTime = true
   export let value: V | null = null
   export let placeholder: string | null = null
   export let timeOnly = false
+  export let setTimeTo: string | undefined = undefined
   export let ignoreTimezones = false
   export let useKeyboardShortcuts = true
-  export let appendTo = undefined
-  export let api = null
+  export let appendTo: string | undefined = undefined
+  export let api: DatePickerApi | null = null
   export let align: PopoverAlignment = PopoverAlignment.Left
   const browserStartDayOfWeek = getLocaleStartDayOfWeek()
   export let startDayOfWeek: Weekday | undefined = undefined
@@ -37,6 +45,7 @@
 
   $: parsedValue = parseDate(value as string | dayjs.Dayjs | null, {
     enableTime,
+    setTimeTo,
   })
 
   const onOpen = () => {
@@ -88,6 +97,7 @@
       {ignoreTimezones}
       {enableTime}
       {timeOnly}
+      {setTimeTo}
       startDayOfWeek={resolvedStartDayOfWeek}
       {calendarLabels}
       value={parsedValue}

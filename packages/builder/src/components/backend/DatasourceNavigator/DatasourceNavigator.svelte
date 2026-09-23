@@ -168,8 +168,8 @@
             icon="plus"
             text="New API operation"
             on:click={() =>
-              $goto(`/builder/workspace/:application/apis/query/new/:id`, {
-                application: $params.application,
+              $goto(`/builder/workspace/:workspaceId/apis/query/new/:id`, {
+                workspaceId: $params.workspaceId,
                 id: datasource._id,
               })}
           />

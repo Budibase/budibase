@@ -1,4 +1,4 @@
-import { context, docIds, events } from "@budibase/backend-core"
+import { context, docIds, events, locks } from "@budibase/backend-core"
 import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
@@ -11,6 +11,8 @@ import {
   INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
   JsonFieldSubType,
+  LockName,
+  LockType,
   PermissionLevel,
   RelationshipType,
   Row,
@@ -1602,6 +1604,41 @@ if (descriptions.length) {
         if (isInternal) {
           beforeEach(async () => {
             await config.unpublish()
+          })
+
+          it("rejects a table publish while a workspace publish holds the lock", async () => {
+            const table = await config.api.table.save(basicTable())
+            const devId = config.getDevWorkspaceId()
+
+            let releaseLock: () => void = () => {}
+            let confirmLockAcquired: () => void = () => {}
+            const lockAcquired = new Promise<void>(resolve => {
+              confirmLockAcquired = resolve
+            })
+            const heldLock = config.doInContext(devId, () =>
+              locks.doWithLock(
+                {
+                  type: LockType.AUTO_EXTEND,
+                  name: LockName.PUBLISH_WORKSPACE,
+                  resource: devId,
+                },
+                () =>
+                  new Promise<void>(resolve => {
+                    releaseLock = resolve
+                    confirmLockAcquired()
+                  })
+              )
+            )
+            await lockAcquired
+
+            await config.api.table.publish(table._id!, undefined, {
+              status: 429,
+            })
+
+            releaseLock()
+            await heldLock
+
+            await config.api.table.publish(table._id!)
           })
 
           it("publishes the workspace before publishing a table", async () => {

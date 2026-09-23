@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   maliciousName: "<img src=x onerror=alert(document.domain)>",
   goto: vi.fn(),
   hide: vi.fn(),
+  publishApp: vi.fn(),
   publishAppChanges: vi.fn(),
   setFlag: vi.fn(),
   settings: vi.fn(),
@@ -36,7 +37,7 @@ vi.mock("@/stores/bb", () => ({
 vi.mock("@/stores/portal", async () => {
   const { writable } = await import("svelte/store")
   const featureFlagsStore = writable({
-    DEBUG_UI: true,
+    FEATURE_FLAG_OVERRIDES: true,
     TEST_FLAG: false,
   })
 
@@ -56,11 +57,15 @@ vi.mock("@/stores/builder", async () => {
 
   return {
     automationStore: writable({ automations: [] }),
+    deploymentStore: {
+      subscribe: writable({ isPublishing: false }).subscribe,
+      publishApp: mocks.publishApp,
+    },
     previewStore: {
       showPreview: mocks.showPreview,
     },
     sortedScreens: writable([]),
-    appStore: writable({
+    workspaceStore: writable({
       appId: "app_1",
       url: "/test-app",
     }),

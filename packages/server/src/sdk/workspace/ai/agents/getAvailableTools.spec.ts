@@ -1,4 +1,9 @@
-import { Datasource, Query, SourceName, ToolType } from "@budibase/types"
+import {
+  SourceName,
+  ToolType,
+  type Datasource,
+  type Query,
+} from "@budibase/types"
 import sdk from "../../.."
 import { getAvailableToolsMetadata } from "./utils"
 
@@ -30,7 +35,7 @@ describe("getAvailableToolsMetadata", () => {
     jest.spyOn(sdk.automations, "fetch").mockResolvedValue([])
   })
 
-  it("does not expose helper tools in metadata", async () => {
+  it("does not expose legacy helper tools in metadata", async () => {
     jest.spyOn(sdk.datasources, "fetch").mockResolvedValue([])
     jest.spyOn(sdk.queries, "fetch").mockResolvedValue([])
 
@@ -71,7 +76,7 @@ describe("getAvailableToolsMetadata", () => {
     )
 
     expect(restQueryTool).toMatchObject({
-      name: "rest_rest_api_get_pokemon",
+      name: "rest_rest_api_get_pokemon_query_rest",
       readableName: "Get Pokemon",
       sourceType: ToolType.REST_QUERY,
       sourceLabel: "REST API",
@@ -102,7 +107,7 @@ describe("getAvailableToolsMetadata", () => {
     )
 
     expect(datasourceQueryTool).toMatchObject({
-      name: "ds_warehouse_monthly_sales",
+      name: "ds_warehouse_monthly_sales_query_warehouse",
       readableName: "Monthly Sales",
       sourceType: ToolType.DATASOURCE_QUERY,
       sourceLabel: "Warehouse",
@@ -134,38 +139,37 @@ describe("getAvailableToolsMetadata", () => {
     expect(missingQueryTool).toBeUndefined()
   })
 
-  it("generates unique runtime names for identical query names across datasources", async () => {
+  it("generates unique runtime names when readable segments collide", async () => {
     jest.spyOn(sdk.datasources, "fetch").mockResolvedValue([
       makeDatasource({
         _id: "datasource_rest",
         source: SourceName.REST,
-        name: "REST API",
+        name: "Shared datasource prefix one",
       }),
       makeDatasource({
-        _id: "datasource_snowflake",
-        source: SourceName.SNOWFLAKE,
-        name: "Warehouse",
+        _id: "datasource_rest_two",
+        source: SourceName.REST,
+        name: "Shared datasource prefix two",
       }),
     ])
     jest.spyOn(sdk.queries, "fetch").mockResolvedValue([
       makeQuery({
         _id: "query_rest",
         datasourceId: "datasource_rest",
-        name: "Get Data",
+        name: "Shared query name prefix one",
       }),
       makeQuery({
-        _id: "query_snowflake",
-        datasourceId: "datasource_snowflake",
-        name: "Get Data",
+        _id: "query_rest_two",
+        datasourceId: "datasource_rest_two",
+        name: "Shared query name prefix two",
       }),
     ])
 
     const tools = await getAvailableToolsMetadata()
     const queryTools = tools.filter(
       tool =>
-        tool.readableName === "Get Data" &&
-        (tool.sourceType === ToolType.REST_QUERY ||
-          tool.sourceType === ToolType.DATASOURCE_QUERY)
+        tool.readableName?.startsWith("Shared query name prefix") &&
+        tool.sourceType === ToolType.REST_QUERY
     )
 
     expect(queryTools).toHaveLength(2)

@@ -1,33 +1,29 @@
 import {
-  Agent,
   AgentFileUploadResponse,
   ConnectAgentSharePointSiteRequest,
   ConnectAgentSharePointSiteResponse,
   DisconnectAgentSharePointSiteResponse,
   CreateAgentRequest,
   CreateAgentResponse,
+  CreateAgentSlackAppRequest,
+  CreateAgentSlackAppResponse,
   FetchAgentKnowledgeIndexResponse,
   FetchAgentKnowledgeResponse,
   FetchAgentKnowledgeSourceOptionsResponse,
   FetchAgentFileUrlResponse,
   ProvisionAgentSlackChannelRequest,
   ProvisionAgentSlackChannelResponse,
-  ProvisionAgentTelegramChannelRequest,
-  ProvisionAgentTelegramChannelResponse,
   ProvisionAgentMSTeamsChannelRequest,
   ProvisionAgentMSTeamsChannelResponse,
-  SyncAgentDiscordCommandsRequest,
-  SyncAgentDiscordCommandsResponse,
   SyncAgentKnowledgeSourcesRequest,
   SyncAgentKnowledgeSourcesResponse,
-  ToggleAgentDeploymentRequest,
-  ToggleAgentDeploymentResponse,
   UpdateAgentRequest,
   UpdateAgentResponse,
   CreateAgentOperationRequest,
   UpdateAgentOperationRequest,
   AgentOperationMutationResponse,
   FetchAgentTestSuiteResponse,
+  FetchAgentsResponse,
   RunAgentTestSuiteRequest,
   RunAgentTestSuiteResponse,
   UpdateAgentTestSuiteRequest,
@@ -36,8 +32,8 @@ import {
 import { AttachedFile, Expectations, TestAPI } from "../base"
 
 export class AgentAPI extends TestAPI {
-  fetch = async (expectations?: Expectations): Promise<{ agents: Agent[] }> => {
-    return await this._get<{ agents: Agent[] }>(`/api/agent`, {
+  fetch = async (expectations?: Expectations): Promise<FetchAgentsResponse> => {
+    return await this._get<FetchAgentsResponse>(`/api/agent`, {
       expectations,
     })
   }
@@ -128,20 +124,6 @@ export class AgentAPI extends TestAPI {
     })
   }
 
-  syncDiscordCommands = async (
-    agentId: string,
-    body?: SyncAgentDiscordCommandsRequest,
-    expectations?: Expectations
-  ): Promise<SyncAgentDiscordCommandsResponse> => {
-    return await this._post<SyncAgentDiscordCommandsResponse>(
-      `/api/agent/${agentId}/discord/sync`,
-      {
-        body,
-        expectations,
-      }
-    )
-  }
-
   provisionMSTeamsChannel = async (
     agentId: string,
     body?: ProvisionAgentMSTeamsChannelRequest,
@@ -154,6 +136,24 @@ export class AgentAPI extends TestAPI {
         expectations,
       }
     )
+  }
+
+  downloadMSTeamsPackage = async (
+    agentId: string,
+    expectations?: Expectations
+  ): Promise<Buffer> => {
+    const response = this._checkResponse(
+      await this.request
+        .get(`/api/agent/${agentId}/ms-teams/package`)
+        .set(
+          await this.getHeaders(undefined, {
+            "x-budibase-include-stacktrace": "true",
+          })
+        )
+        .responseType("blob"),
+      expectations
+    )
+    return response.body as Buffer
   }
 
   provisionSlackChannel = async (
@@ -170,41 +170,26 @@ export class AgentAPI extends TestAPI {
     )
   }
 
-  provisionTelegramChannel = async (
+  downloadSlackManifest = async (
     agentId: string,
-    body?: ProvisionAgentTelegramChannelRequest,
     expectations?: Expectations
-  ): Promise<ProvisionAgentTelegramChannelResponse> => {
-    return await this._post<ProvisionAgentTelegramChannelResponse>(
-      `/api/agent/${agentId}/telegram/provision`,
-      {
-        body,
+  ): Promise<string> => {
+    const response = this._checkResponse(
+      await this._requestRaw("get", `/api/agent/${agentId}/slack/manifest`, {
         expectations,
-      }
+      }),
+      expectations
     )
+    return response.text
   }
 
-  toggleDiscordDeployment = async (
+  createSlackApp = async (
     agentId: string,
-    body?: ToggleAgentDeploymentRequest | Record<string, unknown>,
+    body?: CreateAgentSlackAppRequest,
     expectations?: Expectations
-  ): Promise<ToggleAgentDeploymentResponse> => {
-    return await this._post<ToggleAgentDeploymentResponse>(
-      `/api/agent/${agentId}/discord/toggle`,
-      {
-        body,
-        expectations,
-      }
-    )
-  }
-
-  toggleTelegramDeployment = async (
-    agentId: string,
-    body?: ToggleAgentDeploymentRequest | Record<string, unknown>,
-    expectations?: Expectations
-  ): Promise<ToggleAgentDeploymentResponse> => {
-    return await this._post<ToggleAgentDeploymentResponse>(
-      `/api/agent/${agentId}/telegram/toggle`,
+  ): Promise<CreateAgentSlackAppResponse> => {
+    return await this._post<CreateAgentSlackAppResponse>(
+      `/api/agent/${agentId}/slack/app/create`,
       {
         body,
         expectations,

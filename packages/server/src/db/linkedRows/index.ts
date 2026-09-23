@@ -204,7 +204,10 @@ export async function attachFullLinkedDocs(
         )
         if (linkedTable) {
           const processed = await processFormulas(linkedTable, linkedRow)
-          row[link.fieldName].push(processed)
+          row[link.fieldName].push({
+            ...processed,
+            primaryDisplay: getPrimaryDisplayValue(processed, linkedTable),
+          })
         }
       }
     }

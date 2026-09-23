@@ -10,6 +10,11 @@ import type {
 import { BudiStore } from "../BudiStore"
 import { get } from "svelte/store"
 
+const sortProjectsByName = (projects: ProjectResponse[]) =>
+  [...projects].sort(
+    (a, b) => a.name.localeCompare(b.name) || a._id.localeCompare(b._id)
+  )
+
 export class ProjectsStore extends BudiStore<ProjectResponse[]> {
   private loaded = false
   private fetchPromise: Promise<ProjectResponse[]> | undefined
@@ -35,11 +40,12 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     const promise = API.projects
       .fetch()
       .then(({ projects }) => {
+        const sortedProjects = sortProjectsByName(projects)
         if (this.fetchPromise === promise && this.workspaceId === workspaceId) {
           this.loaded = true
-          this.set(projects)
+          this.set(sortedProjects)
         }
-        return projects
+        return sortedProjects
       })
       .finally(() => {
         if (this.fetchPromise === promise) {
@@ -74,7 +80,7 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
       return response.project
     }
     this.invalidateFetch()
-    this.update(state => [...state, response.project])
+    this.update(state => sortProjectsByName([...state, response.project]))
     return response.project
   }
 
@@ -110,8 +116,10 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
     }
     this.invalidateFetch()
     this.update(state =>
-      state.map(existing =>
-        existing._id === response.project._id ? response.project : existing
+      sortProjectsByName(
+        state.map(existing =>
+          existing._id === response.project._id ? response.project : existing
+        )
       )
     )
     return response.project

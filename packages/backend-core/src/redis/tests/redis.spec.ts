@@ -1,4 +1,4 @@
-import { GenericContainer, StartedTestContainer } from "testcontainers"
+import { GenericContainer, StartedTestContainer, Wait } from "testcontainers"
 import { generator, structures } from "../../../tests"
 import RedisWrapper from "../redis"
 import env from "../../environment"
@@ -20,6 +20,7 @@ describe("redis", () => {
     container = await new GenericContainer("redis")
       .withCommand(["redis-server", "--requirepass", redisPassword])
       .withExposedPorts(6379)
+      .withWaitStrategy(Wait.forListeningPorts())
       .start()
 
     redisHost = container.getHost()

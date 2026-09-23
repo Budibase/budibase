@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     ActionButton,
     Select,
@@ -6,18 +6,35 @@
     Body,
     Button,
   } from "@budibase/bbui"
-  import { dataAPI } from "@/stores/builder"
+  import { QueryUtils } from "@budibase/frontend-core"
+  import type {
+    ExportRowsRequest,
+    RowExportFormat,
+    SortOrder,
+    UISearchFilter,
+  } from "@budibase/types"
   import download from "downloadjs"
-  import { ROW_EXPORT_FORMATS } from "@/constants/backend"
   import DetailPopover from "@/components/common/DetailPopover.svelte"
+  import { ROW_EXPORT_FORMATS } from "@/constants/backend"
+  import { dataAPI } from "@/stores/builder"
 
-  export let view
-  export let sorting
-  export let disabled = false
-  export let selectedRows
-  export let formats
+  interface SortEntry {
+    column: string
+    order: SortOrder
+  }
 
-  const FORMATS = [
+  interface SelectedRow {
+    _id: string
+  }
+
+  export let view: string
+  export let filters: UISearchFilter | undefined = undefined
+  export let sorting: SortEntry[] | undefined = undefined
+  export let disabled: boolean = false
+  export let selectedRows: SelectedRow[] | undefined = undefined
+  export let formats: RowExportFormat[] | undefined = undefined
+
+  const FORMATS: { name: string; key: RowExportFormat }[] = [
     {
       name: "CSV",
       key: ROW_EXPORT_FORMATS.CSV,
@@ -32,9 +49,9 @@
     },
   ]
 
-  let popover
-  let exportFormat
-  let loading = false
+  let popover: DetailPopover
+  let exportFormat: RowExportFormat | undefined
+  let loading: boolean = false
 
   $: options = FORMATS.filter(format => {
     if (formats && !formats.includes(format.key)) {
@@ -42,47 +59,66 @@
     }
     return true
   })
-  $: if (options && !exportFormat) {
-    exportFormat = Array.isArray(options) ? options[0]?.key : []
+  $: if (!exportFormat) {
+    exportFormat = options[0]?.key
   }
 
   const openPopover = () => {
     loading = false
-    popover.show()
+    popover?.show()
   }
 
-  function downloadWithBlob(data, filename) {
+  function downloadWithBlob(data: string, filename: string) {
     download(new Blob([data], { type: "text/plain" }), filename)
   }
 
-  const exportAllData = async () => {
-    return await $dataAPI.exportView(view, exportFormat)
+  const exportAllData = async ({ format }: { format: RowExportFormat }) => {
+    return await $dataAPI.exportView(view, format)
   }
 
-  const exportFilteredData = async () => {
-    let payload = {}
+  const exportFilteredData = async ({
+    format,
+  }: {
+    format: RowExportFormat
+  }) => {
+    const payload: ExportRowsRequest = {}
     if (selectedRows?.length) {
       payload.rows = selectedRows.map(row => row._id)
     }
-    if (sorting) {
-      payload.sort = sorting.sortColumn
-      payload.sortOrder = sorting.sortOrder
+    if (filters) {
+      payload.query = QueryUtils.buildQuery(filters)
     }
-    return await $dataAPI.exportRows(view, exportFormat, payload)
+    if (sorting?.length) {
+      payload.sort = Object.fromEntries(
+        sorting.map(sortEntry => [
+          sortEntry.column,
+          {
+            direction: sortEntry.order,
+          },
+        ])
+      )
+    }
+    return await $dataAPI.exportRows(view, format, payload)
   }
 
   const exportData = async () => {
+    if (!exportFormat) {
+      notifications.error("An export format is required")
+      return
+    }
+    const format = exportFormat
+
     try {
       loading = true
       let data
-      if (selectedRows?.length || sorting) {
-        data = await exportFilteredData()
+      if (selectedRows?.length || filters || sorting?.length) {
+        data = await exportFilteredData({ format })
       } else {
-        data = await exportAllData()
+        data = await exportAllData({ format })
       }
       notifications.success("Export successful")
-      downloadWithBlob(data, `export.${exportFormat}`)
-      popover.hide()
+      downloadWithBlob(data, `export.${format}`)
+      popover?.hide()
     } catch (error) {
       console.error(error)
       notifications.error("Error exporting data")
@@ -124,7 +160,6 @@
       label="Format"
       bind:value={exportFormat}
       {options}
-      placeholder={null}
       getOptionLabel={x => x.name}
       getOptionValue={x => x.key}
     />

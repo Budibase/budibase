@@ -31,7 +31,7 @@
     (option as any)?.colour
   export let useOptionIconImage = false
   export let isOptionEnabled:
-    | ((_option: O, _index?: number) => boolean)
+    | ((option: O, index?: number) => boolean)
     | undefined = undefined
   export let quiet: boolean = false
   export let size: "S" | "M" | "L" = "M"
@@ -41,7 +41,7 @@
   export let sort: boolean = false
   export let tooltip: string | undefined = undefined
   export let tooltipMessage:
-    | ((_option: O, _index?: number) => string)
+    | ((option: O, index?: number) => string)
     | undefined = undefined
   export let autocomplete: boolean = false
   export let customPopoverHeight: string | undefined = undefined
@@ -53,6 +53,7 @@
   export let onOptionMouseleave = () => {}
   export let loading: boolean | undefined = false
   export let searchPlaceholder: string | undefined = undefined
+  export let searchTerm: string | undefined = undefined
   export let required: boolean | undefined = false
   export let wrapText: boolean = false
   export let description: string | undefined = undefined
@@ -114,7 +115,9 @@
     {tooltipMessage}
     {searchPlaceholder}
     {wrapText}
+    bind:searchTerm
     on:change={onChange}
     on:click
+    on:loadMore
   />
 </Field>

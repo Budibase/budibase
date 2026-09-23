@@ -1,30 +1,31 @@
 import { auth } from "@budibase/backend-core"
-import { REVIEWER_TYPES } from "@budibase/shared-core"
+import {
+  MAX_REVIEW_PARAMETER_NAME_LENGTH,
+  MAX_REVIEW_PARAMETERS,
+  REVIEWER_TYPES,
+} from "@budibase/shared-core"
+import {
+  EscalationNotificationChannel,
+  ResolutionStrategy,
+} from "@budibase/types"
 import Joi from "joi"
+import { validate as isValidUUID } from "uuid"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
 const OPTIONAL_AICONFIG = Joi.string().optional().allow("")
 const NON_EMPTY_STRING = Joi.string().trim().min(1)
-
-const DISCORD_INTEGRATION_SCHEMA = Joi.object({
-  applicationId: OPTIONAL_STRING,
-  publicKey: OPTIONAL_STRING,
-  botToken: OPTIONAL_STRING,
-  guildId: OPTIONAL_STRING,
-  chatAppId: OPTIONAL_STRING,
-  interactionsEndpointUrl: OPTIONAL_STRING,
-  idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
-  requireUserLink: Joi.boolean().optional(),
+const OPTIONAL_UUID = OPTIONAL_STRING.custom((value: string, helpers) => {
+  if (!value.trim() || isValidUUID(value.trim())) {
+    return value
+  }
+  return helpers.message({ custom: "{{#label}} must be a valid UUID" })
 })
-  .optional()
-  .allow(null)
 
 const TEAMS_INTEGRATION_SCHEMA = Joi.object({
-  appId: OPTIONAL_STRING,
+  appId: OPTIONAL_UUID,
   appPassword: OPTIONAL_STRING,
   tenantId: NON_EMPTY_STRING.required(),
-  chatAppId: OPTIONAL_STRING,
   messagingEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
   requireUserLink: Joi.boolean().optional(),
@@ -33,9 +34,14 @@ const TEAMS_INTEGRATION_SCHEMA = Joi.object({
   .allow(null)
 
 const SLACK_INTEGRATION_SCHEMA = Joi.object({
+  appId: OPTIONAL_STRING,
+  clientId: OPTIONAL_STRING,
+  clientSecret: OPTIONAL_STRING,
   botToken: OPTIONAL_STRING,
+  botUserId: OPTIONAL_STRING,
   signingSecret: OPTIONAL_STRING,
-  chatAppId: OPTIONAL_STRING,
+  teamId: OPTIONAL_STRING,
+  teamName: OPTIONAL_STRING,
   messagingEndpointUrl: OPTIONAL_STRING,
   idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
   requireUserLink: Joi.boolean().optional(),
@@ -43,32 +49,52 @@ const SLACK_INTEGRATION_SCHEMA = Joi.object({
   .optional()
   .allow(null)
 
-const TELEGRAM_INTEGRATION_SCHEMA = Joi.object({
-  botToken: OPTIONAL_STRING,
-  webhookSecretToken: OPTIONAL_STRING,
-  botUserName: OPTIONAL_STRING,
-  chatAppId: OPTIONAL_STRING,
-  messagingEndpointUrl: OPTIONAL_STRING,
-  idleTimeoutMinutes: OPTIONAL_NUMBER.integer().min(1).max(1440),
-})
-  .optional()
-  .allow(null)
-
 const ESCALATION_RECIPIENT_SCHEMA = Joi.object({
-  type: Joi.string().required(),
+  type: Joi.string()
+    .valid(...Object.values(EscalationNotificationChannel))
+    .required(),
   config: Joi.object().optional(),
+})
+
+const TOOL_EXECUTION_RULE_SCHEMA = Joi.object({
+  conditions: Joi.array().items(Joi.object()).optional(),
+  policyId: Joi.string().required(),
+  reviewParameters: Joi.array()
+    .items(Joi.string().trim().min(1).max(MAX_REVIEW_PARAMETER_NAME_LENGTH))
+    .max(MAX_REVIEW_PARAMETERS)
+    .optional(),
+})
+
+const APPROVAL_POLICY_SCHEMA = Joi.object({
+  id: Joi.string().required(),
+  name: Joi.string().required(),
+  approvalType: Joi.string()
+    .valid(...Object.values(ResolutionStrategy))
+    .optional(),
+  approvers: Joi.array().items(Joi.string()).optional(),
+  notifications: Joi.object({
+    recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
+    delay: Joi.number().integer().positive().optional(),
+  }).required(),
 })
 
 const AGENT_OPERATION_CONFIG_SCHEMA = Joi.object({
   name: OPTIONAL_STRING,
   live: Joi.boolean().optional(),
   promptInstructions: OPTIONAL_STRING,
-  enabledTools: Joi.array().items(Joi.string()).optional(),
+  enabledTools: Joi.array()
+    .items(
+      Joi.object({
+        toolName: Joi.string().required(),
+        executionPrincipal: Joi.string().valid("requester", "admin").required(),
+        executionRules: Joi.array()
+          .items(TOOL_EXECUTION_RULE_SCHEMA)
+          .optional(),
+      })
+    )
+    .optional(),
+  approvalPolicies: Joi.array().items(APPROVAL_POLICY_SCHEMA).optional(),
   allowKnowledgeSourceDownload: Joi.boolean().optional(),
-  escalation: Joi.object({
-    recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
-    delay: Joi.number().optional(),
-  }).optional(),
 })
 
 export function createAgentValidator() {
@@ -84,10 +110,9 @@ export function createAgentValidator() {
       goal: OPTIONAL_STRING,
       icon: OPTIONAL_STRING,
       iconColor: OPTIONAL_STRING,
-      discordIntegration: DISCORD_INTEGRATION_SCHEMA,
+      allowConversationAttachments: Joi.boolean().optional(),
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
-      telegramIntegration: TELEGRAM_INTEGRATION_SCHEMA,
     })
   )
 }
@@ -111,10 +136,9 @@ export function updateAgentValidator() {
       updatedAt: OPTIONAL_STRING,
       publishedAt: OPTIONAL_STRING,
       createdBy: OPTIONAL_STRING,
-      discordIntegration: DISCORD_INTEGRATION_SCHEMA,
+      allowConversationAttachments: Joi.boolean().optional(),
       MSTeamsIntegration: TEAMS_INTEGRATION_SCHEMA,
       slackIntegration: SLACK_INTEGRATION_SCHEMA,
-      telegramIntegration: TELEGRAM_INTEGRATION_SCHEMA,
     }).unknown(true)
   )
 }
@@ -133,39 +157,20 @@ export function updateAgentOperationValidator() {
   return auth.joiValidator.body(AGENT_OPERATION_CONFIG_SCHEMA.min(1).required())
 }
 
-export function syncAgentDiscordCommandsValidator() {
-  return chatAppIdBodyValidator()
-}
-
 export function provisionAgentMSTeamsChannelValidator() {
-  return chatAppIdBodyValidator()
+  return emptyOptionalBodyValidator()
 }
 
 export function provisionAgentSlackChannelValidator() {
-  return chatAppIdBodyValidator()
+  return emptyOptionalBodyValidator()
 }
 
-export function provisionAgentTelegramChannelValidator() {
-  return chatAppIdBodyValidator()
+export function createAgentSlackAppValidator() {
+  return auth.joiValidator.body(Joi.object().optional().allow(null))
 }
 
-function chatAppIdBodyValidator() {
-  return auth.joiValidator.body(
-    Joi.object({
-      chatAppId: OPTIONAL_STRING,
-    })
-      .optional()
-      .allow(null)
-  )
-}
-
-export function toggleAgentDiscordDeploymentValidator() {
-  return auth.joiValidator.body(
-    Joi.object({
-      enabled: Joi.boolean().required(),
-    }).required()
-  )
-}
+const emptyOptionalBodyValidator = () =>
+  auth.joiValidator.body(Joi.object().optional().allow(null))
 
 export function toggleAgentMSTeamsDeploymentValidator() {
   return auth.joiValidator.body(
@@ -176,14 +181,6 @@ export function toggleAgentMSTeamsDeploymentValidator() {
 }
 
 export function toggleAgentSlackDeploymentValidator() {
-  return auth.joiValidator.body(
-    Joi.object({
-      enabled: Joi.boolean().required(),
-    }).required()
-  )
-}
-
-export function toggleAgentTelegramDeploymentValidator() {
   return auth.joiValidator.body(
     Joi.object({
       enabled: Joi.boolean().required(),
@@ -252,6 +249,34 @@ export function syncAgentKnowledgeSourcesValidator() {
   return auth.joiValidator.body(Joi.object({}).optional())
 }
 
+const SHAREPOINT_SCOPE_TARGET_SCHEMA = Joi.alternatives().try(
+  Joi.object({
+    type: Joi.string().valid("drive").required(),
+    driveId: NON_EMPTY_STRING.required(),
+  }),
+  Joi.object({
+    type: Joi.string().valid("folder", "file").required(),
+    driveId: NON_EMPTY_STRING.required(),
+    itemId: NON_EMPTY_STRING.required(),
+  }),
+  Joi.object({
+    type: Joi.string().valid("list").required(),
+    listId: NON_EMPTY_STRING.required(),
+  })
+)
+
+const SHAREPOINT_SCOPE_SCHEMA = Joi.alternatives()
+  .try(
+    Joi.object({
+      mode: Joi.string().valid("all").required(),
+    }),
+    Joi.object({
+      mode: Joi.string().valid("selected").required(),
+      targets: Joi.array().items(SHAREPOINT_SCOPE_TARGET_SCHEMA).required(),
+    })
+  )
+  .required()
+
 export function connectAgentSharePointSiteValidator() {
   return auth.joiValidator.body(
     Joi.object({
@@ -262,7 +287,7 @@ export function connectAgentSharePointSiteValidator() {
       }).required(),
       datasourceId: NON_EMPTY_STRING.required(),
       authConfigId: NON_EMPTY_STRING.required(),
-      filters: Joi.array().items(NON_EMPTY_STRING).optional(),
+      scope: SHAREPOINT_SCOPE_SCHEMA,
     }).required()
   )
 }
@@ -270,7 +295,7 @@ export function connectAgentSharePointSiteValidator() {
 export function updateAgentSharePointSiteValidator() {
   return auth.joiValidator.body(
     Joi.object({
-      filters: Joi.array().items(NON_EMPTY_STRING).optional(),
+      scope: SHAREPOINT_SCOPE_SCHEMA,
     }).required()
   )
 }

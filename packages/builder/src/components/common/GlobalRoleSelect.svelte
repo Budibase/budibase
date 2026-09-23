@@ -7,11 +7,21 @@
     subtitle?: string
   }
 
-  export let value: string | undefined = undefined
-  export let options: GlobalRoleOption[] = []
-  export let label = "Select role"
-  export let size: "S" | "M" | "L" = "M"
-  export let disabled = false
+  interface Props {
+    value?: string
+    options?: GlobalRoleOption[]
+    label?: string
+    size?: "S" | "M" | "L"
+    disabled?: boolean
+  }
+
+  let {
+    value = $bindable(),
+    options = [],
+    label = "Select role",
+    size = "M",
+    disabled = false,
+  }: Props = $props()
 </script>
 
 <div class="role-select">

@@ -12,6 +12,10 @@ interface BannerConfig {
   type?: string
   extraButtonText?: string
   extraButtonAction?: () => void
+  extraLinkText?: string
+  extraLinkAction?: () => void
+  tooltip?: string
+  showCloseButton?: boolean
   onChange?: () => void
 }
 

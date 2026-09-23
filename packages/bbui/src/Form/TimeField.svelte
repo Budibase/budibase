@@ -16,6 +16,7 @@
     id?: string
     name?: string
     disableClearing?: boolean
+    showSeconds?: boolean
     onchange?: (value: string | undefined) => void
   }
 </script>
@@ -39,33 +40,41 @@
     id = undefined,
     name = undefined,
     disableClearing = false,
+    showSeconds = false,
     onchange,
   }: Props = $props()
 
-  const FALLBACK_TIME = "00:00"
+  const FALLBACK_TIME = $derived(showSeconds ? "00:00:00" : "00:00")
 
   const parseValue = (time: TimeFieldValue) => {
     if (!time) {
       return undefined
     }
 
-    const [hour, minute] = time.split(":").map(part => Number(part))
+    const parts = time.split(":")
+    if (parts.length !== (showSeconds ? 3 : 2)) {
+      return undefined
+    }
+    const [hour, minute, second = 0] = parts.map(part => Number(part))
     if (
       !Number.isInteger(hour) ||
       !Number.isInteger(minute) ||
+      !Number.isInteger(second) ||
       hour < 0 ||
       hour > 23 ||
       minute < 0 ||
-      minute > 59
+      minute > 59 ||
+      second < 0 ||
+      second > 59
     ) {
       return undefined
     }
 
-    return dayjs().hour(hour).minute(minute).second(0).millisecond(0)
+    return dayjs().hour(hour).minute(minute).second(second).millisecond(0)
   }
 
   const handleChange = (event: CustomEvent<Dayjs | undefined>) => {
-    const nextValue = event.detail?.format("HH:mm")
+    const nextValue = event.detail?.format(showSeconds ? "HH:mm:ss" : "HH:mm")
     if (!nextValue && disableClearing) {
       return
     }
@@ -104,6 +113,7 @@
       {disableClearing}
       {disabled}
       {readonly}
+      {showSeconds}
       on:change={handleChange}
     />
     {#if name}

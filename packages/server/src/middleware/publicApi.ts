@@ -9,7 +9,7 @@ export function publicApiMiddleware({
     if (requiresAppId && !appId) {
       ctx.throw(
         400,
-        `Invalid app ID provided, please check the ${constants.Header.APP_ID} header.`
+        `Invalid app ID provided, please check the ${constants.Header.WORKSPACE_ID} header.`
       )
     }
     if (!ctx.headers[constants.Header.API_KEY]) {
