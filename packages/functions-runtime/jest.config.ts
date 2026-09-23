@@ -1,6 +1,4 @@
-import type { Config } from "jest"
-
-const config: Config = {
+export default {
   testEnvironment: "node",
   transform: {
     "^.+\\.ts?$": "@swc/jest",
@@ -9,5 +7,3 @@ const config: Config = {
     "@budibase/types": "<rootDir>/../types/src",
   },
 }
-
-export default config

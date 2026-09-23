@@ -1,28 +1,24 @@
 import { FunctionErrorCode } from "@budibase/types"
 import type {
+  FunctionCapabilityHandler,
   FunctionRunRequest,
   FunctionRunResult,
   JSONValue,
 } from "@budibase/types"
 import ivm from "isolated-vm"
-import { readFileSync } from "node:fs"
-import path from "node:path"
 import { z } from "zod"
+import { isolateBootstrap } from "./isolateBootstrap"
 
 export const FUNCTION_INPUTS_GLOBAL = "__budibaseInputs"
 export const FUNCTION_INVOKE_QUERY_GLOBAL = "__budibaseInvokeQuery"
 
 const INVALID_OUTPUT_MESSAGE = "Function output is invalid"
 const RUNTIME_ERROR_MESSAGE = "Function execution failed"
-const INVALID_QUERY_MESSAGE = "Function query payload is invalid"
+const QUERY_DENIED_MESSAGE = "Function query denied"
 const QUERY_LIMIT_MESSAGE = "Function query limit exceeded"
 const QUERY_FAILED_MESSAGE = "Function query failed"
 const MEMORY_LIMIT_MESSAGE = "Function memory limit exceeded"
 const TIMEOUT_MESSAGE = "Function run timed out"
-const bootstrapSource = readFileSync(
-  path.join(__dirname, "isolate-bootstrap.js"),
-  "utf8"
-)
 
 const functionResultSchema = z
   .object({
@@ -30,18 +26,6 @@ const functionResultSchema = z
     status: z.enum(["success", "error", "stopped"]).optional(),
   })
   .strict()
-
-export interface FunctionQueryRequest {
-  runId: string
-  grantToken: string
-  capabilityId: string
-  parameters: Record<string, JSONValue>
-  signal: AbortSignal
-}
-
-export type FunctionQueryHandler = (
-  request: FunctionQueryRequest
-) => Promise<JSONValue>
 
 class FunctionOutputError extends Error {}
 
@@ -167,8 +151,8 @@ const failureMessage = (code: FunctionErrorCode) => {
       return INVALID_OUTPUT_MESSAGE
     case FunctionErrorCode.FUNCTION_QUERY_LIMIT:
       return QUERY_LIMIT_MESSAGE
-    case FunctionErrorCode.FUNCTION_PROTOCOL_ERROR:
-      return INVALID_QUERY_MESSAGE
+    case FunctionErrorCode.FUNCTION_QUERY_DENIED:
+      return QUERY_DENIED_MESSAGE
     case FunctionErrorCode.FUNCTION_MEMORY_LIMIT:
       return MEMORY_LIMIT_MESSAGE
     case FunctionErrorCode.FUNCTION_TIMEOUT:
@@ -198,15 +182,24 @@ const createFailure = (
   },
 })
 
+export type TerminationHandler = () => void
+export type UnregisterTermination = () => void
+
+export interface FunctionRuntimeContext {
+  invokeCapability: FunctionCapabilityHandler
+  /** Required by the internal runner to terminate an active isolate. */
+  registerTermination?: (terminate: TerminationHandler) => UnregisterTermination
+}
+
 export const executeFunctionInIsolate = async (
   request: FunctionRunRequest,
-  queryHandler: FunctionQueryHandler
+  runtimeContext: FunctionRuntimeContext
 ): Promise<FunctionRunResult> => {
   const startedAt = Date.now()
   let queryCount = 0
   let concurrentQueryCount = 0
   let queryLimitExceeded = false
-  let queryProtocolError = false
+  let queryDenied = false
   const allowedCapabilityIds = new Set(request.artifact.capabilityIds)
   let errorCode: FunctionErrorCode = FunctionErrorCode.FUNCTION_RUNTIME_ERROR
   let wallTimedOut = false
@@ -220,27 +213,45 @@ export const executeFunctionInIsolate = async (
     return createFailure(request, startedAt, queryCount, errorCode)
   }
 
-  const wallTimer = setTimeout(() => {
-    wallTimedOut = true
+  const terminateRuntime = () => {
     queryAbortController.abort()
     if (!isolate.isDisposed) {
       isolate.dispose()
     }
+  }
+  const createRuntimeFailure = (error: unknown) => {
+    if (wallTimedOut) {
+      errorCode = FunctionErrorCode.FUNCTION_TIMEOUT
+    } else if (error instanceof FunctionOutputError) {
+      errorCode = FunctionErrorCode.FUNCTION_OUTPUT_INVALID
+    } else if (isolate.isDisposed) {
+      errorCode = FunctionErrorCode.FUNCTION_MEMORY_LIMIT
+    } else if (String(error).toLowerCase().includes("timed out")) {
+      errorCode = FunctionErrorCode.FUNCTION_TIMEOUT
+    }
+    return createFailure(request, startedAt, queryCount, errorCode)
+  }
+  const unregisterTermination =
+    runtimeContext.registerTermination?.(terminateRuntime)
+
+  const wallTimer = setTimeout(() => {
+    wallTimedOut = true
+    terminateRuntime()
   }, request.limits.timeoutMs)
 
   try {
     const context = await isolate.createContext()
-    const queryReference = new ivm.Reference(
+    const capabilityReference = new ivm.Reference(
       async (capabilityIdValue: unknown, parametersValue: unknown) => {
         if (typeof capabilityIdValue !== "string" || !capabilityIdValue) {
-          queryProtocolError = true
-          errorCode = FunctionErrorCode.FUNCTION_PROTOCOL_ERROR
-          return { error: INVALID_QUERY_MESSAGE }
+          queryDenied = true
+          errorCode = FunctionErrorCode.FUNCTION_QUERY_DENIED
+          return { error: QUERY_DENIED_MESSAGE }
         }
         if (!allowedCapabilityIds.has(capabilityIdValue)) {
-          queryProtocolError = true
-          errorCode = FunctionErrorCode.FUNCTION_PROTOCOL_ERROR
-          return { error: INVALID_QUERY_MESSAGE }
+          queryDenied = true
+          errorCode = FunctionErrorCode.FUNCTION_QUERY_DENIED
+          return { error: QUERY_DENIED_MESSAGE }
         }
         let parameters: Record<string, JSONValue>
         try {
@@ -248,12 +259,12 @@ export const executeFunctionInIsolate = async (
             parametersValue,
             request.limits.maxInputDepth,
             request.limits.maxInputBytes,
-            INVALID_QUERY_MESSAGE
+            QUERY_DENIED_MESSAGE
           ).normalized
         } catch {
-          queryProtocolError = true
-          errorCode = FunctionErrorCode.FUNCTION_PROTOCOL_ERROR
-          return { error: INVALID_QUERY_MESSAGE }
+          queryDenied = true
+          errorCode = FunctionErrorCode.FUNCTION_QUERY_DENIED
+          return { error: QUERY_DENIED_MESSAGE }
         }
         if (
           queryCount >= request.limits.maxQueryCalls ||
@@ -267,9 +278,8 @@ export const executeFunctionInIsolate = async (
         concurrentQueryCount += 1
         let result: JSONValue
         try {
-          result = await queryHandler({
+          result = await runtimeContext.invokeCapability({
             runId: request.runId,
-            grantToken: request.grantToken,
             capabilityId: capabilityIdValue,
             parameters,
             signal: queryAbortController.signal,
@@ -285,13 +295,13 @@ export const executeFunctionInIsolate = async (
               result,
               request.limits.maxQueryResponseDepth,
               request.limits.maxQueryResponseBytes,
-              INVALID_QUERY_MESSAGE
+              QUERY_DENIED_MESSAGE
             ).normalized,
           }
         } catch {
-          queryProtocolError = true
-          errorCode = FunctionErrorCode.FUNCTION_PROTOCOL_ERROR
-          return { error: INVALID_QUERY_MESSAGE }
+          queryDenied = true
+          errorCode = FunctionErrorCode.FUNCTION_QUERY_DENIED
+          return { error: QUERY_DENIED_MESSAGE }
         }
       }
     )
@@ -302,9 +312,9 @@ export const executeFunctionInIsolate = async (
         "__budibaseInputsValue",
         new ivm.ExternalCopy(request.inputs).copyInto({ release: true })
       )
-      await jail.set("__budibaseInvokeQueryReference", queryReference)
+      await jail.set("__budibaseInvokeCapabilityReference", capabilityReference)
 
-      const bootstrap = await isolate.compileScript(bootstrapSource, {
+      const bootstrap = await isolate.compileScript(isolateBootstrap, {
         filename: "function:///sdk.js",
       })
       try {
@@ -337,14 +347,14 @@ export const executeFunctionInIsolate = async (
             result: { copy: true, promise: true },
             timeout: request.limits.timeoutMs,
           })
-          if (queryLimitExceeded || queryProtocolError) {
+          if (queryLimitExceeded || queryDenied) {
             return createFailure(
               request,
               startedAt,
               queryCount,
               queryLimitExceeded
                 ? FunctionErrorCode.FUNCTION_QUERY_LIMIT
-                : FunctionErrorCode.FUNCTION_PROTOCOL_ERROR
+                : FunctionErrorCode.FUNCTION_QUERY_DENIED
             )
           }
           try {
@@ -359,26 +369,17 @@ export const executeFunctionInIsolate = async (
       } finally {
         artifact.release()
       }
+    } catch (error) {
+      return createRuntimeFailure(error)
     } finally {
-      queryReference.release()
+      capabilityReference.release()
       context.release()
     }
   } catch (error) {
-    if (wallTimedOut) {
-      errorCode = FunctionErrorCode.FUNCTION_TIMEOUT
-    } else if (error instanceof FunctionOutputError) {
-      errorCode = FunctionErrorCode.FUNCTION_OUTPUT_INVALID
-    } else if (isolate.isDisposed) {
-      errorCode = FunctionErrorCode.FUNCTION_MEMORY_LIMIT
-    } else if (String(error).toLowerCase().includes("timed out")) {
-      errorCode = FunctionErrorCode.FUNCTION_TIMEOUT
-    }
-    return createFailure(request, startedAt, queryCount, errorCode)
+    return createRuntimeFailure(error)
   } finally {
     clearTimeout(wallTimer)
-    queryAbortController.abort()
-    if (!isolate.isDisposed) {
-      isolate.dispose()
-    }
+    unregisterTermination?.()
+    terminateRuntime()
   }
 }

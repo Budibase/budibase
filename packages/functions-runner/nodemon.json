@@ -1,6 +1,0 @@
-{
-  "watch": ["src", "../types"],
-  "ext": "js,ts,json",
-  "ignore": ["**/*.spec.ts", "../*/dist/**/*"],
-  "exec": "yarn build && node --enable-source-maps dist/start.js"
-}

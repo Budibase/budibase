@@ -1,5 +1,9 @@
 import { FunctionErrorCode } from "@budibase/types"
-import { executeFunctionInIsolate } from "./isolatedVmRuntime"
+import type {
+  FunctionCapabilityHandler,
+  FunctionRunRequest,
+} from "@budibase/types"
+import { executeInternalFunctionInIsolate } from "./internal-runtime"
 import { FUNCTION_RUN_REQUEST_FIXTURE } from "./testFixtures"
 
 const request = (compiledJavaScript: string, runId = "isolate-run") => ({
@@ -14,6 +18,15 @@ const request = (compiledJavaScript: string, runId = "isolate-run") => ({
 const noQueries = async () => {
   throw new Error("Unexpected query")
 }
+
+const executeFunctionInIsolate = (
+  runRequest: FunctionRunRequest,
+  invokeCapability: FunctionCapabilityHandler
+) =>
+  executeInternalFunctionInIsolate(runRequest, {
+    signal: new AbortController().signal,
+    invokeCapability,
+  })
 
 describe("Functions isolate", () => {
   it("runs a compiled artifact with copied inputs and an awaited query", async () => {
@@ -40,7 +53,6 @@ describe("Functions isolate", () => {
     })
     expect(queryHandler).toHaveBeenCalledWith({
       runId: "isolate-run",
-      grantToken: FUNCTION_RUN_REQUEST_FIXTURE.grantToken,
       capabilityId: "capability-1",
       parameters: { id: "hello" },
       signal: expect.any(AbortSignal),
@@ -65,8 +77,8 @@ describe("Functions isolate", () => {
       status: "error",
       metrics: { queryCount: 0 },
       error: {
-        code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
-        message: "Function query payload is invalid",
+        code: FunctionErrorCode.FUNCTION_QUERY_DENIED,
+        message: "Function query denied",
       },
     })
     expect(result.output).toBeUndefined()
@@ -108,8 +120,9 @@ describe("Functions isolate", () => {
               nestedInputFrozen: Object.isFrozen(globalThis.__budibaseInputs.nested),
               queryFrozen: Object.isFrozen(globalThis.__budibaseInvokeQuery),
               inputHandle: typeof globalThis.__budibaseInputsValue,
-              queryHandle: typeof globalThis.__budibaseInvokeQueryReference,
-              lexicalQueryHandle: typeof queryReference,
+              capabilityHandle:
+                typeof globalThis.__budibaseInvokeCapabilityReference,
+              lexicalCapabilityHandle: typeof capabilityReference,
               bootstrapHelper: typeof deepFreeze,
             },
           }
@@ -123,8 +136,8 @@ describe("Functions isolate", () => {
       nestedInputFrozen: true,
       queryFrozen: true,
       inputHandle: "undefined",
-      queryHandle: "undefined",
-      lexicalQueryHandle: "undefined",
+      capabilityHandle: "undefined",
+      lexicalCapabilityHandle: "undefined",
       bootstrapHelper: "undefined",
     })
   })
@@ -339,8 +352,8 @@ describe("Functions isolate", () => {
     ).resolves.toMatchObject({
       status: "error",
       error: {
-        code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
-        message: "Function query payload is invalid",
+        code: FunctionErrorCode.FUNCTION_QUERY_DENIED,
+        message: "Function query denied",
       },
     })
   })
@@ -364,8 +377,8 @@ describe("Functions isolate", () => {
       status: "error",
       metrics: { queryCount: 1 },
       error: {
-        code: FunctionErrorCode.FUNCTION_PROTOCOL_ERROR,
-        message: "Function query payload is invalid",
+        code: FunctionErrorCode.FUNCTION_QUERY_DENIED,
+        message: "Function query denied",
       },
     })
     expect(result.output).toBeUndefined()
