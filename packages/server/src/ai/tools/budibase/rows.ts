@@ -18,6 +18,7 @@ import {
 import {
   PROTECTED_EXTERNAL_COLUMNS,
   PROTECTED_INTERNAL_COLUMNS,
+  helpers,
 } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
@@ -56,6 +57,10 @@ type TableSchemaField = {
   name: string
   schema: TableSchema[string]
 }
+
+const isRequiredInputField = (schema: TableSchema[string]) =>
+  helpers.schema.isRequired(schema.constraints) &&
+  (!("default" in schema) || schema.default === undefined)
 
 const getProtectedColumns = (tableSourceType: TableSourceType) =>
   new Set<string>(
@@ -111,6 +116,9 @@ const formatFieldType = (schema: TableSchema[string]) => {
 
 const formatFieldSummary = ({ name, schema }: TableSchemaField) => {
   let summary = `${name} (${formatFieldType(schema)})`
+  if (isRequiredInputField(schema)) {
+    summary += " required"
+  }
   const options = schema.constraints?.inclusion
   if (
     (schema.type === FieldType.OPTIONS || schema.type === FieldType.ARRAY) &&
@@ -158,12 +166,13 @@ const buildDataFieldDescription = (schemaSummary: string) =>
     ? `${DATA_FIELD_DESCRIPTION} Available fields: ${schemaSummary}.`
     : DATA_FIELD_DESCRIPTION
 
-const buildRowDataSchema = (
+export const buildRowDataSchema = (
   fields: TableSchemaField[],
-  schemaSummary: string
+  schemaSummary: string,
+  requirePresentFields = false
 ) => {
   if (fields.length === 0) {
-    return z.record(z.string(), z.any()).describe(DATA_FIELD_DESCRIPTION)
+    return z.record(z.string(), z.never()).describe(DATA_FIELD_DESCRIPTION)
   }
 
   const shape: Record<string, z.ZodTypeAny> = {}
@@ -174,15 +183,70 @@ const buildRowDataSchema = (
       Array.isArray(options) && options.length > 0
         ? ` Options: ${options.join(" | ")}.`
         : ""
-    shape[field.name] = z
-      .any()
-      .describe(`Field type: ${fieldType}.${optionsHint}`)
+    let fieldSchema: z.ZodTypeAny
+    if (Array.isArray(options) && options.length > 0) {
+      const optionSchema = z.enum(options as [string, ...string[]])
+      fieldSchema =
+        field.schema.type === FieldType.ARRAY
+          ? z.array(optionSchema)
+          : optionSchema
+    } else {
+      switch (field.schema.type) {
+        case FieldType.STRING:
+        case FieldType.LONGFORM:
+        case FieldType.OPTIONS:
+        case FieldType.DATETIME:
+        case FieldType.BARCODEQR:
+        case FieldType.BIGINT:
+        case FieldType.BB_REFERENCE_SINGLE:
+          fieldSchema = z.string()
+          break
+        case FieldType.NUMBER:
+          fieldSchema = z.number()
+          break
+        case FieldType.BOOLEAN:
+          fieldSchema = z.boolean()
+          break
+        case FieldType.ARRAY:
+        case FieldType.ATTACHMENTS:
+        case FieldType.LINK:
+        case FieldType.BB_REFERENCE:
+          fieldSchema = z.array(z.any())
+          break
+        case FieldType.ATTACHMENT_SINGLE:
+        case FieldType.SIGNATURE_SINGLE:
+        case FieldType.JSON:
+          fieldSchema = z.record(z.string(), z.any())
+          break
+        default:
+          fieldSchema = z.union([
+            z.string(),
+            z.number(),
+            z.boolean(),
+            z.array(z.any()),
+            z.record(z.string(), z.any()),
+          ])
+      }
+    }
+
+    const required = requirePresentFields && isRequiredInputField(field.schema)
+    if (required) {
+      if (fieldSchema instanceof z.ZodString) {
+        fieldSchema = fieldSchema.min(1)
+      } else if (fieldSchema instanceof z.ZodArray) {
+        fieldSchema = fieldSchema.min(1)
+      }
+    } else {
+      fieldSchema = fieldSchema.nullish()
+    }
+    shape[field.name] = fieldSchema.describe(
+      `Field type: ${fieldType}.${required ? " Required." : ""}${optionsHint}`
+    )
   }
 
   return z
     .object(shape)
-    .partial()
-    .passthrough()
+    .strict()
     .describe(buildDataFieldDescription(schemaSummary))
 }
 
@@ -408,7 +472,12 @@ export const createRowTools = ({
 
   const writableFields = getWritableFields(tableSchema, tableSourceType)
   const schemaSummary = buildSchemaSummary(writableFields)
-  const dataSchema = buildRowDataSchema(writableFields, schemaSummary)
+  const createDataSchema = buildRowDataSchema(
+    writableFields,
+    schemaSummary,
+    true
+  )
+  const updateDataSchema = buildRowDataSchema(writableFields, schemaSummary)
   const searchInputSchema = buildSearchInputSchema(schemaSummary)
   const fields = getAgentTableFields(tableSchema)
   const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
@@ -431,12 +500,12 @@ export const createRowTools = ({
       action === ToolAction.CREATE_ROW || action === ToolAction.UPDATE_ROW
     let inputSchema = def.inputSchema
     if (action === ToolAction.CREATE_ROW) {
-      inputSchema = z.object({ data: dataSchema })
+      inputSchema = z.object({ data: createDataSchema })
     } else if (action === ToolAction.UPDATE_ROW) {
       inputSchema = z.object({
         rowId: z.string().describe("The ID of the row to update"),
         rowRev: z.string().describe("The current _rev of the row (if known)"),
-        data: dataSchema,
+        data: updateDataSchema,
       })
     } else if (action === ToolAction.SEARCH_ROWS) {
       inputSchema = searchInputSchema

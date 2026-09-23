@@ -44,6 +44,7 @@ import {
   getLiveOperations,
   type BuildPromptAndToolsOptions,
 } from "./utils"
+import { repairToolCall } from "./toolCallRepair"
 import { estimateTokens } from "./usage"
 import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowledge/reportUsedSources"
 import type tracer from "dd-trace"
@@ -650,6 +651,7 @@ const prepareAgentChatRunInternal = async ({
     instructions: systemPrompt || undefined,
     tools: hasTools ? tools : undefined,
     ...(hasTools ? { toolChoice: "auto" as const } : {}),
+    repairToolCall,
     stopWhen: stepCountIs(30),
     // Anthropic rejects those without a tools param.
     prepareStep: ({ steps }) =>

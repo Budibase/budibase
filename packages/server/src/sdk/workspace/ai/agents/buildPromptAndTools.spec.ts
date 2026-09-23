@@ -6,6 +6,7 @@ import {
   type Agent,
 } from "@budibase/types"
 import type { Tool } from "ai"
+import { z } from "zod"
 import { requesterTools } from "../tests/utils"
 
 jest.mock("../../..", () => ({
@@ -70,7 +71,15 @@ jest.mock("../../../../ai/tools", () => ({
       config?.executionPrincipal ?? ToolExecutionPrincipal.REQUESTER
   ),
   toToolSet: (tools: any[]) =>
-    Object.fromEntries(tools.map(t => [t.name, t.tool])),
+    Object.fromEntries(
+      tools.map(t => [
+        t.name,
+        {
+          ...t.tool,
+          authoritativeInputSchema: t.authoritativeInputSchema,
+        },
+      ])
+    ),
 }))
 
 jest.mock("../../../../ai/tools/authorization", () => ({
@@ -354,6 +363,7 @@ describe("buildPromptAndTools", () => {
 
   it("redacts restricted table definitions without removing the tools", async () => {
     jest.mocked(canRequesterReadAgentToolResource).mockResolvedValue(false)
+    const authoritativeInputSchema = z.object({ email: z.string() })
     const restrictedTool = {
       description: "Create Row on the configured resource",
     } as Tool
@@ -374,7 +384,10 @@ describe("buildPromptAndTools", () => {
           permissionLevel: PermissionLevel.WRITE,
           resourceId: "ta_employees",
         },
-        tool: { description: "Fields: Email, Employee Level" } as Tool,
+        tool: {
+          description: "Fields: Email, Employee Level",
+          inputSchema: authoritativeInputSchema,
+        } as Tool,
         requesterRedactedTool: restrictedTool,
       },
       {
@@ -429,8 +442,18 @@ describe("buildPromptAndTools", () => {
       },
     })
 
-    expect(result.tools.ta_employees_create_row).toBe(restrictedTool)
-    expect(result.tools.ta_employees_search_rows).toBe(restrictedTool)
+    expect(result.tools.ta_employees_create_row).toEqual(
+      expect.objectContaining(restrictedTool)
+    )
+    expect(result.tools.ta_employees_search_rows).toEqual(
+      expect.objectContaining(restrictedTool)
+    )
+    expect(
+      Reflect.get(
+        result.tools.ta_employees_create_row,
+        "authoritativeInputSchema"
+      )
+    ).toBe(authoritativeInputSchema)
     expect(canRequesterReadAgentToolResource).toHaveBeenCalledTimes(1)
   })
 })
