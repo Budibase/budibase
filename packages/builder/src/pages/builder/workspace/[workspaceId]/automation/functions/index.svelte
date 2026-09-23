@@ -6,6 +6,7 @@
   import type { UIFunction } from "@/stores/builder/functions"
   import { auth, featureFlags } from "@/stores/portal"
   import { Modal, ModalContent, notifications } from "@budibase/bbui"
+  import { goto as gotoStore } from "@roxi/routify"
   import { FeatureFlag } from "@budibase/types"
   import { onMount } from "svelte"
   import FunctionList from "./FunctionList.svelte"
@@ -28,6 +29,7 @@ export default async function (): Promise<FunctionResult> {
   $: canManage =
     enabled && canManageFunctions($auth.user, $workspaceStore.appId)
   $: functions = functionStore.getList($functionStore)
+  $: goto = $gotoStore
   $: if (enabled) {
     builderStore.selectResource("functions")
   }
@@ -37,12 +39,13 @@ export default async function (): Promise<FunctionResult> {
       title: "New Function",
       confirmText: "Create",
       onConfirm: async name => {
-        await functionStore.create({
+        const fn = await functionStore.create({
           name,
           source: DEFAULT_SOURCE,
           capabilities: [],
         })
         notifications.success("Function created")
+        goto(`./${fn._id}`)
       },
     })
   }
@@ -131,6 +134,7 @@ export default async function (): Promise<FunctionResult> {
     {canManage}
     onRetry={() => functionStore.fetch()}
     onCreate={createFunction}
+    onOpen={fn => goto(`./${fn._id}`)}
     onRename={renameFunction}
     onDuplicate={duplicateFunction}
     onDelete={requestDelete}

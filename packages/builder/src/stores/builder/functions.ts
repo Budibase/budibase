@@ -5,6 +5,7 @@ import { BudiStore } from "@/stores/BudiStore"
 import type {
   CreateFunctionRequest,
   FunctionQueryCapabilityInput,
+  FunctionQueryCatalogEntry,
   FunctionResponse,
   FunctionSummary,
   PublishStatusResource,
@@ -24,14 +25,19 @@ export interface UIFunction extends FunctionSummary {
 interface FunctionStoreState {
   functions: FunctionSummary[]
   deployment: Record<string, PublishStatusResource>
+  queryCatalog: FunctionQueryCatalogEntry[]
   loading: boolean
+  catalogLoading: boolean
   error?: string
+  catalogError?: string
 }
 
 const initialState: FunctionStoreState = {
   functions: [],
   deployment: {},
+  queryCatalog: [],
   loading: false,
+  catalogLoading: false,
 }
 
 const toCapabilityInputs = (
@@ -103,6 +109,29 @@ export class FunctionStore extends BudiStore<FunctionStoreState> {
     const response = await API.getFunction(functionId)
     this.upsert(response.function, false)
     return response.function
+  }
+
+  async fetchQueryCatalog() {
+    this.update(state => ({
+      ...state,
+      catalogLoading: true,
+      catalogError: undefined,
+    }))
+    try {
+      const response = await API.getFunctionQueryCatalog()
+      this.update(state => ({
+        ...state,
+        queryCatalog: response.queries,
+        catalogLoading: false,
+      }))
+    } catch (error) {
+      const message = getErrorMessage(error) || "Unable to load saved queries"
+      this.update(state => ({
+        ...state,
+        catalogLoading: false,
+        catalogError: message,
+      }))
+    }
   }
 
   async create(draft: CreateFunctionRequest) {
