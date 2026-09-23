@@ -1061,12 +1061,12 @@ describe("/projects", () => {
             url: "/unassigned-app",
           })
         )
-        const analyzeDependencies = jest.fn(
-          sdk.resources.analyzeResourceDependencies
+        const analyseDependencies = jest.fn(
+          sdk.resources.analyseResourceDependencies
         )
         const resources = jest.replaceProperty(sdk, "resources", {
           ...sdk.resources,
-          analyzeResourceDependencies: analyzeDependencies,
+          analyseResourceDependencies: analyseDependencies,
         })
 
         try {
@@ -1080,7 +1080,7 @@ describe("/projects", () => {
             customTheme: workspaceApp.customTheme,
             disabled: workspaceApp.disabled,
           })
-          expect(analyzeDependencies).not.toHaveBeenCalled()
+          expect(analyseDependencies).not.toHaveBeenCalled()
         } finally {
           resources.restore()
         }
@@ -1541,16 +1541,16 @@ describe("/projects", () => {
         const persistedScreen = (await config.api.screen.list()).find(
           candidate => candidate._id === screen._id
         )!
-        const analyzeDependencies = jest.fn(
-          sdk.resources.analyzeResourceDependencies
+        const analyseDependencies = jest.fn(
+          sdk.resources.analyseResourceDependencies
         )
         const resources = jest.replaceProperty(sdk, "resources", {
           ...sdk.resources,
-          analyzeResourceDependencies: analyzeDependencies,
+          analyseResourceDependencies: analyseDependencies,
         })
         try {
           await config.api.screen.save(persistedScreen)
-          expect(analyzeDependencies).not.toHaveBeenCalled()
+          expect(analyseDependencies).not.toHaveBeenCalled()
         } finally {
           resources.restore()
         }
