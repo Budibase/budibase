@@ -155,7 +155,7 @@ export const getProjectAssignmentPreview = async ({
 }
 
 const getProjectAssignableDependencies = async (resourceId: string) => {
-  const { graph } = await sdk.resources.analyzeResourceDependencies({
+  const { graph } = await sdk.resources.analyseResourceDependencies({
     includeProjects: false,
     includeDatasourceQueries: true,
   })
