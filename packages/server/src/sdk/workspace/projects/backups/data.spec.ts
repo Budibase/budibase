@@ -16,7 +16,7 @@ const sourceKey = "app_source/attachments/example.png"
 const sourceRowId = "ro_ta_source_first"
 const relatedRowId = "ro_ta_related_second"
 
-const fixture = () => {
+const fixture = ({ attachmentKey = sourceKey } = {}) => {
   const sourceTable = basicTable(undefined, {
     _id: "ta_source",
     schema: {
@@ -56,7 +56,7 @@ const fixture = () => {
     },
   })
   const attachment = {
-    key: sourceKey,
+    key: attachmentKey,
     name: "example.png",
     extension: "png",
     size: 10,
@@ -96,7 +96,11 @@ const fixture = () => {
       },
     ],
     attachments: [
-      { key: sourceKey, path: "attachments/example", contentType: "image/png" },
+      {
+        key: attachmentKey,
+        path: "attachments/example",
+        contentType: "image/png",
+      },
     ],
   }
   return { tables: [sourceTable, relatedTable], data }
@@ -245,8 +249,9 @@ describe("Project package data", () => {
   })
 
   it("rejects attachment objects belonging to another workspace", () => {
-    const test = fixture()
-    test.data.attachments[0].key = "app_other/attachments/example.png"
+    const test = fixture({
+      attachmentKey: "app_other/attachments/example.png",
+    })
     expect(() => validate(test)).toThrow("invalid or unreferenced attachment")
   })
 })

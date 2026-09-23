@@ -14,7 +14,7 @@ vi.mock("@budibase/bbui", () => ({
 import ImportProjectResultModal from "./ImportProjectResultModal.svelte"
 
 describe("ImportProjectResultModal", () => {
-  it("groups setup reasons by resource and explains omitted content", async () => {
+  it("groups setup reasons by resource and shows omitted content and data counts", async () => {
     const response: ImportProjectResponse = {
       project: {
         _id: "project_1",
