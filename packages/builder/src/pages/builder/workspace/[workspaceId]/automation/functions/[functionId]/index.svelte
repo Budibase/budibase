@@ -37,6 +37,7 @@
   let queriesDirty = false
   let actionError = ""
   let validationRequest = 0
+  let lastObservedSource = ""
 
   $params
   $: functionId = $params.functionId
@@ -67,6 +68,9 @@
       functionToValidate: FunctionResponse,
       request: number
     ) => {
+      if (request !== validationRequest) {
+        return
+      }
       validating = true
       try {
         const response = await functionStore.compile({
@@ -100,8 +104,15 @@
     debouncedValidate(value, fn, request)
   }
 
+  const validateChangedSource = (value: string) => {
+    if (value !== lastObservedSource) {
+      lastObservedSource = value
+      validate(value)
+    }
+  }
+
   $: if (fn) {
-    validate(source)
+    validateChangedSource(source)
   }
 
   const load = async () => {
@@ -112,10 +123,14 @@
         functionStore.fetchOne(functionId),
         functionStore.fetchQueryCatalog(),
       ])
-      fn = loadedFunction
+      lastObservedSource = loadedFunction.source
       source = loadedFunction.source
       savedSource = loadedFunction.source
-      diagnostics = loadedFunction.lastBuild?.diagnostics || []
+      fn = loadedFunction
+      diagnostics =
+        loadedFunction.readiness === "build_failed"
+          ? loadedFunction.lastBuild?.diagnostics || []
+          : []
     } catch (loadError) {
       error = getErrorMessage(loadError) || "Unable to load Function"
     } finally {
@@ -135,7 +150,6 @@
       source: fn.source,
       capabilities,
     })
-    diagnostics = []
     validate(source)
     notifications.success("Linked queries saved")
   }

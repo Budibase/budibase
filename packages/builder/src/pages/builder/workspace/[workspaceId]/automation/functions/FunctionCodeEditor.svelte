@@ -216,7 +216,6 @@
     font-family: var(--font-family-code);
   }
   .function-code-editor :global(.cm-focused) {
-    outline: 2px solid var(--spectrum-global-color-blue-500);
-    outline-offset: -2px;
+    outline: none;
   }
 </style>
