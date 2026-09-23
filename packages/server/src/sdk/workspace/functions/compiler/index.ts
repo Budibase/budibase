@@ -73,25 +73,6 @@ const isCompilerResult = (value: unknown): value is FunctionCompilerResult => {
   )
 }
 
-const getWorkerOptions = (memoryLimitMb: number) => {
-  if (env.isDev()) {
-    return {
-      execArgv: [
-        `--max-old-space-size=${memoryLimitMb}`,
-        "-r",
-        require.resolve("ts-node/register/transpile-only"),
-        "-r",
-        require.resolve("tsconfig-paths/register"),
-      ],
-      workerPath: join(__dirname, "../../../../threads/functionCompiler.ts"),
-    }
-  }
-  return {
-    execArgv: [`--max-old-space-size=${memoryLimitMb}`],
-    workerPath: join(__dirname, "functionCompiler.js"),
-  }
-}
-
 export const runFunctionCompilerProcess = async (
   request: FunctionCompilerRequest,
   options: CompilerProcessOptions = {}
@@ -100,18 +81,18 @@ export const runFunctionCompilerProcess = async (
     options.timeoutMs ?? DEFAULT_FUNCTION_LIMITS.compile.timeoutMs
   const memoryLimitMb =
     options.memoryLimitMb ?? DEFAULT_FUNCTION_LIMITS.compile.memoryLimitMb
-  const workerOptions = getWorkerOptions(memoryLimitMb)
-
   return await new Promise(resolve => {
-    const child = fork(options.workerPath || workerOptions.workerPath, [], {
-      env: {
-        NODE_ENV: process.env.NODE_ENV || "production",
-      },
-      execArgv: options.workerPath
-        ? [`--max-old-space-size=${memoryLimitMb}`]
-        : workerOptions.execArgv,
-      stdio: ["ignore", "ignore", "ignore", "ipc"],
-    })
+    const child = fork(
+      options.workerPath || join(__dirname, "functionCompiler.js"),
+      [],
+      {
+        env: {
+          NODE_ENV: process.env.NODE_ENV || "production",
+        },
+        execArgv: [`--max-old-space-size=${memoryLimitMb}`],
+        stdio: ["ignore", "ignore", "ignore", "ipc"],
+      }
+    )
     let settled = false
 
     const finish = (result: FunctionCompilerResult) => {
