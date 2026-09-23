@@ -214,16 +214,16 @@ async function getUnsupportedContent(
   return unsupported
 }
 
-async function sanitizeDocumentForExport(
+async function sanitiseDocumentForExport(
   doc: AnyDocument,
   type: ResourceType,
   screenWorkspaceAppIdByScreenId?: Map<string, string>
 ) {
-  const sanitized = structuredClone(doc)
-  delete sanitized._rev
+  const sanitised = structuredClone(doc)
+  delete sanitised._rev
 
   if (type === ResourceType.DATASOURCE) {
-    const datasource = sanitized as Datasource
+    const datasource = sanitised as Datasource
     if (datasource.entities) {
       datasource.entities = Object.fromEntries(
         Object.entries(datasource.entities).map(([name, entity]) => {
@@ -237,36 +237,36 @@ async function sanitizeDocumentForExport(
   }
 
   if (type === ResourceType.AGENT) {
-    return sdk.ai.agents.sanitiseAgentForExport(sanitized as Agent)
+    return sdk.ai.agents.sanitiseAgentForExport(sanitised as Agent)
   }
 
   if (type === ResourceType.AUTOMATION) {
     return sdk.automations.utils.sanitiseAutomationForExport(
-      sanitized as Automation
+      sanitised as Automation
     )
   }
 
   if (!isProjectAssignableResourceType(type)) {
-    delete sanitized.projectIds
+    delete sanitised.projectIds
   }
 
-  if (type === ResourceType.SCREEN && !sanitized.workspaceAppId) {
+  if (type === ResourceType.SCREEN && !sanitised.workspaceAppId) {
     const workspaceAppId = screenWorkspaceAppIdByScreenId?.get(doc._id!)
     if (workspaceAppId) {
-      ;(sanitized as Screen).workspaceAppId = workspaceAppId
+      ;(sanitised as Screen).workspaceAppId = workspaceAppId
     }
   }
 
-  return sanitized
+  return sanitised
 }
 
-function sanitizeProjectForExport(project: Project) {
-  const sanitized = structuredClone(project)
+function sanitiseProjectForExport(project: Project) {
+  const sanitised = structuredClone(project)
   const createdAt = getProjectCreatedAt(project)
-  delete sanitized._rev
-  sanitized.createdAt = createdAt
-  sanitized.updatedAt = toTimestamp(project.updatedAt) ?? createdAt
-  return sanitized
+  delete sanitised._rev
+  sanitised.createdAt = createdAt
+  sanitised.updatedAt = toTimestamp(project.updatedAt) ?? createdAt
+  return sanitised
 }
 
 function countManifestResourcesByType(dependencies: UsedResource[]) {
@@ -483,7 +483,7 @@ export async function exportProject(
     await writeJsonFile(join(tmpPath, PROJECT_MANIFEST_FILE), manifest)
     await writeJsonFile(
       join(tmpPath, PROJECT_FILE),
-      sanitizeProjectForExport(project)
+      sanitiseProjectForExport(project)
     )
     await writeJsonFile(
       join(tmpPath, PROJECT_DEPENDENCY_INDEX_FILE),
@@ -498,14 +498,14 @@ export async function exportProject(
           return
         }
 
-        const sanitized = await sanitizeDocumentForExport(
+        const sanitised = await sanitiseDocumentForExport(
           doc,
           type,
           screenWorkspaceAppIdByScreenId
         )
         await writeJsonFile(
           join(tmpPath, PROJECT_DOCS_DIRECTORY, type, `${doc._id}.json`),
-          sanitized
+          sanitised
         )
       })
     )

@@ -505,7 +505,7 @@ const createWorkspaceAppImportDeconflicter = async () => {
   }
 }
 
-const sanitizeImportedProjectAssignments = (
+const sanitiseImportedProjectAssignments = (
   doc: AnyDocument,
   resourceType: ResourceType,
   importedProjectId: string
@@ -533,9 +533,9 @@ const sanitizeImportedProjectAssignments = (
 
   datasource.entities = Object.fromEntries(
     Object.entries(entities).map(([key, entity]) => {
-      const sanitizedEntity = { ...entity }
-      delete sanitizedEntity.projectIds
-      return [key, sanitizedEntity]
+      const sanitisedEntity = { ...entity }
+      delete sanitisedEntity.projectIds
+      return [key, sanitisedEntity]
     })
   )
 }
@@ -569,7 +569,7 @@ const hasImportedEmailConnection = ({
   )
 }
 
-const sanitizeImportedDoc = async ({
+const sanitiseImportedDoc = async ({
   doc,
   resourceType,
   remapper,
@@ -615,7 +615,7 @@ const sanitizeImportedDoc = async ({
         }
       )
     )
-    sanitizeImportedProjectAssignments(
+    sanitiseImportedProjectAssignments(
       rowActions,
       resourceType,
       importedProjectId
@@ -670,7 +670,7 @@ const sanitizeImportedDoc = async ({
     remapped.isDefault = false
   }
 
-  sanitizeImportedProjectAssignments(remapped, resourceType, importedProjectId)
+  sanitiseImportedProjectAssignments(remapped, resourceType, importedProjectId)
   if (resourceType === ResourceType.DATASOURCE) {
     return await sdk.datasources.removeSecretSingle(remapped as Datasource)
   }
@@ -1424,7 +1424,7 @@ export async function importProject(
               .filter(doc => doc.resourceType === resourceType)
               .map(async ({ doc }) => {
                 const newId = idMap.get(doc._id!)
-                const remappedDoc = await sanitizeImportedDoc({
+                const remappedDoc = await sanitiseImportedDoc({
                   doc: { ...doc, _id: newId },
                   resourceType,
                   remapper: idRemapper,

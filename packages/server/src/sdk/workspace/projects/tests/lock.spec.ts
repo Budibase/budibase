@@ -40,7 +40,7 @@ const isEnabled = backendCore.features.isEnabled as jest.MockedFunction<
 
 describe("Project assignments lock", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.resetAllMocks()
     getWorkspaceId.mockReturnValue("app_dev_workspace")
     doWithLock.mockImplementation(async (_options, fn) => ({
       executed: true,
