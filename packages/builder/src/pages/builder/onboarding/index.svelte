@@ -16,7 +16,7 @@
   let onboardingForbidden = false
 
   const goToApps = () => {
-    goto("../apps")
+    goto("/apps")
   }
 
   const createDefaultWorkspace = async () => {

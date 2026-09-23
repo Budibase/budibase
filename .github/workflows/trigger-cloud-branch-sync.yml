@@ -1,0 +1,85 @@
+name: Trigger Cloud branch sync
+run-name: Sync ${{ github.repository }}:${{ github.ref_name }} at ${{ github.sha }}
+
+on:
+  push:
+    branches:
+      - cloud
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    name: Start the matching Cloud branch sync
+    if: >-
+      (github.repository == 'Budibase/budibase' && github.ref == 'refs/heads/cloud') ||
+      (github.repository == 'Budibase/cloud-security' && github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate release App token
+        id: release-app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: Budibase
+          repositories: budibase-deploys
+          permission-contents: write
+
+      - name: Select the synchronization direction
+        id: direction
+        env:
+          SOURCE_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$SOURCE_REPOSITORY" == "Budibase/budibase" ]]; then
+            echo "event_type=public-cloud-updated" >> "$GITHUB_OUTPUT"
+          else
+            echo "event_type=private-master-updated" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger the branch synchronization workflow
+        env:
+          EVENT_TYPE: ${{ steps.direction.outputs.event_type }}
+          GH_TOKEN: ${{ steps.release-app-token.outputs.token }}
+          SOURCE_REF: ${{ github.ref_name }}
+          SOURCE_REPOSITORY: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          gh api \
+            --method POST \
+            repos/Budibase/budibase-deploys/dispatches \
+            --field "event_type=$EVENT_TYPE" \
+            --field "client_payload[source_repository]=$SOURCE_REPOSITORY" \
+            --field "client_payload[source_ref]=$SOURCE_REF" \
+            --field "client_payload[source_sha]=$SOURCE_SHA"
+
+      - name: Notify when synchronization could not be started
+        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.RELEASE_SLACK_WEBHOOK_URL }}
+          SOURCE_REF: ${{ github.ref_name }}
+          SOURCE_REPOSITORY: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$SLACK_WEBHOOK_URL" ]]; then
+            echo "::warning::RELEASE_SLACK_WEBHOOK_URL is not configured; skipping the synchronization alert."
+            exit 0
+          fi
+
+          workflow_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          message=":warning: Cloud branch synchronization could not be started for \`$SOURCE_REPOSITORY:$SOURCE_REF\` at \`$SOURCE_SHA\`. <$workflow_url|Open the workflow run>"
+          payload=$(jq --null-input --arg text "$message" '{text: $text}')
+
+          curl --fail-with-body \
+            --request POST \
+            --header 'Content-type: application/json' \
+            --data "$payload" \
+            "$SLACK_WEBHOOK_URL"

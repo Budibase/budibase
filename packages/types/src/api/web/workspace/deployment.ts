@@ -1,4 +1,4 @@
-import { DeploymentDoc, DeploymentStatus } from "../../../documents"
+import { DeploymentDoc, DeploymentHistoryEntry } from "../../../documents"
 
 export interface PublishWorkspaceRequest {
   automationIds?: string[]
@@ -30,11 +30,6 @@ export interface PublishStatusResponse {
   functions: Record<string, PublishStatusResource>
 }
 
-export interface DeploymentProgressResponse {
-  _id: string
-  appId: string
-  status?: DeploymentStatus
-  updatedAt: number
-}
+export interface DeploymentProgressResponse extends DeploymentHistoryEntry {}
 
 export type FetchDeploymentResponse = DeploymentProgressResponse[]

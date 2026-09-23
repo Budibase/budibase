@@ -21,12 +21,14 @@ export enum LockName {
   PERSIST_WRITETHROUGH = "persist_writethrough",
   QUOTA_USAGE_EVENT = "quota_usage_event",
   WORKSPACE_MIGRATION = "app_migrations",
+  PUBLISH_WORKSPACE = "publish_workspace",
   PROCESS_USER_INVITE = "process_user_invite",
   SQS_SYNC_DEFINITIONS = "sys_sync_definitions",
   LITELLM_KEY = "litellm_key",
   AGENT_RAG_KNOWLEDGE_BASE = "agent_rag_knowledge_base",
   CUSTOM_REST_TEMPLATES = "custom_rest_templates",
   CONVERSATION_ATTACHMENT = "conversation_attachment",
+  ESCALATION = "escalation",
 }
 
 export type LockOptions = {
