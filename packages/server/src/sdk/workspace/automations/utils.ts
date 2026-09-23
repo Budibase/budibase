@@ -18,8 +18,8 @@ export function isMaskedPassword(value?: string) {
 export const sanitiseAutomationForExport = (
   automation: Automation
 ): Automation => {
-  const sanitized = structuredClone(automation)
-  const trigger = sanitized.definition?.trigger
+  const sanitised = structuredClone(automation)
+  const trigger = sanitised.definition?.trigger
   if (isEmailTrigger(trigger) && trigger.inputs) {
     const { host, port, secure, username, authType, mailbox } = trigger.inputs
     const { datasourceId, authConfigId } = trigger.inputs
@@ -33,5 +33,5 @@ export const sanitiseAutomationForExport = (
       trigger.inputs.authConfigId = authConfigId
     }
   }
-  return sanitized
+  return sanitised
 }

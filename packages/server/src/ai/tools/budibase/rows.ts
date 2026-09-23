@@ -374,22 +374,22 @@ const getRequesterRedactedDescription = (action: string) =>
   `${formatActionLabel(action)} on the configured resource. Resource metadata is restricted. Do not infer its schema or substitute another resource if this tool is denied.`
 
 const buildCollisionSafeToolName = (tableId: string, action: string) => {
-  const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
+  const sanitisedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
   const tableIdHash = createHash("sha256")
     .update(tableId)
     .digest("hex")
     .substring(0, TOOL_NAME_HASH_LENGTH)
   const suffix = `_${tableIdHash}_${action}`
   const tableIdLength = MAX_TOOL_NAME_LENGTH - suffix.length
-  return `${sanitizedTableId.substring(0, tableIdLength)}${suffix}`
+  return `${sanitisedTableId.substring(0, tableIdLength)}${suffix}`
 }
 
 export const getRowToolNames = (tableId: string): Record<string, string> => {
-  const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
+  const sanitisedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
   const truncatedToolNames = Object.fromEntries(
     Object.keys(ROW_TOOL).map(action => [
       action,
-      `${sanitizedTableId}_${action}`.substring(0, MAX_TOOL_NAME_LENGTH),
+      `${sanitisedTableId}_${action}`.substring(0, MAX_TOOL_NAME_LENGTH),
     ])
   )
   const hasToolNameCollision =
