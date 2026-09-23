@@ -1,6 +1,5 @@
 import Joi from "joi"
 import { middleware } from "@budibase/backend-core"
-import { DEFAULT_FUNCTION_LIMITS } from "@budibase/types"
 import { functionsEnabled } from "../../middleware/functionsEnabled"
 import * as controller from "../controllers/function"
 import { builderRoutes } from "./endpointGroups"
@@ -13,10 +12,7 @@ const capabilitySchema = Joi.object({
 
 const draftSchema = {
   name: Joi.string().max(255).required(),
-  source: Joi.string()
-    .max(DEFAULT_FUNCTION_LIMITS.compile.maxSourceBytes)
-    .required()
-    .allow(""),
+  source: Joi.string().required().allow(""),
   capabilities: Joi.array().items(capabilitySchema).required(),
 }
 
@@ -30,12 +26,37 @@ builderRoutes
     }),
     controller.create
   )
+  .post(
+    "/api/functions/compile",
+    functionsEnabled,
+    middleware.joiValidator.body(
+      Joi.object({
+        ...draftSchema,
+        functionId: Joi.string().optional(),
+      }),
+      { allowUnknown: false }
+    ),
+    controller.compile
+  )
   .get(
     "/api/functions/query-catalog",
     functionsEnabled,
     controller.queryCatalog
   )
   .get("/api/functions/:id", functionsEnabled, controller.find)
+  .get("/api/functions/:id/runs", functionsEnabled, controller.fetchRuns)
+  .get("/api/functions/:id/runs/:runId", functionsEnabled, controller.findRun)
+  .post(
+    "/api/functions/:id/build",
+    functionsEnabled,
+    middleware.joiValidator.body(
+      Joi.object({
+        _rev: Joi.string().required(),
+      }),
+      { allowUnknown: false }
+    ),
+    controller.build
+  )
   .put(
     "/api/functions/:id",
     functionsEnabled,

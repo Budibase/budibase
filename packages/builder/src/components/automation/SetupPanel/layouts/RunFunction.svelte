@@ -5,7 +5,7 @@
     AutomationStep,
     EnrichedBinding,
     ExecuteFunctionStepInputs,
-    FunctionResponse,
+    FunctionSummary,
   } from "@budibase/types"
   import { Body, Button, Icon, ProgressCircle, Select } from "@budibase/bbui"
   import { onMount } from "svelte"
@@ -30,9 +30,9 @@
   $: selectedFunctionMissing =
     !!inputData?.functionId && !$functionStore.loading && !selectedFunction
 
-  const getOptionLabel = (fn: FunctionResponse) =>
+  const getOptionLabel = (fn: FunctionSummary) =>
     `${fn.name} · ${readinessLabels[fn.readiness]}`
-  const getOptionValue = (fn: FunctionResponse) => fn._id
+  const getOptionValue = (fn: FunctionSummary) => fn._id
 
   const update = (value: Partial<ExecuteFunctionStepInputs>) => {
     if (block) {

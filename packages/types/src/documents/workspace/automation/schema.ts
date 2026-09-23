@@ -110,6 +110,10 @@ export type ActionImplementations<T extends Hosting> = {
     ExecuteQueryStepInputs,
     ExecuteQueryStepOutputs
   >
+  [AutomationActionStepId.EXECUTE_FUNCTION]: ActionImplementation<
+    ExecuteFunctionStepInputs,
+    ExecuteFunctionStepOutputs
+  >
   [AutomationActionStepId.API_REQUEST]: ActionImplementation<
     APIRequestStepInputs,
     APIRequestStepOutputs

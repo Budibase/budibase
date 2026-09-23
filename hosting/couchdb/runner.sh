@@ -149,10 +149,18 @@ echo ""
 sed -i "s#COUCHDB_ERLANG_COOKIE#${COUCHDB_ERLANG_COOKIE}#g" /opt/couchdb/etc/vm.args
 sed -i "s#COUCHDB_ERLANG_COOKIE#${COUCHDB_ERLANG_COOKIE}#g" /opt/clouseau/clouseau.ini
 
+EPMD="$(ls /opt/couchdb/erts-*/bin/epmd 2>/dev/null | head -n1)"
+"${EPMD}" -daemon
+
 # Start Clouseau. Budibase won't function correctly without Clouseau running, it
 # powers the search API endpoints which are used to do all sorts, including
 # populating app grids.
 /opt/clouseau/bin/clouseau > /dev/stdout 2>&1 &
+
+echo 'Waiting for Clouseau to start...'
+while ! "${EPMD}" -names 2>/dev/null | grep -q '^name clouseau '; do
+    sleep 1
+done
 
 # Start CouchDB.
 /docker-entrypoint.sh /opt/couchdb/bin/couchdb > /dev/stdout 2>&1 &

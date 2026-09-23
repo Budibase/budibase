@@ -11,12 +11,14 @@ import {
   roles,
 } from "@budibase/backend-core"
 import { mocks, structures } from "@budibase/backend-core/tests"
+import { encodeJSBinding } from "@budibase/string-templates"
 import {
   type Workspace,
   AppFontFamily,
   BuiltinPermissionID,
   DocumentType,
   Feature,
+  type FunctionDocument,
   PermissionLevel,
   Screen,
   SEPARATOR,
@@ -33,6 +35,7 @@ import env from "../../../environment"
 import sdk from "../../../sdk"
 import { getAppObjectStorageEtags } from "../../../tests/utilities/objectStore"
 import {
+  basicDatasource,
   basicQuery,
   basicScreen,
   basicTable,
@@ -58,7 +61,7 @@ const seedAgentWithLogs = async (appId: string) => {
       goal: "Help the user",
       createdAt: now,
     })
-    const sessionId = "chat:session-1"
+    const sessionId = "slack:session-1"
     const logId = `${DocumentType.AGENT_LOG_SESSION}${SEPARATOR}${encodeURIComponent(
       agentId
     )}${SEPARATOR}${encodeURIComponent(sessionId)}`
@@ -67,7 +70,7 @@ const seedAgentWithLogs = async (appId: string) => {
       type: "agent_log_session",
       agentId,
       sessionId,
-      trigger: "Chat",
+      trigger: "Slack",
       isPreview: false,
       firstInput: "Hello",
       requestIds: JSON.stringify(["req-1"]),
@@ -94,6 +97,55 @@ const getAgentArtifacts = async (appId: string) => {
     return {
       agentIds: agents.rows.map(row => row.id),
       logIds: logs.rows.map(row => row.id),
+    }
+  })
+}
+
+const seedFunctionWithRunSummary = async (appId: string, queryId: string) => {
+  return await context.doInWorkspaceContext(appId, async () => {
+    const workspaceDb = context.getWorkspaceDB()
+    const functionId = `${DocumentType.FUNCTION}${SEPARATOR}${uuid.v4()}`
+    const runSummaryId = `${DocumentType.FUNCTION_RUN_LOG}${SEPARATOR}${uuid.v4()}`
+    await workspaceDb.bulkDocs([
+      {
+        _id: functionId,
+        appId,
+        name: "Duplicated Function",
+        source: "export default async function () {}",
+        capabilities: [
+          {
+            capabilityId: "capability-1",
+            queryId,
+            datasourceAlias: "Inventory",
+            queryAlias: "findRooms",
+            parameterNames: [],
+          },
+        ],
+      },
+      {
+        _id: runSummaryId,
+        runId: "run-1",
+        functionId,
+        functionName: "Duplicated Function",
+        sourceHash: "source-hash",
+        environment: "development",
+        status: "success",
+      },
+    ])
+    return { functionId, runSummaryId }
+  })
+}
+
+const getFunctionArtifacts = async (appId: string) => {
+  return await context.doInWorkspaceContext(appId, async () => {
+    const workspaceDb = context.getWorkspaceDB()
+    const [functions, runSummaries] = await Promise.all([
+      workspaceDb.allDocs(db.getDocParams(DocumentType.FUNCTION, null)),
+      workspaceDb.allDocs(db.getDocParams(DocumentType.FUNCTION_RUN_LOG, null)),
+    ])
+    return {
+      functionIds: functions.rows.map(row => row.id),
+      runSummaryIds: runSummaries.rows.map(row => row.id),
     }
   })
 }
@@ -968,6 +1020,16 @@ describe("/applications", () => {
       const res = await config.api.workspace.getDefinition(workspace.appId)
       expect(res.libraries.length).toEqual(1)
     })
+
+    it("should reject users from another tenant", async () => {
+      await config.newTenant()
+
+      await config.withHeaders({ [Header.WORKSPACE_ID]: workspace.appId }, () =>
+        config.api.workspace.getDefinition(workspace.appId, {
+          status: 401,
+        })
+      )
+    })
   })
 
   describe("fetchAppPackage", () => {
@@ -976,6 +1038,37 @@ describe("/applications", () => {
       expect(res.application).toBeDefined()
       expect(res.application.appId).toEqual(config.getDevWorkspaceId())
     })
+
+    it.each([
+      { published: false, requestType: "client" },
+      { published: true, requestType: "client" },
+      { published: false, requestType: "builder" },
+      { published: true, requestType: "builder" },
+    ])(
+      "should reject cross-tenant access to snippets (published: $published, type: $requestType)",
+      async ({ published, requestType }) => {
+        await config.api.workspace.update(workspace.appId, {
+          snippets: [{ name: "MySnippet", code: "return value => value" }],
+        })
+        await config.publish()
+        const appId = published
+          ? config.getProdWorkspaceId()
+          : config.getDevWorkspaceId()
+        await config.newTenant()
+
+        await config.withHeaders(
+          {
+            [Header.WORKSPACE_ID]: appId,
+            [Header.TYPE]: requestType,
+            referer: `https://example.com/app${workspace.url}`,
+          },
+          () =>
+            config.api.workspace.getAppPackage(appId, {
+              expectations: { status: 401 },
+            })
+        )
+      }
+    )
 
     it("should retrieve all the screens for builder calls", async () => {
       await config.api.screen.save(basicScreen())
@@ -1012,6 +1105,52 @@ describe("/applications", () => {
       expect(res.screens).toContainEqual(
         expect.objectContaining({ _id: screen2._id })
       )
+    })
+
+    it.each([roles.BUILTIN_ROLE_IDS.PUBLIC, roles.BUILTIN_ROLE_IDS.BASIC])(
+      "should provide published snippets to %s clients",
+      async roleId => {
+        const snippets = [{ name: "MySnippet", code: "return value => value" }]
+        await config.api.workspace.update(workspace.appId, {
+          snippets,
+        })
+        const screen = customScreen({ roleId, route: "/" })
+        screen.props.text = encodeJSBinding(
+          'return snippets.MySnippet("apple")'
+        )
+        await config.api.screen.save(screen)
+        await config.publish()
+        await config.api.workspace.update(workspace.appId, {
+          snippets: [{ name: "MySnippet", code: "return 'unpublished'" }],
+        })
+        mocks.licenses.useCloudFree()
+        const user = await config.createUser({
+          builder: { global: false },
+          admin: { global: false },
+          roles: { [config.getProdWorkspaceId()]: roleId },
+        })
+        const res = await config.withUser(user, () =>
+          config.api.workspace.getAppPackage(config.getProdWorkspaceId(), {
+            useProdApp: true,
+            publicUser: roleId === roles.BUILTIN_ROLE_IDS.PUBLIC,
+            headers: {
+              [Header.TYPE]: "client",
+              referer: `https://example.com/app${workspace.url}`,
+            },
+          })
+        )
+        expect(res.application.snippets).toEqual(snippets)
+        expect(res.screens).toEqual([
+          expect.objectContaining({ props: screen.props }),
+        ])
+      }
+    )
+
+    it("should provide snippets to builder calls", async () => {
+      const snippets = [{ name: "MySnippet", code: "return value => value" }]
+      await config.api.workspace.update(workspace.appId, { snippets })
+      const res = await config.api.workspace.getAppPackage(workspace.appId)
+      expect(res.application.snippets).toEqual(snippets)
     })
 
     it("should expose recaptcha availability to public app packages", async () => {
@@ -1351,44 +1490,6 @@ describe("/applications", () => {
                     )
                   )
                 )
-              }
-            )
-          )
-        })
-
-        it("should allow chat route app package when no workspace apps exist", async () => {
-          await config.publish()
-
-          await context.doInWorkspaceContext(
-            config.getProdWorkspaceId(),
-            async () => {
-              const workspaceApps = await sdk.workspaceApps.fetch()
-              for (const workspaceApp of workspaceApps) {
-                await sdk.workspaceApps.remove(
-                  workspaceApp._id!,
-                  workspaceApp._rev!
-                )
-              }
-            }
-          )
-
-          await config.withProdApp(() =>
-            config.withHeaders(
-              {
-                referer: `http://localhost:10000/app-chat${config.prodWorkspace?.url}`,
-              },
-              async () => {
-                const res = await config.api.workspace.getAppPackage(
-                  config.getDevWorkspaceId(),
-                  {
-                    headers: {
-                      [Header.TYPE]: "client",
-                    },
-                  }
-                )
-
-                expect(res.application).toBeDefined()
-                expect(res.screens).toEqual([])
               }
             )
           )
@@ -1927,7 +2028,7 @@ describe("/applications", () => {
       })
 
       await config.withHeaders(
-        { [Header.APP_ID]: workspace.appId },
+        { [Header.WORKSPACE_ID]: workspace.appId },
         async () => {
           await config.api.workspace.delete(secondWorkspace.appId, {
             status: 403,
@@ -1977,6 +2078,55 @@ describe("/applications", () => {
       expect(duplicated.agentIds).toContain(agentId)
       expect(duplicated.logIds).not.toContain(logId)
       expect(duplicated.logIds).toHaveLength(0)
+    })
+
+    it("preserves Functions but not run summaries when duplicating", async () => {
+      const bucketInitFile = "function-duplicate-bucket-init"
+      await objectStore.upload({
+        bucket: objectStore.ObjectStoreBuckets.APPS,
+        filename: bucketInitFile,
+        body: Buffer.from(""),
+      })
+      const datasource = await config.api.datasource.create(
+        basicDatasource().datasource
+      )
+      const query = await config.api.query.save(basicQuery(datasource._id!))
+      const { functionId, runSummaryId } = await seedFunctionWithRunSummary(
+        workspace.appId,
+        query._id!
+      )
+
+      try {
+        const resp = await config.api.workspace.duplicateWorkspace(
+          workspace.appId,
+          {
+            name: "function-dupe copy",
+            url: "/function-dupe-copy",
+          },
+          { status: 200 }
+        )
+
+        const duplicated = await getFunctionArtifacts(resp.duplicateAppId)
+        expect(duplicated.functionIds).toContain(functionId)
+        expect(duplicated.runSummaryIds).not.toContain(runSummaryId)
+        expect(duplicated.runSummaryIds).toHaveLength(0)
+        await context.doInWorkspaceContext(resp.duplicateAppId, async () => {
+          const duplicatedFunction = await context
+            .getWorkspaceDB()
+            .get<FunctionDocument>(functionId)
+          expect(duplicatedFunction.capabilities[0].queryId).toBe(query._id)
+          expect(
+            await context
+              .getWorkspaceDB()
+              .tryGet(duplicatedFunction.capabilities[0].queryId)
+          ).toBeDefined()
+        })
+      } finally {
+        await objectStore.deleteFile(
+          objectStore.ObjectStoreBuckets.APPS,
+          bucketInitFile
+        )
+      }
     })
 
     it("should reject an unknown app id with a 404", async () => {

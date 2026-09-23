@@ -2,8 +2,8 @@
   import { Input, notifications } from "@budibase/bbui"
   import { goto as gotoStore } from "@roxi/routify"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
-  import { appStore } from "@/stores/builder"
-  import { appsStore, enrichedApps } from "@/stores/portal"
+  import { workspaceStore } from "@/stores/builder"
+  import { workspacesStore, enrichedApps } from "@/stores/portal"
   import { API } from "@/api"
   import { get } from "svelte/store"
 
@@ -49,14 +49,14 @@
       return
     }
     deleting = true
-    const deletedCurrentWorkspace = $appStore.appId === appId
+    const deletedCurrentWorkspace = $workspaceStore.appId === appId
     let deletedSuccessfully = false
     try {
       await API.deleteApp(appId)
       deletedSuccessfully = true
 
       if (deletedCurrentWorkspace) {
-        appStore.reset()
+        workspaceStore.reset()
       }
       notifications.success("Workspace deleted successfully")
       try {
@@ -65,7 +65,7 @@
         console.error("Post-delete callback failed", err)
       }
       try {
-        await appsStore.load()
+        await workspacesStore.load()
       } catch (err) {
         console.error("Post-delete workspace list refresh failed", err)
       }

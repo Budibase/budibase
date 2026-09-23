@@ -71,6 +71,7 @@ async function runBuild(entry, outfile, opts = {}) {
     process.cwd(),
     tsconfig
   )
+  tsconfigPathPluginContent.compilerOptions.baseUrl = path.resolve(__dirname, "..")
   const external = Array.isArray(opts.external) ? opts.external : []
 
   const sharedConfig = {
@@ -89,10 +90,8 @@ async function runBuild(entry, outfile, opts = {}) {
           "@budibase/frontend-core",
           "svelte",
           "chat",
-          "@chat-adapter/discord",
           "@chat-adapter/slack",
           "@chat-adapter/teams",
-          "@chat-adapter/telegram",
           "@chat-adapter/state-ioredis",
           "@chat-adapter/state-memory",
         ],

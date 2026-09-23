@@ -19,16 +19,21 @@ import {
   AutomationActionStepId,
   AutomationIOType,
   AutomationStepType,
+  BlockDefinitionTypes,
+  ToolExecutionPrincipal,
   isBranchStep,
   isLoopV2Step,
   type Automation,
   type BranchStep,
   type AutomationStep,
+  type AgentStep,
+  type BlockPath,
 } from "@budibase/types"
+import { automations } from "@budibase/shared-core"
 
 vi.mock("@/stores/builder", () => {
   return {
-    appStore: writable({}),
+    workspaceStore: writable({}),
     deploymentStore: writable({}),
     permissions: writable({}),
     tables: writable({ list: [] }),
@@ -41,6 +46,57 @@ interface TestBlockRef extends AutomationBlockRef {
 }
 
 describe("automation store", () => {
+  it("adds the execution principal field to legacy agent steps", () => {
+    const agentDefinition = automations.steps.agent.definition
+    const legacyAgent: AgentStep = {
+      ...structuredClone(agentDefinition),
+      id: "legacy-agent",
+      stepId: AutomationActionStepId.AGENT,
+      inputs: {
+        agentId: "agent-id",
+        prompt: "prompt",
+      },
+    }
+    delete legacyAgent.inputs.executionPrincipal
+    delete legacyAgent.schema.inputs.properties.executionPrincipal
+
+    const automation: Automation = {
+      _id: "automation",
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps: [legacyAgent],
+      },
+    }
+
+    automationStore.update(state => ({
+      ...state,
+      automations: [automation],
+      selectedAutomationId: automation._id!,
+      blockDefinitions: {
+        ...state.blockDefinitions,
+        [BlockDefinitionTypes.ACTION]: {
+          ...state.blockDefinitions.ACTION,
+          [AutomationActionStepId.AGENT]: agentDefinition,
+        },
+      },
+    }))
+
+    const selectedAgent = get(selectedAutomation).data?.definition.steps[0]
+    if (selectedAgent?.stepId !== AutomationActionStepId.AGENT) {
+      throw new Error("Expected an agent step")
+    }
+
+    expect(selectedAgent.inputs.executionPrincipal).toBe(
+      ToolExecutionPrincipal.ADMIN
+    )
+    expect(selectedAgent.schema.inputs.properties.executionPrincipal).toEqual(
+      agentDefinition.schema.inputs.properties.executionPrincipal
+    )
+  })
+
   it("selects new automations in editor mode", () => {
     const existingAutomation: Automation = {
       _id: "existing-automation",
@@ -130,6 +186,127 @@ describe("automation store", () => {
       "branch",
       "branch-child",
     ])
+  })
+
+  it("distinguishes Loop V2 branch lane children from direct loop children", () => {
+    const { automation } = nestedLoopBranchAutomation()
+    const blockRefs: Record<string, TestBlockRef> = {}
+    automationStore.actions.traverse(blockRefs, automation)
+
+    const branchChildHop = blockRefs["branch-child"].pathTo.at(-1)
+    const branchHop = blockRefs.branch.pathTo.at(-1)
+
+    expect(branchChildHop).toMatchObject({
+      branchIdx: 0,
+      loopStepId: "loop",
+      stepIdx: 0,
+    })
+    expect(branchHop).toMatchObject({
+      loopStepId: "loop",
+      stepIdx: 0,
+    })
+    expect(branchHop).not.toHaveProperty("branchIdx")
+  })
+
+  it("moves a Loop V2 child after another child in the same loop", async () => {
+    const first = serverLogStep("first")
+    const second = serverLogStep("second")
+    const third = serverLogStep("third")
+    const loop = loopStep([first, second, third])
+    const automation: Automation = {
+      _id: "automation",
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps: [loop],
+      },
+    }
+    let savedAutomation: Automation | undefined
+    const save = vi
+      .spyOn(automationStore.actions, "save")
+      .mockImplementation(async updatedAutomation => {
+        savedAutomation = updatedAutomation
+        return updatedAutomation
+      })
+
+    automationStore.update(state => ({
+      ...state,
+      automations: [automation],
+      selectedAutomationId: automation._id!,
+    }))
+
+    const refs = get(selectedAutomation).blockRefs
+    await automationStore.actions.moveBlock(
+      refs.first.pathTo,
+      refs.second.pathTo,
+      automation
+    )
+
+    const savedLoop = savedAutomation?.definition.steps[0]
+    if (!savedLoop || !isLoopV2Step(savedLoop)) {
+      throw new Error("Expected saved loop step")
+    }
+
+    expect(savedLoop.inputs.children?.map(step => step.id)).toEqual([
+      "second",
+      "first",
+      "third",
+    ])
+
+    save.mockRestore()
+  })
+
+  it("moves a root step into a Loop V2 child insertion point", async () => {
+    const loopChild = serverLogStep("loop-child")
+    const loop = loopStep([loopChild])
+    const rootStep = serverLogStep("root-step")
+    const automation: Automation = {
+      _id: "automation",
+      name: "Automation",
+      appId: "app",
+      type: "automation",
+      definition: {
+        trigger: automationTrigger,
+        steps: [loop, rootStep],
+      },
+    }
+    let savedAutomation: Automation | undefined
+    const save = vi
+      .spyOn(automationStore.actions, "save")
+      .mockImplementation(async updatedAutomation => {
+        savedAutomation = updatedAutomation
+        return updatedAutomation
+      })
+
+    automationStore.update(state => ({
+      ...state,
+      automations: [automation],
+      selectedAutomationId: automation._id!,
+    }))
+
+    const refs = get(selectedAutomation).blockRefs
+    await automationStore.actions.moveBlock(
+      refs["root-step"].pathTo,
+      refs["loop-child"].pathTo,
+      automation
+    )
+
+    const savedLoop = savedAutomation?.definition.steps[0]
+    if (!savedLoop || !isLoopV2Step(savedLoop)) {
+      throw new Error("Expected saved loop step")
+    }
+
+    expect(savedAutomation?.definition.steps.map(step => step.id)).toEqual([
+      "loop",
+    ])
+    expect(savedLoop.inputs.children?.map(step => step.id)).toEqual([
+      "loop-child",
+      "root-step",
+    ])
+
+    save.mockRestore()
   })
 
   it("allows moving the first branch step into another branch on the same branch block", () => {
@@ -229,6 +406,137 @@ describe("automation store", () => {
     ]
 
     expect(isNoOpBlockMove(sourcePath, destPath)).toBe(true)
+  })
+
+  it("allows moving the first branch step after another step in the same branch", () => {
+    const sourcePath = [
+      {
+        stepIdx: 1,
+        branchIdx: -1,
+        branchStepId: "",
+        id: "branch",
+      },
+      {
+        branchIdx: 0,
+        branchStepId: "branch",
+        stepIdx: 0,
+        id: "source-step",
+      },
+    ]
+    const destPath = [
+      {
+        stepIdx: 1,
+        branchIdx: -1,
+        branchStepId: "",
+        id: "branch",
+      },
+      {
+        branchIdx: 0,
+        branchStepId: "branch",
+        stepIdx: 1,
+        id: "next-step",
+      },
+    ]
+
+    expect(isNoOpBlockMove(sourcePath, destPath)).toBe(false)
+  })
+
+  it("allows moving a Loop V2 branch child after another step in the same branch", () => {
+    const sourcePath: BlockPath[] = [
+      {
+        stepIdx: 1,
+        branchIdx: -1,
+        branchStepId: "",
+        id: "loop",
+      },
+      {
+        loopStepId: "loop",
+        stepIdx: 1,
+        branchIdx: -1,
+        branchStepId: "",
+        id: "branch",
+      },
+      {
+        branchIdx: 0,
+        branchStepId: "branch",
+        loopStepId: "loop",
+        stepIdx: 0,
+        id: "api-request",
+      },
+    ]
+    const destPath: BlockPath[] = [
+      {
+        stepIdx: 1,
+        branchIdx: -1,
+        branchStepId: "",
+        id: "loop",
+      },
+      {
+        loopStepId: "loop",
+        stepIdx: 1,
+        branchIdx: -1,
+        branchStepId: "",
+        id: "branch",
+      },
+      {
+        branchIdx: 0,
+        branchStepId: "branch",
+        loopStepId: "loop",
+        stepIdx: 1,
+        id: "backend-log",
+      },
+    ]
+
+    expect(isNoOpBlockMove(sourcePath, destPath)).toBe(false)
+  })
+
+  it("allows moving a Loop V2 branch child into another branch lane", () => {
+    const sourcePath: BlockPath[] = [
+      {
+        stepIdx: 1,
+        branchIdx: -1,
+        branchStepId: "",
+        id: "loop",
+      },
+      {
+        loopStepId: "loop",
+        stepIdx: 1,
+        branchIdx: -1,
+        branchStepId: "",
+        id: "branch",
+      },
+      {
+        branchIdx: 1,
+        branchStepId: "branch",
+        loopStepId: "loop",
+        stepIdx: 0,
+        id: "backend-log-3",
+      },
+    ]
+    const destPath: BlockPath[] = [
+      {
+        stepIdx: 1,
+        branchIdx: -1,
+        branchStepId: "",
+        id: "loop",
+      },
+      {
+        loopStepId: "loop",
+        stepIdx: 1,
+        branchIdx: -1,
+        branchStepId: "",
+        id: "branch",
+      },
+      {
+        branchIdx: 0,
+        branchStepId: "branch",
+        loopStepId: "loop",
+        stepIdx: 1,
+        id: "backend-log-4",
+      },
+    ]
+
+    expect(isNoOpBlockMove(sourcePath, destPath)).toBe(false)
   })
 
   it("treats moving a step above itself in the same container as a no-op", () => {

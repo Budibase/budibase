@@ -138,14 +138,8 @@ const getCurrentGlobalUserId = (ctx: UserCtx) => {
 }
 
 const providerDisplayName = (provider: ChatIdentityLinkProvider) => {
-  if (provider === AgentChannelProvider.DISCORD) {
-    return "Discord"
-  }
   if (provider === AgentChannelProvider.MSTEAMS) {
     return "Teams"
-  }
-  if (provider === AgentChannelProvider.TELEGRAM) {
-    return "Telegram"
   }
   if (provider === AgentChannelProvider.SLACK) {
     return "Slack"
@@ -298,7 +292,6 @@ export async function confirmChatLinkSession(
     externalUserId: consumedSession.externalUserId,
     externalUserName: consumedSession.externalUserName,
     teamId: consumedSession.teamId,
-    guildId: consumedSession.guildId,
     providerTenantId: consumedSession.providerTenantId,
     serviceUrl: consumedSession.serviceUrl,
     globalUserId: currentGlobalUserId,
@@ -309,9 +302,80 @@ export async function confirmChatLinkSession(
   ctx.body = renderLinkSuccessPage()
 }
 
+const resolveAgentSlackTeamId = async (
+  appId: string,
+  agentId: string
+): Promise<string | undefined> => {
+  return await context.doInWorkspaceContext(appId, async () => {
+    const agents = await sdk.ai.agents.fetch()
+    const agent = agents.find(
+      a => a._id === agentId && a.slackIntegration?.botToken
+    )
+    if (!agent?.slackIntegration?.botToken) {
+      return undefined
+    }
+    if (agent.slackIntegration.teamId) {
+      return agent.slackIntegration.teamId
+    }
+    try {
+      const { botToken } =
+        sdk.ai.deployments.slack.validateSlackIntegration(agent)
+      return (await new WebClient(botToken).auth.test()).team_id
+    } catch (err) {
+      console.warn("listChatIdentityLinks: failed to resolve Slack workspace", {
+        agentId,
+        error: err instanceof Error ? err.message : String(err),
+      })
+      return undefined
+    }
+  })
+}
+
+const parseChatIdentityLinkProvider = (
+  value: string | string[] | undefined
+): ChatIdentityLinkProvider | undefined =>
+  Object.values(AgentChannelProvider).find(provider => provider === value)
+
 export async function listChatIdentityLinks(ctx: UserCtx) {
-  const provider = ctx.query.provider as ChatIdentityLinkProvider | undefined
-  ctx.body = await sdk.ai.chatIdentityLinks.listChatIdentityLinks(provider)
+  const provider = parseChatIdentityLinkProvider(ctx.query.provider)
+  const agentId = ctx.query.agentId
+
+  if (!provider) {
+    ctx.throw(400, "Valid provider is required")
+  }
+  if (typeof agentId !== "string" || !agentId) {
+    ctx.throw(400, "agentId is required")
+  }
+
+  const appId = ctx.appId
+  if (!appId) {
+    ctx.throw(400, "appId is required")
+  }
+
+  const links = await sdk.ai.chatIdentityLinks.listChatIdentityLinks(provider)
+
+  // Scope the links to identities the agent's bot can actually reach
+  if (provider === AgentChannelProvider.SLACK) {
+    const teamId = await resolveAgentSlackTeamId(appId, agentId)
+    ctx.body = teamId ? links.filter(l => l.teamId === teamId) : []
+    return
+  }
+
+  if (provider === AgentChannelProvider.MSTEAMS) {
+    const tenantId = await context.doInWorkspaceContext(appId, async () => {
+      const agents = await sdk.ai.agents.fetch()
+      return agents
+        .find(a => a._id === agentId)
+        ?.MSTeamsIntegration?.tenantId?.trim()
+    })
+    // Fail closed when the tenant can't be resolved.
+    ctx.body = tenantId
+      ? links.filter(l => l.providerTenantId === tenantId)
+      : []
+    return
+  }
+
+  provider satisfies never
 }
 
 export async function listSlackChannels(ctx: UserCtx) {
@@ -337,27 +401,30 @@ export async function listSlackChannels(ctx: UserCtx) {
   })
 
   if (!botToken) {
-    ctx.body = []
+    ctx.body = { channels: [], hasNext: false }
     return
   }
 
+  const cursor = ctx.query.cursor as string | undefined
   const client = new WebClient(botToken)
-  const result = await client.conversations.list({
+  // users.conversations only returns conversations the bot is a member of,
+  // so no post-fetch membership filter is needed.
+  const result = await client.users.conversations({
     types: "public_channel,private_channel,mpim",
     exclude_archived: true,
     limit: 200,
+    ...(cursor ? { cursor } : {}),
   })
 
-  const all = result.channels ?? []
+  const channels = (result.channels ?? []).map(c => ({
+    id: c.id,
+    name: c.is_mpim
+      ? `Group DM: ${c.purpose?.value?.replace("Group messaging with: ", "") ?? c.name}`
+      : c.name,
+  }))
 
-  ctx.body = all
-    .filter(c => c.is_member)
-    .map(c => ({
-      id: c.id,
-      name: c.is_mpim
-        ? `Group DM: ${c.purpose?.value?.replace("Group messaging with: ", "") ?? c.name}`
-        : c.name,
-    }))
+  const nextCursor = result.response_metadata?.next_cursor || undefined
+  ctx.body = { channels, hasNext: !!nextCursor, cursor: nextCursor }
 }
 
 export async function listMSTeamsChannels(ctx: UserCtx) {
@@ -373,7 +440,7 @@ export async function listMSTeamsChannels(ctx: UserCtx) {
 
   const integration = await getMSTeamsIntegration(appId, agentId)
   if (!integration) {
-    ctx.body = []
+    ctx.body = { channels: [], hasNext: false }
     return
   }
 
@@ -384,5 +451,6 @@ export async function listMSTeamsChannels(ctx: UserCtx) {
     MS_SCOPE_GRAPH
   )
 
-  ctx.body = await listTeamsChannels(graphToken)
+  const cursor = ctx.query.cursor as string | undefined
+  ctx.body = await listTeamsChannels(graphToken, cursor)
 }

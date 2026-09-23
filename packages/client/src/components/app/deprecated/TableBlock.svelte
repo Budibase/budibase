@@ -1,11 +1,11 @@
 <script>
   import { getContext } from "svelte"
   import { get } from "svelte/store"
-  import { generate } from "shortid"
   import Block from "@/components/Block.svelte"
   import BlockComponent from "@/components/BlockComponent.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import { enrichSearchColumns, enrichFilter } from "@/utils/blocks"
+  import { generateId } from "@budibase/bbui"
   import { Utils } from "@budibase/frontend-core"
 
   export let title
@@ -38,7 +38,7 @@
   const { fetchDatasourceSchema, API, generateGoldenSample } = getContext("sdk")
   const component = getContext("component")
   const context = getContext("context")
-  const stateKey = `ID_${generate()}`
+  const stateKey = `ID_${generateId()}`
 
   let formId
   let dataProviderId

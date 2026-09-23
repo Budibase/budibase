@@ -8,8 +8,8 @@ export type AgentOperationConfig = Pick<
   | "live"
   | "promptInstructions"
   | "enabledTools"
+  | "approvalPolicies"
   | "allowKnowledgeSourceDownload"
-  | "escalation"
 >
 
 export type CreateAgentOperationInput = AgentOperationConfig &
@@ -37,7 +37,6 @@ const mergeOperationConfig = (
   id: existing.id,
   knowledgeBases: existing.knowledgeBases,
   knowledgeSources: existing.knowledgeSources,
-  escalation: incoming.escalation ?? existing.escalation,
 })
 
 const assertUniqueOperationName = (
@@ -77,7 +76,13 @@ export async function createOperation(
 
   return update({
     ...existing,
-    operations: [...(existing.operations ?? []), operation],
+    operations: [
+      ...(existing.operations ?? []),
+      {
+        ...operation,
+        enabledTools: operation.enabledTools || [],
+      },
+    ],
   })
 }
 

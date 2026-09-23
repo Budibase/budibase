@@ -10,12 +10,19 @@ import {
   SearchUsersResponse,
   UnsavedUser,
   User,
+  type UserAdminInfo,
+  type UserBuilderInfo,
   UserIdentifier,
 } from "@budibase/types"
 import { licensing } from "."
 import { BudiStore } from "../BudiStore"
 
 type UserState = SearchUsersResponse & SearchUsersRequest
+
+export interface UserRoleDetails extends UserAdminInfo, UserBuilderInfo {
+  email: string
+  tenantOwnerEmail?: string
+}
 
 class UserStore extends BudiStore<UserState> {
   constructor() {
@@ -183,7 +190,7 @@ class UserStore extends BudiStore<UserState> {
     return await API.getAccountHolder()
   }
 
-  getUserRole(user?: User & { tenantOwnerEmail?: string }) {
+  getUserRole(user?: UserRoleDetails) {
     if (!user) {
       return Constants.BudibaseRoles.AppUser
     }

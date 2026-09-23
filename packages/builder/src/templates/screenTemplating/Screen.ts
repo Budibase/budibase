@@ -101,6 +101,7 @@ export class PDFScreen extends Screen {
       _children: [],
       _instanceName: "PDF",
       title: "PDF",
+      orientation: "portrait",
     }
   }
 }

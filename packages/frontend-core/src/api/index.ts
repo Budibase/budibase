@@ -13,7 +13,7 @@ import { Header } from "@budibase/shared-core"
 import { ApiVersion } from "../constants"
 import { buildAnalyticsEndpoints } from "./analytics"
 import { buildAIEndpoints } from "./ai"
-import { buildAppEndpoints } from "./app"
+import { buildAppEndpoints } from "./workspace"
 import { buildAttachmentEndpoints } from "./attachments"
 import { buildAuthEndpoints } from "./auth"
 import { buildAutomationEndpoints } from "./automations"
@@ -52,13 +52,13 @@ import { buildAgentEndpoints } from "./agents"
 import { buildAgentTestEndpoints } from "./agentTests"
 import { buildAgentLogEndpoints } from "./agentLogs"
 import { buildAgentRequestEndpoints } from "./agentRequests"
-import { buildChatAppEndpoints } from "./chatApps"
 import { buildEscalationEndpoints } from "./escalations"
 import { buildChatLinksEndpoints } from "./chatLinks"
 import { buildFeatureFlagEndpoints } from "./features"
 import { buildNavigationEndpoints } from "./navigation"
 import { buildWorkspaceAppEndpoints } from "./workspaceApps"
 import { buildResourceEndpoints } from "./resource"
+import { buildRestTemplateEndpoints } from "./restTemplates"
 import { buildDeploymentEndpoints } from "./deploy"
 import { buildWorkspaceFavouriteEndpoints } from "./workspaceFavourites"
 import { buildWorkspaceHomeEndpoints } from "./workspaceHome"
@@ -146,8 +146,16 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
   const makeApiCall = async <RequestT = null, ResponseT = void>(
     callConfig: APICallConfig<RequestT, ResponseT>
   ): Promise<ResponseT> => {
-    let { json, method, external, body, url, parseResponse, suppressErrors } =
-      callConfig
+    let {
+      json,
+      method,
+      external,
+      body,
+      url,
+      parseResponse,
+      suppressErrors,
+      signal,
+    } = callConfig
 
     // Ensure we don't do JSON processing if sending a GET request
     json = json && method !== HTTPMethod.GET
@@ -183,9 +191,13 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
         headers,
         body: requestBody,
         credentials: "same-origin",
+        signal,
       })
     } catch (error) {
       delete cache[url]
+      if (signal?.aborted) {
+        throw error
+      }
       throw makeError("Failed to send request", url, method)
     }
 
@@ -261,7 +273,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
         const handler = cacheRequest ? makeCachedApiCall : makeApiCall
         return await handler(callConfig)
       } catch (error) {
-        if (config?.onError) {
+        if (config?.onError && !params.signal?.aborted) {
           config.onError(error as APIError)
         }
         throw error
@@ -283,7 +295,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     getAppID: (): string => {
       let headers: Headers = {}
       config?.attachHeaders?.(headers)
-      return headers?.[Header.APP_ID]
+      return headers?.[Header.WORKSPACE_ID]
     },
   }
 
@@ -311,6 +323,7 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     ...buildScreenEndpoints(API),
     ...buildTableEndpoints(API),
     ...buildTemplateEndpoints(API),
+    ...buildRestTemplateEndpoints(API),
     ...buildUserEndpoints(API),
     ...buildViewEndpoints(API),
     ...buildSelfEndpoints(API),
@@ -327,7 +340,6 @@ export const createAPIClient = (config: APIClientConfig = {}): APIClient => {
     ...buildAgentTestEndpoints(API),
     ...buildAgentLogEndpoints(API),
     ...buildAgentRequestEndpoints(API),
-    ...buildChatAppEndpoints(API),
     ...buildEscalationEndpoints(API),
     ...buildChatLinksEndpoints(API),
     ...buildFeatureFlagEndpoints(API),

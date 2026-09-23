@@ -29,8 +29,16 @@ export interface FunctionResponse extends FunctionDocument {
   readiness: FunctionReadiness
 }
 
+export interface FunctionSummary
+  extends Pick<
+    FunctionResponse,
+    "_id" | "_rev" | "name" | "appId" | "createdAt" | "updatedAt" | "readiness"
+  > {
+  linkedQueryCount: number
+}
+
 export interface FetchFunctionsResponse {
-  functions: FunctionResponse[]
+  functions: FunctionSummary[]
 }
 
 export interface CreateFunctionResponse {
@@ -58,7 +66,7 @@ export interface BuildFunctionRequest {
 }
 
 export interface BuildFunctionResponse {
-  function: FunctionResponse
+  function: FunctionSummary
 }
 
 export type FunctionQueryKind = "data" | "api"

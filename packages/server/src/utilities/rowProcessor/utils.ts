@@ -18,7 +18,7 @@ import tracer from "dd-trace"
 import { AutoFieldDefaultNames } from "../../constants"
 import { isAIColumn } from "../../db/utils"
 import sdk from "../../sdk"
-import { toModelMessages } from "../../sdk/workspace/ai/llm/messages"
+import { toPrompt } from "../../sdk/workspace/ai/llm/messages"
 import { coerce } from "./index"
 
 interface FormulaOpts {
@@ -68,7 +68,7 @@ async function runAIOperation(
   const request = promptForAIOperation(schema, row)
   const result = await generateText({
     model: llm.chat,
-    messages: toModelMessages(request.messages),
+    ...toPrompt(request.messages),
     providerOptions: llm.providerOptions?.(false),
   })
   return result.text

@@ -22,7 +22,7 @@
     UrlValidationProtocol,
   } from "@budibase/types"
   import { isJSBinding } from "@budibase/string-templates"
-  import { generate } from "shortid"
+  import { generateId } from "@budibase/bbui"
   import { SvelteSet } from "svelte/reactivity"
   import { selectedScreen, selectedComponent } from "@/stores/builder"
   import { findClosestMatchingComponent } from "@/helpers/components"
@@ -277,7 +277,7 @@
   }
 
   const addRule = (): void => {
-    const id = generate()
+    const id = generateId()
     rules = [
       ...(rules || []),
       {
@@ -300,7 +300,7 @@
     if (!existingRule) {
       return
     }
-    const newRule = { ...existingRule, id: generate() }
+    const newRule = { ...existingRule, id: generateId() }
     rules = [...rules, newRule]
     expandedRules.add(newRule.id)
   }

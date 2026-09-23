@@ -171,7 +171,6 @@ async function processSMTPConfig(
   config: SMTPInnerConfig,
   existingConfig?: SMTPInnerConfig
 ) {
-  await email.verifyConfig(config)
   if (config.auth?.pass === PASSWORD_REPLACEMENT) {
     // if the password is being replaced, use the existing password
     if (existingConfig && existingConfig.auth?.pass) {
@@ -181,6 +180,7 @@ async function processSMTPConfig(
       throw new BadRequestError("SMTP password is required")
     }
   }
+  await email.verifyConfig(config)
 }
 
 async function processSettingsConfig(

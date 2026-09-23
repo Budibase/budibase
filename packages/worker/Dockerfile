@@ -6,6 +6,9 @@ LABEL com.centurylinklabs.watchtower.lifecycle.post-update="scripts/watchtower-h
 LABEL com.centurylinklabs.watchtower.lifecycle.post-check="scripts/watchtower-hooks/post-check.sh"
 
 
+# pull latest Alpine security patches
+RUN apk update && apk upgrade --no-cache
+
 # handle node-gyp
 RUN apk add --no-cache --virtual .gyp python3 make g++ \
     && apk add --no-cache \

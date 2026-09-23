@@ -1,7 +1,6 @@
 import {
   context,
   HTTPError,
-  locks,
   sql,
   SQLITE_DESIGN_DOC_ID,
   SQS_DATASOURCE_INTERNAL,
@@ -18,10 +17,9 @@ import {
   DocumentType,
   EnrichedQueryJson,
   FieldType,
+  isDynamicFormula,
   isLogicalSearchOperator,
   isStaticFormula,
-  LockName,
-  LockType,
   Operation,
   QueryJson,
   RelationshipFieldMetadata,
@@ -30,6 +28,7 @@ import {
   RowSearchParams,
   SearchFilters,
   SearchResponse,
+  SortJson,
   SortOrder,
   SortType,
   SqlClient,
@@ -49,6 +48,8 @@ import sdk from "../../../../index"
 import {
   mapToUserColumn,
   USER_COLUMN_PREFIX,
+  waitForDefinitionRebuild,
+  withDefinitionRebuildLock,
 } from "../../../tables/internal/sqs"
 import AliasTables from "../../sqlAlias"
 import { enrichQueryJson, processRowCountResponse } from "../../utils"
@@ -88,11 +89,12 @@ export async function buildInternalFieldList(
     )
   }
 
-  const containsFormula = schemaFields.some(
-    f => table.schema[f]?.type === FieldType.FORMULA
-  )
-  // If are requesting for a formula field, we need to retrieve all fields
-  if (containsFormula) {
+  const containsDynamicFormula = schemaFields.some(f => {
+    const field = table.schema[f]
+    return field != null && isDynamicFormula(field)
+  })
+  // Dynamic formulas need all source fields to be available for evaluation
+  if (containsDynamicFormula) {
     schemaFields = Object.keys(table.schema)
   } else if (allowedFields) {
     schemaFields = schemaFields.filter(field => allowedFields.includes(field))
@@ -144,7 +146,7 @@ export async function buildInternalFieldList(
       // as part of the relationship to tell us which relationship column the junction is related to.
       const relatedFields = (
         await buildInternalFieldList(relatedTable, tables, {
-          includeHiddenFields: containsFormula,
+          includeHiddenFields: containsDynamicFormula,
         })
       ).concat(
         getJunctionFields(relatedTable, ["doc1.fieldName", "doc2.fieldName"])
@@ -264,12 +266,13 @@ async function runSqlQuery(
   relationships: RelationshipsJson[],
   opts?: { countTotalRows?: boolean }
 ) {
+  const queryJson = opts?.countTotalRows ? cloneDeep(json) : json
   const relationshipJunctionTableIds = relationships.map(rel => rel.through!)
   const alias = new AliasTables(
     tables.map(table => table._id!).concat(relationshipJunctionTableIds)
   )
   if (opts?.countTotalRows) {
-    json.operation = Operation.COUNT
+    queryJson.operation = Operation.COUNT
   }
   const processSQLQuery = async (json: EnrichedQueryJson) => {
     const query = builder._query(json, {
@@ -302,11 +305,11 @@ async function runSqlQuery(
       return await db.sql<Row>(sql, bindings)
     })
   }
-  const response = await alias.queryWithAliasing(json, processSQLQuery)
+  const response = await alias.queryWithAliasing(queryJson, processSQLQuery)
   if (opts?.countTotalRows) {
     return processRowCountResponse(response)
   } else if (Array.isArray(response)) {
-    return reverseUserColumnMapping(response, json.table)
+    return reverseUserColumnMapping(response, queryJson.table)
   }
   return response
 }
@@ -420,30 +423,66 @@ export async function search(
   }
 
   if (params.sort) {
-    const sortField = table.schema[params.sort]
-    const isAggregateField = aggregations.some(agg => agg.name === params.sort)
-
-    if (isAggregateField) {
-      request.sort = {
-        [params.sort]: {
-          direction: params.sortOrder || SortOrder.ASCENDING,
-          type: SortType.NUMBER,
-        },
+    const resolveSortEntry = (
+      field: string,
+      direction?: SortOrder,
+      type?: SortType
+    ) => {
+      const isAggregateField = aggregations.some(agg => agg.name === field)
+      if (isAggregateField) {
+        return {
+          key: field,
+          direction: direction || SortOrder.ASCENDING,
+          type: type || SortType.NUMBER,
+        }
       }
-    } else if (sortField) {
+
+      const sortField = table.schema[field]
+      if (!sortField) {
+        throw new Error(`Unable to sort by ${field}`)
+      }
+
       const responseType = isStaticFormula(sortField)
         ? sortField.responseType
         : sortField.type
       const sortType =
-        responseType === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
+        type ||
+        (responseType === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING)
+
+      return {
+        key: mapToUserColumn(sortField.name),
+        direction: direction || SortOrder.ASCENDING,
+        type: sortType as SortType,
+      }
+    }
+
+    if (typeof params.sort === "string") {
+      const entry = resolveSortEntry(
+        params.sort,
+        params.sortOrder,
+        params.sortType
+      )
       request.sort = {
-        [mapToUserColumn(sortField.name)]: {
-          direction: params.sortOrder || SortOrder.ASCENDING,
-          type: sortType as SortType,
+        [entry.key]: {
+          direction: entry.direction,
+          type: entry.type,
         },
       }
     } else {
-      throw new Error(`Unable to sort by ${params.sort}`)
+      const sort: SortJson = {}
+      for (const [field, sortInfo] of Object.entries(params.sort)) {
+        if (!sortInfo) {
+          continue
+        }
+        const entry = resolveSortEntry(field, sortInfo.direction, sortInfo.type)
+        sort[entry.key] = {
+          direction: entry.direction,
+          type: entry.type,
+        }
+      }
+      if (Object.keys(sort).length) {
+        request.sort = sort
+      }
     }
   }
 
@@ -462,6 +501,10 @@ export async function search(
   }
 
   const enrichedRequest = await enrichQueryJson(request)
+
+  if (!opts?.retrying) {
+    await waitForDefinitionRebuild()
+  }
 
   try {
     const [rows, totalRows] = await Promise.all([
@@ -527,13 +570,9 @@ export async function search(
       throw new HTTPError("Search is temporarily unavailable", 503)
     }
     if (!opts?.retrying && resyncDefinitionsRequired(err.status, msg)) {
-      await locks.doWithLock(
-        {
-          type: LockType.AUTO_EXTEND,
-          name: LockName.SQS_SYNC_DEFINITIONS,
-          resource: context.getWorkspaceId(),
-        },
-        sdk.tables.sqs.syncDefinition
+      await withDefinitionRebuildLock(
+        sdk.tables.sqs.syncDefinition,
+        context.getWorkspaceId()
       )
       return search(options, source, { retrying: true })
     }

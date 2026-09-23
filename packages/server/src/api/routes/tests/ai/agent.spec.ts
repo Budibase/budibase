@@ -1,3 +1,4 @@
+import { ToolExecutionPrincipal } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../../tests/utilities/aiConfig"
 
@@ -26,6 +27,7 @@ describe("agent duplicate", () => {
         aiconfig: "default",
         description: "Support assistant",
         live: true,
+        allowConversationAttachments: false,
       },
       {
         id: "operation_1",
@@ -51,6 +53,7 @@ describe("agent duplicate", () => {
       created.operations?.[0]?.name
     )
     expect(duplicate.live).toEqual(created.live)
+    expect(duplicate.allowConversationAttachments).toBe(false)
   })
 
   it("persists operation name on create and update", async () => {
@@ -81,6 +84,7 @@ describe("agent duplicate", () => {
     const { agents } = await config.api.agent.fetch()
     const fetched = agents.find(agent => agent._id === created._id)
     expect(fetched?.operations?.[0]?.name).toEqual("Escalation flow")
+    expect(fetched?.allowConversationAttachments).toBe(true)
   })
 
   it("creates, updates, and deletes an operation via dedicated endpoints", async () => {
@@ -120,6 +124,28 @@ describe("agent duplicate", () => {
     expect(
       removed.operations?.find(operation => operation.id === "operation_2")
     ).toBeUndefined()
+  })
+
+  it("removes retired escalation tools from operation mutations", async () => {
+    const created = await config.api.agent.create({
+      name: "Retired Tool Agent",
+      aiconfig: "default",
+    })
+
+    const updated = await config.api.agent.createOperation(created._id!, {
+      id: "operation_1",
+      name: "Main operation",
+      live: false,
+      enabledTools: [
+        {
+          toolName: "escalate",
+          executionPrincipal: ToolExecutionPrincipal.ADMIN,
+        },
+      ],
+      allowKnowledgeSourceDownload: true,
+    })
+
+    expect(updated.operations?.[0].enabledTools).toEqual([])
   })
 
   it("rejects creating an operation with a duplicate name for the same agent", async () => {

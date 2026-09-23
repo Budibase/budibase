@@ -488,7 +488,10 @@ export async function doInFeatureFlagOverrideContext<T>(
   value: Record<string, boolean>,
   callback: () => Promise<T>
 ) {
-  return await newContext({ featureFlagOverrides: value }, callback)
+  return await newContext(
+    { featureFlagOverrides: value, featureFlagCache: {} },
+    callback
+  )
 }
 
 export function getTableForView(viewId: string): Table | undefined {

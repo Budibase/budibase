@@ -17,6 +17,8 @@ jest.mock("../bbReferenceProcessor", (): typeof bbReferenceProcessor => ({
   processInputBBReferences: jest.fn(),
   processOutputBBReference: jest.fn(),
   processOutputBBReferences: jest.fn(),
+  getBBReferenceIds: jest.fn(),
+  fetchUserReferences: jest.fn(),
 }))
 
 describe("rowProcessor - outputProcessing", () => {
@@ -30,14 +32,20 @@ describe("rowProcessor - outputProcessing", () => {
     config.end()
   })
 
-  beforeEach(() => {
-    jest.resetAllMocks()
-  })
-
   const processOutputBBReferenceMock =
     bbReferenceProcessor.processOutputBBReference as jest.Mock
   const processOutputBBReferencesMock =
     bbReferenceProcessor.processOutputBBReferences as jest.Mock
+  const getBBReferenceIdsMock =
+    bbReferenceProcessor.getBBReferenceIds as jest.Mock
+  const fetchUserReferencesMock =
+    bbReferenceProcessor.fetchUserReferences as jest.Mock
+
+  beforeEach(() => {
+    jest.resetAllMocks()
+    getBBReferenceIdsMock.mockReturnValue([])
+    fetchUserReferencesMock.mockResolvedValue({})
+  })
 
   it("fetches single user references given a populated field", async () => {
     await config.doInContext(config.getDevWorkspaceId(), async () => {
@@ -74,7 +82,7 @@ describe("rowProcessor - outputProcessing", () => {
       }
 
       const user = structures.users.user()
-      processOutputBBReferenceMock.mockResolvedValue(user)
+      processOutputBBReferenceMock.mockReturnValue(user)
 
       const result = await outputProcessing(table, row, { squash: false })
 
@@ -85,7 +93,7 @@ describe("rowProcessor - outputProcessing", () => {
       ).toHaveBeenCalledTimes(1)
       expect(
         bbReferenceProcessor.processOutputBBReference
-      ).toHaveBeenCalledWith("123", BBReferenceFieldSubType.USER)
+      ).toHaveBeenCalledWith("123", BBReferenceFieldSubType.USER, {})
     })
   })
 
@@ -124,7 +132,7 @@ describe("rowProcessor - outputProcessing", () => {
       }
 
       const users = [structures.users.user()]
-      processOutputBBReferencesMock.mockResolvedValue(users)
+      processOutputBBReferencesMock.mockReturnValue(users)
 
       const result = await outputProcessing(table, row, { squash: false })
 
@@ -135,7 +143,7 @@ describe("rowProcessor - outputProcessing", () => {
       ).toHaveBeenCalledTimes(1)
       expect(
         bbReferenceProcessor.processOutputBBReferences
-      ).toHaveBeenCalledWith("123", BBReferenceFieldSubType.USER)
+      ).toHaveBeenCalledWith("123", BBReferenceFieldSubType.USER, {})
     })
   })
 

@@ -1,15 +1,95 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, beforeEach, vi } from "vitest"
+import type { RestTemplate } from "@budibase/types"
 
+import { API } from "@/api"
 import {
   RestTemplatesStore,
   MICROSOFT_SHAREPOINT_NAME_ALIASES,
 } from "../restTemplates"
 
+vi.mock("@/api", () => ({
+  API: {
+    getCustomRestTemplates: vi.fn(),
+    uploadCustomRestTemplate: vi.fn(),
+    updateCustomRestTemplate: vi.fn(),
+    deleteCustomRestTemplate: vi.fn(),
+  },
+}))
+
 describe("RestTemplatesStore", () => {
   let store: RestTemplatesStore
 
   beforeEach(() => {
+    vi.clearAllMocks()
     store = new RestTemplatesStore()
+  })
+
+  describe("custom templates", () => {
+    const customTemplate: RestTemplate = {
+      id: "rest_template_example",
+      name: "Example",
+      description: "Example API",
+      operationsCount: 1,
+      custom: true,
+      specs: [
+        {
+          version: "custom",
+        },
+      ],
+    }
+
+    it("adds fetched custom templates without replacing built-in templates", async () => {
+      vi.mocked(API.getCustomRestTemplates).mockResolvedValue([customTemplate])
+      const builtInCount = store.templates.length
+
+      await store.fetchCustom()
+
+      expect(store.templates).toHaveLength(builtInCount + 1)
+      expect(store.get("rest_template_example")).toEqual(
+        expect.objectContaining({
+          name: "Example",
+          custom: true,
+        })
+      )
+    })
+
+    it("removes a deleted custom template from the store", async () => {
+      vi.mocked(API.getCustomRestTemplates).mockResolvedValue([customTemplate])
+      vi.mocked(API.deleteCustomRestTemplate).mockResolvedValue({
+        message: "deleted",
+      })
+      await store.fetchCustom()
+
+      await store.deleteCustom("rest_template_example")
+
+      expect(API.deleteCustomRestTemplate).toHaveBeenCalledWith(
+        "rest_template_example"
+      )
+      expect(store.get("rest_template_example")).toBeUndefined()
+    })
+
+    it("replaces an updated custom template in the store", async () => {
+      const updatedTemplate = {
+        ...customTemplate,
+        name: "Updated example",
+      }
+      vi.mocked(API.getCustomRestTemplates).mockResolvedValue([customTemplate])
+      vi.mocked(API.updateCustomRestTemplate).mockResolvedValue({
+        template: updatedTemplate,
+      })
+      await store.fetchCustom()
+
+      await store.updateCustom({
+        restTemplateId: "rest_template_example",
+        name: "Updated example",
+        description: "Example API",
+      })
+
+      expect(store.get("rest_template_example")?.name).toBe("Updated example")
+      expect(
+        store.templates.filter(template => template.id === customTemplate.id)
+      ).toHaveLength(1)
+    })
   })
 
   describe("getByName", () => {

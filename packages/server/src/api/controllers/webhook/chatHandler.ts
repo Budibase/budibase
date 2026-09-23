@@ -12,17 +12,23 @@ import {
 import { ChatCommands, type SupportedChatCommand } from "@budibase/shared-core"
 import type { RedisClient } from "@budibase/backend-core"
 import type {
-  ChatApp,
   ChatConversation,
   ChatConversationChannel,
   ChatConversationRequest,
   ContextUser,
+  ConversationAttachmentTurn,
+  EscalationRespondResult,
   WebhookChatCompleteResult,
 } from "@budibase/types"
-import { AgentChannelProvider, DocumentType } from "@budibase/types"
+import {
+  AgentChannelProvider,
+  ConversationAttachmentStatus,
+  ConversationAttachmentTurnStatus,
+  DocumentType,
+} from "@budibase/types"
 import sdk from "../../../sdk"
+import type { IncomingConversationAttachment } from "../../../sdk/workspace/ai/chatConversations"
 import { getGlobalUser } from "../../../utilities/global"
-import { canAccessChatAppAgentForUser } from "../ai/chatApps"
 import {
   webhookChat,
   type WebhookAssistantStream,
@@ -46,7 +52,6 @@ let conversationCacheClientInitInFlight:
 let conversationCacheClientLastFailureAt = 0
 
 interface ConversationScope {
-  chatAppId: string
   agentId: string
   externalUserId: string
   channelId?: string
@@ -68,7 +73,6 @@ const getCacheKey = ({
 }) =>
   [
     workspaceId,
-    scope.chatAppId,
     scope.agentId,
     scope.channelId || "",
     scope.threadId || "",
@@ -226,25 +230,8 @@ const matchesScope = ({
   provider: AgentChannelProvider
 }) => {
   const ch = chat.channel
-  if (
-    chat.chatAppId !== scope.chatAppId ||
-    chat.agentId !== scope.agentId ||
-    ch?.provider !== provider
-  ) {
+  if (chat.agentId !== scope.agentId || ch?.provider !== provider) {
     return false
-  }
-
-  if (provider === AgentChannelProvider.DISCORD) {
-    if (
-      ch?.channelId !== scope.channelId ||
-      (ch?.threadId || undefined) !== scope.threadId
-    ) {
-      return false
-    }
-    if (ch?.externalUserId) {
-      return ch.externalUserId === scope.externalUserId
-    }
-    return chat.userId === `discord:${scope.externalUserId}`
   }
 
   if (provider === AgentChannelProvider.MSTEAMS) {
@@ -257,14 +244,6 @@ const matchesScope = ({
   }
 
   if (provider === AgentChannelProvider.SLACK) {
-    return (
-      ch?.channelId === scope.channelId &&
-      (ch?.threadId || undefined) === scope.threadId &&
-      ch?.externalUserId === scope.externalUserId
-    )
-  }
-
-  if (provider === AgentChannelProvider.TELEGRAM) {
     return (
       ch?.channelId === scope.channelId &&
       (ch?.threadId || undefined) === scope.threadId &&
@@ -374,12 +353,13 @@ export interface HandleChatMessageParams {
   beforeAssistantWebhook?: () => Promise<void>
   replyLinkPrompt: (message: LinkPromptMessage) => Promise<void>
   workspaceId: string
-  chatAppId: string
   agentId: string
   provider: AgentChannelProvider
   channelEnabled: boolean
   command: SupportedChatCommand
   content: string
+  attachments?: IncomingConversationAttachment[]
+  allowConversationAttachments: boolean
   user: {
     externalUserId: string
     displayName?: string
@@ -390,15 +370,63 @@ export interface HandleChatMessageParams {
   requireUserLink?: boolean
 }
 
-const providerDisplayName = (provider: HandleChatMessageParams["provider"]) => {
-  if (provider === AgentChannelProvider.DISCORD) {
-    return "Discord"
+export const buildLinkPrompt = async ({
+  workspaceId,
+  provider,
+  user,
+  channel,
+  linkedAlready,
+  prefix,
+}: {
+  workspaceId: string
+  provider: AgentChannelProvider
+  user: HandleChatMessageParams["user"]
+  channel: Pick<ChatConversationChannel, "teamId" | "tenantId" | "serviceUrl">
+  linkedAlready: boolean
+  prefix: string
+}): Promise<LinkPromptMessage> => {
+  const session = await sdk.ai.chatIdentityLinks.createChatIdentityLinkSession({
+    workspaceId,
+    provider,
+    externalUserId: user.externalUserId,
+    externalUserName: user.displayName,
+    teamId: channel.teamId,
+    providerTenantId: channel.tenantId,
+    serviceUrl: channel.serviceUrl,
+  })
+
+  const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
+  const linkUrl = `${platformUrl.replace(/\/$/, "")}/api/chat-links/${workspaceId}/${session.token}/handoff`
+
+  const suffix = linkedAlready
+    ? "Completing this link will replace the previous Budibase user mapping."
+    : `Run ${getLinkCommand(provider)} any time to generate a fresh link.`
+
+  return {
+    text: `${prefix} ${suffix}`,
+    linkUrl,
   }
+}
+
+export const escalationReplyText = (
+  status: EscalationRespondResult["status"]
+) => {
+  switch (status) {
+    case "closed":
+      return "Escalation already closed."
+    case "already_responded":
+      return "You've already responded to this request."
+    default:
+      return "Response recorded."
+  }
+}
+
+export const unlinkedResponsePrompt = (provider: AgentChannelProvider) =>
+  `Your ${providerDisplayName(provider)} account isn't linked to Budibase, so this response can't be counted. Link it, then respond to the request again.`
+
+const providerDisplayName = (provider: HandleChatMessageParams["provider"]) => {
   if (provider === AgentChannelProvider.MSTEAMS) {
     return "Teams"
-  }
-  if (provider === AgentChannelProvider.TELEGRAM) {
-    return "Telegram"
   }
   return "Slack"
 }
@@ -429,13 +457,7 @@ const getSyntheticUserId = ({
       : `msteams:${externalUserId}`
   }
 
-  if (provider === AgentChannelProvider.DISCORD) {
-    return channel.guildId
-      ? `discord:${channel.guildId}:${externalUserId}`
-      : `discord:${externalUserId}`
-  }
-
-  return `${provider}:${externalUserId}`
+  throw provider satisfies never
 }
 
 const createTransientPublicUser = ({
@@ -470,12 +492,13 @@ export const handleChatMessage = async ({
   beforeAssistantWebhook,
   replyLinkPrompt,
   workspaceId,
-  chatAppId,
   agentId,
   provider,
   channelEnabled,
   command,
   content,
+  attachments: incomingAttachments = [],
+  allowConversationAttachments,
   user,
   channel,
   scope,
@@ -485,22 +508,9 @@ export const handleChatMessage = async ({
   await context.doInWorkspaceContext(workspaceId, async () => {
     const idleTimeoutMs = getIdleTimeoutMs(idleTimeoutMinutes)
     const db = context.getWorkspaceDB()
-    const chatApp = await db.tryGet<ChatApp>(chatAppId)
-    if (!chatApp) {
-      await reply("Chat app not found.")
-      return
-    }
 
     if (!channelEnabled) {
-      await reply("Agent is not enabled for this chat app.")
-      return
-    }
-
-    const chatAgentConfig = chatApp.agents?.find(
-      agent => agent.agentId === agentId
-    )
-    if (!chatAgentConfig) {
-      await reply("Agent is not enabled for this chat app.")
+      await reply("Agent is not enabled for this channel.")
       return
     }
 
@@ -511,37 +521,21 @@ export const handleChatMessage = async ({
       providerTenantId: channel.tenantId,
     })
 
-    const createLinkPromptMessage = async ({
+    const createLinkPromptMessage = ({
       linkedAlready,
       prefix,
     }: {
       linkedAlready: boolean
       prefix: string
-    }): Promise<LinkPromptMessage> => {
-      const session =
-        await sdk.ai.chatIdentityLinks.createChatIdentityLinkSession({
-          workspaceId,
-          provider,
-          externalUserId: user.externalUserId,
-          externalUserName: user.displayName,
-          teamId: channel.teamId,
-          guildId: channel.guildId,
-          providerTenantId: channel.tenantId,
-          serviceUrl: channel.serviceUrl,
-        })
-
-      const platformUrl = await configs.getPlatformUrl({ tenantAware: true })
-      const linkUrl = `${platformUrl.replace(/\/$/, "")}/api/chat-links/${workspaceId}/${session.token}/handoff`
-
-      const suffix = linkedAlready
-        ? "Completing this link will replace the previous Budibase user mapping."
-        : `Run ${getLinkCommand(provider)} any time to generate a fresh link.`
-
-      return {
-        text: `${prefix} ${suffix}`,
-        linkUrl,
-      }
-    }
+    }) =>
+      buildLinkPrompt({
+        workspaceId,
+        provider,
+        user,
+        channel,
+        linkedAlready,
+        prefix,
+      })
 
     if (command === ChatCommands.LINK) {
       const prompt = await createLinkPromptMessage({
@@ -551,6 +545,30 @@ export const handleChatMessage = async ({
           : `Link your ${providerDisplayName(provider)} account to continue chatting with this agent.`,
       })
       await replyLinkPrompt(prompt)
+      return
+    }
+
+    if (command === ChatCommands.UNLINK) {
+      if (!existingLink) {
+        await reply(
+          `Your ${providerDisplayName(provider)} account is not linked. Run ${getLinkCommand(
+            provider
+          )} to connect it.`
+        )
+        return
+      }
+
+      await sdk.ai.chatIdentityLinks.deleteChatIdentityLink({
+        provider,
+        externalUserId: user.externalUserId,
+        teamId: channel.teamId,
+        providerTenantId: channel.tenantId,
+      })
+      await reply(
+        `Your ${providerDisplayName(provider)} account has been unlinked from Budibase. Run ${getLinkCommand(
+          provider
+        )} to connect it again.`
+      )
       return
     }
 
@@ -592,7 +610,6 @@ export const handleChatMessage = async ({
 
         logging.logWarn("chat_link_lookup_miss", {
           workspaceId,
-          chatAppId,
           agentId,
           provider,
           externalUserIdTried: user.externalUserId,
@@ -620,34 +637,43 @@ export const handleChatMessage = async ({
       })
     }
 
-    const hasAccess = await canAccessChatAppAgentForUser(
-      {
-        user: chatUser,
-        roleId: chatUser.roleId ?? undefined,
-      },
-      chatAgentConfig
-    )
-    if (!hasAccess) {
-      await reply(
-        existingLink
-          ? "Your linked Budibase account does not have access to this agent."
-          : "This agent is not available to unlinked users."
-      )
-      return
+    if (
+      provider === AgentChannelProvider.SLACK &&
+      command === ChatCommands.NEW
+    ) {
+      const previousChat = await findConversation({
+        db,
+        workspaceId,
+        scope,
+        provider,
+        idleTimeoutMs,
+      })
+      if (previousChat?.attachments?.length) {
+        await db.put({
+          ...previousChat,
+          attachmentContextExpiresAt: new Date(0).toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+        await sdk.ai.chatConversations.attachmentCleanupQueue.cleanupConversationAttachments(
+          previousChat._id!
+        )
+      }
     }
 
-    if (command === ChatCommands.NEW && !content) {
+    if (
+      command === ChatCommands.NEW &&
+      !content &&
+      !incomingAttachments.length
+    ) {
       const chatId = docIds.generateChatConversationID()
       await db.put(
         sdk.ai.chatConversations.prepareChatConversationForSave({
           chatId,
-          chatAppId,
           userId,
           title: "New conversation",
           messages: [],
           chat: {
             _id: chatId,
-            chatAppId,
             agentId,
             title: "New conversation",
             messages: [],
@@ -660,24 +686,18 @@ export const handleChatMessage = async ({
         chatId,
         idleTimeoutMs,
       })
-      const msg =
-        provider === AgentChannelProvider.DISCORD
-          ? `Started a new conversation. Use /${ChatCommands.ASK} with a message.`
-          : "Started a new conversation. Send a message to continue."
+      const msg = "Started a new conversation. Send a message to continue."
       await reply(msg)
       return
     }
 
-    if (!content) {
-      const msg =
-        provider === AgentChannelProvider.DISCORD
-          ? `Please provide a message after /${ChatCommands.ASK}.`
-          : `Please provide a message after "${ChatCommands.ASK}", or just send a normal message.`
+    if (!content && !incomingAttachments.length) {
+      const msg = `Please provide a message after "${ChatCommands.ASK}", or just send a normal message.`
       await reply(msg)
       return
     }
 
-    const existingChat =
+    let existingChat =
       command === ChatCommands.NEW
         ? undefined
         : await findConversation({
@@ -688,21 +708,212 @@ export const handleChatMessage = async ({
             idleTimeoutMs,
           })
 
-    const userMessage: ChatConversationRequest["messages"][number] = {
-      id: v4(),
-      role: "user",
-      parts: [{ type: "text", text: content }],
+    if (incomingAttachments.length && !allowConversationAttachments) {
+      await reply("File attachments aren't enabled for this agent.")
+      return
+    }
+
+    if (
+      incomingAttachments.length &&
+      !sdk.ai.knowledgeBase.isGeminiFileSearchConfigured()
+    ) {
+      await reply(
+        "I can't process file attachments because Gemini File Search isn't enabled. Please ask your Budibase administrator to enable it."
+      )
+      return
     }
 
     const chatId = existingChat?._id ?? docIds.generateChatConversationID()
+    let conversationAttachments = existingChat?.attachments || []
+    const queuedAttachments = incomingAttachments.length
+      ? sdk.ai.chatConversations.prepareConversationAttachments({
+          conversation: {
+            _id: chatId,
+            attachments: conversationAttachments,
+          },
+          incoming: incomingAttachments,
+        })
+      : []
+    conversationAttachments = [...conversationAttachments, ...queuedAttachments]
+    const attachmentContextExpiresAt =
+      conversationAttachments.length || incomingAttachments.length
+        ? new Date(Date.now() + idleTimeoutMs).toISOString()
+        : undefined
+
+    if (!content && incomingAttachments.length && !queuedAttachments.length) {
+      await reply("Those files are already available in this conversation.")
+      return
+    }
+
+    const attachmentMarker = queuedAttachments.length
+      ? `\n\n[Attached files: ${queuedAttachments
+          .map(file => file.filename)
+          .join(", ")}]`
+      : ""
+    const userMessage: ChatConversationRequest["messages"][number] = {
+      id: v4(),
+      role: "user",
+      parts: [
+        {
+          type: "text",
+          text: `${content}${attachmentMarker}`.trim(),
+        },
+      ],
+    }
+
+    const hasProcessingAttachments = conversationAttachments.some(
+      attachment =>
+        attachment.status === ConversationAttachmentStatus.QUEUED ||
+        attachment.status === ConversationAttachmentStatus.PROCESSING
+    )
+    const hasPendingAttachmentTurns =
+      existingChat?.pendingAttachmentTurns?.some(
+        turn =>
+          turn.status === ConversationAttachmentTurnStatus.QUEUED ||
+          turn.status === ConversationAttachmentTurnStatus.PROCESSING
+      )
+    if (
+      queuedAttachments.length ||
+      hasProcessingAttachments ||
+      hasPendingAttachmentTurns
+    ) {
+      const now = new Date().toISOString()
+      const turn: ConversationAttachmentTurn = {
+        id: v4(),
+        message: userMessage,
+        attachmentIds: conversationAttachments
+          .filter(
+            attachment =>
+              attachment.status !== ConversationAttachmentStatus.FAILED
+          )
+          .map(attachment => attachment.id),
+        status: ConversationAttachmentTurnStatus.QUEUED,
+        requester: {
+          userId,
+          linked: !!existingLink,
+          displayName: user.displayName,
+        },
+        createdAt: now,
+        updatedAt: now,
+      }
+      let chatToUpdate = existingChat
+      let saved = false
+      for (let attempt = 0; attempt < 5 && !saved; attempt++) {
+        const currentAttachments = chatToUpdate?.attachments || []
+        const mergedAttachments = [
+          ...currentAttachments,
+          ...conversationAttachments.filter(
+            attachment =>
+              !currentAttachments.some(current => current.id === attachment.id)
+          ),
+        ]
+        const currentTurns = chatToUpdate?.pendingAttachmentTurns || []
+        const queuedChat =
+          sdk.ai.chatConversations.prepareChatConversationForSave({
+            chatId,
+            userId,
+            title:
+              chatToUpdate?.title ||
+              sdk.ai.chatConversations.truncateTitle(
+                content || queuedAttachments[0]?.filename || "Document question"
+              ),
+            messages: chatToUpdate?.messages || [],
+            chat: {
+              ...(chatToUpdate || {}),
+              _id: chatId,
+              agentId,
+              messages: chatToUpdate?.messages || [],
+              channel,
+              attachments: mergedAttachments,
+              attachmentContextExpiresAt,
+              pendingAttachmentTurns: [
+                ...currentTurns,
+                ...(currentTurns.some(current => current.id === turn.id)
+                  ? []
+                  : [turn]),
+              ],
+            },
+            existingChat: chatToUpdate,
+          })
+        try {
+          await db.put(queuedChat)
+          saved = true
+        } catch (error) {
+          const isConflict =
+            error instanceof Error && "status" in error && error.status === 409
+          if (!isConflict) {
+            throw error
+          }
+          chatToUpdate = await db.tryGet<ChatConversation>(chatId)
+        }
+      }
+      if (!saved) {
+        throw new HTTPError("Conversation update conflict", 409)
+      }
+      await sdk.ai.chatConversations.attachmentIngestionQueue.scheduleConversationAttachmentIngestion(
+        {
+          workspaceId,
+          conversationId: chatId,
+          turnId: turn.id,
+        }
+      )
+      await sdk.ai.chatConversations.attachmentCleanupQueue.scheduleConversationAttachmentCleanup(
+        {
+          workspaceId,
+          conversationId: chatId,
+          expiresAt: attachmentContextExpiresAt!,
+        }
+      )
+      await cacheConversationId({
+        cacheKey: getCacheKey({ workspaceId, scope }),
+        chatId,
+        idleTimeoutMs,
+      })
+      await reply(
+        queuedAttachments.length
+          ? `Processing ${queuedAttachments
+              .map(file => file.filename)
+              .join(", ")}. I'll reply here when ready.`
+          : "The conversation files are still processing. I'll reply here when ready."
+      )
+      return
+    }
+
+    if (
+      existingChat &&
+      conversationAttachments.length &&
+      attachmentContextExpiresAt
+    ) {
+      try {
+        const renewedChat = {
+          ...existingChat,
+          attachmentContextExpiresAt,
+          updatedAt: new Date().toISOString(),
+        }
+        const { rev } = await db.put(renewedChat)
+        existingChat = { ...renewedChat, _rev: rev }
+      } catch (error) {
+        const message =
+          error instanceof HTTPError
+            ? error.message
+            : "Sorry, something went wrong while processing your request."
+        await reply(message)
+        return
+      }
+    }
+
     const draftChat: ChatConversationRequest = {
       _id: chatId,
-      chatAppId,
       agentId,
       title:
         existingChat?.title || sdk.ai.chatConversations.truncateTitle(content),
       messages: [...(existingChat?.messages || []), userMessage],
       channel,
+      ...(conversationAttachments.length && {
+        attachments: conversationAttachments,
+        attachmentContextExpiresAt,
+        attachmentVectorStoreId: existingChat?.attachmentVectorStoreId,
+      }),
     }
 
     let result: Awaited<ReturnType<typeof webhookChat>>
@@ -733,7 +944,6 @@ export const handleChatMessage = async ({
     await db.put(
       sdk.ai.chatConversations.prepareChatConversationForSave({
         chatId,
-        chatAppId,
         userId,
         title: existingChat?.title || result.title,
         messages: result.messages,
@@ -741,6 +951,15 @@ export const handleChatMessage = async ({
         existingChat,
       })
     )
+    if (conversationAttachments.length && attachmentContextExpiresAt) {
+      await sdk.ai.chatConversations.attachmentCleanupQueue.scheduleConversationAttachmentCleanup(
+        {
+          workspaceId,
+          conversationId: chatId,
+          expiresAt: attachmentContextExpiresAt,
+        }
+      )
+    }
     await cacheConversationId({
       cacheKey: getCacheKey({ workspaceId, scope }),
       chatId,

@@ -97,6 +97,8 @@ enum QueueEventType {
   AGENT_REQUEST_TRACKING_PROCESSOR = "agent-request-tracking-processor",
   AGENT_TEST_RUN_PROCESSOR = "agent-test-run-processor",
   KNOWLEDGE_SOURCE_SYNC_PROCESSOR = "knowledge-source-sync-processor",
+  CONVERSATION_ATTACHMENT_CLEANUP_PROCESSOR = "conversation-attachment-cleanup-processor",
+  CONVERSATION_ATTACHMENT_INGESTION_PROCESSOR = "conversation-attachment-ingestion-processor",
 }
 
 const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
@@ -117,6 +119,10 @@ const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
   [JobQueue.AGENT_TEST_RUN]: QueueEventType.AGENT_TEST_RUN_PROCESSOR,
   [JobQueue.KNOWLEDGE_SOURCE_SYNC]:
     QueueEventType.KNOWLEDGE_SOURCE_SYNC_PROCESSOR,
+  [JobQueue.CONVERSATION_ATTACHMENT_CLEANUP]:
+    QueueEventType.CONVERSATION_ATTACHMENT_CLEANUP_PROCESSOR,
+  [JobQueue.CONVERSATION_ATTACHMENT_INGESTION]:
+    QueueEventType.CONVERSATION_ATTACHMENT_INGESTION_PROCESSOR,
 }
 
 function logging(queue: Queue, jobQueue: JobQueue) {

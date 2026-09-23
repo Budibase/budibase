@@ -41,6 +41,21 @@ function main() {
 
   const imageTag = `main-v${version}-${channel}`
 
+  const dockerHubImagePattern =
+    /image:\s*docker\.io\/litellm\/litellm:main-v(\d+\.\d+\.\d+)-([a-zA-Z0-9]+)((?:\.[a-zA-Z0-9]+)*)/
+  const dockerHubImageReplacement = (
+    _match,
+    existingVersion,
+    existingChannel,
+    suffix
+  ) => {
+    const isSameRelease =
+      existingVersion === version && existingChannel === channel
+    return `image: docker.io/litellm/litellm:${imageTag}${
+      isSameRelease ? suffix : ""
+    }`
+  }
+
   const updates = [
     {
       path: path.join(repoRoot, "hosting", "single", "Dockerfile"),
@@ -57,8 +72,8 @@ function main() {
       update: content =>
         replaceRequired(
           content,
-          /image:\s*(?:docker\.litellm\.ai|ghcr\.io)\/berriai\/litellm:[^\s\n]+/,
-          `image: ghcr.io/berriai/litellm:${imageTag}`,
+          dockerHubImagePattern,
+          dockerHubImageReplacement,
           "hosting/docker-compose.yaml"
         ),
     },
@@ -67,8 +82,8 @@ function main() {
       update: content =>
         replaceRequired(
           content,
-          /image:\s*(?:docker\.litellm\.ai|ghcr\.io)\/berriai\/litellm:[^\s\n]+/,
-          `image: ghcr.io/berriai/litellm:${imageTag}`,
+          dockerHubImagePattern,
+          dockerHubImageReplacement,
           "hosting/docker-compose.build.yaml"
         ),
     },
@@ -77,8 +92,8 @@ function main() {
       update: content =>
         replaceRequired(
           content,
-          /image:\s*(?:docker\.litellm\.ai|ghcr\.io)\/berriai\/litellm:[^\s\n]+/,
-          `image: ghcr.io/berriai/litellm:${imageTag}`,
+          dockerHubImagePattern,
+          dockerHubImageReplacement,
           "hosting/docker-compose.dev.yaml"
         ),
     },

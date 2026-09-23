@@ -38,7 +38,7 @@ async function getAuditLogSqlQuery(
     tables: {},
     paginate: {
       limit: limit || GENERIC_PAGE_SIZE,
-      page: bookmark,
+      offset: (bookmark - 1) * GENERIC_PAGE_SIZE,
     },
     filters,
     resource: {
@@ -104,7 +104,7 @@ export async function searchSQL(
       await db.sql<AuditLogDoc>(mainQuery.sql, mainQuery.bindings)
     )
     let nextRow: AuditLogDoc | undefined
-    if (rows.length > limit) {
+    if (rows.length > GENERIC_PAGE_SIZE) {
       nextRow = rows.pop()
     }
     const response: SearchResponse<AuditLogDoc> = {

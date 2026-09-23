@@ -13,8 +13,9 @@ import { DataFetchType } from "."
 import { APIClient } from "../api/types"
 import { QueryUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
+import { normalizeSorts } from "./sort"
 
-const { buildQuery, limit: queryLimit, runQuery, sort } = QueryUtils
+const { buildQuery, limit: queryLimit, multiSort, runQuery, sort } = QueryUtils
 
 interface DataFetchStore<TDefinition, TQuery, TRow extends Row> {
   rows: TRow[]
@@ -83,6 +84,7 @@ export default abstract class BaseDataFetch<
   }
   store: Writable<DataFetchStore<TDefinition, TQuery, TRow>>
   derivedStore: Readable<DataFetchDerivedStore<TDefinition, TQuery, TRow>>
+  lastLoadId: number | undefined
 
   /**
    * Constructs a new DataFetch instance.
@@ -109,6 +111,7 @@ export default abstract class BaseDataFetch<
       sortColumn: null,
       sortOrder: SortOrder.ASCENDING,
       sortType: null,
+      sorts: null,
 
       // Pagination config
       paginate: true,
@@ -201,11 +204,22 @@ export default abstract class BaseDataFetch<
   async getInitialData() {
     const { filter, paginate } = this.options
 
+    // Load using IDs to track invocations and ensure we're handling the
+    // latest update
+    this.lastLoadId = Math.random()
+    const thisLoadId = this.lastLoadId
+
     // Fetch datasource definition and extract sort properties if configured
     const definition = await this.getDefinition()
 
     // Determine feature flags
     const features = await this.determineFeatureFlags()
+
+    // In case a newer load started while we waited, abandon this one before
+    // it writes its query to the store
+    if (thisLoadId !== this.lastLoadId) {
+      return
+    }
     this.features = {
       supportsSearch: !!features?.supportsSearch,
       supportsSort: !!features?.supportsSort,
@@ -219,42 +233,22 @@ export default abstract class BaseDataFetch<
     }
     schema = this.enrichSchema(schema)
 
-    // If an invalid sort column is specified, delete it
-    if (this.options.sortColumn && !schema[this.options.sortColumn]) {
+    const normalizedSorts = normalizeSorts(
+      this.options,
+      schema,
+      this.getDefaultSortColumn(definition, schema)
+    )
+
+    if (!normalizedSorts.length) {
       this.options.sortColumn = null
-    }
-
-    // If no sort column, get the default column for this datasource
-    if (!this.options.sortColumn) {
-      this.options.sortColumn = this.getDefaultSortColumn(definition, schema)
-    }
-
-    // If we don't have a sort column specified then just ensure we don't set
-    // any sorting params
-    if (!this.options.sortColumn) {
       this.options.sortOrder = SortOrder.ASCENDING
       this.options.sortType = null
+      this.options.sorts = []
     } else {
-      // Otherwise determine what sort type to use base on sort column
-      this.options.sortType = SortType.STRING
-      const fieldSchema = schema?.[this.options.sortColumn]
-      if (
-        fieldSchema?.type === FieldType.NUMBER ||
-        fieldSchema?.type === FieldType.BIGINT ||
-        fieldSchema?.responseType === FieldType.NUMBER ||
-        ("calculationType" in fieldSchema && fieldSchema?.calculationType)
-      ) {
-        this.options.sortType = SortType.NUMBER
-      }
-
-      // If no sort order, default to ascending
-      if (!this.options.sortOrder) {
-        this.options.sortOrder = SortOrder.ASCENDING
-      } else {
-        // Ensure sortOrder matches the enum
-        this.options.sortOrder =
-          this.options.sortOrder.toLowerCase() as SortOrder
-      }
+      this.options.sorts = normalizedSorts
+      this.options.sortColumn = normalizedSorts[0]?.field ?? null
+      this.options.sortOrder = normalizedSorts[0]?.order || SortOrder.ASCENDING
+      this.options.sortType = normalizedSorts[0]?.type || null
     }
 
     // Build the query
@@ -277,6 +271,11 @@ export default abstract class BaseDataFetch<
 
     // Actually fetch data
     const page = await this.getPage()
+
+    // In case fetching takes longer than a newer load, abandon these results
+    if (thisLoadId !== this.lastLoadId) {
+      return
+    }
     this.store.update($store => ({
       ...$store,
       loading: false,
@@ -298,6 +297,7 @@ export default abstract class BaseDataFetch<
       sortColumn,
       sortOrder,
       sortType,
+      sorts,
       limit,
       clientSideSearching,
       clientSideSorting,
@@ -314,8 +314,34 @@ export default abstract class BaseDataFetch<
     }
 
     // If we don't support sorting, do a client-side sort
-    if (!this.features.supportsSort && clientSideSorting && sortType) {
-      rows = sort(rows, sortColumn as any, sortOrder, sortType)
+    if (!this.features.supportsSort && clientSideSorting) {
+      const activeSorts = (sorts || []).filter(
+        sortEntry => sortEntry?.field && sortEntry?.order
+      )
+      if (activeSorts.length > 1) {
+        rows = multiSort(
+          rows,
+          Object.fromEntries(
+            activeSorts.map(sortEntry => [
+              sortEntry.field,
+              {
+                direction: sortEntry.order || SortOrder.ASCENDING,
+                type: sortEntry.type,
+              },
+            ])
+          )
+        )
+      } else if (activeSorts.length === 1) {
+        const [entry] = activeSorts
+        rows = sort(
+          rows,
+          entry.field as any,
+          entry.order || sortOrder,
+          entry.type || sortType || SortType.STRING
+        )
+      } else if (sortType && sortColumn) {
+        rows = sort(rows, sortColumn as any, sortOrder, sortType)
+      }
     }
 
     // If we don't support pagination, do a client-side limit

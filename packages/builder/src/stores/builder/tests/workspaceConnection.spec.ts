@@ -64,7 +64,7 @@ vi.mock("@/stores/builder/restTemplates", () => {
         }
         return (
           templates[nameOrId as RestTemplateId] ||
-          Object.values(templates).find(t => t.name === nameOrId)
+          Object.values(templates).find(t => t?.name === nameOrId)
         )
       }),
     },

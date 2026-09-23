@@ -14,7 +14,7 @@
   } from "@/types/routing"
   import { beforeUrlChange, goto } from "@roxi/routify"
   import ModalSideBar from "./ModalSideBar.svelte"
-  import SideNavLink from "@/pages/builder/workspace/[application]/_components/SideNav/SideNavLink.svelte"
+  import SideNavLink from "@/pages/builder/workspace/[workspaceId]/_components/SideNav/SideNavLink.svelte"
 
   export const show = () => modal.show()
 
@@ -397,7 +397,9 @@
 
   .setting-page {
     flex: 1 1 auto;
+    min-width: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: var(--spacing-l);
   }
 
@@ -437,6 +439,7 @@
 
   .setting-main {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     background-color: var(--background);

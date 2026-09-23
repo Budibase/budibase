@@ -1,0 +1,202 @@
+name: Merge public cloud back to master
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - cloud
+
+concurrency:
+  group: public-cloud-merge-back
+  cancel-in-progress: false
+
+jobs:
+  merge-back:
+    name: Merge public cloud into public master
+    if: github.repository == 'Budibase/budibase'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Generate release App token
+        id: release-app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: Budibase
+          repositories: budibase
+          permission-checks: read
+          permission-contents: write
+          permission-pull-requests: write
+          permission-workflows: write
+
+      - name: Check out the current public Cloud branch
+        uses: actions/checkout@v4
+        with:
+          repository: Budibase/budibase
+          ref: ${{ github.event_name == 'push' && github.sha || 'cloud' }}
+          token: ${{ steps.release-app-token.outputs.token }}
+          fetch-depth: 0
+
+      - name: Open or find the Cloud merge-back PR
+        id: merge-back-pr
+        env:
+          GH_TOKEN: ${{ steps.release-app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          source_commit=$(git rev-parse HEAD)
+          short_commit=$(git rev-parse --short=12 HEAD)
+          merge_back_branch="merge-back/cloud-$short_commit"
+          echo "source_commit=$source_commit" >> "$GITHUB_OUTPUT"
+
+          git fetch origin master
+          if git merge-base --is-ancestor "$source_commit" origin/master; then
+            echo "Public cloud is already contained in public master."
+            exit 0
+          fi
+
+          existing_pr=$(
+            gh pr list \
+              --repo Budibase/budibase \
+              --base master \
+              --head "$merge_back_branch" \
+              --state open \
+              --json url \
+              --jq '.[0].url // ""'
+          )
+
+          if [[ -n "$existing_pr" ]]; then
+            echo "Cloud merge-back PR already exists: $existing_pr"
+            echo "url=$existing_pr" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          remote_commit=$(git ls-remote --heads origin "$merge_back_branch" | cut -f1)
+          if [[ -n "$remote_commit" && "$remote_commit" != "$source_commit" ]]; then
+            echo "Merge-back branch exists at an unexpected commit: $merge_back_branch" >&2
+            exit 1
+          fi
+          if [[ -z "$remote_commit" ]]; then
+            git push origin "$source_commit:refs/heads/$merge_back_branch"
+          fi
+
+          pr_url=$(
+            gh pr create \
+              --repo Budibase/budibase \
+              --base master \
+              --head "$merge_back_branch" \
+              --title "Merge Cloud changes back to master" \
+              --body "Automatically merges the latest public Cloud branch changes back into master."
+          )
+
+          echo "Cloud merge-back PR created: $pr_url"
+          echo "url=$pr_url" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for required checks
+        id: required-checks
+        if: steps.merge-back-pr.outputs.url != ''
+        env:
+          GH_TOKEN: ${{ steps.release-app-token.outputs.token }}
+          PR_URL: ${{ steps.merge-back-pr.outputs.url }}
+          SOURCE_COMMIT: ${{ steps.merge-back-pr.outputs.source_commit }}
+        run: |
+          set -euo pipefail
+
+          pr_head_commit=$(
+            gh pr view "$PR_URL" \
+              --repo Budibase/budibase \
+              --json headRefOid \
+              --jq '.headRefOid'
+          )
+          if [[ "$pr_head_commit" != "$SOURCE_COMMIT" ]]; then
+            echo "Merge-back PR head does not match the selected Cloud commit." >&2
+            exit 1
+          fi
+          echo "head_commit=$pr_head_commit" >> "$GITHUB_OUTPUT"
+
+          checks_detected=false
+          for attempt in {1..30}; do
+            required_check_count=$(
+              gh pr checks "$PR_URL" \
+                --repo Budibase/budibase \
+                --required \
+                --json name \
+                --jq 'length' 2>/dev/null || true
+            )
+            required_check_count=${required_check_count:-0}
+
+            if (( required_check_count > 0 )); then
+              checks_detected=true
+              break
+            fi
+
+            echo "Waiting for required checks to be registered (attempt $attempt/30)..."
+            sleep 10
+          done
+
+          if [[ "$checks_detected" != "true" ]]; then
+            echo "No required checks were registered for $PR_URL." >&2
+            exit 1
+          fi
+
+          gh pr checks "$PR_URL" \
+            --repo Budibase/budibase \
+            --required \
+            --watch \
+            --fail-fast \
+            --interval 10
+
+      - name: Merge Cloud changes back to master
+        if: steps.merge-back-pr.outputs.url != ''
+        env:
+          GH_TOKEN: ${{ steps.release-app-token.outputs.token }}
+          PR_URL: ${{ steps.merge-back-pr.outputs.url }}
+          CHECKED_HEAD_COMMIT: ${{ steps.required-checks.outputs.head_commit }}
+        run: |
+          set -euo pipefail
+
+          gh pr merge "$PR_URL" \
+            --repo Budibase/budibase \
+            --merge \
+            --admin \
+            --match-head-commit "$CHECKED_HEAD_COMMIT" \
+            --delete-branch
+
+          pr_state=$(gh pr view "$PR_URL" --json state --jq '.state')
+          if [[ "$pr_state" != "MERGED" ]]; then
+            echo "The merge-back PR still requires manual intervention: $PR_URL" >&2
+            exit 1
+          fi
+
+      - name: Notify when manual intervention is required
+        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.RELEASE_SLACK_WEBHOOK_URL }}
+          PR_URL: ${{ steps.merge-back-pr.outputs.url }}
+          SOURCE_SHA: ${{ steps.merge-back-pr.outputs.source_commit || github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$SLACK_WEBHOOK_URL" ]]; then
+            echo "::warning::RELEASE_SLACK_WEBHOOK_URL is not configured; skipping the merge-back alert."
+            exit 0
+          fi
+
+          workflow_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          message=":warning: Public cloud could not be merged back into public master automatically. <$workflow_url|Open the workflow run>"
+
+          if [[ -n "$PR_URL" ]]; then
+            message="$message · <$PR_URL|Open the merge-back PR>"
+          elif [[ -n "$SOURCE_SHA" ]]; then
+            message="$message · Cloud commit: \`$SOURCE_SHA\`"
+          fi
+
+          payload=$(jq --null-input --arg text "$message" '{text: $text}')
+
+          curl --fail-with-body \
+            --request POST \
+            --header 'Content-type: application/json' \
+            --data "$payload" \
+            "$SLACK_WEBHOOK_URL"

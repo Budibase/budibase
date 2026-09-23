@@ -10,7 +10,10 @@ export interface EscalationEndpoints {
   fetchEscalationContext: (
     escalationId: string
   ) => Promise<EscalationContextDoc>
-  fetchEscalationResult: (escalationId: string) => Promise<EscalationResult>
+  fetchEscalationResult: (
+    escalationId: string,
+    signal?: AbortSignal
+  ) => Promise<EscalationResult>
   resolveEscalation: (
     escalationId: string,
     response: EscalationResponse
@@ -26,9 +29,10 @@ export const buildEscalationEndpoints = (
     })
   },
 
-  fetchEscalationResult: async escalationId => {
+  fetchEscalationResult: async (escalationId, signal) => {
     return await API.get({
       url: `/api/escalations/${escalationId}/result`,
+      signal,
     })
   },
 

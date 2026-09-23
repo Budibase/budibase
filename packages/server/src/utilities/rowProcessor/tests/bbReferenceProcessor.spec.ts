@@ -2,6 +2,8 @@ import _ from "lodash"
 import * as backendCore from "@budibase/backend-core"
 import { BBReferenceFieldSubType, User } from "@budibase/types"
 import {
+  fetchUserReferences,
+  getBBReferenceIds,
   processInputBBReference,
   processInputBBReferences,
   processOutputBBReference,
@@ -234,14 +236,43 @@ describe("bbReferenceProcessor", () => {
     })
   })
 
+  describe("fetchUserReferences", () => {
+    it("fetches all referenced users in a single cache call", async () => {
+      const [user1, user2] = _.sampleSize(users, 2)
+      const userId1 = user1._id!
+      const userId2 = user2._id!
+
+      const result = await config.doInTenant(() =>
+        fetchUserReferences([userId1, userId2, userId1])
+      )
+
+      expect(Object.keys(result)).toEqual(
+        expect.arrayContaining([userId1, userId2])
+      )
+      expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+      expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId1, userId2])
+    })
+
+    it("does not hit the cache when there is nothing to fetch", async () => {
+      const result = await config.doInTenant(() => fetchUserReferences([]))
+
+      expect(result).toEqual({})
+      expect(cacheGetUsersSpy).not.toHaveBeenCalled()
+    })
+  })
+
   describe("processOutputBBReference", () => {
     describe("subtype user", () => {
       it("fetches user given a valid string id", async () => {
         const user = _.sample(users)!
         const userId = user._id!
 
-        const result = await config.doInTenant(() =>
-          processOutputBBReference(userId, BBReferenceFieldSubType.USER)
+        const result = await config.doInTenant(async () =>
+          processOutputBBReference(
+            userId,
+            BBReferenceFieldSubType.USER,
+            await fetchUserReferences([userId])
+          )
         )
 
         expect(result).toEqual({
@@ -252,24 +283,24 @@ describe("bbReferenceProcessor", () => {
           lastName: user.lastName,
           fullName: `${user.firstName} ${user.lastName}`,
         })
-        expect(cacheGetUserSpy).toHaveBeenCalledTimes(1)
-        expect(cacheGetUserSpy).toHaveBeenCalledWith({
-          userId,
-        })
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId])
       })
 
       it("returns undefined given an unexisting user", async () => {
         const userId = generator.guid()
 
-        const result = await config.doInTenant(() =>
-          processOutputBBReference(userId, BBReferenceFieldSubType.USER)
+        const result = await config.doInTenant(async () =>
+          processOutputBBReference(
+            userId,
+            BBReferenceFieldSubType.USER,
+            await fetchUserReferences([userId])
+          )
         )
 
         expect(result).toBeUndefined()
-        expect(cacheGetUserSpy).toHaveBeenCalledTimes(1)
-        expect(cacheGetUserSpy).toHaveBeenCalledWith({
-          userId,
-        })
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId])
       })
     })
   })
@@ -280,8 +311,12 @@ describe("bbReferenceProcessor", () => {
         const user = _.sample(users)!
         const userId = user._id!
 
-        const result = await config.doInTenant(() =>
-          processOutputBBReferences(userId, BBReferenceFieldSubType.USER)
+        const result = await config.doInTenant(async () =>
+          processOutputBBReferences(
+            userId,
+            BBReferenceFieldSubType.USER,
+            await fetchUserReferences([userId])
+          )
         )
 
         expect(result).toEqual([
@@ -302,11 +337,13 @@ describe("bbReferenceProcessor", () => {
         const [user1, user2] = _.sampleSize(users, 2)
         const userId1 = user1._id!
         const userId2 = user2._id!
+        const input = [userId1, userId2].join(",")
 
-        const result = await config.doInTenant(() =>
+        const result = await config.doInTenant(async () =>
           processOutputBBReferences(
-            [userId1, userId2].join(","),
-            BBReferenceFieldSubType.USER
+            input,
+            BBReferenceFieldSubType.USER,
+            await fetchUserReferences(getBBReferenceIds(input))
           )
         )
 
@@ -342,8 +379,12 @@ describe("bbReferenceProcessor", () => {
           userId2,
         ].join(",")
 
-        const result = await config.doInTenant(() =>
-          processOutputBBReferences(input, BBReferenceFieldSubType.USER)
+        const result = await config.doInTenant(async () =>
+          processOutputBBReferences(
+            input,
+            BBReferenceFieldSubType.USER,
+            await fetchUserReferences(getBBReferenceIds(input))
+          )
         )
 
         expect(result).toHaveLength(2)

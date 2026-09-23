@@ -18,7 +18,7 @@ export async function triggerAutomation(
     method: "POST",
     body: JSON.stringify(parameters),
     headers: {
-      [constants.Header.APP_ID]: appId,
+      [constants.Header.WORKSPACE_ID]: appId,
       [constants.Header.API_KEY]: env.INTERNAL_API_KEY,
       ["Content-Type"]: "application/json",
     },

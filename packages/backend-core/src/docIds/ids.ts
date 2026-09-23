@@ -1,3 +1,4 @@
+import type { CustomRestTemplateId } from "@budibase/types"
 import {
   DocumentType,
   InternalTable,
@@ -125,10 +126,6 @@ export const generateAgentID = () => {
   return `${DocumentType.AGENT}${SEPARATOR}${newid()}`
 }
 
-export const generateChatAppID = () => {
-  return `${DocumentType.CHAT_APP}${SEPARATOR}${newid()}`
-}
-
 export const generateChatConversationID = () => {
   return `${DocumentType.CHAT_CONVERSATION}${SEPARATOR}${newid()}`
 }
@@ -200,4 +197,8 @@ export const generateFunctionRunLogID = (runId: string) => {
 
 export const generateKnowledgeBaseID = () => {
   return `${DocumentType.KNOWLEDGE_BASE}${SEPARATOR}${newid()}`
+}
+
+export const generateRestTemplateID = (): CustomRestTemplateId => {
+  return `${DocumentType.REST_TEMPLATE}${SEPARATOR}${newid()}`
 }

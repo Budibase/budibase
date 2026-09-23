@@ -63,9 +63,14 @@ export class BullEscalationProcessor implements IEscalationProcessor {
             agentId: input.agentId,
             operationId: input.operationId,
             sessionId: input.context.sessionId,
+            ...(input.context.conversationId && {
+              conversationId: input.context.conversationId,
+            }),
             ...((input.requestId ?? existing?.requestId) && {
               requestId: input.requestId ?? existing?.requestId,
             }),
+            ...(input.rule && { rule: input.rule }),
+            ...(input.policy && { policy: input.policy }),
           }
 
     const doc: EscalationContextDoc = {
@@ -82,6 +87,7 @@ export class BullEscalationProcessor implements IEscalationProcessor {
       isTest,
       ...(input.title && { title: input.title }),
       ...(input.summary && { summary: input.summary }),
+      ...(input.reviewContext && { reviewContext: input.reviewContext }),
       ...(input.recipients?.length && { recipients: input.recipients }),
       ...(input.resolutionStrategy && {
         resolutionStrategy: input.resolutionStrategy,
@@ -159,6 +165,17 @@ export class BullEscalationProcessor implements IEscalationProcessor {
         console.log("Escalation resolved before resume job was enqueued", {
           escalationId,
         })
+        await addEscalationJob(
+          {
+            phase: "waiting",
+            escalationId,
+            appId: doc.appId,
+            tenantId: doc.tenantId,
+            isTest: doc.isTest,
+          },
+          0,
+          getResumeJobId(escalationId)
+        )
       }
       return
     }

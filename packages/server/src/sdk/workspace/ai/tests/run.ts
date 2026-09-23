@@ -93,17 +93,16 @@ const buildTestMessages = ({
   testCase,
 }: {
   testCase: AgentTestCase
-}): ModelMessage[] => [
-  ...(testCase.context
-    ? [
-        {
-          role: "system" as const,
-          content: `Additional test context:\n${testCase.context}\n\nUse this context when answering the user.`,
-        },
-      ]
-    : []),
-  { role: "user", content: testCase.input },
-]
+}): ModelMessage[] => [{ role: "user", content: testCase.input }]
+
+const buildTestContextInstructions = ({
+  testCase,
+}: {
+  testCase: AgentTestCase
+}) =>
+  testCase.context
+    ? `Additional test context:\n${testCase.context}\n\nUse this context when answering the user.`
+    : undefined
 
 const buildResult = ({
   testCase,
@@ -232,6 +231,7 @@ async function runAgentForCase({
   sessionId,
   startedAt,
   aiConfigId,
+  additionalInstructions,
 }: {
   agent: Agent
   user: ContextUser
@@ -240,6 +240,7 @@ async function runAgentForCase({
   sessionId: string
   startedAt: string
   aiConfigId: string
+  additionalInstructions?: string
 }): Promise<{
   response: string
   toolCalls: string[]
@@ -264,6 +265,7 @@ async function runAgentForCase({
     sessionId,
     startedAt,
     user,
+    additionalInstructions,
   })
 
   const stream = await run.stream({
@@ -289,7 +291,7 @@ async function runAgentForCase({
     selectedOperationName: run.selectedOperation?.name,
     promptInstructions: run.selectedOperation?.promptInstructions,
     enabledTools: run.selectedOperation?.enabledTools
-      ? [...run.selectedOperation.enabledTools]
+      ? run.selectedOperation.enabledTools.map(tool => tool.toolName)
       : undefined,
     knowledgeBases: run.selectedOperation?.knowledgeBases
       ? [...run.selectedOperation.knowledgeBases]
@@ -403,6 +405,7 @@ async function runCase({
       sessionId,
       startedAt,
       aiConfigId,
+      additionalInstructions: buildTestContextInstructions({ testCase }),
     })
     sessionLogIndexer = agentRun.sessionLogIndexer
     const toolDisplayNames = {

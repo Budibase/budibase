@@ -5,9 +5,11 @@
   import { users } from "@/stores/portal/users"
   import { Layout, Table, notifications } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
+  import type { RequiredKeys } from "@budibase/types"
   import {
     type GetUserInvitesResponse,
     type InviteWithCode,
+    type UserAdminInfo,
   } from "@budibase/types"
   import { onMount } from "svelte"
   import RouteActions from "@/settings/components/RouteActions.svelte"
@@ -19,22 +21,28 @@
     _id: string
     email: string
     builder?: InviteWithCode["info"]["builder"]
-    admin?: InviteWithCode["info"]["admin"]
+    admin?: UserAdminInfo["admin"]
     userGroups?: string[]
   }
 
-  let selectedInvites: ParsedInvite[] = []
-  let invitesLoaded = false
-  let pendingInvites: GetUserInvitesResponse = []
-  let parsedInvites: ParsedInvite[] = []
-  let customRenderers = [
+  interface SchemaField {
+    displayName?: string
+    sortable: boolean
+    width: string
+    minWidth?: string
+  }
+
+  let selectedInvites = $state<ParsedInvite[]>([])
+  let invitesLoaded = $state(false)
+  let pendingInvites = $state<GetUserInvitesResponse>([])
+  const customRenderers = [
     { column: "email", component: EmailTableRenderer },
     { column: "userGroups", component: GroupsTableRenderer },
     // { column: "apps", component: AppsTableRenderer },
     { column: "role", component: RoleTableRenderer },
   ]
 
-  $: schema = {
+  const schema = $derived<Record<string, SchemaField>>({
     email: {
       sortable: false,
       width: "1fr",
@@ -48,11 +56,7 @@
     ...($licensing.groupsEnabled && {
       userGroups: { sortable: false, displayName: "Groups", width: "1fr" },
     }),
-  }
-
-  $: pendingSchema = getPendingSchema(schema)
-  $: readonly = $auth.user ? !sdk.users.isAdmin($auth.user) : false
-  $: parsedInvites = invitesToSchema(pendingInvites)
+  })
 
   const invitesToSchema = (invites: InviteWithCode[]): ParsedInvite[] => {
     return invites.map(invite => {
@@ -62,13 +66,17 @@
         _id: invite.code,
         email: invite.email,
         builder: builder ? { ...builder } : undefined,
-        admin: admin ? { ...admin } : undefined,
+        admin: admin
+          ? ({ global: !!admin.global } satisfies RequiredKeys<
+              ParsedInvite["admin"]
+            >)
+          : undefined,
         userGroups: userGroups,
-      }
+      } satisfies ParsedInvite
     })
   }
 
-  const getPendingSchema = (tblSchema: any) => {
+  const getPendingSchema = (tblSchema: Record<string, SchemaField>) => {
     if (!tblSchema) {
       return {}
     }
@@ -76,6 +84,10 @@
     pendingSchema.email.displayName = "Pending Users"
     return pendingSchema
   }
+
+  const pendingSchema = $derived(getPendingSchema(schema))
+  const readonly = $derived($auth.user ? !sdk.users.isAdmin($auth.user) : false)
+  const parsedInvites = $derived(invitesToSchema(pendingInvites))
 
   const deleteUsers = async () => {
     try {

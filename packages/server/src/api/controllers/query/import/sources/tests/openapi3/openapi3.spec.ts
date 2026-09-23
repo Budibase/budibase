@@ -1,5 +1,6 @@
 import fs from "fs"
 import path from "path"
+import { pathToFileURL } from "url"
 import SwaggerParser from "@apidevtools/swagger-parser"
 import { BodyType } from "@budibase/types"
 
@@ -58,9 +59,41 @@ describe("OpenAPI3 Import", () => {
     expect(supported).toBe(true)
     expect(openapi3.document).toBe(dereferenced)
 
-    expect(parseSpy).toHaveBeenCalled()
-    expect(validateSpy).toHaveBeenCalled()
-    expect(dereferenceSpy).toHaveBeenCalled()
+    const parserOptions = {
+      resolve: {
+        external: false,
+      },
+    }
+    expect(parseSpy).toHaveBeenCalledWith({}, parserOptions)
+    expect(validateSpy).toHaveBeenCalledWith(document, parserOptions)
+    expect(dereferenceSpy).toHaveBeenCalledWith(document, parserOptions)
+  })
+
+  it("does not resolve external file references", async () => {
+    const referencedFile = path.join(__dirname, "data/petstore/petstore.json")
+    const externalRef = `${pathToFileURL(referencedFile).href}#/components/schemas/Pet`
+    const readFileSpy = jest.spyOn(fs.promises, "readFile")
+    const spec = JSON.stringify({
+      openapi: "3.0.0",
+      info: {
+        title: "External reference",
+        version: "1.0.0",
+      },
+      paths: {},
+      components: {
+        schemas: {
+          External: {
+            $ref: externalRef,
+          },
+        },
+      },
+    })
+
+    expect(await openapi3.tryLoad(spec)).toBe(true)
+    expect(readFileSpy).not.toHaveBeenCalled()
+    expect(openapi3.document.components?.schemas?.External).toEqual({
+      $ref: externalRef,
+    })
   })
 
   it("creates bindings for server variables", async () => {

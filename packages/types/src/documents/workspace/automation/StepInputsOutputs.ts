@@ -16,6 +16,7 @@ import {
 } from "./automation"
 import { AutomationStep } from "./schema"
 import type { EscalationRecipient, EscalationResponse } from "../escalation"
+import type { ToolExecutionPrincipal } from "../../global/agents"
 import type { JSONValue } from "../../../core"
 import type { FunctionError, FunctionRunStatus } from "../../../sdk/functions"
 
@@ -108,7 +109,7 @@ export type ExecuteQueryStepOutputs = BaseAutomationOutputs & {
 
 export interface ExecuteFunctionStepInputs {
   functionId: string
-  inputs: JSONEditorInput<string>
+  inputs: Record<string, JSONValue>
   continueOnError?: boolean
 }
 
@@ -283,6 +284,7 @@ export type ExtractFileDataStepOutputs = {
 export type AgentStepInputs = {
   agentId: string
   prompt: string
+  executionPrincipal?: ToolExecutionPrincipal
   useStructuredOutput?: boolean
   outputSchema?: Record<string, any>
 }
@@ -377,7 +379,7 @@ export type GetRowStepOutputs = BaseAutomationOutputs & {
 
 export type SmtpEmailStepInputs = {
   to: string
-  from: string
+  from?: string
   replyTo?: string
   subject: string
   contents: string
