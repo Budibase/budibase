@@ -347,6 +347,7 @@ export interface AgentRunContext {
   systemPrompt: string
   tools: ToolSet
   toolDisplayNames: Record<string, string>
+  mutatingToolNames: Set<string>
   executionContext?: AgentExecutionContext
 }
 
@@ -596,6 +597,7 @@ const prepareAgentChatRunInternal = async ({
     operationIntent,
     tools,
     toolDisplayNames,
+    mutatingToolNames,
     systemPrompt: baseSystemPrompt,
   } = runContext
   const retrievedKnowledgeSourceById = new Map<
@@ -641,7 +643,7 @@ const prepareAgentChatRunInternal = async ({
         })
       : undefined
   let suspended = false
-  const toolCallRetryGuard = createToolCallRetryGuard()
+  const toolCallRetryGuard = createToolCallRetryGuard(mutatingToolNames)
   const agentRunner = new ToolLoopAgent({
     model: wrapLanguageModel({
       model: llm.chat,

@@ -24,7 +24,9 @@ export interface ToolCallRetryGuard {
   shouldDisableTools: () => boolean
 }
 
-export const createToolCallRetryGuard = (): ToolCallRetryGuard => {
+export const createToolCallRetryGuard = (
+  mutatingToolNames: ReadonlySet<string>
+): ToolCallRetryGuard => {
   const failureCounts = new Map<string, number>()
   let disableTools = false
 
@@ -33,7 +35,10 @@ export const createToolCallRetryGuard = (): ToolCallRetryGuard => {
     inputSchema,
     error,
   }) => {
-    if (!InvalidToolInputError.isInstance(error)) {
+    if (
+      !mutatingToolNames.has(toolCall.toolName) ||
+      !InvalidToolInputError.isInstance(error)
+    ) {
       return null
     }
 

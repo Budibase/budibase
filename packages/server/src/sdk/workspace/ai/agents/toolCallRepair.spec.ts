@@ -3,7 +3,7 @@ import { createToolCallRetryGuard } from "./toolCallRepair"
 
 describe("tool call repair", () => {
   it("repairs markdown-wrapped schema keys", async () => {
-    const retryGuard = createToolCallRetryGuard()
+    const retryGuard = createToolCallRetryGuard(new Set(["create_expense"]))
     const input = JSON.stringify({
       data: { "`Expense Tags`": ["Other"], Cost: 10 },
     })
@@ -57,7 +57,7 @@ describe("tool call repair", () => {
   })
 
   it("disables tools after the same invalid call fails twice", async () => {
-    const retryGuard = createToolCallRetryGuard()
+    const retryGuard = createToolCallRetryGuard(new Set(["create_expense"]))
     const input = JSON.stringify({ data: { Cost: 10, Notes: "Breakfast" } })
     const error = new InvalidToolInputError({
       toolInput: input,
@@ -103,5 +103,35 @@ describe("tool call repair", () => {
 
     await retryGuard.repairToolCall(options)
     expect(retryGuard.shouldDisableTools()).toBe(true)
+  })
+
+  it("does not repair or count read tool failures", async () => {
+    const retryGuard = createToolCallRetryGuard(new Set())
+    const input = JSON.stringify({ "`query`": "expenses" })
+
+    await expect(
+      retryGuard.repairToolCall({
+        instructions: undefined,
+        system: undefined,
+        messages: [],
+        tools: {},
+        toolCall: {
+          type: "tool-call",
+          toolCallId: "call_1",
+          toolName: "search_expenses",
+          input,
+        },
+        inputSchema: async () => ({
+          type: "object",
+          properties: { query: { type: "string" } },
+        }),
+        error: new InvalidToolInputError({
+          toolInput: input,
+          toolName: "search_expenses",
+          cause: new Error("invalid input"),
+        }),
+      })
+    ).resolves.toBeNull()
+    expect(retryGuard.shouldDisableTools()).toBe(false)
   })
 })

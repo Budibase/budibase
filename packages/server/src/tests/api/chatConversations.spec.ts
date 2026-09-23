@@ -494,6 +494,7 @@ describe("chat conversation preview stream", () => {
       tools,
       toolDisplayNames: {},
       toolSources: {},
+      mutatingToolNames: new Set(),
     })
     ;(
       sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
@@ -1018,6 +1019,7 @@ describe("Agent chat tool call tracking", () => {
       tools: { tool1: {} as any },
       toolDisplayNames: {},
       toolSources: {},
+      mutatingToolNames: new Set(),
     })
     ;(
       sdk.ai.llm.createLLM as jest.MockedFunction<typeof sdk.ai.llm.createLLM>
