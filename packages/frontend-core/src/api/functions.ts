@@ -1,4 +1,7 @@
 import type {
+  BuildFunctionResponse,
+  CompileFunctionRequest,
+  CompileFunctionResponse,
   CreateFunctionRequest,
   CreateFunctionResponse,
   FetchFunctionResponse,
@@ -13,6 +16,13 @@ export interface FunctionEndpoints {
   getFunctions: () => Promise<FetchFunctionsResponse>
   getFunctionQueryCatalog: () => Promise<FetchFunctionQueryCatalogResponse>
   getFunction: (functionId: string) => Promise<FetchFunctionResponse>
+  compileFunction: (
+    fn: CompileFunctionRequest
+  ) => Promise<CompileFunctionResponse>
+  buildFunction: (
+    functionId: string,
+    revision: string
+  ) => Promise<BuildFunctionResponse>
   createFunction: (fn: CreateFunctionRequest) => Promise<CreateFunctionResponse>
   updateFunction: (
     functionId: string,
@@ -39,6 +49,20 @@ export const buildFunctionEndpoints = (
   getFunction: async functionId => {
     return await API.get({
       url: `/api/functions/${functionId}`,
+    })
+  },
+
+  compileFunction: async fn => {
+    return await API.post({
+      url: "/api/functions/compile",
+      body: fn,
+    })
+  },
+
+  buildFunction: async (functionId, revision) => {
+    return await API.post({
+      url: `/api/functions/${functionId}/build`,
+      body: { _rev: revision },
     })
   },
 
