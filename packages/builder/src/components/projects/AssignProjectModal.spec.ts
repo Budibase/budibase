@@ -60,7 +60,7 @@ vi.mock("@/stores/portal", async () => {
 
 vi.mock("@/stores/builder", async () => {
   const { readable } = await import("svelte/store")
-  return { appStore: readable({ appId: "app_1" }) }
+  return { workspaceStore: readable({ appId: "app_1" }) }
 })
 
 import AssignProjectModal from "./AssignProjectModal.svelte"
