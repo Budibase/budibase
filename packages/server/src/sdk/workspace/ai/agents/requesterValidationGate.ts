@@ -1,120 +1,387 @@
+import { safeValidateTypes, type FlexibleSchema } from "@ai-sdk/provider-utils"
 import {
+  LockName,
+  LockType,
   ToolValidationResultStatus,
-  type ChatConversationRequest,
+  type ChatConversationChannel,
 } from "@budibase/types"
-import { getToolName, isToolUIPart, tool, type ToolSet } from "ai"
-import { z } from "zod"
+import { cache, locks } from "@budibase/backend-core"
+import type { ModelMessage } from "ai"
 import type { RequesterValidationRuntime } from "../../../../ai/tools"
 
-export const REQUESTER_VALIDATION_TOOL_NAME = "confirm_requester_action"
+export type RequesterActionStatus =
+  | "collecting_input"
+  | "awaiting_confirmation"
+  | "executing"
+  | "completed"
+  | "rejected"
+  | "failed"
 
-export interface PendingRequesterToolCall {
-  toolCallId: string
+export interface RequesterActionContext {
+  agentId: string
+  operationId: string
+  conversationId: string
+  requestId?: string
+  requesterId: string
+  requesterRole: string
+  channel?: ChatConversationChannel["provider"]
+  externalUserId?: string
+  externalConversationId?: string
   toolName: string
+  readableName?: string
   sourceId?: string
-  args: unknown
+  toolCallId: string
+  partialArguments: unknown
+  confirmedArguments?: unknown
+  status: RequesterActionStatus
+  validationMessage?: string
+  result?: unknown
+  error?: string
+  responderId?: string
+  createdAt: string
+  updatedAt: string
+}
+
+const requesterActionKey = (conversationId: string) =>
+  `agent:requester-action:${conversationId}`
+
+export const getRequesterAction = async (conversationId: string) =>
+  ((await cache.get(requesterActionKey(conversationId))) as
+    | RequesterActionContext
+    | null) ?? undefined
+
+export const getActiveRequesterAction = async (conversationId: string) => {
+  const action = await getRequesterAction(conversationId)
+  return action &&
+    (action.status === "collecting_input" ||
+      action.status === "awaiting_confirmation" ||
+      action.status === "executing")
+    ? action
+    : undefined
+}
+
+const saveRequesterAction = async (
+  action: Omit<RequesterActionContext, "createdAt" | "updatedAt">
+) => {
+  const existing = await getRequesterAction(action.conversationId)
+  const timestamp = new Date().toISOString()
+  const next: RequesterActionContext = {
+    ...action,
+    createdAt: existing?.createdAt ?? timestamp,
+    updatedAt: timestamp,
+  }
+  await cache.store(requesterActionKey(action.conversationId), next)
+  return next
+}
+
+export const transitionRequesterAction = async ({
+  conversationId,
+  from,
+  to,
+  update = {},
+}: {
+  conversationId: string
+  from: RequesterActionStatus
+  to: RequesterActionStatus
+  update?: Partial<RequesterActionContext>
+}) => {
+  const { result } = await locks.doWithLock(
+    {
+      name: LockName.REQUESTER_CONFIRMATION,
+      resource: conversationId,
+      type: LockType.DEFAULT,
+      ttl: 5000,
+    },
+    async () => {
+      const existing = await getRequesterAction(conversationId)
+      if (!existing || existing.status !== from) {
+        return { confirmation: existing, changed: false }
+      }
+      const confirmation: RequesterActionContext = {
+        ...existing,
+        ...update,
+        status: to,
+        updatedAt: new Date().toISOString(),
+      }
+      await cache.store(requesterActionKey(conversationId), confirmation)
+      return { confirmation, changed: true }
+    }
+  )
+  return result
 }
 
 export interface RequesterValidationContext {
-  pendingCalls: PendingRequesterToolCall[]
+  agentId: string
+  operationId: string
+  conversationId: string
+  getRequestId?: () => string | undefined
+  requesterId: string
+  requesterRole: string
+  channel?: ChatConversationChannel
 }
 
-export const getPendingRequesterToolCalls = (
-  chat?: ChatConversationRequest
-): PendingRequesterToolCall[] => {
-  if (!chat?.messages.length) {
-    return []
-  }
-  const latestUserIndex = chat.messages.findLastIndex(
-    message => message.role === "user"
-  )
-  if (latestUserIndex < 1) {
-    return []
-  }
-  const proposal = chat.messages[latestUserIndex - 1]
-  if (proposal?.role !== "assistant") {
-    return []
-  }
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  !!value && typeof value === "object" && !Array.isArray(value)
 
-  return proposal.parts.flatMap(part => {
-    if (!isToolUIPart(part) || part.state !== "output-available") {
-      return []
+const mergeArguments = (previous: unknown, incoming: unknown): unknown => {
+  if (!isRecord(previous) || !isRecord(incoming)) {
+    return incoming
+  }
+  return Object.fromEntries(
+    Object.entries({ ...previous, ...incoming }).map(([key, value]) => [
+      key,
+      key in previous && key in incoming
+        ? mergeArguments(previous[key], incoming[key])
+        : value,
+    ])
+  )
+}
+
+const messageText = (message: ModelMessage) =>
+  (typeof message.content === "string"
+    ? message.content
+    : JSON.stringify(message.content)
+  ).toLocaleLowerCase()
+
+const evidenceText = (messages: ModelMessage[] = []) => ({
+  requester: messages
+    .filter(message => message.role === "user")
+    .map(messageText)
+    .join("\n"),
+  tools: messages
+    .filter(message => message.role === "tool")
+    .map(messageText)
+    .join("\n"),
+})
+
+const primitiveIsGrounded = (value: unknown, evidence: string) => {
+  if (typeof value === "number") {
+    const escaped = String(value).replace(".", "\\.")
+    return new RegExp(`(^|[^0-9.])${escaped}([^0-9.]|$)`).test(evidence)
+  }
+  if (typeof value === "string") {
+    return evidence.includes(value.toLocaleLowerCase())
+  }
+  if (typeof value === "boolean") {
+    return evidence.includes(String(value))
+  }
+  return value === null && evidence.includes("null")
+}
+
+const isInternalReference = (path: string[]) =>
+  /(^|[_\s])(id|rev|key|identifier)$/i.test(path.at(-1) ?? "") ||
+  /(Id|ID|Rev|Key)$/.test(path.at(-1) ?? "")
+
+const groundedArguments = (
+  value: unknown,
+  evidence: ReturnType<typeof evidenceText>,
+  path: string[] = []
+): unknown => {
+  if (Array.isArray(value)) {
+    return value
+      .map(item => groundedArguments(item, evidence, path))
+      .filter(item => item !== undefined)
+  }
+  if (isRecord(value)) {
+    return Object.fromEntries(
+      Object.entries(value).flatMap(([key, child]) => {
+        const grounded = groundedArguments(child, evidence, [...path, key])
+        return grounded === undefined ? [] : [[key, grounded]]
+      })
+    )
+  }
+  const source = isInternalReference(path)
+    ? `${evidence.requester}\n${evidence.tools}`
+    : evidence.requester
+  return primitiveIsGrounded(value, source) ? value : undefined
+}
+
+interface ValidationIssue {
+  path?: Array<PropertyKey>
+  message?: string
+  values?: unknown[]
+  options?: unknown[]
+}
+
+const validationIssues = (error: unknown): ValidationIssue[] => {
+  if (!isRecord(error)) {
+    return []
+  }
+  if (Array.isArray(error.issues)) {
+    return error.issues as ValidationIssue[]
+  }
+  return validationIssues(error.cause)
+}
+
+const friendlyLabel = (path: Array<PropertyKey>) =>
+  String(path.at(-1) ?? "value").replace(/([a-z])([A-Z])/g, "$1 $2")
+
+const buildClarificationMessage = (error: unknown) => {
+  const issue = validationIssues(error)[0]
+  const field = friendlyLabel(issue?.path ?? [])
+  const options = issue?.values ?? issue?.options
+  const question = `What ${field} should I use?`
+  return options?.length
+    ? `${question}\nChoose one of: ${options.map(String).join(", ")}.`
+    : question
+}
+
+const displayEntries = (value: unknown, prefix = ""): string[] => {
+  if (!isRecord(value)) {
+    return [`- ${prefix || "Value"}: ${JSON.stringify(value)}`]
+  }
+  return Object.entries(value).flatMap(([key, child]) => {
+    if (!prefix && key === "data" && isRecord(child)) {
+      return displayEntries(child)
     }
-    const output = part.output as
-      | { status?: string; sourceId?: string }
-      | undefined
-    if (output?.status !== ToolValidationResultStatus.PENDING) {
-      return []
+    const label = prefix ? `${prefix} · ${key}` : key
+    if (isRecord(child)) {
+      return displayEntries(child, label)
     }
-    return [
-      {
-        toolCallId: part.toolCallId,
-        toolName: getToolName(part),
-        sourceId: output.sourceId,
-        args: part.input,
-      },
-    ]
+    const rendered = Array.isArray(child)
+      ? child.map(String).join(", ")
+      : String(child)
+    return [`- ${label}: ${rendered}`]
   })
 }
+
+const actionDescription = (readableName?: string, toolName?: string) =>
+  (() => {
+    const value = readableName ?? toolName ?? "perform this action"
+    const [source, action] = value.split(".")
+    if (action === "create_row") {
+      return `create a new entry in ${source}`
+    }
+    if (action === "update_row") {
+      return `update the entry in ${source}`
+    }
+    if (action === "delete_row") {
+      return `delete the entry from ${source}`
+    }
+    return value.replace(/[._-]+/g, " ").trim()
+  })()
+
+export const buildConfirmationMessage = ({
+  readableName,
+  toolName,
+  arguments: args,
+}: {
+  readableName?: string
+  toolName: string
+  arguments: unknown
+}) =>
+  [
+    `Please confirm that you want me to ${actionDescription(readableName, toolName)}:`,
+    "",
+    ...displayEntries(args),
+    "",
+    "Should I go ahead?",
+  ].join("\n")
+
+const confirmationBase = ({
+  context,
+  toolName,
+  readableName,
+  sourceId,
+  toolCallId,
+  partialArguments,
+}: {
+  context: RequesterValidationContext
+  toolName: string
+  readableName?: string
+  sourceId?: string
+  toolCallId: string
+  partialArguments: unknown
+}): Omit<RequesterActionContext, "createdAt" | "updatedAt" | "status"> => ({
+  agentId: context.agentId,
+  operationId: context.operationId,
+  conversationId: context.conversationId,
+  requestId: context.getRequestId?.(),
+  requesterId: context.requesterId,
+  requesterRole: context.requesterRole,
+  channel: context.channel?.provider,
+  externalUserId: context.channel?.externalUserId,
+  externalConversationId:
+    context.channel?.conversationId ?? context.channel?.channelId,
+  toolName,
+  readableName,
+  sourceId,
+  toolCallId,
+  partialArguments,
+})
 
 export const createRequesterValidationRuntime = ({
   toolName,
   readableName,
   sourceId,
+  inputSchema,
+  context,
 }: {
   toolName: string
   readableName?: string
   sourceId?: string
+  inputSchema: FlexibleSchema
+  context: RequesterValidationContext
 }): RequesterValidationRuntime => ({
-  intercept: async (input, { toolCallId }) => ({
-    status: ToolValidationResultStatus.PENDING,
-    title: `Review ${readableName ?? toolName}`,
-    toolName,
-    sourceId,
-    arguments: input,
-    validationToolCallId: toolCallId,
-    note:
-      'The action has not run. Say "Please confirm the following details ' +
-      'before I [perform the action]", show every proposed argument, then ' +
-      'ask "Should I go ahead?" Do not say the action is prepared, ready, ' +
-      "or completed. Do not expose an approval code.",
-  }),
-})
-
-export const createRequesterValidationResolutionTool = ({
-  pendingCalls,
-  executableTools,
-}: {
-  pendingCalls: PendingRequesterToolCall[]
-  executableTools: ToolSet
-}) => {
-  const pendingById = new Map(
-    pendingCalls.map(pending => [pending.toolCallId, pending])
-  )
-  return tool({
-    description:
-      "Execute one previously proposed action only when the user's latest " +
-      "message clearly and unambiguously confirms that exact action. Do " +
-      "not call this for a rejection, a parameter change, an unrelated " +
-      "message, or an ambiguous response. Available internal action IDs: " +
-      pendingCalls.map(pending => pending.toolCallId).join(", "),
-    inputSchema: z.object({
-      actionId: z.string().describe("The internal action ID to execute"),
-    }),
-    execute: async ({ actionId }, executionOptions) => {
-      const pending = pendingById.get(actionId)
-      if (!pending) {
-        return { error: "That proposed action is no longer available" }
+  intercept: async (input, { toolCallId, messages }) => {
+    const active = await getActiveRequesterAction(context.conversationId)
+    if (active && active.toolName !== toolName) {
+      return {
+        status:
+          active.status === "collecting_input"
+            ? ToolValidationResultStatus.NEEDS_INPUT
+            : ToolValidationResultStatus.PENDING,
+        message:
+          active.validationMessage ??
+          "Please finish or cancel the pending action before starting another one.",
       }
-      pendingById.delete(actionId)
-      const target = executableTools[pending.toolName]
-      if (!target?.execute) {
-        return { error: "The proposed action is no longer available" }
-      }
-      return await target.execute(pending.args, {
-        ...executionOptions,
-        toolCallId: pending.toolCallId,
+    }
+    const groundedInput = groundedArguments(input, evidenceText(messages))
+    const merged = mergeArguments(
+      active?.toolName === toolName ? active.partialArguments : undefined,
+      groundedInput
+    )
+    const validation = await safeValidateTypes({
+      value: merged,
+      schema: inputSchema,
+    })
+    const base = confirmationBase({
+      context,
+      toolName,
+      readableName,
+      sourceId,
+      toolCallId,
+      partialArguments: merged,
+    })
+    if (!validation.success) {
+      const message = buildClarificationMessage(validation.error)
+      await saveRequesterAction({
+        ...base,
+        status: "collecting_input",
+        validationMessage: message,
       })
-    },
-  })
-}
+      return {
+        status: ToolValidationResultStatus.NEEDS_INPUT,
+        message,
+      }
+    }
+
+    const message = buildConfirmationMessage({
+      readableName,
+      toolName,
+      arguments: validation.value,
+    })
+    await saveRequesterAction({
+      ...base,
+      partialArguments: validation.value,
+      confirmedArguments: validation.value,
+      status: "awaiting_confirmation",
+      validationMessage: message,
+    })
+    return {
+      status: ToolValidationResultStatus.PENDING,
+      message,
+      arguments: validation.value,
+    }
+  },
+})

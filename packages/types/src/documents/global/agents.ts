@@ -270,6 +270,7 @@ export interface AgentMessageMetadata {
 
 export enum ToolValidationResultStatus {
   PENDING = "pending_validation",
+  NEEDS_INPUT = "needs_input",
 }
 
 export interface AgentChat extends Document {

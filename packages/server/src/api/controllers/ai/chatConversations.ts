@@ -194,6 +194,7 @@ const buildToolCallTrackingHandler = ({
       | undefined
     if (
       approvalOutput?.status === ToolValidationResultStatus.PENDING ||
+      approvalOutput?.status === ToolValidationResultStatus.NEEDS_INPUT ||
       (approvalOutput?.status === ApprovalToolResultStatus.PENDING_APPROVAL &&
         approvalOutput.escalationId)
     ) {

@@ -1,136 +1,175 @@
 import { ToolValidationResultStatus } from "@budibase/types"
-import { tool } from "ai"
 import { z } from "zod"
+
+const mockCacheGet = jest.fn()
+const mockCacheStore = jest.fn()
+
+jest.mock("@budibase/backend-core", () => ({
+  cache: {
+    get: (...args: unknown[]) => mockCacheGet(...args),
+    store: (...args: unknown[]) => mockCacheStore(...args),
+  },
+  locks: {
+    doWithLock: jest.fn(),
+  },
+}))
+
 import {
-  createRequesterValidationResolutionTool,
+  buildConfirmationMessage,
   createRequesterValidationRuntime,
-  getPendingRequesterToolCalls,
 } from "./requesterValidationGate"
 
-const createRuntime = () =>
-  createRequesterValidationRuntime({
-    toolName: "create_row",
-    readableName: "Create row",
-    sourceId: "table_1",
-  })
+const validationContext = {
+  agentId: "agent_1",
+  operationId: "operation_1",
+  conversationId: "conversation_1",
+  requesterId: "user_1",
+  requesterRole: "role_1",
+}
 
 describe("requester validation gate", () => {
-  it("pauses a write and returns all frozen arguments", async () => {
-    const args = { name: "Ada", active: true }
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it("renders the exact canonical arguments without internal identifiers", () => {
+    expect(
+      buildConfirmationMessage({
+        toolName: "create_row",
+        readableName: "add the new expense",
+        arguments: {
+          data: {
+            Cost: 15,
+            "Expense Tags": ["Food"],
+            Notes: "Breakfast",
+          },
+        },
+      })
+    ).toBe(
+      [
+        "Please confirm that you want me to add the new expense:",
+        "",
+        "- Cost: 15",
+        "- Expense Tags: Food",
+        "- Notes: Breakfast",
+        "",
+        "Should I go ahead?",
+      ].join("\n")
+    )
+  })
+
+  it("asks only for a missing required field", async () => {
+    mockCacheGet.mockResolvedValue(undefined)
+    const runtime = createRequesterValidationRuntime({
+      toolName: "create_expense",
+      inputSchema: z.object({
+        data: z.object({
+          Cost: z.number(),
+          Category: z.enum(["Food", "Travel"]),
+          Notes: z.string().optional(),
+        }),
+      }),
+      context: validationContext,
+    })
 
     await expect(
-      createRuntime().intercept(args, { toolCallId: "call_1" })
+      runtime.intercept(
+        { data: { Cost: 15 } },
+        {
+          toolCallId: "call_1",
+          messages: [{ role: "user", content: "Add an expense for 15" }],
+        }
+      )
+    ).resolves.toEqual(
+      expect.objectContaining({
+        status: ToolValidationResultStatus.NEEDS_INPUT,
+        message:
+          "What Category should I use?\nChoose one of: Food, Travel.",
+      })
+    )
+    expect(mockCacheStore).toHaveBeenCalledWith(
+      "agent:requester-action:conversation_1",
+      expect.objectContaining({
+        status: "collecting_input",
+        partialArguments: { data: { Cost: 15 } },
+      })
+    )
+  })
+
+  it("removes a valid enum value that the requester did not supply", async () => {
+    mockCacheGet.mockResolvedValue(undefined)
+    const runtime = createRequesterValidationRuntime({
+      toolName: "create_expense",
+      inputSchema: z.object({
+        data: z.object({
+          Cost: z.number(),
+          "Expense Tags": z.enum(["Food", "Other"]),
+        }),
+      }),
+      context: validationContext,
+    })
+
+    await expect(
+      runtime.intercept(
+        { data: { Cost: 10, "Expense Tags": "Other" } },
+        {
+          toolCallId: "call_1",
+          messages: [{ role: "user", content: "Add an expense, 10 euros" }],
+        }
+      )
+    ).resolves.toEqual(
+      expect.objectContaining({
+        status: ToolValidationResultStatus.NEEDS_INPUT,
+        message:
+          "What Expense Tags should I use?\nChoose one of: Food, Other.",
+      })
+    )
+    expect(mockCacheStore).toHaveBeenCalledWith(
+      "agent:requester-action:conversation_1",
+      expect.objectContaining({
+        partialArguments: { data: { Cost: 10 } },
+      })
+    )
+  })
+
+  it("merges a clarification and freezes the validated payload", async () => {
+    mockCacheGet.mockResolvedValue({
+      status: "collecting_input",
+      toolName: "create_expense",
+      partialArguments: { data: { Cost: 15 } },
+    })
+    const runtime = createRequesterValidationRuntime({
+      toolName: "create_expense",
+      readableName: "add the expense",
+      inputSchema: z.object({
+        data: z.object({
+          Cost: z.number(),
+          Category: z.enum(["Food", "Travel"]),
+        }),
+      }),
+      context: validationContext,
+    })
+
+    await expect(
+      runtime.intercept(
+        { data: { Category: "Food" } },
+        {
+          toolCallId: "call_2",
+          messages: [{ role: "user", content: "Food" }],
+        }
+      )
     ).resolves.toEqual(
       expect.objectContaining({
         status: ToolValidationResultStatus.PENDING,
-        toolName: "create_row",
-        sourceId: "table_1",
-        arguments: args,
-        validationToolCallId: "call_1",
+        arguments: { data: { Cost: 15, Category: "Food" } },
       })
     )
-  })
-
-  it("reads frozen calls from the previous assistant turn", () => {
-    const args = { name: "Ada", active: true }
-
-    expect(
-      getPendingRequesterToolCalls({
-        _id: "chat_1",
-        agentId: "agent_1",
-        messages: [
-          {
-            id: "assistant_1",
-            role: "assistant",
-            parts: [
-              {
-                type: "tool-create_row",
-                toolCallId: "call_1",
-                state: "output-available",
-                input: args,
-                output: {
-                  status: ToolValidationResultStatus.PENDING,
-                  sourceId: "table_1",
-                },
-              },
-            ],
-          },
-          {
-            id: "user_1",
-            role: "user",
-            parts: [{ type: "text", text: "Please proceed with that" }],
-          },
-        ],
+    expect(mockCacheStore).toHaveBeenCalledWith(
+      "agent:requester-action:conversation_1",
+      expect.objectContaining({
+        status: "awaiting_confirmation",
+        confirmedArguments: { data: { Cost: 15, Category: "Food" } },
       })
-    ).toEqual([
-      {
-        toolCallId: "call_1",
-        toolName: "create_row",
-        sourceId: "table_1",
-        args,
-      },
-    ])
-  })
-
-  it("does not offer calls that are not from the preceding assistant turn", () => {
-    expect(
-      getPendingRequesterToolCalls({
-        _id: "chat_1",
-        agentId: "agent_1",
-        messages: [
-          {
-            id: "assistant_1",
-            role: "assistant",
-            parts: [{ type: "text", text: "Anything else?" }],
-          },
-          {
-            id: "user_1",
-            role: "user",
-            parts: [{ type: "text", text: "Yes" }],
-          },
-        ],
-      })
-    ).toEqual([])
-  })
-
-  it("executes the frozen call directly and only once", async () => {
-    const execute = jest.fn().mockResolvedValue({ success: true })
-    const resolver = createRequesterValidationResolutionTool({
-      pendingCalls: [
-        {
-          toolCallId: "call_1",
-          toolName: "create_row",
-          sourceId: "table_1",
-          args: { name: "Ada" },
-        },
-      ],
-      executableTools: {
-        create_row: tool({
-          description: "Create row",
-          inputSchema: z.object({ name: z.string() }),
-          execute,
-        }),
-      },
-    })
-
-    await expect(
-      resolver.execute?.(
-        { actionId: "call_1" },
-        { toolCallId: "confirmation_1", messages: [], context: {} }
-      )
-    ).resolves.toEqual({ success: true })
-    expect(execute).toHaveBeenCalledWith(
-      { name: "Ada" },
-      expect.objectContaining({ toolCallId: "call_1" })
     )
-    await expect(
-      resolver.execute?.(
-        { actionId: "call_1" },
-        { toolCallId: "confirmation_2", messages: [], context: {} }
-      )
-    ).resolves.toEqual({
-      error: "That proposed action is no longer available",
-    })
-    expect(execute).toHaveBeenCalledTimes(1)
   })
 })

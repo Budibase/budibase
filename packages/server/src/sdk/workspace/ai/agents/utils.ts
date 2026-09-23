@@ -37,8 +37,6 @@ import {
   type EscalationGateContext,
 } from "./escalationGate"
 import {
-  REQUESTER_VALIDATION_TOOL_NAME,
-  createRequesterValidationResolutionTool,
   createRequesterValidationRuntime,
   type RequesterValidationContext,
 } from "./requesterValidationGate"
@@ -193,7 +191,10 @@ export interface BuildPromptAndToolsOptions {
   fallbackPromptInstructions?: string
   executionContext?: AgentExecutionContext
   escalationGateContext?: EscalationGateContext
-  requesterValidationContext?: RequesterValidationContext
+  requesterValidationContext?: Omit<
+    RequesterValidationContext,
+    "agentId" | "operationId" | "conversationId"
+  >
 }
 
 export async function buildPromptAndTools(
@@ -203,6 +204,8 @@ export async function buildPromptAndTools(
 ): Promise<{
   systemPrompt: string
   tools: ToolSet
+  executableTools?: ToolSet
+  writeToolNames?: string[]
   toolDisplayNames: Record<string, string>
   toolSources: Record<string, string | undefined>
 }> {
@@ -319,6 +322,13 @@ export async function buildPromptAndTools(
           toolName: tool.name,
           readableName: tool.readableName,
           sourceId: tool.sourceId,
+          inputSchema: tool.tool.inputSchema,
+          context: {
+            ...options.requesterValidationContext,
+            agentId,
+            operationId: operation.id,
+            conversationId: options.executionContext?.conversationId ?? "",
+          },
         })
       )
     }
@@ -344,27 +354,20 @@ export async function buildPromptAndTools(
     resolvedSystemPrompt += `\n\nYou have no escalation or approval-request capability of your own. Never claim to have escalated, flagged, or referred anything for human review - approvals happen automatically when you use tools that require them. If instructions ask you to escalate a topic, tell the user you cannot escalate it and continue normally.`
   }
   const tools = toToolSet(enabledTools, runtimes, gates, validations)
-  const pendingValidations = options.requesterValidationContext?.pendingCalls
+  const executableTools = toToolSet(enabledTools, runtimes, gates)
+  const writeToolNames = enabledTools
+    .filter(tool => tool.authorization?.permissionLevel !== PermissionLevel.READ)
+    .map(tool => tool.name)
   if (options.requesterValidationContext) {
-    resolvedSystemPrompt += `\n\nWrite and execute tools have a requester validation planning step. Before proposing a write, make sure its arguments satisfy the tool schema. Collect every required value from the user, including required option or tag fields, and never invent a missing value. If anything required is missing or invalid, ask for it before attempting the tool and before asking for confirmation. When a tool returns pending_validation, it has not run. Begin the response with "Please confirm the following details before I [perform the action]:" using a specific description of the action. Then show every proposed argument exactly as returned, including every required field, with friendly field labels and appropriate formatting, and finish with "Should I go ahead?" Do not say you have prepared, completed, registered, submitted, or are ready to perform the action, because that can imply it already happened. Never use approval codes or claim the action ran. If the requester rejects the action or changes any parameter, do not execute the old call; propose the revised call, which must be validated separately.`
-  }
-  if (pendingValidations?.length) {
-    const executableTools = toToolSet(enabledTools, runtimes, gates)
-    tools[REQUESTER_VALIDATION_TOOL_NAME] =
-      createRequesterValidationResolutionTool({
-        pendingCalls: pendingValidations,
-        executableTools,
-      })
-    resolvedSystemPrompt += `\n\nThe immediately preceding assistant turn contains one or more pending requester validations. Interpret the user's latest reply conversationally. Only when they clearly confirm a proposed action, call ${REQUESTER_VALIDATION_TOOL_NAME} with that action's internal ID; this executes the frozen arguments, so never recreate them. If they reject it, respond without calling a tool. If they request any change, call the original write tool with the revised arguments so the new proposal is shown for validation. Do not reveal internal action IDs.`
+    resolvedSystemPrompt += `\n\nInteractive write tools are proposals. Call them with only information supplied by the requester. Do not invent missing values or fields outside the schema. If a proposal result contains a message, reply with that message exactly and do not call another tool in the same turn.`
   }
   return {
     systemPrompt: resolvedSystemPrompt,
     tools,
+    executableTools,
+    writeToolNames,
     toolDisplayNames: {
       ...getToolDisplayNames(enabledTools),
-      ...(pendingValidations?.length
-        ? { [REQUESTER_VALIDATION_TOOL_NAME]: "Confirm action" }
-        : {}),
     },
     toolSources: Object.fromEntries(
       enabledTools.map(tool => [tool.name, tool.sourceId])

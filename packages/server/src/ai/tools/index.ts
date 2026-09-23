@@ -1,5 +1,6 @@
-import { validateTypes } from "@ai-sdk/provider-utils"
+import { asSchema, jsonSchema, validateTypes } from "@ai-sdk/provider-utils"
 import { type ModelMessage, type Tool, type ToolSet } from "ai"
+import type { JSONSchema7 } from "json-schema"
 import { getErrorMessage } from "@budibase/backend-core"
 import {
   PermissionLevel,
@@ -128,6 +129,15 @@ const wrapTool = (
     input,
     options
   ) => {
+    if (validation) {
+      const validationResult = await validation.intercept(input, {
+        toolCallId: options?.toolCallId ?? "",
+        messages: options?.messages,
+      })
+      if (validationResult) {
+        return validationResult
+      }
+    }
     const validatedInput = await validateTypes({
       value: input,
       schema: toolDef.tool.inputSchema,
@@ -142,15 +152,6 @@ const wrapTool = (
         executionContext: runtime.executionContext,
         principal: runtime.principal,
       })
-    }
-    if (validation) {
-      const validationResult = await validation.intercept(validatedInput, {
-        toolCallId: options?.toolCallId ?? "",
-        messages: options?.messages,
-      })
-      if (validationResult) {
-        return validationResult
-      }
     }
     if (gate) {
       const gateResult = await gate.intercept(validatedInput, {
@@ -183,8 +184,32 @@ const wrapTool = (
     }
   }
 
+  const relaxRequiredFields = (value: unknown): unknown => {
+    if (Array.isArray(value)) {
+      return value.map(relaxRequiredFields)
+    }
+    if (!value || typeof value !== "object") {
+      return value
+    }
+    return Object.fromEntries(
+      Object.entries(value).flatMap(([key, child]) =>
+        key === "required" ? [] : [[key, relaxRequiredFields(child)]]
+      )
+    )
+  }
+  const inputSchema = validation
+      ? jsonSchema(
+        async () => {
+          const resolved = await asSchema(toolDef.tool.inputSchema).jsonSchema
+          return relaxRequiredFields(resolved) as JSONSchema7
+        },
+        { validate: value => ({ success: true, value }) }
+      )
+    : toolDef.tool.inputSchema
+
   return {
     ...toolDef.tool,
+    inputSchema,
     execute: wrappedExecute,
   }
 }

@@ -50,6 +50,11 @@ jest.mock("../agentLogs", () => ({
   createSessionLogIndexer: jest.fn(),
 }))
 
+jest.mock("./requesterValidationGate", () => ({
+  getActiveRequesterAction: jest.fn().mockResolvedValue(undefined),
+  transitionRequesterAction: jest.fn(),
+}))
+
 jest.mock("../../../../ai/tools/budibase/knowledge/reportUsedSources", () => ({
   createReportUsedSourcesTool: jest.fn(),
 }))
@@ -595,7 +600,8 @@ describe("prepareAgentChatRun - approval gating", () => {
   }
 
   it("enables per-tool approval gating", async () => {
-    await runFor(procurementOperation)
+    const run = await runFor(procurementOperation)
+    await run.stream()
 
     expect(buildPromptAndTools).toHaveBeenCalledWith(
       agent,
@@ -612,7 +618,8 @@ describe("prepareAgentChatRun - approval gating", () => {
   })
 
   it("does not configure structured output for an empty schema", async () => {
-    await runFor(supportOperation, { outputSchema: {} })
+    const run = await runFor(supportOperation, { outputSchema: {} })
+    await run.stream()
 
     expect(ToolLoopAgent).toHaveBeenCalledWith(
       expect.objectContaining({ output: undefined })
@@ -638,9 +645,10 @@ describe("prepareAgentChatRun - approval gating", () => {
   })
 
   it("configures structured output for a populated schema", async () => {
-    await runFor(supportOperation, {
+    const run = await runFor(supportOperation, {
       outputSchema: { sentiment: "string" },
     })
+    await run.stream()
 
     expect(ToolLoopAgent).toHaveBeenCalledWith(
       expect.objectContaining({ output: expect.anything() })
