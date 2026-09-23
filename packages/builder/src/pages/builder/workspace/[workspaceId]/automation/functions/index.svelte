@@ -1,13 +1,14 @@
 <script lang="ts">
+  import { functionsAvailable } from "@/stores/builder/functionsAvailability"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
+  import FunctionTrustNotice from "./FunctionTrustNotice.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { getErrorMessage } from "@/helpers/errors"
   import { workspaceStore, builderStore, functionStore } from "@/stores/builder"
   import type { UIFunction } from "@/stores/builder/functions"
-  import { auth, featureFlags } from "@/stores/portal"
+  import { auth } from "@/stores/portal"
   import { Modal, ModalContent, notifications } from "@budibase/bbui"
   import { goto as gotoStore } from "@roxi/routify"
-  import { FeatureFlag } from "@budibase/types"
   import { onMount } from "svelte"
   import FunctionList from "./FunctionList.svelte"
   import FunctionNameModal from "./FunctionNameModal.svelte"
@@ -25,7 +26,7 @@ export default async function (): Promise<FunctionResult> {
   let selectedFunction: UIFunction | undefined
   let blockedDeleteMessage = ""
 
-  $: enabled = $featureFlags[FeatureFlag.FUNCTIONS]
+  $: enabled = $functionsAvailable
   $: canManage =
     enabled && canManageFunctions($auth.user, $workspaceStore.appId)
   $: functions = functionStore.getList($functionStore)
@@ -127,6 +128,9 @@ export default async function (): Promise<FunctionResult> {
     breadcrumbs={[{ text: "Automations", url: "../" }, { text: "Functions" }]}
     icon="code"
   />
+  {#if canManage}
+    <FunctionTrustNotice />
+  {/if}
   <FunctionList
     {functions}
     loading={$functionStore.loading}

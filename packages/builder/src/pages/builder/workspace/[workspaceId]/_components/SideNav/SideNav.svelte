@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { functionsAvailable } from "@/stores/builder/functionsAvailability"
   import {
     Context,
     ActionMenu,
@@ -557,7 +558,7 @@
                 <MenuItem icon="path" on:click={openCreateAutomation}>
                   Automation
                 </MenuItem>
-                {#if $featureFlags[FeatureFlag.FUNCTIONS] && canManageFunctions($auth.user, workspaceId)}
+                {#if $functionsAvailable && canManageFunctions($auth.user, workspaceId)}
                   <MenuItem icon="code" on:click={openFunctions}>
                     Function
                   </MenuItem>
@@ -601,7 +602,7 @@
                 {collapsed}
                 on:click={keepCollapsed}
               />
-              {#if $featureFlags[FeatureFlag.FUNCTIONS] && canManageFunctions($auth.user, workspaceId)}
+              {#if $functionsAvailable && canManageFunctions($auth.user, workspaceId)}
                 <SideNavLink
                   icon="code"
                   text="Functions"

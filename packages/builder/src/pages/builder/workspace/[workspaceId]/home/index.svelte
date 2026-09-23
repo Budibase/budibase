@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { functionsAvailable } from "@/stores/builder/functionsAvailability"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import DuplicateAutomationModal from "@/components/automation/AutomationPanel/DuplicateAutomationModal.svelte"
   import UpdateAutomationModal from "@/components/automation/AutomationPanel/UpdateAutomationModal.svelte"
@@ -85,7 +86,7 @@
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
 
   $: functionsEnabled =
-    !!$featureFlags[FeatureFlag.FUNCTIONS] &&
+    !!$functionsAvailable &&
     canManageFunctions($auth.user, $workspaceStore.appId)
 
   $: goto = $gotoStore
