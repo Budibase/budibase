@@ -128,8 +128,7 @@ const wrapTool = (
     const isMutating =
       toolDef.authorization?.permissionLevel === PermissionLevel.WRITE ||
       toolDef.authorization?.permissionLevel === PermissionLevel.EXECUTE
-    const isRequesterRedacted =
-      toolDef.requesterRedactedTool === toolDef.tool
+    const isRequesterRedacted = toolDef.requesterRedactedTool === toolDef.tool
     let validatedInput = input
     if (isMutating) {
       const schema =
