@@ -61,8 +61,7 @@
       </Body>
     </div>
     {#if canManage}
-      <Button primary on:click={onCreate}>
-        <Icon name="plus" size="S" />
+      <Button primary icon="plus" iconSize="S" on:click={onCreate}>
         New Function
       </Button>
     {/if}
