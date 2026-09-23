@@ -1,10 +1,11 @@
 import { fireEvent, render, screen, within } from "@testing-library/svelte"
+import { Helpers } from "@budibase/bbui"
 import type {
   FunctionQueryCapability,
   FunctionQueryCatalogEntry,
 } from "@budibase/types"
 import { SourceName } from "@budibase/types"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import FunctionQueryEditor from "./FunctionQueryEditor.svelte"
 
 if (!Element.prototype.animate) {
@@ -50,6 +51,10 @@ describe("FunctionQueryEditor", () => {
     document.body.className = "spectrum"
   })
 
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it("shows current display names without changing stored aliases", () => {
     render(FunctionQueryEditor, {
       capabilities: [capability],
@@ -58,8 +63,26 @@ describe("FunctionQueryEditor", () => {
 
     expect(screen.getByText("Find renamed customer")).toBeInTheDocument()
     expect(screen.getByText("Renamed CRM")).toBeInTheDocument()
-    expect(screen.getByText("queries.crm.findCustomer()")).toBeInTheDocument()
+    expect(
+      screen.getByText("await queries.crm.findCustomer()")
+    ).toBeInTheDocument()
     expect(screen.getByText("customerId: string | null")).toBeInTheDocument()
+  })
+
+  it("copies the displayed query call", async () => {
+    const copyToClipboard = vi
+      .spyOn(Helpers, "copyToClipboard")
+      .mockResolvedValue(undefined)
+    render(FunctionQueryEditor, {
+      capabilities: [capability],
+      catalog,
+    })
+
+    await fireEvent.click(screen.getByRole("button", { name: /Copy/ }))
+
+    expect(copyToClipboard).toHaveBeenCalledWith(
+      "await queries.crm.findCustomer()"
+    )
   })
 
   it("selects Data and API Explorer queries and saves only explicit links", async () => {
