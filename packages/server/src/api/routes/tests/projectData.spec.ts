@@ -416,10 +416,10 @@ describe("Project data export and import", () => {
       })
       const destination = await createDestination()
       const before = await snapshotWorkspace(destination.appId)
-      const license = cloneDeep(mocks.licenses.useUnlimited())
-      license.quotas.usage.static.rows.value = before.rowUsage.total + 2
-      license.quotas.usage.static.rows.triggers = []
-      mocks.licenses.useLicense(license)
+      const licence = cloneDeep(mocks.licenses.useUnlimited())
+      licence.quotas.usage.static.rows.value = before.rowUsage.total + 2
+      licence.quotas.usage.static.rows.triggers = []
+      mocks.licenses.useLicense(licence)
 
       await config.withHeaders(
         { [Header.WORKSPACE_ID]: destination.appId },
