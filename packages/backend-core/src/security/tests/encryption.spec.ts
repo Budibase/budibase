@@ -13,7 +13,7 @@ import { tmpdir } from "os"
 import { join } from "path"
 
 describe("encryption", () => {
-  it("should throw an error if API encryption key is not set", () => {
+  it("uses the JWT secret as the default API encryption key", () => {
     const jwt = getSecret(SecretOption.API)
     expect(jwt).toBe(env.JWT_SECRET?.export().toString())
   })

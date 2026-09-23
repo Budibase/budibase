@@ -16,14 +16,17 @@ import {
   isWebhookTrigger,
   OAuth2CredentialsMethod,
   OAuth2GrantType,
+  PASSWORD_REPLACEMENT,
   RestAuthType,
   SourceName,
   ToolExecutionPrincipal,
   type Automation,
+  type Datasource,
   type EmailTrigger,
   type EmailTriggerInputs,
   type Project,
   type ProjectPackageDependencyIndex,
+  type Query,
   type Webhook,
 } from "@budibase/types"
 import { Header, helpers } from "@budibase/shared-core"
@@ -571,10 +574,6 @@ describe("/projects", () => {
         ...basicDatasource().datasource,
         projectIds,
       })
-      const query = await config.api.query.save({
-        ...basicQuery(datasource._id!),
-        projectIds,
-      })
 
       await config.api.project.delete(project._id, project._rev)
 
@@ -589,14 +588,12 @@ describe("/projects", () => {
       const fetchedAgent = agents.find(existing => existing._id === agent._id)
       const fetchedTable = await config.api.table.get(table._id!)
       const fetchedDatasource = await config.api.datasource.get(datasource._id!)
-      const fetchedQuery = await config.api.query.get(query._id!)
 
       expect(fetchedWorkspaceApp.projectIds).toEqual(expectedProjectIds)
       expect(fetchedAutomation.projectIds).toEqual(expectedProjectIds)
       expect(fetchedAgent?.projectIds).toEqual(expectedProjectIds)
       expect(fetchedTable.projectIds).toEqual(expectedProjectIds)
       expect(fetchedDatasource.projectIds).toEqual(expectedProjectIds)
-      expect(fetchedQuery.projectIds).toBeUndefined()
     })
   })
 
@@ -853,14 +850,26 @@ describe("/projects", () => {
       })
     })
 
-    it("strips query assignments", async () => {
+    it("clears stored query assignments when updates omit project ids", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
           name: "Operations",
         })
-        const { query } = await createAssignedResources(project._id)
+        const datasource = await config.createDatasource()
+        const query = await config.api.query.save(basicQuery(datasource._id))
+        await config.doInContext(config.getDevWorkspaceId(), async () => {
+          const persistedQuery = await context
+            .getWorkspaceDB()
+            .get<Query>(query._id!)
+          await context.getWorkspaceDB().put({
+            ...persistedQuery,
+            projectIds: [project._id],
+          })
+        })
 
-        const { projectIds: _queryProjectIds, ...queryUpdate } = query
+        const persistedQuery = await config.api.query.get(query._id!)
+
+        const { projectIds: _queryProjectIds, ...queryUpdate } = persistedQuery
         const updatedQuery = await config.api.query.save({
           ...queryUpdate,
           name: "Ops query updated",
@@ -1104,7 +1113,7 @@ describe("/projects", () => {
         },
       },
     ])(
-      "sanitises email credentials and remaps $name after import",
+      "sanitises email credentials and restores portable settings for $name",
       async ({ credentials, includeDatasource }) => {
         await withProjectsEnabled(async () => {
           const project = await createAssignedProject()
@@ -1303,7 +1312,7 @@ describe("/projects", () => {
         const exportedDatasource = JSON.parse(
           files.get(`docs/datasource/${datasource._id}.json`)!.toString()
         )
-        expect(exportedDatasource.config.password).not.toContain("super-secret")
+        expect(exportedDatasource.config.password).toBe(PASSWORD_REPLACEMENT)
 
         const exportedQuery = JSON.parse(
           files.get(`docs/query/${query._id}.json`)!.toString()
@@ -1384,19 +1393,16 @@ describe("/projects", () => {
         ) as ProjectPackageDependencyIndex
         expect(dependencyIndex.rootProjectId).toBe(project._id)
         expect(
-          dependencyIndex.directMembers.map(resource => resource.id)
+          dependencyIndex.directMembers.map(resource => resource.id).sort()
         ).toEqual(
-          expect.arrayContaining([
+          [
             datasource._id,
             table._id,
             automation._id,
             agent._id,
             workspaceApp._id,
-          ])
+          ].sort()
         )
-        expect(
-          dependencyIndex.directMembers.map(resource => resource.id)
-        ).not.toContain(query._id)
         expect(
           dependencyIndex.resources[datasource._id!]!.dependencies.map(
             resource => resource.id
@@ -1801,6 +1807,9 @@ describe("/projects", () => {
         await config.withHeaders(
           { [Header.WORKSPACE_ID]: destinationWorkspaceId },
           async () => {
+            const tableIds = [table._id!]
+            const viewIds = [view.id]
+            const rowActionIds = [rowAction.id]
             for (let importIndex = 0; importIndex < 2; importIndex++) {
               const imported = await config.api.project.import(body)
               const importedTableId = imported.resources.table![0]
@@ -1815,7 +1824,6 @@ describe("/projects", () => {
               )!
 
               expect(resolvedView.tableId).toBe(importedTableId)
-              expect(importedView.id).not.toBe(view.id)
               expect(importedScreen.props._children![1].table).toMatchObject({
                 id: importedView.id,
                 tableId: importedTableId,
@@ -1833,7 +1841,6 @@ describe("/projects", () => {
                 automationId: imported.resources.automation![0],
                 allowedSources: [importedTableId, importedView.id],
               })
-              expect(importedAction.id).not.toBe(rowAction.id)
               expect(Object.keys(importedRowActions.actions)).toEqual([
                 importedAction.id,
               ])
@@ -1848,7 +1855,13 @@ describe("/projects", () => {
               }
               expect(triggerInputs.tableId).toBe(imported.resources.table?.[0])
               expect(triggerInputs.rowActionId).toBe(importedAction.id)
+              tableIds.push(importedTableId)
+              viewIds.push(importedView.id)
+              rowActionIds.push(importedAction.id)
             }
+            expect(new Set(tableIds).size).toBe(3)
+            expect(new Set(viewIds).size).toBe(3)
+            expect(new Set(rowActionIds).size).toBe(3)
           }
         )
       })
@@ -2116,11 +2129,15 @@ describe("/projects", () => {
             imported.project._id,
           ])
 
-          const importedDatasource = await config.api.datasource.get(
-            imported.resources.datasource?.[0]!
+          const importedDatasource = await config.doInContext(
+            destinationWorkspace.appId,
+            () =>
+              context
+                .getWorkspaceDB()
+                .get<Datasource>(imported.resources.datasource![0])
           )
           expect(importedDatasource.projectIds).toEqual([imported.project._id])
-          expect(importedDatasource.config?.password).not.toBe("super-secret")
+          expect(importedDatasource.config?.password).toBe(PASSWORD_REPLACEMENT)
 
           const { agents } = await config.api.agent.fetch()
           const importedAgent = agents.find(
@@ -2726,15 +2743,19 @@ describe("/projects", () => {
       )
 
       const imported = await config.api.project.import(packageBuffer)
-      const importedDatasource = await config.api.datasource.get(
-        imported.resources.datasource?.[0]!
+      const importedDatasource = await config.doInContext(
+        config.getDevWorkspaceId(),
+        () =>
+          context
+            .getWorkspaceDB()
+            .get<Datasource>(imported.resources.datasource![0])
       )
       const { agents } = await config.api.agent.fetch()
       const importedAgent = agents.find(
         agent => agent._id === imported.resources.agent?.[0]
       )
 
-      expect(importedDatasource.config?.password).not.toBe("crafted-secret")
+      expect(importedDatasource.config?.password).toBe(PASSWORD_REPLACEMENT)
       expect(importedAgent?.live).toBe(false)
       expect(importedAgent?.publishedAt).toBeUndefined()
       expect(importedAgent?.slackIntegration).toEqual({
