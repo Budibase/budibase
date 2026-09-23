@@ -1,4 +1,4 @@
-import { structures } from "../../../tests"
+import { structures, mocks } from "../../../tests"
 import {
   deleteTenant,
   lockTenant,
@@ -10,7 +10,6 @@ import {
   LockReason,
   ConfigType,
   SettingsConfig,
-  type Database,
   type Workspace,
 } from "@budibase/types"
 
@@ -79,19 +78,23 @@ describe("tenants", () => {
 
   describe("deleteTenant Actions cleanup", () => {
     const destroy = jest.fn()
-    const tenantDb = {
-      allDocs: jest.fn().mockResolvedValue({ rows: [] }),
-      destroy: jest.fn(),
-    } as Database
+    const tenantDb = mocks.createDatabaseMock()
 
     beforeEach(() => {
       destroy.mockReset().mockResolvedValue(undefined)
+      tenantDb.allDocs.mockResolvedValue({ rows: [], offset: 0, total_rows: 0 })
       jest.mocked(tenancy.getTenantDB).mockReturnValue(tenantDb)
-      jest.mocked(platform.getPlatformDB).mockReturnValue({
-        allDocs: jest.fn().mockResolvedValue({ rows: [] }),
-        bulkDocs: jest.fn().mockResolvedValue([]),
-      } as Database)
-      jest.mocked(db.getDB).mockReturnValue({ destroy } as Database)
+      const platformDb = mocks.createDatabaseMock()
+      platformDb.allDocs.mockResolvedValue({
+        rows: [],
+        offset: 0,
+        total_rows: 0,
+      })
+      platformDb.bulkDocs.mockResolvedValue([])
+      jest.mocked(platform.getPlatformDB).mockReturnValue(platformDb)
+      const workspaceDb = mocks.createDatabaseMock()
+      workspaceDb.destroy = destroy
+      jest.mocked(db.getDB).mockReturnValue(workspaceDb)
     })
 
     it.each([true, false])(
