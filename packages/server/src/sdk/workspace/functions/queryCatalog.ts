@@ -8,7 +8,6 @@ import {
   type FunctionQueryCatalogEntry,
   type Query,
   type QueryParameter,
-  type QueryVerb,
 } from "@budibase/types"
 
 interface ResolvedQuery {
@@ -17,13 +16,17 @@ interface ResolvedQuery {
   parameterNames: string[]
 }
 
-const SUPPORTED_QUERY_VERBS: QueryVerb[] = [
-  "read",
-  "create",
-  "update",
-  "delete",
-  "patch",
-]
+const SUPPORTED_QUERY_VERBS = ["read", "create", "update", "delete", "patch"]
+
+const isSupportedQueryVerb = ({
+  queryVerb,
+  source,
+}: {
+  queryVerb: string
+  source: SourceName
+}) =>
+  SUPPORTED_QUERY_VERBS.includes(queryVerb) ||
+  (source === SourceName.MONGODB && queryVerb === "aggregate")
 
 const isQueryParameter = (parameter: unknown): parameter is QueryParameter => {
   if (typeof parameter !== "object" || parameter === null) {
@@ -71,19 +74,16 @@ async function resolveQuery(
   query: Query & { _id: string },
   datasource?: Datasource & { _id: string }
 ): Promise<ResolvedQuery> {
-  if (!SUPPORTED_QUERY_VERBS.includes(query.queryVerb)) {
-    throw new HTTPError(
-      `Query '${query._id}' is not supported by Functions.`,
-      400
-    )
-  }
-
   const resolvedDatasource =
     datasource ||
     (await context.getWorkspaceDB().tryGet<Datasource>(query.datasourceId))
   if (
     !resolvedDatasource?._id ||
-    !isSupportedSource(resolvedDatasource.source)
+    !isSupportedSource(resolvedDatasource.source) ||
+    !isSupportedQueryVerb({
+      queryVerb: query.queryVerb,
+      source: resolvedDatasource.source,
+    })
   ) {
     throw new HTTPError(
       `Query '${query._id}' is not supported by Functions.`,
