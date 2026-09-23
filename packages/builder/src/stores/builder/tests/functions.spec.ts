@@ -1,7 +1,7 @@
 import { API } from "@/api"
 import { FunctionStore } from "@/stores/builder/functions"
 import type { FunctionResponse, FunctionSummary } from "@budibase/types"
-import { SourceName, PublishResourceState } from "@budibase/types"
+import { PublishResourceState } from "@budibase/types"
 import { get } from "svelte/store"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
