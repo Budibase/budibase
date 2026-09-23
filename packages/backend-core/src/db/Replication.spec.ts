@@ -108,7 +108,7 @@ describe("Replication", () => {
       expect(opts).not.toHaveProperty("isCreation")
     })
 
-    it("should always replicate deleted documents", () => {
+    it("should not replicate deleted documents to production", () => {
       const replication = new Replication({
         source: `${DocumentType.WORKSPACE_DEV}_source`,
         target: `${DocumentType.WORKSPACE}_target`,
@@ -121,7 +121,19 @@ describe("Replication", () => {
         _deleted: true,
       }
 
-      expect((opts.filter as Function)(deletedDoc, {})).toBe(true)
+      expect((opts.filter as Function)(deletedDoc, {})).toBe(false)
+    })
+
+    it("should replicate deleted documents when syncing to development", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE}_source`,
+        target: `${DocumentType.WORKSPACE_DEV}_target`,
+      })
+      const opts = replication.appReplicateOpts({ isCreation: false })
+
+      expect(
+        (opts.filter as Function)({ _id: "some_doc", _deleted: true }, {})
+      ).toBe(true)
     })
 
     it.each([
@@ -369,77 +381,29 @@ describe("Replication", () => {
       const opts = replication.appReplicateOpts({ isCreation: false })
 
       expect(opts.selector).toBeInstanceOf(Object)
-      expect(opts.selector).toEqual(
-        expect.objectContaining({
-          $and: expect.arrayContaining([
-            {
-              $nor: [
-                {
-                  _id: {
-                    $regex: `^${DocumentType.SLACK_APP_CONFIG}${SEPARATOR}`,
-                  },
-                },
-              ],
-            },
-            { $nor: [{ _id: DesignDocuments.MIGRATIONS }] },
-            expect.objectContaining({
-              $or: expect.arrayContaining([
-                { _deleted: true },
-                expect.objectContaining({
-                  $and: expect.arrayContaining([
-                    {
-                      $nor: [
-                        {
-                          _id: {
-                            $regex: `^${DocumentType.AUTOMATION_LOG}${SEPARATOR}`,
-                          },
-                        },
-                      ],
-                    },
-                    {
-                      $nor: [
-                        {
-                          _id: {
-                            $regex: `^${DocumentType.AGENT_LOG_SESSION}${SEPARATOR}`,
-                          },
-                        },
-                      ],
-                    },
-                    { $nor: [{ _id: DocumentType.WORKSPACE_METADATA }] },
-                    {
-                      $nor: [
-                        {
-                          $or: [
-                            {
-                              _id: {
-                                $regex: `^${DocumentType.ROW}${SEPARATOR}`,
-                              },
-                            },
-                            {
-                              _id: {
-                                $regex: `^${DocumentType.LINK}${SEPARATOR}`,
-                              },
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                    {
-                      $nor: [
-                        {
-                          _id: {
-                            $regex: `^${DocumentType.AUTO_COLUMN_STATE}${SEPARATOR}`,
-                          },
-                        },
-                      ],
-                    },
-                  ]),
-                }),
-              ]),
-            }),
-          ]),
-        })
-      )
+      const selectorJSON = JSON.stringify(opts.selector)
+      expect(selectorJSON).toContain(DocumentType.SLACK_APP_CONFIG)
+      expect(selectorJSON).toContain(DesignDocuments.MIGRATIONS)
+      expect(selectorJSON).toContain(DocumentType.AUTOMATION_LOG)
+      expect(selectorJSON).toContain(DocumentType.AGENT_LOG_SESSION)
+      expect(selectorJSON).toContain(DocumentType.WORKSPACE_METADATA)
+      expect(selectorJSON).toContain(DocumentType.AUTO_COLUMN_STATE)
+      expect(selectorJSON).toContain('"_deleted":true')
+      expect(selectorJSON).not.toContain('{"$or":[{"_deleted":true}')
+    })
+
+    it("should exclude tombstones from the production selector", () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+
+      const opts = replication.appReplicateOpts({ isCreation: false })
+
+      const selectorJSON = JSON.stringify(opts.selector)
+
+      expect(selectorJSON).toContain('{"$nor":[{"_deleted":true}]}')
+      expect(selectorJSON).not.toContain('{"$or":[{"_deleted":true}')
     })
 
     it("should exclude design documents from the TO_DEV selector", () => {

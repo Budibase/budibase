@@ -181,9 +181,8 @@ class Replication {
         if (startsWithID(doc._id, DocumentType.SLACK_APP_CONFIG)) {
           return false
         }
-        // always replicate deleted documents
         if (doc._deleted) {
-          return true
+          return direction !== ReplicationDirection.TO_PRODUCTION
         }
         if (
           direction === ReplicationDirection.TO_PRODUCTION &&
@@ -285,14 +284,12 @@ class Replication {
       )
     }
 
-    return {
-      $and: [
-        ...unconditional,
-        {
-          $or: [{ _deleted: true }, { $and: fallback }],
-        },
-      ],
-    }
+    const documents =
+      direction === ReplicationDirection.TO_PRODUCTION
+        ? { $and: [{ $nor: [{ _deleted: true }] }, ...fallback] }
+        : { $or: [{ _deleted: true }, { $and: fallback }] }
+
+    return { $and: [...unconditional, documents] }
   }
 
   /**
