@@ -214,9 +214,10 @@ describe("AssignProjectModal", () => {
       .fn()
       .mockRejectedValueOnce({ status: 503, message: "Please try again" })
       .mockResolvedValue(undefined)
+    const onPreview = vi.fn().mockResolvedValue(preview)
     render(AssignProjectModal, {
       resource,
-      onPreview: vi.fn().mockResolvedValue(preview),
+      onPreview,
       onConfirm,
     })
 
@@ -224,6 +225,7 @@ describe("AssignProjectModal", () => {
     await fireEvent.click(screen.getByText("Save changes"))
     await fireEvent.click(screen.getByText("Save changes"))
 
+    expect(onPreview).toHaveBeenCalledTimes(1)
     expect(onConfirm).toHaveBeenCalledTimes(2)
     expect(onConfirm).toHaveBeenLastCalledWith({
       resourceRev: resource.revision,
