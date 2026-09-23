@@ -57,6 +57,27 @@ describe("write tool schemas", () => {
       expect(schema.safeParse({ amount: "20" }).success).toBe(false)
     })
 
+    it.each<[string, AutomationIOType, unknown, unknown]>([
+      ["date", AutomationIOType.DATE, "2026-09-23", 23],
+      ["datetime", AutomationIOType.DATETIME, "2026-09-23T10:00:00Z", 23],
+      ["long-form text", AutomationIOType.LONGFORM, "Expense details", 23],
+      ["JavaScript", AutomationIOType.JS, "return true", 23],
+      ["object", AutomationIOType.OBJECT, { category: "Food" }, "Food"],
+      ["JSON", AutomationIOType.JSON, { category: "Food" }, "Food"],
+      ["attachment", AutomationIOType.ATTACHMENT, [{ name: "receipt" }], {}],
+    ])("validates %s trigger fields", (_label, type, valid, invalid) => {
+      const fieldSchema = buildAutomationFieldsSchema({
+        definition: {
+          trigger: {
+            inputs: { fields: { value: type } },
+          },
+        },
+      })
+
+      expect(fieldSchema.safeParse({ value: valid }).success).toBe(true)
+      expect(fieldSchema.safeParse({ value: invalid }).success).toBe(false)
+    })
+
     it("keeps trigger fields optional and rejects undeclared fields", () => {
       expect(schema.safeParse({}).success).toBe(true)
       expect(schema.safeParse({ unknown: "value" }).success).toBe(false)
