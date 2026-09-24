@@ -139,44 +139,74 @@ describe("ProjectsStore", () => {
     expect(getProjects(store)).toEqual([response.project, existing])
   })
 
-  it.each(["before", "after"])(
-    "keeps one imported project when a fetch resolves %s the import",
-    async fetchOrder => {
-      const store = new ProjectsStore()
-      const existing = project("project_2")
-      fetchProjects.mockResolvedValueOnce({ projects: [existing] })
-      await store.fetch()
+  const startConcurrentFetchAndImport = async () => {
+    const store = new ProjectsStore()
+    const existing = project("project_2")
+    fetchProjects.mockResolvedValueOnce({ projects: [existing] })
+    await store.fetch()
 
-      const fetch = defer<FetchProjectsResponse>()
-      const imported = defer<ImportProjectResponse>()
-      const response: ImportProjectResponse = {
-        project: project("project_1", { _rev: "2-rev" }),
-        resources: {},
-        requirements: [],
-        unsupportedContent: [],
-      }
-      fetchProjects.mockReturnValueOnce(fetch.promise)
-      importBundle.mockReturnValueOnce(imported.promise)
-      const fetchPromise = store.fetch()
-      const importPromise = store.importProject(
-        new File(["project"], "project.tar.gz")
-      )
-
-      if (fetchOrder === "before") {
-        fetch.resolve({ projects: [existing, project("project_1")] })
-        await fetchPromise
-        imported.resolve(response)
-        await importPromise
-      } else {
-        imported.resolve(response)
-        await importPromise
-        fetch.resolve({ projects: [existing] })
-        await fetchPromise
-      }
-
-      expect(getProjects(store)).toEqual([response.project, existing])
+    const pendingFetch = defer<FetchProjectsResponse>()
+    const pendingImport = defer<ImportProjectResponse>()
+    const importResponse: ImportProjectResponse = {
+      project: project("project_1", { _rev: "2-rev" }),
+      resources: {},
+      requirements: [],
+      unsupportedContent: [],
     }
-  )
+    fetchProjects.mockReturnValueOnce(pendingFetch.promise)
+    importBundle.mockReturnValueOnce(pendingImport.promise)
+    const fetchPromise = store.fetch()
+    const importPromise = store.importProject(
+      new File(["project"], "project.tar.gz")
+    )
+    return {
+      store,
+      existing,
+      pendingFetch,
+      pendingImport,
+      importResponse,
+      fetchPromise,
+      importPromise,
+    }
+  }
+
+  it("keeps one imported project when the fetch finishes before the import", async () => {
+    const {
+      store,
+      existing,
+      pendingFetch,
+      pendingImport,
+      importResponse,
+      fetchPromise,
+      importPromise,
+    } = await startConcurrentFetchAndImport()
+
+    pendingFetch.resolve({ projects: [existing, project("project_1")] })
+    await fetchPromise
+    pendingImport.resolve(importResponse)
+    await importPromise
+
+    expect(getProjects(store)).toEqual([importResponse.project, existing])
+  })
+
+  it("keeps the imported project when an older fetch finishes after the import", async () => {
+    const {
+      store,
+      existing,
+      pendingFetch,
+      pendingImport,
+      importResponse,
+      fetchPromise,
+      importPromise,
+    } = await startConcurrentFetchAndImport()
+
+    pendingImport.resolve(importResponse)
+    await importPromise
+    pendingFetch.resolve({ projects: [existing] })
+    await fetchPromise
+
+    expect(getProjects(store)).toEqual([importResponse.project, existing])
+  })
 
   it("does not let an in-flight fetch overwrite a created project", async () => {
     const store = new ProjectsStore()
