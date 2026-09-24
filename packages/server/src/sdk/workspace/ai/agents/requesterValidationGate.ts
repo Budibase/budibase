@@ -46,9 +46,9 @@ const requesterActionKey = (conversationId: string) =>
   `agent:requester-action:${conversationId}`
 
 export const getRequesterAction = async (conversationId: string) =>
-  ((await cache.get(requesterActionKey(conversationId))) as
-    | RequesterActionContext
-    | null) ?? undefined
+  ((await cache.get(
+    requesterActionKey(conversationId)
+  )) as RequesterActionContext | null) ?? undefined
 
 export const getActiveRequesterAction = async (conversationId: string) => {
   const action = await getRequesterAction(conversationId)

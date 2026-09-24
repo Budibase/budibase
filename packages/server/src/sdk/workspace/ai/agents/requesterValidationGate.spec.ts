@@ -83,8 +83,7 @@ describe("requester validation gate", () => {
     ).resolves.toEqual(
       expect.objectContaining({
         status: ToolValidationResultStatus.NEEDS_INPUT,
-        message:
-          "What Category should I use?\nChoose one of: Food, Travel.",
+        message: "What Category should I use?\nChoose one of: Food, Travel.",
       })
     )
     expect(mockCacheStore).toHaveBeenCalledWith(
@@ -120,8 +119,7 @@ describe("requester validation gate", () => {
     ).resolves.toEqual(
       expect.objectContaining({
         status: ToolValidationResultStatus.NEEDS_INPUT,
-        message:
-          "What Expense Tags should I use?\nChoose one of: Food, Other.",
+        message: "What Expense Tags should I use?\nChoose one of: Food, Other.",
       })
     )
     expect(mockCacheStore).toHaveBeenCalledWith(

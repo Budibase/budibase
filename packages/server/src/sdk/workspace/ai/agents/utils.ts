@@ -361,7 +361,9 @@ export async function buildPromptAndTools(
   const tools = toToolSet(enabledTools, runtimes, gates, validations)
   const executableTools = toToolSet(enabledTools, runtimes, gates)
   const writeToolNames = enabledTools
-    .filter(tool => tool.authorization?.permissionLevel !== PermissionLevel.READ)
+    .filter(
+      tool => tool.authorization?.permissionLevel !== PermissionLevel.READ
+    )
     .map(tool => tool.name)
   if (options.requesterValidationContext) {
     resolvedSystemPrompt += `\n\nInteractive write tools are proposals. Call them with only information supplied by the requester. Do not invent missing values or fields outside the schema. If a proposal result contains a message, reply with that message exactly and do not call another tool in the same turn.`

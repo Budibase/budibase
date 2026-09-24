@@ -778,7 +778,9 @@ const prepareAgentChatRunInternal = async ({
         requesterInstruction =
           "The requester's confirmation will be resolved by the server before this response. Follow the resulting system message and never call a write tool."
         tools = Object.fromEntries(
-          Object.entries(tools).filter(([name]) => !writeToolNames.includes(name))
+          Object.entries(tools).filter(
+            ([name]) => !writeToolNames.includes(name)
+          )
         )
       } else if (decision === "reject") {
         await transitionRequesterAction({
@@ -788,7 +790,9 @@ const prepareAgentChatRunInternal = async ({
           update: { responderId: requesterId },
         })
         tools = Object.fromEntries(
-          Object.entries(tools).filter(([name]) => !writeToolNames.includes(name))
+          Object.entries(tools).filter(
+            ([name]) => !writeToolNames.includes(name)
+          )
         )
         requesterInstruction =
           "The requester rejected the pending action. Confirm conversationally that nothing was changed."
@@ -804,7 +808,9 @@ const prepareAgentChatRunInternal = async ({
           JSON.stringify(activeConfirmation.confirmedArguments)
       } else {
         tools = Object.fromEntries(
-          Object.entries(tools).filter(([name]) => !writeToolNames.includes(name))
+          Object.entries(tools).filter(
+            ([name]) => !writeToolNames.includes(name)
+          )
         )
         requesterInstruction =
           decision === "unrelated"
@@ -869,8 +875,9 @@ const prepareAgentChatRunInternal = async ({
         }),
       }),
       instructions:
-        [systemPrompt, requesterOutcomeInstruction].filter(Boolean).join("\n\n") ||
-        undefined,
+        [systemPrompt, requesterOutcomeInstruction]
+          .filter(Boolean)
+          .join("\n\n") || undefined,
       tools: hasTools ? tools : undefined,
       ...(hasTools ? { toolChoice: "auto" as const } : {}),
       stopWhen: stepCountIs(30),
