@@ -1,4 +1,8 @@
-import { safeValidateTypes, type FlexibleSchema } from "@ai-sdk/provider-utils"
+import {
+  asSchema,
+  safeValidateTypes,
+  type FlexibleSchema,
+} from "@ai-sdk/provider-utils"
 import {
   LockName,
   LockType,
@@ -216,10 +220,52 @@ const validationIssues = (error: unknown): ValidationIssue[] => {
 const friendlyLabel = (path: Array<PropertyKey>) =>
   String(path.at(-1) ?? "value").replace(/([a-z])([A-Z])/g, "$1 $2")
 
-const buildClarificationMessage = (error: unknown) => {
+const enumValues = (schema: unknown): unknown[] | undefined => {
+  if (!isRecord(schema)) {
+    return
+  }
+  if (Array.isArray(schema.enum)) {
+    return schema.enum
+  }
+  if (isRecord(schema.items) && Array.isArray(schema.items.enum)) {
+    return schema.items.enum
+  }
+  if (Array.isArray(schema.anyOf)) {
+    return schema.anyOf.flatMap(option => enumValues(option) ?? [])
+  }
+}
+
+const schemaOptionsAtPath = async (
+  inputSchema: FlexibleSchema,
+  path: Array<PropertyKey>
+) => {
+  let current: unknown = await asSchema(inputSchema).jsonSchema
+  for (const segment of path) {
+    if (!isRecord(current)) {
+      return
+    }
+    if (typeof segment === "number") {
+      current = current.items
+      continue
+    }
+    if (!isRecord(current.properties)) {
+      return
+    }
+    current = current.properties[String(segment)]
+  }
+  return enumValues(current)
+}
+
+const buildClarificationMessage = async (
+  error: unknown,
+  inputSchema: FlexibleSchema
+) => {
   const issue = validationIssues(error)[0]
   const field = friendlyLabel(issue?.path ?? [])
-  const options = issue?.values ?? issue?.options
+  const options =
+    issue?.values ??
+    issue?.options ??
+    (await schemaOptionsAtPath(inputSchema, issue?.path ?? []))
   const question = `What ${field} should I use?`
   return options?.length
     ? `${question}\nChoose one of: ${options.map(String).join(", ")}.`
@@ -354,7 +400,10 @@ export const createRequesterValidationRuntime = ({
       partialArguments: merged,
     })
     if (!validation.success) {
-      const message = buildClarificationMessage(validation.error)
+      const message = await buildClarificationMessage(
+        validation.error,
+        inputSchema
+      )
       await saveRequesterAction({
         ...base,
         status: "collecting_input",

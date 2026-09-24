@@ -95,6 +95,36 @@ describe("requester validation gate", () => {
     )
   })
 
+  it("includes valid options for a missing required multi-select field", async () => {
+    mockCacheGet.mockResolvedValue(undefined)
+    const runtime = createRequesterValidationRuntime({
+      toolName: "create_expense",
+      inputSchema: z.object({
+        data: z.object({
+          Cost: z.number(),
+          "Expense Tags": z.array(z.enum(["Food", "Travel", "Other"])),
+        }),
+      }),
+      context: validationContext,
+    })
+
+    await expect(
+      runtime.intercept(
+        { data: { Cost: 50 } },
+        {
+          toolCallId: "call_1",
+          messages: [{ role: "user", content: "Add an expense, 50 euros" }],
+        }
+      )
+    ).resolves.toEqual(
+      expect.objectContaining({
+        status: ToolValidationResultStatus.NEEDS_INPUT,
+        message:
+          "What Expense Tags should I use?\nChoose one of: Food, Travel, Other.",
+      })
+    )
+  })
+
   it("removes a valid enum value that the requester did not supply", async () => {
     mockCacheGet.mockResolvedValue(undefined)
     const runtime = createRequesterValidationRuntime({
