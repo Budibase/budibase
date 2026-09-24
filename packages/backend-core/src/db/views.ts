@@ -46,7 +46,8 @@ async function removeDeprecated(db: Database, viewName: ViewName) {
 export async function createView(
   db: Database,
   viewJs: string,
-  viewName: string
+  viewName: string,
+  reduce?: string
 ): Promise<void> {
   let designDoc
   try {
@@ -57,6 +58,7 @@ export async function createView(
   }
   const view: DBView = {
     map: viewJs,
+    ...(reduce ? { reduce } : {}),
   }
   designDoc.views = {
     ...designDoc.views,
@@ -66,7 +68,7 @@ export async function createView(
     await db.put(designDoc)
   } catch (err: any) {
     if (err.status === 409) {
-      return await createView(db, viewJs, viewName)
+      return await createView(db, viewJs, viewName, reduce)
     } else {
       throw err
     }
