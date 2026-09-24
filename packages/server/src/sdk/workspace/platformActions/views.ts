@@ -184,13 +184,10 @@ async function fetchKeysetPage<T extends Document>({
     workspaceDb,
     createFunc
   )
-  const first = response.rows[0]
-  // The anchor may have moved or disappeared since the bookmark was issued.
-  const includesAnchor =
-    hasBookmark &&
-    first?.id === params.startkey_docid &&
-    JSON.stringify(first.key) === JSON.stringify(params.startkey)
-  const rows = includesAnchor ? response.rows.slice(1) : response.rows
+  // An updated anchor may appear anywhere in the returned range.
+  const rows = hasBookmark
+    ? response.rows.filter(row => row.id !== params.startkey_docid)
+    : response.rows
 
   const hasMore = rows.length > limit
   const page = rows.slice(0, limit).map(row => row.doc!)

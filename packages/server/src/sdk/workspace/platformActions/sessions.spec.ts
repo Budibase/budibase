@@ -258,7 +258,52 @@ describe("platformActions sessions", () => {
           "e",
           "d",
         ])
-        expect(previous.pagination.hasPreviousPage).toBe(true)
+        expect(previous.pagination.hasPreviousPage).toBe(false)
+      })
+
+      it("excludes the anchor after it moves inside the previous page", async () => {
+        await withContext(async () => {
+          const database = events.platformActions.getActionsDB()
+          for (const [index, sourceId] of ["a", "b", "c", "d", "e"].entries()) {
+            const doc = await database.get<PlatformActionSessionIndexDoc>(
+              buildSessionId({
+                environment: "prod",
+                sourceType: "agent_session",
+                sourceId,
+              })
+            )
+            await database.put({
+              ...doc,
+              updatedAt: new Date(
+                Date.UTC(2026, 8, 24, 0, 0, index)
+              ).toISOString(),
+            })
+          }
+        })
+        const first = await withContext(() => fetchSessions({ limit: 2 }))
+        const second = await withContext(() =>
+          fetchSessions({ limit: 2, bookmark: first.pagination.nextBookmark })
+        )
+        await withContext(async () => {
+          const database = events.platformActions.getActionsDB()
+          const doc = await database.get<PlatformActionSessionIndexDoc>(
+            buildSessionId(second.sessions[0])
+          )
+          await database.put({ ...doc, updatedAt: "2026-09-24T00:00:03.500Z" })
+        })
+
+        const previous = await withContext(() =>
+          fetchSessions({
+            limit: 2,
+            bookmark: second.pagination.previousBookmark,
+          })
+        )
+        expect(previous.sessions.map(session => session.sourceId)).toEqual([
+          "e",
+          "d",
+        ])
+        expect(previous.pagination.hasPreviousPage).toBe(false)
+        expect(previous.pagination.previousBookmark).toBeUndefined()
       })
 
       it.each(["next", "prev"] as const)(
