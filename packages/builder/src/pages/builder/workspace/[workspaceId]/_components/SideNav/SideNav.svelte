@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { functionsAvailable } from "@/stores/builder/functionsAvailability"
   import {
     Context,
     ActionMenu,
@@ -28,6 +29,7 @@
     tables,
     queries,
     viewsV2,
+    functionStore,
   } from "@/stores/builder"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import {
@@ -42,6 +44,7 @@
   import { onDestroy, setContext } from "svelte"
   import {
     type Datasource,
+    type FunctionSummary,
     FeatureFlag,
     type Query,
     type Table,
@@ -102,6 +105,7 @@
     tables: Table[]
     queries: Query[]
     views: ViewV2[]
+    functions: FunctionSummary[]
   }
 
   setContext(Context.PopoverRoot, ".nav .popover-container")
@@ -115,6 +119,7 @@
     [WorkspaceResource.QUERY]: "database", // regular db queries
     [WorkspaceResource.VIEW]: "table",
     [WorkspaceResource.AGENT]: "cpu",
+    [WorkspaceResource.FUNCTION]: "code",
   }
 
   const datasourceLookup = datasources.lookup
@@ -132,6 +137,7 @@
   let createWorkspaceModal: Modal | undefined
   let workspaceMenuOpen = false
   let createMenuOpen = false
+  let functionsFetchedForWorkspace = ""
 
   let createAutomationModal: ModalAPI
   let webhookModal: ModalAPI
@@ -187,6 +193,10 @@
     keepCollapsed()
   }
 
+  const openFunctions = () => {
+    goToCreate("home?type=function&create=function")
+  }
+
   const handleTableSave = async (table: Table) => {
     if (!workspaceId) {
       return
@@ -216,8 +226,24 @@
 
   // Ignore resources without names
   $: favourites = $workspaceFavouriteStore
-    .filter(f => $resourceLookup?.[f.resourceId])
+    .filter(
+      f =>
+        $resourceLookup?.[f.resourceId] &&
+        (f.resourceType !== WorkspaceResource.FUNCTION || $functionsAvailable)
+    )
     .sort((a, b) => a.resourceId.localeCompare(b.resourceId))
+
+  $: if (
+    workspaceId &&
+    $functionsAvailable &&
+    $workspaceFavouriteStore.some(
+      favourite => favourite.resourceType === WorkspaceResource.FUNCTION
+    ) &&
+    functionsFetchedForWorkspace !== workspaceId
+  ) {
+    functionsFetchedForWorkspace = workspaceId
+    functionStore.fetch()
+  }
 
   const initResourceStores = (): Readable<AllResourceStores> =>
     derived(
@@ -229,6 +255,7 @@
         queries,
         viewsV2,
         agentsStore,
+        functionStore,
         workspaceFavouriteStore,
       ],
       ([
@@ -239,6 +266,7 @@
         $queries,
         $views,
         $agents,
+        $functions,
       ]) => ({
         automations: $automations.automations,
         apps: $apps.workspaceApps,
@@ -247,6 +275,7 @@
         queries: $queries.list,
         views: $views.list,
         agents: $agents.agents,
+        functions: $functions.functions,
       })
     )
 
@@ -365,6 +394,8 @@
       },
       [WorkspaceResource.AGENT]: (id: string) =>
         `${workspacePrefix}/agent/${id}/config`,
+      [WorkspaceResource.FUNCTION]: (id: string) =>
+        `${workspacePrefix}/function/${id}`,
     }
     if (!link[favourite.resourceType]) return null
     return link[favourite.resourceType]?.(favourite.resourceId)
@@ -551,6 +582,11 @@
                 <MenuItem icon="path" on:click={openCreateAutomation}>
                   Automation
                 </MenuItem>
+                {#if $functionsAvailable}
+                  <MenuItem icon="code" on:click={openFunctions}>
+                    Function
+                  </MenuItem>
+                {/if}
                 <MenuItem icon="browsers" on:click={openCreateApp}>
                   App
                 </MenuItem>
@@ -581,6 +617,22 @@
                     bb.settings(`/connections/apis`)
                     keepCollapsed()
                   }}
+                />
+              {/if}
+              <SideNavLink
+                icon="path"
+                text="Automations"
+                url={$url("./home?type=automation")}
+                {collapsed}
+                on:click={keepCollapsed}
+              />
+              {#if $functionsAvailable}
+                <SideNavLink
+                  icon="code"
+                  text="Functions"
+                  url={$url("./home?type=function")}
+                  {collapsed}
+                  on:click={keepCollapsed}
                 />
               {/if}
               <SideNavLink
