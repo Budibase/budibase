@@ -4,6 +4,7 @@ import { z } from "zod"
 import validateJs from "validate.js"
 import {
   FieldType,
+  JsonFieldSubType,
   SortOrder,
   TableSourceType,
   ToolAction,
@@ -245,8 +246,13 @@ export const buildRowDataSchema = (
           break
         case FieldType.ATTACHMENT_SINGLE:
         case FieldType.SIGNATURE_SINGLE:
-        case FieldType.JSON:
           fieldSchema = z.record(z.string(), z.any())
+          break
+        case FieldType.JSON:
+          fieldSchema =
+            field.schema.subtype === JsonFieldSubType.ARRAY
+              ? z.array(z.any())
+              : z.record(z.string(), z.any())
           break
         case FieldType.AUTO:
         case FieldType.AI:

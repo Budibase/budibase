@@ -1,5 +1,5 @@
 import { asSchema } from "@ai-sdk/provider-utils"
-import { FieldType, type TableSchema } from "@budibase/types"
+import { FieldType, JsonFieldSubType, type TableSchema } from "@budibase/types"
 import { buildRowDataSchema } from "../rows"
 
 const tableSchema: TableSchema = {
@@ -29,6 +29,35 @@ const fields = Object.entries(tableSchema).map(([name, schema]) => ({
 }))
 
 describe("row tool data schema", () => {
+  it.each([true, false])(
+    "validates JSON arrays and objects by subtype (create: %s)",
+    requirePresentFields => {
+      const jsonFields: TableSchema = {
+        Items: {
+          name: "Items",
+          type: FieldType.JSON,
+          subtype: JsonFieldSubType.ARRAY,
+        },
+        Details: { name: "Details", type: FieldType.JSON },
+      }
+      const schema = buildRowDataSchema(
+        Object.entries(jsonFields).map(([name, schema]) => ({ name, schema })),
+        "",
+        requirePresentFields
+      )
+      const input = {
+        Items: [{ name: "Breakfast", tags: ["Food"] }, 15, "note"],
+        Details: { tags: ["Food"] },
+      }
+
+      expect(schema.parse(input)).toEqual(input)
+      expect(schema.safeParse({ Items: [] }).success).toBe(true)
+      expect(schema.safeParse({ Items: {} }).success).toBe(false)
+      expect(schema.safeParse({ Details: [] }).success).toBe(false)
+      expect(schema.safeParse({ Items: "invalid" }).success).toBe(false)
+    }
+  )
+
   it("requires mandatory create fields", () => {
     const schema = buildRowDataSchema(fields, "", true)
 
