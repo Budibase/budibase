@@ -1356,8 +1356,8 @@ describe("/projects", () => {
             url: "/ops-app",
           })
         )
-        const automation = await config.createAutomation({
-          ...newAutomation(),
+        const { automation } = await config.api.automation.post({
+          ...createAutomationBuilder(config).onAppAction({}).build(),
           projectIds: [firstProject._id],
         })
         await config.api.screen.save(
