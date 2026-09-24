@@ -250,6 +250,71 @@ describe("Replication", () => {
       }
     })
 
+    it("limits cleanup work and retains the checkpoint for a large backlog", async () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      jest.spyOn(replication, "replicate").mockResolvedValue({} as any)
+      mockTargetDb.get.mockRejectedValue({ status: 404 })
+      const changes = Array.from({ length: 1201 }, (_, index) => ({
+        id: `doc-${index}`,
+        deleted: true,
+        changes: [{ rev: `2-${index}` }],
+        doc: { _id: `doc-${index}`, _rev: `2-${index}`, _deleted: true },
+      }))
+      const scanBatches = [
+        changes.slice(0, 500),
+        changes.slice(500, 1000),
+        changes.slice(1000),
+      ]
+      mockSourceDb.changes.mockImplementation(
+        async (options: { doc_ids?: string[]; since?: string | number }) => {
+          if (options.doc_ids) {
+            return {
+              results: changes.filter(change =>
+                options.doc_ids?.includes(change.id)
+              ),
+            }
+          }
+          const batch =
+            options.since === 0
+              ? scanBatches[0]
+              : options.since === "seq-1"
+                ? scanBatches[1]
+                : scanBatches[2]
+          const sequence =
+            options.since === 0
+              ? "seq-1"
+              : options.since === "seq-1"
+                ? "seq-2"
+                : "seq-3"
+          return { last_seq: sequence, results: batch }
+        }
+      )
+      mockTargetDb.allDocs.mockImplementation(({ keys }: { keys: string[] }) =>
+        Promise.resolve({
+          rows: keys.map(id => ({ id, value: { rev: "1-live" } })),
+        })
+      )
+      mockTargetDb.changes.mockImplementation(
+        async (options: { doc_ids?: string[] }) => ({
+          results: changes.filter(change =>
+            options.doc_ids?.includes(change.id)
+          ),
+        })
+      )
+
+      await replication.replicateApp()
+
+      expect(mockTargetDb.changes).toHaveBeenCalledTimes(5)
+      expect(mockDirectCouchCall).toHaveBeenCalledTimes(10)
+      expect(mockDirectCouchCall.mock.calls[0][2]).toEqual(
+        expect.objectContaining({ "doc-0": ["2-0"] })
+      )
+      expect(mockTargetDb.put).not.toHaveBeenCalled()
+    })
+
     it("does not advance the tombstone cursor when CouchDB reports write failures", async () => {
       const replication = new Replication({
         source: `${DocumentType.WORKSPACE_DEV}_source`,

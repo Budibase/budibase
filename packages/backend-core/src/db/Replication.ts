@@ -10,6 +10,8 @@ const _PouchDB = PouchDB // Keep Prettier from removing import
 const DEFAULT_REPLICATION_BATCH_SIZE = 1000
 const TOMBSTONE_CHANGES_BATCH_SIZE = 500
 const TOMBSTONE_LOOKUP_BATCH_SIZE = 200
+const TOMBSTONE_CLEANUP_BATCH_SIZE = 200
+const MAX_TOMBSTONES_TO_CLEAN = 1000
 
 enum ReplicationDirection {
   TO_PRODUCTION = "toProduction",
@@ -246,34 +248,39 @@ class Replication {
       tombstoneWritesSucceeded = false
     }
     if (tombstoneWritesSucceeded) {
-      for (const tombstone of tombstonesToClean.values()) {
-        try {
-          if (!(await this.cleanReplicatedTombstone(tombstone))) {
-            tombstoneWritesSucceeded = false
-          }
-        } catch (error) {
-          // Tombstone cleanup is best-effort; leave the source revision so a later publish can retry.
-          console.warn(
-            "Unable to purge published tombstone",
-            tombstone.id,
-            error
-          )
-          tombstoneWritesSucceeded = false
-        }
+      const tombstonesToCleanList = Array.from(tombstonesToClean.values())
+      const sourceTombstonesToCleanList = Array.from(
+        sourceTombstonesToClean.values()
+      )
+      const tombstonesToCleanNow = tombstonesToCleanList.slice(
+        0,
+        MAX_TOMBSTONES_TO_CLEAN
+      )
+      const sourceTombstonesToCleanNow = sourceTombstonesToCleanList.slice(
+        0,
+        Math.max(0, MAX_TOMBSTONES_TO_CLEAN - tombstonesToCleanNow.length)
+      )
+
+      if (
+        tombstonesToCleanNow.length < tombstonesToCleanList.length ||
+        sourceTombstonesToCleanNow.length < sourceTombstonesToCleanList.length
+      ) {
+        tombstoneWritesSucceeded = false
       }
-      for (const tombstone of sourceTombstonesToClean.values()) {
-        try {
-          if (!(await this.cleanSourceTombstone(tombstone))) {
-            tombstoneWritesSucceeded = false
-          }
-        } catch (error) {
-          console.warn(
-            "Unable to purge excluded tombstone",
-            tombstone.id,
-            error
-          )
+
+      try {
+        const replicatedCleanupSucceeded =
+          await this.cleanReplicatedTombstones(tombstonesToCleanNow)
+        const sourceCleanupSucceeded = await this.cleanSourceTombstones(
+          sourceTombstonesToCleanNow
+        )
+        if (!replicatedCleanupSucceeded || !sourceCleanupSucceeded) {
           tombstoneWritesSucceeded = false
         }
+      } catch (error) {
+        // Tombstone cleanup is best-effort; leave the source revision so a later publish can retry.
+        console.warn("Unable to purge published tombstones", error)
+        tombstoneWritesSucceeded = false
       }
     }
     if (tombstoneWritesSucceeded && canAdvanceTombstoneCheckpoint) {
@@ -282,81 +289,135 @@ class Replication {
     return result
   }
 
-  private async cleanReplicatedTombstone({
-    id,
-    rev,
-  }: TombstoneRevision): Promise<boolean> {
-    const [sourceChanges, targetChanges] = await Promise.all([
-      this.source.changes<Document>({
-        since: 0,
-        doc_ids: [id],
-        include_docs: true,
-        style: "all_docs",
-      }),
-      this.target.changes<Document>({
-        since: 0,
-        doc_ids: [id],
-        include_docs: true,
-        style: "all_docs",
-      }),
-    ])
-    const latestChange = (results: typeof sourceChanges.results) =>
-      [...results].reverse().find(change => change.id === id)
-    const sourceChange = latestChange(sourceChanges.results)
-    const targetChange = latestChange(targetChanges.results)
-    const hasOnlyTombstoneRevision = (change: typeof sourceChange) =>
-      !!change?.deleted &&
-      change.changes?.length === 1 &&
-      change.changes[0].rev === rev
-
-    if (!hasOnlyTombstoneRevision(sourceChange)) {
-      return false
-    }
-    if (targetChange && !hasOnlyTombstoneRevision(targetChange)) {
-      return false
-    }
-
-    if (targetChange) {
-      if (!(await this.purgeRevision(this.targetName, id, rev))) {
-        return false
+  private async cleanReplicatedTombstones(
+    tombstones: TombstoneRevision[]
+  ): Promise<boolean> {
+    let succeeded = true
+    for (
+      let offset = 0;
+      offset < tombstones.length;
+      offset += TOMBSTONE_CLEANUP_BATCH_SIZE
+    ) {
+      const batch = tombstones.slice(
+        offset,
+        offset + TOMBSTONE_CLEANUP_BATCH_SIZE
+      )
+      const ids = batch.map(({ id }) => id)
+      const [sourceChanges, targetChanges] = await Promise.all([
+        this.source.changes<Document>({
+          since: 0,
+          doc_ids: ids,
+          include_docs: true,
+          style: "all_docs",
+        }),
+        this.target.changes<Document>({
+          since: 0,
+          doc_ids: ids,
+          include_docs: true,
+          style: "all_docs",
+        }),
+      ])
+      const latestChange = (
+        results: typeof sourceChanges.results,
+        id: string
+      ) => [...results].reverse().find(change => change.id === id)
+      const hasOnlyTombstoneRevision = (
+        change: (typeof sourceChanges.results)[number] | undefined,
+        rev: string
+      ) =>
+        !!change?.deleted &&
+        change.changes?.length === 1 &&
+        change.changes[0].rev === rev
+      const verified = batch.filter(({ id, rev }) => {
+        const sourceChange = latestChange(sourceChanges.results, id)
+        const targetChange = latestChange(targetChanges.results, id)
+        return (
+          hasOnlyTombstoneRevision(sourceChange, rev) &&
+          (!targetChange || hasOnlyTombstoneRevision(targetChange, rev))
+        )
+      })
+      const targetPurge = verified.filter(({ id }) =>
+        latestChange(targetChanges.results, id)
+      )
+      const purgedTargetIds = await this.purgeRevisions(
+        this.targetName,
+        targetPurge
+      )
+      const sourcePurge = verified.filter(
+        ({ id }) =>
+          !targetPurge.some(target => target.id === id) ||
+          purgedTargetIds.has(id)
+      )
+      const purgedSourceIds = await this.purgeRevisions(
+        this.sourceName,
+        sourcePurge
+      )
+      if (purgedSourceIds.size !== batch.length) {
+        succeeded = false
       }
     }
-    return await this.purgeRevision(this.sourceName, id, rev)
+    return succeeded
   }
 
-  private async cleanSourceTombstone({
-    id,
-    rev,
-  }: TombstoneRevision): Promise<boolean> {
-    const sourceChanges = await this.source.changes<Document>({
-      since: 0,
-      doc_ids: [id],
-      include_docs: true,
-      style: "all_docs",
-    })
-    const sourceChange = [...sourceChanges.results]
-      .reverse()
-      .find(change => change.id === id)
-    const hasOnlyTombstoneRevision =
-      !!sourceChange?.deleted &&
-      sourceChange.changes?.length === 1 &&
-      sourceChange.changes[0].rev === rev
-
-    if (!hasOnlyTombstoneRevision) {
-      return false
+  private async cleanSourceTombstones(
+    tombstones: TombstoneRevision[]
+  ): Promise<boolean> {
+    let succeeded = true
+    for (
+      let offset = 0;
+      offset < tombstones.length;
+      offset += TOMBSTONE_CLEANUP_BATCH_SIZE
+    ) {
+      const batch = tombstones.slice(
+        offset,
+        offset + TOMBSTONE_CLEANUP_BATCH_SIZE
+      )
+      const changes = await this.source.changes<Document>({
+        since: 0,
+        doc_ids: batch.map(({ id }) => id),
+        include_docs: true,
+        style: "all_docs",
+      })
+      const purgable = batch.filter(({ id, rev }) => {
+        const change = [...changes.results]
+          .reverse()
+          .find(change => change.id === id)
+        return (
+          !!change?.deleted &&
+          change.changes?.length === 1 &&
+          change.changes[0].rev === rev
+        )
+      })
+      const purgedIds = await this.purgeRevisions(this.sourceName, purgable)
+      if (purgedIds.size !== batch.length) {
+        succeeded = false
+      }
     }
-    return await this.purgeRevision(this.sourceName, id, rev)
+    return succeeded
   }
 
-  private async purgeRevision(dbName: string, id: string, rev: string) {
+  private async purgeRevisions(
+    dbName: string,
+    tombstones: TombstoneRevision[]
+  ) {
+    if (!tombstones.length) {
+      return new Set<string>()
+    }
+    const revisions = Object.fromEntries(
+      tombstones.map(({ id, rev }) => [id, [rev]])
+    )
     const response = await directCouchCall(`${dbName}/_purge`, "POST", {
-      [id]: [rev],
+      ...revisions,
     })
     if (!response.ok) {
       throw new Error(`CouchDB purge failed with status ${response.status}`)
     }
     const body: CouchPurgeResponse = await response.json()
-    return body.purged?.[id]?.includes(rev) ?? false
+    return new Set(
+      tombstones
+        .filter(({ id, rev }) => body.purged?.[id]?.includes(rev))
+        .map(({ id }) => id)
+    )
   }
 
   private async getTombstoneCheckpoint(): Promise<ChangeSequence> {
