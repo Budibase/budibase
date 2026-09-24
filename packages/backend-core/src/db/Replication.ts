@@ -136,15 +136,17 @@ class Replication {
     const tombstonesToClean = new Map<string, TombstoneRevision>()
     const sourceTombstonesToClean = new Map<string, TombstoneRevision>()
     let tombstoneCleanupIncomplete = false
+    let scanUntil: ChangeSequence | undefined
+    let hasMoreChanges = true
 
-    while (true) {
+    while (hasMoreChanges) {
       const changes = await this.source.changes<Document>({
         since,
         limit: TOMBSTONE_CHANGES_BATCH_SIZE,
         include_docs: true,
         style: "all_docs",
       })
-      lastSequence = changes.last_seq
+      scanUntil ??= changes.last_seq
       const batchDeletedIds = changes.results
         .filter(change => change.deleted)
         .map(change => change.id)
@@ -238,14 +240,15 @@ class Replication {
         }
       }
 
-      if (
-        changes.results.length < TOMBSTONE_CHANGES_BATCH_SIZE ||
-        changes.last_seq === since
-      ) {
-        break
+      const nextSince = changes.results.at(-1)?.seq ?? changes.last_seq
+      hasMoreChanges =
+        changes.results.length === TOMBSTONE_CHANGES_BATCH_SIZE &&
+        nextSince !== scanUntil
+      if (hasMoreChanges) {
+        since = nextSince
       }
-      since = changes.last_seq
     }
+    lastSequence = scanUntil ?? lastSequence
 
     const result = await this.replicate(
       this.appReplicateOpts({ ...opts, tombstoneIds: [] })

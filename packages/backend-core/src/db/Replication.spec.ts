@@ -182,10 +182,11 @@ describe("Replication", () => {
       mockTargetDb.get.mockRejectedValue({ status: 404 })
       mockSourceDb.changes
         .mockResolvedValueOnce({
-          last_seq: "seq-1",
+          last_seq: "seq-2",
           results: Array.from({ length: 500 }, (_, index) => ({
             id: `doc-${index}`,
             deleted: false,
+            seq: "seq-1",
           })),
         })
         .mockResolvedValueOnce({ last_seq: "seq-2", results: [] })
@@ -272,9 +273,18 @@ describe("Replication", () => {
         },
       ]
       const scanBatches = [
-        changes.slice(0, 500),
-        changes.slice(500, 1000),
-        changes.slice(1000),
+        changes.slice(0, 500).map(change => ({
+          ...change,
+          seq: "seq-1",
+        })),
+        changes.slice(500, 1000).map(change => ({
+          ...change,
+          seq: "seq-2",
+        })),
+        changes.slice(1000).map(change => ({
+          ...change,
+          seq: "seq-3",
+        })),
       ]
       mockSourceDb.changes.mockImplementation(
         async (options: { doc_ids?: string[]; since?: string | number }) => {
@@ -291,13 +301,7 @@ describe("Replication", () => {
               : options.since === "seq-1"
                 ? scanBatches[1]
                 : scanBatches[2]
-          const sequence =
-            options.since === 0
-              ? "seq-1"
-              : options.since === "seq-1"
-                ? "seq-2"
-                : "seq-3"
-          return { last_seq: sequence, results: batch }
+          return { last_seq: "seq-3", results: batch }
         }
       )
       mockTargetDb.allDocs.mockImplementation(({ keys }: { keys: string[] }) =>
