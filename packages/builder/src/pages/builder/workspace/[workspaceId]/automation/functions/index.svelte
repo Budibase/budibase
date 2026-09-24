@@ -12,7 +12,7 @@
   import FunctionNameModal from "./FunctionNameModal.svelte"
   import { canManageFunctions } from "./permissions"
 
-  const DEFAULT_SOURCE = `import { queries, type FunctionResult } from "@budibase/functions"
+  const DEFAULT_SOURCE = `import { inputs, queries, type FunctionResult } from "@budibase/functions"
 
 /*
  * Link saved queries below before calling them with
