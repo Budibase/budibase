@@ -1,13 +1,11 @@
 import { API } from "@/api"
 import { FunctionStore } from "@/stores/builder/functions"
 import type { FunctionResponse, FunctionSummary } from "@budibase/types"
-import { PublishResourceState } from "@budibase/types"
 import { get } from "svelte/store"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 vi.mock("@/api", () => ({
   API: {
-    deployment: { getPublishStatus: vi.fn() },
     getFunctions: vi.fn(),
     getFunctionQueryCatalog: vi.fn(),
     getFunction: vi.fn(),
@@ -58,71 +56,16 @@ describe("FunctionStore", () => {
     vi.resetAllMocks()
     vi.mocked(API.getFunction).mockResolvedValue({ function: makeFunction() })
     vi.mocked(API.getFunctions).mockResolvedValue({ functions: [] })
-    vi.mocked(API.deployment.getPublishStatus).mockResolvedValue({
-      automations: {},
-      workspaceApps: {},
-      tables: {},
-      agents: {},
-      functions: {},
-    })
   })
 
-  it("loads Functions and derives published deployment state", async () => {
+  it("loads Function summaries with their build readiness", async () => {
     const fn = makeFunction()
     vi.mocked(API.getFunctions).mockResolvedValue({ functions: [fn] })
-    vi.mocked(API.deployment.getPublishStatus).mockResolvedValue({
-      automations: {},
-      workspaceApps: {},
-      tables: {},
-      agents: {},
-      functions: {
-        fn_one: {
-          name: fn.name,
-          published: true,
-          unpublishedChanges: false,
-          state: PublishResourceState.PUBLISHED,
-        },
-      },
-    })
 
     await store.fetch()
 
-    expect(store.list).toEqual([
-      expect.objectContaining({
-        _id: fn._id,
-        deploymentState: "published",
-      }),
-    ])
+    expect(store.list).toEqual([fn])
     expect(get(store).loading).toBe(false)
-  })
-
-  it("distinguishes unpublished changes and Functions not yet deployed", async () => {
-    const changed = makeFunction({ _id: "fn_changed" })
-    const newFunction = makeFunction({ _id: "fn_new", name: "New Function" })
-    vi.mocked(API.getFunctions).mockResolvedValue({
-      functions: [changed, newFunction],
-    })
-    vi.mocked(API.deployment.getPublishStatus).mockResolvedValue({
-      automations: {},
-      workspaceApps: {},
-      tables: {},
-      agents: {},
-      functions: {
-        fn_changed: {
-          name: changed.name,
-          published: true,
-          unpublishedChanges: true,
-          state: PublishResourceState.PUBLISHED,
-        },
-      },
-    })
-
-    await store.fetch()
-
-    expect(store.list.map(fn => [fn._id, fn.deploymentState])).toEqual([
-      ["fn_changed", "unpublished_changes"],
-      ["fn_new", "not_deployed"],
-    ])
   })
 
   it("stores a fetch error for the retry state", async () => {

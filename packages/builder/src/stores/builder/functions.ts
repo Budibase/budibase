@@ -7,30 +7,18 @@ import type {
   FunctionQueryCapabilityInput,
   FunctionResponse,
   FunctionSummary,
-  PublishStatusResource,
   UpdateFunctionRequest,
 } from "@budibase/types"
 import { get } from "svelte/store"
 
-export type FunctionDeploymentState =
-  | "not_deployed"
-  | "published"
-  | "unpublished_changes"
-
-export interface UIFunction extends FunctionSummary {
-  deploymentState: FunctionDeploymentState
-}
-
 interface FunctionStoreState {
   functions: FunctionSummary[]
-  deployment: Record<string, PublishStatusResource>
   loading: boolean
   error?: string
 }
 
 const initialState: FunctionStoreState = {
   functions: [],
-  deployment: {},
   loading: false,
 }
 
@@ -53,44 +41,22 @@ const toUpdateRequest = (
   capabilities: toCapabilityInputs(fn),
 })
 
-const getDeploymentState = (
-  fn: FunctionSummary,
-  deployment: Record<string, PublishStatusResource>
-): FunctionDeploymentState => {
-  const published = deployment[fn._id]
-  if (!published?.published) {
-    return "not_deployed"
-  }
-  return !published.unpublishedChanges ? "published" : "unpublished_changes"
-}
-
 export class FunctionStore extends BudiStore<FunctionStoreState> {
   constructor() {
     super(initialState)
   }
 
-  get list(): UIFunction[] {
-    return this.getList(get(this.store))
-  }
-
-  getList(state: FunctionStoreState): UIFunction[] {
-    return state.functions.map(fn => ({
-      ...fn,
-      deploymentState: getDeploymentState(fn, state.deployment),
-    }))
+  get list(): FunctionSummary[] {
+    return get(this.store).functions
   }
 
   async fetch() {
     this.update(state => ({ ...state, loading: true, error: undefined }))
     try {
-      const [development, published] = await Promise.all([
-        API.getFunctions(),
-        API.deployment.getPublishStatus(),
-      ])
+      const development = await API.getFunctions()
       this.update(state => ({
         ...state,
         functions: development.functions,
-        deployment: published.functions,
         loading: false,
       }))
     } catch (error) {
@@ -101,7 +67,7 @@ export class FunctionStore extends BudiStore<FunctionStoreState> {
 
   async fetchOne(functionId: string) {
     const response = await API.getFunction(functionId)
-    this.upsert(response.function, false)
+    this.upsert(response.function)
     return response.function
   }
 
@@ -150,7 +116,7 @@ export class FunctionStore extends BudiStore<FunctionStoreState> {
     this.set(initialState)
   }
 
-  private upsert(fn: FunctionResponse, changed = true) {
+  private upsert(fn: FunctionResponse) {
     this.update(state => {
       const existingIndex = state.functions.findIndex(
         item => item._id === fn._id
@@ -168,16 +134,6 @@ export class FunctionStore extends BudiStore<FunctionStoreState> {
       return {
         ...state,
         functions,
-        deployment:
-          changed && state.deployment[fn._id]
-            ? {
-                ...state.deployment,
-                [fn._id]: {
-                  ...state.deployment[fn._id],
-                  unpublishedChanges: true,
-                },
-              }
-            : state.deployment,
       }
     })
   }
