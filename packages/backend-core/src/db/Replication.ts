@@ -144,6 +144,7 @@ class Replication {
     let tombstoneWritesSucceeded = true
     const tombstonesToClean = new Map<string, TombstoneRevision>()
     const sourceTombstonesToClean = new Map<string, TombstoneRevision>()
+    let tombstoneCleanupIncomplete = false
 
     while (true) {
       const changes = await this.source.changes<Document>({
@@ -190,12 +191,20 @@ class Replication {
           continue
         }
         if (deletedIds.includes(change.id)) {
-          tombstonesToClean.set(change.id, { id: change.id, rev })
+          if (tombstonesToClean.size < MAX_TOMBSTONES_TO_CLEAN) {
+            tombstonesToClean.set(change.id, { id: change.id, rev })
+          } else {
+            tombstoneCleanupIncomplete = true
+          }
         } else if (
           canAdvanceTombstoneCheckpoint &&
           isDataDocumentId(change.id)
         ) {
-          sourceTombstonesToClean.set(change.id, { id: change.id, rev })
+          if (sourceTombstonesToClean.size < MAX_TOMBSTONES_TO_CLEAN) {
+            sourceTombstonesToClean.set(change.id, { id: change.id, rev })
+          } else {
+            tombstoneCleanupIncomplete = true
+          }
         }
       }
 
@@ -262,8 +271,9 @@ class Replication {
       )
 
       if (
-        tombstonesToCleanNow.length < tombstonesToCleanList.length ||
-        sourceTombstonesToCleanNow.length < sourceTombstonesToCleanList.length
+        tombstoneCleanupIncomplete ||
+        tombstonesToCleanList.length + sourceTombstonesToCleanList.length >
+          MAX_TOMBSTONES_TO_CLEAN
       ) {
         tombstoneWritesSucceeded = false
       }
