@@ -85,8 +85,7 @@
     {#if !canManage}
       <div class="state" data-testid="function-permission-state">
         <Icon name="lock" size="L" />
-        <Heading size="S">You don't have permission to manage Functions</Heading
-        >
+        <Heading size="S">Functions are not available</Heading>
       </div>
     {:else if loading}
       <div class="state" data-testid="function-loading-state">
