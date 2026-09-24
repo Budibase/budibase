@@ -57,24 +57,24 @@ describe("project resource dependency traversal", () => {
       app: {
         dependencies: [
           resource("automation", ResourceType.AUTOMATION),
-          resource("agent", ResourceType.AGENT),
+          resource("customers", ResourceType.TABLE),
         ],
       },
       automation: {
-        dependencies: [resource("datasource", ResourceType.DATASOURCE)],
+        dependencies: [resource("orders", ResourceType.TABLE)],
       },
-      agent: {
-        dependencies: [resource("datasource", ResourceType.DATASOURCE)],
+      customers: {
+        dependencies: [resource("orders", ResourceType.TABLE)],
       },
-      datasource: {
-        dependencies: [resource("app", ResourceType.WORKSPACE_APP)],
+      orders: {
+        dependencies: [resource("customers", ResourceType.TABLE)],
       },
     }
     const memberships = new Map([
       ["app", ["project_1"]],
       ["automation", ["project_1"]],
-      ["agent", ["project_1"]],
-      ["datasource", ["project_1"]],
+      ["customers", ["project_1"]],
+      ["orders", ["project_1"]],
     ])
 
     expect(
@@ -84,7 +84,7 @@ describe("project resource dependency traversal", () => {
         "project_1",
         memberships
       ).map(dependency => dependency.id)
-    ).toEqual(["automation", "datasource", "agent"])
+    ).toEqual(["automation", "orders", "customers"])
   })
 
   it("stops at excluded assignable dependencies", () => {
@@ -119,15 +119,15 @@ describe("project resource dependency traversal", () => {
         dependencies: [resource("query", ResourceType.QUERY)],
       },
       query: {
-        dependencies: [resource("agent", ResourceType.AGENT)],
+        dependencies: [resource("datasource", ResourceType.DATASOURCE)],
       },
       screen: {
-        dependencies: [resource("agent", ResourceType.AGENT)],
+        dependencies: [resource("datasource", ResourceType.DATASOURCE)],
       },
     }
     const memberships = new Map([
       ["app", ["project_1"]],
-      ["agent", ["project_1"]],
+      ["datasource", ["project_1"]],
     ])
 
     expect(
@@ -137,7 +137,7 @@ describe("project resource dependency traversal", () => {
         "project_1",
         memberships
       ).map(dependency => dependency.id)
-    ).toEqual(["screen", "agent"])
+    ).toEqual(["screen", "datasource"])
   })
 })
 

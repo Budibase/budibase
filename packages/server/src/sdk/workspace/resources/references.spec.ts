@@ -195,7 +195,7 @@ describe("resource references", () => {
 
   it.each([
     { queryId: queryResource.id },
-    { props: { dependencies: [queryResource.id] } },
+    { props: { _children: [{ table: { _id: queryResource.id } }] } },
   ])("matches resource ids in structured reference fields: %j", resource => {
     const target = createSearchTarget(queryResource)
 

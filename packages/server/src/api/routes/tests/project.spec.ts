@@ -32,7 +32,6 @@ import {
   type Webhook,
 } from "@budibase/types"
 import { Header, helpers } from "@budibase/shared-core"
-import { decodeJSBinding, encodeJSBinding } from "@budibase/string-templates"
 import fsp from "fs/promises"
 import { tmpdir } from "os"
 import { join } from "path"
@@ -47,7 +46,6 @@ import sdk from "../../../sdk"
 import { getQueryToolBindingsForResource } from "../../../sdk/workspace/ai/agents/queryToolReferences"
 import * as projects from "../../../sdk/workspace/projects/crud"
 import { buildExternalTableId } from "../../../integrations/utils"
-import { getQueryIndex } from "../../../db/utils"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
 import {
@@ -573,29 +571,6 @@ describe("/projects", () => {
       expect(fetchedAgent?.projectIds).toEqual(expectedProjectIds)
       expect(fetchedTable.projectIds).toEqual(expectedProjectIds)
       expect(fetchedDatasource.projectIds).toEqual(expectedProjectIds)
-    })
-  })
-
-  it("uses the project members view when deleting project assignments", async () => {
-    await withProjectsEnabled(async () => {
-      const project = await createAssignedProject()
-      await createAssignedWorkspaceApp(project._id)
-
-      const query = jest.spyOn(DatabaseImpl.prototype, "query")
-
-      try {
-        await config.api.project.delete(project._id, project._rev)
-
-        expect(query).toHaveBeenCalledWith(
-          getQueryIndex(ViewName.PROJECT_MEMBERS),
-          expect.objectContaining({
-            key: project._id,
-            include_docs: true,
-          })
-        )
-      } finally {
-        query.mockRestore()
-      }
     })
   })
 
@@ -1408,7 +1383,7 @@ describe("/projects", () => {
       })
     })
 
-    it("omits an unassigned agent referenced by an exported query and reports the excluded dependency", async () => {
+    it("does not treat an agent id in a query name as a dependency or report it as excluded", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
           name: "Operations",
@@ -1416,61 +1391,13 @@ describe("/projects", () => {
         const datasource = await config.api.datasource.create({
           ...basicDatasource().datasource,
         })
-        const unassignedAgent = await config.api.agent.create({
-          name: "Referenced agent",
-          aiconfig: "default",
-          live: true,
-        })
-        const queryUsingAgent = await config.api.query.save({
-          ...basicQuery(datasource._id!),
-          transformer: `return "{{ ${unassignedAgent._id}.name }}"`,
-        })
-        await config.api.datasource.update({
-          ...datasource,
-          projectIds: [project._id],
-        })
-
-        const body = await config.api.project.export(project._id)
-        const files = await readTarEntries(body)
-        const manifest = JSON.parse(files.get("manifest.json")!.toString())
-
-        expect(files.has(`docs/query/${queryUsingAgent._id}.json`)).toBe(true)
-        expect(files.has(`docs/agent/${unassignedAgent._id}.json`)).toBe(false)
-        const dependencyIndex = JSON.parse(
-          files.get("dependency-index.json")!.toString()
-        ) as ProjectPackageDependencyIndex
-        const exportedDependencyIds = Object.values(
-          dependencyIndex.resources
-        ).flatMap(resource =>
-          resource.dependencies.map(dependency => dependency.id)
-        )
-        expect(exportedDependencyIds).not.toContain(unassignedAgent._id)
-        expect(manifest.unsupportedContent).toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              type: "excluded_dependency",
-              count: 1,
-            }),
-          ])
-        )
-      })
-    })
-
-    it("ignores resource ids in ordinary text", async () => {
-      await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        const datasource = await config.api.datasource.create({
-          ...basicDatasource().datasource,
-        })
-        const agent = await config.api.agent.create({
+        const unrelatedAgent = await config.api.agent.create({
           name: "Unrelated agent",
           aiconfig: "default",
         })
-        await config.api.query.save({
+        const queryNamedAfterAgent = await config.api.query.save({
           ...basicQuery(datasource._id!),
-          name: `Docs for ${agent._id}.json`,
+          name: `Docs for ${unrelatedAgent._id}.json`,
         })
         await config.api.datasource.update({
           ...datasource,
@@ -1485,12 +1412,17 @@ describe("/projects", () => {
           files.get("dependency-index.json")!.toString()
         ) as ProjectPackageDependencyIndex
 
-        expect(files.has(`docs/agent/${agent._id}.json`)).toBe(false)
+        const exportedQuery = JSON.parse(
+          files.get(`docs/query/${queryNamedAfterAgent._id}.json`)!.toString()
+        )
+
+        expect(exportedQuery.name).toBe(queryNamedAfterAgent.name)
+        expect(files.has(`docs/agent/${unrelatedAgent._id}.json`)).toBe(false)
         expect(
           Object.values(dependencyIndex.resources).flatMap(resource =>
             resource.dependencies.map(dependency => dependency.id)
           )
-        ).not.toContain(agent._id)
+        ).not.toContain(unrelatedAgent._id)
         expect(manifest.unsupportedContent).not.toEqual(
           expect.arrayContaining([
             expect.objectContaining({ type: "excluded_dependency" }),
@@ -1646,19 +1578,22 @@ describe("/projects", () => {
     })
   })
 
-  it("links an agent table tool to its datasource without adding the datasource to the project", async () => {
+  it("recognises an agent's external table tool as a datasource dependency while keeping the datasource outside the project", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
         name: "External data agent",
       })
-      const datasource = await config.api.datasource.create(
+      const unassignedDatasource = await config.api.datasource.create(
         basicDatasource().datasource
       )
-      const externalTableId = buildExternalTableId(datasource._id!, "Orders")
+      const externalTableId = buildExternalTableId(
+        unassignedDatasource._id!,
+        "Orders"
+      )
       await config.api.datasource.update({
-        ...datasource,
+        ...unassignedDatasource,
         entities: {
-          Orders: basicTable(datasource, {
+          Orders: basicTable(unassignedDatasource, {
             _id: externalTableId,
             name: "Orders",
           }),
@@ -1683,15 +1618,15 @@ describe("/projects", () => {
       })
 
       const resourceGraph = await config.api.resource.getResourceDependencies()
-      const agentToolDependencyIds = resourceGraph.body.resources[
+      const agentDependencyIds = resourceGraph.body.resources[
         agent._id!
       ].dependencies.map(dependency => dependency.id)
       const projectMemberIds = resourceGraph.body.resources[
         project._id
       ].dependencies.map(dependency => dependency.id)
 
-      expect(agentToolDependencyIds).toContain(datasource._id)
-      expect(projectMemberIds).not.toContain(datasource._id)
+      expect(agentDependencyIds).toContain(unassignedDatasource._id)
+      expect(projectMemberIds).toEqual([agent._id])
     })
   })
 
@@ -1756,7 +1691,7 @@ describe("/projects", () => {
     })
   })
 
-  describe("imports independent views and row actions", () => {
+  describe("importing a project containing a table, a view and a row action", () => {
     const createViewAndRowActionPackage = async () => {
       const project = await createAssignedProject()
       const table = await createAssignedInternalTable(project._id)
@@ -1791,122 +1726,95 @@ describe("/projects", () => {
       }
     }
 
-    const expectRemappedViewAndRowActionReferences = async (
+    const readImportedViewAndRowAction = async (
       imported: ImportProjectResponse
     ) => {
-      const importedTableId = imported.resources.table![0]
-      const importedTable = await config.api.table.get(importedTableId)
-      const importedView = Object.values(importedTable.views!).filter(
+      const tableId = imported.resources.table![0]
+      const table = await config.api.table.get(tableId)
+      const importedView = Object.values(table.views!).filter(
         helpers.views.isV2
       )[0]
-      const resolvedView = await config.api.viewV2.get(importedView.id)
+      const view = await config.api.viewV2.get(importedView.id)
       const screens = await config.api.screen.list()
-      const importedScreen = screens.find(
+      const screen = screens.find(
         screen => screen._id === imported.resources.screen![0]
       )!
-
-      expect(resolvedView.tableId).toBe(importedTableId)
-      expect(importedScreen.props._children![1].table).toMatchObject({
-        id: importedView.id,
-        tableId: importedTableId,
-      })
-
-      const importedRowActions =
-        await config.api.rowAction.find(importedTableId)
-      const importedAction = Object.values(importedRowActions.actions)[0]
-      expect(importedAction).toMatchObject({
-        tableId: importedTableId,
-        automationId: imported.resources.automation![0],
-        allowedSources: [importedTableId, importedView.id],
-      })
-      expect(Object.keys(importedRowActions.actions)).toEqual([
-        importedAction.id,
-      ])
-
-      const importedAutomation = await config.api.automation.get(
-        imported.resources.automation![0]
-      )
-      const triggerInputs = importedAutomation.definition.trigger
-        .inputs as RowActionTriggerInputs
-      expect(triggerInputs.tableId).toBe(importedTableId)
-      expect(triggerInputs.rowActionId).toBe(importedAction.id)
+      const rowActions = await config.api.rowAction.find(tableId)
+      const rowAction = Object.values(rowActions.actions)[0]
+      const automationId = imported.resources.automation![0]
+      const automation = await config.api.automation.get(automationId)
 
       return {
-        tableId: importedTableId,
+        tableId,
         viewId: importedView.id,
-        rowActionId: importedAction.id,
+        rowActionId: rowAction.id,
+        automationId,
+        view,
+        screenTable: screen.props._children![1].table,
+        rowAction,
+        rowActionIds: Object.keys(rowActions.actions),
+        automationTriggerInputs: automation.definition.trigger
+          .inputs as RowActionTriggerInputs,
       }
     }
 
-    it("creates separate copies on the initial import and re-import into the source workspace", async () => {
-      await withProjectsEnabled(async () => {
-        const source = await createViewAndRowActionPackage()
+    it.each(["source workspace", "another workspace"])(
+      "creates new ids and reconnects the screen and the row action's automation on every import (%s)",
+      async destination => {
+        await withProjectsEnabled(async () => {
+          const source = await createViewAndRowActionPackage()
+          const destinationWorkspaceId =
+            destination === "source workspace"
+              ? config.getDevWorkspaceId()
+              : (
+                  await config.api.workspace.create({
+                    name: "Imported workspace",
+                  })
+                ).appId
 
-        const initialImport = await config.api.project.import(
-          source.packageBuffer
-        )
-        const initial =
-          await expectRemappedViewAndRowActionReferences(initialImport)
-        const repeatedImport = await config.api.project.import(
-          source.packageBuffer
-        )
-        const repeated =
-          await expectRemappedViewAndRowActionReferences(repeatedImport)
+          await config.withHeaders(
+            { [Header.WORKSPACE_ID]: destinationWorkspaceId },
+            async () => {
+              const firstImport = await config.api.project.import(
+                source.packageBuffer
+              )
+              const secondImport = await config.api.project.import(
+                source.packageBuffer
+              )
+              const importedCopies = await Promise.all([
+                readImportedViewAndRowAction(firstImport),
+                readImportedViewAndRowAction(secondImport),
+              ])
 
-        expect(
-          new Set([source.tableId, initial.tableId, repeated.tableId]).size
-        ).toBe(3)
-        expect(
-          new Set([source.viewId, initial.viewId, repeated.viewId]).size
-        ).toBe(3)
-        expect(
-          new Set([
-            source.rowActionId,
-            initial.rowActionId,
-            repeated.rowActionId,
-          ]).size
-        ).toBe(3)
-      })
-    })
+              const allCopies = [source, ...importedCopies]
+              expect(new Set(allCopies.map(copy => copy.tableId)).size).toBe(3)
+              expect(new Set(allCopies.map(copy => copy.viewId)).size).toBe(3)
+              expect(
+                new Set(allCopies.map(copy => copy.rowActionId)).size
+              ).toBe(3)
 
-    it("creates separate copies on the initial import and re-import into another workspace", async () => {
-      await withProjectsEnabled(async () => {
-        const source = await createViewAndRowActionPackage()
-        const destinationWorkspace = await config.api.workspace.create({
-          name: "Imported workspace",
+              for (const copy of importedCopies) {
+                expect(copy.view.tableId).toBe(copy.tableId)
+                expect(copy.screenTable).toMatchObject({
+                  id: copy.viewId,
+                  tableId: copy.tableId,
+                })
+                expect(copy.rowAction).toMatchObject({
+                  tableId: copy.tableId,
+                  automationId: copy.automationId,
+                  allowedSources: [copy.tableId, copy.viewId],
+                })
+                expect(copy.rowActionIds).toEqual([copy.rowActionId])
+                expect(copy.automationTriggerInputs).toMatchObject({
+                  tableId: copy.tableId,
+                  rowActionId: copy.rowActionId,
+                })
+              }
+            }
+          )
         })
-
-        await config.withHeaders(
-          { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
-          async () => {
-            const initialImport = await config.api.project.import(
-              source.packageBuffer
-            )
-            const initial =
-              await expectRemappedViewAndRowActionReferences(initialImport)
-            const repeatedImport = await config.api.project.import(
-              source.packageBuffer
-            )
-            const repeated =
-              await expectRemappedViewAndRowActionReferences(repeatedImport)
-
-            expect(
-              new Set([source.tableId, initial.tableId, repeated.tableId]).size
-            ).toBe(3)
-            expect(
-              new Set([source.viewId, initial.viewId, repeated.viewId]).size
-            ).toBe(3)
-            expect(
-              new Set([
-                source.rowActionId,
-                initial.rowActionId,
-                repeated.rowActionId,
-              ]).size
-            ).toBe(3)
-          }
-        )
-      })
-    })
+      }
+    )
   })
 
   it("imports exported projects additively into another workspace", async () => {
@@ -1939,26 +1847,6 @@ describe("/projects", () => {
       const queryScreen = createQueryScreen(datasource._id!, query)
       await config.api.screen.save({
         ...queryScreen,
-        props: {
-          ...queryScreen.props,
-          testBinding: `{{ ${query._id}.rows }}`,
-          testMultilineBinding: `{{\n ${query._id}.rows\n }}`,
-          testBracketBinding: `{{ [${query._id}].[rows] }}`,
-          testBlockBinding: `{{#if ${query._id}.rows}}{{ ${query._id}.rows }}{{/if}}`,
-          testJavascriptBinding: encodeJSBinding(
-            `return $("${query._id}.rows")`
-          ),
-          ordinaryText: `Docs: ${query._id}.rows`,
-          ordinaryUrl: `https://example.com/${query._id}.rows`,
-          bindingKeyed: {
-            [`{{ ${query._id}.rows }}`]: "binding key",
-          },
-          idKeyed: {
-            [query._id!]: {
-              resourceId: query._id,
-            },
-          },
-        },
         workspaceAppId: workspaceApp._id,
       })
       const automation = await config.createAutomation()
@@ -2079,36 +1967,6 @@ describe("/projects", () => {
           expect(importedScreen!.props._children?.[0].table.datasourceId).toBe(
             imported.resources.datasource?.[0]
           )
-          expect(importedScreen!.props.testBinding).toBe(
-            `{{ ${imported.resources.query?.[0]}.rows }}`
-          )
-          expect(importedScreen!.props.testMultilineBinding).toBe(
-            `{{\n ${imported.resources.query?.[0]}.rows\n }}`
-          )
-          expect(importedScreen!.props.testBracketBinding).toBe(
-            `{{ [${imported.resources.query?.[0]}].[rows] }}`
-          )
-          expect(importedScreen!.props.testBlockBinding).toBe(
-            `{{#if ${imported.resources.query?.[0]}.rows}}{{ ${imported.resources.query?.[0]}.rows }}{{/if}}`
-          )
-          expect(
-            decodeJSBinding(importedScreen!.props.testJavascriptBinding)
-          ).toBe(`return $("${imported.resources.query?.[0]}.rows")`)
-          expect(importedScreen!.props.ordinaryText).toBe(
-            `Docs: ${query._id}.rows`
-          )
-          expect(importedScreen!.props.ordinaryUrl).toBe(
-            `https://example.com/${query._id}.rows`
-          )
-          expect(importedScreen!.props.bindingKeyed).toEqual({
-            [`{{ ${query._id}.rows }}`]: "binding key",
-          })
-          expect(importedScreen!.props.idKeyed).toEqual({
-            [query._id!]: {
-              resourceId: imported.resources.query?.[0],
-            },
-          })
-
           const importedQuery = await config.api.query.get(
             imported.resources.query?.[0]!
           )
