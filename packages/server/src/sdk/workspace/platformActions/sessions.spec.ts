@@ -190,6 +190,71 @@ describe("platformActions sessions", () => {
     })
 
     describe("pagination", () => {
+      it.each(["updated", "status changed", "deleted"] as const)(
+        "does not skip the next session when the anchor is %s",
+        async change => {
+          const first = await withContext(() =>
+            fetchSessions({ status: "active", limit: 2 })
+          )
+          const anchor = first.sessions[1]
+          await withContext(async () => {
+            const database = events.platformActions.getActionsDB()
+            const doc = await database.get<PlatformActionSessionIndexDoc>(
+              buildSessionId(anchor)
+            )
+            if (change === "deleted") {
+              await database.remove(doc)
+            } else {
+              await database.put({
+                ...doc,
+                ...(change === "updated"
+                  ? { updatedAt: "2099-01-01T00:00:00.000Z" }
+                  : { status: "completed" }),
+              })
+            }
+          })
+
+          const next = await withContext(() =>
+            fetchSessions({
+              status: "active",
+              limit: 2,
+              bookmark: first.pagination.nextBookmark,
+            })
+          )
+          expect(next.sessions.map(session => session.sourceId)).toEqual([
+            "c",
+            "b",
+          ])
+          expect(next.pagination.hasNextPage).toBe(true)
+        }
+      )
+
+      it("does not skip a session when paging backward after the anchor moves", async () => {
+        const first = await withContext(() => fetchSessions({ limit: 2 }))
+        const second = await withContext(() =>
+          fetchSessions({ limit: 2, bookmark: first.pagination.nextBookmark })
+        )
+        await withContext(async () => {
+          const database = events.platformActions.getActionsDB()
+          const doc = await database.get<PlatformActionSessionIndexDoc>(
+            buildSessionId(second.sessions[0])
+          )
+          await database.put({ ...doc, updatedAt: "2099-01-01T00:00:00.000Z" })
+        })
+
+        const previous = await withContext(() =>
+          fetchSessions({
+            limit: 2,
+            bookmark: second.pagination.previousBookmark,
+          })
+        )
+        expect(previous.sessions.map(session => session.sourceId)).toEqual([
+          "e",
+          "d",
+        ])
+        expect(previous.pagination.hasPreviousPage).toBe(true)
+      })
+
       it.each(["next", "prev"] as const)(
         "rejects %s bookmarks outside the requested filter",
         async direction => {

@@ -3,6 +3,7 @@ import type {
   Database,
   DatabaseKey,
   DatabaseQueryOpts,
+  Document,
   PlatformActionContainerStatus,
   PlatformActionEnvironment,
   PlatformActionEvent,
@@ -161,7 +162,7 @@ export interface KeysetPage<T> {
   hasMore: boolean
 }
 
-async function fetchKeysetPage<T>({
+async function fetchKeysetPage<T extends Document>({
   viewName,
   params,
   workspaceDb,
@@ -176,16 +177,23 @@ async function fetchKeysetPage<T>({
   limit: number
   reverseResult: boolean
 }): Promise<KeysetPage<T>> {
-  const rows = (await db.queryView(
+  const hasBookmark = params.startkey_docid !== undefined
+  const response = await db.queryViewRaw<T>(
     viewName,
-    { ...params, include_docs: true, limit: limit + 1 },
+    { ...params, include_docs: true, limit: limit + 1 + Number(hasBookmark) },
     workspaceDb,
-    createFunc,
-    { arrayResponse: true }
-  )) as T[]
+    createFunc
+  )
+  const first = response.rows[0]
+  // The anchor may have moved or disappeared since the bookmark was issued.
+  const includesAnchor =
+    hasBookmark &&
+    first?.id === params.startkey_docid &&
+    JSON.stringify(first.key) === JSON.stringify(params.startkey)
+  const rows = includesAnchor ? response.rows.slice(1) : response.rows
 
   const hasMore = rows.length > limit
-  const page = rows.slice(0, limit)
+  const page = rows.slice(0, limit).map(row => row.doc!)
   return { items: reverseResult ? page.reverse() : page, hasMore }
 }
 
@@ -223,7 +231,6 @@ function buildKeysetParams({
     }
     params.startkey = bookmark.key
     params.startkey_docid = bookmark.id
-    params.skip = 1
   } else if (prefix.length > 0) {
     params.startkey = descending ? [...prefix, {}] : prefix
   }
