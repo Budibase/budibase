@@ -9,6 +9,7 @@ export enum WorkspaceResource {
   WORKSPACE_APP = "workspace_app",
   VIEW = "view",
   AGENT = "agent",
+  FUNCTION = "function",
 }
 
 export interface AddWorkspaceFavouriteRequest {
