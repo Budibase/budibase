@@ -209,17 +209,26 @@ describe("Project package data", () => {
     expect(first.attachments[0].key).not.toEqual(sourceKey)
   })
 
-  it.each(["duplicate", "external", "users"])("rejects %s rows", kind => {
+  it("rejects duplicate rows", () => {
     const test = fixture()
-    if (kind === "duplicate") {
-      test.data.rows.push(test.data.rows[0])
-    } else if (kind === "external") {
-      test.tables[0].sourceId = "ds_external"
-    } else {
-      test.tables[0]._id = InternalTable.USER_METADATA
-      test.data.rows[0].tableId = InternalTable.USER_METADATA
-      test.data.rows[0]._id = db.generateUserMetadataID("us_author")
-    }
+    test.data.rows.push(test.data.rows[0])
+
+    expect(() => validate(test)).toThrow("invalid or duplicate row")
+  })
+
+  it("rejects rows from external tables", () => {
+    const test = fixture()
+    test.tables[0].sourceId = "ds_external"
+
+    expect(() => validate(test)).toThrow("invalid or duplicate row")
+  })
+
+  it("rejects user metadata rows", () => {
+    const test = fixture()
+    test.tables[0]._id = InternalTable.USER_METADATA
+    test.data.rows[0].tableId = InternalTable.USER_METADATA
+    test.data.rows[0]._id = db.generateUserMetadataID("us_author")
+
     expect(() => validate(test)).toThrow("invalid or duplicate row")
   })
 
