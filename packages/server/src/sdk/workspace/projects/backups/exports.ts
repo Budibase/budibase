@@ -237,7 +237,10 @@ async function sanitiseDocumentForExport(
   }
 
   if (type === ResourceType.AGENT) {
-    return sdk.ai.agents.sanitiseAgentForExport(sanitised as Agent)
+    return {
+      ...sdk.ai.agents.sanitiseAgentForExport(sanitised as Agent),
+      aiconfig: "",
+    }
   }
 
   if (type === ResourceType.AUTOMATION) {
