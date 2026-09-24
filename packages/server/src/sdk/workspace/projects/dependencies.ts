@@ -452,18 +452,11 @@ export const propagateProjectDependencyChanges = async ({
     return completePropagation()
   }
 
-  let projectsEnabled: boolean
-  try {
-    projectsEnabled = await features.isEnabled(FeatureFlag.PROJECTS)
-  } catch (error) {
-    return incompletePropagation({ resourceIds: [rootResourceId], error })
-  }
-  if (!projectsEnabled) {
-    return completePropagation()
-  }
-
   let analysis: ResourceDependencyAnalysis
   try {
+    if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
+      return completePropagation()
+    }
     analysis = await sdk.resources.analyseResourceDependencies({
       includeProjects: false,
       includeDatasourceQueries: true,

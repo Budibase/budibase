@@ -192,7 +192,6 @@ export const migrateQueryToolReferences = async (
   const referencingAgents: Agent[] = []
   for (const agent of agents) {
     let updatedAgent: Agent | undefined
-    let currentAgent = agent
     let referencesQuery = false
     for (const bindingMigration of bindingMigrations) {
       referencesQuery ||=
@@ -205,11 +204,10 @@ export const migrateQueryToolReferences = async (
           runtimeBinding: bindingMigration.updatedBindings.runtimeBinding,
         })
       const result = updateAgentQueryToolReferences({
-        agent: currentAgent,
+        agent: updatedAgent || agent,
         ...bindingMigration,
       })
       if (result) {
-        currentAgent = result
         updatedAgent = result
       }
     }
