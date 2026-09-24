@@ -7,6 +7,7 @@ import {
   type HomeSortColumn,
   type HomeSortOrder,
   type HomeType,
+  type FunctionSummary,
   type Table,
   type UIAutomation,
   type UIInternalDatasource,
@@ -22,6 +23,7 @@ interface BuildHomeRowsParams {
   apps: UIWorkspaceApp[]
   automations: UIAutomation[]
   agents: Agent[]
+  functions?: FunctionSummary[]
   datasources: (Datasource | UIInternalDatasource)[]
   tables: Table[]
   getFavourite: (
@@ -38,6 +40,8 @@ export const getRowIcon = (type: HomeRowType) => {
       return "browsers"
     case "agent":
       return "sparkle"
+    case "function":
+      return "code"
     case "datasource":
       return "database"
     case "table":
@@ -55,6 +59,8 @@ export const getRowIconColor = (type: HomeRowType) => {
       return "var(--color-orange-400)"
     case "agent":
       return "var(--color-brand-400)"
+    case "function":
+      return "var(--color-purple-300)"
     case "datasource":
     case "table":
       return "var(--color-green-600)"
@@ -91,6 +97,8 @@ export const getTypeLabel = (type: HomeRowType) => {
       return "Automation"
     case "agent":
       return "Agent"
+    case "function":
+      return "Function"
     case "datasource":
       return "Datasource"
     case "table":
@@ -121,6 +129,9 @@ const getStatusSortValue = (row: HomeRow) => {
   }
   if (row.type === "agent") {
     return getAgentStatusLabel(row.resource)
+  }
+  if (row.type === "function") {
+    return row.status
   }
   return "-"
 }
@@ -210,10 +221,22 @@ export const filterHomeRows = ({
   })
 }
 
+const getFunctionStatus = (fn: FunctionSummary) => {
+  switch (fn.readiness) {
+    case "ready":
+      return "Ready"
+    case "build_required":
+      return "Build required"
+    default:
+      return "Build failed"
+  }
+}
+
 export const buildHomeRows = ({
   apps,
   automations,
   agents,
+  functions = [],
   datasources,
   tables,
   getFavourite,
@@ -274,6 +297,20 @@ export const buildHomeRows = ({
     }
   })
 
+  const functionRows: HomeRow[] = functions.map(fn => ({
+    _id: fn._id,
+    id: fn._id,
+    name: fn.name,
+    type: "function",
+    updatedAt: fn.updatedAt,
+    createdAt: fn.createdAt,
+    resource: fn,
+    favourite: getFavourite(WorkspaceResource.FUNCTION, fn._id),
+    status: getFunctionStatus(fn),
+    icon: getRowIcon("function"),
+    iconColor: getRowIconColor("function"),
+  }))
+
   const externalDatasources = datasources.filter(isAssignableDatasource)
   const assignableInternalTables = tables.filter(
     table =>
@@ -320,6 +357,7 @@ export const buildHomeRows = ({
     ...appRows,
     ...automationRows,
     ...agentRows,
+    ...functionRows,
     ...datasourceRows,
     ...tableRows,
   ]
