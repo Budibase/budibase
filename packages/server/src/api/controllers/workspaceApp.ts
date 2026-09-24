@@ -13,10 +13,6 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { defaultAppNavigator } from "../../constants/definitions"
-import {
-  resolveProjectIds,
-  resolveUpdatedProjectIds,
-} from "../../utilities/projects"
 
 function toWorkspaceAppResponse(
   workspaceApp: WorkspaceApp
@@ -76,7 +72,7 @@ export async function create(
   ctx: Ctx<InsertWorkspaceAppRequest, InsertWorkspaceAppResponse>
 ) {
   const { body } = ctx.request
-  const projectIds = await resolveProjectIds(body.projectIds)
+  const projectIds = await sdk.projects.resolveProjectIds(body.projectIds)
   const newWorkspaceApp: WithoutDocMetadata<WorkspaceApp> = {
     name: body.name,
     url: body.url,
@@ -110,10 +106,10 @@ export async function edit(
     ctx.throw(404)
   }
 
-  const updatedProjectIds = await resolveUpdatedProjectIds(
-    body.projectIds,
-    existingWorkspaceApp.projectIds
-  )
+  const updatedProjectIds = await sdk.projects.resolveUpdatedProjectIds({
+    projectIds: body.projectIds,
+    currentProjectIds: existingWorkspaceApp.projectIds,
+  })
 
   const workspaceApp = await sdk.workspaceApps.update({
     _id: body._id,
