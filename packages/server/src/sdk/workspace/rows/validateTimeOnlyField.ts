@@ -13,25 +13,49 @@ validateJs.extend(validateJs.validators.datetime, {
   },
 })
 
+const stringTimeToDate = (value: string) => {
+  const [hour, minute, rawSecond] = value.split(":").map(part => +part)
+  const second = Number.isFinite(rawSecond) ? rawSecond : 0
+  if (
+    hour < 0 ||
+    hour > 23 ||
+    minute < 0 ||
+    minute >= 60 ||
+    second < 0 ||
+    second >= 60
+  ) {
+    return
+  }
+  const wholeSecond = Math.floor(second)
+  const millisecond = Math.round((second - wholeSecond) * 1000)
+  return dayjs("2000-01-01T00:00:00.000Z")
+    .hour(hour)
+    .minute(Math.floor(minute))
+    .second(wholeSecond)
+    .millisecond(millisecond)
+}
+
+const toTimeBound = (bound: string) => {
+  if (sql.utils.isValidTime(bound)) {
+    return bound
+  }
+  const parsed = dayjs(bound)
+  if (!parsed.isValid()) {
+    return bound
+  }
+  return parsed.format(parsed.second() ? "HH:mm:ss" : "HH:mm")
+}
+
 export function validateTimeOnlyField(
   fieldName: string,
   value: any,
   constraints: FieldConstraints | undefined
 ) {
   let res
-  if (value && !sql.utils.isValidTime(value)) {
+  if (value && (!sql.utils.isValidTime(value) || !stringTimeToDate(value))) {
     res = [`"${fieldName}" is not a valid time`]
   } else if (constraints) {
     let castedValue = value
-    const stringTimeToDate = (value: string) => {
-      const [hour, minute, second] = value.split(":").map((x: string) => +x)
-      let date = dayjs("2000-01-01T00:00:00.000Z").hour(hour).minute(minute)
-      if (!isNaN(second)) {
-        date = date.second(second)
-      }
-      return date
-    }
-
     if (castedValue) {
       castedValue = stringTimeToDate(castedValue)
     }
@@ -40,21 +64,11 @@ export function validateTimeOnlyField(
     let earliest, latest
     let easliestTimeString: string, latestTimeString: string
     if (castedConstraints.datetime?.earliest) {
-      easliestTimeString = castedConstraints.datetime.earliest
-      if (dayjs(castedConstraints.datetime.earliest).isValid()) {
-        easliestTimeString = dayjs(castedConstraints.datetime.earliest).format(
-          "HH:mm"
-        )
-      }
+      easliestTimeString = toTimeBound(castedConstraints.datetime.earliest)
       earliest = stringTimeToDate(easliestTimeString)
     }
     if (castedConstraints.datetime?.latest) {
-      latestTimeString = castedConstraints.datetime.latest
-      if (dayjs(castedConstraints.datetime.latest).isValid()) {
-        latestTimeString = dayjs(castedConstraints.datetime.latest).format(
-          "HH:mm"
-        )
-      }
+      latestTimeString = toTimeBound(castedConstraints.datetime.latest)
       latest = stringTimeToDate(latestTimeString)
     }
 
