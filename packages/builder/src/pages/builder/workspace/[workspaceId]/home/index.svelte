@@ -84,14 +84,11 @@
   } from "./_components/urlState"
   import { withWorkspaceHomeReturn } from "@/helpers/workspaceHomeNavigation"
 
-  import { canManageFunctions } from "../function/permissions"
   import FunctionNameModal from "../function/FunctionNameModal.svelte"
   import { DEFAULT_FUNCTION_SOURCE } from "../function/defaultSource"
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
 
-  $: functionsEnabled =
-    !!$functionsAvailable &&
-    canManageFunctions($auth.user, $workspaceStore.appId)
+  $: functionsEnabled = !!$functionsAvailable
 
   $: goto = $gotoStore
   $: url = $urlStore
@@ -346,7 +343,7 @@
     importProjectModal?.show()
   }
 
-  const goToCreate = (target: string) => {
+  const goToCreate = (target: "data/new" | "apis/new") => {
     goto(url(`../${target}`))
   }
 

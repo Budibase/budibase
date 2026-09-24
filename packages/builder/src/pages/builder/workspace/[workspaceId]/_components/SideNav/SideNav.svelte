@@ -37,7 +37,6 @@
     licensing,
     enrichedApps,
     agentsStore,
-    auth,
     featureFlags,
   } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
@@ -70,7 +69,6 @@
   import AgentModal from "@/pages/builder/workspace/[workspaceId]/agent/AgentModal.svelte"
   import WorkspaceAppModal from "@/pages/builder/workspace/[workspaceId]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
-  import { canManageFunctions } from "@/pages/builder/workspace/[workspaceId]/function/permissions"
 
   export const show = () => {
     pinned.set(true)
@@ -231,15 +229,13 @@
     .filter(
       f =>
         $resourceLookup?.[f.resourceId] &&
-        (f.resourceType !== WorkspaceResource.FUNCTION ||
-          ($functionsAvailable && canManageFunctions($auth.user, workspaceId)))
+        (f.resourceType !== WorkspaceResource.FUNCTION || $functionsAvailable)
     )
     .sort((a, b) => a.resourceId.localeCompare(b.resourceId))
 
   $: if (
     workspaceId &&
     $functionsAvailable &&
-    canManageFunctions($auth.user, workspaceId) &&
     $workspaceFavouriteStore.some(
       favourite => favourite.resourceType === WorkspaceResource.FUNCTION
     ) &&
@@ -586,7 +582,7 @@
                 <MenuItem icon="path" on:click={openCreateAutomation}>
                   Automation
                 </MenuItem>
-                {#if $functionsAvailable && canManageFunctions($auth.user, workspaceId)}
+                {#if $functionsAvailable}
                   <MenuItem icon="code" on:click={openFunctions}>
                     Function
                   </MenuItem>
@@ -630,7 +626,7 @@
                 {collapsed}
                 on:click={keepCollapsed}
               />
-              {#if $functionsAvailable && canManageFunctions($auth.user, workspaceId)}
+              {#if $functionsAvailable}
                 <SideNavLink
                   icon="code"
                   text="Functions"
