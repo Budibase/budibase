@@ -33,6 +33,7 @@ export interface AiToolDefinition {
   executionPolicy: ToolExecutionPolicy
   authorization?: ToolAuthorization
   authoritativeInputSchema?: Tool["inputSchema"]
+  preflight?: (input: unknown) => Promise<unknown>
   requesterRedactedTool?: Tool
   filterResult?: (
     result: unknown,
@@ -138,6 +139,9 @@ const wrapTool = (
           value: input,
           schema,
         })
+        if (toolDef.preflight) {
+          validatedInput = await toolDef.preflight(validatedInput)
+        }
       } catch (error) {
         if (isRequesterRedacted) {
           throw new Error("Tool input is invalid")

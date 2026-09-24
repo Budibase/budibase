@@ -1,7 +1,7 @@
 import { createHash } from "crypto"
 import { tool } from "ai"
 import { z } from "zod"
-import validateJs from "validate.js"
+import { cloneDeep, isEqual } from "lodash"
 import {
   FieldType,
   JsonFieldSubType,
@@ -24,6 +24,7 @@ import {
   utils,
 } from "@budibase/shared-core"
 import sdk from "../../../sdk"
+import { processDefaultValues } from "../../../utilities/rowProcessor"
 import type { BudibaseToolDefinition } from "."
 import { getAgentTableFields, sanitizeAgentRow } from "./tableScope"
 
@@ -271,46 +272,12 @@ export const buildRowDataSchema = (
       }
     }
 
-    const required =
-      field.isPrimaryDisplay ||
-      helpers.schema.isRequired(field.schema.constraints)
-    const mustProvide =
-      required &&
-      (!("default" in field.schema) || field.schema.default === undefined)
-    if (required) {
-      if (fieldSchema instanceof z.ZodString) {
-        fieldSchema = fieldSchema.min(1)
-      } else if (fieldSchema instanceof z.ZodArray) {
-        fieldSchema = fieldSchema.min(1)
-      } else if (fieldSchema instanceof z.ZodEnum) {
-        fieldSchema = fieldSchema.refine(value => value !== "", {
-          message: "Required option cannot be empty",
-        })
-      }
-      if (!requirePresentFields || !mustProvide) {
-        fieldSchema = fieldSchema.optional()
-      }
-    } else {
-      if (field.schema.type === FieldType.OPTIONS) {
-        fieldSchema = fieldSchema.or(z.literal(""))
-      }
-      fieldSchema = fieldSchema.nullish()
+    if (field.schema.type === FieldType.OPTIONS) {
+      fieldSchema = fieldSchema.or(z.literal(""))
     }
-    const { email, length } = field.schema.constraints ?? {}
-    fieldSchema = fieldSchema.superRefine((value, ctx) => {
-      if (value === undefined) {
-        return
-      }
-      const errors: string[] | undefined = validateJs.single(value, {
-        ...(email && { email }),
-        ...(length && { length }),
-      })
-      for (const message of errors ?? []) {
-        ctx.addIssue({ code: "custom", message })
-      }
-    })
+    fieldSchema = fieldSchema.nullish()
     shape[field.name] = fieldSchema.describe(
-      `Field type: ${fieldType}.${requirePresentFields && mustProvide ? " Required." : ""}${optionsHint}`
+      `Field type: ${fieldType}.${requirePresentFields && (field.isPrimaryDisplay || isRequiredInputField(field.schema)) ? " Required." : ""}${optionsHint}`
     )
   }
 
@@ -620,6 +587,47 @@ export const createRowTools = ({
         permissionLevel: isWrite ? PermissionLevel.WRITE : PermissionLevel.READ,
         resourceId: tableId,
       },
+      preflight: isWrite
+        ? async input => {
+            const table = await sdk.tables.getTable(tableId)
+            const currentFields = getWritableFields(
+              table.schema,
+              table.sourceType
+            )
+            const dataSchema = buildRowDataSchema(currentFields, "")
+            const parsed = z
+              .object({
+                data: dataSchema,
+                rowId: z.string().optional(),
+                rowRev: z.string().optional(),
+              })
+              .parse(input)
+            const existing =
+              action === ToolAction.UPDATE_ROW
+                ? await sdk.rows.find(tableId, z.string().parse(parsed.rowId))
+                : {}
+            const candidate = cloneDeep({ ...existing, ...parsed.data })
+            const before = cloneDeep(candidate)
+            await processDefaultValues(table, candidate)
+            const result = await sdk.rows.utils.validate({
+              source: table,
+              row: candidate,
+            })
+            if (!result.valid) {
+              throw new Error(`Invalid row: ${JSON.stringify(result.errors)}`)
+            }
+            const data = Object.fromEntries(
+              currentFields
+                .filter(
+                  ({ name }) =>
+                    Object.hasOwn(parsed.data, name) ||
+                    !isEqual(before[name], candidate[name])
+                )
+                .map(({ name }) => [name, candidate[name]])
+            )
+            return { ...parsed, data }
+          }
+        : undefined,
       tool: tool({
         description,
         inputSchema,
