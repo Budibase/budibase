@@ -205,6 +205,7 @@ export async function exportBundle(
   ctx.body = await sdk.projects.streamExportProject({
     projectId: id,
     encryptPassword,
+    includeRows: ctx.request.body?.includeRows,
   })
 }
 

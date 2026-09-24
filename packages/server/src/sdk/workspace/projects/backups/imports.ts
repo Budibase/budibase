@@ -4,8 +4,11 @@ import {
   docIds,
   encryption,
   HTTPError,
+  UsageLimitWarning,
+  objectStore,
   utils,
 } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import { decodeJSBinding, encodeJSBinding } from "@budibase/string-templates"
 import {
@@ -23,6 +26,8 @@ import {
   ProjectImportRequirement,
   ProjectPackageDependencyIndex,
   ProjectPackageManifest,
+  ProjectPackageData,
+  IdentityType,
   Query,
   ResourceType,
   type RestAuthConfig,
@@ -65,6 +70,7 @@ import { getAppUrl } from "../../workspaces/utils"
 import { doWithProjectAssignmentsLock } from "../lock"
 import {
   PROJECT_ATTACHMENTS_DIRECTORY,
+  PROJECT_DATA_FILE,
   MAX_PROJECT_ARCHIVE_SIZE_BYTES,
   MAX_PROJECT_EXTRACTED_SIZE_BYTES,
   MAX_PROJECT_PACKAGE_FILES,
@@ -74,13 +80,13 @@ import {
   PROJECT_FILE,
   PROJECT_MANIFEST_FILE,
 } from "./constants"
-import { getProjectIds, isProjectAssignableResourceType } from "../utils"
-
 import {
   readProjectPackageFiles,
   isSafeArchivePath,
   MAX_PROJECT_PATH_SEGMENTS,
 } from "./files"
+import { prepareProjectData, validateProjectData } from "./data"
+import { getProjectIds, isProjectAssignableResourceType } from "../utils"
 
 const IMPORT_ORDER: ResourceType[] = [
   ResourceType.AGENT,
@@ -140,6 +146,7 @@ interface ExtractedProjectPackage {
   project: Project
   dependencyIndex: ProjectPackageDependencyIndex
   docs: ImportedDoc[]
+  data?: ProjectPackageData
 }
 
 interface InsertedDocRef {
@@ -745,7 +752,9 @@ const validateManifest = (manifest: ProjectPackageManifest) => {
     !manifest.sourceWorkspace.id ||
     !dbCore.isDevWorkspaceID(manifest.sourceWorkspace.id) ||
     !isRecord(manifest.resourcesByType) ||
-    !Array.isArray(manifest.unsupportedContent)
+    !Array.isArray(manifest.unsupportedContent) ||
+    typeof manifest.containsRows !== "boolean" ||
+    typeof manifest.containsAttachments !== "boolean"
   ) {
     throw new HTTPError("Project package manifest is invalid.", 400)
   }
@@ -1229,6 +1238,8 @@ async function extractProjectPackage(
             PROJECT_FILE,
             PROJECT_DEPENDENCY_INDEX_FILE,
             PROJECT_DOCS_DIRECTORY,
+            PROJECT_DATA_FILE,
+            PROJECT_ATTACHMENTS_DIRECTORY,
           ].includes(entry)
       )
     ) {
@@ -1298,12 +1309,41 @@ async function extractProjectPackage(
 
     validateDependencyIndex(project, dependencyIndex, docs, manifest)
 
+    const attachmentPaths = packageFiles
+      .map(filePath => relative(tmpPath, filePath))
+      .filter(
+        filePath =>
+          filePath === PROJECT_ATTACHMENTS_DIRECTORY ||
+          filePath.startsWith(`${PROJECT_ATTACHMENTS_DIRECTORY}/`)
+      )
+    const data = rootEntries.includes(PROJECT_DATA_FILE)
+      ? validateProjectData({
+          data: await readJsonFile<unknown>(join(tmpPath, PROJECT_DATA_FILE)),
+          tables: docs
+            .filter(({ resourceType }) => resourceType === ResourceType.TABLE)
+            .map(({ doc }) => doc as Table),
+          sourceWorkspaceId: manifest.sourceWorkspace.id,
+          attachmentPaths,
+        })
+      : undefined
+    if (
+      manifest.containsRows !== !!data?.rows.length ||
+      manifest.containsAttachments !== !!data?.attachments.length ||
+      (!data && attachmentPaths.length)
+    ) {
+      throw new HTTPError(
+        "Project package data does not match its manifest.",
+        400
+      )
+    }
+
     return {
       tmpPath,
       manifest,
       project,
       dependencyIndex,
       docs,
+      data,
     }
   } catch (err) {
     await fsp.rm(tmpPath, { recursive: true, force: true })
@@ -1378,6 +1418,55 @@ const buildRequirements = ({
   })
 }
 
+const cleanupFailedProjectImport = async ({
+  insertedDocs,
+  importedProject,
+  uploadedKeys,
+}: {
+  insertedDocs: InsertedDocRef[]
+  importedProject?: Project
+  uploadedKeys: string[]
+}) => {
+  const cleanupTasks: Promise<unknown>[] = []
+  if (insertedDocs.length || importedProject) {
+    cleanupTasks.push(
+      doWithProjectAssignmentsLock(async () => {
+        if (insertedDocs.length) {
+          await context.getWorkspaceDB().bulkRemove(insertedDocs, {
+            silenceErrors: true,
+          })
+        }
+        if (importedProject?._id && importedProject._rev) {
+          await context
+            .getWorkspaceDB()
+            .remove(importedProject._id, importedProject._rev)
+        }
+      })
+    )
+  }
+  for (let start = 0; start < uploadedKeys.length; start += 1000) {
+    cleanupTasks.push(
+      objectStore
+        .deleteFiles(
+          objectStore.ObjectStoreBuckets.APPS,
+          uploadedKeys.slice(start, start + 1000)
+        )
+        .then(result => {
+          if (result.Errors?.length) {
+            throw new Error(
+              `Failed to remove ${result.Errors.length} Project attachment(s).`
+            )
+          }
+        })
+    )
+  }
+  for (const result of await Promise.allSettled(cleanupTasks)) {
+    if (result.status === "rejected") {
+      console.log("Failed to clean up Project import", result.reason)
+    }
+  }
+}
+
 export async function importProject(
   file: { path: string },
   opts?: { encryptPassword?: string }
@@ -1388,24 +1477,50 @@ export async function importProject(
   }
 
   const extracted = await extractProjectPackage(file, opts?.encryptPassword)
+  const insertedDocs: InsertedDocRef[] = []
+  const uploadedKeys: string[] = []
+  let importedProject: Project | undefined
   try {
-    return await doWithProjectAssignmentsLock(async () => {
-      const insertedDocs: InsertedDocRef[] = []
-      let importedProject: Project | undefined
-      try {
+    const idMap = new Map<string, string>([
+      [extracted.manifest.sourceWorkspace.id, workspaceId],
+    ])
+    assignImportedIds({ docs: extracted.docs, idMap })
+    const identity = context.getIdentity()
+    const preparedData = extracted.data
+      ? prepareProjectData({
+          data: extracted.data,
+          tables: extracted.docs
+            .filter(({ resourceType }) => resourceType === ResourceType.TABLE)
+            .map(({ doc }) => doc as Table),
+          idMap,
+          workspaceId,
+          userId:
+            identity?.type === IdentityType.USER ? identity._id : undefined,
+        })
+      : undefined
+
+    const persistImport = async (): Promise<ImportProjectResponse> => {
+      if (preparedData) {
+        for (const attachment of preparedData.attachments) {
+          uploadedKeys.push(attachment.key)
+          await objectStore.streamUpload({
+            bucket: objectStore.ObjectStoreBuckets.APPS,
+            stream: fs.createReadStream(
+              join(extracted.tmpPath, attachment.path)
+            ),
+            filename: attachment.key,
+            type: attachment.contentType,
+          })
+        }
+      }
+      return await doWithProjectAssignmentsLock(async () => {
         importedProject = await sdk.projects.create({
           name: extracted.project.name,
           description: extracted.project.description,
           color: extracted.project.color,
         })
         const importedProjectId = importedProject._id!
-
-        const idMap = new Map<string, string>([
-          [extracted.project._id!, importedProjectId],
-          [extracted.manifest.sourceWorkspace.id, workspaceId],
-        ])
-
-        assignImportedIds({ docs: extracted.docs, idMap })
+        idMap.set(extracted.project._id!, importedProjectId)
         const datasourcesById = new Map(
           extracted.docs
             .filter(doc => doc.resourceType === ResourceType.DATASOURCE)
@@ -1459,6 +1574,19 @@ export async function importProject(
           resources[resourceType] = docsToInsert.map(doc => doc._id!)
         }
 
+        if (preparedData) {
+          const dataDocs: AnyDocument[] = [
+            ...preparedData.rows,
+            ...preparedData.relationships,
+          ]
+          for (let start = 0; start < dataDocs.length; start += 250) {
+            await bulkInsertDocs(
+              dataDocs.slice(start, start + 250),
+              insertedDocs
+            )
+          }
+        }
+
         const requirements = buildRequirements({
           docs: extracted.docs,
           datasourcesById,
@@ -1482,22 +1610,25 @@ export async function importProject(
           resources,
           unsupportedContent: extracted.manifest.unsupportedContent,
           requirements,
+          ...(preparedData && { dataImport: preparedData.summary }),
         }
-      } catch (err) {
-        if (insertedDocs.length) {
-          await context.getWorkspaceDB().bulkRemove(insertedDocs, {
-            silenceErrors: true,
-          })
-        }
-        if (importedProject?._id && importedProject._rev) {
-          await context
-            .getWorkspaceDB()
-            .remove(importedProject._id, importedProject._rev)
-            .catch(() => {})
-        }
-        throw err
-      }
+      })
+    }
+
+    if (!preparedData?.rows.length) {
+      return await persistImport()
+    }
+    return await quotas.addRows(preparedData.rows.length, persistImport)
+  } catch (err) {
+    await cleanupFailedProjectImport({
+      insertedDocs,
+      importedProject,
+      uploadedKeys,
     })
+    if (err instanceof UsageLimitWarning) {
+      throw new HTTPError(err.message, 400)
+    }
+    throw err
   } finally {
     await fsp.rm(extracted.tmpPath, { recursive: true, force: true })
   }

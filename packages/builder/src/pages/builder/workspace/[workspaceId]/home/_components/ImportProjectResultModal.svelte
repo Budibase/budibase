@@ -33,6 +33,15 @@
     publishing the imported resources.
   </Body>
 
+  {#if response.dataImport}
+    <Body size="S">
+      Tables: {response.dataImport.tables.toLocaleString()} · Rows: {response.dataImport.rows.toLocaleString()}
+      · Relationships:
+      {response.dataImport.relationships.toLocaleString()} · Attachments:
+      {response.dataImport.attachments.toLocaleString()}
+    </Body>
+  {/if}
+
   <div class="import-details">
     {#if resourceRequirements.length}
       <section>
