@@ -67,7 +67,10 @@ const meterQuery = (
 const createCapabilitySession = async (input: FunctionInvocationScopeInput) => {
   return new FunctionCapabilityService(createFunctionInvocationScope(input), {
     executeQuery,
-    meter: meterQuery,
+    meter: async execute =>
+      await context.doInWorkspaceContext(input.workspaceId, () =>
+        meterQuery(execute)
+      ),
   })
 }
 

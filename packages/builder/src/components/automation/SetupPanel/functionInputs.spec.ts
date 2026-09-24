@@ -1,17 +1,22 @@
 import { describe, expect, it } from "vitest"
-import { isFunctionInputsObject } from "./functionInputs"
+import { parseFunctionInputsObject } from "./functionInputs"
 
 describe("Function automation inputs", () => {
-  it("accepts JSON objects and bindable input expressions", () => {
-    expect(isFunctionInputsObject('{"name":"Ada"}')).toBe(true)
-    expect(isFunctionInputsObject('{"name":"{{ steps.1.name }}"}')).toBe(true)
-    expect(isFunctionInputsObject("{{ steps.1.output }}")).toBe(true)
+  it("accepts JSON objects with bindable values", () => {
+    expect(parseFunctionInputsObject('{"name":"Ada"}')).toEqual({
+      name: "Ada",
+    })
+    expect(parseFunctionInputsObject('{"name":"{{ steps.1.name }}"}')).toEqual({
+      name: "{{ steps.1.name }}",
+    })
+    expect(parseFunctionInputsObject("{}")).toEqual({})
   })
 
   it("rejects invalid JSON and non-object JSON values", () => {
-    expect(isFunctionInputsObject("invalid")).toBe(false)
-    expect(isFunctionInputsObject("[]")).toBe(false)
-    expect(isFunctionInputsObject('"value"')).toBe(false)
-    expect(isFunctionInputsObject("null")).toBe(false)
+    expect(parseFunctionInputsObject("invalid")).toBeUndefined()
+    expect(parseFunctionInputsObject("[]")).toBeUndefined()
+    expect(parseFunctionInputsObject('"value"')).toBeUndefined()
+    expect(parseFunctionInputsObject("null")).toBeUndefined()
+    expect(parseFunctionInputsObject("{{ steps.1.output }}")).toBeUndefined()
   })
 })

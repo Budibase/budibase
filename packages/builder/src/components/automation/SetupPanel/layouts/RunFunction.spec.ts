@@ -41,7 +41,7 @@ const mocks = vi.hoisted(() => {
     requestUpdate: vi.fn(),
     inputData: {
       functionId: undefined as string | undefined,
-      inputs: { value: "{}" },
+      inputs: undefined,
     },
   }
 })
@@ -136,7 +136,7 @@ describe("RunFunction", () => {
     )
 
     expect(mocks.requestUpdate).toHaveBeenCalledWith(
-      { functionId: readyFunction._id },
+      { functionId: readyFunction._id, inputs: {} },
       block
     )
   })

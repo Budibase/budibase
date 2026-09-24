@@ -1,3 +1,5 @@
+import { context } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
 import {
   DEFAULT_FUNCTION_LIMITS,
   FunctionErrorCode,
@@ -17,6 +19,27 @@ import {
 } from "../../sdk/workspace/functions/history"
 import { functionRunSupervisor } from "./supervisor"
 import { functionRunOrchestrator } from "./orchestrator"
+
+jest.mock("@budibase/backend-core", () => {
+  const actual = jest.requireActual("@budibase/backend-core")
+  return {
+    ...actual,
+    context: {
+      ...actual.context,
+      doInWorkspaceContext: jest.fn(),
+    },
+  }
+})
+
+jest.mock("@budibase/pro", () => ({
+  quotas: { addAction: jest.fn() },
+}))
+
+jest.mock("../../api/controllers/query/executeAsAutomation", () => ({
+  executeQueryAsAutomation: jest.fn(async (ctx: { body?: object }) => {
+    ctx.body = { data: [] }
+  }),
+}))
 
 jest.mock("@budibase/functions-runtime", () => {
   const actual = jest.requireActual("@budibase/functions-runtime")
@@ -158,6 +181,68 @@ describe("server FunctionRunOrchestrator", () => {
     expect(mockedCreateFunctionInvocationScope).toHaveBeenCalledWith(
       expect.objectContaining({ limits: request.limits })
     )
+  })
+
+  it("meters a Function query within its workspace context", async () => {
+    let activeWorkspaceId: string | undefined
+    const workspaceContext = jest
+      .mocked(context.doInWorkspaceContext)
+      .mockImplementation(async (workspaceId, task) => {
+        activeWorkspaceId = workspaceId
+        try {
+          return await task()
+        } finally {
+          activeWorkspaceId = undefined
+        }
+      })
+    const addAction = jest
+      .mocked(quotas.addAction)
+      .mockImplementation(async (_action, action) => {
+        expect(activeWorkspaceId).toBe(capabilityScope.workspaceId)
+        return await action()
+      })
+    execute.mockImplementation(async ({ context: executionContext }) => {
+      await executionContext.invokeCapability({
+        runId: request.runId,
+        capabilityId: "capability-1",
+        parameters: {},
+        signal: new AbortController().signal,
+      })
+      return result
+    })
+
+    try {
+      await functionRunOrchestrator.execute({
+        runId: request.runId,
+        workspaceId: capabilityScope.workspaceId,
+        definition: {
+          id: fn._id,
+          name: fn.name,
+          artifact: request.artifact,
+          capabilities: [
+            {
+              capabilityId: "capability-1",
+              queryId: "query-1",
+              datasourceAlias: "Data",
+              queryAlias: "read",
+              parameterNames: [],
+            },
+          ],
+        },
+        inputs: request.inputs,
+        limits: request.limits,
+        invocation: capabilityScope.invocation,
+      })
+
+      expect(addAction).toHaveBeenCalledTimes(1)
+      expect(workspaceContext).toHaveBeenCalledWith(
+        capabilityScope.workspaceId,
+        expect.any(Function)
+      )
+    } finally {
+      workspaceContext.mockReset()
+      addAction.mockReset()
+    }
   })
 
   it("finalizes an error summary when execution fails", async () => {
