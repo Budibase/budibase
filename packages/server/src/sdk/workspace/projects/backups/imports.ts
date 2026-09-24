@@ -1418,6 +1418,55 @@ const buildRequirements = ({
   })
 }
 
+const cleanupFailedProjectImport = async ({
+  insertedDocs,
+  importedProject,
+  uploadedKeys,
+}: {
+  insertedDocs: InsertedDocRef[]
+  importedProject?: Project
+  uploadedKeys: string[]
+}) => {
+  const cleanupTasks: Promise<unknown>[] = []
+  if (insertedDocs.length || importedProject) {
+    cleanupTasks.push(
+      doWithProjectAssignmentsLock(async () => {
+        if (insertedDocs.length) {
+          await context.getWorkspaceDB().bulkRemove(insertedDocs, {
+            silenceErrors: true,
+          })
+        }
+        if (importedProject?._id && importedProject._rev) {
+          await context
+            .getWorkspaceDB()
+            .remove(importedProject._id, importedProject._rev)
+        }
+      })
+    )
+  }
+  for (let start = 0; start < uploadedKeys.length; start += 1000) {
+    cleanupTasks.push(
+      objectStore
+        .deleteFiles(
+          objectStore.ObjectStoreBuckets.APPS,
+          uploadedKeys.slice(start, start + 1000)
+        )
+        .then(result => {
+          if (result.Errors?.length) {
+            throw new Error(
+              `Failed to remove ${result.Errors.length} Project attachment(s).`
+            )
+          }
+        })
+    )
+  }
+  for (const result of await Promise.allSettled(cleanupTasks)) {
+    if (result.status === "rejected") {
+      console.log("Failed to clean up Project import", result.reason)
+    }
+  }
+}
+
 export async function importProject(
   file: { path: string },
   opts?: { encryptPassword?: string }
@@ -1571,44 +1620,11 @@ export async function importProject(
     }
     return await quotas.addRows(preparedData.rows.length, persistImport)
   } catch (err) {
-    const cleanupTasks: Promise<unknown>[] = []
-    if (insertedDocs.length || importedProject) {
-      cleanupTasks.push(
-        doWithProjectAssignmentsLock(async () => {
-          if (insertedDocs.length) {
-            await context.getWorkspaceDB().bulkRemove(insertedDocs, {
-              silenceErrors: true,
-            })
-          }
-          if (importedProject?._id && importedProject._rev) {
-            await context
-              .getWorkspaceDB()
-              .remove(importedProject._id, importedProject._rev)
-          }
-        })
-      )
-    }
-    for (let start = 0; start < uploadedKeys.length; start += 1000) {
-      cleanupTasks.push(
-        objectStore
-          .deleteFiles(
-            objectStore.ObjectStoreBuckets.APPS,
-            uploadedKeys.slice(start, start + 1000)
-          )
-          .then(result => {
-            if (result.Errors?.length) {
-              throw new Error(
-                `Failed to remove ${result.Errors.length} Project attachment(s).`
-              )
-            }
-          })
-      )
-    }
-    for (const result of await Promise.allSettled(cleanupTasks)) {
-      if (result.status === "rejected") {
-        console.log("Failed to clean up Project import", result.reason)
-      }
-    }
+    await cleanupFailedProjectImport({
+      insertedDocs,
+      importedProject,
+      uploadedKeys,
+    })
     if (err instanceof UsageLimitWarning) {
       throw new HTTPError(err.message, 400)
     }

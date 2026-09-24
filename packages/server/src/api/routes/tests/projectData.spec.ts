@@ -10,6 +10,7 @@ import {
   QuotaUsageType,
   RelationshipType,
   StaticQuotaName,
+  type ImportProjectRequest,
   type ImportProjectResponse,
   type Row,
   type RowAttachment,
@@ -172,14 +173,96 @@ describe("Project data export and import", () => {
     })
   })
 
-  it.each([undefined, "example-password"])(
-    "imports related rows and attachments twice independently (password: %s)",
-    async encryptPassword => {
+  const importProjectData = async ({
+    archive,
+    options,
+  }: {
+    archive: Buffer
+    options: ImportProjectRequest
+  }) => {
+    const response = await config.api.project.import(archive, options)
+    return { response, ...(await readImportedData(response)) }
+  }
+
+  const packageFormats = [
+    { format: "unencrypted", options: {} },
+    { format: "encrypted", options: { encryptPassword: "example-password" } },
+  ]
+
+  const readAttachmentContent = async (attachment: RowAttachment) => {
+    const { stream } = await objectStore.getReadStream(
+      ObjectStoreBuckets.APPS,
+      attachment.key!
+    )
+    return await buffer(stream)
+  }
+
+  it.each(packageFormats)(
+    "imports related rows and attachment content from an $format package",
+    async ({ options }) => {
       await withProjectsEnabled(async () => {
         const source = await createDataProject()
         const archive = await config.api.project.export(source.project._id, {
           includeRows: true,
-          encryptPassword,
+          ...options,
+        })
+        const destination = await config.api.workspace.create({
+          name: "Destination",
+        })
+        await config.withHeaders(
+          { [Header.WORKSPACE_ID]: destination.appId },
+          async () => {
+            const imported = await importProjectData({ archive, options })
+            const openCategory = imported.categoryRows.find(
+              row => row.name === "Open"
+            )!
+            const attachment: RowAttachment = imported.rows[0].attachment
+
+            expect(imported.response.dataImport).toEqual({
+              tables: 2,
+              rows: 3,
+              relationships: 1,
+              attachments: 1,
+            })
+            expect(imported.rows).toEqual([
+              expect.objectContaining({
+                name: "First task",
+                description: source.description,
+                autoId: 42,
+                tableId: imported.tasks._id,
+                category: [expect.objectContaining({ _id: openCategory._id })],
+                attachment: expect.objectContaining({
+                  name: source.attachment.name,
+                  size: attachmentContent.length,
+                }),
+                gallery: [expect.objectContaining({ key: attachment.key })],
+              }),
+            ])
+            expect(imported.categoryRows.map(row => row.name).sort()).toEqual([
+              "Closed",
+              "Open",
+            ])
+            expect(openCategory.tasks).toEqual([
+              expect.objectContaining({ _id: imported.rows[0]._id }),
+            ])
+            expect(attachment.key).not.toBe(source.attachment.key)
+            expect(await readAttachmentContent(attachment)).toEqual(
+              attachmentContent
+            )
+          }
+        )
+      })
+    }
+  )
+
+  it.each(packageFormats)(
+    "re-imports an $format package independently, preserving existing data and counting new rows without triggering automations",
+    async ({ options }) => {
+      await withProjectsEnabled(async () => {
+        const source = await createDataProject()
+        const archive = await config.api.project.export(source.project._id, {
+          includeRows: true,
+          ...options,
         })
         const destination = await config.api.workspace.create({
           name: "Destination",
@@ -203,80 +286,18 @@ describe("Project data export and import", () => {
             )
             const emitRow = jest.spyOn(BudibaseEmitter.prototype, "emitRow")
             try {
-              const imports = []
-              for (let i = 0; i < 2; i++) {
-                const imported = await config.api.project.import(
-                  archive,
-                  encryptPassword ? { encryptPassword } : undefined
-                )
-                const data = await readImportedData(imported)
-                const openCategory = data.categoryRows.find(
-                  row => row.name === "Open"
-                )!
-                const attachment: RowAttachment = data.rows[0].attachment
-                const { stream } = await objectStore.getReadStream(
-                  ObjectStoreBuckets.APPS,
-                  attachment.key!
-                )
-
-                expect(imported.dataImport).toEqual({
-                  tables: 2,
-                  rows: 3,
-                  relationships: 1,
-                  attachments: 1,
-                })
-                expect(data.rows).toEqual([
-                  expect.objectContaining({
-                    name: "First task",
-                    description: source.description,
-                    autoId: 42,
-                    tableId: data.tasks._id,
-                    category: [
-                      expect.objectContaining({ _id: openCategory._id }),
-                    ],
-                    attachment: expect.objectContaining({
-                      name: source.attachment.name,
-                      size: attachmentContent.length,
-                    }),
-                    gallery: [expect.objectContaining({ key: attachment.key })],
-                  }),
-                ])
-                expect(data.categoryRows.map(row => row.name).sort()).toEqual([
-                  "Closed",
-                  "Open",
-                ])
-                expect(openCategory.tasks).toEqual([
-                  expect.objectContaining({ _id: data.rows[0]._id }),
-                ])
-                expect(attachment.key).not.toBe(source.attachment.key)
-                expect(await buffer(stream)).toEqual(attachmentContent)
-                imports.push(data)
-              }
-
-              expect(
-                new Set([
-                  source.tasks._id,
-                  imports[0].tasks._id,
-                  imports[1].tasks._id,
-                ]).size
-              ).toBe(3)
-              expect(
-                new Set([
-                  source.task._id,
-                  imports[0].rows[0]._id,
-                  imports[1].rows[0]._id,
-                ]).size
-              ).toBe(3)
-              expect(imports[0].rows[0].attachment.key).not.toBe(
-                imports[1].rows[0].attachment.key
-              )
-              expect(await config.api.row.fetch(existing._id!)).toEqual([
-                expect.objectContaining({
-                  _id: existingRow._id,
-                  name: "Keep me",
-                }),
-              ])
-              expect(emitRow).not.toHaveBeenCalled()
+              const firstImport = await importProjectData({ archive, options })
+              const secondImport = await importProjectData({ archive, options })
+              const firstOpenCategory = firstImport.categoryRows.find(
+                row => row.name === "Open"
+              )!
+              const secondOpenCategory = secondImport.categoryRows.find(
+                row => row.name === "Open"
+              )!
+              const firstAttachment: RowAttachment =
+                firstImport.rows[0].attachment
+              const secondAttachment: RowAttachment =
+                secondImport.rows[0].attachment
               const usageAfter = await config.doInContext(
                 destination.appId,
                 () =>
@@ -285,6 +306,63 @@ describe("Project data export and import", () => {
                     StaticQuotaName.ROWS
                   )
               )
+
+              expect(
+                new Set([
+                  source.tasks._id,
+                  firstImport.tasks._id,
+                  secondImport.tasks._id,
+                ]).size
+              ).toBe(3)
+              expect(
+                new Set([
+                  source.task._id,
+                  firstImport.rows[0]._id,
+                  secondImport.rows[0]._id,
+                ]).size
+              ).toBe(3)
+              expect(
+                new Set([
+                  source.categories._id,
+                  firstImport.categories._id,
+                  secondImport.categories._id,
+                ]).size
+              ).toBe(3)
+              expect(
+                new Set([
+                  source.category._id,
+                  firstOpenCategory._id,
+                  secondOpenCategory._id,
+                ]).size
+              ).toBe(3)
+              expect(firstImport.rows[0].category).toEqual([
+                expect.objectContaining({ _id: firstOpenCategory._id }),
+              ])
+              expect(secondImport.rows[0].category).toEqual([
+                expect.objectContaining({ _id: secondOpenCategory._id }),
+              ])
+              expect(firstOpenCategory.tasks).toEqual([
+                expect.objectContaining({ _id: firstImport.rows[0]._id }),
+              ])
+              expect(secondOpenCategory.tasks).toEqual([
+                expect.objectContaining({ _id: secondImport.rows[0]._id }),
+              ])
+              expect(firstAttachment.key).not.toBe(source.attachment.key)
+              expect(secondAttachment.key).not.toBe(source.attachment.key)
+              expect(firstAttachment.key).not.toBe(secondAttachment.key)
+              expect(await readAttachmentContent(firstAttachment)).toEqual(
+                attachmentContent
+              )
+              expect(await readAttachmentContent(secondAttachment)).toEqual(
+                attachmentContent
+              )
+              expect(await config.api.row.fetch(existing._id!)).toEqual([
+                expect.objectContaining({
+                  _id: existingRow._id,
+                  name: "Keep me",
+                }),
+              ])
+              expect(emitRow).not.toHaveBeenCalled()
               expect(usageAfter.total - usageBefore.total).toBe(6)
               expect(usageAfter.app! - usageBefore.app!).toBe(6)
             } finally {
@@ -357,6 +435,33 @@ describe("Project data export and import", () => {
       ),
     }))
 
+  const failRowImportAfterFirstWrite = ({
+    workspaceId,
+  }: {
+    workspaceId: string
+  }) => {
+    const originalBulkDocs = DatabaseImpl.prototype.bulkDocs
+    return jest
+      .spyOn(DatabaseImpl.prototype, "bulkDocs")
+      .mockImplementation(async function (this: DatabaseImpl, docs) {
+        if (
+          context.getWorkspaceId() === workspaceId &&
+          docs.some(doc => doc._id?.startsWith("ro_") && !doc._deleted)
+        ) {
+          const saved = await this.put(docs[0])
+          return [
+            { id: saved.id, rev: saved.rev },
+            ...docs.slice(1).map(doc => ({
+              id: doc._id!,
+              error: "conflict",
+              reason: "import failed",
+            })),
+          ]
+        }
+        return await originalBulkDocs.call(this, docs)
+      })
+  }
+
   it("rolls back partial row writes and uploaded attachments without changing existing data", async () => {
     await withProjectsEnabled(async () => {
       const source = await createDataProject()
@@ -365,26 +470,9 @@ describe("Project data export and import", () => {
       })
       const destination = await createDestination()
       const before = await snapshotWorkspace(destination.appId)
-      const originalBulkDocs = DatabaseImpl.prototype.bulkDocs
-      const bulkDocs = jest
-        .spyOn(DatabaseImpl.prototype, "bulkDocs")
-        .mockImplementation(async function (this: DatabaseImpl, docs) {
-          if (
-            context.getWorkspaceId() === destination.appId &&
-            docs.some(doc => doc._id?.startsWith("ro_") && !doc._deleted)
-          ) {
-            const saved = await this.put(docs[0])
-            return [
-              { id: saved.id, rev: saved.rev },
-              ...docs.slice(1).map(doc => ({
-                id: doc._id!,
-                error: "conflict",
-                reason: "import failed",
-              })),
-            ]
-          }
-          return await originalBulkDocs.call(this, docs)
-        })
+      const bulkDocs = failRowImportAfterFirstWrite({
+        workspaceId: destination.appId,
+      })
 
       try {
         await config.withHeaders(
