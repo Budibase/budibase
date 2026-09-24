@@ -81,6 +81,31 @@
     refreshAttempt += 1
   }
 
+  const applyRefreshedAssignment = ({
+    requestedProjectIds,
+    response,
+  }: {
+    requestedProjectIds: string[]
+    response: PreviewProjectAssignmentResponse
+  }) => {
+    const removed = assignedProjectIds.filter(
+      id => !requestedProjectIds.includes(id)
+    )
+    const added = requestedProjectIds.filter(
+      id => !assignedProjectIds.includes(id)
+    )
+    selectedProjectIds = [
+      ...new Set([
+        ...response.resourceProjectIds.filter(id => !removed.includes(id)),
+        ...added,
+      ]),
+    ]
+    assignedProjectIds = response.resourceProjectIds
+    resourceRevision = response.resourceRev
+    refreshingResource = false
+    assignmentStale = false
+  }
+
   $effect(() => {
     const request = {
       resourceId: resource.id,
@@ -107,22 +132,10 @@
           return
         }
 
-        const removed = assignedProjectIds.filter(
-          id => !request.projectIds.includes(id)
-        )
-        const added = request.projectIds.filter(
-          id => !assignedProjectIds.includes(id)
-        )
-        selectedProjectIds = [
-          ...new Set([
-            ...response.resourceProjectIds.filter(id => !removed.includes(id)),
-            ...added,
-          ]),
-        ]
-        assignedProjectIds = response.resourceProjectIds
-        resourceRevision = response.resourceRev
-        refreshingResource = false
-        assignmentStale = false
+        applyRefreshedAssignment({
+          requestedProjectIds: request.projectIds,
+          response,
+        })
       } catch (error) {
         if (request === latestPreviewRequest) {
           previewError = getErrorMessage(error) || "Please try again"
