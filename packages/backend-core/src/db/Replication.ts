@@ -2,11 +2,16 @@ import { Document, DocumentType } from "@budibase/types"
 import PouchDB from "pouchdb"
 import { DesignDocuments, SEPARATOR } from "../constants"
 import { closePouchDB, getPouchDB } from "./couch"
+import { directCouchCall } from "./couch/utils"
 import { tracer } from "dd-trace"
 
 const _PouchDB = PouchDB // Keep Prettier from removing import
 
 const DEFAULT_REPLICATION_BATCH_SIZE = 1000
+const TOMBSTONE_CHANGES_BATCH_SIZE = 500
+const TOMBSTONE_LOOKUP_BATCH_SIZE = 200
+const TOMBSTONE_CLEANUP_BATCH_SIZE = 200
+const MAX_TOMBSTONES_TO_CLEAN = 1000
 
 enum ReplicationDirection {
   TO_PRODUCTION = "toProduction",
@@ -14,13 +19,48 @@ enum ReplicationDirection {
 }
 
 type DocumentWithID = Omit<Document, "_id"> & { _id: string }
+type ChangeSequence = number | string
+
+interface TombstoneCheckpoint extends PouchDB.Core.IdMeta {
+  lastSequence: ChangeSequence
+  _rev?: PouchDB.Core.RevisionId
+}
+
+type AppReplicationOptions = PouchDB.Replication.ReplicateOptions & {
+  isCreation?: boolean
+  tablesToSync?: string[] | "all"
+  tombstoneIds?: string[]
+  tombstonesOnly?: boolean
+}
+
+interface TombstoneRevision {
+  id: string
+  rev: string
+}
+
+interface CouchPurgeResponse {
+  purged?: Record<string, string[]>
+}
+
+const TOMBSTONE_CHECKPOINT_ID = "_local/budibase-publish-tombstones"
+
+function isDataDocumentId(id: string) {
+  return (
+    id.startsWith(DocumentType.ROW + SEPARATOR) ||
+    id.startsWith(DocumentType.LINK + SEPARATOR)
+  )
+}
 
 class Replication {
   source: PouchDB.Database
   target: PouchDB.Database
+  sourceName: string
+  targetName: string
   direction: ReplicationDirection | undefined
 
   constructor({ source, target }: { source: string; target: string }) {
+    this.sourceName = source
+    this.targetName = target
     this.source = getPouchDB(source)
     this.target = getPouchDB(target)
     if (
@@ -71,6 +111,370 @@ class Replication {
         }
       )
     })
+  }
+
+  async replicateApp(opts: AppReplicationOptions = {}) {
+    if (this.direction !== ReplicationDirection.TO_PRODUCTION) {
+      return this.replicate(this.appReplicateOpts(opts))
+    }
+
+    if (typeof opts.filter === "string") {
+      throw new Error(
+        "Named CouchDB filters cannot be used when replicating to production"
+      )
+    }
+    const canAdvanceTombstoneCheckpoint =
+      opts.checkpoint !== false &&
+      !opts.filter &&
+      !opts.selector &&
+      (opts.tablesToSync === undefined || opts.tablesToSync === "all")
+
+    const checkpoint = await this.getTombstoneCheckpoint()
+    let since = checkpoint
+    let lastSequence = checkpoint
+    let tombstoneWritesSucceeded = true
+    const tombstonesToClean = new Map<string, TombstoneRevision>()
+    const sourceTombstonesToClean = new Map<string, TombstoneRevision>()
+    let tombstoneCleanupIncomplete = false
+    let scanUntil: ChangeSequence | undefined
+    let hasMoreChanges = true
+
+    while (hasMoreChanges) {
+      const changes = await this.source.changes<Document>({
+        since,
+        limit: TOMBSTONE_CHANGES_BATCH_SIZE,
+        include_docs: true,
+        style: "all_docs",
+      })
+      scanUntil ??= changes.last_seq
+      const batchDeletedIds = changes.results
+        .filter(change => change.deleted)
+        .map(change => change.id)
+      const tombstoneFilter = this.appReplicateOpts({
+        ...opts,
+        tombstoneIds: batchDeletedIds,
+      }).filter as (doc: DocumentWithID, params: object) => boolean
+      const deletedIds = Array.from(
+        new Set(
+          changes.results
+            .filter(change => change.deleted)
+            .filter(change => {
+              const revs = change.changes?.map(({ rev }) => rev) ?? []
+              const rev = revs[0]
+              if (!rev) {
+                return false
+              }
+              const doc = {
+                ...(change.doc as DocumentWithID | undefined),
+                _id: change.id,
+                _rev: rev,
+                _deleted: true,
+              }
+              return tombstoneFilter(doc, {})
+            })
+            .map(change => change.id)
+        )
+      )
+
+      for (const change of changes.results) {
+        if (!change.deleted) {
+          continue
+        }
+        const rev = change.changes?.[0]?.rev
+        if (!rev) {
+          continue
+        }
+        if (deletedIds.includes(change.id)) {
+          if (change.changes?.length !== 1) {
+            continue
+          }
+          if (
+            tombstonesToClean.has(change.id) ||
+            tombstonesToClean.size < MAX_TOMBSTONES_TO_CLEAN
+          ) {
+            tombstonesToClean.set(change.id, { id: change.id, rev })
+          } else {
+            tombstoneCleanupIncomplete = true
+          }
+        } else if (
+          canAdvanceTombstoneCheckpoint &&
+          isDataDocumentId(change.id)
+        ) {
+          if (
+            sourceTombstonesToClean.has(change.id) ||
+            sourceTombstonesToClean.size < MAX_TOMBSTONES_TO_CLEAN
+          ) {
+            sourceTombstonesToClean.set(change.id, { id: change.id, rev })
+          } else {
+            tombstoneCleanupIncomplete = true
+          }
+        }
+      }
+
+      for (
+        let offset = 0;
+        offset < deletedIds.length;
+        offset += TOMBSTONE_LOOKUP_BATCH_SIZE
+      ) {
+        const ids = deletedIds.slice(
+          offset,
+          offset + TOMBSTONE_LOOKUP_BATCH_SIZE
+        )
+        const targetDocs = await this.target.allDocs({ keys: ids })
+        const tombstoneIds = targetDocs.rows.flatMap(row => {
+          if ("error" in row || row.value.deleted) {
+            return []
+          }
+          return [row.id]
+        })
+        if (!tombstoneIds.length) {
+          continue
+        }
+
+        const result = await this.replicate(
+          this.appReplicateOpts({
+            ...opts,
+            checkpoint: false,
+            tombstoneIds,
+            tombstonesOnly: true,
+          })
+        )
+        if (result.doc_write_failures > 0) {
+          tombstoneWritesSucceeded = false
+        }
+      }
+
+      const nextSince = changes.results.at(-1)?.seq ?? changes.last_seq
+      hasMoreChanges =
+        changes.results.length === TOMBSTONE_CHANGES_BATCH_SIZE &&
+        nextSince !== scanUntil
+      if (hasMoreChanges) {
+        since = nextSince
+      }
+    }
+    lastSequence = scanUntil ?? lastSequence
+
+    const result = await this.replicate(
+      this.appReplicateOpts({ ...opts, tombstoneIds: [] })
+    )
+    if (result.doc_write_failures > 0) {
+      tombstoneWritesSucceeded = false
+    }
+    if (tombstoneWritesSucceeded) {
+      const tombstonesToCleanList = Array.from(tombstonesToClean.values())
+      const sourceTombstonesToCleanList = Array.from(
+        sourceTombstonesToClean.values()
+      )
+      const tombstonesToCleanNow = tombstonesToCleanList.slice(
+        0,
+        MAX_TOMBSTONES_TO_CLEAN
+      )
+      const sourceTombstonesToCleanNow = sourceTombstonesToCleanList.slice(
+        0,
+        Math.max(0, MAX_TOMBSTONES_TO_CLEAN - tombstonesToCleanNow.length)
+      )
+
+      if (
+        tombstoneCleanupIncomplete ||
+        tombstonesToCleanList.length + sourceTombstonesToCleanList.length >
+          MAX_TOMBSTONES_TO_CLEAN
+      ) {
+        tombstoneWritesSucceeded = false
+      }
+
+      try {
+        const replicatedCleanupSucceeded =
+          await this.cleanReplicatedTombstones(tombstonesToCleanNow)
+        const sourceCleanupSucceeded = await this.cleanSourceTombstones(
+          sourceTombstonesToCleanNow
+        )
+        if (!replicatedCleanupSucceeded || !sourceCleanupSucceeded) {
+          tombstoneWritesSucceeded = false
+        }
+      } catch (error) {
+        // Tombstone cleanup is best-effort; leave the source revision so a later publish can retry.
+        console.warn("Unable to purge published tombstones", error)
+        tombstoneWritesSucceeded = false
+      }
+    }
+    if (tombstoneWritesSucceeded && canAdvanceTombstoneCheckpoint) {
+      await this.saveTombstoneCheckpoint(lastSequence)
+    }
+    return result
+  }
+
+  private async cleanReplicatedTombstones(
+    tombstones: TombstoneRevision[]
+  ): Promise<boolean> {
+    let succeeded = true
+    for (
+      let offset = 0;
+      offset < tombstones.length;
+      offset += TOMBSTONE_CLEANUP_BATCH_SIZE
+    ) {
+      const batch = tombstones.slice(
+        offset,
+        offset + TOMBSTONE_CLEANUP_BATCH_SIZE
+      )
+      const ids = batch.map(({ id }) => id)
+      const [sourceChanges, targetChanges] = await Promise.all([
+        this.source.changes<Document>({
+          since: 0,
+          doc_ids: ids,
+          include_docs: true,
+          style: "all_docs",
+        }),
+        this.target.changes<Document>({
+          since: 0,
+          doc_ids: ids,
+          include_docs: true,
+          style: "all_docs",
+        }),
+      ])
+      const latestChange = (
+        results: typeof sourceChanges.results,
+        id: string
+      ) => [...results].reverse().find(change => change.id === id)
+      const hasOnlyTombstoneRevision = (
+        change: (typeof sourceChanges.results)[number] | undefined,
+        rev: string
+      ) =>
+        !!change?.deleted &&
+        change.changes?.length === 1 &&
+        change.changes[0].rev === rev
+      const verified = batch.filter(({ id, rev }) => {
+        const sourceChange = latestChange(sourceChanges.results, id)
+        const targetChange = latestChange(targetChanges.results, id)
+        return (
+          hasOnlyTombstoneRevision(sourceChange, rev) &&
+          (!targetChange || hasOnlyTombstoneRevision(targetChange, rev))
+        )
+      })
+      const targetPurge = verified.filter(({ id }) =>
+        latestChange(targetChanges.results, id)
+      )
+      const purgedTargetIds = await this.purgeRevisions(
+        this.targetName,
+        targetPurge
+      )
+      const sourcePurge = verified.filter(
+        ({ id }) =>
+          !targetPurge.some(target => target.id === id) ||
+          purgedTargetIds.has(id)
+      )
+      const purgedSourceIds = await this.purgeRevisions(
+        this.sourceName,
+        sourcePurge
+      )
+      if (purgedSourceIds.size !== batch.length) {
+        succeeded = false
+      }
+    }
+    return succeeded
+  }
+
+  private async cleanSourceTombstones(
+    tombstones: TombstoneRevision[]
+  ): Promise<boolean> {
+    let succeeded = true
+    for (
+      let offset = 0;
+      offset < tombstones.length;
+      offset += TOMBSTONE_CLEANUP_BATCH_SIZE
+    ) {
+      const batch = tombstones.slice(
+        offset,
+        offset + TOMBSTONE_CLEANUP_BATCH_SIZE
+      )
+      const changes = await this.source.changes<Document>({
+        since: 0,
+        doc_ids: batch.map(({ id }) => id),
+        include_docs: true,
+        style: "all_docs",
+      })
+      const purgable = batch.filter(({ id, rev }) => {
+        const change = [...changes.results]
+          .reverse()
+          .find(change => change.id === id)
+        return (
+          !!change?.deleted &&
+          change.changes?.length === 1 &&
+          change.changes[0].rev === rev
+        )
+      })
+      const purgedIds = await this.purgeRevisions(this.sourceName, purgable)
+      if (purgedIds.size !== batch.length) {
+        succeeded = false
+      }
+    }
+    return succeeded
+  }
+
+  private async purgeRevisions(
+    dbName: string,
+    tombstones: TombstoneRevision[]
+  ) {
+    if (!tombstones.length) {
+      return new Set<string>()
+    }
+    const revisions = Object.fromEntries(
+      tombstones.map(({ id, rev }) => [id, [rev]])
+    )
+    const response = await directCouchCall(`${dbName}/_purge`, "POST", {
+      ...revisions,
+    })
+    if (!response.ok) {
+      throw new Error(`CouchDB purge failed with status ${response.status}`)
+    }
+    const body: CouchPurgeResponse = await response.json()
+    return new Set(
+      tombstones
+        .filter(({ id, rev }) => body.purged?.[id]?.includes(rev))
+        .map(({ id }) => id)
+    )
+  }
+
+  private async getTombstoneCheckpoint(): Promise<ChangeSequence> {
+    try {
+      const checkpoint = await this.target.get<TombstoneCheckpoint>(
+        TOMBSTONE_CHECKPOINT_ID
+      )
+      return checkpoint.lastSequence
+    } catch (error) {
+      if (
+        !error ||
+        typeof error !== "object" ||
+        !("status" in error) ||
+        error.status !== 404
+      ) {
+        throw error
+      }
+    }
+    return 0
+  }
+
+  private async saveTombstoneCheckpoint(lastSequence: ChangeSequence) {
+    let checkpoint: TombstoneCheckpoint = {
+      _id: TOMBSTONE_CHECKPOINT_ID,
+      lastSequence,
+    }
+    try {
+      const existing = await this.target.get<TombstoneCheckpoint>(
+        TOMBSTONE_CHECKPOINT_ID
+      )
+      checkpoint = { ...checkpoint, _rev: existing._rev }
+    } catch (error) {
+      if (
+        !error ||
+        typeof error !== "object" ||
+        !("status" in error) ||
+        error.status !== 404
+      ) {
+        throw error
+      }
+    }
+
+    await this.target.put(checkpoint)
   }
 
   // If the target rev went ahead the source rev, replication will cause conflicts and the document will not update in the target.
@@ -131,18 +535,24 @@ class Replication {
   }
 
   appReplicateOpts(
-    opts: PouchDB.Replication.ReplicateOptions & {
-      isCreation?: boolean
-      tablesToSync?: string[] | "all"
-    } = {}
+    opts: AppReplicationOptions = {}
   ): PouchDB.Replication.ReplicateOptions {
+    const direction = this.direction
+    const tombstoneIds = new Set<string>(opts.tombstoneIds ?? [])
+    delete opts.tombstoneIds
+    const tombstonesOnly = opts.tombstonesOnly
+    delete opts.tombstonesOnly
     if (typeof opts.filter === "string") {
+      if (direction === ReplicationDirection.TO_PRODUCTION) {
+        throw new Error(
+          "Named CouchDB filters cannot be used when replicating to production"
+        )
+      }
       opts.batch_size = opts.batch_size ?? DEFAULT_REPLICATION_BATCH_SIZE
       return opts
     }
 
     const filter = opts.filter
-    const direction = this.direction
     const toDev = direction === ReplicationDirection.TO_DEV
     delete opts.filter
 
@@ -171,6 +581,9 @@ class Replication {
       ...opts,
       batch_size: opts.batch_size ?? DEFAULT_REPLICATION_BATCH_SIZE,
       filter: (doc: DocumentWithID, params: any) => {
+        if (tombstonesOnly && !doc._deleted) {
+          return false
+        }
         if (!isCreation && doc._id === DesignDocuments.MIGRATIONS) {
           return false
         }
@@ -181,10 +594,6 @@ class Replication {
         if (startsWithID(doc._id, DocumentType.SLACK_APP_CONFIG)) {
           return false
         }
-        // always replicate deleted documents
-        if (doc._deleted) {
-          return true
-        }
         if (
           direction === ReplicationDirection.TO_PRODUCTION &&
           !isCreation &&
@@ -193,9 +602,12 @@ class Replication {
           return false
         }
         if (isData(doc._id)) {
-          return (
+          const isInSelectedTable =
             !!tableSyncList?.find(id => doc._id.includes(id)) || syncAllTables
-          )
+          if (tableSyncList || syncAllTables) {
+            return isInSelectedTable && (!filter || filter(doc, params))
+          }
+          return !!filter?.(doc, params)
         }
         if (startsWithID(doc._id, DocumentType.AUTOMATION_LOG)) {
           return false
@@ -206,17 +618,25 @@ class Replication {
         if (doc._id === DocumentType.WORKSPACE_METADATA) {
           return false
         }
+        if (doc._deleted) {
+          if (direction !== ReplicationDirection.TO_PRODUCTION) {
+            return true
+          }
+          return tombstoneIds.has(doc._id) && (!filter || filter(doc, params))
+        }
         return filter ? filter(doc, params) : true
       },
     }
 
-    // Keep this in sync with the filter function above.
-    if (!filter) {
+    if (!filter || direction === ReplicationDirection.TO_PRODUCTION) {
       const generatedSelector = this.buildReplicationSelector({
         direction,
         isCreation,
         tableSyncList,
         syncAllTables,
+        tombstoneIds: Array.from(tombstoneIds),
+        tombstonesOnly: tombstonesOnly ?? false,
+        hasCustomFilter: !!filter,
       })
       result.selector = opts.selector
         ? { $and: [opts.selector, generatedSelector] }
@@ -231,8 +651,19 @@ class Replication {
     isCreation?: boolean
     tableSyncList?: string[]
     syncAllTables: boolean
+    tombstoneIds: string[]
+    tombstonesOnly: boolean
+    hasCustomFilter: boolean
   }): PouchDB.Find.Selector {
-    const { direction, isCreation, tableSyncList, syncAllTables } = opts
+    const {
+      direction,
+      isCreation,
+      tableSyncList,
+      syncAllTables,
+      tombstoneIds,
+      tombstonesOnly,
+      hasCustomFilter,
+    } = opts
     const toDev = direction === ReplicationDirection.TO_DEV
     const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     const startsWith = (prefix: string): PouchDB.Find.Selector => ({
@@ -242,7 +673,6 @@ class Replication {
       $nor: [selector],
     })
 
-    // Evaluated ahead of the deleted-document short circuit below
     const unconditional: PouchDB.Find.Selector[] = [
       not(startsWith(DocumentType.SLACK_APP_CONFIG + SEPARATOR)),
     ]
@@ -253,7 +683,6 @@ class Replication {
       unconditional.push(not(startsWith("_design")))
     }
 
-    // Only relevant once we're past the deleted/user-metadata short-circuits.
     const fallback: PouchDB.Find.Selector[] = [
       not(startsWith(DocumentType.AUTOMATION_LOG + SEPARATOR)),
       not(startsWith(DocumentType.AGENT_LOG_SESSION + SEPARATOR)),
@@ -262,6 +691,7 @@ class Replication {
     if (direction === ReplicationDirection.TO_PRODUCTION && !isCreation) {
       fallback.push(not(startsWith(DocumentType.AUTO_COLUMN_STATE + SEPARATOR)))
     }
+    let dataScope: PouchDB.Find.Selector | undefined
     if (!syncAllTables) {
       const isNotData = not({
         $or: [
@@ -269,30 +699,45 @@ class Replication {
           startsWith(DocumentType.LINK + SEPARATOR),
         ],
       })
-      fallback.push(
-        tableSyncList?.length
-          ? {
-              $or: [
-                isNotData,
-                {
-                  $or: tableSyncList.map(id => ({
-                    _id: { $regex: escapeRegExp(id) },
-                  })),
-                },
-              ],
-            }
-          : isNotData
-      )
+      dataScope = tableSyncList?.length
+        ? {
+            $or: [
+              isNotData,
+              {
+                $or: tableSyncList.map(id => ({
+                  _id: { $regex: escapeRegExp(id) },
+                })),
+              },
+            ],
+          }
+        : isNotData
+    }
+    const replicationFallback = dataScope ? [...fallback, dataScope] : fallback
+    const tombstoneFallback =
+      hasCustomFilter && !tableSyncList ? fallback : replicationFallback
+
+    let documents: PouchDB.Find.Selector
+    if (direction === ReplicationDirection.TO_PRODUCTION) {
+      const liveDocuments = {
+        $and: [...replicationFallback],
+      }
+      const allowedTombstones = tombstoneIds.length
+        ? {
+            $and: [{ _id: { $in: tombstoneIds } }, ...tombstoneFallback],
+          }
+        : undefined
+      if (tombstonesOnly) {
+        documents = allowedTombstones ?? { _id: { $in: [] } }
+      } else {
+        documents = allowedTombstones
+          ? { $or: [liveDocuments, allowedTombstones] }
+          : liveDocuments
+      }
+    } else {
+      documents = { $or: [{ _deleted: true }, { $and: fallback }] }
     }
 
-    return {
-      $and: [
-        ...unconditional,
-        {
-          $or: [{ _deleted: true }, { $and: fallback }],
-        },
-      ],
-    }
+    return { $and: [...unconditional, documents] }
   }
 
   /**
