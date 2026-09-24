@@ -1,4 +1,4 @@
-import { cache, context, roles } from "@budibase/backend-core"
+import { cache, context, features, roles } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import {
@@ -9,6 +9,7 @@ import {
   ApprovedToolCall,
   ChatConversationRequest,
   ContextUser,
+  FeatureFlag,
   ApprovalToolResultStatus,
   ToolValidationResultStatus,
   type AgentExecutionContext,
@@ -606,23 +607,27 @@ const prepareAgentChatRunInternal = async ({
     includeGoal: promptMode === "automation",
     escalationGateContext,
   }
+  const requesterConfirmationEnabled =
+    promptMode === "interactive" &&
+    (await features.isEnabled(FeatureFlag.AI_REQUESTER_CONFIRMATION))
   if (promptMode === "interactive") {
+    buildPromptOptions.baseSystemPrompt = ai.agentSystemPrompt(
+      user,
+      chat?.timezone
+    )
+  }
+  if (requesterConfirmationEnabled) {
     buildPromptOptions.requesterValidationContext = {
       requesterId: user.globalId || user.userId || user._id || "",
       requesterRole: requester.executorRole,
       getRequestId,
       channel: chat?.channel,
     }
-    buildPromptOptions.baseSystemPrompt = ai.agentSystemPrompt(
-      user,
-      chat?.timezone
-    )
   }
 
-  const persistedConfirmation =
-    promptMode === "interactive"
-      ? await getActiveRequesterAction(sessionId)
-      : undefined
+  const persistedConfirmation = requesterConfirmationEnabled
+    ? await getActiveRequesterAction(sessionId)
+    : undefined
 
   const [runContext, modelMessages] = await Promise.all([
     prepareAgentRunContext({

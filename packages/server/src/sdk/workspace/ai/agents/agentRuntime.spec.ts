@@ -684,6 +684,28 @@ describe("prepareAgentChatRun - approval gating", () => {
     expect(buildOptions).not.toHaveProperty("baseSystemPrompt")
   })
 
+  it("does not enable requester confirmation when its feature flag is disabled", async () => {
+    await runFor(supportOperation)
+
+    const buildOptions = jest.mocked(buildPromptAndTools).mock.calls.at(-1)?.[2]
+    expect(buildOptions).not.toHaveProperty("requesterValidationContext")
+  })
+
+  it("enables requester confirmation when its feature flag is enabled", async () => {
+    mockIsEnabled.mockResolvedValue(true)
+
+    await runFor(supportOperation)
+
+    const buildOptions = jest.mocked(buildPromptAndTools).mock.calls.at(-1)?.[2]
+    expect(buildOptions).toEqual(
+      expect.objectContaining({
+        requesterValidationContext: expect.objectContaining({
+          requesterRole: "PUBLIC",
+        }),
+      })
+    )
+  })
+
   it("attributes requester-principal automations to the real user", async () => {
     await runFor(supportOperation, {
       promptMode: "automation",
