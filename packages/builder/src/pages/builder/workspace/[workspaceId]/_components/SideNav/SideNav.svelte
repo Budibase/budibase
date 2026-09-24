@@ -29,6 +29,7 @@
     tables,
     queries,
     viewsV2,
+    functionStore,
   } from "@/stores/builder"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import {
@@ -44,6 +45,7 @@
   import { onDestroy, setContext } from "svelte"
   import {
     type Datasource,
+    type FunctionSummary,
     FeatureFlag,
     type Query,
     type Table,
@@ -68,7 +70,7 @@
   import AgentModal from "@/pages/builder/workspace/[workspaceId]/agent/AgentModal.svelte"
   import WorkspaceAppModal from "@/pages/builder/workspace/[workspaceId]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
-  import { canManageFunctions } from "@/pages/builder/workspace/[workspaceId]/automation/functions/permissions"
+  import { canManageFunctions } from "@/pages/builder/workspace/[workspaceId]/function/permissions"
 
   export const show = () => {
     pinned.set(true)
@@ -105,6 +107,7 @@
     tables: Table[]
     queries: Query[]
     views: ViewV2[]
+    functions: FunctionSummary[]
   }
 
   setContext(Context.PopoverRoot, ".nav .popover-container")
@@ -118,6 +121,7 @@
     [WorkspaceResource.QUERY]: "database", // regular db queries
     [WorkspaceResource.VIEW]: "table",
     [WorkspaceResource.AGENT]: "cpu",
+    [WorkspaceResource.FUNCTION]: "code",
   }
 
   const datasourceLookup = datasources.lookup
@@ -135,6 +139,7 @@
   let createWorkspaceModal: Modal | undefined
   let workspaceMenuOpen = false
   let createMenuOpen = false
+  let functionsFetchedForWorkspace = ""
 
   let createAutomationModal: ModalAPI
   let webhookModal: ModalAPI
@@ -191,7 +196,7 @@
   }
 
   const openFunctions = () => {
-    goToCreate("automation/functions")
+    goToCreate("home?type=function&create=function")
   }
 
   const handleTableSave = async (table: Table) => {
@@ -223,8 +228,26 @@
 
   // Ignore resources without names
   $: favourites = $workspaceFavouriteStore
-    .filter(f => $resourceLookup?.[f.resourceId])
+    .filter(
+      f =>
+        $resourceLookup?.[f.resourceId] &&
+        (f.resourceType !== WorkspaceResource.FUNCTION ||
+          ($functionsAvailable && canManageFunctions($auth.user, workspaceId)))
+    )
     .sort((a, b) => a.resourceId.localeCompare(b.resourceId))
+
+  $: if (
+    workspaceId &&
+    $functionsAvailable &&
+    canManageFunctions($auth.user, workspaceId) &&
+    $workspaceFavouriteStore.some(
+      favourite => favourite.resourceType === WorkspaceResource.FUNCTION
+    ) &&
+    functionsFetchedForWorkspace !== workspaceId
+  ) {
+    functionsFetchedForWorkspace = workspaceId
+    functionStore.fetch()
+  }
 
   const initResourceStores = (): Readable<AllResourceStores> =>
     derived(
@@ -236,6 +259,7 @@
         queries,
         viewsV2,
         agentsStore,
+        functionStore,
         workspaceFavouriteStore,
       ],
       ([
@@ -246,6 +270,7 @@
         $queries,
         $views,
         $agents,
+        $functions,
       ]) => ({
         automations: $automations.automations,
         apps: $apps.workspaceApps,
@@ -254,6 +279,7 @@
         queries: $queries.list,
         views: $views.list,
         agents: $agents.agents,
+        functions: $functions.functions,
       })
     )
 
@@ -372,6 +398,8 @@
       },
       [WorkspaceResource.AGENT]: (id: string) =>
         `${workspacePrefix}/agent/${id}/config`,
+      [WorkspaceResource.FUNCTION]: (id: string) =>
+        `${workspacePrefix}/function/${id}`,
     }
     if (!link[favourite.resourceType]) return null
     return link[favourite.resourceType]?.(favourite.resourceId)
@@ -606,7 +634,7 @@
                 <SideNavLink
                   icon="code"
                   text="Functions"
-                  url={$url("./automation/functions")}
+                  url={$url("./home?type=function")}
                   {collapsed}
                   on:click={keepCollapsed}
                 />

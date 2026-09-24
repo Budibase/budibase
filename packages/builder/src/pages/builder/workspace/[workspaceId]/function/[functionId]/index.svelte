@@ -204,8 +204,7 @@
 <div class="wrapper">
   <TopBar
     breadcrumbs={[
-      { text: "Automations", url: "../../" },
-      { text: "Functions", url: "../" },
+      { text: "Functions", url: "../../home?type=function" },
       { text: fn?.name || "Function" },
     ]}
     icon="code"
