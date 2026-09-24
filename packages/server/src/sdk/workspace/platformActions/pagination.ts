@@ -19,6 +19,10 @@ export function buildPagination<T>({
   keyOf: (item: T) => DatabaseKey
   idOf: (item: T) => string
 }): ActionsPagination {
+  if (items.length === 0) {
+    return { hasNextPage: false, hasPreviousPage: false }
+  }
+
   const first = items[0]
   const last = items[items.length - 1]
 
