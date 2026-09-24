@@ -494,6 +494,55 @@ describe("Replication", () => {
       expect(mockDirectCouchCall).not.toHaveBeenCalled()
       expect(mockTargetDb.put).not.toHaveBeenCalled()
     })
+
+    it("replicates shared resource tombstones with conflicting leaf revisions", async () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      jest.spyOn(replication, "replicate").mockResolvedValue({} as any)
+      mockTargetDb.get.mockRejectedValue({ status: 404 })
+      const tombstone = {
+        id: `${DocumentType.AUTOMATION}${SEPARATOR}automation1`,
+        deleted: true,
+        changes: [{ rev: "2-deleted" }, { rev: "2-conflict" }],
+        doc: {
+          _id: `${DocumentType.AUTOMATION}${SEPARATOR}automation1`,
+          _rev: "2-deleted",
+          _deleted: true,
+        },
+      }
+      mockSourceDb.changes.mockImplementation(
+        async (options: { doc_ids?: string[] }) =>
+          options.doc_ids
+            ? { results: [tombstone] }
+            : { last_seq: "seq-2", results: [tombstone] }
+      )
+      mockTargetDb.allDocs.mockResolvedValue({
+        rows: [{ id: tombstone.id, value: { rev: "1-live" } }],
+      })
+
+      await replication.replicateApp()
+
+      expect(replication.replicate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          selector: expect.objectContaining({
+            $and: expect.arrayContaining([
+              expect.objectContaining({
+                $and: expect.arrayContaining([
+                  { _id: { $in: [tombstone.id] } },
+                ]),
+              }),
+            ]),
+          }),
+        })
+      )
+      expect(mockDirectCouchCall).not.toHaveBeenCalled()
+      expect(mockTargetDb.put).toHaveBeenCalledWith({
+        _id: "_local/budibase-publish-tombstones",
+        lastSequence: "seq-2",
+      })
+    })
   })
 
   describe("replicate", () => {

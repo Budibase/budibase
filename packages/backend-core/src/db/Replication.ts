@@ -160,13 +160,14 @@ class Replication {
             .filter(change => change.deleted)
             .filter(change => {
               const revs = change.changes?.map(({ rev }) => rev) ?? []
-              if (revs.length !== 1) {
+              const rev = revs[0]
+              if (!rev) {
                 return false
               }
               const doc = {
                 ...(change.doc as DocumentWithID | undefined),
                 _id: change.id,
-                _rev: revs[0],
+                _rev: rev,
                 _deleted: true,
               }
               return tombstoneFilter(doc, {})
@@ -184,6 +185,9 @@ class Replication {
           continue
         }
         if (deletedIds.includes(change.id)) {
+          if (change.changes?.length !== 1) {
+            continue
+          }
           if (
             tombstonesToClean.has(change.id) ||
             tombstonesToClean.size < MAX_TOMBSTONES_TO_CLEAN
@@ -437,7 +441,12 @@ class Replication {
       )
       return checkpoint.lastSequence
     } catch (error) {
-      if (error?.status !== 404) {
+      if (
+        !error ||
+        typeof error !== "object" ||
+        !("status" in error) ||
+        error.status !== 404
+      ) {
         throw error
       }
     }
@@ -455,7 +464,12 @@ class Replication {
       )
       checkpoint = { ...checkpoint, _rev: existing._rev }
     } catch (error) {
-      if (error?.status !== 404) {
+      if (
+        !error ||
+        typeof error !== "object" ||
+        !("status" in error) ||
+        error.status !== 404
+      ) {
         throw error
       }
     }
