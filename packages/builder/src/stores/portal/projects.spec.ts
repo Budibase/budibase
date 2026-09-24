@@ -204,37 +204,47 @@ describe("ProjectsStore", () => {
     expect(getProjects(store)).toEqual([retained])
   })
 
-  it.each(["update", "delete"])(
-    "does not let a late %s discard the next workspace's fetch",
-    async operation => {
-      const store = new ProjectsStore()
-      const pendingMutation = defer<void>()
-      const secondFetch = defer<FetchProjectsResponse>()
-      const original = project("project_1")
-      const secondWorkspaceProject = project("workspace_2_project")
+  const createStoreWithPendingWorkspaceFetch = async () => {
+    const store = new ProjectsStore()
+    const pendingFetch = defer<FetchProjectsResponse>()
+    const original = project("project_1")
+    const secondWorkspaceProject = project("workspace_2_project")
+    fetchProjects
+      .mockResolvedValueOnce({ projects: [original] })
+      .mockReturnValueOnce(pendingFetch.promise)
+    await store.fetch("app_workspace_1")
+    return { store, pendingFetch, original, secondWorkspaceProject }
+  }
 
-      fetchProjects
-        .mockResolvedValueOnce({ projects: [original] })
-        .mockReturnValueOnce(secondFetch.promise)
-      updateProject.mockImplementation(async () => {
-        await pendingMutation.promise
-        return { project: original }
-      })
-      deleteProject.mockReturnValue(pendingMutation.promise)
+  it("does not let a late update discard the next workspace's fetch", async () => {
+    const { store, pendingFetch, original, secondWorkspaceProject } =
+      await createStoreWithPendingWorkspaceFetch()
+    const pendingUpdate = defer<UpdateProjectResponse>()
+    updateProject.mockReturnValueOnce(pendingUpdate.promise)
 
-      await store.fetch("app_workspace_1")
-      const mutation =
-        operation === "update"
-          ? store.updateProject(original)
-          : store.deleteProject(original._id, original._rev)
-      const workspaceFetch = store.fetch("app_workspace_2")
+    const updatePromise = store.updateProject(original)
+    const workspaceFetch = store.fetch("app_workspace_2")
+    pendingUpdate.resolve({ project: original })
+    await updatePromise
+    pendingFetch.resolve({ projects: [secondWorkspaceProject] })
+    await workspaceFetch
 
-      pendingMutation.resolve()
-      await mutation
-      secondFetch.resolve({ projects: [secondWorkspaceProject] })
-      await workspaceFetch
+    expect(getProjects(store)).toEqual([secondWorkspaceProject])
+  })
 
-      expect(getProjects(store)).toEqual([secondWorkspaceProject])
-    }
-  )
+  it("does not let a late delete discard the next workspace's fetch", async () => {
+    const { store, pendingFetch, original, secondWorkspaceProject } =
+      await createStoreWithPendingWorkspaceFetch()
+    const pendingDelete = defer<void>()
+    deleteProject.mockReturnValueOnce(pendingDelete.promise)
+
+    const deletePromise = store.deleteProject(original._id, original._rev)
+    const workspaceFetch = store.fetch("app_workspace_2")
+    pendingDelete.resolve()
+    await deletePromise
+    pendingFetch.resolve({ projects: [secondWorkspaceProject] })
+    await workspaceFetch
+
+    expect(getProjects(store)).toEqual([secondWorkspaceProject])
+  })
 })
