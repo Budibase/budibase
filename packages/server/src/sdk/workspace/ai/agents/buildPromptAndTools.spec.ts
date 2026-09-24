@@ -81,6 +81,12 @@ jest.mock("../../../../ai/tools/authorization", () => ({
   canRequesterReadAgentToolResource: jest.fn().mockResolvedValue(true),
 }))
 
+jest.mock("./requesterValidationGate", () => ({
+  createRequesterValidationRuntime: jest.fn(() => ({
+    intercept: jest.fn(),
+  })),
+}))
+
 jest.mock("@budibase/pro", () => ({
   __esModule: true,
   ai: {
@@ -100,6 +106,7 @@ import {
   authorizeAgentToolCall,
   canRequesterReadAgentToolResource,
 } from "../../../../ai/tools/authorization"
+import { createRequesterValidationRuntime } from "./requesterValidationGate"
 describe("getEscalationToolDisplayName", () => {
   it.each([undefined, "API", "api"])(
     "omits a redundant REST source label (%s)",
@@ -433,6 +440,10 @@ describe("buildPromptAndTools", () => {
           executorRole: "BASIC",
         },
       },
+      requesterValidationContext: {
+        requesterId: "user_1",
+        requesterRole: "BASIC",
+      },
     })
 
     expect(result.tools.ta_employees_create_row).toEqual(
@@ -452,5 +463,12 @@ describe("buildPromptAndTools", () => {
       ])
     )
     expect(canRequesterReadAgentToolResource).toHaveBeenCalledTimes(1)
+    expect(createRequesterValidationRuntime).toHaveBeenCalledWith(
+      expect.objectContaining({
+        toolName: "ta_employees_create_row",
+        inputSchema: authoritativeInputSchema,
+        sanitizeValidationErrors: true,
+      })
+    )
   })
 })

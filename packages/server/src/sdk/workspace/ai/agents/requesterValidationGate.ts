@@ -361,12 +361,14 @@ export const createRequesterValidationRuntime = ({
   readableName,
   sourceId,
   inputSchema,
+  sanitizeValidationErrors = false,
   context,
 }: {
   toolName: string
   readableName?: string
   sourceId?: string
   inputSchema: FlexibleSchema
+  sanitizeValidationErrors?: boolean
   context: RequesterValidationContext
 }): RequesterValidationRuntime => ({
   intercept: async (input, { toolCallId, messages }) => {
@@ -400,10 +402,9 @@ export const createRequesterValidationRuntime = ({
       partialArguments: merged,
     })
     if (!validation.success) {
-      const message = await buildClarificationMessage(
-        validation.error,
-        inputSchema
-      )
+      const message = sanitizeValidationErrors
+        ? "I couldn't validate those details. Please check the information and try again."
+        : await buildClarificationMessage(validation.error, inputSchema)
       await saveRequesterAction({
         ...base,
         status: "collecting_input",

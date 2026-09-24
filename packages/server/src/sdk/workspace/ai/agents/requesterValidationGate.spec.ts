@@ -125,6 +125,45 @@ describe("requester validation gate", () => {
     )
   })
 
+  it("does not expose authoritative schema details for a redacted tool", async () => {
+    mockCacheGet.mockResolvedValue(undefined)
+    const runtime = createRequesterValidationRuntime({
+      toolName: "create_employee",
+      inputSchema: z.object({
+        data: z.object({
+          "Employee Level": z.enum(["Manager", "Apprentice"]),
+        }),
+      }),
+      sanitizeValidationErrors: true,
+      context: validationContext,
+    })
+
+    const result = await runtime.intercept(
+      { data: {} },
+      {
+        toolCallId: "call_1",
+        messages: [{ role: "user", content: "Create an employee" }],
+      }
+    )
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        status: ToolValidationResultStatus.NEEDS_INPUT,
+        message:
+          "I couldn't validate those details. Please check the information and try again.",
+      })
+    )
+    expect(JSON.stringify(result)).not.toContain("Employee Level")
+    expect(JSON.stringify(result)).not.toContain("Manager")
+    expect(mockCacheStore).toHaveBeenCalledWith(
+      "agent:requester-action:conversation_1",
+      expect.objectContaining({
+        status: "collecting_input",
+        partialArguments: { data: {} },
+      })
+    )
+  })
+
   it("removes a valid enum value that the requester did not supply", async () => {
     mockCacheGet.mockResolvedValue(undefined)
     const runtime = createRequesterValidationRuntime({

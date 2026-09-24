@@ -327,7 +327,8 @@ export async function buildPromptAndTools(
           toolName: tool.name,
           readableName: tool.readableName,
           sourceId: tool.sourceId,
-          inputSchema: tool.tool.inputSchema,
+          inputSchema: tool.authoritativeInputSchema ?? tool.tool.inputSchema,
+          sanitizeValidationErrors: tool.requesterRedactedTool === tool.tool,
           context: {
             ...options.requesterValidationContext,
             agentId,
