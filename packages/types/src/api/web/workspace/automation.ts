@@ -37,13 +37,17 @@ export interface FetchAutomationResponse {
 
 export interface FindAutomationResponse extends Automation {}
 
-export interface UpdateAutomationRequest extends Automation {}
+interface AutomationWriteRequest extends Automation {
+  sourceAutomationId?: string
+}
+
+export interface UpdateAutomationRequest extends AutomationWriteRequest {}
 export interface UpdateAutomationResponse {
   message: string
   automation: Automation
 }
 
-export interface CreateAutomationRequest extends Automation {}
+export interface CreateAutomationRequest extends AutomationWriteRequest {}
 export interface CreateAutomationResponse {
   message: string
   automation: Automation

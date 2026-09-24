@@ -154,6 +154,62 @@ describe.each([
       )
     })
 
+    it("does not update agents when a query move has a stale revision", async () => {
+      const sourceDatasource = await config.api.datasource.create({
+        name: "Owen API",
+        type: "datasource",
+        source,
+        config: {},
+      })
+      const destinationDatasource = await config.api.datasource.create({
+        name: "New API",
+        type: "datasource",
+        source,
+        config: {},
+      })
+      const query = await config.api.query.save({
+        name: "Old endpoint",
+        datasourceId: sourceDatasource._id!,
+        parameters: [],
+        fields: {},
+        schema: {},
+        queryVerb: "read",
+        transformer: null,
+        readable: true,
+      })
+      const runtimeIdentifier = query._id!.slice(-16)
+      const agent = await config.api.agent.createWithOperation(
+        { name: "Wow agent" },
+        {
+          id: "operation_1",
+          name: "Get a wow",
+          live: false,
+          promptInstructions: `Use {{ ${oldReadableBinding} }}.`,
+          enabledTools: requesterTools(
+            `${oldRuntimeBinding}_${runtimeIdentifier}`
+          ),
+          allowKnowledgeSourceDownload: true,
+        }
+      )
+      await config.api.query.save(query)
+
+      await config.api.query.save(
+        {
+          ...query,
+          name: "New endpoint",
+          datasourceId: destinationDatasource._id!,
+        },
+        { status: 409 }
+      )
+
+      const { agents } = await config.api.agent.fetch()
+      const unchangedAgent = agents.find(
+        candidate => candidate._id === agent._id
+      )
+      expect(unchangedAgent?._rev).toBe(agent._rev)
+      expect(unchangedAgent?.operations).toEqual(agent.operations)
+    })
+
     it("updates agent references when the datasource name changes", async () => {
       const datasource = await config.api.datasource.create({
         name: "Owen API",
