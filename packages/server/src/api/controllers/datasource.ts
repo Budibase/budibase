@@ -217,7 +217,7 @@ async function invalidateVariables(
 const isDatasourceEntity = (entity: unknown): entity is Table =>
   typeof entity === "object" && entity !== null && !Array.isArray(entity)
 
-const stripDatasourceEntityProjectIds = (datasource: Datasource) => {
+const validateDatasourceEntities = (datasource: Datasource) => {
   if (!datasource.entities) {
     return
   }
@@ -226,8 +226,6 @@ const stripDatasourceEntityProjectIds = (datasource: Datasource) => {
     if (!isDatasourceEntity(entity)) {
       throw new HTTPError(`Datasource entity '${name}' must be an object.`, 400)
     }
-
-    delete entity.projectIds
   }
 }
 
@@ -258,7 +256,7 @@ export async function update(
     ctx.request.body.projectIds,
     baseDatasource.projectIds
   )
-  stripDatasourceEntityProjectIds(datasource)
+  validateDatasourceEntities(datasource)
 
   // this block is specific to GSheets, if no auth set, set it back
   const auth = baseDatasource.config?.auth
@@ -342,7 +340,7 @@ export async function save(
     tablesFilter,
   } = ctx.request.body
   datasourceData.projectIds = await resolveProjectIds(datasourceData.projectIds)
-  stripDatasourceEntityProjectIds(datasourceData)
+  validateDatasourceEntities(datasourceData)
   const saveDatasource = async () => {
     const restTemplateId = datasourceData.restTemplateId
     if (isCustomRestTemplateId(restTemplateId)) {
