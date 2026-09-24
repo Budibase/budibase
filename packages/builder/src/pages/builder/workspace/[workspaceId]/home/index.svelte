@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { functionsAvailable } from "@/stores/builder/functionsAvailability"
   import ConfirmDialog from "@/components/common/ConfirmDialog.svelte"
   import DuplicateAutomationModal from "@/components/automation/AutomationPanel/DuplicateAutomationModal.svelte"
   import UpdateAutomationModal from "@/components/automation/AutomationPanel/UpdateAutomationModal.svelte"
@@ -82,12 +81,7 @@
   } from "./_components/urlState"
   import { withWorkspaceHomeReturn } from "@/helpers/workspaceHomeNavigation"
 
-  import { canManageFunctions } from "../automation/functions/permissions"
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
-
-  $: functionsEnabled =
-    !!$functionsAvailable &&
-    canManageFunctions($auth.user, $workspaceStore.appId)
 
   $: goto = $gotoStore
   $: url = $urlStore
@@ -282,7 +276,7 @@
     importProjectModal?.show()
   }
 
-  const goToCreate = (target: string) => {
+  const goToCreate = (target: "data/new" | "apis/new") => {
     goto(url(`../${target}`))
   }
 
@@ -1139,8 +1133,6 @@
             portalTarget=".workspace-home .create-popover-container"
             onCreateAgent={createAgent}
             onCreateAutomation={createAutomation}
-            onCreateFunction={() => goToCreate("automation/functions")}
-            showFunctions={functionsEnabled}
             onCreateApp={createApp}
             onCreateConnection={() => goToCreate("data/new")}
             onCreateTable={openCreateTable}

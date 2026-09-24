@@ -1,13 +1,14 @@
-import { findHBSBlocks } from "@budibase/string-templates"
+import type { JSONValue } from "@budibase/types"
 
-export const isFunctionInputsObject = (value: string) => {
-  if (findHBSBlocks(value)?.length) {
-    return true
-  }
+export const parseFunctionInputsObject = (
+  value: string
+): Record<string, JSONValue> | undefined => {
   try {
     const parsed = JSON.parse(value)
-    return !!parsed && typeof parsed === "object" && !Array.isArray(parsed)
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed
+    }
   } catch {
-    return false
+    return
   }
 }

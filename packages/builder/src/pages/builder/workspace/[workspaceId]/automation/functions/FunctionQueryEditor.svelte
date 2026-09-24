@@ -3,11 +3,14 @@
 <script lang="ts">
   import { getErrorMessage } from "@/helpers/errors"
   import {
+    ActionButton,
     Body,
     Button,
     Heading,
+    Helpers,
     Icon,
     Input,
+    notifications,
     ProgressCircle,
     Select,
   } from "@budibase/bbui"
@@ -112,6 +115,20 @@
 
   const getOptionLabel = (entry: FunctionQueryCatalogEntry) => entry.queryName
   const getOptionValue = (entry: FunctionQueryCatalogEntry) => entry.queryId
+  const getCodeReference = (capability: FunctionQueryCapabilityInput) =>
+    `await queries.${capability.datasourceAlias || "datasource"}.${capability.queryAlias || "query"}()`
+
+  const copyCodeReference = async (
+    capability: FunctionQueryCapabilityInput
+  ) => {
+    try {
+      await Helpers.copyToClipboard(getCodeReference(capability))
+      notifications.success("Query call copied to clipboard")
+    } catch (error) {
+      notifications.error(getErrorMessage(error) || "Unable to copy query call")
+    }
+  }
+
   const getOptionSubtitle = (entry: FunctionQueryCatalogEntry) => {
     if (!entry.parameters.length) {
       return `${entry.datasourceName} · No parameters`
@@ -360,11 +377,18 @@
           </div>
 
           <div class="code-reference">
-            Available in code as
-            <code
-              >queries.{capability.datasourceAlias ||
-                "datasource"}.{capability.queryAlias || "query"}()</code
-            >
+            <span>Available in code as</span>
+            <div class="code-snippet">
+              <code>{getCodeReference(capability)}</code>
+              <ActionButton
+                icon="copy"
+                size="S"
+                quiet
+                on:click={() => copyCodeReference(capability)}
+              >
+                Copy
+              </ActionButton>
+            </div>
           </div>
 
           <div class="parameters">
@@ -497,6 +521,18 @@
     gap: var(--spacing-xs);
     color: var(--spectrum-global-color-gray-700);
     font-size: 12px;
+  }
+  .code-reference {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .code-snippet {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+  .code-snippet code {
+    font-size: 15px;
   }
   .missing-message,
   .parameter-change,
