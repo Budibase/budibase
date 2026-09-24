@@ -106,6 +106,56 @@ describe("row tool data schema", () => {
     const schema = buildRowDataSchema(fields, "")
 
     expect(schema.safeParse({ Cost: 20 }).success).toBe(true)
-    expect(schema.safeParse({ Cost: null }).success).toBe(true)
+    expect(schema.safeParse({}).success).toBe(true)
+    expect(schema.safeParse({ Cost: null }).success).toBe(false)
+    expect(schema.safeParse({ Currency: null }).success).toBe(false)
+  })
+
+  it("enforces configured email and length constraints on supplied values", () => {
+    const schema = buildRowDataSchema(
+      [
+        {
+          name: "Email",
+          schema: {
+            name: "Email",
+            type: FieldType.STRING,
+            constraints: { email: true },
+          },
+        },
+        {
+          name: "Notes",
+          schema: {
+            name: "Notes",
+            type: FieldType.STRING,
+            constraints: { length: { maximum: 5 } },
+          },
+        },
+      ],
+      ""
+    )
+
+    expect(
+      schema.safeParse({ Email: "user@example.com", Notes: "Lunch" }).success
+    ).toBe(true)
+    expect(schema.safeParse({ Email: "invalid" }).success).toBe(false)
+    expect(schema.safeParse({ Notes: "Too long" }).success).toBe(false)
+    expect(schema.safeParse({ Notes: null }).success).toBe(true)
+  })
+
+  it("requires a writable primary display value on create but allows omission on update", () => {
+    const displayFields = [
+      {
+        name: "Name",
+        schema: { name: "Name", type: FieldType.STRING as const },
+        isPrimaryDisplay: true,
+      },
+    ]
+    const create = buildRowDataSchema(displayFields, "", true)
+    const update = buildRowDataSchema(displayFields, "")
+    expect(create.safeParse({}).success).toBe(false)
+    expect(create.safeParse({ Name: "Lunch" }).success).toBe(true)
+    expect(update.safeParse({}).success).toBe(true)
+    expect(update.safeParse({ Name: null }).success).toBe(false)
+    expect(update.safeParse({ Name: "" }).success).toBe(false)
   })
 })

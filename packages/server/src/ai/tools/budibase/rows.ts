@@ -1,6 +1,7 @@
 import { createHash } from "crypto"
 import { tool } from "ai"
 import { z } from "zod"
+import validateJs from "validate.js"
 import {
   FieldType,
   SortOrder,
@@ -57,6 +58,7 @@ const TOOL_NAME_HASH_LENGTH = 12
 type TableSchemaField = {
   name: string
   schema: TableSchema[string]
+  isPrimaryDisplay?: boolean
 }
 
 const isRequiredInputField = (schema: TableSchema[string]) =>
@@ -263,18 +265,39 @@ export const buildRowDataSchema = (
       }
     }
 
-    const required = requirePresentFields && isRequiredInputField(field.schema)
+    const required =
+      field.isPrimaryDisplay ||
+      helpers.schema.isRequired(field.schema.constraints)
+    const mustProvide =
+      required &&
+      (!("default" in field.schema) || field.schema.default === undefined)
     if (required) {
       if (fieldSchema instanceof z.ZodString) {
         fieldSchema = fieldSchema.min(1)
       } else if (fieldSchema instanceof z.ZodArray) {
         fieldSchema = fieldSchema.min(1)
       }
+      if (!requirePresentFields || !mustProvide) {
+        fieldSchema = fieldSchema.optional()
+      }
     } else {
       fieldSchema = fieldSchema.nullish()
     }
+    const { email, length } = field.schema.constraints ?? {}
+    fieldSchema = fieldSchema.superRefine((value, ctx) => {
+      if (value === undefined) {
+        return
+      }
+      const errors: string[] | undefined = validateJs.single(value, {
+        ...(email && { email }),
+        ...(length && { length }),
+      })
+      for (const message of errors ?? []) {
+        ctx.addIssue({ code: "custom", message })
+      }
+    })
     shape[field.name] = fieldSchema.describe(
-      `Field type: ${fieldType}.${required ? " Required." : ""}${optionsHint}`
+      `Field type: ${fieldType}.${requirePresentFields && mustProvide ? " Required." : ""}${optionsHint}`
     )
   }
 
@@ -493,6 +516,7 @@ export const createRowTools = ({
   tableName,
   tableSourceType,
   tableSchema,
+  primaryDisplay,
   sourceLabel,
   sourceIconType,
 }: {
@@ -500,6 +524,7 @@ export const createRowTools = ({
   tableName: string
   tableSourceType: TableSourceType
   tableSchema: TableSchema
+  primaryDisplay?: string
   sourceLabel?: string
   sourceIconType?: string
 }): BudibaseToolDefinition[] => {
@@ -510,7 +535,9 @@ export const createRowTools = ({
   const resolvedSourceLabel =
     sourceLabel || (isExternal ? "External" : "Budibase")
 
-  const writableFields = getWritableFields(tableSchema, tableSourceType)
+  const writableFields = getWritableFields(tableSchema, tableSourceType).map(
+    field => ({ ...field, isPrimaryDisplay: field.name === primaryDisplay })
+  )
   const schemaSummary = buildSchemaSummary(writableFields)
   const createDataSchema = buildRowDataSchema(
     writableFields,
