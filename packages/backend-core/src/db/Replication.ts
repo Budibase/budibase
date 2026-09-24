@@ -42,6 +42,13 @@ interface CouchPurgeResponse {
 
 const TOMBSTONE_CHECKPOINT_ID = "_local/budibase-publish-tombstones"
 
+function isDataDocumentId(id: string) {
+  return (
+    id.startsWith(DocumentType.ROW + SEPARATOR) ||
+    id.startsWith(DocumentType.LINK + SEPARATOR)
+  )
+}
+
 function isNotFoundError(error: unknown) {
   return (
     typeof error === "object" &&
@@ -134,6 +141,7 @@ class Replication {
     let lastSequence = checkpoint
     let tombstoneWritesSucceeded = true
     const tombstonesToClean = new Map<string, TombstoneRevision>()
+    const sourceTombstonesToClean = new Map<string, TombstoneRevision>()
 
     while (true) {
       const changes = await this.source.changes<Document>({
@@ -172,12 +180,20 @@ class Replication {
       )
 
       for (const change of changes.results) {
-        if (!deletedIds.includes(change.id)) {
+        if (!change.deleted) {
           continue
         }
         const rev = change.changes?.[0]?.rev
-        if (rev) {
+        if (!rev) {
+          continue
+        }
+        if (deletedIds.includes(change.id)) {
           tombstonesToClean.set(change.id, { id: change.id, rev })
+        } else if (
+          canAdvanceTombstoneCheckpoint &&
+          isDataDocumentId(change.id)
+        ) {
+          sourceTombstonesToClean.set(change.id, { id: change.id, rev })
         }
       }
 
@@ -245,6 +261,20 @@ class Replication {
           tombstoneWritesSucceeded = false
         }
       }
+      for (const tombstone of sourceTombstonesToClean.values()) {
+        try {
+          if (!(await this.cleanSourceTombstone(tombstone))) {
+            tombstoneWritesSucceeded = false
+          }
+        } catch (error) {
+          console.warn(
+            "Unable to purge excluded tombstone",
+            tombstone.id,
+            error
+          )
+          tombstoneWritesSucceeded = false
+        }
+      }
     }
     if (tombstoneWritesSucceeded && canAdvanceTombstoneCheckpoint) {
       await this.saveTombstoneCheckpoint(lastSequence)
@@ -290,6 +320,30 @@ class Replication {
       if (!(await this.purgeRevision(this.targetName, id, rev))) {
         return false
       }
+    }
+    return await this.purgeRevision(this.sourceName, id, rev)
+  }
+
+  private async cleanSourceTombstone({
+    id,
+    rev,
+  }: TombstoneRevision): Promise<boolean> {
+    const sourceChanges = await this.source.changes<Document>({
+      since: 0,
+      doc_ids: [id],
+      include_docs: true,
+      style: "all_docs",
+    })
+    const sourceChange = [...sourceChanges.results]
+      .reverse()
+      .find(change => change.id === id)
+    const hasOnlyTombstoneRevision =
+      !!sourceChange?.deleted &&
+      sourceChange.changes?.length === 1 &&
+      sourceChange.changes[0].rev === rev
+
+    if (!hasOnlyTombstoneRevision) {
+      return false
     }
     return await this.purgeRevision(this.sourceName, id, rev)
   }
@@ -399,7 +453,7 @@ class Replication {
     opts: AppReplicationOptions = {}
   ): PouchDB.Replication.ReplicateOptions {
     const direction = this.direction
-    const tombstoneIds = new Set(opts.tombstoneIds ?? [])
+    const tombstoneIds = new Set<string>(opts.tombstoneIds ?? [])
     delete opts.tombstoneIds
     const tombstonesOnly = opts.tombstonesOnly
     delete opts.tombstonesOnly

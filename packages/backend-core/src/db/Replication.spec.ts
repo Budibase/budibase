@@ -344,6 +344,43 @@ describe("Replication", () => {
       )
     })
 
+    it("purges excluded row tombstones from dev during a normal publish", async () => {
+      const replication = new Replication({
+        source: `${DocumentType.WORKSPACE_DEV}_source`,
+        target: `${DocumentType.WORKSPACE}_target`,
+      })
+      jest.spyOn(replication, "replicate").mockResolvedValue({} as any)
+      mockTargetDb.get.mockRejectedValue({ status: 404 })
+      const tombstone = {
+        id: `${DocumentType.ROW}${SEPARATOR}orders${SEPARATOR}row1`,
+        deleted: true,
+        changes: [{ rev: "2-deleted" }],
+      }
+      mockSourceDb.changes.mockImplementation(
+        async (options: { doc_ids?: string[] }) =>
+          options.doc_ids
+            ? { results: [tombstone] }
+            : { last_seq: "seq-2", results: [tombstone] }
+      )
+
+      await replication.replicateApp({ isCreation: false })
+
+      expect(mockDirectCouchCall).toHaveBeenCalledWith(
+        `${DocumentType.WORKSPACE_DEV}_source/_purge`,
+        "POST",
+        { [tombstone.id]: ["2-deleted"] }
+      )
+      expect(mockDirectCouchCall).not.toHaveBeenCalledWith(
+        `${DocumentType.WORKSPACE}_target/_purge`,
+        "POST",
+        expect.anything()
+      )
+      expect(mockTargetDb.put).toHaveBeenCalledWith({
+        _id: "_local/budibase-publish-tombstones",
+        lastSequence: "seq-2",
+      })
+    })
+
     it("does not purge tombstones with conflicting leaf revisions", async () => {
       const replication = new Replication({
         source: `${DocumentType.WORKSPACE_DEV}_source`,
