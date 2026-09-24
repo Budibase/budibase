@@ -15,8 +15,6 @@
     portalTarget?: string
     onCreateAgent?: () => void
     onCreateAutomation?: () => void
-    onCreateFunction?: () => void
-    showFunctions?: boolean
     onCreateApp?: () => void
     onCreateConnection?: () => void
     onCreateTable?: () => void
@@ -28,8 +26,6 @@
     portalTarget = undefined,
     onCreateAgent = () => {},
     onCreateAutomation = () => {},
-    onCreateFunction = () => {},
-    showFunctions = false,
     onCreateApp = () => {},
     onCreateConnection = () => {},
     onCreateTable = () => {},
@@ -64,16 +60,6 @@
       <Tag emphasized>Beta</Tag>
     </div>
   </MenuItem>
-  {#if showFunctions}
-    <MenuItem
-      icon="code"
-      iconColour="var(--spectrum-global-color-gray-700)"
-      iconWeight="fill"
-      on:click={onCreateFunction}
-    >
-      Function
-    </MenuItem>
-  {/if}
   <MenuItem
     icon={getHomeTypeIcon("automation")}
     iconColour={getHomeTypeIconColor("automation")}
