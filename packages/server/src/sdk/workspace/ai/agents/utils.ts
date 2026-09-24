@@ -6,6 +6,7 @@ import {
   SourceName,
   WebSearchProvider,
   ApprovalToolResultStatus,
+  PermissionLevel,
   type AgentExecutionContext,
 } from "@budibase/types"
 import {
@@ -27,6 +28,7 @@ import {
   toToolSet,
   type AiToolDefinition,
   type EscalationGateRuntime,
+  type RequesterValidationRuntime,
   type ToolAuthorizationRuntime,
 } from "../../../../ai/tools"
 import {
@@ -34,6 +36,10 @@ import {
   resolveToolArgsKey,
   type EscalationGateContext,
 } from "./escalationGate"
+import {
+  createRequesterValidationRuntime,
+  type RequesterValidationContext,
+} from "./requesterValidationGate"
 import sdk from "../../.."
 import { createExaTool, createParallelTool } from "../../../../ai/tools/search"
 import { HTTPError } from "@budibase/backend-core"
@@ -185,6 +191,10 @@ export interface BuildPromptAndToolsOptions {
   fallbackPromptInstructions?: string
   executionContext?: AgentExecutionContext
   escalationGateContext?: EscalationGateContext
+  requesterValidationContext?: Omit<
+    RequesterValidationContext,
+    "agentId" | "operationId" | "conversationId"
+  >
 }
 
 export async function buildPromptAndTools(
@@ -194,6 +204,8 @@ export async function buildPromptAndTools(
 ): Promise<{
   systemPrompt: string
   tools: ToolSet
+  executableTools?: ToolSet
+  writeToolNames?: string[]
   toolDisplayNames: Record<string, string>
   toolSources: Record<string, string | undefined>
 }> {
@@ -299,6 +311,35 @@ export async function buildPromptAndTools(
     }
   }
 
+  const validations = new Map<string, RequesterValidationRuntime>()
+  if (operation && options.requesterValidationContext) {
+    for (const tool of enabledTools) {
+      const permission = tool.authorization?.permissionLevel
+      if (!permission) {
+        throw new Error(`Tool ${tool.name} has no authorization metadata`)
+      }
+      if (permission === PermissionLevel.READ) {
+        continue
+      }
+      validations.set(
+        tool.name,
+        createRequesterValidationRuntime({
+          toolName: tool.name,
+          readableName: tool.readableName,
+          sourceId: tool.sourceId,
+          inputSchema: tool.authoritativeInputSchema ?? tool.tool.inputSchema,
+          sanitizeValidationErrors: tool.requesterRedactedTool === tool.tool,
+          context: {
+            ...options.requesterValidationContext,
+            agentId,
+            operationId: operation.id,
+            conversationId: options.executionContext?.conversationId ?? "",
+          },
+        })
+      )
+    }
+  }
+
   const systemPrompt = ai.composeAutomationAgentSystemPrompt({
     baseSystemPrompt,
     goal: includeGoal ? agent.goal : undefined,
@@ -318,10 +359,24 @@ export async function buildPromptAndTools(
   if (options.escalationGateContext) {
     resolvedSystemPrompt += `\n\nYou have no escalation or approval-request capability of your own. Never claim to have escalated, flagged, or referred anything for human review - approvals happen automatically when you use tools that require them. If instructions ask you to escalate a topic, tell the user you cannot escalate it and continue normally.`
   }
+  const tools = toToolSet(enabledTools, runtimes, gates, validations)
+  const executableTools = toToolSet(enabledTools, runtimes, gates)
+  const writeToolNames = enabledTools
+    .filter(
+      tool => tool.authorization?.permissionLevel !== PermissionLevel.READ
+    )
+    .map(tool => tool.name)
+  if (options.requesterValidationContext) {
+    resolvedSystemPrompt += `\n\nInteractive write tools are proposals. Call them with only information supplied by the requester. Do not invent missing values or fields outside the schema. If a proposal result contains a message, reply with that message exactly and do not call another tool in the same turn.`
+  }
   return {
     systemPrompt: resolvedSystemPrompt,
-    tools: toToolSet(enabledTools, runtimes, gates),
-    toolDisplayNames: getToolDisplayNames(enabledTools),
+    tools,
+    executableTools,
+    writeToolNames,
+    toolDisplayNames: {
+      ...getToolDisplayNames(enabledTools),
+    },
     toolSources: Object.fromEntries(
       enabledTools.map(tool => [tool.name, tool.sourceId])
     ),

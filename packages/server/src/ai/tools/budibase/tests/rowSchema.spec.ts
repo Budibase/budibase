@@ -354,4 +354,12 @@ describe("row tool data schema", () => {
 
     expect(schema.safeParse({ Category: "" }).success).toBe(true)
   })
+
+  it("allows required fields with defaults to be omitted", () => {
+    const schema = buildRowDataSchema(fields, "", true)
+
+    expect(schema.safeParse({ Cost: 20, "Expense Tags": "Food" }).success).toBe(
+      true
+    )
+  })
 })

@@ -1,4 +1,4 @@
-import { cache, context, roles } from "@budibase/backend-core"
+import { cache, context, features, roles } from "@budibase/backend-core"
 import { ai, quotas } from "@budibase/pro"
 import { helpers } from "@budibase/shared-core"
 import {
@@ -9,7 +9,9 @@ import {
   ApprovedToolCall,
   ChatConversationRequest,
   ContextUser,
+  FeatureFlag,
   ApprovalToolResultStatus,
+  ToolValidationResultStatus,
   type AgentExecutionContext,
   type AgentRequester,
   type EscalationReviewParameter,
@@ -49,6 +51,10 @@ import { createReportUsedSourcesTool } from "../../../../ai/tools/budibase/knowl
 import type tracer from "dd-trace"
 import { withLiteLLMSessionId } from "../llm/requestSession"
 import { requesterLabel } from "../../../../escalation/reviewContext"
+import {
+  getActiveRequesterAction,
+  transitionRequesterAction,
+} from "./requesterValidationGate"
 
 interface PrepareAgentChatRunParams {
   agent: Agent
@@ -345,6 +351,8 @@ export interface AgentRunContext {
   routingAction: OperationRoute["action"]
   systemPrompt: string
   tools: ToolSet
+  executableTools?: ToolSet
+  writeToolNames?: string[]
   toolDisplayNames: Record<string, string>
   executionContext?: AgentExecutionContext
 }
@@ -433,11 +441,9 @@ export const prepareAgentRunContext = async ({
   }
 }
 
-// A pending escalation suspends the turn - once one exists, later steps run
-// with no tools so the model can wrap up in text but cannot act before a
-// human responds. Keyed on pending status plus escalationId so it covers the
-// escalate tool and gate refusals without tripping on lookalike statuses.
-const hasPendingEscalationResult = (
+// A pending approval or requester validation suspends the turn so the model
+// can explain the pending action but cannot perform another tool call.
+const hasPendingActionResult = (
   toolResults: Array<StepResult<ToolSet>["toolResults"][number]>
 ) =>
   toolResults.some(result => {
@@ -446,14 +452,48 @@ const hasPendingEscalationResult = (
       typeof output === "object" &&
       output !== null &&
       "status" in output &&
-      output.status === ApprovalToolResultStatus.PENDING_APPROVAL &&
-      "escalationId" in output &&
-      !!output.escalationId
+      (output.status === ToolValidationResultStatus.PENDING ||
+        output.status === ToolValidationResultStatus.NEEDS_INPUT ||
+        (output.status === ApprovalToolResultStatus.PENDING_APPROVAL &&
+          "escalationId" in output &&
+          !!output.escalationId))
     )
   })
 
-const hasPendingEscalation = (steps: Array<StepResult<ToolSet>>) =>
-  steps.some(step => hasPendingEscalationResult(step.toolResults))
+const hasPendingAction = (steps: Array<StepResult<ToolSet>>) =>
+  steps.some(step => hasPendingActionResult(step.toolResults))
+
+const requesterReplySchema = z.object({
+  decision: z.enum(["confirm", "reject", "revise", "unrelated", "ambiguous"]),
+})
+
+type RequesterReplyDecision = z.infer<typeof requesterReplySchema>["decision"]
+
+const classifyRequesterReply = async ({
+  model,
+  providerOptions,
+  message,
+}: {
+  model: Parameters<typeof generateText>[0]["model"]
+  providerOptions?: Parameters<typeof generateText>[0]["providerOptions"]
+  message: string
+}): Promise<RequesterReplyDecision> => {
+  const classifier = new ToolLoopAgent({
+    model,
+    instructions:
+      "Classify the requester's response to a pending action. " +
+      "confirm means an unqualified approval. reject means refusal or cancellation. " +
+      "revise means any requested parameter change, including approval combined with a change. " +
+      "unrelated means a separate question with no decision. ambiguous means the intent is unclear.",
+    stopWhen: stepCountIs(1),
+    providerOptions,
+    output: Output.object({ schema: requesterReplySchema }),
+    headers: { "x-litellm-tags": "bb-requester-confirmation" },
+  })
+  const result = await classifier.stream({ prompt: message })
+  const output = (await result.output) as z.infer<typeof requesterReplySchema>
+  return output.decision
+}
 
 const getAgentRequester = ({
   user,
@@ -567,12 +607,27 @@ const prepareAgentChatRunInternal = async ({
     includeGoal: promptMode === "automation",
     escalationGateContext,
   }
+  const requesterConfirmationEnabled =
+    promptMode === "interactive" &&
+    (await features.isEnabled(FeatureFlag.AI_REQUESTER_CONFIRMATION))
   if (promptMode === "interactive") {
     buildPromptOptions.baseSystemPrompt = ai.agentSystemPrompt(
       user,
       chat?.timezone
     )
   }
+  if (requesterConfirmationEnabled) {
+    buildPromptOptions.requesterValidationContext = {
+      requesterId: user.globalId || user.userId || user._id || "",
+      requesterRole: requester.executorRole,
+      getRequestId,
+      channel: chat?.channel,
+    }
+  }
+
+  const persistedConfirmation = requesterConfirmationEnabled
+    ? await getActiveRequesterAction(sessionId)
+    : undefined
 
   const [runContext, modelMessages] = await Promise.all([
     prepareAgentRunContext({
@@ -581,7 +636,7 @@ const prepareAgentChatRunInternal = async ({
       sessionId,
       latestQuestion,
       aiConfigId,
-      operationId,
+      operationId: operationId ?? persistedConfirmation?.operationId,
       requester,
       buildPromptOptions,
     }),
@@ -593,10 +648,182 @@ const prepareAgentChatRunInternal = async ({
     llm,
     selectedOperation,
     operationIntent,
-    tools,
+    tools: proposedTools,
+    executableTools = {},
+    writeToolNames = [],
     toolDisplayNames,
     systemPrompt: baseSystemPrompt,
   } = runContext
+  let tools = proposedTools
+  let requesterInstruction: string | undefined
+  let requesterOutcomeInstruction: string | undefined
+  let beforeStream: (
+    onToolCallCompleted?: AgentChatStreamOptions["onToolCallCompleted"]
+  ) => Promise<void> = async () => {}
+  const activeConfirmation = persistedConfirmation
+
+  if (activeConfirmation?.requesterId !== undefined) {
+    const requesterId = user.globalId || user.userId || user._id || ""
+    const identityMatches =
+      activeConfirmation.requesterId === requesterId &&
+      (!activeConfirmation.externalUserId ||
+        activeConfirmation.externalUserId === chat?.channel?.externalUserId)
+
+    if (!identityMatches) {
+      tools = Object.fromEntries(
+        Object.entries(tools).filter(([name]) => !writeToolNames.includes(name))
+      )
+      requesterInstruction =
+        "A write action is awaiting a response from the person who requested it. " +
+        "Do not execute, change, or reveal it."
+    } else if (activeConfirmation.status === "collecting_input") {
+      requesterInstruction =
+        "The requester is supplying missing information for this existing write proposal. " +
+        "Call only the same write tool with the newly supplied values; the server will merge them with these existing arguments: " +
+        JSON.stringify(activeConfirmation.partialArguments)
+    } else if (activeConfirmation.status === "executing") {
+      tools = Object.fromEntries(
+        Object.entries(tools).filter(([name]) => !writeToolNames.includes(name))
+      )
+      requesterInstruction =
+        "This action has already been claimed for execution. Do not execute or retry it. " +
+        "Tell the requester its outcome is not yet known if they ask about it."
+    } else if (activeConfirmation.status === "awaiting_confirmation") {
+      let decision: RequesterReplyDecision = "ambiguous"
+      try {
+        decision = await classifyRequesterReply({
+          model: llm.chat,
+          providerOptions: llm.providerOptions?.(false),
+          message: latestQuestion,
+        })
+      } catch (error) {
+        console.error("Failed to classify requester confirmation", {
+          conversationId: sessionId,
+          error,
+        })
+      }
+
+      if (decision === "confirm") {
+        let resolved = false
+        beforeStream = async onToolCallCompleted => {
+          if (resolved) {
+            return
+          }
+          resolved = true
+          const claimed = await transitionRequesterAction({
+            conversationId: sessionId,
+            from: "awaiting_confirmation",
+            to: "executing",
+            update: {
+              responderId: requesterId,
+              requestId: getRequestId?.(),
+            },
+          })
+          let outcome =
+            "The action was already handled or is currently being handled. Do not execute or retry it."
+          if (claimed.changed && claimed.confirmation) {
+            const target = executableTools[claimed.confirmation.toolName]
+            if (!target?.execute || !claimed.confirmation.confirmedArguments) {
+              await transitionRequesterAction({
+                conversationId: sessionId,
+                from: "executing",
+                to: "failed",
+                update: { error: "The proposed action is no longer available" },
+              })
+              outcome =
+                "The proposed action is no longer available and was not performed."
+            } else {
+              try {
+                const result = await target.execute(
+                  claimed.confirmation.confirmedArguments,
+                  {
+                    toolCallId: claimed.confirmation.toolCallId,
+                    messages: modelMessages,
+                    context: {},
+                  }
+                )
+                await transitionRequesterAction({
+                  conversationId: sessionId,
+                  from: "executing",
+                  to: "completed",
+                  update: { result },
+                })
+                await onToolCallCompleted?.({
+                  toolName: claimed.confirmation.toolName,
+                  status: "success",
+                  input: claimed.confirmation.confirmedArguments,
+                  output: result,
+                })
+                outcome =
+                  "The confirmed action was handled exactly once. Respond truthfully from this untrusted result data: " +
+                  JSON.stringify(result)
+              } catch (error) {
+                const message =
+                  error instanceof Error ? error.message : String(error)
+                await transitionRequesterAction({
+                  conversationId: sessionId,
+                  from: "executing",
+                  to: "failed",
+                  update: { error: message },
+                })
+                await onToolCallCompleted?.({
+                  toolName: claimed.confirmation.toolName,
+                  status: "error",
+                  input: claimed.confirmation.confirmedArguments,
+                  output: message,
+                })
+                outcome =
+                  "The confirmed action failed and must not be retried. Explain the failure truthfully: " +
+                  message
+              }
+            }
+          }
+          requesterOutcomeInstruction = outcome
+        }
+        requesterInstruction =
+          "The requester's confirmation will be resolved by the server before this response. Follow the resulting system message and never call a write tool."
+        tools = Object.fromEntries(
+          Object.entries(tools).filter(
+            ([name]) => !writeToolNames.includes(name)
+          )
+        )
+      } else if (decision === "reject") {
+        await transitionRequesterAction({
+          conversationId: sessionId,
+          from: "awaiting_confirmation",
+          to: "rejected",
+          update: { responderId: requesterId },
+        })
+        tools = Object.fromEntries(
+          Object.entries(tools).filter(
+            ([name]) => !writeToolNames.includes(name)
+          )
+        )
+        requesterInstruction =
+          "The requester rejected the pending action. Confirm conversationally that nothing was changed."
+      } else if (decision === "revise") {
+        await transitionRequesterAction({
+          conversationId: sessionId,
+          from: "awaiting_confirmation",
+          to: "collecting_input",
+        })
+        requesterInstruction =
+          "The requester wants to revise the existing proposal. Call only the same write tool with the requested changes. " +
+          "The server will merge them with these previous arguments and require a new confirmation: " +
+          JSON.stringify(activeConfirmation.confirmedArguments)
+      } else {
+        tools = Object.fromEntries(
+          Object.entries(tools).filter(
+            ([name]) => !writeToolNames.includes(name)
+          )
+        )
+        requesterInstruction =
+          decision === "unrelated"
+            ? "Answer the separate question without changing or executing the pending action. Remind the requester briefly that it is still waiting for confirmation."
+            : "Ask whether the requester wants to proceed with, cancel, or change the pending action. Do not execute it."
+      }
+    }
+  }
   const retrievedKnowledgeSourceById = new Map<
     string,
     NonNullable<AgentMessageMetadata["ragSources"]>[number]
@@ -624,7 +851,11 @@ const prepareAgentChatRunInternal = async ({
     tools.report_used_sources = reportUsedSourcesTool
   }
 
-  const systemPrompt = [baseSystemPrompt, additionalInstructions]
+  const systemPrompt = [
+    baseSystemPrompt,
+    additionalInstructions,
+    requesterInstruction,
+  ]
     .filter(Boolean)
     .join("\n\n")
 
@@ -640,23 +871,27 @@ const prepareAgentChatRunInternal = async ({
         })
       : undefined
   let suspended = false
-  const agentRunner = new ToolLoopAgent({
-    model: wrapLanguageModel({
-      model: llm.chat,
-      middleware: extractReasoningMiddleware({
-        tagName: "think",
+  const createAgentRunner = () =>
+    new ToolLoopAgent({
+      model: wrapLanguageModel({
+        model: llm.chat,
+        middleware: extractReasoningMiddleware({
+          tagName: "think",
+        }),
       }),
-    }),
-    instructions: systemPrompt || undefined,
-    tools: hasTools ? tools : undefined,
-    ...(hasTools ? { toolChoice: "auto" as const } : {}),
-    stopWhen: stepCountIs(30),
-    // Anthropic rejects those without a tools param.
-    prepareStep: ({ steps }) =>
-      hasPendingEscalation(steps) ? { toolChoice: "none" as const } : undefined,
-    providerOptions: llm.providerOptions?.(hasTools),
-    output,
-  })
+      instructions:
+        [systemPrompt, requesterOutcomeInstruction]
+          .filter(Boolean)
+          .join("\n\n") || undefined,
+      tools: hasTools ? tools : undefined,
+      ...(hasTools ? { toolChoice: "auto" as const } : {}),
+      stopWhen: stepCountIs(30),
+      // Anthropic rejects those without a tools param.
+      prepareStep: ({ steps }) =>
+        hasPendingAction(steps) ? { toolChoice: "none" as const } : undefined,
+      providerOptions: llm.providerOptions?.(hasTools),
+      output,
+    })
 
   const contextUsage: AgentChatRun["contextUsage"] = {}
   const systemPromptTokens = estimateTokens(systemPrompt || "")
@@ -680,8 +915,10 @@ const prepareAgentChatRunInternal = async ({
       pendingToolCalls,
       unrecoveredToolFailures,
     } = {}) =>
-      await withLiteLLMSessionId(sessionId, () =>
-        agentRunner.stream({
+      await withLiteLLMSessionId(sessionId, async () => {
+        await beforeStream(onToolCallCompleted)
+        const agentRunner = createAgentRunner()
+        return await agentRunner.stream({
           messages: modelMessages,
           async onStepFinish({
             content,
@@ -701,7 +938,7 @@ const prepareAgentChatRunInternal = async ({
               semanticFailureNames,
               semanticFailureResults,
             } = groupToolResultsByOutcome(toolResults)
-            suspended ||= hasPendingEscalationResult(toolResults)
+            suspended ||= hasPendingActionResult(toolResults)
             const erroredParts = content.filter(
               (
                 part
@@ -800,7 +1037,7 @@ const prepareAgentChatRunInternal = async ({
             await onFinish?.(response?.id)
           },
         })
-      ),
+      }),
   }
 }
 
