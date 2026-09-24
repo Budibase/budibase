@@ -4,9 +4,10 @@
   import { createValidatedConfigStore } from "./stores/validatedConfig"
   import { createValidatedNameStore } from "./stores/validatedName"
   import { get } from "svelte/store"
-  import type { UIIntegration } from "@budibase/types"
+  import { FeatureFlag, type UIIntegration } from "@budibase/types"
   import InfoDisplay from "@/pages/builder/workspace/[workspaceId]/design/[workspaceAppId]/[screenId]/[componentId]/_components/Component/InfoDisplay.svelte"
   import ProjectSelect from "@/components/common/ProjectSelect.svelte"
+  import { featureFlags } from "@/stores/portal"
 
   export let integration: UIIntegration
   export let config: Record<string, any>
@@ -19,7 +20,6 @@
   export let nameFieldValue: string = ""
   export let showProjectField: boolean = false
   export let projectIdsValue: string[] = []
-  export let originalProjectIdsValue: string[] | undefined = undefined
 
   let projectIds: string[] = []
 
@@ -28,16 +28,9 @@
   $: projectIds = projectIdsValue || []
 
   const getSubmittedProjectIds = () => {
-    if (projectIds.length) {
-      return projectIds
-    }
-    if (
-      originalProjectIdsValue &&
-      JSON.stringify(projectIds) !== JSON.stringify(originalProjectIdsValue)
-    ) {
-      return []
-    }
-    return undefined
+    return $featureFlags[FeatureFlag.PROJECTS] && projectIds.length
+      ? projectIds
+      : undefined
   }
 
   const handleConfirm = async () => {
