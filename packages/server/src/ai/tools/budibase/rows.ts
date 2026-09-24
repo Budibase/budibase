@@ -13,6 +13,7 @@ import {
   PermissionLevel,
   PermissionType,
   ToolExecutionPrincipal,
+  type FieldConstraints,
   type Row,
   type RowSearchParams,
   type TableSchema,
@@ -26,6 +27,7 @@ import {
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
 import { getAgentTableFields, sanitizeAgentRow } from "./tableScope"
+import { validateTimeOnlyField } from "../../../sdk/workspace/rows/validateTimeOnlyField"
 
 const PLAIN_TEXT_WARNING =
   "CRITICAL: Use plain text values only. Do NOT include HTML tags, markdown formatting, " +
@@ -60,6 +62,31 @@ type TableSchemaField = {
   name: string
   schema: TableSchema[string]
   isPrimaryDisplay?: boolean
+}
+
+const toFiniteNumber = (value: unknown) => {
+  if (value === null || value === undefined || value === "") {
+    return undefined
+  }
+  const parsed = typeof value === "number" ? value : Number(value)
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
+const buildNumericalityConstraint = (
+  numericality: FieldConstraints["numericality"] | undefined
+) => {
+  if (!numericality) {
+    return undefined
+  }
+  const greaterThanOrEqualTo = toFiniteNumber(numericality.greaterThanOrEqualTo)
+  const lessThanOrEqualTo = toFiniteNumber(numericality.lessThanOrEqualTo)
+  if (greaterThanOrEqualTo === undefined && lessThanOrEqualTo === undefined) {
+    return undefined
+  }
+  return {
+    ...(greaterThanOrEqualTo !== undefined && { greaterThanOrEqualTo }),
+    ...(lessThanOrEqualTo !== undefined && { lessThanOrEqualTo }),
+  }
 }
 
 const isRequiredInputField = (schema: TableSchema[string]) =>
@@ -296,15 +323,24 @@ export const buildRowDataSchema = (
       }
       fieldSchema = fieldSchema.nullish()
     }
-    const { email, length } = field.schema.constraints ?? {}
+    const { email, length, numericality, datetime } =
+      field.schema.constraints ?? {}
+    const numericalityConstraint = buildNumericalityConstraint(numericality)
     fieldSchema = fieldSchema.superRefine((value, ctx) => {
       if (value === undefined) {
         return
       }
-      const errors: string[] | undefined = validateJs.single(value, {
-        ...(email && { email }),
-        ...(length && { length }),
-      })
+      const errors: string[] | undefined =
+        field.schema.type === FieldType.DATETIME && field.schema.timeOnly
+          ? validateTimeOnlyField(field.name, value, { datetime })
+          : validateJs.single(value, {
+              ...(email && { email }),
+              ...(length && { length }),
+              ...(numericalityConstraint && {
+                numericality: numericalityConstraint,
+              }),
+              ...(datetime && { datetime }),
+            })
       for (const message of errors ?? []) {
         ctx.addIssue({ code: "custom", message })
       }

@@ -171,6 +171,99 @@ describe("row tool data schema", () => {
     expect(schema.safeParse({ Notes: null }).success).toBe(true)
   })
 
+  it("enforces configured numericality constraints on supplied values", () => {
+    const schema = buildRowDataSchema(
+      [
+        {
+          name: "Cost",
+          schema: {
+            name: "Cost",
+            type: FieldType.NUMBER,
+            constraints: {
+              numericality: {
+                greaterThanOrEqualTo: "10",
+                lessThanOrEqualTo: "20",
+              },
+            },
+          },
+        },
+      ],
+      ""
+    )
+
+    expect(schema.safeParse({ Cost: 10 }).success).toBe(true)
+    expect(schema.safeParse({ Cost: 20 }).success).toBe(true)
+    expect(schema.safeParse({ Cost: 9 }).success).toBe(false)
+    expect(schema.safeParse({ Cost: 21 }).success).toBe(false)
+    expect(schema.safeParse({ Cost: null }).success).toBe(true)
+  })
+
+  it("enforces configured datetime constraints on supplied values", () => {
+    const schema = buildRowDataSchema(
+      [
+        {
+          name: "Due",
+          schema: {
+            name: "Due",
+            type: FieldType.DATETIME,
+            constraints: {
+              datetime: {
+                earliest: "2024-01-10T00:00:00.000Z",
+                latest: "2024-01-20T00:00:00.000Z",
+              },
+            },
+          },
+        },
+      ],
+      ""
+    )
+
+    expect(schema.safeParse({ Due: "2024-01-10T00:00:00.000Z" }).success).toBe(
+      true
+    )
+    expect(schema.safeParse({ Due: "2024-01-20T00:00:00.000Z" }).success).toBe(
+      true
+    )
+    expect(schema.safeParse({ Due: "2024-01-09T23:59:59.000Z" }).success).toBe(
+      false
+    )
+    expect(schema.safeParse({ Due: "2024-01-20T00:00:01.000Z" }).success).toBe(
+      false
+    )
+    expect(schema.safeParse({ Due: null }).success).toBe(true)
+  })
+
+  it("enforces time-only datetime constraints on supplied values", () => {
+    const schema = buildRowDataSchema(
+      [
+        {
+          name: "Start",
+          schema: {
+            name: "Start",
+            type: FieldType.DATETIME,
+            timeOnly: true,
+            constraints: {
+              datetime: {
+                earliest: "10:00",
+                latest: "15:00",
+              },
+            },
+          },
+        },
+      ],
+      ""
+    )
+
+    expect(schema.safeParse({ Start: "10:00" }).success).toBe(true)
+    expect(schema.safeParse({ Start: "15:00" }).success).toBe(true)
+    expect(schema.safeParse({ Start: "09:59" }).success).toBe(false)
+    expect(schema.safeParse({ Start: "15:01" }).success).toBe(false)
+    expect(
+      schema.safeParse({ Start: "2024-01-10T10:00:00.000Z" }).success
+    ).toBe(false)
+    expect(schema.safeParse({ Start: null }).success).toBe(true)
+  })
+
   it("requires a writable primary display value on create but allows omission on update", () => {
     const displayFields = [
       {
