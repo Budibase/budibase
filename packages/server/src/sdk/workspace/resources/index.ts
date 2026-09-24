@@ -152,7 +152,7 @@ export function collectProjectResourceDependencies(
   })
 }
 
-async function buildResourceDependencyAnalysis({
+export async function analyseResourceDependencies({
   includeProjects = true,
   includeDatasourceQueries = false,
 }: GetResourcesInfoOptions = {}): Promise<ResourceDependencyAnalysis> {
@@ -584,16 +584,10 @@ async function buildResourceDependencyAnalysis({
   return { graph: dependencies, findReferencedResources }
 }
 
-export async function analyseResourceDependencies(
-  options: GetResourcesInfoOptions = {}
-): Promise<ResourceDependencyAnalysis> {
-  return await buildResourceDependencyAnalysis(options)
-}
-
 export async function getResourcesInfo(
   options: GetResourcesInfoOptions = {}
 ): Promise<ResourceDependencyGraph> {
-  const { graph } = await buildResourceDependencyAnalysis(options)
+  const { graph } = await analyseResourceDependencies(options)
   const directDependencyPrefixes = [
     prefixed(DocumentType.PROJECT),
     prefixed(DocumentType.ROW_ACTIONS),
@@ -655,14 +649,6 @@ function isProject(doc: AnyDocument): doc is Project {
   }
   const type = getResourceType(doc._id)
   return type === ResourceType.PROJECT
-}
-
-function isDatasource(doc: AnyDocument): doc is Datasource {
-  if (!doc._id) {
-    return false
-  }
-  const type = getResourceType(doc._id)
-  return type === ResourceType.DATASOURCE
 }
 
 function isTable(doc: AnyDocument): doc is WithDocMetadata<Table> {
@@ -1072,7 +1058,7 @@ async function duplicateResourcesToWorkspaceUnlocked(
           sanitisedResource =
             sdk.automations.utils.sanitiseAutomationForExport(doc)
         }
-        let sanitisedDoc = sanitiseProjectAssignment({
+        const sanitisedDoc = sanitiseProjectAssignment({
           ...sanitisedResource,
           fromWorkspace,
         })
@@ -1086,21 +1072,6 @@ async function duplicateResourcesToWorkspaceUnlocked(
         }
         if (isAutomation(sanitisedDoc)) {
           sanitisedDoc.appId = toWorkspace
-        }
-        const resourceType = sanitisedDoc._id
-          ? getResourceType(sanitisedDoc._id)
-          : undefined
-        if (!resourceType || !isProjectAssignableResourceType(resourceType)) {
-          sanitisedDoc = withProjectIds(sanitisedDoc)
-        }
-        if (isDatasource(sanitisedDoc) && sanitisedDoc.entities) {
-          sanitisedDoc.entities = Object.fromEntries(
-            Object.entries(sanitisedDoc.entities).map(([name, entity]) => {
-              const sanitisedEntity = { ...entity }
-              delete sanitisedEntity.projectIds
-              return [name, sanitisedEntity]
-            })
-          )
         }
         return sanitisedDoc
       })

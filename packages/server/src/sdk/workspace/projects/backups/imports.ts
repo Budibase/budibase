@@ -587,7 +587,7 @@ const sanitiseImportedDoc = async ({
   datasourcesById: Map<string, Datasource>
 }): Promise<AnyDocument> => {
   const { idMap } = remapper
-  const remapped = remapValue(structuredClone(doc), remapper) as AnyDocument
+  const remapped = remapValue(doc, remapper) as AnyDocument
   delete remapped._rev
 
   if (resourceType === ResourceType.ROW_ACTION) {
@@ -1264,12 +1264,9 @@ async function extractProjectPackage(
     validateProject(project)
     validateDependencyIndexShape(dependencyIndex)
 
-    const docFiles = await fsp
-      .access(docsPath)
-      .then(() =>
-        packageFiles.filter(filePath => filePath.startsWith(docsPath))
-      )
-      .catch(() => [])
+    const docFiles = packageFiles.filter(filePath =>
+      filePath.startsWith(docsPath)
+    )
 
     if (docFiles.length > MAX_PACKAGE_DOCS) {
       throw new HTTPError("Project package contains too many docs.", 400)
@@ -1282,22 +1279,20 @@ async function extractProjectPackage(
     }
 
     const docs = await Promise.all(
-      docFiles
-        .filter(filePath => filePath.endsWith(".json"))
-        .map(async filePath => {
-          const doc = await readJsonFile<AnyDocument>(filePath)
-          if (!isRecord(doc) || typeof doc._id !== "string") {
-            throw new HTTPError(
-              `Project package contains an invalid doc in '${basename(filePath)}'.`,
-              400
-            )
-          }
-          return {
-            path: filePath,
-            resourceType: getResourceTypeForDocPath(tmpPath, filePath),
-            doc,
-          }
-        })
+      docFiles.map(async filePath => {
+        const doc = await readJsonFile<AnyDocument>(filePath)
+        if (!isRecord(doc) || typeof doc._id !== "string") {
+          throw new HTTPError(
+            `Project package contains an invalid doc in '${basename(filePath)}'.`,
+            400
+          )
+        }
+        return {
+          path: filePath,
+          resourceType: getResourceTypeForDocPath(tmpPath, filePath),
+          doc,
+        }
+      })
     )
 
     validateDependencyIndex(project, dependencyIndex, docs, manifest)

@@ -175,18 +175,17 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
 
   const isCreate = !table._id
 
-  if (isExternalTable(table)) {
-    delete table.projectIds
-    delete ctx.request.body.projectIds
-  } else if (isCreate) {
-    table.projectIds = await resolveProjectIds(table.projectIds)
-  } else {
-    const existingTable = await sdk.tables.getTable(table._id!)
-    table.projectIds = await resolveUpdatedProjectIds(
-      table.projectIds,
-      existingTable.projectIds
-    )
-    ctx.request.body.projectIds = table.projectIds
+  if (!isExternalTable(table)) {
+    if (isCreate) {
+      table.projectIds = await resolveProjectIds(table.projectIds)
+    } else {
+      const existingTable = await sdk.tables.getTable(table._id!)
+      table.projectIds = await resolveUpdatedProjectIds(
+        table.projectIds,
+        existingTable.projectIds
+      )
+      ctx.request.body.projectIds = table.projectIds
+    }
   }
 
   await guardTable(table, isCreate)

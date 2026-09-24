@@ -1121,56 +1121,7 @@ describe("/api/resources/usage", () => {
       })
     })
 
-    it("duplicates project datasources and strips external table project assignments", async () => {
-      await features.testutils.withFeatureFlags(
-        config.getTenantId(),
-        { [FeatureFlag.PROJECTS]: true },
-        async () => {
-          const { project } = await config.api.project.create({
-            name: "Operations",
-          })
-          const datasource = await config.api.datasource.create({
-            ...basicDatasource().datasource,
-            projectIds: [project._id],
-          })
-          const externalTable = basicTable(datasource, {
-            _id: buildExternalTableId(datasource._id!, "TestTable"),
-            projectIds: [project._id],
-          })
-          await config.doInContext(config.getDevWorkspaceId(), async () => {
-            await context.getWorkspaceDB().put({
-              ...datasource,
-              entities: {
-                [externalTable.name]: externalTable,
-              },
-            })
-          })
-          const destination = await config.api.workspace.create({
-            name: `Destination ${generator.natural()}`,
-          })
-
-          const resourcesToCopy = await collectDependantResourceIds(project._id)
-          expect(resourcesToCopy).toEqual([project._id, datasource._id])
-
-          await duplicateResources(resourcesToCopy, destination.appId)
-
-          const destinationDb = db.getDB(
-            db.getDevWorkspaceID(destination.appId),
-            { skip_setup: true }
-          )
-          const duplicatedDatasource = await destinationDb.get<Datasource>(
-            datasource._id!
-          )
-
-          await expect(destinationDb.get(project._id)).resolves.toBeDefined()
-          expect(
-            duplicatedDatasource.entities![externalTable.name].projectIds
-          ).toBeUndefined()
-        }
-      )
-    })
-
-    it("strips inert query project assignments when duplicating a project", async () => {
+    it("duplicates external tables with their project datasource", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
           name: "Operations",
@@ -1179,80 +1130,40 @@ describe("/api/resources/usage", () => {
           ...basicDatasource().datasource,
           projectIds: [project._id],
         })
-        const query = await config.api.query.save(basicQuery(datasource._id!))
-        await config.doInContext(config.getDevWorkspaceId(), async () => {
-          const db = context.getWorkspaceDB()
-          const storedQuery = await db.get<Query>(query._id!)
-          await db.put({
-            ...storedQuery,
-            projectIds: [project._id],
-          })
+        const externalTable = basicTable(datasource, {
+          _id: buildExternalTableId(datasource._id!, "TestTable"),
+          name: "TestTable",
+        })
+        await config.api.datasource.update({
+          ...datasource,
+          entities: {
+            [externalTable.name]: externalTable,
+          },
         })
         const destination = await config.api.workspace.create({
           name: `Destination ${generator.natural()}`,
         })
 
         const resourcesToCopy = await collectDependantResourceIds(project._id)
-        expect(resourcesToCopy).toEqual([
-          project._id,
-          datasource._id,
-          query._id,
-        ])
         await duplicateResources(resourcesToCopy, destination.appId)
 
         const destinationDb = db.getDB(
           db.getDevWorkspaceID(destination.appId),
           { skip_setup: true }
         )
-        const duplicatedQuery = await destinationDb.get<Query>(query._id!)
-        expect(duplicatedQuery.projectIds).toBeUndefined()
-      })
-    })
-
-    it("strips inert screen project assignments when duplicating a project", async () => {
-      await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        const { workspaceApp } = await config.api.workspaceApp.create({
-          name: "Operations app",
-          url: "/operations",
-          projectIds: [project._id],
-        })
-        const screen = await config.api.screen.save({
-          ...basicScreen(),
-          workspaceAppId: workspaceApp._id,
-        })
-        await config.doInContext(config.getDevWorkspaceId(), async () => {
-          const db = context.getWorkspaceDB()
-          const storedScreen = await db.get<Screen & { projectIds?: string[] }>(
-            screen._id!
-          )
-          await db.put({
-            ...storedScreen,
-            projectIds: [project._id],
-          })
-        })
-        const destination = await config.api.workspace.create({
-          name: `Destination ${generator.natural()}`,
-        })
-
-        const resourcesToCopy = await collectDependantResourceIds(project._id)
-        expect(resourcesToCopy).toEqual([
-          project._id,
-          screen._id,
-          workspaceApp._id,
-        ])
-        await duplicateResources(resourcesToCopy, destination.appId)
-
-        const destinationDb = db.getDB(
-          db.getDevWorkspaceID(destination.appId),
-          { skip_setup: true }
+        const duplicatedDatasource = await destinationDb.get<Datasource>(
+          datasource._id!
         )
-        const duplicatedScreen = await destinationDb.get<
-          Screen & { projectIds?: string[] }
-        >(screen._id!)
-        expect(duplicatedScreen.projectIds).toBeUndefined()
+
+        await expect(destinationDb.get(project._id)).resolves.toBeDefined()
+        expect(duplicatedDatasource.projectIds).toEqual([project._id])
+        expect(
+          duplicatedDatasource.entities![externalTable.name]
+        ).toMatchObject({
+          _id: externalTable._id,
+          name: externalTable.name,
+          schema: externalTable.schema,
+        })
       })
     })
 

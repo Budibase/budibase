@@ -15,30 +15,62 @@ describe("Project package ownership", () => {
   beforeEach(async () => config.newTenant())
   afterAll(() => config.end())
 
+  const createProjectAppWithUnassignedQueryDatasource = async () => {
+    const { project } = await config.api.project.create({ name: "Support" })
+    const datasource = await config.api.datasource.create(
+      basicDatasource().datasource
+    )
+    const query = await config.api.query.save(basicQuery(datasource._id!))
+    const { workspaceApp } = await config.api.workspaceApp.create({
+      name: "Support app",
+      url: "/support",
+    })
+    await config.api.screen.save({
+      ...createQueryScreen(datasource._id!, query),
+      workspaceAppId: workspaceApp._id,
+    })
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      await context.getWorkspaceDB().put({
+        ...workspaceApp,
+        projectIds: [project._id],
+      })
+    })
+
+    return project
+  }
+
+  const createProjectAppWithUnassignedRowActionTable = async () => {
+    const { project } = await config.api.project.create({ name: "Support" })
+    const table = await config.api.table.save(basicTable())
+    await config.api.rowAction.save(table._id!, { name: "Approve" })
+    const view = await config.api.viewV2.create({
+      tableId: table._id!,
+      name: "Open tickets",
+    })
+    const { workspaceApp } = await config.api.workspaceApp.create({
+      name: "Support app",
+      url: "/support",
+    })
+    await config.api.screen.save({
+      ...createViewScreen(view),
+      workspaceAppId: workspaceApp._id,
+    })
+    await config.doInContext(config.getDevWorkspaceId(), async () => {
+      await context.getWorkspaceDB().put({
+        ...workspaceApp,
+        projectIds: [project._id],
+      })
+    })
+
+    return project
+  }
+
   it("imports an app after its query datasource was excluded from assignment", async () => {
     await features.testutils.withFeatureFlags(
       config.getTenantId(),
       { [FeatureFlag.PROJECTS]: true },
       async () => {
-        const { project } = await config.api.project.create({ name: "Support" })
-        const datasource = await config.api.datasource.create(
-          basicDatasource().datasource
-        )
-        const query = await config.api.query.save(basicQuery(datasource._id!))
-        const { workspaceApp } = await config.api.workspaceApp.create({
-          name: "Support app",
-          url: "/support",
-        })
-        await config.api.screen.save({
-          ...createQueryScreen(datasource._id!, query),
-          workspaceAppId: workspaceApp._id,
-        })
-        await config.doInContext(config.getDevWorkspaceId(), async () => {
-          await context.getWorkspaceDB().put({
-            ...workspaceApp,
-            projectIds: [project._id],
-          })
-        })
+        const project = await createProjectAppWithUnassignedQueryDatasource()
 
         const archive = await config.api.project.export(project._id)
         const imported = await config.api.project.import(archive)
@@ -55,27 +87,7 @@ describe("Project package ownership", () => {
       config.getTenantId(),
       { [FeatureFlag.PROJECTS]: true },
       async () => {
-        const { project } = await config.api.project.create({ name: "Support" })
-        const table = await config.api.table.save(basicTable())
-        await config.api.rowAction.save(table._id!, { name: "Approve" })
-        const view = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: "Open tickets",
-        })
-        const { workspaceApp } = await config.api.workspaceApp.create({
-          name: "Support app",
-          url: "/support",
-        })
-        await config.api.screen.save({
-          ...createViewScreen(view),
-          workspaceAppId: workspaceApp._id,
-        })
-        await config.doInContext(config.getDevWorkspaceId(), async () => {
-          await context.getWorkspaceDB().put({
-            ...workspaceApp,
-            projectIds: [project._id],
-          })
-        })
+        const project = await createProjectAppWithUnassignedRowActionTable()
 
         const archive = await config.api.project.export(project._id)
         const imported = await config.api.project.import(archive)

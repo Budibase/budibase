@@ -322,18 +322,13 @@
     ? prettifyQueryRequestBody(editableQuery, mergedBindings)
     : undefined
 
-  const stripQueryProjectIds = (query: Query): Query => {
-    const { projectIds: _projectIds, ...queryWithoutProjectIds } = query
-    return queryWithoutProjectIds
-  }
-
   // ── BUILT QUERY & DIRTY STATE ─────────────────────────────────────────────
   $: builtQuery =
     editableQuery &&
     schema &&
     buildQuery(
       {
-        ...stripQueryProjectIds(editableQuery),
+        ...editableQuery,
         datasourceId: selectedDatasourceId || editableQuery.datasourceId,
         fields: { ...editableQuery.fields, path: requestUrl },
       },

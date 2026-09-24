@@ -25,9 +25,10 @@ import {
   type Datasource,
   type EmailTrigger,
   type EmailTriggerInputs,
+  type ImportProjectResponse,
   type Project,
   type ProjectPackageDependencyIndex,
-  type Query,
+  type RowActionTriggerInputs,
   type Webhook,
 } from "@budibase/types"
 import { Header, helpers } from "@budibase/shared-core"
@@ -123,37 +124,50 @@ describe("/projects", () => {
     cleanupAIConfig = undefined
   })
 
-  it.each(["multiple files", "invalid fields"])(
-    "removes uploaded files when import rejects %s",
-    async rejection => {
-      await withProjectsEnabled(async () => {
-        const remove = jest.spyOn(fsp, "rm")
-        try {
-          const request = config
-            .request!.post("/api/projects/import")
-            .set(config.defaultHeaders())
-            .attach("file", Buffer.from("first"), "first.tar.gz")
-          if (rejection === "invalid fields") {
-            request.field("encryptPassword", "x".repeat(1025))
-          } else {
-            request.attach("file", Buffer.from("second"), "second.tar.gz")
-          }
-          await request.expect(400)
+  it("removes both uploaded files when import rejects multiple files", async () => {
+    await withProjectsEnabled(async () => {
+      const remove = jest.spyOn(fsp, "rm")
+      try {
+        await config
+          .request!.post("/api/projects/import")
+          .set(config.defaultHeaders())
+          .attach("file", Buffer.from("first"), "first.tar.gz")
+          .attach("file", Buffer.from("second"), "second.tar.gz")
+          .expect(400)
 
-          expect(remove).toHaveBeenCalledTimes(
-            rejection === "invalid fields" ? 1 : 2
-          )
-          for (const [path] of remove.mock.calls) {
-            await expect(fsp.access(path)).rejects.toMatchObject({
-              code: "ENOENT",
-            })
-          }
-        } finally {
-          remove.mockRestore()
-        }
-      })
-    }
-  )
+        expect(remove).toHaveBeenCalledTimes(2)
+        const [[firstPath], [secondPath]] = remove.mock.calls
+        await expect(fsp.access(firstPath)).rejects.toMatchObject({
+          code: "ENOENT",
+        })
+        await expect(fsp.access(secondPath)).rejects.toMatchObject({
+          code: "ENOENT",
+        })
+      } finally {
+        remove.mockRestore()
+      }
+    })
+  })
+
+  it("removes the uploaded file when import rejects an invalid password field", async () => {
+    await withProjectsEnabled(async () => {
+      const remove = jest.spyOn(fsp, "rm")
+      try {
+        await config
+          .request!.post("/api/projects/import")
+          .set(config.defaultHeaders())
+          .attach("file", Buffer.from("first"), "first.tar.gz")
+          .field("encryptPassword", "x".repeat(1025))
+          .expect(400)
+
+        expect(remove).toHaveBeenCalledTimes(1)
+        const [[path]] = remove.mock.calls
+        await expect(fsp.access(path)).rejects.toMatchObject({ code: "ENOENT" })
+      } finally {
+        remove.mockRestore()
+      }
+    })
+  })
 
   const readTarEntries = async (buffer: Buffer) => {
     const files = new Map<string, Buffer>()
@@ -450,42 +464,6 @@ describe("/projects", () => {
           },
         }
       )
-    })
-  })
-
-  it("strips project assignments from external tables", async () => {
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-      })
-      const datasource = await config.api.datasource.create(
-        basicDatasource().datasource
-      )
-      const externalTable = basicTable(datasource, {
-        _id: buildExternalTableId(datasource._id!, "TestTable"),
-        projectIds: [project._id],
-      })
-      const datasourceWithTable = await config.api.datasource.update({
-        ...datasource,
-        entities: {
-          [externalTable.name]: externalTable,
-        },
-      })
-
-      expect(
-        datasourceWithTable.entities![externalTable.name].projectIds
-      ).toBeUndefined()
-
-      const savedTable = await config.api.table.save({
-        ...datasourceWithTable.entities![externalTable.name],
-        projectIds: [project._id],
-      })
-      expect(savedTable.projectIds).toBeUndefined()
-
-      const storedDatasource = await config.api.datasource.get(datasource._id!)
-      expect(
-        storedDatasource.entities![externalTable.name].projectIds
-      ).toBeUndefined()
     })
   })
 
@@ -850,35 +828,6 @@ describe("/projects", () => {
         expect(updatedDatasource.projectIds).toEqual([project._id])
       })
     })
-
-    it("clears stored query assignments when updates omit project ids", async () => {
-      await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        const datasource = await config.createDatasource()
-        const query = await config.api.query.save(basicQuery(datasource._id))
-        await config.doInContext(config.getDevWorkspaceId(), async () => {
-          const persistedQuery = await context
-            .getWorkspaceDB()
-            .get<Query>(query._id!)
-          await context.getWorkspaceDB().put({
-            ...persistedQuery,
-            projectIds: [project._id],
-          })
-        })
-
-        const persistedQuery = await config.api.query.get(query._id!)
-
-        const { projectIds: _queryProjectIds, ...queryUpdate } = persistedQuery
-        const updatedQuery = await config.api.query.save({
-          ...queryUpdate,
-          name: "Ops query updated",
-        })
-
-        expect(updatedQuery.projectIds).toBeUndefined()
-      })
-    })
   })
 
   it("restores assignments when project cleanup fails after partial cleanup", async () => {
@@ -1072,166 +1021,244 @@ describe("/projects", () => {
   }
 
   describe("exports project tarballs", () => {
-    it.each([
-      {
-        name: "password",
-        includeDatasource: false,
-        credentials: { password: "mailbox-secret" },
-      },
-      {
-        name: "excluded OAuth2 connection",
-        includeDatasource: false,
-        credentials: {
-          authType: EmailTriggerAuthType.OAUTH2,
-          datasourceId: "datasource_source",
-          authConfigId: "auth_source",
-        },
-      },
-      {
-        name: "included OAuth2 connection",
-        includeDatasource: true,
-        credentials: {
-          authType: EmailTriggerAuthType.OAUTH2,
-          datasourceId: "datasource_source",
-          authConfigId: "auth_source",
-        },
-      },
-      {
-        name: "missing OAuth2 auth config",
-        includeDatasource: true,
-        credentials: {
-          authType: EmailTriggerAuthType.OAUTH2,
-          datasourceId: "datasource_source",
-          authConfigId: "auth_missing",
-        },
-      },
-      {
-        name: "legacy OAuth2",
-        includeDatasource: false,
-        credentials: {
-          authType: EmailTriggerAuthType.OAUTH2,
-          oauth2ConfigId: "oauth2_source",
-        },
-      },
-    ])(
-      "sanitises email credentials and restores portable settings for $name",
-      async ({ credentials, includeDatasource }) => {
-        await withProjectsEnabled(async () => {
-          const project = await createAssignedProject()
-          if (credentials.datasourceId) {
-            const datasource = await config.api.datasource.create({
-              ...basicDatasource().datasource,
-              source: SourceName.REST,
-              projectIds: includeDatasource ? [project._id] : undefined,
-              config: {
-                authConfigs: [
-                  {
-                    _id: "auth_source",
-                    name: "Mailbox authentication",
-                    type: RestAuthType.OAUTH2,
-                    url: "https://example.com/oauth/token",
-                    clientId: "mailbox-client",
-                    clientSecret: "oauth-secret",
-                    method: OAuth2CredentialsMethod.BODY,
-                    grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
-                  },
-                ],
-              },
-            })
-            credentials = { ...credentials, datasourceId: datasource._id! }
-          }
-          const settings = {
-            host: "imap.example.com",
-            port: 993,
-            secure: true,
-            username: "ops@example.com",
-            mailbox: "INBOX",
-          }
-          const sourceAutomation = createAutomationBuilder(config)
-            .onEmail({ ...settings, ...credentials })
-            .build({ disabled: true })
-          const { automation } = await config.api.automation.post({
-            ...sourceAutomation,
-            projectIds: [project._id],
-          })
-          const files = await readTarEntries(
-            await config.api.project.export(project._id)
-          )
-          const automationPath = `docs/automation/${automation._id}.json`
-          const exported: Automation = JSON.parse(
-            files.get(automationPath)!.toString()
-          )
-          const manifest = JSON.parse(files.get("manifest.json")!.toString())
+    const emailSettings = {
+      host: "imap.example.com",
+      port: 993,
+      secure: true,
+      username: "ops@example.com",
+      mailbox: "INBOX",
+    }
 
-          expect(exported.definition.trigger.inputs).toEqual({
-            ...settings,
-            authType: credentials.authType,
-            ...(credentials.datasourceId
-              ? {
-                  datasourceId: credentials.datasourceId,
-                  authConfigId: credentials.authConfigId,
-                }
-              : {}),
-          })
-          expect(
-            [...files.values()].map(file => file.toString()).join("\n")
-          ).not.toContain("oauth-secret")
-          expect(manifest.requiresSecrets).toBe(true)
+    const createEmailOAuthConnection = async (projectIds: string[]) => {
+      return await config.api.datasource.create({
+        ...basicDatasource().datasource,
+        source: SourceName.REST,
+        projectIds,
+        config: {
+          authConfigs: [
+            {
+              _id: "auth_source",
+              name: "Mailbox authentication",
+              type: RestAuthType.OAUTH2,
+              url: "https://example.com/oauth/token",
+              clientId: "mailbox-client",
+              clientSecret: "oauth-secret",
+              method: OAuth2CredentialsMethod.BODY,
+              grantType: OAuth2GrantType.CLIENT_CREDENTIALS,
+            },
+          ],
+        },
+      })
+    }
 
-          const entries = Object.fromEntries(
-            [...files].map(([path, contents]) => [
-              path,
-              JSON.parse(contents.toString()),
-            ])
-          )
-          entries[automationPath] = {
-            ...exported,
-            disabled: false,
-            definition: sourceAutomation.definition,
-          }
-          const imported = await config.api.project.import(
-            await createTarPackage(entries)
-          )
-          const importedAutomation = await config.doInContext(undefined, () =>
-            context
-              .getWorkspaceDB()
-              .get<Automation>(imported.resources.automation![0])
-          )
+    const exportThenImportUnsanitisedEmailAutomation = async ({
+      projectId,
+      credentials,
+    }: {
+      projectId: string
+      credentials: Partial<EmailTriggerInputs> & { oauth2ConfigId?: string }
+    }) => {
+      const sourceAutomation = createAutomationBuilder(config)
+        .onEmail({ ...emailSettings, ...credentials })
+        .build({ disabled: true })
+      const { automation } = await config.api.automation.post({
+        ...sourceAutomation,
+        projectIds: [projectId],
+      })
+      const files = await readTarEntries(
+        await config.api.project.export(projectId)
+      )
+      const automationPath = `docs/automation/${automation._id}.json`
+      const exported: Automation = JSON.parse(
+        files.get(automationPath)!.toString()
+      )
+      const manifest = JSON.parse(files.get("manifest.json")!.toString())
 
-          expect(importedAutomation.disabled).toBe(true)
-          const importedConnection =
-            includeDatasource && credentials.authConfigId === "auth_source"
-          expect(importedAutomation.definition.trigger.inputs).toEqual({
-            ...settings,
-            authType: credentials.authType,
-            ...(importedConnection
-              ? {
-                  datasourceId: imported.resources.datasource![0],
-                  authConfigId: credentials.authConfigId,
-                }
-              : {}),
-          })
-          const expectedRequirements = []
-          if (!importedConnection) {
-            expectedRequirements.push({
-              type: "automation_credentials",
-              resourceId: importedAutomation._id,
-            })
-          }
-          if (includeDatasource) {
-            expectedRequirements.push({
-              type: "datasource_secrets",
-              resourceId: imported.resources.datasource![0],
-            })
-          }
-          expect(
-            imported.requirements
-              .map(({ type, resourceId }) => ({ type, resourceId }))
-              .sort((a, b) => a.type.localeCompare(b.type))
-          ).toEqual(expectedRequirements)
-        })
+      expect(
+        [...files.values()].map(file => file.toString()).join("\n")
+      ).not.toContain("oauth-secret")
+      expect(manifest.requiresSecrets).toBe(true)
+
+      // Restore the original credentials to check that import sanitises them too.
+      const entries = Object.fromEntries(
+        [...files].map(([path, contents]) => [
+          path,
+          JSON.parse(contents.toString()),
+        ])
+      )
+      entries[automationPath] = {
+        ...exported,
+        disabled: false,
+        definition: sourceAutomation.definition,
       }
-    )
+      const imported = await config.api.project.import(
+        await createTarPackage(entries)
+      )
+      const importedAutomation = await config.doInContext(undefined, () =>
+        context
+          .getWorkspaceDB()
+          .get<Automation>(imported.resources.automation![0])
+      )
+      expect(importedAutomation.disabled).toBe(true)
+
+      return {
+        imported,
+        exportedInputs: exported.definition.trigger.inputs,
+        importedInputs: importedAutomation.definition.trigger.inputs,
+        requirements: imported.requirements
+          .map(({ type, resourceId }) => ({ type, resourceId }))
+          .sort((a, b) => a.type.localeCompare(b.type)),
+      }
+    }
+
+    it("removes email passwords on export and import while preserving mailbox settings", async () => {
+      await withProjectsEnabled(async () => {
+        const project = await createAssignedProject()
+        const result = await exportThenImportUnsanitisedEmailAutomation({
+          projectId: project._id,
+          credentials: { password: "mailbox-secret" },
+        })
+
+        expect(result.exportedInputs).toEqual(emailSettings)
+        expect(result.importedInputs).toEqual(emailSettings)
+        expect(result.requirements).toEqual([
+          {
+            type: "automation_credentials",
+            resourceId: result.imported.resources.automation![0],
+          },
+        ])
+      })
+    })
+
+    it("requires email credentials when the OAuth2 datasource is excluded from the package", async () => {
+      await withProjectsEnabled(async () => {
+        const project = await createAssignedProject()
+        const datasource = await createEmailOAuthConnection([])
+        const result = await exportThenImportUnsanitisedEmailAutomation({
+          projectId: project._id,
+          credentials: {
+            authType: EmailTriggerAuthType.OAUTH2,
+            datasourceId: datasource._id,
+            authConfigId: "auth_source",
+          },
+        })
+
+        expect(result.exportedInputs).toEqual({
+          ...emailSettings,
+          authType: EmailTriggerAuthType.OAUTH2,
+          datasourceId: datasource._id,
+          authConfigId: "auth_source",
+        })
+        expect(result.importedInputs).toEqual({
+          ...emailSettings,
+          authType: EmailTriggerAuthType.OAUTH2,
+        })
+        expect(result.requirements).toEqual([
+          {
+            type: "automation_credentials",
+            resourceId: result.imported.resources.automation![0],
+          },
+        ])
+      })
+    })
+
+    it("remaps an included email OAuth2 connection and requires its datasource secrets", async () => {
+      await withProjectsEnabled(async () => {
+        const project = await createAssignedProject()
+        const datasource = await createEmailOAuthConnection([project._id])
+        const result = await exportThenImportUnsanitisedEmailAutomation({
+          projectId: project._id,
+          credentials: {
+            authType: EmailTriggerAuthType.OAUTH2,
+            datasourceId: datasource._id,
+            authConfigId: "auth_source",
+          },
+        })
+
+        expect(result.exportedInputs).toEqual({
+          ...emailSettings,
+          authType: EmailTriggerAuthType.OAUTH2,
+          datasourceId: datasource._id,
+          authConfigId: "auth_source",
+        })
+        expect(result.importedInputs).toEqual({
+          ...emailSettings,
+          authType: EmailTriggerAuthType.OAUTH2,
+          datasourceId: result.imported.resources.datasource![0],
+          authConfigId: "auth_source",
+        })
+        expect(result.requirements).toEqual([
+          {
+            type: "datasource_secrets",
+            resourceId: result.imported.resources.datasource![0],
+          },
+        ])
+      })
+    })
+
+    it("requires email credentials when an included OAuth2 datasource has no matching auth config", async () => {
+      await withProjectsEnabled(async () => {
+        const project = await createAssignedProject()
+        const datasource = await createEmailOAuthConnection([project._id])
+        const result = await exportThenImportUnsanitisedEmailAutomation({
+          projectId: project._id,
+          credentials: {
+            authType: EmailTriggerAuthType.OAUTH2,
+            datasourceId: datasource._id,
+            authConfigId: "auth_missing",
+          },
+        })
+
+        expect(result.exportedInputs).toEqual({
+          ...emailSettings,
+          authType: EmailTriggerAuthType.OAUTH2,
+          datasourceId: datasource._id,
+          authConfigId: "auth_missing",
+        })
+        expect(result.importedInputs).toEqual({
+          ...emailSettings,
+          authType: EmailTriggerAuthType.OAUTH2,
+        })
+        expect(result.requirements).toEqual([
+          {
+            type: "automation_credentials",
+            resourceId: result.imported.resources.automation![0],
+          },
+          {
+            type: "datasource_secrets",
+            resourceId: result.imported.resources.datasource![0],
+          },
+        ])
+      })
+    })
+
+    it("removes legacy email OAuth2 credentials on export and import", async () => {
+      await withProjectsEnabled(async () => {
+        const project = await createAssignedProject()
+        const result = await exportThenImportUnsanitisedEmailAutomation({
+          projectId: project._id,
+          credentials: {
+            authType: EmailTriggerAuthType.OAUTH2,
+            oauth2ConfigId: "oauth2_source",
+          },
+        })
+
+        expect(result.exportedInputs).toEqual({
+          ...emailSettings,
+          authType: EmailTriggerAuthType.OAUTH2,
+        })
+        expect(result.importedInputs).toEqual({
+          ...emailSettings,
+          authType: EmailTriggerAuthType.OAUTH2,
+        })
+        expect(result.requirements).toEqual([
+          {
+            type: "automation_credentials",
+            resourceId: result.imported.resources.automation![0],
+          },
+        ])
+      })
+    })
 
     it("includes expected docs and manifest metadata", async () => {
       await withProjectsEnabled(async () => {
@@ -1412,7 +1439,7 @@ describe("/projects", () => {
       })
     })
 
-    it("omits unassigned dependencies and reports incomplete content", async () => {
+    it("omits an unassigned agent referenced by an exported query and reports the excluded dependency", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
           name: "Operations",
@@ -1420,14 +1447,14 @@ describe("/projects", () => {
         const datasource = await config.api.datasource.create({
           ...basicDatasource().datasource,
         })
-        const agent = await config.api.agent.create({
+        const unassignedAgent = await config.api.agent.create({
           name: "Referenced agent",
           aiconfig: "default",
           live: true,
         })
-        await config.api.query.save({
+        const queryUsingAgent = await config.api.query.save({
           ...basicQuery(datasource._id!),
-          transformer: `return "{{ ${agent._id}.name }}"`,
+          transformer: `return "{{ ${unassignedAgent._id}.name }}"`,
         })
         await config.api.datasource.update({
           ...datasource,
@@ -1438,15 +1465,17 @@ describe("/projects", () => {
         const files = await readTarEntries(body)
         const manifest = JSON.parse(files.get("manifest.json")!.toString())
 
-        expect(files.has(`docs/agent/${agent._id}.json`)).toBe(false)
+        expect(files.has(`docs/query/${queryUsingAgent._id}.json`)).toBe(true)
+        expect(files.has(`docs/agent/${unassignedAgent._id}.json`)).toBe(false)
         const dependencyIndex = JSON.parse(
           files.get("dependency-index.json")!.toString()
         ) as ProjectPackageDependencyIndex
-        expect(
-          Object.values(dependencyIndex.resources).flatMap(resource =>
-            resource.dependencies.map(dependency => dependency.id)
-          )
-        ).not.toContain(agent._id)
+        const exportedDependencyIds = Object.values(
+          dependencyIndex.resources
+        ).flatMap(resource =>
+          resource.dependencies.map(dependency => dependency.id)
+        )
+        expect(exportedDependencyIds).not.toContain(unassignedAgent._id)
         expect(manifest.unsupportedContent).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -1648,7 +1677,7 @@ describe("/projects", () => {
     })
   })
 
-  it("tracks external table agent tools as datasource dependencies", async () => {
+  it("links an agent table tool to its datasource without adding the datasource to the project", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
         name: "External data agent",
@@ -1685,16 +1714,15 @@ describe("/projects", () => {
       })
 
       const resourceGraph = await config.api.resource.getResourceDependencies()
-      expect(
-        resourceGraph.body.resources[agent._id!].dependencies.map(
-          dependency => dependency.id
-        )
-      ).toContain(datasource._id)
-      expect(
-        resourceGraph.body.resources[project._id].dependencies.map(
-          dependency => dependency.id
-        )
-      ).not.toContain(datasource._id)
+      const agentToolDependencyIds = resourceGraph.body.resources[
+        agent._id!
+      ].dependencies.map(dependency => dependency.id)
+      const projectMemberIds = resourceGraph.body.resources[
+        project._id
+      ].dependencies.map(dependency => dependency.id)
+
+      expect(agentToolDependencyIds).toContain(datasource._id)
+      expect(projectMemberIds).not.toContain(datasource._id)
     })
   })
 
@@ -1759,115 +1787,158 @@ describe("/projects", () => {
     })
   })
 
-  it.each(["source", "another"])(
-    "imports independent views and row actions into the %s workspace",
-    async destination => {
-      await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        const table = await config.api.table.save({
-          ...basicTable(),
-          projectIds: [project._id],
-        })
-        const rowAction = await config.api.rowAction.save(table._id!, {
-          name: "Approve",
-        })
-        const view = await config.api.viewV2.create({
-          tableId: table._id!,
-          name: "Open orders",
-        })
-        await config.api.rowAction.setViewPermission(
-          table._id!,
-          view.id,
-          rowAction.id
-        )
-        const workspaceApp = await createAssignedWorkspaceApp(project._id)
-        await config.api.screen.save({
-          ...createViewScreen(view),
-          workspaceAppId: workspaceApp._id,
-        })
-        const automation = await config.api.automation.get(
-          rowAction.automationId
-        )
-        await config.api.automation.update({
-          ...automation,
-          projectIds: [project._id],
-        })
+  describe("imports independent views and row actions", () => {
+    const createViewAndRowActionPackage = async () => {
+      const project = await createAssignedProject()
+      const table = await createAssignedInternalTable(project._id)
+      const rowAction = await config.api.rowAction.save(table._id!, {
+        name: "Approve",
+      })
+      const view = await config.api.viewV2.create({
+        tableId: table._id!,
+        name: "Open orders",
+      })
+      await config.api.rowAction.setViewPermission(
+        table._id!,
+        view.id,
+        rowAction.id
+      )
+      const workspaceApp = await createAssignedWorkspaceApp(project._id)
+      await config.api.screen.save({
+        ...createViewScreen(view),
+        workspaceAppId: workspaceApp._id,
+      })
+      const automation = await config.api.automation.get(rowAction.automationId)
+      await config.api.automation.update({
+        ...automation,
+        projectIds: [project._id],
+      })
 
-        const body = await config.api.project.export(project._id)
-        const destinationWorkspaceId =
-          destination === "source"
-            ? config.getDevWorkspaceId()
-            : (
-                await config.api.workspace.create({
-                  name: "Imported workspace",
-                })
-              ).appId
+      return {
+        packageBuffer: await config.api.project.export(project._id),
+        tableId: table._id!,
+        viewId: view.id,
+        rowActionId: rowAction.id,
+      }
+    }
+
+    const expectRemappedViewAndRowActionReferences = async (
+      imported: ImportProjectResponse
+    ) => {
+      const importedTableId = imported.resources.table![0]
+      const importedTable = await config.api.table.get(importedTableId)
+      const importedView = Object.values(importedTable.views!).filter(
+        helpers.views.isV2
+      )[0]
+      const resolvedView = await config.api.viewV2.get(importedView.id)
+      const screens = await config.api.screen.list()
+      const importedScreen = screens.find(
+        screen => screen._id === imported.resources.screen![0]
+      )!
+
+      expect(resolvedView.tableId).toBe(importedTableId)
+      expect(importedScreen.props._children![1].table).toMatchObject({
+        id: importedView.id,
+        tableId: importedTableId,
+      })
+
+      const importedRowActions =
+        await config.api.rowAction.find(importedTableId)
+      const importedAction = Object.values(importedRowActions.actions)[0]
+      expect(importedAction).toMatchObject({
+        tableId: importedTableId,
+        automationId: imported.resources.automation![0],
+        allowedSources: [importedTableId, importedView.id],
+      })
+      expect(Object.keys(importedRowActions.actions)).toEqual([
+        importedAction.id,
+      ])
+
+      const importedAutomation = await config.api.automation.get(
+        imported.resources.automation![0]
+      )
+      const triggerInputs = importedAutomation.definition.trigger
+        .inputs as RowActionTriggerInputs
+      expect(triggerInputs.tableId).toBe(importedTableId)
+      expect(triggerInputs.rowActionId).toBe(importedAction.id)
+
+      return {
+        tableId: importedTableId,
+        viewId: importedView.id,
+        rowActionId: importedAction.id,
+      }
+    }
+
+    it("creates separate copies on the initial import and re-import into the source workspace", async () => {
+      await withProjectsEnabled(async () => {
+        const source = await createViewAndRowActionPackage()
+
+        const initialImport = await config.api.project.import(
+          source.packageBuffer
+        )
+        const initial =
+          await expectRemappedViewAndRowActionReferences(initialImport)
+        const repeatedImport = await config.api.project.import(
+          source.packageBuffer
+        )
+        const repeated =
+          await expectRemappedViewAndRowActionReferences(repeatedImport)
+
+        expect(
+          new Set([source.tableId, initial.tableId, repeated.tableId]).size
+        ).toBe(3)
+        expect(
+          new Set([source.viewId, initial.viewId, repeated.viewId]).size
+        ).toBe(3)
+        expect(
+          new Set([
+            source.rowActionId,
+            initial.rowActionId,
+            repeated.rowActionId,
+          ]).size
+        ).toBe(3)
+      })
+    })
+
+    it("creates separate copies on the initial import and re-import into another workspace", async () => {
+      await withProjectsEnabled(async () => {
+        const source = await createViewAndRowActionPackage()
+        const destinationWorkspace = await config.api.workspace.create({
+          name: "Imported workspace",
+        })
 
         await config.withHeaders(
-          { [Header.WORKSPACE_ID]: destinationWorkspaceId },
+          { [Header.WORKSPACE_ID]: destinationWorkspace.appId },
           async () => {
-            const tableIds = [table._id!]
-            const viewIds = [view.id]
-            const rowActionIds = [rowAction.id]
-            for (let importIndex = 0; importIndex < 2; importIndex++) {
-              const imported = await config.api.project.import(body)
-              const importedTableId = imported.resources.table![0]
-              const importedTable = await config.api.table.get(importedTableId)
-              const importedView = Object.values(importedTable.views!).filter(
-                helpers.views.isV2
-              )[0]
-              const resolvedView = await config.api.viewV2.get(importedView.id)
-              const screens = await config.api.screen.list()
-              const importedScreen = screens.find(
-                screen => screen._id === imported.resources.screen![0]
-              )!
+            const initialImport = await config.api.project.import(
+              source.packageBuffer
+            )
+            const initial =
+              await expectRemappedViewAndRowActionReferences(initialImport)
+            const repeatedImport = await config.api.project.import(
+              source.packageBuffer
+            )
+            const repeated =
+              await expectRemappedViewAndRowActionReferences(repeatedImport)
 
-              expect(resolvedView.tableId).toBe(importedTableId)
-              expect(importedScreen.props._children![1].table).toMatchObject({
-                id: importedView.id,
-                tableId: importedTableId,
-              })
-
-              const importedRowActions = await config.api.rowAction.find(
-                imported.resources.table?.[0]!
-              )
-              const importedAction = Object.values(
-                importedRowActions.actions
-              )[0]
-
-              expect(importedAction).toMatchObject({
-                tableId: importedTableId,
-                automationId: imported.resources.automation![0],
-                allowedSources: [importedTableId, importedView.id],
-              })
-              expect(Object.keys(importedRowActions.actions)).toEqual([
-                importedAction.id,
-              ])
-
-              const importedAutomation = await config.api.automation.get(
-                imported.resources.automation?.[0]!
-              )
-              const triggerInputs = importedAutomation.definition.trigger
-                .inputs as {
-                tableId?: string
-                rowActionId?: string
-              }
-              expect(triggerInputs.tableId).toBe(imported.resources.table?.[0])
-              expect(triggerInputs.rowActionId).toBe(importedAction.id)
-              tableIds.push(importedTableId)
-              viewIds.push(importedView.id)
-              rowActionIds.push(importedAction.id)
-            }
-            expect(new Set(tableIds).size).toBe(3)
-            expect(new Set(viewIds).size).toBe(3)
-            expect(new Set(rowActionIds).size).toBe(3)
+            expect(
+              new Set([source.tableId, initial.tableId, repeated.tableId]).size
+            ).toBe(3)
+            expect(
+              new Set([source.viewId, initial.viewId, repeated.viewId]).size
+            ).toBe(3)
+            expect(
+              new Set([
+                source.rowActionId,
+                initial.rowActionId,
+                repeated.rowActionId,
+              ]).size
+            ).toBe(3)
           }
         )
       })
-    }
-  )
+    })
+  })
 
   it("imports exported projects additively into another workspace", async () => {
     await withProjectsEnabled(async () => {
@@ -2400,75 +2471,90 @@ describe("/projects", () => {
     })
   })
 
-  it.each(["dependency", "direct member"])(
-    "rejects a missing %s resource",
-    async location => {
-      await withProjectsEnabled(async () => {
-        const missing = {
-          id: "au_missing",
-          name: "Missing automation",
-          type: "automation",
-        }
-        const dependencyIndex =
-          location === "dependency"
-            ? {
-                resources: {
-                  project_source: { dependencies: [missing] },
-                },
-              }
-            : { directMembers: [missing] }
-        const packageBuffer = await createTarPackage(
-          createMinimalPackageEntries({ dependencyIndex })
-        )
-
-        await config.api.project.import(packageBuffer, undefined, {
-          status: 400,
-          body: {
-            message:
-              "Project package dependency index references missing docs.",
+  it("rejects a missing dependency resource", async () => {
+    await withProjectsEnabled(async () => {
+      const missing = {
+        id: "au_missing",
+        name: "Missing automation",
+        type: "automation",
+      }
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({
+          dependencyIndex: {
+            resources: {
+              project_source: { dependencies: [missing] },
+            },
           },
         })
-      })
-    }
-  )
+      )
 
-  it.each(["dependency", "direct member"])(
-    "rejects a %s with the wrong resource type",
-    async location => {
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: {
+          message: "Project package dependency index references missing docs.",
+        },
+      })
+    })
+  })
+
+  it("rejects a missing direct member resource", async () => {
+    await withProjectsEnabled(async () => {
+      const missing = {
+        id: "au_missing",
+        name: "Missing automation",
+        type: "automation",
+      }
+      const packageBuffer = await createTarPackage(
+        createMinimalPackageEntries({
+          dependencyIndex: { directMembers: [missing] },
+        })
+      )
+
+      await config.api.project.import(packageBuffer, undefined, {
+        status: 400,
+        body: {
+          message: "Project package dependency index references missing docs.",
+        },
+      })
+    })
+  })
+
+  describe("validates dependency index resource types", () => {
+    const table = {
+      id: "ta_mistyped",
+      name: "Mistyped table",
+      type: "table",
+    }
+    const tableClaimingToBeAutomation = { ...table, type: "automation" }
+
+    const createTablePackage = async (
+      dependencyIndex: Record<string, unknown>
+    ) => {
+      return await createTarPackage(
+        createMinimalPackageEntries({
+          manifest: {
+            resourcesByType: { project: 1, table: 1 },
+          },
+          dependencyIndex,
+          docs: {
+            [`docs/table/${table.id}.json`]: {
+              ...basicTable(),
+              _id: table.id,
+              name: table.name,
+            },
+          },
+        })
+      )
+    }
+
+    it("rejects a dependency that identifies a table as an automation", async () => {
       await withProjectsEnabled(async () => {
-        const tableId = "ta_mistyped"
-        const table = {
-          id: tableId,
-          name: "Mistyped table",
-          type: "table",
-        }
-        const mistyped = { ...table, type: "automation" }
-        const packageBuffer = await createTarPackage(
-          createMinimalPackageEntries({
-            manifest: {
-              resourcesByType: {
-                project: 1,
-                table: 1,
-              },
-            },
-            dependencyIndex: {
-              directMembers: location === "direct member" ? [mistyped] : [],
-              resources: {
-                project_source: {
-                  dependencies: [location === "dependency" ? mistyped : table],
-                },
-                [tableId]: { dependencies: [] },
-              },
-            },
-            docs: {
-              [`docs/table/${tableId}.json`]: {
-                ...basicTable(),
-                _id: tableId,
-                name: "Mistyped table",
-              },
-            },
-          })
-        )
+        const packageBuffer = await createTablePackage({
+          resources: {
+            project_source: { dependencies: [tableClaimingToBeAutomation] },
+            [table.id]: { dependencies: [] },
+          },
+        })
 
         await config.api.project.import(packageBuffer, undefined, {
           status: 400,
@@ -2478,8 +2564,28 @@ describe("/projects", () => {
           },
         })
       })
-    }
-  )
+    })
+
+    it("rejects a direct member that identifies a table as an automation", async () => {
+      await withProjectsEnabled(async () => {
+        const packageBuffer = await createTablePackage({
+          directMembers: [tableClaimingToBeAutomation],
+          resources: {
+            project_source: { dependencies: [table] },
+            [table.id]: { dependencies: [] },
+          },
+        })
+
+        await config.api.project.import(packageBuffer, undefined, {
+          status: 400,
+          body: {
+            message:
+              "Project package dependency index resource types do not match package docs.",
+          },
+        })
+      })
+    })
+  })
 
   it("rejects packages with docs that are not reachable from the project", async () => {
     await withProjectsEnabled(async () => {
@@ -2867,27 +2973,45 @@ describe("/projects", () => {
     })
   })
 
-  it.each([false, true])(
-    "bounds decrypted output across the package (includes plaintext: %s)",
-    async includesPlaintext => {
+  describe("bounds decrypted output across the package", () => {
+    const password = "example-password"
+
+    const createLargePlaintextFile = async ({
+      dir,
+      filename,
+    }: {
+      dir: string
+      filename: string
+    }) => {
+      const sourcePath = join(dir, filename)
+      await fsp.writeFile(sourcePath, "")
+      await fsp.truncate(sourcePath, 60 * 1024 * 1024)
+    }
+
+    const createLargeEncryptedFile = async ({
+      dir,
+      filename,
+    }: {
+      dir: string
+      filename: string
+    }) => {
+      await createLargePlaintextFile({ dir, filename })
+      await encryption.encryptFile({ dir, filename }, password)
+      await fsp.rm(join(dir, filename))
+    }
+
+    it("rejects encrypted files whose combined decrypted size exceeds the package limit", async () => {
       await withProjectsEnabled(async () => {
-        const entries = {
-          "project.json.enc": null,
-          [includesPlaintext ? "manifest.json" : "manifest.json.enc"]: null,
-        }
-        const password = "example-password"
-        const packageBuffer = await createTarPackage(entries, async dir => {
-          for (const filename of Object.keys(entries)) {
-            const source = filename.replace(/\.enc$/, "")
-            const sourcePath = join(dir, source)
-            await fsp.writeFile(sourcePath, "")
-            await fsp.truncate(sourcePath, 60 * 1024 * 1024)
-            if (filename.endsWith(".enc")) {
-              await encryption.encryptFile({ dir, filename: source }, password)
-              await fsp.rm(sourcePath)
-            }
+        const packageBuffer = await createTarPackage(
+          {
+            "project.json.enc": null,
+            "manifest.json.enc": null,
+          },
+          async dir => {
+            await createLargeEncryptedFile({ dir, filename: "project.json" })
+            await createLargeEncryptedFile({ dir, filename: "manifest.json" })
           }
-        })
+        )
 
         await config.api.project.import(
           packageBuffer,
@@ -2899,8 +3023,33 @@ describe("/projects", () => {
         )
         expect((await config.api.project.fetch()).projects).toEqual([])
       })
-    }
-  )
+    })
+
+    it("counts plaintext files towards the package limit when decrypting another file", async () => {
+      await withProjectsEnabled(async () => {
+        const packageBuffer = await createTarPackage(
+          {
+            "project.json.enc": null,
+            "manifest.json": null,
+          },
+          async dir => {
+            await createLargeEncryptedFile({ dir, filename: "project.json" })
+            await createLargePlaintextFile({ dir, filename: "manifest.json" })
+          }
+        )
+
+        await config.api.project.import(
+          packageBuffer,
+          { encryptPassword: password },
+          {
+            status: 400,
+            body: { message: "Project package is too large." },
+          }
+        )
+        expect((await config.api.project.fetch()).projects).toEqual([])
+      })
+    })
+  })
 
   it("rejects packages with paths that are too deep", async () => {
     await withProjectsEnabled(async () => {
