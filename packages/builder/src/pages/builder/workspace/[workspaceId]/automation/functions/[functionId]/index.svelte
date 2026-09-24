@@ -1,8 +1,8 @@
 <script lang="ts">
   import TopBar from "@/components/common/TopBar.svelte"
   import { getErrorMessage } from "@/helpers/errors"
-  import { workspaceStore, builderStore, functionStore } from "@/stores/builder"
-  import { auth, featureFlags } from "@/stores/portal"
+  import { builderStore, functionStore } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
   import {
     Body,
     Button,
@@ -19,7 +19,6 @@
   import { params } from "@roxi/routify"
   import { onMount } from "svelte"
   import FunctionQueryEditor from "../FunctionQueryEditor.svelte"
-  import { canManageFunctions } from "../permissions"
 
   let fn: FunctionResponse | undefined
   let loading = true
@@ -28,8 +27,6 @@
   $params
   $: functionId = $params.functionId
   $: enabled = $featureFlags[FeatureFlag.FUNCTIONS]
-  $: canManage =
-    enabled && canManageFunctions($auth.user, $workspaceStore.appId)
   $: builderStore.selectResource(functionId)
 
   const load = async () => {
@@ -64,7 +61,7 @@
   }
 
   onMount(() => {
-    if (canManage) {
+    if (enabled) {
       load()
     } else {
       loading = false
@@ -83,10 +80,10 @@
   />
 
   <main class="function-page">
-    {#if !canManage}
+    {#if !enabled}
       <div class="state" data-testid="function-permission-state">
         <Icon name="lock" size="L" />
-        <Heading size="S">You don't have permission to manage Functions</Heading
+        <Heading size="S">Functions are not available</Heading
         >
       </div>
     {:else if loading}
