@@ -146,6 +146,22 @@ describe("Project data export and import", () => {
     }
   }
 
+  const createProjectDataArchive = async ({
+    options = {},
+  }: { options?: ImportProjectRequest } = {}) => {
+    const source = await createDataProject()
+    const archive = await config.api.project.export(source.project._id, {
+      includeRows: true,
+      ...options,
+    })
+    return { source, archive }
+  }
+
+  const getRowUsage = async (workspaceId: string) =>
+    await config.doInContext(workspaceId, () =>
+      quotas.getCurrentUsageValues(QuotaUsageType.STATIC, StaticQuotaName.ROWS)
+    )
+
   const readImportedData = async (imported: ImportProjectResponse) => {
     const tables = (await config.api.table.fetch()).filter(table =>
       imported.resources.table?.includes(table._id!)
@@ -201,11 +217,7 @@ describe("Project data export and import", () => {
     "imports related rows and attachment content from an $format package",
     async ({ options }) => {
       await withProjectsEnabled(async () => {
-        const source = await createDataProject()
-        const archive = await config.api.project.export(source.project._id, {
-          includeRows: true,
-          ...options,
-        })
+        const { source, archive } = await createProjectDataArchive({ options })
         const destination = await config.api.workspace.create({
           name: "Destination",
         })
@@ -259,11 +271,7 @@ describe("Project data export and import", () => {
     "re-imports an $format package independently, preserving existing data and counting new rows without triggering automations",
     async ({ options }) => {
       await withProjectsEnabled(async () => {
-        const source = await createDataProject()
-        const archive = await config.api.project.export(source.project._id, {
-          includeRows: true,
-          ...options,
-        })
+        const { source, archive } = await createProjectDataArchive({ options })
         const destination = await config.api.workspace.create({
           name: "Destination",
         })
@@ -276,14 +284,7 @@ describe("Project data export and import", () => {
             const existingRow = await config.api.row.save(existing._id!, {
               name: "Keep me",
             })
-            const usageBefore = await config.doInContext(
-              destination.appId,
-              () =>
-                quotas.getCurrentUsageValues(
-                  QuotaUsageType.STATIC,
-                  StaticQuotaName.ROWS
-                )
-            )
+            const usageBefore = await getRowUsage(destination.appId)
             const emitRow = jest.spyOn(BudibaseEmitter.prototype, "emitRow")
             try {
               const firstImport = await importProjectData({ archive, options })
@@ -298,14 +299,7 @@ describe("Project data export and import", () => {
                 firstImport.rows[0].attachment
               const secondAttachment: RowAttachment =
                 secondImport.rows[0].attachment
-              const usageAfter = await config.doInContext(
-                destination.appId,
-                () =>
-                  quotas.getCurrentUsageValues(
-                    QuotaUsageType.STATIC,
-                    StaticQuotaName.ROWS
-                  )
-              )
+              const usageAfter = await getRowUsage(destination.appId)
 
               expect(
                 new Set([
@@ -376,10 +370,7 @@ describe("Project data export and import", () => {
 
   it("allocates the next Auto ID above imported values", async () => {
     await withProjectsEnabled(async () => {
-      const source = await createDataProject()
-      const archive = await config.api.project.export(source.project._id, {
-        includeRows: true,
-      })
+      const { archive } = await createProjectDataArchive()
       const imported = await config.api.project.import(archive)
       const data = await readImportedData(imported)
       const next = await config.api.row.save(data.tasks._id!, {
@@ -464,10 +455,7 @@ describe("Project data export and import", () => {
 
   it("rolls back partial row writes and uploaded attachments without changing existing data", async () => {
     await withProjectsEnabled(async () => {
-      const source = await createDataProject()
-      const archive = await config.api.project.export(source.project._id, {
-        includeRows: true,
-      })
+      const { archive } = await createProjectDataArchive()
       const destination = await createDestination()
       const before = await snapshotWorkspace(destination.appId)
       const bulkDocs = failRowImportAfterFirstWrite({
@@ -498,10 +486,7 @@ describe("Project data export and import", () => {
 
   it("rejects imports exceeding the total row quota without changing the destination", async () => {
     await withProjectsEnabled(async () => {
-      const source = await createDataProject()
-      const archive = await config.api.project.export(source.project._id, {
-        includeRows: true,
-      })
+      const { archive } = await createProjectDataArchive()
       const destination = await createDestination()
       const before = await snapshotWorkspace(destination.appId)
       const licence = cloneDeep(mocks.licenses.useUnlimited())

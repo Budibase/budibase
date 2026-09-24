@@ -224,12 +224,28 @@ describe("Project package data", () => {
   })
 
   it("rejects user metadata rows", () => {
-    const test = fixture()
-    test.tables[0]._id = InternalTable.USER_METADATA
-    test.data.rows[0].tableId = InternalTable.USER_METADATA
-    test.data.rows[0]._id = db.generateUserMetadataID("us_author")
+    const userTable = basicTable(undefined, {
+      _id: InternalTable.USER_METADATA,
+    })
+    const data: ProjectPackageData = {
+      rows: [
+        {
+          _id: `ro_${InternalTable.USER_METADATA}_first`,
+          tableId: InternalTable.USER_METADATA,
+        },
+      ],
+      relationships: [],
+      attachments: [],
+    }
 
-    expect(() => validate(test)).toThrow("invalid or duplicate row")
+    expect(() =>
+      validateProjectData({
+        data,
+        tables: [userTable],
+        sourceWorkspaceId,
+        attachmentPaths: [],
+      })
+    ).toThrow("invalid or duplicate row")
   })
 
   it("rejects relationships whose endpoint is not in the package", () => {
