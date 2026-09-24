@@ -291,6 +291,9 @@ export const buildRowDataSchema = (
         fieldSchema = fieldSchema.optional()
       }
     } else {
+      if (field.schema.type === FieldType.OPTIONS) {
+        fieldSchema = fieldSchema.or(z.literal(""))
+      }
       fieldSchema = fieldSchema.nullish()
     }
     const { email, length } = field.schema.constraints ?? {}

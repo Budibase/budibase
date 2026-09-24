@@ -217,6 +217,32 @@ describe("row tool data schema", () => {
     }
   )
 
+  it.each([true, false])(
+    "allows clearing optional dropdowns (create: %s)",
+    requirePresentFields => {
+      const schema = buildRowDataSchema(
+        [
+          {
+            name: "Category",
+            schema: {
+              name: "Category",
+              type: FieldType.OPTIONS,
+              constraints: { inclusion: ["Food", "Other"] },
+            },
+          },
+        ],
+        "",
+        requirePresentFields
+      )
+
+      expect(schema.parse({ Category: "" })).toEqual({ Category: "" })
+      expect(schema.safeParse({ Category: null }).success).toBe(true)
+      expect(schema.safeParse({}).success).toBe(true)
+      expect(schema.safeParse({ Category: "Food" }).success).toBe(true)
+      expect(schema.safeParse({ Category: "Invalid" }).success).toBe(false)
+    }
+  )
+
   it("allows an explicitly configured empty option for non-required fields", () => {
     const schema = buildRowDataSchema(
       [
