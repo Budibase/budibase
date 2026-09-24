@@ -92,8 +92,11 @@ describe("FunctionStore", () => {
   it("creates and renames while sending only editable Function fields", async () => {
     const fn = makeFunction()
     vi.mocked(API.createFunction).mockResolvedValue({ function: fn })
+    vi.mocked(API.getFunction).mockResolvedValue({
+      function: makeFunction({ _rev: "3-three" }),
+    })
     vi.mocked(API.updateFunction).mockResolvedValue({
-      function: makeFunction({ _rev: "2-two", name: "Renamed Function" }),
+      function: makeFunction({ _rev: "4-four", name: "Renamed Function" }),
     })
 
     await store.create({
@@ -104,7 +107,7 @@ describe("FunctionStore", () => {
     await store.rename(fn, "Renamed Function")
 
     expect(API.updateFunction).toHaveBeenCalledWith(fn._id, {
-      _rev: fn._rev,
+      _rev: "3-three",
       name: "Renamed Function",
       source: fn.source,
       capabilities: [
@@ -118,10 +121,16 @@ describe("FunctionStore", () => {
     expect(store.list[0].name).toBe("Renamed Function")
   })
 
-  it("preserves the current Function when a rename revision conflicts", async () => {
+  it("keeps the fetched draft when it changes before the rename save", async () => {
     const fn = makeFunction()
     vi.mocked(API.getFunctions).mockResolvedValue({ functions: [fn] })
     await store.fetch()
+    vi.mocked(API.getFunction).mockResolvedValue({
+      function: makeFunction({
+        _rev: "3-three",
+        name: "Updated in another tab",
+      }),
+    })
     vi.mocked(API.updateFunction).mockRejectedValue({
       status: 409,
       message: "Function revision does not match.",
@@ -131,9 +140,13 @@ describe("FunctionStore", () => {
       status: 409,
     })
 
+    expect(API.updateFunction).toHaveBeenCalledWith(
+      fn._id,
+      expect.objectContaining({ _rev: "3-three" })
+    )
     expect(store.list[0]).toMatchObject({
-      name: fn.name,
-      _rev: fn._rev,
+      name: "Updated in another tab",
+      _rev: "3-three",
     })
   })
 

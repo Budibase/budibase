@@ -85,10 +85,7 @@ export class FunctionStore extends BudiStore<FunctionStoreState> {
 
   async rename(fn: FunctionSummary, name: string) {
     const draft = await this.fetchOne(fn._id)
-    return await this.save(draft, {
-      ...toUpdateRequest(draft, name),
-      _rev: fn._rev!,
-    })
+    return await this.save(draft, toUpdateRequest(draft, name))
   }
 
   async duplicate(summary: FunctionSummary) {
