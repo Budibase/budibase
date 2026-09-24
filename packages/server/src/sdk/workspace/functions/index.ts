@@ -3,6 +3,7 @@ import {
   context,
   db as dbCore,
   docIds,
+  events,
   HTTPError,
 } from "@budibase/backend-core"
 import {
@@ -631,7 +632,9 @@ export const remove = async (id: string, rev: string) => {
       409
     )
   }
-  return await getDb().remove(id, rev)
+  const result = await getDb().remove(id, rev)
+  await events.function.deleted(fn)
+  return result
 }
 
 export {

@@ -2,6 +2,7 @@ import {
   AddWorkspaceFavouriteRequest,
   AddWorkspaceFavouriteResponse,
   Agent,
+  FunctionDocument,
   Automation,
   Datasource,
   DeleteWorkspaceFavouriteResponse,
@@ -17,6 +18,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { db, HTTPError } from "@budibase/backend-core"
+import { areFunctionsEnabled } from "../../middleware/functionsEnabled"
 
 type WorkspaceResourceDoc =
   | Table
@@ -26,6 +28,7 @@ type WorkspaceResourceDoc =
   | Query
   | ViewV2
   | Agent
+  | FunctionDocument
 
 export type ResourceGetter = (
   id: string
@@ -46,6 +49,12 @@ export async function create(
   ctx: UserCtx<AddWorkspaceFavouriteRequest, AddWorkspaceFavouriteResponse>
 ) {
   const { body } = ctx.request
+  if (
+    body.resourceType === WorkspaceResource.FUNCTION &&
+    !(await areFunctionsEnabled())
+  ) {
+    ctx.throw(404)
+  }
   const createdBy = ctx.user?._id!
   const globalId = db.getGlobalIDFromUserMetadataID(createdBy)
 
@@ -58,15 +67,12 @@ export async function create(
   // Check if a favourite has been created for the resource
   const existing: WithoutDocMetadata<WorkspaceFavourite>[] =
     await sdk.workspace.findByResourceId(body.resourceId)
-  if (existing.length) {
-    const [favourite] = existing
-    if (favourite.createdBy === globalId) {
-      const dupeError = new Error(
-        `Workspace favourite failure. Already exists: ${body.resourceId}`
-      )
-      ;(dupeError as any).status = 409
-      throw dupeError
-    }
+  if (existing.some(favourite => favourite.createdBy === globalId)) {
+    const dupeError = new Error(
+      `Workspace favourite failure. Already exists: ${body.resourceId}`
+    )
+    ;(dupeError as any).status = 409
+    throw dupeError
   }
 
   const check: Record<WorkspaceResource, ResourceGetter> = {
@@ -77,6 +83,7 @@ export async function create(
     [WorkspaceResource.QUERY]: sdk.queries.find,
     [WorkspaceResource.VIEW]: sdk.views.get,
     [WorkspaceResource.AGENT]: sdk.ai.agents.getOrThrow,
+    [WorkspaceResource.FUNCTION]: sdk.functions.get,
   }
   const verifyResource: ResourceGetter = check[body.resourceType]
 

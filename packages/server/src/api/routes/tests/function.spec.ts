@@ -4,6 +4,7 @@ import {
   DEFAULT_FUNCTION_LIMITS,
   FeatureFlag,
   FunctionErrorCode,
+  WorkspaceResource,
   type FunctionDocument,
   type FunctionRunSummary,
   prefixed,
@@ -86,6 +87,83 @@ export default async function (): Promise<FunctionResult> {
       datasourceAlias: capability.datasourceAlias,
       queryAlias: capability.queryAlias,
     }))
+
+  it("allows Functions to be favourited", async () => {
+    await withFunctionsEnabled(async () => {
+      const { function: fn } = await config.api.function.create({
+        name: "Favourite lookup",
+        source: validSource,
+        capabilities: [],
+      })
+      await config.api.workspaceFavourites.save({
+        resourceType: WorkspaceResource.FUNCTION,
+        resourceId: fn._id,
+      })
+
+      const result = await config.api.workspaceFavourites.fetchAll()
+      expect(result.favourites).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            resourceType: WorkspaceResource.FUNCTION,
+            resourceId: fn._id,
+          }),
+        ])
+      )
+    })
+  })
+
+  it("clears Function favourites when the Function is deleted", async () => {
+    await withFunctionsEnabled(async () => {
+      const { function: fn } = await config.api.function.create({
+        name: "Favourite lookup",
+        source: validSource,
+        capabilities: [],
+      })
+      await config.api.workspaceFavourites.save({
+        resourceType: WorkspaceResource.FUNCTION,
+        resourceId: fn._id,
+      })
+      const otherUser = await config.createUser({
+        _id: "us_function_favourite",
+      })
+      await config.withUser(otherUser, async () => {
+        await config.api.workspaceFavourites.save({
+          resourceType: WorkspaceResource.FUNCTION,
+          resourceId: fn._id,
+        })
+      })
+      await config.api.function.delete(fn._id, fn._rev!)
+
+      const currentUserFavourites =
+        await config.api.workspaceFavourites.fetchAll()
+      const otherUserFavourites = await config.withUser(otherUser, async () =>
+        config.api.workspaceFavourites.fetchAll()
+      )
+      expect([
+        ...currentUserFavourites.favourites,
+        ...otherUserFavourites.favourites,
+      ]).toEqual([])
+    })
+  })
+
+  it("does not allow Function favourites when Functions are disabled", async () => {
+    const fn = await withFunctionsEnabled(async () => {
+      const response = await config.api.function.create({
+        name: "Hidden lookup",
+        source: validSource,
+        capabilities: [],
+      })
+      return response.function
+    })
+
+    await config.api.workspaceFavourites.save(
+      {
+        resourceType: WorkspaceResource.FUNCTION,
+        resourceId: fn._id,
+      },
+      { status: 404 }
+    )
+  })
 
   const createRestQuery = async () => {
     const datasource = await config.restDatasource({
