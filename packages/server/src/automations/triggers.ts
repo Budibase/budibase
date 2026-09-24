@@ -19,6 +19,7 @@ import {
   AutomationTriggerInputs,
   AutomationTriggerStepId,
   DidNotTriggerResponse,
+  FieldType,
   Row,
   SearchFilters,
   Table,
@@ -197,6 +198,29 @@ export interface ExternalTriggerOptions {
   isTestRun?: boolean
 }
 
+export function prepareAppTriggerFields({
+  automation,
+  params,
+}: {
+  automation: Automation
+  params: AutomationTriggerParams
+}) {
+  const trigger = automation.definition.trigger
+  if (trigger.stepId !== AutomationTriggerStepId.APP) {
+    throw new Error("Only APP trigger type supported")
+  }
+  const fields = trigger.inputs?.fields
+  return Object.fromEntries(
+    Object.entries(fields || {}).map(([key, type]) => {
+      const fieldType = Object.values(FieldType).find(
+        value => String(value) === String(type)
+      )
+      const value = params.fields?.[key]
+      return [key, fieldType ? coerce(value, fieldType) : value]
+    })
+  )
+}
+
 export async function externalTrigger(
   automation: Automation,
   params: AutomationTriggerParams,
@@ -225,18 +249,7 @@ export async function externalTrigger(
     !isTestRun &&
     !(await checkTestFlag(automation._id!))
   ) {
-    if (params.fields == null) {
-      params.fields = {}
-    }
-
-    // values are likely to be submitted as strings, so we shall convert to correct type
-    const coercedFields: any = {}
-    const triggerInputs = automation.definition.trigger.inputs || {}
-    const fields = "fields" in triggerInputs ? triggerInputs.fields : {}
-    for (const key of Object.keys(fields || {})) {
-      coercedFields[key] = coerce(params.fields[key], fields[key])
-    }
-    params.fields = coercedFields
+    params.fields = prepareAppTriggerFields({ automation, params })
   }
 
   // row actions and webhooks flatten the fields down

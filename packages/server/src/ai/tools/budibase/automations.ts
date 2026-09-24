@@ -72,7 +72,7 @@ export const buildAutomationFieldsSchema = (
       Object.fromEntries(
         Object.entries(fields).map(([name, type]) => [
           name,
-          getAutomationFieldSchema(type).optional(),
+          getAutomationFieldSchema(type).nullish(),
         ])
       )
     )
@@ -245,6 +245,29 @@ const createAutomationTools = (
           permissionType: PermissionType.AUTOMATION,
           permissionLevel: PermissionLevel.EXECUTE,
           resourceId: automation._id!,
+        },
+        preflight: async input => {
+          const currentAutomation = await sdk.automations.get(automation._id!)
+          if (currentAutomation.disabled) {
+            throw new Error("Automation is disabled")
+          }
+          if (
+            currentAutomation.definition.trigger.stepId !==
+            AutomationTriggerStepId.APP
+          ) {
+            throw new Error("Only APP trigger type supported")
+          }
+          const parsed = z
+            .object({
+              fields: buildAutomationFieldsSchema(currentAutomation).nullish(),
+            })
+            .parse(input)
+          return {
+            fields: triggers.prepareAppTriggerFields({
+              automation: currentAutomation,
+              params: { fields: parsed.fields ?? {} },
+            }),
+          }
         },
         tool: tool({
           description,
