@@ -19,9 +19,8 @@ export type GetAutomationTriggerDefinitionsResponse = Record<
   AutomationTriggerDefinition
 >
 
-export type GetAutomationActionDefinitionsResponse = Record<
-  keyof typeof AutomationActionStepId,
-  AutomationStepDefinition
+export type GetAutomationActionDefinitionsResponse = Partial<
+  Record<keyof typeof AutomationActionStepId, AutomationStepDefinition>
 >
 
 export interface GetAutomationStepDefinitionsResponse {
