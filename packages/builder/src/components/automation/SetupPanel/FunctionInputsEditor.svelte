@@ -16,20 +16,20 @@
     runtimeToReadableBinding,
   } from "@/dataBinding"
   import { Body } from "@budibase/bbui"
-  import type { EnrichedBinding, JSONEditorInput } from "@budibase/types"
-  import { isFunctionInputsObject } from "./functionInputs"
+  import type { EnrichedBinding, JSONValue } from "@budibase/types"
+  import { parseFunctionInputsObject } from "./functionInputs"
 
   interface Props {
-    value?: JSONEditorInput<string>
+    value?: Record<string, JSONValue>
     bindings?: EnrichedBinding[]
     context?: object
-    onchange?: (value: JSONEditorInput<string>) => void
+    onchange?: (value: Record<string, JSONValue>) => void
   }
 
   let { value, bindings = [], context, onchange = () => {} }: Props = $props()
 
   let error = $state("")
-  let storedValue = $derived(value?.value || "{}")
+  let storedValue = $derived(JSON.stringify(value ?? {}, null, 2))
   let editorValue = $derived(runtimeToReadableBinding(bindings, storedValue))
   let completions = $derived([
     hbAutocomplete(bindingsToCompletions(bindings, EditorModes.Handlebars)),
@@ -37,14 +37,15 @@
 
   const save = (readableValue: string) => {
     const trimmedValue = readableValue.trim() || "{}"
-    if (!isFunctionInputsObject(trimmedValue)) {
+    const inputs = parseFunctionInputsObject(
+      readableToRuntimeBinding(bindings, trimmedValue)
+    )
+    if (!inputs) {
       error = "Inputs must be a JSON object."
       return
     }
     error = ""
-    onchange({
-      value: readableToRuntimeBinding(bindings, trimmedValue),
-    })
+    onchange(inputs)
   }
 
   const saveDrawerValue = (event: CustomEvent<string>) => {

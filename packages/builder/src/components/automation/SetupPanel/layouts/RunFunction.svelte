@@ -65,7 +65,8 @@
         {getOptionLabel}
         {getOptionValue}
         placeholder="Select a Function"
-        on:change={event => update({ functionId: event.detail })}
+        on:change={event =>
+          update({ functionId: event.detail, inputs: inputData?.inputs ?? {} })}
       />
     {/if}
   </PropField>
