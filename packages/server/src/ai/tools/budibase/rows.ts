@@ -276,6 +276,10 @@ export const buildRowDataSchema = (
         fieldSchema = fieldSchema.min(1)
       } else if (fieldSchema instanceof z.ZodArray) {
         fieldSchema = fieldSchema.min(1)
+      } else if (fieldSchema instanceof z.ZodEnum) {
+        fieldSchema = fieldSchema.refine(value => value !== "", {
+          message: "Required option cannot be empty",
+        })
       }
       if (!requirePresentFields || !mustProvide) {
         fieldSchema = fieldSchema.optional()

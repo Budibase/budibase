@@ -158,4 +158,52 @@ describe("row tool data schema", () => {
     expect(update.safeParse({ Name: null }).success).toBe(false)
     expect(update.safeParse({ Name: "" }).success).toBe(false)
   })
+
+  it.each([true, false])(
+    "rejects empty required enum values (primary display: %s)",
+    isPrimaryDisplay => {
+      const optionFields = [
+        {
+          name: "Category",
+          schema: {
+            name: "Category",
+            type: FieldType.OPTIONS as const,
+            constraints: {
+              inclusion: ["", "Food"],
+              presence: !isPrimaryDisplay,
+            },
+          },
+          isPrimaryDisplay,
+        },
+      ]
+      const create = buildRowDataSchema(optionFields, "", true)
+      const update = buildRowDataSchema(optionFields, "")
+
+      expect(create.safeParse({ Category: "" }).success).toBe(false)
+      expect(update.safeParse({ Category: "" }).success).toBe(false)
+      expect(create.safeParse({ Category: "Food" }).success).toBe(true)
+      expect(update.safeParse({ Category: "Food" }).success).toBe(true)
+      expect(create.safeParse({}).success).toBe(false)
+      expect(update.safeParse({}).success).toBe(true)
+    }
+  )
+
+  it("allows an explicitly configured empty option for non-required fields", () => {
+    const schema = buildRowDataSchema(
+      [
+        {
+          name: "Category",
+          schema: {
+            name: "Category",
+            type: FieldType.OPTIONS,
+            constraints: { inclusion: ["", "Food"] },
+          },
+        },
+      ],
+      "",
+      true
+    )
+
+    expect(schema.safeParse({ Category: "" }).success).toBe(true)
+  })
 })
