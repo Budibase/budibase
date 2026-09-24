@@ -32,7 +32,7 @@ describe("/api/escalations", () => {
         source: EscalationSource.OPERATION,
         appId: config.getDevWorkspaceId(),
         tenantId: config.getTenantId(),
-        delay: 0,
+        duration: 0,
         resolution: "pending",
       })
     })

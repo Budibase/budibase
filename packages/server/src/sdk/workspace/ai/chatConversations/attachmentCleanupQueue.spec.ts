@@ -114,7 +114,7 @@ describe("conversation attachment cleanup", () => {
       appId: "workspace_1",
       tenantId: "tenant_1",
       conversationId: "chat_1",
-      delay: 1000,
+      duration: 1000,
       resolution,
       resumeResultCompressed,
     }
