@@ -12,6 +12,7 @@ import { EnvironmentVariableEndpoints } from "./environmentVariables"
 import { EventEndpoints } from "./events"
 import { FeatureFlagEndpoints } from "./features"
 import { FlagEndpoints } from "./flags"
+import { FunctionEndpoints } from "./functions"
 import { GroupEndpoints } from "./groups"
 import { LayoutEndpoints } from "./layouts"
 import { LicensingEndpoints } from "./licensing"
@@ -142,6 +143,7 @@ export type APIClient = BaseAPIClient &
   EnvironmentVariableEndpoints &
   EventEndpoints &
   FlagEndpoints &
+  FunctionEndpoints &
   GroupEndpoints &
   LayoutEndpoints &
   LicensingEndpoints &

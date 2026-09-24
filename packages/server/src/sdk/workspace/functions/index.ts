@@ -437,6 +437,7 @@ export const toFunctionSummary = async (
   createdAt: fn.createdAt,
   updatedAt: fn.updatedAt,
   readiness: await getFunctionReadiness(fn, catalog),
+  linkedQueryCount: fn.capabilities.length,
 })
 
 export const toFunctionSummaries = async (fns: FunctionDocument[]) => {
