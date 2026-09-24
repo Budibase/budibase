@@ -24,8 +24,8 @@ function buildSessionId({
   return [
     DocumentType.PLATFORM_ACTION_SESSION,
     environment,
-    sourceType,
-    sourceId,
+    encodeURIComponent(sourceType),
+    encodeURIComponent(sourceId),
   ].join(SEPARATOR)
 }
 
@@ -73,6 +73,21 @@ describe("platformActions sessions", () => {
   }
 
   describe("fetchSessions", () => {
+    it("preserves source IDs with special characters when reading encoded session IDs", async () => {
+      const sourceId = "run/a b%25"
+      await createSession({ sourceId })
+
+      const { sessions } = await withContext(() => fetchSessions({}))
+
+      expect(sessions).toEqual([
+        expect.objectContaining({
+          sourceId,
+          sourceType: "agent_session",
+          environment: "prod",
+        }),
+      ])
+    })
+
     it("rejects an explicitly supplied empty bookmark", async () => {
       await expect(
         withContext(() => fetchSessions({ bookmark: "" }))
