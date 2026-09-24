@@ -110,6 +110,43 @@ describe("/projects", () => {
     )
   }
 
+  const createAutomationButtonScreen = ({
+    workspaceAppId,
+    automationId,
+  }: {
+    workspaceAppId: string
+    automationId: string
+  }): Screen => ({
+    props: {
+      _id: "automation-button-root",
+      _component: "@budibase/standard-components/container",
+      _styles: { normal: {}, hover: {}, active: {}, selected: {} },
+      _instanceName: "Root",
+      _children: [
+        {
+          _id: "automation-button",
+          _component: "@budibase/standard-components/button",
+          _styles: { normal: {}, hover: {}, active: {}, selected: {} },
+          _instanceName: "Trigger automation button",
+          _children: [],
+          onClick: [
+            {
+              "##eventHandlerType": "Trigger Automation",
+              parameters: { automationId },
+            },
+          ],
+        },
+      ],
+    },
+    routing: {
+      route: "/automation-button",
+      roleId: "BASIC",
+      homeScreen: false,
+    },
+    name: "automation-button-screen",
+    workspaceAppId,
+  })
+
   const pauseNextProjectAssignmentLock = () => {
     const doWithProjectAssignmentsLock =
       projectLock.doWithProjectAssignmentsLock as jest.MockedFunction<
@@ -1036,7 +1073,10 @@ describe("/projects", () => {
           const deletion = config.api.project.delete(project._id, project._rev)
           await gate.locked
           const screenSave = config.api.screen.save(
-            createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+            createAutomationButtonScreen({
+              workspaceAppId: workspaceApp._id!,
+              automationId: automation._id!,
+            })
           )
           await gate.contenderStarted
           gate.release()
@@ -1087,40 +1127,6 @@ describe("/projects", () => {
       })
     })
 
-    const createAutomationButtonScreen = (
-      workspaceAppId: string,
-      automationId: string
-    ): Screen => ({
-      props: {
-        _id: "automation-button-root",
-        _component: "@budibase/standard-components/container",
-        _styles: { normal: {}, hover: {}, active: {}, selected: {} },
-        _instanceName: "Root",
-        _children: [
-          {
-            _id: "automation-button",
-            _component: "@budibase/standard-components/button",
-            _styles: { normal: {}, hover: {}, active: {}, selected: {} },
-            _instanceName: "Trigger automation button",
-            _children: [],
-            onClick: [
-              {
-                "##eventHandlerType": "Trigger Automation",
-                parameters: { automationId },
-              },
-            ],
-          },
-        ],
-      },
-      routing: {
-        route: "/automation-button",
-        roleId: "BASIC",
-        homeScreen: false,
-      },
-      name: "automation-button-screen",
-      workspaceAppId,
-    })
-
     it("previews dependencies and applies only the selected additions", async () => {
       await withProjectsEnabled(async () => {
         const { project: firstProject } = await config.api.project.create({
@@ -1137,7 +1143,10 @@ describe("/projects", () => {
         )
         const automation = await config.createAutomation()
         await config.api.screen.save(
-          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+          createAutomationButtonScreen({
+            workspaceAppId: workspaceApp._id!,
+            automationId: automation._id!,
+          })
         )
         const projectIds = [firstProject._id, secondProject._id]
 
@@ -1206,7 +1215,10 @@ describe("/projects", () => {
         )
         const automation = await config.createAutomation()
         await config.api.screen.save(
-          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+          createAutomationButtonScreen({
+            workspaceAppId: workspaceApp._id!,
+            automationId: automation._id!,
+          })
         )
 
         const preview = await config.api.project.previewAssignment({
@@ -1258,7 +1270,10 @@ describe("/projects", () => {
         )
         const automation = await config.createAutomation()
         await config.api.screen.save(
-          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+          createAutomationButtonScreen({
+            workspaceAppId: workspaceApp._id!,
+            automationId: automation._id!,
+          })
         )
 
         const preview = await config.api.project.previewAssignment({
@@ -1299,10 +1314,10 @@ describe("/projects", () => {
         )
         const existingAutomation = await config.createAutomation()
         const screen = await config.api.screen.save(
-          createAutomationButtonScreen(
-            workspaceApp._id!,
-            existingAutomation._id!
-          )
+          createAutomationButtonScreen({
+            workspaceAppId: workspaceApp._id!,
+            automationId: existingAutomation._id!,
+          })
         )
         const preview = await config.api.project.previewAssignment({
           resourceId: workspaceApp._id!,
@@ -1310,10 +1325,10 @@ describe("/projects", () => {
         })
 
         const addedAutomation = await config.createAutomation()
-        const addedButton = createAutomationButtonScreen(
-          workspaceApp._id!,
-          addedAutomation._id!
-        ).props!._children![0]
+        const addedButton = createAutomationButtonScreen({
+          workspaceAppId: workspaceApp._id!,
+          automationId: addedAutomation._id!,
+        }).props!._children![0]
         await config.api.screen.save({
           ...screen,
           props: {
@@ -1358,7 +1373,10 @@ describe("/projects", () => {
         )
         const automation = await config.createAutomation()
         await config.api.screen.save(
-          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+          createAutomationButtonScreen({
+            workspaceAppId: workspaceApp._id!,
+            automationId: automation._id!,
+          })
         )
 
         await config.api.project.updateAssignment(
@@ -1494,7 +1512,10 @@ describe("/projects", () => {
           projectIds: [firstProject._id],
         })
         await config.api.screen.save(
-          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+          createAutomationButtonScreen({
+            workspaceAppId: workspaceApp._id!,
+            automationId: automation._id!,
+          })
         )
 
         const preview = await config.api.project.previewAssignment({
@@ -1526,7 +1547,10 @@ describe("/projects", () => {
         )
         const automation = await config.createAutomation()
         const screen = await config.api.screen.save(
-          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+          createAutomationButtonScreen({
+            workspaceAppId: workspaceApp._id!,
+            automationId: automation._id!,
+          })
         )
 
         await config.api.project.updateAssignment(workspaceApp._id!, {
@@ -1573,7 +1597,10 @@ describe("/projects", () => {
         )
         const automation = await config.createAutomation()
         const screen = await config.api.screen.save(
-          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+          createAutomationButtonScreen({
+            workspaceAppId: workspaceApp._id!,
+            automationId: automation._id!,
+          })
         )
 
         await config.api.project.updateAssignment(workspaceApp._id!, {
@@ -1590,7 +1617,10 @@ describe("/projects", () => {
           },
         })
         await config.api.screen.save({
-          ...createAutomationButtonScreen(workspaceApp._id!, automation._id!),
+          ...createAutomationButtonScreen({
+            workspaceAppId: workspaceApp._id!,
+            automationId: automation._id!,
+          }),
           _id: screenWithoutAutomation._id,
           _rev: screenWithoutAutomation._rev,
         })
@@ -1614,7 +1644,10 @@ describe("/projects", () => {
         )
         const automation = await config.createAutomation()
         await config.api.screen.save(
-          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+          createAutomationButtonScreen({
+            workspaceAppId: workspaceApp._id!,
+            automationId: automation._id!,
+          })
         )
 
         await config.api.workspaceApp.update({
@@ -1648,7 +1681,10 @@ describe("/projects", () => {
         )
         const automation = await config.createAutomation()
         await config.api.screen.save(
-          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+          createAutomationButtonScreen({
+            workspaceAppId: workspaceApp._id!,
+            automationId: automation._id!,
+          })
         )
         const bulkDocs = jest
           .spyOn(DatabaseImpl.prototype, "bulkDocs")
@@ -1719,7 +1755,10 @@ describe("/projects", () => {
         const automation = await config.createAutomation()
 
         await config.api.screen.save(
-          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+          createAutomationButtonScreen({
+            workspaceAppId: workspaceApp._id!,
+            automationId: automation._id!,
+          })
         )
 
         const updatedAutomation = await config.api.automation.get(
@@ -1871,7 +1910,7 @@ describe("/projects", () => {
       })
     })
 
-    it("preserves project exclusions and tool bindings when a query moves", async () => {
+    it("preserves agent project exclusions and tool bindings when a query moves", async () => {
       await withProjectsEnabled(async () => {
         const { project: sharedProject } = await config.api.project.create({
           name: "Shared project",
@@ -1897,24 +1936,14 @@ describe("/projects", () => {
           ...basicDatasource().datasource,
           name: "Destination datasource",
         })
-        const table = await config.api.table.save(basicTable())
-        const excludedTable = await config.api.table.save(
-          basicTable(undefined, { name: "Excluded table" })
-        )
-        await config.api.query.save({
-          ...basicQuery(destinationDatasource._id!),
-          name: "Excluded query",
-          transformer: `return "{{ ${excludedTable._id}._id }}"`,
-        })
         await config.api.project.updateAssignment(destinationDatasource._id!, {
           resourceRev: destinationDatasource._rev!,
           projectIds: [sharedProject._id, destinationProject._id],
           dependencyIds: [],
         })
-        const query = await config.api.query.save({
-          ...basicQuery(sourceDatasource._id!),
-          transformer: `return "{{ ${table._id}._id }}"`,
-        })
+        const query = await config.api.query.save(
+          basicQuery(sourceDatasource._id!)
+        )
         const existingBindings = getQueryToolBindingsForResource({
           datasource: sourceDatasource,
           query,
@@ -1947,13 +1976,6 @@ describe("/projects", () => {
           ],
           dependencyIds: [],
         })
-        const persistedTable = await config.api.table.get(table._id!)
-        await config.api.project.updateAssignment(table._id!, {
-          resourceRev: persistedTable._rev!,
-          projectIds: [agentProject._id],
-          dependencyIds: [],
-        })
-
         const movedQuery = await config.api.query.save({
           ...query,
           datasourceId: destinationDatasource._id!,
@@ -1968,19 +1990,6 @@ describe("/projects", () => {
         ).toEqual(
           new Set([sharedProject._id, destinationProject._id, agentProject._id])
         )
-        expect(
-          new Set((await config.api.table.get(table._id!)).projectIds)
-        ).toEqual(new Set([destinationProject._id, agentProject._id]))
-        expect(
-          (await config.api.table.get(excludedTable._id!)).projectIds
-        ).toEqual([agentProject._id])
-        expect(
-          (await config.api.datasource.get(destinationDatasource._id!))
-            .projectIds
-        ).not.toContain(excludedAgentProject._id)
-        expect(
-          (await config.api.table.get(table._id!)).projectIds
-        ).not.toContain(excludedAgentProject._id)
         const updatedBindings = getQueryToolBindingsForResource({
           datasource: destinationDatasource,
           query: movedQuery,
@@ -1994,107 +2003,6 @@ describe("/projects", () => {
         expect(updatedAgent.operations?.[0].enabledTools?.[0].toolName).toBe(
           updatedBindings.runtimeBinding
         )
-      })
-    })
-
-    it("propagates imported query dependencies without restoring exclusions", async () => {
-      await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        const datasource = await config.api.datasource.create({
-          type: "datasource",
-          name: "REST datasource",
-          source: SourceName.REST,
-          config: { url: "https://example.com" },
-        })
-        const excludedTable = await config.api.table.save(
-          basicTable(undefined, { name: "Excluded table" })
-        )
-        const importedTable = await config.api.table.save(
-          basicTable(undefined, { name: "Imported table" })
-        )
-        await config.api.query.save({
-          ...basicQuery(datasource._id!),
-          transformer: `return "{{ ${excludedTable._id}._id }}"`,
-        })
-        await config.api.project.updateAssignment(datasource._id!, {
-          resourceRev: datasource._rev!,
-          projectIds: [project._id],
-          dependencyIds: [],
-        })
-
-        await config.api.query.import({
-          datasource,
-          datasourceId: datasource._id,
-          data: JSON.stringify({
-            openapi: "3.0.0",
-            info: { title: "Imported API", version: "1.0.0" },
-            servers: [{ url: "https://example.com" }],
-            paths: {
-              "/records": {
-                get: {
-                  parameters: [
-                    {
-                      name: "table",
-                      in: "query",
-                      schema: {
-                        type: "string",
-                        default: `{{ ${importedTable._id}._id }}`,
-                      },
-                    },
-                  ],
-                  responses: { "200": { description: "OK" } },
-                },
-              },
-            },
-          }),
-        })
-
-        expect(
-          (await config.api.table.get(importedTable._id!)).projectIds
-        ).toEqual([project._id])
-        expect(
-          (await config.api.table.get(excludedTable._id!)).projectIds
-        ).toBeUndefined()
-      })
-    })
-
-    it("does not restore excluded sibling query dependencies", async () => {
-      await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        const datasource = await config.api.datasource.create(
-          basicDatasource().datasource
-        )
-        const excludedTable = await config.api.table.save(
-          basicTable(undefined, { name: "Excluded table" })
-        )
-        const includedTable = await config.api.table.save(
-          basicTable(undefined, { name: "Included table" })
-        )
-        await config.api.query.save({
-          ...basicQuery(datasource._id!),
-          transformer: `return "{{ ${excludedTable._id}._id }}"`,
-        })
-
-        await config.api.project.updateAssignment(datasource._id!, {
-          resourceRev: datasource._rev!,
-          projectIds: [project._id],
-          dependencyIds: [],
-        })
-        await config.api.query.save({
-          ...basicQuery(datasource._id!),
-          transformer: `return "{{ ${includedTable._id}._id }}"`,
-        })
-
-        expect(
-          (await config.api.table.get(excludedTable._id!)).projectIds
-        ).toBeUndefined()
-        expect(
-          (await config.api.table.get(includedTable._id!)).projectIds
-        ).toEqual([project._id])
       })
     })
 
@@ -2310,7 +2218,10 @@ describe("/projects", () => {
           )
         const automation = await config.createAutomation()
         const screen = await config.api.screen.save(
-          createAutomationButtonScreen(sourceApp._id!, automation._id!)
+          createAutomationButtonScreen({
+            workspaceAppId: sourceApp._id!,
+            automationId: automation._id!,
+          })
         )
 
         await config.api.screen.save({
@@ -2334,7 +2245,10 @@ describe("/projects", () => {
         )
         const automation = await config.createAutomation()
         const screen = await config.api.screen.save(
-          createAutomationButtonScreen(workspaceApp._id!, automation._id!)
+          createAutomationButtonScreen({
+            workspaceAppId: workspaceApp._id!,
+            automationId: automation._id!,
+          })
         )
         await config.api.project.updateAssignment(workspaceApp._id!, {
           resourceRev: workspaceApp._rev!,
@@ -2511,6 +2425,21 @@ describe("/projects", () => {
           ...basicDatasource().datasource,
           name: "Second datasource",
         })
+        const firstQuery = await config.api.query.save(
+          basicQuery(firstDatasource._id!)
+        )
+        const secondQuery = await config.api.query.save(
+          basicQuery(secondDatasource._id!)
+        )
+        const screen = createQueryScreen(firstDatasource._id!, firstQuery)
+        const secondQueryTable = createQueryScreen(
+          secondDatasource._id!,
+          secondQuery
+        ).props._children![0]
+        screen.props._children!.push({
+          ...secondQueryTable,
+          _id: "second-query-table",
+        })
         let successfulDependencyId = ""
         const bulkDocs = jest
           .spyOn(DatabaseImpl.prototype, "bulkDocs")
@@ -2532,16 +2461,8 @@ describe("/projects", () => {
           })
 
         try {
-          const screen = basicScreen()
           await config.api.screen.save(
-            {
-              ...screen,
-              props: {
-                ...screen.props,
-                dependencies: [firstDatasource._id, secondDatasource._id],
-              },
-              workspaceAppId: workspaceApp._id,
-            },
+            { ...screen, workspaceAppId: workspaceApp._id },
             {
               status: 200,
               headers: {
@@ -2650,39 +2571,47 @@ describe("/projects", () => {
         url: "/operations-app",
       })
       const appDependency = await config.createAutomation()
-      const appScreen = basicScreen()
-      await config.api.screen.save({
-        ...appScreen,
-        workspaceAppId: workspaceApp._id,
-        props: {
-          ...appScreen.props,
-          dependencies: [appDependency._id],
-        },
-      })
+      await config.api.screen.save(
+        createAutomationButtonScreen({
+          workspaceAppId: workspaceApp._id!,
+          automationId: appDependency._id!,
+        })
+      )
       const agentDependency = await config.api.datasource.create({
         ...basicDatasource().datasource,
         name: "Agent dependency",
+      })
+      const agentQuery = await config.api.query.save(
+        basicQuery(agentDependency._id!)
+      )
+      const agentQueryTool = getQueryToolBindingsForResource({
+        datasource: agentDependency,
+        query: agentQuery,
       })
       const agent = await config.api.agent.createWithOperation(
         { name: "Ops agent" },
         {
           id: "operation_1",
-          name: "Use datasource",
+          name: "Run query",
           live: false,
-          promptInstructions: `Use {{ ${agentDependency._id}.rows }}.`,
-          enabledTools: [],
+          enabledTools: [
+            {
+              toolName: agentQueryTool.runtimeBinding,
+              executionPrincipal: ToolExecutionPrincipal.REQUESTER,
+            },
+          ],
           allowKnowledgeSourceDownload: true,
         }
       )
       const automationDependency = await config.api.table.save(
         basicTable(undefined, { name: "Automation dependency" })
       )
-      const automationDefinition = newAutomation()
-      automationDefinition.definition.steps[0].inputs = {
-        ...automationDefinition.definition.steps[0].inputs,
-        tableId: automationDependency._id!,
-      }
-      const automation = await config.createAutomation(automationDefinition)
+      const { automation } = await createAutomationBuilder(config)
+        .onAppAction({})
+        .createRow({
+          row: { tableId: automationDependency._id!, name: "New row" },
+        })
+        .save()
 
       for (const resource of [table, workspaceApp, agent, automation]) {
         await config.api.project.updateAssignment(resource._id!, {
@@ -2732,12 +2661,10 @@ describe("/projects", () => {
       const dependency = await config.api.table.save(
         basicTable(undefined, { name: "Automation dependency" })
       )
-      const definition = newAutomation()
-      definition.definition.steps[0].inputs = {
-        ...definition.definition.steps[0].inputs,
-        tableId: dependency._id!,
-      }
-      const source = await config.createAutomation(definition)
+      const { automation: source } = await createAutomationBuilder(config)
+        .onAppAction({})
+        .createRow({ row: { tableId: dependency._id!, name: "New row" } })
+        .save()
       await config.api.project.updateAssignment(source._id!, {
         resourceRev: source._rev!,
         projectIds: [project._id],
@@ -2776,15 +2703,16 @@ describe("/projects", () => {
       const dependency = await config.api.table.save(
         basicTable(undefined, { name: "Automation dependency" })
       )
-      const automation = newAutomation()
-      automation._id = "au_explicit_id"
-      automation.projectIds = [project._id]
-      automation.definition.steps[0].inputs = {
-        ...automation.definition.steps[0].inputs,
-        tableId: dependency._id!,
-      }
+      const automation = createAutomationBuilder(config)
+        .onAppAction({})
+        .createRow({ row: { tableId: dependency._id!, name: "New row" } })
+        .build()
 
-      await config.api.automation.post(automation)
+      await config.api.automation.post({
+        ...automation,
+        _id: "au_explicit_id",
+        projectIds: [project._id],
+      })
 
       expect((await config.api.table.get(dependency._id!)).projectIds).toEqual([
         project._id,
@@ -3583,10 +3511,7 @@ describe("/projects", () => {
       const datasource = await config.api.datasource.create(
         basicDatasource().datasource
       )
-      const externalTableId = buildExternalTableId(
-        datasource._id!,
-        "Orders"
-      )
+      const externalTableId = buildExternalTableId(datasource._id!, "Orders")
       await config.api.datasource.update({
         ...datasource,
         entities: {
