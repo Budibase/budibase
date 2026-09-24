@@ -49,6 +49,22 @@ export interface RequesterActionContext {
 const requesterActionKey = (conversationId: string) =>
   `agent:requester-action:${conversationId}`
 
+const withRequesterActionLock = async <T>(
+  conversationId: string,
+  callback: () => Promise<T>
+) => {
+  const { result } = await locks.doWithLock(
+    {
+      name: LockName.REQUESTER_CONFIRMATION,
+      resource: conversationId,
+      type: LockType.DEFAULT,
+      ttl: 5000,
+    },
+    callback
+  )
+  return result
+}
+
 export const getRequesterAction = async (conversationId: string) =>
   ((await cache.get(
     requesterActionKey(conversationId)
@@ -89,29 +105,20 @@ export const transitionRequesterAction = async ({
   to: RequesterActionStatus
   update?: Partial<RequesterActionContext>
 }) => {
-  const { result } = await locks.doWithLock(
-    {
-      name: LockName.REQUESTER_CONFIRMATION,
-      resource: conversationId,
-      type: LockType.DEFAULT,
-      ttl: 5000,
-    },
-    async () => {
-      const existing = await getRequesterAction(conversationId)
-      if (!existing || existing.status !== from) {
-        return { confirmation: existing, changed: false }
-      }
-      const confirmation: RequesterActionContext = {
-        ...existing,
-        ...update,
-        status: to,
-        updatedAt: new Date().toISOString(),
-      }
-      await cache.store(requesterActionKey(conversationId), confirmation)
-      return { confirmation, changed: true }
+  return withRequesterActionLock(conversationId, async () => {
+    const existing = await getRequesterAction(conversationId)
+    if (!existing || existing.status !== from) {
+      return { confirmation: existing, changed: false }
     }
-  )
-  return result
+    const confirmation: RequesterActionContext = {
+      ...existing,
+      ...update,
+      status: to,
+      updatedAt: new Date().toISOString(),
+    }
+    await cache.store(requesterActionKey(conversationId), confirmation)
+    return { confirmation, changed: true }
+  })
 }
 
 export interface RequesterValidationContext {
@@ -371,67 +378,71 @@ export const createRequesterValidationRuntime = ({
   sanitizeValidationErrors?: boolean
   context: RequesterValidationContext
 }): RequesterValidationRuntime => ({
-  intercept: async (input, { toolCallId, messages }) => {
-    const active = await getActiveRequesterAction(context.conversationId)
-    if (active && active.toolName !== toolName) {
-      return {
-        status:
-          active.status === "collecting_input"
-            ? ToolValidationResultStatus.NEEDS_INPUT
-            : ToolValidationResultStatus.PENDING,
-        message:
-          active.validationMessage ??
-          "Please finish or cancel the pending action before starting another one.",
+  intercept: async (input, { toolCallId, messages }) =>
+    withRequesterActionLock(context.conversationId, async () => {
+      const active = await getActiveRequesterAction(context.conversationId)
+      if (
+        active &&
+        (active.toolName !== toolName || active.status !== "collecting_input")
+      ) {
+        return {
+          status:
+            active.status === "collecting_input"
+              ? ToolValidationResultStatus.NEEDS_INPUT
+              : ToolValidationResultStatus.PENDING,
+          message:
+            active.validationMessage ??
+            "Please finish or cancel the pending action before starting another one.",
+        }
       }
-    }
-    const groundedInput = groundedArguments(input, evidenceText(messages))
-    const merged = mergeArguments(
-      active?.toolName === toolName ? active.partialArguments : undefined,
-      groundedInput
-    )
-    const validation = await safeValidateTypes({
-      value: merged,
-      schema: inputSchema,
-    })
-    const base = confirmationBase({
-      context,
-      toolName,
-      readableName,
-      sourceId,
-      toolCallId,
-      partialArguments: merged,
-    })
-    if (!validation.success) {
-      const message = sanitizeValidationErrors
-        ? "I couldn't validate those details. Please check the information and try again."
-        : await buildClarificationMessage(validation.error, inputSchema)
+      const groundedInput = groundedArguments(input, evidenceText(messages))
+      const merged = mergeArguments(
+        active?.toolName === toolName ? active.partialArguments : undefined,
+        groundedInput
+      )
+      const validation = await safeValidateTypes({
+        value: merged,
+        schema: inputSchema,
+      })
+      const base = confirmationBase({
+        context,
+        toolName,
+        readableName,
+        sourceId,
+        toolCallId,
+        partialArguments: merged,
+      })
+      if (!validation.success) {
+        const message = sanitizeValidationErrors
+          ? "I couldn't validate those details. Please check the information and try again."
+          : await buildClarificationMessage(validation.error, inputSchema)
+        await saveRequesterAction({
+          ...base,
+          status: "collecting_input",
+          validationMessage: message,
+        })
+        return {
+          status: ToolValidationResultStatus.NEEDS_INPUT,
+          message,
+        }
+      }
+
+      const message = buildConfirmationMessage({
+        readableName,
+        toolName,
+        arguments: validation.value,
+      })
       await saveRequesterAction({
         ...base,
-        status: "collecting_input",
+        partialArguments: validation.value,
+        confirmedArguments: validation.value,
+        status: "awaiting_confirmation",
         validationMessage: message,
       })
       return {
-        status: ToolValidationResultStatus.NEEDS_INPUT,
+        status: ToolValidationResultStatus.PENDING,
         message,
+        arguments: validation.value,
       }
-    }
-
-    const message = buildConfirmationMessage({
-      readableName,
-      toolName,
-      arguments: validation.value,
-    })
-    await saveRequesterAction({
-      ...base,
-      partialArguments: validation.value,
-      confirmedArguments: validation.value,
-      status: "awaiting_confirmation",
-      validationMessage: message,
-    })
-    return {
-      status: ToolValidationResultStatus.PENDING,
-      message,
-      arguments: validation.value,
-    }
-  },
+    }),
 })

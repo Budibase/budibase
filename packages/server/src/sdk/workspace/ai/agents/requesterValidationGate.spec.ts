@@ -3,6 +3,11 @@ import { z } from "zod"
 
 const mockCacheGet = jest.fn()
 const mockCacheStore = jest.fn()
+const mockDoWithLock = jest.fn(
+  async (_options: unknown, callback: () => Promise<unknown>) => ({
+    result: await callback(),
+  })
+)
 
 jest.mock("@budibase/backend-core", () => ({
   cache: {
@@ -10,7 +15,8 @@ jest.mock("@budibase/backend-core", () => ({
     store: (...args: unknown[]) => mockCacheStore(...args),
   },
   locks: {
-    doWithLock: jest.fn(),
+    doWithLock: (options: unknown, callback: () => Promise<unknown>) =>
+      mockDoWithLock(options, callback),
   },
 }))
 
@@ -30,6 +36,39 @@ const validationContext = {
 describe("requester validation gate", () => {
   beforeEach(() => {
     jest.clearAllMocks()
+  })
+
+  it("does not replace an action that is already awaiting confirmation", async () => {
+    mockCacheGet.mockResolvedValue({
+      status: "awaiting_confirmation",
+      toolName: "create_expense",
+      validationMessage: "Please confirm the existing expense.",
+    })
+    const runtime = createRequesterValidationRuntime({
+      toolName: "create_expense",
+      inputSchema: z.object({ data: z.object({ Cost: z.number() }) }),
+      context: validationContext,
+    })
+
+    await expect(
+      runtime.intercept(
+        { data: { Cost: 20 } },
+        {
+          toolCallId: "call_2",
+          messages: [{ role: "user", content: "Add another expense for 20" }],
+        }
+      )
+    ).resolves.toEqual({
+      status: ToolValidationResultStatus.PENDING,
+      message: "Please confirm the existing expense.",
+    })
+    expect(mockCacheStore).not.toHaveBeenCalled()
+    expect(mockDoWithLock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resource: "conversation_1",
+      }),
+      expect.any(Function)
+    )
   })
 
   it("renders the exact canonical arguments without internal identifiers", () => {
