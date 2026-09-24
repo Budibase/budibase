@@ -51,15 +51,6 @@ function isDataDocumentId(id: string) {
   )
 }
 
-function isNotFoundError(error: unknown) {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "status" in error &&
-    error.status === 404
-  )
-}
-
 class Replication {
   source: PouchDB.Database
   target: PouchDB.Database
@@ -443,7 +434,7 @@ class Replication {
       )
       return checkpoint.lastSequence
     } catch (error) {
-      if (!isNotFoundError(error)) {
+      if (error?.status !== 404) {
         throw error
       }
     }
@@ -461,7 +452,7 @@ class Replication {
       )
       checkpoint = { ...checkpoint, _rev: existing._rev }
     } catch (error) {
-      if (!isNotFoundError(error)) {
+      if (error?.status !== 404) {
         throw error
       }
     }
