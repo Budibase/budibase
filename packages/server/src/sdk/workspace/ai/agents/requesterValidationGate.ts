@@ -242,6 +242,49 @@ const enumValues = (schema: unknown): unknown[] | undefined => {
   }
 }
 
+const normalizeEnumValues = (value: unknown, schema: unknown): unknown => {
+  if (!isRecord(schema)) {
+    return value
+  }
+  if (typeof value === "string" && isRecord(schema.items)) {
+    const option = enumValues(schema.items)?.find(
+      item =>
+        typeof item === "string" &&
+        item.toLocaleLowerCase() === value.toLocaleLowerCase()
+    )
+    if (option !== undefined) {
+      return [option]
+    }
+  }
+  if (Array.isArray(value)) {
+    return value.map(item => normalizeEnumValues(item, schema.items))
+  }
+  if (isRecord(value) && isRecord(schema.properties)) {
+    const properties = schema.properties
+    return Object.fromEntries(
+      Object.entries(value).map(([key, child]) => [
+        key,
+        normalizeEnumValues(child, properties[key]),
+      ])
+    )
+  }
+  if (typeof value !== "string") {
+    return value
+  }
+  return (
+    enumValues(schema)?.find(
+      option =>
+        typeof option === "string" &&
+        option.toLocaleLowerCase() === value.toLocaleLowerCase()
+    ) ?? value
+  )
+}
+
+const normalizeInputEnumValues = async (
+  input: unknown,
+  inputSchema: FlexibleSchema
+) => normalizeEnumValues(input, await asSchema(inputSchema).jsonSchema)
+
 const schemaOptionsAtPath = async (
   inputSchema: FlexibleSchema,
   path: Array<PropertyKey>
@@ -395,7 +438,10 @@ export const createRequesterValidationRuntime = ({
             "Please finish or cancel the pending action before starting another one.",
         }
       }
-      const groundedInput = groundedArguments(input, evidenceText(messages))
+      const groundedInput = await normalizeInputEnumValues(
+        groundedArguments(input, evidenceText(messages)),
+        inputSchema
+      )
       const merged = mergeArguments(
         active?.toolName === toolName ? active.partialArguments : undefined,
         groundedInput

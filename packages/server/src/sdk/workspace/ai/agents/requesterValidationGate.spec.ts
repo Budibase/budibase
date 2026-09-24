@@ -278,4 +278,39 @@ describe("requester validation gate", () => {
       })
     )
   })
+
+  it("normalizes a requester-supplied enum value to its canonical casing", async () => {
+    mockCacheGet.mockResolvedValue({
+      status: "collecting_input",
+      toolName: "create_expense",
+      partialArguments: { data: { Cost: 50 } },
+    })
+    const runtime = createRequesterValidationRuntime({
+      toolName: "create_expense",
+      inputSchema: z.object({
+        data: z.object({
+          Cost: z.number(),
+          "Expense Tags": z.array(
+            z.enum(["Equipment", "Food", "Other", "Service"])
+          ),
+        }),
+      }),
+      context: validationContext,
+    })
+
+    await expect(
+      runtime.intercept(
+        { data: { "Expense Tags": "other" } },
+        {
+          toolCallId: "call_2",
+          messages: [{ role: "user", content: "other" }],
+        }
+      )
+    ).resolves.toEqual(
+      expect.objectContaining({
+        status: ToolValidationResultStatus.PENDING,
+        arguments: { data: { Cost: 50, "Expense Tags": ["Other"] } },
+      })
+    )
+  })
 })
