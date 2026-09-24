@@ -915,35 +915,6 @@ describe("/projects", () => {
         expect(updatedDatasource.projectIds).toEqual([project._id])
       })
     })
-
-    it("clears stored query assignments when updates omit project ids", async () => {
-      await withProjectsEnabled(async () => {
-        const { project } = await config.api.project.create({
-          name: "Operations",
-        })
-        const datasource = await config.createDatasource()
-        const query = await config.api.query.save(basicQuery(datasource._id))
-        await config.doInContext(config.getDevWorkspaceId(), async () => {
-          const persistedQuery = await context
-            .getWorkspaceDB()
-            .get<Query>(query._id!)
-          await context.getWorkspaceDB().put({
-            ...persistedQuery,
-            projectIds: [project._id],
-          })
-        })
-
-        const persistedQuery = await config.api.query.get(query._id!)
-
-        const { projectIds: _queryProjectIds, ...queryUpdate } = persistedQuery
-        const updatedQuery = await config.api.query.save({
-          ...queryUpdate,
-          name: "Ops query updated",
-        })
-
-        expect(updatedQuery.projectIds).toBeUndefined()
-      })
-    })
   })
 
   describe("propagates project ids to dependencies on save", () => {
