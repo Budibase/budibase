@@ -515,6 +515,116 @@ describe("/datasources", () => {
       )
     })
 
+    it("detects embedded env var references", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST embedded env var",
+        source: SourceName.REST,
+        config: {
+          url: "https://{{ env.HOST }}/api",
+        },
+      })
+
+      expect(ds.usesEnvironmentVariables).toBe(true)
+    })
+
+    it("does not treat nested env properties as environment variables", async () => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST nested env property",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Nested Env Auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "user",
+                password: "{{ user.env.PASSWORD }}",
+              },
+            },
+          ],
+        },
+      })
+
+      expect(ds.usesEnvironmentVariables).toBe(false)
+      expect(ds.config!.authConfigs[0].config.password).toBe(
+        PASSWORD_REPLACEMENT
+      )
+    })
+
+    it.each([
+      ["quoted text", '{{ "env.HOST" }}'],
+      ["a short comment", "{{! env.HOST }}"],
+      ["a long comment", "{{!-- env.HOST --}}"],
+    ])("does not treat %s as an environment reference", async (_label, url) => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST inactive env reference",
+        source: SourceName.REST,
+        config: { url },
+      })
+
+      expect(ds.usesEnvironmentVariables).toBe(false)
+    })
+
+    it.each([
+      "prefix {{ env.PASSWORD }}",
+      '{{ env.PASSWORD || "fallback-secret" }}',
+      '{{ env.PASSWORD||"fallback-secret" }}',
+      '{{ "prefix-" + env.PASSWORD }}',
+      "{{ env.PASSWORD }}{{ user.password }}",
+    ])("scrubs mixed environment expressions: %s", async password => {
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST environment expression",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Environment expression auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "user",
+                password,
+              },
+            },
+          ],
+        },
+      })
+
+      expect(ds.usesEnvironmentVariables).toBe(true)
+      expect(ds.config!.authConfigs[0].config.password).toBe(
+        PASSWORD_REPLACEMENT
+      )
+    })
+
+    it("preserves secrets composed of adjacent env var references", async () => {
+      const password = "{{ env.PASSWORD_PREFIX }}{{ env.PASSWORD_SUFFIX }}"
+      const ds = await config.api.datasource.create({
+        type: "datasource",
+        name: "REST adjacent env secrets",
+        source: SourceName.REST,
+        config: {
+          authConfigs: [
+            {
+              _id: generator.guid(),
+              name: "Adjacent Env Auth",
+              type: RestAuthType.BASIC,
+              config: {
+                username: "{{ env.USERNAME }}",
+                password,
+              },
+            },
+          ],
+        },
+      })
+
+      expect(ds.config!.authConfigs[0].config.password).toBe(password)
+    })
+
     it("scrubs sensitive longform fields in get response", async () => {
       const privateKey = [
         "-----BEGIN PRIVATE KEY-----",

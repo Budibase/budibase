@@ -1,14 +1,19 @@
 import {
   compare,
   decrypt,
+  decryptFile,
   encrypt,
+  encryptFile,
   getSecret,
   SecretOption,
 } from "../encryption"
 import env, { withEnv } from "../../environment"
+import fsp from "fs/promises"
+import { tmpdir } from "os"
+import { join } from "path"
 
 describe("encryption", () => {
-  it("should throw an error if API encryption key is not set", () => {
+  it("uses the JWT secret as the default API encryption key", () => {
     const jwt = getSecret(SecretOption.API)
     expect(jwt).toBe(env.JWT_SECRET?.export().toString())
   })
@@ -44,5 +49,51 @@ describe("encryption", () => {
       expect(compare(plaintext, encrypted, SecretOption.API)).toBe(true)
       expect(compare("not-budibase", encrypted, SecretOption.API)).toBe(false)
     })
+  })
+})
+
+describe("file decryption", () => {
+  let dir: string
+  const content = "a".repeat(128 * 1024)
+  const password = "example-password"
+
+  beforeEach(async () => {
+    dir = await fsp.mkdtemp(join(tmpdir(), "file-decryption-"))
+    await fsp.writeFile(join(dir, "source"), content)
+    await encryptFile({ dir, filename: "source" }, password)
+  })
+
+  afterEach(async () => {
+    await fsp.rm(dir, { recursive: true, force: true })
+  })
+
+  it.each([undefined, content.length])(
+    "decrypts a file within its output budget (%s)",
+    async maxOutputBytes => {
+      const output = join(dir, "output")
+      await decryptFile(join(dir, "source.enc"), output, password, {
+        maxOutputBytes,
+      })
+
+      expect(await fsp.readFile(output, "utf8")).toEqual(content)
+    }
+  )
+
+  it("stops decompression before writing beyond the output budget", async () => {
+    const output = join(dir, "output")
+    const maxOutputBytes = 32 * 1024
+
+    await expect(
+      decryptFile(join(dir, "source.enc"), output, password, {
+        maxOutputBytes,
+      })
+    ).rejects.toThrow("Decrypted file exceeds the size limit")
+
+    const outputFile = await fsp.stat(output).catch(error => {
+      if (error.code !== "ENOENT") {
+        throw error
+      }
+    })
+    expect(outputFile?.size ?? 0).toBeLessThanOrEqual(maxOutputBytes)
   })
 })

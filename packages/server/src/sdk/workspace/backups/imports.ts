@@ -156,7 +156,11 @@ export async function untarFile(file: { path: string }) {
   return tmpPath
 }
 
-export async function decryptFiles(path: string, password: string) {
+export async function decryptFiles(
+  path: string,
+  password: string,
+  { maxOutputBytes = Infinity }: { maxOutputBytes?: number } = {}
+) {
   try {
     const processDirectory = async (dirPath: string) => {
       for (let file of await fsp.readdir(dirPath)) {
@@ -165,7 +169,10 @@ export async function decryptFiles(path: string, password: string) {
           const stats = await fsp.lstat(inputPath)
           if (stats.isFile() && inputPath.endsWith(".enc")) {
             const outputPath = inputPath.replace(/\.enc$/, "")
-            await encryption.decryptFile(inputPath, outputPath, password)
+            await encryption.decryptFile(inputPath, outputPath, password, {
+              maxOutputBytes,
+            })
+            maxOutputBytes -= (await fsp.stat(outputPath)).size
             await fsp.rm(inputPath)
           } else if (stats.isDirectory()) {
             await processDirectory(inputPath)

@@ -2,6 +2,7 @@ import { context, features } from "@budibase/backend-core"
 import {
   AnyDocument,
   FeatureFlag,
+  ResourceType,
   type Document,
   type Project,
 } from "@budibase/types"
@@ -11,6 +12,17 @@ import { createProjectMembersView } from "../../../db/views/staticViews"
 export interface ProjectAssignable extends Document {
   projectIds?: string[]
 }
+
+export const PROJECT_ASSIGNABLE_RESOURCE_TYPES = new Set<ResourceType>([
+  ResourceType.WORKSPACE_APP,
+  ResourceType.AUTOMATION,
+  ResourceType.AGENT,
+  ResourceType.DATASOURCE,
+  ResourceType.TABLE,
+])
+
+export const isProjectAssignableResourceType = (type: ResourceType) =>
+  PROJECT_ASSIGNABLE_RESOURCE_TYPES.has(type)
 
 export const getProjectIds = (doc: ProjectAssignable = {}) =>
   Array.isArray(doc.projectIds) ? doc.projectIds : []
@@ -45,19 +57,6 @@ export const addProjectId = <T extends ProjectAssignable>(
   projectId: string
 ): T =>
   withProjectIds(doc, Array.from(new Set([...getProjectIds(doc), projectId])))
-
-export const getProjectAssignedEntities = (
-  doc: AnyDocument
-): ProjectAssignable[] => {
-  if (!doc.entities || typeof doc.entities !== "object") {
-    return []
-  }
-
-  return Object.values(doc.entities).filter(
-    (entity): entity is ProjectAssignable =>
-      !!entity && typeof entity === "object"
-  )
-}
 
 export const getValidProjectIdsForDuplication = async (
   projectIds?: string[]

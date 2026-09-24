@@ -13,6 +13,8 @@ import {
   UpdateProjectRequest,
   UpdateProjectResponse,
 } from "@budibase/types"
+import fsp from "fs/promises"
+import type { Next } from "koa"
 import sdk from "../../sdk"
 
 export const toProjectResponse = (project: Project): ProjectResponse => {
@@ -102,8 +104,30 @@ export async function exportBundle(
   })
 }
 
-type ProjectImportFiles = {
-  file?: KoaFile | KoaFile[]
+interface ProjectImportFiles {
+  [field: string]: KoaFile | KoaFile[]
+}
+
+export async function cleanupImportFiles(ctx: Ctx, next: Next) {
+  try {
+    await next()
+  } finally {
+    const files = ctx.request.files as ProjectImportFiles | undefined
+    await Promise.all(
+      Object.values(files || {})
+        .flat()
+        .map(async file => {
+          if (file.filepath) {
+            await fsp.rm(file.filepath, { force: true }).catch(error => {
+              console.log(
+                "Failed to remove uploaded Project import archive",
+                error
+              )
+            })
+          }
+        })
+    )
+  }
 }
 
 export async function importBundle(
