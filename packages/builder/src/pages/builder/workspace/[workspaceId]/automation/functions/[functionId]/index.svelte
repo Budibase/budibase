@@ -1,8 +1,9 @@
 <script lang="ts">
+  import { functionsAvailable } from "@/stores/builder/functionsAvailability"
+  import FunctionTrustNotice from "../FunctionTrustNotice.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { getErrorMessage } from "@/helpers/errors"
   import { builderStore, functionStore } from "@/stores/builder"
-  import { featureFlags } from "@/stores/portal"
   import {
     Badge,
     Body,
@@ -21,7 +22,6 @@
     FunctionResponse,
   } from "@budibase/types"
   import { params } from "@roxi/routify"
-  import { FeatureFlag } from "@budibase/types"
   import { onDestroy, onMount } from "svelte"
   import FunctionCodeEditor from "../FunctionCodeEditor.svelte"
   import FunctionLogs from "../FunctionLogs.svelte"
@@ -44,7 +44,7 @@
 
   $params
   $: functionId = $params.functionId
-  $: enabled = $featureFlags[FeatureFlag.FUNCTIONS]
+  $: enabled = $functionsAvailable
   $: builderStore.selectResource(functionId)
   $: sourceDirty = !!fn && source !== savedSource
   $: draftDirty = sourceDirty || queriesDirty
@@ -244,6 +244,7 @@
         <Button secondary on:click={load}>Retry</Button>
       </div>
     {:else}
+      <FunctionTrustNotice />
       <div class="heading">
         <div>
           <div class="title">
