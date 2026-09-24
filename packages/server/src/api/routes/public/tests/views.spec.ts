@@ -138,6 +138,15 @@ describe("check public API security", () => {
     })
     const restrictedRequest = await PublicAPIRequest.init(config, user)
 
+    const adminUser = await config.globalUser({
+      builder: { global: false },
+      roles: {
+        [config.getDevWorkspaceId()]: roles.BUILTIN_ROLE_IDS.ADMIN,
+      },
+    })
+    const adminRequest = await PublicAPIRequest.init(config, adminUser)
+    await adminRequest.rows.viewSearch(response.data.id, {}, { status: 200 })
+
     await restrictedRequest.rows.viewSearch(
       response.data.id,
       {},
