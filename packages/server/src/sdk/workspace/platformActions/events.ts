@@ -46,7 +46,8 @@ export async function fetchSessionEvents({
   limit?: number
 }): Promise<FetchActionSessionEventsResponse> {
   const workspaceDb = events.platformActions.getActionsDB()
-  const token = bookmark ? decodeKeysetBookmark(bookmark) : undefined
+  const token =
+    bookmark === undefined ? undefined : decodeKeysetBookmark(bookmark)
   const direction = token?.direction ?? "next"
 
   const [page, summary] = await Promise.all([

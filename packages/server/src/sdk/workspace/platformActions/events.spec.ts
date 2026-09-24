@@ -56,6 +56,19 @@ describe("platformActions events", () => {
   }
 
   describe("fetchSessionEvents", () => {
+    it("rejects an explicitly supplied empty bookmark", async () => {
+      await expect(
+        withContext(() =>
+          fetchSessionEvents({
+            environment: "prod",
+            sourceType: "agent_session",
+            sourceId: "run-1",
+            bookmark: "",
+          })
+        )
+      ).rejects.toMatchObject({ status: 400, message: "Invalid bookmark" })
+    })
+
     it("lists events for the exact session, oldest first", async () => {
       await createEvent({ sourceId: "run-1", eventName: "action:step:1" })
       await createEvent({ sourceId: "run-1", eventName: "action:step:2" })

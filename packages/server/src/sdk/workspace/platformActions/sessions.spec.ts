@@ -73,6 +73,12 @@ describe("platformActions sessions", () => {
   }
 
   describe("fetchSessions", () => {
+    it("rejects an explicitly supplied empty bookmark", async () => {
+      await expect(
+        withContext(() => fetchSessions({ bookmark: "" }))
+      ).rejects.toMatchObject({ status: 400, message: "Invalid bookmark" })
+    })
+
     it("lists sessions across both environments when env is omitted", async () => {
       await createSession({ sourceId: "prod-1", environment: "prod" })
       await createSession({ sourceId: "dev-1", environment: "dev" })
