@@ -1,6 +1,10 @@
 import { asSchema, jsonSchema, validateTypes } from "@ai-sdk/provider-utils"
-import { type ModelMessage, type Tool, type ToolSet } from "ai"
-import type { JSONSchema7 } from "json-schema"
+import {
+  type JSONSchema7,
+  type ModelMessage,
+  type Tool,
+  type ToolSet,
+} from "ai"
 import { getErrorMessage } from "@budibase/backend-core"
 import {
   PermissionLevel,
