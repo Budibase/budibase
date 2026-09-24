@@ -78,6 +78,7 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
   reset() {
     this.abortController.abort()
     this.abortController = new AbortController()
+    this.inFlight = false
     this.stop()
     this.set({ escalations: {} })
   }
@@ -95,6 +96,7 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
       return
     }
     this.consecutiveFailures = 0
+    this.tick().catch(() => {})
     this.interval = setInterval(() => {
       this.tick().catch(() => {})
     }, POLL_INTERVAL_MS)
@@ -139,9 +141,11 @@ export class EscalationsStore extends BudiStore<EscalationsState> {
         this.stop()
       }
     } finally {
-      this.inFlight = false
-      if (!this.pendingIds().length) {
-        this.stop()
+      if (signal === this.abortController.signal) {
+        this.inFlight = false
+        if (!this.pendingIds().length) {
+          this.stop()
+        }
       }
     }
   }
