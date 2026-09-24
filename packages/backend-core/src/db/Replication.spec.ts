@@ -257,12 +257,20 @@ describe("Replication", () => {
       })
       jest.spyOn(replication, "replicate").mockResolvedValue({} as any)
       mockTargetDb.get.mockRejectedValue({ status: 404 })
-      const changes = Array.from({ length: 1201 }, (_, index) => ({
-        id: `doc-${index}`,
-        deleted: true,
-        changes: [{ rev: `2-${index}` }],
-        doc: { _id: `doc-${index}`, _rev: `2-${index}`, _deleted: true },
-      }))
+      const changes = [
+        ...Array.from({ length: 1200 }, (_, index) => ({
+          id: `doc-${index}`,
+          deleted: true,
+          changes: [{ rev: `2-${index}` }],
+          doc: { _id: `doc-${index}`, _rev: `2-${index}`, _deleted: true },
+        })),
+        {
+          id: "doc-0",
+          deleted: true,
+          changes: [{ rev: "3-0" }],
+          doc: { _id: "doc-0", _rev: "3-0", _deleted: true },
+        },
+      ]
       const scanBatches = [
         changes.slice(0, 500),
         changes.slice(500, 1000),
@@ -310,7 +318,7 @@ describe("Replication", () => {
       expect(mockTargetDb.changes).toHaveBeenCalledTimes(5)
       expect(mockDirectCouchCall).toHaveBeenCalledTimes(10)
       expect(mockDirectCouchCall.mock.calls[0][2]).toEqual(
-        expect.objectContaining({ "doc-0": ["2-0"] })
+        expect.objectContaining({ "doc-0": ["3-0"] })
       )
       expect(mockTargetDb.put).not.toHaveBeenCalled()
     })

@@ -191,7 +191,10 @@ class Replication {
           continue
         }
         if (deletedIds.includes(change.id)) {
-          if (tombstonesToClean.size < MAX_TOMBSTONES_TO_CLEAN) {
+          if (
+            tombstonesToClean.has(change.id) ||
+            tombstonesToClean.size < MAX_TOMBSTONES_TO_CLEAN
+          ) {
             tombstonesToClean.set(change.id, { id: change.id, rev })
           } else {
             tombstoneCleanupIncomplete = true
@@ -200,7 +203,10 @@ class Replication {
           canAdvanceTombstoneCheckpoint &&
           isDataDocumentId(change.id)
         ) {
-          if (sourceTombstonesToClean.size < MAX_TOMBSTONES_TO_CLEAN) {
+          if (
+            sourceTombstonesToClean.has(change.id) ||
+            sourceTombstonesToClean.size < MAX_TOMBSTONES_TO_CLEAN
+          ) {
             sourceTombstonesToClean.set(change.id, { id: change.id, rev })
           } else {
             tombstoneCleanupIncomplete = true
