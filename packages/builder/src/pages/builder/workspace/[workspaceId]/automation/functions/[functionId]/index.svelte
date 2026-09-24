@@ -1,8 +1,8 @@
 <script lang="ts">
   import TopBar from "@/components/common/TopBar.svelte"
   import { getErrorMessage } from "@/helpers/errors"
-  import { workspaceStore, builderStore, functionStore } from "@/stores/builder"
-  import { auth, featureFlags } from "@/stores/portal"
+  import { builderStore, functionStore } from "@/stores/builder"
+  import { featureFlags } from "@/stores/portal"
   import {
     Badge,
     Body,
@@ -23,7 +23,6 @@
   import { onDestroy, onMount } from "svelte"
   import FunctionCodeEditor from "../FunctionCodeEditor.svelte"
   import FunctionQueryEditor from "../FunctionQueryEditor.svelte"
-  import { canManageFunctions } from "../permissions"
 
   let fn: FunctionResponse | undefined
   let loading = true
@@ -37,12 +36,11 @@
   let queriesDirty = false
   let actionError = ""
   let validationRequest = 0
+  let lastObservedSource = ""
 
   $params
   $: functionId = $params.functionId
   $: enabled = $featureFlags[FeatureFlag.FUNCTIONS]
-  $: canManage =
-    enabled && canManageFunctions($auth.user, $workspaceStore.appId)
   $: builderStore.selectResource(functionId)
   $: sourceDirty = !!fn && source !== savedSource
   $: draftDirty = sourceDirty || queriesDirty
@@ -67,6 +65,9 @@
       functionToValidate: FunctionResponse,
       request: number
     ) => {
+      if (request !== validationRequest) {
+        return
+      }
       validating = true
       try {
         const response = await functionStore.compile({
@@ -100,8 +101,15 @@
     debouncedValidate(value, fn, request)
   }
 
+  const validateChangedSource = (value: string) => {
+    if (value !== lastObservedSource) {
+      lastObservedSource = value
+      validate(value)
+    }
+  }
+
   $: if (fn) {
-    validate(source)
+    validateChangedSource(source)
   }
 
   const load = async () => {
@@ -112,10 +120,14 @@
         functionStore.fetchOne(functionId),
         functionStore.fetchQueryCatalog(),
       ])
-      fn = loadedFunction
+      lastObservedSource = loadedFunction.source
       source = loadedFunction.source
       savedSource = loadedFunction.source
-      diagnostics = loadedFunction.lastBuild?.diagnostics || []
+      fn = loadedFunction
+      diagnostics =
+        loadedFunction.readiness === "build_failed"
+          ? loadedFunction.lastBuild?.diagnostics || []
+          : []
     } catch (loadError) {
       error = getErrorMessage(loadError) || "Unable to load Function"
     } finally {
@@ -135,7 +147,6 @@
       source: fn.source,
       capabilities,
     })
-    diagnostics = []
     validate(source)
     notifications.success("Linked queries saved")
   }
@@ -184,7 +195,7 @@
   }
 
   onMount(() => {
-    if (canManage) {
+    if (enabled) {
       load()
     } else {
       loading = false
@@ -207,11 +218,10 @@
   />
 
   <main class="function-page">
-    {#if !canManage}
+    {#if !enabled}
       <div class="state" data-testid="function-permission-state">
         <Icon name="lock" size="L" />
-        <Heading size="S">You don't have permission to manage Functions</Heading
-        >
+        <Heading size="S">Functions are not available</Heading>
       </div>
     {:else if loading}
       <div class="state" data-testid="function-loading-state">
