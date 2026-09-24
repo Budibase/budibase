@@ -133,7 +133,7 @@ describe("check public API security", () => {
     const user = await config.globalUser({
       builder: { global: false },
       roles: {
-        [config.getDevWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.BASIC,
       },
     })
     const restrictedRequest = await PublicAPIRequest.init(config, user)
@@ -141,7 +141,7 @@ describe("check public API security", () => {
     const adminUser = await config.globalUser({
       builder: { global: false },
       roles: {
-        [config.getDevWorkspaceId()]: roles.BUILTIN_ROLE_IDS.ADMIN,
+        [config.getProdWorkspaceId()]: roles.BUILTIN_ROLE_IDS.ADMIN,
       },
     })
     const adminRequest = await PublicAPIRequest.init(config, adminUser)
