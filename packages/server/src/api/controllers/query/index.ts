@@ -241,6 +241,72 @@ export async function importInfo(
   }
 }
 
+interface MovedQueryDependencyPropagationInput {
+  ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>
+  existingDatasource: Datasource
+  datasource: Datasource
+  existingQuery: Query
+  query: Query
+  referencingAgents: Agent[]
+}
+
+const propagateMovedQueryDependencies = async ({
+  ctx,
+  existingDatasource,
+  datasource,
+  existingQuery,
+  query,
+  referencingAgents,
+}: MovedQueryDependencyPropagationInput) => {
+  const sourceProjectIds = new Set(existingDatasource.projectIds || [])
+  const destinationProjectIds = new Set(datasource.projectIds || [])
+  const sharedProjectIds = Array.from(destinationProjectIds).filter(projectId =>
+    sourceProjectIds.has(projectId)
+  )
+  const destinationOnlyProjectIds = Array.from(destinationProjectIds).filter(
+    projectId => !sourceProjectIds.has(projectId)
+  )
+
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
+    rootResourceId: datasource._id!,
+    currentProjectIds: sharedProjectIds,
+    previousProjectIds: sharedProjectIds,
+    previousResource: existingQuery,
+    savedResource: query,
+  })
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
+    rootResourceId: datasource._id!,
+    currentProjectIds: destinationOnlyProjectIds,
+    previousProjectIds: destinationOnlyProjectIds,
+    savedResource: query,
+  })
+
+  const newAgentProjectIds = Array.from(
+    new Set(referencingAgents.flatMap(agent => agent.projectIds || []))
+  ).filter(
+    projectId =>
+      sourceProjectIds.has(projectId) && !destinationProjectIds.has(projectId)
+  )
+
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
+    rootResourceId: datasource._id!,
+    currentProjectIds: newAgentProjectIds,
+    previousProjectIds: newAgentProjectIds,
+    previousResource: existingQuery,
+    savedResource: query,
+  })
+
+  await propagateProjectIdsToDependencySubtreesWithWarning({
+    ctx,
+    blockedResourceIds: [query._id!],
+    dependencyIds: [datasource._id!],
+    projectIds: newAgentProjectIds,
+  })
+}
+
 async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const db = context.getWorkspaceDB()
   const query: Query = ctx.request.body
@@ -307,52 +373,13 @@ async function saveUnlocked(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
       savedResource: query,
     })
   } else {
-    const sourceProjectIds = new Set(existingDatasource.projectIds || [])
-    const destinationProjectIds = new Set(datasource.projectIds || [])
-    const sharedProjectIds = Array.from(destinationProjectIds).filter(
-      projectId => sourceProjectIds.has(projectId)
-    )
-    const destinationOnlyProjectIds = Array.from(destinationProjectIds).filter(
-      projectId => !sourceProjectIds.has(projectId)
-    )
-
-    await propagateProjectDependencyChangesWithWarning({
+    await propagateMovedQueryDependencies({
       ctx,
-      rootResourceId: datasource._id!,
-      currentProjectIds: sharedProjectIds,
-      previousProjectIds: sharedProjectIds,
-      previousResource: existingQuery,
-      savedResource: query,
-    })
-    await propagateProjectDependencyChangesWithWarning({
-      ctx,
-      rootResourceId: datasource._id!,
-      currentProjectIds: destinationOnlyProjectIds,
-      previousProjectIds: destinationOnlyProjectIds,
-      savedResource: query,
-    })
-
-    const newAgentProjectIds = Array.from(
-      new Set(referencingAgents.flatMap(agent => agent.projectIds || []))
-    ).filter(
-      projectId =>
-        sourceProjectIds.has(projectId) && !destinationProjectIds.has(projectId)
-    )
-
-    await propagateProjectDependencyChangesWithWarning({
-      ctx,
-      rootResourceId: datasource._id!,
-      currentProjectIds: newAgentProjectIds,
-      previousProjectIds: newAgentProjectIds,
-      previousResource: existingQuery,
-      savedResource: query,
-    })
-
-    await propagateProjectIdsToDependencySubtreesWithWarning({
-      ctx,
-      blockedResourceIds: [query._id!],
-      dependencyIds: [datasource._id!],
-      projectIds: newAgentProjectIds,
+      existingDatasource,
+      datasource,
+      existingQuery,
+      query,
+      referencingAgents,
     })
   }
 
