@@ -37,7 +37,9 @@ type RestQueryToolResult =
       error: string
     }
 
-export const buildParametersSchema = (query: Pick<Query, "parameters">) => {
+export const buildParametersSchema = (query: {
+  parameters?: Query["parameters"]
+}) => {
   const schemaFields: Record<string, z.ZodTypeAny> = {}
 
   for (const param of query.parameters || []) {

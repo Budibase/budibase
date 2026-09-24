@@ -33,6 +33,7 @@ export interface AiToolDefinition {
   action?: ToolAction
   executionPolicy: ToolExecutionPolicy
   authorization?: ToolAuthorization
+  authoritativeInputSchema?: Tool["inputSchema"]
   requesterRedactedTool?: Tool
   filterResult?: (
     result: unknown,
@@ -129,6 +130,17 @@ const wrapTool = (
     input,
     options
   ) => {
+    if (runtime) {
+      if (!toolDef.authorization) {
+        throw new Error("Tool is not available in this security context")
+      }
+      await runtime.authorize({
+        authorization: toolDef.authorization,
+        input,
+        executionContext: runtime.executionContext,
+        principal: runtime.principal,
+      })
+    }
     if (validation) {
       const validationResult = await validation.intercept(input, {
         toolCallId: options?.toolCallId ?? "",
@@ -138,20 +150,25 @@ const wrapTool = (
         return validationResult
       }
     }
-    const validatedInput = await validateTypes({
-      value: input,
-      schema: toolDef.tool.inputSchema,
-    })
-    if (runtime) {
-      if (!toolDef.authorization) {
-        throw new Error("Tool is not available in this security context")
+    const isMutating =
+      toolDef.authorization?.permissionLevel === PermissionLevel.WRITE ||
+      toolDef.authorization?.permissionLevel === PermissionLevel.EXECUTE
+    const isRequesterRedacted = toolDef.requesterRedactedTool === toolDef.tool
+    let validatedInput = input
+    if (isMutating) {
+      const schema =
+        toolDef.authoritativeInputSchema ?? toolDef.tool.inputSchema
+      try {
+        validatedInput = await validateTypes({
+          value: input,
+          schema,
+        })
+      } catch (error) {
+        if (isRequesterRedacted) {
+          throw new Error("Tool input is invalid")
+        }
+        throw error
       }
-      await runtime.authorize({
-        authorization: toolDef.authorization,
-        input: validatedInput,
-        executionContext: runtime.executionContext,
-        principal: runtime.principal,
-      })
     }
     if (gate) {
       const gateResult = await gate.intercept(validatedInput, {
@@ -198,7 +215,7 @@ const wrapTool = (
     )
   }
   const inputSchema = validation
-      ? jsonSchema(
+    ? jsonSchema(
         async () => {
           const resolved = await asSchema(toolDef.tool.inputSchema).jsonSchema
           return relaxRequiredFields(resolved) as JSONSchema7

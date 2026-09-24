@@ -280,7 +280,25 @@
 
   let resolvedConversationId = $state<string | undefined>()
 
+  // The consumer must get plain objects, otherwise reading them keeps
+  // subscribing to the live chat state and every streamed token counts as a
+  // change. $state.snapshot cannot type UIMessage, hence the manual clone.
+  const snapshotMessages = (
+    nextMessages: UIMessage<AgentMessageMetadata>[]
+  ): UIMessage<AgentMessageMetadata>[] =>
+    nextMessages.map(message => JSON.parse(JSON.stringify(message)))
+
+  const publishChatMessages = (
+    nextMessages: UIMessage<AgentMessageMetadata>[] = chatInstance.messages
+  ) => {
+    chat = {
+      ...chat,
+      messages: snapshotMessages(nextMessages),
+    }
+  }
+
   const chatInstance = new Chat<UIMessage<AgentMessageMetadata>>({
+    messages: chat?.messages || [],
     transport: new DefaultChatTransport({
       headers: () => ({ [Header.WORKSPACE_ID]: workspaceId }),
       prepareSendMessagesRequest: ({ messages }) => {
@@ -300,13 +318,13 @@
         }
       },
     }),
-    messages: chat?.messages || [],
     onFinish: async () => {
       isPreparingResponse = false
-      chat = { ...chat, messages: chatInstance.messages }
+      publishChatMessages()
     },
     onError: error => {
       resetPendingResponse()
+      publishChatMessages()
 
       console.error(error)
       let message = error.message || "Failed to send message"
@@ -364,6 +382,7 @@
     message: UIMessage<AgentMessageMetadata>
   ) {
     chatInstance.messages = [...chatInstance.messages, message]
+    publishChatMessages()
   }
 
   let lastAssistantUsage = $derived(
@@ -504,7 +523,18 @@
     inputValue = ""
     promptHistoryIndex = undefined
     onpromptsubmitted?.(text)
-    chatInstance.sendMessage({ text })
+
+    const userMessage: UIMessage<AgentMessageMetadata> = {
+      id: Helpers.uuid(),
+      role: "user",
+      parts: [{ type: "text", text }],
+    }
+    publishChatMessages([...(chat.messages ?? []), userMessage])
+    chatInstance.sendMessage({
+      id: userMessage.id,
+      role: "user",
+      parts: userMessage.parts,
+    })
     isPreparingResponse = false
   }
 

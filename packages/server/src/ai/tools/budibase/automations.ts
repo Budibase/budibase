@@ -16,6 +16,7 @@ import * as triggers from "../../../automations/triggers"
 import sdk from "../../../sdk"
 import type { BudibaseToolDefinition } from "."
 import { filterAgentToolCollectionResult } from "../authorization"
+import { utils } from "@budibase/shared-core"
 
 const TRIGGER_AUTOMATION_BASE_DESCRIPTION =
   "Trigger this automation (APP triggers only). Returns all step outputs."
@@ -35,8 +36,14 @@ const getAutomationFieldSchema = (type: AutomationIOType): z.ZodTypeAny => {
     case AutomationIOType.OBJECT:
     case AutomationIOType.JSON:
       return z.record(z.string(), z.unknown())
-    default:
+    case AutomationIOType.STRING:
+    case AutomationIOType.DATE:
+    case AutomationIOType.DATETIME:
+    case AutomationIOType.LONGFORM:
+    case AutomationIOType.JS:
       return z.string()
+    default:
+      throw utils.unreachable(type)
   }
 }
 

@@ -140,12 +140,13 @@ describe("secured AI tool execution", () => {
     expect(execute).not.toHaveBeenCalled()
   })
 
-  it("lets requester validation inspect incomplete input before strict validation", async () => {
+  it("authorizes before validating a mutating tool", async () => {
     const execute = jest.fn()
-    const authorize = jest.fn()
-    const intercept = jest.fn()
+    const authorize = jest.fn().mockRejectedValue(new Error("denied"))
+    const toolDefinition = definition(execute)
+    toolDefinition.authorization!.permissionLevel = PermissionLevel.WRITE
     const tools = toToolSet(
-      [definition(execute)],
+      [toolDefinition],
       new Map([
         [
           "secured_tool",
@@ -155,9 +156,7 @@ describe("secured AI tool execution", () => {
             authorize,
           },
         ],
-      ]),
-      new Map(),
-      new Map([["secured_tool", { intercept }]])
+      ])
     )
 
     await expect(
@@ -165,24 +164,21 @@ describe("secured AI tool execution", () => {
         {},
         { toolCallId: "call_1", messages: [], context: undefined }
       )
-    ).rejects.toThrow()
-    expect(authorize).not.toHaveBeenCalled()
-    expect(intercept).toHaveBeenCalledWith(
-      {},
-      expect.objectContaining({ toolCallId: "call_1" })
-    )
+    ).rejects.toThrow("denied")
+    expect(authorize).toHaveBeenCalledTimes(1)
     expect(execute).not.toHaveBeenCalled()
   })
 
-  it("pauses before authorization when requester confirmation is required", async () => {
-    const execute = jest.fn()
+  it("does not apply authoritative mutating validation to read tools", async () => {
+    const execute = jest.fn().mockResolvedValue({ success: true })
     const authorize = jest.fn().mockResolvedValue(undefined)
-    const intercept = jest.fn().mockResolvedValue({
-      status: "pending_validation",
+    const intercept = jest.fn().mockResolvedValue(undefined)
+    const toolDefinition = definition(execute)
+    toolDefinition.authoritativeInputSchema = z.object({
+      requiredOnlyForWrites: z.string(),
     })
-    const approvalIntercept = jest.fn()
     const tools = toToolSet(
-      [definition(execute)],
+      [toolDefinition],
       new Map([
         [
           "secured_tool",
@@ -193,7 +189,50 @@ describe("secured AI tool execution", () => {
           },
         ],
       ]),
-      new Map([["secured_tool", { intercept: approvalIntercept }]]),
+      new Map([["secured_tool", { intercept }]])
+    )
+    const input = { value: "hello" }
+
+    await expect(
+      tools.secured_tool.execute?.(input, {
+        toolCallId: "call_1",
+        messages: [],
+        context: undefined,
+      })
+    ).resolves.toEqual({ success: true })
+    expect(authorize).toHaveBeenCalledTimes(1)
+    expect(intercept).toHaveBeenCalledWith(
+      input,
+      expect.objectContaining({ toolCallId: "call_1" })
+    )
+    expect(execute).toHaveBeenCalledWith(
+      input,
+      expect.objectContaining({ toolCallId: "call_1" })
+    )
+  })
+
+  it("rejects invalid mutating input before escalation", async () => {
+    const execute = jest.fn()
+    const authorize = jest.fn().mockResolvedValue(undefined)
+    const intercept = jest.fn()
+    const toolDefinition = definition(execute)
+    toolDefinition.authorization!.permissionLevel = PermissionLevel.WRITE
+    toolDefinition.authoritativeInputSchema = z.object({
+      value: z.string(),
+      category: z.string(),
+    })
+    const tools = toToolSet(
+      [toolDefinition],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize,
+          },
+        ],
+      ]),
       new Map([["secured_tool", { intercept }]])
     )
 
@@ -202,25 +241,149 @@ describe("secured AI tool execution", () => {
         { value: "hello" },
         { toolCallId: "call_1", messages: [], context: undefined }
       )
-    ).resolves.toEqual({
-      status: "pending_validation",
-    })
-    expect(authorize).not.toHaveBeenCalled()
-    expect(intercept).toHaveBeenCalledWith(
-      { value: "hello" },
-      expect.objectContaining({ toolCallId: "call_1" })
-    )
-    expect(approvalIntercept).not.toHaveBeenCalled()
+    ).rejects.toThrow()
+    expect(authorize).toHaveBeenCalledTimes(1)
+    expect(intercept).not.toHaveBeenCalled()
     expect(execute).not.toHaveBeenCalled()
   })
 
-  it("continues to approval and execution after requester validation", async () => {
+  it("sanitizes authoritative validation errors for redacted tools", async () => {
+    const execute = jest.fn()
+    const authorize = jest.fn().mockResolvedValue(undefined)
+    const intercept = jest.fn()
+    const toolDefinition = definition(execute)
+    toolDefinition.authorization!.permissionLevel = PermissionLevel.WRITE
+    toolDefinition.authoritativeInputSchema = z.object({
+      hiddenField: z.enum(["hidden-option"]),
+    })
+    const redactedTool = tool({
+      description: "A redacted tool",
+      inputSchema: z.record(z.string(), z.unknown()),
+      execute,
+    })
+    toolDefinition.tool = redactedTool
+    toolDefinition.requesterRedactedTool = redactedTool
+    const tools = toToolSet(
+      [toolDefinition],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize,
+          },
+        ],
+      ]),
+      new Map([["secured_tool", { intercept }]])
+    )
+
+    await expect(
+      tools.secured_tool.execute?.(
+        {},
+        { toolCallId: "call_1", messages: [], context: undefined }
+      )
+    ).rejects.toEqual(new Error("Tool input is invalid"))
+    expect(authorize).toHaveBeenCalledTimes(1)
+    expect(intercept).not.toHaveBeenCalled()
+    expect(execute).not.toHaveBeenCalled()
+  })
+
+  it("passes canonical mutating input to escalation and execution", async () => {
+    const execute = jest.fn().mockResolvedValue({ success: true })
+    const authorize = jest.fn().mockResolvedValue(undefined)
+    const intercept = jest.fn().mockResolvedValue(undefined)
+    const toolDefinition = definition(execute)
+    toolDefinition.authorization!.permissionLevel = PermissionLevel.EXECUTE
+    toolDefinition.authoritativeInputSchema = z.object({
+      value: z.string(),
+      category: z.string().default("Other"),
+    })
+    const tools = toToolSet(
+      [toolDefinition],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize,
+          },
+        ],
+      ]),
+      new Map([["secured_tool", { intercept }]])
+    )
+
+    await expect(
+      tools.secured_tool.execute?.(
+        { value: "hello" },
+        { toolCallId: "call_1", messages: [], context: undefined }
+      )
+    ).resolves.toEqual({ success: true })
+    const canonicalInput = { value: "hello", category: "Other" }
+    expect(intercept).toHaveBeenCalledWith(
+      canonicalInput,
+      expect.objectContaining({ toolCallId: "call_1" })
+    )
+    expect(execute).toHaveBeenCalledWith(
+      canonicalInput,
+      expect.objectContaining({ toolCallId: "call_1" })
+    )
+  })
+
+  it("lets requester validation inspect incomplete input before authoritative validation", async () => {
+    const execute = jest.fn()
+    const authorize = jest.fn().mockResolvedValue(undefined)
+    const validate = jest.fn().mockResolvedValue({
+      status: "needs_input",
+    })
+    const approve = jest.fn()
+    const toolDefinition = definition(execute)
+    toolDefinition.authorization!.permissionLevel = PermissionLevel.WRITE
+    toolDefinition.authoritativeInputSchema = z.object({
+      value: z.string(),
+      category: z.string(),
+    })
+    const tools = toToolSet(
+      [toolDefinition],
+      new Map([
+        [
+          "secured_tool",
+          {
+            executionContext,
+            principal: ToolExecutionPrincipal.REQUESTER,
+            authorize,
+          },
+        ],
+      ]),
+      new Map([["secured_tool", { intercept: approve }]]),
+      new Map([["secured_tool", { intercept: validate }]])
+    )
+
+    await expect(
+      tools.secured_tool.execute?.(
+        { value: "hello" },
+        { toolCallId: "call_1", messages: [], context: undefined }
+      )
+    ).resolves.toEqual({ status: "needs_input" })
+    expect(authorize).toHaveBeenCalledTimes(1)
+    expect(validate).toHaveBeenCalledWith(
+      { value: "hello" },
+      expect.objectContaining({ toolCallId: "call_1" })
+    )
+    expect(approve).not.toHaveBeenCalled()
+    expect(execute).not.toHaveBeenCalled()
+  })
+
+  it("continues to authoritative validation, escalation, and execution after requester validation", async () => {
     const execute = jest.fn().mockResolvedValue({ success: true })
     const authorize = jest.fn().mockResolvedValue(undefined)
     const validate = jest.fn().mockResolvedValue(undefined)
     const approve = jest.fn().mockResolvedValue(undefined)
+    const toolDefinition = definition(execute)
+    toolDefinition.authorization!.permissionLevel = PermissionLevel.WRITE
     const tools = toToolSet(
-      [definition(execute)],
+      [toolDefinition],
       new Map([
         [
           "secured_tool",
@@ -241,6 +404,7 @@ describe("secured AI tool execution", () => {
         { toolCallId: "call_1", messages: [], context: undefined }
       )
     ).resolves.toEqual({ success: true })
+    expect(authorize).toHaveBeenCalledTimes(1)
     expect(validate).toHaveBeenCalledTimes(1)
     expect(approve).toHaveBeenCalledTimes(1)
     expect(execute).toHaveBeenCalledTimes(1)
