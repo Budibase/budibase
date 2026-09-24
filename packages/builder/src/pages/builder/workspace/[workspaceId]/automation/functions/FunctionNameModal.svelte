@@ -55,7 +55,7 @@
   }
 </script>
 
-<Modal bind:this={modal}>
+<Modal bind:this={modal} disableCancel={saving}>
   <ModalContent
     bind:this={modalContent}
     {title}
@@ -63,6 +63,7 @@
     showConfirmButton
     showCancelButton
     showCloseIcon
+    disableCancelOnConfirm
     disabled={saving || !name.trim()}
     onConfirm={save}
   >
