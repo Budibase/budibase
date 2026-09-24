@@ -94,14 +94,23 @@ const advancePreviewDebounce = async () => {
   await vi.advanceTimersByTimeAsync(150)
   await tick()
 }
-const toggleReportingProject = async () => {
+const selectProjects = async (projectNames: string[]) => {
   const projectSelect = screen.getByLabelText("Projects")
-  const option = within(projectSelect).getByRole("option", {
-    name: "Reporting",
-  }) as HTMLOptionElement
-  option.selected = !option.selected
+  for (const option of within(projectSelect).getAllByRole("option")) {
+    const projectOption = option as HTMLOptionElement
+    projectOption.selected = projectNames.includes(projectOption.text)
+  }
   await fireEvent.change(projectSelect)
   await advancePreviewDebounce()
+}
+const createPendingPreview = () => {
+  let resolve!: (response: PreviewProjectAssignmentResponse) => void
+  const promise = new Promise<PreviewProjectAssignmentResponse>(
+    resolvePromise => {
+      resolve = resolvePromise
+    }
+  )
+  return { promise, resolve }
 }
 
 describe("AssignProjectModal", () => {
@@ -186,13 +195,7 @@ describe("AssignProjectModal", () => {
 
     await advancePreviewDebounce()
     await fireEvent.click(screen.getByLabelText(automation.name))
-    const projectSelect = screen.getByLabelText("Projects")
-    for (const option of within(projectSelect).getAllByRole("option")) {
-      const projectOption = option as HTMLOptionElement
-      projectOption.selected = projectOption.textContent === "Reporting"
-    }
-    await fireEvent.change(projectSelect)
-    await advancePreviewDebounce()
+    await selectProjects(["Reporting"])
     await fireEvent.click(screen.getByText("Save changes"))
     onPreview.mockResolvedValue(refreshedPreview)
     await fireEvent.click(screen.getByText("Refresh and review"))
@@ -237,21 +240,18 @@ describe("AssignProjectModal", () => {
 
   it("preserves exclusions when dependencies disappear and return", async () => {
     const onConfirm = vi.fn()
-    render(AssignProjectModal, {
-      resource,
-      onPreview: vi.fn(async ({ projectIds }) => ({
-        ...preview,
-        dependencies: projectIds.includes("project_2")
-          ? [datasource]
-          : [automation],
-      })),
-      onConfirm,
+    const onPreview = vi.fn().mockResolvedValue({
+      ...preview,
+      dependencies: [automation],
     })
+    render(AssignProjectModal, { resource, onPreview, onConfirm })
 
     await advancePreviewDebounce()
     await fireEvent.click(screen.getByLabelText(automation.name))
-    await toggleReportingProject()
-    await toggleReportingProject()
+    onPreview.mockResolvedValue({ ...preview, dependencies: [datasource] })
+    await selectProjects(["Operations", "Reporting"])
+    onPreview.mockResolvedValue({ ...preview, dependencies: [automation] })
+    await selectProjects(["Operations"])
     await fireEvent.click(screen.getByText("Save changes"))
 
     expect(screen.getByLabelText(automation.name)).not.toBeChecked()
@@ -264,33 +264,23 @@ describe("AssignProjectModal", () => {
   })
 
   it("ignores preview responses superseded by a project selection change", async () => {
-    let resolveFirst!: (response: PreviewProjectAssignmentResponse) => void
-    let resolveSecond!: (response: PreviewProjectAssignmentResponse) => void
-    const firstPreview = new Promise<PreviewProjectAssignmentResponse>(
-      resolve => {
-        resolveFirst = resolve
-      }
-    )
-    const secondPreview = new Promise<PreviewProjectAssignmentResponse>(
-      resolve => {
-        resolveSecond = resolve
-      }
-    )
+    const firstPreview = createPendingPreview()
+    const secondPreview = createPendingPreview()
     const onConfirm = vi.fn()
     render(AssignProjectModal, {
       resource,
       onPreview: vi
         .fn()
-        .mockReturnValueOnce(firstPreview)
-        .mockReturnValueOnce(secondPreview),
+        .mockReturnValueOnce(firstPreview.promise)
+        .mockReturnValueOnce(secondPreview.promise),
       onConfirm,
     })
 
     await advancePreviewDebounce()
-    await toggleReportingProject()
-    resolveSecond({ ...preview, dependencies: [datasource] })
+    await selectProjects(["Operations", "Reporting"])
+    secondPreview.resolve({ ...preview, dependencies: [datasource] })
     await tick()
-    resolveFirst({ ...preview, dependencies: [automation] })
+    firstPreview.resolve({ ...preview, dependencies: [automation] })
     await tick()
     await fireEvent.click(screen.getByText("Save changes"))
 
