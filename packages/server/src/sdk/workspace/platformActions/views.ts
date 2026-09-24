@@ -1,4 +1,4 @@
-import { db, ViewName } from "@budibase/backend-core"
+import { db, HTTPError, ViewName } from "@budibase/backend-core"
 import type {
   Database,
   DatabaseKey,
@@ -189,6 +189,21 @@ async function fetchKeysetPage<T>({
   return { items: reverseResult ? page.reverse() : page, hasMore }
 }
 
+function isValidBookmarkKey(key: DatabaseKey, prefix: DatabaseKey[]): boolean {
+  if (prefix.length === 0) {
+    return typeof key === "string" && key.length > 0
+  }
+  if (!Array.isArray(key) || key.length !== prefix.length + 1) {
+    return false
+  }
+  const trailing = key[prefix.length]
+  return (
+    prefix.every((value, index) => key[index] === value) &&
+    typeof trailing === "string" &&
+    trailing.length > 0
+  )
+}
+
 function buildKeysetParams({
   prefix,
   bookmark,
@@ -203,6 +218,9 @@ function buildKeysetParams({
     params.endkey = descending ? prefix : [...prefix, {}]
   }
   if (bookmark) {
+    if (!isValidBookmarkKey(bookmark.key, prefix) || !bookmark.id) {
+      throw new HTTPError("Invalid bookmark for this query", 400)
+    }
     params.startkey = bookmark.key
     params.startkey_docid = bookmark.id
     params.skip = 1

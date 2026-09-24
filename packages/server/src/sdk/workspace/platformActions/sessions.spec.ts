@@ -8,6 +8,7 @@ import type {
 } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { fetchSessions, fetchSessionsSummary } from "./sessions"
+import { encodeKeysetBookmark } from "./bookmarks"
 
 const tick = () => new Promise(resolve => setTimeout(resolve, 5))
 
@@ -189,6 +190,44 @@ describe("platformActions sessions", () => {
     })
 
     describe("pagination", () => {
+      it.each(["next", "prev"] as const)(
+        "rejects %s bookmarks outside the requested filter",
+        async direction => {
+          const cases = [
+            {
+              environment: "prod" as const,
+              key: ["dev", "2026-09-24T00:00:00.000Z"],
+            },
+            {
+              status: "active" as const,
+              key: ["failed", "2026-09-24T00:00:00.000Z"],
+            },
+            {
+              environment: "prod" as const,
+              status: "active" as const,
+              key: ["prod", "failed", "2026-09-24T00:00:00.000Z"],
+            },
+            { key: ["prod", "2026-09-24T00:00:00.000Z"] },
+            { environment: "prod" as const, key: "2026-09-24T00:00:00.000Z" },
+            { environment: "prod" as const, key: ["prod", {}] },
+          ]
+          for (const { key, ...filters } of cases) {
+            await expect(
+              withContext(() =>
+                fetchSessions({
+                  ...filters,
+                  bookmark: encodeKeysetBookmark({
+                    direction,
+                    key,
+                    id: "session",
+                  }),
+                })
+              )
+            ).rejects.toMatchObject({ status: 400 })
+          }
+        }
+      )
+
       beforeEach(async () => {
         for (const sourceId of ["a", "b", "c", "d", "e"]) {
           await createSession({ sourceId })

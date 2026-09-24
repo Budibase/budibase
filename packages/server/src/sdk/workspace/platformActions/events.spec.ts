@@ -7,6 +7,7 @@ import type {
 import { DocumentType, SEPARATOR } from "@budibase/types"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { fetchSessionEvents, fetchSessionEventsSummary } from "./events"
+import { encodeKeysetBookmark } from "./bookmarks"
 
 const tick = () => new Promise(resolve => setTimeout(resolve, 5))
 
@@ -125,6 +126,36 @@ describe("platformActions events", () => {
     })
 
     describe("pagination", () => {
+      it.each(["next", "prev"] as const)(
+        "rejects %s bookmarks from another session scope",
+        async direction => {
+          const timestamp = "2026-09-24T00:00:00.000Z"
+          const keys = [
+            ["dev", "agent_session", "run-1", timestamp],
+            ["prod", "automation_run", "run-1", timestamp],
+            ["prod", "agent_session", "another-run", timestamp],
+            ["prod", "agent_session", "run-1"],
+            ["prod", "agent_session", "run-1", {}],
+          ]
+          for (const key of keys) {
+            await expect(
+              withContext(() =>
+                fetchSessionEvents({
+                  environment: "prod",
+                  sourceType: "agent_session",
+                  sourceId: "run-1",
+                  bookmark: encodeKeysetBookmark({
+                    direction,
+                    key,
+                    id: "event",
+                  }),
+                })
+              )
+            ).rejects.toMatchObject({ status: 400 })
+          }
+        }
+      )
+
       beforeEach(async () => {
         for (const eventName of ["1", "2", "3", "4", "5"]) {
           await createEvent({ sourceId: "run-1", eventName })
