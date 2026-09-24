@@ -65,7 +65,7 @@ describe("Project package ownership", () => {
     return project
   }
 
-  it("imports an app after its query datasource was excluded from assignment", async () => {
+  it("imports the app without its excluded query datasource and reports the missing dependency", async () => {
     await features.testutils.withFeatureFlags(
       config.getTenantId(),
       { [FeatureFlag.PROJECTS]: true },
@@ -78,11 +78,14 @@ describe("Project package ownership", () => {
         expect(imported.resources.workspace_app).toHaveLength(1)
         expect(imported.resources.query).toBeUndefined()
         expect(imported.resources.datasource).toBeUndefined()
+        expect(imported.unsupportedContent).toContainEqual(
+          expect.objectContaining({ type: "excluded_dependency" })
+        )
       }
     )
   })
 
-  it("imports an app after its row action table was excluded from assignment", async () => {
+  it("imports the app without its excluded row action table and reports the missing dependency", async () => {
     await features.testutils.withFeatureFlags(
       config.getTenantId(),
       { [FeatureFlag.PROJECTS]: true },
@@ -96,6 +99,9 @@ describe("Project package ownership", () => {
         expect(imported.resources.row_action).toBeUndefined()
         expect(imported.resources.table).toBeUndefined()
         expect(imported.resources.automation).toBeUndefined()
+        expect(imported.unsupportedContent).toContainEqual(
+          expect.objectContaining({ type: "excluded_dependency" })
+        )
       }
     )
   })
