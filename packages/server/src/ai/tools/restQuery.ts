@@ -89,7 +89,9 @@ const createQueryTool = ({
       resourceId: query._id,
     },
     preflight: async input => {
-      const currentQuery = await sdk.queries.find(query._id!)
+      const currentQuery = await sdk.queries.find(query._id!, {
+        keepParams: true,
+      })
       const parameters = z
         .record(z.string(), z.string().nullable())
         .parse(buildParametersSchema(currentQuery).parse(input))
