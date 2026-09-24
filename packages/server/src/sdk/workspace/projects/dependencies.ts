@@ -5,7 +5,6 @@ import {
   type PreviewProjectAssignmentResponse,
   type ProjectAssignmentDependency,
   ResourceType,
-  type WithDocMetadata,
 } from "@budibase/types"
 import sdk from "../.."
 import { collectTransitiveResourceDependencies } from "../resources"
@@ -197,19 +196,13 @@ export const propagateProjectIdsToDependencyIds = async ({
         .filter(id => !fetchedIds.has(id))
         .forEach(id => failedIds.add(id))
 
-      const updates = docs
-        .map(doc => {
-          const existing = getProjectIds(doc)
-          const next = unionProjectIds(existing, projectIds)
-          const changed =
-            (next?.length || 0) !== existing.length ||
-            !existing.every(id => next?.includes(id))
-          return changed ? withProjectIds(doc, next) : undefined
-        })
-        .filter(
-          (doc): doc is WithDocMetadata<AnyDocument & ProjectAssignable> =>
-            !!doc
-        )
+      const updates = docs.flatMap(doc => {
+        const existing = getProjectIds(doc)
+        const next = unionProjectIds(existing, projectIds)
+        return (next?.length || 0) !== existing.length
+          ? [withProjectIds(doc, next)]
+          : []
+      })
 
       if (!updates.length) {
         idsToUpdate = []
