@@ -140,7 +140,7 @@ export async function processAutoColumn(
   }
 }
 
-export async function processDefaultValues(table: Table, row: Row) {
+async function processDefaultValues(table: Table, row: Row) {
   type UserDefaultsContext = User & { fullName?: string }
   const ctx: {
     ["Current User"]?: UserDefaultsContext

@@ -147,15 +147,12 @@ function enrichQueries(input: any) {
   return wasArray ? queries : queries[0]
 }
 
-export async function find(
-  queryId: string,
-  opts: { keepParams?: boolean } = {}
-) {
+export async function find(queryId: string) {
   const db = context.getWorkspaceDB()
   const workspaceId = context.getWorkspaceId()
   const query = enrichQueries(await db.get(queryId))
   // remove properties that could be dangerous in real app
-  if (isProdWorkspaceID(workspaceId) && !opts.keepParams) {
+  if (isProdWorkspaceID(workspaceId)) {
     delete query.fields
     delete query.parameters
   }

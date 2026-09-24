@@ -12,7 +12,6 @@ import { z } from "zod"
 import { type AiToolDefinition } from "."
 import * as queryController from "../../api/controllers/query"
 import { buildCtx } from "../../automations/steps/utils"
-import sdk from "../../sdk"
 
 export interface RestQueryToolsConfig {
   queryIds: string[]
@@ -46,7 +45,7 @@ export const buildParametersSchema = (query: {
   for (const param of query.parameters || []) {
     schemaFields[param.name] = z
       .string()
-      .nullish()
+      .optional()
       .describe(`Parameter: ${param.name}`)
   }
 
@@ -87,18 +86,6 @@ const createQueryTool = ({
       permissionType: PermissionType.QUERY,
       permissionLevel: PermissionLevel.WRITE,
       resourceId: query._id,
-    },
-    preflight: async input => {
-      const currentQuery = await sdk.queries.find(query._id!, {
-        keepParams: true,
-      })
-      const parameters = z
-        .record(z.string(), z.string().nullable())
-        .parse(buildParametersSchema(currentQuery).parse(input))
-      return queryController.prepareQueryParameters({
-        query: currentQuery,
-        parameters,
-      })
     },
     tool: tool({
       description,

@@ -282,19 +282,15 @@ function getAuthConfig(ctx: UserCtx) {
   }
 }
 
-export function prepareQueryParameters({
-  query,
-  parameters = {},
-}: {
-  query: Query
-  parameters?: QueryEventParameters
-}): QueryEventParameters {
-  const requestParameters = { ...parameters }
+function enrichParameters(
+  query: Query,
+  requestParameters: QueryEventParameters = {}
+): QueryEventParameters {
   const paramNotSet = (val: unknown) => val === "" || val == undefined
   // first check parameters are all valid
   validateQueryInputs(requestParameters)
   // make sure parameters are fully enriched with defaults
-  for (const parameter of query.parameters || []) {
+  for (const parameter of query.parameters) {
     let value = requestParameters[parameter.name]
     if (value == null || value === "") {
       value = parameter.default
@@ -441,7 +437,7 @@ export async function preview(
     appId: ctx.appId,
     queryVerb: query.queryVerb,
     fields: query.fields,
-    parameters: prepareQueryParameters({ query }),
+    parameters: enrichParameters(query),
     transformer: query.transformer,
     schema: query.schema,
     nullDefaultSupport: query.nullDefaultSupport,
@@ -512,10 +508,7 @@ async function execute(
       queryVerb: query.queryVerb,
       fields: query.fields,
       pagination: ctx.request.body.pagination,
-      parameters: prepareQueryParameters({
-        query,
-        parameters: ctx.request.body.parameters,
-      }),
+      parameters: enrichParameters(query, ctx.request.body.parameters),
       transformer: query.transformer,
       queryId: ctx.params.queryId,
       // have to pass down to the thread runner - can't put into context now

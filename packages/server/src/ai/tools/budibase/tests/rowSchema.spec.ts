@@ -58,10 +58,10 @@ describe("row tool data schema", () => {
     }
   )
 
-  it("leaves required-field validation to platform preflight", () => {
+  it("requires mandatory create fields", () => {
     const schema = buildRowDataSchema(fields, "", true)
 
-    expect(schema.safeParse({ Cost: 20 }).success).toBe(true)
+    expect(schema.safeParse({ Cost: 20 }).success).toBe(false)
     expect(schema.safeParse({ Cost: 20, "Expense Tags": "Food" }).success).toBe(
       true
     )
@@ -136,11 +136,11 @@ describe("row tool data schema", () => {
 
     expect(schema.safeParse({ Cost: 20 }).success).toBe(true)
     expect(schema.safeParse({}).success).toBe(true)
-    expect(schema.safeParse({ Cost: null }).success).toBe(true)
-    expect(schema.safeParse({ Currency: null }).success).toBe(true)
+    expect(schema.safeParse({ Cost: null }).success).toBe(false)
+    expect(schema.safeParse({ Currency: null }).success).toBe(false)
   })
 
-  it("leaves email and length constraints to platform preflight", () => {
+  it("enforces configured email and length constraints on supplied values", () => {
     const schema = buildRowDataSchema(
       [
         {
@@ -166,12 +166,12 @@ describe("row tool data schema", () => {
     expect(
       schema.safeParse({ Email: "user@example.com", Notes: "Lunch" }).success
     ).toBe(true)
-    expect(schema.safeParse({ Email: "invalid" }).success).toBe(true)
-    expect(schema.safeParse({ Notes: "Too long" }).success).toBe(true)
+    expect(schema.safeParse({ Email: "invalid" }).success).toBe(false)
+    expect(schema.safeParse({ Notes: "Too long" }).success).toBe(false)
     expect(schema.safeParse({ Notes: null }).success).toBe(true)
   })
 
-  it("leaves primary display presence to platform preflight", () => {
+  it("requires a writable primary display value on create but allows omission on update", () => {
     const displayFields = [
       {
         name: "Name",
@@ -181,15 +181,15 @@ describe("row tool data schema", () => {
     ]
     const create = buildRowDataSchema(displayFields, "", true)
     const update = buildRowDataSchema(displayFields, "")
-    expect(create.safeParse({}).success).toBe(true)
+    expect(create.safeParse({}).success).toBe(false)
     expect(create.safeParse({ Name: "Lunch" }).success).toBe(true)
     expect(update.safeParse({}).success).toBe(true)
-    expect(update.safeParse({ Name: null }).success).toBe(true)
-    expect(update.safeParse({ Name: "" }).success).toBe(true)
+    expect(update.safeParse({ Name: null }).success).toBe(false)
+    expect(update.safeParse({ Name: "" }).success).toBe(false)
   })
 
   it.each([true, false])(
-    "leaves required enum presence to platform preflight (primary display: %s)",
+    "rejects empty required enum values (primary display: %s)",
     isPrimaryDisplay => {
       const optionFields = [
         {
@@ -208,11 +208,11 @@ describe("row tool data schema", () => {
       const create = buildRowDataSchema(optionFields, "", true)
       const update = buildRowDataSchema(optionFields, "")
 
-      expect(create.safeParse({ Category: "" }).success).toBe(true)
-      expect(update.safeParse({ Category: "" }).success).toBe(true)
+      expect(create.safeParse({ Category: "" }).success).toBe(false)
+      expect(update.safeParse({ Category: "" }).success).toBe(false)
       expect(create.safeParse({ Category: "Food" }).success).toBe(true)
       expect(update.safeParse({ Category: "Food" }).success).toBe(true)
-      expect(create.safeParse({}).success).toBe(true)
+      expect(create.safeParse({}).success).toBe(false)
       expect(update.safeParse({}).success).toBe(true)
     }
   )
