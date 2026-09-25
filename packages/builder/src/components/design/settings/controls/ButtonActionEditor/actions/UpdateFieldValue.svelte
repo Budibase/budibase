@@ -14,6 +14,8 @@
     type?: UpdateFieldValueType
     fields?: string[]
     fieldValues?: Record<string, string>
+    field?: string
+    value?: string
   }
 
   interface Props {
@@ -63,7 +65,15 @@
   )
   const formSchema = $derived(buildFormSchema(formComponent))
   const fieldOptions = $derived(Object.keys(formSchema || {}))
-  const selectedFields = $derived(parameters.fields || [])
+  const selectedFields = $derived(
+    parameters.fields ?? (parameters.field ? [parameters.field] : [])
+  )
+  const fieldValues = $derived(
+    parameters.fieldValues ??
+      (parameters.field !== undefined
+        ? { [parameters.field]: parameters.value ?? "" }
+        : {})
+  )
   const actionProviders = $derived(
     getActionProviders(
       $selectedScreen,
@@ -109,10 +119,13 @@
   }
 
   const handleFieldChange = (e: CustomEvent<string[]>) => {
+    const newFields = e.detail || []
     parameters = {
       ...parameters,
-      fields: e.detail || [],
-      fieldValues: parameters.fieldValues || {},
+      fields: newFields,
+      fieldValues: Object.fromEntries(
+        Object.entries(fieldValues).filter(([key]) => newFields.includes(key))
+      ),
     }
   }
 
@@ -120,7 +133,7 @@
     parameters = {
       ...parameters,
       fieldValues: {
-        ...(parameters.fieldValues || {}),
+        ...fieldValues,
         [fieldName]: value,
       },
     }
@@ -161,7 +174,7 @@
             <DrawerBindableInput
               title={`Value for ${fieldName}`}
               {bindings}
-              value={parameters.fieldValues?.[fieldName]}
+              value={fieldValues?.[fieldName]}
               on:change={e => handleFieldValueChange(fieldName, e.detail)}
             />
           </div>
