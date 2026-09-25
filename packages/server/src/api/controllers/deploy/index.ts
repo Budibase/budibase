@@ -481,15 +481,13 @@ export const publishWorkspaceInternal = async (
 
         await devDb.compact()
         await sdk.tables.sqs.withDefinitionRebuildLocks([devId, prodId], () =>
-          replication!.replicate(
-            replication!.appReplicateOpts({
-              isCreation: !isPublished,
-              tablesToSync,
-              // don't use checkpoints, this can stop previously ignored data being replicated
-              checkpoint: !seedTables,
-              filter: tableFilter,
-            })
-          )
+          replication!.replicateApp({
+            isCreation: !isPublished,
+            tablesToSync,
+            // don't use checkpoints, this can stop previously ignored data being replicated
+            checkpoint: !seedTables,
+            filter: tableFilter,
+          })
         )
 
         const updatedProdTables =
