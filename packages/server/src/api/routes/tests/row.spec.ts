@@ -1742,7 +1742,7 @@ if (descriptions.length) {
 
             await config.api.row.bulkDelete(
               table._id!,
-              { rows: ["app_metadata"] },
+              { rows: [{ _id: "app_metadata" }] },
               { status: 500 }
             )
 

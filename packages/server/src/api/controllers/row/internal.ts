@@ -155,7 +155,7 @@ export async function bulkDestroy(ctx: UserCtx) {
   const db = context.getWorkspaceDB()
 
   const rowIds = rows
-    .map((row: Row) => row._id)
+    .map((row: Row | string) => (typeof row === "string" ? row : row._id))
     .filter((id: string | undefined): id is string => !!id)
   const dbRows = await db.getMultiple<Row>(rowIds, { allowMissing: true })
   if (dbRows.some(row => row.tableId !== tableId)) {
