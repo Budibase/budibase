@@ -9,7 +9,6 @@ import {
 import {
   context,
   events,
-  db as dbCore,
   getErrorMessage,
   queue,
   roles,
@@ -73,26 +72,14 @@ const updateNotificationOutcome = async (
   outcome: Pick<
     EscalationNotificationDoc,
     "status" | "providerResponse" | "sentAt"
-  >,
-  maxRetries = 3
+  >
 ) => {
   const db = context.getWorkspaceDB()
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    const notifDoc =
-      await db.tryGet<EscalationNotificationDoc>(notificationDocId)
-    if (!notifDoc) {
-      return
-    }
-    try {
-      await db.put({ ...notifDoc, ...outcome })
-      return
-    } catch (err) {
-      if (dbCore.isDocumentConflictError(err) && attempt < maxRetries - 1) {
-        continue
-      }
-      throw err
-    }
+  const notifDoc = await db.tryGet<EscalationNotificationDoc>(notificationDocId)
+  if (!notifDoc) {
+    return
   }
+  await db.put({ ...notifDoc, ...outcome })
 }
 
 const getDocId = (escalationId: string): string =>
@@ -239,13 +226,17 @@ export async function processNotify(
         })
       )
 
-      await Promise.all(
-        outcomes.map(({ notifDoc, status, providerResponse }) =>
-          updateNotificationOutcome(notifDoc._id!, {
-            status,
-            ...(providerResponse ? { providerResponse } : {}),
-            sentAt: new Date().toISOString(),
-          })
+      // Under the escalation lock so a press landing on the notification doc
+      // can't race the outcome write
+      await sdk.escalations.withEscalationLock(escalationId, () =>
+        Promise.all(
+          outcomes.map(({ notifDoc, status, providerResponse }) =>
+            updateNotificationOutcome(notifDoc._id!, {
+              status,
+              ...(providerResponse ? { providerResponse } : {}),
+              sentAt: new Date().toISOString(),
+            })
+          )
         )
       )
     }
@@ -908,35 +899,54 @@ async function processResume(job: Job<EscalationJob>) {
 
   await context.doInContext(appId, async () => {
     const db = context.getWorkspaceDB()
-    const doc = await db.tryGet<EscalationContextDoc>(getDocId(escalationId))
 
+    // Under the escalation lock so a late response can't land between the
+    // read and the resolution write.
+    const doc = await sdk.escalations.withEscalationLock(
+      escalationId,
+      async () => {
+        const doc = await db.tryGet<EscalationContextDoc>(
+          getDocId(escalationId)
+        )
+
+        if (!doc) {
+          console.error(
+            "Escalation resume: context doc not found, discarding",
+            {
+              escalationId,
+              jobId: job.id,
+            }
+          )
+          return
+        }
+
+        if (doc.resolution === "cancelled") {
+          console.log("Escalation resume: escalation cancelled, discarding", {
+            escalationId,
+            jobId: job.id,
+          })
+          return
+        }
+
+        if (doc.resumeResultCompressed) {
+          console.log("Escalation resume: already resumed, discarding", {
+            escalationId,
+            jobId: job.id,
+          })
+          return
+        }
+
+        const resolvedAt = doc.resolvedAt ?? new Date().toISOString()
+        const resolution =
+          doc.resolution === "pending" ? "expired" : doc.resolution
+        await db.put({ ...doc, resolvedAt, resolution, updatedAt: resolvedAt })
+        return { ...doc, resolvedAt, resolution }
+      }
+    )
     if (!doc) {
-      console.error("Escalation resume: context doc not found, discarding", {
-        escalationId,
-        jobId: job.id,
-      })
       return
     }
-
-    if (doc.resolution === "cancelled") {
-      console.log("Escalation resume: escalation cancelled, discarding", {
-        escalationId,
-        jobId: job.id,
-      })
-      return
-    }
-
-    if (doc.resumeResultCompressed) {
-      console.log("Escalation resume: already resumed, discarding", {
-        escalationId,
-        jobId: job.id,
-      })
-      return
-    }
-
-    const resolvedAt = doc.resolvedAt ?? new Date().toISOString()
-    const resolution = doc.resolution === "pending" ? "expired" : doc.resolution
-    await db.put({ ...doc, resolvedAt, resolution, updatedAt: resolvedAt })
+    const { resolvedAt, resolution } = doc
 
     // Without the snapshot there's nothing to resume - mark it resolved (above)
     // and discard rather than crash the job on an empty inflate/parse.
