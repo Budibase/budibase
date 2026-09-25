@@ -43,6 +43,7 @@ import {
   TableSchema,
   TableSourceType,
   UpdatedRowEventEmitter,
+  Workspace,
 } from "@budibase/types"
 import { Knex } from "knex"
 import _, { merge } from "lodash"
@@ -1730,6 +1731,24 @@ if (descriptions.length) {
             expect(res[0].tableId).toEqual(table._id!)
           })
         })
+
+        isInternal &&
+          it("does not bulk delete documents outside the requested table", async () => {
+            const getMetadata = () =>
+              config.doInContext(config.getDevWorkspaceId(), () =>
+                context.getWorkspaceDB().get<Workspace>("app_metadata")
+              )
+            const metadataBefore = await getMetadata()
+
+            await config.api.row.bulkDelete(
+              table._id!,
+              { rows: ["app_metadata"] },
+              { status: 500 }
+            )
+
+            const metadataAfter = await getMetadata()
+            expect(metadataAfter._rev).toEqual(metadataBefore._rev)
+          })
 
         it("should be able to bulk delete rows, including a row that doesn't exist", async () => {
           const createdRow = await config.api.row.save(table._id!, {

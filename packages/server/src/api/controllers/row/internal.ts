@@ -152,6 +152,15 @@ export async function bulkDestroy(ctx: UserCtx) {
   const { tableId } = utils.getSourceId(ctx)
   const table = await sdk.tables.getTable(tableId)
   let { rows } = ctx.request.body
+  const db = context.getWorkspaceDB()
+
+  const rowIds = rows
+    .map((row: Row) => row._id)
+    .filter((id: string | undefined): id is string => !!id)
+  const dbRows = await db.getMultiple<Row>(rowIds, { allowMissing: true })
+  if (dbRows.some(row => row.tableId !== tableId)) {
+    throw "Supplied tableId doesn't match the row's tableId"
+  }
 
   // before carrying out any updates, make sure the rows are ready to be returned
   // they need to be the full rows (including previous relationships) for automations
@@ -178,7 +187,6 @@ export async function bulkDestroy(ctx: UserCtx) {
       })
     )
   } else {
-    const db = context.getWorkspaceDB()
     await db.bulkDocs(processedRows.map(row => ({ ...row, _deleted: true })))
   }
   // remove any attachments that were on the rows from object storage
