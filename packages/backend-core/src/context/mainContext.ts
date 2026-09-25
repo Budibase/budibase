@@ -2,6 +2,7 @@ import {
   Database,
   IdentityContext,
   License,
+  type PlatformActionEnvironment,
   Snippet,
   Table,
   Workspace,
@@ -288,6 +289,16 @@ export function getTenantId(): string {
 export function getAutomationId(): string | undefined {
   const context = Context.get()
   return context?.automationId
+}
+
+export const getPlatformActionEnvironment = (): PlatformActionEnvironment => {
+  const workspaceId = getWorkspaceId()
+  if (!workspaceId) {
+    throw new Error(
+      "Unable to retrieve platform action environment - no workspace ID."
+    )
+  }
+  return conversions.isDevWorkspaceID(workspaceId) ? "dev" : "prod"
 }
 
 export function getWorkspaceId(): string | undefined {

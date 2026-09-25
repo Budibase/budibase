@@ -11,6 +11,7 @@ import {
 import * as context from "../../../context"
 import { timeout } from "../../../utils"
 import { EventProcessor } from "../types"
+import { getActionsDB } from "./db"
 import { enqueuePlatformActionSessionIndex } from "./indexQueue"
 
 const ENQUEUE_MAX_ATTEMPTS = 3
@@ -73,6 +74,12 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
       return
     }
 
+    const workspaceId = context.getWorkspaceId()
+    if (!workspaceId) {
+      return
+    }
+    const environment = context.getPlatformActionEnvironment()
+
     const { sourceType, sourceId, ...payload } = properties
     const isoTimestamp =
       timestamp === undefined
@@ -85,13 +92,14 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
       _id: platformActionEventId,
       sourceType: sourceType as PlatformActionSourceType,
       sourceId,
+      environment,
       eventName: event,
       timestamp: isoTimestamp,
       payload,
     }
 
     try {
-      await context.getWorkspaceDB().put(doc)
+      await getActionsDB().put(doc)
     } catch (err) {
       console.error("Failed to persist platform action event", {
         event,
@@ -105,13 +113,9 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
       return
     }
 
-    const workspaceId = context.getWorkspaceId()
-    if (!workspaceId) {
-      return
-    }
-
     const indexJob: PlatformActionSessionIndexJob = {
       workspaceId,
+      environment,
       indexId: platformActionEventId,
       sourceType: doc.sourceType,
       sourceId: doc.sourceId,

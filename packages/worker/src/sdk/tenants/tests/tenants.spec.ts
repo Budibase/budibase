@@ -1,7 +1,18 @@
-import { structures } from "../../../tests"
-import { lockTenant, unlockTenant, setActivation } from "../tenants"
-import { configs, tenancy } from "@budibase/backend-core"
-import { LockReason, ConfigType, SettingsConfig } from "@budibase/types"
+import { structures, mocks } from "../../../tests"
+import {
+  deleteTenant,
+  lockTenant,
+  unlockTenant,
+  setActivation,
+} from "../tenants"
+import { configs, tenancy, db, events, platform } from "@budibase/backend-core"
+import {
+  LockReason,
+  ConfigType,
+  SettingsConfig,
+  type Database,
+  type Workspace,
+} from "@budibase/types"
 
 // Mock the backend-core modules
 jest.mock("@budibase/backend-core", () => {
@@ -64,6 +75,103 @@ describe("tenants", () => {
     jest.clearAllMocks()
     mockedTenancy.getTenantDB.mockReturnValue(mockDb as any)
     mockedConfigs.generateConfigID.mockReturnValue("config_settings")
+  })
+
+  describe("deleteTenant Actions cleanup", () => {
+    const tenantDb = mocks.createDatabaseMock()
+    const databases = new Map<string, jest.Mocked<Database>>()
+
+    const getDatabaseMock = (name: string) => {
+      let database = databases.get(name)
+      if (!database) {
+        database = mocks.createDatabaseMock()
+        databases.set(name, database)
+      }
+      return database
+    }
+
+    beforeEach(() => {
+      databases.clear()
+      tenantDb.allDocs.mockResolvedValue({ rows: [], offset: 0, total_rows: 0 })
+      jest.mocked(tenancy.getTenantDB).mockReturnValue(tenantDb)
+      const platformDb = mocks.createDatabaseMock()
+      platformDb.allDocs.mockResolvedValue({
+        rows: [],
+        offset: 0,
+        total_rows: 0,
+      })
+      platformDb.bulkDocs.mockResolvedValue([])
+      jest.mocked(platform.getPlatformDB).mockReturnValue(platformDb)
+      jest.mocked(db.getDB).mockImplementation(getDatabaseMock)
+    })
+
+    it.each([true, false])(
+      "cleans each shared database once when present=%s",
+      async exists => {
+        const tenantId = structures.tenant.id()
+        const workspaceId = db.generateWorkspaceID(tenantId)
+        const secondWorkspaceId = db.generateWorkspaceID(tenantId)
+        const workspaceIds = [
+          workspaceId,
+          db.getDevWorkspaceID(workspaceId),
+          db.getDevWorkspaceID(secondWorkspaceId),
+        ]
+        const workspaceDatabases = workspaceIds.map(getDatabaseMock)
+        const names = [workspaceId, secondWorkspaceId].map(id =>
+          events.platformActions.getActionsDbName(id)
+        )
+        const actionsDatabases = names.map(getDatabaseMock)
+        jest
+          .mocked(db.getAllWorkspaces)
+          .mockResolvedValue(
+            workspaceIds.map(appId => ({ appId })) as Workspace[]
+          )
+        jest.mocked(db.dbExists).mockResolvedValue(exists)
+
+        await deleteTenant(tenantId)
+
+        expect(jest.mocked(db.dbExists).mock.calls).toEqual(
+          names.map(name => [name])
+        )
+        expect(
+          jest
+            .mocked(db.getDB)
+            .mock.calls.filter(([name]) => names.includes(name))
+        ).toEqual(exists ? names.map(name => [name, { skip_setup: true }]) : [])
+        for (const actionsDb of actionsDatabases) {
+          expect(actionsDb.destroy).toHaveBeenCalledTimes(exists ? 1 : 0)
+        }
+        for (const workspaceDb of workspaceDatabases) {
+          expect(workspaceDb.destroy).toHaveBeenCalledTimes(1)
+        }
+        expect(tenantDb.destroy).toHaveBeenCalledTimes(1)
+      }
+    )
+
+    it("does not delete workspace or tenant databases when Actions cleanup fails", async () => {
+      const tenantId = structures.tenant.id()
+      const workspaceId = db.generateWorkspaceID(tenantId)
+      const workspaceDb = getDatabaseMock(workspaceId)
+      const actionsDb = getDatabaseMock(
+        events.platformActions.getActionsDbName(workspaceId)
+      )
+      jest
+        .mocked(db.getAllWorkspaces)
+        .mockResolvedValue([{ appId: workspaceId }] as Workspace[])
+      jest.mocked(db.dbExists).mockResolvedValue(true)
+      actionsDb.destroy.mockRejectedValueOnce(
+        new Error("Actions DB unavailable")
+      )
+
+      await expect(deleteTenant(tenantId)).rejects.toThrow(
+        "Actions DB unavailable"
+      )
+
+      expect(db.getDB).not.toHaveBeenCalledWith(workspaceId)
+      expect(actionsDb.destroy).toHaveBeenCalledTimes(1)
+      expect(workspaceDb.destroy).not.toHaveBeenCalled()
+      expect(tenantDb.destroy).not.toHaveBeenCalled()
+    })
   })
 
   describe("lockTenant", () => {
