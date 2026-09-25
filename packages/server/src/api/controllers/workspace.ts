@@ -620,7 +620,8 @@ async function performWorkspaceCreate(
   ctx: UserCtx<
     CreateWorkspaceRequest | OnboardingWorkspaceRequest,
     CreateWorkspaceResponse
-  >
+  >,
+  serverFilePath?: string
 ) {
   const workspaces = await dbCore.getAllWorkspaces({
     dev: true,
@@ -661,6 +662,10 @@ async function performWorkspaceCreate(
       type,
       path,
       password: encryptionPassword,
+    }
+  } else if (serverFilePath) {
+    instanceConfig.file = {
+      path: serverFilePath,
     }
   }
 
@@ -933,9 +938,12 @@ async function workspacePostCreate(
 }
 
 export async function create(
-  ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>
+  ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse>,
+  serverFilePath?: string
 ) {
-  const newApplication = await quotas.addApp(() => performWorkspaceCreate(ctx))
+  const newApplication = await quotas.addApp(() =>
+    performWorkspaceCreate(ctx, serverFilePath)
+  )
   await workspacePostCreate(ctx, newApplication)
   await cache.bustCache(cache.CacheKey.CHECKLIST)
   ctx.body = newApplication
@@ -1306,7 +1314,7 @@ export async function duplicateWorkspace(
   } as UserCtx<CreateWorkspaceRequest, Workspace>
 
   // Build the new application
-  await create(createRequest)
+  await create(createRequest, tmpPath)
   const { body: newApplication } = createRequest
 
   if (!newApplication) {
