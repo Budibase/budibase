@@ -27,6 +27,10 @@ export interface AutomationDataEvent {
   // Carries suspended state for resumed automations - restored into context
   // before executeSteps runs so prior bindings remain available.
   resumeContext?: AutomationResumeContext
+  // Logical run identity used to group this run's platform actions, kept
+  // distinct from the job id (transport identity). Only a resumed run needs
+  // to carry it explicitly
+  runId?: string
 }
 
 export interface AutomationData {
