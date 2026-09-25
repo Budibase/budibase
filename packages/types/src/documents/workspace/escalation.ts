@@ -2,7 +2,11 @@ import type { ModelMessage, UIMessage } from "ai"
 import { Document } from "../document"
 import { Automation, AutomationStepResult } from "./automation"
 import { ChatConversationChannel } from "../global"
-import type { AgentRequester } from "../global/agents"
+import type {
+  AgentRequester,
+  EscalationPolicySnapshot,
+  ToolExecutionRule,
+} from "../global/agents"
 
 // This does need a degree of flexibility
 // {accepted: boolean} is a given for now, but response text
@@ -108,6 +112,9 @@ export interface EscalationContextDoc extends Document {
   isTest?: boolean
   recipients?: EscalationRecipient[]
   resolutionStrategy?: string
+  rule?: ToolExecutionRule
+  policy?: EscalationPolicySnapshot
+  approvals?: EscalationApproval[]
   // zlib-deflated + base64 JSON of the assistant UI message produced when the
   // operation resumed
   resumeResultCompressed?: string
@@ -136,8 +143,15 @@ export interface EscalationRecipient {
   config: Record<string, any>
 }
 
+export interface EscalationApproval {
+  userId: string
+  actionId: string
+  respondedAt: string
+  notificationDocId?: string
+}
+
 export interface EscalationRespondResult {
-  status: "recorded" | "already_responded" | "closed"
+  status: "recorded" | "already_responded" | "closed" | "unlinked"
   // Human-facing message the caller can surface (e.g. the inline card).
   message?: string
 }
