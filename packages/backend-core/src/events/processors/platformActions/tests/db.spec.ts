@@ -26,9 +26,7 @@ describe("getActionsDbName", () => {
     const prodWorkspaceId = dbCore.generateWorkspaceID(structures.tenant.id())
     const devWorkspaceId = dbCore.getDevWorkspaceID(prodWorkspaceId)
 
-    expect(getActionsDbName(devWorkspaceId)).toBe(
-      `actions_${prodWorkspaceId}`
-    )
+    expect(getActionsDbName(devWorkspaceId)).toBe(`actions_${prodWorkspaceId}`)
   })
 })
 
