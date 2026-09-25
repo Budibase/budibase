@@ -3,6 +3,7 @@ import { Readable } from "stream"
 
 jest.mock("@budibase/backend-core", () => {
   const actual = jest.requireActual("@budibase/backend-core")
+  const tempDir = fs.mkdtempSync("/tmp/bb-file-utils-")
   return {
     ...actual,
     context: {
@@ -13,7 +14,7 @@ jest.mock("@budibase/backend-core", () => {
     },
     objectStore: {
       ...actual.objectStore,
-      budibaseTempDir: jest.fn(() => fs.mkdtempSync("/tmp/bb-file-utils-")),
+      budibaseTempDir: jest.fn(() => tempDir),
       upload: jest.fn(async ({ filename }: { filename: string }) => ({
         Key: filename,
       })),
@@ -25,7 +26,7 @@ jest.mock("@budibase/backend-core", () => {
 })
 
 import { utils } from "@budibase/backend-core"
-import { uploadUrl } from "../fileUtils"
+import { uploadFile, uploadUrl } from "../fileUtils"
 
 describe("fileUtils.uploadUrl", () => {
   const fetchWithBlacklistMock =
@@ -46,5 +47,22 @@ describe("fileUtils.uploadUrl", () => {
       "https://example.com/test.jpg"
     )
     expect(result?.url).toContain("app_test/attachments/")
+  })
+})
+
+describe("fileUtils.uploadFile", () => {
+  it("reuses an existing file for repeated uploads", async () => {
+    const file = {
+      fileName: "document",
+      extension: ".txt",
+      content: "hello",
+    }
+
+    await expect(uploadFile(file)).resolves.toEqual(
+      expect.objectContaining({ name: "document.txt" })
+    )
+    await expect(uploadFile(file)).resolves.toEqual(
+      expect.objectContaining({ name: "document.txt" })
+    )
   })
 })

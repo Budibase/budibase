@@ -67,7 +67,18 @@ export async function uploadFile(file: {
     throw new Error("Path must be within the Budibase temp directory.")
   }
 
-  fs.writeFileSync(destination, file.content, { flag: "wx" })
+  try {
+    fs.writeFileSync(destination, file.content, { flag: "wx" })
+  } catch (error) {
+    if (
+      typeof error !== "object" ||
+      error === null ||
+      !("code" in error) ||
+      error.code !== "EEXIST"
+    ) {
+      throw error
+    }
+  }
 
   const processedFileName = path.basename(destination)
   const s3Key = `${context.getProdWorkspaceId()}/attachments/${processedFileName}`
