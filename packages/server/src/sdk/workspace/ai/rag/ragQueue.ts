@@ -8,8 +8,15 @@ import {
 import { ObjectStoreBuckets } from "../../../../constants"
 import { ingestKnowledgeBaseFile } from "./files"
 import { knowledgeBase } from ".."
+import {
+  extendGeminiIngestionCooldown,
+  GeminiRateLimitError,
+  throwIfGeminiIngestionCoolingDown,
+} from "./geminiRateLimit"
 
 const DEFAULT_CONCURRENCY = 2
+const DEFAULT_ATTEMPTS = 5
+const STACK_TRACE_LIMIT = 10
 const DEFAULT_BACKOFF_MS = utils.Duration.fromSeconds(10).toMs()
 const DEFAULT_TIMEOUT_MS = utils.Duration.fromMinutes(10).toMs()
 
@@ -18,6 +25,7 @@ export interface RagIngestionJob {
   knowledgeBaseId: string
   fileId: string
   objectStoreKey?: string
+  rateLimitDeferrals?: number
 }
 
 let ragQueue: queue.BudibaseQueue<RagIngestionJob> | undefined
@@ -30,7 +38,8 @@ export function getQueue() {
       {
         maxStalledCount: 3,
         jobOptions: {
-          attempts: 5,
+          attempts: DEFAULT_ATTEMPTS,
+          stackTraceLimit: STACK_TRACE_LIMIT,
           backoff: {
             type: "exponential",
             delay: DEFAULT_BACKOFF_MS,
@@ -59,6 +68,15 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
     ragQueueInitialised = true
 
     return getQueue().process(concurrency, async job => {
+      const rateLimitDeferrals = job.data.rateLimitDeferrals || 0
+      const failedAttempts = Math.max(0, job.attemptsMade - rateLimitDeferrals)
+      // Bull counts every deferral as an attempt; only ordinary failures use the budget.
+      job.opts.attempts = DEFAULT_ATTEMPTS + rateLimitDeferrals
+      job.opts.stackTraceLimit = STACK_TRACE_LIMIT
+      job.opts.backoff = {
+        type: "fixed",
+        delay: (2 ** (failedAttempts + 1) - 1) * DEFAULT_BACKOFF_MS,
+      }
       const { workspaceId, knowledgeBaseId, fileId, objectStoreKey } = job.data
       const startedAtMs = Date.now()
       console.log("Starting RAG ingestion queue job", {
@@ -126,7 +144,9 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
         }
 
         try {
+          await throwIfGeminiIngestionCoolingDown()
           const buffer = await loadFileBuffer(knowledgeBaseFile.objectStoreKey)
+          await throwIfGeminiIngestionCoolingDown()
           await ingestKnowledgeBaseFile(
             knowledgeBaseConfig,
             knowledgeBaseFile,
@@ -139,8 +159,35 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
             jobId: job.id,
             durationMs: Date.now() - startedAtMs,
           })
-        } catch (error: any) {
-          await handleProcessingError(knowledgeBaseFile, job, error)
+        } catch (error) {
+          if (error instanceof GeminiRateLimitError) {
+            const retryAt = await extendGeminiIngestionCooldown({
+              retryAt: error.retryAt,
+            })
+            await job.update({
+              ...job.data,
+              rateLimitDeferrals: rateLimitDeferrals + 1,
+            })
+            job.opts.attempts = DEFAULT_ATTEMPTS + rateLimitDeferrals + 1
+            job.opts.backoff = {
+              type: "fixed",
+              delay:
+                Math.max(1000, retryAt - Date.now()) +
+                Math.floor(Math.random() * 1000),
+            }
+            console.log(
+              "Deferring RAG ingestion until Gemini capacity is available",
+              {
+                workspaceId,
+                knowledgeBaseId,
+                fileId,
+                jobId: job.id,
+                retryAt,
+              }
+            )
+            throw error
+          }
+          await handleProcessingError({ file: knowledgeBaseFile, job, error })
           console.error("RAG ingestion queue job failed", {
             workspaceId,
             knowledgeBaseId,
@@ -194,26 +241,32 @@ const loadFileBuffer = async (objectKey: string): Promise<Buffer> => {
   return Buffer.concat(chunks)
 }
 
-const handleProcessingError = async (
-  file: KnowledgeBaseFile,
-  job: Job<RagIngestionJob>,
-  error: any
-) => {
+const handleProcessingError = async ({
+  file,
+  job,
+  error,
+}: {
+  file: KnowledgeBaseFile
+  job: Job<RagIngestionJob>
+  error: unknown
+}) => {
   const attempts = job.opts.attempts || 1
   const isFinalAttempt = job.attemptsMade + 1 >= attempts
+  const errorMessage =
+    error instanceof Error ? error.message : "Failed to process uploaded file"
 
   if (!isFinalAttempt) {
     console.log("RAG ingestion job attempt failed, will retry", {
       fileId: file._id,
       attemptsMade: job.attemptsMade,
       attempts,
-      errorMessage: error?.message,
+      errorMessage,
     })
     return
   }
 
   file.status = KnowledgeBaseFileStatus.FAILED
-  file.errorMessage = error?.message || "Failed to process uploaded file"
+  file.errorMessage = errorMessage
   console.error("RAG ingestion job exhausted retries, marking file failed", {
     fileId: file._id,
     attemptsMade: job.attemptsMade,
