@@ -116,4 +116,17 @@ describe("getActionsDB", () => {
       "Unable to retrieve actions DB - no workspace ID."
     )
   })
+
+  it("rejects self-host cloud access even with a workspace in context", async () => {
+    const tenantId = structures.tenant.id()
+    const workspaceId = dbCore.generateWorkspaceID(tenantId)
+
+    await context.doInWorkspaceContext(workspaceId, () =>
+      context.doInSelfHostTenantUsingCloud(tenantId, () => {
+        expect(() => getActionsDB()).toThrow(
+          "Actions DB not found - self-host users using cloud don't have Actions DBs"
+        )
+      })
+    )
+  })
 })
