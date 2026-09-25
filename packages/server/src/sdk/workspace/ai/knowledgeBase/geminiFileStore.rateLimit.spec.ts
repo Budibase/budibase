@@ -72,4 +72,28 @@ describe("Gemini ingestion rate limits", () => {
 
     await expect(ingest()).rejects.not.toBeInstanceOf(GeminiRateLimitError)
   })
+
+  it("logs a wrapped upstream 429 and applies the default cooldown", async () => {
+    const log = jest.spyOn(console, "log").mockImplementation(() => {})
+    nock("https://example.com").post("/v1/rag/ingest").reply(200, {
+      status: "failed",
+      error:
+        "Client error '429 Too Many Requests' for url 'https://example.com/upload'",
+    })
+
+    const result = ingest()
+    await expect(result).rejects.toBeInstanceOf(GeminiRateLimitError)
+    await expect(result).rejects.toMatchObject({
+      status: 429,
+      retryAt: now + 60_000,
+    })
+    expect(log).toHaveBeenCalledTimes(1)
+    expect(log).toHaveBeenCalledWith("Gemini ingestion rate limit hit", {
+      vectorStoreId: "store-1",
+      status: 429,
+      source: "upstream",
+      retryAfter: null,
+      retryAt: now + 60_000,
+    })
+  })
 })
