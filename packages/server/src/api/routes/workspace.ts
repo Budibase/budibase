@@ -25,10 +25,8 @@ builderRoutes
   .post("/api/applications/:appId/duplicate", controller.duplicateWorkspace)
   .post("/api/applications/:appId/import", controller.importToWorkspace)
 
-creatorRoutes.post(
-  "/api/applications",
-  applicationValidator(),
-  controller.create
+creatorRoutes.post("/api/applications", applicationValidator(), ctx =>
+  controller.create(ctx)
 )
 
 // Client only endpoints
