@@ -21,6 +21,7 @@ import {
   resolveWorkspaceTranslations,
   sdk as sharedCoreSDK,
 } from "@budibase/shared-core"
+import { rm } from "fs/promises"
 import Joi from "joi"
 import {
   AddWorkspaceSampleDataResponse,
@@ -1314,7 +1315,11 @@ export async function duplicateWorkspace(
   } as UserCtx<CreateWorkspaceRequest, Workspace>
 
   // Build the new application
-  await create(createRequest, tmpPath)
+  try {
+    await create(createRequest, tmpPath)
+  } finally {
+    await rm(tmpPath, { recursive: true, force: true })
+  }
   const { body: newApplication } = createRequest
 
   if (!newApplication) {
