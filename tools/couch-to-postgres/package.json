@@ -1,0 +1,25 @@
+{
+  "name": "couch-to-postgres",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Migrates a Budibase internal (CouchDB-backed) table to an external PostgreSQL datasource",
+  "type": "module",
+  "bin": {
+    "couch-to-postgres": "./dist/cli.js"
+  },
+  "scripts": {
+    "start": "tsx src/cli.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
