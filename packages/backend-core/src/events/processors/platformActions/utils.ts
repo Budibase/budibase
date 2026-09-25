@@ -2,6 +2,7 @@ import { DocumentType, SEPARATOR } from "@budibase/types"
 import type {
   ActionSourceContext,
   PlatformActionContainerStatus,
+  PlatformActionEnvironment,
   PlatformActionSessionIndexDoc,
 } from "@budibase/types"
 
@@ -10,15 +11,19 @@ function encodeKeyPart(value: string): string {
 }
 
 export function getPlatformActionSessionId({
+  environment,
   sourceType,
   sourceId,
-}: ActionSourceContext): string {
-  return `${DocumentType.PLATFORM_ACTION_SESSION}${SEPARATOR}${encodeKeyPart(
+}: ActionSourceContext & {
+  environment: PlatformActionEnvironment
+}): string {
+  return `${DocumentType.PLATFORM_ACTION_SESSION}${SEPARATOR}${environment}${SEPARATOR}${encodeKeyPart(
     sourceType
   )}${SEPARATOR}${encodeKeyPart(sourceId)}`
 }
 
 export interface PlatformActionSessionInput extends ActionSourceContext {
+  environment: PlatformActionEnvironment
   status: PlatformActionContainerStatus
   startedAt: string
   statusUpdatedAt: string
