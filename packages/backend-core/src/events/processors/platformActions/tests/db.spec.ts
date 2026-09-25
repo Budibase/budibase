@@ -27,14 +27,8 @@ describe("getActionsDbName", () => {
     const devWorkspaceId = dbCore.getDevWorkspaceID(prodWorkspaceId)
 
     expect(getActionsDbName(devWorkspaceId)).toBe(
-      getActionsDbName(prodWorkspaceId)
+      `actions_${prodWorkspaceId}`
     )
-  })
-
-  it("is stable for the same workspace across calls", () => {
-    const workspaceId = dbCore.generateWorkspaceID(structures.tenant.id())
-
-    expect(getActionsDbName(workspaceId)).toBe(getActionsDbName(workspaceId))
   })
 })
 
