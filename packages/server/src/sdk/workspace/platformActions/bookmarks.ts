@@ -25,7 +25,9 @@ export function encodeKeysetBookmark({
   key,
   id,
 }: KeysetBookmarkToken): string {
-  return Buffer.from(JSON.stringify({ direction, key, id })).toString("base64")
+  return Buffer.from(JSON.stringify({ direction, key, id })).toString(
+    "base64url"
+  )
 }
 
 export function decodeKeysetBookmark(bookmark: string): KeysetBookmarkToken {
