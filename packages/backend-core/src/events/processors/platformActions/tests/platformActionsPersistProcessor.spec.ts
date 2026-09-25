@@ -120,6 +120,7 @@ describe("PlatformActionPersistProcessor", () => {
         include_docs: true,
       })
 
+      expect(rows).toHaveLength(1)
       expect(rows[0].doc!.environment).toBe("dev")
       expect(mockEnqueue).toHaveBeenCalledWith(
         expect.objectContaining({ environment: "dev" })
