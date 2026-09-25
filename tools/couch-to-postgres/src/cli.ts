@@ -5,7 +5,7 @@ import { migrate } from "./migrate.js"
 const program = new Command()
 
 program
-  .name("couch-to-postgres")
+  .name("bbdb-to-postgres")
   .description(
     "Migrate a Budibase internal (CouchDB-backed) table to an external PostgreSQL datasource"
   )
@@ -22,10 +22,17 @@ program
   .requiredOption("--pg-password <password>", "Postgres password")
   .option("--pg-schema <schema>", "Postgres schema", "public")
   .option("--pg-ssl", "Use SSL for the Postgres connection", false)
-  .option("--pg-table <table>", "Target Postgres table name (defaults to a slug of the Budibase table name)")
+  .option(
+    "--pg-table <table>",
+    "Target Postgres table name (defaults to a slug of the Budibase table name)"
+  )
   .option("--datasource-name <name>", "Name for the new Budibase datasource")
   .option("--batch-size <n>", "Rows per page/insert batch", "500")
-  .option("--dry-run", "Print the migration plan without writing anything", false)
+  .option(
+    "--dry-run",
+    "Print the migration plan without writing anything",
+    false
+  )
   .action(async opts => {
     try {
       await migrate({

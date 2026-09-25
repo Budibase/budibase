@@ -1,11 +1,11 @@
 {
-  "name": "couch-to-postgres",
+  "name": "bbdb-to-postgres",
   "version": "0.1.0",
   "private": true,
   "description": "Migrates a Budibase internal (CouchDB-backed) table to an external PostgreSQL datasource",
   "type": "module",
   "bin": {
-    "couch-to-postgres": "./dist/cli.js"
+    "bbdb-to-postgres": "./dist/cli.js"
   },
   "scripts": {
     "start": "tsx src/cli.ts",
