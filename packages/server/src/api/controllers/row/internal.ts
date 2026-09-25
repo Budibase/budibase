@@ -158,7 +158,7 @@ export async function bulkDestroy(ctx: UserCtx) {
     .map((row: Row | string) => (typeof row === "string" ? row : row._id))
     .filter((id: string | undefined): id is string => !!id)
   const dbRows = await db.getMultiple<Row>(rowIds, { allowMissing: true })
-  if (dbRows.some(row => row.tableId !== tableId)) {
+  if (rows.some((row: Row) => row.tableId && row.tableId !== tableId) || dbRows.some(row => row.tableId !== tableId)) {
     throw "Supplied tableId doesn't match the row's tableId"
   }
 
