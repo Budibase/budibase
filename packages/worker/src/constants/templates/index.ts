@@ -2,6 +2,7 @@ import { readStaticFile } from "../../utilities/fileSystem"
 import { TemplateType, TemplatePurpose, GLOBAL_OWNER } from "../index"
 import { join } from "path"
 import { db as dbCore, tenancy, context } from "@budibase/backend-core"
+import * as pro from "@budibase/pro"
 import { Template, EmailTemplatePurpose } from "@budibase/types"
 import yaml from "yaml"
 
@@ -148,6 +149,11 @@ export async function getTemplateByID(id: string, ownerId?: string) {
 }
 
 export async function getTemplateByPurpose(type: string, purpose: string) {
+  if (!(await pro.features.isCustomiseEmailsEnabled())) {
+    return addBaseTemplates([], type).find(
+      (template: Template) => template.purpose === purpose
+    )
+  }
   const templates = await getTemplates({ type })
   return templates.find((template: Template) => template.purpose === purpose)
 }

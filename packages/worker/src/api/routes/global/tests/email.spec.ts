@@ -1,5 +1,13 @@
-import { EmailTemplatePurpose, SendEmailRequest } from "@budibase/types"
+import { objectStore, tenancy } from "@budibase/backend-core"
+import {
+  EmailTemplatePurpose,
+  Feature,
+  SendEmailRequest,
+  Template,
+} from "@budibase/types"
+import * as cheerio from "cheerio"
 import { TestConfiguration } from "../../../../tests"
+import mocks from "../../../../tests/mocks"
 import {
   captureEmail,
   deleteAllEmail,
@@ -8,8 +16,6 @@ import {
   startMailserver,
   stopMailserver,
 } from "../../../../tests/mocks/email"
-import { objectStore } from "@budibase/backend-core"
-import * as cheerio from "cheerio"
 
 describe("/api/global/email", () => {
   const config = new TestConfiguration()
@@ -88,6 +94,51 @@ describe("/api/global/email", () => {
       expect(email.html).not.toContain("Invalid binding")
     }
   )
+
+  it("uses default templates when email customisation is not licensed", async () => {
+    mocks.licenses.useUnlimited({ features: [Feature.CUSTOMISE_EMAILS] })
+    const templateResponse = await config.api.templates.saveTemplate({
+      contents: "<div>Licensed custom welcome template</div>",
+      purpose: EmailTemplatePurpose.WELCOME,
+      type: "email",
+    })
+    const savedTemplate = templateResponse.body as Template
+
+    try {
+      const customisedEmail = await captureEmail(mailserver, async () => {
+        await config.api.emails.sendEmail({
+          email: "to@example.com",
+          subject: "Test",
+          userId: config.user!._id,
+          purpose: EmailTemplatePurpose.WELCOME,
+        })
+      })
+      expect(customisedEmail.html).toContain("Licensed custom welcome template")
+
+      mocks.licenses.useCloudFree()
+      const defaultEmail = await captureEmail(mailserver, async () => {
+        await config.api.emails.sendEmail({
+          email: "to@example.com",
+          subject: "Test",
+          userId: config.user!._id,
+          purpose: EmailTemplatePurpose.WELCOME,
+        })
+      })
+      expect(defaultEmail.html).toContain(
+        "Thanks for getting started with Budibase's Budibase platform."
+      )
+      expect(defaultEmail.html).not.toContain(
+        "Licensed custom welcome template"
+      )
+    } finally {
+      await config.doInTenant(async () => {
+        await tenancy
+          .getGlobalDB()
+          .remove(savedTemplate._id!, savedTemplate._rev!)
+      })
+      mocks.licenses.useUnlimited({ features: [Feature.CUSTOMISE_EMAILS] })
+    }
+  })
 
   it("should be able to send an email with an attachment", async () => {
     let bucket = "testbucket"
