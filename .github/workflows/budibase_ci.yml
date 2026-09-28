@@ -192,6 +192,9 @@ jobs:
 
   test-libraries:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
     concurrency:
       group: ${{ github.workflow }}-test-libraries-${{ github.event.pull_request.number || github.ref }}
       cancel-in-progress: true
@@ -204,6 +207,33 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 2
+
+      - name: Configure AWS credentials for ECR Public
+        id: aws-credentials
+        if: >-
+          github.event_name != 'pull_request'
+          || github.event.pull_request.head.repo.full_name == github.repository
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::545012296077:role/github-actions-ecr-public
+          aws-region: us-east-1
+
+      - name: Log in to ECR Public
+        if: steps.aws-credentials.outcome == 'success'
+        run: |
+          aws ecr-public get-login-password --region us-east-1 \
+            | docker login --username AWS --password-stdin public.ecr.aws
+
+      - name: Scrub AWS credentials from the job environment
+        if: steps.aws-credentials.conclusion != 'skipped'
+        run: |
+          {
+            echo "AWS_ACCESS_KEY_ID="
+            echo "AWS_SECRET_ACCESS_KEY="
+            echo "AWS_SESSION_TOKEN="
+            echo "AWS_REGION="
+            echo "AWS_DEFAULT_REGION="
+          } >> "$GITHUB_ENV"
 
       - name: Fetch base branch for affected tasks
         if: env.ONLY_AFFECTED_TASKS == 'true'
@@ -218,6 +248,7 @@ jobs:
           ./scripts/pull-images.sh \
             testcontainers/ryuk:0.5.1 \
             budibase/couchdb:v3.3.3-sqs-v2.1.1 \
+            public.ecr.aws/x1w3a5n5/third-party:minio-RELEASE.2025-09-07T16-13-09Z \
             redis
 
       - name: Restore hoisted node_modules cache
