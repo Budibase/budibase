@@ -79,6 +79,27 @@ describe("redlockImpl", () => {
       expect(mockOnExtend).toHaveBeenCalledTimes(5)
     })
 
+    it("should keep a custom autoextend lock through a delayed timer", async () => {
+      const onExtend = jest.fn()
+      const result = await config.doInTenant(() =>
+        doWithLock(
+          {
+            name: LockName.SQS_SYNC_DEFINITIONS,
+            type: LockType.AUTO_EXTEND,
+            ttl: 60_000,
+            onExtend,
+          },
+          async () => {
+            jest.advanceTimersByTime(25_000)
+            return "completed"
+          }
+        )
+      )
+
+      expect(result).toEqual({ executed: true, result: "completed" })
+      expect(onExtend).not.toHaveBeenCalled()
+    })
+
     it.each(Object.values(LockType).filter(t => t !== LockType.AUTO_EXTEND))(
       "should timeout when type is %s",
       async (lockType: LockType) => {
