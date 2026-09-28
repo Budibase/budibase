@@ -9,6 +9,7 @@ import { DatabaseImpl } from "../../../../../backend-core/src/db/couch/DatabaseI
 import { generator, structures } from "@budibase/backend-core/tests"
 import {
   AutomationTriggerStepId,
+  APIWarningCode,
   DesignDocument,
   EmailTriggerAuthType,
   FeatureFlag,
@@ -32,6 +33,7 @@ import {
   type ProjectPackageDependencyIndex,
   type Query,
   type RowActionTriggerInputs,
+  type Screen,
   type Webhook,
 } from "@budibase/types"
 import { Header, helpers } from "@budibase/shared-core"
@@ -50,6 +52,7 @@ import { getQueryToolBindingsForResource } from "../../../sdk/workspace/ai/agent
 import * as workspaceBackups from "../../../sdk/workspace/backups/imports"
 import * as projectPackageConstants from "../../../sdk/workspace/projects/backups/constants"
 import * as projects from "../../../sdk/workspace/projects/crud"
+import * as projectLock from "../../../sdk/workspace/projects/lock"
 import { buildExternalTableId } from "../../../integrations/utils"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { setupDefaultCompletionsAIConfig } from "../../../tests/utilities/aiConfig"
@@ -88,6 +91,18 @@ jest.mock("@slack/web-api", () => ({
     },
   })),
 }))
+
+jest.mock("../../../sdk/workspace/projects/lock", () => {
+  const actual = jest.requireActual<
+    typeof import("../../../sdk/workspace/projects/lock")
+  >("../../../sdk/workspace/projects/lock")
+  return {
+    ...actual,
+    doWithProjectAssignmentsLockIfEnabled: jest.fn(
+      actual.doWithProjectAssignmentsLockIfEnabled
+    ),
+  }
+})
 
 describe("/projects", () => {
   const config = new TestConfiguration()
@@ -1026,7 +1041,12 @@ describe("/projects", () => {
           })
         )
 
+        const preview = await config.api.project.previewAssignment({
+          resourceId: workspaceApp._id!,
+          projectIds: [project._id],
+        })
         await config.api.project.updateAssignment(workspaceApp._id!, {
+          dependencyFingerprint: preview.dependencyFingerprint,
           resourceRev: workspaceApp._rev!,
           projectIds: [project._id],
           dependencyIds: [],
@@ -1076,7 +1096,12 @@ describe("/projects", () => {
           })
         )
 
+        const preview = await config.api.project.previewAssignment({
+          resourceId: workspaceApp._id!,
+          projectIds: [project._id],
+        })
         await config.api.project.updateAssignment(workspaceApp._id!, {
+          dependencyFingerprint: preview.dependencyFingerprint,
           resourceRev: workspaceApp._rev!,
           projectIds: [project._id],
           dependencyIds: [],
@@ -1225,7 +1250,12 @@ describe("/projects", () => {
             allowKnowledgeSourceDownload: true,
           }
         )
+        const preview = await config.api.project.previewAssignment({
+          resourceId: agent._id!,
+          projectIds: [project._id],
+        })
         await config.api.project.updateAssignment(agent._id!, {
+          dependencyFingerprint: preview.dependencyFingerprint,
           resourceRev: agent._rev!,
           projectIds: [project._id],
           dependencyIds: [],
@@ -1310,7 +1340,12 @@ describe("/projects", () => {
           ...basicDatasource().datasource,
           name: "Destination datasource",
         })
+        const datasourcePreview = await config.api.project.previewAssignment({
+          resourceId: destinationDatasource._id!,
+          projectIds: [sharedProject._id, destinationProject._id],
+        })
         await config.api.project.updateAssignment(destinationDatasource._id!, {
+          dependencyFingerprint: datasourcePreview.dependencyFingerprint,
           resourceRev: destinationDatasource._rev!,
           projectIds: [sharedProject._id, destinationProject._id],
           dependencyIds: [],
@@ -1341,7 +1376,16 @@ describe("/projects", () => {
             allowKnowledgeSourceDownload: true,
           }
         )
+        const preview = await config.api.project.previewAssignment({
+          resourceId: agent._id!,
+          projectIds: [
+            sharedProject._id,
+            agentProject._id,
+            excludedAgentProject._id,
+          ],
+        })
         await config.api.project.updateAssignment(agent._id!, {
+          dependencyFingerprint: preview.dependencyFingerprint,
           resourceRev: agent._rev!,
           projectIds: [
             sharedProject._id,
@@ -1422,12 +1466,22 @@ describe("/projects", () => {
             },
           },
         })
+        const sourcePreview = await config.api.project.previewAssignment({
+          resourceId: source._id!,
+          projectIds: [sourceProject._id],
+        })
         await config.api.project.updateAssignment(source._id!, {
+          dependencyFingerprint: sourcePreview.dependencyFingerprint,
           resourceRev: source._rev!,
           projectIds: [sourceProject._id],
           dependencyIds: [],
         })
+        const targetPreview = await config.api.project.previewAssignment({
+          resourceId: target._id!,
+          projectIds: [targetProject._id, sourceProject._id],
+        })
         await config.api.project.updateAssignment(target._id!, {
+          dependencyFingerprint: targetPreview.dependencyFingerprint,
           resourceRev: target._rev!,
           projectIds: [targetProject._id, sourceProject._id],
           dependencyIds: [],
@@ -1580,7 +1634,12 @@ describe("/projects", () => {
             automationId: automation._id!,
           })
         )
+        const preview = await config.api.project.previewAssignment({
+          resourceId: workspaceApp._id!,
+          projectIds: [project._id],
+        })
         await config.api.project.updateAssignment(workspaceApp._id!, {
+          dependencyFingerprint: preview.dependencyFingerprint,
           resourceRev: workspaceApp._rev!,
           projectIds: [project._id],
           dependencyIds: [],
@@ -1725,6 +1784,7 @@ describe("/projects", () => {
           projectIds: [project._id],
         })
         await config.api.project.updateAssignment(workspaceApp._id!, {
+          dependencyFingerprint: preview.dependencyFingerprint,
           resourceRev: workspaceApp._rev!,
           projectIds: [project._id],
           dependencyIds: preview.dependencies.map(dependency => dependency.id),
@@ -1944,7 +2004,12 @@ describe("/projects", () => {
         .save()
 
       for (const resource of [table, workspaceApp, agent, automation]) {
+        const preview = await config.api.project.previewAssignment({
+          resourceId: resource._id!,
+          projectIds: [project._id],
+        })
         await config.api.project.updateAssignment(resource._id!, {
+          dependencyFingerprint: preview.dependencyFingerprint,
           resourceRev: resource._rev!,
           projectIds: [project._id],
           dependencyIds: [],
@@ -1995,7 +2060,12 @@ describe("/projects", () => {
         .onAppAction({})
         .createRow({ row: { tableId: dependency._id!, name: "New row" } })
         .save()
+      const sourcePreview = await config.api.project.previewAssignment({
+        resourceId: source._id!,
+        projectIds: [project._id],
+      })
       await config.api.project.updateAssignment(source._id!, {
+        dependencyFingerprint: sourcePreview.dependencyFingerprint,
         resourceRev: source._rev!,
         projectIds: [project._id],
         dependencyIds: [],
@@ -2325,7 +2395,12 @@ describe("/projects", () => {
             const assignedDatasource = await config.api.datasource.get(
               datasource._id!
             )
+            const preview = await config.api.project.previewAssignment({
+              resourceId: assignedDatasource._id!,
+              projectIds: [],
+            })
             await config.api.project.updateAssignment(assignedDatasource._id!, {
+              dependencyFingerprint: preview.dependencyFingerprint,
               resourceRev: assignedDatasource._rev!,
               projectIds: [],
               dependencyIds: [],
@@ -2650,8 +2725,8 @@ describe("/projects", () => {
           projectIds: [project._id],
         })
         await config.api.project.updateAssignment(datasource._id!, {
-          resourceRev: preview.resourceRev,
           dependencyFingerprint: preview.dependencyFingerprint,
+          resourceRev: preview.resourceRev,
           projectIds: [project._id],
           dependencyIds: [],
         })
