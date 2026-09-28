@@ -29,6 +29,7 @@
     "@codemirror/state": "^6.2.0",
     "@codemirror/theme-one-dark": "^6.1.2",
     "@codemirror/view": "^6.11.2",
+    "@lezer/highlight": "^1.0.0",
     "@dagrejs/dagre": "1.1.4",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",

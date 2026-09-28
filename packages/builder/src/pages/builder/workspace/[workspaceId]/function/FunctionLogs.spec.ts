@@ -212,4 +212,19 @@ describe("FunctionLogs", () => {
     expect(detail).not.toHaveTextContent("host-stack-do-not-render")
     expect(detail).not.toHaveTextContent("user-message-do-not-render")
   })
+
+  it("shows a compact log list and opens run details in the settings rail", async () => {
+    api.getFunctionRuns.mockResolvedValue(runsResponse([makeRun("success")]))
+
+    const view = render(FunctionLogs, { functionId: "fn_one", compact: true })
+
+    await fireEvent.click(
+      await screen.findByRole("button", { name: /View Success run/ })
+    )
+
+    expect(view.container.querySelector("table")).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("complementary", { name: "Function run details" })
+    ).toHaveTextContent("automation_one")
+  })
 })

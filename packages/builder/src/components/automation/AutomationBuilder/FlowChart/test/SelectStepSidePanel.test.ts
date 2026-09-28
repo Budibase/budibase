@@ -200,15 +200,13 @@ describe("SelectStepSidePanel", () => {
   })
 
   it("shows Run Function only when its gated action definition is available", async () => {
-    const view = render(SelectStepSidePanel, {
+    render(SelectStepSidePanel, {
       props: {
         block: { id: "step-1" },
       },
     })
 
     expect(screen.queryByText("Run Function")).not.toBeInTheDocument()
-    view.unmount()
-
     mocks.automationStore.set({
       actionPanelToolbarFlowEnd: false,
       blockDefinitions: {
@@ -216,7 +214,7 @@ describe("SelectStepSidePanel", () => {
           EXECUTE_FUNCTION: {
             name: "Run Function",
             stepId: "EXECUTE_FUNCTION",
-            icon: "functions",
+            icon: "function",
             internal: true,
           },
         },
@@ -224,11 +222,17 @@ describe("SelectStepSidePanel", () => {
       },
     })
 
-    render(SelectStepSidePanel, {
-      props: {
-        block: { id: "step-1" },
-      },
+    await waitFor(() => {
+      expect(screen.getByText("Run Function")).toBeInTheDocument()
     })
-    expect(screen.getByText("Run Function")).toBeInTheDocument()
+
+    mocks.automationStore.set({
+      actionPanelToolbarFlowEnd: false,
+      blockDefinitions: { ACTION: {}, TRIGGER: {} },
+    })
+
+    await waitFor(() => {
+      expect(screen.queryByText("Run Function")).not.toBeInTheDocument()
+    })
   })
 })
