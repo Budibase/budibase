@@ -30,6 +30,7 @@ builderAdminRoutes
   .delete("/api/ai/slack/app-config", ai.deleteSlackAppConfig)
   .post("/api/ai/cron", ai.generateCronExpression)
   .post("/api/ai/js", ai.generateJs)
+  .post("/api/ai/function-code", ai.generateFunctionCode)
 
 builderAdminRoutes.get("/api/configs/providers", ai.fetchAIProviders)
 

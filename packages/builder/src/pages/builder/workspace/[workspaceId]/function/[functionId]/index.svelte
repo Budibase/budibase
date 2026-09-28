@@ -25,6 +25,7 @@
   import { onDestroy, onMount } from "svelte"
   import { createSaveCoordinator } from "../../saveCoordinator"
   import FunctionCodeEditor from "../FunctionCodeEditor.svelte"
+  import GenerateFunctionCode from "../GenerateFunctionCode.svelte"
   import FunctionLogs from "../FunctionLogs.svelte"
   import FunctionQueryEditor from "../FunctionQueryEditor.svelte"
   import { canManageFunctions } from "../permissions"
@@ -310,6 +311,12 @@
               {/if}
             </div>
             <div class="code-actions">
+              <GenerateFunctionCode
+                functionName={fn.name}
+                {source}
+                capabilities={fn.capabilities}
+                onApply={generated => (source = generated)}
+              />
               <Button
                 primary
                 size="S"

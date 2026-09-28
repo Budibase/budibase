@@ -1,6 +1,8 @@
 import {
   GenerateAgentInstructionsRequest,
   GenerateAgentInstructionsResponse,
+  GenerateFunctionCodeRequest,
+  GenerateFunctionCodeResponse,
   GenerateJsRequest,
   GenerateJsResponse,
   GenerateTablesRequest,
@@ -47,6 +49,9 @@ export interface AIEndpoints {
   ) => Promise<GenerateAgentInstructionsResponse>
   generateCronExpression: (prompt: string) => Promise<{ message: string }>
   generateJs: (req: GenerateJsRequest) => Promise<GenerateJsResponse>
+  generateFunctionCode: (
+    req: GenerateFunctionCodeRequest
+  ) => Promise<GenerateFunctionCodeResponse>
   generateTables: (
     req: GenerateTablesRequest,
     onProgress?: (message: string) => void
@@ -79,6 +84,13 @@ export const buildAIEndpoints = (API: BaseAPIClient): AIEndpoints => ({
   generateJs: async req => {
     return await API.post({
       url: "/api/ai/js",
+      body: req,
+    })
+  },
+
+  generateFunctionCode: async req => {
+    return await API.post({
+      url: "/api/ai/function-code",
       body: req,
     })
   },

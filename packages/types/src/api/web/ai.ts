@@ -64,6 +64,21 @@ export interface GenerateJsResponse {
   code: string
 }
 
+export interface GenerateFunctionCodeRequest {
+  prompt: string
+  functionName: string
+  source: string
+  queries: {
+    datasourceAlias: string
+    queryAlias: string
+    parameterNames: string[]
+  }[]
+}
+
+export interface GenerateFunctionCodeResponse {
+  code: string
+}
+
 export interface GenerateCronRequest {
   prompt: string
 }
