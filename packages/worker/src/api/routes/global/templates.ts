@@ -25,8 +25,6 @@ loggedInRoutes
   .get("/api/global/template/definitions", controller.definitions)
   .get("/api/global/template", controller.fetch)
   .get("/api/global/template/:type", controller.fetchByType)
-  .get("/api/global/template/:ownerId", controller.fetchByOwner)
-  .get("/api/global/template/:id", controller.find)
   .post("/api/global/template/:type/export", controller.exportTemplates)
 
 adminRoutes

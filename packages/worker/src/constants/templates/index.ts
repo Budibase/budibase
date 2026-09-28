@@ -136,18 +136,6 @@ export async function getTemplates({
   return addBaseTemplates(templates, type)
 }
 
-export async function getTemplateByID(id: string, ownerId?: string) {
-  const db = tenancy.getGlobalDB()
-  const response = await db.allDocs<Template>(
-    dbCore.getTemplateParams(ownerId || GLOBAL_OWNER, id, {
-      include_docs: true,
-    })
-  )
-  let templates = response.rows.map(row => row.doc!)
-  // should only be one template with ID
-  return templates[0]
-}
-
 export async function getTemplateByPurpose(type: string, purpose: string) {
   if (!(await pro.features.isCustomiseEmailsEnabled())) {
     return addBaseTemplates([], type).find(
