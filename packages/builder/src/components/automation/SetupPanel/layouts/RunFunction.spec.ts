@@ -83,7 +83,7 @@ const block: AutomationStep = {
   type: AutomationStepType.ACTION,
   name: "Run Function",
   tagline: "Run a Function",
-  icon: "functions",
+  icon: "function",
   description: "Run a Function in this automation",
   inputs: {
     functionId: "",
@@ -105,14 +105,6 @@ describe("RunFunction", () => {
       loading: false,
       error: undefined,
     })
-    if (!Element.prototype.animate) {
-      Element.prototype.animate = () =>
-        Object.assign(Object.create(null), {
-          onfinish: null,
-          cancel: () => {},
-          finished: Promise.resolve(),
-        }) as Animation
-    }
   })
 
   it("loads Functions and saves the selected Function ID", async () => {
@@ -174,5 +166,29 @@ describe("RunFunction", () => {
         "This Function was deleted or is unavailable. Select another Function."
       )
     ).toBeInTheDocument()
+  })
+
+  it("shows the fetch error without reporting the selected Function as missing", () => {
+    mocks.inputData.functionId = "fn_saved"
+    mocks.functionStore.set({
+      functions: [],
+      loading: false,
+      error: "Unable to load Functions",
+    })
+
+    render(RunFunction, { block })
+
+    expect(screen.getByText("Unable to load Functions")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument()
+    expect(
+      screen.queryByText(
+        "This Function was deleted or is unavailable. Select another Function."
+      )
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(
+        "Create and build a Function before configuring this step."
+      )
+    ).not.toBeInTheDocument()
   })
 })
