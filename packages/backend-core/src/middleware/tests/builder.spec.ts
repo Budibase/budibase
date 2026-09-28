@@ -409,5 +409,16 @@ describe("security middlewares", () => {
 
       passed(ctx.throw, next)
     })
+
+    it("should deny app builder access to a different workspace", async () => {
+      const ctx = buildUserCtx(appBuilderUser)
+      const next = jest.fn()
+
+      await doInWorkspaceContext(ctx, "app_b", () =>
+        workspaceBuilderOrAdmin(ctx, next)
+      )
+
+      threw(ctx.throw, 403, "Workspace Admin/Builder user only endpoint.")
+    })
   })
 })
