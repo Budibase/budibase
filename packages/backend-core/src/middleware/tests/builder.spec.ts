@@ -410,6 +410,27 @@ describe("security middlewares", () => {
       passed(ctx.throw, next)
     })
 
+    it("should allow creator user with app-specific permissions", async () => {
+      const creatorUser = {
+        ...basicUser,
+        builder: {
+          creator: true,
+          apps: [appId],
+        },
+        roles: {
+          [appId]: "CREATOR",
+        },
+      }
+      const ctx = buildUserCtx(creatorUser)
+      const next = jest.fn()
+
+      await doInWorkspaceContext(ctx, appId, () =>
+        workspaceBuilderOrAdmin(ctx, next)
+      )
+
+      passed(ctx.throw, next)
+    })
+
     it("should deny app builder access to a different workspace", async () => {
       const ctx = buildUserCtx(appBuilderUser)
       const next = jest.fn()
