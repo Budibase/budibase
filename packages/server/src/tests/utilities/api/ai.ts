@@ -9,6 +9,8 @@ import {
   CustomAIProviderConfig,
   GenerateCronRequest,
   GenerateCronResponse,
+  GenerateFunctionCodeRequest,
+  GenerateFunctionCodeResponse,
   GenerateJsRequest,
   GenerateJsResponse,
   GenerateTablesRequest,
@@ -79,6 +81,16 @@ export class AIAPI extends TestAPI {
       body: req,
       expectations,
     })
+  }
+
+  generateFunctionCode = async (
+    req: GenerateFunctionCodeRequest,
+    expectations?: Expectations
+  ): Promise<GenerateFunctionCodeResponse> => {
+    return await this._post<GenerateFunctionCodeResponse>(
+      `/api/ai/function-code`,
+      { body: req, expectations }
+    )
   }
 
   generateCron = async (
