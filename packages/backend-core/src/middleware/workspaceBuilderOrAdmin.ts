@@ -1,10 +1,6 @@
 import { UserCtx } from "@budibase/types"
 import env from "../environment"
-import {
-  hasBuilderPermissions,
-  isAdmin,
-  isAdminOrBuilder,
-} from "../users"
+import { hasBuilderPermissions, isAdmin, isAdminOrBuilder } from "../users"
 import { getWorkspaceIdFromCtx } from "../utils"
 
 export async function workspaceBuilderOrAdmin(ctx: UserCtx, next: any) {
