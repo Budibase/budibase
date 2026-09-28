@@ -8,9 +8,24 @@ import {
 } from "../../../documents"
 
 /**
- * Settings that aren't stored in the database - enriched at runtime.
+ * Settings returned to unauthenticated clients.
  */
-export interface PublicSettingsInnerConfig extends SettingsInnerConfig {
+export interface PublicSettingsInnerConfig
+  extends Pick<
+    SettingsInnerConfig,
+    | "platformUrl"
+    | "company"
+    | "logoUrl"
+    | "docsUrl"
+    | "logoUrlEtag"
+    | "uniqueTenantId"
+    | "analyticsEnabled"
+    | "isSSOEnforced"
+    | "createdVersion"
+    | "lockedBy"
+    | "deactivationScheduledAt"
+    | "active"
+  > {
   google: boolean
   googleDatasourceConfigured: boolean
   oidc: boolean
