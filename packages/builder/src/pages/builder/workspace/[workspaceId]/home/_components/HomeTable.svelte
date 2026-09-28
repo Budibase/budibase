@@ -10,7 +10,7 @@
     HomeType,
   } from "@budibase/types"
   import HomeEmptyState from "./HomeEmptyState.svelte"
-  import { getTypeLabel } from "./rows"
+  import { getHomeIconWeight, getTypeLabel } from "./rows"
   import { getAgentStatusLabel, getPublishResourceStatusLabel } from "./status"
 
   dayjs.extend(relativeTime)
@@ -246,7 +246,7 @@
               name={row.icon}
               size="S"
               color={row.iconColor}
-              weight="fill"
+              weight={getHomeIconWeight(row.type)}
             />
             <div class="name-content">
               <Body size="S" color="var(--spectrum-global-color-gray-800)"

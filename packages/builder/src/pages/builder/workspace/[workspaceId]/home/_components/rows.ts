@@ -32,6 +32,10 @@ interface BuildHomeRowsParams {
   ) => WorkspaceFavourite
 }
 
+export const getHomeIconWeight = (
+  type: HomeType | HomeRowType
+): "bold" | "fill" => (type === "function" ? "bold" : "fill")
+
 export const getRowIcon = (type: HomeRowType) => {
   switch (type) {
     case "automation":
@@ -41,7 +45,7 @@ export const getRowIcon = (type: HomeRowType) => {
     case "agent":
       return "sparkle"
     case "function":
-      return "code"
+      return "function"
     case "datasource":
       return "database"
     case "table":
@@ -60,7 +64,7 @@ export const getRowIconColor = (type: HomeRowType) => {
     case "agent":
       return "var(--color-brand-400)"
     case "function":
-      return "var(--color-purple-300)"
+      return "var(--spectrum-global-color-magenta-400)"
     case "datasource":
     case "table":
       return "var(--color-green-600)"

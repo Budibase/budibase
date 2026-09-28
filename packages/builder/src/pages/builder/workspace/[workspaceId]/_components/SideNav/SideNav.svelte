@@ -37,6 +37,7 @@
     licensing,
     enrichedApps,
     agentsStore,
+    auth,
     featureFlags,
   } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
@@ -69,6 +70,7 @@
   import AgentModal from "@/pages/builder/workspace/[workspaceId]/agent/AgentModal.svelte"
   import WorkspaceAppModal from "@/pages/builder/workspace/[workspaceId]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
+  import { canManageFunctions } from "@/pages/builder/workspace/[workspaceId]/function/permissions"
 
   export const show = () => {
     pinned.set(true)
@@ -229,13 +231,15 @@
     .filter(
       f =>
         $resourceLookup?.[f.resourceId] &&
-        (f.resourceType !== WorkspaceResource.FUNCTION || $functionsAvailable)
+        (f.resourceType !== WorkspaceResource.FUNCTION ||
+          ($functionsAvailable && canManageFunctions($auth.user, workspaceId)))
     )
     .sort((a, b) => a.resourceId.localeCompare(b.resourceId))
 
   $: if (
     workspaceId &&
     $functionsAvailable &&
+    canManageFunctions($auth.user, workspaceId) &&
     $workspaceFavouriteStore.some(
       favourite => favourite.resourceType === WorkspaceResource.FUNCTION
     ) &&
@@ -582,9 +586,17 @@
                 <MenuItem icon="path" on:click={openCreateAutomation}>
                   Automation
                 </MenuItem>
-                {#if $functionsAvailable}
-                  <MenuItem icon="code" on:click={openFunctions}>
+                {#if $functionsAvailable && canManageFunctions($auth.user, workspaceId)}
+                  <MenuItem
+                    icon="function"
+                    iconColour="var(--spectrum-global-color-magenta-400)"
+                    iconWeight="bold"
+                    on:click={openFunctions}
+                  >
                     Function
+                    <div slot="right">
+                      <Tag emphasized>Alpha</Tag>
+                    </div>
                   </MenuItem>
                 {/if}
                 <MenuItem icon="browsers" on:click={openCreateApp}>
@@ -617,22 +629,6 @@
                     bb.settings(`/connections/apis`)
                     keepCollapsed()
                   }}
-                />
-              {/if}
-              <SideNavLink
-                icon="path"
-                text="Automations"
-                url={$url("./home?type=automation")}
-                {collapsed}
-                on:click={keepCollapsed}
-              />
-              {#if $functionsAvailable}
-                <SideNavLink
-                  icon="code"
-                  text="Functions"
-                  url={$url("./home?type=function")}
-                  {collapsed}
-                  on:click={keepCollapsed}
                 />
               {/if}
               <SideNavLink

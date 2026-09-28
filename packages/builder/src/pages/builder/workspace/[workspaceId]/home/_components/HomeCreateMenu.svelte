@@ -8,7 +8,11 @@
     PopoverAlignment,
     Tag,
   } from "@budibase/bbui"
-  import { getHomeTypeIcon, getHomeTypeIconColor } from "./rows"
+  import {
+    getHomeIconWeight,
+    getHomeTypeIcon,
+    getHomeTypeIconColor,
+  } from "./rows"
 
   interface Props {
     variant?: "button" | "pill"
@@ -66,12 +70,15 @@
   </MenuItem>
   {#if showFunctions}
     <MenuItem
-      icon="code"
-      iconColour="var(--spectrum-global-color-gray-700)"
-      iconWeight="fill"
+      icon={getHomeTypeIcon("function")}
+      iconColour={getHomeTypeIconColor("function")}
+      iconWeight={getHomeIconWeight("function")}
       on:click={onCreateFunction}
     >
       Function
+      <div slot="right">
+        <Tag emphasized>Alpha</Tag>
+      </div>
     </MenuItem>
   {/if}
   <MenuItem

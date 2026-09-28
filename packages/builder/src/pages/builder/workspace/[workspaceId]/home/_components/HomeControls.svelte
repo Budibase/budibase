@@ -1,7 +1,11 @@
 <script lang="ts">
   import { ActionButton, Icon } from "@budibase/bbui"
   import type { HomeType } from "@budibase/types"
-  import { getHomeTypeIcon, getHomeTypeIconColor } from "./rows"
+  import {
+    getHomeIconWeight,
+    getHomeTypeIcon,
+    getHomeTypeIconColor,
+  } from "./rows"
 
   interface Props {
     typeFilter?: HomeType
@@ -50,7 +54,7 @@
             name={getHomeTypeIcon(option.value)}
             size="S"
             color={getHomeTypeIconColor(option.value)}
-            weight="fill"
+            weight={getHomeIconWeight(option.value)}
           />
           {option.label}
         </ActionButton>
