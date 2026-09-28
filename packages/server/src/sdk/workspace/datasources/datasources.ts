@@ -337,9 +337,27 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
       }
     }
 
+    const storedSettings = { ...old.config }
+    const updatedSettings = { ...restoredConfig }
+    // SQL query variables do not change the connection used by the stored password.
+    if (
+      [
+        SourceName.POSTGRES,
+        SourceName.SQL_SERVER,
+        SourceName.MYSQL,
+        SourceName.ORACLE,
+        SourceName.SNOWFLAKE,
+      ].includes(old.source)
+    ) {
+      delete storedSettings.staticVariables
+      delete storedSettings.dynamicVariables
+      delete updatedSettings.staticVariables
+      delete updatedSettings.dynamicVariables
+    }
+
     if (
       (update.source && update.source !== old.source) ||
-      !isEqual(restoredConfig, old.config)
+      !isEqual(updatedSettings, storedSettings)
     ) {
       throw new HTTPError(
         "Datasource settings cannot change while using stored credentials.",

@@ -129,6 +129,78 @@ describe("/datasources", () => {
   })
 
   describe("secret redaction", () => {
+    it("allows SQL query variables to change while preserving stored credentials", () => {
+      const stored: Datasource = {
+        type: "datasource",
+        source: SourceName.ORACLE,
+        config: {
+          host: "trusted.example",
+          port: 1521,
+          database: "app",
+          user: "reader",
+          password: "stored-secret",
+        },
+      }
+
+      const merged = sdk.datasources.mergeConfigs(
+        {
+          ...stored,
+          config: {
+            ...stored.config,
+            password: PASSWORD_REPLACEMENT,
+            staticVariables: { tenant: "acme" },
+            dynamicVariables: [
+              {
+                queryId: "query_1",
+                name: "region",
+                value: "{{ data.region }}",
+              },
+            ],
+          },
+        },
+        stored
+      )
+
+      expect(merged.config).toEqual({
+        ...stored.config,
+        staticVariables: { tenant: "acme" },
+        dynamicVariables: [
+          { queryId: "query_1", name: "region", value: "{{ data.region }}" },
+        ],
+      })
+    })
+
+    it("rejects a changed SQL host even when query variables change", () => {
+      const stored: Datasource = {
+        type: "datasource",
+        source: SourceName.ORACLE,
+        config: {
+          host: "trusted.example",
+          password: "stored-secret",
+        },
+      }
+
+      expect(() =>
+        sdk.datasources.mergeConfigs(
+          {
+            ...stored,
+            config: {
+              host: "attacker.example",
+              password: PASSWORD_REPLACEMENT,
+              dynamicVariables: [
+                {
+                  queryId: "query_1",
+                  name: "region",
+                  value: "{{ data.region }}",
+                },
+              ],
+            },
+          },
+          stored
+        )
+      ).toThrow("Datasource settings cannot change")
+    })
+
     it("rejects using a stored database password with a different host", async () => {
       const stored = await config.api.datasource.create({
         type: "datasource",
