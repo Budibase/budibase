@@ -100,6 +100,53 @@ describe("/api/global/template", () => {
     })
   })
 
+  describe("DELETE /api/global/template/:id/:rev", () => {
+    it("deletes a template", async () => {
+      const contents = "Template to delete"
+      const saved = await config.api.templates.saveTemplate({
+        contents,
+        purpose: EmailTemplatePurpose.PASSWORD_RECOVERY,
+        type: "email",
+      })
+
+      await config.api.templates.deleteTemplate({
+        id: saved.body._id,
+        rev: saved.body._rev,
+      })
+
+      const result = await config.api.templates.getTemplate()
+      expect(
+        result.body.find(
+          (template: Template) =>
+            template.purpose === EmailTemplatePurpose.PASSWORD_RECOVERY
+        ).contents
+      ).not.toEqual(contents)
+    })
+
+    it("rejects deletion without the customise emails feature", async () => {
+      const contents = "Template that should not be deleted"
+      const saved = await config.api.templates.saveTemplate({
+        contents,
+        purpose: EmailTemplatePurpose.INVITATION,
+        type: "email",
+      })
+      mocks.licenses.useCloudFree()
+
+      await config.api.templates.deleteTemplate(
+        { id: saved.body._id, rev: saved.body._rev },
+        { status: 400 }
+      )
+
+      const result = await config.api.templates.getTemplate()
+      expect(
+        result.body.find(
+          (template: Template) =>
+            template.purpose === EmailTemplatePurpose.INVITATION
+        ).contents
+      ).toEqual(contents)
+    })
+  })
+
   describe("GET /api/global/template", () => {
     it("fetches templates", async () => {
       let res = await config.api.templates.getTemplate()
