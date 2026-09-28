@@ -25,9 +25,10 @@
 
   export interface Props {
     functionId: string
+    compact?: boolean
   }
 
-  let { functionId }: Props = $props()
+  let { functionId, compact = false }: Props = $props()
 
   let runs = $state<FunctionRunSummary[]>([])
   let loading = $state(false)
@@ -115,15 +116,19 @@
   })
 </script>
 
-<section class="logs" aria-label="Function logs">
+<section class="logs" class:compact aria-label="Function logs">
   <div class="logs-heading">
     <div>
-      <Heading size="M">Logs</Heading>
+      {#if compact}
+        <Body size="S" weight="500">Logs</Body>
+      {:else}
+        <Heading size="M">Logs</Heading>
+      {/if}
       <Body size="S" color="var(--spectrum-global-color-gray-600)">
         Sanitized development and published execution history.
       </Body>
     </div>
-    <Button secondary disabled={loading} on:click={() => loadRuns()}>
+    <Button secondary size="S" disabled={loading} on:click={() => loadRuns()}>
       Refresh
     </Button>
   </div>
@@ -157,58 +162,45 @@
         <Button secondary on:click={loadMore}>Retry</Button>
       </div>
     {/if}
-    <div class:with-detail={selectedRun} class="logs-content">
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Status</th>
-              <th>Started</th>
-              <th>Environment</th>
-              <th>Duration</th>
-              <th><span class="visually-hidden">Actions</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each runs as run (runKey(run))}
-              <tr data-status={run.status} data-environment={run.environment}>
-                <td>
-                  <Badge
-                    size="S"
-                    green={run.status === "success"}
-                    red={run.status === "error"}
-                    orange={run.status === "running"}
-                    grey={run.status === "stopped"}
-                  >
-                    {functionRunStatusLabels[run.status]}
-                  </Badge>
-                </td>
-                <td>
-                  <time datetime={run.startedAt}>
-                    {formatFunctionRunTimestamp(run.startedAt)}
-                  </time>
-                </td>
-                <td>{functionEnvironmentLabels[run.environment]}</td>
-                <td>{formatFunctionRunDuration(run.durationMs)}</td>
-                <td>
-                  <Button secondary on:click={() => selectRun(run)}>
-                    View details
-                  </Button>
-                </td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-
+    {#if compact}
+      <div class="run-list">
+        {#each runs as run (runKey(run))}
+          <button
+            type="button"
+            class="run-row"
+            aria-label={`View ${functionRunStatusLabels[run.status]} run from ${formatFunctionRunTimestamp(run.startedAt)}`}
+            onclick={() => selectRun(run)}
+          >
+            <Badge
+              size="S"
+              green={run.status === "success"}
+              red={run.status === "error"}
+              orange={run.status === "running"}
+              grey={run.status === "stopped"}
+            >
+              {functionRunStatusLabels[run.status]}
+            </Badge>
+            <span class="run-row-info">
+              <time datetime={run.startedAt}
+                >{formatFunctionRunTimestamp(run.startedAt)}</time
+              >
+              <small
+                >{functionEnvironmentLabels[run.environment]} · {formatFunctionRunDuration(
+                  run.durationMs
+                )}</small
+              >
+            </span>
+            <Icon name="caret-right" size="S" />
+          </button>
+        {/each}
         {#if hasMore}
           <div class="pagination">
-            <Button secondary disabled={loading} on:click={loadMore}>
+            <Button secondary size="S" disabled={loading} on:click={loadMore}>
               {loading ? "Loading..." : "Load more"}
             </Button>
           </div>
         {/if}
       </div>
-
       {#if selectedRun}
         <FunctionRunDetail
           run={selectedRun}
@@ -221,7 +213,73 @@
           }}
         />
       {/if}
-    </div>
+    {:else}
+      <div class:with-detail={selectedRun} class="logs-content">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Started</th>
+                <th>Environment</th>
+                <th>Duration</th>
+                <th><span class="visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each runs as run (runKey(run))}
+                <tr data-status={run.status} data-environment={run.environment}>
+                  <td>
+                    <Badge
+                      size="S"
+                      green={run.status === "success"}
+                      red={run.status === "error"}
+                      orange={run.status === "running"}
+                      grey={run.status === "stopped"}
+                    >
+                      {functionRunStatusLabels[run.status]}
+                    </Badge>
+                  </td>
+                  <td>
+                    <time datetime={run.startedAt}>
+                      {formatFunctionRunTimestamp(run.startedAt)}
+                    </time>
+                  </td>
+                  <td>{functionEnvironmentLabels[run.environment]}</td>
+                  <td>{formatFunctionRunDuration(run.durationMs)}</td>
+                  <td>
+                    <Button secondary on:click={() => selectRun(run)}>
+                      View details
+                    </Button>
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+
+          {#if hasMore}
+            <div class="pagination">
+              <Button secondary disabled={loading} on:click={loadMore}>
+                {loading ? "Loading..." : "Load more"}
+              </Button>
+            </div>
+          {/if}
+        </div>
+
+        {#if selectedRun}
+          <FunctionRunDetail
+            run={selectedRun}
+            loading={detailLoading}
+            error={detailError}
+            onretry={retrySelectedRun}
+            onclose={() => {
+              selectedRun = undefined
+              detailError = ""
+            }}
+          />
+        {/if}
+      </div>
+    {/if}
   {/if}
 </section>
 
@@ -246,6 +304,39 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
+  }
+  .compact .logs-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .run-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .run-row {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: var(--spacing-s);
+    padding: var(--spacing-s);
+    border: 0;
+    border-radius: 4px;
+    background: var(--background-alt);
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .run-row-info {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 12px;
+  }
+  .run-row-info small {
+    color: var(--spectrum-global-color-gray-600);
   }
   .logs-content {
     display: grid;
