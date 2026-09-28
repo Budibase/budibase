@@ -5,6 +5,7 @@ import env from "../../environment"
 import { adminOnly } from "../adminOnly"
 import { builderOnly } from "../builderOnly"
 import { builderOrAdmin } from "../builderOrAdmin"
+import { workspaceBuilderOrAdmin } from "../workspaceBuilderOrAdmin"
 
 const appId = "app_aaa"
 const basicUser = structures.users.user()
@@ -393,6 +394,19 @@ describe("security middlewares", () => {
       const next = jest.fn()
 
       await builderOrAdmin(ctx, next)
+      passed(ctx.throw, next)
+    })
+  })
+
+  describe("workspaceBuilderOrAdmin middleware", () => {
+    it("should allow global builder access to any workspace", async () => {
+      const ctx = buildUserCtx(builderUser)
+      const next = jest.fn()
+
+      await doInWorkspaceContext(ctx, appId, () =>
+        workspaceBuilderOrAdmin(ctx, next)
+      )
+
       passed(ctx.throw, next)
     })
   })
