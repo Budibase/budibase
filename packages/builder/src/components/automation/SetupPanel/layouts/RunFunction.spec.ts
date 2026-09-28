@@ -83,7 +83,7 @@ const block: AutomationStep = {
   type: AutomationStepType.ACTION,
   name: "Run Function",
   tagline: "Run a Function",
-  icon: "functions",
+  icon: "function",
   description: "Run a Function in this automation",
   inputs: {
     functionId: "",
