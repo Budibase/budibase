@@ -28,7 +28,10 @@
   $: functions = $functionStore.functions
   $: selectedFunction = functions.find(fn => fn._id === inputData?.functionId)
   $: selectedFunctionMissing =
-    !!inputData?.functionId && !$functionStore.loading && !selectedFunction
+    !!inputData?.functionId &&
+    !$functionStore.loading &&
+    !$functionStore.error &&
+    !selectedFunction
 
   const getOptionLabel = (fn: FunctionResponse) =>
     `${fn.name} · ${readinessLabels[fn.readiness]}`
@@ -93,7 +96,7 @@
         automation.
       </Body>
     </div>
-  {:else if !$functionStore.loading && !functions.length}
+  {:else if !$functionStore.loading && !$functionStore.error && !functions.length}
     <div class="message warning" role="status">
       <Icon name="info" size="S" />
       <Body size="S">
