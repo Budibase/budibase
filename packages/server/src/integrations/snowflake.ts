@@ -155,6 +155,14 @@ class SnowflakeIntegration {
     }
   }
 
+  getBindingIdentifier(): string {
+    return "?"
+  }
+
+  getStringConcat(parts: string[]): string {
+    return `concat(${parts.join(", ")})`
+  }
+
   async internalQuery(query: SqlQuery) {
     await this.client.connect()
     try {
