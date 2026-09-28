@@ -42,7 +42,9 @@ export const escalationDurationMs = async (
     license.quotas?.constant?.[ConstantQuotaName.ESCALATION_DURATION_DAYS]
       ?.value
   const unlimited =
-    !ceilingDays || ceilingDays === proConstants.licenses.UNLIMITED
+    ceilingDays == null ||
+    ceilingDays === proConstants.licenses.UNLIMITED ||
+    !Number.isFinite(ceilingDays)
   const requested =
     expiry?.duration === undefined ? undefined : expiry.duration * 1000
   if (unlimited) {

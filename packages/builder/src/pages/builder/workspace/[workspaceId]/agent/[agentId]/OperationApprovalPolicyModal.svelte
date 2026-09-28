@@ -114,7 +114,9 @@
   let ceilingDays = $derived(
     $licensing.license?.quotas?.constant?.escalationDurationDays?.value
   )
-  let unlimited = $derived(!ceilingDays || ceilingDays <= 0)
+  let unlimited = $derived(
+    ceilingDays == null || ceilingDays < 0 || !Number.isFinite(ceilingDays)
+  )
   let allowedPresets = $derived(
     unlimited
       ? durationPresets
@@ -143,7 +145,9 @@
     if (!policy) {
       return DEFAULT_ESCALATION_DURATION_SECONDS
     }
-    const largest = allowedPresets[allowedPresets.length - 1].value
+    const largest =
+      allowedPresets[allowedPresets.length - 1]?.value ??
+      DEFAULT_ESCALATION_DURATION_SECONDS
     const duration = policy.expiry?.duration
     if (duration === undefined) {
       return unlimited ? NEVER : largest
