@@ -498,6 +498,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.ECR_PUBLIC_ROLE_ARN }}
           aws-region: us-east-1
+          retry-max-attempts: 1
 
       - name: Log in to Amazon ECR Public
         if: steps.aws-credentials.outcome == 'success'
