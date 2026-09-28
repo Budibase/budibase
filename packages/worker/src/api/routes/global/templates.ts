@@ -1,8 +1,10 @@
-import * as controller from "../../controllers/global/templates"
-import { TemplatePurpose, TemplateType } from "../../../constants"
 import { auth as authCore } from "@budibase/backend-core"
-import { loggedInRoutes, adminRoutes } from "../endpointGroups"
+import { middleware as proMiddleware } from "@budibase/pro"
+import { Feature } from "@budibase/types"
 import Joi from "joi"
+import { TemplatePurpose, TemplateType } from "../../../constants"
+import * as controller from "../../controllers/global/templates"
+import { loggedInRoutes, adminRoutes } from "../endpointGroups"
 
 const { joiValidator } = authCore
 
@@ -28,5 +30,14 @@ loggedInRoutes
   .post("/api/global/template/:type/export", controller.exportTemplates)
 
 adminRoutes
-  .post("/api/global/template", buildTemplateSaveValidation(), controller.save)
-  .delete("/api/global/template/:id/:rev", controller.destroy)
+  .post(
+    "/api/global/template",
+    proMiddleware.feature.requireFeature(Feature.CUSTOMISE_EMAILS),
+    buildTemplateSaveValidation(),
+    controller.save
+  )
+  .delete(
+    "/api/global/template/:id/:rev",
+    proMiddleware.feature.requireFeature(Feature.CUSTOMISE_EMAILS),
+    controller.destroy
+  )
