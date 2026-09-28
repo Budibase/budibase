@@ -13,8 +13,6 @@
     Icon,
     notifications,
     ProgressCircle,
-    Tab,
-    Tabs,
   } from "@budibase/bbui"
   import { Utils } from "@budibase/frontend-core"
   import type {
@@ -23,8 +21,11 @@
     FunctionResponse,
   } from "@budibase/types"
   import { params } from "@roxi/routify"
+  import { debounce } from "lodash"
   import { onDestroy, onMount } from "svelte"
+  import { createSaveCoordinator } from "../../saveCoordinator"
   import FunctionCodeEditor from "../FunctionCodeEditor.svelte"
+  import GenerateFunctionCode from "../GenerateFunctionCode.svelte"
   import FunctionLogs from "../FunctionLogs.svelte"
   import FunctionQueryEditor from "../FunctionQueryEditor.svelte"
   import { canManageFunctions } from "../permissions"
@@ -36,13 +37,16 @@
   let savedSource = ""
   let diagnostics: FunctionBuildDiagnostic[] = []
   let validating = false
+  let validationFailed = false
   let saving = false
   let building = false
   let queriesDirty = false
   let actionError = ""
   let validationRequest = 0
   let lastObservedSource = ""
-  let selectedTab = "Code"
+  let pendingCapabilities: FunctionQueryCapabilityInput[] | undefined
+  let destroyed = false
+  let railTab: "Queries" | "Logs" = "Queries"
 
   $params
   $: functionId = $params.functionId
@@ -52,6 +56,14 @@
   $: builderStore.selectResource(functionId)
   $: sourceDirty = !!fn && source !== savedSource
   $: draftDirty = sourceDirty || queriesDirty
+  $: buildDisabled =
+    draftDirty ||
+    fn?.readiness === "ready" ||
+    saving ||
+    building ||
+    validating ||
+    validationFailed ||
+    diagnostics.length > 0
   $: displayedReadiness = draftDirty ? "build_required" : fn?.readiness
 
   const readinessLabels = {
@@ -76,7 +88,6 @@
       if (request !== validationRequest) {
         return
       }
-      validating = true
       try {
         const response = await functionStore.compile({
           functionId: functionToValidate._id,
@@ -89,6 +100,7 @@
         }
       } catch (validationError) {
         if (request === validationRequest) {
+          validationFailed = true
           actionError =
             getErrorMessage(validationError) || "Unable to validate Function"
         }
@@ -106,6 +118,11 @@
       return
     }
     const request = ++validationRequest
+    validating = true
+    if (validationFailed) {
+      actionError = ""
+    }
+    validationFailed = false
     debouncedValidate(value, fn, request)
   }
 
@@ -113,6 +130,11 @@
     if (value !== lastObservedSource) {
       lastObservedSource = value
       validate(value)
+      if (value !== savedSource) {
+        debouncedSave()
+      } else {
+        debouncedSave.cancel()
+      }
     }
   }
 
@@ -121,6 +143,7 @@
   }
 
   const load = async () => {
+    debouncedSave.cancel()
     loading = true
     error = ""
     try {
@@ -136,6 +159,7 @@
         loadedFunction.readiness === "build_failed"
           ? loadedFunction.lastBuild?.diagnostics || []
           : []
+      validate(source)
     } catch (loadError) {
       error = getErrorMessage(loadError) || "Unable to load Function"
     } finally {
@@ -146,43 +170,59 @@
   const saveCapabilities = async (
     capabilities: FunctionQueryCapabilityInput[]
   ) => {
-    if (!fn?._rev) {
-      throw new Error("Function revision is missing")
+    debouncedSave.cancel()
+    pendingCapabilities = capabilities
+    if (!(await saveCoordinator.save())) {
+      throw new Error(actionError || "Unable to save linked queries")
     }
-    fn = await functionStore.save(fn, {
-      _rev: fn._rev,
-      name: fn.name,
-      source: fn.source,
-      capabilities,
-    })
     validate(source)
     notifications.success("Linked queries saved")
   }
 
-  const saveSource = async () => {
-    if (!fn?._rev || saving || !sourceDirty) {
-      return
+  const persistDraft = async (): Promise<boolean> => {
+    if (!fn?._rev) {
+      return false
     }
+    const capabilitiesToSave = pendingCapabilities
+    if (source === savedSource && !capabilitiesToSave) {
+      return true
+    }
+    const sourceToSave = source
     saving = true
-    actionError = ""
+    if (!validationFailed) {
+      actionError = ""
+    }
     try {
       fn = await functionStore.save(fn, {
         _rev: fn._rev,
         name: fn.name,
-        source,
-        capabilities: toCapabilityInputs(fn),
+        source: sourceToSave,
+        capabilities: capabilitiesToSave || toCapabilityInputs(fn),
       })
-      savedSource = fn.source
-      notifications.success("Function draft saved")
+      savedSource = sourceToSave
+      if (pendingCapabilities === capabilitiesToSave) {
+        pendingCapabilities = undefined
+      }
+      if (source !== sourceToSave && !destroyed) {
+        void saveCoordinator.save()
+      }
+      return true
     } catch (saveError) {
       actionError = getErrorMessage(saveError) || "Unable to save Function"
+      if (pendingCapabilities === capabilitiesToSave) {
+        pendingCapabilities = undefined
+      }
+      return false
     } finally {
       saving = false
     }
   }
 
+  const saveCoordinator = createSaveCoordinator(persistDraft)
+  const debouncedSave = debounce(() => saveCoordinator.save(), 500)
+
   const build = async () => {
-    if (!fn || draftDirty || building) {
+    if (!fn || buildDisabled) {
       return
     }
     building = true
@@ -211,20 +251,25 @@
   })
 
   onDestroy(() => {
+    destroyed = true
     validationRequest += 1
+    debouncedSave.cancel()
+    if (source !== savedSource || saving) {
+      void saveCoordinator.save()
+    }
   })
 </script>
 
 <div class="wrapper">
   <TopBar
     breadcrumbs={[
-      { text: "Functions", url: "../../home?type=function" },
+      { text: "Functions", url: "../../home?type=function", tag: "Alpha" },
       { text: fn?.name || "Function" },
     ]}
-    icon="code"
+    icon="function"
   />
 
-  <main class="function-page">
+  <div class="function-page">
     {#if !canManage}
       <div class="state" data-testid="function-permission-state">
         <Icon name="lock" size="L" />
@@ -241,154 +286,179 @@
         <Icon name="warning-circle" size="L" />
         <Heading size="S">Unable to load Function</Heading>
         {#if error}
-          <Body size="S" color="var(--spectrum-global-color-gray-600)">
-            {error}
-          </Body>
+          <Body size="S" color="var(--spectrum-global-color-gray-600)"
+            >{error}</Body
+          >
         {/if}
         <Button secondary on:click={load}>Retry</Button>
       </div>
     {:else}
       <FunctionTrustNotice />
-      <div class="heading">
-        <div>
-          <div class="title">
-            <Heading size="L">{fn.name}</Heading>
-            {#if displayedReadiness}
-              <Badge
-                grey={displayedReadiness === "build_required"}
-                red={displayedReadiness === "build_failed"}
-                green={displayedReadiness === "ready"}
+      <div class="function-content">
+        <main class="code-pane">
+          <div class="code-header">
+            <div class="code-title">
+              <Body size="S" weight="500">Code</Body>
+              {#if displayedReadiness}
+                <Badge
+                  size="S"
+                  grey={displayedReadiness === "build_required"}
+                  red={displayedReadiness === "build_failed"}
+                  green={displayedReadiness === "ready"}
+                >
+                  {readinessLabels[displayedReadiness]}
+                </Badge>
+              {/if}
+            </div>
+            <div class="code-actions">
+              <GenerateFunctionCode
+                functionName={fn.name}
+                {source}
+                capabilities={fn.capabilities}
+                onApply={generated => (source = generated)}
+              />
+              <Button
+                primary
+                size="S"
+                disabled={buildDisabled}
+                on:click={build}
               >
-                {readinessLabels[displayedReadiness]}
-              </Badge>
-            {/if}
+                {building ? "Building..." : "Build"}
+              </Button>
+            </div>
           </div>
-          <Body size="S" color="var(--spectrum-global-color-gray-600)">
-            {selectedTab === "Code"
-              ? "Write TypeScript, save the draft, then build its saved revision."
-              : "Review sanitized development and published execution history."}
-          </Body>
-        </div>
-        {#if selectedTab === "Code"}
-          <div class="actions">
-            <Button
-              secondary
-              disabled={!sourceDirty || saving || building}
-              on:click={saveSource}
-            >
-              {saving ? "Saving..." : "Save"}
-            </Button>
-            <Button
-              primary
-              disabled={draftDirty || saving || building}
-              on:click={build}
-            >
-              {building ? "Building..." : "Build"}
-            </Button>
-          </div>
-        {/if}
-      </div>
 
-      <Tabs
-        noHorizPadding
-        selected={selectedTab}
-        on:select={event => (selectedTab = event.detail)}
-      >
-        <Tab title="Code">
           {#if actionError}
             <div class="action-error" role="alert">
               <Icon name="warning-circle" size="S" />
               <span>{actionError}</span>
-              <Button secondary on:click={load}>Reload saved revision</Button>
+              <Button secondary size="S" on:click={load}
+                >Reload saved revision</Button
+              >
             </div>
           {/if}
-
-          <section class="source-editor">
-            <div class="section-heading">
-              <div>
-                <Heading size="M">Source</Heading>
-                <Body size="S" color="var(--spectrum-global-color-gray-600)">
-                  TypeScript diagnostics are authoritative and do not prevent
-                  saving.
-                </Body>
-              </div>
+          <div class="editor-shell">
+            <div class="editor-body">
+              <FunctionCodeEditor
+                bind:value={source}
+                capabilities={fn.capabilities}
+                {diagnostics}
+              />
+            </div>
+            <div class="editor-footer">
+              <span
+                >TypeScript · {saving
+                  ? "Saving..."
+                  : "Changes save automatically"}</span
+              >
               {#if validating}
-                <div class="validating">
-                  <ProgressCircle size="S" />
-                  <Body size="S">Checking...</Body>
-                </div>
+                <span class="validating"
+                  ><ProgressCircle size="S" /> Checking...</span
+                >
               {/if}
             </div>
-            <FunctionCodeEditor
-              bind:value={source}
-              capabilities={fn.capabilities}
-              {diagnostics}
-            />
-            {#if diagnostics.length}
-              <div class="diagnostics" aria-label="Function diagnostics">
-                {#each diagnostics as diagnostic}
-                  <div class="diagnostic">
-                    <code>{diagnostic.code}</code>
-                    {#if diagnostic.line}
-                      <span>
-                        Line {diagnostic.line}{diagnostic.column
-                          ? `:${diagnostic.column}`
-                          : ""}
-                      </span>
-                    {/if}
-                    <span>{diagnostic.message}</span>
-                  </div>
-                {/each}
-              </div>
-            {/if}
-          </section>
+          </div>
+          {#if diagnostics.length}
+            <div class="diagnostics" aria-label="Function diagnostics">
+              {#each diagnostics as diagnostic}
+                <div class="diagnostic">
+                  <code>{diagnostic.code}</code>
+                  {#if diagnostic.line}
+                    <span
+                      >Line {diagnostic.line}{diagnostic.column
+                        ? `:${diagnostic.column}`
+                        : ""}</span
+                    >
+                  {/if}
+                  <span>{diagnostic.message}</span>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </main>
 
-          <FunctionQueryEditor
-            capabilities={fn.capabilities}
-            catalog={$functionStore.queryCatalog}
-            catalogLoading={$functionStore.catalogLoading}
-            catalogError={$functionStore.catalogError}
-            onRetry={() => functionStore.fetchQueryCatalog()}
-            onSave={saveCapabilities}
-            onDirtyChange={dirty => (queriesDirty = dirty)}
-          />
-        </Tab>
-        <Tab title="Logs">
-          <FunctionLogs functionId={fn._id} />
-        </Tab>
-      </Tabs>
+        <aside class="settings-rail" aria-label="Function settings">
+          <div class="rail-tabs" role="tablist" aria-label="Function settings">
+            <button
+              type="button"
+              role="tab"
+              id="function-queries-tab"
+              aria-selected={railTab === "Queries"}
+              aria-controls="function-settings-panel"
+              class:active={railTab === "Queries"}
+              onclick={() => (railTab = "Queries")}>Queries</button
+            >
+            <button
+              type="button"
+              role="tab"
+              id="function-logs-tab"
+              aria-selected={railTab === "Logs"}
+              aria-controls="function-settings-panel"
+              class:active={railTab === "Logs"}
+              onclick={() => (railTab = "Logs")}>Logs</button
+            >
+          </div>
+          <div
+            class="rail-content"
+            role="tabpanel"
+            id="function-settings-panel"
+            aria-labelledby={railTab === "Queries"
+              ? "function-queries-tab"
+              : "function-logs-tab"}
+          >
+            <div hidden={railTab !== "Queries"}>
+              <FunctionQueryEditor
+                capabilities={fn.capabilities}
+                catalog={$functionStore.queryCatalog}
+                catalogLoading={$functionStore.catalogLoading}
+                catalogError={$functionStore.catalogError}
+                onRetry={() => functionStore.fetchQueryCatalog()}
+                onSave={saveCapabilities}
+                onDirtyChange={dirty => (queriesDirty = dirty)}
+              />
+            </div>
+            {#if railTab === "Logs"}
+              <FunctionLogs functionId={fn._id} compact />
+            {/if}
+          </div>
+        </aside>
+      </div>
     {/if}
-  </main>
+  </div>
 </div>
 
 <style>
-  .wrapper {
-    height: 100%;
+  .wrapper,
+  .function-page,
+  .code-pane,
+  .settings-rail {
     display: flex;
+    min-height: 0;
     flex-direction: column;
+  }
+  .wrapper,
+  .function-page {
+    height: 100%;
   }
   .function-page {
     flex: 1;
-    overflow: auto;
-    padding: var(--spacing-xl);
+    overflow: hidden;
+    background: var(--background);
   }
-  .heading {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--spacing-l);
-    margin-bottom: var(--spacing-xl);
+  .function-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    min-height: 0;
+    flex: 1;
   }
-  .heading > div:first-child,
-  .source-editor,
-  .diagnostics {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-s);
+  .code-pane {
+    min-width: 0;
+    gap: 10px;
+    padding: 10px 12px 12px;
   }
-  .title,
-  .actions,
-  .section-heading,
+  .code-header,
+  .code-title,
+  .code-actions,
   .validating,
   .action-error,
   .diagnostic {
@@ -396,21 +466,76 @@
     align-items: center;
     gap: var(--spacing-s);
   }
-  .section-heading {
-    align-items: flex-start;
+  .code-header {
     justify-content: space-between;
+    min-height: 30px;
   }
-  .section-heading > div:first-child {
+  .code-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .editor-shell {
     display: flex;
+    min-height: 0;
+    flex: 1;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    overflow: hidden;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    border-radius: 6px;
+    background: var(--spectrum-global-color-gray-100);
   }
-  .source-editor {
-    gap: var(--spacing-m);
-    margin-bottom: var(--spacing-xl);
+  .editor-body {
+    min-height: 0;
+    flex: 1;
+  }
+  .editor-body :global(.function-code-editor) {
+    min-height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+  .editor-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 34px;
+    padding: 0 var(--spacing-m);
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-600);
+    font-size: 12px;
+  }
+  .settings-rail {
+    min-width: 0;
+    border-left: 1px solid var(--spectrum-global-color-gray-200);
+  }
+  .rail-tabs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 2px 12px;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+  }
+  .rail-tabs button {
+    padding: 4px 8px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--spectrum-global-color-gray-700);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .rail-tabs button.active {
+    background: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-900);
+  }
+  .rail-content {
+    min-height: 0;
+    flex: 1;
+    overflow: auto;
+    padding: 20px 12px;
   }
   .action-error {
-    margin-bottom: var(--spacing-l);
     padding: var(--spacing-m);
     border: 1px solid var(--spectrum-global-color-red-400);
     border-radius: var(--radius-m);
@@ -420,7 +545,7 @@
     flex: 1;
   }
   .diagnostics {
-    max-height: 180px;
+    max-height: 150px;
     overflow: auto;
     padding: var(--spacing-m);
     border: 1px solid var(--spectrum-global-color-red-300);
@@ -432,10 +557,6 @@
     color: var(--spectrum-global-color-red-800);
     font-size: 12px;
   }
-  .diagnostic code,
-  .diagnostic > span:first-of-type {
-    flex: 0 0 auto;
-  }
   .state {
     display: flex;
     min-height: 320px;
@@ -444,5 +565,10 @@
     justify-content: center;
     gap: var(--spacing-s);
     text-align: center;
+  }
+  @media (max-width: 900px) {
+    .function-content {
+      grid-template-columns: minmax(0, 1fr) 300px;
+    }
   }
 </style>

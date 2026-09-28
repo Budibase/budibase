@@ -587,8 +587,16 @@
                   Automation
                 </MenuItem>
                 {#if $functionsAvailable && canManageFunctions($auth.user, workspaceId)}
-                  <MenuItem icon="code" on:click={openFunctions}>
+                  <MenuItem
+                    icon="function"
+                    iconColour="var(--spectrum-global-color-magenta-400)"
+                    iconWeight="bold"
+                    on:click={openFunctions}
+                  >
                     Function
+                    <div slot="right">
+                      <Tag emphasized>Alpha</Tag>
+                    </div>
                   </MenuItem>
                 {/if}
                 <MenuItem icon="browsers" on:click={openCreateApp}>
@@ -621,22 +629,6 @@
                     bb.settings(`/connections/apis`)
                     keepCollapsed()
                   }}
-                />
-              {/if}
-              <SideNavLink
-                icon="path"
-                text="Automations"
-                url={$url("./home?type=automation")}
-                {collapsed}
-                on:click={keepCollapsed}
-              />
-              {#if $functionsAvailable && canManageFunctions($auth.user, workspaceId)}
-                <SideNavLink
-                  icon="code"
-                  text="Functions"
-                  url={$url("./home?type=function")}
-                  {collapsed}
-                  on:click={keepCollapsed}
                 />
               {/if}
               <SideNavLink

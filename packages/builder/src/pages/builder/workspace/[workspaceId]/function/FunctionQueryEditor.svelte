@@ -4,15 +4,15 @@
   import { getErrorMessage } from "@/helpers/errors"
   import {
     ActionButton,
+    ActionMenu,
     Body,
     Button,
-    Heading,
     Helpers,
     Icon,
     Input,
+    MenuItem,
     notifications,
     ProgressCircle,
-    Select,
   } from "@budibase/bbui"
   import type {
     FunctionQueryCapability,
@@ -51,10 +51,9 @@
   let saving = $state(false)
   let saveError = $state("")
   let showErrors = $state(false)
-  let queryToAdd = $state<Record<FunctionQueryKind, string | undefined>>({
-    data: undefined,
-    api: undefined,
-  })
+  let querySearch = $state("")
+  let expandedQueryId = $state<string | undefined>()
+  const queryKinds: FunctionQueryKind[] = ["data", "api"]
 
   const toInputs = (
     values: FunctionQueryCapability[]
@@ -106,15 +105,15 @@
     onDirtyChange(dirty)
   })
 
-  const getAvailableQueries = (kind: FunctionQueryKind) =>
+  const getAvailableQueries = (kind: "data" | "api") =>
     catalog.filter(
       entry =>
         entry.kind === kind &&
-        !drafts.some(capability => capability.queryId === entry.queryId)
+        !drafts.some(capability => capability.queryId === entry.queryId) &&
+        `${entry.queryName} ${entry.datasourceName}`
+          .toLowerCase()
+          .includes(querySearch.toLowerCase())
     )
-
-  const getOptionLabel = (entry: FunctionQueryCatalogEntry) => entry.queryName
-  const getOptionValue = (entry: FunctionQueryCatalogEntry) => entry.queryId
   const getCodeReference = (capability: FunctionQueryCapabilityInput) =>
     `await queries.${capability.datasourceAlias || "datasource"}.${capability.queryAlias || "query"}()`
 
@@ -170,8 +169,7 @@
     return alias
   }
 
-  const addQuery = (kind: FunctionQueryKind, queryId?: string) => {
-    queryToAdd[kind] = undefined
+  const addQuery = (queryId?: string) => {
     if (!queryId || drafts.some(capability => capability.queryId === queryId)) {
       return
     }
@@ -209,6 +207,7 @@
         queryAlias,
       },
     ]
+    expandedQueryId = queryId
     saveError = ""
   }
 
@@ -256,17 +255,72 @@
 </script>
 
 <section class="query-editor">
-  <div class="editor-heading">
-    <div>
-      <Heading size="M">Linked queries</Heading>
-      <Body size="S" color="var(--spectrum-global-color-gray-600)">
-        Only linked saved queries are available to this Function. Aliases remain
-        stable when a datasource or query is renamed.
-      </Body>
+  <div class="rail-heading">
+    <Body size="S" weight="500">Linked queries</Body>
+    <Body size="S" color="var(--spectrum-global-color-gray-600)">
+      Give this Function access to saved queries it can call from code.
+    </Body>
+    <div class="query-actions">
+      <div class="query-popover-container">
+        <ActionMenu
+          align="right"
+          roundedPopover
+          portalTarget=".query-popover-container"
+        >
+          <div slot="control">
+            <Button
+              secondary
+              size="S"
+              icon="plus-circle"
+              disabled={catalogLoading || !!catalogError}
+            >
+              Add queries
+            </Button>
+          </div>
+          <div class="query-menu">
+            <input
+              class="query-search"
+              type="search"
+              aria-label="Search saved queries"
+              placeholder="Search"
+              bind:value={querySearch}
+            />
+            {#each queryKinds as kind}
+              {@const options = getAvailableQueries(kind)}
+              {#if options.length}
+                <div class="query-menu-section">
+                  <div class="query-menu-label">
+                    {kind === "data" ? "Data queries" : "API Explorer queries"}
+                  </div>
+                  {#each options as entry (entry.queryId)}
+                    <MenuItem on:click={() => addQuery(entry.queryId)}>
+                      <div class="query-option">
+                        <Icon
+                          name={kind === "api" ? "globe-simple" : "database"}
+                          size="S"
+                        />
+                        <span>
+                          <strong>{entry.queryName}</strong>
+                          <small>{getOptionSubtitle(entry)}</small>
+                        </span>
+                      </div>
+                    </MenuItem>
+                  {/each}
+                </div>
+              {/if}
+            {/each}
+            {#if !getAvailableQueries("data").length && !getAvailableQueries("api").length}
+              <div class="menu-empty">No queries available</div>
+            {/if}
+          </div>
+        </ActionMenu>
+      </div>
+      {#if dirty}
+        <Button primary size="S" disabled={saving} on:click={save}>
+          {saving ? "Saving..." : "Save links"}
+        </Button>
+      {/if}
     </div>
-    <Button primary disabled={!dirty || saving} on:click={save}>
-      Save query links
-    </Button>
   </div>
 
   {#if catalogLoading}
@@ -278,46 +332,13 @@
     <div class="catalog-state error" data-testid="query-catalog-error">
       <Icon name="warning-circle" size="S" />
       <Body size="S">{catalogError}</Body>
-      <Button secondary on:click={onRetry}>Retry</Button>
-    </div>
-  {:else}
-    <div class="query-pickers">
-      <Select
-        label="Data queries"
-        value={queryToAdd.data}
-        options={getAvailableQueries("data")}
-        {getOptionLabel}
-        {getOptionValue}
-        {getOptionSubtitle}
-        showSelectedSubtitle
-        autocomplete
-        searchPlaceholder="Search Data queries"
-        placeholder="Link a Data query"
-        on:change={event => addQuery("data", event.detail)}
-      />
-      <Select
-        label="API Explorer queries"
-        value={queryToAdd.api}
-        options={getAvailableQueries("api")}
-        {getOptionLabel}
-        {getOptionValue}
-        {getOptionSubtitle}
-        showSelectedSubtitle
-        autocomplete
-        searchPlaceholder="Search API queries"
-        placeholder="Link an API query"
-        on:change={event => addQuery("api", event.detail)}
-      />
+      <Button secondary size="S" on:click={onRetry}>Retry</Button>
     </div>
   {/if}
 
   {#if !drafts.length}
     <div class="empty" data-testid="linked-queries-empty">
-      <Icon name="link" size="L" />
-      <Heading size="S">No linked queries</Heading>
-      <Body size="S" color="var(--spectrum-global-color-gray-600)">
-        Select a saved Data or API Explorer query to make it callable.
-      </Body>
+      No queries linked yet. Add a Data or API Explorer query to use it in code.
     </div>
   {:else}
     <div class="linked-queries">
@@ -325,26 +346,40 @@
         {@const entry = catalogByQueryId.get(capability.queryId)}
         {@const missing = !catalogLoading && !catalogError && !entry}
         <article
-          class:missing
           class="linked-query"
+          class:missing
           data-testid={`linked-query-${capability.queryId}`}
         >
-          <div class="query-heading">
-            <div>
-              <div class="query-title">
-                <Icon
-                  name={entry?.kind === "api" ? "globe-simple" : "database"}
-                  size="S"
-                />
-                <Heading size="S">
-                  {entry?.queryName || getUnavailableQueryTitle()}
-                </Heading>
-              </div>
-              <Body size="S" color="var(--spectrum-global-color-gray-600)">
-                {entry?.datasourceName ||
-                  getUnavailableQueryDescription(capability, missing)}
-              </Body>
-            </div>
+          <div class="query-row">
+            <button
+              type="button"
+              class="query-row-toggle"
+              aria-expanded={expandedQueryId === capability.queryId}
+              onclick={() =>
+                (expandedQueryId =
+                  expandedQueryId === capability.queryId
+                    ? undefined
+                    : capability.queryId)}
+            >
+              <Icon
+                name={entry?.kind === "api" ? "globe-simple" : "database"}
+                size="S"
+              />
+              <span class="query-row-name">
+                <strong>{entry?.queryName || getUnavailableQueryTitle()}</strong
+                >
+                <small
+                  >{entry?.datasourceName ||
+                    getUnavailableQueryDescription(capability, missing)}</small
+                >
+              </span>
+              <Icon
+                name={expandedQueryId === capability.queryId
+                  ? "caret-up"
+                  : "caret-down"}
+                size="S"
+              />
+            </button>
             <button
               type="button"
               class="remove-button"
@@ -352,65 +387,62 @@
               onclick={() => removeQuery(capability.queryId)}
             >
               <Icon name="trash" size="S" />
-              Remove
             </button>
           </div>
 
-          {#if missing}
-            <div class="missing-message">
-              <Icon name="warning-circle" size="S" />
-              Remove this link before saving, or restore the saved query.
-            </div>
-          {/if}
-
-          <div class="aliases">
-            <Input
-              label="Datasource alias"
-              bind:value={capability.datasourceAlias}
-              error={showErrors ? errors[index]?.datasourceAlias : undefined}
-            />
-            <Input
-              label="Query alias"
-              bind:value={capability.queryAlias}
-              error={showErrors ? errors[index]?.queryAlias : undefined}
-            />
-          </div>
-
-          <div class="code-reference">
-            <span>Available in code as</span>
-            <div class="code-snippet">
-              <code>{getCodeReference(capability)}</code>
-              <ActionButton
-                icon="copy"
-                size="S"
-                quiet
-                on:click={() => copyCodeReference(capability)}
-              >
-                Copy
-              </ActionButton>
-            </div>
-          </div>
-
-          <div class="parameters">
-            <span>Parameters</span>
-            {#if entry?.parameters.length}
-              {#each entry.parameters as parameter (parameter.name)}
-                <code>{parameter.name}: string | null</code>
-              {/each}
-            {:else if !entry && getPersistedCapability(capability.queryId)?.parameterNames.length}
-              {#each getPersistedCapability(capability.queryId)?.parameterNames || [] as parameter (parameter)}
-                <code>{parameter}: string | null</code>
-              {/each}
-              <span class="parameter-note">Last known</span>
-            {:else}
-              <span>None</span>
-            {/if}
-          </div>
-
-          {#if entry && parametersChanged(capability, entry)}
-            <div class="parameter-change">
-              Query parameters changed. Save and rebuild this Function to update
-              its declarations.
+          {#if expandedQueryId === capability.queryId}
+            <div class="query-details">
+              {#if missing}
+                <div class="missing-message">
+                  <Icon name="warning-circle" size="S" />
+                  Remove this link before saving, or restore the saved query.
+                </div>
+              {/if}
+              <Input
+                label="Datasource alias"
+                bind:value={capability.datasourceAlias}
+                error={showErrors ? errors[index]?.datasourceAlias : undefined}
+              />
+              <Input
+                label="Query alias"
+                bind:value={capability.queryAlias}
+                error={showErrors ? errors[index]?.queryAlias : undefined}
+              />
+              <div class="code-reference">
+                <span>Available in code as</span>
+                <div class="code-snippet">
+                  <code>{getCodeReference(capability)}</code>
+                  <ActionButton
+                    icon="copy"
+                    size="S"
+                    quiet
+                    on:click={() => copyCodeReference(capability)}
+                  >
+                    Copy
+                  </ActionButton>
+                </div>
+              </div>
+              <div class="parameters">
+                <span>Parameters</span>
+                {#if entry?.parameters.length}
+                  {#each entry.parameters as parameter (parameter.name)}
+                    <code>{parameter.name}: string | null</code>
+                  {/each}
+                {:else if !entry && getPersistedCapability(capability.queryId)?.parameterNames.length}
+                  {#each getPersistedCapability(capability.queryId)?.parameterNames || [] as parameter (parameter)}
+                    <code>{parameter}: string | null</code>
+                  {/each}
+                  <span class="parameter-note">Last known</span>
+                {:else}
+                  <span>None</span>
+                {/if}
+              </div>
+              {#if entry && parametersChanged(capability, entry)}
+                <div class="parameter-change">
+                  Query parameters changed. Save and rebuild this Function to
+                  update its declarations.
+                </div>
+              {/if}
             </div>
           {/if}
         </article>
@@ -428,98 +460,130 @@
 </section>
 
 <style>
-  .query-editor {
+  .query-editor,
+  .rail-heading,
+  .linked-queries,
+  .query-details {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-l);
   }
-  .editor-heading,
-  .query-heading {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--spacing-l);
-  }
-  .editor-heading > div,
-  .query-heading > div {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-  }
-  .query-pickers {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--spacing-l);
-    padding: var(--spacing-l);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: var(--radius-l);
-    background: var(--spectrum-global-color-gray-100);
-  }
-  .catalog-state {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-    min-height: 48px;
-  }
-  .catalog-state.error {
-    color: var(--spectrum-global-color-red-700);
-  }
-  .empty {
-    display: flex;
-    min-height: 180px;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-s);
-    border: 1px dashed var(--spectrum-global-color-gray-400);
-    border-radius: var(--radius-l);
-    text-align: center;
+  .query-editor,
+  .rail-heading {
+    gap: var(--spacing-m);
   }
   .linked-queries {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
+    gap: 6px;
   }
-  .linked-query {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
-    padding: var(--spacing-l);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: var(--radius-l);
-  }
-  .linked-query.missing {
-    border-color: var(--spectrum-global-color-red-500);
-  }
-  .query-title {
+  .query-actions,
+  .catalog-state,
+  .query-row,
+  .query-row-toggle,
+  .code-snippet {
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
+  }
+  .query-menu {
+    width: 300px;
+    max-height: 400px;
+    overflow: auto;
+  }
+  .query-search {
+    width: 100%;
+    padding: var(--spacing-s) var(--spacing-m);
+    border: 0;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-200);
+    outline: none;
+    background: transparent;
+    color: inherit;
+  }
+  .query-menu-label {
+    padding: var(--spacing-s) var(--spacing-m);
+    color: var(--spectrum-global-color-gray-600);
+    font-size: var(--font-size-s);
+  }
+  .query-option {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+  .query-option span,
+  .query-row-name {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .query-option small,
+  .query-row-name small {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: 11px;
+    font-weight: 400;
+  }
+  .menu-empty,
+  .empty {
+    padding: var(--spacing-m);
+    color: var(--spectrum-global-color-gray-600);
+    font-size: var(--font-size-s);
+  }
+  .catalog-state.error,
+  .missing-message,
+  .parameter-change,
+  .save-error {
+    color: var(--spectrum-global-color-red-700);
+  }
+  .linked-query {
+    border-radius: 4px;
+    background: var(--background-alt);
+  }
+  .linked-query.missing {
+    outline: 1px solid var(--spectrum-global-color-red-400);
+  }
+  .query-row {
+    padding: 0 var(--spacing-s);
+  }
+  .query-row-toggle {
+    min-width: 0;
+    flex: 1;
+    padding: var(--spacing-s) 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .query-row-name {
+    flex: 1;
+  }
+  .query-row-name strong,
+  .query-row-name small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .remove-button {
     display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
     border: 0;
     background: transparent;
-    color: var(--spectrum-global-color-red-700);
+    color: var(--spectrum-global-color-gray-600);
     cursor: pointer;
-    font: inherit;
   }
-  .aliases {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--spacing-l);
+  .remove-button:hover {
+    color: var(--spectrum-global-color-red-700);
+  }
+  .query-details {
+    gap: var(--spacing-m);
+    padding: var(--spacing-m);
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
   }
   .code-reference,
   .parameters,
   .missing-message,
   .parameter-change {
     display: flex;
-    align-items: center;
     flex-wrap: wrap;
+    align-items: center;
     gap: var(--spacing-xs);
-    color: var(--spectrum-global-color-gray-700);
     font-size: 12px;
   }
   .code-reference {
@@ -527,17 +591,10 @@
     align-items: flex-start;
   }
   .code-snippet {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
+    max-width: 100%;
   }
   .code-snippet code {
-    font-size: 15px;
-  }
-  .missing-message,
-  .parameter-change,
-  .save-error {
-    color: var(--spectrum-global-color-red-700);
+    overflow-wrap: anywhere;
   }
   code {
     padding: 2px var(--spacing-xs);
@@ -549,14 +606,5 @@
   .parameter-note {
     color: var(--spectrum-global-color-gray-600);
     font-style: italic;
-  }
-  .save-error {
-    font-size: 13px;
-  }
-  @media (max-width: 900px) {
-    .query-pickers,
-    .aliases {
-      grid-template-columns: 1fr;
-    }
   }
 </style>

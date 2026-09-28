@@ -121,6 +121,23 @@ describe("AI", () => {
     })
   })
 
+  describe("POST /api/ai/function-code", () => {
+    it("returns a complete TypeScript Function module", async () => {
+      const source =
+        "export default async function () { return { output: {} } }"
+      mockAISDKChatGPTResponse(`\`\`\`ts\n${source}\n\`\`\``)
+
+      const response = await config.api.ai.generateFunctionCode({
+        prompt: "Return the input value",
+        functionName: "Example",
+        source,
+        queries: [],
+      })
+
+      expect(response.code).toBe(source)
+    })
+  })
+
   describe("POST /api/ai/cron", () => {
     it("handles correct cron response", async () => {
       mockAISDKChatGPTResponse("0 0 * * *")
