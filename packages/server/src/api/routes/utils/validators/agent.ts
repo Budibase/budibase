@@ -78,7 +78,9 @@ const APPROVAL_POLICY_SCHEMA = Joi.object({
     outcome: Joi.string()
       .valid(...Object.values(EscalationAction))
       .optional(),
-  }).optional(),
+  })
+    .with("outcome", "duration")
+    .optional(),
   notifications: Joi.object({
     recipients: Joi.array().items(ESCALATION_RECIPIENT_SCHEMA).optional(),
   }).required(),
