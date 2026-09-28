@@ -42,9 +42,7 @@ export interface WorkspaceMetaState {
   features: WorkspaceFeatures
   clientLibPath: string
   hasLock: boolean
-  appInstance: { _id: string } | null
   initialised: boolean
-  hasAppPackage: boolean
   usedPlugins: Plugin[]
   automations: AutomationSettings
   routes: { [key: string]: any }
@@ -84,9 +82,7 @@ export const INITIAL_WORKSPACE_META_STATE: WorkspaceMetaState = {
   },
   clientLibPath: "",
   hasLock: true,
-  appInstance: null,
   initialised: false,
-  hasAppPackage: false,
   usedPlugins: [],
   automations: {},
   routes: {},
@@ -122,7 +118,6 @@ export class WorkspaceMetaStore extends BudiStore<WorkspaceMetaState> {
       url: workspace.url || "",
       libraries: workspace.componentLibraries,
       version: workspace.version,
-      appInstance: workspace.instance,
       revertableVersion: workspace.revertableVersion,
       upgradableVersion: workspace.upgradableVersion,
       usedPlugins: workspace.usedPlugins || [],
@@ -133,7 +128,6 @@ export class WorkspaceMetaStore extends BudiStore<WorkspaceMetaState> {
       },
       initialised: true,
       automations: workspace.automations || {},
-      hasAppPackage: true,
       pwa: workspace.pwa,
       scripts: workspace.scripts || [],
       embedAllowedOrigins: workspace.embedAllowedOrigins || [],

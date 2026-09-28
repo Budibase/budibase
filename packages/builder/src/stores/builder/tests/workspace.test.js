@@ -72,7 +72,6 @@ describe("Workspace Meta Store", () => {
 
     const {
       version,
-      instance,
       revertableVersion,
       upgradableVersion,
       usedPlugins,
@@ -96,7 +95,6 @@ describe("Workspace Meta Store", () => {
       clientLibPath,
       libraries: componentLibraries,
       version,
-      appInstance: instance,
       revertableVersion,
       upgradableVersion,
       usedPlugins,
@@ -104,7 +102,6 @@ describe("Workspace Meta Store", () => {
       features,
       hasLock,
       initialised: true,
-      hasAppPackage: true,
       pwa,
       embedSSO,
     })
