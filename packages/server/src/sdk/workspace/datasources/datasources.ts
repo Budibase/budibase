@@ -354,6 +354,10 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
       delete updatedSettings.staticVariables
       delete updatedSettings.dynamicVariables
     }
+    if ([SourceName.POSTGRES, SourceName.SQL_SERVER].includes(old.source)) {
+      delete storedSettings.schema
+      delete updatedSettings.schema
+    }
 
     if (
       (update.source && update.source !== old.source) ||

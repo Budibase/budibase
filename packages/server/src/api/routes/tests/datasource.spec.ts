@@ -201,6 +201,57 @@ describe("/datasources", () => {
       ).toThrow("Datasource settings cannot change")
     })
 
+    it.each([
+      { source: SourceName.POSTGRES, hostField: "host" },
+      { source: SourceName.SQL_SERVER, hostField: "server" },
+    ])(
+      "allows $source schema changes without exposing stored credentials to a new host",
+      ({ source, hostField }) => {
+        const stored: Datasource = {
+          type: "datasource",
+          source,
+          config: {
+            [hostField]: "trusted.example",
+            port: 5432,
+            schema: "original",
+            password: "stored-secret",
+          },
+        }
+
+        const merged = sdk.datasources.mergeConfigs(
+          {
+            ...stored,
+            config: {
+              ...stored.config,
+              schema: "other",
+              password: PASSWORD_REPLACEMENT,
+            },
+          },
+          stored
+        )
+
+        expect(merged.config).toEqual({
+          ...stored.config,
+          schema: "other",
+        })
+
+        expect(() =>
+          sdk.datasources.mergeConfigs(
+            {
+              ...stored,
+              config: {
+                ...stored.config,
+                [hostField]: "attacker.example",
+                schema: "other",
+                password: PASSWORD_REPLACEMENT,
+              },
+            },
+            stored
+          )
+        ).toThrow("Datasource settings cannot change")
+      }
+    )
+
     it("rejects using a stored database password with a different host", async () => {
       const stored = await config.api.datasource.create({
         type: "datasource",
