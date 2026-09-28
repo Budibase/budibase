@@ -128,9 +128,7 @@
           { value: NEVER, label: "Never expires" },
           { value: CUSTOM, label: "Custom" },
         ]
-      : [...allowedPresets, ...storedOption].sort(
-          (a, b) => a.value - b.value
-        )
+      : [...allowedPresets, ...storedOption].sort((a, b) => a.value - b.value)
   )
 
   const splitDuration = (seconds: number) => {
