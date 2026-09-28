@@ -129,6 +129,90 @@ describe("/datasources", () => {
   })
 
   describe("secret redaction", () => {
+    it("rejects using a stored database password with a different host", async () => {
+      const stored = await config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.POSTGRES,
+        config: {
+          host: "trusted.example",
+          port: 5432,
+          database: "app",
+          user: "reader",
+          password: "stored-secret",
+          schema: "public",
+        },
+      })
+
+      await config.api.datasource.verify(
+        {
+          datasource: {
+            ...stored,
+            config: {
+              ...stored.config,
+              host: "127.0.0.1",
+              port: 1,
+            },
+          },
+        },
+        { status: 400 }
+      )
+    })
+
+    it("rejects using a stored database password without its host", async () => {
+      const stored = await config.api.datasource.create({
+        type: "datasource",
+        name: generator.guid(),
+        source: SourceName.POSTGRES,
+        config: {
+          host: "trusted.example",
+          port: 5432,
+          database: "app",
+          user: "reader",
+          password: "stored-secret",
+          schema: "public",
+        },
+      })
+      const configWithoutHost = { ...stored.config }
+      delete configWithoutHost.host
+
+      await config.api.datasource.verify(
+        {
+          datasource: {
+            ...stored,
+            config: configWithoutHost,
+          },
+        },
+        { status: 400 }
+      )
+    })
+
+    it("rejects a changed host when stored auth settings are merged", () => {
+      const stored: Datasource = {
+        type: "datasource",
+        source: SourceName.POSTGRES,
+        config: {
+          host: "trusted.example",
+          password: "stored-secret",
+          auth: { type: "service" },
+        },
+      }
+
+      expect(() =>
+        sdk.datasources.mergeConfigs(
+          {
+            ...stored,
+            config: {
+              host: "127.0.0.1",
+              password: PASSWORD_REPLACEMENT,
+              auth: { type: "service" },
+            },
+          },
+          stored
+        )
+      ).toThrow("Datasource settings cannot change")
+    })
+
     it("should redact and preserve MongoDB connection strings", async () => {
       const connectionString =
         "mongodb://leakuser:SuperSecretPw123@prod-db.internal:27017/payments"

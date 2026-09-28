@@ -1,4 +1,9 @@
-import { context, db as dbCore, events } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  events,
+  HTTPError,
+} from "@budibase/backend-core"
 import { helpers } from "@budibase/shared-core"
 import { findHBSBlocks, processObjectSync } from "@budibase/string-templates"
 import {
@@ -20,6 +25,7 @@ import {
   SourceName,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
+import isEqual from "lodash/isEqual"
 import merge from "lodash/merge"
 import {
   BudibaseInternalDB,
@@ -289,6 +295,9 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
   if (!update.config || !old.config) {
     return update
   }
+  const restoringStoredSecrets = Object.values(update.config).some(
+    value => value === PASSWORD_REPLACEMENT
+  )
   // specific to REST datasources, fix the auth configs again if required
   if (hasAuthConfigs(update)) {
     const configs = update.config.authConfigs as RestAuthConfig[]
@@ -312,19 +321,32 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
   }
 
   if (old.config?.auth) {
-    update.config = merge(old.config, update.config)
+    update.config = merge({}, old.config, update.config)
   }
 
-  // update back to actual passwords for everything else
-  for (let [key, value] of Object.entries(update.config)) {
-    if (value !== PASSWORD_REPLACEMENT) {
-      continue
+  if (restoringStoredSecrets) {
+    const restoredConfig = { ...update.config }
+    for (const [key, value] of Object.entries(restoredConfig)) {
+      if (value !== PASSWORD_REPLACEMENT) {
+        continue
+      }
+      if (old.config[key]) {
+        restoredConfig[key] = old.config[key]
+      } else {
+        delete restoredConfig[key]
+      }
     }
-    if (update.config && old.config && old.config?.[key]) {
-      update.config[key] = old.config?.[key]
-    } else if (update.config) {
-      delete update.config[key]
+
+    if (
+      (update.source && update.source !== old.source) ||
+      !isEqual(restoredConfig, old.config)
+    ) {
+      throw new HTTPError(
+        "Datasource settings cannot change while using stored credentials.",
+        400
+      )
     }
+    update.config = restoredConfig
   }
 
   return update
