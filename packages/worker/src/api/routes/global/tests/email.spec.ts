@@ -21,6 +21,7 @@ describe("/api/global/email", () => {
   const config = new TestConfiguration()
   let mailserver: Mailserver
   let smtpPort: number
+  let savedTemplate: Template | undefined
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -33,8 +34,21 @@ describe("/api/global/email", () => {
     await config.afterAll()
   })
 
-  beforeEach(async () => {
-    await deleteAllEmail(mailserver)
+  beforeEach(() => {
+    deleteAllEmail(mailserver)
+  })
+
+  afterEach(async () => {
+    mocks.licenses.useUnlimited()
+    const templateToRemove = savedTemplate
+    if (templateToRemove) {
+      await config.doInTenant(async () => {
+        await tenancy
+          .getGlobalDB()
+          .remove(templateToRemove._id!, templateToRemove._rev!)
+      })
+      savedTemplate = undefined
+    }
   })
 
   interface TestCase {
@@ -136,38 +150,29 @@ describe("/api/global/email", () => {
         purpose: templatePurpose,
         type: "email",
       })
-      const savedTemplate = templateResponse.body as Template
+      savedTemplate = templateResponse.body as Template
 
-      try {
-        const customisedEmail = await captureEmail(mailserver, async () => {
-          await config.api.emails.sendEmail({
-            email: "to@example.com",
-            subject: "Test",
-            userId: config.user!._id,
-            purpose: emailPurpose,
-          })
+      const customisedEmail = await captureEmail(mailserver, async () => {
+        await config.api.emails.sendEmail({
+          email: "to@example.com",
+          subject: "Test",
+          userId: config.user!._id,
+          purpose: emailPurpose,
         })
-        expect(customisedEmail.html).toContain(customMarker)
+      })
+      expect(customisedEmail.html).toContain(customMarker)
 
-        mocks.licenses.useCloudFree()
-        const defaultEmail = await captureEmail(mailserver, async () => {
-          await config.api.emails.sendEmail({
-            email: "to@example.com",
-            subject: "Test",
-            userId: config.user!._id,
-            purpose: emailPurpose,
-          })
+      mocks.licenses.useCloudFree()
+      const defaultEmail = await captureEmail(mailserver, async () => {
+        await config.api.emails.sendEmail({
+          email: "to@example.com",
+          subject: "Test",
+          userId: config.user!._id,
+          purpose: emailPurpose,
         })
-        expect(defaultEmail.html).toContain(defaultMarker)
-        expect(defaultEmail.html).not.toContain(customMarker)
-      } finally {
-        await config.doInTenant(async () => {
-          await tenancy
-            .getGlobalDB()
-            .remove(savedTemplate._id!, savedTemplate._rev!)
-        })
-        mocks.licenses.useUnlimited({ features: [Feature.CUSTOMISE_EMAILS] })
-      }
+      })
+      expect(defaultEmail.html).toContain(defaultMarker)
+      expect(defaultEmail.html).not.toContain(customMarker)
     }
   )
 
