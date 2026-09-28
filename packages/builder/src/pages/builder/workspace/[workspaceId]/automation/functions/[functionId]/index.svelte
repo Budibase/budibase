@@ -21,6 +21,8 @@
   import { FeatureFlag } from "@budibase/types"
   import { params } from "@roxi/routify"
   import { onDestroy } from "svelte"
+  import { debounce } from "lodash"
+  import { createSaveCoordinator } from "../../../saveCoordinator"
   import FunctionCodeEditor from "../FunctionCodeEditor.svelte"
   import FunctionQueryEditor from "../FunctionQueryEditor.svelte"
 
@@ -32,12 +34,15 @@
   let savedSource = ""
   let diagnostics: FunctionBuildDiagnostic[] = []
   let validating = false
+  let validationFailed = false
   let saving = false
   let building = false
   let queriesDirty = false
   let actionError = ""
   let validationRequest = 0
   let lastObservedSource = ""
+  let pendingCapabilities: FunctionQueryCapabilityInput[] | undefined
+  let destroyed = false
 
   $params
   $: functionId = $params.functionId
@@ -47,6 +52,14 @@
   }
   $: sourceDirty = !!fn && source !== savedSource
   $: draftDirty = sourceDirty || queriesDirty
+  $: buildDisabled =
+    draftDirty ||
+    fn?.readiness === "ready" ||
+    saving ||
+    building ||
+    validating ||
+    validationFailed ||
+    diagnostics.length > 0
   $: displayedReadiness = draftDirty ? "build_required" : fn?.readiness
 
   const readinessLabels = {
@@ -71,7 +84,6 @@
       if (request !== validationRequest) {
         return
       }
-      validating = true
       try {
         const response = await functionStore.compile({
           functionId: functionToValidate._id,
@@ -84,6 +96,7 @@
         }
       } catch (validationError) {
         if (request === validationRequest) {
+          validationFailed = true
           actionError =
             getErrorMessage(validationError) || "Unable to validate Function"
         }
@@ -101,6 +114,11 @@
       return
     }
     const request = ++validationRequest
+    validating = true
+    if (validationFailed) {
+      actionError = ""
+    }
+    validationFailed = false
     debouncedValidate(value, fn, request)
   }
 
@@ -108,6 +126,11 @@
     if (value !== lastObservedSource) {
       lastObservedSource = value
       validate(value)
+      if (value !== savedSource) {
+        debouncedSave()
+      } else {
+        debouncedSave.cancel()
+      }
     }
   }
 
@@ -125,6 +148,7 @@
 
   const load = async (id: string) => {
     fn = undefined
+    debouncedSave.cancel()
     loading = true
     error = ""
     const pendingLoad = fetchFunction(id)
@@ -148,6 +172,7 @@
         loadedFunction.readiness === "build_failed"
           ? loadedFunction.lastBuild?.diagnostics || []
           : []
+      validate(source)
     }
     error = loadError
     loading = false
@@ -159,52 +184,62 @@
     if (!fn || fn._id !== functionId) {
       throw new Error("Function is no longer selected")
     }
-    if (!fn._rev) {
-      throw new Error("Function revision is missing")
+    const id = fn._id
+    debouncedSave.cancel()
+    pendingCapabilities = capabilities
+    if (!(await saveCoordinator.save())) {
+      throw new Error(actionError || "Unable to save linked queries")
     }
-    const functionToSave = fn
-    const revision = fn._rev
-    const saved = await functionStore.save(functionToSave, {
-      _rev: revision,
-      name: functionToSave.name,
-      source: functionToSave.source,
-      capabilities,
-    })
-    if (
-      fn?._id === functionToSave._id &&
-      functionId === functionToSave._id &&
-      enabled
-    ) {
-      fn = saved
+    if (!destroyed && enabled && functionId === id) {
       validate(source)
       notifications.success("Linked queries saved")
     }
   }
 
-  const saveSource = async () => {
-    if (!fn?._rev || saving || !sourceDirty) {
-      return
+  const persistDraft = async (): Promise<boolean> => {
+    if (!fn?._rev) {
+      return false
     }
+    const capabilitiesToSave = pendingCapabilities
+    if (source === savedSource && !capabilitiesToSave) {
+      return true
+    }
+    const sourceToSave = source
     saving = true
-    actionError = ""
+    if (!validationFailed) {
+      actionError = ""
+    }
     try {
       fn = await functionStore.save(fn, {
         _rev: fn._rev,
         name: fn.name,
-        source,
-        capabilities: toCapabilityInputs(fn),
+        source: sourceToSave,
+        capabilities: capabilitiesToSave || toCapabilityInputs(fn),
       })
-      savedSource = fn.source
-      notifications.success("Function draft saved")
+      savedSource = sourceToSave
+      if (pendingCapabilities === capabilitiesToSave) {
+        pendingCapabilities = undefined
+      }
+      if (source !== sourceToSave && !destroyed) {
+        void saveCoordinator.save()
+      }
+      return true
     } catch (saveError) {
       actionError = getErrorMessage(saveError) || "Unable to save Function"
+      if (pendingCapabilities === capabilitiesToSave) {
+        pendingCapabilities = undefined
+      }
+      return false
     } finally {
       saving = false
     }
   }
 
+  const saveCoordinator = createSaveCoordinator(persistDraft)
+  const debouncedSave = debounce(() => saveCoordinator.save(), 500)
+
   const build = async () => {
-    if (!fn || draftDirty || building) {
+    if (!fn || buildDisabled) {
       return
     }
     building = true
@@ -234,8 +269,12 @@
 
   onDestroy(() => {
     currentLoad = undefined
-    fn = undefined
+    destroyed = true
     validationRequest += 1
+    debouncedSave.cancel()
+    if (source !== savedSource || saving) {
+      void saveCoordinator.save()
+    }
   })
 </script>
 
@@ -287,22 +326,12 @@
             {/if}
           </div>
           <Body size="S" color="var(--spectrum-global-color-gray-600)">
-            Write TypeScript, save the draft, then build its saved revision.
+            Write TypeScript. Changes save automatically; build to use the
+            latest revision.
           </Body>
         </div>
         <div class="actions">
-          <Button
-            secondary
-            disabled={!sourceDirty || saving || building}
-            on:click={saveSource}
-          >
-            {saving ? "Saving..." : "Save"}
-          </Button>
-          <Button
-            primary
-            disabled={draftDirty || saving || building}
-            on:click={build}
-          >
+          <Button primary disabled={buildDisabled} on:click={build}>
             {building ? "Building..." : "Build"}
           </Button>
         </div>
