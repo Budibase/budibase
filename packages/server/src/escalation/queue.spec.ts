@@ -896,9 +896,21 @@ describe("expiry", () => {
     tenantId: config.getTenantId(),
   })
 
+  const resumeJobsFor = (escalationId: string) =>
+    addJobSpy.mock.calls.filter(
+      ([job]) => job.phase === "waiting" && job.escalationId === escalationId
+    )
+
+  let addJobSpy: jest.SpyInstance
+
   beforeEach(async () => {
     ;(slack.sendSlackNotification as jest.Mock).mockReset()
+    addJobSpy = jest.spyOn(getQueue(), "add")
     await config.newTenant()
+  })
+
+  afterEach(() => {
+    addJobSpy.mockRestore()
   })
 
   afterAll(() => {
@@ -913,10 +925,19 @@ describe("expiry", () => {
       data: { phase: "notify", ...jobData(escalationId) },
     })
 
-    const jobs = await getQueue().getBullQueue().getJobs(["delayed", "waiting"])
-    expect(
-      jobs.some(job => job.opts?.jobId === `esc_${escalationId}_resume`)
-    ).toBe(false)
+    expect(resumeJobsFor(escalationId)).toHaveLength(0)
+  })
+
+  it("queues a resume job for the escalation's duration", async () => {
+    const escalationId = await seedPending({ duration: 60_000 })
+
+    await processNotify({
+      id: `esc_${escalationId}_notify`,
+      data: { phase: "notify", ...jobData(escalationId) },
+    })
+
+    const [[, opts]] = resumeJobsFor(escalationId)
+    expect(opts.delay).toEqual(60_000)
   })
 
   it("expires without a decision when the policy sets no outcome", async () => {
