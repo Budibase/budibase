@@ -51,13 +51,6 @@ export function isAdmin(user?: UserAdminInfo): boolean {
   return hasAdminPermissions(user)
 }
 
-export function isAdminOrWorkspaceBuilder(
-  user: UserBuilderInfo & UserAdminInfo,
-  workspaceId: string
-): boolean {
-  return isAdmin(user) || isBuilder(user, workspaceId)
-}
-
 export function isAdminOrBuilder(
   user: UserBuilderInfo & UserAdminInfo,
   workspaceId?: string
