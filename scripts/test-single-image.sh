@@ -4,12 +4,17 @@
 set -eo pipefail
 cd "$(dirname "$0")/.."
 
-IMAGE="${IMAGE:-budibase:latest}"
 CONFIG="hosting/single/structure-test.yaml"
 CST_VERSION="${CST_VERSION:-v1.16.0}"
 
+if [[ -z "${IMAGE:-}" ]]; then
+    IMAGE="budibase:latest"
+    echo "Building local ${IMAGE} before running structure tests..."
+    ./scripts/build-single-image.sh
+fi
+
 if ! docker image inspect "${IMAGE}" >/dev/null 2>&1; then
-    echo "Image ${IMAGE} not found. Build it with 'yarn build:docker:single', or set IMAGE."
+    echo "Image ${IMAGE} not found."
     exit 1
 fi
 
@@ -24,9 +29,13 @@ else
         arm64 | aarch64) arch="arm64" ;;
         *) arch="amd64" ;;
     esac
+    # This release does not publish a native Darwin ARM64 binary.
+    if [[ "${os}" == "darwin" && "${arch}" == "arm64" ]]; then
+        arch="amd64"
+    fi
     CST="$(mktemp -d)/container-structure-test"
     echo "Downloading container-structure-test ${CST_VERSION} (${os}-${arch})..."
-    curl -sSLo "${CST}" \
+    curl -fsSLo "${CST}" \
         "https://storage.googleapis.com/container-structure-test/${CST_VERSION}/container-structure-test-${os}-${arch}"
     chmod +x "${CST}"
 fi

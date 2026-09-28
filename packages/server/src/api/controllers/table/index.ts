@@ -432,31 +432,29 @@ async function publishTableInternal(
 
   await replication.resolveInconsistencies([tableId])
 
-  await replication.replicate(
-    replication.appReplicateOpts({
-      tablesToSync: undefined,
-      checkpoint: false,
-      filter: (doc: any) => {
-        const _id = doc?._id as string
-        if (!_id || _id.startsWith("_design")) {
-          return false
-        }
-        if (_id.startsWith(DocumentType.AUTOMATION_LOG)) {
-          return false
-        }
-        if (_id.startsWith(DocumentType.WORKSPACE_METADATA)) {
-          return false
-        }
-        if (!matchesTable(_id)) {
-          return false
-        }
-        if (!seedProductionTables && isDataDoc(_id)) {
-          return false
-        }
-        return true
-      },
-    })
-  )
+  await replication.replicateApp({
+    tablesToSync: undefined,
+    checkpoint: false,
+    filter: (doc: any) => {
+      const _id = doc?._id as string
+      if (!_id || _id.startsWith("_design")) {
+        return false
+      }
+      if (_id.startsWith(DocumentType.AUTOMATION_LOG)) {
+        return false
+      }
+      if (_id.startsWith(DocumentType.WORKSPACE_METADATA)) {
+        return false
+      }
+      if (!matchesTable(_id)) {
+        return false
+      }
+      if (!seedProductionTables && isDataDoc(_id)) {
+        return false
+      }
+      return true
+    },
+  })
 
   const metadata = await sdk.workspaces.metadata.tryGet({
     production: true,

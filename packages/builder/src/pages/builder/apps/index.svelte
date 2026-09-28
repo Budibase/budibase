@@ -135,7 +135,7 @@
               </MenuItem>
               {#if sdk.users.hasBuilderPermissions($auth.user)}
                 <MenuItem icon="code" on:click={() => $goto("/builder")}>
-                  {menuLabels.portal}
+                  {menuLabels.builder}
                 </MenuItem>
               {/if}
               <MenuItem icon="sign-out" on:click={logout}
