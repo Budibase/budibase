@@ -24,8 +24,7 @@ export default function process() {
         context.doInWorkspaceContext(appId, async () => {
           const result = await sdk.workspace.findByResourceId(docId)
           const [fav] = result
-          if (fav) {
-            // Purge
+          if (fav?._id && fav._rev) {
             await sdk.workspace.remove(fav._id, fav._rev)
           }
         })

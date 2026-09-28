@@ -1,3 +1,5 @@
+FROM public.ecr.aws/x1w3a5n5/third-party:minio-RELEASE.2025-09-07T16-13-09Z AS minio
+
 FROM budibase/database:2.1.0
 
 ENV DATA_DIR /data
@@ -7,6 +9,7 @@ RUN apt-get update && \
   apt-get install -y --no-install-recommends redis-server
 
 WORKDIR /minio
+COPY --from=minio /usr/bin/minio ./minio
 ADD scripts/install-minio.sh ./install.sh
 RUN chmod +x install.sh && ./install.sh
 

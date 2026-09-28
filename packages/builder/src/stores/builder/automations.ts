@@ -14,7 +14,7 @@ import { getNewStepName } from "@/helpers/automations/nameHelpers"
 import { getSequentialName } from "@/helpers/duplicate"
 import { DerivedBudiStore } from "@/stores/BudiStore"
 import {
-  appStore,
+  workspaceStore,
   deploymentStore,
   permissions,
   tables,
@@ -55,6 +55,7 @@ import {
   AutomationResults,
   AutomationStatus,
   AutomationStep,
+  AgentStep,
   AutomationStepResult,
   AutomationStepInputs,
   AutomationStepType,
@@ -97,6 +98,7 @@ import {
   BlockRef,
   isLoopV2Step,
   type RestTemplateId,
+  ToolExecutionPrincipal,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { derived, get, readable, Readable } from "svelte/store"
@@ -109,6 +111,10 @@ export interface AutomationSaveOptions {
 }
 
 export const MAX_STICKY_NOTES_PER_AUTOMATION = 12
+
+const isAgentStep = (
+  step?: AutomationStep | AutomationTrigger
+): step is AgentStep => step?.stepId === AutomationActionStepId.AGENT
 
 const sameMoveContainer = (
   sourcePath: BlockPath[],
@@ -2294,7 +2300,7 @@ const automationActions = (store: AutomationStore) => ({
     const automation: Automation = {
       name,
       type: "automation",
-      appId: get(appStore).appId,
+      appId: get(workspaceStore).appId,
       definition: {
         steps: [],
         trigger,
@@ -2341,7 +2347,9 @@ const automationActions = (store: AutomationStore) => ({
         const response = await API.updateAutomation(updatedAutomation)
         store.actions.replace(response.automation._id!, response.automation)
         store.actions.select(response.automation._id!)
-        await deploymentStore.publishApp()
+        if (!(await deploymentStore.publishApp())) {
+          return
+        }
       } else {
         await store.actions.save(updatedAutomation)
       }
@@ -3188,6 +3196,36 @@ class SelectedAutomationStore extends DerivedBudiStore<
         // Only traverse if we have a valid automation
         if (updatedAuto) {
           automationStore.actions.traverse(blockRefs, updatedAuto)
+
+          const executionPrincipalSchema =
+            $store.blockDefinitions.ACTION[AutomationActionStepId.AGENT]?.schema
+              .inputs.properties.executionPrincipal
+
+          if (executionPrincipalSchema) {
+            Object.values(blockRefs).forEach(blockRef => {
+              const step = automationStore.actions
+                .getPathSteps(blockRef.pathTo, updatedAuto)
+                .at(-1)
+
+              if (isAgentStep(step)) {
+                const properties = step?.schema?.inputs?.properties
+
+                if (!properties || properties.executionPrincipal) {
+                  return
+                }
+
+                properties.executionPrincipal = cloneDeep(
+                  executionPrincipalSchema
+                )
+                step.inputs = {
+                  ...step.inputs,
+                  executionPrincipal:
+                    step.inputs?.executionPrincipal ??
+                    ToolExecutionPrincipal.ADMIN,
+                }
+              }
+            })
+          }
 
           Object.values(blockRefs)
             .filter(blockRef => blockRef.terminating)

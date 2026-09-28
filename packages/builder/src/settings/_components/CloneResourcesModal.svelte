@@ -2,7 +2,7 @@
   import { API } from "@/api"
   import { TableNames } from "@/constants"
   import {
-    appStore,
+    workspaceStore,
     automationStore,
     datasources,
     queries,
@@ -69,7 +69,7 @@
   }
 
   $: otherWorkspaces = $workspacesStore.apps.filter(
-    a => a.devId !== $appStore.appId
+    a => a.devId !== $workspaceStore.appId
   )
 
   async function onConfirm() {

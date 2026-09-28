@@ -1,24 +1,23 @@
-import { context, db as dbCore } from "@budibase/backend-core"
-import {
-  DocumentType,
-  SEPARATOR,
-  WithoutDocMetadata,
-  WorkspaceFavourite,
-} from "@budibase/types"
+import { context, db as dbCore, docIds } from "@budibase/backend-core"
+import { WithoutDocMetadata, WorkspaceFavourite } from "@budibase/types"
 
-export async function fetch(userId?: string): Promise<WorkspaceFavourite[]> {
+async function fetchAll(): Promise<WorkspaceFavourite[]> {
   const db = context.getWorkspaceDB()
 
-  const userFavourites = await db.find<WorkspaceFavourite>({
-    selector: {
-      _id: {
-        $regex: `^${DocumentType.WORKSPACE_FAVOURITE}${SEPARATOR}`,
-      },
-      ...(userId ? { createdBy: userId } : {}),
-    },
-  })
+  const response = await db.allDocs<WorkspaceFavourite>(
+    docIds.getWorkspaceFavouriteParams(null, { include_docs: true })
+  )
 
-  return userFavourites.docs
+  return response.rows
+    .map(row => row.doc)
+    .filter((doc): doc is WorkspaceFavourite => !!doc)
+}
+
+export async function fetch(userId?: string): Promise<WorkspaceFavourite[]> {
+  const favourites = await fetchAll()
+  return userId
+    ? favourites.filter(favourite => favourite.createdBy === userId)
+    : favourites
 }
 
 export async function create(
@@ -44,16 +43,8 @@ export async function remove(favouriteId: string, favouriteRev: string) {
 }
 
 export async function findByResourceId(resourceId: string) {
-  const db = context.getWorkspaceDB()
-  const existingFavourites = await db.find<WorkspaceFavourite>({
-    selector: {
-      _id: {
-        $regex: `^${DocumentType.WORKSPACE_FAVOURITE}${SEPARATOR}`,
-      },
-      resourceId: resourceId,
-    },
-    limit: 1,
-  })
-
-  return existingFavourites.docs
+  const favourites = await fetchAll()
+  return favourites
+    .filter(favourite => favourite.resourceId === resourceId)
+    .slice(0, 1)
 }

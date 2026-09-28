@@ -1,6 +1,6 @@
 import { Workspace } from "@budibase/types"
 
-export type AppTemplate =
+export type WorkspaceTemplate =
   | {
       fromFile: true
     }
@@ -13,14 +13,14 @@ export type AppTemplate =
       icon: string
     }
 
-export interface AppIdentifierMetadata {
+export interface WorkspaceIdentifierMetadata {
   devId?: string
   devRev?: string
   prodId?: string
   prodRev?: string
 }
 
-export interface AppUIMetadata {
+export interface WorkspaceUIMetadata {
   deployed: boolean
   lockedYou: boolean
   lockedOther: boolean
@@ -28,8 +28,10 @@ export interface AppUIMetadata {
   editable: boolean
 }
 
-export interface StoreApp extends Workspace, AppIdentifierMetadata {
+export interface StoreWorkspace extends Workspace, WorkspaceIdentifierMetadata {
   defaultWorkspaceAppUrl: string
 }
 
-export interface EnrichedApp extends StoreApp, AppUIMetadata {}
+export interface EnrichedWorkspace
+  extends StoreWorkspace,
+    WorkspaceUIMetadata {}

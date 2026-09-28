@@ -19,7 +19,7 @@ import { getComponentFieldOptions } from "@/helpers/formFields"
 import { selectedScreen } from "./screens"
 import {
   screenStore,
-  appStore,
+  workspaceStore,
   previewStore,
   tables,
   componentTreeNodesStore,
@@ -130,8 +130,10 @@ export class ComponentStore extends BudiStore<ComponentState> {
     }))
 
     // Sync client features to app store
-    appStore.syncClientFeatures(components.features)
-    appStore.syncClientTypeSupportPresets(components?.typeSupportPresets ?? {})
+    workspaceStore.syncClientFeatures(components.features)
+    workspaceStore.syncClientTypeSupportPresets(
+      components?.typeSupportPresets ?? {}
+    )
 
     return components
   }

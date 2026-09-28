@@ -82,12 +82,15 @@
       {/if}
       <Layout gap="S" noPadding>
         <Heading size="M">Reset your password</Heading>
-        <Body size="M">Must contain at least 12 characters</Body>
+        <Body size="M">
+          Must contain at least {$admin.passwordPolicy.minLength} characters.
+          {$admin.passwordPolicy.regexErrorMessage || ""}
+        </Body>
         <PasswordRepeatInput
           bind:passwordForm={form}
           bind:password
           bind:error={passwordError}
-          minLength={$admin.passwordMinLength || 12}
+          policy={$admin.passwordPolicy}
         />
         <Button secondary cta on:click={reset}>
           {#if loading}
