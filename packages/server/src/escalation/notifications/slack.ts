@@ -1,3 +1,4 @@
+import type { Block, KnownBlock } from "@slack/types"
 import { WebClient } from "@slack/web-api"
 import { createSlackAdapter } from "@chat-adapter/slack"
 import { tenancy } from "@budibase/backend-core"
@@ -10,48 +11,170 @@ import {
   EscalationNotificationChannel,
 } from "@budibase/types"
 import sdk from "../../sdk"
+import { APPROVAL_REQUIRED_TITLE_PREFIX } from "../constants"
+import { chunkText, truncateReviewField } from "../reviewContext"
 import { findIntegrationAgent, getEscalationText } from "./utils"
+
+const escapeMrkdwn = (value: string) =>
+  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+
+const PARAMETER_CHUNK_LENGTH = 2_500
+const MAX_PARAMETER_BLOCKS = 43
+
+const displayTitle = (title: string) =>
+  title.startsWith(`${APPROVAL_REQUIRED_TITLE_PREFIX} `)
+    ? title.slice(APPROVAL_REQUIRED_TITLE_PREFIX.length + 1)
+    : title
+
+const actionBlock = ({
+  escalationId,
+  notificationDocId,
+  appId,
+}: {
+  escalationId: string
+  notificationDocId: string
+  appId: string
+}): KnownBlock => ({
+  type: "actions",
+  elements: [
+    {
+      type: "button",
+      text: { type: "plain_text", text: "Approve" },
+      style: "primary",
+      action_id: EscalationAction.APPROVE,
+      value: JSON.stringify({ escalationId, notificationDocId, appId }),
+    },
+    {
+      type: "button",
+      text: { type: "plain_text", text: "Reject" },
+      style: "danger",
+      action_id: EscalationAction.REJECT,
+      value: JSON.stringify({ escalationId, notificationDocId, appId }),
+    },
+  ],
+})
 
 const buildEscalationBlocks = ({
   title,
   summary,
+  reviewContext,
   escalationId,
   notificationDocId,
   appId,
 }: {
   title: string
   summary?: string
+  reviewContext?: EscalationContextDoc["reviewContext"]
   escalationId: string
   notificationDocId: string
   appId: string
-}) => [
-  {
-    type: "section",
-    text: {
-      type: "mrkdwn",
-      text: summary ? `*${title}*\n${summary}` : `*${title}*`,
+}) => {
+  const decisionBlock = actionBlock({
+    escalationId,
+    notificationDocId,
+    appId,
+  })
+  const blocks: (KnownBlock | Block)[] = [
+    {
+      type: "header",
+      text: { type: "plain_text", text: "Approval required" },
     },
-  },
-  {
-    type: "actions",
-    elements: [
-      {
-        type: "button",
-        text: { type: "plain_text", text: "Approve" },
-        style: "primary",
-        action_id: EscalationAction.APPROVE,
-        value: JSON.stringify({ escalationId, notificationDocId, appId }),
+  ]
+  const titleText = displayTitle(title)
+  if (reviewContext) {
+    blocks.push({
+      type: "section",
+      text: {
+        type: "plain_text",
+        text: truncateReviewField(titleText, 2_900),
       },
-      {
-        type: "button",
-        text: { type: "plain_text", text: "Reject" },
-        style: "danger",
-        action_id: EscalationAction.REJECT,
-        value: JSON.stringify({ escalationId, notificationDocId, appId }),
+    })
+    blocks.push({
+      type: "section",
+      text: {
+        type: "plain_text",
+        text: truncateReviewField(
+          `${reviewContext.requestedBy} is requesting approval for ` +
+            `${reviewContext.action} as part of ${reviewContext.operation}.`,
+          2_900
+        ),
       },
-    ],
-  },
-]
+    })
+    if (summary) {
+      blocks.push({
+        type: "section",
+        text: {
+          type: "plain_text",
+          text: truncateReviewField(summary, 2_900),
+        },
+      })
+    }
+    if (reviewContext.parameters?.length) {
+      blocks.push({ type: "divider" })
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text:
+            "*Tool parameters*" +
+            (reviewContext.toolName
+              ? ` · \`${escapeMrkdwn(reviewContext.toolName).replace(/`/g, "'")}\``
+              : ""),
+        },
+      })
+      // Neutralise the fence before chunking - a ``` split across two chunks
+      // would survive a per-chunk replace and close the block early, letting the
+      // rest of the arguments render as mrkdwn.
+      const parameters = reviewContext.parameters.slice(0, MAX_PARAMETER_BLOCKS)
+      let remainingBlocks = MAX_PARAMETER_BLOCKS
+      parameters.forEach((parameter, index) => {
+        const remainingParameters = parameters.length - index
+        const blockBudget = Math.max(
+          1,
+          Math.floor(remainingBlocks / remainingParameters)
+        )
+        const value = truncateReviewField(
+          escapeMrkdwn(parameter.value).replace(/```/g, "'''"),
+          blockBudget * PARAMETER_CHUNK_LENGTH
+        )
+        const chunks = chunkText(value, PARAMETER_CHUNK_LENGTH).slice(
+          0,
+          blockBudget
+        )
+        chunks.forEach((chunk, chunkIndex) => {
+          const name = truncateReviewField(
+            escapeMrkdwn(parameter.name).replace(/`/g, "'"),
+            300
+          )
+          blocks.push({
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text:
+                (chunkIndex === 0 && name ? `*${name}*\n` : "") +
+                `\`\`\`${chunk || "\u200B"}\`\`\``,
+            },
+          })
+        })
+        remainingBlocks -= chunks.length
+      })
+    }
+    blocks.push(decisionBlock)
+  } else {
+    blocks.push({
+      type: "section",
+      text: {
+        type: "plain_text",
+        text: truncateReviewField(
+          summary ? `${titleText}\n${summary}` : titleText,
+          2_900
+        ),
+      },
+    })
+    blocks.push(decisionBlock)
+  }
+  return blocks
+}
 
 const getSlackIntegration = async (
   appId: string,
@@ -108,6 +231,7 @@ export async function sendSlackNotification({
   const blocks = buildEscalationBlocks({
     title,
     summary,
+    reviewContext: contextDoc.reviewContext,
     escalationId: notifDoc.escalationId,
     notificationDocId: notifDoc._id!,
     appId: contextDoc.appId,

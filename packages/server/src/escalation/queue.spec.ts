@@ -733,4 +733,47 @@ describe("processNotify", () => {
     expect(doc.responses).toHaveLength(1)
     expect(doc.responses?.[0].user.userId).toEqual("U1")
   })
+
+  it("serialises a press that lands while the outcome is being written", async () => {
+    const escalationId = await seedPending({
+      type: EscalationNotificationChannel.SLACK,
+      config: { channelId: "C1" },
+    })
+    sendTeamsMock.mockResolvedValue(false)
+    let notifDoc: EscalationNotificationDoc | undefined
+    sendSlackMock.mockImplementation(
+      async ({ notifDoc: sent }: { notifDoc: EscalationNotificationDoc }) => {
+        notifDoc = sent
+        return true
+      }
+    )
+    let press: Promise<unknown> | undefined
+    const withLock = sdk.escalations.withEscalationLock
+    const lockSpy = jest
+      .spyOn(sdk.escalations, "withEscalationLock")
+      .mockImplementationOnce((id, task) =>
+        withLock(id, async () => {
+          press = config.doInContext(config.getProdWorkspaceId(), () =>
+            sdk.escalations.respond(
+              escalationId,
+              notifDoc!._id!,
+              { actionId: "esc_approve", user: { userId: "U1" } },
+              jest.fn()
+            )
+          )
+          return task()
+        })
+      )
+
+    try {
+      await runNotify(escalationId)
+      await press
+    } finally {
+      lockSpy.mockRestore()
+    }
+
+    const doc = await getNotification(escalationId)
+    expect(doc.status).toEqual("sent")
+    expect(doc.responses).toHaveLength(1)
+  })
 })

@@ -2,11 +2,16 @@ import {
   Agent,
   AgentOperation,
   ToolMetadata,
+  ToolType,
   SourceName,
   WebSearchProvider,
   ApprovalToolResultStatus,
   type AgentExecutionContext,
 } from "@budibase/types"
+import {
+  getReadableQueryToolBinding,
+  isQueryToolType,
+} from "@budibase/shared-core"
 import { ai } from "@budibase/pro"
 import {
   createKnowledgeFilesTool,
@@ -63,6 +68,22 @@ export function getToolDisplayNames(
       tool.readableName ? [[tool.name, tool.readableName]] : []
     )
   )
+}
+
+export const getEscalationToolDisplayName = (
+  tool: Pick<AiToolDefinition, "readableName" | "sourceLabel" | "sourceType">
+) => {
+  if (!isQueryToolType(tool.sourceType)) {
+    return tool.readableName
+  }
+  const readableBinding = getReadableQueryToolBinding({
+    sourceType: tool.sourceType,
+    sourceLabel: tool.sourceLabel,
+    queryName: tool.readableName,
+  })
+  return tool.sourceType === ToolType.REST_QUERY
+    ? readableBinding.replace(/^api\.api\./, "api.")
+    : readableBinding
 }
 
 export function toToolMetadata(tool: AiToolDefinition): ToolMetadata {
@@ -262,6 +283,7 @@ export async function buildPromptAndTools(
           operation,
           toolName: tool.name,
           readableName: tool.readableName,
+          displayName: getEscalationToolDisplayName(tool),
           sourceId: tool.sourceId,
           action: tool.action,
           argsKey: resolveToolArgsKey(tool),

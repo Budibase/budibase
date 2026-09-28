@@ -3,10 +3,14 @@
     Body,
     Helpers,
     Input,
+    keepOpen,
     Label,
     Modal,
     ModalContent,
+    Select,
   } from "@budibase/bbui"
+  import { FilterUsers } from "@budibase/frontend-core"
+  import { ResolutionStrategy } from "@budibase/types"
   import type {
     AgentOperationApprovalPolicy,
     EscalationNotificationChannel,
@@ -18,33 +22,90 @@
     agentId?: string
     providers?: EscalationNotificationChannel[]
     onSave: (policy: AgentOperationApprovalPolicy) => void | Promise<void>
+    onRemove?: (
+      policy: AgentOperationApprovalPolicy
+    ) => boolean | Promise<boolean>
     onClose?: () => void
   }
 
-  let { agentId, providers = [], onSave, onClose }: Props = $props()
+  let { agentId, providers = [], onSave, onRemove, onClose }: Props = $props()
+
+  const ANY = "any"
+  type ApprovalTypeValue = ResolutionStrategy | typeof ANY
+
+  const approvalTypeOptions: {
+    value: ApprovalTypeValue
+    label: string
+    subtitle: string
+  }[] = [
+    {
+      value: ANY,
+      label: "Any approver",
+      subtitle: "Approval from any one approver is enough to proceed.",
+    },
+    {
+      value: ResolutionStrategy.UNANIMOUS,
+      label: "Unanimous",
+      subtitle: "Every approver must approve before it can proceed.",
+    },
+    {
+      value: ResolutionStrategy.MAJORITY,
+      label: "Majority",
+      subtitle: "More than half of the approvers must approve to proceed.",
+    },
+  ]
 
   let modal: Modal | undefined = $state()
   let editing = $state(false)
-  let policyId = $state<string | undefined>()
+  let existing = $state<AgentOperationApprovalPolicy | undefined>()
   let name = $state("")
   let recipients = $state<EscalationRecipient[]>([])
+  let approvers = $state<string[]>([])
+  let approvalType = $state<ApprovalTypeValue>(ANY)
 
   export const show = (policy?: AgentOperationApprovalPolicy) => {
     editing = !!policy
-    policyId = policy?.id
+    existing = policy
     name = policy?.name ?? ""
     recipients = policy?.notifications?.recipients ?? []
+    approvers = policy?.approvers ?? []
+    approvalType =
+      policy?.approvalType &&
+      policy.approvalType !== ResolutionStrategy.FIRST_RESPONSE
+        ? policy.approvalType
+        : ANY
     modal?.show()
   }
 
   export const hide = () => modal?.hide()
 
+  const changeApprovers = (updated: string[]) => {
+    approvers = updated
+    if (approvers.length <= 1) {
+      approvalType = ANY
+    }
+  }
+
   const save = async () => {
-    await onSave({
-      id: policyId ?? Helpers.uuid(),
+    const policy: AgentOperationApprovalPolicy = {
+      ...existing,
+      id: existing?.id ?? Helpers.uuid(),
       name: name.trim(),
-      notifications: { recipients },
-    })
+      approvers,
+      notifications: { ...existing?.notifications, recipients },
+    }
+    if (approvalType === ANY) {
+      delete policy.approvalType
+    } else {
+      policy.approvalType = approvalType
+    }
+    await onSave(policy)
+  }
+
+  const remove = async () => {
+    if (!existing || !(await onRemove?.(existing))) {
+      return keepOpen
+    }
   }
 </script>
 
@@ -55,23 +116,60 @@
     showCloseIcon={false}
     title={editing ? "Edit approval policy" : "Create approval policy"}
     confirmText={editing ? "Save policy" : "Create policy"}
+    showSecondaryButton={editing && !!onRemove}
+    secondaryButtonText="Delete"
+    secondaryButtonWarning
+    secondaryAction={remove}
     onConfirm={save}
     disabled={!name.trim() || !recipients.length}
   >
     <div class="configuration-field">
       <div class="field-copy">
-        <Label size="M">Name</Label>
+        <Label size="M">Policy name</Label>
         <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-          A recognisable name for this policy, shown on approval rules.
+          Give your approval policy a name.
         </Body>
       </div>
       <Input bind:value={name} placeholder="e.g. Finance approval" />
     </div>
     <div class="configuration-field">
       <div class="field-copy">
+        <Label size="M">Approval type</Label>
+        <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+          How many approvers must respond before it can proceed.
+        </Body>
+      </div>
+      <Select
+        size="M"
+        placeholder={false}
+        options={approvalTypeOptions}
+        value={approvalType}
+        getOptionLabel={option => option.label}
+        getOptionValue={option => option.value}
+        getOptionSubtitle={option => option.subtitle}
+        showSelectedSubtitle
+        disabled={approvers.length <= 1}
+        on:change={event => (approvalType = event.detail)}
+      />
+    </div>
+    <div class="configuration-field">
+      <div class="field-copy">
+        <Label size="M">Approvers</Label>
+        <Body size="XS" color="var(--spectrum-global-color-gray-700)">
+          Who reviews and responds to the escalated request
+        </Body>
+      </div>
+      <FilterUsers
+        multiselect
+        value={approvers}
+        on:change={event => changeApprovers(event.detail ?? [])}
+      />
+    </div>
+    <div class="configuration-field">
+      <div class="field-copy">
         <Label size="M">Notification</Label>
         <Body size="XS" color="var(--spectrum-global-color-gray-700)">
-          Choose who gets notified when this policy requires approval.
+          Where escalations appear
         </Body>
       </div>
       {#if !providers.length}

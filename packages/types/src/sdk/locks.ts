@@ -28,6 +28,7 @@ export enum LockName {
   AGENT_RAG_KNOWLEDGE_BASE = "agent_rag_knowledge_base",
   CUSTOM_REST_TEMPLATES = "custom_rest_templates",
   CONVERSATION_ATTACHMENT = "conversation_attachment",
+  ESCALATION = "escalation",
 }
 
 export type LockOptions = {

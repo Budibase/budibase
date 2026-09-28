@@ -5,6 +5,7 @@ import {
   type ChatConversationChannel,
   type EscalationContextDoc,
   type EscalationNotificationDoc,
+  type EscalationReviewContext,
   EscalationAction,
   EscalationNotificationChannel,
 } from "@budibase/types"
@@ -13,6 +14,7 @@ import {
   DEFAULT_MSTEAMS_SERVICE_URL,
   validateMSTeamsServiceUrl,
 } from "../../utilities/msTeams"
+import { truncateReviewField } from "../reviewContext"
 import {
   findIntegrationAgent,
   getEscalationText,
@@ -165,15 +167,119 @@ export const listTeamsChannels = async (
   }
 }
 
+// Teams renders TextBlock text as markdown, and tool arguments are model
+// controlled, so the reviewer context goes into RichTextBlocks instead - a
+// TextRun takes no markdown, which stops a crafted argument drawing its own
+// link beside the approve action. Runs also ignore newlines, so each line is
+// its own block.
+const MAX_PARAMETER_CHARACTERS = 6_000
+const MAX_PARAMETER_LINES = 100
+
+interface TextRun {
+  text: string
+  weight?: string
+  fontType?: string
+}
+
+const richLine = (inlines: TextRun[], { tight = true } = {}) => ({
+  type: "RichTextBlock",
+  ...(tight && { spacing: "none" }),
+  // A run with no text is dropped, so blank lines need a space to survive.
+  inlines: inlines.map(inline => ({
+    type: "TextRun",
+    ...inline,
+    text: inline.text || " ",
+  })),
+})
+
+const parameterLines = ({
+  value,
+  lineLimit = MAX_PARAMETER_LINES,
+  characterLimit = MAX_PARAMETER_CHARACTERS,
+}: {
+  value: string
+  lineLimit?: number
+  characterLimit?: number
+}) => {
+  const lines = truncateReviewField(value, characterLimit).split("\n")
+  const shown = lines.slice(0, lineLimit)
+  const omitted = lines.length - shown.length
+  if (omitted > 0) {
+    const lastIndex = shown.length - 1
+    shown[lastIndex] =
+      `${shown[lastIndex]} … [TRUNCATED: ${omitted} more lines]`
+  }
+  return shown.map(line => richLine([{ text: line, fontType: "monospace" }]))
+}
+
+const parameterDetails = (reviewContext: EscalationReviewContext) => {
+  const parameters = reviewContext.parameters ?? []
+  let remainingLines = MAX_PARAMETER_LINES - parameters.length
+  let remainingCharacters = MAX_PARAMETER_CHARACTERS
+  return parameters.flatMap((parameter, index) => {
+    const remainingParameters = parameters.length - index
+    const lineLimit = Math.max(
+      1,
+      Math.floor(remainingLines / remainingParameters)
+    )
+    const characterLimit = Math.max(
+      1,
+      Math.floor(remainingCharacters / remainingParameters)
+    )
+    const lines = parameterLines({
+      value: parameter.value,
+      lineLimit,
+      characterLimit,
+    })
+    remainingLines -= lines.length
+    remainingCharacters -= Math.min(parameter.value.length, characterLimit)
+    return [richLine([{ text: parameter.name, weight: "bolder" }]), ...lines]
+  })
+}
+
+const buildReviewContextIntro = (reviewContext: EscalationReviewContext) =>
+  richLine(
+    [
+      { text: reviewContext.requestedBy },
+      { text: " is requesting approval for " },
+      { text: reviewContext.action, weight: "bolder" },
+      { text: " as part of " },
+      { text: reviewContext.operation, weight: "bolder" },
+      { text: "." },
+    ],
+    { tight: false }
+  )
+
+const buildReviewContextDetails = (reviewContext: EscalationReviewContext) =>
+  reviewContext.parameters?.length
+    ? [
+        richLine(
+          [
+            { text: "Tool parameters", weight: "bolder" },
+            ...(reviewContext.toolName
+              ? [
+                  { text: " · " },
+                  { text: reviewContext.toolName, fontType: "monospace" },
+                ]
+              : []),
+          ],
+          { tight: false }
+        ),
+        ...parameterDetails(reviewContext),
+      ]
+    : []
+
 const buildAdaptiveCard = ({
   title,
   summary,
+  reviewContext,
   escalationId,
   notificationDocId,
   appId,
 }: {
   title: string
   summary?: string
+  reviewContext?: EscalationReviewContext
   escalationId: string
   notificationDocId: string
   appId: string
@@ -190,7 +296,9 @@ const buildAdaptiveCard = ({
         weight: "Bolder",
         wrap: true,
       },
+      ...(reviewContext ? [buildReviewContextIntro(reviewContext)] : []),
       ...(summary ? [{ type: "TextBlock", text: summary, wrap: true }] : []),
+      ...(reviewContext ? buildReviewContextDetails(reviewContext) : []),
     ],
     actions: [
       {
@@ -331,6 +439,7 @@ export async function sendMSTeamsNotification({
   const card = buildAdaptiveCard({
     title,
     summary,
+    reviewContext: contextDoc.reviewContext,
     escalationId: notifDoc.escalationId,
     notificationDocId: notifDoc._id!,
     appId: contextDoc.appId,

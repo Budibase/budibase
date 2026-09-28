@@ -8,6 +8,7 @@
     ProgressCircle,
   } from "@budibase/bbui"
   import {
+    ResolutionStrategy,
     ToolExecutionPrincipal,
     type AgentOperation,
     type AgentOperationApprovalPolicy,
@@ -67,7 +68,10 @@
     type PendingToolInsertion,
   } from "../../toolAutocomplete"
   import { createSaveCoordinator } from "../../operationSaveCoordinator"
-  import { getToolConditionFields } from "../../agentConditionFields"
+  import {
+    getToolConditionFields,
+    getToolReviewFields,
+  } from "../../agentConditionFields"
   import APIEndpointViewer from "@/components/integration/APIEndpointViewer.svelte"
   import { isQueryToolType } from "@budibase/shared-core"
   import type { AgentTool } from "../../toolTypes"
@@ -110,6 +114,7 @@
         index?: number
         policyId?: string
         conditions?: ToolExecutionCondition[]
+        reviewParameters?: string[]
       }
     | undefined
   >()
@@ -348,9 +353,6 @@
           lastSavedInstructions = snapshot.promptInstructions || ""
         }
       }
-
-      await workspaceDeploymentStore.fetch()
-      return true
     } catch (error) {
       console.error(error)
       notifications.error("Failed to save operation")
@@ -358,6 +360,12 @@
     } finally {
       saving = false
     }
+    try {
+      await workspaceDeploymentStore.fetch()
+    } catch (error) {
+      console.error(error)
+    }
+    return true
   }
 
   const operationSaveCoordinator = createSaveCoordinator(persistOperation)
@@ -605,6 +613,24 @@
     }
   }
 
+  const APPROVAL_TYPE_LABELS: Record<ResolutionStrategy, string> = {
+    [ResolutionStrategy.FIRST_RESPONSE]: "Any approver",
+    [ResolutionStrategy.UNANIMOUS]: "Unanimous",
+    [ResolutionStrategy.MAJORITY]: "Majority",
+  }
+
+  const policyApprovalSummary = (policy: AgentOperationApprovalPolicy) => {
+    const count = policy.approvers?.length ?? 0
+    if (!count) {
+      return undefined
+    }
+    const type =
+      APPROVAL_TYPE_LABELS[
+        policy.approvalType ?? ResolutionStrategy.FIRST_RESPONSE
+      ]
+    return `${type} · ${count} ${count === 1 ? "approver" : "approvers"}`
+  }
+
   const policyUsageCount = (policyId: string) =>
     (operation?.enabledTools || []).reduce(
       (count, configured) =>
@@ -632,41 +658,27 @@
     await saveOperation()
   }
 
-  const deletePolicy = (policy: AgentOperationApprovalPolicy) => {
+  const deletePolicy = async (policy: AgentOperationApprovalPolicy) => {
     if (!operation) {
-      return
+      return false
     }
     const usage = policyUsageCount(policy.id)
     if (usage) {
       notifications.error(
         `"${policy.name}" is used by ${usage} tool ${usage === 1 ? "rule" : "rules"} and cannot be deleted`
       )
-      return
+      return false
     }
-    operation.approvalPolicies = (operation.approvalPolicies || []).filter(
+    const forOperationId = operation.id
+    const previous = operation.approvalPolicies
+    const approvalPolicies = (previous || []).filter(
       candidate => candidate.id !== policy.id
     )
-    saveOperation()
-  }
-
-  const openPolicyMenu = (
-    event: MouseEvent,
-    policy: AgentOperationApprovalPolicy
-  ) => {
-    event.preventDefault()
-    event.stopPropagation()
-    contextMenuStore.open(
-      "agent-operation-policy",
-      [
-        {
-          icon: "trash",
-          name: "Delete policy",
-          visible: true,
-          callback: () => deletePolicy(policy),
-        },
-      ],
-      { x: event.clientX, y: event.clientY }
-    )
+    const saved = await saveOperation({ approvalPolicies })
+    if (!saved && operation?.id === forOperationId) {
+      operation = { ...operation, approvalPolicies: previous }
+    }
+    return saved
   }
 
   const toolApprovalOptions = (toolName: string) => ({
@@ -677,6 +689,14 @@
 
   const toolConditionFields = (tool: AgentTool) =>
     getToolConditionFields({
+      tool,
+      tables: $tables.list,
+      queries: $queries.list,
+      automations: $automationStore.automations,
+    })
+
+  const toolReviewFields = (tool: AgentTool) =>
+    getToolReviewFields({
       tool,
       tables: $tables.list,
       queries: $queries.list,
@@ -705,6 +725,7 @@
     approvalRuleModal?.show({
       policies: approvalPolicies,
       fields: toolConditionFields(tool),
+      reviewFields: toolReviewFields(tool),
       rule: index !== undefined ? rules[index] : undefined,
       index,
       apiExplorer: isQueryToolType(tool.sourceType),
@@ -730,6 +751,9 @@
     if (stagedToolConfig) {
       approvalRuleModal?.updateFields(
         toolConditionFields(stagedToolConfig.tool)
+      )
+      approvalRuleModal?.updateReviewFields(
+        toolReviewFields(stagedToolConfig.tool)
       )
     }
   }
@@ -805,12 +829,14 @@
     index,
     policyId,
     conditions,
+    reviewParameters,
   }: {
     index?: number
     policyId?: string
     conditions: ToolExecutionCondition[]
+    reviewParameters: string[]
   }) => {
-    stagedRule = { index, policyId, conditions }
+    stagedRule = { index, policyId, conditions, reviewParameters }
     policyModalFromRule = true
     chainingRuleModal = true
     approvalRuleModal?.hide()
@@ -836,8 +862,15 @@
       fields: stagedToolConfig
         ? toolConditionFields(stagedToolConfig.tool)
         : [],
+      reviewFields: stagedToolConfig
+        ? toolReviewFields(stagedToolConfig.tool)
+        : [],
       rule: pending
-        ? { policyId: pending.policyId, conditions: pending.conditions }
+        ? {
+            policyId: pending.policyId,
+            conditions: pending.conditions,
+            reviewParameters: pending.reviewParameters,
+          }
         : undefined,
       index: pending?.index,
       apiExplorer: stagedToolConfig
@@ -1183,17 +1216,17 @@
                       onclick={() => approvalPolicyModal?.show(policy)}
                     >
                       <span class="policy-name">{policy.name}</span>
-                      <span class="policy-usage">
-                        {policyUsageCount(policy.id)}
-                        {policyUsageCount(policy.id) === 1 ? "rule" : "rules"}
-                      </span>
-                    </button>
-                    <button
-                      class="tool-actions"
-                      aria-label={`Actions for ${policy.name}`}
-                      onclick={event => openPolicyMenu(event, policy)}
-                    >
-                      <Icon name="dots-three" size="XS" />
+                      <div class="policy-row-summary">
+                        {#if policyApprovalSummary(policy)}
+                          <span class="policy-usage">
+                            {policyApprovalSummary(policy)}
+                          </span>
+                        {/if}
+                        <span class="policy-usage policy-rules">
+                          {policyUsageCount(policy.id)}
+                          {policyUsageCount(policy.id) === 1 ? "rule" : "rules"}
+                        </span>
+                      </div>
                     </button>
                   </div>
                 {:else}
@@ -1248,6 +1281,7 @@
     {agentId}
     providers={escalationProviders}
     onSave={handlePolicySave}
+    onRemove={deletePolicy}
     onClose={handlePolicyModalClose}
   />
   <OperationApprovalRuleModal
@@ -1560,11 +1594,11 @@
   .policy-row {
     display: flex;
     box-sizing: border-box;
-    min-height: 34px;
+    min-height: 50px;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 0 12px;
+    padding: 8px 12px;
     border-radius: 4px;
     background: var(--background-alt);
     width: 100%;
@@ -1574,9 +1608,9 @@
     display: flex;
     min-width: 0;
     flex: 1 1 auto;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
     border: 0;
     padding: 0;
     background: transparent;
@@ -1587,6 +1621,7 @@
   }
 
   .policy-name {
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1594,10 +1629,22 @@
     line-height: 17px;
   }
 
+  .policy-row-summary {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    width: 100%;
+  }
+
   .policy-usage {
     flex: 0 0 auto;
     color: var(--spectrum-global-color-gray-700);
     font-size: 11px;
+    line-height: 15px;
+  }
+
+  .policy-rules {
+    margin-left: auto;
   }
 
   @media (max-width: 900px) {

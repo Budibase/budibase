@@ -30,6 +30,16 @@ const TENANT_RIGHT = "tenant-z-right"
 const USER_WRONG = "29:user-wrong"
 const USER_RIGHT = "29:user-right"
 
+interface CardElement {
+  type: string
+  text?: string
+  inlines?: { text: string; weight?: string }[]
+}
+
+interface TeamsMessage {
+  attachments: { content: { body: CardElement[] } }[]
+}
+
 const jsonResponse = (body: unknown) => ({
   ok: true,
   status: 200,
@@ -194,5 +204,113 @@ describe("sendMSTeamsNotification", () => {
         String(url).startsWith("https://example.com/")
       )
     ).toBe(false)
+  })
+
+  it("includes requester and tool parameters in the approval card", async () => {
+    agent = await createAgent()
+    const { contextDoc, notifDoc, globalUserId } = buildDocs()
+    contextDoc.reviewContext = {
+      requestedBy: "Test User (test@example.com)",
+      operation: "Prepare Cloud release",
+      action: "Trigger workflow",
+      toolName: "create_workflow_dispatch",
+      parameters: [
+        { name: "owner", value: "Budibase" },
+        {
+          name: "release_notes",
+          value: "## Features\n- Useful change",
+        },
+      ],
+    }
+    await seedLinks(globalUserId)
+
+    await config.doInContext(config.getDevWorkspaceId(), () =>
+      sendMSTeamsNotification({ notifDoc, contextDoc })
+    )
+
+    const postCall = mockFetch.mock.calls.find(([url]) =>
+      String(url).endsWith("/v3/conversations/conv_1/activities")
+    )
+    expect(postCall).toBeDefined()
+    const rendered = postCall![1].body
+    expect(rendered).toContain("Test User")
+    expect(rendered).toContain("Prepare Cloud release")
+    expect(rendered).toContain("release_notes")
+    expect(rendered).toContain("owner")
+    expect(rendered).toContain("create_workflow_dispatch")
+    expect(rendered).toContain("Useful change")
+    expect(rendered).toContain('"fontType":"monospace"')
+    const message: TeamsMessage = JSON.parse(rendered)
+    const textRuns = message.attachments[0].content.body.flatMap(
+      element => element.inlines ?? []
+    )
+    expect(textRuns.map(run => run.text).join("")).toContain(
+      "Test User (test@example.com) is requesting approval for Trigger workflow as part of Prepare Cloud release."
+    )
+    expect(textRuns.filter(run => run.weight)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ text: "Trigger workflow", weight: "bolder" }),
+        expect.objectContaining({
+          text: "Prepare Cloud release",
+          weight: "bolder",
+        }),
+      ])
+    )
+  })
+
+  it("omits the tool parameters section when none were shared", async () => {
+    agent = await createAgent()
+    const { contextDoc, notifDoc, globalUserId } = buildDocs()
+    contextDoc.reviewContext = {
+      requestedBy: "Test User (test@example.com)",
+      operation: "Prepare Cloud release",
+      action: "Trigger workflow",
+      toolName: "create_workflow_dispatch",
+      parameters: [],
+    }
+    await seedLinks(globalUserId)
+
+    await config.doInContext(config.getDevWorkspaceId(), () =>
+      sendMSTeamsNotification({ notifDoc, contextDoc })
+    )
+
+    const postCall = mockFetch.mock.calls.find(([url]) =>
+      String(url).endsWith("/v3/conversations/conv_1/activities")
+    )
+    expect(postCall![1].body).not.toContain("Tool parameters")
+    expect(postCall![1].body).not.toContain("No tool parameters were shared.")
+    expect(postCall![1].body).not.toContain("Sensitive values are redacted")
+  })
+
+  it("renders reviewer context as text so arguments can't inject a link", async () => {
+    agent = await createAgent()
+    const { contextDoc, notifDoc, globalUserId } = buildDocs()
+    const injected = "release_notes: [Approve here](https://evil.example.com)"
+    contextDoc.reviewContext = {
+      requestedBy: "Test User (test@example.com)",
+      operation: "Prepare Cloud release",
+      action: "Trigger workflow",
+      parameters: [{ name: "release_notes", value: injected }],
+    }
+    await seedLinks(globalUserId)
+
+    await config.doInContext(config.getDevWorkspaceId(), () =>
+      sendMSTeamsNotification({ notifDoc, contextDoc })
+    )
+
+    const postCall = mockFetch.mock.calls.find(([url]) =>
+      String(url).endsWith("/v3/conversations/conv_1/activities")
+    )
+    const message: TeamsMessage = JSON.parse(postCall![1].body)
+    const body = message.attachments[0].content.body
+    // Markdown-parsing blocks must never carry model-controlled text.
+    expect(
+      body.some(element => element.text?.includes("evil.example.com"))
+    ).toBe(false)
+    expect(
+      body
+        .flatMap(element => element.inlines ?? [])
+        .some(inline => inline.text === injected)
+    ).toBe(true)
   })
 })
