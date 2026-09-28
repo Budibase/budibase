@@ -431,6 +431,17 @@ describe("security middlewares", () => {
       passed(ctx.throw, next)
     })
 
+    it("should allow app builder access to their workspace", async () => {
+      const ctx = buildUserCtx(appBuilderUser)
+      const next = jest.fn()
+
+      await doInWorkspaceContext(ctx, appId, () =>
+        workspaceBuilderOrAdmin(ctx, next)
+      )
+
+      passed(ctx.throw, next)
+    })
+
     it("should deny app builder access to a different workspace", async () => {
       const ctx = buildUserCtx(appBuilderUser)
       const next = jest.fn()
