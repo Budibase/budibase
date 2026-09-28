@@ -50,20 +50,8 @@
 
   $: syncAutomationsEnabled = $licensing.syncAutomationsEnabled
   $: triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
-  let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
-  let actions = Object.entries($automationStore.blockDefinitions.ACTION).filter(
-    ([key, action]) =>
-      key !== AutomationActionStepId.BRANCH && action.deprecated !== true
-  )
-
-  $: {
-    const triggerStepId = $selectedAutomation.data?.definition.trigger.stepId
-    if (triggerStepId && !collectBlockAllowedSteps.includes(triggerStepId)) {
-      actions = actions.filter(
-        ([key]) => key !== AutomationActionStepId.COLLECT
-      )
-    }
-  }
+  const collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
+  $: triggerStepId = $selectedAutomation.data?.definition.trigger.stepId
   let lockedFeatures = [
     ActionStepID.COLLECT,
     ActionStepID.TRIGGER_AUTOMATION_RUN,
@@ -87,15 +75,19 @@
     typeof block?.loopChildInsertIndex === "number"
       ? block.loopChildInsertIndex
       : undefined
-  $: actions = actions.filter(([k]) =>
-    insideLoopV2
-      ? ![
-          AutomationActionStepId.BRANCH,
+  $: actions = Object.entries($automationStore.blockDefinitions.ACTION).filter(
+    ([key, action]) =>
+      key !== AutomationActionStepId.BRANCH &&
+      action.deprecated !== true &&
+      (!triggerStepId ||
+        collectBlockAllowedSteps.includes(triggerStepId) ||
+        key !== AutomationActionStepId.COLLECT) &&
+      (!insideLoopV2 ||
+        ![
           AutomationActionStepId.COLLECT,
           AutomationActionStepId.LOOP,
           AutomationActionStepId.LOOP_V2,
-        ].includes(k as AutomationActionStepId)
-      : true
+        ].includes(key as AutomationActionStepId))
   )
   const resolveBranchAnchorPath = (): FlowBlockPath | undefined => {
     if (!block?.branchNode) return undefined
@@ -282,14 +274,15 @@
     }
   }
 
-  const allActions: Record<string, AutomationStepDefinition> = {}
-  actions.forEach(([k, v]) => {
-    if (!v.deprecated) {
+  let allActions: Record<string, AutomationStepDefinition> = {}
+  $: {
+    allActions = {}
+    actions.forEach(([k, v]) => {
       allActions[k] = v
-    }
-  })
+    })
+  }
 
-  const plugins = actions.reduce(
+  $: plugins = actions.reduce(
     (acc: Record<string, AutomationStepDefinition>, elm) => {
       const [k, v] = elm
       if (v.custom) {
