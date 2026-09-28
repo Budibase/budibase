@@ -5,7 +5,7 @@
   import { workspaceDeploymentStore } from "@/stores/builder"
   import { bb } from "@/stores/bb"
   import { shouldAutoSelectAgentModel } from "./configUtils"
-  import { createSaveCoordinator } from "./operationSaveCoordinator"
+  import { createSaveCoordinator } from "../../saveCoordinator"
   import OperationsSection from "./OperationsSection.svelte"
 
   let draftAgentId: string | undefined = $state()

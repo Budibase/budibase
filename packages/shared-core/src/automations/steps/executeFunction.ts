@@ -10,7 +10,7 @@ import {
 export const definition: AutomationStepDefinition = {
   name: "Run Function",
   tagline: "Run a Function",
-  icon: "functions",
+  icon: "function",
   description: "Run a Function in this automation",
   type: AutomationStepType.ACTION,
   stepId: AutomationActionStepId.EXECUTE_FUNCTION,

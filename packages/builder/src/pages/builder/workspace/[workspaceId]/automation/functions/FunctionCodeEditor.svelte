@@ -18,7 +18,11 @@
     indentWithTab,
   } from "@codemirror/commands"
   import { javascript } from "@codemirror/lang-javascript"
-  import { bracketMatching, syntaxHighlighting } from "@codemirror/language"
+  import {
+    bracketMatching,
+    HighlightStyle,
+    syntaxHighlighting,
+  } from "@codemirror/language"
   import { setDiagnostics, type Diagnostic } from "@codemirror/lint"
   import { EditorState } from "@codemirror/state"
   import { oneDark, oneDarkHighlightStyle } from "@codemirror/theme-one-dark"
@@ -30,6 +34,7 @@
     keymap,
     lineNumbers,
   } from "@codemirror/view"
+  import { tags } from "@lezer/highlight"
   import { onDestroy, onMount } from "svelte"
   import {
     getFunctionDatasourceCompletions,
@@ -50,6 +55,12 @@
 
   let container: HTMLDivElement
   let editor: EditorView | undefined
+
+  const lightHighlightStyle = HighlightStyle.define([
+    ...oneDarkHighlightStyle.specs,
+    { tag: tags.definition(tags.name), color: "#4b5563" },
+    { tag: [tags.modifier, tags.typeName], color: "#8a5a1e" },
+  ])
 
   const complete = (context: CompletionContext) => {
     const before = context.state.doc.sliceString(0, context.pos)
@@ -171,7 +182,10 @@
         bracketMatching(),
         closeBrackets(),
         javascript({ typescript: true }),
-        syntaxHighlighting(oneDarkHighlightStyle, { fallback: true }),
+        syntaxHighlighting(
+          isDark ? oneDarkHighlightStyle : lightHighlightStyle,
+          { fallback: true }
+        ),
         ...(isDark ? [oneDark] : []),
         autocompletion({ override: [complete] }),
         keymap.of([
@@ -205,7 +219,7 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: var(--radius-l);
     background: var(--spectrum-global-color-gray-50);
-    font-size: 13px;
+    font-size: 15px;
   }
   .function-code-editor :global(.cm-editor) {
     height: 100%;
