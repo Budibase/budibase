@@ -214,7 +214,7 @@ describe("SelectStepSidePanel", () => {
           EXECUTE_FUNCTION: {
             name: "Run Function",
             stepId: "EXECUTE_FUNCTION",
-            icon: "functions",
+            icon: "function",
             internal: true,
           },
         },
