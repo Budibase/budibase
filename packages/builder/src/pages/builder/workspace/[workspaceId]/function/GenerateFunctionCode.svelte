@@ -27,7 +27,6 @@
   let request = $state("")
   let generatedCode = $state("")
   let generating = $state(false)
-  let error = $state("")
   let requestToken = $state(0)
 
   const close = () => modal?.hide()
@@ -36,7 +35,6 @@
     if (!request.trim() || generating) return
     const token = ++requestToken
     generating = true
-    error = ""
     try {
       const response = await API.generateFunctionCode({
         prompt: request,
@@ -51,11 +49,15 @@
       if (token !== requestToken) return
       generatedCode = response.code.trim()
       if (!generatedCode) {
-        error = "No code was generated. Try a more specific request."
+        notifications.error(
+          "No code was generated. Try a more specific request."
+        )
       }
     } catch (generationError) {
       if (token === requestToken) {
-        error = getErrorMessage(generationError) || "Unable to generate code"
+        notifications.error(
+          getErrorMessage(generationError) || "Unable to generate code"
+        )
       }
     } finally {
       if (token === requestToken) generating = false
@@ -85,7 +87,6 @@
     generating = false
     request = ""
     generatedCode = ""
-    error = ""
   }}
 >
   <ModalContent
@@ -123,7 +124,6 @@
           on:change={event => (request = event.detail || "")}
         />
       {/key}
-      {#if error}<p class="error" role="alert">{error}</p>{/if}
       <div class="modal-actions">
         <Button secondary disabled={generating} on:click={close}>Cancel</Button>
         <Button
@@ -166,9 +166,5 @@
     justify-content: flex-end;
     gap: var(--spacing-s);
     margin-top: var(--spacing-m);
-  }
-  .error {
-    color: var(--spectrum-global-color-red-700);
-    font-size: var(--font-size-s);
   }
 </style>
