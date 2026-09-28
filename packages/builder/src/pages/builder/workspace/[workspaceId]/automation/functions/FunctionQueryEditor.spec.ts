@@ -8,15 +8,6 @@ import { SourceName } from "@budibase/types"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import FunctionQueryEditor from "./FunctionQueryEditor.svelte"
 
-if (!Element.prototype.animate) {
-  Element.prototype.animate = () =>
-    Object.assign(Object.create(null), {
-      onfinish: null,
-      cancel: () => {},
-      finished: Promise.resolve(),
-    }) as Animation
-}
-
 const catalog: FunctionQueryCatalogEntry[] = [
   {
     queryId: "query_customer",
@@ -55,7 +46,7 @@ describe("FunctionQueryEditor", () => {
     vi.restoreAllMocks()
   })
 
-  it("shows current display names without changing stored aliases", () => {
+  it("shows current display names without changing stored aliases", async () => {
     render(FunctionQueryEditor, {
       capabilities: [capability],
       catalog,
@@ -63,6 +54,12 @@ describe("FunctionQueryEditor", () => {
 
     expect(screen.getByText("Find renamed customer")).toBeInTheDocument()
     expect(screen.getByText("Renamed CRM")).toBeInTheDocument()
+    await fireEvent.click(
+      within(screen.getByTestId("linked-query-query_customer")).getByRole(
+        "button",
+        { expanded: false }
+      )
+    )
     expect(
       screen.getByText("await queries.crm.findCustomer()")
     ).toBeInTheDocument()
@@ -78,6 +75,12 @@ describe("FunctionQueryEditor", () => {
       catalog,
     })
 
+    await fireEvent.click(
+      within(screen.getByTestId("linked-query-query_customer")).getByRole(
+        "button",
+        { expanded: false }
+      )
+    )
     await fireEvent.click(screen.getByRole("button", { name: /Copy/ }))
 
     expect(copyToClipboard).toHaveBeenCalledWith(
@@ -92,24 +95,13 @@ describe("FunctionQueryEditor", () => {
       onSave,
     })
 
+    await fireEvent.click(screen.getByRole("button", { name: /Add queries/ }))
     await fireEvent.click(
-      screen.getByRole("button", { name: /Link a Data query/i })
+      screen.getByRole("menuitem", { name: /Find renamed customer/ })
     )
-    await fireEvent.click(
-      screen.getByRole("option", {
-        name: /Find renamed customer/i,
-        hidden: true,
-      })
-    )
-    await fireEvent.click(
-      screen.getByRole("button", { name: /Link an API query/i })
-    )
-    await fireEvent.click(
-      screen.getByRole("option", { name: /Send event/i, hidden: true })
-    )
-    await fireEvent.click(
-      screen.getByRole("button", { name: "Save query links" })
-    )
+    await fireEvent.click(screen.getByRole("button", { name: /Add queries/ }))
+    await fireEvent.click(screen.getByRole("menuitem", { name: /Send event/ }))
+    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
 
     expect(onSave).toHaveBeenCalledWith([
       {
@@ -133,14 +125,9 @@ describe("FunctionQueryEditor", () => {
     })
 
     expect(onDirtyChange).toHaveBeenLastCalledWith(false)
+    await fireEvent.click(screen.getByRole("button", { name: /Add queries/ }))
     await fireEvent.click(
-      screen.getByRole("button", { name: /Link a Data query/i })
-    )
-    await fireEvent.click(
-      screen.getByRole("option", {
-        name: /Find renamed customer/i,
-        hidden: true,
-      })
+      screen.getByRole("menuitem", { name: /Find renamed customer/ })
     )
 
     expect(onDirtyChange).toHaveBeenLastCalledWith(true)
@@ -162,6 +149,9 @@ describe("FunctionQueryEditor", () => {
 
     const missing = screen.getByTestId("linked-query-query_deleted")
     expect(within(missing).getByText("Missing query")).toBeInTheDocument()
+    await fireEvent.click(
+      within(missing).getByRole("button", { expanded: false })
+    )
     expect(
       within(missing).getByText("lastKnownId: string | null")
     ).toBeInTheDocument()
@@ -169,9 +159,7 @@ describe("FunctionQueryEditor", () => {
     await fireEvent.click(
       within(missing).getByRole("button", { name: "Remove missing query" })
     )
-    await fireEvent.click(
-      screen.getByRole("button", { name: "Save query links" })
-    )
+    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
 
     expect(onSave).toHaveBeenCalledWith([])
   })
@@ -184,13 +172,17 @@ describe("FunctionQueryEditor", () => {
       onSave,
     })
 
+    await fireEvent.click(
+      within(screen.getByTestId("linked-query-query_customer")).getByRole(
+        "button",
+        { expanded: false }
+      )
+    )
     const inputs = view.container.querySelectorAll("input")
-    await fireEvent.input(inputs[1], {
+    await fireEvent.input(inputs[0], {
       target: { value: "invalid alias" },
     })
-    await fireEvent.click(
-      screen.getByRole("button", { name: "Save query links" })
-    )
+    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
 
     expect(
       screen.getByText("Use a JavaScript identifier, for example customerData.")
@@ -215,7 +207,7 @@ describe("FunctionQueryEditor", () => {
     expect(onRetry).toHaveBeenCalledOnce()
   })
 
-  it("highlights declaration parameter changes", () => {
+  it("highlights declaration parameter changes", async () => {
     render(FunctionQueryEditor, {
       capabilities: [
         {
@@ -226,9 +218,15 @@ describe("FunctionQueryEditor", () => {
       catalog,
     })
 
+    await fireEvent.click(
+      within(screen.getByTestId("linked-query-query_customer")).getByRole(
+        "button",
+        { expanded: false }
+      )
+    )
     expect(screen.getByText(/Query parameters changed/)).toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: "Save query links" })
-    ).not.toHaveClass("is-disabled")
+    expect(screen.getByRole("button", { name: "Save links" })).not.toHaveClass(
+      "is-disabled"
+    )
   })
 })
