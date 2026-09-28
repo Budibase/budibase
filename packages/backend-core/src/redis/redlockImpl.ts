@@ -127,7 +127,9 @@ export async function doWithLock<T>(
     const name = getLockName(opts)
 
     const ttl =
-      opts.type === LockType.AUTO_EXTEND ? AUTO_EXTEND_POLLING_MS : opts.ttl
+      opts.type === LockType.AUTO_EXTEND
+        ? (opts.ttl ?? AUTO_EXTEND_POLLING_MS)
+        : opts.ttl
 
     // create the lock
     lock = await redlock.lock(name, ttl)
