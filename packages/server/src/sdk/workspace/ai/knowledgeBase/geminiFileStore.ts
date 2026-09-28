@@ -288,6 +288,7 @@ export async function searchGeminiFileStore({
         body: JSON.stringify({
           query,
           custom_llm_provider: "gemini",
+          model: "gemini-3.8-flash",
           ...(geminiApiKey ? { api_key: geminiApiKey } : {}),
           ...(sessionId
             ? {
