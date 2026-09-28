@@ -1,7 +1,10 @@
 import { createHash } from "crypto"
 import { context, features } from "@budibase/backend-core"
 import {
+  type Agent,
   type AnyDocument,
+  type Datasource,
+  type Query,
   FeatureFlag,
   type PreviewProjectAssignmentResponse,
   type ProjectAssignmentDependency,
@@ -212,30 +215,26 @@ const collectAssignableDependencyIds = ({
   resourceIds: string[]
 }) => {
   const blocked = new Set(blockedResourceIds)
-  return Array.from(
-    new Set(
-      [
-        ...(includeRoots
-          ? resourceIds.flatMap(resourceId => {
-              if (blocked.has(resourceId)) {
-                return []
-              }
-              const type = getResourceType(resourceId)
-              return type ? [{ id: resourceId, type }] : []
-            })
-          : []),
-        ...resourceIds.flatMap(resourceId =>
-          collectTransitiveResourceDependencies(
-            graph,
-            resourceId,
-            new Set(blocked)
-          )
-        ),
-      ]
-        .filter(isAssignableDependency)
-        .map(dependency => dependency.id)
+  const ids = new Set<string>()
+  for (const resourceId of resourceIds) {
+    if (includeRoots && !blocked.has(resourceId)) {
+      const type = getResourceType(resourceId)
+      if (type && isAssignableDependency({ id: resourceId, type })) {
+        ids.add(resourceId)
+      }
+    }
+    const dependencies = collectTransitiveResourceDependencies(
+      graph,
+      resourceId,
+      new Set(blocked)
     )
-  ).sort(compareResourceIds)
+    for (const dependency of dependencies) {
+      if (isAssignableDependency(dependency)) {
+        ids.add(dependency.id)
+      }
+    }
+  }
+  return Array.from(ids).sort(compareResourceIds)
 }
 
 const getNewDirectDependencyIds = ({
@@ -423,6 +422,39 @@ export const propagateCreatedResourceDependencies = async ({
   }
 }
 
+const propagateNewResourceDependencies = async ({
+  analysis,
+  rootResourceId,
+  previousResource,
+  savedResource,
+  projectIds,
+}: {
+  analysis: ResourceDependencyAnalysis
+  rootResourceId: string
+  previousResource?: AnyDocument
+  savedResource: AnyDocument
+  projectIds: string[]
+}): Promise<ProjectPropagationOutcome> => {
+  if (!projectIds.length) {
+    return completePropagation()
+  }
+  const dependencyIds = getNewDirectDependencyIds({
+    analysis,
+    rootResourceId,
+    previousResource,
+    savedResource,
+  })
+  return await propagateProjectIdsToDependencyIds({
+    dependencyIds: collectAssignableDependencyIds({
+      blockedResourceIds: [rootResourceId],
+      graph: analysis.graph,
+      includeRoots: true,
+      resourceIds: dependencyIds,
+    }),
+    projectIds,
+  })
+}
+
 export const propagateProjectDependencyChanges = async ({
   rootResourceId,
   currentProjectIds = [],
@@ -441,14 +473,14 @@ export const propagateProjectDependencyChanges = async ({
   const existingProjectIds = currentProjectIds.filter(projectId =>
     previousProjects.has(projectId)
   )
-  const dependencyContentChanged =
+  const resourceContentChanged =
     !previousResource ||
     !isEqual(
       withoutRevisionMetadata(previousResource),
       withoutRevisionMetadata(savedResource)
     )
 
-  if (!addedProjectIds.length && !dependencyContentChanged) {
+  if (!addedProjectIds.length && !resourceContentChanged) {
     return completePropagation()
   }
 
@@ -480,25 +512,106 @@ export const propagateProjectDependencyChanges = async ({
     )
   }
 
-  if (existingProjectIds.length && dependencyContentChanged) {
-    const newDirectDependencyIds = getNewDirectDependencyIds({
-      analysis,
-      rootResourceId,
-      previousResource,
-      savedResource,
-    })
+  if (existingProjectIds.length && resourceContentChanged) {
     outcomes.push(
-      await propagateProjectIdsToDependencyIds({
-        dependencyIds: collectAssignableDependencyIds({
-          blockedResourceIds: [rootResourceId],
-          graph,
-          includeRoots: true,
-          resourceIds: newDirectDependencyIds,
-        }),
+      await propagateNewResourceDependencies({
+        analysis,
+        rootResourceId,
+        previousResource,
+        savedResource,
         projectIds: existingProjectIds,
       })
     )
   }
 
+  return mergePropagationOutcomes(outcomes)
+}
+
+export interface MovedQueryDependencyPropagationInput {
+  existingDatasource: Datasource
+  datasource: Datasource
+  existingQuery: Query
+  query: Query
+  referencingAgents: Agent[]
+}
+
+export const propagateMovedQueryDependencies = async ({
+  existingDatasource,
+  datasource,
+  existingQuery,
+  query,
+  referencingAgents,
+}: MovedQueryDependencyPropagationInput): Promise<ProjectPropagationOutcome> => {
+  const outcomes: ProjectPropagationOutcome[] = []
+  const sourceProjectIds = new Set(existingDatasource.projectIds || [])
+  const destinationProjectIds = new Set(datasource.projectIds || [])
+  const sharedProjectIds = Array.from(destinationProjectIds).filter(projectId =>
+    sourceProjectIds.has(projectId)
+  )
+  const destinationOnlyProjectIds = Array.from(destinationProjectIds).filter(
+    projectId => !sourceProjectIds.has(projectId)
+  )
+
+  const newAgentProjectIds = Array.from(
+    new Set(referencingAgents.flatMap(agent => agent.projectIds || []))
+  ).filter(
+    projectId =>
+      sourceProjectIds.has(projectId) && !destinationProjectIds.has(projectId)
+  )
+  if (!destinationProjectIds.size && !newAgentProjectIds.length) {
+    return completePropagation()
+  }
+  let analysis: ResourceDependencyAnalysis
+  try {
+    if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
+      return completePropagation()
+    }
+    analysis = await sdk.resources.analyseResourceDependencies({
+      includeProjects: false,
+      includeDatasourceQueries: true,
+    })
+  } catch (error) {
+    return incompletePropagation({ resourceIds: [datasource._id!], error })
+  }
+
+  outcomes.push(
+    await propagateNewResourceDependencies({
+      analysis,
+      rootResourceId: datasource._id!,
+      projectIds: sharedProjectIds,
+      previousResource: existingQuery,
+      savedResource: query,
+    })
+  )
+  outcomes.push(
+    await propagateNewResourceDependencies({
+      analysis,
+      rootResourceId: datasource._id!,
+      projectIds: destinationOnlyProjectIds,
+      savedResource: query,
+    })
+  )
+
+  outcomes.push(
+    await propagateNewResourceDependencies({
+      analysis,
+      rootResourceId: datasource._id!,
+      projectIds: newAgentProjectIds,
+      previousResource: existingQuery,
+      savedResource: query,
+    })
+  )
+
+  outcomes.push(
+    await propagateProjectIdsToDependencyIds({
+      dependencyIds: collectAssignableDependencyIds({
+        blockedResourceIds: [query._id!],
+        graph: analysis.graph,
+        includeRoots: true,
+        resourceIds: [datasource._id!],
+      }),
+      projectIds: newAgentProjectIds,
+    })
+  )
   return mergePropagationOutcomes(outcomes)
 }

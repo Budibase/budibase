@@ -3,6 +3,7 @@ import { APIWarningCode } from "@budibase/types"
 import sdk from "../sdk"
 import type {
   CreatedResourceDependencyPropagationInput,
+  MovedQueryDependencyPropagationInput,
   ProjectDependencyChangeInput,
   ProjectDependencySubtreePropagationInput,
   ProjectPropagationOutcome,
@@ -65,6 +66,15 @@ export const propagateCreatedResourceDependenciesWithWarning = async ({
   ctx: ResponseHeaderContext
 }) => {
   const outcome = await sdk.projects.propagateCreatedResourceDependencies(input)
+  setProjectPropagationWarning({ ctx, outcome })
+  return outcome
+}
+
+export const propagateMovedQueryDependenciesWithWarning = async ({
+  ctx,
+  ...input
+}: MovedQueryDependencyPropagationInput & { ctx: ResponseHeaderContext }) => {
+  const outcome = await sdk.projects.propagateMovedQueryDependencies(input)
   setProjectPropagationWarning({ ctx, outcome })
   return outcome
 }
