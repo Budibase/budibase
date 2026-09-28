@@ -633,11 +633,16 @@
       if (!recipient) {
         return undefined
       }
-      const target = recipient.config?.channelName
+      const channel = recipient.config?.channelName
         ? `#${recipient.config.channelName}`
-        : recipient.config?.channelId || "DM"
+        : recipient.config?.channelId
+      const chat = [
+        EscalationNotificationChannel.SLACK,
+        EscalationNotificationChannel.MSTEAMS,
+      ].includes(recipient.type)
+      const target = channel ?? (chat ? "DM" : null)
       const provider = PROVIDER_LABELS[recipient.type] ?? recipient.type
-      return `Anyone · ${provider} · ${target}`
+      return ["Anyone", provider, target].filter(Boolean).join(" · ")
     }
     const type =
       APPROVAL_TYPE_LABELS[
