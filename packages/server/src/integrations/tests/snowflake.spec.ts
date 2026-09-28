@@ -14,7 +14,7 @@ jest.mock("../../sdk", () => ({
   },
 }))
 
-import { SourceName, type DatasourcePlus } from "@budibase/types"
+import { SourceName } from "@budibase/types"
 import snowflake from "../snowflake"
 import { interpolateSQL } from "../queries/sql"
 
@@ -87,7 +87,7 @@ describe("snowflake integration", () => {
         bindings: [],
       },
       { id: payload },
-      integration as DatasourcePlus,
+      integration,
       { nullDefaultSupport: false }
     )
 
