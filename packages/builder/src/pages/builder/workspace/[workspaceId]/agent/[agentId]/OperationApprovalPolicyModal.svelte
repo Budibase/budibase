@@ -104,6 +104,7 @@
   let outcome = $state<OutcomeValue>(EXPIRE)
   let cappedFrom = $state<string | undefined>()
   let cappedTo = $state("")
+  let storedOption = $state<{ value: number; label: string }[]>([])
 
   let customValid = $derived(
     Number.isInteger(customValue) && (customValue ?? 0) >= 1
@@ -127,7 +128,9 @@
           { value: NEVER, label: "Never expires" },
           { value: CUSTOM, label: "Custom" },
         ]
-      : allowedPresets
+      : [...allowedPresets, ...storedOption].sort(
+          (a, b) => a.value - b.value
+        )
   )
 
   const splitDuration = (seconds: number) => {
@@ -152,10 +155,7 @@
     if (unlimited) {
       return CUSTOM
     }
-    const atOrBelow = allowedPresets.filter(preset => preset.value <= duration)
-    return atOrBelow.length
-      ? atOrBelow[atOrBelow.length - 1].value
-      : allowedPresets[0].value
+    return duration <= largest ? duration : largest
   }
 
   const expiryLabel = (value: ExpiryValue) => {
@@ -196,6 +196,11 @@
         : ANY
     expiry = deriveExpiry(policy)
     outcome = policy?.expiry?.outcome ?? EXPIRE
+    storedOption =
+      typeof expiry === "number" &&
+      !allowedPresets.some(preset => preset.value === expiry)
+        ? [{ value: expiry, label: expiryLabel(expiry) }]
+        : []
     const stored = storedExpiry(policy)
     if (expiry === CUSTOM && typeof stored === "number") {
       const split = splitDuration(stored)
