@@ -490,13 +490,12 @@ jobs:
         id: aws-credentials
         if: >-
           needs.compute-affected-jobs.outputs.run_server_tests == 'true'
-          && vars.ECR_PUBLIC_ROLE_ARN != ''
           && (github.event_name != 'pull_request'
           || github.event.pull_request.head.repo.full_name == github.repository)
         continue-on-error: true
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: ${{ vars.ECR_PUBLIC_ROLE_ARN }}
+          role-to-assume: arn:aws:iam::545012296077:role/github-actions-ecr-public
           aws-region: us-east-1
           retry-max-attempts: 1
 
