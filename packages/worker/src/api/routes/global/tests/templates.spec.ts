@@ -1,9 +1,10 @@
-import { TemplateMetadata, TemplateType } from "../../../../constants"
-import { TestConfiguration } from "../../../../tests"
-import { EmailTemplatePurpose, Template } from "@budibase/types"
-import { addBaseTemplates } from "../../../../constants/templates"
 import { tenancy } from "@budibase/backend-core"
+import { EmailTemplatePurpose, Feature, Template } from "@budibase/types"
 import yaml from "yaml"
+import { TemplateMetadata, TemplateType } from "../../../../constants"
+import { addBaseTemplates } from "../../../../constants/templates"
+import { TestConfiguration } from "../../../../tests"
+import mocks from "../../../../tests/mocks"
 
 // TODO
 
@@ -12,6 +13,10 @@ describe("/api/global/template", () => {
 
   beforeAll(async () => {
     await config.beforeAll()
+  })
+
+  beforeEach(() => {
+    mocks.licenses.useUnlimited({ features: [Feature.CUSTOMISE_EMAILS] })
   })
 
   afterAll(async () => {
@@ -79,6 +84,19 @@ describe("/api/global/template", () => {
       let res = await config.api.templates.getTemplate()
       let newTemplate = res.body.find((t: any) => (t.purpose = purpose))
       expect(newTemplate.contents).toEqual(contents)
+    })
+
+    it("rejects updates without the customise emails feature", async () => {
+      mocks.licenses.useCloudFree()
+
+      await config.api.templates.saveTemplate(
+        {
+          contents: "Test contents",
+          purpose: "base",
+          type: "email",
+        },
+        { status: 400 }
+      )
     })
   })
 
