@@ -136,7 +136,7 @@ describe("/api/global/email", () => {
         "Thanks for getting started with Budibase's Budibase platform.",
     },
   ])(
-    "uses the default $templatePurpose template when email customisation is not licensed",
+    "uses the default $templatePurpose template for $emailPurpose emails when email customisation is not licensed",
     async ({
       templatePurpose,
       emailPurpose,
