@@ -14,6 +14,7 @@
   import { FilterUsers } from "@budibase/frontend-core"
   import {
     DEFAULT_ESCALATION_DURATION_SECONDS,
+    Duration,
     ESCALATION_DURATION_PRESETS,
   } from "@budibase/shared-core"
   import { EscalationAction, ResolutionStrategy } from "@budibase/types"
@@ -65,9 +66,9 @@
   const NEVER = "never"
   const CUSTOM = "custom"
   const EXPIRE = "expire"
-  const HOUR_SECONDS = 60 * 60
-  const DAY_SECONDS = 24 * HOUR_SECONDS
-  const WEEK_SECONDS = 7 * DAY_SECONDS
+  const HOUR_SECONDS = Duration.fromHours(1).toSeconds()
+  const DAY_SECONDS = Duration.fromDays(1).toSeconds()
+  const WEEK_SECONDS = Duration.fromDays(7).toSeconds()
   type ExpiryValue = number | typeof NEVER | typeof CUSTOM
   type OutcomeValue = EscalationAction | typeof EXPIRE
 

@@ -1,6 +1,6 @@
 import { context } from "@budibase/backend-core"
 import { constants as proConstants, licensing } from "@budibase/pro"
-import { dataFilters } from "@budibase/shared-core"
+import { dataFilters, Duration } from "@budibase/shared-core"
 import {
   AgentOperation,
   AgentOperationApprovalPolicy,
@@ -32,7 +32,7 @@ import {
 } from "../../../../escalation/reviewContext"
 
 const SUMMARY_MAX_LENGTH = 300
-const DAY_MS = 24 * 60 * 60 * 1000
+const DAY_MS = Duration.fromDays(1).toMs()
 
 export const escalationDurationMs = async (
   expiry: ApprovalPolicyExpiry | undefined
