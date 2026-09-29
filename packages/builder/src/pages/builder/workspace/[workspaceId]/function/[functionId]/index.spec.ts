@@ -3,6 +3,7 @@ import type { FunctionResponse } from "@budibase/types"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { writable } from "svelte/store"
 import MockComponent from "@/test/mocks/MockComponent.svelte"
+import MockFunctionTopBar from "./MockFunctionTopBar.svelte"
 
 const mocks = vi.hoisted(() => {
   const { writable } = require("svelte/store")
@@ -15,10 +16,17 @@ const mocks = vi.hoisted(() => {
     compile: vi.fn().mockResolvedValue({ diagnostics: [] }),
     notificationsSuccess: vi.fn(),
     fetchQueryCatalog: vi.fn().mockResolvedValue(undefined),
+    compile: vi.fn().mockResolvedValue({ diagnostics: [] }),
   }
 })
 
 vi.mock("@roxi/routify", () => ({ params: mocks.params }))
+vi.mock("@budibase/frontend-core", () => ({
+  Utils: {
+    debounce: (callback: (...args: never[]) => void) =>
+      Object.assign(callback, { cancel: vi.fn() }),
+  },
+}))
 vi.mock("@/stores/builder/functionsAvailability", () => ({
   functionsAvailable: mocks.available,
 }))
@@ -34,10 +42,12 @@ vi.mock("@/stores/builder", () => ({
       save: mocks.save,
       compile: mocks.compile,
       fetchQueryCatalog: mocks.fetchQueryCatalog,
+      compile: mocks.compile,
     }
   ),
 }))
 vi.mock("@budibase/bbui", () => ({
+  Badge: MockComponent,
   Body: MockComponent,
   Badge: MockComponent,
   Button: MockComponent,
@@ -50,7 +60,7 @@ vi.mock("@budibase/bbui", () => ({
   notifications: { success: mocks.notificationsSuccess },
 }))
 vi.mock("@/components/common/TopBar.svelte", () => ({
-  default: MockComponent,
+  default: MockFunctionTopBar,
 }))
 vi.mock("../FunctionCodeEditor.svelte", () => ({
   default: MockComponent,
@@ -60,6 +70,9 @@ vi.mock("../FunctionQueryEditor.svelte", async () => ({
   default: (await import("@/test/mocks/MockFunctionQueryEditor.svelte"))
     .default,
 }))
+vi.mock("../FunctionCodeEditor.svelte", () => ({ default: MockComponent }))
+vi.mock("../FunctionLogs.svelte", () => ({ default: MockComponent }))
+vi.mock("../FunctionTrustNotice.svelte", () => ({ default: MockComponent }))
 
 import FunctionPage from "./index.svelte"
 
@@ -107,7 +120,9 @@ describe("Function editor route", () => {
 
     mocks.params.set({ functionId: "function-b" })
     await waitFor(() =>
-      expect(screen.getAllByText("function-b").length).toBeGreaterThan(0)
+      expect(screen.getByTestId("function-name")).toHaveTextContent(
+        "function-b"
+      )
     )
     expect(mocks.selectResource).toHaveBeenLastCalledWith("function-b")
 
@@ -116,7 +131,7 @@ describe("Function editor route", () => {
     await waitFor(() =>
       expect(mocks.selectResource).toHaveBeenLastCalledWith("function-b")
     )
-    expect(screen.queryByText("function-a")).not.toBeInTheDocument()
+    expect(screen.getByTestId("function-name")).toHaveTextContent("function-b")
   })
 
   it("uses the saved revision after returning to the same Function during a save", async () => {

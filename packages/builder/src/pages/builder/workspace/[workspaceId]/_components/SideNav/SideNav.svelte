@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { functionsAvailable } from "@/stores/builder/functionsAvailability"
   import {
     Context,
     ActionMenu,
@@ -36,6 +37,7 @@
     licensing,
     enrichedApps,
     agentsStore,
+    auth,
     featureFlags,
   } from "@/stores/portal"
   import SideNavLink from "./SideNavLink.svelte"
@@ -43,8 +45,8 @@
   import { onDestroy, setContext } from "svelte"
   import {
     type Datasource,
-    FeatureFlag,
     type FunctionSummary,
+    FeatureFlag,
     type Query,
     type Table,
     type UIAutomation,
@@ -68,6 +70,7 @@
   import AgentModal from "@/pages/builder/workspace/[workspaceId]/agent/AgentModal.svelte"
   import WorkspaceAppModal from "@/pages/builder/workspace/[workspaceId]/design/[workspaceAppId]/[screenId]/_components/WorkspaceApp/WorkspaceAppModal.svelte"
   import CreateTableModal from "@/components/backend/TableNavigator/modals/CreateTableModal.svelte"
+  import { canManageFunctions } from "@/pages/builder/workspace/[workspaceId]/function/permissions"
 
   export const show = () => {
     pinned.set(true)
@@ -99,12 +102,12 @@
   }
   interface AllResourceStores {
     automations: UIAutomation[]
-    functions: FunctionSummary[]
     apps: UIWorkspaceApp[]
     datasources: (Datasource | UIInternalDatasource)[]
     tables: Table[]
     queries: Query[]
     views: ViewV2[]
+    functions: FunctionSummary[]
   }
 
   setContext(Context.PopoverRoot, ".nav .popover-container")
@@ -136,6 +139,7 @@
   let createWorkspaceModal: Modal | undefined
   let workspaceMenuOpen = false
   let createMenuOpen = false
+  let functionsFetchedForWorkspace = ""
 
   let createAutomationModal: ModalAPI
   let webhookModal: ModalAPI
@@ -191,6 +195,10 @@
     keepCollapsed()
   }
 
+  const openFunctions = () => {
+    goToCreate("home?type=function&create=function")
+  }
+
   const handleTableSave = async (table: Table) => {
     if (!workspaceId) {
       return
@@ -220,40 +228,58 @@
 
   // Ignore resources without names
   $: favourites = $workspaceFavouriteStore
-    .filter(f => $resourceLookup?.[f.resourceId])
+    .filter(
+      f =>
+        $resourceLookup?.[f.resourceId] &&
+        (f.resourceType !== WorkspaceResource.FUNCTION ||
+          ($functionsAvailable && canManageFunctions($auth.user, workspaceId)))
+    )
     .sort((a, b) => a.resourceId.localeCompare(b.resourceId))
+
+  $: if (
+    workspaceId &&
+    $functionsAvailable &&
+    canManageFunctions($auth.user, workspaceId) &&
+    $workspaceFavouriteStore.some(
+      favourite => favourite.resourceType === WorkspaceResource.FUNCTION
+    ) &&
+    functionsFetchedForWorkspace !== workspaceId
+  ) {
+    functionsFetchedForWorkspace = workspaceId
+    functionStore.fetch()
+  }
 
   const initResourceStores = (): Readable<AllResourceStores> =>
     derived(
       [
         automationStore,
-        functionStore,
         workspaceAppStore,
         datasources,
         tables,
         queries,
         viewsV2,
         agentsStore,
+        functionStore,
         workspaceFavouriteStore,
       ],
       ([
         $automations,
-        $functions,
         $apps,
         $datasources,
         $tables,
         $queries,
         $views,
         $agents,
+        $functions,
       ]) => ({
         automations: $automations.automations,
-        functions: $functions.functions,
         apps: $apps.workspaceApps,
         datasources: $datasources.list,
         tables: $tables.list,
         queries: $queries.list,
         views: $views.list,
         agents: $agents.agents,
+        functions: $functions.functions,
       })
     )
 
@@ -327,9 +353,6 @@
 
   // None of this needs to be done if the side bar is closed
   const initFavourites = () => {
-    if ($featureFlags[FeatureFlag.FUNCTIONS]) {
-      void functionStore.fetch()
-    }
     const stores = initResourceStores()
     resourceLookup = generateResourceLookup(stores)
   }
@@ -339,8 +362,6 @@
     const link: Record<WorkspaceResource, ResourceLinkFn> = {
       [WorkspaceResource.AUTOMATION]: (id: string) =>
         `${workspacePrefix}/automation/${id}`,
-      [WorkspaceResource.FUNCTION]: (id: string) =>
-        `${workspacePrefix}/automation/functions/${id}`,
       [WorkspaceResource.DATASOURCE]: (id: string) => {
         const datasourceMap = get(datasourceLookup) || {}
         const datasource = datasourceMap[id]
@@ -377,6 +398,8 @@
       },
       [WorkspaceResource.AGENT]: (id: string) =>
         `${workspacePrefix}/agent/${id}/config`,
+      [WorkspaceResource.FUNCTION]: (id: string) =>
+        `${workspacePrefix}/function/${id}`,
     }
     if (!link[favourite.resourceType]) return null
     return link[favourite.resourceType]?.(favourite.resourceId)
@@ -563,6 +586,19 @@
                 <MenuItem icon="path" on:click={openCreateAutomation}>
                   Automation
                 </MenuItem>
+                {#if $functionsAvailable && canManageFunctions($auth.user, workspaceId)}
+                  <MenuItem
+                    icon="function"
+                    iconColour="var(--spectrum-global-color-magenta-400)"
+                    iconWeight="bold"
+                    on:click={openFunctions}
+                  >
+                    Function
+                    <div slot="right">
+                      <Tag emphasized>Alpha</Tag>
+                    </div>
+                  </MenuItem>
+                {/if}
                 <MenuItem icon="browsers" on:click={openCreateApp}>
                   App
                 </MenuItem>
