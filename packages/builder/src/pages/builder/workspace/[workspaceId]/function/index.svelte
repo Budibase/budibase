@@ -1,8 +1,7 @@
 <script lang="ts">
-  import { goto, params } from "@roxi/routify"
-  import { onMount } from "svelte"
+  import { redirect } from "@roxi/routify"
 
-  onMount(() => {
-    $goto(`/builder/workspace/${$params.workspaceId}/home?type=function`)
-  })
+  $redirect
+
+  $redirect("../home?type=function")
 </script>

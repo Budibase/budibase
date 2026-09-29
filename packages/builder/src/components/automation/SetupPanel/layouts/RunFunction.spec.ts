@@ -53,6 +53,8 @@ vi.mock("@/stores/builder", () => ({
       requestUpdate: mocks.requestUpdate,
     },
   },
+}))
+vi.mock("@/stores/builder/functions", () => ({
   functionStore: mocks.functionStore,
 }))
 

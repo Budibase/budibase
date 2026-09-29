@@ -3,8 +3,9 @@
   import FunctionTrustNotice from "../FunctionTrustNotice.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { getErrorMessage } from "@/helpers/errors"
-  import { builderStore, functionStore } from "@/stores/builder"
-  import { toCapabilityInputs } from "@/stores/builder/functions"
+  import { builderStore } from "@/stores/builder"
+  import { functionStore, toCapabilityInputs } from "@/stores/builder/functions"
+  import { auth } from "@/stores/portal"
   import {
     Badge,
     Body,
@@ -27,6 +28,7 @@
   import FunctionCodeEditor from "../FunctionCodeEditor.svelte"
   import FunctionLogs from "../FunctionLogs.svelte"
   import FunctionQueryEditor from "../FunctionQueryEditor.svelte"
+  import { canManageFunctions } from "../permissions"
 
   let fn: FunctionResponse | undefined
   let loading = true
@@ -49,7 +51,8 @@
 
   $params
   $: functionId = $params.functionId
-  $: enabled = $functionsAvailable
+  $: available = $functionsAvailable
+  $: enabled = available && canManageFunctions($auth.user, $params.workspaceId)
   $: if (enabled && functionId && fn?._id === functionId && !loading) {
     builderStore.selectResource(functionId)
   }
@@ -288,7 +291,11 @@
     {#if !enabled}
       <div class="state" data-testid="function-permission-state">
         <Icon name="lock" size="L" />
-        <Heading size="S">Functions are not available</Heading>
+        <Heading size="S">
+          {available
+            ? "You don't have permission to manage Functions"
+            : "Functions are not available"}
+        </Heading>
       </div>
     {:else if loading}
       <div class="state" data-testid="function-loading-state">

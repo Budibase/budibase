@@ -27,8 +27,8 @@
     tables,
     workspaceAppStore,
     workspaceFavouriteStore,
-    functionStore,
   } from "@/stores/builder"
+  import { functionStore } from "@/stores/builder/functions"
   import {
     agentsStore,
     workspacesStore,
@@ -86,9 +86,12 @@
 
   import FunctionNameModal from "../function/FunctionNameModal.svelte"
   import { DEFAULT_FUNCTION_SOURCE } from "../function/defaultSource"
+  import { canManageFunctions } from "../function/permissions"
   import UpdateAgentModal from "../_components/UpdateAgentModal.svelte"
 
-  $: functionsEnabled = !!$functionsAvailable
+  $: functionsEnabled =
+    !!$functionsAvailable &&
+    canManageFunctions($auth.user, $workspaceStore.appId)
 
   $: goto = $gotoStore
   $: url = $urlStore
@@ -655,7 +658,7 @@
   }
 
   const getContextMenuItemsForRow = (row: HomeRow) => {
-    if (row.type === "function") {
+    if (row.type === "function" && functionsEnabled) {
       const fn = row.resource
       return [
         {
@@ -874,7 +877,7 @@
   }
 
   const openRow = (row: HomeRow) => {
-    if (row.type === "function") {
+    if (row.type === "function" && functionsEnabled) {
       goToResource(`../function/${row.id}`)
       return
     }

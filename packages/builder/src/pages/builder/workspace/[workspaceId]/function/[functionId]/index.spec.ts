@@ -8,8 +8,10 @@ import MockFunctionTopBar from "./MockFunctionTopBar.svelte"
 const mocks = vi.hoisted(() => {
   const { writable } = require("svelte/store")
   return {
-    params: writable({ functionId: "function-a" }),
+    params: writable({ workspaceId: "app_dev_one", functionId: "function-a" }),
     available: writable(false),
+    auth: writable({ user: { builder: { global: true } } }),
+    canManageFunctions: vi.fn().mockReturnValue(true),
     selectResource: vi.fn(),
     fetchOne: vi.fn(),
     save: vi.fn(),
@@ -30,8 +32,8 @@ vi.mock("@budibase/frontend-core", () => ({
 vi.mock("@/stores/builder/functionsAvailability", () => ({
   functionsAvailable: mocks.available,
 }))
-vi.mock("@/stores/builder", () => ({
-  builderStore: { selectResource: mocks.selectResource },
+vi.mock("@/stores/builder/functions", () => ({
+  toCapabilityInputs: () => [],
   functionStore: Object.assign(
     writable({
       queryCatalog: [],
@@ -46,10 +48,16 @@ vi.mock("@/stores/builder", () => ({
     }
   ),
 }))
+vi.mock("@/stores/portal", () => ({ auth: mocks.auth }))
+vi.mock("../permissions", () => ({
+  canManageFunctions: mocks.canManageFunctions,
+}))
+vi.mock("@/stores/builder", () => ({
+  builderStore: { selectResource: mocks.selectResource },
+}))
 vi.mock("@budibase/bbui", () => ({
   Badge: MockComponent,
   Body: MockComponent,
-  Badge: MockComponent,
   Button: MockComponent,
   Heading: MockComponent,
   Helpers: { uuid: vi.fn().mockReturnValue("test-session") },
@@ -70,7 +78,6 @@ vi.mock("../FunctionQueryEditor.svelte", async () => ({
   default: (await import("@/test/mocks/MockFunctionQueryEditor.svelte"))
     .default,
 }))
-vi.mock("../FunctionCodeEditor.svelte", () => ({ default: MockComponent }))
 vi.mock("../FunctionLogs.svelte", () => ({ default: MockComponent }))
 vi.mock("../FunctionTrustNotice.svelte", () => ({ default: MockComponent }))
 
@@ -93,8 +100,22 @@ describe("Function editor route", () => {
     vi.clearAllMocks()
     mocks.fetchOne.mockReset()
     mocks.save.mockReset()
-    mocks.params.set({ functionId: "function-a" })
+    mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-a" })
     mocks.available.set(false)
+    mocks.canManageFunctions.mockReturnValue(true)
+  })
+
+  it("distinguishes unavailable Functions from missing author permission", async () => {
+    mocks.canManageFunctions.mockReturnValue(false)
+    render(FunctionPage)
+
+    expect(screen.getByText("Functions are not available")).toBeInTheDocument()
+    mocks.available.set(true)
+
+    expect(
+      await screen.findByText("You don't have permission to manage Functions")
+    ).toBeInTheDocument()
+    expect(mocks.fetchOne).not.toHaveBeenCalled()
   })
 
   it("loads only when enabled and ignores a late response from the previous route", async () => {
@@ -118,7 +139,7 @@ describe("Function editor route", () => {
     )
     expect(mocks.selectResource).not.toHaveBeenCalled()
 
-    mocks.params.set({ functionId: "function-b" })
+    mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-b" })
     await waitFor(() =>
       expect(screen.getByTestId("function-name")).toHaveTextContent(
         "function-b"
@@ -152,11 +173,11 @@ describe("Function editor route", () => {
     await screen.findByRole("button", { name: "Save links" })
     await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
 
-    mocks.params.set({ functionId: "function-b" })
+    mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-b" })
     await waitFor(() =>
       expect(mocks.selectResource).toHaveBeenLastCalledWith("function-b")
     )
-    mocks.params.set({ functionId: "function-a" })
+    mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-a" })
     await waitFor(() => expect(mocks.fetchOne).toHaveBeenCalledTimes(3))
     await screen.findByRole("button", { name: "Save links" })
 

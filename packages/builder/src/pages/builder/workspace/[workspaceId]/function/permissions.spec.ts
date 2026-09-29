@@ -12,11 +12,20 @@ describe("canManageFunctions", () => {
   })
 
   it("allows builders assigned to the workspace", () => {
+    // app_dev_one is the development workspace for app_one.
     const user: PermissionUser = {
       builder: { apps: ["app_one"] },
     }
 
     expect(canManageFunctions(user, "app_dev_one")).toBe(true)
+  })
+
+  it("rejects builders assigned to a different workspace", () => {
+    const user: PermissionUser = {
+      builder: { apps: ["app_other"] },
+    }
+
+    expect(canManageFunctions(user, "app_dev_one")).toBe(false)
   })
 
   it("allows global admins", () => {
