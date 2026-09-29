@@ -310,20 +310,26 @@ describe("/projects", () => {
   }
 
   it("returns 404 when the feature flag is disabled", async () => {
-    await config.api.project.fetch({ status: 404 })
-    await config.api.project.previewAssignment(
-      { resourceId: "workspace_app_test", projectIds: [] },
-      { status: 404 }
-    )
-    await config.api.project.updateAssignment(
-      "workspace_app_test",
-      {
-        resourceRev: "1-test",
-        projectIds: [],
-        dependencyIds: [],
-        dependencyFingerprint: "unavailable-while-feature-disabled",
-      },
-      { status: 404 }
+    await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.PROJECTS]: false },
+      async () => {
+        await config.api.project.fetch({ status: 404 })
+        await config.api.project.previewAssignment(
+          { resourceId: "workspace_app_test", projectIds: [] },
+          { status: 404 }
+        )
+        await config.api.project.updateAssignment(
+          "workspace_app_test",
+          {
+            resourceRev: "1-test",
+            projectIds: [],
+            dependencyIds: [],
+            dependencyFingerprint: "unavailable-while-feature-disabled",
+          },
+          { status: 404 }
+        )
+      }
     )
   })
 
@@ -333,21 +339,27 @@ describe("/projects", () => {
       return await createAssignedWorkspaceApp(project._id)
     })
 
-    await config.api.workspaceApp.update({
-      _id: workspaceApp._id,
-      _rev: workspaceApp._rev,
-      name: workspaceApp.name,
-      url: workspaceApp.url,
-      navigation: workspaceApp.navigation,
-      theme: workspaceApp.theme,
-      customTheme: workspaceApp.customTheme,
-      disabled: workspaceApp.disabled,
-    })
+    await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.PROJECTS]: false },
+      async () => {
+        await config.api.workspaceApp.update({
+          _id: workspaceApp._id,
+          _rev: workspaceApp._rev,
+          name: workspaceApp.name,
+          url: workspaceApp.url,
+          navigation: workspaceApp.navigation,
+          theme: workspaceApp.theme,
+          customTheme: workspaceApp.customTheme,
+          disabled: workspaceApp.disabled,
+        })
 
-    const fetchedWorkspaceApp = await config.api.workspaceApp.find(
-      workspaceApp._id!
+        const fetchedWorkspaceApp = await config.api.workspaceApp.find(
+          workspaceApp._id!
+        )
+        expect(fetchedWorkspaceApp.projectIds).toEqual(workspaceApp.projectIds)
+      }
     )
-    expect(fetchedWorkspaceApp.projectIds).toEqual(workspaceApp.projectIds)
   })
 
   it("creates, fetches, and updates projects", async () => {

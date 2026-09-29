@@ -81,20 +81,27 @@ export async function update(
   }
 }
 
-export async function previewAssignment(
-  ctx: Ctx<PreviewProjectAssignmentRequest, PreviewProjectAssignmentResponse>
-) {
-  const { resourceId } = ctx.request.body
+const getAssignmentPreview = async ({
+  resourceId,
+  projectIds: requestedProjectIds,
+}: PreviewProjectAssignmentRequest) => {
   const projectIds =
-    (await sdk.projects.resolveProjectIds(ctx.request.body.projectIds)) || []
+    (await sdk.projects.resolveProjectIds(requestedProjectIds)) || []
   const resource = await sdk.projects.getProjectAssignableResource(resourceId)
-
-  ctx.body = await sdk.projects.getProjectAssignmentPreview({
+  const preview = await sdk.projects.getProjectAssignmentPreview({
     resourceId,
     resourceRev: resource._rev,
     resourceProjectIds: resource.projectIds || [],
     projectIds,
   })
+  return { projectIds, preview }
+}
+
+export async function previewAssignment(
+  ctx: Ctx<PreviewProjectAssignmentRequest, PreviewProjectAssignmentResponse>
+) {
+  const { preview } = await getAssignmentPreview(ctx.request.body)
+  ctx.body = preview
 }
 
 export async function updateAssignment(
@@ -104,15 +111,9 @@ export async function updateAssignment(
     const { resourceId } = ctx.params
     const { dependencyFingerprint, resourceRev, dependencyIds } =
       ctx.request.body
-    const projectIds =
-      (await sdk.projects.resolveProjectIds(ctx.request.body.projectIds)) || []
-    const resource = await sdk.projects.getProjectAssignableResource(resourceId)
-
-    const preview = await sdk.projects.getProjectAssignmentPreview({
+    const { projectIds, preview } = await getAssignmentPreview({
       resourceId,
-      resourceRev: resource._rev,
-      resourceProjectIds: resource.projectIds || [],
-      projectIds,
+      projectIds: ctx.request.body.projectIds,
     })
     if (
       projectIds.length &&

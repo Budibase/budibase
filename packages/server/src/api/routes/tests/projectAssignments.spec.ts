@@ -59,7 +59,7 @@ describe("project dependency assignments", () => {
     return workspaceApp
   }
 
-  it("rechecks the project after waiting for the assignment lock", async () => {
+  it("revalidates the project when it is deleted before the assignment callback runs", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
         name: "Operations",
@@ -70,7 +70,6 @@ describe("project dependency assignments", () => {
         projectIds: [project._id],
       })
 
-      // Simulate deletion finishing before the waiting assignment acquires the lock.
       jest
         .mocked(projectLock.doWithProjectAssignmentsLock)
         .mockImplementationOnce(async task => {
@@ -144,6 +143,26 @@ describe("project dependency assignments", () => {
     return { workspaceApp, automation, screen }
   }
 
+  const createAppWithTwoAutomations = async () => {
+    const { workspaceApp, automation, screen } = await createAppWithAutomation()
+    const secondAutomation = await config.createAutomation()
+    const secondButton = createAutomationButtonScreen({
+      workspaceAppId: workspaceApp._id!,
+      automationId: secondAutomation._id!,
+    }).props._children![0]
+    await config.api.screen.save({
+      ...screen,
+      props: {
+        ...screen.props,
+        _children: [
+          ...screen.props._children!,
+          { ...secondButton, _id: "second-automation-button" },
+        ],
+      },
+    })
+    return { workspaceApp, automation, secondAutomation }
+  }
+
   it("previews dependencies and applies only the selected additions", async () => {
     await withProjectsEnabled(async () => {
       const { project: firstProject } = await config.api.project.create({
@@ -152,9 +171,14 @@ describe("project dependency assignments", () => {
       const { project: secondProject } = await config.api.project.create({
         name: "Reporting",
       })
-      const { workspaceApp, automation } = await createAppWithAutomation()
+      const { workspaceApp, automation, secondAutomation } =
+        await createAppWithTwoAutomations()
       await config.api.automation.update({
         ...automation,
+        projectIds: [firstProject._id],
+      })
+      await config.api.automation.update({
+        ...secondAutomation,
         projectIds: [firstProject._id],
       })
       const projectIds = [firstProject._id, secondProject._id]
@@ -163,14 +187,22 @@ describe("project dependency assignments", () => {
         resourceId: workspaceApp._id!,
         projectIds,
       })
-      expect(preview.dependencies).toEqual([
-        {
-          id: automation._id,
-          name: automation.name,
-          type: ResourceType.AUTOMATION,
-          projectIdsToAdd: [secondProject._id],
-        },
-      ])
+      expect(preview.dependencies).toEqual(
+        expect.arrayContaining([
+          {
+            id: automation._id,
+            name: automation.name,
+            type: ResourceType.AUTOMATION,
+            projectIdsToAdd: [secondProject._id],
+          },
+          {
+            id: secondAutomation._id,
+            name: secondAutomation.name,
+            type: ResourceType.AUTOMATION,
+            projectIdsToAdd: [secondProject._id],
+          },
+        ])
+      )
 
       const excluded = await config.api.project.updateAssignment(
         workspaceApp._id!,
@@ -210,8 +242,64 @@ describe("project dependency assignments", () => {
       expect(
         (await config.api.automation.get(automation._id!)).projectIds
       ).toEqual(projectIds)
+      expect(
+        (await config.api.automation.get(secondAutomation._id!)).projectIds
+      ).toEqual([firstProject._id])
     })
   })
+
+  it.each([
+    { action: "replaces", clear: false },
+    { action: "clears", clear: true },
+  ])(
+    "$action existing root assignments while preserving dependency memberships",
+    async ({ clear }) => {
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const { workspaceApp, automation } = await createAppWithAutomation()
+        const initialPreview = await config.api.project.previewAssignment({
+          resourceId: workspaceApp._id!,
+          projectIds: [project._id],
+        })
+        await config.api.project.updateAssignment(workspaceApp._id!, {
+          resourceRev: initialPreview.resourceRev,
+          dependencyFingerprint: initialPreview.dependencyFingerprint,
+          projectIds: [project._id],
+          dependencyIds: [automation._id!],
+        })
+        const projectIds = clear
+          ? []
+          : [
+              (await config.api.project.create({ name: "Reporting" })).project
+                ._id,
+            ]
+        const preview = await config.api.project.previewAssignment({
+          resourceId: workspaceApp._id!,
+          projectIds,
+        })
+        const result = await config.api.project.updateAssignment(
+          workspaceApp._id!,
+          {
+            resourceRev: preview.resourceRev,
+            dependencyFingerprint: preview.dependencyFingerprint,
+            projectIds,
+            dependencyIds: [],
+          }
+        )
+
+        expect(result.projectIds).toEqual(projectIds)
+        expect(
+          (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds ||
+            []
+        ).toEqual(projectIds)
+        expect(
+          (await config.api.automation.get(automation._id!)).projectIds
+        ).toEqual([project._id])
+      })
+    }
+  )
 
   it("rejects an assignment when dependency projects change after preview", async () => {
     await withProjectsEnabled(async () => {
@@ -354,7 +442,12 @@ describe("project dependency assignments", () => {
           projectIds: [],
           dependencyIds: ["automation_unselected"],
         },
-        { status: 400 }
+        {
+          status: 400,
+          body: {
+            message: "Dependencies cannot be assigned without a project.",
+          },
+        }
       )
       expect(
         (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
@@ -391,7 +484,7 @@ describe("project dependency assignments", () => {
     })
   })
 
-  it("rejects a stale root revision", async () => {
+  it("rejects a mismatched root revision", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
         name: "Operations",
@@ -404,7 +497,7 @@ describe("project dependency assignments", () => {
       await config.api.project.updateAssignment(
         workspaceApp._id!,
         {
-          resourceRev: "stale-revision",
+          resourceRev: "mismatched-revision",
           dependencyFingerprint: preview.dependencyFingerprint,
           projectIds: [project._id],
           dependencyIds: [],
@@ -468,12 +561,13 @@ describe("project dependency assignments", () => {
     })
   })
 
-  it("keeps the root assignment successful when selected dependency writes conflict", async () => {
+  it("reports successful dependency assignments when another dependency exhausts conflict retries", async () => {
     await withProjectsEnabled(async () => {
       const { project } = await config.api.project.create({
         name: "Operations",
       })
-      const { workspaceApp, automation } = await createAppWithAutomation()
+      const { workspaceApp, automation, secondAutomation } =
+        await createAppWithTwoAutomations()
       const preview = await config.api.project.previewAssignment({
         resourceId: workspaceApp._id!,
         projectIds: [project._id],
@@ -481,11 +575,18 @@ describe("project dependency assignments", () => {
       const bulkDocs = jest
         .spyOn(DatabaseImpl.prototype, "bulkDocs")
         .mockImplementation(async docs =>
-          docs.map(doc => ({
-            id: doc._id!,
-            error: "conflict",
-            reason: "mock conflict",
-          }))
+          Promise.all(
+            docs.map(async doc => {
+              if (doc._id === automation._id) {
+                return await context.getWorkspaceDB().put(doc)
+              }
+              return {
+                id: doc._id!,
+                error: "conflict",
+                reason: "mock conflict",
+              }
+            })
+          )
         )
 
       try {
@@ -495,7 +596,7 @@ describe("project dependency assignments", () => {
             resourceRev: preview.resourceRev,
             dependencyFingerprint: preview.dependencyFingerprint,
             projectIds: [project._id],
-            dependencyIds: [automation._id!],
+            dependencyIds: [automation._id!, secondAutomation._id!],
           },
           {
             status: 200,
@@ -505,12 +606,15 @@ describe("project dependency assignments", () => {
             },
           }
         )
-        expect(response.assignedDependencyIds).toEqual([])
+        expect(response.assignedDependencyIds).toEqual([automation._id])
         expect(
           (await config.api.workspaceApp.find(workspaceApp._id!)).projectIds
         ).toEqual([project._id])
         expect(
           (await config.api.automation.get(automation._id!)).projectIds
+        ).toEqual([project._id])
+        expect(
+          (await config.api.automation.get(secondAutomation._id!)).projectIds
         ).toBeUndefined()
       } finally {
         bulkDocs.mockRestore()
@@ -526,12 +630,12 @@ describe("project dependency assignments", () => {
           resourceRev: repairPreview.resourceRev,
           dependencyFingerprint: repairPreview.dependencyFingerprint,
           projectIds: [project._id],
-          dependencyIds: [automation._id!],
+          dependencyIds: [secondAutomation._id!],
         }
       )
-      expect(retried.assignedDependencyIds).toEqual([automation._id])
+      expect(retried.assignedDependencyIds).toEqual([secondAutomation._id])
       expect(
-        (await config.api.automation.get(automation._id!)).projectIds
+        (await config.api.automation.get(secondAutomation._id!)).projectIds
       ).toEqual([project._id])
     })
   })

@@ -10,7 +10,7 @@ import sdk from "../.."
 import { collectTransitiveResourceDependencies } from "../resources"
 import {
   compareResourceIds,
-  isDisallowedProjectAssignmentResourceId,
+  isAllowedProjectAssignmentResourceId,
 } from "../resources/utils"
 import {
   getProjectIds,
@@ -38,10 +38,6 @@ export interface SelectiveProjectPropagationInput {
   projectIds: string[]
 }
 
-const completePropagation = (): ProjectPropagationOutcome => ({
-  status: "complete",
-})
-
 const incompletePropagation = ({
   resourceIds,
   error,
@@ -66,7 +62,7 @@ const isAssignableDependency = (dependency: {
   type: ResourceType
 }) =>
   isProjectAssignableResourceType(dependency.type) &&
-  !isDisallowedProjectAssignmentResourceId(dependency.id)
+  isAllowedProjectAssignmentResourceId(dependency.id)
 
 const createProjectAssignmentPreview = ({
   dependencies,
@@ -174,7 +170,7 @@ export const propagateProjectIdsToDependencyIds = async ({
 }: SelectiveProjectPropagationInput): Promise<ProjectPropagationOutcome> => {
   const uniqueDependencyIds = Array.from(new Set(dependencyIds)).sort()
   if (!uniqueDependencyIds.length || !projectIds.length) {
-    return completePropagation()
+    return { status: "complete" }
   }
 
   let idsToUpdate = uniqueDependencyIds
@@ -239,5 +235,5 @@ export const propagateProjectIdsToDependencyIds = async ({
     })
   }
 
-  return completePropagation()
+  return { status: "complete" }
 }

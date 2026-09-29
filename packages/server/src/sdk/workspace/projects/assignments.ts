@@ -6,7 +6,7 @@ import {
 } from "@budibase/types"
 import {
   getResourceType,
-  isDisallowedProjectAssignmentResourceId,
+  isAllowedProjectAssignmentResourceId,
 } from "../resources/utils"
 import {
   isProjectAssignableResourceType,
@@ -29,7 +29,7 @@ export const getProjectAssignableResource = async (
   if (
     !resourceType ||
     !isProjectAssignableResourceType(resourceType) ||
-    isDisallowedProjectAssignmentResourceId(resourceId)
+    !isAllowedProjectAssignmentResourceId(resourceId)
   ) {
     throw new HTTPError("Resource cannot be assigned to a project.", 400)
   }
