@@ -29,8 +29,8 @@
     tables,
     queries,
     viewsV2,
-    functionStore,
   } from "@/stores/builder"
+  import { functionStore } from "@/stores/builder/functions"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import {
     workspacesStore,

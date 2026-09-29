@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { automationStore, functionStore } from "@/stores/builder"
+  import { automationStore } from "@/stores/builder"
+  import { functionStore } from "@/stores/builder/functions"
   import type { AutomationContext } from "@/stores/builder/automations"
   import type {
     AutomationStep,

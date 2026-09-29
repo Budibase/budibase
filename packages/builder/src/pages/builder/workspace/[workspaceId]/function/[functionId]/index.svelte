@@ -3,7 +3,8 @@
   import FunctionTrustNotice from "../FunctionTrustNotice.svelte"
   import TopBar from "@/components/common/TopBar.svelte"
   import { getErrorMessage } from "@/helpers/errors"
-  import { workspaceStore, builderStore, functionStore } from "@/stores/builder"
+  import { workspaceStore, builderStore } from "@/stores/builder"
+  import { functionStore } from "@/stores/builder/functions"
   import { auth } from "@/stores/portal"
   import {
     Badge,

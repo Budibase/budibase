@@ -27,8 +27,8 @@
     tables,
     workspaceAppStore,
     workspaceFavouriteStore,
-    functionStore,
   } from "@/stores/builder"
+  import { functionStore } from "@/stores/builder/functions"
   import {
     agentsStore,
     workspacesStore,
