@@ -140,6 +140,13 @@
     }
   }
 
+  const closeSelectedRun = () => {
+    currentDetailRequest = undefined
+    selectedRun = undefined
+    detailLoading = false
+    detailError = ""
+  }
+
   $effect(() => {
     const requestedFunctionId = functionId
     currentRunsRequest = undefined
@@ -262,10 +269,7 @@
           loading={detailLoading}
           error={detailError}
           onretry={retrySelectedRun}
-          onclose={() => {
-            selectedRun = undefined
-            detailError = ""
-          }}
+          onclose={closeSelectedRun}
         />
       {/if}
     {:else}
@@ -327,10 +331,7 @@
             loading={detailLoading}
             error={detailError}
             onretry={retrySelectedRun}
-            onclose={() => {
-              selectedRun = undefined
-              detailError = ""
-            }}
+            onclose={closeSelectedRun}
           />
         {/if}
       </div>
