@@ -100,7 +100,7 @@
       </div>
       <div>
         <dt>Step ID</dt>
-        <dd><code>{run.invocation.stepId}</code></dd>
+        <dd><code>{run.invocation.automationStepId}</code></dd>
       </div>
       <div>
         <dt>Query count</dt>

@@ -35,7 +35,7 @@ const makeRun = (
   invocation: {
     type: "automation",
     automationId: "automation_one",
-    stepId: "step_one",
+    automationStepId: "step_one",
   },
   startedAt: "2026-07-23T12:00:00.000Z",
   ...(status === "running"
