@@ -164,6 +164,55 @@ describe("FunctionQueryEditor", () => {
     expect(onSave).toHaveBeenCalledWith([])
   })
 
+  it("blocks saving other link changes until a missing query is removed", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    const view = render(FunctionQueryEditor, {
+      capabilities: [
+        capability,
+        {
+          ...capability,
+          capabilityId: "cap_deleted",
+          queryId: "query_deleted",
+          queryAlias: "deleted",
+        },
+      ],
+      catalog,
+      onSave,
+    })
+
+    await fireEvent.click(
+      within(screen.getByTestId("linked-query-query_customer")).getByRole(
+        "button",
+        { expanded: false }
+      )
+    )
+    await fireEvent.input(view.container.querySelector("input")!, {
+      target: { value: "customerData" },
+    })
+    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Remove missing query links before saving"
+    )
+    expect(onSave).not.toHaveBeenCalled()
+
+    await fireEvent.click(
+      within(screen.getByTestId("linked-query-query_deleted")).getByRole(
+        "button",
+        { name: "Remove missing query" }
+      )
+    )
+    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
+
+    expect(onSave).toHaveBeenCalledWith([
+      {
+        queryId: "query_customer",
+        datasourceAlias: "customerData",
+        queryAlias: "findCustomer",
+      },
+    ])
+  })
+
   it("prevents invalid aliases with an actionable error", async () => {
     const onSave = vi.fn().mockResolvedValue(undefined)
     const view = render(FunctionQueryEditor, {

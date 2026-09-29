@@ -41,7 +41,7 @@ const catalog: FunctionQueryCatalogEntry[] = [
 ]
 
 const validate = (capabilities: FunctionQueryCapabilityInput[]) =>
-  validateFunctionQueryAliases(capabilities, catalog)
+  validateFunctionQueryAliases({ capabilities, catalog, catalogLoaded: true })
 
 describe("Function query aliases", () => {
   it("generates stable JavaScript identifiers from display names", () => {
@@ -124,6 +124,53 @@ describe("Function query aliases", () => {
     )
   })
 
+  it("preserves the first error when both datasource alias rules fail", () => {
+    const errors = validate([
+      {
+        queryId: "query_customers",
+        datasourceAlias: "a",
+        queryAlias: "customers",
+      },
+      {
+        queryId: "query_events",
+        datasourceAlias: "b",
+        queryAlias: "events",
+      },
+      {
+        queryId: "query_orders",
+        datasourceAlias: "b",
+        queryAlias: "orders",
+      },
+    ])
+
+    expect(errors[2].datasourceAlias).toBe(
+      "This alias is already used by another datasource."
+    )
+  })
+
+  it("blocks missing queries only after the catalog loads", () => {
+    const capabilities = [
+      {
+        queryId: "query_missing_one",
+        datasourceAlias: "legacyDatasource",
+        queryAlias: "first",
+      },
+    ]
+
+    const pendingErrors = validateFunctionQueryAliases({
+      capabilities,
+      catalog,
+      catalogLoaded: false,
+    })
+    expect(hasFunctionQueryAliasErrors(pendingErrors)).toBe(false)
+
+    const loadedErrors = validate(capabilities)
+    expect(loadedErrors[0].missingQuery).toBe(
+      "Remove this link before saving, or restore the saved query."
+    )
+    expect(hasFunctionQueryAliasErrors(loadedErrors)).toBe(true)
+  })
+
   it("does not infer datasource collisions for missing catalog entries", () => {
     const errors = validate([
       {
@@ -138,6 +185,7 @@ describe("Function query aliases", () => {
       },
     ])
 
-    expect(hasFunctionQueryAliasErrors(errors)).toBe(false)
+    expect(errors[0].datasourceAlias).toBeUndefined()
+    expect(errors[1].datasourceAlias).toBeUndefined()
   })
 })

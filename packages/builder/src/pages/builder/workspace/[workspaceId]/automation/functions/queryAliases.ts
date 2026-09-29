@@ -8,6 +8,13 @@ const IDENTIFIER_PATTERN = /^[A-Za-z_$][A-Za-z0-9_$]*$/
 export interface FunctionQueryAliasErrors {
   datasourceAlias?: string
   queryAlias?: string
+  missingQuery?: string
+}
+
+interface ValidateFunctionQueryAliasesOptions {
+  capabilities: FunctionQueryCapabilityInput[]
+  catalog: FunctionQueryCatalogEntry[]
+  catalogLoaded: boolean
 }
 
 const getIdentifierError = (alias: string) => {
@@ -39,11 +46,12 @@ export const toFunctionQueryAlias = (name: string, fallback: string) => {
   return alias || fallback
 }
 
-export const validateFunctionQueryAliases = (
-  capabilities: FunctionQueryCapabilityInput[],
-  catalog: FunctionQueryCatalogEntry[]
-): FunctionQueryAliasErrors[] => {
-  const errors = capabilities.map(capability => ({
+export const validateFunctionQueryAliases = ({
+  capabilities,
+  catalog,
+  catalogLoaded,
+}: ValidateFunctionQueryAliasesOptions): FunctionQueryAliasErrors[] => {
+  const errors: FunctionQueryAliasErrors[] = capabilities.map(capability => ({
     datasourceAlias: getIdentifierError(capability.datasourceAlias),
     queryAlias: getIdentifierError(capability.queryAlias),
   }))
@@ -54,12 +62,16 @@ export const validateFunctionQueryAliases = (
 
   capabilities.forEach((capability, index) => {
     const entry = catalogByQueryId.get(capability.queryId)
+    if (!entry && catalogLoaded) {
+      errors[index].missingQuery =
+        "Remove this link before saving, or restore the saved query."
+    }
     if (entry) {
       const existingDatasource = datasourceByAlias.get(
         capability.datasourceAlias
       )
       if (existingDatasource && existingDatasource !== entry.datasourceId) {
-        errors[index].datasourceAlias =
+        errors[index].datasourceAlias ||=
           "This alias is already used by another datasource."
       } else {
         datasourceByAlias.set(capability.datasourceAlias, entry.datasourceId)
@@ -67,7 +79,7 @@ export const validateFunctionQueryAliases = (
 
       const existingAlias = aliasByDatasource.get(entry.datasourceId)
       if (existingAlias && existingAlias !== capability.datasourceAlias) {
-        errors[index].datasourceAlias =
+        errors[index].datasourceAlias ||=
           "Use the same alias for every query from this datasource."
       } else {
         aliasByDatasource.set(entry.datasourceId, capability.datasourceAlias)
@@ -91,4 +103,8 @@ export const validateFunctionQueryAliases = (
 
 export const hasFunctionQueryAliasErrors = (
   errors: FunctionQueryAliasErrors[]
-) => errors.some(error => !!error.datasourceAlias || !!error.queryAlias)
+) =>
+  errors.some(
+    error =>
+      !!error.datasourceAlias || !!error.queryAlias || !!error.missingQuery
+  )

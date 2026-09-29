@@ -81,7 +81,13 @@
   let catalogByQueryId = $derived(
     new Map(catalog.map(entry => [entry.queryId, entry]))
   )
-  let errors = $derived(validateFunctionQueryAliases(drafts, catalog))
+  let errors = $derived(
+    validateFunctionQueryAliases({
+      capabilities: drafts,
+      catalog,
+      catalogLoaded: !catalogLoading && !catalogError,
+    })
+  )
   let parameterMetadataChanged = $derived.by(() =>
     capabilities.some(capability => {
       const entry = catalogByQueryId.get(capability.queryId)
@@ -447,7 +453,11 @@
     </div>
   {/if}
 
-  {#if showErrors && hasFunctionQueryAliasErrors(errors)}
+  {#if showErrors && errors.some(error => !!error.missingQuery)}
+    <div class="save-error" role="alert">
+      Remove missing query links before saving, or restore the saved queries.
+    </div>
+  {:else if showErrors && hasFunctionQueryAliasErrors(errors)}
     <div class="save-error" role="alert">
       Fix the alias errors before saving.
     </div>
