@@ -78,7 +78,11 @@
       source: functionToSave.source,
       capabilities,
     })
-    if (fn === functionToSave && functionId === functionToSave._id && enabled) {
+    if (
+      fn?._id === functionToSave._id &&
+      functionId === functionToSave._id &&
+      enabled
+    ) {
       fn = saved
       notifications.success("Linked queries saved")
     }

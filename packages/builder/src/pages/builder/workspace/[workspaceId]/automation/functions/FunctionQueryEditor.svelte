@@ -64,7 +64,10 @@
       queryAlias: capability.queryAlias,
     }))
 
-  const haveSameParameterNames = (left: string[], right: string[]) =>
+  const haveSameParameterNames = (
+    left: readonly string[],
+    right: readonly string[]
+  ) =>
     left.length === right.length &&
     left.every((name, index) => name === right[index])
 

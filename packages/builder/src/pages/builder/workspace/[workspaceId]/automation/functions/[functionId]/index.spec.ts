@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/svelte"
+import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
 import type { FunctionResponse } from "@budibase/types"
 import { FeatureFlag } from "@budibase/types"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => {
     flags: writable({ ["FUNCTIONS"]: false }),
     selectResource: vi.fn(),
     fetchOne: vi.fn(),
+    save: vi.fn(),
+    notificationsSuccess: vi.fn(),
     fetchQueryCatalog: vi.fn().mockResolvedValue(undefined),
   }
 })
@@ -27,23 +29,27 @@ vi.mock("@/stores/builder", () => ({
     }),
     {
       fetchOne: mocks.fetchOne,
+      save: mocks.save,
       fetchQueryCatalog: mocks.fetchQueryCatalog,
     }
   ),
 }))
 vi.mock("@budibase/bbui", () => ({
   Body: MockComponent,
+  Badge: MockComponent,
   Button: MockComponent,
   Heading: MockComponent,
+  Helpers: { uuid: vi.fn().mockReturnValue("test-session") },
   Icon: MockComponent,
   ProgressCircle: MockComponent,
-  notifications: { success: vi.fn() },
+  notifications: { success: mocks.notificationsSuccess },
 }))
 vi.mock("@/components/common/TopBar.svelte", () => ({
   default: MockComponent,
 }))
-vi.mock("../FunctionQueryEditor.svelte", () => ({
-  default: MockComponent,
+vi.mock("../FunctionQueryEditor.svelte", async () => ({
+  default: (await import("@/test/mocks/MockFunctionQueryEditor.svelte"))
+    .default,
 }))
 
 import FunctionPage from "./index.svelte"
@@ -100,5 +106,42 @@ describe("Function editor route", () => {
       expect(mocks.selectResource).toHaveBeenLastCalledWith("function-b")
     )
     expect(screen.queryByText("function-a")).not.toBeInTheDocument()
+  })
+
+  it("uses the saved revision after returning to the same Function during a save", async () => {
+    let resolveSave: (value: FunctionResponse) => void = () => undefined
+    const pendingSave = new Promise<FunctionResponse>(resolve => {
+      resolveSave = resolve
+    })
+    mocks.fetchOne.mockImplementation(async (id: string) => createFunction(id))
+    mocks.save
+      .mockImplementationOnce(() => pendingSave)
+      .mockImplementationOnce(async () => ({
+        ...createFunction("function-a"),
+        _rev: "3",
+      }))
+    mocks.flags.set({ [FeatureFlag.FUNCTIONS]: true })
+
+    render(FunctionPage)
+    await screen.findByRole("button", { name: "Save links" })
+    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
+
+    mocks.params.set({ functionId: "function-b" })
+    await waitFor(() =>
+      expect(mocks.selectResource).toHaveBeenLastCalledWith("function-b")
+    )
+    mocks.params.set({ functionId: "function-a" })
+    await waitFor(() => expect(mocks.fetchOne).toHaveBeenCalledTimes(3))
+    await screen.findByRole("button", { name: "Save links" })
+
+    resolveSave({ ...createFunction("function-a"), _rev: "2" })
+    await waitFor(() => expect(mocks.notificationsSuccess).toHaveBeenCalled())
+    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
+
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(2))
+    expect(mocks.save).toHaveBeenLastCalledWith(
+      expect.objectContaining({ _rev: "2" }),
+      expect.objectContaining({ _rev: "2" })
+    )
   })
 })
