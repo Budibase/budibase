@@ -142,6 +142,47 @@ describe("FunctionLogs", () => {
     })
   })
 
+  it("loads the new Function's runs and clears the previous run detail", async () => {
+    api.getFunctionRuns.mockImplementation(async (functionId: string) =>
+      runsResponse([
+        makeRun("success", {
+          functionId,
+          runId: `run_${functionId}`,
+          environment: functionId === "fn_one" ? "development" : "published",
+        }),
+      ])
+    )
+
+    const view = render(FunctionLogs, { functionId: "fn_one" })
+    await fireEvent.click(
+      await screen.findByRole("button", { name: "View details" })
+    )
+    await screen.findByRole("complementary", { name: "Function run details" })
+
+    await view.rerender({ functionId: "fn_two" })
+
+    await waitFor(() =>
+      expect(api.getFunctionRuns).toHaveBeenLastCalledWith("fn_two", {
+        bookmark: undefined,
+        limit: 20,
+      })
+    )
+    await waitFor(() =>
+      expect(
+        view.container.querySelector('tr[data-environment="published"]')
+      ).toBeInTheDocument()
+    )
+    expect(
+      view.container.querySelector('tr[data-environment="development"]')
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("complementary", { name: "Function run details" })
+    ).not.toBeInTheDocument()
+
+    await fireEvent.click(screen.getByRole("button", { name: "View details" }))
+    expect(api.getFunctionRun).toHaveBeenLastCalledWith("fn_two", "run_fn_two")
+  })
+
   it("shows a loading state", () => {
     api.getFunctionRuns.mockReturnValue(new Promise(() => {}))
 

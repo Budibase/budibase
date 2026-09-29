@@ -11,8 +11,12 @@
     Icon,
     ProgressCircle,
   } from "@budibase/bbui"
-  import type { FunctionRunSummary } from "@budibase/types"
-  import { onMount } from "svelte"
+  import type {
+    FetchFunctionRunResponse,
+    FetchFunctionRunsResponse,
+    FunctionRunSummary,
+  } from "@budibase/types"
+  import { untrack } from "svelte"
   import FunctionRunDetail from "./FunctionRunDetail.svelte"
   import {
     formatFunctionRunDuration,
@@ -38,20 +42,35 @@
   let selectedRun = $state<FunctionRunSummary>()
   let detailLoading = $state(false)
   let detailError = $state("")
+  let currentRunsRequest: Promise<FetchFunctionRunsResponse> | undefined
+  let currentDetailRequest: Promise<FetchFunctionRunResponse> | undefined
 
   const runKey = (run: FunctionRunSummary) => `${run.environment}:${run.runId}`
 
-  const loadRuns = async (bookmark?: string, append = false) => {
+  const loadRuns = async ({
+    requestedFunctionId,
+    bookmark,
+    append = false,
+  }: {
+    requestedFunctionId: string
+    bookmark?: string
+    append?: boolean
+  }) => {
     if (loading) {
       return
     }
     loading = true
     error = ""
+    const pendingRequest = API.getFunctionRuns(requestedFunctionId, {
+      bookmark,
+      limit: PAGE_SIZE,
+    })
+    currentRunsRequest = pendingRequest
     try {
-      const response = await API.getFunctionRuns(functionId, {
-        bookmark,
-        limit: PAGE_SIZE,
-      })
+      const response = await pendingRequest
+      if (currentRunsRequest !== pendingRequest) {
+        return
+      }
       if (append) {
         const existingKeys = new Set(runs.map(runKey))
         runs = [
@@ -65,6 +84,9 @@
       hasMore = response.hasMore
       nextBookmark = response.nextBookmark
     } catch (loadError) {
+      if (currentRunsRequest !== pendingRequest) {
+        return
+      }
       error = getErrorMessage(loadError) || "Unable to load Function logs"
       if (!append) {
         runs = []
@@ -73,13 +95,19 @@
         selectedRun = undefined
       }
     } finally {
-      loading = false
+      if (currentRunsRequest === pendingRequest) {
+        loading = false
+      }
     }
   }
 
   const loadMore = async () => {
     if (hasMore && nextBookmark) {
-      await loadRuns(nextBookmark, true)
+      await loadRuns({
+        requestedFunctionId: functionId,
+        bookmark: nextBookmark,
+        append: true,
+      })
     }
   }
 
@@ -87,19 +115,20 @@
     selectedRun = run
     detailLoading = true
     detailError = ""
-    const requestedRunId = run.runId
+    const pendingRequest = API.getFunctionRun(functionId, run.runId)
+    currentDetailRequest = pendingRequest
     try {
-      const response = await API.getFunctionRun(functionId, requestedRunId)
-      if (selectedRun?.runId === requestedRunId) {
+      const response = await pendingRequest
+      if (currentDetailRequest === pendingRequest) {
         selectedRun = response.run
       }
     } catch (loadError) {
-      if (selectedRun?.runId === requestedRunId) {
+      if (currentDetailRequest === pendingRequest) {
         detailError =
           getErrorMessage(loadError) || "Unable to load Function run details"
       }
     } finally {
-      if (selectedRun?.runId === requestedRunId) {
+      if (currentDetailRequest === pendingRequest) {
         detailLoading = false
       }
     }
@@ -111,8 +140,25 @@
     }
   }
 
-  onMount(() => {
-    loadRuns()
+  $effect(() => {
+    const requestedFunctionId = functionId
+    currentRunsRequest = undefined
+    currentDetailRequest = undefined
+    runs = []
+    loading = false
+    error = ""
+    hasMore = false
+    nextBookmark = undefined
+    selectedRun = undefined
+    detailLoading = false
+    detailError = ""
+    untrack(() => {
+      void loadRuns({ requestedFunctionId })
+    })
+    return () => {
+      currentRunsRequest = undefined
+      currentDetailRequest = undefined
+    }
   })
 </script>
 
@@ -128,7 +174,12 @@
         Sanitized development and published execution history.
       </Body>
     </div>
-    <Button secondary size="S" disabled={loading} on:click={() => loadRuns()}>
+    <Button
+      secondary
+      size="S"
+      disabled={loading}
+      on:click={() => loadRuns({ requestedFunctionId: functionId })}
+    >
       Refresh
     </Button>
   </div>
@@ -145,7 +196,11 @@
       <Body size="S" color="var(--spectrum-global-color-gray-600)">
         {error}
       </Body>
-      <Button secondary on:click={() => loadRuns()}>Retry</Button>
+      <Button
+        secondary
+        on:click={() => loadRuns({ requestedFunctionId: functionId })}
+        >Retry</Button
+      >
     </div>
   {:else if !runs.length}
     <div class="state" data-testid="function-logs-empty">
