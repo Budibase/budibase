@@ -301,9 +301,14 @@ describe("geminiFileStore", () => {
       )
 
       const [, init] = mockFetch.mock.calls[0]
+<<<<<<< HEAD
       requestBody =
         JSON.parse(String(init?.body)) +
         expect(requestBody?.model).toBe("gemini/gemini-3.8-flash")
+=======
+      requestBody = JSON.parse(String(init?.body))
+      expect(requestBody?.model).toBe("gemini/gemini-3.8-flash")
+>>>>>>> 8ab66cb429 (Fix Gemini file store test assertion order)
       expect(requestBody?.litellm_session_id).toBe("chatconvo_123")
       expect(requestBody?.metadata).toEqual({ session_id: "chatconvo_123" })
     })
