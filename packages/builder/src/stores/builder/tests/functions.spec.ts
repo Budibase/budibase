@@ -211,10 +211,12 @@ describe("FunctionStore", () => {
     const fn = makeFunction({ readiness: "build_required" })
     const built = makeFunction({ _rev: "2-two", readiness: "ready" })
     vi.mocked(API.buildFunction).mockResolvedValue({ function: built })
+    vi.mocked(API.getFunction).mockResolvedValue({ function: built })
 
     await expect(store.build(fn)).resolves.toEqual(built)
 
     expect(API.buildFunction).toHaveBeenCalledWith(fn._id, fn._rev)
+    expect(API.getFunction).toHaveBeenCalledWith(fn._id)
     expect(store.list[0]).toEqual(
       expect.objectContaining({ _rev: "2-two", readiness: "ready" })
     )

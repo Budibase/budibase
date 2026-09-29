@@ -121,9 +121,8 @@ export class FunctionStore extends BudiStore<FunctionStoreState> {
     if (!fn._rev) {
       throw new Error("Function revision is missing")
     }
-    const response = await API.buildFunction(fn._id, fn._rev)
-    this.upsert(response.function)
-    return response.function
+    await API.buildFunction(fn._id, fn._rev)
+    return await this.fetchOne(fn._id)
   }
 
   async rename(fn: FunctionSummary, name: string) {

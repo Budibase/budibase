@@ -47,6 +47,9 @@ vi.mock("@budibase/bbui", () => ({
 vi.mock("@/components/common/TopBar.svelte", () => ({
   default: MockComponent,
 }))
+vi.mock("../FunctionCodeEditor.svelte", () => ({
+  default: MockComponent,
+}))
 vi.mock("../FunctionQueryEditor.svelte", async () => ({
   default: (await import("@/test/mocks/MockFunctionQueryEditor.svelte"))
     .default,
