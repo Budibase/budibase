@@ -68,10 +68,6 @@ export interface CreatedResourceDependencyPropagationInput {
   savedResources: AnyDocument[]
 }
 
-const completePropagation = (): ProjectPropagationOutcome => ({
-  status: "complete",
-})
-
 const incompletePropagation = ({
   resourceIds,
   error,
@@ -276,7 +272,7 @@ const mergePropagationOutcomes = (
         status: "incomplete",
         resourceIds: Array.from(new Set(failedResourceIds)),
       }
-    : completePropagation()
+    : { status: "complete" }
 }
 
 export const propagateProjectIdsToDependencyIds = async ({
@@ -359,12 +355,12 @@ export const propagateProjectIdsToDependencySubtrees = async ({
   projectIds = [],
 }: ProjectDependencySubtreePropagationInput): Promise<ProjectPropagationOutcome> => {
   if (!dependencyIds.length || !projectIds.length) {
-    return completePropagation()
+    return { status: "complete" }
   }
 
   try {
     if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
-      return completePropagation()
+      return { status: "complete" }
     }
     const { graph } = await sdk.resources.analyseResourceDependencies({
       includeProjects: false,
@@ -390,12 +386,12 @@ export const propagateCreatedResourceDependencies = async ({
   savedResources,
 }: CreatedResourceDependencyPropagationInput): Promise<ProjectPropagationOutcome> => {
   if (!savedResources.length || !projectIds.length) {
-    return completePropagation()
+    return { status: "complete" }
   }
 
   try {
     if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
-      return completePropagation()
+      return { status: "complete" }
     }
     const analysis = await sdk.resources.analyseResourceDependencies({
       includeProjects: false,
@@ -436,7 +432,7 @@ const propagateNewResourceDependencies = async ({
   projectIds: string[]
 }): Promise<ProjectPropagationOutcome> => {
   if (!projectIds.length) {
-    return completePropagation()
+    return { status: "complete" }
   }
   const dependencyIds = getNewDirectDependencyIds({
     analysis,
@@ -463,7 +459,7 @@ export const propagateProjectDependencyChanges = async ({
   savedResource,
 }: ProjectDependencyChangeInput): Promise<ProjectPropagationOutcome> => {
   if (!currentProjectIds.length) {
-    return completePropagation()
+    return { status: "complete" }
   }
 
   const previousProjects = new Set(previousProjectIds)
@@ -481,13 +477,13 @@ export const propagateProjectDependencyChanges = async ({
     )
 
   if (!addedProjectIds.length && !resourceContentChanged) {
-    return completePropagation()
+    return { status: "complete" }
   }
 
   let analysis: ResourceDependencyAnalysis
   try {
     if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
-      return completePropagation()
+      return { status: "complete" }
     }
     analysis = await sdk.resources.analyseResourceDependencies({
       includeProjects: false,
@@ -559,12 +555,12 @@ export const propagateMovedQueryDependencies = async ({
       sourceProjectIds.has(projectId) && !destinationProjectIds.has(projectId)
   )
   if (!destinationProjectIds.size && !newAgentProjectIds.length) {
-    return completePropagation()
+    return { status: "complete" }
   }
   let analysis: ResourceDependencyAnalysis
   try {
     if (!(await features.isEnabled(FeatureFlag.PROJECTS))) {
-      return completePropagation()
+      return { status: "complete" }
     }
     analysis = await sdk.resources.analyseResourceDependencies({
       includeProjects: false,

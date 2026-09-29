@@ -176,7 +176,7 @@ describe("project dependency propagation", () => {
       })
     })
 
-    it("does not propagate a project deleted while the save waits for the lock", async () => {
+    it("revalidates the project when it is deleted before the screen-save callback runs", async () => {
       await withProjectsEnabled(async () => {
         const { project } = await config.api.project.create({
           name: "Operations",
@@ -184,7 +184,6 @@ describe("project dependency propagation", () => {
         const workspaceApp = await createAssignedWorkspaceApp(project._id)
         const automation = await config.createAutomation()
 
-        // Complete project deletion before the waiting screen save acquires the lock.
         jest
           .mocked(projectLock.doWithProjectAssignmentsLockIfEnabled)
           .mockImplementationOnce(async task => {
@@ -1265,57 +1264,61 @@ describe("project dependency propagation", () => {
   })
 
   it("clears project assignments when duplicating resources with projects disabled", async () => {
-    let tableId = ""
-    let workspaceAppId = ""
-    let agentId = ""
-    let automationId = ""
+    const { tableId, workspaceAppId, agentId, automationId } =
+      await withProjectsEnabled(async () => {
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
+        const table = await config.api.table.save({
+          ...basicTable(),
+          projectIds: [project._id],
+        })
+        const { workspaceApp } = await config.api.workspaceApp.create({
+          name: "Operations app",
+          url: "/operations-app",
+          projectIds: [project._id],
+        })
+        const agent = await config.api.agent.create({
+          name: "Ops agent",
+          aiconfig: "default",
+          projectIds: [project._id],
+        })
+        const automation = await config.createAutomation({
+          ...newAutomation(),
+          projectIds: [project._id],
+        })
 
-    await withProjectsEnabled(async () => {
-      const { project } = await config.api.project.create({
-        name: "Operations",
-      })
-      const table = await config.api.table.save({
-        ...basicTable(),
-        projectIds: [project._id],
-      })
-      const { workspaceApp } = await config.api.workspaceApp.create({
-        name: "Operations app",
-        url: "/operations-app",
-        projectIds: [project._id],
-      })
-      const agent = await config.api.agent.create({
-        name: "Ops agent",
-        aiconfig: "default",
-        projectIds: [project._id],
-      })
-      const automation = await config.createAutomation({
-        ...newAutomation(),
-        projectIds: [project._id],
-      })
-
-      tableId = table._id!
-      workspaceAppId = workspaceApp._id!
-      agentId = agent._id!
-      automationId = automation._id!
-    })
-
-    const duplicatedTable = await config.api.table.duplicate(tableId!)
-    const { workspaceApp: duplicatedWorkspaceApp } =
-      await config.api.workspaceApp.duplicate(workspaceAppId!)
-    const duplicatedAgent = await config.api.agent.duplicate(agentId!)
-    const automation = await config.api.automation.get(automationId)
-    const { automation: duplicatedAutomation } =
-      await config.api.automation.update({
-        ...automation,
-        _id: undefined,
-        _rev: undefined,
-        name: `${automation.name} copy`,
-        sourceAutomationId: automationId,
+        return {
+          tableId: table._id!,
+          workspaceAppId: workspaceApp._id!,
+          agentId: agent._id!,
+          automationId: automation._id!,
+        }
       })
 
-    expect(duplicatedTable.projectIds).toBeUndefined()
-    expect(duplicatedWorkspaceApp.projectIds).toBeUndefined()
-    expect(duplicatedAgent.projectIds).toBeUndefined()
-    expect(duplicatedAutomation.projectIds).toBeUndefined()
+    await features.testutils.withFeatureFlags(
+      config.getTenantId(),
+      { [FeatureFlag.PROJECTS]: false },
+      async () => {
+        const duplicatedTable = await config.api.table.duplicate(tableId)
+        const { workspaceApp: duplicatedWorkspaceApp } =
+          await config.api.workspaceApp.duplicate(workspaceAppId)
+        const duplicatedAgent = await config.api.agent.duplicate(agentId)
+        const automation = await config.api.automation.get(automationId)
+        const { automation: duplicatedAutomation } =
+          await config.api.automation.update({
+            ...automation,
+            _id: undefined,
+            _rev: undefined,
+            name: `${automation.name} copy`,
+            sourceAutomationId: automationId,
+          })
+
+        expect(duplicatedTable.projectIds).toBeUndefined()
+        expect(duplicatedWorkspaceApp.projectIds).toBeUndefined()
+        expect(duplicatedAgent.projectIds).toBeUndefined()
+        expect(duplicatedAutomation.projectIds).toBeUndefined()
+      }
+    )
   })
 })
