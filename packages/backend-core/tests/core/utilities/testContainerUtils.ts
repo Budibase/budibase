@@ -118,7 +118,7 @@ export function setupEnv(...envs: any[]) {
   }
 
   const minio = getContainerByImage(
-    "public.ecr.aws/x1w3a5n5/third-party:minio-"
+    "budibase/minio:final"
   )
 
   const minioPort = getExposedV4Port(minio, 9000)
