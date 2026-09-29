@@ -124,7 +124,7 @@ export default async function (): Promise<FunctionResult> {
         resourceId: fn._id,
       })
       const otherUser = await config.createUser({
-        _id: "us_function_favourite",
+        _id: `${prefixed(DocumentType.USER)}function_favourite`,
       })
       await config.withUser(otherUser, async () => {
         await config.api.workspaceFavourites.save({

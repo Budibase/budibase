@@ -29,6 +29,7 @@
     queries,
     viewsV2,
   } from "@/stores/builder"
+  import { functionStore } from "@/stores/builder/functions"
   import FavouriteResourceButton from "@/pages/builder/_components/FavouriteResourceButton.svelte"
   import {
     workspacesStore,
@@ -43,6 +44,7 @@
   import {
     type Datasource,
     FeatureFlag,
+    type FunctionSummary,
     type Query,
     type Table,
     type UIAutomation,
@@ -97,6 +99,7 @@
   }
   interface AllResourceStores {
     automations: UIAutomation[]
+    functions: FunctionSummary[]
     apps: UIWorkspaceApp[]
     datasources: (Datasource | UIInternalDatasource)[]
     tables: Table[]
@@ -115,6 +118,7 @@
     [WorkspaceResource.QUERY]: "database", // regular db queries
     [WorkspaceResource.VIEW]: "table",
     [WorkspaceResource.AGENT]: "cpu",
+    [WorkspaceResource.FUNCTION]: "function",
   }
 
   const datasourceLookup = datasources.lookup
@@ -223,6 +227,7 @@
     derived(
       [
         automationStore,
+        functionStore,
         workspaceAppStore,
         datasources,
         tables,
@@ -233,6 +238,7 @@
       ],
       ([
         $automations,
+        $functions,
         $apps,
         $datasources,
         $tables,
@@ -241,6 +247,7 @@
         $agents,
       ]) => ({
         automations: $automations.automations,
+        functions: $functions.functions,
         apps: $apps.workspaceApps,
         datasources: $datasources.list,
         tables: $tables.list,
@@ -320,6 +327,9 @@
 
   // None of this needs to be done if the side bar is closed
   const initFavourites = () => {
+    if ($featureFlags[FeatureFlag.FUNCTIONS]) {
+      void functionStore.fetch()
+    }
     const stores = initResourceStores()
     resourceLookup = generateResourceLookup(stores)
   }
@@ -329,6 +339,8 @@
     const link: Record<WorkspaceResource, ResourceLinkFn> = {
       [WorkspaceResource.AUTOMATION]: (id: string) =>
         `${workspacePrefix}/automation/${id}`,
+      [WorkspaceResource.FUNCTION]: (id: string) =>
+        `${workspacePrefix}/automation/functions/${id}`,
       [WorkspaceResource.DATASOURCE]: (id: string) => {
         const datasourceMap = get(datasourceLookup) || {}
         const datasource = datasourceMap[id]
