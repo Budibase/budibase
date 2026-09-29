@@ -35,7 +35,7 @@ spec:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreSecret
 
-        image: budibase/minio:final
+        image: {{ .Values.globals.dockerRegistry | default "" }}budibase/minio:final
         imagePullPolicy: ""
         livenessProbe:
           httpGet:
