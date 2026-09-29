@@ -23,8 +23,8 @@
     HighlightStyle,
     syntaxHighlighting,
   } from "@codemirror/language"
-  import { setDiagnostics, type Diagnostic } from "@codemirror/lint"
-  import { EditorState } from "@codemirror/state"
+  import { linter, setDiagnostics, type Diagnostic } from "@codemirror/lint"
+  import { Compartment, EditorState } from "@codemirror/state"
   import { oneDark, oneDarkHighlightStyle } from "@codemirror/theme-one-dark"
   import {
     drawSelection,
@@ -55,12 +55,21 @@
 
   let container: HTMLDivElement
   let editor: EditorView | undefined
+  let currentTheme = $themeStore?.theme
+  const themeConfig = new Compartment()
 
   const lightHighlightStyle = HighlightStyle.define([
     ...oneDarkHighlightStyle.specs,
     { tag: tags.definition(tags.name), color: "#4b5563" },
     { tag: [tags.modifier, tags.typeName], color: "#8a5a1e" },
   ])
+
+  const themeExtensions = (isDark: boolean) => [
+    syntaxHighlighting(isDark ? oneDarkHighlightStyle : lightHighlightStyle, {
+      fallback: true,
+    }),
+    ...(isDark ? [oneDark] : []),
+  ]
 
   const complete = (context: CompletionContext) => {
     const before = context.state.doc.sliceString(0, context.pos)
@@ -162,6 +171,15 @@
 
   $: refreshDiagnostics(diagnostics, editor)
 
+  $: if (editor && currentTheme !== $themeStore?.theme) {
+    currentTheme = $themeStore?.theme
+    editor.dispatch({
+      effects: themeConfig.reconfigure(
+        themeExtensions(!currentTheme?.includes("light"))
+      ),
+    })
+  }
+
   $: if (editor && editor.state.doc.toString() !== value) {
     editor.dispatch({
       changes: { from: 0, to: editor.state.doc.length, insert: value },
@@ -169,7 +187,7 @@
   }
 
   onMount(() => {
-    const isDark = !$themeStore?.theme?.includes("light")
+    const isDark = !currentTheme?.includes("light")
     editor = new EditorView({
       parent: container,
       doc: value,
@@ -182,11 +200,8 @@
         bracketMatching(),
         closeBrackets(),
         javascript({ typescript: true }),
-        syntaxHighlighting(
-          isDark ? oneDarkHighlightStyle : lightHighlightStyle,
-          { fallback: true }
-        ),
-        ...(isDark ? [oneDark] : []),
+        themeConfig.of(themeExtensions(isDark)),
+        linter(null),
         autocompletion({ override: [complete] }),
         keymap.of([
           ...closeBracketsKeymap,

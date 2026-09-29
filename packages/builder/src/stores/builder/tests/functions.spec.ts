@@ -189,6 +189,8 @@ describe("FunctionStore", () => {
 
   it("validates an unsaved draft without changing the stored Function", async () => {
     const fn = makeFunction()
+    vi.mocked(API.getFunction).mockResolvedValue({ function: fn })
+    await store.fetchOne(fn._id)
     const request = {
       functionId: fn._id,
       name: fn.name,
@@ -204,13 +206,27 @@ describe("FunctionStore", () => {
     })
 
     expect(API.compileFunction).toHaveBeenCalledWith(request)
-    expect(store.list).toEqual([])
+    expect(store.list).toEqual([fn])
   })
 
   it("builds the saved revision and stores its new readiness", async () => {
     const fn = makeFunction({ readiness: "build_required" })
-    const built = makeFunction({ _rev: "2-two", readiness: "ready" })
-    vi.mocked(API.buildFunction).mockResolvedValue({ function: built })
+    const built = makeFunction({
+      _rev: "2-two",
+      readiness: "ready",
+      source: "export default async function () { return { built: true } }",
+    })
+    const buildSummary: FunctionSummary = {
+      _id: built._id,
+      _rev: built._rev,
+      appId: built.appId,
+      name: built.name,
+      readiness: built.readiness,
+      createdAt: built.createdAt,
+      updatedAt: built.updatedAt,
+      linkedQueryCount: built.linkedQueryCount,
+    }
+    vi.mocked(API.buildFunction).mockResolvedValue({ function: buildSummary })
     vi.mocked(API.getFunction).mockResolvedValue({ function: built })
 
     await expect(store.build(fn)).resolves.toEqual(built)
@@ -218,7 +234,11 @@ describe("FunctionStore", () => {
     expect(API.buildFunction).toHaveBeenCalledWith(fn._id, fn._rev)
     expect(API.getFunction).toHaveBeenCalledWith(fn._id)
     expect(store.list[0]).toEqual(
-      expect.objectContaining({ _rev: "2-two", readiness: "ready" })
+      expect.objectContaining({
+        _rev: "2-two",
+        readiness: "ready",
+        source: built.source,
+      })
     )
   })
 

@@ -2,6 +2,7 @@
   import TopBar from "@/components/common/TopBar.svelte"
   import { getErrorMessage } from "@/helpers/errors"
   import { builderStore, functionStore } from "@/stores/builder"
+  import { toCapabilityInputs } from "@/stores/builder/functions"
   import { featureFlags } from "@/stores/portal"
   import {
     Badge,
@@ -67,13 +68,6 @@
     build_required: "Build required",
     build_failed: "Build failed",
   }
-
-  const toCapabilityInputs = (value: FunctionResponse) =>
-    value.capabilities.map(capability => ({
-      queryId: capability.queryId,
-      datasourceAlias: capability.datasourceAlias,
-      queryAlias: capability.queryAlias,
-    }))
 
   const debouncedValidate = Utils.debounce(
     async (
@@ -151,6 +145,7 @@
     debouncedSave.cancel()
     loading = true
     error = ""
+    actionError = ""
     const pendingLoad = fetchFunction(id)
     currentLoad = pendingLoad
     let loadedFunction: FunctionResponse | undefined

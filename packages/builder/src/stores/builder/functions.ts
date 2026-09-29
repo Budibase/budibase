@@ -29,7 +29,7 @@ const initialState: FunctionStoreState = {
   catalogLoading: false,
 }
 
-const toCapabilityInputs = (
+export const toCapabilityInputs = (
   fn: FunctionResponse
 ): FunctionQueryCapabilityInput[] =>
   fn.capabilities.map(capability => ({
