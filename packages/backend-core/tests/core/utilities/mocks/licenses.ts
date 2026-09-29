@@ -56,7 +56,7 @@ export const useLicense = (license: License, opts?: UseLicenseOpts) => {
 }
 
 export const useUnlimited = (opts?: UseLicenseOpts) => {
-  return useLicense(UNLIMITED_LICENSE, opts)
+  return useLicense(cloneDeep(UNLIMITED_LICENSE), opts)
 }
 
 export const useCloudFree = () => {
