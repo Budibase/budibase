@@ -3,4 +3,8 @@ export {
   enqueuePlatformActionSessionLifecycle,
   initPlatformActionSessionIndexQueue as init,
 } from "./indexQueue"
-export { getActionsDB, getActionsDbName } from "./db"
+export {
+  doWithActionsWorkspaceDeletionLock,
+  getActionsDB,
+  getActionsDbName,
+} from "./db"

@@ -1,10 +1,12 @@
-import { SEPARATOR } from "@budibase/types"
+import { LockName, LockType, SEPARATOR } from "@budibase/types"
 import type { Database } from "@budibase/types"
 import * as context from "../../../context"
 import { getDB } from "../../../db/db"
 import { getProdWorkspaceID } from "../../../docIds/conversions"
+import * as locks from "../../../redis/redlockImpl"
 
 const ACTIONS_DB_PREFIX = "actions"
+const WRITE_LOCK_TTL_MS = 10000
 
 /**
  * Actions are persisted once per workspace, shared by its dev and prod
@@ -25,4 +27,48 @@ export function getActionsDB(): Database {
     )
   }
   return getDB(getActionsDbName(workspaceId))
+}
+
+interface ActionsWorkspaceLockInput<T> {
+  workspaceId: string
+  task: () => Promise<T>
+}
+
+// Dev and prod writers and workspace/tenant deletion must contend for the
+// same lock, so it is keyed by the prod workspace ID and not scoped to the
+// tenant in context.
+const getActionsWorkspaceLockResource = (workspaceId: string) =>
+  getProdWorkspaceID(workspaceId)
+
+export const doWithActionsWorkspaceWriteLock = async <T>({
+  workspaceId,
+  task,
+}: ActionsWorkspaceLockInput<T>): Promise<T> => {
+  const { result } = await locks.doWithLock(
+    {
+      type: LockType.DEFAULT,
+      name: LockName.PLATFORM_ACTIONS_WORKSPACE,
+      resource: getActionsWorkspaceLockResource(workspaceId),
+      systemLock: true,
+      ttl: WRITE_LOCK_TTL_MS,
+    },
+    task
+  )
+  return result
+}
+
+export const doWithActionsWorkspaceDeletionLock = async <T>({
+  workspaceId,
+  task,
+}: ActionsWorkspaceLockInput<T>): Promise<T> => {
+  const { result } = await locks.doWithLock(
+    {
+      type: LockType.AUTO_EXTEND,
+      name: LockName.PLATFORM_ACTIONS_WORKSPACE,
+      resource: getActionsWorkspaceLockResource(workspaceId),
+      systemLock: true,
+    },
+    task
+  )
+  return result
 }

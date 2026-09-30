@@ -1,7 +1,12 @@
 import * as dbCore from "../../../../db"
 import { structures } from "../../../../../tests"
 import * as context from "../../../../context"
-import { getActionsDB, getActionsDbName } from "../db"
+import {
+  doWithActionsWorkspaceDeletionLock,
+  doWithActionsWorkspaceWriteLock,
+  getActionsDB,
+  getActionsDbName,
+} from "../db"
 import { upsertPlatformActionSession } from "../sessionIndex"
 import { getPlatformActionSessionId } from "../utils"
 import type {
@@ -120,5 +125,66 @@ describe("getActionsDB", () => {
         )
       })
     )
+  })
+})
+
+describe("Actions workspace lock", () => {
+  const holdDeletionLock = (workspaceId: string, order: string[]) => {
+    let release!: () => void
+    const released = new Promise<void>(resolve => {
+      release = resolve
+    })
+    let acquired!: () => void
+    const isAcquired = new Promise<void>(resolve => {
+      acquired = resolve
+    })
+    const done = doWithActionsWorkspaceDeletionLock({
+      workspaceId,
+      task: async () => {
+        acquired()
+        await released
+        order.push("deletion")
+      },
+    })
+    return { isAcquired, release, done }
+  }
+
+  it("serializes a dev writer behind a deletion holding the prod workspace lock", async () => {
+    const prodWorkspaceId = dbCore.generateWorkspaceID(structures.tenant.id())
+    const devWorkspaceId = dbCore.getDevWorkspaceID(prodWorkspaceId)
+    const order: string[] = []
+
+    const deletion = holdDeletionLock(prodWorkspaceId, order)
+    await deletion.isAcquired
+    const writer = doWithActionsWorkspaceWriteLock({
+      workspaceId: devWorkspaceId,
+      task: async () => {
+        order.push("writer")
+      },
+    })
+    deletion.release()
+    await Promise.all([deletion.done, writer])
+
+    expect(order).toEqual(["deletion", "writer"])
+  })
+
+  it("does not serialize writers of different workspaces", async () => {
+    const tenantId = structures.tenant.id()
+    const lockedWorkspaceId = dbCore.generateWorkspaceID(tenantId)
+    const otherWorkspaceId = dbCore.generateWorkspaceID(tenantId)
+    const order: string[] = []
+
+    const deletion = holdDeletionLock(lockedWorkspaceId, order)
+    await deletion.isAcquired
+    await doWithActionsWorkspaceWriteLock({
+      workspaceId: otherWorkspaceId,
+      task: async () => {
+        order.push("writer")
+      },
+    })
+    deletion.release()
+    await deletion.done
+
+    expect(order).toEqual(["writer", "deletion"])
   })
 })
