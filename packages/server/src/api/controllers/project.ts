@@ -81,27 +81,26 @@ export async function update(
   }
 }
 
-const getAssignmentPreview = async ({
+const getAssignmentInput = async ({
   resourceId,
   projectIds: requestedProjectIds,
 }: PreviewProjectAssignmentRequest) => {
   const projectIds =
     (await sdk.projects.resolveProjectIds(requestedProjectIds)) || []
   const resource = await sdk.projects.getProjectAssignableResource(resourceId)
-  const preview = await sdk.projects.getProjectAssignmentPreview({
+  return {
     resourceId,
     resourceRev: resource._rev,
     resourceProjectIds: resource.projectIds || [],
     projectIds,
-  })
-  return { projectIds, preview }
+  }
 }
 
 export async function previewAssignment(
   ctx: Ctx<PreviewProjectAssignmentRequest, PreviewProjectAssignmentResponse>
 ) {
-  const { preview } = await getAssignmentPreview(ctx.request.body)
-  ctx.body = preview
+  const input = await getAssignmentInput(ctx.request.body)
+  ctx.body = await sdk.projects.getProjectAssignmentPreview(input)
 }
 
 export async function updateAssignment(
@@ -111,20 +110,11 @@ export async function updateAssignment(
     const { resourceId } = ctx.params
     const { dependencyFingerprint, resourceRev, dependencyIds } =
       ctx.request.body
-    const { projectIds, preview } = await getAssignmentPreview({
+    const input = await getAssignmentInput({
       resourceId,
       projectIds: ctx.request.body.projectIds,
     })
-    if (
-      projectIds.length &&
-      preview.dependencyFingerprint !== dependencyFingerprint
-    ) {
-      throw new HTTPError(
-        "Resource dependencies changed. Preview the project assignment again.",
-        409
-      )
-    }
-    const { dependencies } = preview
+    const { projectIds } = input
 
     let selectedDependencyIds: string[] = []
     if (dependencyIds.length) {
@@ -135,6 +125,14 @@ export async function updateAssignment(
         )
       }
 
+      const preview = await sdk.projects.getProjectAssignmentPreview(input)
+      if (preview.dependencyFingerprint !== dependencyFingerprint) {
+        throw new HTTPError(
+          "Resource dependencies changed. Preview the project assignment again.",
+          409
+        )
+      }
+      const { dependencies } = preview
       const dependencyIdsSet = new Set(dependencyIds)
       const validDependencyIds = new Set(
         dependencies.map(dependency => dependency.id)

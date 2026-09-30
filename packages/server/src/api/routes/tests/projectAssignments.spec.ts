@@ -187,6 +187,7 @@ describe("project dependency assignments", () => {
         resourceId: workspaceApp._id!,
         projectIds,
       })
+      expect(preview.dependencies).toHaveLength(2)
       expect(preview.dependencies).toEqual(
         expect.arrayContaining([
           {
@@ -279,6 +280,11 @@ describe("project dependency assignments", () => {
           resourceId: workspaceApp._id!,
           projectIds,
         })
+        const dependencyProjectIds = [project._id, ...projectIds]
+        await config.api.automation.update({
+          ...(await config.api.automation.get(automation._id!)),
+          projectIds: dependencyProjectIds,
+        })
         const result = await config.api.project.updateAssignment(
           workspaceApp._id!,
           {
@@ -296,7 +302,7 @@ describe("project dependency assignments", () => {
         ).toEqual(projectIds)
         expect(
           (await config.api.automation.get(automation._id!)).projectIds
-        ).toEqual([project._id])
+        ).toEqual(dependencyProjectIds)
       })
     }
   )
