@@ -1,6 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
 import type { FunctionResponse } from "@budibase/types"
-import { FeatureFlag } from "@budibase/types"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { writable } from "svelte/store"
 import MockComponent from "@/test/mocks/MockComponent.svelte"
@@ -9,7 +8,7 @@ const mocks = vi.hoisted(() => {
   const { writable } = require("svelte/store")
   return {
     params: writable({ functionId: "function-a" }),
-    flags: writable({ ["FUNCTIONS"]: false }),
+    available: writable(false),
     selectResource: vi.fn(),
     fetchOne: vi.fn(),
     save: vi.fn(),
@@ -20,7 +19,9 @@ const mocks = vi.hoisted(() => {
 })
 
 vi.mock("@roxi/routify", () => ({ params: mocks.params }))
-vi.mock("@/stores/portal", () => ({ featureFlags: mocks.flags }))
+vi.mock("@/stores/builder/functionsAvailability", () => ({
+  functionsAvailable: mocks.available,
+}))
 vi.mock("@/stores/builder", () => ({
   builderStore: { selectResource: mocks.selectResource },
   functionStore: Object.assign(
@@ -80,7 +81,7 @@ describe("Function editor route", () => {
     mocks.fetchOne.mockReset()
     mocks.save.mockReset()
     mocks.params.set({ functionId: "function-a" })
-    mocks.flags.set({ [FeatureFlag.FUNCTIONS]: false })
+    mocks.available.set(false)
   })
 
   it("loads only when enabled and ignores a late response from the previous route", async () => {
@@ -98,7 +99,7 @@ describe("Function editor route", () => {
     expect(mocks.fetchOne).not.toHaveBeenCalled()
     expect(mocks.selectResource).not.toHaveBeenCalled()
 
-    mocks.flags.set({ [FeatureFlag.FUNCTIONS]: true })
+    mocks.available.set(true)
     await waitFor(() =>
       expect(mocks.fetchOne).toHaveBeenCalledWith("function-a")
     )
@@ -130,7 +131,7 @@ describe("Function editor route", () => {
         ...createFunction("function-a"),
         _rev: "3",
       }))
-    mocks.flags.set({ [FeatureFlag.FUNCTIONS]: true })
+    mocks.available.set(true)
 
     render(FunctionPage)
     await screen.findByRole("button", { name: "Save links" })
