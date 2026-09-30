@@ -1,9 +1,16 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/svelte"
 import type { FunctionResponse } from "@budibase/types"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { writable } from "svelte/store"
 import MockComponent from "@/test/mocks/MockComponent.svelte"
-import MockFunctionTopBar from "./MockFunctionTopBar.svelte"
+import MockFunctionTopBar from "@/test/mocks/MockFunctionTopBar.svelte"
+import MockFunctionButton from "@/test/mocks/MockFunctionButton.svelte"
 
 const mocks = vi.hoisted(() => {
   const { writable } = require("svelte/store")
@@ -15,7 +22,7 @@ const mocks = vi.hoisted(() => {
     selectResource: vi.fn(),
     fetchOne: vi.fn(),
     save: vi.fn(),
-    compile: vi.fn().mockResolvedValue({ diagnostics: [] }),
+    build: vi.fn(),
     notificationsSuccess: vi.fn(),
     fetchQueryCatalog: vi.fn().mockResolvedValue(undefined),
     compile: vi.fn().mockResolvedValue({ diagnostics: [] }),
@@ -42,7 +49,7 @@ vi.mock("@/stores/builder/functions", () => ({
     {
       fetchOne: mocks.fetchOne,
       save: mocks.save,
-      compile: mocks.compile,
+      build: mocks.build,
       fetchQueryCatalog: mocks.fetchQueryCatalog,
       compile: mocks.compile,
     }
@@ -58,7 +65,7 @@ vi.mock("@/stores/builder", () => ({
 vi.mock("@budibase/bbui", () => ({
   Badge: MockComponent,
   Body: MockComponent,
-  Button: MockComponent,
+  Button: MockFunctionButton,
   Heading: MockComponent,
   Helpers: { uuid: vi.fn().mockReturnValue("test-session") },
   Icon: MockComponent,
@@ -103,6 +110,10 @@ describe("Function editor route", () => {
     mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-a" })
     mocks.available.set(false)
     mocks.canManageFunctions.mockReturnValue(true)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it("distinguishes unavailable Functions from missing author permission", async () => {
@@ -192,6 +203,137 @@ describe("Function editor route", () => {
     )
   })
 
+  it("blocks Build after returning to a Function until its save finishes", async () => {
+    let resolveSave: (value: FunctionResponse) => void = () => undefined
+    const pendingSave = new Promise<FunctionResponse>(resolve => {
+      resolveSave = resolve
+    })
+    const functionA = { ...createFunction("function-a"), source: "A original" }
+    mocks.fetchOne.mockImplementation(async (id: string) =>
+      id === functionA._id ? functionA : createFunction(id)
+    )
+    mocks.save.mockImplementationOnce(() => pendingSave)
+    mocks.build.mockImplementation(async (fn: FunctionResponse) => ({
+      ...fn,
+      readiness: "ready",
+    }))
+    mocks.available.set(true)
+    render(FunctionPage)
+
+    const editor = await screen.findByRole("textbox")
+    vi.useFakeTimers()
+    await fireEvent.input(editor, { target: { value: "A edited" } })
+    await act(() => vi.advanceTimersByTimeAsync(500))
+    await act(async () => {
+      mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-b" })
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    await act(async () => {
+      mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-a" })
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    const buildButton = screen.getByRole("button", { name: "Build" })
+    await fireEvent.click(buildButton)
+    const buildsWhileSaving = mocks.build.mock.calls.length
+    const blockedWhileSaving = buildButton.hasAttribute("disabled")
+    await act(async () => {
+      resolveSave({ ...functionA, _rev: "2", source: "A edited" })
+      await pendingSave
+    })
+    await act(() => vi.advanceTimersByTimeAsync(0))
+    await fireEvent.click(screen.getByRole("button", { name: "Build" }))
+
+    expect(mocks.save).toHaveBeenCalledTimes(1)
+    expect(blockedWhileSaving).toBe(true)
+    expect(buildsWhileSaving).toBe(0)
+    expect(mocks.build).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        _id: "function-a",
+        _rev: "2",
+        source: "A edited",
+      })
+    )
+  })
+
+  it("preserves newer edits after returning while a previous save finishes", async () => {
+    let resolveSave: (value: FunctionResponse) => void = () => undefined
+    const pendingSave = new Promise<FunctionResponse>(resolve => {
+      resolveSave = resolve
+    })
+    mocks.fetchOne.mockImplementation(async (id: string) => createFunction(id))
+    mocks.save.mockImplementationOnce(() => pendingSave)
+    mocks.save.mockImplementation(async (fn, request) => ({
+      ...fn,
+      ...request,
+    }))
+    mocks.available.set(true)
+    render(FunctionPage)
+
+    const editor = await screen.findByRole("textbox")
+    vi.useFakeTimers()
+    await fireEvent.input(editor, { target: { value: "A first edit" } })
+    await act(() => vi.advanceTimersByTimeAsync(500))
+    await act(async () => {
+      mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-b" })
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    await act(async () => {
+      mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-a" })
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    await fireEvent.input(screen.getByRole("textbox"), {
+      target: { value: "A newer edit" },
+    })
+    await act(() => vi.advanceTimersByTimeAsync(500))
+    await act(async () => {
+      resolveSave({
+        ...createFunction("function-a"),
+        _rev: "2",
+        source: "A first edit",
+      })
+      await pendingSave
+    })
+
+    expect(screen.getByRole("textbox")).toHaveValue("A newer edit")
+    expect(mocks.save).toHaveBeenCalledTimes(2)
+    expect(mocks.save).toHaveBeenLastCalledWith(
+      expect.objectContaining({ _id: "function-a", _rev: "2" }),
+      expect.objectContaining({ _rev: "2", source: "A newer edit" })
+    )
+  })
+
+  it("enables Build on the selected Function after another Function's save finishes", async () => {
+    let resolveSave: (value: FunctionResponse) => void = () => undefined
+    const pendingSave = new Promise<FunctionResponse>(resolve => {
+      resolveSave = resolve
+    })
+    mocks.fetchOne.mockImplementation(async (id: string) => createFunction(id))
+    mocks.save.mockImplementationOnce(() => pendingSave)
+    mocks.build.mockImplementation(async (fn: FunctionResponse) => ({
+      ...fn,
+      readiness: "ready",
+    }))
+    mocks.available.set(true)
+    render(FunctionPage)
+
+    await screen.findByRole("button", { name: "Save links" })
+    vi.useFakeTimers()
+    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
+    await act(async () => {
+      mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-b" })
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    await act(async () => {
+      resolveSave({ ...createFunction("function-a"), _rev: "2" })
+      await pendingSave
+    })
+    await fireEvent.click(screen.getByRole("button", { name: "Build" }))
+
+    expect(mocks.build).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ _id: "function-b", _rev: "1" })
+    )
+  })
+
   it("does not save the newly selected Function source into the previous Function", async () => {
     let resolveSave: (value: FunctionResponse) => void = () => undefined
     const pendingSave = new Promise<FunctionResponse>(resolve => {
@@ -210,15 +352,21 @@ describe("Function editor route", () => {
     mocks.available.set(true)
     render(FunctionPage)
 
-    await fireEvent.input(await screen.findByRole("textbox"), {
+    const editor = await screen.findByRole("textbox")
+    vi.useFakeTimers()
+    await fireEvent.input(editor, {
       target: { value: "A edited" },
     })
-    await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1))
-    mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-b" })
-    await screen.findByDisplayValue("B original")
-    resolveSave({ ...functionA, _rev: "2", source: "A edited" })
-    await pendingSave
-    await new Promise(resolve => setTimeout(resolve, 600))
+    await act(() => vi.advanceTimersByTimeAsync(500))
+    await act(async () => {
+      mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-b" })
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    await act(async () => {
+      resolveSave({ ...functionA, _rev: "2", source: "A edited" })
+      await pendingSave
+    })
+    await act(() => vi.advanceTimersByTimeAsync(500))
 
     expect(screen.getByTestId("function-name")).toHaveTextContent("function-b")
     expect(screen.getByRole("textbox")).toHaveValue("B original")
@@ -243,27 +391,30 @@ describe("Function editor route", () => {
     mocks.available.set(true)
     render(FunctionPage)
 
-    await fireEvent.input(await screen.findByRole("textbox"), {
+    const editor = await screen.findByRole("textbox")
+    vi.useFakeTimers()
+    await fireEvent.input(editor, {
       target: { value: "A edited" },
     })
-    await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1))
-    mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-b" })
-    await waitFor(() =>
-      expect(screen.getByTestId("function-name")).toHaveTextContent(
-        "function-b"
-      )
-    )
+    await act(() => vi.advanceTimersByTimeAsync(500))
+    await act(async () => {
+      mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-b" })
+      await vi.advanceTimersByTimeAsync(0)
+    })
     await fireEvent.input(screen.getByRole("textbox"), {
       target: { value: "B edited" },
     })
-    await new Promise(resolve => setTimeout(resolve, 600))
-    resolveSave({
-      ...createFunction("function-a"),
-      _rev: "2",
-      source: "A edited",
+    await act(() => vi.advanceTimersByTimeAsync(500))
+    await act(async () => {
+      resolveSave({
+        ...createFunction("function-a"),
+        _rev: "2",
+        source: "A edited",
+      })
+      await pendingSave
     })
-    await pendingSave
-    await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(2))
+
+    expect(mocks.save).toHaveBeenCalledTimes(2)
 
     expect(screen.getByTestId("function-name")).toHaveTextContent("function-b")
     expect(mocks.save).toHaveBeenLastCalledWith(
@@ -282,20 +433,25 @@ describe("Function editor route", () => {
     mocks.available.set(true)
     render(FunctionPage)
 
-    await fireEvent.input(await screen.findByRole("textbox"), {
+    const editor = await screen.findByRole("textbox")
+    vi.useFakeTimers()
+    await fireEvent.input(editor, {
       target: { value: "A edited" },
     })
-    await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1))
-    mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-b" })
-    await waitFor(() =>
-      expect(screen.getByTestId("function-name")).toHaveTextContent(
-        "function-b"
-      )
-    )
-    rejectSave(new Error("A save failed"))
-    await pendingSave.catch(() => undefined)
-    await new Promise(resolve => setTimeout(resolve, 0))
+    await act(() => vi.advanceTimersByTimeAsync(500))
+    await act(async () => {
+      mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-b" })
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    await act(async () => {
+      rejectSave(new Error("A save failed"))
+      await pendingSave.catch(() => undefined)
+    })
 
+    expect(mocks.save).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ _id: "function-a" }),
+      expect.objectContaining({ source: "A edited" })
+    )
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
     expect(screen.getByTestId("function-name")).toHaveTextContent("function-b")
   })

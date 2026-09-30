@@ -150,7 +150,6 @@
     debouncedSave.cancel()
     pendingCapabilities = undefined
     queriesDirty = false
-    saving = false
     loading = true
     error = ""
     actionError = ""
@@ -211,6 +210,7 @@
       return true
     }
     const sourceToSave = source
+    const loadAtSave = currentLoad
     saving = true
     if (!validationFailed) {
       actionError = ""
@@ -226,6 +226,11 @@
         return true
       }
       fn = savedFunction
+      if (currentLoad !== loadAtSave && source === savedSource) {
+        lastObservedSource = sourceToSave
+        source = sourceToSave
+        validate(sourceToSave)
+      }
       savedSource = sourceToSave
       if (pendingCapabilities === capabilitiesToSave) {
         pendingCapabilities = undefined
@@ -244,9 +249,7 @@
       }
       return false
     } finally {
-      if (isCurrentFunction()) {
-        saving = false
-      }
+      saving = false
     }
   }
 
