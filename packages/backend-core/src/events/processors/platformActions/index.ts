@@ -5,6 +5,7 @@ export {
 } from "./indexQueue"
 export {
   doWithActionsWorkspaceDeletionLock,
+  doWithExistingActionsWorkspace,
   getActionsDB,
   getActionsDbName,
 } from "./db"
