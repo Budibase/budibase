@@ -2,8 +2,15 @@ import { constants, context, logging } from "@budibase/backend-core"
 import { DocUpdateEvent, WorkspaceResourceEvents } from "@budibase/types"
 import sdk from "../../sdk"
 
-const { AUTOMATION, DATASOURCE, TABLE, WORKSPACE_APP, QUERY, MEM_VIEW } =
-  constants.DocumentType
+const {
+  AUTOMATION,
+  DATASOURCE,
+  TABLE,
+  WORKSPACE_APP,
+  QUERY,
+  MEM_VIEW,
+  FUNCTION,
+} = constants.DocumentType
 
 export default function process() {
   const processor = async (update: DocUpdateEvent) => {
@@ -18,15 +25,19 @@ export default function process() {
         WORKSPACE_APP,
         QUERY,
         MEM_VIEW,
-      ].find(type => docId.startsWith(type))
+        FUNCTION,
+      ].some(type => docId.startsWith(type))
 
-      if (isWSResource!! && appId) {
-        context.doInWorkspaceContext(appId, async () => {
+      if (isWSResource && appId) {
+        await context.doInWorkspaceContext(appId, async () => {
           const result = await sdk.workspace.findByResourceId(docId)
-          const [fav] = result
-          if (fav?._id && fav._rev) {
-            await sdk.workspace.remove(fav._id, fav._rev)
-          }
+          await Promise.all(
+            result.map(async favourite => {
+              if (favourite._id && favourite._rev) {
+                await sdk.workspace.remove(favourite._id, favourite._rev)
+              }
+            })
+          )
         })
       }
     } catch (err: any) {

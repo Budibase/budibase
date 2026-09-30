@@ -3,8 +3,10 @@ import { duplicateName } from "@/helpers/duplicate"
 import { getErrorMessage } from "@/helpers/errors"
 import { BudiStore } from "@/stores/BudiStore"
 import type {
+  CompileFunctionRequest,
   CreateFunctionRequest,
   FunctionQueryCapabilityInput,
+  FunctionQueryCatalogEntry,
   FunctionResponse,
   FunctionSummary,
   UpdateFunctionRequest,
@@ -13,16 +15,21 @@ import { get } from "svelte/store"
 
 interface FunctionStoreState {
   functions: FunctionSummary[]
+  queryCatalog: FunctionQueryCatalogEntry[]
   loading: boolean
+  catalogLoading: boolean
   error?: string
+  catalogError?: string
 }
 
 const initialState: FunctionStoreState = {
   functions: [],
+  queryCatalog: [],
   loading: false,
+  catalogLoading: false,
 }
 
-const toCapabilityInputs = (
+export const toCapabilityInputs = (
   fn: FunctionResponse
 ): FunctionQueryCapabilityInput[] =>
   fn.capabilities.map(capability => ({
@@ -71,6 +78,29 @@ export class FunctionStore extends BudiStore<FunctionStoreState> {
     return response.function
   }
 
+  async fetchQueryCatalog() {
+    this.update(state => ({
+      ...state,
+      catalogLoading: true,
+      catalogError: undefined,
+    }))
+    try {
+      const response = await API.getFunctionQueryCatalog()
+      this.update(state => ({
+        ...state,
+        queryCatalog: response.queries,
+        catalogLoading: false,
+      }))
+    } catch (error) {
+      const message = getErrorMessage(error) || "Unable to load saved queries"
+      this.update(state => ({
+        ...state,
+        catalogLoading: false,
+        catalogError: message,
+      }))
+    }
+  }
+
   async create(draft: CreateFunctionRequest) {
     const response = await API.createFunction(draft)
     this.upsert(response.function)
@@ -81,6 +111,18 @@ export class FunctionStore extends BudiStore<FunctionStoreState> {
     const response = await API.updateFunction(fn._id, request)
     this.upsert(response.function)
     return response.function
+  }
+
+  async compile(request: CompileFunctionRequest) {
+    return await API.compileFunction(request)
+  }
+
+  async build(fn: FunctionResponse) {
+    if (!fn._rev) {
+      throw new Error("Function revision is missing")
+    }
+    await API.buildFunction(fn._id, fn._rev)
+    return await this.fetchOne(fn._id)
   }
 
   async rename(fn: FunctionSummary, name: string) {

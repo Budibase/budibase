@@ -1,6 +1,7 @@
 import { API } from "@/api"
 import { FunctionStore } from "@/stores/builder/functions"
 import type { FunctionResponse, FunctionSummary } from "@budibase/types"
+import { SourceName } from "@budibase/types"
 import { get } from "svelte/store"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -89,6 +90,42 @@ describe("FunctionStore", () => {
     expect(store.list[0]._id).toBe(fn._id)
   })
 
+  it("loads the saved query catalog", async () => {
+    const query = {
+      queryId: "query_one",
+      queryName: "Find customer",
+      datasourceId: "datasource_one",
+      datasourceName: "CRM",
+      source: SourceName.POSTGRES,
+      kind: "data" as const,
+      parameters: [{ name: "id" }],
+    }
+    vi.mocked(API.getFunctionQueryCatalog).mockResolvedValue({
+      queries: [query],
+    })
+
+    await store.fetchQueryCatalog()
+
+    expect(get(store)).toMatchObject({
+      queryCatalog: [query],
+      catalogLoading: false,
+      catalogError: undefined,
+    })
+  })
+
+  it("stores query catalog API failures for retry", async () => {
+    vi.mocked(API.getFunctionQueryCatalog).mockRejectedValue(
+      new Error("Catalog unavailable")
+    )
+
+    await store.fetchQueryCatalog()
+
+    expect(get(store)).toMatchObject({
+      catalogLoading: false,
+      catalogError: "Catalog unavailable",
+    })
+  })
+
   it("creates and renames while sending only editable Function fields", async () => {
     const fn = makeFunction()
     vi.mocked(API.createFunction).mockResolvedValue({ function: fn })
@@ -148,6 +185,70 @@ describe("FunctionStore", () => {
       name: "Updated in another tab",
       _rev: "3-three",
     })
+  })
+
+  it("validates an unsaved draft without changing the stored Function", async () => {
+    const fn = makeFunction()
+    vi.mocked(API.getFunction).mockResolvedValue({ function: fn })
+    await store.fetchOne(fn._id)
+    const request = {
+      functionId: fn._id,
+      name: fn.name,
+      source: "invalid TypeScript",
+      capabilities: [],
+    }
+    vi.mocked(API.compileFunction).mockResolvedValue({
+      diagnostics: [{ code: "TS2304", message: "Cannot find name" }],
+    })
+
+    await expect(store.compile(request)).resolves.toEqual({
+      diagnostics: [{ code: "TS2304", message: "Cannot find name" }],
+    })
+
+    expect(API.compileFunction).toHaveBeenCalledWith(request)
+    expect(store.list).toEqual([fn])
+  })
+
+  it("builds the saved revision and stores its new readiness", async () => {
+    const fn = makeFunction({ readiness: "build_required" })
+    const built = makeFunction({
+      _rev: "2-two",
+      readiness: "ready",
+      source: "export default async function () { return { built: true } }",
+    })
+    const buildSummary: FunctionSummary = {
+      _id: built._id,
+      _rev: built._rev,
+      appId: built.appId,
+      name: built.name,
+      readiness: built.readiness,
+      createdAt: built.createdAt,
+      updatedAt: built.updatedAt,
+      linkedQueryCount: built.linkedQueryCount,
+    }
+    vi.mocked(API.buildFunction).mockResolvedValue({ function: buildSummary })
+    vi.mocked(API.getFunction).mockResolvedValue({ function: built })
+
+    await expect(store.build(fn)).resolves.toEqual(built)
+
+    expect(API.buildFunction).toHaveBeenCalledWith(fn._id, fn._rev)
+    expect(API.getFunction).toHaveBeenCalledWith(fn._id)
+    expect(store.list[0]).toEqual(
+      expect.objectContaining({
+        _rev: "2-two",
+        readiness: "ready",
+        source: built.source,
+      })
+    )
+  })
+
+  it("requires a revision before building", async () => {
+    const fn = makeFunction({ _rev: undefined })
+
+    await expect(store.build(fn)).rejects.toThrow(
+      "Function revision is missing"
+    )
+    expect(API.buildFunction).not.toHaveBeenCalled()
   })
 
   it("duplicates the draft without copying server-owned metadata", async () => {

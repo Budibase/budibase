@@ -12,6 +12,7 @@ import {
   GroupUsersDeletedEvent,
   GroupPermissionsEditedEvent,
   AutomationDeletedEvent,
+  FunctionDeletedEvent,
   DatasourceDeletedEvent,
   TableDeletedEvent,
   QueryDeletedEvent,
@@ -54,6 +55,8 @@ const getEventProperties: Record<
 
   [Event.AUTOMATION_DELETED]: (properties: AutomationDeletedEvent) =>
     properties.automationId,
+  [Event.FUNCTION_DELETED]: (properties: FunctionDeletedEvent) =>
+    properties.functionId,
   [Event.DATASOURCE_DELETED]: (properties: DatasourceDeletedEvent) =>
     properties.datasourceId,
   [Event.TABLE_DELETED]: (properties: TableDeletedEvent) => properties.tableId,
