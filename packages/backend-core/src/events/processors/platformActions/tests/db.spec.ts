@@ -4,12 +4,13 @@ import * as context from "../../../../context"
 import {
   doWithActionsWorkspaceDeletionLock,
   doWithActionsWorkspaceWriteLock,
+  doWithExistingActionsWorkspace,
   getActionsDB,
   getActionsDbName,
 } from "../db"
 import { upsertPlatformActionSession } from "../sessionIndex"
 import { getPlatformActionSessionId } from "../utils"
-import { createWorkspace } from "./workspace"
+import { createWorkspace, destroyWorkspace } from "./workspace"
 import type {
   PlatformActionEvent,
   PlatformActionSessionIndexDoc,
@@ -130,6 +131,38 @@ describe("getActionsDB", () => {
 })
 
 describe("Actions workspace lock", () => {
+  it("keeps deletion behind a write that exceeds the original lock TTL", async () => {
+    const workspaceId = await createWorkspace()
+    const order: string[] = []
+    // Exceed the production 10-second lease, allowing renewal timers to run.
+    const slowWriteMs = 12000
+    let started!: () => void
+    const writeStarted = new Promise<void>(resolve => {
+      started = resolve
+    })
+    const writer = context.doInWorkspaceContext(workspaceId, () =>
+      doWithExistingActionsWorkspace(async () => {
+        started()
+        await new Promise(resolve => setTimeout(resolve, slowWriteMs))
+        await getActionsDB().put({ _id: "slow-action" })
+        order.push("write")
+      })
+    )
+    await writeStarted
+    const deletion = destroyWorkspace(workspaceId).then(() => {
+      order.push("deletion")
+    })
+
+    try {
+      await Promise.all([writer, deletion])
+      expect(order).toEqual(["write", "deletion"])
+      expect(await dbCore.dbExists(getActionsDbName(workspaceId))).toBe(false)
+    } finally {
+      await Promise.allSettled([writer, deletion])
+      await destroyWorkspace(workspaceId)
+    }
+  }, 30000)
+
   const holdDeletionLock = (workspaceId: string, order: string[]) => {
     let release!: () => void
     const released = new Promise<void>(resolve => {

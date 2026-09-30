@@ -40,7 +40,7 @@ export type LockOptions = {
   type: LockType
   /**
    * The custom options to use when creating the redlock instance
-   * type must be set to custom for the options to be applied
+   * Applied for CUSTOM and AUTO_EXTEND locks
    */
   customOptions?: Redlock.Options
   /**
