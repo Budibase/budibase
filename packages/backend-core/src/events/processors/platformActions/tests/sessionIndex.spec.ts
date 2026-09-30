@@ -3,18 +3,18 @@ import type {
   PlatformActionEnvironment,
   PlatformActionSessionIndexDoc,
 } from "@budibase/types"
-import { generator, mocks, structures } from "../../../../../tests"
+import { generator, mocks } from "../../../../../tests"
 import * as context from "../../../../context"
 import * as db from "../../../../db"
 import * as locks from "../../../../redis/redlockImpl"
-import { getActionsDB } from "../db"
+import { getActionsDB, getActionsDbName } from "../db"
 import { upsertPlatformActionSession } from "../sessionIndex"
 import { getPlatformActionSessionId } from "../utils"
-
-async function run<T>(task: () => Promise<T>): Promise<T> {
-  const workspaceId = db.generateWorkspaceID(structures.tenant.id())
-  return await context.doInWorkspaceContext(workspaceId, task)
-}
+import {
+  createWorkspace,
+  destroyWorkspace,
+  runInWorkspace as run,
+} from "./workspace"
 
 async function getSessionDoc(
   sourceId: string,
@@ -492,5 +492,31 @@ describe("upsertPlatformActionSession", () => {
       expect(devDoc.status).toBe("failed")
       expect(devDoc.actionCount).toBe(1)
     })
+  })
+
+  describe("workspace deletion", () => {
+    it.each([
+      ["an action", true],
+      ["a lifecycle-only signal", false],
+    ])(
+      "discards %s queued before the workspace was deleted",
+      async (_, incrementsActionCount) => {
+        const workspaceId = await createWorkspace()
+        await destroyWorkspace(workspaceId)
+
+        await context.doInWorkspaceContext(workspaceId, () =>
+          upsertPlatformActionSession({
+            sourceType: "agent_session",
+            sourceId: generator.guid(),
+            environment: "prod",
+            incrementsActionCount,
+            signal: "completed",
+            timestamp: "2026-08-31T00:00:00.000Z",
+          })
+        )
+
+        expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
+      }
+    )
   })
 })

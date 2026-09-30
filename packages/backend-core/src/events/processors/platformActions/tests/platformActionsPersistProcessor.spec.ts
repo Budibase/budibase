@@ -2,7 +2,11 @@ import { Event, PlatformActionEvent, type Identity } from "@budibase/types"
 import { structures } from "../../../../../tests"
 import * as context from "../../../../context"
 import * as db from "../../../../db"
-import { getActionsDB, getActionsDbName } from "../db"
+import {
+  doWithActionsWorkspaceDeletionLock,
+  getActionsDB,
+  getActionsDbName,
+} from "../db"
 
 jest.mock("../indexQueue")
 import { enqueuePlatformActionSessionIndex } from "../indexQueue"
@@ -12,15 +16,15 @@ jest.mock("../../../../utils", () => ({
   timeout: jest.fn().mockResolvedValue(undefined),
 }))
 import PlatformActionPersistProcessor from "../platformActionsPersistProcessor"
+import {
+  createWorkspace,
+  destroyWorkspace,
+  runInWorkspace as run,
+} from "./workspace"
 
 const mockEnqueue = enqueuePlatformActionSessionIndex as jest.MockedFunction<
   typeof enqueuePlatformActionSessionIndex
 >
-
-async function run<T>(task: () => Promise<T>): Promise<T> {
-  const workspaceId = db.generateWorkspaceID(structures.tenant.id())
-  return await context.doInWorkspaceContext(workspaceId, task)
-}
 
 describe("PlatformActionPersistProcessor", () => {
   const processor = new PlatformActionPersistProcessor()
@@ -128,7 +132,7 @@ describe("PlatformActionPersistProcessor", () => {
   })
 
   it("tags the persisted event and the enqueued job as dev when the current context is a dev workspace", async () => {
-    const prodWorkspaceId = db.generateWorkspaceID(structures.tenant.id())
+    const prodWorkspaceId = await createWorkspace()
     const devWorkspaceId = db.getDevWorkspaceID(prodWorkspaceId)
 
     await context.doInWorkspaceContext(devWorkspaceId, async () => {
@@ -330,6 +334,96 @@ describe("PlatformActionPersistProcessor", () => {
         )
       } finally {
         errorSpy.mockRestore()
+      }
+    })
+  })
+
+  describe("workspace deletion", () => {
+    const processAgentAction = () =>
+      processor.processEvent(Event.ACTION_AI_AGENT_EXECUTED, identity, {
+        sourceType: "agent_session",
+        sourceId: "session-1",
+      })
+
+    it("discards a late event without recreating the Actions DB", async () => {
+      const workspaceId = await createWorkspace()
+      await destroyWorkspace(workspaceId)
+
+      await context.doInWorkspaceContext(workspaceId, processAgentAction)
+
+      expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
+      expect(mockEnqueue).not.toHaveBeenCalled()
+    })
+
+    it("discards an event that waited for an in-progress deletion", async () => {
+      const workspaceId = await createWorkspace()
+      let releaseDeletion!: () => void
+      const deletionReleased = new Promise<void>(resolve => {
+        releaseDeletion = resolve
+      })
+      let deletionAcquired!: () => void
+      const isDeletionAcquired = new Promise<void>(resolve => {
+        deletionAcquired = resolve
+      })
+
+      const deletion = doWithActionsWorkspaceDeletionLock({
+        workspaceId,
+        task: async () => {
+          deletionAcquired()
+          await deletionReleased
+          await db
+            .getDB(db.getDevWorkspaceID(workspaceId), { skip_setup: true })
+            .destroy()
+        },
+      })
+      await isDeletionAcquired
+      const writer = context.doInWorkspaceContext(
+        workspaceId,
+        processAgentAction
+      )
+      releaseDeletion()
+      await Promise.all([deletion, writer])
+
+      expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
+      expect(mockEnqueue).not.toHaveBeenCalled()
+    })
+
+    it("lets a deletion that arrives mid-write remove the persisted event", async () => {
+      const workspaceId = await createWorkspace()
+      const originalPut = db.DatabaseImpl.prototype.put
+      let releasePut!: () => void
+      const putReleased = new Promise<void>(resolve => {
+        releasePut = resolve
+      })
+      let putStarted!: () => void
+      const isPutStarted = new Promise<void>(resolve => {
+        putStarted = resolve
+      })
+      const putSpy = jest
+        .spyOn(db.DatabaseImpl.prototype, "put")
+        .mockImplementationOnce(async function (
+          this: db.DatabaseImpl,
+          ...args
+        ) {
+          putStarted()
+          await putReleased
+          return await originalPut.apply(this, args)
+        })
+
+      try {
+        const writer = context.doInWorkspaceContext(
+          workspaceId,
+          processAgentAction
+        )
+        await isPutStarted
+        const deletion = destroyWorkspace(workspaceId)
+        releasePut()
+        await Promise.all([writer, deletion])
+
+        expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
+        expect(mockEnqueue).toHaveBeenCalledTimes(1)
+      } finally {
+        putSpy.mockRestore()
       }
     })
   })

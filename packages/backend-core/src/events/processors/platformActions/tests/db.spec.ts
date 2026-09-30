@@ -9,6 +9,7 @@ import {
 } from "../db"
 import { upsertPlatformActionSession } from "../sessionIndex"
 import { getPlatformActionSessionId } from "../utils"
+import { createWorkspace } from "./workspace"
 import type {
   PlatformActionEvent,
   PlatformActionSessionIndexDoc,
@@ -38,8 +39,8 @@ describe("getActionsDbName", () => {
 describe("getActionsDB", () => {
   it("isolates actions and session updates between workspaces in the same tenant", async () => {
     const tenantId = structures.tenant.id()
-    const firstWorkspaceId = dbCore.generateWorkspaceID(tenantId)
-    const secondWorkspaceId = dbCore.generateWorkspaceID(tenantId)
+    const firstWorkspaceId = await createWorkspace(tenantId)
+    const secondWorkspaceId = await createWorkspace(tenantId)
     const source = {
       environment: "prod" as const,
       sourceType: "agent_session" as const,

@@ -2,7 +2,11 @@ import { LockName, LockType, SEPARATOR } from "@budibase/types"
 import type { Database } from "@budibase/types"
 import * as context from "../../../context"
 import { getDB } from "../../../db/db"
-import { getProdWorkspaceID } from "../../../docIds/conversions"
+import { dbExists } from "../../../db/utils"
+import {
+  getDevWorkspaceID,
+  getProdWorkspaceID,
+} from "../../../docIds/conversions"
 import * as locks from "../../../redis/redlockImpl"
 
 const ACTIONS_DB_PREFIX = "actions"
@@ -55,6 +59,31 @@ export const doWithActionsWorkspaceWriteLock = async <T>({
     task
   )
   return result
+}
+
+/**
+ * Runs an Actions write only while the workspace still exists, returning
+ * whether it ran. CouchDB creates missing databases on write, so a late
+ * writer would otherwise recreate the Actions DB of a deleted workspace. The
+ * dev workspace DB is the reference because prod is absent until publish.
+ */
+export const doWithExistingActionsWorkspace = async (
+  task: () => Promise<void>
+): Promise<boolean> => {
+  const workspaceId = context.getWorkspaceId()
+  if (!workspaceId) {
+    throw new Error("Unable to write to actions DB - no workspace ID.")
+  }
+  return await doWithActionsWorkspaceWriteLock({
+    workspaceId,
+    task: async () => {
+      if (!(await dbExists(getDevWorkspaceID(workspaceId)))) {
+        return false
+      }
+      await task()
+      return true
+    },
+  })
 }
 
 export const doWithActionsWorkspaceDeletionLock = async <T>({
