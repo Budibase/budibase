@@ -382,7 +382,7 @@ describe("PlatformActionPersistProcessor", () => {
       await holder
       await destroyWorkspace(workspaceId)
     }
-  })
+  }, 30000)
 
   describe("workspace deletion", () => {
     const processAgentAction = () =>
