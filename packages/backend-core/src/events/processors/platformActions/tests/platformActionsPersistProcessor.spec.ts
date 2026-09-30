@@ -2,7 +2,7 @@ import { Event, PlatformActionEvent, type Identity } from "@budibase/types"
 import { structures } from "../../../../../tests"
 import * as context from "../../../../context"
 import * as db from "../../../../db"
-import { getActionsDB } from "../db"
+import { getActionsDB, getActionsDbName } from "../db"
 
 jest.mock("../indexQueue")
 import { enqueuePlatformActionSessionIndex } from "../indexQueue"
@@ -28,6 +28,29 @@ describe("PlatformActionPersistProcessor", () => {
 
   beforeEach(() => {
     mockEnqueue.mockReset()
+  })
+
+  it("skips self-host cloud events without persisting, enqueueing or logging an error", async () => {
+    const tenantId = structures.tenant.id()
+    const workspaceId = db.generateWorkspaceID(tenantId)
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {})
+
+    try {
+      await context.doInWorkspaceContext(workspaceId, () =>
+        context.doInSelfHostTenantUsingCloud(tenantId, () =>
+          processor.processEvent(Event.ACTION_AI_AGENT_EXECUTED, identity, {
+            sourceType: "agent_session",
+            sourceId: "session-1",
+          })
+        )
+      )
+
+      expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
+      expect(mockEnqueue).not.toHaveBeenCalled()
+      expect(errorSpy).not.toHaveBeenCalled()
+    } finally {
+      errorSpy.mockRestore()
+    }
   })
 
   it("ignores events that are not action events", async () => {
