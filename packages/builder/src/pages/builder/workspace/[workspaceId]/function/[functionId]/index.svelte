@@ -148,6 +148,9 @@
   const load = async (id: string) => {
     fn = undefined
     debouncedSave.cancel()
+    pendingCapabilities = undefined
+    queriesDirty = false
+    saving = false
     loading = true
     error = ""
     actionError = ""
@@ -197,9 +200,12 @@
   }
 
   const persistDraft = async (): Promise<boolean> => {
-    if (!fn?._rev) {
+    const functionToSave = fn
+    if (!functionToSave?._rev || functionToSave._id !== functionId) {
       return false
     }
+    const isCurrentFunction = () =>
+      fn?._id === functionToSave._id && functionId === functionToSave._id
     const capabilitiesToSave = pendingCapabilities
     if (source === savedSource && !capabilitiesToSave) {
       return true
@@ -210,12 +216,16 @@
       actionError = ""
     }
     try {
-      fn = await functionStore.save(fn, {
-        _rev: fn._rev,
-        name: fn.name,
+      const savedFunction = await functionStore.save(functionToSave, {
+        _rev: functionToSave._rev,
+        name: functionToSave.name,
         source: sourceToSave,
-        capabilities: capabilitiesToSave || toCapabilityInputs(fn),
+        capabilities: capabilitiesToSave || toCapabilityInputs(functionToSave),
       })
+      if (!isCurrentFunction()) {
+        return true
+      }
+      fn = savedFunction
       savedSource = sourceToSave
       if (pendingCapabilities === capabilitiesToSave) {
         pendingCapabilities = undefined
@@ -225,13 +235,18 @@
       }
       return true
     } catch (saveError) {
+      if (!isCurrentFunction()) {
+        return false
+      }
       actionError = getErrorMessage(saveError) || "Unable to save Function"
       if (pendingCapabilities === capabilitiesToSave) {
         pendingCapabilities = undefined
       }
       return false
     } finally {
-      saving = false
+      if (isCurrentFunction()) {
+        saving = false
+      }
     }
   }
 
