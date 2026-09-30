@@ -226,7 +226,7 @@
         return true
       }
       fn = savedFunction
-      if (currentLoad !== loadAtSave && source === savedSource) {
+      if (!destroyed && currentLoad !== loadAtSave && source === savedSource) {
         lastObservedSource = sourceToSave
         source = sourceToSave
         validate(sourceToSave)

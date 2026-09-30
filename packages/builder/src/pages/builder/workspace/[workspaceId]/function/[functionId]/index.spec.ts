@@ -107,6 +107,8 @@ describe("Function editor route", () => {
     vi.clearAllMocks()
     mocks.fetchOne.mockReset()
     mocks.save.mockReset()
+    mocks.build.mockReset()
+    mocks.fetchOne.mockReset()
     mocks.params.set({ workspaceId: "app_dev_one", functionId: "function-a" })
     mocks.available.set(false)
     mocks.canManageFunctions.mockReturnValue(true)
@@ -201,6 +203,32 @@ describe("Function editor route", () => {
       expect.objectContaining({ _rev: "2" }),
       expect.objectContaining({ _rev: "2" })
     )
+  })
+
+  it("does not compile after a pending save finishes on an unmounted editor", async () => {
+    let resolveSave: (value: FunctionResponse) => void = () => undefined
+    const pendingSave = new Promise<FunctionResponse>(resolve => {
+      resolveSave = resolve
+    })
+    const fn = createFunction("function-a")
+    mocks.fetchOne.mockResolvedValue(fn)
+    mocks.save.mockImplementationOnce(() => pendingSave)
+    mocks.available.set(true)
+    const view = render(FunctionPage)
+
+    await screen.findByRole("button", { name: "Save links" })
+    vi.useFakeTimers()
+    await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
+    view.unmount()
+    await act(async () => {
+      resolveSave({ ...fn, _rev: "2" })
+      await pendingSave
+      await vi.advanceTimersByTimeAsync(0)
+    })
+
+    expect(mocks.save).toHaveBeenCalledTimes(1)
+    expect(mocks.compile).toHaveBeenCalledTimes(1)
+    expect(mocks.notificationsSuccess).not.toHaveBeenCalled()
   })
 
   it("blocks Build after returning to a Function until its save finishes", async () => {
