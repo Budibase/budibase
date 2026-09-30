@@ -19,5 +19,10 @@ export function getActionsDB(): Database {
   if (!workspaceId) {
     throw new Error("Unable to retrieve actions DB - no workspace ID.")
   }
+  if (context.isSelfHostUsingCloud()) {
+    throw new Error(
+      "Actions DB not found - self-host users using cloud don't have Actions DBs"
+    )
+  }
   return getDB(getActionsDbName(workspaceId))
 }

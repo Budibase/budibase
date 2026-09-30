@@ -75,6 +75,8 @@ services:
       - litellm-service
 
   proxy-service-docker:
+    build:
+      context: ./proxy
     ports:
       - "${MAIN_PORT}:10000"
     container_name: build-bbproxy

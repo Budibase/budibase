@@ -1,10 +1,12 @@
 import {
+  EscalationPolicySnapshot,
   EscalationRecipient,
   EscalationReviewContext,
   EscalationResponse,
   EscalationSource,
   SuspendedAutomationContext,
   SuspendedOperationContext,
+  ToolExecutionRule,
 } from "@budibase/types"
 
 interface CreateEscalationBase {
@@ -35,6 +37,8 @@ export interface CreateOperationEscalationInput extends CreateEscalationBase {
   agentId: string
   operationId: string
   requestId?: string
+  rule?: ToolExecutionRule
+  policy?: EscalationPolicySnapshot
   context: SuspendedOperationContext
 }
 

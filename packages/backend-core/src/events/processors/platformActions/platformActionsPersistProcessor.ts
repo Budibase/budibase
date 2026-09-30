@@ -12,7 +12,6 @@ import * as context from "../../../context"
 import { timeout } from "../../../utils"
 import { EventProcessor } from "../types"
 import { getActionsDB } from "./db"
-import { getPlatformActionEnvironment } from "./utils"
 import { enqueuePlatformActionSessionIndex } from "./indexQueue"
 
 const ENQUEUE_MAX_ATTEMPTS = 3
@@ -79,7 +78,7 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
     if (!workspaceId) {
       return
     }
-    const environment = getPlatformActionEnvironment(workspaceId)
+    const environment = context.getPlatformActionEnvironment()
 
     const { sourceType, sourceId, ...payload } = properties
     const isoTimestamp =

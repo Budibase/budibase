@@ -69,6 +69,8 @@ export class BullEscalationProcessor implements IEscalationProcessor {
             ...((input.requestId ?? existing?.requestId) && {
               requestId: input.requestId ?? existing?.requestId,
             }),
+            ...(input.rule && { rule: input.rule }),
+            ...(input.policy && { policy: input.policy }),
           }
 
     const doc: EscalationContextDoc = {

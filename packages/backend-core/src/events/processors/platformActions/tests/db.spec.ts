@@ -26,15 +26,7 @@ describe("getActionsDbName", () => {
     const prodWorkspaceId = dbCore.generateWorkspaceID(structures.tenant.id())
     const devWorkspaceId = dbCore.getDevWorkspaceID(prodWorkspaceId)
 
-    expect(getActionsDbName(devWorkspaceId)).toBe(
-      getActionsDbName(prodWorkspaceId)
-    )
-  })
-
-  it("is stable for the same workspace across calls", () => {
-    const workspaceId = dbCore.generateWorkspaceID(structures.tenant.id())
-
-    expect(getActionsDbName(workspaceId)).toBe(getActionsDbName(workspaceId))
+    expect(getActionsDbName(devWorkspaceId)).toBe(`actions_${prodWorkspaceId}`)
   })
 })
 
@@ -114,6 +106,19 @@ describe("getActionsDB", () => {
   it("throws when there is no workspace in context", async () => {
     expect(() => getActionsDB()).toThrow(
       "Unable to retrieve actions DB - no workspace ID."
+    )
+  })
+
+  it("rejects self-host cloud access even with a workspace in context", async () => {
+    const tenantId = structures.tenant.id()
+    const workspaceId = dbCore.generateWorkspaceID(tenantId)
+
+    await context.doInWorkspaceContext(workspaceId, () =>
+      context.doInSelfHostTenantUsingCloud(tenantId, () => {
+        expect(() => getActionsDB()).toThrow(
+          "Actions DB not found - self-host users using cloud don't have Actions DBs"
+        )
+      })
     )
   })
 })

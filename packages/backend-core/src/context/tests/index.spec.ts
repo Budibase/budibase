@@ -8,6 +8,30 @@ import Context from "../Context"
 import { ContextMap } from "../types"
 
 describe("context", () => {
+  describe("getPlatformActionEnvironment", () => {
+    it("returns prod from the workspace context", async () => {
+      const workspaceId = db.generateWorkspaceID(structures.tenant.id())
+      await context.doInWorkspaceContext(workspaceId, () => {
+        expect(context.getPlatformActionEnvironment()).toBe("prod")
+      })
+    })
+
+    it("returns dev from the workspace context", async () => {
+      const workspaceId = db.getDevWorkspaceID(
+        db.generateWorkspaceID(structures.tenant.id())
+      )
+      await context.doInWorkspaceContext(workspaceId, () => {
+        expect(context.getPlatformActionEnvironment()).toBe("dev")
+      })
+    })
+
+    it("throws without a workspace in context", () => {
+      expect(() => context.getPlatformActionEnvironment()).toThrow(
+        "Unable to retrieve platform action environment - no workspace ID."
+      )
+    })
+  })
+
   describe("doInTenant", () => {
     describe("single-tenancy", () => {
       beforeAll(() => {
