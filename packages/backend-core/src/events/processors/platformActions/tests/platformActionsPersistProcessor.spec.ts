@@ -4,6 +4,7 @@ import * as context from "../../../../context"
 import * as db from "../../../../db"
 import {
   doWithActionsWorkspaceDeletionLock,
+  doWithActionsWorkspaceWriteLock,
   getActionsDB,
   getActionsDbName,
 } from "../db"
@@ -336,6 +337,51 @@ describe("PlatformActionPersistProcessor", () => {
         errorSpy.mockRestore()
       }
     })
+  })
+
+  it("persists and enqueues once after contention exceeds the previous retry budget", async () => {
+    const workspaceId = await createWorkspace()
+    // The previous policy allowed 10 retries, each delayed by at most 300ms.
+    const contentionMs = 4000
+    let acquired!: () => void
+    const lockAcquired = new Promise<void>(resolve => {
+      acquired = resolve
+    })
+    const holder = doWithActionsWorkspaceWriteLock({
+      workspaceId,
+      task: async () => {
+        acquired()
+        await new Promise(resolve => setTimeout(resolve, contentionMs))
+      },
+    })
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {})
+
+    try {
+      await lockAcquired
+      await context.doInWorkspaceContext(workspaceId, async () => {
+        await Promise.all([
+          holder,
+          processor.processEvent(Event.ACTION_AI_AGENT_EXECUTED, identity, {
+            sourceType: "agent_session",
+            sourceId: "contended-session",
+          }),
+        ])
+        const { rows } = await getActionsDB().allDocs<PlatformActionEvent>({
+          include_docs: true,
+        })
+        expect(rows).toHaveLength(1)
+        expect(rows[0].doc).toMatchObject({ sourceId: "contended-session" })
+        expect(mockEnqueue).toHaveBeenCalledTimes(1)
+        expect(mockEnqueue).toHaveBeenCalledWith(
+          expect.objectContaining({ indexId: rows[0].id })
+        )
+        expect(errorSpy).not.toHaveBeenCalled()
+      })
+    } finally {
+      errorSpy.mockRestore()
+      await holder
+      await destroyWorkspace(workspaceId)
+    }
   })
 
   describe("workspace deletion", () => {

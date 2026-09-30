@@ -27,7 +27,7 @@ async function getClient(
       return newRedlock(OPTIONS.DELAY_500)
     }
     case LockType.AUTO_EXTEND: {
-      return newRedlock({ ...OPTIONS.AUTO_EXTEND, ...opts })
+      return newRedlock(OPTIONS.AUTO_EXTEND)
     }
     default: {
       throw utils.unreachable(type)

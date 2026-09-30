@@ -11,7 +11,6 @@ import * as locks from "../../../redis/redlockImpl"
 
 const ACTIONS_DB_PREFIX = "actions"
 const WRITE_LOCK_TTL_MS = 10000
-const WRITE_LOCK_RETRY_COUNT = 10
 
 /**
  * Actions are persisted once per workspace, shared by its dev and prod
@@ -52,7 +51,6 @@ export const doWithActionsWorkspaceWriteLock = async <T>({
   const { result } = await locks.doWithLock(
     {
       type: LockType.AUTO_EXTEND,
-      customOptions: { retryCount: WRITE_LOCK_RETRY_COUNT },
       name: LockName.PLATFORM_ACTIONS_WORKSPACE,
       resource: getActionsWorkspaceLockResource(workspaceId),
       systemLock: true,

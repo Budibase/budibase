@@ -12,30 +12,6 @@ describe("redlockImpl", () => {
     const config = new DBTestConfiguration()
     const lockTtl = AUTO_EXTEND_POLLING_MS
 
-    it.each([undefined, 10])(
-      "preserves autoextend defaults unless retryCount is overridden (%s)",
-      async retryCount => {
-        const lockSpy = jest.spyOn(Redlock.prototype, "lock")
-        try {
-          await config.doInTenant(() =>
-            doWithLock(
-              {
-                name: LockName.PLATFORM_ACTIONS_WORKSPACE,
-                resource: generator.guid(),
-                type: LockType.AUTO_EXTEND,
-                customOptions:
-                  retryCount === undefined ? undefined : { retryCount },
-              },
-              async () => {}
-            )
-          )
-          expect(lockSpy.mock.contexts[0].retryCount).toBe(retryCount ?? -1)
-        } finally {
-          lockSpy.mockRestore()
-        }
-      }
-    )
-
     function runLockWithExecutionTime({
       opts,
       task,
