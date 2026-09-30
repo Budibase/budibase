@@ -75,7 +75,7 @@ export default class PlatformActionPersistProcessor implements EventProcessor {
     }
 
     const workspaceId = context.getWorkspaceId()
-    if (!workspaceId) {
+    if (!workspaceId || context.isSelfHostUsingCloud()) {
       return
     }
     const environment = context.getPlatformActionEnvironment()

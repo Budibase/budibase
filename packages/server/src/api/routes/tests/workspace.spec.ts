@@ -2041,27 +2041,39 @@ describe("/applications", () => {
       const actionsDbName = events.platformActions.getActionsDbName(
         config.getProdWorkspaceId()
       )
-      await db.getDB(actionsDbName).put({ _id: "test_doc" })
-      expect(await db.dbExists(actionsDbName)).toBe(true)
+      try {
+        await db.getDB(actionsDbName).put({ _id: "test_doc" })
+        expect(await db.dbExists(actionsDbName)).toBe(true)
 
-      nock("http://localhost:10000")
-        .delete(`/api/global/roles/${workspace.appId}`)
-        .reply(200, {})
+        nock("http://localhost:10000")
+          .delete(`/api/global/roles/${workspace.appId}`)
+          .reply(200, {})
 
-      await config.api.workspace.delete(workspace.appId)
+        await config.api.workspace.delete(workspace.appId)
 
-      expect(await db.dbExists(actionsDbName)).toBe(false)
+        expect(await db.dbExists(actionsDbName)).toBe(false)
+      } finally {
+        if (await db.dbExists(actionsDbName)) {
+          await db.getDB(actionsDbName, { skip_setup: true }).destroy()
+        }
+      }
     })
 
     it("should not delete the shared Actions database on unpublish", async () => {
       const actionsDbName = events.platformActions.getActionsDbName(
         config.getProdWorkspaceId()
       )
-      await db.getDB(actionsDbName).put({ _id: "test_doc" })
+      try {
+        await db.getDB(actionsDbName).put({ _id: "test_doc" })
 
-      await config.api.workspace.unpublish(config.getDevWorkspaceId())
+        await config.api.workspace.unpublish(config.getDevWorkspaceId())
 
-      expect(await db.dbExists(actionsDbName)).toBe(true)
+        expect(await db.dbExists(actionsDbName)).toBe(true)
+      } finally {
+        if (await db.dbExists(actionsDbName)) {
+          await db.getDB(actionsDbName, { skip_setup: true }).destroy()
+        }
+      }
     })
   })
 
