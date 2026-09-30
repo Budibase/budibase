@@ -1,4 +1,4 @@
-import { context, docIds, features } from "@budibase/backend-core"
+import { context, docIds, events, features } from "@budibase/backend-core"
 import {
   DocumentType,
   DEFAULT_FUNCTION_LIMITS,
@@ -133,6 +133,7 @@ export default async function (): Promise<FunctionResult> {
         })
       })
       await config.api.function.delete(fn._id, fn._rev!)
+      await events.asyncEventQueue.whenCurrentJobsFinished()
 
       const currentUserFavourites =
         await config.api.workspaceFavourites.fetchAll()
