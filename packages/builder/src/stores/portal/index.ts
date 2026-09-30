@@ -30,7 +30,6 @@ export type {
 export { knowledgeConnectionsStore } from "./knowledgeConnections"
 export { clientAppsStore } from "./clientApps"
 export { bannerStore } from "./banners"
-export { appCreationStore } from "./workspaceCreation"
 export { aiConfigsStore } from "./aiConfigs"
 export { translations } from "./translations"
 export { aiStore } from "./ai"

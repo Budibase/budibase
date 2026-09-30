@@ -8,7 +8,7 @@
     FancyForm,
     FancyInput,
   } from "@budibase/bbui"
-  import { BUILDER_URLS } from "@budibase/shared-core"
+  import { BUILDER_URLS, validatePasswordPolicy } from "@budibase/shared-core"
   import { goto as gotoStore } from "@roxi/routify"
   import { API } from "@/api"
   import { admin, auth } from "@/stores/portal"
@@ -23,7 +23,7 @@
   let submitted = false
 
   $: tenantId = $auth.tenantId
-  $: passwordMinLength = $admin.passwordMinLength ?? 12
+  $: passwordPolicy = $admin.passwordPolicy
 
   async function save() {
     form.validate()
@@ -99,11 +99,12 @@
 
               if (!formData.password) {
                 fieldError["password"] = "Please enter a password"
-              } else if (formData.password.length < passwordMinLength) {
-                fieldError["password"] =
-                  `Password must be at least ${passwordMinLength} characters`
               } else {
-                fieldError["password"] = undefined
+                const result = validatePasswordPolicy({
+                  password: formData.password,
+                  policy: passwordPolicy,
+                })
+                fieldError["password"] = result.valid ? undefined : result.error
               }
 
               fieldError["confirmationPassword"] =

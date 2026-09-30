@@ -1,7 +1,11 @@
 <script lang="ts">
   import { getErrorMessage } from "@/helpers/errors"
   import { buildLiveUrl } from "@/helpers/urls"
-  import { appStore, screenStore, workspaceAppStore } from "@/stores/builder"
+  import {
+    workspaceStore,
+    screenStore,
+    workspaceAppStore,
+  } from "@/stores/builder"
   import * as screenTemplating from "@/templates/screenTemplating"
   import {
     Body,
@@ -119,7 +123,7 @@
 
     try {
       if (isNew) {
-        const workspaceId = $appStore.appId
+        const workspaceId = $workspaceStore.appId
         const workspaceApp = await workspaceAppStore.add({
           ...workspaceAppData,
           disabled: true,
@@ -208,7 +212,7 @@
       disabled={editingPublishedApp}
     />
     <div class="live-url-display">
-      {buildLiveUrl($appStore, data.url, false)}
+      {buildLiveUrl($workspaceStore, data.url, false)}
     </div>
 
     {#if editingPublishedApp}

@@ -1,6 +1,6 @@
 import { API } from "@/api"
 import { AppStatus } from "@/constants"
-import { EnrichedApp, StoreApp } from "@/types"
+import { EnrichedWorkspace, StoreWorkspace } from "@/types"
 import { UpdateWorkspaceRequest, Workspace } from "@budibase/types"
 import { derived } from "svelte/store"
 import { BudiStore } from "../BudiStore"
@@ -8,7 +8,7 @@ import { auth } from "./auth"
 import { sdk } from "@budibase/shared-core"
 
 export interface PortalWorkspacesStore {
-  apps: StoreApp[]
+  apps: StoreWorkspace[]
   sortBy?: string
 }
 
@@ -73,7 +73,7 @@ export class WorkspacesStore extends BudiStore<PortalWorkspacesStore> {
     const json = await API.getApps()
     if (Array.isArray(json)) {
       // Merge development and deployed workspaces into one sensible list.
-      let workspaceMap: Record<string, StoreApp> = {}
+      let workspaceMap: Record<string, StoreWorkspace> = {}
       const devWorkspaces = json.filter(
         workspace => workspace.status === AppStatus.DEV
       )
@@ -171,7 +171,7 @@ export const sortBy = derived([workspacesStore, auth], ([$store, $auth]) => {
 export const enrichedApps = derived(
   [workspacesStore, auth, sortBy],
   ([$store, $auth, $sortBy]) => {
-    const enrichedApps: EnrichedApp[] = $store.apps.map(workspace => {
+    const enrichedApps: EnrichedWorkspace[] = $store.apps.map(workspace => {
       const user = $auth.user
       return {
         ...workspace,

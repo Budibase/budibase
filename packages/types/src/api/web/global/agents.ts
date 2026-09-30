@@ -198,7 +198,6 @@ export type AgentOperationConfigRequest = Pick<
   | "enabledTools"
   | "approvalPolicies"
   | "allowKnowledgeSourceDownload"
-  | "escalation"
 >
 
 export type CreateAgentOperationRequest = AgentOperationConfigRequest &

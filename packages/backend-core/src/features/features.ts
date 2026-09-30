@@ -256,8 +256,6 @@ export class FlagSet<T extends { [name: string]: boolean }> {
 
 const featureFlagDefaults: Record<FeatureFlag, boolean> = {
   [FeatureFlag.AI_TESTS]: false,
-  [FeatureFlag.ESCALATION]: false,
-  [FeatureFlag.AI_TOOL_ESCALATION]: false,
   [FeatureFlag.FRONT_COMPANION]: false,
   [FeatureFlag.PROJECTS]: false,
   [FeatureFlag.FEATURE_FLAG_OVERRIDES]: env.isDev(),
