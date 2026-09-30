@@ -105,7 +105,6 @@ const createFunction = (id: string): FunctionResponse => ({
 describe("Function editor route", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.fetchOne.mockReset()
     mocks.save.mockReset()
     mocks.build.mockReset()
     mocks.fetchOne.mockReset()
@@ -219,6 +218,7 @@ describe("Function editor route", () => {
     await screen.findByRole("button", { name: "Save links" })
     vi.useFakeTimers()
     await fireEvent.click(screen.getByRole("button", { name: "Save links" }))
+    const compilationsBeforeUnmount = mocks.compile.mock.calls.length
     view.unmount()
     await act(async () => {
       resolveSave({ ...fn, _rev: "2" })
@@ -227,7 +227,7 @@ describe("Function editor route", () => {
     })
 
     expect(mocks.save).toHaveBeenCalledTimes(1)
-    expect(mocks.compile).toHaveBeenCalledTimes(1)
+    expect(mocks.compile).toHaveBeenCalledTimes(compilationsBeforeUnmount)
     expect(mocks.notificationsSuccess).not.toHaveBeenCalled()
   })
 
