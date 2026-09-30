@@ -184,9 +184,7 @@ describe("tenants", () => {
         workspaceId,
         secondWorkspaceId,
       ])
-      for (const database of databases.values()) {
-        expect(database.destroy).not.toHaveBeenCalled()
-      }
+      expect(db.getDB).not.toHaveBeenCalled()
     })
 
     it("does not delete workspace or tenant databases when Actions cleanup fails", async () => {
