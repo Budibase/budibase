@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => {
     selectResource: vi.fn(),
     fetchOne: vi.fn(),
     save: vi.fn(),
+    compile: vi.fn().mockResolvedValue({ diagnostics: [] }),
     notificationsSuccess: vi.fn(),
     fetchQueryCatalog: vi.fn().mockResolvedValue(undefined),
   }
@@ -30,6 +31,7 @@ vi.mock("@/stores/builder", () => ({
     {
       fetchOne: mocks.fetchOne,
       save: mocks.save,
+      compile: mocks.compile,
       fetchQueryCatalog: mocks.fetchQueryCatalog,
     }
   ),
@@ -42,6 +44,8 @@ vi.mock("@budibase/bbui", () => ({
   Helpers: { uuid: vi.fn().mockReturnValue("test-session") },
   Icon: MockComponent,
   ProgressCircle: MockComponent,
+  Tab: MockComponent,
+  Tabs: MockComponent,
   notifications: { success: mocks.notificationsSuccess },
 }))
 vi.mock("@/components/common/TopBar.svelte", () => ({
@@ -50,6 +54,7 @@ vi.mock("@/components/common/TopBar.svelte", () => ({
 vi.mock("../FunctionCodeEditor.svelte", () => ({
   default: MockComponent,
 }))
+vi.mock("../FunctionLogs.svelte", () => ({ default: MockComponent }))
 vi.mock("../FunctionQueryEditor.svelte", async () => ({
   default: (await import("@/test/mocks/MockFunctionQueryEditor.svelte"))
     .default,
@@ -72,6 +77,8 @@ const createFunction = (id: string): FunctionResponse => ({
 describe("Function editor route", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.fetchOne.mockReset()
+    mocks.save.mockReset()
     mocks.params.set({ functionId: "function-a" })
     mocks.flags.set({ [FeatureFlag.FUNCTIONS]: false })
   })
