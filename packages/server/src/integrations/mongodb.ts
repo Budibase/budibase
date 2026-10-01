@@ -386,7 +386,6 @@ export class MongoIntegration implements IntegrationBase {
   }
 
   async connect() {
-    // The driver normalizes URI options during construction and reads TLS files on connect.
     const { tlsCAFile, tlsCertificateKeyFile, tlsCRLFile } = this.client.options
     if (
       !environment.SELF_HOSTED &&
