@@ -1,10 +1,6 @@
 import { UserCtx } from "@budibase/types"
 import env from "../environment"
-import {
-  hasBuilderPermissions,
-  isAdmin,
-  isAdminOrWorkspaceBuilder,
-} from "../users"
+import { hasBuilderPermissions, isAdmin, isAdminOrBuilder } from "../users"
 import { getWorkspaceIdFromCtx } from "../utils"
 
 export async function workspaceBuilderOrAdmin(ctx: UserCtx, next: any) {
@@ -14,7 +10,7 @@ export async function workspaceBuilderOrAdmin(ctx: UserCtx, next: any) {
 
   const workspaceId = await getWorkspaceIdFromCtx(ctx)
 
-  if (workspaceId && !isAdminOrWorkspaceBuilder(ctx.user, workspaceId)) {
+  if (workspaceId && !isAdminOrBuilder(ctx.user, workspaceId)) {
     ctx.throw(403, "Workspace Admin/Builder user only endpoint.")
   } else if (!workspaceId && !env.isWorker()) {
     ctx.throw(403, "This request required a workspace id.")

@@ -14,7 +14,6 @@ export const isAdminOrBuilder = sdk.users.isAdminOrBuilder
 export const hasAdminPermissions = sdk.users.hasAdminPermissions
 export const hasBuilderPermissions = sdk.users.hasBuilderPermissions
 export const hasAppBuilderPermissions = sdk.users.hasAppBuilderPermissions
-export const isAdminOrWorkspaceBuilder = sdk.users.isAdminOrWorkspaceBuilder
 
 export async function creatorsInList(
   users: (User | ContextUser)[],

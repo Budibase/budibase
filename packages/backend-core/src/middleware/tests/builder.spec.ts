@@ -5,6 +5,7 @@ import env from "../../environment"
 import { adminOnly } from "../adminOnly"
 import { builderOnly } from "../builderOnly"
 import { builderOrAdmin } from "../builderOrAdmin"
+import { workspaceBuilderOrAdmin } from "../workspaceBuilderOrAdmin"
 
 const appId = "app_aaa"
 const basicUser = structures.users.user()
@@ -394,6 +395,62 @@ describe("security middlewares", () => {
 
       await builderOrAdmin(ctx, next)
       passed(ctx.throw, next)
+    })
+  })
+
+  describe("workspaceBuilderOrAdmin middleware", () => {
+    it("should allow global builder access to any workspace", async () => {
+      const ctx = buildUserCtx(builderUser)
+      const next = jest.fn()
+
+      await doInWorkspaceContext(ctx, appId, () =>
+        workspaceBuilderOrAdmin(ctx, next)
+      )
+
+      passed(ctx.throw, next)
+    })
+
+    it("should allow creator user with app-specific permissions", async () => {
+      const creatorUser = {
+        ...basicUser,
+        builder: {
+          creator: true,
+          apps: [appId],
+        },
+        roles: {
+          [appId]: "CREATOR",
+        },
+      }
+      const ctx = buildUserCtx(creatorUser)
+      const next = jest.fn()
+
+      await doInWorkspaceContext(ctx, appId, () =>
+        workspaceBuilderOrAdmin(ctx, next)
+      )
+
+      passed(ctx.throw, next)
+    })
+
+    it("should allow app builder access to their workspace", async () => {
+      const ctx = buildUserCtx(appBuilderUser)
+      const next = jest.fn()
+
+      await doInWorkspaceContext(ctx, appId, () =>
+        workspaceBuilderOrAdmin(ctx, next)
+      )
+
+      passed(ctx.throw, next)
+    })
+
+    it("should deny app builder access to a different workspace", async () => {
+      const ctx = buildUserCtx(appBuilderUser)
+      const next = jest.fn()
+
+      await doInWorkspaceContext(ctx, "app_b", () =>
+        workspaceBuilderOrAdmin(ctx, next)
+      )
+
+      threw(ctx.throw, 403, "Workspace Admin/Builder user only endpoint.")
     })
   })
 })
