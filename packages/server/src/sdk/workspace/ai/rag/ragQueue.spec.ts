@@ -2,7 +2,7 @@ import Bull, { type Job } from "bull"
 import { randomUUID } from "crypto"
 import { Readable } from "stream"
 import { GenericContainer, type StartedTestContainer } from "testcontainers"
-import { env, RedisClient } from "@budibase/backend-core"
+import { env, HTTPError, RedisClient } from "@budibase/backend-core"
 import {
   KnowledgeBaseFileStatus,
   KnowledgeBaseType,
@@ -126,6 +126,50 @@ describe("RAG ingestion retries", () => {
 
   afterEach(() => {
     jest.restoreAllMocks()
+  })
+
+  it.each([429, 503])("keeps retrying HTTP %s failures", async status => {
+    const job = makeJob()
+    mockIngest.mockRejectedValue(new HTTPError("Temporary failure", status))
+
+    await expect(processJob(job)).rejects.toThrow("Temporary failure")
+
+    expect(mockUpdateFile).not.toHaveBeenCalled()
+    expect(job.discard).not.toHaveBeenCalled()
+  })
+
+  it.each([403, 404])(
+    "fails immediately on an HTTP %s store access error",
+    async status => {
+      const job = makeJob()
+      const message = "Use 'Reset store' to recreate it."
+      mockIngest.mockRejectedValue(new HTTPError(message, status))
+
+      await expect(processJob(job)).rejects.toThrow(message)
+
+      expect(mockUpdateFile).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: KnowledgeBaseFileStatus.FAILED,
+          errorMessage: message,
+        })
+      )
+      expect(job.discard).toHaveBeenCalled()
+    }
+  )
+
+  it("fails on the fifth retryable failure", async () => {
+    const job = makeJob({ attemptsMade: 4 })
+    mockIngest.mockRejectedValue(new Error("Upload failed"))
+
+    await expect(processJob(job)).rejects.toThrow("Upload failed")
+
+    expect(mockUpdateFile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: KnowledgeBaseFileStatus.FAILED,
+        errorMessage: "Upload failed",
+      })
+    )
+    expect(job.discard).not.toHaveBeenCalled()
   })
 
   it("keeps throttling beyond five attempts outside the failure budget", async () => {

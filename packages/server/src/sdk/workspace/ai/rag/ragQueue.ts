@@ -1,5 +1,11 @@
 import type { Job } from "bull"
-import { context, objectStore, queue, utils } from "@budibase/backend-core"
+import {
+  context,
+  HTTPError,
+  objectStore,
+  queue,
+  utils,
+} from "@budibase/backend-core"
 import {
   KnowledgeBase,
   KnowledgeBaseFile,
@@ -252,10 +258,12 @@ const handleProcessingError = async ({
 }) => {
   const attempts = job.opts.attempts || 1
   const isFinalAttempt = job.attemptsMade + 1 >= attempts
+  const isStoreAccessError =
+    error instanceof HTTPError && (error.status === 403 || error.status === 404)
   const errorMessage =
     error instanceof Error ? error.message : "Failed to process uploaded file"
 
-  if (!isFinalAttempt) {
+  if (!isFinalAttempt && !isStoreAccessError) {
     console.log("RAG ingestion job attempt failed, will retry", {
       fileId: file._id,
       attemptsMade: job.attemptsMade,
@@ -267,11 +275,14 @@ const handleProcessingError = async ({
 
   file.status = KnowledgeBaseFileStatus.FAILED
   file.errorMessage = errorMessage
-  console.error("RAG ingestion job exhausted retries, marking file failed", {
+  console.error("RAG ingestion job cannot retry, marking file failed", {
     fileId: file._id,
     attemptsMade: job.attemptsMade,
     attempts,
     errorMessage: file.errorMessage,
   })
   await knowledgeBase.updateKnowledgeBaseFile(file)
+  if (isStoreAccessError) {
+    await job.discard()
+  }
 }
