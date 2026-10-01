@@ -189,17 +189,23 @@ describe("Actions workspace lock", () => {
     const order: string[] = []
 
     const deletion = holdDeletionLock(prodWorkspaceId, order)
-    await deletion.isAcquired
-    const writer = doWithActionsWorkspaceWriteLock({
-      workspaceId: devWorkspaceId,
-      task: async () => {
-        order.push("writer")
-      },
-    })
-    deletion.release()
-    await Promise.all([deletion.done, writer])
+    let writer: Promise<void> | undefined
+    try {
+      await deletion.isAcquired
+      writer = doWithActionsWorkspaceWriteLock({
+        workspaceId: devWorkspaceId,
+        task: async () => {
+          order.push("writer")
+        },
+      })
+      deletion.release()
+      await Promise.all([deletion.done, writer])
 
-    expect(order).toEqual(["deletion", "writer"])
+      expect(order).toEqual(["deletion", "writer"])
+    } finally {
+      deletion.release()
+      await Promise.allSettled([deletion.done, writer])
+    }
   })
 
   it("does not serialize writers of different workspaces", async () => {
@@ -209,16 +215,21 @@ describe("Actions workspace lock", () => {
     const order: string[] = []
 
     const deletion = holdDeletionLock(lockedWorkspaceId, order)
-    await deletion.isAcquired
-    await doWithActionsWorkspaceWriteLock({
-      workspaceId: otherWorkspaceId,
-      task: async () => {
-        order.push("writer")
-      },
-    })
-    deletion.release()
-    await deletion.done
+    try {
+      await deletion.isAcquired
+      await doWithActionsWorkspaceWriteLock({
+        workspaceId: otherWorkspaceId,
+        task: async () => {
+          order.push("writer")
+        },
+      })
+      deletion.release()
+      await deletion.done
 
-    expect(order).toEqual(["writer", "deletion"])
+      expect(order).toEqual(["writer", "deletion"])
+    } finally {
+      deletion.release()
+      await Promise.allSettled([deletion.done])
+    }
   })
 })
