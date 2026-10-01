@@ -522,12 +522,7 @@
     } else {
       route = `../agent/${resourceId}/config`
     }
-    goto(
-      withWorkspaceHomeReturn(
-        url(route),
-        `${window.location.pathname}${window.location.search}`
-      )
-    )
+    goToResource(route)
   }
 
   const handleImportProject = async ({
