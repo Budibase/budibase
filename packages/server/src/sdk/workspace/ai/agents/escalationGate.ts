@@ -1,12 +1,15 @@
 import { context } from "@budibase/backend-core"
-import { dataFilters } from "@budibase/shared-core"
+import { constants as proConstants, licensing } from "@budibase/pro"
+import { dataFilters, Duration } from "@budibase/shared-core"
 import {
   AgentOperation,
   AgentOperationApprovalPolicy,
   AgentRequester,
+  ApprovalPolicyExpiry,
   ApprovedToolCall,
   ChatConversationChannel,
   ApprovalToolResultStatus,
+  ConstantQuotaName,
   EscalationSource,
   type EscalationReviewContext,
   type EscalationReviewParameter,
@@ -28,9 +31,28 @@ import {
   truncateReviewField,
 } from "../../../../escalation/reviewContext"
 
-export const DEFAULT_ESCALATION_DELAY_SECONDS = 3600
-
 const SUMMARY_MAX_LENGTH = 300
+const DAY_MS = Duration.fromDays(1).toMs()
+
+export const escalationDurationMs = async (
+  expiry: ApprovalPolicyExpiry | undefined
+): Promise<number | undefined> => {
+  const license = await licensing.cache.getCachedLicense()
+  const ceilingDays =
+    license.quotas?.constant?.[ConstantQuotaName.ESCALATION_DURATION_DAYS]
+      ?.value
+  const unlimited =
+    ceilingDays == null ||
+    ceilingDays === proConstants.licenses.UNLIMITED ||
+    !Number.isFinite(ceilingDays)
+  const requested =
+    expiry?.duration === undefined ? undefined : expiry.duration * 1000
+  if (unlimited) {
+    return requested
+  }
+  const ceiling = ceilingDays * DAY_MS
+  return requested === undefined ? ceiling : Math.min(requested, ceiling)
+}
 
 export interface EscalationGateContext {
   sessionId: string
@@ -238,7 +260,7 @@ export const createEscalationGateRuntime = ({
     if (policySnapshot.approvers) {
       policySnapshot.approvers = Array.from(new Set(policySnapshot.approvers))
     }
-    const { recipients, delay } = notifications
+    const { recipients } = notifications
 
     const frozenMessages = messages?.length
       ? messages
@@ -275,6 +297,7 @@ export const createEscalationGateRuntime = ({
       })
     }
 
+    const duration = await escalationDurationMs(policy.expiry)
     const reviewContext: EscalationReviewContext = {
       requestedBy: truncateReviewField(requestedBy),
       operation: truncateReviewField(operation.name),
@@ -290,7 +313,7 @@ export const createEscalationGateRuntime = ({
       title,
       summary,
       reviewContext,
-      delay: (delay ?? DEFAULT_ESCALATION_DELAY_SECONDS) * 1000,
+      ...(duration !== undefined && { duration }),
       recipients,
       resolutionStrategy: resolutionStrategyBinding(
         policy.approvers?.length

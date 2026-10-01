@@ -75,7 +75,7 @@ describe("sendSlackNotification", () => {
       agentId: agent._id,
       operationId: "op_1",
       sessionId: "session_1",
-      delay: 1000,
+      duration: 1000,
       resolution: "pending",
       title: "Procurement request",
       summary: "Approve 1500 pens",

@@ -20,6 +20,7 @@ import {
   ChatConversation,
   ContextUser,
   DocumentType,
+  EscalationAction,
   EscalationContextDoc,
   EscalationNotificationDoc,
   EscalationNotificationStatus,
@@ -147,25 +148,32 @@ export async function processNotify(
 
     const resumeJobId = `esc_${escalationId}_resume`
 
-    const resumeJob: EscalationJob = {
-      phase: "waiting",
-      escalationId,
-      appId,
-      tenantId: job.data.tenantId,
-      message,
-      expiresAt: new Date(Date.now() + doc.delay).toISOString(),
-      isTest: job.data.isTest,
-    }
-    await addEscalationJob(resumeJob, doc.delay, resumeJobId)
+    if (doc.duration === undefined) {
+      console.log("Escalation notify: never expires, no resume job enqueued", {
+        jobId: job.id,
+        escalationId,
+      })
+    } else {
+      const resumeJob: EscalationJob = {
+        phase: "waiting",
+        escalationId,
+        appId,
+        tenantId: job.data.tenantId,
+        message,
+        expiresAt: new Date(Date.now() + doc.duration).toISOString(),
+        isTest: job.data.isTest,
+      }
+      await addEscalationJob(resumeJob, doc.duration, resumeJobId)
 
-    console.log("Escalation notify: resume job enqueued", {
-      jobId: job.id,
-      escalationId,
-      message,
-      resumeJobId,
-      delayMs: doc.delay,
-      expiresAt: resumeJob.expiresAt,
-    })
+      console.log("Escalation notify: resume job enqueued", {
+        jobId: job.id,
+        escalationId,
+        message,
+        resumeJobId,
+        durationMs: doc.duration,
+        expiresAt: resumeJob.expiresAt,
+      })
+    }
 
     // TODO: consider one Bull job per recipient rather than batching all in one job -
     // gives independent retry/backoff per channel so a Slack failure doesn't block Teams etc.
@@ -428,9 +436,13 @@ export async function resumeOperation({
   resolution: EscalationContextDoc["resolution"]
   ctx: SuspendedOperationContext
 }) {
-  const approved = resolution === "resolved" && doc.response?.accepted === true
-  const outcome =
-    resolution === "expired" ? "expired" : approved ? "approved" : "rejected"
+  const approved = doc.response?.accepted === true
+  const expiredUndecided = resolution === "expired" && !doc.response?.actionId
+  const outcome = expiredUndecided
+    ? "expired"
+    : approved
+      ? "approved"
+      : "rejected"
 
   console.log("Escalation resume (operation):", {
     escalationId,
@@ -767,7 +779,9 @@ export async function resumeOperation({
   }
 }
 
-async function processResume(job: Job<EscalationJob>) {
+export async function processResume(
+  job: Pick<Job<EscalationJob>, "id" | "data">
+) {
   const { escalationId, appId } = job.data
 
   await context.doInContext(appId, async () => {
@@ -810,10 +824,26 @@ async function processResume(job: Job<EscalationJob>) {
         }
 
         const resolvedAt = doc.resolvedAt ?? new Date().toISOString()
-        const resolution =
-          doc.resolution === "pending" ? "expired" : doc.resolution
-        await db.put({ ...doc, resolvedAt, resolution, updatedAt: resolvedAt })
-        return { ...doc, resolvedAt, resolution }
+        const expiring = doc.resolution === "pending"
+        const resolution = expiring ? "expired" : doc.resolution
+        const outcome = expiring ? doc.policy?.expiry?.outcome : undefined
+        const response = outcome
+          ? {
+              ...doc.response,
+              accepted: outcome === EscalationAction.APPROVE,
+              actionId: outcome,
+              automatic: true,
+            }
+          : doc.response
+        const updated = {
+          ...doc,
+          resolvedAt,
+          resolution,
+          updatedAt: resolvedAt,
+          ...(response && { response }),
+        }
+        await db.put(updated)
+        return updated
       }
     )
     if (!doc) {

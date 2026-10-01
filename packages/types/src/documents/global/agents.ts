@@ -3,6 +3,7 @@ import type { UIMessage } from "ai"
 import type { ArrayOperator, BasicOperator } from "../../sdk"
 import type { FieldType } from "../workspace/row"
 import {
+  EscalationAction,
   EscalationRecipient,
   ResolutionStrategy,
 } from "../workspace/escalation"
@@ -142,8 +143,12 @@ export type AgentKnowledgeSource = AgentSharePointKnowledgeSource
 
 export interface AgentEscalationConfig {
   recipients?: EscalationRecipient[]
-  // How long the escalation is kept before being marked as expired.
-  delay?: number
+}
+
+export interface ApprovalPolicyExpiry {
+  // Seconds. Absent means the request never expires.
+  duration?: number
+  outcome?: EscalationAction
 }
 
 export interface AgentOperationApprovalPolicy {
@@ -151,6 +156,7 @@ export interface AgentOperationApprovalPolicy {
   name: string
   approvalType?: ResolutionStrategy
   approvers?: string[]
+  expiry?: ApprovalPolicyExpiry
   notifications: AgentEscalationConfig
 }
 
