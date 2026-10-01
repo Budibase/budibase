@@ -10,6 +10,10 @@ export default defineConfig(() => {
     resolve: {
       alias: [
         {
+          find: "@budibase/bbui",
+          replacement: path.resolve("../bbui/src"),
+        },
+        {
           find: "@budibase/types",
           replacement: path.resolve("../types/src"),
         },
