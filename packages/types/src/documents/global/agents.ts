@@ -268,6 +268,11 @@ export interface AgentMessageMetadata {
   usage?: AgentMessageUsage
 }
 
+export enum ToolValidationResultStatus {
+  PENDING = "pending_validation",
+  NEEDS_INPUT = "needs_input",
+}
+
 export interface AgentChat extends Document {
   agentId?: string
   title: string
