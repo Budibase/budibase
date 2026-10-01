@@ -408,12 +408,6 @@ export const validateProjectData = ({
   return { rows, relationships, attachments }
 }
 
-interface ProjectDataAttachmentUpload {
-  path: string
-  key: string
-  contentType?: string
-}
-
 export const prepareProjectData = ({
   data,
   tables,
@@ -429,7 +423,7 @@ export const prepareProjectData = ({
 }): {
   rows: Row[]
   relationships: LinkDocument[]
-  attachments: ProjectDataAttachmentUpload[]
+  attachments: ProjectPackageAttachment[]
   summary: ProjectDataImportSummary
 } => {
   const selectedTables = internalTables(tables)

@@ -1421,29 +1421,28 @@ const buildRequirements = ({
 const cleanupFailedProjectImport = async ({
   insertedDocs,
   importedProject,
-  uploadedKeys,
 }: {
   insertedDocs: InsertedDocRef[]
   importedProject?: Project
-  uploadedKeys: string[]
 }) => {
-  const cleanupTasks: Promise<unknown>[] = []
-  if (insertedDocs.length || importedProject) {
-    cleanupTasks.push(
-      doWithProjectAssignmentsLock(async () => {
-        if (insertedDocs.length) {
-          await context.getWorkspaceDB().bulkRemove(insertedDocs, {
-            silenceErrors: true,
-          })
-        }
-        if (importedProject?._id && importedProject._rev) {
-          await context
-            .getWorkspaceDB()
-            .remove(importedProject._id, importedProject._rev)
-        }
+  try {
+    if (insertedDocs.length) {
+      await context.getWorkspaceDB().bulkRemove(insertedDocs, {
+        silenceErrors: true,
       })
-    )
+    }
+    if (importedProject?._id && importedProject._rev) {
+      await context
+        .getWorkspaceDB()
+        .remove(importedProject._id, importedProject._rev)
+    }
+  } catch (err) {
+    console.log("Failed to clean up Project import", err)
   }
+}
+
+const cleanupProjectAttachments = async (uploadedKeys: string[]) => {
+  const cleanupTasks: Promise<unknown>[] = []
   for (let start = 0; start < uploadedKeys.length; start += 1000) {
     cleanupTasks.push(
       objectStore
@@ -1462,7 +1461,7 @@ const cleanupFailedProjectImport = async ({
   }
   for (const result of await Promise.allSettled(cleanupTasks)) {
     if (result.status === "rejected") {
-      console.log("Failed to clean up Project import", result.reason)
+      console.log("Failed to clean up Project attachments", result.reason)
     }
   }
 }
@@ -1477,9 +1476,8 @@ export async function importProject(
   }
 
   const extracted = await extractProjectPackage(file, opts?.encryptPassword)
-  const insertedDocs: InsertedDocRef[] = []
   const uploadedKeys: string[] = []
-  let importedProject: Project | undefined
+  let persisted = false
   try {
     const idMap = new Map<string, string>([
       [extracted.manifest.sourceWorkspace.id, workspaceId],
@@ -1499,21 +1497,22 @@ export async function importProject(
         })
       : undefined
 
-    const persistImport = async (): Promise<ImportProjectResponse> => {
-      if (preparedData) {
-        for (const attachment of preparedData.attachments) {
-          uploadedKeys.push(attachment.key)
-          await objectStore.streamUpload({
-            bucket: objectStore.ObjectStoreBuckets.APPS,
-            stream: fs.createReadStream(
-              join(extracted.tmpPath, attachment.path)
-            ),
-            filename: attachment.key,
-            type: attachment.contentType,
-          })
-        }
+    if (preparedData) {
+      for (const attachment of preparedData.attachments) {
+        uploadedKeys.push(attachment.key)
+        await objectStore.streamUpload({
+          bucket: objectStore.ObjectStoreBuckets.APPS,
+          stream: fs.createReadStream(join(extracted.tmpPath, attachment.path)),
+          filename: attachment.key,
+          type: attachment.contentType,
+        })
       }
-      return await doWithProjectAssignmentsLock(async () => {
+    }
+
+    return await doWithProjectAssignmentsLock(async () => {
+      const insertedDocs: InsertedDocRef[] = []
+      let importedProject: Project | undefined
+      const persistImport = async (): Promise<ImportProjectResponse> => {
         importedProject = await sdk.projects.create({
           name: extracted.project.name,
           description: extracted.project.description,
@@ -1612,19 +1611,24 @@ export async function importProject(
           requirements,
           ...(preparedData && { dataImport: preparedData.summary }),
         }
-      })
-    }
+      }
 
-    if (!preparedData?.rows.length) {
-      return await persistImport()
-    }
-    return await quotas.addRows(preparedData.rows.length, persistImport)
-  } catch (err) {
-    await cleanupFailedProjectImport({
-      insertedDocs,
-      importedProject,
-      uploadedKeys,
+      try {
+        const result = preparedData?.rows.length
+          ? await quotas.addRows(preparedData.rows.length, persistImport)
+          : await persistImport()
+        persisted = true
+        return result
+      } catch (err) {
+        await cleanupFailedProjectImport({ insertedDocs, importedProject })
+        throw err
+      }
     })
+  } catch (err) {
+    // Releasing the lock can fail after the import has succeeded.
+    if (!persisted) {
+      await cleanupProjectAttachments(uploadedKeys)
+    }
     if (err instanceof UsageLimitWarning) {
       throw new HTTPError(err.message, 400)
     }
