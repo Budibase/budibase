@@ -1863,6 +1863,11 @@ describe("/projects", () => {
         projectIds: [project._id],
       })
       const queryScreen = createQueryScreen(datasource._id!, query)
+      queryScreen.props._children!.push({
+        _id: generator.guid(),
+        _component: "@budibase/standard-components/heading",
+        text: `{{!-- {{ ${query._id}.rows }} --}} Value: {{ ${query._id}.rows }}`,
+      })
       await config.api.screen.save({
         ...queryScreen,
         workspaceAppId: workspaceApp._id,
@@ -1984,6 +1989,9 @@ describe("/projects", () => {
           )
           expect(importedScreen!.props._children?.[0].table.datasourceId).toBe(
             imported.resources.datasource?.[0]
+          )
+          expect(importedScreen!.props._children?.[1].text).toBe(
+            `{{!-- {{ ${query._id}.rows }} --}} Value: {{ ${imported.resources.query?.[0]}.rows }}`
           )
           const importedQuery = await config.api.query.get(
             imported.resources.query?.[0]!

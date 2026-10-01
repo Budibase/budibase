@@ -43,7 +43,7 @@ import fsp from "fs/promises"
 import { basename, join, relative } from "path"
 import { pipeline } from "stream/promises"
 import * as tar from "tar"
-import { findResourceBindingBlocks } from "../../resources/references"
+import { RESOURCE_BINDING_REGEX } from "../../resources/references"
 import {
   extractTableIdFromRowActionsID,
   generateAutomationID,
@@ -379,20 +379,21 @@ const remapBinding = (block: string, remapper: ProjectImportIdRemapper) => {
   return remapIdReferences(block, remapper)
 }
 
-const remapHandlebarsReferences = (
-  value: string,
+const remapHandlebarsReferences = ({
+  value,
+  remapper,
+}: {
+  value: string
   remapper: ProjectImportIdRemapper
-) => {
-  return findResourceBindingBlocks(value).reduce(
-    (remapped, block) => remapped.replace(block, remapBinding(block, remapper)),
-    value
+}) =>
+  value.replace(RESOURCE_BINDING_REGEX, (match, binding: string | undefined) =>
+    binding ? remapBinding(binding, remapper) : match
   )
-}
 
 const remapString = (value: string, remapper: ProjectImportIdRemapper) =>
   remapper.exactValueMap.get(value) ??
   remapper.idMap.get(value) ??
-  remapHandlebarsReferences(value, remapper)
+  remapHandlebarsReferences({ value, remapper })
 
 const remapValue = (
   value: unknown,

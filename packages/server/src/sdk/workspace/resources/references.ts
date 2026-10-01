@@ -9,10 +9,15 @@ export interface ResourceSearchTarget extends UsedResource {
   matchExactly?: boolean
 }
 
+export const RESOURCE_BINDING_REGEX = new RegExp(
+  `{{~?!--[\\s\\S]*?--~?}}|{{~?![\\s\\S]*?}}|(${FIND_ANY_HBS_REGEX.source})`,
+  "gs"
+)
+
 export const findResourceBindingBlocks = (value: string) =>
-  value
-    .replace(/{{~?!--[\s\S]*?--~?}}|{{~?![\s\S]*?}}/g, "")
-    .match(new RegExp(FIND_ANY_HBS_REGEX, "gs")) || []
+  Array.from(value.matchAll(RESOURCE_BINDING_REGEX)).flatMap(([, binding]) =>
+    binding ? [binding] : []
+  )
 
 const STRUCTURED_REFERENCE_PROPERTIES = new Set(["_id", "dependencies", "id"])
 
