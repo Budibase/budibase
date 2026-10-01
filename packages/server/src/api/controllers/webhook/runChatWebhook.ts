@@ -31,12 +31,11 @@ export const runChatWebhook = async ({
     return
   }
 
-  let handleWebhook: (request: Request) => Promise<Response>
+  const rawBody = await readRawBody(ctx.req)
   try {
-    handleWebhook = await createWebhookHandler({
-      workspaceId: prodWorkspaceId,
-      agentId: ctx.params.agentId,
-    })
+    if (ctx.get("authorization")) {
+      validateBody?.(tryParseJson(rawBody))
+    }
   } catch (error) {
     if (error instanceof HTTPError) {
       ctx.status = error.status
@@ -46,11 +45,12 @@ export const runChatWebhook = async ({
     throw error
   }
 
-  const rawBody = await readRawBody(ctx.req)
+  let handleWebhook: (request: Request) => Promise<Response>
   try {
-    if (ctx.get("authorization")) {
-      validateBody?.(tryParseJson(rawBody))
-    }
+    handleWebhook = await createWebhookHandler({
+      workspaceId: prodWorkspaceId,
+      agentId: ctx.params.agentId,
+    })
   } catch (error) {
     if (error instanceof HTTPError) {
       ctx.status = error.status
