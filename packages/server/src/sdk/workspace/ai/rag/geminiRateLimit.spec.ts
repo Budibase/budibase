@@ -2,6 +2,7 @@ import { randomUUID } from "crypto"
 import { RedisClient } from "@budibase/backend-core"
 import {
   extendGeminiIngestionCooldown,
+  getGeminiBackoffMs,
   throwIfGeminiIngestionCoolingDown,
 } from "./geminiRateLimit"
 
@@ -19,6 +20,23 @@ jest.mock("@budibase/backend-core", () => {
       },
     },
   }
+})
+
+describe("Gemini ingestion backoff", () => {
+  it.each([
+    [1, 60_000],
+    [2, 120_000],
+    [3, 240_000],
+    [4, 300_000],
+    [5, 300_000],
+    [1025, 300_000],
+    [Number.MAX_SAFE_INTEGER, 300_000],
+  ])(
+    "backs off after %s rate-limit responses for %s ms",
+    (rateLimitResponses, delay) => {
+      expect(getGeminiBackoffMs({ rateLimitResponses })).toBe(delay)
+    }
+  )
 })
 
 describe("shared Gemini ingestion cooldown", () => {

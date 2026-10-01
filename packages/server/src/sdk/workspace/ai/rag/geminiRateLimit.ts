@@ -2,6 +2,7 @@ import { HTTPError, locks, redis } from "@budibase/backend-core"
 import { LockName, LockType } from "@budibase/types"
 
 const DEFAULT_COOLDOWN_MS = 60_000
+const MAX_BACKOFF_MS = 300_000
 const COOLDOWN_KEY = "gemini:rag:cooldown"
 
 export class GeminiRateLimitError extends HTTPError {
@@ -17,6 +18,18 @@ export class GeminiRateLimitError extends HTTPError {
     super(message, 429)
     this.retryAt = retryAt
   }
+}
+
+export const getGeminiBackoffMs = ({
+  rateLimitResponses,
+}: {
+  rateLimitResponses: number
+}): number => {
+  const exponent = Math.min(
+    rateLimitResponses - 1,
+    Math.ceil(Math.log2(MAX_BACKOFF_MS / DEFAULT_COOLDOWN_MS))
+  )
+  return Math.min(DEFAULT_COOLDOWN_MS * 2 ** exponent, MAX_BACKOFF_MS)
 }
 
 export const getGeminiRetryAt = (retryAfter: string | null): number => {

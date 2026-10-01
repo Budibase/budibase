@@ -17,6 +17,7 @@ import { knowledgeBase } from ".."
 import {
   extendGeminiIngestionCooldown,
   GeminiRateLimitError,
+  getGeminiBackoffMs,
   throwIfGeminiIngestionCoolingDown,
 } from "./geminiRateLimit"
 
@@ -32,6 +33,7 @@ export interface RagIngestionJob {
   fileId: string
   objectStoreKey?: string
   rateLimitDeferrals?: number
+  rateLimitResponses?: number
 }
 
 let ragQueue: queue.BudibaseQueue<RagIngestionJob> | undefined
@@ -149,10 +151,12 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
           throw new Error("RAG file does not have an object store key")
         }
 
+        let ingestionStarted = false
         try {
           await throwIfGeminiIngestionCoolingDown()
           const buffer = await loadFileBuffer(knowledgeBaseFile.objectStoreKey)
           await throwIfGeminiIngestionCoolingDown()
+          ingestionStarted = true
           await ingestKnowledgeBaseFile(
             knowledgeBaseConfig,
             knowledgeBaseFile,
@@ -167,12 +171,21 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
           })
         } catch (error) {
           if (error instanceof GeminiRateLimitError) {
-            const retryAt = await extendGeminiIngestionCooldown({
-              retryAt: error.retryAt,
-            })
+            let rateLimitResponses = job.data.rateLimitResponses ?? 0
+            let retryAt = error.retryAt
+            if (ingestionStarted) {
+              rateLimitResponses++
+              retryAt = await extendGeminiIngestionCooldown({
+                retryAt: Math.max(
+                  retryAt,
+                  Date.now() + getGeminiBackoffMs({ rateLimitResponses })
+                ),
+              })
+            }
             await job.update({
               ...job.data,
               rateLimitDeferrals: rateLimitDeferrals + 1,
+              rateLimitResponses,
             })
             job.opts.attempts = DEFAULT_ATTEMPTS + rateLimitDeferrals + 1
             job.opts.backoff = {
@@ -189,6 +202,7 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
                 fileId,
                 jobId: job.id,
                 retryAt,
+                rateLimitResponses,
               }
             )
             throw error
