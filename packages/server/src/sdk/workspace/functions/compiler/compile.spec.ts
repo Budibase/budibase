@@ -5,7 +5,7 @@ import { generateFunctionDeclarations } from "../declarations"
 import { compileFunctionInProcess } from "./compile"
 import { runFunctionCompilerProcess } from "./index"
 
-const declarations = generateFunctionDeclarations([])
+const declarations = generateFunctionDeclarations({ capabilities: [] })
 const capabilities: FunctionQueryCapability[] = []
 
 const executeCompiledFunction = async ({
@@ -184,7 +184,9 @@ export default async function (): Promise<FunctionResult> {
     ]
     const result = await compileFunctionInProcess({
       capabilities: queryCapabilities,
-      declarations: generateFunctionDeclarations(queryCapabilities),
+      declarations: generateFunctionDeclarations({
+        capabilities: queryCapabilities,
+      }),
       source: `import { queries } from "@budibase/functions"
 
 export default async function () {
@@ -220,7 +222,9 @@ export default async function () {
     ]
     const result = await compileFunctionInProcess({
       capabilities: queryCapabilities,
-      declarations: generateFunctionDeclarations(queryCapabilities),
+      declarations: generateFunctionDeclarations({
+        capabilities: queryCapabilities,
+      }),
       source: `import { queries } from "@budibase/functions"
 
 export default async function () {

@@ -1,4 +1,10 @@
 import Joi from "joi"
+import {
+  FUNCTION_INPUT_TYPES,
+  MAX_FUNCTION_INPUTS,
+  MAX_FUNCTION_INPUT_NAME_LENGTH,
+  MAX_FUNCTION_INPUT_DESCRIPTION_LENGTH,
+} from "@budibase/shared-core"
 import { middleware } from "@budibase/backend-core"
 import { functionsEnabled } from "../../middleware/functionsEnabled"
 import * as controller from "../controllers/function"
@@ -13,6 +19,22 @@ const capabilitySchema = Joi.object({
 const draftSchema = {
   name: Joi.string().max(255).required(),
   source: Joi.string().required().allow(""),
+  inputSchema: Joi.array()
+    .max(MAX_FUNCTION_INPUTS)
+    .items(
+      Joi.object({
+        name: Joi.string().max(MAX_FUNCTION_INPUT_NAME_LENGTH).required(),
+        type: Joi.string()
+          .valid(...FUNCTION_INPUT_TYPES)
+          .required(),
+        required: Joi.boolean().strict().required(),
+        description: Joi.string()
+          .max(MAX_FUNCTION_INPUT_DESCRIPTION_LENGTH)
+          .allow("")
+          .optional(),
+      })
+    )
+    .optional(),
   capabilities: Joi.array().items(capabilitySchema).required(),
 }
 

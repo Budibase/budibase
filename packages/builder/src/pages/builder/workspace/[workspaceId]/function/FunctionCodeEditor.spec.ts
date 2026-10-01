@@ -1,7 +1,8 @@
 import { themeStore } from "@/stores/portal"
 import { Theme } from "@budibase/types"
+import { startCompletion } from "@codemirror/autocomplete"
 import { EditorView } from "@codemirror/view"
-import { render, waitFor } from "@testing-library/svelte"
+import { render, screen, waitFor } from "@testing-library/svelte"
 import { get } from "svelte/store"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import FunctionCodeEditor from "./FunctionCodeEditor.svelte"
@@ -36,6 +37,29 @@ describe("FunctionCodeEditor", () => {
         view.container.querySelector(".cm-lintRange-error")
       ).toBeInTheDocument()
     })
+  })
+
+  it("completes authored inputs with their declared types", async () => {
+    const view = render(FunctionCodeEditor, {
+      value: "inputs.",
+      inputSchema: [
+        {
+          name: "customerId",
+          type: "string",
+          required: true,
+          description: "Customer identifier",
+        },
+      ],
+    })
+    const editor = EditorView.findFromDOM(
+      view.container.querySelector<HTMLElement>(".cm-editor")!
+    )!
+    editor.dispatch({ selection: { anchor: editor.state.doc.length } })
+    startCompletion(editor)
+    await waitFor(() =>
+      expect(screen.getByRole("option")).toHaveTextContent("customerId")
+    )
+    expect(screen.getByRole("option")).toHaveTextContent("string")
   })
 
   it("updates the editor theme when the builder theme changes", async () => {
