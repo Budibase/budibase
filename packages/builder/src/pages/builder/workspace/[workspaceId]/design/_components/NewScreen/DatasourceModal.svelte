@@ -1,6 +1,9 @@
 <script lang="ts">
   import { Body, ModalContent, Layout, Link } from "@budibase/bbui"
-  import { appStore, datasources as datasourcesStore } from "@/stores/builder"
+  import {
+    workspaceStore,
+    datasources as datasourcesStore,
+  } from "@/stores/builder"
   import ICONS from "@/components/backend/DatasourceNavigator/icons"
   import { IntegrationNames } from "@/constants"
   import { createEventDispatcher } from "svelte"
@@ -77,8 +80,8 @@
   }
 
   let dataUrl = ""
-  $: dataUrl = $appStore.appId
-    ? `/builder/workspace/${$appStore.appId}/data`
+  $: dataUrl = $workspaceStore.appId
+    ? `/builder/workspace/${$workspaceStore.appId}/data`
     : ""
 </script>
 

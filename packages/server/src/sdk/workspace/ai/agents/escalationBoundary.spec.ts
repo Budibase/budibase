@@ -7,7 +7,7 @@ import { stepCountIs, tool, ToolLoopAgent, type ToolSet } from "ai"
 import { MockLanguageModelV3 } from "ai/test"
 import { z } from "zod"
 import {
-  EscalateToolResultStatus,
+  ApprovalToolResultStatus,
   ToolExecutionPrincipal,
   ToolType,
   type AgentExecutionContext,
@@ -29,14 +29,8 @@ const USAGE: LanguageModelV3Usage = {
   outputTokens: { total: 1, text: 1, reasoning: 0 },
 }
 
-// The parallelism hole: a model can emit escalate and a mutating tool in one
-// parallel batch, and streaming dispatches the action before the escalate
-// chunk even arrives. This never showed up in the other agent specs because
-// they mock ToolLoopAgent itself - dispatch is never exercised. Using
-// MockLanguageModelV3 under a REAL ToolLoopAgent reproduces true dispatch
-// ordering, which is how the reactive wrapper passed every test yet failed
-// live. The gate runs inside the wrapped execute, so batch composition and
-// chunk timing cannot matter.
+// Use a real ToolLoopAgent to verify that approval gates run inside wrapped
+// tool execution, including when a model dispatches parallel streamed calls.
 describe("escalation approval boundary", () => {
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
   const CHUNK_GAP_MS = 50
@@ -54,12 +48,12 @@ describe("escalation approval boundary", () => {
     const createdRows: unknown[] = []
     const defs: AiToolDefinition[] = [
       {
-        name: "escalate",
-        description: "Escalate to a human for approval.",
-        sourceType: ToolType.ESCALATION,
+        name: "send_notification",
+        description: "Send a notification.",
+        sourceType: ToolType.AUTOMATION,
         executionPolicy: { mode: "admin" },
         tool: tool({
-          description: "Escalate to a human for approval.",
+          description: "Send a notification.",
           inputSchema: z.object({ reason: z.string() }),
           execute: async () => ({ status: "pending_approval" }),
         }),
@@ -96,8 +90,8 @@ describe("escalation approval boundary", () => {
           },
           {
             type: "tool-call" as const,
-            toolCallId: "call_escalate",
-            toolName: "escalate",
+            toolCallId: "call_notification",
+            toolName: "send_notification",
             input: JSON.stringify({ reason: "needs sign-off" }),
           },
         ],
@@ -124,8 +118,8 @@ describe("escalation approval boundary", () => {
             await sleep(CHUNK_GAP_MS)
             controller.enqueue({
               type: "tool-call",
-              toolCallId: "call_escalate",
-              toolName: "escalate",
+              toolCallId: "call_notification",
+              toolName: "send_notification",
               input: JSON.stringify({ reason: "needs sign-off" }),
             })
             controller.enqueue({
@@ -147,7 +141,7 @@ describe("escalation approval boundary", () => {
       stopWhen: stepCountIs(1),
     })
 
-  it("ungated: the action executes in the same step as escalate", async () => {
+  it("ungated: parallel tools execute in the same step", async () => {
     const { defs, createdRows } = buildToolDefs()
 
     const result = await agentFor(batchingModel(), toToolSet(defs)).generate({
@@ -156,12 +150,12 @@ describe("escalation approval boundary", () => {
 
     expect(result.steps[0].toolCalls.map(call => call.toolName)).toEqual([
       "create_row",
-      "escalate",
+      "send_notification",
     ])
     expect(createdRows).toEqual(["Jeff Man"])
   })
 
-  it("ungated streaming: the action executes before escalate even arrives", async () => {
+  it("ungated streaming: the first action executes before its sibling arrives", async () => {
     const { defs, createdRows } = buildToolDefs()
 
     const result = await agentFor(
@@ -199,7 +193,7 @@ describe("escalation approval boundary", () => {
         events.push("gate")
         intercepted.push({ input, toolCallId })
         return {
-          status: EscalateToolResultStatus.PENDING_APPROVAL,
+          status: ApprovalToolResultStatus.PENDING_APPROVAL,
           escalationId: "esc_test",
           title: "Approval required: create_row",
           summary: "Jeff Man",
@@ -224,17 +218,17 @@ describe("escalation approval boundary", () => {
     ])
     // Every call has a result - the refusal IS the gated call's result, so
     // there is no dangling tool call for a resume to trip over, and the
-    // sibling escalate is untouched.
+    // sibling tool is untouched.
     const resultsByTool = Object.fromEntries(
       steps[0].toolResults.map(r => [r.toolName, r.output])
     )
     expect(resultsByTool.create_row).toEqual(
       expect.objectContaining({
-        status: EscalateToolResultStatus.PENDING_APPROVAL,
+        status: ApprovalToolResultStatus.PENDING_APPROVAL,
         escalationId: "esc_test",
       })
     )
-    expect(resultsByTool.escalate).toBeDefined()
+    expect(resultsByTool.send_notification).toBeDefined()
     expect(await result.finishReason).toEqual("tool-calls")
   })
 
@@ -258,6 +252,8 @@ describe("escalation approval boundary", () => {
     const steps = await result.steps
 
     expect(createdRows).toEqual([])
-    expect(steps[0].toolResults.map(r => r.toolName)).toEqual(["escalate"])
+    expect(steps[0].toolResults.map(r => r.toolName)).toEqual([
+      "send_notification",
+    ])
   })
 })

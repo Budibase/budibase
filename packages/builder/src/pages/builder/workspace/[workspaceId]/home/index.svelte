@@ -18,7 +18,7 @@
   import HomeTable from "./_components/HomeTable.svelte"
   import ImportProjectModal from "./_components/ImportProjectModal.svelte"
   import {
-    appStore,
+    workspaceStore,
     automationStore,
     contextMenuStore,
     datasources,
@@ -300,7 +300,7 @@
       return null
     }
 
-    const liveUrl = buildLiveUrl($appStore, workspaceApp.url ?? "", true)
+    const liveUrl = buildLiveUrl($workspaceStore, workspaceApp.url ?? "", true)
 
     return liveUrl || null
   }
@@ -327,7 +327,7 @@
     } finally {
       isDuplicatingWorkspaceApp = false
     }
-    await appStore.refresh()
+    await workspaceStore.refresh()
   }
 
   const deleteWorkspaceApp = async () => {
@@ -451,7 +451,7 @@
       assignProjectModal?.hide()
 
       try {
-        await Promise.all([appStore.refresh(), agentsStore.fetchAgents()])
+        await Promise.all([workspaceStore.refresh(), agentsStore.fetchAgents()])
       } catch (error) {
         console.error(error)
         notifications.warning(
@@ -512,7 +512,7 @@
       notifications.success(`Project '${projectName}' deleted successfully`)
 
       try {
-        await Promise.all([appStore.refresh(), agentsStore.fetchAgents()])
+        await Promise.all([workspaceStore.refresh(), agentsStore.fetchAgents()])
       } catch (error) {
         console.error(error)
         notifications.warning(
@@ -574,7 +574,7 @@
       notifications.success(`Imported project '${response.project.name}'`)
       notifyImportFollowUps(response)
 
-      const refreshes = await Promise.allSettled([appStore.refresh()])
+      const refreshes = await Promise.allSettled([workspaceStore.refresh()])
       if (refreshes.some(result => result.status === "rejected")) {
         notifications.warning(
           "Project imported, but some resources could not be refreshed. Reload the workspace to see all imported resources."
@@ -812,7 +812,7 @@
       await projectsStore.ensureFetched(workspaceId)
     } catch (error) {
       projectsRequestedForWorkspace = ""
-      if ($appStore.appId === workspaceId && projectsEnabled) {
+      if ($workspaceStore.appId === workspaceId && projectsEnabled) {
         notifications.error(getErrorMessage(error) || "Unable to load projects")
       }
     }
@@ -870,7 +870,7 @@
       row.projectIds?.includes(selectedProjectId)
   )
   $: targetApp = $workspacesStore.apps.find(
-    app => app.devId === $appStore.appId
+    app => app.devId === $workspaceStore.appId
   )
   $: automationErrorEntries = Object.entries(targetApp?.automationErrors || {})
     .filter(([, logIds]) => logIds.length > 0)
@@ -898,10 +898,10 @@
   $: if (
     hasMounted &&
     projectsEnabled &&
-    $appStore.appId &&
-    projectsRequestedForWorkspace !== $appStore.appId
+    $workspaceStore.appId &&
+    projectsRequestedForWorkspace !== $workspaceStore.appId
   ) {
-    loadProjects($appStore.appId)
+    loadProjects($workspaceStore.appId)
   }
 
   $: if (hasMounted) {
@@ -923,7 +923,7 @@
     try {
       await automationStore.actions.clearLogErrors({
         automationId,
-        appId: $appStore.appId,
+        appId: $workspaceStore.appId,
       })
       await workspacesStore.load()
     } catch (err) {
@@ -946,7 +946,7 @@
   }
 
   onMount(async () => {
-    const workspaceId = $appStore.appId
+    const workspaceId = $workspaceStore.appId
     if (!workspaceId) {
       return
     }
@@ -994,7 +994,7 @@
           weight="500"
           color="var(--spectrum-global-color-gray-900)"
         >
-          {$appStore.name || "Workspace"}
+          {$workspaceStore.name || "Workspace"}
         </Body>
       </div>
 

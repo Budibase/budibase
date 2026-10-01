@@ -11,7 +11,7 @@ import {
 import {
   componentStore,
   screenStore,
-  appStore,
+  workspaceStore,
   layoutStore,
   queries as queriesStores,
   tables as tablesStore,
@@ -986,7 +986,7 @@ export const getUserBindings = (): EnrichedDataBinding[] => {
  */
 const getDeviceBindings = (): EnrichedDataBinding[] => {
   let bindings: EnrichedDataBinding[] = []
-  if (get(appStore).clientFeatures?.deviceAwareness) {
+  if (get(workspaceStore).clientFeatures?.deviceAwareness) {
     const safeDevice = makePropSafe("device")
 
     bindings = [
@@ -1060,7 +1060,7 @@ export const getSettingBindings = (): SettingBinding[] => {
  */
 const getSelectedRowsBindings = (asset: unknown): EnrichedDataBinding[] => {
   let bindings: EnrichedDataBinding[] = []
-  if (get(appStore).clientFeatures?.rowSelection) {
+  if (get(workspaceStore).clientFeatures?.rowSelection) {
     // Add bindings for table components
     const props = getAssetProps(asset)
     let tables = props
@@ -1130,7 +1130,7 @@ export const makeStateBinding = (
  */
 const getStateBindings = (): EnrichedDataBinding[] => {
   let bindings: EnrichedDataBinding[] = []
-  if (get(appStore).clientFeatures?.state) {
+  if (get(workspaceStore).clientFeatures?.state) {
     bindings = getAllStateVariables().map(makeStateBinding)
   }
   return bindings

@@ -2,7 +2,7 @@ import { createWebsocket } from "@budibase/frontend-core"
 import {
   automationStore,
   userStore,
-  appStore,
+  workspaceStore,
   themeStore,
   navigationStore,
   deploymentStore,
@@ -63,7 +63,7 @@ export const createBuilderWebsocket = (appId: string) => {
     BuilderSocketEvent.LockTransfer,
     ({ userId }: { userId: string }) => {
       if (userId === get(auth)?.user?._id) {
-        appStore.update(state => ({
+        workspaceStore.update(state => ({
           ...state,
           hasLock: true,
         }))
@@ -112,7 +112,7 @@ export const createBuilderWebsocket = (appId: string) => {
   socket.onOther(
     BuilderSocketEvent.AppMetadataChange,
     ({ metadata }: { metadata: any }) => {
-      appStore.syncMetadata(metadata)
+      workspaceStore.syncMetadata(metadata)
       themeStore.syncMetadata(metadata)
       navigationStore.syncMetadata(metadata)
       snippets.syncMetadata(metadata)

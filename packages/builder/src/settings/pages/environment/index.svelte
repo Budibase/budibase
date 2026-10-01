@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {
     Layout,
     Button,
@@ -6,7 +6,9 @@
     Table,
     InlineAlert,
     notifications,
+    type ModalAPI,
   } from "@budibase/bbui"
+  import type { CreateEnvironmentVariableRequest } from "@budibase/types"
   import { environment } from "@/stores/portal/environment"
   import { licensing } from "@/stores/portal/licensing"
   import { onMount } from "svelte"
@@ -17,12 +19,19 @@
 
   const customRenderers = [{ column: "edit", component: EditVariableColumn }]
 
-  let modal
-  let loading = true
+  interface TableColumn {
+    width: string
+    borderLeft?: boolean
+    displayName?: string
+  }
 
-  $: noEncryptionKey =
-    loading == false && $environment.status?.encryptionKeyAvailable === false
-  $: schema = buildSchema(noEncryptionKey)
+  let modal = $state<ModalAPI>()
+  let loading = $state<boolean>(true)
+
+  const noEncryptionKey = $derived(
+    !loading && $environment.status?.encryptionKeyAvailable === false
+  )
+  const schema = $derived(buildSchema(noEncryptionKey))
 
   onMount(async () => {
     try {
@@ -30,14 +39,14 @@
       await environment.loadVariables()
     } catch (error) {
       notifications.error(
-        `Error loading environment variables: ${error.message}`
+        `Error loading environment variables: ${error instanceof Error ? error.message : error}`
       )
     }
     loading = false
   })
 
-  const buildSchema = noEncryptionKey => {
-    const schema = {
+  function buildSchema(noEncryptionKey: boolean) {
+    const schema: Record<string, TableColumn> = {
       name: {
         width: "2fr",
       },
@@ -52,12 +61,14 @@
     return schema
   }
 
-  const save = async data => {
+  const save = async (data: CreateEnvironmentVariableRequest) => {
     try {
       await environment.createVariable(data)
-      modal.hide()
+      modal?.hide()
     } catch (err) {
-      notifications.error(`Error saving variable: ${err.message}`)
+      notifications.error(
+        `Error saving variable: ${err instanceof Error ? err.message : err}`
+      )
     }
   }
 </script>
@@ -81,7 +92,12 @@
   {/if}
 
   <RouteActions>
-    <Button size="M" on:click={modal.show} cta disabled={noEncryptionKey}>
+    <Button
+      size="M"
+      on:click={() => modal?.show()}
+      cta
+      disabled={noEncryptionKey}
+    >
       Add Variable
     </Button>
   </RouteActions>

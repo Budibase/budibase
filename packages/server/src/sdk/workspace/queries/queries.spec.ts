@@ -140,6 +140,23 @@ describe("queries SDK", () => {
       })
     })
 
+    it.each(["delete", "row", "rows"])(
+      "keeps quoted JSON parameters safe in the %s field",
+      async field => {
+        const injected = `value","extra":"injected`
+        const result = await enrichContext(
+          {
+            [field]: '{"value":"{{ value }}"}',
+          },
+          { value: injected }
+        )
+
+        expect(result[field]).toEqual({
+          value: injected,
+        })
+      }
+    )
+
     it("keeps quoted JSON parameters inside MongoDB filter fields", async () => {
       const result = await enrichContext(
         {

@@ -19,6 +19,12 @@ export const userMenuTranslations = createTranslationDefinitions(category, [
     key: "portal",
     fullKey: "portal",
     name: "User menu portal label",
+    defaultValue: "Go to portal",
+  },
+  {
+    key: "builder",
+    fullKey: "builder",
+    name: "User menu developer mode label",
     defaultValue: "Open developer mode",
   },
   {

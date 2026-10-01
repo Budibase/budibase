@@ -53,13 +53,11 @@ describe("automation feature flag overrides", () => {
   it("propagates all feature flag overrides", async () => {
     areFeatureFlagOverridesTrusted.mockResolvedValue(true)
     getOverrides.mockReturnValue({
-      [FeatureFlag.AI_TOOL_ESCALATION]: true,
       [FeatureFlag.AI_AGENT_ACTIVITY]: true,
       [FeatureFlag.FEATURE_FLAG_OVERRIDES]: true,
     })
 
     await expect(getAutomationFeatureFlagOverrides()).resolves.toEqual({
-      [FeatureFlag.AI_TOOL_ESCALATION]: true,
       [FeatureFlag.AI_AGENT_ACTIVITY]: true,
       [FeatureFlag.FEATURE_FLAG_OVERRIDES]: true,
     })

@@ -1,5 +1,5 @@
 import { API } from "@/api"
-import { appStore } from "@/stores/builder"
+import { workspaceStore } from "@/stores/builder"
 import { Workspace } from "@budibase/types"
 import { get } from "svelte/store"
 import { BudiStore } from "../BudiStore"
@@ -33,7 +33,7 @@ export class RecaptchaStore extends BudiStore<RecaptchaState> {
   }
 
   async setState(enabled: boolean) {
-    const appId = get(appStore).appId
+    const appId = get(workspaceStore).appId
     await API.saveAppMetadata(appId, {
       features: { recaptchaEnabled: enabled },
     })

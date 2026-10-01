@@ -85,6 +85,7 @@ export interface TestAutomationRequest {
   id?: string
   revision?: string
   timeout?: number
+  previewRoleId?: string
   fields?: Record<string, any>
   row?: Row
   oldRow?: Row

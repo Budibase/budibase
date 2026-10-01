@@ -69,6 +69,8 @@ export class BullEscalationProcessor implements IEscalationProcessor {
             ...((input.requestId ?? existing?.requestId) && {
               requestId: input.requestId ?? existing?.requestId,
             }),
+            ...(input.rule && { rule: input.rule }),
+            ...(input.policy && { policy: input.policy }),
           }
 
     const doc: EscalationContextDoc = {
@@ -85,6 +87,7 @@ export class BullEscalationProcessor implements IEscalationProcessor {
       isTest,
       ...(input.title && { title: input.title }),
       ...(input.summary && { summary: input.summary }),
+      ...(input.reviewContext && { reviewContext: input.reviewContext }),
       ...(input.recipients?.length && { recipients: input.recipients }),
       ...(input.resolutionStrategy && {
         resolutionStrategy: input.resolutionStrategy,

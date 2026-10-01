@@ -339,14 +339,16 @@ class TableSaveFunctions {
   }
 
   // after saving
-  async after(table: Table) {
+  async after(table: Table, opts?: { skipDefinitionRebuildLock?: boolean }) {
     table = await handleSearchIndexes(table)
     table = await handleDataImport(table, {
       importRows: this.importRows,
       userId: this.userId,
     })
 
-    await sdk.tables.sqs.addTable(table)
+    await sdk.tables.sqs.addTable(table, {
+      skipDefinitionRebuildLock: opts?.skipDefinitionRebuildLock,
+    })
     return table
   }
 
