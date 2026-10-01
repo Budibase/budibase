@@ -14,6 +14,11 @@ export interface ActionSourceContext {
   sourceId: string
 }
 
+export const PLATFORM_ACTION_ENVIRONMENTS = ["prod", "dev"] as const
+
+export type PlatformActionEnvironment =
+  (typeof PLATFORM_ACTION_ENVIRONMENTS)[number]
+
 export const PLATFORM_ACTION_CONTAINER_STATUSES = [
   "active",
   "waiting",
@@ -25,6 +30,7 @@ export type PlatformActionContainerStatus =
   (typeof PLATFORM_ACTION_CONTAINER_STATUSES)[number]
 
 export interface PlatformActionEvent extends Document, ActionSourceContext {
+  environment: PlatformActionEnvironment
   eventName: string
   timestamp: string
   assetType?: string
@@ -35,6 +41,7 @@ export interface PlatformActionEvent extends Document, ActionSourceContext {
 export interface PlatformActionSessionIndexDoc
   extends Document,
     ActionSourceContext {
+  environment: PlatformActionEnvironment
   status: PlatformActionContainerStatus
   actionCount: number
   assetType?: string
@@ -51,6 +58,7 @@ export interface PlatformActionSessionIndexDoc
 
 export interface PlatformActionSessionIndexJob extends ActionSourceContext {
   workspaceId: string
+  environment: PlatformActionEnvironment
   indexId: string
   incrementsActionCount: boolean
   // Absent for a step-level action that isn't the run's terminal state. It

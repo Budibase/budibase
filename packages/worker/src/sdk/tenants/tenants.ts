@@ -1,6 +1,7 @@
 import {
   configs,
   db as dbCore,
+  events,
   platform,
   tenancy,
 } from "@budibase/backend-core"
@@ -77,6 +78,18 @@ async function removeTenantApps(tenantId: string) {
     const workspaces = await dbCore.getAllWorkspaces({
       all: true,
     })
+    const actionsDbNames = new Set(
+      workspaces.map(workspace =>
+        events.platformActions.getActionsDbName(workspace.appId)
+      )
+    )
+    await Promise.all(
+      [...actionsDbNames].map(async name => {
+        if (await dbCore.dbExists(name)) {
+          await dbCore.getDB(name, { skip_setup: true }).destroy()
+        }
+      })
+    )
     const destroyPromises = workspaces.map(workspace => {
       const db = dbCore.getDB(workspace.appId)
       return db.destroy()

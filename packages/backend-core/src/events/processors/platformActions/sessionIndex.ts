@@ -3,10 +3,11 @@ import {
   LockType,
   type ActionSourceContext,
   type PlatformActionContainerStatus,
+  type PlatformActionEnvironment,
   type PlatformActionSessionIndexDoc,
 } from "@budibase/types"
-import * as context from "../../../context"
 import * as locks from "../../../redis/redlockImpl"
+import { getActionsDB } from "./db"
 import { buildPlatformActionSession, getPlatformActionSessionId } from "./utils"
 
 const LOCK_TTL_MS = 10000
@@ -24,6 +25,7 @@ function isTerminalSignal(
 }
 
 export interface UpsertPlatformActionSessionInput extends ActionSourceContext {
+  environment: PlatformActionEnvironment
   incrementsActionCount: boolean
   signal?: PlatformActionContainerStatus
   timestamp: string
@@ -100,7 +102,7 @@ export async function upsertPlatformActionSession(
       ttl: LOCK_TTL_MS,
     },
     async () => {
-      const db = context.getWorkspaceDB()
+      const db = getActionsDB()
 
       for (let attempt = 0; attempt < MAX_PUT_CONFLICT_ATTEMPTS; attempt++) {
         const existing =
@@ -142,6 +144,7 @@ export async function upsertPlatformActionSession(
           : buildPlatformActionSession({
               sourceType: input.sourceType,
               sourceId: input.sourceId,
+              environment: input.environment,
               status,
               startedAt,
               statusUpdatedAt,
