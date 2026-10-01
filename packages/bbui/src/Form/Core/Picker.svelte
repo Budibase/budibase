@@ -228,6 +228,7 @@
   {id}
   class="spectrum-Picker spectrum-Picker--size{size}"
   class:has-border={bordered}
+  class:has-subtitle={!!fieldSubtitle}
   class:spectrum-Picker--quiet={quiet}
   {disabled}
   class:is-open={open}
@@ -446,6 +447,12 @@
   .spectrum-Picker.has-border {
     border: 1px solid var(--spectrum-global-color-gray-200);
     border-radius: 6px;
+  }
+  .spectrum-Picker.has-subtitle {
+    height: auto;
+    align-items: center;
+    padding-top: var(--spacing-s);
+    padding-bottom: var(--spacing-s);
   }
   .spectrum-Picker--quiet {
     padding: 0 8px;

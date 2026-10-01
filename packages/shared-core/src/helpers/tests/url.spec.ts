@@ -1,7 +1,7 @@
 import {
   accountPortalBillingUrl,
   accountPortalUpgradeUrl,
-  builderWorkspacesUrl,
+  builderUrl,
   applyBaseUrl,
 } from "../url"
 
@@ -49,8 +49,8 @@ describe("url helpers", () => {
 
   describe("builder", () => {
     it("normalizes base when joining", () => {
-      const url = builderWorkspacesUrl(`${BASE}/`)
-      expect(url).toEqual(`${BASE}/builder/apps`)
+      const url = builderUrl(`${BASE}/`)
+      expect(url).toEqual(`${BASE}/builder`)
     })
   })
 })

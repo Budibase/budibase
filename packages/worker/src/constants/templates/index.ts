@@ -2,6 +2,7 @@ import { readStaticFile } from "../../utilities/fileSystem"
 import { TemplateType, TemplatePurpose, GLOBAL_OWNER } from "../index"
 import { join } from "path"
 import { db as dbCore, tenancy, context } from "@budibase/backend-core"
+import * as pro from "@budibase/pro"
 import { Template, EmailTemplatePurpose } from "@budibase/types"
 import yaml from "yaml"
 
@@ -135,19 +136,12 @@ export async function getTemplates({
   return addBaseTemplates(templates, type)
 }
 
-export async function getTemplateByID(id: string, ownerId?: string) {
-  const db = tenancy.getGlobalDB()
-  const response = await db.allDocs<Template>(
-    dbCore.getTemplateParams(ownerId || GLOBAL_OWNER, id, {
-      include_docs: true,
-    })
-  )
-  let templates = response.rows.map(row => row.doc!)
-  // should only be one template with ID
-  return templates[0]
-}
-
 export async function getTemplateByPurpose(type: string, purpose: string) {
+  if (!(await pro.features.isCustomiseEmailsEnabled())) {
+    return addBaseTemplates([], type).find(
+      (template: Template) => template.purpose === purpose
+    )
+  }
   const templates = await getTemplates({ type })
   return templates.find((template: Template) => template.purpose === purpose)
 }

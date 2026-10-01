@@ -91,12 +91,37 @@ import {
   createKnowledgeFilesTool,
   createKnowledgeSearchTool,
 } from "../../../../ai/tools/budibase"
-import { buildPromptAndTools } from "./utils"
+import { buildPromptAndTools, getEscalationToolDisplayName } from "./utils"
 import { generator } from "@budibase/backend-core/tests"
 import {
   authorizeAgentToolCall,
   canRequesterReadAgentToolResource,
 } from "../../../../ai/tools/authorization"
+
+describe("getEscalationToolDisplayName", () => {
+  it.each([undefined, "API", "api"])(
+    "omits a redundant REST source label (%s)",
+    sourceLabel => {
+      expect(
+        getEscalationToolDisplayName({
+          readableName: "Trigger release",
+          sourceLabel,
+          sourceType: ToolType.REST_QUERY,
+        })
+      ).toBe("api.Trigger release")
+    }
+  )
+
+  it("keeps meaningful REST source labels", () => {
+    expect(
+      getEscalationToolDisplayName({
+        readableName: "Trigger release",
+        sourceLabel: "GitHub release manager",
+        sourceType: ToolType.REST_QUERY,
+      })
+    ).toBe("api.github_release_manager.Trigger release")
+  })
+})
 
 describe("buildPromptAndTools", () => {
   beforeEach(() => {

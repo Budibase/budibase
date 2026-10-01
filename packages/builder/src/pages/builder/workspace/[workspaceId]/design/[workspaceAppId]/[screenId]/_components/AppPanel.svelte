@@ -2,7 +2,7 @@
   import AppPreview from "./AppPreview.svelte"
   import {
     screenStore,
-    appStore,
+    workspaceStore,
     selectedScreen,
     previewStore,
     selectedAppUrls,
@@ -85,7 +85,7 @@
         </div>
         <div class="actions">
           {#if !isPDF}
-            {#if $appStore.clientFeatures.devicePreview}
+            {#if $workspaceStore.clientFeatures.devicePreview}
               <ActionButton
                 quiet
                 icon={deviceIcon}
@@ -115,7 +115,7 @@
       </div>
     </div>
     <div class="content">
-      {#key $appStore.version}
+      {#key $workspaceStore.version}
         <AppPreview />
       {/key}
     </div>

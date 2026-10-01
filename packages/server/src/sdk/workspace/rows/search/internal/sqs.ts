@@ -1,7 +1,6 @@
 import {
   context,
   HTTPError,
-  locks,
   sql,
   SQLITE_DESIGN_DOC_ID,
   SQS_DATASOURCE_INTERNAL,
@@ -21,8 +20,6 @@ import {
   isDynamicFormula,
   isLogicalSearchOperator,
   isStaticFormula,
-  LockName,
-  LockType,
   Operation,
   QueryJson,
   RelationshipFieldMetadata,
@@ -51,6 +48,8 @@ import sdk from "../../../../index"
 import {
   mapToUserColumn,
   USER_COLUMN_PREFIX,
+  waitForDefinitionRebuild,
+  withDefinitionRebuildLock,
 } from "../../../tables/internal/sqs"
 import AliasTables from "../../sqlAlias"
 import { enrichQueryJson, processRowCountResponse } from "../../utils"
@@ -267,12 +266,13 @@ async function runSqlQuery(
   relationships: RelationshipsJson[],
   opts?: { countTotalRows?: boolean }
 ) {
+  const queryJson = opts?.countTotalRows ? cloneDeep(json) : json
   const relationshipJunctionTableIds = relationships.map(rel => rel.through!)
   const alias = new AliasTables(
     tables.map(table => table._id!).concat(relationshipJunctionTableIds)
   )
   if (opts?.countTotalRows) {
-    json.operation = Operation.COUNT
+    queryJson.operation = Operation.COUNT
   }
   const processSQLQuery = async (json: EnrichedQueryJson) => {
     const query = builder._query(json, {
@@ -305,11 +305,11 @@ async function runSqlQuery(
       return await db.sql<Row>(sql, bindings)
     })
   }
-  const response = await alias.queryWithAliasing(json, processSQLQuery)
+  const response = await alias.queryWithAliasing(queryJson, processSQLQuery)
   if (opts?.countTotalRows) {
     return processRowCountResponse(response)
   } else if (Array.isArray(response)) {
-    return reverseUserColumnMapping(response, json.table)
+    return reverseUserColumnMapping(response, queryJson.table)
   }
   return response
 }
@@ -502,6 +502,10 @@ export async function search(
 
   const enrichedRequest = await enrichQueryJson(request)
 
+  if (!opts?.retrying) {
+    await waitForDefinitionRebuild()
+  }
+
   try {
     const [rows, totalRows] = await Promise.all([
       runSqlQuery(enrichedRequest, allTables, relationships),
@@ -566,13 +570,9 @@ export async function search(
       throw new HTTPError("Search is temporarily unavailable", 503)
     }
     if (!opts?.retrying && resyncDefinitionsRequired(err.status, msg)) {
-      await locks.doWithLock(
-        {
-          type: LockType.AUTO_EXTEND,
-          name: LockName.SQS_SYNC_DEFINITIONS,
-          resource: context.getWorkspaceId(),
-        },
-        sdk.tables.sqs.syncDefinition
+      await withDefinitionRebuildLock(
+        sdk.tables.sqs.syncDefinition,
+        context.getWorkspaceId()
       )
       return search(options, source, { retrying: true })
     }

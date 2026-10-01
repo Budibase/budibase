@@ -57,6 +57,21 @@ a {
   margin-top: var(--spacing-xl);
 }
 
+.json-highlight .hljs-attr {
+  color: #e06c75;
+}
+.json-highlight .hljs-number {
+  color: #e5c07b;
+}
+.json-highlight .hljs-string {
+  color: #98c379;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+.json-highlight .hljs-literal {
+  color: #d19a66;
+}
+
 /* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 8px;

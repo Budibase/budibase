@@ -11,7 +11,6 @@ import BaseDataFetch, { DataFetchParams } from "./DataFetch"
 
 interface UserFetchQuery {
   appId?: string
-  workspaceId?: string
   paginated?: boolean
   string?: {
     email: string
@@ -36,6 +35,7 @@ export default class UserFetch extends BaseDataFetch<
     super({
       ...opts,
       datasource: {
+        ...opts.datasource,
         type: "user",
       },
     })
@@ -56,9 +56,14 @@ export default class UserFetch extends BaseDataFetch<
   async getData() {
     const { limit, paginate } = this.options
     const { cursor, query } = get(this.store)
+    const {
+      groupIds,
+      workspaceId: datasourceWorkspaceId,
+      workspaceRoleId,
+    } = this.options.datasource
 
     // Convert old format to new one - we now allow use of the lucene format
-    const { appId, paginated, workspaceId, ...rest } = query
+    const { appId, paginated, ...rest } = query
 
     const finalQuery: SearchFilters = utils.isSupportedUserSearch(rest)
       ? rest
@@ -69,7 +74,9 @@ export default class UserFetch extends BaseDataFetch<
         bookmark: cursor ?? undefined,
         query: finalQuery ?? undefined,
         appId: appId,
-        workspaceId,
+        workspaceId: datasourceWorkspaceId,
+        groupIds,
+        workspaceRoleId,
         paginate: paginated || paginate,
         limit,
       }

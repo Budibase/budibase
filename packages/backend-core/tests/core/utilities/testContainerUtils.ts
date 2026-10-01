@@ -117,7 +117,9 @@ export function setupEnv(...envs: any[]) {
     throw new Error("CouchDB SQL port not found")
   }
 
-  const minio = getContainerByImage("minio/minio")
+  const minio = getContainerByImage(
+    "public.ecr.aws/x1w3a5n5/third-party:minio-"
+  )
 
   const minioPort = getExposedV4Port(minio, 9000)
   if (!minioPort) {

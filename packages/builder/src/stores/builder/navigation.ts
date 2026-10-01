@@ -1,6 +1,6 @@
 import { derived, get, Writable } from "svelte/store"
 import { API } from "@/api"
-import { appStore, workspaceAppStore } from "@/stores/builder"
+import { workspaceStore, workspaceAppStore } from "@/stores/builder"
 import { DerivedBudiStore } from "../BudiStore"
 import { AppNavigation, AppNavigationLink, UIObject } from "@budibase/types"
 import { notifications } from "@budibase/bbui"
@@ -129,7 +129,7 @@ export class NavigationStore extends DerivedBudiStore<
   }
 
   async refresh() {
-    const appId = get(appStore).appId
+    const appId = get(workspaceStore).appId
     const appPackage = await API.fetchAppPackage(appId)
 
     this.syncAppNavigation(appPackage.application.navigation)

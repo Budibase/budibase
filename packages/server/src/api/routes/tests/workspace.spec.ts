@@ -19,6 +19,7 @@ import {
   DocumentType,
   Feature,
   PermissionLevel,
+  RowValue,
   Screen,
   SEPARATOR,
   Theme,
@@ -1663,6 +1664,49 @@ describe("/applications", () => {
 
       expect(prodRows).toHaveLength(1)
       expect(prodRows[0]._id).toEqual(devRow._id)
+    })
+
+    it("propagates row deletions and purges their tombstones after publish", async () => {
+      const table = await config.api.table.save(basicTable())
+      const row = await config.api.row.save(table._id!, { name: "Delete me" })
+      await config.publish()
+
+      await config.api.row.delete(table._id!, { _id: row._id! })
+      const devDb = db.getDB(config.getDevWorkspaceId())
+      const prodDb = db.getDB(config.getProdWorkspaceId())
+      const deletedRow = await devDb.allDocs<RowValue>({
+        keys: [row._id!],
+      })
+      const deletedRev = deletedRow.rows[0].value.rev
+      expect(deletedRow.rows[0].value.deleted).toBe(true)
+
+      await config.publish()
+
+      await config.withProdApp(async () => {
+        expect(await config.api.row.fetch(table._id!)).toHaveLength(0)
+      })
+
+      const [devRow, prodRow] = await Promise.all([
+        devDb.allDocs({ keys: [row._id!] }),
+        prodDb.allDocs({ keys: [row._id!] }),
+      ])
+      expect(devRow.rows[0]).toEqual(
+        expect.objectContaining({ error: "not_found" })
+      )
+      expect(prodRow.rows[0]).toEqual(
+        expect.objectContaining({ error: "not_found" })
+      )
+
+      const [devRevisionDiff, prodRevisionDiff] = await Promise.all([
+        db.getPouchDB(config.getDevWorkspaceId()).revsDiff({
+          [row._id!]: [deletedRev],
+        }),
+        db.getPouchDB(config.getProdWorkspaceId()).revsDiff({
+          [row._id!]: [deletedRev],
+        }),
+      ])
+      expect(devRevisionDiff[row._id!]?.missing).toContain(deletedRev)
+      expect(prodRevisionDiff[row._id!]?.missing).toContain(deletedRev)
     })
 
     // API to publish filtered resources currently disabled, skip test while not needed

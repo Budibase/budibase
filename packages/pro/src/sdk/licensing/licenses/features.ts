@@ -1,7 +1,11 @@
 import { Feature, PlanFeatures, PlanType } from "@budibase/types"
 import * as constants from "../../../constants"
 
-const PRO_FEATURES = [Feature.BUDIBASE_AI, Feature.SYNC_AUTOMATIONS]
+const PRO_FEATURES = [
+  Feature.BUDIBASE_AI,
+  Feature.SYNC_AUTOMATIONS,
+  Feature.CUSTOMISE_EMAILS,
+]
 
 const PREMIUM_FEATURES = [
   Feature.WORKSPACE_BACKUPS,
@@ -13,6 +17,7 @@ const PREMIUM_FEATURES = [
   Feature.AI_CUSTOM_CONFIGS,
   Feature.PDF,
   Feature.BUDIBASE_AI,
+  Feature.CUSTOMISE_EMAILS,
 ]
 
 const BUSINESS_FEATURES = [
@@ -33,6 +38,7 @@ const BUSINESS_FEATURES = [
   Feature.RECAPTCHA,
   Feature.PKCE_OIDC,
   Feature.TRANSLATIONS,
+  Feature.CUSTOMISE_EMAILS,
 ]
 
 const SELF_FEATURES: PlanFeatures = {
@@ -42,6 +48,7 @@ const SELF_FEATURES: PlanFeatures = {
     Feature.BRANDING,
     Feature.VIEW_PERMISSIONS,
     Feature.PDF,
+    Feature.CUSTOMISE_EMAILS,
   ],
   [PlanType.PREMIUM_PLUS]: PREMIUM_FEATURES,
   [PlanType.PREMIUM_MAX]: PREMIUM_FEATURES,
@@ -58,7 +65,11 @@ const SELF_FEATURES: PlanFeatures = {
   ],
   [PlanType.PRO]: PRO_FEATURES,
   [PlanType.PRO_MAX]: PRO_FEATURES,
-  [PlanType.TEAM]: [Feature.USER_GROUPS, Feature.WORKSPACE_BACKUPS],
+  [PlanType.TEAM]: [
+    Feature.USER_GROUPS,
+    Feature.WORKSPACE_BACKUPS,
+    Feature.CUSTOMISE_EMAILS,
+  ],
   [PlanType.BUSINESS]: BUSINESS_FEATURES,
   [PlanType.BUSINESS_PLUS]: BUSINESS_FEATURES,
   [PlanType.ENTERPRISE_BASIC]: [
@@ -86,6 +97,7 @@ const SELF_FEATURES: PlanFeatures = {
     Feature.PKCE_OIDC,
     Feature.TRANSLATIONS,
     Feature.MICROFRONTEND,
+    Feature.CUSTOMISE_EMAILS,
   ],
   [PlanType.ENTERPRISE_BASIC_TRIAL]: [
     Feature.USER_GROUPS,
@@ -138,6 +150,7 @@ const SELF_FEATURES: PlanFeatures = {
     Feature.PKCE_OIDC,
     Feature.TRANSLATIONS,
     Feature.MICROFRONTEND,
+    Feature.CUSTOMISE_EMAILS,
   ],
 }
 

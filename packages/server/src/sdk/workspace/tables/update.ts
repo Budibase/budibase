@@ -28,12 +28,20 @@ export async function saveTable(table: Table): Promise<Table> {
   return tableClone
 }
 
-export async function update(table: Table, renaming?: RenameColumn) {
+export async function update(
+  table: Table,
+  renaming?: RenameColumn,
+  opts?: { skipDefinitionRebuildLock?: boolean }
+) {
   const tableId = table._id
   if (isExternal({ table })) {
     const datasourceId = table.sourceId!
     await external.save(datasourceId, table, { tableId, renaming })
   } else {
-    await internal.save(table, { tableId, renaming })
+    await internal.save(table, {
+      tableId,
+      renaming,
+      skipDefinitionRebuildLock: opts?.skipDefinitionRebuildLock,
+    })
   }
 }

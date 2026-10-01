@@ -3,5 +3,5 @@
   // This should not be the case, and it has been fixed. This will fix any user that has it cached on the browser.
   import { redirect } from "@roxi/routify"
 
-  $: $redirect(`./apps`)
+  $: $redirect(`/apps`)
 </script>

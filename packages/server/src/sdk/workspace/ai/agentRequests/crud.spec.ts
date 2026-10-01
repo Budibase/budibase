@@ -1,7 +1,7 @@
 import { context } from "@budibase/backend-core"
 import {
   DocumentType,
-  EscalateToolResultStatus,
+  ApprovalToolResultStatus,
   EscalationNotificationChannel,
   EscalationSource,
   SEPARATOR,
@@ -819,10 +819,10 @@ describe("agentRequests crud", () => {
           requestId,
           agentId: "agent_1",
           sessionId: "session_1",
-          toolName: "escalate",
+          toolName: "book_meeting",
           status: "success",
           output: {
-            status: EscalateToolResultStatus.PENDING_APPROVAL,
+            status: ApprovalToolResultStatus.PENDING_APPROVAL,
             escalationId: "esc_1",
             note: "Escalated for approval",
           },
@@ -863,10 +863,10 @@ describe("agentRequests crud", () => {
           requestId,
           agentId: "agent_1",
           sessionId: "session_1",
-          toolName: "escalate",
+          toolName: "book_meeting",
           status: "success",
           output: {
-            status: EscalateToolResultStatus.PENDING_APPROVAL,
+            status: ApprovalToolResultStatus.PENDING_APPROVAL,
             escalationId: "esc_missing",
           },
         })
@@ -877,7 +877,7 @@ describe("agentRequests crud", () => {
         ).toEqual([])
         expect(
           (request.actions ?? []).filter(a => a.type === "tool_call")
-        ).toEqual([expect.objectContaining({ toolName: "escalate" })])
+        ).toEqual([expect.objectContaining({ toolName: "book_meeting" })])
         expect(generateToolCallSummaryMock).toHaveBeenCalled()
       })
     })
@@ -890,9 +890,9 @@ describe("agentRequests crud", () => {
           requestId,
           agentId: "agent_1",
           sessionId: "session_1",
-          toolName: "escalate",
+          toolName: "book_meeting",
           status: "error",
-          output: { status: EscalateToolResultStatus.UNAVAILABLE },
+          output: { status: ApprovalToolResultStatus.UNAVAILABLE },
         })
 
         const [request] = await fetchRequestsByAgent("agent_1")
@@ -902,7 +902,10 @@ describe("agentRequests crud", () => {
         expect(
           (request.actions ?? []).filter(a => a.type === "tool_call")
         ).toEqual([
-          expect.objectContaining({ toolName: "escalate", status: "error" }),
+          expect.objectContaining({
+            toolName: "book_meeting",
+            status: "error",
+          }),
         ])
       })
     })
@@ -915,9 +918,9 @@ describe("agentRequests crud", () => {
           requestId,
           agentId: "agent_1",
           sessionId: "session_1",
-          toolName: "escalate",
+          toolName: "book_meeting",
           status: "success",
-          output: { status: EscalateToolResultStatus.ALREADY_APPROVED },
+          output: { status: ApprovalToolResultStatus.ALREADY_APPROVED },
         })
 
         const [request] = await fetchRequestsByAgent("agent_1")
@@ -926,7 +929,7 @@ describe("agentRequests crud", () => {
         ).toEqual([])
         expect(
           (request.actions ?? []).filter(a => a.type === "tool_call")
-        ).toEqual([expect.objectContaining({ toolName: "escalate" })])
+        ).toEqual([expect.objectContaining({ toolName: "book_meeting" })])
       })
     })
   })
@@ -1214,11 +1217,11 @@ describe("agentRequests crud", () => {
       expect(
         resolveFinalRequestStatus({
           toolCallsIncomplete: false,
-          unrecoveredToolFailures: new Set(["escalate"]),
+          unrecoveredToolFailures: new Set(["book_meeting"]),
         })
       ).toEqual({
         status: "failed",
-        error: "Tool call(s) failed: escalate",
+        error: "Tool call(s) failed: book_meeting",
       })
     })
 
