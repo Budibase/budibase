@@ -502,20 +502,24 @@ describe("upsertPlatformActionSession", () => {
       "discards %s queued before the workspace was deleted",
       async (_, incrementsActionCount) => {
         const workspaceId = await createWorkspace()
-        await destroyWorkspace(workspaceId)
+        try {
+          await destroyWorkspace(workspaceId)
 
-        await context.doInWorkspaceContext(workspaceId, () =>
-          upsertPlatformActionSession({
-            sourceType: "agent_session",
-            sourceId: generator.guid(),
-            environment: "prod",
-            incrementsActionCount,
-            signal: "completed",
-            timestamp: "2026-08-31T00:00:00.000Z",
-          })
-        )
+          await context.doInWorkspaceContext(workspaceId, () =>
+            upsertPlatformActionSession({
+              sourceType: "agent_session",
+              sourceId: generator.guid(),
+              environment: "prod",
+              incrementsActionCount,
+              signal: "completed",
+              timestamp: "2026-08-31T00:00:00.000Z",
+            })
+          )
 
-        expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
+          expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
+        } finally {
+          await destroyWorkspace(workspaceId)
+        }
       }
     )
   })

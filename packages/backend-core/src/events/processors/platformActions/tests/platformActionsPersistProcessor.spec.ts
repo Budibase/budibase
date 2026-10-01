@@ -136,24 +136,28 @@ describe("PlatformActionPersistProcessor", () => {
     const prodWorkspaceId = await createWorkspace()
     const devWorkspaceId = db.getDevWorkspaceID(prodWorkspaceId)
 
-    await context.doInWorkspaceContext(devWorkspaceId, async () => {
-      await processor.processEvent(
-        Event.ACTION_AI_AGENT_EXECUTED,
-        identity,
-        { sourceType: "agent_session", sourceId: "session-1" },
-        undefined
-      )
+    try {
+      await context.doInWorkspaceContext(devWorkspaceId, async () => {
+        await processor.processEvent(
+          Event.ACTION_AI_AGENT_EXECUTED,
+          identity,
+          { sourceType: "agent_session", sourceId: "session-1" },
+          undefined
+        )
 
-      const { rows } = await getActionsDB().allDocs<PlatformActionEvent>({
-        include_docs: true,
+        const { rows } = await getActionsDB().allDocs<PlatformActionEvent>({
+          include_docs: true,
+        })
+
+        expect(rows).toHaveLength(1)
+        expect(rows[0].doc!.environment).toBe("dev")
+        expect(mockEnqueue).toHaveBeenCalledWith(
+          expect.objectContaining({ environment: "dev" })
+        )
       })
-
-      expect(rows).toHaveLength(1)
-      expect(rows[0].doc!.environment).toBe("dev")
-      expect(mockEnqueue).toHaveBeenCalledWith(
-        expect.objectContaining({ environment: "dev" })
-      )
-    })
+    } finally {
+      await destroyWorkspace(prodWorkspaceId)
+    }
   })
 
   it.each([
@@ -379,7 +383,7 @@ describe("PlatformActionPersistProcessor", () => {
       })
     } finally {
       errorSpy.mockRestore()
-      await holder
+      await Promise.allSettled([holder])
       await destroyWorkspace(workspaceId)
     }
   }, 30000)
@@ -393,12 +397,16 @@ describe("PlatformActionPersistProcessor", () => {
 
     it("discards a late event without recreating the Actions DB", async () => {
       const workspaceId = await createWorkspace()
-      await destroyWorkspace(workspaceId)
+      try {
+        await destroyWorkspace(workspaceId)
 
-      await context.doInWorkspaceContext(workspaceId, processAgentAction)
+        await context.doInWorkspaceContext(workspaceId, processAgentAction)
 
-      expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
-      expect(mockEnqueue).not.toHaveBeenCalled()
+        expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
+        expect(mockEnqueue).not.toHaveBeenCalled()
+      } finally {
+        await destroyWorkspace(workspaceId)
+      }
     })
 
     it("discards an event that waited for an in-progress deletion", async () => {
@@ -422,16 +430,22 @@ describe("PlatformActionPersistProcessor", () => {
             .destroy()
         },
       })
-      await isDeletionAcquired
-      const writer = context.doInWorkspaceContext(
-        workspaceId,
-        processAgentAction
-      )
-      releaseDeletion()
-      await Promise.all([deletion, writer])
+      let writer: Promise<void> | undefined
+      try {
+        await isDeletionAcquired
+        writer = Promise.resolve(
+          context.doInWorkspaceContext(workspaceId, processAgentAction)
+        )
+        releaseDeletion()
+        await Promise.all([deletion, writer])
 
-      expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
-      expect(mockEnqueue).not.toHaveBeenCalled()
+        expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
+        expect(mockEnqueue).not.toHaveBeenCalled()
+      } finally {
+        releaseDeletion()
+        await Promise.allSettled([deletion, writer])
+        await destroyWorkspace(workspaceId)
+      }
     })
 
     it("lets a deletion that arrives mid-write remove the persisted event", async () => {
@@ -456,20 +470,24 @@ describe("PlatformActionPersistProcessor", () => {
           return await originalPut.apply(this, args)
         })
 
+      let writer: Promise<void> | undefined
+      let deletion: Promise<void> | undefined
       try {
-        const writer = context.doInWorkspaceContext(
-          workspaceId,
-          processAgentAction
+        writer = Promise.resolve(
+          context.doInWorkspaceContext(workspaceId, processAgentAction)
         )
         await isPutStarted
-        const deletion = destroyWorkspace(workspaceId)
+        deletion = destroyWorkspace(workspaceId)
         releasePut()
         await Promise.all([writer, deletion])
 
         expect(await db.dbExists(getActionsDbName(workspaceId))).toBe(false)
         expect(mockEnqueue).toHaveBeenCalledTimes(1)
       } finally {
+        releasePut()
+        await Promise.allSettled([writer, deletion])
         putSpy.mockRestore()
+        await destroyWorkspace(workspaceId)
       }
     })
   })

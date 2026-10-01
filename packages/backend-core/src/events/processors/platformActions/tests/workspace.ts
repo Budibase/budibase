@@ -16,7 +16,11 @@ export async function createWorkspace(
 
 export async function runInWorkspace<T>(task: () => Promise<T>): Promise<T> {
   const workspaceId = await createWorkspace()
-  return await context.doInWorkspaceContext(workspaceId, task)
+  try {
+    return await context.doInWorkspaceContext(workspaceId, task)
+  } finally {
+    await destroyWorkspace(workspaceId)
+  }
 }
 
 export async function destroyWorkspace(workspaceId: string): Promise<void> {
