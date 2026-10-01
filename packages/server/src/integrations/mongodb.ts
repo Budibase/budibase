@@ -386,6 +386,18 @@ export class MongoIntegration implements IntegrationBase {
   }
 
   async connect() {
+    // The driver normalizes URI options during construction and reads TLS files on connect.
+    const { tlsCAFile, tlsCertificateKeyFile, tlsCRLFile } = this.client.options
+    if (
+      !environment.SELF_HOSTED &&
+      (tlsCAFile !== undefined ||
+        tlsCertificateKeyFile !== undefined ||
+        tlsCRLFile !== undefined)
+    ) {
+      throw new Error(
+        "MongoDB TLS file options are only supported on self-hosted installations"
+      )
+    }
     return this.client.connect()
   }
 
