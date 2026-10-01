@@ -40,6 +40,42 @@ import { getEnvironmentVariables } from "../../utils"
 import { ensureValidPrimaryDisplay } from "../tables/utils"
 
 const ENV_VAR_PREFIX = "env."
+const ENV_VAR_REFERENCE_PATTERN = new RegExp(
+  `(?:^|[^A-Za-z0-9_.-])${ENV_VAR_PREFIX.replace(".", "\\.")}`
+)
+const ENV_VAR_BINDING_PATTERN =
+  /^(?:{{\s*env\.[A-Za-z0-9_.-]+\s*}}|{{{\s*env\.[A-Za-z0-9_.-]+\s*}}})$/
+const QUOTE_CHARACTERS = new Set(['"', "'", "`"])
+
+const withoutQuotedContent = (value: string) => {
+  let quote: string | undefined
+  let escaped = false
+
+  return Array.from(value, character => {
+    if (!quote) {
+      if (QUOTE_CHARACTERS.has(character)) {
+        quote = character
+        return " "
+      }
+      return character
+    }
+
+    if (escaped) {
+      escaped = false
+    } else if (character === "\\") {
+      escaped = true
+    } else if (character === quote) {
+      quote = undefined
+    }
+    return " "
+  }).join("")
+}
+
+const isHbsComment = (value: string) =>
+  value
+    .slice(value.startsWith("{{{") ? 3 : 2)
+    .trimStart()
+    .startsWith("!")
 
 export function addDatasourceFlags(datasource: Datasource) {
   datasource.isSQL = helpers.isSQL(datasource)
@@ -205,12 +241,33 @@ function hasAuthConfigs(datasource: Datasource) {
   return datasource.source === SourceName.REST && datasource.config?.authConfigs
 }
 
-function useEnvVars(str: any) {
+function containsEnvVarBinding(str: unknown) {
+  if (typeof str !== "string") {
+    return false
+  }
+  return findHBSBlocks(str).some(
+    block =>
+      !isHbsComment(block) &&
+      ENV_VAR_REFERENCE_PATTERN.test(withoutQuotedContent(block))
+  )
+}
+
+function isEnvVarBinding(str: unknown) {
   if (typeof str !== "string") {
     return false
   }
   const blocks = findHBSBlocks(str)
-  return blocks.find(block => block.includes(ENV_VAR_PREFIX)) != null
+  if (
+    !blocks.length ||
+    blocks.some(block => !ENV_VAR_BINDING_PATTERN.test(block))
+  ) {
+    return false
+  }
+  const remaining = blocks.reduce(
+    (value, block) => value.replace(block, ""),
+    str
+  )
+  return !remaining.trim()
 }
 
 function datasourceUsesEnvironmentVariables(datasource: Datasource): boolean {
@@ -218,9 +275,9 @@ function datasourceUsesEnvironmentVariables(datasource: Datasource): boolean {
     return false
   }
 
-  const checkValue = (value: any): boolean => {
+  const checkValue = (value: unknown): boolean => {
     if (typeof value === "string") {
-      return useEnvVars(value)
+      return containsEnvVarBinding(value)
     }
     if (typeof value === "object" && value !== null) {
       return Object.values(value).some(checkValue)
@@ -249,17 +306,17 @@ export async function removeSecrets(datasources: Datasource[]) {
         for (let config of configs) {
           if (config.type === RestAuthType.BASIC) {
             const basic = config.config as RestBasicAuthConfig
-            if (!useEnvVars(basic.password)) {
+            if (!isEnvVarBinding(basic.password)) {
               basic.password = PASSWORD_REPLACEMENT
             }
           } else if (config.type === RestAuthType.BEARER) {
             const bearer = config.config as RestBearerAuthConfig
-            if (!useEnvVars(bearer.token)) {
+            if (!isEnvVarBinding(bearer.token)) {
               bearer.token = PASSWORD_REPLACEMENT
             }
           } else if (config.type === RestAuthType.OAUTH2) {
             const oauth2 = config as OAuth2RestAuthConfig
-            if (!useEnvVars(oauth2.clientSecret)) {
+            if (!isEnvVarBinding(oauth2.clientSecret)) {
               oauth2.clientSecret = PASSWORD_REPLACEMENT
             }
           }
@@ -271,7 +328,7 @@ export async function removeSecrets(datasources: Datasource[]) {
         if (
           (fieldType === DatasourceFieldType.PASSWORD ||
             fieldType === DatasourceFieldType.SENSITIVE_LONGFORM) &&
-          !useEnvVars(datasource.config[key])
+          !isEnvVarBinding(datasource.config[key])
         ) {
           datasource.config[key] = PASSWORD_REPLACEMENT
         }

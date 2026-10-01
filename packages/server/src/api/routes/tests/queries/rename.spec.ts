@@ -1,6 +1,8 @@
+import { context } from "@budibase/backend-core"
 import { SourceName } from "@budibase/types"
 import { requesterTools } from "../../../../sdk/workspace/ai/tests/utils"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import { basicQuery } from "../../../../tests/utilities/structures"
 
 describe.each([
   {
@@ -24,7 +26,7 @@ describe.each([
     renamedDatasourceRuntimeBinding: "ds_new_api_old_endpoint",
   },
 ])(
-  "$label query tool renames",
+  "$label query saves",
   ({
     source,
     oldReadableBinding,
@@ -43,6 +45,31 @@ describe.each([
     afterAll(() => {
       config.end()
     })
+
+    it.each(["created", "updated"])(
+      "does not store independent project memberships when a query is %s",
+      async operation => {
+        const datasource = await config.api.datasource.create({
+          name: "Owen API",
+          type: "datasource",
+          source,
+          config: {},
+        })
+        const query =
+          operation === "created"
+            ? basicQuery(datasource._id!)
+            : await config.api.query.save(basicQuery(datasource._id!))
+        const savedQuery = await config.api.query.save({
+          ...query,
+          projectIds: ["project_1"],
+        })
+        const storedQuery = await config.doInContext(undefined, () =>
+          context.getWorkspaceDB().get(savedQuery._id!)
+        )
+
+        expect(storedQuery).not.toHaveProperty("projectIds")
+      }
+    )
 
     it("updates agent instructions and enabled tools", async () => {
       const datasource = await config.api.datasource.create({

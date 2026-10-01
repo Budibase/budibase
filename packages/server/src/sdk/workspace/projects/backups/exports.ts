@@ -1,9 +1,10 @@
-import { context, encryption } from "@budibase/backend-core"
+import { context, encryption, HTTPError } from "@budibase/backend-core"
 import {
   Agent,
   AnyDocument,
+  Automation,
   Datasource,
-  INTERNAL_TABLE_SOURCE_ID,
+  isEmailTrigger,
   KnowledgeBaseFile,
   Project,
   ProjectPackageDependencyIndex,
@@ -21,8 +22,14 @@ import { v4 as uuid } from "uuid"
 import sdk from "../../.."
 import { budibaseTempDir } from "../../../../utilities/budibaseDir"
 import { streamFile } from "../../../../utilities/fileSystem"
-import { isExternalTableID } from "../../../../integrations/utils"
+import { collectTransitiveResourceDependencies } from "../../resources"
 import {
+  compareResourceIds,
+  getResourceType,
+  isDisallowedProjectAssignmentResourceId,
+} from "../../resources/utils"
+import {
+  MAX_PROJECT_ARCHIVE_SIZE_BYTES,
   PROJECT_ATTACHMENTS_DIRECTORY,
   PROJECT_DEPENDENCY_INDEX_FILE,
   PROJECT_DOCS_DIRECTORY,
@@ -30,10 +37,12 @@ import {
   PROJECT_FILE,
   PROJECT_MANIFEST_FILE,
 } from "./constants"
+import { readProjectPackageFiles } from "./files"
+import { doWithProjectAssignmentsLock } from "../lock"
 import {
   fetchAssignedProjectDocs,
-  getProjectAssignedEntities,
   hasProject,
+  isProjectAssignableResourceType,
 } from "../utils"
 
 async function tarFilesToTmp(tmpDir: string, files: string[]) {
@@ -51,13 +60,10 @@ async function tarFilesToTmp(tmpDir: string, files: string[]) {
   return exportFile
 }
 
-function getExportDirectoryName(resourceType: ResourceType) {
-  return resourceType
-}
-
 const sortResources = (resources: UsedResource[]) =>
   [...resources].sort(
-    (a, b) => a.type.localeCompare(b.type) || a.id.localeCompare(b.id)
+    (a, b) =>
+      compareResourceIds(a.type, b.type) || compareResourceIds(a.id, b.id)
   )
 
 const toTimestamp = (timestamp?: string | number) => {
@@ -73,13 +79,6 @@ const getProjectCreatedAt = (project: Project) =>
   toTimestamp(project.updatedAt) ??
   new Date().toISOString()
 
-const isDirectProjectResource = (
-  doc: AnyDocument,
-  prefix: string,
-  projectId: string
-): doc is AnyDocument & { _id: string } =>
-  !!doc._id && doc._id.startsWith(prefix) && hasProject(doc, projectId)
-
 export async function listAssignedAgentFiles(
   assignedAgents: Agent[],
   listFilesForAgent = sdk.ai.rag.listFilesForAgent
@@ -94,55 +93,66 @@ export async function listAssignedAgentFiles(
 async function getDirectMembers(projectId: string): Promise<UsedResource[]> {
   const assignedDocs = await fetchAssignedProjectDocs(projectId)
 
-  const asUsedResource = (
-    doc: { _id?: string; name?: string },
-    type: ResourceType
-  ): UsedResource => ({
-    id: doc._id!,
-    name: doc.name || "Unknown",
-    type,
-  })
+  return sortResources(
+    assignedDocs.flatMap(doc => {
+      if (
+        !doc._id ||
+        !hasProject(doc, projectId) ||
+        isDisallowedProjectAssignmentResourceId(doc._id)
+      ) {
+        return []
+      }
 
-  return sortResources([
-    ...assignedDocs
+      const type = getResourceType(doc._id)
+      if (
+        !type ||
+        !isProjectAssignableResourceType(type) ||
+        (type === ResourceType.DATASOURCE && typeof doc.source !== "string")
+      ) {
+        return []
+      }
+
+      return [{ id: doc._id, name: doc.name || "Unknown", type }]
+    })
+  )
+}
+
+async function getExcludedDependencies({
+  projectId,
+  directMembers,
+  graph,
+}: {
+  projectId: string
+  directMembers: UsedResource[]
+  graph: Awaited<ReturnType<typeof sdk.resources.getResourcesInfo>>
+}): Promise<UsedResource[]> {
+  const dependenciesById = new Map(
+    directMembers
+      .flatMap(member =>
+        collectTransitiveResourceDependencies(graph, member.id)
+      )
       .filter(
-        datasource =>
-          datasource._id !== INTERNAL_TABLE_SOURCE_ID &&
-          !!datasource._id &&
-          datasource._id.startsWith("datasource_") &&
-          typeof datasource.source === "string" &&
-          (hasProject(datasource, projectId) ||
-            getProjectAssignedEntities(datasource).some(entity =>
-              hasProject(entity, projectId)
-            ))
+        dependency =>
+          isProjectAssignableResourceType(dependency.type) &&
+          !isDisallowedProjectAssignmentResourceId(dependency.id)
       )
-      .map(datasource => asUsedResource(datasource, ResourceType.DATASOURCE)),
-    ...assignedDocs
-      .filter(
-        table =>
-          isDirectProjectResource(table, "ta_", projectId) &&
-          !isExternalTableID(table._id)
-      )
-      .map(table => asUsedResource(table, ResourceType.TABLE)),
-    ...assignedDocs
-      .filter(query => isDirectProjectResource(query, "query_", projectId))
-      .map(query => asUsedResource(query, ResourceType.QUERY)),
-    ...assignedDocs
-      .filter(automation =>
-        isDirectProjectResource(automation, "au_", projectId)
-      )
-      .map(automation => asUsedResource(automation, ResourceType.AUTOMATION)),
-    ...assignedDocs
-      .filter(agent => isDirectProjectResource(agent, "agent_", projectId))
-      .map(agent => asUsedResource(agent, ResourceType.AGENT)),
-    ...assignedDocs
-      .filter(workspaceApp =>
-        isDirectProjectResource(workspaceApp, "workspace_app_", projectId)
-      )
-      .map(workspaceApp =>
-        asUsedResource(workspaceApp, ResourceType.WORKSPACE_APP)
-      ),
-  ])
+      .map(dependency => [dependency.id, dependency])
+  )
+  if (!dependenciesById.size) {
+    return []
+  }
+
+  const docs = await context
+    .getWorkspaceDB()
+    .getMultiple<AnyDocument>(Array.from(dependenciesById.keys()), {
+      allowMissing: true,
+    })
+  return sortResources(
+    docs.flatMap(doc => {
+      const dependency = doc._id ? dependenciesById.get(doc._id) : undefined
+      return dependency && !hasProject(doc, projectId) ? [dependency] : []
+    })
+  )
 }
 
 async function getUnsupportedContent(
@@ -204,39 +214,59 @@ async function getUnsupportedContent(
   return unsupported
 }
 
-async function sanitizeDocumentForExport(
+async function sanitiseDocumentForExport(
   doc: AnyDocument,
   type: ResourceType,
   screenWorkspaceAppIdByScreenId?: Map<string, string>
 ) {
-  const sanitized = structuredClone(doc)
-  delete sanitized._rev
+  const sanitised = structuredClone(doc)
+  delete sanitised._rev
 
   if (type === ResourceType.DATASOURCE) {
-    return await sdk.datasources.removeSecretSingle(sanitized as Datasource)
+    const datasource = sanitised as Datasource
+    if (datasource.entities) {
+      datasource.entities = Object.fromEntries(
+        Object.entries(datasource.entities).map(([name, entity]) => {
+          const next = { ...entity }
+          delete next.projectIds
+          return [name, next]
+        })
+      )
+    }
+    return await sdk.datasources.removeSecretSingle(datasource)
   }
 
   if (type === ResourceType.AGENT) {
-    return sdk.ai.agents.sanitiseAgentForExport(sanitized as Agent)
+    return sdk.ai.agents.sanitiseAgentForExport(sanitised as Agent)
   }
 
-  if (type === ResourceType.SCREEN && !sanitized.workspaceAppId) {
+  if (type === ResourceType.AUTOMATION) {
+    return sdk.automations.utils.sanitiseAutomationForExport(
+      sanitised as Automation
+    )
+  }
+
+  if (!isProjectAssignableResourceType(type)) {
+    delete sanitised.projectIds
+  }
+
+  if (type === ResourceType.SCREEN && !sanitised.workspaceAppId) {
     const workspaceAppId = screenWorkspaceAppIdByScreenId?.get(doc._id!)
     if (workspaceAppId) {
-      ;(sanitized as Screen).workspaceAppId = workspaceAppId
+      ;(sanitised as Screen).workspaceAppId = workspaceAppId
     }
   }
 
-  return sanitized
+  return sanitised
 }
 
-function sanitizeProjectForExport(project: Project) {
-  const sanitized = structuredClone(project)
+function sanitiseProjectForExport(project: Project) {
+  const sanitised = structuredClone(project)
   const createdAt = getProjectCreatedAt(project)
-  delete sanitized._rev
-  sanitized.createdAt = createdAt
-  sanitized.updatedAt = toTimestamp(project.updatedAt) ?? createdAt
-  return sanitized
+  delete sanitised._rev
+  sanitised.createdAt = createdAt
+  sanitised.updatedAt = toTimestamp(project.updatedAt) ?? createdAt
+  return sanitised
 }
 
 function countManifestResourcesByType(dependencies: UsedResource[]) {
@@ -251,12 +281,19 @@ function countManifestResourcesByType(dependencies: UsedResource[]) {
   return resourcesByType
 }
 
-function buildManifest(
-  project: Project,
-  workspaceId: string,
-  dependencies: UsedResource[],
+function buildManifest({
+  project,
+  workspaceId,
+  dependencies,
+  unsupportedContent,
+  requiresEmailCredentials,
+}: {
+  project: Project
+  workspaceId: string
+  dependencies: UsedResource[]
   unsupportedContent: ProjectPackageUnsupportedContent[]
-): ProjectPackageManifest {
+  requiresEmailCredentials: boolean
+}): ProjectPackageManifest {
   const createdAt = getProjectCreatedAt(project)
   const resourcesByType = countManifestResourcesByType(dependencies)
 
@@ -281,7 +318,8 @@ function buildManifest(
     containsAttachments: false,
     requiresSecrets:
       !!resourcesByType[ResourceType.DATASOURCE] ||
-      !!resourcesByType[ResourceType.AGENT],
+      !!resourcesByType[ResourceType.AGENT] ||
+      requiresEmailCredentials,
     unsupportedContent,
   }
 }
@@ -319,27 +357,61 @@ export async function exportProject(
     throw new Error("Could not determine workspace for Project export")
   }
 
-  const project = await sdk.projects.get(projectId)
-  if (!project) {
-    throw new Error(`Project '${projectId}' not found`)
-  }
+  const snapshot = await doWithProjectAssignmentsLock(async () => {
+    const project = await sdk.projects.get(projectId)
+    if (!project) {
+      throw new Error(`Project '${projectId}' not found`)
+    }
 
-  const graph = await sdk.resources.getResourcesInfo()
-  const projectDependencies = sortResources(
-    Array.from(
-      new Map(
-        (graph[projectId]?.dependencies || []).map(resource => [
-          resource.id,
-          resource,
-        ])
-      ).values()
+    const graph = await sdk.resources.getResourcesInfo({
+      includeDatasourceQueries: true,
+    })
+    const projectDependencies = graph[projectId]?.dependencies || []
+    const [agents, workspaceApps, directMembers] = await Promise.all([
+      sdk.ai.agents.fetch(),
+      sdk.workspaceApps.fetch(),
+      getDirectMembers(projectId),
+    ])
+    const excludedDependencies = await getExcludedDependencies({
+      projectId,
+      directMembers,
+      graph,
+    })
+    const typeByResourceId = new Map(
+      projectDependencies.map(resource => [resource.id, resource.type])
     )
-  )
-  const [agents, workspaceApps] = await Promise.all([
-    sdk.ai.agents.fetch(),
-    sdk.workspaceApps.fetch(),
-  ])
-  const directMembers = await getDirectMembers(projectId)
+    const docsToExport = projectDependencies.map(resource => resource.id)
+    const exportedDocs = docsToExport.length
+      ? await context.getWorkspaceDB().getMultiple<AnyDocument>(docsToExport, {
+          allowMissing: false,
+        })
+      : []
+
+    return {
+      agents,
+      directMembers,
+      docsToExport,
+      excludedDependencies,
+      exportedDocs,
+      graph,
+      project,
+      projectDependencies,
+      typeByResourceId,
+      workspaceApps,
+    }
+  })
+  const {
+    agents,
+    directMembers,
+    docsToExport,
+    excludedDependencies,
+    exportedDocs,
+    graph,
+    project,
+    projectDependencies,
+    typeByResourceId,
+    workspaceApps,
+  } = snapshot
   const exportedAgentIds = new Set(
     projectDependencies
       .filter(resource => resource.type === ResourceType.AGENT)
@@ -351,39 +423,49 @@ export async function exportProject(
     workspaceApps,
     exportedAgentIds
   )
+  if (excludedDependencies.length) {
+    unsupportedContent.push({
+      type: "excluded_dependency",
+      count: excludedDependencies.length,
+      reason:
+        "Referenced dependencies were excluded from the Project assignment and export.",
+    })
+  }
 
-  const typeByResourceId = new Map(
-    projectDependencies.map(resource => [resource.id, resource.type])
-  )
-  const docsToExport = projectDependencies.map(resource => resource.id)
-  const exportedDocs = docsToExport.length
-    ? await context.getWorkspaceDB().getMultiple<AnyDocument>(docsToExport, {
-        allowMissing: false,
-      })
-    : []
-
+  const exportedResourceIds = new Set(docsToExport)
+  const getExportedDependencies = (resourceId: string) =>
+    sortResources(
+      (graph[resourceId]?.dependencies || []).filter(dependency =>
+        exportedResourceIds.has(dependency.id)
+      )
+    )
   const dependencyIndex: ProjectPackageDependencyIndex = {
     rootProjectId: projectId,
     directMembers,
     resources: {
       [projectId]: {
-        dependencies: sortResources(graph[projectId]?.dependencies || []),
+        dependencies: getExportedDependencies(projectId),
       },
       ...Object.fromEntries(
         docsToExport.map(id => [
           id,
-          { dependencies: sortResources(graph[id]?.dependencies || []) },
+          { dependencies: getExportedDependencies(id) },
         ])
       ),
     },
   }
 
-  const manifest = buildManifest(
+  const manifest = buildManifest({
     project,
     workspaceId,
-    projectDependencies,
-    unsupportedContent
-  )
+    dependencies: projectDependencies,
+    unsupportedContent,
+    requiresEmailCredentials: exportedDocs.some(
+      doc =>
+        typeByResourceId.get(doc._id!) === ResourceType.AUTOMATION &&
+        isEmailTrigger((doc as Automation).definition?.trigger)
+    ),
+  })
   const screenWorkspaceAppIdByScreenId = new Map<string, string>()
 
   for (const workspaceAppId of docsToExport.filter(
@@ -401,7 +483,7 @@ export async function exportProject(
     await writeJsonFile(join(tmpPath, PROJECT_MANIFEST_FILE), manifest)
     await writeJsonFile(
       join(tmpPath, PROJECT_FILE),
-      sanitizeProjectForExport(project)
+      sanitiseProjectForExport(project)
     )
     await writeJsonFile(
       join(tmpPath, PROJECT_DEPENDENCY_INDEX_FILE),
@@ -416,19 +498,14 @@ export async function exportProject(
           return
         }
 
-        const sanitized = await sanitizeDocumentForExport(
+        const sanitised = await sanitiseDocumentForExport(
           doc,
           type,
           screenWorkspaceAppIdByScreenId
         )
         await writeJsonFile(
-          join(
-            tmpPath,
-            PROJECT_DOCS_DIRECTORY,
-            getExportDirectoryName(type),
-            `${doc._id}.json`
-          ),
-          sanitized
+          join(tmpPath, PROJECT_DOCS_DIRECTORY, type, `${doc._id}.json`),
+          sanitised
         )
       })
     )
@@ -439,11 +516,18 @@ export async function exportProject(
       throw writeFailure.reason
     }
 
+    await readProjectPackageFiles({ dirPath: tmpPath })
+
     if (opts?.encryptPassword) {
       await encryptDirectory(tmpPath, opts.encryptPassword)
     }
 
-    return await tarFilesToTmp(tmpPath, await fsp.readdir(tmpPath))
+    const tarPath = await tarFilesToTmp(tmpPath, await fsp.readdir(tmpPath))
+    if ((await fsp.stat(tarPath)).size > MAX_PROJECT_ARCHIVE_SIZE_BYTES) {
+      await fsp.rm(tarPath, { force: true })
+      throw new HTTPError("Project package is too large.", 400)
+    }
+    return tarPath
   } finally {
     await fsp.rm(tmpPath, { recursive: true, force: true })
   }

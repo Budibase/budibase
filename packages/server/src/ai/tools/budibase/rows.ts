@@ -374,14 +374,36 @@ const getRequesterRedactedDescription = (action: string) =>
   `${formatActionLabel(action)} on the configured resource. Resource metadata is restricted. Do not infer its schema or substitute another resource if this tool is denied.`
 
 const buildCollisionSafeToolName = (tableId: string, action: string) => {
-  const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
+  const sanitisedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
   const tableIdHash = createHash("sha256")
     .update(tableId)
     .digest("hex")
     .substring(0, TOOL_NAME_HASH_LENGTH)
   const suffix = `_${tableIdHash}_${action}`
   const tableIdLength = MAX_TOOL_NAME_LENGTH - suffix.length
-  return `${sanitizedTableId.substring(0, tableIdLength)}${suffix}`
+  return `${sanitisedTableId.substring(0, tableIdLength)}${suffix}`
+}
+
+export const getRowToolNames = (tableId: string): Record<string, string> => {
+  const sanitisedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
+  const truncatedToolNames = Object.fromEntries(
+    Object.keys(ROW_TOOL).map(action => [
+      action,
+      `${sanitisedTableId}_${action}`.substring(0, MAX_TOOL_NAME_LENGTH),
+    ])
+  )
+  const hasToolNameCollision =
+    new Set(Object.values(truncatedToolNames)).size !==
+    Object.keys(truncatedToolNames).length
+  if (!hasToolNameCollision) {
+    return truncatedToolNames
+  }
+  return Object.fromEntries(
+    Object.keys(ROW_TOOL).map(action => [
+      action,
+      buildCollisionSafeToolName(tableId, action),
+    ])
+  )
 }
 
 export const createRowTools = ({
@@ -410,23 +432,13 @@ export const createRowTools = ({
   const schemaSummary = buildSchemaSummary(writableFields)
   const dataSchema = buildRowDataSchema(writableFields, schemaSummary)
   const searchInputSchema = buildSearchInputSchema(schemaSummary)
+  const toolNames = getRowToolNames(tableId)
   const fields = getAgentTableFields(tableSchema)
-  const sanitizedTableId = tableId.replace(/[^A-Za-z0-9_-]/g, "_")
-  const truncatedToolNames = new Map(
-    ROW_TOOL_ACTIONS.map(action => [
-      action,
-      `${sanitizedTableId}_${action}`.substring(0, MAX_TOOL_NAME_LENGTH),
-    ])
-  )
-  const hasToolNameCollision =
-    new Set(truncatedToolNames.values()).size !== truncatedToolNames.size
 
   return ROW_TOOL_ACTIONS.map(action => {
     const def = ROW_TOOL[action]
     const description = `${formatActionLabel(action)} in "${tableName}". ${def.description}`
-    const toolName = hasToolNameCollision
-      ? buildCollisionSafeToolName(tableId, action)
-      : truncatedToolNames.get(action)!
+    const toolName = toolNames[action]
     const isWrite =
       action === ToolAction.CREATE_ROW || action === ToolAction.UPDATE_ROW
     let inputSchema = def.inputSchema
