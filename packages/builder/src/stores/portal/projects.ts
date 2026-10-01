@@ -130,10 +130,13 @@ export class ProjectsStore extends BudiStore<ProjectResponse[]> {
   previewAssignment = async (request: PreviewProjectAssignmentRequest) =>
     await API.projects.previewAssignment(request)
 
-  updateAssignment = async (
-    resourceId: string,
+  updateAssignment = async ({
+    resourceId,
+    request,
+  }: {
+    resourceId: string
     request: UpdateProjectAssignmentRequest
-  ) => await API.projects.updateAssignment(resourceId, request)
+  }) => await API.projects.updateAssignment({ resourceId, request })
 
   deleteProject = async (id: string, rev: string) => {
     const workspaceId = this.workspaceId

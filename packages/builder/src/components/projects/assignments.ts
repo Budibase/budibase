@@ -9,7 +9,10 @@ export const saveProjectAssignment = async ({
   resourceId: string
   selection: UpdateProjectAssignmentRequest
 }) => {
-  const result = await projectsStore.updateAssignment(resourceId, selection)
+  const result = await projectsStore.updateAssignment({
+    resourceId,
+    request: selection,
+  })
   if (result.assignedDependencyIds.length === selection.dependencyIds.length) {
     notifications.success("Projects updated successfully")
   }

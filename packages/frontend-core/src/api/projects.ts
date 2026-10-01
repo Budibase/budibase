@@ -26,10 +26,10 @@ export interface ProjectEndpoints {
   previewAssignment: (
     request: PreviewProjectAssignmentRequest
   ) => Promise<PreviewProjectAssignmentResponse>
-  updateAssignment: (
-    resourceId: string,
+  updateAssignment: (params: {
+    resourceId: string
     request: UpdateProjectAssignmentRequest
-  ) => Promise<UpdateProjectAssignmentResponse>
+  }) => Promise<UpdateProjectAssignmentResponse>
   delete: (id: string, rev: string) => Promise<void>
 }
 
@@ -90,7 +90,7 @@ export const buildProjectEndpoints = (
       body: request,
     })
   },
-  updateAssignment: async (resourceId, request) => {
+  updateAssignment: async ({ resourceId, request }) => {
     return await API.put<
       UpdateProjectAssignmentRequest,
       UpdateProjectAssignmentResponse
