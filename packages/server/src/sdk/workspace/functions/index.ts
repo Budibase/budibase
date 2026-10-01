@@ -13,12 +13,14 @@ import {
   type FunctionArtifact,
   type FunctionBuildDiagnostic,
   type FunctionDocument,
+  type FunctionInputDefinition,
   type FunctionQueryCapability,
   type FunctionQueryCapabilityInput,
   type FunctionResponse,
   type FunctionQueryCatalogEntry,
   type FunctionSummary,
 } from "@budibase/types"
+import { validateFunctionInputSchema } from "@budibase/shared-core"
 import { compileFunction } from "./compiler"
 import {
   generateFunctionDeclarations,
@@ -35,6 +37,7 @@ export { getQueryCatalog, resolveSavedQuery } from "./queryCatalog"
 interface FunctionDraftInput {
   name: string
   source: string
+  inputSchema?: FunctionInputDefinition[]
   capabilities: FunctionQueryCapabilityInput[]
 }
 
@@ -81,6 +84,11 @@ const validateDraft = (draft: FunctionDraftInput) => {
     throw new HTTPError("Function source exceeds the maximum size.", 400)
   }
 
+  const inputErrors = validateFunctionInputSchema(draft.inputSchema || [])
+  if (inputErrors.length) {
+    throw new HTTPError(inputErrors[0], 400)
+  }
+
   const queryIds = new Set<string>()
   const aliases = new Set<string>()
   for (const capability of draft.capabilities) {
@@ -109,11 +117,17 @@ export const getFunctionDeclarations = async (fn: FunctionDocument) => {
     })),
     fn.capabilities
   )
-  const declarations = generateFunctionDeclarations(capabilities)
+  const declarations = generateFunctionDeclarations({
+    capabilities,
+    inputSchema: fn.inputSchema,
+  })
   return {
     capabilities,
     declarations,
-    declarationsHash: hashFunctionDeclarations(declarations),
+    declarationsHash: hashFunctionDeclarations({
+      declarations,
+      inputSchema: fn.inputSchema,
+    }),
   }
 }
 
@@ -133,11 +147,17 @@ const getFunctionDeclarationsFromCatalog = (
       parameterNames: query.parameters.map(parameter => parameter.name),
     }
   })
-  const declarations = generateFunctionDeclarations(capabilities)
+  const declarations = generateFunctionDeclarations({
+    capabilities,
+    inputSchema: fn.inputSchema,
+  })
   return {
     capabilities,
     declarations,
-    declarationsHash: hashFunctionDeclarations(declarations),
+    declarationsHash: hashFunctionDeclarations({
+      declarations,
+      inputSchema: fn.inputSchema,
+    }),
   }
 }
 
@@ -152,11 +172,17 @@ const getFunctionDeclarationsForReadiness = async (
 }
 
 const getPersistedFunctionDeclarations = (fn: FunctionDocument) => {
-  const declarations = generateFunctionDeclarations(fn.capabilities)
+  const declarations = generateFunctionDeclarations({
+    capabilities: fn.capabilities,
+    inputSchema: fn.inputSchema,
+  })
   return {
     capabilities: fn.capabilities,
     declarations,
-    declarationsHash: hashFunctionDeclarations(declarations),
+    declarationsHash: hashFunctionDeclarations({
+      declarations,
+      inputSchema: fn.inputSchema,
+    }),
   }
 }
 
@@ -310,7 +336,10 @@ export const compile = async (draft: FunctionCompileInput) => {
     draft.capabilities,
     existing?.capabilities
   )
-  const declarations = generateFunctionDeclarations(capabilities)
+  const declarations = generateFunctionDeclarations({
+    capabilities,
+    inputSchema: draft.inputSchema,
+  })
   const result = await compileFunction({
     source: draft.source,
     declarations,
@@ -482,6 +511,7 @@ export const create = async (
       name: draft.name,
       appId,
       source: draft.source,
+      inputSchema: draft.inputSchema,
       capabilities,
       createdAt: now,
       updatedAt: now,
@@ -510,6 +540,7 @@ export const update = async (
       _rev: draft._rev,
       name: draft.name,
       source: draft.source,
+      inputSchema: draft.inputSchema,
       capabilities,
       createdAt: persisted.createdAt,
       updatedAt: new Date().toISOString(),

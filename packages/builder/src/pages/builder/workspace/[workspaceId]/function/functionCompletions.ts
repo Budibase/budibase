@@ -1,4 +1,7 @@
-import type { FunctionQueryCapability } from "@budibase/types"
+import type {
+  FunctionInputDefinition,
+  FunctionQueryCapability,
+} from "@budibase/types"
 
 export const getFunctionDatasourceCompletions = (
   capabilities: FunctionQueryCapability[]
@@ -14,3 +17,13 @@ export const getFunctionQueryCompletions = (
       label: item.queryAlias,
       parameterNames: item.parameterNames,
     }))
+
+export const getFunctionInputCompletions = (
+  inputSchema: readonly FunctionInputDefinition[]
+) =>
+  inputSchema.map(input => ({
+    label: input.name,
+    type: "property",
+    detail: `${input.type}${input.required ? "" : " | null (optional)"}`,
+    info: input.description,
+  }))

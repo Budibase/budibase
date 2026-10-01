@@ -62,7 +62,8 @@ vi.mock("../permissions", () => ({
 vi.mock("@/stores/builder", () => ({
   builderStore: { selectResource: mocks.selectResource },
 }))
-vi.mock("@budibase/bbui", () => ({
+vi.mock("@budibase/bbui", async () => ({
+  ...(await vi.importActual<typeof import("@budibase/bbui")>("@budibase/bbui")),
   Badge: MockComponent,
   Body: MockComponent,
   Button: MockFunctionButton,
@@ -115,6 +116,44 @@ describe("Function editor route", () => {
 
   afterEach(() => {
     vi.useRealTimers()
+  })
+
+  it("saves input definitions with the current source and refreshes compile diagnostics", async () => {
+    const fn = { ...createFunction("function-a"), source: "saved source" }
+    mocks.fetchOne.mockResolvedValue(fn)
+    mocks.save.mockImplementation(async (_fn, request) => ({
+      ...fn,
+      ...request,
+      _rev: "2",
+    }))
+    mocks.available.set(true)
+    render(FunctionPage)
+    await fireEvent.click(await screen.findByRole("tab", { name: "Inputs" }))
+    await fireEvent.click(screen.getByRole("button", { name: "Add input" }))
+    await fireEvent.input(screen.getByPlaceholderText("customerId"), {
+      target: { value: "customerId" },
+    })
+    await fireEvent.click(screen.getByRole("button", { name: "Save inputs" }))
+    await waitFor(() =>
+      expect(mocks.save).toHaveBeenCalledWith(
+        expect.objectContaining({ _id: "function-a" }),
+        expect.objectContaining({
+          source: "saved source",
+          inputSchema: [{ name: "customerId", type: "string", required: true }],
+        })
+      )
+    )
+    await waitFor(() =>
+      expect(mocks.compile).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          inputSchema: [{ name: "customerId", type: "string", required: true }],
+        })
+      )
+    )
+    expect(screen.getByRole("tab", { name: "Inputs" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    )
   })
 
   it("distinguishes unavailable Functions from missing author permission", async () => {

@@ -18,6 +18,7 @@
   import { Utils } from "@budibase/frontend-core"
   import type {
     FunctionBuildDiagnostic,
+    FunctionInputDefinition,
     FunctionQueryCapabilityInput,
     FunctionResponse,
   } from "@budibase/types"
@@ -26,6 +27,7 @@
   import { onDestroy } from "svelte"
   import { createSaveCoordinator } from "../../saveCoordinator"
   import FunctionCodeEditor from "../FunctionCodeEditor.svelte"
+  import FunctionInputsEditor from "../FunctionInputsEditor.svelte"
   import FunctionLogs from "../FunctionLogs.svelte"
   import FunctionQueryEditor from "../FunctionQueryEditor.svelte"
   import { canManageFunctions } from "../permissions"
@@ -42,12 +44,14 @@
   let saving = false
   let building = false
   let queriesDirty = false
+  let inputsDirty = false
+  let pendingInputSchema: FunctionInputDefinition[] | undefined
   let actionError = ""
   let validationRequest = 0
   let lastObservedSource = ""
   let pendingCapabilities: FunctionQueryCapabilityInput[] | undefined
   let destroyed = false
-  let railTab: "Queries" | "Logs" = "Queries"
+  let railTab: "Inputs" | "Queries" | "Logs" = "Queries"
 
   $params
   $: functionId = $params.functionId
@@ -57,7 +61,7 @@
     builderStore.selectResource(functionId)
   }
   $: sourceDirty = !!fn && source !== savedSource
-  $: draftDirty = sourceDirty || queriesDirty
+  $: draftDirty = sourceDirty || queriesDirty || inputsDirty
   $: buildDisabled =
     draftDirty ||
     fn?.readiness === "ready" ||
@@ -88,6 +92,7 @@
           functionId: functionToValidate._id,
           name: functionToValidate.name,
           source: value,
+          inputSchema: functionToValidate.inputSchema,
           capabilities: toCapabilityInputs(functionToValidate),
         })
         if (request === validationRequest) {
@@ -150,6 +155,8 @@
     debouncedSave.cancel()
     pendingCapabilities = undefined
     queriesDirty = false
+    inputsDirty = false
+    pendingInputSchema = undefined
     loading = true
     error = ""
     actionError = ""
@@ -198,6 +205,22 @@
     }
   }
 
+  const saveInputSchema = async (inputSchema: FunctionInputDefinition[]) => {
+    if (!fn || fn._id !== functionId) {
+      throw new Error("Function is no longer selected")
+    }
+    const id = fn._id
+    debouncedSave.cancel()
+    pendingInputSchema = inputSchema
+    if (!(await saveCoordinator.save())) {
+      throw new Error(actionError || "Unable to save inputs")
+    }
+    if (!destroyed && enabled && functionId === id) {
+      validate(source)
+      notifications.success("Inputs saved")
+    }
+  }
+
   const persistDraft = async (): Promise<boolean> => {
     const functionToSave = fn
     if (!functionToSave?._rev || functionToSave._id !== functionId) {
@@ -206,7 +229,8 @@
     const isCurrentFunction = () =>
       fn?._id === functionToSave._id && functionId === functionToSave._id
     const capabilitiesToSave = pendingCapabilities
-    if (source === savedSource && !capabilitiesToSave) {
+    const inputSchemaToSave = pendingInputSchema
+    if (source === savedSource && !capabilitiesToSave && !inputSchemaToSave) {
       return true
     }
     const sourceToSave = source
@@ -220,6 +244,7 @@
         _rev: functionToSave._rev,
         name: functionToSave.name,
         source: sourceToSave,
+        inputSchema: inputSchemaToSave || functionToSave.inputSchema,
         capabilities: capabilitiesToSave || toCapabilityInputs(functionToSave),
       })
       if (!isCurrentFunction()) {
@@ -232,6 +257,9 @@
         validate(sourceToSave)
       }
       savedSource = sourceToSave
+      if (pendingInputSchema === inputSchemaToSave) {
+        pendingInputSchema = undefined
+      }
       if (pendingCapabilities === capabilitiesToSave) {
         pendingCapabilities = undefined
       }
@@ -244,6 +272,9 @@
         return false
       }
       actionError = getErrorMessage(saveError) || "Unable to save Function"
+      if (pendingInputSchema === inputSchemaToSave) {
+        pendingInputSchema = undefined
+      }
       if (pendingCapabilities === capabilitiesToSave) {
         pendingCapabilities = undefined
       }
@@ -375,6 +406,7 @@
               <FunctionCodeEditor
                 bind:value={source}
                 capabilities={fn.capabilities}
+                inputSchema={fn.inputSchema}
                 {diagnostics}
               />
             </div>
@@ -415,6 +447,15 @@
             <button
               type="button"
               role="tab"
+              id="function-inputs-tab"
+              aria-selected={railTab === "Inputs"}
+              aria-controls="function-settings-panel"
+              class:active={railTab === "Inputs"}
+              onclick={() => (railTab = "Inputs")}>Inputs</button
+            >
+            <button
+              type="button"
+              role="tab"
               id="function-queries-tab"
               aria-selected={railTab === "Queries"}
               aria-controls="function-settings-panel"
@@ -435,10 +476,15 @@
             class="rail-content"
             role="tabpanel"
             id="function-settings-panel"
-            aria-labelledby={railTab === "Queries"
-              ? "function-queries-tab"
-              : "function-logs-tab"}
+            aria-labelledby={`function-${railTab.toLowerCase()}-tab`}
           >
+            <div hidden={railTab !== "Inputs"}>
+              <FunctionInputsEditor
+                inputSchema={fn.inputSchema}
+                onSave={saveInputSchema}
+                onDirtyChange={dirty => (inputsDirty = dirty)}
+              />
+            </div>
             <div hidden={railTab !== "Queries"}>
               <FunctionQueryEditor
                 capabilities={fn.capabilities}

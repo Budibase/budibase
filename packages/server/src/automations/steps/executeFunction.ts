@@ -13,6 +13,7 @@ import {
   type FunctionRunLimits,
   type JSONValue,
 } from "@budibase/types"
+import { getFunctionInputError } from "@budibase/shared-core"
 import env from "../../environment"
 import { areFunctionsEnabled } from "../../middleware/functionsEnabled"
 import {
@@ -47,8 +48,11 @@ const ERROR_MESSAGES = {
 } satisfies Record<FunctionErrorCode, string>
 
 class FunctionActionError extends Error {
-  constructor(readonly code: FunctionErrorCode) {
-    super(ERROR_MESSAGES[code])
+  constructor(
+    readonly code: FunctionErrorCode,
+    message: string = ERROR_MESSAGES[code]
+  ) {
+    super(message)
   }
 }
 
@@ -184,6 +188,17 @@ export const executeFunction = async (
       throw new FunctionActionError(FunctionErrorCode.FUNCTION_BUILD_REQUIRED)
     }
 
+    const inputError = getFunctionInputError({
+      inputSchema: fn.inputSchema,
+      inputs: functionInputs,
+    })
+    if (inputError) {
+      throw new FunctionActionError(
+        FunctionErrorCode.FUNCTION_INPUT_INVALID,
+        inputError
+      )
+    }
+
     const runId = dependencies.createRunId()
     const result = await dependencies.orchestrate({
       runId,
@@ -210,7 +225,7 @@ export const executeFunction = async (
     return resultToOutputs(result)
   } catch (error) {
     return error instanceof FunctionActionError
-      ? actionFailure(error.code)
+      ? failure({ code: error.code, message: error.message })
       : actionFailure(FunctionErrorCode.FUNCTION_RUNTIME_ERROR)
   }
 }
