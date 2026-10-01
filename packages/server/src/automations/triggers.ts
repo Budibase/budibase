@@ -30,6 +30,7 @@ import env from "../environment"
 import { doesTableExist } from "../sdk/workspace/tables/getters"
 import { executeInThread } from "../threads/automation"
 import { checkTestFlag } from "../utilities/redis"
+import * as uuid from "uuid"
 import { automationQueue } from "./bullboard"
 import * as utils from "./utils"
 import { AutomationTestProgressEvent } from "./testProgress"
@@ -289,7 +290,7 @@ export async function externalTrigger(
       automation,
     }
     return quotas.addAction(ActionType.AUTOMATION_STEP, () =>
-      executeInThread({ data } as AutomationJob, {
+      executeInThread({ id: uuid.v4(), data } as AutomationJob, {
         onProgress,
         isTestRun: shouldRunAsTest,
       })
