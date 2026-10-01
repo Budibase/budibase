@@ -1,4 +1,4 @@
-import { db, HTTPError, ViewName } from "@budibase/backend-core"
+import { db, events, HTTPError, ViewName } from "@budibase/backend-core"
 import type {
   Database,
   DatabaseKey,
@@ -80,79 +80,99 @@ const buildEventsCountBySessionView = (): string => `function(doc) {
   }
 }`
 
-export const createSessionsByUpdatedAtView = async (workspaceDb: Database) => {
-  await db.createView(
-    workspaceDb,
-    buildSessionsByUpdatedAtView(),
-    ViewName.PLATFORM_ACTION_SESSIONS_BY_UPDATED_AT
+const createActionsView = async ({
+  workspaceDb,
+  map,
+  viewName,
+  reduce,
+}: {
+  workspaceDb: Database
+  map: string
+  viewName: ViewName
+  reduce?: string
+}): Promise<void> => {
+  const created = await events.platformActions.doWithExistingActionsWorkspace(
+    () => db.createView(workspaceDb, map, viewName, reduce)
   )
+  if (!created) {
+    throw new HTTPError("Workspace not found", 404)
+  }
+}
+
+export const createSessionsByUpdatedAtView = async (workspaceDb: Database) => {
+  await createActionsView({
+    workspaceDb,
+    map: buildSessionsByUpdatedAtView(),
+    viewName: ViewName.PLATFORM_ACTION_SESSIONS_BY_UPDATED_AT,
+  })
 }
 
 export const createSessionsByStatusAndUpdatedAtView = async (
   workspaceDb: Database
 ) => {
-  await db.createView(
+  await createActionsView({
     workspaceDb,
-    buildSessionsByStatusAndUpdatedAtView(),
-    ViewName.PLATFORM_ACTION_SESSIONS_BY_STATUS_AND_UPDATED_AT
-  )
+    map: buildSessionsByStatusAndUpdatedAtView(),
+    viewName: ViewName.PLATFORM_ACTION_SESSIONS_BY_STATUS_AND_UPDATED_AT,
+  })
 }
 
 export const createSessionsByEnvironmentAndUpdatedAtView = async (
   workspaceDb: Database
 ) => {
-  await db.createView(
+  await createActionsView({
     workspaceDb,
-    buildSessionsByEnvironmentAndUpdatedAtView(),
-    ViewName.PLATFORM_ACTION_SESSIONS_BY_ENVIRONMENT_AND_UPDATED_AT
-  )
+    map: buildSessionsByEnvironmentAndUpdatedAtView(),
+    viewName: ViewName.PLATFORM_ACTION_SESSIONS_BY_ENVIRONMENT_AND_UPDATED_AT,
+  })
 }
 
 export const createSessionsByEnvironmentStatusAndUpdatedAtView = async (
   workspaceDb: Database
 ) => {
-  await db.createView(
+  await createActionsView({
     workspaceDb,
-    buildSessionsByEnvironmentStatusAndUpdatedAtView(),
-    ViewName.PLATFORM_ACTION_SESSIONS_BY_ENVIRONMENT_STATUS_AND_UPDATED_AT
-  )
+    map: buildSessionsByEnvironmentStatusAndUpdatedAtView(),
+    viewName:
+      ViewName.PLATFORM_ACTION_SESSIONS_BY_ENVIRONMENT_STATUS_AND_UPDATED_AT,
+  })
 }
 
 export const createSessionsStatusCountsView = async (workspaceDb: Database) => {
-  await db.createView(
+  await createActionsView({
     workspaceDb,
-    buildSessionsStatusCountsView(),
-    ViewName.PLATFORM_ACTION_SESSIONS_STATUS_COUNTS,
-    "_count"
-  )
+    map: buildSessionsStatusCountsView(),
+    viewName: ViewName.PLATFORM_ACTION_SESSIONS_STATUS_COUNTS,
+    reduce: "_count",
+  })
 }
 
 export const createSessionsByEnvironmentStatusCountsView = async (
   workspaceDb: Database
 ) => {
-  await db.createView(
+  await createActionsView({
     workspaceDb,
-    buildSessionsByEnvironmentStatusCountsView(),
-    ViewName.PLATFORM_ACTION_SESSIONS_ENVIRONMENT_STATUS_COUNTS,
-    "_count"
-  )
+    map: buildSessionsByEnvironmentStatusCountsView(),
+    viewName: ViewName.PLATFORM_ACTION_SESSIONS_ENVIRONMENT_STATUS_COUNTS,
+    reduce: "_count",
+  })
 }
 
 export const createEventsBySessionView = async (workspaceDb: Database) => {
-  await db.createView(
+  await createActionsView({
     workspaceDb,
-    buildEventsBySessionView(),
-    ViewName.PLATFORM_ACTION_EVENTS_BY_SESSION
-  )
+    map: buildEventsBySessionView(),
+    viewName: ViewName.PLATFORM_ACTION_EVENTS_BY_SESSION,
+  })
 }
 
 export const createEventsCountBySessionView = async (workspaceDb: Database) => {
-  await db.createView(
+  await createActionsView({
     workspaceDb,
-    buildEventsCountBySessionView(),
-    ViewName.PLATFORM_ACTION_EVENTS_COUNT_BY_SESSION,
-    "_count"
-  )
+    map: buildEventsCountBySessionView(),
+    viewName: ViewName.PLATFORM_ACTION_EVENTS_COUNT_BY_SESSION,
+    reduce: "_count",
+  })
 }
 
 // keyset pagination - sessions
