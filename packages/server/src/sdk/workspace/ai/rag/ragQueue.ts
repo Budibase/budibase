@@ -14,8 +14,16 @@ import {
 import { ObjectStoreBuckets } from "../../../../constants"
 import { ingestKnowledgeBaseFile } from "./files"
 import { knowledgeBase } from ".."
+import {
+  extendGeminiIngestionCooldown,
+  GeminiRateLimitError,
+  getGeminiBackoffMs,
+  throwIfGeminiIngestionCoolingDown,
+} from "./geminiRateLimit"
 
 const DEFAULT_CONCURRENCY = 2
+const DEFAULT_ATTEMPTS = 5
+const STACK_TRACE_LIMIT = 10
 const DEFAULT_BACKOFF_MS = utils.Duration.fromSeconds(10).toMs()
 const DEFAULT_TIMEOUT_MS = utils.Duration.fromMinutes(10).toMs()
 
@@ -24,6 +32,8 @@ export interface RagIngestionJob {
   knowledgeBaseId: string
   fileId: string
   objectStoreKey?: string
+  rateLimitDeferrals?: number
+  rateLimitResponses?: number
 }
 
 let ragQueue: queue.BudibaseQueue<RagIngestionJob> | undefined
@@ -36,7 +46,8 @@ export function getQueue() {
       {
         maxStalledCount: 3,
         jobOptions: {
-          attempts: 5,
+          attempts: DEFAULT_ATTEMPTS,
+          stackTraceLimit: STACK_TRACE_LIMIT,
           backoff: {
             type: "exponential",
             delay: DEFAULT_BACKOFF_MS,
@@ -65,6 +76,15 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
     ragQueueInitialised = true
 
     return getQueue().process(concurrency, async job => {
+      const rateLimitDeferrals = job.data.rateLimitDeferrals || 0
+      const failedAttempts = Math.max(0, job.attemptsMade - rateLimitDeferrals)
+      // Bull counts every deferral as an attempt; only ordinary failures use the budget.
+      job.opts.attempts = DEFAULT_ATTEMPTS + rateLimitDeferrals
+      job.opts.stackTraceLimit = STACK_TRACE_LIMIT
+      job.opts.backoff = {
+        type: "fixed",
+        delay: (2 ** (failedAttempts + 1) - 1) * DEFAULT_BACKOFF_MS,
+      }
       const { workspaceId, knowledgeBaseId, fileId, objectStoreKey } = job.data
       const startedAtMs = Date.now()
       console.log("Starting RAG ingestion queue job", {
@@ -131,8 +151,12 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
           throw new Error("RAG file does not have an object store key")
         }
 
+        let ingestionStarted = false
         try {
+          await throwIfGeminiIngestionCoolingDown()
           const buffer = await loadFileBuffer(knowledgeBaseFile.objectStoreKey)
+          await throwIfGeminiIngestionCoolingDown()
+          ingestionStarted = true
           await ingestKnowledgeBaseFile(
             knowledgeBaseConfig,
             knowledgeBaseFile,
@@ -145,7 +169,44 @@ export function init(concurrency = DEFAULT_CONCURRENCY) {
             jobId: job.id,
             durationMs: Date.now() - startedAtMs,
           })
-        } catch (error: any) {
+        } catch (error) {
+          if (error instanceof GeminiRateLimitError) {
+            let rateLimitResponses = job.data.rateLimitResponses ?? 0
+            let retryAt = error.retryAt
+            if (ingestionStarted) {
+              rateLimitResponses++
+              retryAt = await extendGeminiIngestionCooldown({
+                retryAt: Math.max(
+                  retryAt,
+                  Date.now() + getGeminiBackoffMs({ rateLimitResponses })
+                ),
+              })
+            }
+            await job.update({
+              ...job.data,
+              rateLimitDeferrals: rateLimitDeferrals + 1,
+              rateLimitResponses,
+            })
+            job.opts.attempts = DEFAULT_ATTEMPTS + rateLimitDeferrals + 1
+            job.opts.backoff = {
+              type: "fixed",
+              delay:
+                Math.max(1000, retryAt - Date.now()) +
+                Math.floor(Math.random() * 1000),
+            }
+            console.log(
+              "Deferring RAG ingestion until Gemini capacity is available",
+              {
+                workspaceId,
+                knowledgeBaseId,
+                fileId,
+                jobId: job.id,
+                retryAt,
+                rateLimitResponses,
+              }
+            )
+            throw error
+          }
           await handleProcessingError({ file: knowledgeBaseFile, job, error })
           console.error("RAG ingestion queue job failed", {
             workspaceId,
