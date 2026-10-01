@@ -203,6 +203,7 @@ export async function exportBundle(
   const exportStream = await sdk.projects.streamExportProject({
     projectId: id,
     encryptPassword,
+    includeRows: ctx.request.body?.includeRows,
   })
   ctx.attachment(identifier)
   ctx.body = exportStream
