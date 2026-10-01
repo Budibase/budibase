@@ -88,6 +88,116 @@ export default async function (): Promise<FunctionResult> {
       queryAlias: capability.queryAlias,
     }))
 
+  it("persists typed inputs and invalidates builds when their schema changes", async () => {
+    await withFunctionsEnabled(async () => {
+      const source = `import { inputs } from "@budibase/functions"
+export default async function () { return { output: { text: inputs.value.toUpperCase() } } }`
+      const { function: created } = await config.api.function.create({
+        name: "Typed inputs",
+        source,
+        capabilities: [],
+        inputSchema: [
+          {
+            name: "value",
+            type: "string",
+            required: true,
+            description: "Text",
+          },
+        ],
+      })
+      await config.api.function.build(created._id, { _rev: created._rev! })
+      const { function: built } = await config.api.function.find(created._id)
+      const { function: updated } = await config.api.function.update(
+        built._id,
+        {
+          _rev: built._rev!,
+          name: built.name,
+          source,
+          capabilities: [],
+          inputSchema: [
+            {
+              name: "value",
+              type: "number",
+              required: true,
+              description: "Count",
+            },
+          ],
+        }
+      )
+      await config.api.function.build(updated._id, { _rev: updated._rev! })
+      const { function: failed } = await config.api.function.find(updated._id)
+      expect(updated.readiness).toBe("build_required")
+      expect(failed.readiness).toBe("build_failed")
+      expect(failed.inputSchema).toEqual([
+        { name: "value", type: "number", required: true, description: "Count" },
+      ])
+      expect(failed.lastBuild?.diagnostics).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            message: expect.stringContaining("toUpperCase"),
+          }),
+        ])
+      )
+    })
+  })
+
+  it("requires rebuilding after requiredness or description edits", async () => {
+    await withFunctionsEnabled(async () => {
+      const { function: created } = await config.api.function.create({
+        name: "Input metadata",
+        source: validSource,
+        capabilities: [],
+        inputSchema: [{ name: "value", type: "string", required: true }],
+      })
+      await config.api.function.build(created._id, { _rev: created._rev! })
+      const { function: built } = await config.api.function.find(created._id)
+      const { function: updated } = await config.api.function.update(
+        built._id,
+        {
+          _rev: built._rev!,
+          name: built.name,
+          source: built.source,
+          capabilities: [],
+          inputSchema: [
+            {
+              name: "value",
+              type: "string",
+              required: false,
+              description: "Optional text",
+            },
+          ],
+        }
+      )
+      expect(updated.readiness).toBe("build_required")
+    })
+  })
+
+  it("rejects invalid input definitions with actionable errors", async () => {
+    await withFunctionsEnabled(async () => {
+      await config.api.function.create(
+        {
+          name: "Invalid inputs",
+          source: validSource,
+          capabilities: [],
+          inputSchema: [{ name: "not a name", type: "string", required: true }],
+        },
+        { status: 400 }
+      )
+      await config.api.function.create(
+        {
+          name: "Duplicate inputs",
+          source: validSource,
+          capabilities: [],
+          inputSchema: [
+            { name: "value", type: "string", required: true },
+            { name: "value", type: "number", required: false },
+          ],
+        },
+        { status: 400 }
+      )
+    })
+  })
+
   it("allows Functions to be favourited", async () => {
     await withFunctionsEnabled(async () => {
       const { function: fn } = await config.api.function.create({
@@ -1078,6 +1188,7 @@ export default async function (): Promise<FunctionResult> {
       const { function: created } = await config.api.function.create({
         name: "Published lookup",
         source: validSource,
+        inputSchema: [{ name: "customerId", type: "string", required: true }],
         capabilities: [
           {
             queryId: query._id!,
@@ -1147,6 +1258,7 @@ export default async function (): Promise<FunctionResult> {
         _rev: rebuilt._rev!,
         name: rebuilt.name,
         source: `${rebuilt.source}\n// development edit`,
+        inputSchema: [{ name: "customerId", type: "number", required: false }],
         capabilities: toCapabilityInputs(rebuilt),
       })
 
@@ -1155,6 +1267,9 @@ export default async function (): Promise<FunctionResult> {
         async () => await sdk.functions.get(rebuilt._id)
       )
       expect(unchangedPublished?.source).toBe(rebuilt.source)
+      expect(unchangedPublished?.inputSchema).toEqual([
+        { name: "customerId", type: "string", required: true },
+      ])
 
       const status = await config.api.deploy.publishStatus()
       expect(status.functions[rebuilt._id]).toEqual(

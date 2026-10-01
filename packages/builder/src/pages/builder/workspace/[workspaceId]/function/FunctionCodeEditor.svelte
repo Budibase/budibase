@@ -2,6 +2,7 @@
   import { themeStore } from "@/stores/portal"
   import type {
     FunctionBuildDiagnostic,
+    FunctionInputDefinition,
     FunctionQueryCapability,
   } from "@budibase/types"
   import {
@@ -38,10 +39,12 @@
   import { onDestroy, onMount } from "svelte"
   import {
     getFunctionDatasourceCompletions,
+    getFunctionInputCompletions,
     getFunctionQueryCompletions,
   } from "./functionCompletions"
 
   export let value = ""
+  export let inputSchema: FunctionInputDefinition[] = []
   export let capabilities: FunctionQueryCapability[] = []
   export let diagnostics: FunctionBuildDiagnostic[] = []
   export let readonly = false
@@ -95,6 +98,14 @@
       return {
         from: typedExport?.from ?? context.pos,
         options: virtualModuleExports,
+      }
+    }
+
+    const inputMatch = context.matchBefore(/inputs\.[\w$]*$/)
+    if (inputMatch && inputSchema.length) {
+      return {
+        from: inputMatch.from + "inputs.".length,
+        options: getFunctionInputCompletions(inputSchema),
       }
     }
 

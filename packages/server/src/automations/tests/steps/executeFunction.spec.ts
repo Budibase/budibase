@@ -2,6 +2,8 @@ import {
   FunctionErrorCode,
   type ExecuteFunctionStepInputs,
   type FunctionDocument,
+  type FunctionInputType,
+  type JSONValue,
   type FunctionRunResult,
 } from "@budibase/types"
 import env, { withEnv } from "../../../environment"
@@ -93,6 +95,105 @@ const run = (
   )
 
 describe("Run Function automation action", () => {
+  const typedInputs: { type: FunctionInputType; value: JSONValue }[] = [
+    { type: "string", value: "Ada" },
+    { type: "number", value: 0 },
+    { type: "boolean", value: false },
+    { type: "object", value: { nested: true } },
+    { type: "array", value: [1, null] },
+  ]
+  it.each(typedInputs)(
+    "dispatches valid required and optional $type inputs",
+    async ({ type, value }) => {
+      for (const required of [true, false]) {
+        const deps = dependencies({
+          getFunction: jest.fn().mockResolvedValue({
+            ...fn,
+            inputSchema: [{ name: "value", type, required }],
+          }),
+        })
+        await expect(
+          run(deps, { functionId: fn._id, inputs: { value } })
+        ).resolves.toMatchObject({ success: true })
+        expect(deps.orchestrate).toHaveBeenCalledWith(
+          expect.objectContaining({ inputs: { value } })
+        )
+      }
+    }
+  )
+
+  const inputTypes: FunctionInputType[] = [
+    "string",
+    "number",
+    "boolean",
+    "object",
+    "array",
+  ]
+  it.each(inputTypes)(
+    "rejects null for required %s inputs before dispatch",
+    async type => {
+      const deps = dependencies({
+        getFunction: jest.fn().mockResolvedValue({
+          ...fn,
+          inputSchema: [{ name: "value", type, required: true }],
+        }),
+      })
+      await expect(
+        run(deps, { functionId: fn._id, inputs: { value: null } })
+      ).resolves.toEqual({
+        success: false,
+        status: "error",
+        error: {
+          code: FunctionErrorCode.FUNCTION_INPUT_INVALID,
+          message: `Input "value" must be of type ${type}.`,
+        },
+      })
+      expect(deps.orchestrate).not.toHaveBeenCalled()
+    }
+  )
+
+  it.each(inputTypes)(
+    "accepts null for optional %s inputs before dispatch",
+    async type => {
+      const deps = dependencies({
+        getFunction: jest.fn().mockResolvedValue({
+          ...fn,
+          inputSchema: [{ name: "value", type, required: false }],
+        }),
+      })
+      await expect(
+        run(deps, { functionId: fn._id, inputs: { value: null } })
+      ).resolves.toMatchObject({ success: true })
+      expect(deps.orchestrate).toHaveBeenCalledWith(
+        expect.objectContaining({ inputs: { value: null } })
+      )
+    }
+  )
+
+  it("rejects missing required inputs and permits omitted optional inputs", async () => {
+    const getFunction = jest.fn().mockResolvedValue({
+      ...fn,
+      inputSchema: [{ name: "value", type: "string", required: true }],
+    })
+    const deps = dependencies({ getFunction })
+    await expect(
+      run(deps, { functionId: fn._id, inputs: {} })
+    ).resolves.toMatchObject({
+      error: {
+        code: FunctionErrorCode.FUNCTION_INPUT_INVALID,
+        message: 'Required input "value" is missing.',
+      },
+    })
+    expect(deps.orchestrate).not.toHaveBeenCalled()
+    getFunction.mockResolvedValue({
+      ...fn,
+      inputSchema: [{ name: "value", type: "string", required: false }],
+    })
+    await expect(
+      run(deps, { functionId: fn._id, inputs: {} })
+    ).resolves.toMatchObject({ success: true })
+  })
+
   it("uses configured limits for execution and capabilities", async () => {
     const limits = {
       ...env.FUNCTIONS_LIMITS.run,

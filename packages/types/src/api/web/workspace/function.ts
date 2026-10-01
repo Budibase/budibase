@@ -1,6 +1,7 @@
 import type {
   FunctionBuildDiagnostic,
   FunctionDocument,
+  FunctionInputDefinition,
   FunctionRunSummary,
 } from "../../../documents"
 import type { SourceName } from "../../../sdk"
@@ -16,6 +17,7 @@ export interface FunctionQueryCapabilityInput {
 export interface FunctionDraftRequest {
   name: string
   source: string
+  inputSchema?: FunctionInputDefinition[]
   capabilities: FunctionQueryCapabilityInput[]
 }
 
