@@ -32,6 +32,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { apiFileReturn } from "../../../utilities/fileSystem"
+import { propagateProjectDependencyChangesWithWarning } from "../../../utilities/projects"
 import { toAgentResponse } from "./agentResponse"
 
 const SLACK_OAUTH_STATE_TTL_SECONDS = 600
@@ -316,7 +317,7 @@ export async function fetchAgents(ctx: UserCtx<void, FetchAgentsResponse>) {
   ctx.body = { agents: agents.map(toAgentResponse) }
 }
 
-export async function createAgent(
+async function createAgentUnlocked(
   ctx: UserCtx<CreateAgentRequest, CreateAgentResponse>
 ) {
   const body = ctx.request.body
@@ -341,12 +342,27 @@ export async function createAgent(
   }
 
   const agent = await sdk.ai.agents.create(createRequest)
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
+    rootResourceId: agent._id!,
+    currentProjectIds: agent.projectIds,
+    previousProjectIds: [],
+    savedResource: agent,
+  })
 
   ctx.body = toAgentResponse(agent)
   ctx.status = 201
 }
 
-export async function updateAgent(
+export async function createAgent(
+  ctx: UserCtx<CreateAgentRequest, CreateAgentResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    createAgentUnlocked(ctx)
+  )
+}
+
+async function updateAgentUnlocked(
   ctx: UserCtx<UpdateAgentRequest, UpdateAgentResponse>
 ) {
   const body = ctx.request.body
@@ -379,11 +395,26 @@ export async function updateAgent(
     ...existing,
     ...updateRequest,
   })
+  await propagateProjectDependencyChangesWithWarning({
+    ctx,
+    rootResourceId: agent._id!,
+    currentProjectIds: agent.projectIds,
+    previousProjectIds: existing.projectIds,
+    previousResource: existing,
+    savedResource: agent,
+  })
 
   ctx.body = toAgentResponse(agent)
   ctx.status = 200
 }
 
+export async function updateAgent(
+  ctx: UserCtx<UpdateAgentRequest, UpdateAgentResponse>
+) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    updateAgentUnlocked(ctx)
+  )
+}
 export async function provisionAgentMSTeamsChannel(
   ctx: UserCtx<
     ProvisionAgentMSTeamsChannelRequest,
@@ -706,7 +737,7 @@ export async function toggleAgentSlackDeployment(
   ctx.status = 200
 }
 
-export async function duplicateAgent(
+async function duplicateAgentUnlocked(
   ctx: UserCtx<void, CreateAgentResponse, { agentId: string }>
 ) {
   const sourceAgent = await sdk.ai.agents.getOrThrow(ctx.params.agentId)
@@ -717,6 +748,14 @@ export async function duplicateAgent(
 
   ctx.body = toAgentResponse(duplicated)
   ctx.status = 201
+}
+
+export async function duplicateAgent(
+  ctx: UserCtx<void, CreateAgentResponse, { agentId: string }>
+) {
+  await sdk.projects.doWithProjectAssignmentsLockIfEnabled(() =>
+    duplicateAgentUnlocked(ctx)
+  )
 }
 
 export async function deleteAgent(
