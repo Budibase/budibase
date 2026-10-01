@@ -94,28 +94,12 @@ describe("project dependency propagation", () => {
     workspaceAppId,
   })
 
-  const createAssignedProject = async () => {
-    const { project } = await config.api.project.create({
-      name: "Operations",
-    })
-    return project
-  }
-
-  const createAssignedWorkspaceApp = async (projectId: string) => {
-    const { workspaceApp } = await config.api.workspaceApp.create(
-      structures.workspaceApps.createRequest({
-        name: "Ops app",
-        url: "/ops-app",
-        projectIds: [projectId],
-      })
-    )
-    return workspaceApp
-  }
-
   describe("propagates project ids to dependencies on save", () => {
     it("allows other saves during schema discovery and revalidates projects afterwards", async () => {
       await withProjectsEnabled(async () => {
-        const project = await createAssignedProject()
+        const { project } = await config.api.project.create({
+          name: "Operations",
+        })
         const { workspaceApp } = await config.api.workspaceApp.create({
           name: "Unrelated app",
           url: "/unrelated-app",
@@ -181,7 +165,13 @@ describe("project dependency propagation", () => {
         const { project } = await config.api.project.create({
           name: "Operations",
         })
-        const workspaceApp = await createAssignedWorkspaceApp(project._id)
+        const { workspaceApp } = await config.api.workspaceApp.create(
+          structures.workspaceApps.createRequest({
+            name: "Ops app",
+            url: "/ops-app",
+            projectIds: [project._id],
+          })
+        )
         const automation = await config.createAutomation()
 
         jest
@@ -529,7 +519,7 @@ describe("project dependency propagation", () => {
       })
     })
 
-    it("preserves agent project exclusions and tool bindings when a query moves", async () => {
+    it("propagates new query references during a move while preserving exclusions and tool bindings", async () => {
       await withProjectsEnabled(async () => {
         const { project: sharedProject } = await config.api.project.create({
           name: "Shared project",
@@ -546,10 +536,15 @@ describe("project dependency propagation", () => {
           await config.api.project.create({
             name: "Excluded agent project",
           })
+        const excludedTable = await config.api.table.save(
+          basicTable(undefined, { name: "Excluded reference" })
+        )
+        const addedTable = await config.api.table.save(
+          basicTable(undefined, { name: "Added reference" })
+        )
         const sourceDatasource = await config.api.datasource.create({
           ...basicDatasource().datasource,
           name: "Source datasource",
-          projectIds: [sharedProject._id, agentProject._id],
         })
         const destinationDatasource = await config.api.datasource.create({
           ...basicDatasource().datasource,
@@ -565,9 +560,22 @@ describe("project dependency propagation", () => {
           projectIds: [sharedProject._id, destinationProject._id],
           dependencyIds: [],
         })
-        const query = await config.api.query.save(
-          basicQuery(sourceDatasource._id!)
-        )
+        const query = await config.api.query.save({
+          ...basicQuery(sourceDatasource._id!),
+          parameters: [
+            { name: "existing", default: `{{ ${excludedTable._id}.name }}` },
+          ],
+        })
+        const sourcePreview = await config.api.project.previewAssignment({
+          resourceId: sourceDatasource._id!,
+          projectIds: [sharedProject._id, agentProject._id],
+        })
+        await config.api.project.updateAssignment(sourceDatasource._id!, {
+          dependencyFingerprint: sourcePreview.dependencyFingerprint,
+          resourceRev: sourceDatasource._rev!,
+          projectIds: [sharedProject._id, agentProject._id],
+          dependencyIds: [],
+        })
         const existingBindings = getQueryToolBindingsForResource({
           datasource: sourceDatasource,
           query,
@@ -575,7 +583,6 @@ describe("project dependency propagation", () => {
         const agent = await config.api.agent.createWithOperation(
           {
             name: "Query agent",
-            projectIds: [sharedProject._id, agentProject._id],
           },
           {
             id: "operation_1",
@@ -620,8 +627,24 @@ describe("project dependency propagation", () => {
           const movedQuery = await config.api.query.save({
             ...query,
             datasourceId: destinationDatasource._id!,
+            parameters: [
+              ...query.parameters,
+              { name: "added", default: `{{ ${addedTable._id}.name }}` },
+            ],
           })
 
+          expect(
+            (await config.api.table.get(excludedTable._id!)).projectIds
+          ).toEqual([destinationProject._id])
+          expect(
+            new Set((await config.api.table.get(addedTable._id!)).projectIds)
+          ).toEqual(
+            new Set([
+              sharedProject._id,
+              destinationProject._id,
+              agentProject._id,
+            ])
+          )
           expect(
             new Set(
               (

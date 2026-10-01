@@ -2,8 +2,6 @@ import { constants } from "@budibase/backend-core"
 import {
   ExecuteQueryRequest,
   ExecuteV2QueryResponse,
-  ImportRestQueryRequest,
-  ImportRestQueryResponse,
   PreviewQueryRequest,
   PreviewQueryResponse,
   Query,
@@ -13,16 +11,6 @@ import { Expectations, TestAPI } from "./base"
 export class QueryAPI extends TestAPI {
   save = async (body: Query, expectations?: Expectations): Promise<Query> => {
     return await this._post<Query>(`/api/queries`, { body, expectations })
-  }
-
-  import = async (
-    body: ImportRestQueryRequest,
-    expectations?: Expectations
-  ): Promise<ImportRestQueryResponse> => {
-    return await this._post<ImportRestQueryResponse>(`/api/queries/import`, {
-      body,
-      expectations,
-    })
   }
 
   execute = async (

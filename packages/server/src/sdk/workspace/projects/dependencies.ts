@@ -598,16 +598,18 @@ export const propagateMovedQueryDependencies = async ({
     })
   )
 
-  outcomes.push(
-    await propagateProjectIdsToDependencyIds({
-      dependencyIds: collectAssignableDependencyIds({
-        blockedResourceIds: [query._id!],
-        graph: analysis.graph,
-        includeRoots: true,
-        resourceIds: [datasource._id!],
-      }),
-      projectIds: newAgentProjectIds,
-    })
-  )
+  if (newAgentProjectIds.length) {
+    outcomes.push(
+      await propagateProjectIdsToDependencyIds({
+        dependencyIds: collectAssignableDependencyIds({
+          blockedResourceIds: [query._id!],
+          graph: analysis.graph,
+          includeRoots: true,
+          resourceIds: [datasource._id!],
+        }),
+        projectIds: newAgentProjectIds,
+      })
+    )
+  }
   return mergePropagationOutcomes(outcomes)
 }
