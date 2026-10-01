@@ -10,7 +10,9 @@ export interface ResourceSearchTarget extends UsedResource {
 }
 
 export const findResourceBindingBlocks = (value: string) =>
-  value.match(new RegExp(FIND_ANY_HBS_REGEX, "gs")) || []
+  value
+    .replace(/{{~?!--[\s\S]*?--~?}}|{{~?![\s\S]*?}}/g, "")
+    .match(new RegExp(FIND_ANY_HBS_REGEX, "gs")) || []
 
 const STRUCTURED_REFERENCE_PROPERTIES = new Set(["_id", "dependencies", "id"])
 
@@ -97,13 +99,9 @@ const getBindingMatches = ({
   return matchedIds
 }
 
-const getSearchableBinding = (block: string) => {
-  try {
-    return decodeJSBinding(block) ?? block
-  } catch {
-    return block
-  }
-}
+const getSearchableBinding = (block: string) =>
+  decodeJSBinding(block) ??
+  block.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, "")
 
 export const findResourceSearchTargets = ({
   resource,

@@ -214,6 +214,7 @@ export async function importInfo(
 export async function save(ctx: UserCtx<SaveQueryRequest, SaveQueryResponse>) {
   const db = context.getWorkspaceDB()
   const query: Query = ctx.request.body
+  delete query.projectIds
 
   // Validate query name
   if (!query?.name.match(ValidQueryNameRegex)) {

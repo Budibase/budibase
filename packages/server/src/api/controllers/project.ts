@@ -97,11 +97,12 @@ export async function exportBundle(
 
   const extension = encryptPassword ? "enc.tar.gz" : "tar.gz"
   const identifier = `${project.name}-project-export-${Date.now()}.${extension}`
-  ctx.attachment(identifier)
-  ctx.body = await sdk.projects.streamExportProject({
+  const exportStream = await sdk.projects.streamExportProject({
     projectId: id,
     encryptPassword,
   })
+  ctx.attachment(identifier)
+  ctx.body = exportStream
 }
 
 interface ProjectImportFiles {

@@ -40,6 +40,49 @@ describe("resource references", () => {
     ).toEqual([])
   })
 
+  it.each([
+    "{{! query_orders.rows api.sales.getOrders }}",
+    "{{~!-- {{ query_orders.rows }} --~}}{{~! api.sales.getOrders ~}}",
+    "{{!-- ignore {{ query_orders.rows }}\nand {{ api.sales.getOrders }} --}}",
+    '{{ "query_orders.rows api.sales.getOrders" }}',
+    "{{ 'query_orders.rows api.sales.getOrders' }}",
+    '{{ concat "say \\"query_orders.rows\\"" \'api.sales.getOrders\' }}',
+  ])("ignores comments and quoted literals: %s", binding => {
+    expect(
+      findResourceSearchTargets({
+        resource: { binding },
+        targets: [
+          createSearchTarget(queryResource),
+          createBindingSearchTarget({
+            resource: queryResource,
+            binding: "api.sales.getOrders",
+          }),
+        ],
+      })
+    ).toEqual([])
+  })
+
+  it("keeps active references beside comments and quoted literals", () => {
+    const literalTarget = createSearchTarget({
+      ...queryResource,
+      id: "query_ignored",
+    })
+    const activeTarget = createBindingSearchTarget({
+      resource: queryResource,
+      binding: "api.sales.getOrders",
+    })
+
+    expect(
+      findResourceSearchTargets({
+        resource: {
+          binding:
+            '{{!-- {{ query_ignored.rows }} --}}{{ concat "query_ignored.rows" api.sales.getOrders.rows }}',
+        },
+        targets: [literalTarget, activeTarget],
+      })
+    ).toEqual([activeTarget])
+  })
+
   it("finds structured agent operation tool references", () => {
     const target = createToolSearchTarget({
       resource: queryResource,

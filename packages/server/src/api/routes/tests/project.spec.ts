@@ -44,6 +44,8 @@ import { getAutomationTriggerToolName } from "../../../ai/tools/budibase/automat
 import { getRowToolNames } from "../../../ai/tools/budibase/rows"
 import sdk from "../../../sdk"
 import { getQueryToolBindingsForResource } from "../../../sdk/workspace/ai/agents/queryToolReferences"
+import * as workspaceBackups from "../../../sdk/workspace/backups/imports"
+import * as projectPackageConstants from "../../../sdk/workspace/projects/backups/constants"
 import * as projects from "../../../sdk/workspace/projects/crud"
 import { buildExternalTableId } from "../../../integrations/utils"
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
@@ -60,6 +62,20 @@ import {
   newAutomation,
 } from "../../../tests/utilities/structures"
 
+jest.mock("../../../sdk/workspace/backups/imports", () => ({
+  __esModule: true,
+  ...jest.requireActual<
+    typeof import("../../../sdk/workspace/backups/imports")
+  >("../../../sdk/workspace/backups/imports"),
+}))
+
+jest.mock("../../../sdk/workspace/projects/backups/constants", () => ({
+  __esModule: true,
+  ...jest.requireActual<
+    typeof import("../../../sdk/workspace/projects/backups/constants")
+  >("../../../sdk/workspace/projects/backups/constants"),
+}))
+
 // Agent create/update resolves the Slack workspace via auth.test - mocked so
 // tests never call out to Slack.
 jest.mock("@slack/web-api", () => ({
@@ -74,6 +90,8 @@ describe("/projects", () => {
   const config = new TestConfiguration()
   let cleanupAIConfig: undefined | (() => Promise<void>)
   type PipelineDestination = Parameters<typeof pipeline>[1]
+  const packageLimits: { MAX_PROJECT_PACKAGE_ENTRIES: number } =
+    projectPackageConstants
 
   afterAll(() => {
     config.end()
@@ -2783,6 +2801,56 @@ describe("/projects", () => {
           datasource => datasource._id !== INTERNAL_TABLE_SOURCE_ID
         )
       ).toHaveLength(0)
+    })
+  })
+
+  it("accepts a package at the total entry limit", async () => {
+    await withProjectsEnabled(async () => {
+      const project = await createAssignedProject()
+      const limit = jest.replaceProperty(
+        packageLimits,
+        "MAX_PROJECT_PACKAGE_ENTRIES",
+        4
+      )
+
+      try {
+        const packageBuffer = await config.api.project.export(project._id!)
+        const { project: importedProject } =
+          await config.api.project.import(packageBuffer)
+
+        expect(importedProject.name).toBe(project.name)
+        expect((await config.api.project.fetch()).projects).toHaveLength(2)
+      } finally {
+        limit.restore()
+      }
+    })
+  })
+
+  it("counts directories towards the entry limit on export and before extraction", async () => {
+    await withProjectsEnabled(async () => {
+      const project = await createAssignedProject()
+      const packageBuffer = await config.api.project.export(project._id!)
+      const limit = jest.replaceProperty(
+        packageLimits,
+        "MAX_PROJECT_PACKAGE_ENTRIES",
+        3
+      )
+      const extract = jest.spyOn(workspaceBackups, "untarFile")
+      const expectations = {
+        status: 400,
+        body: { message: "Project package contains too many entries." },
+      }
+
+      try {
+        await config.api.project.export(project._id!, undefined, expectations)
+        await config.api.project.import(packageBuffer, undefined, expectations)
+
+        expect(extract).not.toHaveBeenCalled()
+        expect((await config.api.project.fetch()).projects).toHaveLength(1)
+      } finally {
+        extract.mockRestore()
+        limit.restore()
+      }
     })
   })
 

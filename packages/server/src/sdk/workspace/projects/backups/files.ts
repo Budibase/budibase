@@ -3,7 +3,7 @@ import fsp from "fs/promises"
 import { join, relative } from "path"
 import {
   MAX_PROJECT_EXTRACTED_SIZE_BYTES,
-  MAX_PROJECT_PACKAGE_FILES,
+  MAX_PROJECT_PACKAGE_ENTRIES,
 } from "./constants"
 
 export const MAX_PROJECT_PATH_SEGMENTS = 4
@@ -21,16 +21,20 @@ export const isSafeArchivePath = (path: string) => {
 export const readProjectPackageFiles = async ({
   dirPath,
   rootPath = dirPath,
-  totals = { files: 0, bytes: 0 },
+  totals = { entries: 0, bytes: 0 },
 }: {
   dirPath: string
   rootPath?: string
-  totals?: { files: number; bytes: number }
+  totals?: { entries: number; bytes: number }
 }): Promise<string[]> => {
   const entries = await fsp.readdir(dirPath, { withFileTypes: true })
   const files: string[] = []
 
   for (const entry of entries) {
+    totals.entries += 1
+    if (totals.entries > MAX_PROJECT_PACKAGE_ENTRIES) {
+      throw new HTTPError("Project package contains too many entries.", 400)
+    }
     const fullPath = join(dirPath, entry.name)
     const relPath = relative(rootPath, fullPath)
     if (!isSafeArchivePath(relPath)) {
@@ -55,11 +59,7 @@ export const readProjectPackageFiles = async ({
       )
     } else {
       const stats = await fsp.stat(fullPath)
-      totals.files += 1
       totals.bytes += stats.size
-      if (totals.files > MAX_PROJECT_PACKAGE_FILES) {
-        throw new HTTPError("Project package contains too many files.", 400)
-      }
       if (totals.bytes > MAX_PROJECT_EXTRACTED_SIZE_BYTES) {
         throw new HTTPError("Project package is too large.", 400)
       }

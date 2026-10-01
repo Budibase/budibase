@@ -52,7 +52,7 @@ describe("project resource dependency traversal", () => {
     type,
   })
 
-  it("deduplicates diamond dependencies and terminates cycles", () => {
+  it("deduplicates diamond dependencies", () => {
     const graph: ResourceDependencyGraph = {
       app: {
         dependencies: [
@@ -66,9 +66,7 @@ describe("project resource dependency traversal", () => {
       customers: {
         dependencies: [resource("orders", ResourceType.TABLE)],
       },
-      orders: {
-        dependencies: [resource("customers", ResourceType.TABLE)],
-      },
+      orders: { dependencies: [] },
     }
     const memberships = new Map([
       ["app", ["project_1"]],
@@ -85,6 +83,28 @@ describe("project resource dependency traversal", () => {
         memberships
       ).map(dependency => dependency.id)
     ).toEqual(["automation", "orders", "customers"])
+  })
+
+  it("terminates a cycle without including the root as its own dependency", () => {
+    const graph: ResourceDependencyGraph = {
+      app: { dependencies: [resource("automation", ResourceType.AUTOMATION)] },
+      automation: { dependencies: [resource("table", ResourceType.TABLE)] },
+      table: { dependencies: [resource("app", ResourceType.WORKSPACE_APP)] },
+    }
+    const memberships = new Map([
+      ["app", ["project_1"]],
+      ["automation", ["project_1"]],
+      ["table", ["project_1"]],
+    ])
+
+    expect(
+      collectProjectResourceDependencies(
+        graph,
+        "app",
+        "project_1",
+        memberships
+      ).map(dependency => dependency.id)
+    ).toEqual(["automation", "table"])
   })
 
   it("stops at excluded assignable dependencies", () => {
@@ -283,11 +303,6 @@ describe("/api/resources/usage", () => {
             name: table.name,
             type: ResourceType.TABLE,
           },
-          {
-            id: automation._id,
-            name: automation.name,
-            type: ResourceType.AUTOMATION,
-          },
         ],
       })
     })
@@ -312,11 +327,6 @@ describe("/api/resources/usage", () => {
             name: rowAction.name,
             type: ResourceType.ROW_ACTION,
           },
-          {
-            id: rowAction.automationId,
-            name: "Row action usage",
-            type: ResourceType.AUTOMATION,
-          },
         ],
       })
 
@@ -331,20 +341,12 @@ describe("/api/resources/usage", () => {
       })
     })
 
-    it("should not detect datasource when for internal tables", async () => {
+    it("does not treat an internal table's document id as a dependency", async () => {
       const table = await config.api.table.save(basicTable())
 
       const result = await config.api.resource.getResourceDependencies()
 
-      expect(result.body.resources[table._id!]).toEqual({
-        dependencies: [
-          {
-            id: table._id,
-            name: table.name,
-            type: ResourceType.TABLE,
-          },
-        ],
-      })
+      expect(result.body.resources[table._id!]).toEqual({ dependencies: [] })
     })
 
     it("should include row actions and their automations when checking a table", async () => {
@@ -368,11 +370,6 @@ describe("/api/resources/usage", () => {
         result.body.resources[table._id!].dependencies ?? []
 
       expect(tableDependencies).toEqual([
-        {
-          id: table._id,
-          name: table.name,
-          type: ResourceType.TABLE,
-        },
         {
           id: generateRowActionsID(table._id!),
           name: rowAction.name,
@@ -403,11 +400,6 @@ describe("/api/resources/usage", () => {
             id: datasource._id,
             name: datasource.name,
             type: ResourceType.DATASOURCE,
-          },
-          {
-            id: query._id,
-            name: query.name,
-            type: ResourceType.QUERY,
           },
         ],
       })

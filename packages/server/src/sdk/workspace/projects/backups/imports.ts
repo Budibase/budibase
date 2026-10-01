@@ -67,7 +67,7 @@ import {
   PROJECT_ATTACHMENTS_DIRECTORY,
   MAX_PROJECT_ARCHIVE_SIZE_BYTES,
   MAX_PROJECT_EXTRACTED_SIZE_BYTES,
-  MAX_PROJECT_PACKAGE_FILES,
+  MAX_PROJECT_PACKAGE_ENTRIES,
   PROJECT_DEPENDENCY_INDEX_FILE,
   PROJECT_DOCS_DIRECTORY,
   PROJECT_EXPORT_FORMAT_VERSION,
@@ -195,7 +195,7 @@ const validateProjectPackageBeforeExtraction = async (file: {
     throw new HTTPError("Project package is invalid.", 400)
   }
 
-  const totals = { files: 0, bytes: 0 }
+  let totalBytes = 0
   const stream = fs.createReadStream(file.path)
   let entries = 0
 
@@ -211,6 +211,10 @@ const validateProjectPackageBeforeExtraction = async (file: {
         return
       }
       entries += 1
+      if (entries > MAX_PROJECT_PACKAGE_ENTRIES) {
+        fail(new HTTPError("Project package contains too many entries.", 400))
+        return
+      }
       if (!isSafeArchivePath(entry.path)) {
         fail(new HTTPError("Project package contains unsafe paths.", 400))
         return
@@ -238,13 +242,8 @@ const validateProjectPackageBeforeExtraction = async (file: {
         return
       }
       if (!entry.type || PROJECT_PACKAGE_FILE_ENTRY_TYPES.has(entry.type)) {
-        totals.files += 1
-        totals.bytes += entry.size || 0
-        if (totals.files > MAX_PROJECT_PACKAGE_FILES) {
-          fail(new HTTPError("Project package contains too many files.", 400))
-          return
-        }
-        if (totals.bytes > MAX_PROJECT_EXTRACTED_SIZE_BYTES) {
+        totalBytes += entry.size || 0
+        if (totalBytes > MAX_PROJECT_EXTRACTED_SIZE_BYTES) {
           fail(new HTTPError("Project package is too large.", 400))
           return
         }

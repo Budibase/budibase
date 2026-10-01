@@ -96,25 +96,6 @@ export function collectTransitiveResourceDependencies(
   })
 }
 
-function collectCloneResourceDependencies(
-  graph: ResourceDependencyGraph,
-  resourceId: string
-): UsedResource[] {
-  const seen = new Set([resourceId])
-  return (graph[resourceId]?.dependencies || []).flatMap(dependency => {
-    if (dependency.id === resourceId) {
-      return [dependency]
-    }
-    if (seen.has(dependency.id)) {
-      return []
-    }
-    return [
-      dependency,
-      ...collectTransitiveResourceDependencies(graph, dependency.id, seen),
-    ]
-  })
-}
-
 export function collectProjectResourceDependencies(
   graph: ResourceDependencyGraph,
   resourceId: string,
@@ -351,11 +332,18 @@ export async function analyseResourceDependencies({
       type,
     }))
 
-  const searchForUsages = (
-    forResource: string,
-    possibleUsages: AnyDocument
-  ) => {
-    for (const search of findSearchTargets(possibleUsages)) {
+  const addReferencedDependencies = ({
+    forResource,
+    resource,
+  }: {
+    forResource: string
+    resource: AnyDocument
+  }) => {
+    dependencies[forResource] ??= { dependencies: [] }
+    for (const search of findSearchTargets(resource)) {
+      if (search.id === forResource) {
+        continue
+      }
       if (
         !dependencies[forResource]?.dependencies.find(
           resource => resource.id === search.id
@@ -369,6 +357,7 @@ export async function analyseResourceDependencies({
 
         const toAdd = [...(search.extraDependencies || [])].filter(
           ({ id }) =>
+            id !== forResource &&
             !dependencies[forResource]?.dependencies.some(r => r.id === id)
         )
         addDependencies(forResource, toAdd)
@@ -377,29 +366,44 @@ export async function analyseResourceDependencies({
   }
 
   for (const datasource of datasources) {
-    searchForUsages(datasource._id!, {
-      config: datasource.config,
-      entities: datasource.entities,
+    addReferencedDependencies({
+      forResource: datasource._id!,
+      resource: {
+        config: datasource.config,
+        entities: datasource.entities,
+      },
     })
   }
 
   // Search in tables
   for (const table of internalTables) {
-    searchForUsages(table._id!, table)
+    addReferencedDependencies({
+      forResource: table._id!,
+      resource: table,
+    })
   }
 
   // Search in automations
   for (const automation of automations) {
-    searchForUsages(automation._id, automation)
+    addReferencedDependencies({
+      forResource: automation._id,
+      resource: automation,
+    })
   }
 
   // Search in queries
   for (const query of queries) {
-    searchForUsages(query._id!, query)
+    addReferencedDependencies({
+      forResource: query._id!,
+      resource: query,
+    })
   }
 
   for (const agent of agents) {
-    searchForUsages(agent._id!, agent)
+    addReferencedDependencies({
+      forResource: agent._id!,
+      resource: agent,
+    })
   }
 
   // Search in workspace app screens
@@ -428,7 +432,10 @@ export async function analyseResourceDependencies({
     )
 
     for (const screen of screens) {
-      searchForUsages(workspaceApp._id!, screen)
+      addReferencedDependencies({
+        forResource: workspaceApp._id!,
+        resource: screen,
+      })
     }
   }
 
@@ -602,7 +609,12 @@ export async function getResourcesInfo(
       }
       return [
         resourceId,
-        { dependencies: collectCloneResourceDependencies(graph, resourceId) },
+        {
+          dependencies: collectTransitiveResourceDependencies(
+            graph,
+            resourceId
+          ),
+        },
       ]
     })
   )
