@@ -11,6 +11,7 @@
   } from "@budibase/types"
   import { workspaceDeploymentStore } from "@/stores/builder"
   import {
+    admin,
     agentsStore,
     knowledgeConnectionsStore,
     selectedAgent,
@@ -99,11 +100,14 @@
     return agentsStore.getKnowledgeConfiguration()?.knowledgeSearchConfigured
   })
   let knowledgeSearchUnavailable = $derived(knowledgeSearchConfigured !== true)
-  let knowledgeActionsTooltip = $derived(
-    knowledgeSearchUnavailable
-      ? "Set GEMINI_API_KEY on your local environment and restart Budibase."
-      : undefined
-  )
+  let knowledgeActionsTooltip = $derived.by(() => {
+    if (!knowledgeSearchUnavailable) {
+      return undefined
+    }
+    return $admin.cloud
+      ? "File search is currently unavailable"
+      : "Set GEMINI_API_KEY in the Budibase server environment and restart Budibase."
+  })
 
   let hasSharePointConnection = $derived(
     $knowledgeConnectionsStore.connections.some(
@@ -387,6 +391,19 @@
         </div>
       {/snippet}
     </OperationRailSectionHeader>
+
+    {#if $admin.cloud}
+      <Body color="var(--spectrum-global-color-gray-700)" size="XS">
+        {knowledgeSearchUnavailable
+          ? "File search is currently unavailable"
+          : "Powered by Budibase AI"}
+      </Body>
+    {:else if knowledgeSearchUnavailable}
+      <Body color="var(--spectrum-global-color-gray-700)" size="XS">
+        Set <code>GEMINI_API_KEY</code> in the Budibase server environment and restart
+        Budibase.
+      </Body>
+    {/if}
 
     {#if knowledgeTableRows.length}
       <div class="sources-access">

@@ -10,7 +10,8 @@ jest.mock("../configs/litellm", () => ({
   getKeySettings: (...args: any[]) => mockGetKeySettings(...args),
 }))
 
-import { setEnv, withEnv } from "../../../../environment"
+import { withEnv as withCoreEnv } from "@budibase/backend-core"
+import { withEnv } from "../../../../environment"
 import { withLiteLLMSessionId } from "../llm/requestSession"
 import {
   createGeminiFileStore,
@@ -54,21 +55,29 @@ describe("geminiFileStore", () => {
     mockGetKeySettings.mockResolvedValue({ secretKey: "workspace-key" })
   })
 
-  it("throws a 400 when GEMINI_API_KEY is missing", async () => {
-    const cleanup = setEnv({ GEMINI_API_KEY: undefined as any })
-    try {
-      await expect(createGeminiFileStore("Support Docs")).rejects.toMatchObject(
-        {
-          status: 400,
-          message:
-            "Gemini File Search failed. Set GEMINI_API_KEY on your local environment",
-        }
-      )
-      expect(mockFetch).not.toHaveBeenCalled()
-    } finally {
-      cleanup()
+  it.each([
+    {
+      selfHosted: false,
+      message: "File search is currently unavailable",
+    },
+    {
+      selfHosted: true,
+      message:
+        "File search is currently unavailable. Set GEMINI_API_KEY in the Budibase server environment and restart Budibase.",
+    },
+  ])(
+    "returns the missing-key error for selfHosted=$selfHosted",
+    async ({ selfHosted, message }) => {
+      await withCoreEnv({ SELF_HOSTED: selfHosted }, async () => {
+        await withEnv({ GEMINI_API_KEY: undefined }, async () => {
+          await expect(
+            createGeminiFileStore("Support Docs")
+          ).rejects.toMatchObject({ status: 400, message })
+          expect(mockFetch).not.toHaveBeenCalled()
+        })
+      })
     }
-  })
+  )
 
   it("uses upstream response status when ingest fails", async () => {
     await withEnv({ GEMINI_API_KEY: "test-gemini-key" }, async () => {
