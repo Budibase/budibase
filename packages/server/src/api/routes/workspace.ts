@@ -4,6 +4,11 @@ import * as deploymentController from "../controllers/deploy"
 import * as controller from "../controllers/workspace"
 import { builderRoutes, creatorRoutes, publicRoutes } from "./endpointGroups"
 import { applicationValidator } from "./utils/validators"
+import {
+  UserCtx,
+  CreateWorkspaceRequest,
+  CreateWorkspaceResponse,
+} from "@budibase/types"
 
 builderRoutes
   .post("/api/applications/:appId/sync", controller.sync)
@@ -28,7 +33,8 @@ builderRoutes
 creatorRoutes.post(
   "/api/applications",
   applicationValidator(),
-  controller.create
+  (ctx: UserCtx<CreateWorkspaceRequest, CreateWorkspaceResponse, any>) =>
+    controller.create(ctx)
 )
 
 // Client only endpoints
