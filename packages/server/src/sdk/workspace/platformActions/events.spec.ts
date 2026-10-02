@@ -2,6 +2,7 @@ import { events, utils } from "@budibase/backend-core"
 import type {
   PlatformActionEnvironment,
   PlatformActionEvent,
+  PlatformActionSessionIndexDoc,
   PlatformActionSourceType,
 } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "@budibase/types"
@@ -22,6 +23,40 @@ describe("platformActions events", () => {
     config.end()
   })
 
+  async function createSession({
+    environment = "prod",
+    sourceType = "agent_session",
+    sourceId,
+  }: {
+    environment?: PlatformActionEnvironment
+    sourceType?: PlatformActionSourceType
+    sourceId: string
+  }) {
+    await config.doInContext(config.getProdWorkspaceId(), async () => {
+      const database = events.platformActions.getActionsDB()
+      const _id = events.platformActions.getPlatformActionSessionId({
+        environment,
+        sourceType,
+        sourceId,
+      })
+      if (await database.tryGet(_id)) {
+        return
+      }
+      const timestamp = new Date().toISOString()
+      const doc: PlatformActionSessionIndexDoc = {
+        _id,
+        sourceType,
+        sourceId,
+        environment,
+        status: "active",
+        actionCount: 1,
+        startedAt: timestamp,
+        updatedAt: timestamp,
+      }
+      await database.put(doc)
+    })
+  }
+
   async function createEvent({
     environment = "prod",
     sourceType = "agent_session",
@@ -33,6 +68,7 @@ describe("platformActions events", () => {
     sourceId: string
     eventName?: string
   }) {
+    await createSession({ environment, sourceType, sourceId })
     const timestamp = new Date().toISOString()
     await config.doInContext(config.getProdWorkspaceId(), async () => {
       const doc: PlatformActionEvent = {
@@ -67,6 +103,38 @@ describe("platformActions events", () => {
           })
         )
       ).rejects.toMatchObject({ status: 400, message: "Invalid bookmark" })
+    })
+
+    it("rejects a session that does not exist", async () => {
+      await createEvent({ sourceId: "run-1", environment: "dev" })
+
+      await expect(
+        withContext(() =>
+          fetchSessionEvents({
+            environment: "prod",
+            sourceType: "agent_session",
+            sourceId: "run-1",
+          })
+        )
+      ).rejects.toMatchObject({ status: 404, message: "Session not found" })
+    })
+
+    it("returns an empty page for an existing session without events", async () => {
+      await createSession({ sourceId: "run-1" })
+
+      const result = await withContext(() =>
+        fetchSessionEvents({
+          environment: "prod",
+          sourceType: "agent_session",
+          sourceId: "run-1",
+        })
+      )
+
+      expect(result).toEqual({
+        events: [],
+        summary: { total: 0 },
+        pagination: { hasNextPage: false, hasPreviousPage: false },
+      })
     })
 
     it("lists events for the exact session, oldest first", async () => {
