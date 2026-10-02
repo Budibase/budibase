@@ -9,3 +9,4 @@ export {
   getActionsDB,
   getActionsDbName,
 } from "./db"
+export { getPlatformActionSessionId } from "./utils"
