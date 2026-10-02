@@ -149,8 +149,9 @@ jest.mock("../../../../sdk/workspace/ai/knowledgeBase/geminiFileStore", () => {
   }
 })
 
+import { CookieJar } from "tough-cookie"
 import sdk from "../../../../sdk"
-import { context, db, docIds, encryption } from "@budibase/backend-core"
+import { context, db, docIds, encryption, env } from "@budibase/backend-core"
 import { ChatCommands } from "@budibase/shared-core"
 import {
   AgentChannelProvider,
@@ -1079,117 +1080,165 @@ describe("agent slack integration provisioning", () => {
       })
     })
 
-    it("completes link tokens for authenticated users and consumes the token once", async () => {
-      const { agent } = await setupProvisionedSlackAgent()
-      const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
+    it.each([undefined, ".example.com"])(
+      "links the account, removes the return URL cookie only on success and consumes the token once with cookie domain %s",
+      async cookieDomain => {
+        const originalCookieDomain = env.COOKIE_DOMAIN
+        env.COOKIE_DOMAIN = cookieDomain
+        try {
+          const { agent } = await setupProvisionedSlackAgent()
+          const path = `/api/webhooks/slack/${config.getProdWorkspaceId()}/${agent._id}`
 
-      const linkResponse = await postSlackMessage({
-        path,
-        body: {
-          command: `/${ChatCommands.LINK}`,
-          text: "",
-          channel_id: "D123",
-          user_id: "user-1",
-          user_name: "Slack User",
-          team_id: "T123",
-        },
-      })
+          const linkResponse = await postSlackMessage({
+            path,
+            body: {
+              command: `/${ChatCommands.LINK}`,
+              text: "",
+              channel_id: "D123",
+              user_id: "user-1",
+              user_name: "Slack User",
+              team_id: "T123",
+            },
+          })
 
-      const linkUrl = extractLinkUrl(linkResponse.body.messages)
-      expect(linkUrl).toBeTruthy()
+          const linkUrl = extractLinkUrl(linkResponse.body.messages)
+          expect(linkUrl).toBeTruthy()
 
-      const handoffPath = getLinkPath(linkUrl!)
+          const handoffPath = getLinkPath(linkUrl!)
 
-      const unauthHandoff = await config
-        .getRequest()!
-        .get(handoffPath)
-        .expect(302)
-      expect(unauthHandoff.headers.location).toEqual("/builder/auth/login")
-      const cookies = Array.isArray(unauthHandoff.headers["set-cookie"])
-        ? unauthHandoff.headers["set-cookie"]
-        : []
-      expect(
-        cookies.some((cookie: string) =>
-          cookie.startsWith("budibase:returnurl=/api/chat-links/")
-        )
-      ).toBe(true)
+          const unauthHandoff = await config
+            .getRequest()!
+            .get(handoffPath)
+            .expect(302)
+          expect(unauthHandoff.headers.location).toEqual("/builder/auth/login")
+          const cookies = Array.isArray(unauthHandoff.headers["set-cookie"])
+            ? unauthHandoff.headers["set-cookie"]
+            : []
+          expect(
+            cookies.some((cookie: string) =>
+              cookie.startsWith("budibase:returnurl=/api/chat-links/")
+            )
+          ).toBe(true)
 
-      const authHandoff = await config
-        .getRequest()!
-        .get(handoffPath)
-        .set(config.defaultHeaders({}, true))
-        .expect(200)
-      expect(authHandoff.type).toEqual("text/html")
-      expect(authHandoff.text).toContain("Confirm chat account link")
-      expect(authHandoff.text).toContain("<style>")
-      expect(authHandoff.text).toContain("/builder/bblogo.png")
-      expect(authHandoff.text).toContain("Link account")
-      const confirmationToken = extractConfirmationToken(authHandoff.text)
-      expect(confirmationToken).toBeTruthy()
+          const cookieJar = new CookieJar()
+          const builderUrl = "https://tenant.example.com/builder/apps"
+          for (const cookie of cookies) {
+            cookieJar.setCookieSync(cookie, builderUrl)
+          }
 
-      await config.doInTenant(async () => {
-        const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
-          provider: AgentChannelProvider.SLACK,
-          externalUserId: "user-1",
-          teamId: "T123",
-        })
-        expect(link).toBeUndefined()
-      })
+          const authHandoff = await config
+            .getRequest()!
+            .get(handoffPath)
+            .set(config.defaultHeaders({}, true))
+            .expect(200)
+          for (const cookie of authHandoff.headers["set-cookie"] || []) {
+            cookieJar.setCookieSync(cookie, builderUrl)
+          }
+          expect(cookieJar.getCookieStringSync(builderUrl)).toEqual(
+            `budibase:returnurl=${handoffPath}`
+          )
 
-      await config
-        .getRequest()!
-        .post(handoffPath)
-        .set(config.defaultHeaders({}, true))
-        .send({})
-        .expect(400)
+          expect(authHandoff.type).toEqual("text/html")
+          expect(authHandoff.text).toContain("Confirm chat account link")
+          expect(authHandoff.text).toContain("<style>")
+          expect(authHandoff.text).toContain("/builder/bblogo.png")
+          expect(authHandoff.text).toContain("Link account")
+          const confirmationToken = extractConfirmationToken(authHandoff.text)
+          expect(confirmationToken).toBeTruthy()
 
-      const confirmHandoff = await config
-        .getRequest()!
-        .post(handoffPath)
-        .set(config.defaultHeaders({}, true))
-        .send({ confirmationToken })
-        .expect(200)
-      expect(confirmHandoff.type).toEqual("text/html")
-      expect(confirmHandoff.text).toContain("Authentication succeeded.")
-      expect(confirmHandoff.text).toContain("<style>")
-      expect(confirmHandoff.text).toContain("/builder/bblogo.png")
-      expect(confirmHandoff.text).toContain(
-        "You can return to your chat to continue."
-      )
+          await config.doInTenant(async () => {
+            const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
+              provider: AgentChannelProvider.SLACK,
+              externalUserId: "user-1",
+              teamId: "T123",
+            })
+            expect(link).toBeUndefined()
+          })
 
-      await config.doInTenant(async () => {
-        const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
-          provider: AgentChannelProvider.SLACK,
-          externalUserId: "user-1",
-          teamId: "T123",
-        })
-        expect(link?.globalUserId).toEqual(config.getUser()._id)
-      })
+          const invalidConfirmation = await config
+            .getRequest()!
+            .post(handoffPath)
+            .set(config.defaultHeaders({}, true))
+            .send({})
+            .expect(400)
+          for (const cookie of invalidConfirmation.headers["set-cookie"] ||
+            []) {
+            cookieJar.setCookieSync(cookie, builderUrl)
+          }
+          expect(cookieJar.getCookieStringSync(builderUrl)).toEqual(
+            `budibase:returnurl=${handoffPath}`
+          )
 
-      await config
-        .getRequest()!
-        .get(handoffPath)
-        .set(config.defaultHeaders({}, true))
-        .expect(400)
+          const confirmHandoff = await config
+            .getRequest()!
+            .post(handoffPath)
+            .set(config.defaultHeaders({}, true))
+            .send({ confirmationToken })
+            .expect(200)
+          for (const cookie of confirmHandoff.headers["set-cookie"] || []) {
+            cookieJar.setCookieSync(cookie, builderUrl)
+          }
+          expect(
+            cookieJar
+              .getCookiesSync(builderUrl)
+              .find(cookie => cookie.key === "budibase:returnurl")
+          ).toBeUndefined()
+          expect(confirmHandoff.type).toEqual("text/html")
+          expect(confirmHandoff.text).toContain("Authentication succeeded.")
+          expect(confirmHandoff.text).toContain("<style>")
+          expect(confirmHandoff.text).toContain("/builder/bblogo.png")
+          expect(confirmHandoff.text).toContain(
+            "You can return to your chat to continue."
+          )
 
-      const chatResponse = await postSlackMessage({
-        path,
-        body: {
-          type: "event_callback",
-          event: {
-            type: "message",
-            text: "hello after linking",
-            user: "user-1",
-            channel: "D123",
-            channel_type: "im",
-            ts: "1700000000.100",
-            team_id: "T123",
-          },
-        },
-      })
+          await config.doInTenant(async () => {
+            const link = await sdk.ai.chatIdentityLinks.getChatIdentityLink({
+              provider: AgentChannelProvider.SLACK,
+              externalUserId: "user-1",
+              teamId: "T123",
+            })
+            expect(link?.globalUserId).toEqual(config.getUser()._id)
+          })
 
-      expect(chatResponse.body.messages).toContain("Mock assistant response")
-    })
+          for (const cookie of cookies) {
+            cookieJar.setCookieSync(cookie, builderUrl)
+          }
+          const expiredHandoff = await config
+            .getRequest()!
+            .get(handoffPath)
+            .set(config.defaultHeaders({}, true))
+            .expect(400)
+          for (const cookie of expiredHandoff.headers["set-cookie"] || []) {
+            cookieJar.setCookieSync(cookie, builderUrl)
+          }
+          expect(cookieJar.getCookieStringSync(builderUrl)).toEqual(
+            `budibase:returnurl=${handoffPath}`
+          )
+
+          const chatResponse = await postSlackMessage({
+            path,
+            body: {
+              type: "event_callback",
+              event: {
+                type: "message",
+                text: "hello after linking",
+                user: "user-1",
+                channel: "D123",
+                channel_type: "im",
+                ts: "1700000000.100",
+                team_id: "T123",
+              },
+            },
+          })
+
+          expect(chatResponse.body.messages).toContain(
+            "Mock assistant response"
+          )
+        } finally {
+          env.COOKIE_DOMAIN = originalCookieDomain
+        }
+      }
+    )
 
     it("rejects confirmation tokens prepared by a different authenticated user", async () => {
       const { agent } = await setupProvisionedSlackAgent()
