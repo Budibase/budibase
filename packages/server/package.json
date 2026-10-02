@@ -1,45 +1,5 @@
 {
-  "name": "@budibase/server",
-  "private": true,
-  "email": "hi@budibase.com",
-  "version": "0.0.0",
-  "description": "Budibase Web Server",
-  "main": "src/index.ts",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Budibase/budibase.git"
-  },
-  "scripts": {
-    "prebuild": "rimraf dist/ client/",
-    "build": "node ./scripts/build.js",
-    "postbuild": "copyfiles -a -u 3 '../client/dist/**/*.js' client && copyfiles -f ../client/manifest.json client && copyfiles -f ../../yarn.lock ./dist/",
-    "check:types": "tsc -p tsconfig.json --noEmit --incremental --paths null",
-    "build:isolated-vm-lib:snippets": "esbuild --minify --bundle src/jsRunner/bundles/snippets.ts --outfile=src/jsRunner/bundles/snippets.ivm.bundle.js --platform=node --format=iife --global-name=snippets",
-    "build:isolated-vm-lib:string-templates": "esbuild --minify --bundle src/jsRunner/bundles/index-helpers.ts --outfile=src/jsRunner/bundles/index-helpers.ivm.bundle.js --platform=node --format=iife --external:handlebars --global-name=helpers",
-    "build:isolated-vm-lib:bson": "esbuild --minify --bundle src/jsRunner/bundles/bsonPackage.ts --outfile=src/jsRunner/bundles/bson.ivm.bundle.js --platform=node --format=iife --global-name=bson",
-    "build:isolated-vm-lib:buffer": "esbuild --minify --bundle src/jsRunner/bundles/buffer.ts --outfile=src/jsRunner/bundles/buffer.ivm.bundle.js --platform=node --format=iife --global-name=buffer",
-    "build:isolated-vm-libs": "yarn build:isolated-vm-lib:string-templates && yarn build:isolated-vm-lib:bson && yarn build:isolated-vm-lib:snippets && yarn build:isolated-vm-lib:buffer",
-    "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
-    "debug": "yarn build && node --expose-gc --inspect=9222 dist/index.js",
-    "jest": "NODE_OPTIONS=\"--no-node-snapshot $NODE_OPTIONS\" jest",
-    "test": "bash scripts/test.sh",
-    "test:memory": "jest --maxWorkers=2 --logHeapUsage --forceExit",
-    "test:watch": "jest --watch",
-    "run:docker": "node --enable-source-maps dist/index.js",
-    "run:docker:cluster": "pm2-runtime start pm2.config.js",
-    "dev:stack:up": "node scripts/dev/manage.js up",
-    "dev:stack:down": "node scripts/dev/manage.js down",
-    "dev:stack:nuke": "node scripts/dev/manage.js nuke",
-    "dev": "yarn run dev:stack:up && nodemon",
-    "dev:built": "yarn run dev:stack:up && yarn run run:docker",
-    "ai:evals": "NODE_OPTIONS=\"--no-node-snapshot $NODE_OPTIONS\" ts-node --transpileOnly -r tsconfig-paths/register ./scripts/ai-refactor-evals.ts",
-    "specs": "TS_NODE_BASEURL=../.. ts-node specs/generate.ts && openapi-typescript specs/openapi.yaml --output src/definitions/openapi.ts"
-  },
-  "keywords": [
-    "budibase"
-  ],
   "author": "Budibase",
-  "license": "GPL-3.0",
   "dependencies": {
     "@ai-sdk/openai": "^4.0.46",
     "@ai-sdk/provider": "^4.0.7",
@@ -139,6 +99,7 @@
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "xml2js": "0.6.2"
   },
+  "description": "Budibase Web Server",
   "devDependencies": {
     "@babel/core": "^8.0.1",
     "@babel/preset-env": "8.0.2",
@@ -159,6 +120,8 @@
     "@types/supertest": "2.0.14",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/tmp": "0.2.6",
+    "@types/tough-cookie": "^4.0.2",
+    "@types/uuid": "8.3.4",
     "copyfiles": "2.4.1",
     "docker-compose": "1.2.0",
     "ioredis-mock": "8.13.1",
@@ -172,36 +135,76 @@
     "supertest": "6.3.3",
     "swagger-jsdoc": "6.1.0",
     "timekeeper": "2.2.0",
+    "tough-cookie": "4.1.3",
     "ts-node": "10.8.1",
     "zod": "^4.2.1"
   },
+  "email": "hi@budibase.com",
+  "keywords": [
+    "budibase"
+  ],
+  "license": "GPL-3.0",
+  "main": "src/index.ts",
+  "name": "@budibase/server",
   "nx": {
     "targets": {
       "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/builder",
+              "@budibase/client"
+            ],
+            "target": "build"
+          }
+        ],
         "inputs": [
           "default",
-          "{projectRoot}/src",
           "{projectRoot}/builder",
           "{projectRoot}/client",
-          "{projectRoot}/scripts",
           "{projectRoot}/package.json",
+          "{projectRoot}/scripts",
+          "{projectRoot}/src",
           "{projectRoot}/tsconfig*.json"
         ],
         "outputs": [
           "{projectRoot}/builder",
           "{projectRoot}/client",
           "{projectRoot}/dist"
-        ],
-        "dependsOn": [
-          {
-            "projects": [
-              "@budibase/client",
-              "@budibase/builder"
-            ],
-            "target": "build"
-          }
         ]
       }
     }
-  }
+  },
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Budibase/budibase.git"
+  },
+  "scripts": {
+    "ai:evals": "NODE_OPTIONS=\"--no-node-snapshot $NODE_OPTIONS\" ts-node --transpileOnly -r tsconfig-paths/register ./scripts/ai-refactor-evals.ts",
+    "build": "node ./scripts/build.js",
+    "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
+    "build:isolated-vm-lib:bson": "esbuild --minify --bundle src/jsRunner/bundles/bsonPackage.ts --outfile=src/jsRunner/bundles/bson.ivm.bundle.js --platform=node --format=iife --global-name=bson",
+    "build:isolated-vm-lib:buffer": "esbuild --minify --bundle src/jsRunner/bundles/buffer.ts --outfile=src/jsRunner/bundles/buffer.ivm.bundle.js --platform=node --format=iife --global-name=buffer",
+    "build:isolated-vm-lib:snippets": "esbuild --minify --bundle src/jsRunner/bundles/snippets.ts --outfile=src/jsRunner/bundles/snippets.ivm.bundle.js --platform=node --format=iife --global-name=snippets",
+    "build:isolated-vm-lib:string-templates": "esbuild --minify --bundle src/jsRunner/bundles/index-helpers.ts --outfile=src/jsRunner/bundles/index-helpers.ivm.bundle.js --platform=node --format=iife --external:handlebars --global-name=helpers",
+    "build:isolated-vm-libs": "yarn build:isolated-vm-lib:string-templates && yarn build:isolated-vm-lib:bson && yarn build:isolated-vm-lib:snippets && yarn build:isolated-vm-lib:buffer",
+    "check:types": "tsc -p tsconfig.json --noEmit --incremental --paths null",
+    "debug": "yarn build && node --expose-gc --inspect=9222 dist/index.js",
+    "dev": "yarn run dev:stack:up && nodemon",
+    "dev:built": "yarn run dev:stack:up && yarn run run:docker",
+    "dev:stack:down": "node scripts/dev/manage.js down",
+    "dev:stack:nuke": "node scripts/dev/manage.js nuke",
+    "dev:stack:up": "node scripts/dev/manage.js up",
+    "jest": "NODE_OPTIONS=\"--no-node-snapshot $NODE_OPTIONS\" jest",
+    "postbuild": "copyfiles -a -u 3 '../client/dist/**/*.js' client && copyfiles -f ../client/manifest.json client && copyfiles -f ../../yarn.lock ./dist/",
+    "prebuild": "rimraf dist/ client/",
+    "run:docker": "node --enable-source-maps dist/index.js",
+    "run:docker:cluster": "pm2-runtime start pm2.config.js",
+    "specs": "TS_NODE_BASEURL=../.. ts-node specs/generate.ts && openapi-typescript specs/openapi.yaml --output src/definitions/openapi.ts",
+    "test": "bash scripts/test.sh",
+    "test:memory": "jest --maxWorkers=2 --logHeapUsage --forceExit",
+    "test:watch": "jest --watch"
+  },
+  "version": "0.0.0"
 }
