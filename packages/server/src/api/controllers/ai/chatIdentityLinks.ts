@@ -299,6 +299,7 @@ export async function confirmChatLinkSession(
   })
 
   ctx.type = "text/html"
+  utils.clearCookie(ctx, CHAT_LINK_RETURN_URL_COOKIE)
   ctx.body = renderLinkSuccessPage()
 }
 
