@@ -1,4 +1,4 @@
-import { context, events } from "@budibase/backend-core"
+import { context, docIds, events } from "@budibase/backend-core"
 import { generator, mocks } from "@budibase/backend-core/tests"
 import { DocumentType, Workspace } from "@budibase/types"
 import path from "path"
@@ -198,12 +198,19 @@ describe("/backups", () => {
     it("should be able to calculate the backup statistics", async () => {
       await config.createAutomation()
       await config.createScreen()
+      await config.doInContext(config.getDevWorkspaceId(), async () => {
+        await context.getWorkspaceDB().put({
+          _id: docIds.generateFunctionID(),
+          name: "Backup Function",
+        })
+      })
       let res = await sdk.backups.calculateBackupStats(
         config.getDevWorkspaceId()
       )
       expect(res.automations).toEqual(1)
       expect(res.datasources).toEqual(1)
       expect(res.screens).toEqual(1)
+      expect(res.functions).toEqual(1)
     })
   })
 
