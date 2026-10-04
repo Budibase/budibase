@@ -8614,7 +8614,7 @@ base64-js@1.5.1, base64-js@^1.0.2, base64-js@^1.3.0, base64-js@^1.3.1:
   resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-1.5.1.tgz#1b1b440160a5bf7ad40b650f095963481903930a"
   integrity sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==
 
-base64id@2.0.0, base64id@~2.0.0:
+base64id@~2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/base64id/-/base64id-2.0.0.tgz#2770ac6bc47d312af97a8bf9a634342e0cd25cb6"
   integrity sha512-lGe34o6EHj9y3Kts9R4ZYs/Gr+6N7MCaMlIFA3F1R2O5/m7K06AxfSeO5530PEERE6/WyEg3lsuyw4GHlPZHog==
@@ -10958,15 +10958,14 @@ engine.io-parser@~5.2.1:
   integrity sha512-HqD3yTBfnBxIrbnM1DoD6Pcq8NECnh8d4As1Qgh0z5Gg3jRRIqijury0CL3ghu/edArpUYiYqQiDUQBIs4np3Q==
 
 engine.io@~6.6.0:
-  version "6.6.9"
-  resolved "https://registry.yarnpkg.com/engine.io/-/engine.io-6.6.9.tgz#fd17e9f4e3a256423592574b60ac262e91af4b82"
-  integrity sha512-clKkw4C7nJ22mGgoVcCg6V/W/TxdNyIOTr89k2ONZu81qqkddPFDF0LXcbAwhzPD8DjkiRCjzuiO6Y+fkpD4vg==
+  version "6.6.11"
+  resolved "https://registry.yarnpkg.com/engine.io/-/engine.io-6.6.11.tgz#05203f76be9c63489cdf52aadab4200a201315fd"
+  integrity sha512-z34mGpLoY/82ZbkX1LqGMIaf3wjVMPL6gVC681QDqnmzJ26synI8qAE32P+a7UazmpJZ8UGrFIeAavgRfXzYrg==
   dependencies:
     "@types/cors" "^2.8.12"
     "@types/node" ">=10.0.0"
     "@types/ws" "^8.5.12"
     accepts "~1.3.4"
-    base64id "2.0.0"
     cookie "~0.7.2"
     cors "~2.8.5"
     debug "~4.4.1"
@@ -16641,9 +16640,9 @@ moment-timezone@^0.5.15:
     moment "^2.29.4"
 
 moment@^2.29.4:
-  version "2.30.1"
-  resolved "https://registry.yarnpkg.com/moment/-/moment-2.30.1.tgz#f8c91c07b7a786e30c59926df530b4eac96974ae"
-  integrity sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==
+  version "2.31.0"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.31.0.tgz#6e19184e8005a9dfc61c9351263d4d6ea2ace7aa"
+  integrity sha512-0acOTfMiWOheYS4eoWb80yYMb/JLvVv9SHbs2PehaDzfUG0Bw855SKyk0IKTnPGa5+U2bmi3W68l1+sGLX/pvw==
 
 mongodb-connection-string-url@^3.0.0:
   version "3.0.2"
@@ -16953,10 +16952,10 @@ node-source-walk@^5.0.0, node-source-walk@^5.0.1:
   dependencies:
     "@babel/parser" "^7.21.4"
 
-nodemailer@10.0.11:
-  version "10.0.11"
-  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-10.0.11.tgz#b605e8de1dbb2866a58e9717eb20daf47f438c52"
-  integrity sha512-/c4P7U7aGpiNu2Rl08q525q2zECkUpSaf2zQPgIStCcAjHAkkQQKwD4sTyi3l91mGcLQrKzL1syXPHymo+Ogtw==
+nodemailer@10.0.12:
+  version "10.0.12"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-10.0.12.tgz#f94e46bb0f450f515cca29ba1af139fb0d83a149"
+  integrity sha512-PQ46oNbNMuH/Sno7B5IWIU9etytwrO0xdTFvWXpIQFRXhBAXtzD48243AS+BCbQQTPD8y3fqUrgLn0tSo77gvg==
 
 nodemailer@9.0.1:
   version "9.0.1"
@@ -21868,9 +21867,9 @@ undici@^7.19.0, undici@^7.28.0:
   integrity sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==
 
 undici@^8.5.0, undici@^8.9.0:
-  version "8.10.2"
-  resolved "https://registry.yarnpkg.com/undici/-/undici-8.10.2.tgz#960bcb0b43c267f86910ea7ca408ada843a44bc7"
-  integrity sha512-/y4/bH9YNU5hi9NIrpOuvGXFcxrj3CMrV+/AYpowAYTpHn8gX/XPFjNy766FPoYY0miQhdW977JFWKGNhBdwyQ==
+  version "8.11.0"
+  resolved "https://registry.yarnpkg.com/undici/-/undici-8.11.0.tgz#6c5251a351bf38ce27fc204a3916f5b4da8deb4e"
+  integrity sha512-AdzuGcAkzhbha3GgCSoUBx2P0quwym6qdFNCQz/fDGZc8w9XJ741wHUbt2kTmfPz+ZIOMkySFkiY7RXmiDDC8w==
 
 unicode-canonical-property-names-ecmascript@^2.0.0:
   version "2.0.1"
