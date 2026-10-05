@@ -7,6 +7,7 @@ import {
   type ExecuteFunctionStepInputs,
   type ExecuteFunctionStepOutputs,
   type FunctionDocument,
+  type FunctionInputDefinition,
   type FunctionError,
   type FunctionReadiness,
   type FunctionRunResult,
@@ -103,13 +104,26 @@ const actionFailure = (code: FunctionErrorCode) =>
 const parseInputs = ({
   inputs,
   limits,
+  inputSchema = [],
 }: {
   inputs: Record<string, JSONValue>
   limits: FunctionRunLimits
+  inputSchema?: FunctionInputDefinition[]
 }): Record<string, JSONValue> => {
   const parsed = jsonRecordSchema.safeParse(inputs)
   if (!parsed.success) {
     throw new FunctionActionError(FunctionErrorCode.FUNCTION_INPUT_INVALID)
+  }
+  for (const input of inputSchema) {
+    const value = parsed.data[input.name]
+    // Parse string values if the type is not declared as String
+    if (input.type !== "string" && typeof value === "string") {
+      try {
+        parsed.data[input.name] = JSON.parse(value)
+      } catch {
+        // Type validation reports invalid values after binding resolution.
+      }
+    }
   }
   try {
     validateJSONLimits(parsed.data, {
@@ -175,11 +189,15 @@ export const executeFunction = async (
       )
     }
     const limits = env.FUNCTIONS_LIMITS.run
-    const functionInputs = parseInputs({ inputs: inputs.inputs, limits })
     const fn = await dependencies.getFunction(inputs.functionId)
     if (!fn) {
       throw new FunctionActionError(FunctionErrorCode.FUNCTION_BUILD_REQUIRED)
     }
+    const functionInputs = parseInputs({
+      inputs: inputs.inputs,
+      limits,
+      inputSchema: fn.inputSchema,
+    })
     const readiness = await dependencies.getReadiness(fn)
     if (readiness === "build_failed") {
       throw new FunctionActionError(FunctionErrorCode.FUNCTION_BUILD_FAILED)

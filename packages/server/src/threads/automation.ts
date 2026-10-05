@@ -1136,7 +1136,10 @@ class Orchestrator {
             ? (inputs as EscalationStepInputs)
             : undefined
         const resolutionStrategy = escalationInputs?.resolutionStrategy
-        inputs = await processObject(inputs, ctx)
+        inputs = await processObject(inputs, ctx, {
+          serializeArrays:
+            step.stepId === AutomationActionStepId.EXECUTE_FUNCTION,
+        })
         if (escalationInputs && resolutionStrategy !== undefined) {
           ;(inputs as EscalationStepInputs).resolutionStrategy =
             resolutionStrategy

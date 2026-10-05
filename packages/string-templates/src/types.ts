@@ -7,6 +7,7 @@ export interface ProcessOptions {
   escapeNewlines?: boolean
   onlyFound?: boolean
   disabledHelpers?: string[]
+  serializeArrays?: boolean
 }
 
 export type LogType = "log" | "info" | "debug" | "warn" | "error" | "table"
